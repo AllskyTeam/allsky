@@ -17,9 +17,40 @@ You will need to install Raspbian on your Raspberry Pi. Follow [this link](https
 
 Make sure you have a working internet connection by setting it either through the GUI or [the terminal](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md). 
 
-Run the install script:
+Start by fetching the code from this GitHub page. Open the terminal and type the following:
+
+```shell
+clone https://github.com/thomasjacquin/allsky.git
+```
+
+Then navigate to the allsky directory:
+
+```shell
+cd allsky
+```
+
+Then make the install script executable:
+
+```shell
+chmod +x install.sh
+```
+
+Now, run the install script:
 
 ```shell
 sudo ./install.sh
 ```
 
+Unplug and replug the camera to trigger the new udev rules.
+
+You can now start the camera by typing the following:
+
+```shell
+./allsky.sh
+```
+
+Note: If you don't want to use the X server, make sure you type this in the console before launching ./allsky.sh:
+
+```shell
+export DISPLAY=:0.0
+```

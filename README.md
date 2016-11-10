@@ -1,8 +1,25 @@
-# allsky-camera
-A Raspberry Pi operated Wireless Allsky Camera
+# Allsky Camera
 
-Requirements
+This is the source code for the Wireless Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 
-Installation
 
-Compile it yourself
+## Requirements
+
+In order to get the camera working properly you will need the following hardware:
+
+ * An ASI camera from ZWO. Tested cameras include ASI120MC, ASI224MC
+ * A Raspberry Pi 2 or 3
+ * A USB wireless dongle if using a Pi 2. [This one](https://www.amazon.ca/Edimax-EW-7811Un-150Mbps-Raspberry-Supports/dp/B003MTTJOY) has been tested.
+
+## Installation
+
+You will need to install Raspbian on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
+
+Make sure you have a working internet connection by setting it either through the GUI or [the terminal](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md). 
+
+Run the install script:
+
+```shell
+sudo ./install.sh
+```
+

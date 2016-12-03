@@ -25,7 +25,10 @@ enum Control_TYPE{ //Control ID//
 	CONTROL_HIGHSPEED,
 	CONTROL_COOLERPOWERPERC,
 	CONTROL_TARGETTEMP,
-	CONTROL_COOLER_ON
+	CONTROL_COOLER_ON,
+	CONTROL_MONO_BIN,
+	CONTROL_FAN_ON,
+	CONTROL_PATTERN_ADJUST
 };
 
 
@@ -92,7 +95,7 @@ extern "C" {
 	ASICAMERA_API  char* getCameraModel(int camIndex);
 
 	//Subtract Dark using bmp file
-	ASICAMERA_API int EnableDarkSubtract(char *BMPPath);
+	ASICAMERA_API bool EnableDarkSubtract(char *BMPPath);
 	//Disable Subtracting Dark 
 	ASICAMERA_API void DisableDarkSubtract();
 
@@ -135,8 +138,8 @@ extern "C" {
 	//call this function to change ROI area after setImageFormat
 	//return true when success false when failed
 	ASICAMERA_API  bool setStartPos(int startx, int starty); 
-	// set new image format - 
-	//ASI120's data size must be times of 1024 which means width*height%1024=0
+	// set new image format 
+	//Make sure width%8 = 0 and height%2 = 0, further, for USB2.0 camera ASI120, please make sure that width*height%1024=0. 
 	ASICAMERA_API  bool setImageFormat(int width, int height,  int binning, IMG_TYPE img_type);  
 	//get the image type current set
 	ASICAMERA_API  IMG_TYPE getImgType(); 
@@ -179,12 +182,11 @@ extern "C" {
 	//check if the camera is usb3
 	ASICAMERA_API bool isUSB3Camera();
 
-	//get Gain of camera
+	//get e/ADU of camera
 	ASICAMERA_API float getElectronsPerADU();
 
-	ASICAMERA_API int getOffsetLGain();
-
-	ASICAMERA_API int getOffsetHGain();
+//highest dynamic range, unity gain, lowest read noise, lowest read noise
+	ASICAMERA_API void getGainOffset(int *Offset_HighestDR, int *Offset_UnityGain, int *Gain_LowestRN, int *Offset_LowestRN);
 	
 
 #ifdef __cplusplus

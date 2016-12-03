@@ -6,15 +6,17 @@ echo "Sunwait installation"
 cp sunwait /usr/local/bin
 echo -en '\n'
 echo -en '\n'
+echo "Dependencies installation"
 apt-get update && apt-get install libopencv-dev libusb-dev libav-tools gawk lftp entr imagemagick -y
 echo -en '\n'
 echo -en '\n'
 echo -en 'Using the camera without root access'
-install lib/asi.rules /lib/udev/rules.d
+install asi.rules /lib/udev/rules.d
 echo -en '\n'
 echo -en '\n'
 echo -en 'Copying shared libraries to user library'
-cp lib/armv7/libASICamera2* /usr/local/lib
+cp lib/libASICamera2* /usr/local/lib
+ldconfig
 echo -en '\n'
 echo -en '\n'
 echo -en 'Autostart script'

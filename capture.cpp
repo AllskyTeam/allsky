@@ -158,9 +158,11 @@ int  main(int argc, char* argv[])
 	int asiGamma=50;
 	int asiBrightness=50;
 	int asiFlip=0;
-        char const * latitude="60.7N";
+        char const * latitude="60.7N";	//GPS Coordinates of Whitehorse, Yukon where the code was created
 	char const * longitude="135.05W";
-        int display=1;
+        int gui=1;
+	int timelapse=0;
+	int time=1;
 
 	char const* bayer[] = {"RG","BG","GR","GB"};
 	int CamNum=0;
@@ -210,10 +212,12 @@ int  main(int argc, char* argv[])
   printf(" -u | -usb = USB Speed  - Default = 40   - Values between 40-100, This is BandwidthOverload \n");
   printf(" -f | -fil = Filename   - Default = IMAGE.PNG \n");
   printf("\n");
-  printf("    | -lat = Latitude   - Default = 60.7N   - Latitude of the camera \n");
-  printf("    | -lon = Longitude  - Default = 135.05W - Longitude of the camera \n");
+  printf("    | -lat = Latitude   - Default = 60.7N   - Latitude of the camera. Defaults to the latitude of Whitehorse, Yukon where the project was born \n");
+  printf("    | -lon = Longitude  - Default = 135.05W - Longitude of the camera Defaults to the longitude of Whitehorse, Yukon where the project was born\n");
   printf("\n");  
-  printf("    | -dis = Display    - Default = true - Set to false to capture images without displaying it \n");
+  printf("    | -gui = GUI        - Default = 1 - Set to 0 to capture images without using a desktop environment \n");
+  printf("    | -tlp = Timelapse  - Default = 0 - Set to 1 if you want to create a timelapse at the end of the night \n");
+  printf("    | -tim = Time	  - Default = 1 - Adds the time to the image. Combine with Text X and Text Y for placement \n");
 
   printf("%sUsage:\n", KRED);
   printf(" ./asiSnap -w 640 -h 480 -e 50000 -g 50 -t 1 -b 1 -f Timelapse.PNG\n\n");
@@ -225,9 +229,6 @@ if(argc > 0)
     {
       for(i = 0; i < argc-1; i++)
 	{
-//		 if(strcmp(argv[i], "-size") == 0 || strcmp(argv[i],      "-siz") == 0 || strcmp(argv[i], "-s") == 0){
-//	  width = atoi(argv[i+1]); i++;
-//	  height = atoi(argv[i+1]); i++;}
 		 if(strcmp(argv[i], "-width") == 0 || strcmp(argv[i], 	  "-wid") == 0 || strcmp(argv[i], "-w") == 0){
 	width = atoi(argv[i+1]); i++;}
 	    else if(strcmp(argv[i], "-height") == 0 || strcmp(argv[i], 	  "-hei") == 0 || strcmp(argv[i], "-h") == 0){
@@ -280,8 +281,12 @@ if(argc > 0)
         latitude = argv[i+1]; i++;}
             else if(strcmp(argv[i], "-longitude") == 0 || strcmp(argv[i],  "-lon") == 0 ){
         longitude = argv[i+1]; i++;}
- 	    else if(strcmp(argv[i], "-display") == 0 || strcmp(argv[i],  "-dis") == 0 ){
-        display = atoi(argv[i+1]); i++;}
+ 	    else if(strcmp(argv[i], "-gui") == 0 ){
+        gui = atoi(argv[i+1]); i++;}
+ 	    else if(strcmp(argv[i], "-timelapse") == 0 || strcmp(argv[i], "-tlp") == 0 ){
+        gui = atoi(argv[i+1]); i++;}
+ 	    else if(strcmp(argv[i], "-time") == 0 || strcmp(argv[i], "-tim") == 0 ){
+        gui = atoi(argv[i+1]); i++;}
 	}
     }
 
@@ -382,7 +387,9 @@ printf("%s",KGRN);
 	printf(" Filename: %s\n",fileName);
 	printf(" Latitude: %s\n",latitude);
 	printf(" Longitude: %s\n",longitude);
-        printf(" Display: %i\n",display);
+        printf(" GUI: %d\n",gui);
+	printf(" Timelapse: %d\n",timelapse);
+	printf(" Time: %d\n",time);
 printf("%s",KNRM);
 
 asiBrightness=asiBrightness*1000;
@@ -416,11 +423,11 @@ asiBrightness=asiBrightness*1000;
 	ASISetControlValue(CamNum, ASI_BRIGHTNESS, asiBrightness, ASI_FALSE);
 	ASISetControlValue(CamNum, ASI_FLIP, asiFlip, ASI_FALSE);
 	
-	//if (display == 1) {
-		bDisplay = 1;
-		pthread_t thread_display;
+	pthread_t thread_display=0;
+	if (gui == 1) {
+		bDisplay = 1;		
 		pthread_create(&thread_display, NULL, Display, (void*)pRgb);
-	//}
+	}
 
 	time1 = GetTickCount();
 	timeSave = GetTickCount();
@@ -485,6 +492,9 @@ asiBrightness=asiBrightness*1000;
 			cvSet(pRgb, CV_RGB(5, 5, 5));
 			cvResetImageROI(pRgb);
 		}
+		if (time == 1 ){
+			ImgText = getTime();
+		}
   		cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
 		
 
@@ -505,10 +515,12 @@ asiBrightness=asiBrightness*1000;
 			} else if (result == "DAY" && endOfNight){
 				printf("DAY");
 				printf("\n");
-				printf("Generating Timelapse");
-				std::string timelapseCommand = "./timelapse.sh ";
-				timelapseCommand.append(fileName);
-				system(timelapseCommand.c_str());
+				if (timelapse){
+					printf("Generating Timelapse");
+					std::string timelapseCommand = "./timelapse.sh ";
+					timelapseCommand.append(fileName);
+					system(timelapseCommand.c_str());
+				}
 				printf("\n");
 				endOfNight = false;		
 			}

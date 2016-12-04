@@ -152,7 +152,7 @@ int  main(int argc, char* argv[])
 	int Image_type=1;
 	int asiGain=150;
 	int asiBandwidth=40;
-	int asiExposure=2000000;
+	int asiExposure=5000000;
 	int asiWBR=65;
 	int asiWBB=85;
 	int asiGamma=50;
@@ -160,9 +160,9 @@ int  main(int argc, char* argv[])
 	int asiFlip=0;
         char const * latitude="60.7N";	//GPS Coordinates of Whitehorse, Yukon where the code was created
 	char const * longitude="135.05W";
-        int gui=1;
-	int timelapse=0;
-	int time=1;
+        int noDisplay=false;
+	int timelapse=false;
+	int time=true;
 
 	char const* bayer[] = {"RG","BG","GR","GB"};
 	int CamNum=0;
@@ -179,48 +179,47 @@ int  main(int argc, char* argv[])
   printf("\%sAuthor:",KNRM);
   printf("Thomas Jacquin\n\n");
   printf("\%sContributors:\n",KNRM);
-  printf("-Knut Olav Klo\n");
+  printf("-Knut Olav Klo - Added input parameters and cleaned the code\n");
   printf("-Daniel Johnsen\n");
   printf("-Yang and Sam from ZWO\n\n");
-  printf("%sSwitches: \n",KYEL);
-  printf(" -w | -wid = Width      - Default = Camera Max Width \n");
-  printf(" -h | -hei = Height     - Default = Camera Max Height \n");
-  printf(" -e | -exp = Exposure   - Default = 50000µs \n");
-  printf(" -g | -gai = Gain       - Default = 50 \n");
-  printf(" -a | -gam = Gamma      - Default = 50 \n");
-  printf(" -r | -bri = Brightness - Default = 50 \n");
-  printf("    | -wbr = WB_Red     - Default = 50   - White Balance Red \n");
-  printf("    | -wbb = WB_Blue    - Default = 50   - White Balance Blue \n");
-  printf(" -b | -bin = Bin        - Default = 1    - 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n");
-  printf(" -d | -dly = Delay      - Default = 10   - Delay between images in milliseconds - 1000 = 1 sec.\n");
-  printf(" -t | -typ = Image Type - Default = 0    - 0 = RAW8,  1 = RGB24,  2 = RAW16 \n");
-  printf(" -c | -txt = Text       - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c \"Text Overlay\"\n");
-  printf(" -x | -txx = Text X     - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
-  printf(" -y | -txy = Text Y     - Default = 25   - Text Placement Vertical from TOP in Pixels\n");
-  printf(" -n | -fon = Font Name  - Default = 0    - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n");
-  printf(" -k | -foc = Font Color - Default = 255 0 0  - Text blue (BRG)\n");
-  printf("    | -fot = Font Type  - Default = 0    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
-
-  printf(" -s | -fos = Font Size  - Default = 0.5  - Text Font Size\n");
-  printf(" -l | -fol = Font Line  - Default = 1    - Text Font Line Thickness\n");
-
-//printf(" -c = BG Color   - Default =      - Text Background Color in Hex. 00ff00 = Green\n");
-//printf(" -a = BG Alpha   - Default =      - Text Background Color Alpha/Transparency 0-100\n");
-  printf(" -i | -inc = Increment  - Default = 0    - Image increment number. Ex. 1 = 0-9, 2 = 00-99 \n");
-  printf(" -z | -flp = Flip Image - Default = 0    - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
-  printf(" -q | -qty = Quality    - Default = 3/95 - Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
-  printf(" -u | -usb = USB Speed  - Default = 40   - Values between 40-100, This is BandwidthOverload \n");
-  printf(" -f | -fil = Filename   - Default = IMAGE.PNG \n");
+  printf("%sAvailable Parameters: \n",KYEL);
+  printf(" -width  		  - Default = Camera Max Width \n");
+  printf(" -height     		  - Default = Camera Max Height \n");
+  printf(" -exposure		  - Default = 5000000 - Time in µs (equals to 5 sec) \n");
+  printf(" -gain 	          - Default = 50 \n");
+  printf(" -gamma	          - Default = 50 \n");
+  printf(" -brightness		  - Default = 50 \n");
+  printf(" -wbr			  - Default = 50   - White Balance Red \n");
+  printf(" -wbb			  - Default = 50   - White Balance Blue \n");
+  printf(" -bin        		  - Default = 1    - 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n");
+  printf(" -delay      		  - Default = 10   - Delay between images in milliseconds - 1000 = 1 sec.\n");
+  printf(" -type = Image Type 	  - Default = 0    - 0 = RAW8,  1 = RGB24,  2 = RAW16 \n");
+  printf(" -quality		  - Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
+  printf(" -usb = USB Speed       - Default = 40   - Values between 40-100, This is BandwidthOverload \n");
+  printf(" -filename		  - Default = IMAGE.PNG \n");  
+  printf(" -flip		  - Default = 0    - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");  
   printf("\n");
-  printf("    | -lat = Latitude   - Default = 60.7N   - Latitude of the camera. Defaults to the latitude of Whitehorse, Yukon where the project was born \n");
-  printf("    | -lon = Longitude  - Default = 135.05W - Longitude of the camera Defaults to the longitude of Whitehorse, Yukon where the project was born\n");
+  printf(" -text		  - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c \"Text Overlay\"\n");
+  printf(" -textx		  - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
+  printf(" -texty = Text Y     	  - Default = 25   - Text Placement Vertical from TOP in Pixels\n");
+  printf(" -fontname = Font Name  - Default = 0    - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n");
+  printf(" -fontcolor = Font Color - Default = 255 0 0  - Text blue (BRG)\n");
+  printf(" -fonttype = Font Type  - Default = 0    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
+  printf(" -fontsize 		  - Default = 0.5  - Text Font Size\n");
+  printf(" -fontline		  - Default = 1    - Text Font Line Thickness\n");
+//printf(" -bgc = BG Color   	  - Default =      - Text Background Color in Hex. 00ff00 = Green\n");
+//printf(" -bga = BG Alpha   	  - Default =      - Text Background Color Alpha/Transparency 0-100\n");
+  printf("\n");
+  printf("\n");
+  printf(" -lat = Latitude   	  - Default = 60.7N   - Latitude of the camera. Defaults to the latitude of Whitehorse, Yukon where the project was born \n");
+  printf(" -lon = Longitude  	  - Default = 135.05W - Longitude of the camera Defaults to the longitude of Whitehorse, Yukon where the project was born\n");
   printf("\n");  
-  printf("    | -gui = GUI        - Default = 1 - Set to 0 to capture images without using a desktop environment \n");
-  printf("    | -tlp = Timelapse  - Default = 0 - Set to 1 if you want to create a timelapse at the end of the night \n");
-  printf("    | -tim = Time	  - Default = 1 - Adds the time to the image. Combine with Text X and Text Y for placement \n");
+  printf(" -nodisplay        	  - Add this parameter to capture images without using a desktop environment \n");
+  printf(" -timelapse	  	  - add this parameter if you want to create a timelapse at the end of the night \n");
+  printf(" -time		  - Adds the time to the image. Combine with Text X and Text Y for placement \n");
 
   printf("%sUsage:\n", KRED);
-  printf(" ./asiSnap -w 640 -h 480 -e 50000 -g 50 -t 1 -b 1 -f Timelapse.PNG\n\n");
+  printf(" ./capture -width 640 -height 480 -exposure 5000000 -gamma 50 -type 1 -bin 1 -filename Lake-Laberge.PNG\n\n");
 
   printf("%s", KNRM);    
 
@@ -229,64 +228,64 @@ if(argc > 0)
     {
       for(i = 0; i < argc-1; i++)
 	{
-		 if(strcmp(argv[i], "-width") == 0 || strcmp(argv[i], 	  "-wid") == 0 || strcmp(argv[i], "-w") == 0){
-	width = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-height") == 0 || strcmp(argv[i], 	  "-hei") == 0 || strcmp(argv[i], "-h") == 0){
-	height = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-imagetype") == 0 || strcmp(argv[i], "-typ") == 0 || strcmp(argv[i], "-t") == 0){
-	Image_type = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-quality") == 0 || strcmp(argv[i],   "-qty") == 0 || strcmp(argv[i], "-q") == 0){
-        quality[1] = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-exposure") == 0 || strcmp(argv[i],  "-exp") == 0 || strcmp(argv[i], "-e") == 0){
-        asiExposure = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-gain") == 0 || strcmp(argv[i], 	  "-gai") == 0 || strcmp(argv[i], "-g") == 0){
-        asiGain = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-gamma") == 0 || strcmp(argv[i], 	  "-gam") == 0 || strcmp(argv[i], "-a") == 0){
-        asiGamma = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-brightness") == 0 || strcmp(argv[i],"-bri") == 0 || strcmp(argv[i], "-r") == 0){
-        asiBrightness = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-binning") == 0 || strcmp(argv[i],   "-bin") == 0 || strcmp(argv[i], "-b") == 0){
-        bin = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-delay") == 0 || strcmp(argv[i],     "-dly") == 0 || strcmp(argv[i], "-d") == 0){
-        delay = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-wbred") == 0 || strcmp(argv[i],     "-wbr") == 0){
-        asiWBR = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-wbblue") == 0 || strcmp(argv[i],    "-wbb") == 0){
-        asiWBB = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-text") == 0 || strcmp(argv[i], 	  "-txt") == 0 || strcmp(argv[i], "-c") == 0){
-        ImgText = (argv[i+1]); i++;}
-            else if(strcmp(argv[i], "-textx") == 0 || strcmp(argv[i],     "-txx") == 0 || strcmp(argv[i], "-x") == 0){
-        iTextX = atoi(argv[i+1]); i++;}
-            else if(strcmp(argv[i], "-texty") == 0 || strcmp(argv[i],     "-txy") == 0 || strcmp(argv[i], "-y") == 0){
-        iTextY = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-fontname") == 0 || strcmp(argv[i],  "-fon") == 0 || strcmp(argv[i], "-n") == 0){
-        fontnumber = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-fontcolor") == 0 || strcmp(argv[i], "-foc") == 0 || strcmp(argv[i], "-k") == 0){
-        fontcolor[0] = atoi(argv[i+1]); i++;
-	fontcolor[1] = atoi(argv[i+1]); i++;
-	fontcolor[2] = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-fonttype") == 0 || strcmp(argv[i],  "-fot") == 0){
-        linenumber = atoi(argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-fontsize") == 0 || strcmp(argv[i],  "-fos") == 0 || strcmp(argv[i], "-s") == 0){
-	  fontsize = atof(argv[i+1]); i++;}
-            else if(strcmp(argv[i], "-fontline") == 0 || strcmp(argv[i],  "-fol") == 0 || strcmp(argv[i], "-l") == 0){
-        linewidth = atoi(argv[i+1]); i++;}
-            else if(strcmp(argv[i], "-flip") == 0 || strcmp(argv[i],      "-flp") == 0 || strcmp(argv[i], "-z") == 0){
-        asiFlip = atoi(argv[i+1]); i++;}
-            else if(strcmp(argv[i], "-usbspeed") == 0 || strcmp(argv[i],  "-usb") == 0 || strcmp(argv[i], "-u") == 0){
-        asiBandwidth = atoi(argv[i+1]); i++;}
-            else if(strcmp(argv[i], "-filename") == 0 || strcmp(argv[i],  "-fil") == 0 || strcmp(argv[i], "-f") == 0){
-        fileName = (argv[i+1]); i++;}
-	    else if(strcmp(argv[i], "-latitude") == 0 || strcmp(argv[i],  "-lat") == 0 ){
-        latitude = argv[i+1]; i++;}
-            else if(strcmp(argv[i], "-longitude") == 0 || strcmp(argv[i],  "-lon") == 0 ){
-        longitude = argv[i+1]; i++;}
- 	    else if(strcmp(argv[i], "-gui") == 0 ){
-        gui = atoi(argv[i+1]); i++;}
- 	    else if(strcmp(argv[i], "-timelapse") == 0 || strcmp(argv[i], "-tlp") == 0 ){
-        gui = atoi(argv[i+1]); i++;}
- 	    else if(strcmp(argv[i], "-time") == 0 || strcmp(argv[i], "-tim") == 0 ){
-        gui = atoi(argv[i+1]); i++;}
+	 if(strcmp(argv[i], "-width") == 0){
+		width = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-height") == 0){
+		height = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-type") == 0){
+		Image_type = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-quality") == 0){
+        	quality[1] = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-exposure") == 0){
+        	asiExposure = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-gain") == 0){
+        	asiGain = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-gamma") == 0){
+        	asiGamma = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-brightness") == 0){
+        	asiBrightness = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-bin") == 0){
+        	bin = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-delay") == 0){
+        	delay = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-wbr") == 0){
+        	asiWBR = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-wbb") == 0){
+        	asiWBB = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-text") == 0){
+        	ImgText = (argv[i+1]); i++;}
+         else if(strcmp(argv[i], "-textx") == 0){
+        	iTextX = atoi(argv[i+1]); i++;}
+         else if(strcmp(argv[i], "-texty") == 0){
+        	iTextY = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-fontname") == 0){
+        	fontnumber = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-fontcolor") == 0){
+        	fontcolor[0] = atoi(argv[i+1]); i++;
+		fontcolor[1] = atoi(argv[i+1]); i++;
+		fontcolor[2] = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-fonttype") == 0){
+        	linenumber = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-fontsize") == 0){
+	  	fontsize = atof(argv[i+1]); i++;}
+         else if(strcmp(argv[i], "-fontline") == 0){
+        	linewidth = atoi(argv[i+1]); i++;}
+         else if(strcmp(argv[i], "-flip") == 0){
+        	asiFlip = atoi(argv[i+1]); i++;}
+         else if(strcmp(argv[i], "-usb") == 0){
+        	asiBandwidth = atoi(argv[i+1]); i++;}
+         else if(strcmp(argv[i], "-filename") == 0){
+        	fileName = (argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-lat") == 0){
+        	latitude = argv[i+1]; i++;}
+         else if(strcmp(argv[i], "-lon") == 0){
+        	longitude = argv[i+1]; i++;}
+ 	 else if(strcmp(argv[i], "-nodisplay") == 0){
+        	noDisplay = true; i++;}
+ 	 else if(strcmp(argv[i], "-timelapse") == 0){
+        	timelapse = true; i++;}
+ 	 else if(strcmp(argv[i], "-time") == 0){
+        	time = true; i++;}
 	}
     }
 
@@ -368,7 +367,7 @@ printf("%s",KGRN);
 	printf(" Resolution: %dx%d \n",width,height);
 	printf(" Quality: %d \n",quality[1]);
 	printf(" Gain: %d\n",asiGain);
-	printf(" Exposure: %dns\n",asiExposure);
+	printf(" Exposure: %dµs\n",asiExposure);
 	printf(" Brightness: %d\n",asiBrightness);
 	printf(" Gamma: %d\n",asiGamma);
 	printf(" WB Red: %d\n",asiWBR);
@@ -387,7 +386,7 @@ printf("%s",KGRN);
 	printf(" Filename: %s\n",fileName);
 	printf(" Latitude: %s\n",latitude);
 	printf(" Longitude: %s\n",longitude);
-        printf(" GUI: %d\n",gui);
+        printf(" No Display: %d\n",noDisplay);
 	printf(" Timelapse: %d\n",timelapse);
 	printf(" Time: %d\n",time);
 printf("%s",KNRM);
@@ -424,7 +423,7 @@ asiBrightness=asiBrightness*1000;
 	ASISetControlValue(CamNum, ASI_FLIP, asiFlip, ASI_FALSE);
 	
 	pthread_t thread_display=0;
-	if (gui == 1) {
+	if (noDisplay == false) {
 		bDisplay = 1;		
 		pthread_create(&thread_display, NULL, Display, (void*)pRgb);
 	}
@@ -459,7 +458,7 @@ asiBrightness=asiBrightness*1000;
 		usleep(delay*1000); //10ms
 		status = ASI_EXP_WORKING;
 
-		if(status == ASI_EXP_WORKING)
+		while(status == ASI_EXP_WORKING)
 		{
 			ASIGetExpStatus(CamNum, &status);		
 		}
@@ -492,13 +491,12 @@ asiBrightness=asiBrightness*1000;
 			cvSet(pRgb, CV_RGB(5, 5, 5));
 			cvResetImageROI(pRgb);
 		}
-		if (time == 1 ){
-			ImgText = getTime();
+		if (time == true ){
+			ImgText = bufTime;
 		}
   		cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
 		
-
-		if (time2 - timeSave > 5000) {
+		if (time2 - timeSave > (asiExposure/1000) + 50){ // add 50 milliseconds so that we don't save the same image twice
 			std::string result = exec(sunwaitCommand.c_str());		
 			result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
 			if (result == "NIGHT"){
@@ -515,7 +513,7 @@ asiBrightness=asiBrightness*1000;
 			} else if (result == "DAY" && endOfNight){
 				printf("DAY");
 				printf("\n");
-				if (timelapse){
+				if (timelapse == true){
 					printf("Generating Timelapse");
 					std::string timelapseCommand = "./timelapse.sh ";
 					timelapseCommand.append(fileName);

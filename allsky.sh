@@ -3,19 +3,17 @@
 echo "Starting allsky camera..."
 cd /home/pi/allsky
 
+FILENAME="Image.PNG"
 
-$FILENAME="image.jpg"
+# Open README for full list of options
 
-ls "$FILENAME" | entr ./upload.sh "$FILENAME" & ./capture \
-  -txt 		"Thomas" \
+#ls "$FILENAME" | entr ./upload.sh "$FILENAME" & \
+./capture \
   -gain 	50 \
-  -exposure 	3000000 \
-  -filename 	"Ortona.PNG" \
+  -exposure 	1000000 \
+  -filename 	"$FILENAME" \
   -latitude 	"60.7N" \
   -longitude 	"135.05W" \
-  -wbred 	"53" \
-  -wbblue 	"80"
-
-# These values override the default values of the program.
-# You can add more overrides here. 
-# Full list of available parameters shows up in the terminal window when the program starts.
+  -wbred 	53 \
+  -wbblue 	80 \
+  -textx	200

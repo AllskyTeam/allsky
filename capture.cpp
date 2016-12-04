@@ -479,8 +479,8 @@ asiBrightness=asiBrightness*1000;
 			time1=GetTickCount();
 			//printf(bufTime);
 			//printf(buf);
-			printf(".");
-			printf("\n");
+			//printf(".");
+			//printf("\n");
 		}
 
 		if(Image_type != ASI_IMG_RGB24 && Image_type != ASI_IMG_RAW16)
@@ -496,11 +496,12 @@ asiBrightness=asiBrightness*1000;
 		}
   		cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
 		
-		if (time2 - timeSave > (asiExposure/1000) + 50){ // add 50 milliseconds so that we don't save the same image twice
+		//if (time2 - timeSave > (asiExposure/1000) + 10){ // add 50 milliseconds so that we don't save the same image twice
 			std::string result = exec(sunwaitCommand.c_str());		
 			result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
 			if (result == "NIGHT"){
-				printf("NIGHT");
+				printf("Saving...");
+				printf(bufTime);
 				printf("\n");
 				/*if(!bSavingImg)
 				{
@@ -523,7 +524,7 @@ asiBrightness=asiBrightness*1000;
 				endOfNight = false;		
 			}
 			timeSave = GetTickCount();				
-		}
+		//}
 		
 	}
 

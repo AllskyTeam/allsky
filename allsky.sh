@@ -1,7 +1,10 @@
 #!/bin/bash
 
-echo "Starting allsky camera...";
+echo "Starting allsky camera..."
 cd /home/pi/allsky
+
+
+$FILENAME="image.jpg"
 
 ls "$FILENAME" | entr ./upload.sh "$FILENAME" & ./capture \
   -txt 		"Thomas" \
@@ -15,4 +18,4 @@ ls "$FILENAME" | entr ./upload.sh "$FILENAME" & ./capture \
 
 # These values override the default values of the program.
 # You can add more overrides here. 
-# Just look at the available parameters in the terminal window.
+# Full list of available parameters shows up in the terminal window when the program starts.

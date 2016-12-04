@@ -5,14 +5,15 @@ WIDTH=0;
 HEIGHT=0;
 BIN=1;
 MODE=1;
-GAIN=200;
-EXPOSURE=5000000;
-FILENAME="Ortona";
+GAIN=50;
+EXPOSURE=3000000;
+FILENAME="Ortona.PNG";
 LATITUDE="60.7N";
 LONGITUDE="135.05W";
 WBR="53";
 WBB="80";
+DISPLAY=1;
 
-ls "$FILENAME-full.jpg" | entr ./upload.sh "$FILENAME" & ./capture "$WIDTH" "$HEIGHT" "$BIN" "$MODE" "$GAIN" "$EXPOSURE" "$FILENAME" "$LATITUDE" "$LONGITUDE" "$WBR" "$WBB"
+ls "$FILENAME" | entr ./upload.sh "$FILENAME" & ./capture -width "$WIDTH" -height "$HEIGHT" -binning "$BIN" -imagetype "$MODE" -gain "$GAIN" -exposure "$EXPOSURE" -filename "$FILENAME" -latitude "$LATITUDE" -longitude "$LONGITUDE" -wbred "$WBR" -wbblue "$WBB" -display "$DISPLAY"
 
 

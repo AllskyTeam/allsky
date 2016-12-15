@@ -20,7 +20,7 @@ Make sure you have a working internet connection by setting it either through th
 Start by fetching the code from this GitHub page. Open the terminal and type the following:
 
 ```shell
-clone https://github.com/thomasjacquin/allsky.git
+git clone https://github.com/thomasjacquin/allsky.git
 ```
 
 Then navigate to the allsky directory:

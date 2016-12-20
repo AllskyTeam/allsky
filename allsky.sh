@@ -5,7 +5,7 @@ cd /home/pi/allsky
 
 FILENAME="Image.PNG"
 
-# Open README for full list of options
+# Look at the terminal window on program startup for full list of options
 
 #ls "$FILENAME" | entr ./upload.sh "$FILENAME" & \
 ./capture \

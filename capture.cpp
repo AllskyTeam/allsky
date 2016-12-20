@@ -144,7 +144,7 @@ int  main(int argc, char* argv[])
 	char const * fileName="image.jpg";
         int noDisplay=0;
 	int timelapse=0;
-	int time=0;
+	int time=1;
 	int help=0;
 
 	char const* bayer[] = {"RG","BG","GR","GB"};
@@ -173,7 +173,7 @@ int  main(int argc, char* argv[])
       for(i = 0; i < argc-1; i++)
 	{
 	 if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0){
-		help = 1; i++;}
+		help = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-width") == 0){
 		width = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-height") == 0){
@@ -222,24 +222,21 @@ int  main(int argc, char* argv[])
         	asiBandwidth = atoi(argv[i+1]); i++;}
          else if(strcmp(argv[i], "-filename") == 0){
         	fileName = (argv[i+1]); i++;}
-	 else if(strcmp(argv[i], "-lat") == 0){
+	 else if(strcmp(argv[i], "-latitude") == 0){
         	latitude = argv[i+1]; i++;}
-         else if(strcmp(argv[i], "-lon") == 0){
+         else if(strcmp(argv[i], "-longitude") == 0){
         	longitude = argv[i+1]; i++;}
  	 else if(strcmp(argv[i], "-nodisplay") == 0){
-        	noDisplay = 1; i++;}
+        	noDisplay = atoi(argv[i+1]); i++;}
  	 else if(strcmp(argv[i], "-timelapse") == 0){
-        	timelapse = 1; i++;}
+        	timelapse = atoi(argv[i+1]); i++;}
  	 else if(strcmp(argv[i], "-time") == 0){
-        	time = 1; i++;}
+        	time = atoi(argv[i+1]); i++;}
 	}
   }
-printf("%d",noDisplay);
-printf("%d",timelapse);
-printf("%d",time);
-printf("%d",help);
+
   if (help == 1) {
-	  printf("%sAvailable Parameters: \n",KYEL);
+	  printf("%sAvailable Arguments: \n",KYEL);
 	  printf(" -width  		  - Default = Camera Max Width \n");
 	  printf(" -height     		  - Default = Camera Max Height \n");
 	  printf(" -exposure		  - Default = 5000000 - Time in µs (equals to 5 sec) \n");
@@ -493,17 +490,18 @@ printf("%s",KNRM);
 			}*/
 			cvSaveImage( fileName, pRgb );					
 			endOfNight = true;
-		} else if (result == "DAY" && endOfNight){
-			printf("DAY");
+		} else if (result == "DAY"){
+			printf(bufTime);
+			printf(" It's daytime... we're not saving images");
 			printf("\n");
-			if (timelapse == true){
+			if (endOfNight && timelapse == true){
 				printf("Generating Timelapse");
 				std::string timelapseCommand = "./timelapse.sh ";
 				timelapseCommand.append(fileName);
 				system(timelapseCommand.c_str());
-			}
-			printf("\n");
-			endOfNight = false;		
+				printf("\n");
+				endOfNight = false;
+			}		
 		}
 		
 	}

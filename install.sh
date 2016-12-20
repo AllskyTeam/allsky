@@ -7,7 +7,7 @@ cp sunwait /usr/local/bin
 echo -en '\n'
 echo -en '\n'
 echo "Dependencies installation"
-apt-get update && apt-get install libopencv-dev libusb-dev libav-tools gawk lftp entr imagemagick -y
+apt-get update && apt-get install libopencv-dev libusb-dev libav-tools gawk lftp entr xterm imagemagick -y
 echo -en '\n'
 echo -en '\n'
 echo -en 'Using the camera without root access'

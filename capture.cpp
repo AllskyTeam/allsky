@@ -30,20 +30,6 @@ void cvText(IplImage* img, const char* text, int x, int y, double fontsize, int 
 	cv::putText(mat_img, text, cvPoint(x, y), fontname, fontsize, cvScalar(fontcolor[0],fontcolor[1],fontcolor[2]), linewidth, linetype);
 }
 
-static unsigned long GetTickCount()
-{
-#ifdef _MAC
-    struct timeval  now;
-    gettimeofday(&now, NULL);
-    unsigned long ul_ms = now.tv_usec/1000 + now.tv_sec*1000;
-    return ul_ms;
-#else
-   struct timespec ts;
-   clock_gettime(CLOCK_MONOTONIC,&ts);
-   return (ts.tv_sec*1000 + ts.tv_nsec/(1000*1000));
-#endif
-}
-
 char* getTime(){
 	static int seconds_last = 99;
 	static char TimeString[128];
@@ -72,9 +58,11 @@ std::string exec(const char* cmd) {
 IplImage *pRgb = 0;
 char nameCnt[128];
 int quality[3] = {CV_IMWRITE_PNG_COMPRESSION, 200, 0};
-bool bSaveRun = false, bSavingImg = false, bMain=true, bDisplay=false;
-pthread_mutex_t mtx_SaveImg;
-pthread_cond_t cond_SatrtSave;
+bool bMain=true, bDisplay=false;
+
+//bool bSaveRun = false, bSavingImg = false;
+//pthread_mutex_t mtx_SaveImg;
+//pthread_cond_t cond_SatrtSave;
 
 void* Display(void* params)
 {
@@ -91,7 +79,7 @@ END:
 	return (void*)0;
 }
 
-void* SaveImgThd(void * para)
+/*void* SaveImgThd(void * para)
 {
 	while(bSaveRun)
 	{
@@ -107,7 +95,7 @@ void* SaveImgThd(void * para)
 
 	printf("save thread over\n");
 	return (void*)0;
-}
+}*/
 
 void IntHandle(int i)
 {
@@ -120,12 +108,9 @@ void IntHandle(int i)
 int  main(int argc, char* argv[])
 {
 
-	signal(SIGINT, IntHandle);
-	pthread_mutex_init(&mtx_SaveImg, 0);
-	pthread_cond_init(&cond_SatrtSave, 0);
-
-	int time1,time2,timeSave;
-	int count=0;
+	//signal(SIGINT, IntHandle);
+	//pthread_mutex_init(&mtx_SaveImg, 0);
+	//pthread_cond_init(&cond_SatrtSave, 0);
 
 	int fontname[] = {CV_FONT_HERSHEY_SIMPLEX, CV_FONT_HERSHEY_PLAIN, CV_FONT_HERSHEY_DUPLEX, CV_FONT_HERSHEY_COMPLEX,
  		CV_FONT_HERSHEY_TRIPLEX, CV_FONT_HERSHEY_COMPLEX_SMALL, CV_FONT_HERSHEY_SCRIPT_SIMPLEX, CV_FONT_HERSHEY_SCRIPT_COMPLEX};
@@ -141,11 +126,6 @@ int  main(int argc, char* argv[])
 	char buf[1024]={0};
 	char bufTime[128]={0};
 
-
-	char const * fileName="image.jpg";
-
-	int delay=10; // Delay in milliseconds. Default is 10ms
-
 	int width=0;
 	int height=0;
 	int bin=1;
@@ -153,6 +133,7 @@ int  main(int argc, char* argv[])
 	int asiGain=150;
 	int asiBandwidth=40;
 	int asiExposure=5000000;
+	int delay=10; // Delay in milliseconds. Default is 10ms
 	int asiWBR=65;
 	int asiWBB=85;
 	int asiGamma=50;
@@ -160,9 +141,11 @@ int  main(int argc, char* argv[])
 	int asiFlip=0;
         char const * latitude="60.7N";	//GPS Coordinates of Whitehorse, Yukon where the code was created
 	char const * longitude="135.05W";
-        int noDisplay=false;
-	int timelapse=false;
-	int time=true;
+	char const * fileName="image.jpg";
+        int noDisplay=0;
+	int timelapse=0;
+	int time=0;
+	int help=0;
 
 	char const* bayer[] = {"RG","BG","GR","GB"};
 	int CamNum=0;
@@ -175,60 +158,23 @@ int  main(int argc, char* argv[])
   printf("%s *** Allsky Camera Software v0.1 | 2016 ***\n", KGRN);
   printf("%s ******************************************\n\n", KGRN);
   printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n",KGRN); 
+  printf("\n");  
+  printf("%sAdd -h or -help for available options \n",KYEL);  
   printf("\n");
-  printf("\%sAuthor:",KNRM);
-  printf("Thomas Jacquin\n\n");
+  printf("\%sAuthor: ",KNRM);
+  printf("Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
   printf("\%sContributors:\n",KNRM);
-  printf("-Knut Olav Klo - Added input parameters and cleaned the code\n");
+  printf("-Knut Olav Klo\n");
   printf("-Daniel Johnsen\n");
   printf("-Yang and Sam from ZWO\n\n");
-  printf("%sAvailable Parameters: \n",KYEL);
-  printf(" -width  		  - Default = Camera Max Width \n");
-  printf(" -height     		  - Default = Camera Max Height \n");
-  printf(" -exposure		  - Default = 5000000 - Time in µs (equals to 5 sec) \n");
-  printf(" -gain 	          - Default = 50 \n");
-  printf(" -gamma	          - Default = 50 \n");
-  printf(" -brightness		  - Default = 50 \n");
-  printf(" -wbr			  - Default = 50   - White Balance Red \n");
-  printf(" -wbb			  - Default = 50   - White Balance Blue \n");
-  printf(" -bin        		  - Default = 1    - 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n");
-  printf(" -delay      		  - Default = 10   - Delay between images in milliseconds - 1000 = 1 sec.\n");
-  printf(" -type = Image Type 	  - Default = 0    - 0 = RAW8,  1 = RGB24,  2 = RAW16 \n");
-  printf(" -quality		  - Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
-  printf(" -usb = USB Speed       - Default = 40   - Values between 40-100, This is BandwidthOverload \n");
-  printf(" -filename		  - Default = IMAGE.PNG \n");  
-  printf(" -flip		  - Default = 0    - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");  
-  printf("\n");
-  printf(" -text		  - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c \"Text Overlay\"\n");
-  printf(" -textx		  - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
-  printf(" -texty = Text Y     	  - Default = 25   - Text Placement Vertical from TOP in Pixels\n");
-  printf(" -fontname = Font Name  - Default = 0    - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n");
-  printf(" -fontcolor = Font Color - Default = 255 0 0  - Text blue (BRG)\n");
-  printf(" -fonttype = Font Type  - Default = 0    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
-  printf(" -fontsize 		  - Default = 0.5  - Text Font Size\n");
-  printf(" -fontline		  - Default = 1    - Text Font Line Thickness\n");
-//printf(" -bgc = BG Color   	  - Default =      - Text Background Color in Hex. 00ff00 = Green\n");
-//printf(" -bga = BG Alpha   	  - Default =      - Text Background Color Alpha/Transparency 0-100\n");
-  printf("\n");
-  printf("\n");
-  printf(" -lat = Latitude   	  - Default = 60.7N   - Latitude of the camera. Defaults to the latitude of Whitehorse, Yukon where the project was born \n");
-  printf(" -lon = Longitude  	  - Default = 135.05W - Longitude of the camera Defaults to the longitude of Whitehorse, Yukon where the project was born\n");
-  printf("\n");  
-  printf(" -nodisplay        	  - Add this parameter to capture images without using a desktop environment \n");
-  printf(" -timelapse	  	  - add this parameter if you want to create a timelapse at the end of the night \n");
-  printf(" -time		  - Adds the time to the image. Combine with Text X and Text Y for placement \n");
 
-  printf("%sUsage:\n", KRED);
-  printf(" ./capture -width 640 -height 480 -exposure 5000000 -gamma 50 -type 1 -bin 1 -filename Lake-Laberge.PNG\n\n");
-
-  printf("%s", KNRM);    
-
-
-if(argc > 0)
+  if(argc > 0)
     {
       for(i = 0; i < argc-1; i++)
 	{
-	 if(strcmp(argv[i], "-width") == 0){
+	 if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0){
+		help = 1; i++;}
+	 else if(strcmp(argv[i], "-width") == 0){
 		width = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-height") == 0){
 		height = atoi(argv[i+1]); i++;}
@@ -281,13 +227,58 @@ if(argc > 0)
          else if(strcmp(argv[i], "-lon") == 0){
         	longitude = argv[i+1]; i++;}
  	 else if(strcmp(argv[i], "-nodisplay") == 0){
-        	noDisplay = true; i++;}
+        	noDisplay = 1; i++;}
  	 else if(strcmp(argv[i], "-timelapse") == 0){
-        	timelapse = true; i++;}
+        	timelapse = 1; i++;}
  	 else if(strcmp(argv[i], "-time") == 0){
-        	time = true; i++;}
+        	time = 1; i++;}
 	}
-    }
+  }
+printf("%d",noDisplay);
+printf("%d",timelapse);
+printf("%d",time);
+printf("%d",help);
+  if (help == 1) {
+	  printf("%sAvailable Parameters: \n",KYEL);
+	  printf(" -width  		  - Default = Camera Max Width \n");
+	  printf(" -height     		  - Default = Camera Max Height \n");
+	  printf(" -exposure		  - Default = 5000000 - Time in µs (equals to 5 sec) \n");
+	  printf(" -gain			  - Default = 50 \n");
+	  printf(" -gamma			  - Default = 50 \n");
+	  printf(" -brightness		  - Default = 50 \n");
+	  printf(" -wbr			  - Default = 50   - White Balance Red \n");
+	  printf(" -wbb			  - Default = 50   - White Balance Blue \n");
+	  printf(" -bin        		  - Default = 1    - 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n");
+	  printf(" -delay      		  - Default = 10   - Delay between images in milliseconds - 1000 = 1 sec.\n");
+	  printf(" -type = Image Type 	  - Default = 0    - 0 = RAW8,  1 = RGB24,  2 = RAW16 \n");
+	  printf(" -quality		  - Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
+	  printf(" -usb = USB Speed	  - Default = 40   - Values between 40-100, This is BandwidthOverload \n");
+	  printf(" -filename		  - Default = IMAGE.PNG \n");  
+	  printf(" -flip        		  - Default = 0    - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");  
+	  printf("\n");
+	  printf(" -text        		  - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c \"Text Overlay\"\n");
+	  printf(" -textx        		  - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
+	  printf(" -texty = Text Y     	  - Default = 25   - Text Placement Vertical from TOP in Pixels\n");
+	  printf(" -fontname = Font Name	- Default = 0    - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n");
+	  printf(" -fontcolor = Font Color	- Default = 255 0 0  - Text blue (BRG)\n");
+	  printf(" -fonttype = Font Type	- Default = 0    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
+	  printf(" -fontsize 		  - Default = 0.5  - Text Font Size\n");
+	  printf(" -fontline		  - Default = 1    - Text Font Line Thickness\n");
+	//printf(" -bgc = BG Color   	  - Default =      - Text Background Color in Hex. 00ff00 = Green\n");
+	//printf(" -bga = BG Alpha   	  - Default =      - Text Background Color Alpha/Transparency 0-100\n");
+	  printf("\n");
+	  printf("\n");
+	  printf(" -lat = Latitude   	  - Default = 60.7N (Whitehorse)   - Latitude of the camera.\n");
+	  printf(" -lon = Longitude  	  - Default = 135.05W (Whitehorse) - Longitude of the camera\n");
+	  printf("\n");  
+	  printf(" -nodisplay        	  - Add this parameter to capture images without using a desktop environment \n");
+	  printf(" -timelapse	  	  - add this parameter if you want to create a timelapse at the end of the night \n");
+	  printf(" -time		  	- Adds the time to the image. Combine with Text X and Text Y for placement \n");
+	
+	  printf("%sUsage:\n", KRED);
+	  printf(" ./capture -width 640 -height 480 -exposure 5000000 -gamma 50 -type 1 -bin 1 -filename Lake-Laberge.PNG\n\n");	     
+  }
+	printf("%s", KNRM); 
 
 	const char * ext = strrchr(fileName, '.');
 	if (strcmp(ext+1, "jpg") == 0 || strcmp(ext+1, "JPG") == 0 || strcmp(ext+1, "jpeg") == 0 || strcmp(ext+1, "JPEG") == 0) {
@@ -299,7 +290,6 @@ if(argc > 0)
 	else{
 		quality[1] = 3;
 	}
-
 
 
 	int numDevices = ASIGetNumOfConnectedCameras();
@@ -316,7 +306,7 @@ if(argc > 0)
 	for(i = 0; i < numDevices; i++)
 	{
 		ASIGetCameraProperty(&ASICameraInfo, i);
-		printf("%d %s\n",i, ASICameraInfo.Name);
+		printf("- %d %s\n",i, ASICameraInfo.Name);
 	}	
 
 	if(ASIOpenCamera(CamNum) != ASI_SUCCESS)
@@ -328,16 +318,16 @@ if(argc > 0)
 	int iMaxWidth, iMaxHeight;
 	iMaxWidth = ASICameraInfo.MaxWidth;
 	iMaxHeight =  ASICameraInfo.MaxHeight;
-	printf("Resolution:%dx%d\n", iMaxWidth, iMaxHeight);
+	printf("- Resolution:%dx%d\n", iMaxWidth, iMaxHeight);
 	if(ASICameraInfo.IsColorCam)
-		printf("Color Camera: bayer pattern:%s\n",bayer[ASICameraInfo.BayerPattern]);
+		printf("- Color Camera: bayer pattern:%s\n",bayer[ASICameraInfo.BayerPattern]);
 	else
-		printf("Mono camera\n");
+		printf("- Mono camera\n");
 
 	if(ASIInitCamera(CamNum) == ASI_SUCCESS)
-		printf("Initialise Camera OK\n");
+		printf("- Initialise Camera OK\n");
 	else
-		printf("Initialise Camera ERROR\n");
+		printf("- Initialise Camera ERROR\n");
 	
 	ASI_CONTROL_CAPS ControlCaps;
 	int iNumOfCtrl = 0;
@@ -345,7 +335,7 @@ if(argc > 0)
 	for( i = 0; i < iNumOfCtrl; i++)
 	{
 		ASIGetControlCaps(CamNum, i, &ControlCaps);
-		//printf("%s\n", ControlCaps.Name);
+		//printf("- %s\n", ControlCaps.Name);
 	}
 	
 	if(width == 0 || height == 0)
@@ -357,13 +347,30 @@ if(argc > 0)
 	long ltemp = 0;
 	ASI_BOOL bAuto = ASI_FALSE;
 	ASIGetControlValue(CamNum, ASI_TEMPERATURE, &ltemp, &bAuto);
-	printf("sensor temperature:%02f\n", (float)ltemp/10.0);
+	printf("- Sensor temperature:%02f\n", (float)ltemp/10.0);
 
-	//-------------------------------------------------------------------------------------------------------
+	const char * sType;
+	if(Image_type == ASI_IMG_RAW16)
+		{
+		sType = "ASI_IMG_RAW16";
+		pRgb=cvCreateImage(cvSize(width, height), IPL_DEPTH_16U, 1);
+		}
+	else if(Image_type == ASI_IMG_RGB24)
+		{
+		sType = "ASI_IMG_RGB24";
+		pRgb=cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+		}
+	else	{
+		sType = "ASI_IMG_RAW8";
+		pRgb=cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+		}
+
 //-------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+
 printf("%s",KGRN);
 	printf("\nCapture Settings: \n");
-	printf(" Image Type: %d \n",Image_type);
+	printf(" Image Type: %s\n",sType);
 	printf(" Resolution: %dx%d \n",width,height);
 	printf(" Quality: %d \n",quality[1]);
 	printf(" Gain: %d\n",asiGain);
@@ -391,24 +398,10 @@ printf("%s",KGRN);
 	printf(" Time: %d\n",time);
 printf("%s",KNRM);
 
-asiBrightness=asiBrightness*1000;
+	asiBrightness=asiBrightness*1000;
 
 	ASISetROIFormat(CamNum, width, height, bin, (ASI_IMG_TYPE)Image_type);
 	ASIGetROIFormat(CamNum, &width, &height, &bin, (ASI_IMG_TYPE*)&Image_type);
-	if(Image_type == ASI_IMG_RAW16)
-		{
-		printf("\n\nASI_IMG_RAW16\n\n");
-		pRgb=cvCreateImage(cvSize(width, height), IPL_DEPTH_16U, 1);
-		}
-	else if(Image_type == ASI_IMG_RGB24)
-		{
-		printf("\n\nASI_IMG_RGB24\n\n");
-		pRgb=cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
-		}
-	else	{
-		printf("\n\nASI_IMG_RAW8\n\n");
-		pRgb=cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-		}
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -423,13 +416,10 @@ asiBrightness=asiBrightness*1000;
 	ASISetControlValue(CamNum, ASI_FLIP, asiFlip, ASI_FALSE);
 	
 	pthread_t thread_display=0;
-	if (noDisplay == false) {
+	if (noDisplay == 0) {
 		bDisplay = 1;		
 		pthread_create(&thread_display, NULL, Display, (void*)pRgb);
 	}
-
-	time1 = GetTickCount();
-	timeSave = GetTickCount();
 	
 	void* retval;
 	std::string sunwaitCommand = "sunwait poll exit set civil ";
@@ -441,16 +431,22 @@ asiBrightness=asiBrightness*1000;
 	bool bresult;
 
 	ASI_EXPOSURE_STATUS status;
-	int iDropped = 0;
-	pthread_t hthdSave = 0;
+	//int iDropped = 0;
+	//pthread_t hthdSave = 0;
 
-	if(!bSaveRun)
+	/*if(!bSaveRun)
 	{
 		bSaveRun = true;
 		if(pthread_create(&hthdSave, 0, SaveImgThd, 0)!=0)
 			bSaveRun = false;
 
-	}
+	}*/
+
+	int expTime = round(asiExposure/1000000);
+	printf("\n");
+	printf("Saving %d", expTime);
+	printf("s exposure images every %d ms\n\n", delay);
+	printf("Press Ctrl+C to stop\n\n");	
 
 	while(bMain)
 	{
@@ -462,26 +458,12 @@ asiBrightness=asiBrightness*1000;
 		{
 			ASIGetExpStatus(CamNum, &status);		
 		}
+
 		if(status == ASI_EXP_SUCCESS){
 			ASIGetDataAfterExp(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize);
 		}
 
-		time2 = GetTickCount();
-		
-		count++;
-		
-		if(time2-time1 > 1000 )
-		{
-			ASIGetDroppedFrames(CamNum, &iDropped);
-			sprintf(buf, " - fps:%d dropped frames:%d ImageType:%d", count, iDropped, Image_type);
-			sprintf(bufTime, "%s", getTime());
-			count = 0;
-			time1=GetTickCount();
-			//printf(bufTime);
-			//printf(buf);
-			//printf(".");
-			//printf("\n");
-		}
+		sprintf(bufTime, "%s", getTime());
 
 		if(Image_type != ASI_IMG_RGB24 && Image_type != ASI_IMG_RAW16)
 		{
@@ -491,40 +473,38 @@ asiBrightness=asiBrightness*1000;
 			cvSet(pRgb, CV_RGB(5, 5, 5));
 			cvResetImageROI(pRgb);
 		}
-		if (time == true ){
+		if (time == 1 ){
 			ImgText = bufTime;
 		}
   		cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
 		
-		//if (time2 - timeSave > (asiExposure/1000) + 10){ // add 50 milliseconds so that we don't save the same image twice
-			std::string result = exec(sunwaitCommand.c_str());		
-			result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-			if (result == "NIGHT"){
-				printf("Saving...");
-				printf(bufTime);
-				printf("\n");
-				/*if(!bSavingImg)
-				{
-					pthread_mutex_lock(& mtx_SaveImg);
-					pthread_cond_signal(&cond_SatrtSave);
-					pthread_mutex_unlock(& mtx_SaveImg);
-				}*/
-				cvSaveImage( fileName, pRgb );					
-				endOfNight = true;
-			} else if (result == "DAY" && endOfNight){
-				printf("DAY");
-				printf("\n");
-				if (timelapse == true){
-					printf("Generating Timelapse");
-					std::string timelapseCommand = "./timelapse.sh ";
-					timelapseCommand.append(fileName);
-					system(timelapseCommand.c_str());
-				}
-				printf("\n");
-				endOfNight = false;		
+		std::string result = exec(sunwaitCommand.c_str());		
+		result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+		
+		if (result == "NIGHT"){
+			printf("Saving...");
+			printf(bufTime);
+			printf("\n");
+			/*if(!bSavingImg)
+			{
+				pthread_mutex_lock(& mtx_SaveImg);
+				pthread_cond_signal(&cond_SatrtSave);
+				pthread_mutex_unlock(& mtx_SaveImg);
+			}*/
+			cvSaveImage( fileName, pRgb );					
+			endOfNight = true;
+		} else if (result == "DAY" && endOfNight){
+			printf("DAY");
+			printf("\n");
+			if (timelapse == true){
+				printf("Generating Timelapse");
+				std::string timelapseCommand = "./timelapse.sh ";
+				timelapseCommand.append(fileName);
+				system(timelapseCommand.c_str());
 			}
-			timeSave = GetTickCount();				
-		//}
+			printf("\n");
+			endOfNight = false;		
+		}
 		
 	}
 

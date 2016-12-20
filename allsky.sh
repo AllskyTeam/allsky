@@ -16,4 +16,7 @@ FILENAME="Image.PNG"
   -longitude 	"135.05W" \
   -wbred 	53 \
   -wbblue 	80 \
-  -textx	200
+  -textx	200 \
+  -time 1\
+  -h 0\
+  -nodisplay 1

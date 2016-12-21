@@ -48,7 +48,7 @@ sudo ./install.sh
 You can now start the camera by typing the following:
 
 ```shell
-.capture
+./capture
 ```
 An example of how to use it is:
 ```shell
@@ -57,7 +57,7 @@ An example of how to use it is:
 
 For a full list of available arguments, run:
 ```shell
-.capture -help
+./capture -help
 ```
 
 In order to make things a little easier, you can edit allsky.sh, modify the options by passing or removing arguments and run the script:

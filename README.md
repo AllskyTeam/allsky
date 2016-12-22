@@ -7,9 +7,11 @@ This is the source code for the Wireless Allsky Camera project described [on Ins
 
 In order to get the camera working properly you will need the following hardware:
 
- * An ASI camera from ZWO. Tested cameras include ASI120MC, ASI224MC
+ * An ASI camera from ZWO. Tested cameras include ASI120MC*, ASI224MC, ASI178MC
  * A Raspberry Pi 2 or 3
  * A USB wireless dongle if using a Pi 2. [This one](https://www.amazon.ca/Edimax-EW-7811Un-150Mbps-Raspberry-Supports/dp/B003MTTJOY) has been tested.
+
+***Note:** ASI120MC owners will need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software/) (This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.)
 
 ## Installation
 
@@ -77,3 +79,11 @@ If you are running Raspbian with LXDE or Pixel, you can set this argument to 0 o
 ```shell
 -nodisplay 0
 ```
+
+## Compile your own version
+
+If you want to modify the software, you'll need to edit capture.cpp and run the following command from the root of the allsky directory:
+```shell
+make capture
+```
+This will compile the new code and create a new "capture" binary.

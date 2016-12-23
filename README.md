@@ -11,7 +11,7 @@ In order to get the camera working properly you will need the following hardware
  * A Raspberry Pi 2 or 3
  * A USB wireless dongle if using a Pi 2. [This one](https://www.amazon.ca/Edimax-EW-7811Un-150Mbps-Raspberry-Supports/dp/B003MTTJOY) has been tested.
 
-***Note:** ASI120MC owners will need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software/) (This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.)
+**Note:*** ASI120MC owners will need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software/) (This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.)
 
 ## Installation
 

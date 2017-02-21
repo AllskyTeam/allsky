@@ -395,7 +395,7 @@ printf("%s",KGRN);
 	printf(" Time: %d\n",time);
 printf("%s",KNRM);
 
-	asiBrightness=asiBrightness*1000;
+//	asiBrightness=asiBrightness*1000;
 
 	ASISetROIFormat(CamNum, width, height, bin, (ASI_IMG_TYPE)Image_type);
 	ASIGetROIFormat(CamNum, &width, &height, &bin, (ASI_IMG_TYPE*)&Image_type);

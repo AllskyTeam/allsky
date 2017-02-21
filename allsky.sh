@@ -3,22 +3,23 @@
 echo "Starting allsky camera..."
 cd /home/pi/allsky
 
-FILENAME="image.PNG"
+FILENAME="gibbons.jpg"
+UPLOAD=true
 
-# Run with -help or -h for full list of arguments
+# Set -help to 1 for full list of arguments
 
-Uncomment the following line to allow upload of your image for live view
-#ls "$FILENAME" | entr ./upload.sh "$FILENAME" & \
+ls "$FILENAME" | entr ./saveImage.sh "$FILENAME" "$UPLOAD" & \
 ./capture \
-  -gain 	50 \
-  -exposure 	3000000 \
+  -gain 	200 \
+  -exposure 	5000000 \
   -filename 	"$FILENAME" \
   -latitude 	"60.7N" \
-  -longitude 	"135.05W" \
-  -wbred 	53 \
-  -wbblue 	80 \
-  -textx	200 \
-  -time 	1\
-  -help 	0\
+  -longitude 	"135.05E" \
+  -wbr	 	53 \
+  -wbb	 	80 \
+  -textx	20 \
+  -fontcolor	255 255 255 \
+  -time 	1 \
+  -help 	0 \
   -nodisplay 	1 \
-  -timelapse 	1
+  -timelapse 	1 

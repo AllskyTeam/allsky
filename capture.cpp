@@ -1,5 +1,5 @@
 #include "stdio.h"
-#include "highgui.h"
+#include "opencv/highgui.h"
 #include "ASICamera2.h"
 #include <sys/time.h>
 #include <time.h>
@@ -57,12 +57,13 @@ std::string exec(const char* cmd) {
 
 IplImage *pRgb = 0;
 char nameCnt[128];
+char const * fileName="image.jpg";
 int quality[3] = {CV_IMWRITE_PNG_COMPRESSION, 200, 0};
 bool bMain=true, bDisplay=false;
 
-//bool bSaveRun = false, bSavingImg = false;
-//pthread_mutex_t mtx_SaveImg;
-//pthread_cond_t cond_SatrtSave;
+bool bSaveRun = false, bSavingImg = false;
+pthread_mutex_t mtx_SaveImg;
+pthread_cond_t cond_SatrtSave;
 
 void* Display(void* params)
 {
@@ -79,7 +80,7 @@ END:
 	return (void*)0;
 }
 
-/*void* SaveImgThd(void * para)
+void* SaveImgThd(void * para)
 {
 	while(bSaveRun)
 	{
@@ -87,7 +88,7 @@ END:
 		pthread_cond_wait(&cond_SatrtSave,&mtx_SaveImg);
 		bSavingImg = true;
 		if(pRgb)
-			cvSaveImage( nameCnt, pRgb, quality);
+			cvSaveImage( fileName, pRgb, quality);
 		bSavingImg = false;
 		pthread_mutex_unlock(&mtx_SaveImg);
 
@@ -95,7 +96,7 @@ END:
 
 	printf("save thread over\n");
 	return (void*)0;
-}*/
+}
 
 void IntHandle(int i)
 {
@@ -108,9 +109,9 @@ void IntHandle(int i)
 int  main(int argc, char* argv[])
 {
 
-	//signal(SIGINT, IntHandle);
-	//pthread_mutex_init(&mtx_SaveImg, 0);
-	//pthread_cond_init(&cond_SatrtSave, 0);
+	signal(SIGINT, IntHandle);
+	pthread_mutex_init(&mtx_SaveImg, 0);
+	pthread_cond_init(&cond_SatrtSave, 0);
 
 	int fontname[] = {CV_FONT_HERSHEY_SIMPLEX, CV_FONT_HERSHEY_PLAIN, CV_FONT_HERSHEY_DUPLEX, CV_FONT_HERSHEY_COMPLEX,
  		CV_FONT_HERSHEY_TRIPLEX, CV_FONT_HERSHEY_COMPLEX_SMALL, CV_FONT_HERSHEY_SCRIPT_SIMPLEX, CV_FONT_HERSHEY_SCRIPT_COMPLEX};
@@ -141,7 +142,6 @@ int  main(int argc, char* argv[])
 	int asiFlip=0;
         char const * latitude="60.7N";	//GPS Coordinates of Whitehorse, Yukon where the code was created
 	char const * longitude="135.05W";
-	char const * fileName="image.jpg";
         int noDisplay=0;
 	int timelapse=0;
 	int time=1;
@@ -428,16 +428,16 @@ printf("%s",KNRM);
 	bool bresult;
 
 	ASI_EXPOSURE_STATUS status;
-	//int iDropped = 0;
-	//pthread_t hthdSave = 0;
+	int iDropped = 0;
+	pthread_t hthdSave = 0;
 
-	/*if(!bSaveRun)
+	if(!bSaveRun)
 	{
 		bSaveRun = true;
 		if(pthread_create(&hthdSave, 0, SaveImgThd, 0)!=0)
 			bSaveRun = false;
 
-	}*/
+	}
 
 	int expTime = round(asiExposure/1000000);
 	printf("\n");
@@ -482,13 +482,13 @@ printf("%s",KNRM);
 			printf("Saving...");
 			printf(bufTime);
 			printf("\n");
-			/*if(!bSavingImg)
+			if(!bSavingImg)
 			{
 				pthread_mutex_lock(& mtx_SaveImg);
 				pthread_cond_signal(&cond_SatrtSave);
 				pthread_mutex_unlock(& mtx_SaveImg);
-			}*/
-			cvSaveImage( fileName, pRgb );					
+			}
+			//cvSaveImage( fileName, pRgb );					
 			endOfNight = true;
 		} else if (result == "DAY"){
 			printf(bufTime);
@@ -515,7 +515,7 @@ printf("%s",KNRM);
    		pthread_join(thread_display, &retval);
 	}
 
-	/*if(bSaveRun)
+	if(bSaveRun)
 	{
 		bSaveRun = false;
 		pthread_mutex_lock(&mtx_SaveImg);
@@ -523,7 +523,7 @@ printf("%s",KNRM);
 		pthread_mutex_unlock(& mtx_SaveImg);
 		pthread_join(hthdSave, 0);
 
-	}*/
+	}
 	cvReleaseImage(&pRgb);
 	printf("main function over\n");
 	return 1;

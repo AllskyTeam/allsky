@@ -13,16 +13,18 @@ UPLOAD=true
 
 ls "$FILENAME" | entr ./saveImage.sh "$FILENAME" "$UPLOAD" & \
 ./capture \
-  -gain 	200 \
+  -gain 	50 \
+  -delay 	1000 \
   -exposure 	5000000 \
   -filename 	"$FILENAME" \
   -latitude 	"60.7N" \
   -longitude 	"135.05W" \
-  -wbr	 	53 \
-  -wbb	 	80 \
+  -wbr	 	50 \
+  -wbb	 	90 \
   -textx	20 \
   -fontcolor	255 255 255 \
   -time 	1 \
   -help 	0 \
   -nodisplay 	0 \
-  -timelapse 	1 
+  -timelapse 	1 \
+  -type		1

@@ -13,11 +13,11 @@ if [ "$UPLOAD" = true ] ; then
 	
 	# Create a thumbnail for live view
 	# Here's what I use with my ASI224MC
-	convert "$1" -resize 962x720 -gravity East -chop 2x0 "$1-resize.jpg";
+	convert "$1" -resize 962x720 -gravity East -chop 2x0 "$FILENAME-resize.$EXTENSION";
 	# Here's what I use with my ASI185MC (larger sensor so I crop the black around the image)
-	#convert "$1" -resize 962x720 -gravity Center -crop 680x720+40+0 +repage "$FILENAME-small.$EXTENSION";
+	#convert "$1" -resize 962x720 -gravity Center -crop 680x720+40+0 +repage "$FILENAME-resize.$EXTENSION";
 	
 	#echo "Uploading\n";
-	lftp sftp://user:password@host:/path/to/website -e "put $1; bye"
+	lftp sftp://user:password@host:/path/to/website -e "put $FILENAME-resize.$EXTENSION; bye"
 
 fi

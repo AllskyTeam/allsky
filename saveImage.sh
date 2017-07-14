@@ -5,8 +5,8 @@ FILENAME="${FILENAME%.*}"
 UPLOAD=$2
 
 # Make a directory to store current night images
-mkdir -p current;
-cp "$1" "current/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION";
+mkdir -p images/current;
+cp "$1" "images/current/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION";
 
 if [ "$UPLOAD" = true ] ; then
     	echo "Resizing\n";

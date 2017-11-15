@@ -16,7 +16,7 @@ FILENAME=""
 while IFS='' read -r line || [[ -n "$line" ]]; do
     KEY=${line%=*}
     VALUE=${line#*=}
-    VALUE=$VALUE | sed -e 's/^ "//' -e 's/"$//'
+    VALUE=$VALUE | sed -e 's/^"//' -e 's/"$//'
     file="filename"
     if [[ $KEY == *"$file"* ]]; then
         FILENAME=$VALUE

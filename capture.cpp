@@ -447,13 +447,15 @@ printf("%s",KNRM);
 
 	while(bMain)
 	{
-		ASIStartExposure(CamNum, ASI_FALSE);
 		usleep(delay*1000); //10ms
+		ASIStartExposure(CamNum, ASI_FALSE);
 		status = ASI_EXP_WORKING;
+		usleep(round(0.95*asiExposure)); //experimental: slep 95% of exposure time
 
 		while(status == ASI_EXP_WORKING)
 		{
-			ASIGetExpStatus(CamNum, &status);		
+			ASIGetExpStatus(CamNum, &status);	
+			usleep(500*1000); //experimental: let's sleep for 0.5 s, to query the camera status a bit less often	
 		}
 
 		if(status == ASI_EXP_SUCCESS){

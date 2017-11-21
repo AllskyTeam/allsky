@@ -1,19 +1,10 @@
 #!/bin/bash
 
 # Camera configuration file location
-CAMERA_CONFIG='/var/www/html/camera.conf'
-
-FILENAME=""
-while IFS='' read -r line || [[ -n "$line" ]]; do
-    KEY=${line%=*}
-    VALUE=${line#*=}
-    VALUE=$VALUE | sed -e 's/^ "//' -e 's/"$//'
-    file="filename"
-    if [[ $KEY == *"$file"* ]]; then
-        FILENAME=$VALUE
-	EXTENSION="${FILENAME##*.}"
-    fi
-done < "$CAMERA_CONFIG"
+CAMERA_SETTINGS='settings.json'
+FILENAME=$(jq -r '.filename' $CAMERA_SETTINGS)
+EXTENSION="${FILENAME##*.}"
+FILENAME="${FILENAME%.*}"
 
 ls -rt images/current | # find images
 gawk 'BEGIN{ a=1 }{ printf "mv -v ./images/current/%s images/current/%04d.'$EXTENSION'\n", $0, a++ }' | # build mv command

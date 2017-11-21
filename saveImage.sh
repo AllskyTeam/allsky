@@ -1,7 +1,9 @@
-FILENAME=$1
+#!/bin/bash
+
+CAMERA_SETTINGS='settings.json'
+FILENAME=$(jq -r '.filename' $CAMERA_SETTINGS)
 EXTENSION="${FILENAME##*.}"
 FILENAME="${FILENAME%.*}"
-
 UPLOAD=$2
 
 # Make a directory to store current night images
@@ -21,3 +23,4 @@ if [ "$UPLOAD" = true ] ; then
 	lftp sftp://user:password@host:/path/to/website -e "put $FILENAME-resize.$EXTENSION; bye"
 
 fi
+

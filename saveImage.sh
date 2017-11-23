@@ -1,17 +1,13 @@
 #!/bin/bash
-
-CAMERA_SETTINGS='settings.json'
-FILENAME=$(jq -r '.filename' $CAMERA_SETTINGS)
-EXTENSION="${FILENAME##*.}"
-FILENAME="${FILENAME%.*}"
-UPLOAD=$2
+source config.sh
 
 # Make a directory to store current night images
 mkdir -p images/current;
 cp "$1" "images/current/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION";
 
-if [ "$UPLOAD" = true ] ; then
-    	echo "Resizing\n";
+# If upload is true, create a smaller version of the image and upload it
+if [ "$UPLOAD_IMG" = true ] ; then
+    echo "Resizing\n";
 	
 	# Create a thumbnail for live view
 	# Here's what I use with my ASI224MC
@@ -20,7 +16,6 @@ if [ "$UPLOAD" = true ] ; then
 	#convert "$1" -resize 962x720 -gravity Center -crop 680x720+40+0 +repage "$FILENAME-resize.$EXTENSION";
 	
 	#echo "Uploading\n";
-	lftp sftp://user:password@host:/path/to/website -e "put $FILENAME-resize.$EXTENSION; bye"
-
+	lftp sftp://$USER:$PASSWORD@$HOST:$IMGDIR -e "put $FILENAME-resize.$EXTENSION; bye"
 fi
 

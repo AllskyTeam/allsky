@@ -39,8 +39,11 @@ echo -en '\n'
 echo -e "${GREEN}* Replacing allsky.sh${NC}"
 mv -f /var/www/html/allsky.sh /home/pi/allsky/
 echo -en '\n'
-echo -e "${GREEN}* Installing cpulimit${NC}"
-apt-get install cpulimit
+echo -e "${GREEN}* Installing jq and cpulimit${NC}"
+apt-get install jq cpulimit
+echo -en '\n'
+echo -e "${GREEN}* Modify config.json${NC}"
+printf "CAMERA_SETTINGS='settings.json'\n" >> ../config.json
 echo -en '\n'
 echo -en '\n'
 echo "The Allsky Portal is now installed"

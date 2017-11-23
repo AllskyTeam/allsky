@@ -11,7 +11,7 @@ echo -en "${GREEN}* Sunwait installation"
 cp sunwait /usr/local/bin
 echo -en '\n'
 echo -en "${GREEN}* Dependencies installation${NC}"
-apt-get update && apt-get install libopencv-dev libusb-dev libav-tools gawk lftp entr xterm imagemagick -y
+apt-get update && apt-get install libopencv-dev libusb-dev libav-tools gawk lftp entr xterm jq cpulimit imagemagick -y
 echo -en '\n'
 echo -en "${GREEN}* Using the camera without root access${NC}"
 install asi.rules /lib/udev/rules.d

@@ -14,6 +14,6 @@ done
 
 # When a new image is captured, we launch saveImage.sh
 # cpulimit prevents the Pi from crashing during the timelapse creation
-ls $FULL_FILENAME | entr ./saveImage.sh $FILENAME $UPLOAD & \
+ls $FULL_FILENAME | entr ./saveImage.sh & \
 cpulimit -e avconv -l 50 & \
 ./capture $ARGUMENTS

@@ -24,7 +24,7 @@ echo -en "${GREEN}* Autostart script${NC}"
 echo "@xterm -hold -e /home/pi/allsky/allsky.sh" >> /home/pi/.config/lxsession/LXDE-pi/autostart
 echo -en '\n'
 echo -en "${GREEN}* Compile allsky software${NC}"
-rm capture && make capture
+make capture
 echo -en '\n'
 echo -en '\n'
 echo "The Allsky Camera is now installed."

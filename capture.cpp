@@ -167,6 +167,7 @@ int  main(int argc, char* argv[])
   printf("-Knut Olav Klo\n");
   printf("-Daniel Johnsen\n");
   printf("-Yang and Sam from ZWO\n\n");
+  printf("-Robert Wagner\n");
 
   if(argc > 0)
     {

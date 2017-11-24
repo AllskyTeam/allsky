@@ -497,21 +497,26 @@ printf("%s",KNRM);
 			printf(bufTime);
 			printf(" It's daytime... we're not saving images");
 			printf("\n");
-			if (endOfNight && timelapse == true){
-				printf("Generating Timelapse");
-				std::string timelapseCommand = "./timelapse.sh ";
-				timelapseCommand.append(fileName);
-				system(timelapseCommand.c_str());
+			if (endOfNight == true){
+				printf("Post Next Twilight Time");
+				system("./postData.sh");
 				printf("\n");
-				endOfNight = false;
-			}		
+				if (timelapse == true){
+					printf("Generating Timelapse");
+					std::string timelapseCommand = "./timelapse.sh ";
+					timelapseCommand.append(fileName);
+					system(timelapseCommand.c_str());
+					printf("\n");
+					endOfNight = false;
+				}
+			}
 		}
-		
+
 	}
 
 	ASIStopExposure(CamNum);
 	ASICloseCamera(CamNum);
-		
+
 	if(bDisplay)
 	{
 		bDisplay = 0;

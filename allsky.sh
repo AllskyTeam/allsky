@@ -11,7 +11,7 @@ for KEY in ${KEYS[@]}
 do
 	ARGUMENTS="$ARGUMENTS -$KEY `jq -r '.'$KEY $CAMERA_SETTINGS` "
 done
-
+echo "$ARGUMENTS">>log.txt
 # When a new image is captured, we launch saveImage.sh
 # cpulimit prevents the Pi from crashing during the timelapse creation
 ls $FULL_FILENAME | entr ./saveImage.sh & \

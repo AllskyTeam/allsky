@@ -26,6 +26,10 @@ echo -en '\n'
 echo -en "${GREEN}* Compile allsky software${NC}"
 make capture
 echo -en '\n'
+echo -en "${GREEN}* Copy camera settings files${NC}"
+cp settings.json.repo settings.json
+cp config.sh.repo config.sh
+echo -en '\n'
 echo -en '\n'
 echo "The Allsky Camera is now installed."
 echo "You can now reboot the Raspberry Pi."

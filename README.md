@@ -45,40 +45,31 @@ sudo ./install.sh
 
 **Important**: Unplug and replug the camera to trigger the new udev rules otherwise you'll get an error about permissions later.
 
+## Configuration
+
+You need to configure your settings such as latitude, longitude, exposure, gain, etc.
+Open the file called settings.json and modify the values to fit your needs:
+```shell
+nano settings.json
+```
+You also need to configure your FTP connection if you want to upload a live view image periodically to your website.
+```shell
+nano config.sh
+```
+nano is a text editor. Hit **ctrl + x**, followed by **y** and **Enter** in order to save your changes.
+
 ## Usage
 
 You can now start the camera by typing the following:
-
-```shell
-./capture
-```
-An example of how to use it is:
-```shell
-./capture -width 640 -height 480 -exposure 5000000 -gamma 50 -type 1 -bin 1 -filename "observatory-site.PNG"
-```
-
-For a full list of available arguments, run:
-```shell
-./capture -help
-```
-
-In order to make things a little easier, you can edit allsky.sh, modify the options by passing or removing arguments and run the script:
 ```shell
 ./allsky.sh
 ```
-It will do the same thing as "capture" but you won't have to re-type all the arguments everytime.
+This script is launched automatically when the Raspberry Pi boots up. To disable this feature, open /home/pi/.config/lxsession/LXDE-pi/autostart and remove the allsky line
 
-## Usage without GUI
+## Usage without desktop environments
 
-**Note**: If you're using Raspbian lite or another distribution without desktop environment, make sure to use the following argument:
-```shell
--nodisplay 1
-```
+If you're using Raspbian lite or another distribution without desktop environment, make sure to set the nodisplay option to 1 in settings.json.
 
-If you are running Raspbian with LXDE or Pixel, you can set this argument to 0 or remove it entirely to get a live view from the camera while it's saving the images.
-```shell
--nodisplay 0
-```
 
 ## Compile your own version
 
@@ -87,3 +78,8 @@ If you want to modify the software, you'll need to edit capture.cpp and run the 
 make capture
 ```
 This will compile the new code and create a new "capture" binary.
+
+## Release notes
+
+* version **0.1**: Initial release
+* version **0.2**: Separated camera settings from code logic 

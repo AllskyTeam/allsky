@@ -1,5 +1,5 @@
 #!/bin/bash
-source config.sh
+source /home/pi/allsky/config.sh
 
 echo "Starting allsky camera..."
 cd /home/pi/allsky

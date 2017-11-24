@@ -1,5 +1,5 @@
 #!/bin/bash
-source config.sh
+source /home/pi/allsky/config.sh
 
 # Make a directory to store current night images
 mkdir -p images/current;

@@ -1,5 +1,5 @@
 #!/bin/bash
-source config.sh
+source /home/pi/allsky/config.sh
 
 function upload_timelapse(){
 	if [ "$UPLOAD_VIDEO" = true ] ; then

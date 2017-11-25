@@ -41,7 +41,7 @@ mv -f /var/www/html/allsky.sh /home/pi/allsky/
 echo -en '\n'
 echo -e "${GREEN}* Modify config.sh${NC}"
 printf "CAMERA_SETTINGS='/var/www/html/settings.json'\n" >> ../config.sh
-cp settings.json /var/www/html/settings.json
+cp /home/pi/allsky/settings.json /var/www/html/settings.json
 echo -en '\n'
 echo -en '\n'
 echo "The Allsky Portal is now installed"

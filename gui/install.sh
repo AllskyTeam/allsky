@@ -39,9 +39,6 @@ echo -en '\n'
 echo -e "${GREEN}* Replacing allsky.sh${NC}"
 mv -f /var/www/html/allsky.sh /home/pi/allsky/
 echo -en '\n'
-echo -e "${GREEN}* Installing jq and cpulimit${NC}"
-apt-get install jq cpulimit -y
-echo -en '\n'
 echo -e "${GREEN}* Modify config.sh${NC}"
 printf "CAMERA_SETTINGS='/var/www/html/settings.json'\n" >> ../config.sh
 cp settings.json /var/www/html/settings.json

@@ -13,19 +13,19 @@ if [[ $EUID -ne 0 ]]; then
 fi
 echo -e "${GREEN}* Installation of the webserver${NC}"
 echo -en '\n'
-apt-get update && apt-get install -y lighttpd php7.0-cgi hostapd dnsmasq avahi-daemon
+apt-get update && apt-get install -y lighttpd php5-cgi hostapd dnsmasq avahi-daemon
 lighty-enable-mod fastcgi-php
 service lighttpd restart
 echo -en '\n'
 echo -e "${GREEN}* Configuring lighttpd${NC}"
-cp /home/pi/allsky/lighttpd.conf /etc/httpd/httpd.conf
+cp /home/pi/allsky/gui/lighttpd.conf /etc/httpd/httpd.conf
 echo -en '\n'
 echo -e "${GREEN}* Changing hostname to allsky${NC}"
 echo "allsky" > /etc/hostname
 sed -i 's/raspberrypi/allsky/g' /etc/hosts
 echo -en '\n'
 echo -e "${GREEN}* Adding the right permissions to the web server${NC}"
-cat sudoers >> /etc/sudoers
+cat /home/pi/allsky/gui/sudoers >> /etc/sudoers
 echo -en '\n'
 echo -e "${GREEN}* Retrieving github files to build admin portal${NC}"
 rm -rf /var/www/html
@@ -35,9 +35,6 @@ mkdir /etc/raspap
 mv /var/www/html/raspap.php /etc/raspap/
 chown -R www-data:www-data /etc/raspap
 usermod -a -G www-data pi
-echo -en '\n'
-echo -e "${GREEN}* Replacing allsky.sh${NC}"
-mv -f /var/www/html/allsky.sh /home/pi/allsky/
 echo -en '\n'
 echo -e "${GREEN}* Modify config.sh${NC}"
 printf "CAMERA_SETTINGS='/var/www/html/settings.json'\n" >> ../config.sh

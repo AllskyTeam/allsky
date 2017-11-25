@@ -13,6 +13,6 @@ function upload_timelapse(){
 ls -rt images/current |
 gawk 'BEGIN{ a=1 }{ printf "mv -v ./images/current/%s images/current/%04d.'$EXTENSION'\n", $0, a++ }' |
 bash &
-avconv -y -f image2 -r 25 -i images/current/%04d.$EXTENSION -vcodec libx264 -b:v 2000k images/current/allsky-`date -d "yesterday 13:00" '+%Y%m%d'`.mp4 && \
-{upload_timelapse || true;} && \
-mv ./images/current images/`date -d "yesterday 13:00" '+%Y%m%d'`
+avconv -y -f image2 -r 25 -i images/current/%04d.$EXTENSION -vcodec libx264 -b:v 2000k images/current/allsky-$(date -d "yesterday 13:00" '+%Y%m%d').mp4 && \
+upload_timelapse && \
+mv ./images/current images/$(date -d "yesterday 13:00" '+%Y%m%d')

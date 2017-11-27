@@ -73,6 +73,16 @@ Please note that this will change your hostname to allsky, install lighttpd and 
 ```shell
 sudo gui/install.sh
 ```
+After you complete the GUI setup, you'll be able to administer the camera using the web UI by navigating to
+```sh
+http://your_raspberry_IP
+```
+or
+```sh
+http://allsky.local
+```
+
+The default username is 'admin' and the default password is 'secret'.
 
 ## Usage without desktop environments
 

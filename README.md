@@ -66,6 +66,14 @@ You can now start the camera by typing the following:
 ```
 This script is launched automatically when the Raspberry Pi boots up. To disable this feature, open /home/pi/.config/lxsession/LXDE-pi/autostart and remove the allsky line
 
+## Graphical Interface
+
+If you don't want to configure the camera using the terminal, you can install the web based [graphical interface](https://github.com/thomasjacquin/allsky-portal).
+Please note that this will change your hostname to allsky, install lighttpd and replace your /var/www/html directory.
+```shell
+sudo gui/install.sh
+```
+
 ## Usage without desktop environments
 
 If you're using Raspbian lite or another distribution without desktop environment, make sure to set the nodisplay option to 1 in settings.json.

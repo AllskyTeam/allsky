@@ -24,6 +24,9 @@ echo -e "${GREEN}* Changing hostname to allsky${NC}"
 echo "allsky" > /etc/hostname
 sed -i 's/raspberrypi/allsky/g' /etc/hosts
 echo -en '\n'
+echo -e "${GREEN}* Setting avahi-daemon configuration${NC}"
+cp /home/pi/allsky/gui/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
+echo -en '\n'
 echo -e "${GREEN}* Adding the right permissions to the web server${NC}"
 cat /home/pi/allsky/gui/sudoers >> /etc/sudoers
 echo -en '\n'

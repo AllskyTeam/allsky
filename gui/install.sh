@@ -18,7 +18,7 @@ lighty-enable-mod fastcgi-php
 service lighttpd restart
 echo -en '\n'
 echo -e "${GREEN}* Configuring lighttpd${NC}"
-cp /home/pi/allsky/gui/lighttpd.conf /etc/httpd/httpd.conf
+cp /home/pi/allsky/gui/lighttpd.conf /etc/lighttpd/lighttpd.conf
 echo -en '\n'
 echo -e "${GREEN}* Changing hostname to allsky${NC}"
 echo "allsky" > /etc/hostname

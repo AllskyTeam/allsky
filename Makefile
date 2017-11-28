@@ -1,12 +1,26 @@
-CC = arm-linux-gnueabihf-g++
+platform = armv7
+
 #INCLIB = /usr/local/include
 #LDLIB = /usr/local/lib
 OPENCV = $(shell pkg-config --cflags opencv) $(shell pkg-config --libs opencv)
 USB =  -I libusb/ -L libusb/  
-LIBSPATH = -L lib/ -I include/
+LIBSPATH = -L../lib/$(platform) -I../include
 DEFS = -D_LIN -D_DEBUG 
-CFLAGS = -g  -I $(INCLIB) -L $(LDLIB) $(DEFS) $(COMMON) $(LIBSPATH)  -lpthread  $(USB) -DGLIBC_20 -march=armv7 -mthumb
-AR= arm-linux-gnueabihf-ar 
+
+CFLAGS = -g  -I $(INCLIB) -L $(LDLIB) $(DEFS) $(COMMON) $(LIBSPATH)  -lpthread  $(USB) -DGLIBC_20
+
+ifeq ($(platform), armv6)
+CC = arm-bcm2708hardfp-linux-gnueabi-g++
+AR= arm-bcm2708hardfp-linux-gnueabi-ar
+CFLAGS += -march=armv6
+CFLAGS += -lrt
+endif
+
+ifeq ($(platform), armv7)
+CC = arm-linux-gnueabihf-g++
+AR= arm-linux-gnueabihf-ar
+CFLAGS += -march=armv7 -mcpu=cortex-m3 -mthumb
+endif
 
 all:capture
 

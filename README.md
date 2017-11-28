@@ -36,6 +36,7 @@ Then navigate to the allsky directory:
 ```shell
 cd allsky
 ```
+Now, before running the install script, if you're running a Pi 2, it may not be compatible with armv7 architecture. Run ```cat /proc/cpuinfo``` to know your processor model. If it doesn't say ARMv7, you'll need to change the first line of Makefile to say ```platform = armv6```
 
 Now, run the install script:
 

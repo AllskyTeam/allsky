@@ -1,6 +1,6 @@
 #include "stdio.h"
 #include "opencv/highgui.h"
-#include "ASICamera2.h"
+#include "include/ASICamera2.h"
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>

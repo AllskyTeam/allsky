@@ -19,7 +19,7 @@ endif
 ifeq ($(platform), armv7)
 CC = arm-linux-gnueabihf-g++
 AR= arm-linux-gnueabihf-ar
-CFLAGS += -march=armv7 -mcpu=cortex-m3 -mthumb
+CFLAGS += -march=armv7 -mthumb
 endif
 
 all:capture

@@ -10,8 +10,8 @@ DEFS = -D_LIN -D_DEBUG
 CFLAGS = -g  -I $(INCLIB) -L $(LDLIB) $(DEFS) $(COMMON) $(LIBSPATH)  -lpthread  $(USB) -DGLIBC_20
 
 ifeq ($(platform), armv6)
-CC = arm-bcm2708hardfp-linux-gnueabi-g++
-AR= arm-bcm2708hardfp-linux-gnueabi-ar
+CC = arm-linux-gnueabihf-g++
+AR= arm-linux-gnueabihf-ar
 CFLAGS += -march=armv6
 CFLAGS += -lrt
 endif

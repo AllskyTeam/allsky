@@ -20,6 +20,6 @@ if [ "$UPLOAD_IMG" = true ] ; then
 
 	echo -e "Uploading\n"
 	echo -e "Uploading $FILENAME-resize.$EXTENSION\n" >> log.txt
-	lftp sftp://"$USER":"$PASSWORD"@"$HOST":"$IMGDIR" -e "set net:max-retries 1; set net:timeout 20; set xfer:use-temp-files yes; put $FILENAME-resize.$EXTENSION; bye" &
+	lftp sftp://"$USER":"$PASSWORD"@"$HOST":"$IMGDIR" -e "set net:max-retries 1; set net:timeout 20; put $FILENAME-resize.$EXTENSION; bye" &
 fi
 

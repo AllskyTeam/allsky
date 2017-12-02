@@ -2,6 +2,7 @@
 
 This is the source code for the Wireless Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 
+![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg)
 
 ## Requirements
 
@@ -104,6 +105,12 @@ If you want to modify the software, you'll need to edit capture.cpp and run the 
 make capture
 ```
 This will compile the new code and create a new "capture" binary.
+
+## Share your sky
+
+If you built an allsky camera, please send me a message and I'll add you to the map.
+
+![](http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg)
 
 ## Release notes
 

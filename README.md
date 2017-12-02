@@ -108,7 +108,7 @@ This will compile the new code and create a new "capture" binary.
 
 ## Share your sky
 
-If you built an allsky camera, please send me a message and I'll add you to the map.
+If you built an allsky camera, please send me a message and I'll add you to the [map](http://www.thomasjacquin.com/allsky-map).
 
 ![](http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg)
 

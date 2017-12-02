@@ -2,7 +2,8 @@
 UPLOAD_IMG=true
 UPLOAD_VIDEO=true
 
-# FTP settings
+# FTP/SFTP settings
+PROTOCOL='ftp'
 USER='username'
 PASSWORD='password'
 HOST='example.com'

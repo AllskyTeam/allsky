@@ -3,7 +3,12 @@ source /home/pi/allsky/config.sh
 
 # Make a directory to store current night images
 mkdir -p images/current;
-cp "$FULL_FILENAME" "images/current/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION";
+
+# Subtract dark frame
+convert "$FULL_FILENAME" "$DARK_FRAME" -compose minus_src -composite "$FILENAME-clean.$EXTENSION";
+
+# Save image in "current" directory
+cp "$FILENAME-clean.$EXTENSION" "images/current/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION";
 
 echo -e "Saving $FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION\n" >> log.txt
 
@@ -14,9 +19,9 @@ if [ "$UPLOAD_IMG" = true ] ; then
 
 	# Create a thumbnail for live view
 	# Here's what I use with my ASI224MC
-	convert "$FULL_FILENAME" -resize 962x720 -gravity East -chop 2x0 "$FILENAME-resize.$EXTENSION";
+	convert "$FILENAME-clean.$EXTENSION" -resize 962x720 -gravity East -chop 2x0 "$FILENAME-resize.$EXTENSION";
 	# Here's what I use with my ASI185MC (larger sensor so I crop the black around the image)
-	#convert "$FULL_FILENAME" -resize 962x720 -gravity Center -crop 680x720+40+0 +repage "$FILENAME-resize.$EXTENSION";
+	#convert "$FILENAME-clean.$EXTENSION" -resize 962x720 -gravity Center -crop 680x720+40+0 +repage "$FILENAME-resize.$EXTENSION";
 
 	echo -e "Uploading\n"
 	echo -e "Uploading $FILENAME-resize.$EXTENSION\n" >> log.txt

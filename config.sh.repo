@@ -17,5 +17,6 @@ CAMERA_SETTINGS='/home/pi/allsky/settings.json'
 FULL_FILENAME=$(jq -r '.filename' "$CAMERA_SETTINGS")
 EXTENSION="${FULL_FILENAME##*.}"
 FILENAME="${FULL_FILENAME%.*}"
+DARK_FRAME="dark.png"
 
 echo -e "Reading configuration file\n" >> log.txt

@@ -9,11 +9,12 @@ if [ -e "$DARK_FRAME" ] ; then
 	convert "$FULL_FILENAME" "$DARK_FRAME" -compose minus_src -composite "$FILENAME-processed.$EXTENSION";
 fi
 
-# Define image to use (original or processed)
+# Create image to use (original or processed) for liveview in GUI
 IMAGE_TO_USE="$FULL_FILENAME"
 if [ -e "$DARK_FRAME" ] ; then
 	IMAGE_TO_USE="$FILENAME-processed.$EXTENSION"
 fi
+cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 
 # Save image in "current" directory
 if [ -e "$DARK_FRAME" ] ; then

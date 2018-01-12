@@ -490,28 +490,17 @@ printf("%s",KNRM);
 				pthread_mutex_lock(& mtx_SaveImg);
 				pthread_cond_signal(&cond_SatrtSave);
 				pthread_mutex_unlock(& mtx_SaveImg);
-			}
-			//cvSaveImage( fileName, pRgb );					
+			}					
 			endOfNight = true;
 		} else if (result == "DAY"){
 			printf(bufTime);
 			printf(" It's daytime... we're not saving images");
 			printf("\n");
 			if (endOfNight == true){
-				printf("Post Next Twilight Time");
-				system("./postData.sh");
-				printf("\n");
-				if (timelapse == true){
-					printf("Generating Timelapse");
-					std::string timelapseCommand = "./timelapse.sh ";
-					timelapseCommand.append(fileName);
-					system(timelapseCommand.c_str());
-					printf("\n");
-					endOfNight = false;
-				}
+				system("./endOfNight.sh");
+				endOfNight = false;
 			}
 		}
-
 	}
 
 	ASIStopExposure(CamNum);

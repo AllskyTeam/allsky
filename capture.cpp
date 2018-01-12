@@ -145,6 +145,7 @@ int  main(int argc, char* argv[])
         int noDisplay=0;
 	int timelapse=0;
 	int time=1;
+	int darkframe=0;
 	int help=0;
 
 	char const* bayer[] = {"RG","BG","GR","GB"};
@@ -233,6 +234,9 @@ int  main(int argc, char* argv[])
         	timelapse = atoi(argv[i+1]); i++;}
  	 else if(strcmp(argv[i], "-time") == 0){
         	time = atoi(argv[i+1]); i++;}
+	 else if(strcmp(argv[i], "-darkframe") == 0){
+                darkframe = atoi(argv[i+1]); i++;}
+
 	}
   }
 
@@ -268,11 +272,13 @@ int  main(int argc, char* argv[])
 	  printf("\n");
 	  printf(" -lat = Latitude   	  - Default = 60.7N (Whitehorse)   - Latitude of the camera.\n");
 	  printf(" -lon = Longitude  	  - Default = 135.05W (Whitehorse) - Longitude of the camera\n");
-	  printf("\n");  
+	  printf("\n");
 	  printf(" -nodisplay        	  - Add this parameter to capture images without using a desktop environment \n");
 	  printf(" -timelapse	  	  - add this parameter if you want to create a timelapse at the end of the night \n");
-	  printf(" -time		  	- Adds the time to the image. Combine with Text X and Text Y for placement \n");
-	
+	  printf(" -time		  - Adds the time to the image. Combine with Text X and Text Y for placement \n");
+	  printf(" -darkframe             - Set to 1 to disable time and text overlay \n");
+
+
 	  printf("%sUsage:\n", KRED);
 	  printf(" ./capture -width 640 -height 480 -exposure 5000000 -gamma 50 -type 1 -bin 1 -filename Lake-Laberge.PNG\n\n");	     
   }
@@ -299,13 +305,13 @@ int  main(int argc, char* argv[])
 	   printf("\nListing Attached Cameras:\n");
 
 	ASI_CAMERA_INFO ASICameraInfo;
-	
+
 
 	for(i = 0; i < numDevices; i++)
 	{
 		ASIGetCameraProperty(&ASICameraInfo, i);
 		printf("- %d %s\n",i, ASICameraInfo.Name);
-	}	
+	}
 
 	if(ASIOpenCamera(CamNum) != ASI_SUCCESS)
 	{
@@ -326,7 +332,7 @@ int  main(int argc, char* argv[])
 		printf("- Initialise Camera OK\n");
 	else
 		printf("- Initialise Camera ERROR\n");
-	
+
 	ASI_CONTROL_CAPS ControlCaps;
 	int iNumOfCtrl = 0;
 	ASIGetNumOfControls(CamNum, &iNumOfCtrl);
@@ -335,7 +341,7 @@ int  main(int argc, char* argv[])
 		ASIGetControlCaps(CamNum, i, &ControlCaps);
 		//printf("- %s\n", ControlCaps.Name);
 	}
-	
+
 	if(width == 0 || height == 0)
 	{
 		width = iMaxWidth;
@@ -394,6 +400,7 @@ printf("%s",KGRN);
         printf(" No Display: %d\n",noDisplay);
 	printf(" Timelapse: %d\n",timelapse);
 	printf(" Time: %d\n",time);
+	printf(" Darkframe: %d\n",darkframe);
 printf("%s",KNRM);
 
 //	asiBrightness=asiBrightness*1000;
@@ -476,11 +483,13 @@ printf("%s",KNRM);
 		if (time == 1 ){
 			ImgText = bufTime;
 		}
-  		cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
-		
-		std::string result = exec(sunwaitCommand.c_str());		
+		if (darkframe != 1 ){
+  			cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
+		}
+
+		std::string result = exec(sunwaitCommand.c_str());
 		result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-		
+
 		if (result == "NIGHT"){
 			printf("Saving...");
 			printf(bufTime);
@@ -490,7 +499,7 @@ printf("%s",KNRM);
 				pthread_mutex_lock(& mtx_SaveImg);
 				pthread_cond_signal(&cond_SatrtSave);
 				pthread_mutex_unlock(& mtx_SaveImg);
-			}					
+			}
 			endOfNight = true;
 		} else if (result == "DAY"){
 			printf(bufTime);

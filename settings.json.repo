@@ -26,5 +26,6 @@
    "longitude":"135.05W",
    "nodisplay":"1",
    "timelapse":"1",
-   "time":"1"
+   "time":"1",
+   "darkframe":"0"
 }

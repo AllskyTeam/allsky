@@ -5,7 +5,6 @@ source /home/pi/allsky/config.sh
 ./postData.sh
 echo -e "\n"
 
-echo "$CAMERA_SETTINGS"
 # We get the timelapse setting from settings.json
 TIMELAPSE=$(jq -r '.timelapse' "$CAMERA_SETTINGS")
 

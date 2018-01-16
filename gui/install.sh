@@ -13,7 +13,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 echo -e "${GREEN}* Installation of the webserver${NC}"
 echo -en '\n'
-apt-get update && apt-get install -y lighttpd php-cgi hostapd dnsmasq avahi-daemon
+apt-get update && apt-get install -y lighttpd php5-cgi hostapd dnsmasq avahi-daemon
 lighty-enable-mod fastcgi-php
 service lighttpd restart
 echo -en '\n'

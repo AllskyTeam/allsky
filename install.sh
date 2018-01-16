@@ -21,6 +21,7 @@ cp lib/armv7/libASICamera2* /usr/local/lib
 ldconfig
 echo -en '\n'
 echo -en "${GREEN}* Autostart script${NC}"
+sed -i '/allsky.sh/d' /home/pi/.config/lxsession/LXDE-pi/autostart
 echo "@xterm -hold -e /home/pi/allsky/allsky.sh" >> /home/pi/.config/lxsession/LXDE-pi/autostart
 echo -en '\n'
 echo -en "${GREEN}* Compile allsky software${NC}"

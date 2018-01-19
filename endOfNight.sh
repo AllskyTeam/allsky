@@ -2,7 +2,7 @@
 source /home/pi/allsky/config.sh
 
 # Posting next twilight time to let server know when to resume liveview
-./postData.sh
+#./postData.sh
 echo -e "\n"
 
 # We get the timelapse setting from settings.json

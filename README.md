@@ -144,7 +144,7 @@ By default, a timelapse is generated at dawn from all of the images captured dur
 To disable timelapse, open **config.sh** and set
 
 ```
-KEOGRAM=false
+TIMELAPSE=false
 ```
 
 ## Keograms

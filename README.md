@@ -47,20 +47,32 @@ sudo ./install.sh
 
 **Important**: Unplug and replug the camera to trigger the new udev rules otherwise you'll get an error about permissions later.
 
+## Update
+
+There is no 1-click update yet so until then, the easiest is to backup your config files, delete the allsky directory and follow the installation instructions again.
+
 ## Configuration
 
-There are 2 configuration files. 
+Here's a quick overview of the configuration files. 
 
 the first one is called **settings.json**. It contains the camera parameters such as exposure, gain but also latitude, longitude, etc.
 
 ```shell
 nano settings.json
 ```
-The other file called **config.sh** lets you configure the overall behavior of the camera. Options include FTP connection for periodical image / video upload but also the location of your dark frame for an optional subtraction.
+The second file called **config.sh** lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.
 
 ```shell
 nano config.sh
 ```
+In order to upload images and videos to your website, you'll need to fill your FTP connection details in **ftp-settings.sh**
+```shell
+nano scripts/ftp-settings.sh
+```
+**saveImage.sh** is called every time the camera take a new image. You can play with this file in case your sensor is not dead center.
+
+At the end of the night **endOfNight.sh** is run. It calls a few other scripts based on your config.sh content.
+
 nano is a text editor. Hit **ctrl + x**, followed by **y** and **Enter** in order to save your changes.
 
 ## Usage
@@ -125,6 +137,33 @@ GUI method:
 
 The dark frame is now created and will always be subtracted from captured images. In case the outside temperature varies significantly and you start seeing more / less hot pixels, you can run theses instructions again to create a new dark frame.
 
+## Timelapse
+
+By default, a timelapse is generated at dawn from all of the images captured during last night.
+
+To disable timelapse, open **config.sh** and set
+
+```
+KEOGRAM=false
+```
+
+## Keograms
+
+![](http://www.thomasjacquin.com/allsky-portal/screenshots/keogram-annotated.jpg)
+
+A **Keogram** is an image giving a quick view of the night activity. It was originally invented to study the aurora borealis.
+For each image taken during the night, a central vertical column 1 pixel wide is extracted. All these columns are then stitched together from left to right. This results in a timeline that reads from dusk to dawn.
+
+To get the best results, you will need to rotate your camera to have north at the top. That way, using a fisheye lens, you end up with the bottom of the keogram being the southern horizon and the top being the northern horizon.
+
+Note that it will only show what happens at the meridian during the night and will not display events on the east or west.
+
+To activate keograms, open **config.sh** and set
+
+```
+KEOGRAM=true
+```
+
 ## Usage without desktop environments
 
 If you're using Raspbian lite or another distribution without a desktop environment, make sure to set the nodisplay option to 1 in settings.json.
@@ -150,3 +189,4 @@ If you built an allsky camera, please send me a message and I'll add you to the 
 * version **0.1**: Initial release
 * version **0.2**: Separated camera settings from code logic
 * version **0.3**: Added dark frame subtraction
+* version **0.4**: Added Keograms (summary of the night in one image)

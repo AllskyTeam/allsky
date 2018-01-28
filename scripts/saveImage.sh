@@ -1,8 +1,13 @@
 #!/bin/bash
 source /home/pi/allsky/config.sh
+source /home/pi/allsky/scripts/filename.sh
+
+cd /home/pi/allsky
 
 # Make a directory to store current night images
-mkdir -p images/current;
+# the 12 hours ago option ensures that throughout the entire night, we are using the same date.
+CURRENT=$(date -d '12 hours ago' +'%Y%m%d')
+mkdir -p images/$CURRENT
 
 # If we are in darkframe mode, we only save to the dark file
 DARK_MODE=$(jq -r '.darkframe' "$CAMERA_SETTINGS")
@@ -15,7 +20,7 @@ fi
 
 # Subtract dark frame if there is one defined in config.sh
 if [ -e "$DARK_FRAME" ] ; then
-	convert "$FULL_FILENAME" "$DARK_FRAME" -compose minus_src -composite "$FILENAME-processed.$EXTENSION";
+	convert "$FULL_FILENAME" "$DARK_FRAME" -compose minus_src -composite "$FILENAME-processed.$EXTENSION"
 fi
 
 # Create image to use (original or processed) for liveview in GUI
@@ -26,7 +31,7 @@ fi
 cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 
 # Save image in images/current directory
-cp $IMAGE_TO_USE "images/current/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION";
+cp $IMAGE_TO_USE "images/$CURRENT/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION"
 
 echo -e "Saving $FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION\n" >> log.txt
 

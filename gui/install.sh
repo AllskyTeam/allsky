@@ -28,6 +28,8 @@ echo -e "${GREEN}* Setting avahi-daemon configuration${NC}"
 cp /home/pi/allsky/gui/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
 echo -en '\n'
 echo -e "${GREEN}* Adding the right permissions to the web server${NC}"
+sed -i '/allsky/d' /etc/sudoers
+sed -i '/www-data/d' /etc/sudoers
 cat /home/pi/allsky/gui/sudoers >> /etc/sudoers
 echo -en '\n'
 echo -e "${GREEN}* Retrieving github files to build admin portal${NC}"

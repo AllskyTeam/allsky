@@ -143,7 +143,6 @@ int  main(int argc, char* argv[])
         char const * latitude="60.7N";	//GPS Coordinates of Whitehorse, Yukon where the code was created
 	char const * longitude="135.05W";
         int noDisplay=0;
-	int timelapse=0;
 	int time=1;
 	int darkframe=0;
 	int help=0;
@@ -156,7 +155,7 @@ int  main(int argc, char* argv[])
 //-------------------------------------------------------------------------------------------------------
   printf("\n");  
   printf("%s ******************************************\n", KGRN);  
-  printf("%s *** Allsky Camera Software v0.3 | 2018 ***\n", KGRN);
+  printf("%s *** Allsky Camera Software v0.4 | 2018 ***\n", KGRN);
   printf("%s ******************************************\n\n", KGRN);
   printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n",KGRN); 
   printf("\n");  
@@ -230,8 +229,6 @@ int  main(int argc, char* argv[])
         	longitude = argv[i+1]; i++;}
  	 else if(strcmp(argv[i], "-nodisplay") == 0){
         	noDisplay = atoi(argv[i+1]); i++;}
- 	 else if(strcmp(argv[i], "-timelapse") == 0){
-        	timelapse = atoi(argv[i+1]); i++;}
  	 else if(strcmp(argv[i], "-time") == 0){
         	time = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-darkframe") == 0){
@@ -274,7 +271,6 @@ int  main(int argc, char* argv[])
 	  printf(" -lon = Longitude  	  - Default = 135.05W (Whitehorse) - Longitude of the camera\n");
 	  printf("\n");
 	  printf(" -nodisplay        	  - Add this parameter to capture images without using a desktop environment \n");
-	  printf(" -timelapse	  	  - add this parameter if you want to create a timelapse at the end of the night \n");
 	  printf(" -time		  - Adds the time to the image. Combine with Text X and Text Y for placement \n");
 	  printf(" -darkframe             - Set to 1 to disable time and text overlay \n");
 
@@ -398,7 +394,6 @@ printf("%s",KGRN);
 	printf(" Latitude: %s\n",latitude);
 	printf(" Longitude: %s\n",longitude);
         printf(" No Display: %d\n",noDisplay);
-	printf(" Timelapse: %d\n",timelapse);
 	printf(" Time: %d\n",time);
 	printf(" Darkframe: %d\n",darkframe);
 printf("%s",KNRM);
@@ -506,7 +501,7 @@ printf("%s",KNRM);
 			printf(" It's daytime... we're not saving images");
 			printf("\n");
 			if (endOfNight == true){
-				system("./endOfNight.sh");
+				system("scripts/endOfNight.sh");
 				endOfNight = false;
 			}
 		}

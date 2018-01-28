@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# FTP/SFTP settings
+PROTOCOL='ftp'
+USER='username'
+PASSWORD='password'
+HOST='example.com'
+IMGDIR='/allsky/'
+MP4DIR='/allsky/videos/'

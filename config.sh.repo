@@ -1,22 +1,24 @@
-# Set to true to upload to your website
+#!/bin/bash
+source /home/pi/allsky/scripts/ftp-settings.sh
+
+# Set to true to upload current image to your website
 UPLOAD_IMG=true
+
+# Set to true to upload timelapse video to your website at the end of each night
 UPLOAD_VIDEO=true
 
-# FTP/SFTP settings
-PROTOCOL='ftp'
-USER='username'
-PASSWORD='password'
-HOST='example.com'
-IMGDIR='/allsky/'
-MP4DIR='/allsky/videos/'
+# Set to true to send data to your server at the end of each night
+POST_END_OF_NIGHT_DATA=false
 
-# settings.json contains the camera settings such as exposure and gain
-CAMERA_SETTINGS='/home/pi/allsky/settings.json'
+# Set to true to generate a timelapse at the end of the night
+TIMELAPSE=true
 
-# We get the filename from settings.json
-FULL_FILENAME=$(jq -r '.filename' "$CAMERA_SETTINGS")
-EXTENSION="${FULL_FILENAME##*.}"
-FILENAME="${FULL_FILENAME%.*}"
+# Set to true to generate a keogram at the end of the night (image summary of$
+KEOGRAM=false
+
+# Path to the dark frame for hot pixels subtraction. Can be jpg or png.
 DARK_FRAME="dark.png"
 
-echo -e "Reading configuration file\n" >> log.txt
+# Path to the camera settings (exposure, gain, delay, overlay, etc)
+CAMERA_SETTINGS="/home/pi/allsky/settings.json"
+

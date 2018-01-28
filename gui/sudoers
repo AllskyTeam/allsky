@@ -1,6 +1,4 @@
-
 # Permissions for allsky webserver
-
 www-data ALL=(ALL) NOPASSWD:/sbin/ifdown wlan0
 www-data ALL=(ALL) NOPASSWD:/sbin/ifup wlan0
 www-data ALL=(ALL) NOPASSWD:/bin/cat /etc/wpa_supplicant/wpa_supplicant.conf
@@ -17,3 +15,6 @@ www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/dhcpddata /etc/dnsmasq.conf
 www-data ALL=(ALL) NOPASSWD:/sbin/shutdown -h now
 www-data ALL=(ALL) NOPASSWD:/sbin/reboot
 www-data ALL=(ALL) NOPASSWD:/bin/chgrp
+www-data ALL=(ALL) NOPASSWD:/bin/chown
+www-data ALL=(ALL) NOPASSWD:/bin/rm
+

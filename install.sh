@@ -30,6 +30,7 @@ echo -en '\n'
 echo -en "${GREEN}* Copy camera settings files${NC}"
 cp settings.json.repo settings.json
 cp config.sh.repo config.sh
+cp scripts/ftp-settings.sh.repo scripts/ftp-settings.sh
 chown -R pi:pi ../allsky
 echo -en '\n'
 echo -en '\n'

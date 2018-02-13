@@ -12,15 +12,21 @@ if [[ $POST_END_OF_NIGHT_DATA == "true" ]]; then
 	echo -e "\n"
 fi
 
-# Generate timelapse form collected images
+# Generate timelapse from collected images
 if [[ $KEOGRAM == "true" ]]; then
         echo -e "Generating Keogram\n"
         ./keogram.sh /home/pi/allsky/images/$LAST_NIGHT/ $EXTENSION /home/pi/allsky/images/$LAST_NIGHT/keogram-$LAST_NIGHT.jpg
         echo -e "\n"
 fi
 
+# Generate startrails from collected images. Treshold set to 0.1 to avoid stacking over-exposed images
+if [[ $STARTRAILS == "true" ]]; then
+        echo -e "Generating Startrails\n"
+        ./startrails.sh /home/pi/allsky/images/$LAST_NIGHT/ $EXTENSION 0.1 /home/pi/allsky/images/$LAST_NIGHT/startrails-$LAST_NIGHT.jpg
+        echo -e "\n"
+fi
 
-# Generate timelapse form collected images
+# Generate timelapse from collected images
 if [[ $TIMELAPSE == "true" ]]; then
 	echo -e "Generating Timelapse\n"
 	./timelapse.sh $LAST_NIGHT

@@ -32,3 +32,11 @@ if [[ $TIMELAPSE == "true" ]]; then
 	./timelapse.sh $LAST_NIGHT
 	echo -e "\n"
 fi
+
+# Automatically delete old images and videos
+if [[ $AUTO_DELETE == "true" ]]; then
+	del=$(date --date="$NIGHTS_TO_KEEP days ago" +%Y%m%d)
+	for i in `find /home/pi/allsky/images/ -type d -name "2*"`; do
+	  (($del > $(basename $i))) && rm -rf $i
+	done
+fi

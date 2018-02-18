@@ -94,6 +94,8 @@ Please note that this will change your hostname to allsky, install lighttpd and 
 ```shell
 sudo gui/install.sh
 ```
+**Note:*** If you use an older version of Raspbian, the install script may fail on php7.0-cgi dependency. Edit gui/install.sh and replace php7.0-cgi by php5-cgi.
+
 After you complete the GUI setup, you'll be able to administer the camera using the web UI by navigating to
 ```sh
 http://your_raspberry_IP

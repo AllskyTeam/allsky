@@ -17,7 +17,7 @@ TIMELAPSE=true
 KEOGRAM=false
 
 # Set to true to enable automatic deletion of archived data (images + videos)
-AUTO_DELETE=false
+AUTO_DELETE=true
 
 # Set this value to the number of archived nights you want to keep. Needs AUTO_DELETE=true to work
 NIGHTS_TO_KEEP=14

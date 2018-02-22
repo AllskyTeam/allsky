@@ -72,9 +72,7 @@ void* Display(void* params)
 	while(bDisplay)
 	{
 		cvShowImage("video", pImg);
-		char c=cvWaitKey(1);
 	}
-END:
 	cvDestroyWindow("video");
 	printf("Display thread over\n");
 	return (void*)0;
@@ -427,11 +425,8 @@ printf("%s",KNRM);
 	sunwaitCommand.append(" ");
 	sunwaitCommand.append(longitude);
 	bool endOfNight = false;
-	char c;
-	bool bresult;
 
 	ASI_EXPOSURE_STATUS status;
-	int iDropped = 0;
 	pthread_t hthdSave = 0;
 
 	if(!bSaveRun)

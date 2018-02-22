@@ -16,7 +16,7 @@ fi
 if [[ $KEOGRAM == "true" ]]; then
         echo -e "Generating Keogram\n"
 	mkdir -p /home/pi/allsky/images/$LAST_NIGHT/keogram/
-        ../keogram /home/pi/allsky/images/$LAST_NIGHT/keogram/ $EXTENSION /home/pi/allsky/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.jpg
+        ../keogram /home/pi/allsky/images/$LAST_NIGHT/ $EXTENSION /home/pi/allsky/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.jpg
         echo -e "\n"
 fi
 
@@ -24,7 +24,7 @@ fi
 if [[ $STARTRAILS == "true" ]]; then
         echo -e "Generating Startrails\n"
 	mkdir -p /home/pi/allsky/images/$LAST_NIGHT/startrails/
-        ../startrails /home/pi/allsky/images/$LAST_NIGHT/startrails/ $EXTENSION 0.1 /home/pi/allsky/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.jpg
+        ../startrails /home/pi/allsky/images/$LAST_NIGHT/ $EXTENSION 0.1 /home/pi/allsky/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.jpg
         echo -e "\n"
 fi
 

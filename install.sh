@@ -25,7 +25,7 @@ sed -i '/allsky.sh/d' /home/pi/.config/lxsession/LXDE-pi/autostart
 echo "@xterm -hold -e /home/pi/allsky/allsky.sh" >> /home/pi/.config/lxsession/LXDE-pi/autostart
 echo -en '\n'
 echo -en "${GREEN}* Compile allsky software${NC}"
-make capture
+make all
 echo -en '\n'
 echo -en "${GREEN}* Copy camera settings files${NC}"
 cp settings.json.repo settings.json

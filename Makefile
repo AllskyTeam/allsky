@@ -25,7 +25,7 @@ endif
 all:capture startrails keogram
 
 capture:capture.cpp
-	$(CC)  capture.cpp -o capture $(CFLAGS) $(OPENCV) -lASICamera2	
+	$(CC)  capture.cpp lib/$(platform)/libASICamera2.a -o capture $(CFLAGS) $(OPENCV) -lusb-1.0
 
 startrails:startrails.cpp
 	$(CC)  startrails.cpp -o startrails $(CFLAGS) $(OPENCV)

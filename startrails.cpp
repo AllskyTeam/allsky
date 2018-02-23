@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -48,6 +49,10 @@ int main(int argc, char *argv[])
 
     cv::Mat accumulated;
 
+    // Create space for statistics
+    cv::Mat stats;
+    stats.create(1, files.gl_pathc, CV_64F);
+
     for (size_t f = 0; f < files.gl_pathc; f++)
     {
         cv::Mat image = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
@@ -76,14 +81,42 @@ int main(int argc, char *argv[])
         }
         std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] " << basename(files.gl_pathv[f]) << " " << mean
                   << std::endl;
+
+        stats.col(f) = mean;
+
         if (mean <= threshold)
         {
             if (accumulated.empty())
             {
                 image.copyTo(accumulated);
             }
-            accumulated = cv::max(accumulated, image);
+            else
+            {
+                accumulated = cv::max(accumulated, image);
+            }
         }
+    }
+
+    // Calculate some statistics
+    double min_mean, max_mean;
+    cv::Point min_loc;
+    cv::minMaxLoc(stats, &min_mean, &max_mean, &min_loc);
+    double mean_mean = cv::mean(stats)[0];
+
+    // For median, do partial sort and take middle value
+    std::vector<double> vec;
+    stats.copyTo(vec);
+    std::nth_element(vec.begin(), vec.begin() + (vec.size() / 2), vec.end());
+    double median_mean = vec[vec.size() / 2];
+
+    std::cout << "Minimum: " << min_mean << " maximum: " << max_mean << " mean: " << mean_mean
+              << " median: " << median_mean << std::endl;
+
+    // If we still don't have an image (no images below threshold), copy the minimum mean image so we see why
+    if (accumulated.empty())
+    {
+        std::cout << "No images below threshold, writing the minimum image only" << std::endl;
+        accumulated = cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
     }
     globfree(&files);
 

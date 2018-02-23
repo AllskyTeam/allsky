@@ -7,7 +7,7 @@ USB =  -I libusb/ -L libusb/
 LIBSPATH = -L../lib/$(platform) -I../include
 DEFS = -D_LIN -D_DEBUG 
 
-CFLAGS = -Wall -g  -I $(INCLIB) -L $(LDLIB) $(DEFS) $(COMMON) $(LIBSPATH)  -lpthread  $(USB) -DGLIBC_20
+CFLAGS = -Wall -Wno-psabi -g  -I $(INCLIB) -L $(LDLIB) $(DEFS) $(COMMON) $(LIBSPATH)  -lpthread  $(USB) -DGLIBC_20
 
 ifeq ($(platform), armv6)
 CC = arm-linux-gnueabihf-g++

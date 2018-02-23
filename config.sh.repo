@@ -13,8 +13,17 @@ POST_END_OF_NIGHT_DATA=false
 # Set to true to generate a timelapse at the end of the night
 TIMELAPSE=true
 
-# Set to true to generate a keogram at the end of the night (image summary of$
-KEOGRAM=false
+# Set to true to generate a keogram at the end of the night (image summary of the night)
+KEOGRAM=true
+
+# Set to true to upload the keogram after it has been generated
+UPLOAD_KEOGRAM=false
+
+# Set to true to generate a startrails image of the night. Will skip brighter images to avoid over-exposure
+STARTRAILS=true
+
+# Set to true to upload the startrails after it has been generated
+UPLOAD_STARTRAILS=false
 
 # Set to true to enable automatic deletion of archived data (images + videos)
 AUTO_DELETE=true

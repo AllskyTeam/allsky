@@ -198,6 +198,15 @@ To disable automatic startrails, open **config.sh** and set
 STARTRAILS=false
 ```
 
+## Automatic deletion of archived nights
+
+In order to keep the Raspberry Pi SD card from filling up, 2 settings have been added to **config.sh**. Automatic deletion is enabled by default and will keep 2 weeks of data on the card.
+```
+	AUTO_DELETE=true
+	NIGHTS_TO_KEEP=14
+```
+Modify these values if you wish to increase/decrease the number of nights to retain on the card. Set to false to keep all nights (requires manual management of SD card free space).
+
 ## Usage without desktop environments
 
 If you're using Raspbian lite or another distribution without a desktop environment, make sure to set the nodisplay option to 1 in settings.json.

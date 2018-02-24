@@ -16,7 +16,7 @@ if [ $# -lt 1 ]
 fi
 
 # find images, rename images sequentially and start avconv to build mp4; upload mp4 and move directory
-ls -rt -I "keogram*" -I "*.mp4" images/$1 |
+ls -rt images/$1/*.$EXTENSION |
 gawk 'BEGIN{ a=1 }{ printf "mv -v ./images/'$1'/%s images/'$1'/%04d.'$EXTENSION'\n", $0, a++ }' |
 bash
 avconv -y -f image2 -r 25 -i images/$1/%04d.$EXTENSION -vcodec libx264 -b:v 2000k -pix_fmt yuv420p images/$1/allsky-$1.mp4

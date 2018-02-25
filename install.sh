@@ -16,10 +16,6 @@ echo -en '\n'
 echo -en "${GREEN}* Using the camera without root access${NC}"
 install asi.rules /lib/udev/rules.d
 echo -en '\n'
-echo -en "${GREEN}* Copying shared libraries to user library${NC}"
-cp lib/armv7/libASICamera2* /usr/local/lib
-ldconfig
-echo -en '\n'
 echo -en "${GREEN}* Autostart script${NC}"
 sed -i '/allsky.sh/d' /home/pi/.config/lxsession/LXDE-pi/autostart
 echo "@xterm -hold -e /home/pi/allsky/allsky.sh" >> /home/pi/.config/lxsession/LXDE-pi/autostart

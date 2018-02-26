@@ -48,6 +48,11 @@ int main(int argc, char *argv[])
     for (size_t f = 0; f < files.gl_pathc; f++)
     {
         cv::Mat image = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
+        if (!image.data)
+        {
+            std::cout << "Error reading file " << basename(files.gl_pathv[f]) << std::endl;
+            continue;
+        }
 
         std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] " << basename(files.gl_pathv[f]) << std::endl;
 

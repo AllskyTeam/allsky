@@ -16,6 +16,7 @@ if [ $# -lt 1 ]
 fi
 
 # find images, rename images sequentially and start avconv to build mp4; upload mp4 and move directory
+find "images/$1" -name "*.$EXTENSION" -size 0 -delete
 ls -rt images/$1/*.$EXTENSION |
 gawk 'BEGIN{ a=1 }{ printf "mv -v %s images/'$1'/%04d.'$EXTENSION'\n", $0, a++ }' |
 bash

@@ -20,7 +20,7 @@ fi
 
 # Subtract dark frame if there is one defined in config.sh
 if [ -e "$DARK_FRAME" ] ; then
-	convert "$FULL_FILENAME" "$DARK_FRAME" -compose minus_src -composite "$FILENAME-processed.$EXTENSION"
+	convert "$FULL_FILENAME" "$DARK_FRAME" -compose minus_src -composite -type TrueColor "$FILENAME-processed.$EXTENSION"
 fi
 
 # Create image to use (original or processed) for liveview in GUI
@@ -28,6 +28,9 @@ IMAGE_TO_USE="$FULL_FILENAME"
 if [ -e "$DARK_FRAME" ] ; then
 	IMAGE_TO_USE="$FILENAME-processed.$EXTENSION"
 fi
+
+#Uncomment the following line to enable image stretching
+#convert $IMAGE_TO_USE -sigmoidal-contrast 10,10% $IMAGE_TO_USE
 cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 
 # Save image in images/current directory

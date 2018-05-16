@@ -391,7 +391,7 @@ printf("%s",KGRN);
 	printf(" Filename: %s\n",fileName);
 	printf(" Latitude: %s\n",latitude);
 	printf(" Longitude: %s\n",longitude);
-        printf(" No Display: %d\n",noDisplay);
+    printf(" No Display: %d\n",noDisplay);
 	printf(" Time: %d\n",time);
 	printf(" Darkframe: %d\n",darkframe);
 printf("%s",KNRM);
@@ -498,6 +498,17 @@ printf("%s",KNRM);
 			if (endOfNight == true){
 				system("scripts/endOfNight.sh");
 				endOfNight = false;
+			}
+			// Stop Exposure mode
+			ASIStopExposure(CamNum);
+			// Start video mode
+			ASIStartVideoCapture(CamNum);
+			int exp_ms = 50;
+			while(1){
+				if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, exp_ms<=100?200:exp_ms*2) == ASI_SUCCESS){
+					if(pRgb)
+						cvSaveImage( fileName, pRgb, quality);
+				}
 			}
 		}
 	}

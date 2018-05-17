@@ -121,7 +121,7 @@ int  main(int argc, char* argv[])
 	int fontcolor[3]={255,0,0};
 	int linetype[3]={CV_AA, 8, 4};
 	int linenumber = 0;
-	
+
 	char buf[1024]={0};
 	char bufTime[128]={0};
 
@@ -129,20 +129,25 @@ int  main(int argc, char* argv[])
 	int height=0;
 	int bin=1;
 	int Image_type=1;
-	int asiGain=150;
 	int asiBandwidth=40;
 	int asiExposure=5000000;
+	int asiMaxExposure=10000000;
+	int asiAutoExposure=0;
+	int asiGain=150;
+	int asiMaxGain=200;
+	int asiAutoGain=0;
 	int delay=10; // Delay in milliseconds. Default is 10ms
 	int asiWBR=65;
 	int asiWBB=85;
 	int asiGamma=50;
 	int asiBrightness=50;
 	int asiFlip=0;
-        char const * latitude="60.7N";	//GPS Coordinates of Whitehorse, Yukon where the code was created
+  char const * latitude="60.7N";	//GPS Coordinates of Whitehorse, Yukon where the code was created
 	char const * longitude="135.05W";
-        int noDisplay=0;
+  int noDisplay=0;
 	int time=1;
 	int darkframe=0;
+	int daytimeCapture=0;
 	int help=0;
 
 	char const* bayer[] = {"RG","BG","GR","GB"};
@@ -151,13 +156,13 @@ int  main(int argc, char* argv[])
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
-  printf("\n");  
-  printf("%s ******************************************\n", KGRN);  
+  printf("\n");
+  printf("%s ******************************************\n", KGRN);
   printf("%s *** Allsky Camera Software v0.5 | 2018 ***\n", KGRN);
   printf("%s ******************************************\n\n", KGRN);
-  printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n",KGRN); 
-  printf("\n");  
-  printf("%sAdd -h or -help for available options \n",KYEL);  
+  printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n",KGRN);
+  printf("\n");
+  printf("%sAdd -h or -help for available options \n",KYEL);
   printf("\n");
   printf("\%sAuthor: ",KNRM);
   printf("Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
@@ -183,8 +188,16 @@ int  main(int argc, char* argv[])
         	quality[1] = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-exposure") == 0){
         	asiExposure = atoi(argv[i+1]); i++;}
+		else if(strcmp(argv[i], "-maxexposure") == 0){
+	       	asiMaxExposure = atoi(argv[i+1]); i++;}
+		else if(strcmp(argv[i], "-autoexposure") == 0){
+         	asiAutoExposure = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-gain") == 0){
         	asiGain = atoi(argv[i+1]); i++;}
+		else if(strcmp(argv[i], "-maxgain") == 0){
+					asiMaxGain = atoi(argv[i+1]); i++;}
+		else if(strcmp(argv[i], "-autogain") == 0){
+         	asiAutoGain = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-gamma") == 0){
         	asiGamma = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-brightness") == 0){
@@ -231,6 +244,8 @@ int  main(int argc, char* argv[])
         	time = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-darkframe") == 0){
                 darkframe = atoi(argv[i+1]); i++;}
+		else if(strcmp(argv[i], "-daytime") == 0){
+	       	daytimeCapture = atoi(argv[i+1]); i++;}
 
 	}
   }
@@ -240,7 +255,11 @@ int  main(int argc, char* argv[])
 	  printf(" -width  		  - Default = Camera Max Width \n");
 	  printf(" -height     		  - Default = Camera Max Height \n");
 	  printf(" -exposure		  - Default = 5000000 - Time in µs (equals to 5 sec) \n");
+		printf(" -maxexposure		  - Default = 10000000 - Time in µs (equals to 5 sec) \n");
+		printf(" -autoexposure		  - Default = 0 - Set to 1 to enable auto Exposure \n");
 	  printf(" -gain			  - Default = 50 \n");
+		printf(" -maxgain			  - Default = 200 \n");
+		printf(" -autogain		  - Default = 0 - Set to 1 to enable auto Gain \n");
 	  printf(" -gamma			  - Default = 50 \n");
 	  printf(" -brightness		  - Default = 50 \n");
 	  printf(" -wbr			  - Default = 50   - White Balance Red \n");
@@ -250,8 +269,8 @@ int  main(int argc, char* argv[])
 	  printf(" -type = Image Type 	  - Default = 0    - 0 = RAW8,  1 = RGB24,  2 = RAW16 \n");
 	  printf(" -quality		  - Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
 	  printf(" -usb = USB Speed	  - Default = 40   - Values between 40-100, This is BandwidthOverload \n");
-	  printf(" -filename		  - Default = IMAGE.PNG \n");  
-	  printf(" -flip        		  - Default = 0    - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");  
+	  printf(" -filename		  - Default = IMAGE.PNG \n");
+	  printf(" -flip        		  - Default = 0    - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
 	  printf("\n");
 	  printf(" -text        		  - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c \"Text Overlay\"\n");
 	  printf(" -textx        		  - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
@@ -274,9 +293,9 @@ int  main(int argc, char* argv[])
 
 
 	  printf("%sUsage:\n", KRED);
-	  printf(" ./capture -width 640 -height 480 -exposure 5000000 -gamma 50 -type 1 -bin 1 -filename Lake-Laberge.PNG\n\n");	     
+	  printf(" ./capture -width 640 -height 480 -exposure 5000000 -gamma 50 -type 1 -bin 1 -filename Lake-Laberge.PNG\n\n");
   }
-	printf("%s", KNRM); 
+	printf("%s", KNRM);
 
 	const char * ext = strrchr(fileName, '.');
 	if (strcmp(ext+1, "jpg") == 0 || strcmp(ext+1, "JPG") == 0 || strcmp(ext+1, "jpeg") == 0 || strcmp(ext+1, "JPEG") == 0) {
@@ -371,8 +390,12 @@ printf("%s",KGRN);
 	printf(" Image Type: %s\n",sType);
 	printf(" Resolution: %dx%d \n",width,height);
 	printf(" Quality: %d \n",quality[1]);
-	printf(" Gain: %d\n",asiGain);
 	printf(" Exposure: %dµs\n",asiExposure);
+	printf(" Max Exposure: %dµs\n",asiMaxExposure);
+	printf(" Auto Exposure: %d\n",asiAutoExposure);
+	printf(" Gain: %d\n",asiGain);
+	printf(" Max Gain: %d\n",asiMaxGain);
+	printf(" Auto Gain: %d\n",asiAutoGain);
 	printf(" Brightness: %d\n",asiBrightness);
 	printf(" Gamma: %d\n",asiGamma);
 	printf(" WB Red: %d\n",asiWBR);
@@ -391,7 +414,7 @@ printf("%s",KGRN);
 	printf(" Filename: %s\n",fileName);
 	printf(" Latitude: %s\n",latitude);
 	printf(" Longitude: %s\n",longitude);
-    printf(" No Display: %d\n",noDisplay);
+  printf(" No Display: %d\n",noDisplay);
 	printf(" Time: %d\n",time);
 	printf(" Darkframe: %d\n",darkframe);
 printf("%s",KNRM);
@@ -404,21 +427,23 @@ printf("%s",KNRM);
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 	ASISetControlValue(CamNum, ASI_TEMPERATURE, 50*1000, ASI_FALSE);
-	ASISetControlValue(CamNum, ASI_GAIN, asiGain, ASI_FALSE);
 	ASISetControlValue(CamNum, ASI_BANDWIDTHOVERLOAD, asiBandwidth, ASI_FALSE);
-	ASISetControlValue(CamNum, ASI_EXPOSURE, asiExposure, ASI_FALSE);
+	ASISetControlValue(CamNum, ASI_EXPOSURE, asiExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
+	ASISetControlValue(CamNum, ASI_AUTO_MAX_EXP, asiMaxExposure, ASI_FALSE);
+	ASISetControlValue(CamNum, ASI_GAIN, asiGain, asiAutoGain == 1 ? ASI_TRUE : ASI_FALSE);
+	ASISetControlValue(CamNum, ASI_AUTO_MAX_GAIN, asiMaxGain, ASI_FALSE);
 	ASISetControlValue(CamNum, ASI_WB_R, asiWBR, ASI_FALSE);
 	ASISetControlValue(CamNum, ASI_WB_B, asiWBB, ASI_FALSE);
 	ASISetControlValue(CamNum, ASI_GAMMA, asiGamma, ASI_FALSE);
 	ASISetControlValue(CamNum, ASI_BRIGHTNESS, asiBrightness, ASI_FALSE);
 	ASISetControlValue(CamNum, ASI_FLIP, asiFlip, ASI_FALSE);
-	
+
 	pthread_t thread_display=0;
 	if (noDisplay == 0) {
-		bDisplay = 1;		
+		bDisplay = 1;
 		pthread_create(&thread_display, NULL, Display, (void*)pRgb);
 	}
-	
+
 	void* retval;
 	std::string sunwaitCommand = "sunwait poll exit set civil ";
 	sunwaitCommand.append(latitude);
@@ -441,7 +466,7 @@ printf("%s",KNRM);
 	printf("\n");
 	printf("Saving %d", expTime);
 	printf("s exposure images every %d ms\n\n", delay);
-	printf("Press Ctrl+C to stop\n\n");	
+	printf("Press Ctrl+C to stop\n\n");
 
 	while(bMain)
 	{
@@ -452,8 +477,8 @@ printf("%s",KNRM);
 
 		while(status == ASI_EXP_WORKING)
 		{
-			ASIGetExpStatus(CamNum, &status);	
-			usleep(500*1000); //experimental: let's sleep for 0.5 s, to query the camera status a bit less often	
+			ASIGetExpStatus(CamNum, &status);
+			usleep(500*1000); //experimental: let's sleep for 0.5 s, to query the camera status a bit less often
 		}
 
 		if(status == ASI_EXP_SUCCESS){
@@ -467,7 +492,7 @@ printf("%s",KNRM);
 			iStrLen = strlen(buf);
 			CvRect rect = cvRect(iTextX, iTextY - 15, iStrLen* 11, 20);
 			cvSetImageROI(pRgb , rect);
-			cvSet(pRgb, CV_RGB(5, 5, 5));
+			cvSet(pRgb, CV_RGB(180, 180, 180));
 			cvResetImageROI(pRgb);
 		}
 		if (time == 1 ){
@@ -492,23 +517,40 @@ printf("%s",KNRM);
 			}
 			endOfNight = true;
 		} else if (result == "DAY"){
-			printf(bufTime);
-			printf(" It's daytime... we're not saving images");
-			printf("\n");
 			if (endOfNight == true){
 				system("scripts/endOfNight.sh");
 				endOfNight = false;
 			}
-			// Stop Exposure mode
-			ASIStopExposure(CamNum);
-			// Start video mode
-			ASIStartVideoCapture(CamNum);
-			int exp_ms = 50;
-			while(1){
-				if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, exp_ms<=100?200:exp_ms*2) == ASI_SUCCESS){
-					if(pRgb)
-						cvSaveImage( fileName, pRgb, quality);
+			if (daytimeCapture != 1){
+				printf(bufTime);
+				printf(" It's daytime... we're not saving images");
+				printf("\n");
+			} else {
+				// Stop Exposure mode
+				ASIStopExposure(CamNum);
+				// Start video mode
+				ASIStartVideoCapture(CamNum);
+				int exp_ms=32;
+				while(result == "DAY"){
+					std::string result = exec(sunwaitCommand.c_str());
+					result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+					if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, exp_ms<=100?200:exp_ms*2) == ASI_SUCCESS){
+						sprintf(bufTime, "%s", getTime());
+						if(pRgb){
+							cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
+							//cvSaveImage( fileName, pRgb, quality);
+							if(!bSavingImg)
+							{
+								pthread_mutex_lock(& mtx_SaveImg);
+								pthread_cond_signal(&cond_SatrtSave);
+								pthread_mutex_unlock(& mtx_SaveImg);
+							}
+						}
+						usleep(5000*1000);
+					}
 				}
+				// Stop video mode
+				ASIStopVideoCapture(CamNum);
 			}
 		}
 	}

@@ -24,6 +24,25 @@
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
 
+
+//-------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+
+IplImage *pRgb = 0;
+char nameCnt[128];
+char const * fileName="image.jpg";
+int quality[3] = {CV_IMWRITE_PNG_COMPRESSION, 200, 0};
+bool bMain=true, bDisplay=false;
+std::string dayOrNight;
+
+bool bSaveRun = false, bSavingImg = false;
+pthread_mutex_t mtx_SaveImg;
+pthread_cond_t cond_SatrtSave;
+
+
+//-------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+
 void cvText(IplImage* img, const char* text, int x, int y, double fontsize, int linewidth, int linetype, int fontname, int fontcolor[])
 {
 	cv::Mat mat_img(img );
@@ -55,17 +74,6 @@ std::string exec(const char* cmd) {
     return result;
 }
 
-IplImage *pRgb = 0;
-char nameCnt[128];
-char const * fileName="image.jpg";
-int quality[3] = {CV_IMWRITE_PNG_COMPRESSION, 200, 0};
-bool bMain=true, bDisplay=false;
-std::string dayOrNight;
-
-bool bSaveRun = false, bSavingImg = false;
-pthread_mutex_t mtx_SaveImg;
-pthread_cond_t cond_SatrtSave;
-
 void* Display(void* params)
 {
 	IplImage *pImg = (IplImage *)params;
@@ -88,9 +96,10 @@ void* SaveImgThd(void * para)
 		bSavingImg = true;
 		if(pRgb){
 			cvSaveImage( fileName, pRgb, quality);
-			//std::string saveScript = "scripts/saveImage.sh " + dayOrNight;
-			//system(saveScript.c_str());
-			system("scripts/saveImage.sh");
+			if (dayOrNight == "NIGHT")
+				system("scripts/saveImageNight.sh &");
+			else
+				system("scripts/saveImageDay.sh &");
 		}
 		bSavingImg = false;
 		pthread_mutex_unlock(&mtx_SaveImg);
@@ -480,24 +489,9 @@ printf("%s",KNRM);
 
 	while(bMain)
 	{
-		usleep(delay*1000); //10ms
-		// Restore exposure value for night time capture
-		ASISetControlValue(CamNum, ASI_EXPOSURE, asiExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
-		ASIStartExposure(CamNum, ASI_FALSE);
-		status = ASI_EXP_WORKING;
-		usleep(round(0.95*asiExposure)); //experimental: slep 95% of exposure time
-
-		while(status == ASI_EXP_WORKING)
-		{
-			ASIGetExpStatus(CamNum, &status);
-			usleep(500*1000); //experimental: let's sleep for 0.5 s, to query the camera status a bit less often
-		}
-
-		if(status == ASI_EXP_SUCCESS){
-			ASIGetDataAfterExp(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize);
-		}
-
-		sprintf(bufTime, "%s", getTime());
+		// Find out if it is currently DAY or NIGHT
+		dayOrNight = exec(sunwaitCommand.c_str());
+		dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
 
 		if(Image_type != ASI_IMG_RGB24 && Image_type != ASI_IMG_RAW16)
 		{
@@ -507,17 +501,33 @@ printf("%s",KNRM);
 			cvSet(pRgb, CV_RGB(180, 180, 180));
 			cvResetImageROI(pRgb);
 		}
-		if (time == 1 ){
-			ImgText = bufTime;
-		}
-		if (darkframe != 1 ){
-  			cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
-		}
-
-		dayOrNight = exec(sunwaitCommand.c_str());
-		dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
 
 		if (dayOrNight == "NIGHT"){
+			// Restore exposure value for night time capture
+			ASISetControlValue(CamNum, ASI_EXPOSURE, asiExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
+			ASIStartExposure(CamNum, ASI_FALSE);
+			status = ASI_EXP_WORKING;
+			usleep(round(0.95*asiExposure)); //experimental: slep 95% of exposure time
+
+			while(status == ASI_EXP_WORKING)
+			{
+				ASIGetExpStatus(CamNum, &status);
+				usleep(500*1000); //experimental: let's sleep for 0.5 s, to query the camera status a bit less often
+			}
+
+			if(status == ASI_EXP_SUCCESS){
+				ASIGetDataAfterExp(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize);
+			}
+
+			sprintf(bufTime, "%s", getTime());
+			if (time == 1 ){
+				ImgText = bufTime;
+			}
+		
+			if (darkframe != 1 ){
+  				cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
+			}
+
 			printf("Saving...");
 			printf(bufTime);
 			printf("\n");
@@ -528,13 +538,15 @@ printf("%s",KNRM);
 				pthread_mutex_unlock(& mtx_SaveImg);
 			}
 			endOfNight = true;
+			// Delay applied before next exposure
+			usleep(delay*1000);
+
 		} else if (dayOrNight == "DAY"){
 			if (endOfNight == true){
-				system("scripts/endOfNight.sh");
+				system("scripts/endOfNight.sh &");
 				endOfNight = false;
 			}
 			if (daytimeCapture != 1){
-				printf(bufTime);
 				printf(" It's daytime... we're not saving images");
 				printf("\n");
 			} else {
@@ -551,11 +563,15 @@ printf("%s",KNRM);
 				while(bMain && dayOrNight == "DAY"){
 					dayOrNight = exec(sunwaitCommand.c_str());
 					dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
-					if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, exp_ms<=100?200:exp_ms*2) == ASI_SUCCESS){
+					
+					if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, exp_ms<=100?200:exp_ms*2) == ASI_SUCCESS){	
 						sprintf(bufTime, "%s", getTime());
+						if (time == 1 ){
+							ImgText = bufTime;
+						}					
 						if(pRgb){
 							cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
-							printf("Saving...");
+							printf("Capturing daytime image...");
 							printf(bufTime);
 							printf("\n");
 							if(!bSavingImg)

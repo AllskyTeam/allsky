@@ -16,10 +16,4 @@ echo "$ARGUMENTS">>log.txt
 
 ARGUMENTS="$ARGUMENTS -daytime $DAYTIME"
 
-echo $ARGUMENTS;
-
-# When a new image is captured, we launch saveImage.sh
-#ls $FULL_FILENAME | entr scripts/saveImage.sh & \
-# Uncomment the following line if you get a segmentation fault during timelapse on a Pi3
-#cpulimit -e avconv -l 50 & \
 ./capture $ARGUMENTS

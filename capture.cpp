@@ -115,6 +115,17 @@ void IntHandle(int i)
 	bMain = false;
 }
 
+void calculateDayOrNight(const char* latitude, const char* longitude)
+{
+	std::string sunwaitCommand = "sunwait poll exit set civil ";
+	sunwaitCommand.append(latitude);
+	sunwaitCommand.append(" ");
+	sunwaitCommand.append(longitude);
+	dayOrNight = exec(sunwaitCommand.c_str());
+	dayOrNight = exec(sunwaitCommand.c_str());
+	dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
+}
+
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
@@ -464,12 +475,7 @@ printf("%s",KNRM);
 	}
 
 	void* retval;
-	std::string sunwaitCommand = "sunwait poll exit set civil ";
-	sunwaitCommand.append(latitude);
-	sunwaitCommand.append(" ");
-	sunwaitCommand.append(longitude);
 	bool endOfNight = false;
-
 	ASI_EXPOSURE_STATUS status;
 	pthread_t hthdSave = 0;
 
@@ -484,8 +490,7 @@ printf("%s",KNRM);
 	while(bMain)
 	{
 		// Find out if it is currently DAY or NIGHT
-		dayOrNight = exec(sunwaitCommand.c_str());
-		dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
+		calculateDayOrNight(latitude, longitude);
 		int expTime = round(asiExposure/1000000);
 
 		if(Image_type != ASI_IMG_RGB24 && Image_type != ASI_IMG_RAW16)
@@ -569,8 +574,7 @@ printf("%s",KNRM);
 				ASIStartVideoCapture(CamNum);
 				
 				while(bMain && dayOrNight == "DAY"){
-					dayOrNight = exec(sunwaitCommand.c_str());
-					dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
+					calculateDayOrNight(latitude, longitude);
 					
 					if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, exp_ms<=100?200:exp_ms*2) == ASI_SUCCESS){	
 						sprintf(bufTime, "%s", getTime());

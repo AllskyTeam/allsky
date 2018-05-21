@@ -10,32 +10,35 @@ echo -en '\n'
 echo -en "${GREEN}* Sunwait installation"
 cp sunwait /usr/local/bin
 echo -en '\n'
-echo -en "${GREEN}* Dependencies installation${NC}"
-apt-get update && apt-get install libopencv-dev libusb-dev libav-tools gawk lftp entr xterm jq cpulimit imagemagick -y
+echo -en "${GREEN}* Dependencies installation\n${NC}"
+apt-get update && apt-get install libopencv-dev libusb-dev libav-tools gawk lftp jq imagemagick -y
 echo -en '\n'
-echo -en "${GREEN}* Using the camera without root access${NC}"
+echo -en "${GREEN}* Using the camera without root access\n${NC}"
 install asi.rules /lib/udev/rules.d
 echo -en '\n'
-echo -en "${GREEN}* Autostart script${NC}"
+echo -en "${GREEN}* Autostart script\n${NC}"
 sed -i '/allsky.sh/d' /home/pi/.config/lxsession/LXDE-pi/autostart
-echo "@xterm -hold -e /home/pi/allsky/allsky.sh" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+cp autostart/allsky.service /lib/systemd/system/
+chown root:root /lib/systemd/system/allsky.service
+chmod 0644 /lib/systemd/system/allsky.service
+cp autostart/allsky /etc/logrotate.d/
+chown root:root /etc/logrotate.d/allsky
+chmod 0644 /etc/logrotate.d/allsky
+cp autostart/allsky.conf /etc/rsyslog.d/
+chown root:root /etc/rsyslog.d/allsky.conf
+chmod 0644 /etc/rsyslog.d/allsky.conf
 echo -en '\n'
-echo -en "${GREEN}* Compile allsky software${NC}"
+echo -en "${GREEN}* Compile allsky software\n${NC}"
 make all
 echo -en '\n'
-echo -en "${GREEN}* Copy camera settings files${NC}"
+echo -en "${GREEN}* Copy camera settings files\n${NC}"
 cp settings.json.repo settings.json
 cp config.sh.repo config.sh
 cp scripts/ftp-settings.sh.repo scripts/ftp-settings.sh
 chown -R pi:pi ../allsky
 echo -en '\n'
 echo -en '\n'
-echo "The Allsky Camera is now installed."
-echo "You can now reboot the Raspberry Pi."
-echo -en '\n'
-read -p "Do you want to reboot now? [y/n] " ans_yn
-case "$ans_yn" in
-  [Yy]|[Yy][Ee][Ss]) reboot now;;
-
-  *) exit 3;;
-esac
+echo -en "The Allsky Camera is now installed. Starting service now\n"
+systemctl daemon-reload
+systemctl enable allsky.service
+systemctl start allsky.service

@@ -12,8 +12,11 @@ for KEY in ${KEYS[@]}
 do
 	ARGUMENTS="$ARGUMENTS -$KEY `jq -r '.'$KEY $CAMERA_SETTINGS` "
 done
-echo "$ARGUMENTS">>log.txt
 
+# Pass other arguments that are not specific to the camera
+ARGUMENTS="$ARGUMENTS -nodisplay $NODISPLAY"
 ARGUMENTS="$ARGUMENTS -daytime $DAYTIME"
+
+echo "$ARGUMENTS">>log.txt
 
 ./capture $ARGUMENTS

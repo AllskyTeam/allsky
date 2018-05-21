@@ -9,6 +9,7 @@
    "wbb":"90",
    "bin":"1",
    "delay":"10",
+   "daytimeDelay": "5000"
    "type":"1",
    "quality":"95",
    "usb":"40",
@@ -24,7 +25,6 @@
    "fontline":"1",
    "latitude":"60.7N",
    "longitude":"135.05W",
-   "nodisplay":"1",
    "time":"1",
    "darkframe":"0"
 }

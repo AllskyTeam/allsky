@@ -481,17 +481,12 @@ printf("%s",KNRM);
 
 	}
 
-	int expTime = round(asiExposure/1000000);
-	printf("\n");
-	printf("Saving %d", expTime);
-	printf("s exposure images every %d ms\n\n", delay);
-	printf("Press Ctrl+C to stop\n\n");
-
 	while(bMain)
 	{
 		// Find out if it is currently DAY or NIGHT
 		dayOrNight = exec(sunwaitCommand.c_str());
 		dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
+		int expTime = round(asiExposure/1000000);
 
 		if(Image_type != ASI_IMG_RGB24 && Image_type != ASI_IMG_RAW16)
 		{
@@ -503,6 +498,11 @@ printf("%s",KNRM);
 		}
 
 		if (dayOrNight == "NIGHT"){
+			printf("\n");
+			printf("Saving %d", expTime);
+			printf("s exposure images every %d ms\n\n", delay);
+			printf("Press Ctrl+C to stop\n\n");
+
 			// Restore exposure value for night time capture
 			ASISetControlValue(CamNum, ASI_EXPOSURE, asiExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
 			ASIStartExposure(CamNum, ASI_FALSE);
@@ -542,6 +542,14 @@ printf("%s",KNRM);
 			usleep(delay*1000);
 
 		} else if (dayOrNight == "DAY"){
+			printf("\n");
+			if (asiAutoExposure == 1)
+				printf("Saving auto exposed images every %d ms\n\n", daytimeDelay);
+			else {
+				printf("Saving %d", expTime);
+				printf("s exposure images every %d ms\n\n", daytimeDelay);
+			}
+			printf("Press Ctrl+C to stop\n\n");
 			if (endOfNight == true){
 				system("scripts/endOfNight.sh &");
 				endOfNight = false;

@@ -510,6 +510,7 @@ printf("%s",KNRM);
 
 			// Restore exposure value for night time capture
 			ASISetControlValue(CamNum, ASI_EXPOSURE, asiExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
+			ASISetControlValue(CamNum, ASI_GAIN, asiGain, asiAutoGain == 1 ? ASI_TRUE : ASI_FALSE);
 			ASIStartExposure(CamNum, ASI_FALSE);
 			status = ASI_EXP_WORKING;
 			usleep(round(0.95*asiExposure)); //experimental: slep 95% of exposure time
@@ -569,6 +570,7 @@ printf("%s",KNRM);
 				ASIStopExposure(CamNum);
 				// Set Exposure to something low for daytime capture
 				int exp_ms=32;
+				// Enable Auto-Exposure
 				ASISetControlValue(CamNum, ASI_EXPOSURE, exp_ms, ASI_TRUE);
 				// Start video mode
 				ASIStartVideoCapture(CamNum);

@@ -12,7 +12,7 @@ In order to get the camera working properly you will need the following hardware
  * A Raspberry Pi 2 or 3
  * A USB wireless dongle if using a Pi 2. [This one](https://www.amazon.ca/Edimax-EW-7811Un-150Mbps-Raspberry-Supports/dp/B003MTTJOY) has been tested.
 
-**Note:*** Owners of USB2.0 cameras such as ASI120MC and ASI120MM will need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software/) (This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.) A Linux [kernel patch](http://zwoug.org/viewtopic.php?f=17&t=7132) may also be necessary to fix segmented images and improve frame rate.
+**Note:*** Owners of USB2.0 cameras such as ASI120MC and ASI120MM may need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software/) (This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.)
 
 ## Installation
 
@@ -45,8 +45,6 @@ Now, run the install script:
 sudo ./install.sh
 ```
 
-**Important**: Unplug and replug the camera to trigger the new udev rules otherwise you'll get an error about permissions later.
-
 ## Update
 
 There is no 1-click update yet so until then, the easiest is to backup your config files, delete the allsky directory and follow the installation instructions again.
@@ -77,11 +75,21 @@ nano is a text editor. Hit **ctrl + x**, followed by **y** and **Enter** in orde
 
 ## Usage
 
-The allsky.sh script is launched automatically when the Raspberry Pi boots up. To disable this feature, open /home/pi/.config/lxsession/LXDE-pi/autostart and remove the allsky line.
+Systemd is used to launch the software automatically when the Raspberry Pi boots up. To disable this behavior, open a terminal and type
 
-If you want to start the program manually, navigate to the allsky directory and type:
+```
+sudo systemctl disable allsky.service
+```
+
+If you want to start, stop or restart the program manually, you can use one of the following commands:
 ```shell
-./allsky.sh
+sudo service allsky start
+sudo service allsky stop
+sudo service allsky restart
+```
+To know the status of the allsky software, type:
+```shell
+sudo service allsky status
 ```
 
 ## Graphical Interface
@@ -107,7 +115,7 @@ http://allsky.local
 
 The default username is 'admin' and the default password is 'secret'.
 
-**Note:*** The GUI setup uses /var/www/html/settings.json for the camera settings. If, for some reason, you prefer using the non-gui version (launching allsky.sh from terminal), make sure to edit your config.sh file to have CAMERA_SETTINGS="settings.json" instead.
+**Note:*** The GUI setup uses /var/www/html/settings.json for the camera settings. If, for some reason, you prefer to use the non-gui version (launching allsky.sh from terminal), make sure to edit your config.sh file to have CAMERA_SETTINGS="settings.json" instead.
 
 ## Dark frame subtraction
 
@@ -211,6 +219,8 @@ Modify these values if you wish to increase/decrease the number of nights to ret
 
 If you're using Raspbian lite or another distribution without a desktop environment, make sure to set the nodisplay option to 1 in settings.json.
 
+Also if your Raspberry Pi doesn't have a monitor on it's HDMI port, the nodisplay option should be set to 1.
+
 
 ## Compile your own version
 
@@ -223,7 +233,7 @@ This will compile the new code and create a new binary.
 
 ## Share your sky
 
-If you built an allsky camera, please send me a message and I'll add you to the [map](http://www.thomasjacquin.com/allsky-map).
+If you've built an allsky camera, please send me a message and I'll add you to the [map](http://www.thomasjacquin.com/allsky-map).
 
 ![](http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg)
 
@@ -235,3 +245,8 @@ If you built an allsky camera, please send me a message and I'll add you to the 
 * version **0.4**: Added Keograms (summary of the night in one image)
 * version **0.5**: Added Startrails (image stacking) with brightness control
 	* Keograms and Startrails generation is now much faster thanks to a rewrite by Jarno Paananen.
+* version **0.6**: Added daytime exposure and auto-exposure capability
+	* Added -maxexposure, -autoexposure, -maxgain, -autogain options
+ 	* Autostart is now based on systemd and should work on all raspbian based systems, including headless distributions. Remote controlling should not start multiple instances of the software.
+ 	* Moved nodisplay option to config.sh. Default is now "1".
+ 	* When using the GUI, camera options can be saved without rebooting the RPi.

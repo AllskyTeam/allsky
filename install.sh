@@ -36,9 +36,15 @@ cp settings.json.repo settings.json
 cp config.sh.repo config.sh
 cp scripts/ftp-settings.sh.repo scripts/ftp-settings.sh
 chown -R pi:pi ../allsky
-echo -en '\n'
-echo -en '\n'
-echo -en "The Allsky Camera is now installed. Starting service now\n"
 systemctl daemon-reload
 systemctl enable allsky.service
-systemctl start allsky.service
+echo -en '\n'
+echo -en '\n'
+echo -en "The Allsky Software is now installed. You should reboot the Raspberry Pi to finish the installation\n"
+echo -en '\n'
+read -p "Do you want to reboot now? [y/n] " ans_yn
+case "$ans_yn" in
+  [Yy]|[Yy][Ee][Ss]) reboot now;;
+
+  *) exit 3;;
+esac

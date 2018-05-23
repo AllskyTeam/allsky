@@ -34,9 +34,6 @@ NIGHTS_TO_KEEP=14
 # Path to the dark frame for hot pixels subtraction. Can be jpg or png.
 DARK_FRAME="dark.png"
 
-# Set to 1 to if you don't have a monitor plugged to the RPi. Uses less CPU. Set to 0 to display a preview on the HDMI output
-NODISPLAY="1"
-
 # Enable Daytime Capture
 DAYTIME="0"
 

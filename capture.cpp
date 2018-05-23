@@ -170,7 +170,7 @@ int  main(int argc, char* argv[])
 	int asiFlip=0;
   	char const * latitude="60.7N";	//GPS Coordinates of Whitehorse, Yukon where the code was created
 	char const * longitude="135.05W";
-  	int noDisplay=0;
+  	int preview=0;
 	int time=1;
 	int darkframe=0;
 	int daytimeCapture=0;
@@ -266,8 +266,8 @@ int  main(int argc, char* argv[])
         	latitude = argv[i+1]; i++;}
          else if(strcmp(argv[i], "-longitude") == 0){
         	longitude = argv[i+1]; i++;}
- 	 else if(strcmp(argv[i], "-nodisplay") == 0){
-        	noDisplay = atoi(argv[i+1]); i++;}
+ 	 else if(strcmp(argv[i], "-preview") == 0){
+        	preview = atoi(argv[i+1]); i++;}
  	 else if(strcmp(argv[i], "-time") == 0){
         	time = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-darkframe") == 0){
@@ -284,22 +284,22 @@ int  main(int argc, char* argv[])
 	  printf(" -height     		  - Default = Camera Max Height \n");
 	  printf(" -exposure		  - Default = 5000000 - Time in µs (equals to 5 sec) \n");
 	  printf(" -maxexposure		  - Default = 10000000 - Time in µs (equals to 5 sec) \n");
-	  printf(" -autoexposure		  - Default = 0 - Set to 1 to enable auto Exposure \n");
+	  printf(" -autoexposure	  - Default = 0 - Set to 1 to enable auto Exposure \n");
 	  printf(" -gain			  - Default = 50 \n");
 	  printf(" -maxgain			  - Default = 200 \n");
 	  printf(" -autogain		  - Default = 0 - Set to 1 to enable auto Gain \n");
 	  printf(" -gamma			  - Default = 50 \n");
 	  printf(" -brightness		  - Default = 50 \n");
-	  printf(" -wbr			  - Default = 50   - White Balance Red \n");
-	  printf(" -wbb			  - Default = 50   - White Balance Blue \n");
+	  printf(" -wbr			  	  - Default = 50   - White Balance Red \n");
+	  printf(" -wbb			  	  - Default = 50   - White Balance Blue \n");
 	  printf(" -bin        		  - Default = 1    - 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n");
 	  printf(" -delay      		  - Default = 10   - Delay between images in milliseconds - 1000 = 1 sec.\n");
-	  printf(" -daytimeDelay          - Default = 5000   - Delay between images in milliseconds - 5000 = 5 sec.\n");
-	  printf(" -type = Image Type 	  - Default = 0    - 0 = RAW8,  1 = RGB24,  2 = RAW16 \n");
-	  printf(" -quality		  - Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
+	  printf(" -daytimeDelay      - Default = 5000   - Delay between images in milliseconds - 5000 = 5 sec.\n");
+	  printf(" -type = Image Type - Default = 0    - 0 = RAW8,  1 = RGB24,  2 = RAW16 \n");
+	  printf(" -quality		  	  - Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
 	  printf(" -usb = USB Speed	  - Default = 40   - Values between 40-100, This is BandwidthOverload \n");
 	  printf(" -filename		  - Default = IMAGE.PNG \n");
-	  printf(" -flip        		  - Default = 0    - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
+	  printf(" -flip        	  - Default = 0    - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
 	  printf("\n");
 	  printf(" -text        		  - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c \"Text Overlay\"\n");
 	  printf(" -textx        		  - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
@@ -316,9 +316,9 @@ int  main(int argc, char* argv[])
 	  printf(" -lat = Latitude   	  - Default = 60.7N (Whitehorse)   - Latitude of the camera.\n");
 	  printf(" -lon = Longitude  	  - Default = 135.05W (Whitehorse) - Longitude of the camera\n");
 	  printf("\n");
-	  printf(" -nodisplay        	  - Add this parameter to capture images without using a desktop environment \n");
-	  printf(" -time		  - Adds the time to the image. Combine with Text X and Text Y for placement \n");
-	  printf(" -darkframe             - Set to 1 to disable time and text overlay \n");
+	  printf(" -preview        	  - set to 1 to preview the captured images. Only works with a Desktop Environment \n");
+	  printf(" -time		  	  - Adds the time to the image. Combine with Text X and Text Y for placement \n");
+	  printf(" -darkframe         - Set to 1 to disable time and text overlay \n");
 
 
 	  printf("%sUsage:\n", KRED);
@@ -444,7 +444,7 @@ printf("%s",KGRN);
 	printf(" Filename: %s\n",fileName);
 	printf(" Latitude: %s\n",latitude);
 	printf(" Longitude: %s\n",longitude);
-  printf(" No Display: %d\n",noDisplay);
+    printf(" Preview: %d\n",preview);
 	printf(" Time: %d\n",time);
 	printf(" Darkframe: %d\n",darkframe);
 printf("%s",KNRM);
@@ -469,7 +469,7 @@ printf("%s",KNRM);
 	ASISetControlValue(CamNum, ASI_FLIP, asiFlip, ASI_FALSE);
 
 	pthread_t thread_display=0;
-	if (noDisplay == 0) {
+	if (preview == 1) {
 		bDisplay = 1;
 		pthread_create(&thread_display, NULL, Display, (void*)pRgb);
 	}

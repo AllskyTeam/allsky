@@ -67,7 +67,9 @@ In order to upload images and videos to your website, you'll need to fill your F
 ```shell
 nano scripts/ftp-settings.sh
 ```
-**saveImage.sh** is called every time the camera take a new image. You can play with this file in case your sensor is not dead center.
+**saveImageNight.sh** is called every time the camera takes a new image at night. You can play with this file in case your sensor is not dead center.
+
+**saveImageDay.sh** is called every time the camera takes a new image during the day. Images are not archived on the SD card. They are only resized and uploaded periodically in order to monitor the sky by day.
 
 At the end of the night **endOfNight.sh** is run. It calls a few other scripts based on your config.sh content.
 
@@ -75,13 +77,17 @@ nano is a text editor. Hit **ctrl + x**, followed by **y** and **Enter** in orde
 
 ## Usage
 
-Systemd is used to launch the software automatically when the Raspberry Pi boots up. To disable this behavior, open a terminal and type
+### Autostart
+
+Systemd is used to launch the software automatically when the Raspberry Pi boots up. To enable or disable this behavior, you can use these commands.
 
 ```
+sudo systemctl enable allsky.service
 sudo systemctl disable allsky.service
 ```
+**Note:*** The service is enabled by default.
 
-If you want to start, stop or restart the program manually, you can use one of the following commands:
+When you want to start, stop or restart the program, you can use one of the following commands:
 ```shell
 sudo service allsky start
 sudo service allsky stop
@@ -91,6 +97,18 @@ To know the status of the allsky software, type:
 ```shell
 sudo service allsky status
 ```
+
+### Manual Start
+Starting the program from the terminal can be a great way to track down issues as it provides debug information.
+To start the program manually, make sure you first stop the service and run:
+```
+./allsky.sh
+```
+If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote desktop or VNC, you can add the `preview` argument in order to show the images the program is currently saving. 
+```
+./allsky.sh preview
+```
+
 
 ## Graphical Interface
 
@@ -215,11 +233,12 @@ In order to keep the Raspberry Pi SD card from filling up, 2 settings have been 
 ```
 Modify these values if you wish to increase/decrease the number of nights to retain on the card. Set to false to keep all nights (requires manual management of SD card free space).
 
-## Usage without desktop environments
+## Logging issues
 
-If you're using Raspbian lite or another distribution without a desktop environment, make sure to set the nodisplay option to 1 in settings.json.
-
-Also if your Raspberry Pi doesn't have a monitor on it's HDMI port, the nodisplay option should be set to 1.
+When using the allsky service, issues are written to a log file. In case the program stopped, crashed of behaved in an abnormal way, you can take a look at this log file:
+```
+tail /var/log/allsky.log
+```
 
 
 ## Compile your own version
@@ -248,5 +267,5 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 * version **0.6**: Added daytime exposure and auto-exposure capability
 	* Added -maxexposure, -autoexposure, -maxgain, -autogain options
  	* Autostart is now based on systemd and should work on all raspbian based systems, including headless distributions. Remote controlling should not start multiple instances of the software.
- 	* Moved nodisplay option to config.sh. Default is now "1".
+ 	* Replaced `nodisplay` option with `preview` argument. No preview in autostart mode.
  	* When using the GUI, camera options can be saved without rebooting the RPi.

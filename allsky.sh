@@ -13,8 +13,11 @@ do
 	ARGUMENTS="$ARGUMENTS -$KEY `jq -r '.'$KEY $CAMERA_SETTINGS` "
 done
 
-# Pass other arguments that are not specific to the camera
-ARGUMENTS="$ARGUMENTS -nodisplay $NODISPLAY"
+# When using a desktop environment (Remote Desktop, VNC, HDMI output, etc), a preview of the capture can be displayed in a separate window
+# The preview mode does not work if allsky.sh is started as a service or if the debian distribution has no desktop environment.
+if [[ $1 == "preview" ]] ; then
+	ARGUMENTS="$ARGUMENTS -preview 1"
+fi
 ARGUMENTS="$ARGUMENTS -daytime $DAYTIME"
 
 echo "$ARGUMENTS">>log.txt

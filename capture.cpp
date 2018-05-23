@@ -49,6 +49,8 @@ void cvText(IplImage* img, const char* text, int x, int y, double fontsize, int 
 	cv::putText(mat_img, text, cvPoint(x, y), fontname, fontsize, cvScalar(fontcolor[0],fontcolor[1],fontcolor[2]), linewidth, linetype);
 }
 
+extern unsigned long GetTickCount();
+
 char* getTime(){
 	static int seconds_last = 99;
 	static char TimeString[128];
@@ -179,6 +181,9 @@ int  main(int argc, char* argv[])
 	char const* bayer[] = {"RG","BG","GR","GB"};
 	int CamNum=0;
 	int i;
+	void* retval;
+	bool endOfNight = false;
+	pthread_t hthdSave = 0;
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -449,8 +454,6 @@ printf("%s",KGRN);
 	printf(" Darkframe: %d\n",darkframe);
 printf("%s",KNRM);
 
-//	asiBrightness=asiBrightness*1000;
-
 	ASISetROIFormat(CamNum, width, height, bin, (ASI_IMG_TYPE)Image_type);
 	ASIGetROIFormat(CamNum, &width, &height, &bin, (ASI_IMG_TYPE*)&Image_type);
 
@@ -474,11 +477,6 @@ printf("%s",KNRM);
 		pthread_create(&thread_display, NULL, Display, (void*)pRgb);
 	}
 
-	void* retval;
-	bool endOfNight = false;
-	ASI_EXPOSURE_STATUS status;
-	pthread_t hthdSave = 0;
-
 	if(!bSaveRun)
 	{
 		bSaveRun = true;
@@ -492,6 +490,7 @@ printf("%s",KNRM);
 		// Find out if it is currently DAY or NIGHT
 		calculateDayOrNight(latitude, longitude);
 		int expTime = round(asiExposure/1000000);
+		int time1,time2,actualExposure;
 
 		if(Image_type != ASI_IMG_RGB24 && Image_type != ASI_IMG_RAW16)
 		{
@@ -504,57 +503,69 @@ printf("%s",KNRM);
 
 		if (dayOrNight == "NIGHT"){
 			printf("\n");
-			printf("Saving %d", expTime);
-			printf("s exposure images every %d ms\n\n", delay);
+			if (asiAutoExposure == 1)
+				printf("Saving auto exposed images every %d ms\n\n", delay);
+			else {
+				printf("Saving %d", expTime);
+				printf("s exposure images every %d ms\n\n", delay);
+			}
 			printf("Press Ctrl+C to stop\n\n");
 
 			// Restore exposure value for night time capture
 			ASISetControlValue(CamNum, ASI_EXPOSURE, asiExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
 			ASISetControlValue(CamNum, ASI_GAIN, asiGain, asiAutoGain == 1 ? ASI_TRUE : ASI_FALSE);
-			ASIStartExposure(CamNum, ASI_FALSE);
-			status = ASI_EXP_WORKING;
-			usleep(round(0.95*asiExposure)); //experimental: slep 95% of exposure time
-
-			while(status == ASI_EXP_WORKING)
-			{
-				ASIGetExpStatus(CamNum, &status);
-				usleep(500*1000); //experimental: let's sleep for 0.5 s, to query the camera status a bit less often
-			}
-
-			if(status == ASI_EXP_SUCCESS){
-				ASIGetDataAfterExp(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize);
-			}
-
-			sprintf(bufTime, "%s", getTime());
-			if (time == 1 ){
-				ImgText = bufTime;
-			}
-		
-			if (darkframe != 1 ){
-  				cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
-			}
-
-			printf("Saving...");
-			printf(bufTime);
+			
+			printf("Starting nighttime capture");
 			printf("\n");
-			if(!bSavingImg)
-			{
-				pthread_mutex_lock(& mtx_SaveImg);
-				pthread_cond_signal(&cond_SatrtSave);
-				pthread_mutex_unlock(& mtx_SaveImg);
+
+			// Start video mode
+			ASIStartVideoCapture(CamNum);
+				
+			while(bMain && dayOrNight == "NIGHT"){
+				calculateDayOrNight(latitude, longitude);
+				time1 = GetTickCount();
+				if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, asiExposure<=100?200:(asiExposure*2+500)) == ASI_SUCCESS){	
+					sprintf(bufTime, "%s", getTime());
+					if (time == 1 ){
+						ImgText = bufTime;
+					}	
+					if (darkframe != 1 ){
+  						cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
+					}				
+					if(pRgb){
+						cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
+						printf("Saving...");
+						printf(bufTime);
+						printf("\n");
+						if(!bSavingImg)
+						{
+							pthread_mutex_lock(& mtx_SaveImg);
+							pthread_cond_signal(&cond_SatrtSave);
+							pthread_mutex_unlock(& mtx_SaveImg);
+						}
+					}
+					if (asiAutoExposure == 1){
+						time2 = GetTickCount();
+						actualExposure = (time2 -time1) * 1000;
+						printf("Auto Exposure value: %d ms\n", actualExposure/1000);
+
+						// Delay applied before next exposure
+						if (actualExposure < asiMaxExposure)
+							usleep(asiMaxExposure-actualExposure + delay*1000);
+						else
+							usleep(delay*1000);
+					}
+					else
+						usleep(delay*1000);
+				}
 			}
 			endOfNight = true;
-			// Delay applied before next exposure
-			usleep(delay*1000);
+			// Stop video mode
+			ASIStopVideoCapture(CamNum);
 
 		} else if (dayOrNight == "DAY"){
 			printf("\n");
-			if (asiAutoExposure == 1)
-				printf("Saving auto exposed images every %d ms\n\n", daytimeDelay);
-			else {
-				printf("Saving %d", expTime);
-				printf("s exposure images every %d ms\n\n", daytimeDelay);
-			}
+			printf("Saving auto exposed images every %d ms\n\n", daytimeDelay);
 			printf("Press Ctrl+C to stop\n\n");
 			if (endOfNight == true){
 				system("scripts/endOfNight.sh &");
@@ -566,8 +577,6 @@ printf("%s",KNRM);
 			} else {
 				printf("Starting daytime capture");
 				printf("\n");
-				// Stop Exposure mode
-				ASIStopExposure(CamNum);
 				// Set Exposure to something low for daytime capture
 				int exp_ms=32;
 				// Enable Auto-Exposure

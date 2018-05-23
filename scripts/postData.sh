@@ -1,12 +1,17 @@
 #!/bin/bash
 source /home/pi/allsky/config.sh
 
+# TODO Needs fixing when civil twilight happens after midnight
 cd /home/pi/allsky/scripts
 
 latitude=60.7N
 longitude=135.02W
 timezone=-0700
-streamDaytime=true
+streamDaytime=false
+
+if [[ $DAYTIME == "1" ]] ; then
+	streamDaytime=true;
+fi
 
 echo "Posting Next Twilight Time"
 today=`date +%Y-%m-%d`

@@ -49,8 +49,6 @@ void cvText(IplImage* img, const char* text, int x, int y, double fontsize, int 
 	cv::putText(mat_img, text, cvPoint(x, y), fontname, fontsize, cvScalar(fontcolor[0],fontcolor[1],fontcolor[2]), linewidth, linetype);
 }
 
-extern unsigned long GetTickCount();
-
 char* getTime(){
 	static int seconds_last = 99;
 	static char TimeString[128];
@@ -158,7 +156,7 @@ int  main(int argc, char* argv[])
 	int Image_type=1;
 	int asiBandwidth=40;
 	int asiExposure=5000000;
-	int asiMaxExposure=10000000;
+	int asiMaxExposure=10000;
 	int asiAutoExposure=0;
 	int asiGain=150;
 	int asiMaxGain=200;
@@ -288,7 +286,7 @@ int  main(int argc, char* argv[])
 	  printf(" -width  		  - Default = Camera Max Width \n");
 	  printf(" -height     		  - Default = Camera Max Height \n");
 	  printf(" -exposure		  - Default = 5000000 - Time in µs (equals to 5 sec) \n");
-	  printf(" -maxexposure		  - Default = 10000000 - Time in µs (equals to 5 sec) \n");
+	  printf(" -maxexposure		  - Default = 10000 - Time in ms (equals to 10 sec) \n");
 	  printf(" -autoexposure	  - Default = 0 - Set to 1 to enable auto Exposure \n");
 	  printf(" -gain			  - Default = 50 \n");
 	  printf(" -maxgain			  - Default = 200 \n");
@@ -425,7 +423,7 @@ printf("%s",KGRN);
 	printf(" Resolution: %dx%d \n",width,height);
 	printf(" Quality: %d \n",quality[1]);
 	printf(" Exposure: %dµs\n",asiExposure);
-	printf(" Max Exposure: %dµs\n",asiMaxExposure);
+	printf(" Max Exposure: %dms\n",asiMaxExposure);
 	printf(" Auto Exposure: %d\n",asiAutoExposure);
 	printf(" Gain: %d\n",asiGain);
 	printf(" Max Gain: %d\n",asiMaxGain);
@@ -490,7 +488,6 @@ printf("%s",KNRM);
 		// Find out if it is currently DAY or NIGHT
 		calculateDayOrNight(latitude, longitude);
 		int expTime = round(asiExposure/1000000);
-		int time1,time2,actualExposure;
 
 		if(Image_type != ASI_IMG_RGB24 && Image_type != ASI_IMG_RAW16)
 		{
@@ -523,7 +520,6 @@ printf("%s",KNRM);
 				
 			while(bMain && dayOrNight == "NIGHT"){
 				calculateDayOrNight(latitude, longitude);
-				time1 = GetTickCount();
 				if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, asiExposure<=100?200:(asiExposure*2+500)) == ASI_SUCCESS){	
 					sprintf(bufTime, "%s", getTime());
 					if (time == 1 ){
@@ -544,14 +540,21 @@ printf("%s",KNRM);
 							pthread_mutex_unlock(& mtx_SaveImg);
 						}
 					}
+					if (asiAutoGain == 1){
+						long autoGain = 0;
+						ASIGetControlValue(CamNum, ASI_GAIN, &autoGain, &bAuto);
+						printf("Auto Gain value: %.0f\n", (float)autoGain);
+					}
 					if (asiAutoExposure == 1){
-						time2 = GetTickCount();
-						actualExposure = (time2 -time1) * 1000;
-						printf("Auto Exposure value: %d ms\n", actualExposure/1000);
+						long autoExp = 0;
+						ASIGetControlValue(CamNum, ASI_EXPOSURE, &autoExp, &bAuto);
+						printf("Auto Exposure value: %.0f ms\n", (float)autoExp/1000);
 
 						// Delay applied before next exposure
-						if (actualExposure < asiMaxExposure)
-							usleep(asiMaxExposure-actualExposure + delay*1000);
+						if (autoExp < asiMaxExposure*1000) {
+							printf("Sleeping: %d ms\n", asiMaxExposure - (int)(autoExp/1000) + delay);
+							usleep(asiMaxExposure*1000-autoExp + delay*1000);
+						}
 						else
 							usleep(delay*1000);
 					}

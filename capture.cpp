@@ -14,6 +14,7 @@
 #include <ctime>
 #include <stdlib.h>
 #include <signal.h>
+#include <fstream>
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
@@ -125,6 +126,13 @@ void calculateDayOrNight(const char* latitude, const char* longitude)
 	dayOrNight = exec(sunwaitCommand.c_str());
 	dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
 }
+
+void writeToLog(int val) {
+	std::ofstream outfile;
+  	outfile.open("log.txt", std::ios_base::app);
+  	outfile << val;
+  	outfile << "\n";  
+} 
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -488,6 +496,7 @@ printf("%s",KNRM);
 		// Find out if it is currently DAY or NIGHT
 		calculateDayOrNight(latitude, longitude);
 		int expTime = round(asiExposure/1000000);
+		int exp_ms=0;
 
 		if(Image_type != ASI_IMG_RGB24 && Image_type != ASI_IMG_RAW16)
 		{
@@ -511,6 +520,7 @@ printf("%s",KNRM);
 			// Restore exposure value for night time capture
 			ASISetControlValue(CamNum, ASI_EXPOSURE, asiExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
 			ASISetControlValue(CamNum, ASI_GAIN, asiGain, asiAutoGain == 1 ? ASI_TRUE : ASI_FALSE);
+			exp_ms=round(asiExposure/1000);
 			
 			printf("Starting nighttime capture");
 			printf("\n");
@@ -519,8 +529,7 @@ printf("%s",KNRM);
 			ASIStartVideoCapture(CamNum);
 				
 			while(bMain && dayOrNight == "NIGHT"){
-				calculateDayOrNight(latitude, longitude);
-				if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, asiExposure<=100?200:(asiExposure*2+500)) == ASI_SUCCESS){	
+				if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, exp_ms<=100?200:exp_ms*2+500) == ASI_SUCCESS){	
 					sprintf(bufTime, "%s", getTime());
 					if (time == 1 ){
 						ImgText = bufTime;
@@ -529,7 +538,6 @@ printf("%s",KNRM);
   						cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
 					}				
 					if(pRgb){
-						cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
 						printf("Saving...");
 						printf(bufTime);
 						printf("\n");
@@ -544,29 +552,36 @@ printf("%s",KNRM);
 						long autoGain = 0;
 						ASIGetControlValue(CamNum, ASI_GAIN, &autoGain, &bAuto);
 						printf("Auto Gain value: %.0f\n", (float)autoGain);
+						writeToLog(autoGain);
 					}
 					if (asiAutoExposure == 1){
 						long autoExp = 0;
 						ASIGetControlValue(CamNum, ASI_EXPOSURE, &autoExp, &bAuto);
 						printf("Auto Exposure value: %.0f ms\n", (float)autoExp/1000);
+						writeToLog(autoExp);
 
 						// Delay applied before next exposure
 						if (autoExp < asiMaxExposure*1000) {
 							printf("Sleeping: %d ms\n", asiMaxExposure - (int)(autoExp/1000) + delay);
 							usleep(asiMaxExposure*1000-autoExp + delay*1000);
 						}
-						else
+						else {
 							usleep(delay*1000);
+						}
 					}
-					else
+					else {
 						usleep(delay*1000);
+					}
+					calculateDayOrNight(latitude, longitude);
 				}
 			}
 			endOfNight = true;
 			// Stop video mode
 			ASIStopVideoCapture(CamNum);
+			// Sleep 2 seconds (for SEG fault debugging)
+			usleep(2000000);
 
-		} else if (dayOrNight == "DAY"){
+		} else if (dayOrNight == "DAY") {
 			printf("\n");
 			printf("Saving auto exposed images every %d ms\n\n", daytimeDelay);
 			printf("Press Ctrl+C to stop\n\n");
@@ -581,15 +596,13 @@ printf("%s",KNRM);
 				printf("Starting daytime capture");
 				printf("\n");
 				// Set Exposure to something low for daytime capture
-				int exp_ms=32;
+				exp_ms=32;
 				// Enable Auto-Exposure
 				ASISetControlValue(CamNum, ASI_EXPOSURE, exp_ms, ASI_TRUE);
 				// Start video mode
 				ASIStartVideoCapture(CamNum);
 				
 				while(bMain && dayOrNight == "DAY"){
-					calculateDayOrNight(latitude, longitude);
-					
 					if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, exp_ms<=100?200:exp_ms*2) == ASI_SUCCESS){	
 						sprintf(bufTime, "%s", getTime());
 						if (time == 1 ){
@@ -609,14 +622,16 @@ printf("%s",KNRM);
 						}
 						usleep(daytimeDelay*1000);
 					}
+					calculateDayOrNight(latitude, longitude);
 				}
 				// Stop video mode
 				ASIStopVideoCapture(CamNum);
+				// Sleep 2 seconds (for SEG fault debugging)
+				usleep(2000000);
 			}
 		}
 	}
 
-	ASIStopExposure(CamNum);
 	ASICloseCamera(CamNum);
 
 	if(bDisplay)

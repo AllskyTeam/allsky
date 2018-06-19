@@ -5,9 +5,10 @@ source /home/pi/allsky/scripts/filename.sh
 cd /home/pi/allsky
 
 # Make a directory to store current night images
-# the 12 hours ago option ensures that throughout the entire night, we are using the same date.
+# the 12 hours ago option ensures that we're always using today's date even at high latitudes where civil twilight can start after midnight
 CURRENT=$(date -d '12 hours ago' +'%Y%m%d')
 mkdir -p images/$CURRENT
+mkdir -p images/$CURRENT/thumbnails
 
 # If we are in darkframe mode, we only save to the dark file
 DARK_MODE=$(jq -r '.darkframe' "$CAMERA_SETTINGS")
@@ -35,6 +36,9 @@ cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 
 # Save image in images/current directory
 cp $IMAGE_TO_USE "images/$CURRENT/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION"
+
+# Create a thumbnail of the image for faster load in web GUI
+convert "$IMAGE_TO_USE" -resize 100x75 "images/$CURRENT/thumbnails/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION";
 
 echo -e "Saving $FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION\n" >> log.txt
 

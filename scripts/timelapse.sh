@@ -15,6 +15,12 @@ if [ $# -lt 1 ]
         exit 3
 fi
 
+# find thumbnails and rename them to match full images names
+find "images/$1/thumbnails" -name "*.$EXTENSION" -size 0 -delete
+ls -rt images/$1/thumbnails/*.$EXTENSION |
+gawk 'BEGIN{ a=1 }{ printf "mv -v %s images/'$1'/thumbnails/%04d.'$EXTENSION'\n", $0, a++ }' |
+bash
+
 # find images, rename images sequentially and start avconv to build mp4; upload mp4 and move directory
 find "images/$1" -name "*.$EXTENSION" -size 0 -delete
 ls -rt images/$1/*.$EXTENSION |

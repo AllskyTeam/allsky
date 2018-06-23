@@ -266,6 +266,7 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* Keograms and Startrails generation is now much faster thanks to a rewrite by Jarno Paananen.
 * version **0.6**: Added daytime exposure and auto-exposure capability
 	* Added -maxexposure, -autoexposure, -maxgain, -autogain options
- 	* Autostart is now based on systemd and should work on all raspbian based systems, including headless distributions. Remote controlling should not start multiple instances of the software.
+ 	* Autostart is now based on systemd and should work on all raspbian based systems, including headless distributions. Remote controlling will not start multiple instances of the software.
  	* Replaced `nodisplay` option with `preview` argument. No preview in autostart mode.
  	* When using the GUI, camera options can be saved without rebooting the RPi.
+ 	* Added a publicly accessible preview to the GUI: public.php

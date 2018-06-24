@@ -6,7 +6,7 @@
    "autoexposure":"1",
    "gain":"0",
    "maxgain":"200",
-   "autogain":"0"
+   "autogain":"0",
    "gain":"50",
    "gamma":"50",
    "brightness":"50",
@@ -14,7 +14,7 @@
    "wbb":"90",
    "bin":"1",
    "delay":"10",
-   "daytimeDelay": "5000"
+   "daytimeDelay": "5000",
    "type":"1",
    "quality":"95",
    "usb":"40",

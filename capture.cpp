@@ -406,6 +406,14 @@ int  main(int argc, char* argv[])
 	ASIGetControlValue(CamNum, ASI_TEMPERATURE, &ltemp, &bAuto);
 	printf("- Sensor temperature:%02f\n", (float)ltemp/10.0);
 
+	// Adjusting variables for chosen binning
+	height = height/bin;
+	width = width/bin;
+	iTextX = iTextX/bin;
+	iTextY = iTextY/bin;
+	fontsize = fontsize/bin;
+	linewidth = linewidth/bin;
+
 	const char * sType;
 	if(Image_type == ASI_IMG_RAW16)
 		{
@@ -461,7 +469,7 @@ printf("%s",KGRN);
 printf("%s",KNRM);
 
 	ASISetROIFormat(CamNum, width, height, bin, (ASI_IMG_TYPE)Image_type);
-	ASIGetROIFormat(CamNum, &width, &height, &bin, (ASI_IMG_TYPE*)&Image_type);
+	//ASIGetROIFormat(CamNum, &width, &height, &bin, (ASI_IMG_TYPE*)&Image_type);
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -529,7 +537,7 @@ printf("%s",KNRM);
 			ASIStartVideoCapture(CamNum);
 				
 			while(bMain && dayOrNight == "NIGHT"){
-				if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, exp_ms<=100?200:exp_ms*2+500) == ASI_SUCCESS){	
+				if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, -1) == ASI_SUCCESS){	
 					sprintf(bufTime, "%s", getTime());
 					if (time == 1 ){
 						ImgText = bufTime;

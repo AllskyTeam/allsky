@@ -133,13 +133,19 @@ http://allsky.local
 
 The default username is 'admin' and the default password is 'secret'.
 
-**Note:*** The GUI setup uses /var/www/html/settings.json for the camera settings. If, for some reason, you prefer to use the non-gui version (launching allsky.sh from terminal), make sure to edit your config.sh file to have CAMERA_SETTINGS="settings.json" instead.
+A public page is also available in order to view the current image without having to log into the portal. This can be useful for people who don't have a personal website but still want to share a view of their sky :
+
+```sh
+http://your_raspberry_IP/public.php
+```
+
+**Note:*** The GUI setup uses /var/www/html/settings.json for the camera settings. If, for some reason, you prefer to go back to the non-gui version, make sure to edit your config.sh file to have CAMERA_SETTINGS="settings.json" instead.
 
 ## Dark frame subtraction
 
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/darkframe.jpg)
 
-The dark frame subtraction feature was implemented to remove hot pixels from night sky images. The concept is the following: Take an image with a cover on your camera lens and subtract that image later to all images taken during the night.
+The dark frame subtraction feature was implemented to remove hot pixels from night sky images. The concept is the following: Take an image with a cover on your camera lens and subtract that image later to all images taken throughout the night.
 
 You only need to follow these instructions once.
 

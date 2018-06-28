@@ -44,10 +44,14 @@ pthread_cond_t cond_SatrtSave;
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
-void cvText(IplImage* img, const char* text, int x, int y, double fontsize, int linewidth, int linetype, int fontname, int fontcolor[])
+void cvText(IplImage* img, const char* text, int x, int y, double fontsize, int linewidth, int linetype, int fontname, int fontcolor[], int imgtype)
 {
 	cv::Mat mat_img(img );
-	cv::putText(mat_img, text, cvPoint(x, y), fontname, fontsize, cvScalar(fontcolor[0],fontcolor[1],fontcolor[2]), linewidth, linetype);
+	if (imgtype == ASI_IMG_RAW16) {
+		cv::putText(mat_img, text, cvPoint(x, y), fontname, fontsize, cvScalar(fontcolor[0],fontcolor[1],fontcolor[2]), linewidth, linetype);
+	} else {
+		cv::putText(mat_img, text, cvPoint(x, y), fontname, fontsize, cvScalar(fontcolor[0],fontcolor[1],fontcolor[2], 255), linewidth, linetype);
+	}
 }
 
 char* getTime(){
@@ -469,7 +473,6 @@ printf("%s",KGRN);
 printf("%s",KNRM);
 
 	ASISetROIFormat(CamNum, width, height, bin, (ASI_IMG_TYPE)Image_type);
-	//ASIGetROIFormat(CamNum, &width, &height, &bin, (ASI_IMG_TYPE*)&Image_type);
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -543,7 +546,7 @@ printf("%s",KNRM);
 						ImgText = bufTime;
 					}	
 					if (darkframe != 1 ){
-  						cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
+  						cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
 					}				
 					if(pRgb){
 						printf("Saving...");
@@ -617,7 +620,7 @@ printf("%s",KNRM);
 							ImgText = bufTime;
 						}					
 						if(pRgb){
-							cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor);
+							cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
 							printf("Capturing daytime image...");
 							printf(bufTime);
 							printf("\n");

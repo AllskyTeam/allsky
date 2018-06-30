@@ -603,6 +603,7 @@ printf("%s",KNRM);
 			if (daytimeCapture != 1){
 				printf(" It's daytime... we're not saving images");
 				printf("\n");
+				usleep(daytimeDelay*1000);
 			} else {
 				printf("Starting daytime capture");
 				printf("\n");

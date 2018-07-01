@@ -86,6 +86,7 @@ void* Display(void* params)
 	while(bDisplay)
 	{
 		cvShowImage("video", pImg);
+		cvWaitKey(100);
 	}
 	cvDestroyWindow("video");
 	printf("Display thread over\n");

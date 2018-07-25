@@ -2,10 +2,10 @@
 source /home/pi/allsky/scripts/ftp-settings.sh
 
 # Set to true to upload current image to your website
-UPLOAD_IMG=true
+UPLOAD_IMG=false
 
 # Set to true to upload timelapse video to your website at the end of each night
-UPLOAD_VIDEO=true
+UPLOAD_VIDEO=false
 
 # Set to true to send data to your server at the end of each night
 POST_END_OF_NIGHT_DATA=false
@@ -34,7 +34,7 @@ NIGHTS_TO_KEEP=14
 # Path to the dark frame for hot pixels subtraction. Can be jpg or png.
 DARK_FRAME="dark.png"
 
-# Enable Daytime Capture
+# Set to 1 to enable Daytime Capture
 DAYTIME="0"
 
 # Path to the camera settings (exposure, gain, delay, overlay, etc)

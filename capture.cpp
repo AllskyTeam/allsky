@@ -229,7 +229,7 @@ int  main(int argc, char* argv[])
 	 else if(strcmp(argv[i], "-quality") == 0){
         	quality[1] = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-exposure") == 0){
-        	asiExposure = atoi(argv[i+1]); i++;}
+        	asiExposure = atoi(argv[i+1])*1000; i++;}
 		else if(strcmp(argv[i], "-maxexposure") == 0){
 	       	asiMaxExposure = atoi(argv[i+1]); i++;}
 		else if(strcmp(argv[i], "-autoexposure") == 0){
@@ -443,7 +443,7 @@ printf("%s",KGRN);
 	printf(" Image Type: %s\n",sType);
 	printf(" Resolution: %dx%d \n",width,height);
 	printf(" Quality: %d \n",quality[1]);
-	printf(" Exposure: %dµs\n",asiExposure);
+	printf(" Exposure: %1.0fms\n",round(asiExposure/1000));
 	printf(" Max Exposure: %dms\n",asiMaxExposure);
 	printf(" Auto Exposure: %d\n",asiAutoExposure);
 	printf(" Gain: %d\n",asiGain);

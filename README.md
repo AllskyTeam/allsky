@@ -8,7 +8,7 @@ This is the source code for the Wireless Allsky Camera project described [on Ins
 
 In order to get the camera working properly you will need the following hardware:
 
- * An ASI camera from ZWO. Tested cameras include ASI120MC*, ASI120MM*, ASI120MC-S, ASI120MM-S, ASI224MC, ASI178MC, ASI185MC, ASI1600MC
+ * An ASI camera from ZWO. Tested cameras include ASI120MC*, ASI120MM*, ASI120MC-S, ASI120MM-S, ASI224MC, ASI178MC, ASI185MC, ASI290MC, ASI1600MC
  * A Raspberry Pi 2 or 3
  * A USB wireless dongle if using a Pi 2. [This one](https://www.amazon.ca/Edimax-EW-7811Un-150Mbps-Raspberry-Supports/dp/B003MTTJOY) has been tested.
 
@@ -271,8 +271,9 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 * version **0.5**: Added Startrails (image stacking) with brightness control
 	* Keograms and Startrails generation is now much faster thanks to a rewrite by Jarno Paananen.
 * version **0.6**: Added daytime exposure and auto-exposure capability
-	* Added -maxexposure, -autoexposure, -maxgain, -autogain options
+	* Added -maxexposure, -autoexposure, -maxgain, -autogain options. Note that using autoexposure and autogain at the same time may produce unexpected results (black frames).
  	* Autostart is now based on systemd and should work on all raspbian based systems, including headless distributions. Remote controlling will not start multiple instances of the software.
  	* Replaced `nodisplay` option with `preview` argument. No preview in autostart mode.
  	* When using the GUI, camera options can be saved without rebooting the RPi.
  	* Added a publicly accessible preview to the GUI: public.php
+	* Changed exposure unit to milliseconds instead of microseconds

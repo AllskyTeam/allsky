@@ -38,7 +38,9 @@ cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 cp $IMAGE_TO_USE "images/$CURRENT/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION"
 
 # Create a thumbnail of the image for faster load in web GUI
-convert "$IMAGE_TO_USE" -resize 100x75 "images/$CURRENT/thumbnails/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION";
+if identify $IMAGE_TO_USE >/dev/null 2>&1; then
+	convert "$IMAGE_TO_USE" -resize 100x75 "images/$CURRENT/thumbnails/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION";
+fi
 
 echo -e "Saving $FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION\n" >> log.txt
 

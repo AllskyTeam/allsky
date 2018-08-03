@@ -612,6 +612,7 @@ printf("%s",KNRM);
 				exp_ms=32;
 				// Enable Auto-Exposure
 				ASISetControlValue(CamNum, ASI_EXPOSURE, exp_ms, ASI_TRUE);
+				ASISetControlValue(CamNum, ASI_GAIN, 0, ASI_FALSE);
 				// Start video mode
 				ASIStartVideoCapture(CamNum);
 				

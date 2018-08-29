@@ -25,11 +25,11 @@ if [[ $KEOGRAM == "true" ]]; then
         echo -e "\n"
 fi
 
-# Generate startrails from collected images. Treshold set to 0.1 to avoid stacking over-exposed images
+# Generate startrails from collected images. Treshold set to 0.1 by default in config.sh to avoid stacking over-exposed images
 if [[ $STARTRAILS == "true" ]]; then
         echo -e "Generating Startrails\n"
 	mkdir -p /home/pi/allsky/images/$LAST_NIGHT/startrails/
-        ../startrails /home/pi/allsky/images/$LAST_NIGHT/ $EXTENSION 0.1 /home/pi/allsky/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.jpg
+        ../startrails /home/pi/allsky/images/$LAST_NIGHT/ $EXTENSION $BRIGHTNESS_THRESHOLD /home/pi/allsky/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.jpg
 	if [[ $UPLOAD_STARTRAILS == "true" ]] ; then
 		OUTPUT="/home/pi/allsky/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.jpg"
                 lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$STARTRAILS_DIR" \

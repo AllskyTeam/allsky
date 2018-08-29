@@ -22,6 +22,9 @@ UPLOAD_KEOGRAM=false
 # Set to true to generate a startrails image of the night. Will skip brighter images to avoid over-exposure
 STARTRAILS=true
 
+# Images with a brightness higher than the threshold will be skipped for startrails image generation
+BRIGHTNESS_THRESHOLD=0.1
+
 # Set to true to upload the startrails after it has been generated
 UPLOAD_STARTRAILS=false
 

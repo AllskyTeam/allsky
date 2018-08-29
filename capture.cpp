@@ -102,10 +102,11 @@ void* SaveImgThd(void * para)
 		bSavingImg = true;
 		if(pRgb){
 			cvSaveImage( fileName, pRgb, quality);
-			if (dayOrNight == "NIGHT")
+			if (dayOrNight == "NIGHT"){
 				system("scripts/saveImageNight.sh &");
-			else
+			} else {
 				system("scripts/saveImageDay.sh &");
+			}
 		}
 		bSavingImg = false;
 		pthread_mutex_unlock(&mtx_SaveImg);
@@ -136,8 +137,8 @@ void writeToLog(int val) {
 	std::ofstream outfile;
   	outfile.open("log.txt", std::ios_base::app);
   	outfile << val;
-  	outfile << "\n";  
-} 
+  	outfile << "\n";
+}
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -162,6 +163,7 @@ int  main(int argc, char* argv[])
 
 	char buf[1024]={0};
 	char bufTime[128]={0};
+	char bufTemp[128]={0};
 
 	int width=0;
 	int height=0;
@@ -186,6 +188,7 @@ int  main(int argc, char* argv[])
   	int preview=0;
 	int time=1;
 	int darkframe=0;
+	int showTemperature=0;
 	int daytimeCapture=0;
 	int help=0;
 
@@ -288,10 +291,11 @@ int  main(int argc, char* argv[])
         	time = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-darkframe") == 0){
                 darkframe = atoi(argv[i+1]); i++;}
+	else if(strcmp(argv[i], "-showTemperature") == 0){
+               showTemperature = atoi(argv[i+1]); i++;}
 		else if(strcmp(argv[i], "-daytime") == 0){
 	       	daytimeCapture = atoi(argv[i+1]); i++;}
-
-	}
+				}
   }
 
   if (help == 1) {
@@ -335,7 +339,7 @@ int  main(int argc, char* argv[])
 	  printf(" -preview        	  - set to 1 to preview the captured images. Only works with a Desktop Environment \n");
 	  printf(" -time		  	  - Adds the time to the image. Combine with Text X and Text Y for placement \n");
 	  printf(" -darkframe         - Set to 1 to disable time and text overlay \n");
-
+		printf(" -showTemperature         - Set to 1 to display the sensor temperature on the image \n");
 
 	  printf("%sUsage:\n", KRED);
 	  printf(" ./capture -width 640 -height 480 -exposure 5000000 -gamma 50 -type 1 -bin 1 -filename Lake-Laberge.PNG\n\n");
@@ -471,6 +475,7 @@ printf("%s",KGRN);
     printf(" Preview: %d\n",preview);
 	printf(" Time: %d\n",time);
 	printf(" Darkframe: %d\n",darkframe);
+	printf(" Show Temperature: %d\n",showTemperature);
 printf("%s",KNRM);
 
 	ASISetROIFormat(CamNum, width, height, bin, (ASI_IMG_TYPE)Image_type);
@@ -509,6 +514,7 @@ printf("%s",KNRM);
 		calculateDayOrNight(latitude, longitude);
 		int expTime = round(asiExposure/1000000);
 		int exp_ms=0;
+		int currentExposure = asiExposure;
 
 		if(Image_type != ASI_IMG_RGB24 && Image_type != ASI_IMG_RAW16)
 		{
@@ -530,25 +536,31 @@ printf("%s",KNRM);
 			printf("Press Ctrl+C to stop\n\n");
 
 			// Restore exposure value for night time capture
-			ASISetControlValue(CamNum, ASI_EXPOSURE, asiExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
+			ASISetControlValue(CamNum, ASI_EXPOSURE, currentExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
 			ASISetControlValue(CamNum, ASI_GAIN, asiGain, asiAutoGain == 1 ? ASI_TRUE : ASI_FALSE);
-			exp_ms=round(asiExposure/1000);
-			
+
 			printf("Starting nighttime capture");
 			printf("\n");
 
 			// Start video mode
 			ASIStartVideoCapture(CamNum);
-				
+
 			while(bMain && dayOrNight == "NIGHT"){
-				if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, -1) == ASI_SUCCESS){	
+				if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, -1) == ASI_SUCCESS){
 					sprintf(bufTime, "%s", getTime());
 					if (time == 1 ){
 						ImgText = bufTime;
-					}	
+					}
 					if (darkframe != 1 ){
-  						cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
-					}				
+						cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
+
+						if (showTemperature == 1 ){
+							// Read sensor temperature
+							ASIGetControlValue(CamNum, ASI_TEMPERATURE, &ltemp, &bAuto);
+							sprintf(bufTemp, "Sensor %.1fC", (float)ltemp/10);
+							cvText(pRgb, bufTemp, iTextX, iTextY+30, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
+						}
+					}
 					if(pRgb){
 						printf("Saving...");
 						printf(bufTime);
@@ -615,15 +627,32 @@ printf("%s",KNRM);
 				ASISetControlValue(CamNum, ASI_GAIN, 0, ASI_FALSE);
 				// Start video mode
 				ASIStartVideoCapture(CamNum);
-				
+
 				while(bMain && dayOrNight == "DAY"){
-					if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, exp_ms<=100?200:exp_ms*2) == ASI_SUCCESS){	
+					if(ASIGetVideoData(CamNum, (unsigned char*)pRgb->imageData, pRgb->imageSize, exp_ms<=100?200:exp_ms*2) == ASI_SUCCESS){
+
+						// Retrieve the current Exposure for smooth transition to night time
+					 	long autoExp = 0;
+						ASIGetControlValue(CamNum, ASI_EXPOSURE, &autoExp, &bAuto);
+						currentExposure = autoExp;
+
 						sprintf(bufTime, "%s", getTime());
 						if (time == 1 ){
 							ImgText = bufTime;
-						}					
-						if(pRgb){
+						}
+
+						if (darkframe != 1 ){
 							cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
+
+							if (showTemperature == 1 ){
+								// Read sensor temperature
+								ASIGetControlValue(CamNum, ASI_TEMPERATURE, &ltemp, &bAuto);
+								sprintf(bufTemp, "Sensor %.1fC", (float)ltemp/10);
+								cvText(pRgb, bufTemp, iTextX, iTextY+30, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
+							}
+						}
+
+						if(pRgb){
 							printf("Capturing daytime image...");
 							printf(bufTime);
 							printf("\n");
@@ -640,7 +669,8 @@ printf("%s",KNRM);
 				}
 				// Stop video mode
 				ASIStopVideoCapture(CamNum);
-				// Sleep 2 seconds (for SEG fault debugging)
+				// set currentExposure to
+				// Sleep 2 seconds before starting night time capture
 				usleep(2000000);
 			}
 		}

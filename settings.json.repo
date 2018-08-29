@@ -1,4 +1,4 @@
-{  
+{
    "width":"0",
    "height":"0",
    "exposure":"10000",
@@ -31,5 +31,6 @@
    "latitude":"60.7N",
    "longitude":"135.05W",
    "time":"1",
-   "darkframe":"0"
+   "darkframe":"0",
+   "showTemperature":"0"
 }

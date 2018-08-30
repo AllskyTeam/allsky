@@ -255,7 +255,7 @@ The program takes 3 arguments:
 
 Example when running the program manually:
 ```
-	./keogram ./images/20180223/ jpg ./images/20180223/keogram.jpg
+./keogram ./images/20180223/ jpg ./images/20180223/keogram.jpg
 ```
 
 To disable keograms, open **config.sh** and set
@@ -277,7 +277,7 @@ The program takes 4 arguments:
 
 Example when running the program manually:
 ```
-	./startrails ./images/20180223/ jpg 0.15 ./images/20180223/startrails.jpg
+./startrails ./images/20180223/ jpg 0.15 ./images/20180223/startrails.jpg
 ```
 
 To disable automatic startrails, open **config.sh** and set
@@ -290,8 +290,8 @@ STARTRAILS=false
 
 In order to keep the Raspberry Pi SD card from filling up, 2 settings have been added to **config.sh**. Automatic deletion is enabled by default and will keep 2 weeks of data on the card.
 ```
-	AUTO_DELETE=true
-	NIGHTS_TO_KEEP=14
+AUTO_DELETE=true
+NIGHTS_TO_KEEP=14
 ```
 Modify these values if you wish to increase/decrease the number of nights to retain on the card. Set to false to keep all nights (requires manual management of SD card free space).
 

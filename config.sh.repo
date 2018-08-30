@@ -37,8 +37,8 @@ NIGHTS_TO_KEEP=14
 # Path to the dark frame for hot pixels subtraction. Can be jpg or png.
 DARK_FRAME="dark.png"
 
-# Set to 1 to enable Daytime Capture
-DAYTIME="0"
+# Set to 0 to disable Daytime Capture
+DAYTIME="1"
 
 # Path to the camera settings (exposure, gain, delay, overlay, etc)
 CAMERA_SETTINGS="/home/pi/allsky/settings.json"

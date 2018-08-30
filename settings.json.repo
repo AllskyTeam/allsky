@@ -2,12 +2,11 @@
    "width":"0",
    "height":"0",
    "exposure":"10000",
-   "maxexposure":"10000",
+   "maxexposure":"20000",
    "autoexposure":"1",
-   "gain":"0",
+   "gain":"50",
    "maxgain":"200",
    "autogain":"0",
-   "gain":"50",
    "gamma":"50",
    "brightness":"50",
    "wbr":"53",
@@ -32,5 +31,5 @@
    "longitude":"135.05W",
    "time":"1",
    "darkframe":"0",
-   "showTemperature":"0"
+   "showTemperature":"1"
 }

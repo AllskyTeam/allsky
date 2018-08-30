@@ -19,7 +19,7 @@ In order to get the camera working properly you will need the following hardware
 
 You will need to install Raspbian on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
 
-Make sure you have a working internet connection by setting it either through the GUI or [the terminal](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md). 
+Make sure you have a working internet connection by setting it either through the GUI or [the terminal](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md).
 
 Start by installing git. You may already have it installed:
 
@@ -52,18 +52,73 @@ There is no 1-click update yet so until then, the easiest is to backup your conf
 
 ## Configuration
 
-Here's a quick overview of the configuration files. 
+Here's a quick overview of the configuration files.
 
 the first one is called **settings.json**. It contains the camera parameters such as exposure, gain but also latitude, longitude, etc.
 
 ```shell
 nano settings.json
 ```
+
+| Setting     | Default     | Additional Info |
+| ----------- | ----------- | ----------------|
+| width | 0 | 0 means max width. Look up your camera specifications to know what values are supported |
+| height | 0 |  0 means max height. Look up your camera specifications to know what values are supported |
+| exposure | 10000 | **Night** time exposure in milliseconds. During the day, auto-exposure is used. |
+| maxexposure | 20000 | This is the maximum exposure for **night** images when using auto-exposure. During the day, auto-exposure is always used. |
+| autoexposure | 1 | Set to 0 to disable auto-exposure at **night**. Auto-exposure delivers properly exposed images throughout the night even if the overall brightness of the sky changes (cloud cover, moon, aurora, etc). When set to 1, *maxexposure* value will be used as the delay between timelapse frames. |
+| gain | 50 | Gain for **Night** images. Varies from 0 to 600. During the day, gain is always set to 0 |
+| maxgain | 200 | Maximum gain for **night** images when using auto-gain.|
+| autogain | 0 | Set to 1 to allow auto-gain at **night**. This mode will adjust the gain of night images when the overall brightness of the sky changes (cloud cover, moon, aurora, etc). **Avoid using autoexposure and autogain together** as it produces unpredicatble results (dark frames, but not always).|
+| gamma | 50 | Varies between 0 and 100. This setting increases or decreases contrast between dark and bright areas. |
+| brightness | 50 | Varies between 0 and 100. This setting changes the amount of light in the image. |
+| wbr | 53 | Varies between 0 and 100. This is the intensity of the red component of the image. |
+| wbb | 90 | Varies between 0 and 100. This is the intensity of the blue component of the image. |
+| bin | 1 | bin 2 collects the light from 2x2 photosites to form 1 pixel on the image. bin 3 uses 3x3 photosites, etc. Increasing the bin results in smaller images and reduces the need for long exposure. Look up your camera specifications to know what values are supported |
+| delay | 10 | Time in milliseconds to wait between 2 frames at night. |
+| daytimeDelay | 5000 | Time in milliseconds to wait between 2 frames during the day. |
+| type | 1 | Image format. 0=RAW 8 bits, 1=RGB 24 bits, 2=RAW 16 bits |
+| quality | 95 | Compression of the image. 0(low quality) to 100(high quality) for JPG images, 0 to 9 for PNG |
+| usb | 40 | This is the USB bandwidth. Varies from 40 to 100. |
+| filename | image.jpg | this is the name used across the app. Supported extensions are JPG and PNG. |
+| flip | 0 | 0=Original, 1=Horizontal, 2=Vertical, 3=Both |
+| text | text | Text overlay. **Note**: It is replaced by timestamp if time=1 |
+| textx | 15 | Horizontal text placement from the left |
+| texty | 35 | Vertical text placement from the top |
+| fontname | 0 | Font type for the overlay. 0=Simplex, 1=Plain, 2=Duplex, 3=Complex, 4=Triplex, 5=Complex small, 6=Script simplex, 7=Script complex |
+| fontcolor | 255 255 255 | Font color in BGR |
+| fontsize | 0.7 | Font size |
+| fonttype | 0 | Controls the smoothness of the fonts. 0=Antialiased, 1=8 Connected, 2=4 Connected. |
+| fontline | 1 | font line thickness |
+| latitude | 60.7N | Latitude of the camera. N for North and S for South
+| longitude | 135.05W | longitude of the camera. E for East and W for West |
+| time | 1 | Replaces the text overlay |
+| darkframe | 0 | Set to 1 to enable dark frame capture. In this mode, overlays are hidden and the image is saved as dark.png by default |
+| showTemperature | 1 | Displays the sensor temperature under the text or timestamp |
+
 The second file called **config.sh** lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.
 
 ```shell
 nano config.sh
 ```
+
+| Configuration     | Default     | Additional Info |
+| ----------- | ----------- | ----------------|
+| UPLOAD_IMG | false | Set to true to upload (ftp) the current image to a server (website, blog, host, etc) |
+| UPLOAD_VIDEO | false | Set to true to upload the timelapse to a server |
+| POST_END_OF_NIGHT_DATA | false | Set to true to send some data to your server at the end of each night |
+| TIMELAPSE | true | Build a timelapse at the end of the night |
+| KEOGRAM | true | Builds a keogram at the end of the night |
+| UPLOAD_KEOGRAM | false | Set to true to upload the keogram to your server |
+| STARTRAILS | true | Stacks images to create a startrail at the end of the night |
+| BRIGHTNESS_THRESHOLD | 0.1 | Brightness level above which images are discarded (moon, head lights, aurora, etc) |
+| UPLOAD_STARTRAILS | false | Set to true to uplad the startrails to your server |
+| AUTO_DELETE | true | Enables automatic deletion of old images and videos |
+| NIGHTS_TO_KEEP | 14 | Number of nights to keep before starting deleting. Needs AUTO_DELETE=true to work. |
+| DARK_FRAME | dark.png | Path to the dark frame use for hot pixels subtraction. |
+| DAYTIME | 1 | Set to 0 to disable daytime liveview. |
+| CAMERA_SETTINGS | /home/pi/allsky/settings.json | Path to the camera settings file. **Note**: If using the GUI, this path will change to /var/www/html/settings.json |
+
 In order to upload images and videos to your website, you'll need to fill your FTP connection details in **ftp-settings.sh**
 ```shell
 nano scripts/ftp-settings.sh
@@ -105,7 +160,7 @@ To start the program manually, make sure you first stop the service and run:
 ```
 ./allsky.sh
 ```
-If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote desktop or VNC, you can add the `preview` argument in order to show the images the program is currently saving. 
+If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote desktop or VNC, you can add the `preview` argument in order to show the images the program is currently saving.
 ```
 ./allsky.sh preview
 ```
@@ -152,23 +207,23 @@ You only need to follow these instructions once.
 
 Manual method:
 * make sure config.sh has a DARK_FRAME configuration. Default is "dark.png"
-* Place a cover on your camera dome
+* Place a cover on your camera lens/dome
 * Set darkframe to 1 in settings.json
-* Reboot the Raspberry Pi: ```sudo reboot now```
+* Restart the allsky service: ```sudo service allsky restart```
 * A new file has been created at the root of the project: dark.png by default
 * Set darkframe to 0 in settings.json
-* Reboot the Raspberry Pi: ```sudo reboot now```
-* Remove the cover on the dome
+* Restart the allsky service: ```sudo service allsky restart```
+* Remove the cover from the lens/dome
 
 GUI method:
 * make sure config.sh has a DARK_FRAME configuration. Default is "dark.png"
-* Place a cover on your camera dome
+* Place a cover on your camera lens/dome
 * Open the Camera Settings tab and set Dark Frame to Yes.
-* Hit the Save and Reboot button
+* Hit the Save button
 * A new file has been created at the root of the project: dark.png by default
-* Open the Camera Settings tab and set Dark Frame to No.
-* Hit the Save and Reboot button
-* Remove the cover on the dome
+* On the Camera Settings tab and set Dark Frame to No.
+* Hit the Save button
+* Remove the cover from the lens/dome
 
 The dark frame is now created and will always be subtracted from captured images. In case the outside temperature varies significantly and you start seeing more / less hot pixels, you can run theses instructions again to create a new dark frame.
 
@@ -193,10 +248,10 @@ To get the best results, you will need to rotate your camera to have north at th
 
 Note that it will only show what happens at the meridian during the night and will not display events on the east or west.
 
-The program takes 3 arguments: 
+The program takes 3 arguments:
 - Source directory
 - File extension
-- Output file 
+- Output file
 
 Example when running the program manually:
 ```
@@ -214,11 +269,11 @@ KEOGRAM=false
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/startrail.jpg)
 
 **Startrails** can be generated by stacking all the images from a night on top of each other.
-The program takes 4 arguments: 
+The program takes 4 arguments:
 - Source directory
 - File extension
 - Brightness treshold to avoid over-exposure: 0 (black) to 1 (white).
-- Output file 
+- Output file
 
 Example when running the program manually:
 ```

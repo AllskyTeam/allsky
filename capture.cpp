@@ -122,9 +122,11 @@ void IntHandle(int i)
 	bMain = false;
 }
 
-void calculateDayOrNight(const char* latitude, const char* longitude)
+void calculateDayOrNight(const char* latitude, const char* longitude, const char* angle)
 {
-	std::string sunwaitCommand = "sunwait poll exit set civil ";
+	std::string sunwaitCommand = "sunwait poll exit set angle ";
+	sunwaitCommand.append(angle);
+	sunwaitCommand.append(" ");
 	sunwaitCommand.append(latitude);
 	sunwaitCommand.append(" ");
 	sunwaitCommand.append(longitude);
@@ -186,6 +188,7 @@ int  main(int argc, char* argv[])
 	int asiFlip=0;
   char const * latitude="60.7N";	//GPS Coordinates of Whitehorse, Yukon where the code was created
 	char const * longitude="135.05W";
+	char const * angle="-6"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
   int preview=0;
 	int time=1;
 	int darkframe=0;
@@ -286,6 +289,8 @@ int  main(int argc, char* argv[])
         	latitude = argv[i+1]; i++;}
    else if(strcmp(argv[i], "-longitude") == 0){
         	longitude = argv[i+1]; i++;}
+	 else if(strcmp(argv[i], "-angle") == 0){
+					angle = argv[i+1]; i++;}
  	 else if(strcmp(argv[i], "-preview") == 0){
         	preview = atoi(argv[i+1]); i++;}
  	 else if(strcmp(argv[i], "-time") == 0){
@@ -334,8 +339,9 @@ int  main(int argc, char* argv[])
 	//printf(" -bga = BG Alpha   	  - Default =      - Text Background Color Alpha/Transparency 0-100\n");
 	  printf("\n");
 	  printf("\n");
-	  printf(" -lat = Latitude   	  - Default = 60.7N (Whitehorse)   - Latitude of the camera.\n");
-	  printf(" -lon = Longitude  	  - Default = 135.05W (Whitehorse) - Longitude of the camera\n");
+	  printf(" -latitude   	  - Default = 60.7N (Whitehorse)   - Latitude of the camera.\n");
+	  printf(" -longitude  	  - Default = 135.05W (Whitehorse) - Longitude of the camera\n");
+		printf(" -angle  	  		- Default = -6 - Angle of the sun below the horizon. -6=civil twilight, -12=nautical twilight, -18=astronomical twilight\n");
 	  printf("\n");
 	  printf(" -preview        	  - set to 1 to preview the captured images. Only works with a Desktop Environment \n");
 	  printf(" -time		  	  - Adds the time to the image. Combine with Text X and Text Y for placement \n");
@@ -482,6 +488,7 @@ printf("%s",KGRN);
 	printf(" Filename: %s\n",fileName);
 	printf(" Latitude: %s\n",latitude);
 	printf(" Longitude: %s\n",longitude);
+	printf(" Sun Elevation: %s\n",angle);
   printf(" Preview: %d\n",preview);
 	printf(" Time: %d\n",time);
 	printf(" Darkframe: %d\n",darkframe);
@@ -527,7 +534,7 @@ printf("%s",KNRM);
 	while(bMain)
 	{
 		// Find out if it is currently DAY or NIGHT
-		calculateDayOrNight(latitude, longitude);
+		calculateDayOrNight(latitude, longitude, angle);
 
 		if (dayOrNight == "NIGHT"){
 			printf("\n");
@@ -614,7 +621,7 @@ printf("%s",KNRM);
 					else {
 						usleep(delay*1000);
 					}
-					calculateDayOrNight(latitude, longitude);
+					calculateDayOrNight(latitude, longitude, angle);
 				}
 			}
 			endOfNight = true;
@@ -697,7 +704,7 @@ printf("%s",KNRM);
 						// Wait a certain amount of time before taking the next image
 						usleep(daytimeDelay*1000);
 					}
-					calculateDayOrNight(latitude, longitude);
+					calculateDayOrNight(latitude, longitude, angle);
 				}
 				// Stop video mode
 				ASIStopVideoCapture(CamNum);

@@ -577,11 +577,11 @@ printf("%s",KNRM);
 
 						if (showDetails == 1 ){
 							sprintf(bufTemp, "Sensor %.1fC", (float)ltemp/10);
-							cvText(pRgb, bufTemp, iTextX, iTextY+30, 0.6, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
-							sprintf(bufTemp, "Exposure %.0f ms", (float)autoExp/1000);
-							cvText(pRgb, bufTemp, iTextX, iTextY+60, 0.6, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+							cvText(pRgb, bufTemp, iTextX, iTextY+(30/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+							sprintf(bufTemp, "Exposure %.3f s", (float)autoExp/1000000);
+							cvText(pRgb, bufTemp, iTextX, iTextY+(60/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
 							sprintf(bufTemp, "Gain %d", (int)autoGain);
-							cvText(pRgb, bufTemp, iTextX, iTextY+90, 0.6, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+							cvText(pRgb, bufTemp, iTextX, iTextY+(90/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
 						}
 					}
 					if(pRgb){
@@ -674,11 +674,11 @@ printf("%s",KNRM);
 
 							if (showDetails == 1 ){
 								sprintf(bufTemp, "Sensor %.1fC", (float)ltemp/10);
-								cvText(pRgb, bufTemp, iTextX, iTextY+30, 0.6, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+								cvText(pRgb, bufTemp, iTextX, iTextY+(30/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
 								sprintf(bufTemp, "Exposure %.3f ms", (float)autoExp/1000);
-								cvText(pRgb, bufTemp, iTextX, iTextY+60, 0.6, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+								cvText(pRgb, bufTemp, iTextX, iTextY+(60/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
 								sprintf(bufTemp, "Gain %d", (int)autoGain);
-								cvText(pRgb, bufTemp, iTextX, iTextY+90, 0.6, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+								cvText(pRgb, bufTemp, iTextX, iTextY+(90/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
 							}
 						}
 

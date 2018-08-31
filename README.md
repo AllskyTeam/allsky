@@ -94,7 +94,7 @@ nano settings.json
 | longitude | 135.05W | longitude of the camera. E for East and W for West |
 | time | 1 | Replaces the text overlay |
 | darkframe | 0 | Set to 1 to enable dark frame capture. In this mode, overlays are hidden and the image is saved as dark.png by default |
-| showTemperature | 1 | Displays the sensor temperature under the text or timestamp |
+| showDetails | 1 | Displays the exposure, gain and temperature in the overlay |
 
 The second file called **config.sh** lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.
 

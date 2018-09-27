@@ -8,6 +8,8 @@ ExecStart=/home/pi/allsky/allsky.sh
 StandardOutput=null
 StandardError=syslog
 SyslogFacility=local5
+Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target

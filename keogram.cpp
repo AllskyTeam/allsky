@@ -21,6 +21,11 @@
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
 
+#define TIMESTAMP
+#ifdef TIMESTAMP
+#include <sys/stat.h>
+#endif
+
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
@@ -45,6 +50,10 @@ int main(int argc, char *argv[])
 
     cv::Mat accumulated;
 
+#ifdef TIMESTAMP
+    int prevHour = -1;
+#endif
+
     for (size_t f = 0; f < files.gl_pathc; f++)
     {
         cv::Mat image = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
@@ -64,6 +73,48 @@ int main(int argc, char *argv[])
         }
         // Copy middle column to destination
         image.col(image.cols / 2).copyTo(accumulated.col(f));
+
+#ifdef TIMESTAMP
+        struct stat s;
+        stat(files.gl_pathv[f], &s);
+
+        struct tm *t = localtime(&s.st_mtime);
+        if (t->tm_hour != prevHour)
+        {
+            if (prevHour != -1)
+            {
+                // Draw a dashed line and label for hour
+                cv::LineIterator it(accumulated, cv::Point(f, 0), cv::Point(f, accumulated.rows));
+                for (int i = 0; i < it.count; i++, ++it)
+                {
+                    // 4 pixel dashed line
+                    if (i & 4)
+                    {
+                        uchar *p = *it;
+                        for (int c = 0; c < it.elemSize; c++)
+                        {
+                            *p = ~(*p);
+                            p++;
+                        }
+                    }
+                }
+
+                // Draw text label to the left of the dash
+                char hour[3];
+                snprintf(hour, 3, "%02d", t->tm_hour);
+                std::string text(hour);
+                const int fontFace     = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
+                const double fontScale = 2;
+                const int thickness    = 3;
+                int baseline           = 0;
+                cv::Size textSize      = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
+
+                cv::putText(accumulated, text, cv::Point(f - textSize.width, accumulated.rows - textSize.height),
+                            fontFace, fontScale, cv::Scalar::all(255), thickness);
+            }
+            prevHour = t->tm_hour;
+        }
+#endif
     }
     globfree(&files);
 

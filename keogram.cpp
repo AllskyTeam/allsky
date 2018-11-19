@@ -5,12 +5,13 @@
 
 #include <cstdlib>
 #include <glob.h>
-#include <string>
 #include <iostream>
+#include <string>
+#include <sys/stat.h>
 #include <vector>
 
-#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #define KNRM "\x1B[0m"
 #define KRED "\x1B[31m"
@@ -21,22 +22,33 @@
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
 
-#define TIMESTAMP
-#ifdef TIMESTAMP
-#include <sys/stat.h>
-#endif
-
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
 int main(int argc, char *argv[])
 {
-    if (argc != 4)
+    if (argc < 4)
     {
-        std::cout << KRED << "You need to pass 3 arguments: source directory, image extension, output file"
+        std::cout << KRED << "You need to pass 3 arguments: source directory, "
+                             "image extension, output file"
                   << std::endl;
-        std::cout << "    ex: keogram ../images/current/ jpg keogram.jpg" << std::endl;
-        std::cout << "    ex: keogram . png /home/pi/allsky/keogram.jpg" << KNRM << std::endl;
+        std::cout << "Optionally you can pass after them: " << std::endl;
+        std::cout << " -no-label                    - Disable hour labels" << std::endl;
+        std::cout << " -fontname = Font Name        - Default = 0    - Font Types "
+                     "(0-7), Ex. 0 = simplex, 4 = triplex, 7 = script"
+                  << std::endl;
+        std::cout << " -fontcolor = Font Color      - Default = 255 0 0  - Text "
+                     "blue (BRG)"
+                  << std::endl;
+        std::cout << " -fonttype = Font Type        - Default = 8    - Font Line "
+                     "Type,(0-2), 0 = AA, 1 = 8, 2 = 4"
+                  << std::endl;
+        std::cout << " -fontsize                    - Default = 2.0  - Text Font Size" << std::endl;
+        std::cout << " -fontline                    - Default = 3    - Text Font "
+                     "Line Thickness"
+                  << std::endl;
+        std::cout << "    ex: keogram ../images/current/ jpg keogram.jpg -fontsize 2" << std::endl;
+        std::cout << "    ex: keogram . png /home/pi/allsky/keogram.jpg -no-label" << KNRM << std::endl;
         return 3;
     }
 
@@ -44,15 +56,51 @@ int main(int argc, char *argv[])
     std::string extension  = argv[2];
     std::string outputfile = argv[3];
 
+    bool labelsEnabled = true;
+    int fontFace       = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
+    double fontScale   = 2;
+    int fontType       = 8;
+    int thickness      = 3;
+    char fontColor[3]  = { 255, 0, 0 };
+
+    // Handle optional parameters
+    for (int a = 4; a < argc; ++a)
+    {
+        if (!strcmp(argv[a], "-no-label"))
+        {
+            labelsEnabled = false;
+        }
+        else if (!strcmp(argv[a], "-fontname"))
+        {
+            fontFace = atoi(argv[++a]);
+        }
+        else if (!strcmp(argv[a], "-fonttype"))
+        {
+            fontType = atoi(argv[++a]);
+        }
+        else if (!strcmp(argv[a], "-fontsize"))
+        {
+            fontScale = atof(argv[++a]);
+        }
+        else if (!strcmp(argv[a], "-fontline"))
+        {
+            thickness = atoi(argv[++a]);
+        }
+        else if (!strcmp(argv[a], "-fontcolor"))
+        {
+            fontColor[0] = atoi(argv[++a]);
+            fontColor[1] = atoi(argv[++a]);
+            fontColor[2] = atoi(argv[++a]);
+        }
+    }
+
     glob_t files;
     std::string wildcard = directory + "/*." + extension;
     glob(wildcard.c_str(), 0, NULL, &files);
 
     cv::Mat accumulated;
 
-#ifdef TIMESTAMP
     int prevHour = -1;
-#endif
 
     for (size_t f = 0; f < files.gl_pathc; f++)
     {
@@ -74,47 +122,50 @@ int main(int argc, char *argv[])
         // Copy middle column to destination
         image.col(image.cols / 2).copyTo(accumulated.col(f));
 
-#ifdef TIMESTAMP
-        struct stat s;
-        stat(files.gl_pathv[f], &s);
-
-        struct tm *t = localtime(&s.st_mtime);
-        if (t->tm_hour != prevHour)
+        if (labelsEnabled)
         {
-            if (prevHour != -1)
+            struct stat s;
+            stat(files.gl_pathv[f], &s);
+
+            struct tm *t = localtime(&s.st_mtime);
+            if (t->tm_hour != prevHour)
             {
-                // Draw a dashed line and label for hour
-                cv::LineIterator it(accumulated, cv::Point(f, 0), cv::Point(f, accumulated.rows));
-                for (int i = 0; i < it.count; i++, ++it)
+                if (prevHour != -1)
                 {
-                    // 4 pixel dashed line
-                    if (i & 4)
+                    // Draw a dashed line and label for hour
+                    cv::LineIterator it(accumulated, cv::Point(f, 0), cv::Point(f, accumulated.rows));
+                    for (int i = 0; i < it.count; i++, ++it)
                     {
-                        uchar *p = *it;
-                        for (int c = 0; c < it.elemSize; c++)
+                        // 4 pixel dashed line
+                        if (i & 4)
                         {
-                            *p = ~(*p);
-                            p++;
+                            uchar *p = *it;
+                            for (int c = 0; c < it.elemSize; c++)
+                            {
+                                *p = ~(*p);
+                                p++;
+                            }
                         }
                     }
+
+                    // Draw text label to the left of the dash
+                    char hour[3];
+                    snprintf(hour, 3, "%02d", t->tm_hour);
+                    std::string text(hour);
+                    int baseline      = 0;
+                    cv::Size textSize = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
+
+                    if (f - textSize.width >= 0)
+                    {
+                        cv::putText(accumulated, text,
+                                    cv::Point(f - textSize.width, accumulated.rows - textSize.height), fontFace,
+                                    fontScale, cv::Scalar(fontColor[0], fontColor[1], fontColor[2]), thickness,
+                                    fontType);
+                    }
                 }
-
-                // Draw text label to the left of the dash
-                char hour[3];
-                snprintf(hour, 3, "%02d", t->tm_hour);
-                std::string text(hour);
-                const int fontFace     = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
-                const double fontScale = 2;
-                const int thickness    = 3;
-                int baseline           = 0;
-                cv::Size textSize      = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
-
-                cv::putText(accumulated, text, cv::Point(f - textSize.width, accumulated.rows - textSize.height),
-                            fontFace, fontScale, cv::Scalar::all(255), thickness);
+                prevHour = t->tm_hour;
             }
-            prevHour = t->tm_hour;
         }
-#endif
     }
     globfree(&files);
 

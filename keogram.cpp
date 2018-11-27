@@ -9,6 +9,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <vector>
+#include <stdio.h>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

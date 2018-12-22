@@ -1,0 +1,4 @@
+ColumnLimit: 120
+BraceWrapping:
+    AfterControlStatement: false
+

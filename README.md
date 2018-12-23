@@ -1,7 +1,9 @@
-# Allsky Camera ![Release 0.6](https://img.shields.io/badge/Release-0.6-green.svg)
+# Allsky Camera ![Release 0.6](https://img.shields.io/badge/Release-0.6-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+
 
 
 This is the source code for the Wireless Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
+
 
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg)
 
@@ -334,3 +336,9 @@ If you've built an allsky camera, please send me a message and I'll add you to t
  	* When using the GUI, camera options can be saved without rebooting the RPi.
  	* Added a publicly accessible preview to the GUI: public.php
 	* Changed exposure unit to milliseconds instead of microseconds
+
+## Donation
+
+If you found this project useful, you can give me a cup of coffee :)
+
+[![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)

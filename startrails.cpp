@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
         if (!image.data)
         {
             std::cout << "Error reading file " << basename(files.gl_pathv[f]) << std::endl;
+            stats.col(f) = 1.0; // mark as invalid
             continue;
         }
 

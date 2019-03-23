@@ -273,6 +273,10 @@ int  main(int argc, char* argv[])
         	fontcolor[0] = atoi(argv[i+1]); i++;
 		fontcolor[1] = atoi(argv[i+1]); i++;
 		fontcolor[2] = atoi(argv[i+1]); i++;}
+	else if(strcmp(argv[i], "-smallfontcolor") == 0){
+        	smallFontcolor[0] = atoi(argv[i+1]); i++;
+		smallFontcolor[1] = atoi(argv[i+1]); i++;
+		smallFontcolor[2] = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-fonttype") == 0){
         	linenumber = atoi(argv[i+1]); i++;}
 	 else if(strcmp(argv[i], "-fontsize") == 0){
@@ -331,7 +335,8 @@ int  main(int argc, char* argv[])
 	  printf(" -textx        		  - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
 	  printf(" -texty = Text Y     	  - Default = 25   - Text Placement Vertical from TOP in Pixels\n");
 	  printf(" -fontname = Font Name	- Default = 0    - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n");
-	  printf(" -fontcolor = Font Color	- Default = 255 0 0  - Text blue (BRG)\n");
+	  printf(" -fontcolor = Font Color	- Default = 255 0 0  - Text blue (BGR)\n");
+	  printf(" -smallfontcolor = Small Font Color	- Default = 0 0 255  - Text red (BGR)\n");
 	  printf(" -fonttype = Font Type	- Default = 0    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
 	  printf(" -fontsize 		  - Default = 0.5  - Text Font Size\n");
 	  printf(" -fontline		  - Default = 1    - Text Font Line Thickness\n");
@@ -481,6 +486,7 @@ printf("%s",KGRN);
 	printf(" Text Position: %dpx left, %dpx top\n",iTextX,iTextY);
 	printf(" Font Name:  %d\n",fontname[fontnumber]);
 	printf(" Font Color: %d , %d, %d\n",fontcolor[0], fontcolor[1], fontcolor[2]);
+	printf(" Small Font Color: %d , %d, %d\n",smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
 	printf(" Font Line Type: %d\n",linetype[linenumber]);
 	printf(" Font Size: %1.1f\n",fontsize);
 	printf(" Font Line: %d\n",linewidth);

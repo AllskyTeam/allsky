@@ -89,6 +89,7 @@ nano settings.json
 | texty | 35 | Vertical text placement from the top |
 | fontname | 0 | Font type for the overlay. 0=Simplex, 1=Plain, 2=Duplex, 3=Complex, 4=Triplex, 5=Complex small, 6=Script simplex, 7=Script complex |
 | fontcolor | 255 255 255 | Font color in BGR |
+| smallfontcolor | 0 0 255 | Small Font color in BGR |
 | fontsize | 0.7 | Font size |
 | fonttype | 0 | Controls the smoothness of the fonts. 0=Antialiased, 1=8 Connected, 2=4 Connected. |
 | fontline | 1 | font line thickness |
@@ -240,6 +241,12 @@ To disable timelapse, open **config.sh** and set
 TIMELAPSE=false
 ```
 
+Example to generate a timelapse manually:
+
+```
+./scripts/timelapse.sh 20190322
+```
+
 ## Keograms
 
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/keogram-annotated.jpg)
@@ -314,6 +321,9 @@ make all
 ```
 This will compile the new code and create a new binary.
 
+## Show your sky on your own website
+
+If you have set the upload options to true in `config.sh`, that means you probably already have a website. If you want to display a live view of your sky on your website like in this [example](http://www.thomasjacquin.com/allsky), you can donwload the source files from this repository: [https://github.com/thomasjacquin/allsky-website.git](https://github.com/thomasjacquin/allsky-website.git).
 
 ## Share your sky
 

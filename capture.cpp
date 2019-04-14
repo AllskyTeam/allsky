@@ -688,25 +688,29 @@ int  main(int argc, char* argv[])
                     // Get Current Time for overlay
                     sprintf(bufTime, "%s", getTime());
 
-                    if (time == 1 )
-                    {
-                        // Replace text with time
-                        ImgText = bufTime;
-                    }
-
                     if (darkframe != 1 )
                     {
                         // If darkframe mode is off, put an overlay over the image
-                        cvText(pRgb, ImgText, iTextX, iTextY, fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
+                        int offset=0;
+                        cvText(pRgb, ImgText, iTextX, iTextY+(offset/bin), fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
+                        offset+=30;
+
+			if (time == 1 )
+                        {
+                            cvText(pRgb, bufTime, iTextX, iTextY+(offset/bin), fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
+                            offset+=30;
+                        }
 
                         if (showDetails == 1 )
                         {
                             sprintf(bufTemp, "Sensor %.1fC", (float)ltemp/10);
-                            cvText(pRgb, bufTemp, iTextX, iTextY+(30/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+                            cvText(pRgb, bufTemp, iTextX, iTextY+(offset/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+                            offset+=30;
                             sprintf(bufTemp, "Exposure %.3f s", (float)autoExp/1000000);
-                            cvText(pRgb, bufTemp, iTextX, iTextY+(60/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+                            cvText(pRgb, bufTemp, iTextX, iTextY+(offset/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+                            offset+=30;
                             sprintf(bufTemp, "Gain %d", (int)autoGain);
-                            cvText(pRgb, bufTemp, iTextX, iTextY+(90/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+                            cvText(pRgb, bufTemp, iTextX, iTextY+(offset/bin), fontsize*0.8, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
                         }
                     }
                     if(pRgb)

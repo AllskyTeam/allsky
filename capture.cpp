@@ -230,7 +230,8 @@ int  main(int argc, char* argv[])
     printf("-Knut Olav Klo\n");
     printf("-Daniel Johnsen\n");
     printf("-Yang and Sam from ZWO\n");
-    printf("-Robert Wagner\n\n");
+    printf("-Robert Wagner\n");
+    printf("-Michael J. Kidd - <linuxkidd@gmail.com>\n\n");
 
     if(argc > 0)
     {

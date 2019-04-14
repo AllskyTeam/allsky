@@ -1,5 +1,6 @@
 #!/bin/bash
-if [ $(lsusb | grep 03c3: -c) -eq 0 ]; then
+isPresent=$(lsusb -D $(lsusb | awk '/ 03c3:/ { bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}') | grep -c 'iProduct .*ASI[0-9]')
+if [ $isPresent -eq 0 ]; then
         echo ZWO Camera not found.  Exiting. >&2
         sudo systemctl stop allsky
         exit 0

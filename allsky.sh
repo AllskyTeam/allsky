@@ -1,4 +1,10 @@
 #!/bin/bash
+if [ $(lsusb | grep 03c3: -c) -eq 0 ]; then
+        echo ZWO Camera not found.  Exiting. >&2
+        sudo systemctl stop allsky
+        exit 0
+fi
+
 source /home/pi/allsky/config.sh
 source /home/pi/allsky/scripts/filename.sh
 

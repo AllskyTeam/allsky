@@ -14,7 +14,8 @@ echo -en "${GREEN}* Dependencies installation\n${NC}"
 apt-get update && apt-get install libopencv-dev libusb-dev libav-tools gawk lftp jq imagemagick -y
 echo -en '\n'
 echo -en "${GREEN}* Using the camera without root access\n${NC}"
-install asi.rules /lib/udev/rules.d
+install asi.rules /etc/udev/rules.d
+udevadm control -R
 echo -en '\n'
 echo -en "${GREEN}* Autostart script\n${NC}"
 sed -i '/allsky.sh/d' /home/pi/.config/lxsession/LXDE-pi/autostart

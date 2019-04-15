@@ -30,7 +30,8 @@ echo -en '\n'
 echo -e "${GREEN}* Adding the right permissions to the web server${NC}"
 sed -i '/allsky/d' /etc/sudoers
 sed -i '/www-data/d' /etc/sudoers
-cat /home/pi/allsky/gui/sudoers >> /etc/sudoers
+rm -f /etc/sudoers.d/allsky
+cat /home/pi/allsky/gui/sudoers >> /etc/sudoers.d/allsky
 echo -en '\n'
 echo -e "${GREEN}* Retrieving github files to build admin portal${NC}"
 rm -rf /var/www/html
@@ -38,13 +39,12 @@ git clone https://github.com/thomasjacquin/allsky-portal.git /var/www/html
 chown -R www-data:www-data /var/www/html
 mkdir /etc/raspap
 mv /var/www/html/raspap.php /etc/raspap/
+cp /home/pi/allsky/settings.json /etc/raspap/settings.json
 chown -R www-data:www-data /etc/raspap
 usermod -a -G www-data pi
 echo -en '\n'
 echo -e "${GREEN}* Modify config.sh${NC}"
-sed -i '/CAMERA_SETTINGS=/c\CAMERA_SETTINGS="/var/www/html/settings.json"' /home/pi/allsky/config.sh
-cp /home/pi/allsky/settings.json /var/www/html/settings.json
-chown www-data:www-data /var/www/html/settings.json
+sed -i '/CAMERA_SETTINGS=/c\CAMERA_SETTINGS="/etc/raspap/settings.json"' /home/pi/allsky/config.sh
 echo -en '\n'
 echo -en '\n'
 echo "The Allsky Portal is now installed"

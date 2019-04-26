@@ -12,7 +12,7 @@ if [[ $POST_END_OF_NIGHT_DATA == "true" ]]; then
 	echo -e "\n"
 fi
 
-# Generate timelapse from collected images
+# Generate keogram from collected images
 if [[ $KEOGRAM == "true" ]]; then
         echo -e "Generating Keogram\n"
 	mkdir -p /home/pi/allsky/images/$LAST_NIGHT/keogram/

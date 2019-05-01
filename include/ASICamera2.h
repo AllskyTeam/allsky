@@ -85,6 +85,12 @@ typedef enum ASI_CAMERA_MODE {
 	ASI_MODE_END = -1
 }ASI_CAMERA_MODE;
 
+typedef enum ASI_TRIG_OUTPUT {
+	ASI_TRIG_OUTPUT_PINA = 0,//: Only Pin A output
+	ASI_TRIG_OUTPUT_PINB,//: Only Pin B output
+	ASI_TRIG_OUTPUT_NONE = -1
+}ASI_TRIG_OUTPUT_PIN;
+
 typedef enum ASI_ERROR_CODE{ //ASI ERROR CODE
 	ASI_SUCCESS=0,
 	ASI_ERROR_INVALID_INDEX, //no camera connected or index value out of boundary
@@ -405,8 +411,6 @@ ASI_ERROR_INVALID_CONTROL_TYPE, //invalid Control type
 ASI_ERROR_GENERAL_ERROR,//general error, eg: value is out of valid range; operate to camera hareware failed
 ***************************************************************************/
 ASICAMERA_API ASI_ERROR_CODE ASISetControlValue(int  iCameraID, ASI_CONTROL_TYPE  ControlType, long lValue, ASI_BOOL bAuto);
-
- 
 
 /***************************************************************************
 Descriptions:
@@ -800,7 +804,7 @@ Description:
 Get the camera current mode, only need to call when the IsTriggerCam in the CameraInfo is true 
 Paras:
 int CameraID: this is get from the camera property use the API ASIGetCameraProperty
-ASI_CAMERA_MODE: the current camera mode
+ASI_CAMERA_MODE *mode: the current camera mode
 
 return:
 ASI_SUCCESS : Operation is successful
@@ -833,6 +837,10 @@ IsTriggerCam in the CameraInfo is true
 Paras:
 int CameraID: this is get from the camera property use the API ASIGetCameraProperty
 ASI_BOOL starts:send a softTrigger start/stop signal
+
+return:
+ASI_SUCCESS : Operation is successful
+ASI_ERROR_CAMERA_CLOSED : camera didn't open
 ***************************************************************************/
 ASICAMERA_API ASI_ERROR_CODE  ASISendSoftTrigger(int iCameraID, ASI_BOOL bStart);
 
@@ -849,6 +857,48 @@ ASI_ERROR_CAMERA_CLOSED : camera didn't open
 ASI_ERROR_GENERAL_ERROR : camera does not have Serial Number
 ***************************************************************************/
 ASICAMERA_API ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraID, ASI_SN* pSN);
+
+/***************************************************************************
+Description:
+Config the output pin (A or B) of Trigger port. If lDuration <= 0, this output pin will be closed. 
+Only need to call when the IsTriggerCam in the CameraInfo is true 
+
+Paras:
+int CameraID: this is get from the camera property use the API ASIGetCameraProperty.
+ASI_TRIG_OUTPUT_STATUS pin: Select the pin for output
+ASI_BOOL bPinAHigh: If true, the selected pin will output a high level as a signal
+					when it is effective. Or it will output a low level as a signal.
+long lDelay: the time between the camera receive a trigger signal and the output 
+			of the valid level.From 0 microsecond to 2000*1000*1000 microsecond.
+long lDuration: the duration time of the valid level output.From 0 microsecond to 
+			2000*1000*1000 microsecond.
+
+return:
+ASI_SUCCESS : Operation is successful
+ASI_ERROR_CAMERA_CLOSED : camera didn't open
+ASI_ERROR_GENERAL_ERROR : the parameter is not right
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASISetTriggerOutputIOConf(int iCameraID, ASI_TRIG_OUTPUT_PIN pin, ASI_BOOL bPinHigh, long lDelay, long lDuration);
+
+
+/***************************************************************************
+Description:
+Get the output pin configuration, only need to call when the IsTriggerCam in the CameraInfo is true 
+Paras:
+int CameraID: this is get from the camera property use the API ASIGetCameraProperty.
+ASI_TRIG_OUTPUT_STATUS pin: Select the pin for getting the configuration
+ASI_BOOL *bPinAHigh: Get the current status of valid level.
+long *lDelay: get the time between the camera receive a trigger signal and the output of the valid level.
+long *lDuration: get the duration time of the valid level output.
+
+return:
+ASI_SUCCESS : Operation is successful
+ASI_ERROR_CAMERA_CLOSED : camera didn't open
+ASI_ERROR_INVALID_ID  :no camera of this ID is connected or ID value is out of boundary
+ASI_ERROR_GENERAL_ERROR : the parameter is not right
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASIGetTriggerOutputIOConf(int iCameraID, ASI_TRIG_OUTPUT_PIN pin, ASI_BOOL *bPinHigh, long *lDelay, long *lDuration);
+
 #ifdef __cplusplus
 }
 #endif

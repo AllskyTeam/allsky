@@ -26,7 +26,7 @@ find "images/$1" -name "*.$EXTENSION" -size 0 -delete
 ls -rt images/$1/*.$EXTENSION |
 gawk 'BEGIN{ a=1 }{ printf "mv -v %s images/'$1'/%04d.'$EXTENSION'\n", $0, a++ }' |
 bash
-avconv -y -f image2 -r 25 -i images/$1/%04d.$EXTENSION -vcodec libx264 -b:v 2000k -pix_fmt yuv420p images/$1/allsky-$1.mp4
+ffmpeg -y -f image2 -r 25 -i images/$1/%04d.$EXTENSION -vcodec libx264 -b:v 2000k -pix_fmt yuv420p images/$1/allsky-$1.mp4
 
 if [ "$UPLOAD_VIDEO" = true ] ; then
 	lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$MP4DIR" -e "set net:max-retries 1; put images/$1/allsky-$1.mp4; bye"

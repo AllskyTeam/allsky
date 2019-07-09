@@ -11,14 +11,14 @@ echo -en "${GREEN}* Sunwait installation"
 cp sunwait /usr/local/bin
 echo -en '\n'
 echo -en "${GREEN}* Dependencies installation\n${NC}"
-apt-get update && apt-get install libopencv-dev libusb-dev libav-tools gawk lftp jq imagemagick -y
+apt-get update && apt-get install libopencv-dev libusb-dev ffmpeg gawk lftp jq imagemagick -y
 echo -en '\n'
 echo -en "${GREEN}* Using the camera without root access\n${NC}"
 install asi.rules /etc/udev/rules.d
 udevadm control -R
 echo -en '\n'
 echo -en "${GREEN}* Autostart script\n${NC}"
-sed -i '/allsky.sh/d' /home/pi/.config/lxsession/LXDE-pi/autostart
+sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart
 cp autostart/allsky.service /lib/systemd/system/
 chown root:root /lib/systemd/system/allsky.service
 chmod 0644 /lib/systemd/system/allsky.service

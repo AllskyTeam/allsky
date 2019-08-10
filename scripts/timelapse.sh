@@ -33,5 +33,5 @@ if [ "$UPLOAD_VIDEO" = true ] ; then
 fi
 
 rm /home/pi/allsky/images/$1/thumbnails/????.$EXTENSION
-rm /home/pi/allsky/images/$1/images/????.$EXTENSION
+rm /home/pi/allsky/images/$1/????.$EXTENSION
 echo -en "* ${GREEN}Timelapse was created${NC}\n"

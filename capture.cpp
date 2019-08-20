@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
     //-------------------------------------------------------------------------------------------------------
     printf("\n");
     printf("%s ******************************************\n", KGRN);
-    printf("%s *** Allsky Camera Software v0.5 | 2018 ***\n", KGRN);
+    printf("%s *** Allsky Camera Software v0.6 | 2019 ***\n", KGRN);
     printf("%s ******************************************\n\n", KGRN);
     printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n", KGRN);
     printf("\n");

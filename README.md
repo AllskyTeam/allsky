@@ -17,6 +17,8 @@ In order to get the camera working properly you will need the following hardware
 
 **Note:*** Owners of USB2.0 cameras such as ASI120MC and ASI120MM may need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software/) (This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.)
 
+The Datyson T7 camera seems to be supported as well. The firmware needs to be upgraded with ZWO's compatible firmware (see link above) and you'll need to add this line in /boot/config.txt: `program_usb_boot_mode=0`
+
 ## Installation
 
 You will need to install Raspbian on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.

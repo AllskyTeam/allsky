@@ -12,6 +12,12 @@ if [[ $POST_END_OF_NIGHT_DATA == "true" ]]; then
 	echo -e "\n"
 fi
 
+# Uncomment this to scan for, and remove corrupt images before generating
+# keograms and startrails. This can take several (tens of) minutes to run
+# and isn't necessary unless your system produces corrupt images which then
+# generate funny colors in the summary images...
+# ./removeBadImages.sh /home/pi/allsky/images/$LAST_NIGHT/  
+
 # Generate keogram from collected images
 if [[ $KEOGRAM == "true" ]]; then
         echo -e "Generating Keogram\n"

@@ -103,6 +103,13 @@ int main(int argc, char *argv[])
         }
     }
 
+    globfree(&files);
+    if (stats.empty())
+    {
+        std::cout << "No images found, exiting." << std::endl;
+	    return 0;
+    }
+
     // Calculate some statistics
     double min_mean, max_mean;
     cv::Point min_loc;
@@ -124,7 +131,6 @@ int main(int argc, char *argv[])
         std::cout << "No images below threshold, writing the minimum image only" << std::endl;
         accumulated = cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
     }
-    globfree(&files);
 
     std::vector<int> compression_params;
     compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);

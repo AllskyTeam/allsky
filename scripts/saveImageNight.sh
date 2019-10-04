@@ -1,8 +1,8 @@
 #!/bin/bash
-source /home/pi/allsky/config.sh
-source /home/pi/allsky/scripts/filename.sh
+source ${HOME}/allsky/config.sh
+source ${HOME}/allsky/scripts/filename.sh
 
-cd /home/pi/allsky
+cd ${HOME}/allsky
 
 # Make a directory to store current night images
 # the 12 hours ago option ensures that we're always using today's date even at high latitudes where civil twilight can start after midnight

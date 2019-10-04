@@ -6,11 +6,11 @@ if [ $isPresent -eq 0 ]; then
         exit 0
 fi
 
-source /home/pi/allsky/config.sh
-source /home/pi/allsky/scripts/filename.sh
+source ${HOME}/allsky/config.sh
+source ${HOME}/allsky/scripts/filename.sh
 
 echo "Starting allsky camera..."
-cd /home/pi/allsky
+cd ${HOME}/allsky
 
 # Building the arguments to pass to the capture binary
 ARGUMENTS=""

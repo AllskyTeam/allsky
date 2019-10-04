@@ -1,8 +1,8 @@
 #!/bin/bash
-source /home/pi/allsky/config.sh
-source /home/pi/allsky/scripts/filename.sh
+source ${HOME}/allsky/config.sh
+source ${HOME}/allsky/scripts/filename.sh
 
-cd  /home/pi/allsky/scripts
+cd  ${HOME}/allsky/scripts
 LAST_NIGHT=$(date -d '12 hours ago' +'%Y%m%d')
 
 # Post end of night data. This includes next twilight time
@@ -21,10 +21,10 @@ fi
 # Generate keogram from collected images
 if [[ $KEOGRAM == "true" ]]; then
         echo -e "Generating Keogram\n"
-	mkdir -p /home/pi/allsky/images/$LAST_NIGHT/keogram/
-        ../keogram /home/pi/allsky/images/$LAST_NIGHT/ $EXTENSION /home/pi/allsky/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.jpg
+	mkdir -p ${HOME}/allsky/images/$LAST_NIGHT/keogram/
+        ../keogram ${HOME}/allsky/images/$LAST_NIGHT/ $EXTENSION ${HOME}/allsky/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.jpg
 	if [[ $UPLOAD_KEOGRAM == "true" ]] ; then
-		OUTPUT="/home/pi/allsky/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.jpg"
+		OUTPUT="${HOME}/allsky/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.jpg"
                 lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$KEOGRAM_DIR" \
                         -e "set net:max-retries 1; put $OUTPUT; bye"
 	fi
@@ -34,10 +34,10 @@ fi
 # Generate startrails from collected images. Treshold set to 0.1 by default in config.sh to avoid stacking over-exposed images
 if [[ $STARTRAILS == "true" ]]; then
         echo -e "Generating Startrails\n"
-	mkdir -p /home/pi/allsky/images/$LAST_NIGHT/startrails/
-        ../startrails /home/pi/allsky/images/$LAST_NIGHT/ $EXTENSION $BRIGHTNESS_THRESHOLD /home/pi/allsky/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.jpg
+	mkdir -p ${HOME}/allsky/images/$LAST_NIGHT/startrails/
+        ../startrails ${HOME}/allsky/images/$LAST_NIGHT/ $EXTENSION $BRIGHTNESS_THRESHOLD ${HOME}/allsky/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.jpg
 	if [[ $UPLOAD_STARTRAILS == "true" ]] ; then
-		OUTPUT="/home/pi/allsky/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.jpg"
+		OUTPUT="${HOME}/allsky/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.jpg"
                 lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$STARTRAILS_DIR" \
 			-e "set net:max-retries 1; put $OUTPUT; bye"
         fi
@@ -55,7 +55,7 @@ fi
 # Automatically delete old images and videos
 if [[ $AUTO_DELETE == "true" ]]; then
 	del=$(date --date="$NIGHTS_TO_KEEP days ago" +%Y%m%d)
-	for i in `find /home/pi/allsky/images/ -type d -name "2*"`; do
+	for i in `find ${HOME}/allsky/images/ -type d -name "2*"`; do
 	  (($del > $(basename $i))) && rm -rf $i
 	done
 fi

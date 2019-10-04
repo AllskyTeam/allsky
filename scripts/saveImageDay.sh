@@ -1,8 +1,8 @@
 #!/bin/bash
-source /home/pi/allsky/config.sh
-source /home/pi/allsky/scripts/filename.sh
+source ${HOME}/allsky/config.sh
+source ${HOME}/allsky/scripts/filename.sh
 
-cd /home/pi/allsky
+cd ${HOME}/allsky
 
 IMAGE_TO_USE="$FULL_FILENAME"
 cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"

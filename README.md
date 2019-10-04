@@ -34,7 +34,7 @@ sudo apt-get install git
 Now fetch the code from this GitHub page. Open the terminal and type the following:
 
 ```shell
-git clone https://github.com/thomasjacquin/allsky.git
+git clone --recursive https://github.com/thomasjacquin/allsky.git
 ```
 
 Then navigate to the allsky directory:
@@ -42,7 +42,9 @@ Then navigate to the allsky directory:
 ```shell
 cd allsky
 ```
-Now, before running the install script, if you're running a Pi 2, it may not be compatible with armv7 architecture. Run ```cat /proc/cpuinfo``` to know your processor model. If it doesn't say ARMv7, you'll need to change the first line of Makefile to say ```platform = armv6```
+Now, before running the install script, if you're running a Pi 2, it may not be compatible with armv7 architecture. Run ```cat /proc/cpuinfo``` to know your processor model. If it doesn't say ARMv7, you'll need to change the first line of Makefile to say ```platform = armv6```.
+
+Use of allsky on non-ARM platforms is unsupported (there isn't yet an easy, portable installer) but should be possible. Have a look at `install.sh` to see what needs to be done. Additionally, you'll need to download the [SDK](https://astronomy-imaging-camera.com/software-drivers).
 
 Now, run the install script:
 
@@ -231,7 +233,7 @@ GUI method:
 * Hit the Save button
 * Remove the cover from the lens/dome
 
-The dark frame is now created and will always be subtracted from captured images. In case the outside temperature varies significantly and you start seeing more / less hot pixels, you can run theses instructions again to create a new dark frame.
+The dark frame is now created and will always be subtracted from captured images. In case the outside temperature varies significantly and you start seeing more / less hot pixels, you can run these instructions again to create a new dark frame.
 
 ## Timelapse
 

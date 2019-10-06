@@ -98,6 +98,12 @@ int main(int argc, char *argv[])
     glob_t files;
     std::string wildcard = directory + "/*." + extension;
     glob(wildcard.c_str(), 0, NULL, &files);
+    if (files.gl_pathc == 0)
+    {
+        globfree(&files);
+        std::cout << "No images found, exiting." << std::endl;
+        return 0;
+    }
 
     cv::Mat accumulated;
 

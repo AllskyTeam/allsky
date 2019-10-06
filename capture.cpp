@@ -49,15 +49,15 @@ void cvText(cv::Mat &img, const char *text, int x, int y, double fontsize, int l
     if (imgtype == ASI_IMG_RAW16)
     {
         if (outlinefont)
-            cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(0,0,0), linewidth+6, linetype);
+            cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(0,0,0), linewidth+4, linetype);
         cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(fontcolor[0], fontcolor[1], fontcolor[2]),
                     linewidth, linetype);
     }
     else
     {
         if (outlinefont)
-            cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(0,0,0, 255), linewidth+6, linetype);
-	cv::putText(img, text, cvPoint(x, y), fontname, fontsize,
+            cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(0,0,0, 255), linewidth+4, linetype);
+        cv::putText(img, text, cvPoint(x, y), fontname, fontsize,
                     cvScalar(fontcolor[0], fontcolor[1], fontcolor[2], 255), linewidth, linetype);
     }
 }

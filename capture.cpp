@@ -44,16 +44,20 @@ pthread_cond_t cond_SatrtSave;
 //-------------------------------------------------------------------------------------------------------
 
 void cvText(cv::Mat &img, const char *text, int x, int y, double fontsize, int linewidth, int linetype, int fontname,
-            int fontcolor[], int imgtype)
+            int fontcolor[], int imgtype, int outlinefont)
 {
     if (imgtype == ASI_IMG_RAW16)
     {
+        if (outlinefont)
+            cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(0,0,0), linewidth+6, linetype);
         cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(fontcolor[0], fontcolor[1], fontcolor[2]),
                     linewidth, linetype);
     }
     else
     {
-        cv::putText(img, text, cvPoint(x, y), fontname, fontsize,
+        if (outlinefont)
+            cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(0,0,0, 255), linewidth+6, linetype);
+	cv::putText(img, text, cvPoint(x, y), fontname, fontsize,
                     cvScalar(fontcolor[0], fontcolor[1], fontcolor[2], 255), linewidth, linetype);
     }
 }
@@ -170,6 +174,7 @@ int main(int argc, char *argv[])
     char const *ImgText   = "";
     double fontsize       = 0.6;
     int linewidth         = 1;
+    int outlinefont       = 0;
     int fontcolor[3]      = { 255, 0, 0 };
     int smallFontcolor[3] = { 0, 0, 255 };
     int linetype[3]       = { CV_AA, 8, 4 };
@@ -380,6 +385,13 @@ int main(int argc, char *argv[])
             else if (strcmp(argv[i], "-fontline") == 0)
             {
                 linewidth = atoi(argv[i + 1]);
+                i++;
+            }
+            else if (strcmp(argv[i], "-outlinefont") == 0)
+            {
+                outlinefont = atoi(argv[i + 1]);
+				if (outlinefont != 0)
+				    outlinefont = 1;
                 i++;
             }
             else if (strcmp(argv[i], "-flip") == 0)
@@ -653,6 +665,7 @@ int main(int argc, char *argv[])
     printf(" Font Line Type: %d\n", linetype[linenumber]);
     printf(" Font Size: %1.1f\n", fontsize);
     printf(" Font Line: %d\n", linewidth);
+    printf(" Outline Font : %d\n", outlinefont);
     printf(" Flip Image: %d\n", asiFlip);
     printf(" Filename: %s\n", fileName);
     printf(" Latitude: %s\n", latitude);
@@ -780,7 +793,7 @@ int main(int argc, char *argv[])
                         if (time == 1)
                         {
                             cvText(pRgb, bufTime, iTextX, iTextY + (iYOffset / bin), fontsize, linewidth,
-                                   linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
+                                   linetype[linenumber], fontname[fontnumber], fontcolor, Image_type, outlinefont);
                             iYOffset += 30;
                         }
 
@@ -788,15 +801,15 @@ int main(int argc, char *argv[])
                         {
                             sprintf(bufTemp, "Sensor %.1fC", (float)ltemp / 10);
                             cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.8, linewidth,
-                                   linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+                                   linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
                             iYOffset += 30;
                             sprintf(bufTemp, "Exposure %.3f s", (float)autoExp / 1000000);
                             cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.8, linewidth,
-                                   linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+                                   linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
                             iYOffset += 30;
                             sprintf(bufTemp, "Gain %d", (int)autoGain);
                             cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.8, linewidth,
-                                   linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type);
+                                   linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
                             iYOffset += 30;
                         }
                     }

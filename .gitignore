@@ -17,3 +17,5 @@ scripts/keogram_only.sh
 scripts/startrails_manual.sh
 scripts/startrails_only.sh
 scripts/stretch.sh
+sunwait
+sunait-src

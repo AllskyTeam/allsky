@@ -421,8 +421,8 @@ ie. you need to set width to 640 and height to 480 if you want to run at 640X480
 ASI120's data size must be times of 1024 which means width*height%1024=0
 Paras:		
 int CameraID: this is get from the camera property use the API ASIGetCameraProperty
-int iWidth,  the width of the ROI area. Make sure iWidth%8 = 0. 
-int iHeight,  the height of the ROI area. Make sure iHeight%2 = 0, 
+int iWidth,  the width of the ROI area. Make sure iWidth%8 == 0. 
+int iHeight,  the height of the ROI area. Make sure iHeight%2 == 0, 
 further, for USB2.0 camera ASI120, please make sure that iWidth*iHeight%1024=0. 
 int iBin,   binning method. bin1=1, bin2=2
 ASI_IMG_TYPE Img_type: the output format you want 
@@ -846,7 +846,8 @@ ASICAMERA_API ASI_ERROR_CODE  ASISendSoftTrigger(int iCameraID, ASI_BOOL bStart)
 
 /***************************************************************************
 Description:
-Get a serial number from a camera.
+Get a serial number from a camera. 
+It is 8 ASCII characters, you need to print it in hexadecimal.
 Paras:
 int CameraID: this is get from the camera property use the API ASIGetCameraProperty
 ASI_SN* pSN: pointer to SN
@@ -866,7 +867,7 @@ Only need to call when the IsTriggerCam in the CameraInfo is true
 Paras:
 int CameraID: this is get from the camera property use the API ASIGetCameraProperty.
 ASI_TRIG_OUTPUT_STATUS pin: Select the pin for output
-ASI_BOOL bPinAHigh: If true, the selected pin will output a high level as a signal
+ASI_BOOL bPinHigh: If true, the selected pin will output a high level as a signal
 					when it is effective. Or it will output a low level as a signal.
 long lDelay: the time between the camera receive a trigger signal and the output 
 			of the valid level.From 0 microsecond to 2000*1000*1000 microsecond.

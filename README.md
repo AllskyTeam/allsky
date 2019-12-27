@@ -203,7 +203,7 @@ A public page is also available in order to view the current image without havin
 http://your_raspberry_IP/public.php
 ```
 
-**Note:*** The GUI setup uses /var/www/html/settings.json for the camera settings. If, for some reason, you prefer to go back to the non-gui version, make sure to edit your config.sh file to have CAMERA_SETTINGS="settings.json" instead.
+**Note:*** The GUI setup uses /etc/raspap/settings.json for the camera settings. If, for some reason, you prefer to go back to the non-gui version, make sure to edit your config.sh file to have CAMERA_SETTINGS="settings.json" instead.
 
 ## Dark frame subtraction
 

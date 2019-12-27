@@ -764,7 +764,8 @@ int main(int argc, char *argv[])
                 printf("Saving %ds exposure images every %d ms\n\n", (int)round(currentExposure / 1000000), delay);
             }
             // Set exposure value for night time capture
-            ASISetControlValue(CamNum, ASI_EXPOSURE, currentExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
+            useDelay = delay;
+	    ASISetControlValue(CamNum, ASI_EXPOSURE, currentExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
             ASISetControlValue(CamNum, ASI_GAIN, asiGain, asiAutoGain == 1 ? ASI_TRUE : ASI_FALSE);
         }
         printf("Press Ctrl+C to stop\n\n");

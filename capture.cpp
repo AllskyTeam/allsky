@@ -39,6 +39,7 @@ std::string dayOrNight;
 bool bSaveRun = false, bSavingImg = false;
 pthread_mutex_t mtx_SaveImg;
 pthread_cond_t cond_SatrtSave;
+volatile long saveExpTime = 0;
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -155,6 +156,45 @@ void writeToLog(int val)
     outfile.open("log.txt", std::ios_base::app);
     outfile << val;
     outfile << "\n";
+}
+
+bool brokenDetector(cv::Mat &src)
+{
+    int i, j, c;
+
+    int ddepth = -1;
+    cv::Point anchor = cv::Point( -1, -1 );
+    double delta = 0;
+    float filter[3][3] = {{1,1,1}, {0,0,0}, {-1,-1,-1}};
+    cv::Mat kernel = cv::Mat( 3, 3, CV_32F, filter );
+    // Apply filter
+    cv::Mat dst;
+    cv::filter2D(src, dst, ddepth , kernel, anchor, delta, cv::BORDER_DEFAULT );
+
+    cv::resize(dst, dst, cv::Size(16, pRgb.rows), 0, 0, cv::INTER_AREA);
+    // imwrite("out.jpg", dst);
+    for (i = 0; i < dst.rows; i++)
+    {
+        c = 0;
+        for (j = 0; j < dst.cols; j++)
+        {
+            if (dst.at<uint8_t>(i,j) > 80)
+            {
+                // printf("%dx%d: %d\n", i, j, dst.at<uint8_t>(i,j));
+                c ++;
+            }
+            else
+            {
+                c = 0;
+            }
+            if (c > dst.cols / 2)
+            {
+                printf("detected! %d at %d line\n", c, i);
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -765,11 +805,13 @@ int main(int argc, char *argv[])
             }
             // Set exposure value for night time capture
             useDelay = delay;
-	    ASISetControlValue(CamNum, ASI_EXPOSURE, currentExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
+            ASISetControlValue(CamNum, ASI_EXPOSURE, currentExposure, asiAutoExposure == 1 ? ASI_TRUE : ASI_FALSE);
             ASISetControlValue(CamNum, ASI_GAIN, asiGain, asiAutoGain == 1 ? ASI_TRUE : ASI_FALSE);
         }
         printf("Press Ctrl+C to stop\n\n");
 
+        long lastExp = 0;
+        int flushingStatus = 0;
         if (needCapture)
         {
             ASIStartVideoCapture(CamNum);
@@ -781,6 +823,23 @@ int main(int argc, char *argv[])
                     ASIGetControlValue(CamNum, ASI_EXPOSURE, &autoExp, &bAuto);
                     ASIGetControlValue(CamNum, ASI_GAIN, &autoGain, &bAuto);
                     ASIGetControlValue(CamNum, ASI_TEMPERATURE, &ltemp, &bAuto);
+                    if (lastExp != autoExp)
+                    {
+                        flushingStatus = 2;
+                        printf("exp changed %ld -> %ld, flushing ...\n", lastExp, autoExp);
+                    }
+                    lastExp = autoExp;
+                    if (flushingStatus != 0)
+                    {
+                        printf("flushing %d\n", flushingStatus);
+                        flushingStatus --;
+                        continue;
+                    }
+                    if (brokenDetector(pRgb))
+                    {
+                        printf("bad image detected!\n");
+                        continue;
+                    }
 
                     // Get Current Time for overlay
                     sprintf(bufTime, "%s", getTime());
@@ -829,6 +888,7 @@ int main(int argc, char *argv[])
                     if (!bSavingImg)
                     {
                         pthread_mutex_lock(&mtx_SaveImg);
+                        saveExpTime = autoExp;
                         pthread_cond_signal(&cond_SatrtSave);
                         pthread_mutex_unlock(&mtx_SaveImg);
                     }

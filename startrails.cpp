@@ -24,6 +24,19 @@
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
+std::vector<std::string> split(std::string s, std::string delimiter)
+{
+    std::vector<std::string> ret;
+    size_t pos = 0;
+    std::string token;
+    while ((pos = s.find(delimiter)) != std::string::npos) {
+        token = s.substr(0, pos);
+        ret.push_back(token);
+        s.erase(0, pos + delimiter.length());
+    }
+    ret.push_back(s);
+    return ret;
+}
 
 int main(int argc, char *argv[])
 {
@@ -69,6 +82,18 @@ int main(int argc, char *argv[])
             continue;
         }
 
+        std::string filename = split(basename(files.gl_pathv[f]), ".")[0];
+        std::vector<std::string> parts = split(filename, "-");
+        if (parts.size() == 3)
+        {
+            long expTime =std::stol(parts[2]);
+            if (expTime < 15000000)
+            {
+                std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] " << basename(files.gl_pathv[f]) << " expTime: " << expTime << " < " << 15000000 << std::endl;
+                continue;
+            }
+        }
+
         cv::Scalar mean_scalar = cv::mean(image);
         double mean;
         switch (image.channels())
@@ -91,8 +116,7 @@ int main(int argc, char *argv[])
                 mean /= 65535.0;
                 break;
         }
-        std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] " << basename(files.gl_pathv[f]) << " " << mean
-                  << std::endl;
+        std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] " << basename(files.gl_pathv[f]) << " " << mean << std::endl;
 
         stats.col(f) = mean;
 

@@ -35,14 +35,14 @@ fi
 cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 
 # Save image in images/current directory
-cp $IMAGE_TO_USE "images/$CURRENT/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION"
+cp $IMAGE_TO_USE "images/$CURRENT/$FILENAME-$(date +'%Y%m%d%H%M%S')-$1.$EXTENSION"
 
 # Create a thumbnail of the image for faster load in web GUI
 if identify $IMAGE_TO_USE >/dev/null 2>&1; then
-	convert "$IMAGE_TO_USE" -resize 100x75 "images/$CURRENT/thumbnails/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION";
+	convert "$IMAGE_TO_USE" -resize 100x75 "images/$CURRENT/thumbnails/$FILENAME-$(date +'%Y%m%d%H%M%S')-$1.$EXTENSION";
 fi
 
-echo -e "Saving $FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION\n" >> log.txt
+echo -e "Saving $FILENAME-$(date +'%Y%m%d%H%M%S')-$1.$EXTENSION\n" >> log.txt
 
 # If upload is true, create a smaller version of the image and upload it
 if [ "$UPLOAD_IMG" = true ] ; then
@@ -59,5 +59,3 @@ if [ "$UPLOAD_IMG" = true ] ; then
 	echo -e "Uploading $FILENAME-resize.$EXTENSION \n" >> log.txt
 	lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$IMGDIR" -e "set net:max-retries 1; set net:timeout 20; put $FILENAME-resize.$EXTENSION; bye" &
 fi
-
-

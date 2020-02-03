@@ -120,14 +120,16 @@ void *SaveImgThd(void *para)
         if (pRgb.data)
         {
             imwrite(fileName, pRgb, compression_parameters);
+            char buf[255];
             if (dayOrNight == "NIGHT")
             {
-                system("scripts/saveImageNight.sh &");
+                sprintf(buf, "scripts/saveImageNight.sh %ld &", saveExpTime);
             }
             else
             {
-                system("scripts/saveImageDay.sh &");
+                sprintf(buf, "scripts/saveImageDay.sh %ld &", saveExpTime);
             }
+            system(buf);
         }
         bSavingImg = false;
         pthread_mutex_unlock(&mtx_SaveImg);

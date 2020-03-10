@@ -727,7 +727,7 @@ int main(int argc, char *argv[])
     ASISetControlValue(CamNum, ASI_FLIP, asiFlip, ASI_FALSE);
     if (ASICameraInfo.IsCoolerCam)
     {
-        ASI_ERROR_CODE err = ASISetControlValue(CamNum, ASI_COOLER_ON, asiCoolerEnabled, ASI_FALSE);
+        ASI_ERROR_CODE err = ASISetControlValue(CamNum, ASI_COOLER_ON, asiCoolerEnabled == 1 ? ASI_TRUE : ASI_FALSE, ASI_FALSE);
 	if (err != ASI_SUCCESS)
 	{
 		printf("%s", KRED);

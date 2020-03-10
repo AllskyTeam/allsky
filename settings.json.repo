@@ -7,6 +7,8 @@
    "gain":"50",
    "maxgain":"200",
    "autogain":"0",
+   "coolerEnabled":"0",
+   "targetTemp":"0",
    "gamma":"50",
    "brightness":"50",
    "wbr":"53",

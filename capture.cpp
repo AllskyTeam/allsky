@@ -202,10 +202,11 @@ int main(int argc, char *argv[])
     int asiGamma          = 50;
     int asiBrightness     = 50;
     int asiFlip           = 0;
+    int asiCoolerEnabled  = 0;
+    long asiTargetTemp    = 0;
     char const *latitude  = "60.7N"; //GPS Coordinates of Whitehorse, Yukon where the code was created
     char const *longitude = "135.05W";
-    char const *angle =
-        "-6"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
+    char const *angle  = "-6"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
     int preview        = 0;
     int time           = 1;
     int darkframe      = 0;
@@ -449,6 +450,16 @@ int main(int argc, char *argv[])
                 daytimeCapture = atoi(argv[i + 1]);
                 i++;
             }
+	    else if (strcmp(argv[i], "-coolerEnabled") == 0)
+            {
+                asiCoolerEnabled = atoi(argv[i + 1]);
+                i++;
+            }
+	    else if (strcmp(argv[i], "-targetTemp") == 0)
+            {
+                asiTargetTemp = atol(argv[i + 1]);
+                i++;
+            }
         }
     }
 
@@ -463,7 +474,9 @@ int main(int argc, char *argv[])
         printf(" -gain                              - Default = 50 \n");
         printf(" -maxgain                           - Default = 200 \n");
         printf(" -autogain                          - Default = 0 - Set to 1 to enable auto Gain \n");
-        printf(" -gamma                             - Default = 50 \n");
+        printf(" -coolerEnabled                     - Set to 1 to enable cooler (works on cooled cameras only) \n");
+        printf(" -targetTemp                        - Target temperature in degrees C (works on cooled cameras only) \n");
+	printf(" -gamma                             - Default = 50 \n");
         printf(" -brightness                        - Default = 50 \n");
         printf(" -wbr                               - Default = 50   - White Balance Red \n");
         printf(" -wbb                               - Default = 50   - White Balance Blue \n");
@@ -561,9 +574,23 @@ int main(int argc, char *argv[])
 
     printf("\n%s Information:\n", ASICameraInfo.Name);
     int iMaxWidth, iMaxHeight;
+    double pixelSize;
     iMaxWidth  = ASICameraInfo.MaxWidth;
     iMaxHeight = ASICameraInfo.MaxHeight;
+    pixelSize  = ASICameraInfo.PixelSize;
     printf("- Resolution:%dx%d\n", iMaxWidth, iMaxHeight);
+    printf("- Pixel Size: %1.1fμm\n", pixelSize);
+    printf("- Supported Bin: ");
+    for (int i = 0; i < 16; ++i)
+    {
+        if (ASICameraInfo.SupportedBins[i] == 0)
+        {
+            break;
+        }
+        printf("%d ", ASICameraInfo.SupportedBins[i]);
+    }
+    printf("\n");
+
     if (ASICameraInfo.IsColorCam)
     {
         printf("- Color Camera: bayer pattern:%s\n", bayer[ASICameraInfo.BayerPattern]);
@@ -571,6 +598,10 @@ int main(int argc, char *argv[])
     else
     {
         printf("- Mono camera\n");
+    }
+    if (ASICameraInfo.IsCoolerCam)
+    {
+        printf("- Camera with cooling capabilities\n");
     }
 
     if (ASIInitCamera(CamNum) == ASI_SUCCESS)
@@ -648,6 +679,8 @@ int main(int argc, char *argv[])
     printf(" Auto Exposure: %d\n", asiAutoExposure);
     printf(" Gain: %d\n", asiGain);
     printf(" Max Gain: %d\n", asiMaxGain);
+    printf(" Cooler Enabled: %d\n", asiCoolerEnabled);
+    printf(" Target Temperature: %ldC\n", asiTargetTemp);
     printf(" Auto Gain: %d\n", asiAutoGain);
     printf(" Brightness: %d\n", asiBrightness);
     printf(" Gamma: %d\n", asiGamma);
@@ -692,6 +725,23 @@ int main(int argc, char *argv[])
     ASISetControlValue(CamNum, ASI_GAMMA, asiGamma, ASI_FALSE);
     ASISetControlValue(CamNum, ASI_BRIGHTNESS, asiBrightness, ASI_FALSE);
     ASISetControlValue(CamNum, ASI_FLIP, asiFlip, ASI_FALSE);
+    if (ASICameraInfo.IsCoolerCam)
+    {
+        ASI_ERROR_CODE err = ASISetControlValue(CamNum, ASI_COOLER_ON, asiCoolerEnabled, ASI_FALSE);
+	if (err != ASI_SUCCESS)
+	{
+		printf("%s", KRED);
+		printf(" Could not enable cooler\n");
+		printf("%s", KNRM);
+	}
+	err = ASISetControlValue(CamNum, ASI_TARGET_TEMP, asiTargetTemp, ASI_FALSE);
+	if (err != ASI_SUCCESS)
+        {
+                printf("%s", KRED);
+                printf(" Could not set cooler temperature\n");
+                printf("%s", KNRM);
+        }
+    }
 
     pthread_t thread_display = 0;
     if (preview == 1)

@@ -604,6 +604,9 @@ int main(int argc, char *argv[])
         printf("- Camera with cooling capabilities\n");
     }
 
+    const char *ver = ASIGetSDKVersion();
+    printf("- SDK version %s\n", ver);
+
     if (ASIInitCamera(CamNum) == ASI_SUCCESS)
     {
         printf("- Initialise Camera OK\n");

@@ -13,6 +13,9 @@ POST_END_OF_NIGHT_DATA=false
 # Set to true to generate a timelapse at the end of the night
 TIMELAPSE=true
 
+# Timelapse frame rate (number of frames per second)
+FPS=25
+
 # Set to true to generate a keogram at the end of the night (image summary of the night)
 KEOGRAM=true
 

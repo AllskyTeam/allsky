@@ -11,6 +11,13 @@
 #include <vector>
 #include <stdio.h>
 
+#ifdef OPENCV_C_HEADERS
+#include <opencv2/core/types_c.h>
+#include <opencv2/highgui/highgui_c.h>
+#include <opencv2/imgproc/imgproc_c.h>
+#include <opencv2/imgcodecs/legacy/constants_c.h>
+#endif
+
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -62,7 +69,7 @@ int main(int argc, char *argv[])
     double fontScale   = 2;
     int fontType       = 8;
     int thickness      = 3;
-    char fontColor[3]  = { 255, 0, 0 };
+    unsigned char fontColor[3]  = { 255, 0, 0 };
 
     // Handle optional parameters
     for (int a = 4; a < argc; ++a)

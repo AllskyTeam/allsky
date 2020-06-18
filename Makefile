@@ -1,27 +1,44 @@
-platform = armv7
+platform = $(shell uname -m)
 
-#INCLIB = /usr/local/include
-#LDLIB = /usr/local/lib
-OPENCV = $(shell pkg-config --cflags opencv) $(shell pkg-config --libs opencv)
-USB =  -I libusb/ -L libusb/  
-LIBSPATH = -L../lib/$(platform) -I../include
+USB=$(shell pkg-config --cflags libusb-1.0) $(shell pkg-config --libs libusb-1.0)
 DEFS = -D_LIN -D_DEBUG 
 
-CFLAGS = -Wall -Wno-psabi -g  -I $(INCLIB) -L $(LDLIB) $(DEFS) $(COMMON) $(LIBSPATH)  -lpthread  $(USB) -DGLIBC_20
-
-ifeq ($(platform), armv6)
+ifeq ($(platform), armv6l)
+OPENCV = $(shell pkg-config --cflags opencv) $(shell pkg-config --libs opencv)
 CC = arm-linux-gnueabihf-g++
 AR= arm-linux-gnueabihf-ar
 CFLAGS += -march=armv6
 CFLAGS += -lrt
+ZWOSDK = -Llib/arm6 -I./include
 endif
 
-ifeq ($(platform), armv7)
+ifeq ($(platform), armv7l)
+OPENCV = $(shell pkg-config --cflags opencv) $(shell pkg-config --libs opencv)
 CC = arm-linux-gnueabihf-g++
 AR= arm-linux-gnueabihf-ar
 CFLAGS += -march=armv7 -mthumb
+ZWOSDK = -Llib/armv7 -I./include
 endif
 
+#Ubuntu has opencv4, not opencv2
+ifeq ($(platform), x86_64)
+OPENCV = $(shell pkg-config --cflags opencv4) $(shell pkg-config --libs opencv4)
+CC = g++
+AR= ar
+#At least on Ubuntu 20 x86_64 the c++ (.hpp) headers don't define all the constsants I need
+DEFS += -DOPENCV_C_HEADERS
+ZWOSDK = -Llib/x64 -I./include
+endif
+
+ifeq ($(platform), i386) # FIXME: is this correct?
+OPENCV = $(shell pkg-config --cflags opencv4) $(shell pkg-config --libs opencv4)
+CC = g++
+AR= ar
+DEFS += -DOPENCV_C_HEADERS
+ZWOSDK = -Llib/x86 -I./include
+endif
+
+CFLAGS = -Wall -Wno-psabi -g $(DEFS) $(COMMON) $(ZWOSDK) -lpthread  -DGLIBC_20
 
 all:capture startrails keogram sunwait-remove-precompiled sunwait
 
@@ -37,7 +54,7 @@ sunwait:
 		cp sunwait-src/sunwait .
 
 capture:capture.cpp
-	$(CC)  capture.cpp lib/$(platform)/libASICamera2.a -o capture $(CFLAGS) $(OPENCV) -lusb-1.0
+	$(CC)  capture.cpp -o capture $(CFLAGS) $(OPENCV) -lASICamera2 $(USB)
 
 startrails:startrails.cpp
 	$(CC)  startrails.cpp -o startrails $(CFLAGS) $(OPENCV)
@@ -47,6 +64,3 @@ keogram:keogram.cpp
 
 clean:
 	rm -f capture startrails keogram
-#pkg-config libusb-1.0 --cflags --libs
-#pkg-config opencv --cflags --libs
-

@@ -42,9 +42,6 @@ Then navigate to the allsky directory:
 ```shell
 cd allsky
 ```
-Now, before running the install script, if you're running a Pi 2, it may not be compatible with armv7 architecture. Run ```cat /proc/cpuinfo``` to know your processor model. If it doesn't say ARMv7, you'll need to change the first line of Makefile to say ```platform = armv6```.
-
-Use of allsky on non-ARM platforms is unsupported (there isn't yet an easy, portable installer) but should be possible. Have a look at `install.sh` to see what needs to be done. Additionally, you'll need to download the [SDK](https://astronomy-imaging-camera.com/software-drivers).
 
 Now, run the install script:
 
@@ -354,6 +351,6 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 
 ## Donation
 
-If you found this project useful, you can give me a cup of coffee :)
+If you found this project useful, here's a link to send me a cup of coffee :)
 
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)

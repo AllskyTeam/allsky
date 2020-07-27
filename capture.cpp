@@ -246,7 +246,8 @@ int main(int argc, char *argv[])
     printf("-Daniel Johnsen\n");
     printf("-Yang and Sam from ZWO\n");
     printf("-Robert Wagner\n");
-    printf("-Michael J. Kidd - <linuxkidd@gmail.com>\n\n");
+    printf("-Michael J. Kidd - <linuxkidd@gmail.com>\n");
+    printf("-Chris Kuethe\n\n");
 
     if (argc > 0)
     {

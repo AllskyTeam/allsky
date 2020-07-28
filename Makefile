@@ -56,6 +56,9 @@ sunwait:
 capture:capture.cpp
 	$(CC)  capture.cpp -o capture $(CFLAGS) $(OPENCV) -lASICamera2 $(USB)
 
+capture_RPiHQ:capture_RPiHQ.cpp
+	$(CC)  capture_RPiHQ.cpp -o capture_RPiHQ $(CFLAGS) $(OPENCV) -lASICamera2 $(USB)
+
 startrails:startrails.cpp
 	$(CC)  startrails.cpp -o startrails $(CFLAGS) $(OPENCV)
 
@@ -63,4 +66,4 @@ keogram:keogram.cpp
 	$(CC)  keogram.cpp -o keogram $(CFLAGS) $(OPENCV)
 
 clean:
-	rm -f capture startrails keogram
+	rm -f capture capture_RPiHQ startrails keogram

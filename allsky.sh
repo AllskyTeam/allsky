@@ -1,4 +1,8 @@
 #!/bin/bash
+
+ALLSKY_DIR=$(dirname $BASH_ARGV0)
+cd ${ALLSKY_DIR}
+
 isPresent=$(lsusb -D $(lsusb | awk '/ 03c3:/ { bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}') | grep -c 'iProduct .*ASI[0-9]')
 if [ $isPresent -eq 0 ]; then
         echo ZWO Camera not found.  Exiting. >&2
@@ -6,11 +10,10 @@ if [ $isPresent -eq 0 ]; then
         exit 0
 fi
 
-source ${HOME}/allsky/config.sh
-source ${HOME}/allsky/scripts/filename.sh
+source ${ALLSKY_DIR}/config.sh
+source ${ALLSKY_DIR}/scripts/filename.sh
 
 echo "Starting allsky camera..."
-cd ${HOME}/allsky
 
 # Building the arguments to pass to the capture binary
 ARGUMENTS=""
@@ -27,6 +30,7 @@ if [[ $1 == "preview" ]] ; then
 fi
 ARGUMENTS="$ARGUMENTS -daytime $DAYTIME"
 
-echo "$ARGUMENTS">>log.txt
+date >> log.txt
+echo "capture $ARGUMENTS" >> log.txt
 
 ./capture $ARGUMENTS

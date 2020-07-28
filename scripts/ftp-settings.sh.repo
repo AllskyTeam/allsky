@@ -1,4 +1,10 @@
 #!/bin/bash
+SCRIPT_DIR=$(dirname $(realpath $BASH_ARGV0))
+ALLSKY_DIR=$(dirname $SCRIPT_DIR)
+source ${ALLSKY_DIR}/config.sh
+source ${ALLSKY_DIR}/scripts/filename.sh
+cd ${ALLSKY_DIR}
+
 
 # FTP/SFTP settings
 PROTOCOL='ftp'

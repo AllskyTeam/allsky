@@ -1,9 +1,13 @@
 #!/bin/bash
-source ${HOME}/allsky/config.sh
+SCRIPT_DIR=$(dirname $(realpath $BASH_ARGV0))
+ALLSKY_DIR=$(dirname $SCRIPT_DIR)
+source ${ALLSKY_DIR}/config.sh
+source ${ALLSKY_DIR}/scripts/filename.sh
+cd ${ALLSKY_DIR}/scripts
+
 
 # TODO Needs fixing when civil twilight happens after midnight
-cd ${HOME}/allsky/scripts
-
+# TODO get this from settings.json...
 latitude=60.7N
 longitude=135.02W
 timezone=-0700

@@ -1,8 +1,10 @@
 #!/bin/bash
-source ${HOME}/allsky/config.sh
-source ${HOME}/allsky/scripts/filename.sh
 
-cd ${HOME}/allsky
+SCRIPT_DIR=$(dirname $(realpath $BASH_ARGV0))
+ALLSKY_DIR=$(dirname $SCRIPT_DIR)
+source ${ALLSKY_DIR}/config.sh
+source ${ALLSKY_DIR}/scripts/filename.sh
+cd ${ALLSKY_DIR}
 
 IMAGE_TO_USE="$FULL_FILENAME"
 cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"

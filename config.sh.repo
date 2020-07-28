@@ -1,5 +1,6 @@
 #!/bin/bash
-source ${HOME}/allsky/scripts/ftp-settings.sh
+ALLSKY_DIR=$(dirname $BASH_ARGV0)
+source ${ALLSKY_DIR}/scripts/ftp-settings.sh
 
 # Set to true to upload current image to your website
 UPLOAD_IMG=false
@@ -44,4 +45,4 @@ DARK_FRAME="dark.png"
 DAYTIME="1"
 
 # Path to the camera settings (exposure, gain, delay, overlay, etc)
-CAMERA_SETTINGS="${HOME}/allsky/settings.json"
+CAMERA_SETTINGS="${ALLSKY_DIR}/settings.json"

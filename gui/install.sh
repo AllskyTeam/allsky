@@ -1,4 +1,7 @@
 #!/bin/bash
+SCRIPT_DIR=$(dirname $(realpath $BASH_ARGV0))
+ALLSKY_DIR=$(dirname $SCRIPT_DIR)
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
@@ -18,20 +21,20 @@ lighty-enable-mod fastcgi-php
 service lighttpd restart
 echo -en '\n'
 echo -e "${GREEN}* Configuring lighttpd${NC}"
-cp ${HOME}/allsky/gui/lighttpd.conf /etc/lighttpd/lighttpd.conf
+cp ${ALLSKY_DIR}/gui/lighttpd.conf /etc/lighttpd/lighttpd.conf
 echo -en '\n'
 echo -e "${GREEN}* Changing hostname to allsky${NC}"
 echo "allsky" > /etc/hostname
 sed -i 's/raspberrypi/allsky/g' /etc/hosts
 echo -en '\n'
 echo -e "${GREEN}* Setting avahi-daemon configuration${NC}"
-cp ${HOME}/allsky/gui/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
+cp ${ALLSKY_DIR}/gui/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
 echo -en '\n'
 echo -e "${GREEN}* Adding the right permissions to the web server${NC}"
 sed -i '/allsky/d' /etc/sudoers
 sed -i '/www-data/d' /etc/sudoers
 rm -f /etc/sudoers.d/allsky
-cat ${HOME}/allsky/gui/sudoers >> /etc/sudoers.d/allsky
+cat ${ALLSKY_DIR}/gui/sudoers >> /etc/sudoers.d/allsky
 echo -en '\n'
 echo -e "${GREEN}* Retrieving github files to build admin portal${NC}"
 rm -rf /var/www/html
@@ -40,12 +43,12 @@ chown -R www-data:www-data /var/www/html
 mkdir /etc/raspap
 mv /var/www/html/raspap.php /etc/raspap/
 mv /var/www/html/camera_options.json /etc/raspap/
-cp ${HOME}/allsky/settings.json /etc/raspap/settings.json
+cp ${ALLSKY_DIR}/settings.json /etc/raspap/settings.json
 chown -R www-data:www-data /etc/raspap
 usermod -a -G www-data pi
 echo -en '\n'
 echo -e "${GREEN}* Modify config.sh${NC}"
-sed -i '/CAMERA_SETTINGS=/c\CAMERA_SETTINGS="/etc/raspap/settings.json"' ${HOME}/allsky/config.sh
+sed -i '/CAMERA_SETTINGS=/c\CAMERA_SETTINGS="/etc/raspap/settings.json"' ${ALLSKY_DIR}/config.sh
 echo -en '\n'
 echo -en '\n'
 echo "The Allsky Portal is now installed"

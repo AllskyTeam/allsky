@@ -13,20 +13,13 @@
 # having to remount the overlayfs
 # 
 # This assumes that an entire storage device will be used exclusively for
-# image storage by allsky.
-
-#CONFIGURED=yes
-
-if [ "x$CONFIGURED" != "xyes" ] ; then
-	echo "Please edit this script to configure it for your system."
-	echo "Once this is done, uncomment 'CONFIGURED=yes'"
-	exit 1
-fi
+# image storage by allsky, eg. a usb stick like /dev/sda1
 
 # The actual allsky source tree
 ALLSKY=${ALLSKY:-/home/allsky-src}
 
-# The running directory, will be overlaid by a tmpfs to grab the writes
+# The running code directory, where allsky thinks it's running. This will be
+# overlaid by a tmpfs to grab any temporary scribbling (ie. current frame).
 ALLSKY_RUN=${ALLSKY_RUN:-/home/allsky}
 
 # set these to the user running allsky. Pi, dietpi, root, yourself - doesn't
@@ -46,6 +39,16 @@ TMPSIZE=8m
 
 # stick this in /run (another tmpfs) since it's transient
 TMPFS=/run/overlayfs/allsky
+
+#CONFIGURED=yes
+
+if [ "x$CONFIGURED" != "xyes" ] ; then
+	echo "Please edit this script to configure it for your system."
+	echo "Once this is done, uncomment 'CONFIGURED=yes'"
+	exit 1
+fi
+
+# No changes should be required below this line
 
 # make the tempfs for storing the current captures
 mkdir -p ${TMPFS}

@@ -44,7 +44,7 @@ DARK_FRAME="dark.png"
 DAYTIME="1"
 
 # Set 24Hr capture to true to save both night and day images to disk. By default, only night images are saved.
-CAPTURE_24HR=true
+CAPTURE_24HR=false
 
 # Path to the camera settings (exposure, gain, delay, overlay, etc)
 CAMERA_SETTINGS="/home/pi/allsky/settings.json"

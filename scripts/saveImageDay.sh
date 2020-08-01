@@ -9,6 +9,15 @@ cd ${ALLSKY_DIR}
 IMAGE_TO_USE="$FULL_FILENAME"
 cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 
+# If 24 hour saving is desired, save the current image in today's directory
+if [ "$CAPTURE_24HR" = true ] ; then
+	CURRENT=$(date +'%Y%m%d')
+	mkdir -p images/$CURRENT
+
+	# Save image in images/current directory
+	cp $IMAGE_TO_USE "images/$CURRENT/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION"
+fi
+
 # If upload is true, create a smaller version of the image and upload it
 if [ "$UPLOAD_IMG" = true ] ; then
 	echo -e "Resizing"

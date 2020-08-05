@@ -9,7 +9,7 @@ CC = arm-linux-gnueabihf-g++
 AR= arm-linux-gnueabihf-ar
 CFLAGS += -march=armv6
 CFLAGS += -lrt
-ZWOSDK = -Llib/arm6 -I./include
+ZWOSDK = -Llib/armv6 -I./include
 endif
 
 ifeq ($(platform), armv7l)

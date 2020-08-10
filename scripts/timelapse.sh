@@ -1,8 +1,8 @@
 #!/bin/bash
-source /home/pi/allsky/config.sh
-source /home/pi/allsky/scripts/filename.sh
+source $ALLSKY_HOME/config.sh
+source $ALLSKY_HOME/scripts/filename.sh
 
-cd /home/pi/allsky/
+cd $ALLSKY_HOME/
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -16,12 +16,12 @@ if [ $# -lt 1 ]
 fi
 
 echo -en "* ${GREEN}Creating symlinks to generate timelapse${NC}\n"
-mkdir /home/pi/allsky/images/$1/sequence/
+mkdir $ALLSKY_HOME/images/$1/sequence/
 
 # find images, make symlinks sequentially and start avconv to build mp4; upload mp4 and move directory
-find "/home/pi/allsky/images/$1" -name "*.$EXTENSION" -size 0 -delete
-ls -rt /home/pi/allsky/images/$1/*.$EXTENSION |
-gawk 'BEGIN{ a=1 }{ printf "ln -sv %s /home/pi/allsky/images/'$1'/sequence/%04d.'$EXTENSION'\n", $0, a++ }' |
+find "$ALLSKY_HOME/images/$1" -name "*.$EXTENSION" -size 0 -delete
+ls -rt $ALLSKY_HOME/images/$1/*.$EXTENSION |
+gawk 'BEGIN{ a=1 }{ printf "ln -sv %s $ALLSKY_HOME/images/'$1'/sequence/%04d.'$EXTENSION'\n", $0, a++ }' |
 bash
 
 ffmpeg -y -f image2 \
@@ -38,6 +38,6 @@ if [ "$UPLOAD_VIDEO" = true ] ; then
 fi
 
 echo -en "* ${GREEN}Deleting sequence${NC}\n"
-rm -rf /home/pi/allsky/images/$1/sequence
+rm -rf $ALLSKY_HOME/images/$1/sequence
 
 echo -en "* ${GREEN}Timelapse was created${NC}\n"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/pi/allsky
+cd $ALLSKY_HOME
 
 # If we are in darkframe mode, we only save to the dark file
 DARK_MODE=$(jq -r '.darkframe' "$CAMERA_SETTINGS")

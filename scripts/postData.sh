@@ -1,8 +1,8 @@
 #!/bin/bash
-source /home/pi/allsky/config.sh
+source $ALLSKY_HOME/config.sh
 
 # TODO Needs fixing when civil twilight happens after midnight
-cd /home/pi/allsky/scripts
+cd $ALLSKY_HOME/scripts
 
 latitude=60.7N
 longitude=135.02W

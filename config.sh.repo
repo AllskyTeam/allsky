@@ -1,5 +1,5 @@
 #!/bin/bash
-source /home/pi/allsky/scripts/ftp-settings.sh
+source $ALLSKY_HOME/scripts/ftp-settings.sh
 
 # Set to true to upload current image to your website
 UPLOAD_IMG=false
@@ -47,4 +47,4 @@ DAYTIME="1"
 CAPTURE_24HR=false
 
 # Path to the camera settings (exposure, gain, delay, overlay, etc)
-CAMERA_SETTINGS="/home/pi/allsky/settings.json"
+CAMERA_SETTINGS="$ALLSKY_HOME/settings.json"

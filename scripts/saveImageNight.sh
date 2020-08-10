@@ -1,10 +1,10 @@
 #!/bin/bash
-source /home/pi/allsky/config.sh
-source /home/pi/allsky/scripts/filename.sh
-source /home/pi/allsky/scripts/darkCapture.sh
-source /home/pi/allsky/scripts/darkSubtract.sh
+source $ALLSKY_HOME/config.sh
+source $ALLSKY_HOME/scripts/filename.sh
+source $ALLSKY_HOME/scripts/darkCapture.sh
+source $ALLSKY_HOME/scripts/darkSubtract.sh
 
-cd /home/pi/allsky
+cd $ALLSKY_HOME
 
 # If we are in darkframe mode, we only save to the dark file
 DARK_MODE=$(jq -r '.darkframe' "$CAMERA_SETTINGS")
@@ -54,5 +54,3 @@ if [ "$UPLOAD_IMG" = true ] ; then
 	echo -e "Uploading $FILENAME-resize.$EXTENSION \n" >> log.txt
 	lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$IMGDIR" -e "set net:max-retries 1; set net:timeout 20; put $FILENAME-resize.$EXTENSION; bye" &
 fi
-
-

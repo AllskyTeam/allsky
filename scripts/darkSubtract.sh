@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/pi/allsky
+cd $ALLSKY_HOME
 
 # Subtract dark frame if there is one defined in config.sh
 # Find the closest dark frame temperature wise

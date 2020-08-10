@@ -6,11 +6,16 @@ if [ $isPresent -eq 0 ]; then
         exit 0
 fi
 
-source /home/pi/allsky/config.sh
-source /home/pi/allsky/scripts/filename.sh
+if [ -z "$ALLSKY_HOME" ]
+then
+      export ALLSKY_HOME=/home/pi/allsky
+fi
+
+source $ALLSKY_HOME/config.sh
+source $ALLSKY_HOME/scripts/filename.sh
 
 echo "Starting allsky camera..."
-cd /home/pi/allsky
+cd $ALLSKY_HOME
 
 # Building the arguments to pass to the capture binary
 ARGUMENTS=""
@@ -29,4 +34,4 @@ ARGUMENTS="$ARGUMENTS -daytime $DAYTIME"
 
 echo "$ARGUMENTS">>log.txt
 
-./capture $ARGUMENTS
+$ALLSKY_HOME/capture $ARGUMENTS

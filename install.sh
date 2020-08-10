@@ -27,6 +27,7 @@ echo -en '\n'
 
 echo -en "${GREEN}* Autostart script\n${NC}"
 sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart
+sed -i "s|/home/pi/allsky|$PWD|g" autostart/allsky.service
 cp autostart/allsky.service /lib/systemd/system/
 chown root:root /lib/systemd/system/allsky.service
 chmod 0644 /lib/systemd/system/allsky.service
@@ -36,9 +37,13 @@ echo -en "${GREEN}* Configure log rotation\n${NC}"
 cp autostart/allsky /etc/logrotate.d/
 chown root:root /etc/logrotate.d/allsky
 chmod 0644 /etc/logrotate.d/allsky
-cp autostart/allsky.conf /etc/rsyslog.d/
+cp autostart/allsky.conf /etc/rsyslog.d/ 
 chown root:root /etc/rsyslog.d/allsky.conf
 chmod 0644 /etc/rsyslog.d/allsky.conf
+echo -en '\n'
+
+echo -en "${GREEN}* Add ALLSKY_HOME environment variable\n${NC}"
+echo "export ALLSKY_HOME=$PWD" | sudo tee /etc/profile.d/allsky.sh
 echo -en '\n'
 
 echo -en "${GREEN}* Copy camera settings files\n${NC}"

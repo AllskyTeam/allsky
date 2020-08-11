@@ -8,7 +8,7 @@ fi
 
 if [ -z "$ALLSKY_HOME" ]
 then
-      export ALLSKY_HOME=/home/pi/allsky
+      export ALLSKY_HOME=$(dirname $BASH_ARGV0)
 fi
 
 source $ALLSKY_HOME/config.sh

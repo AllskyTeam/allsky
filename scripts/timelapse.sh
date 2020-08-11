@@ -30,6 +30,7 @@ ffmpeg -y -f image2 \
 	-vcodec libx264 \
 	-b:v 2000k \
 	-pix_fmt yuv420p \
+	-movflags +faststart \
 	images/$1/allsky-$1.mp4
 
 if [ "$UPLOAD_VIDEO" = true ] ; then

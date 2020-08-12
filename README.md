@@ -89,8 +89,8 @@ nano settings.json
 | textx | 15 | Horizontal text placement from the left |
 | texty | 35 | Vertical text placement from the top |
 | fontname | 0 | Font type for the overlay. 0=Simplex, 1=Plain, 2=Duplex, 3=Complex, 4=Triplex, 5=Complex small, 6=Script simplex, 7=Script complex |
-| fontcolor | 255 255 255 | Font color in BGR |
-| smallfontcolor | 0 0 255 | Small Font color in BGR |
+| fontcolor | 255 255 255 | Font color in BGR. NOTE: When using RAW 16 only the B and G values are used i.e. 255 128 0 |
+| smallfontcolor | 0 0 255 | Small Font color in BGR. NOTE: When using RAW 16 only the B and G values are used i.e. 255 128 0 |
 | fontsize | 0.7 | Font size |
 | fonttype | 0 | Controls the smoothness of the fonts. 0=Antialiased, 1=8 Connected, 2=4 Connected. |
 | fontline | 1 | font line thickness |

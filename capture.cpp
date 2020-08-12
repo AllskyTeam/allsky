@@ -50,15 +50,21 @@ pthread_cond_t cond_SatrtSave;
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
+// Create Hex value from RGB
+unsigned long createRGB(int r, int g, int b)
+{
+    return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+}
+
 void cvText(cv::Mat &img, const char *text, int x, int y, double fontsize, int linewidth, int linetype, int fontname,
             int fontcolor[], int imgtype, int outlinefont)
 {
     if (imgtype == ASI_IMG_RAW16)
     {
+		unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
         if (outlinefont)
             cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(0,0,0), linewidth+4, linetype);
-        cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(fontcolor[0], fontcolor[1], fontcolor[2]),
-                    linewidth, linetype);
+        cv::putText(img, text, cvPoint(x, y), fontname, fontsize, fontcolor16, linewidth, linetype);
     }
     else
     {

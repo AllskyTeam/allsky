@@ -27,6 +27,7 @@ echo -en '\n'
 
 echo -en "${GREEN}* Autostart script\n${NC}"
 sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart
+sed -i "s|/User=pi|User=`logname`|g" autostart/allsky.service
 sed -i "s|/home/pi/allsky|$PWD|g" autostart/allsky.service
 cp autostart/allsky.service /lib/systemd/system/
 chown root:root /lib/systemd/system/allsky.service
@@ -50,7 +51,7 @@ echo -en "${GREEN}* Copy camera settings files\n${NC}"
 cp settings.json.repo settings.json
 cp config.sh.repo config.sh
 cp scripts/ftp-settings.sh.repo scripts/ftp-settings.sh
-chown -R pi:pi ../allsky
+chown -R `logname`:`logname` ../allsky
 systemctl daemon-reload
 systemctl enable allsky.service
 echo -en '\n'

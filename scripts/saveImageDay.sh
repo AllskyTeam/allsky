@@ -7,6 +7,15 @@ cd /home/pi/allsky
 IMAGE_TO_USE="$FULL_FILENAME"
 cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 
+# If we are in darkframe mode, we only save to the dark file
+DARK_MODE=$(jq -r '.darkframe' "$CAMERA_SETTINGS")
+
+if [ $DARK_MODE = "1" ] ; then
+	cp $FULL_FILENAME $DARK_FRAME
+	cp $FULL_FILENAME "liveview-$FILENAME.$EXTENSION"
+	exit 0
+fi
+
 # If 24 hour saving is desired, save the current image in today's directory
 if [ "$CAPTURE_24HR" = true ] ; then
 	CURRENT=$(date +'%Y%m%d')

@@ -901,7 +901,7 @@ int main(int argc, char *argv[])
                     }
 
                     // Save the image
-                    printf("%s", bufTime);
+                    printf("%s ", bufTime);
                     if (!bSavingImg)
                     {
                         pthread_mutex_lock(&mtx_SaveImg);

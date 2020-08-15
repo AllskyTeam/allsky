@@ -1,20 +1,20 @@
 #!/bin/bash
 source /home/pi/allsky/config.sh
 source /home/pi/allsky/scripts/filename.sh
+source /home/pi/allsky/scripts/darkCapture.sh
 
 cd /home/pi/allsky
-
-IMAGE_TO_USE="$FULL_FILENAME"
-cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 
 # If we are in darkframe mode, we only save to the dark file
 DARK_MODE=$(jq -r '.darkframe' "$CAMERA_SETTINGS")
 
 if [ $DARK_MODE = "1" ] ; then
-	cp $FULL_FILENAME $DARK_FRAME
-	cp $FULL_FILENAME "liveview-$FILENAME.$EXTENSION"
-	exit 0
+        exit 0
 fi
+
+IMAGE_TO_USE="$FULL_FILENAME"
+cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
+
 
 # If 24 hour saving is desired, save the current image in today's directory
 if [ "$CAPTURE_24HR" = true ] ; then

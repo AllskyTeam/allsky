@@ -37,8 +37,8 @@ AUTO_DELETE=true
 # Set this value to the number of archived nights you want to keep. Needs AUTO_DELETE=true to work
 NIGHTS_TO_KEEP=14
 
-# Path to the dark frame for hot pixels subtraction. Can be jpg or png.
-DARK_FRAME="dark.png"
+# Set to true if you want to enable dark frame subtraction on your night time images
+DARK_FRAME_SUBTRACTION=false
 
 # Set to 0 to disable Daytime Capture
 DAYTIME="1"

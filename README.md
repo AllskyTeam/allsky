@@ -121,7 +121,7 @@ nano config.sh
 | UPLOAD_STARTRAILS | false | Set to true to uplad the startrails to your server |
 | AUTO_DELETE | true | Enables automatic deletion of old images and videos |
 | NIGHTS_TO_KEEP | 14 | Number of nights to keep before starting deleting. Needs AUTO_DELETE=true to work. |
-| DARK_FRAME | dark.png | Path to the dark frame use for hot pixels subtraction. |
+| DARK_FRAME_SUBTRACTION | false | Set to true toenable hot pixels subtraction at night. |
 | DAYTIME | 1 | Set to 0 to disable daytime liveview. |
 | CAPTURE_24HR | false | Set to true to save images during both night and day |
 | CAMERA_SETTINGS | /home/pi/allsky/settings.json | Path to the camera settings file. **Note**: If using the GUI, this path will change to /var/www/html/settings.json |

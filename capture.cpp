@@ -170,6 +170,14 @@ void writeToLog(int val)
     outfile << "\n";
 }
 
+void writeTemperatureToFile(float val)
+{
+    std::ofstream outfile;
+    outfile.open("temperature.txt", std::ios_base::trunc);
+    outfile << val;
+    outfile << "\n";
+}
+
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
@@ -848,6 +856,9 @@ int main(int argc, char *argv[])
                     ASIGetControlValue(CamNum, ASI_EXPOSURE, &autoExp, &bAuto);
                     ASIGetControlValue(CamNum, ASI_GAIN, &autoGain, &bAuto);
                     ASIGetControlValue(CamNum, ASI_TEMPERATURE, &ltemp, &bAuto);
+
+		    // Write temperature to file
+		    writeTemperatureToFile((float)ltemp / 10.0);
 
                     // Get Current Time for overlay
                     sprintf(bufTime, "%s", getTime());

@@ -1,8 +1,17 @@
 #!/bin/bash
 source /home/pi/allsky/config.sh
 source /home/pi/allsky/scripts/filename.sh
+source /home/pi/allsky/scripts/darkCapture.sh
+source /home/pi/allsky/scripts/darkSubtract.sh
 
 cd /home/pi/allsky
+
+# If we are in darkframe mode, we only save to the dark file
+DARK_MODE=$(jq -r '.darkframe' "$CAMERA_SETTINGS")
+
+if [ $DARK_MODE = "1" ] ; then
+        exit 0
+fi
 
 # Make a directory to store current night images
 # the 12 hours ago option ensures that we're always using today's date even at high latitudes where civil twilight can start after midnight
@@ -10,23 +19,9 @@ CURRENT=$(date -d '12 hours ago' +'%Y%m%d')
 mkdir -p images/$CURRENT
 mkdir -p images/$CURRENT/thumbnails
 
-# If we are in darkframe mode, we only save to the dark file
-DARK_MODE=$(jq -r '.darkframe' "$CAMERA_SETTINGS")
-
-if [ $DARK_MODE = "1" ] ; then
-	cp $FULL_FILENAME $DARK_FRAME
-	cp $FULL_FILENAME "liveview-$FILENAME.$EXTENSION"
-	exit 0
-fi
-
-# Subtract dark frame if there is one defined in config.sh
-if [ -e "$DARK_FRAME" ] ; then
-	convert "$FULL_FILENAME" "$DARK_FRAME" -compose minus_src -composite -type TrueColor "$FILENAME-processed.$EXTENSION"
-fi
-
 # Create image to use (original or processed) for liveview in GUI
 IMAGE_TO_USE="$FULL_FILENAME"
-if [ -e "$DARK_FRAME" ] ; then
+if [ "$DARK_FRAME_SUBTRACTION" = true ] ; then
 	IMAGE_TO_USE="$FILENAME-processed.$EXTENSION"
 fi
 

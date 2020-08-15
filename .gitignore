@@ -1,10 +1,12 @@
 images/*
 capture
 config.sh
-dark.*
+darks/*
 gibbons*
 liveview*
 image-resize.jpg
+image-processed.jpg
+temperature.txt
 data.json
 keogram
 log.txt

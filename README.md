@@ -125,6 +125,7 @@ nano config.sh
 | DAYTIME | 1 | Set to 0 to disable daytime liveview. |
 | CAPTURE_24HR | false | Set to true to save images during both night and day |
 | CAMERA_SETTINGS | /home/pi/allsky/settings.json | Path to the camera settings file. **Note**: If using the GUI, this path will change to /var/www/html/settings.json |
+| CROP_IMAGE | false | Crop the captured image BEFORE any other processing. This inproves the subsequent images when using a fisheye lens |
 | CROP_WIDTH | n/a | The width of the resulting image |
 | CROP_HEIGHT | n/a | The height of the resulting image |
 | CROP_OFFSET_X | 0 | The x offset to use when cropping |

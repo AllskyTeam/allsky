@@ -46,5 +46,12 @@ DAYTIME="1"
 # Set 24Hr capture to true to save both night and day images to disk. By default, only night images are saved.
 CAPTURE_24HR=false
 
+# Crop the captured image, used to improve the images when using a fisheye lens
+CROP_IMAGE=false
+CROP_WIDTH=640
+CROP_HEIGHT=480
+CROP_OFFSET_X=0
+CROP_OFFSET_Y=0
+
 # Path to the camera settings (exposure, gain, delay, overlay, etc)
 CAMERA_SETTINGS="$ALLSKY_HOME/settings.json"

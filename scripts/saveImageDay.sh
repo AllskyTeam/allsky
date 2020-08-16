@@ -13,6 +13,12 @@ if [ $DARK_MODE = "1" ] ; then
 fi
 
 IMAGE_TO_USE="$FULL_FILENAME"
+
+# Crop the image around the center if required
+if [[ $CROP_IMAGE == "true" ]]; then
+        convert "$IMAGE_TO_USE" -gravity Center -crop "$CROP_WIDTH"x"$CROP_HEIGHT"+"$CROP_OFFSET_X"+"$CROP_OFFSET_Y" +repage "$IMAGE_TO_USE";
+fi
+
 cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 
 

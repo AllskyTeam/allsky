@@ -125,6 +125,12 @@ nano config.sh
 | DAYTIME | 1 | Set to 0 to disable daytime liveview. |
 | CAPTURE_24HR | false | Set to true to save images during both night and day |
 | CAMERA_SETTINGS | /home/pi/allsky/settings.json | Path to the camera settings file. **Note**: If using the GUI, this path will change to /var/www/html/settings.json |
+| CROP_WIDTH | n/a | The width of the resulting image |
+| CROP_HEIGHT | n/a | The height of the resulting image |
+| CROP_OFFSET_X | 0 | The x offset to use when cropping |
+| CROP_OFFSET_Y | 0 | The y offset to use when cropping |
+
+When using the cropping options the image is cropped from the center so you will need to experiment with the correct width and height values. Normally there will be no need to amend the offset values.
 
 In order to upload images and videos to your website, you'll need to fill your FTP connection details in **ftp-settings.sh**
 ```shell

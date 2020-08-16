@@ -25,6 +25,11 @@ if [ "$DARK_FRAME_SUBTRACTION" = true ] ; then
 	IMAGE_TO_USE="$FILENAME-processed.$EXTENSION"
 fi
 
+# Crop the image around the center if required
+if [[ $CROP_IMAGE == "true" ]]; then
+        convert "$IMAGE_TO_USE" -gravity Center -crop "$CROP_WIDTH"x"$CROP_HEIGHT"+"$CROP_OFFSET_X"+"$CROP_OFFSET_Y" +repage "$IMAGE_TO_USE";
+fi
+
 #Uncomment the following line to enable image stretching
 #convert $IMAGE_TO_USE -sigmoidal-contrast 10,10% $IMAGE_TO_USE
 cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"

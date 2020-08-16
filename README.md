@@ -130,6 +130,9 @@ nano config.sh
 | CROP_HEIGHT | n/a | The height of the resulting image |
 | CROP_OFFSET_X | 0 | The x offset to use when cropping |
 | CROP_OFFSET_Y | 0 | The y offset to use when cropping |
+| AUTO_STRETCH | false | If enabled the captured image will be stretched |
+| AUTO_STRETCH_AMOUNT | 10 | Indicates how much to increase the contrast. For example, 0 is none, 3 is typical and 20 is a lot |
+| AUTO_STRETCH_MID_POINT | 10% | Indicates where the maximum change 'slope' in contrast should fall in the resultant image (0 is white; 50% is middle-gray; 100% is black). |
 
 When using the cropping options the image is cropped from the center so you will need to experiment with the correct width and height values. Normally there will be no need to amend the offset values.
 

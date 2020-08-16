@@ -53,5 +53,10 @@ CROP_HEIGHT=480
 CROP_OFFSET_X=0
 CROP_OFFSET_Y=0
 
+# Auto stretch images saved at night
+AUTO_STRETCH=false
+AUTO_STRETCH_AMOUNT=10
+AUTO_STRETCH_MID_POINT=10%
+
 # Path to the camera settings (exposure, gain, delay, overlay, etc)
 CAMERA_SETTINGS="$ALLSKY_HOME/settings.json"

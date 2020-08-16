@@ -30,8 +30,11 @@ if [[ $CROP_IMAGE == "true" ]]; then
         convert "$IMAGE_TO_USE" -gravity Center -crop "$CROP_WIDTH"x"$CROP_HEIGHT"+"$CROP_OFFSET_X"+"$CROP_OFFSET_Y" +repage "$IMAGE_TO_USE";
 fi
 
-#Uncomment the following line to enable image stretching
-#convert $IMAGE_TO_USE -sigmoidal-contrast 10,10% $IMAGE_TO_USE
+# Stretch the image
+if [[ $AUTO_STRETCH == "true" ]]; then
+  	convert $IMAGE_TO_USE -sigmoidal-contrast "$AUTO_STRETCH_AMOUNT","$AUTO_STRETCH_MID_POINT" $IMAGE_TO_USE
+fi
+
 cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 
 # Save image in images/current directory

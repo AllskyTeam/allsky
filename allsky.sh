@@ -5,7 +5,7 @@ if [ $isPresent -eq 0 ]; then
         sudo systemctl stop allsky
         exit 0
 fi
------------------
+
 if [ -z "$ALLSKY_HOME" ]
 then
       export ALLSKY_HOME="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"

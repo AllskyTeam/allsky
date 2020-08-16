@@ -20,6 +20,6 @@ do
     fi
 done
 
-if [ -e "darks/$CLOSEST_TEMP.png" ] ; then
-        convert "$FULL_FILENAME" "darks/$CLOSEST_TEMP.png" -compose minus_src -composite -type TrueColor "$FILENAME-processed.$EXTENSION"
+if [ -e "darks/$CLOSEST_TEMP.$EXTENSION" ] ; then
+        convert "$FULL_FILENAME" "darks/$CLOSEST_TEMP.$EXTENSION" -compose minus_src -composite -type TrueColor "$FILENAME-processed.$EXTENSION"
 fi

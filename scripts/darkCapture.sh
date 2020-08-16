@@ -8,7 +8,7 @@ TEMP=$(printf "%.0f" "`cat temperature.txt`")
 
 if [ $DARK_MODE = "1" ] ; then
         mkdir -p darks
-        cp $FULL_FILENAME "darks/$TEMP.png"
+        cp $FULL_FILENAME "darks/$TEMP.$EXTENSION"
         cp $FULL_FILENAME "liveview-$FILENAME.$EXTENSION"
         exit 0
 fi

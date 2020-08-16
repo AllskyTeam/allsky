@@ -121,7 +121,7 @@ nano config.sh
 | UPLOAD_STARTRAILS | false | Set to true to uplad the startrails to your server |
 | AUTO_DELETE | true | Enables automatic deletion of old images and videos |
 | NIGHTS_TO_KEEP | 14 | Number of nights to keep before starting deleting. Needs AUTO_DELETE=true to work. |
-| DARK_FRAME_SUBTRACTION | false | Set to true toenable hot pixels subtraction at night. |
+| DARK_FRAME_SUBTRACTION | false | Set to true to enable hot pixels subtraction at night. |
 | DAYTIME | 1 | Set to 0 to disable daytime liveview. |
 | CAPTURE_24HR | false | Set to true to save images during both night and day |
 | CAMERA_SETTINGS | /home/pi/allsky/settings.json | Path to the camera settings file. **Note**: If using the GUI, this path will change to /var/www/html/settings.json |
@@ -212,27 +212,30 @@ The dark frame subtraction feature was implemented to remove hot pixels from nig
 
 You only need to follow these instructions once.
 
-Manual method:
-* make sure config.sh has a DARK_FRAME configuration. Default is "dark.png"
+If you don't use the GUI:
 * Place a cover on your camera lens/dome
 * Set darkframe to 1 in settings.json
 * Restart the allsky service: ```sudo service allsky restart```
-* A new file has been created at the root of the project: dark.png by default
+* Dark frames are created in a `darks` directory. A new dark is created every time the sensor temperature changes by 1 degree C.
 * Set darkframe to 0 in settings.json
 * Restart the allsky service: ```sudo service allsky restart```
 * Remove the cover from the lens/dome
+* Enable dark subtraction in `config.sh` by setting `DARK_FRAME_SUBTRACTION` to true
 
 GUI method:
-* make sure config.sh has a DARK_FRAME configuration. Default is "dark.png"
 * Place a cover on your camera lens/dome
 * Open the Camera Settings tab and set Dark Frame to Yes.
 * Hit the Save button
-* A new file has been created at the root of the project: dark.png by default
+* Dark frames are created in a `darks` directory. A new dark is created every time the sensor temperature changes by 1 degree C.
 * On the Camera Settings tab and set Dark Frame to No.
 * Hit the Save button
 * Remove the cover from the lens/dome
+* Open the scripts editor tab, load `config.sh` and set `DARK_FRAME_SUBTRACTION` to true
 
-The dark frame is now created and will always be subtracted from captured images. In case the outside temperature varies significantly and you start seeing more / less hot pixels, you can run these instructions again to create a new dark frame.
+The dark frame subtraction is temperature dependant.
+Running the dark frame capture while ambiant temperature is varying results in a larger set of darks (1 per degree C).
+During the night, the sensor temperature is used to select the most appropriate dark frame.
+Dark frames are only subtracted from images taken at night.
 
 ## Timelapse
 

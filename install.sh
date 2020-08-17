@@ -27,7 +27,7 @@ echo -en '\n'
 
 echo -en "${GREEN}* Autostart script\n${NC}"
 sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart
-sed -i "s|/User=pi|User=`logname`|g" autostart/allsky.service
+sed -i "s|User=pi|User=`logname`|g" autostart/allsky.service
 sed -i "s|/home/pi/allsky|$PWD|g" autostart/allsky.service
 cp autostart/allsky.service /lib/systemd/system/
 chown root:root /lib/systemd/system/allsky.service

@@ -40,7 +40,7 @@ endif
 
 CFLAGS = -Wall -Wno-psabi -g $(DEFS) $(COMMON) $(ZWOSDK) -lpthread  -DGLIBC_20
 
-all:capture startrails keogram sunwait-remove-precompiled sunwait
+all:capture capture_RPiHQ startrails keogram sunwait-remove-precompiled sunwait
 
 sunwait-remove-precompiled:
 ifneq ("arm", $(findstring $(platform), "arm"))

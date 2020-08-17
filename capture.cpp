@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
     int fontnumber = 0;
     int iStrLen, iTextX = 15, iTextY = 25;
     char const *ImgText   = "";
-    double fontsize       = 0.6;
+    double fontsize       = 7;
     int linewidth         = 1;
     int outlinefont       = 0;
     int fontcolor[3]      = { 255, 0, 0 };
@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
     //-------------------------------------------------------------------------------------------------------
     printf("\n");
     printf("%s ******************************************\n", KGRN);
-    printf("%s *** Allsky Camera Software v0.6 | 2019 ***\n", KGRN);
+    printf("%s *** Allsky Camera Software v0.7 | 2020 ***\n", KGRN);
     printf("%s ******************************************\n\n", KGRN);
     printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n", KGRN);
     printf("\n");
@@ -525,7 +525,7 @@ int main(int argc, char *argv[])
         printf(" -fontcolor = Font Color            - Default = 255 0 0  - Text blue (BGR)\n");
         printf(" -smallfontcolor = Small Font Color - Default = 0 0 255  - Text red (BGR)\n");
         printf(" -fonttype = Font Type              - Default = 0    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
-        printf(" -fontsize                          - Default = 0.5  - Text Font Size\n");
+        printf(" -fontsize                          - Default = 7  - Text Font Size\n");
         printf(" -fontline                          - Default = 1    - Text Font Line Thickness\n");
         //printf(" -bgc = BG Color                    - Default =      - Text Background Color in Hex. 00ff00 = Green\n");
         //printf(" -bga = BG Alpha                    - Default =      - Text Background Color Alpha/Transparency 0-100\n");
@@ -871,7 +871,7 @@ int main(int argc, char *argv[])
                         //iYOffset+=30;
                         if (time == 1)
                         {
-                            cvText(pRgb, bufTime, iTextX, iTextY + (iYOffset / bin), fontsize, linewidth,
+                            cvText(pRgb, bufTime, iTextX, iTextY + (iYOffset / bin), fontsize * 0.1, linewidth,
                                    linetype[linenumber], fontname[fontnumber], fontcolor, Image_type, outlinefont);
                             iYOffset += 30;
                         }
@@ -879,15 +879,15 @@ int main(int argc, char *argv[])
                         if (showDetails == 1)
                         {
                             sprintf(bufTemp, "Sensor %.1fC", (float)ltemp / 10);
-                            cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.8, linewidth,
+                            cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.08, linewidth,
                                    linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
                             iYOffset += 30;
                             sprintf(bufTemp, "Exposure %.3f s", (float)autoExp / 1000000);
-                            cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.8, linewidth,
+                            cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.08, linewidth,
                                    linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
                             iYOffset += 30;
                             sprintf(bufTemp, "Gain %d", (int)autoGain);
-                            cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.8, linewidth,
+                            cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.08, linewidth,
                                    linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
                             iYOffset += 30;
                         }

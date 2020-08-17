@@ -1,6 +1,12 @@
 #!/bin/bash
 
-CAMERA="RPiHQ"
+if [ -z "$ALLSKY_HOME" ]
+then
+      export ALLSKY_HOME="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+fi
+
+source $ALLSKY_HOME/config.sh
+source $ALLSKY_HOME/scripts/filename.sh
 
 echo "Making sure allsky.sh is not already running..."
 ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
@@ -18,25 +24,6 @@ if [[ $CAMERA == "ZWO" &&  $ZWOIsPresent -eq 0 ]]; then
         sudo systemctl stop allsky
         exit 0
 fi
-
-if [ -z "$ALLSKY_HOME" ]
-then
-      export ALLSKY_HOME="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-fi
-
-source $ALLSKY_HOME/config.sh
-source $ALLSKY_HOME/scripts/filename.sh
-
-#echo "Ensuring you are running the latest software..."
-#if [ `git pull | wc -c` != 20 ]; then
-#	echo "Compiling software..."
-#	make
-#	if [ -f "/etc/raspap/camera_settings.json"] ; then
-#		echo Copying camera settings file...
-#		sudo cp /etc/raspap/camera_settings.json /etc/raspap/camera_settings.json.old
-#		sudo cp camera_settings.json /etc/raspap
-#	fi
-#fi
 
 echo "Starting allsky camera..."
 cd $ALLSKY_HOME

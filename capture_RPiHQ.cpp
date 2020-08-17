@@ -277,7 +277,7 @@ time ( NULL );
 
 		if (asiWBR > 10)
 		{
-			asiWBR = 10;
+			asiWBR = 2;
 		}
 
 		if (asiWBB < 0.1)
@@ -287,7 +287,7 @@ time ( NULL );
 
 		if (asiWBB > 10)
 		{
-			asiWBB = 10;
+			asiWBB = 2;
 		}
 
 		ss.str("");
@@ -424,14 +424,14 @@ time ( NULL );
 			command += "-a \"" + ss.str() + "\" ";
 		}
 
-		if (fontsize < 6)
-			fontsize = 6;
+		if (fontsize < 1)
+			fontsize = 1;
 
-		if (fontsize > 160)
-			fontsize = 160;
+		if (fontsize > 16)
+			fontsize = 16;
 
 		ss.str("");
-		ss << fontsize;
+		ss << fontsize*10/bin;
 
 		if (fontcolor < 0)
 			fontcolor = 0;
@@ -534,7 +534,7 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	printf("\n");
 	printf("%s ******************************************\n", KGRN);
-	printf("%s *** Allsky Camera Software v0.6 | 2019 ***\n", KGRN);
+	printf("%s *** Allsky Camera Software v0.7 | 2020 ***\n", KGRN);
 	printf("%s ******************************************\n\n", KGRN);
 	printf("\%sCapture images of the sky with a Raspberry Pi and an ZWO ASI or RPi HQ camera\n", KGRN);
 	printf("\n");

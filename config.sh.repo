@@ -1,5 +1,7 @@
 #!/bin/bash
-source $ALLSKY_HOME/scripts/ftp-settings.sh
+
+# Choose between ZWO or RPiHQ
+CAMERA="ZWO"
 
 # Set to true to upload current image to your website
 UPLOAD_IMG=false

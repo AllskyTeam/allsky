@@ -11,9 +11,8 @@ This is the source code for the Wireless Allsky Camera project described [on Ins
 
 In order to get the camera working properly you will need the following hardware:
 
- * An ASI camera from ZWO. Tested cameras include ASI120MC*, ASI120MM*, ASI120MC-S, ASI120MM-S, ASI224MC, ASI178MC, ASI185MC, ASI290MC, ASI1600MC
- * A Raspberry Pi 2 or 3
- * A USB wireless dongle if using a Pi 2. [This one](https://www.amazon.ca/Edimax-EW-7811Un-150Mbps-Raspberry-Supports/dp/B003MTTJOY) has been tested.
+ * A camera (Tested cameras include Raspberry Pi HQ camera, ASI120MC*, ASI120MM*, ASI120MC-S, ASI120MM-S, ASI224MC, ASI178MC, ASI185MC, ASI290MC, ASI1600MC
+ * A Raspberry Pi (2, 3, 4 or zero)
 
 **Note:*** Owners of USB2.0 cameras such as ASI120MC and ASI120MM may need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software/) (This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.)
 
@@ -91,7 +90,7 @@ nano settings.json
 | fontname | 0 | Font type for the overlay. 0=Simplex, 1=Plain, 2=Duplex, 3=Complex, 4=Triplex, 5=Complex small, 6=Script simplex, 7=Script complex |
 | fontcolor | 255 255 255 | Font color in BGR. NOTE: When using RAW 16 only the B and G values are used i.e. 255 128 0 |
 | smallfontcolor | 0 0 255 | Small Font color in BGR. NOTE: When using RAW 16 only the B and G values are used i.e. 255 128 0 |
-| fontsize | 0.7 | Font size |
+| fontsize | 7 | Font size |
 | fonttype | 0 | Controls the smoothness of the fonts. 0=Antialiased, 1=8 Connected, 2=4 Connected. |
 | fontline | 1 | font line thickness |
 | latitude | 60.7N | Latitude of the camera. N for North and S for South
@@ -109,6 +108,7 @@ nano config.sh
 
 | Configuration     | Default     | Additional Info |
 | ----------- | ----------- | ----------------|
+| CAMERA | ZWO | Choose between ZWO and RPiHQ
 | UPLOAD_IMG | false | Set to true to upload (ftp) the current image to a server (website, blog, host, etc) |
 | UPLOAD_VIDEO | false | Set to true to upload the timelapse to a server |
 | POST_END_OF_NIGHT_DATA | false | Set to true to send some data to your server at the end of each night |
@@ -124,7 +124,7 @@ nano config.sh
 | DARK_FRAME_SUBTRACTION | false | Set to true to enable hot pixels subtraction at night. |
 | DAYTIME | 1 | Set to 0 to disable daytime liveview. |
 | CAPTURE_24HR | false | Set to true to save images during both night and day |
-| CAMERA_SETTINGS | /home/pi/allsky/settings.json | Path to the camera settings file. **Note**: If using the GUI, this path will change to /var/www/html/settings.json |
+| CAMERA_SETTINGS | /home/pi/allsky/settings.json | Path to the camera settings file. **Note**: If using the GUI, this path will change to /etc/raspap/settings.json |
 | CROP_IMAGE | false | Crop the captured image BEFORE any other processing. This inproves the subsequent images when using a fisheye lens |
 | CROP_WIDTH | n/a | The width of the resulting image |
 | CROP_HEIGHT | n/a | The height of the resulting image |
@@ -140,9 +140,9 @@ In order to upload images and videos to your website, you'll need to fill your F
 ```shell
 nano scripts/ftp-settings.sh
 ```
-**saveImageNight.sh** is called every time the camera takes a new image at night. You can play with this file in case your sensor is not dead center.
+**saveImageNight.sh** is called every time the camera takes a new image at night. If dark subtraction is enabled, this is where it happens
 
-**saveImageDay.sh** is called every time the camera takes a new image during the day. Images are not archived on the SD card. They are only resized and uploaded periodically in order to monitor the sky by day.
+**saveImageDay.sh** is called every time the camera takes a new image during the day.
 
 At the end of the night **endOfNight.sh** is run. It calls a few other scripts based on your config.sh content.
 
@@ -281,7 +281,7 @@ The program takes 3 arguments:
 
 Example when running the program manually:
 ```
-./keogram ./images/20180223/ jpg ./images/20180223/keogram.jpg
+./keogram ./images/20180223/ jpg ./images/20180223/keogram/keogram.jpg
 ```
 
 To disable keograms, open **config.sh** and set
@@ -303,7 +303,7 @@ The program takes 4 arguments:
 
 Example when running the program manually:
 ```
-./startrails ./images/20180223/ jpg 0.15 ./images/20180223/startrails.jpg
+./startrails ./images/20180223/ jpg 0.15 ./images/20180223/startrails/startrails.jpg
 ```
 
 To disable automatic startrails, open **config.sh** and set
@@ -357,11 +357,18 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* Keograms and Startrails generation is now much faster thanks to a rewrite by Jarno Paananen.
 * version **0.6**: Added daytime exposure and auto-exposure capability
 	* Added -maxexposure, -autoexposure, -maxgain, -autogain options. Note that using autoexposure and autogain at the same time may produce unexpected results (black frames).
- 	* Autostart is now based on systemd and should work on all raspbian based systems, including headless distributions. Remote controlling will not start multiple instances of the software.
- 	* Replaced `nodisplay` option with `preview` argument. No preview in autostart mode.
- 	* When using the GUI, camera options can be saved without rebooting the RPi.
- 	* Added a publicly accessible preview to the GUI: public.php
+	* Autostart is now based on systemd and should work on all raspbian based systems, including headless distributions. Remote controlling will not start multiple instances of the software.
+	* Replaced `nodisplay` option with `preview` argument. No preview in autostart mode.
+	* When using the GUI, camera options can be saved without rebooting the RPi.
+	* Added a publicly accessible preview to the GUI: public.php
 	* Changed exposure unit to milliseconds instead of microseconds
+* version **0.7**: Added Raspberry Pi camera HQ support (Based on Rob Musquetier's fork)
+	* Support for x86 architecture (Ubuntu, etc)
+	* Temperature dependant dark frame library
+	* Browser based script editor
+	* Configuration variables to crop black area around image
+	* Timelapse frame rate setting
+	* Changed font size default value
 
 ## Donation
 

@@ -41,7 +41,7 @@ git clone https://github.com/thomasjacquin/allsky-portal.git /var/www/html
 chown -R www-data:www-data /var/www/html
 mkdir /etc/raspap
 mv /var/www/html/raspap.php /etc/raspap/
-mv /var/www/html/camera_options.json /etc/raspap/
+mv /var/www/html/camera_options_* /etc/raspap/
 cp $(dirname "$SCRIPTPATH")/settings.json /etc/raspap/settings.json
 chown -R www-data:www-data /etc/raspap
 usermod -a -G www-data `logname`

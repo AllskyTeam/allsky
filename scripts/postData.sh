@@ -1,5 +1,6 @@
 #!/bin/bash
 source $ALLSKY_HOME/config.sh
+source $ALLSKY_HOME/scripts/ftp-settings.sh
 
 # TODO Needs fixing when civil twilight happens after midnight
 cd $ALLSKY_HOME/scripts

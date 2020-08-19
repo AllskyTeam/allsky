@@ -1,6 +1,7 @@
 #!/bin/bash
 source $ALLSKY_HOME/config.sh
 source $ALLSKY_HOME/scripts/filename.sh
+source $ALLSKY_HOME/scripts/ftp-settings.sh
 
 cd $ALLSKY_HOME/
 

@@ -1,10 +1,3 @@
-#ifdef OPENCV_C_HEADERS
-#include <opencv2/core/types_c.h>
-#include <opencv2/highgui/highgui_c.h>
-#include <opencv2/imgproc/imgproc_c.h>
-#include <opencv2/imgcodecs/legacy/constants_c.h>
-#endif
-
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -277,7 +270,7 @@ time ( NULL );
 
 		if (asiWBR > 10)
 		{
-			asiWBR = 2;
+			asiWBR = 10;
 		}
 
 		if (asiWBB < 0.1)
@@ -287,7 +280,7 @@ time ( NULL );
 
 		if (asiWBB > 10)
 		{
-			asiWBB = 2;
+			asiWBB = 10;
 		}
 
 		ss.str("");
@@ -424,14 +417,14 @@ time ( NULL );
 			command += "-a \"" + ss.str() + "\" ";
 		}
 
-		if (fontsize < 1)
-			fontsize = 1;
+		if (fontsize < 6)
+			fontsize = 6;
 
-		if (fontsize > 16)
-			fontsize = 16;
+		if (fontsize > 160)
+			fontsize = 160;
 
 		ss.str("");
-		ss << fontsize*10/bin;
+		ss << fontsize;
 
 		if (fontcolor < 0)
 			fontcolor = 0;
@@ -473,8 +466,8 @@ int main(int argc, char *argv[])
 {
 	signal(SIGINT, IntHandle);
 /*
-	int fontname[] = { CV_FONT_HERSHEY_SIMPLEX,		CV_FONT_HERSHEY_PLAIN,		 CV_FONT_HERSHEY_DUPLEX,
-					   CV_FONT_HERSHEY_COMPLEX,		CV_FONT_HERSHEY_TRIPLEX,       CV_FONT_HERSHEY_COMPLEX_SMALL,
+	int fontname[] = { CV_FONT_HERSHEY_SIMPLEX,        CV_FONT_HERSHEY_PLAIN,         CV_FONT_HERSHEY_DUPLEX,
+					   CV_FONT_HERSHEY_COMPLEX,        CV_FONT_HERSHEY_TRIPLEX,       CV_FONT_HERSHEY_COMPLEX_SMALL,
 					   CV_FONT_HERSHEY_SCRIPT_SIMPLEX, CV_FONT_HERSHEY_SCRIPT_COMPLEX };
 	int fontnumber = 0;
 	int iStrLen;
@@ -484,46 +477,46 @@ int main(int argc, char *argv[])
 	char const *param     = "";
 	double fontsize       = 32;
 /*
-	int linewidth		 = 1;
+	int linewidth         = 1;
 	int outlinefont       = 0;
 */
-	int fontcolor		 = 255;
-	int background		= 0;
+	int fontcolor         = 255;
+	int background        = 0;
 /*
 	int smallFontcolor[3] = { 0, 0, 255 };
 	int linetype[3]       = { CV_AA, 8, 4 };
-	int linenumber		= 0;
+	int linenumber        = 0;
 	char buf[1024]    = { 0 };
 	char bufTime[128] = { 0 };
 	char bufTemp[128] = { 0 };
 */
-	int width		     = 0;
-	int height		    = 0;
-	int bin		       = 2;
+	int width             = 0;
+	int height            = 0;
+	int bin               = 2;
 	int asiExposure       = 60000000;
 	int asiAutoExposure   = 0;
 	int asiAutoFocus      = 0;
-	double asiGain		= 4;
+	double asiGain        = 4;
 	int asiAutoGain       = 0;
-	int asiAutoAWB		= 0;
-	int delay		     = 10;   // Delay in milliseconds. Default is 10ms
+	int asiAutoAWB        = 0;
+	int delay             = 10;   // Delay in milliseconds. Default is 10ms
 	int daytimeDelay      = 15000; // Delay in milliseconds. Default is 15 seconds
-	double asiWBR		 = 2.5;
-	double asiWBB		 = 2;
-	int asiGamma		  = 50;
+	double asiWBR         = 2.5;
+	double asiWBB         = 2;
+	int asiGamma          = 50;
 	int asiBrightness     = 50;
-	int asiFlip		   = 0;
+	int asiFlip           = 0;
 	int asiRotation       = 0;
 	char const *latitude  = "52.57N"; //GPS Coordinates of Limmen, Netherlands where this code was altered
 	char const *longitude = "4.70E";
 	char const *angle  	  = "0"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
-	//int preview		   = 0;
-	int time		      = 0;
+	//int preview           = 0;
+	int time              = 0;
 	int showDetails       = 0;
-	int darkframe		 = 0;
+	int darkframe         = 0;
 	int daytimeCapture    = 0;
-	int help		      = 0;
-	int quality		   = 90;
+	int help              = 0;
+	int quality           = 90;
 
 	int i;
 	//id *retval;
@@ -534,7 +527,7 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	printf("\n");
 	printf("%s ******************************************\n", KGRN);
-	printf("%s *** Allsky Camera Software v0.7 | 2020 ***\n", KGRN);
+	printf("%s *** Allsky Camera Software v0.6 | 2019 ***\n", KGRN);
 	printf("%s ******************************************\n\n", KGRN);
 	printf("\%sCapture images of the sky with a Raspberry Pi and an ZWO ASI or RPi HQ camera\n", KGRN);
 	printf("\n");
@@ -826,57 +819,57 @@ int main(int argc, char *argv[])
 	if (help == 1)
 	{
 		printf("%sAvailable Arguments: \n", KYEL);
-		printf(" -width						     - Default = Camera Max Width \n");
-		printf(" -height						    - Default = Camera Max Height \n");
-		printf(" -exposure						  - Default = 5000000 - Time in µs (equals to 5 sec) \n");
-		printf(" -autoexposure				      - Default = 0 - Set to 1 to enable auto Exposure \n");
-		printf(" -autofocus						 - Default = 0 - Set to 1 to enable auto Focus \n");
-		printf(" -gain						      - Default = 1 (1 - 16) \n");
-		printf(" -autogain						  - Default = 0 - Set to 1 to enable auto Gain \n");
-		printf(" -gamma						     - Default = 50 (-100 till 100)\n");
-		printf(" -brightness						- Default = 50 (0 till 100) \n");
-//		printf(" -awb						       - Default = 0 - Auto White Balance (0 = off)\n");
-		printf(" -wbr						       - Default = 2 - White Balance Red  (0 = off)\n");
-		printf(" -wbb						       - Default = 2 - White Balance Blue (0 = off)\n");
-		printf(" -bin						       - Default = 1 - binning OFF (1x1), 2 = 2x2, 3 = 3x3 binning\n");
-		printf(" -delay						     - Default = 10 - Delay between images in milliseconds - 1000 = 1 sec.\n");
-		printf(" -daytimeDelay				      - Default = 5000 - Delay between images in milliseconds - 5000 = 5 sec.\n");
-		printf(" -type = Image Type				 - Default = 0 - 0 = RAW8,  1 = RGB24,  2 = RAW16 \n");
-		printf(" -quality						   - Default = 70%%, 0%% (poor) 100%% (perfect)\n");
-		printf(" -filename						  - Default = image.jpg\n");
-		printf(" -rotation						  - Default = 0 degrees - Options 0, 90, 180 or 270\n");
-		printf(" -flip						      - Default = 0 - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
+		printf(" -width                             - Default = Camera Max Width \n");
+		printf(" -height                            - Default = Camera Max Height \n");
+		printf(" -exposure                          - Default = 5000000 - Time in µs (equals to 5 sec) \n");
+		printf(" -autoexposure                      - Default = 0 - Set to 1 to enable auto Exposure \n");
+		printf(" -autofocus                         - Default = 0 - Set to 1 to enable auto Focus \n");
+		printf(" -gain                              - Default = 1 (1 - 16) \n");
+		printf(" -autogain                          - Default = 0 - Set to 1 to enable auto Gain \n");
+		printf(" -gamma                             - Default = 50 (-100 till 100)\n");
+		printf(" -brightness                        - Default = 50 (0 till 100) \n");
+//		printf(" -awb                               - Default = 0 - Auto White Balance (0 = off)\n");
+		printf(" -wbr                               - Default = 2 - White Balance Red  (0 = off)\n");
+		printf(" -wbb                               - Default = 2 - White Balance Blue (0 = off)\n");
+		printf(" -bin                               - Default = 1 - binning OFF (1x1), 2 = 2x2, 3 = 3x3 binning\n");
+		printf(" -delay                             - Default = 10 - Delay between images in milliseconds - 1000 = 1 sec.\n");
+		printf(" -daytimeDelay                      - Default = 5000 - Delay between images in milliseconds - 5000 = 5 sec.\n");
+		printf(" -type = Image Type                 - Default = 0 - 0 = RAW8,  1 = RGB24,  2 = RAW16 \n");
+		printf(" -quality                           - Default = 70%%, 0%% (poor) 100%% (perfect)\n");
+		printf(" -filename                          - Default = image.jpg\n");
+		printf(" -rotation                          - Default = 0 degrees - Options 0, 90, 180 or 270\n");
+		printf(" -flip                              - Default = 0 - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
 		printf("\n");
-		printf(" -text						      - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c "
+		printf(" -text                              - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c "
 			   "\"Text Overlay\"\n");
 /*
 		printf(
-			" -textx						     - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
-		printf(" -texty = Text Y				    - Default = 25   - Text Placement Vertical from TOP in Pixels\n");
-		printf(" -fontname = Font Name		      - Default = 0    - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, "
+			" -textx                             - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
+		printf(" -texty = Text Y                    - Default = 25   - Text Placement Vertical from TOP in Pixels\n");
+		printf(" -fontname = Font Name              - Default = 0    - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, "
 			   "7 = script\n");
 */
-		printf(" -fontcolor = Font Color		    - Default = 255  - Text gray scale color  (0 - 255)\n");
-		printf(" -background= Font Color		    - Default = 0  - Backgroud gray scale color (0 - 255)\n");
+		printf(" -fontcolor = Font Color            - Default = 255  - Text gray scale color  (0 - 255)\n");
+		printf(" -background= Font Color            - Default = 0  - Backgroud gray scale color (0 - 255)\n");
 /*
 		printf(" -smallfontcolor = Small Font Color - Default = 0 0 255  - Text red (BGR)\n");
-		printf(" -fonttype = Font Type		      - Default = 0    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
+		printf(" -fonttype = Font Type              - Default = 0    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
 */
-		printf(" -fontsize						  - Default = 32  - Text Font Size (range 6 - 160, 32 default)\n");
+		printf(" -fontsize                          - Default = 32  - Text Font Size (range 6 - 160, 32 default)\n");
 /*
-		printf(" -fontline						  - Default = 1    - Text Font Line Thickness\n");
+		printf(" -fontline                          - Default = 1    - Text Font Line Thickness\n");
 */
 		printf("\n");
 		printf("\n");
-		printf(" -latitude						  - Default = 60.7N (Whitehorse)   - Latitude of the camera.\n");
-		printf(" -longitude						 - Default = 135.05W (Whitehorse) - Longitude of the camera\n");
-		printf(" -angle						     - Default = -6 - Angle of the sun below the horizon. -6=civil "
+		printf(" -latitude                          - Default = 60.7N (Whitehorse)   - Latitude of the camera.\n");
+		printf(" -longitude                         - Default = 135.05W (Whitehorse) - Longitude of the camera\n");
+		printf(" -angle                             - Default = -6 - Angle of the sun below the horizon. -6=civil "
 			   "twilight, -12=nautical twilight, -18=astronomical twilight\n");
 		printf("\n");
-		// printf(" -preview						   - set to 1 to preview the captured images. Only works with a Desktop Environment \n");
-		printf(" -time						      - Adds the time to the image.\n");
-		printf(" -darkframe						 - Set to 1 to grab dark frame and cover your camera \n");
-		printf(" -showDetails				       - Set to 1 to display the metadata on the image \n");
+		// printf(" -preview                           - set to 1 to preview the captured images. Only works with a Desktop Environment \n");
+		printf(" -time                              - Adds the time to the image.\n");
+		printf(" -darkframe                         - Set to 1 to grab dark frame and cover your camera \n");
+		printf(" -showDetails                       - Set to 1 to display the metadata on the image \n");
 
 		printf("%sUsage:\n", KRED);
 		printf(" ./capture -width 640 -height 480 -exposure 5000000 -gamma 50 -bin 1 -filename Lake-Laberge.JPG\n\n");
@@ -955,8 +948,8 @@ int main(int argc, char *argv[])
 
 	// Initialization
 	int currentExposure = asiExposure;
-	int exp_ms		  = 0;
-	int useDelay		= 0;
+	int exp_ms          = 0;
+	int useDelay        = 0;
 	bool needCapture	= true;
 	std::string lastDayOrNight;
 
@@ -1024,7 +1017,7 @@ int main(int argc, char *argv[])
 				printf("Starting daytime capture\n");
 
 				// Set exposure to 32 ms
-				exp_ms		 = 32;
+				exp_ms         = 32;
 
 				// Inform user
 				printf("Saving %d ms exposed images with %d seconds delays in between...\n\n", exp_ms, daytimeDelay / 1000);

@@ -39,9 +39,10 @@ echo -e "${GREEN}* Retrieving github files to build admin portal${NC}"
 rm -rf /var/www/html
 git clone https://github.com/thomasjacquin/allsky-portal.git /var/www/html
 chown -R www-data:www-data /var/www/html
-mkdir /etc/raspap
+mkdir -p /etc/raspap
 mv /var/www/html/raspap.php /etc/raspap/
-mv /var/www/html/camera_options_* /etc/raspap/
+mv /var/www/html/camera_options_ZWO.json /etc/raspap/
+mv /var/www/html/camera_options_RPiHQ.json /etc/raspap/
 cp $(dirname "$SCRIPTPATH")/settings.json /etc/raspap/settings.json
 chown -R www-data:www-data /etc/raspap
 usermod -a -G www-data `logname`

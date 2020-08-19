@@ -48,7 +48,8 @@ echo "export ALLSKY_HOME=$PWD" | sudo tee /etc/profile.d/allsky.sh
 echo -en '\n'
 
 echo -en "${GREEN}* Copy camera settings files\n${NC}"
-cp settings.json.repo settings.json
+cp settings_ZWO.json.repo settings_ZWO.json
+cp settings_RPiHQ.json.repo settings_RPiHQ.json
 cp config.sh.repo config.sh
 cp scripts/ftp-settings.sh.repo scripts/ftp-settings.sh
 chown -R `logname`:`logname` ../allsky

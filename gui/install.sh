@@ -43,12 +43,13 @@ mkdir -p /etc/raspap
 mv /var/www/html/raspap.php /etc/raspap/
 mv /var/www/html/camera_options_ZWO.json /etc/raspap/
 mv /var/www/html/camera_options_RPiHQ.json /etc/raspap/
-cp $(dirname "$SCRIPTPATH")/settings.json /etc/raspap/settings.json
+cp $(dirname "$SCRIPTPATH")/settings_ZWO.json /etc/raspap/settings_ZWO.json
+cp $(dirname "$SCRIPTPATH")/settings_RPiHQ.json /etc/raspap/settings_RPiHQ.json
 chown -R www-data:www-data /etc/raspap
 usermod -a -G www-data `logname`
 echo -en '\n'
 echo -e "${GREEN}* Modify config.sh${NC}"
-sed -i '/CAMERA_SETTINGS=/c\CAMERA_SETTINGS="/etc/raspap/settings.json"' $(dirname "$SCRIPTPATH")/config.sh
+sed -i '/CAMERA_SETTINGS_DIR=/c\CAMERA_SETTINGS_DIR="/etc/raspap"' $(dirname "$SCRIPTPATH")/config.sh
 echo -en '\n'
 echo -en '\n'
 echo "The Allsky Portal is now installed"

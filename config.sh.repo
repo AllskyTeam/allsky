@@ -61,4 +61,5 @@ AUTO_STRETCH_AMOUNT=10
 AUTO_STRETCH_MID_POINT=10%
 
 # Path to the camera settings (exposure, gain, delay, overlay, etc)
-CAMERA_SETTINGS="$ALLSKY_HOME/settings.json"
+CAMERA_SETTINGS_DIR="$ALLSKY_HOME"
+CAMERA_SETTINGS="$CAMERA_SETTINGS_DIR/settings_$CAMERA.json"

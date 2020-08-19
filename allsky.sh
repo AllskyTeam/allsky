@@ -12,7 +12,7 @@ echo "Making sure allsky.sh is not already running..."
 ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 RPiHQIsPresent=$(vcgencmd get_camera)
-if [[ $CAMERA == "RPiHQ" && $RPiHQIsPresent == "*supported=1 detected=1*" ]]; then
+if [[ $CAMERA == "RPiHQ" && $RPiHQIsPresent != "supported=1 detected=1" ]]; then
 echo "RPiHQ Camera not found. Exiting." >&2
         sudo systemctl stop allsky
         exit 0

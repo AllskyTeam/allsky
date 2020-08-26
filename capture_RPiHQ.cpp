@@ -988,7 +988,7 @@ int main(int argc, char *argv[])
 			// Execute end of night script
 			if (endOfNight == true)
 			{
-				system("scripts/endOfNight_RPiHQ.sh &");
+				system("scripts/endOfNight.sh &");
 
 				// Reset end of night indicator
 				endOfNight = false;

@@ -26,17 +26,16 @@ cp $IMAGE_TO_USE "liveview-$FILENAME.$EXTENSION"
 # If 24 hour saving is desired, save the current image in today's directory
 if [ "$CAPTURE_24HR" = true ] ; then
 	CURRENT=$(date +'%Y%m%d')
-	TFILENAME="$(date +'%Y%m%d%H%M%S').$EXTENSION"
 
 	mkdir -p images/$CURRENT
 	mkdir -p images/$CURRENT/thumbnails
 
 	# Save image in images/current directory
-	cp $IMAGE_TO_USE "images/$CURRENT/$TFILENAME"
+	cp $IMAGE_TO_USE "images/$CURRENT/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION"
 
 	# Create a thumbnail of the image for faster load in web GUI
     	if identify $IMAGE_TO_USE >/dev/null 2>&1; then
-        	convert "$IMAGE_TO_USE" -resize 100x75 "images/$CURRENT/thumbnails/$TFILENAME";
+		convert "$IMAGE_TO_USE" -resize 100x75 "images/$CURRENT/thumbnails/$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION";
     	fi
 fi
 

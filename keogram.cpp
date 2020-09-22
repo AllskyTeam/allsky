@@ -1,6 +1,7 @@
 // Simple keogram composition program using OpenCV
 // Copyright 2018 Jarno Paananen <jarno.paananen@gmail.com>
 // Based on a script by Thomas Jacquin
+// Rotation added by Agustin Nunez @agnunez
 // SPDX-License-Identifier: MIT
 
 #include <cstdlib>
@@ -20,6 +21,7 @@
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 
 #define KNRM "\x1B[0m"
 #define KRED "\x1B[31m"
@@ -55,6 +57,7 @@ int main(int argc, char *argv[])
         std::cout << " -fontline                    - Default = 3    - Text Font "
                      "Line Thickness"
                   << std::endl;
+        std::cout << " -rotate                      - Default = 0    - Rotation angle anticlockwise (deg)" << std::endl;
         std::cout << "    ex: keogram ../images/current/ jpg keogram.jpg -fontsize 2" << std::endl;
         std::cout << "    ex: keogram . png /home/pi/allsky/keogram.jpg -no-label" << KNRM << std::endl;
         return 3;
@@ -70,6 +73,7 @@ int main(int argc, char *argv[])
     int fontType       = 8;
     int thickness      = 3;
     unsigned char fontColor[3]  = { 255, 0, 0 };
+    double angle       = 0;
 
     // Handle optional parameters
     for (int a = 4; a < argc; ++a)
@@ -100,6 +104,10 @@ int main(int argc, char *argv[])
             fontColor[1] = atoi(argv[++a]);
             fontColor[2] = atoi(argv[++a]);
         }
+        else if (!strcmp(argv[a], "-rotate"))
+        {
+            angle = atoi(argv[++a]);
+        }
     }
 
     glob_t files;
@@ -118,8 +126,8 @@ int main(int argc, char *argv[])
 
     for (size_t f = 0; f < files.gl_pathc; f++)
     {
-        cv::Mat image = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
-        if (!image.data)
+        cv::Mat imagesrc = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
+        if (!imagesrc.data)
         {
             std::cout << "Error reading file " << basename(files.gl_pathv[f]) << std::endl;
             continue;
@@ -127,14 +135,21 @@ int main(int argc, char *argv[])
 
         std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] " << basename(files.gl_pathv[f]) << std::endl;
 
-        // If we don't have image yet, create one using height and format from
-        // the source image and width from number of files
+	//double angle = -36;
+	cv::Point2f center((imagesrc.cols-1)/2.0, (imagesrc.rows-1)/2.0);
+	cv::Mat rot = cv::getRotationMatrix2D(center, angle, 1.0);
+	cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), imagesrc.size(), angle).boundingRect2f();
+	rot.at<double>(0,2) += bbox.width/2.0 - imagesrc.cols/2.0;
+	rot.at<double>(1,2) += bbox.height/2.0 - imagesrc.rows/2.0;
+	cv::Mat imagedst;
+	cv::warpAffine(imagesrc, imagedst, rot, bbox.size());
         if (accumulated.empty())
         {
-            accumulated.create(image.rows, files.gl_pathc, image.type());
+            accumulated.create(imagedst.rows, files.gl_pathc, imagesrc.type());
         }
+
         // Copy middle column to destination
-        image.col(image.cols / 2).copyTo(accumulated.col(f));
+        imagedst.col(imagedst.cols / 2).copyTo(accumulated.col(f));
 
         if (labelsEnabled)
         {

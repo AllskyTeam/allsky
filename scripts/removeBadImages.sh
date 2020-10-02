@@ -24,7 +24,15 @@ fi
 # Why on G-d's green earth would I do something like this? Because for whatever
 # reason, my raspberry pi produces corrupt captures occasionally and this tool
 # means I get good startrails and keograms in the morning.
+#
+# If GNU Parallel is installed (it's not by default), then blast through and
+# clean all the images as fast as possible without regard for CPU utilization.
 
-for f in $( find "$1" -type f \( -iname image-\*.jpg -o -iname image-\*.png \) \! -ipath \*thumbnail\* ) ; do
-	nice convert "$f"  histogram:/dev/null 2>&1 | grep -q "Corrupt JPEG" && rm -f $f
-done
+if which parallel > /dev/null ; then
+	find "$1" -type f \( -iname image-\*.jpg -o -iname image-\*.png \) \! -ipath \*thumbnail\*  | \
+		parallel -- "convert {} histogram:/dev/null 2>&1 | egrep -q 'Huffman|Bogus|Corrupt|Invalid|Trunc|Missing' && rm -vf {}"
+else
+	for f in $( find "$1" -type f \( -iname image-\*.jpg -o -iname image-\*.png \) \! -ipath \*thumbnail\* ) ; do
+		nice convert "$f"  histogram:/dev/null 2>&1 | egrep -q 'Huffman|Bogus|Corrupt|Invalid|Trunc|Missing' && rm -vf $f
+	done
+fi

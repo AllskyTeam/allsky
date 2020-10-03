@@ -34,9 +34,9 @@ fi
 if [[ $KEOGRAM == "true" ]]; then
         echo -e "Generating Keogram\n"
 	mkdir -p $ALLSKY_HOME/images/$LAST_NIGHT/keogram/
-        ../keogram $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.jpg
+        ../keogram $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.$EXTENSION
 	if [[ $UPLOAD_KEOGRAM == "true" ]] ; then
-		OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.jpg"
+		OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.$EXTENSION"
                 lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$KEOGRAM_DIR" \
                         -e "set net:max-retries 1; put $OUTPUT; bye"
 	fi
@@ -47,9 +47,9 @@ fi
 if [[ $STARTRAILS == "true" ]]; then
         echo -e "Generating Startrails\n"
 	mkdir -p $ALLSKY_HOME/images/$LAST_NIGHT/startrails/
-        ../startrails $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $BRIGHTNESS_THRESHOLD $ALLSKY_HOME/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.jpg
+        ../startrails $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $BRIGHTNESS_THRESHOLD $ALLSKY_HOME/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.$EXTENSION
 	if [[ $UPLOAD_STARTRAILS == "true" ]] ; then
-		OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.jpg"
+		OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.$EXTENSION"
                 lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$STARTRAILS_DIR" \
 			-e "set net:max-retries 1; put $OUTPUT; bye"
         fi

@@ -85,6 +85,9 @@ nano settings.json
 | filename | image.jpg | this is the name used across the app. Supported extensions are JPG and PNG. |
 | flip | 0 | 0=Original, 1=Horizontal, 2=Vertical, 3=Both |
 | text | text | Text overlay. **Note**: It is replaced by timestamp if time=1 |
+| extratext | | (ZWO ONLY) The FULL path to a text file which will be displayed under the Exposure/Gain. The file can contain multiple lines which will be displayed underneath each other |
+| extratextage | 600 | (ZWO ONLY) If using the extra text file then it must be updated within this number of seconds, if not it will not be displayed. Set to 0 to ignore this check and always didplay it |
+| textlineheight | 30 | (ZWO ONLY) The line height of the text displayed in the image, if you chnage the font size the adjust this value if required |
 | textx | 15 | Horizontal text placement from the left |
 | texty | 35 | Vertical text placement from the top |
 | fontname | 0 | Font type for the overlay. 0=Simplex, 1=Plain, 2=Duplex, 3=Complex, 4=Triplex, 5=Complex small, 6=Script simplex, 7=Script complex |

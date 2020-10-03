@@ -1,10 +1,21 @@
 #!/bin/bash
+
+if [ $# -eq 1 ] ; then
+	if [ "x$1" = "x-h" ] ; then
+		echo "Usage: $BASH_ARGV0 [YYYYmmdd]"
+		exit
+	else
+		LAST_NIGHT=$1
+	fi
+else
+	LAST_NIGHT=$(date -d '12 hours ago' +'%Y%m%d')
+fi
+
 source $ALLSKY_HOME/config.sh
 source $ALLSKY_HOME/scripts/filename.sh
 source $ALLSKY_HOME/scripts/ftp-settings.sh
 
 cd  $ALLSKY_HOME/scripts
-LAST_NIGHT=$(date -d '12 hours ago' +'%Y%m%d')
 
 # Post end of night data. This includes next twilight time
 if [[ $POST_END_OF_NIGHT_DATA == "true" ]]; then

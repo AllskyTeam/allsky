@@ -10,6 +10,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include "include/ASICamera2.h"
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 #include <string.h>
@@ -46,6 +47,8 @@ std::string dayOrNight;
 bool bSaveRun = false, bSavingImg = false;
 pthread_mutex_t mtx_SaveImg;
 pthread_cond_t cond_SatrtSave;
+
+int debugLevel = 0; 
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -178,6 +181,16 @@ void writeTemperatureToFile(float val)
     outfile << "\n";
 }
 
+/**
+ * Helper function to display debug info
+**/
+void displayDebugText(const char * text, int requiredLevel) {
+    if (debugLevel >= requiredLevel) {
+
+        printf("%s", text);
+    }
+}
+
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
@@ -192,7 +205,11 @@ int main(int argc, char *argv[])
                        CV_FONT_HERSHEY_SCRIPT_SIMPLEX, CV_FONT_HERSHEY_SCRIPT_COMPLEX };
     int fontnumber = 0;
     int iStrLen, iTextX = 15, iTextY = 25;
+    int iTextLineHeight = 30;
     char const *ImgText   = "";
+    char const *ImgExtraText   = "";
+    int extraFileAge      = 0;   
+    char textBuffer[1024] = { 0 };
     double fontsize       = 7;
     int linewidth         = 1;
     int outlinefont       = 0;
@@ -229,7 +246,7 @@ int main(int argc, char *argv[])
     char const *longitude = "135.05W";
     char const *angle  = "-6"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
     int preview        = 0;
-    int time           = 1;
+    int Showtime       = 1;
     int darkframe      = 0;
     int showDetails    = 0;
     int daytimeCapture = 0;
@@ -359,7 +376,32 @@ int main(int argc, char *argv[])
             }
             else if (strcmp(argv[i], "-text") == 0)
             {
-                ImgText = (argv[i + 1]);
+                // Fix for blank text in camera settings
+                if ((char)argv[i + 1][0] != '-') {
+                    ImgText = (argv[i + 1]);
+                    i++;
+                }
+            }
+            else if (strcmp(argv[i], "-extratext") == 0)
+            {
+                if ((char)argv[i + 1][0] != '-') {
+                    ImgExtraText = (argv[i + 1]);
+                    i++;
+                }
+            }
+            else if (strcmp(argv[i], "-textlineheight") == 0)
+            {
+                iTextLineHeight = atoi(argv[i + 1]);
+                i++;
+            }
+            else if (strcmp(argv[i], "-extratextage") == 0)
+            {
+                extraFileAge = atoi(argv[i + 1]);
+                i++;
+            }
+            else if (strcmp(argv[i], "-debuglevel") == 0)
+            {
+                debugLevel = atoi(argv[i + 1]);
                 i++;
             }
             else if (strcmp(argv[i], "-textx") == 0)
@@ -454,7 +496,7 @@ int main(int argc, char *argv[])
             }
             else if (strcmp(argv[i], "-time") == 0)
             {
-                time = atoi(argv[i + 1]);
+                Showtime = atoi(argv[i + 1]);
                 i++;
             }
             else if (strcmp(argv[i], "-darkframe") == 0)
@@ -498,7 +540,7 @@ int main(int argc, char *argv[])
         printf(" -autogain                          - Default = 0 - Set to 1 to enable auto Gain \n");
         printf(" -coolerEnabled                     - Set to 1 to enable cooler (works on cooled cameras only) \n");
         printf(" -targetTemp                        - Target temperature in degrees C (works on cooled cameras only) \n");
-	printf(" -gamma                             - Default = 50 \n");
+	    printf(" -gamma                             - Default = 50 \n");
         printf(" -brightness                        - Default = 50 \n");
         printf(" -wbr                               - Default = 50   - White Balance Red \n");
         printf(" -wbb                               - Default = 50   - White Balance Blue \n");
@@ -517,6 +559,9 @@ int main(int argc, char *argv[])
         printf("\n");
         printf(" -text                              - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c "
                "\"Text Overlay\"\n");
+        printf(" -extratext                         - Default =      - Full Path to extra text to display\n"); 
+        printf(" -extratextage                      - Default = 600  - If the extra file is not updated after this many seconds its contents will not be displayed. set to 0 to disable\n"); 
+        printf(" -textlineheight                    - Default = 30   - Text Line Height in Pixels\n");               
         printf(
             " -textx                             - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
         printf(" -texty = Text Y                    - Default = 25   - Text Placement Vertical from TOP in Pixels\n");
@@ -542,7 +587,7 @@ int main(int argc, char *argv[])
                "placement \n");
         printf(" -darkframe                         - Set to 1 to disable time and text overlay \n");
         printf(" -showDetails                       - Set to 1 to display the metadata on the image \n");
-
+        printf(" -debuglevel                        - Default = 0 Set to 1,2 or 3 for dbug level \n");
         printf("%sUsage:\n", KRED);
         printf(" ./capture -width 640 -height 480 -exposure 5000000 -gamma 50 -type 1 -bin 1 -filename "
                "Lake-Laberge.PNG\n\n");
@@ -716,6 +761,9 @@ int main(int argc, char *argv[])
     printf(" Daytime Delay: %dms\n", daytimeDelay);
     printf(" USB Speed: %d\n", asiBandwidth);
     printf(" Text Overlay: %s\n", ImgText);
+    printf(" Text Extra Filename: %s\n", ImgExtraText);
+    printf(" Text Extra Filename Age: %d\n", extraFileAge);
+    printf(" Text Line Height %dpx\n", iTextLineHeight);    
     printf(" Text Position: %dpx left, %dpx top\n", iTextX, iTextY);
     printf(" Font Name:  %d\n", fontname[fontnumber]);
     printf(" Font Color: %d , %d, %d\n", fontcolor[0], fontcolor[1], fontcolor[2]);
@@ -730,9 +778,11 @@ int main(int argc, char *argv[])
     printf(" Longitude: %s\n", longitude);
     printf(" Sun Elevation: %s\n", angle);
     printf(" Preview: %d\n", preview);
-    printf(" Time: %d\n", time);
+    printf(" Time: %d\n", Showtime);
     printf(" Darkframe: %d\n", darkframe);
     printf(" Show Details: %d\n", showDetails);
+    printf(" Debug Level: %d\n", debugLevel);
+    
     printf("%s", KNRM);
 
     ASISetROIFormat(CamNum, width, height, bin, (ASI_IMG_TYPE)Image_type);
@@ -813,13 +863,14 @@ int main(int argc, char *argv[])
             if (daytimeCapture != 1)
             {
                 needCapture = false;
-                printf("It's daytime... we're not saving images\n");
+                sprintf(textBuffer, "It's daytime... we're not saving images\n");
+                displayDebugText(textBuffer, 0);
                 usleep(daytimeDelay * 1000);
             }
             else
             {
-                printf("Starting daytime capture\n");
-                printf("Saving auto exposed images every %d ms\n\n", daytimeDelay);
+                sprintf(textBuffer, "Starting daytime capture\nSaving auto exposed images every %d ms\n\n", daytimeDelay);
+                displayDebugText(textBuffer, 0);
                 exp_ms         = 32;
                 useDelay       = daytimeDelay;
                 captureTimeout = exp_ms <= 100 ? 200 : exp_ms * 2;
@@ -869,11 +920,11 @@ int main(int argc, char *argv[])
                         int iYOffset = 0;
                         //cvText(pRgb, ImgText, iTextX, iTextY+(iYOffset/bin), fontsize, linewidth, linetype[linenumber], fontname[fontnumber], fontcolor, Image_type);
                         //iYOffset+=30;
-                        if (time == 1)
+                        if (Showtime == 1)
                         {
                             cvText(pRgb, bufTime, iTextX, iTextY + (iYOffset / bin), fontsize * 0.1, linewidth,
                                    linetype[linenumber], fontname[fontnumber], fontcolor, Image_type, outlinefont);
-                            iYOffset += 30;
+                            iYOffset += iTextLineHeight;
                         }
 
                         if (showDetails == 1)
@@ -881,18 +932,81 @@ int main(int argc, char *argv[])
                             sprintf(bufTemp, "Sensor %.1fC", (float)ltemp / 10);
                             cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.08, linewidth,
                                    linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
-                            iYOffset += 30;
+                            iYOffset += iTextLineHeight;
                             sprintf(bufTemp, "Exposure %.3f s", (float)autoExp / 1000000);
                             cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.08, linewidth,
                                    linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
-                            iYOffset += 30;
+                            iYOffset += iTextLineHeight;
                             sprintf(bufTemp, "Gain %d", (int)autoGain);
                             cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / bin), fontsize * 0.08, linewidth,
                                    linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
-                            iYOffset += 30;
+                            iYOffset += iTextLineHeight;
+                        }
+                        /**
+                         * Display extra text if required. The extra text is read from the provided file. If the
+                         * age of the file exceeds the specified limit then the text in the file is not displayed
+                         * this is to prevent situations where the code updating the text file stops working.
+                         **/
+                        if (ImgExtraText[0] != '\0') {
+                            bool bUseExtraFile = true;
+                            if (access(ImgExtraText, F_OK ) == -1 ) {
+                                bUseExtraFile = false;
+                                 displayDebugText("Extra Text File Does Not Exist So Ignoring It\n", 1);
+                            } else {
+                                if (access(ImgExtraText, R_OK ) == -1 ) {
+                                    displayDebugText("Cannot Read From Extra Text File So Ignoring It\n", 1);
+                                    bUseExtraFile = false;
+                                }
+                            }
+
+                            if (bUseExtraFile) {
+                                FILE *fp = fopen(ImgExtraText, "r");
+
+                                if (fp != NULL) {
+                                    bool bAddExtra = false;
+                                    if (extraFileAge > 0) {
+                                        struct stat buffer;
+                                        if (stat(ImgExtraText, &buffer) == 0) {
+                                            struct tm modifiedTime = *localtime(&buffer.st_mtime);
+
+                                            time_t now = time(NULL);
+                                            double ageInSeconds = difftime(now, mktime(&modifiedTime));
+                                            sprintf(textBuffer, "Extra Text File (%s) Modified %f seconds ago ", ImgExtraText, ageInSeconds);
+                                            displayDebugText(textBuffer, 1);
+                                            if (ageInSeconds < extraFileAge) {
+                                                displayDebugText("So Using It\n", 1);
+                                                bAddExtra = true;
+                                            } else {
+                                                displayDebugText("So Ignoring\n", 1);
+                                            }
+                                        } else {
+                                            displayDebugText("Stat Of Extra Text File Failed !\n", 1);
+                                        }
+                                    } else {
+                                        displayDebugText("Extra Text File Age Disabled So Displaying Anyway\n", 1);
+                                    }
+                                    if (bAddExtra) {
+                                        char *line = NULL;
+                                        size_t len = 0;
+                                        while (getline(&line, &len, fp) != -1) {
+                                            if (line[strlen(line)-1] == 10) {
+                                                line[strlen(line)-1] = '\0';
+                                            };
+                                            cvText(pRgb, line, iTextX, iTextY + (iYOffset / bin), fontsize * 0.08, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
+                                            iYOffset += iTextLineHeight;
+                                        }
+                                    }
+                                    fclose(fp);
+                                } else {
+                                    displayDebugText("Failed To Open Extra Text File\n", 1);
+                                }
+                            }
+                        } else {
+                            displayDebugText("No Extra Text File Specified\n", 1);
                         }
                     }
-                    printf("Exposure value: %.0f µs\n", (float)autoExp);
+                    sprintf(textBuffer, "Exposure value: %.0f µs\n", (float)autoExp);
+                    displayDebugText(textBuffer, 0);
                     if (asiAutoExposure == 1)
                     {
                         // Retrieve the current Exposure for smooth transition to night time
@@ -901,7 +1015,8 @@ int main(int argc, char *argv[])
                     }
 
                     // Save the image
-                    printf("%s ", bufTime);
+                    sprintf(textBuffer, "%s \n", bufTime);
+                    displayDebugText(textBuffer, 0);
                     if (!bSavingImg)
                     {
                         pthread_mutex_lock(&mtx_SaveImg);
@@ -912,7 +1027,8 @@ int main(int argc, char *argv[])
                     if (asiAutoGain == 1 && dayOrNight == "NIGHT")
                     {
                         ASIGetControlValue(CamNum, ASI_GAIN, &autoGain, &bAuto);
-                        printf("Auto Gain value: %d\n", (int)autoGain);
+                        sprintf(textBuffer, "Auto Gain value: %d\n", (int)autoGain);
+                        displayDebugText(textBuffer, 0);
                         writeToLog(autoGain);
                     }
 
@@ -935,7 +1051,8 @@ int main(int argc, char *argv[])
                             // if using auto-exposure and the actual exposure is less than the max,
                             // we still wait until we reach maxexposure. This is important for a
                             // constant frame rate during timelapse generation
-                            printf("Sleeping: %d ms\n", asiMaxExposure - (int)(autoExp / 1000) + useDelay);
+                            sprintf(textBuffer,"Sleeping: %d ms\n", asiMaxExposure - (int)(autoExp / 1000) + useDelay);
+                            displayDebugText(textBuffer, 0);
                             usleep((asiMaxExposure * 1000 - autoExp) + useDelay * 1000);
                         }
                         else

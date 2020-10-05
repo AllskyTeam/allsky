@@ -65,14 +65,7 @@ if [[ $TIMELAPSE == "true" ]]; then
 fi
 
 # Run custom script at the end of a night. This is run BEFORE the automatic deletion just in case you need to do something with the files before they are removed
-if [[ $RUN_END_OF_NIGHT_CUSTOM_SCRIPT == "true" ]]; then
-	echo -e "Running Custom End Of Night Script - $END_OF_NIGHT_CUSTOM_SCRIPT_PATH\n"
-	if ! [ -x "$(command -v $END_OF_NIGHT_CUSTOM_SCRIPT_PATH)" ]; then
-  		echo "Error: Cannot execute end of night custom script $END_OF_NIGHT_CUSTOM_SCRIPT_PATH" >&2
-	else
-		$END_OF_NIGHT_CUSTOM_SCRIPT_PATH
-	fi
-fi
+./endOfNight_additionalSteps.sh
 
 # Automatically delete old images and videos
 if [[ $AUTO_DELETE == "true" ]]; then

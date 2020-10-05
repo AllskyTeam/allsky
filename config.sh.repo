@@ -60,10 +60,6 @@ AUTO_STRETCH=false
 AUTO_STRETCH_AMOUNT=10
 AUTO_STRETCH_MID_POINT=10%
 
-# Custom Scripts to run at end of night
-RUN_END_OF_NIGHT_CUSTOM_SCRIPT=false
-END_OF_NIGHT_CUSTOM_SCRIPT_PATH=
-
 # Path to the camera settings (exposure, gain, delay, overlay, etc)
 CAMERA_SETTINGS_DIR="$ALLSKY_HOME"
 CAMERA_SETTINGS="$CAMERA_SETTINGS_DIR/settings_$CAMERA.json"

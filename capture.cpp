@@ -984,6 +984,7 @@ int main(int argc, char *argv[])
                                         }
                                     } else {
                                         displayDebugText("Extra Text File Age Disabled So Displaying Anyway\n", 1);
+                                        bAddExtra = true;										
                                     }
                                     if (bAddExtra) {
                                         char *line = NULL;

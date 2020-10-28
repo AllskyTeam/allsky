@@ -1,6 +1,7 @@
 #!/bin/bash
 source $ALLSKY_HOME/config.sh
 source $ALLSKY_HOME/scripts/filename.sh
+source $ALLSKY_HOME/scripts/ftp-settings.sh
 
 cd  $ALLSKY_HOME/scripts
 
@@ -17,13 +18,13 @@ fi
 
 # Upload keogram
 echo -e "Uploading Keogram\n"
-KEOGRAM="$ALLSKY_HOME/images/$1/keogram/keogram-$1.jpg"
+KEOGRAM="$ALLSKY_HOME/images/$1/keogram/keogram-$1.$EXTENSION"
 lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$KEOGRAM_DIR" -e "set net:max-retries 1; put $KEOGRAM; bye" -u "$USER","$PASSWORD"
 echo -e "\n"
 
 # Upload Startrails
 echo -e "Uploading Startrails\n"
-STARTRAILS="$ALLSKY_HOME/images/$1/startrails/startrails-$1.jpg"
+STARTRAILS="$ALLSKY_HOME/images/$1/startrails/startrails-$1.$EXTENSION"
 lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$STARTRAILS_DIR" -e "set net:max-retries 1; put $STARTRAILS; bye"
 echo -e "\n"
 

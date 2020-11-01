@@ -191,11 +191,17 @@ If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote 
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg)
 
 If you don't want to configure the camera using the terminal, you can install the web based [graphical interface](https://github.com/thomasjacquin/allsky-portal).
-Please note that this will change your hostname to allsky, install lighttpd and replace your /var/www/html directory. It will also move settings.json to `/etc/raspap/settings.json`.
+Please note that this will change your hostname to allsky (or whatever you called it when installing), install lighttpd and replace your /var/www/html directory. It will also move settings.json to `/etc/raspap/settings.json`.
 
 ```shell
 sudo gui/install.sh
 ```
+Or if you don't want to use the default name of 'allsky' for your pi use the following
+
+```shell
+sudo gui/install.sh piname
+```
+
 **Note:*** If you use an older version of Raspbian, the install script may fail on php7.0-cgi dependency. Edit gui/install.sh and replace php7.0-cgi by php5-cgi.
 
 After you complete the GUI setup, you'll be able to administer the camera using the web UI by navigating to
@@ -205,6 +211,11 @@ http://your_raspberry_IP
 or
 ```sh
 http://allsky.local
+```
+
+Note: If you changed the name of your pi during the gui install then use
+```sh
+http://piname.local
 ```
 
 The default username is 'admin' and the default password is 'secret'.

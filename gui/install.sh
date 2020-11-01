@@ -2,6 +2,14 @@
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
+
+if [ $# -eq 1 ] ; then
+	HOST_NAME=$1
+else
+	HOST_NAME='allsky'
+fi
+
+
 echo -en '\n'
 echo -e "${RED}****************************************************************"
 echo    "*** Welcome to the Allsky Administration Portal installation ***"
@@ -23,8 +31,8 @@ sed -i "s|/home/pi/allsky|$(dirname "$SCRIPTPATH")|g" $SCRIPTPATH/lighttpd.conf
 cp $SCRIPTPATH/lighttpd.conf /etc/lighttpd/lighttpd.conf
 echo -en '\n'
 echo -e "${GREEN}* Changing hostname to allsky${NC}"
-echo "allsky" > /etc/hostname
-sed -i 's/raspberrypi/allsky/g' /etc/hosts
+echo "$HOST_NAME" > /etc/hostname
+sed -i 's/raspberrypi/$HOST_NAME/g' /etc/hosts
 echo -en '\n'
 echo -e "${GREEN}* Setting avahi-daemon configuration${NC}"
 cp $SCRIPTPATH/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
@@ -53,7 +61,7 @@ sed -i '/CAMERA_SETTINGS_DIR=/c\CAMERA_SETTINGS_DIR="/etc/raspap"' $(dirname "$S
 echo -en '\n'
 echo -en '\n'
 echo "The Allsky Portal is now installed"
-echo "You can now reboot the Raspberry Pi and connect to it from your laptop, computer, phone, tablet at this address: http://allsky.local or http://`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'`"
+echo "You can now reboot the Raspberry Pi and connect to it from your laptop, computer, phone, tablet at this address: http://$HOST_NAME.local or http://`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'`"
 echo -en '\n'
 read -p "Do you want to reboot now? [y/n] " ans_yn
 case "$ans_yn" in

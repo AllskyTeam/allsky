@@ -32,10 +32,11 @@ cp $SCRIPTPATH/lighttpd.conf /etc/lighttpd/lighttpd.conf
 echo -en '\n'
 echo -e "${GREEN}* Changing hostname to allsky${NC}"
 echo "$HOST_NAME" > /etc/hostname
-sed -i 's/raspberrypi/$HOST_NAME/g' /etc/hosts
+sed -i "s/raspberrypi/$HOST_NAME/g" /etc/hosts
 echo -en '\n'
 echo -e "${GREEN}* Setting avahi-daemon configuration${NC}"
 cp $SCRIPTPATH/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
+sed -i "s/allsky/$HOST_NAME/g" /etc/avahi/avahi-daemon.conf
 echo -en '\n'
 echo -e "${GREEN}* Adding the right permissions to the web server${NC}"
 sed -i '/allsky/d' /etc/sudoers

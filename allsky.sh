@@ -5,6 +5,8 @@ then
       export ALLSKY_HOME="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 fi
 
+# reset auto camera selection, so $ALLSKY_HOME/config.sh do not pick up old camera selection
+echo "" > "$CAMERA_SETTINGS_DIR/autocam.sh"
 source $ALLSKY_HOME/config.sh
 
 echo "Making sure allsky.sh is not already running..."
@@ -52,6 +54,8 @@ fi
 echo "Settings check done"
 echo "CAMERA: ${CAMERA}"
 echo "CAMERA_SETTINGS: ${CAMERA_SETTINGS}"
+# save auto camera selection for the current session, will be read in "$ALLSKY_HOME/config.sh" file
+echo "export CAMERA=$CAMERA" > "$CAMERA_SETTINGS_DIR/autocam.sh"
 
 # this must be called after camera autoselect
 source $ALLSKY_HOME/scripts/filename.sh

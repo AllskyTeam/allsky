@@ -12,16 +12,15 @@ source $ALLSKY_HOME/config.sh
 echo "Making sure allsky.sh is not already running..."
 ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
+# old/regular manual camera selection mode => exit if no requested camera was found
 RPiHQIsPresent=$(vcgencmd get_camera)
-ZWOIsPresent=$(lsusb -D $(lsusb | awk '/ 03c3:/ { bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}') | grep -c 'iProduct .*ASI[0-9]')
-
-# regular flow, to exist if no selected camera was found
 if [[ $CAMERA == "RPiHQ" && $RPiHQIsPresent != "supported=1 detected=1" ]]; then
 echo "RPiHQ Camera not found. Exiting." >&2
         sudo systemctl stop allsky
         exit 0
 fi
 
+ZWOIsPresent=$(lsusb -D $(lsusb | awk '/ 03c3:/ { bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}') | grep -c 'iProduct .*ASI[0-9]')
 if [[ $CAMERA == "ZWO" &&  $ZWOIsPresent -eq 0 ]]; then
         echo "ZWO Camera not found. Exiting." >&2
         sudo systemctl stop allsky

@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Choose between ZWO or RPiHQ
-CAMERA="ZWO"
+# Choose between ZWO or RPiHQ or auto (prefers ZWO if present)
+CAMERA="auto"
+
 
 # Set to true to upload current image to your website
 UPLOAD_IMG=false
@@ -62,4 +63,9 @@ AUTO_STRETCH_MID_POINT=10%
 
 # Path to the camera settings (exposure, gain, delay, overlay, etc)
 CAMERA_SETTINGS_DIR="$ALLSKY_HOME"
+
+if [[ $CAMERA -eq "auto" ]]; then
+  # restore currently saved autodiscovered camera mode if any
+  source "$CAMERA_SETTINGS_DIR/autocam.sh"
+fi
 CAMERA_SETTINGS="$CAMERA_SETTINGS_DIR/settings_$CAMERA.json"

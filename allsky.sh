@@ -54,7 +54,7 @@ echo "Settings check done"
 echo "CAMERA: ${CAMERA}"
 echo "CAMERA_SETTINGS: ${CAMERA_SETTINGS}"
 # save auto camera selection for the current session, will be read in "$ALLSKY_HOME/config.sh" file
-echo "export CAMERA=$CAMERA" > "$CAMERA_SETTINGS_DIR/autocam.sh"
+echo "export CAMERA=$CAMERA" > "$ALLSKY_HOME/autocam.sh"
 
 # this must be called after camera autoselect
 source $ALLSKY_HOME/scripts/filename.sh

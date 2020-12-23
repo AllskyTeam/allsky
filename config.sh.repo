@@ -48,6 +48,11 @@ DAYTIME="1"
 # Set 24Hr capture to true to save both night and day images to disk. By default, only night images are saved.
 CAPTURE_24HR=false
 
+# Resize images before cropping and saving. Adjust width and height according to your own sensor ratio
+IMG_RESIZE=false
+IMG_HEIGHT=1520
+IMG_WIDTH=2028
+
 # Crop the captured image, used to improve the images when using a fisheye lens
 CROP_IMAGE=false
 CROP_WIDTH=640

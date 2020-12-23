@@ -22,7 +22,7 @@ mkdir -p images/$CURRENT/thumbnails
 
 # Create image to use (original or processed) for liveview in GUI
 IMAGE_TO_USE="$FULL_FILENAME"
-if [ "$DARK_FRAME_SUBTRACTION" = true ] ; then
+if [ "$DARK_FRAME_SUBTRACTION" = "true" ] ; then
 	IMAGE_TO_USE="$FILENAME-processed.$EXTENSION"
 fi
 

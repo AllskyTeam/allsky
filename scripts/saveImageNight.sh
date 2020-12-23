@@ -26,6 +26,11 @@ if [ "$DARK_FRAME_SUBTRACTION" = "true" ] ; then
 	IMAGE_TO_USE="$FILENAME-processed.$EXTENSION"
 fi
 
+# Resize the image if required
+if [[ $IMG_RESIZE == "true" ]]; then
+        convert "$IMAGE_TO_USE" -resize "$IMG_WIDTH"x"$IMG_HEIGHT" $IMAGE_TO_USE
+fi
+
 # Crop the image around the center if required
 if [[ $CROP_IMAGE == "true" ]]; then
         convert "$IMAGE_TO_USE" -gravity Center -crop "$CROP_WIDTH"x"$CROP_HEIGHT"+"$CROP_OFFSET_X"+"$CROP_OFFSET_Y" +repage "$IMAGE_TO_USE";

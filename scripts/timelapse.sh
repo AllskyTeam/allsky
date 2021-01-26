@@ -25,6 +25,15 @@ ls -rt $ALLSKY_HOME/images/$1/*.$EXTENSION |
 gawk 'BEGIN{ a=1 }{ printf "ln -sv %s $ALLSKY_HOME/images/'$1'/sequence/%04d.'$EXTENSION'\n", $0, a++ }' |
 bash
 
+SCALE=""
+TIMELAPSEWIDTH=${TIMELAPSEWIDTH:-0}
+
+if [ "${TIMELAPSEWIDTH}" != 0 ]
+  then
+    SCALE="-filter:v scale=${TIMELAPSEWIDTH:0}:${TIMELAPSEHEIGHT:0}"
+    echo "Using video scale ${TIMELAPSEWIDTH} * ${TIMELAPSEHEIGHT}"
+fi
+
 ffmpeg -y -f image2 \
 	-r $FPS \
 	-i images/$1/sequence/%04d.$EXTENSION \
@@ -32,6 +41,7 @@ ffmpeg -y -f image2 \
 	-b:v 2000k \
 	-pix_fmt yuv420p \
 	-movflags +faststart \
+	$SCALE \
 	images/$1/allsky-$1.mp4
 
 if [ "$UPLOAD_VIDEO" = true ] ; then

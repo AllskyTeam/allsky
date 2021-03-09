@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# FTP/SFTP settings
+# FTP/SFTP/S3 settings
 PROTOCOL='ftp'
 USER='username'
 PASSWORD='password'
@@ -9,3 +9,22 @@ IMGDIR='/allsky/'
 MP4DIR='/allsky/videos/'
 KEOGRAM_DIR='/allsky/keograms/'
 STARTRAILS_DIR='/allsky/startrails/'
+
+# S3 settings (Set PROTOCOL='S3'above and configure DIR settings above also as required.)
+# You will need to install the AWS CLI:
+#   sudo apt-get install python3-pip
+#   pip3 install awscli --upgrade --user
+#   export PATH=/home/pi/.local/bin:$PATH
+#   aws configure
+# Enter a valid access key ID, Secret Access Key and Default region name (e.g. us-west-2) when prompted.
+# Set the Default output format to json when prompted
+#
+# AWS CLI directory where the AWS CLI tools are installed.
+AWS_CLI_DIR='/home/pi/.local/bin'
+# Name of S3 Bucket where the files are to be uploaded (must be in Default region specified above).
+# You may want to turn off or limit bucket versioning to avoid consuming lots of space with multiple versions of the live 'image-resize.*' file.
+S3_BUCKET='allskybucket'
+# S3_ACL is set to private by default. If you want to serve your uploaded files vis http(s), change S3_ACL to 'public-read'.  
+# You will need to ensure the S3 bucket policy is configured to allow public access to objects with a public-read ACL.
+# You may need to set a CORS policy in S3 if the files are to be accessed by Javascript from a different domain.
+S3_ACL='private'

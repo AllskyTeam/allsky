@@ -141,7 +141,7 @@ nano config.sh
 
 When using the cropping options the image is cropped from the center so you will need to experiment with the correct width and height values. Normally there will be no need to amend the offset values.
 
-In order to upload images and videos to your website, you'll need to fill your FTP connection details in **ftp-settings.sh**
+In order to upload images and videos to your website, you'll need to fill your FTP or Amazon S3 connection details in **ftp-settings.sh**
 ```shell
 nano scripts/ftp-settings.sh
 ```

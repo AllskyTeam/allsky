@@ -39,13 +39,17 @@ ffmpeg -y -f image2 \
 	-i images/$1/sequence/%04d.$EXTENSION \
 	-vcodec libx264 \
 	-b:v 2000k \
-	-pix_fmt yuv420p \
+	-pix_fmt yuv420p \./i
 	-movflags +faststart \
 	$SCALE \
 	images/$1/allsky-$1.mp4
 
 if [ "$UPLOAD_VIDEO" = true ] ; then
-	lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$MP4DIR" -e "set net:max-retries 1; put images/$1/allsky-$1.mp4; bye"
+        if [[ "$PROTOCOL" == "S3" ]] ; then
+                $AWS_CLI_DIR/aws s3 cp images/$1/allsky-$1.mp4 s3://$S3_BUCKET$MP4DIR --acl $S3_ACL &
+        else
+                lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$MP4DIR" -e "set net:max-retries 1; put images/$1/allsky-$1.mp4; bye" &
+        fi
 fi
 
 echo -en "* ${GREEN}Deleting sequence${NC}\n"

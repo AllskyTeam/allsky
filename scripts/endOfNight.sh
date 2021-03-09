@@ -33,25 +33,33 @@ fi
 # Generate keogram from collected images
 if [[ $KEOGRAM == "true" ]]; then
         echo -e "Generating Keogram\n"
-	mkdir -p $ALLSKY_HOME/images/$LAST_NIGHT/keogram/
+        mkdir -p $ALLSKY_HOME/images/$LAST_NIGHT/keogram/
         ../keogram $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.$EXTENSION
-	if [[ $UPLOAD_KEOGRAM == "true" ]] ; then
-		OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.$EXTENSION"
-                lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$KEOGRAM_DIR" \
-                        -e "set net:max-retries 1; put $OUTPUT; bye"
-	fi
+        if [[ $UPLOAD_KEOGRAM == "true" ]] ; then
+                OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.$EXTENSION"
+                if [[ $PROTOCOL == "S3" ]] ; then
+                        $AWS_CLI_DIR/aws s3 cp $OUTPUT s3://$S3_BUCKET$KEOGRAM_DIR --acl $S3_ACL &
+                else
+                        lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$KEOGRAM_DIR" \
+                                -e "set net:max-retries 1; put $OUTPUT; bye" &
+                fi
+        fi
         echo -e "\n"
 fi
 
-# Generate startrails from collected images. Treshold set to 0.1 by default in config.sh to avoid stacking over-exposed images
+# Generate startrails from collected images. Threshold set to 0.1 by default in config.sh to avoid stacking over-exposed images
 if [[ $STARTRAILS == "true" ]]; then
         echo -e "Generating Startrails\n"
-	mkdir -p $ALLSKY_HOME/images/$LAST_NIGHT/startrails/
+        mkdir -p $ALLSKY_HOME/images/$LAST_NIGHT/startrails/
         ../startrails $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $BRIGHTNESS_THRESHOLD $ALLSKY_HOME/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.$EXTENSION
-	if [[ $UPLOAD_STARTRAILS == "true" ]] ; then
-		OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.$EXTENSION"
-                lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$STARTRAILS_DIR" \
-			-e "set net:max-retries 1; put $OUTPUT; bye"
+        if [[ $UPLOAD_STARTRAILS == "true" ]] ; then
+                OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.$EXTENSION"
+                if [[ $PROTOCOL == "S3" ]] ; then
+                        $AWS_CLI_DIR/aws s3 cp $OUTPUT s3://$S3_BUCKET$STARTRAILS_DIR --acl $S3_ACL &
+                else
+                        lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$STARTRAILS_DIR" \
+                                -e "set net:max-retries 1; put $OUTPUT; bye" &
+                fi
         fi
 
         echo -e "\n"

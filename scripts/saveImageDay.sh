@@ -57,6 +57,6 @@ if [ "$UPLOAD_IMG" = true ] ; then
        if [[ $PROTOCOL == "S3" ]] ; then
                 $AWS_CLI_DIR/aws s3 cp $FILENAME-resize.$EXTENSION s3://$S3_BUCKET$IMGDIR --acl $S3_ACL &
         else
-                lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$IMGDIR" -e "set net:max-retries 1; set net:timeout 20; put $FILENAME-resize.$EXTENSION; bye" $
+                lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$IMGDIR" -e "set net:max-retries 1; set net:timeout 20; put $FILENAME-resize.$EXTENSION; bye" &
         fi
 fi

@@ -39,7 +39,7 @@ ffmpeg -y -f image2 \
 	-i images/$1/sequence/%04d.$EXTENSION \
 	-vcodec libx264 \
 	-b:v 2000k \
-	-pix_fmt yuv420p \./i
+	-pix_fmt yuv420p \
 	-movflags +faststart \
 	$SCALE \
 	images/$1/allsky-$1.mp4

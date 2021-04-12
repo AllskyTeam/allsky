@@ -150,6 +150,21 @@ In order to upload images and videos to your website, you'll need to fill your F
 ```shell
 nano scripts/ftp-settings.sh
 ```
+
+| Configuration     | Default     | Additional Info |
+| ----------- | ----------- | ----------------|
+| PROTOCOL | ftp | Choose between `ftp`, `sftp`, `S3` or `local` |
+| USER | username | Your ftp user name |
+| PASSWORD | password | Your ftp password |
+| HOST | example.com | Your host server or IP |
+| IMGDIR | /allsky/ | The absolute path to your image-resize.jpg on the server |
+| MP4DIR | /allsky/videos/ | The absolute path to your videos directory on the server |
+| KEOGRAM_DIR | /allsky/keograms/ | The absolute path to your keograms directory on the server |
+| STARTRAILS_DIR | allsky/startrails/ | The absolute path to your startrails directory on the server |
+
+
+### Other scripts of interest
+
 **saveImageNight.sh** is called every time the camera takes a new image at night. If dark subtraction is enabled, this is where it happens
 
 **saveImageDay.sh** is called every time the camera takes a new image during the day.
@@ -377,6 +392,23 @@ This will compile the new code and create a new binary.
 ## Show your sky on your own website
 
 If you have set the upload options to true in `config.sh`, that means you probably already have a website. If you want to display a live view of your sky on your website like in this [example](http://www.thomasjacquin.com/allsky), you can donwload the source files from this repository: [https://github.com/thomasjacquin/allsky-website.git](https://github.com/thomasjacquin/allsky-website.git).
+
+If you want to host the website on the raspberry Pi, run these commands:
+
+```
+cd /var/www/html
+git clone github.com/thomasjacquin/allsky-website.git
+mv allsky-website allsky
+```
+
+And set these variabled in `ftp-settings.sh`:
+```
+PROTOCOL = 'local'
+IMGDIR = '/var/www/html/'
+MP4DIR = `/var/www/html/videos`
+KEOGRAM_DIR = `/var/www/html/keograms`
+STARTRAILS_DIR = `/var/www/html/startrails`
+```
 
 ## Share your sky
 

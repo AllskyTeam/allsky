@@ -25,6 +25,8 @@ echo } >> data.json
 echo "Uploading data.json"
 if [[ $PROTOCOL == "S3" ]] ; then
         $AWS_CLI_DIR/aws s3 cp data.json s3://$S3_BUCKET$IMGDIR --acl $S3_ACL &
+elif [[ $PROTOCOL == "local" ]] ; then
+	cp data.json $IMGDIR &
 else
         lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$IMGDIR" -e "set net:max-retries 1; set net:timeout 20; put data.json; bye" &
 fi

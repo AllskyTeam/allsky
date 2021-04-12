@@ -47,6 +47,8 @@ ffmpeg -y -f image2 \
 if [ "$UPLOAD_VIDEO" = true ] ; then
         if [[ "$PROTOCOL" == "S3" ]] ; then
                 $AWS_CLI_DIR/aws s3 cp images/$1/allsky-$1.mp4 s3://$S3_BUCKET$MP4DIR --acl $S3_ACL &
+	elif [[ $PROTOCOL == "local" ]] ; then
+                cp $FILENAME-resize.$EXTENSION /var/www/html/$MP4DIR &
         else
                 lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$MP4DIR" -e "set net:max-retries 1; put images/$1/allsky-$1.mp4; bye" &
         fi

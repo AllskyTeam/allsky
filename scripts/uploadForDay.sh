@@ -21,6 +21,8 @@ echo -e "Uploading Keogram\n"
 KEOGRAM="$ALLSKY_HOME/images/$1/keogram/keogram-$1.$EXTENSION"
 if [[ $PROTOCOL == "S3" ]] ; then
         $AWS_CLI_DIR/aws s3 cp $KEOGRAM s3://$S3_BUCKET$KEOGRAM_DIR --acl $S3_ACL &
+elif [[ $PROTOCOL == "local" ]] ; then
+	cp $KEOGRAM $KEOGRAM_DIR &
 else
         lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$KEOGRAM_DIR" -e "set net:max-retries 1; put $KEOGRAM; bye" -u "$USER","$PASSWORD" &
 fi
@@ -31,6 +33,8 @@ echo -e "Uploading Startrails\n"
 STARTRAILS="$ALLSKY_HOME/images/$1/startrails/startrails-$1.$EXTENSION"
 if [[ $PROTOCOL == "S3" ]] ; then
         $AWS_CLI_DIR/aws s3 cp $STARTRAILS s3://$S3_BUCKET$STARTRAILS_DIR --acl $S3_ACL &
+elif [[ $PROTOCOL == "local" ]] ; then
+	cp $STARTRAILS $STARTRAILS_DIR &
 else
         lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$STARTRAILS_DIR" -e "set net:max-retries 1; put $STARTRAILS; bye" &
 fi
@@ -41,6 +45,8 @@ echo -e "Uploading Timelapse\n"
 TIMELAPSE="$ALLSKY_HOME/images/$1/allsky-$1.mp4"
 if [[ "$PROTOCOL" == "S3" ]] ; then
         $AWS_CLI_DIR/aws s3 cp $TIMELAPSE s3://$S3_BUCKET$MP4DIR --acl $S3_ACL &
+elif [[ $PROTOCOL == "local" ]] ; then
+	cp $TIMELAPSE $MP4DIR &
 else
         lftp "$PROTOCOL"://"$USER":"$PASSWORD"@"$HOST":"$MP4DIR" -e "set net:max-retries 1; put $TIMELAPSE; bye" &
 fi

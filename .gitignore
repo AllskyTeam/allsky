@@ -5,8 +5,10 @@ config.sh
 darks/*
 gibbons*
 liveview*
+image.jpg
 image-resize.jpg
 image-processed.jpg
+autocam.sh
 temperature.txt
 data.json
 keogram

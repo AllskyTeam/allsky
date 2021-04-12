@@ -404,10 +404,10 @@ mv allsky-website allsky
 And set these variabled in `ftp-settings.sh`:
 ```
 PROTOCOL = 'local'
-IMGDIR = '/var/www/html/'
-MP4DIR = `/var/www/html/videos`
-KEOGRAM_DIR = `/var/www/html/keograms`
-STARTRAILS_DIR = `/var/www/html/startrails`
+IMGDIR = '/var/www/html/allsky/'
+MP4DIR = `/var/www/html/allsky/videos`
+KEOGRAM_DIR = `/var/www/html/allsky/keograms`
+STARTRAILS_DIR = `/var/www/html/allsky/startrails`
 ```
 
 ## Share your sky

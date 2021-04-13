@@ -20,7 +20,7 @@ The Datyson T7 camera seems to be supported as well. The firmware needs to be up
 
 ## Installation
 
-**New:** PatriotAstro created a [video](https://www.youtube.com/watch?v=j9xHsST2EeY) describing the installation steps below. Feel free to check it out if you prefer video tutorials or if you're new to Linux and Raspberry Pi projects.
+**New:** PatriotAstro created a [video](https://www.youtube.com/watch?v=j9xHsST2EeY) describing the installation steps below. Feel free to check it out if you prefer video tutorials or if you're new to Linux and Raspberry Pi projects. Another [video](https://www.youtube.com/watch?v=y6EFfLo4XxE) covers the installation on a Raspberry Pi zero with both ZWO and RPiHQ cameras.
 
 You will need to install Raspbian on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
 

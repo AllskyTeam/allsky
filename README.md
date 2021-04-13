@@ -397,7 +397,7 @@ If you want to host the website on the raspberry Pi, run these commands:
 
 ```
 cd /var/www/html
-git clone github.com/thomasjacquin/allsky-website.git
+git clone https://github.com/thomasjacquin/allsky-website.git
 mv allsky-website allsky
 ```
 

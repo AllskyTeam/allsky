@@ -393,14 +393,10 @@ This will compile the new code and create a new binary.
 
 If you have set the upload options to true in `config.sh`, that means you probably already have a website. If you want to display a live view of your sky on your website like in this [example](http://www.thomasjacquin.com/allsky), you can donwload the source files from this repository: [https://github.com/thomasjacquin/allsky-website.git](https://github.com/thomasjacquin/allsky-website.git).
 
-If you want to host the website on the raspberry Pi, run these commands:
+If you want to host the website on the raspberry Pi, run the following command. Note that this website is installed on the same webserver as the GUI. Currently, reinstalling the GUI will wipe you website.
 
 ```
-cd /var/www/html
-git clone https://github.com/thomasjacquin/allsky-website.git
-mv allsky-website allsky
-chown -R pi:www-data allsky
-chmod -R 755 allsky
+website/install.sh
 ```
 
 And set these variabled in `ftp-settings.sh`:

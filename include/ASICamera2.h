@@ -1,6 +1,6 @@
 /**************************************************
 this is the second version of release ASI Camera ASIs
-any question feel free contact us:sam.wen@zwoptical.com
+any question feel free contact us:software@zwoptical.com
 
 here is the suggested procedure to operate the camera.
 

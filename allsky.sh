@@ -70,6 +70,14 @@ do
 	ARGUMENTS="$ARGUMENTS -$KEY `jq -r '.'$KEY $CAMERA_SETTINGS` "
 done
 
+# user defined mode
+if [[ $CAMERA == "RPiHQ" && $MODE -eq "1" ]]; then
+  echo "mode mean"
+  ARGUMENTS="$ARGUMENTS -mode 1 "
+  ARGUMENTS="$ARGUMENTS -mean-value $MEAN_VALUE " 
+  ARGUMENTS="$ARGUMENTS -mean-threshold $MEAN_THRESHOLD " 
+fi
+
 # When using a desktop environment (Remote Desktop, VNC, HDMI output, etc), a preview of the capture can be displayed in a separate window
 # The preview mode does not work if allsky.sh is started as a service or if the debian distribution has no desktop environment.
 if [[ $1 == "preview" ]] ; then

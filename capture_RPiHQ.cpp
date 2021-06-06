@@ -19,6 +19,9 @@
 #include <signal.h>
 #include <fstream>
 
+// new includes
+#include "mode_RPiHQ_mean.h"
+
 using namespace std;
 
 #define KNRM "\x1B[0m"
@@ -40,6 +43,13 @@ bool bMain = true;
 std::string dayOrNight;
 
 bool bSavingImg = false;
+
+//user defined mode "mean"
+bool mode_mean    = false;
+double mean_value    = 0.5;
+double mean_threshold = 0.05;
+double mean_Belichtungszeit = 1.0;
+int mean_Verstaerkung = 1;
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -101,6 +111,8 @@ void calculateDayOrNight(const char *latitude, const char *longitude, const char
 
 	// Determine if it is day or night
 	dayOrNight = exec(sunwaitCommand);
+// for testing
+//    dayOrNight = "NIGHT";
 
 	// RMu, I have no clue what this does...
 	dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
@@ -209,7 +221,14 @@ time ( NULL );
 
 	if (asiAutoExposure)
 	{
-		shutter = "--exposure auto ";
+		if (mode_mean) {
+			ss.str("");
+			int shuttertime = mean_Belichtungszeit * 1000000; 
+			ss << shuttertime;
+			shutter = "--exposure off --shutter " + ss.str() + " ";
+		} else {
+			shutter = "--exposure auto ";
+		}
 	}
 
 	// Set exposure time
@@ -231,11 +250,18 @@ time ( NULL );
 	// Anolog Gain
 	string gain;
 
-	// Check if auto gain is sleected
+	// Check if auto gain is slected
 	if (asiAutoGain)
 	{
-		// Set analog gain to 1
-		gain = "--analoggain 1 ";
+		if (mode_mean) {
+			ss.str("");
+			ss << mean_Verstaerkung;
+			gain = "--analoggain " + ss.str() + " ";
+		}
+		else {
+			// Set analog gain to 1
+			gain = "--analoggain 1 ";
+		}
 	}
 
 	// Set manual analog gain setting
@@ -258,6 +284,17 @@ time ( NULL );
 	// Add gain setting to raspistill command string
 	command += gain;
 
+	// Add exif information to raspistill command string
+	if (mode_mean) {
+     	string exif;
+     	stringstream Str_Belichtungszeit;
+     	stringstream Str_Verstaerkung;
+		Str_Belichtungszeit << mean_Belichtungszeit;
+		Str_Verstaerkung << mean_Verstaerkung;
+   		exif = "--exif IFD0.Artist=li_" + Str_Belichtungszeit.str() + "_" + Str_Verstaerkung.str() + " ";
+		command += exif;
+	}
+ 
 	// White balance
 	string awb;
 
@@ -517,6 +554,7 @@ int main(int argc, char *argv[])
 	int daytimeCapture    = 0;
 	int help              = 0;
 	int quality           = 90;
+	int mode              = 0;
 
 	int i;
 	//id *retval;
@@ -549,7 +587,7 @@ int main(int argc, char *argv[])
 
 		for (i = 0; i < argc - 1; i++)
 		{
-			// printf("Processing argument: %s\n\n", argv[i]);
+			printf("Processing argument: %s: %s\n\n", argv[i], argv[i + 1]);
 
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0)
 			{
@@ -630,13 +668,12 @@ int main(int argc, char *argv[])
 				daytimeDelay = atoi(argv[i + 1]);
 				i++;
 			}
-/*
 			else if (strcmp(argv[i], "-awb") == 0)
 			{
-				asiAutoAWB = atoi(argv[i + 1]);
+				printf("argument: %s: %s not use !\n\n", argv[i], argv[i + 1]);
+				//asiAutoAWB = atoi(argv[i + 1]);
 				i++;
 			}
-*/
 			else if (strcmp(argv[i], "-wbr") == 0)
 			{
 				asiWBR = atof(argv[i + 1]);
@@ -645,6 +682,27 @@ int main(int argc, char *argv[])
 			else if (strcmp(argv[i], "-wbb") == 0)
 			{
 				asiWBB = atof(argv[i + 1]);
+				i++;
+			}
+			//bool mode_mean    = false;
+			//double mean_value    = 0.5;
+			//double mean_threshold = 0.05;
+			else if (strcmp(argv[i], "-mode") == 0)
+			{
+				mode = atoi(argv[i + 1]);
+				i++;
+				mode_mean = (mode == 1);  
+				
+   				printf("mode: %d\n", mode);
+			}
+			else if (strcmp(argv[i], "-mean-value") == 0)
+			{
+				mean_value = atof(argv[i + 1]);
+				i++;
+			}
+			else if (strcmp(argv[i], "-mean-threshold") == 0)
+			{
+				mean_threshold = atof(argv[i + 1]);
 				i++;
 			}
 
@@ -972,8 +1030,10 @@ int main(int argc, char *argv[])
 
 		if (dayOrNight=="DAY")
 			printf("Check for day or night: DAY\n");
-		else if (dayOrNight=="NIGHT")
+		else if (dayOrNight=="NIGHT") {
 			printf("Check for day or night: NIGHT\n");
+  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_Belichtungszeit, mean_Verstaerkung);
+		}
 		else
 			printf("Nor day or night...\n");
 
@@ -1034,8 +1094,13 @@ int main(int argc, char *argv[])
 		else if (dayOrNight == "NIGHT")
 		{
 			// Retrieve auto gain setting
-			asiAutoExposure = oldAutoExposure;
-			asiGain = oldGain;
+			if (mode_mean) {
+				asiAutoExposure = 1;
+			}
+			else {
+				asiAutoExposure = oldAutoExposure;
+				asiGain = oldGain;
+			}
 
 			// Inform user
 			printf("Saving %d seconds exposure images with %d ms delays in between...\n\n", (int)round(currentExposure / 1000000), delay);
@@ -1070,7 +1135,8 @@ int main(int argc, char *argv[])
 					// Check for night time
 					if (dayOrNight == "NIGHT")
 					{
-						// Preserve image during night time
+            			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_Belichtungszeit, mean_Verstaerkung);
+   		    			// Preserve image during night time
 						system("scripts/saveImageNight.sh &");
 					}
 					else
@@ -1093,7 +1159,7 @@ int main(int argc, char *argv[])
 				calculateDayOrNight(latitude, longitude, angle);
 
 // Next line is present for testing purposes
-// dayOrNight.assign("NIGHT");
+ //dayOrNight.assign("NIGHT");
 
 				// Check if it is day time
 				if (dayOrNight=="DAY")

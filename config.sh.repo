@@ -77,3 +77,8 @@ if [[ $CAMERA -eq "auto" ]]; then
   source "$ALLSKY_HOME/autocam.sh"
 fi
 CAMERA_SETTINGS="$CAMERA_SETTINGS_DIR/settings_$CAMERA.json"
+
+MODE=1 # mean
+# Mode 1: mean - Simple algorithm - the shutter speed and gain are adjusted based on the averaged exposure value
+MEAN_VALUE=0.5
+MEAN_THRESHOLD=0.05

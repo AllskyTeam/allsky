@@ -48,6 +48,7 @@ bool bSavingImg = false;
 bool mode_mean    = false;
 double mean_value    = 0.5;
 double mean_threshold = 0.05;
+double mean_shuttersteps = 3.0;
 double mean_Belichtungszeit = 1.0;
 int mean_Verstaerkung = 1;
 
@@ -209,9 +210,10 @@ time ( NULL );
 		asiExposure = 1;
 	}
 
-	if (asiExposure > 240000000)
+	// https://www.raspberrypi.org/documentation/raspbian/applications/camera.md : HQ (IMX477) 	200000000 (i.e. 200s)
+	if (asiExposure > 200000000)
 	{
-		asiExposure = 240000000;
+		asiExposure = 200000000;
 	}
 
 	// Exposure time
@@ -289,7 +291,7 @@ time ( NULL );
      	string exif;
      	stringstream Str_Belichtungszeit;
      	stringstream Str_Verstaerkung;
-		Str_Belichtungszeit << mean_Belichtungszeit;
+		Str_Belichtungszeit <<  (int) (mean_Belichtungszeit * 1000000);
 		Str_Verstaerkung << mean_Verstaerkung;
    		exif = "--exif IFD0.Artist=li_" + Str_Belichtungszeit.str() + "_" + Str_Verstaerkung.str() + " ";
 		command += exif;
@@ -687,6 +689,7 @@ int main(int argc, char *argv[])
 			//bool mode_mean    = false;
 			//double mean_value    = 0.5;
 			//double mean_threshold = 0.05;
+			//double mean_shuttersteps = 3.0;
 			else if (strcmp(argv[i], "-mode") == 0)
 			{
 				mode = atoi(argv[i + 1]);
@@ -703,6 +706,11 @@ int main(int argc, char *argv[])
 			else if (strcmp(argv[i], "-mean-threshold") == 0)
 			{
 				mean_threshold = atof(argv[i + 1]);
+				i++;
+			}
+			else if (strcmp(argv[i], "-mean-shuttersteps") == 0)
+			{
+				mean_shuttersteps = atof(argv[i + 1]);
 				i++;
 			}
 
@@ -1028,11 +1036,14 @@ int main(int argc, char *argv[])
 // Next lines are present for testing purposes
 // printf("Daytimecapture: %d\n", daytimeCapture);
 
+		if (mode_mean) {
+  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_Belichtungszeit, mean_Verstaerkung);
+		}
+
 		if (dayOrNight=="DAY")
 			printf("Check for day or night: DAY\n");
 		else if (dayOrNight=="NIGHT") {
 			printf("Check for day or night: NIGHT\n");
-  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_Belichtungszeit, mean_Verstaerkung);
 		}
 		else
 			printf("Nor day or night...\n");
@@ -1135,7 +1146,6 @@ int main(int argc, char *argv[])
 					// Check for night time
 					if (dayOrNight == "NIGHT")
 					{
-            			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_Belichtungszeit, mean_Verstaerkung);
    		    			// Preserve image during night time
 						system("scripts/saveImageNight.sh &");
 					}
@@ -1143,6 +1153,10 @@ int main(int argc, char *argv[])
 					{
 						// Upload and resize image when configured
 						system("scripts/saveImageDay.sh &");
+					}
+
+					if (mode_mean) {
+	           			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_Belichtungszeit, mean_Verstaerkung);
 					}
 
 					// Flag processing is over

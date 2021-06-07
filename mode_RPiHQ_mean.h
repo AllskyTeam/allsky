@@ -1,5 +1,5 @@
 //
-// program_RPiHQ_mean.h
+// mode_RPiHQ_mean.h
 //
 // 2021-06-06  initial state
 //
@@ -7,6 +7,6 @@
 #ifndef MEAN_H
 #define MEAN_H
 
-void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double& Belichtungszeit, int& Verstaerkung);
+void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double mean_shuttersteps, double& Belichtungszeit, int& Verstaerkung);
 
 #endif

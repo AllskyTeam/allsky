@@ -82,3 +82,4 @@ MODE=0 # user defined mode
 # Mode 1: mean - Simple algorithm - the shutter speed and gain are adjusted based on the averaged exposure value
 MEAN_VALUE=0.5
 MEAN_THRESHOLD=0.05
+MEAN_SHUTTERSTEPS=3

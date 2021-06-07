@@ -79,7 +79,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 			}
 		}
 		if (mean > (mean_value - mean_threshold))  {
-			if (Belichtungszeit < 0.000001) {
+			if (Belichtungszeit <= 0.000001) {
 				printf("Wahrscheinlich Tagmodus - nicht mehr weiter regeln\n");
 			}
 			else if (Verstaerkung > 1)  {

@@ -56,6 +56,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 		//printf("mean_diff: %1.4f\n", mean_diff);
     
 		int Belichtungsstufe_step = 1;
+		/*
 		if (mean_diff > (mean_threshold * 12)) {
 			Belichtungsstufe_step = (mean_shuttersteps * 2);
 		}  
@@ -63,9 +64,14 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 			Belichtungsstufe_step = (mean_shuttersteps);
 		}  
 		else if (mean_diff > (mean_threshold * 3)) {
-			Belichtungsstufe_step = mean_shuttersteps/2;
+			Belichtungsstufe_step = 1 + (mean_shuttersteps / 2);
 		}  
-        
+        */
+	    // fast forward
+		if (mean_diff > (mean_threshold * 2)) {
+			Belichtungsstufe_step = 1 + pow ((mean_diff * 10.0),2.0);
+		}
+
 		printf("asiExposure: %d\n", asiExposure);
 		printf("asiGain: %1.4f\n", asiGain);
 		if (mean < (mean_value - mean_threshold)) {

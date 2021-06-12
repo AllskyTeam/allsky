@@ -98,7 +98,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 			Belichtungszeit = 0.000001;
 		}
 
-		printf("Mean: %1.2f Belichtungsstufe:%d Belichtungszeit:%1.4f Verstaerkung:%d\n", mean, Belichtungsstufe, Belichtungszeit, Verstaerkung);
+		printf("Mean: %1.2f Belichtungsstufe:%d Belichtungszeit:%1.8f Verstaerkung:%d\n", mean, Belichtungsstufe, Belichtungszeit, Verstaerkung);
 
 	}
 

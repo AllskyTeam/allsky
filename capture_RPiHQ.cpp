@@ -1052,9 +1052,16 @@ int main(int argc, char *argv[])
 
 		if (dayOrNight == "DAY")
 		{
-			// Switch auto gain on
-			asiAutoExposure = 1;
-			asiGain = 1;
+			if (mode_mean) {
+				// changing settings in runtime is so bad... 
+				asiAutoExposure = 1;
+				asiGain = 1;
+			}
+			else {
+				// Switch auto gain on
+				asiAutoExposure = 1;
+				asiGain = 1;
+			}
 
 			// Execute end of night script
 			if (endOfNight == true)
@@ -1106,6 +1113,7 @@ int main(int argc, char *argv[])
 		{
 			// Retrieve auto gain setting
 			if (mode_mean) {
+				asiGain = oldGain;
 				asiAutoExposure = 1;
 			}
 			else {

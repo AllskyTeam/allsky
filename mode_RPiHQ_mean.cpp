@@ -17,6 +17,8 @@
 
 int Belichtungsstufe = 1;
 int Verstaerkung = 1;
+double lastMeans [5] = {0.5,0.5,0.5,0.5,0.5};
+int MeanCnt = 0;
 
 // Build capture command to capture the image from the HQ camera
 void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double mean_shuttersteps, double& Belichtungszeit, int& Verstaerkung)
@@ -51,6 +53,10 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
                 break;
         }
         std::cout <<  basename(fileName) << " " << mean << std::endl;
+
+		// avg of last means 
+		lastMeans[MeanCnt++ % 5] = mean;
+		mean = (lastMeans[0] + lastMeans[1] + lastMeans[2] + lastMeans[3] + lastMeans[4]) / 5.0;
 
    		double mean_diff = abs(mean - mean_value);
 		//printf("mean_diff: %1.4f\n", mean_diff);
@@ -104,7 +110,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 			Belichtungszeit = 0.000001;
 		}
 
-		printf("Mean: %1.2f Belichtungsstufe:%d Belichtungszeit:%1.8f Verstaerkung:%d\n", mean, Belichtungsstufe, Belichtungszeit, Verstaerkung);
+		printf("Mean: %1.4f Belichtungsstufe:%d Belichtungszeit:%1.8f Verstaerkung:%d\n", mean, Belichtungsstufe, Belichtungszeit, Verstaerkung);
 
 	}
 

@@ -452,7 +452,7 @@ time ( NULL );
 		if (strcmp(ImgText, "") != 0) {
 			ss.str("");
 	//		ss << ReplaceAll(ImgText, std::string(" "), std::string("_"));
-			ss << ImgText;
+			ss << ImgText << " (li)";
 			command += "-a \"" + ss.str() + "\" ";
 		}
 

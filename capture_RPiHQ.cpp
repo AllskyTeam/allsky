@@ -299,29 +299,39 @@ time ( NULL );
  
 	// White balance
 	string awb;
+	if (asiWBR < 0.1) 	{
+		asiWBR = 0.1;
+	}
+
+	if (asiWBR > 10) {
+		asiWBR = 10;
+	}
+
+	if (asiWBB < 0.1) {
+		asiWBB = 0.1;
+	}
+
+	if (asiWBB > 10) {
+		asiWBB = 10;
+	}
 
 	// Check if R and B component are given
-	if (!asiAutoGain) {
-		if (asiWBR < 0.1)
-		{
-			asiWBR = 0.1;
+	if (mode_mean) {
+		// support asiAutoAWB, asiWBR and asiWBB
+		if (asiAutoAWB) {
+  			awb = "--awb auto ";
 		}
+		else {
+			ss.str("");
+			ss << asiWBR;
+			awb  = "--awb off --awbgains " + ss.str();
 
-		if (asiWBR > 10)
-		{
-			asiWBR = 10;
+			ss.str("");
+			ss << asiWBB;
+			awb += "," + ss.str() + " ";
 		}
-
-		if (asiWBB < 0.1)
-		{
-			asiWBB = 0.1;
-		}
-
-		if (asiWBB > 10)
-		{
-			asiWBB = 10;
-		}
-
+	}
+	else if (!asiAutoGain) {
 		ss.str("");
 		ss << asiWBR;
 		awb  = "--awb off --awbgains " + ss.str();
@@ -330,10 +340,8 @@ time ( NULL );
 		ss << asiWBB;
 		awb += "," + ss.str() + " ";
 	}
-
 	// Use automatic white balance
-	else
-	{
+	else {
 		awb = "--awb auto ";
 	}
 
@@ -673,7 +681,7 @@ int main(int argc, char *argv[])
 			else if (strcmp(argv[i], "-awb") == 0)
 			{
 				printf("argument: %s: %s not use !\n\n", argv[i], argv[i + 1]);
-				//asiAutoAWB = atoi(argv[i + 1]);
+				asiAutoAWB = atoi(argv[i + 1]);
 				i++;
 			}
 			else if (strcmp(argv[i], "-wbr") == 0)
@@ -974,7 +982,7 @@ int main(int argc, char *argv[])
 	printf(" Auto Gain: %d\n", asiAutoGain);
 	printf(" Brightness: %d\n", asiBrightness);
 	printf(" Gamma: %d\n", asiGamma);
-//	printf(" Auto White Balance: %d\n", asiAutoAWB);
+	printf(" Auto White Balance: %d\n", asiAutoAWB);
 	printf(" WB Red: %1.2f\n", asiWBR);
 	printf(" WB Blue: %1.2f\n", asiWBB);
 	printf(" Binning: %d\n", bin);

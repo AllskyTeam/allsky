@@ -59,7 +59,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 		mean = (lastMeans[0] + lastMeans[1] + lastMeans[2] + lastMeans[3] + lastMeans[4]) / 5.0;
 
    		double mean_diff = abs(mean - mean_value);
-		//printf("mean_diff: %1.4f\n", mean_diff);
+		printf("mean_diff: %1.4f\n", mean_diff);
     
 		int Belichtungsstufe_step = 1;
 		/*

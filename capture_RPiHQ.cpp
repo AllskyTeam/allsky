@@ -289,10 +289,11 @@ time ( NULL );
 	// Add exif information to raspistill command string
 	if (mode_mean) {
      	string exif;
-     	stringstream Str_Belichtungszeit;
-     	stringstream Str_Verstaerkung;
-		Str_Belichtungszeit <<  (int) (mean_Belichtungszeit * 1000000);
+	   	stringstream Str_Belichtungszeit;
+   		stringstream Str_Verstaerkung;
+   		Str_Belichtungszeit <<  (int) (mean_Belichtungszeit * 1000000);
 		Str_Verstaerkung << mean_Verstaerkung;
+		
    		exif = "--exif IFD0.Artist=li_" + Str_Belichtungszeit.str() + "_" + Str_Verstaerkung.str() + " ";
 		command += exif;
 	}
@@ -460,7 +461,7 @@ time ( NULL );
 		if (strcmp(ImgText, "") != 0) {
 			ss.str("");
 	//		ss << ReplaceAll(ImgText, std::string(" "), std::string("_"));
-			ss << ImgText << " (li)";
+			ss << ImgText << " (li) " <<  (int) (mean_Belichtungszeit * 1000000) << " " << mean_Verstaerkung << " " << asiWBR << " " << asiWBB;
 			command += "-a \"" + ss.str() + "\" ";
 		}
 

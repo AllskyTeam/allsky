@@ -15,13 +15,12 @@
 #include <signal.h>
 #include <fstream>
 
-int Belichtungsstufe = 1;
-int Verstaerkung = 1;
+int ExposureLevel = 1;
 double lastMeans [5] = {0.5,0.5,0.5,0.5,0.5};
 int MeanCnt = 0;
 
 // Build capture command to capture the image from the HQ camera
-void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double mean_shuttersteps, double& Belichtungszeit, int& Verstaerkung)
+void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double mean_shuttersteps, double& ExposureTime, int& Reinforcement)
 {
 
     cv::Mat image = cv::imread(fileName, cv::IMREAD_UNCHANGED);
@@ -61,56 +60,56 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
    		double mean_diff = abs(mean - mean_value);
 		printf("mean_diff: %1.4f\n", mean_diff);
     
-		int Belichtungsstufe_step = 1;
+		int ExposureChange = 1;
 		/*
 		if (mean_diff > (mean_threshold * 12)) {
-			Belichtungsstufe_step = (mean_shuttersteps * 2);
+			ExposureChange = (mean_shuttersteps * 2);
 		}  
 		else if (mean_diff > (mean_threshold * 6)) {
-			Belichtungsstufe_step = (mean_shuttersteps);
+			ExposureChange = (mean_shuttersteps);
 		}  
 		else if (mean_diff > (mean_threshold * 3)) {
-			Belichtungsstufe_step = 1 + (mean_shuttersteps / 2);
+			ExposureChange = 1 + (mean_shuttersteps / 2);
 		}  
         */
 	    // fast forward
 		if (mean_diff > (mean_threshold * 2)) {
-			Belichtungsstufe_step = 1 + pow ((mean_diff * 10.0),2.0);
+			ExposureChange = 1 + pow ((mean_diff * 10.0),2.0);
 		}
 
-		printf("asiExposure: %d\n", asiExposure);
-		printf("asiGain: %1.4f\n", asiGain);
+		//printf("asiExposure: %d\n", asiExposure);
+		//printf("asiGain: %1.4f\n", asiGain);
 		if (mean < (mean_value - mean_threshold)) {
-			if (Belichtungszeit < (asiExposure/1000000.0)) {
-				Belichtungsstufe += Belichtungsstufe_step;
+			if (ExposureTime < (asiExposure/1000000.0)) {
+				ExposureLevel += ExposureChange;
 			}
-			else if (Verstaerkung < asiGain) {
-				Verstaerkung++;
+			else if (Reinforcement < asiGain) {
+				Reinforcement++;
 			}
 		}
 		if (mean > (mean_value + mean_threshold))  {
-			if (Belichtungszeit <= 0.000001) {
-				printf("Wahrscheinlich Tagmodus - nicht mehr weiter regeln\n");
+			if (ExposureTime <= 0.000001) {
+				printf("ExposureTime to low - stop !\n");
 			}
-			else if (Verstaerkung > 1)  {
-				 Verstaerkung--;
+			else if (Reinforcement > 1)  {
+				 Reinforcement--;
 			}
 			else {
-				Belichtungsstufe -= Belichtungsstufe_step;
+				ExposureLevel -= ExposureChange;
 			}
 
 		}
 
-		printf("mean_shuttersteps: %1.4f\n", mean_shuttersteps);
-		Belichtungszeit = pow(2.0, double(Belichtungsstufe)/mean_shuttersteps);
-		if (Belichtungszeit > (asiExposure/1000000.0)) {
-			Belichtungszeit = asiExposure/1000000.0;
+		//printf("mean_shuttersteps: %1.4f\n", mean_shuttersteps);
+		ExposureTime = pow(2.0, double(ExposureLevel)/mean_shuttersteps);
+		if (ExposureTime > (asiExposure/1000000.0)) {
+			ExposureTime = asiExposure/1000000.0;
 		}
-		else if (Belichtungszeit < 0.000001) {
-			Belichtungszeit = 0.000001;
+		else if (ExposureTime < 0.000001) {
+			ExposureTime = 0.000001;
 		}
 
-		printf("Mean: %1.4f Belichtungsstufe:%d Belichtungszeit:%1.8f Verstaerkung:%d\n", mean, Belichtungsstufe, Belichtungszeit, Verstaerkung);
+		printf("Mean: %1.4f Exposure level:%d Exposure time:%1.8f Reinforcement:%d\n", mean, ExposureLevel, ExposureTime, Reinforcement);
 
 	}
 

@@ -46,11 +46,11 @@ bool bSavingImg = false;
 
 //user defined mode "mean"
 bool mode_mean    = false;
-double mean_value    = 0.5;
+double mean_value    = 0.3;
 double mean_threshold = 0.05;
-double mean_shuttersteps = 3.0;
-double mean_Belichtungszeit = 1.0;
-int mean_Verstaerkung = 1;
+double mean_shuttersteps = 6.0;
+double mean_ExposureTime = 1.0;
+int mean_Reinforcement = 1;
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -225,7 +225,7 @@ time ( NULL );
 	{
 		if (mode_mean) {
 			ss.str("");
-			int shuttertime = mean_Belichtungszeit * 1000000; 
+			int shuttertime = mean_ExposureTime * 1000000; 
 			ss << shuttertime;
 			shutter = "--exposure off --shutter " + ss.str() + " ";
 		} else {
@@ -257,7 +257,7 @@ time ( NULL );
 	{
 		if (mode_mean) {
 			ss.str("");
-			ss << mean_Verstaerkung;
+			ss << mean_Reinforcement;
 			gain = "--analoggain " + ss.str() + " ";
 		}
 		else {
@@ -289,12 +289,12 @@ time ( NULL );
 	// Add exif information to raspistill command string
 	if (mode_mean) {
      	string exif;
-	   	stringstream Str_Belichtungszeit;
-   		stringstream Str_Verstaerkung;
-   		Str_Belichtungszeit <<  (int) (mean_Belichtungszeit * 1000000);
-		Str_Verstaerkung << mean_Verstaerkung;
+	   	stringstream Str_ExposureTime;
+   		stringstream Str_Reinforcement;
+   		Str_ExposureTime <<  (int) (mean_ExposureTime * 1000000);
+		Str_Reinforcement << mean_Reinforcement;
 		
-   		exif = "--exif IFD0.Artist=li_" + Str_Belichtungszeit.str() + "_" + Str_Verstaerkung.str() + " ";
+   		exif = "--exif IFD0.Artist=li_" + Str_ExposureTime.str() + "_" + Str_Reinforcement.str() + " ";
 		command += exif;
 	}
  
@@ -461,7 +461,7 @@ time ( NULL );
 		if (strcmp(ImgText, "") != 0) {
 			ss.str("");
 	//		ss << ReplaceAll(ImgText, std::string(" "), std::string("_"));
-			ss << ImgText << " (li) " <<  (int) (mean_Belichtungszeit * 1000000) << " " << mean_Verstaerkung << " " << asiWBR << " " << asiWBB;
+			ss << ImgText << " (li) " <<  (int) (mean_ExposureTime * 1000000) << " " << mean_Reinforcement << " " << asiWBR << " " << asiWBB;
 			command += "-a \"" + ss.str() + "\" ";
 		}
 
@@ -1046,7 +1046,7 @@ int main(int argc, char *argv[])
 // printf("Daytimecapture: %d\n", daytimeCapture);
 
 		if (mode_mean) {
-  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_Belichtungszeit, mean_Verstaerkung);
+  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement);
 		}
 
 		if (dayOrNight=="DAY")
@@ -1173,7 +1173,7 @@ int main(int argc, char *argv[])
 					}
 
 					if (mode_mean) {
-	           			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_Belichtungszeit, mean_Verstaerkung);
+	           			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement);
 					}
 
 					// Flag processing is over

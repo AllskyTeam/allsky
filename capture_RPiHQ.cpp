@@ -705,7 +705,7 @@ int main(int argc, char *argv[])
 				i++;
 				mode_mean = (mode == 1);  
 				
-   				printf("mode: %d\n", mode);
+   				//printf("mode: %d\n", mode);
 			}
 			else if (strcmp(argv[i], "-mean-value") == 0)
 			{
@@ -720,6 +720,9 @@ int main(int argc, char *argv[])
 			else if (strcmp(argv[i], "-mean-shuttersteps") == 0)
 			{
 				mean_shuttersteps = atof(argv[i + 1]);
+				if (mean_shuttersteps <= 1.0) {
+					mean_shuttersteps = 1.0;
+				}
 				i++;
 			}
 

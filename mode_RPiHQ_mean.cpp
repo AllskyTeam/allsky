@@ -61,20 +61,14 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 		printf("mean_diff: %1.4f\n", mean_diff);
     
 		int ExposureChange = 1;
-		/*
-		if (mean_diff > (mean_threshold * 12)) {
-			ExposureChange = (mean_shuttersteps * 2);
-		}  
-		else if (mean_diff > (mean_threshold * 6)) {
-			ExposureChange = (mean_shuttersteps);
-		}  
-		else if (mean_diff > (mean_threshold * 3)) {
-			ExposureChange = 1 + (mean_shuttersteps / 2);
-		}  
-        */
 	    // fast forward
 		if (mean_diff > (mean_threshold * 2)) {
-			ExposureChange = 1 + pow ((mean_diff * 10.0),2.0);
+			// magic number 4.0 ! be careful changing this value
+			// Number 		Change of ExposureTime for (mean_diff = 0.5)
+			// 3.46			2^3 = x8   slower
+			// 4.00			2^4 = x16
+			// 4.47         2^5 = x32  faster			  
+			ExposureChange = pow ((mean_diff * 4.0 * mean_shuttersteps),2.0);
 		}
 
 		//printf("asiExposure: %d\n", asiExposure);
@@ -101,7 +95,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 		}
 
 		//printf("mean_shuttersteps: %1.4f\n", mean_shuttersteps);
-		ExposureTime = pow(2.0, double(ExposureLevel)/mean_shuttersteps);
+		ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0));
 		if (ExposureTime > (asiExposure/1000000.0)) {
 			ExposureTime = asiExposure/1000000.0;
 		}

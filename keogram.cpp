@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
                      "Line Thickness"
                   << std::endl;
         std::cout << " -rotate                      - Default = 0    - Rotation angle anticlockwise (deg)" << std::endl;
+        std::cout << " -finishline                  - Default = <image.cols / 2>  - line of interest (finishline)" << std::endl;
         std::cout << "    ex: keogram ../images/current/ jpg keogram.jpg -fontsize 2" << std::endl;
         std::cout << "    ex: keogram . png /home/pi/allsky/keogram.jpg -no-label" << KNRM << std::endl;
         return 3;
@@ -69,11 +70,12 @@ int main(int argc, char *argv[])
 
     bool labelsEnabled = true;
     int fontFace       = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
-    double fontScale   = 2;
+    double fontScale   = 1;
     int fontType       = 8;
-    int thickness      = 3;
-    unsigned char fontColor[3]  = { 255, 0, 0 };
+    int thickness      = 1;
+    unsigned char fontColor[3]  = { 255, 255, 255 };
     double angle       = 0;
+    int finishline     = -1;
 
     // Handle optional parameters
     for (int a = 4; a < argc; ++a)
@@ -108,6 +110,10 @@ int main(int argc, char *argv[])
         {
             angle = atoi(argv[++a]);
         }
+        else if (!strcmp(argv[a], "-finishline"))
+        {
+            finishline = atoi(argv[++a]);
+        }
     }
 
     glob_t files;
@@ -135,21 +141,26 @@ int main(int argc, char *argv[])
 
         std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] " << basename(files.gl_pathv[f]) << std::endl;
 
-	//double angle = -36;
-	cv::Point2f center((imagesrc.cols-1)/2.0, (imagesrc.rows-1)/2.0);
-	cv::Mat rot = cv::getRotationMatrix2D(center, angle, 1.0);
-	cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), imagesrc.size(), angle).boundingRect2f();
-	rot.at<double>(0,2) += bbox.width/2.0 - imagesrc.cols/2.0;
-	rot.at<double>(1,2) += bbox.height/2.0 - imagesrc.rows/2.0;
-	cv::Mat imagedst;
-	cv::warpAffine(imagesrc, imagedst, rot, bbox.size());
+	    //double angle = -36;
+	    cv::Point2f center((imagesrc.cols-1)/2.0, (imagesrc.rows-1)/2.0);
+	    cv::Mat rot = cv::getRotationMatrix2D(center, angle, 1.0);
+	    cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), imagesrc.size(), angle).boundingRect2f();
+	    rot.at<double>(0,2) += bbox.width/2.0 - imagesrc.cols/2.0;
+	    rot.at<double>(1,2) += bbox.height/2.0 - imagesrc.rows/2.0;
+	    cv::Mat imagedst;
+	    cv::warpAffine(imagesrc, imagedst, rot, bbox.size());
         if (accumulated.empty())
         {
             accumulated.create(imagedst.rows, files.gl_pathc, imagesrc.type());
         }
 
         // Copy middle column to destination
-        imagedst.col(imagedst.cols / 2).copyTo(accumulated.col(f));
+        if (finishline == -1) {
+            imagedst.col(imagedst.cols / 2).copyTo(accumulated.col(f));
+        }
+        else {
+            imagedst.col(finishline).copyTo(accumulated.col(f));
+        }
 
         if (labelsEnabled)
         {
@@ -157,6 +168,7 @@ int main(int argc, char *argv[])
             stat(files.gl_pathv[f], &s);
 
             struct tm *t = localtime(&s.st_mtime);
+
             if (t->tm_hour != prevHour)
             {
                 if (prevHour != -1)
@@ -174,6 +186,23 @@ int main(int argc, char *argv[])
                                 *p = ~(*p);
                                 p++;
                             }
+                        }
+                    }
+
+                    if (t->tm_hour == 0) {
+                        // Draw date
+                        char    time_buf[256];
+                        (void) strftime(time_buf, sizeof (time_buf), "%m-%d-%Y", t);
+                        std::string text(time_buf);
+                        int baseline      = 0;
+                        cv::Size textSize = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
+
+                        if (f - textSize.width >= 0)
+                        {
+                            cv::putText(accumulated, text,
+                                        cv::Point(f - textSize.width, accumulated.rows - (2.5 * textSize.height)), fontFace,
+                                        fontScale, cv::Scalar(fontColor[0], fontColor[1], fontColor[2]), thickness,
+                                        fontType);
                         }
                     }
 

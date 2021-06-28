@@ -34,7 +34,7 @@ fi
 if [[ $KEOGRAM == "true" ]]; then
         echo -e "Generating Keogram\n"
         mkdir -p $ALLSKY_HOME/images/$LAST_NIGHT/keogram/
-        ../keogram $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.$EXTENSION -fontsize 1.0 -fontline 1 -fontcolor 255 255 255 -finishline 1363 
+        ../keogram $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.$EXTENSION -fontsize 1.0 -fontline 1 -fontcolor 255 255 255 -finishline 1359 
         if [[ $UPLOAD_KEOGRAM == "true" ]] ; then
                 OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.$EXTENSION"
                 if [[ $PROTOCOL == "S3" ]] ; then

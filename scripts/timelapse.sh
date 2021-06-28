@@ -38,7 +38,7 @@ ffmpeg -y -f image2 \
 	-r $FPS \
 	-i images/$1/sequence/%04d.$EXTENSION \
 	-vcodec libx264 \
-	-b:v 2000k \
+	-b:v 15000k \
 	-pix_fmt yuv420p \
 	-movflags +faststart \
 	$SCALE \

@@ -20,7 +20,7 @@ double lastMeans [5] = {0.5,0.5,0.5,0.5,0.5};
 int MeanCnt = 0;
 
 // Build capture command to capture the image from the HQ camera
-void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double mean_shuttersteps, double& ExposureTime, int& Reinforcement)
+void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double mean_shuttersteps, double& ExposureTime, int& Reinforcement, double mean_fastforward, int asiBrightness, int& Brightness)
 {
 
     cv::Mat image = cv::imread(fileName, cv::IMREAD_UNCHANGED);
@@ -68,13 +68,16 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 			// 3.46			2^3 = x8   slower
 			// 4.00			2^4 = x16
 			// 4.47         2^5 = x32  faster			  
-			ExposureChange = pow ((mean_diff * 4.0 * mean_shuttersteps),2.0);
+			ExposureChange = pow ((mean_diff * mean_fastforward * mean_shuttersteps),2.0);
 		}
 
 		//printf("asiExposure: %d\n", asiExposure);
 		//printf("asiGain: %1.4f\n", asiGain);
 		if (mean < (mean_value - mean_threshold)) {
-			if (ExposureTime < (asiExposure/1000000.0)) {
+			if (Brightness < asiBrightness) {
+				Brightness++;
+			}
+			else if (ExposureTime < (asiExposure/1000000.0)) {
 				ExposureLevel += ExposureChange;
 			}
 			else if (Reinforcement < asiGain) {
@@ -84,6 +87,12 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 		if (mean > (mean_value + mean_threshold))  {
 			if (ExposureTime <= 0.000001) {
 				printf("ExposureTime to low - stop !\n");
+				if (Brightness > 0) {
+					Brightness--;
+				}
+				else {
+					printf("Brightness to low - stop !\n");
+				}
 			}
 			else if (Reinforcement > 1)  {
 				 Reinforcement--;

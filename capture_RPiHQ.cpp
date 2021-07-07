@@ -44,13 +44,6 @@ std::string dayOrNight;
 
 bool bSavingImg = false;
 
-//user defined mode "mean"
-bool mode_mean    = false;
-double mean_value    = 0.3;
-double mean_threshold = 0.05;
-double mean_shuttersteps = 6.0;
-double mean_ExposureTime = 1.0;
-int mean_Reinforcement = 1;
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -420,12 +413,21 @@ time ( NULL );
 		asiBrightness = 100;
 	}
 
-	// check if brightness setting is set
-	if (asiBrightness!=50)
-	{
-		ss.str("");
-		ss << asiBrightness;
-		brightness = "--brightness " + ss.str() + " ";
+	if (mode_mean) {
+		// check if brightness setting is set
+		if (mean_Brightness!=50) {
+			ss.str("");
+			ss << mean_Brightness;
+			brightness = "--brightness " + ss.str() + " ";
+		}
+	}
+	else {
+		// check if brightness setting is set
+		if (asiBrightness!=50) {
+			ss.str("");
+			ss << asiBrightness;
+			brightness = "--brightness " + ss.str() + " ";
+		}
 	}
 
 	// Add brightness info to raspistill command string
@@ -722,6 +724,17 @@ int main(int argc, char *argv[])
 				mean_shuttersteps = atof(argv[i + 1]);
 				if (mean_shuttersteps <= 1.0) {
 					mean_shuttersteps = 1.0;
+				}
+				i++;
+			}
+			else if (strcmp(argv[i], "-mean-mean-fastforward") == 0)
+			{
+				mean_fastforward = atof(argv[i + 1]);
+				if (mean_fastforward < 1.0) {
+					mean_fastforward = 1.0;
+				}
+				else if (mean_fastforward > 10.0) {
+					mean_fastforward = 10.0;
 				}
 				i++;
 			}
@@ -1049,7 +1062,7 @@ int main(int argc, char *argv[])
 // printf("Daytimecapture: %d\n", daytimeCapture);
 
 		if (mode_mean) {
-  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement);
+  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, asiBrightness, mean_Brightness);
 		}
 
 		if (dayOrNight=="DAY")
@@ -1176,7 +1189,7 @@ int main(int argc, char *argv[])
 					}
 
 					if (mode_mean) {
-	           			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement);
+	           			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, asiBrightness, mean_Brightness);
 					}
 
 					// Flag processing is over

@@ -77,6 +77,8 @@ if [[ $CAMERA == "RPiHQ" && $MODE -eq "1" ]]; then
   ARGUMENTS="$ARGUMENTS -mean-value $MEAN_VALUE " 
   ARGUMENTS="$ARGUMENTS -mean-threshold $MEAN_THRESHOLD " 
   ARGUMENTS="$ARGUMENTS -mean-shuttersteps $MEAN_SHUTTERSTEPS " 
+  ARGUMENTS="$ARGUMENTS -mean-fastforward $MEAN_FASTFORWARD " 
+  ARGUMENTS="$ARGUMENTS -mean-longplay $MEAN_LONGPLAY " 
 fi
 
 # When using a desktop environment (Remote Desktop, VNC, HDMI output, etc), a preview of the capture can be displayed in a separate window

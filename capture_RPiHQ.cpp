@@ -463,7 +463,7 @@ time ( NULL );
 		if (strcmp(ImgText, "") != 0) {
 			ss.str("");
 	//		ss << ReplaceAll(ImgText, std::string(" "), std::string("_"));
-			ss << ImgText << " (li) " <<  (int) (mean_ExposureTime * 1000000) << " " << mean_Reinforcement << " " << asiWBR << " " << asiWBB;
+			ss << ImgText << " (li-" << __TIMESTAMP__ << ") " <<  (int) (mean_ExposureTime * 1000000) << " " << mean_Reinforcement << " " << asiWBR << " " << asiWBB;
 			command += "-a \"" + ss.str() + "\" ";
 		}
 
@@ -727,7 +727,7 @@ int main(int argc, char *argv[])
 				}
 				i++;
 			}
-			else if (strcmp(argv[i], "-mean-mean-fastforward") == 0)
+			else if (strcmp(argv[i], "-mean-fastforward") == 0)
 			{
 				mean_fastforward = atof(argv[i + 1]);
 				if (mean_fastforward < 1.0) {
@@ -736,6 +736,11 @@ int main(int argc, char *argv[])
 				else if (mean_fastforward > 10.0) {
 					mean_fastforward = 10.0;
 				}
+				i++;
+			}
+			else if (strcmp(argv[i], "-mean-longplay") == 0)
+			{
+				mean_longplay = atoi(argv[i + 1]);
 				i++;
 			}
 
@@ -1190,6 +1195,10 @@ int main(int argc, char *argv[])
 
 					if (mode_mean) {
 	           			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, asiBrightness, mean_Brightness);
+ 						printf("asiExposure: %d us mean_ExposureTime: %1.4f s\n", asiExposure, mean_ExposureTime);
+						if ((dayOrNight == "NIGHT") && !mean_longplay) {
+							useDelay = (asiExposure / 1000) - (int) (mean_ExposureTime * 1000.0) + delay;
+						}
 					}
 
 					// Flag processing is over

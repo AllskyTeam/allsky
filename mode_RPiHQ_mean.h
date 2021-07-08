@@ -16,6 +16,7 @@ double mean_ExposureTime = 1.0;
 double mean_fastforward = 4.0;
 int mean_Reinforcement = 1;
 int mean_Brightness = 50;
+int mean_longplay = 0;
 
 void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double mean_shuttersteps, double& ExposureTime, int& Reinforcement, double mean_fastforward, int asiBrightness, int& Brightness);
 

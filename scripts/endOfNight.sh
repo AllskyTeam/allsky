@@ -24,19 +24,22 @@ if [[ $POST_END_OF_NIGHT_DATA == "true" ]]; then
 	echo -e "\n"
 fi
 
-# Uncomment this to scan for, and remove corrupt images before generating
+# Scan for, and remove corrupt images before generating
 # keograms and startrails. This can take several (tens of) minutes to run
 # and isn't necessary unless your system produces corrupt images which then
 # generate funny colors in the summary images...
-# ./removeBadImages.sh $ALLSKY_HOME/images/$LAST_NIGHT/  
+if [[ "$REMOVE_BAD_IMAGES" == "true" ]]; then		# ECC added check
+	echo -e "Removing bad images\n"			# ECC added
+	./removeBadImages.sh $ALLSKY_HOME/images/$LAST_NIGHT/  
+fi
 
 # Generate keogram from collected images
 if [[ $KEOGRAM == "true" ]]; then
         echo -e "Generating Keogram\n"
         mkdir -p $ALLSKY_HOME/images/$LAST_NIGHT/keogram/
-        ../keogram $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.$EXTENSION
+	OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.$EXTENSION"		# ECC moved from below to use in multiple places
+        ../keogram $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $OUTPUT				# ECC: use $OUTPUT
         if [[ $UPLOAD_KEOGRAM == "true" ]] ; then
-                OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/keogram/keogram-$LAST_NIGHT.$EXTENSION"
                 if [[ $PROTOCOL == "S3" ]] ; then
                         $AWS_CLI_DIR/aws s3 cp $OUTPUT s3://$S3_BUCKET$KEOGRAM_DIR --acl $S3_ACL &
 		elif [[ $PROTOCOL == "local" ]] ; then
@@ -53,9 +56,10 @@ fi
 if [[ $STARTRAILS == "true" ]]; then
         echo -e "Generating Startrails\n"
         mkdir -p $ALLSKY_HOME/images/$LAST_NIGHT/startrails/
-        ../startrails $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $BRIGHTNESS_THRESHOLD $ALLSKY_HOME/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.$EXTENSION
-        if [[ $UPLOAD_STARTRAILS == "true" ]] ; then
-                OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.$EXTENSION"
+	OUTPUT="$ALLSKY_HOME/images/$LAST_NIGHT/startrails/startrails-$LAST_NIGHT.$EXTENSION"		# ECC moved from below to use in multiple places
+        ../startrails $ALLSKY_HOME/images/$LAST_NIGHT/ $EXTENSION $BRIGHTNESS_THRESHOLD $OUTPUT		# ECC: use $OUTPUT
+	RETCODE=$?											# ECC added RETCODE since ../startrails failed once
+        if [[ $UPLOAD_STARTRAILS == "true" && $RETCODE == 0 ]] ; then
                 if [[ $PROTOCOL == "S3" ]] ; then
                         $AWS_CLI_DIR/aws s3 cp $OUTPUT s3://$S3_BUCKET$STARTRAILS_DIR --acl $S3_ACL &
                 elif [[ $PROTOCOL == "local" ]] ; then

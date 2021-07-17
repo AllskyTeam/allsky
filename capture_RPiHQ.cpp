@@ -463,7 +463,13 @@ time ( NULL );
 		if (strcmp(ImgText, "") != 0) {
 			ss.str("");
 	//		ss << ReplaceAll(ImgText, std::string(" "), std::string("_"));
-			ss << ImgText << " (li-" << __TIMESTAMP__ << ") " <<  (int) (mean_ExposureTime * 1000000) << " " << mean_Reinforcement << " " << asiWBR << " " << asiWBB;
+			ss << ImgText 
+			   << " (li-" << __TIMESTAMP__ << ") " 
+			   << mean_Brightness << " " 
+			   <<  (int) (mean_ExposureTime * 1000000) << " " 
+			   << mean_Reinforcement << " " 
+			   << asiWBR << " " 
+			   << asiWBB;
 			command += "-a \"" + ss.str() + "\" ";
 		}
 
@@ -506,7 +512,9 @@ time ( NULL );
 	printf("Capture command: %s\n", cmd);
 
 	// Execute raspistill command
+	printf ("capturing image in file %s\n", fileName);
 	system(cmd);
+	printf ("capturing image in file %s finished\n", fileName);
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -741,6 +749,28 @@ int main(int argc, char *argv[])
 			else if (strcmp(argv[i], "-mean-longplay") == 0)
 			{
 				mean_longplay = atoi(argv[i + 1]);
+				i++;
+			}
+			else if (strcmp(argv[i], "-mean-historySize") == 0)
+			{
+				mean_historySize = atoi(argv[i + 1]);
+				if (mean_historySize < 1) {
+					mean_historySize = 1;
+				}
+				else if (mean_historySize > 5) {
+					mean_historySize = 5;
+				}
+				i++;
+			}
+			else if (strcmp(argv[i], "-mean-kp") == 0)
+			{
+				mean_Kp = atof(argv[i + 1]);
+				if (mean_Kp < 1.0) {
+					mean_Kp = 1.0;
+				}
+				else if (mean_Kp > 100.0) {
+					mean_Kp = 100.0;
+				}
 				i++;
 			}
 
@@ -1067,7 +1097,7 @@ int main(int argc, char *argv[])
 // printf("Daytimecapture: %d\n", daytimeCapture);
 
 		if (mode_mean) {
-  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, asiBrightness, mean_Brightness);
+  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, asiBrightness, mean_Brightness, mean_historySize, mean_Kp);
 		}
 
 		if (dayOrNight=="DAY")
@@ -1194,8 +1224,8 @@ int main(int argc, char *argv[])
 					}
 
 					if (mode_mean) {
-	           			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, asiBrightness, mean_Brightness);
- 						printf("asiExposure: %d us mean_ExposureTime: %1.4f s\n", asiExposure, mean_ExposureTime);
+						RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, asiBrightness, mean_Brightness, mean_historySize, mean_Kp);
+						printf("asiExposure: %d us mean_ExposureTime: %1.4f s\n", asiExposure, mean_ExposureTime);
 						if ((dayOrNight == "NIGHT") && !mean_longplay) {
 							useDelay = (asiExposure / 1000) - (int) (mean_ExposureTime * 1000.0) + delay;
 						}
@@ -1207,7 +1237,6 @@ int main(int argc, char *argv[])
 
 				// Inform user
 				printf("Capturing & saving image done, now wait %d seconds...\n", useDelay / 1000);
-
 				// Sleep for a moment
 				usleep(useDelay * 1000);
 

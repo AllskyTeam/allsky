@@ -74,11 +74,13 @@ done
 if [[ $CAMERA == "RPiHQ" && $MODE -eq "1" ]]; then
   echo "mode mean"
   ARGUMENTS="$ARGUMENTS -mode 1 "
-  ARGUMENTS="$ARGUMENTS -mean-value $MEAN_VALUE " 
-  ARGUMENTS="$ARGUMENTS -mean-threshold $MEAN_THRESHOLD " 
-  ARGUMENTS="$ARGUMENTS -mean-shuttersteps $MEAN_SHUTTERSTEPS " 
-  ARGUMENTS="$ARGUMENTS -mean-fastforward $MEAN_FASTFORWARD " 
-  ARGUMENTS="$ARGUMENTS -mean-longplay $MEAN_LONGPLAY " 
+  if [ -z ${MEAN_VALUE+x} ]; then echo "MEAN_VALUE is unset"; else ARGUMENTS="$ARGUMENTS -mean-value $MEAN_VALUE "; fi
+  if [ -z ${MEAN_THRESHOLD+x} ]; then echo "MEAN_THRESHOLD is unset"; else ARGUMENTS="$ARGUMENTS -mean-threshold $MEAN_THRESHOLD "; fi
+  if [ -z ${MEAN_SHUTTERSTEPS+x} ]; then echo "MEAN_SHUTTERSTEPS is unset"; else ARGUMENTS="$ARGUMENTS -mean-shuttersteps $MEAN_SHUTTERSTEPS "; fi
+  if [ -z ${MEAN_FASTFORWARD+x} ]; then echo "MEAN_FASTFORWARD is unset"; else ARGUMENTS="$ARGUMENTS -mean-fastforward $MEAN_FASTFORWARD "; fi
+  if [ -z ${MEAN_LONGPLAY+x} ]; then echo "MEAN_LONGPLAY is unset"; else ARGUMENTS="$ARGUMENTS -mean-longplay $MEAN_LONGPLAY "; fi
+  if [ -z ${MEAN_HISTORYSIZE+x} ]; then echo "MEAN_HISTORYSIZE is unset"; else ARGUMENTS="$ARGUMENTS -mean-historySize $MEAN_HISTORYSIZE "; fi
+  if [ -z ${MEAN_KP+x} ]; then echo "MEAN_KP is unset"; else ARGUMENTS="$ARGUMENTS -mean-kp $MEAN_KP "; fi
 fi
 
 # When using a desktop environment (Remote Desktop, VNC, HDMI output, etc), a preview of the capture can be displayed in a separate window

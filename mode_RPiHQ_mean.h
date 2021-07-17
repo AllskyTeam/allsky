@@ -21,5 +21,6 @@ int mean_historySize = 3;
 double mean_Kp = 1.0;
 
 void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double mean_shuttersteps, double& ExposureTime, int& Reinforcement, double mean_fastforward, int asiBrightness, int& Brightness, int mean_historySize, double Kp);
+void RPiHQmask(const char* fileName);
 
 #endif

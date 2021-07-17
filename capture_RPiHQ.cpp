@@ -1204,6 +1204,7 @@ int main(int argc, char *argv[])
 
 				// Capture and save image
 				RPiHQcapture(asiAutoFocus, asiAutoExposure, currentExposure, asiAutoGain, asiAutoAWB, asiGain, bin, asiWBR, asiWBB, asiRotation, asiFlip, asiGamma, asiBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe);
+				RPiHQmask (fileName);
 
 				// Check if no processing is going on
 				if (!bSavingImg)

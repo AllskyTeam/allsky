@@ -32,6 +32,105 @@ double Esum_Brightness = 0.0;
 double STG_Brightness = 0.0;
 
 double ExposureTest = 60;
+bool createMaskHorizon = true;
+
+// remove same areas
+void RPiHQmask(const char* fileName)
+{
+	//std::cout <<  "RPiHQcalcMean Bild wird zur Analyse geladen" << std::endl;
+    cv::Mat image = cv::imread(fileName, cv::IMREAD_UNCHANGED);
+
+	//std::cout <<  "RPiHQcalcMean Laden fertig" << std::endl;
+    if (!image.data)
+    {
+            std::cout << "Error reading file " << basename(fileName) << std::endl;
+    }
+	else {
+		//Define your destination image
+		cv::Mat dstImage = cv::Mat::zeros(image.size(), CV_8U);    
+
+
+//##########################################################################################
+// Test Mask horizon 
+// https://docs.opencv.org/4.5.2/d3/d96/tutorial_basic_geometric_drawing.html
+
+		dstImage = cv::Mat::zeros(image.size(), CV_8U);
+		cv::Mat maskHorizon;
+    	std::vector<int> compression_params;
+    	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+    	compression_params.push_back(9);
+    	compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+    	compression_params.push_back(95);
+
+		if (createMaskHorizon) {
+			// 1. Define maskHorizon image
+			maskHorizon = cv::Mat::zeros(image.size(), CV_8U);   
+
+			// 2. circle
+			cv::circle(maskHorizon, cv::Point(image.cols/2, image.rows/2), image.rows*10/12, cv::Scalar(255, 255, 255), -1, 8, 0);
+			cv::circle(maskHorizon, cv::Point(image.cols/2, image.rows/2), image.rows*3/12, cv::Scalar(0, 0, 0), 5, 8, 0);
+			cv::circle(maskHorizon, cv::Point(image.cols/2, image.rows/2), image.rows*4/12, cv::Scalar(0, 0, 0), 5, 8, 0);
+			cv::circle(maskHorizon, cv::Point(image.cols/2, image.rows/2), image.rows*5/12, cv::Scalar(0, 0, 0), 5, 8, 0);
+			cv::circle(maskHorizon, cv::Point(image.cols/2, image.rows/2), image.rows*6/12, cv::Scalar(0, 0, 0), 5, 8, 0);
+			cv::circle(maskHorizon, cv::Point(image.cols/2, image.rows/2), image.rows*7/12, cv::Scalar(0, 0, 0), 5, 8, 0);
+			cv::circle(maskHorizon, cv::Point(image.cols/2, image.rows/2), image.rows*8/12, cv::Scalar(0, 0, 0), 5, 8, 0);
+			cv::circle(maskHorizon, cv::Point(image.cols/2, image.rows/2), image.rows*9/12, cv::Scalar(0, 0, 0), 5, 8, 0);
+
+			// 3. some guidelines
+			cv::line( maskHorizon,
+    			cv::Point( 0, image.rows/2 ), 
+				cv::Point( maskHorizon.cols, maskHorizon.rows/2 ),
+    			cv::Scalar( 0, 0, 0 ),
+    			5,
+    			cv::LINE_8 );
+
+			cv::line( maskHorizon,
+    			cv::Point( maskHorizon.cols/2, 0 ), 
+				cv::Point( maskHorizon.cols/2, maskHorizon.rows ),
+    			cv::Scalar( 0, 0, 0 ),
+    			5,
+    			cv::LINE_8 );
+
+  			ellipse( maskHorizon,
+       			cv::Point(maskHorizon.cols/2, maskHorizon.rows/2),
+       			cv::Size( maskHorizon.cols, 1 ),
+       			45,
+       			0,
+       			360,
+       			cv::Scalar( 0, 0, 0 ),
+       			5,
+       			cv::LINE_8 );
+  			ellipse( maskHorizon,
+       			cv::Point(image.cols/2, image.rows/2),
+       			cv::Size( image.cols, 1 ),
+       			135,
+       			0,
+       			360,
+       			cv::Scalar( 0, 0, 0 ),
+       			5,
+       			cv::LINE_8 );
+
+			// 4. Save Mask to mask_template
+    		cv::imwrite("mask_template.jpg", maskHorizon, compression_params);
+			createMaskHorizon = false;
+		}
+		else {
+    		maskHorizon = cv::imread("mask.jpg", cv::IMREAD_UNCHANGED);
+    		if (!image.data)
+    		{
+    			maskHorizon = cv::imread("mask_template.jpg", cv::IMREAD_UNCHANGED);
+    		}
+		}
+
+		// 5. Save masked image to mask_test
+		image.copyTo(dstImage, maskHorizon);
+
+		remove( fileName );
+    	cv::imwrite(fileName, dstImage, compression_params);
+
+//##########################################################################################
+	}
+}
 
 // Build capture command to capture the image from the HQ camera
 void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double mean_shuttersteps, double& ExposureTime, int& Reinforcement, double mean_fastforward, int asiBrightness, int& Brightness, int mean_historySize, double Kp)

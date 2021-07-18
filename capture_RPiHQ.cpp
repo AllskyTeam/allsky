@@ -773,7 +773,11 @@ int main(int argc, char *argv[])
 				}
 				i++;
 			}
-
+			else if (strcmp(argv[i], "-mean-maskHorizon") == 0)
+			{
+				mean_maskHorizon = atoi(argv[i + 1]);
+				i++;
+			}
 			// Check for text parameter
 			else if (strcmp(argv[i], "-text") == 0)
 			{
@@ -1204,7 +1208,9 @@ int main(int argc, char *argv[])
 
 				// Capture and save image
 				RPiHQcapture(asiAutoFocus, asiAutoExposure, currentExposure, asiAutoGain, asiAutoAWB, asiGain, bin, asiWBR, asiWBB, asiRotation, asiFlip, asiGamma, asiBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe);
-				RPiHQmask (fileName);
+				if (mean_maskHorizon) {
+					RPiHQmask (fileName);
+				}
 
 				// Check if no processing is going on
 				if (!bSavingImg)

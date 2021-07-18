@@ -37,6 +37,8 @@ bool createMaskHorizon = true;
 // remove same areas
 void RPiHQmask(const char* fileName)
 {
+	bool foundMaskFile = true;
+
 	//std::cout <<  "RPiHQcalcMean Bild wird zur Analyse geladen" << std::endl;
     cv::Mat image = cv::imread(fileName, cv::IMREAD_UNCHANGED);
 
@@ -119,14 +121,20 @@ void RPiHQmask(const char* fileName)
     		if (!image.data)
     		{
     			maskHorizon = cv::imread("mask_template.jpg", cv::IMREAD_UNCHANGED);
+				foundMaskFile = false;
     		}
 		}
 
-		// 5. Save masked image to mask_test
+		// 5. Save masked image to mask_template_test or filename
 		image.copyTo(dstImage, maskHorizon);
 
-		remove( fileName );
-    	cv::imwrite(fileName, dstImage, compression_params);
+		if (foundMaskFile) {
+			remove( fileName );
+    		cv::imwrite(fileName, dstImage, compression_params);
+		}
+		else {
+    		cv::imwrite("mask_template_test.jpg", dstImage, compression_params);
+		}
 
 //##########################################################################################
 	}

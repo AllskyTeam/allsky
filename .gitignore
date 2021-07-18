@@ -44,3 +44,6 @@ test.jpg
 write_mask.png
 masked_color_replace.png
 image.jpg
+mask_test.jpg
+mask_template.jpg
+image.jpg

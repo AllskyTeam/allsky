@@ -291,7 +291,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 			}
 			else if (Reinforcement < asiGain) {
 				Reinforcement++;
-				ExposureLevel--; // ein Gain Step fuehrt meist zur Ueberbelichtung
+				//ExposureLevel--; // ein Gain Step fuehrt meist zur Ueberbelichtung
 			}
 		}
 		if (mean > (mean_value + mean_threshold))  {
@@ -306,7 +306,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 			}
 			else if (Reinforcement > 1)  {
 				Reinforcement--;
-				ExposureLevel++;  // ein Gain Step fuehrt meist zur Unterbelichtung
+				//ExposureLevel++;  // ein Gain Step fuehrt meist zur Unterbelichtung
 			}
 			else {
 				ExposureLevel -= ExposureChange;
@@ -329,7 +329,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 
 		if (ExposureTime > (asiExposure/1000000.0)) {
 			ExposureTime = asiExposure/1000000.0;
-			if ((Reinforcement == 1) && (mean > (mean_value + mean_threshold))) Reinforcement++; // gain sofort von 1 auf 2 hochstellen
+			//if ((Reinforcement == 1) && (mean > (mean_value + mean_threshold))) Reinforcement++; // gain sofort von 1 auf 2 hochstellen
 		}
 		else if (ExposureTime < 0.000001) {
 			ExposureTime = 0.000001;

@@ -58,6 +58,9 @@ int main(int argc, char *argv[])
                      "Line Thickness"
                   << std::endl;
         std::cout << " -rotate                      - Default = 0    - Rotation angle anticlockwise (deg)" << std::endl;
+        std::cout << " -addRow                      - Default = 0    - standard, keogram maybe small" << std::endl;
+        std::cout << "                                          1    - copy the same row to get nearby source images size" << std::endl;
+        std::cout << "                                          2    - copy the neighbor row to get nearby source images size" << std::endl;
         std::cout << " -finishline                  - Default = <image.cols / 2>  - line of interest (finishline)" << std::endl;
         std::cout << "    ex: keogram ../images/current/ jpg keogram.jpg -fontsize 2" << std::endl;
         std::cout << "    ex: keogram . png /home/pi/allsky/keogram.jpg -no-label" << KNRM << std::endl;
@@ -76,6 +79,7 @@ int main(int argc, char *argv[])
     unsigned char fontColor[3]  = { 255, 255, 255 };
     double angle       = 0;
     int finishline     = -1;
+    int addRow         = 0;
 
     // Handle optional parameters
     for (int a = 4; a < argc; ++a)
@@ -114,6 +118,10 @@ int main(int argc, char *argv[])
         {
             finishline = atoi(argv[++a]);
         }
+        else if (!strcmp(argv[a], "-addRow"))
+        {
+            addRow = atoi(argv[++a]);
+        }
     }
 
     glob_t files;
@@ -129,6 +137,8 @@ int main(int argc, char *argv[])
     cv::Mat accumulated;
 
     int prevHour = -1;
+    int expand = 1;
+    int destCol = 0;
 
     for (size_t f = 0; f < files.gl_pathc; f++)
     {
@@ -151,15 +161,34 @@ int main(int argc, char *argv[])
 	    cv::warpAffine(imagesrc, imagedst, rot, bbox.size());
         if (accumulated.empty())
         {
-            accumulated.create(imagedst.rows, files.gl_pathc, imagesrc.type());
+            if (addRow != 0) {
+                expand = imagesrc.cols / (int) files.gl_pathc;
+            }
+            accumulated.create(imagedst.rows, files.gl_pathc * expand, imagesrc.type());
         }
 
         // Copy middle column to destination
         if (finishline == -1) {
-            imagedst.col(imagedst.cols / 2).copyTo(accumulated.col(f));
+            imagedst.col(imagedst.cols / 2).copyTo(accumulated.col(destCol));
+            if (expand > 1) {
+                for (int i=1; i < expand; i++) {
+                    if (addRow == 1)
+                        imagedst.col(imagedst.cols / 2).copyTo(accumulated.col(destCol+i));   //copy
+                    else    
+                        imagedst.col((imagedst.cols / 2) + i).copyTo(accumulated.col(destCol+i)); //neighbor
+                }
+            }
         }
         else {
-            imagedst.col(finishline).copyTo(accumulated.col(f));
+            imagedst.col(finishline).copyTo(accumulated.col(destCol));
+            if (expand > 1) {
+                for (int i=1; i < expand; i++) {
+                    if (addRow == 1)
+                        imagedst.col(finishline).copyTo(accumulated.col(destCol+i));  //copy
+                    else
+                        imagedst.col(finishline + i).copyTo(accumulated.col(destCol+i)); //neighbor
+                }
+            }
         }
 
         if (labelsEnabled)
@@ -174,7 +203,7 @@ int main(int argc, char *argv[])
                 if (prevHour != -1)
                 {
                     // Draw a dashed line and label for hour
-                    cv::LineIterator it(accumulated, cv::Point(f, 0), cv::Point(f, accumulated.rows));
+                    cv::LineIterator it(accumulated, cv::Point(destCol, 0), cv::Point(destCol, accumulated.rows));
                     for (int i = 0; i < it.count; i++, ++it)
                     {
                         // 4 pixel dashed line
@@ -197,10 +226,10 @@ int main(int argc, char *argv[])
                         int baseline      = 0;
                         cv::Size textSize = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
 
-                        if (f - textSize.width >= 0)
+                        if (destCol - textSize.width >= 0)
                         {
                             cv::putText(accumulated, text,
-                                        cv::Point(f - textSize.width, accumulated.rows - (2.5 * textSize.height)), fontFace,
+                                        cv::Point(destCol - textSize.width, accumulated.rows - (2.5 * textSize.height)), fontFace,
                                         fontScale, cv::Scalar(fontColor[0], fontColor[1], fontColor[2]), thickness,
                                         fontType);
                         }
@@ -213,10 +242,10 @@ int main(int argc, char *argv[])
                     int baseline      = 0;
                     cv::Size textSize = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
 
-                    if (f - textSize.width >= 0)
+                    if (destCol - textSize.width >= 0)
                     {
                         cv::putText(accumulated, text,
-                                    cv::Point(f - textSize.width, accumulated.rows - textSize.height), fontFace,
+                                    cv::Point(destCol - textSize.width, accumulated.rows - textSize.height), fontFace,
                                     fontScale, cv::Scalar(fontColor[0], fontColor[1], fontColor[2]), thickness,
                                     fontType);
                     }
@@ -224,6 +253,8 @@ int main(int argc, char *argv[])
                 prevHour = t->tm_hour;
             }
         }
+
+        destCol +=expand;
     }
     globfree(&files);
 

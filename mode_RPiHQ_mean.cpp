@@ -62,7 +62,7 @@ void RPiHQmask(const char* fileName)
     	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
     	compression_params.push_back(9);
     	compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-    	compression_params.push_back(95);
+    	compression_params.push_back(100);
 
 		if (createMaskHorizon) {
 			// 1. Define maskHorizon image
@@ -166,6 +166,20 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 		//Now you can copy your source image to destination image with masking
 		image.copyTo(dstImage, mask);
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Test focus
+// https://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry
+// https://drive.google.com/file/d/0B6UHr3GQEkQwYnlDY2dKNTdudjg/view?resourcekey=0-a73PvBnc3a2B5wztAV0QaA
+ 		cv::Mat lap;
+    	cv::Laplacian(dstImage, lap, CV_64F);
+
+    	cv::Scalar mu, sigma;
+    	cv::meanStdDev(lap, mu, sigma);
+
+    	double focusMeasure = sigma.val[0]*sigma.val[0];
+	    std::cout <<  "focusMeasure: " << focusMeasure << std::endl;
+/////////////////////////////////////////////////////////////////////////////////////
+        
 
     	std::vector<int> compression_params;
     	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);

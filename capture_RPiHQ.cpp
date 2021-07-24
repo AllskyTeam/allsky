@@ -778,6 +778,11 @@ int main(int argc, char *argv[])
 				mean_maskHorizon = atoi(argv[i + 1]);
 				i++;
 			}
+			else if (strcmp(argv[i], "-mean-brightnessControl") == 0)
+			{
+				mean_brightnessControl = atoi(argv[i + 1]);
+				i++;
+			}
 			// Check for text parameter
 			else if (strcmp(argv[i], "-text") == 0)
 			{
@@ -1101,7 +1106,7 @@ int main(int argc, char *argv[])
 // printf("Daytimecapture: %d\n", daytimeCapture);
 
 		if (mode_mean) {
-  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, asiBrightness, mean_Brightness, mean_historySize, mean_Kp);
+  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, mean_brightnessControl,  asiBrightness, mean_Brightness, mean_historySize, mean_Kp);
 		}
 
 		if (dayOrNight=="DAY")
@@ -1231,7 +1236,7 @@ int main(int argc, char *argv[])
 					}
 
 					if (mode_mean) {
-						RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, asiBrightness, mean_Brightness, mean_historySize, mean_Kp);
+						RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, mean_brightnessControl,  asiBrightness, mean_Brightness, mean_historySize, mean_Kp);
 						printf("asiExposure: %d us mean_ExposureTime: %1.4f s\n", asiExposure, mean_ExposureTime);
 						if ((dayOrNight == "NIGHT") && !mean_longplay) {
 							useDelay = (asiExposure / 1000) - (int) (mean_ExposureTime * 1000.0) + delay;

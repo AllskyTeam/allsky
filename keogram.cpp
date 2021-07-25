@@ -163,6 +163,8 @@ int main(int argc, char *argv[])
         {
             if (addRow != 0) {
                 expand = imagesrc.cols / (int) files.gl_pathc;
+                if (expand < 1)
+                    expand = 1;
             }
             accumulated.create(imagedst.rows, files.gl_pathc * expand, imagesrc.type());
         }

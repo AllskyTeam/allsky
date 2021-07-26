@@ -308,16 +308,16 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 			if (mean_brightnessControl && (Brightness < asiBrightness)) {
 				Brightness++;
 			}
-			else if (ExposureTime < (asiExposure/1000000.0)) {
+			else if (Reinforcement <= asiGain) {  // obere Grenze durch Gaim
 				ExposureLevel += ExposureChange;
 			}
-			else if (Reinforcement < asiGain) {
-				Reinforcement++;
+			//else if (Reinforcement < asiGain) {
+			//	Reinforcement++;
 				//ExposureLevel--; // ein Gain Step fuehrt meist zur Ueberbelichtung
-			}
+			//}
 		}
 		if (mean > (mean_value + mean_threshold))  {
-			if (ExposureTime <= 0.000001) {
+			if (ExposureTime <= 0.000001) { // untere Grenze durch shuttertime
 				printf("ExposureTime to low - stop !\n");
 				if (mean_brightnessControl && (Brightness > 0)) {
 					Brightness--;
@@ -326,32 +326,27 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 					printf("Brightness to low - stop !\n");
 				}
 			}
-			else if (Reinforcement > 1)  {
-				Reinforcement--;
-				//ExposureLevel++;  // ein Gain Step fuehrt meist zur Unterbelichtung
-			}
+			//else if (Reinforcement > 1)  {
+			//	Reinforcement--;
+			//	//ExposureLevel++;  // ein Gain Step fuehrt meist zur Unterbelichtung
+			//}
 			else {
 				ExposureLevel -= ExposureChange;
 			}
-
 		}
 
-		//printf("mean_shuttersteps: %1.4f\n", mean_shuttersteps);
-		ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0));
-
-		//ExposureTime = ExposureTest;
-		
-
-		//Brightness = STG_Brightness;
-
-
-		// STG ... Steuergroeße (1...asiExposure) [us]
-		// ExposureTime ... Belichtungszeit (1//1000000 ... asiExposure/1000000) [s]
-		//ExposureTime = exp (STG)/1000000.0;
+		ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / Reinforcement;
+		if ((ExposureTime > (asiExposure/1000000.0)) && (Reinforcement < asiGain)) {
+			Reinforcement++;
+			ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / Reinforcement;
+		}
+		else if ((Reinforcement >= 2) && (pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / (Reinforcement-1) <= (asiExposure/1000000.0))) {
+			Reinforcement--;
+			ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / Reinforcement;
+		}
 
 		if (ExposureTime > (asiExposure/1000000.0)) {
 			ExposureTime = asiExposure/1000000.0;
-			//if ((Reinforcement == 1) && (mean > (mean_value + mean_threshold))) Reinforcement++; // gain sofort von 1 auf 2 hochstellen
 		}
 		else if (ExposureTime < 0.000001) {
 			ExposureTime = 0.000001;
@@ -360,5 +355,4 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 		printf("Mean: %1.4f Exposure level:%d Exposure time:%1.8f Reinforcement:%d\n", mean, ExposureLevel, ExposureTime, Reinforcement);
 
 	}
-
 }

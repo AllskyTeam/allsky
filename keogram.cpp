@@ -232,6 +232,10 @@ int main(int argc, char *argv[])
                         {
                             cv::putText(accumulated, text,
                                         cv::Point(destCol - textSize.width, accumulated.rows - (2.5 * textSize.height)), fontFace,
+                                        fontScale, cv::Scalar(0, 0, 0), thickness+1,
+                                        fontType);
+                            cv::putText(accumulated, text,
+                                        cv::Point(destCol - textSize.width, accumulated.rows - (2.5 * textSize.height)), fontFace,
                                         fontScale, cv::Scalar(fontColor[0], fontColor[1], fontColor[2]), thickness,
                                         fontType);
                         }
@@ -246,6 +250,10 @@ int main(int argc, char *argv[])
 
                     if (destCol - textSize.width >= 0)
                     {
+                        cv::putText(accumulated, text,
+                                    cv::Point(destCol - textSize.width, accumulated.rows - textSize.height), fontFace,
+                                    fontScale, cv::Scalar(0, 0, 0), thickness+1,
+                                    fontType);
                         cv::putText(accumulated, text,
                                     cv::Point(destCol - textSize.width, accumulated.rows - textSize.height), fontFace,
                                     fontScale, cv::Scalar(fontColor[0], fontColor[1], fontColor[2]), thickness,

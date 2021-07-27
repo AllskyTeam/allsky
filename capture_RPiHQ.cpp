@@ -21,6 +21,7 @@
 
 // new includes
 #include "mode_RPiHQ_mean.h"
+#include "RPiHQ_raspistill.h"
 
 using namespace std;
 
@@ -44,6 +45,8 @@ std::string dayOrNight;
 
 bool bSavingImg = false;
 
+
+raspistillSetting myRaspistillSetting;
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -218,8 +221,7 @@ time ( NULL );
 	{
 		if (mode_mean) {
 			ss.str("");
-			int shuttertime = mean_ExposureTime * 1000000; 
-			ss << shuttertime;
+			ss << myRaspistillSetting.shutter;
 			shutter = "--exposure off --shutter " + ss.str() + " ";
 		} else {
 			shutter = "--exposure auto ";
@@ -250,7 +252,7 @@ time ( NULL );
 	{
 		if (mode_mean) {
 			ss.str("");
-			ss << mean_Reinforcement;
+			ss << myRaspistillSetting.analoggain;
 			gain = "--analoggain " + ss.str() + " ";
 		}
 		else {
@@ -284,8 +286,8 @@ time ( NULL );
      	string exif;
 	   	stringstream Str_ExposureTime;
    		stringstream Str_Reinforcement;
-   		Str_ExposureTime <<  (int) (mean_ExposureTime * 1000000);
-		Str_Reinforcement << mean_Reinforcement;
+   		Str_ExposureTime <<  myRaspistillSetting.shutter;
+		Str_Reinforcement << myRaspistillSetting.analoggain;
 		
    		exif = "--exif IFD0.Artist=li_" + Str_ExposureTime.str() + "_" + Str_Reinforcement.str() + " ";
 		command += exif;
@@ -415,15 +417,15 @@ time ( NULL );
 
 	if (mode_mean) {
 		// check if brightness setting is set
-		if (mean_Brightness!=50) {
+		if (myRaspistillSetting.brightness != 50) {
 			ss.str("");
-			ss << mean_Brightness;
+			ss << myRaspistillSetting.brightness;
 			brightness = "--brightness " + ss.str() + " ";
 		}
 	}
 	else {
 		// check if brightness setting is set
-		if (asiBrightness!=50) {
+		if (asiBrightness != 50) {
 			ss.str("");
 			ss << asiBrightness;
 			brightness = "--brightness " + ss.str() + " ";
@@ -465,9 +467,9 @@ time ( NULL );
 	//		ss << ReplaceAll(ImgText, std::string(" "), std::string("_"));
 			ss << ImgText 
 			   << " (li-" << __TIMESTAMP__ << ") " 
-			   << mean_Brightness << " " 
-			   <<  (int) (mean_ExposureTime * 1000000) << " " 
-			   << mean_Reinforcement << " " 
+			   << myRaspistillSetting.brightness << " " 
+			   << myRaspistillSetting.shutter << " " 
+			   << myRaspistillSetting.analoggain << " " 
 			   << asiWBR << " " 
 			   << asiWBB;
 			command += "-a \"" + ss.str() + "\" ";
@@ -510,6 +512,8 @@ time ( NULL );
 	strcpy(cmd, command.c_str());
 
 	printf("Capture command: %s\n", cmd);
+
+    printf("analoggain=%d\n", myRaspistillSetting.analoggain);
 
 	// Execute raspistill command
 	printf ("capturing image in file %s\n", fileName);
@@ -1106,7 +1110,7 @@ int main(int argc, char *argv[])
 // printf("Daytimecapture: %d\n", daytimeCapture);
 
 		if (mode_mean) {
-  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, mean_brightnessControl,  asiBrightness, mean_Brightness, mean_historySize, mean_Kp);
+  			RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_fastforward, mean_brightnessControl,  asiBrightness, mean_historySize, mean_Kp, myRaspistillSetting);
 		}
 
 		if (dayOrNight=="DAY")
@@ -1236,10 +1240,10 @@ int main(int argc, char *argv[])
 					}
 
 					if (mode_mean) {
-						RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_ExposureTime, mean_Reinforcement, mean_fastforward, mean_brightnessControl,  asiBrightness, mean_Brightness, mean_historySize, mean_Kp);
-						printf("asiExposure: %d us mean_ExposureTime: %1.4f s\n", asiExposure, mean_ExposureTime);
+						RPiHQcalcMean(fileName, asiExposure, asiGain, mean_value, mean_threshold, mean_shuttersteps, mean_fastforward, mean_brightnessControl,  asiBrightness, mean_historySize, mean_Kp, myRaspistillSetting);
+						printf("asiExposure: %d shutter: %1.4f s\n", asiExposure, (double) myRaspistillSetting.shutter / 1000000.0);
 						if ((dayOrNight == "NIGHT") && !mean_longplay) {
-							useDelay = (asiExposure / 1000) - (int) (mean_ExposureTime * 1000.0) + delay;
+							useDelay = (asiExposure / 1000) - (int) (myRaspistillSetting.shutter / 1000.0) + delay;
 						}
 					}
 

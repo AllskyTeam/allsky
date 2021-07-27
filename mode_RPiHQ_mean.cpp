@@ -15,6 +15,8 @@
 #include <signal.h>
 #include <fstream>
 
+#include "RPiHQ_raspistill.h"
+
 int ExposureLevel = 1;
 double mean_history [5] = {0.5,0.5,0.5,0.5,0.5};
 int MeanCnt = 0;
@@ -141,8 +143,11 @@ void RPiHQmask(const char* fileName)
 }
 
 // Build capture command to capture the image from the HQ camera
-void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double mean_shuttersteps, double& ExposureTime, int& Reinforcement, double mean_fastforward, int mean_brightnessControl, int asiBrightness, int& Brightness, int mean_historySize, double Kp)
+void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double mean_value, double mean_threshold, double mean_shuttersteps,  double mean_fastforward, int mean_brightnessControl, int asiBrightness, int mean_historySize, double Kp, raspistillSetting &currentRaspistillSetting)
 {
+
+	// get old ExposureTime
+	double ExposureTime = (double) currentRaspistillSetting.shutter/1000000.0;
 
 	//std::cout <<  "RPiHQcalcMean Bild wird zur Analyse geladen" << std::endl;
     cv::Mat image = cv::imread(fileName, cv::IMREAD_UNCHANGED);
@@ -305,44 +310,37 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 		//printf("asiExposure: %d\n", asiExposure);
 		//printf("asiGain: %1.4f\n", asiGain);
 		if (mean < (mean_value - mean_threshold)) {
-			if (mean_brightnessControl && (Brightness < asiBrightness)) {
-				Brightness++;
+			if (mean_brightnessControl && (currentRaspistillSetting.brightness < asiBrightness)) {
+				currentRaspistillSetting.brightness++;
 			}
-			else if (Reinforcement <= asiGain) {  // obere Grenze durch Gaim
+			else if (currentRaspistillSetting.analoggain <= asiGain) {  // obere Grenze durch Gaim
 				ExposureLevel += ExposureChange;
 			}
-			//else if (Reinforcement < asiGain) {
-			//	Reinforcement++;
-				//ExposureLevel--; // ein Gain Step fuehrt meist zur Ueberbelichtung
-			//}
 		}
 		if (mean > (mean_value + mean_threshold))  {
 			if (ExposureTime <= 0.000001) { // untere Grenze durch shuttertime
 				printf("ExposureTime to low - stop !\n");
-				if (mean_brightnessControl && (Brightness > 0)) {
-					Brightness--;
+				if (mean_brightnessControl && (currentRaspistillSetting.brightness > 0)) {
+					currentRaspistillSetting.brightness--;
 				}
 				else {
 					printf("Brightness to low - stop !\n");
 				}
 			}
-			//else if (Reinforcement > 1)  {
-			//	Reinforcement--;
-			//	//ExposureLevel++;  // ein Gain Step fuehrt meist zur Unterbelichtung
-			//}
 			else {
 				ExposureLevel -= ExposureChange;
 			}
 		}
 
-		ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / Reinforcement;
-		if ((ExposureTime > (asiExposure/1000000.0)) && (Reinforcement < asiGain)) {
-			Reinforcement++;
-			ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / Reinforcement;
+		// calculate new ExposureTime
+		ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
+		if ((ExposureTime > (asiExposure/1000000.0)) && (currentRaspistillSetting.analoggain < asiGain)) {
+			currentRaspistillSetting.analoggain++;
+			ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
 		}
-		else if ((Reinforcement >= 2) && (pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / (Reinforcement-1) <= (asiExposure/1000000.0))) {
-			Reinforcement--;
-			ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / Reinforcement;
+		else if ((currentRaspistillSetting.analoggain >= 2) && (pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / (currentRaspistillSetting.analoggain-1) <= (asiExposure/1000000.0))) {
+			currentRaspistillSetting.analoggain--;
+			ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
 		}
 
 		if (ExposureTime > (asiExposure/1000000.0)) {
@@ -351,8 +349,9 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 		else if (ExposureTime < 0.000001) {
 			ExposureTime = 0.000001;
 		}
-
-		printf("Mean: %1.4f Exposure level:%d Exposure time:%1.8f Reinforcement:%d\n", mean, ExposureLevel, ExposureTime, Reinforcement);
+		
+		currentRaspistillSetting.shutter = ExposureTime * 1000 * 1000;
+		printf("Mean: %1.4f Exposure level:%d Exposure time:%1.8f analoggain:%d\n", mean, ExposureLevel, ExposureTime, currentRaspistillSetting.analoggain);
 
 	}
 }

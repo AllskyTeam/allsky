@@ -254,6 +254,12 @@ time ( NULL );
 			ss.str("");
 			ss << myRaspistillSetting.analoggain;
 			gain = "--analoggain " + ss.str() + " ";
+
+			if (myRaspistillSetting.digitalgain > 1.0) {
+				ss.str("");
+				ss << myRaspistillSetting.digitalgain;
+				gain = gain + "--digitalgain " + ss.str() + " ";
+			}
 		}
 		else {
 			// Set analog gain to 1
@@ -513,7 +519,7 @@ time ( NULL );
 
 	printf("Capture command: %s\n", cmd);
 
-    printf("analoggain=%d\n", myRaspistillSetting.analoggain);
+    printf("analoggain=%1.2f\n", myRaspistillSetting.analoggain);
 
 	// Execute raspistill command
 	printf ("capturing image in file %s\n", fileName);

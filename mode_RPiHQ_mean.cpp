@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <fstream>
+#include <algorithm> 
 
 #include "RPiHQ_raspistill.h"
 
@@ -298,22 +299,18 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
     
 		int ExposureChange = 1;
 	    // fast forward
-		if (mean_diff > (mean_threshold * 2)) {
-			// magic number 4.0 ! be careful changing this value
-			// Number 		Change of ExposureTime for (mean_diff = 0.5)
-			// 3.46			2^3 = x8   slower
-			// 4.00			2^4 = x16
-			// 4.47         2^5 = x32  faster			  
-			ExposureChange = pow ((mean_diff * mean_fastforward * mean_shuttersteps),2.0);
+		if (mean_diff > (mean_threshold * 2.0)) {
+			ExposureChange = std::max(1.0, pow ((mean_diff * mean_fastforward * mean_shuttersteps),2.0));
 		}
+		printf("ExposureChange: %d\n", ExposureChange);
 
 		//printf("asiExposure: %d\n", asiExposure);
 		//printf("asiGain: %1.4f\n", asiGain);
-		if (mean < (mean_value - mean_threshold)) {
+		if (mean < (mean_value - (mean_threshold))) {
 			if (mean_brightnessControl && (currentRaspistillSetting.brightness < asiBrightness)) {
 				currentRaspistillSetting.brightness++;
 			}
-			else if (currentRaspistillSetting.analoggain <= asiGain) {  // obere Grenze durch Gaim
+			else if ((currentRaspistillSetting.analoggain < asiGain) || (currentRaspistillSetting.shutter < asiExposure)) {  // obere Grenze durch Gaim und shutter
 				ExposureLevel += ExposureChange;
 			}
 		}
@@ -332,15 +329,34 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 			}
 		}
 
-		// calculate new ExposureTime
-		ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
-		if ((ExposureTime > (asiExposure/1000000.0)) && (currentRaspistillSetting.analoggain < asiGain)) {
-			currentRaspistillSetting.analoggain++;
+		// gain or exposure ?
+		if (true) {
+        	// change gain
+			double newGain = std::min(asiGain, std::max(1.0, pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / (asiExposure/1000000.0))); 
+			double deltaGain = newGain - currentRaspistillSetting.analoggain; 
+			if (deltaGain > 2.0) {
+				currentRaspistillSetting.analoggain += 2.0;
+			}
+			else if (deltaGain < -2.0) {
+				currentRaspistillSetting.analoggain -= 2.0;
+			}
+			else {
+				currentRaspistillSetting.analoggain = newGain;
+			}
 			ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
 		}
-		else if ((currentRaspistillSetting.analoggain >= 2) && (pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / (currentRaspistillSetting.analoggain-1) <= (asiExposure/1000000.0))) {
-			currentRaspistillSetting.analoggain--;
+		else {
+			// change ExposureTime
+			// calculate new ExposureTime
 			ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
+			if ((ExposureTime > (asiExposure/1000000.0)) && (currentRaspistillSetting.analoggain < asiGain)) {
+				currentRaspistillSetting.analoggain += 1.0;
+				ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
+			}
+			else if ((currentRaspistillSetting.analoggain >= 2) && (pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / (currentRaspistillSetting.analoggain-1) <= (asiExposure/1000000.0))) {
+				currentRaspistillSetting.analoggain -= 1.0;
+				ExposureTime = pow(2.0, double(ExposureLevel)/pow(mean_shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
+			}
 		}
 
 		if (ExposureTime > (asiExposure/1000000.0)) {
@@ -351,7 +367,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, double
 		}
 		
 		currentRaspistillSetting.shutter = ExposureTime * 1000 * 1000;
-		printf("Mean: %1.4f Exposure level:%d Exposure time:%1.8f analoggain:%d\n", mean, ExposureLevel, ExposureTime, currentRaspistillSetting.analoggain);
+		printf("Mean: %1.4f Exposure level:%d Exposure time:%1.8f analoggain:%1.2f\n", mean, ExposureLevel, ExposureTime, currentRaspistillSetting.analoggain);
 
 	}
 }

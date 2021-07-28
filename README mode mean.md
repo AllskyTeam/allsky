@@ -52,7 +52,7 @@ Copy new capture_RPiHQ to existing installation
 cp capture_RPiHQ ~/allsky/capture_RPiHQ 
 ```
 
-Make some config changes....
+Make some config changes....some new lines in allsky.sh und config.sh
 
 For Deinstallion stop allsky und restore secure copy of capture_RPiHQ
 ```shell

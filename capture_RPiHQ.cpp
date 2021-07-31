@@ -470,14 +470,16 @@ time ( NULL );
 
 		if (strcmp(ImgText, "") != 0) {
 			ss.str("");
-	//		ss << ReplaceAll(ImgText, std::string(" "), std::string("_"));
-			ss << ImgText 
-			   << " (li-" << __TIMESTAMP__ << ") " 
-			   << myRaspistillSetting.brightness << " " 
-			   << myRaspistillSetting.shutter << " " 
-			   << myRaspistillSetting.analoggain << " " 
-			   << asiWBR << " " 
-			   << asiWBB;
+			ss << ImgText; 
+			if (mean_info) {
+				ss << ImgText
+				<< " (li-" << __TIMESTAMP__ << ") " 
+			   	<< myRaspistillSetting.brightness << " " 
+			   	<< myRaspistillSetting.shutter << " " 
+			   	<< myRaspistillSetting.analoggain << " " 
+			   	<< asiWBR << " " 
+			   	<< asiWBB;
+			}
 			command += "-a \"" + ss.str() + "\" ";
 		}
 
@@ -791,6 +793,11 @@ int main(int argc, char *argv[])
 			else if (strcmp(argv[i], "-mean-brightnessControl") == 0)
 			{
 				mean_brightnessControl = atoi(argv[i + 1]);
+				i++;
+			}
+			else if (strcmp(argv[i], "-mean-info") == 0)
+			{
+				mean_info = atoi(argv[i + 1]);
 				i++;
 			}
 			// Check for text parameter

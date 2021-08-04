@@ -58,7 +58,7 @@ There is no 1-click update yet so until then, the easiest is to backup your conf
 
 Here's a quick overview of the configuration files.
 
-the first one is called **settings.json**. It contains the camera parameters such as exposure, gain but also latitude, longitude, etc.
+the first one is called **settings.json**. It contains the camera parameters such as exposure, gain but also latitude, longitude, etc.  Many settings have both a daytime ("dayXXXX") and nighttime ("nightXXXX") version.
 
 ```shell
 nano settings.json
@@ -68,28 +68,34 @@ nano settings.json
 | ----------- | ----------- | ----------------|
 | width | 0 | 0 means max width. Look up your camera specifications to know what values are supported |
 | height | 0 |  0 means max height. Look up your camera specifications to know what values are supported |
-| exposure | 10000 | **Night** time exposure in milliseconds. During the day, auto-exposure is used. |
-| maxexposure | 20000 | This is the maximum exposure for **night** images when using auto-exposure. During the day, auto-exposure is always used. |
-| autoexposure | 1 | Set to 0 to disable auto-exposure at **night**. Auto-exposure delivers properly exposed images throughout the night even if the overall brightness of the sky changes (cloud cover, moon, aurora, etc). When set to 1, *maxexposure* value will be used as the delay between timelapse frames. |
-| gain | 50 | Gain for **Night** images. Varies from 0 to 600. During the day, gain is always set to 0 |
-| maxgain | 200 | Maximum gain for **night** images when using auto-gain.|
-| autogain | 0 | Set to 1 to allow auto-gain at **night**. This mode will adjust the gain of night images when the overall brightness of the sky changes (cloud cover, moon, aurora, etc). **Avoid using autoexposure and autogain together** as it produces unpredicatble results (dark frames, but not always).|
-| gamma | 50 | Varies between 0 and 100. This setting increases or decreases contrast between dark and bright areas. |
-| brightness | 50 | Varies between 0 and 100. This setting changes the amount of light in the image. |
+| dayautoexposure | 1 | Set to 0 to disable auto-exposure during **daytime**. Auto-exposure delivers properly exposed images throughout the day even if the overall brightness of the sky changes (cloud cover, sun, etc). Since daytime exposures are short, there is not daytime "maxexposure". This option is usually only disabled for testing. |
+| dayexposure | 1 | **Day** time manual exposure time in milliseconds.  Normally daytime auto-exposure will be used; if so, this value is used as a starting exposure. |
+| daybrightness | 50 | Varies between 0 and 600. This setting changes the amount of light in **daytime** images. |
+| daydelay | 5000 | Time in milliseconds to wait between 2 frames during the day. |
+| daybin | 1 | bin 2 collects the light from 2x2 photosites to form 1 pixel on the image. bin 3 uses 3x3 photosites, etc. Increasing the bin results in smaller images and reduces the need for long exposure. Look up your camera specifications to know what values are supported.  This variable is usually only changed for testing. |
+| nightautoexposure | 1 | Set to 0 to disable auto-exposure at **night**. Auto-exposure delivers properly exposed images throughout the night even if the overall brightness of the sky changes (cloud cover, moon, aurora, etc). When set to 1, *maxexposure* value will be used as the delay between timelapse frames. |
+| nightmaxexposure | 20000 | This is the maximum exposure for **night** images when using auto-exposure.
+| nightexposure | 10000 | **Night** time exposure in milliseconds. |
+| nightautogain | 0 | Set to 1 to allow auto-gain at **night**. This mode will adjust the gain of night images when the overall brightness of the sky changes (cloud cover, moon, aurora, etc). **Avoid using autoexposure and autogain together** as it produces unpredicatble results (dark frames, but not always).|
+| nightmaxgain | 200 | Maximum gain for **night** images when using auto-gain.|
+| nightgain | 50 | Gain for **Night** images. Varies from 0 to 600. During the day, gain is always set to 0. |
+| nightbin | 1 | Similar to "daybin" but for night. |
+| nightbrightness | 50 | Varies between 0 and 600. This setting changes the amount of light in **nighttime** images. |
+| gamma | 50 | Varies between 0 and 100. This setting increases or decreases contrast between dark and bright areas. This is not supported by all cameras. |
+| autowhitebalance | 0 | Sets auto white balance.  When used, "wbr" and "wbb" are used as starting points. |
 | wbr | 53 | Varies between 0 and 100. This is the intensity of the red component of the image. |
 | wbb | 90 | Varies between 0 and 100. This is the intensity of the blue component of the image. |
-| bin | 1 | bin 2 collects the light from 2x2 photosites to form 1 pixel on the image. bin 3 uses 3x3 photosites, etc. Increasing the bin results in smaller images and reduces the need for long exposure. Look up your camera specifications to know what values are supported |
 | delay | 10 | Time in milliseconds to wait between 2 frames at night. |
-| daytimeDelay | 5000 | Time in milliseconds to wait between 2 frames during the day. |
 | type | 1 | Image format. 0=RAW 8 bits, 1=RGB 24 bits, 2=RAW 16 bits |
 | quality | 95 | Compression of the image. 0(low quality) to 100(high quality) for JPG images, 0 to 9 for PNG |
+| autousb | 0 | Set to 1 to enable auto USB bandwidth. This option is primarily for testing. |
 | usb | 40 | This is the USB bandwidth. Varies from 40 to 100. |
 | filename | image.jpg | this is the name used across the app. Supported extensions are JPG and PNG. |
 | flip | 0 | 0=Original, 1=Horizontal, 2=Vertical, 3=Both |
 | text | text | Text overlay. **Note**: It is replaced by timestamp if time=1 |
 | extratext | | (ZWO ONLY) The FULL path to a text file which will be displayed under the Exposure/Gain. The file can contain multiple lines which will be displayed underneath each other |
 | extratextage | 600 | (ZWO ONLY) If using the extra text file then it must be updated within this number of seconds, if not it will not be displayed. Set to 0 to ignore this check and always didplay it |
-| textlineheight | 30 | (ZWO ONLY) The line height of the text displayed in the image, if you chnage the font size the adjust this value if required |
+| textlineheight | 30 | (ZWO ONLY) The line height of the text displayed in the image, if you chnage the font size then adjust this value if required |
 | textx | 15 | Horizontal text placement from the left |
 | texty | 35 | Vertical text placement from the top |
 | fontname | 0 | Font type for the overlay. 0=Simplex, 1=Plain, 2=Duplex, 3=Complex, 4=Triplex, 5=Complex small, 6=Script simplex, 7=Script complex |
@@ -98,12 +104,15 @@ nano settings.json
 | fontsize | 7 | Font size |
 | fonttype | 0 | Controls the smoothness of the fonts. 0=Antialiased, 1=8 Connected, 2=4 Connected. |
 | fontline | 1 | font line thickness |
+| outlinefont | 0 | Set to 1 to add an outline to the text overlay to improve contrast. |
 | latitude | 60.7N | Latitude of the camera. N for North and S for South
 | longitude | 135.05W | longitude of the camera. E for East and W for West |
 | angle | -6 | Altitude of the sun above or below the horizon at which capture should start/stop. Can be negative (sun below horizon) or positive (sun above horizon). 0=Sunset, -6=Civil twilight, -12=Nautical twilight, -18=Astronomical twilight.
-| time | 1 | Replaces the text overlay |
-| darkframe | 0 | Set to 1 to enable dark frame capture. In this mode, overlays are hidden and the image is saved as dark.png by default |
-| showDetails | 1 | Displays the exposure, gain and temperature in the overlay |
+| time | 1 | Replaces the text overlay with the time the picture was taken. |
+| timeformat | %Y%m%d %H:%M:%S | Determines the format of the displayed time.  See strftime(3).  Use _ (underscore) for spaces. |
+| darkframe | 0 | Set to 1 to enable dark frame capture. In this mode, overlays are hidden. |
+| showDetails | 1 | Displays the exposure, gain and temperature in the overlay (OBSOLETE) |
+| notificationimages | 1 | Set to 0 to disable notification images, e.g., "Camera off during day" if daytime images are not being taken. |
 
 The second file called **config.sh** lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.
 
@@ -142,7 +151,20 @@ nano config.sh
 | AUTO_STRETCH | false | If enabled the captured image will be stretched |
 | AUTO_STRETCH_AMOUNT | 10 | Indicates how much to increase the contrast. For example, 0 is none, 3 is typical and 20 is a lot |
 | AUTO_STRETCH_MID_POINT | 10% | Indicates where the maximum change 'slope' in contrast should fall in the resultant image (0 is white; 50% is middle-gray; 100% is black). |
-| CAMERA_SETTINGS | /home/pi/allsky/settings.json | Path to the camera settings file. **Note**: If using the GUI, this path will change to /etc/raspap/settings.json |
+| RESIZE_UPLOADS | false | Set to true to resize uploaded pictures |
+| RESIZE_UPLOADS_SIZE | 962x720 | Sets the width x height of resized images being uploaded |
+| THUMBNAIL_SIZE_X | 100 | Sets the width of thumbnails |
+| THUMBNAIL_SIZE_Y | 75 | Sets the height of thumbnails |
+| REMOVE_BAD_IMAGES | false | Scan for, and remove corrupt or too bright/too dark images before generating keograms and startrails |
+| REMOVE_BAD_IMAGES_THRESHOLD_LOW | 1 | Images whose mean brightness is below this percent will be removed |
+| REMOVE_BAD_IMAGES_THRESHOLD_HIGH | 90 | Images whose mean brightness is above this percent will be removed (max: 100) |
+| UHUBCTL_PATH | n/a | If you have the "uhubctl" command installed (it resets the USB bus), enter its path name |
+| UHUBCTL_PORT | n/a | Enter the USB port the camera is on.  Port 1 is USB 2.0 and port 2 is USB 3.0 |
+| IMG_DIR | allsky | Location of the image the website will use.  "allsky" is /var/www/html/allsky. Set to "current" to use /home/pi/allsky. |
+| IMG_PREFIX | liveview- | An optional prefix on the website image file name, before "image.jpg" (or whatever your image is called) |
+| TEMPERATURE | C | How to display the temperature in image overlays as well as on the "System" page of the web GUI. |
+| CAMERA_SETTINGS_DIR | /etc/raspap | Path to the camera settings file |
+| CAMERA_SETTINGS | /home/pi/allsky/settings.json | Name of the camera settings file. **Note**: If using the GUI, this path will change to /etc/raspap/settings.json |
 
 When using the cropping options the image is cropped from the center so you will need to experiment with the correct width and height values. Normally there will be no need to amend the offset values.
 
@@ -273,7 +295,7 @@ GUI method:
 * Open the Camera Settings tab and set Dark Frame to Yes.
 * Hit the Save button
 * Dark frames are created in a `darks` directory. A new dark is created every time the sensor temperature changes by 1 degree C.
-* On the Camera Settings tab and set Dark Frame to No.
+* On the Camera Settings tab set Dark Frame to No.
 * Hit the Save button
 * Remove the cover from the lens/dome
 * Open the scripts editor tab, load `config.sh` and set `DARK_FRAME_SUBTRACTION` to true
@@ -350,7 +372,7 @@ The startrails program is used by the `endOfNight.sh` script.
 The program takes 4 arguments:
 - Source directory
 - File extension
-- Brightness treshold to avoid over-exposure: 0 (black) to 1 (white).
+- Brightness threshold to avoid over-exposure: 0 (black) to 1 (white).
 - Output file
 
 Example when running the program manually:
@@ -393,7 +415,7 @@ This will compile the new code and create a new binary.
 
 If you have set the upload options to true in `config.sh`, that means you probably already have a website. If you want to display a live view of your sky on your website like in this [example](http://www.thomasjacquin.com/allsky), you can donwload the source files from this repository: [https://github.com/thomasjacquin/allsky-website.git](https://github.com/thomasjacquin/allsky-website.git).
 
-If you want to host the website on the raspberry Pi, run the following command. Note that this website is installed on the same webserver as the GUI. Currently, reinstalling the GUI will wipe you website.
+If you want to host the website on the raspberry Pi, run the following command. Note that this website is installed on the same webserver as the GUI. Currently, reinstalling the GUI will wipe your website.
 
 ```
 website/install.sh
@@ -436,6 +458,18 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* Configuration variables to crop black area around image
 	* Timelapse frame rate setting
 	* Changed font size default value
+* version **0.8**: Workaround for ZWO daytime autoexposure bug.
+	* Improved exposure transitions between day and night so there's not a huge change in brightness.
+	* Decrease in ZWO sensor temperature.
+	* Lots of new settings, including splitting some settings into day and night versions.
+	* Error checking and associated log messages added in many places.
+	* Ability to have "notification" images displayed, such as "Allsky is starting up" and "Taking dark frames".
+	* Ability to set size uploaded images are resized to.
+	* Ability to set thumbnail size.
+	* Ability to delete bad images (corrupt and too light/dark).
+	* Ability to set an image file name prefix.
+	* Ability to reset USB bus if ZWO camera isn't found (requires "uhubctl" command to be installed).
+	* Ability to specify format of time displayed on image and temperature displayed in Celcius, Fahrenheit, or both.
 
 ## Donation
 

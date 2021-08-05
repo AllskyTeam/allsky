@@ -14,8 +14,14 @@ else
 fi
 
 if [ $DARK_MODE = "1" ] ; then
-        mkdir -p darks
-        cp $FULL_FILENAME "darks/$TEMP.$EXTENSION"
+        # Determine sourcing script, to detect day or night mode
+        PARENT_SCRIPT=$(basename ${BASH_SOURCE[1]})
+
+        # Only archive night darks
+        if [ "$PARENT_SCRIPT" == "saveImageNight.sh" ] ; then
+                mkdir -p darks
+                cp $FULL_FILENAME "darks/$TEMP.$EXTENSION"
+        fi
         cp $FULL_FILENAME "liveview-$FILENAME.$EXTENSION"
         exit 0
 fi

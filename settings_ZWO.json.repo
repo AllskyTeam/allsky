@@ -27,7 +27,7 @@
    "filename":"image.jpg",
    "flip":"0",
    "showTime":"1",
-   "timeformat":"%Y%m%d %H:%M:%S"
+   "timeformat":"%Y%m%d %H:%M:%S",
    "showTemp":"1",
    "temptype":"C",
    "showExposure":"1",

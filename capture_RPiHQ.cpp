@@ -1,7 +1,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-//#include <sys/time.h>
+#include <sys/time.h>
 //#include <time.h>
 #include <unistd.h>
 #include <string.h>
@@ -30,6 +30,10 @@ using namespace std;
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
 
+#define US_IN_MS 1000                     // microseconds in a millisecond
+#define MS_IN_SEC 1000                    // milliseconds in a second
+#define US_IN_SEC (US_IN_MS * MS_IN_SEC)  // microseconds in a second
+
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
@@ -38,11 +42,52 @@ char const *fileName = "image.jpg";
 bool bMain = true;
 //ol bDisplay = false;
 std::string dayOrNight;
+int numExposures = 0;	// how many valid pictures have we taken so far?
 
-bool bSavingImg = false;
+// Some command-line and other option definitions needed outside of main():
+int tty				= 0;	// 1 if we're on a tty (i.e., called from the shell prompt).
+#define NOT_SET			  -1	// signifies something isn't set yet
+#define DEFAULT_NOTIFICATIONIMAGES 1
+int notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
+
+//bool bSavingImg = false;
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
+
+char debugText[500];		// buffer to hold debug messages displayed by displayDebugText()
+int debugLevel = 0;
+/**
+ * Helper function to display debug info
+**/
+void displayDebugText(const char * text, int requiredLevel) {
+    if (debugLevel >= requiredLevel) {
+        printf("%s", text);
+    }
+}
+
+// Return the numeric time.
+timeval getTimeval()
+{
+    timeval curTime;
+    gettimeofday(&curTime, NULL);
+    return(curTime);
+}
+
+// Format a numeric time as a string.
+char *formatTime(timeval t, char const *tf)
+{
+    static char TimeString[128];
+    strftime(TimeString, 80, tf, localtime(&t.tv_sec));
+    return(TimeString);
+}
+
+// Return the current time as a string.  Uses both functions above.
+char *getTime(char const *tf)
+{
+    return(formatTime(getTimeval(), tf));
+}
+
 std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
 	size_t start_pos = 0;
 	while((start_pos = str.find(from, start_pos)) != std::string::npos) {
@@ -83,9 +128,54 @@ void *Display(void *params)
 	return (void *)0;
 }
 */
+
+// Exit the program gracefully.
+void closeUp(int e)
+{
+	static int closingUp = 0;		// indicates if we're in the process of exiting.
+	// For whatever reason, we're sometimes called twice, but we should only execute once.
+	if (closingUp) return;
+
+	closingUp = 1;
+
+	// If we're not on a tty assume we were started by the service.
+	// Unfortunately we don't know if the service is stopping us, or restarting us.
+	// If it was restarting there'd be no reason to copy a notification image since it
+	// will soon be overwritten.  Since we don't know, always copy it.
+	if (notificationImages) {
+		system("scripts/copy_notification_image.sh NotRunning &");
+		// Sleep to give it a chance to print any messages so they (hopefully) get printed
+		// before the one below.  This is only so it looks nicer in the log file.
+		sleep(3);
+	}
+
+	printf("     ***** Stopping AllSky *****\n");
+	exit(e);
+}
+
 void IntHandle(int i)
 {
 	bMain = false;
+	closeUp(0);
+}
+
+// A user error was found.  Wait for the user to fix it.
+void waitToFix(char const *msg)
+{
+    printf("**********\n");
+    printf(msg);
+    printf("\n");
+    printf("*** After fixing, ");
+    if (tty)
+        printf("restart allsky.sh.\n");
+    else
+        printf("restart the allsky service.\n");
+    if (notificationImages)
+        system("scripts/copy_notification_image.sh Error &");
+    sleep(5);	// give time for image to be copied
+    printf("*** Sleeping until you fix the problem.\n");
+    printf("**********\n");
+    sleep(100000);	// basically, sleep forever until the user fixes this.
 }
 
 // Calculate if it is day or night
@@ -93,17 +183,54 @@ void calculateDayOrNight(const char *latitude, const char *longitude, const char
 {
 	char sunwaitCommand[128];
 
-	// Log data
-	sprintf(sunwaitCommand, "sunwait poll exit set angle %s %s %s", angle, latitude, longitude);
+	// Log data.  Don't need "exit" or "set".
+	sprintf(sunwaitCommand, "sunwait poll angle %s %s %s", angle, latitude, longitude);
 
 	// Inform user
-	printf("Determine if it is day or night using variables: desired sun declination angle: %s degrees, latitude: %s, longitude: %s\n", angle, latitude, longitude);
+	sprintf(debugText, "Determine if it is day or night using variables: desired sun declination angle: %s degrees, latitude: %s, longitude: %s\n", angle, latitude, longitude);
+	displayDebugText(debugText, 1);
 
 	// Determine if it is day or night
 	dayOrNight = exec(sunwaitCommand);
 
 	// RMu, I have no clue what this does...
 	dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
+
+	if (dayOrNight != "DAY" && dayOrNight != "NIGHT")
+	{
+		sprintf(debugText, "*** ERROR: dayOrNight isn't DAY or NIGHT, it's '%s'\n", dayOrNight.c_str());
+		waitToFix(debugText);
+		closeUp(2);
+	}
+}
+
+// Calculate how long until nighttime.
+int calculateTimeToNightTime(const char *latitude, const char *longitude, const char *angle)
+{
+    std::string t;
+    char sunwaitCommand[128];	// returns "hh:mm, hh:mm" (sunrise, sunset)
+    sprintf(sunwaitCommand, "sunwait list angle %s %s %s | awk '{print $2}'", angle, latitude, longitude);
+    t = exec(sunwaitCommand);
+    t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
+
+    int h=0, m=0, secs;
+    sscanf(t.c_str(), "%d:%d", &h, &m);
+    secs = (h*60*60) + (m*60);
+
+    char *now = getTime("%H:%M");
+    int hNow=0, mNow=0, secsNow;
+    sscanf(now, "%d:%d", &hNow, &mNow);
+    secsNow = (hNow*60*60) + (mNow*60);
+
+    // Handle the (probably rare) case where nighttime is tomorrow
+    if (secsNow > secs)
+    {
+        return(secs + (60*60*24) - secsNow);
+    }
+    else
+    {
+        return(secs - secsNow);
+    }
 }
 
 // write value to log file
@@ -120,7 +247,8 @@ void writeToLog(int val)
 // Build capture command to capture the image from the HQ camera
 void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asiAutoGain, int asiAutoAWB, double asiGain, int bin, double asiWBR, double asiWBB, int asiRotation, int asiFlip, int asiGamma, int asiBrightness, int quality, const char* fileName, int time, int showDetails, const char* ImgText, int fontsize, int fontcolor, int background, int darkframe)
 {
-	//printf ("capturing image in file %s\n", fileName);
+	sprintf(debugText, "capturing image in file %s\n", fileName);
+	displayDebugText(debugText, 3);
 
 	// Ensure no rraspistill process is still running
 	string kill = "ps -ef|grep raspistill| grep -v color|awk '{print $2}'|xargs kill -9 1> /dev/null 2>&1";
@@ -131,7 +259,8 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 	// Convert command to character variable
 	strcpy(kcmd, kill.c_str());
 
-	//printf("Command: %s\n", cmd);
+	sprintf(debugText, "Command: %s\n", kcmd);
+	displayDebugText(debugText, 3);
 
 	// Execute raspistill command
 	system(kcmd);
@@ -231,7 +360,7 @@ time ( NULL );
 	// Anolog Gain
 	string gain;
 
-	// Check if auto gain is sleected
+	// Check if auto gain is selected
 	if (asiAutoGain)
 	{
 		// Set analog gain to 1
@@ -453,11 +582,24 @@ time ( NULL );
 	// Convert command to character variable
 	strcpy(cmd, command.c_str());
 
-	printf("Capture command: %s\n", cmd);
+	sprintf(debugText, "Capture command: %s\n", cmd);
+	displayDebugText(debugText, 1);
 
 	// Execute raspistill command
-	system(cmd);
+	if (system(cmd) == 0) numExposures++;
 }
+
+// Simple function to make flags easier to read for humans.
+char const *yes = "1 (yes)";
+char const *no  = "0 (no)";
+char const *yesNo(int flag)
+{
+    if (flag)
+        return(yes);
+    else
+        return(no);
+}
+
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -465,6 +607,7 @@ time ( NULL );
 int main(int argc, char *argv[])
 {
 	signal(SIGINT, IntHandle);
+	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
 /*
 	int fontname[] = { CV_FONT_HERSHEY_SIMPLEX,        CV_FONT_HERSHEY_PLAIN,         CV_FONT_HERSHEY_DUPLEX,
 					   CV_FONT_HERSHEY_COMPLEX,        CV_FONT_HERSHEY_TRIPLEX,       CV_FONT_HERSHEY_COMPLEX_SMALL,
@@ -492,24 +635,37 @@ int main(int argc, char *argv[])
 */
 	int width             = 0;
 	int height            = 0;
-	int bin               = 2;
-	int asiExposure       = 60000000;
-	int asiAutoExposure   = 0;
+	int dayBin            = 1;
+	int nightBin          = 2;
+	int currentBin        = NOT_SET;
+	int asiDayExposure    = 32;	// milliseconds
+	int asiNightExposure  = 60000000;
+	int currentExposure   = NOT_SET;
+	int asiNightAutoExposure = 0;
+	int asiDayAutoExposure= 1;
+	int currentAutoExposure = 0;
 	int asiAutoFocus      = 0;
-	double asiGain        = 4;
-	int asiAutoGain       = 0;
+	double asiNightGain   = 4;
+	double asiDayGain     = 1;
+	double currentGain    = NOT_SET;
+	int asiNightAutoGain  = 0;
+	int asiDayAutoGain    = 0;
+	int currentAutoGain   = NOT_SET;
 	int asiAutoAWB        = 0;
-	int delay             = 10;   // Delay in milliseconds. Default is 10ms
-	int daytimeDelay      = 15000; // Delay in milliseconds. Default is 15 seconds
+	int nightDelay        = 10;   // Delay in milliseconds. Default is 10ms
+	int dayDelay          = 15000; // Delay in milliseconds. Default is 15 seconds
+	int currentDelay      = NOT_SET;
 	double asiWBR         = 2.5;
 	double asiWBB         = 2;
 	int asiGamma          = 50;
-	int asiBrightness     = 50;
+	int asiDayBrightness  = 50;
+	int asiNightBrightness= 50;
+	int currentBrightness = NOT_SET;
 	int asiFlip           = 0;
 	int asiRotation       = 0;
 	char const *latitude  = "52.57N"; //GPS Coordinates of Limmen, Netherlands where this code was altered
 	char const *longitude = "4.70E";
-	char const *angle  	  = "0"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
+	char const *angle     = "0"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
 	//int preview           = 0;
 	int time              = 0;
 	int showDetails       = 0;
@@ -525,13 +681,14 @@ int main(int argc, char *argv[])
 
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
+	setlinebuf(stdout);   // Line buffer output so entries appear in the log immediately.
 	printf("\n");
 	printf("%s ******************************************\n", KGRN);
-	printf("%s *** Allsky Camera Software v0.6 | 2019 ***\n", KGRN);
+	printf("%s *** Allsky Camera Software v0.8 | 2021 ***\n", KGRN);
 	printf("%s ******************************************\n\n", KGRN);
 	printf("\%sCapture images of the sky with a Raspberry Pi and an ZWO ASI or RPi HQ camera\n", KGRN);
 	printf("\n");
-	printf("%sAdd -h or -help for available options \n", KYEL);
+	printf("%sAdd -h or -help for available options\n", KYEL);
 	printf("\n");
 	printf("\%sAuthor: ", KNRM);
 	printf("Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
@@ -543,298 +700,306 @@ int main(int argc, char *argv[])
 	printf("-Michael J. Kidd - <linuxkidd@gmail.com>\n");
 	printf("-Rob Musquetier\n\n");
 
+	// The newer "allsky.sh" puts quotes around arguments so we can have spaces in them.
+	// If you are running the old allsky.sh, set this to false:
+	bool argumentsQuoted = true;
+
 	if (argc > 0)
 	{
-		// printf("Found %d parameters...\n", argc - 1);
+		sprintf(debugText, "Found %d parameters...\n", argc - 1);
+		displayDebugText(debugText, 3);
+
+		// -h[elp] doesn't take an argument, but the "for" loop assumes every option does,
+       		// so check separately, assuming the option is the first one.
+		// If it's not the first option, we'll find it in the "for" loop.
+		if (strcmp(argv[0], "-h") == 0 || strcmp(argv[0], "-help") == 0)
+		{
+			help = 1;
+			i = 1;
+		}
+		else
+		{
+			i = 0;
+		}
 
 		for (i = 0; i < argc - 1; i++)
 		{
-			// printf("Processing argument: %s\n\n", argv[i]);
+			sprintf(debugText, "Processing argument: %s\n\n", argv[i]);
+			displayDebugText(debugText, 3);
 
+			// Check again in case "-h" isn't the first option.
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0)
 			{
-				help = atoi(argv[i + 1]);
-				i++;
+				help = 1;
 			}
 			else if (strcmp(argv[i], "-width") == 0)
 			{
-				width = atoi(argv[i + 1]);
-				i++;
+				width = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-height") == 0)
 			{
-				height = atoi(argv[i + 1]);
-				i++;
+				height = atoi(argv[++i]);
 			}
 /*
 			else if (strcmp(argv[i], "-type") == 0)
 			{
-				Image_type = atoi(argv[i + 1]);
-				i++;
+				Image_type = atoi(argv[++i]);
 			}
 */
 			else if (strcmp(argv[i], "-quality") == 0)
 			{
-				quality = atoi(argv[i + 1]);
-				i++;
+				quality = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-exposure") == 0)
+			// check for old names as well - the "||" part is the old name
+			else if (strcmp(argv[i], "-nightexposure") == 0 || strcmp(argv[i], "-exposure") == 0)
 			{
-				asiExposure = atoi(argv[i + 1]) * 1000;
-				i++;
+				asiNightExposure = atoi(argv[++i]) * US_IN_MS;
 			}
 
-			else if (strcmp(argv[i], "-autoexposure") == 0)
+			else if (strcmp(argv[i], "-nightautoexposure") == 0 || strcmp(argv[i], "-autoexposure") == 0)
 			{
-				asiAutoExposure = atoi(argv[i + 1]);
-				i++;
+				asiNightAutoExposure = atoi(argv[++i]);
 			}
 
 			else if (strcmp(argv[i], "-autofocus") == 0)
 			{
-				asiAutoFocus = atoi(argv[i + 1]);
-				i++;
+				asiAutoFocus = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-gain") == 0)
+			// xxxx Day gain isn't settable by the user.  Should it be?
+			else if (strcmp(argv[i], "-nightgain") == 0 || strcmp(argv[i], "-gain") == 0)
 			{
-				asiGain = atof(argv[i + 1]);
-				i++;
+				asiNightGain = atof(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-autogain") == 0)
+			else if (strcmp(argv[i], "-nightautogain") == 0 || strcmp(argv[i], "-autogain") == 0)
 			{
-				asiAutoGain = atoi(argv[i + 1]);
-				i++;
+				asiNightAutoGain = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-gamma") == 0)
 			{
-				asiGamma = atoi(argv[i + 1]);
-				i++;
+				asiGamma = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-brightness") == 0)
+			else if (strcmp(argv[i], "-brightness") == 0)// old "-brightness" applied to day and night
 			{
-				asiBrightness = atoi(argv[i + 1]);
-				i++;
+				asiDayBrightness = atoi(argv[++i]);
+				asiNightBrightness = asiDayBrightness;
 			}
-			else if (strcmp(argv[i], "-bin") == 0)
+			else if (strcmp(argv[i], "-daybrightness") == 0)
 			{
-				bin = atoi(argv[i + 1]);
-				i++;
+				asiDayBrightness = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-delay") == 0)
+			else if (strcmp(argv[i], "-nightbrightness") == 0)
 			{
-				delay = atoi(argv[i + 1]);
-				i++;
+				asiNightBrightness = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-daytimeDelay") == 0)
+ 			else if (strcmp(argv[i], "-daybin") == 0)
+            		{
+                		dayBin = atoi(argv[++i]);
+            		}
+			else if (strcmp(argv[i], "-nightbin") == 0 || strcmp(argv[i], "-bin") == 0)
 			{
-				daytimeDelay = atoi(argv[i + 1]);
-				i++;
+				nightBin = atoi(argv[++i]);
 			}
-
+			else if (strcmp(argv[i], "-nightdelay") == 0 || strcmp(argv[i], "-delay") == 0)
+			{
+				nightDelay = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daydelay") == 0 || strcmp(argv[i], "-daytimeDelay") == 0)
+			{
+				dayDelay = atoi(argv[++i]);
+			}
 			else if (strcmp(argv[i], "-awb") == 0)
 			{
-				asiAutoAWB = atoi(argv[i + 1]);
-				i++;
+				asiAutoAWB = atoi(argv[++i]);
 			}
-
 			else if (strcmp(argv[i], "-wbr") == 0)
 			{
-				asiWBR = atof(argv[i + 1]);
-				i++;
+				asiWBR = atof(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-wbb") == 0)
 			{
-				asiWBB = atof(argv[i + 1]);
-				i++;
+				asiWBB = atof(argv[++i]);
 			}
 
 			// Check for text parameter
 			else if (strcmp(argv[i], "-text") == 0)
 			{
-				// Get first param
-				param = argv[i + 1];
-
-				// Space character
-				const char *space = " ";
-
-				// Temporary text buffer
-				char buffer[1024]; // <- danger, only storage for 1024 characters.
-
-				// First word flag
-				int j = 0;
-
-				// Loop while next parameter doesn't start with a - character
-				while (strncmp(param, "-", 1) != 0)
+				if (argumentsQuoted)
 				{
-					// Copy Text into buffer
-					strncpy(buffer, ImgText, sizeof(buffer));
-
-					// Add a space after each word (skip for first word)
-					if (j)
-						strncat(buffer, space, sizeof(buffer));
-
-					// Add parameter
-					strncat(buffer, param, sizeof(buffer));
-
-					// Copy buffer into ImgText variable
-					ImgText = buffer;
-
-					// Increase parameter counter
-					i++;
-
-					// Flag first word is entered
-					j = 1;
-
-					// Get next parameter
+					ImgText = argv[++i];
+				}
+				else
+				{
+					// Get first param
 					param = argv[i + 1];
+
+					// Space character
+					const char *space = " ";
+
+					// Temporary text buffer
+					char buffer[1024]; // <- danger, only storage for 1024 characters.
+
+					// First word flag
+					int j = 0;
+
+					// Loop while next parameter doesn't start with a - character
+					while (strncmp(param, "-", 1) != 0)
+					{
+						// Copy Text into buffer
+						strncpy(buffer, ImgText, sizeof(buffer));
+
+						// Add a space after each word (skip for first word)
+						if (j)
+							strncat(buffer, space, sizeof(buffer));
+
+						// Add parameter
+						strncat(buffer, param, sizeof(buffer));
+
+						// Copy buffer into ImgText variable
+						ImgText = buffer;
+
+						// Flag first word is entered
+						j = 1;
+
+						// Get next parameter
+						param = argv[++i];
+					}
 				}
 			}
 /*
 			else if (strcmp(argv[i], "-textx") == 0)
 			{
-				iTextX = atoi(argv[i + 1]);
-				i++;
+				iTextX = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-texty") == 0)
 			{
-				iTextY = atoi(argv[i + 1]);
-				i++;
+				iTextY = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-fontname") == 0)
 			{
-				fontnumber = atoi(argv[i + 1]);
-				i++;
+				fontnumber = atoi(argv[++i]);
 			}
 */
 			else if (strcmp(argv[i], "-background") == 0)
 			{
-				background = atoi(argv[i + 1]);
-				i++;
+				background = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-fontcolor") == 0)
 			{
-				fontcolor = atoi(argv[i + 1]);
-				i++;
+				fontcolor = atoi(argv[++i]);
 			}
 /*
 			else if (strcmp(argv[i], "-smallfontcolor") == 0)
 			{
-				smallFontcolor[0] = atoi(argv[i + 1]);
-				i++;
-				smallFontcolor[1] = atoi(argv[i + 1]);
-				i++;
-				smallFontcolor[2] = atoi(argv[i + 1]);
-				i++;
+				if (argumentsQuoted)
+				{
+					sscanf(argv[++i], "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]);
+				}
+				else
+				{
+					smallFontcolor[0] = atoi(argv[++i]);
+					smallFontcolor[1] = atoi(argv[++i]);
+					smallFontcolor[2] = atoi(argv[++i]);
+				}
 			}
 			else if (strcmp(argv[i], "-fonttype") == 0)
 			{
-				linenumber = atoi(argv[i + 1]);
-				i++;
+				linenumber = atoi(argv[++i]);
 			}
 */
 			else if (strcmp(argv[i], "-fontsize") == 0)
 			{
-				fontsize = atof(argv[i + 1]);
-				i++;
+				fontsize = atof(argv[++i]);
 			}
 /*
 			else if (strcmp(argv[i], "-fontline") == 0)
 			{
-				linewidth = atoi(argv[i + 1]);
-				i++;
+				linewidth = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-outlinefont") == 0)
 			{
-				outlinefont = atoi(argv[i + 1]);
+				outlinefont = atoi(argv[++i]);
 				if (outlinefont != 0)
 					outlinefont = 1;
-				i++;
 			}
 */
 			else if (strcmp(argv[i], "-rotation") == 0)
 			{
-				asiRotation = atoi(argv[i + 1]);
-				i++;
+				asiRotation = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-flip") == 0)
 			{
-				asiFlip = atoi(argv[i + 1]);
-				i++;
+				asiFlip = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-filename") == 0)
 			{
-				fileName = (argv[i + 1]);
-				i++;
+				fileName = (argv[++i]);
 			}
 			else if (strcmp(argv[i], "-latitude") == 0)
 			{
-				latitude = argv[i + 1];
-				i++;
+				latitude = argv[++i];
 			}
 			else if (strcmp(argv[i], "-longitude") == 0)
 			{
-				longitude = argv[i + 1];
-				i++;
+				longitude = argv[++i];
 			}
 			else if (strcmp(argv[i], "-angle") == 0)
 			{
-				angle = argv[i + 1];
-				i++;
+				angle = argv[++i];
 			}
 /*
 			else if (strcmp(argv[i], "-preview") == 0)
 			{
-				preview = atoi(argv[i + 1]);
-				i++;
+				preview = atoi(argv[++i]);
 			}
 */
-			else if (strcmp(argv[i], "-time") == 0)
+			else if (strcmp(argv[i], "-showTime") == 0 || strcmp(argv[i], "-time") == 0)
 			{
-				time = atoi(argv[i + 1]);
-				i++;
+				time = atoi(argv[++i]);
 			}
 
 			else if (strcmp(argv[i], "-darkframe") == 0)
 			{
-				darkframe = atoi(argv[i + 1]);
-				i++;
+				darkframe = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-showDetails") == 0)
 			{
-				showDetails = atoi(argv[i + 1]);
-				i++;
+				showDetails = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-daytime") == 0)
 			{
-				daytimeCapture = atoi(argv[i + 1]);
-				i++;
+				daytimeCapture = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-notificationimages") == 0)
+			{
+				notificationImages = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-tty") == 0)
+			{
+				tty = atoi(argv[++i]);
 			}
 		}
 	}
 
-	// Save the status of Auto Gain for night exposure
-	int oldAutoExposure = asiAutoExposure;
-	int oldGain = asiGain;
-
 	if (help == 1)
 	{
-		printf("%sAvailable Arguments: \n", KYEL);
-		printf(" -width                             - Default = Camera Max Width \n");
-		printf(" -height                            - Default = Camera Max Height \n");
-		printf(" -exposure                          - Default = 5000000 - Time in µs (equals to 5 sec) \n");
-		printf(" -autoexposure                      - Default = 0 - Set to 1 to enable auto Exposure \n");
-		printf(" -autofocus                         - Default = 0 - Set to 1 to enable auto Focus \n");
-		printf(" -gain                              - Default = 1 (1 - 16) \n");
-		printf(" -autogain                          - Default = 0 - Set to 1 to enable auto Gain \n");
+		printf("%sAvailable Arguments:\n", KYEL);
+		printf(" -width                             - Default = Camera Max Width\n");
+		printf(" -height                            - Default = Camera Max Height\n");
+		printf(" -nightexposure                     - Default = 5000000 - Time in Âµs (equals to 5 sec)\n");
+		printf(" -nightautoexposure                 - Default = 0 - Set to 1 to enable auto Exposure\n");
+		printf(" -autofocus                         - Default = 0 - Set to 1 to enable auto Focus\n");
+		printf(" -nightgain                         - Default = 1 (1 - 16)\n");
+		printf(" -nightautogain                     - Default = 0 - Set to 1 to enable auto Gain at night\n");
 		printf(" -gamma                             - Default = 50 (-100 till 100)\n");
-		printf(" -brightness                        - Default = 50 (0 till 100) \n");
+		printf(" -brightness                        - Default = 50 (0 till 100)\n");
 		printf(" -awb                               - Default = 0 - Auto White Balance (0 = off)\n");
 		printf(" -wbr                               - Default = 2 - White Balance Red  (0 = off)\n");
 		printf(" -wbb                               - Default = 2 - White Balance Blue (0 = off)\n");
-		printf(" -bin                               - Default = 1 - binning OFF (1x1), 2 = 2x2, 3 = 3x3 binning\n");
-		printf(" -delay                             - Default = 10 - Delay between images in milliseconds - 1000 = 1 sec.\n");
-		printf(" -daytimeDelay                      - Default = 5000 - Delay between images in milliseconds - 5000 = 5 sec.\n");
-		printf(" -type = Image Type                 - Default = 0 - 0 = RAW8,  1 = RGB24,  2 = RAW16 \n");
+		printf(" -daybin                            - Default = 1 - binning OFF (1x1), 2 = 2x2, 3 = 3x3 binning\n");
+		printf(" -nightbin                          - Default = 1 - same as -daybin but for nighttime\n");
+		printf(" -nightdelay                        - Default = 10 - Delay between images in milliseconds - %d = 1 sec.\n", MS_IN_SEC);
+		printf(" -daydelay                          - Default = 5000 - Delay between images in milliseconds - 5000 = 5 sec.\n");
+		printf(" -type = Image Type                 - Default = 0 - 0 = RAW8,  1 = RGB24,  2 = RAW16\n");
 		printf(" -quality                           - Default = 70%%, 0%% (poor) 100%% (perfect)\n");
 		printf(" -filename                          - Default = image.jpg\n");
 		printf(" -rotation                          - Default = 0 degrees - Options 0, 90, 180 or 270\n");
@@ -842,23 +1007,15 @@ int main(int argc, char *argv[])
 		printf("\n");
 		printf(" -text                              - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c "
 			   "\"Text Overlay\"\n");
-/*
-		printf(
-			" -textx                             - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
-		printf(" -texty = Text Y                    - Default = 25   - Text Placement Vertical from TOP in Pixels\n");
-		printf(" -fontname = Font Name              - Default = 0    - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, "
-			   "7 = script\n");
-*/
+//		printf(" -textx                             - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
+//		printf(" -texty = Text Y                    - Default = 25   - Text Placement Vertical from TOP in Pixels\n");
+//		printf(" -fontname = Font Name              - Default = 0    - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n");
 		printf(" -fontcolor = Font Color            - Default = 255  - Text gray scale color  (0 - 255)\n");
 		printf(" -background= Font Color            - Default = 0  - Backgroud gray scale color (0 - 255)\n");
-/*
-		printf(" -smallfontcolor = Small Font Color - Default = 0 0 255  - Text red (BGR)\n");
-		printf(" -fonttype = Font Type              - Default = 0    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
-*/
+//		printf(" -smallfontcolor = Small Font Color - Default = 0 0 255  - Text red (BGR)\n");
+//		printf(" -fonttype = Font Type              - Default = 0    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
 		printf(" -fontsize                          - Default = 32  - Text Font Size (range 6 - 160, 32 default)\n");
-/*
-		printf(" -fontline                          - Default = 1    - Text Font Line Thickness\n");
-*/
+//		printf(" -fontline                          - Default = 1    - Text Font Line Thickness\n");
 		printf("\n");
 		printf("\n");
 		printf(" -latitude                          - Default = 60.7N (Whitehorse)   - Latitude of the camera.\n");
@@ -866,13 +1023,15 @@ int main(int argc, char *argv[])
 		printf(" -angle                             - Default = -6 - Angle of the sun below the horizon. -6=civil "
 			   "twilight, -12=nautical twilight, -18=astronomical twilight\n");
 		printf("\n");
-		// printf(" -preview                           - set to 1 to preview the captured images. Only works with a Desktop Environment \n");
+		// printf(" -preview                           - set to 1 to preview the captured images. Only works with a Desktop Environment\n");
 		printf(" -time                              - Adds the time to the image.\n");
-		printf(" -darkframe                         - Set to 1 to grab dark frame and cover your camera \n");
-		printf(" -showDetails                       - Set to 1 to display the metadata on the image \n");
+		printf(" -darkframe                         - Set to 1 to grab dark frame and cover your camera\n");
+		printf(" -showDetails                       - Set to 1 to display the metadata on the image\n");
+		printf(" -notificationimages                - Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
+		printf(" -debuglevel                        - Default = 0. Set to 1,2 or 3 for more debugging information.\n");
 
 		printf("%sUsage:\n", KRED);
-		printf(" ./capture -width 640 -height 480 -exposure 5000000 -gamma 50 -bin 1 -filename Lake-Laberge.JPG\n\n");
+		printf(" ./capture_RPiHQ -width 640 -height 480 -nightexposure 5000000 -gamma 50 -nightbin 1 -filename Lake-Laberge.JPG\n\n");
 	}
 
 	printf("%s", KNRM);
@@ -882,64 +1041,59 @@ int main(int argc, char *argv[])
 	double pixelSize = 1.55;
 
 	printf("- Resolution: %dx%d\n", iMaxWidth, iMaxHeight);
-	printf("- Pixel Size: %1.2fμm\n", pixelSize);
+	printf("- Pixel Size: %1.2fÎ¼m\n", pixelSize);
 	printf("- Supported Bin: 1x, 2x and 3x\n");
 
-	// Adjusting variables for chosen binning
-	width  = iMaxWidth / bin;
-	height = iMaxHeight / bin;
-
-	//iTextX    = iTextX / bin;
-	//iTextY    = iTextY / bin;
-	//fontsize  = fontsize / bin;
-	//linewidth = linewidth / bin;
+	if (darkframe)
+	{
+		// To avoid overwriting the optional notification inage with the dark image,
+		// during dark frames we use a different file name.
+		fileName = "dark.jpg";
+	}
 
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 
 	printf("%s", KGRN);
-	printf("\nCapture Settings: \n");
-	printf(" Resolution: %dx%d \n", width, height);
-	printf(" Quality: %d \n", quality);
-	printf(" Exposure: %1.0fms\n", round(asiExposure / 1000));
-	printf(" Auto Exposure: %d\n", asiAutoExposure);
-	printf(" Auto Focus: %d\n", asiAutoFocus);
-	printf(" Gain: %1.2f\n", asiGain);
-	printf(" Auto Gain: %d\n", asiAutoGain);
-	printf(" Brightness: %d\n", asiBrightness);
+	printf("\nCapture Settings:\n");
+	printf(" Resolution (before any binning): %dx%d\n", width, height);
+	printf(" Quality: %d\n", quality);
+	printf(" Exposure (night): %1.0fms\n", round(asiNightExposure / US_IN_MS));
+	printf(" Auto Exposure (night): %s\n", yesNo(asiNightAutoExposure));
+	printf(" Auto Focus: %s\n", yesNo(asiAutoFocus));
+	printf(" Gain (night): %1.2f\n", asiNightGain);
+	printf(" Auto Gain (night): %s\n", yesNo(asiNightAutoGain));
+	printf(" Brightness (day): %d\n", asiDayBrightness);
+	printf(" Brightness (night): %d\n", asiNightBrightness);
 	printf(" Gamma: %d\n", asiGamma);
-	printf(" Auto White Balance: %d\n", asiAutoAWB);
+	printf(" Auto White Balance: %s\n", yesNo(asiAutoAWB));
 	printf(" WB Red: %1.2f\n", asiWBR);
 	printf(" WB Blue: %1.2f\n", asiWBB);
-	printf(" Binning: %d\n", bin);
-	printf(" Delay: %dms\n", delay);
-	printf(" Daytime Delay: %dms\n", daytimeDelay);
+	printf(" Binning (day): %d\n", dayBin);
+	printf(" Binning (night): %d\n", nightBin);
+	printf(" Delay (day): %dms\n", dayDelay);
+	printf(" Delay (night): %dms\n", nightDelay);
 	printf(" Text Overlay: %s\n", ImgText);
-/*
-		printf(" Text Position: %dpx left, %dpx top\n", iTextX, iTextY);
-		printf(" Font Name:  %d\n", fontname[fontnumber]);
-*/
-		printf(" Font Color: %d\n", fontcolor);
-		printf(" Font Background Color: %d\n", background);
-/*
-		printf(" Small Font Color: %d , %d, %d\n", smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
-		printf(" Font Line Type: %d\n", linetype[linenumber]);
-*/
-		printf(" Font Size: %1.1f\n", fontsize);
-/*
-		printf(" Font Line: %d\n", linewidth);
-		printf(" Outline Font : %d\n", outlinefont);
-*/
+//	printf(" Text Position: %dpx left, %dpx top\n", iTextX, iTextY);
+//	printf(" Font Name:  %d\n", fontname[fontnumber]);
+	printf(" Font Color: %d\n", fontcolor);
+	printf(" Font Background Color: %d\n", background);
+//	printf(" Small Font Color: %d , %d, %d\n", smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
+//	printf(" Font Line Type: %d\n", linetype[linenumber]);
+	printf(" Font Size: %1.1f\n", fontsize);
+//	printf(" Font Line: %d\n", linewidth);
+//	printf(" Outline Font : %s\n", yesNo(outlinefont));
 	printf(" Rotation: %d\n", asiRotation);
 	printf(" Flip Image: %d\n", asiFlip);
 	printf(" Filename: %s\n", fileName);
 	printf(" Latitude: %s\n", latitude);
 	printf(" Longitude: %s\n", longitude);
 	printf(" Sun Elevation: %s\n", angle);
-	// printf(" Preview: %d\n", preview);
-	printf(" Time: %d\n", time);
-	printf(" Show Details: %d\n", showDetails);
-	printf(" Darkframe: %d\n", darkframe);
+	// printf(" Preview: %s\n", yesNo(preview));
+	printf(" Time: %s\n", yesNo(time));
+	printf(" Show Details: %s\n", yesNo(showDetails));
+	printf(" Darkframe: %s\n", yesNo(darkframe));
+	printf(" Notification Images: %s\n", yesNo(notificationImages));
 
 	// Show selected camera type
 	printf(" Camera: Raspberry Pi HQ camera\n");
@@ -947,17 +1101,12 @@ int main(int argc, char *argv[])
 	printf("%s", KNRM);
 
 	// Initialization
-	int currentExposure = asiExposure;
-	int exp_ms          = 0;
-	int useDelay        = 0;
-	bool needCapture	= true;
 	std::string lastDayOrNight;
+	int displayedNoDaytimeMsg = 0; // Have we displayed "not taking picture during day" message, if applicable?
 
 	while (bMain)
 	{
 		printf("\n");
-
-		needCapture = true;
 
 		// Find out if it is currently DAY or NIGHT
 		calculateDayOrNight(latitude, longitude, angle);
@@ -968,30 +1117,39 @@ int main(int argc, char *argv[])
 		lastDayOrNight = dayOrNight;
 
 // Next lines are present for testing purposes
-// printf("Daytimecapture: %d\n", daytimeCapture);
-
-		if (dayOrNight=="DAY")
-			printf("Check for day or night: DAY\n");
-		else if (dayOrNight=="NIGHT")
-			printf("Check for day or night: NIGHT\n");
-		else
-			printf("Nor day or night...\n");
+sprintf(debugText, "Daytimecapture: %d\n", daytimeCapture);
+displayDebugText(debugText, 3);
 
 		printf("\n");
 
-		if (dayOrNight == "DAY")
+		if (darkframe)
 		{
-			// Switch auto gain on
-			asiAutoExposure = 1;
-			asiGain = 1;
+			// We're doing dark frames so turn off autoexposure and autogain, and use
+			// nightime gain, delay, exposure, and brightness to mimic a nightime shot.
+			currentAutoExposure = 0;
+			currentAutoGain = 0;
+			currentGain = asiNightGain;
+			currentDelay = nightDelay;
+			currentExposure = asiNightExposure;
+			currentBrightness = asiNightBrightness;
+			currentBin = nightBin;
 
-			// Execute end of night script
-			if (endOfNight == true)
+ 			displayDebugText("Taking dark frames...\n", 0);
+			if (notificationImages) {
+				system("scripts/copy_notification_image.sh DarkFrames &");
+			}
+		}
+
+		else if (dayOrNight == "DAY")
+		{
+			if (endOfNight == true)		// Execute end of night script
 			{
 				system("scripts/endOfNight.sh &");
 
 				// Reset end of night indicator
 				endOfNight = false;
+
+				displayedNoDaytimeMsg = 0;
 			}
 
 // Next line is present for testing purposes
@@ -1000,154 +1158,176 @@ int main(int argc, char *argv[])
 			// Check if images should not be captured during day-time
 			if (daytimeCapture != 1)
 			{
-				// Indicate no images need capturing
-				needCapture = false;
+				// Only display messages once a day.
+				if (displayedNoDaytimeMsg == 0) {
+					if (notificationImages) {
+						system("scripts/copy_notification_image.sh CameraOffDuringDay &");
+					}
+					sprintf(debugText, "It's daytime... we're not saving images.\n%s\n",
+						tty ? "Press Ctrl+C to stop" : "Stop the allsky service to end this process.");
+					displayDebugText(debugText, 0);
+					displayedNoDaytimeMsg = 1;
 
-				// Inform user
-				printf("It's daytime... we're not saving images\n");
+					// sleep until almost nighttime, then wake up and sleep a short time
+					int secsTillNight = calculateTimeToNightTime(latitude, longitude, angle);
+					sleep(secsTillNight - 10);
+				}
+				else
+				{
+					// Shouldn't need to sleep more than a few times before nighttime.
+					sleep(5);
+				}
 
-				// Sleep for a while
-				usleep(daytimeDelay * 1000);
+				// No need to do any of the code below so go back to the main loop.
+				continue;
 			}
 
 			// Images should be captured during day-time
 			else
 			{
 				// Inform user
-				printf("Starting daytime capture\n");
+				char const *x;
+				if (numExposures > 0)	// so it's easier to see in log file
+					x = "\n==========\n";
+				else
+					x = "";
+				sprintf(debugText, "%s=== Starting daytime capture ===\n%s", x, x);
+				displayDebugText(debugText, 0);
 
-				// Set exposure to 32 ms
-				exp_ms         = 32;
+				// set daytime settings
+				currentAutoExposure = asiDayAutoExposure;
+				currentAutoGain = asiDayAutoGain;
+				currentGain = asiDayGain;
+				currentDelay = dayDelay;
+				currentExposure = asiDayExposure;
+				currentBrightness = asiDayBrightness;
+				currentBin = dayBin;
 
 				// Inform user
-				printf("Saving %d ms exposed images with %d seconds delays in between...\n\n", exp_ms, daytimeDelay / 1000);
-
-				// Set delay time
-				useDelay       = daytimeDelay;
-
-				// Set exposure time
-				currentExposure = exp_ms * 1000;
+				sprintf(debugText, "Saving %d ms exposed images with %d seconds delays in between...\n\n", currentExposure * US_IN_MS, currentDelay / MS_IN_SEC);
+				displayDebugText(debugText, 0);
 			}
 		}
 
-		// Check for night time
-		else if (dayOrNight == "NIGHT")
+		else	// NIGHT
 		{
-			// Retrieve auto gain setting
-			asiAutoExposure = oldAutoExposure;
-			asiGain = oldGain;
+			char const *x;
+			if (numExposures > 0)	// so it's easier to see in log file
+				x = "\n==========\n";
+			else
+				x = "";
+			sprintf(debugText, "%s=== Starting nighttime capture ===\n%s", x, x);
+			displayDebugText(debugText, 0);
+
+			// Set nighttime settings
+			currentAutoExposure = asiNightAutoExposure;
+			currentAutoGain = asiNightAutoGain;
+			currentGain = asiNightGain;
+			currentDelay = nightDelay;
+			currentExposure = asiNightExposure;
+			currentBrightness = asiNightBrightness;
+			currentBin = nightBin;
 
 			// Inform user
-			printf("Saving %d seconds exposure images with %d ms delays in between...\n\n", (int)round(currentExposure / 1000000), delay);
-
-			// Set exposure value for night time capture
-			useDelay = delay;
-
-			currentExposure = asiExposure;
+			sprintf(debugText, "Saving %d seconds exposure images with %d ms delays in between...\n\n", (int)round(currentExposure / US_IN_SEC), nightDelay);
+			displayDebugText(debugText, 0);
 		}
 
+		// Adjusting variables for chosen binning
+		width  = iMaxWidth / currentBin;
+		height = iMaxHeight / currentBin;
+//		iTextX    = iTextX / currentBin;
+//		iTextY    = iTextY / currentBin;
+//		fontsize  = fontsize / currentBin;
+//		linewidth = linewidth / currentBin;
+
 		// Inform user
-		printf("Press Ctrl+Z to stop capturing images...\n\n");
+		if (tty)
+			printf("Press Ctrl+Z to stop\n\n");	// xxx ECC: Ctrl-Z stops a process, it doesn't kill it
+		else
+			printf("Stop the allsky service to end this process.\n\n");
 
-		// check if images should be captured
-		if (needCapture)
+		// Wait for switch day time -> night time or night time -> day time
+		while (bMain && lastDayOrNight == dayOrNight)
 		{
-			// Wait for switch day time -> night time or night time -> day time
-			while (bMain && lastDayOrNight == dayOrNight)
+			// Inform user
+			sprintf(debugText, "Capturing & saving image...\n");
+			displayDebugText(debugText, 0);
+
+			// Capture and save image
+			RPiHQcapture(asiAutoFocus, currentAutoExposure, currentExposure, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, asiGamma, currentBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe);
+
+			// Check for night time
+			if (dayOrNight == "NIGHT")
 			{
-				// Inform user
-				printf("Capturing & saving image...\n");
+				// Preserve image during night time
+				system("scripts/saveImageNight.sh &");
+			}
+			else
+			{
+				// Upload and resize image when configured
+				system("scripts/saveImageDay.sh &");
+			}
 
-				// Capture and save image
-				RPiHQcapture(asiAutoFocus, asiAutoExposure, currentExposure, asiAutoGain, asiAutoAWB, asiGain, bin, asiWBR, asiWBB, asiRotation, asiFlip, asiGamma, asiBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe);
+			// Inform user
+			sprintf(debugText, "Capturing & saving %s done, now wait %d seconds...\n", darkframe ? "dark frame" : "image", currentDelay / MS_IN_SEC);
+			displayDebugText(debugText, 0);
 
-				// Check if no processing is going on
-				if (!bSavingImg)
-				{
-					// Flag processing is on-going
-					bSavingImg = true;
+			// Sleep for a moment
+			usleep(currentDelay * US_IN_SEC);
 
-					// Check for night time
-					if (dayOrNight == "NIGHT")
-					{
-						// Preserve image during night time
-						system("scripts/saveImageNight.sh &");
-					}
-					else
-					{
-						// Upload and resize image when configured
-						system("scripts/saveImageDay.sh &");
-					}
-
-					// Flag processing is over
-					bSavingImg = false;
-				}
-
-				// Inform user
-				printf("Capturing & saving image done, now wait %d seconds...\n", useDelay / 1000);
-
-				// Sleep for a moment
-				usleep(useDelay * 1000);
-
-				// Check for day or night based on location and angle
-				calculateDayOrNight(latitude, longitude, angle);
+			// Check for day or night based on location and angle
+			calculateDayOrNight(latitude, longitude, angle);
 
 // Next line is present for testing purposes
 // dayOrNight.assign("NIGHT");
 
-				// Check if it is day time
-				if (dayOrNight=="DAY")
+			// ECC: why bother with the check below for DAY/NIGHT?
+			// Check if it is day time
+			if (dayOrNight=="DAY")
+			{
+				// Check started capturing during day time
+				if (lastDayOrNight=="DAY")
 				{
-					// Check started capturing during day time
-					if (lastDayOrNight=="DAY")
-					{
-						printf("Check for day or night: DAY (waiting for changing DAY into NIGHT)...\n");
-					}
-
-					// Started capturing during night time
-					else
-					{
-						printf("Check for day or night: DAY (waiting for changing NIGHT into DAY)...\n");
-					}
+					sprintf(debugText, "Check for day or night: DAY (waiting for changing DAY into NIGHT)...\n");
+					displayDebugText(debugText, 2);
 				}
 
-				// Check if it is night time
-				else if (dayOrNight=="NIGHT")
-				{
-					// Check started capturing during day time
-					if (lastDayOrNight=="DAY")
-					{
-						printf("Check for day or night: NIGHT (waiting for changing DAY into NIGHT)...\n");
-					}
-
-					// Started capturing during night time
-					else
-					{
-						printf("Check for day or night: NIGHT (waiting for changing NIGHT into DAY)...\n");
-					}
-				}
-
-				// Unclear if it is day or night
+				// Started capturing during night time
 				else
 				{
-					printf("Nor day or night...\n");
+					sprintf(debugText, "Check for day or night: DAY (waiting for changing NIGHT into DAY)...\n");
+					displayDebugText(debugText, 2);
+				}
+			}
+
+			else	// NIGHT
+			{
+				// Check started capturing during day time
+				if (lastDayOrNight=="DAY")
+				{
+					sprintf(debugText, "Check for day or night: NIGHT (waiting for changing DAY into NIGHT)...\n");
+					displayDebugText(debugText, 2);
 				}
 
-				printf("\n");
+				// Started capturing during night time
+				else
+				{
+					sprintf(debugText, "Check for day or night: NIGHT (waiting for changing NIGHT into DAY)...\n");
+					displayDebugText(debugText, 2);
+				}
 			}
 
-			// Check for night situation
-			if (lastDayOrNight == "NIGHT")
-			{
-				// Flag end of night processing is needed
-				endOfNight = true;
-			}
+			printf("\n");
+		}
+
+		// Check for night situation
+		if (lastDayOrNight == "NIGHT")
+		{
+			// Flag end of night processing is needed
+			endOfNight = true;
 		}
 	}
 
-	// Stop script
-	printf("main function over\n");
-
-	// Return all is well
-	return 1;
+	closeUp(0);
 }

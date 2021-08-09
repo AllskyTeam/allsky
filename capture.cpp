@@ -2370,7 +2370,7 @@ const char *locale = DEFAULT_LOCALE;
                                     char *line = NULL;
                                     size_t len = 0;
                                     while (getline(&line, &len, fp) != -1) {
-                                        if (line[strlen(line)-1] == 10 || line[strlen(line-1)] == 13) {  // Linefeed, Carriage Return
+                                        if (line[strlen(line)-1] == 10 || line[strlen(line-1)] == 13) {  // Linefeed and Carriage Return
                                             line[strlen(line)-1] = '\0';
                                         }
                                         cvText(pRgb, line, iTextX, iTextY + (iYOffset / currentBin), fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);

@@ -72,7 +72,7 @@ ffmpeg -y -f image2 \
 	-r $FPS \
 	-i $DIR/sequence/%04d.$EXTENSION \
 	-vcodec libx264 \
-	-b:v 2000k \
+	-b:v ${TIMELAPSE_BITRATE:-2000k} \
 	-pix_fmt yuv420p \
 	-movflags +faststart \
 	$SCALE \

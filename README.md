@@ -1,4 +1,4 @@
-# Allsky Camera ![Release 0.7](https://img.shields.io/badge/Release-0.7-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release 0.8](https://img.shields.io/badge/Release-0.8-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 
 
@@ -129,6 +129,7 @@ nano config.sh
 | TIMELAPSE | true | Build a timelapse at the end of the night |
 | TIMELAPSEWIDTH | 0 | Overwrite the width of the generated timelapse, must be divisible by 2
 | TIMELAPSEHEIGHT | 0 | Overwrite the height of the generated timelapse, must be divisible by 2
+| TIMELAPSE_BITRATE | 2000k | Bitrate the timelapse video will be created with.  Higher values produce better quality video but larger files.
 | FPS | 25 | The timelapse frame rate (frames per second)
 | KEOGRAM | true | Builds a keogram at the end of the night |
 | UPLOAD_KEOGRAM | false | Set to true to upload the keogram to your server |

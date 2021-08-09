@@ -19,6 +19,9 @@ TIMELAPSE=true
 TIMELAPSEWIDTH=0
 TIMELAPSEHEIGHT=0
 
+# Set the bitrate of the timelapse video.  Higher numbers will produce higher quality but larger files.
+TIMELAPSE_BITRATE="2000k"
+
 # Timelapse frame rate (number of frames per second)
 FPS=25
 
@@ -80,7 +83,7 @@ THUMBNAIL_SIZE_Y=75
 # Scan for, and remove corrupt images before generating keograms and startrails.
 # This can take several (tens of) minutes to run and isn't necessary unless your system produces
 # corrupt images which then generate funny colors in the summary images...
-REMOVE_BAD_IMAGES=true
+REMOVE_BAD_IMAGES=false
 # Images whose mean brightness is less than THRESHOLD_LOW or over THRESHOLD_HIGH
 # percent (max: 100) will be removed.  Set to 0 to disable the brightness checks.
 REMOVE_BAD_IMAGES_THRESHOLD_LOW=1; export REMOVE_BAD_IMAGES_THRESHOLD_LOW

@@ -19,7 +19,7 @@ TIMELAPSE=true
 TIMELAPSEWIDTH=0
 TIMELAPSEHEIGHT=0
 
-# Set the bitrate of the timelapse video.  Higher numbers will produce higher quality but larger files.
+# Set the bitrate of the timelapse video.  Higher numbers will produce higher quality but larger files.  Be sure to include the trailing "k".
 TIMELAPSE_BITRATE="2000k"
 
 # Timelapse frame rate (number of frames per second)

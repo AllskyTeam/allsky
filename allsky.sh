@@ -81,12 +81,7 @@ if [[ $CAMERA == "auto" ]]; then
 
   # redefine the settings variable
   CAMERA_SETTINGS="$CAMERA_SETTINGS_DIR/settings_$CAMERA.json"
-fi
-
-# Optionally display a notification image
-USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
-if [ "$USE_NOTIFICATION_IMAGES" = "1" ] ; then
-	$ALLSKY_HOME/scripts/copy_notification_image.sh "StartingUp" 2>&1
+  echo CAMERA_SETTINGS=$CAMERA_SETTINGS 1
 fi
 
 # echo "Settings check done"
@@ -97,6 +92,12 @@ echo "export CAMERA=$CAMERA" > "$ALLSKY_HOME/autocam.sh"
 
 # this must be called after camera autoselect
 source $ALLSKY_HOME/scripts/filename.sh
+
+# Optionally display a notification image. This has to come after the creation of "autocam.sh" above.
+USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
+if [ "$USE_NOTIFICATION_IMAGES" = "1" ] ; then
+	$ALLSKY_HOME/scripts/copy_notification_image.sh "StartingUp" 2>&1
+fi
 
 echo "Starting allsky camera..."
 

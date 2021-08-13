@@ -61,7 +61,7 @@ if [[ $KEOGRAM == "true" ]]; then
                                 -e "set net:max-retries 1; put "$OUTPUT"; bye" &
                 fi
         fi
-	echo -e "$ME: Processed $(wc -l ${TMP}) keogram files\n"
+	echo -e "$ME: Processed $(wc -l < ${TMP}) keogram files\n"
 	# Leave ${TMP} in case the user needs to debug something.
 
 	# Optionally copy to the local website in addition to the upload above.
@@ -92,7 +92,7 @@ if [[ $STARTRAILS == "true" ]]; then
                                 -e "set net:max-retries 1; put $OUTPUT; bye" &
                 fi
         fi
-        echo -e "$ME: Processed $(wc -l ${TMP}) startrails files.  Summary:\n"
+        echo -e "$ME: Processed $(wc -l < ${TMP}) startrails files.  Summary:\n"
 	grep "^Minimum" "${TMP}"
 	# Leave ${TMP} in case the user needs to debug something.
 

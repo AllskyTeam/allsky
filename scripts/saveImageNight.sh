@@ -17,13 +17,17 @@ mkdir -p $THUMBNAILS_DIR
 
 # Create image to use (original or processed) for liveview in GUI
 IMAGE_TO_USE="$FULL_FILENAME"
+if [ "$IMAGE_TO_USE" = "" ]; then
+	echo "*** $ME: ERROR: IMAGE_TO_USE is null."
+	exit 1
+fi
 # quotes around $IMAGE_TO_USE below, in case it has a space or special characters.
 
 # Make sure the image isn't corrupted
 identify "$IMAGE_TO_USE" >/dev/null 2>&1
 RET=$?
 if [ $RET -ne 0 ] ; then
-	echo "*** $ME: ERROR: Image '${IMAGE_TO_USE} is corrupt; ignoring."
+	echo "*** $ME: ERROR: Image '${IMAGE_TO_USE}' is corrupt; ignoring."
 	exit 1
 fi
 

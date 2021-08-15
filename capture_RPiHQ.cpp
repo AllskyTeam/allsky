@@ -1274,7 +1274,7 @@ displayDebugText(debugText, 3);
 			displayDebugText(debugText, 0);
 
 			// Sleep for a moment
-			usleep(currentDelay * US_IN_SEC);
+			usleep(currentDelay * US_IN_MS);
 
 			// Check for day or night based on location and angle
 			calculateDayOrNight(latitude, longitude, angle);

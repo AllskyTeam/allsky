@@ -81,10 +81,8 @@ if [[ $CAMERA == "auto" ]]; then
 
   # redefine the settings variable
   CAMERA_SETTINGS="$CAMERA_SETTINGS_DIR/settings_$CAMERA.json"
-  echo CAMERA_SETTINGS=$CAMERA_SETTINGS 1
 fi
 
-# echo "Settings check done"
 echo "CAMERA: ${CAMERA}"
 echo "CAMERA_SETTINGS: ${CAMERA_SETTINGS}"
 # save auto camera selection for the current session, will be read in "$ALLSKY_HOME/config.sh" file

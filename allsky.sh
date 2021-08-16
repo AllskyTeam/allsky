@@ -72,19 +72,15 @@ if [[ $CAMERA == "auto" ]]; then
   fi
   # prioritize ZWO camera if exists, and use RPI camera otherwise
   if [[ $ZWOIsPresent -eq 0 ]]; then
-    # echo "No ZWO camera found. Choosing RPI"	# CAMERA is displayed below; don't need it here too
-    CAMERA="RPiHQ"
+   CAMERA="RPiHQ"
   else
-    # echo "ZWO camera found. Choosing ZWO"	# CAMERA is displayed below; don't need it here too
-    CAMERA="ZWO"
+   CAMERA="ZWO"
   fi
 
   # redefine the settings variable
   CAMERA_SETTINGS="$CAMERA_SETTINGS_DIR/settings_$CAMERA.json"
-  echo CAMERA_SETTINGS=$CAMERA_SETTINGS 1
 fi
 
-# echo "Settings check done"
 echo "CAMERA: ${CAMERA}"
 echo "CAMERA_SETTINGS: ${CAMERA_SETTINGS}"
 # save auto camera selection for the current session, will be read in "$ALLSKY_HOME/config.sh" file
@@ -144,6 +140,7 @@ if [[ $CAMERA == "ZWO" ]]; then
 elif [[ $CAMERA == "RPiHQ" ]]; then
 	$ALLSKY_HOME/capture_RPiHQ "${ARGUMENTS[@]}"
 	RETCODE=$?
+	echo "capture_RPiHQ exited with retcode=$RETCODE"
 else
 	exit 1
 fi

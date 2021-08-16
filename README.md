@@ -124,6 +124,7 @@ nano settings.json
 | showBrightness | 1 | Display the brightness level in the overlay? |
 | darkframe | 0 | Set to 1 to enable dark frame capture. In this mode, overlays are hidden. |
 | notificationimages | 1 | Set to 0 to disable notification images, e.g., "Camera off during day" if daytime images are not being taken. |
+| debuglevel | 0 | Determines the amount of output in the log file (usually /var/log/allsky.log). |
 
 The second file called **config.sh** lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.
 
@@ -172,7 +173,7 @@ nano config.sh
 | REMOVE_BAD_IMAGES_THRESHOLD_HIGH | 90 | Images whose mean brightness is above this percent will be removed (max: 100) |
 | UHUBCTL_PATH | n/a | If you have the "uhubctl" command installed (it resets the USB bus), enter its path name |
 | UHUBCTL_PORT | n/a | Enter the USB port the camera is on.  Port 1 is USB 2.0 and port 2 is USB 3.0 |
-| IMG_DIR | allsky | Location of the image the website will use.  "allsky" is /var/www/html/allsky. Set to "current" to use /home/pi/allsky. |
+| IMG_DIR | allsky | Location of the image the website will use.  "allsky" is /var/www/html/allsky and "current" is /home/pi/allsky. |
 | IMG_PREFIX | liveview- | An optional prefix on the website image file name, before "image.jpg" (or whatever your image is called) |
 | CAMERA_SETTINGS_DIR | /etc/raspap | Path to the camera settings file |
 | CAMERA_SETTINGS | /home/pi/allsky/settings.json | Name of the camera settings file. **Note**: If using the GUI, this path will change to /etc/raspap/settings.json |
@@ -332,6 +333,11 @@ Example to generate a timelapse manually:
 ./scripts/timelapse.sh 20190322
 ```
 
+**Note:** If you unable to create a timelapse (typically it just dies part way through),
+try creating or increasing the swap space.  2 GB is a good amount.
+See https://pimylifeup.com/raspberry-pi-swap-file/ for details.
+This is especially true for Rasberry Pi 3 users who have less RAM memory than a Raspberry Pi 4.
+
 ## Keograms
 
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/keogram-annotated.jpg)
@@ -473,14 +479,15 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* Improved exposure transitions between day and night so there's not a huge change in brightness.
 	* Decrease in ZWO sensor temperature.
 	* Lots of new settings, including splitting some settings into day and night versions.
-	* Error checking and associated log messages added in many places.
+	* Error checking and associated log messages added in many places to aid in debugging.
 	* Ability to have "notification" images displayed, such as "Allsky is starting up" and "Taking dark frames".
-	* Ability to set size uploaded images are resized to.
+	* Ability to resize uploaded images to a user-specified size.
 	* Ability to set thumbnail size.
 	* Ability to delete bad images (corrupt and too light/dark).
 	* Ability to set an image file name prefix.
 	* Ability to reset USB bus if ZWO camera isn't found (requires "uhubctl" command to be installed).
 	* Ability to specify format of time displayed on image and temperature displayed in Celcius, Fahrenheit, or both.
+	* Ability to set bitrate on timelapse video.
 
 ## Donation
 

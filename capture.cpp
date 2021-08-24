@@ -2372,18 +2372,14 @@ const char *locale = DEFAULT_LOCALE;
 				    int slen = 0;
                                     while (getline(&line, &len, fp) != -1) {
                                         slen = strlen(line);
-                                        if (slen > 1 && (line[slen-2] == 10 || line[slen-2] == 13)) {  // LF, CR
+                                        if (slen >= 2 && (line[slen-2] == 10 || line[slen-2] == 13)) {  // LF, CR
                                             line[slen-2] = '\0';
-                                        } else if (line[slen-1] == 10 || line[slen-1] == 13) {
+                                        } else if (slen >= 1 && (line[slen-1] == 10 || line[slen-1] == 13)) {
                                             line[slen-1] = '\0';
                                         }
-                                        slen = strlen(line);
-                                        sprintf(textBuffer, "  > Extra Text line 13: '%s' (new length=%d)\n", line, slen);
-                                        displayDebugText(textBuffer, 3);
 
                                         cvText(pRgb, line, iTextX, iTextY + (iYOffset / currentBin), fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
                                         iYOffset += iTextLineHeight;
-					if (slen > 0) free(line);
                                     }
                                 }
                                 fclose(fp);

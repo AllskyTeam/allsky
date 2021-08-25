@@ -1863,7 +1863,7 @@ const char *locale = DEFAULT_LOCALE;
             currentBrightness = asiNightBrightness;
             currentDelay = nightDelay;
             currentBin = nightBin;
-            if (numExposures == 0 || asiDayAutoExposure == ASI_FALSE)
+            if (numExposures == 0 || asiNightAutoExposure == ASI_FALSE)
             {
              	currentExposure = asiNightExposure;
             }

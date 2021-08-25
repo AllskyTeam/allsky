@@ -147,7 +147,13 @@ fi
 
 if [ "$USE_NOTIFICATION_IMAGES" = "1" -a "$RETCODE" -ne 0 ] ; then
 	# "capture" will do this if it exited with 0.
-	$ALLSKY_HOME/scripts/copy_notification_image.sh "NotRunning" 2>&1
+	if [ "$RETCODE" -gt 100 ]; then	
+		$ALLSKY_HOME/scripts/copy_notification_image.sh "Error" 2>&1
+		echo "*** Waiting for you to fix this.  Restart when done fixing. ***"
+		sudo service allsky stop
+	else
+		$ALLSKY_HOME/scripts/copy_notification_image.sh "NotRunning" 2>&1
+	fi
 fi
 
 exit $RETCODE

@@ -65,10 +65,13 @@ Some users have reported ASI TIMEOUT errors with their ZWO cameras in verion 0.8
 
 Here's a quick overview of the configuration files.
 
-the first one is called **settings.json**. It contains the camera parameters such as exposure, gain but also latitude, longitude, etc.  Many settings have both a daytime ("dayXXXX") and nighttime ("nightXXXX") version.
+the first one is called **settings_RPiHQ.json** or **settings_ZWO.json**, depending on which camera type you have. It contains the camera parameters such as exposure, gain but also latitude, longitude, etc.  Many settings have both a daytime ("dayXXXX") and nighttime ("nightXXXX") version.
+If you have the administrative GUI, the files are in /etc/raspap, otherwise they are in ~/allsky.  The advantage of using the administrative GUI is that you don't explicitly edit the files, instead, you do it via the GUI interface, which includes descriptive text on each option.
+
+The exact list of settings available depend on the camera you are using; in general, the RPiHQ camera has less settings.
 
 ```shell
-nano settings.json
+nano settings_RPiHQ.json  or  nano settings_ZWO.json
 ```
 
 | Setting     | Default     | Additional Info |
@@ -126,7 +129,7 @@ nano settings.json
 | notificationimages | 1 | Set to 0 to disable notification images, e.g., "Camera off during day" if daytime images are not being taken. |
 | debuglevel | 0 | Determines the amount of output in the log file (usually /var/log/allsky.log). |
 
-The second file called **config.sh** lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.
+The second file called **config.sh** lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.  Note that with the administrative GUI, you can edit the file via the "Editor" link on the left side of the page.
 
 ```shell
 nano config.sh
@@ -176,11 +179,12 @@ nano config.sh
 | IMG_DIR | allsky | Location of the image the website will use.  "allsky" is /var/www/html/allsky and "current" is /home/pi/allsky. |
 | IMG_PREFIX | liveview- | An optional prefix on the website image file name, before "image.jpg" (or whatever your image is called) |
 | CAMERA_SETTINGS_DIR | /etc/raspap | Path to the camera settings file |
-| CAMERA_SETTINGS | /home/pi/allsky/settings.json | Name of the camera settings file. **Note**: If using the GUI, this path will change to /etc/raspap/settings.json |
+| CAMERA_SETTINGS | /home/pi/allsky/settings_\*.json | Name of the camera settings file. **Note**: If using the GUI, this path will change to /etc/raspap/settings_\*.json |
 
 When using the cropping options the image is cropped from the center so you will need to experiment with the correct width and height values. Normally there will be no need to amend the offset values.
 
-In order to upload images and videos to your website, you'll need to fill your FTP or Amazon S3 connection details in **ftp-settings.sh**
+In order to upload images and videos to your website, you'll need to fill your FTP or Amazon S3 connection details in **ftp-settings.sh**.  If you're using the administrative GUI you can edit this file via the "Editor" link on the left side of the page.
+
 ```shell
 nano scripts/ftp-settings.sh
 ```
@@ -197,13 +201,15 @@ nano scripts/ftp-settings.sh
 | STARTRAILS_DIR | allsky/startrails/ | The absolute path to your startrails directory on the server |
 
 
-### Other scripts of interest
+### Other scripts of interest (in ~/allsky/scripts)
 
-**saveImageNight.sh** is called every time the camera takes a new image at night. If dark subtraction is enabled, this is where it happens
+**saveImageNight.sh** is called every time the camera takes a new image at night. If dark subtraction is enabled, this is where it happens.
 
 **saveImageDay.sh** is called every time the camera takes a new image during the day.
 
 At the end of the night **endOfNight.sh** is run. It calls a few other scripts based on your config.sh content.
+
+You normally won't need to edit those files unless you want to implement a new feature.  One file you *may* want to edit is **endOfNight_additionalSteps.sh** which is where you can place any additional code you require to be run at the end of the night. This script is run prior to the deletion of any old image files.
 
 nano is a text editor. Hit **ctrl + x**, followed by **y** and **Enter** in order to save your changes.
 
@@ -211,29 +217,27 @@ nano is a text editor. Hit **ctrl + x**, followed by **y** and **Enter** in orde
 
 ### Autostart
 
-Systemd is used to launch the software automatically when the Raspberry Pi boots up. To enable or disable this behavior, you can use these commands.
+**Systemd** is used to launch the software automatically when the Raspberry Pi boots up. To enable or disable this behavior, use these commands:
 
 ```
-sudo systemctl enable allsky.service
+sudo systemctl enable allsky.service     # enables the service, but does not start it
 sudo systemctl disable allsky.service
 ```
-**Note:*** The service is enabled by default.
+**Note:*** The service is enabled by default after installation.
 
-When you want to start, stop or restart the program, you can use one of the following commands:
+When you want to start, stop or restart the program, or obtain status, use one of the following commands:
 ```shell
 sudo service allsky start
 sudo service allsky stop
 sudo service allsky restart
-```
-To know the status of the allsky software, type:
-```shell
 sudo service allsky status
 ```
 
 ### Manual Start
 Starting the program from the terminal can be a great way to track down issues as it provides debug information.
-To start the program manually, make sure you first stop the service and run:
+To start the program manually, make sure you first stop the service then run:
 ```
+cd scripts
 ./allsky.sh
 ```
 If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote desktop or VNC, you can add the `preview` argument in order to show the images the program is currently saving.
@@ -247,12 +251,13 @@ If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote 
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg)
 
 If you don't want to configure the camera using the terminal, you can install the web based [graphical interface](https://github.com/thomasjacquin/allsky-portal).
-Please note that this will change your hostname to allsky (or whatever you called it when installing), install lighttpd and replace your /var/www/html directory. It will also move settings.json to `/etc/raspap/settings.json`.
+Please note that this will change your hostname to **allsky** (or whatever you called it when installing), install the lighttpd web server, and replace your /var/www/html directory. It will also move settings_\*.json to `/etc/raspap/settings_\*.json`.
+Using the graphical user interface (GUI) is **highly** recommended as it provides additional information on each setting and provides additional system information.
 
 ```shell
 sudo gui/install.sh
 ```
-Or if you don't want to use the default name of 'allsky' for your pi use the following
+Or if you don't want to use the default name of 'allsky' for your pi use the following:
 
 ```shell
 sudo gui/install.sh piname
@@ -260,7 +265,7 @@ sudo gui/install.sh piname
 
 **Note:*** If you use an older version of Raspbian, the install script may fail on php7.0-cgi dependency. Edit gui/install.sh and replace php7.0-cgi by php5-cgi.
 
-After you complete the GUI setup, you'll be able to administer the camera using the web UI by navigating to
+After you complete the GUI setup, you'll be able to administer the camera using the web GUI by navigating to
 ```sh
 http://your_raspberry_IP
 ```
@@ -274,41 +279,43 @@ Note: If you changed the name of your pi during the gui install then use
 http://piname.local
 ```
 
-The default username is 'admin' and the default password is 'secret'.
+The default username is 'admin' and the default password is 'secret'.  If this website is publically viewable we suggest you change those settings.
 
-A public page is also available in order to view the current image without having to log into the portal. This can be useful for people who don't have a personal website but still want to share a view of their sky :
+A public page is also available in order to view the current image without having to log into the portal and without being able to do any administrative tasks. This can be useful for people who don't have a personal website but still want to share a view of their sky:
 
 ```sh
 http://your_raspberry_IP/public.php
 ```
 
-**Note:*** The GUI setup uses /etc/raspap/settings.json for the camera settings. If, for some reason, you prefer to go back to the non-gui version, make sure to edit your config.sh file to have CAMERA_SETTINGS="settings.json" instead.
+Make sure this page is publically viewable, i.e., is not behind a firewall.
+
+**Note:*** The GUI setup uses /etc/raspap/settings_\*.json for the camera settings. If, for some reason, you prefer to go back to the non-GUI version, make sure to edit your config.sh file to have CAMERA_SETTINGS="settings_\*.json" instead (which looks in ~/allsky).
 
 ## Dark frame subtraction
 
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/darkframe.jpg)
 
-The dark frame subtraction feature removes hot pixels from night sky images. The concept is the following: Take an image with a cover on your camera lens and subtract that image later to all images taken throughout the night.
+The dark frame subtraction feature removes hot pixels from night sky images. The concept is the following: Take an image with a cover on your camera lens and let the software subtract that image later from all images taken throughout the night.
 
 You only need to follow these instructions once.
 
 If you don't use the GUI:
-* Place a cover on your camera lens/dome
-* Set darkframe to 1 in settings.json
+* Place a cover on your camera lens/dome.  Make sure no light can get in.
+* Set `darkframe` to 1 in settings_\*.json
 * Restart the allsky service: ```sudo service allsky restart```
 * Dark frames are created in a `darks` directory. A new dark is created every time the sensor temperature changes by 1 degree C.
-* Set darkframe to 0 in settings.json
+* Set `darkframe` to 0 in setting_\*s.json
 * Restart the allsky service: ```sudo service allsky restart```
 * Remove the cover from the lens/dome
 * Enable dark subtraction in `config.sh` by setting `DARK_FRAME_SUBTRACTION` to true
 
 GUI method:
-* Place a cover on your camera lens/dome
-* Open the Camera Settings tab and set Dark Frame to Yes.
+* Place a cover on your camera lens/dome.  Make sure no light can get in.
+* On the GUI page, open the `Camera Settings` tab and set `Dark Frame` to Yes.
 * Hit the Save button
 * Dark frames are created in a `darks` directory. A new dark is created every time the sensor temperature changes by 1 degree C.
 * On the Camera Settings tab set Dark Frame to No.
-* Hit the Save button
+* Hit the `Save changes` button
 * Remove the cover from the lens/dome
 * Open the scripts editor tab, load `config.sh` and set `DARK_FRAME_SUBTRACTION` to true
 
@@ -333,9 +340,10 @@ Example to generate a timelapse manually:
 ./scripts/timelapse.sh 20190322
 ```
 
-**Note:** If you unable to create a timelapse (typically it just dies part way through),
+**Note:** If you are unable to create a timelapse (typically it just dies part way through),
 try creating or increasing the swap space.  2 GB is a good amount.
 See https://pimylifeup.com/raspberry-pi-swap-file/ for details.
+If that doesn't work, try reducing the size of the timelapse video.
 This is especially true for Rasberry Pi 3 users who have less RAM memory than a Raspberry Pi 4.
 
 ## Keograms

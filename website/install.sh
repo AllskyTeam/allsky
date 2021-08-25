@@ -16,6 +16,7 @@ echo -en "${GREEN}* Create thumbnails directories\n${NC}"
 cd /var/www/html
 mkdir ./allsky/startrails/thumbnails
 mkdir ./allsky/keograms/thumbnails
+mkdir ./allsky/videos/thumbnails
 echo -en '\n'
 
 echo -en "${GREEN}* Fixing ownership and permissions\n${NC}"
@@ -24,4 +25,5 @@ chown -R pi:www-data allsky
 chmod -R 755 allsky
 chmod 0775 ./allsky/startrails/thumbnails
 chmod 0775 ./allsky/keograms/thumbnails
+chmod 0775 ./allsky/videos/thumbnails
 echo -en '\n'

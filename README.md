@@ -127,7 +127,7 @@ nano settings_RPiHQ.json  or  nano settings_ZWO.json
 | showBrightness | 1 | Display the brightness level in the overlay? |
 | darkframe | 0 | Set to 1 to enable dark frame capture. In this mode, overlays are hidden. |
 | notificationimages | 1 | Set to 0 to disable notification images, e.g., "Camera off during day" if daytime images are not being taken. |
-| newexposure | 1 | Determines if the new version 0.8 exposure method... If you see ASI_ERROR_TIMEOUTs" in the log file, try setting this to 0. ( See [issue 417](https://github.com/thomasjacquin/allsky/issues/417) ) |
+| newexposure | 1 | Determines if the new version 0.8 exposure method is used. If you see ASI_ERROR_TIMEOUTs" in the log file, try setting this to 0. ( See [issue 417](https://github.com/thomasjacquin/allsky/issues/417) ) |
 | debuglevel | 0 | Determines the amount of output in the log file (usually /var/log/allsky.log). |
 
 The second file called **config.sh** lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.  Note that with the administrative GUI, you can edit the file via the "Editor" link on the left side of the page.

@@ -46,6 +46,7 @@
 
 cv::Mat pRgb;
 std::vector<int> compression_parameters;
+bool use_new_exposure_algorithm = true;
 bool bMain = true, bDisplay = false;
 std::string dayOrNight;
 
@@ -454,6 +455,13 @@ ASI_ERROR_CODE takeOneExposure(
 
     setControl(cameraId, ASI_EXPOSURE, exposureTimeMicroseconds, currentAutoExposure);
 
+    if (use_new_exposure_algorithm)
+    {
+        status = ASIStartVideoCapture(cameraId);
+    } else {
+        status = ASI_SUCCESS;
+    }
+
     status = ASIStartVideoCapture(cameraId);
     if (status == ASI_SUCCESS) {
         status = ASIGetVideoData(cameraId, imageBuffer, bufferSize, timeout);
@@ -477,6 +485,10 @@ ASI_ERROR_CODE takeOneExposure(
             ASIGetControlValue(cameraId, ASI_TEMPERATURE, &actualTemp, &bAuto);
         }
         ASIStopVideoCapture(cameraId);
+
+        if (use_new_exposure_algorithm)
+            ASIStopVideoCapture(cameraId);
+
     }
     else {
         sprintf(debugText, "  > ERROR: Not fetching exposure data because status is %s\n", getRetCode(status));
@@ -970,6 +982,13 @@ const char *locale = DEFAULT_LOCALE;
             if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0)
             {
                 help = 1;
+            }
+            else if (strcmp(argv[i], "-newexposure") == 0)
+            {
+                if (atoi(argv[++i]))
+                    use_new_exposure_algorithm = true;
+                else
+                    use_new_exposure_algorithm = false;
             }
             else if (strcmp(argv[i], "-locale") == 0)
             {

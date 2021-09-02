@@ -58,5 +58,6 @@
    "darkframe":"0",
    "locale":"en_US.UTF-8",
    "debuglevel":"1",
+   "newexposure":"0",
    "alwaysshowadvanced":"0"
 }

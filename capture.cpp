@@ -462,7 +462,6 @@ ASI_ERROR_CODE takeOneExposure(
         status = ASI_SUCCESS;
     }
 
-    status = ASIStartVideoCapture(cameraId);
     if (status == ASI_SUCCESS) {
         status = ASIGetVideoData(cameraId, imageBuffer, bufferSize, timeout);
         if (status != ASI_SUCCESS) {
@@ -484,7 +483,6 @@ ASI_ERROR_CODE takeOneExposure(
             ASIGetControlValue(cameraId, ASI_GAIN, &actualGain, &bAuto);
             ASIGetControlValue(cameraId, ASI_TEMPERATURE, &actualTemp, &bAuto);
         }
-        ASIStopVideoCapture(cameraId);
 
         if (use_new_exposure_algorithm)
             ASIStopVideoCapture(cameraId);

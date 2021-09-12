@@ -870,11 +870,11 @@ const char *locale = DEFAULT_LOCALE;
 #define DEFAULT_ASIDAYGHTGAIN    0
     int asiDayGain             = DEFAULT_ASIDAYGHTGAIN;
     int asiDayAutoGain         = 0;	// is Auto Gain on or off for daytime?
-#define DEFAULT_ASINIGHTGAIN     150
+#define DEFAULT_ASINIGHTGAIN     100
     int asiNightGain           = DEFAULT_ASINIGHTGAIN;
 #define DEFAULT_NIGHTAUTOGAIN    0
     int asiNightAutoGain       = DEFAULT_NIGHTAUTOGAIN;	// is Auto Gain on or off for nighttime?
-#define DEFAULT_ASINIGHTMAXGAIN  200
+#define DEFAULT_ASINIGHTMAXGAIN  100
     int asiNightMaxGain        = DEFAULT_ASINIGHTMAXGAIN;
     ASI_BOOL currentAutoGain   = ASI_FALSE;
 
@@ -890,7 +890,7 @@ const char *locale = DEFAULT_LOCALE;
 #define DEFAULT_ASIGAMMA         50		// not supported by all cameras
     int asiGamma               = DEFAULT_ASIGAMMA;
 
-#define DEFAULT_BRIGHTNESS 50
+#define DEFAULT_BRIGHTNESS 20
     int asiDayBrightness       = DEFAULT_BRIGHTNESS;
 #define MAX_BRIGHTNESS           600
     int asiNightBrightness     = DEFAULT_BRIGHTNESS;

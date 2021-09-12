@@ -1537,9 +1537,11 @@ const char *locale = DEFAULT_LOCALE;
 
     if (width == 0 || height == 0)
     {
-        width  = iMaxWidth;	originalWidth = width;
-        height = iMaxHeight;	originalHeight = height;
+        width  = iMaxWidth;
+        height = iMaxHeight;
     }
+    originalWidth = width;
+    originalHeight = height;
 
     ASIGetControlValue(CamNum, ASI_TEMPERATURE, &actualTemp, &bAuto);
     printf("- Sensor temperature:%0.2f\n", (float)actualTemp / 10.0);
@@ -1931,7 +1933,9 @@ const char *locale = DEFAULT_LOCALE;
             pRgb.create(cvSize(width, height), CV_8UC1);
         }
 
-        ASISetROIFormat(CamNum, width, height, currentBin, (ASI_IMG_TYPE)Image_type);
+        asiRetCode = ASISetROIFormat(CamNum, width, height, currentBin, (ASI_IMG_TYPE)Image_type);
+        if (asiRetCode)
+			printf("ASISetROIFormat(%d, %dx%d, %d, %d) = %s\n", CamNum, width, height, currentBin, Image_type, getRetCode(asiRetCode));
         setControl(CamNum, ASI_BRIGHTNESS, currentBrightness, ASI_FALSE); // ASI_BRIGHTNESS == ASI_OFFSET
 
         // Here and below, indent sub-messages with "  > " so it's clear they go with the un-indented line.

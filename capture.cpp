@@ -447,7 +447,8 @@ ASI_ERROR_CODE takeOneExposure(
 
     ASI_ERROR_CODE status;
     // ZWO recommends timeout = (exposure*2) + 500 ms
-    long timeout = ((exposureTimeMicroseconds * 2) / US_IN_MS) + 500;	// timeout is in ms
+    // 1500ms seems better with lots of other USB traffic (eg. disk IO)
+    long timeout = ((exposureTimeMicroseconds * 2) / US_IN_MS) + 1500;	// timeout is in ms
 
     sprintf(debugText, "  > Exposure set to %'ld Âµs (%'.2f ms), timeout: %'ld ms\n",
             exposureTimeMicroseconds, (float)exposureTimeMicroseconds/US_IN_MS, timeout);

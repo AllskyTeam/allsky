@@ -1479,7 +1479,7 @@ const char *locale = DEFAULT_LOCALE;
     iMaxHeight = ASICameraInfo.MaxHeight;
     pixelSize  = ASICameraInfo.PixelSize;
     printf("  - Resolution:%dx%d\n", iMaxWidth, iMaxHeight);
-    printf("  - Pixel Size: %1.1fum\n", pixelSize);
+    printf("  - Pixel Size: %1.1fmicrons\n", pixelSize);
     printf("  - Supported Bin: ");
     for (int i = 0; i < 16; ++i)
     {

@@ -1041,7 +1041,7 @@ int main(int argc, char *argv[])
 	double pixelSize = 1.55;
 
 	printf("- Resolution: %dx%d\n", iMaxWidth, iMaxHeight);
-	printf("- Pixel Size: %1.2fÎ¼m\n", pixelSize);
+	printf("- Pixel Size: %1.2fmicrons\n", pixelSize);
 	printf("- Supported Bin: 1x, 2x and 3x\n");
 
 	if (darkframe)

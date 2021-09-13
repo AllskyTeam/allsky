@@ -1935,7 +1935,10 @@ const char *locale = DEFAULT_LOCALE;
 
         asiRetCode = ASISetROIFormat(CamNum, width, height, currentBin, (ASI_IMG_TYPE)Image_type);
         if (asiRetCode)
+        {
 			printf("ASISetROIFormat(%d, %dx%d, %d, %d) = %s\n", CamNum, width, height, currentBin, Image_type, getRetCode(asiRetCode));
+			closeUp(1);
+        }
         setControl(CamNum, ASI_BRIGHTNESS, currentBrightness, ASI_FALSE); // ASI_BRIGHTNESS == ASI_OFFSET
 
         // Here and below, indent sub-messages with "  > " so it's clear they go with the un-indented line.

@@ -99,7 +99,7 @@ ffmpeg -y -f image2 \
 	-loglevel ${FFLOG:-warning} \
 	-r ${FPS:-25} \
 	-i $DIR/sequence/%04d.$EXTENSION \
-	-vcodec ${VCODEC:libx264} \
+	-vcodec ${VCODEC:-libx264} \
 	-b:v ${TIMELAPSE_BITRATE:-2000k} \
 	-pix_fmt yuv420p \
 	-movflags +faststart \

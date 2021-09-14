@@ -1948,11 +1948,17 @@ const char *locale = DEFAULT_LOCALE;
 
         // As of April 2021 there's a bug that causes the first 3 images to be identical,
         // so take 3 short ones but don't save them.
-        // On the ASI178MC the shortest time is 10010 us; it may be higher on other cameras,
-        // so use a higher value like 30,000 us to be safe.
-        // Only do this once.
+
+        long min_exposure = 100000;
+        asiRetCode = ASIGetControlCaps(CamNum, ASI_EXPOSURE, &ControlCaps);
+        if (asiRetCode == ASI_SUCCESS) {
+            min_exposure = ControlCaps.MinValue;
+        } else {
+            sprintf(debugText, "Unable to get minimum exposure time, using %dus - %s\n", min_exposure, getRetCode(asiRetCode));
+            displayDebugText(debugText, 2);
+        }
+
         if (numExposures == 0) {
-#define SHORT_EXPOSURE 30000
             displayDebugText("===Taking 3 images to clear buffer...\n", 2);
             // turn off auto exposure
             ASI_BOOL savedAutoExposure = currentAutoExposure;
@@ -1960,7 +1966,7 @@ const char *locale = DEFAULT_LOCALE;
             for (i=1; i <= 3; i++)
             {
                 // don't count these as "real" exposures, so don't increment numExposures.
-                asiRetCode = takeOneExposure(CamNum, SHORT_EXPOSURE, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
+                asiRetCode = takeOneExposure(CamNum, min_exposure, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
                 if (asiRetCode != ASI_SUCCESS)
                 {
                     numErrors++;

@@ -1,7 +1,8 @@
 platform = $(shell uname -m)
 
 USB=$(shell pkg-config --cflags libusb-1.0) $(shell pkg-config --libs libusb-1.0)
-DEFS = -D_LIN -D_DEBUG 
+DEFS = -D_LIN -D_DEBUG -DGLIBC_20
+CFLAGS = -Wall -Wno-psabi -g -O2 -lpthread
 
 ifeq ($(platform), armv6l)
 OPENCV = $(shell pkg-config --cflags opencv) $(shell pkg-config --libs opencv)
@@ -13,6 +14,7 @@ ZWOSDK = -Llib/armv6 -I./include
 endif
 
 ifeq ($(platform), armv7l)
+# Some distributions may need to use opencv4 and -DOPENCV_C_HEADERS as is done for x86_64
 OPENCV = $(shell pkg-config --cflags opencv) $(shell pkg-config --libs opencv)
 CC = arm-linux-gnueabihf-g++
 AR= arm-linux-gnueabihf-ar
@@ -25,7 +27,6 @@ ifeq ($(platform), x86_64)
 OPENCV = $(shell pkg-config --cflags opencv4) $(shell pkg-config --libs opencv4)
 CC = g++
 AR= ar
-#At least on Ubuntu 20 x86_64 the c++ (.hpp) headers don't define all the constsants I need
 DEFS += -DOPENCV_C_HEADERS
 ZWOSDK = -Llib/x64 -I./include
 endif
@@ -38,7 +39,7 @@ DEFS += -DOPENCV_C_HEADERS
 ZWOSDK = -Llib/x86 -I./include
 endif
 
-CFLAGS = -Wall -Wno-psabi -g $(DEFS) $(COMMON) $(ZWOSDK) -lpthread  -DGLIBC_20
+CFLAGS += $(DEFS) $(ZWOSDK)
 
 all:capture capture_RPiHQ startrails keogram sunwait-remove-precompiled sunwait
 

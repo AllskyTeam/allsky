@@ -5,17 +5,21 @@ source $ALLSKY_HOME/scripts/ftp-settings.sh
 
 cd $ALLSKY_HOME
 
+FPS=${FPS:-25}
+ENCODER=${ENCODER:-libx264}
+
 ME="$(basename "$BASH_ARGV0")"	# Include script name in output so it's easier to find in the log file
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-if [ $# -lt 1 ]
-  then
-    echo -en "${ME}: ${RED}You need to pass a day argument\n"
-        echo -en "    ex: timelapse.sh 20180119${NC}\n"
-        exit 3
+if [ $# -lt 1 -o $# -gt 2 -o "x$1" = "x-h" ] ; then
+    TODAY=$(date +%Y%m%d)
+    echo -en "${RED}Usage: ${ME} <day> [directory]${NC}\n"
+    echo -en "    ex: timelapse.sh ${TODAY}\n"
+    echo -en "    or: timelapse.sh ${TODAY} /media/external/allsky/${TODAY}\n"
+    exit 3
 fi
 
 # Allow timelapses of pictures not in ALLSKY_HOME.
@@ -27,7 +31,7 @@ else
 	DIR="$2"
 fi
 echo -en "${ME}: ${GREEN}Creating symlinks to generate timelapse${NC}\n"
-[ -d $DIR/sequence ] && rm -fr $DIR/sequence	# remove in case it was left over from last run
+rm -fr $DIR/sequence	# remove in case it was left over from last run
 mkdir -p $DIR/sequence/
 
 # find images, make symlinks sequentially and start avconv to build mp4; upload mp4 and move directory

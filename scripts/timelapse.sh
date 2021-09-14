@@ -14,6 +14,7 @@ ME="$(basename "$BASH_ARGV0")"	# Include script name in output so it's easier to
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 if [ $# -lt 1 -o $# -gt 2 -o "x$1" = "x-h" ] ; then
@@ -32,35 +33,47 @@ if [ "$2" = "" ] ; then
 else
 	DIR="$2"
 fi
-echo -en "${ME}: ${GREEN}Creating symlinks to generate timelapse${NC}\n"
-rm -fr $DIR/sequence	# remove in case it was left over from last run
-mkdir -p $DIR/sequence/
 
-# find images, make symlinks sequentially and start avconv to build mp4; upload mp4 and move directory
-find "$DIR" -name "*.$EXTENSION" -size 0 -delete
+# If you are tuning encoder settings, run this script with KEEP_SEQUENCE, eg.
+#	$ env KEEP_SEQUENCE=1 VCODEC=h264_nvenc ~/allsky/scripts/timelapse.sh ${TODAY} /media/external/allsky/${TODAY}/
+# to keep the sequence directory from being deleted and to reuse the contents
+# of the sequence directory if it looks ok (contains at least 100 files). This
+# might save you some time when running your encoder repeatedly.
 
-TMP_DIR="$ALLSKY_HOME/tmp"
-mkdir -p "$TMP_DIR"
-TMP="$TMP_DIR/timelapseTMP.txt"	# capture the "ln" commands in case the user needs to debug
-> $TMP
-ls -rt $DIR/*.$EXTENSION |
-gawk 'BEGIN{ a=1 }
-	{
-		printf "ln -s %s '$DIR'/sequence/%04d.'$EXTENSION'\n", $0, a;
-		printf "ln -s %s '$DIR'/sequence/%04d.'$EXTENSION'\n", $0, a >> "'$TMP'";
-		# if (a % 100 == 0) printf "echo '$ME': %d links created so far\n", a;
-		a++;
-	}' |
-bash
+NSEQ=$(ls "/${DIR}/sequence" | wc -l )
+if [ -z "$KEEP_SEQUENCE" -o $NSEQ -lt 100 ] ; then
+	echo -en "${ME}: ${GREEN}Creating symlinks to generate timelapse${NC}\n"
+	rm -fr $DIR/sequence
+	mkdir -p $DIR/sequence
 
-# Make sure there's at least one link.
-NUM_FILES=$(wc -l < ${TMP})
-if [ $NUM_FILES -eq 0 ]; then
-	echo -en "*** ${ME}: ${RED}ERROR: No links found!${NC}\n"
-	rmdir "${DIR}/sequence"
-	exit 1
+	# find images, make symlinks sequentially and start avconv to build mp4; upload mp4 and move directory
+	find "$DIR" -name "*.$EXTENSION" -size 0 -delete
+
+	TMP_DIR="$ALLSKY_HOME/tmp"
+	mkdir -p "$TMP_DIR"
+	TMP="$TMP_DIR/timelapseTMP.txt"	# capture the "ln" commands in case the user needs to debug
+	> $TMP
+	ls -rt $DIR/*.$EXTENSION |
+	gawk 'BEGIN{ a=1 }
+		{
+			printf "ln -s %s '$DIR'/sequence/%04d.'$EXTENSION'\n", $0, a;
+			printf "ln -s %s '$DIR'/sequence/%04d.'$EXTENSION'\n", $0, a >> "'$TMP'";
+			# if (a % 100 == 0) printf "echo '$ME': %d links created so far\n", a;
+			a++;
+		}' |
+	bash
+
+	# Make sure there's at least one link.
+	NUM_FILES=$(wc -l < ${TMP})
+	if [ $NUM_FILES -eq 0 ]; then
+		echo -en "*** ${ME}: ${RED}ERROR: No links found!${NC}\n"
+		rmdir "${DIR}/sequence"
+		exit 1
+	else
+		echo -e "$ME: Created $NUM_FILES links total\n"
+	fi
 else
-	echo -e "$ME: Created $NUM_FILES links total\n"
+	echo -en "${ME}: ${YELLOW}Not regenerating sequence because KEEP_SEQUENCE was given and $NSEQ links are present ${NC}\n"
 fi
 
 SCALE=""
@@ -123,7 +136,11 @@ if [ "$UPLOAD_VIDEO" = true ] ; then
         fi
 fi
 
-echo -en "${ME}: ${GREEN}Deleting sequence${NC}\n"
-rm -rf $DIR/sequence
+if [ -z "$KEEP_SEQUENCE" ] ; then
+	echo -en "${ME}: ${GREEN}Deleting sequence${NC}\n"
+	rm -rf $DIR/sequence
+else
+	echo -en "${ME}: ${GREEN}Keeping sequence${NC}\n"
+fi
 
 echo -en "${ME}: ${GREEN}Timelapse was created${NC}\n"

@@ -1,12 +1,14 @@
 #!/bin/bash
+
+if [ -z "$ALLSKY_HOME" ] ; then
+	export ALLSKY_HOME=$(realpath $(dirname "$BASH_ARGV0")/..)
+fi
+
 source $ALLSKY_HOME/config.sh
 source $ALLSKY_HOME/scripts/filename.sh
 source $ALLSKY_HOME/scripts/ftp-settings.sh
 
 cd $ALLSKY_HOME
-
-FPS=${FPS:-25}
-ENCODER=${ENCODER:-libx264}
 
 ME="$(basename "$BASH_ARGV0")"	# Include script name in output so it's easier to find in the log file
 
@@ -71,11 +73,12 @@ fi
 
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
+# set FFLOG=info in config.sh if you want to see what's going on for debugging
 ffmpeg -y -f image2 \
-	-loglevel warning \
-	-r $FPS \
+	-loglevel ${FFLOG:-warning} \
+	-r ${FPS:-25} \
 	-i $DIR/sequence/%04d.$EXTENSION \
-	-vcodec libx264 \
+	-vcodec ${VCODEC:libx264} \
 	-b:v ${TIMELAPSE_BITRATE:-2000k} \
 	-pix_fmt yuv420p \
 	-movflags +faststart \

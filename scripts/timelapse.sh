@@ -34,6 +34,14 @@ else
 	DIR="$2"
 fi
 
+# Guess what the likely image extension is (unless specified in the config) by
+# looking at the most common extension in the target day directory
+if [ -z "$EXTENSION" ] ; then
+	EXT_GUESS=$(ls $DIR | sed -e 's/.*[.]//' | sort | uniq -c | head -1 | sed -e 's/.* //')
+    echo -en "${RED}${ME}: file EXTENSION not found in configuration, guessing ${EXT_GUESS}${NC}\n"
+	EXTENSION=$EXT_GUESS
+fi
+
 # If you are tuning encoder settings, run this script with KEEP_SEQUENCE, eg.
 #	$ env KEEP_SEQUENCE=1 VCODEC=h264_nvenc ~/allsky/scripts/timelapse.sh ${TODAY} /media/external/allsky/${TODAY}/
 # to keep the sequence directory from being deleted and to reuse the contents

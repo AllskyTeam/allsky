@@ -985,7 +985,7 @@ int main(int argc, char *argv[])
 		printf("%sAvailable Arguments:\n", KYEL);
 		printf(" -width                             - Default = Camera Max Width\n");
 		printf(" -height                            - Default = Camera Max Height\n");
-		printf(" -nightexposure                     - Default = 5000000 - Time in Âµs (equals to 5 sec)\n");
+		printf(" -nightexposure                     - Default = 5000000 - Time in us (equals to 5 sec)\n");
 		printf(" -nightautoexposure                 - Default = 0 - Set to 1 to enable auto Exposure\n");
 		printf(" -autofocus                         - Default = 0 - Set to 1 to enable auto Focus\n");
 		printf(" -nightgain                         - Default = 1 (1 - 16)\n");
@@ -1041,7 +1041,7 @@ int main(int argc, char *argv[])
 	double pixelSize = 1.55;
 
 	printf("- Resolution: %dx%d\n", iMaxWidth, iMaxHeight);
-	printf("- Pixel Size: %1.2fÎ¼m\n", pixelSize);
+	printf("- Pixel Size: %1.2fmicrons\n", pixelSize);
 	printf("- Supported Bin: 1x, 2x and 3x\n");
 
 	if (darkframe)

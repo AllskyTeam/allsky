@@ -48,7 +48,7 @@ fi
 # of the sequence directory if it looks ok (contains at least 100 files). This
 # might save you some time when running your encoder repeatedly.
 
-NSEQ=$(ls "/${DIR}/sequence" | wc -l )
+NSEQ=$(ls "/${DIR}/sequence" 2>/dev/null | wc -l )
 if [ -z "$KEEP_SEQUENCE" -o $NSEQ -lt 100 ] ; then
 	echo -en "${ME}: ${GREEN}Creating symlinks to generate timelapse${NC}\n"
 	rm -fr $DIR/sequence

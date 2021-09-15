@@ -1734,6 +1734,16 @@ const char *locale = DEFAULT_LOCALE;
     else
         printf("Stop the allsky service to end this process.\n\n");
 
+    if (! use_new_exposure_algorithm)
+    {
+        asiRetCode = ASIStartVideoCapture(CamNum);
+        if (asiRetCode != ASI_SUCCESS)
+        {
+            printf("*** ERROR: Unable to start video capture: %s\n", getRetCode(asiRetCode));
+            closeUp(99);
+        }
+    }
+
     while (bMain)
     {
         std::string lastDayOrNight;

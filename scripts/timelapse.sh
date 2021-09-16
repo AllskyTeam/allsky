@@ -1,4 +1,9 @@
 #!/bin/bash
+
+if [ -z "$ALLSKY_HOME" ] ; then
+	export ALLSKY_HOME=$(realpath $(dirname "$BASH_ARGV0")/..)
+fi
+
 source $ALLSKY_HOME/config.sh
 source $ALLSKY_HOME/scripts/filename.sh
 source $ALLSKY_HOME/scripts/ftp-settings.sh
@@ -9,13 +14,15 @@ ME="$(basename "$BASH_ARGV0")"	# Include script name in output so it's easier to
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
-if [ $# -lt 1 ]
-  then
-    echo -en "${ME}: ${RED}You need to pass a day argument\n"
-        echo -en "    ex: timelapse.sh 20180119${NC}\n"
-        exit 3
+if [ $# -lt 1 -o $# -gt 2 -o "x$1" = "x-h" ] ; then
+    TODAY=$(date +%Y%m%d)
+    echo -en "${RED}Usage: ${ME} <day> [directory]${NC}\n"
+    echo -en "    ex: timelapse.sh ${TODAY}\n"
+    echo -en "    or: timelapse.sh ${TODAY} /media/external/allsky/${TODAY}\n"
+    exit 3
 fi
 
 # Allow timelapses of pictures not in ALLSKY_HOME.
@@ -26,35 +33,55 @@ if [ "$2" = "" ] ; then
 else
 	DIR="$2"
 fi
-echo -en "${ME}: ${GREEN}Creating symlinks to generate timelapse${NC}\n"
-[ -d $DIR/sequence ] && rm -fr $DIR/sequence	# remove in case it was left over from last run
-mkdir -p $DIR/sequence/
 
-# find images, make symlinks sequentially and start avconv to build mp4; upload mp4 and move directory
-find "$DIR" -name "*.$EXTENSION" -size 0 -delete
+# Guess what the likely image extension is (unless specified in the config) by
+# looking at the most common extension in the target day directory
+if [ -z "$EXTENSION" ] ; then
+	EXT_GUESS=$(ls $DIR | sed -e 's/.*[.]//' | sort | uniq -c | head -1 | sed -e 's/.* //')
+    echo -en "${RED}${ME}: file EXTENSION not found in configuration, guessing ${EXT_GUESS}${NC}\n"
+	EXTENSION=$EXT_GUESS
+fi
 
-TMP_DIR="$ALLSKY_HOME/tmp"
-mkdir -p "$TMP_DIR"
-TMP="$TMP_DIR/timelapseTMP.txt"	# capture the "ln" commands in case the user needs to debug
-> $TMP
-ls -rt $DIR/*.$EXTENSION |
-gawk 'BEGIN{ a=1 }
-	{
-		printf "ln -s %s '$DIR'/sequence/%04d.'$EXTENSION'\n", $0, a;
-		printf "ln -s %s '$DIR'/sequence/%04d.'$EXTENSION'\n", $0, a >> "'$TMP'";
-		# if (a % 100 == 0) printf "echo '$ME': %d links created so far\n", a;
-		a++;
-	}' |
-bash
+# If you are tuning encoder settings, run this script with KEEP_SEQUENCE, eg.
+#	$ env KEEP_SEQUENCE=1 VCODEC=h264_nvenc ~/allsky/scripts/timelapse.sh ${TODAY} /media/external/allsky/${TODAY}/
+# to keep the sequence directory from being deleted and to reuse the contents
+# of the sequence directory if it looks ok (contains at least 100 files). This
+# might save you some time when running your encoder repeatedly.
 
-# Make sure there's at least one link.
-NUM_FILES=$(wc -l < ${TMP})
-if [ $NUM_FILES -eq 0 ]; then
-	echo -en "*** ${ME}: ${RED}ERROR: No links found!${NC}\n"
-	rmdir "${DIR}/sequence"
-	exit 1
+NSEQ=$(ls "/${DIR}/sequence" 2>/dev/null | wc -l )
+if [ -z "$KEEP_SEQUENCE" -o $NSEQ -lt 100 ] ; then
+	echo -en "${ME}: ${GREEN}Creating symlinks to generate timelapse${NC}\n"
+	rm -fr $DIR/sequence
+	mkdir -p $DIR/sequence
+
+	# find images, make symlinks sequentially and start avconv to build mp4; upload mp4 and move directory
+	find "$DIR" -name "*.$EXTENSION" -size 0 -delete
+
+	TMP_DIR="$ALLSKY_HOME/tmp"
+	mkdir -p "$TMP_DIR"
+	TMP="$TMP_DIR/timelapseTMP.txt"	# capture the "ln" commands in case the user needs to debug
+	> $TMP
+	ls -rt $DIR/*.$EXTENSION |
+	gawk 'BEGIN{ a=1 }
+		{
+			printf "ln -s %s '$DIR'/sequence/%04d.'$EXTENSION'\n", $0, a;
+			printf "ln -s %s '$DIR'/sequence/%04d.'$EXTENSION'\n", $0, a >> "'$TMP'";
+			# if (a % 100 == 0) printf "echo '$ME': %d links created so far\n", a;
+			a++;
+		}' |
+	bash
+
+	# Make sure there's at least one link.
+	NUM_FILES=$(wc -l < ${TMP})
+	if [ $NUM_FILES -eq 0 ]; then
+		echo -en "*** ${ME}: ${RED}ERROR: No links found!${NC}\n"
+		rmdir "${DIR}/sequence"
+		exit 1
+	else
+		echo -e "$ME: Created $NUM_FILES links total\n"
+	fi
 else
-	echo -e "$ME: Created $NUM_FILES links total\n"
+	echo -en "${ME}: ${YELLOW}Not regenerating sequence because KEEP_SEQUENCE was given and $NSEQ links are present ${NC}\n"
 fi
 
 SCALE=""
@@ -67,11 +94,12 @@ fi
 
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
+# set FFLOG=info in config.sh if you want to see what's going on for debugging
 ffmpeg -y -f image2 \
-	-loglevel warning \
-	-r $FPS \
+	-loglevel ${FFLOG:-warning} \
+	-r ${FPS:-25} \
 	-i $DIR/sequence/%04d.$EXTENSION \
-	-vcodec libx264 \
+	-vcodec ${VCODEC:-libx264} \
 	-b:v ${TIMELAPSE_BITRATE:-2000k} \
 	-pix_fmt yuv420p \
 	-movflags +faststart \
@@ -116,7 +144,11 @@ if [ "$UPLOAD_VIDEO" = true ] ; then
         fi
 fi
 
-echo -en "${ME}: ${GREEN}Deleting sequence${NC}\n"
-rm -rf $DIR/sequence
+if [ -z "$KEEP_SEQUENCE" ] ; then
+	echo -en "${ME}: ${GREEN}Deleting sequence${NC}\n"
+	rm -rf $DIR/sequence
+else
+	echo -en "${ME}: ${GREEN}Keeping sequence${NC}\n"
+fi
 
 echo -en "${ME}: ${GREEN}Timelapse was created${NC}\n"

@@ -25,6 +25,9 @@ TIMELAPSE_BITRATE="2000k"
 # Timelapse frame rate (number of frames per second)
 FPS=25
 
+# Encoder for timelapse. May be changed to use a hardware encoder or different codec
+VCODEC=libx264
+
 # Set to true to generate a keogram at the end of the night (image summary of the night)
 KEOGRAM=true
 

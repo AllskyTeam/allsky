@@ -59,6 +59,9 @@ void usage_and_exit(int x) {
   std::cout << "-r | --rotate <float> : number of degrees to rotate image, "
                "counterclockwise (0)"
             << std::endl;
+  std::cout << "-s | --image-size <int>x<int> : only process images of a given "
+               "size, eg. 1280x960"
+            << std::endl;
   std::cout << "-h | --help : display this help message" << std::endl;
   std::cout << "-v | --verbose : Increase logging verbosity" << std::endl;
   std::cout << "-n | --no-label : Disable hour labels" << std::endl;
@@ -120,11 +123,13 @@ int main(int argc, char* argv[]) {
   unsigned char fontColor[3] = {255, 0, 0};
   double angle = 0;
   std::string directory, extension, outputfile;
+  int width = 0, height = 0;
 
   while (1) {  // getopt loop
     int option_index = 0;
     static struct option long_options[] = {
         {"directory", required_argument, 0, 'd'},
+        {"image-size", required_argument, 0, 's'},
         {"extension", required_argument, 0, 'e'},
         {"output", required_argument, 0, 'o'},
         {"font-color", required_argument, 0, 'C'},
@@ -138,7 +143,7 @@ int main(int argc, char* argv[]) {
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "d:e:o:r:C:L:N:S:T:nvh", long_options,
+    c = getopt_long(argc, argv, "d:e:o:r:s:C:L:N:S:T:nvh", long_options,
                     &option_index);
     if (c == -1)
       break;
@@ -161,6 +166,12 @@ int main(int argc, char* argv[]) {
         break;
       case 'r':
         angle = atof(optarg);
+        break;
+      case 's':
+        sscanf(optarg, "%dx%d", &width, &height);
+        // 122.8Mpx should be enough for anybody.
+        if (height < 0 || height > 9600 || width < 0 || width > 12800)
+          height = width = 0;
         break;
       case 'v':
         loglevel++;
@@ -224,6 +235,12 @@ int main(int argc, char* argv[]) {
       std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
                 << basename(files.gl_pathv[f]) << std::endl;
 
+    if (height && width &&
+        (imagesrc.cols != width || imagesrc.rows != height)) {
+      fprintf(stderr, "Image size %dx%d != %dx%d\n", imagesrc.cols,
+              imagesrc.cols, width, height);
+      continue;
+    }
     cv::Point2f center((imagesrc.cols - 1) / 2.0, (imagesrc.rows - 1) / 2.0);
     cv::Mat rot = cv::getRotationMatrix2D(center, angle, 1.0);
     cv::Rect2f bbox =

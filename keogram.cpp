@@ -122,7 +122,10 @@ int main(int argc, char* argv[]) {
     int option_index = 0;
     static struct option long_options[] = {
         {"directory", required_argument, 0, 'd'},
+<<<<<<< HEAD
         {"image-size", required_argument, 0, 's'},
+=======
+>>>>>>> 7113a89 (fix directory long_opt name)
         {"extension", required_argument, 0, 'e'},
         {"output", required_argument, 0, 'o'},
         {"font-color", required_argument, 0, 'C'},

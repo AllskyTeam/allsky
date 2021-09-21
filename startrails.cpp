@@ -62,10 +62,10 @@ void usage_and_exit(int x) {
 int main(int argc, char* argv[]) {
   std::string directory, extension, outputfile;
   double threshold = -1;
-  int verbose = 0, stats_only = 0;
+  int verbose = 0, stats_only = 0, height = 0, width = 0;
   char c;
 
-  while ((c = getopt(argc, argv, "hvsb:d:e:o:")) != -1) {
+  while ((c = getopt(argc, argv, "hvsb:d:e:o:S:")) != -1) {
     switch (c) {
       case 'h':
         usage_and_exit(0);
@@ -76,6 +76,12 @@ int main(int argc, char* argv[]) {
         break;
       case 's':
         stats_only = 1;
+        break;
+      case 'S':
+        sscanf(optarg, "%dx%d", &width, &height);
+        // 122.8Mpx should be enough for anybody.
+        if (height < 0 || height > 9600 || width < 0 || width > 12800)
+          height = width = 0;
         break;
       case 'b':
         double tf;
@@ -128,6 +134,12 @@ int main(int argc, char* argv[]) {
       std::cout << "Error reading file " << basename(files.gl_pathv[f])
                 << std::endl;
       stats.col(f) = 1.0;  // mark as invalid
+      continue;
+    }
+
+    if (height && width && (image.cols != width || image.rows != height)) {
+      fprintf(stderr, "%s size %dx%d != %dx%d\n", files.gl_pathv[f], image.cols,
+              image.cols, width, height);
       continue;
     }
 

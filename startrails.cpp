@@ -140,6 +140,10 @@ int main(int argc, char* argv[]) {
       continue;
     }
 
+    // first valid image sets the number of channels we expect
+    if (nchan == 0 && image.channels())
+      nchan = image.channels();
+
     cv::Scalar mean_scalar = cv::mean(image);
     double mean;
     switch (image.channels()) {

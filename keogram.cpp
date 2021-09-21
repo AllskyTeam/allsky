@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
   while (1) {  // getopt loop
     int option_index = 0;
     static struct option long_options[] = {
-        {"image-dir", required_argument, 0, 'd'},
+        {"directory", required_argument, 0, 'd'},
         {"extension", required_argument, 0, 'e'},
         {"output", required_argument, 0, 'o'},
         {"font-color", required_argument, 0, 'C'},

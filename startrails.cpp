@@ -127,6 +127,7 @@ int main(int argc, char* argv[]) {
   // Create space for statistics
   cv::Mat stats;
   stats.create(1, files.gl_pathc, CV_64F);
+  int nchan = 0;
 
   for (size_t f = 0; f < files.gl_pathc; f++) {
     cv::Mat image = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
@@ -142,6 +143,10 @@ int main(int argc, char* argv[]) {
               image.cols, width, height);
       continue;
     }
+
+    // first valid image sets the number of channels we expect
+    if (nchan == 0 && image.channels())
+      nchan = image.channels();
 
     cv::Scalar mean_scalar = cv::mean(image);
     double mean;
@@ -170,6 +175,15 @@ int main(int argc, char* argv[]) {
     stats.col(f) = mean;
 
     if (mean <= threshold) {
+      if (image.channels() != nchan) {
+        if (verbose)
+          fprintf(stderr, "repairing channel mismatch: %d != %d\n",
+                  image.channels(), nchan);
+        if (image.channels() < nchan)
+          cv::cvtColor(image, image, CV_GRAY2BGR, nchan);
+        else if (image.channels() > nchan)
+          cv::cvtColor(image, image, CV_BGR2GRAY, nchan);
+      }
       if (accumulated.empty()) {
         image.copyTo(accumulated);
       } else {

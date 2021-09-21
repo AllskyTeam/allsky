@@ -222,6 +222,7 @@ int main(int argc, char* argv[]) {
   cv::Mat accumulated;
 
   int prevHour = -1;
+  int nchan = 0;
 
   for (size_t f = 0; f < files.gl_pathc; f++) {
     cv::Mat imagesrc = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
@@ -237,10 +238,16 @@ int main(int argc, char* argv[]) {
 
     if (height && width &&
         (imagesrc.cols != width || imagesrc.rows != height)) {
-      fprintf(stderr, "Image size %dx%d != %dx%d\n", imagesrc.cols,
-              imagesrc.cols, width, height);
+      fprintf(stderr, "%s size %dx%d != %dx%d\n", files.gl_pathv[f],
+              imagesrc.cols, imagesrc.cols, width, height);
       continue;
     }
+    if (nchan == 0)
+      nchan = imagesrc.channels();
+
+    if (imagesrc.channels() != nchan)
+      continue;
+
     cv::Point2f center((imagesrc.cols - 1) / 2.0, (imagesrc.rows - 1) / 2.0);
     cv::Mat rot = cv::getRotationMatrix2D(center, angle, 1.0);
     cv::Rect2f bbox =

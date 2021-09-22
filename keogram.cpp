@@ -56,7 +56,7 @@ void usage_and_exit(int x) {
             << std::endl;
   std::cout << "-o | --output-file <str> : name of output file (required)"
             << std::endl;
-  std::cout << "-r | --r <float> : number of degrees to rotate image, "
+  std::cout << "-r | --rotate <float> : number of degrees to rotate image, "
                "counterclockwise (0)"
             << std::endl;
   std::cout << "-h | --help : display this help message" << std::endl;

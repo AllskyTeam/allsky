@@ -2100,7 +2100,7 @@ const char *locale = DEFAULT_LOCALE;
                          displayDebugText(textBuffer, 2);
 
 			 std::string why;	// Why did we adjust the exposure?  For debugging
-			 int num=0;
+			 int num = 0;
                          if (mean >= 254) {
                              newExposure = currentExposure * 0.4;
                              tempMaxExposure = currentExposure - roundToMe;

@@ -24,9 +24,14 @@
 #include <opencv2/imgproc/imgproc_c.h>
 #endif
 
+<<<<<<< HEAD
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 >>>>>>> 302520c (Silence aux tools (#493))
+=======
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+>>>>>>> dd2096b (Updated for OpenCV4 on armv7l)
 
 #define KNRM "\x1B[0m"
 #define KRED "\x1B[31m"
@@ -284,6 +289,7 @@ int main(int argc, char* argv[]) {
       continue;
     }
 
+<<<<<<< HEAD
     cv::Scalar mean_scalar = cv::mean(image);
     double mean;
     switch (image.channels()) {
@@ -307,6 +313,13 @@ int main(int argc, char* argv[]) {
     if (verbose)
       std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
                 << basename(files.gl_pathv[f]) << " " << mean << std::endl;
+=======
+    std::vector<int> compression_params;
+    compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+    compression_params.push_back(9);
+    compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
+    compression_params.push_back(95);
+>>>>>>> dd2096b (Updated for OpenCV4 on armv7l)
 
     stats.col(f) = mean;
 

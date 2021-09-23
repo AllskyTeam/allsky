@@ -12,8 +12,8 @@
 #include <string>
 #include <vector>
 
-#include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 #define KNRM "\x1B[0m"
 #define KRED "\x1B[31m"

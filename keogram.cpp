@@ -20,8 +20,8 @@
 #include <opencv2/imgproc/imgproc_c.h>
 #endif
 
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
 #define KNRM "\x1B[0m"
@@ -332,9 +332,9 @@ int main(int argc, char* argv[]) {
   globfree(&files);
 
   std::vector<int> compression_params;
-  compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+  compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
   compression_params.push_back(9);
-  compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+  compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
   compression_params.push_back(95);
 
   cv::imwrite(outputfile, accumulated, compression_params);

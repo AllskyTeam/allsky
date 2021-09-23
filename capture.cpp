@@ -5,9 +5,10 @@
 #include <opencv2/imgcodecs/legacy/constants_c.h>
 #endif
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/viz.hpp>
 #include "include/ASICamera2.h"
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -177,15 +178,15 @@ void cvText(cv::Mat &img, const char *text, int x, int y, double fontsize, int l
     {
         unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
         if (outlinefont)
-            cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(0,0,0), linewidth+4, linetype);
-        cv::putText(img, text, cvPoint(x, y), fontname, fontsize, fontcolor16, linewidth, linetype);
+            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0), linewidth+4, linetype);
+        cv::putText(img, text, cv::Point(x, y), fontname, fontsize, fontcolor16, linewidth, linetype);
     }
     else
     {
         if (outlinefont)
-            cv::putText(img, text, cvPoint(x, y), fontname, fontsize, cvScalar(0,0,0, 255), linewidth+4, linetype);
-        cv::putText(img, text, cvPoint(x, y), fontname, fontsize,
-                    cvScalar(fontcolor[0], fontcolor[1], fontcolor[2], 255), linewidth, linetype);
+            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0, 255), linewidth+4, linetype);
+        cv::putText(img, text, cv::Point(x, y), fontname, fontsize,
+                    cv::Scalar(fontcolor[0], fontcolor[1], fontcolor[2], 255), linewidth, linetype);
     }
 }
 
@@ -213,7 +214,7 @@ char *getTime(char const *tf)
 
 double timeDiff(int64 start, int64 end)
 {
-	double frequency = cvGetTickFrequency();
+	double frequency = cv::getTickFrequency();
 	return (double)(end - start) / frequency;	// in Microseconds
 }
 
@@ -236,14 +237,14 @@ std::string exec(const char *cmd)
 
 void *Display(void *params)
 {
-    cv::Mat *pImg = (cv::Mat *)params;
-    cvNamedWindow("video", 1);
+    //cv::Mat *pImg = (cv::Mat *)params;
+    cv::namedWindow("video", 1);
     while (bDisplay)
     {
-        cvShowImage("video", pImg);
-        cvWaitKey(100);
+        //cv::ShowImage("video", pImg);
+        cv::waitKey(100);
     }
-    cvDestroyWindow("video");
+    cv::destroyWindow("video");
     printf("Display thread over\n");
     return (void *)0;
 }
@@ -788,9 +789,9 @@ int main(int argc, char *argv[])
     pthread_cond_init(&cond_SatrtSave, 0);
 
     int fontname[] = {
-        CV_FONT_HERSHEY_SIMPLEX,        CV_FONT_HERSHEY_PLAIN,         CV_FONT_HERSHEY_DUPLEX,
-        CV_FONT_HERSHEY_COMPLEX,        CV_FONT_HERSHEY_TRIPLEX,       CV_FONT_HERSHEY_COMPLEX_SMALL,
-        CV_FONT_HERSHEY_SCRIPT_SIMPLEX, CV_FONT_HERSHEY_SCRIPT_COMPLEX };
+        cv::FONT_HERSHEY_SIMPLEX,        cv::FONT_HERSHEY_PLAIN,         cv::FONT_HERSHEY_DUPLEX,
+        cv::FONT_HERSHEY_COMPLEX,        cv::FONT_HERSHEY_TRIPLEX,       cv::FONT_HERSHEY_COMPLEX_SMALL,
+        cv::FONT_HERSHEY_SCRIPT_SIMPLEX, cv::FONT_HERSHEY_SCRIPT_COMPLEX };
     char const *fontnames[] = {		// Character representation of names for clarity:
         "SIMPLEX",                      "PLAIN",                       "DUPEX",
         "COMPLEX",                      "TRIPLEX",                     "COMPLEX_SMALL",
@@ -838,7 +839,7 @@ const char *locale = DEFAULT_LOCALE;
     int outlinefont            = DEFAULT_OUTLINEFONT;
     int fontcolor[3]           = { 255, 0, 0 };
     int smallFontcolor[3]      = { 0, 0, 255 };
-    int linetype[3]            = { CV_AA, 8, 4 };
+    int linetype[3]            = { cv::LINE_AA, 8, 4 };
 #define DEFAULT_LINENUMBER       0
     int linenumber             = DEFAULT_LINENUMBER;
 
@@ -1410,7 +1411,7 @@ const char *locale = DEFAULT_LOCALE;
 	}
 
         imagetype = "jpg";
-        compression_parameters.push_back(CV_IMWRITE_JPEG_QUALITY);
+        compression_parameters.push_back(cv::IMWRITE_JPEG_QUALITY);
         if (quality == NOT_SET)
         {
             quality = 95;
@@ -1422,7 +1423,7 @@ const char *locale = DEFAULT_LOCALE;
     else if (strcasecmp(ext + 1, "png") == 0)
     {
         imagetype = "png";
-        compression_parameters.push_back(CV_IMWRITE_PNG_COMPRESSION);
+        compression_parameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
         if (quality == NOT_SET)
         {
             quality = 3;
@@ -1934,15 +1935,15 @@ const char *locale = DEFAULT_LOCALE;
 
         if (Image_type == ASI_IMG_RAW16)
         {
-            pRgb.create(cvSize(width, height), CV_16UC1);
+            pRgb.create(cv::Size(width, height), CV_16UC1);
         }
         else if (Image_type == ASI_IMG_RGB24)
         {
-            pRgb.create(cvSize(width, height), CV_8UC3);
+            pRgb.create(cv::Size(width, height), CV_8UC3);
         }
         else // RAW8 and Y8
         {
-            pRgb.create(cvSize(width, height), CV_8UC1);
+            pRgb.create(cv::Size(width, height), CV_8UC1);
         }
 
         asiRetCode = ASISetROIFormat(CamNum, width, height, currentBin, (ASI_IMG_TYPE)Image_type);
@@ -2315,7 +2316,7 @@ const char *locale = DEFAULT_LOCALE;
                     {
                         // Draw a rectangle where the histogram box is.
 
-                        int lt = CV_AA, thickness = 2;
+                        int lt = cv::LINE_AA, thickness = 2;
 			cv::Point from1, to1, from2, to2;
                         int X1 = (width * histogramBoxPercentFromLeft) - (histogramBoxSizeX / 2);
                         int X2 = X1 + histogramBoxSizeX;
@@ -2327,36 +2328,36 @@ const char *locale = DEFAULT_LOCALE;
                         // cv::line takes care of bytes per pixel.
 
                         // top lines
-			from1 = cvPoint(X1, Y1);
-			to1 = cvPoint(X2, Y1);
-                        from2 = cvPoint(X1, Y1+thickness);
-                        to2 = cvPoint(X2, Y1+thickness);
-                        cv::line(pRgb, from1, to1, cvScalar(0,0,0), thickness, lt);
-                        cv::line(pRgb, from2, to2, cvScalar(255,255,255), thickness, lt);
+			from1 = cv::Point(X1, Y1);
+			to1 = cv::Point(X2, Y1);
+                        from2 = cv::Point(X1, Y1+thickness);
+                        to2 = cv::Point(X2, Y1+thickness);
+                        cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
+                        cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
 
                         // right lines
-			from1 = cvPoint(X2, Y1);
-			to1 = cvPoint(X2, Y2);
-                        from2 = cvPoint(X2-thickness, Y1+thickness);
-                        to2 = cvPoint(X2-thickness, Y2-thickness);
-                        cv::line(pRgb, from1, to1, cvScalar(0,0,0), thickness, lt);
-                        cv::line(pRgb, from2, to2, cvScalar(255,255,255), thickness, lt);
+			from1 = cv::Point(X2, Y1);
+			to1 = cv::Point(X2, Y2);
+                        from2 = cv::Point(X2-thickness, Y1+thickness);
+                        to2 = cv::Point(X2-thickness, Y2-thickness);
+                        cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
+                        cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
 
                         // bottom lines
-			from1 = cvPoint(X1, Y2);
-			to1 = cvPoint(X2, Y2);
-                        from2 = cvPoint(X1, Y2-thickness);
-                        to2 = cvPoint(X2, Y2-thickness);
-                        cv::line(pRgb, from1, to1, cvScalar(0,0,0), thickness, lt);
-                        cv::line(pRgb, from2, to2, cvScalar(255,255,255), thickness, lt);
+			from1 = cv::Point(X1, Y2);
+			to1 = cv::Point(X2, Y2);
+                        from2 = cv::Point(X1, Y2-thickness);
+                        to2 = cv::Point(X2, Y2-thickness);
+                        cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
+                        cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
 
                         // left lines
-			from1 = cvPoint(X1, Y1);
-			to1 = cvPoint(X1, Y2);
-                        from2 = cvPoint(X1+thickness, Y1+thickness);
-                        to2 = cvPoint(X1+thickness, Y2-thickness);
-                        cv::line(pRgb, from1, to1, cvScalar(0,0,0), thickness, lt);
-                        cv::line(pRgb, from2, to2, cvScalar(255,255,255), thickness, lt);
+			from1 = cv::Point(X1, Y1);
+			to1 = cv::Point(X1, Y2);
+                        from2 = cv::Point(X1+thickness, Y1+thickness);
+                        to2 = cv::Point(X1+thickness, Y2-thickness);
+                        cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
+                        cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
                     }
 #endif
                     /**
@@ -2445,9 +2446,9 @@ const char *locale = DEFAULT_LOCALE;
 
                     pthread_mutex_lock(&mtx_SaveImg);
                     // Display the time it took to save an image, for debugging.
-                    int64 st = cvGetTickCount();
+                    int64 st = cv::getTickCount();
                     pthread_cond_signal(&cond_SatrtSave);
-                    int64 et = cvGetTickCount();
+                    int64 et = cv::getTickCount();
                     pthread_mutex_unlock(&mtx_SaveImg);
 
                     sprintf(textBuffer, "  (%.0f us)\n", timeDiff(st, et));

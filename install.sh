@@ -2,6 +2,12 @@
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
+
+if [[ $EUID -eq 0 ]]; then
+   echo "This script must NOT be run as root" 1>&2
+   exit 1
+fi
+
 echo -en '\n'
 echo -e "${RED}**********************************************"
 echo    "*** Welcome to the Allsky Camera installer ***"

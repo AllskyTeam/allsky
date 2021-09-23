@@ -9,7 +9,7 @@ echo -e "**********************************************${NC}"
 echo -en '\n'
 
 echo -en "${GREEN}* Dependencies installation\n${NC}"
-sudo apt-get update && sudo apt-get -y install libopencv-dev libusb-dev libusb-1.0-0-dev ffmpeg gawk lftp jq imagemagick
+sudo apt update && sudo apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev ffmpeg gawk lftp jq imagemagick
 echo -en '\n'
 
 echo -en "${GREEN}* Compile allsky software\n${NC}"

@@ -41,7 +41,7 @@ endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
 
-all:capture capture_RPiHQ startrails keogram sunwait-remove-precompiled sunwait
+all:capture capture_RPiHQ startrails keogram multi_out sunwait-remove-precompiled sunwait
 
 sunwait-remove-precompiled:
 ifneq ("arm", $(findstring $(platform), "arm"))
@@ -65,6 +65,9 @@ startrails:startrails.cpp
 
 keogram:keogram.cpp
 	$(CC)  keogram.cpp -o keogram $(CFLAGS) $(OPENCV)
+
+multi_out:multi_out.cpp
+	$(CC)  multi_out.cpp -o multi_out $(CFLAGS) $(OPENCV)
 
 clean:
 	rm -f capture capture_RPiHQ startrails keogram

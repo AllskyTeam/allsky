@@ -16,6 +16,7 @@ endif
 ifeq ($(platform), armv7l)
 # Some distributions may need to use opencv4 and -DOPENCV_C_HEADERS as is done for x86_64
 OPENCV = $(shell pkg-config --cflags opencv4) $(shell pkg-config --libs opencv4)
+DEFS += -DOPENCV_C_HEADERS
 CC = arm-linux-gnueabihf-g++
 AR= arm-linux-gnueabihf-ar
 CFLAGS += -march=armv7 -mthumb

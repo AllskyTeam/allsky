@@ -47,7 +47,7 @@ cd allsky
 Now, run the install script:
 
 ```shell
-sudo ./install.sh
+./install.sh
 ```
 
 ## Update

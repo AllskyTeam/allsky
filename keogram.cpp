@@ -20,8 +20,8 @@
 #include <opencv2/imgproc/imgproc_c.h>
 #endif
 
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
 #define KNRM "\x1B[0m"

@@ -237,11 +237,17 @@ std::string exec(const char *cmd)
 
 void *Display(void *params)
 {
-    //cv::Mat *pImg = (cv::Mat *)params;
+    cv::Mat *para = (cv::Mat *)params;
+    int w=para->cols;
+    int h=para->rows;
+    
+    cv::Mat pImg(h,w,(int)para->type(),(uchar *)para->data);
     cv::namedWindow("video", 1);
     while (bDisplay)
     {
-        //cv::ShowImage("video", pImg);
+        // With this in, a compile error occurs:
+	// no known conversion for argument 2 from ‘cv::Mat*’ to ‘cv::InputArray’
+        cv::imshow("video", pImg);
         cv::waitKey(100);
     }
     cv::destroyWindow("video");

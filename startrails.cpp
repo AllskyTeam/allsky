@@ -3,22 +3,24 @@
 // Based on script by Thomas Jacquin
 // SPDX-License-Identifier: MIT
 
-#include <cstdlib>
+#include <getopt.h>
 #include <glob.h>
-#include <string>
-#include <iostream>
-#include <vector>
+#include <unistd.h>
 #include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+#include <vector>
 
 #ifdef OPENCV_C_HEADERS
 #include <opencv2/core/types_c.h>
 #include <opencv2/highgui/highgui_c.h>
-#include <opencv2/imgproc/imgproc_c.h>
 #include <opencv2/imgcodecs/legacy/constants_c.h>
+#include <opencv2/imgproc/imgproc_c.h>
 #endif
 
-#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #define KNRM "\x1B[0m"
 #define KRED "\x1B[31m"
@@ -32,112 +34,169 @@
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
-int main(int argc, char *argv[])
-{
-    if (argc != 5)
-    {
-        std::cout << KRED
-                  << "You need to pass 4 arguments: source directory, file extension, brightness treshold, output file"
-                  << KNRM << std::endl;
-        std::cout << "    ex: startrails ../images/20180208/ jpg 0.07 startrails.jpg" << std::endl;
-        std::cout << "    brightness ranges from 0 (black) to 1 (white)" << std::endl;
-        std::cout << "    A moonless sky is around 0.05 while full moon can be as high as 0.4" << std::endl;
-        return 3;
+void usage_and_exit(int x) {
+  std::cout << "Usage: startrails [-v] -d <dir> -e <ext> [-b <brightness> -o "
+               "<output> | -s]"
+            << std::endl;
+  if (x) {
+    std::cout << KRED
+              << "Source directory and file extension are always required."
+              << std::endl;
+    std::cout << "brightness threshold and output file are required to render "
+                 "startrails"
+              << KNRM << std::endl;
+  }
+
+  std::cout << std::endl << "Arguments:" << std::endl;
+  std::cout << "-h : display this help, then exit" << std::endl;
+  std::cout << "-v : increase log verbosity" << std::endl;
+  std::cout << "-s : print image directory statistics without producing image."
+            << std::endl;
+  std::cout << "-d <str> : directory from which to read images" << std::endl;
+  std::cout << "-e <str> : filter images to just this extension" << std::endl;
+  std::cout << "-o <str> : output image filename" << std::endl;
+  std::cout << "-b <float> : ranges from 0 (black) to 1 (white)" << std::endl;
+  std::cout << "\tA moonless sky may be as low as 0.05 while full moon can be "
+               "as high as 0.4"
+            << std::endl;
+  std::cout << std::endl
+            << "ex: startrails -b 0.07 -d ../images/20180208/ -e jpg -o "
+               "startrails.jpg"
+            << std::endl;
+  exit(x);
+}
+
+int main(int argc, char* argv[]) {
+  std::string directory, extension, outputfile;
+  double threshold = -1;
+  int verbose = 0, stats_only = 0;
+  char c;
+
+  while ((c = getopt(argc, argv, "hvsb:d:e:o:")) != -1) {
+    switch (c) {
+      case 'h':
+        usage_and_exit(0);
+        // NOTREACHED
+        break;
+      case 'v':
+        verbose++;
+        break;
+      case 's':
+        stats_only = 1;
+        break;
+      case 'b':
+        double tf;
+        tf = atof(optarg);
+        if (tf >= 0 && tf <= 1.0)
+          threshold = tf;
+        break;
+      case 'd':
+        directory = optarg;
+        break;
+      case 'e':
+        extension = optarg;
+        break;
+      case 'o':
+        outputfile = optarg;
+        break;
+      default:
+        break;
     }
-    std::string directory  = argv[1];
-    std::string extension  = argv[2];
-    double threshold       = atof(argv[3]);
-    std::string outputfile = argv[4];
+  }
 
-    // Find files
-    glob_t files;
-    std::string wildcard = directory + "/*." + extension;
-    glob(wildcard.c_str(), 0, NULL, &files);
-    if (files.gl_pathc == 0)
-    {
-        globfree(&files);
-        std::cout << "No images found, exiting." << std::endl;
-        return 0;
-    }
+  if (stats_only) {
+    threshold = 0;
+    outputfile = "/dev/null";
+  }
 
-    cv::Mat accumulated;
+  if (directory.empty() || extension.empty() || outputfile.empty() ||
+      threshold < 0)
+    usage_and_exit(3);
 
-    // Create space for statistics
-    cv::Mat stats;
-    stats.create(1, files.gl_pathc, CV_64F);
-
-    for (size_t f = 0; f < files.gl_pathc; f++)
-    {
-        cv::Mat image = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
-        if (!image.data)
-        {
-            std::cout << "Error reading file " << basename(files.gl_pathv[f]) << std::endl;
-            stats.col(f) = 1.0; // mark as invalid
-            continue;
-        }
-
-        cv::Scalar mean_scalar = cv::mean(image);
-        double mean;
-        switch (image.channels())
-        {
-            default: // mono case
-                mean = mean_scalar.val[0];
-                break;
-            case 3: // for color choose maximum channel
-            case 4:
-                mean = cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
-                break;
-        }
-        // Scale to 0-1 range
-        switch (image.depth())
-        {
-            case CV_8U:
-                mean /= 255.0;
-                break;
-            case CV_16U:
-                mean /= 65535.0;
-                break;
-        }
-        std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] " << basename(files.gl_pathv[f]) << " " << mean
-                  << std::endl;
-
-        stats.col(f) = mean;
-
-        if (mean <= threshold)
-        {
-            if (accumulated.empty())
-            {
-                image.copyTo(accumulated);
-            }
-            else
-            {
-                accumulated = cv::max(accumulated, image);
-            }
-        }
-    }
-
-    // Calculate some statistics
-    double min_mean, max_mean;
-    cv::Point min_loc;
-    cv::minMaxLoc(stats, &min_mean, &max_mean, &min_loc);
-    double mean_mean = cv::mean(stats)[0];
-
-    // For median, do partial sort and take middle value
-    std::vector<double> vec;
-    stats.copyTo(vec);
-    std::nth_element(vec.begin(), vec.begin() + (vec.size() / 2), vec.end());
-    double median_mean = vec[vec.size() / 2];
-
-    std::cout << "Minimum: " << min_mean << " maximum: " << max_mean << " mean: " << mean_mean
-              << " median: " << median_mean << std::endl;
-
-    // If we still don't have an image (no images below threshold), copy the minimum mean image so we see why
-    if (accumulated.empty())
-    {
-        std::cout << "No images below threshold, writing the minimum image only" << std::endl;
-        accumulated = cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
-    }
+  // Find files
+  glob_t files;
+  std::string wildcard = directory + "/*." + extension;
+  glob(wildcard.c_str(), 0, NULL, &files);
+  if (files.gl_pathc == 0) {
     globfree(&files);
+    std::cout << "No images found, exiting." << std::endl;
+    return 0;
+  }
+
+  cv::Mat accumulated;
+
+  // Create space for statistics
+  cv::Mat stats;
+  stats.create(1, files.gl_pathc, CV_64F);
+
+  for (size_t f = 0; f < files.gl_pathc; f++) {
+    cv::Mat image = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
+    if (!image.data) {
+      std::cout << "Error reading file " << basename(files.gl_pathv[f])
+                << std::endl;
+      stats.col(f) = 1.0;  // mark as invalid
+      continue;
+    }
+
+    cv::Scalar mean_scalar = cv::mean(image);
+    double mean;
+    switch (image.channels()) {
+      default:  // mono case
+        mean = mean_scalar.val[0];
+        break;
+      case 3:  // for color choose maximum channel
+      case 4:
+        mean = cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
+        break;
+    }
+    // Scale to 0-1 range
+    switch (image.depth()) {
+      case CV_8U:
+        mean /= 255.0;
+        break;
+      case CV_16U:
+        mean /= 65535.0;
+        break;
+    }
+    if (verbose)
+      std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
+                << basename(files.gl_pathv[f]) << " " << mean << std::endl;
+
+    stats.col(f) = mean;
+
+    if (mean <= threshold) {
+      if (accumulated.empty()) {
+        image.copyTo(accumulated);
+      } else {
+        accumulated = cv::max(accumulated, image);
+      }
+    }
+  }
+
+  // Calculate some statistics
+  double min_mean, max_mean;
+  cv::Point min_loc;
+  cv::minMaxLoc(stats, &min_mean, &max_mean, &min_loc);
+  double mean_mean = cv::mean(stats)[0];
+
+  // For median, do partial sort and take middle value
+  std::vector<double> vec;
+  stats.copyTo(vec);
+  std::nth_element(vec.begin(), vec.begin() + (vec.size() / 2), vec.end());
+  double median_mean = vec[vec.size() / 2];
+
+  std::cout << "Minimum: " << min_mean << " maximum: " << max_mean
+            << " mean: " << mean_mean << " median: " << median_mean
+            << std::endl;
+
+  // If we still don't have an image (no images below threshold), copy the
+  // minimum mean image so we see why
+  if (!stats_only) {
+    if (accumulated.empty()) {
+      std::cout << "No images below threshold, writing the minimum image only"
+                << std::endl;
+      accumulated = cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
+    }
 
     std::vector<int> compression_params;
     compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
@@ -146,5 +205,7 @@ int main(int argc, char *argv[])
     compression_params.push_back(95);
 
     cv::imwrite(outputfile, accumulated, compression_params);
-    return 0;
+  }
+  globfree(&files);
+  return 0;
 }

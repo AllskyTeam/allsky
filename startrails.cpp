@@ -199,41 +199,42 @@ int main(int argc, char* argv[]) {
         accumulated = cv::max(accumulated, image);
       }
     }
-  }
 
-  // Calculate some statistics
-  double min_mean, max_mean;
-  cv::Point min_loc;
-  cv::minMaxLoc(stats, &min_mean, &max_mean, &min_loc);
-  double mean_mean = cv::mean(stats)[0];
+    // Calculate some statistics
+    double min_mean, max_mean;
+    cv::Point min_loc;
+    cv::minMaxLoc(stats, &min_mean, &max_mean, &min_loc);
+    double mean_mean = cv::mean(stats)[0];
 
-  // For median, do partial sort and take middle value
-  std::vector<double> vec;
-  stats.copyTo(vec);
-  std::nth_element(vec.begin(), vec.begin() + (vec.size() / 2), vec.end());
-  double median_mean = vec[vec.size() / 2];
+    // For median, do partial sort and take middle value
+    std::vector<double> vec;
+    stats.copyTo(vec);
+    std::nth_element(vec.begin(), vec.begin() + (vec.size() / 2), vec.end());
+    double median_mean = vec[vec.size() / 2];
 
-  std::cout << "Minimum: " << min_mean << " maximum: " << max_mean
-            << " mean: " << mean_mean << " median: " << median_mean
-            << std::endl;
+    std::cout << "Minimum: " << min_mean << " maximum: " << max_mean
+              << " mean: " << mean_mean << " median: " << median_mean
+              << std::endl;
 
-  // If we still don't have an image (no images below threshold), copy the
-  // minimum mean image so we see why
-  if (!stats_only) {
-    if (accumulated.empty()) {
-      std::cout << "No images below threshold, writing the minimum image only"
-                << std::endl;
-      accumulated = cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
+    // If we still don't have an image (no images below threshold), copy the
+    // minimum mean image so we see why
+    if (!stats_only) {
+      if (accumulated.empty()) {
+        std::cout << "No images below threshold, writing the minimum image only"
+                  << std::endl;
+        accumulated =
+            cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
+      }
+
+      std::vector<int> compression_params;
+      compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+      compression_params.push_back(9);
+      compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+      compression_params.push_back(95);
+
+      cv::imwrite(outputfile, accumulated, compression_params);
     }
-
-    std::vector<int> compression_params;
-    compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-    compression_params.push_back(9);
-    compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-    compression_params.push_back(95);
-
-    cv::imwrite(outputfile, accumulated, compression_params);
+    globfree(&files);
+    return 0;
   }
-  globfree(&files);
-  return 0;
 }

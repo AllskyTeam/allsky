@@ -55,6 +55,8 @@ void usage_and_exit(int x) {
   std::cout << "-d <str> : directory from which to read images" << std::endl;
   std::cout << "-e <str> : filter images to just this extension" << std::endl;
   std::cout << "-o <str> : output image filename" << std::endl;
+  std::cout << "-S <int>x<int> : restrict processed images to this size"
+            << std::endl;
   std::cout << "-b <float> : ranges from 0 (black) to 1 (white)" << std::endl;
   std::cout << "\tA moonless sky may be as low as 0.05 while full moon can be "
                "as high as 0.4"
@@ -70,7 +72,7 @@ int main(int argc, char* argv[]) {
   std::string directory, extension, outputfile;
   double threshold = -1;
   int verbose = 0, stats_only = 0, height = 0, width = 0;
-  char c;
+  int c;
 
   while ((c = getopt(argc, argv, "hvsb:d:e:o:S:")) != -1) {
     switch (c) {
@@ -181,7 +183,7 @@ int main(int argc, char* argv[]) {
 
     stats.col(f) = mean;
 
-    if (mean <= threshold) {
+    if (!stats_only && mean <= threshold) {
       if (image.channels() != nchan) {
         if (verbose)
           fprintf(stderr, "repairing channel mismatch: %d != %d\n",

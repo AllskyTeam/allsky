@@ -2,59 +2,74 @@
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
+
+if [[ $EUID -eq 0 ]]; then
+   echo "This script must NOT be run as root" 1>&2
+   exit 1
+fi
+# The user should be running this in the "allsky" directory.  Make sure they are.
+INSTALL_DIR="allsky"
+DIR=$(basename "$PWD")
+if [ "$DIR" != "$INSTALL_DIR" ] ; then
+	(echo
+	 echo -e "${RED}**********"
+	 echo -e "Please run this script from the '$INSTALL_DIR' directory."
+	 echo -e "**********${NC}"
+	 echo) 1>&2
+	exit 1
+fi
+
 echo -en '\n'
-echo -e "${RED}**********************************************"
+echo -e "**********************************************"
 echo    "*** Welcome to the Allsky Camera installer ***"
-echo -e "**********************************************${NC}"
+echo -e "**********************************************"
 echo -en '\n'
 
 echo -en "${GREEN}* Dependencies installation\n${NC}"
-apt-get update && apt-get install libopencv-dev libusb-dev libusb-1.0-0-dev ffmpeg gawk lftp jq imagemagick -y
+sudo apt update && sudo apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev ffmpeg gawk lftp jq imagemagick
 echo -en '\n'
 
 echo -en "${GREEN}* Compile allsky software\n${NC}"
 make all
 echo -en '\n'
 
+# Make sure all scripts are executable
+chmod 755 allsky.sh scripts/*.sh
+
 echo -en "${GREEN}* Sunwait installation"
-cp sunwait /usr/local/bin
+sudo install sunwait /usr/local/bin/
 echo -en '\n'
 
-echo -en "${GREEN}* Using the camera without root access\n${NC}"
-install asi.rules /etc/udev/rules.d
-udevadm control -R
+echo -en "${GREEN}* Allow using the camera without root access\n${NC}"
+sudo install -D -m 0644 asi.rules /etc/udev/rules.d/
+sudo udevadm control -R
 echo -en '\n'
 
 echo -en "${GREEN}* Autostart script\n${NC}"
 sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart
-sed -i "s|User=pi|User=`logname`|g" autostart/allsky.service
+sed -i "s|User=pi|User=$USER|g" autostart/allsky.service
 sed -i "s|/home/pi/allsky|$PWD|g" autostart/allsky.service
-cp autostart/allsky.service /lib/systemd/system/
-chown root:root /lib/systemd/system/allsky.service
-chmod 0644 /lib/systemd/system/allsky.service
+sudo install -D -m 0644 autostart/allsky.service /etc/systemd/system/
+sudo rm -f /lib/systemd/system/allsky.service     # remove file from prior version of AllSky
 echo -en '\n'
 
 echo -en "${GREEN}* Configure log rotation\n${NC}"
-cp autostart/allsky /etc/logrotate.d/
-chown root:root /etc/logrotate.d/allsky
-chmod 0644 /etc/logrotate.d/allsky
-cp autostart/allsky.conf /etc/rsyslog.d/ 
-chown root:root /etc/rsyslog.d/allsky.conf
-chmod 0644 /etc/rsyslog.d/allsky.conf
+sudo install -D -m 0644 autostart/allsky /etc/logrotate.d/
+sudo install -D -m 0644 autostart/allsky.conf /etc/rsyslog.d/ 
 echo -en '\n'
 
 echo -en "${GREEN}* Add ALLSKY_HOME environment variable\n${NC}"
-echo "export ALLSKY_HOME=$PWD" | sudo tee /etc/profile.d/allsky.sh
+echo "export ALLSKY_HOME=$PWD" | sudo tee /etc/profile.d/allsky.sh &> /dev/null
 echo -en '\n'
 
 echo -en "${GREEN}* Copy camera settings files\n${NC}"
-cp settings_ZWO.json.repo settings_ZWO.json
-cp settings_RPiHQ.json.repo settings_RPiHQ.json
-cp config.sh.repo config.sh
-cp scripts/ftp-settings.sh.repo scripts/ftp-settings.sh
-chown -R `logname`:`logname` ../allsky
-systemctl daemon-reload
-systemctl enable allsky.service
+[ ! -e settings_ZWO.json ] && cp settings_ZWO.json.repo settings_ZWO.json
+[ ! -e settings_RPiHQ.json ] && cp settings_RPiHQ.json.repo settings_RPiHQ.json
+[ ! -e config.sh ] && cp config.sh.repo config.sh
+[ ! -e scripts/ftp-settings.sh ] && cp scripts/ftp-settings.sh.repo scripts/ftp-settings.sh
+sudo chown -R $USER:$USER ./
+sudo systemctl daemon-reload
+sudo systemctl enable allsky.service
 echo -en '\n'
 
 echo -en '\n'
@@ -62,7 +77,7 @@ echo -en "The Allsky Software is now installed. You should reboot the Raspberry 
 echo -en '\n'
 read -p "Do you want to reboot now? [y/n] " ans_yn
 case "$ans_yn" in
-  [Yy]|[Yy][Ee][Ss]) reboot now;;
+  [Yy]|[Yy][Ee][Ss]) sudo reboot now;;
 
   *) exit 3;;
 esac

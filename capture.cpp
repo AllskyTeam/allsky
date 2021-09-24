@@ -2064,7 +2064,7 @@ const char *locale = DEFAULT_LOCALE;
                         // We asked but got a useless reply.
                         // Values below the default make the image darker; above make it brighter.
 
-                        float exposureAdjustment, numMultiples;
+                        float exposureAdjustment = 0.0, numMultiples;
 
                         // Adjustments of DEFAULT_BRIGHTNESS up or down make the image this much darker/lighter.
                         // Don't want the max brightness to give pure white.
@@ -2100,7 +2100,7 @@ const char *locale = DEFAULT_LOCALE;
                          displayDebugText(textBuffer, 2);
 
 			 std::string why;	// Why did we adjust the exposure?  For debugging
-			 int num;
+			 int num = 0;
                          if (mean >= 254) {
                              newExposure = currentExposure * 0.4;
                              tempMaxExposure = currentExposure - roundToMe;

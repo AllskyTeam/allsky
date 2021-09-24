@@ -28,7 +28,7 @@
 
 struct config_t {
   std::string img_src_dir, img_src_ext, dst_keogram, dst_startrails;
-  bool labels_enabled, keogram_enabled, startrails_enabled, _pad;
+  bool labels_enabled, keogram_enabled, startrails_enabled, parse_filename;
   int img_width;
   int img_height;
   int fontFace;
@@ -62,14 +62,11 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
   cf->brightness_limit = -1.0;         // will inhibit startrails
   cf->rotation_angle = 0.0;
   cf->labels_enabled = true;
-  cf->keogram_enabled = cf->startrails_enabled = false;
+  cf->parse_filename = cf->keogram_enabled = cf->startrails_enabled = false;
   cf->fontType = cv::LINE_8;
   cf->fontScale = 2.0;
+  cf->lineWidth = 3;
   cf->fontFace = cv::FONT_HERSHEY_SIMPLEX;
-  cf->img_src_dir.erase();
-  cf->img_src_ext.erase();
-  cf->dst_startrails.erase();
-  cf->dst_startrails.erase();
 
   while (1) {  // getopt loop
     int option_index = 0;
@@ -81,17 +78,18 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         {"brightness", required_argument, 0, 'b'},
         {"image-size", required_argument, 0, 's'},
         {"font-color", required_argument, 0, 'C'},
-        {"font-line", required_argument, 0, 'L'},
+        {"line-width", required_argument, 0, 'L'},
         {"font-name", required_argument, 0, 'N'},
         {"font-size", required_argument, 0, 'S'},
         {"font-type", required_argument, 0, 'T'},
         {"rotate", required_argument, 0, 'r'},
         {"no-label", no_argument, 0, 'n'},
+        {"parse-filename", no_argument, 0, 'p'},
         {"verbose", no_argument, 0, 'v'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}};
 
-    optchar = getopt_long(argc, argv, "b:d:e:k:r:s:t:C:L:N:S:T:nvh",
+    optchar = getopt_long(argc, argv, "b:d:e:k:r:s:t:C:L:N:S:T:npvh",
                           long_options, &option_index);
     if (optchar == -1)
       break;
@@ -118,6 +116,9 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         break;
       case 'n':
         cf->labels_enabled = false;
+        break;
+      case 'p':
+        cf->parse_filename = true;
         break;
       case 'r':
         cf->rotation_angle = atof(optarg);
@@ -149,6 +150,8 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         break;
       case 'L':
         cf->lineWidth = atoi(optarg);
+        if (cf->lineWidth < 1)
+          cf->lineWidth = 1;
         break;
       case 'N':
         cf->fontFace = get_font_by_name(optarg);
@@ -201,10 +204,14 @@ void usage_and_exit(int x) {
   std::cout << "-h | --help : display this help message" << std::endl;
   std::cout << "-v | --verbose : Increase logging verbosity" << std::endl;
   std::cout << "-n | --no-label : Disable hour labels" << std::endl;
+  std::cout << "-p | --parse-filename : extract image time from filename "
+               "rather than time on disk"
+            << std::endl;
   std::cout
       << "-C | --font-color <str> : label font color, in HTML format (0000ff)"
       << std::endl;
-  std::cout << "-L | --font-line <int> : font line thickness (3)" << std::endl;
+  std::cout << "-L | --line-width <int> : keogram line thickness (3)"
+            << std::endl;
   std::cout << "-N | --font-name <str> : font name (simplex)" << std::endl;
   std::cout << "-S | --font-side <float> : font size (2.0)" << std::endl;
   std::cout << "-T | --font-type <int> : font line type (1)" << std::endl;
@@ -385,11 +392,33 @@ int main(int argc, char* argv[]) {
       src_image.col(src_image.cols / 2).copyTo(keogram_buf.col(i));
 
       if (config.labels_enabled) {
-        struct stat s;
-        stat(files.gl_pathv[i], &s);
+        struct tm ft;  // the time of the file, by any means necessary
+        if (config.parse_filename) {
+          /* engage your safety squints!
+           * this mess assumes that filenames are formatted thus:
+           * /path/to/whatever/images/YYYYmmdd/image-11112233445566.ext
+           *
+           * Based on this assumption, it finds the last '-' in the input
+           * string and advances one character beyond that... to the first
+           * character of a sequence of digits which could reasonably be
+           * interpreted as a timestamp. It then uses sscanf to extract
+           * some integers and stash them into a struct tm.
+           *
+           * Hope you don't have any really weird filenames... :P */
+          char* s;
+          s = strrchr(files.gl_pathv[i], '-');
+          s++;
+          sscanf(s, "%04d%02d%02d%02d%02d%02d.%*s", &ft.tm_year, &ft.tm_mon,
+                 &ft.tm_mday, &ft.tm_hour, &ft.tm_min, &ft.tm_sec);
+        } else {
+          struct stat s;
+          stat(files.gl_pathv[i], &s);
 
-        struct tm* t = localtime(&s.st_mtime);
-        if (t->tm_hour != prevHour) {
+          struct tm* t = localtime(&s.st_mtime);
+          ft.tm_hour = t->tm_hour;
+        }
+
+        if (ft.tm_hour != prevHour) {
           if (prevHour != -1) {
             // Draw a dashed line and label for hour
             cv::LineIterator it(keogram_buf, cv::Point(i, 0),
@@ -407,7 +436,7 @@ int main(int argc, char* argv[]) {
 
             // Draw text label to the left of the dash
             char hour[3];
-            snprintf(hour, 3, "%02d", t->tm_hour);
+            snprintf(hour, 3, "%02d", ft.tm_hour);
             std::string text(hour);
             int baseline = 0;
             cv::Size textSize =
@@ -423,7 +452,7 @@ int main(int argc, char* argv[]) {
                           config.lineWidth, config.fontType);
             }
           }
-          prevHour = t->tm_hour;
+          prevHour = ft.tm_hour;
         }
       }
     }

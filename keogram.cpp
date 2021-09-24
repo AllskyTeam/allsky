@@ -115,7 +115,7 @@ int get_font_by_name(char* s) {
 
 int main(int argc, char* argv[]) {
   int c;
-  bool labelsEnabled = true;
+  bool labelsEnabled = true, parse_filename = false;
   int fontFace = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
   double fontScale = 2;
   int fontType = cv::LINE_8;
@@ -138,12 +138,13 @@ int main(int argc, char* argv[]) {
         {"font-size", required_argument, 0, 'S'},
         {"font-type", required_argument, 0, 'T'},
         {"rotate", required_argument, 0, 'r'},
+        {"parse-filename", no_argument, 0, 'p'},
         {"no-label", no_argument, 0, 'n'},
         {"verbose", no_argument, 0, 'v'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "d:e:o:r:s:C:L:N:S:T:nvh", long_options,
+    c = getopt_long(argc, argv, "d:e:o:r:s:C:L:N:S:T:npvh", long_options,
                     &option_index);
     if (c == -1)
       break;
@@ -161,6 +162,9 @@ int main(int argc, char* argv[]) {
       case 'o':
         outputfile = optarg;
         break;
+      case 'p':
+        parse_filename = true;
+        break;
       case 'n':
         labelsEnabled = false;
         break;
@@ -177,12 +181,20 @@ int main(int argc, char* argv[]) {
         loglevel++;
         break;
       case 'C':
+        if (strchr(optarg, ' ')) {
+          int r, g, b;
+          sscanf(optarg, "%d %d %d", &b, &g, &r);
+          fontColor[0] = b & 0xff;
+          fontColor[1] = g & 0xff;
+          fontColor[2] = r & 0xff;
+          break;
+        }
         if (optarg[0] == '#')  // skip '#' if input is like '#coffee'
           optarg++;
         sscanf(optarg, "%06x", &tmp);
-        fontColor[0] = (tmp >> 16) & 0xff;
+        fontColor[0] = tmp & 0xff;
         fontColor[1] = (tmp >> 8) & 0xff;
-        fontColor[2] = tmp & 0xff;
+        fontColor[2] = (tmp >> 16) & 0xff;
         break;
       case 'L':
         thickness = atoi(optarg);
@@ -264,11 +276,23 @@ int main(int argc, char* argv[]) {
     imagedst.col(imagedst.cols / 2).copyTo(accumulated.col(f));
 
     if (labelsEnabled) {
-      struct stat s;
-      stat(files.gl_pathv[f], &s);
+      struct tm ft;  // the time of the file, by any means necessary
+      if (parse_filename) {
+        // engage your safety squints!
+        char* s;
+        s = strrchr(files.gl_pathv[f], '-');
+        s++;
+        sscanf(s, "%04d%02d%02d%02d%02d%02d.%*s", &ft.tm_year, &ft.tm_mon,
+               &ft.tm_mday, &ft.tm_hour, &ft.tm_min, &ft.tm_sec);
+      } else {
+        // sometimes you can believe the file time on disk
+        struct stat s;
+        stat(files.gl_pathv[f], &s);
+        struct tm* t = localtime(&s.st_mtime);
+        ft.tm_hour = t->tm_hour;
+      }
 
-      struct tm* t = localtime(&s.st_mtime);
-      if (t->tm_hour != prevHour) {
+      if (ft.tm_hour != prevHour) {
         if (prevHour != -1) {
           // Draw a dashed line and label for hour
           cv::LineIterator it(accumulated, cv::Point(f, 0),
@@ -286,7 +310,7 @@ int main(int argc, char* argv[]) {
 
           // Draw text label to the left of the dash
           char hour[3];
-          snprintf(hour, 3, "%02d", t->tm_hour);
+          snprintf(hour, 3, "%02d", ft.tm_hour);
           std::string text(hour);
           int baseline = 0;
           cv::Size textSize =
@@ -301,7 +325,7 @@ int main(int argc, char* argv[]) {
                         thickness, fontType);
           }
         }
-        prevHour = t->tm_hour;
+        prevHour = ft.tm_hour;
       }
     }
   }

@@ -245,8 +245,6 @@ void *Display(void *params)
     cv::namedWindow("video", 1);
     while (bDisplay)
     {
-        // With this in, a compile error occurs:
-	// no known conversion for argument 2 from ‘cv::Mat*’ to ‘cv::InputArray’
         cv::imshow("video", pImg);
         cv::waitKey(100);
     }

@@ -176,7 +176,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 }
 
 void usage_and_exit(int x) {
-  std::cout << "Usage:\tkeogram -d <imagedir> -e <ext> [<other_args>]"
+  std::cout << "Usage:\tmulti_out -d <imagedir> -e <ext> [<other_args>]"
             << std::endl;
   if (x)
     std::cout << KRED
@@ -216,7 +216,7 @@ void usage_and_exit(int x) {
   std::cout << "-S | --font-side <float> : font size (2.0)" << std::endl;
   std::cout << "-T | --font-type <int> : font line type (1)" << std::endl;
 
-  std::cout << KNRM << std::endl;
+  std::cout << std::endl;
   std::cout
       << "Font name is one of these OpenCV font names:\n\tSimplex, Plain, "
          "Duplex, Complex, Triplex, ComplexSmall, ScriptSimplex, ScriptComplex"
@@ -224,12 +224,15 @@ void usage_and_exit(int x) {
   std::cout << "Font Type is an OpenCV line type: 0=antialias, 1=8-connected, "
                "2=4-connected"
             << std::endl;
-  std::cout << KNRM << std::endl;
-  std::cout << "    ex: keogram --directory ../images/current/ --extension jpg "
-               "--output-file keogram.jpg --font-size 2"
+  std::cout << std::endl;
+  std::cout << "examples:" << std::endl;
+  std::cout
+      << "multi_out --directory ../images/current/ --extension jpg "
+         "--brightness 0.35 --keogram keogram.jpg --startrails startrails.jpg"
+      << std::endl;
+  std::cout << "multi_out -d . -e png -C ff0000 -k keogram.jpg" << std::endl;
+  std::cout << "multi_out -d . -e png --brightness 0.35 -t keogram.jpg"
             << std::endl;
-  std::cout << "    ex: keogram -d . -e png -o /home/pi/allsky/keogram.jpg -n"
-            << KNRM << std::endl;
   exit(x);
 }
 

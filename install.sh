@@ -7,11 +7,22 @@ if [[ $EUID -eq 0 ]]; then
    echo "This script must NOT be run as root" 1>&2
    exit 1
 fi
+# The user should be running this in the "allsky" directory.  Make sure they are.
+INSTALL_DIR="allsky"
+DIR=$(basename "$PWD")
+if [ "$DIR" != "$INSTALL_DIR" ] ; then
+	(echo
+	 echo -e "${RED}**********"
+	 echo -e "Please run this script from the '$INSTALL_DIR' directory."
+	 echo -e "**********${NC}"
+	 echo) 1>&2
+	exit 1
+fi
 
 echo -en '\n'
-echo -e "${RED}**********************************************"
+echo -e "**********************************************"
 echo    "*** Welcome to the Allsky Camera installer ***"
-echo -e "**********************************************${NC}"
+echo -e "**********************************************"
 echo -en '\n'
 
 echo -en "${GREEN}* Dependencies installation\n${NC}"
@@ -22,11 +33,14 @@ echo -en "${GREEN}* Compile allsky software\n${NC}"
 make all
 echo -en '\n'
 
+# Make sure all scripts are executable
+chmod 755 allsky.sh scripts/*.sh
+
 echo -en "${GREEN}* Sunwait installation"
 sudo install sunwait /usr/local/bin/
 echo -en '\n'
 
-echo -en "${GREEN}* Using the camera without root access\n${NC}"
+echo -en "${GREEN}* Allow using the camera without root access\n${NC}"
 sudo install -D -m 0644 asi.rules /etc/udev/rules.d/
 sudo udevadm control -R
 echo -en '\n'
@@ -36,6 +50,7 @@ sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart
 sed -i "s|User=pi|User=$USER|g" autostart/allsky.service
 sed -i "s|/home/pi/allsky|$PWD|g" autostart/allsky.service
 sudo install -D -m 0644 autostart/allsky.service /etc/systemd/system/
+sudo rm -f /lib/systemd/system/allsky.service     # remove file from prior version of AllSky
 echo -en '\n'
 
 echo -en "${GREEN}* Configure log rotation\n${NC}"

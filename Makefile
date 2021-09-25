@@ -24,7 +24,6 @@ ifeq ($(platform), armv6l)
 endif
 
 ifeq ($(platform), armv7l)
-  # Some distributions may need to use opencv4 and -DOPENCV_C_HEADERS as is done for x86_64
   CC = arm-linux-gnueabihf-g++
   AR= arm-linux-gnueabihf-ar
   CFLAGS += -march=armv7 -mthumb
@@ -38,7 +37,6 @@ ifeq ($(platform), aarch64)
   ZWOSDK = -Llib/armv8 -I./include
 endif
 
-#Ubuntu has opencv4, not opencv2
 ifeq ($(platform), x86_64)
   CC = g++
   AR= ar

@@ -2,7 +2,7 @@ platform = $(shell uname -m)
 
 USB=$(shell pkg-config --cflags --libs libusb-1.0)
 ifeq (,$(USB))
-  $(warning Did not find USB Libraries, you may need to install libusb-dev.)
+  $(warning Did not find USB Libraries, you may need to install libusb-1.0-0-dev.)
   $(error Missing dependencies)
 endif
 
@@ -31,28 +31,23 @@ ifeq ($(platform), armv7l)
   ZWOSDK = -Llib/armv7 -I./include
 endif
 
-#------------------------------------------------------------------------------
-#Ubuntu server 20.04 added by Jos Wennmacker
+#Ubuntu 20.04 added by Jos Wennmacker
 ifeq ($(platform), aarch64)
   CC = g++
   AR= ar
-  DEFS += -DOPENCV_C_HEADERS
   ZWOSDK = -Llib/armv8 -I./include
 endif
-#-------------------------------------------------------------------------------
 
 #Ubuntu has opencv4, not opencv2
 ifeq ($(platform), x86_64)
   CC = g++
   AR= ar
-  DEFS += -DOPENCV_C_HEADERS
   ZWOSDK = -Llib/x64 -I./include
 endif
 
 ifeq ($(platform), i386) # FIXME: is this correct?
   CC = g++
   AR= ar
-  DEFS += -DOPENCV_C_HEADERS
   ZWOSDK = -Llib/x86 -I./include
 endif
 
@@ -71,10 +66,10 @@ ifneq ("arm", $(findstring $(platform), "arm"))
 endif
 
 sunwait:
-		git submodule init
-		git submodule update
-		$(MAKE) -C sunwait-src
-		cp sunwait-src/sunwait .
+	git submodule init
+	git submodule update
+	$(MAKE) -C sunwait-src
+	cp sunwait-src/sunwait .
 
 capture:capture.cpp
 	$(CC)  capture.cpp -o capture $(CFLAGS) $(OPENCV) -lASICamera2 $(USB)

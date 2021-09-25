@@ -11,27 +11,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
-<<<<<<< HEAD
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-=======
-
-#ifdef OPENCV_C_HEADERS
-#include <opencv2/core/types_c.h>
-#include <opencv2/highgui/highgui_c.h>
-#include <opencv2/imgcodecs/legacy/constants_c.h>
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
-
-<<<<<<< HEAD
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
->>>>>>> 302520c (Silence aux tools (#493))
-=======
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
->>>>>>> dd2096b (Updated for OpenCV4 on armv7l)
 
 #define KNRM "\x1B[0m"
 #define KRED "\x1B[31m"
@@ -66,11 +48,8 @@ void usage_and_exit(int x) {
   std::cout << "-d <str> : directory from which to read images" << std::endl;
   std::cout << "-e <str> : filter images to just this extension" << std::endl;
   std::cout << "-o <str> : output image filename" << std::endl;
-<<<<<<< HEAD
   std::cout << "-S <int>x<int> : restrict processed images to this size"
             << std::endl;
-=======
->>>>>>> 302520c (Silence aux tools (#493))
   std::cout << "-b <float> : ranges from 0 (black) to 1 (white)" << std::endl;
   std::cout << "\tA moonless sky may be as low as 0.05 while full moon can be "
                "as high as 0.4"
@@ -85,17 +64,10 @@ void usage_and_exit(int x) {
 int main(int argc, char* argv[]) {
   std::string directory, extension, outputfile;
   double threshold = -1;
-<<<<<<< HEAD
   int verbose = 0, stats_only = 0, height = 0, width = 0;
   int c;
 
   while ((c = getopt(argc, argv, "hvsb:d:e:o:S:")) != -1) {
-=======
-  int verbose = 0, stats_only = 0;
-  char c;
-
-  while ((c = getopt(argc, argv, "hvsb:d:e:o:")) != -1) {
->>>>>>> 302520c (Silence aux tools (#493))
     switch (c) {
       case 'h':
         usage_and_exit(0);
@@ -107,15 +79,12 @@ int main(int argc, char* argv[]) {
       case 's':
         stats_only = 1;
         break;
-<<<<<<< HEAD
       case 'S':
         sscanf(optarg, "%dx%d", &width, &height);
         // 122.8Mpx should be enough for anybody.
         if (height < 0 || height > 9600 || width < 0 || width > 12800)
           height = width = 0;
         break;
-=======
->>>>>>> 302520c (Silence aux tools (#493))
       case 'b':
         double tf;
         tf = atof(optarg);
@@ -133,7 +102,6 @@ int main(int argc, char* argv[]) {
         break;
       default:
         break;
-<<<<<<< HEAD
     }
   }
 
@@ -170,46 +138,7 @@ int main(int argc, char* argv[]) {
                 << std::endl;
       stats.col(f) = 1.0;  // mark as invalid
       continue;
-=======
->>>>>>> 302520c (Silence aux tools (#493))
     }
-  }
-
-  if (stats_only) {
-    threshold = 0;
-    outputfile = "/dev/null";
-  }
-
-  if (directory.empty() || extension.empty() || outputfile.empty() ||
-      threshold < 0)
-    usage_and_exit(3);
-
-  // Find files
-  glob_t files;
-  std::string wildcard = directory + "/*." + extension;
-  glob(wildcard.c_str(), 0, NULL, &files);
-  if (files.gl_pathc == 0) {
-    globfree(&files);
-    std::cout << "No images found, exiting." << std::endl;
-    return 0;
-  }
-
-  cv::Mat accumulated;
-
-  // Create space for statistics
-  cv::Mat stats;
-  stats.create(1, files.gl_pathc, CV_64F);
-
-<<<<<<< HEAD
-    if (height && width && (image.cols != width || image.rows != height)) {
-      fprintf(stderr, "%s size %dx%d != %dx%d\n", files.gl_pathv[f], image.cols,
-              image.cols, width, height);
-      continue;
-    }
-
-    // first valid image sets the number of channels we expect
-    if (nchan == 0 && image.channels())
-      nchan = image.channels();
 
     cv::Scalar mean_scalar = cv::mean(image);
     double mean;
@@ -234,92 +163,6 @@ int main(int argc, char* argv[]) {
     if (verbose)
       std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
                 << basename(files.gl_pathv[f]) << " " << mean << std::endl;
-
-    stats.col(f) = mean;
-
-    if (!stats_only && mean <= threshold) {
-      if (image.channels() != nchan) {
-        if (verbose)
-          fprintf(stderr, "repairing channel mismatch: %d != %d\n",
-                  image.channels(), nchan);
-        if (image.channels() < nchan)
-          cv::cvtColor(image, image, cv::COLOR_GRAY2BGR, nchan);
-        else if (image.channels() > nchan)
-          cv::cvtColor(image, image, cv::COLOR_BGR2GRAY, nchan);
-      }
-      if (accumulated.empty()) {
-        image.copyTo(accumulated);
-      } else {
-        accumulated = cv::max(accumulated, image);
-      }
-    }
-
-    // Calculate some statistics
-    double min_mean, max_mean;
-    cv::Point min_loc;
-    cv::minMaxLoc(stats, &min_mean, &max_mean, &min_loc);
-    double mean_mean = cv::mean(stats)[0];
-
-    // For median, do partial sort and take middle value
-    std::vector<double> vec;
-    stats.copyTo(vec);
-    std::nth_element(vec.begin(), vec.begin() + (vec.size() / 2), vec.end());
-    double median_mean = vec[vec.size() / 2];
-
-    std::cout << "Minimum: " << min_mean << " maximum: " << max_mean
-              << " mean: " << mean_mean << " median: " << median_mean
-              << std::endl;
-
-    // If we still don't have an image (no images below threshold), copy the
-    // minimum mean image so we see why
-    if (!stats_only) {
-      if (accumulated.empty()) {
-        std::cout << "No images below threshold, writing the minimum image only"
-                  << std::endl;
-        accumulated =
-            cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
-      }
-=======
-  for (size_t f = 0; f < files.gl_pathc; f++) {
-    cv::Mat image = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
-    if (!image.data) {
-      std::cout << "Error reading file " << basename(files.gl_pathv[f])
-                << std::endl;
-      stats.col(f) = 1.0;  // mark as invalid
-      continue;
-    }
-
-<<<<<<< HEAD
-    cv::Scalar mean_scalar = cv::mean(image);
-    double mean;
-    switch (image.channels()) {
-      default:  // mono case
-        mean = mean_scalar.val[0];
-        break;
-      case 3:  // for color choose maximum channel
-      case 4:
-        mean = cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
-        break;
-    }
-    // Scale to 0-1 range
-    switch (image.depth()) {
-      case CV_8U:
-        mean /= 255.0;
-        break;
-      case CV_16U:
-        mean /= 65535.0;
-        break;
-    }
-    if (verbose)
-      std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
-                << basename(files.gl_pathv[f]) << " " << mean << std::endl;
-=======
-    std::vector<int> compression_params;
-    compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
-    compression_params.push_back(9);
-    compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
-    compression_params.push_back(95);
->>>>>>> dd2096b (Updated for OpenCV4 on armv7l)
 
     stats.col(f) = mean;
 
@@ -356,24 +199,15 @@ int main(int argc, char* argv[]) {
                 << std::endl;
       accumulated = cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
     }
->>>>>>> 302520c (Silence aux tools (#493))
 
-      std::vector<int> compression_params;
-      compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
-      compression_params.push_back(9);
-      compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
-      compression_params.push_back(95);
+    std::vector<int> compression_params;
+    compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+    compression_params.push_back(9);
+    compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
+    compression_params.push_back(95);
 
-<<<<<<< HEAD
-      cv::imwrite(outputfile, accumulated, compression_params);
-    }
-    globfree(&files);
-    return 0;
-  }
-=======
     cv::imwrite(outputfile, accumulated, compression_params);
   }
   globfree(&files);
   return 0;
->>>>>>> 302520c (Silence aux tools (#493))
 }

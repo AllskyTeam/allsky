@@ -31,6 +31,16 @@ ifeq ($(platform), armv7l)
   ZWOSDK = -Llib/armv7 -I./include
 endif
 
+#------------------------------------------------------------------------------
+#Ubuntu server 20.04 added by Jos Wennmacker
+ifeq ($(platform), aarch64)
+  CC = g++
+  AR= ar
+  DEFS += -DOPENCV_C_HEADERS
+  ZWOSDK = -Llib/armv8 -I./include
+endif
+#-------------------------------------------------------------------------------
+
 #Ubuntu has opencv4, not opencv2
 ifeq ($(platform), x86_64)
   CC = g++

@@ -1,42 +1,57 @@
 platform = $(shell uname -m)
 
-USB=$(shell pkg-config --cflags libusb-1.0) $(shell pkg-config --libs libusb-1.0)
+USB=$(shell pkg-config --cflags --libs libusb-1.0)
+ifeq (,$(USB))
+  $(warning Did not find USB Libraries, you may need to install libusb-1.0-0-dev.)
+  $(error Missing dependencies)
+endif
+
 DEFS = -D_LIN -D_DEBUG -DGLIBC_20
 CFLAGS = -Wall -Wno-psabi -g -O2 -lpthread
+OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4)
+
+ifeq (,$(OPENCV))
+  $(warning Did not find any OpenCV Libraries, you may need to install libopencv-dev.)
+  $(error Missing dependencies)
+endif
 
 ifeq ($(platform), armv6l)
-OPENCV = $(shell pkg-config --cflags opencv) $(shell pkg-config --libs opencv)
-CC = arm-linux-gnueabihf-g++
-AR= arm-linux-gnueabihf-ar
-CFLAGS += -march=armv6
-CFLAGS += -lrt
-ZWOSDK = -Llib/armv6 -I./include
+  CC = arm-linux-gnueabihf-g++
+  AR= arm-linux-gnueabihf-ar
+  CFLAGS += -march=armv6
+  CFLAGS += -lrt
+  ZWOSDK = -Llib/armv6 -I./include
 endif
 
 ifeq ($(platform), armv7l)
-# Some distributions may need to use opencv4 and -DOPENCV_C_HEADERS as is done for x86_64
-OPENCV = $(shell pkg-config --cflags opencv) $(shell pkg-config --libs opencv)
-CC = arm-linux-gnueabihf-g++
-AR= arm-linux-gnueabihf-ar
-CFLAGS += -march=armv7 -mthumb
-ZWOSDK = -Llib/armv7 -I./include
+  CC = arm-linux-gnueabihf-g++
+  AR= arm-linux-gnueabihf-ar
+  CFLAGS += -march=armv7 -mthumb
+  ZWOSDK = -Llib/armv7 -I./include
 endif
 
-#Ubuntu has opencv4, not opencv2
+#Ubuntu 20.04 added by Jos Wennmacker
+ifeq ($(platform), aarch64)
+  CC = g++
+  AR= ar
+  ZWOSDK = -Llib/armv8 -I./include
+endif
+
 ifeq ($(platform), x86_64)
-OPENCV = $(shell pkg-config --cflags opencv4) $(shell pkg-config --libs opencv4)
-CC = g++
-AR= ar
-DEFS += -DOPENCV_C_HEADERS
-ZWOSDK = -Llib/x64 -I./include
+  CC = g++
+  AR= ar
+  ZWOSDK = -Llib/x64 -I./include
 endif
 
 ifeq ($(platform), i386) # FIXME: is this correct?
-OPENCV = $(shell pkg-config --cflags opencv4) $(shell pkg-config --libs opencv4)
-CC = g++
-AR= ar
-DEFS += -DOPENCV_C_HEADERS
-ZWOSDK = -Llib/x86 -I./include
+  CC = g++
+  AR= ar
+  ZWOSDK = -Llib/x86 -I./include
+endif
+
+ifeq (,$(CC))
+  $(warning Could not identify the proper compiler for your platform.)
+  $(error Unknown platform $(platform))
 endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
@@ -49,10 +64,10 @@ ifneq ("arm", $(findstring $(platform), "arm"))
 endif
 
 sunwait:
-		git submodule init
-		git submodule update
-		$(MAKE) -C sunwait-src
-		cp sunwait-src/sunwait .
+	git submodule init
+	git submodule update
+	$(MAKE) -C sunwait-src
+	cp sunwait-src/sunwait .
 
 capture:capture.cpp
 	$(CC)  capture.cpp -o capture $(CFLAGS) $(OPENCV) -lASICamera2 $(USB)

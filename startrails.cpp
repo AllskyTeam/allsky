@@ -12,13 +12,6 @@
 #include <string>
 #include <vector>
 
-#ifdef OPENCV_C_HEADERS
-#include <opencv2/core/types_c.h>
-#include <opencv2/highgui/highgui_c.h>
-#include <opencv2/imgcodecs/legacy/constants_c.h>
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
-
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 

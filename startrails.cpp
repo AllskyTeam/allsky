@@ -182,9 +182,9 @@ int main(int argc, char* argv[]) {
           fprintf(stderr, "repairing channel mismatch: %d != %d\n",
                   image.channels(), nchan);
         if (image.channels() < nchan)
-          cv::cvtColor(image, image, CV_GRAY2BGR, nchan);
+          cv::cvtColor(image, image, cv::COLOR_GRAY2BGR, nchan);
         else if (image.channels() > nchan)
-          cv::cvtColor(image, image, CV_BGR2GRAY, nchan);
+          cv::cvtColor(image, image, cv::COLOR_BGR2GRAY, nchan);
       }
       if (accumulated.empty()) {
         image.copyTo(accumulated);

@@ -139,73 +139,36 @@ int main(int argc, char* argv[]) {
       stats.col(f) = 1.0;  // mark as invalid
       continue;
     }
-  }
 
-  // first valid image sets the number of channels we expect
-  if (nchan == 0 && image.channels())
-    nchan = image.channels();
+    if (height && width && (image.cols != width || image.rows != height)) {
+      fprintf(stderr, "%s size %dx%d != %dx%d\n", files.gl_pathv[f], image.cols,
+              image.cols, width, height);
+      continue;
+    }
 
-  // Find files
-  glob_t files;
-  std::string wildcard = directory + "/*." + extension;
-  glob(wildcard.c_str(), 0, NULL, &files);
-  if (files.gl_pathc == 0) {
-    globfree(&files);
-    std::cout << "No images found, exiting." << std::endl;
-    return 0;
-  }
+    // first valid image sets the number of channels we expect
+    if (nchan == 0 && image.channels())
+      nchan = image.channels();
 
-  cv::Mat accumulated;
-
-  // Create space for statistics
-  cv::Mat stats;
-  stats.create(1, files.gl_pathc, CV_64F);
-
-  if (height && width && (image.cols != width || image.rows != height)) {
-    fprintf(stderr, "%s size %dx%d != %dx%d\n", files.gl_pathv[f], image.cols,
-            image.cols, width, height);
-    continue;
-  }
-
-  // first valid image sets the number of channels we expect
-  if (nchan == 0 && image.channels())
-    nchan = image.channels();
-
-  cv::Scalar mean_scalar = cv::mean(image);
-  double mean;
-  switch (image.channels()) {
-    default:  // mono case
-      mean = mean_scalar.val[0];
-      break;
-    case 3:  // for color choose maximum channel
-    case 4:
-      mean = cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
-      break;
-  }
-  // Scale to 0-1 range
-  switch (image.depth()) {
-    case CV_8U:
-      mean /= 255.0;
-      break;
-    case CV_16U:
-      mean /= 65535.0;
-      break;
-  }
-  if (verbose)
-    std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
-              << basename(files.gl_pathv[f]) << " " << mean << std::endl;
-
-  stats.col(f) = mean;
-
-  if (!stats_only && mean <= threshold) {
-    if (image.channels() != nchan) {
-      if (verbose)
-        fprintf(stderr, "repairing channel mismatch: %d != %d\n",
-                image.channels(), nchan);
-      if (image.channels() < nchan)
-        cv::cvtColor(image, image, CV_GRAY2BGR, nchan);
-      else if (image.channels() > nchan)
-        cv::cvtColor(image, image, CV_BGR2GRAY, nchan);
+    cv::Scalar mean_scalar = cv::mean(image);
+    double mean;
+    switch (image.channels()) {
+      default:  // mono case
+        mean = mean_scalar.val[0];
+        break;
+      case 3:  // for color choose maximum channel
+      case 4:
+        mean = cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
+        break;
+    }
+    // Scale to 0-1 range
+    switch (image.depth()) {
+      case CV_8U:
+        mean /= 255.0;
+        break;
+      case CV_16U:
+        mean /= 65535.0;
+        break;
     }
     if (verbose)
       std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "

@@ -166,7 +166,16 @@ int main(int argc, char* argv[]) {
 
     stats.col(f) = mean;
 
-    if (mean <= threshold) {
+    if (!stats_only && mean <= threshold) {
+      if (image.channels() != nchan) {
+        if (verbose)
+          fprintf(stderr, "repairing channel mismatch: %d != %d\n",
+                  image.channels(), nchan);
+        if (image.channels() < nchan)
+          cv::cvtColor(image, image, cv::COLOR_GRAY2BGR, nchan);
+        else if (image.channels() > nchan)
+          cv::cvtColor(image, image, cv::COLOR_BGR2GRAY, nchan);
+      }
       if (accumulated.empty()) {
         image.copyTo(accumulated);
       } else {

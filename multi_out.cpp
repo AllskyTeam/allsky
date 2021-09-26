@@ -15,13 +15,6 @@
 #include <vector>
 #include "allsky.h"
 
-#ifdef OPENCV_C_HEADERS
-#include <opencv2/core/types_c.h>
-#include <opencv2/highgui/highgui_c.h>
-#include <opencv2/imgcodecs/legacy/constants_c.h>
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
-
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
@@ -331,9 +324,9 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "repairing channel mismatch: %d != %d\n",
                 src_image.channels(), nchan);
       if (src_image.channels() < nchan)
-        cv::cvtColor(src_image, src_image, CV_GRAY2BGR, nchan);
+        cv::cvtColor(src_image, src_image, cv::COLOR_GRAY2BGR, nchan);
       else if (src_image.channels() > nchan)
-        cv::cvtColor(src_image, src_image, CV_BGR2GRAY, nchan);
+        cv::cvtColor(src_image, src_image, cv::COLOR_BGR2GRAY, nchan);
     }
 
     // statistics
@@ -462,9 +455,9 @@ int main(int argc, char* argv[]) {
   }
 
   std::vector<int> compression_params;
-  compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+  compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
   compression_params.push_back(9);
-  compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+  compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
   compression_params.push_back(95);
 
   // Calculate some statistics

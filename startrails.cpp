@@ -12,8 +12,8 @@
 #include <string>
 #include <vector>
 
-#include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 #define KNRM "\x1B[0m"
 #define KRED "\x1B[31m"
@@ -48,6 +48,8 @@ void usage_and_exit(int x) {
   std::cout << "-d <str> : directory from which to read images" << std::endl;
   std::cout << "-e <str> : filter images to just this extension" << std::endl;
   std::cout << "-o <str> : output image filename" << std::endl;
+  std::cout << "-S <int>x<int> : restrict processed images to this size"
+            << std::endl;
   std::cout << "-b <float> : ranges from 0 (black) to 1 (white)" << std::endl;
   std::cout << "\tA moonless sky may be as low as 0.05 while full moon can be "
                "as high as 0.4"
@@ -62,10 +64,10 @@ void usage_and_exit(int x) {
 int main(int argc, char* argv[]) {
   std::string directory, extension, outputfile;
   double threshold = -1;
-  int verbose = 0, stats_only = 0;
-  char c;
+  int verbose = 0, stats_only = 0, height = 0, width = 0;
+  int c;
 
-  while ((c = getopt(argc, argv, "hvsb:d:e:o:")) != -1) {
+  while ((c = getopt(argc, argv, "hvsb:d:e:o:S:")) != -1) {
     switch (c) {
       case 'h':
         usage_and_exit(0);
@@ -76,6 +78,12 @@ int main(int argc, char* argv[]) {
         break;
       case 's':
         stats_only = 1;
+        break;
+      case 'S':
+        sscanf(optarg, "%dx%d", &width, &height);
+        // 122.8Mpx should be enough for anybody.
+        if (height < 0 || height > 9600 || width < 0 || width > 12800)
+          height = width = 0;
         break;
       case 'b':
         double tf;
@@ -121,6 +129,7 @@ int main(int argc, char* argv[]) {
   // Create space for statistics
   cv::Mat stats;
   stats.create(1, files.gl_pathc, CV_64F);
+  int nchan = 0;
 
   for (size_t f = 0; f < files.gl_pathc; f++) {
     cv::Mat image = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
@@ -130,6 +139,16 @@ int main(int argc, char* argv[]) {
       stats.col(f) = 1.0;  // mark as invalid
       continue;
     }
+
+    if (height && width && (image.cols != width || image.rows != height)) {
+      fprintf(stderr, "%s size %dx%d != %dx%d\n", files.gl_pathv[f], image.cols,
+              image.cols, width, height);
+      continue;
+    }
+
+    // first valid image sets the number of channels we expect
+    if (nchan == 0 && image.channels())
+      nchan = image.channels();
 
     cv::Scalar mean_scalar = cv::mean(image);
     double mean;
@@ -157,7 +176,16 @@ int main(int argc, char* argv[]) {
 
     stats.col(f) = mean;
 
-    if (mean <= threshold) {
+    if (!stats_only && mean <= threshold) {
+      if (image.channels() != nchan) {
+        if (verbose)
+          fprintf(stderr, "repairing channel mismatch: %d != %d\n",
+                  image.channels(), nchan);
+        if (image.channels() < nchan)
+          cv::cvtColor(image, image, cv::COLOR_GRAY2BGR, nchan);
+        else if (image.channels() > nchan)
+          cv::cvtColor(image, image, cv::COLOR_BGR2GRAY, nchan);
+      }
       if (accumulated.empty()) {
         image.copyTo(accumulated);
       } else {

@@ -46,6 +46,11 @@
 
 cv::Mat pRgb;
 std::vector<int> compression_parameters;
+// In version 0.8 we introduced a different way to take exposures.  Instead of turning video mode on at
+// the beginning of the program and off at the end (which kept the camera running all the time, heating it up),
+// version 0.8 turned video mode on, then took a picture, then turned it off.  This helps cool the camera,
+// but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures.
+// So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
 bool use_new_exposure_algorithm = true;
 bool bMain = true, bDisplay = false;
 std::string dayOrNight;
@@ -635,7 +640,7 @@ void writeTemperatureToFile(float val)
 // Simple function to make flags easier to read for humans.
 char const *yesNo(int flag)
 {
-    if (flag != 0)
+    if (flag)
         return("Yes");
     else
         return("No");
@@ -961,7 +966,7 @@ const char *locale = DEFAULT_LOCALE;
         // -h[elp] doesn't take an argument, but the "for" loop assumes every option does,
         // so check separately, assuming the option is the first one.
         // If it's not the first option, we'll find it in the "for" loop.
-        if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0))
+        if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
         {
             help = 1;
             i = 1;
@@ -977,7 +982,7 @@ const char *locale = DEFAULT_LOCALE;
         for ( ; i < argc - 1 ; i++)
         {
             // Check again in case "-h" isn't the first option.
-            if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "-help") == 0))
+            if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "-help") == 0)
             {
                 help = 1;
             }
@@ -1703,10 +1708,9 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Darkframe: %s\n", yesNo(darkframe));
     printf(" Debug Level: %d\n", debugLevel);
     printf(" TTY: %s\n", yesNo(tty));
-    printf(" Version 0.8 Exposure Method: %s\n", yesNo(use_new_exposure_algorithm));
-
-    // This should always be last since it turns color off.
-    printf(" ZWO SDK version %s%s\n", ASIGetSDKVersion(), KNRM);
+    printf(" Continuous Capture Method Method: %s\n", yesNo(use_new_exposure_algorithm));
+    printf(" ZWO SDK version %s\n", ASIGetSDKVersion());
+    printf("%s", KNRM);
 
     //-------------------------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------------------------

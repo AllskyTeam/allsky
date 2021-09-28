@@ -46,7 +46,7 @@ sudo udevadm control -R
 echo -en '\n'
 
 echo -en "${GREEN}* Autostart script\n${NC}"
-sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart
+[ -e /etc/xdg/lxsession/LXDE-pi/autostart ] && sudo sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart
 sed -i "s|User=pi|User=$USER|g" autostart/allsky.service
 sed -i "s|/home/pi/allsky|$PWD|g" autostart/allsky.service
 sudo install -D -m 0644 autostart/allsky.service /etc/systemd/system/

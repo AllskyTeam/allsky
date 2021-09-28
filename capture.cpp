@@ -40,6 +40,11 @@
 
 cv::Mat pRgb;
 std::vector<int> compression_parameters;
+// In version 0.8 we introduced a different way to take exposures.  Instead of turning video mode on at
+// the beginning of the program and off at the end (which kept the camera running all the time, heating it up),
+// version 0.8 turned video mode on, then took a picture, then turned it off.  This helps cool the camera,
+// but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures.
+// So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
 bool use_new_exposure_algorithm = true;
 bool bMain = true, bDisplay = false;
 std::string dayOrNight;
@@ -82,8 +87,8 @@ int asiNightMaxExposure    = DEFAULT_ASINIGHTMAXEXPOSURE;
 int gainTransitionTime     = DEFAULT_GAIN_TRANSITION_TIME;
 ASI_BOOL currentAutoExposure = ASI_FALSE;	// is Auto Exposure currently on or off?
 
-#ifdef USE_HISTOGRAM
 long cameraMaxAutoExposureUS  = NOT_SET;	// camera's max auto exposure in us
+#ifdef USE_HISTOGRAM
 #define DEFAULT_BOX_SIZEX       500
 #define DEFAULT_BOX_SIZEY       500
 int histogramBoxSizeX         = DEFAULT_BOX_SIZEX;     // 500 px x 500 px box.  Must be a multiple of 2.
@@ -631,14 +636,12 @@ void writeTemperatureToFile(float val)
 }
 
 // Simple function to make flags easier to read for humans.
-char const *yes = "1 (yes)";
-char const *no  = "0 (no)";
 char const *yesNo(int flag)
 {
     if (flag)
-        return(yes);
+        return("Yes");
     else
-        return(no);
+        return("No");
 }
 
 bool adjustGain = false;	// Should we adjust the gain?  Set by user on command line.
@@ -936,11 +939,11 @@ const char *locale = DEFAULT_LOCALE;
     setlinebuf(stdout);   // Line buffer output so entries appear in the log immediately.
     printf("\n");
     printf("%s ******************************************\n", KGRN);
-    printf("%s *** Allsky Camera Software v0.8 | 2021 ***\n", KGRN);
+    printf("%s *** Allsky Camera Software v0.8.1 | 2021 ***\n", KGRN);
     printf("%s ******************************************\n\n", KGRN);
     printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n", KGRN);
     printf("\n");
-    printf("%sAdd -h or -help for available options\n", KYEL);
+    printf("%sAdd -h or --help for available options\n", KYEL);
     printf("\n");
     printf("\%sAuthor: ", KNRM);
     printf("Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
@@ -961,7 +964,7 @@ const char *locale = DEFAULT_LOCALE;
         // -h[elp] doesn't take an argument, but the "for" loop assumes every option does,
         // so check separately, assuming the option is the first one.
         // If it's not the first option, we'll find it in the "for" loop.
-        if (strcmp(argv[0], "-h") == 0 || strcmp(argv[0], "-help") == 0)
+        if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
         {
             help = 1;
             i = 1;
@@ -977,7 +980,7 @@ const char *locale = DEFAULT_LOCALE;
         for ( ; i < argc - 1 ; i++)
         {
             // Check again in case "-h" isn't the first option.
-            if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0)
+            if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "-help") == 0)
             {
                 help = 1;
             }
@@ -1393,6 +1396,7 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -debuglevel                        - Default = 0. Set to 1,2 or 3 for more debugging information.\n");
         printf("%sUsage:\n", KRED);
         printf(" ./capture -width 640 -height 480 -nightexposure 5000000 -gamma 50 -type 1 -nightbin 1 -filename Lake-Laberge.PNG\n\n");
+        exit(0);
     }
     printf("%s\n", KNRM);
     setlocale(LC_NUMERIC, locale);
@@ -1504,15 +1508,43 @@ const char *locale = DEFAULT_LOCALE;
         printf("  - Camera with cooling capabilities\n");
     }
 
-    const char *ver = ASIGetSDKVersion();
-    printf("  - SDK version %s\n", ver);
-
-    asiRetCode = ASIInitCamera(CamNum);
-    if (asiRetCode == ASI_SUCCESS)
+    printf("\n");
+    ASI_ID cameraID;	// USB 3 cameras only
+    if (ASICameraInfo.IsUSB3Camera == ASI_TRUE && ASIGetID(CamNum, &cameraID) == ASI_SUCCESS)
     {
-        printf("  - Initialise Camera OK\n");
+        printf("  - Camera ID: ");
+        if (cameraID.id[0] == '\0')
+        {
+            printf("[none]");
+        } else {
+            for (unsigned int i=0; i<sizeof(cameraID.id); i++) printf("%c", cameraID.id[i]);
+        }
+        printf("\n");
+    }
+    // To clear the camera ID:
+        // cameraID.id[0] = '\0';
+        // ASISetID(CamNum, cameraID);
+    ASI_SN serialNumber;
+    asiRetCode = ASIGetSerialNumber(CamNum, &serialNumber);
+    if (asiRetCode != ASI_SUCCESS)
+    {
+        printf("*** WARNING: unable to get serialNumber (%s)\n", getRetCode(asiRetCode));
     }
     else
+    {
+        printf("  - Camera Serial Number: ");
+        if (serialNumber.id[0] == '\0')
+        {
+            printf("[none]");
+        } else {
+            printf("0x");
+            for (unsigned int i=0; i<sizeof(serialNumber.id); i++) printf("%02x", serialNumber.id[i]);
+        }
+        printf("\n");
+    }
+
+    asiRetCode = ASIInitCamera(CamNum);
+    if (asiRetCode != ASI_SUCCESS)
     {
         printf("*** ERROR: Unable to initialise camera: %s\n", getRetCode(asiRetCode));
         closeUp(1);      // Can't do anything so might as well exit.
@@ -1532,6 +1564,25 @@ const char *locale = DEFAULT_LOCALE;
             printf("   - IsAutoSupported = %d\n", ControlCaps.IsAutoSupported);
             printf("   - IsWritable = %d\n", ControlCaps.IsWritable);
             printf("   - ControlType = %d\n", ControlCaps.ControlType);
+        }
+    }
+
+    if (debugLevel >= 3)
+    {
+        printf("Supported video formats:\n");
+        for (i = 0; i < 8; i++)
+        {
+            ASI_IMG_TYPE it = ASICameraInfo.SupportedVideoFormat[i];
+            if (it == ASI_IMG_END)
+            {
+                break;
+            }
+            printf("   - %s\n",
+                it == ASI_IMG_RAW8 ?  "ASI_IMG_RAW8" :
+                it == ASI_IMG_RGB24 ?  "ASI_IMG_RGB24" :
+                it == ASI_IMG_RAW16 ?  "ASI_IMG_RAW16" :
+                it == ASI_IMG_Y8 ?  "ASI_IMG_Y8" :
+                "unknown video format");
         }
     }
 
@@ -1655,7 +1706,9 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Darkframe: %s\n", yesNo(darkframe));
     printf(" Debug Level: %d\n", debugLevel);
     printf(" TTY: %s\n", yesNo(tty));
-    printf("%s\n", KNRM);
+    printf(" Continuous Capture Method Method: %s\n", yesNo(use_new_exposure_algorithm));
+    printf(" ZWO SDK version %s\n", ASIGetSDKVersion());
+    printf("%s", KNRM);
 
     //-------------------------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------------------------

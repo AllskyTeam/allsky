@@ -26,9 +26,139 @@
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
 
+struct config_t {
+  std::string img_src_dir, img_src_ext, dst_keogram;
+  bool labels_enabled, keogram_enabled, parse_filename, junk;
+  int img_width;
+  int img_height;
+  int fontFace;
+  int fontType;
+  int lineWidth;
+  int verbose;
+  uint8_t a, r, g, b;
+  double fontScale;
+  double rotation_angle;
+  double brightness_limit;
+} config;
+
+void parse_args(int, char**, struct config_t*);
+void usage_and_exit(int);
+int get_font_by_name(char*);
+
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
-int loglevel = 0;
+
+void parse_args(int argc, char** argv, struct config_t* cf) {
+  int c;
+
+  cf->labels_enabled = true;
+  cf->parse_filename = false;
+  cf->fontFace = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
+  cf->fontScale = 2;
+  cf->fontType = cv::LINE_8;
+  cf->lineWidth = 3;
+  cf->a = cf->r = cf->g = 0;
+  cf->b = 0xff;
+  cf->rotation_angle = 0;
+  cf->verbose = cf->img_width = cf->img_height = 0;
+
+  while (1) {  // getopt loop
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"directory", required_argument, 0, 'd'},
+        {"image-size", required_argument, 0, 's'},
+        {"extension", required_argument, 0, 'e'},
+        {"output", required_argument, 0, 'o'},
+        {"font-color", required_argument, 0, 'C'},
+        {"font-line", required_argument, 0, 'L'},
+        {"font-name", required_argument, 0, 'N'},
+        {"font-size", required_argument, 0, 'S'},
+        {"font-type", required_argument, 0, 'T'},
+        {"rotate", required_argument, 0, 'r'},
+        {"parse-filename", no_argument, 0, 'p'},
+        {"no-label", no_argument, 0, 'n'},
+        {"verbose", no_argument, 0, 'v'},
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}};
+
+    c = getopt_long(argc, argv, "d:e:o:r:s:C:L:N:S:T:npvh", long_options,
+                    &option_index);
+    if (c == -1)
+      break;
+    switch (c) {  // option switch
+      case 'h':
+        usage_and_exit(0);
+        // NOTREACHED
+      case 'd':
+        cf->img_src_dir = optarg;
+        break;
+      case 'e':
+        cf->img_src_ext = optarg;
+        break;
+      case 'o':
+        cf->dst_keogram = optarg;
+        break;
+      case 'p':
+        cf->parse_filename = true;
+        break;
+      case 'n':
+        cf->labels_enabled = false;
+        break;
+      case 'r':
+        cf->rotation_angle = atof(optarg);
+        break;
+      case 's':
+        int height, width;
+        sscanf(optarg, "%dx%d", &width, &height);
+        // 122.8Mpx should be enough for anybody.
+        if (height < 0 || height > 9600 || width < 0 || width > 12800)
+          height = width = 0;
+        cf->img_height = height;
+        cf->img_width = width;
+        break;
+      case 'v':
+        cf->verbose++;
+        break;
+      case 'C':
+        int tmp;
+        if (strchr(optarg, ' ')) {
+          int r, g, b;
+          sscanf(optarg, "%d %d %d", &b, &g, &r);
+          cf->b = b & 0xff;
+          cf->g = g & 0xff;
+          cf->r = r & 0xff;
+          break;
+        }
+        if (optarg[0] == '#')  // skip '#' if input is like '#coffee'
+          optarg++;
+        sscanf(optarg, "%06x", &tmp);
+        cf->b = tmp & 0xff;
+        cf->g = (tmp >> 8) & 0xff;
+        cf->r = (tmp >> 16) & 0xff;
+        break;
+      case 'L':
+        cf->lineWidth = atoi(optarg);
+        break;
+      case 'N':
+        cf->fontFace = get_font_by_name(optarg);
+        break;
+      case 'S':
+        cf->fontScale = atof(optarg);
+        break;
+      case 'T':
+        tmp = atoi(optarg);
+        if (tmp == 2)
+          cf->fontType = cv::LINE_4;
+        else if (tmp == 0)
+          cf->fontType = cv::LINE_AA;
+        else
+          cf->fontType = cv::LINE_8;
+        break;
+      default:
+        break;
+    }  // option switch
+  }    // getopt loop
+}
 
 void usage_and_exit(int x) {
   std::cout
@@ -107,116 +237,16 @@ int get_font_by_name(char* s) {
 }
 
 int main(int argc, char* argv[]) {
-  int c;
-  bool labelsEnabled = true, parse_filename = false;
-  int fontFace = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
-  double fontScale = 2;
-  int fontType = cv::LINE_8;
-  int thickness = 3;
-  unsigned char fontColor[3] = {255, 0, 0};
-  double angle = 0;
-  std::string directory, extension, outputfile;
-  int width = 0, height = 0;
+  struct config_t config;
 
-  while (1) {  // getopt loop
-    int option_index = 0;
-    static struct option long_options[] = {
-        {"directory", required_argument, 0, 'd'},
-        {"image-size", required_argument, 0, 's'},
-        {"extension", required_argument, 0, 'e'},
-        {"output", required_argument, 0, 'o'},
-        {"font-color", required_argument, 0, 'C'},
-        {"font-line", required_argument, 0, 'L'},
-        {"font-name", required_argument, 0, 'N'},
-        {"font-size", required_argument, 0, 'S'},
-        {"font-type", required_argument, 0, 'T'},
-        {"rotate", required_argument, 0, 'r'},
-        {"parse-filename", no_argument, 0, 'p'},
-        {"no-label", no_argument, 0, 'n'},
-        {"verbose", no_argument, 0, 'v'},
-        {"help", no_argument, 0, 'h'},
-        {0, 0, 0, 0}};
+  parse_args(argc, argv, &config);
 
-    c = getopt_long(argc, argv, "d:e:o:r:s:C:L:N:S:T:npvh", long_options,
-                    &option_index);
-    if (c == -1)
-      break;
-    switch (c) {  // option switch
-      int tmp;
-      case 'h':
-        usage_and_exit(0);
-        // NOTREACHED
-      case 'd':
-        directory = optarg;
-        break;
-      case 'e':
-        extension = optarg;
-        break;
-      case 'o':
-        outputfile = optarg;
-        break;
-      case 'p':
-        parse_filename = true;
-        break;
-      case 'n':
-        labelsEnabled = false;
-        break;
-      case 'r':
-        angle = atof(optarg);
-        break;
-      case 's':
-        sscanf(optarg, "%dx%d", &width, &height);
-        // 122.8Mpx should be enough for anybody.
-        if (height < 0 || height > 9600 || width < 0 || width > 12800)
-          height = width = 0;
-        break;
-      case 'v':
-        loglevel++;
-        break;
-      case 'C':
-        if (strchr(optarg, ' ')) {
-          int r, g, b;
-          sscanf(optarg, "%d %d %d", &b, &g, &r);
-          fontColor[0] = b & 0xff;
-          fontColor[1] = g & 0xff;
-          fontColor[2] = r & 0xff;
-          break;
-        }
-        if (optarg[0] == '#')  // skip '#' if input is like '#coffee'
-          optarg++;
-        sscanf(optarg, "%06x", &tmp);
-        fontColor[0] = tmp & 0xff;
-        fontColor[1] = (tmp >> 8) & 0xff;
-        fontColor[2] = (tmp >> 16) & 0xff;
-        break;
-      case 'L':
-        thickness = atoi(optarg);
-        break;
-      case 'N':
-        fontFace = get_font_by_name(optarg);
-        break;
-      case 'S':
-        fontScale = atof(optarg);
-        break;
-      case 'T':
-        tmp = atoi(optarg);
-        if (tmp == 2)
-          fontType = cv::LINE_4;
-        else if (tmp == 0)
-          fontType = cv::LINE_AA;
-        else
-          fontType = cv::LINE_8;
-        break;
-      default:
-        break;
-    }  // option switch
-  }    // getopt loop
-
-  if (directory.empty() || extension.empty() || outputfile.empty())
+  if (config.img_src_dir.empty() || config.img_src_ext.empty() ||
+      config.dst_keogram.empty())
     usage_and_exit(3);
 
   glob_t files;
-  std::string wildcard = directory + "/*." + extension;
+  std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
   glob(wildcard.c_str(), 0, NULL, &files);
   if (files.gl_pathc == 0) {
     globfree(&files);
@@ -237,14 +267,16 @@ int main(int argc, char* argv[]) {
       continue;
     }
 
-    if (loglevel)
+    if (config.verbose)
       std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
                 << basename(files.gl_pathv[f]) << std::endl;
 
-    if (height && width &&
-        (imagesrc.cols != width || imagesrc.rows != height)) {
+    if (config.img_height && config.img_width &&
+        (imagesrc.cols != config.img_width ||
+         imagesrc.rows != config.img_height)) {
       fprintf(stderr, "%s size %dx%d != %dx%d\n", files.gl_pathv[f],
-              imagesrc.cols, imagesrc.cols, width, height);
+              imagesrc.cols, imagesrc.cols, config.img_width,
+              config.img_height);
       continue;
     }
     if (nchan == 0)
@@ -254,9 +286,10 @@ int main(int argc, char* argv[]) {
       continue;
 
     cv::Point2f center((imagesrc.cols - 1) / 2.0, (imagesrc.rows - 1) / 2.0);
-    cv::Mat rot = cv::getRotationMatrix2D(center, angle, 1.0);
+    cv::Mat rot = cv::getRotationMatrix2D(center, config.rotation_angle, 1.0);
     cv::Rect2f bbox =
-        cv::RotatedRect(cv::Point2f(), imagesrc.size(), angle).boundingRect2f();
+        cv::RotatedRect(cv::Point2f(), imagesrc.size(), config.rotation_angle)
+            .boundingRect2f();
     rot.at<double>(0, 2) += bbox.width / 2.0 - imagesrc.cols / 2.0;
     rot.at<double>(1, 2) += bbox.height / 2.0 - imagesrc.rows / 2.0;
     cv::Mat imagedst;
@@ -268,9 +301,9 @@ int main(int argc, char* argv[]) {
     // Copy middle column to destination
     imagedst.col(imagedst.cols / 2).copyTo(accumulated.col(f));
 
-    if (labelsEnabled) {
+    if (config.labels_enabled) {
       struct tm ft;  // the time of the file, by any means necessary
-      if (parse_filename) {
+      if (config.parse_filename) {
         // engage your safety squints!
         char* s;
         s = strrchr(files.gl_pathv[f], '-');
@@ -307,15 +340,16 @@ int main(int argc, char* argv[]) {
           std::string text(hour);
           int baseline = 0;
           cv::Size textSize =
-              cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
+              cv::getTextSize(text, config.fontFace, config.fontScale,
+                              config.lineWidth, &baseline);
 
           if (f - textSize.width >= 0) {
             cv::putText(accumulated, text,
                         cv::Point(f - textSize.width,
                                   accumulated.rows - textSize.height),
-                        fontFace, fontScale,
-                        cv::Scalar(fontColor[0], fontColor[1], fontColor[2]),
-                        thickness, fontType);
+                        config.fontFace, config.fontScale,
+                        cv::Scalar(config.b, config.g, config.r),
+                        config.lineWidth, config.fontType);
           }
         }
         prevHour = ft.tm_hour;
@@ -330,5 +364,5 @@ int main(int argc, char* argv[]) {
   compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
   compression_params.push_back(95);
 
-  cv::imwrite(outputfile, accumulated, compression_params);
+  cv::imwrite(config.dst_keogram, accumulated, compression_params);
 }

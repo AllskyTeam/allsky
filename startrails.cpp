@@ -24,8 +24,68 @@
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
 
+struct config_t {
+  std::string img_src_dir, img_src_ext, dst_startrails;
+  bool startrails_enabled;
+  int img_width;
+  int img_height;
+  int verbose;
+  double brightness_limit;
+} config;
+
+void parse_args(int, char**, struct config_t*);
+void usage_and_exit(int);
+
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
+void parse_args(int argc, char** argv, struct config_t* cf) {
+  int c;
+  cf->verbose = 0;
+  cf->startrails_enabled = true;
+  cf->img_height = cf->img_width = 0;
+  cf->brightness_limit = 0.35;  // not terrible in the city
+
+  while ((c = getopt(argc, argv, "hvsb:d:e:o:S:")) != -1) {
+    switch (c) {
+      case 'h':
+        usage_and_exit(0);
+        // NOTREACHED
+        break;
+      case 'v':
+        cf->verbose++;
+        break;
+      case 's':
+        cf->startrails_enabled = false;
+        break;
+      case 'S':
+        int height, width;
+        sscanf(optarg, "%dx%d", &width, &height);
+        // 122.8Mpx should be enough for anybody.
+        if (height < 0 || height > 9600 || width < 0 || width > 12800)
+          height = width = 0;
+        cf->img_height = height;
+        cf->img_width = width;
+        break;
+      case 'b':
+        double b;
+        b = atof(optarg);
+        if (b >= 0 && b <= 1.0)
+          cf->brightness_limit = b;
+        break;
+      case 'd':
+        cf->img_src_dir = optarg;
+        break;
+      case 'e':
+        cf->img_src_ext = optarg;
+        break;
+      case 'o':
+        cf->dst_startrails = optarg;
+        break;
+      default:
+        break;
+    }
+  }
+}
 
 void usage_and_exit(int x) {
   std::cout << "Usage: startrails [-v] -d <dir> -e <ext> [-b <brightness> -o "
@@ -50,7 +110,8 @@ void usage_and_exit(int x) {
   std::cout << "-o <str> : output image filename" << std::endl;
   std::cout << "-S <int>x<int> : restrict processed images to this size"
             << std::endl;
-  std::cout << "-b <float> : ranges from 0 (black) to 1 (white)" << std::endl;
+  std::cout << "-b <float> : ranges from 0 (black) to 1 (white). Default 0.35"
+            << std::endl;
   std::cout << "\tA moonless sky may be as low as 0.05 while full moon can be "
                "as high as 0.4"
             << std::endl;
@@ -62,61 +123,24 @@ void usage_and_exit(int x) {
 }
 
 int main(int argc, char* argv[]) {
-  std::string directory, extension, outputfile;
-  double threshold = -1;
-  int verbose = 0, stats_only = 0, height = 0, width = 0;
-  int c;
+  struct config_t config;
 
-  while ((c = getopt(argc, argv, "hvsb:d:e:o:S:")) != -1) {
-    switch (c) {
-      case 'h':
-        usage_and_exit(0);
-        // NOTREACHED
-        break;
-      case 'v':
-        verbose++;
-        break;
-      case 's':
-        stats_only = 1;
-        break;
-      case 'S':
-        sscanf(optarg, "%dx%d", &width, &height);
-        // 122.8Mpx should be enough for anybody.
-        if (height < 0 || height > 9600 || width < 0 || width > 12800)
-          height = width = 0;
-        break;
-      case 'b':
-        double tf;
-        tf = atof(optarg);
-        if (tf >= 0 && tf <= 1.0)
-          threshold = tf;
-        break;
-      case 'd':
-        directory = optarg;
-        break;
-      case 'e':
-        extension = optarg;
-        break;
-      case 'o':
-        outputfile = optarg;
-        break;
-      default:
-        break;
-    }
+  parse_args(argc, argv, &config);
+
+  if (config.img_src_dir.empty() || config.img_src_ext.empty())
+    usage_and_exit(3);
+
+  if (!config.startrails_enabled) {
+    config.brightness_limit = 0;
+    config.dst_startrails = "/dev/null";
   }
 
-  if (stats_only) {
-    threshold = 0;
-    outputfile = "/dev/null";
-  }
-
-  if (directory.empty() || extension.empty() || outputfile.empty() ||
-      threshold < 0)
+  if (!config.dst_startrails.empty() && config.brightness_limit < 0)
     usage_and_exit(3);
 
   // Find files
   glob_t files;
-  std::string wildcard = directory + "/*." + extension;
+  std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
   glob(wildcard.c_str(), 0, NULL, &files);
   if (files.gl_pathc == 0) {
     globfree(&files);
@@ -140,9 +164,10 @@ int main(int argc, char* argv[]) {
       continue;
     }
 
-    if (height && width && (image.cols != width || image.rows != height)) {
+    if (config.img_height && config.img_width &&
+        (image.cols != config.img_width || image.rows != config.img_height)) {
       fprintf(stderr, "%s size %dx%d != %dx%d\n", files.gl_pathv[f], image.cols,
-              image.cols, width, height);
+              image.cols, config.img_width, config.img_height);
       continue;
     }
 
@@ -170,15 +195,15 @@ int main(int argc, char* argv[]) {
         mean /= 65535.0;
         break;
     }
-    if (verbose)
+    if (config.verbose)
       std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
                 << basename(files.gl_pathv[f]) << " " << mean << std::endl;
 
     stats.col(f) = mean;
 
-    if (!stats_only && mean <= threshold) {
+    if (config.startrails_enabled && mean <= config.brightness_limit) {
       if (image.channels() != nchan) {
-        if (verbose)
+        if (config.verbose)
           fprintf(stderr, "repairing channel mismatch: %d != %d\n",
                   image.channels(), nchan);
         if (image.channels() < nchan)
@@ -212,7 +237,7 @@ int main(int argc, char* argv[]) {
 
   // If we still don't have an image (no images below threshold), copy the
   // minimum mean image so we see why
-  if (!stats_only) {
+  if (config.startrails_enabled) {
     if (accumulated.empty()) {
       std::cout << "No images below threshold, writing the minimum image only"
                 << std::endl;
@@ -225,7 +250,7 @@ int main(int argc, char* argv[]) {
     compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
     compression_params.push_back(95);
 
-    cv::imwrite(outputfile, accumulated, compression_params);
+    cv::imwrite(config.dst_startrails, accumulated, compression_params);
   }
   globfree(&files);
   return 0;

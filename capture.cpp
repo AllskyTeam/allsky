@@ -289,6 +289,8 @@ void *SaveImgThd(void *para)
 }
 
 char retCodeBuffer[100];
+int asi_error_timeout_cntr = 0;
+
 // Display ASI errors in human-readable format
 char *getRetCode(ASI_ERROR_CODE code)
 {
@@ -304,7 +306,13 @@ char *getRetCode(ASI_ERROR_CODE code)
     else if (code == ASI_ERROR_INVALID_SIZE) ret = "ASI_ERROR_INVALID_SIZE";
     else if (code == ASI_ERROR_INVALID_IMGTYPE) ret = "ASI_ERROR_INVALID_IMGTYPE";
     else if (code == ASI_ERROR_OUTOF_BOUNDARY) ret = "ASI_ERROR_OUTOF_BOUNDARY";
-    else if (code == ASI_ERROR_TIMEOUT) ret = "ASI_ERROR_TIMEOUT";
+    else if (code == ASI_ERROR_TIMEOUT)
+    {
+	// To aid in debugging these errors, keep track of how many we see.
+        asi_error_timeout_cntr += 1;
+        ret = "ASI_ERROR_TIMEOUT #" + std::to_string(asi_error_timeout_cntr) +
+              " (with 0.8 exposure = " + ((use_new_exposure_algorithm)?("YES"):("NO")) + ")";
+    }
     else if (code == ASI_ERROR_INVALID_SEQUENCE) ret = "ASI_ERROR_INVALID_SEQUENCE";
     else if (code == ASI_ERROR_BUFFER_TOO_SMALL) ret = "ASI_ERROR_BUFFER_TOO_SMALL";
     else if (code == ASI_ERROR_VIDEO_MODE_ACTIVE) ret = "ASI_ERROR_VIDEO_MODE_ACTIVE";
@@ -1757,7 +1765,7 @@ const char *locale = DEFAULT_LOCALE;
     // Initialization
     int exitCode        = 0;    // Exit code for main()
     int numErrors       = 0;    // Number of errors in a row.
-    int maxErrors       = 2;    // Max number of errors in a row before we exit
+    int maxErrors       = 5;    // Max number of errors in a row before we exit
     int originalITextX = iTextX;
     int originalITextY = iTextY;
     int originalFontsize = fontsize;

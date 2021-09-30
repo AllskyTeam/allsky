@@ -15,8 +15,8 @@ ME="$(basename "${BASH_ARGV0}")"
 cd $ALLSKY_HOME
 
 if [ $# -lt 1 -o $# -gt 2 -o "${1}" = "-h" -o "${1}" = "--help" ] ; then
-    TODAY=$(date +%Y%m%d)
-    echo -en "${RED}"
+	TODAY=$(date +%Y%m%d)
+	echo -en "${RED}"
 	echo -n "Usage: ${ME} [--help]  DATE  [directory]"
 	echo -e "${NC}"
 	echo "    example: ${ME} ${TODAY}"
@@ -91,8 +91,8 @@ SCALE=""
 TIMELAPSEWIDTH=${TIMELAPSEWIDTH:-0}
 TIMELAPSEHEIGHT=${TIMELAPSEHEIGHT:-0}
 if [ "${TIMELAPSEWIDTH}" != 0 ]; then
-    SCALE="-filter:v scale=${TIMELAPSEWIDTH}:${TIMELAPSEHEIGHT}"
-    echo "$ME: Using video scale ${TIMELAPSEWIDTH}x${TIMELAPSEHEIGHT}"
+	SCALE="-filter:v scale=${TIMELAPSEWIDTH}:${TIMELAPSEHEIGHT}"
+	echo "$ME: Using video scale ${TIMELAPSEWIDTH}x${TIMELAPSEHEIGHT}"
 fi
 
 # "-loglevel warning" gets rid of the dozens of lines of garbage output

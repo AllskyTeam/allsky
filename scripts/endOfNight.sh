@@ -31,8 +31,8 @@ fi
 
 # Post end of night data. This includes next twilight time
 if [[ ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
-        echo -e "${ME}: Posting next twilight time to let server know when to resume liveview\n"
-        "${ALLSKY_SCRIPTS}/postData.sh"
+	echo -e "${ME}: Posting next twilight time to let server know when to resume liveview\n"
+	"${ALLSKY_SCRIPTS}/postData.sh"
 	echo -e "\n"
 fi
 
@@ -46,13 +46,12 @@ if [[ "${REMOVE_BAD_IMAGES}" == "true" ]]; then
 fi
 
 # Generate keogram from collected images
-if [[ ${KEOGRAM} == "true" ]]; then
-        echo -e "${ME}: ===== Generating Keogram"
-        mkdir -p "${DATE_DIR}/keogram/"
+	echo -e "${ME}: ===== Generating Keogram"
+	mkdir -p "${DATE_DIR}/keogram/"
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/keogram/${KEOGRAM_FILE}"
 
-        "${ALLSKY_HOME}/keogram" -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_PARAMETERS}
+	"${ALLSKY_HOME}/keogram" -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_PARAMETERS}
 	RETCODE=$?
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RETCODE} = 0 ]] ; then
 		# If the user specified a different name for the destination file, use it.
@@ -67,21 +66,20 @@ if [[ ${KEOGRAM} == "true" ]]; then
 			echo "${ME}: Copying ${UPLOAD_FILE} to ${WEB_KEOGRAM_DIR}"
 			cp ${UPLOAD_FILE} "${WEB_KEOGRAM_DIR}"
 		fi
-        fi
+	fi
 	echo
 fi
 
 # Generate startrails from collected images.
 # Threshold set to 0.1 by default in config.sh to avoid stacking over-exposed images.
 if [[ ${STARTRAILS} == "true" ]]; then
-        echo -e "${ME}: ===== Generating Startrails"
-        mkdir -p ${DATE_DIR}/startrails/
+	echo -e "${ME}: ===== Generating Startrails"
+	mkdir -p ${DATE_DIR}/startrails/
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/startrails/${STARTRAILS_FILE}"
-
-        "${ALLSKY_HOME}/startrails" "${DATE_DIR}/" ${EXTENSION} ${BRIGHTNESS_THRESHOLD} "${UPLOAD_FILE}"
+	"${ALLSKY_HOME}/startrails" "${DATE_DIR}/" ${EXTENSION} ${BRIGHTNESS_THRESHOLD} "${UPLOAD_FILE}"
 	RETCODE=$?
-        if [[ ${UPLOAD_STARTRAILS} == "true" && ${RETCODE} == 0 ]] ; then
+	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RETCODE} == 0 ]] ; then
 		# If the user specified a different name for the destination file, use it.
 		if [ "${STARTRAILS_DESTINATION_NAME}" != "" ]; then
 			STARTRAILS_FILE="${STARTRAILS_DESTINATION_NAME}"
@@ -94,7 +92,7 @@ if [[ ${STARTRAILS} == "true" ]]; then
 			echo "${ME}: Copying ${UPLOAD_FILE} to ${WEB_STARTRAILS_DIR}"
 			cp "${UPLOAD_FILE}" "${WEB_STARTRAILS_DIR}"
 		fi
-        fi
+	fi
 	echo
 fi
 
@@ -105,7 +103,7 @@ if [[ ${TIMELAPSE} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Timelapse"
 	"${ALLSKY_SCRIPTS}/timelapse.sh" "${DATE}"
 	RETCODE=$?
-        if [[ ${UPLOAD_VIDEO} == "true" && ${RETCODE} == 0 ]] ; then
+	if [[ ${UPLOAD_VIDEO} == "true" && ${RETCODE} == 0 ]] ; then
 		VIDEOS_FILE="allsky-${DATE}.mp4"
 		UPLOAD_FILE="${DATE_DIR}/${VIDEOS_FILE}"
 		# If the user specified a different name for the destination file, use it.

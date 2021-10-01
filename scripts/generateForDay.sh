@@ -28,7 +28,7 @@ source "${ALLSKY_SCRIPTS}/filename.sh"
 
 
 if [ $# -eq 0 -o "${1}" = "-h" -o "${1}" = "--help" ]; then
-	echo -en "${RED}"
+	[ $# -eq 0 ] && echo -en "${RED}"
 	echo -e "Usage: ${ME} [-k] [-s] [-t] DATE"
 	echo -e "    where:"
 	echo -e "      'DATE' is the day in '${ALLSKY_IMAGES}' to process"
@@ -36,31 +36,31 @@ if [ $# -eq 0 -o "${1}" = "-h" -o "${1}" = "--help" ]; then
 	echo -e "      's' is to ${MSG1} a startrail"
 	echo -e "      't' is to ${MSG1} a timelapse"
 	echo -e "    If you don't specify k, s, or t, all three will be ${MSG2}."
-	echo -e "${NC}"
+	[ $# -eq 0 ] && echo -e "${NC}"
 	exit 0
 fi
 
 if [ $# -gt 1 ] ; then
-	DO_K="false"
-	DO_S="false"
-	DO_T="false"
+	DO_KEOGRAM="false"
+	DO_STARTRAILS="false"
+	DO_TIMELAPSE="false"
 	while [ $# -gt 1 ]
 	do
 		if [ "${1}" = "-k" ] ; then
-			DO_K="true"
+			DO_KEOGRAM="true"
 		elif [ "${1}" = "-s" ] ; then
-			DO_S="true"
+			DO_STARTRAILS="true"
 		elif [ "${1}" = "-t" ] ; then
-			DO_T="true"
+			DO_TIMELAPSE="true"
 		else
 			echo "Unknown image type: '${1}'; ignoring."
 		fi
 		shift
 	done
 else
-	DO_K="true"
-	DO_S="true"
-	DO_T="true"
+	DO_KEOGRAM="true"
+	DO_STARTRAILS="true"
+	DO_TIMELAPSE="true"
 fi
 
 DATE="${1}"
@@ -70,7 +70,7 @@ if [ ! -d "${DATE_DIR}" ] ; then
 	exit 2
 fi
 
-if [ "${DO_K}" = "true" ] ; then
+if [ "${DO_KEOGRAM}" = "true" ] ; then
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/keogram/${KEOGRAM_FILE}"
 	if [ "${TYPE}" = "GENERATE" ]; then
@@ -78,11 +78,7 @@ if [ "${DO_K}" = "true" ] ; then
 		echo -e "===== Generating Keogram"
 		mkdir -p "${DATE_DIR}/keogram"
 
-		# The keogram command outputs one line for each of the many hundreds of files,
-		# and this adds needless clutter to the output, so send output to a tmp file so we
-		# can output the number of images.
-		TMP="${ALLSKY_TMP}/keogramTMP.txt"
-		"${ALLSKY_HOME}/keogram" -d "${DATE_DIR}" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_PARAMETERS} > "${TMP}"
+		"${ALLSKY_HOME}/keogram" -d "${DATE_DIR}" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_PARAMETERS}
 		[ $? -eq 0 ] && echo -e "Completed"
 	else
 		if [ -s "${UPLOAD_FILE}" ]; then
@@ -96,25 +92,21 @@ if [ "${DO_K}" = "true" ] ; then
 			[ $? -eq 0 ] && echo "${KEOGRAM_FILE} uploaded"
 		else
 			echo -en "${YELLOW}"
-			echo -n "ERROR: Keogram file '${UPLOAD_FILE}' not found; skipping"
+			echo -n "WARNING: Keogram file '${UPLOAD_FILE}' not found; skipping"
 			echo -e "${NC}"
 		fi
 	fi
 	echo -e "\n"
 fi
 
-if [ "${DO_S}" = "true" ] ; then
+if [ "${DO_STARTRAILS}" = "true" ] ; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/startrails/${STARTRAILS_FILE}"
 	if [ "${TYPE}" = "GENERATE" ]; then
 		echo -e "===== Generating Startrails, threshold=${BRIGHTNESS_THRESHOLD}"
 		mkdir -p "${DATE_DIR}/startrails"
 
-		# The staretrails command outputs one line for each of the many hundreds of files,
-		# and this adds needless clutter to the output, so send output to a tmp file so we
-		# can output the number of images.
-		TMP="${ALLSKY_TMP}/startrailsTMP.txt"
-		"${ALLSKY_HOME}/startrails" -d "${DATE_DIR}/" -e ${EXTENSION} -b "${BRIGHTNESS_THRESHOLD}" -o "${UPLOAD_FILE}" > "${TMP}"
+		"${ALLSKY_HOME}/startrails" -d "${DATE_DIR}/" -e ${EXTENSION} -b "${BRIGHTNESS_THRESHOLD}" -o "${UPLOAD_FILE}"
 		[ $? -eq 0 ] && echo -e "Completed"
 	else
 		if [ -s "${UPLOAD_FILE}" ]; then
@@ -134,7 +126,7 @@ if [ "${DO_S}" = "true" ] ; then
 	echo -e "\n"
 fi
 
-if [ "${DO_T}" = "true" ] ; then
+if [ "${DO_TIMELAPSE}" = "true" ] ; then
 	VIDEOS_FILE="allsky-${DATE}.mp4"
 	UPLOAD_FILE="${DATE_DIR}/${VIDEOS_FILE}"
 	if [ "${TYPE}" = "GENERATE" ]; then
@@ -152,7 +144,7 @@ if [ "${DO_T}" = "true" ] ; then
 			[ $? -eq 0 ] && echo "${VIDEOS_FILE} uploaded"
 		else
 			echo -en "${YELLOW}"
-			echo -n "ERROR: Timelapse file '${UPLOAD_FILE}' not found; skipping"
+			echo -n "WARNING: Timelapse file '${UPLOAD_FILE}' not found; skipping"
 			echo -e "${NC}"
 		fi
 	fi

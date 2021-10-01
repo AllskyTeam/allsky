@@ -8,7 +8,7 @@ endif
 
 DEFS = -D_LIN -D_DEBUG -DGLIBC_20
 CFLAGS = -Wall -Wno-psabi -g -O2 -lpthread
-OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4)
+OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || (pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4))
 
 ifeq (,$(OPENCV))
   $(warning Did not find any OpenCV Libraries, you may need to install libopencv-dev.)

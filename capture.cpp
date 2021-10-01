@@ -967,27 +967,13 @@ const char *locale = DEFAULT_LOCALE;
     // If you are running the old allsky.sh, set this to false:
     bool argumentsQuoted = true;
 
-    if (argc > 0)
+    if (argc > 1)
     {
-        // -h[elp] doesn't take an argument, but the "for" loop assumes every option does,
-        // so check separately, assuming the option is the first one.
-        // If it's not the first option, we'll find it in the "for" loop.
-        if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
-        {
-            help = 1;
-            i = 1;
-        }
-        else
-        {
-            i = 0;
-        }
-
         // Many of the argument names changed to allow day and night values.
-        // However, still check for the old names in case the user didn't update their
-        // settings.json file.  The old names should be removed below in a future version.
-        for ( ; i < argc - 1 ; i++)
+        // However, still check for the old names in case the user didn't update their settings.json file.
+        // The old names should be removed below in a future version.
+        for (i=1 ; i <= argc - 1 ; i++)
         {
-            // Check again in case "-h" isn't the first option.
             if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "-help") == 0)
             {
                 help = 1;

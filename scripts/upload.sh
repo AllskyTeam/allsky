@@ -66,7 +66,7 @@ LOG="${ALLSKY_TMP}/upload_log.txt"
 
 # Convert to lowercase so we don't care if user specified upper or lowercase.
 PROTOCOL="${PROTOCOL,,}"
-
+ALLSKY_DEBUG_LEVEL=${ALLSKY_DEBUG_LEVEL:-0}
 if [[ "${PROTOCOL}" == "s3" ]] ; then
 	# xxxxxx How do you tell it the DESTINATION_FILE name ?
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then

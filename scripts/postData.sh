@@ -10,7 +10,7 @@ ME="$(basename "${BASH_ARGV0}")"
 
 latitude=$(jq -r '.latitude' "${CAMERA_SETTINGS}")
 longitude=$(jq -r '.longitude' "${CAMERA_SETTINGS}")
-timezone=-0700
+timezone=$(date "+%z")
 streamDaytime=false
 
 if [[ ${DAYTIME} == "true" || ${DAYTIME} == "1" ]] ; then

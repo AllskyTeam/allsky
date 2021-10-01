@@ -704,30 +704,16 @@ int main(int argc, char *argv[])
 	// If you are running the old allsky.sh, set this to false:
 	bool argumentsQuoted = true;
 
-	if (argc > 0)
+	if (argc > 1)
 	{
 		sprintf(debugText, "Found %d parameters...\n", argc - 1);
 		displayDebugText(debugText, 3);
 
-		// -h[elp] doesn't take an argument, but the "for" loop assumes every option does,
-       		// so check separately, assuming the option is the first one.
-		// If it's not the first option, we'll find it in the "for" loop.
-		if (strcmp(argv[0], "-h") == 0 || strcmp(argv[0], "-help") == 0)
-		{
-			help = 1;
-			i = 1;
-		}
-		else
-		{
-			i = 0;
-		}
-
-		for (i = 0; i < argc - 1; i++)
+		for (i = 1; i <= argc - 1; i++)
 		{
 			sprintf(debugText, "Processing argument: %s\n\n", argv[i]);
 			displayDebugText(debugText, 3);
 
-			// Check again in case "-h" isn't the first option.
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0)
 			{
 				help = 1;

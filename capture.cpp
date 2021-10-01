@@ -289,6 +289,8 @@ void *SaveImgThd(void *para)
 }
 
 char retCodeBuffer[100];
+int asi_error_timeout_cntr = 0;
+
 // Display ASI errors in human-readable format
 char *getRetCode(ASI_ERROR_CODE code)
 {
@@ -304,7 +306,13 @@ char *getRetCode(ASI_ERROR_CODE code)
     else if (code == ASI_ERROR_INVALID_SIZE) ret = "ASI_ERROR_INVALID_SIZE";
     else if (code == ASI_ERROR_INVALID_IMGTYPE) ret = "ASI_ERROR_INVALID_IMGTYPE";
     else if (code == ASI_ERROR_OUTOF_BOUNDARY) ret = "ASI_ERROR_OUTOF_BOUNDARY";
-    else if (code == ASI_ERROR_TIMEOUT) ret = "ASI_ERROR_TIMEOUT";
+    else if (code == ASI_ERROR_TIMEOUT)
+    {
+	// To aid in debugging these errors, keep track of how many we see.
+        asi_error_timeout_cntr += 1;
+        ret = "ASI_ERROR_TIMEOUT #" + std::to_string(asi_error_timeout_cntr) +
+              " (with 0.8 exposure = " + ((use_new_exposure_algorithm)?("YES"):("NO")) + ")";
+    }
     else if (code == ASI_ERROR_INVALID_SEQUENCE) ret = "ASI_ERROR_INVALID_SEQUENCE";
     else if (code == ASI_ERROR_BUFFER_TOO_SMALL) ret = "ASI_ERROR_BUFFER_TOO_SMALL";
     else if (code == ASI_ERROR_VIDEO_MODE_ACTIVE) ret = "ASI_ERROR_VIDEO_MODE_ACTIVE";
@@ -959,27 +967,13 @@ const char *locale = DEFAULT_LOCALE;
     // If you are running the old allsky.sh, set this to false:
     bool argumentsQuoted = true;
 
-    if (argc > 0)
+    if (argc > 1)
     {
-        // -h[elp] doesn't take an argument, but the "for" loop assumes every option does,
-        // so check separately, assuming the option is the first one.
-        // If it's not the first option, we'll find it in the "for" loop.
-        if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0)
-        {
-            help = 1;
-            i = 1;
-        }
-        else
-        {
-            i = 0;
-        }
-
         // Many of the argument names changed to allow day and night values.
-        // However, still check for the old names in case the user didn't update their
-        // settings.json file.  The old names should be removed below in a future version.
-        for ( ; i < argc - 1 ; i++)
+        // However, still check for the old names in case the user didn't update their settings.json file.
+        // The old names should be removed below in a future version.
+        for (i=1 ; i <= argc - 1 ; i++)
         {
-            // Check again in case "-h" isn't the first option.
             if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "-help") == 0)
             {
                 help = 1;
@@ -1757,7 +1751,7 @@ const char *locale = DEFAULT_LOCALE;
     // Initialization
     int exitCode        = 0;    // Exit code for main()
     int numErrors       = 0;    // Number of errors in a row.
-    int maxErrors       = 2;    // Max number of errors in a row before we exit
+    int maxErrors       = 5;    // Max number of errors in a row before we exit
     int originalITextX = iTextX;
     int originalITextY = iTextY;
     int originalFontsize = fontsize;

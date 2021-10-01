@@ -1,85 +1,77 @@
 #!/bin/bash
 
-ME="$(basename "$BASH_ARGV0")"	# Include script name in output so it's easier to find in the log file
+ME="$(basename "${BASH_ARGV0}")"
 
 NOTIFICATIONFILE="$1"	# filename, minus the extension, since the extension may vary
 if [ "$1" = "" ] ; then
-	echo "*** $ME: ERROR: no file specified" >&2
+	echo "*** ${ME}: ERROR: no file specified" >&2
 	exit 1
 fi
 
-source $ALLSKY_HOME/config.sh
-source $ALLSKY_HOME/scripts/filename.sh
-source $ALLSKY_HOME/scripts/ftp-settings.sh
+source "${ALLSKY_HOME}/variables.sh"
+source "${ALLSKY_CONFIG}/config.sh"
+source "${ALLSKY_SCRIPTS}/filename.sh"
+source "${ALLSKY_SCRIPTS}/ftp-settings.sh"
 
-cd $ALLSKY_HOME
+cd "${ALLSKY_HOME}"
 
-NOTIFICATIONFILE="notification_images/$NOTIFICATIONFILE.$EXTENSION"
-if [ ! -e "$NOTIFICATIONFILE" ] ; then
-	echo "*** $ME: ERROR: File '$NOTIFICATIONFILE' does not exist or is empty!" >&2
-	exit 1
+NOTIFICATIONFILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATIONFILE}.${EXTENSION}"
+if [ ! -e "${NOTIFICATIONFILE}" ] ; then
+	echo "*** ${ME}: ERROR: File '${NOTIFICATIONFILE}' does not exist or is empty!" >&2
+	exit 2
 fi
 
-IMAGE_TO_USE="$FULL_FILENAME"
-cp "$NOTIFICATIONFILE" "$IMAGE_TO_USE"	# don't overwrite notification image
+IMAGE_TO_USE="${ALLSKY_TMP}/notification-${FULL_FILENAME}"
+# Don't overwrite notification image so create a temporary copy and use that.
+cp "${NOTIFICATIONFILE}" "${IMAGE_TO_USE}"
 
 # Resize the image if required
-if [ $IMG_RESIZE = "true" ]; then
-        convert "$IMAGE_TO_USE" -resize "$IMG_WIDTH"x"$IMG_HEIGHT" "$IMAGE_TO_USE"
+if [ "${IMG_RESIZE}" = "true" ]; then
+        convert "${IMAGE_TO_USE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${IMAGE_TO_USE}"
 	RET=$?
-	if [ $RET -ne 0 ] ; then
-		echo "*** $ME: ERROR: IMG_RESIZE failed with RET=$RET"
-		exit 1
+	if [ ${RET} -ne 0 ] ; then
+		echo "*** ${ME}: ERROR: IMG_RESIZE failed with RET=${RET}"
+		exit 3
 	fi
 fi
 
-# IMG_DIR and IMG_PREFIX are in config.sh
-# If the user specified an IMG_PREFIX, copy the file to that name so the websites can display it.
-if [ "${IMG_PREFIX}" != "" ]; then
-	cp "$IMAGE_TO_USE" "${IMG_PREFIX}${FILENAME}.${EXTENSION}"
-fi
-
-# If 24 hour saving is desired, save the image in today's thumbnail directory
+# If daytime saving is desired, save the image in today's thumbnail directory
 # so the user can see when things changed.
 # Don't save in main image directory because we don't want the notification image in timelapses.
-if [ "$CAPTURE_24HR" = "true" ] ; then
-	CURRENT=$(date +'%Y%m%d')
-	mkdir -p images/$CURRENT
-	THUMBNAILS_DIR=images/$CURRENT/thumbnails
-	mkdir -p $THUMBNAILS_DIR
+# If at nighttime, save them in (possibly) yesterday's directory.
+# If during day, save in today's directory.
+if [ "${CAPTURE_24HR}" = "true" ] ; then
+	IMAGES_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
+	THUMB="${IMAGES_DIR}/thumbnails/${FILENAME}-$(date +'%Y%m%d%H%M%S').${EXTENSION}"
 
-	SAVED_FILE="$FILENAME-$(date +'%Y%m%d%H%M%S').$EXTENSION"
-	# Create a thumbnail of the image for faster load in web GUI
-	convert "$IMAGE_TO_USE" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "$THUMBNAILS_DIR/$SAVED_FILE"
+	convert "${IMAGE_TO_USE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}"
 	RET=$?
-	if [ $RET -ne 0 ] ; then
-		echo "*** $ME: WARNING: THUMBNAIL resize failed with RET=$RET; continuing."
+	if [ ${RET} -ne 0 ] ; then
+		echo "*** ${ME}: WARNING: THUMBNAIL resize failed with RET=${RET}; continuing."
     	fi
 fi
 
+mv -f "${IMAGE_TO_USE}" "${ALLSKY_HOME}/${FULL_FILENAME}"	# so web severs can see it.
+
 # If upload is true, optionally create a smaller version of the image and upload it
-if [ "$UPLOAD_IMG" = "true" ] ; then
-	if [ "$RESIZE_UPLOADS" = "true" ]; then
-		echo -e "$ME: Resizing $NOTIFICATIONFILE for uploading"
+if [ "${UPLOAD_IMG}" = "true" ] ; then
+	# Don't overwrite FULL_FILENAME since the web server(s) may be looking at it.
+	cp "${ALLSKY_HOME}/${FULL_FILENAME}" "${ALLSKY_TMP}"
+	IMAGE_TO_USE="${ALLSKY_TMP}/${FULL_FILENAME}"
+	if [ "${RESIZE_UPLOADS}" = "true" ]; then
 		# Create a smaller version for upload
-		convert "$IMAGE_TO_USE" -resize "$RESIZE_UPLOADS_SIZE" -gravity East -chop 2x0 "$IMAGE_TO_USE"
+		convert "${IMAGE_TO_USE}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${IMAGE_TO_USE}"
 		RET=$?
-		if [ $RET -ne 0 ] ; then
-			echo "*** $ME: ERROR: RESIZE_UPLOADS failed with RET=$RET"
-			exit 1
+		if [ ${RET} -ne 0 ] ; then
+			echo "*** ${ME}: ERROR: RESIZE_UPLOADS failed with RET=${RET}"
+			exit 4
     		fi
 	fi
 
-	TS=$(ls -l --time-style='+%H:%M:%S' $IMAGE_TO_USE | awk '{print $6}')
-	echo -e "$ME: Uploading $(basename $NOTIFICATIONFILE) with timestamp: $TS\n"
-	if [ $PROTOCOL = "S3" ] ; then
-                $AWS_CLI_DIR/aws s3 cp "$IMAGE_TO_USE" s3://$S3_BUCKET$IMGDIR --acl $S3_ACL &
-        elif [ $PROTOCOL = "local" ] ; then
-		cp "$IMAGE_TO_USE" "$IMGDIR" &
-	else
-		TEMP_NAME="ni-$RANDOM"
-		# "ni" = notification image.  Use unique temporary name.
-		lftp "$PROTOCOL://$USER:$PASSWORD@$HOST:$IMGDIR" -e "set net:max-retries 2; set net:timeout 20; put "$IMAGE_TO_USE" -o $TEMP_NAME; rm -f "$IMAGE_TO_USE"; mv $TEMP_NAME "$IMAGE_TO_USE"; bye" &
-
-        fi
+	# We're actually uploading $IMAGE_TO_USE, but show $NOTIFICATIONFILE
+	# in the message since it's more descriptive.
+	echo -e "${ME}: Uploading $(basename "${NOTIFICATIONFILE}")\n"
+	# NI == Notification Image
+	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${IMAGE_TO_USE}" "${IMG_DIR}" "${FULL_FILENAME}" "NI"
 fi
+exit 0

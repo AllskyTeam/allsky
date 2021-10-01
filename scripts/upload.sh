@@ -34,7 +34,7 @@ if [ $# -lt 3 ] ; then
 	echo "   'directory' is the directory ON THE SERVER the file should be uploaded to."
 	echo "   'destination_file_name' is the name the file should be called ON THE SERVER."
 	echo
-	echo -n "For example: ${ME}  keogram-20210710.jgp  /keograms  keogram.jpg"
+	echo -n "For example: ${ME}  keogram-20210710.jpg  /keograms  keogram.jpg"
 	exit 1
 fi
 FILE_TO_UPLOAD="${1}"

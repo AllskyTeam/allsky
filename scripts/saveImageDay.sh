@@ -15,8 +15,7 @@ IMAGE_TO_USE="$FULL_FILENAME"
 
 # Quick check to make sure the image isn't corrupted.
 identify "$IMAGE_TO_USE" >/dev/null 2>&1
-RET=$?
-if [ $RET -ne 0 ] ; then
+if [ $? -ne 0 ] ; then
 	echo "${RED}*** $ME: ERROR: Image '${IMAGE_TO_USE} is corrupt; ignoring.${NC}"
 	exit 3
 fi
@@ -24,9 +23,8 @@ fi
 # Resize the image if required
 if [[ $IMG_RESIZE == "true" ]]; then
         convert "$IMAGE_TO_USE" -resize "$IMG_WIDTH"x"$IMG_HEIGHT" "$IMAGE_TO_USE"
-	RET=$?
-	if [ $RET -ne 0 ] ; then
-		echo "${RED}*** $ME: ERROR: IMG_RESIZE failed with RET=$RET${NC}"
+	if [ $? -ne 0 ] ; then
+		echo "${RED}*** $ME: ERROR: IMG_RESIZE failed${NC}"
 		exit 4
 	fi
 fi
@@ -34,9 +32,8 @@ fi
 # Crop the image around the center if required
 if [[ $CROP_IMAGE == "true" ]]; then
         convert "$IMAGE_TO_USE" -gravity Center -crop "$CROP_WIDTH"x"$CROP_HEIGHT"+"$CROP_OFFSET_X"+"$CROP_OFFSET_Y" +repage "$IMAGE_TO_USE"
-	RET=$?
-	if [ $RET -ne 0 ] ; then
-		echo "${RED}*** $ME: ERROR: CROP_IMAGE failed with RET=$RET${NC}"
+	if [ $? -ne 0 ] ; then
+		echo "${RED}*** $ME: ERROR: CROP_IMAGE failed${NC}"
 		exit 4
 	fi
 fi
@@ -62,9 +59,8 @@ if [ "${CAPTURE_24HR}" = "true" -o "${DAYTIME_SAVE}" = "true" ] ; then
 	# If we resized above, this will be a resize of a resize,
 	# but for thumbnails it should be ok.
 	convert "$IMAGE_TO_USE" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "$THUMBNAILS_DIR/$SAVED_FILE"
-	RET=$?
-	if [ $RET -ne 0 ] ; then
-		echo "*** $ME: ERROR: THUMBNAIL resize failed with RET=$RET; continuing."
+	if [ $? -ne 0 ] ; then
+		echo "*** $ME: ERROR: THUMBNAIL resize failed; continuing."
     	fi
 fi
 
@@ -73,12 +69,14 @@ if [ "$UPLOAD_IMG" = true ] ; then
 	if [[ "$RESIZE_UPLOADS" == "true" ]]; then
 		# Create a smaller version for upload
 		convert "$IMAGE_TO_USE" -resize "$RESIZE_UPLOADS_SIZE" -gravity East -chop 2x0 "$IMAGE_TO_USE"
-		RET=$?
-		if [ $RET -ne 0 ] ; then
-			echo -e "${YELLOW}*** ${ME}: WARNING: RESIZE_UPLOADS failed with RET=${RET}; continuing with larger image.${NC}"
+		if [ $? -ne 0 ] ; then
+			echo -e "${YELLOW}*** ${ME}: WARNING: RESIZE_UPLOADS failed; continuing with larger image.${NC}"
 		fi
 	fi
 
+	# SI == Save Image
 	"${ALLSKY_SCRIPTS}/upload.sh" "${IMAGE_TO_USE}" "${IMGDIR}" "${IMAGE_TO_USE}" "SI"
+	exit $?
 fi
+
 exit 0

@@ -1,0 +1,3 @@
+[submodule "src/sunwait-src"]
+	path = src/sunwait-src
+	url = https://github.com/risacher/sunwait

@@ -68,8 +68,8 @@ if [ -z "$KEEP_SEQUENCE" -o $NSEQ -lt 100 ] ; then
 	ls -rt "${DATE_DIR}"/*.${EXTENSION} |
 	gawk 'BEGIN{ a=1 }
 		{
-			printf "ln -s %s '$DIR'/sequence/%04d.'$EXTENSION'\n", $0, a;
-			printf "ln -s %s '$DIR'/sequence/%04d.'$EXTENSION'\n", $0, a >> "'${TMP}'";
+			printf "ln -s %s '${SEQUENCE_DIR}'/%04d.'${EXTENSION}'\n", $0, a;
+			printf "ln -s %s '${SEQUENCE_DIR}'/%04d.'${EXTENSION}'\n", $0, a >> "'${TMP}'";
 			a++;
 		}' |
 	bash

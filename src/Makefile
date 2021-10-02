@@ -1,6 +1,23 @@
 platform = $(shell uname -m)
 prefix = /
 
+PDIR = $(shell dirname "$$PWD")
+MYDIR = $(shell basename "$$PWD")
+NLU = $(shell basename "$(PDIR)")
+RIGHTPATH = 1
+
+ifneq (src,$(MYDIR))
+  RIGHTPATH = 0
+endif
+ifneq (allsky,$(NLU))
+  RIGHTPATH = 0
+endif
+
+ifneq (1,$(RIGHTPATH))
+  @echo Unexpected directory structure.
+  @echo This should be in allsky/src directory.
+else
+
 .DEFAULT_GOAL := all
 
 deps:
@@ -14,8 +31,7 @@ endif
 
 USB=$(shell pkg-config --cflags --libs libusb-1.0)
 ifeq (,$(USB))
-  $(warning Did not find USB Libraries, you may need to install libusb-1.0-0-dev.)
-  $(error Missing dependencies)
+  $(error Did not find USB Libraries, try 'make deps')
 endif
 
 DEFS = -D_LIN -D_DEBUG -DGLIBC_20
@@ -23,8 +39,7 @@ CFLAGS = -Wall -Wno-psabi -g -O2 -lpthread
 OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || (pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4))
 
 ifeq (,$(OPENCV))
-  $(warning Did not find any OpenCV Libraries, you may need to install libopencv-dev.)
-  $(error Missing dependencies)
+  $(error Did not find any OpenCV Libraries, try 'make deps')
 endif
 
 ifeq ($(platform), armv6l)
@@ -101,8 +116,7 @@ keogram:keogram.cpp
 
 install:
 ifneq ($(shell id -u), 0)
-	@echo This must be ran with root permissions.
-	@echo Please run \'sudo make install\'
+	$(error Please run \'sudo make install\')
 else
 	@echo `date +%F\ %R:%S` Starting install...
 	@chmod 755 ../allsky.sh ../scripts/*.sh
@@ -113,9 +127,9 @@ else
 ifneq ($(wildcard /etc/xdg/lxsession/LXDE-pi/autostart),)
 	@sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart
 endif
-	@sed -i "s|User=pi|User=$(SUDO_USER)|g" ../autostart/allsky.service
-	@sed -i "s|/home/pi/allsky|$$PWD|g" ../autostart/allsky.service
-	@install -m 0644 ../autostart/allsky.service /etc/systemd/system/
+	@sed -i "s|User=pi|User=$(SUDO_USER)|g" ../config_repo/allsky.service
+	@sed -i "s|/home/pi/allsky|$(PDIR)|g" ../config_repo/allsky.service
+	@install -m 0644 ../config_repo/allsky.service /etc/systemd/system/
 ifneq ($(wildcard /lib/systemd/system/allsky.service),)
 	@rm -f /lib/systemd/system/allsky.service
 endif
@@ -125,7 +139,7 @@ endif
 	@install -D -m 0644 ../config_repo/allsky.logrotate /etc/logrotate.d/allsky
 	@install -D -m 0644 ../config_repo/allsky.rsyslog /etc/rsyslog.d/allsky.conf
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
-	@echo "export ALLSKY_HOME=$$PWD" > /etc/profile.d/allsky.sh
+	@echo "export ALLSKY_HOME=$(PDIR)" > /etc/profile.d/allsky.sh
 ifeq ($(wildcard ../settings_ZWO.json),)
 	@echo `date +%F\ %R:%S` Copying default settings_ZWO.json
 	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/settings_ZWO.json.repo ../settings_ZWO.json
@@ -147,9 +161,9 @@ ifeq ($(wildcard ../scripts/ftp-settings.sh),)
 	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../scripts/ftp-settings.sh.repo ../scripts/ftp-settings.sh
 endif
 	@echo `date +%F\ %R:%S` Copying binaries...
-	@install capture /usr/local/bin/
-	@install keogram /usr/local/bin/
-	@install startrails /usr/local/bin/
+	@install -o $(SUDO_USER) -g $(SUDO_USER) capture ../
+	@install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../
+	@install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../
 	@install sunwait /usr/local/bin/
 
 	@echo `date +%F\ %R:%S` Setting directory permissions...
@@ -159,7 +173,9 @@ endif
 	@echo `date +%F\ %R:%S` It is recommended to reboot now, please issue \'sudo reboot\'
 	@echo ""
 	@echo ""
-endif
+endif # sudo / root check
 
 clean:
 	rm -f capture capture_RPiHQ startrails keogram
+
+endif # Correct directory structure check

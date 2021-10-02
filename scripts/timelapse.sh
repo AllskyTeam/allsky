@@ -52,7 +52,7 @@ fi
 # of the sequence directory if it looks ok (contains at least 100 files). This
 # might save you some time when running your encoder repeatedly.
 
-SEQUENCE_DIR="${DATE_DIR}/sequencce"
+SEQUENCE_DIR="${DATE_DIR}/sequence"
 NSEQ=$(ls "${SEQUENCE_DIR}" 2>/dev/null | wc -l )
 if [ -z "$KEEP_SEQUENCE" -o $NSEQ -lt 100 ] ; then
 	rm -fr "${SEQUENCE_DIR}"

@@ -121,8 +121,12 @@ if [[ $CAMERA -eq "auto" ]]; then
   # restore currently saved autodiscovered camera mode if any
   source "$ALLSKY_HOME/autocam.sh"
 fi
-CAMERA_SETTINGS="$CAMERA_SETTINGS_DIR/settings_$CAMERA.json"
 
-# So scripts can conditionally ouput messages; DO NOT CHANGE NEXT LINES.
-ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")
+if [[ $CAMERA -ne "auto" ]]; then
+  CAMERA_SETTINGS="$CAMERA_SETTINGS_DIR/settings_$CAMERA.json"
+ 
+  # So scripts can conditionally ouput messages; DO NOT CHANGE NEXT LINES.
+  ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")
+fi
+
 ALLSKY_DEBUG_LEVEL=${ALLSKY_DEBUG_LEVEL:-0}

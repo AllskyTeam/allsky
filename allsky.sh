@@ -63,7 +63,10 @@ fi
 
 # CAMERA AUTOSELECT
 # exit if no camera found at all
+WAS_AUTO=0
+
 if [[ $CAMERA == "auto" ]]; then
+  WAS_AUTO=1
   echo "Trying to automatically choose between ZWO and RPI camera"
   if [[ $ZWOIsPresent -eq 0 && $RPiHQIsPresent -eq 0 ]]; then
           echo "None of RPI or ZWO Cameras were found. Exiting." >&2
@@ -85,6 +88,10 @@ echo "CAMERA: ${CAMERA}"
 echo "CAMERA_SETTINGS: ${CAMERA_SETTINGS}"
 # save auto camera selection for the current session, will be read in "$ALLSKY_HOME/config.sh" file
 echo "export CAMERA=$CAMERA" > "$ALLSKY_HOME/autocam.sh"
+
+if [ $WAS_AUTO -eq 1 ]; then  # Get the proper debug level since earlier config.sh run couldn't.
+	ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")
+fi
 
 # this must be called after camera autoselect
 source $ALLSKY_HOME/scripts/filename.sh

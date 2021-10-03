@@ -139,9 +139,9 @@ else
 	  install keogram $(DESTDIR)$(bindir); \
 	  install startrails $(DESTDIR)$(bindir); \
 	else \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) capture $(DESTDIR)$(bindir); \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) keogram $(DESTDIR)$(bindir); \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails $(DESTDIR)$(bindir); \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) capture ../; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../; \
 	fi
 	@install sunwait $(DESTDIR)$(bindir)
 endif # sudo / root check

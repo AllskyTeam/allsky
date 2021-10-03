@@ -2,9 +2,10 @@ platform = $(shell uname -m)
 prefix = 
 
 sysconfdir = ${prefix}/etc
-exec_prefix = ${prefix}/usr
+exec_prefix = /usr
 bindir = ${exec_prefix}/bin
 libexecdir = ${exec_prefix}/libexec/allsky
+sharedir = ${exec_prefix}/share/allsky
 
 .DEFAULT_GOAL := all
 
@@ -40,12 +41,13 @@ else
 	  [ ! -e $(DESTDIR)$(sysconfdir)/profile.d ] && mkdir -p $(DESTDIR)$(sysconfdir)/profile.d; \
 	  [ ! -e $(DESTDIR)$(bindir) ] && mkdir -p $(DESTDIR)$(bindor); \
 	  [ ! -e $(DESTDIR)$(libexecdir) ] && mkdir -p $(DESTDIR)$(libexecdir); \
+	  [ ! -e $(DESTDIR)$(sharedir) ] && mkdir -p $(DESTDIR)$(sharedir); \
 	  install allsky.sh $(DESTDIR)$(libexecdir)/; \
 	  install scripts/* $(DESTDIR)$(libexecdir)/; \
 	fi
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0655 config_repo/asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
-	@udevadm control -R
+	@if [ $(PKGBUILD) -ne 1 ]; then udevadm control -R; fi
 	@echo `date +%F\ %R:%S` Setting allsky to auto start...
 	@if [ -e /etc/xdg/lxsession/LXDE-pi/autostart ] && [ $(PKGBUILD) -ne 1 ]; then \
 	  sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart; fi
@@ -61,32 +63,36 @@ else
 	@install -D -m 0644 config_repo/allsky.logrotate.repo $(DESTDIR)$(sysconfdir)/logrotate.d/allsky
 	@install -D -m 0644 config_repo/allsky.rsyslog.repo $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
-	@echo "export ALLSKY_HOME=$(PDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
+	@if [ $(PKGBUILD) -eq 1 ]; then \
+	  echo -e "export ALLSKY_TMP=/tmp\nexport ALLSKY_CONFIG=$(DESTDIR)$(sysconfdir)/allsky\nexport ALLSKY_SCRIPTS=$(DESTDIR)$(libexecdir)\nexport ALLSKY_NOTIFICATION_IMAGES=$(DESTDIR)$(sharedir)\nexport ALLSKY_IMAGES=/home/allsky/Pictures/" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh; \
+	else \
+	  echo "export ALLSKY_HOME=$(PDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh; \
+	fi
 	@echo `date +%F\ %R:%S` Copying default settings_ZWO.json
 	@if [ ! -e settings_ZWO.json ] && [ $(PKGBUILD) -ne 1 ]; then \
 	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) config_repo/settings_ZWO.json.repo settings_ZWO.json; fi
 	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) config_repo/settings_ZWO.json.repo $(DESTDIR)$(sysconfdir)/allsky/settings_ZWO.json; fi
+	  install -m 0644 config_repo/settings_ZWO.json.repo $(DESTDIR)$(sysconfdir)/allsky/settings_ZWO.json; fi
 	@echo `date +%F\ %R:%S` Copying default settings_RPiHQ.json
 	@if [ ! -e settings_RPiHQ.json ] && [ $(PKGBUILD) -ne 1 ]; then \
 	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) config_repo/settings_RPiHQ.json.repo settings_RPiHQ.json; fi
 	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) config_repo/settings_RPiHQ.json.repo $(DESTDIR)$(sysconfdir)/allsky/settings_RPiHQ.json; fi
+	  install -m 0644 config_repo/settings_RPiHQ.json.repo $(DESTDIR)$(sysconfdir)/allsky/settings_RPiHQ.json; fi
 	@echo `date +%F\ %R:%S` Copying default config.sh
 	@if [ ! -e config.sh ] && [ $(PKGBUILD) -ne 1 ]; then \
 	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) config_repo/config.sh.repo config.sh; fi
 	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) config_repo/config.sh.repo $(DESTDIR)$(sysconfdir)/allsky/config.sh; fi
+	  install -m 0644 config_repo/config.sh.repo $(DESTDIR)$(sysconfdir)/allsky/config.sh; fi
 	@echo `date +%F\ %R:%S` Copying default config.sh
 	@if [ ! -e variables.sh ] && [ $(PKGBUILD) -ne 1 ]; then \
 	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) config_repo/variables.sh.repo variables.sh; fi
 	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) config_repo/variables.sh.repo $(DESTDIR)$(sysconfdir)/allsky/variables.sh; fi
+	  install -m 0644 config_repo/variables.sh.repo $(DESTDIR)$(sysconfdir)/allsky/variables.sh; fi
 	@echo `date +%F\ %R:%S` Copying default ftp-settings.sh
 	@if [ scripts/ftp-settings.sh ] && [ $(PKGBUILD) -ne 1 ]; then \
 	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) scripts/ftp-settings.sh.repo scripts/ftp-settings.sh; fi
 	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) scripts/ftp-settings.sh.repo $(DESTDIR)$(sysconfdir)/allsky/ftp-settings.sh; fi
+	  install -m 0644 scripts/ftp-settings.sh.repo $(DESTDIR)$(sysconfdir)/allsky/ftp-settings.sh; fi
 	@make -C src $@
 	@if [ $(PKGBUILD) -ne 1 ]; then \
 	  echo `date +%F\ %R:%S` Setting directory permissions...; \

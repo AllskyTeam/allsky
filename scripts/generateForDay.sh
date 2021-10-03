@@ -152,8 +152,12 @@ if [ "${DO_TIMELAPSE}" = "true" ] ; then
 fi
 
 if [ "${TYPE}" = "GENERATE" ]; then
+	ARGS=""
+	[ "${DO_KEOGRAM}" != "" ] && ARGS="${ARGS} -k"
+	[ "${DO_STARTRAILS}" != "" ] && ARGS="${ARGS} -s"
+	[ "${DO_TIMELAPSE}" != "" ] && ARGS="${ARGS} -t"
 	echo -e "\n================"
-	echo "If you want to upload the file(s) you just created, execute 'uploadForDay.sh ${DATE}"
+	echo "If you want to upload the file(s) you just created, execute 'uploadForDay.sh ${ARGS} ${DATE}'"
 	echo "================"
 fi
 

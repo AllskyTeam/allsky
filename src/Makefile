@@ -146,7 +146,7 @@ ifeq ($(wildcard ../settings_ZWO.json),)
 endif
 ifeq ($(wildcard ../settings_RPiHQ.json),)
 	@echo `date +%F\ %R:%S` Copying default settings_RPiHQ.json
-	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/settings_RPiHQ.json.repo settings_RPiHQ.json
+	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/settings_RPiHQ.json.repo ../settings_RPiHQ.json
 endif
 ifeq ($(wildcard ../config.sh),)
 	@echo `date +%F\ %R:%S` Copying default config.sh

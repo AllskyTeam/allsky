@@ -20,10 +20,12 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
-clean:
+all:
+	@echo `date +%F\ %R:%S` nothing to do for all...
+
+clean: # Remove all but the *.repo files ( and asi.rules ).
 	rm -f allsky.logrotate allsky.rsyslog allsky.service config.sh settings_RPiHQ.json settings_ZWO.json variables.sh \
 	  ../settings_RPiHQ.json ../settings_ZWO.json ../config.sh ../variables.sh
-  # Remove all but the *.repo files ( and asi.rules ).
 
 
 ifneq ($(ROOTCHECK), 0)
@@ -31,33 +33,39 @@ install:
 	@echo This must be ran with root permissions.
 	@echo Please run \'sudo make install\'
 else # Root check passed
-common:
+
+ifeq ($(PKGBUILD),1)
+install:
+	@echo `date +%F\ %R:%S` Creating directory structures...
+	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky ]; then mkdir -p $(DESTDIR)$(sysconfdir)/allsky; fi
+	@if [ ! -e $(DESTDIR)$(sysconfdir)/profile.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/profile.d; fi
+	@if [ ! -e $(DESTDIR)$(sysconfdir)/systemd/system ]; then mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system; fi
+	@if [ ! -e $(DESTDIR)$(sysconfdir)/udev/rules.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/udev/rules.d; fi
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0655 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...
 	@install -D -m 0644 allsky.logrotate.repo $(DESTDIR)$(sysconfdir)/logrotate.d/allsky
 	@install -D -m 0644 allsky.rsyslog.repo $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf
-
-ifeq($(PKGBUILD),1)
-install: common
-	@echo `date +%F\ %R:%S` Creating directory structures...
-	@[ ! -e $(DESTDIR)$(sysconfdir)/systemd/system ] && mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system
-	@[ ! -e $(DESTDIR)$(sysconfdir)/udev/rules.d ] && mkdir -p $(DESTDIR)$(sysconfdir)/udev/rules.d
 	@echo `date +%F\ %R:%S` Setting allsky to auto start...
 	@sed -e "s|User=pi|User=allsky|g" -e "s|/home/pi/allsky|$(bindir)|g" allsky.service.repo > allsky.service
 	@install -m 0644 allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
 	@echo -e "export ALLSKY_TMP=/tmp\nexport ALLSKY_CONFIG=$(DESTDIR)$(sysconfdir)/allsky\nexport ALLSKY_SCRIPTS=$(DESTDIR)$(libexecdir)\nexport ALLSKY_NOTIFICATION_IMAGES=$(DESTDIR)$(sharedir)\nexport ALLSKY_IMAGES=/home/allsky/Pictures/" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
 	@echo `date +%F\ %R:%S` Copying default settings_ZWO.json
-	@install -m 0644 settings_ZWO.json.repo $(DESTDIR)$(sysconfdir)/allsky/settings_ZWO.json; fi
+	@install -m 0644 settings_ZWO.json.repo $(DESTDIR)$(sysconfdir)/allsky/settings_ZWO.json
 	@echo `date +%F\ %R:%S` Copying default settings_RPiHQ.json
-	@install -m 0644 settings_RPiHQ.json.repo $(DESTDIR)$(sysconfdir)/allsky/settings_RPiHQ.json; fi
+	@install -m 0644 settings_RPiHQ.json.repo $(DESTDIR)$(sysconfdir)/allsky/settings_RPiHQ.json
 	@echo `date +%F\ %R:%S` Copying default config.sh
-	@install -m 0644 config.sh.repo $(DESTDIR)$(sysconfdir)/allsky/config.sh; fi
+	@install -m 0644 config.sh.repo $(DESTDIR)$(sysconfdir)/allsky/config.sh
 	@echo `date +%F\ %R:%S` Copying default variables.sh
-	@install -m 0644 variables.sh.repo $(DESTDIR)$(sysconfdir)/allsky/variables.sh; fi
+	@install -m 0644 variables.sh.repo $(DESTDIR)$(sysconfdir)/allsky/variables.sh
 else # Not in package build mode
-install: common
+install:
+	@echo `date +%F\ %R:%S` Setting up udev rules...
+	@install -D -m 0655 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
+	@echo `date +%F\ %R:%S` Setting up logging...
+	@install -D -m 0644 allsky.logrotate.repo $(DESTDIR)$(sysconfdir)/logrotate.d/allsky
+	@install -D -m 0644 allsky.rsyslog.repo $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf
 	@udevadm control -R
 	@echo `date +%F\ %R:%S` Setting allsky to auto start...
 	@if [ -e /etc/xdg/lxsession/LXDE-pi/autostart ]; then \
@@ -81,4 +89,5 @@ install: common
 	@echo `date +%F\ %R:%S` Copying default variables.sh
 	@if [ ! -e variables.sh ]; then \
 	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) variables.sh.repo ../variables.sh; fi
-endif
+endif # Package build check
+endif # Root check

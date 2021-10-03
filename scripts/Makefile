@@ -20,8 +20,8 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
-%:
-	make -C src $@
+all:
+	@echo `date +%F\ %R:%S` nothing to do for all...
 
 clean:
 	rm -f ftp-settings.sh

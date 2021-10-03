@@ -32,11 +32,6 @@ ifneq ($(ROOTCHECK), 0)
 	@echo Please run \'sudo make install\'
 else
 	@echo `date +%F\ %R:%S` Starting install...
-	@chmod 755 allsky.sh
-	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  [ ! -e $(DESTDIR)$(libexecdir) ] && mkdir -p $(DESTDIR)$(libexecdir); \
-	  install allsky.sh $(DESTDIR)$(libexecdir)/; \
-	fi
 	@make -C src $@
 	@make -C config_repo $@
 	@make -C notification_images $@

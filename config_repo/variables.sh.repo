@@ -9,7 +9,7 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	ALLSKY_VARIABLE_SET="true"	# so we only do the following once
 
-	ME="$(basename "${BASH_ARGV0}")"
+	ME="$(basename "$0")"
 
 	# Set colors used by many scripts in output.
 	# If we're not on a tty output is likely being written to a file, so don't use colors.
@@ -35,7 +35,7 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Allow variables to be overridden for testing or to use different locations.
 
 	# For temporary files or files that can be deleted at reboot.
-	ALLSKY_TMP="${ALLSKY_TMP:-${ALLSKY_HOME}/tmp}"
+	ALLSKY_TMP="${ALLSKY_TMP:/tmp}"
 
 	# Central location for all AllSky configuration files.
 	# xxxxxx   NEW NAME xxxxxx

@@ -117,12 +117,12 @@ IMG_PREFIX="liveview-"
 # Path to the camera settings (exposure, gain, delay, overlay, etc)
 CAMERA_SETTINGS_DIR="$ALLSKY_HOME"
 
-if [[ $CAMERA -eq "auto" ]]; then
+if [[ $CAMERA == "auto" ]]; then
   # restore currently saved autodiscovered camera mode if any
   source "$ALLSKY_HOME/autocam.sh"
 fi
 
-if [[ $CAMERA -ne "auto" ]]; then
+if [[ $CAMERA != "auto" ]]; then
   CAMERA_SETTINGS="$CAMERA_SETTINGS_DIR/settings_$CAMERA.json"
  
   # So scripts can conditionally ouput messages; DO NOT CHANGE NEXT LINES.

@@ -153,7 +153,7 @@ ifeq ($(wildcard ../config.sh),)
 	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/config.sh.repo ../config.sh
 endif
 ifeq ($(wildcard ../variables.sh),)
-	@echo `date +%F\ %R:%S` Copying default config.sh
+	@echo `date +%F\ %R:%S` Copying default variables.sh
 	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/variables.sh.repo ../variables.sh
 endif
 ifeq ($(wildcard ../scripts/ftp-settings.sh),)

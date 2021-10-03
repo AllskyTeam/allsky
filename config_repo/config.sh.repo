@@ -115,7 +115,7 @@ IMG_DIR="current"
 IMG_PREFIX="liveview-"
 
 # Path to the camera settings (exposure, gain, delay, overlay, etc)
-CAMERA_SETTINGS_DIR="{$ALLSKY_HOME}/config"
+CAMERA_SETTINGS_DIR="${ALLSKY_HOME}/config"
 
 if [[ $CAMERA -eq "auto" ]]; then
   # restore currently saved autodiscovered camera mode if any

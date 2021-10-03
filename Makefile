@@ -26,6 +26,9 @@ endif
 	@make -C notification_images $@
 	@make -C scripts $@
 
+deps:
+	@make -C src $@
+
 install:
 ifneq ($(ROOTCHECK), 0)
 	@echo This must be ran with root permissions.

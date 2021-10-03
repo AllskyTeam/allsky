@@ -39,7 +39,7 @@ else
 	  [ ! -e $(DESTDIR)$(sysconfdir)/systemd/system ] && mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system; \
 	  [ ! -e $(DESTDIR)$(sysconfdir)/udev/rules.d ] && mkdir -p $(DESTDIR)$(sysconfdir)/udev/rules.d; \
 	  [ ! -e $(DESTDIR)$(sysconfdir)/profile.d ] && mkdir -p $(DESTDIR)$(sysconfdir)/profile.d; \
-	  [ ! -e $(DESTDIR)$(bindir) ] && mkdir -p $(DESTDIR)$(bindor); \
+	  [ ! -e $(DESTDIR)$(bindir) ] && mkdir -p $(DESTDIR)$(bindir); \
 	  [ ! -e $(DESTDIR)$(libexecdir) ] && mkdir -p $(DESTDIR)$(libexecdir); \
 	  [ ! -e $(DESTDIR)$(sharedir) ] && mkdir -p $(DESTDIR)$(sharedir); \
 	  install allsky.sh $(DESTDIR)$(libexecdir)/; \

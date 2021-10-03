@@ -21,33 +21,26 @@ ifeq ($(PKGBUILD),)
 endif
 
 %:
-	@make -C src $@
-	@make -C config_repo $@
-	@make -C notification_images $@
-	@make -C scripts $@
+	make -C src $@
+
+clean:
+	rm -f ftp-settings.sh
 
 install:
 ifneq ($(ROOTCHECK), 0)
 	@echo This must be ran with root permissions.
 	@echo Please run \'sudo make install\'
 else
-	@echo `date +%F\ %R:%S` Starting install...
-	@chmod 755 allsky.sh
+	@echo `date +%F\ %R:%S` Setting up scripts...
+	@chmod 755 *.sh
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  [ ! -e $(DESTDIR)$(libexecdir) ] && mkdir -p $(DESTDIR)$(libexecdir); \
-	  install allsky.sh $(DESTDIR)$(libexecdir)/; \
+	  [ ! -e $(DESTDIR)$(sysconfdir)/allsky ] && mkdir -p $(DESTDIR)$(sysconfdir)/allsky; \
+	  install *.sh $(DESTDIR)$(libexecdir)/; \
 	fi
-	@make -C src $@
-	@make -C config_repo $@
-	@make -C notification_images $@
-	@make -C scripts $@
-	@if [ $(PKGBUILD) -ne 1 ]; then \
-	  echo `date +%F\ %R:%S` Setting directory permissions...; \
-	  chown $(SUDO_USER):$(SUDO_USER) ./ ; \
-	  echo ""; \
-	  echo ""; \
-	  echo `date +%F\ %R:%S` It is recommended to reboot now, please issue \'sudo reboot\'; \
-	  echo ""; \
-	  echo ""; \
-	fi
+	@echo `date +%F\ %R:%S` Copying default ftp-settings.sh
+	@if [ ftp-settings.sh ] && [ $(PKGBUILD) -ne 1 ]; then \
+	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ftp-settings.sh.repo ftp-settings.sh; fi
+	@if [ $(PKGBUILD) -eq 1 ]; then \
+	  install -m 0644 ftp-settings.sh.repo $(DESTDIR)$(sysconfdir)/ftp-settings.sh; fi
 endif

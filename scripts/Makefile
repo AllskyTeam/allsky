@@ -34,6 +34,7 @@ else
 	@echo `date +%F\ %R:%S` Setting up scripts...
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  [ ! -e $(DESTDIR)$(libexecdir) ] && mkdir -p $(DESTDIR)$(libexecdir); \
+	  [ ! -e $(DESTDIR)$(sysconfdir)/allsky ] && mkdir -p $(DESTDIR)$(sysconfdir)/allsky; \
 	  install allsky.sh.repo $(DESTDIR)$(libexecdir)/allsky.sh; \
 	else \
 	  if [ ! -e ../allsky.sh ]; then install -o $(SUDO_USER) -g $(SUDO_USER) allsky.sh.repo ../allsky.sh; fi; \
@@ -49,5 +50,5 @@ else
 	@if [ ftp-settings.sh ] && [ $(PKGBUILD) -ne 1 ]; then \
 	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ftp-settings.sh.repo ftp-settings.sh; fi
 	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  install -m 0644 ftp-settings.sh.repo $(DESTDIR)$(sysconfdir)/ftp-settings.sh; fi
+	  install -m 0644 ftp-settings.sh.repo $(DESTDIR)$(sysconfdir)/allsky/ftp-settings.sh; fi
 endif

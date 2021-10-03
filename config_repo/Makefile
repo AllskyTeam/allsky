@@ -7,6 +7,8 @@ bindir = ${exec_prefix}/bin
 libexecdir = ${exec_prefix}/libexec/allsky
 sharedir = ${exec_prefix}/share/allsky
 
+PDIR = $(shell dirname "$$PWD")
+
 .DEFAULT_GOAL := all
 
 ROOTCHECK=$(shell id -u)

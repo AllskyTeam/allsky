@@ -1,6 +1,12 @@
 platform = $(shell uname -m)
 prefix = /
 
+sysconfdir = ${prefix}/etc
+exec_prefix = /usr
+bindir = ${exec_prefix}/bin
+libexecdir = ${exec_prefix}/libexec/allsky
+libdir = ${prefix}/lib
+
 PDIR = $(shell dirname "$$PWD")
 MYDIR = $(shell basename "$$PWD")
 NLU = $(shell basename "$(PDIR)")
@@ -115,56 +121,54 @@ keogram:keogram.cpp
 	@echo `date +%F\ %R:%S` Build of keogram complete.
 
 install:
-ifneq ($(shell id -u), 0)
-	$(error Please run \'sudo make install\')
-else
-	@echo `date +%F\ %R:%S` Starting install...
-	@chmod 755 ../allsky.sh ../scripts/*.sh
-	@echo `date +%F\ %R:%S` Setting up udev rules...
-	@install -D -m 0655 ../config_repo/asi.rules /etc/udev/rules.d/
-	@udevadm control -R
-	@echo `date +%F\ %R:%S` Setting allsky to auto start...
-ifneq ($(wildcard /etc/xdg/lxsession/LXDE-pi/autostart),)
-	@sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart
-endif
-	@sed -i "s|User=pi|User=$(SUDO_USER)|g" ../config_repo/allsky.service
-	@sed -i "s|/home/pi/allsky|$(PDIR)|g" ../config_repo/allsky.service
-	@install -m 0644 ../config_repo/allsky.service /etc/systemd/system/
-ifneq ($(wildcard /lib/systemd/system/allsky.service),)
-	@rm -f /lib/systemd/system/allsky.service
-endif
-	@systemctl daemon-reload
-	@systemctl enable allsky
-	@echo `date +%F\ %R:%S` Setting up logging...
-	@install -D -m 0644 ../config_repo/allsky.logrotate /etc/logrotate.d/allsky
-	@install -D -m 0644 ../config_repo/allsky.rsyslog /etc/rsyslog.d/allsky.conf
-	@echo `date +%F\ %R:%S` Setting up home environment variable...
-	@echo "export ALLSKY_HOME=$(PDIR)" > /etc/profile.d/allsky.sh
-ifeq ($(wildcard ../settings_ZWO.json),)
-	@echo `date +%F\ %R:%S` Copying default settings_ZWO.json
-	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/settings_ZWO.json.repo ../settings_ZWO.json
-endif
-ifeq ($(wildcard ../settings_RPiHQ.json),)
-	@echo `date +%F\ %R:%S` Copying default settings_RPiHQ.json
-	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/settings_RPiHQ.json.repo settings_RPiHQ.json
-endif
-ifeq ($(wildcard ../config.sh),)
-	@echo `date +%F\ %R:%S` Copying default config.sh
-	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/config.sh.repo ../config.sh
-endif
-ifeq ($(wildcard ../variables.sh),)
-	@echo `date +%F\ %R:%S` Copying default config.sh
-	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/variables.sh.repo ../variables.sh
-endif
-ifeq ($(wildcard ../scripts/ftp-settings.sh),)
-	@echo `date +%F\ %R:%S` Copying default ftp-settings.sh
-	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../scripts/ftp-settings.sh.repo ../scripts/ftp-settings.sh
-endif
 	@echo `date +%F\ %R:%S` Copying binaries...
-	@install -o $(SUDO_USER) -g $(SUDO_USER) capture ../
-	@install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../
-	@install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../
-	@install sunwait /usr/local/bin/
+	@install -o $(SUDO_USER) -g $(SUDO_USER) capture $(bindir)
+	@install -o $(SUDO_USER) -g $(SUDO_USER) keogram $(bindir)
+	@install -o $(SUDO_USER) -g $(SUDO_USER) startrails $(bindir)
+	@install sunwait $(bindir)
+endif # sudo / root check
+
+pkg-setup:
+ifeq ($(shell id -u), 0)
+	$(error Please do NOT run as root: Use \'make pkg-setup\')
+else
+	@echo `date +%F\ %R:%S` Starting pkg-setup...
+ifeq ($(wildcard ../BASE),)
+	@mkdir ../BASE
+	@mkdir -p ../BASE/etc/allsky/scripts
+	@mkdir -p ../BASE/etc/udev/rules.d
+	@mkdir -p ../BASE/usr/bin
+	@mkdir -p ../BASE/lib/systemd/system
+endif
+	@echo `date +%F\ %R:%S` Copying scripts...
+	@install ../allsky.sh ../BASE/usr/bin/
+	@install ../scripts/*.sh ../BASE/etc/allsky/scripts/
+	@echo `date +%F\ %R:%S` Copying udev rules...
+	@install -D -m 0644 ../config_repo/asi.rules ../BASE/etc/udev/rules.d/
+	@echo `date +%F\ %R:%S` Copying allsky systemd unit file...
+	@install -m 0644 ../config_repo/allsky.service ../BASE/lib/systemd/system/
+	@sed -i "s|User=pi|User=allsky|g" ../BASE/lib/systemd/system/allsky.service
+	@sed -i "s|/home/pi/allsky|/usr/bin|g" ../BASE/lib/systemd/system/allsky.service
+	@echo `date +%F\ %R:%S` Copying logging config...
+	@install -D -m 0644 ../config_repo/allsky.logrotate ../BASE/etc/logrotate.d/allsky
+	@install -D -m 0644 ../config_repo/allsky.rsyslog ../BASE/etc/rsyslog.d/allsky.conf
+	@echo `date +%F\ %R:%S` Setting up home environment variable...
+	@echo "export ALLSKY_HOME=/etc/allsky" > ../BASE/etc/profile.d/allsky.sh
+	@echo `date +%F\ %R:%S` Copying default settings_ZWO.json
+	@install -m 0644 ../config_repo/settings_ZWO.json.repo ../BASE/etc/allsky/settings_ZWO.json
+	@echo `date +%F\ %R:%S` Copying default settings_RPiHQ.json
+	@install -m 0644 ../config_repo/settings_RPiHQ.json.repo ../BASE/etc/allsky/settings_RPiHQ.json
+	@echo `date +%F\ %R:%S` Copying default config.sh
+	@install -m 0644 ../config_repo/config.sh.repo ../BASE/etc/allsky/config.sh
+	@echo `date +%F\ %R:%S` Copying default variables.sh
+	@install -m 0644 ../config_repo/variables.sh.repo ../BASE/etc/allsky/variables.sh
+	@echo `date +%F\ %R:%S` Copying default ftp-settings.sh
+	@install -m 0644 ../scripts/ftp-settings.sh.repo ../BASE/etc/allsky/scripts/ftp-settings.sh
+	@echo `date +%F\ %R:%S` Copying binaries...
+	@install capture ../BASE/usr/bin/
+	@install keogram ../BASE/usr/bin/
+	@install startrails ../BASE/usr/bin/
+	@install sunwait ../BASE/usr/bin/
 
 	@echo `date +%F\ %R:%S` Setting directory permissions...
 	@chown $(SUDO_USER):$(SUDO_USER) ./
@@ -173,7 +177,7 @@ endif
 	@echo `date +%F\ %R:%S` It is recommended to reboot now, please issue \'sudo reboot\'
 	@echo ""
 	@echo ""
-endif # sudo / root check
+
 
 clean:
 	rm -f capture capture_RPiHQ startrails keogram

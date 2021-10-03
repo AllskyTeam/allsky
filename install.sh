@@ -27,7 +27,7 @@ echo "**********************************************"
 echo
 
 echo -e "${GREEN}* Dependencies installation\n${NC}"
-sudo make -C src deps
+sudo make deps
 RETVAL=$?
 if [ $RETVAL -ne 0 ]; then
 	echo Installing dependencies failed\!
@@ -36,7 +36,7 @@ fi
 echo
 
 echo -e "${GREEN}* Compile allsky software\n${NC}"
-make -C src all
+make all
 RETVAL=$?
 if [ $RETVAL -ne 0 ]; then
 	echo Compile failed\!
@@ -45,7 +45,7 @@ fi
 echo
 
 echo -e "${GREEN}* Install allsky software\n${NC}"
-sudo make -C src install
+sudo make install
 RETVAL=$?
 if [ $RETVAL -ne 0 ]; then
 	echo Install failed\!

@@ -38,8 +38,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	ALLSKY_TMP="${ALLSKY_TMP:-${ALLSKY_HOME}/tmp}"
 
 	# Central location for all AllSky configuration files.
-	# xxxxxx   NEW NAME:  ALLSKY_CONFIG${ALLSKY_CONFIG:-=${ALLSKY_HOME}/configuration}
-	ALLSKY_CONFIG="${ALLSKY_HOME}"	# xxx old location
+	# xxxxxx   NEW NAME xxxxxx
+	ALLSKY_CONFIG="${ALLSKY_CONFIG:-${ALLSKY_HOME}/configuration}"
+	# ALLSKY_CONFIG="${ALLSKY_HOME}"	# xxx old location
 
 	# Holds all the scripts.
 	ALLSKY_SCRIPTS="${ALLSKY_SCRIPTS:-${ALLSKY_HOME}/scripts}"

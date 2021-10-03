@@ -46,6 +46,7 @@ if [[ "${REMOVE_BAD_IMAGES}" == "true" ]]; then
 fi
 
 # Generate keogram from collected images
+if [[ ${KEOGRAM} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Keogram"
 	mkdir -p "${DATE_DIR}/keogram/"
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"

@@ -105,27 +105,27 @@ sunwait:
 	@echo `date +%F\ %R:%S` Building sunwait...
 	@$(MAKE) -C sunwait-src
 	@cp sunwait-src/sunwait .
-	@echo `date +%F\ %R:%S` Build of sunwait complete.
+	@echo `date +%F\ %R:%S` Done.
 
 capture:capture.cpp
 	@echo `date +%F\ %R:%S` Building capture program...
 	@$(CC)  capture.cpp -o capture $(CFLAGS) $(OPENCV) -lASICamera2 $(USB)
-	@echo `date +%F\ %R:%S` Build of capture complete.
+	@echo `date +%F\ %R:%S` Done.
 
 capture_RPiHQ:capture_RPiHQ.cpp
 	@echo `date +%F\ %R:%S` Building capture_RPiHQ program...
 	@$(CC)  capture_RPiHQ.cpp -o capture_RPiHQ $(CFLAGS) $(OPENCV)
-	@echo `date +%F\ %R:%S` Build of capture_RPiHQ complete.
+	@echo `date +%F\ %R:%S` Done.
 
 startrails:startrails.cpp
 	@echo `date +%F\ %R:%S` Building startrails program...
 	@$(CC)  startrails.cpp -o startrails $(CFLAGS) $(OPENCV)
-	@echo `date +%F\ %R:%S` Build of startrails complete.
+	@echo `date +%F\ %R:%S` Done.
 
 keogram:keogram.cpp
 	@echo `date +%F\ %R:%S` Building keogram program...
 	@$(CC)  keogram.cpp -o keogram $(CFLAGS) $(OPENCV)
-	@echo `date +%F\ %R:%S` Build of keogram complete.
+	@echo `date +%F\ %R:%S` Done.
 
 install:
 ifneq ($(ROOTCHECK), 0)

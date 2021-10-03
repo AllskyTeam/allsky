@@ -37,12 +37,19 @@ install:
 else # Root check passed
 
 ifeq ($(PKGBUILD),1)
-install:
+createDirs:
 	@echo `date +%F\ %R:%S` Creating directory structures...
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky ]; then mkdir -p $(DESTDIR)$(sysconfdir)/allsky; fi
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/profile.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/profile.d; fi
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/systemd/system ]; then mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system; fi
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/udev/rules.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/udev/rules.d; fi
+
+%.repo:
+	OUTFILE = $(subst ".repo","",$@)
+	@echo `date +%F\ %R:%S` Copying default $(OUTFILE)
+	@install -m 0644 $@ $(DESTDIR)$(sysconfdir)/allsky/$(OUTFILE)
+
+install: createDirs settings_ZWO.json.repo settings_RPiHQ.json.repo config.sh.repo variables.sh.repo
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0655 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...
@@ -53,16 +60,17 @@ install:
 	@install -m 0644 allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
 	@echo -e "export ALLSKY_TMP=/tmp\nexport ALLSKY_CONFIG=$(DESTDIR)$(sysconfdir)/allsky\nexport ALLSKY_SCRIPTS=$(DESTDIR)$(libexecdir)\nexport ALLSKY_NOTIFICATION_IMAGES=$(DESTDIR)$(sharedir)\nexport ALLSKY_IMAGES=/home/allsky/Pictures/" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
-	@echo `date +%F\ %R:%S` Copying default settings_ZWO.json
-	@install -m 0644 settings_ZWO.json.repo $(DESTDIR)$(sysconfdir)/allsky/settings_ZWO.json
-	@echo `date +%F\ %R:%S` Copying default settings_RPiHQ.json
-	@install -m 0644 settings_RPiHQ.json.repo $(DESTDIR)$(sysconfdir)/allsky/settings_RPiHQ.json
-	@echo `date +%F\ %R:%S` Copying default config.sh
-	@install -m 0644 config.sh.repo $(DESTDIR)$(sysconfdir)/allsky/config.sh
-	@echo `date +%F\ %R:%S` Copying default variables.sh
-	@install -m 0644 variables.sh.repo $(DESTDIR)$(sysconfdir)/allsky/variables.sh
 else # Not in package build mode
-install:
+createDirs:
+	@echo `date +%F\ %R:%S` Creating directory structures...
+	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi
+
+%.repo:
+	OUTFILE = $(subst ".repo","",$@)
+	@echo `date +%F\ %R:%S` Copying default $(OUTFILE)
+	@install -m 0644 $@ ../config/$(OUTFILE)
+
+install: createDirs settings_ZWO.json.repo settings_RPiHQ.json.repo config.sh.repo variables.sh.repo
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0655 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...
@@ -79,17 +87,5 @@ install:
 	@systemctl enable allsky
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
 	@echo "export ALLSKY_HOME=$(PDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
-	@echo `date +%F\ %R:%S` Copying default settings_ZWO.json
-	@if [ ! -e settings_ZWO.json ]; then \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) settings_ZWO.json.repo ../settings_ZWO.json; fi
-	@echo `date +%F\ %R:%S` Copying default settings_RPiHQ.json
-	@if [ ! -e settings_RPiHQ.json ]; then \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) settings_RPiHQ.json.repo ../settings_RPiHQ.json; fi
-	@echo `date +%F\ %R:%S` Copying default config.sh
-	@if [ ! -e config.sh ]; then \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) config.sh.repo ../config.sh; fi
-	@echo `date +%F\ %R:%S` Copying default variables.sh
-	@if [ ! -e variables.sh ]; then \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) variables.sh.repo ../variables.sh; fi
 endif # Package build check
 endif # Root check

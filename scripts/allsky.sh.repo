@@ -8,7 +8,7 @@ fi
 # reset auto camera selection, so $ALLSKY_HOME/config.sh do not pick up old camera selection
 cd $ALLSKY_HOME
 echo "" > "$ALLSKY_HOME/autocam.sh"
-source $ALLSKY_HOME/config.sh
+source $ALLSKY_HOME/config/config.sh
 
 # Make it easy to find the beginning of this run in the log file.
 echo "     ***** Starting AllSky *****"

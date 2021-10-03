@@ -18,7 +18,7 @@ if [ -z "$ALLSKY_HOME" ] ; then
 	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
 fi
 
-source "${ALLSKY_HOME}/variables.sh"
+source "${ALLSKY_HOME}/config/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_SCRIPTS}/filename.sh"
 source "${ALLSKY_SCRIPTS}/ftp-settings.sh"

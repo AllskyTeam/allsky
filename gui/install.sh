@@ -21,7 +21,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 echo -e "${GREEN}* Installation of the webserver${NC}"
 echo -en '\n'
-apt-get update && apt-get install -y lighttpd php7.3-cgi php-gd hostapd dnsmasq avahi-daemon
+apt-get update && apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
 lighty-enable-mod fastcgi-php
 service lighttpd restart
 echo -en '\n'
@@ -53,13 +53,13 @@ mkdir -p /etc/raspap
 mv /var/www/html/raspap.php /etc/raspap/
 mv /var/www/html/camera_options_ZWO.json /etc/raspap/
 mv /var/www/html/camera_options_RPiHQ.json /etc/raspap/
-cp $(dirname "$SCRIPTPATH")/settings_ZWO.json /etc/raspap/settings_ZWO.json
-cp $(dirname "$SCRIPTPATH")/settings_RPiHQ.json /etc/raspap/settings_RPiHQ.json
+cp $(dirname "$SCRIPTPATH")/config/settings_ZWO.json /etc/raspap/settings_ZWO.json
+cp $(dirname "$SCRIPTPATH")/config/settings_RPiHQ.json /etc/raspap/settings_RPiHQ.json
 chown -R www-data:www-data /etc/raspap
 usermod -a -G www-data `logname`
 echo -en '\n'
 echo -e "${GREEN}* Modify config.sh${NC}"
-sed -i '/CAMERA_SETTINGS_DIR=/c\CAMERA_SETTINGS_DIR="/etc/raspap"' $(dirname "$SCRIPTPATH")/config.sh
+sed -i '/CAMERA_SETTINGS_DIR=/c\CAMERA_SETTINGS_DIR="/etc/raspap"' $(dirname "$SCRIPTPATH")/config/config.sh
 echo -en '\n'
 echo -en '\n'
 echo "The Allsky Portal is now installed"

@@ -28,6 +28,10 @@ ifneq ($(ROOTCHECK),0)
   endif
 endif
 
+ifeq ($(PKGBUILD),)
+  PKGBUILD=0
+endif
+
 deps:
 ifneq ($(shell id -u), 0)
 	@echo This must be ran with root permissions.

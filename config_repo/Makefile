@@ -46,8 +46,8 @@ createDirs:
 
 $(CONFIGFILES):
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky/$@ ]; then \
-	  echo `date +%F\ %R:%S` Copying default $@ \
-	  install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$@ \
+	  echo `date +%F\ %R:%S` Copying default $@; \
+	  install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$@; \
 	fi
 
 install: createDirs $(CONFIGFILES)
@@ -69,8 +69,8 @@ createDirs:
 
 $(CONFIGFILES):
 	@if [ ! -e ../config/$@ ]; then \
-	  echo `date +%F\ %R:%S` Copying default $@ \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.repo ../config/$@ \
+	  echo `date +%F\ %R:%S` Copying default $@; \
+	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.repo ../config/$@; \
 	fi
 
 install: createDirs $(CONFIGFILES)

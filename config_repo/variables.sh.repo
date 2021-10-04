@@ -35,7 +35,7 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Allow variables to be overridden for testing or to use different locations.
 
 	# For temporary files or files that can be deleted at reboot.
-	ALLSKY_TMP="${ALLSKY_TMP:/tmp}"
+	ALLSKY_TMP="${ALLSKY_TMP:-${ALLSKY_HOME}/tmp}"
 
 	# Central location for all AllSky configuration files.
 	# xxxxxx   NEW NAME xxxxxx

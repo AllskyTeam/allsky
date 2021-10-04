@@ -45,7 +45,8 @@ else
         fi
 	@if [ $(PKGBUILD) -ne 1 ]; then \
 	  echo `date +%F\ %R:%S` Setting directory permissions...; \
-	  chown $(SUDO_USER):$(SUDO_USER) ./ ; \
+	  [ ! -e tmp ] && mkdir tmp; \
+	  chown -R $(SUDO_USER):$(SUDO_USER) ./ ; \
 	  echo ""; \
 	  echo ""; \
 	  echo `date +%F\ %R:%S` It is recommended to reboot now, please issue \'sudo reboot\'; \

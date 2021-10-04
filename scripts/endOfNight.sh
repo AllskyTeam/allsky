@@ -23,6 +23,14 @@ source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_SCRIPTS}/filename.sh"
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
+# Nasty JQ trick to compose a widthxheight string if both width and height
+# are defined in the config file and are non-zero. If this check fails, then
+# IMGSIZE will be empty and it won't be used later on. If the check passes
+# a non-empty string (eg. IMGSIZE="1280x960") will be produced and later
+# parts of this script such as startrail and keogram generation can use it
+# to reject incorrectly sized images.
+IMGSIZE=$(jq 'if .width? != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end' "${CAMERA_SETTINGS}" | tr -d '"')
+
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
 if [ ! -d "${DATE_DIR}" ] ; then
 	echo -e "${ME}: ${RED}ERROR: '${DATE_DIR}' not found!${NC}"
@@ -51,8 +59,8 @@ if [[ ${KEOGRAM} == "true" ]]; then
 	mkdir -p "${DATE_DIR}/keogram/"
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/keogram/${KEOGRAM_FILE}"
-
-	"${ALLSKY_HOME}/keogram" -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_PARAMETERS}
+	test -n "${IMGSIZE}" && S="-s ${IMGSIZE}"
+	"${ALLSKY_HOME}/keogram" $S -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_PARAMETERS}
 	RETCODE=$?
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RETCODE} = 0 ]] ; then
 		# If the user specified a different name for the destination file, use it.
@@ -78,7 +86,9 @@ if [[ ${STARTRAILS} == "true" ]]; then
 	mkdir -p ${DATE_DIR}/startrails/
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/startrails/${STARTRAILS_FILE}"
-	"${ALLSKY_HOME}/startrails" "${DATE_DIR}/" ${EXTENSION} ${BRIGHTNESS_THRESHOLD} "${UPLOAD_FILE}"
+
+	test -n "${IMGSIZE}" && S="-S ${IMGSIZE}"
+	"${ALLSKY_HOME}/startrails" $S -d "${DATE_DIR}" -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o "${UPLOAD_FILE}"
 	RETCODE=$?
 	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RETCODE} == 0 ]] ; then
 		# If the user specified a different name for the destination file, use it.

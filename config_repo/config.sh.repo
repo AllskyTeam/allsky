@@ -129,4 +129,11 @@ if [[ $CAMERA != "auto" ]]; then
   ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")
 fi
 
+if [[ $CAMERA != "auto" ]]; then
+  CAMERA_SETTINGS="$CAMERA_SETTINGS_DIR/settings_$CAMERA.json"
+ 
+  # So scripts can conditionally ouput messages; DO NOT CHANGE NEXT LINES.
+  ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")
+fi
+
 ALLSKY_DEBUG_LEVEL=${ALLSKY_DEBUG_LEVEL:-0}

@@ -93,6 +93,10 @@ if [ $WAS_AUTO -eq 1 ]; then  # Get the proper debug level since earlier config.
 	ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")
 fi
 
+if [ $WAS_AUTO -eq 1 ]; then  # Get the proper debug level since earlier config.sh run couldn't.
+	ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")
+fi
+
 # this must be called after camera autoselect
 source $ALLSKY_HOME/scripts/filename.sh
 

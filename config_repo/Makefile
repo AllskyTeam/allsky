@@ -45,8 +45,10 @@ createDirs:
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/udev/rules.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/udev/rules.d; fi
 
 $(CONFIGFILES):
-	@echo `date +%F\ %R:%S` Copying default $@
-	@install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$@
+	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky/$@ ]; then \
+	  echo `date +%F\ %R:%S` Copying default $@ \
+	  install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$@ \
+	fi
 
 install: createDirs $(CONFIGFILES)
 	@echo `date +%F\ %R:%S` Setting up udev rules...
@@ -66,8 +68,10 @@ createDirs:
 	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi
 
 $(CONFIGFILES):
-	@echo `date +%F\ %R:%S` Copying default $@
-	@install -m 0644 $@.repo ../config/$@
+	@if [ ! -e ../config/$@ ]; then \
+	  echo `date +%F\ %R:%S` Copying default $@ \
+	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.repo ../config/$@ \
+	fi
 
 install: createDirs $(CONFIGFILES)
 	@echo `date +%F\ %R:%S` Setting up udev rules...

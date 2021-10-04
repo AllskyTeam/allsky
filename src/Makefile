@@ -145,6 +145,8 @@ else
 endif # sudo / root check
 
 clean:
-	rm -f capture capture_RPiHQ startrails keogram *.o
+	rm -f capture capture_RPiHQ startrails keogram *.o \
+	   ../capture ../capture_RPiHQ ../startrails ../keogram 
+
 
 endif # Correct directory structure check

@@ -30,13 +30,6 @@ CONFIGFILES := settings_ZWO.json settings_RPiHQ.json config.sh variables.sh ftp-
 %:
 	@echo `date +%F\ %R:%S` nothing to do for $@
 
-clean: # Remove all but the *.repo files ( and asi.rules ).
-	@rm -f allsky.logrotate allsky.rsyslog allsky.service config.sh settings_RPiHQ.json settings_ZWO.json variables.sh ftp-settings.sh
-
-# We probably don't want to risk deleting customized configs
-# ../config/settings_RPiHQ.json ../config/settings_ZWO.json ../config/config.sh ../config/variables.sh ../config/ftp-settings.sh
-
-
 ifneq ($(ROOTCHECK), 0)
 install:
 	@echo This must be ran with root permissions.

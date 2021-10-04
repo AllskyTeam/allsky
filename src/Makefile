@@ -138,7 +138,7 @@ else
 	@echo `date +%F\ %R:%S` Copying binaries...
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  [ ! -e $(DESTDIR)$(bindir) ] && mkdir -p $(DESTDIR)$(bindir); \
-    install capture $(DESTDIR)$(bindir); \
+	  install capture $(DESTDIR)$(bindir); \
 	  install keogram $(DESTDIR)$(bindir); \
 	  install startrails $(DESTDIR)$(bindir); \
 	else \

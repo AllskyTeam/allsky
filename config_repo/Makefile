@@ -51,7 +51,7 @@ createDirs:
 
 install: createDirs settings_ZWO.json.repo settings_RPiHQ.json.repo config.sh.repo variables.sh.repo
 	@echo `date +%F\ %R:%S` Setting up udev rules...
-	@install -D -m 0655 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
+	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...
 	@install -D -m 0644 allsky.logrotate.repo $(DESTDIR)$(sysconfdir)/logrotate.d/allsky
 	@install -D -m 0644 allsky.rsyslog.repo $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf

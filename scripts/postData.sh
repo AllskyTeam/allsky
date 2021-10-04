@@ -4,7 +4,7 @@
 
 source "${ALLSKY_HOME}/config/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_SCRIPTS}/config/ftp-settings.sh"
+source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 ME="$(basename "${BASH_ARGV0}")"
 

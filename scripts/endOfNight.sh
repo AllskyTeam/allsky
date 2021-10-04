@@ -78,7 +78,7 @@ if [[ ${STARTRAILS} == "true" ]]; then
 	mkdir -p ${DATE_DIR}/startrails/
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/startrails/${STARTRAILS_FILE}"
-	"${ALLSKY_HOME}/startrails" "${DATE_DIR}/" ${EXTENSION} ${BRIGHTNESS_THRESHOLD} "${UPLOAD_FILE}"
+	"${ALLSKY_HOME}/startrails" -d "${DATE_DIR}/" -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o "${UPLOAD_FILE}"
 	RETCODE=$?
 	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RETCODE} == 0 ]] ; then
 		# If the user specified a different name for the destination file, use it.

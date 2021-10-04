@@ -138,6 +138,8 @@ do
 done
 echo "$Z" >> log.txt
 
+source $ALLSKY_HOME/config/variables.sh
+
 RETCODE=0
 if [[ $CAMERA == "ZWO" ]]; then
 	$ALLSKY_HOME/capture "${ARGUMENTS[@]}"

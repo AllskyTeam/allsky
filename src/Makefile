@@ -9,19 +9,14 @@ sharedir = ${exec_prefix}/share/allsky
 
 PDIR = $(shell dirname "$$PWD")
 MYDIR = $(shell basename "$$PWD")
-NLU = $(shell basename "$(PDIR)")
 RIGHTPATH = 1
 
 ifneq (src,$(MYDIR))
   RIGHTPATH = 0
 endif
-ifneq (allsky,$(NLU))
-  RIGHTPATH = 0
-endif
 
 ifneq (1,$(RIGHTPATH))
-  @echo Unexpected directory structure.
-  @echo This should be in allsky/src directory.
+  $(error Unexpected directory structure. This should be in allsky/src directory.)
 else
 
 .DEFAULT_GOAL := all

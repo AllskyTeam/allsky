@@ -22,6 +22,11 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
+
+CONFIGFILES := settings_ZWO.json settings_RPiHQ.json config.sh variables.sh ftp-settings.sh
+
+.PHONY: clean
+
 %:
 	@echo `date +%F\ %R:%S` nothing to do for $@
 
@@ -46,12 +51,11 @@ createDirs:
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/systemd/system ]; then mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system; fi
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/udev/rules.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/udev/rules.d; fi
 
-%.repo:
-	OUTFILE = $(subst ".repo","",$@)
-	@echo `date +%F\ %R:%S` Copying default $(OUTFILE)
-	@install -m 0644 $@ $(DESTDIR)$(sysconfdir)/allsky/$(OUTFILE)
+$(CONFIGFILES):
+	@echo `date +%F\ %R:%S` Copying default $@
+	@install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$(OUTFILE)
 
-install: createDirs settings_ZWO.json.repo settings_RPiHQ.json.repo config.sh.repo variables.sh.repo ftp-settings.sh.repo
+install: createDirs $(CONFIGFILES)
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...
@@ -68,12 +72,11 @@ createDirs:
 	@echo `date +%F\ %R:%S` Creating directory structures...
 	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi
 
-%.repo:
-	OUTFILE = $(subst ".repo","",$@)
-	@echo `date +%F\ %R:%S` Copying default $(OUTFILE)
-	@install -m 0644 $@ ../config/$(OUTFILE)
+$(CONFIGFILES):
+	@echo `date +%F\ %R:%S` Copying default $@
+	@install -m 0644 $@.repo ../config/$@
 
-install: createDirs settings_ZWO.json.repo settings_RPiHQ.json.repo config.sh.repo variables.sh.repo ftp-settings.sh.repo
+install: createDirs $(CONFIGFILES)
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...

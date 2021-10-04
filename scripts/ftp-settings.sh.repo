@@ -5,8 +5,10 @@ PROTOCOL='ftp'
 USER='username'
 PASSWORD='password'
 HOST='example.com'
-IMGDIR='/allsky/'
+IMG_DIR='/allsky/'
+IMGDIR="${IMG_DIR}"		# for backwards compatibility - will be removed in the future
 VIDEOS_DIR='/allsky/videos/'
+MP4DIR="${VIDEOS_DIR}"	# for backwards compatibility - will be removed in the future
 KEOGRAM_DIR='/allsky/keograms/'
 STARTRAILS_DIR='/allsky/startrails/'
 

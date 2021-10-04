@@ -24,7 +24,7 @@ fi
 source "${ALLSKY_HOME}/config/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_SCRIPTS}/filename.sh"
-[ "${TYPE}" = "UPLOAD" ] && source "${ALLSKY_SCRIPTS}/ftp-settings.sh"
+[ "${TYPE}" = "UPLOAD" ] && source "${ALLSKY_SCRIPTS}/config/ftp-settings.sh"
 
 
 if [ $# -eq 0 -o "${1}" = "-h" -o "${1}" = "--help" ]; then

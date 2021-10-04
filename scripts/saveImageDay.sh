@@ -6,7 +6,7 @@ source "${ALLSKY_HOME}/config/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_SCRIPTS}/filename.sh"
 source "${ALLSKY_SCRIPTS}/darkCapture.sh"	# does not return if in darkframe mode
-source "${ALLSKY_SCRIPTS}/ftp-settings.sh"
+source "${ALLSKY_SCRIPTS}/config/ftp-settings.sh"
 
 cd $ALLSKY_HOME
 

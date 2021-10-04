@@ -96,6 +96,9 @@ endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
 
+%:
+	@echo `date +%F\ %R:%S` nothing to do for $@
+
 all:capture capture_RPiHQ startrails keogram sunwait
 
 sunwait:

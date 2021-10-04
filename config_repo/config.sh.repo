@@ -119,7 +119,7 @@ CAMERA_SETTINGS_DIR="${ALLSKY_HOME}/config"
 
 if [[ $CAMERA == "auto" ]]; then
   # restore currently saved autodiscovered camera mode if any
-  source "$ALLSKY_HOME/autocam.sh"
+  source "$ALLSKY_HOME/config/autocam.sh"
 fi
 
 if [[ $CAMERA != "auto" ]]; then

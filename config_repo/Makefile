@@ -22,12 +22,14 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
-all:
-	@echo `date +%F\ %R:%S` nothing to do for all...
+%:
+	@echo `date +%F\ %R:%S` nothing to do for $@
 
 clean: # Remove all but the *.repo files ( and asi.rules ).
-	rm -f allsky.logrotate allsky.rsyslog allsky.service config.sh settings_RPiHQ.json settings_ZWO.json variables.sh \
-	  ../settings_RPiHQ.json ../settings_ZWO.json ../config.sh ../variables.sh
+	@rm -f allsky.logrotate allsky.rsyslog allsky.service config.sh settings_RPiHQ.json settings_ZWO.json variables.sh ftp-settings.sh
+
+# We probably don't want to risk deleting customized configs
+# ../config/settings_RPiHQ.json ../config/settings_ZWO.json ../config/config.sh ../config/variables.sh ../config/ftp-settings.sh
 
 
 ifneq ($(ROOTCHECK), 0)
@@ -49,7 +51,7 @@ createDirs:
 	@echo `date +%F\ %R:%S` Copying default $(OUTFILE)
 	@install -m 0644 $@ $(DESTDIR)$(sysconfdir)/allsky/$(OUTFILE)
 
-install: createDirs settings_ZWO.json.repo settings_RPiHQ.json.repo config.sh.repo variables.sh.repo
+install: createDirs settings_ZWO.json.repo settings_RPiHQ.json.repo config.sh.repo variables.sh.repo ftp-settings.sh.repo
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...
@@ -60,6 +62,7 @@ install: createDirs settings_ZWO.json.repo settings_RPiHQ.json.repo config.sh.re
 	@install -m 0644 allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
 	@echo -e "export ALLSKY_TMP=/tmp\nexport ALLSKY_CONFIG=$(DESTDIR)$(sysconfdir)/allsky\nexport ALLSKY_SCRIPTS=$(DESTDIR)$(libexecdir)\nexport ALLSKY_NOTIFICATION_IMAGES=$(DESTDIR)$(sharedir)\nexport ALLSKY_IMAGES=/home/allsky/Pictures/" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
+
 else # Not in package build mode
 createDirs:
 	@echo `date +%F\ %R:%S` Creating directory structures...
@@ -70,7 +73,7 @@ createDirs:
 	@echo `date +%F\ %R:%S` Copying default $(OUTFILE)
 	@install -m 0644 $@ ../config/$(OUTFILE)
 
-install: createDirs settings_ZWO.json.repo settings_RPiHQ.json.repo config.sh.repo variables.sh.repo
+install: createDirs settings_ZWO.json.repo settings_RPiHQ.json.repo config.sh.repo variables.sh.repo ftp-settings.sh.repo
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...
@@ -87,5 +90,6 @@ install: createDirs settings_ZWO.json.repo settings_RPiHQ.json.repo config.sh.re
 	@systemctl enable allsky
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
 	@echo "export ALLSKY_HOME=$(PDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
+	@echo `date +%F\ %R:%S` Copying default ftp-settings.sh
 endif # Package build check
 endif # Root check

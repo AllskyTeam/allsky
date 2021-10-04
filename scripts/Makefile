@@ -20,11 +20,8 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
-all:
-	@echo `date +%F\ %R:%S` nothing to do for all...
-
-clean:
-	rm -f ftp-settings.sh
+%:
+	@echo `date +%F\ %R:%S` nothing to do for $@
 
 install:
 ifneq ($(ROOTCHECK), 0)
@@ -46,9 +43,4 @@ else
 	  [ ! -e $(DESTDIR)$(sysconfdir)/allsky ] && mkdir -p $(DESTDIR)$(sysconfdir)/allsky; \
 	  install *.sh $(DESTDIR)$(libexecdir)/; \
 	fi
-	@echo `date +%F\ %R:%S` Copying default ftp-settings.sh
-	@if [ ftp-settings.sh ] && [ $(PKGBUILD) -ne 1 ]; then \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ftp-settings.sh.repo ftp-settings.sh; fi
-	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  install -m 0644 ftp-settings.sh.repo $(DESTDIR)$(sysconfdir)/allsky/ftp-settings.sh; fi
 endif

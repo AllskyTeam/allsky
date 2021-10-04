@@ -53,7 +53,7 @@ createDirs:
 
 $(CONFIGFILES):
 	@echo `date +%F\ %R:%S` Copying default $@
-	@install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$(OUTFILE)
+	@install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$@
 
 install: createDirs $(CONFIGFILES)
 	@echo `date +%F\ %R:%S` Setting up udev rules...

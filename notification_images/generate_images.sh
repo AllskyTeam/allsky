@@ -55,5 +55,5 @@ make_image NotRunning         "#ff0000" "#000000" "#404040" "Allsky Software\nis
 make_image DarkFrames         "#00ff00" "#ffffff" "#000000" "Camera is taking\ndark frames"
 make_image StartingUp         "#00ff00" "#000000" "#404040" "Allsky Software\nis starting up"
 make_image CameraOffDuringDay "#ffff4a" "#000000" "#404040" "Camera is off\nduring the day"
-make_image Error              "#ff0000" "#000000" "#404040" "ERROR: See log\nfile for information\n\n/var/log/allsky.log" 72
+make_image Error              "#ff0000" "#000000" "#404040" "ERROR: See\n/var/log/allsky.log\nfor details"
 

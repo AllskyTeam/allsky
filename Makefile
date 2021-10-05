@@ -41,7 +41,7 @@ else
 	@make -C scripts $@
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  [ ! -e $(DESTDIR)$(libexecdir) ] && mkdir -p $(DESTDIR)$(libexecdir) \
-	  install allsky.sh.repo $(DESTDIR)$(libexecdir)/allsky.sh; \
+	  install allsky.sh $(DESTDIR)$(libexecdir)/allsky.sh; \
         fi
 	@if [ $(PKGBUILD) -ne 1 ]; then \
 	  echo `date +%F\ %R:%S` Setting directory permissions...; \

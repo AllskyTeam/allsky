@@ -7,8 +7,10 @@ fi
 
 # reset auto camera selection, so $ALLSKY_HOME/config.sh do not pick up old camera selection
 cd $ALLSKY_HOME
-echo "" > "$ALLSKY_HOME/config/autocam.sh"
-source $ALLSKY_HOME/config/config.sh
+source $ALLSKY_HOME/variables.sh
+
+echo "" > "$ALLSKY_CONFIG/autocam.sh"
+source $ALLSKY_CONFIG/config.sh
 
 # Make it easy to find the beginning of this run in the log file.
 echo "     ***** Starting AllSky *****"
@@ -98,12 +100,12 @@ if [ $WAS_AUTO -eq 1 ]; then  # Get the proper debug level since earlier config.
 fi
 
 # this must be called after camera autoselect
-source $ALLSKY_HOME/scripts/filename.sh
+source $ALLSKY_SCRIPTS/filename.sh
 
 # Optionally display a notification image. This has to come after the creation of "autocam.sh" above.
 USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
 if [ "$USE_NOTIFICATION_IMAGES" = "1" ] ; then
-	$ALLSKY_HOME/scripts/copy_notification_image.sh "StartingUp" 2>&1
+	$ALLSKY_SCRIPTS/copy_notification_image.sh "StartingUp" 2>&1
 fi
 
 echo "Starting allsky camera..."
@@ -159,11 +161,11 @@ fi
 if [ "$USE_NOTIFICATION_IMAGES" = "1" -a "$RETCODE" -ne 0 ] ; then
 	# "capture" will do this if it exited with 0.
 	if [ "$RETCODE" -gt 100 ]; then	
-		$ALLSKY_HOME/scripts/copy_notification_image.sh "Error" 2>&1
+		$ALLSKY_SCRIPTS/copy_notification_image.sh "Error" 2>&1
 		echo "*** Waiting for you to fix this.  Restart when done fixing. ***"
 		sudo service allsky stop
 	else
-		$ALLSKY_HOME/scripts/copy_notification_image.sh "NotRunning" 2>&1
+		$ALLSKY_SCRIPTS/copy_notification_image.sh "NotRunning" 2>&1
 	fi
 fi
 

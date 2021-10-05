@@ -6,7 +6,7 @@ USER='username'
 PASSWORD='password'
 HOST='example.com'
 IMGDIR='/allsky/'
-MP4DIR='/allsky/videos/'
+VIDEOS_DIR='/allsky/videos/'
 KEOGRAM_DIR='/allsky/keograms/'
 STARTRAILS_DIR='/allsky/startrails/'
 

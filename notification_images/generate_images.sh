@@ -40,6 +40,15 @@ function make_image() {
 
 }
 
+if [ -z "$(which mogrify)" ] ; then
+    # Testing for mogrify which seems like a much more distinctive executable
+	# name than "convert". I assume that if "mogrify" is in the path, then
+	# ImageMagick is installed and "convert" will run ImageMagick and not some
+	# other tool.
+	echo ImageMagick does not appear to be installed. Please install it.
+	exit 1
+fi
+
 #          BaseName           TxtColor  Stroke    BgColor   Message                                                       FontSize
 make_image NotRunning         "#ff0000" "#000000" "#404040" "Allsky software\nis not running"
 make_image DarkFrames         "#00ff00" "#ffffff" "#000000" "Camera is taking\ndark frames"

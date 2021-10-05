@@ -8,7 +8,7 @@ if [ -z "${ALLSKY_HOME}" ] ; then
 	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}")/..)"
 fi
 
-source "${ALLSKY_HOME}/config/variables.sh"
+source "${ALLSKY_HOME}/variables.sh"
 
 # "--upload" tells the script to do an upload rather than create.
 "${ALLSKY_SCRIPTS}/generateForDay.sh" --upload "$@"

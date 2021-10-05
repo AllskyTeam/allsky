@@ -23,7 +23,7 @@ ifeq ($(PKGBUILD),)
 endif
 
 
-CONFIGFILES := settings_ZWO.json settings_RPiHQ.json config.sh variables.sh ftp-settings.sh
+CONFIGFILES := settings_ZWO.json settings_RPiHQ.json config.sh ftp-settings.sh
 
 .PHONY: clean
 

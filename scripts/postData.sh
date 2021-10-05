@@ -2,7 +2,7 @@
 
 # TODO Needs fixing when civil twilight happens after midnight
 
-source "${ALLSKY_HOME}/config/variables.sh"
+source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 

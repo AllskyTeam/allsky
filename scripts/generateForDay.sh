@@ -21,7 +21,7 @@ else
 	MSG2="created"
 fi
 
-source "${ALLSKY_HOME}/config/variables.sh"
+source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_SCRIPTS}/filename.sh"
 [ "${TYPE}" = "UPLOAD" ] && source "${ALLSKY_CONFIG}/ftp-settings.sh"

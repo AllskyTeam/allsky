@@ -23,21 +23,26 @@ endif
 %:
 	@echo `date +%F\ %R:%S` nothing to do for $@
 
-install:
 ifneq ($(ROOTCHECK), 0)
+install uninstall:
 	@echo This must be ran with root permissions.
 	@echo Please run \'sudo make install\'
 else
-	@echo `date +%F\ %R:%S` Setting up scripts...
-	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  [ ! -e $(DESTDIR)$(libexecdir) ] && mkdir -p $(DESTDIR)$(libexecdir); \
-	  [ ! -e $(DESTDIR)$(sysconfdir)/allsky ] && mkdir -p $(DESTDIR)$(sysconfdir)/allsky; \
-	fi
 
+install:
+	@echo `date +%F\ %R:%S` Setting up scripts...
 	@chmod 755 *.sh
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  [ ! -e $(DESTDIR)$(libexecdir) ] && mkdir -p $(DESTDIR)$(libexecdir); \
-	  [ ! -e $(DESTDIR)$(sysconfdir)/allsky ] && mkdir -p $(DESTDIR)$(sysconfdir)/allsky; \
 	  install *.sh $(DESTDIR)$(libexecdir)/; \
 	fi
+
+uninstall:
+	@if [ $(PKGBUILD) -eq 1 ]; then \
+	  echo `date +%F\ %R:%S` Removing scripts...; \
+	  rm -rf $(DESTDIR)$(libexecdir); \
+	else
+	  echo `date +%F\ %R:%S` nothing to do for $@; \
+	fi
+
 endif

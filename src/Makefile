@@ -129,15 +129,17 @@ keogram:keogram.cpp
 	@$(CC)  keogram.cpp -o keogram $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
-install:
 ifneq ($(ROOTCHECK), 0)
+install uninstall:
 	@echo This must be ran with root permissions.
 	@echo Please run \'sudo make install\'
 else
+install:
 	@echo `date +%F\ %R:%S` Copying binaries...
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  [ ! -e $(DESTDIR)$(bindir) ] && mkdir -p $(DESTDIR)$(bindir); \
 	  install capture $(DESTDIR)$(bindir); \
+	  install capture_RPiHQ $(DESTDIR)$(bindir); \
 	  install keogram $(DESTDIR)$(bindir); \
 	  install startrails $(DESTDIR)$(bindir); \
 	else \
@@ -147,11 +149,19 @@ else
 	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../; \
 	fi
 	@install sunwait $(DESTDIR)$(bindir)
+
+uninstall:
+	@echo `date +%F\ %R:%S` Removing binaries...
+	@if [ $(PKGBUILD) -eq 1 ]; then \
+	  rm -f $(DESTDIR)$(bindir)/{capture,capture_RPiHQ,keogram,startrails,sunwait}; \
+	else \
+	  rm -f ../{capture,capture_RPiHQ,keogram,startrails}; \
+	  rm -f $(DESTDIR)$(bindir)/startrails; \
+	fi
 endif # sudo / root check
 
 clean:
-	rm -f capture capture_RPiHQ startrails keogram *.o \
-	   ../capture ../capture_RPiHQ ../startrails ../keogram 
+	rm -f capture capture_RPiHQ startrails keogram *.o *.a
 
 
 endif # Correct directory structure check

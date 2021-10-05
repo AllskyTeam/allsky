@@ -26,14 +26,21 @@ all:
 clean:
 	@echo `date +%F\ %R:%S` Notification Images clean...
 
-install:
 ifneq ($(ROOTCHECK), 0)
+install uninstall:
 	@echo This must be ran with root permissions.
-	@echo Please run \'sudo make install\'
+	@echo Please run \'sudo make $@\'
 else
+install:
 	@echo `date +%F\ %R:%S` Setting up Notification Images...
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  [ ! -e $(DESTDIR)$(sharedir) ] && mkdir -p $(DESTDIR)$(sharedir); \
 	  install -m 0644 *.jpg *.png $(DESTDIR)$(sharedir)/; \
+	fi
+
+uninstall:
+	@if [ $(PKGBUILD) -eq 1 ]; then \
+	  echo `date +%F\ %R:%S` Removing Notification Images...
+	  rm -rf $(DESTDIR)$(sharedir); \
 	fi
 endif

@@ -24,19 +24,32 @@ endif
 
 
 CONFIGFILES := settings_ZWO.json settings_RPiHQ.json config.sh ftp-settings.sh
-
-.PHONY: clean
+UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service
 
 %:
 	@echo `date +%F\ %R:%S` nothing to do for $@
 
 ifneq ($(ROOTCHECK), 0)
-install:
+install uninstall:
 	@echo This must be ran with root permissions.
-	@echo Please run \'sudo make install\'
+	@echo Please run \'sudo make $@\'
 else # Root check passed
 
+uninstall:
+	@echo `date +%F\ %R:%S` Removing installed files: $(UNINSTALLFILES)
+	@rm -f $(UNINSTALLFILES)
+	@echo `date +%F\ %R:%S` Complete.
+	@echo `date +%F\ %R:%S` NOTE: Config files were \-NOT\- removed.
+	@echo `date +%F\ %R:%S` To remove config files, please run \'sudo make remove_configs\'
+
+.PHONY : uninstall
+
 ifeq ($(PKGBUILD),1)
+
+remove_configs:
+	@echo `date +%F\ %R:%S` Removing config path and files $(DESTDIR)$(sysconfigdir)/allsky
+	@rm -rf $(DESTDIR)$(sysconfigdir)/allsky
+
 createDirs:
 	@echo `date +%F\ %R:%S` Creating directory structures...
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky ]; then mkdir -p $(DESTDIR)$(sysconfdir)/allsky; fi
@@ -63,6 +76,10 @@ install: createDirs $(CONFIGFILES)
 	@echo -e "export ALLSKY_TMP=/tmp\nexport ALLSKY_CONFIG=$(DESTDIR)$(sysconfdir)/allsky\nexport ALLSKY_SCRIPTS=$(DESTDIR)$(libexecdir)\nexport ALLSKY_NOTIFICATION_IMAGES=$(DESTDIR)$(sharedir)\nexport ALLSKY_IMAGES=/home/allsky/Pictures/" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
 
 else # Not in package build mode
+remove_configs:
+	@echo `date +%F\ %R:%S` Removing config path and files ../config
+	@rm -rf ../config
+
 createDirs:
 	@echo `date +%F\ %R:%S` Creating directory structures...
 	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi

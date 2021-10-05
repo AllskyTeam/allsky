@@ -124,8 +124,15 @@ void usage_and_exit(int x) {
 
 int main(int argc, char* argv[]) {
   struct config_t config;
+  int i;
+  char* e;
 
   parse_args(argc, argv, &config);
+
+  if (config.verbose < 1)
+    if (e = getenv("ALLSKY_DEBUG_LEVEL"))
+      if ((i = atoi(e)) > 0)
+        config.verbose = i;
 
   if (config.img_src_dir.empty() || config.img_src_ext.empty())
     usage_and_exit(3);
@@ -158,16 +165,18 @@ int main(int argc, char* argv[]) {
   for (size_t f = 0; f < files.gl_pathc; f++) {
     cv::Mat image = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
     if (!image.data) {
-      std::cout << "Error reading file " << basename(files.gl_pathv[f])
-                << std::endl;
+      if (config.verbose)
+        fprintf(stderr, "Error reading file %s\n", basename(files.gl_pathv[f]));
       stats.col(f) = 1.0;  // mark as invalid
       continue;
     }
 
     if (config.img_height && config.img_width &&
         (image.cols != config.img_width || image.rows != config.img_height)) {
-      fprintf(stderr, "%s size %dx%d != %dx%d\n", files.gl_pathv[f], image.cols,
-              image.cols, config.img_width, config.img_height);
+      if (config.verbose)
+        fprintf(stderr, "skipped %s - got size %dx%d, want %dx%d\n",
+                files.gl_pathv[f], image.cols, image.cols, config.img_width,
+                config.img_height);
       continue;
     }
 
@@ -195,7 +204,7 @@ int main(int argc, char* argv[]) {
         mean /= 65535.0;
         break;
     }
-    if (config.verbose)
+    if (config.verbose > 1)
       std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
                 << basename(files.gl_pathv[f]) << " " << mean << std::endl;
 
@@ -204,8 +213,8 @@ int main(int argc, char* argv[]) {
     if (config.startrails_enabled && mean <= config.brightness_limit) {
       if (image.channels() != nchan) {
         if (config.verbose)
-          fprintf(stderr, "repairing channel mismatch: %d != %d\n",
-                  image.channels(), nchan);
+          fprintf(stderr, "repairing %s channel mismatch: got %d, want %d\n",
+                  files.gl_pathv[f], image.channels(), nchan);
         if (image.channels() < nchan)
           cv::cvtColor(image, image, cv::COLOR_GRAY2BGR, nchan);
         else if (image.channels() > nchan)

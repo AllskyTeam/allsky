@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
   parse_args(argc, argv, &config);
 
   if (config.verbose < 1)
-    if (e = getenv("ALLSKY_DEBUG_LEVEL"))
+    if ((e = getenv("ALLSKY_DEBUG_LEVEL")))
       if ((i = atoi(e)) > 0)
         config.verbose = i;
 

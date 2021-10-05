@@ -41,6 +41,5 @@ install:
 uninstall:
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  echo `date +%F\ %R:%S` Removing Notification Images...
-	  rm -rf $(DESTDIR)$(sharedir); \
-	fi
+	  rm -rf $(DESTDIR)$(sharedir); fi
 endif

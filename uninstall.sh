@@ -25,7 +25,7 @@ echo
 echo "Note: This only removes files in their default location."
 echo
 read -p "ARE YOU SURE? [y/n] " ans_yn
-echo -en '${NC}'
+echo -en "${NC}"
 case "$ans_yn" in
   [Yy]|[Yy][Ee][Ss])
     sudo make uninstall

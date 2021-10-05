@@ -37,12 +37,10 @@ install:
 	  install *.sh $(DESTDIR)$(libexecdir)/; \
 	fi
 
+ifeq ($(PKGBUILD),1)
 uninstall:
-	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  echo `date +%F\ %R:%S` Removing scripts...; \
-	  rm -rf $(DESTDIR)$(libexecdir); \
-	else
-	  echo `date +%F\ %R:%S` nothing to do for $@; \
-	fi
+	@echo `date +%F\ %R:%S` Removing scripts...
+	@rm -rf $(DESTDIR)$(libexecdir)
 
-endif
+endif # PKGBUILD
+endif # ROOTCHECK

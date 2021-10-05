@@ -157,11 +157,19 @@ install:
 uninstall:
 	@echo `date +%F\ %R:%S` Removing binaries...
 	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  rm -f $(DESTDIR)$(bindir)/{capture,capture_RPiHQ,keogram,startrails,sunwait}; \
+	  rm -f $(DESTDIR)$(bindir)/capture; \
+	  rm -f $(DESTDIR)$(bindir)/capture_RPiHQ; \
+	  rm -f $(DESTDIR)$(bindir)/keogram; \
+	  rm -f $(DESTDIR)$(bindir)/startrails; \
+	  rm -f $(DESTDIR)$(bindir)/sunwait; \
 	else \
-	  rm -f ../{capture,capture_RPiHQ,keogram,startrails}; \
+	  rm -f ../capture; \
+	  rm -f ../capture_RPiHQ; \
+	  rm -f ../keogram; \
+	  rm -f ../startrails; \
 	  rm -f $(DESTDIR)$(bindir)/startrails; \
 	fi
+
 endif # sudo / root check
 
 clean:

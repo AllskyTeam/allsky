@@ -29,19 +29,16 @@ install uninstall:
 	@echo Please run \'sudo make $@\'
 
 else
+
+ifeq ($(PKGBUILD),1)
 install:
 	@echo `date +%F\ %R:%S` Setting up Notification Images...
-	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  [ ! -e $(DESTDIR)$(sharedir) ] && mkdir -p $(DESTDIR)$(sharedir); \
-	  install -m 0644 *.jpg *.png $(DESTDIR)$(sharedir)/; \
-	fi
+	@if [ ! -e $(DESTDIR)$(sharedir) ] && mkdir -p $(DESTDIR)$(sharedir); fi
+	@install -m 0644 *.jpg *.png $(DESTDIR)$(sharedir)/
 
 uninstall:
-	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  echo `date +%F\ %R:%S` Removing Notification Images...
-	  rm -rf $(DESTDIR)$(sharedir); \
-	else \
-	  echo `date +%F\ %R:%S` nothing to do for $@
-	fi
+	@echo `date +%F\ %R:%S` Removing Notification Images...
+	@rm -rf $(DESTDIR)$(sharedir)
 
-endif
+endif # PKGBUILD
+endif # ROOTCHECK

@@ -31,7 +31,7 @@ deps:
 
 install:
 ifneq ($(ROOTCHECK), 0)
-	@echo This must be ran with root permissions.
+	@echo This must be run with root permissions.
 	@echo Please run \'sudo make install\'
 else
 	@echo `date +%F\ %R:%S` Starting install...

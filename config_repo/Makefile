@@ -31,7 +31,7 @@ UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconf
 
 ifneq ($(ROOTCHECK), 0)
 install uninstall:
-	@echo This must be ran with root permissions.
+	@echo This must be run with root permissions.
 	@echo Please run \'sudo make $@\'
 else # Root check passed
 

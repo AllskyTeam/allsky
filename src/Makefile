@@ -162,6 +162,7 @@ ifeq ($(wildcard ../scripts/ftp-settings.sh),)
 endif
 	@echo `date +%F\ %R:%S` Copying binaries...
 	@install -o $(SUDO_USER) -g $(SUDO_USER) capture ../
+	@install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPiHQ ../
 	@install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../
 	@install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../
 	@install sunwait /usr/local/bin/

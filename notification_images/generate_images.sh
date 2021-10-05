@@ -7,12 +7,12 @@ function make_image() {
     BGCOLOR="$4"
     MSG="$5"
     FS=$6
-    EXTS="JPG PNG"
+    EXTS="jpg png"
 
-    echo "$BASENAME" | grep -qEi '[.](${EXTS/ /|})'
+    echo "${BASENAME}" | grep -qEi '[.](${EXTS/ /|})'
     if [ $? -ne 1 ] ; then
-        echo "run this function with only the image basename"
-        echo "make_image StartingUp '#00ff00' 'Allsky Starting Up'"
+        echo "run this function with only the image basename, eg."
+        echo "make_image StartingUp '#00ff00' '#000000' '#404040' 'Allsky Starting Up'"
         exit 1
     fi
 
@@ -23,16 +23,17 @@ function make_image() {
     IM_SIZE="959x719"
     FONT="Arial"
     FONT_SIZE=${FS:-128}
+	SW="2"
 
-    for EXT in jpg png ; do
+    for EXT in ${EXTS} ; do
         convert \
-            -background "$BGCOLOR" \
-            -fill "$TEXTCOLOR" \
-            -strokewidth 2 \
-            -stroke "$STROKE}" \
-            -size $IM_SIZE \
-            -font $FONT \
-            -pointsize $FONT_SIZE \
+            -background "${BGCOLOR}" \
+            -fill "${TEXTCOLOR}" \
+            -strokewidth "${SW}" \
+            -stroke "${STROKE}" \
+            -size "${IM_SIZE}" \
+            -font "${FONT}" \
+            -pointsize "${FONT_SIZE}" \
             -gravity center \
             label:"${MSG}" \
             "${BASENAME}.${EXT}"
@@ -50,7 +51,7 @@ if [ -z "$(which mogrify)" ] ; then
 fi
 
 #          BaseName           TxtColor  Stroke    BgColor   Message                                                       FontSize
-make_image NotRunning         "#ff0000" "#000000" "#404040" "Allsky software\nis not running"
+make_image NotRunning         "#ff0000" "#000000" "#404040" "Allsky Software\nis not running"
 make_image DarkFrames         "#00ff00" "#ffffff" "#000000" "Camera is taking\ndark frames"
 make_image StartingUp         "#00ff00" "#000000" "#404040" "Allsky Software\nis starting up"
 make_image CameraOffDuringDay "#ffff4a" "#000000" "#404040" "Camera is off\nduring the day"

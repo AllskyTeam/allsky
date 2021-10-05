@@ -20,16 +20,14 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
-all:
-	@echo `date +%F\ %R:%S` nothing to do for all...
-
-clean:
-	@echo `date +%F\ %R:%S` Notification Images clean...
+%:
+	@echo `date +%F\ %R:%S` nothing to do for $@...
 
 ifneq ($(ROOTCHECK), 0)
 install uninstall:
 	@echo This must be ran with root permissions.
 	@echo Please run \'sudo make $@\'
+
 else
 install:
 	@echo `date +%F\ %R:%S` Setting up Notification Images...
@@ -41,5 +39,9 @@ install:
 uninstall:
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  echo `date +%F\ %R:%S` Removing Notification Images...
-	  rm -rf $(DESTDIR)$(sharedir); fi
+	  rm -rf $(DESTDIR)$(sharedir); \
+	else \
+	  echo `date +%F\ %R:%S` nothing to do for $@
+	fi
+
 endif

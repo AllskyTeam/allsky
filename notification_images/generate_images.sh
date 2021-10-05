@@ -35,6 +35,7 @@ function make_image() {
             -font "${FONT}" \
             -pointsize "${FONT_SIZE}" \
             -gravity center \
+			-depth 8 \
             label:"${MSG}" \
             "${BASENAME}.${EXT}"
     done

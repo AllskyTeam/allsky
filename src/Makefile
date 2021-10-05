@@ -129,6 +129,14 @@ keogram:keogram.cpp
 	@$(CC)  keogram.cpp -o keogram $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
+symlink:
+	@echo `date +%F\ %R:%S` Symlinking binaries...
+	@ln -s capture ../
+	@ln -s capture_RPiHQ ../
+	@ln -s keogram ../
+	@ln -s startrails ../
+
+
 ifneq ($(ROOTCHECK), 0)
 install uninstall:
 	@echo This must be ran with root permissions.

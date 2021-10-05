@@ -136,7 +136,7 @@ symlink: all
 ifneq ($(ROOTCHECK), 0)
 install uninstall:
 	@echo This must be ran with root permissions.
-	@echo Please run \'sudo make install\'
+	@echo Please run \'sudo make $@\'
 else
 install:
 	@echo `date +%F\ %R:%S` Copying binaries...

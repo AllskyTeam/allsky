@@ -193,7 +193,7 @@ void usage_and_exit(int x) {
       << std::endl;
   std::cout << "-L | --font-line <int> : font line thickness (3)" << std::endl;
   std::cout << "-N | --font-name <str> : font name (simplex)" << std::endl;
-  std::cout << "-S | --font-side <float> : font size (2.0)" << std::endl;
+  std::cout << "-S | --font-size <float> : font size (2.0)" << std::endl;
   std::cout << "-T | --font-type <int> : font line type (1)" << std::endl;
 
   std::cout << KNRM << std::endl;
@@ -238,8 +238,15 @@ int get_font_by_name(char* s) {
 
 int main(int argc, char* argv[]) {
   struct config_t config;
+  int i;
+  char* e;
 
   parse_args(argc, argv, &config);
+
+  if (config.verbose < 1)
+    if ((e = getenv("ALLSKY_DEBUG_LEVEL")))
+      if ((i = atoi(e)) > 0)
+        config.verbose = i;
 
   if (config.img_src_dir.empty() || config.img_src_ext.empty() ||
       config.dst_keogram.empty())
@@ -262,28 +269,41 @@ int main(int argc, char* argv[]) {
   for (size_t f = 0; f < files.gl_pathc; f++) {
     cv::Mat imagesrc = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
     if (!imagesrc.data) {
-      std::cout << "Error reading file " << basename(files.gl_pathv[f])
-                << std::endl;
+      if (config.verbose)
+        std::cout << "Error reading file " << basename(files.gl_pathv[f])
+                  << std::endl;
       continue;
     }
 
-    if (config.verbose)
+    if (config.verbose > 1)
       std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
                 << basename(files.gl_pathv[f]) << std::endl;
 
     if (config.img_height && config.img_width &&
         (imagesrc.cols != config.img_width ||
          imagesrc.rows != config.img_height)) {
-      fprintf(stderr, "%s size %dx%d != %dx%d\n", files.gl_pathv[f],
-              imagesrc.cols, imagesrc.cols, config.img_width,
-              config.img_height);
+      if (config.verbose) {
+        fprintf(stderr,
+                "%s image size %dx%d does not match expected size %dx%d\n",
+                files.gl_pathv[f], imagesrc.cols, imagesrc.cols,
+                config.img_width, config.img_height);
+      }
       continue;
     }
+
     if (nchan == 0)
       nchan = imagesrc.channels();
 
-    if (imagesrc.channels() != nchan)
-      continue;
+    if (imagesrc.channels() != nchan) {
+      if (config.verbose) {
+        fprintf(stderr, "repairing channel mismatch: %d != %d\n",
+                imagesrc.channels(), nchan);
+      }
+      if (imagesrc.channels() < nchan)
+        cv::cvtColor(imagesrc, imagesrc, cv::COLOR_GRAY2BGR, nchan);
+      else if (imagesrc.channels() > nchan)
+        cv::cvtColor(imagesrc, imagesrc, cv::COLOR_BGR2GRAY, nchan);
+    }
 
     cv::Point2f center((imagesrc.cols - 1) / 2.0, (imagesrc.rows - 1) / 2.0);
     cv::Mat rot = cv::getRotationMatrix2D(center, config.rotation_angle, 1.0);

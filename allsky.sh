@@ -89,7 +89,7 @@ fi
 echo "CAMERA: ${CAMERA}"
 echo "CAMERA_SETTINGS: ${CAMERA_SETTINGS}"
 # save auto camera selection for the current session, will be read in "$ALLSKY_HOME/config.sh" file
-echo "export CAMERA=$CAMERA" > "$ALLSKY_HOME/config/autocam.sh"
+echo "export CAMERA=$CAMERA" > "$ALLSKY_CONFIG/autocam.sh"
 
 if [ $WAS_AUTO -eq 1 ]; then  # Get the proper debug level since earlier config.sh run couldn't.
 	ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")

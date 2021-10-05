@@ -1,24 +1,36 @@
 platform = $(shell uname -m)
-prefix = /
+prefix = 
+
+sysconfdir = ${prefix}/etc
+exec_prefix = /usr
+bindir = ${exec_prefix}/bin
+libexecdir = ${exec_prefix}/libexec/allsky
+sharedir = ${exec_prefix}/share/allsky
 
 PDIR = $(shell dirname "$$PWD")
 MYDIR = $(shell basename "$$PWD")
-NLU = $(shell basename "$(PDIR)")
 RIGHTPATH = 1
 
 ifneq (src,$(MYDIR))
   RIGHTPATH = 0
 endif
-ifneq (allsky,$(NLU))
-  RIGHTPATH = 0
-endif
 
 ifneq (1,$(RIGHTPATH))
-  @echo Unexpected directory structure.
-  @echo This should be in allsky/src directory.
+  $(error Unexpected directory structure. This should be in allsky/src directory.)
 else
 
 .DEFAULT_GOAL := all
+
+ROOTCHECK=$(shell id -u)
+ifneq ($(ROOTCHECK),0)
+  ifeq ($(PKGBUILD),1)
+    ROOTCHECK=0
+  endif
+endif
+
+ifeq ($(PKGBUILD),)
+  PKGBUILD=0
+endif
 
 deps:
 ifneq ($(shell id -u), 0)
@@ -83,6 +95,9 @@ endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
 
+%:
+	@echo `date +%F\ %R:%S` nothing to do for $@
+
 all:capture capture_RPiHQ startrails keogram sunwait
 
 sunwait:
@@ -92,91 +107,73 @@ sunwait:
 	@echo `date +%F\ %R:%S` Building sunwait...
 	@$(MAKE) -C sunwait-src
 	@cp sunwait-src/sunwait .
-	@echo `date +%F\ %R:%S` Build of sunwait complete.
+	@echo `date +%F\ %R:%S` Done.
 
-capture:capture.cpp
-	@echo `date +%F\ %R:%S` Building capture program...
-	@$(CC)  capture.cpp -o capture $(CFLAGS) $(OPENCV) -lASICamera2 $(USB)
-	@echo `date +%F\ %R:%S` Build of capture complete.
+capture:
+	@echo `date +%F\ %R:%S` Building $@ program...
+	@$(CC)  $@.cpp -o $@ $(CFLAGS) $(OPENCV) -lASICamera2 $(USB)
+	@echo `date +%F\ %R:%S` Done.
 
-capture_RPiHQ:capture_RPiHQ.cpp
-	@echo `date +%F\ %R:%S` Building capture_RPiHQ program...
-	@$(CC)  capture_RPiHQ.cpp -o capture_RPiHQ $(CFLAGS) $(OPENCV)
-	@echo `date +%F\ %R:%S` Build of capture_RPiHQ complete.
+capture_RPiHQ:
+	@echo `date +%F\ %R:%S` Building $@ program...
+	@$(CC)  $@.cpp -o $@ $(CFLAGS) $(OPENCV)
+	@echo `date +%F\ %R:%S` Done.
 
-startrails:startrails.cpp
-	@echo `date +%F\ %R:%S` Building startrails program...
-	@$(CC)  startrails.cpp -o startrails $(CFLAGS) $(OPENCV)
-	@echo `date +%F\ %R:%S` Build of startrails complete.
+startrails keogram:
+	@echo `date +%F\ %R:%S` Building $@ program...
+	@$(CC) $@.cpp -o $@ $(CFLAGS) $(OPENCV)
+	@echo `date +%F\ %R:%S` Done.
 
-keogram:keogram.cpp
-	@echo `date +%F\ %R:%S` Building keogram program...
-	@$(CC)  keogram.cpp -o keogram $(CFLAGS) $(OPENCV)
-	@echo `date +%F\ %R:%S` Build of keogram complete.
+symlink: all
+	@echo `date +%F\ %R:%S` Symlinking binaries...
+	@ln -s $$PWD/capture ../
+	@ln -s $$PWD/capture_RPiHQ ../
+	@ln -s $$PWD/keogram ../
+	@ln -s $$PWD/startrails ../
 
-install:
-ifneq ($(shell id -u), 0)
-	$(error Please run \'sudo make install\')
+.PHONY: symlink
+
+ifneq ($(ROOTCHECK), 0)
+install uninstall:
+	@echo This must be ran with root permissions.
+	@echo Please run \'sudo make $@\'
 else
-	@echo `date +%F\ %R:%S` Starting install...
-	@chmod 755 ../allsky.sh ../scripts/*.sh
-	@echo `date +%F\ %R:%S` Setting up udev rules...
-	@install -D -m 0644 ../config_repo/asi.rules /etc/udev/rules.d/
-	@udevadm control -R
-	@echo `date +%F\ %R:%S` Setting allsky to auto start...
-ifneq ($(wildcard /etc/xdg/lxsession/LXDE-pi/autostart),)
-	@sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart
-endif
-	@sed -i "s|User=pi|User=$(SUDO_USER)|g" ../config_repo/allsky.service
-	@sed -i "s|/home/pi/allsky|$(PDIR)|g" ../config_repo/allsky.service
-	@install -m 0644 ../config_repo/allsky.service /etc/systemd/system/
-ifneq ($(wildcard /lib/systemd/system/allsky.service),)
-	@rm -f /lib/systemd/system/allsky.service
-endif
-	@systemctl daemon-reload
-	@systemctl enable allsky
-	@echo `date +%F\ %R:%S` Setting up logging...
-	@install -D -m 0644 ../config_repo/allsky.logrotate /etc/logrotate.d/allsky
-	@install -D -m 0644 ../config_repo/allsky.rsyslog /etc/rsyslog.d/allsky.conf
-	@echo `date +%F\ %R:%S` Setting up home environment variable...
-	@echo "export ALLSKY_HOME=$(PDIR)" > /etc/profile.d/allsky.sh
-ifeq ($(wildcard ../settings_ZWO.json),)
-	@echo `date +%F\ %R:%S` Copying default settings_ZWO.json
-	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/settings_ZWO.json.repo ../settings_ZWO.json
-endif
-ifeq ($(wildcard ../settings_RPiHQ.json),)
-	@echo `date +%F\ %R:%S` Copying default settings_RPiHQ.json
-	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/settings_RPiHQ.json.repo ../settings_RPiHQ.json
-endif
-ifeq ($(wildcard ../config.sh),)
-	@echo `date +%F\ %R:%S` Copying default config.sh
-	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/config.sh.repo ../config.sh
-endif
-ifeq ($(wildcard ../variables.sh),)
-	@echo `date +%F\ %R:%S` Copying default variables.sh
-	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../config_repo/variables.sh.repo ../variables.sh
-endif
-ifeq ($(wildcard ../scripts/ftp-settings.sh),)
-	@echo `date +%F\ %R:%S` Copying default ftp-settings.sh
-	@install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) ../scripts/ftp-settings.sh.repo ../scripts/ftp-settings.sh
-endif
+install:
 	@echo `date +%F\ %R:%S` Copying binaries...
-	@install -o $(SUDO_USER) -g $(SUDO_USER) capture ../
-	@install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPiHQ ../
-	@install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../
-	@install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../
-	@install sunwait /usr/local/bin/
+	@if [ $(PKGBUILD) -eq 1 ]; then \
+	  [ ! -e $(DESTDIR)$(bindir) ] && mkdir -p $(DESTDIR)$(bindir); \
+	  install capture $(DESTDIR)$(bindir); \
+	  install capture_RPiHQ $(DESTDIR)$(bindir); \
+	  install keogram $(DESTDIR)$(bindir); \
+	  install startrails $(DESTDIR)$(bindir); \
+	else \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) capture ../; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPiHQ ../; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../; \
+	fi
+	@install sunwait $(DESTDIR)$(bindir)
 
-	@echo `date +%F\ %R:%S` Setting directory permissions...
-	@chown $(SUDO_USER):$(SUDO_USER) ./
-	@echo ""
-	@echo ""
-	@echo `date +%F\ %R:%S` It is recommended to reboot now, please issue \'sudo reboot\'
-	@echo ""
-	@echo ""
+uninstall:
+	@echo `date +%F\ %R:%S` Removing binaries...
+	@if [ $(PKGBUILD) -eq 1 ]; then \
+	  rm -f $(DESTDIR)$(bindir)/capture; \
+	  rm -f $(DESTDIR)$(bindir)/capture_RPiHQ; \
+	  rm -f $(DESTDIR)$(bindir)/keogram; \
+	  rm -f $(DESTDIR)$(bindir)/startrails; \
+	  rm -f $(DESTDIR)$(bindir)/sunwait; \
+	else \
+	  rm -f ../capture; \
+	  rm -f ../capture_RPiHQ; \
+	  rm -f ../keogram; \
+	  rm -f ../startrails; \
+	  rm -f $(DESTDIR)$(bindir)/startrails; \
+	fi
+
 endif # sudo / root check
 
 clean:
-	rm -f capture capture_RPiHQ startrails keogram
+	rm -f capture capture_RPiHQ startrails keogram *.o *.a
+
 
 endif # Correct directory structure check

@@ -21,7 +21,7 @@ fi
 source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_SCRIPTS}/filename.sh"
-source "${ALLSKY_SCRIPTS}/ftp-settings.sh"
+source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 # Nasty JQ trick to compose a widthxheight string if both width and height
 # are defined in the config file and are non-zero. If this check fails, then

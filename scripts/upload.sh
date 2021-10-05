@@ -12,7 +12,7 @@ fi
 source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_SCRIPTS}/filename.sh"
-source "${ALLSKY_SCRIPTS}/ftp-settings.sh"
+source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 if [ "${1}" = "--silent" ] ; then
 	SILENT="true"

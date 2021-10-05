@@ -2,10 +2,16 @@
 
 ME="$(basename "${BASH_ARGV0}")"
 
+NOTIFICATIONFILE="$1"	# filename, minus the extension, since the extension may vary
+if [ "$1" = "" ] ; then
+	echo "*** ${ME}: ERROR: no file specified" >&2
+	exit 1
+fi
+
 source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_SCRIPTS}/filename.sh"
-source "${ALLSKY_SCRIPTS}/ftp-settings.sh"
+source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 NOTIFICATIONFILE="$1"	# filename, minus the extension, since the extension may vary
 if [ "$1" = "" ] ; then

@@ -2023,7 +2023,7 @@ const char *locale = DEFAULT_LOCALE;
                 asiRetCode = takeOneExposure(CamNum, SHORT_EXPOSURE, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
                 if (asiRetCode != ASI_SUCCESS)
                 {
-                    sprintf(debugText, "buffer clearing exposure %d failed\n");	// takeOneExposure() already output the error number
+                    sprintf(debugText, "buffer clearing exposure %d failed\n", i);	// takeOneExposure() already output the error number
                     displayDebugText(debugText, 0);
                     numErrors++;
                     sleep(2);	// sometimes sleeping keeps errors from reappearing
@@ -2033,6 +2033,8 @@ const char *locale = DEFAULT_LOCALE;
             {
                 bMain = false;
                 exitCode = 2;
+		sprintf(debugText, "Maximun number of consecutive errors of %d reached; exiting...\n", maxErrors);
+                displayDebugText(debugText, 0);
                 break;
             }
 
@@ -2573,13 +2575,14 @@ const char *locale = DEFAULT_LOCALE;
             } else {
                 // Once takeOneExposure() fails with a timeout, it seems to always fail,
                 // even with extremely large timeout values, so apparently ASI_ERROR_TIMEOUT doesn't
-                // necessarily mean it's timing out.  I think it means the camera went away,
-                // so exit which will cause us to be restarted.
+                // necessarily mean it's timing out.  Exit which will cause us to be restarted.
                 numErrors++; sleep(2);
                 if (numErrors >= maxErrors)
                 {
                     bMain = false;  // get out of inner and outer loop
                     exitCode = 2;
+                    sprintf(debugText, "Maximun number of consecutive errors of %d reached; exiting...\n", maxErrors);
+                    displayDebugText(debugText, 0);
                 }
             }
         }

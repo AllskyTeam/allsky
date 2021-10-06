@@ -2,7 +2,6 @@
 
 # Script to upload files.
 # This is a separate script so it can also be used manually to test uploads.
-# Plus, this code was used in several other files and putting it here centralizes it.
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
@@ -61,12 +60,11 @@ fi
 #		another process. (image.jpg)
 # Slow uplinks also cause problems with web servers that read the file as it's being uploaded.
 
-mkdir -p "${ALLSKY_TMP}"
 LOG="${ALLSKY_TMP}/upload_log.txt"
 
 # Convert to lowercase so we don't care if user specified upper or lowercase.
 PROTOCOL="${PROTOCOL,,}"
-ALLSKY_DEBUG_LEVEL=${ALLSKY_DEBUG_LEVEL:-0}
+
 if [[ "${PROTOCOL}" == "s3" ]] ; then
 	# xxxxxx How do you tell it the DESTINATION_FILE name ?
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
@@ -84,14 +82,11 @@ else # sftp/ftp
 	# People sometimes have problems with ftp not working,
 	# so save the commands we use so they can run lftp manually to debug.
 
-	# REMOTE_DIR can be ""; if so, don't add "/"
-	if [ "${REMOTE_DIR}" = "" ]; then
-		SLASH=""
-	else
-		SLASH="/"
-	fi
+	# If REMOTE_DIR isn't null (which it can be), append a "/".
+	[ "${REMOTE_DIR}" != "" ] && REMOTE_DIR="${REMOTE_DIR}/"
+
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
-		echo "${ME}: FTP'ing ${FILE_TO_UPLOAD} to ${REMOTE_DIR}${SLASH}${DESTINATION_FILE}"
+		echo "${ME}: FTP'ing ${FILE_TO_UPLOAD} to ${REMOTE_DIR}${DESTINATION_FILE}"
 	fi
 	LFTP_CMDS="${ALLSKY_TMP}/lftp_cmds.txt"
 
@@ -104,10 +99,10 @@ else # sftp/ftp
 		echo set net:max-retries 2
 		echo set net:timeout 20
 		echo rm -f "${TEMP_NAME}"		# just in case it's already there
-		echo put "\"${FILE_TO_UPLOAD}\"" -o "${TEMP_NAME}"
+		echo "put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}' || echo 'put of ${FILE_TO_UPLOAD} failed!' && exit"
 		echo rm -f "\"${DESTINATION_FILE}\""
-		echo mv "${TEMP_NAME}" "\"${REMOTE_DIR}${SLASH}${DESTINATION_FILE}\""
-		echo bye
+		echo mv "${TEMP_NAME}" "\"${REMOTE_DIR}${DESTINATION_FILE}\""
+		echo exit
 	) > "${LFTP_CMDS}"
 	lftp -f "${LFTP_CMDS}" > "${LOG}" 2>&1
 	RET=$?

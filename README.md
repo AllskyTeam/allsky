@@ -149,6 +149,7 @@ nano config.sh
 | TIMELAPSE_BITRATE | 2000k | Bitrate the timelapse video will be created with.  Higher values produce better quality video but larger files.  Make sure to include the trailing "k".
 | FPS | 25 | The timelapse frame rate (frames per second)
 | KEOGRAM | true | Builds a keogram at the end of the night |
+| KEOGRAM_EXTRA_PARAMETERS | various | Additional Keogram parameters.  Execute src/keogram --help for a list. |
 | UPLOAD_KEOGRAM | false | Set to true to upload the keogram to your server |
 | STARTRAILS | true | Stacks images to create a startrail at the end of the night |
 | BRIGHTNESS_THRESHOLD | 0.1 | Brightness level above which images are discarded (moon, head lights, aurora, etc) |
@@ -156,8 +157,8 @@ nano config.sh
 | AUTO_DELETE | true | Enables automatic deletion of old images and videos |
 | NIGHTS_TO_KEEP | 14 | Number of nights to keep before starting deleting. Needs AUTO_DELETE=true to work. |
 | DARK_FRAME_SUBTRACTION | false | Set to true to enable hot pixels subtraction at night. |
-| DAYTIME | 1 | Set to 0 to disable daytime liveview. |
-| CAPTURE_24HR | false | Set to true to save images during both night and day |
+| DAYTIME_CAPTURE | true | Set to 0 to disable daytime liveview. |
+| DAYTIME_SAVE | false | Set to true to save images during both night and day |
 | IMG_RESIZE | false | Resize images before cropping and saving. Adjust width and height according to your own sensor ratio |
 | IMG_HEIGHT | n/a | The height of the resized image |
 | IMG_WIDTH | n/a | The width of the resized image |
@@ -197,8 +198,8 @@ nano scripts/ftp-settings.sh
 | USER | username | Your ftp user name |
 | PASSWORD | password | Your ftp password |
 | HOST | example.com | Your host server or IP |
-| IMGDIR | /allsky/ | The absolute path to your image.jpg on the server |
-| MP4DIR | /allsky/videos/ | The absolute path to your videos directory on the server |
+| IMAGE_DIR | /allsky/ | The absolute path to your image.jpg on the server |
+| VIDEOS_DIR | /allsky/videos/ | The absolute path to your videos directory on the server |
 | KEOGRAM_DIR | /allsky/keograms/ | The absolute path to your keograms directory on the server |
 | STARTRAILS_DIR | allsky/startrails/ | The absolute path to your startrails directory on the server |
 
@@ -520,6 +521,8 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* Ability to reset USB bus if ZWO camera isn't found (requires "uhubctl" command to be installed).
 	* Ability to specify format of time displayed on image and temperature displayed in Celcius, Fahrenheit, or both.
 	* Ability to set bitrate on timelapse video.
+* version **0.8.1** Rearranged directory structure.
+	* Many bug fixes.
 
 ## Donation
 

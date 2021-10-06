@@ -13,7 +13,7 @@ longitude=$(jq -r '.longitude' "${CAMERA_SETTINGS}")
 timezone=$(date "+%z")
 streamDaytime=false
 
-if [[ ${DAYTIME} == "true" || ${DAYTIME} == "1" ]] ; then
+if [[ ${DAYTIME_CAPTURE} == "true" || ${DAYTIME} == "1" ]] ; then	# xxxx DAYTIME is old name
 	streamDaytime="true"
 fi
 

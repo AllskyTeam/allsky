@@ -45,8 +45,22 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
   cf->img_height = cf->img_width = 0;
   cf->brightness_limit = 0.35;  // not terrible in the city
 
-  while ((c = getopt(argc, argv, "hvsb:d:e:o:S:")) != -1) {
-    switch (c) {
+  while (1) {  // getopt loop
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"directory", required_argument, 0, 'd'},
+        {"extension", required_argument, 0, 'e'},
+        {"output", required_argument, 0, 'o'},
+        {"image-size", required_argument, 0, 's'},
+        {"statistics", no_argument, 0, 'S'},
+        {"verbose", no_argument, 0, 'v'},
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}};
+
+    c = getopt_long(argc, argv, "hvsd:e:o:s:", long_options, &option_index);
+    if (c == -1)
+      break;
+    switch (c) {  // option switch
       case 'h':
         usage_and_exit(0);
         // NOTREACHED
@@ -54,10 +68,10 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
       case 'v':
         cf->verbose++;
         break;
-      case 's':
+      case 'S':
         cf->startrails_enabled = false;
         break;
-      case 'S':
+      case 's':
         int height, width;
         sscanf(optarg, "%dx%d", &width, &height);
         // 122.8Mpx should be enough for anybody.
@@ -83,13 +97,13 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         break;
       default:
         break;
-    }
-  }
+    }  // option switch
+  }    // getopt loop
 }
 
 void usage_and_exit(int x) {
   std::cout << "Usage: startrails [-v] -d <dir> -e <ext> [-b <brightness> -o "
-               "<output> | -s]"
+               "<output> -s <size> | -S]"
             << std::endl;
   if (x) {
     std::cout << KRED
@@ -101,16 +115,21 @@ void usage_and_exit(int x) {
   }
 
   std::cout << std::endl << "Arguments:" << std::endl;
-  std::cout << "-h : display this help, then exit" << std::endl;
-  std::cout << "-v : increase log verbosity" << std::endl;
-  std::cout << "-s : print image directory statistics without producing image."
+  std::cout << "-h | --help : display this help, then exit" << std::endl;
+  std::cout << "-v | --verbose : increase log verbosity" << std::endl;
+  std::cout << "-S | --statistics : print image directory statistics without "
+               "producing image."
             << std::endl;
-  std::cout << "-d <str> : directory from which to read images" << std::endl;
-  std::cout << "-e <str> : filter images to just this extension" << std::endl;
-  std::cout << "-o <str> : output image filename" << std::endl;
-  std::cout << "-S <int>x<int> : restrict processed images to this size"
+  std::cout << "-d | --directory <str> : directory from which to read images"
             << std::endl;
-  std::cout << "-b <float> : ranges from 0 (black) to 1 (white). Default 0.35"
+  std::cout << "-e | --extension <str> : filter images to just this extension"
+            << std::endl;
+  std::cout << "-o | --output-file <str> : output image filename" << std::endl;
+  std::cout << "-s | --image-size <int>x<int> : restrict processed images to "
+               "this size"
+            << std::endl;
+  std::cout << "-b | --brightness-limit <float> : ranges from 0 (black) to 1 "
+               "(white). Default 0.35"
             << std::endl;
   std::cout << "\tA moonless sky may be as low as 0.05 while full moon can be "
                "as high as 0.4"

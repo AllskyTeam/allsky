@@ -30,6 +30,7 @@ source "${ALLSKY_CONFIG}/ftp-settings.sh"
 # parts of this script such as startrail and keogram generation can use it
 # to reject incorrectly sized images.
 IMGSIZE=$(jq 'if .width? != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end' "${CAMERA_SETTINGS}" | tr -d '"')
+test -n "${IMGSIZE}" && SIZE_FILTER="-s ${IMGSIZE}"
 
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
 if [ ! -d "${DATE_DIR}" ] ; then
@@ -59,8 +60,7 @@ if [[ ${KEOGRAM} == "true" ]]; then
 	mkdir -p "${DATE_DIR}/keogram/"
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/keogram/${KEOGRAM_FILE}"
-	test -n "${IMGSIZE}" && S="-s ${IMGSIZE}"
-	"${ALLSKY_HOME}/keogram" $S -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_PARAMETERS}
+	"${ALLSKY_HOME}/keogram" ${SIZE_FILTER} -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_PARAMETERS}
 	RETCODE=$?
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RETCODE} = 0 ]] ; then
 		# If the user specified a different name for the destination file, use it.
@@ -86,8 +86,7 @@ if [[ ${STARTRAILS} == "true" ]]; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/startrails/${STARTRAILS_FILE}"
 
-	test -n "${IMGSIZE}" && S="-S ${IMGSIZE}"
-	"${ALLSKY_HOME}/startrails" $S -d "${DATE_DIR}" -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o "${UPLOAD_FILE}"
+	"${ALLSKY_HOME}/startrails" ${SIZE_FILTER} -d "${DATE_DIR}" -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o "${UPLOAD_FILE}"
 	RETCODE=$?
 	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RETCODE} == 0 ]] ; then
 		# If the user specified a different name for the destination file, use it.

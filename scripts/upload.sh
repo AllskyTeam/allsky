@@ -103,10 +103,10 @@ else # sftp/ftp
 		# Sometimes have problems with "max-reties 1", so make it 2
 		echo set net:max-retries 2
 		echo set net:timeout 20
-		echo rm -f ${TEMP_NAME}		# just in case it's already there
-		echo put "\"${FILE_TO_UPLOAD}\"" -o ${TEMP_NAME}
+		echo rm -f "${TEMP_NAME}"		# just in case it's already there
+		echo put "\"${FILE_TO_UPLOAD}\"" -o "${TEMP_NAME}"
 		echo rm -f "\"${DESTINATION_FILE}\""
-		echo mv ${TEMP_NAME} "\"${REMOTE_DIR}${SLASH}${DESTINATION_FILE}\""
+		echo mv "${TEMP_NAME}" "\"${REMOTE_DIR}${SLASH}${DESTINATION_FILE}\""
 		echo bye
 	) > "${LFTP_CMDS}"
 	lftp -f "${LFTP_CMDS}" > "${LOG}" 2>&1

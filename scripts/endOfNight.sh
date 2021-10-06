@@ -67,8 +67,7 @@ if [[ ${KEOGRAM} == "true" ]]; then
 		if [ "${KEOGRAM_DESTINATION_NAME}" != "" ]; then
 			KEOGRAM_FILE="${KEOGRAM_DESTINATION_NAME}"
 		fi
-		# KG == KeoGram
-		"${ALLSKY_SCRIPTS}/upload.sh" "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" "KG"
+		"${ALLSKY_SCRIPTS}/upload.sh" "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" "Keogram"
 
 		# Optionally copy to the local website in addition to the upload above.
 		if [ "${WEB_KEOGRAM_DIR}" != "" ]; then
@@ -95,8 +94,7 @@ if [[ ${STARTRAILS} == "true" ]]; then
 		if [ "${STARTRAILS_DESTINATION_NAME}" != "" ]; then
 			STARTRAILS_FILE="${STARTRAILS_DESTINATION_NAME}"
 		fi
-		# ST == Star Trails
-		"${ALLSKY_SCRIPTS}/upload.sh" "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" "ST"
+		"${ALLSKY_SCRIPTS}/upload.sh" "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" "Startrails"
 
 		# Optionally copy to the local website in addition to the upload above.
 		if [ "${WEB_STARTRAILS_DIR}" != "" ]; then
@@ -121,8 +119,7 @@ if [[ ${TIMELAPSE} == "true" ]]; then
 		if [ "${VIDEOS_DESTINATION_NAME}" != "" ]; then
 			VIDEOS_FILE="${VIDEOS_DESTINATION_NAME}"
 		fi
-		# TL == Time Lapse
-		"${ALLSKY_SCRIPTS}/upload.sh" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "TL"
+		"${ALLSKY_SCRIPTS}/upload.sh" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "Timelapse"
 
 		# Optionally copy to the local website in addition to the upload above.
 		if [ "${WEB_VIDEOS_DIR}" != "" ]; then

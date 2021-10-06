@@ -87,8 +87,8 @@ if [ "${DO_KEOGRAM}" = "true" ] ; then
 				KEOGRAM_FILE="${KEOGRAM_DESTINATION_NAME}"
 			fi
 			echo "Uploading ${KEOGRAM_FILE}"
-			# KG == KeoGram.   "--silent" is for silent mode
-			"${ALLSKY_SCRIPTS}/upload.sh" --silent "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" "KG"
+			# "--silent" is for silent mode
+			"${ALLSKY_SCRIPTS}/upload.sh" --silent "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" "Keogram"
 			[ $? -eq 0 ] && echo "${KEOGRAM_FILE} uploaded"
 		else
 			echo -en "${YELLOW}"
@@ -114,8 +114,7 @@ if [ "${DO_STARTRAILS}" = "true" ] ; then
 				STARTRAILS_FILE="${STARTRAILS_DESTINATION_NAME}"
 			fi
 			echo "Uploading ${STARTRAILS_FILE}"
-			# ST = Star Trails
-			"${ALLSKY_SCRIPTS}/upload.sh" --silent "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" "ST"
+			"${ALLSKY_SCRIPTS}/upload.sh" --silent "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" "Startrails"
 			[ $? -eq 0 ] && echo "${STARTRAILS_FILE} uploaded"
 		else
 			echo -en "${YELLOW}"
@@ -139,8 +138,7 @@ if [ "${DO_TIMELAPSE}" = "true" ] ; then
 				VIDEOS_FILE="${VIDEOS_DESTINATION_NAME}"
 			fi
 			echo "Uploading ${VIDEOS_FILE}"
-			# TL = Time Lapse
-			"${ALLSKY_SCRIPTS}/upload.sh" --silent "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "TL"
+			"${ALLSKY_SCRIPTS}/upload.sh" --silent "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "Timelapse"
 			[ $? -eq 0 ] && echo "${VIDEOS_FILE} uploaded"
 		else
 			echo -en "${YELLOW}"

@@ -105,7 +105,7 @@ if [[ "$UPLOAD_IMG" == "true" ]] ; then
 		fi
 	fi
 
-	"${ALLSKY_SCRIPTS}/upload.sh" "${IMAGE_TO_USE}" "${IMGDIR}" "${IMAGE_TO_USE}" "SI"
+	"${ALLSKY_SCRIPTS}/upload.sh" "${IMAGE_TO_USE}" "${IMGDIR}" "${IMAGE_TO_USE}" "SaveImageNight"
 	exit $?
 fi
 exit 0

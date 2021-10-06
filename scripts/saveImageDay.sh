@@ -74,8 +74,7 @@ if [ "$UPLOAD_IMG" = true ] ; then
 		fi
 	fi
 
-	# SI == Save Image
-	"${ALLSKY_SCRIPTS}/upload.sh" "${IMAGE_TO_USE}" "${IMGDIR}" "${IMAGE_TO_USE}" "SI"
+	"${ALLSKY_SCRIPTS}/upload.sh" "${IMAGE_TO_USE}" "${IMGDIR}" "${IMAGE_TO_USE}" "SaveImageDay"
 	exit $?
 fi
 

@@ -38,9 +38,7 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	ALLSKY_TMP="${ALLSKY_TMP:-${ALLSKY_HOME}/tmp}"
 
 	# Central location for all AllSky configuration files.
-	# xxxxxx   NEW NAME xxxxxx
 	ALLSKY_CONFIG="${ALLSKY_CONFIG:-${ALLSKY_HOME}/config}"
-	# ALLSKY_CONFIG="${ALLSKY_HOME}"	# xxx old location
 
 	# Holds all the scripts.
 	ALLSKY_SCRIPTS="${ALLSKY_SCRIPTS:-${ALLSKY_HOME}/scripts}"
@@ -53,4 +51,10 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	# Holds all the dark frames.
 	ALLSKY_DARKS="${ALLSKY_DARKS:-${ALLSKY_HOME}/darks}"
+
+	# Location of optional allsky-portal package.
+	PORTAL_DIR=${PORTAL_DIR:-/var/www/html}
+
+	# Location of optional allsky-website package.
+	WEBSITE_DIR=${WEBSITE_DIR:-${PORTAL_DIR}/allsky}
 fi

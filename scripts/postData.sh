@@ -31,5 +31,4 @@ OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
   echo }
 ) > "${OUTPUT_FILE}"
 
-# PD == Post Data
-"${ALLSKY_SCRIPTS}/upload.sh" --silent "${OUTPUT_FILE}" "${IMGDIR}" "${FILE}" "PD"
+"${ALLSKY_SCRIPTS}/upload.sh" --silent "${OUTPUT_FILE}" "${IMGDIR}" "${FILE}" "PostData"

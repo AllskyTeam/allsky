@@ -73,8 +73,7 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 	# We're actually uploading $IMAGE_TO_USE, but show $NOTIFICATIONFILE
 	# in the message since it's more descriptive.
 	echo -e "${ME}: Uploading $(basename "${NOTIFICATIONFILE}")\n"
-	# NI == Notification Image
-	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${IMAGE_TO_USE}" "${IMGDIR}" "${FULL_FILENAME}" "NI"
+	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${IMAGE_TO_USE}" "${IMGDIR}" "${FULL_FILENAME}" "NotificationImage"
 	exit $?
 fi
 exit 0

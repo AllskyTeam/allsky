@@ -41,6 +41,8 @@ else
 	@apt update && apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev ffmpeg gawk lftp jq imagemagick
 endif
 
+.PHONY : deps
+
 USB=$(shell pkg-config --cflags --libs libusb-1.0)
 ifeq (,$(USB))
   $(error Did not find USB Libraries, try 'make deps')
@@ -99,6 +101,7 @@ CFLAGS += $(DEFS) $(ZWOSDK)
 	@echo `date +%F\ %R:%S` nothing to do for $@
 
 all:capture capture_RPiHQ startrails keogram sunwait
+.PHONY : all
 
 sunwait:
 	@echo `date +%F\ %R:%S` Initializing sunwait submodule...
@@ -176,9 +179,10 @@ uninstall:
 	fi
 
 endif # sudo / root check
+.PHONY : install uninstall
 
 clean:
 	rm -f capture capture_RPiHQ startrails keogram *.o *.a
-
+.PHONY : clean
 
 endif # Correct directory structure check

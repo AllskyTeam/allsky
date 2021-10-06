@@ -29,6 +29,8 @@ endif
 deps:
 	@make -C src $@
 
+.PHONY : deps
+
 install:
 ifneq ($(ROOTCHECK), 0)
 	@echo This must be run with root permissions.
@@ -54,3 +56,4 @@ else
 	  echo ""; \
 	fi
 endif
+.PHONY : install

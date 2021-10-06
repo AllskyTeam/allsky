@@ -961,8 +961,9 @@ const char *locale = DEFAULT_LOCALE;
     printf("-Yang and Sam from ZWO\n");
     printf("-Robert Wagner\n");
     printf("-Michael J. Kidd - <linuxkidd@gmail.com>\n");
-    printf("-Chris Kuethe\n\n");
-    printf("-Eric Claeys\n\n");
+    printf("-Chris Kuethe\n");
+    printf("-Eric Claeys\n");
+    printf("\n");
 
     // The newer "allsky.sh" puts quotes around arguments so we can have spaces in them.
     // If you are running the old allsky.sh, set this to false:

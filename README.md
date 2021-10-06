@@ -65,13 +65,13 @@ Some users have reported ASI TIMEOUT errors with their ZWO cameras in verion 0.8
 
 Here's a quick overview of the configuration files.
 
-the first one is called **settings_RPiHQ.json** or **settings_ZWO.json**, depending on which camera type you have. It contains the camera parameters such as exposure, gain but also latitude, longitude, etc.  Many settings have both a daytime ("dayXXXX") and nighttime ("nightXXXX") version.
-If you have the administrative GUI, the files are in /etc/raspap, otherwise they are in ~/allsky.  The advantage of using the administrative GUI is that you don't explicitly edit the files, instead, you do it via the GUI interface, which includes descriptive text on each option.
+the first one is called `config/settings_RPiHQ.json` or `config/settings_ZWO.json`, depending on which camera type you have. It contains the camera parameters such as exposure, gain but also latitude, longitude, etc.  Many settings have both a daytime ("dayXXXX") and nighttime ("nightXXXX") version.
+If you have the administrative GUI, the files are in `/etc/raspap`, otherwise they are in `~/allsky/config`.  The advantage of using the administrative GUI is that you don't explicitly edit the files, instead, you do it via the GUI interface, which includes descriptive text on each option.
 
 The exact list of settings available depend on the camera you are using; in general, the RPiHQ camera has less settings.
 
 ```shell
-nano settings_RPiHQ.json  or  nano settings_ZWO.json
+nano config/settings_RPiHQ.json  or  nano config/settings_ZWO.json
 ```
 
 | Setting     | Default     | Additional Info |
@@ -130,7 +130,7 @@ nano settings_RPiHQ.json  or  nano settings_ZWO.json
 | newexposure | 1 | Determines if the new version 0.8 exposure method is used. If you see ASI_ERROR_TIMEOUTs" in the log file, try setting this to 0. ( See [issue 417](https://github.com/thomasjacquin/allsky/issues/417) ) |
 | debuglevel | 0 | Determines the amount of output in the log file (usually /var/log/allsky.log). |
 
-The second file called **config.sh** lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.  Note that with the administrative GUI, you can edit the file via the "Editor" link on the left side of the page.
+The second file called **config/config.sh** lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.  Note that with the administrative GUI, you can edit the file via the "Editor" link on the left side of the page.
 
 ```shell
 nano config.sh
@@ -177,14 +177,14 @@ nano config.sh
 | REMOVE_BAD_IMAGES_THRESHOLD_HIGH | 90 | Images whose mean brightness is above this percent will be removed (max: 100) |
 | UHUBCTL_PATH | n/a | If you have the "uhubctl" command installed (it resets the USB bus), enter its path name |
 | UHUBCTL_PORT | n/a | Enter the USB port the camera is on.  Port 1 is USB 2.0 and port 2 is USB 3.0 |
-| IMG_DIR | allsky | Location of the image the website will use.  "allsky" is /var/www/html/allsky and "current" is /home/pi/allsky. |
+| IMG_DIR | allsky | Location of the image the website will use.  "allsky" is `/var/www/html/allsky` and "current" is `/home/pi/allsky`. |
 | IMG_PREFIX | liveview- | An optional prefix on the website image file name, before "image.jpg" (or whatever your image is called) |
-| CAMERA_SETTINGS_DIR | /etc/raspap | Path to the camera settings file |
-| CAMERA_SETTINGS | /home/pi/allsky/settings_\*.json | Name of the camera settings file. **Note**: If using the GUI, this path will change to /etc/raspap/settings_\*.json |
+| CAMERA_SETTINGS_DIR | Either `/home/pi/allsky/config` or `/etc/raspap` | Path to the camera settings file |
+| CAMERA_SETTINGS | `/home/pi/allsky/config/settings_*.json` | Name of the camera settings file. **Note**: If using the GUI, this path will change to /etc/raspap/settings_\*.json |
 
 When using the cropping options the image is cropped from the center so you will need to experiment with the correct width and height values. Normally there will be no need to amend the offset values.
 
-In order to upload images and videos to your website, you'll need to fill your FTP or Amazon S3 connection details in **ftp-settings.sh**.  If you're using the administrative GUI you can edit this file via the "Editor" link on the left side of the page.
+In order to upload images and videos to your website, you'll need to fill your FTP or Amazon S3 connection details in **config/ftp-settings.sh**.  If you're using the administrative GUI you can edit this file via the "Editor" link on the left side of the page.
 
 ```shell
 nano scripts/ftp-settings.sh
@@ -252,7 +252,7 @@ If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote 
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg)
 
 If you don't want to configure the camera using the terminal, you can install the web based [graphical interface](https://github.com/thomasjacquin/allsky-portal).
-Please note that this will change your hostname to **allsky** (or whatever you called it when installing), install the lighttpd web server, and replace your /var/www/html directory. It will also move settings_\*.json to `/etc/raspap/settings_\*.json`.
+Please note that this will change your hostname to **allsky** (or whatever you called it when installing), install the lighttpd web server, and replace your `/var/www/html` directory. It will also move `config/settings_*.json` to `/etc/raspap/settings_*.json`.
 Using the graphical user interface (GUI) is **highly** recommended as it provides additional information on each setting and provides additional system information.
 
 ```shell
@@ -264,7 +264,7 @@ Or if you don't want to use the default name of 'allsky' for your pi use the fol
 sudo gui/install.sh piname
 ```
 
-**Note:*** If you use an older version of Raspbian, the install script may fail on php7.0-cgi dependency. Edit gui/install.sh and replace php7.0-cgi by php5-cgi.
+**Note:*** If you use an older version of Raspbian, the install script may fail on php7.0-cgi dependency. Edit `gui/install.sh` and replace php7.0-cgi by php5-cgi.
 
 After you complete the GUI setup, you'll be able to administer the camera using the web GUI by navigating to
 ```sh
@@ -290,7 +290,7 @@ http://your_raspberry_IP/public.php
 
 Make sure this page is publically viewable, i.e., is not behind a firewall.
 
-**Note:*** The GUI setup uses /etc/raspap/settings_\*.json for the camera settings. If, for some reason, you prefer to go back to the non-GUI version, make sure to edit your config.sh file to have CAMERA_SETTINGS="settings_\*.json" instead (which looks in ~/allsky).
+**Note:*** The GUI setup uses `/etc/raspap/settings_\*.json` for the camera settings. If, for some reason, you prefer to go back to the non-GUI version, make sure to edit your `config/config.sh` file to have `CAMERA_SETTINGS_DIR="${ALLSKY_HOME}/config"` instead.
 
 ## Dark frame subtraction
 
@@ -302,13 +302,13 @@ You only need to follow these instructions once.
 
 If you don't use the GUI:
 * Place a cover on your camera lens/dome.  Make sure no light can get in.
-* Set `darkframe` to 1 in settings_\*.json
-* Restart the allsky service: ```sudo service allsky restart```
+* Set `darkframe` to 1 in `config/settings_*.json`
+* Restart the allsky service: `sudo systemctl restart allsky`
 * Dark frames are created in a `darks` directory. A new dark is created every time the sensor temperature changes by 1 degree C.
-* Set `darkframe` to 0 in setting_\*s.json
-* Restart the allsky service: ```sudo service allsky restart```
+* Set `darkframe` to 0 in `config/settings_*.json`
+* Restart the allsky service: `sudo systemctl restart allsky`
 * Remove the cover from the lens/dome
-* Enable dark subtraction in `config.sh` by setting `DARK_FRAME_SUBTRACTION` to true
+* Enable dark subtraction in `config/config.sh` by setting `DARK_FRAME_SUBTRACTION=true`
 
 GUI method:
 * Place a cover on your camera lens/dome.  Make sure no light can get in.
@@ -318,7 +318,7 @@ GUI method:
 * On the Camera Settings tab set Dark Frame to No.
 * Hit the `Save changes` button
 * Remove the cover from the lens/dome
-* Open the scripts editor tab, load `config.sh` and set `DARK_FRAME_SUBTRACTION` to true
+* Open the scripts editor tab, load `config/config.sh` and set `DARK_FRAME_SUBTRACTION=true`
 
 The dark frame subtraction is temperature dependant.
 Running the dark frame capture while ambiant temperature is varying results in a larger set of darks (1 per degree C).
@@ -329,7 +329,7 @@ Dark frames are only subtracted from images taken at night.
 
 By default, a timelapse is generated at dawn from all of the images captured during last night.
 
-To disable timelapse, open **config.sh** and set
+To disable timelapse, open **config/config.sh** and set
 
 ```
 TIMELAPSE=false
@@ -358,30 +358,40 @@ To get the best results, you will need to rotate your camera to have north at th
 
 Note that it will only show what happens at the meridian during the night and will not display events on the east or west.
 
-The keogram program is used by the `endOfNight.sh` script.
+The keogram program is used by the `scripts/endOfNight.sh` script.
 
-The program takes 3 arguments:
-- Source directory
-- File extension
-- Output file
+The program can take multiple arguments:
+```
+Usage:  keogram -d <imagedir> -e <ext> -o <outputfile> [<other_args>]
 
-and 7 optional arguments:
--no-label
--fontname
--fontcolor
--fonttype
--fontsize
--fontline
--rotate
+Arguments:
+-d | --directory <str> : directory from which to load images (required)
+-e | --extension <str> : image extension to process (required)
+-o | --output-file <str> : name of output file (required)
+-r | --rotate <float> : number of degrees to rotate image, counterclockwise (0)
+-s | --image-size <int>x<int> : only process images of a given size, eg. 1280x960
+-h | --help : display this help message
+-v | --verbose : Increase logging verbosity
+-n | --no-label : Disable hour labels
+-C | --font-color <str> : label font color, in HTML format (0000ff)
+-L | --font-line <int> : font line thickness (3)
+-N | --font-name <str> : font name (simplex)
+-S | --font-size <float> : font size (2.0)
+-T | --font-type <int> : font line type (1)
 
-If your camera is not aligned in the north-south direction, you can use the optional `-rotate` option to derotate the image before processing (rotation angle counterclockwise).
+Font name is one of these OpenCV font names:
+        Simplex, Plain, Duplex, Complex, Triplex, ComplexSmall, ScriptSimplex, ScriptComplex
+Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected
+```
+
+If your camera is not aligned in the north-south direction, you can use the optional `-r` | `--rotate` option to derotate the image before processing (rotation angle counterclockwise).
 
 Example when running the program manually:
 ```
-./keogram ./images/20180223/ jpg ./images/20180223/keogram/keogram.jpg -rotate 42 -fontsize 2
+./keogram -d ./images/20180223/ -e jpg -o ./images/20180223/keogram/keogram.jpg --rotate 42 --font-size 2
 ```
 
-To disable keograms, open **config.sh** and set
+To disable keograms, open `config/config.sh` and set
 
 ```
 KEOGRAM=false
@@ -393,20 +403,30 @@ KEOGRAM=false
 
 **Startrails** can be generated by stacking all the images from a night on top of each other.
 
-The startrails program is used by the `endOfNight.sh` script.
+The startrails program is used by the `scripts/endOfNight.sh` script.
 
-The program takes 4 arguments:
-- Source directory
-- File extension
-- Brightness threshold to avoid over-exposure: 0 (black) to 1 (white).
-- Output file
+The program can take arguments:
+```
+Usage: startrails [-v] -d <dir> -e <ext> [-b <brightness> -o <output> | -s]
+
+Arguments:
+-h : display this help, then exit
+-v : increase log verbosity
+-s : print image directory statistics without producing image.
+-d <str> : directory from which to read images
+-e <str> : filter images to just this extension
+-o <str> : output image filename
+-S <int>x<int> : restrict processed images to this size
+-b <float> : ranges from 0 (black) to 1 (white). Default 0.35
+        A moonless sky may be as low as 0.05 while full moon can be as high as 0.4
+```
 
 Example when running the program manually:
 ```
-./startrails ./images/20180223/ jpg 0.15 ./images/20180223/startrails/startrails.jpg
+./startrails -d ./images/20180223/ -e jpg -b 0.15 -o ./images/20180223/startrails/startrails.jpg
 ```
 
-To disable automatic startrails, open **config.sh** and set
+To disable automatic startrails, open `config/config.sh` and set
 
 ```
 STARTRAILS=false
@@ -414,7 +434,7 @@ STARTRAILS=false
 
 ## Automatic deletion of archived nights
 
-In order to keep the Raspberry Pi SD card from filling up, 2 settings have been added to **config.sh**. Automatic deletion is enabled by default and will keep 2 weeks of data on the card.
+In order to keep the Raspberry Pi SD card from filling up, 2 settings have been added to `config/config.sh`. Automatic deletion is enabled by default and will keep 2 weeks of data on the card.
 ```
 AUTO_DELETE=true
 NIGHTS_TO_KEEP=14
@@ -431,15 +451,16 @@ tail /var/log/allsky.log
 
 ## Compile your own version
 
-If you want to modify a compiled file, you'll need to edit the corresponding .cpp file and run the following command from the root of the allsky directory:
+If you want to modify a compiled file, you'll need to edit the corresponding `src/*.cpp` file and run the following command from the `src` directory:
 ```shell
 make all
+sudo make install
 ```
-This will compile the new code and create a new binary.
+This will compile the new code, create a new binary, and copy it to the top level `allsky` folder.
 
 ## Show your sky on your own website
 
-If you have set the upload options to true in `config.sh`, that means you probably already have a website. If you want to display a live view of your sky on your website like in this [example](http://www.thomasjacquin.com/allsky), you can donwload the source files from this repository: [https://github.com/thomasjacquin/allsky-website.git](https://github.com/thomasjacquin/allsky-website.git).
+If you have set the upload options to true in `config/config.sh`, that means you probably already have a website. If you want to display a live view of your sky on your website like in this [example](http://www.thomasjacquin.com/allsky), you can donwload the source files from this repository: [https://github.com/thomasjacquin/allsky-website.git](https://github.com/thomasjacquin/allsky-website.git).
 
 If you want to host the website on the raspberry Pi, run the following command. Note that this website is installed on the same webserver as the GUI. Currently, reinstalling the GUI will wipe your website.
 
@@ -450,8 +471,8 @@ website/install.sh
 And set these variabled in `ftp-settings.sh`:
 ```
 PROTOCOL = 'local'
-IMGDIR = '/var/www/html/allsky/'
-MP4DIR = `/var/www/html/allsky/videos`
+IMAGE_DIR = '/var/www/html/allsky/'
+VIDEOS_DIR = `/var/www/html/allsky/videos`
 KEOGRAM_DIR = `/var/www/html/allsky/keograms`
 STARTRAILS_DIR = `/var/www/html/allsky/startrails`
 ```

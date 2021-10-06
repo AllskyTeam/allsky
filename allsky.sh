@@ -5,7 +5,7 @@ echo "     ***** Starting AllSky *****"
 
 if [ -z "${ALLSKY_HOME}" ]
 then
-	export ALLSKY_HOME="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}")/..)"
 fi
 
 cd "${ALLSKY_HOME}"

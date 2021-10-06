@@ -2023,7 +2023,7 @@ const char *locale = DEFAULT_LOCALE;
                 asiRetCode = takeOneExposure(CamNum, SHORT_EXPOSURE, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
                 if (asiRetCode != ASI_SUCCESS)
                 {
-                    sprintf(debugText, "buffer clearing exposure %d failed: %s\n", i, getRetCode(asiRetCode));
+                    sprintf(debugText, "buffer clearing exposure %d failed\n");	// takeOneExposure() already output the error number
                     displayDebugText(debugText, 0);
                     numErrors++;
                     sleep(2);	// sometimes sleeping keeps errors from reappearing

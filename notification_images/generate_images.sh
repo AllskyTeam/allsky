@@ -1,4 +1,5 @@
 #!/bin/bash
+# vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4 syn=bash
 
 function make_image() {
     BASENAME="$1"
@@ -16,14 +17,14 @@ function make_image() {
         exit 1
     fi
 
-	# Hack to make these images more detectable. Typically camera images are
-	# at least an even number of pixels, and usually a multiple of 8 pixels.
-	# So just in case someone has a camera configured for 960x720 images, or
-	# is rescaling to 960x720... this will allow them to be detected.
+    # Hack to make these images more detectable. Typically camera images are
+    # at least an even number of pixels, and usually a multiple of 8 pixels.
+    # So just in case someone has a camera configured for 960x720 images, or
+    # is rescaling to 960x720... this will allow them to be detected.
     IM_SIZE="959x719"
     FONT="Arial"
     FONT_SIZE=${FS:-128}
-	SW="2"
+    SW="2"
 
     for EXT in ${EXTS} ; do
         convert \
@@ -35,7 +36,7 @@ function make_image() {
             -font "${FONT}" \
             -pointsize "${FONT_SIZE}" \
             -gravity center \
-			-depth 8 \
+            -depth 8 \
             label:"${MSG}" \
             "${BASENAME}.${EXT}"
     done
@@ -44,11 +45,11 @@ function make_image() {
 
 if [ -z "$(which mogrify)" ] ; then
     # Testing for mogrify which seems like a much more distinctive executable
-	# name than "convert". I assume that if "mogrify" is in the path, then
-	# ImageMagick is installed and "convert" will run ImageMagick and not some
-	# other tool.
-	echo ImageMagick does not appear to be installed. Please install it.
-	exit 1
+    # name than "convert". I assume that if "mogrify" is in the path, then
+    # ImageMagick is installed and "convert" will run ImageMagick and not some
+    # other tool.
+    echo ImageMagick does not appear to be installed. Please install it.
+    exit 1
 fi
 
 #          BaseName           TxtColor  Stroke    BgColor   Message                                                       FontSize
@@ -57,4 +58,3 @@ make_image DarkFrames         "#00ff00" "#ffffff" "#000000" "Camera is taking\nd
 make_image StartingUp         "#00ff00" "#000000" "#404040" "Allsky Software\nis starting up"
 make_image CameraOffDuringDay "#ffff4a" "#000000" "#404040" "Camera is off\nduring the day"
 make_image Error              "#ff0000" "#000000" "#404040" "ERROR: See\n/var/log/allsky.log\nfor details"
-

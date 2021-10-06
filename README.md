@@ -67,8 +67,13 @@ If you have the administrative GUI, the files are in `/etc/raspap`, otherwise th
 The exact list of settings available depend on the camera you are using; in general, the RPiHQ camera has less settings.
 
 ```shell
-nano config/settings_RPiHQ.json  or  nano config/settings_ZWO.json
+nano config/settings_RPiHQ.json
 ```
+-or-
+```
+nano config/settings_ZWO.json
+```
+
 
 | Setting     | Default     | Additional Info |
 | ----------- | ----------- | ----------------|

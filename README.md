@@ -200,13 +200,13 @@ nano scripts/ftp-settings.sh
 
 ### Other scripts of interest (in ~/allsky/scripts)
 
-**saveImageNight.sh** is called every time the camera takes a new image at night. If dark subtraction is enabled, this is where it happens.
+`saveImageNight.sh` is called every time the camera takes a new image at night. If dark subtraction is enabled, this is where it happens.
 
-**saveImageDay.sh** is called every time the camera takes a new image during the day.
+`saveImageDay.sh` is called every time the camera takes a new image during the day.
 
-At the end of the night **endOfNight.sh** is run. It calls a few other scripts based on your config.sh content.
+At the end of the night `endOfNight.sh` is run. It calls a few other scripts based on your config.sh content.
 
-You normally won't need to edit those files unless you want to implement a new feature.  One file you *may* want to edit is **endOfNight_additionalSteps.sh** which is where you can place any additional code you require to be run at the end of the night. This script is run prior to the deletion of any old image files.
+You normally won't need to edit those files unless you want to implement a new feature.  One file you *may* want to edit is `endOfNight_additionalSteps.sh` which is where you can place any additional code you require to be run at the end of the night. This script is run prior to the deletion of any old image files.
 
 nano is a text editor. Hit **ctrl + x**, followed by **y** and **Enter** in order to save your changes.
 
@@ -237,6 +237,7 @@ To start the program manually, make sure you first stop the service then run:
 cd scripts
 ./allsky.sh
 ```
+
 If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote desktop or VNC, you can add the `preview` argument in order to show the images the program is currently saving.
 ```
 ./allsky.sh preview

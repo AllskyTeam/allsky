@@ -100,7 +100,7 @@ UPLOAD_VIDEO="false"
 # Set to "true" to generate a keogram at the end of each night.
 KEOGRAM="true"
 
-# Additional Keogram parameters.  Run "src/keogram --help" to see the options.
+# Additional Keogram parameters.  Run "keogram --help" to see the options.
 # Keograms work best if North is at the top of the image.  If this is not the case you can
 # rotate the image; for example, if North is straight down in your image, rotate it 180 degrees.
 # Rotation is anticlockwise. 0 disables rotation.

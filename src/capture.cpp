@@ -1524,7 +1524,10 @@ const char *locale = DEFAULT_LOCALE;
     asiRetCode = ASIGetSerialNumber(CamNum, &serialNumber);
     if (asiRetCode != ASI_SUCCESS)
     {
-        printf("*** WARNING: unable to get serialNumber (%s)\n", getRetCode(asiRetCode));
+        if (asiRetCode == ASI_ERROR_GENERAL_ERROR)
+            printf("Camera does not support serialNumber\n");
+        else
+            printf("*** WARNING: unable to get serialNumber (%s)\n", getRetCode(asiRetCode));
     }
     else
     {
@@ -1702,7 +1705,7 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Darkframe: %s\n", yesNo(darkframe));
     printf(" Debug Level: %d\n", debugLevel);
     printf(" TTY: %s\n", yesNo(tty));
-    printf(" Continuous Capture Method Method: %s\n", yesNo(use_new_exposure_algorithm));
+    printf(" Continuous Capture Method: %s\n", yesNo(use_new_exposure_algorithm));
     printf(" ZWO SDK version %s\n", ASIGetSDKVersion());
     printf("%s", KNRM);
 

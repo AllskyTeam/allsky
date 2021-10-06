@@ -129,9 +129,9 @@ nano config/settings_ZWO.json
 | darkframe | 0 | Set to 1 to enable dark frame capture. In this mode, overlays are hidden. |
 | notificationimages | 1 | Set to 0 to disable notification images, e.g., "Camera off during day" if daytime images are not being taken. |
 | newexposure | 1 | Determines if the new version 0.8 exposure method is used. If you see ASI_ERROR_TIMEOUTs" in the log file, try setting this to 0. ( See [issue 417](https://github.com/thomasjacquin/allsky/issues/417) ) |
-| debuglevel | 0 | Determines the amount of output in the log file (usually /var/log/allsky.log). |
+| debuglevel | 0 | Determines the amount of output in the log file (usually `/var/log/allsky.log`, also can be viewed with `journalctl -u allsky`). |
 
-The second file called **config/config.sh** lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.  Note that with the administrative GUI, you can edit the file via the "Editor" link on the left side of the page.
+The second file called `config/config.sh` lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.  Note that with the administrative GUI, you can edit the file via the "Editor" link on the left side of the page.
 
 ```shell
 nano config.sh
@@ -181,11 +181,11 @@ nano config.sh
 | IMG_DIR | allsky | Location of the image the website will use.  "allsky" is `/var/www/html/allsky` and "current" is `/home/pi/allsky`. |
 | IMG_PREFIX | liveview- | An optional prefix on the website image file name, before "image.jpg" (or whatever your image is called) |
 | CAMERA_SETTINGS_DIR | Either `/home/pi/allsky/config` or `/etc/raspap` | Path to the camera settings file |
-| CAMERA_SETTINGS | `/home/pi/allsky/config/settings_*.json` | Name of the camera settings file. **Note**: If using the GUI, this path will change to /etc/raspap/settings_\*.json |
+| CAMERA_SETTINGS | `/home/pi/allsky/config/settings_*.json` | Name of the camera settings file. **Note**: If using the GUI, this path will change to /etc/raspap/settings_*.json |
 
 When using the cropping options the image is cropped from the center so you will need to experiment with the correct width and height values. Normally there will be no need to amend the offset values.
 
-In order to upload images and videos to your website, you'll need to fill your FTP or Amazon S3 connection details in **config/ftp-settings.sh**.  If you're using the administrative GUI you can edit this file via the "Editor" link on the left side of the page.
+In order to upload images and videos to your website, you'll need to fill your FTP or Amazon S3 connection details in `config/ftp-settings.sh`.  If you're using the administrative GUI you can edit this file via the "Editor" link on the left side of the page.
 
 ```shell
 nano scripts/ftp-settings.sh
@@ -203,7 +203,7 @@ nano scripts/ftp-settings.sh
 | STARTRAILS_DIR | allsky/startrails/ | The absolute path to your startrails directory on the server |
 
 
-### Other scripts of interest (in ~/allsky/scripts)
+### Other scripts of interest (in `allsky/scripts`)
 
 `saveImageNight.sh` is called every time the camera takes a new image at night. If dark subtraction is enabled, this is where it happens.
 
@@ -292,7 +292,7 @@ http://your_raspberry_IP/public.php
 
 Make sure this page is publically viewable, i.e., is not behind a firewall.
 
-**Note:*** The GUI setup uses `/etc/raspap/settings_\*.json` for the camera settings. If, for some reason, you prefer to go back to the non-GUI version, make sure to edit your `config/config.sh` file to have `CAMERA_SETTINGS_DIR="${ALLSKY_HOME}/config"` instead.
+**Note:*** The GUI setup uses `/etc/raspap/settings_*.json` for the camera settings. If, for some reason, you prefer to go back to the non-GUI version, make sure to edit your `config/config.sh` file to have `CAMERA_SETTINGS_DIR="${ALLSKY_HOME}/config"` instead.
 
 ## Dark frame subtraction
 
@@ -331,7 +331,7 @@ Dark frames are only subtracted from images taken at night.
 
 By default, a timelapse is generated at dawn from all of the images captured during last night.
 
-To disable timelapse, open **config/config.sh** and set
+To disable timelapse, open `config/config.sh` and set
 
 ```
 TIMELAPSE=false

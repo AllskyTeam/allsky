@@ -19,7 +19,7 @@ cd "${WEBSITE_DIR}"
 
 # xxxx Should set some variables in config.js based on settings_*.json and config.sh
 
-echo -en "${GREEN}* Creatig thumbnails directories\n${NC}"
+echo -en "${GREEN}* Creating thumbnails directories\n${NC}"
 mkdir startrails/thumbnails
 mkdir keograms/thumbnails
 mkdir videos/thumbnails

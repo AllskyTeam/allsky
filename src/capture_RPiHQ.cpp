@@ -698,8 +698,9 @@ int main(int argc, char *argv[])
 	printf("-Yang and Sam from ZWO\n");
 	printf("-Robert Wagner\n");
 	printf("-Michael J. Kidd - <linuxkidd@gmail.com>\n");
-	printf("-Rob Musquetier\n\n");	
-	printf("-Eric Claeys\n\n");
+	printf("-Rob Musquetier\n");	
+	printf("-Eric Claeys\n");
+	printf("\n");
 
 	// The newer "allsky.sh" puts quotes around arguments so we can have spaces in them.
 	// If you are running the old allsky.sh, set this to false:

@@ -229,15 +229,15 @@ sudo systemctl disable allsky.service
 
 When you want to start, stop or restart the program, or obtain status, use one of the following commands:
 ```shell
-sudo service allsky start
-sudo service allsky stop
-sudo service allsky restart
-sudo service allsky status
+sudo systemctl start allsky
+sudo systemctl stop allsky
+sudo systemctl restart allsky
+sudo systemctl status allsky
 ```
 
 ### Manual Start
 Starting the program from the terminal can be a great way to track down issues as it provides debug information.
-To start the program manually, make sure you first stop the service then run:
+To start the program manually, make sure the service is stopped (see above), then run:
 ```
 cd scripts
 ./allsky.sh

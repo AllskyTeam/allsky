@@ -20,15 +20,10 @@ cd "${WEBSITE_DIR}"
 # xxxx Should set some variables in config.js based on settings_*.json and config.sh
 
 echo -en "${GREEN}* Creating thumbnails directories\n${NC}"
-mkdir startrails/thumbnails
-mkdir keograms/thumbnails
-mkdir videos/thumbnails
+mkdir startrails/thumbnails keograms/thumbnails videos/thumbnails
 echo -en '\n'
 
 echo -en "${GREEN}* Fixing ownership and permissions\n${NC}"
 chown -R pi:www-data .
 chmod -R 755 .
-chmod 0775 startrails/thumbnails
-chmod 0775 keograms/thumbnails
-chmod 0775 videos/thumbnails
 echo -en '\n'

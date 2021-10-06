@@ -26,29 +26,25 @@ You will need to install Raspbian on your Raspberry Pi. Follow [this link](https
 
 Make sure you have a working internet connection by setting it either through the GUI or [the terminal](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md).  The GUI is highly recommended since it simplifies administration of the AllSky software.
 
-Start by installing git. You may already have it installed:
+1. Start by installing git. You may already have it installed:
+    ```shell
+    sudo apt-get install git
+    ```
 
-```shell
-sudo apt-get install git
-```
+2. Now fetch the code from this GitHub page. Open the terminal and type the following:
+    ```shell
+    git clone --recursive https://github.com/thomasjacquin/allsky.git
+    ```
 
-Now fetch the code from this GitHub page. Open the terminal and type the following:
+3. Then navigate to the allsky directory:
+    ```shell
+    cd allsky
+    ```
 
-```shell
-git clone --recursive https://github.com/thomasjacquin/allsky.git
-```
-
-Then navigate to the allsky directory:
-
-```shell
-cd allsky
-```
-
-Now, run the install script:
-
-```shell
-./install.sh
-```
+4. Now, run the install script:
+    ```shell
+    ./install.sh
+    ```
 
 ## Update
 

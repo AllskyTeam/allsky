@@ -482,6 +482,7 @@ ASI_ERROR_CODE takeOneExposure(
             displayDebugText(debugText, 0);
         }
         else {
+	    numErrors = 0;
             ASIGetControlValue(cameraId, ASI_EXPOSURE, &actualExposureMicroseconds, &wasAutoExposure);
             sprintf(debugText, "  > Got image @ exposure: %'ld us (%'.2f ms)\n", actualExposureMicroseconds, (float)actualExposureMicroseconds/US_IN_MS);
             displayDebugText(debugText, 2);
@@ -722,8 +723,8 @@ bool resetGainTransitionVariables(int dayGain, int nightGain)
     else
     {
         // Since we can't adust gain by fractions, see if there's any "left over" after gainTransitionImages.
-	// For example, if totalAdjustGain is 7 and we're adjusting by 3 each of 2 times,
-	// we need an extra transition to get the remaining 1 ((7 - (3 * 2)) == 1).
+	    // For example, if totalAdjustGain is 7 and we're adjusting by 3 each of 2 times,
+	    // we need an extra transition to get the remaining 1 ((7 - (3 * 2)) == 1).
         if (gainTransitionImages * perImageAdjustGain < totalAdjustGain)
 		gainTransitionImages++;		// this one will get the remaining amount
     }
@@ -759,7 +760,7 @@ int determineGainChange(int dayGain, int nightGain)
     {
         // During DAY, want to start out adding the full gain adjustment minus the increment on the first image,
         // then DECREASE by totalAdjustGain each exposure.
-	// This assumes night gain is > day gain.
+    	// This assumes night gain is > day gain.
         amt = totalAdjustGain - (perImageAdjustGain * numGainChanges);
         if (amt < 0)
         {
@@ -1185,8 +1186,8 @@ const char *locale = DEFAULT_LOCALE;
             else if (strcmp(argv[i], "-outlinefont") == 0)
             {
                 outlinefont = atoi(argv[++i]);
-		if (outlinefont != 0)
-		    outlinefont = 1;
+		        if (outlinefont != 0)
+		          outlinefont = 1;
             }
             else if (strcmp(argv[i], "-flip") == 0)
             {
@@ -1268,8 +1269,8 @@ const char *locale = DEFAULT_LOCALE;
                 // showDetails is an obsolete variable that shows ALL details except time.
                 // It's been replaced by separate variables for various lines.
                 showTemp = showDetails;
-		showExposure = showDetails;
-		showGain = showDetails;
+		        showExposure = showDetails;
+		        showGain = showDetails;
             }
             else if (strcmp(argv[i], "-showTemp") == 0)
             {
@@ -1301,11 +1302,11 @@ const char *locale = DEFAULT_LOCALE;
             {
                 daytimeCapture = atoi(argv[++i]);
             }
-	    else if (strcmp(argv[i], "-coolerEnabled") == 0)
+	        else if (strcmp(argv[i], "-coolerEnabled") == 0)
             {
                 asiCoolerEnabled = atoi(argv[++i]);
             }
-	    else if (strcmp(argv[i], "-targetTemp") == 0)
+	        else if (strcmp(argv[i], "-targetTemp") == 0)
             {
                 asiTargetTemp = atol(argv[++i]);
             }
@@ -1342,8 +1343,7 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -nightDelay                        - Default = %'d   - Delay between night images in milliseconds - %d = 1 sec.\n", DEFAULT_NIGHTDELAY, MS_IN_SEC);
         printf(" -type = Image Type                 - Default = %d    - 0 = RAW8,  1 = RGB24,  2 = RAW16,  3 = Y8\n", DEFAULT_IMAGE_TYPE);
         printf(" -quality                           - Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
-        printf(" -usb = USB Speed                   - Default = %d   - Values between 40-100, This is "
-               "BandwidthOverload\n", DEFAULT_ASIBANDWIDTH);
+        printf(" -usb = USB Speed                   - Default = %d   - Values between 40-100, This is BandwidthOverload\n", DEFAULT_ASIBANDWIDTH);
         printf(" -autousb                           - Default = 0 - Set to 1 to enable auto USB Speed\n");
         printf(" -filename                          - Default = %s\n", DEFAULT_FILENAME);
         printf(" -flip                              - Default = 0    - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
@@ -1524,7 +1524,10 @@ const char *locale = DEFAULT_LOCALE;
     asiRetCode = ASIGetSerialNumber(CamNum, &serialNumber);
     if (asiRetCode != ASI_SUCCESS)
     {
-        printf("*** WARNING: unable to get serialNumber (%s)\n", getRetCode(asiRetCode));
+        if (asiRetCode == ASI_ERROR_GENERAL_ERROR)
+            printf("Camera does not support serialNumber\n");
+        else
+            printf("*** WARNING: unable to get serialNumber (%s)\n", getRetCode(asiRetCode));
     }
     else
     {
@@ -1702,7 +1705,7 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Darkframe: %s\n", yesNo(darkframe));
     printf(" Debug Level: %d\n", debugLevel);
     printf(" TTY: %s\n", yesNo(tty));
-    printf(" Continuous Capture Method Method: %s\n", yesNo(use_new_exposure_algorithm));
+    printf(" Continuous Capture Method: %s\n", yesNo(use_new_exposure_algorithm));
     printf(" ZWO SDK version %s\n", ASIGetSDKVersion());
     printf("%s", KNRM);
 
@@ -2020,7 +2023,7 @@ const char *locale = DEFAULT_LOCALE;
                 asiRetCode = takeOneExposure(CamNum, SHORT_EXPOSURE, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
                 if (asiRetCode != ASI_SUCCESS)
                 {
-                    sprintf(debugText, "buffer clearing exposure %d failed: %s\n", i, getRetCode(asiRetCode));
+                    sprintf(debugText, "buffer clearing exposure %d failed\n", i);	// takeOneExposure() already output the error number
                     displayDebugText(debugText, 0);
                     numErrors++;
                     sleep(2);	// sometimes sleeping keeps errors from reappearing
@@ -2030,6 +2033,8 @@ const char *locale = DEFAULT_LOCALE;
             {
                 bMain = false;
                 exitCode = 2;
+		        sprintf(debugText, "Maximum number of consecutive errors of %d reached; exiting...\n", maxErrors);
+                displayDebugText(debugText, 0);
                 break;
             }
 
@@ -2048,7 +2053,7 @@ const char *locale = DEFAULT_LOCALE;
             // date/time is added to many log entries to make it easier to associate them
             // with an image (which has the date/time in the filename).
             timeval t;
-	    t = getTimeval();
+	        t = getTimeval();
             char exposureStart[128];
             char f[10] = "%F %T";
             sprintf(exposureStart, "%s", formatTime(t, f));
@@ -2118,7 +2123,7 @@ const char *locale = DEFAULT_LOCALE;
                         //xxx May have to play with this number, but it seems to work ok.
                         float adjustmentAmountPerMultiple = 0.12;	// 100 * this number is the percent to change
 
-  			// The amount doesn't change after being set, so only display once.
+  	              		// The amount doesn't change after being set, so only display once.
                         static int showedMessage = 0;
                         if (showedMessage == 0)
                         {
@@ -2128,7 +2133,7 @@ const char *locale = DEFAULT_LOCALE;
                             // which is ok - it just means the multiplier will be less than 1.
                             numMultiples = (asiDayBrightness - DEFAULT_BRIGHTNESS) / DEFAULT_BRIGHTNESS;
                             exposureAdjustment = 1 + (numMultiples * adjustmentAmountPerMultiple);
-  			    sprintf(textBuffer, "  > >>> Adjusting exposure %.1f%% for daybrightness\n", (exposureAdjustment - 1) * 100);
+  			                sprintf(textBuffer, "  > >>> Adjusting exposure %.1f%% for daybrightness\n", (exposureAdjustment - 1) * 100);
                             displayDebugText(textBuffer, 2);
                             showedMessage = 1;
                         }
@@ -2144,63 +2149,63 @@ const char *locale = DEFAULT_LOCALE;
                     while ((mean < minAcceptableHistogram || mean > maxAcceptableHistogram) && ++attempts <= maxHistogramAttempts)
                     {
                         sprintf(textBuffer, "  > Attempt %i,  current exposure %'ld us,  mean %d,  temp min exposure %ld us,  tempMaxExposure %'ld us", attempts, currentExposure, mean, tempMinExposure, tempMaxExposure);
-                         displayDebugText(textBuffer, 2);
+                        displayDebugText(textBuffer, 2);
 
-			 std::string why;	// Why did we adjust the exposure?  For debugging
-			 int num = 0;
+                        std::string why;	// Why did we adjust the exposure?  For debugging
+                        int num = 0;
                          if (mean >= 254) {
                              newExposure = currentExposure * 0.4;
                              tempMaxExposure = currentExposure - roundToMe;
-			     why = "mean >= max";
-			     num = 254;
+                             why = "mean >= max";
+                             num = 254;
                          }
                          else
                          {
                              //  The code below takes into account how far off we are from an acceptable mean.
                              //  There's probably a simplier way to do this, like adjust by some multiple of
-			     //  how far of we are.  That exercise is left to the reader...
+                             //  how far of we are.  That exercise is left to the reader...
                              last_OK_exposure = currentExposure;
                              if (mean < reallyLowMean) {
                                  // The cameras don't appear linear at this low of a level,
                                  // so really crank it up to get into the linear area.
                                  newExposure = currentExposure * 20;
                                  tempMinExposure = currentExposure + roundToMe;
-			         why = "mean < reallyLowMean";
-			         num = reallyLowMean;
+                                 why = "mean < reallyLowMean";
+                                 num = reallyLowMean;
                              }
 			     else if (mean < lowMean) {
                                  newExposure = currentExposure * 5;
                                  tempMinExposure = currentExposure + roundToMe;
-			         why = "mean < lowMean";
-			         num = lowMean;
+                                 why = "mean < lowMean";
+                                 num = lowMean;
                              }
                              else if (mean < (minAcceptableHistogram * 0.6))
                              {
                                  newExposure = currentExposure * 2.5;
                                  tempMinExposure = currentExposure + roundToMe;
-			         why = "mean < (minAcceptableHistogram * 0.6)";
-			         num = minAcceptableHistogram * 0.6;
+                                 why = "mean < (minAcceptableHistogram * 0.6)";
+                                 num = minAcceptableHistogram * 0.6;
                              }
                              else if (mean < minAcceptableHistogram)
                              {
                                  newExposure = currentExposure * 1.1;
                                  tempMinExposure = currentExposure + roundToMe;
-			         why = "mean < minAcceptableHistogram";
-			         num = minAcceptableHistogram;
+                                 why = "mean < minAcceptableHistogram";
+                                 num = minAcceptableHistogram;
                              }
                              else if (mean > (maxAcceptableHistogram * 1.6))
                              {
                                  newExposure = currentExposure * 0.7;
                                  tempMaxExposure = currentExposure - roundToMe;
-			         why = "mean > (maxAcceptableHistogram * 1.6)";
-			         num = (maxAcceptableHistogram * 1.6);
+                                 why = "mean > (maxAcceptableHistogram * 1.6)";
+                                 num = (maxAcceptableHistogram * 1.6);
                              }
                              else if (mean > maxAcceptableHistogram)
                              {
                                  newExposure = currentExposure * 0.9;
                                  tempMaxExposure = currentExposure - roundToMe;
-			         why = "mean > maxAcceptableHistogram";
-			         num = maxAcceptableHistogram;
+                                 why = "mean > maxAcceptableHistogram";
+                                 num = maxAcceptableHistogram;
                              }
                          }
 
@@ -2285,13 +2290,13 @@ const char *locale = DEFAULT_LOCALE;
                     {
                         char C[20] = { 0 }, F[20] = { 0 };
                         if (strcmp(tempType, "C") == 0 || strcmp(tempType, "B") == 0)
-			{
-			    sprintf(C, "  %.0fC", (float)actualTemp / 10);
-			}
+			            {
+		            	    sprintf(C, "  %.0fC", (float)actualTemp / 10);
+		            	}
                         if (strcmp(tempType, "F") == 0 || strcmp(tempType, "B") == 0)
-			{
-			    sprintf(F, "  %.0fF", (((float)actualTemp / 10 * 1.8) + 32));
-			}
+			            {
+			                sprintf(F, "  %.0fF", (((float)actualTemp / 10 * 1.8) + 32));
+			            }
                         sprintf(bufTemp, "Sensor: %s %s", C, F);
                         cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin), fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
                                linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
@@ -2363,7 +2368,7 @@ const char *locale = DEFAULT_LOCALE;
                         // Draw a rectangle where the histogram box is.
 
                         int lt = cv::LINE_AA, thickness = 2;
-			cv::Point from1, to1, from2, to2;
+			            cv::Point from1, to1, from2, to2;
                         int X1 = (width * histogramBoxPercentFromLeft) - (histogramBoxSizeX / 2);
                         int X2 = X1 + histogramBoxSizeX;
                         int Y1 = (height * histogramBoxPercentFromTop) - (histogramBoxSizeY / 2);
@@ -2374,32 +2379,32 @@ const char *locale = DEFAULT_LOCALE;
                         // cv::line takes care of bytes per pixel.
 
                         // top lines
-			from1 = cv::Point(X1, Y1);
-			to1 = cv::Point(X2, Y1);
+			            from1 = cv::Point(X1, Y1);
+			            to1 = cv::Point(X2, Y1);
                         from2 = cv::Point(X1, Y1+thickness);
                         to2 = cv::Point(X2, Y1+thickness);
                         cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
                         cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
 
                         // right lines
-			from1 = cv::Point(X2, Y1);
-			to1 = cv::Point(X2, Y2);
+			            from1 = cv::Point(X2, Y1);
+			            to1 = cv::Point(X2, Y2);
                         from2 = cv::Point(X2-thickness, Y1+thickness);
                         to2 = cv::Point(X2-thickness, Y2-thickness);
                         cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
                         cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
 
                         // bottom lines
-			from1 = cv::Point(X1, Y2);
-			to1 = cv::Point(X2, Y2);
+		            	from1 = cv::Point(X1, Y2);
+			            to1 = cv::Point(X2, Y2);
                         from2 = cv::Point(X1, Y2-thickness);
                         to2 = cv::Point(X2, Y2-thickness);
                         cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
                         cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
 
                         // left lines
-			from1 = cv::Point(X1, Y1);
-			to1 = cv::Point(X1, Y2);
+		            	from1 = cv::Point(X1, Y1);
+		            	to1 = cv::Point(X1, Y2);
                         from2 = cv::Point(X1+thickness, Y1+thickness);
                         to2 = cv::Point(X1+thickness, Y2-thickness);
                         cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
@@ -2454,7 +2459,7 @@ const char *locale = DEFAULT_LOCALE;
                                 if (bAddExtra) {
                                     char *line = NULL;
                                     size_t len = 0;
-				    int slen = 0;
+				                    int slen = 0;
                                     while (getline(&line, &len, fp) != -1) {
                                         slen = strlen(line);
                                         if (slen >= 2 && (line[slen-2] == 10 || line[slen-2] == 13)) {  // LF, CR
@@ -2553,9 +2558,9 @@ const char *locale = DEFAULT_LOCALE;
                 else
                 {
                     std::string s;
-		    if (darkframe)
+		           if (darkframe)
                         s = "dark frame";
-		    else
+		           else
                         s = "manual";
 #ifdef USE_HISTOGRAM
                     if (usedHistogram == 1)
@@ -2570,13 +2575,14 @@ const char *locale = DEFAULT_LOCALE;
             } else {
                 // Once takeOneExposure() fails with a timeout, it seems to always fail,
                 // even with extremely large timeout values, so apparently ASI_ERROR_TIMEOUT doesn't
-                // necessarily mean it's timing out.  I think it means the camera went away,
-                // so exit which will cause us to be restarted.
+                // necessarily mean it's timing out.  Exit which will cause us to be restarted.
                 numErrors++; sleep(2);
                 if (numErrors >= maxErrors)
                 {
                     bMain = false;  // get out of inner and outer loop
                     exitCode = 2;
+                    sprintf(debugText, "Maximum number of consecutive errors of %d reached; exiting...\n", maxErrors);
+                    displayDebugText(debugText, 0);
                 }
             }
         }

@@ -29,5 +29,6 @@
    "angle":"-9",
    "autofocus":"0",
    "darkframe":"0",
+   "debuglevel":"1",
    "alwaysshowadvanced":"0"
 }

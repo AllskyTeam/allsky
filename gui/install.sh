@@ -73,7 +73,7 @@ echo -en '\n'
 
 echo -en '\n'
 echo "The Allsky Portal is now installed"
-echo "You can now reboot the Raspberry Pi and connect to it from your laptop, computer, phone, tablet at this address: http://$HOST_NAME.local or http://`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'`"
+echo "You can now reboot the Raspberry Pi and connect to it from your laptop, computer, phone, tablet at this address: http://$HOST_NAME.local or http://$(hostname -I | sed -e 's/ .*$//')"
 echo -en '\n'
 read -p "Do you want to reboot now? [y/n] " ans_yn
 case "$ans_yn" in

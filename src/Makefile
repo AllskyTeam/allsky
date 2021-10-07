@@ -32,29 +32,10 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
-deps:
-ifneq ($(shell id -u), 0)
-	@echo This must be ran with root permissions.
-	@echo Please run \'sudo make deps\'
-else
-	@echo `date +%F\ %R:%S` Installing build dependencies...
-	@apt update && apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev ffmpeg gawk lftp jq imagemagick
-endif
-
-.PHONY : deps
-
-USB=$(shell pkg-config --cflags --libs libusb-1.0)
-ifeq (,$(USB))
-  $(error Did not find USB Libraries, try 'make deps')
-endif
-
+USB=$(shell pkg-config --exists libusb-1.0 && pkg-config --cflags --libs libusb-1.0)
 DEFS = -D_LIN -D_DEBUG -DGLIBC_20
 CFLAGS = -Wall -Wno-psabi -g -O2 -lpthread
 OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || (pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4))
-
-ifeq (,$(OPENCV))
-  $(error Did not find any OpenCV Libraries, try 'make deps')
-endif
 
 ifeq ($(platform), armv6l)
   CC = arm-linux-gnueabihf-g++
@@ -97,11 +78,31 @@ endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
 
-%:
-	@echo `date +%F\ %R:%S` nothing to do for $@
-
-all:capture capture_RPiHQ startrails keogram sunwait
+all:check_deps capture capture_RPiHQ startrails keogram sunwait
 .PHONY : all
+
+ifneq ($(shell id -u), 0)
+deps:
+	echo This must be ran with root permissions.
+	echo Please run 'sudo make deps'
+else
+deps:
+	@echo `date +%F\ %R:%S` Installing build dependencies...
+	@apt update && apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev ffmpeg gawk lftp jq imagemagick
+endif
+
+.PHONY : deps
+
+
+check_deps:
+ifeq (,$(USB))
+	  $(error Did not find USB Libraries, try 'sudo make deps')
+endif
+ifeq (,$(OPENCV))
+	  $(error Did not find any OpenCV Libraries, try 'sudo make deps')
+endif
+.PHONY : check_deps
+
 
 sunwait:
 	@echo `date +%F\ %R:%S` Initializing sunwait submodule...
@@ -112,22 +113,22 @@ sunwait:
 	@cp sunwait-src/sunwait .
 	@echo `date +%F\ %R:%S` Done.
 
-capture:capture.cpp
+capture:check_deps capture.cpp
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC)  $@.cpp -o $@ $(CFLAGS) $(OPENCV) -lASICamera2 $(USB)
 	@echo `date +%F\ %R:%S` Done.
 
-capture_RPiHQ:capture_RPiHQ.cpp
+capture_RPiHQ:check_deps capture_RPiHQ.cpp
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC)  $@.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
-keogram:keogram.cpp
+keogram:check_deps keogram.cpp
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC) $@.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
-startrails:startrails.cpp
+startrails:check_deps startrails.cpp
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC) $@.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
@@ -186,3 +187,6 @@ clean:
 .PHONY : clean
 
 endif # Correct directory structure check
+
+%:
+	@echo `date +%F\ %R:%S` nothing to do for $@

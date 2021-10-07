@@ -104,8 +104,7 @@ KEOGRAM="true"
 # Keograms work best if North is at the top of the image.  If this is not the case you can
 # rotate the image; for example, if North is straight down in your image, rotate it 180 degrees.
 # Rotation is anticlockwise. 0 disables rotation.
-# Monochrome cameras have black and white text and only the first number in fontcolor is used.
-KEOGRAM_EXTRA_PARAMETERS="-rotate 0 -fontsize 1.0 -fontline 1 -fontcolor 255 255 255"
+KEOGRAM_EXTRA_PARAMETERS="--rotate 0 --font-size 1.0 --font-line 1 --font-color '255 255 255'"
 
 # Set to "true" to upload the keogram to your website at the end of each night.
 UPLOAD_KEOGRAM="false"

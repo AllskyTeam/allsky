@@ -25,5 +25,6 @@ echo -en '\n'
 
 echo -en "${GREEN}* Fixing ownership and permissions\n${NC}"
 chown -R pi:www-data .
-chmod -R 755 .
+find ./ -type f -exec chmod 644 {} \;
+find ./ -type d -exec chmod 775 {} \;
 echo -en '\n'

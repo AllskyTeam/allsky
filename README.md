@@ -1,4 +1,4 @@
-# Allsky Camera ![Release 0.8](https://img.shields.io/badge/Release-0.8-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release 0.8.1](https://img.shields.io/badge/Release-0.8.1-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 
 
@@ -11,7 +11,7 @@ This is the source code for the Wireless Allsky Camera project described [on Ins
 
 In order to get the camera working properly you will need the following hardware:
 
- * A camera (Tested cameras include Raspberry Pi HQ camera, ASI120MC*, ASI120MM*, ASI120MC-S, ASI120MM-S, ASI224MC, ASI178MC, ASI185MC, ASI290MC, ASI1600MC
+ * A camera (a Raspberry Pi HQ or ZWO ASI)
  * A Raspberry Pi (2, 3, 4 or Zero)
 
 **Note:*** Owners of USB2.0 cameras such as ASI120MC and ASI120MM may need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software-drivers) (This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.)
@@ -24,7 +24,7 @@ The Datyson T7 camera seems to be supported as well. The firmware needs to be up
 
 You will need to install Raspbian on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
 
-Make sure you have a working internet connection by setting it either through the GUI or [the terminal](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md).  The GUI is highly recommended since it simplifies administration of the AllSky software.
+Make sure you have a working internet connection by setting it either through the WebUI or [the terminal](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md).  The WebUI is **highly** recommended since it simplifies administration of the AllSky software.
 
 1. Start by installing git. You may already have it installed:
     ```shell
@@ -51,7 +51,7 @@ Make sure you have a working internet connection by setting it either through th
 There is no 1-click update yet so until then, the easiest is to backup your config files, delete the allsky directory and follow the installation instructions again.
 
 Please note that version 0.8 added many new settings and changed the name of several existing settings.  For example, there are now separate brightness levels for daytime and nighttime, called "daybrightness" and "nightbrightness".  Version 0.7 only had "brightness" that applied to both day and nighttime.  It's very important that you save a copy of your current settings prior to upgrading to version 0.8 so you can restore them properly.
-The GUI interface uses these new settings so it's also important to update AllSky **prior to** updating the GUI.
+The WebUI interface uses these new settings so it's also important to update AllSky **prior to** updating the WebUI.
 
 Also note that in version 0.8, the default image file created and uploaded is called either "image.jpg" or "liveview-image.jpg", depending on how you set things up.  The prior "image-resize.jpg" is no longer created. Keep that in mind if you copy the image to a remote web server - it will need to know about the new name.
 
@@ -62,7 +62,7 @@ Some users have reported ASI TIMEOUT errors with their ZWO cameras in verion 0.8
 Here's a quick overview of the configuration files.
 
 the first one is called `config/settings_RPiHQ.json` or `config/settings_ZWO.json`, depending on which camera type you have. It contains the camera parameters such as exposure, gain but also latitude, longitude, etc.  Many settings have both a daytime ("dayXXXX") and nighttime ("nightXXXX") version.
-If you have the administrative GUI, the files are in `/etc/raspap`, otherwise they are in `~/allsky/config`.  The advantage of using the administrative GUI is that you don't explicitly edit the files, instead, you do it via the GUI interface, which includes descriptive text on each option.
+If you have the administrative WebUI, the files are in `/etc/raspap`, otherwise they are in `~/allsky/config`.  The advantage of using the administrative WebUI is that you don't explicitly edit the files, instead, you do it via the WebUI interface, which includes descriptive text on each option.
 
 The exact list of settings available depend on the camera you are using; in general, the RPiHQ camera has less settings.
 
@@ -131,7 +131,7 @@ nano config/settings_ZWO.json
 | newexposure | 1 | Determines if the new version 0.8 exposure method is used. If you see ASI_ERROR_TIMEOUTs" in the log file, try setting this to 0. ( See [issue 417](https://github.com/thomasjacquin/allsky/issues/417) ) |
 | debuglevel | 0 | Determines the amount of output in the log file (usually `/var/log/allsky.log`, also can be viewed with `journalctl -u allsky`). |
 
-The second file called `config/config.sh` lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.  Note that with the administrative GUI, you can edit the file via the "Editor" link on the left side of the page.
+The second file called `config/config.sh` lets you configure the overall behavior of the camera. Options include functionalities such as upload, timelapse, dark frame location, keogram.  Note that with the administrative WebUI, you can edit the file via the "Editor" link on the left side of the page.
 
 ```shell
 nano config.sh
@@ -149,7 +149,7 @@ nano config.sh
 | TIMELAPSE_BITRATE | 2000k | Bitrate the timelapse video will be created with.  Higher values produce better quality video but larger files.  Make sure to include the trailing "k".
 | FPS | 25 | The timelapse frame rate (frames per second)
 | KEOGRAM | true | Builds a keogram at the end of the night |
-| KEOGRAM_EXTRA_PARAMETERS | various | Additional Keogram parameters.  Execute src/keogram --help for a list. |
+| KEOGRAM_EXTRA_PARAMETERS | various | Additional Keogram parameters.  Execute ./keogram --help for a list. |
 | UPLOAD_KEOGRAM | false | Set to true to upload the keogram to your server |
 | STARTRAILS | true | Stacks images to create a startrail at the end of the night |
 | BRIGHTNESS_THRESHOLD | 0.1 | Brightness level above which images are discarded (moon, head lights, aurora, etc) |
@@ -182,11 +182,11 @@ nano config.sh
 | IMG_DIR | allsky | Location of the image the website will use.  "allsky" is `/var/www/html/allsky` and "current" is `/home/pi/allsky`. |
 | IMG_PREFIX | liveview- | An optional prefix on the website image file name, before "image.jpg" (or whatever your image is called) |
 | CAMERA_SETTINGS_DIR | Either `/home/pi/allsky/config` or `/etc/raspap` | Path to the camera settings file |
-| CAMERA_SETTINGS | `/home/pi/allsky/config/settings_*.json` | Name of the camera settings file. **Note**: If using the GUI, this path will change to /etc/raspap/settings_*.json |
+| CAMERA_SETTINGS | `/home/pi/allsky/config/settings_*.json` | Name of the camera settings file. **Note**: If using the WebUI, this path will change to /etc/raspap/settings_*.json |
 
 When using the cropping options the image is cropped from the center so you will need to experiment with the correct width and height values. Normally there will be no need to amend the offset values.
 
-In order to upload images and videos to your website, you'll need to fill your FTP or Amazon S3 connection details in `config/ftp-settings.sh`.  If you're using the administrative GUI you can edit this file via the "Editor" link on the left side of the page.
+In order to upload images and videos to your website, you'll need to fill your FTP or Amazon S3 connection details in `config/ftp-settings.sh`.  If you're using the administrative WebUI you can edit this file via the "Editor" link on the left side of the page.
 
 ```shell
 nano scripts/ftp-settings.sh
@@ -256,7 +256,7 @@ If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote 
 
 If you don't want to configure the camera using the terminal, you can install the web based [graphical interface](https://github.com/thomasjacquin/allsky-portal).
 Please note that this will change your hostname to **allsky** (or whatever you called it when installing), install the lighttpd web server, and replace your `/var/www/html` directory. It will also move `config/settings_*.json` to `/etc/raspap/settings_*.json`.
-Using the graphical user interface (GUI) is **highly** recommended as it provides additional information on each setting and provides additional system information.
+Using the Web user interface (WebUI) is **highly** recommended as it provides additional information on each setting and provides additional system information.
 
 ```shell
 sudo gui/install.sh
@@ -269,7 +269,7 @@ sudo gui/install.sh piname
 
 **Note:*** If you use an older version of Raspbian, the install script may fail on php7.0-cgi dependency. Edit `gui/install.sh` and replace php7.0-cgi by php5-cgi.
 
-After you complete the GUI setup, you'll be able to administer the camera using the web GUI by navigating to
+After you complete the WebUI setup, you'll be able to administer the camera using the web WebUI by navigating to
 ```sh
 http://your_raspberry_IP
 ```
@@ -278,7 +278,7 @@ or
 http://allsky.local
 ```
 
-Note: If you changed the name of your pi during the gui install then use
+Note: If you changed the name of your pi during the WebUI install then use
 ```sh
 http://piname.local
 ```
@@ -293,7 +293,7 @@ http://your_raspberry_IP/public.php
 
 Make sure this page is publically viewable, i.e., is not behind a firewall.
 
-**Note:*** The GUI setup uses `/etc/raspap/settings_*.json` for the camera settings. If, for some reason, you prefer to go back to the non-GUI version, make sure to edit your `config/config.sh` file to have `CAMERA_SETTINGS_DIR="${ALLSKY_HOME}/config"` instead.
+**Note:*** The WebUI setup uses `/etc/raspap/settings_*.json` for the camera settings. If, for some reason, you prefer to go back to the non-WebUI version, make sure to edit your `config/config.sh` file to have `CAMERA_SETTINGS_DIR="${ALLSKY_HOME}/config"` instead.
 
 ## Dark frame subtraction
 
@@ -303,7 +303,7 @@ The dark frame subtraction feature removes hot pixels from night sky images. The
 
 You only need to follow these instructions once.
 
-If you don't use the GUI:
+If you don't use the WebUI:
 * Place a cover on your camera lens/dome.  Make sure no light can get in.
 * Set `darkframe` to 1 in `config/settings_*.json`
 * Restart the allsky service: `sudo systemctl restart allsky`
@@ -313,9 +313,9 @@ If you don't use the GUI:
 * Remove the cover from the lens/dome
 * Enable dark subtraction in `config/config.sh` by setting `DARK_FRAME_SUBTRACTION=true`
 
-GUI method:
+WebUI method:
 * Place a cover on your camera lens/dome.  Make sure no light can get in.
-* On the GUI page, open the `Camera Settings` tab and set `Dark Frame` to Yes.
+* On the WebUI page, open the `Camera Settings` tab and set `Dark Frame` to Yes.
 * Hit the Save button
 * Dark frames are created in a `darks` directory. A new dark is created every time the sensor temperature changes by 1 degree C.
 * On the Camera Settings tab set Dark Frame to No.
@@ -465,7 +465,7 @@ This will compile the new code, create a new binary, and copy it to the top leve
 
 If you have set the upload options to true in `config/config.sh`, that means you probably already have a website. If you want to display a live view of your sky on your website like in this [example](http://www.thomasjacquin.com/allsky), you can donwload the source files from this repository: [https://github.com/thomasjacquin/allsky-website.git](https://github.com/thomasjacquin/allsky-website.git).
 
-If you want to host the website on the raspberry Pi, run the following command. Note that this website is installed on the same webserver as the GUI. Currently, reinstalling the GUI will wipe your website.
+If you want to host the website on the raspberry Pi, run the following command. Note that this website is installed on the same webserver as the WebUI. Currently, reinstalling the WebUI will wipe your website.
 
 ```
 website/install.sh
@@ -473,11 +473,11 @@ website/install.sh
 
 And set these variabled in `ftp-settings.sh`:
 ```
-PROTOCOL = 'local'
-IMAGE_DIR = '/var/www/html/allsky/'
-VIDEOS_DIR = `/var/www/html/allsky/videos`
-KEOGRAM_DIR = `/var/www/html/allsky/keograms`
-STARTRAILS_DIR = `/var/www/html/allsky/startrails`
+PROTOCOL='local'
+IMAGE_DIR='/var/www/html/allsky/'
+VIDEOS_DIR=`/var/www/html/allsky/videos`
+KEOGRAM_DIR=`/var/www/html/allsky/keograms`
+STARTRAILS_DIR=`/var/www/html/allsky/startrails`
 ```
 
 ## Share your sky
@@ -498,8 +498,8 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* Added -maxexposure, -autoexposure, -maxgain, -autogain options. Note that using autoexposure and autogain at the same time may produce unexpected results (black frames).
 	* Autostart is now based on systemd and should work on all raspbian based systems, including headless distributions. Remote controlling will not start multiple instances of the software.
 	* Replaced `nodisplay` option with `preview` argument. No preview in autostart mode.
-	* When using the GUI, camera options can be saved without rebooting the RPi.
-	* Added a publicly accessible preview to the GUI: public.php
+	* When using the WebUI, camera options can be saved without rebooting the RPi.
+	* Added a publicly accessible preview to the WebUI: public.php
 	* Changed exposure unit to milliseconds instead of microseconds
 * version **0.7**: Added Raspberry Pi camera HQ support (Based on Rob Musquetier's fork)
 	* Support for x86 architecture (Ubuntu, etc)
@@ -522,6 +522,7 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* Ability to specify format of time displayed on image and temperature displayed in Celcius, Fahrenheit, or both.
 	* Ability to set bitrate on timelapse video.
 * version **0.8.1** Rearranged directory structure.
+	* Renamed several variables in `config.sh` and `ftp-settings.sh`.
 	* Many bug fixes.
 
 ## Donation

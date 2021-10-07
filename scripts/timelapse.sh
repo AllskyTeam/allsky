@@ -47,14 +47,14 @@ if [ -z "${EXTENSION}" ] ; then
 fi
 
 # If you are tuning encoder settings, run this script with KEEP_SEQUENCE, eg.
-#	$ env KEEP_SEQUENCE=1 VCODEC=h264_nvenc ~/allsky/scripts/timelapse.sh ${TODAY} /media/external/allsky/${TODAY}/
+#	$ env KEEP_SEQUENCE=true VCODEC=h264_nvenc ~/allsky/scripts/timelapse.sh ${TODAY} /media/external/allsky/${TODAY}/
 # to keep the sequence directory from being deleted and to reuse the contents
 # of the sequence directory if it looks ok (contains at least 100 files). This
 # might save you some time when running your encoder repeatedly.
 
 SEQUENCE_DIR="${DATE_DIR}/sequence"
 NSEQ=$(ls "${SEQUENCE_DIR}" 2>/dev/null | wc -l )
-if [ -z "$KEEP_SEQUENCE" -o $NSEQ -lt 100 ] ; then
+if [ "$KEEP_SEQUENCE" = "false" -o $NSEQ -lt 100 ] ; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
 
@@ -118,7 +118,7 @@ if [ $RET -ne 0 ]; then
 	exit 1
 fi
 
-if [ -z "$KEEP_SEQUENCE" ] ; then
+if [ "$KEEP_SEQUENCE" = "false" ] ; then
 	rm -rf $DIR/sequence
 else
 	echo -en "${ME}: ${GREEN}Keeping sequence${NC}\n"

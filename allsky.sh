@@ -10,10 +10,10 @@ fi
 
 cd "${ALLSKY_HOME}"
 
+source "${ALLSKY_HOME}/variables.sh"
+
 # Reset auto camera selection, so config.sh does not pick up old camera selection.
 > "${ALLSKY_CONFIG}/autocam.sh"
-
-source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 mkdir -p "${ALLSKY_TMP}"
 

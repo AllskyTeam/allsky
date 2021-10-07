@@ -482,6 +482,7 @@ ASI_ERROR_CODE takeOneExposure(
             displayDebugText(debugText, 0);
         }
         else {
+	    numErrors = 0;
             ASIGetControlValue(cameraId, ASI_EXPOSURE, &actualExposureMicroseconds, &wasAutoExposure);
             sprintf(debugText, "  > Got image @ exposure: %'ld us (%'.2f ms)\n", actualExposureMicroseconds, (float)actualExposureMicroseconds/US_IN_MS);
             displayDebugText(debugText, 2);
@@ -2032,7 +2033,7 @@ const char *locale = DEFAULT_LOCALE;
             {
                 bMain = false;
                 exitCode = 2;
-		        sprintf(debugText, "Maximun number of consecutive errors of %d reached; exiting...\n", maxErrors);
+		        sprintf(debugText, "Maximum number of consecutive errors of %d reached; exiting...\n", maxErrors);
                 displayDebugText(debugText, 0);
                 break;
             }
@@ -2580,7 +2581,7 @@ const char *locale = DEFAULT_LOCALE;
                 {
                     bMain = false;  // get out of inner and outer loop
                     exitCode = 2;
-                    sprintf(debugText, "Maximun number of consecutive errors of %d reached; exiting...\n", maxErrors);
+                    sprintf(debugText, "Maximum number of consecutive errors of %d reached; exiting...\n", maxErrors);
                     displayDebugText(debugText, 0);
                 }
             }

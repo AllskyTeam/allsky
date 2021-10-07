@@ -57,11 +57,14 @@ createDirs:
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/systemd/system ]; then mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system; fi
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/udev/rules.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/udev/rules.d; fi
 
+.PHONY : createDirs
+
 $(CONFIGFILES):
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky/$@ ]; then \
 	  echo `date +%F\ %R:%S` Copying default $@; \
 	  install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$@; \
 	fi
+.PHONY : $(CONFIGFILES)
 
 install: createDirs $(CONFIGFILES)
 	@echo `date +%F\ %R:%S` Setting up udev rules...
@@ -80,15 +83,20 @@ remove_configs:
 	@echo `date +%F\ %R:%S` Removing config path and files ../config
 	@rm -rf ../config
 
+.PHONY : remove_configs
+
 createDirs:
 	@echo `date +%F\ %R:%S` Creating directory structures...
 	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi
+
+.PHONY : createDirs
 
 $(CONFIGFILES):
 	@if [ ! -e ../config/$@ ]; then \
 	  echo `date +%F\ %R:%S` Copying default $@; \
 	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.repo ../config/$@; \
 	fi
+.PHONY : $(CONFIGFILES)
 
 install: createDirs $(CONFIGFILES)
 	@echo `date +%F\ %R:%S` Setting up udev rules...
@@ -108,5 +116,6 @@ install: createDirs $(CONFIGFILES)
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
 	@echo "export ALLSKY_HOME=$(PDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
 	@echo `date +%F\ %R:%S` Copying default ftp-settings.sh
+.PHONY : install
 endif # Package build check
 endif # Root check

@@ -54,6 +54,7 @@ if [ "${DAYTIME_SAVE}" = "true" -o "${CAPTURE_24HR}" = "true" ] ; then
     	fi
 fi
 
+FULL_FILENAME="${IMG_PREFIX}${FULL_FILENAME}"
 mv -f "${IMAGE_TO_USE}" "${ALLSKY_HOME}/${FULL_FILENAME}"	# so web severs can see it.
 
 # If upload is true, optionally create a smaller version of the image and upload it
@@ -70,8 +71,7 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
     		fi
 	fi
 
-	# We're actually uploading $IMAGE_TO_USE, but show $NOTIFICATIONFILE
-	# in the message since it's more descriptive.
+	# We're actually uploading $IMAGE_TO_USE, but show $NOTIFICATIONFILE in the message since it's more descriptive.
 	echo -e "${ME}: Uploading $(basename "${NOTIFICATIONFILE}")\n"
 	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${IMAGE_TO_USE}" "${IMGDIR}" "${FULL_FILENAME}" "NotificationImage"
 	exit $?

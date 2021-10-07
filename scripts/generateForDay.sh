@@ -78,7 +78,7 @@ if [ "${DO_KEOGRAM}" = "true" ] ; then
 		echo -e "===== Generating Keogram"
 		mkdir -p "${DATE_DIR}/keogram"
 
-		"${ALLSKY_HOME}/keogram" -d "${DATE_DIR}" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_PARAMETERS}
+		"${ALLSKY_HOME}/keogram" -d "${DATE_DIR}" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_EXTRA_PARAMETERS}
 		[ $? -eq 0 ] && echo -e "Completed"
 	else
 		if [ -s "${UPLOAD_FILE}" ]; then

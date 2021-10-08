@@ -57,12 +57,13 @@ pthread_cond_t cond_SatrtSave;
 #define NOT_SET -1	// signifies something isn't set yet
 ASI_CONTROL_CAPS ControlCaps;
 void *retval;
-int gotSignal            = 0;		// did we get a SIGINT (from keyboard) or SIGTERM (from service)?
+int numErrors            = 0;    // Number of errors in a row.
+int gotSignal            = 0;    // did we get a SIGINT (from keyboard) or SIGTERM (from service)?
 int iNumOfCtrl           = 0;
 int CamNum               = 0;
 pthread_t thread_display = 0;
 pthread_t hthdSave       = 0;
-int numExposures         = 0;	// how many valid pictures have we taken so far?
+int numExposures         = 0;	 // how many valid pictures have we taken so far?
 int currentGain          = NOT_SET;
 
 // Some command-line and other option definitions needed outside of main():
@@ -482,7 +483,7 @@ ASI_ERROR_CODE takeOneExposure(
             displayDebugText(debugText, 0);
         }
         else {
-	    numErrors = 0;
+	        numErrors = 0;
             ASIGetControlValue(cameraId, ASI_EXPOSURE, &actualExposureMicroseconds, &wasAutoExposure);
             sprintf(debugText, "  > Got image @ exposure: %'ld us (%'.2f ms)\n", actualExposureMicroseconds, (float)actualExposureMicroseconds/US_IN_MS);
             displayDebugText(debugText, 2);
@@ -1755,7 +1756,6 @@ const char *locale = DEFAULT_LOCALE;
 
     // Initialization
     int exitCode        = 0;    // Exit code for main()
-    int numErrors       = 0;    // Number of errors in a row.
     int maxErrors       = 5;    // Max number of errors in a row before we exit
     int originalITextX = iTextX;
     int originalITextY = iTextY;

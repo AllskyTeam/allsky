@@ -11,6 +11,10 @@ fi
 cd "${ALLSKY_HOME}"
 
 source "${ALLSKY_HOME}/variables.sh"
+if [ -z "${ALLSKY_CONFIG}" ]; then
+	echo "${RED}*** ERROR: variables not set, can't continue!${NC}"
+	exit 1
+fi
 
 # Reset auto camera selection, so config.sh does not pick up old camera selection.
 > "${ALLSKY_CONFIG}/autocam.sh"

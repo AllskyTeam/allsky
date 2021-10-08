@@ -48,7 +48,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
   while (1) {  // getopt loop
     int option_index = 0;
     static struct option long_options[] = {
-        {"brightness", required_argument, 0, 'b'},
+        {"brightness", optional_argument, 0, 'b'},
         {"directory", required_argument, 0, 'd'},
         {"extension", required_argument, 0, 'e'},
         {"output", required_argument, 0, 'o'},

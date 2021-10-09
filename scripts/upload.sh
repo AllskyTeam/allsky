@@ -99,7 +99,7 @@ else # sftp/ftp
 		echo set net:max-retries 2
 		echo set net:timeout 20
 		echo rm -f "${TEMP_NAME}"		# just in case it's already there
-		echo "put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}' || echo 'put of ${FILE_TO_UPLOAD} failed!' && exit"
+		echo "put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}' || (echo 'put of ${FILE_TO_UPLOAD} failed!' && exit) "
 		echo rm -f "\"${DESTINATION_FILE}\""
 		echo mv "${TEMP_NAME}" "\"${REMOTE_DIR}${DESTINATION_FILE}\""
 		echo exit

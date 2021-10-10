@@ -93,8 +93,8 @@ else # sftp/ftp
 	(
 		[ "${LFTP_COMMANDS}" != "" ] && echo ${LFTP_COMMANDS}
 		# xxx TODO: escape double quotes in PASSWORD - how?  With \ ?
-		P="${PASSWORD}"
-		echo "open --user '${USER}' --password '${P}' '${PROTOCOL}://${HOST}' "
+		P="${REMOTE_PASSWORD}"
+		echo "open --user '${REMOTE_USER}' --password '${P}' '${PROTOCOL}://${REMOTE_HOST}' "
 		# Sometimes have problems with "max-reties 1", so make it 2
 		echo set net:max-retries 2
 		echo set net:timeout 20

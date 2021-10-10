@@ -195,9 +195,9 @@ nano scripts/ftp-settings.sh
 | Configuration     | Default     | Additional Info |
 | ----------- | ----------- | ----------------|
 | PROTOCOL | ftp | Choose between `ftp`, `sftp`, `S3` or `local` |
-| USER | username | Your ftp user name |
-| PASSWORD | password | Your ftp password |
-| HOST | example.com | Your host server or IP |
+| REMOTE_USER | username | Your ftp user name |
+| REMOTE_PASSWORD | password | Your ftp password |
+| REMOTE_HOST | example.com | Your host server or IP |
 | IMAGE_DIR | /allsky/ | The absolute path to your image.jpg on the server |
 | VIDEOS_DIR | /allsky/videos/ | The absolute path to your videos directory on the server |
 | KEOGRAM_DIR | /allsky/keograms/ | The absolute path to your keograms directory on the server |

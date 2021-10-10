@@ -66,13 +66,13 @@ MP4DIR="${VIDEOS_DIR}"
 
 ############### ftp / sftp PROTOCOL only:
 	# Enter the name of your FTP server.  If you don't know it, ask your service provider.
-HOST=""
+REMOTE_HOST=""
 
 	# Enter the username of the login on your FTP server
-USER=""
+REMOTE_USER=""
 
 	# Enter the password of the login on your FTP server
-PASSWORD=""
+REMOTE_PASSWORD=""
 
 	# If you need special commands executed when connecting to the FTP server enter them here.
 	# For example, to allow lftp to work with unknown certificates, use:

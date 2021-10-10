@@ -14,15 +14,16 @@ IMAGE_TO_USE="$FULL_FILENAME"
 # quotes around $IMAGE_TO_USE below, in case it has a space or special characters.
 
 # Quick check to make sure the image isn't corrupted.
-identify "$IMAGE_TO_USE" >/dev/null 2>&1
+identify "${IMAGE_TO_USE}" >/dev/null 2>&1
 if [ $? -ne 0 ] ; then
 	echo "${RED}*** $ME: ERROR: Image '${IMAGE_TO_USE} is corrupt; ignoring.${NC}"
 	exit 3
 fi
 
 # Resize the image if required
-if [[ $IMG_RESIZE == "true" ]]; then
-        convert "$IMAGE_TO_USE" -resize "$IMG_WIDTH"x"$IMG_HEIGHT" "$IMAGE_TO_USE"
+if [[ "${IMG_RESIZE}" == "true" ]]; then
+	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing '${IMAGE_TO_USE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
+        convert "${IMAGE_TO_USE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${IMAGE_TO_USE}"
 	if [ $? -ne 0 ] ; then
 		echo "${RED}*** $ME: ERROR: IMG_RESIZE failed${NC}"
 		exit 4
@@ -30,8 +31,9 @@ if [[ $IMG_RESIZE == "true" ]]; then
 fi
 
 # Crop the image around the center if required
-if [[ $CROP_IMAGE == "true" ]]; then
-        convert "$IMAGE_TO_USE" -gravity Center -crop "$CROP_WIDTH"x"$CROP_HEIGHT"+"$CROP_OFFSET_X"+"$CROP_OFFSET_Y" +repage "$IMAGE_TO_USE"
+if [[ "${CROP_IMAGE}" == "true" ]]; then
+	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Cropping ${IMAGE_TO_USE} to ${CROP_WIDTH}x${CROP_HEIGHT}"
+        convert "${IMAGE_TO_USE}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${IMAGE_TO_USE}"
 	if [ $? -ne 0 ] ; then
 		echo "${RED}*** $ME: ERROR: CROP_IMAGE failed${NC}"
 		exit 4
@@ -41,7 +43,7 @@ fi
 # IMG_DIR and IMG_PREFIX are in config.sh
 # If the user specified an IMG_PREFIX, copy the file to that name so the websites can display it.
 if [ "${IMG_PREFIX}" != "" ]; then
-	cp "$IMAGE_TO_USE" "${IMG_PREFIX}${FILENAME}.${EXTENSION}"
+	cp "${IMAGE_TO_USE}" "${IMG_PREFIX}${FILENAME}.${EXTENSION}"
 fi
 
 # If daytime saving is desired, save the current image in today's directory
@@ -68,7 +70,8 @@ fi
 if [ "$UPLOAD_IMG" = true ] ; then
 	if [[ "$RESIZE_UPLOADS" == "true" ]]; then
 		# Create a smaller version for upload
-		convert "$IMAGE_TO_USE" -resize "$RESIZE_UPLOADS_SIZE" -gravity East -chop 2x0 "$IMAGE_TO_USE"
+		[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing upload file '${IMAGE_TO_USE}' to ${RESIZE_UPLOADS_SIZE}"
+		convert "${IMAGE_TO_USE}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${IMAGE_TO_USE}"
 		if [ $? -ne 0 ] ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: RESIZE_UPLOADS failed; continuing with larger image.${NC}"
 		fi

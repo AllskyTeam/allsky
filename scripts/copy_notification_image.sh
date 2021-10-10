@@ -45,8 +45,10 @@ fi
 # If at nighttime, save them in (possibly) yesterday's directory.
 # If during day, save in today's directory.
 if [ "${DAYTIME_SAVE}" = "true" -o "${CAPTURE_24HR}" = "true" ] ; then
-	IMAGES_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
-	THUMB="${IMAGES_DIR}/thumbnails/${FILENAME}-$(date +'%Y%m%d%H%M%S').${EXTENSION}"
+	DATE_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
+	# Use today's folder if it exists, otherwise yesterday's
+	[ ! -d "${DATE_DIR}" ] && DATE_DIR="${ALLSKY_IMAGES}/$(date -d '12 hours ago' +'%Y%m%d')"
+	THUMB="${DATE_DIR}/thumbnails/${FILENAME}-$(date +'%Y%m%d%H%M%S').${EXTENSION}"
 
 	convert "${IMAGE_TO_USE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}"
 	if [ $? -ne 0 ] ; then

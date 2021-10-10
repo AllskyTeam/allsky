@@ -18,7 +18,33 @@ fi
 
 # Reset auto camera selection, so config.sh does not pick up old camera selection.
 > "${ALLSKY_CONFIG}/autocam.sh"
-source "${ALLSKY_CONFIG}/config.sh"
+
+# COMPATIBILITY CHECKS
+# config.sh moved to a new location in version 0.8.1.  Check for it.
+# Check for a new variable in config.sh that wasn't in prior versions.
+# If not found, force the user to upgrade config.sh
+if [ -f "${ALLSKY_CONFIG}/config.sh" ]; then
+	source "${ALLSKY_CONFIG}/config.sh"
+	RET=$?
+	if [ -z "${ALLSKY_DEBUG_LEVEL}" ]; then
+		echo "${RED}*** ERROR: old version of config.sh detected.${NC}"
+		RET=1
+	fi
+else
+	echo "${RED}*** ERROR: cannot find config.sh.${NC}"
+	RET=1
+fi
+if [ ${RET} -ne 0 ]; then
+	echo "Please make a backup of your config.sh, ftp-settings.sh, and settings_*.json files,"
+	echo "then do a full re-install of AllSky."
+	echo "After the re-install, copy your settings from the backup files to the new files."
+	echo "Do NOT simply copy the old files over the new ones since several variables have been added or changed names."
+	
+	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
+	sudo systemctl stop allsky
+	exit 1
+fi
+
 mkdir -p "${ALLSKY_TMP}"
 
 # Make sure allsky.sh is not already running.
@@ -152,10 +178,7 @@ ARGUMENTS+=(-daytime $DAYTIME_CAPTURE)
 
 [ "$ADD_PARAMS" != "" ] && ARGUMENTS+=($ADD_PARAMS)	# Any additional parameters
 
-for A in ${ARGUMENTS[@]}
-do
-	echo "${A}"
-done > $ALLSKY_TMP/capture_args.txt
+echo "${ARGUMENTS[@]}" > ${ALLSKY_TMP}/capture_args.txt
 
 if [[ $CAMERA == "ZWO" ]]; then
 	CAPTURE="capture"

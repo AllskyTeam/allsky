@@ -119,9 +119,9 @@ if [ $RET -ne -0 ]; then
 	echo -e "Remove them when the problem is fixed.${NC}\n"
 	exit 1
 fi
-[ $"{FFLOG}" = "info" ] && cat "${TMP}"	 # if the user wants output, give it to them...
+[ "${FFLOG}" = "info" ] && cat "${TMP}"	 # if the user wants output, give it to them...
 
-if [ "$KEEP_SEQUENCE" = "false" ] ; then
+if [ "${KEEP_SEQUENCE}" = "false" ] ; then
 	rm -rf "${SEQUENCE_DIR}"
 else
 	echo -en "${ME}: ${GREEN}Keeping sequence${NC}\n"

@@ -71,12 +71,14 @@ if [[ "${PROTOCOL}" == "s3" ]] ; then
 		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to aws ${S3_BUCKET}/${REMOTE_DIR}"
 	fi
 	${AWS_CLI_DIR}/aws s3 cp "${FILE_TO_UPLOAD}" s3://${S3_BUCKET}${REMOTE_DIR} --acl ${S3_ACL} > "${LOG}"
+	RET=$?
 
 elif [[ ${PROTOCOL} == "local" ]] ; then
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_DIR}/${DESTINATION_FILE}"
 	fi
 	cp "${FILE_TO_UPLOAD}" "${REMOTE_DIR}/${DESTINATION_FILE}"
+	RET=$?
 
 else # sftp/ftp
 	# People sometimes have problems with ftp not working,
@@ -106,10 +108,10 @@ else # sftp/ftp
 		echo set net:max-retries 2
 		echo set net:timeout 20
 		echo "rm -f '${REMOTE_DIR}${TEMP_NAME}' "		# unlikely, but just in case it's already there
-		echo "put '${FILE_TO_UPLOAD}' -o '${REMOTE_DIR}${TEMP_NAME}' || (echo 'put of ${FILE_TO_UPLOAD} failed!'; exit) "
+		echo "put '${FILE_TO_UPLOAD}' -o '${REMOTE_DIR}${TEMP_NAME}' || (echo 'put of ${FILE_TO_UPLOAD} failed!'; exit 1) "
 		echo "rm -f '${REMOTE_DIR}${DESTINATION_FILE}' "
-		echo "mv '${REMOTE_DIR}${TEMP_NAME}' '${REMOTE_DIR}${DESTINATION_FILE}' || ( echo 'mv of ${TEMP_NAME} to ${DESTINATION_FILE} in ${REMOTE_DIR} failed!'; exit )"
-		echo exit
+		echo "mv '${REMOTE_DIR}${TEMP_NAME}' '${REMOTE_DIR}${DESTINATION_FILE}' || ( echo 'mv of ${TEMP_NAME} to ${DESTINATION_FILE} in ${REMOTE_DIR} failed!'; exit 2 )"
+		echo exit 0
 	) > "${LFTP_CMDS}"
 	lftp -f "${LFTP_CMDS}" > "${LOG}" 2>&1
 	RET=$?

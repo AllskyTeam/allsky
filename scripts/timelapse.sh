@@ -23,7 +23,7 @@ if [ $# -lt 1 -o $# -gt 2 -o "${1}" = "-h" -o "${1}" = "--help" ] ; then
 	echo "    or:      ${ME} ${TODAY} /media/external/allsky"
 	echo -en "${YELLOW}"
 	echo "'DATE' must be in '${ALLSKY_IMAGES}' unless 'directory' is specified,"
-	echo "in which case 'DATE' must bin in 'directory', i.e., 'directory/DATE'."
+	echo "in which case 'DATE' must be in in 'directory', i.e., 'directory/DATE'."
 	echo -en "${NC}"
 	exit 1
 fi
@@ -102,24 +102,27 @@ OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
 ffmpeg -y -f image2 \
 	-loglevel ${FFLOG:-warning} \
 	-r ${FPS:-25} \
-	-i ${SEQUENCE_DIR}/%04d.${EXTENSION} \
+	-i "${SEQUENCE_DIR}/%04d.${EXTENSION}" \
 	-vcodec ${VCODEC:-libx264} \
 	-b:v ${TIMELAPSE_BITRATE:-2000k} \
 	-pix_fmt ${PIX_FMT:-yuv420p} \
 	-movflags +faststart \
 	$SCALE \
 	${TIMELAPSE_PARAMETERS} \
-	${OUTPUT_FILE}
+	"${OUTPUT_FILE}" >> "${TMP}" 2>&1
 RET=$?
-if [ $RET -ne 0 ]; then
-	echo -e "\n${RED}*** $ME: ERROR: ffmpeg failed with RET=$RET"
+if [ $RET -ne -0 ]; then
+	echo -e "\n${RED}*** $ME: ERROR: ffmpeg failed."
+	echo "Error log is in '${TMP}'."
+	echo
 	echo "Links in '${SEQUENCE_DIR}' left for debugging."
 	echo -e "Remove them when the problem is fixed.${NC}\n"
 	exit 1
 fi
+[ "${FFLOG}" = "info" ] && cat "${TMP}"	 # if the user wants output, give it to them...
 
-if [ "$KEEP_SEQUENCE" = "false" ] ; then
-	rm -rf $DIR/sequence
+if [ "${KEEP_SEQUENCE}" = "false" ] ; then
+	rm -rf "${SEQUENCE_DIR}"
 else
 	echo -en "${ME}: ${GREEN}Keeping sequence${NC}\n"
 fi

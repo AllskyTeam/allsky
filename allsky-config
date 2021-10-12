@@ -1,0 +1,68 @@
+#!/bin/bash
+
+#
+# Ease setup of Allsky software using whiptail text interface
+#
+
+source "variables.sh"
+
+calc_wt_size() {
+	# NOTE: it's tempting to redirect stderr to /dev/null, so supress error
+	# output from tput. However in this case, tput detects neither stdout or
+	# stderr is a tty and so only gives default 80, 24 values
+	WT_HEIGHT=18
+	WT_WIDTH=$(tput cols)
+	
+	if [ -z "$WT_WIDTH" ] || [ "$WT_WIDTH" -lt 60 ]; then
+		WT_WIDTH=80
+	fi
+	if [ "$WT_WIDTH" -gt 178 ]; then
+		WT_WIDTH=120
+	fi
+	WT_MENU_HEIGHT=$(($WT_HEIGHT-7))
+}
+
+select_camera() {
+	CAM=$(whiptail --title "Allsky Software Config Tool (allsky-config)" --menu "Camera Type" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT \
+		"ZWO" "ZWO camera is used for allsky" \
+		"RPiHQ" "RPiHQ camera is used for allsky" \
+		3>&1 1>&2 2>&3)
+	if [ $? -eq 0 ]; then
+		sed -e "s/^CAMERA=.*$/CAMERA=\"${CAM}\"/" "$ALLSKY_CONFIG/config.sh"
+		if [ $? -eq 0 ]; then
+			whiptail --msgbox "Camera set to $CAM" 20 60 2
+			return 0
+		else
+			whiptail --msgbox "Something went wrong setting camera to ${CAM}.  Does ${ALLSKY_CONFIG}/config.sh exist?" 20 60 2
+			return 1
+		fi
+	else
+		return 1
+	fi
+}
+
+
+main_menu() {
+	while true; do
+		MAIN=$(whiptail --title "Allsky Software Config Tool (allsky-config)" --menu "Main Menu" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT \
+			"C" "Camera Selection" \
+			"E" "End of Night Processing" \
+			"P" "Post Processing" \
+			"U" "Upload Settings" \
+			3>&1 1>&2 2>&3)
+		RETVAL=$?
+		if [ $RETVAL -eq 1 ]; then
+			exit 0
+		elif [ $RETVAL -eq 0 ]; then
+			case "$MAIN" in
+				C) select_camera ;;
+				*) whiptail --msgbox "Sorry, this function not yet implemented." 20 60 2 ;;
+			esac
+		else
+			exit 1
+		fi
+	done
+}
+
+calc_wt_size
+main_menu

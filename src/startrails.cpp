@@ -3,17 +3,24 @@
 // Based on script by Thomas Jacquin
 // SPDX-License-Identifier: MIT
 
+using namespace std;
+
 #include <getopt.h>
 #include <glob.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 
 #define KNRM "\x1B[0m"
 #define KRED "\x1B[31m"
@@ -27,23 +34,155 @@
 struct config_t {
   std::string img_src_dir, img_src_ext, dst_startrails;
   bool startrails_enabled;
+  int num_threads;
+  int nice_level;
   int img_width;
   int img_height;
   int verbose;
   double brightness_limit;
 } config;
 
+std::mutex stdio_mutex;
+
 void parse_args(int, char**, struct config_t*);
 void usage_and_exit(int);
+void startrail_worker(int,               // thread num
+                      struct config_t*,  // config
+                      glob_t*,           // file list
+                      std::mutex*,       // mutex
+                      cv::Mat*,          // statistics
+                      cv::Mat*           // accumulated
+);
 
-//-------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------
+void startrail_worker(int thread_num,
+                      struct config_t* cf,
+                      glob_t* files,
+                      std::mutex* mtx,
+                      cv::Mat* stats_ptr,
+                      cv::Mat* main_accumulator) {
+  int start_num, end_num, batch_size, nchan = 0;
+  unsigned long nfiles = files->gl_pathc;
+  cv::Mat thread_accumulator;
+
+  batch_size = nfiles / cf->num_threads;
+  start_num = thread_num * batch_size;
+
+  // last thread has more work to do if the number of images isn't multiple of
+  // the number of threads
+  if ((thread_num + 1) == cf->num_threads)
+    end_num = nfiles - 1;
+  else
+    end_num = start_num + batch_size - 1;
+
+  if (cf->verbose > 1) {
+    stdio_mutex.lock();
+    fprintf(stderr, "thread %d/%d processing files %d-%d (%d/%lu)\n",
+            thread_num + 1, cf->num_threads, start_num, end_num,
+            end_num - start_num + 1, nfiles);
+    stdio_mutex.unlock();
+  }
+
+  for (int f = start_num; f <= end_num; f++) {
+    char* filename = files->gl_pathv[f];
+    cv::Mat image = cv::imread(filename, cv::IMREAD_UNCHANGED);
+    filename = basename(filename);
+    if (!image.data) {
+      stdio_mutex.lock();
+      fprintf(stderr, "Error reading file %s\n", filename);
+      stdio_mutex.unlock();
+      continue;
+    }
+
+    if (cf->img_height && cf->img_width &&
+        (image.cols != cf->img_width || image.rows != cf->img_height)) {
+      if (cf->verbose) {
+        stdio_mutex.lock();
+        fprintf(stderr, "skip %s size %dx%d != %dx%d\n", filename, image.cols,
+                image.cols, cf->img_width, cf->img_height);
+        stdio_mutex.unlock();
+      }
+      continue;
+    }
+
+    // first valid image sets the number of channels we expect
+    if (nchan == 0 && image.channels())
+      nchan = image.channels();
+
+    cv::Scalar mean_scalar = cv::mean(image);
+    double image_mean;
+    switch (image.channels()) {
+      default:  // mono case
+        image_mean = mean_scalar.val[0];
+        break;
+      case 3:  // for color choose maximum channel
+      case 4:
+        image_mean =
+            cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
+        break;
+    }
+    // Scale to 0-1 range
+    switch (image.depth()) {
+      case CV_8U:
+        image_mean /= 255.0;
+        break;
+      case CV_16U:
+        image_mean /= 65535.0;
+        break;
+    }
+    if (cf->verbose > 1) {
+      stdio_mutex.lock();
+      fprintf(stderr, "[%d/%lu] %s %.3f\n", f + 1, nfiles, filename,
+              image_mean);
+      stdio_mutex.unlock();
+    }
+
+    // the matrix pointed to by stats_ptr has already been initialized to NAN
+    // so we just update the entry once the image is successfully loaded
+    stats_ptr->col(f) = image_mean;
+
+    if (cf->startrails_enabled && image_mean <= cf->brightness_limit) {
+      if (image.channels() != nchan) {
+        if (cf->verbose) {
+          stdio_mutex.lock();
+          fprintf(stderr, "repairing channel mismatch: %d != %d\n",
+                  image.channels(), nchan);
+          stdio_mutex.unlock();
+        }
+        if (image.channels() < nchan)
+          cv::cvtColor(image, image, cv::COLOR_GRAY2BGR, nchan);
+        else if (image.channels() > nchan)
+          cv::cvtColor(image, image, cv::COLOR_BGR2GRAY, nchan);
+      }
+      if (thread_accumulator.empty()) {
+        image.copyTo(thread_accumulator);
+      } else {
+        thread_accumulator = cv::max(thread_accumulator, image);
+      }
+    }
+  }
+
+  if (cf->startrails_enabled) {
+    // skip unlucky threads that might have got only bad images
+    if (!thread_accumulator.empty()) {
+      mtx->lock();
+      if (main_accumulator->empty()) {
+        thread_accumulator.copyTo(*main_accumulator);
+      } else {
+        *main_accumulator = cv::max(thread_accumulator, *main_accumulator);
+      }
+      mtx->unlock();
+    }
+  }
+}
+
 void parse_args(int argc, char** argv, struct config_t* cf) {
-  int c;
+  int c, tmp;
   cf->verbose = 0;
   cf->startrails_enabled = true;
   cf->img_height = cf->img_width = 0;
   cf->brightness_limit = 0.35;  // not terrible in the city
+  cf->nice_level = 10;
+  cf->num_threads = std::thread::hardware_concurrency();
 
   while (1) {  // getopt loop
     int option_index = 0;
@@ -51,6 +190,8 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         {"brightness", optional_argument, 0, 'b'},
         {"directory", required_argument, 0, 'd'},
         {"extension", required_argument, 0, 'e'},
+        {"max-threads", required_argument, 0, 'm'},
+        {"nice-level", required_argument, 0, 'n'},
         {"output", required_argument, 0, 'o'},
         {"image-size", required_argument, 0, 's'},
         {"statistics", no_argument, 0, 'S'},
@@ -58,7 +199,8 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "hvsd:e:o:s:", long_options, &option_index);
+    c = getopt_long(argc, argv, "hvSb:d:e:m:n:o:s:", long_options,
+                    &option_index);
     if (c == -1)
       break;
     switch (c) {  // option switch
@@ -93,6 +235,22 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
       case 'e':
         cf->img_src_ext = optarg;
         break;
+      case 'm':
+        tmp = atoi(optarg);
+        if ((tmp >= 1) || (tmp < cf->num_threads))
+          cf->num_threads = tmp;
+        break;
+      case 'n':
+        tmp = atoi(optarg);
+        if (PRIO_MIN > tmp) {
+          tmp = PRIO_MIN;
+          fprintf(stderr, "clamping scheduler priority to PRIO_MIN\n");
+        } else if (PRIO_MAX < tmp) {
+          fprintf(stderr, "clamping scheduler priority to PRIO_MAX\n");
+          tmp = PRIO_MAX;
+        }
+        cf->nice_level = atoi(optarg);
+        break;
       case 'o':
         cf->dst_startrails = optarg;
         break;
@@ -104,7 +262,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 
 void usage_and_exit(int x) {
   std::cout << "Usage: startrails [-v] -d <dir> -e <ext> [-b <brightness> -o "
-               "<output> -s <size> | -S]"
+               "<output> | -s] [-m <max-threads>] [-n <nice>]"
             << std::endl;
   if (x) {
     std::cout << KRED
@@ -125,6 +283,11 @@ void usage_and_exit(int x) {
             << std::endl;
   std::cout << "-e | --extension <str> : filter images to just this extension"
             << std::endl;
+  std::cout << "-m | --max-threads <int> : limit maximum number of processing "
+               "threads. (0 = nproc)"
+            << std::endl;
+  std::cout << "-n | --nice <int> : nice(2) level of processing threads (10)"
+            << std::endl;
   std::cout << "-o | --output-file <str> : output image filename" << std::endl;
   std::cout << "-s | --image-size <int>x<int> : restrict processed images to "
                "this size"
@@ -143,6 +306,7 @@ void usage_and_exit(int x) {
 }
 
 int main(int argc, char* argv[]) {
+  int r;
   struct config_t config;
   int i;
   char* e;
@@ -165,6 +329,12 @@ int main(int argc, char* argv[]) {
   if (!config.dst_startrails.empty() && config.brightness_limit < 0)
     usage_and_exit(3);
 
+  r = setpriority(PRIO_PROCESS, 0, config.nice_level);
+  if (r) {
+    config.nice_level = getpriority(PRIO_PROCESS, 0);
+    fprintf(stderr, "unable to set nice level: %s\n", strerror(errno));
+  }
+
   // Find files
   glob_t files;
   std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
@@ -175,101 +345,56 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
+  std::mutex accumulated_mutex;
   cv::Mat accumulated;
-
-  // Create space for statistics
   cv::Mat stats;
   stats.create(1, files.gl_pathc, CV_64F);
-  int nchan = 0;
+  // initialize stats to NAN because some images might legitimately be 100%
+  // brightness if they're massively overexposed. They should be counted in
+  // the summary statistics. It is not entirely accurate to signal invalid
+  // images with 1.0 brightness since no image data was read.
+  stats = NAN;
 
-  for (size_t f = 0; f < files.gl_pathc; f++) {
-    cv::Mat image = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
-    if (!image.data) {
-      if (config.verbose)
-        fprintf(stderr, "Error reading file %s\n", basename(files.gl_pathv[f]));
-      stats.col(f) = 1.0;  // mark as invalid
-      continue;
-    }
+  std::vector<std::thread> threadpool;
+  for (int tid = 0; tid < config.num_threads; tid++)
+    threadpool.push_back(std::thread(startrail_worker, tid, &config, &files,
+                                     &accumulated_mutex, &stats, &accumulated));
 
-    if (config.img_height && config.img_width &&
-        (image.cols != config.img_width || image.rows != config.img_height)) {
-      if (config.verbose)
-        fprintf(stderr, "skipped %s - got size %dx%d, want %dx%d\n",
-                files.gl_pathv[f], image.cols, image.cols, config.img_width,
-                config.img_height);
-      continue;
-    }
+  for (auto& t : threadpool)
+    t.join();
 
-    // first valid image sets the number of channels we expect
-    if (nchan == 0 && image.channels())
-      nchan = image.channels();
-
-    cv::Scalar mean_scalar = cv::mean(image);
-    double mean;
-    switch (image.channels()) {
-      default:  // mono case
-        mean = mean_scalar.val[0];
-        break;
-      case 3:  // for color choose maximum channel
-      case 4:
-        mean = cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
-        break;
-    }
-    // Scale to 0-1 range
-    switch (image.depth()) {
-      case CV_8U:
-        mean /= 255.0;
-        break;
-      case CV_16U:
-        mean /= 65535.0;
-        break;
-    }
-    if (config.verbose > 1)
-      std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
-                << basename(files.gl_pathv[f]) << " " << mean << std::endl;
-
-    stats.col(f) = mean;
-
-    if (config.startrails_enabled && mean <= config.brightness_limit) {
-      if (image.channels() != nchan) {
-        if (config.verbose)
-          fprintf(stderr, "repairing %s channel mismatch: got %d, want %d\n",
-                  files.gl_pathv[f], image.channels(), nchan);
-        if (image.channels() < nchan)
-          cv::cvtColor(image, image, cv::COLOR_GRAY2BGR, nchan);
-        else if (image.channels() > nchan)
-          cv::cvtColor(image, image, cv::COLOR_BGR2GRAY, nchan);
-      }
-      if (accumulated.empty()) {
-        image.copyTo(accumulated);
-      } else {
-        accumulated = cv::max(accumulated, image);
-      }
-    }
-  }
-
-  // Calculate some statistics
-  double min_mean, max_mean;
+  // Calculate some descriptive statistics
+  double ds_min, ds_max, ds_mean, ds_median;
   cv::Point min_loc;
-  cv::minMaxLoc(stats, &min_mean, &max_mean, &min_loc);
-  double mean_mean = cv::mean(stats)[0];
+
+  // Each thread will have updated stats with the brightness of the images
+  // that were successfully processed. Invalid images will be left as NAN.
+  // In OpenCV, NAN is unequal to everything including NAN which means we can
+  // filter out bogus entries by checking stats for element-wise equality
+  // with itself.
+  cv::Mat nan_mask = cv::Mat(stats == stats);
+  cv::Mat filtered_stats;
+  stats.copyTo(filtered_stats, nan_mask);
+  cv::minMaxLoc(stats, &ds_min, &ds_max, &min_loc);
+  ds_mean = cv::mean(filtered_stats)[0];
 
   // For median, do partial sort and take middle value
   std::vector<double> vec;
-  stats.copyTo(vec);
+  filtered_stats.copyTo(vec);
   std::nth_element(vec.begin(), vec.begin() + (vec.size() / 2), vec.end());
-  double median_mean = vec[vec.size() / 2];
+  ds_median = vec[vec.size() / 2];
 
-  std::cout << "Minimum: " << min_mean << " maximum: " << max_mean
-            << " mean: " << mean_mean << " median: " << median_mean
-            << std::endl;
+  std::cout << "Minimum: " << ds_min << " maximum: " << ds_max
+            << " mean: " << ds_mean << " median: " << ds_median << std::endl;
 
   // If we still don't have an image (no images below threshold), copy the
   // minimum mean image so we see why
   if (config.startrails_enabled) {
     if (accumulated.empty()) {
-      std::cout << "No images below threshold, writing the minimum image only"
-                << std::endl;
+      fprintf(
+          stderr,
+          "No images below threshold %.3f, writing the minimum image only\n",
+          config.brightness_limit);
       accumulated = cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
     }
 

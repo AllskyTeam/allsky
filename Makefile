@@ -51,7 +51,7 @@ else
 	  chown -R $(SUDO_USER):$(SUDO_USER) ./ ; \
 	  echo ""; \
 	  echo ""; \
-	  echo `date +%F\ %R:%S` It is recommended to reboot now, please issue \'sudo reboot\'; \
+	  echo `date +%F\ %R:%S` Install complete; \
 	  echo ""; \
 	  echo ""; \
 	fi

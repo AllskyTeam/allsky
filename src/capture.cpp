@@ -568,8 +568,7 @@ void IntHandle(int i)
 void waitToFix(char const *msg)
 {
     printf("**********\n");
-    printf(msg);
-    printf("\n");
+    printf("%s\n", msg);
     printf("*** After fixing, ");
     if (tty)
         printf("restart allsky.sh.\n");

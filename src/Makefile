@@ -34,7 +34,7 @@ endif
 
 USB=$(shell pkg-config --exists libusb-1.0 && pkg-config --cflags --libs libusb-1.0)
 DEFS = -D_LIN -D_DEBUG -DGLIBC_20
-CFLAGS = -Wall -Wno-psabi -g -O2 -lpthread
+CFLAGS = -Wall -Wno-psabi -Wno-unused-result -g -O2 -lpthread
 OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || (pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4))
 
 ifeq ($(platform), armv6l)

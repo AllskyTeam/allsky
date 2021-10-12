@@ -977,7 +977,7 @@ const char *locale = DEFAULT_LOCALE;
         // The old names should be removed below in a future version.
         for (i=1 ; i <= argc - 1 ; i++)
         {
-            if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "-help") == 0)
+            if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0)
             {
                 help = 1;
             }

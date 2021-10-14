@@ -187,7 +187,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
   while (1) {  // getopt loop
     int option_index = 0;
     static struct option long_options[] = {
-        {"brightness", optional_argument, 0, 'b'},
+        {"brightness", required_argument, 0, 'b'},
         {"directory", required_argument, 0, 'd'},
         {"extension", required_argument, 0, 'e'},
         {"max-threads", required_argument, 0, 'm'},
@@ -237,8 +237,11 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         break;
       case 'm':
         tmp = atoi(optarg);
-        if ((tmp >= 1) || (tmp < cf->num_threads))
+        if ((tmp >= 1) && (tmp < cf->num_threads))
           cf->num_threads = tmp;
+        else
+          fprintf(stderr, "invalid number of threads %d; using %d\n", tmp,
+                  cf->num_threads);
         break;
       case 'n':
         tmp = atoi(optarg);

@@ -1,6 +1,4 @@
 images/*
-capture
-capture_RPiHQ
 config.sh
 darks/*
 gibbons*
@@ -11,10 +9,8 @@ image-processed.jpg
 autocam.sh
 temperature.txt
 data.json
-keogram
 log.txt
 settings.json
-startrails
 scripts/data.json
 scripts/ftp-settings.sh
 scripts/keogram_and_startrails.sh
@@ -24,3 +20,18 @@ scripts/startrails_only.sh
 scripts/stretch.sh
 settings_RPiHQ.json
 settings_ZWO.json
+
+# development artifacts
+src/*.a
+*.o
+*.core
+*.gcda
+gmon.out
+.*.swp
+
+# generated binaries
+capture
+capture_RPiHQ
+keogram
+startrails
+sunwait

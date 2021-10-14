@@ -63,13 +63,13 @@ if [ "${DARK_FRAME_SUBTRACTION}" = "true" ]; then
 				CLOSEST_TEMPERATURE=${DARK_TEMPERATURE}
 				let DIFF=${TEMPERATURE}-${CLOSEST_TEMPERATURE}
 			else
-				echo "${ME}: INFORMATION: dark file '${CAMERA}/${file}' is zero-length; deleting."
+				echo "${ME}: INFORMATION: dark file '${DARKS_DIR}/${file}' is zero-length; deleting."
 				rm -f "${DARKS_DIR}/${file}"
 			fi
 		done
 
 		if [ "${CLOSEST_TEMPERATURE}" = "" ]; then
-			echo "*** ${ME}: ERROR: No ${CAMERA} dark frame found for ${CURRENT_IMAGE} at TEMPERATURE ${TEMPERATURE}."
+			echo "*** ${ME}: ERROR: No dark frame found for ${CURRENT_IMAGE} at TEMPERATURE ${TEMPERATURE}."
 			echo "Either take dark frames or turn DARK_FRAME_SUBTRACTION off in config.sh"
 			echo "Continuing without dark subtraction."
 			return
@@ -79,7 +79,7 @@ if [ "${DARK_FRAME_SUBTRACTION}" = "true" ]; then
 	fi
 
 	if [ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ]; then
-		echo "${ME}: Subtracting dark frame '${CAMERA}/${CLOSEST_TEMPERATURE}.${EXTENSION}' from image with TEMPERATURE=${TEMPERATURE}"
+		echo "${ME}: Subtracting dark frame '${CLOSEST_TEMPERATURE}.${EXTENSION}' from image with TEMPERATURE=${TEMPERATURE}"
 	fi
 	# Update the current image - don't rename it.
 	convert "${CURRENT_IMAGE}" "${DARK}" -compose minus_src -composite -type TrueColor "${CURRENT_IMAGE}"

@@ -287,7 +287,7 @@ void usage_and_exit(int x) {
   std::cout << "-e | --extension <str> : filter images to just this extension"
             << std::endl;
   std::cout << "-m | --max-threads <int> : limit maximum number of processing "
-               "threads. (0 = nproc)"
+               "threads. (unspecified = use all cpus)"
             << std::endl;
   std::cout << "-n | --nice <int> : nice(2) level of processing threads (10)"
             << std::endl;

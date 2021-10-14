@@ -1,8 +1,6 @@
 #!/bin/bash
 
 # This file is "source"d into another.
-# "${CURRENT_IMAGE}" is the name of the current image we're working on.
-CURRENT_IMAGE="dark.${EXTENSION}"		# XXXXX in future release this will be set by saveImage.sh
 
 # ${TEMPERATURE} is passed to us by saveImage.sh, but may be null.
 # If ${TEMPERATURE} is set, use it as the temperature, otherwise read the ${TEMPERATURE_FILE}.
@@ -18,6 +16,9 @@ fi
 
 DARK_MODE=$(jq -r '.darkframe' "$CAMERA_SETTINGS")
 if [ "$DARK_MODE" = "1" ] ; then
+	# "${CURRENT_IMAGE}" is the name of the current image we're working on.
+	CURRENT_IMAGE="dark.${EXTENSION}"		# XXXXX in future release this will be set by saveImage.sh
+
 	DARKS_DIR="${ALLSKY_DARKS}"
 	mkdir -p "${DARKS_DIR}"
 	# If the camera doesn't support temperature, we will keep overwriting the file until
@@ -39,4 +40,7 @@ if [ "$DARK_MODE" = "1" ] ; then
 	fi
 
 	exit 0	# exit so the calling script exits.
+	
+else	
+	CURRENT_IMAGE="${FULL_FILENAME}"	# Not capturing darks so use standard file name
 fi

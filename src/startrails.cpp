@@ -176,13 +176,13 @@ void startrail_worker(int thread_num,
 }
 
 void parse_args(int argc, char** argv, struct config_t* cf) {
-  int c, tmp;
+  int c, tmp, ncpu = std::thread::hardware_concurrency();
   cf->verbose = 0;
   cf->startrails_enabled = true;
   cf->img_height = cf->img_width = 0;
   cf->brightness_limit = 0.35;  // not terrible in the city
   cf->nice_level = 10;
-  cf->num_threads = std::thread::hardware_concurrency();
+  cf->num_threads = ncpu;
 
   while (1) {  // getopt loop
     int option_index = 0;
@@ -237,7 +237,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         break;
       case 'm':
         tmp = atoi(optarg);
-        if ((tmp >= 1) && (tmp < cf->num_threads))
+        if ((tmp >= 1) && (tmp <= ncpu))
           cf->num_threads = tmp;
         else
           fprintf(stderr, "invalid number of threads %d; using %d\n", tmp,

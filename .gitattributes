@@ -10,6 +10,7 @@
 *.txt text
 *.md text
 Makefile text
+.gitignore text
 
 *.png binary
 *.jpg binary

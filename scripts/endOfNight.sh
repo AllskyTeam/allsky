@@ -60,6 +60,8 @@ if [[ ${KEOGRAM} == "true" ]]; then
 	mkdir -p "${DATE_DIR}/keogram/"
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/keogram/${KEOGRAM_FILE}"
+
+	echo "${ALLSKY_HOME}/keogram" ${SIZE_FILTER} -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_EXTRA_PARAMETERS}
 	"${ALLSKY_HOME}/keogram" ${SIZE_FILTER} -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_EXTRA_PARAMETERS}
 	RETCODE=$?
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RETCODE} = 0 ]] ; then
@@ -86,6 +88,7 @@ if [[ ${STARTRAILS} == "true" ]]; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/startrails/${STARTRAILS_FILE}"
 
+	echo "${ALLSKY_HOME}/startrails" ${SIZE_FILTER} -d "${DATE_DIR}" -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o "${UPLOAD_FILE}"
 	"${ALLSKY_HOME}/startrails" ${SIZE_FILTER} -d "${DATE_DIR}" -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o "${UPLOAD_FILE}"
 	RETCODE=$?
 	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RETCODE} == 0 ]] ; then

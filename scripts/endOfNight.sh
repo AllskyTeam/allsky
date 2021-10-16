@@ -133,7 +133,7 @@ fi
 
 # Run custom script at the end of a night. This is run BEFORE the automatic deletion
 # just in case you need to do something with the files before they are removed
-"${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh"
+test -x "${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh" && "${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh"
 
 # Automatically delete old images and videos
 if [[ ${AUTO_DELETE} == "true" ]]; then

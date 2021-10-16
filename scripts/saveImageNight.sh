@@ -34,18 +34,6 @@ if [ $RET -ne 0 ] ; then
 	exit 3
 fi
 
-if [ "$DARK_FRAME_SUBTRACTION" = "true" ] ; then
-	# PROCESSED_FILE should have been created by darkSubtract.sh.  If not, it output an error message.
-	PROCESSED_FILE="$FILENAME-processed.$EXTENSION"
-	# Check in case the user has subtraction set to "true" but has no dark frames.
-	if [[ ! -f "$PROCESSED_FILE" ]]; then
-		echo "${YELLOW}*** $ME: WARNING: Processed image '$PROCESSED_FILE' does not exist; continuing!${NC}"
-	else
-		# Want the name of the final file to alway be the same
-		mv -f "$PROCESSED_FILE" "$IMAGE_TO_USE"
-	fi
-fi
-
 # Resize the image if required
 if [[ $IMG_RESIZE == "true" ]]; then
 	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing '${IMAGE_TO_USE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"

@@ -54,6 +54,9 @@ fi
 
 SEQUENCE_DIR="${DATE_DIR}/sequence"
 NSEQ=$(ls "${SEQUENCE_DIR}" 2>/dev/null | wc -l )
+TMP="${ALLSKY_TMP}/timelapseTMP.txt"
+> "${TMP}"
+
 if [ "$KEEP_SEQUENCE" = "false" -o $NSEQ -lt 100 ] ; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
@@ -62,9 +65,6 @@ if [ "$KEEP_SEQUENCE" = "false" -o $NSEQ -lt 100 ] ; then
 	find "${DATE_DIR}" -name "*.${EXTENSION}" -size 0 -delete
 
 	# capture the "ln" commands in case the user needs to debug
-	mkdir -p "${ALLSKY_TMP}"
-	TMP="${ALLSKY_TMP}/timelapseTMP.txt"
-	> "${TMP}"
 	ls -rt "${DATE_DIR}"/*.${EXTENSION} |
 	gawk 'BEGIN{ a=1 }
 		{

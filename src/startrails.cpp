@@ -190,8 +190,8 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         {"brightness", required_argument, 0, 'b'},
         {"directory", required_argument, 0, 'd'},
         {"extension", required_argument, 0, 'e'},
-        {"max-threads", required_argument, 0, 'm'},
-        {"nice-level", required_argument, 0, 'n'},
+        {"max-threads", required_argument, 0, 'Q'},
+        {"nice-level", required_argument, 0, 'q'},
         {"output", required_argument, 0, 'o'},
         {"image-size", required_argument, 0, 's'},
         {"statistics", no_argument, 0, 'S'},
@@ -199,7 +199,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "hvSb:d:e:m:n:o:s:", long_options,
+    c = getopt_long(argc, argv, "hvSb:d:e:Q:q:o:s:", long_options,
                     &option_index);
     if (c == -1)
       break;
@@ -235,7 +235,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
       case 'e':
         cf->img_src_ext = optarg;
         break;
-      case 'm':
+      case 'Q':
         tmp = atoi(optarg);
         if ((tmp >= 1) && (tmp <= ncpu))
           cf->num_threads = tmp;
@@ -243,7 +243,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
           fprintf(stderr, "invalid number of threads %d; using %d\n", tmp,
                   cf->num_threads);
         break;
-      case 'n':
+      case 'q':
         tmp = atoi(optarg);
         if (PRIO_MIN > tmp) {
           tmp = PRIO_MIN;
@@ -265,7 +265,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 
 void usage_and_exit(int x) {
   std::cout << "Usage: startrails [-v] -d <dir> -e <ext> [-b <brightness> -o "
-               "<output> | -s] [-m <max-threads>] [-n <nice>]"
+               "<output> | -s] [-Q <max-threads>] [-q <nice>]"
             << std::endl;
   if (x) {
     std::cout << KRED
@@ -286,10 +286,10 @@ void usage_and_exit(int x) {
             << std::endl;
   std::cout << "-e | --extension <str> : filter images to just this extension"
             << std::endl;
-  std::cout << "-m | --max-threads <int> : limit maximum number of processing "
+  std::cout << "-Q | --max-threads <int> : limit maximum number of processing "
                "threads. (unspecified = use all cpus)"
             << std::endl;
-  std::cout << "-n | --nice <int> : nice(2) level of processing threads (10)"
+  std::cout << "-q | --nice <int> : nice(2) level of processing threads (10)"
             << std::endl;
   std::cout << "-o | --output-file <str> : output image filename" << std::endl;
   std::cout << "-s | --image-size <int>x<int> : restrict processed images to "

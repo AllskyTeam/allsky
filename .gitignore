@@ -18,6 +18,7 @@ scripts/keogram_only.sh
 scripts/startrails_manual.sh
 scripts/startrails_only.sh
 scripts/stretch.sh
+scripts/endOfNight_additionalSteps.sh
 settings_RPiHQ.json
 settings_ZWO.json
 
@@ -27,7 +28,7 @@ src/*.a
 *.core
 *.gcda
 gmon.out
-.*.swp
+.*.sw[pomnq]
 
 # generated binaries
 capture

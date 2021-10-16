@@ -212,7 +212,11 @@ nano scripts/ftp-settings.sh
 
 At the end of the night `endOfNight.sh` is run. It calls a few other scripts based on your config.sh content.
 
-You normally won't need to edit those files unless you want to implement a new feature.  One file you *may* want to edit is `endOfNight_additionalSteps.sh` which is where you can place any additional code you require to be run at the end of the night. This script is run prior to the deletion of any old image files.
+You normally won't need to edit those files unless you want to implement a new feature.
+One change you may want to make is to copy `endOfNight_additionalSteps.repo` to
+`endOfNight_additionalSteps.sh` and then add your additional processing steps which
+will be run after the usual end-of-night processing, but before the deletion of any
+old image files.
 
 nano is a text editor. Hit **ctrl + x**, followed by **y** and **Enter** in order to save your changes.
 

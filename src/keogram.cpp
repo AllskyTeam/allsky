@@ -4,13 +4,18 @@
 // Rotation added by Agustin Nunez @agnunez
 // SPDX-License-Identifier: MIT
 
+using namespace std;
+
 #include <getopt.h>
 #include <glob.h>
 #include <stdio.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <opencv2/highgui.hpp>
@@ -35,21 +40,219 @@ struct config_t {
   int fontType;
   int lineWidth;
   int verbose;
+  int num_threads;
+  int nice_level;
   uint8_t a, r, g, b;
   double fontScale;
   double rotation_angle;
   double brightness_limit;
 } config;
 
+std::mutex stdio_mutex;
+
 void parse_args(int, char**, struct config_t*);
 void usage_and_exit(int);
 int get_font_by_name(char*);
+void keogram_worker(int,               // thread num
+                    struct config_t*,  // config
+                    glob_t*,           // file list
+                    std::mutex*,       // mutex
+                    cv::Mat*,          // accumulated
+                    cv::Mat*           // annotations
+);
 
-//-------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------
+void keogram_worker(int thread_num,
+                    struct config_t* cf,
+                    glob_t* files,
+                    std::mutex* mtx,
+                    cv::Mat* acc,
+                    cv::Mat* ann) {
+  int start_num, end_num, batch_size, prevHour = -1, nchan = 0;
+  unsigned long nfiles = files->gl_pathc;
+  cv::Mat thread_accumulator;
+
+  batch_size = nfiles / cf->num_threads;
+  start_num = thread_num * batch_size;
+
+  // last thread has more work to do if the number of images isn't multiple of
+  // the number of threads
+  if ((thread_num + 1) == cf->num_threads)
+    end_num = nfiles - 1;
+  else
+    end_num = start_num + batch_size - 1;
+
+  if (cf->verbose > 1) {
+    stdio_mutex.lock();
+    fprintf(stderr, "thread %d/%d processing files %d-%d (%d/%lu)\n",
+            thread_num + 1, cf->num_threads, start_num, end_num,
+            end_num - start_num + 1, nfiles);
+    stdio_mutex.unlock();
+  }
+
+  for (int f = start_num; f <= end_num; f++) {
+    char* filename = files->gl_pathv[f];
+    if (cf->verbose > 1) {
+      stdio_mutex.lock();
+      fprintf(stderr, "[%d/%lu] %s\n", f + 1, nfiles, filename);
+      stdio_mutex.unlock();
+    }
+
+    cv::Mat imagesrc = cv::imread(filename, cv::IMREAD_UNCHANGED);
+    if (!imagesrc.data) {
+      if (cf->verbose) {
+        stdio_mutex.lock();
+        std::cout << "Error reading file " << filename << std::endl;
+        stdio_mutex.unlock();
+      }
+      continue;
+    }
+
+    if (cf->img_height && cf->img_width &&
+        (imagesrc.cols != cf->img_width || imagesrc.rows != cf->img_height)) {
+      if (cf->verbose) {
+        stdio_mutex.lock();
+        fprintf(stderr,
+                "%s image size %dx%d does not match expected size %dx%d\n",
+                filename, imagesrc.cols, imagesrc.cols, cf->img_width,
+                cf->img_height);
+        stdio_mutex.unlock();
+      }
+      continue;
+    }
+
+    if (nchan == 0)
+      nchan = imagesrc.channels();
+
+    if (imagesrc.channels() != nchan) {
+      if (cf->verbose) {
+        stdio_mutex.lock();
+        fprintf(stderr, "repairing channel mismatch: %d != %d\n",
+                imagesrc.channels(), nchan);
+        stdio_mutex.unlock();
+      }
+      if (imagesrc.channels() < nchan)
+        cv::cvtColor(imagesrc, imagesrc, cv::COLOR_GRAY2BGR, nchan);
+      else if (imagesrc.channels() > nchan)
+        cv::cvtColor(imagesrc, imagesrc, cv::COLOR_BGR2GRAY, nchan);
+    }
+
+    if (cf->rotation_angle) {
+      if (cf->verbose > 1) {
+        stdio_mutex.lock();
+        fprintf(stderr, "rotating image by %.2f\n", cf->rotation_angle);
+        stdio_mutex.unlock();
+      }
+      cv::Point2f center((imagesrc.cols - 1) / 2.0, (imagesrc.rows - 1) / 2.0);
+      cv::Mat rot = cv::getRotationMatrix2D(center, cf->rotation_angle, 1.0);
+      cv::Rect2f bbox =
+          cv::RotatedRect(cv::Point2f(), imagesrc.size(), cf->rotation_angle)
+              .boundingRect2f();
+      rot.at<double>(0, 2) += bbox.width / 2.0 - imagesrc.cols / 2.0;
+      rot.at<double>(1, 2) += bbox.height / 2.0 - imagesrc.rows / 2.0;
+      // cv::Mat imagedst;
+      // cv::warpAffine(imagesrc, imagedst, rot, bbox.size());
+      cv::warpAffine(imagesrc, imagesrc, rot, bbox.size());
+    }
+
+    /* This seemingly redundant check saves a bunch of locking and unlocking
+    later. Maybe all the threads will see the accumlator as empty, so they will
+    all try grab the lock...
+
+    The winner of that race initializes the accumulator with its image, and
+    releases the lock. The rest of the threads will - in turn - get the lock,
+    and on checking the accumulator again, find it no longer in need of
+    initialization, so they skip the .create().
+
+    Future iterations will all see that the accumulator is non-empty.
+    */
+    if (acc->empty()) {
+      mtx->lock();
+      if (acc->empty()) {
+        acc->create(imagesrc.rows, nfiles, imagesrc.type());
+        if (cf->verbose > 1) {
+          stdio_mutex.lock();
+          fprintf(stderr, "thread %d initialized accumulator\n", thread_num);
+          stdio_mutex.unlock();
+        }
+      }
+      mtx->unlock();
+    }
+
+    // Copy middle column to destination
+    // locking not required - we have absolute index into the accumulator
+    imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(f));
+
+    if (cf->labels_enabled) {
+      struct tm ft;  // the time of the file, by any means necessary
+      if (cf->parse_filename) {
+        // engage your safety squints!
+        char* s;
+        s = strrchr(filename, '-');
+        s++;
+        sscanf(s, "%04d%02d%02d%02d%02d%02d.%*s", &ft.tm_year, &ft.tm_mon,
+               &ft.tm_mday, &ft.tm_hour, &ft.tm_min, &ft.tm_sec);
+      } else {
+        // sometimes you can believe the file time on disk
+        struct stat s;
+        stat(filename, &s);
+        struct tm* t = localtime(&s.st_mtime);
+        ft.tm_hour = t->tm_hour;
+      }
+
+      // record the annotation
+      if (ft.tm_hour != prevHour) {
+        if (prevHour != -1) {
+          mtx->lock();
+          cv::Mat a = (cv::Mat_<int>(1, 2) << f, ft.tm_hour);
+          ann->push_back(a);
+          mtx->unlock();
+        }
+        prevHour = ft.tm_hour;
+      }
+    }
+  }
+}
+
+void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
+  int baseline = 0;
+  char hour[3];
+
+  if (cf->labels_enabled && !ann->empty()) {
+    for (int r = 0; r < ann->rows; r++) {
+      // Draw a dashed line and label for hour
+      cv::LineIterator it(*acc, cv::Point(ann->at<int>(r, 0), 0),
+                          cv::Point(ann->at<int>(r, 0), acc->rows));
+      for (int i = 0; i < it.count; i++, ++it) {
+        // 4 pixel dashed line
+        if (i & 4) {
+          uchar* p = *it;
+          for (int c = 0; c < it.elemSize; c++) {
+            *p = ~(*p);
+            p++;
+          }
+        }
+      }
+
+      // Draw text label to the left of the dash
+      snprintf(hour, 3, "%02d", ann->at<int>(r, 1));
+      std::string text(hour);
+      cv::Size textSize = cv::getTextSize(text, cf->fontFace, cf->fontScale,
+                                          cf->lineWidth, &baseline);
+
+      if (ann->at<int>(r, 0) - textSize.width >= 0) {
+        cv::putText(*acc, text,
+                    cv::Point(ann->at<int>(r, 0) - textSize.width,
+                              acc->rows - textSize.height),
+                    cf->fontFace, cf->fontScale,
+                    cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
+                    cf->fontType);
+      }
+    }
+  }
+}
 
 void parse_args(int argc, char** argv, struct config_t* cf) {
-  int c;
+  int c, tmp, ncpu = std::thread::hardware_concurrency();
 
   cf->labels_enabled = true;
   cf->parse_filename = false;
@@ -61,6 +264,8 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
   cf->b = 0xff;
   cf->rotation_angle = 0;
   cf->verbose = cf->img_width = cf->img_height = 0;
+  cf->num_threads = ncpu;
+  cf->nice_level = 10;
 
   while (1) {  // getopt loop
     int option_index = 0;
@@ -75,13 +280,15 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         {"font-size", required_argument, 0, 'S'},
         {"font-type", required_argument, 0, 'T'},
         {"rotate", required_argument, 0, 'r'},
+        {"max-threads", required_argument, 0, 'Q'},
+        {"nice-level", required_argument, 0, 'q'},
         {"parse-filename", no_argument, 0, 'p'},
         {"no-label", no_argument, 0, 'n'},
         {"verbose", no_argument, 0, 'v'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "d:e:o:r:s:C:L:N:S:T:npvh", long_options,
+    c = getopt_long(argc, argv, "d:e:o:r:s:C:L:N:S:T:Q:q:npvh", long_options,
                     &option_index);
     if (c == -1)
       break;
@@ -120,7 +327,6 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         cf->verbose++;
         break;
       case 'C':
-        int tmp;
         if (strchr(optarg, ' ')) {
           int r, g, b;
           sscanf(optarg, "%d %d %d", &b, &g, &r);
@@ -153,6 +359,25 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
           cf->fontType = cv::LINE_AA;
         else
           cf->fontType = cv::LINE_8;
+        break;
+      case 'Q':
+        tmp = atoi(optarg);
+        if ((tmp >= 1) && (tmp <= ncpu))
+          cf->num_threads = tmp;
+        else
+          fprintf(stderr, "invalid number of threads %d; using %d\n", tmp,
+                  cf->num_threads);
+        break;
+      case 'q':
+        tmp = atoi(optarg);
+        if (PRIO_MIN > tmp) {
+          tmp = PRIO_MIN;
+          fprintf(stderr, "clamping scheduler priority to PRIO_MIN\n");
+        } else if (PRIO_MAX < tmp) {
+          fprintf(stderr, "clamping scheduler priority to PRIO_MAX\n");
+          tmp = PRIO_MAX;
+        }
+        cf->nice_level = atoi(optarg);
         break;
       default:
         break;
@@ -195,6 +420,12 @@ void usage_and_exit(int x) {
   std::cout << "-N | --font-name <str> : font name (simplex)" << std::endl;
   std::cout << "-S | --font-size <float> : font size (2.0)" << std::endl;
   std::cout << "-T | --font-type <int> : font line type (1)" << std::endl;
+  std::cout << "-Q | --max-threads <int> : limit maximum number of processing "
+               "threads. (use all cpus)"
+            << std::endl;
+  std::cout
+      << "-q | --nice-level <int> : nice(2) level of processing threads (10)"
+      << std::endl;
 
   std::cout << KNRM << std::endl;
   std::cout
@@ -238,7 +469,7 @@ int get_font_by_name(char* s) {
 
 int main(int argc, char* argv[]) {
   struct config_t config;
-  int i;
+  int i, r;
   char* e;
 
   parse_args(argc, argv, &config);
@@ -252,6 +483,12 @@ int main(int argc, char* argv[]) {
       config.dst_keogram.empty())
     usage_and_exit(3);
 
+  r = setpriority(PRIO_PROCESS, 0, config.nice_level);
+  if (r) {
+    config.nice_level = getpriority(PRIO_PROCESS, 0);
+    fprintf(stderr, "unable to set nice level: %s\n", strerror(errno));
+  }
+
   glob_t files;
   std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
   glob(wildcard.c_str(), 0, NULL, &files);
@@ -261,121 +498,23 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
+  std::mutex accumulated_mutex;
   cv::Mat accumulated;
+  cv::Mat annotations;
+  annotations.create(0, 2, CV_32S);
+  annotations = -1;
 
-  int prevHour = -1;
-  int nchan = 0;
+  std::vector<std::thread> threadpool;
+  for (int tid = 0; tid < config.num_threads; tid++)
+    threadpool.push_back(std::thread(keogram_worker, tid, &config, &files,
+                                     &accumulated_mutex, &accumulated,
+                                     &annotations));
 
-  for (size_t f = 0; f < files.gl_pathc; f++) {
-    cv::Mat imagesrc = cv::imread(files.gl_pathv[f], cv::IMREAD_UNCHANGED);
-    if (!imagesrc.data) {
-      if (config.verbose)
-        std::cout << "Error reading file " << basename(files.gl_pathv[f])
-                  << std::endl;
-      continue;
-    }
+  for (auto& t : threadpool)
+    t.join();
 
-    if (config.verbose > 1)
-      std::cout << "[" << f + 1 << "/" << files.gl_pathc << "] "
-                << basename(files.gl_pathv[f]) << std::endl;
-
-    if (config.img_height && config.img_width &&
-        (imagesrc.cols != config.img_width ||
-         imagesrc.rows != config.img_height)) {
-      if (config.verbose) {
-        fprintf(stderr,
-                "%s image size %dx%d does not match expected size %dx%d\n",
-                files.gl_pathv[f], imagesrc.cols, imagesrc.cols,
-                config.img_width, config.img_height);
-      }
-      continue;
-    }
-
-    if (nchan == 0)
-      nchan = imagesrc.channels();
-
-    if (imagesrc.channels() != nchan) {
-      if (config.verbose) {
-        fprintf(stderr, "repairing channel mismatch: %d != %d\n",
-                imagesrc.channels(), nchan);
-      }
-      if (imagesrc.channels() < nchan)
-        cv::cvtColor(imagesrc, imagesrc, cv::COLOR_GRAY2BGR, nchan);
-      else if (imagesrc.channels() > nchan)
-        cv::cvtColor(imagesrc, imagesrc, cv::COLOR_BGR2GRAY, nchan);
-    }
-
-    cv::Point2f center((imagesrc.cols - 1) / 2.0, (imagesrc.rows - 1) / 2.0);
-    cv::Mat rot = cv::getRotationMatrix2D(center, config.rotation_angle, 1.0);
-    cv::Rect2f bbox =
-        cv::RotatedRect(cv::Point2f(), imagesrc.size(), config.rotation_angle)
-            .boundingRect2f();
-    rot.at<double>(0, 2) += bbox.width / 2.0 - imagesrc.cols / 2.0;
-    rot.at<double>(1, 2) += bbox.height / 2.0 - imagesrc.rows / 2.0;
-    cv::Mat imagedst;
-    cv::warpAffine(imagesrc, imagedst, rot, bbox.size());
-    if (accumulated.empty()) {
-      accumulated.create(imagedst.rows, files.gl_pathc, imagesrc.type());
-    }
-
-    // Copy middle column to destination
-    imagedst.col(imagedst.cols / 2).copyTo(accumulated.col(f));
-
-    if (config.labels_enabled) {
-      struct tm ft;  // the time of the file, by any means necessary
-      if (config.parse_filename) {
-        // engage your safety squints!
-        char* s;
-        s = strrchr(files.gl_pathv[f], '-');
-        s++;
-        sscanf(s, "%04d%02d%02d%02d%02d%02d.%*s", &ft.tm_year, &ft.tm_mon,
-               &ft.tm_mday, &ft.tm_hour, &ft.tm_min, &ft.tm_sec);
-      } else {
-        // sometimes you can believe the file time on disk
-        struct stat s;
-        stat(files.gl_pathv[f], &s);
-        struct tm* t = localtime(&s.st_mtime);
-        ft.tm_hour = t->tm_hour;
-      }
-
-      if (ft.tm_hour != prevHour) {
-        if (prevHour != -1) {
-          // Draw a dashed line and label for hour
-          cv::LineIterator it(accumulated, cv::Point(f, 0),
-                              cv::Point(f, accumulated.rows));
-          for (int i = 0; i < it.count; i++, ++it) {
-            // 4 pixel dashed line
-            if (i & 4) {
-              uchar* p = *it;
-              for (int c = 0; c < it.elemSize; c++) {
-                *p = ~(*p);
-                p++;
-              }
-            }
-          }
-
-          // Draw text label to the left of the dash
-          char hour[3];
-          snprintf(hour, 3, "%02d", ft.tm_hour);
-          std::string text(hour);
-          int baseline = 0;
-          cv::Size textSize =
-              cv::getTextSize(text, config.fontFace, config.fontScale,
-                              config.lineWidth, &baseline);
-
-          if (f - textSize.width >= 0) {
-            cv::putText(accumulated, text,
-                        cv::Point(f - textSize.width,
-                                  accumulated.rows - textSize.height),
-                        config.fontFace, config.fontScale,
-                        cv::Scalar(config.b, config.g, config.r),
-                        config.lineWidth, config.fontType);
-          }
-        }
-        prevHour = ft.tm_hour;
-      }
-    }
-  }
+  if (config.labels_enabled)
+    annotate_image(&annotations, &accumulated, &config);
   globfree(&files);
 
   std::vector<int> compression_params;

@@ -287,10 +287,11 @@ void usage_and_exit(int x) {
   std::cout << "-e | --extension <str> : filter images to just this extension"
             << std::endl;
   std::cout << "-m | --max-threads <int> : limit maximum number of processing "
-               "threads. (unspecified = use all cpus)"
+               "threads. (use all cpus)"
             << std::endl;
-  std::cout << "-n | --nice <int> : nice(2) level of processing threads (10)"
-            << std::endl;
+  std::cout
+      << "-n | --nice-level <int> : nice(2) level of processing threads (10)"
+      << std::endl;
   std::cout << "-o | --output-file <str> : output image filename" << std::endl;
   std::cout << "-s | --image-size <int>x<int> : restrict processed images to "
                "this size"

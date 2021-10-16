@@ -60,8 +60,10 @@ if [[ ${KEOGRAM} == "true" ]]; then
 	mkdir -p "${DATE_DIR}/keogram/"
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/keogram/${KEOGRAM_FILE}"
+
 	"${ALLSKY_HOME}/keogram" ${SIZE_FILTER} -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_EXTRA_PARAMETERS}
 	RETCODE=$?
+	test $RETCODE -eq 0 || echo "Command Failed: ${ALLSKY_HOME}/keogram" ${SIZE_FILTER} -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_EXTRA_PARAMETERS}
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RETCODE} = 0 ]] ; then
 		# If the user specified a different name for the destination file, use it.
 		if [ "${KEOGRAM_DESTINATION_NAME}" != "" ]; then
@@ -88,6 +90,7 @@ if [[ ${STARTRAILS} == "true" ]]; then
 
 	"${ALLSKY_HOME}/startrails" ${SIZE_FILTER} -d "${DATE_DIR}" -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o "${UPLOAD_FILE}"
 	RETCODE=$?
+	test $RETCODE -eq 0 || echo "Command Failed: ${ALLSKY_HOME}/startrails" ${SIZE_FILTER} -d "${DATE_DIR}" -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o "${UPLOAD_FILE}"
 	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RETCODE} == 0 ]] ; then
 		# If the user specified a different name for the destination file, use it.
 		if [ "${STARTRAILS_DESTINATION_NAME}" != "" ]; then

@@ -9,7 +9,7 @@ source "${ALLSKY_HOME}/variables.sh"
 ME="$(basename "${BASH_ARGV0}")"
 
 if [ $# -lt 1 -o $# -gt 2 -o "${1}" = "-h" -o "${1}" = "--help" ] ; then
-	XD="/media/external/allsky"
+	XD="/path/to/nonstandard/location/of/allsky"
 	TODAY=$(date +%Y%m%d)
 	echo -en "${RED}"
 	echo -n "Usage: ${ME} [-h|--help] <DATE> [<IMAGE_DIR>]"
@@ -20,8 +20,10 @@ if [ $# -lt 1 -o $# -gt 2 -o "${1}" = "-h" -o "${1}" = "--help" ] ; then
 	echo -en "${YELLOW}"
 	echo "<DATE> must be of the form YYYYMMDD."
 	echo ""
-	echo "<IMAGE_DIR> defaults to '\${ALLSKY_IMAGES}', but may be overriden. In that case"
-	echo "<DATE> must exist inside <IMAGE_DIR>, eg. '${XD}/${TODAY}'."
+	echo "<IMAGE_DIR> defaults to '\${ALLSKY_IMAGES}' (wherever your installation of allsky is"
+	echo "configured to store images), but may be overriden to use a nonstandard location such"
+	echo "as a usb stick or a network drive (eg. for regenerating timelapses). In that case <DATE>"
+	echo "must exist inside <IMAGE_DIR>, eg. '${XD}/${TODAY}'."
 	echo ""
 	echo "Produces a movie in <IMAGE_DIR>/<DATE>/allsky-<DATE>.mp4"
 	echo "eg. ${ALLSKY_IMAGES}/${TODAY}/allsky-${TODAY}.mp4"

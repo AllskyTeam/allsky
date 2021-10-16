@@ -6,27 +6,37 @@ if [ -z "${ALLSKY_HOME}" ] ; then
 fi
 
 source "${ALLSKY_HOME}/variables.sh"
-source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_SCRIPTS}/filename.sh"
-source "${ALLSKY_CONFIG}/ftp-settings.sh"
-
 ME="$(basename "${BASH_ARGV0}")"
 
-cd $ALLSKY_HOME
-
 if [ $# -lt 1 -o $# -gt 2 -o "${1}" = "-h" -o "${1}" = "--help" ] ; then
+	XD="/path/to/nonstandard/location/of/allsky"
 	TODAY=$(date +%Y%m%d)
 	echo -en "${RED}"
-	echo -n "Usage: ${ME} [--help]  DATE  [directory]"
+	echo -n "Usage: ${ME} [-h|--help] <DATE> [<IMAGE_DIR>]"
 	echo -e "${NC}"
 	echo "    example: ${ME} ${TODAY}"
-	echo "    or:      ${ME} ${TODAY} /media/external/allsky"
+	echo "    or:      ${ME} ${TODAY} ${XD}"
+	echo ""
 	echo -en "${YELLOW}"
-	echo "'DATE' must be in '${ALLSKY_IMAGES}' unless 'directory' is specified,"
-	echo "in which case 'DATE' must be in in 'directory', i.e., 'directory/DATE'."
+	echo "<DATE> must be of the form YYYYMMDD."
+	echo ""
+	echo "<IMAGE_DIR> defaults to '\${ALLSKY_IMAGES}' (wherever your installation of allsky is"
+	echo "configured to store images), but may be overriden to use a nonstandard location such"
+	echo "as a usb stick or a network drive (eg. for regenerating timelapses). In that case <DATE>"
+	echo "must exist inside <IMAGE_DIR>, eg. '${XD}/${TODAY}'."
+	echo ""
+	echo "Produces a movie in <IMAGE_DIR>/<DATE>/allsky-<DATE>.mp4"
+	echo "eg. ${ALLSKY_IMAGES}/${TODAY}/allsky-${TODAY}.mp4"
+	echo "or  ${XD}/${TODAY}/allsky-${TODAY}.mp4"
 	echo -en "${NC}"
 	exit 1
 fi
+
+
+source "${ALLSKY_CONFIG}/config.sh"
+source "${ALLSKY_SCRIPTS}/filename.sh"
+
+cd $ALLSKY_HOME
 
 # Allow timelapses of pictures not in the standard ALLSKY_IMAGES directory.
 # If $2 is passed, it's the top folder, otherwise use the one in ALLSKY_IMAGES.

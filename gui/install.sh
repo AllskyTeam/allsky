@@ -50,36 +50,58 @@ rm -f /etc/sudoers.d/allsky
 cat $SCRIPTPATH/sudoers >> /etc/sudoers.d/allsky
 echo -en '\n'
 
-echo -e "${GREEN}* Retrieving github files to build admin portal${NC}"
 # As of October 2021, WEBSITE_DIR is a subdirectory of PORTAL_DIR.
-# Before we remove all of PORTAL_DIR, save WEBSITE_DIR to the partent of PORTAL_DIR, then restore it.
+# Before we remove PORTAL_DIR, save WEBSITE_DIR to the partent of PORTAL_DIR, then restore it.
 if [ -d "${WEBSITE_DIR}" ]; then
 	TMP_WEBSITE_DIR="$(dirname "${PORTAL_DIR}")"
+	echo -e "${GREEN}* Backing up ${WEBSITE_DIR} to ${TMP_WEBSITE_DIR}${NC}"
 	sudo mv "${WEBSITE_DIR}" "${TMP_WEBSITE_DIR}"
+	WEBSITE_DIR_NAME="$(basename "${WEBSITE_DIR}")"
 else
 	TMP_WEBSITE_DIR=""
 fi
-rm -rf "${PORTAL_DIR}"
+
+if [ -d "${PORTAL_DIR}" ]; then
+	echo -e "${GREEN}* Removing old ${PORTAL_DIR}${NC}"
+	rm -rf "${PORTAL_DIR}"
+fi
+
+echo -e "${GREEN}* Retrieving github files to build admin portal${NC}"
 git clone https://github.com/thomasjacquin/allsky-portal.git "${PORTAL_DIR}"
 chown -R ${SUDO_USER}:www-data "${PORTAL_DIR}"
 chmod -R 775 "${PORTAL_DIR}"
+
 # Restore WEBSITE_DIR if it existed before
 if [ "${TMP_WEBSITE_DIR}" != "" ]; then
-	sudo mv "${TMP_WEBSITE_DIR}" "${PORTAL_DIR}"
+	echo -e "${GREEN}* Restoring ${TMP_WEBSITE_DIR}/${WEBSITE_DIR_NAME} to ${PORTAL_DIR}${NC}"
+	sudo mv "${TMP_WEBSITE_DIR}/${WEBSITE_DIR_NAME}" "${PORTAL_DIR}"
 fi
-mkdir -p /etc/raspap
-mv "${PORTAL_DIR}"/raspap.php /etc/raspap/
-mv "${PORTAL_DIR}"/camera_options_ZWO.json /etc/raspap/
-mv "${PORTAL_DIR}"/camera_options_RPiHQ.json /etc/raspap/
-install -m 0644 -o www-data -g www-data ${ALLSKY_CONFIG}/settings_ZWO.json /etc/raspap/
-install -m 0644 -o www-data -g www-data ${ALLSKY_CONFIG}/settings_RPiHQ.json /etc/raspap/
-chown -R www-data:www-data /etc/raspap
+
+CONFIG_DIR="/etc/raspap"
+mkdir -p "${CONFIG_DIR}"
+mv "${PORTAL_DIR}"/raspap.php "${CONFIG_DIR}"
+mv "${PORTAL_DIR}"/camera_options_ZWO.json "${CONFIG_DIR}"
+mv "${PORTAL_DIR}"/camera_options_RPiHQ.json "${CONFIG_DIR}"
+
+# If the user is doing a re-install, don't overwrite their existing settings.
+if [ -f "${CONFIG_DIR}/settings_ZWO.json" ]; then
+	echo -e "${GREEN}* Leaving existing ZWO settings file as is.${NC}"
+else
+	install -m 0644 -o www-data -g www-data ${ALLSKY_CONFIG}/settings_ZWO.json "${CONFIG_DIR}"
+fi
+if [ -f "${CONFIG_DIR}/settings_RPiHQ.json" ]; then
+	echo -e "${GREEN}* Leaving existing RPiHQ settings file as is.${NC}"
+else
+	install -m 0644 -o www-data -g www-data ${ALLSKY_CONFIG}/settings_RPiHQ.json "${CONFIG_DIR}"
+fi
+chown -R www-data:www-data "${CONFIG_DIR}"
 usermod -a -G www-data $SUDO_USER
 echo -en '\n'
-rm -f ${ALLSKY_CONFIG}/settings_ZWO.json ${ALLSKY_CONFIG}/settings_RPiHQ.json	# don't leave unused files around
+# don't leave unused files around
+rm -f ${ALLSKY_CONFIG}/settings_ZWO.json ${ALLSKY_CONFIG}/settings_RPiHQ.json
 
 echo -e "${GREEN}* Modify config.sh${NC}"
-sed -i '/CAMERA_SETTINGS_DIR=/c\CAMERA_SETTINGS_DIR="/etc/raspap"' ${ALLSKY_CONFIG}/config.sh
+sed -i "/CAMERA_SETTINGS_DIR=/c\CAMERA_SETTINGS_DIR=\"${CONFIG_DIR}\"" ${ALLSKY_CONFIG}/config.sh
 echo -en '\n'
 
 echo -en '\n'

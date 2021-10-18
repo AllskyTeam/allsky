@@ -69,11 +69,13 @@ The WebUI is **highly** recommended since it simplifies administration of the Al
 The exact list of settings available depends on the camera you are using, but in general, the RPiHQ camera has fewer settings.
 The range of valid values varies by camera model so is not shown below.  For example, the ZWO ASI183's maximum gain is 450 but the ASI178's is 510.  To determine your camera's range, set the `Debug Level` in the WebUI to 4 and then look in `/var/log/allsky.log`.  It will list the minimum, maximum, and default values for all the camera's capabilities.
 
+If you do NOT have the WebUI installed, use "0" for "No" and "1" for "Yes" when manually editing the appropriate `settings_*.json` file.  Also, use "1" for "1x1" binning, "2" for "2x2", etc.
+
 
 | Setting     | Default     | Additional Info |
 | ----------- | ----------- | ----------------|
-| width | 0 | 0 means max width. Look up your camera specifications to know what values are supported |
-| height | 0 |  0 means max height. Look up your camera specifications to know what values are supported |
+| width | 0 | 0 means max width. Look up your camera specifications to know what values are supported. |
+| height | 0 |  0 means max height. Look up your camera specifications to know what values are supported. |
 | dayautoexposure | Yes | Should auto-exposure be on during **daytime**? Auto-exposure delivers properly exposed images throughout the day even if the overall brightness of the sky changes (cloud cover, sun, etc). Since daytime exposures are short, there is no daytime "maxexposure". This option is usually only disabled for testing. |
 | dayexposure | 0.5 | **Day**time manual exposure time in milliseconds.  Normally daytime auto-exposure will be used; if so, this value is used as a starting exposure. |
 | daybrightness | 50 | This setting changes the amount of light in **daytime** images. |
@@ -119,8 +121,8 @@ The range of valid values varies by camera model so is not shown below.  For exa
 | timeformat | %Y%m%d %H:%M:%S | Determines the format of the displayed time.  Run "man 3 strftime" to see the options. |
 | showTemp | Yes | Display the camera sensor temperature? |
 | temptype | C | Determines what unit(s) the temperature will be displayed in: C=Celsius, F=Fahrenheit, B=Both. |
-| showExposure | Yes | Display the exposure time in the overlay? If auto-exposure is enable, "(auto)" will appear after the exposure. |
-| showGain | Yes | Display the gain in the overlay? If auto-gain is enable, "(auto)" will appear after the gain. |
+| showExposure | Yes | Display the exposure time in the overlay? If auto-exposure is enabled, "(auto)" will appear after the exposure. |
+| showGain | Yes | Display the gain in the overlay? If auto-gain is enabled, "(auto)" will appear after the gain. |
 | showBrightness | No | Display the brightness level in the overlay? |
 | showHistogram | No | Display the histogram mean level in the overlay? |
 | darkframe | No | Set to Yes to enable dark frame capture. In this mode, overlays are hidden. |
@@ -142,7 +144,7 @@ The second configuration file is called `config/config.sh` lets you configure th
 | IMG_RESIZE | false | Resize images before cropping and saving. Adjust width and height according to your own sensor ratio. |
 | IMG_HEIGHT | 2028 | The height of the resized image. |
 | IMG_WIDTH | 1520 | The width of the resized image. |
-| CROP_IMAGE | false | Crop the captured image BEFORE any other processing. This inproves the subsequent images when using a fisheye lens. |
+| CROP_IMAGE | false | Crop the captured image BEFORE any other processing. This can be used, for example, to crop out most of the dark border when using a fisheye lens. |
 | CROP_WIDTH | 640| The width of the resulting image. |
 | CROP_HEIGHT | 480 | The height of the resulting image. |
 | CROP_OFFSET_X | 0 | The x offset to use when cropping. |
@@ -179,7 +181,7 @@ The second configuration file is called `config/config.sh` lets you configure th
 | DARK_FRAME_SUBTRACTION | false | Enable hot pixels subtraction at night? |
 | DAYTIME_CAPTURE | true | Capture images during the day? |
 | DAYTIME_SAVE | false | Save images during the day?  They are always saved at night. |
-| UHUBCTL_PATH |  | If you have the "uhubctl" command installed (it resets the USB bus), enter its path name. |
+| UHUBCTL_PATH |  | If you have the "uhubctl" command installed enter its path name. uhubctl resets the USB bus an can sometimes eliminate ASI_ERROR_TIMEOUTs. |
 | UHUBCTL_PORT | 2 | Enter the USB port the camera is on.  Port 1 is USB 2.0 and port 2 is USB 3.0. |
 | CAMERA_SETTINGS_DIR | Either `/home/pi/allsky/config` or `/etc/raspap` | Path to the camera settings file.  Set automatically. |
 | CAMERA_SETTINGS | n/a | Do not change this line. |
@@ -255,11 +257,11 @@ If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote 
 ```
 
 
-## WebUI Graphical Interface
+## Web User Interface (WebUI)
 
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg)
 
-If you don't want to configure the camera using the terminal, you can install the [Web User Interface (WebUI)](https://github.com/thomasjacquin/allsky-portal).
+If you don't want to configure the camera using the terminal, you can install the [WebUI](https://github.com/thomasjacquin/allsky-portal).
 Please note that this will change your hostname to **allsky** (or whatever you called it when installing), install the lighttpd web server, and replace your `/var/www/html` directory. It will also move `config/settings_*.json` to `/etc/raspap/settings_*.json`.
 Using the WebUI is **highly** recommended as it provides additional information on each setting and allows error checking behind the scenes.
 

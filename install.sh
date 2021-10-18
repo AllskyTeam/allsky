@@ -77,7 +77,7 @@ select_camera() {
 		"RPiHQ" "RPiHQ camera is used for allsky" \
 		3>&1 1>&2 2>&3)
 	if [ $? -eq 0 ]; then
-		sed -e "s/^CAMERA=.*$/CAMERA=\"${CAM}\"/" "$ALLSKY_CONFIG/config.sh"
+		sed -i -e "s/^CAMERA=.*$/CAMERA=\"${CAM}\"/" "$ALLSKY_CONFIG/config.sh"
 		if [ $? -eq 0 ]; then
 			whiptail --msgbox "Camera set to $CAM" 10 60 2
 			return 0

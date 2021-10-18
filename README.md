@@ -285,7 +285,7 @@ or
 http://allsky.local
 ```
 
-Note: If you changed the name of your pi during the WebUI install then use
+Note: If you changed the name of your Pi (to piname, for example) during the WebUI install then use the hostname you set:
 ```sh
 http://piname.local
 ```
@@ -298,7 +298,8 @@ A public page is also available in order to view the current image without havin
 http://your_raspberry_IP/public.php
 ```
 
-Make sure this page is publically viewable, i.e., is not behind a firewall.
+Make sure this page is publically viewable.
+If it is behind a firewall consult the documentation for your network equipment for information on allowing inbound connections.
 
 **Note:*** The WebUI setup uses `/etc/raspap/settings_*.json` for the camera settings. If, for some reason, you prefer to go back to the non-WebUI version, make sure to edit your `config/config.sh` file to have `CAMERA_SETTINGS_DIR="${ALLSKY_CONFIG}"` instead.
 

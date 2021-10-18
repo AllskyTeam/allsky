@@ -53,12 +53,52 @@ if [ $RETVAL -ne 0 ]; then
 fi
 echo
 
-echo
-echo "The Allsky Software is now installed. You should reboot the Raspberry Pi to finish the installation"
-echo
-read -p "Do you want to reboot now? [y/n] " ans_yn
-case "$ans_yn" in
-  [Yy]|[Yy][Ee][Ss]) sudo reboot now;;
+source "variables.sh"
 
-  *) exit 3;;
-esac
+calc_wt_size() {
+	# NOTE: it's tempting to redirect stderr to /dev/null, so supress error
+	# output from tput. However in this case, tput detects neither stdout or
+	# stderr is a tty and so only gives default 80, 24 values
+	WT_HEIGHT=18
+	WT_WIDTH=$(tput cols)
+	
+	if [ -z "$WT_WIDTH" ] || [ "$WT_WIDTH" -lt 60 ]; then
+		WT_WIDTH=80
+	fi
+	if [ "$WT_WIDTH" -gt 178 ]; then
+		WT_WIDTH=120
+	fi
+	WT_MENU_HEIGHT=$(($WT_HEIGHT-7))
+}
+
+select_camera() {
+	CAM=$(whiptail --title "Allsky Software Installer" --menu "Camera Type" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT \
+		"ZWO" "ZWO camera is used for allsky" \
+		"RPiHQ" "RPiHQ camera is used for allsky" \
+		3>&1 1>&2 2>&3)
+	if [ $? -eq 0 ]; then
+		sed -e "s/^CAMERA=.*$/CAMERA=\"${CAM}\"/" "$ALLSKY_CONFIG/config.sh"
+		if [ $? -eq 0 ]; then
+			whiptail --msgbox "Camera set to $CAM" 10 60 2
+			return 0
+		else
+			whiptail --msgbox "Something went wrong setting camera to ${CAM}.  Does ${ALLSKY_CONFIG}/config.sh exist?" 10 60 2
+			return 1
+		fi
+	else
+		return 1
+	fi
+}
+
+ask_reboot() {
+	if (whiptail --title "Allsky Software Installer" --yesno "The Allsky Software is now installed. You should reboot the Raspberry Pi to finish the installation.\n\n  Reboot now?" 10 60 \
+		3>&1 1>&2 2>&3); then 
+		sudo reboot now
+	else
+		exit 3
+	fi
+}
+
+calc_wt_size
+select_camera
+ask_reboot

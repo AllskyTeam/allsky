@@ -6,7 +6,7 @@
 #  - Values can optionally be quoted with double quotes, NOT single quotes.
 #  - If a variable occurs multiple times, only the last value is used.
 
-# Choose between "ZWO", "RPiHQ", or "auto".  "auto" prefers ZWO if present.
+# Choose between "ZWO" or "RPiHQ".  Note that "auto" is no longer allowed.
 CAMERA=""
 
 
@@ -160,7 +160,10 @@ UHUBCTL_PORT=2
 CAMERA_SETTINGS_DIR="${ALLSKY_CONFIG}"
 
 if [ "${CAMERA}" = "" ]; then
-	echo "${RED}ERROR: Please set CAMERA in config.sh${NC}"
+	echo "${RED}ERROR: Please set CAMERA in config/config.sh${NC}"
+	exit 1
+elif [ "${CAMERA}" = "auto" ]; then
+	echo "${RED}ERROR: 'auto' is no longer a valid CAMERA type.  Please reset CAMERA in config/config.sh${NC}"
 	exit 1
 fi
 

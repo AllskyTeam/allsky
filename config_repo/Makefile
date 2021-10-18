@@ -115,7 +115,6 @@ install: createDirs $(CONFIGFILES)
 	@systemctl enable allsky
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
 	@echo "export ALLSKY_HOME=$(PDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
-	@echo `date +%F\ %R:%S` Copying default ftp-settings.sh
 .PHONY : install
 endif # Package build check
 endif # Root check

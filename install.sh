@@ -70,7 +70,7 @@ set_camera() {
 	sed -i -e "s/^CAMERA=.*$/CAMERA=\"${CAM}\"/" "$ALLSKY_CONFIG/config.sh"
 	RETVAL=$?
 	if [ $RETVAL -eq 0 ]; then
-		whiptail --msgbox "Camera set to $CAM" 10 60 2
+		whiptail --msgbox "Camera set to $CAM" 10 60
 		return 0
 	else
 		whiptail --msgbox "Something went wrong setting camera to ${CAM}.  Error code ${RETVAL}?" 10 60

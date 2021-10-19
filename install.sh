@@ -60,7 +60,7 @@ select_camera() {
 		if [ $? -eq 0 ]; then
 			CAM=$MYCAM
 		else
-			whiptail --msgbox "Camera selection required.  Please re-run './install.sh' and select a camera to continue." 10 60 2
+			whiptail --msgbox "Camera selection required.  Please re-run './install.sh' and select a camera to continue." 10 60
 			exit 1
 		fi
 	fi
@@ -73,7 +73,7 @@ set_camera() {
 		whiptail --msgbox "Camera set to $CAM" 10 60 2
 		return 0
 	else
-		whiptail --msgbox "Something went wrong setting camera to ${CAM}.  Error code ${RETVAL}?" 10 60 2
+		whiptail --msgbox "Something went wrong setting camera to ${CAM}.  Error code ${RETVAL}?" 10 60
 		return 1
 	fi
 }

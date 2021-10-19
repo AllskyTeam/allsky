@@ -5,21 +5,64 @@ if [ -z "${ALLSKY_HOME}" ] ; then
 fi
 source ${ALLSKY_HOME}/variables.sh
 
-if [ $# -eq 1 ] ; then
-	HOST_NAME=$1
-else
-	HOST_NAME='allsky'
+echo -en '\n'
+echo -e "*********************************************************************"
+echo    "*** Welcome to the Allsky Web User Interface (WebUI) installation ***"
+echo -e "*********************************************************************"
+echo -en '\n'
+
+if [[ $EUID -ne 0 ]]; then
+	echo -e "${RED}This script must be run as root${NC}" 1>&2
+	exit 1
 fi
 
-echo -en '\n'
-echo -e "****************************************************************"
-echo    "*** Welcome to the Allsky Administration Portal installation ***"
-echo -e "****************************************************************"
-echo -en '\n'
-if [[ $EUID -ne 0 ]]; then
-   echo "${RED}This script must be run as root${NC}" 1>&2
-   exit 1
+CONFIG_DIR="/etc/raspap"	# settings_*.json files go here
+mkdir -p "${CONFIG_DIR}"
+modify_locations() {	# Some files have placeholders for certain locations.  Modify them.
+	echo -e "${GREEN}* Modifying locations in web files${NC}"
+	(
+		cd "${PORTAL_DIR}/includes"
+		sed -i "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" functions.php save_file.php
+		sed -i -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		       -e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
+		       -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
+		       -e "s;XX_RASPI_CONFIG_XX;${CONFIG_DIR};" \
+				functions.php
+	)
+}
+
+# Check if the user is updating an existing installation.
+if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
+	UPDATE=true
+	shift
+	if [ ! -d "${PORTAL_DIR}" ]; then
+		echo -e "${RED}Update specified but no existing WebUI found in '${PORTAL_DIR}'${NC}" 1>&2
+		exit 2
+	fi
+
+	modify_locations
+	exit 0		# currently nothing else to do for updates
+
+else
+	UPDATE=false
+
+	if [ "${1}" != "" ] ; then
+		HOST_NAME=${1}
+		shift
+	else
+		HOST_NAME='allsky'
+		echo
+		echo
+		echo -e "Your Pi will be renamed to ${GREEN}${HOST_NAME}${NC}."
+		echo "If you already have a Pi with that name you must rename this Pi to something else."
+		echo -en "Enter a new name or press 'enter' to accept ${GREEN}${HOST_NAME}${NC}: "
+		read host
+		[ "${host}" != "" ] && HOST_NAME="${host}"
+		echo
+		echo
+	fi
 fi
+
 echo -e "${GREEN}* Installation of the webserver${NC}"
 echo -en '\n'
 apt-get update && apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
@@ -51,7 +94,7 @@ cat $SCRIPTPATH/sudoers >> /etc/sudoers.d/allsky
 echo -en '\n'
 
 # As of October 2021, WEBSITE_DIR is a subdirectory of PORTAL_DIR.
-# Before we remove PORTAL_DIR, save WEBSITE_DIR to the parent of PORTAL_DIR, then restore it.
+# Before we remove PORTAL_DIR, save WEBSITE_DIR to the partent of PORTAL_DIR, then restore it.
 if [ -d "${WEBSITE_DIR}" ]; then
 	TMP_WEBSITE_DIR="$(dirname "${PORTAL_DIR}")"
 	echo -e "${GREEN}* Backing up ${WEBSITE_DIR} to ${TMP_WEBSITE_DIR}${NC}"
@@ -77,8 +120,8 @@ if [ "${TMP_WEBSITE_DIR}" != "" ]; then
 	sudo mv "${TMP_WEBSITE_DIR}/${WEBSITE_DIR_NAME}" "${PORTAL_DIR}"
 fi
 
-CONFIG_DIR="/etc/raspap"
-mkdir -p "${CONFIG_DIR}"
+modify_locations	# replace placeholders in some files with actual path names
+
 mv "${PORTAL_DIR}"/raspap.php "${CONFIG_DIR}"
 mv "${PORTAL_DIR}"/camera_options_ZWO.json "${CONFIG_DIR}"
 mv "${PORTAL_DIR}"/camera_options_RPiHQ.json "${CONFIG_DIR}"
@@ -110,7 +153,6 @@ echo "You can now reboot the Raspberry Pi and connect to it from your laptop, co
 echo -en '\n'
 read -p "Do you want to reboot now? [y/n] " ans_yn
 case "$ans_yn" in
-  [Yy]|[Yy][Ee][Ss]) reboot now;;
-
-  *) exit 3;;
+	[Yy]|[Yy][Ee][Ss]) reboot now;;
+	*) exit 3;;
 esac

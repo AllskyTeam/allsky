@@ -46,6 +46,8 @@ select_camera() {
 	NEEDCAM=0
 	if [ ! -e ${ALLSKY_CONFIG}/config.sh ]; then
 		NEEDCAM=1
+		# NOTE: The config.sh file is put in place during the 'make install' step below.
+		# This flag will be checked after 'make install', and trigger an edit to set the camera value.
 	else
 		source ${ALLSKY_CONFIG}/config.sh
 		if [ -z "${CAM}" ]; then

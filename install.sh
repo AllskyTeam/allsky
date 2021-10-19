@@ -1,8 +1,5 @@
 #!/bin/bash
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m' # No Color
-
+source "variables.sh"
 if [[ $EUID -eq 0 ]]; then
    echo "This script must NOT be run as root" 1>&2
    exit 1
@@ -28,7 +25,6 @@ echo "**********************************************"
 echo "*** Welcome to the Allsky Camera installer ***"
 echo "**********************************************"
 echo
-source "variables.sh"
 
 calc_wt_size() {
 	# NOTE: it's tempting to redirect stderr to /dev/null, so supress error

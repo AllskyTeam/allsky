@@ -50,8 +50,11 @@ select_camera() {
 		# This flag will be checked after 'make install', and trigger an edit to set the camera value.
 	else
 		source ${ALLSKY_CONFIG}/config.sh
-		if [ -z "${CAM}" ]; then
+		if [ -z "${CAMERA}" ]; then
 			NEEDCAM=1
+			# NOTE: The config.sh file is present, but the CAMERA variable is empty, thus we need to query it.
+		else
+			CAM=$CAMERA
 		fi
 	fi
 	if [ $NEEDCAM -eq 1 ]; then

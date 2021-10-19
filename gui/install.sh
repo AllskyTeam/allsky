@@ -31,9 +31,11 @@ modify_locations() {	# Some files have placeholders for certain locations.  Modi
 	)
 }
 
+NEED_TO_UPDATE_HOST_NAME="true"
+
 # Check if the user is updating an existing installation.
 if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
-	UPDATE=true
+	UPDATE="true"
 	shift
 	if [ ! -d "${PORTAL_DIR}" ]; then
 		echo -e "${RED}Update specified but no existing WebUI found in '${PORTAL_DIR}'${NC}" 1>&2
@@ -44,54 +46,72 @@ if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
 	exit 0		# currently nothing else to do for updates
 
 else
-	UPDATE=false
+	UPDATE="false"
 
+	CURRENT_HOST_NAME=$(< /etc/hostname)
 	if [ "${1}" != "" ] ; then
 		HOST_NAME=${1}
 		shift
 	else
 		HOST_NAME='allsky'
-		echo
-		echo
+	fi
+	echo
+	echo
+	if [ "${CURRENT_HOST_NAME}" != "${HOST_NAME}" ]; then
 		echo -e "Your Pi will be renamed to ${GREEN}${HOST_NAME}${NC}."
 		echo "If you already have a Pi with that name you must rename this Pi to something else."
-		echo -en "Enter a new name or press 'enter' to accept ${GREEN}${HOST_NAME}${NC}: "
-		read host
-		[ "${host}" != "" ] && HOST_NAME="${host}"
-		echo
 		echo
 	fi
+	echo -en "Enter a new host name or press 'enter' to accept ${GREEN}${HOST_NAME}${NC}: "
+	read host
+	[ "${host}" != "" ] && HOST_NAME="${host}"
+	echo
+	echo
+	if [ "${CURRENT_HOST_NAME}" = "${HOST_NAME}" ]; then
+		NEED_TO_UPDATE_HOST_NAME="false"
+	fi
 fi
+# FOR TESTING:   echo -e "${GREEN} * Using host name '${HOST_NAME}'${NC}";  exit
 
-echo -e "${GREEN}* Installation of the webserver${NC}"
-echo -en '\n'
+echo -e "${GREEN}* Installing the webserver${NC}"
+echo
 apt-get update && apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
 lighty-enable-mod fastcgi-php
 service lighttpd restart
-echo -en '\n'
+echo
 
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 echo -e "${GREEN}* Configuring lighttpd${NC}"
+# "/home/pi/allsky" is hard coded into file we distribute
 sed -i "s|/home/pi/allsky|$(dirname "$SCRIPTPATH")|g" $SCRIPTPATH/lighttpd.conf
 install -m 0644 $SCRIPTPATH/lighttpd.conf /etc/lighttpd/lighttpd.conf
-echo -en '\n'
+echo
 
-echo -e "${GREEN}* Changing hostname to allsky${NC}"
-echo "$HOST_NAME" > /etc/hostname
-sed -i "s/raspberrypi/$HOST_NAME/g" /etc/hosts
-echo -en '\n'
+if [ "${NEED_TO_UPDATE_HOST_NAME}" = "true" ]; then
+	echo -e "${GREEN}* Changing hostname to '${HOST_NAME}'${NC}"
+	echo "$HOST_NAME" > /etc/hostname
+	# This assumes the hostname is "raspberrypi" when the OS is installed.
+	sed -i "s/raspberrypi/$HOST_NAME/g" /etc/hosts
+	echo
+else
+	echo -e "${GREEN}* Leaving hostname at '${HOST_NAME}'${NC}"
+fi
 
-echo -e "${GREEN}* Setting avahi-daemon configuration${NC}"
-install -m 0644 $SCRIPTPATH/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
-sed -i "s/allsky/$HOST_NAME/g" /etc/avahi/avahi-daemon.conf
-echo -en '\n'
+FILE="/etc/avahi/avahi-daemon.conf"
+[ -f "${FILE}" ] && grep -i --quiet "host-name=${HOST_NAME}" "${FILE}"
+if [ $? -ne 0 ]; then
+	# New HOST_NAME not found, or file doesn't exist, so need to configure file.
+	echo -e "${GREEN}* Configuring avahi-daemon${NC}"
+	install -m 0644 $SCRIPTPATH/avahi-daemon.conf "${FILE}"
+	sed -i "s/allsky/$HOST_NAME/g" "${FILE}"	# "allsky" is hard coded in file we distribute
+	echo
+fi
 
 echo -e "${GREEN}* Adding the right permissions to the web server${NC}"
-sed -i '/allsky/d' /etc/sudoers
-sed -i '/www-data/d' /etc/sudoers
-rm -f /etc/sudoers.d/allsky
-cat $SCRIPTPATH/sudoers >> /etc/sudoers.d/allsky
-echo -en '\n'
+# Remove any old entries; we now use /etc/sudoers.d/allsky instead of /etc/sudoers.
+sed -i -e '/allsky/d' -e '/www-data/d' /etc/sudoers
+cp $SCRIPTPATH/sudoers /etc/sudoers.d/allsky
+echo
 
 # As of October 2021, WEBSITE_DIR is a subdirectory of PORTAL_DIR.
 # Before we remove PORTAL_DIR, save WEBSITE_DIR to the partent of PORTAL_DIR, then restore it.
@@ -139,7 +159,7 @@ else
 fi
 chown -R www-data:www-data "${CONFIG_DIR}"
 usermod -a -G www-data $SUDO_USER
-echo -en '\n'
+echo
 # don't leave unused files around
 rm -f ${ALLSKY_CONFIG}/settings_ZWO.json ${ALLSKY_CONFIG}/settings_RPiHQ.json
 
@@ -147,10 +167,10 @@ echo -e "${GREEN}* Modify config.sh${NC}"
 sed -i "/CAMERA_SETTINGS_DIR=/c\CAMERA_SETTINGS_DIR=\"${CONFIG_DIR}\"" ${ALLSKY_CONFIG}/config.sh
 echo -en '\n'
 
-echo -en '\n'
+echo
 echo "The Allsky Portal is now installed"
 echo "You can now reboot the Raspberry Pi and connect to it from your laptop, computer, phone, tablet at this address: http://$HOST_NAME.local or http://$(hostname -I | sed -e 's/ .*$//')"
-echo -en '\n'
+echo
 read -p "Do you want to reboot now? [y/n] " ans_yn
 case "$ans_yn" in
 	[Yy]|[Yy][Ee][Ss]) reboot now;;

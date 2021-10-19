@@ -19,14 +19,13 @@ if [ "$DARK_MODE" = "1" ] ; then
 	# "${CURRENT_IMAGE}" is the name of the current image we're working on.
 	CURRENT_IMAGE="dark.${EXTENSION}"		# XXXXX in future release this will be set by saveImage.sh
 
-	DARKS_DIR="${ALLSKY_DARKS}"
-	mkdir -p "${DARKS_DIR}"
+	mkdir -p "${ALLSKY_DARKS}"
 	# If the camera doesn't support temperature, we will keep overwriting the file until
 	#	user creates temperature.txt file.
 	if [ "${TEMPERATURE}" = "n/a" ]; then
-		cp "${CURRENT_IMAGE}" "${DARKS_DIR}/dark.${EXTENSION}"
+		cp "${CURRENT_IMAGE}" "${ALLSKY_DARKS}/dark.${EXTENSION}"
 	else
-		cp "${CURRENT_IMAGE}" "${DARKS_DIR}/${TEMPERATURE}.${EXTENSION}"
+		cp "${CURRENT_IMAGE}" "${ALLSKY_DARKS}/${TEMPERATURE}.${EXTENSION}"
 	fi
 
 	# If the user has notification images on, the current image says we're taking dark frames,

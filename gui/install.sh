@@ -51,7 +51,7 @@ cat $SCRIPTPATH/sudoers >> /etc/sudoers.d/allsky
 echo -en '\n'
 
 # As of October 2021, WEBSITE_DIR is a subdirectory of PORTAL_DIR.
-# Before we remove PORTAL_DIR, save WEBSITE_DIR to the partent of PORTAL_DIR, then restore it.
+# Before we remove PORTAL_DIR, save WEBSITE_DIR to the parent of PORTAL_DIR, then restore it.
 if [ -d "${WEBSITE_DIR}" ]; then
 	TMP_WEBSITE_DIR="$(dirname "${PORTAL_DIR}")"
 	echo -e "${GREEN}* Backing up ${WEBSITE_DIR} to ${TMP_WEBSITE_DIR}${NC}"

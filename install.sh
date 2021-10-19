@@ -118,5 +118,7 @@ if [ $RETVAL -ne 0 ]; then
 fi
 echo
 
-set_camera
+if [ $NEEDCAM -eq 1 ]; then
+	set_camera
+fi
 ask_reboot

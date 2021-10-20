@@ -33,6 +33,8 @@ modify_locations() {	# Some files have placeholders for certain locations.  Modi
 
 NEED_TO_UPDATE_HOST_NAME="true"
 
+CURRENT_HOSTNAME=`cat /etc/hostname | tr -d " \t\n\r"`
+
 # Check if the user is updating an existing installation.
 if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
 	UPDATE="true"
@@ -48,26 +50,15 @@ if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
 else
 	UPDATE="false"
 
-	CURRENT_HOST_NAME=$(< /etc/hostname)
 	if [ "${1}" != "" ] ; then
 		HOST_NAME=${1}
 		shift
 	else
 		HOST_NAME='allsky'
 	fi
-	echo
-	echo
-	if [ "${CURRENT_HOST_NAME}" != "${HOST_NAME}" ]; then
-		echo -e "Your Pi will be renamed to ${GREEN}${HOST_NAME}${NC}."
-		echo "If you already have a Pi with that name you must rename this Pi to something else."
-		echo
-	fi
-	echo -en "Enter a new host name or press 'enter' to accept ${GREEN}${HOST_NAME}${NC}: "
-	read host
-	[ "${host}" != "" ] && HOST_NAME="${host}"
-	echo
-	echo
-	if [ "${CURRENT_HOST_NAME}" = "${HOST_NAME}" ]; then
+    HOST_NAME=$(whiptail --inputbox "Please enter a hostname for your Allsky Pi" 20 60 "$CURRENT_HOSTNAME" 3>&1 1>&2 2>&3)
+	RETVAL=$?
+	if [ "${CURRENT_HOSTNAME}" = "${HOST_NAME}" ]; then
 		NEED_TO_UPDATE_HOST_NAME="false"
 	fi
 fi
@@ -90,8 +81,7 @@ echo
 if [ "${NEED_TO_UPDATE_HOST_NAME}" = "true" ]; then
 	echo -e "${GREEN}* Changing hostname to '${HOST_NAME}'${NC}"
 	echo "$HOST_NAME" > /etc/hostname
-	# This assumes the hostname is "raspberrypi" when the OS is installed.
-	sed -i "s/raspberrypi/$HOST_NAME/g" /etc/hosts
+	sed -i "s/127.0.1.1.*$CURRENT_HOSTNAME/127.0.1.1\t$HOST_NAME/g" /etc/hosts
 	echo
 else
 	echo -e "${GREEN}* Leaving hostname at '${HOST_NAME}'${NC}"

@@ -157,12 +157,9 @@ echo -e "${GREEN}* Modify config.sh${NC}"
 sed -i "/CAMERA_SETTINGS_DIR=/c\CAMERA_SETTINGS_DIR=\"${CONFIG_DIR}\"" ${ALLSKY_CONFIG}/config.sh
 echo -en '\n'
 
-echo
-echo "The Allsky Portal is now installed"
-echo "You can now reboot the Raspberry Pi and connect to it from your laptop, computer, phone, tablet at this address: http://$HOST_NAME.local or http://$(hostname -I | sed -e 's/ .*$//')"
-echo
-read -p "Do you want to reboot now? [y/n] " ans_yn
-case "$ans_yn" in
-	[Yy]|[Yy][Ee][Ss]) reboot now;;
-	*) exit 3;;
-esac
+if (whiptail --title "Allsky Software Installer" --yesno "The Allsky WebUI is now installed. You can now reboot the Raspberry Pi and connect to it from your laptop, computer, phone, tablet at this address: http://$HOST_NAME.local or http://$(hostname -I | sed -e 's/ .*$//')   Would you like to Reboot now?" 10 60 \
+	3>&1 1>&2 2>&3); then 
+	reboot now
+else
+	exit 3
+fi

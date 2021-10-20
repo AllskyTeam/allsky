@@ -56,8 +56,7 @@ else
 	else
 		HOST_NAME='allsky'
 	fi
-    HOST_NAME=$(whiptail --inputbox "Please enter a hostname for your Allsky Pi" 20 60 "$CURRENT_HOSTNAME" 3>&1 1>&2 2>&3)
-	RETVAL=$?
+	HOST_NAME=$(whiptail --inputbox "Please enter a hostname for your Allsky Pi" 20 60 "$CURRENT_HOSTNAME" 3>&1 1>&2 2>&3)
 	if [ "${CURRENT_HOSTNAME}" = "${HOST_NAME}" ]; then
 		NEED_TO_UPDATE_HOST_NAME="false"
 	fi

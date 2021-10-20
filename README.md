@@ -268,11 +268,7 @@ Using the WebUI is **highly** recommended as it provides additional information 
 ```shell
 sudo gui/install.sh
 ```
-Or if you don't want to use the default name of 'allsky' for your pi use the following:
-
-```shell
-sudo gui/install.sh piname
-```
+It will prompt you for a new name of your Pi (default is 'allsky').
 
 **Note:*** If you use an older version of Raspbian, the install script may fail on php7.0-cgi dependency. Edit `gui/install.sh` and replace php7.0-cgi by php5-cgi.
 
@@ -285,12 +281,12 @@ or
 http://allsky.local
 ```
 
-Note: If you changed the name of your Pi (to piname, for example) during the WebUI install then use the hostname you set:
+Note: If you changed the name of your Pi (to 'piname', for example, instead of the default 'allsky') during the WebUI install then use this:
 ```sh
 http://piname.local
 ```
 
-The default username is 'admin' and the default password is 'secret'.  If this website is publically viewable you should change those settings.
+The default username is **admin** and the default password is **secret**.  If this website is publically viewable you should change those settings.
 
 A public page is also available in order to view the current image without having to log into the portal and without being able to do any administrative tasks. This can be useful for people who don't have a personal website but still want to share a view of their sky:
 

@@ -40,7 +40,7 @@ echo
 echo "+++++++++++++++++++++++++++++++++++++"
 echo "Before using the website you need to:"
 echo "   * Edit '${WEBSITE_DIR}/config.js'"
-if [ "${POST_END_OF_NIGHT_DATA}" != "xtrue" ]; then
+if [ "x${POST_END_OF_NIGHT_DATA}" != "xtrue" ]; then
 	echo "   * Set 'POST_END_OF_NIGHT_DATA=true' in ${ALLSKY_CONFIG}/config.sh"
 fi
 echo

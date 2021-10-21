@@ -1705,7 +1705,7 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Darkframe: %s\n", yesNo(darkframe));
     printf(" Debug Level: %d\n", debugLevel);
     printf(" TTY: %s\n", yesNo(tty));
-    printf(" Continuous Capture Method: %s\n", yesNo(use_new_exposure_algorithm));
+    printf(" Non-continuous Capture Method: %s\n", yesNo(use_new_exposure_algorithm));
     printf(" ZWO SDK version %s\n", ASIGetSDKVersion());
     printf("%s", KNRM);
 

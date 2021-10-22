@@ -5,12 +5,12 @@
 	# PROTOCOL determines how the files will be uploaded and is one of:
 	#  "local"	copies to a location on your Pi.
 	#  "ftp"	uploads to an FTP server.
-	#		See the "ftp / sftp PROTOCOL only" section below.
+	#		See the section for ftp PROTOCOL below.
 	#  "sftp"	(SSH file transfer) - uploads to an FTP server that supports secure transfer.
 	# 		Use "sftp" instead of "ftp" if you can - it's more secure.
-	#		See the "ftp / sftp PROTOCOL only" section below.
+	#		See the section for sftp PROTOCOL below.
 	#  "scp"	(secure copy) - copies to a remote server.
-	#		See the "scp PROTOCOL only" section below.
+	#		See the section for scp PROTOCOL below.   NOTE: "scp" PROTOCOL IS NOT IMPLEMENTED YET.
 	#  "S3"		uploads to an Amazon Web Services (AWS) server.
 	#		See the "S3 PROTOCOL only" section below.
 PROTOCOL=""
@@ -40,21 +40,24 @@ PROTOCOL=""
 # remote web server, and set WEB_VIDEOS_DIR to the name of the directory on your Pi,
 # which will usually be in /var/www/html/allsky/videos.
 
-	# The remote directory where the current "image.jpg" file should go.
+	# The remote directory where the current "image.jpg" file be copied to.
 IMAGE_DIR=""
 
-	# The remote directory where the timelapse video should go.
+	# The remote directory where the timelapse video should be uploaded to.
 	# Some people prefer to put timelapse, keogram, and startrails in separate directories.
+	# If you have the "allsky-website" package installed, use VIDEOS_DIR="/var/www/html/allsky/videos".
 VIDEOS_DIR=""
 VIDEOS_DESTINATION_NAME=""
 WEB_VIDEOS_DIR=""
 
-	# The remote directory where the keogram image should go.
+	# The remote directory where the keogram image should be copied to.
+	# If you have the "allsky-website" package installed, use KEOGRAM_DIR="/var/www/html/allsky/keograms".
 KEOGRAM_DIR=""
 KEOGRAM_DESTINATION_NAME=""
 WEB_KEOGRAM_DIR=""
 
-	# The remote directory where the startrails image should go.
+	# The remote directory where the startrails image should be copied to.
+	# If you have the "allsky-website" package installed, use STARTRAILS_DIR="/var/www/html/allsky/startrails".
 STARTRAILS_DIR=""
 STARTRAILS_DESTINATION_NAME=""
 WEB_STARTRAILS_DIR=""
@@ -64,29 +67,22 @@ IMGDIR="${IMAGE_DIR}"
 MP4DIR="${VIDEOS_DIR}"
 
 
-############### ftp / sftp PROTOCOL only:
-	# Enter the name of your FTP server.  If you don't know it, ask your service provider.
+############### ftp, sftp, and scp PROTOCOLS only:
+	# Enter the name of the remote server.  If you don't know it, ask your service provider.
 REMOTE_HOST=""
 
-	# Enter the username of the login on your FTP server
+	# Enter the username of the login on the remote server.
 REMOTE_USER=""
 
-	# Enter the password of the login on your FTP server
+	# Enter the password of the login on your FTP server.  Does not apply to PROTOCOL=scp.
 REMOTE_PASSWORD=""
 
 	# If you need special commands executed when connecting to the FTP server enter them here.
 	# For example, to allow lftp to work with unknown certificates, use:
-	#	LFTP_COMMANDS="set ssl:check-hostname false"
+	#	  LFTP_COMMANDS="set ssl:check-hostname false"
 	# If you have more than one command to enter, separate them with semicolons (;).
+	# Does not apply to PROTOCOL=scp.
 LFTP_COMMANDS=""
-
-
-############### scp PROTOCOL only:	!!!! NOT IMPLEMENTED YET - FOR FUTURE USE !!!!
-	# Enter the name of the remote server.
-SCP_SERVER=""
-
-	# Enter the username of the login on your remote server.
-SCP_USER=""
 
 
 ############### S3 PROTOCOL only:

@@ -32,10 +32,14 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
-USB=$(shell pkg-config --exists libusb-1.0 && pkg-config --cflags --libs libusb-1.0)
+PKGPATH=$(which pkg-config)
+
+ifneq ($(PKGPATH),)
+  USB=$(shell pkg-config --exists libusb-1.0 && pkg-config --cflags --libs libusb-1.0)
+  OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || (pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4))
+endif
 DEFS = -D_LIN -D_DEBUG -DGLIBC_20
 CFLAGS = -Wall -Wno-psabi -Wno-unused-result -g -O2 -lpthread
-OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || (pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4))
 
 ifeq ($(platform), armv6l)
   CC = arm-linux-gnueabihf-g++

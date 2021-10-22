@@ -205,12 +205,10 @@ In order to upload files to your website, you'll need to edit connection details
 | STARTRAILS_DIR |  | The remote directory where the startrails image should go. |
 | STARTRAILS_DESTINATION_NAME | | Remote name of the startrails file.  If not specified it's the same as on the Pi. |
 | WEB_STARTRAILS_DIR | | Location on the Pi to copy the startrails file to, _in addition to_ uploading it. |
-| REMOTE_HOST |  | Your host server or IP |
-| REMOTE_USER |  | Your ftp user name |
-| REMOTE_PASSWORD |  | Your ftp password |
+| REMOTE_HOST |  | Your remote host server or IP. |
+| REMOTE_USER |  | Your remote user name. |
+| REMOTE_PASSWORD |  | Your ftp / sftp password. |
 | LFTP_COMMANDS | | Any additional commands needed by `lftp`. |
-| SCP_SERVER | | Name of the scp server to use when uploading. |
-| SCP_USER | | Name fo the scp user to use when uploading. |
 
 
 ### Optional additional processing steps

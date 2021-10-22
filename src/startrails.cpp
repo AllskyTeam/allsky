@@ -265,7 +265,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 
 void usage_and_exit(int x) {
   std::cout << "Usage: startrails [-v] -d <dir> -e <ext> [-b <brightness> -o "
-               "<output> | -s] [-Q <max-threads>] [-q <nice>]"
+               "<output> | -S] [-s <WxH>] [-Q <max-threads>] [-q <nice>]"
             << std::endl;
   if (x) {
     std::cout << KRED

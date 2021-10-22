@@ -32,7 +32,7 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
-PKGPATH=$(which pkg-config)
+PKGPATH=$(shell which pkg-config)
 
 ifneq ($(PKGPATH),)
   USB=$(shell pkg-config --exists libusb-1.0 && pkg-config --cflags --libs libusb-1.0)

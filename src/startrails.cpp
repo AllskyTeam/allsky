@@ -265,7 +265,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 
 void usage_and_exit(int x) {
   std::cout << "Usage: startrails [-v] -d <dir> -e <ext> [-b <brightness> -o "
-               "<output> | -s] [-Q <max-threads>] [-q <nice>]"
+               "<output> | -S] [-s <WxH>] [-Q <max-threads>] [-q <nice>]"
             << std::endl;
   if (x) {
     std::cout << KRED
@@ -324,7 +324,19 @@ int main(int argc, char* argv[]) {
   if (config.img_src_dir.empty() || config.img_src_ext.empty())
     usage_and_exit(3);
 
-  if (!config.startrails_enabled) {
+  if (config.startrails_enabled) {
+    std::string extcheck = config.dst_startrails;
+    std::transform(extcheck.begin(), extcheck.end(), extcheck.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    if (extcheck.rfind(".png") == string::npos ||
+        extcheck.rfind(".jpg") == string::npos) {
+      fprintf(stderr,
+              KRED "Output file '%s' is missing extension (.jpg or .png)\n\n",
+              config.dst_startrails.c_str());
+      usage_and_exit(3);
+    }
+  } else {
     config.brightness_limit = 0;
     config.dst_startrails = "/dev/null";
   }

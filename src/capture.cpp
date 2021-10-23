@@ -2397,7 +2397,7 @@ const char *locale = DEFAULT_LOCALE;
 		            	from1 = cv::Point(X1, Y2);
 			            to1 = cv::Point(X2, Y2);
                         from2 = cv::Point(X1, Y2-thickness);
-                        to2 = cv::Point(X2, Y2-thickness);
+                        to2 = cv::Point(X2-thickness, Y2-thickness);
                         cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
                         cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
 

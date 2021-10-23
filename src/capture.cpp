@@ -65,6 +65,7 @@ pthread_t thread_display = 0;
 pthread_t hthdSave       = 0;
 int numExposures         = 0;	 // how many valid pictures have we taken so far?
 int currentGain          = NOT_SET;
+int minExposure          = 100;
 
 // Some command-line and other option definitions needed outside of main():
 int tty = 0;	// 1 if we're on a tty (i.e., called from the shell prompt).
@@ -1565,6 +1566,9 @@ const char *locale = DEFAULT_LOCALE;
             printf("   - ControlType = %d\n", ControlCaps.ControlType);
         }
     }
+    asiRetCode = ASIGetControlCaps(CamNum, ASI_EXPOSURE, &ControlCaps);
+    if (asiRetCode == ASI_SUCCESS)
+        minExposure = ControlCaps.MinValue;
 
     if (debugLevel >= 3)
     {
@@ -2078,7 +2082,7 @@ const char *locale = DEFAULT_LOCALE;
                     int maxAcceptableHistogram;
                     int reallyLowMean;
                     int lowMean;
-                    int roundToMe;
+                    int roundToMe = 1; // round exposures to this many microseconds
 
                     usedHistogram = 1;	// we are using the histogram code on this exposure
                     int histogram[256];
@@ -2093,17 +2097,17 @@ const char *locale = DEFAULT_LOCALE;
                     int attempts = 0;
                     long newExposure = 0;
 
-                    int minExposure = 100;
-                    long tempMinExposure = minExposure;
-                    long tempMaxExposure = asiNightMaxExposure *  US_IN_MS;
+                    // minExposure is a camera property, fetched at device initialization
+                    // histMinExposure is the minimum exposure used in the histogram calculation
+                    int histMinExposure = minExposure? minExposure : 100;
+                    long tempMinExposure = histMinExposure;
+                    long tempMaxExposure = asiNightMaxExposure * US_IN_MS;
 
                     // Got these by trial and error.  They are more-or-less half the max of 255.
                     minAcceptableHistogram = 120;
                     maxAcceptableHistogram = 136;
                     reallyLowMean = 5;
                     lowMean = 15;
-
-                    roundToMe = 5; // round exposures to this many microseconds
 
                     if (asiDayBrightness != DEFAULT_BRIGHTNESS)
                     {
@@ -2138,7 +2142,7 @@ const char *locale = DEFAULT_LOCALE;
                         }
 
                         // Now adjust the variables
-                        minExposure *= exposureAdjustment;
+                        histMinExposure *= exposureAdjustment;
                         reallyLowMean *= exposureAdjustment;
                         lowMean *= exposureAdjustment;
                         minAcceptableHistogram *= exposureAdjustment;

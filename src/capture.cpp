@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <math.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
@@ -355,6 +356,10 @@ int bytesPerPixel(ASI_IMG_TYPE imageType) {
 // exposures jump all over the place.  One is way too dark and the next way too light, etc.
 // As a workaround, our histogram code replaces ZWO's code auto-exposure mechanism.
 // We look at the mean brightness of an X by X rectangle in image, and adjust exposure based on that.
+
+// FIXME prevent this from misbehaving when unreasonable settings are given,
+// eg. box size 0x0, box size WxW, box crosses image edge, ... basically
+// anything that would read/write out-of-bounds
 
 void computeHistogram(unsigned char *imageBuffer, int width, int height, ASI_IMG_TYPE imageType, int *histogram)
 {
@@ -1228,15 +1233,29 @@ const char *locale = DEFAULT_LOCALE;
                 if (argumentsQuoted)
                 {
                     sscanf(argv[++i], "%d %d %f %f", &histogramBoxSizeX, &histogramBoxSizeY, &histogramBoxPercentFromLeft, &histogramBoxPercentFromTop);
-                    histogramBoxPercentFromLeft /= 100;	// user enters 0-100
-                    histogramBoxPercentFromTop /= 100;
                 }
                 else
                 {
                     histogramBoxSizeX = atoi(argv[++i]);
                     histogramBoxSizeY = atoi(argv[++i]);
-                    histogramBoxPercentFromLeft = (float)atoi(argv[++i]) / 100;	// user enters 0-100
-                    histogramBoxPercentFromTop = (float)atoi(argv[++i]) / 100;	// user enters 0-100
+                    histogramBoxPercentFromLeft = atof(argv[++i]);
+                    histogramBoxPercentFromTop = atof(argv[++i]);
+                }
+
+                // scale user-input 0-100 to 0.0-1.0
+                histogramBoxPercentFromLeft /= 100;
+                histogramBoxPercentFromTop /= 100;
+
+                // avoid histogram crash if the parser returns weird
+                if (histogramBoxSizeX < 1 ||  histogramBoxSizeY < 1 || histogramBoxSizeX > 640 || histogramBoxSizeY > 640) {
+                    histogramBoxSizeX = histogramBoxSizeY = 256;
+                    fprintf(stderr, "weird histogram box dimensions; resetting to 256x256\n");
+                }
+                if (isnan(histogramBoxPercentFromLeft) || isnan(histogramBoxPercentFromTop) || 
+                    histogramBoxPercentFromLeft < 0.2 || histogramBoxPercentFromTop < 0.2 ||
+	                histogramBoxPercentFromLeft > 0.8 || histogramBoxPercentFromTop > 0.8) {
+                    histogramBoxPercentFromLeft = histogramBoxPercentFromTop = 0.5;
+                    fprintf(stderr, "weird histogram box position; resetting to (50%%,50%%)\n");
                 }
             }
             else if (strcmp(argv[i], "-showhistogrambox") == 0)

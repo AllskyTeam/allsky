@@ -329,7 +329,7 @@ int main(int argc, char* argv[]) {
     std::transform(extcheck.begin(), extcheck.end(), extcheck.begin(),
                    [](unsigned char c) { return std::tolower(c); });
 
-    if (extcheck.rfind(".png") == string::npos ||
+    if (extcheck.rfind(".png") == string::npos &&
         extcheck.rfind(".jpg") == string::npos) {
       fprintf(stderr,
               KRED "Output file '%s' is missing extension (.jpg or .png)\n\n",

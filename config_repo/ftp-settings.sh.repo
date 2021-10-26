@@ -78,10 +78,10 @@ REMOTE_USER=""
 REMOTE_PASSWORD=""
 
 	# If you need special commands executed when connecting to the FTP server enter them here.
-	# For example, to allow lftp to work with unknown certificates, use:
-	#	  LFTP_COMMANDS="set ssl:check-hostname false"
+	# See the Wiki (https://github.com/thomasjacquin/allsky/wiki/11-Troubleshooting:-uploads)
+	# for example commands to enter into LFTP_COMMANDS.
 	# If you have more than one command to enter, separate them with semicolons (;).
-	# Does not apply to PROTOCOL=scp.
+	# This setting does not apply to the "scp" PROTOCOL.
 LFTP_COMMANDS=""
 
 

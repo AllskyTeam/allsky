@@ -78,9 +78,10 @@ REMOTE_USER=""
 REMOTE_PASSWORD=""
 
 	# If you need special commands executed when connecting to the FTP server enter them here.
-	# See the Wiki for example commands to enter into LFTP_COMMANDS.
+	# See the Wiki (https://github.com/thomasjacquin/allsky/wiki/11-Troubleshooting:-uploads)
+	# for example commands to enter into LFTP_COMMANDS.
 	# If you have more than one command to enter, separate them with semicolons (;).
-	# Does not apply to the "scp" PROTOCOL.
+	# This setting does not apply to the "scp" PROTOCOL.
 LFTP_COMMANDS=""
 
 

@@ -243,18 +243,19 @@ std::string exec(const char *cmd)
 
 void *Display(void *params)
 {
-    cv::Mat *para = (cv::Mat *)params;
-    int w=para->cols;
-    int h=para->rows;
-    
-    cv::Mat pImg(h,w,(int)para->type(),(uchar *)para->data);
-    cv::namedWindow("video", 1);
+    cv::Mat *pImg = (cv::Mat *)params;
+    int w = pImg->cols;
+    int h = pImg->rows;
+    cv::namedWindow("Preview", cv::WINDOW_AUTOSIZE);
+	cv::Mat Img2 = *pImg, *pImg2 = &Img2;
+
     while (bDisplay)
     {
-        cv::imshow("video", pImg);
-        cv::waitKey(100);
+        cv::resize(*pImg, *pImg2, cv::Size((int)w/2, (int)h/2));
+        cv::imshow("Preview", *pImg2);
+        cv::waitKey(500);	// TODO: wait for exposure time
     }
-    cv::destroyWindow("video");
+    cv::destroyWindow("Preview");
     printf("Display thread over\n");
     return (void *)0;
 }
@@ -474,8 +475,16 @@ ASI_ERROR_CODE takeOneExposure(
 	// USB contention, such as that caused by heavy USB disk IO
     long timeout = ((exposureTimeMicroseconds * 2) / US_IN_MS) + 5000;	// timeout is in ms
 
-    sprintf(debugText, "  > Exposure set to %'ld us (%'.2f ms)",
+    if (wasAutoExposure == ASI_TRUE)
+	{
+        sprintf(debugText, "  > Camera set auto exposure to %'ld us (%'.2f ms)",
             exposureTimeMicroseconds, (float)exposureTimeMicroseconds/US_IN_MS);
+	}
+	else
+	{
+        sprintf(debugText, "  > Exposure set to %'ld us (%'.2f ms)",
+            exposureTimeMicroseconds, (float)exposureTimeMicroseconds/US_IN_MS);
+	}
     displayDebugText(debugText, 3);
     sprintf(debugText, ", timeout: %'ld ms", timeout);
     displayDebugText(debugText, 4);
@@ -949,8 +958,8 @@ const char *locale = DEFAULT_LOCALE;
     int preview                = 0;
 #define DEFAULT_SHOWTIME 1
     int showTime               = DEFAULT_SHOWTIME;
-    int darkframe              = 0;
-    char const *tempType      = "C";	// Celsius
+    int takingDarkFrames       = 0;
+    char const *tempType       = "C";	// Celsius
 
     int showDetails            = 0;
         // Allow for more granularity than showDetails, which shows everything:
@@ -977,7 +986,7 @@ const char *locale = DEFAULT_LOCALE;
     setlinebuf(stdout);   // Line buffer output so entries appear in the log immediately.
     printf("\n");
     printf("%s ********************************************\n", KGRN);
-    printf("%s *** Allsky Camera Software v0.8.2 | 2021 ***\n", KGRN);
+    printf("%s *** Allsky Camera Software v0.8.3 | 2021 ***\n", KGRN);
     printf("%s ********************************************\n\n", KGRN);
     printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n", KGRN);
     printf("\n");
@@ -1309,7 +1318,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-darkframe") == 0)
             {
-                darkframe = atoi(argv[++i]);
+                takingDarkFrames = atoi(argv[++i]);
             }
             else if (strcmp(argv[i], "-showDetails") == 0)
             {
@@ -1485,7 +1494,7 @@ const char *locale = DEFAULT_LOCALE;
     }
     compression_parameters.push_back(quality);
 
-    if (darkframe)
+    if (takingDarkFrames)
     {
         // To avoid overwriting the optional notification inage with the dark image,
         // during dark frames we use a different file name.
@@ -1503,15 +1512,17 @@ const char *locale = DEFAULT_LOCALE;
     	closeUp(1);   // If there are no cameras we can't do anything.
     }
 
-    printf("\nListing Attached Cameras%s:\n", numDevices == 1 ? "" : " (using first one)");
-
     ASI_CAMERA_INFO ASICameraInfo;
-
-    for (i = 0; i < numDevices; i++)
-    {
-        ASIGetCameraProperty(&ASICameraInfo, i);
-        printf("  - %d %s\n", i, ASICameraInfo.Name);
+    if (numDevices > 1)
+	{
+        printf("\nListing Attached Cameras%s:\n", numDevices == 1 ? "" : " (using first one)");
+        for (i = 0; i < numDevices; i++)
+        {
+            ASIGetCameraProperty(&ASICameraInfo, i);
+            printf("  - %d %s\n", i, ASICameraInfo.Name);
+        }
     }
+    ASIGetCameraProperty(&ASICameraInfo, 0);	// want info on 1st camera
 
     asiRetCode = ASIOpenCamera(CamNum);
     if (asiRetCode != ASI_SUCCESS)
@@ -1598,7 +1609,7 @@ const char *locale = DEFAULT_LOCALE;
     }
 
     ASIGetNumOfControls(CamNum, &iNumOfCtrl);
-    if (debugLevel >= 3)	// this is really only needed for debugging
+    if (debugLevel >= 4)	// this is really only needed for debugging
     {
         printf("Control Caps:\n");
         for (i = 0; i < iNumOfCtrl; i++)
@@ -1617,7 +1628,7 @@ const char *locale = DEFAULT_LOCALE;
     if (asiRetCode == ASI_SUCCESS)
         minExposureUS = ControlCaps.MinValue;
 
-    if (debugLevel >= 3)
+    if (debugLevel >= 4)
     {
         printf("Supported video formats:\n");
         for (i = 0; i < 8; i++)
@@ -1755,7 +1766,7 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Show Gain: %s\n", yesNo(showGain));
     printf(" Show Brightness: %s\n", yesNo(showBrightness));
     printf(" Preview: %s\n", yesNo(preview));
-    printf(" Darkframe: %s\n", yesNo(darkframe));
+    printf(" Darkframe: %s\n", yesNo(takingDarkFrames));
     printf(" Debug Level: %d\n", debugLevel);
     printf(" TTY: %s\n", yesNo(tty));
     printf(" Non-continuous Capture Method: %s\n", yesNo(use_new_exposure_algorithm));
@@ -1791,12 +1802,6 @@ const char *locale = DEFAULT_LOCALE;
         }
     }
 
-    if (preview == 1)
-    {
-        bDisplay = 1;
-        pthread_create(&thread_display, NULL, Display, (void *)&pRgb);
-    }
-
     if (!bSaveRun)
     {
         bSaveRun = true;
@@ -1820,7 +1825,7 @@ const char *locale = DEFAULT_LOCALE;
     // so don't transition.
     // gainTransitionTime of 0 means don't adjust gain.
     // No need to adjust gain if day and night gain are the same.
-    if (asiDayAutoGain == 1 || asiNightAutoGain == 1 || gainTransitionTime == 0 || asiDayGain == asiNightGain || darkframe == 1)
+    if (asiDayAutoGain == 1 || asiNightAutoGain == 1 || gainTransitionTime == 0 || asiDayGain == asiNightGain || takingDarkFrames == 1)
     {
         adjustGain = false;
         printf("Will NOT adjust gain at transitions\n");
@@ -1853,11 +1858,11 @@ const char *locale = DEFAULT_LOCALE;
         // Find out if it is currently DAY or NIGHT
         calculateDayOrNight(latitude, longitude, angle);
 
-        if (! darkframe)
+        if (! takingDarkFrames)
             currentAdjustGain = resetGainTransitionVariables(asiDayGain, asiNightGain);
 
         lastDayOrNight = dayOrNight;
-        if (darkframe)
+        if (takingDarkFrames)
         {
                 // We're doing dark frames so turn off autoexposure and autogain, and use
                 // nightime gain, delay, max exposure, bin, and brightness to mimic a nightime shot.
@@ -2027,7 +2032,7 @@ const char *locale = DEFAULT_LOCALE;
         {
             // No need to print after first time if the binning didn't change.
             sprintf(debugText, "Buffer size: %ld\n", bufferSize);
-            displayDebugText(debugText, 2);
+            displayDebugText(debugText, 4);
         }
 
         if (Image_type == ASI_IMG_RAW16)
@@ -2096,6 +2101,7 @@ const char *locale = DEFAULT_LOCALE;
 
 #ifdef USE_HISTOGRAM
         int mean = 0;
+        int attempts = 0;
 #endif
 
         while (bMain && lastDayOrNight == dayOrNight)
@@ -2118,14 +2124,19 @@ const char *locale = DEFAULT_LOCALE;
             if (asiRetCode == ASI_SUCCESS)
             {
                 numErrors = 0;
-                numExposures++;
+                if (numExposures++ == 0 && preview == 1)
+                {
+                    bDisplay = 1;
+                    pthread_create(&thread_display, NULL, Display, (void *)&pRgb);
+				}
 
 #ifdef USE_HISTOGRAM
                 int usedHistogram = 0;	// did we use the histogram method?
                 // We don't use this at night since the ZWO bug is only when it's light outside.
-                if (dayOrNight == "DAY" && asiDayAutoExposure && ! darkframe)
+                if (dayOrNight == "DAY" && asiDayAutoExposure && ! takingDarkFrames)
                 {
                     usedHistogram = 1;	// we are using the histogram code on this exposure
+                    attempts = 0;
 
                     int minAcceptableHistogram;
                     int maxAcceptableHistogram;
@@ -2134,7 +2145,7 @@ const char *locale = DEFAULT_LOCALE;
                     int roundToMe = 1; // round exposures to this many microseconds
 
                     int histogram[256];
-                    computeHistogram(pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram);
+                    computeHistogram(pRgb.data, width, height, (ASI_IMG_TYPE)Image_type, histogram);
                     mean = calculateHistogramMean(histogram);
                     // "last_OK_exposureUS" is the exposure time of the last OK
                     // image (i.e., mean < 255).
@@ -2142,12 +2153,11 @@ const char *locale = DEFAULT_LOCALE;
                     // exposure we calculate is no good, we can go back to the last OK one.
                     long last_OK_exposureUS = currentExposureUS;
 
-                    int attempts = 0;
                     long newExposureUS = 0;
 
-                    // minExposureUS is a camera property, fetched at device initialization
-                    // histMinExposure is the minimum exposure used in the histogram calculation
-                    int histMinExposureUS = minExposureUS ? minExposureUS : 100;
+                    // minExposureUS is a camera property, fetched at device initialization.
+                    // histMinExposure is the minimum exposure used in the histogram calculation.
+                    long histMinExposureUS = minExposureUS ? minExposureUS : 100;
                     long tempMinExposureUS = histMinExposureUS;
                     long tempMaxExposureUS = currentMaxExposureUS;
 
@@ -2200,8 +2210,9 @@ const char *locale = DEFAULT_LOCALE;
                     }
 
                     std::string why;	// Why did we adjust the exposure?  For debugging
-                    while ((mean < minAcceptableHistogram || mean > maxAcceptableHistogram) && ++attempts <= maxHistogramAttempts && currentExposureUS <= currentMaxExposureUS)
+                    while ((mean < minAcceptableHistogram || mean > maxAcceptableHistogram) && attempts <= maxHistogramAttempts && currentExposureUS <= currentMaxExposureUS)
                     {
+                        attempts++;
                         why = "";
 
                         sprintf(debugText, "  > Attempt %i, exposure %'ld us @ mean %d, tempMinExposureUS %'ld us, tempMaxExposureUS %'ld us", attempts, currentExposureUS, mean, tempMinExposureUS, tempMaxExposureUS);
@@ -2302,7 +2313,7 @@ const char *locale = DEFAULT_LOCALE;
                          }
 
                          sprintf(debugText, "  > !!! Retrying @ %'ld us because 'mean (%d) %s (%d)'\n", currentExposureUS, mean, why.c_str(), num);
-                         displayDebugText(debugText, 2);
+                         displayDebugText(debugText, 3);
                          asiRetCode = takeOneExposure(CamNum, currentExposureUS, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
                          if (asiRetCode == ASI_SUCCESS)
                          {
@@ -2350,7 +2361,7 @@ const char *locale = DEFAULT_LOCALE;
                 writeTemperatureToFile((float)actualTemp / 10.0);
 
                 // If darkframe mode is off, add overlay text to the image
-                if (! darkframe)
+                if (! takingDarkFrames)
                 {
                     int iYOffset = 0;
 
@@ -2576,8 +2587,8 @@ const char *locale = DEFAULT_LOCALE;
                 // Save the image
                 if (bSavingImg == false)
                 {
-                    sprintf(debugText, "  > Saving image '%s' that started at %s", fileName, exposureStart);
-                    displayDebugText(debugText, 0);
+                    sprintf(debugText, "  > Saving %s image '%s'", takingDarkFrames ? "dark" : dayOrNight == "DAY" ? "DAY" : "NIGHT", fileName);
+                    displayDebugText(debugText, 1);
 
                     pthread_mutex_lock(&mtx_SaveImg);
                     // Display the time it took to save an image, for debugging.
@@ -2586,6 +2597,13 @@ const char *locale = DEFAULT_LOCALE;
                     int64 et = cv::getTickCount();
                     pthread_mutex_unlock(&mtx_SaveImg);
 
+#ifdef USE_HISTOGRAM
+                    if (attempts == 0 && dayOrNight == "DAY" && asiDayAutoExposure && ! takingDarkFrames)
+					{
+                        sprintf(debugText, "  (mean=%d)", mean);
+                        displayDebugText(debugText, 0);
+					}
+#endif
                     sprintf(debugText, "  (%.0f us)\n", timeDiff(st, et));
                     displayDebugText(debugText, 0);
                 }
@@ -2598,7 +2616,7 @@ const char *locale = DEFAULT_LOCALE;
                     displayDebugText(debugText, 0);
                 }
 
-                if (asiNightAutoGain == 1 && dayOrNight == "NIGHT" && ! darkframe)
+                if (asiNightAutoGain == 1 && dayOrNight == "NIGHT" && ! takingDarkFrames)
                 {
                     ASIGetControlValue(CamNum, ASI_GAIN, &actualGain, &bAuto);
                     sprintf(debugText, "  > Auto Gain value: %ld\n", actualGain);
@@ -2618,7 +2636,7 @@ const char *locale = DEFAULT_LOCALE;
 #endif
 
                     // Delay applied before next exposure
-                    if (dayOrNight == "NIGHT" && asiNightAutoExposure == 1 && actualExposureUS < (asiNightMaxExposureMS * US_IN_MS) && ! darkframe)
+                    if (dayOrNight == "NIGHT" && asiNightAutoExposure == 1 && actualExposureUS < (asiNightMaxExposureMS * US_IN_MS) && ! takingDarkFrames)
                     {
                         // If using auto-exposure and the actual exposure is less than the max,
                         // we still wait until we reach maxexposure, then wait for the delay period.
@@ -2634,7 +2652,7 @@ const char *locale = DEFAULT_LOCALE;
                     {
                         // Sleep even if taking dark frames so the sensor can cool between shots like it would
                         // do on a normal night.  With no delay the sensor may get hotter than it would at night.
-                        sprintf(debugText,"  > Sleeping from %s exposure: %s\n", darkframe ? "dark frame" : "auto", length_in_units(currentDelay));
+                        sprintf(debugText,"  > Sleeping from %s exposure: %s\n", takingDarkFrames ? "dark frame" : "auto", length_in_units(currentDelay));
                         displayDebugText(debugText, 0);
                         usleep(currentDelay * US_IN_MS);
                     }
@@ -2642,7 +2660,7 @@ const char *locale = DEFAULT_LOCALE;
                 else
                 {
                     std::string s;
-		           if (darkframe)
+		           if (takingDarkFrames)
                         s = "dark frame";
 		           else
                         s = "manual";

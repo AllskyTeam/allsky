@@ -151,9 +151,9 @@ fi
 
 if [ "${TYPE}" = "GENERATE" ]; then
 	ARGS=""
-	[ "${DO_KEOGRAM}" != "" ] && ARGS="${ARGS} -k"
-	[ "${DO_STARTRAILS}" != "" ] && ARGS="${ARGS} -s"
-	[ "${DO_TIMELAPSE}" != "" ] && ARGS="${ARGS} -t"
+	[ "${DO_KEOGRAM}" = "true" ] && ARGS="${ARGS} -k"
+	[ "${DO_STARTRAILS}" = "true" ] && ARGS="${ARGS} -s"
+	[ "${DO_TIMELAPSE}" = "true" ] && ARGS="${ARGS} -t"
 	echo -e "\n================"
 	echo "If you want to upload the file(s) you just created, execute 'uploadForDay.sh ${ARGS} ${DATE}'"
 	echo "================"

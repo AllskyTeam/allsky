@@ -30,13 +30,15 @@ IMG_DIR="current"
 # This must match what the local web site thinks the name is (see /var/www/html/allsky/config.js).
 IMG_PREFIX="liveview-"
 
-# Resize images before cropping and saving.
+# Resize images before cropping, stretching, and saving.
 # Adjust IMG_WIDTH and IMG_HEIGHT according to your camera's sensor ratio.
 IMG_RESIZE="false"
 IMG_WIDTH=2028
 IMG_HEIGHT=1520
 
-# Crop images, used to improve them when using a fisheye lens.
+# Crop images before stretching and saving.
+# This is useful to remove some of the black border when using a fisheye lens.
+# If you crop an image you may need to change the "Text X" and/or "Text Y" settings in the WebUI.
 CROP_IMAGE="false"
 CROP_WIDTH=640
 CROP_HEIGHT=480

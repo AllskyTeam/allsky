@@ -141,10 +141,10 @@ The second configuration file is called `config/config.sh` lets you configure th
 | IMG_UPLOAD | false | Upload the current image to a server (website, blog, host, etc)? |
 | IMG_DIR | current | Location of the image the website will use.  "allsky" is `/var/www/html/allsky` and "current" is `/home/pi/allsky`. |
 | IMG_PREFIX | liveview- | An optional prefix on the image file name, before "image.jpg" (or whatever your image is called). |
-| IMG_RESIZE | false | Resize images before cropping and saving. Adjust width and height according to your own sensor ratio. |
+| IMG_RESIZE | false | Resize images before cropping, stretching, and saving. Adjust width and height according to your own sensor ratio. |
 | IMG_HEIGHT | 2028 | The height of the resized image. |
 | IMG_WIDTH | 1520 | The width of the resized image. |
-| CROP_IMAGE | false | Crop the captured image BEFORE any other processing. This can be used, for example, to crop out most of the dark border when using a fisheye lens. |
+| CROP_IMAGE | false | Crop images before stretching and saving. This can be used, for example, to crop out most of the dark border when using a fisheye lens. Cropped images may need the "textx" and/or "texty" settings changed. |
 | CROP_WIDTH | 640| The width of the resulting image. |
 | CROP_HEIGHT | 480 | The height of the resulting image. |
 | CROP_OFFSET_X | 0 | The x offset to use when cropping. |
@@ -430,9 +430,12 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* Ability to specify format of time displayed on image and temperature displayed in Celcius, Fahrenheit, or both.
 	* Ability to set bitrate on timelapse video.
 * version **0.8.1**: Rearranged directory structure.
+	* Created a Wiki with additional documentation and troubleshooting tips.
 	* Renamed several variables in `config.sh` and `ftp-settings.sh`.
 	* CAMERA type of "auto" is no longer supported - you must specify "ZWO" or "RPiHQ".
-	* Startrails and keograms are now created using all CPUs on the Pi, drastically speeding up creating time.
+	* Startrails and keograms are now created using all CPUs on the Pi, drastically speeding up creation time.
+	* Installing the WebUI now preserves any website files (keograms, startrails, etc.) you have.  This allows for non-destructive updates of the WebUI.
+	* New script called `upload.sh` centralizes all the upload code from other scripts, and can be used to debug uploading issues.  See the Wiki for more information.
 	* Many bug fixes.
 
 ## Donation

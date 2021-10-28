@@ -66,7 +66,7 @@ pthread_t thread_display = 0;
 pthread_t hthdSave       = 0;
 int numExposures         = 0;	 // how many valid pictures have we taken so far?
 int currentGain          = NOT_SET;
-int minExposure          = 100;
+int min_exposure_us      = 100;
 
 // Some command-line and other option definitions needed outside of main():
 int tty = 0;	// 1 if we're on a tty (i.e., called from the shell prompt).
@@ -1587,7 +1587,7 @@ const char *locale = DEFAULT_LOCALE;
     }
     asiRetCode = ASIGetControlCaps(CamNum, ASI_EXPOSURE, &ControlCaps);
     if (asiRetCode == ASI_SUCCESS)
-        minExposure = ControlCaps.MinValue;
+        min_exposure_us = ControlCaps.MinValue;
 
     if (debugLevel >= 3)
     {
@@ -2116,11 +2116,11 @@ const char *locale = DEFAULT_LOCALE;
                     int attempts = 0;
                     long newExposure = 0;
 
-                    // minExposure is a camera property, fetched at device initialization
-                    // histMinExposure is the minimum exposure used in the histogram calculation
-                    int histMinExposure = minExposure? minExposure : 100;
-                    long tempMinExposure = histMinExposure;
-                    long tempMaxExposure = asiNightMaxExposure * US_IN_MS;
+                    // min_exposure_us is a camera property, fetched at device initialization
+                    // hist_min_exposure_us is the minimum exposure used in the histogram calculation
+                    int hist_min_exposure_us = min_exposure_us ? min_exposure_us : 100;
+                    long temp_min_exposure_us = hist_min_exposure_us;
+                    long temp_max_exposure_us = asiNightMaxExposure * US_IN_MS;
 
                     // Got these by trial and error.  They are more-or-less half the max of 255.
                     minAcceptableHistogram = 120;
@@ -2161,7 +2161,7 @@ const char *locale = DEFAULT_LOCALE;
                         }
 
                         // Now adjust the variables
-                        histMinExposure *= exposureAdjustment;
+                        hist_min_exposure_us *= exposureAdjustment;
                         reallyLowMean *= exposureAdjustment;
                         lowMean *= exposureAdjustment;
                         minAcceptableHistogram *= exposureAdjustment;
@@ -2170,14 +2170,14 @@ const char *locale = DEFAULT_LOCALE;
 
                     while ((mean < minAcceptableHistogram || mean > maxAcceptableHistogram) && ++attempts <= maxHistogramAttempts)
                     {
-                        sprintf(textBuffer, "  > Attempt %i,  current exposure %'ld us,  mean %d,  temp min exposure %ld us,  tempMaxExposure %'ld us", attempts, currentExposure, mean, tempMinExposure, tempMaxExposure);
+                        sprintf(textBuffer, "  > Attempt %i,  current exposure %'ld us,  mean %d,  temp min exposure %ld us,  temp_max_exposure_us %'ld us", attempts, currentExposure, mean, temp_min_exposure_us, temp_max_exposure_us);
                         displayDebugText(textBuffer, 2);
 
                         std::string why;	// Why did we adjust the exposure?  For debugging
                         int num = 0;
                          if (mean >= 254) {
                              newExposure = currentExposure * 0.4;
-                             tempMaxExposure = currentExposure - roundToMe;
+                             temp_max_exposure_us = currentExposure - roundToMe;
                              why = "mean >= max";
                              num = 254;
                          }
@@ -2191,50 +2191,50 @@ const char *locale = DEFAULT_LOCALE;
                                  // The cameras don't appear linear at this low of a level,
                                  // so really crank it up to get into the linear area.
                                  newExposure = currentExposure * 20;
-                                 tempMinExposure = currentExposure + roundToMe;
+                                 temp_min_exposure_us = currentExposure + roundToMe;
                                  why = "mean < reallyLowMean";
                                  num = reallyLowMean;
                              }
 			     else if (mean < lowMean) {
                                  newExposure = currentExposure * 5;
-                                 tempMinExposure = currentExposure + roundToMe;
+                                 temp_min_exposure_us = currentExposure + roundToMe;
                                  why = "mean < lowMean";
                                  num = lowMean;
                              }
                              else if (mean < (minAcceptableHistogram * 0.6))
                              {
                                  newExposure = currentExposure * 2.5;
-                                 tempMinExposure = currentExposure + roundToMe;
+                                 temp_min_exposure_us = currentExposure + roundToMe;
                                  why = "mean < (minAcceptableHistogram * 0.6)";
                                  num = minAcceptableHistogram * 0.6;
                              }
                              else if (mean < minAcceptableHistogram)
                              {
                                  newExposure = currentExposure * 1.1;
-                                 tempMinExposure = currentExposure + roundToMe;
+                                 temp_min_exposure_us = currentExposure + roundToMe;
                                  why = "mean < minAcceptableHistogram";
                                  num = minAcceptableHistogram;
                              }
                              else if (mean > (maxAcceptableHistogram * 1.6))
                              {
                                  newExposure = currentExposure * 0.7;
-                                 tempMaxExposure = currentExposure - roundToMe;
+                                 temp_max_exposure_us = currentExposure - roundToMe;
                                  why = "mean > (maxAcceptableHistogram * 1.6)";
                                  num = (maxAcceptableHistogram * 1.6);
                              }
                              else if (mean > maxAcceptableHistogram)
                              {
                                  newExposure = currentExposure * 0.9;
-                                 tempMaxExposure = currentExposure - roundToMe;
+                                 temp_max_exposure_us = currentExposure - roundToMe;
                                  why = "mean > maxAcceptableHistogram";
                                  num = maxAcceptableHistogram;
                              }
                          }
 
                          newExposure = roundTo(newExposure, roundToMe);
-                         newExposure = std::max(tempMinExposure, newExposure);
-                         newExposure = std::min(newExposure, tempMaxExposure);
-                         newExposure = std::max(tempMinExposure, newExposure);
+                         newExposure = std::max(temp_min_exposure_us, newExposure);
+                         newExposure = std::min(newExposure, temp_max_exposure_us);
+                         newExposure = std::max(temp_min_exposure_us, newExposure);
                          newExposure = std::min(newExposure, cameraMaxAutoExposureUS);
 
                          sprintf(textBuffer, ",  new exposure %'ld us\n", newExposure);

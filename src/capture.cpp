@@ -244,18 +244,20 @@ std::string exec(const char *cmd)
 
 void *Display(void *params)
 {
-    cv::Mat *para = (cv::Mat *)params;
-    int w=para->cols;
-    int h=para->rows;
-    
-    cv::Mat pImg(h,w,(int)para->type(),(uchar *)para->data);
-    cv::namedWindow("video", 1);
+    cv::Mat *pImg = (cv::Mat *)params;
+    int w = pImg->cols;
+    int h = pImg->rows;
+    cv::namedWindow("Preview", cv::WINDOW_AUTOSIZE);
+    cv::Mat Img2 = *pImg, *pImg2 = &Img2;
+
     while (bDisplay)
     {
-        cv::imshow("video", pImg);
-        cv::waitKey(100);
+        // default preview size usually fills whole screen, so shrink.
+        cv::resize(*pImg, *pImg2, cv::Size((int)w/2, (int)h/2));
+        cv::imshow("Preview", *pImg2);
+        cv::waitKey(500);	// TODO: wait for exposure time instead of hard-coding value
     }
-    cv::destroyWindow("video");
+    cv::destroyWindow("Preview");
     printf("Display thread over\n");
     return (void *)0;
 }
@@ -1809,12 +1811,6 @@ const char *locale = DEFAULT_LOCALE;
         }
     }
 
-    if (preview == 1)
-    {
-        bDisplay = 1;
-        pthread_create(&thread_display, NULL, Display, (void *)&pRgb);
-    }
-
     if (!bSaveRun)
     {
         bSaveRun = true;
@@ -2144,7 +2140,11 @@ const char *locale = DEFAULT_LOCALE;
             if (asiRetCode == ASI_SUCCESS)
             {
                 numErrors = 0;
-                numExposures++;
+                if (numExposures++ == 0 && preview == 1)
+                {
+                    bDisplay = 1;
+                    pthread_create(&thread_display, NULL, Display, (void *)&pRgb);
+                }
 
 #ifdef USE_HISTOGRAM
                 int usedHistogram = 0;	// did we use the histogram method?

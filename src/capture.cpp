@@ -367,10 +367,10 @@ int bytesPerPixel(ASI_IMG_TYPE imageType) {
 // eg. box size 0x0, box size WxW, box crosses image edge, ... basically
 // anything that would read/write out-of-bounds
 
-void computeHistogram(unsigned char *imageBuffer, int width, int height, ASI_IMG_TYPE imageType, int *histogram)
+int computeHistogram(unsigned char *imageBuffer, int width, int height, ASI_IMG_TYPE imageType, int *histogram)
 {
     int h, i;
-    unsigned char *b = imageBuffer;
+    unsigned char *buf = imageBuffer;
 
     // Clear the histogram array.
     for (h = 0; h < 256; h++) {
@@ -403,7 +403,7 @@ void computeHistogram(unsigned char *imageBuffer, int width, int height, ASI_IMG
                 for (int z = 0; z < bpp; z++)
                 {
                     // For RGB24 this averages the blue, green, and red pixels.
-                    total += b[i+z];
+                    total += buf[i+z];
                 }
                 int avg = total / bpp;
                 histogram[avg]++;
@@ -420,7 +420,7 @@ void computeHistogram(unsigned char *imageBuffer, int width, int height, ASI_IMG
                 // and use that for the histogram value ignoring the
                 // least significant byte so we can use the 256 value histogram array.
                 // If t's acutally little endian then add a +1 to the array subscript for b[i].
-                pixelValue = b[i];
+                pixelValue = buf[i];
                 histogram[pixelValue]++;
             }
         }
@@ -429,9 +429,7 @@ void computeHistogram(unsigned char *imageBuffer, int width, int height, ASI_IMG
         sprintf(debug_text, "*** ERROR: Received unspported value for ASI_IMG_TYPE: %d\n", imageType);
         displayDebugText(debug_text, 0);
     }
-}
 
-int calculateHistogramMean(int *histogram) {
     int meanBin = 0;
     int a = 0, b = 0;
     for (int h = 0; h < 256; h++) {
@@ -461,9 +459,12 @@ long bufferSize = NOT_SET;
 
 ASI_ERROR_CODE takeOneExposure(
         int cameraId,
-        long exposureTimeMicroseconds,
+        long exposure_time_ms,
         unsigned char *imageBuffer, long width, long height,  // where to put image and its size
-        ASI_IMG_TYPE imageType)
+        ASI_IMG_TYPE imageType,
+        int *histogram,
+        int *mean
+)
 {
     if (imageBuffer == NULL) {
         return (ASI_ERROR_CODE) -1;
@@ -473,13 +474,18 @@ ASI_ERROR_CODE takeOneExposure(
     // ZWO recommends timeout = (exposure*2) + 500 ms
     // After some discussion, we're doing +5000ms to account for delays induced by
 	// USB contention, such as that caused by heavy USB disk IO
-    long timeout = ((exposureTimeMicroseconds * 2) / US_IN_MS) + 5000;	// timeout is in ms
+    long timeout = ((exposure_time_ms * 2) / US_IN_MS) + 5000;	// timeout is in ms
 
-    sprintf(debug_text, "  > Exposure set to %'ld us (%'.2f ms), timeout: %'ld ms\n",
-            exposureTimeMicroseconds, (float)exposureTimeMicroseconds/US_IN_MS, timeout);
+    sprintf(debug_text, "  > %s to %'ld us (%'.2f ms)",
+        wasAutoExposure == ASI_TRUE ? "Camera set auto exposure" : "Exposure set",
+        exposure_time_ms, (float)exposure_time_ms/US_IN_MS);
     displayDebugText(debug_text, 3);
+    sprintf(debug_text, ", timeout: %'ld ms", timeout);
+    displayDebugText(debug_text, 4);
+    sprintf(debug_text, "\n");
+    displayDebugText(debug_text, 3); // needs to be same debug level as "Exposure set to ..."
 
-    setControl(cameraId, ASI_EXPOSURE, exposureTimeMicroseconds, currentAutoExposure);
+    setControl(cameraId, ASI_EXPOSURE, exposure_time_ms, currentAutoExposure);
 
     if (use_new_exposure_algorithm)
     {
@@ -495,15 +501,23 @@ ASI_ERROR_CODE takeOneExposure(
             displayDebugText(debug_text, 0);
         }
         else {
-	        numErrors = 0;
+            numErrors = 0;
+            debug_text2[0] = '\0';
+#ifdef USE_HISTOGRAM
+            if (histogram != NULL && mean != NULL)
+            {
+                *mean = computeHistogram(imageBuffer, width, height, imageType, histogram);
+                sprintf(debug_text2, ", mean %d", *mean);
+            }
+#endif
             ASIGetControlValue(cameraId, ASI_EXPOSURE, &actual_exposure_us, &wasAutoExposure);
-            sprintf(debug_text, "  > Got image @ exposure: %'ld us (%'.2f ms)\n", actual_exposure_us, (float)actual_exposure_us/US_IN_MS);
+            sprintf(debug_text, "  > Got image @ exposure: %'ld us (%'.2f ms)%s\n", actual_exposure_us, (float)actual_exposure_us/US_IN_MS, debug_text2);
             displayDebugText(debug_text, 3);
 
             // If this was a manual exposure, make sure it took the correct exposure.
-            if (wasAutoExposure == ASI_FALSE && exposureTimeMicroseconds != actual_exposure_us)
+            if (wasAutoExposure == ASI_FALSE && exposure_time_ms != actual_exposure_us)
             {
-                sprintf(debug_text, "  > WARNING: not correct exposure (requested: %'ld us, actual: %'ld us, diff: %'ld)\n", exposureTimeMicroseconds, actual_exposure_us, actual_exposure_us - exposureTimeMicroseconds);
+                sprintf(debug_text, "  > WARNING: not correct exposure (requested: %'ld us, actual: %'ld us, diff: %'ld)\n", exposure_time_ms, actual_exposure_us, actual_exposure_us - exposure_time_ms);
                 displayDebugText(debug_text, 0);
                 status = (ASI_ERROR_CODE) -1;
             }
@@ -2064,10 +2078,11 @@ const char *locale = DEFAULT_LOCALE;
             for (i=1; i <= 3; i++)
             {
                 // don't count these as "real" exposures, so don't increment numExposures.
-                asiRetCode = takeOneExposure(CamNum, SHORT_EXPOSURE, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
+                asiRetCode = takeOneExposure(CamNum, SHORT_EXPOSURE, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, NULL, NULL);
                 if (asiRetCode != ASI_SUCCESS)
                 {
-                    sprintf(debug_text, "buffer clearing exposure %d failed\n", i);	// takeOneExposure() already output the error number
+                    // takeOneExposure() already output the error number
+                    sprintf(debug_text, "buffer clearing exposure %d failed\n", i);
                     displayDebugText(debug_text, 0);
                     numErrors++;
                     sleep(2);	// sometimes sleeping keeps errors from reappearing
@@ -2090,7 +2105,16 @@ const char *locale = DEFAULT_LOCALE;
             // END of bug code
         }
 
+#ifdef USE_HISTOGRAM
         int mean = 0;
+        int attempts = 0;
+        int histogram[256];
+#define MEAN &mean
+#define HISTOGRAM histogram
+#else
+#define MEAN NULL
+#define HISTOGRAM NULL
+#endif
 
         while (bMain && lastDayOrNight == dayOrNight)
         {
@@ -2108,7 +2132,7 @@ const char *locale = DEFAULT_LOCALE;
             if (showTime == 1)
             	sprintf(bufTime, "%s", formatTime(t, timeFormat));
 
-            asiRetCode = takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
+            asiRetCode = takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, HISTOGRAM, MEAN);
             if (asiRetCode == ASI_SUCCESS)
             {
                 numErrors = 0;
@@ -2119,23 +2143,21 @@ const char *locale = DEFAULT_LOCALE;
                 // We don't use this at night since the ZWO bug is only when it's light outside.
                 if (dayOrNight == "DAY" && asiDayAutoExposure && ! taking_dark_frames && current_exposure_us <= camera_max_auto_exposure_us)
                 {
+                    usedHistogram = 1;	// we are using the histogram code on this exposure
+                    attempts = 0;
+
                     int minAcceptableHistogram;
                     int maxAcceptableHistogram;
                     int reallyLowMean;
                     int lowMean;
                     int roundToMe = 1; // round exposures to this many microseconds
 
-                    usedHistogram = 1;	// we are using the histogram code on this exposure
-                    int histogram[256];
-                    computeHistogram(pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram);
-                    mean = calculateHistogramMean(histogram);
                     // "last_OK_exposure" is the exposure time of the last OK
                     // image (i.e., mean < 255).
                     // The intent is to keep track of the last OK exposure in case the final
                     // exposure we calculate is no good, we can go back to the last OK one.
                     long last_OK_exposure = current_exposure_us;
 
-                    int attempts = 0;
                     long new_exposure_us = 0;
 
                     // min_exposure_us is a camera property, fetched at device initialization
@@ -2271,20 +2293,26 @@ const char *locale = DEFAULT_LOCALE;
                                  current_exposure_us = last_OK_exposure;
                                  sprintf(debug_text, "  > !!! Resetting to last OK exposure of '%ld us\n", current_exposure_us);
                                  displayDebugText(debug_text, 3);
-                                 takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
-                                 computeHistogram(pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram);
-                                 mean = calculateHistogramMean(histogram);
+                                 takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram, &mean);
                              }
+                             sprintf(debug_text, "  > Stopping: new_exposure_us == current_exposure_us (%'ld)\n", current_exposure_us);
+                             displayDebugText(debug_text, 3);
                              break;
                          }
 
                          current_exposure_us = new_exposure_us;
+                         if (current_exposure_us > current_max_exposure_us)
+                         {
+                             break;
+                         }
 
                          sprintf(debug_text, "  > !!! Retrying @ %'ld us because '%s (%d)'\n", current_exposure_us, why.c_str(), num);
                          displayDebugText(debug_text, 3);
-                         takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
-                         computeHistogram(pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram);
-                         mean = calculateHistogramMean(histogram);
+                         takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram, &mean);
+                         if (asiRetCode == ASI_SUCCESS)
+                         {
+                             continue;
+                         }
                     }
 
                     if (asiRetCode != ASI_SUCCESS)
@@ -2292,8 +2320,8 @@ const char *locale = DEFAULT_LOCALE;
                         sprintf(debug_text,"  > Sleeping from failed exposure: %s\n", length_in_units(currentDelay));
                         displayDebugText(debug_text, 2);
                         usleep(currentDelay * US_IN_MS);
-                         // Don't save the file or do anything below.
-                         continue;
+                        // Don't save the file or do anything below.
+                        continue;
                     }
 
                     if (attempts > maxHistogramAttempts)

@@ -799,6 +799,21 @@ int determineGainChange(int dayGain, int nightGain)
     return(amt);
 }
 
+// Display a length of time in different units, depending on the length's value.
+char *length_in_units(float ms)	// milliseconds
+{
+    static char length[50];
+    if (ms == 0)
+        sprintf(length, "0 ms");
+    if (ms < 1)
+        sprintf(length, "%.3f ms", (float) ms);
+    else if (ms > (1 * MS_IN_SEC))
+        sprintf(length, "%.1f sec", (float) ms / MS_IN_SEC);
+    else
+        sprintf(length, "%.1f ms", ms);
+    return(length);
+}
+
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
@@ -2271,6 +2286,16 @@ const char *locale = DEFAULT_LOCALE;
                          computeHistogram(pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram);
                          mean = calculateHistogramMean(histogram);
                     }
+
+                    if (asiRetCode != ASI_SUCCESS)
+                    {
+                        sprintf(debug_text,"  > Sleeping from failed exposure: %s\n", length_in_units(currentDelay));
+                        displayDebugText(debug_text, 2);
+                        usleep(currentDelay * US_IN_MS);
+                         // Don't save the file or do anything below.
+                         continue;
+                    }
+
                     if (attempts > maxHistogramAttempts)
                     {
                          sprintf(debug_text, "  > max attempts reached - using exposure of %'ld us with mean %d\n", current_exposure_us, mean);
@@ -2571,7 +2596,7 @@ const char *locale = DEFAULT_LOCALE;
                         // This doesn't apply during the day since we don't have a max time then.
                         int s = (asi_night_max_exposure_ms * US_IN_MS) - actual_exposure_us; // to get to max
                         s += currentDelay * US_IN_MS;   // Add standard delay amount
-                        sprintf(debug_text,"  > Sleeping: %'d ms\n", s / US_IN_MS);
+                        sprintf(debug_text,"  > Sleeping: %s\n", length_in_units(s / US_IN_MS));
                         displayDebugText(debug_text, 0);
                         usleep(s);	// usleep() is in microseconds
                     }
@@ -2579,7 +2604,7 @@ const char *locale = DEFAULT_LOCALE;
                     {
                         // Sleep even if taking dark frames so the sensor can cool between shots like it would
                         // do on a normal night.  With no delay the sensor may get hotter than it would at night.
-                        sprintf(debug_text,"  > Sleeping from %s exposure: %'d ms (%.0f sec)\n", taking_dark_frames ? "dark frame" : "auto", currentDelay, (float)currentDelay/US_IN_MS);
+                        sprintf(debug_text,"  > Sleeping from %s exposure: %s\n", taking_dark_frames ? "dark frame" : "auto", length_in_units(currentDelay));
                         displayDebugText(debug_text, 0);
                         usleep(currentDelay * US_IN_MS);
                     }
@@ -2595,7 +2620,7 @@ const char *locale = DEFAULT_LOCALE;
                     if (usedHistogram == 1)
                         s = "histogram";
 #endif
-                    sprintf(debug_text,"  > Sleeping from %s exposure: %'d ms\n", s.c_str(), currentDelay);
+                    sprintf(debug_text,"  > Sleeping from %s exposure: %s\n", s.c_str(), length_in_units(currentDelay));
                     displayDebugText(debug_text, 0);
                     usleep(currentDelay * US_IN_MS);
                 }

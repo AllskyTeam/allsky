@@ -880,7 +880,7 @@ const char *locale = DEFAULT_LOCALE;
     // There is no max day autoexposure since daylight exposures are always pretty short.
 #define DEFAULT_ASINIGHTEXPOSURE (5 * US_IN_SEC)	// 5 seconds
     long asiNightExposure      = DEFAULT_ASINIGHTEXPOSURE;
-    long currentExposure       = NOT_SET;
+    long current_exposure_us   = NOT_SET;
 #define DEFAULT_NIGHTAUTOEXPOSURE 1
     int asiNightAutoExposure   = DEFAULT_NIGHTAUTOEXPOSURE;	// is it on or off for nighttime?
     // currentAutoExposure is global so is defined outside of main()
@@ -1832,14 +1832,14 @@ const char *locale = DEFAULT_LOCALE;
                 // We're doing dark frames so turn off autoexposure and autogain, and use
                 // nightime gain, delay, max exposure, bin, and brightness to mimic a nightime shot.
                 currentAutoExposure = ASI_FALSE;
-                setControl(CamNum, ASI_EXPOSURE, currentExposure, currentAutoExposure);
+                setControl(CamNum, ASI_EXPOSURE, current_exposure_us, currentAutoExposure);
                 asiNightAutoExposure = 0;
                 currentAutoGain = ASI_FALSE;
                 // Don't need to set ASI_AUTO_MAX_GAIN since we're not using auto gain
                 setControl(CamNum, ASI_GAIN, asiNightGain, ASI_FALSE);
                 currentGain = asiNightGain;
         	currentDelay = nightDelay;
-                currentExposure = asiNightMaxExposure * US_IN_MS;
+                current_exposure_us = asiNightMaxExposure * US_IN_MS;
                 currentBin = nightBin;
                 currentBrightness = asiNightBrightness;
 
@@ -1909,22 +1909,22 @@ const char *locale = DEFAULT_LOCALE;
                 currentDelay = dayDelay;
                 currentBin = dayBin;
 
-                // If we went from Night to Day, then currentExposure will be the last night
+                // If we went from Night to Day, then current_exposure_us will be the last night
                 // exposure so leave it if we're using auto-exposure so there's a seamless change from
                 // Night to Day, i.e., if the exposure was fine a minute ago it will likely be fine now.
                 // On the other hand, if this program just started or we're using manual exposures,
                 // use what the user specified.
                 if (numExposures == 0 || asiDayAutoExposure == ASI_FALSE)
                 {
-                    currentExposure = asiDayExposure;
+                    current_exposure_us = asiDayExposure;
                 }
 		else
                 {
-                    sprintf(textBuffer, "Using last night exposure of %'ld us (%'.2lf ms)\n", currentExposure, (float)currentExposure / US_IN_MS);
+                    sprintf(textBuffer, "Using last night exposure of %'ld us (%'.2lf ms)\n", current_exposure_us, (float)current_exposure_us / US_IN_MS);
                     displayDebugText(textBuffer, 2);
                 }
 #ifndef USE_HISTOGRAM
-                setControl(CamNum, ASI_EXPOSURE, currentExposure, currentAutoExposure);
+                setControl(CamNum, ASI_EXPOSURE, current_exposure_us, currentAutoExposure);
 #endif
                 setControl(CamNum, ASI_AUTO_MAX_EXP, cameraMaxAutoExposureUS / US_IN_MS, ASI_FALSE);	// need ms
                 currentGain = asiDayGain;	// must come before determineGainChange() below
@@ -1960,7 +1960,7 @@ const char *locale = DEFAULT_LOCALE;
             else
             {
                 currentAutoExposure = ASI_FALSE;
-                printf("Saving %ds manual exposure night images with delay of %'d ms (%d sec)\n\n", (int)round(currentExposure / US_IN_SEC), nightDelay, nightDelay / MS_IN_SEC);
+                printf("Saving %ds manual exposure night images with delay of %'d ms (%d sec)\n\n", (int)round(current_exposure_us / US_IN_SEC), nightDelay, nightDelay / MS_IN_SEC);
             }
 
             currentBrightness = asiNightBrightness;
@@ -1968,10 +1968,10 @@ const char *locale = DEFAULT_LOCALE;
             currentBin = nightBin;
             if (numExposures == 0 || asiNightAutoExposure == ASI_FALSE)
             {
-             	currentExposure = asiNightExposure;
+             	current_exposure_us = asiNightExposure;
             }
 #ifndef USE_HISTOGRAM
-            setControl(CamNum, ASI_EXPOSURE, currentExposure, currentAutoExposure);
+            setControl(CamNum, ASI_EXPOSURE, current_exposure_us, currentAutoExposure);
 #endif
             currentGain = asiNightGain;	// must come before determineGainChange() below
             if (currentAdjustGain)
@@ -2062,8 +2062,8 @@ const char *locale = DEFAULT_LOCALE;
 
             // Restore correct exposure times and auto-exposure mode.
             currentAutoExposure = savedAutoExposure;
-            setControl(CamNum, ASI_EXPOSURE, currentExposure, currentAutoExposure);
-            sprintf(debugText, "...DONE.  Reset exposure to %'ld us\n", currentExposure);
+            setControl(CamNum, ASI_EXPOSURE, current_exposure_us, currentAutoExposure);
+            sprintf(debugText, "...DONE.  Reset exposure to %'ld us\n", current_exposure_us);
             displayDebugText(debugText, 2);
             // END of bug code
         }
@@ -2086,7 +2086,7 @@ const char *locale = DEFAULT_LOCALE;
             if (showTime == 1)
             	sprintf(bufTime, "%s", formatTime(t, timeFormat));
 
-            asiRetCode = takeOneExposure(CamNum, currentExposure, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
+            asiRetCode = takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
             if (asiRetCode == ASI_SUCCESS)
             {
                 numErrors = 0;
@@ -2095,7 +2095,7 @@ const char *locale = DEFAULT_LOCALE;
 #ifdef USE_HISTOGRAM
                 int usedHistogram = 0;	// did we use the histogram method?
                 // We don't use this at night since the ZWO bug is only when it's light outside.
-                if (dayOrNight == "DAY" && asiDayAutoExposure && ! darkframe && currentExposure <= cameraMaxAutoExposureUS)
+                if (dayOrNight == "DAY" && asiDayAutoExposure && ! darkframe && current_exposure_us <= cameraMaxAutoExposureUS)
                 {
                     int minAcceptableHistogram;
                     int maxAcceptableHistogram;
@@ -2111,10 +2111,10 @@ const char *locale = DEFAULT_LOCALE;
                     // image (i.e., mean < 255).
                     // The intent is to keep track of the last OK exposure in case the final
                     // exposure we calculate is no good, we can go back to the last OK one.
-                    long last_OK_exposure = currentExposure;
+                    long last_OK_exposure = current_exposure_us;
 
                     int attempts = 0;
-                    long newExposure = 0;
+                    long new_exposure_us = 0;
 
                     // min_exposure_us is a camera property, fetched at device initialization
                     // hist_min_exposure_us is the minimum exposure used in the histogram calculation
@@ -2170,14 +2170,14 @@ const char *locale = DEFAULT_LOCALE;
 
                     while ((mean < minAcceptableHistogram || mean > maxAcceptableHistogram) && ++attempts <= maxHistogramAttempts)
                     {
-                        sprintf(textBuffer, "  > Attempt %i,  current exposure %'ld us,  mean %d,  temp min exposure %ld us,  temp_max_exposure_us %'ld us", attempts, currentExposure, mean, temp_min_exposure_us, temp_max_exposure_us);
+                        sprintf(textBuffer, "  > Attempt %i,  current exposure %'ld us,  mean %d,  temp min exposure %ld us,  temp_max_exposure_us %'ld us", attempts, current_exposure_us, mean, temp_min_exposure_us, temp_max_exposure_us);
                         displayDebugText(textBuffer, 2);
 
                         std::string why;	// Why did we adjust the exposure?  For debugging
                         int num = 0;
                          if (mean >= 254) {
-                             newExposure = currentExposure * 0.4;
-                             temp_max_exposure_us = currentExposure - roundToMe;
+                             new_exposure_us = current_exposure_us * 0.4;
+                             temp_max_exposure_us = current_exposure_us - roundToMe;
                              why = "mean >= max";
                              num = 254;
                          }
@@ -2186,102 +2186,102 @@ const char *locale = DEFAULT_LOCALE;
                              //  The code below takes into account how far off we are from an acceptable mean.
                              //  There's probably a simplier way to do this, like adjust by some multiple of
                              //  how far of we are.  That exercise is left to the reader...
-                             last_OK_exposure = currentExposure;
+                             last_OK_exposure = current_exposure_us;
                              if (mean < reallyLowMean) {
                                  // The cameras don't appear linear at this low of a level,
                                  // so really crank it up to get into the linear area.
-                                 newExposure = currentExposure * 20;
-                                 temp_min_exposure_us = currentExposure + roundToMe;
+                                 new_exposure_us = current_exposure_us * 20;
+                                 temp_min_exposure_us = current_exposure_us + roundToMe;
                                  why = "mean < reallyLowMean";
                                  num = reallyLowMean;
                              }
 			     else if (mean < lowMean) {
-                                 newExposure = currentExposure * 5;
-                                 temp_min_exposure_us = currentExposure + roundToMe;
+                                 new_exposure_us = current_exposure_us * 5;
+                                 temp_min_exposure_us = current_exposure_us + roundToMe;
                                  why = "mean < lowMean";
                                  num = lowMean;
                              }
                              else if (mean < (minAcceptableHistogram * 0.6))
                              {
-                                 newExposure = currentExposure * 2.5;
-                                 temp_min_exposure_us = currentExposure + roundToMe;
+                                 new_exposure_us = current_exposure_us * 2.5;
+                                 temp_min_exposure_us = current_exposure_us + roundToMe;
                                  why = "mean < (minAcceptableHistogram * 0.6)";
                                  num = minAcceptableHistogram * 0.6;
                              }
                              else if (mean < minAcceptableHistogram)
                              {
-                                 newExposure = currentExposure * 1.1;
-                                 temp_min_exposure_us = currentExposure + roundToMe;
+                                 new_exposure_us = current_exposure_us * 1.1;
+                                 temp_min_exposure_us = current_exposure_us + roundToMe;
                                  why = "mean < minAcceptableHistogram";
                                  num = minAcceptableHistogram;
                              }
                              else if (mean > (maxAcceptableHistogram * 1.6))
                              {
-                                 newExposure = currentExposure * 0.7;
-                                 temp_max_exposure_us = currentExposure - roundToMe;
+                                 new_exposure_us = current_exposure_us * 0.7;
+                                 temp_max_exposure_us = current_exposure_us - roundToMe;
                                  why = "mean > (maxAcceptableHistogram * 1.6)";
                                  num = (maxAcceptableHistogram * 1.6);
                              }
                              else if (mean > maxAcceptableHistogram)
                              {
-                                 newExposure = currentExposure * 0.9;
-                                 temp_max_exposure_us = currentExposure - roundToMe;
+                                 new_exposure_us = current_exposure_us * 0.9;
+                                 temp_max_exposure_us = current_exposure_us - roundToMe;
                                  why = "mean > maxAcceptableHistogram";
                                  num = maxAcceptableHistogram;
                              }
                          }
 
-                         newExposure = roundTo(newExposure, roundToMe);
-                         newExposure = std::max(temp_min_exposure_us, newExposure);
-                         newExposure = std::min(newExposure, temp_max_exposure_us);
-                         newExposure = std::max(temp_min_exposure_us, newExposure);
-                         newExposure = std::min(newExposure, cameraMaxAutoExposureUS);
+                         new_exposure_us = roundTo(new_exposure_us, roundToMe);
+                         new_exposure_us = std::max(temp_min_exposure_us, new_exposure_us);
+                         new_exposure_us = std::min(new_exposure_us, temp_max_exposure_us);
+                         new_exposure_us = std::max(temp_min_exposure_us, new_exposure_us);
+                         new_exposure_us = std::min(new_exposure_us, cameraMaxAutoExposureUS);
 
-                         sprintf(textBuffer, ",  new exposure %'ld us\n", newExposure);
+                         sprintf(textBuffer, ",  new exposure %'ld us\n", new_exposure_us);
                          displayDebugText(textBuffer, 2);
 
-                         if (newExposure == currentExposure)
+                         if (new_exposure_us == current_exposure_us)
                          {
                              // We can't find a better exposure so stick with this one
                              // or the last OK one.  If the last exposure had a mean >= 254,
                              // use the most recent exposure that was OK.
                              if (mean >= 254 && 0) {	// xxxxxxxxxxxxxxxxxxxx This needs work so disabled
-                                 currentExposure = last_OK_exposure;
-                                 sprintf(textBuffer, "  > !!! Resetting to last OK exposure of '%ld us\n", currentExposure);
+                                 current_exposure_us = last_OK_exposure;
+                                 sprintf(textBuffer, "  > !!! Resetting to last OK exposure of '%ld us\n", current_exposure_us);
                                  displayDebugText(textBuffer, 2);
-                                 takeOneExposure(CamNum, currentExposure, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
+                                 takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
                                  computeHistogram(pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram);
                                  mean = calculateHistogramMean(histogram);
                              }
                              break;
                          }
 
-                         currentExposure = newExposure;
+                         current_exposure_us = new_exposure_us;
 
-                         sprintf(textBuffer, "  > !!! Retrying @ %'ld us because '%s (%d)'\n", currentExposure, why.c_str(), num);
+                         sprintf(textBuffer, "  > !!! Retrying @ %'ld us because '%s (%d)'\n", current_exposure_us, why.c_str(), num);
                          displayDebugText(textBuffer, 2);
-                         takeOneExposure(CamNum, currentExposure, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
+                         takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type);
                          computeHistogram(pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram);
                          mean = calculateHistogramMean(histogram);
                     }
                     if (attempts > maxHistogramAttempts)
                     {
-                         sprintf(textBuffer, "  > max attempts reached - using exposure of %'ld us with mean %d\n", currentExposure, mean);
+                         sprintf(textBuffer, "  > max attempts reached - using exposure of %'ld us with mean %d\n", current_exposure_us, mean);
                          displayDebugText(textBuffer, 2);
                     }
                     else if (attempts > 1)
                     {
-                         sprintf(textBuffer, "  > Using exposure of %'ld us with mean %d\n", currentExposure, mean);
+                         sprintf(textBuffer, "  > Using exposure of %'ld us with mean %d\n", current_exposure_us, mean);
                          displayDebugText(textBuffer, 2);
                     }
                     else if (attempts == 1)
                     {
-                         sprintf(textBuffer, "  > Current exposure of %'ld us with mean %d was ok - no additional attempts needed.\n", currentExposure, mean);
+                         sprintf(textBuffer, "  > Current exposure of %'ld us with mean %d was ok - no additional attempts needed.\n", current_exposure_us, mean);
                          displayDebugText(textBuffer, 2);
                     }
-                    actualExposureMicroseconds = currentExposure;
+                    actualExposureMicroseconds = current_exposure_us;
                 } else {
-                    currentExposure = actualExposureMicroseconds;
+                    current_exposure_us = actualExposureMicroseconds;
                 }
 #endif
                 // Write temperature to file
@@ -2328,14 +2328,14 @@ const char *locale = DEFAULT_LOCALE;
                     if (showExposure == 1)
                     {
                         // Indicate when the time to take the exposure is less than the reported exposure time
-                        if (actualExposureMicroseconds == currentExposure)
+                        if (actualExposureMicroseconds == current_exposure_us)
                             bufTemp2[0] = '\0';
                         else
                             sprintf(bufTemp2, " actual %'.2lf ms)", (double)actualExposureMicroseconds / US_IN_MS);
                         if (actualExposureMicroseconds >= (1 * US_IN_SEC))  // display in seconds if >= 1 second, else in ms
-                            sprintf(bufTemp, "Exposure: %'.2f s%s", (float)currentExposure / US_IN_SEC, bufTemp2);
+                            sprintf(bufTemp, "Exposure: %'.2f s%s", (float)current_exposure_us / US_IN_SEC, bufTemp2);
                         else
-                            sprintf(bufTemp, "Exposure: %'.2f ms%s", (float)currentExposure / US_IN_MS, bufTemp2);
+                            sprintf(bufTemp, "Exposure: %'.2f ms%s", (float)current_exposure_us / US_IN_MS, bufTemp2);
                         // Indicate if in auto exposure mode.
                         if (currentAutoExposure == ASI_TRUE) strcat(bufTemp, " (auto)");
                         cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin), fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
@@ -2507,7 +2507,7 @@ const char *locale = DEFAULT_LOCALE;
                 {
                     // Retrieve the current Exposure for smooth transition to night time
                     // as long as auto-exposure is enabled during night time
-                    currentExposure = actualExposureMicroseconds;
+                    current_exposure_us = actualExposureMicroseconds;
                 }
 #endif
 
@@ -2551,7 +2551,7 @@ const char *locale = DEFAULT_LOCALE;
 
                     if (dayOrNight == "DAY")
                     {
-                        currentExposure = actualExposureMicroseconds;
+                        current_exposure_us = actualExposureMicroseconds;
                     }
 #endif
 

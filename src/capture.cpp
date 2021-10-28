@@ -439,7 +439,7 @@ int computeHistogram(unsigned char *imageBuffer, int width, int height, ASI_IMG_
 
     if (b == 0)
     {
-        sprintf(debug_text, "*** ERROR: calculateHistogramMean(): b==0\n");
+        sprintf(debug_text, "*** ERROR: calculating histogram: b==0\n");
         displayDebugText(debug_text, 0);
         return(0);
     }
@@ -1052,21 +1052,13 @@ const char *locale = DEFAULT_LOCALE;
             {
                 quality = atoi(argv[++i]);
             }
-            else if (strcmp(argv[i], "-nightexposure") == 0 || strcmp(argv[i], "-exposure") == 0)
-            {
-                asi_night_exposure_us = atoi(argv[++i]) * US_IN_MS;
-            }
             else if (strcmp(argv[i], "-dayexposure") == 0)
             {
                 asi_day_exposure_us = atof(argv[++i]) * US_IN_MS;  // allow fractions
             }
-            else if (strcmp(argv[i], "-nightmaxexposure") == 0 || strcmp(argv[i], "-maxexposure") == 0)
+            else if (strcmp(argv[i], "-nightexposure") == 0 || strcmp(argv[i], "-exposure") == 0)
             {
-                asi_night_max_exposure_ms = atoi(argv[++i]);
-            }
-            else if (strcmp(argv[i], "-daymaxexposure") == 0)
-            {
-                asi_day_max_exposure_ms = atoi(argv[++i]);
+                asi_night_exposure_us = atoi(argv[++i]) * US_IN_MS;
             }
             else if (strcmp(argv[i], "-dayautoexposure") == 0)
             {
@@ -1075,6 +1067,14 @@ const char *locale = DEFAULT_LOCALE;
             else if (strcmp(argv[i], "-nightautoexposure") == 0 || strcmp(argv[i], "-autoexposure") == 0)
             {
                 asiNightAutoExposure = atoi(argv[++i]);
+            }
+            else if (strcmp(argv[i], "-daymaxexposure") == 0)
+            {
+                asi_day_max_exposure_ms = atoi(argv[++i]);
+            }
+            else if (strcmp(argv[i], "-nightmaxexposure") == 0 || strcmp(argv[i], "-maxexposure") == 0)
+            {
+                asi_night_max_exposure_ms = atoi(argv[++i]);
             }
             else if (strcmp(argv[i], "-nightgain") == 0 || strcmp(argv[i], "-gain") == 0)
             {
@@ -1379,11 +1379,10 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -daytime                           - Default = %d - Set to 1 to enable daytime images\n", DEFAULT_DAYTIMECAPTURE);
         printf(" -dayexposure                       - Default = %'d - Time in us (equals to %.4f sec)\n", DEFAULT_ASIDAYEXPOSURE, (float)DEFAULT_ASIDAYEXPOSURE/US_IN_SEC);
         printf(" -nightexposure                     - Default = %'d - Time in us (equals to %.4f sec)\n", DEFAULT_ASINIGHTEXPOSURE, (float)DEFAULT_ASINIGHTEXPOSURE/US_IN_SEC);
-        printf(" -daymaxexposure                    - Default = %'d - Time in ms (equals to %.1f sec)\n", DEFAULT_ASIDAYMAXEXPOSURE_MS, (float)DEFAULT_ASIDAYMAXEXPOSURE_MS/US_IN_MS);
-        printf(" -nightmaxexposure                  - Default = %'d - Time in ms (equals to %.1f sec)\n", DEFAULT_ASINIGHTMAXEXPOSURE_MS, (float)DEFAULT_ASINIGHTMAXEXPOSURE_MS/US_IN_MS);
-
         printf(" -dayautoexposure                   - Default = %d - Set to 1 to enable daytime auto Exposure\n", DEFAULT_DAYAUTOEXPOSURE);
         printf(" -nightautoexposure                 - Default = %d - Set to 1 to enable nighttime auto Exposure\n", DEFAULT_NIGHTAUTOEXPOSURE);
+        printf(" -daymaxexposure                    - Default = %'d - Time in ms (equals to %.1f sec)\n", DEFAULT_ASIDAYMAXEXPOSURE_MS, (float)DEFAULT_ASIDAYMAXEXPOSURE_MS/US_IN_MS);
+        printf(" -nightmaxexposure                  - Default = %'d - Time in ms (equals to %.1f sec)\n", DEFAULT_ASINIGHTMAXEXPOSURE_MS, (float)DEFAULT_ASINIGHTMAXEXPOSURE_MS/US_IN_MS);
         printf(" -nightgain                         - Default = %d\n", DEFAULT_ASINIGHTGAIN);
         printf(" -nightmaxgain                      - Default = %d\n", DEFAULT_ASINIGHTMAXGAIN);
         printf(" -nightautogain                     - Default = %d - Set to 1 to enable nighttime auto gain\n", DEFAULT_NIGHTAUTOGAIN);

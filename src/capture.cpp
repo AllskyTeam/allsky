@@ -451,6 +451,25 @@ int computeHistogram(unsigned char *imageBuffer, int width, int height, ASI_IMG_
 }
 #endif
 
+// Copied this from PHD2 code.
+// Camera has 2 internal frame buffers we need to clear.
+// The camera and/or drive will buffer frames and return the oldest one which
+// could be very old. Read out all the buffered frames so the frame we get is current.
+static void flush_buffered_image(int cameraId, void *buf, size_t size)
+{
+    enum { NUM_IMAGE_BUFFERS = 2 };
+
+    for (unsigned int num_cleared = 0; num_cleared < NUM_IMAGE_BUFFERS; num_cleared++)
+    {
+        ASI_ERROR_CODE status = ASIGetVideoData(cameraId, (unsigned char *) buf, size, 0);
+        if (status != ASI_SUCCESS)
+            break; // no more buffered frames
+
+        sprintf(debug_text, "  > Cleared %u frame\n", num_cleared + 1);
+        displayDebugText(debug_text, 3);
+    }
+}
+
 long actual_exposure_us = 0;	// actual exposure taken, per the camera
 long actualGain = 0;			// actual gain used, per the camera
 long actualTemp = 0;			// actual sensor temp, per the camera
@@ -488,6 +507,8 @@ ASI_ERROR_CODE takeOneExposure(
     displayDebugText(debug_text, 3); // needs to be same debug level as "Exposure set to ..."
 
     setControl(cameraId, ASI_EXPOSURE, exposure_time_ms, currentAutoExposure);
+
+    flush_buffered_image(cameraId, imageBuffer, bufferSize);
 
     if (use_new_exposure_algorithm)
     {
@@ -2073,7 +2094,8 @@ const char *locale = DEFAULT_LOCALE;
         // On the ASI178MC the shortest time is 10010 us; it may be higher on other cameras,
         // so use a higher value like 30,000 us to be safe.
         // Only do this once.
-        if (numExposures == 0) {
+// xxxxxxxxxxxxxx Remove the code below when we're sure flushing the buffer works
+        if ( 0 && numExposures == 0) {
 #define SHORT_EXPOSURE 30000
             displayDebugText("===Taking 3 images to clear buffer...\n", 2);
             // turn off auto exposure

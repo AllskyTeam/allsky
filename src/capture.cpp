@@ -2089,12 +2089,12 @@ const char *locale = DEFAULT_LOCALE;
         // Here and below, indent sub-messages with "  > " so it's clear they go with the un-indented line.
         // This simply makes it easier to see things in the log file.
 
+// xxxxxxxxxxxxxx Remove the code below when we're sure flushing the buffer works
         // As of April 2021 there's a bug that causes the first 3 images to be identical,
         // so take 3 short ones but don't save them.
         // On the ASI178MC the shortest time is 10010 us; it may be higher on other cameras,
         // so use a higher value like 30,000 us to be safe.
         // Only do this once.
-// xxxxxxxxxxxxxx Remove the code below when we're sure flushing the buffer works
         if ( 0 && numExposures == 0) {
 #define SHORT_EXPOSURE 30000
             displayDebugText("===Taking 3 images to clear buffer...\n", 2);
@@ -2217,7 +2217,8 @@ const char *locale = DEFAULT_LOCALE;
                         // Adjustments of DEFAULT_BRIGHTNESS up or down make the image this much darker/lighter.
                         // Don't want the max brightness to give pure white.
                         //xxx May have to play with this number, but it seems to work ok.
-                        const float adjustmentAmountPerMultiple = 0.12;	// 100 * this number is the percent to change
+                        // 100 * this number is the percent to change.
+                        const float adjustmentAmountPerMultiple = 0.12;
 
                         // The amount doesn't change after being set, so only display once.
                         static int showedMessage = 0;
@@ -2244,19 +2245,19 @@ const char *locale = DEFAULT_LOCALE;
                         maxAcceptableHistogram *= exposureAdjustment;
                     }
 
+                    std::string why;	// Why did we adjust the exposure?  For debugging
                     while ((mean < minAcceptableHistogram || mean > maxAcceptableHistogram) && attempts <= maxHistogramAttempts && current_exposure_us <= current_max_exposure_us)
                     {
                         attempts++;
+                        why = "";
 
-                        sprintf(debug_text, "  > Attempt %i,  exposure %'ld us,  mean %d,  temp_min_exposure_us %'ld us,  temp_max_exposure_us %'ld us", attempts, current_exposure_us, mean, temp_min_exposure_us, temp_max_exposure_us);
-                        displayDebugText(debug_text, 3);
+                        sprintf(debug_text, "  > Attempt %i, exposure %'ld us @ mean %d, temp_min_exposure_us %'ld us, temp_max_exposure_us %'ld us", attempts, current_exposure_us, mean, temp_min_exposure_us, temp_max_exposure_us);
 
-                        std::string why;	// Why did we adjust the exposure?  For debugging
                         int num = 0;
                          if (mean >= 254) {
                              new_exposure_us = current_exposure_us * 0.4;
                              temp_max_exposure_us = current_exposure_us - roundToMe;
-                             why = "mean >= max";
+                             why = ">= max";
                              num = 254;
                          }
                          else
@@ -2270,41 +2271,41 @@ const char *locale = DEFAULT_LOCALE;
                                  // so really crank it up to get into the linear area.
                                  new_exposure_us = current_exposure_us * 20;
                                  temp_min_exposure_us = current_exposure_us + roundToMe;
-                                 why = "mean < reallyLowMean";
+                                 why = "< reallyLowMean";
                                  num = reallyLowMean;
                              }
-			     else if (mean < lowMean) {
+                             else if (mean < lowMean) {
                                  new_exposure_us = current_exposure_us * 5;
                                  temp_min_exposure_us = current_exposure_us + roundToMe;
-                                 why = "mean < lowMean";
+                                 why = "< lowMean";
                                  num = lowMean;
                              }
                              else if (mean < (minAcceptableHistogram * 0.6))
                              {
                                  new_exposure_us = current_exposure_us * 2.5;
                                  temp_min_exposure_us = current_exposure_us + roundToMe;
-                                 why = "mean < (minAcceptableHistogram * 0.6)";
+                                 why = "< (minAcceptableHistogram * 0.6)";
                                  num = minAcceptableHistogram * 0.6;
                              }
                              else if (mean < minAcceptableHistogram)
                              {
                                  new_exposure_us = current_exposure_us * 1.1;
                                  temp_min_exposure_us = current_exposure_us + roundToMe;
-                                 why = "mean < minAcceptableHistogram";
+                                 why = "< minAcceptableHistogram";
                                  num = minAcceptableHistogram;
                              }
                              else if (mean > (maxAcceptableHistogram * 1.6))
                              {
                                  new_exposure_us = current_exposure_us * 0.7;
                                  temp_max_exposure_us = current_exposure_us - roundToMe;
-                                 why = "mean > (maxAcceptableHistogram * 1.6)";
+                                 why = "> (maxAcceptableHistogram * 1.6)";
                                  num = (maxAcceptableHistogram * 1.6);
                              }
                              else if (mean > maxAcceptableHistogram)
                              {
                                  new_exposure_us = current_exposure_us * 0.9;
                                  temp_max_exposure_us = current_exposure_us - roundToMe;
-                                 why = "mean > maxAcceptableHistogram";
+                                 why = "> maxAcceptableHistogram";
                                  num = maxAcceptableHistogram;
                              }
                          }
@@ -2341,9 +2342,9 @@ const char *locale = DEFAULT_LOCALE;
                              break;
                          }
 
-                         sprintf(debug_text, "  > !!! Retrying @ %'ld us because '%s (%d)'\n", current_exposure_us, why.c_str(), num);
+                         sprintf(debug_text, "  > !!! Retrying @ %'ld us because 'mean (%d) %s (%d)'\n", current_exposure_us, mean, why.c_str(), num);
                          displayDebugText(debug_text, 3);
-                         takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram, &mean);
+                         asiRetCode = takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram, &mean);
                          if (asiRetCode == ASI_SUCCESS)
                          {
                              continue;
@@ -2362,17 +2363,23 @@ const char *locale = DEFAULT_LOCALE;
                     if (attempts > maxHistogramAttempts)
                     {
                          sprintf(debug_text, "  > max attempts reached - using exposure of %'ld us with mean %d\n", current_exposure_us, mean);
-                         displayDebugText(debug_text, 2);
+                         displayDebugText(debug_text, 3);
                     }
-                    else if (attempts > 1)
+                    else if (attempts >= 1)
                     {
-                         sprintf(debug_text, "  > Using exposure of %'ld us with mean %d\n", current_exposure_us, mean);
-                         displayDebugText(debug_text, 2);
-                    }
-                    else if (attempts == 1)
-                    {
-                         sprintf(debug_text, "  > Current exposure of %'ld us with mean %d was ok - no additional attempts needed.\n", current_exposure_us, mean);
-                         displayDebugText(debug_text, 2);
+                         if (current_exposure_us > current_max_exposure_us)
+                         {
+                             sprintf(debug_text, "  > Stopped trying: new exposure of %'ld us is over max of %'ld\n", current_exposure_us, current_max_exposure_us);
+                         }
+                         else if (mean >= minAcceptableHistogram && mean <= maxAcceptableHistogram)
+                         {
+                             sprintf(debug_text, "  > Good image: mean %d within range (%d to %d)\n", mean, minAcceptableHistogram, maxAcceptableHistogram);
+                         }
+                         else
+                         {
+                             sprintf(debug_text, "  > Stopped trying, using exposure of %'ld us with mean %d, min=%d, max=%d\n", current_exposure_us, mean, minAcceptableHistogram, maxAcceptableHistogram);
+                         }
+                         displayDebugText(debug_text, 3);
                     }
                     actual_exposure_us = current_exposure_us;
                 } else {
@@ -2609,7 +2616,7 @@ const char *locale = DEFAULT_LOCALE;
                 // Save the image
                 if (bSavingImg == false)
                 {
-                    sprintf(debug_text, "  > Saving image '%s' that started at %s", fileName, exposureStart);
+                    sprintf(debug_text, "  > Saving %s image '%s'", taking_dark_frames ? "dark" : dayOrNight == "DAY" ? "DAY" : "NIGHT", fileName);
                     displayDebugText(debug_text, 1);
 
                     pthread_mutex_lock(&mtx_SaveImg);
@@ -2619,6 +2626,13 @@ const char *locale = DEFAULT_LOCALE;
                     int64 et = cv::getTickCount();
                     pthread_mutex_unlock(&mtx_SaveImg);
 
+#ifdef USE_HISTOGRAM
+                    if (attempts == 0 && dayOrNight == "DAY" && asiDayAutoExposure && ! taking_dark_frames)
+                    {
+                        sprintf(debug_text, "  (mean=%d)", mean);
+                        displayDebugText(debug_text, 0);
+                    }
+#endif
                     sprintf(debug_text, "  (%.0f us)\n", timeDiff(st, et));
                     displayDebugText(debug_text, 0);
                 }

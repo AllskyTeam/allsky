@@ -76,8 +76,11 @@ int notificationImages     = DEFAULT_NOTIFICATIONIMAGES;
 char const *fileName       = DEFAULT_FILENAME;
 #define DEFAULT_TIMEFORMAT   "%Y%m%d %H:%M:%S"	// format the time should be displayed in
 char const *timeFormat     = DEFAULT_TIMEFORMAT;
+
 #define DEFAULT_ASIDAYEXPOSURE   500	// microseconds - good starting point for daytime exposures
 int asi_day_exposure_us    = DEFAULT_ASIDAYEXPOSURE;
+#define DEFAULT_ASIDAYMAXEXPOSURE_MS  (10 * MS_IN_SEC)	// 10 sec
+int asi_day_max_exposure_ms   = DEFAULT_ASIDAYMAXEXPOSURE_MS;
 #define DEFAULT_DAYAUTOEXPOSURE  1
 int asiDayAutoExposure     = DEFAULT_DAYAUTOEXPOSURE;	// is it on or off for daylight?
 #define DEFAULT_DAYDELAY     (5 * MS_IN_SEC)	// 5 seconds
@@ -86,6 +89,8 @@ int dayDelay               = DEFAULT_DAYDELAY;	// Delay in milliseconds.
 int nightDelay             = DEFAULT_NIGHTDELAY;	// Delay in milliseconds.
 #define DEFAULT_ASINIGHTMAXEXPOSURE_MS  (20 * US_IN_MS)	// 10 ms
 int asi_night_max_exposure_ms= DEFAULT_ASINIGHTMAXEXPOSURE_MS;
+long current_max_exposure_us   = NOT_SET;
+
 #define DEFAULT_GAIN_TRANSITION_TIME 5		// user specifies minutes
 int gainTransitionTime     = DEFAULT_GAIN_TRANSITION_TIME;
 ASI_BOOL currentAutoExposure = ASI_FALSE;	// is Auto Exposure currently on or off?
@@ -1030,6 +1035,10 @@ const char *locale = DEFAULT_LOCALE;
             {
                 asi_night_max_exposure_ms = atoi(argv[++i]);
             }
+            else if (strcmp(argv[i], "-daymaxexposure") == 0)
+            {
+                asi_day_max_exposure_ms = atoi(argv[++i]);
+            }
             else if (strcmp(argv[i], "-dayautoexposure") == 0)
             {
                 asiDayAutoExposure = atoi(argv[++i]);
@@ -1341,6 +1350,7 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -daytime                           - Default = %d - Set to 1 to enable daytime images\n", DEFAULT_DAYTIMECAPTURE);
         printf(" -dayexposure                       - Default = %'d - Time in us (equals to %.4f sec)\n", DEFAULT_ASIDAYEXPOSURE, (float)DEFAULT_ASIDAYEXPOSURE/US_IN_SEC);
         printf(" -nightexposure                     - Default = %'d - Time in us (equals to %.4f sec)\n", DEFAULT_ASINIGHTEXPOSURE, (float)DEFAULT_ASINIGHTEXPOSURE/US_IN_SEC);
+        printf(" -daymaxexposure                    - Default = %'d - Time in ms (equals to %.1f sec)\n", DEFAULT_ASIDAYMAXEXPOSURE_MS, (float)DEFAULT_ASIDAYMAXEXPOSURE_MS/US_IN_MS);
         printf(" -nightmaxexposure                  - Default = %'d - Time in ms (equals to %.1f sec)\n", DEFAULT_ASINIGHTMAXEXPOSURE_MS, (float)DEFAULT_ASINIGHTMAXEXPOSURE_MS/US_IN_MS);
 
         printf(" -dayautoexposure                   - Default = %d - Set to 1 to enable daytime auto Exposure\n", DEFAULT_DAYAUTOEXPOSURE);
@@ -1892,22 +1902,6 @@ const char *locale = DEFAULT_LOCALE;
             {
                 sprintf(textBuffer, "==========\n=== Starting daytime capture ===\n==========\n");
                 displayDebugText(textBuffer, 0);
-                sprintf(textBuffer, "Saving images with delay of %'d ms (%d sec)\n\n", dayDelay, dayDelay / MS_IN_SEC);
-                displayDebugText(textBuffer, 0);
-#ifdef USE_HISTOGRAM
-                // Don't use camera auto exposure since we mimic it ourselves.
-                if (asiDayAutoExposure == 1)
-                {
-                    sprintf(textBuffer, "Turning off daytime auto-exposure to use histogram exposure.\n");
-                    displayDebugText(textBuffer, 2);
-                    currentAutoExposure = ASI_FALSE;
-                }
-#else
-                currentAutoExposure = asiDayAutoExposure ? ASI_TRUE : ASI_FALSE;
-#endif
-                currentBrightness = asiDayBrightness;
-                currentDelay = dayDelay;
-                currentBin = dayBin;
 
                 // If we went from Night to Day, then current_exposure_us will be the last night
                 // exposure so leave it if we're using auto-exposure so there's a seamless change from
@@ -1923,10 +1917,23 @@ const char *locale = DEFAULT_LOCALE;
                     sprintf(textBuffer, "Using last night exposure of %'ld us (%'.2lf ms)\n", current_exposure_us, (float)current_exposure_us / US_IN_MS);
                     displayDebugText(textBuffer, 2);
                 }
-#ifndef USE_HISTOGRAM
+
+#ifdef USE_HISTOGRAM
+                // Don't use camera auto exposure since we mimic it ourselves.
+                if (asiDayAutoExposure == 1)
+                {
+                    sprintf(textBuffer, "Turning off daytime auto-exposure to use histogram exposure.\n");
+                    displayDebugText(textBuffer, 2);
+                    currentAutoExposure = ASI_FALSE;
+                }
+#else
+                currentAutoExposure = asiDayAutoExposure ? ASI_TRUE : ASI_FALSE;
                 setControl(CamNum, ASI_EXPOSURE, current_exposure_us, currentAutoExposure);
 #endif
-                setControl(CamNum, ASI_AUTO_MAX_EXP, camera_max_auto_exposure_us / US_IN_MS, ASI_FALSE);	// need ms
+                currentBrightness = asiDayBrightness;
+                currentDelay = dayDelay;
+                currentBin = dayBin;
+                current_max_exposure_us = asi_day_max_exposure_ms * US_IN_MS;
                 currentGain = asiDayGain;	// must come before determineGainChange() below
                 if (currentAdjustGain)
                 {
@@ -1951,28 +1958,18 @@ const char *locale = DEFAULT_LOCALE;
             displayDebugText(textBuffer, 0);
 
             // Setup the night time capture parameters
-            if (asiNightAutoExposure == 1)
+            if (numExposures == 0 || asiNightAutoExposure == ASI_FALSE)
             {
-                currentAutoExposure = ASI_TRUE;
-                setControl(CamNum, ASI_AUTO_MAX_EXP, asi_night_max_exposure_ms, ASI_FALSE);
-                printf("Saving auto exposed night images with delay of %'d ms (%d sec)\n\n", nightDelay, nightDelay / MS_IN_SEC);
-            }
-            else
-            {
-                currentAutoExposure = ASI_FALSE;
-                printf("Saving %ds manual exposure night images with delay of %'d ms (%d sec)\n\n", (int)round(current_exposure_us / US_IN_SEC), nightDelay, nightDelay / MS_IN_SEC);
+                current_exposure_us = asi_night_exposure_us;
+                sprintf(debugText, "Using night exposure (%ld ms)\n", asi_night_exposure_us / US_IN_MS);
+                displayDebugText(debugText, 4);
             }
 
+            currentAutoExposure = asiNightAutoExposure ? ASI_TRUE : ASI_FALSE;
             currentBrightness = asiNightBrightness;
             currentDelay = nightDelay;
             currentBin = nightBin;
-            if (numExposures == 0 || asiNightAutoExposure == ASI_FALSE)
-            {
-             	current_exposure_us = asi_night_exposure_us;
-            }
-#ifndef USE_HISTOGRAM
-            setControl(CamNum, ASI_EXPOSURE, current_exposure_us, currentAutoExposure);
-#endif
+            current_max_exposure_us = asi_night_max_exposure_ms * US_IN_MS;
             currentGain = asiNightGain;	// must come before determineGainChange() below
             if (currentAdjustGain)
             {
@@ -1985,9 +1982,19 @@ const char *locale = DEFAULT_LOCALE;
                 gainChange = 0;
             }
             currentAutoGain = asiNightAutoGain ? ASI_TRUE : ASI_FALSE;
-            setControl(CamNum, ASI_GAIN, currentGain + gainChange, currentAutoGain);
             setControl(CamNum, ASI_AUTO_MAX_GAIN, asiNightMaxGain, ASI_FALSE);
+
         }
+
+        setControl(CamNum, ASI_GAIN, currentGain + gainChange, currentAutoGain);
+        if (currentAutoExposure == ASI_TRUE)
+        {
+            // This needs MS
+            setControl(CamNum, ASI_AUTO_MAX_EXP, current_max_exposure_us / US_IN_MS, ASI_FALSE);
+        }
+#ifndef USE_HISTOGRAM
+            setControl(CamNum, ASI_EXPOSURE, current_exposure_us, currentAutoExposure);
+#endif
 
         // Adjusting variables for chosen binning
         height    = originalHeight / currentBin;
@@ -2120,7 +2127,7 @@ const char *locale = DEFAULT_LOCALE;
                     // hist_min_exposure_us is the minimum exposure used in the histogram calculation
                     int hist_min_exposure_us = min_exposure_us ? min_exposure_us : 100;
                     long temp_min_exposure_us = hist_min_exposure_us;
-                    long temp_max_exposure_us = asi_night_max_exposure_ms * US_IN_MS;
+                    long temp_max_exposure_us = current_max_exposure_us;
 
                     // Got these by trial and error.  They are more-or-less half the max of 255.
                     minAcceptableHistogram = 120;
@@ -2168,7 +2175,7 @@ const char *locale = DEFAULT_LOCALE;
                         maxAcceptableHistogram *= exposureAdjustment;
                     }
 
-                    while ((mean < minAcceptableHistogram || mean > maxAcceptableHistogram) && ++attempts <= maxHistogramAttempts)
+                    while ((mean < minAcceptableHistogram || mean > maxAcceptableHistogram) && ++attempts <= maxHistogramAttempts && current_exposure_us <= current_max_exposure_us)
                     {
                         sprintf(textBuffer, "  > Attempt %i,  current exposure %'ld us,  mean %d,  temp min exposure %ld us,  temp_max_exposure_us %'ld us", attempts, current_exposure_us, mean, temp_min_exposure_us, temp_max_exposure_us);
                         displayDebugText(textBuffer, 2);
@@ -2233,9 +2240,9 @@ const char *locale = DEFAULT_LOCALE;
 
                          new_exposure_us = roundTo(new_exposure_us, roundToMe);
                          new_exposure_us = std::max(temp_min_exposure_us, new_exposure_us);
-                         new_exposure_us = std::min(new_exposure_us, temp_max_exposure_us);
+                         new_exposure_us = std::min(temp_max_exposure_us, new_exposure_us);
                          new_exposure_us = std::max(temp_min_exposure_us, new_exposure_us);
-                         new_exposure_us = std::min(new_exposure_us, camera_max_auto_exposure_us);
+                         new_exposure_us = std::min(current_max_exposure_us, new_exposure_us);
 
                          sprintf(textBuffer, ",  new exposure %'ld us\n", new_exposure_us);
                          displayDebugText(textBuffer, 2);

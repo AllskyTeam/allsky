@@ -58,15 +58,18 @@ pthread_cond_t cond_SatrtSave;
 #define NOT_SET -1	// signifies something isn't set yet
 ASI_CONTROL_CAPS ControlCaps;
 void *retval;
-int numErrors            = 0;    // Number of errors in a row.
-int gotSignal            = 0;    // did we get a SIGINT (from keyboard) or SIGTERM (from service)?
+int numErrors            = 0;	// Number of errors in a row.
+int gotSignal            = 0;	// did we get a SIGINT (from keyboard) or SIGTERM (from service)?
 int iNumOfCtrl           = 0;
 int CamNum               = 0;
 pthread_t thread_display = 0;
 pthread_t hthdSave       = 0;
-int numExposures         = 0;	 // how many valid pictures have we taken so far?
+int numExposures         = 0;	// how many valid pictures have we taken so far?
 int currentGain          = NOT_SET;
 int min_exposure_us      = 100;
+long current_exposure_us = NOT_SET;
+long actualTemp          = 0;	// actual sensor temp, per the camera
+int taking_dark_frames   = 0;
 
 // Some command-line and other option definitions needed outside of main():
 int tty = 0;	// 1 if we're on a tty (i.e., called from the shell prompt).
@@ -268,22 +271,62 @@ void *SaveImgThd(void *para)
         }
 
         bSavingImg = true;
+
+	char dT[500];	// Since we're in a thread, use our own copy of debugText
+        sprintf(dT, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight == "DAY" ? "DAY" : "NIGHT", fileName);
+        displayDebugText(dT, 1);
+        int64 st = cvGetTickCount();
+
+        bool result = false;
         if (pRgb.data)
         {
-            imwrite(fileName, pRgb, compression_parameters);
+            const char *s;	// TODO: use saveImage.sh
             if (dayOrNight == "NIGHT")
             {
-                system("scripts/saveImageNight.sh &");
+                s = "scripts/saveImageNight.sh";
             }
             else
             {
-                system("scripts/saveImageDay.sh &");
+                s = "scripts/saveImageDay.sh";
             }
+
+            char cmd[100];
+	    // imwrite() may take several seconds and while it's running, "fileName" could change,
+	    // so set "cmd" before imwrite().
+	    // The temperature must be a 2-digit number with an optional "-" sign.
+            sprintf(cmd, "%s %s '%s' '%2.0f' %ld &", s, dayOrNight.c_str(), fileName, (float) actualTemp/10, current_exposure_us);
+            try
+            {
+                result = imwrite(fileName, pRgb, compression_parameters);
+            }
+            catch (const cv::Exception& ex)
+            {
+                printf("*** ERROR: Exception saving image: %s\n", ex.what());
+            }
+            if (result)
+                system(cmd);
+	    else
+                printf("*** ERROR: Unable to save image '%s'.\n", fileName);
+
         } else {
             // This can happen if the program is closed before the first picture.
             displayDebugText("----- SaveImgThd(): pRgb.data is null\n", 2);
         }
         bSavingImg = false;
+
+        if (result)
+	{
+            int64 et = cvGetTickCount();
+            double diff = timeDiff(st, et);
+            char const *x;
+            if (diff/US_IN_MS > 1 * MS_IN_SEC)
+               x = "  > *****\n";
+            else
+               x = "";
+            sprintf(dT, "%s  > Image took %'.0f ms to save.\n%s", x, diff/US_IN_MS, x);
+            displayDebugText(dT, 4);
+	}
+
         pthread_mutex_unlock(&mtx_SaveImg);
     }
 
@@ -463,7 +506,6 @@ static void flush_buffered_image(int cameraId, void *buf, size_t size)
 
 long actual_exposure_us = 0;	// actual exposure taken, per the camera
 long actualGain = 0;			// actual gain used, per the camera
-long actualTemp = 0;			// actual sensor temp, per the camera
 ASI_BOOL bAuto = ASI_FALSE;		// "auto" flag returned by ASIGetControlValue, when we don't care what it is
 
 ASI_BOOL wasAutoExposure = ASI_FALSE;
@@ -928,7 +970,6 @@ const char *locale = DEFAULT_LOCALE;
     // There is no max day autoexposure since daylight exposures are always pretty short.
 #define DEFAULT_ASINIGHTEXPOSURE (5 * US_IN_SEC)	// 5 seconds
     long asi_night_exposure_us = DEFAULT_ASINIGHTEXPOSURE;
-    long current_exposure_us   = NOT_SET;
 #define DEFAULT_NIGHTAUTOEXPOSURE 1
     int asiNightAutoExposure   = DEFAULT_NIGHTAUTOEXPOSURE;	// is it on or off for nighttime?
     // currentAutoExposure is global so is defined outside of main()
@@ -973,7 +1014,6 @@ const char *locale = DEFAULT_LOCALE;
     int preview                = 0;
 #define DEFAULT_SHOWTIME 1
     int showTime               = DEFAULT_SHOWTIME;
-    int taking_dark_frames     = 0;
     char const *tempType       = "C";	// Celsius
 
     int showDetails            = 0;
@@ -1835,13 +1875,9 @@ const char *locale = DEFAULT_LOCALE;
         }
     }
 
-    if (!bSaveRun)
+    if (! bSaveRun && pthread_create(&hthdSave, 0, SaveImgThd, 0) == 0)
     {
         bSaveRun = true;
-        if (pthread_create(&hthdSave, 0, SaveImgThd, 0) != 0)
-        {
-            bSaveRun = false;
-        }
     }
 
     // Initialization
@@ -2348,7 +2384,7 @@ const char *locale = DEFAULT_LOCALE;
 
                     if (asiRetCode != ASI_SUCCESS)
                     {
-                        sprintf(debug_text,"  > Sleeping from failed exposure: %s\n", length_in_units(currentDelay));
+                        sprintf(debug_text,"  > Sleeping %s from failed exposure\n", length_in_units(currentDelay));
                         displayDebugText(debug_text, 2);
                         usleep(currentDelay * US_IN_MS);
                         // Don't save the file or do anything below.
@@ -2383,7 +2419,7 @@ const char *locale = DEFAULT_LOCALE;
                          }
                     } else if (current_exposure_us == current_max_exposure_us)
                     {
-                         sprintf(debug_text, "  > Did not make any attempts - at max exposure limit of %'ld, mean %d\n", current_max_exposure_us, mean);
+                         sprintf(debug_text, "  > Did not make any additional attempts - at max exposure limit of %'ld, mean %d\n", current_max_exposure_us, mean);
                     }
                     displayDebugText(debug_text, 3);
                     actual_exposure_us = current_exposure_us;
@@ -2619,27 +2655,11 @@ const char *locale = DEFAULT_LOCALE;
 #endif
 
                 // Save the image
-                if (bSavingImg == false)
+                if (! bSavingImg)
                 {
-                    sprintf(debug_text, "  > Saving %s image '%s'", taking_dark_frames ? "dark" : dayOrNight == "DAY" ? "DAY" : "NIGHT", fileName);
-                    displayDebugText(debug_text, 1);
-
                     pthread_mutex_lock(&mtx_SaveImg);
-                    // Display the time it took to save an image, for debugging.
-                    int64 st = cv::getTickCount();
                     pthread_cond_signal(&cond_SatrtSave);
-                    int64 et = cv::getTickCount();
                     pthread_mutex_unlock(&mtx_SaveImg);
-
-#ifdef USE_HISTOGRAM
-                    if (attempts == 0 && dayOrNight == "DAY" && asiDayAutoExposure && ! taking_dark_frames)
-                    {
-                        sprintf(debug_text, "  (mean=%d)", mean);
-                        displayDebugText(debug_text, 0);
-                    }
-#endif
-                    sprintf(debug_text, "  (%.0f us)\n", timeDiff(st, et));
-                    displayDebugText(debug_text, 0);
                 }
                 else
                 {
@@ -2648,6 +2668,8 @@ const char *locale = DEFAULT_LOCALE;
                     // Perhaps their disk is very slow or their delay is too short.
                     sprintf(debug_text, "  > WARNING: currently saving an image; can't save new one at %s.\n", exposureStart);
                     displayDebugText(debug_text, 0);
+
+                    // TODO: wait for the prior image to finish saving.
                 }
 
                 if (asiNightAutoGain == 1 && dayOrNight == "NIGHT" && ! taking_dark_frames)
@@ -2686,7 +2708,7 @@ const char *locale = DEFAULT_LOCALE;
                     {
                         // Sleep even if taking dark frames so the sensor can cool between shots like it would
                         // do on a normal night.  With no delay the sensor may get hotter than it would at night.
-                        sprintf(debug_text,"  > Sleeping from %s exposure: %s\n", taking_dark_frames ? "dark frame" : "auto", length_in_units(currentDelay));
+                        sprintf(debug_text,"  > Sleeping %s from %s exposure\n", length_in_units(currentDelay), taking_dark_frames ? "dark frame" : "auto");
                         displayDebugText(debug_text, 0);
                         usleep(currentDelay * US_IN_MS);
                     }
@@ -2702,7 +2724,7 @@ const char *locale = DEFAULT_LOCALE;
                     if (usedHistogram == 1)
                         s = "histogram";
 #endif
-                    sprintf(debug_text,"  > Sleeping from %s exposure: %s\n", s.c_str(), length_in_units(currentDelay));
+                    sprintf(debug_text,"  > Sleeping %s from %s exposure\n", length_in_units(currentDelay), s.c_str());
                     displayDebugText(debug_text, 0);
                     usleep(currentDelay * US_IN_MS);
                 }

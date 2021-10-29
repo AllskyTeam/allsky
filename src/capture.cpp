@@ -213,7 +213,7 @@ char *getTime(char const *tf)
     return(formatTime(getTimeval(), tf));
 }
 
-double timeDiff(int64 start, int64 end)
+double time_diff_us(int64 start, int64 end)
 {
 	double frequency = cv::getTickFrequency();
 	return (double)(end - start) / frequency;	// in Microseconds
@@ -275,7 +275,7 @@ void *SaveImgThd(void *para)
 	char dT[500];	// Since we're in a thread, use our own copy of debugText
         sprintf(dT, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight == "DAY" ? "DAY" : "NIGHT", fileName);
         displayDebugText(dT, 1);
-        int64 st = cvGetTickCount();
+        int64 st, et;
 
         bool result = false;
         if (pRgb.data)
@@ -295,6 +295,7 @@ void *SaveImgThd(void *para)
 	    // so set "cmd" before imwrite().
 	    // The temperature must be a 2-digit number with an optional "-" sign.
             sprintf(cmd, "%s %s '%s' '%2.0f' %ld &", s, dayOrNight.c_str(), fileName, (float) actualTemp/10, current_exposure_us);
+            st = cvGetTickCount();
             try
             {
                 result = imwrite(fileName, pRgb, compression_parameters);
@@ -303,6 +304,8 @@ void *SaveImgThd(void *para)
             {
                 printf("*** ERROR: Exception saving image: %s\n", ex.what());
             }
+            et = cvGetTickCount();
+
             if (result)
                 system(cmd);
 	    else
@@ -316,14 +319,17 @@ void *SaveImgThd(void *para)
 
         if (result)
 	{
-            int64 et = cvGetTickCount();
-            double diff = timeDiff(st, et);
+            static int total_saves = 0;
+            static double total_time_ms = 0;
+            total_saves++;
+            double diff = time_diff_us(st, et) * US_IN_MS;	// we want ms
+            total_time_ms += diff;
             char const *x;
-            if (diff/US_IN_MS > 1 * MS_IN_SEC)
-               x = "  > *****\n";
+            if (diff > 1 * MS_IN_SEC)
+               x = "  > *****\n";	// indicate when it takes a REALLY long time to save
             else
                x = "";
-            sprintf(dT, "%s  > Image took %'.0f ms to save.\n%s", x, diff/US_IN_MS, x);
+            sprintf(dT, "%s  > Image took %'.1f ms to save (average %'.1f ms).\n%s", x, diff, total_time_ms / total_saves, x);
             displayDebugText(dT, 4);
 	}
 

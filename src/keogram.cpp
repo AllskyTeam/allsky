@@ -34,7 +34,7 @@ using namespace std;
 
 struct config_t {
   std::string img_src_dir, img_src_ext, dst_keogram;
-  bool labels_enabled, keogram_enabled, parse_filename, junk;
+  bool labels_enabled, keogram_enabled, parse_filename, junk, img_expand, channel_info;
   int img_width;
   int img_height;
   int fontFace;
@@ -43,6 +43,7 @@ struct config_t {
   int verbose;
   int num_threads;
   int nice_level;
+  int num_img_expand;
   uint8_t a, r, g, b;
   double fontScale;
   double rotation_angle;
@@ -169,7 +170,11 @@ void keogram_worker(int thread_num,
     if (acc->empty()) {
       mtx->lock();
       if (acc->empty()) {
-        acc->create(imagesrc.rows, nfiles, imagesrc.type());
+        // expand ?
+        if (cf->img_expand) {
+          cf->num_img_expand = std::max(1, (int) (imagesrc.cols / (float) nfiles));
+        }
+        acc->create(imagesrc.rows, nfiles * cf->num_img_expand , imagesrc.type());
         if (cf->verbose > 1) {
           stdio_mutex.lock();
           fprintf(stderr, "thread %d initialized accumulator\n", thread_num);
@@ -181,7 +186,10 @@ void keogram_worker(int thread_num,
 
     // Copy middle column to destination
     // locking not required - we have absolute index into the accumulator
-    imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(f));
+    int destCol = f * cf->num_img_expand;
+    for (int i=0; i < cf->num_img_expand; i++) {
+      imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(destCol+i));   //copy
+    }
 
     if (cf->labels_enabled) {
       struct tm ft;  // the time of the file, by any means necessary
@@ -204,7 +212,7 @@ void keogram_worker(int thread_num,
       if (ft.tm_hour != prevHour) {
         if (prevHour != -1) {
           mtx->lock();
-          cv::Mat a = (cv::Mat_<int>(1, 2) << f, ft.tm_hour);
+          cv::Mat a = (cv::Mat_<int>(1, 2) << destCol, ft.tm_hour);
           ann->push_back(a);
           mtx->unlock();
         }
@@ -267,6 +275,9 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
   cf->verbose = cf->img_width = cf->img_height = 0;
   cf->num_threads = ncpu;
   cf->nice_level = 10;
+  cf->img_expand = false;
+  cf->num_img_expand = 1;
+  cf->channel_info = false;
 
   while (1) {  // getopt loop
     int option_index = 0;
@@ -287,9 +298,11 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         {"no-label", no_argument, 0, 'n'},
         {"verbose", no_argument, 0, 'v'},
         {"help", no_argument, 0, 'h'},
+        {"image-expand", no_argument, 0, 'x'},
+        {"channel-info", no_argument, 0, 'c'},
         {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "d:e:o:r:s:C:L:N:S:T:Q:q:npvh", long_options,
+    c = getopt_long(argc, argv, "d:e:o:r:s:C:L:N:S:T:Q:q:npvhxc", long_options,
                     &option_index);
     if (c == -1)
       break;
@@ -306,6 +319,10 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
       case 'o':
         cf->dst_keogram = optarg;
         break;
+      case 'x':
+        cf->img_expand = true;
+      case 'c':
+        cf->channel_info = true;
       case 'p':
         cf->parse_filename = true;
         break;

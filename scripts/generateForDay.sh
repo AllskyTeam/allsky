@@ -27,20 +27,33 @@ source "${ALLSKY_SCRIPTS}/filename.sh"
 [ "${TYPE}" = "UPLOAD" ] && source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 
-if [ $# -eq 0 -o "${1}" = "-h" -o "${1}" = "--help" ]; then
-	[ $# -eq 0 ] && echo -en "${RED}"
+usage_and_exit()
+{
+	retcode=${1}
+	echo
+	[ ${retcode} -ne 0 ] && echo -en "${RED}"
 	echo -e "Usage: ${ME} [-k] [-s] [-t] DATE"
+	[ ${retcode} -ne 0 ] && echo -en "${NC}"
 	echo -e "    where:"
 	echo -e "      'DATE' is the day in '${ALLSKY_IMAGES}' to process"
 	echo -e "      'k' is to ${MSG1} a keogram"
 	echo -e "      's' is to ${MSG1} a startrail"
 	echo -e "      't' is to ${MSG1} a timelapse"
 	echo -e "    If you don't specify k, s, or t, all three will be ${MSG2}."
-	[ $# -eq 0 ] && echo -e "${NC}"
-	exit 0
-fi
+	exit ${retcode}
+}
+[ "${1}" = "-h" -o "${1}" = "--help" ] && usage_and_exit 0
+[ $# -eq 0 ] && usage_and_exit 1
 
-if [ $# -gt 1 ] ; then
+if [ $# -eq 1 ] ; then
+	# If the first character is "-" it's an argument, not a date.
+	[ "${1:0:1}" = "-" ] && usage_and_exit 1
+
+	DATE="${1}"
+	DO_KEOGRAM="true"
+	DO_STARTRAILS="true"
+	DO_TIMELAPSE="true"
+else
 	DO_KEOGRAM="false"
 	DO_STARTRAILS="false"
 	DO_TIMELAPSE="false"
@@ -52,18 +65,20 @@ if [ $# -gt 1 ] ; then
 			DO_STARTRAILS="true"
 		elif [ "${1}" = "-t" ] ; then
 			DO_TIMELAPSE="true"
-		else
+		elif [ "${1:0:1}" = "-" ]; then
 			echo "Unknown image type: '${1}'; ignoring."
 		fi
 		shift
 	done
-else
-	DO_KEOGRAM="true"
-	DO_STARTRAILS="true"
-	DO_TIMELAPSE="true"
+	DATE="${1}"
 fi
 
-DATE="${1}"
+DATE="${DATE:-${1}}"
+if [ "${DATE}" = "" ]; then
+	echo -e "${ME}: ${RED}ERROR: No date specified!${NC}"
+	usage_and_exit 1
+fi
+#### echo K=$DO_KEOGRAM, S=$DO_STARTRAILS, T=$DO_TIMELAPSE, DATE=$DATE
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
 if [ ! -d "${DATE_DIR}" ] ; then
 	echo -e "${ME}: ${RED}ERROR: '${DATE_DIR}' not found!${NC}"

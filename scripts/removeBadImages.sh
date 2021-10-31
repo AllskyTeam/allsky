@@ -34,19 +34,20 @@ fi
 
 [ $# -eq 0 -o $# -gt 2 ] && usage 1
 
-# If we're running in debug mode don't display ${ME} since it make the output harder to read.
+DATE="${1}"
+FILE="${2}"
+
+# If we're running in debug mode don't display ${ME} since it makes the output harder to read.
 if [ ${DEBUG} = "true" -o "${ON_TTY}" = "1" ]; then
 	ME=""
 else
 	ME="${ME}:"
 fi
-DATE="${1}"
 if [ ! -d "${DATE}" ]; then
 	echo -e "${RED}${ME} '${DATE}' is not a directory${NC}"
 	exit 2
 fi
 
-FILE="${2}"
 if [ "${FILE}" != "" -a ! -f "${DATE}/${FILE}" ]; then
 	echo -e "${RED}${ME} '${FILE}' not found in '${DATE}'${NC}"
 	exit 2
@@ -165,21 +166,22 @@ else
 		fi
 
 		if [ "${BAD}" != "" ]; then
-			echo "${ME} ${r} ${BAD} >> "${OUTPUT}""
+			echo "${r} ${BAD}" >> "${OUTPUT}"
 			[ ${DEBUG} = "false" ] && rm -f "${f}" "thumbnails/${f}"
 			let num_bad=num_bad+1
 		fi
 	done
 
 	if [ $num_bad -eq 0 ]; then
-		echo -e "\n${ME} ${GREEN}No bad files found.${NC}"
+		# If only one file, "no news is good news".
+		[ "${FILE}" = "" ] && echo -e "\n${ME} ${GREEN}No bad files found.${NC}"
 		rm -f "${OUTPUT}"
 	else
 		if [ "${FILE}" = "" ]; then
-			echo "${ME}: ${num_bad} bad file(s) found and ${r}. See ${OUTPUT}."
+			echo "${ME} ${num_bad} bad file(s) found and ${r}. See ${OUTPUT}."
 			# Do NOT remove ${OUTPUT} in case the user wants to look at it.
 		else	# only 1 file so show it
-			echo "${ME}: File is bad: $(< "${OUTPUT}")"
+			echo "${ME} File is bad: $(< "${OUTPUT}")"
 			rm -f "${OUTPUT}"
 		fi
 	fi

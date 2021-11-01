@@ -103,14 +103,18 @@ else # sftp/ftp
 		[ "${LFTP_COMMANDS}" != "" ] && echo ${LFTP_COMMANDS}
 		# xxx TODO: escape single quotes in REMOTE_PASSWORD - how?  With \ ?
 		P="${REMOTE_PASSWORD}"
-		echo "open --user '${REMOTE_USER}' --password '${P}' '${PROTOCOL}://${REMOTE_HOST}' "
+
 		# Sometimes have problems with "max-reties 1", so make it 2
 		echo set net:max-retries 2
-		echo set net:timeout 20
-		echo "rm -f '${REMOTE_DIR}${TEMP_NAME}' "		# unlikely, but just in case it's already there
-		echo "put '${FILE_TO_UPLOAD}' -o '${REMOTE_DIR}${TEMP_NAME}' || (echo 'put of ${FILE_TO_UPLOAD} failed!'; exit 1) "
-		echo "rm -f '${REMOTE_DIR}${DESTINATION_FILE}' "
-		echo "mv '${REMOTE_DIR}${TEMP_NAME}' '${REMOTE_DIR}${DESTINATION_FILE}' || ( echo 'mv of ${TEMP_NAME} to ${DESTINATION_FILE} in ${REMOTE_DIR} failed!'; exit 2 )"
+		echo set net:timeout 10
+
+		echo "open --user '${REMOTE_USER}' --password '${P}' '${PROTOCOL}://${REMOTE_HOST}'"
+		# unlikely, but just in case it's already there
+		echo "rm -f '${REMOTE_DIR}${TEMP_NAME}'"
+		echo "put '${FILE_TO_UPLOAD}' -o '${REMOTE_DIR}${TEMP_NAME}' || (echo 'put of ${FILE_TO_UPLOAD} failed!'; exit 1) || exit 2"
+		echo "rm -f '${REMOTE_DIR}${DESTINATION_FILE}'"
+		echo "mv '${REMOTE_DIR}${TEMP_NAME}' '${REMOTE_DIR}${DESTINATION_FILE}' || (echo 'mv of ${TEMP_NAME} to ${DESTINATION_FILE} in ${REMOTE_DIR} failed!'; exit 1) || exit 3"
+
 		echo exit 0
 	) > "${LFTP_CMDS}"
 	lftp -f "${LFTP_CMDS}" > "${LOG}" 2>&1
@@ -120,6 +124,7 @@ else # sftp/ftp
 		echo -en "${RED}"
 		echo "*** ${ME}: ERROR:"
 		echo "FILE_TO_UPLOAD='${FILE_TO_UPLOAD}'"
+		echo "REMOTE_HOST='${REMOTE_HOST}'"
 		echo "REMOTE_DIR='${REMOTE_DIR}'"
 		echo "TEMP_NAME='${TEMP_NAME}'"
 		echo "DESTINATION_FILE='${DESTINATION_FILE}'"
@@ -127,8 +132,7 @@ else # sftp/ftp
 		echo
 		cat "${LOG}"
 
-		echo -e "\n${YELLOW}Commands used${NC} (run via: ${GREEN}lftp -f ${LFTP_CMDS}${NC}):"
-		cat "${LFTP_CMDS}"
+		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
 
 	elif tty --silent && [ "${SILENT}" = "false" ]; then
 		echo -en "${YELLOW}"

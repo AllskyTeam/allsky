@@ -5,9 +5,14 @@ then
 	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}"))"
 fi
 
-source "variables.sh"
+source "${ALLSKY_HOME}/variables.sh"
+
 if [[ $EUID -eq 0 ]]; then
-   echo "This script must NOT be run as root" 1>&2
+	(echo
+	 echo -e "${RED}**********"
+	 echo -e "This script must NOT be run as root, do NOT use 'sudo'."
+	 echo -e "**********${NC}"
+	 echo) 1>&2
    exit 1
 fi
 

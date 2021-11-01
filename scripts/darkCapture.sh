@@ -21,9 +21,9 @@ if [ "$DARK_MODE" = "1" ] ; then
 
 	mkdir -p "${ALLSKY_DARKS}"
 	# If the camera doesn't support temperature, we will keep overwriting the file until
-	#	user creates temperature.txt file.
+	# the user creates a temperature.txt file.
 	if [ "${TEMPERATURE}" = "n/a" ]; then
-		cp "${CURRENT_IMAGE}" "${ALLSKY_DARKS}/dark.${EXTENSION}"
+		cp "${CURRENT_IMAGE}" "${ALLSKY_DARKS}"
 	else
 		cp "${CURRENT_IMAGE}" "${ALLSKY_DARKS}/${TEMPERATURE}.${EXTENSION}"
 	fi

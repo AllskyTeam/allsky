@@ -176,7 +176,7 @@ elif [ "${DAYTIME_CAPTURE}" = "false" -o "${DAYTIME}" = "0" ] ; then
 fi
 ARGUMENTS+=(-daytime $DAYTIME_CAPTURE)
 
-[ "$CAPTURE_EXTRA_PARAMETERS" != "" ] && ARGUMENTS+=($CAPTURE_EXTRA_PARAMETERS)	# Any additional parameters
+[ "$CAPTURE_EXTRA_PARAMETERS" != "" ] && ARGUMENTS+=( ${CAPTURE_EXTRA_PARAMETERS})	# Any additional parameters
 
 echo "${ARGUMENTS[@]}" > ${ALLSKY_TMP}/capture_args.txt
 

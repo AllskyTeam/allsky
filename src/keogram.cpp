@@ -407,7 +407,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         {"channel-info", no_argument, 0, 'c'},
         {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "d:e:o:r:s:C:L:N:S:T:Q:q:npvhxc", long_options,
+    c = getopt_long(argc, argv, "d:e:o:r:s:L:C:N:S:T:Q:q:npvhxc", long_options,
                     &option_index);
     if (c == -1)
       break;
@@ -452,20 +452,22 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         cf->verbose++;
         break;
       case 'C':
-        if (strchr(optarg, ' ')) {
+        // Problems with "255 255 255" -> optarg is only "255 !!!
+        // solved without spaces - ever worked with optargs ???   
+        if (strchr(optarg, ',')) {
           int r, g, b;
-          sscanf(optarg, "%d %d %d", &b, &g, &r);
+          sscanf(optarg, "%d,%d,%d", &b, &g, &r);
           cf->b = b & 0xff;
           cf->g = g & 0xff;
           cf->r = r & 0xff;
-          break;
+        } else {
+          if (optarg[0] == '#')  // skip '#' if input is like '#coffee'
+            optarg++;
+          sscanf(optarg, "%06x", &tmp);
+          cf->b = tmp & 0xff;
+          cf->g = (tmp >> 8) & 0xff;
+          cf->r = (tmp >> 16) & 0xff;
         }
-        if (optarg[0] == '#')  // skip '#' if input is like '#coffee'
-          optarg++;
-        sscanf(optarg, "%06x", &tmp);
-        cf->b = tmp & 0xff;
-        cf->g = (tmp >> 8) & 0xff;
-        cf->r = (tmp >> 16) & 0xff;
         break;
       case 'L':
         cf->lineWidth = atoi(optarg);

@@ -19,6 +19,10 @@
 #include <signal.h>
 #include <fstream>
 
+// new includes (MEAN)
+#include "include/RPiHQ_raspistill.h"
+#include "include/mode_RPiHQ_mean.h"
+
 using namespace std;
 
 #define KNRM "\x1B[0m"
@@ -51,6 +55,9 @@ int tty				= 0;	// 1 if we're on a tty (i.e., called from the shell prompt).
 int notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
 
 //bool bSavingImg = false;
+
+raspistillSetting myRaspistillSetting;
+modeMeanSetting myModeMeanSetting;
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -325,9 +332,10 @@ time ( NULL );
 		asiExposure = 1;
 	}
 
-	if (asiExposure > 240000000)
+    // https://www.raspberrypi.org/documentation/raspbian/applications/camera.md : HQ (IMX477) 	200000000 (i.e. 200s)
+	if (asiExposure > 200000000)
 	{
-		asiExposure = 240000000;
+		asiExposure = 200000000;
 	}
 
 	// Exposure time
@@ -337,9 +345,14 @@ time ( NULL );
 
 	if (asiAutoExposure)
 	{
-		shutter = "--exposure auto ";
+		if (myModeMeanSetting.mode_mean) {
+			ss.str("");
+			ss << myRaspistillSetting.shutter;
+			shutter = "--exposure off --shutter " + ss.str() + " ";
+		} else {
+			shutter = "--exposure auto ";
+		}
 	}
-
 	// Set exposure time
 	else if (asiExposure)
 	{
@@ -362,8 +375,21 @@ time ( NULL );
 	// Check if auto gain is selected
 	if (asiAutoGain)
 	{
-		// Set analog gain to 1
-		gain = "--analoggain 1 ";
+		if (myModeMeanSetting.mode_mean) {
+			ss.str("");
+			ss << myRaspistillSetting.analoggain;
+			gain = "--analoggain " + ss.str() + " ";
+
+			if (myRaspistillSetting.digitalgain > 1.0) {
+				ss.str("");
+				ss << myRaspistillSetting.digitalgain;
+				gain = gain + "--digitalgain " + ss.str() + " ";
+			}
+		}
+		else {
+			// Set analog gain to 1
+			gain = "--analoggain 1 ";
+		}
 	}
 
 	// Set manual analog gain setting
@@ -386,31 +412,50 @@ time ( NULL );
 	// Add gain setting to raspistill command string
 	command += gain;
 
+    // Add exif information to raspistill command string
+	if (myModeMeanSetting.mode_mean) {
+     	string exif;
+	   	stringstream Str_ExposureTime;
+   		stringstream Str_Reinforcement;
+   		Str_ExposureTime <<  myRaspistillSetting.shutter;
+		Str_Reinforcement << myRaspistillSetting.analoggain;
+		
+   		exif = "--exif IFD0.Artist=li_" + Str_ExposureTime.str() + "_" + Str_Reinforcement.str() + " ";
+		command += exif;
+	}
+
 	// White balance
 	string awb;
+    if (asiWBR < 0.1) 	{
+		asiWBR = 0.1;
+	}
+	if (asiWBR > 10) {
+		asiWBR = 10;
+	}
+	if (asiWBB < 0.1) {
+		asiWBB = 0.1;
+	}
+	if (asiWBB > 10) {
+		asiWBB = 10;
+	}
 
 	// Check if R and B component are given
-	if (!asiAutoAWB) {
-		if (asiWBR < 0.1)
-		{
-			asiWBR = 0.1;
+	if (myModeMeanSetting.mode_mean) {
+		// support asiAutoAWB, asiWBR and asiWBB
+		if (asiAutoAWB) {
+  			awb = "--awb auto ";
 		}
+		else {
+			ss.str("");
+			ss << asiWBR;
+			awb  = "--awb off --awbgains " + ss.str();
 
-		if (asiWBR > 10)
-		{
-			asiWBR = 10;
+			ss.str("");
+			ss << asiWBB;
+			awb += "," + ss.str() + " ";
 		}
-
-		if (asiWBB < 0.1)
-		{
-			asiWBB = 0.1;
-		}
-
-		if (asiWBB > 10)
-		{
-			asiWBB = 10;
-		}
-
+	}
+	else if (!asiAutoAWB) {
 		ss.str("");
 		ss << asiWBR;
 		awb  = "--awb off --awbgains " + ss.str();
@@ -419,10 +464,8 @@ time ( NULL );
 		ss << asiWBB;
 		awb += "," + ss.str() + " ";
 	}
-
 	// Use automatic white balance
-	else
-	{
+	else {
 		awb = "--awb auto ";
 	}
 
@@ -540,8 +583,17 @@ time ( NULL );
 
 		if (strcmp(ImgText, "") != 0) {
 			ss.str("");
-	//		ss << ReplaceAll(ImgText, std::string(" "), std::string("_"));
-			ss << ImgText;
+			ss << ImgText; 
+			if (myModeMeanSetting.info > 0) {
+				ss << " shutter:" << myRaspistillSetting.shutter 
+				<< " gain:"	<< myRaspistillSetting.analoggain;
+				if (myModeMeanSetting.info  > 1 ) {
+					ss << " (li-" << __TIMESTAMP__ 
+					<< ") br:" << myRaspistillSetting.brightness 
+					<< " WBR:" << asiWBR 
+					<< " WBB:" << asiWBB;
+				}
+			}
 			command += "-a \"" + ss.str() + "\" ";
 		}
 
@@ -806,6 +858,12 @@ int main(int argc, char *argv[])
 			{
 				asiWBB = atof(argv[++i]);
 			}
+            else if (strcmp(argv[i], "-mean-value") == 0)
+			{
+				myModeMeanSetting.mean_value = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
+			}
 
 			// Check for text parameter
 			else if (strcmp(argv[i], "-text") == 0)
@@ -939,6 +997,10 @@ int main(int argc, char *argv[])
 				preview = atoi(argv[++i]);
 			}
 */
+            else if (strcmp(argv[i], "-debuglevel") == 0)
+            {
+                debugLevel = atoi(argv[++i]);
+            }
 			else if (strcmp(argv[i], "-showTime") == 0 || strcmp(argv[i], "-time") == 0)
 			{
 				time = atoi(argv[++i]);
@@ -1081,6 +1143,11 @@ int main(int argc, char *argv[])
 	printf(" Show Details: %s\n", yesNo(showDetails));
 	printf(" Darkframe: %s\n", yesNo(darkframe));
 	printf(" Notification Images: %s\n", yesNo(notificationImages));
+	printf(" Mode Mean: %s\n", yesNo(myModeMeanSetting.mode_mean));
+	if (myModeMeanSetting.mode_mean) {
+	  printf(" Mode Mean Value: %1.3f\n", myModeMeanSetting.mean_value);
+	  printf(" Mode Mean Threshold: %1.3f\n", myModeMeanSetting.mean_threshold);
+	}
 
 	// Show selected camera type
 	printf(" Camera: Raspberry Pi HQ camera\n");
@@ -1106,6 +1173,10 @@ int main(int argc, char *argv[])
 // Next lines are present for testing purposes
 sprintf(debugText, "Daytimecapture: %d\n", daytimeCapture);
 displayDebugText(debugText, 3);
+
+		if (myModeMeanSetting.mode_mean) {
+  			RPiHQcalcMean(fileName, asiNightExposure, asiNightGain, myRaspistillSetting, myModeMeanSetting);
+		}
 
 		printf("\n");
 
@@ -1254,6 +1325,21 @@ displayDebugText(debugText, 3);
 			{
 				// Upload and resize image when configured
 				system("scripts/saveImageDay.sh &");
+			}
+
+			if (myModeMeanSetting.mode_mean) {
+				RPiHQcalcMean(fileName, asiNightExposure, asiNightGain, myRaspistillSetting, myModeMeanSetting);
+				if (myModeMeanSetting.info >= 2)
+					printf("asiExposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure, (double) myRaspistillSetting.shutter / 1000000.0, myModeMeanSetting.quickstart);
+				if (myModeMeanSetting.quickstart) {
+					currentDelay = 1000;
+				}
+				else if ((dayOrNight == "NIGHT")) {
+					currentDelay = (asiNightExposure / 1000) - (int) (myRaspistillSetting.shutter / 1000.0) + nightDelay;
+				}
+				else {
+					currentDelay = dayDelay;
+				}
 			}
 
 			// Inform user

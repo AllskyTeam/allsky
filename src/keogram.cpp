@@ -212,7 +212,7 @@ void keogram_worker(int thread_num,
       if (ft.tm_hour != prevHour) {
         if (prevHour != -1) {
           mtx->lock();
-          cv::Mat a = (cv::Mat_<int>(1, 2) << destCol, ft.tm_hour);
+          cv::Mat a = (cv::Mat_<int>(1, 5) << destCol, ft.tm_hour, ft.tm_year, ft.tm_mon, ft.tm_mday);
           ann->push_back(a);
           mtx->unlock();
         }
@@ -249,12 +249,45 @@ void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
                                           cf->lineWidth, &baseline);
 
       if (ann->at<int>(r, 0) - textSize.width >= 0) {
+        // black background
+        cv::putText(*acc, text,
+                    cv::Point(ann->at<int>(r, 0) - textSize.width, 
+                    acc->rows - (textSize.height)),
+                    cf->fontFace, cf->fontScale,
+                    cv::Scalar(0, 0, 0), cf->lineWidth+2,
+                    cf->fontType);
         cv::putText(*acc, text,
                     cv::Point(ann->at<int>(r, 0) - textSize.width,
-                              acc->rows - textSize.height),
+                    acc->rows - textSize.height),
                     cf->fontFace, cf->fontScale,
                     cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
                     cf->fontType);
+      }
+
+      if (ann->at<int>(r, 1) == 0) {
+        // Draw date
+        char    time_buf[256];
+        snprintf(time_buf, 256, "%02d-%02d-%02d", ann->at<int>(r, 3), ann->at<int>(r, 4), ann->at<int>(r, 2));
+        std::string text(time_buf);
+        cv::Size textSize = cv::getTextSize(text, cf->fontFace, cf->fontScale,
+                                          cf->lineWidth, &baseline);
+
+        if (ann->at<int>(r, 0) - textSize.width >= 0) {
+          // black background
+          cv::putText(*acc, text,
+                      cv::Point(ann->at<int>(r, 0) - textSize.width, 
+                      acc->rows - (2.5 * textSize.height)),
+                      cf->fontFace, cf->fontScale,
+                      cv::Scalar(0, 0, 0), cf->lineWidth+2,
+                      cf->fontType);
+          // Text
+          cv::putText(*acc, text,
+                      cv::Point(ann->at<int>(r, 0) - textSize.width, 
+                      acc->rows - (2.5 * textSize.height)),
+                      cf->fontFace, cf->fontScale,
+                      cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
+                      cf->fontType);
+        }
       }
     }
   }

@@ -50,32 +50,34 @@ if [ "${DAYTIME_SAVE}" = "true" -o "${CAPTURE_24HR}" = "true" ] ; then	# CAPTURE
 fi
 
 FULL_FILENAME="${IMG_PREFIX}${FULL_FILENAME}"
-mv -f "${IMAGE_TO_USE}" "${ALLSKY_HOME}/${FULL_FILENAME}"	# so web severs can see it.
+FINAL_IMAGE="${ALLSKY_HOME}/${FULL_FILENAME}"	# final resting place - no more changes to it.  TODO: put in ALLSKY_TMP
+mv -f "${IMAGE_TO_USE}" "${FINAL_IMAGE}"	# so web severs can see it.
 
 # If upload is true, optionally create a smaller version of the image, either way, upload it.
 if [ "${UPLOAD_IMG}" = "true" ] ; then
-	IMAGE_TO_USE="${ALLSKY_HOME}/${FULL_FILENAME}"
-
 	if [ "${RESIZE_UPLOADS}" = "true" ]; then
-		# Don't overwrite IMAGE_TO_USE since the web server(s) may be looking at it.
-		cp "${IMAGE_TO_USE}" "${ALLSKY_TMP}/${FULL_FILENAME}"  # create temporary copy to resize
-		IMAGE_TO_USE="${ALLSKY_TMP}/${FULL_FILENAME}"
-		# Create a smaller version for upload
-		convert "${IMAGE_TO_USE}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${IMAGE_TO_USE}"
+		# Don't overwrite FINAL_IMAGE since the web server(s) may be looking at it.
+		TEMP_FILE="${ALLSKY_TMP}/resize-${FULL_FILENAME}"
+		cp "${FINAL_IMAGE}" "${TEMP_FILE}"  # create temporary copy to resize
+		convert "${TEMP_FILE}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${TEMP_FILE}"
 		if [ $? -ne 0 ] ; then
 			echo "${RED}*** ${ME}: ERROR: RESIZE_UPLOADS failed${NC}"
 			# Leave temporary file for possible debugging.
 			exit 4
 		fi
+		UPLOAD_FILE="${TEMP_FILE}"
+	else
+		UPLOAD_FILE="${FINAL_IMAGE}"
+		TEMP_FILE=""
 	fi
 
-	# We're actually uploading $IMAGE_TO_USE, but show $NOTIFICATIONFILE in the message since it's more descriptive.
+	# We're actually uploading $UPLOAD_FILE, but show $NOTIFICATIONFILE in the message since it's more descriptive.
 	echo "${ME}: Uploading $(basename "${NOTIFICATIONFILE}")"
-	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${IMAGE_TO_USE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage"
+	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage"
 	RET=$?
 
 	# If we created a temporary copy, delete it.
-	[ "${RESIZE_UPLOADS}" = "true" ] && rm -f "${IMAGE_TO_USE}"
+	[ "${TEMP_FILE}" != "" ] && rm -f "${TEMP_FILE}"
 
 	exit ${RET}
 fi

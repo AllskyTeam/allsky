@@ -1,30 +1,48 @@
 #!/bin/bash
 
+# TODO: remove these lines once we know they are in the new unified configuration file.
+TIMELAPSEWIDTH=${TIMELAPSEWIDTH:-0}
+TIMELAPSEHEIGHT=${TIMELAPSEHEIGHT:-0}
+FFLOG=${FFLOG:-warning}
+FPS=${FPS:-25}
+VCODEC=${VCODEC:-libx264}
+TIMELAPSE_BITRATE=${TIMELAPSE_BITRATE:-2000k}
+PIX_FMT=${PIX_FMT:-yuv420p}
+
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
 	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}")/..)"
 fi
 
 source "${ALLSKY_HOME}/variables.sh"
-ME="$(basename "${BASH_ARGV0}")"
+source "${ALLSKY_CONFIG}/config.sh"
+source "${ALLSKY_SCRIPTS}/filename.sh"
 
-if [ $# -lt 1 -o $# -gt 2 -o "${1}" = "-h" -o "${1}" = "--help" ] ; then
-	XD="/path/to/nonstandard/location/of/allsky"
+# If we're on a tty that means we're being manually run and $RED != "".
+# In that case, don't display $ME.
+if [ "${RED}" != "" ]; then
+	ME=""
+else
+	ME="$(basename "${BASH_ARGV0}")"
+fi
+
+if [ $# -eq 0 -o $# -gt 2 -o "${1}" = "-h" -o "${1}" = "--help" ] ; then
+	XD="/path/to/nonstandard/location/of/allsky_images"
 	TODAY=$(date +%Y%m%d)
 	echo -en "${RED}"
 	echo -n "Usage: ${ME} [-h|--help] <DATE> [<IMAGE_DIR>]"
 	echo -e "${NC}"
 	echo "    example: ${ME} ${TODAY}"
 	echo "    or:      ${ME} ${TODAY} ${XD}"
-	echo ""
+	echo
 	echo -en "${YELLOW}"
 	echo "<DATE> must be of the form YYYYMMDD."
-	echo ""
-	echo "<IMAGE_DIR> defaults to '\${ALLSKY_IMAGES}' (wherever your installation of allsky is"
-	echo "configured to store images), but may be overriden to use a nonstandard location such"
-	echo "as a usb stick or a network drive (eg. for regenerating timelapses). In that case <DATE>"
-	echo "must exist inside <IMAGE_DIR>, eg. '${XD}/${TODAY}'."
-	echo ""
+	echo
+	echo "<IMAGE_DIR> defaults to '\${ALLSKY_IMAGES}' but may be overridden to use a"
+	echo "nonstandard location such as a usb stick or a network drive (eg. for"
+	echo "regenerating timelapses)."
+	echo "In that case <DATE> must exist inside <IMAGE_DIR>, eg. '${XD}/${TODAY}'."
+	echo
 	echo "Produces a movie in <IMAGE_DIR>/<DATE>/allsky-<DATE>.mp4"
 	echo "eg. ${ALLSKY_IMAGES}/${TODAY}/allsky-${TODAY}.mp4"
 	echo "or  ${XD}/${TODAY}/allsky-${TODAY}.mp4"
@@ -32,28 +50,17 @@ if [ $# -lt 1 -o $# -gt 2 -o "${1}" = "-h" -o "${1}" = "--help" ] ; then
 	exit 1
 fi
 
-
-source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_SCRIPTS}/filename.sh"
-
-cd $ALLSKY_HOME
-
-# Allow timelapses of pictures not in the standard ALLSKY_IMAGES directory.
-# If $2 is passed, it's the top folder, otherwise use the one in ALLSKY_IMAGES.
+# Allow timelapses of pictures not in the standard $ALLSKY_IMAGES directory.
+# If $2 is passed, it's the top folder, otherwise use the one in $ALLSKY_IMAGES.
 DATE="${1}"
 if [ "${2}" = "" ] ; then
 	DATE_DIR="${ALLSKY_IMAGES}/${DATE}"	# Need full pathname for links
 else
 	DATE_DIR="${2}/${DATE}"
 fi
-
-# Guess what the likely image extension is (unless specified in the config) by
-# looking at the most common extension in the target day directory
-if [ -z "${EXTENSION}" ] ; then
-	EXTENSION=$(ls "${DATE_DIR}" | sed -e 's/.*[.]//' | sort | uniq -c | head -1 | sed -e 's/.* //')
-	echo -en "${YELLOW}"
-	echo -n "${ME}: file EXTENSION not found in configuration, guessing ${EXTENSION}"
-	echo -e "${NC}"
+if [ ! -d "${DATE_DIR}" ]; then
+	echo -e "${RED}*** ${ME}: ERROR: '${DATE_DIR}' does not exist!${NC}"
+	exit 2
 fi
 
 # If you are tuning encoder settings, run this script with KEEP_SEQUENCE, eg.
@@ -62,21 +69,30 @@ fi
 # of the sequence directory if it looks ok (contains at least 100 files). This
 # might save you some time when running your encoder repeatedly.
 
-SEQUENCE_DIR="${DATE_DIR}/sequence"
-NSEQ=$(ls "${SEQUENCE_DIR}" 2>/dev/null | wc -l )
+# To save on writes to SD card for people who have $ALLSKY_TMP as a memory filesystem,
+# put the sequence files there.
+SEQUENCE_DIR="${ALLSKY_TMP}/sequence-${DATE}"
+if [ -d "${SEQUENCE_DIR}" ]; then
+	NSEQ=$(ls "${SEQUENCE_DIR}" 2>/dev/null | wc -l)	# left over from last time
+else
+	NSEQ=0
+fi
+
 TMP="${ALLSKY_TMP}/timelapseTMP.txt"
 > "${TMP}"
 
-if [ "$KEEP_SEQUENCE" = "false" -o $NSEQ -lt 100 ] ; then
+if [ "${KEEP_SEQUENCE}" = "false" -o ${NSEQ} -lt 100 ] ; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
 
-	# Delete any 0=length files
-	find "${DATE_DIR}" -name "*.${EXTENSION}" -size 0 -delete
+	# Delete any 0-length files if REMOVE_BAD_IMAGES didn't already do it.
+	if [ "${REMOVE_BAD_IMAGES}" != "true" ]; then
+		find "${DATE_DIR}" -name "*.${EXTENSION}" -size 0 -delete
+	fi
 
 	# capture the "ln" commands in case the user needs to debug
 	ls -rt "${DATE_DIR}"/*.${EXTENSION} |
-	gawk 'BEGIN{ a=1 }
+	gawk 'BEGIN { a=1 }
 		{
 			printf "ln -s %s '${SEQUENCE_DIR}'/%04d.'${EXTENSION}'\n", $0, a;
 			printf "ln -s %s '${SEQUENCE_DIR}'/%04d.'${EXTENSION}'\n", $0, a >> "'${TMP}'";
@@ -87,19 +103,17 @@ if [ "$KEEP_SEQUENCE" = "false" -o $NSEQ -lt 100 ] ; then
 	# Make sure there's at least one link.
 	NUM_FILES=$(wc -l < "${TMP}")
 	if [ $NUM_FILES -eq 0 ]; then
-		echo -en "${RED}*** ${ME}: ERROR: No images found!${NC}\n"
+		echo -e "${RED}*** ${ME}: ERROR: No images found!${NC}"
 		rmdir "${SEQUENCE_DIR}"
 		exit 1
 	else
 		echo "${ME}: Processing ${NUM_FILES} images..."
 	fi
 else
-	echo -en "${ME}: ${YELLOW}Not regenerating sequence because KEEP_SEQUENCE was given and $NSEQ links are present ${NC}\n"
+	echo -e "${ME}: ${YELLOW}Not regenerating sequence because KEEP_SEQUENCE was given and ${NSEQ} links are present ${NC}"
 fi
 
 SCALE=""
-TIMELAPSEWIDTH=${TIMELAPSEWIDTH:-0}
-TIMELAPSEHEIGHT=${TIMELAPSEHEIGHT:-0}
 if [ "${TIMELAPSEWIDTH}" != 0 ]; then
 	SCALE="-filter:v scale=${TIMELAPSEWIDTH}:${TIMELAPSEHEIGHT}"
 	echo "$ME: Using video scale ${TIMELAPSEWIDTH}x${TIMELAPSEHEIGHT}"
@@ -110,18 +124,18 @@ fi
 # set FFLOG=info in config.sh if you want to see what's going on for debugging.
 OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
 ffmpeg -y -f image2 \
-	-loglevel ${FFLOG:-warning} \
-	-r ${FPS:-25} \
+	-loglevel ${FFLOG} \
+	-r ${FPS} \
 	-i "${SEQUENCE_DIR}/%04d.${EXTENSION}" \
-	-vcodec ${VCODEC:-libx264} \
-	-b:v ${TIMELAPSE_BITRATE:-2000k} \
-	-pix_fmt ${PIX_FMT:-yuv420p} \
+	-vcodec ${VCODEC} \
+	-b:v ${TIMELAPSE_BITRATE} \
+	-pix_fmt ${PIX_FMT} \
 	-movflags +faststart \
 	$SCALE \
 	${TIMELAPSE_PARAMETERS} \
 	"${OUTPUT_FILE}" >> "${TMP}" 2>&1
-RET=$?
-if [ $RET -ne -0 ]; then
+
+if [ $? -ne -0 ]; then
 	echo -e "\n${RED}*** $ME: ERROR: ffmpeg failed."
 	echo "Error log is in '${TMP}'."
 	echo
@@ -134,10 +148,10 @@ fi
 if [ "${KEEP_SEQUENCE}" = "false" ] ; then
 	rm -rf "${SEQUENCE_DIR}"
 else
-	echo -en "${ME}: ${GREEN}Keeping sequence${NC}\n"
+	echo -e "${ME}: ${GREEN}Keeping sequence${NC}"
 fi
 
-echo -en "${ME}: ${GREEN}Timelapse was created${NC}\n"
+echo -e "${ME}: ${GREEN}Timelapse was created${NC}"
 
 # timelapse is uploaded via endOfNight.sh, which called us.
 

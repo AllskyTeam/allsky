@@ -32,6 +32,8 @@ using namespace std;
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
 
+using namespace cv;
+
 struct config_t {
   std::string img_src_dir, img_src_ext, dst_keogram;
   bool labels_enabled, keogram_enabled, parse_filename, junk, img_expand, channel_info;
@@ -60,7 +62,8 @@ void keogram_worker(int,               // thread num
                     glob_t*,           // file list
                     std::mutex*,       // mutex
                     cv::Mat*,          // accumulated
-                    cv::Mat*           // annotations
+                    cv::Mat*,          // annotations
+                    cv::Mat*           // mask
 );
 
 void keogram_worker(int thread_num,
@@ -68,8 +71,9 @@ void keogram_worker(int thread_num,
                     glob_t* files,
                     std::mutex* mtx,
                     cv::Mat* acc,
-                    cv::Mat* ann) {
-  int start_num, end_num, batch_size, prevHour = -1, nchan = 0;
+                    cv::Mat* ann,
+                    cv::Mat* mask) {
+  int start_num, end_num, batch_size, prevHour = -1, nchan = 3;  // first maybe overexposed images (mono !) making problems 
   unsigned long nfiles = files->gl_pathc;
   cv::Mat thread_accumulator;
 
@@ -174,6 +178,12 @@ void keogram_worker(int thread_num,
         if (cf->img_expand) {
           cf->num_img_expand = std::max(1, (int) (imagesrc.cols / (float) nfiles));
         }
+        // channel_info ?
+        if (cf->channel_info) {
+          // create mask
+          *mask = cv::Mat::zeros(imagesrc.size(), CV_8U);
+        	cv::circle(*mask, cv::Point(mask->cols/2, mask->rows/2), mask->rows/3, cv::Scalar(255, 255, 255), -1, 8, 0);
+        }
         acc->create(imagesrc.rows, nfiles * cf->num_img_expand , imagesrc.type());
         if (cf->verbose > 1) {
           stdio_mutex.lock();
@@ -206,6 +216,9 @@ void keogram_worker(int thread_num,
         stat(filename, &s);
         struct tm* t = localtime(&s.st_mtime);
         ft.tm_hour = t->tm_hour;
+        ft.tm_mday = t->tm_mday;
+        ft.tm_mon = t->tm_mon +1;
+        ft.tm_year = t->tm_year+1900;
       }
 
       // record the annotation
@@ -217,6 +230,65 @@ void keogram_worker(int thread_num,
           mtx->unlock();
         }
         prevHour = ft.tm_hour;
+      }
+    }
+    if (cf->channel_info) {
+      Scalar mean_scalar = cv::mean(imagesrc, *mask);
+      Vec3b color;
+      double mean;
+      double mean_Sum;
+      double mean_maxValue = 255.0/100.0;
+
+      // Scale to 0-1 range
+      switch (imagesrc.depth())
+      {
+        case CV_8U:
+          mean_maxValue = 255.0/100.0;
+          break;
+        case CV_16U:
+          mean_maxValue = 65535.0/100.0;
+          break;
+      }
+
+      switch (imagesrc.channels())
+      {
+        default: // mono case - not used for channel info
+          mean = mean_scalar.val[0] / mean_maxValue;
+          break;
+        case 3: // color
+        case 4:
+          // background
+          for (int i=0; i < cf->num_img_expand; i++) {
+            line( *acc, Point(destCol+i,0), Point(destCol+i,100),  Scalar( 255, 255, 255 ), 1,  LINE_8 );
+          }
+          // grid
+          color.val[0] = 127;
+          color.val[1] = 127;
+          color.val[2] = 127;
+          for (int j=0; j <= 10; j++) {
+            acc->at<cv::Vec3b>(Point(destCol,100-10*j)) = color;
+          } 
+          // values          
+          mean_Sum = 0;
+          for (int channel=0; channel <= 2; channel++) {
+            mean = mean_scalar[channel] / mean_maxValue;
+            mean_Sum += mean;
+            color.val[0] = 0;
+            color.val[1] = 0;
+            color.val[2] = 0;
+            color.val[channel] = 255;
+            for (int i=0; i < cf->num_img_expand; i++) {
+              acc->at<cv::Vec3b>(Point(destCol+i,100-mean)) = color;
+            }
+          }
+          mean_Sum = mean_Sum / 3.0;
+          color.val[0] = 0;
+          color.val[1] = 0;
+          color.val[2] = 0;
+          for (int i=0; i < cf->num_img_expand; i++) {
+            acc->at<cv::Vec3b>(Point(destCol+i,100-mean_Sum)) = color;
+          }
+          break;
       }
     }
   }
@@ -354,8 +426,10 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         break;
       case 'x':
         cf->img_expand = true;
+        break;
       case 'c':
         cf->channel_info = true;
+        break;
       case 'p':
         cf->parse_filename = true;
         break;
@@ -552,6 +626,7 @@ int main(int argc, char* argv[]) {
   std::mutex accumulated_mutex;
   cv::Mat accumulated;
   cv::Mat annotations;
+  cv::Mat mask;
   annotations.create(0, 2, CV_32S);
   annotations = -1;
 
@@ -559,7 +634,7 @@ int main(int argc, char* argv[]) {
   for (int tid = 0; tid < config.num_threads; tid++)
     threadpool.push_back(std::thread(keogram_worker, tid, &config, &files,
                                      &accumulated_mutex, &accumulated,
-                                     &annotations));
+                                     &annotations, &mask));
 
   for (auto& t : threadpool)
     t.join();

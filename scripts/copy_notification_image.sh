@@ -71,7 +71,7 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 
 	# We're actually uploading $IMAGE_TO_USE, but show $NOTIFICATIONFILE in the message since it's more descriptive.
 	echo "${ME}: Uploading $(basename "${NOTIFICATIONFILE}")"
-	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${IMAGE_TO_USE}" "${IMGDIR}" "${FULL_FILENAME}" "NotificationImage"
+	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${IMAGE_TO_USE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage"
 	RET=$?
 
 	# If we created a temporary copy, delete it.

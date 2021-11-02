@@ -458,22 +458,20 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         cf->verbose++;
         break;
       case 'C':
-        // Problems with "255 255 255" -> optarg is only "255 !!!
-        // solved without spaces - ever worked with optargs ???   
-        if (strchr(optarg, ',')) {
+        if (strchr(optarg, ' ')) {
           int r, g, b;
-          sscanf(optarg, "%d,%d,%d", &b, &g, &r);
+          sscanf(optarg, "%d %d %d", &b, &g, &r);
           cf->b = b & 0xff;
           cf->g = g & 0xff;
           cf->r = r & 0xff;
-        } else {
-          if (optarg[0] == '#')  // skip '#' if input is like '#coffee'
-            optarg++;
-          sscanf(optarg, "%06x", &tmp);
-          cf->b = tmp & 0xff;
-          cf->g = (tmp >> 8) & 0xff;
-          cf->r = (tmp >> 16) & 0xff;
+          break;
         }
+        if (optarg[0] == '#')  // skip '#' if input is like '#coffee'
+          optarg++;
+        sscanf(optarg, "%06x", &tmp);
+        cf->b = tmp & 0xff;
+        cf->g = (tmp >> 8) & 0xff;
+        cf->r = (tmp >> 16) & 0xff;
         break;
       case 'L':
         cf->lineWidth = atoi(optarg);

@@ -50,6 +50,7 @@ struct config_t {
   double fontScale;
   double rotation_angle;
   double brightness_limit;
+  int fixed_channel_number;
 } config;
 
 std::mutex stdio_mutex;
@@ -73,7 +74,7 @@ void keogram_worker(int thread_num,
                     cv::Mat* acc,
                     cv::Mat* ann,
                     cv::Mat* mask) {
-  int start_num, end_num, batch_size, prevHour = -1, nchan = 3;  // first maybe overexposed images (mono !) making problems 
+  int start_num, end_num, batch_size, prevHour = -1, nchan = cf->fixed_channel_number;  // first maybe overexposed images (mono !) making problems 
   unsigned long nfiles = files->gl_pathc;
   cv::Mat thread_accumulator;
 
@@ -383,6 +384,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
   cf->img_expand = false;
   cf->num_img_expand = 1;
   cf->channel_info = false;
+  cf->fixed_channel_number = 0;
 
   while (1) {  // getopt loop
     int option_index = 0;
@@ -405,9 +407,10 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         {"help", no_argument, 0, 'h'},
         {"image-expand", no_argument, 0, 'x'},
         {"channel-info", no_argument, 0, 'c'},
+        {"fixed-channel-number", required_argument, 0, 'f'},
         {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "d:e:o:r:s:L:C:N:S:T:Q:q:npvhxc", long_options,
+    c = getopt_long(argc, argv, "d:e:o:r:s:L:C:N:S:T:Q:q:f:npvhxc", long_options,
                     &option_index);
     if (c == -1)
       break;
@@ -429,6 +432,9 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         break;
       case 'c':
         cf->channel_info = true;
+        break;
+      case 'f':
+        cf->fixed_channel_number = atoi(optarg);
         break;
       case 'p':
         cf->parse_filename = true;
@@ -555,6 +561,7 @@ void usage_and_exit(int x) {
       << std::endl;
   std::cout << "-x | --image-expand : expand image to get the proportions of source" << std::endl;
   std::cout << "-c | --channel-info : show channel infos - mean value of R/G/B" << std::endl;
+  std::cout << "-f | --fixed-channel-number <int> : define number of channels 0=auto, 1=mono, 3=rgb (0=auto)" << std::endl;
 
   std::cout << KNRM << std::endl;
   std::cout

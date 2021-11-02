@@ -553,6 +553,8 @@ void usage_and_exit(int x) {
   std::cout
       << "-q | --nice-level <int> : nice(2) level of processing threads (10)"
       << std::endl;
+  std::cout << "-x | --image-expand : expand image to get the proportions of source" << std::endl;
+  std::cout << "-c | --channel-info : show channel infos - mean value of R/G/B" << std::endl;
 
   std::cout << KNRM << std::endl;
   std::cout

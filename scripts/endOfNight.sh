@@ -2,6 +2,16 @@
 
 ME="$(basename "${BASH_ARGV0}")"
 
+# Allow this script to be executed manually, which requires several variables to be set.
+if [ -z "${ALLSKY_HOME}" ] ; then
+	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
+fi
+
+source "${ALLSKY_HOME}/variables.sh"
+source "${ALLSKY_CONFIG}/config.sh"
+source "${ALLSKY_SCRIPTS}/filename.sh"
+source "${ALLSKY_CONFIG}/ftp-settings.sh"
+
 if [ $# -eq 1 ] ; then
 	if [ "${1}" = "-h" -o "${1}" = "--help" ] ; then
 		echo -e "${RED}Usage: ${ME} [YYYYmmdd]${NC}"
@@ -12,16 +22,6 @@ if [ $# -eq 1 ] ; then
 else
 	DATE=$(date -d '12 hours ago' +'%Y%m%d')
 fi
-
-# Allow this script to be executed manually, which requires several variables to be set.
-if [ -z "$ALLSKY_HOME" ] ; then
-	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
-fi
-
-source "${ALLSKY_HOME}/variables.sh"
-source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_SCRIPTS}/filename.sh"
-source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 # Nasty JQ trick to compose a widthxheight string if both width and height
 # are defined in the config file and are non-zero. If this check fails, then

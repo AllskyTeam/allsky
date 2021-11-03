@@ -60,7 +60,7 @@ void startrail_worker(int thread_num,
                       std::mutex* mtx,
                       cv::Mat* stats_ptr,
                       cv::Mat* main_accumulator) {
-  int start_num, end_num, batch_size, nchan = 0;
+  int start_num, end_num, batch_size, nchan = 3; // first maybe overexposed images (mono !) making problems
   unsigned long nfiles = files->gl_pathc;
   cv::Mat thread_accumulator;
 

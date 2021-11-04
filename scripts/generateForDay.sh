@@ -123,7 +123,7 @@ if [ "${TYPE}" = "GENERATE" ]; then
 		if [ ${RET} -ne 0 ]; then
 			echo -e "${RED}${ME}Command Failed: ${CMD}${NC}"
 		elif [ ${SILENT} = "false" ]; then
-			echo "===== Completed"
+			echo "===== Completed ${GENERATING_WHAT}"
 		fi
 
 		return ${RET}
@@ -158,18 +158,33 @@ fi
 
 typeset -i EXIT_CODE=0
 
+if [ "${DO_KEOGRAM}" = "true" -o "${DO_STARTRAILS}" = "true" ] ; then
+	# Nasty JQ trick to compose a widthxheight string if both width and height
+	# are defined in the config file and are non-zero. If this check fails, then
+	# IMGSIZE will be empty and it won't be used later on. If the check passes
+	# a non-empty string (eg. IMGSIZE="1280x960") will be produced and later
+	# parts of this script so startrail and keogram generation can use it
+	# to reject incorrectly-sized images.
+	IMGSIZE=$(jq 'if .width? != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end' "${CAMERA_SETTINGS}" | tr -d '"')
+	if [ "${IMGSIZE}" != "" ]; then
+		SIZE_FILTER="-s ${IMGSIZE}"
+	else
+		SIZE_FILTER=""
+	fi
+
+fi
+
 if [ "${DO_KEOGRAM}" = "true" ] ; then
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/keogram/${KEOGRAM_FILE}"
 	if [ "${TYPE}" = "GENERATE" ]; then
-		CMD="'${ALLSKY_HOME}/keogram' -d '${DATE_DIR}' -e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
+		CMD="'${ALLSKY_HOME}/keogram' ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
 		let EXIT_CODE=${EXIT_CODE}+${?}
 	else
 		upload "Keogram" "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" "${KEOGRAM_DESTINATION_NAME}" "${WEB_KEOGRAM_DIR}"
 		let EXIT_CODE=${EXIT_CODE}+${?}
 	fi
-	echo
 fi
 
 if [ "${DO_STARTRAILS}" = "true" ] ; then
@@ -183,7 +198,6 @@ if [ "${DO_STARTRAILS}" = "true" ] ; then
 		upload "Startrails" "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" "${STARTRAILS_DESTINATION_NAME}" "${WEB_STARTRAILS_DIR}"
 		let EXIT_CODE=${EXIT_CODE}+${?}
 	fi
-	echo
 fi
 
 if [ "${DO_TIMELAPSE}" = "true" ] ; then
@@ -197,7 +211,6 @@ if [ "${DO_TIMELAPSE}" = "true" ] ; then
 		upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
 		let EXIT_CODE=${EXIT_CODE}+${?}
 	fi
-	echo
 fi
 
 

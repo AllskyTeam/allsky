@@ -85,11 +85,6 @@ if [ "${KEEP_SEQUENCE}" = "false" -o ${NSEQ} -lt 100 ] ; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
 
-	# Delete any 0-length files if REMOVE_BAD_IMAGES didn't already do it.
-	if [ "${REMOVE_BAD_IMAGES}" != "true" ]; then
-		find "${DATE_DIR}" -name "*.${EXTENSION}" -size 0 -delete
-	fi
-
 	# capture the "ln" commands in case the user needs to debug
 	ls -rt "${DATE_DIR}"/*.${EXTENSION} |
 	gawk 'BEGIN { a=1 }
@@ -100,14 +95,11 @@ if [ "${KEEP_SEQUENCE}" = "false" -o ${NSEQ} -lt 100 ] ; then
 		}' |
 	bash
 
-	# Make sure there's at least one link.
-	NUM_FILES=$(wc -l < "${TMP}")
-	if [ $NUM_FILES -eq 0 ]; then
+	# Make sure there's at least one link.  If there is, the file will be > 0 bytes.
+	if [ ! -s "${TMP}" ]; then
 		echo -e "${RED}*** ${ME}: ERROR: No images found!${NC}"
 		rmdir "${SEQUENCE_DIR}"
 		exit 1
-	else
-		echo "${ME}: Processing ${NUM_FILES} images..."
 	fi
 else
 	echo -e "${ME}: ${YELLOW}Not regenerating sequence because KEEP_SEQUENCE was given and ${NSEQ} links are present ${NC}"
@@ -116,7 +108,6 @@ fi
 SCALE=""
 if [ "${TIMELAPSEWIDTH}" != 0 ]; then
 	SCALE="-filter:v scale=${TIMELAPSEWIDTH}:${TIMELAPSEHEIGHT}"
-	echo "$ME: Using video scale ${TIMELAPSEWIDTH}x${TIMELAPSEHEIGHT}"
 fi
 
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
@@ -151,8 +142,6 @@ else
 	echo -e "${ME}: ${GREEN}Keeping sequence${NC}"
 fi
 
-echo -e "${ME}: ${GREEN}Timelapse was created${NC}"
-
-# timelapse is uploaded via endOfNight.sh, which called us.
+# timelapse is uploaded via generateForDay.sh or endOfNight.sh, which called us.
 
 exit 0

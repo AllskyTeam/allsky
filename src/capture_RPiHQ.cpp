@@ -347,7 +347,7 @@ time ( NULL );
 	{
 		if (myModeMeanSetting.mode_mean) {
 			ss.str("");
-			ss << myRaspistillSetting.shutter;
+			ss << myRaspistillSetting.shutter_us;
 			shutter = "--exposure off --shutter " + ss.str() + " ";
 		} else {
 			shutter = "--exposure auto ";
@@ -417,7 +417,7 @@ time ( NULL );
      	string exif;
 	   	stringstream Str_ExposureTime;
    		stringstream Str_Reinforcement;
-   		Str_ExposureTime <<  myRaspistillSetting.shutter;
+   		Str_ExposureTime <<  myRaspistillSetting.shutter_us;
 		Str_Reinforcement << myRaspistillSetting.analoggain;
 		
    		exif = "--exif IFD0.Artist=li_" + Str_ExposureTime.str() + "_" + Str_Reinforcement.str() + " ";
@@ -584,10 +584,10 @@ time ( NULL );
 		if (strcmp(ImgText, "") != 0) {
 			ss.str("");
 			ss << ImgText; 
-			if (myModeMeanSetting.info > 0) {
-				ss << " shutter:" << myRaspistillSetting.shutter 
+			if (myModeMeanSetting.debugLevel > 0) {
+				ss << " shutter:" << myRaspistillSetting.shutter_us 
 				<< " gain:"	<< myRaspistillSetting.analoggain;
-				if (myModeMeanSetting.info  > 1 ) {
+				if (myModeMeanSetting.debugLevel  > 1 ) {
 					ss << " (li-" << __TIMESTAMP__ 
 					<< ") br:" << myRaspistillSetting.brightness 
 					<< " WBR:" << asiWBR 
@@ -1000,6 +1000,7 @@ int main(int argc, char *argv[])
             else if (strcmp(argv[i], "-debuglevel") == 0)
             {
                 debugLevel = atoi(argv[++i]);
+				myModeMeanSetting.debugLevel = debugLevel;
             }
 			else if (strcmp(argv[i], "-showTime") == 0 || strcmp(argv[i], "-time") == 0)
 			{
@@ -1330,13 +1331,13 @@ displayDebugText(debugText, 3);
 
 			if (myModeMeanSetting.mode_mean) {
 				RPiHQcalcMean(fileName, asiNightExposure, asiNightGain, myRaspistillSetting, myModeMeanSetting);
-				if (myModeMeanSetting.info >= 2)
-					printf("asiExposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure, (double) myRaspistillSetting.shutter / 1000000.0, myModeMeanSetting.quickstart);
+				if (myModeMeanSetting.debugLevel >= 2)
+					printf("asiExposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure, (double) myRaspistillSetting.shutter_us / 1000000.0, myModeMeanSetting.quickstart);
 				if (myModeMeanSetting.quickstart) {
 					currentDelay = 1000;
 				}
 				else if ((dayOrNight == "NIGHT")) {
-					currentDelay = (asiNightExposure / 1000) - (int) (myRaspistillSetting.shutter / 1000.0) + nightDelay;
+					currentDelay = (asiNightExposure / 1000) - (int) (myRaspistillSetting.shutter_us / 1000.0) + nightDelay;
 				}
 				else {
 					currentDelay = dayDelay;

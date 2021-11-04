@@ -38,7 +38,7 @@ usage_and_exit()
 	retcode=${1}
 	echo
 	[ ${retcode} -ne 0 ] && echo -en "${RED}"
-	echo "Usage: ${ME_USAGE} [--silent] [--silent2] [-k] [-s] [-t] DATE"
+	echo "Usage: ${ME_USAGE} [--silent] [-k] [-s] [-t] DATE"
 	[ ${retcode} -ne 0 ] && echo -en "${NC}"
 	echo "    where:"
 	echo "      'DATE' is the day in '${ALLSKY_IMAGES}' to process"
@@ -57,12 +57,6 @@ if [ "${1}" = "--silent" -o "${TYPE}" = "UPLOAD" ] ; then
 else
 	SILENT="false"
 	UPLOAD_SILENT="--silent"
-fi
-if [ "${1}" = "--silent2" ] ; then	# for final message
-	SILENT2="true"
-	shift
-else
-	SILENT2="false"
 fi
 
 [ "${1}" = "-h" -o "${1}" = "--help" ] && usage_and_exit 0
@@ -207,7 +201,7 @@ if [ "${DO_TIMELAPSE}" = "true" ] ; then
 fi
 
 
-if [ "${TYPE}" = "GENERATE" -a ${SILENT2} = "false" ]; then
+if [ "${TYPE}" = "GENERATE" -a ${SILENT} = "false" ]; then
 	ARGS=""
 	[ "${DO_KEOGRAM}" = "true" ] && ARGS="${ARGS} -k"
 	[ "${DO_STARTRAILS}" = "true" ] && ARGS="${ARGS} -s"

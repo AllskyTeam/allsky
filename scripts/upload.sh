@@ -133,11 +133,6 @@ else # sftp/ftp
 		cat "${LOG}"
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
-
-	elif tty --silent && [ "${SILENT}" = "false" ]; then
-		echo -en "${YELLOW}"
-		echo -n "INFO: '${LFTP_CMDS}' contains the lftp commands used to upload the file."
-		echo -e "${NC}"
 	fi
 fi
 

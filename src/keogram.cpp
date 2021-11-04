@@ -32,9 +32,11 @@ using namespace std;
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
 
+using namespace cv;
+
 struct config_t {
   std::string img_src_dir, img_src_ext, dst_keogram;
-  bool labels_enabled, keogram_enabled, parse_filename, junk;
+  bool labels_enabled, keogram_enabled, parse_filename, junk, img_expand, channel_info;
   int img_width;
   int img_height;
   int fontFace;
@@ -43,10 +45,12 @@ struct config_t {
   int verbose;
   int num_threads;
   int nice_level;
+  int num_img_expand;
   uint8_t a, r, g, b;
   double fontScale;
   double rotation_angle;
   double brightness_limit;
+  int fixed_channel_number;
 } config;
 
 std::mutex stdio_mutex;
@@ -59,7 +63,8 @@ void keogram_worker(int,               // thread num
                     glob_t*,           // file list
                     std::mutex*,       // mutex
                     cv::Mat*,          // accumulated
-                    cv::Mat*           // annotations
+                    cv::Mat*,          // annotations
+                    cv::Mat*           // mask
 );
 
 void keogram_worker(int thread_num,
@@ -67,8 +72,9 @@ void keogram_worker(int thread_num,
                     glob_t* files,
                     std::mutex* mtx,
                     cv::Mat* acc,
-                    cv::Mat* ann) {
-  int start_num, end_num, batch_size, prevHour = -1, nchan = 0;
+                    cv::Mat* ann,
+                    cv::Mat* mask) {
+  int start_num, end_num, batch_size, prevHour = -1, nchan = cf->fixed_channel_number;  // first maybe overexposed images (mono !) making problems 
   unsigned long nfiles = files->gl_pathc;
   cv::Mat thread_accumulator;
 
@@ -169,7 +175,17 @@ void keogram_worker(int thread_num,
     if (acc->empty()) {
       mtx->lock();
       if (acc->empty()) {
-        acc->create(imagesrc.rows, nfiles, imagesrc.type());
+        // expand ?
+        if (cf->img_expand) {
+          cf->num_img_expand = std::max(1, (int) (imagesrc.cols / (float) nfiles));
+        }
+        // channel_info ?
+        if (cf->channel_info) {
+          // create mask
+          *mask = cv::Mat::zeros(imagesrc.size(), CV_8U);
+        	cv::circle(*mask, cv::Point(mask->cols/2, mask->rows/2), mask->rows/3, cv::Scalar(255, 255, 255), -1, 8, 0);
+        }
+        acc->create(imagesrc.rows, nfiles * cf->num_img_expand , imagesrc.type());
         if (cf->verbose > 1) {
           stdio_mutex.lock();
           fprintf(stderr, "thread %d initialized accumulator\n", thread_num);
@@ -181,7 +197,10 @@ void keogram_worker(int thread_num,
 
     // Copy middle column to destination
     // locking not required - we have absolute index into the accumulator
-    imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(f));
+    int destCol = f * cf->num_img_expand;
+    for (int i=0; i < cf->num_img_expand; i++) {
+      imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(destCol+i));   //copy
+    }
 
     if (cf->labels_enabled) {
       struct tm ft;  // the time of the file, by any means necessary
@@ -198,17 +217,79 @@ void keogram_worker(int thread_num,
         stat(filename, &s);
         struct tm* t = localtime(&s.st_mtime);
         ft.tm_hour = t->tm_hour;
+        ft.tm_mday = t->tm_mday;
+        ft.tm_mon = t->tm_mon +1;
+        ft.tm_year = t->tm_year+1900;
       }
 
       // record the annotation
       if (ft.tm_hour != prevHour) {
         if (prevHour != -1) {
           mtx->lock();
-          cv::Mat a = (cv::Mat_<int>(1, 2) << f, ft.tm_hour);
+          cv::Mat a = (cv::Mat_<int>(1, 5) << destCol, ft.tm_hour, ft.tm_year, ft.tm_mon, ft.tm_mday);
           ann->push_back(a);
           mtx->unlock();
         }
         prevHour = ft.tm_hour;
+      }
+    }
+    if (cf->channel_info) {
+      Scalar mean_scalar = cv::mean(imagesrc, *mask);
+      Vec3b color;
+      double mean;
+      double mean_Sum;
+      double mean_maxValue = 255.0/100.0;
+
+      // Scale to 0-1 range
+      switch (imagesrc.depth())
+      {
+        case CV_8U:
+          mean_maxValue = 255.0/100.0;
+          break;
+        case CV_16U:
+          mean_maxValue = 65535.0/100.0;
+          break;
+      }
+
+      switch (imagesrc.channels())
+      {
+        default: // mono case - not used for channel info
+          mean = mean_scalar.val[0] / mean_maxValue;
+          break;
+        case 3: // color
+        case 4:
+          // background
+          for (int i=0; i < cf->num_img_expand; i++) {
+            line( *acc, Point(destCol+i,0), Point(destCol+i,100),  Scalar( 255, 255, 255 ), 1,  LINE_8 );
+          }
+          // grid
+          color.val[0] = 127;
+          color.val[1] = 127;
+          color.val[2] = 127;
+          for (int j=0; j <= 10; j++) {
+            acc->at<cv::Vec3b>(Point(destCol,100-10*j)) = color;
+          } 
+          // values          
+          mean_Sum = 0;
+          for (int channel=0; channel <= 2; channel++) {
+            mean = mean_scalar[channel] / mean_maxValue;
+            mean_Sum += mean;
+            color.val[0] = 0;
+            color.val[1] = 0;
+            color.val[2] = 0;
+            color.val[channel] = 255;
+            for (int i=0; i < cf->num_img_expand; i++) {
+              acc->at<cv::Vec3b>(Point(destCol+i,100-mean)) = color;
+            }
+          }
+          mean_Sum = mean_Sum / 3.0;
+          color.val[0] = 0;
+          color.val[1] = 0;
+          color.val[2] = 0;
+          for (int i=0; i < cf->num_img_expand; i++) {
+            acc->at<cv::Vec3b>(Point(destCol+i,100-mean_Sum)) = color;
+          }
+          break;
       }
     }
   }
@@ -241,12 +322,45 @@ void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
                                           cf->lineWidth, &baseline);
 
       if (ann->at<int>(r, 0) - textSize.width >= 0) {
+        // black background
+        cv::putText(*acc, text,
+                    cv::Point(ann->at<int>(r, 0) - textSize.width, 
+                    acc->rows - (textSize.height)),
+                    cf->fontFace, cf->fontScale,
+                    cv::Scalar(0, 0, 0), cf->lineWidth+2,
+                    cf->fontType);
         cv::putText(*acc, text,
                     cv::Point(ann->at<int>(r, 0) - textSize.width,
-                              acc->rows - textSize.height),
+                    acc->rows - textSize.height),
                     cf->fontFace, cf->fontScale,
                     cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
                     cf->fontType);
+      }
+
+      if (ann->at<int>(r, 1) == 0) {
+        // Draw date
+        char    time_buf[256];
+        snprintf(time_buf, 256, "%02d-%02d-%02d", ann->at<int>(r, 3), ann->at<int>(r, 4), ann->at<int>(r, 2));
+        std::string text(time_buf);
+        cv::Size textSize = cv::getTextSize(text, cf->fontFace, cf->fontScale,
+                                          cf->lineWidth, &baseline);
+
+        if (ann->at<int>(r, 0) - textSize.width >= 0) {
+          // black background
+          cv::putText(*acc, text,
+                      cv::Point(ann->at<int>(r, 0) - textSize.width, 
+                      acc->rows - (2.5 * textSize.height)),
+                      cf->fontFace, cf->fontScale,
+                      cv::Scalar(0, 0, 0), cf->lineWidth+2,
+                      cf->fontType);
+          // Text
+          cv::putText(*acc, text,
+                      cv::Point(ann->at<int>(r, 0) - textSize.width, 
+                      acc->rows - (2.5 * textSize.height)),
+                      cf->fontFace, cf->fontScale,
+                      cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
+                      cf->fontType);
+        }
       }
     }
   }
@@ -267,6 +381,10 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
   cf->verbose = cf->img_width = cf->img_height = 0;
   cf->num_threads = ncpu;
   cf->nice_level = 10;
+  cf->img_expand = false;
+  cf->num_img_expand = 1;
+  cf->channel_info = false;
+  cf->fixed_channel_number = 0;
 
   while (1) {  // getopt loop
     int option_index = 0;
@@ -287,9 +405,12 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         {"no-label", no_argument, 0, 'n'},
         {"verbose", no_argument, 0, 'v'},
         {"help", no_argument, 0, 'h'},
+        {"image-expand", no_argument, 0, 'x'},
+        {"channel-info", no_argument, 0, 'c'},
+        {"fixed-channel-number", required_argument, 0, 'f'},
         {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "d:e:o:r:s:C:L:N:S:T:Q:q:npvh", long_options,
+    c = getopt_long(argc, argv, "d:e:o:r:s:L:C:N:S:T:Q:q:f:npvhxc", long_options,
                     &option_index);
     if (c == -1)
       break;
@@ -305,6 +426,15 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
         break;
       case 'o':
         cf->dst_keogram = optarg;
+        break;
+      case 'x':
+        cf->img_expand = true;
+        break;
+      case 'c':
+        cf->channel_info = true;
+        break;
+      case 'f':
+        cf->fixed_channel_number = atoi(optarg);
         break;
       case 'p':
         cf->parse_filename = true;
@@ -427,6 +557,9 @@ void usage_and_exit(int x) {
   std::cout
       << "-q | --nice-level <int> : nice(2) level of processing threads (10)"
       << std::endl;
+  std::cout << "-x | --image-expand : expand image to get the proportions of source" << std::endl;
+  std::cout << "-c | --channel-info : show channel infos - mean value of R/G/B" << std::endl;
+  std::cout << "-f | --fixed-channel-number <int> : define number of channels 0=auto, 1=mono, 3=rgb (0=auto)" << std::endl;
 
   std::cout << KNRM << std::endl;
   std::cout
@@ -502,6 +635,7 @@ int main(int argc, char* argv[]) {
   std::mutex accumulated_mutex;
   cv::Mat accumulated;
   cv::Mat annotations;
+  cv::Mat mask;
   annotations.create(0, 2, CV_32S);
   annotations = -1;
 
@@ -509,7 +643,7 @@ int main(int argc, char* argv[]) {
   for (int tid = 0; tid < config.num_threads; tid++)
     threadpool.push_back(std::thread(keogram_worker, tid, &config, &files,
                                      &accumulated_mutex, &accumulated,
-                                     &annotations));
+                                     &annotations, &mask));
 
   for (auto& t : threadpool)
     t.join();

@@ -1139,6 +1139,7 @@ int main(int argc, char *argv[])
 	printf(" Longitude: %s\n", longitude);
 	printf(" Sun Elevation: %s\n", angle);
 	// printf(" Preview: %s\n", yesNo(preview));
+    printf(" Debug Level: %d\n", debugLevel);
 	printf(" Time: %s\n", yesNo(time));
 	printf(" Show Details: %s\n", yesNo(showDetails));
 	printf(" Darkframe: %s\n", yesNo(darkframe));

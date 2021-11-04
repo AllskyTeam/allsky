@@ -113,6 +113,7 @@ fi
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
 # set FFLOG=info in config.sh if you want to see what's going on for debugging.
+# TODO: remove ${TIMELAPSE_PARAMETERS} after 0.8.5 since it's the old name.
 OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
 ffmpeg -y -f image2 \
 	-loglevel ${FFLOG} \
@@ -123,7 +124,7 @@ ffmpeg -y -f image2 \
 	-pix_fmt ${PIX_FMT} \
 	-movflags +faststart \
 	$SCALE \
-	${TIMELAPSE_PARAMETERS} \
+	${TIMELAPSE_EXTRA_PARAMETERS} ${TIMELAPSE_PARAMETERS} \
 	"${OUTPUT_FILE}" >> "${TMP}" 2>&1
 
 if [ $? -ne -0 ]; then

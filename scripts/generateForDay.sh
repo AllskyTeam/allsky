@@ -78,12 +78,12 @@ if [ "${DATE}" = "" ]; then
 	echo -e "${ME}: ${RED}ERROR: No date specified!${NC}"
 	usage_and_exit 1
 fi
-#### echo K=$DO_KEOGRAM, S=$DO_STARTRAILS, T=$DO_TIMELAPSE, DATE=$DATE
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
 if [ ! -d "${DATE_DIR}" ] ; then
 	echo -e "${ME}: ${RED}ERROR: '${DATE_DIR}' not found!${NC}"
 	exit 2
 fi
+#### echo K=$DO_KEOGRAM, S=$DO_STARTRAILS, T=$DO_TIMELAPSE, DATE=$DATE
 
 if [ "${DO_KEOGRAM}" = "true" ] ; then
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
@@ -93,8 +93,14 @@ if [ "${DO_KEOGRAM}" = "true" ] ; then
 		echo -e "===== Generating Keogram"
 		mkdir -p "${DATE_DIR}/keogram"
 
-		"${ALLSKY_HOME}/keogram" -d "${DATE_DIR}" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_EXTRA_PARAMETERS}
-		[ $? -eq 0 ] && echo -e "Completed"
+		# In order for the shell to treat the single quotes correctly, need to run in separate bash
+		CMD="'${ALLSKY_HOME}/keogram' -d '${DATE_DIR}' -e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
+		echo ${CMD} | bash
+		if [ $? -eq 0 ]; then
+			echo -e "Completed"
+		else
+			echo "Command Failed: ${CMD}"
+		fi
 	else
 		if [ -s "${UPLOAD_FILE}" ]; then
 			# If the user specified a different name for the destination file, use it.
@@ -121,8 +127,13 @@ if [ "${DO_STARTRAILS}" = "true" ] ; then
 		echo -e "===== Generating Startrails, threshold=${BRIGHTNESS_THRESHOLD}"
 		mkdir -p "${DATE_DIR}/startrails"
 
-		"${ALLSKY_HOME}/startrails" -d "${DATE_DIR}/" -e ${EXTENSION} -b "${BRIGHTNESS_THRESHOLD}" -o "${UPLOAD_FILE}"
-		[ $? -eq 0 ] && echo -e "Completed"
+		CMD="'${ALLSKY_HOME}/startrails' -Q 1 ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}'"
+		echo ${CMD} | bash
+		if [ $? -eq 0 ]; then
+			echo -e "Completed"
+		else
+			echo "Command Failed: ${CMD}"
+		fi
 	else
 		if [ -s "${UPLOAD_FILE}" ]; then
 			if [ "${STARTRAILS_DESTINATION_NAME}" != "" ]; then

@@ -61,9 +61,12 @@ if [[ ${KEOGRAM} == "true" ]]; then
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/keogram/${KEOGRAM_FILE}"
 
-	"${ALLSKY_HOME}/keogram" ${SIZE_FILTER} -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_EXTRA_PARAMETERS}
+	# In order for the shell to treat the single quotes correctly, need to run in separate bash
+	CMD="'${ALLSKY_HOME}/keogram' ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
+	echo ${CMD} | bash
 	RETCODE=$?
-	test $RETCODE -eq 0 || echo "Command Failed: ${ALLSKY_HOME}/keogram" ${SIZE_FILTER} -d "${DATE_DIR}/" -e ${EXTENSION} -o "${UPLOAD_FILE}" ${KEOGRAM_EXTRA_PARAMETERS}
+	test $RETCODE -eq 0 || echo "Command Failed: ${CMD}"
+
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RETCODE} = 0 ]] ; then
 		# If the user specified a different name for the destination file, use it.
 		if [ "${KEOGRAM_DESTINATION_NAME}" != "" ]; then
@@ -88,9 +91,11 @@ if [[ ${STARTRAILS} == "true" ]]; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/startrails/${STARTRAILS_FILE}"
 
-	"${ALLSKY_HOME}/startrails" ${SIZE_FILTER} -d "${DATE_DIR}" -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o "${UPLOAD_FILE}"
+	CMD="'${ALLSKY_HOME}/startrails' ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}'"
+	echo ${CMD} | bash
 	RETCODE=$?
-	test $RETCODE -eq 0 || echo "Command Failed: ${ALLSKY_HOME}/startrails" ${SIZE_FILTER} -d "${DATE_DIR}" -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o "${UPLOAD_FILE}"
+	test $RETCODE -eq 0 || echo "Command Failed: ${CMD}"
+
 	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RETCODE} == 0 ]] ; then
 		# If the user specified a different name for the destination file, use it.
 		if [ "${STARTRAILS_DESTINATION_NAME}" != "" ]; then
@@ -114,6 +119,7 @@ if [[ ${TIMELAPSE} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Timelapse"
 	"${ALLSKY_SCRIPTS}/timelapse.sh" "${DATE}"
 	RETCODE=$?
+
 	if [[ ${UPLOAD_VIDEO} == "true" && ${RETCODE} == 0 ]] ; then
 		VIDEOS_FILE="allsky-${DATE}.mp4"
 		UPLOAD_FILE="${DATE_DIR}/${VIDEOS_FILE}"

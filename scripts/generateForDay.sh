@@ -26,20 +26,26 @@ source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_SCRIPTS}/filename.sh"
 [ "${TYPE}" = "UPLOAD" ] && source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
+# If we're on a tty we are being invoked manually so no need to display ${ME} in error messages.
+if tty --silent ; then
+	ME=""
+else
+	ME="${ME_USAGE}: "	# include trailing space
+fi
 
 usage_and_exit()
 {
 	retcode=${1}
 	echo
 	[ ${retcode} -ne 0 ] && echo -en "${RED}"
-	echo -e "Usage: ${ME} [-k] [-s] [-t] DATE"
+	echo "Usage: ${ME_USAGE} [-k] [-s] [-t] DATE"
 	[ ${retcode} -ne 0 ] && echo -en "${NC}"
-	echo -e "    where:"
-	echo -e "      'DATE' is the day in '${ALLSKY_IMAGES}' to process"
-	echo -e "      'k' is to ${MSG1} a keogram"
-	echo -e "      's' is to ${MSG1} a startrail"
-	echo -e "      't' is to ${MSG1} a timelapse"
-	echo -e "    If you don't specify k, s, or t, all three will be ${MSG2}."
+	echo "    where:"
+	echo "      'DATE' is the day in '${ALLSKY_IMAGES}' to process"
+	echo "      'k' is to ${MSG1} a keogram"
+	echo "      's' is to ${MSG1} a startrail"
+	echo "      't' is to ${MSG1} a timelapse"
+	echo "    If you don't specify k, s, or t, all three will be ${MSG2}."
 	exit ${retcode}
 }
 [ "${1}" = "-h" -o "${1}" = "--help" ] && usage_and_exit 0
@@ -66,7 +72,7 @@ else
 		elif [ "${1}" = "-t" ] ; then
 			DO_TIMELAPSE="true"
 		elif [ "${1:0:1}" = "-" ]; then
-			echo "Unknown image type: '${1}'; ignoring."
+			echo -e "${YELLOW}${ME}Unknown image type: '${1}'; ignoring.${NC}"
 		fi
 		shift
 	done
@@ -75,12 +81,12 @@ fi
 
 DATE="${DATE:-${1}}"
 if [ "${DATE}" = "" ]; then
-	echo -e "${ME}: ${RED}ERROR: No date specified!${NC}"
+	echo -e "${RED}${ME}ERROR: No date specified!${NC}"
 	usage_and_exit 1
 fi
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
 if [ ! -d "${DATE_DIR}" ] ; then
-	echo -e "${ME}: ${RED}ERROR: '${DATE_DIR}' not found!${NC}"
+	echo -e "${RED}${ME}ERROR: '${DATE_DIR}' not found!${NC}"
 	exit 2
 fi
 #### echo K=$DO_KEOGRAM, S=$DO_STARTRAILS, T=$DO_TIMELAPSE, DATE=$DATE
@@ -99,7 +105,7 @@ if [ "${DO_KEOGRAM}" = "true" ] ; then
 		if [ $? -eq 0 ]; then
 			echo -e "Completed"
 		else
-			echo "Command Failed: ${CMD}"
+			echo -e "${RED}${ME}Command Failed: ${CMD}${NC}"
 		fi
 	else
 		if [ -s "${UPLOAD_FILE}" ]; then
@@ -132,7 +138,7 @@ if [ "${DO_STARTRAILS}" = "true" ] ; then
 		if [ $? -eq 0 ]; then
 			echo -e "Completed"
 		else
-			echo "Command Failed: ${CMD}"
+			echo -e "${RED}${ME}Command Failed: ${CMD}${NC}"
 		fi
 	else
 		if [ -s "${UPLOAD_FILE}" ]; then

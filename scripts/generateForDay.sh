@@ -38,7 +38,7 @@ usage_and_exit()
 	retcode=${1}
 	echo
 	[ ${retcode} -ne 0 ] && echo -en "${RED}"
-	echo "Usage: ${ME_USAGE} [--silent] [-k] [-s] [-t] DATE"
+	echo "Usage: ${ME_USAGE} [--silent] [--silent2] [-k] [-s] [-t] DATE"
 	[ ${retcode} -ne 0 ] && echo -en "${NC}"
 	echo "    where:"
 	echo "      'DATE' is the day in '${ALLSKY_IMAGES}' to process"
@@ -57,6 +57,12 @@ if [ "${1}" = "--silent" -o "${TYPE}" = "UPLOAD" ] ; then
 else
 	SILENT="false"
 	UPLOAD_SILENT="--silent"
+fi
+if [ "${1}" = "--silent2" ] ; then	# for final message
+	SILENT2="true"
+	shift
+else
+	SILENT2="false"
 fi
 
 [ "${1}" = "-h" -o "${1}" = "--help" ] && usage_and_exit 0
@@ -101,7 +107,7 @@ if [ ! -d "${DATE_DIR}" ] ; then
 	exit 2
 fi
 
-# echo -e "K=${DO_KEOGRAM}, S=${DO_STARTRAILS}, T=${DO_TIMELAPSE}\nDATE_DIR=${DATE_DIR}"; exit
+#### echo -e "K=${DO_KEOGRAM}, S=${DO_STARTRAILS}, T=${DO_TIMELAPSE}\nDATE_DIR=${DATE_DIR}"; exit
 
 if [ "${TYPE}" = "GENERATE" ]; then
 	generate()
@@ -191,7 +197,7 @@ if [ "${DO_TIMELAPSE}" = "true" ] ; then
 	UPLOAD_FILE="${DATE_DIR}/${VIDEOS_FILE}"
 	if [ "${TYPE}" = "GENERATE" ]; then
 		CMD="'${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE} ${TIMELAPSE_EXTRA_PARAMETERS}"
-		generate "Timelapse" "" "${CMD}"	# "" as 2nd argument because it creates the necessary directory
+		generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 		let EXIT_CODE=${EXIT_CODE}+${?}
 	else
 		upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
@@ -201,7 +207,7 @@ if [ "${DO_TIMELAPSE}" = "true" ] ; then
 fi
 
 
-if [ "${TYPE}" = "GENERATE" -a ${SILENT} = "false" ]; then
+if [ "${TYPE}" = "GENERATE" -a ${SILENT2} = "false" ]; then
 	ARGS=""
 	[ "${DO_KEOGRAM}" = "true" ] && ARGS="${ARGS} -k"
 	[ "${DO_STARTRAILS}" = "true" ] && ARGS="${ARGS} -s"

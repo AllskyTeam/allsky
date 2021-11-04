@@ -22,29 +22,25 @@ fi
 
 ME="$(basename "${BASH_ARGV0}")"
 
+# TODO: Use getopt() so arguments can be in any order
 if [ $# -lt 3 ] ; then
-	# When run manually, the uniqueID (arg $4) normally won't be given.
+	# When run manually, the unique_name (arg $4) normally won't be given.
 	echo -en "${RED}"
-	echo -n "*** Usage: ${ME} [--silent]  file_to_upload  directory  destination_file_name"
+	echo -n "*** Usage: ${ME} [--silent]  file_to_upload  directory  destination_file_name [unique_name] [local_directory]"
 	echo -e "${NC}"
 	echo "Where:"
 	echo "   '--silent' doesn't display any status messages"
 	echo "   'file_to_upload' is the path name of the file you want to upload."
 	echo "   'directory' is the directory ON THE SERVER the file should be uploaded to."
 	echo "   'destination_file_name' is the name the file should be called ON THE SERVER."
+	echo "   'unique_name' is an optional, temporary name to use when uploading the file."
+	echo "   'local_directory' is the name of an optional local directory the file should be"
+	echo "        copied to in addition to being uploaded."
 	echo
 	echo -n "For example: ${ME}  keogram-20210710.jpg  /keograms  keogram.jpg"
 	exit 1
 fi
 FILE_TO_UPLOAD="${1}"
-REMOTE_DIR="${2}"
-DESTINATION_FILE="${3}"
-if [ "${4}" = "" ] ; then
-	TEMP_NAME="x-${RANDOM}"
-else
-	TEMP_NAME="${4}-${RANDOM}"
-fi
-
 if [ ! -f "${FILE_TO_UPLOAD}" ] ; then
 	echo -en "${RED}"
 	echo -n "*** ${ME}: ERROR: File to upload '${FILE_TO_UPLOAD}' not found!"
@@ -52,6 +48,20 @@ if [ ! -f "${FILE_TO_UPLOAD}" ] ; then
 	exit 2
 fi
 
+REMOTE_DIR="${2}"
+DESTINATION_FILE="${3}"
+if [ "${4}" = "" ] ; then
+	TEMP_NAME="x-${RANDOM}"
+else
+	TEMP_NAME="${4}-${RANDOM}"
+fi
+COPY_TO="${5}"
+if [ "${COPY_TO}" != "" -a ! -d "${COPY_TO}" ] ; then
+	echo -en "${RED}"
+	echo -n "*** ${ME}: ERROR: '${COPY_TO}' directory not found!"
+	echo -e "${NC}"
+	exit 2
+fi
 
 # "put" to a temp name, then move the temp name to the final name.
 # This is useful with slow uplinks where multiple lftp requests can be running at once,
@@ -134,6 +144,16 @@ else # sftp/ftp
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
 	fi
+fi
+
+# If a local directory was also specified, copy the file there.
+if [ ${RET} -eq 0 -a "${COPY_TO}" != "" ]; then
+	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
+		# No need to specify the file being copied again since we did so above.
+		echo "${ME}: Also copying to ${COPY_TO}/${DESTINATION_FILE}"
+	fi
+	cp "${FILE_TO_UPLOAD}" "${COPY_TO}/${DESTINATION_FILE}"
+	RET=$?
 fi
 
 exit ${RET}

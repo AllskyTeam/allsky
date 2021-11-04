@@ -176,7 +176,7 @@ if [ "${DO_STARTRAILS}" = "true" ] ; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/startrails/${STARTRAILS_FILE}"
 	if [ "${TYPE}" = "GENERATE" ]; then
-		CMD="'${ALLSKY_HOME}/startrails' ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}'"
+		CMD="'${ALLSKY_HOME}/startrails' ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' ${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
 		let EXIT_CODE=${EXIT_CODE}+${?}
 	else
@@ -190,8 +190,8 @@ if [ "${DO_TIMELAPSE}" = "true" ] ; then
 	VIDEOS_FILE="allsky-${DATE}.mp4"
 	UPLOAD_FILE="${DATE_DIR}/${VIDEOS_FILE}"
 	if [ "${TYPE}" = "GENERATE" ]; then
-		CMD="'${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE}"
-		generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
+		CMD="'${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE} ${TIMELAPSE_EXTRA_PARAMETERS}"
+		generate "Timelapse" "" "${CMD}"	# "" as 2nd argument because it creates the necessary directory
 		let EXIT_CODE=${EXIT_CODE}+${?}
 	else
 		upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"

@@ -23,15 +23,6 @@ else
 	DATE=$(date -d '12 hours ago' +'%Y%m%d')
 fi
 
-# Nasty JQ trick to compose a widthxheight string if both width and height
-# are defined in the config file and are non-zero. If this check fails, then
-# IMGSIZE will be empty and it won't be used later on. If the check passes
-# a non-empty string (eg. IMGSIZE="1280x960") will be produced and later
-# parts of this script such as startrail and keogram generation can use it
-# to reject incorrectly sized images.
-IMGSIZE=$(jq 'if .width? != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end' "${CAMERA_SETTINGS}" | tr -d '"')
-test -n "${IMGSIZE}" && SIZE_FILTER="-s ${IMGSIZE}"
-
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
 if [ ! -d "${DATE_DIR}" ] ; then
 	echo -e "${ME}: ${RED}ERROR: '${DATE_DIR}' not found!${NC}"
@@ -40,9 +31,8 @@ fi
 
 # Post end of night data. This includes next twilight time
 if [[ ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
-	echo -e "${ME}: Posting next twilight time to let server know when to resume liveview\n"
+	echo -e "${ME}: ===== Posting twilight data"
 	"${ALLSKY_SCRIPTS}/postData.sh"
-	echo -e "\n"
 fi
 
 # Remove corrupt images before generating keograms and startrails.
@@ -51,65 +41,26 @@ fi
 if [[ "${REMOVE_BAD_IMAGES}" == "true" ]]; then
 	echo -e "${ME}: ===== Removing bad images"
 	"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${DATE_DIR}"
-	echo
 fi
 
 # Generate keogram from collected images
 if [[ ${KEOGRAM} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Keogram"
-	mkdir -p "${DATE_DIR}/keogram/"
-	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
-	UPLOAD_FILE="${DATE_DIR}/keogram/${KEOGRAM_FILE}"
-
-	# In order for the shell to treat the single quotes correctly, need to run in separate bash
-	CMD="'${ALLSKY_HOME}/keogram' ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
-	echo ${CMD} | bash
-	RETCODE=$?
-	test $RETCODE -eq 0 || echo "Command Failed: ${CMD}"
-
-	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RETCODE} = 0 ]] ; then
-		# If the user specified a different name for the destination file, use it.
-		if [ "${KEOGRAM_DESTINATION_NAME}" != "" ]; then
-			KEOGRAM_FILE="${KEOGRAM_DESTINATION_NAME}"
-		fi
-		"${ALLSKY_SCRIPTS}/upload.sh" "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" "Keogram"
-
-		# Optionally copy to the local website in addition to the upload above.
-		if [ "${WEB_KEOGRAM_DIR}" != "" ]; then
-			echo "${ME}: Copying ${UPLOAD_FILE} to ${WEB_KEOGRAM_DIR}"
-			cp ${UPLOAD_FILE} "${WEB_KEOGRAM_DIR}"
-		fi
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -k ${DATE}
+	RET=$?
+	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RET} = 0 ]] ; then
+		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -k ${DATE}
 	fi
-	echo
 fi
 
 # Generate startrails from collected images.
 # Threshold set to 0.1 by default in config.sh to avoid stacking over-exposed images.
 if [[ ${STARTRAILS} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Startrails"
-	mkdir -p ${DATE_DIR}/startrails/
-	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
-	UPLOAD_FILE="${DATE_DIR}/startrails/${STARTRAILS_FILE}"
-
-	CMD="'${ALLSKY_HOME}/startrails' ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}'"
-	echo ${CMD} | bash
-	RETCODE=$?
-	test $RETCODE -eq 0 || echo "Command Failed: ${CMD}"
-
-	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RETCODE} == 0 ]] ; then
-		# If the user specified a different name for the destination file, use it.
-		if [ "${STARTRAILS_DESTINATION_NAME}" != "" ]; then
-			STARTRAILS_FILE="${STARTRAILS_DESTINATION_NAME}"
-		fi
-		"${ALLSKY_SCRIPTS}/upload.sh" "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" "Startrails"
-
-		# Optionally copy to the local website in addition to the upload above.
-		if [ "${WEB_STARTRAILS_DIR}" != "" ]; then
-			echo "${ME}: Copying ${UPLOAD_FILE} to ${WEB_STARTRAILS_DIR}"
-			cp "${UPLOAD_FILE}" "${WEB_STARTRAILS_DIR}"
-		fi
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -s ${DATE}
+	if [[ ${UPLOAD_KEOGRAM} == "true" && ${?} = 0 ]] ; then
+		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -s ${DATE}
 	fi
-	echo
 fi
 
 # Generate timelapse from collected images.
@@ -117,27 +68,10 @@ fi
 # test the timelapse creation, which sometimes has issues.
 if [[ ${TIMELAPSE} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Timelapse"
-	"${ALLSKY_SCRIPTS}/timelapse.sh" "${DATE}"
-	RETCODE=$?
-
-	if [[ ${UPLOAD_VIDEO} == "true" && ${RETCODE} == 0 ]] ; then
-		VIDEOS_FILE="allsky-${DATE}.mp4"
-		UPLOAD_FILE="${DATE_DIR}/${VIDEOS_FILE}"
-		# If the user specified a different name for the destination file, use it.
-		if [ "${VIDEOS_DESTINATION_NAME}" != "" ]; then
-			VIDEOS_FILE="${VIDEOS_DESTINATION_NAME}"
-		fi
-		"${ALLSKY_SCRIPTS}/upload.sh" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "Timelapse"
-
-		# Optionally copy to the local website in addition to the upload above.
-		if [ "${WEB_VIDEOS_DIR}" != "" ]; then
-			TIMELAPSE_FILE="allsky-${DATE}.mp4"
-			UPLOAD_FILE="${DATE_DIR}/${TIMELAPSE_FILE}"
-			echo "${ME}: Copying ${UPLOAD_FILE} to ${WEB_VIDEOS_DIR}"
-			cp "${UPLOAD_FILE}" "${WEB_VIDEOS_DIR}"
-		fi
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -t ${DATE}
+	if [[ ${UPLOAD_VIDEO} == "true" && ${?} = 0 ]] ; then
+		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -t ${DATE}
 	fi
-	# timelapse.sh handled ${TMP}
 fi
 
 # Run custom script at the end of a night. This is run BEFORE the automatic deletion

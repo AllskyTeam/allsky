@@ -92,9 +92,9 @@ OUTPUT="${ALLSKY_TMP}/removeBadImages.log"
 typeset -i num_bad=0
 if which parallel > /dev/null ; then
 	if [ ${DEBUG} = "true" ]; then
-		rm="&& rm -vf {}"
-	else
 		rm=""
+	else
+		rm="&& rm -vf {}"
 	fi
 	echo ${IMAGE_FILES} | \
 		parallel -- "convert {} histogram:/dev/null 2>&1 | egrep -q ${ERROR_WORDS} ${rm}"

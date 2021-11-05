@@ -126,17 +126,17 @@ void keogram_worker(int thread_num,
 
   // last thread has more work to do if the number of images isn't multiple of
   // the number of threads
-  if ((thread_num + 1) == cf->num_threads)
+  if (thread_num == cf->num_threads)
 	end_num = nfiles - 1;
   else
 	end_num = start_num + batch_size - 1;
 
-  if (cf->verbose > 1) {
+  if (cf->verbose > 1 && cf->num_threads > 1) {
 	stdio_mutex.lock();
 	fprintf(stderr, "thread %d/%d processing files %*d-%d (%d/%lu)\n",
 		thread_num, cf->num_threads, s_len, start_num +1, end_num + 1,
 		end_num - start_num + 1, nfiles);
-	stdio_mutex.unlock();
+		stdio_mutex.unlock();
   }
 
   for (int f = start_num; f <= end_num; f++) {
@@ -169,11 +169,6 @@ void keogram_worker(int thread_num,
 	}
 
 	if (cf->rotation_angle) {
-		if (cf->verbose > 1) {
-			stdio_mutex.lock();
-			fprintf(stderr, "rotating image by %.2f\n", cf->rotation_angle);
-			stdio_mutex.unlock();
-		}
 		cv::Point2f center((imagesrc.cols - 1) / 2.0, (imagesrc.rows - 1) / 2.0);
 		cv::Mat rot = cv::getRotationMatrix2D(center, cf->rotation_angle, 1.0);
 		cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), imagesrc.size(), cf->rotation_angle).boundingRect2f();
@@ -256,6 +251,7 @@ void keogram_worker(int thread_num,
 			prevHour = ft.tm_hour;
 		}
 	}
+
 	if (cf->channel_info)
 	{
 		Scalar mean_scalar = cv::mean(imagesrc, *mask);
@@ -325,7 +321,7 @@ void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
   if (cf->labels_enabled && !ann->empty())
   {
 	for (int r = 0; r < ann->rows; r++)
-	{
+ 	{
 		// Draw a dashed line and label for hour
 		cv::LineIterator it(*acc, cv::Point(ann->at<int>(r, 0), 0), cv::Point(ann->at<int>(r, 0), acc->rows));
 		for (int i = 0; i < it.count; i++, ++it)
@@ -436,6 +432,8 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 		c = getopt_long(argc, argv, "d:e:o:r:s:L:C:N:S:T:Q:q:f:npvhxc", long_options, &option_index);
 		if (c == -1)
 			break;
+		if (cf->verbose >= 3)
+			fprintf(stderr, "Looking at [%c], optarg=[%s]\n", c, optarg);
 		switch (c)
 		{
 			case 'h':
@@ -534,19 +532,14 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 				break;
 			default:
 				break;
-		}  // option switch
-  }	// getopt loop
+		}	// option switch
+  	}		// getopt loop
 }
 
 void usage_and_exit(int x) {
-  std::cout
-	<< "Usage:\tkeogram -d <imagedir> -e <ext> -o <outputfile> [<other_args>]"
-	<< std::endl;
+  std::cout << "Usage:\tkeogram -d <imagedir> -e <ext> -o <outputfile> [<other_args>]" << std::endl;
   if (x)
-	std::cout
-		<< KRED
-		<< "Source directory, image extension, and output file are required"
-		<< std::endl;
+	std::cout << KRED << "Source directory, image extension, and output file are required" << std::endl;
 
   std::cout << KNRM << std::endl;
   std::cout << "Arguments:" << std::endl;
@@ -574,8 +567,7 @@ void usage_and_exit(int x) {
 	"Duplex, Complex, Triplex, ComplexSmall, ScriptSimplex, ScriptComplex" << std::endl;
   std::cout << "Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected" << std::endl;
   std::cout << KNRM << std::endl;
-  std::cout << "	ex: keogram --directory ../images/current/ --extension jpg "
-	"--output-file keogram.jpg --font-size 2" << std::endl;
+  std::cout << "	ex: keogram --directory ../images/current/ --extension jpg --output-file keogram.jpg --font-size 2" << std::endl;
   std::cout << "	ex: keogram -d . -e png -o /home/pi/allsky/keogram.jpg -n" << KNRM << std::endl;
   exit(x);
 }

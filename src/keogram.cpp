@@ -485,9 +485,13 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 				cf->verbose++;
 				break;
 			case 'C':
-				if (strchr(optarg, ' ')) {
+				// Allow space- or comma-separated numbers, or hex numbers
+				if (strchr(optarg, ' ') || strchr(optarg, ',')) {
 					int r, g, b;
-					sscanf(optarg, "%d %d %d", &b, &g, &r);
+					if (strchr(optarg, ' '))
+						sscanf(optarg, "%d %d %d", &b, &g, &r);
+					else
+						sscanf(optarg, "%d,%d,%d", &b, &g, &r);
 					cf->b = b & 0xff;
 					cf->g = g & 0xff;
 					cf->r = r & 0xff;

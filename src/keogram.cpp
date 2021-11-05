@@ -50,16 +50,24 @@ struct config_t {
   double fontScale;
   double rotation_angle;
   double brightness_limit;
-  int fixed_channel_number;
 } config;
 
 std::mutex stdio_mutex;
 int nchan = 0;
+unsigned long nfiles = 0;
+int s_len = 0;	// length in characters of nfiles, e.g. if nfiles == "1000", s_len = 4.
 
 // Read a single file and return true on success and false on error.
 // On success, set "mat".
-bool read_file(struct config_t* cf, char* filename, cv::Mat* mat)
+bool read_file(struct config_t* cf, char* filename, cv::Mat* mat, int file_num, bool verbose)
 {
+	const int msg_size = 500;
+	char msg[msg_size];
+
+	if (verbose && cf->verbose > 1) {
+		snprintf(msg, msg_size, "[%*d/%lu] %s", s_len, file_num, nfiles, filename);
+	}
+
 	*mat = cv::imread(filename, cv::IMREAD_UNCHANGED);
 	if (! mat->data || mat->empty()) {
 		if (cf->verbose) {
@@ -70,10 +78,19 @@ bool read_file(struct config_t* cf, char* filename, cv::Mat* mat)
 		return(false);
 	}
 
+	if (verbose && cf->verbose > 1) {	// should be same verbose level as above
+		stdio_mutex.lock();
+		fprintf(stderr, "%s", msg);
+		if (cf->verbose > 2)	// if printed, this is appended to the debug msg above
+			fprintf(stderr, ", channels=%d", mat->channels());
+		fprintf(stderr, "\n");
+		stdio_mutex.unlock();
+	}
+
 	if (mat->cols == 0 || mat->rows == 0) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
-			fprintf(stderr, "%s image size %dx%d is invalid\n", filename, mat->rows, mat->cols);
+			fprintf(stderr, "%s image size %dx%d is invalid; ignoring\n", filename, mat->rows, mat->cols);
 			stdio_mutex.unlock();
 		}
 		return(false);
@@ -82,8 +99,7 @@ bool read_file(struct config_t* cf, char* filename, cv::Mat* mat)
 		(mat->cols != cf->img_width || mat->rows != cf->img_height)) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
-			fprintf(stderr,
-				"%s image size %dx%d does not match expected size %dx%d\n",
+			fprintf(stderr, "%s: image size %dx%d does not match expected size %dx%d; ignoring\n",
 				filename, mat->rows, mat->cols, cf->img_width, cf->img_height);
 			stdio_mutex.unlock();
 		}
@@ -106,7 +122,7 @@ void keogram_worker(int,				// thread num
 );
 
 // Keep track of number of digits in nfiles so file numbers will be consistent width.
-char s_[10]; int s_len;
+char s_[10];
 
 void keogram_worker(int thread_num,
 					struct config_t* cf,
@@ -116,8 +132,6 @@ void keogram_worker(int thread_num,
 					cv::Mat* ann,
 					cv::Mat* mask) {
   int start_num, end_num, batch_size, prevHour = -1;
-  int nchan = cf->fixed_channel_number;  // first maybe overexposed images (mono !) making problems 
-  unsigned long nfiles = files->gl_pathc;
   cv::Mat thread_accumulator;
 
   batch_size = nfiles / cf->num_threads;
@@ -131,7 +145,7 @@ void keogram_worker(int thread_num,
   else
 	end_num = start_num + batch_size - 1;
 
-  if (cf->verbose > 1 && cf->num_threads > 1) {
+  if (cf->verbose > 2 && cf->num_threads > 1) {
 	stdio_mutex.lock();
 	fprintf(stderr, "thread %d/%d processing files %*d-%d (%d/%lu)\n",
 		thread_num, cf->num_threads, s_len, start_num +1, end_num + 1,
@@ -141,25 +155,13 @@ void keogram_worker(int thread_num,
 
   for (int f = start_num; f <= end_num; f++) {
 	char* filename = files->gl_pathv[f];
-	if (cf->verbose > 1) {
-		stdio_mutex.lock();
-		fprintf(stderr, "[%*d/%lu] %s\n", s_len, f + 1, nfiles, filename);
-		stdio_mutex.unlock();
-	}
-
 	cv::Mat imagesrc;
-	if (! read_file(cf, filename, &imagesrc)) continue;
-
-	if (cf->verbose > 1) {
-		stdio_mutex.lock();
-		fprintf(stderr, "%s: channels=%d\n", filename, imagesrc.channels());
-		stdio_mutex.unlock();
-	}
+	if (! read_file(cf, filename, &imagesrc, f+1, true)) continue;
 
 	if (imagesrc.channels() != nchan) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
-			fprintf(stderr, "repairing channel mismatch: %d != %d in '%s'\n", imagesrc.channels(), nchan, filename);
+			fprintf(stderr, "%s: repairing channel mismatch: %d != %d\n", filename, imagesrc.channels(), nchan);
 			stdio_mutex.unlock();
 		}
 		if (imagesrc.channels() < nchan)
@@ -204,7 +206,7 @@ void keogram_worker(int thread_num,
 				cv::circle(*mask, cv::Point(mask->cols/2, mask->rows/2), mask->rows/3, cv::Scalar(255, 255, 255), -1, 8, 0);
 			}
 			acc->create(imagesrc.rows, nfiles * cf->num_img_expand , imagesrc.type());
-			if (cf->verbose > 1) {
+			if (cf->verbose > 2) {
 				stdio_mutex.lock();
 				fprintf(stderr, "thread %d initialized accumulator\n", thread_num);
 				stdio_mutex.unlock();
@@ -217,7 +219,12 @@ void keogram_worker(int thread_num,
 	// locking not required - we have absolute index into the accumulator
 	int destCol = f * cf->num_img_expand;
 	for (int i=0; i < cf->num_img_expand; i++) {
-		imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(destCol+i));   //copy
+		try {
+			imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(destCol+i));   //copy
+		} catch (cv::Exception& ex) {
+			fprintf(stderr, "WARNING: internal copy of '%s' failed; ignoring\n", filename);
+			continue;
+		}
 	}
 
 	if (cf->labels_enabled) {
@@ -403,7 +410,6 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
   cf->img_expand = false;
   cf->num_img_expand = 1;
   cf->channel_info = false;
-  cf->fixed_channel_number = 0;
 
   while (1) {  // getopt loop
 	int option_index = 0;
@@ -455,7 +461,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 				cf->channel_info = true;
 				break;
 			case 'f':
-				cf->fixed_channel_number = atoi(optarg);
+				nchan = atoi(optarg);
 				break;
 			case 'p':
 				cf->parse_filename = true;
@@ -612,7 +618,8 @@ int main(int argc, char* argv[]) {
 	glob_t files;
 	std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
 	glob(wildcard.c_str(), 0, NULL, &files);
-	if (files.gl_pathc == 0) {
+	nfiles = files.gl_pathc;
+	if (nfiles == 0) {
 		globfree(&files);
 		std::cout << "No images found, exiting." << std::endl;
 		exit(1);
@@ -624,31 +631,48 @@ int main(int argc, char* argv[]) {
 	std::mutex accumulated_mutex;
 	cv::Mat accumulated;
 	cv::Mat annotations;
+	cv::Mat mask;
 	annotations.create(0, 2, CV_32S);
 	annotations = -1;
 
 	// Set the global "nchan" variable to be the number of channels in the 1st file.
 	// Any subsequent file with a different number of channels will be converted to
 	// the first file's number.
-	// If we can't read the first file, quit.
+	// Ditto for the width and height.
+	// In both cases only set the variables if not specified on the command line.
 	cv::Mat temp;
-	if (! read_file(&config, files.gl_pathv[0], &temp)) {
-		fprintf(stderr, "Unable to read first file (%s); quitting\n", files.gl_pathv[0]);
-		exit(1);
+	const int sample_file_num = 0;
+	char *sample_file = files.gl_pathv[sample_file_num];
+	if (nchan == 0 || (config.img_width == 0 && config.img_height == 0)) {
+		if (! read_file(&config, sample_file, &temp, sample_file_num+1, false)) {
+			fprintf(stderr, "Unable to read first file (%s); quitting\n", sample_file);
+			exit(1);
+		}
+		if (config.verbose > 1) {
+			fprintf(stderr, "Getting nchan and/or size from: '%s'\n", sample_file);
+		}
 	}
-	nchan = temp.channels();
-
-	if (config.rotation_angle && config.verbose > 2) {
-		stdio_mutex.lock();
-		fprintf(stderr, "rotating all images by %.2f degrees\n", config.rotation_angle);
-		stdio_mutex.unlock();
+	if (nchan == 0)
+	{
+		nchan = temp.channels();
+		if (config.verbose > 1) {
+			fprintf(stderr, "     nchan = %d\n", nchan);
+		}
+	}
+	// Set the width and height based on the same file if not specified on the command line.
+	if (config.img_width == 0 && config.img_height == 0) {
+		config.img_width = temp.cols;
+		config.img_height = temp.rows;
+		if (config.verbose > 1) {
+			fprintf(stderr, "     size = %d x %d\n", config.img_width, config.img_height);
+		}
 	}
 
 	std::vector<std::thread> threadpool;
 	for (int tid = 0; tid < config.num_threads; tid++)
 		threadpool.push_back(std::thread(keogram_worker, tid, &config, &files,
 										 &accumulated_mutex, &accumulated,
-										 &annotations));
+										 &annotations, &mask));
 
 	for (auto& t : threadpool)
 		t.join();

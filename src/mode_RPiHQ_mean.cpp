@@ -146,14 +146,15 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, raspis
     double mean_diff;
 
 	if (currentModeMeanSetting.init) {
+		currentModeMeanSetting.init = false;
 		currentModeMeanSetting.ExposureLevelMax = log(asiGain * asiExposure/1000000.0) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) + 1; 
 		currentModeMeanSetting.ExposureLevelMin = log(1.0     * 1.0        /1000000.0) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) - 1;
 		if (currentModeMeanSetting.debugLevel >= 1)
 		  printf("ExposureLevel: %1.8f ... %1.8f\n", currentModeMeanSetting.ExposureLevelMin, currentModeMeanSetting.ExposureLevelMax);
 
-		currentModeMeanSetting.mean_k0 *=currentModeMeanSetting.shuttersteps;  
-		currentModeMeanSetting.mean_k1 *=currentModeMeanSetting.shuttersteps;  
-		currentModeMeanSetting.mean_k2 *=currentModeMeanSetting.shuttersteps;  
+		//currentModeMeanSetting.mean_k0 *=currentModeMeanSetting.shuttersteps;  
+		//currentModeMeanSetting.mean_k1 *=currentModeMeanSetting.shuttersteps;  
+		//currentModeMeanSetting.mean_k2 *=currentModeMeanSetting.shuttersteps;  
 	}
 
 	// get old ExposureTime
@@ -283,7 +284,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, raspis
 		
 	    // fast forward
 		if ((fastforward) || (mean_diff > (currentModeMeanSetting.mean_threshold * 2.0))) {
-			ExposureChange = std::max(1.0, currentModeMeanSetting.mean_k0 + currentModeMeanSetting.mean_k1 * mean_diff + currentModeMeanSetting.mean_k2 * pow (mean_diff,2.0));
+			ExposureChange = std::max(1.0, currentModeMeanSetting.mean_k0 + currentModeMeanSetting.mean_k1 * mean_diff + pow (currentModeMeanSetting.mean_k2 * mean_diff,2.0));
 		}
 		// slow forward
 		else if (mean_diff > (currentModeMeanSetting.mean_threshold)) {

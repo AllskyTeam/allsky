@@ -82,7 +82,7 @@ if [ "${DARK_FRAME_SUBTRACTION}" = "true" ]; then
 		echo "${ME}: Subtracting dark frame '${CLOSEST_TEMPERATURE}.${EXTENSION}' from image with TEMPERATURE=${TEMPERATURE}"
 	fi
 	# Update the current image - don't rename it.
-	convert "${CURRENT_IMAGE}" "${DARK}" -compose minus_src -composite -type TrueColor "${CURRENT_IMAGE}"
+	convert "${CURRENT_IMAGE}" "${DARK}" -compose minus_src -composite "${CURRENT_IMAGE}"
 	if [ $? -ne 0 ]; then
 		# Exit since we don't know the state of ${CURRENT_IMAGE}.
 		echo "*** ${ME}: ERROR: 'convert' of '${DARK}' failed"

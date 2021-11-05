@@ -54,6 +54,44 @@ struct config_t {
 } config;
 
 std::mutex stdio_mutex;
+int nchan = 0;
+
+// Read a single file and return true on success and false on error.
+// On success, set "mat".
+bool read_file(struct config_t* cf, char* filename, cv::Mat* mat)
+{
+	*mat = cv::imread(filename, cv::IMREAD_UNCHANGED);
+	if (! mat->data || mat->empty()) {
+		if (cf->verbose) {
+			stdio_mutex.lock();
+			std::cout << "Error reading file " << filename << ": no data" << std::endl;
+			stdio_mutex.unlock();
+		}
+		return(false);
+	}
+
+	if (mat->cols == 0 || mat->rows == 0) {
+		if (cf->verbose) {
+			stdio_mutex.lock();
+			fprintf(stderr, "%s image size %dx%d is invalid\n", filename, mat->rows, mat->cols);
+			stdio_mutex.unlock();
+		}
+		return(false);
+	}
+	if (cf->img_height && cf->img_width &&
+		(mat->cols != cf->img_width || mat->rows != cf->img_height)) {
+		if (cf->verbose) {
+			stdio_mutex.lock();
+			fprintf(stderr,
+				"%s image size %dx%d does not match expected size %dx%d\n",
+				filename, mat->rows, mat->cols, cf->img_width, cf->img_height);
+			stdio_mutex.unlock();
+		}
+		return(false);
+	}
+
+	return(true);
+}
 
 void parse_args(int, char**, struct config_t*);
 void usage_and_exit(int);
@@ -104,27 +142,13 @@ void keogram_worker(int thread_num,
 		stdio_mutex.unlock();
 	}
 
-	cv::Mat imagesrc = cv::imread(filename, cv::IMREAD_UNCHANGED);
-	if (!imagesrc.data) {
-		if (cf->verbose) {
-			stdio_mutex.lock();
-			std::cout << "Error reading file " << filename << std::endl;
-			stdio_mutex.unlock();
-		}
-		continue;
-	}
+	cv::Mat imagesrc;
+	if (! read_file(cf, filename, &imagesrc)) continue;
 
-	if (cf->img_height && cf->img_width &&
-		(imagesrc.cols != cf->img_width || imagesrc.rows != cf->img_height)) {
-		if (cf->verbose) {
-			stdio_mutex.lock();
-			fprintf(stderr,
-				"%s image size %dx%d does not match expected size %dx%d\n",
-				filename, imagesrc.cols, imagesrc.cols, cf->img_width,
-				cf->img_height);
-			stdio_mutex.unlock();
-		}
-		continue;
+	if (cf->verbose > 1) {
+		stdio_mutex.lock();
+		fprintf(stderr, "%s: channels=%d\n", filename, imagesrc.channels());
+		stdio_mutex.unlock();
 	}
 
 	if (nchan == 0)

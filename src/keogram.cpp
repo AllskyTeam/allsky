@@ -576,60 +576,95 @@ int get_font_by_name(char* s) {
 }
 
 int main(int argc, char* argv[]) {
-  struct config_t config;
-  int i, r;
-  char* e;
+	struct config_t config;
+	int r;
 
-  parse_args(argc, argv, &config);
+	parse_args(argc, argv, &config);
 
-  if (config.verbose < 1)
-	if ((e = getenv("ALLSKY_DEBUG_LEVEL")))
-		if ((i = atoi(e)) > 0)
-			config.verbose = i;
+	if (config.img_src_dir.empty() || config.img_src_ext.empty() || config.dst_keogram.empty())
+		usage_and_exit(3);
 
-  if (config.img_src_dir.empty() || config.img_src_ext.empty() || config.dst_keogram.empty())
-	usage_and_exit(3);
+	r = setpriority(PRIO_PROCESS, 0, config.nice_level);
+	if (r) {
+		config.nice_level = getpriority(PRIO_PROCESS, 0);
+		fprintf(stderr, "unable to set nice level: %s\n", strerror(errno));
+	}
 
-  r = setpriority(PRIO_PROCESS, 0, config.nice_level);
-  if (r) {
-	config.nice_level = getpriority(PRIO_PROCESS, 0);
-	fprintf(stderr, "unable to set nice level: %s\n", strerror(errno));
-  }
+	glob_t files;
+	std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
+	glob(wildcard.c_str(), 0, NULL, &files);
+	if (files.gl_pathc == 0) {
+		globfree(&files);
+		std::cout << "No images found, exiting." << std::endl;
+		exit(1);
+	}
+	// Determine width of the number of files, e.g., "1234" is 4 characters wide.
+	sprintf(s_, "%d", (int)files.gl_pathc);
+	s_len = strlen(s_);
 
-  glob_t files;
-  std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
-  glob(wildcard.c_str(), 0, NULL, &files);
-  if (files.gl_pathc == 0) {
+	std::mutex accumulated_mutex;
+	cv::Mat accumulated;
+	cv::Mat annotations;
+	annotations.create(0, 2, CV_32S);
+	annotations = -1;
+
+	// Set the global "nchan" variable to be the number of channels in the 1st file.
+	// Any subsequent file with a different number of channels will be converted to
+	// the first file's number.
+	// If we can't read the first file, quit.
+	cv::Mat temp;
+	if (! read_file(&config, files.gl_pathv[0], &temp)) {
+		fprintf(stderr, "Unable to read first file (%s); quitting\n", files.gl_pathv[0]);
+		exit(1);
+	}
+	nchan = temp.channels();
+
+	if (config.rotation_angle && config.verbose > 2) {
+		stdio_mutex.lock();
+		fprintf(stderr, "rotating all images by %.2f degrees\n", config.rotation_angle);
+		stdio_mutex.unlock();
+	}
+
+	std::vector<std::thread> threadpool;
+	for (int tid = 0; tid < config.num_threads; tid++)
+		threadpool.push_back(std::thread(keogram_worker, tid, &config, &files,
+										 &accumulated_mutex, &accumulated,
+										 &annotations));
+
+	for (auto& t : threadpool)
+		t.join();
+
+	if (config.labels_enabled)
+		annotate_image(&annotations, &accumulated, &config);
 	globfree(&files);
-	std::cout << "No images found, exiting." << std::endl;
-	return 0;
-  }
 
-  std::mutex accumulated_mutex;
-  cv::Mat accumulated;
-  cv::Mat annotations;
-  cv::Mat mask;
-  annotations.create(0, 2, CV_32S);
-  annotations = -1;
+	// If the destination doesn't have an extension, use config.img_src_ext.
+	// We assume that anything after the "." is an extension.
+	// If not, imwrite() below will crash.
+	std::string ext = "";
+	const char* e = strrchr(config.dst_keogram.c_str(), '.');
+	if (e != NULL) {
+		ext = ++e;
+	} else {
+		ext = config.img_src_ext;
+		config.dst_keogram += "." + ext;
+	}
 
-  std::vector<std::thread> threadpool;
-  for (int tid = 0; tid < config.num_threads; tid++)
-	threadpool.push_back(std::thread(keogram_worker, tid, &config, &files,
-									 &accumulated_mutex, &accumulated,
-									 &annotations, &mask));
+	std::vector<int> compression_params;
+	if (ext == "png") {
+		compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+		compression_params.push_back(9);
+	} else if (ext == "jpg") {
+		compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
+		compression_params.push_back(95);
+	}
 
-  for (auto& t : threadpool)
-	t.join();
+	try {
+		cv::imwrite(config.dst_keogram, accumulated, compression_params);
+	} catch (cv::Exception& ex) {
+		fprintf(stderr, "ERROR: could not save keogram file: %s\n", ex.what());
+		exit(2);
+	}
 
-  if (config.labels_enabled)
-	annotate_image(&annotations, &accumulated, &config);
-  globfree(&files);
-
-  std::vector<int> compression_params;
-  compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
-  compression_params.push_back(9);
-  compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
-  compression_params.push_back(95);
-
-  cv::imwrite(config.dst_keogram, accumulated, compression_params);
+	exit(0);
 }

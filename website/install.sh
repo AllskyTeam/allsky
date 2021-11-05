@@ -12,6 +12,13 @@ echo "*** Welcome to the Allsky Website ***"
 echo "*************************************"
 echo
 
+if [ ! -d "${PORTAL_DIR}" ]; then
+	echo -e "${RED}* The website requires the WebUI to be installed.${NC}"
+	echo "Please install it by executing: sudo gui/install.sh"
+	echo
+	exit 1
+fi
+
 echo -e "${GREEN}* Fetching website files into ${WEBSITE_DIR}${NC}"
 git clone https://github.com/thomasjacquin/allsky-website.git "${WEBSITE_DIR}"
 echo
@@ -31,16 +38,17 @@ if [ ! -d startrails/thumbnails -o ! -d keograms/thumbnails -o ! -d videos/thumb
 	echo
 fi
 
-# xxxx Should set some variables in config.js based on settings_*.json and config.sh.
-# In the meantime, let the user know to do it.
 echo
 echo -e "${GREEN}* Installation complete${NC}"
 echo
 
+# xxxx TODO: Set some variables in config.js based on settings_*.json and config.sh.
+# In the meantime, let the user know to do it.
 echo "+++++++++++++++++++++++++++++++++++++"
 echo "Before using the website you need to:"
 echo "   * Edit '${WEBSITE_DIR}/config.js'"
-if [ "x${POST_END_OF_NIGHT_DATA}" != "xtrue" ]; then
+echo "   * Look at, and possibly edit '${WEBSITE_DIR}/virtualsky.json'"
+if [ "${POST_END_OF_NIGHT_DATA}" != "true" ]; then
 	echo "   * Set 'POST_END_OF_NIGHT_DATA=true' in ${ALLSKY_CONFIG}/config.sh"
 fi
 echo

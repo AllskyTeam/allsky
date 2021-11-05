@@ -105,6 +105,9 @@ void keogram_worker(int,				// thread num
 					cv::Mat*			// mask
 );
 
+// Keep track of number of digits in nfiles so file numbers will be consistent width.
+char s_[10]; int s_len;
+
 void keogram_worker(int thread_num,
 					struct config_t* cf,
 					glob_t* files,
@@ -112,12 +115,14 @@ void keogram_worker(int thread_num,
 					cv::Mat* acc,
 					cv::Mat* ann,
 					cv::Mat* mask) {
-  int start_num, end_num, batch_size, prevHour = -1, nchan = cf->fixed_channel_number;  // first maybe overexposed images (mono !) making problems 
+  int start_num, end_num, batch_size, prevHour = -1;
+  int nchan = cf->fixed_channel_number;  // first maybe overexposed images (mono !) making problems 
   unsigned long nfiles = files->gl_pathc;
   cv::Mat thread_accumulator;
 
   batch_size = nfiles / cf->num_threads;
   start_num = thread_num * batch_size;
+  thread_num++;	// so messages start at human-friendly thread 1, not 0.
 
   // last thread has more work to do if the number of images isn't multiple of
   // the number of threads
@@ -128,8 +133,8 @@ void keogram_worker(int thread_num,
 
   if (cf->verbose > 1) {
 	stdio_mutex.lock();
-	fprintf(stderr, "thread %d/%d processing files %d-%d (%d/%lu)\n",
-		thread_num + 1, cf->num_threads, start_num, end_num,
+	fprintf(stderr, "thread %d/%d processing files %*d-%d (%d/%lu)\n",
+		thread_num, cf->num_threads, s_len, start_num +1, end_num + 1,
 		end_num - start_num + 1, nfiles);
 	stdio_mutex.unlock();
   }
@@ -138,7 +143,7 @@ void keogram_worker(int thread_num,
 	char* filename = files->gl_pathv[f];
 	if (cf->verbose > 1) {
 		stdio_mutex.lock();
-		fprintf(stderr, "[%d/%lu] %s\n", f + 1, nfiles, filename);
+		fprintf(stderr, "[%*d/%lu] %s\n", s_len, f + 1, nfiles, filename);
 		stdio_mutex.unlock();
 	}
 
@@ -151,13 +156,10 @@ void keogram_worker(int thread_num,
 		stdio_mutex.unlock();
 	}
 
-	if (nchan == 0)
-		nchan = imagesrc.channels();
-
 	if (imagesrc.channels() != nchan) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
-			fprintf(stderr, "repairing channel mismatch: %d != %d\n", imagesrc.channels(), nchan);
+			fprintf(stderr, "repairing channel mismatch: %d != %d in '%s'\n", imagesrc.channels(), nchan, filename);
 			stdio_mutex.unlock();
 		}
 		if (imagesrc.channels() < nchan)
@@ -182,8 +184,9 @@ void keogram_worker(int thread_num,
 		cv::warpAffine(imagesrc, imagesrc, rot, bbox.size());
 	}
 
-	/* This seemingly redundant check saves a bunch of locking and unlocking later.
-	   Maybe all the threads will see the accumlator as empty, so they will all try grab the lock...
+	/* This seemingly redundant check saves a bunch of locking and unlocking
+	   later. Maybe all the threads will see the accumlator as empty, so they will
+	   all try grab the lock...
 
 	   The winner of that race initializes the accumulator with its image, and
 	   releases the lock. The rest of the threads will - in turn - get the lock,

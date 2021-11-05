@@ -295,7 +295,7 @@ void *SaveImgThd(void *para)
 	    // so set "cmd" before imwrite().
 	    // The temperature must be a 2-digit number with an optional "-" sign.
             sprintf(cmd, "%s %s '%s' '%2.0f' %ld &", s, dayOrNight.c_str(), fileName, (float) actualTemp/10, current_exposure_us);
-            st = cvGetTickCount();
+            st = cv::getTickCount();
             try
             {
                 result = imwrite(fileName, pRgb, compression_parameters);
@@ -304,7 +304,7 @@ void *SaveImgThd(void *para)
             {
                 printf("*** ERROR: Exception saving image: %s\n", ex.what());
             }
-            et = cvGetTickCount();
+            et = cv::getTickCount();
 
             if (result)
                 system(cmd);

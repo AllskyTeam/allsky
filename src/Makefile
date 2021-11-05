@@ -117,22 +117,22 @@ sunwait:
 	@cp sunwait-src/sunwait .
 	@echo `date +%F\ %R:%S` Done.
 
-capture:check_deps capture.cpp
+capture:capture.cpp
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC)  $@.cpp -o $@ $(CFLAGS) $(OPENCV) -lASICamera2 $(USB)
 	@echo `date +%F\ %R:%S` Done.
 
-capture_RPiHQ:check_deps capture_RPiHQ.cpp
+capture_RPiHQ:capture_RPiHQ.cpp
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC)  $@.cpp -o $@ mode_RPiHQ_mean.cpp $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
-keogram:check_deps keogram.cpp
+keogram:keogram.cpp
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC) $@.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
-startrails:check_deps startrails.cpp
+startrails:startrails.cpp
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC) $@.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.

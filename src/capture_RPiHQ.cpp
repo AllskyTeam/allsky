@@ -256,7 +256,7 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 	sprintf(debugText, "capturing image in file %s\n", fileName);
 	displayDebugText(debugText, 3);
 
-	// Ensure no rraspistill process is still running
+	// Ensure no raspistill process is still running
 	string kill = "ps -ef|grep raspistill| grep -v color|awk '{print $2}'|xargs kill -9 1> /dev/null 2>&1";
 
 	// Define char variable

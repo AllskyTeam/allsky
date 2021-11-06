@@ -14,9 +14,8 @@ struct modeMeanSetting {
 	double ExposureLevelMax = 1; 
 	double ExposureLevelMin = - 1;
     double mean_value    = 0.3;     // mean value for well exposed images
-    double mean_threshold = 0.02;   // threshold value
+    double mean_threshold = 0.015;   // threshold value
     double shuttersteps = 6.0;      // shuttersteps
-    //double fastforward = 4.0;       // magic number for fastforward  [0...10]
     int historySize = 3;            // use the last images for mean calculation
     int debugLevel = 0;             // show some debug infos
     int quickstart = 10;            // Sets the quickstart. Deactivate delay between captures for quickstart times.

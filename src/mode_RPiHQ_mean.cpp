@@ -138,36 +138,31 @@ void RPiHQmask(const char* fileName)
 }
 
 // Calculate new raspistillSettings (exposure, gain)
-void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
+// Algorithm not perfect, but better than no exposure control at all
+void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
 {
 
 	//Hauptvariablen
-    double mean;
-    double mean_diff;
+  double mean;
+  double mean_diff;
 
+	// Init some values first
 	if (currentModeMeanSetting.init) {
 		currentModeMeanSetting.init = false;
-		currentModeMeanSetting.ExposureLevelMax = log(asiGain * asiExposure/1000000.0) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) + 1; 
+		currentModeMeanSetting.ExposureLevelMax = log(asiGain * asiExposure_us/1000000.0) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) + 1; 
 		currentModeMeanSetting.ExposureLevelMin = log(1.0     * 1.0        /1000000.0) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) - 1;
 		if (currentModeMeanSetting.debugLevel >= 1)
 		  printf("ExposureLevel: %1.8f ... %1.8f\n", currentModeMeanSetting.ExposureLevelMin, currentModeMeanSetting.ExposureLevelMax);
-
-		//currentModeMeanSetting.mean_k0 *=currentModeMeanSetting.shuttersteps;  
-		//currentModeMeanSetting.mean_k1 *=currentModeMeanSetting.shuttersteps;  
-		//currentModeMeanSetting.mean_k2 *=currentModeMeanSetting.shuttersteps;  
 	}
 
 	// get old ExposureTime
 	double ExposureTime_s = (double) currentRaspistillSetting.shutter_us/1000000.0;
 
-	//std::cout <<  "RPiHQcalcMean Bild wird zur Analyse geladen" << std::endl;
-    cv::Mat image = cv::imread(fileName, cv::IMREAD_UNCHANGED);
 
-	//std::cout <<  "RPiHQcalcMean Laden fertig" << std::endl;
-    if (!image.data)
-    {
-            std::cout << "Error reading file " << basename(fileName) << std::endl;
-    }
+  cv::Mat image = cv::imread(fileName, cv::IMREAD_UNCHANGED);
+  if (!image.data) {
+    std::cout << "Error reading file " << basename(fileName) << std::endl;
+  }
 	else {
 		//Then define your mask image
 		//cv::Mat mask = cv::Mat::zeros(image.size(), image.type());
@@ -187,55 +182,47 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, raspis
 // https://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry
 // https://drive.google.com/file/d/0B6UHr3GQEkQwYnlDY2dKNTdudjg/view?resourcekey=0-a73PvBnc3a2B5wztAV0QaA
  		cv::Mat lap;
-    	cv::Laplacian(dstImage, lap, CV_64F);
+    cv::Laplacian(dstImage, lap, CV_64F);
 
-    	cv::Scalar mu, sigma;
-    	cv::meanStdDev(lap, mu, sigma);
+    cv::Scalar mu, sigma;
+    cv::meanStdDev(lap, mu, sigma);
 
-    	double focusMeasure = sigma.val[0]*sigma.val[0];
-	    if (currentModeMeanSetting.debugLevel >= 2) {
+    double focusMeasure = sigma.val[0]*sigma.val[0];
+	   if (currentModeMeanSetting.debugLevel >= 2) {
 			std::cout <<  "focusMeasure: " << focusMeasure << std::endl;
 		}
 /////////////////////////////////////////////////////////////////////////////////////
-        
+      
+    std::vector<int> compression_params;
+   	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+   	compression_params.push_back(9);
+   	compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+   	compression_params.push_back(95);
 
-    	std::vector<int> compression_params;
-    	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-    	compression_params.push_back(9);
-    	compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-    	compression_params.push_back(95);
+   	cv::imwrite("test.jpg", dstImage, compression_params);
 
-    	cv::imwrite("test.jpg", dstImage, compression_params);
-
-        //cv::Scalar mean_scalar = cv::mean(image);
-        //cv::Scalar mean_scalar = cv::mean(dstImage);
-        cv::Scalar mean_scalar = cv::mean(image, mask);
-        switch (image.channels())
-        {
-            default: // mono case
-			    std::cout <<  "mean_scalar.val[0]" << mean_scalar.val[0] << std::endl;
-                mean = mean_scalar.val[0];
-                break;
-            case 3: // for color choose maximum channel
-            case 4:
-			    //std::cout <<  "image.channels() " << image.channels() << std::endl;
-			    //std::cout <<  "mean_scalar.val[0] " << mean_scalar.val[0] << std::endl;
-			    //std::cout <<  "mean_scalar.val[1] " << mean_scalar.val[1] << std::endl;
-			    //std::cout <<  "mean_scalar.val[2] " << mean_scalar.val[2] << std::endl;
-                //mean = cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
+    cv::Scalar mean_scalar = cv::mean(image, mask);
+    switch (image.channels())
+    {
+      default: // mono case
+		    std::cout <<  "mean_scalar.val[0]" << mean_scalar.val[0] << std::endl;
+        mean = mean_scalar.val[0];
+        break;
+      case 3: // for color choose maximum channel
+      case 4:
 				mean = (mean_scalar[0] + mean_scalar[1] + mean_scalar[2]) / 3.0;
-                break;
-        }
-        // Scale to 0-1 range
-        switch (image.depth())
-        {
-            case CV_8U:
-                mean /= 255.0;
-                break;
-            case CV_16U:
-                mean /= 65535.0;
-                break;
-        }
+        break;
+    }
+    // Scale to 0-1 range
+    switch (image.depth())
+    {
+      case CV_8U:
+        mean /= 255.0;
+        break;
+      case CV_16U:
+        mean /= 65535.0;
+        break;
+    }
 		 
 		if ( currentModeMeanSetting.debugLevel >= 1) {
 			std::cout <<  basename(fileName) << " " << ExposureTime_s << " " << mean << " " << (currentModeMeanSetting.mean_value - mean) << std::endl;
@@ -274,15 +261,15 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, raspis
 
 		if (currentModeMeanSetting.debugLevel >= 3)
 			printf("values: %d\n", values);
+		
 		mean = mean / (double) values;
-
-   		mean_diff = abs(mean - currentModeMeanSetting.mean_value);
+   	mean_diff = abs(mean - currentModeMeanSetting.mean_value);
 		if (currentModeMeanSetting.debugLevel >= 2)
 			printf("mean_diff: %1.4f\n", mean_diff);
     
 		int ExposureChange = currentModeMeanSetting.shuttersteps / 2;
 		
-	    // fast forward
+	  // fast forward
 		if ((fastforward) || (mean_diff > (currentModeMeanSetting.mean_threshold * 2.0))) {
 			ExposureChange = std::max(1.0, currentModeMeanSetting.mean_k0 + currentModeMeanSetting.mean_k1 * mean_diff + pow (currentModeMeanSetting.mean_k2 * mean_diff,2.0));
 		}
@@ -298,7 +285,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, raspis
 			printf("ExposureChange: %d (%d)\n", ExposureChange, dExposureChange);
 
 		if (mean < (currentModeMeanSetting.mean_value - (currentModeMeanSetting.mean_threshold))) {
-            if ((currentRaspistillSetting.analoggain < asiGain) || (currentRaspistillSetting.shutter_us < asiExposure)) {  // obere Grenze durch Gaim und shutter
+      if ((currentRaspistillSetting.analoggain < asiGain) || (currentRaspistillSetting.shutter_us < asiExposure_us)) {  // obere Grenze durch Gaim und shutter
 				currentModeMeanSetting.ExposureLevel += ExposureChange;
 			}
 		}
@@ -312,7 +299,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, raspis
 			}
 		}
 
-		// Begrenzung 
+		// check limits of exposurelevel 
 		currentModeMeanSetting.ExposureLevel = std::max(std::min((int)currentModeMeanSetting.ExposureLevel, (int)currentModeMeanSetting.ExposureLevelMax), (int)currentModeMeanSetting.ExposureLevelMin);
 
 		// fastforward ?
@@ -326,46 +313,24 @@ void RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, raspis
 			printf("FF deaktiviert\n");
 		}
 		
-		// gain or exposure ?
-		if (true) {
-        	// change gain
-			double newGain = std::min(asiGain, std::max(1.0, pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / (asiExposure/1000000.0))); 
-			double deltaGain = newGain - currentRaspistillSetting.analoggain; 
-			if (deltaGain > 2.0) {
-				currentRaspistillSetting.analoggain += 2.0;
-			}
-			else if (deltaGain < -2.0) {
-				currentRaspistillSetting.analoggain -= 2.0;
-			}
-			else {
-				currentRaspistillSetting.analoggain = newGain;
-			}
-			ExposureTime_s = pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
+		//#############################################################################################################
+    // calculate gain und exposuretime
+		double newGain = std::min(asiGain, std::max(1.0, pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / (asiExposure_us/1000000.0))); 
+		double deltaGain = newGain - currentRaspistillSetting.analoggain; 
+		if (deltaGain > 2.0) {
+			currentRaspistillSetting.analoggain += 2.0;
+		}
+		else if (deltaGain < -2.0) {
+			currentRaspistillSetting.analoggain -= 2.0;
 		}
 		else {
-			// change ExposureTime_s
-			// calculate new ExposureTime_s
-			ExposureTime_s = pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
-			if ((ExposureTime_s > (asiExposure/1000000.0)) && (currentRaspistillSetting.analoggain < asiGain)) {
-				currentRaspistillSetting.analoggain += 1.0;
-				ExposureTime_s = pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
-			}
-			else if ((currentRaspistillSetting.analoggain >= 2) && (pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / (currentRaspistillSetting.analoggain-1) <= (asiExposure/1000000.0))) {
-				currentRaspistillSetting.analoggain -= 1.0;
-				ExposureTime_s = pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / currentRaspistillSetting.analoggain;
-			}
+			currentRaspistillSetting.analoggain = newGain;
 		}
-
-		if (ExposureTime_s > (asiExposure/1000000.0)) {
-			ExposureTime_s = asiExposure/1000000.0;
-		}
-		else if (ExposureTime_s < 0.000001) {
-			ExposureTime_s = 0.000001;
-		}
-
+		// min=1µs, max asiExposure
+		ExposureTime_s = std::min(asiExposure_us/1000000.0,std::max(0.000001, pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / currentRaspistillSetting.analoggain));
 
 		//#############################################################################################################
-		// Vorbereitung fuer naechste Messung
+		// prepare for the next measurement
 		if (currentModeMeanSetting.quickstart > 0) {
 			currentModeMeanSetting.quickstart--;
 		}

@@ -1182,8 +1182,7 @@ displayDebugText(debugText, 3);
 
 		printf("\n");
 
-		if (darkframe)
-		{
+		if (darkframe) {
 			// We're doing dark frames so turn off autoexposure and autogain, and use
 			// nightime gain, delay, exposure, and brightness to mimic a nightime shot.
 			currentAutoExposure = 0;

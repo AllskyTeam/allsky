@@ -293,33 +293,35 @@ time ( NULL );
 	// Define strings for roi (used for binning) string
 	string roi;
 
-	if (bin > 3)
-	{
-		bin = 3;
+	if (bin > 3) 	{
+		bin = 1;  // for me the best default value
 	}
-
-	if (bin < 1)
-	{
-		bin = 1;
+	if (bin < 1) 	{
+		bin = 1; // for me the best default value
 	}
 
 	// Check for binning 1x1 is selected
-	if (bin==1)
-	{
+	// https://www.raspberrypi.com/documentation/accessories/camera.html#raspistill
+	// Mode   Size         Aspect Ratio  Frame rates  FOV      Binning/Scaling
+  // 0      automatic selection
+	// 1      2028x1080    169:90        0.1-50fps    Partial  2x2 binned
+	// 2      2028x1520    4:3           0.1-50fps    Full     2x2 binned      <<< bin==2
+	// 3      4056x3040    4:3           0.005-10fps  Full     None            <<< bin==1
+	// 4      1332x990     74:55         50.1-120fps  Partial  2x2 binned      <<< else 
+	//
+  // todo: please change gui description !
+
+	if (bin==1)	{
 		// Select binning 1x1 (4060 x 3056 pixels)
 		roi = "--mode 3 ";
 	}
-
 	// Check if binning 2x2 is selected
-	else if (bin==2)
-	{
+	else if (bin==2) 	{
 		// Select binning 2x2 (2028 x 1520 pixels)
 		roi = "--mode 2  --width 2028 --height 1520 ";
 	}
-
 	// Check if binning 3x3 is selected
-	else
-	{
+	else 	{
 		// Select binning 4x4 (1012 x 760 pixels)
 		roi = "--mode 4 --width 1012 --height 760 ";
 	}
@@ -391,16 +393,13 @@ time ( NULL );
 			gain = "--analoggain 1 ";
 		}
 	}
-
 	// Set manual analog gain setting
 	else if (asiGain) {
-		if (asiGain < 1)
-		{
+		if (asiGain < 1) {
 			asiGain = 1;
 		}
 
-		if (asiGain > 16)
-		{
+		if (asiGain > 16) {
 			asiGain = 16;
 		}
 
@@ -412,7 +411,7 @@ time ( NULL );
 	// Add gain setting to raspistill command string
 	command += gain;
 
-    // Add exif information to raspistill command string
+  // Add exif information to raspistill command string
 	if (myModeMeanSetting.mode_mean) {
      	string exif;
 	   	stringstream Str_ExposureTime;
@@ -426,7 +425,7 @@ time ( NULL );
 
 	// White balance
 	string awb;
-    if (asiWBR < 0.1) 	{
+  if (asiWBR < 0.1) {
 		asiWBR = 0.1;
 	}
 	if (asiWBR > 10) {
@@ -507,6 +506,7 @@ time ( NULL );
 	command += flip;
 
 	//Gamma correction (saturation)
+  // todo: Gamma !=saturation,  please change gui description !
 	string saturation;
 
 	// Check if gamma correction is set

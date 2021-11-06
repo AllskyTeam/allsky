@@ -831,9 +831,9 @@ int main(int argc, char *argv[])
 				asiNightBrightness = atoi(argv[++i]);
 			}
  			else if (strcmp(argv[i], "-daybin") == 0)
-            		{
-                		dayBin = atoi(argv[++i]);
-            		}
+      {
+      	dayBin = atoi(argv[++i]);
+      }
 			else if (strcmp(argv[i], "-nightbin") == 0 || strcmp(argv[i], "-bin") == 0)
 			{
 				nightBin = atoi(argv[++i]);
@@ -858,13 +858,12 @@ int main(int argc, char *argv[])
 			{
 				asiWBB = atof(argv[++i]);
 			}
-            else if (strcmp(argv[i], "-mean-value") == 0)
+      else if (strcmp(argv[i], "-mean-value") == 0)
 			{
 				myModeMeanSetting.mean_value = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
 				myModeMeanSetting.mode_mean = true;
 				i++;
 			}
-
 			// Check for text parameter
 			else if (strcmp(argv[i], "-text") == 0)
 			{
@@ -997,11 +996,11 @@ int main(int argc, char *argv[])
 				preview = atoi(argv[++i]);
 			}
 */
-            else if (strcmp(argv[i], "-debuglevel") == 0)
-            {
-                debugLevel = atoi(argv[++i]);
+      else if (strcmp(argv[i], "-debuglevel") == 0)
+      {
+        debugLevel = atoi(argv[++i]);
 				myModeMeanSetting.debugLevel = debugLevel;
-            }
+      }
 			else if (strcmp(argv[i], "-showTime") == 0 || strcmp(argv[i], "-time") == 0)
 			{
 				time = atoi(argv[++i]);
@@ -1079,9 +1078,17 @@ int main(int argc, char *argv[])
 		printf(" -showDetails                       - Set to 1 to display the metadata on the image\n");
 		printf(" -notificationimages                - Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
 		printf(" -debuglevel                        - Default = 0. Set to 1,2 or 3 for more debugging information.\n");
-
+	  printf("%s", KBLU);
+		printf(" -mean-value                        - Set mean-value and activates exposure control\n");
+		printf("                                    - info: Auto-Gain should be set (gui)\n");
+		printf("                                    -       -autoexposure should be set (extra parameter)\n");
+		printf("                                    - config.sh\n");
+		printf("                                    -       # Additional Capture parameters.  Run 'capture_RPiHQ -h' to see the options.\n");
+		printf("                                    -       CAPTURE_EXTRA_PARAMETERS='--mean-value 0.3 -autoexposure 1'\n"); 
+	  printf("%s", KNRM);
 		printf("%sUsage:\n", KRED);
 		printf(" ./capture_RPiHQ -width 640 -height 480 -nightexposure 5000000 -gamma 50 -nightbin 1 -filename Lake-Laberge.JPG\n\n");
+		exit(0);
 	}
 
 	printf("%s", KNRM);

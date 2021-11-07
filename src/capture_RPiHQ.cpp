@@ -864,6 +864,31 @@ int main(int argc, char *argv[])
 				myModeMeanSetting.mode_mean = true;
 				i++;
 			}
+      else if (strcmp(argv[i], "-mean-threshold") == 0)
+			{
+				myModeMeanSetting.mean_threshold = std::min(0.1,std::max(0.0001,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
+			}
+      else if (strcmp(argv[i], "-mean-k0") == 0)
+			{
+				myModeMeanSetting.mean_k0 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
+			}
+      else if (strcmp(argv[i], "-mean-k1") == 0)
+			{
+				myModeMeanSetting.mean_k1 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
+			}
+      else if (strcmp(argv[i], "-mean-k2") == 0)
+			{
+				myModeMeanSetting.mean_k2 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
+			}
+
 			// Check for text parameter
 			else if (strcmp(argv[i], "-text") == 0)
 			{
@@ -1079,12 +1104,16 @@ int main(int argc, char *argv[])
 		printf(" -notificationimages                - Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
 		printf(" -debuglevel                        - Default = 0. Set to 1,2 or 3 for more debugging information.\n");
 	  printf("%s", KBLU);
-		printf(" -mean-value                        - Set mean-value and activates exposure control\n");
+		printf(" -mean-value                        - Default = 0.03 Set mean-value and activates exposure control\n");
 		printf("                                    - info: Auto-Gain should be set (gui)\n");
 		printf("                                    -       -autoexposure should be set (extra parameter)\n");
 		printf("                                    - config.sh\n");
 		printf("                                    -       # Additional Capture parameters.  Run 'capture_RPiHQ -h' to see the options.\n");
 		printf("                                    -       CAPTURE_EXTRA_PARAMETERS='--mean-value 0.3 -autoexposure 1'\n"); 
+		printf(" -mean-threshold                    - Default = 0.015 Set mean-value and activates exposure control\n");
+		printf(" -mean-k0                           - Default = 1.0, be careful changing these values, ExposureChange (Steps) = k0 + k1 * diff + (k2*diff)^2\n");
+		printf(" -mean-k1                           - Default = 2.0\n");
+		printf(" -mean-k2                           - Default = 24.0\n");
 	  printf("%s", KNRM);
 		printf("%sUsage:\n", KRED);
 		printf(" ./capture_RPiHQ -width 640 -height 480 -nightexposure 5000000 -gamma 50 -nightbin 1 -filename Lake-Laberge.JPG\n\n");
@@ -1156,6 +1185,9 @@ int main(int argc, char *argv[])
 	if (myModeMeanSetting.mode_mean) {
 	  printf(" Mode Mean Value: %1.3f\n", myModeMeanSetting.mean_value);
 	  printf(" Mode Mean Threshold: %1.3f\n", myModeMeanSetting.mean_threshold);
+	  printf(" Mode Mean k0: %1.3f\n", myModeMeanSetting.mean_k0);
+	  printf(" Mode Mean k1: %1.3f\n", myModeMeanSetting.mean_k1);
+	  printf(" Mode Mean k2: %1.3f\n", myModeMeanSetting.mean_k2);
 	}
 
 	// Show selected camera type

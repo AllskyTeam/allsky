@@ -20,9 +20,9 @@ struct modeMeanSetting {
     int debugLevel = 0;             // show some debug infos
     int quickstart = 10;            // Sets the quickstart. Deactivate delay between captures for quickstart times.
     int ExposureLevel = 1;          // current ExposureLevel 
-    double mean_k0    = 5.0;        // ExposureChange (Steps) = k0 + k1 * diff + (k2*diff)^2
-    double mean_k1    = 20.0;
-    double mean_k2    = 45.0;
+    double mean_p0    = 5.0;        // ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2
+    double mean_p1    = 20.0;
+    double mean_p2    = 45.0;
     //int maskHorizon = 0;            //
     //int longplay = 0;               // make delay between captures 
     //int brightnessControl = 0;      //

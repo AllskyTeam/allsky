@@ -271,11 +271,11 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 		
 	  // fast forward
 		if ((fastforward) || (mean_diff > (currentModeMeanSetting.mean_threshold * 2.0))) {
-			ExposureChange = std::max(1.0, currentModeMeanSetting.mean_k0 + currentModeMeanSetting.mean_k1 * mean_diff + pow (currentModeMeanSetting.mean_k2 * mean_diff,2.0));
+			ExposureChange = std::max(1.0, currentModeMeanSetting.mean_p0 + currentModeMeanSetting.mean_p1 * mean_diff + pow (currentModeMeanSetting.mean_p2 * mean_diff,2.0));
 		}
 		// slow forward
 		else if (mean_diff > (currentModeMeanSetting.mean_threshold)) {
-			ExposureChange = std::max(1.0, currentModeMeanSetting.mean_k0 + currentModeMeanSetting.mean_k1 * mean_diff);
+			ExposureChange = std::max(1.0, currentModeMeanSetting.mean_p0 + currentModeMeanSetting.mean_p1 * mean_diff);
 		}
 
 		dExposureChange = ExposureChange-lastExposureChange;

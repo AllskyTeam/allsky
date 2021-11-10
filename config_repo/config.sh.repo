@@ -94,7 +94,7 @@ FFLOG="warning"
 KEEP_SEQUENCE="false"
 
 # Any additional timelapse parameters.  Run "ffmpeg -?" to see the options.
-TIMELAPSE_PARAMETERS=""
+TIMELAPSE_EXTRA_PARAMETERS=""
 
 # Set to "true" to upload timelapse video to your website at the end of each night.
 UPLOAD_VIDEO="false"
@@ -121,6 +121,9 @@ STARTRAILS="true"
 # Images with a brightness higher than this threshold will be skipped for
 # startrails image generation.  Values are 0.0 to 1.0.
 BRIGHTNESS_THRESHOLD=0.1
+
+# Any additional startrails parameters.  Run "startrails --help" to see the options.
+STARTRAILS_EXTRA_PARAMETERS=""
 
 # Set to "true" to upload the startrails image to your website at the end of each night.
 UPLOAD_STARTRAILS="false"

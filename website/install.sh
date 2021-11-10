@@ -96,7 +96,7 @@ COMPUTER=$(tail -1 /proc/cpuinfo | sed 's/.*: //')
 sed -i \
 	-e "/latitude:/c\    latitude: ${LATITUDE}," \
 	-e "/longitude:/c\    longitude: ${LONGITUDE}," \
-	-e "/auroraMap:/c\    auroraMap: \"${AURORAMAP},\"" \
+	-e "/auroraMap:/c\    auroraMap: \"${AURORAMAP}\"," \
 	-e "/computer:/c\    computer: \"${COMPUTER}\"," \
 		"${WEBSITE_DIR}/config.js"
 

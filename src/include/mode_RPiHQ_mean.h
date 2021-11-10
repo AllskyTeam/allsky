@@ -14,7 +14,7 @@ struct modeMeanSetting {
 	double ExposureLevelMax = 1; 
 	double ExposureLevelMin = - 1;
     double mean_value    = 0.3;     // mean value for well exposed images
-    double mean_threshold = 0.001;   // threshold value
+    double mean_threshold = 0.01;   // threshold value
     double shuttersteps = 6.0;      // shuttersteps
     int historySize = 3;            // use the last images for mean calculation
     int debugLevel = 0;             // show some debug infos

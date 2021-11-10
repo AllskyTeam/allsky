@@ -1110,7 +1110,7 @@ int main(int argc, char *argv[])
 		printf("                                    - config.sh\n");
 		printf("                                    -       # Additional Capture parameters.  Run 'capture_RPiHQ -h' to see the options.\n");
 		printf("                                    -       CAPTURE_EXTRA_PARAMETERS='--mean-value 0.3 -autoexposure 1'\n"); 
-		printf(" -mean-threshold                    - Default = 0.015 Set mean-value and activates exposure control\n");
+		printf(" -mean-threshold                    - Default = 0.01 Set mean-value and activates exposure control\n");
 		printf(" -mean-p0                           - Default = 5.0, be careful changing these values, ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2\n");
 		printf(" -mean-p1                           - Default = 20.0\n");
 		printf(" -mean-p2                           - Default = 45.0\n");

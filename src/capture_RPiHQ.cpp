@@ -1104,7 +1104,7 @@ int main(int argc, char *argv[])
 		printf(" -notificationimages                - Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
 		printf(" -debuglevel                        - Default = 0. Set to 1,2 or 3 for more debugging information.\n");
 	  printf("%s", KBLU);
-		printf(" -mean-value                        - Default = 0.03 Set mean-value and activates exposure control\n");
+		printf(" -mean-value                        - Default = 0.3 Set mean-value and activates exposure control\n");
 		printf("                                    - info: Auto-Gain should be set (gui)\n");
 		printf("                                    -       -autoexposure should be set (extra parameter)\n");
 		printf("                                    - config.sh\n");

@@ -56,9 +56,9 @@ void RPiHQmask(const char* fileName)
 		dstImage = cv::Mat::zeros(image.size(), CV_8U);
 		cv::Mat maskHorizon;
     	std::vector<int> compression_params;
-    	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+    	compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
     	compression_params.push_back(9);
-    	compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+    	compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
     	compression_params.push_back(100);
 
 		if (createMaskHorizon) {
@@ -194,9 +194,9 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 /////////////////////////////////////////////////////////////////////////////////////
       
     std::vector<int> compression_params;
-   	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+   	compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
    	compression_params.push_back(9);
-   	compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+   	compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
    	compression_params.push_back(95);
 
    	cv::imwrite("test.jpg", dstImage, compression_params);

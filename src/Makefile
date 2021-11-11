@@ -124,7 +124,7 @@ capture:capture.cpp
 
 capture_RPiHQ:capture_RPiHQ.cpp
 	@echo `date +%F\ %R:%S` Building $@ program...
-	@$(CC)  $@.cpp -o $@ $(CFLAGS) $(OPENCV)
+	@$(CC)  $@.cpp -o $@ mode_RPiHQ_mean.cpp $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
 keogram:keogram.cpp

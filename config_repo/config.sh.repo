@@ -65,6 +65,8 @@ REMOVE_BAD_IMAGES="false"
 REMOVE_BAD_IMAGES_THRESHOLD_LOW=1
 REMOVE_BAD_IMAGES_THRESHOLD_HIGH=90
 
+# Additional Capture parameters.  Run "capture_RPiHQ -h" to see the options.
+CAPTURE_EXTRA_PARAMETERS="--mean-value 0.3 -autoexposure 1"
 
 ########## Timelapse
 # Set to "true" to generate a timelapse video at the end of each night.

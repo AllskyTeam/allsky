@@ -16,6 +16,8 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
 CONFIG_DIR="/etc/raspap"	# settings_*.json files go here
 mkdir -p "${CONFIG_DIR}"
 modify_locations() {	# Some files have placeholders for certain locations.  Modify them.
@@ -35,23 +37,43 @@ modify_locations() {	# Some files have placeholders for certain locations.  Modi
 }
 
 NEED_TO_UPDATE_HOST_NAME="true"
-
 CURRENT_HOSTNAME=`cat /etc/hostname | tr -d " \t\n\r"`
 
 # Check if the user is updating an existing installation.
 if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
-	UPDATE="true"
 	shift
+
+	echo -en '\n'
+	echo -e "*********************************************"
+	echo    "*** Performing update of the Allsky WebUI ***"
+	echo -e "*********************************************"
+	echo -en '\n'
+
 	if [ ! -d "${PORTAL_DIR}" ]; then
 		echo -e "${RED}Update specified but no existing WebUI found in '${PORTAL_DIR}'${NC}" 1>&2
 		exit 2
 	fi
 
 	modify_locations
+
+	# Add entry to sudoers file if not already there.
+	# This is only needed for people who updated allsky-portal but didn't update allsky.
+	# "vcgencmd" added to sudoers on November 11, 2021
+	# Don't simply copy the "allsky" file to /etc/sudoers.d in case "allsky" isn't up to date.
+	grep --silent "vcgencmd" /etc/sudoers.d/allsky
+	if [ $? -ne 0 ]; then
+		echo -e "${GREEN}* Updating sudoers list${NC}"
+		grep --silent "vcgencmd" ${SCRIPTPATH}/sudoers
+		if [ $? -ne 0 ]; then
+				echo -e "${RED}Please get the newest '$(basename "${SCRIPTPATH}")/sudoers' file from Git and try again.${NC}"
+			exit 2
+		fi
+		cp ${SCRIPTPATH}/sudoers /etc/sudoers.d/allsky
+	fi
+
 	exit 0		# currently nothing else to do for updates
 
 else
-	UPDATE="false"
 	HOST_NAME='allsky'
 	HOST_NAME=$(whiptail --inputbox "Please enter a hostname for your Allsky Pi" 20 60 "${HOST_NAME}" 3>&1 1>&2 2>&3)
 	if [ "${CURRENT_HOSTNAME}" = "${HOST_NAME}" ]; then
@@ -67,7 +89,6 @@ lighty-enable-mod fastcgi-php
 service lighttpd restart
 echo
 
-SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 echo -e "${GREEN}* Configuring lighttpd${NC}"
 # "/home/pi/allsky" is hard coded into file we distribute
 sed -i "s|/home/pi/allsky|$(dirname "$SCRIPTPATH")|g" $SCRIPTPATH/lighttpd.conf

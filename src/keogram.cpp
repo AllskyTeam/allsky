@@ -141,47 +141,47 @@ void keogram_worker(int thread_num,
   // last thread has more work to do if the number of images isn't multiple of
   // the number of threads
   if (thread_num == cf->num_threads)
-	end_num = nfiles - 1;
+		end_num = nfiles - 1;
   else
-	end_num = start_num + batch_size - 1;
+		end_num = start_num + batch_size - 1;
 
   if (cf->verbose > 2 && cf->num_threads > 1) {
-	stdio_mutex.lock();
-	fprintf(stderr, "thread %d/%d processing files %*d-%d (%d/%lu)\n",
+		stdio_mutex.lock();
+		fprintf(stderr, "thread %d/%d processing files %*d-%d (%d/%lu)\n",
 		thread_num, cf->num_threads, s_len, start_num +1, end_num + 1,
 		end_num - start_num + 1, nfiles);
 		stdio_mutex.unlock();
   }
 
   for (int f = start_num; f <= end_num; f++) {
-	char* filename = files->gl_pathv[f];
-	cv::Mat imagesrc;
-	if (! read_file(cf, filename, &imagesrc, f+1, true)) continue;
+		char* filename = files->gl_pathv[f];
+		cv::Mat imagesrc;
+		if (! read_file(cf, filename, &imagesrc, f+1, true)) continue;
 
-	if (imagesrc.channels() != nchan) {
-		if (cf->verbose) {
-			stdio_mutex.lock();
-			fprintf(stderr, "%s: repairing channel mismatch: %d != %d\n", filename, imagesrc.channels(), nchan);
-			stdio_mutex.unlock();
+		if (imagesrc.channels() != nchan) {
+			if (cf->verbose) {
+				stdio_mutex.lock();
+				fprintf(stderr, "%s: repairing channel mismatch: %d != %d\n", filename, imagesrc.channels(), nchan);
+				stdio_mutex.unlock();
+			}
+			if (imagesrc.channels() < nchan)
+				cv::cvtColor(imagesrc, imagesrc, cv::COLOR_GRAY2BGR, nchan);
+			else if (imagesrc.channels() > nchan)
+				cv::cvtColor(imagesrc, imagesrc, cv::COLOR_BGR2GRAY, nchan);
 		}
-		if (imagesrc.channels() < nchan)
-			cv::cvtColor(imagesrc, imagesrc, cv::COLOR_GRAY2BGR, nchan);
-		else if (imagesrc.channels() > nchan)
-			cv::cvtColor(imagesrc, imagesrc, cv::COLOR_BGR2GRAY, nchan);
-	}
 
-	if (cf->rotation_angle) {
-		cv::Point2f center((imagesrc.cols - 1) / 2.0, (imagesrc.rows - 1) / 2.0);
-		cv::Mat rot = cv::getRotationMatrix2D(center, cf->rotation_angle, 1.0);
-		cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), imagesrc.size(), cf->rotation_angle).boundingRect2f();
-		rot.at<double>(0, 2) += bbox.width / 2.0 - imagesrc.cols / 2.0;
-		rot.at<double>(1, 2) += bbox.height / 2.0 - imagesrc.rows / 2.0;
-		// cv::Mat imagedst;
-		// cv::warpAffine(imagesrc, imagedst, rot, bbox.size());
-		cv::warpAffine(imagesrc, imagesrc, rot, bbox.size());
-	}
+		if (cf->rotation_angle) {
+			cv::Point2f center((imagesrc.cols - 1) / 2.0, (imagesrc.rows - 1) / 2.0);
+			cv::Mat rot = cv::getRotationMatrix2D(center, cf->rotation_angle, 1.0);
+			cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), imagesrc.size(), cf->rotation_angle).boundingRect2f();
+			rot.at<double>(0, 2) += bbox.width / 2.0 - imagesrc.cols / 2.0;
+			rot.at<double>(1, 2) += bbox.height / 2.0 - imagesrc.rows / 2.0;
+			// cv::Mat imagedst;
+			// cv::warpAffine(imagesrc, imagedst, rot, bbox.size());
+			cv::warpAffine(imagesrc, imagesrc, rot, bbox.size());
+		}
 
-	/* This seemingly redundant check saves a bunch of locking and unlocking
+		/* This seemingly redundant check saves a bunch of locking and unlocking
 	   later. Maybe all the threads will see the accumlator as empty, so they will
 	   all try grab the lock...
 
@@ -191,133 +191,159 @@ void keogram_worker(int thread_num,
 	   initialization, so they skip the .create().
 
 	   Future iterations will all see that the accumulator is non-empty.
-	*/
-	if (acc->empty()) {
-		mtx->lock();
+		*/
 		if (acc->empty()) {
-			// expand ?
-			if (cf->img_expand) {
-				cf->num_img_expand = std::max(1, (int) (imagesrc.cols / (float) nfiles));
-			}
-			// channel_info ?
-			if (cf->channel_info) {
-				// create mask
-				*mask = cv::Mat::zeros(imagesrc.size(), CV_8U);
-				cv::circle(*mask, cv::Point(mask->cols/2, mask->rows/2), mask->rows/3, cv::Scalar(255, 255, 255), -1, 8, 0);
-			}
-			acc->create(imagesrc.rows, nfiles * cf->num_img_expand , imagesrc.type());
-			if (cf->verbose > 2) {
-				stdio_mutex.lock();
-				fprintf(stderr, "thread %d initialized accumulator\n", thread_num);
-				stdio_mutex.unlock();
-			}
-		}
-		mtx->unlock();
-	}
-
-	// Copy middle column to destination
-	// locking not required - we have absolute index into the accumulator
-	int destCol = f * cf->num_img_expand;
-	for (int i=0; i < cf->num_img_expand; i++) {
-		try {
-			imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(destCol+i));   //copy
-		} catch (cv::Exception& ex) {
-			fprintf(stderr, "WARNING: internal copy of '%s' failed; ignoring\n", filename);
-			continue;
-		}
-	}
-
-	if (cf->labels_enabled) {
-		struct tm ft;  // the time of the file, by any means necessary
-		if (cf->parse_filename) {
-			// engage your safety squints!
-			char* s;
-			s = strrchr(filename, '-');
-			s++;
-			sscanf(s, "%04d%02d%02d%02d%02d%02d.%*s", &ft.tm_year, &ft.tm_mon,
-				&ft.tm_mday, &ft.tm_hour, &ft.tm_min, &ft.tm_sec);
-		} else {
-			// sometimes you can believe the file time on disk
-			struct stat s;
-			stat(filename, &s);
-			struct tm* t = localtime(&s.st_mtime);
-			ft.tm_hour = t->tm_hour;
-			ft.tm_mday = t->tm_mday;
-			ft.tm_mon = t->tm_mon +1;
-			ft.tm_year = t->tm_year+1900;
-		}
-
-		// record the annotation
-		if (ft.tm_hour != prevHour) {
-			if (prevHour != -1) {
-				mtx->lock();
-				cv::Mat a = (cv::Mat_<int>(1, 5) << destCol, ft.tm_hour, ft.tm_year, ft.tm_mon, ft.tm_mday);
-				ann->push_back(a);
-				mtx->unlock();
-			}
-			prevHour = ft.tm_hour;
-		}
-	}
-
-	if (cf->channel_info)
-	{
-		Scalar mean_scalar = cv::mean(imagesrc, *mask);
-		Vec3b color;
-		double mean;
-		double mean_Sum;
-		double mean_maxValue = 255.0/100.0;
-
-		// Scale to 0-1 range
-		switch (imagesrc.depth())
-		{
-			case CV_8U:
-				mean_maxValue = 255.0/100.0;
-				break;
-			case CV_16U:
-				mean_maxValue = 65535.0/100.0;
-				break;
-		}
-
-		switch (imagesrc.channels())
-		{
-			default:	// mono case - not used for channel info
-				mean = mean_scalar.val[0] / mean_maxValue;
-				break;
-			case 3:		// color
-			case 4:		// background
-				for (int i=0; i < cf->num_img_expand; i++) {
-					line( *acc, Point(destCol+i,0), Point(destCol+i,100),  Scalar( 255, 255, 255 ), 1,  LINE_8 );
+			mtx->lock();
+			if (acc->empty()) {
+				// expand ?
+				if (cf->img_expand) {
+					cf->num_img_expand = std::max(1, (int) (imagesrc.cols / (float) nfiles));
 				}
-				// grid
-				color.val[0] = 127;
-				color.val[1] = 127;
-				color.val[2] = 127;
-				for (int j=0; j <= 10; j++) {
-					acc->at<cv::Vec3b>(Point(destCol,100-10*j)) = color;
-				} 
-				// values
-				mean_Sum = 0;
-				for (int channel=0; channel <= 2; channel++) {
-					mean = mean_scalar[channel] / mean_maxValue;
-					mean_Sum += mean;
-					color.val[0] = 0;
-					color.val[1] = 0;
-					color.val[2] = 0;
-					color.val[channel] = 255;
-					for (int i=0; i < cf->num_img_expand; i++) {
-						acc->at<cv::Vec3b>(Point(destCol+i,100-mean)) = color;
+				// channel_info ?
+				if (cf->channel_info) {
+					// create mask
+					*mask = cv::Mat::zeros(imagesrc.size(), CV_8U);
+					cv::circle(*mask, cv::Point(mask->cols/2, mask->rows/2), mask->rows/3, cv::Scalar(255, 255, 255), -1, 8, 0);
+				}
+				acc->create(imagesrc.rows, nfiles * cf->num_img_expand , imagesrc.type());
+				if (cf->verbose > 2) {
+					stdio_mutex.lock();
+					fprintf(stderr, "thread %d initialized accumulator\n", thread_num);
+					stdio_mutex.unlock();
+				}
+			}
+			mtx->unlock();
+		}
+
+		// Copy middle column to destination
+		// locking not required - we have absolute index into the accumulator
+		int destCol = f * cf->num_img_expand;
+		for (int i=0; i < cf->num_img_expand; i++) {
+			try {
+				imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(destCol+i));   //copy
+			} catch (cv::Exception& ex) {
+				fprintf(stderr, "WARNING: internal copy of '%s' failed; ignoring\n", filename);
+				continue;
+			}
+		}
+
+		if (cf->labels_enabled) {
+			struct tm ft;  // the time of the file, by any means necessary
+			if (cf->parse_filename) {
+				// engage your safety squints!
+				char* s;
+				s = strrchr(filename, '-');
+				s++;
+				sscanf(s, "%04d%02d%02d%02d%02d%02d.%*s", &ft.tm_year, &ft.tm_mon,
+					&ft.tm_mday, &ft.tm_hour, &ft.tm_min, &ft.tm_sec);
+			} else {
+				// sometimes you can believe the file time on disk
+				struct stat s;
+				stat(filename, &s);
+				struct tm* t = localtime(&s.st_mtime);
+				ft.tm_hour = t->tm_hour;
+				ft.tm_mday = t->tm_mday;
+				ft.tm_mon = t->tm_mon +1;
+				ft.tm_year = t->tm_year+1900;
+			}
+
+			// record the annotation
+			if (ft.tm_hour != prevHour) {
+				if (prevHour != -1) {
+					mtx->lock();
+					cv::Mat a = (cv::Mat_<int>(1, 5) << destCol, ft.tm_hour, ft.tm_year, ft.tm_mon, ft.tm_mday);
+					ann->push_back(a);
+					mtx->unlock();
+				}
+				prevHour = ft.tm_hour;
+			}
+		}
+
+		if (cf->channel_info)
+		{
+			Scalar mean_scalar = cv::mean(imagesrc, *mask);
+			Vec3b color;
+			uchar color_mono;
+			double mean;
+			double mean_Sum;
+			double mean_maxValue = 255.0/100.0;
+
+			// Scale to 0-1 range
+			switch (imagesrc.depth())
+			{
+				case CV_8U:
+					mean_maxValue = 255.0/100.0;
+					break;
+				case CV_16U:
+					mean_maxValue = 65535.0/100.0;
+					break;
+			}
+
+	  	// background
+			for (int i=0; i < cf->num_img_expand; i++) {
+				switch (nchan)
+				{
+				case 1:
+					line( *acc, Point(destCol+i,0), Point(destCol+i,100),  Scalar( 255 ), 1,  LINE_8 );
+					break;
+				
+				default:
+				  line( *acc, Point(destCol+i,0), Point(destCol+i,100),  Scalar( 255, 255, 255 ), 1,  LINE_8 );
+					break;
+				}
+			}
+			// grid
+			color.val[0] = color.val[1] = color.val[2] = 127;
+			color_mono = 127;
+			for (int j=0; j <= 10; j++) {
+				switch (nchan)
+				{
+				case 1:
+					acc->at<uchar>(Point(destCol,100-10*j)) = color_mono;
+					break;
+				
+				default:
+				  acc->at<cv::Vec3b>(Point(destCol,100-10*j)) = color;
+					break;
+				}
+			} 
+			// values
+			mean_Sum = 0;
+			for (int channel=0; channel < imagesrc.channels(); channel++) {
+				mean = mean_scalar[channel] / mean_maxValue;
+				mean_Sum += mean;
+				color.val[0] = color.val[1] = color.val[2] = 0;
+				color.val[channel] = 255;
+				color_mono = 255;
+				for (int i=0; i < cf->num_img_expand; i++) {
+					switch (nchan)
+					{
+					case 1:
+						acc->at<uchar>(Point(destCol+i,100-mean)) = color_mono;
+						break;
+				
+					default:
+				  	acc->at<cv::Vec3b>(Point(destCol+i,100-mean)) = color;
+						break;
 					}
 				}
-				mean_Sum = mean_Sum / 3.0;
-				color.val[0] = 0;
-				color.val[1] = 0;
-				color.val[2] = 0;
-				for (int i=0; i < cf->num_img_expand; i++) {
-					acc->at<cv::Vec3b>(Point(destCol+i,100-mean_Sum)) = color;
+			}
+			mean_Sum = mean_Sum / std::min(3,imagesrc.channels());
+			color.val[0] = color.val[1] = color.val[2] = 0;
+			color_mono = 0;
+			for (int i=0; i < cf->num_img_expand; i++) {
+				switch (nchan)
+				{
+				case 1:
+					acc->at<uchar>(Point(destCol+i,100-mean_Sum)) = color_mono;
+					break;
+			
+				default:
+			  	acc->at<cv::Vec3b>(Point(destCol+i,100-mean_Sum)) = color;
+					break;
 				}
-				break;
+			}
 		}
-	}
   }
 }
 
@@ -327,68 +353,68 @@ void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
 
   if (cf->labels_enabled && !ann->empty())
   {
-	for (int r = 0; r < ann->rows; r++)
- 	{
-		// Draw a dashed line and label for hour
-		cv::LineIterator it(*acc, cv::Point(ann->at<int>(r, 0), 0), cv::Point(ann->at<int>(r, 0), acc->rows));
-		for (int i = 0; i < it.count; i++, ++it)
-		{
-			// 4 pixel dashed line
-			if (i & 4) {
-				uchar* p = *it;
-				for (int c = 0; c < it.elemSize; c++) {
-					*p = ~(*p);
-					p++;
+		for (int r = 0; r < ann->rows; r++)
+ 		{
+			// Draw a dashed line and label for hour
+			cv::LineIterator it(*acc, cv::Point(ann->at<int>(r, 0), 0), cv::Point(ann->at<int>(r, 0), acc->rows));
+			for (int i = 0; i < it.count; i++, ++it)
+			{
+				// 4 pixel dashed line
+				if (i & 4) {
+					uchar* p = *it;
+					for (int c = 0; c < it.elemSize; c++) {
+						*p = ~(*p);
+						p++;
+					}
 				}
 			}
-		}
 
-		// Draw text label to the left of the dash
-		snprintf(hour, 3, "%02d", ann->at<int>(r, 1));
-		std::string text(hour);
-		cv::Size textSize = cv::getTextSize(text, cf->fontFace, cf->fontScale, cf->lineWidth, &baseline);
-
-		if (ann->at<int>(r, 0) - textSize.width >= 0) {
-			// black background
-			cv::putText(*acc, text,
-				cv::Point(ann->at<int>(r, 0) - textSize.width, 
-				acc->rows - (textSize.height)),
-				cf->fontFace, cf->fontScale,
-				cv::Scalar(0, 0, 0), cf->lineWidth+2,
-				cf->fontType);
-			cv::putText(*acc, text,
-				cv::Point(ann->at<int>(r, 0) - textSize.width,
-				acc->rows - textSize.height),
-				cf->fontFace, cf->fontScale,
-				cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
-				cf->fontType);
-		}
-
-		if (ann->at<int>(r, 1) == 0) {
-			// Draw date
-			char time_buf[256];
-			snprintf(time_buf, 256, "%02d-%02d-%02d", ann->at<int>(r, 3), ann->at<int>(r, 4), ann->at<int>(r, 2));
-			std::string text(time_buf);
+			// Draw text label to the left of the dash
+			snprintf(hour, 3, "%02d", ann->at<int>(r, 1));
+			std::string text(hour);
 			cv::Size textSize = cv::getTextSize(text, cf->fontFace, cf->fontScale, cf->lineWidth, &baseline);
 
 			if (ann->at<int>(r, 0) - textSize.width >= 0) {
 				// black background
 				cv::putText(*acc, text,
 					cv::Point(ann->at<int>(r, 0) - textSize.width, 
-					acc->rows - (2.5 * textSize.height)),
+					acc->rows - (textSize.height)),
 					cf->fontFace, cf->fontScale,
 					cv::Scalar(0, 0, 0), cf->lineWidth+2,
 					cf->fontType);
-				// Text
 				cv::putText(*acc, text,
-					cv::Point(ann->at<int>(r, 0) - textSize.width, 
-					acc->rows - (2.5 * textSize.height)),
+					cv::Point(ann->at<int>(r, 0) - textSize.width,
+					acc->rows - textSize.height),
 					cf->fontFace, cf->fontScale,
 					cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
 					cf->fontType);
 			}
+
+			if (ann->at<int>(r, 1) == 0) {
+				// Draw date
+				char time_buf[256];
+				snprintf(time_buf, 256, "%02d-%02d-%02d", ann->at<int>(r, 3), ann->at<int>(r, 4), ann->at<int>(r, 2));
+				std::string text(time_buf);
+				cv::Size textSize = cv::getTextSize(text, cf->fontFace, cf->fontScale, cf->lineWidth, &baseline);
+
+				if (ann->at<int>(r, 0) - textSize.width >= 0) {
+					// black background
+					cv::putText(*acc, text,
+						cv::Point(ann->at<int>(r, 0) - textSize.width, 
+						acc->rows - (2.5 * textSize.height)),
+						cf->fontFace, cf->fontScale,
+						cv::Scalar(0, 0, 0), cf->lineWidth+2,
+						cf->fontType);
+					// Text
+					cv::putText(*acc, text,
+						cv::Point(ann->at<int>(r, 0) - textSize.width, 
+						acc->rows - (2.5 * textSize.height)),
+						cf->fontFace, cf->fontScale,
+						cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
+						cf->fontType);
+				}
+			}
 		}
-	}
   }
 }
 

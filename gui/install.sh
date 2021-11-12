@@ -97,8 +97,6 @@ echo -e "${GREEN}* Adding the right permissions to the web server${NC}"
 # Remove any old entries; we now use /etc/sudoers.d/allsky instead of /etc/sudoers.
 sed -i -e '/allsky/d' -e '/www-data/d' /etc/sudoers
 cp $SCRIPTPATH/sudoers /etc/sudoers.d/allsky
-# www-data needs to be in the "sudo" group for sudo to work.
-sudo usermod -a -G sudo www-data
 echo
 
 # As of October 2021, WEBSITE_DIR is a subdirectory of PORTAL_DIR.

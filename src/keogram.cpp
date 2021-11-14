@@ -732,10 +732,15 @@ int main(int argc, char* argv[]) {
 		compression_params.push_back(95);
 	}
 
+	bool result = false;
 	try {
-		cv::imwrite(config.dst_keogram, accumulated, compression_params);
+		result = cv::imwrite(config.dst_keogram, accumulated, compression_params);
 	} catch (cv::Exception& ex) {
 		fprintf(stderr, "ERROR: could not save keogram file: %s\n", ex.what());
+		exit(2);
+	}
+	if (! result) {
+		fprintf(stderr, "ERROR: could not save Keogram file: %s\n", strerror(errno));
 		exit(2);
 	}
 

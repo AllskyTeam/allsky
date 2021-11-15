@@ -245,7 +245,7 @@ sudo systemctl status allsky
 Starting the program from the terminal can be a great way to track down issues as it provides debug information.
 To start the program manually, make sure the service is stopped (see above), then run:
 ```
-cd scripts
+cd allsky
 ./allsky.sh
 ```
 

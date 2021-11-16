@@ -23,5 +23,4 @@ www-data ALL=(ALL) NOPASSWD:/bin/chmod
 www-data ALL=(ALL) NOPASSWD:/bin/rm
 www-data ALL=(ALL) NOPASSWD:/bin/cp
 www-data ALL=(ALL) NOPASSWD:/bin/mv
-www-data ALL=(ALL) NOPASSWD:/opt/vc/bin/vcgencmd
 www-data ALL=(ALL) NOPASSWD:/usr/bin/vcgencmd

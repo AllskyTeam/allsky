@@ -56,9 +56,8 @@ if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
 
 	modify_locations
 
-	# Add entry to sudoers file if not already there.
+	# Add entries to sudoers file if not already there.
 	# This is only needed for people who updated allsky-portal but didn't update allsky.
-	# "vcgencmd" added to sudoers on November 11, 2021
 	# Don't simply copy the "allsky" file to /etc/sudoers.d in case "allsky" isn't up to date.
 	grep --silent "vcgencmd" /etc/sudoers.d/allsky
 	if [ $? -ne 0 ]; then

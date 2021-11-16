@@ -59,10 +59,10 @@ if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
 	# Add entries to sudoers file if not already there.
 	# This is only needed for people who updated allsky-portal but didn't update allsky.
 	# Don't simply copy the "allsky" file to /etc/sudoers.d in case "allsky" isn't up to date.
-	grep --silent "vcgencmd" /etc/sudoers.d/allsky
+	grep --silent "/usr/bin/vcgencmd" /etc/sudoers.d/allsky
 	if [ $? -ne 0 ]; then
 		echo -e "${GREEN}* Updating sudoers list${NC}"
-		grep --silent "vcgencmd" ${SCRIPTPATH}/sudoers
+		grep --silent "/usr/bin/vcgencmd" ${SCRIPTPATH}/sudoers
 		if [ $? -ne 0 ]; then
 				echo -e "${RED}Please get the newest '$(basename "${SCRIPTPATH}")/sudoers' file from Git and try again.${NC}"
 			exit 2

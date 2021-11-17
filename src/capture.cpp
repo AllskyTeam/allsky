@@ -274,7 +274,7 @@ void *SaveImgThd(void *para)
         bSavingImg = true;
 
 		char dT[500];	// Since we're in a thread, use our own copy of debug_text
-        sprintf(dT, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight == "DAY" ? "DAY" : "NIGHT", fileName);
+        sprintf(dT, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), fileName);
         displayDebugText(dT, 1);
         int64 st, et;
 
@@ -482,8 +482,7 @@ int computeHistogram(unsigned char *imageBuffer, int width, int height, ASI_IMG_
 
     if (b == 0)
     {
-        sprintf(debug_text, "*** ERROR: calculating histogram: b==0\n");
-        displayDebugText(debug_text, 0);
+        // This is one heck of a dark picture!
         return(0);
     }
 
@@ -500,13 +499,24 @@ static void flush_buffered_image(int cameraId, void *buf, size_t size)
 {
     enum { NUM_IMAGE_BUFFERS = 2 };
 
-    for (unsigned int num_cleared = 0; num_cleared < NUM_IMAGE_BUFFERS; num_cleared++)
+    int num_cleared;
+    for (num_cleared = 0; num_cleared < NUM_IMAGE_BUFFERS; num_cleared++)
     {
         ASI_ERROR_CODE status = ASIGetVideoData(cameraId, (unsigned char *) buf, size, 0);
         if (status != ASI_SUCCESS)
             break; // no more buffered frames
+long us;
+ASI_BOOL b;
+ASIGetControlValue(cameraId, ASI_EXPOSURE, &us, &b);
+sprintf(debug_text, "  > [Cleared buffer frame, next exposure: %'ld, auto=%s]\n", us, b==ASI_TRUE ? "yes" : "no");
+displayDebugText(debug_text, 3);
+    }
 
-        sprintf(debug_text, "  > Cleared %u frame\n", num_cleared + 1);
+// xxxxxxxxxx For now, display message above for each one rather than a summary.
+return;
+    if (num_cleared > 0)
+    {
+        sprintf(debug_text, "  > [Cleared %d buffer frame%s]\n", num_cleared, num_cleared > 1 ? "s" : "");
         displayDebugText(debug_text, 3);
     }
 }
@@ -537,14 +547,12 @@ ASI_ERROR_CODE takeOneExposure(
 	// USB contention, such as that caused by heavy USB disk IO
     long timeout = ((exposure_time_us * 2) / US_IN_MS) + 5000;	// timeout is in ms
 
-    sprintf(debug_text, "  > %s to %'ld us (%'.2f ms)",
-        wasAutoExposure == ASI_TRUE ? "Camera set auto exposure" : "Exposure set",
-        exposure_time_us, (float)exposure_time_us/US_IN_MS);
-    displayDebugText(debug_text, 3);
-    sprintf(debug_text, ", timeout: %'ld ms", timeout);
+    // This debug message isn't typcally needed since we already displayed a message about
+    // starting a new exposure, and below we display the result when the exposure is done.
+    sprintf(debug_text, "  > %s to %'ld us (%'.2f ms), timeout: %'ld ms\n",
+        wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Exposure set",
+        exposure_time_us, (float)exposure_time_us/US_IN_MS, timeout);
     displayDebugText(debug_text, 4);
-    sprintf(debug_text, "\n");
-    displayDebugText(debug_text, 3); // needs to be same debug level as "Exposure set to ..."
 
     setControl(cameraId, ASI_EXPOSURE, exposure_time_us, currentAutoExposure);
 
@@ -1385,87 +1393,91 @@ const char *locale = DEFAULT_LOCALE;
 
     if (help == 1)
     {
-        printf("%sAvailable Arguments:\n", KYEL);
-        printf(" -width                             - Default = %d = Camera Max Width\n", DEFAULT_WIDTH);
-        printf(" -height                            - Default = %d = Camera Max Height\n", DEFAULT_HEIGHT);
-        printf(" -daytime                           - Default = %d - Set to 1 to enable daytime images\n", DEFAULT_DAYTIMECAPTURE);
-        printf(" -dayexposure                       - Default = %'d - Time in us (equals to %.4f sec)\n", DEFAULT_ASIDAYEXPOSURE, (float)DEFAULT_ASIDAYEXPOSURE/US_IN_SEC);
-        printf(" -nightexposure                     - Default = %'d - Time in us (equals to %.4f sec)\n", DEFAULT_ASINIGHTEXPOSURE, (float)DEFAULT_ASINIGHTEXPOSURE/US_IN_SEC);
-        printf(" -dayautoexposure                   - Default = %d - Set to 1 to enable daytime auto Exposure\n", DEFAULT_DAYAUTOEXPOSURE);
-        printf(" -nightautoexposure                 - Default = %d - Set to 1 to enable nighttime auto Exposure\n", DEFAULT_NIGHTAUTOEXPOSURE);
-        printf(" -daymaxexposure                    - Default = %'d - Time in ms (equals to %.1f sec)\n", DEFAULT_ASIDAYMAXAUTOEXPOSURE_MS, (float)DEFAULT_ASIDAYMAXAUTOEXPOSURE_MS/US_IN_MS);
-        printf(" -nightmaxexposure                  - Default = %'d - Time in ms (equals to %.1f sec)\n", DEFAULT_ASINIGHTMAXAUTOEXPOSURE_MS, (float)DEFAULT_ASINIGHTMAXAUTOEXPOSURE_MS/US_IN_MS);
-        printf(" -nightgain                         - Default = %d\n", DEFAULT_ASINIGHTGAIN);
-        printf(" -nightmaxgain                      - Default = %d\n", DEFAULT_ASINIGHTMAXAUTOGAIN);
-        printf(" -nightautogain                     - Default = %d - Set to 1 to enable nighttime auto gain\n", DEFAULT_NIGHTAUTOGAIN);
-        printf(" -gaintransitiontime                - Default = %'d - Seconds to transition gain from day-to-night or night-to-day.  Set to 0 to disable\n", DEFAULT_GAIN_TRANSITION_TIME);
-        printf(" -coolerEnabled                     - Set to 1 to enable cooler (works on cooled cameras only)\n");
-        printf(" -targetTemp                        - Target temperature in degrees C (works on cooled cameras only)\n");
-        printf(" -gamma                             - Default = %d\n", DEFAULT_ASIGAMMA);
-        printf(" -daybrightness                     - Default = %d (range: 0 - 600)\n", DEFAULT_BRIGHTNESS);
-        printf(" -nightbrightness                   - Default = %d (range: 0 - 600)\n", DEFAULT_BRIGHTNESS);
-        printf(" -wbr                               - Default = %d   - manual White Balance Red\n", DEFAULT_ASIWBR);
-        printf(" -wbb                               - Default = %d   - manual White Balance Blue\n", DEFAULT_ASIWBB);
-        printf(" -autowhitebalance                  - Default = %d - Set to 1 to enable auto White Balance\n", DEFAULT_AUTOWHITEBALANCE);
-        printf(" -daybin                            - Default = %d    - 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n", DEFAULT_DAYBIN);
-        printf(" -nightbin                          - Default = %d    - 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n", DEFAULT_NIGHTBIN);
-        printf(" -dayDelay                          - Default = %'d   - Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY);
-        printf(" -nightDelay_ms                     - Default = %'d   - Delay between night images in milliseconds - %d = 1 sec.\n", DEFAULT_NIGHTDELAY, MS_IN_SEC);
-        printf(" -type = Image Type                 - Default = %d    - 0 = RAW8,  1 = RGB24,  2 = RAW16,  3 = Y8\n", DEFAULT_IMAGE_TYPE);
-        printf(" -quality                           - Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
-        printf(" -usb = USB Speed                   - Default = %d   - Values between 40-100, This is BandwidthOverload\n", DEFAULT_ASIBANDWIDTH);
-        printf(" -autousb                           - Default = 0 - Set to 1 to enable auto USB Speed\n");
-        printf(" -filename                          - Default = %s\n", DEFAULT_FILENAME);
-        printf(" -flip                              - Default = 0    - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
-        printf("\n");
-        printf(" -text                              - Default = \"\"   - Character/Text Overlay\n");
-        printf(" -extratext                         - Default = \"\"   - Full Path to extra text to display\n");
-        printf(" -extratextage                      - Default = 0  - If the extra file is not updated after this many seconds its contents will not be displayed. Set to 0 to disable\n");
-        printf(" -textlineheight                    - Default = %d   - Text Line Height in Pixels\n", DEFAULT_ITEXTLINEHEIGHT);
-        printf(" -textx = Text X                    - Default = %d   - Text Placement Horizontal from LEFT in pixels\n", DEFAULT_ITEXTX);
-        printf(" -texty = Text Y                    - Default = %d   - Text Placement Vertical from TOP in pixels\n", DEFAULT_ITEXTY);
-        printf(" -fontname = Font Name              - Default = %d   - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n", DEFAULT_FONTNUMBER);
-        printf(" -fontcolor = Font Color            - Default = 255 0 0  - Text blue (BGR)\n");
-        printf(" -smallfontcolor = Small Font Color - Default = 0 0 255  - Text red (BGR)\n");
-        printf(" -fonttype = Font Type              - Default = %d    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n", DEFAULT_LINENUMBER);
-        printf(" -fontsize                          - Default = %d    - Text Font Size\n", DEFAULT_FONTSIZE);
-        printf(" -fontline                          - Default = %d    - Text Font Line Thickness\n", DEFAULT_LINEWIDTH);
-        printf(" -outlinefont                       - Default = %d    - TSet to 1 to enable outline font\n", DEFAULT_OUTLINEFONT);
-        //printf(" -bgc = BG Color                    - Default =      - Text Background Color in Hex. 00ff00 = Green\n");
-        //printf(" -bga = BG Alpha                    - Default =      - Text Background Color Alpha/Transparency 0-100\n");
-        printf("\n");
-        printf("\n");
-        printf(" -latitude                          - Default = %7s (Whitehorse) - Latitude of the camera.\n", DEFAULT_LATITUDE);
-        printf(" -longitude                         - Default = %7s (Whitehorse) - Longitude of the camera\n", DEFAULT_LONGITUDE);
-        printf(" -angle                             - Default = %s - Angle of the sun below the horizon.\n", DEFAULT_ANGLE);
-        printf("   -6=civil twilight\n   -12=nautical twilight\n   -18=astronomical twilight\n");
-        printf("\n");
-        printf(" -locale                            - Default = %s - Your locale, used to determine your thousands separator and decimal point. If you don't know it, type 'locale' at a command prompt.\n", DEFAULT_LOCALE);
-        printf(" -notificationimages                - Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
-#ifdef USE_HISTOGRAM
-        printf(" -histogrambox                      - Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100)\n", DEFAULT_BOX_SIZEX, DEFAULT_BOX_SIZEY, DEFAULT_BOX_FROM_LEFT * 100, DEFAULT_BOX_FROM_TOP * 100);
-        printf(" -showhistogrambox                  - Set to 1 to view an outline of the histogram box. Useful to help determine what parameters to use with -histogrambox.\n");
-#endif
-        printf(" -darkframe                         - Set to 1 to disable time and text overlay and take dark frames instead.\n");
-        printf(" -preview                           - Set to 1 to preview the captured images. Only works with a Desktop Environment\n");
-        printf(" -time                              - Set to 1 to add the time to the image. Combine with Text X and Text Y for placement\n");
-        printf(" -timeformat                        - Format the optional time is displayed in; default is '%s'\n", DEFAULT_TIMEFORMAT);
-        printf(" -showDetails (obsolete)            - Set to 1 to display sensor temp, exposure length, and gain metadata on the image.\n");
-        printf(" -showTemp                          - Set to 1 to display the camera sensor temperature on the image.\n");
-        printf(" -temptype                          - How to display temperature: 'C'elsius, 'F'ahrenheit, or 'B'oth.\n");
-        printf(" -showExposure                      - Set to 1 to display the exposure length on the image.\n");
-        printf(" -showGain                          - Set to 1 to display the gain on the image.\n");
-        printf(" -showBrightness                    - Set to 1 to display the brightness on the image, if not the default.\n");
-#ifdef USE_HISTOGRAM
-        printf(" -showHistogram                     - Set to 1 to display the histogram mean on the image.\n");
-#endif
-        printf(" -debuglevel                        - Default = 0. Set to 1,2 or 3 for more debugging information.\n");
         printf("%sUsage:\n", KRED);
         printf(" ./capture -width 640 -height 480 -nightexposure 5000000 -gamma 50 -type 1 -nightbin 1 -filename Lake-Laberge.PNG\n\n");
+        printf("%s", KNRM);
+
+        printf("%sAvailable Arguments:\n", KYEL);
+        printf(" -width                 - Default = %d = Camera Max Width\n", DEFAULT_WIDTH);
+        printf(" -height                - Default = %d = Camera Max Height\n", DEFAULT_HEIGHT);
+        printf(" -daytime               - Default = %d: 1 enables capture daytime images\n", DEFAULT_DAYTIMECAPTURE);
+        printf(" -dayexposure           - Default = %'d: Daytime exposure in us (equals to %.4f sec)\n", DEFAULT_ASIDAYEXPOSURE, (float)DEFAULT_ASIDAYEXPOSURE/US_IN_SEC);
+        printf(" -nightexposure         - Default = %'d: Nighttime exposure in us (equals to %.4f sec)\n", DEFAULT_ASINIGHTEXPOSURE, (float)DEFAULT_ASINIGHTEXPOSURE/US_IN_SEC);
+        printf(" -dayautoexposure       - Default = %d: 1 enables daytime auto-exposure\n", DEFAULT_DAYAUTOEXPOSURE);
+        printf(" -nightautoexposure     - Default = %d: 1 enables nighttime auto-exposure\n", DEFAULT_NIGHTAUTOEXPOSURE);
+        printf(" -daymaxexposure        - Default = %'d: Maximum daytime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_ASIDAYMAXAUTOEXPOSURE_MS, (float)DEFAULT_ASIDAYMAXAUTOEXPOSURE_MS/US_IN_MS);
+        printf(" -nightmaxexposure      - Default = %'d: Maximum nighttime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_ASINIGHTMAXAUTOEXPOSURE_MS, (float)DEFAULT_ASINIGHTMAXAUTOEXPOSURE_MS/US_IN_MS);
+        printf(" -daybrightness         - Default = %d: Daytime brightness level\n", DEFAULT_BRIGHTNESS);
+        printf(" -nightbrightness       - Default = %d: Nighttime brightness level\n", DEFAULT_BRIGHTNESS);
+        printf(" -nightgain             - Default = %d: Nighttime gain\n", DEFAULT_ASINIGHTGAIN);
+        printf(" -nightmaxgain          - Default = %d: Nighttime maximum auto gain\n", DEFAULT_ASINIGHTMAXGAIN);
+        printf(" -nightautogain         - Default = %d: 1 enables nighttime auto gain\n", DEFAULT_NIGHTAUTOGAIN);
+        printf(" -gaintransitiontime    - Default = %'d: Seconds to transition gain from day-to-night or night-to-day.  0 disable it.\n", DEFAULT_GAIN_TRANSITION_TIME);
+        printf(" -dayskipframes         - Default = %d: Number of auto-exposure daytime frames to skip when starting software.\n", DEFAULT_DAYSKIPFRAMES);
+        printf(" -nightskipframes       - Default = %d: Number of auto-exposure nighttime frames to skip when starting software.\n", DEFAULT_NIGHTSKIPFRAMES);
+
+        printf(" -coolerEnabled         - 1 enables cooler (cooled cameras only)\n");
+        printf(" -targetTemp            - Target temperature in degrees C (cooled cameras only)\n");
+        printf(" -gamma                 - Default = %d: Gamma level\n", DEFAULT_ASIGAMMA);
+        printf(" -wbr                   - Default = %d: Manual White Balance Red\n", DEFAULT_ASIWBR);
+        printf(" -wbb                   - Default = %d: Manual White Balance Blue\n", DEFAULT_ASIWBB);
+        printf(" -autowhitebalance      - Default = %d: 1 enables auto White Balance\n", DEFAULT_AUTOWHITEBALANCE);
+        printf(" -daybin                - Default = %d: 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n", DEFAULT_DAYBIN);
+        printf(" -nightbin              - Default = %d: same as daybin but for night\n", DEFAULT_NIGHTBIN);
+        printf(" -dayDelay              - Default = %'d: Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY);
+        printf(" -nightDelay            - Default = %'d: Delay between nighttime images in milliseconds - %d = 1 sec.\n", DEFAULT_NIGHTDELAY, MS_IN_SEC);
+        printf(" -type = Image Type     - Default = %d: 99 = auto,  0 = RAW8,  1 = RGB24,  2 = RAW16,  3 = Y8\n", DEFAULT_IMAGE_TYPE);
+        printf(" -quality               - Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
+        printf(" -usb = USB Speed       - Default = %d: Values between 40-100, This is BandwidthOverload\n", DEFAULT_ASIBANDWIDTH);
+        printf(" -autousb               - Default = 0: 1 enables auto USB Speed\n");
+        printf(" -filename              - Default = %s\n", DEFAULT_FILENAME);
+        printf(" -flip                  - Default = 0: 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both\n");
+        printf("\n");
+        printf(" -text                  - Default = \"\": Text Overlay\n");
+        printf(" -extratext             - Default = \"\": Full Path to extra text to display\n");
+        printf(" -extratextage          - Default = 0: If the extra file is not updated after this many seconds its contents will not be displayed. 0 disables it.\n");
+        printf(" -textlineheight        - Default = %d: Text Line Height in pixels\n", DEFAULT_ITEXTLINEHEIGHT);
+        printf(" -textx                 - Default = %d: Text Placement Horizontal from LEFT in pixels\n", DEFAULT_ITEXTX);
+        printf(" -texty                 - Default = %d: Text Placement Vertical from TOP in pixels\n", DEFAULT_ITEXTY);
+        printf(" -fontname              - Default = %d: Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n", DEFAULT_FONTNUMBER);
+        printf(" -fontcolor             - Default = 255 0 0: Text font color (BGR)\n");
+        printf(" -smallfontcolor        - Default = 0 0 255: Small text font color (BGR)\n");
+        printf(" -fonttype              - Default = %d: Font Line Type: 0=AA, 1=8, 2=4\n", DEFAULT_LINENUMBER);
+        printf(" -fontsize              - Default = %d: Text Font Size\n", DEFAULT_FONTSIZE);
+        printf(" -fontline              - Default = %d: Text Font Line Thickness\n", DEFAULT_LINEWIDTH);
+        printf(" -outlinefont           - Default = %d: 1 enables outline font\n", DEFAULT_OUTLINEFONT);
+        printf("\n");
+        printf("\n");
+        printf(" -latitude              - Default = %7s: Latitude of the camera.\n", DEFAULT_LATITUDE);
+        printf(" -longitude             - Default = %7s: Longitude of the camera\n", DEFAULT_LONGITUDE);
+        printf(" -angle                 - Default = %s: Angle of the sun below the horizon.\n", DEFAULT_ANGLE);
+        printf("        -6=civil twilight   -12=nautical twilight   -18=astronomical twilight\n");
+        printf("\n");
+        printf(" -locale                - Default = %s: Your locale - to determine thousands separator and decimal point.\n", DEFAULT_LOCALE);
+        printf("                          Type 'locale' at a command prompt to determine yours.\n");
+        printf(" -notificationimages    - 1 enables notification images, for example, 'Camera is off during day'.\n");
+#ifdef USE_HISTOGRAM
+        printf(" -histogrambox          - Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", DEFAULT_BOX_SIZEX, DEFAULT_BOX_SIZEY, DEFAULT_BOX_FROM_LEFT * 100, DEFAULT_BOX_FROM_TOP * 100);
+        printf(" -showhistogrambox      - 1 displays an outline of the histogram box on the image overlay.\n");
+        printf("                          Useful to determine what parameters to use with -histogrambox.\n");
+#endif
+        printf(" -darkframe             - 1 disables the overlay and takes dark frames instead\n");
+        printf(" -preview               - 1 previews the captured images. Only works with a Desktop Environment\n");
+        printf(" -time                  - 1 displayes the time. Combine with Text X and Text Y for placement\n");
+        printf(" -timeformat            - Format the optional time is displayed in; default is '%s'\n", DEFAULT_TIMEFORMAT);
+        printf(" -showTemp              - 1 displays the camera sensor temperature\n");
+        printf(" -temptype              - Units to display temperature in: 'C'elsius, 'F'ahrenheit, or 'B'oth.\n");
+        printf(" -showExposure          - 1 displays the exposure length\n");
+        printf(" -showGain              - 1 display the gain\n");
+        printf(" -showBrightness        - 1 displays the brightness\n");
+#ifdef USE_HISTOGRAM
+        printf(" -showHistogram         - 1 displays the histogram mean\n");
+#endif
+        printf(" -debuglevel            - Default = 0. Set to 1,2, 3, or 4 for more debugging information.\n");
         exit(0);
     }
-    printf("%s\n", KNRM);
-    setlocale(LC_NUMERIC, locale);
+    if (setlocale(LC_NUMERIC, locale) == NULL)
+        printf("WARNING: Could not set locale to %s\n", locale);
 
     const char *imagetype = "";
     const char *ext = strrchr(fileName, '.');
@@ -2730,4 +2742,3 @@ const char *locale = DEFAULT_LOCALE;
 
     closeUp(exitCode);
 }
-

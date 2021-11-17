@@ -1067,10 +1067,6 @@ const char *locale = DEFAULT_LOCALE;
     printf("-Eric Claeys\n");
     printf("\n");
 
-    // The newer "allsky.sh" puts quotes around arguments so we can have spaces in them.
-    // If you are running the old allsky.sh, set this to false:
-    bool argumentsQuoted = true;
-
     if (argc > 1)
     {
         // Many of the argument names changed to allow day and night values.
@@ -1202,33 +1198,11 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-text") == 0)
             {
-                if (argumentsQuoted)
-                {
-                    ImgText = argv[++i];
-                }
-                else
-                {
-                    // In case the text is null and isn't quoted, check if the next argument
-                    // starts with a "-".  If so, the text is null, otherwise it's the text.
-                    if ((char)argv[i + 1][0] != '-') {
-                        ImgText = argv[++i];
-                    }
-                }
+                ImgText = argv[++i];
             }
             else if (strcmp(argv[i], "-extratext") == 0)
             {
-                if (argumentsQuoted)
-                {
-                    ImgExtraText = argv[++i];
-                }
-                else
-                {
-                    // In case the text is null and isn't quoted, check if the next argument
-                    // starts with a "-".  If so, the text is null, otherwise it's the text.
-                    if ((char)argv[i + 1][0] != '-') {
-                        ImgExtraText = argv[++i];
-                    }
-                }
+                ImgExtraText = argv[++i];
             }
             else if (strcmp(argv[i], "-extratextage") == 0)
             {
@@ -1252,29 +1226,11 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-fontcolor") == 0)
             {
-                if (argumentsQuoted)
-                {
-                    sscanf(argv[++i], "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]);
-                }
-                else
-                {
-                    fontcolor[0] = atoi(argv[++i]);
-                    fontcolor[1] = atoi(argv[++i]);
-                    fontcolor[2] = atoi(argv[++i]);
-                }
+                sscanf(argv[++i], "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]);
             }
             else if (strcmp(argv[i], "-smallfontcolor") == 0)
             {
-                if (argumentsQuoted)
-                {
-                    sscanf(argv[++i], "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]);
-                }
-                else
-                {
-                    smallFontcolor[0] = atoi(argv[++i]);
-                    smallFontcolor[1] = atoi(argv[++i]);
-                    smallFontcolor[2] = atoi(argv[++i]);
-                }
+                sscanf(argv[++i], "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]);
             }
             else if (strcmp(argv[i], "-fonttype") == 0)
             {
@@ -1329,17 +1285,7 @@ const char *locale = DEFAULT_LOCALE;
 #ifdef USE_HISTOGRAM
             else if (strcmp(argv[i], "-histogrambox") == 0)
             {
-                if (argumentsQuoted)
-                {
-                    sscanf(argv[++i], "%d %d %f %f", &histogramBoxSizeX, &histogramBoxSizeY, &histogramBoxPercentFromLeft, &histogramBoxPercentFromTop);
-                }
-                else
-                {
-                    histogramBoxSizeX = atoi(argv[++i]);
-                    histogramBoxSizeY = atoi(argv[++i]);
-                    histogramBoxPercentFromLeft = atof(argv[++i]);
-                    histogramBoxPercentFromTop = atof(argv[++i]);
-                }
+                sscanf(argv[++i], "%d %d %f %f", &histogramBoxSizeX, &histogramBoxSizeY, &histogramBoxPercentFromLeft, &histogramBoxPercentFromTop);
 
                 // scale user-input 0-100 to 0.0-1.0
                 histogramBoxPercentFromLeft /= 100;

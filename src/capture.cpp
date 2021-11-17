@@ -1871,15 +1871,19 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Brightness (night): %d\n", asiNightBrightness);
     printf(" Skip Frames (day): %d\n", day_skip_frames);
     printf(" Skip Frames (night): %d\n", night_skip_frames);
+    printf(" Aggression: %d%%\n", aggression);
 
-    printf(" Cooler Enabled: %s\n", yesNo(asiCoolerEnabled));
-    if (asiCoolerEnabled) printf(", Target Temperature: %ldC\n", asiTargetTemp);
+    if (ASICameraInfo.IsCoolerCam)
+		printf(" Cooler Enabled: %s", yesNo(asiCoolerEnabled));
+		if (asiCoolerEnabled) printf(", Target Temperature: %ldC\n", asiTargetTemp);
+		printf("\n");
+	}
     printf(" Gamma: %d\n", asiGamma);
     if (ASICameraInfo.IsColorCam)
     {
         printf(" WB Red: %d, Blue: %d\n", asiWBR, asiWBB);
+		printf(" Auto WB: %s\n", yesNo(asiAutoWhiteBalance));
     }
-    printf(" Auto WB: %s\n", yesNo(asiAutoWhiteBalance));
     printf(" Binning (day): %d\n", dayBin);
     printf(" Binning (night): %d\n", nightBin);
     printf(" USB Speed: %d\n", asiBandwidth);
@@ -1906,7 +1910,6 @@ const char *locale = DEFAULT_LOCALE;
             histogramBoxPercentFromLeft * 100, histogramBoxPercentFromTop * 100);
     printf(" Show Histogram Box: %s\n", yesNo(showHistogramBox));
     printf(" Show Histogram Mean: %s\n", yesNo(showHistogram));
-    printf(" Aggression: %d%%\n", aggression);
 #endif
     printf(" Show Time: %s (format: %s)\n", yesNo(showTime), timeFormat);
     printf(" Show Details: %s\n", yesNo(showDetails));
@@ -1928,8 +1931,11 @@ const char *locale = DEFAULT_LOCALE;
     // Other calls to setControl() are done after we know if we're in daytime or nighttime.
     setControl(CamNum, ASI_BANDWIDTHOVERLOAD, asiBandwidth, asiAutoBandwidth == 1 ? ASI_TRUE : ASI_FALSE);
     setControl(CamNum, ASI_HIGH_SPEED_MODE, 0, ASI_FALSE);  // ZWO sets this in their program
-    setControl(CamNum, ASI_WB_R, asiWBR, asiAutoWhiteBalance == 1 ? ASI_TRUE : ASI_FALSE);
-    setControl(CamNum, ASI_WB_B, asiWBB, asiAutoWhiteBalance == 1 ? ASI_TRUE : ASI_FALSE);
+    if (ASICameraInfo.IsColorCam)
+    {
+        setControl(CamNum, ASI_WB_R, asiWBR, asiAutoWhiteBalance == 1 ? ASI_TRUE : ASI_FALSE);
+        setControl(CamNum, ASI_WB_B, asiWBB, asiAutoWhiteBalance == 1 ? ASI_TRUE : ASI_FALSE);
+    }
     setControl(CamNum, ASI_GAMMA, asiGamma, ASI_FALSE);
     setControl(CamNum, ASI_FLIP, asiFlip, ASI_FALSE);
 
@@ -2108,6 +2114,9 @@ const char *locale = DEFAULT_LOCALE;
                     sprintf(debug_text, "Turning off daytime auto-exposure to use histogram exposure.\n");
                     displayDebugText(debug_text, 2);
                 }
+                // With the histogram method we NEVER use auto exposure - either the user said
+                // not to, or we turn it off ourselves.
+                currentAutoExposure = ASI_FALSE;
 #else
                 currentAutoExposure = asiDayAutoExposure ? ASI_TRUE : ASI_FALSE;
 #endif
@@ -2181,40 +2190,52 @@ const char *locale = DEFAULT_LOCALE;
         setControl(CamNum, ASI_EXPOSURE, current_exposure_us, currentAutoExposure);
 #endif
 
-        // Adjusting variables for chosen binning
-        height    = originalHeight / currentBin;
-        width     = originalWidth / currentBin;
-        iTextX    = originalITextX / currentBin;
-        iTextY    = originalITextY / currentBin;
-        fontsize  = originalFontsize / currentBin;
-        linewidth = originalLinewidth / currentBin;
-        bufferSize = width * height * bytesPerPixel((ASI_IMG_TYPE) Image_type);
-        if (numExposures > 0 && dayBin != nightBin)
+        if (numExposures == 0 || dayBin != nightBin)
         {
-            // No need to print after first time if the binning didn't change.
+            // Adjusting variables for chosen binning.
+            // Only need to do at the beginning and if bin changes.
+            height    = originalHeight / currentBin;
+            width     = originalWidth / currentBin;
+            iTextX    = originalITextX / currentBin;
+            iTextY    = originalITextY / currentBin;
+            fontsize  = originalFontsize / currentBin;
+            linewidth = originalLinewidth / currentBin;
+            current_histogramBoxSizeX = histogramBoxSizeX / currentBin;
+            current_histogramBoxSizeY = histogramBoxSizeY / currentBin;
+
+            bufferSize = width * height * bytesPerPixel((ASI_IMG_TYPE) Image_type);
             sprintf(debug_text, "Buffer size: %ld\n", bufferSize);
             displayDebugText(debug_text, 4);
-        }
 
-        if (Image_type == ASI_IMG_RAW16)
-        {
-            pRgb.create(cv::Size(width, height), CV_16UC1);
-        }
-        else if (Image_type == ASI_IMG_RGB24)
-        {
-            pRgb.create(cv::Size(width, height), CV_8UC3);
-        }
-        else // RAW8 and Y8
-        {
-            pRgb.create(cv::Size(width, height), CV_8UC1);
-        }
+// TODO: if not the first time, should we free the old pRgb?
+			if (Image_type == ASI_IMG_RAW16)
+			{
+				pRgb.create(cv::Size(width, height), CV_16UC1);
+			}
+			else if (Image_type == ASI_IMG_RGB24)
+			{
+				pRgb.create(cv::Size(width, height), CV_8UC3);
+			}
+			else // RAW8 and Y8
+			{
+				pRgb.create(cv::Size(width, height), CV_8UC1);
+			}
 
 // TODO: ASISetStartPos(CamNum, from_left_xxx, from_top_xxx);
-        asiRetCode = ASISetROIFormat(CamNum, width, height, currentBin, (ASI_IMG_TYPE)Image_type);
-        if (asiRetCode != ASI_SUCCESS)
-        {
-            printf("ASISetROIFormat(%d, %dx%d, %d, %d) = %s\n", CamNum, width, height, currentBin, Image_type, getRetCode(asiRetCode));
-            closeUp(1);
+			asiRetCode = ASISetROIFormat(CamNum, width, height, currentBin, (ASI_IMG_TYPE)Image_type);
+			if (asiRetCode != ASI_SUCCESS)
+			{
+				if (asiRetCode == ASI_ERROR_INVALID_SIZE)
+				{
+                    printf("*** ERROR: your camera does not support bin %dx%d.\n", currentBin, currentBin);
+                    closeUp(100);	// user needs to fix
+				}
+				else
+				{
+                    printf("ASISetROIFormat(%d, %dx%d, %d, %d) = %s\n", CamNum, width, height, currentBin, Image_type, getRetCode(asiRetCode));
+                    closeUp(1);
+				}
+            }
         }
 
         // Here and below, indent sub-messages with "  > " so it's clear they go with the un-indented line.

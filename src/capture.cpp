@@ -68,7 +68,6 @@ int numExposures           = 0;	// how many valid pictures have we taken so far?
 int currentGain            = NOT_SET;
 long camera_max_autoexposure_us= NOT_SET;	// camera's max auto-exposure
 long camera_min_exposure_us= 100;	// camera's minimum exposure
-int min_exposure_us        = 100;
 long current_exposure_us   = NOT_SET;
 long actualTemp            = 0;	// actual sensor temp, per the camera
 int taking_dark_frames     = 0;
@@ -100,7 +99,6 @@ long current_max_autoexposure_us  = NOT_SET;
 int gainTransitionTime     = DEFAULT_GAIN_TRANSITION_TIME;
 ASI_BOOL currentAutoExposure = ASI_FALSE;	// is auto-exposure currently on or off?
 
-long camera_max_auto_exposure_us  = NOT_SET;	// camera's max auto exposure in us
 #ifdef USE_HISTOGRAM
 #define DEFAULT_BOX_SIZEX       500     // Must be a multiple of 2
 #define DEFAULT_BOX_SIZEY       500     // Must be a multiple of 2
@@ -177,17 +175,18 @@ unsigned long createRGB(int r, int g, int b)
 void cvText(cv::Mat &img, const char *text, int x, int y, double fontsize, int linewidth, int linetype, int fontname,
             int fontcolor[], int imgtype, int outlinefont)
 {
+    int outline_size = std::max(2.0, (fontsize/4));	// need smaller outline when font size is smaller
     if (imgtype == ASI_IMG_RAW16)
     {
         unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
         if (outlinefont)
-            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0), linewidth+4, linetype);
+            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0), linewidth+outline_size, linetype);
         cv::putText(img, text, cv::Point(x, y), fontname, fontsize, fontcolor16, linewidth, linetype);
     }
     else
     {
         if (outlinefont)
-            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0, 255), linewidth+4, linetype);
+            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0, 255), linewidth+outline_size, linetype);
         cv::putText(img, text, cv::Point(x, y), fontname, fontsize,
                     cv::Scalar(fontcolor[0], fontcolor[1], fontcolor[2], 255), linewidth, linetype);
     }
@@ -2731,3 +2730,4 @@ const char *locale = DEFAULT_LOCALE;
 
     closeUp(exitCode);
 }
+

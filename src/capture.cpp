@@ -2677,49 +2677,27 @@ const char *locale = DEFAULT_LOCALE;
                     if (showHistogramBox && usedHistogram)
                     {
                         // Draw a rectangle where the histogram box is.
-
+                        // Put a black and white line one next to each other so they
+                        // can be seen in light and dark images.
                         int lt = cv::LINE_AA, thickness = 2;
-			            cv::Point from1, to1, from2, to2;
                         int X1 = (width * histogramBoxPercentFromLeft) - (histogramBoxSizeX / 2);
                         int X2 = X1 + histogramBoxSizeX;
                         int Y1 = (height * histogramBoxPercentFromTop) - (histogramBoxSizeY / 2);
                         int Y2 = Y1 + histogramBoxSizeY;
-                        // Put a black and white line one next to each other so they
-                        // can be seen in day and night images.
-                        // The black line is on the outside; the white on the inside.
-                        // cv::line takes care of bytes per pixel.
-
-                        // top lines
-			            from1 = cv::Point(X1, Y1);
-			            to1 = cv::Point(X2, Y1);
-                        from2 = cv::Point(X1, Y1+thickness);
-                        to2 = cv::Point(X2, Y1+thickness);
-                        cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
-                        cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
-
-                        // right lines
-			            from1 = cv::Point(X2, Y1);
-			            to1 = cv::Point(X2, Y2);
-                        from2 = cv::Point(X2-thickness, Y1+thickness);
-                        to2 = cv::Point(X2-thickness, Y2-thickness);
-                        cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
-                        cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
-
-                        // bottom lines
-		            	from1 = cv::Point(X1, Y2);
-			            to1 = cv::Point(X2, Y2);
-                        from2 = cv::Point(X1, Y2-thickness);
-                        to2 = cv::Point(X2-thickness, Y2-thickness);
-                        cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
-                        cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
-
-                        // left lines
-		            	from1 = cv::Point(X1, Y1);
-		            	to1 = cv::Point(X1, Y2);
-                        from2 = cv::Point(X1+thickness, Y1+thickness);
-                        to2 = cv::Point(X1+thickness, Y2-thickness);
-                        cv::line(pRgb, from1, to1, cv::Scalar(0,0,0), thickness, lt);
-                        cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
+                        cv::Scalar outer_line, inner_line;
+// xxxxxxx  TODO: can we use Scalar(x,y,z) for both?
+                        if (1 || Image_type == ASI_IMG_RAW16)
+                        {
+                            outer_line = cv::Scalar(0,0,0);
+                            inner_line = cv::Scalar(255,255,255);
+                        }
+                        else
+                        {
+                            outer_line = cv::Scalar(0,0,0, 255);
+                            inner_line = cv::Scalar(255,255,255, 255);
+                        }
+                        cv::rectangle(pRgb, cv::Point(X1, Y1), cv::Point(X2, Y2), outer_line,  thickness, lt, 0);
+                        cv::rectangle(pRgb, cv::Point(X1+thickness, Y1+thickness), cv::Point(X2-thickness, Y2-thickness), inner_line,  thickness, lt, 0);
                     }
 #endif
 

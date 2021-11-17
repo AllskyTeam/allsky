@@ -1349,19 +1349,6 @@ const char *locale = DEFAULT_LOCALE;
                 // scale user-input 0-100 to 0.0-1.0
                 histogramBoxPercentFromLeft /= 100;
                 histogramBoxPercentFromTop /= 100;
-
-                // avoid histogram crash if the parser returns weird
-                if (histogramBoxSizeX < 1 ||  histogramBoxSizeY < 1 || histogramBoxSizeX > 640 || histogramBoxSizeY > 640) {
-                    histogramBoxSizeX = histogramBoxSizeY = 256;
-                    fprintf(stderr, "weird histogram box dimensions; resetting to 256x256\n");
-                }
-                if (isnan(histogramBoxPercentFromLeft) || isnan(histogramBoxPercentFromTop) || 
-                    histogramBoxPercentFromLeft < 0.2 || histogramBoxPercentFromTop < 0.2 ||
-	            histogramBoxPercentFromLeft > 0.8 || histogramBoxPercentFromTop > 0.8)
-                {
-                    histogramBoxPercentFromLeft = histogramBoxPercentFromTop = 0.5;
-                    fprintf(stderr, "weird histogram box position; resetting to (50%%,50%%)\n");
-                }
             }
             else if (strcmp(argv[i], "-showhistogrambox") == 0)
             {
@@ -1617,13 +1604,60 @@ const char *locale = DEFAULT_LOCALE;
         closeUp(1);      // Can't do anything so might as well exit.
     }
 
-    printf("\n%s Information:\n", ASICameraInfo.Name);
     int iMaxWidth, iMaxHeight;
     double pixelSize;
     iMaxWidth  = ASICameraInfo.MaxWidth;
     iMaxHeight = ASICameraInfo.MaxHeight;
     pixelSize  = ASICameraInfo.PixelSize;
-    printf("  - Resolution:%dx%d\n", iMaxWidth, iMaxHeight);
+    if (width == 0 || height == 0)
+    {
+        width  = iMaxWidth;
+        height = iMaxHeight;
+    }
+    originalWidth = width;
+    originalHeight = height;
+
+#ifdef USE_HISTOGRAM
+    // The histogram box needs to fit on the image.
+    // If we're binning we'll decrease the size of the box accordingly.
+    bool ok = true;
+    if (histogramBoxSizeX < 1 ||  histogramBoxSizeY < 1)
+	{
+        fprintf(stderr, "%s*** ERROR: Histogram box size must be > 0; you entered X=%d, Y=%d%s\n",
+            KRED, histogramBoxSizeX, histogramBoxSizeY, KNRM);
+        ok = false;
+	}
+    if (isnan(histogramBoxPercentFromLeft) || isnan(histogramBoxPercentFromTop) || 
+        histogramBoxPercentFromLeft < 0.0 || histogramBoxPercentFromTop < 0.0)
+    {
+        fprintf(stderr, "%s*** ERROR: Bad values for histogram percents; you entered X=%.0f%%, Y=%.0f%%%s\n",
+            KRED, (histogramBoxPercentFromLeft*100.0), (histogramBoxPercentFromTop*100.0), KNRM);
+        ok = false;
+    }
+	else
+    {
+        int centerX = width * histogramBoxPercentFromLeft;
+        int centerY = height * histogramBoxPercentFromTop;
+        int left_of_box = centerX - (histogramBoxSizeX / 2);
+        int right_of_box = centerX + (histogramBoxSizeX / 2);
+        int top_of_box = centerY - (histogramBoxSizeY / 2);
+        int bottom_of_box = centerY + (histogramBoxSizeY / 2);
+        sprintf(debug_text, "Image: %dx%d, HISTOGRAM BOX: center @ %dx%d, upper left: %dx%d, lower right: %dx%d\n", width, height, centerX, centerY, left_of_box, top_of_box, right_of_box, bottom_of_box);
+        displayDebugText(debug_text, 0);
+
+        if (left_of_box < 0 || right_of_box >= width || top_of_box < 0 || bottom_of_box >= height)
+		{
+            fprintf(stderr, "%s*** ERROR: Histogram box location must fit on image; upper left of box is %dx%d, lower right %dx%d%s\n", KRED, left_of_box, top_of_box, right_of_box, bottom_of_box, KNRM);
+            ok = false;
+		}
+    }
+
+    if (! ok)
+        exit(100);	// force the user to fix it
+#endif
+
+    printf("\n%s Information:\n", ASICameraInfo.Name);
+    printf("  - Native Resolution:%dx%d\n", iMaxWidth, iMaxHeight);
     printf("  - Pixel Size: %1.1fmicrons\n", pixelSize);
     printf("  - Supported Bin: ");
     for (int i = 0; i < 16; ++i)
@@ -1753,14 +1787,6 @@ const char *locale = DEFAULT_LOCALE;
                 "unknown video format");
         }
     }
-
-    if (width == 0 || height == 0)
-    {
-        width  = iMaxWidth;
-        height = iMaxHeight;
-    }
-    originalWidth = width;
-    originalHeight = height;
 
     ASIGetControlValue(CamNum, ASI_TEMPERATURE, &actualTemp, &bAuto);
     printf("- Sensor temperature:%0.2f\n", (float)actualTemp / 10.0);
@@ -2737,8 +2763,6 @@ const char *locale = DEFAULT_LOCALE;
                                         displayDebugText("  > *** ERROR: Stat Of Extra Text File Failed !\n", 0);
                                     }
                                 } else {
-                                    // xxx Should really only display this once, maybe at program start.
-                                    displayDebugText("  > Extra Text File Age Disabled So Displaying Anyway\n", 1);
                                     bAddExtra = true;
                                 }
 

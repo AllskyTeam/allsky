@@ -1539,25 +1539,32 @@ const char *locale = DEFAULT_LOCALE;
 
         imagetype = "jpg";
         compression_parameters.push_back(cv::IMWRITE_JPEG_QUALITY);
-        if (quality == NOT_SET)
+        // want dark frames to be at highest quality
+        if (quality > 100 || taking_dark_frames)
+        {
+            quality = 100;
+        }
+        else if (quality == NOT_SET)
         {
             quality = 95;
-        } else if (quality > 100)
-	{
-	    quality = 100;
-	}
+        }
     }
     else if (strcasecmp(ext + 1, "png") == 0)
     {
         imagetype = "png";
         compression_parameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
-        if (quality == NOT_SET)
+        if (taking_dark_frames)
+        {
+            quality = 0;	// actually, it's PNG compression - 0 is highest quality
+        }
+        else if (quality > 9)
+        {
+            quality = 9;
+        }
+        else if (quality == NOT_SET)
         {
             quality = 3;
-        } else if (quality > 9)
-	{
-	    quality = 9;
-	}
+        }
     }
     else
     {

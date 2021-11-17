@@ -369,11 +369,11 @@ sudo make install
 ```
 This will compile the new code, create a new binary, and copy it to the top level `allsky` folder.
 
-## Show your sky on your own website
+## Allsky Website
+You can display your files on a website, either on the Pi itself or on another machine.
 
-If you have set the upload options to true in `config/config.sh`, that means you probably already have a website. If you want to display a live view of your sky on your website like in this [example](http://www.thomasjacquin.com/allsky), download the source files from this repository: [https://github.com/thomasjacquin/allsky-website.git](https://github.com/thomasjacquin/allsky-website.git).
-
-If you want to host the website on the raspberry Pi, run the following command. Note that installing the website on the Pi requires first installing the WebUI.
+### On the Pi
+If you want to host the website on your Raspberry Pi, run the following command. Note that this requires first installing the WebUI.
 
 ```
 website/install.sh
@@ -387,6 +387,12 @@ VIDEOS_DIR=`/var/www/html/allsky/videos`
 KEOGRAM_DIR=`/var/www/html/allsky/keograms`
 STARTRAILS_DIR=`/var/www/html/allsky/startrails`
 ```
+
+### On a different machine
+If you want to host the website on a _different_ machine, like in this [example](http://www.thomasjacquin.com/allsky), download the source files from this repository: [https://github.com/thomasjacquin/allsky-website.git](https://github.com/thomasjacquin/allsky-website.git).
+
+### Website settings
+Once you've installed the website, either on your Pi or another machine, look at the descriptions of the settings on the [allsky-website Settings page](https://github.com/thomasjacquin/allsky/wiki/allsky-website-Settings).
 
 ## Share your sky
 

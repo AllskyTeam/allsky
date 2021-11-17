@@ -1005,6 +1005,15 @@ const char *locale = DEFAULT_LOCALE;
     int asiNightAutoExposure   = DEFAULT_NIGHTAUTOEXPOSURE;	// is it on or off for nighttime?
     // currentAutoExposure is global so is defined outside of main()
 
+// Maximum number of auto-exposure frames to skip when starting the program.
+// This helps eliminate overly bright or dark images before the auto-exposure algorith kicks in.
+// At night, don't use too big a number otherwise it takes a long time to get the first frame.
+#define DEFAULT_DAYSKIPFRAMES    5
+    int day_skip_frames        = DEFAULT_DAYSKIPFRAMES;
+#define DEFAULT_NIGHTSKIPFRAMES  1
+    int night_skip_frames      = DEFAULT_NIGHTSKIPFRAMES;
+    int current_skip_frames    = NOT_SET;
+
 #define DEFAULT_ASIDAYGHTGAIN    0
     int asiDayGain             = DEFAULT_ASIDAYGHTGAIN;
     int asiDayAutoGain         = 0;	// is Auto Gain on or off for daytime?
@@ -1057,7 +1066,25 @@ const char *locale = DEFAULT_LOCALE;
         int showHistogram      = 0;
     int maxHistogramAttempts   = 15;	// max number of times we'll try for a better histogram mean
     int showHistogramBox       = 0;
+    int histogramBoxSizeX      = DEFAULT_BOX_SIZEX;
+    int histogramBoxSizeY      = DEFAULT_BOX_SIZEY;
+#define DEFAULT_AGGRESSION       50
+    int aggression             = DEFAULT_AGGRESSION; // ala PHD2.  Percent of change made, 1 - 100.
+
+    // If we just transitioned from night to day, it's possible current_exposure_us will
+    // be MUCH greater than the daytime max (and will possibly be at the nighttime's max exposure).
+    // So, decrease current_exposure_us by a certain amount of the difference between the two so
+    // it takes several frames to reach the daytime max (which is now in current_max_autoexposure_us).
+
+    // If we don't do this, we'll be stuck in a loop taking an exposure
+    // that's over the max forever.
+
+    // Note that it's likely getting lighter outside with every exposure
+    // so the mean will eventually get into the valid range.
+#define DEFAULT_PERCENTCHANGE 10.0	// percent of ORIGINAL difference
+    const int percent_change = DEFAULT_PERCENTCHANGE;
 #endif
+
 #define DEFAULT_DAYTIMECAPTURE   0
     int daytimeCapture         = DEFAULT_DAYTIMECAPTURE;  // are we capturing daytime pictures?
 
@@ -1111,6 +1138,14 @@ const char *locale = DEFAULT_LOCALE;
             else if (strcmp(argv[i], "-locale") == 0)
             {
                 locale = argv[++i];
+            }
+            else if (strcmp(argv[i], "-dayskipframes") == 0)
+            {
+                day_skip_frames = atoi(argv[++i]);
+            }
+            else if (strcmp(argv[i], "-nightskipframes") == 0)
+            {
+                night_skip_frames = atoi(argv[++i]);
             }
             else if (strcmp(argv[i], "-tty") == 0)
             {
@@ -1332,6 +1367,18 @@ const char *locale = DEFAULT_LOCALE;
             {
                 showHistogramBox = atoi(argv[++i]);
             }
+            else if (strcmp(argv[i], "-aggression") == 0)
+            {
+                aggression = atoi(argv[++i]);
+                if (aggression < 1)
+                {
+                    fprintf(stderr, "Aggression must be between 1 and 100; setting to 1.\n");
+                }
+                else if (aggression > 100)
+                {
+                    fprintf(stderr, "Aggression must be between 1 and 100; setting to 100.\n");
+                }
+            }
 #endif
             else if (strcmp(argv[i], "-preview") == 0)
             {
@@ -1472,6 +1519,7 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -histogrambox          - Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", DEFAULT_BOX_SIZEX, DEFAULT_BOX_SIZEY, DEFAULT_BOX_FROM_LEFT * 100, DEFAULT_BOX_FROM_TOP * 100);
         printf(" -showhistogrambox      - 1 displays an outline of the histogram box on the image overlay.\n");
         printf("                          Useful to determine what parameters to use with -histogrambox.\n");
+        printf(" -aggression            - Default = %d%%: Percent of exposure change to make, similar to PHD2.\n", DEFAULT_AGGRESSION);
 #endif
         printf(" -darkframe             - 1 disables the overlay and takes dark frames instead\n");
         printf(" -preview               - 1 previews the captured images. Only works with a Desktop Environment\n");
@@ -1488,6 +1536,7 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -debuglevel            - Default = 0. Set to 1,2, 3, or 4 for more debugging information.\n");
         exit(0);
     }
+
     if (setlocale(LC_NUMERIC, locale) == NULL)
         printf("WARNING: Could not set locale to %s\n", locale);
 
@@ -1774,10 +1823,10 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
     printf(" Exposure (day): %'1.3fms\n", (float)asi_day_exposure_us / US_IN_MS);
     printf(" Exposure (night): %'1.0fms\n", round(asi_night_exposure_us / US_IN_MS));
-    printf(" Auto Exposure (day): %s\n", yesNo(asiDayAutoExposure));
-    printf(" Auto Exposure (night): %s\n", yesNo(asiNightAutoExposure));
-    printf(" Max Exposure (day): %'dms (%.1fs)\n", asi_day_max_autoexposure_ms, (float)asi_day_max_autoexposure_ms / MS_IN_SEC);
-    printf(" Max Exposure (night): %'dms (%.1fs)\n", asi_night_max_autoexposure_ms, (float)asi_night_max_autoexposure_ms / MS_IN_SEC);
+    printf(" Auto-Exposure (day): %s\n", yesNo(asiDayAutoExposure));
+    printf(" Auto-Exposure (night): %s\n", yesNo(asiNightAutoExposure));
+    printf(" Max Auto-Exposure (day): %'dms (%'.1fs)\n", asi_day_max_autoexposure_ms, (float)asi_day_max_autoexposure_ms / MS_IN_SEC);
+    printf(" Max Auto-Exposure (night): %'dms (%'.1fs)\n", asi_night_max_autoexposure_ms, (float)asi_night_max_autoexposure_ms / MS_IN_SEC);
 
     printf(" Delay (day): %'dms\n", dayDelay_ms);
     printf(" Delay (night): %'dms\n", nightDelay_ms);
@@ -1787,32 +1836,35 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Gain Transition Time: %.1f minutes\n", (float) gainTransitionTime/60);
     printf(" Brightness (day): %d\n", asiDayBrightness);
     printf(" Brightness (night): %d\n", asiNightBrightness);
+    printf(" Skip Frames (day): %d\n", day_skip_frames);
+    printf(" Skip Frames (night): %d\n", night_skip_frames);
+
     printf(" Cooler Enabled: %s\n", yesNo(asiCoolerEnabled));
-    printf(" Target Temperature: %ldC\n", asiTargetTemp);
+    if (asiCoolerEnabled) printf(", Target Temperature: %ldC\n", asiTargetTemp);
     printf(" Gamma: %d\n", asiGamma);
-    printf(" WB Red: %d\n", asiWBR);
-    printf(" WB Blue: %d\n", asiWBB);
+    if (ASICameraInfo.IsColorCam)
+    {
+        printf(" WB Red: %d, Blue: %d\n", asiWBR, asiWBB);
+    }
     printf(" Auto WB: %s\n", yesNo(asiAutoWhiteBalance));
     printf(" Binning (day): %d\n", dayBin);
     printf(" Binning (night): %d\n", nightBin);
     printf(" USB Speed: %d\n", asiBandwidth);
     printf(" Auto USB Speed: %s\n", yesNo(asiAutoBandwidth));
     printf(" Text Overlay: %s\n", ImgText[0] == '\0' ? "[none]" : ImgText);
-    printf(" Text Extra Filename: %s\n", ImgExtraText[0] == '\0' ? "[none]" : ImgExtraText);
-    printf(" Text Extra Filename Age: %d\n", extraFileAge);
+    printf(" Text Extra Filename: %s, Age: %d\n", ImgExtraText[0] == '\0' ? "[none]" : ImgExtraText, extraFileAge);
     printf(" Text Line Height %dpx\n", iTextLineHeight);
     printf(" Text Position: %dpx left, %dpx top\n", iTextX, iTextY);
     printf(" Font Name:  %d (%s)\n", fontname[fontnumber], fontnames[fontnumber]);
-    printf(" Font Color: %d , %d, %d\n", fontcolor[0], fontcolor[1], fontcolor[2]);
-    printf(" Small Font Color: %d , %d, %d\n", smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
+    printf(" Font Color: %d, %d, %d\n", fontcolor[0], fontcolor[1], fontcolor[2]);
+    printf(" Small Font Color: %d, %d, %d\n", smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
     printf(" Font Line Type: %d\n", linetype[linenumber]);
     printf(" Font Size: %1.1f\n", fontsize);
-    printf(" Font Line: %d\n", linewidth);
+    printf(" Font Line Width: %d\n", linewidth);
     printf(" Outline Font : %s\n", yesNo(outlinefont));
     printf(" Flip Image: %d\n", asiFlip);
     printf(" Filename: %s\n", fileName);
-    printf(" Latitude: %s\n", latitude);
-    printf(" Longitude: %s\n", longitude);
+    printf(" Latitude: %s, Longitude: %s\n", latitude, longitude);
     printf(" Sun Elevation: %s\n", angle);
     printf(" Locale: %s\n", locale);
     printf(" Notification Images: %s\n", yesNo(notificationImages));
@@ -1821,21 +1873,21 @@ const char *locale = DEFAULT_LOCALE;
             histogramBoxPercentFromLeft * 100, histogramBoxPercentFromTop * 100);
     printf(" Show Histogram Box: %s\n", yesNo(showHistogramBox));
     printf(" Show Histogram Mean: %s\n", yesNo(showHistogram));
+    printf(" Aggression: %d%%\n", aggression);
 #endif
     printf(" Show Time: %s (format: %s)\n", yesNo(showTime), timeFormat);
     printf(" Show Details: %s\n", yesNo(showDetails));
-    printf(" Show Temperature: %s\n", yesNo(showTemp));
-    printf(" Temperature Type: %s\n", tempType);
+    printf(" Show Temperature: %s, type: %s\n", yesNo(showTemp), tempType);
     printf(" Show Exposure: %s\n", yesNo(showExposure));
     printf(" Show Gain: %s\n", yesNo(showGain));
     printf(" Show Brightness: %s\n", yesNo(showBrightness));
     printf(" Preview: %s\n", yesNo(preview));
     printf(" Taking Dark Frames: %s\n", yesNo(taking_dark_frames));
     printf(" Debug Level: %d\n", debugLevel);
-    printf(" TTY: %s\n", yesNo(tty));
-    printf(" Non-continuous Capture Method: %s\n", yesNo(use_new_exposure_algorithm));
+    printf(" On TTY: %s\n", yesNo(tty));
+    printf(" Video OFF Between Images: %s\n", yesNo(use_new_exposure_algorithm));
     printf(" ZWO SDK version %s\n", ASIGetSDKVersion());
-    printf("%s", KNRM);
+    printf("%s\n", KNRM);
 
     //-------------------------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
@@ -1881,6 +1933,8 @@ const char *locale = DEFAULT_LOCALE;
     int displayedNoDaytimeMsg = 0; // Have we displayed "not taking picture during day" message, if applicable?
     int gainChange = 0;			// how much to change gain up or down
 
+    // Display one-time messages.
+
     // If autogain is on, our adjustments to gain will get overwritten by the camera
     // so don't transition.
     // gainTransitionTime of 0 means don't adjust gain.
@@ -1894,6 +1948,10 @@ const char *locale = DEFAULT_LOCALE;
     {
         adjustGain = true;
         displayDebugText("Will adjust gain at transitions\n", 3);
+    }
+
+    if (ImgExtraText[0] != '\0' && extraFileAge > 0) {
+        displayDebugText("Extra Text File Age Disabled So Displaying Anyway\n", 1);
     }
 
     if (tty)
@@ -1990,6 +2048,10 @@ const char *locale = DEFAULT_LOCALE;
                 sprintf(debug_text, "==========\n=== Starting daytime capture ===\n==========\n");
                 displayDebugText(debug_text, 0);
 
+                // We only skip initial frames if we are starting in daytime and using auto-exposure.
+                if (numExposures == 0 && asiDayAutoExposure)
+                    current_skip_frames = day_skip_frames;
+
                 // If we went from Night to Day, then current_exposure_us will be the last night
                 // exposure so leave it if we're using auto-exposure so there's a seamless change from
                 // Night to Day, i.e., if the exposure was fine a minute ago it will likely be fine now.
@@ -2005,13 +2067,13 @@ const char *locale = DEFAULT_LOCALE;
                     displayDebugText(debug_text, 2);
                 }
 
+                current_max_autoexposure_us = asi_day_max_autoexposure_ms * US_IN_MS;
 #ifdef USE_HISTOGRAM
                 // Don't use camera auto-exposure since we mimic it ourselves.
                 if (asiDayAutoExposure)
                 {
                     sprintf(debug_text, "Turning off daytime auto-exposure to use histogram exposure.\n");
                     displayDebugText(debug_text, 2);
-                    currentAutoExposure = ASI_FALSE;
                 }
 #else
                 currentAutoExposure = asiDayAutoExposure ? ASI_TRUE : ASI_FALSE;
@@ -2019,7 +2081,6 @@ const char *locale = DEFAULT_LOCALE;
                 currentBrightness = asiDayBrightness;
                 currentDelay_ms = dayDelay_ms;
                 currentBin = dayBin;
-                current_max_autoexposure_us = asi_day_max_autoexposure_ms * US_IN_MS;
                 currentGain = asiDayGain;	// must come before determineGainChange() below
                 if (currentAdjustGain)
                 {
@@ -2032,6 +2093,8 @@ const char *locale = DEFAULT_LOCALE;
                     gainChange = 0;
                 }
                 currentAutoGain = asiDayAutoGain ? ASI_TRUE : ASI_FALSE;
+// xxxx TODO: add asiDayMaxGain and currentMaxGain.
+// xxxx then can move the setControl further below
                 // We don't have a separate asiDayMaxGain, so set to night one
                 setControl(CamNum, ASI_AUTO_MAX_GAIN, asiNightMaxGain, ASI_FALSE);
             }
@@ -2041,6 +2104,10 @@ const char *locale = DEFAULT_LOCALE;
         {
             sprintf(debug_text, "==========\n=== Starting nighttime capture ===\n==========\n");
             displayDebugText(debug_text, 0);
+
+            // We only skip initial frames if we are starting in nighttime and using auto-exposure.
+            if (numExposures == 0 && asiNightAutoExposure)
+                current_skip_frames = night_skip_frames;
 
             // Setup the night time capture parameters
             if (numExposures == 0 || asiNightAutoExposure == ASI_FALSE)
@@ -2273,6 +2340,7 @@ const char *locale = DEFAULT_LOCALE;
                         }
 
                         // Now adjust the variables
+// xxxxxxxxx TODO: don't adjust hist_min_exposure_us; just histogram numbers.
                         hist_min_exposure_us *= exposureAdjustment;
                         reallyLowMean *= exposureAdjustment;
                         lowMean *= exposureAdjustment;
@@ -2281,14 +2349,62 @@ const char *locale = DEFAULT_LOCALE;
                     }
 
                     std::string why;	// Why did we adjust the exposure?  For debugging
-                    while ((mean < minAcceptableMean || mean > maxAcceptableMean) && attempts <= maxHistogramAttempts && current_exposure_us < current_max_autoexposure_us)
+
+                    // Keep track of whether or not we're bouncing around, for example,
+                    // one exposure is less than the min and the second is greater than the max.
+                    // When that happens we don't want to set the min to the second exposure
+                    // or else we'll never get low enough.
+                    // Negative is below lower limit, positive is above upper limit.
+                    // Adjust the min or maxAcceptableMean depending on the aggression.
+                    int prior_mean = mean;
+                    int prior_mean_diff = 0;
+                    int adjustment = 0;
+
+                    int last_mean_diff = 0;	// like prior_mean_diff but for next exposure
+
+                    if (mean < minAcceptableMean)
                     {
-                        attempts++;
+                        prior_mean_diff = mean - minAcceptableMean;
+                        // If we're skipping frames we want to get to a good exposure as fast as
+                        // possible so don't set a adjustment.
+                        if (aggression != 100 && current_skip_frames <= 0)
+                        {
+                            adjustment = prior_mean_diff * (1 - ((float)aggression/100));
+                            if (adjustment < 1)
+                                minAcceptableMean += adjustment;
+                        }
+                    }
+                    else if (mean > maxAcceptableMean)
+                    {
+                        prior_mean_diff = mean - maxAcceptableMean;
+#ifdef DO_NOT_USE_OVER_MAX	// xxxxx this allows the image to get too bright
+                        if (aggression != 100 && current_skip_frames <= 0)
+                        {
+                            adjustment = prior_mean_diff * (1 - ((float)aggression/100));
+                            if (adjustment > 1)
+                                maxAcceptableMean += adjustment;
+                        }
+#endif
+                    }
+                    if (adjustment != 0)
+                    {
+                        sprintf(debug_text, "  > !!! Adjusting %sAcceptableMean by %d to %d\n",
+                           adjustment < 0 ? "min" : "max",
+                           adjustment,
+                           adjustment < 0 ? minAcceptableMean : maxAcceptableMean);
+                        displayDebugText(debug_text, 3);
+                    }
+
+                    while ((mean < minAcceptableMean || mean > maxAcceptableMean) && ++attempts <= maxHistogramAttempts && current_exposure_us <= current_max_autoexposure_us)
+                    {
                         why = "";
+                        int num = 0;
 
                         sprintf(debug_text, "  > Attempt %i, exposure %'ld us @ mean %d, temp_min_exposure_us %'ld us, temp_max_exposure_us %'ld us", attempts, current_exposure_us, mean, temp_min_exposure_us, temp_max_exposure_us);
+                        //  The code below looks at how far off we are from an acceptable mean.
+                        //  There's probably a better way to do this, like adjust by some multiple
+                        //  of how far of we are.  That exercise is left to the reader...
 
-                        int num = 0;
                          if (mean >= 254) {
                              new_exposure_us = current_exposure_us * 0.4;
                              temp_max_exposure_us = current_exposure_us - roundToMe;
@@ -2434,10 +2550,33 @@ const char *locale = DEFAULT_LOCALE;
                     }
                     displayDebugText(debug_text, 3);
                     // xxxx TODO: this was "actual_exposure_us = ..."    reported_exposure_us = current_exposure_us;
+
                 } else {
                     current_exposure_us = last_exposure_us;
                 }
 #endif
+                if (current_skip_frames > 0)
+                {
+#ifdef USE_HISTOGRAM
+                    // If we're already at a good exposure, or the last exposure was longer
+                    // than the max, don't skip any more frames.
+// xxx TODO: should we have a separate variable to define "too long" instead of current_max_autoexposure_us?
+                    if ((mean >= MINMEAN && mean <= MAXMEAN) || last_exposure_us > current_max_autoexposure_us)
+                    {
+                        current_skip_frames = 0;
+                    }
+                    else
+#endif
+                    {
+                        sprintf(debug_text, "  >>>> Skipping this frame\n");
+                        displayDebugText(debug_text, 2);
+                        current_skip_frames--;
+                        // Do not save this frame or sleep after it.
+                        // We just started taking images so no need to check if DAY or NIGHT changed
+                        continue;
+                    }
+                }
+
                 // Write temperature to file
                 writeTemperatureToFile((float)actualTemp / 10.0);
 
@@ -2583,6 +2722,7 @@ const char *locale = DEFAULT_LOCALE;
                         cv::line(pRgb, from2, to2, cv::Scalar(255,255,255), thickness, lt);
                     }
 #endif
+
                     /**
                      * Optionally display extra text which is read from the provided file. If the
                      * age of the file exceeds the specified limit then ignore the file.
@@ -2591,16 +2731,11 @@ const char *locale = DEFAULT_LOCALE;
                     if (ImgExtraText[0] != '\0') {
                         // Display these messages every time, since it's possible the user will
                         // correct the issue while we're running.
-                        bool bUseExtraFile = true;
                         if (access(ImgExtraText, F_OK ) == -1 ) {
-                            bUseExtraFile = false;
                             displayDebugText("  > *** WARNING: Extra Text File Does Not Exist So Ignoring It\n", 1);
                         } else if (access(ImgExtraText, R_OK ) == -1 ) {
                             displayDebugText("  > *** ERROR: Cannot Read From Extra Text File So Ignoring It\n", 1);
-                            bUseExtraFile = false;
-                        }
-
-                        if (bUseExtraFile) {
+                        } else {
                             FILE *fp = fopen(ImgExtraText, "r");
 
                             if (fp != NULL) {

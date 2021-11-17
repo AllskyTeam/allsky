@@ -66,6 +66,8 @@ pthread_t thread_display = 0;
 pthread_t hthdSave       = 0;
 int numExposures         = 0;	// how many valid pictures have we taken so far?
 int currentGain          = NOT_SET;
+long camera_max_autoexposure_us= NOT_SET;	// camera's max auto-exposure
+long camera_min_exposure_us= 100;	// camera's minimum exposure
 int min_exposure_us      = 100;
 long current_exposure_us = NOT_SET;
 long actualTemp          = 0;	// actual sensor temp, per the camera
@@ -1669,37 +1671,47 @@ const char *locale = DEFAULT_LOCALE;
         closeUp(1);      // Can't do anything so might as well exit.
     }
 
+   // Get a few values from the camera that we need elsewhere.
     ASIGetNumOfControls(CamNum, &iNumOfCtrl);
-    if (debugLevel >= 4)	// this is really only needed for debugging
-    {
+    if (debugLevel >= 4)
         printf("Control Caps:\n");
-        for (i = 0; i < iNumOfCtrl; i++)
+    for (i = 0; i < iNumOfCtrl; i++)
+    {
+        ASIGetControlCaps(CamNum, i, &ControlCaps);
+		switch (ControlCaps.ControlType) {
+        case ASI_EXPOSURE:
+            camera_min_exposure_us = ControlCaps.MinValue;
+			break;
+#ifdef USE_HISTOGRAM
+        case ASI_AUTO_MAX_EXP:
+            // Keep track of the camera's max auto-exposure so we don't try to exceed it.
+            // MaxValue is in MS so convert to microseconds
+            camera_max_autoexposure_us = ControlCaps.MaxValue * US_IN_MS;
+			break;
+#endif
+		}
+        if (debugLevel >= 4)
         {
-            ASIGetControlCaps(CamNum, i, &ControlCaps);
             printf("- %s:\n", ControlCaps.Name);
-            printf("   - MinValue = %ld\n", ControlCaps.MinValue);
-            printf("   - MaxValue = %ld\n", ControlCaps.MaxValue);
-            printf("   - DefaultValue = %ld\n", ControlCaps.DefaultValue);
+            printf("   - MinValue = %'ld\n", ControlCaps.MinValue);
+            printf("   - MaxValue = %'ld\n", ControlCaps.MaxValue);
+            printf("   - DefaultValue = %'ld\n", ControlCaps.DefaultValue);
             printf("   - IsAutoSupported = %d\n", ControlCaps.IsAutoSupported);
             printf("   - IsWritable = %d\n", ControlCaps.IsWritable);
             printf("   - ControlType = %d\n", ControlCaps.ControlType);
         }
     }
 
-    // Get a few values from the camera that we need elsewhere.
-    asiRetCode = ASIGetControlCaps(CamNum, ASI_EXPOSURE, &ControlCaps);
-    if (asiRetCode == ASI_SUCCESS)
-        min_exposure_us = ControlCaps.MinValue;
-
-#ifdef USE_HISTOGRAM
-    // Keep track of the camera's max auto exposure so we don't try to exceed it.
-    asiRetCode = ASIGetControlCaps(CamNum, ASI_AUTO_MAX_EXP, &ControlCaps);
-    if (asiRetCode == ASI_SUCCESS)
-    {
-        // MaxValue is in MS so convert to microseconds
-        camera_max_auto_exposure_us = ControlCaps.MaxValue * US_IN_MS;
-    }
-#endif
+	if (asi_day_exposure_us < camera_min_exposure_us)
+	{
+	    fprintf(stderr, "WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", asi_day_exposure_us, camera_min_exposure_us);
+	    asi_day_exposure_us = camera_min_exposure_us;
+	}
+   	if (asi_night_exposure_us < camera_min_exposure_us)
+	{
+	    fprintf(stderr, "WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", asi_night_exposure_us, camera_min_exposure_us);
+	    asi_night_exposure_us = camera_min_exposure_us;
+	}
 
     if (debugLevel >= 4)
     {
@@ -2082,8 +2094,13 @@ const char *locale = DEFAULT_LOCALE;
             setControl(CamNum, ASI_AUTO_MAX_GAIN, asiNightMaxGain, ASI_FALSE);
         }
 
+		// never go over the camera's max auto exposure.  ASI_AUTO_MAX_EXP is in ms so convert
+        current_max_autoexposure_us = std::min(current_max_autoexposure_us, camera_max_autoexposure_us);
+        setControl(CamNum, ASI_AUTO_MAX_EXP, current_max_autoexposure_us / US_IN_MS, ASI_FALSE);
         setControl(CamNum, ASI_GAIN, currentGain + gainChange, currentAutoGain);
-        setControl(CamNum, ASI_BRIGHTNESS, currentBrightness, ASI_FALSE); // ASI_BRIGHTNESS == ASI_OFFSET
+		// ASI_BRIGHTNESS is also called ASI_OFFSET
+        setControl(CamNum, ASI_BRIGHTNESS, currentBrightness, ASI_FALSE);
+
 #ifndef USE_HISTOGRAM
         setControl(CamNum, ASI_EXPOSURE, current_exposure_us, currentAutoExposure);
 #endif
@@ -2215,8 +2232,11 @@ const char *locale = DEFAULT_LOCALE;
                     usedHistogram = 1;	// we are using the histogram code on this exposure
                     attempts = 0;
 
-                    int minAcceptableHistogram;
-                    int maxAcceptableHistogram;
+					// Got these by trial and error.  They are more-or-less half the max of 255.
+#define MINMEAN 122
+#define MAXMEAN 134
+                    int minAcceptableHistogram = MINMEAN;
+                    int maxAcceptableHistogram = MAXMEAN;
                     int reallyLowMean;
                     int lowMean;
                     int roundToMe = 1; // round exposures to this many microseconds
@@ -2229,16 +2249,13 @@ const char *locale = DEFAULT_LOCALE;
 
                     long new_exposure_us = 0;
 
-                    // min_exposure_us is a camera property, fetched at device initialization.
+                    // camera_min_exposure_us is a camera property.
                     // hist_min_exposure_us is the min exposure used in the histogram calculation.
-                    long hist_min_exposure_us = min_exposure_us ? min_exposure_us : 100;
+                    long hist_min_exposure_us = camera_min_exposure_us ? camera_min_exposure_us : 100;
                     long temp_min_exposure_us = hist_min_exposure_us;
                     long temp_max_exposure_us = current_max_exposure_us;
 
-                    // Got these by trial and error.  They are more-or-less half the max of 255.
-                    minAcceptableHistogram = 120;
-                    maxAcceptableHistogram = 136;
-                    reallyLowMean = 5;
+                   reallyLowMean = 5;
                     lowMean = 15;
 
                     if (asiDayBrightness != DEFAULT_BRIGHTNESS)

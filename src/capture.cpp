@@ -1099,7 +1099,7 @@ const char *locale = DEFAULT_LOCALE;
     setlinebuf(stdout);   // Line buffer output so entries appear in the log immediately.
     printf("\n");
     printf("%s **********************************************\n", KGRN);
-    printf("%s *** Allsky Camera Software v0.8.1b |  2021 ***\n", KGRN);
+    printf("%s *** Allsky Camera Software v0.8.2  |  2021 ***\n", KGRN);
     printf("%s **********************************************\n\n", KGRN);
     printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n", KGRN);
     printf("\n");
@@ -1751,6 +1751,8 @@ const char *locale = DEFAULT_LOCALE;
             // MaxValue is in MS so convert to microseconds
             camera_max_autoexposure_us = ControlCaps.MaxValue * US_IN_MS;
 			break;
+		default:	// needed to keep compiler quiet
+			break;
 #endif
 		}
         if (debugLevel >= 4)
@@ -1874,6 +1876,7 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Aggression: %d%%\n", aggression);
 
     if (ASICameraInfo.IsCoolerCam)
+	{
 		printf(" Cooler Enabled: %s", yesNo(asiCoolerEnabled));
 		if (asiCoolerEnabled) printf(", Target Temperature: %ldC\n", asiTargetTemp);
 		printf("\n");
@@ -1969,7 +1972,8 @@ const char *locale = DEFAULT_LOCALE;
     int originalITextY = iTextY;
     int originalFontsize = fontsize;
     int originalLinewidth = linewidth;
-    int displayedNoDaytimeMsg = 0; // Have we displayed "not taking picture during day" message, if applicable?
+    // Have we displayed "not taking picture during day" message, if applicable?
+    int displayedNoDaytimeMsg = 0;
     int gainChange = 0;			// how much to change gain up or down
 
     // Display one-time messages.
@@ -2295,26 +2299,16 @@ const char *locale = DEFAULT_LOCALE;
 #define MAXMEAN 134
                     int minAcceptableMean = MINMEAN;
                     int maxAcceptableMean = MAXMEAN;
-                    int reallyLowMean;
-                    int lowMean;
-                    int roundToMe = 1; // round exposures to this many microseconds
-
-                    // "last_OK_exposure_us" is the exposure time of the last OK
-                    // image (i.e., mean < 255).
-                    // The intent is to keep track of the last OK exposure in case the final
-                    // exposure we calculate is no good, we can go back to the last OK one.
-                    long last_OK_exposure_us = current_exposure_us;
+                    int roundToMe = 5; // round exposures to this many microseconds
 
                     long new_exposure_us = 0;
 
                     // camera_min_exposure_us is a camera property.
                     // hist_min_exposure_us is the min exposure used in the histogram calculation.
+// xxxxxxxxx dump hist_min_exposure_us?  Set temp_min_exposure_us = camera_min_exposure_us ? ...
                     long hist_min_exposure_us = camera_min_exposure_us ? camera_min_exposure_us : 100;
                     long temp_min_exposure_us = hist_min_exposure_us;
                     long temp_max_exposure_us = current_max_autoexposure_us;
-
-                   reallyLowMean = 5;
-                    lowMean = 15;
 
                     if (asiDayBrightness != DEFAULT_BRIGHTNESS)
                     {
@@ -2354,8 +2348,6 @@ const char *locale = DEFAULT_LOCALE;
                         // Now adjust the variables
 // xxxxxxxxx TODO: don't adjust hist_min_exposure_us; just histogram numbers.
                         hist_min_exposure_us *= exposureAdjustment;
-                        reallyLowMean *= exposureAdjustment;
-                        lowMean *= exposureAdjustment;
                         minAcceptableMean *= exposureAdjustment;
                         maxAcceptableMean *= exposureAdjustment;
                     }
@@ -2412,87 +2404,130 @@ const char *locale = DEFAULT_LOCALE;
                         why = "";
                         int num = 0;
 
-                        sprintf(debug_text, "  > Attempt %i, exposure %'ld us @ mean %d, temp_min_exposure_us %'ld us, temp_max_exposure_us %'ld us", attempts, current_exposure_us, mean, temp_min_exposure_us, temp_max_exposure_us);
                         //  The code below looks at how far off we are from an acceptable mean.
                         //  There's probably a better way to do this, like adjust by some multiple
                         //  of how far of we are.  That exercise is left to the reader...
-
-                         if (mean >= 254) {
-                             new_exposure_us = current_exposure_us * 0.4;
-                             temp_max_exposure_us = current_exposure_us - roundToMe;
-                             why = ">= max";
-                             num = 254;
-                         }
-                         else
+                         if (mean < (minAcceptableMean * 0.04))
                          {
-                             //  The code below takes into account how far off we are from an acceptable mean.
-                             //  There's probably a simplier way to do this, like adjust by some multiple of
-                             //  how far of we are.  That exercise is left to the reader...
-                             last_OK_exposure_us = current_exposure_us;
-                             if (mean < reallyLowMean) {
-                                 // The cameras don't appear linear at this low of a level,
-                                 // so really crank it up to get into the linear area.
-                                 new_exposure_us = current_exposure_us * 25;
-                                 temp_min_exposure_us = current_exposure_us + roundToMe;
-                                 why = "< reallyLowMean";
-                                 num = reallyLowMean;
-                             }
-                             else if (mean < lowMean) {
-                                 new_exposure_us = current_exposure_us * 7;
-                                 temp_min_exposure_us = current_exposure_us + roundToMe;
-                                 why = "< lowMean";
-                                 num = lowMean;
-                             }
-                             else if (mean < (minAcceptableMean * 0.6))
-                             {
-                                 new_exposure_us = current_exposure_us * 2.5;
-                                 temp_min_exposure_us = current_exposure_us + roundToMe;
-                                 why = "< (minAcceptableMean * 0.6)";
-                                 num = minAcceptableMean * 0.6;
-                             }
-                             else if (mean < minAcceptableMean)
-                             {
-                                 new_exposure_us = current_exposure_us * 1.1;
-                                 temp_min_exposure_us = current_exposure_us + roundToMe;
-                                 why = "< minAcceptableMean";
-                                 num = minAcceptableMean;
-                             }
-                             else if (mean > (maxAcceptableMean * 1.6))
-                             {
-                                 new_exposure_us = current_exposure_us * 0.7;
-                                 temp_max_exposure_us = current_exposure_us - roundToMe;
-                                 why = "> (maxAcceptableMean * 1.6)";
-                                 num = (maxAcceptableMean * 1.6);
-                             }
-                             else if (mean > maxAcceptableMean)
-                             {
-                                 new_exposure_us = current_exposure_us * 0.9;
-                                 temp_max_exposure_us = current_exposure_us - roundToMe;
-                                 why = "> maxAcceptableMean";
-                                 num = maxAcceptableMean;
-                             }
+                             // The cameras don't appear linear at this low of a level,
+                             // so really crank it up to get into the linear area.
+                             new_exposure_us = current_exposure_us * 25;
+                             why = "< (minAcceptableMean * 0.04)";
+                             num = minAcceptableMean * 0.04;
                          }
+                         else if (mean < (minAcceptableMean * 0.1))
+                         {
+                             new_exposure_us = current_exposure_us * 7;
+                             why = "< (minAcceptableMean * 0.1)";
+                             num = minAcceptableMean * 0.1;
+                         }
+                         else if (mean < (minAcceptableMean * 0.3))
+                         {
+                             new_exposure_us = current_exposure_us * 4;
+                             why = "< (minAcceptableMean * 0.3)";
+                             num = minAcceptableMean * 0.3;
+                         }
+                         else if (mean < (minAcceptableMean * 0.6))
+                         {
+                             new_exposure_us = current_exposure_us * 2.5;
+                             why = "< (minAcceptableMean * 0.6)";
+                             num = minAcceptableMean * 0.6;
+                         }
+                         else if (mean < (minAcceptableMean * 0.8))
+                         {
+                             new_exposure_us = current_exposure_us * 1.8;
+                             why = "< (minAcceptableMean * 0.8)";
+                             num = minAcceptableMean * 0.8;
+                         }
+                         else if (mean < (minAcceptableMean * 1.0))
+                         {
+                             new_exposure_us = current_exposure_us * 1.05;
+                             why = "< minAcceptableMean";
+                             num = minAcceptableMean * 1.0;
+                         }
+
+
+                         else if (mean > (maxAcceptableMean * 1.89))
+                         {
+                             new_exposure_us = current_exposure_us * 0.4;
+                             why = "> (maxAcceptableMean * 1.89)";
+                             num = (maxAcceptableMean * 1.89);
+                         }
+                         else if (mean > (maxAcceptableMean * 1.6))
+                         {
+                             new_exposure_us = current_exposure_us * 0.7;
+                             why = "> (maxAcceptableMean * 1.6)";
+                             num = (maxAcceptableMean * 1.6);
+                         }
+                         else if (mean > (maxAcceptableMean * 1.3))
+                         {
+                             new_exposure_us = current_exposure_us * 0.85;
+                             why = "> (maxAcceptableMean * 1.3)";
+                             num = (maxAcceptableMean * 1.3);
+                         }
+                         else if (mean > (maxAcceptableMean * 1.0))
+                         {
+                             new_exposure_us = current_exposure_us * 0.9;
+                             why = "> maxAcceptableMean";
+                             num = maxAcceptableMean;
+                         }
+
+// xxxxxxxxxxxxxxxx test new formula-based method
+long new_new_exposure_us;
+int acceptable;
+const char *acceptable_type;
+if (mean < minAcceptableMean) {
+    acceptable = minAcceptableMean;
+    acceptable_type = "min";
+} else {
+    acceptable = maxAcceptableMean;
+    acceptable_type = "max";
+}
+long e_us;
+e_us = current_exposure_us;
+e_us = last_exposure_us;
+if (current_exposure_us != last_exposure_us) printf("xxxxxxxxxxx current_exposure_us %'ld != last_exposure_us %'ld\n", current_exposure_us, last_exposure_us);
+// if mean/acceptable is 9/90, it's 1/10th of the way there, so multiple exposure by 90/9 (10).
+// ZWO cameras don't appear to be linear so increase the multiply amount some.
+float multiplier = 1.05;
+float multiply = ((double)acceptable / mean) * multiplier;
+new_new_exposure_us= e_us * multiply;
+printf("=== old way new_exposure_us=%'ld, new way=%'ld (multiply by %.3f) [last_exposure_us=%'ld, %sAcceptable=%d, mean=%d]\n", roundTo(new_exposure_us, roundToMe), new_new_exposure_us, multiply, e_us, acceptable_type, acceptable, mean);
+printf("     using new way\n");	 new_exposure_us = new_new_exposure_us;
+
+                        if (prior_mean_diff > 0 && last_mean_diff < 0)
+                        { 
+printf(" >xxx mean was %d and went from %d above max of %d to %d below min of %d, is now at %d; should NOT set temp min to current_exposure_us of %'ld\n",
+                            prior_mean, prior_mean_diff, maxAcceptableMean,
+                            -last_mean_diff, minAcceptableMean, mean, current_exposure_us);
+                        } 
+                        else
+                        {
+                            if (prior_mean_diff < 0 && last_mean_diff > 0)
+                            {
+                            // OK to set upper limit since we know it's too high.
+printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d, is now at %d; OK to set temp max to current_exposure_us of %'ld\n",
+                                prior_mean, -prior_mean_diff, minAcceptableMean,
+                                last_mean_diff, maxAcceptableMean, mean, current_exposure_us);
+                            }
+
+                            if (mean < minAcceptableMean)
+                            {
+                                temp_min_exposure_us = current_exposure_us;
+                            } 
+                            else if (mean > maxAcceptableMean)
+                            {
+                                temp_max_exposure_us = current_exposure_us;
+                            } 
+                        } 
 
                          new_exposure_us = roundTo(new_exposure_us, roundToMe);
                          new_exposure_us = std::max(temp_min_exposure_us, new_exposure_us);
                          new_exposure_us = std::min(temp_max_exposure_us, new_exposure_us);
                          new_exposure_us = std::min(current_max_autoexposure_us, new_exposure_us);
 
-                         sprintf(debug_text2, ", new_exposure_us %'ld us\n", new_exposure_us);
-                         strcat(debug_text, debug_text2);
-                         displayDebugText(debug_text, 3);
-
                          if (new_exposure_us == current_exposure_us)
                          {
-                             // We can't find a better exposure so stick with this one
-                             // or the last OK one.  If the last exposure had a mean >= 254,
-                             // use the most recent exposure that was OK.
-                             if (mean >= 254 && 0) {	// xxxxx This needs work so disabled
-                                 current_exposure_us = last_OK_exposure_us;
-                                 sprintf(debug_text, "  > !!! Resetting to last OK exposure of '%ld us\n", current_exposure_us);
-                                 displayDebugText(debug_text, 3);
-                                 asiRetCode = takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram, &mean);
-                             }
                              break;
                          }
 
@@ -2502,13 +2537,25 @@ const char *locale = DEFAULT_LOCALE;
                              break;
                          }
 
-                        sprintf(debug_text, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: mean (%d) %s (%d)\n", attempts, new_exposure_us, temp_min_exposure_us, temp_max_exposure_us, mean, why.c_str(), num);
+                         sprintf(debug_text, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: mean (%d) %s (%d)\n", attempts, new_exposure_us, temp_min_exposure_us, temp_max_exposure_us, mean, why.c_str(), num);
                          displayDebugText(debug_text, 3);
+
+                         prior_mean = mean;
+                         prior_mean_diff = last_mean_diff;
+
                          asiRetCode = takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram, &mean);
                          if (asiRetCode == ASI_SUCCESS)
                          {
-                             continue;
-						 }
+
+                            if (mean < minAcceptableMean)
+                                last_mean_diff = mean - minAcceptableMean;
+                            else if (mean > maxAcceptableMean)
+                                last_mean_diff = mean - maxAcceptableMean;
+                            else
+                                last_mean_diff = 0;
+
+                            continue;
+                         }
                          else
                          {
 							// Check if we reached the maximum number of consective errors
@@ -2542,10 +2589,19 @@ const char *locale = DEFAULT_LOCALE;
                          if (current_exposure_us > current_max_autoexposure_us)
                          {
                              sprintf(debug_text, "  > Stopped trying: new exposure of %'ld us would be over max of %'ld\n", current_exposure_us, current_max_autoexposure_us);
+                             displayDebugText(debug_text, 3);
+
+                             long diff = (long)((float)current_exposure_us * (1/(float)percent_change));
+                             current_exposure_us -= diff;
+                             sprintf(debug_text, "  > Decreasing next exposure by %d%% (%'ld us) to %'ld\n", percent_change, diff, current_exposure_us);
                          }
                          else if (current_exposure_us == current_max_autoexposure_us)
                          {
                              sprintf(debug_text, "  > Stopped trying: hit max exposure limit of %'ld, mean %d\n", current_max_autoexposure_us, mean);
+                             // If current_exposure_us causes too high of a mean, decrease exposure
+                             // so on the next loop we'll adjust it.
+                             if (mean > maxAcceptableMean)
+                                 current_exposure_us--;
                          }
                          else if (new_exposure_us == current_exposure_us)
                          {

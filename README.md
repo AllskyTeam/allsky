@@ -10,12 +10,13 @@ This is the source code for the Allsky Camera project described [on Instructable
 
 In order to get the camera working properly you will need the following hardware:
 
- * A camera (Raspberry Pi HQ, ZWO ASI, or Dayton T7)
+ * A camera (Raspberry Pi HQ or ZWO ASI)
  * A Raspberry Pi (2, 3, 4 or Zero)
 
 **NOTE:** Owners of USB2.0 cameras such as ASI120MC and ASI120MM may need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software-drivers). This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.
 
-**NOTE:** Owners of the Datyson T7 camera need to upgrade the firmware with ZWO's compatible firmware (see link above) and add this line to /boot/config.txt: `program_usb_boot_mode=0`.
+**NOTE:** The Datyson T7 camera is not officially supported by persistent users may get it to work by following [these instructions](https://github.com/thomasjacquin/allsky/wiki/Troubleshoot:-Datyson-T7-Cameras).
+
 
 ## Software Installation
 

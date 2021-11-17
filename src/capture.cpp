@@ -898,6 +898,23 @@ char *length_in_units(float ms)	// milliseconds
     return(length);
 }
 
+// Check if the maximum number of consecutive errors has been reached
+bool check_max_errors(int *e, int max_errors)
+{
+	// Once takeOneExposure() fails with a timeout, it seems to always fail,
+	// even with extremely large timeout values, so apparently ASI_ERROR_TIMEOUT doesn't
+	// necessarily mean it's timing out.  Exit which will cause us to be restarted.
+	numErrors++; sleep(2);
+	if (numErrors >= max_errors)
+	{
+		*e = 2;		// exit code
+		sprintf(debug_text, "*** ERROR: Maximum number of consecutive errors of %d reached; exiting...\n", max_errors);
+		displayDebugText(debug_text, 0);
+		return(false);	// gets us out of inner and outer loop
+	}
+	return(true);
+}
+
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
@@ -2363,6 +2380,14 @@ const char *locale = DEFAULT_LOCALE;
                          if (asiRetCode == ASI_SUCCESS)
                          {
                              continue;
+						 }
+                         else
+                         {
+							// Check if we reached the maximum number of consective errors
+							if (! check_max_errors(&exitCode, maxErrors))
+							{
+								closeUp(exitCode);
+							}
                          }
                     }
 
@@ -2712,17 +2737,8 @@ const char *locale = DEFAULT_LOCALE;
                 calculateDayOrNight(latitude, longitude, angle);
 
             } else {
-                // Once takeOneExposure() fails with a timeout, it seems to always fail,
-                // even with extremely large timeout values, so apparently ASI_ERROR_TIMEOUT doesn't
-                // necessarily mean it's timing out.  Exit which will cause us to be restarted.
-                numErrors++; sleep(2);
-                if (numErrors >= maxErrors)
-                {
-                    bMain = false;  // get out of inner and outer loop
-                    exitCode = 2;
-                    sprintf(debug_text, "Maximum number of consecutive errors of %d reached; exiting...\n", maxErrors);
-                    displayDebugText(debug_text, 0);
-                }
+				// Check if we reached the maximum number of consective errors
+                bMain = check_max_errors(&exitCode, maxErrors);
             }
         }
         if (lastDayOrNight == "NIGHT")

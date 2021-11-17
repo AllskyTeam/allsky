@@ -2241,48 +2241,6 @@ const char *locale = DEFAULT_LOCALE;
         // Here and below, indent sub-messages with "  > " so it's clear they go with the un-indented line.
         // This simply makes it easier to see things in the log file.
 
-// xxxxxxxxxxxxxx Remove the code below when we're sure flushing the buffer works
-        // As of April 2021 there's a bug that causes the first 3 images to be identical,
-        // so take 3 short ones but don't save them.
-        // On the ASI178MC the shortest time is 10010 us; it may be higher on other cameras,
-        // so use a higher value like 30,000 us to be safe.
-        // Only do this once.
-        if ( 0 && numExposures == 0) {
-#define SHORT_EXPOSURE 30000
-            displayDebugText("===Taking 3 images to clear buffer...\n", 2);
-            // turn off auto-exposure
-            ASI_BOOL savedAutoExposure = currentAutoExposure;
-            currentAutoExposure = ASI_FALSE;
-            for (i=1; i <= 3; i++)
-            {
-                // don't count these as "real" exposures, so don't increment numExposures.
-                asiRetCode = takeOneExposure(CamNum, SHORT_EXPOSURE, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, NULL, NULL);
-                if (asiRetCode != ASI_SUCCESS)
-                {
-                    // takeOneExposure() already output the error number
-                    sprintf(debug_text, "buffer clearing exposure %d failed\n", i);
-                    displayDebugText(debug_text, 0);
-                    numErrors++;
-                    sleep(2);	// sometimes sleeping keeps errors from reappearing
-                }
-            }
-            if (numErrors >= maxErrors)
-            {
-                bMain = false;
-                exitCode = 2;
-		        sprintf(debug_text, "Maximum number of consecutive errors of %d reached; exiting...\n", maxErrors);
-                displayDebugText(debug_text, 0);
-                break;
-            }
-
-            // Restore correct exposure times and auto-exposure mode.
-            currentAutoExposure = savedAutoExposure;
-            setControl(CamNum, ASI_EXPOSURE, current_exposure_us, currentAutoExposure);
-            sprintf(debug_text, "...DONE.  Reset exposure to %'ld us\n", current_exposure_us);
-            displayDebugText(debug_text, 2);
-            // END of bug code
-        }
-
 #ifdef USE_HISTOGRAM
         int mean = 0;
         int attempts = 0;

@@ -212,11 +212,6 @@ void calculateDayOrNight(const char *latitude, const char *longitude, const char
 
 	// Log data.  Don't need "exit" or "set".
 	sprintf(sunwaitCommand, "sunwait poll angle %s %s %s", angle, latitude, longitude);
-
-	// Inform user
-	Log(1, "Determine if it is day or night using variables: desired sun declination angle: %s degrees, latitude: %s, longitude: %s\n", angle, latitude, longitude);
-
-	// Determine if it is day or night
 	dayOrNight = exec(sunwaitCommand);
 
 	// RMu, I have no clue what this does...
@@ -276,90 +271,62 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 	Log(3, "capturing image in file %s\n", fileName);
 
 	// Ensure no raspistill process is still running
-	string kill = "ps -ef|grep raspistill| grep -v color|awk '{print $2}'|xargs kill -9 1> /dev/null 2>&1";
+	// Include "--" to we only find the command, not a different command with "libcamera-still"
+	// on its command line.
+	string kill = "ps -ef | grep 'libcamera-still --' | grep -v color | awk '{print $2}' | xargs kill -9 1> /dev/null 2>&1";
+	char kcmd[kill.length() + 1];		// Define char variable
+	strcpy(kcmd, kill.c_str());			// Convert command to character variable
 
-	// Define char variable
-	char kcmd[kill.length() + 1];
-
-	// Convert command to character variable
-	strcpy(kcmd, kill.c_str());
-
-	Log(3, "Command: %s\n", kcmd);
-
-	// Execute raspistill command
-	system(kcmd);
+	Log(4, "Kill command: %s\n", kcmd);
+	system(kcmd);						// Stop any currently running process
 
 	stringstream ss;
 
-/*
-	static char time_buffer[40];
-	const struct std::tm *tm_ptr;
-	std::time_t now;
-
-	now = std::
-time ( NULL );
-	tm_ptr = std::localtime ( &now );
-
-	std::strftime ( time_buffer, 40, "%d %B %Y %I:%M:%S %p", tm_ptr );
-*/
-
+	// Define command line.
+	string command = "raspistill";
 	ss << fileName;
-
-	// Define strings for raspistill command string and
-	string command = "nice raspistill --nopreview --thumb none --output " + ss.str() + " --burst -st ";
+	command += " --output '" + ss.str();
+	command += " --nopreview --thumb none --burst -st";
 
 	// Define strings for roi (used for binning) string
 	string roi;
 
 	if (bin > 3) 	{
-		bin = 1;  // for me the best default value
+		bin = 3;
 	}
-	if (bin < 1) 	{
-		bin = 1; // for me the best default value
+	else if (bin < 1) 	{
+		bin = 1;
 	}
 
-	// Check for binning 1x1 is selected
 	// https://www.raspberrypi.com/documentation/accessories/camera.html#raspistill
 	// Mode   Size         Aspect Ratio  Frame rates  FOV      Binning/Scaling
-  // 0      automatic selection
+	// 0      automatic selection
 	// 1      2028x1080    169:90        0.1-50fps    Partial  2x2 binned
 	// 2      2028x1520    4:3           0.1-50fps    Full     2x2 binned      <<< bin==2
 	// 3      4056x3040    4:3           0.005-10fps  Full     None            <<< bin==1
 	// 4      1332x990     74:55         50.1-120fps  Partial  2x2 binned      <<< else 
 	//
-  // todo: please change gui description !
+  // TODO: please change gui description !
 
 	if (bin==1)	{
-		// Select binning 1x1 (4060 x 3056 pixels)
-		roi = "--mode 3 ";
+		command += " --mode 3";
 	}
-	// Check if binning 2x2 is selected
 	else if (bin==2) 	{
-		// Select binning 2x2 (2028 x 1520 pixels)
-		roi = "--mode 2  --width 2028 --height 1520 ";
+		command += " --mode 2  --width 2028 --height 1520";
 	}
-	// Check if binning 3x3 is selected
 	else 	{
-		// Select binning 4x4 (1012 x 760 pixels)
-		roi = "--mode 4 --width 1012 --height 760 ";
+		command += " --mode 4 --width 1012 --height 760";
 	}
-
-	// Append binning window
-	command += roi;
 
 	if (asiExposure < 1)
 	{
 		asiExposure = 1;
 	}
-
-    // https://www.raspberrypi.org/documentation/raspbian/applications/camera.md : HQ (IMX477) 	200000000 (i.e. 200s)
-	if (asiExposure > 200000000)
+	else if (asiExposure > 200000000)
 	{
+		// https://www.raspberrypi.org/documentation/raspbian/applications/camera.md : HQ (IMX477) 	200000000 (i.e. 200s)
 		asiExposure = 200000000;
 	}
-
-	// Exposure time
-	string shutter;
 
 	// Check if automatic determined exposure time is selected
 
@@ -368,9 +335,9 @@ time ( NULL );
 		if (myModeMeanSetting.mode_mean) {
 			ss.str("");
 			ss << myRaspistillSetting.shutter_us;
-			shutter = "--exposure off --shutter " + ss.str() + " ";
+			command += " --exposure off --shutter " + ss.str();
 		} else {
-			shutter = "--exposure auto ";
+			command += " --exposure auto";
 		}
 	}
 	// Set exposure time
@@ -378,15 +345,12 @@ time ( NULL );
 	{
 		ss.str("");
 		ss << asiExposure;
-		shutter = "--exposure off --shutter " + ss.str() + " ";
+		command +=  " --exposure off --shutter " + ss.str();
 	}
-
-	// Add exposure time setting to raspistill command string
-	command += shutter;
 
 	if (asiAutoFocus)
 	{
-		command += "--focus ";
+		command += " --focus";
 	}
 
 	// Anolog Gain
@@ -398,61 +362,53 @@ time ( NULL );
 		if (myModeMeanSetting.mode_mean) {
 			ss.str("");
 			ss << myRaspistillSetting.analoggain;
-			gain = "--analoggain " + ss.str() + " ";
+			command += " --analoggain " + ss.str();
 
 			if (myRaspistillSetting.digitalgain > 1.0) {
 				ss.str("");
 				ss << myRaspistillSetting.digitalgain;
-				gain = gain + "--digitalgain " + ss.str() + " ";
+				command += " --digitalgain " + ss.str();
 			}
 		}
 		else {
 			// Set analog gain to 1
-			gain = "--analoggain 1 ";
+			command += " --analoggain 1";
 		}
 	}
 	// Set manual analog gain setting
 	else if (asiGain) {
 		if (asiGain < 1) {
 			asiGain = 1;
-		}
-
-		if (asiGain > 16) {
+		} else if (asiGain > 16) {
 			asiGain = 16;
 		}
 
 		ss.str("");
 		ss << asiGain;
-		gain = "--analoggain " + ss.str() + " ";
+		command += " --analoggain " + ss.str();
 	}
 
-	// Add gain setting to raspistill command string
-	command += gain;
-
-  // Add exif information to raspistill command string
+  // Add exif information
 	if (myModeMeanSetting.mode_mean) {
-     	string exif;
 	   	stringstream Str_ExposureTime;
    		stringstream Str_Reinforcement;
    		Str_ExposureTime <<  myRaspistillSetting.shutter_us;
 		Str_Reinforcement << myRaspistillSetting.analoggain;
 		
-   		exif = "--exif IFD0.Artist=li_" + Str_ExposureTime.str() + "_" + Str_Reinforcement.str() + " ";
-		command += exif;
+   		command += " --exif IFD0.Artist=li_" + Str_ExposureTime.str() + "_" + Str_Reinforcement.str();
 	}
 
 	// White balance
-	string awb;
-  if (asiWBR < 0.1) {
+	if (asiWBR < 0.1) {
 		asiWBR = 0.1;
 	}
-	if (asiWBR > 10) {
+	else if (asiWBR > 10) {
 		asiWBR = 10;
 	}
 	if (asiWBB < 0.1) {
 		asiWBB = 0.1;
 	}
-	if (asiWBB > 10) {
+	else if (asiWBB > 10) {
 		asiWBB = 10;
 	}
 
@@ -460,39 +416,27 @@ time ( NULL );
 	if (myModeMeanSetting.mode_mean) {
 		// support asiAutoAWB, asiWBR and asiWBB
 		if (asiAutoAWB) {
-  			awb = "--awb auto ";
+  			command += " --awb auto";
 		}
 		else {
 			ss.str("");
-			ss << asiWBR;
-			awb  = "--awb off --awbgains " + ss.str();
-
-			ss.str("");
-			ss << asiWBB;
-			awb += "," + ss.str() + " ";
+			ss << asiWBR << "," << asiWBB;
+			command += " --awb off --awbgains " + ss.str();
 		}
 	}
-	else if (!asiAutoAWB) {
+	else if (! asiAutoAWB) {
 		ss.str("");
-		ss << asiWBR;
-		awb  = "--awb off --awbgains " + ss.str();
-
-		ss.str("");
-		ss << asiWBB;
-		awb += "," + ss.str() + " ";
+		ss << asiWBR << "," << asiWBB;
+		command += " --awb off --awbgains " + ss.str();
 	}
 	// Use automatic white balance
 	else {
-		awb = "--awb auto ";
+		command += " --awb auto";
 	}
-
-	// Add white balance setting to raspistill command string
-	command += awb;
 
 	// Check if rotation is at least 0 degrees
 	if (asiRotation != 0 && asiRotation != 90 && asiRotation != 180 && asiRotation != 270)
 	{
-		// Set rotation to 0 degrees
 		asiRotation = 0;
 	}
 
@@ -500,40 +444,30 @@ time ( NULL );
 	if (asiRotation!=0) {
 		ss.str("");
 		ss << asiRotation;
-
-		// Add white balance setting to raspistill command string
-		command += "--rotation "  + ss.str() + " ";
+		command += " --rotation "  + ss.str();
 	}
-
-	// Flip image
-	string flip = "";
 
 	// Check if flip is selected
 	if (asiFlip == 1 || asiFlip == 3)
 	{
 		// Set horizontal flip
-		flip += "--hflip ";
+		command += " --hflip";
 	}
 	if (asiFlip == 2 || asiFlip == 3)
 	{
 		// Set vertical flip
-		flip += "--vflip ";
+		command += " --vflip";
 	}
-
-	// Add flip info to raspistill command string
-	command += flip;
 
 	//Gamma correction (saturation)
   // todo: Gamma !=saturation,  please change gui description !
-	string saturation;
 
 	// Check if gamma correction is set
 	if (asiGamma < -100)
 	{
 		asiGamma = -100;
 	}
-
-	if (asiGamma > 100)
+	else if (asiGamma > 100)
 	{
 		asiGamma = 100;
 	}
@@ -542,21 +476,15 @@ time ( NULL );
 	{
 		ss.str("");
 		ss << asiGamma;
-		saturation = "--saturation "+ ss.str() + " ";
+		command += "--saturation "+ ss.str();
 	}
 
-	// Add gamma correction info to raspistill command string
-	command += saturation;
-
 	// Brightness
-	string brightness;
-
 	if (asiBrightness < 0)
 	{
 		asiBrightness = 0;
 	}
-
-	if (asiBrightness > 100)
+	else if (asiBrightness > 100)
 	{
 		asiBrightness = 100;
 	}
@@ -566,38 +494,28 @@ time ( NULL );
 	{
 		ss.str("");
 		ss << asiBrightness;
-		brightness = "--brightness " + ss.str() + " ";
+		command += " --brightness " + ss.str();
 	}
-
-	// Add brightness info to raspistill command string
-	command += brightness;
-
-	// Quality
-	string squality;
 
 	if (quality < 0)
 	{
 		quality = 0;
 	}
-
-	if (quality > 100)
+	else if (quality > 100)
 	{
 		quality = 100;
 	}
 
 	ss.str("");
 	ss << quality;
-	squality = "--quality " + ss.str() + " ";
-
-	// Add image quality info to raspistill command string
-	command += squality;
+	command += " --quality " + ss.str();
 
 	if (!darkframe) {
 		if (showDetails)
-			command += "-a 1104 ";
+			command += " -a 1104";
 
 		if (time==1)
-			command += "-a 1036 ";
+			command += " -a 1036";
 
 		if (strcmp(ImgText, "") != 0) {
 			ss.str("");
@@ -612,13 +530,12 @@ time ( NULL );
 					<< " WBB:" << asiWBB;
 				}
 			}
-			command += "-a \"" + ss.str() + "\" ";
+			command += " -a \"" + ss.str() + "\"";
 		}
 
 		if (fontsize < 6)
 			fontsize = 6;
-
-		if (fontsize > 160)
+		else if (fontsize > 160)
 			fontsize = 160;
 
 		ss.str("");
@@ -626,8 +543,7 @@ time ( NULL );
 
 		if (fontcolor < 0)
 			fontcolor = 0;
-
-		if (fontcolor > 255)
+		else if (fontcolor > 255)
 			fontcolor = 255;
 
 		std::stringstream C;
@@ -635,14 +551,13 @@ time ( NULL );
 
 		if (background < 0)
 			background = 0;
-
-		if (background > 255)
+		else if (background > 255)
 			background = 255;
 
 		std::stringstream B;
 		B  << std::setfill ('0') << std::setw(2) << std::hex << background;
 
-		command += "-ae " + ss.str() + ",0x" + C.str() + ",0x8080" + B.str() + " ";
+		command += " -ae " + ss.str() + ",0x" + C.str() + ",0x8080" + B.str();
 	}
 
 	// Define char variable
@@ -653,8 +568,8 @@ time ( NULL );
 
 	Log(1, "Capture command: %s\n", cmd);
 
-	// Execute raspistill command
-	if (system(cmd) == 0) numExposures++;
+	// Execute the command.
+	return(system(cmd));
 }
 
 // Simple function to make flags easier to read for humans.
@@ -714,8 +629,8 @@ int main(int argc, char *argv[])
 	int asiDayAutoExposure= 1;
 	int currentAutoExposure = 0;
 	int asiAutoFocus      = 0;
-	double asiNightGain   = 4;
-	double asiDayGain     = 1;
+	double asiNightGain   = 4.0;
+	double asiDayGain     = 1.0;
 	double currentGain    = NOT_SET;
 	int asiNightAutoGain  = 0;
 	int asiDayAutoGain    = 0;
@@ -735,7 +650,7 @@ int main(int argc, char *argv[])
 	char const *latitude  = "52.57N"; //GPS Coordinates of Limmen, Netherlands where this code was altered
 	char const *longitude = "4.70E";
 	char const *angle     = "0"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
-	//int preview           = 0;
+	int preview           = 0;
 	int time              = 0;
 	int showDetails       = 0;
 	int darkframe         = 0;
@@ -747,6 +662,7 @@ int main(int argc, char *argv[])
 	//id *retval;
 	bool endOfNight    = false;
 	//hread_t hthdSave = 0;
+	int retCode;
 
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
@@ -755,13 +671,13 @@ int main(int argc, char *argv[])
 	printf("%s ******************************************\n", c(KGRN));
 	printf("%s *** Allsky Camera Software v0.8 | 2021 ***\n", c(KGRN));
 	printf("%s ******************************************\n\n", c(KGRN));
-	printf("\%sCapture images of the sky with a Raspberry Pi and an ZWO ASI or RPi HQ camera\n", c(KGRN));
+	printf("\%sCapture images of the sky with a Raspberry Pi and a RPi HQ camera\n", c(KGRN));
 	printf("\n");
 	printf("%sAdd -h or -help for available options\n", c(KYEL));
 	printf("\n");
-	printf("\%sAuthor: ", KNRM);
+	printf("\%sAuthor: ", c(KNRM));
 	printf("Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
-	printf("\%sContributors:\n", KNRM);
+	printf("\%sContributors:\n", c(KNRM));
 	printf("-Knut Olav Klo\n");
 	printf("-Daniel Johnsen\n");
 	printf("-Yang and Sam from ZWO\n");
@@ -783,7 +699,7 @@ int main(int argc, char *argv[])
 		{
 			Log(4, "Processing argument: %s\n\n", argv[i]);
 
-			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0)
+			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
 				help = 1;
 			}
@@ -1209,7 +1125,7 @@ int main(int argc, char *argv[])
 	// Show selected camera type
 	printf(" Camera: Raspberry Pi HQ camera\n");
 
-	printf("%s", KNRM);
+	printf("%s", c(KNRM));
 
 	// Initialization
 	std::string lastDayOrNight;
@@ -1230,7 +1146,7 @@ int main(int argc, char *argv[])
 // Next lines are present for testing purposes
 Log(3, "Daytimecapture: %d\n", daytimeCapture);
 
-		if (myModeMeanSetting.mode_mean) {
+		if (myModeMeanSetting.mode_mean && numExposures > 0) {
   			RPiHQcalcMean(fileName, asiNightExposure, asiNightGain, myRaspistillSetting, myModeMeanSetting);
 		}
 
@@ -1362,7 +1278,18 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 			Log(0, "Capturing & saving image...\n");
 
 			// Capture and save image
-			RPiHQcapture(asiAutoFocus, currentAutoExposure, currentExposure, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, asiGamma, currentBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe);
+			retCode = RPiHQcapture(asiAutoFocus, currentAutoExposure, currentExposure, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, asiGamma, currentBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe);
+			if (retCode == 0)
+			{
+				numExposures++;
+			}
+			else
+			{
+				printf(" >>> Unable to take picture, return code=%d\n", (retCode >> 8));
+				Log(1, "  > Sleeping from failed exposure: %d seconds\n", currentDelay / MS_IN_SEC);
+				usleep(currentDelay * US_IN_MS);
+				continue;
+			}
 
 			// Check for night time
 			if (dayOrNight == "NIGHT")

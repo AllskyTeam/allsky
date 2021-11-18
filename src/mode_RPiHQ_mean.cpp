@@ -16,6 +16,8 @@
 #include <fstream>
 #include <algorithm> 
 
+void Log(int, const char *, ...);
+
 #include "include/RPiHQ_raspistill.h"
 #include "include/mode_RPiHQ_mean.h"
 
@@ -117,6 +119,7 @@ void RPiHQmask(const char* fileName)
 		}
 		else {
 			maskHorizon = cv::imread("mask.jpg", cv::IMREAD_UNCHANGED);
+//xxx should be !maskHorizon   ???
 			if (!image.data)
 			{
 				maskHorizon = cv::imread("mask_template.jpg", cv::IMREAD_UNCHANGED);
@@ -139,6 +142,22 @@ void RPiHQmask(const char* fileName)
 	}
 }
 
+// Test focus
+// https://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry
+// https://drive.google.com/file/d/0B6UHr3GQEkQwYnlDY2dKNTdudjg/view?resourcekey=0-a73PvBnc3a2B5wztAV0QaA
+double get_focus_measure(cv::Mat img, modeMeanSetting &currentModeMeanSetting)
+{
+ 	cv::Mat lap;
+	cv::Laplacian(img, lap, CV_64F);
+
+	cv::Scalar mu, sigma;
+	cv::meanStdDev(lap, mu, sigma);
+
+	double focusMeasure = sigma.val[0]*sigma.val[0];
+	Log(2, "focusMeasure: %'f\n", focusMeasure);
+	return(focusMeasure);
+}
+
 // Calculate new raspistillSettings (exposure, gain)
 // Algorithm not perfect, but better than no exposure control at all
 void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
@@ -153,8 +172,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 		currentModeMeanSetting.init = false;
 		currentModeMeanSetting.ExposureLevelMax = log(asiGain * asiExposure_us/US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) + 1; 
 		currentModeMeanSetting.ExposureLevelMin = log(1.0     * 1.0        /US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) - 1;
-		if (currentModeMeanSetting.debugLevel >= 1)
-			printf("ExposureLevel: %1.8f ... %1.8f\n", currentModeMeanSetting.ExposureLevelMin, currentModeMeanSetting.ExposureLevelMax);
+		Log(1, "ExposureLevel: %1.8f ... %1.8f\n", currentModeMeanSetting.ExposureLevelMin, currentModeMeanSetting.ExposureLevelMax);
 	}
 
 	// get old ExposureTime
@@ -180,21 +198,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 	//Now you can copy your source image to destination image with masking
 	image.copyTo(dstImage, mask);
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Test focus
-// https://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry
-// https://drive.google.com/file/d/0B6UHr3GQEkQwYnlDY2dKNTdudjg/view?resourcekey=0-a73PvBnc3a2B5wztAV0QaA
- 	cv::Mat lap;
-	cv::Laplacian(dstImage, lap, CV_64F);
-
-	cv::Scalar mu, sigma;
-	cv::meanStdDev(lap, mu, sigma);
-
-	double focusMeasure = sigma.val[0]*sigma.val[0];
-	if (currentModeMeanSetting.debugLevel >= 2) {
-		std::cout <<  "focusMeasure: " << focusMeasure << std::endl;
-	}
-/////////////////////////////////////////////////////////////////////////////////////
+	(void) get_focus_measure(dstImage, currentModeMeanSetting);
 
 	std::vector<int> compression_params;
 	compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
@@ -211,7 +215,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 			std::cout <<  "mean_scalar.val[0]" << mean_scalar.val[0] << std::endl;
 			mean = mean_scalar.val[0];
 			break;
-		case 3: // for color choose maximum channel
+		case 3: // for color use average of the channels
 		case 4:
 			mean = (mean_scalar[0] + mean_scalar[1] + mean_scalar[2]) / 3.0;
 			break;
@@ -227,22 +231,18 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 			break;
 	}
 		 
-	if ( currentModeMeanSetting.debugLevel >= 1) {
-		std::cout <<  basename(fileName) << " " << ExposureTime_s << " " << mean << " " << (currentModeMeanSetting.mean_value - mean) << std::endl;
-	}
+	Log(1, "%s %.1f %f %f\n", basename(fileName), ExposureTime_s, mean, (currentModeMeanSetting.mean_value - mean));
 
 	// avg of mean history 
-	if (currentModeMeanSetting.debugLevel >= 3) {
-		printf("MeanCnt: %d\n", MeanCnt);
-		printf("mean_historySize: %d\n", currentModeMeanSetting.historySize);
-	}
+	Log(3, "MeanCnt: %d\n", MeanCnt);
+	Log(3, "mean_historySize: %d\n", currentModeMeanSetting.historySize);
+
 	mean_history[MeanCnt % currentModeMeanSetting.historySize] = mean;
 	int values = 0;
 	mean=0.0;
 	for (int i=1; i <= currentModeMeanSetting.historySize; i++) {
 		int idx =  (MeanCnt + i) % currentModeMeanSetting.historySize;
-		if (currentModeMeanSetting.debugLevel >= 1)
-			printf("i=%d: idx=%d mean=%1.4f exp=%d\n", i, idx, mean_history[idx], exp_history[idx]);
+		Log(1, "i=%d: idx=%d mean=%1.4f exp=%d\n", i, idx, mean_history[idx], exp_history[idx]);
 		mean += mean_history[idx] * (double) i;
 		values += i;
 	} 
@@ -256,19 +256,16 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 	// forcast (m_forcast = m_neu + diff = m_neu + m_neu - m_alt = 2*m_neu - m_alt)
 	double mean_forecast = 2.0 * mean_history[idx] - mean_history[idxN1];
 	mean_forecast = std::min((double) std::max((double) mean_forecast, 0.0), 1.0);
-	if (currentModeMeanSetting.debugLevel >= 2)
-		printf("mean_forecast: %1.4f\n", mean_forecast);
+	Log(2, "mean_forecast: %1.4f\n", mean_forecast);
 	// gleiche Wertigkeit wie aktueller Wert
 	mean += mean_forecast * currentModeMeanSetting.historySize;
 	values += currentModeMeanSetting.historySize;
 
-	if (currentModeMeanSetting.debugLevel >= 3)
-		printf("values: %d\n", values);
+	Log(3, "values: %d\n", values);
 	
 	mean = mean / (double) values;
 	mean_diff = abs(mean - currentModeMeanSetting.mean_value);
-	if (currentModeMeanSetting.debugLevel >= 2)
-		printf("mean_diff: %1.4f\n", mean_diff);
+	Log(2, "mean_diff: %1.4f\n", mean_diff);
 
 	int ExposureChange = currentModeMeanSetting.shuttersteps / 2;
 		
@@ -284,8 +281,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 	dExposureChange = ExposureChange-lastExposureChange;
 	lastExposureChange = ExposureChange;
 
-	if (currentModeMeanSetting.debugLevel >= 1)
-		printf("ExposureChange: %d (%d)\n", ExposureChange, dExposureChange);
+	Log(1, "ExposureChange: %d (%d)\n", ExposureChange, dExposureChange);
 
 	if (mean < (currentModeMeanSetting.mean_value - (currentModeMeanSetting.mean_threshold))) {
 		if ((currentRaspistillSetting.analoggain < asiGain) || (currentRaspistillSetting.shutter_us < asiExposure_us)) {  // obere Grenze durch Gaim und shutter
@@ -293,9 +289,8 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 		}
 	}
 	if (mean > (currentModeMeanSetting.mean_value + currentModeMeanSetting.mean_threshold))  {
-		if (ExposureTime_s <= 0.000001) { // untere Grenze durch shuttertime
-			if (currentModeMeanSetting.debugLevel >= 2)
-				printf("ExposureTime_s to low - stop !\n");
+		if (ExposureTime_s <= 1 / US_IN_SEC) { // untere Grenze durch shuttertime
+			Log(2, "ExposureTime_s too low - stop !\n");
 		}
 		else {
 			currentModeMeanSetting.ExposureLevel -= ExposureChange;
@@ -330,7 +325,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 		currentRaspistillSetting.analoggain = newGain;
 	}
 	// min=1Âµs, max asiExposure
-	ExposureTime_s = std::min(asiExposure_us/US_IN_SEC,std::max(0.000001, pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / currentRaspistillSetting.analoggain));
+	ExposureTime_s = std::min(asiExposure_us/US_IN_SEC, std::max(1 / US_IN_SEC, pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / currentRaspistillSetting.analoggain));
 
 	//#############################################################################################################
 	// prepare for the next measurement

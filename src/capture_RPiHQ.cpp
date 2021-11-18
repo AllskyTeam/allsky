@@ -41,16 +41,15 @@ using namespace std;
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
-//char nameCnt[128];
-char const *fileName = "image.jpg";
-bool bMain = true;
+char const *fileName		= "image.jpg";
+bool bMain					= true;
 //ol bDisplay = false;
 std::string dayOrNight;
-int numExposures = 0;	// how many valid pictures have we taken so far?
+int numExposures			= 0;	// how many valid pictures have we taken so far?
 
 // Some command-line and other option definitions needed outside of main():
-bool tty				= false;	// are we on a tty?
-#define NOT_SET			  -1	// signifies something isn't set yet
+bool tty					= false;	// are we on a tty?
+#define NOT_SET				  -1		// signifies something isn't set yet
 #define DEFAULT_NOTIFICATIONIMAGES 1
 int notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
 
@@ -270,7 +269,7 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 {
 	Log(3, "capturing image in file %s\n", fileName);
 
-	// Ensure no raspistill process is still running
+	// Ensure no process is still running.
 	// Include "--" to we only find the command, not a different command with "libcamera-still"
 	// on its command line.
 	string kill = "ps -ef | grep 'libcamera-still --' | grep -v color | awk '{print $2}' | xargs kill -9 1> /dev/null 2>&1";
@@ -286,10 +285,46 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 	string command = "raspistill";
 	ss << fileName;
 	command += " --output '" + ss.str();
-	command += " --nopreview --thumb none --burst -st";
+	command += " --thumb none --burst -st";
 
-	// Define strings for roi (used for binning) string
-	string roi;
+	// --timeout (in MS) determines how long the video will run before it takes a picture.
+	if (preview)
+	{
+		stringstream wh;
+		wh << width << "," << height;
+		command += " --timeout 5000";
+		command += " --preview '0,0," + wh.str() + "'";	// x,y,width,height
+	}
+	else
+	{
+		ss.str("");
+		// Daytime auto-exposure pictures don't need a very long --timeout since the exposures are
+		// normally short so the camera can home in on the correct exposure quickly.
+		if (asiAutoExposure)
+		{
+			if (myModeMeanSetting.mode_mean)
+			{
+				// We do our own auto-exposure so no need to wait at all.
+				ss << 1;
+			}
+			else if (dayOrNight == "DAY")
+			{
+				ss << 1000;
+			}
+			else	// NIGHT
+			{
+				// really could use longer but then it'll take forever for pictures to appear
+				ss << 10000;
+			}
+		}
+		else
+		{
+			// Manual exposure shots don't need any time to home in since we're specifying the time.
+			ss << 10;
+		}
+		command += " --timeout " + ss.str();
+		command += " --nopreview";
+	}
 
 	if (bin > 3) 	{
 		bin = 3;
@@ -353,9 +388,6 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 		command += " --focus";
 	}
 
-	// Anolog Gain
-	string gain;
-
 	// Check if auto gain is selected
 	if (asiAutoGain)
 	{
@@ -371,24 +403,21 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 			}
 		}
 		else {
-			// Set analog gain to 1
-			command += " --analoggain 1";
+			command += " --analoggain 1";	// 1 effectively makes it autogain
 		}
 	}
-	// Set manual analog gain setting
-	else if (asiGain) {
-		if (asiGain < 1) {
-			asiGain = 1;
-		} else if (asiGain > 16) {
-			asiGain = 16;
+	else {							// Is manual gain
+		if (asiGain < 1.0) {
+			asiGain = 1.0;
 		}
-
+		else if (asiGain > 16.0) {
+			asiGain = 16.0;
+		}
 		ss.str("");
 		ss << asiGain;
 		command += " --analoggain " + ss.str();
 	}
 
-  // Add exif information
 	if (myModeMeanSetting.mode_mean) {
 	   	stringstream Str_ExposureTime;
    		stringstream Str_Reinforcement;
@@ -1371,4 +1400,3 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 
 	closeUp(0);
 }
-

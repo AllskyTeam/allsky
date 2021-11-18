@@ -217,7 +217,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 	else {
 		currentRaspistillSetting.analoggain = newGain;
 	}
-	// min=1Âµs, max asiExposure
+	// min=1 us, max asiExposure
 	ExposureTime_s = std::min(asiExposure_us/US_IN_SEC, std::max(1 / US_IN_SEC, pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / currentRaspistillSetting.analoggain));
 
 	//#############################################################################################################

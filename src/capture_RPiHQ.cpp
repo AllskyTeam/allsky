@@ -266,7 +266,7 @@ void writeToLog(int val)
 }
 
 // Build capture command to capture the image from the HQ camera
-void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asiAutoGain, int asiAutoAWB, double asiGain, int bin, double asiWBR, double asiWBB, int asiRotation, int asiFlip, int asiGamma, int asiBrightness, int quality, const char* fileName, int time, int showDetails, const char* ImgText, int fontsize, int fontcolor, int background, int darkframe)
+void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asiAutoGain, int asiAutoAWB, double asiGain, int bin, double asiWBR, double asiWBB, int asiRotation, int asiFlip, float saturation, int asiBrightness, int quality, const char* fileName, int time, int showDetails, const char* ImgText, int fontsize, int fontcolor, int background, int darkframe)
 {
 	Log(3, "capturing image in file %s\n", fileName);
 
@@ -459,24 +459,20 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 		command += " --vflip";
 	}
 
-	//Gamma correction (saturation)
-  // todo: Gamma !=saturation,  please change gui description !
-
-	// Check if gamma correction is set
-	if (asiGamma < -100)
+	if (saturation < -100.0)
 	{
-		asiGamma = -100;
+		saturation = -100.0;
 	}
-	else if (asiGamma > 100)
+	else if (saturation > 100.0)
 	{
-		asiGamma = 100;
+		saturation = 100.0;
 	}
 
-	if (asiGamma)
+	if (saturation)
 	{
 		ss.str("");
-		ss << asiGamma;
-		command += "--saturation "+ ss.str();
+		ss << saturation;
+		command += " --saturation "+ ss.str();
 	}
 
 	// Brightness
@@ -641,13 +637,13 @@ int main(int argc, char *argv[])
 	int currentDelay      = NOT_SET;
 	double asiWBR         = 2.5;
 	double asiWBB         = 2;
-	int asiGamma          = 50;
+	float saturation      = 0.0;
 	int asiDayBrightness  = 50;
 	int asiNightBrightness= 50;
 	int currentBrightness = NOT_SET;
 	int asiFlip           = 0;
 	int asiRotation       = 0;
-	char const *latitude  = "52.57N"; //GPS Coordinates of Limmen, Netherlands where this code was altered
+	char const *latitude  = "52.57N";
 	char const *longitude = "4.70E";
 	char const *angle     = "0"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
 	int preview           = 0;
@@ -1375,3 +1371,4 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 
 	closeUp(0);
 }
+

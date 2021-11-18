@@ -285,7 +285,7 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 	// Define command line.
 	string command = "raspistill";
 	ss << fileName;
-	command += " --output '" + ss.str();
+	command += " --output '" + ss.str() + "'";
 	command += " --thumb none --burst -st";
 
 	// --timeout (in MS) determines how long the video will run before it takes a picture.

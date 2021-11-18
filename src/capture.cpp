@@ -112,17 +112,24 @@ float histogramBoxPercentFromLeft = DEFAULT_BOX_FROM_LEFT;
 float histogramBoxPercentFromTop = DEFAULT_BOX_FROM_TOP;
 #endif	// USE_HISTOGRAM
 
-char debug_text[500];		// buffer to hold debug messages displayed by displayDebugText()
-char debug_text2[100];		// buffer to hold additional message
+char debug_text[500];		// buffer to hold debug messages
 int debugLevel = 0;
 /**
  * Helper function to display debug info
 **/
-void displayDebugText(const char * text, int requiredLevel) {
-    if (debugLevel >= requiredLevel) {
-        printf("%s", text);
-    }
+// [[gnu::format(printf, 2, 3)]]
+static inline void Log(int required_level, const char *fmt, ...)
+{
+    if (debugLevel >= required_level) {
+		char msg[8192];
+		snprintf(msg, sizeof(msg), "%s", fmt);
+		va_list va;
+		va_start(va, fmt);
+		vfprintf(stdout, msg, va);
+		va_end(va);
+	}
 }
+
 
 // Return the string for the specified color, or "" if we're not on a tty.
 char const *c(char const *color)
@@ -172,8 +179,7 @@ ASI_ERROR_CODE setControl(int CamNum, ASI_CONTROL_TYPE control, long value, ASI_
             return ret;
         }
     }
-    sprintf(debug_text, "NOTICE: Camera does not support ControlCap # %d; not setting to %ld.\n", control, value);
-    displayDebugText(debug_text, 3);
+    Log(3, "NOTICE: Camera does not support ControlCap # %d; not setting to %ld.\n", control, value);
     return ASI_ERROR_INVALID_CONTROL_TYPE;
 }
 
@@ -287,9 +293,7 @@ void *SaveImgThd(void *para)
 
         bSavingImg = true;
 
-		char dT[500];	// Since we're in a thread, use our own copy of debug_text
-        sprintf(dT, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), fileName);
-        displayDebugText(dT, 1);
+        Log(1, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), fileName);
         int64 st, et;
 
         bool result = false;
@@ -328,7 +332,7 @@ void *SaveImgThd(void *para)
 
         } else {
             // This can happen if the program is closed before the first picture.
-            displayDebugText("----- SaveImgThd(): pRgb.data is null\n", 2);
+            Log(2, "----- SaveImgThd(): pRgb.data is null\n");
         }
         bSavingImg = false;
 
@@ -344,8 +348,7 @@ void *SaveImgThd(void *para)
                x = "  > *****\n";	// indicate when it takes a REALLY long time to save
             else
                x = "";
-            sprintf(dT, "%s  > Image took %'.1f ms to save (average %'.1f ms).\n%s", x, diff, total_time_ms / total_saves, x);
-            displayDebugText(dT, 4);
+            Log(4, "%s  > Image took %'.1f ms to save (average %'.1f ms).\n%s", x, diff, total_time_ms / total_saves, x);
 		}
 
         pthread_mutex_unlock(&mtx_SaveImg);
@@ -522,16 +525,14 @@ static void flush_buffered_image(int cameraId, void *buf, size_t size)
 long us;
 ASI_BOOL b;
 ASIGetControlValue(cameraId, ASI_EXPOSURE, &us, &b);
-sprintf(debug_text, "  > [Cleared buffer frame, next exposure: %'ld, auto=%s]\n", us, b==ASI_TRUE ? "yes" : "no");
-displayDebugText(debug_text, 3);
+Log(3, "  > [Cleared buffer frame, next exposure: %'ld, auto=%s]\n", us, b==ASI_TRUE ? "yes" : "no");
     }
 
 // xxxxxxxxxx For now, display message above for each one rather than a summary.
 return;
     if (num_cleared > 0)
     {
-        sprintf(debug_text, "  > [Cleared %d buffer frame%s]\n", num_cleared, num_cleared > 1 ? "s" : "");
-        displayDebugText(debug_text, 3);
+        Log(3, "  > [Cleared %d buffer frame%s]\n", num_cleared, num_cleared > 1 ? "s" : "");
     }
 }
 
@@ -564,10 +565,9 @@ ASI_ERROR_CODE takeOneExposure(
 
     // This debug message isn't typcally needed since we already displayed a message about
     // starting a new exposure, and below we display the result when the exposure is done.
-    sprintf(debug_text, "  > %s to %'ld us (%'.2f ms), timeout: %'ld ms\n",
+    Log(4, "  > %s to %'ld us (%'.2f ms), timeout: %'ld ms\n",
         wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Exposure set",
         exposure_time_us, (float)exposure_time_us/US_IN_MS, timeout);
-    displayDebugText(debug_text, 4);
 
     setControl(cameraId, ASI_EXPOSURE, exposure_time_us, currentAutoExposure);
 
@@ -583,18 +583,17 @@ ASI_ERROR_CODE takeOneExposure(
     if (status == ASI_SUCCESS) {
         status = ASIGetVideoData(cameraId, imageBuffer, bufferSize, timeout);
         if (status != ASI_SUCCESS) {
-            sprintf(debug_text, "  > ERROR: Failed getting image: %s\n", getRetCode(status));
-            displayDebugText(debug_text, 0);
+            Log(0, "  > ERROR: Failed getting image: %s\n", getRetCode(status));
         }
         else
         {
             numErrors = 0;
-            debug_text2[0] = '\0';
+            debug_text[0] = '\0';
 #ifdef USE_HISTOGRAM
             if (histogram != NULL && mean != NULL)
             {
                 *mean = computeHistogram(imageBuffer, width, height, imageType, histogram);
-                sprintf(debug_text2, " @ mean %d", *mean);
+                sprintf(debug_text, " @ mean %d", *mean);
             }
 #endif
             last_exposure_us = exposure_time_us;
@@ -603,15 +602,13 @@ ASI_ERROR_CODE takeOneExposure(
 			// When in auto-exposure mode, the returned exposure length is what the driver thinks the
 			// next exposure should be, and will eventually converge on the correct exposure.
             ASIGetControlValue(cameraId, ASI_EXPOSURE, &reported_exposure_us, &wasAutoExposure);
-            sprintf(debug_text, "  > Got image%s.  Reported exposure: %'ld us (%'.2f ms), wasAuto=%s\n", debug_text2, reported_exposure_us, (float)reported_exposure_us/US_IN_MS, wasAutoExposure == ASI_TRUE ? "yes" : "no");
-            displayDebugText(debug_text, 3);
+            Log(3, "  > Got image%s.  Reported exposure: %'ld us (%'.2f ms), wasAuto=%s\n", debug_text, reported_exposure_us, (float)reported_exposure_us/US_IN_MS, wasAutoExposure == ASI_TRUE ? "yes" : "no");
 
             // If this was a manual exposure, make sure it took the correct exposure.
 			// Per ZWO, this should never happen.
             if (wasAutoExposure == ASI_FALSE && exposure_time_us != reported_exposure_us)
             {
-                sprintf(debug_text, "  > WARNING: not correct exposure (requested: %'ld us, actual: %'ld us, diff: %'ld)\n", exposure_time_us, reported_exposure_us, reported_exposure_us - exposure_time_us);
-                displayDebugText(debug_text, 0);
+                Log(0, "  > WARNING: not correct exposure (requested: %'ld us, actual: %'ld us, diff: %'ld)\n", exposure_time_us, reported_exposure_us, reported_exposure_us - exposure_time_us);
             }
             ASIGetControlValue(cameraId, ASI_GAIN, &actualGain, &bAuto);
             ASIGetControlValue(cameraId, ASI_TEMPERATURE, &actualTemp, &bAuto);
@@ -622,8 +619,7 @@ ASI_ERROR_CODE takeOneExposure(
 
     }
     else {
-        sprintf(debug_text, "  > ERROR: Not fetching exposure data because status is %s\n", getRetCode(status));
-        displayDebugText(debug_text, 0);
+        Log(0, "  > ERROR: Not fetching exposure data because status is %s\n", getRetCode(status));
     }
 
     return status;
@@ -776,22 +772,19 @@ int numGainChanges = 0;		// This is reset at every day/night and night/day trans
 bool resetGainTransitionVariables(int dayGain, int nightGain)
 {
     // Many of the "xxx" messages below will go away once we're sure gain transition works.
-    sprintf(debug_text, "xxx resetGainTransitionVariables(%d, %d) called at %s\n", dayGain, nightGain, dayOrNight.c_str());
-    displayDebugText(debug_text, 4);
+    Log(4, "xxx resetGainTransitionVariables(%d, %d) called at %s\n", dayGain, nightGain, dayOrNight.c_str());
 
     if (adjustGain == false)
     {
         // determineGainChange() will never be called so no need to set any variables.
-        sprintf(debug_text,"xxx will not adjust gain - adjustGain == false\n");
-        displayDebugText(debug_text, 4);
+        Log(4, "xxx will not adjust gain - adjustGain == false\n");
         return(false);
     }
 
     if (numExposures == 0)
     {
         // we don't adjust when the program first starts since there's nothing to transition from
-        sprintf(debug_text,"xxx will not adjust gain right now - numExposures == 0\n");
-        displayDebugText(debug_text, 4);
+        Log(4, "xxx will not adjust gain right now - numExposures == 0\n");
         return(false);
     }
 
@@ -805,24 +798,20 @@ bool resetGainTransitionVariables(int dayGain, int nightGain)
     if (dayOrNight == "DAY")
     {
         totalTimeInSec = (asi_day_exposure_us / US_IN_SEC) + (dayDelay_ms / MS_IN_SEC);
-        sprintf(debug_text,"xxx totalTimeInSec=%.1fs, asi_day_exposure_us=%'ldus , daydelay_ms=%'dms\n", totalTimeInSec, asi_day_exposure_us, dayDelay_ms);
-        displayDebugText(debug_text, 4);
+        Log(4, "xxx totalTimeInSec=%.1fs, asi_day_exposure_us=%'ldus , daydelay_ms=%'dms\n", totalTimeInSec, asi_day_exposure_us, dayDelay_ms);
     }
     else	// NIGHT
     {
         // At nightime if the exposure is less than the max, we wait until max has expired,
         // so use it instead of the exposure time.
         totalTimeInSec = (asi_night_max_autoexposure_ms / MS_IN_SEC) + (nightDelay_ms / MS_IN_SEC);
-        sprintf(debug_text, "xxx totalTimeInSec=%.1fs, asi_night_max_autoexposure_ms=%'dms, nightDelay_ms=%'dms\n", totalTimeInSec, asi_night_max_autoexposure_ms, nightDelay_ms);
-        displayDebugText(debug_text, 4);
+        Log(4, "xxx totalTimeInSec=%.1fs, asi_night_max_autoexposure_ms=%'dms, nightDelay_ms=%'dms\n", totalTimeInSec, asi_night_max_autoexposure_ms, nightDelay_ms);
     }
 
     gainTransitionImages = ceil(gainTransitionTime / totalTimeInSec);
     if (gainTransitionImages == 0)
     {
-        sprintf(debug_text, "*** INFORMATION: Not adjusting gain - your 'gaintransitiontime' (%d seconds) is less than the time to take one image plus its delay (%.1f seconds).\n", gainTransitionTime, totalTimeInSec);
-        displayDebugText(debug_text, 0);
-
+        Log(0, "*** INFORMATION: Not adjusting gain - your 'gaintransitiontime' (%d seconds) is less than the time to take one image plus its delay (%.1f seconds).\n", gainTransitionTime, totalTimeInSec);
         return(false);
     }
 
@@ -839,9 +828,8 @@ bool resetGainTransitionVariables(int dayGain, int nightGain)
 			gainTransitionImages++;		// this one will get the remaining amount
     }
 
-    sprintf(debug_text,"xxx gainTransitionImages=%d, gainTransitionTime=%ds, perImageAdjustGain=%d, totalAdjustGain=%d\n",
+    Log(4, "xxx gainTransitionImages=%d, gainTransitionTime=%ds, perImageAdjustGain=%d, totalAdjustGain=%d\n",
         gainTransitionImages, gainTransitionTime, perImageAdjustGain, totalAdjustGain);
-    displayDebugText(debug_text, 4);
 
     return(true);
 }
@@ -858,8 +846,7 @@ int determineGainChange(int dayGain, int nightGain)
     if (numGainChanges > gainTransitionImages || totalAdjustGain == 0)
     {
         // no more changes needed in this transition
-        sprintf(debug_text, "  xxxx No more gain changes needed.\n");
-        displayDebugText(debug_text, 4);
+        Log(4, "  xxxx No more gain changes needed.\n");
         currentAdjustGain = false;
         return(0);
     }
@@ -891,9 +878,8 @@ int determineGainChange(int dayGain, int nightGain)
         }
     }
 
-    sprintf(debug_text, "  xxxx Adjusting %s gain by %d on next picture to %d; will be gain change # %d of %d.\n",
+    Log(4, "  xxxx Adjusting %s gain by %d on next picture to %d; will be gain change # %d of %d.\n",
         dayOrNight.c_str(), amt, amt+currentGain, numGainChanges, gainTransitionImages);
-    displayDebugText(debug_text, 4);
     return(amt);
 }
 
@@ -922,8 +908,7 @@ bool check_max_errors(int *e, int max_errors)
 	if (numErrors >= max_errors)
 	{
 		*e = 2;		// exit code
-		sprintf(debug_text, "*** ERROR: Maximum number of consecutive errors of %d reached; exiting...\n", max_errors);
-		displayDebugText(debug_text, 0);
+		Log(0, "*** ERROR: Maximum number of consecutive errors of %d reached; exiting...\n", max_errors);
 		return(false);	// gets us out of inner and outer loop
 	}
 	return(true);
@@ -1664,8 +1649,7 @@ const char *locale = DEFAULT_LOCALE;
         int right_of_box = centerX + (histogramBoxSizeX / 2);
         int top_of_box = centerY - (histogramBoxSizeY / 2);
         int bottom_of_box = centerY + (histogramBoxSizeY / 2);
-        sprintf(debug_text, "Image: %dx%d, HISTOGRAM BOX: center @ %dx%d, upper left: %dx%d, lower right: %dx%d\n", width, height, centerX, centerY, left_of_box, top_of_box, right_of_box, bottom_of_box);
-        displayDebugText(debug_text, 0);
+        Log(0, "Image: %dx%d, HISTOGRAM BOX: center @ %dx%d, upper left: %dx%d, lower right: %dx%d\n", width, height, centerX, centerY, left_of_box, top_of_box, right_of_box, bottom_of_box);
 
         if (left_of_box < 0 || right_of_box >= width || top_of_box < 0 || bottom_of_box >= height)
 		{
@@ -2000,16 +1984,16 @@ const char *locale = DEFAULT_LOCALE;
     if (asiDayAutoGain == 1 || asiNightAutoGain == 1 || gainTransitionTime == 0 || asiDayGain == asiNightGain || taking_dark_frames == 1)
     {
         adjustGain = false;
-        displayDebugText("Will NOT adjust gain at transitions\n", 3);
+        Log(3, "Will NOT adjust gain at transitions\n");
     }
     else
     {
         adjustGain = true;
-        displayDebugText("Will adjust gain at transitions\n", 3);
+        Log(3, "Will adjust gain at transitions\n");
     }
 
     if (ImgExtraText[0] != '\0' && extraFileAge > 0) {
-        displayDebugText("Extra Text File Age Disabled So Displaying Anyway\n", 1);
+        Log(1, "Extra Text File Age Disabled So Displaying Anyway\n");
     }
 
     if (tty)
@@ -2056,7 +2040,7 @@ const char *locale = DEFAULT_LOCALE;
                 currentBin = nightBin;
                 currentBrightness = asiNightBrightness;
 
-                displayDebugText("Taking dark frames...\n", 0);
+                Log(0, "Taking dark frames...\n");
 
                 if (notificationImages) {
                     system("scripts/copy_notification_image.sh DarkFrames &");
@@ -2068,8 +2052,7 @@ const char *locale = DEFAULT_LOCALE;
             // Setup the daytime capture parameters
             if (endOfNight == true)	// Execute end of night script
             {
-                sprintf(debug_text, "Processing end of night data\n");
-                displayDebugText(debug_text, 0);
+                Log(0, "Processing end of night data\n");
                 system("scripts/endOfNight.sh &");
                 endOfNight = false;
                 displayedNoDaytimeMsg = 0;
@@ -2082,9 +2065,8 @@ const char *locale = DEFAULT_LOCALE;
                     if (notificationImages) {
                         system("scripts/copy_notification_image.sh CameraOffDuringDay &");
                     }
-                    sprintf(debug_text, "It's daytime... we're not saving images.\n*** %s ***\n",
+                    Log(0, "It's daytime... we're not saving images.\n*** %s ***\n",
                         tty ? "Press Ctrl+C to stop" : "Stop the allsky service to end this process.");
-                    displayDebugText(debug_text, 0);
                     displayedNoDaytimeMsg = 1;
 
                     // sleep until almost nighttime, then wake up and sleep a short time
@@ -2103,8 +2085,7 @@ const char *locale = DEFAULT_LOCALE;
 
             else
             {
-                sprintf(debug_text, "==========\n=== Starting daytime capture ===\n==========\n");
-                displayDebugText(debug_text, 0);
+                Log(0, "==========\n=== Starting daytime capture ===\n==========\n");
 
                 // We only skip initial frames if we are starting in daytime and using auto-exposure.
                 if (numExposures == 0 && asiDayAutoExposure)
@@ -2121,8 +2102,7 @@ const char *locale = DEFAULT_LOCALE;
                 }
                 else
                 {
-                    sprintf(debug_text, "Using the last night exposure of %'ld us (%'.2lf ms)\n", current_exposure_us, (float)current_exposure_us / US_IN_MS);
-                    displayDebugText(debug_text, 2);
+                    Log(2, "Using the last night exposure of %'ld us (%'.2lf ms)\n", current_exposure_us, (float)current_exposure_us / US_IN_MS);
                 }
 
                 current_max_autoexposure_us = asi_day_max_autoexposure_ms * US_IN_MS;
@@ -2130,8 +2110,7 @@ const char *locale = DEFAULT_LOCALE;
                 // Don't use camera auto-exposure since we mimic it ourselves.
                 if (asiDayAutoExposure)
                 {
-                    sprintf(debug_text, "Turning off daytime auto-exposure to use histogram exposure.\n");
-                    displayDebugText(debug_text, 2);
+                    Log(2, "Turning off daytime auto-exposure to use histogram exposure.\n");
                 }
                 // With the histogram method we NEVER use auto exposure - either the user said
                 // not to, or we turn it off ourselves.
@@ -2163,8 +2142,7 @@ const char *locale = DEFAULT_LOCALE;
 
         else	// NIGHT
         {
-            sprintf(debug_text, "==========\n=== Starting nighttime capture ===\n==========\n");
-            displayDebugText(debug_text, 0);
+            Log(0, "==========\n=== Starting nighttime capture ===\n==========\n");
 
             // We only skip initial frames if we are starting in nighttime and using auto-exposure.
             if (numExposures == 0 && asiNightAutoExposure)
@@ -2174,8 +2152,7 @@ const char *locale = DEFAULT_LOCALE;
             if (numExposures == 0 || asiNightAutoExposure == ASI_FALSE)
             {
                 current_exposure_us = asi_night_exposure_us;
-                sprintf(debug_text, "Using night exposure (%'ld ms)\n", asi_night_exposure_us / US_IN_MS);
-                displayDebugText(debug_text, 4);
+                Log(4, "Using night exposure (%'ld ms)\n", asi_night_exposure_us / US_IN_MS);
             }
 
             currentAutoExposure = asiNightAutoExposure ? ASI_TRUE : ASI_FALSE;
@@ -2223,8 +2200,7 @@ const char *locale = DEFAULT_LOCALE;
             current_histogramBoxSizeY = histogramBoxSizeY / currentBin;
 
             bufferSize = width * height * bytesPerPixel((ASI_IMG_TYPE) Image_type);
-            sprintf(debug_text, "Buffer size: %ld\n", bufferSize);
-            displayDebugText(debug_text, 4);
+            Log(4, "Buffer size: %ld\n", bufferSize);
 
 // TODO: if not the first time, should we free the old pRgb?
 			if (Image_type == ASI_IMG_RAW16)
@@ -2280,8 +2256,7 @@ const char *locale = DEFAULT_LOCALE;
             char exposureStart[128];
             char f[10] = "%F %T";
             sprintf(exposureStart, "%s", formatTime(t, f));
-            sprintf(debug_text, "STARTING EXPOSURE at: %s   @ %'ld us\n", exposureStart, current_exposure_us);
-            displayDebugText(debug_text, 0);
+            Log(0, "STARTING EXPOSURE at: %s   @ %'ld us\n", exposureStart, current_exposure_us);
 
             // Get start time for overlay.  Make sure it has the same time as exposureStart.
             if (showTime == 1)
@@ -2355,8 +2330,7 @@ const char *locale = DEFAULT_LOCALE;
                             // which is ok - it just means the multiplier will be less than 1.
                             numMultiples = (float)(asiDayBrightness - DEFAULT_BRIGHTNESS) / DEFAULT_BRIGHTNESS;
                             exposureAdjustment = 1 + (numMultiples * adjustmentAmountPerMultiple);
-                            sprintf(debug_text, "  > >>> Adjusting exposure x %.2f (%.1f%%) for daybrightness\n", exposureAdjustment, (exposureAdjustment - 1) * 100);
-                            displayDebugText(debug_text, 3);
+                            Log(3, "  > >>> Adjusting exposure x %.2f (%.1f%%) for daybrightness\n", exposureAdjustment, (exposureAdjustment - 1) * 100);
                             showedMessage = 1;
                         }
 
@@ -2407,11 +2381,10 @@ const char *locale = DEFAULT_LOCALE;
                     }
                     if (adjustment != 0)
                     {
-                        sprintf(debug_text, "  > !!! Adjusting %sAcceptableMean by %d to %d\n",
+                        Log(3, "  > !!! Adjusting %sAcceptableMean by %d to %d\n",
                            adjustment < 0 ? "min" : "max",
                            adjustment,
                            adjustment < 0 ? minAcceptableMean : maxAcceptableMean);
-                        displayDebugText(debug_text, 3);
                     }
 
                     while ((mean < minAcceptableMean || mean > maxAcceptableMean) && ++attempts <= maxHistogramAttempts && current_exposure_us <= current_max_autoexposure_us)
@@ -2552,8 +2525,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                              break;
                          }
 
-                         sprintf(debug_text, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: mean (%d) %s (%d)\n", attempts, new_exposure_us, temp_min_exposure_us, temp_max_exposure_us, mean, why.c_str(), num);
-                         displayDebugText(debug_text, 3);
+                         Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: mean (%d) %s (%d)\n", attempts, new_exposure_us, temp_min_exposure_us, temp_max_exposure_us, mean, why.c_str(), num);
 
                          prior_mean = mean;
                          prior_mean_diff = last_mean_diff;
@@ -2583,8 +2555,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 
                     if (asiRetCode != ASI_SUCCESS)
                     {
-                        sprintf(debug_text,"  > Sleeping %s from failed exposure\n", length_in_units(currentDelay_ms));
-                        displayDebugText(debug_text, 2);
+                        Log(2,"  > Sleeping %s from failed exposure\n", length_in_units(currentDelay_ms));
                         usleep(currentDelay_ms * US_IN_MS);
                         // Don't save the file or do anything below.
                         continue;
@@ -2593,26 +2564,25 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     if (mean >= minAcceptableMean && mean <= maxAcceptableMean)
                     {
                         // +++ at end makes it easier to see in log file
-                        sprintf(debug_text, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n", minAcceptableMean, maxAcceptableMean, mean);
+                        Log(3, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n", minAcceptableMean, maxAcceptableMean, mean);
                     }
                     else if (attempts > maxHistogramAttempts)
                     {
-                         sprintf(debug_text, "  > max attempts reached - using exposure of %'ld us with mean %d\n", current_exposure_us, mean);
+                         Log(3, "  > max attempts reached - using exposure of %'ld us with mean %d\n", current_exposure_us, mean);
                     }
                     else if (attempts >= 1)
                     {
                          if (current_exposure_us > current_max_autoexposure_us)
                          {
-                             sprintf(debug_text, "  > Stopped trying: new exposure of %'ld us would be over max of %'ld\n", current_exposure_us, current_max_autoexposure_us);
-                             displayDebugText(debug_text, 3);
+                             Log(3, "  > Stopped trying: new exposure of %'ld us would be over max of %'ld\n", current_exposure_us, current_max_autoexposure_us);
 
                              long diff = (long)((float)current_exposure_us * (1/(float)percent_change));
                              current_exposure_us -= diff;
-                             sprintf(debug_text, "  > Decreasing next exposure by %d%% (%'ld us) to %'ld\n", percent_change, diff, current_exposure_us);
+                             Log(3, "  > Decreasing next exposure by %d%% (%'ld us) to %'ld\n", percent_change, diff, current_exposure_us);
                          }
                          else if (current_exposure_us == current_max_autoexposure_us)
                          {
-                             sprintf(debug_text, "  > Stopped trying: hit max exposure limit of %'ld, mean %d\n", current_max_autoexposure_us, mean);
+                             Log(3, "  > Stopped trying: hit max exposure limit of %'ld, mean %d\n", current_max_autoexposure_us, mean);
                              // If current_exposure_us causes too high of a mean, decrease exposure
                              // so on the next loop we'll adjust it.
                              if (mean > maxAcceptableMean)
@@ -2620,18 +2590,17 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                          }
                          else if (new_exposure_us == current_exposure_us)
                          {
-                             sprintf(debug_text, "  > Stopped trying: new_exposure_us == current_exposure_us (%'ld)\n", current_exposure_us);
+                             Log(3, "  > Stopped trying: new_exposure_us == current_exposure_us (%'ld)\n", current_exposure_us);
                          }
                          else
                          {
-                             sprintf(debug_text, "  > Stopped trying, using exposure of %'ld us with mean %d, min=%d, max=%d\n", current_exposure_us, mean, minAcceptableMean, maxAcceptableMean);
+                             Log(3, "  > Stopped trying, using exposure of %'ld us with mean %d, min=%d, max=%d\n", current_exposure_us, mean, minAcceptableMean, maxAcceptableMean);
                          }
                     }
                     else if (current_exposure_us == current_max_autoexposure_us)
                     {
-                         sprintf(debug_text, "  > Did not make any additional attempts - at max exposure limit of %'ld, mean %d\n", current_max_autoexposure_us, mean);
+                         Log(3, "  > Did not make any additional attempts - at max exposure limit of %'ld, mean %d\n", current_max_autoexposure_us, mean);
                     }
-                    displayDebugText(debug_text, 3);
                     // xxxx TODO: this was "actual_exposure_us = ..."    reported_exposure_us = current_exposure_us;
 
                 } else {
@@ -2651,8 +2620,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     else
 #endif
                     {
-                        sprintf(debug_text, "  >>>> Skipping this frame\n");
-                        displayDebugText(debug_text, 2);
+                        Log(2, "  >>>> Skipping this frame\n");
                         current_skip_frames--;
                         // Do not save this frame or sleep after it.
                         // We just started taking images so no need to check if DAY or NIGHT changed
@@ -2793,9 +2761,9 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         // Display these messages every time, since it's possible the user will
                         // correct the issue while we're running.
                         if (access(ImgExtraText, F_OK ) == -1 ) {
-                            displayDebugText("  > *** WARNING: Extra Text File Does Not Exist So Ignoring It\n", 1);
+                            Log(1, "  > *** WARNING: Extra Text File Does Not Exist So Ignoring It\n");
                         } else if (access(ImgExtraText, R_OK ) == -1 ) {
-                            displayDebugText("  > *** ERROR: Cannot Read From Extra Text File So Ignoring It\n", 1);
+                            Log(1, "  > *** ERROR: Cannot Read From Extra Text File So Ignoring It\n");
                         } else {
                             FILE *fp = fopen(ImgExtraText, "r");
 
@@ -2808,16 +2776,15 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 
                                         time_t now = time(NULL);
                                         double ageInSeconds = difftime(now, mktime(&modifiedTime));
-                                        sprintf(debug_text, "  > Extra Text File (%s) Modified %.1f seconds ago", ImgExtraText, ageInSeconds);
-                                        displayDebugText(debug_text, 3);
+                                        Log(3, "  > Extra Text File (%s) Modified %.1f seconds ago", ImgExtraText, ageInSeconds);
                                         if (ageInSeconds < extraFileAge) {
-                                            displayDebugText(", so Using It\n", 1);
+                                            Log(1, ", so Using It\n");
                                             bAddExtra = true;
                                         } else {
-                                            displayDebugText(", so Ignoring\n", 1);
+                                            Log(1, ", so Ignoring\n");
                                         }
                                     } else {
-                                        displayDebugText("  > *** ERROR: Stat Of Extra Text File Failed !\n", 0);
+                                        Log(0, "  > *** ERROR: Stat Of Extra Text File Failed !\n");
                                     }
                                 } else {
                                     bAddExtra = true;
@@ -2841,7 +2808,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                                 }
                                 fclose(fp);
                             } else {
-                                displayDebugText("  > *** WARNING: Failed To Open Extra Text File\n", 0);
+                                Log(0, "  > *** WARNING: Failed To Open Extra Text File\n");
                             }
                         }
                     }
@@ -2868,8 +2835,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     // Hopefully the user can use the time it took to save a file to disk
                     // to help determine why they are getting this warning.
                     // Perhaps their disk is very slow or their delay is too short.
-                    sprintf(debug_text, "  > WARNING: currently saving an image; can't save new one at %s.\n", exposureStart);
-                    displayDebugText(debug_text, 0);
+                    Log(0, "  > WARNING: currently saving an image; can't save new one at %s.\n", exposureStart);
 
                     // TODO: wait for the prior image to finish saving.
                 }
@@ -2877,8 +2843,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                 if (asiNightAutoGain == 1 && dayOrNight == "NIGHT" && ! taking_dark_frames)
                 {
                     ASIGetControlValue(CamNum, ASI_GAIN, &actualGain, &bAuto);
-                    sprintf(debug_text, "  > Auto Gain value: %ld\n", actualGain);
-                    displayDebugText(debug_text, 1);
+                    Log(1, "  > Auto Gain value: %ld\n", actualGain);
                 }
 
                 if (currentAutoExposure == ASI_TRUE)
@@ -2900,16 +2865,14 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         // This doesn't apply during the day since we don't have a max time then.
                         int s = (asi_night_max_autoexposure_ms * US_IN_MS) - last_exposure_us; // to get to max
                         s += currentDelay_ms * US_IN_MS;   // Add standard delay amount
-                        sprintf(debug_text,"  > Sleeping: %s\n", length_in_units(s / US_IN_MS));
-                        displayDebugText(debug_text, 0);
+                        Log(0, "  > Sleeping: %s\n", length_in_units(s / US_IN_MS));
                         usleep(s);	// usleep() is in microseconds
                     }
                     else
                     {
                         // Sleep even if taking dark frames so the sensor can cool between shots like it would
                         // do on a normal night.  With no delay the sensor may get hotter than it would at night.
-                        sprintf(debug_text,"  > Sleeping %s from %s exposure\n", length_in_units(currentDelay_ms), taking_dark_frames ? "dark frame" : "auto");
-                        displayDebugText(debug_text, 0);
+                        Log(0, "  > Sleeping %s from %s exposure\n", length_in_units(currentDelay_ms), taking_dark_frames ? "dark frame" : "auto");
                         usleep(currentDelay_ms * US_IN_MS);
                     }
                 }
@@ -2924,8 +2887,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     if (usedHistogram == 1)
                         s = "histogram";
 #endif
-                    sprintf(debug_text,"  > Sleeping %s from %s exposure\n", length_in_units(currentDelay_ms), s.c_str());
-                    displayDebugText(debug_text, 0);
+                    Log(0, "  > Sleeping %s from %s exposure\n", length_in_units(currentDelay_ms), s.c_str());
                     usleep(currentDelay_ms * US_IN_MS);
                 }
                 calculateDayOrNight(latitude, longitude, angle);

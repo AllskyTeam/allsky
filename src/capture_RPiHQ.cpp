@@ -548,10 +548,10 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 		if (strcmp(ImgText, "") != 0) {
 			ss.str("");
 			ss << ImgText; 
-			if (myModeMeanSetting.debugLevel > 0) {
+			if (debugLevel > 0) {
 				ss << " shutter:" << myRaspistillSetting.shutter_us 
 				<< " gain:"	<< myRaspistillSetting.analoggain;
-				if (myModeMeanSetting.debugLevel  > 1 ) {
+				if (debugLevel  > 1 ) {
 					ss << " (li-" << __TIMESTAMP__ 
 					<< ") br:" << myRaspistillSetting.brightness 
 					<< " WBR:" << asiWBR 
@@ -1331,8 +1331,7 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 
 			if (myModeMeanSetting.mode_mean) {
 				RPiHQcalcMean(fileName, asiNightExposure, asiNightGain, myRaspistillSetting, myModeMeanSetting);
-				if (myModeMeanSetting.debugLevel >= 2)
-					printf("asiExposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure, (double) myRaspistillSetting.shutter_us / 1000000.0, myModeMeanSetting.quickstart);
+				Log(2, "asiExposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure, (double) myRaspistillSetting.shutter_us / 1000000.0, myModeMeanSetting.quickstart);
 				if (myModeMeanSetting.quickstart) {
 					currentDelay = 1000;
 				}

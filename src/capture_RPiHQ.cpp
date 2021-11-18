@@ -49,7 +49,7 @@ std::string dayOrNight;
 int numExposures = 0;	// how many valid pictures have we taken so far?
 
 // Some command-line and other option definitions needed outside of main():
-int tty				= 0;	// 1 if we're on a tty (i.e., called from the shell prompt).
+bool tty				= false;	// are we on a tty?
 #define NOT_SET			  -1	// signifies something isn't set yet
 #define DEFAULT_NOTIFICATIONIMAGES 1
 int notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
@@ -71,6 +71,19 @@ void displayDebugText(const char * text, int requiredLevel) {
     if (debugLevel >= requiredLevel) {
         printf("%s", text);
     }
+}
+
+// Return the string for the specified color, or "" if we're not on a tty.
+char const *c(char const *color)
+{
+	if (tty)
+	{
+		return(color);
+	}
+	else
+	{
+		return("");
+	}
 }
 
 // Return the numeric time.
@@ -657,6 +670,7 @@ char const *yesNo(int flag)
 
 int main(int argc, char *argv[])
 {
+	tty = isatty(fileno(stdout)) ? true : false;
 	signal(SIGINT, IntHandle);
 	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
 /*
@@ -734,12 +748,12 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	setlinebuf(stdout);   // Line buffer output so entries appear in the log immediately.
 	printf("\n");
-	printf("%s ******************************************\n", KGRN);
-	printf("%s *** Allsky Camera Software v0.8 | 2021 ***\n", KGRN);
-	printf("%s ******************************************\n\n", KGRN);
-	printf("\%sCapture images of the sky with a Raspberry Pi and an ZWO ASI or RPi HQ camera\n", KGRN);
+	printf("%s ******************************************\n", c(KGRN));
+	printf("%s *** Allsky Camera Software v0.8 | 2021 ***\n", c(KGRN));
+	printf("%s ******************************************\n\n", c(KGRN));
+	printf("\%sCapture images of the sky with a Raspberry Pi and an ZWO ASI or RPi HQ camera\n", c(KGRN));
 	printf("\n");
-	printf("%sAdd -h or -help for available options\n", KYEL);
+	printf("%sAdd -h or -help for available options\n", c(KYEL));
 	printf("\n");
 	printf("\%sAuthor: ", KNRM);
 	printf("Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
@@ -1049,14 +1063,14 @@ int main(int argc, char *argv[])
 			}
 			else if (strcmp(argv[i], "-tty") == 0)
 			{
-				tty = atoi(argv[++i]);
+				tty = atoi(argv[++i]) ? true : false;
 			}
 		}
 	}
 
 	if (help == 1)
 	{
-		printf("%sAvailable Arguments:\n", KYEL);
+		printf("%sAvailable Arguments:\n", c(KYEL));
 		printf(" -width                             - Default = Camera Max Width\n");
 		printf(" -height                            - Default = Camera Max Height\n");
 		printf(" -nightexposure                     - Default = 5000000 - Time in us (equals to 5 sec)\n");
@@ -1103,7 +1117,7 @@ int main(int argc, char *argv[])
 		printf(" -showDetails                       - Set to 1 to display the metadata on the image\n");
 		printf(" -notificationimages                - Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
 		printf(" -debuglevel                        - Default = 0. Set to 1,2 or 3 for more debugging information.\n");
-	  printf("%s", KBLU);
+	  printf("%s", c(KBLU));
 		printf(" -mean-value                        - Default = 0.3 Set mean-value and activates exposure control\n");
 		printf("                                    - info: Auto-Gain should be set (gui)\n");
 		printf("                                    -       -autoexposure should be set (extra parameter)\n");
@@ -1115,7 +1129,7 @@ int main(int argc, char *argv[])
 		printf(" -mean-p1                           - Default = 20.0\n");
 		printf(" -mean-p2                           - Default = 45.0\n");
 	  printf("%s", KNRM);
-		printf("%sUsage:\n", KRED);
+		printf("%sUsage:\n", c(KRED));
 		printf(" ./capture_RPiHQ -width 640 -height 480 -nightexposure 5000000 -gamma 50 -nightbin 1 -filename Lake-Laberge.JPG\n\n");
 		exit(0);
 	}
@@ -1140,7 +1154,7 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 
-	printf("%s", KGRN);
+	printf("%s", c(KGRN));
 	printf("\nCapture Settings:\n");
 	printf(" Resolution (before any binning): %dx%d\n", width, height);
 	printf(" Quality: %d\n", quality);

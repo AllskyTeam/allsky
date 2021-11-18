@@ -69,7 +69,7 @@ int debugLevel = 0;
  * Helper function to display debug info
 **/
 // [[gnu::format(printf, 2, 3)]]
-static inline void Log(int required_level, const char *fmt, ...)
+void Log(int required_level, const char *fmt, ...)
 {
     if (debugLevel >= required_level) {
 		char msg[8192];

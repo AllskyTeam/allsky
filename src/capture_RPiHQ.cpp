@@ -62,15 +62,23 @@ modeMeanSetting myModeMeanSetting;
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
-char debugText[500];		// buffer to hold debug messages displayed by displayDebugText()
+char debugText[500];		// buffer to hold debug messages
 int debugLevel = 0;
+
 /**
  * Helper function to display debug info
 **/
-void displayDebugText(const char * text, int requiredLevel) {
-    if (debugLevel >= requiredLevel) {
-        printf("%s", text);
-    }
+// [[gnu::format(printf, 2, 3)]]
+static inline void Log(int required_level, const char *fmt, ...)
+{
+    if (debugLevel >= required_level) {
+		char msg[8192];
+		snprintf(msg, sizeof(msg), "%s", fmt);
+		va_list va;
+		va_start(va, fmt);
+		vfprintf(stdout, msg, va);
+		va_end(va);
+	}
 }
 
 // Return the string for the specified color, or "" if we're not on a tty.
@@ -206,8 +214,7 @@ void calculateDayOrNight(const char *latitude, const char *longitude, const char
 	sprintf(sunwaitCommand, "sunwait poll angle %s %s %s", angle, latitude, longitude);
 
 	// Inform user
-	sprintf(debugText, "Determine if it is day or night using variables: desired sun declination angle: %s degrees, latitude: %s, longitude: %s\n", angle, latitude, longitude);
-	displayDebugText(debugText, 1);
+	Log(1, "Determine if it is day or night using variables: desired sun declination angle: %s degrees, latitude: %s, longitude: %s\n", angle, latitude, longitude);
 
 	// Determine if it is day or night
 	dayOrNight = exec(sunwaitCommand);
@@ -266,8 +273,7 @@ void writeToLog(int val)
 // Build capture command to capture the image from the HQ camera
 void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asiAutoGain, int asiAutoAWB, double asiGain, int bin, double asiWBR, double asiWBB, int asiRotation, int asiFlip, int asiGamma, int asiBrightness, int quality, const char* fileName, int time, int showDetails, const char* ImgText, int fontsize, int fontcolor, int background, int darkframe)
 {
-	sprintf(debugText, "capturing image in file %s\n", fileName);
-	displayDebugText(debugText, 3);
+	Log(3, "capturing image in file %s\n", fileName);
 
 	// Ensure no raspistill process is still running
 	string kill = "ps -ef|grep raspistill| grep -v color|awk '{print $2}'|xargs kill -9 1> /dev/null 2>&1";
@@ -278,8 +284,7 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 	// Convert command to character variable
 	strcpy(kcmd, kill.c_str());
 
-	sprintf(debugText, "Command: %s\n", kcmd);
-	displayDebugText(debugText, 3);
+	Log(3, "Command: %s\n", kcmd);
 
 	// Execute raspistill command
 	system(kcmd);
@@ -646,8 +651,7 @@ time ( NULL );
 	// Convert command to character variable
 	strcpy(cmd, command.c_str());
 
-	sprintf(debugText, "Capture command: %s\n", cmd);
-	displayDebugText(debugText, 1);
+	Log(1, "Capture command: %s\n", cmd);
 
 	// Execute raspistill command
 	if (system(cmd) == 0) numExposures++;
@@ -773,13 +777,11 @@ int main(int argc, char *argv[])
 
 	if (argc > 1)
 	{
-		sprintf(debugText, "Found %d parameters...\n", argc - 1);
-		displayDebugText(debugText, 3);
+		Log(4, "Found %d parameters...\n", argc - 1);
 
 		for (i = 1; i <= argc - 1; i++)
 		{
-			sprintf(debugText, "Processing argument: %s\n\n", argv[i]);
-			displayDebugText(debugText, 3);
+			Log(4, "Processing argument: %s\n\n", argv[i]);
 
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0)
 			{
@@ -1226,8 +1228,7 @@ int main(int argc, char *argv[])
 		lastDayOrNight = dayOrNight;
 
 // Next lines are present for testing purposes
-sprintf(debugText, "Daytimecapture: %d\n", daytimeCapture);
-displayDebugText(debugText, 3);
+Log(3, "Daytimecapture: %d\n", daytimeCapture);
 
 		if (myModeMeanSetting.mode_mean) {
   			RPiHQcalcMean(fileName, asiNightExposure, asiNightGain, myRaspistillSetting, myModeMeanSetting);
@@ -1246,7 +1247,7 @@ displayDebugText(debugText, 3);
 			currentBrightness = asiNightBrightness;
 			currentBin = nightBin;
 
- 			displayDebugText("Taking dark frames...\n", 0);
+ 			Log(0, "Taking dark frames...\n");
 			if (notificationImages) {
 				system("scripts/copy_notification_image.sh DarkFrames &");
 			}
@@ -1275,9 +1276,8 @@ displayDebugText(debugText, 3);
 					if (notificationImages) {
 						system("scripts/copy_notification_image.sh CameraOffDuringDay &");
 					}
-					sprintf(debugText, "It's daytime... we're not saving images.\n%s\n",
+					Log(0, "It's daytime... we're not saving images.\n%s\n",
 						tty ? "Press Ctrl+C to stop" : "Stop the allsky service to end this process.");
-					displayDebugText(debugText, 0);
 					displayedNoDaytimeMsg = 1;
 
 					// sleep until almost nighttime, then wake up and sleep a short time
@@ -1303,8 +1303,7 @@ displayDebugText(debugText, 3);
 					x = "\n==========\n";
 				else
 					x = "";
-				sprintf(debugText, "%s=== Starting daytime capture ===\n%s", x, x);
-				displayDebugText(debugText, 0);
+				Log(0, "%s=== Starting daytime capture ===\n%s", x, x);
 
 				// set daytime settings
 				currentAutoExposure = asiDayAutoExposure;
@@ -1316,8 +1315,7 @@ displayDebugText(debugText, 3);
 				currentBin = dayBin;
 
 				// Inform user
-				sprintf(debugText, "Saving %d ms exposed images with %d seconds delays in between...\n\n", currentExposure * US_IN_MS, currentDelay / MS_IN_SEC);
-				displayDebugText(debugText, 0);
+				Log(0, "Saving %d ms exposed images with %d seconds delays in between...\n\n", currentExposure * US_IN_MS, currentDelay / MS_IN_SEC);
 			}
 		}
 
@@ -1328,8 +1326,7 @@ displayDebugText(debugText, 3);
 				x = "\n==========\n";
 			else
 				x = "";
-			sprintf(debugText, "%s=== Starting nighttime capture ===\n%s", x, x);
-			displayDebugText(debugText, 0);
+			Log(0, "%s=== Starting nighttime capture ===\n%s", x, x);
 
 			// Set nighttime settings
 			currentAutoExposure = asiNightAutoExposure;
@@ -1341,8 +1338,7 @@ displayDebugText(debugText, 3);
 			currentBin = nightBin;
 
 			// Inform user
-			sprintf(debugText, "Saving %d seconds exposure images with %d ms delays in between...\n\n", (int)round(currentExposure / US_IN_SEC), nightDelay);
-			displayDebugText(debugText, 0);
+			Log(0, "Saving %d seconds exposure images with %d ms delays in between...\n\n", (int)round(currentExposure / US_IN_SEC), nightDelay);
 		}
 
 		// Adjusting variables for chosen binning
@@ -1363,8 +1359,7 @@ displayDebugText(debugText, 3);
 		while (bMain && lastDayOrNight == dayOrNight)
 		{
 			// Inform user
-			sprintf(debugText, "Capturing & saving image...\n");
-			displayDebugText(debugText, 0);
+			Log(0, "Capturing & saving image...\n");
 
 			// Capture and save image
 			RPiHQcapture(asiAutoFocus, currentAutoExposure, currentExposure, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, asiGamma, currentBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe);
@@ -1397,8 +1392,7 @@ displayDebugText(debugText, 3);
 			}
 
 			// Inform user
-			sprintf(debugText, "Capturing & saving %s done, now wait %d seconds...\n", darkframe ? "dark frame" : "image", currentDelay / MS_IN_SEC);
-			displayDebugText(debugText, 0);
+			Log(0, "Capturing & saving %s done, now wait %d seconds...\n", darkframe ? "dark frame" : "image", currentDelay / MS_IN_SEC);
 
 			// Sleep for a moment
 			usleep(currentDelay * US_IN_MS);
@@ -1416,15 +1410,13 @@ displayDebugText(debugText, 3);
 				// Check started capturing during day time
 				if (lastDayOrNight=="DAY")
 				{
-					sprintf(debugText, "Check for day or night: DAY (waiting for changing DAY into NIGHT)...\n");
-					displayDebugText(debugText, 2);
+					Log(2, "Check for day or night: DAY (waiting for changing DAY into NIGHT)...\n");
 				}
 
 				// Started capturing during night time
 				else
 				{
-					sprintf(debugText, "Check for day or night: DAY (waiting for changing NIGHT into DAY)...\n");
-					displayDebugText(debugText, 2);
+					Log(2, "Check for day or night: DAY (waiting for changing NIGHT into DAY)...\n");
 				}
 			}
 
@@ -1433,15 +1425,13 @@ displayDebugText(debugText, 3);
 				// Check started capturing during day time
 				if (lastDayOrNight=="DAY")
 				{
-					sprintf(debugText, "Check for day or night: NIGHT (waiting for changing DAY into NIGHT)...\n");
-					displayDebugText(debugText, 2);
+					Log(2, "Check for day or night: NIGHT (waiting for changing DAY into NIGHT)...\n");
 				}
 
 				// Started capturing during night time
 				else
 				{
-					sprintf(debugText, "Check for day or night: NIGHT (waiting for changing NIGHT into DAY)...\n");
-					displayDebugText(debugText, 2);
+					Log(2, "Check for day or night: NIGHT (waiting for changing NIGHT into DAY)...\n");
 				}
 			}
 

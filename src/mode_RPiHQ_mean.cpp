@@ -19,6 +19,8 @@
 #include "include/RPiHQ_raspistill.h"
 #include "include/mode_RPiHQ_mean.h"
 
+#define US_IN_SEC (1000000.0)  // microseconds in a second
+
 double mean_history [5] = {0.0,1.0,0.0,1.0,0.0};
 int exp_history [5] = {0,0,0,0,0};
 

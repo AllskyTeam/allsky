@@ -20,6 +20,10 @@
 #include <fstream>
 #include <stdarg.h>
 
+#define US_IN_MS 1000                     // microseconds in a millisecond
+#define MS_IN_SEC 1000                    // milliseconds in a second
+#define US_IN_SEC (US_IN_MS * MS_IN_SEC)  // microseconds in a second
+
 // new includes (MEAN)
 #include "include/RPiHQ_raspistill.h"
 #include "include/mode_RPiHQ_mean.h"
@@ -34,10 +38,6 @@ using namespace std;
 #define KMAG "\x1B[35m"
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
-
-#define US_IN_MS 1000                     // microseconds in a millisecond
-#define MS_IN_SEC 1000                    // milliseconds in a second
-#define US_IN_SEC (US_IN_MS * MS_IN_SEC)  // microseconds in a second
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------

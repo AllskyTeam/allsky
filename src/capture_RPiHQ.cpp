@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <fstream>
+#include <stdarg.h>
 
 // new includes (MEAN)
 #include "include/RPiHQ_raspistill.h"
@@ -265,7 +266,7 @@ void writeToLog(int val)
 }
 
 // Build capture command to capture the image from the HQ camera
-void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asiAutoGain, int asiAutoAWB, double asiGain, int bin, double asiWBR, double asiWBB, int asiRotation, int asiFlip, float saturation, int asiBrightness, int quality, const char* fileName, int time, int showDetails, const char* ImgText, int fontsize, int fontcolor, int background, int darkframe)
+int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asiAutoGain, int asiAutoAWB, double asiGain, int bin, double asiWBR, double asiWBB, int asiRotation, int asiFlip, float saturation, int asiBrightness, int quality, const char* fileName, int time, int showDetails, const char* ImgText, int fontsize, int fontcolor, int background, int darkframe, int preview, int width, int height)
 {
 	Log(3, "capturing image in file %s\n", fileName);
 
@@ -370,7 +371,8 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 		if (myModeMeanSetting.mode_mean) {
 			ss.str("");
 			ss << myRaspistillSetting.shutter_us;
-			command += " --exposure off --shutter " + ss.str();
+			command += " --exposure off";
+			command += " --shutter " + ss.str();
 		} else {
 			command += " --exposure auto";
 		}
@@ -380,7 +382,8 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 	{
 		ss.str("");
 		ss << asiExposure;
-		command +=  " --exposure off --shutter " + ss.str();
+		command += " --exposure off";
+		command += " --shutter " + ss.str();
 	}
 
 	if (asiAutoFocus)
@@ -450,13 +453,15 @@ void RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int as
 		else {
 			ss.str("");
 			ss << asiWBR << "," << asiWBB;
-			command += " --awb off --awbgains " + ss.str();
+			command += " --awb off";
+			command += " --awbgains " + ss.str();
 		}
 	}
 	else if (! asiAutoAWB) {
 		ss.str("");
 		ss << asiWBR << "," << asiWBB;
-		command += " --awb off --awbgains " + ss.str();
+		command += " --awb off";
+		command += " --awbgains " + ss.str();
 	}
 	// Use automatic white balance
 	else {
@@ -770,9 +775,9 @@ int main(int argc, char *argv[])
 			{
 				asiNightAutoGain = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-gamma") == 0)
+			else if (strcmp(argv[i], "-saturation") == 0)
 			{
-				asiGamma = atoi(argv[++i]);
+				saturation = atof(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-brightness") == 0)// old "-brightness" applied to day and night
 			{
@@ -815,25 +820,25 @@ int main(int argc, char *argv[])
 			{
 				asiWBB = atof(argv[++i]);
 			}
-      else if (strcmp(argv[i], "-mean-value") == 0)
+			else if (strcmp(argv[i], "-mean-value") == 0)
 			{
 				myModeMeanSetting.mean_value = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
 				myModeMeanSetting.mode_mean = true;
 				i++;
 			}
-      else if (strcmp(argv[i], "-mean-threshold") == 0)
+			else if (strcmp(argv[i], "-mean-threshold") == 0)
 			{
 				myModeMeanSetting.mean_threshold = std::min(0.1,std::max(0.0001,atof(argv[i + 1])));
 				myModeMeanSetting.mode_mean = true;
 				i++;
 			}
-      else if (strcmp(argv[i], "-mean-p0") == 0)
+			else if (strcmp(argv[i], "-mean-p0") == 0)
 			{
 				myModeMeanSetting.mean_p0 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
 				myModeMeanSetting.mode_mean = true;
 				i++;
 			}
-      else if (strcmp(argv[i], "-mean-p1") == 0)
+			else if (strcmp(argv[i], "-mean-p1") == 0)
 			{
 				myModeMeanSetting.mean_p1 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
 				myModeMeanSetting.mode_mean = true;
@@ -972,17 +977,15 @@ int main(int argc, char *argv[])
 			{
 				angle = argv[++i];
 			}
-/*
 			else if (strcmp(argv[i], "-preview") == 0)
 			{
 				preview = atoi(argv[++i]);
 			}
-*/
-      else if (strcmp(argv[i], "-debuglevel") == 0)
-      {
-        debugLevel = atoi(argv[++i]);
+			else if (strcmp(argv[i], "-debuglevel") == 0)
+			{
+				debugLevel = atoi(argv[++i]);
 				myModeMeanSetting.debugLevel = debugLevel;
-      }
+			}
 			else if (strcmp(argv[i], "-showTime") == 0 || strcmp(argv[i], "-time") == 0)
 			{
 				time = atoi(argv[++i]);
@@ -1019,10 +1022,10 @@ int main(int argc, char *argv[])
 		printf(" -nightexposure                     - Default = 5000000 - Time in us (equals to 5 sec)\n");
 		printf(" -nightautoexposure                 - Default = 0 - Set to 1 to enable auto Exposure\n");
 		printf(" -autofocus                         - Default = 0 - Set to 1 to enable auto Focus\n");
-		printf(" -nightgain                         - Default = 1 (1 - 16)\n");
+		printf(" -nightgain                         - Default = 4.0 (1.0 - 16.0)\n");
 		printf(" -nightautogain                     - Default = 0 - Set to 1 to enable auto Gain at night\n");
-		printf(" -gamma                             - Default = 50 (-100 till 100)\n");
-		printf(" -brightness                        - Default = 50 (0 till 100)\n");
+		printf(" -saturation                        - Default = 0 (-100 to 100)\n");
+		printf(" -brightness                        - Default = 50 (0 to 100)\n");
 		printf(" -awb                               - Default = 0 - Auto White Balance (0 = off)\n");
 		printf(" -wbr                               - Default = 2 - White Balance Red  (0 = off)\n");
 		printf(" -wbb                               - Default = 2 - White Balance Blue (0 = off)\n");
@@ -1054,7 +1057,7 @@ int main(int argc, char *argv[])
 		printf(" -angle                             - Default = -6 - Angle of the sun below the horizon. -6=civil "
 			   "twilight, -12=nautical twilight, -18=astronomical twilight\n");
 		printf("\n");
-		// printf(" -preview                           - set to 1 to preview the captured images. Only works with a Desktop Environment\n");
+		printf(" -preview                           - set to 1 to preview the captured images. Only works with a Desktop Environment\n");
 		printf(" -time                              - Adds the time to the image.\n");
 		printf(" -darkframe                         - Set to 1 to grab dark frame and cover your camera\n");
 		printf(" -showDetails                       - Set to 1 to display the metadata on the image\n");
@@ -1071,13 +1074,13 @@ int main(int argc, char *argv[])
 		printf(" -mean-p0                           - Default = 5.0, be careful changing these values, ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2\n");
 		printf(" -mean-p1                           - Default = 20.0\n");
 		printf(" -mean-p2                           - Default = 45.0\n");
-	  printf("%s", KNRM);
+	  printf("%s", c(KNRM));
 		printf("%sUsage:\n", c(KRED));
 		printf(" ./capture_RPiHQ -width 640 -height 480 -nightexposure 5000000 -gamma 50 -nightbin 1 -filename Lake-Laberge.JPG\n\n");
 		exit(0);
 	}
 
-	printf("%s", KNRM);
+	printf("%s", c(KNRM));
 
 	int iMaxWidth = 4096;
 	int iMaxHeight = 3040;
@@ -1108,7 +1111,7 @@ int main(int argc, char *argv[])
 	printf(" Auto Gain (night): %s\n", yesNo(asiNightAutoGain));
 	printf(" Brightness (day): %d\n", asiDayBrightness);
 	printf(" Brightness (night): %d\n", asiNightBrightness);
-	printf(" Gamma: %d\n", asiGamma);
+	printf(" Saturation: %.2f\n", saturation);
 	printf(" Auto White Balance: %s\n", yesNo(asiAutoAWB));
 	printf(" WB Red: %1.2f\n", asiWBR);
 	printf(" WB Blue: %1.2f\n", asiWBB);
@@ -1132,19 +1135,19 @@ int main(int argc, char *argv[])
 	printf(" Latitude: %s\n", latitude);
 	printf(" Longitude: %s\n", longitude);
 	printf(" Sun Elevation: %s\n", angle);
-	// printf(" Preview: %s\n", yesNo(preview));
-    printf(" Debug Level: %d\n", debugLevel);
+	printf(" Preview: %s\n", yesNo(preview));
+	printf(" Debug Level: %d\n", debugLevel);
 	printf(" Time: %s\n", yesNo(time));
 	printf(" Show Details: %s\n", yesNo(showDetails));
 	printf(" Darkframe: %s\n", yesNo(darkframe));
 	printf(" Notification Images: %s\n", yesNo(notificationImages));
 	printf(" Mode Mean: %s\n", yesNo(myModeMeanSetting.mode_mean));
 	if (myModeMeanSetting.mode_mean) {
-	  printf(" Mode Mean Value: %1.3f\n", myModeMeanSetting.mean_value);
-	  printf(" Mode Mean Threshold: %1.3f\n", myModeMeanSetting.mean_threshold);
-	  printf(" Mode Mean p0: %1.3f\n", myModeMeanSetting.mean_p0);
-	  printf(" Mode Mean p1: %1.3f\n", myModeMeanSetting.mean_p1);
-	  printf(" Mode Mean p2: %1.3f\n", myModeMeanSetting.mean_p2);
+		printf("    Value: %1.3f\n", myModeMeanSetting.mean_value);
+		printf("    Threshold: %1.3f\n", myModeMeanSetting.mean_threshold);
+		printf("    p0: %1.3f\n", myModeMeanSetting.mean_p0);
+		printf("    p1: %1.3f\n", myModeMeanSetting.mean_p1);
+		printf("    p2: %1.3f\n", myModeMeanSetting.mean_p2);
 	}
 
 	// Show selected camera type
@@ -1303,7 +1306,7 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 			Log(0, "Capturing & saving image...\n");
 
 			// Capture and save image
-			retCode = RPiHQcapture(asiAutoFocus, currentAutoExposure, currentExposure, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, asiGamma, currentBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe);
+			retCode = RPiHQcapture(asiAutoFocus, currentAutoExposure, currentExposure, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, saturation, currentBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe, preview, width, height);
 			if (retCode == 0)
 			{
 				numExposures++;
@@ -1351,43 +1354,6 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 
 			// Check for day or night based on location and angle
 			calculateDayOrNight(latitude, longitude, angle);
-
-// Next line is present for testing purposes
-// dayOrNight.assign("NIGHT");
-
-			// ECC: why bother with the check below for DAY/NIGHT?
-			// Check if it is day time
-			if (dayOrNight=="DAY")
-			{
-				// Check started capturing during day time
-				if (lastDayOrNight=="DAY")
-				{
-					Log(2, "Check for day or night: DAY (waiting for changing DAY into NIGHT)...\n");
-				}
-
-				// Started capturing during night time
-				else
-				{
-					Log(2, "Check for day or night: DAY (waiting for changing NIGHT into DAY)...\n");
-				}
-			}
-
-			else	// NIGHT
-			{
-				// Check started capturing during day time
-				if (lastDayOrNight=="DAY")
-				{
-					Log(2, "Check for day or night: NIGHT (waiting for changing DAY into NIGHT)...\n");
-				}
-
-				// Started capturing during night time
-				else
-				{
-					Log(2, "Check for day or night: NIGHT (waiting for changing NIGHT into DAY)...\n");
-				}
-			}
-
-			printf("\n");
 		}
 
 		// Check for night situation
@@ -1400,3 +1366,4 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 
 	closeUp(0);
 }
+

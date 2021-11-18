@@ -20,6 +20,7 @@
 #include <signal.h>
 #include <fstream>
 #include <locale.h>
+#include <stdarg.h>
 
 #define KNRM "\x1B[0m"
 #define KRED "\x1B[31m"
@@ -73,7 +74,7 @@ long actualTemp            = 0;	// actual sensor temp, per the camera
 int taking_dark_frames     = 0;
 
 // Some command-line and other option definitions needed outside of main():
-int tty = 0;	// 1 if we're on a tty (i.e., called from the shell prompt).
+bool tty                   = false;	// are we on a tty?
 #define DEFAULT_NOTIFICATIONIMAGES 1
 int notificationImages     = DEFAULT_NOTIFICATIONIMAGES;
 #define DEFAULT_FILENAME     "image.jpg"
@@ -121,6 +122,19 @@ void displayDebugText(const char * text, int requiredLevel) {
     if (debugLevel >= requiredLevel) {
         printf("%s", text);
     }
+}
+
+// Return the string for the specified color, or "" if we're not on a tty.
+char const *c(char const *color)
+{
+	if (tty)
+	{
+		return(color);
+	}
+	else
+	{
+		return("");
+	}
 }
 
 // Make sure we don't try to update a non-updateable control, and check for errors.
@@ -920,6 +934,7 @@ bool check_max_errors(int *e, int max_errors)
 
 int main(int argc, char *argv[])
 {
+	tty = isatty(fileno(stdout)) ? true : false;
     signal(SIGINT, IntHandle);
     signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
     pthread_mutex_init(&mtx_SaveImg, 0);
@@ -1098,16 +1113,16 @@ const char *locale = DEFAULT_LOCALE;
     //-------------------------------------------------------------------------------------------------------
     setlinebuf(stdout);   // Line buffer output so entries appear in the log immediately.
     printf("\n");
-    printf("%s **********************************************\n", KGRN);
-    printf("%s *** Allsky Camera Software v0.8.2  |  2021 ***\n", KGRN);
-    printf("%s **********************************************\n\n", KGRN);
-    printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n", KGRN);
+    printf("%s **********************************************\n", c(KGRN));
+    printf("%s *** Allsky Camera Software v0.8.2  |  2021 ***\n", c(KGRN));
+    printf("%s **********************************************\n\n", c(KGRN));
+    printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n", c(KGRN));
     printf("\n");
-    printf("%sAdd -h or --help for available options\n", KYEL);
+    printf("%sAdd -h or --help for available options\n", c(KYEL));
     printf("\n");
-    printf("\%sAuthor: ", KNRM);
+    printf("\%sAuthor: ", c(KNRM));
     printf("Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
-    printf("\%sContributors:\n", KNRM);
+    printf("\%sContributors:\n", c(KNRM));
     printf("-Knut Olav Klo\n");
     printf("-Daniel Johnsen\n");
     printf("-Yang and Sam from ZWO\n");
@@ -1147,9 +1162,9 @@ const char *locale = DEFAULT_LOCALE;
             {
                 night_skip_frames = atoi(argv[++i]);
             }
-            else if (strcmp(argv[i], "-tty") == 0)
+	        else if (strcmp(argv[i], "-tty") == 0)	// overrides what was automatically determined
             {
-                tty = atoi(argv[++i]);
+                tty = atoi(argv[++i]) ? true : false;
             }
             else if (strcmp(argv[i], "-width") == 0)
             {
@@ -1285,12 +1300,12 @@ const char *locale = DEFAULT_LOCALE;
             else if (strcmp(argv[i], "-fontcolor") == 0)
             {
                 if (sscanf(argv[++i], "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]) != 3)
-                    fprintf(stderr, "%s*** ERROR: Not enough font color parameters: '%s'%s\n", KRED, argv[i], KNRM);
+                    fprintf(stderr, "%s*** ERROR: Not enough font color parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
             }
             else if (strcmp(argv[i], "-smallfontcolor") == 0)
             {
                 if (sscanf(argv[++i], "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]) != 3)
-                    fprintf(stderr, "%s*** ERROR: Not enough small font color parameters: '%s'%s\n", KRED, argv[i], KNRM);
+                    fprintf(stderr, "%s*** ERROR: Not enough small font color parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
             }
             else if (strcmp(argv[i], "-fonttype") == 0)
             {
@@ -1344,7 +1359,7 @@ const char *locale = DEFAULT_LOCALE;
             else if (strcmp(argv[i], "-histogrambox") == 0)
             {
                 if (sscanf(argv[++i], "%d %d %f %f", &histogramBoxSizeX, &histogramBoxSizeY, &histogramBoxPercentFromLeft, &histogramBoxPercentFromTop) != 4)
-                    fprintf(stderr, "%s*** ERROR: Not enough histogram box parameters: '%s'%s\n", KRED, argv[i], KNRM);
+                    fprintf(stderr, "%s*** ERROR: Not enough histogram box parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
 
                 // scale user-input 0-100 to 0.0-1.0
                 histogramBoxPercentFromLeft /= 100;
@@ -1439,11 +1454,11 @@ const char *locale = DEFAULT_LOCALE;
 
     if (help == 1)
     {
-        printf("%sUsage:\n", KRED);
+        printf("%sUsage:\n", c(KRED));
         printf(" ./capture -width 640 -height 480 -nightexposure 5000000 -gamma 50 -type 1 -nightbin 1 -filename Lake-Laberge.PNG\n\n");
-        printf("%s", KNRM);
+        printf("%s", c(KNRM));
 
-        printf("%sAvailable Arguments:\n", KYEL);
+        printf("%sAvailable Arguments:\n", c(KYEL));
         printf(" -width                 - Default = %d = Camera Max Width\n", DEFAULT_WIDTH);
         printf(" -height                - Default = %d = Camera Max Height\n", DEFAULT_HEIGHT);
         printf(" -daytime               - Default = %d: 1 enables capture daytime images\n", DEFAULT_DAYTIMECAPTURE);
@@ -1631,14 +1646,14 @@ const char *locale = DEFAULT_LOCALE;
     if (histogramBoxSizeX < 1 ||  histogramBoxSizeY < 1)
 	{
         fprintf(stderr, "%s*** ERROR: Histogram box size must be > 0; you entered X=%d, Y=%d%s\n",
-            KRED, histogramBoxSizeX, histogramBoxSizeY, KNRM);
+            c(KRED), histogramBoxSizeX, histogramBoxSizeY, c(KNRM));
         ok = false;
 	}
     if (isnan(histogramBoxPercentFromLeft) || isnan(histogramBoxPercentFromTop) || 
         histogramBoxPercentFromLeft < 0.0 || histogramBoxPercentFromTop < 0.0)
     {
         fprintf(stderr, "%s*** ERROR: Bad values for histogram percents; you entered X=%.0f%%, Y=%.0f%%%s\n",
-            KRED, (histogramBoxPercentFromLeft*100.0), (histogramBoxPercentFromTop*100.0), KNRM);
+            c(KRED), (histogramBoxPercentFromLeft*100.0), (histogramBoxPercentFromTop*100.0), c(KNRM));
         ok = false;
     }
 	else
@@ -1654,7 +1669,7 @@ const char *locale = DEFAULT_LOCALE;
 
         if (left_of_box < 0 || right_of_box >= width || top_of_box < 0 || bottom_of_box >= height)
 		{
-            fprintf(stderr, "%s*** ERROR: Histogram box location must fit on image; upper left of box is %dx%d, lower right %dx%d%s\n", KRED, left_of_box, top_of_box, right_of_box, bottom_of_box, KNRM);
+            fprintf(stderr, "%s*** ERROR: Histogram box location must fit on image; upper left of box is %dx%d, lower right %dx%d%s\n", c(KRED), left_of_box, top_of_box, right_of_box, bottom_of_box, c(KNRM));
             ok = false;
 		}
     }
@@ -1850,7 +1865,7 @@ const char *locale = DEFAULT_LOCALE;
     //-------------------------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
 
-    printf("%s", KGRN);
+    printf("%s", c(KGRN));
     printf("\nCapture Settings:\n");
     printf(" Image Type: %s\n", sType);
     printf(" Resolution (before any binning): %dx%d\n", width, height);
@@ -1923,10 +1938,10 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Preview: %s\n", yesNo(preview));
     printf(" Taking Dark Frames: %s\n", yesNo(taking_dark_frames));
     printf(" Debug Level: %d\n", debugLevel);
-    printf(" On TTY: %s\n", yesNo(tty));
+    printf(" On TTY: %s\n", tty ? "Yes" : "No");
     printf(" Video OFF Between Images: %s\n", yesNo(use_new_exposure_algorithm));
     printf(" ZWO SDK version %s\n", ASIGetSDKVersion());
-    printf("%s\n", KNRM);
+    printf("%s\n", c(KNRM));
 
     //-------------------------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
@@ -1947,16 +1962,16 @@ const char *locale = DEFAULT_LOCALE;
         asiRetCode = setControl(CamNum, ASI_COOLER_ON, asiCoolerEnabled == 1 ? ASI_TRUE : ASI_FALSE, ASI_FALSE);
         if (asiRetCode != ASI_SUCCESS)
         {
-            printf("%s", KRED);
+            printf("%s", c(KRED));
             printf(" WARNING: Could not enable cooler: %s, but continuing without it.\n", getRetCode(asiRetCode));
-            printf("%s", KNRM);
+            printf("%s", c(KNRM));
         }
         asiRetCode = setControl(CamNum, ASI_TARGET_TEMP, asiTargetTemp, ASI_FALSE);
         if (asiRetCode != ASI_SUCCESS)
         {
-            printf("%s", KRED);
+            printf("%s", c(KRED));
             printf(" WARNING: Could not set cooler temperature: %s, but continuing without it.\n", getRetCode(asiRetCode));
-            printf("%s", KNRM);
+            printf("%s", c(KNRM));
         }
     }
 

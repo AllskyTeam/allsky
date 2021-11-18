@@ -271,9 +271,7 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 	Log(3, "capturing image in file %s\n", fileName);
 
 	// Ensure no process is still running.
-	// Include "--" to we only find the command, not a different command with "libcamera-still"
-	// on its command line.
-	string kill = "ps -ef | grep 'libcamera-still --' | grep -v color | awk '{print $2}' | xargs kill -9 1> /dev/null 2>&1";
+	string kill = "ps -ef | grep 'raspistill' | grep -v color | awk '{print $2}' | xargs kill -9 1> /dev/null 2>&1";
 	char kcmd[kill.length() + 1];		// Define char variable
 	strcpy(kcmd, kill.c_str());			// Convert command to character variable
 

@@ -1097,24 +1097,25 @@ const char *locale = DEFAULT_LOCALE;
     //-------------------------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
     setlinebuf(stdout);   // Line buffer output so entries appear in the log immediately.
-    printf("\n");
-    printf("%s **********************************************\n", c(KGRN));
-    printf("%s *** Allsky Camera Software v0.8.2  |  2021 ***\n", c(KGRN));
-    printf("%s **********************************************\n\n", c(KGRN));
-    printf("\%sCapture images of the sky with a Raspberry Pi and an ASI Camera\n", c(KGRN));
-    printf("\n");
-    printf("%sAdd -h or --help for available options\n", c(KYEL));
-    printf("\n");
-    printf("\%sAuthor: ", c(KNRM));
-    printf("Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
-    printf("\%sContributors:\n", c(KNRM));
-    printf("-Knut Olav Klo\n");
-    printf("-Daniel Johnsen\n");
-    printf("-Yang and Sam from ZWO\n");
-    printf("-Robert Wagner\n");
-    printf("-Michael J. Kidd - <linuxkidd@gmail.com>\n");
-    printf("-Chris Kuethe\n");
-    printf("-Eric Claeys\n");
+    if (setlocale(LC_NUMERIC, locale) == NULL)
+        printf("WARNING: Could not set locale to %s\n", locale);
+
+    printf("\n%s", c(KGRN));
+    printf("**********************************************\n");
+    printf("*** Allsky Camera Software v0.8.2  |  2021 ***\n");
+    printf("**********************************************\n\n");
+    printf("Capture images of the sky with a Raspberry Pi and an ASI Camera\n");
+    printf("%s\n", c(KNRM));
+    printf("%sAdd -h or --help for available options%s\n\n", c(KYEL), c(KNRM));
+    printf("Author: Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
+    printf("Contributors:\n");
+    printf(" -Knut Olav Klo\n");
+    printf(" -Daniel Johnsen\n");
+    printf(" -Yang and Sam from ZWO\n");
+    printf(" -Robert Wagner\n");
+    printf(" -Michael J. Kidd - <linuxkidd@gmail.com>\n");
+    printf(" -Chris Kuethe\n");
+    printf(" -Eric Claeys\n");
     printf("\n");
 
     if (argc > 1)
@@ -1521,11 +1522,10 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -showHistogram         - 1 displays the histogram mean\n");
 #endif
         printf(" -debuglevel            - Default = 0. Set to 1,2, 3, or 4 for more debugging information.\n");
+
+        printf("%s", c(KNRM));
         exit(0);
     }
-
-    if (setlocale(LC_NUMERIC, locale) == NULL)
-        printf("WARNING: Could not set locale to %s\n", locale);
 
     const char *imagetype = "";
     const char *ext = strrchr(fileName, '.');

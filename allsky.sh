@@ -66,6 +66,17 @@ if [[ $CAMERA == "RPiHQ" && $RPiHQIsPresent -eq 0 ]]; then
 fi
 
 if [[ $CAMERA != "RPiHQ" ]]; then
+	reset_usb()		# resets the USB bus
+	{
+		if [ "${ON_TTY}" = "1" ]; then
+			echo "  Resetting USB ports; restart allsky.sh when done." >&2
+		else
+			echo "  Resetting USB ports and restarting." >&2
+			# The service will automatically restart this script.
+		fi
+		sudo "$UHUBCTL_PATH" -a cycle -l "$UHUBCTL_PORT"
+	}
+
 	# Use two commands to better aid debugging when camera isn't found.
 	# xxxxx This doesn't catch cases where CAMERA is "auto" and we should use ZWO.
 	ZWOdev=$(lsusb | awk '/ 03c3:/ { bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}')
@@ -78,13 +89,7 @@ if [[ $CAMERA != "RPiHQ" ]]; then
 			echo "  but USB entry '$ZWOdev' found for it." >&2
 		fi
 		if [ "$UHUBCTL_PATH" != "" ] ; then
-			if tty --silent ; then
-				echo "  Resetting USB ports; restart allsky.sh when done." >&2
-			else
-				echo "  Resetting USB ports and restarting." >&2
-				# The service will automatically restart this script.
-			fi
-			sudo "$UHUBCTL_PATH" -a cycle -l "$UHUBCTL_PORT"
+			reset_usb
 			exit 1
 		else
 			echo "  Exiting." >&2
@@ -199,11 +204,16 @@ RETCODE=$?
 [ $RETCODE -ne 0 ] && echo "'${CAPTURE}' exited with RETCODE=${RETCODE}"
 
 if [ "${USE_NOTIFICATION_IMAGES}" = "1" -a "${RETCODE}" -ne 0 ] ; then
-	# ${CAPTURE} will do this if it exited with 0.
+
+	# 99 is a special return code which means to reset usb bus if possible.
+	if [ "${RETCODE}" -eq 99 -a "$UHUBCTL_PATH" != "" ] ; then
+		reset_usb
+	fi
+
 	# RETCODE -ge 100 means the we should not restart until the user fixes the error.
 	if [ "$RETCODE" -ge 100 ]; then
 		echo "***"
-		if ${ON_TTY} = "1" ; then
+		if [ ${ON_TTY} = "1" ]; then
 			echo "*** After fixing, restart allsky.sh. ***"
 		else
 			echo "*** After fixing, restart the allsky service. ***"

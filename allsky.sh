@@ -45,13 +45,16 @@ if [ ${RET} -ne 0 ]; then
 	exit 1
 fi
 
-mkdir -p "${ALLSKY_TMP}"
+mkdir -p "${ALLSKY_TMP}"	# Re-create in case it's on a memory filesystem that gets wiped out at reboot
 
 # Make sure allsky.sh is not already running.
 ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 # old/regular manual camera selection mode => exit if no requested camera was found
-if [[ $(vcgencmd get_camera) == "supported=1 detected=1" ]]; then
+# Buster and Bullseye have different output so only check the part they have in common.
+# TODO: this check only needs to be done if CAMERA = RPiHQ
+vcgencmd get_camera | grep --silent "supported=1"
+if [ $? -eq 0 ]; then
 	RPiHQIsPresent=1
 else
 	RPiHQIsPresent=0
@@ -63,6 +66,17 @@ if [[ $CAMERA == "RPiHQ" && $RPiHQIsPresent -eq 0 ]]; then
 fi
 
 if [[ $CAMERA != "RPiHQ" ]]; then
+	reset_usb()		# resets the USB bus
+	{
+		if [ "${ON_TTY}" = "1" ]; then
+			echo "  Resetting USB ports; restart allsky.sh when done." >&2
+		else
+			echo "  Resetting USB ports and restarting." >&2
+			# The service will automatically restart this script.
+		fi
+		sudo "$UHUBCTL_PATH" -a cycle -l "$UHUBCTL_PORT"
+	}
+
 	# Use two commands to better aid debugging when camera isn't found.
 	# xxxxx This doesn't catch cases where CAMERA is "auto" and we should use ZWO.
 	ZWOdev=$(lsusb | awk '/ 03c3:/ { bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}')
@@ -75,13 +89,7 @@ if [[ $CAMERA != "RPiHQ" ]]; then
 			echo "  but USB entry '$ZWOdev' found for it." >&2
 		fi
 		if [ "$UHUBCTL_PATH" != "" ] ; then
-			if tty --silent ; then
-				echo "  Resetting USB ports; restart allsky.sh when done." >&2
-			else
-				echo "  Resetting USB ports and restarting." >&2
-				# The service will automatically restart this script.
-			fi
-			sudo "$UHUBCTL_PATH" -a cycle -l "$UHUBCTL_PORT"
+			reset_usb
 			exit 1
 		else
 			echo "  Exiting." >&2
@@ -134,7 +142,8 @@ source "${ALLSKY_SCRIPTS}/filename.sh"
 # Optionally display a notification image. This must come after the creation of "autocam.sh" above.
 USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
 if [ "$USE_NOTIFICATION_IMAGES" = "1" ] ; then
-	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1
+	# Can do this in the background to speed up startup
+	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
 fi
 
 echo "Starting allsky camera..."
@@ -144,14 +153,8 @@ echo "Starting allsky camera..."
 # but in order for it to work need to make ARGUMENTS an array.
 ARGUMENTS=()
 
-# Determine if we're called from the service (tty will fail).
-# tty should come first so the capture program knows if it should use colors.
-if tty --silent ; then
-	TTY=1
-else
-	TTY=0
-fi
-ARGUMENTS+=(-tty $TTY)
+# This argument should come first so the capture program knows if it should use colors.
+ARGUMENTS+=(-tty ${ON_TTY})
 
 KEYS=( $(jq -r 'keys[]' $CAMERA_SETTINGS) )
 for KEY in ${KEYS[@]}
@@ -160,7 +163,7 @@ do
 	ARGUMENTS+=(-$KEY "$K")
 done
 
-# When using a desktop environment (Remote Desktop, VNC, HDMI output, etc), a preview of the capture can be displayed in a separate window
+# When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if allsky.sh is started as a service or if the debian distribution has no desktop environment.
 if [[ $1 == "preview" ]] ; then
 	ARGUMENTS+=(-preview 1)
@@ -176,30 +179,49 @@ elif [ "${DAYTIME_CAPTURE}" = "false" -o "${DAYTIME}" = "0" ] ; then
 fi
 ARGUMENTS+=(-daytime $DAYTIME_CAPTURE)
 
-[ "$CAPTURE_EXTRA_PARAMETERS" != "" ] && ARGUMENTS+=( ${CAPTURE_EXTRA_PARAMETERS})	# Any additional parameters
+[ "$CAPTURE_EXTRA_PARAMETERS" != "" ] && ARGUMENTS+=(${CAPTURE_EXTRA_PARAMETERS})	# Any additional parameters
 
 echo "${ARGUMENTS[@]}" > ${ALLSKY_TMP}/capture_args.txt
 
 if [[ $CAMERA == "ZWO" ]]; then
 	CAPTURE="capture"
-
 elif [[ $CAMERA == "RPiHQ" ]]; then
 	CAPTURE="capture_RPiHQ"
+	grep --silent -i "VERSION_CODENAME=bullseye" /etc/os-release
+	if [ $? -eq 0 ]; then
+		echo "***"
+		echo -e "${YELLOW}Sorry, AllSky with RPiHQ cameras on the Bullseye operating system does not yet work.${NC}"
+		echo "See https://github.com/thomasjacquin/allsky/discussions/802 for more information."
+		echo "***"
+		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
+
+		# Don't let the service restart us 'cause we'll get the same error again
+		sudo systemctl stop allsky
+	fi
 fi
 "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
 RETCODE=$?
 [ $RETCODE -ne 0 ] && echo "'${CAPTURE}' exited with RETCODE=${RETCODE}"
 
 if [ "${USE_NOTIFICATION_IMAGES}" = "1" -a "${RETCODE}" -ne 0 ] ; then
-	# ${CAPTURE} will do this if it exited with 0.
-	# RETCODE -gt 100 means the we should not restart until the user fixes the error.
-	if [ "$RETCODE" -gt 100 ]; then	
-		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
-		if tty --silent ; then
+
+	# 99 is a special return code which means to reset usb bus if possible.
+	if [ "${RETCODE}" -eq 99 -a "$UHUBCTL_PATH" != "" ] ; then
+		reset_usb
+	fi
+
+	# RETCODE -ge 100 means the we should not restart until the user fixes the error.
+	if [ "$RETCODE" -ge 100 ]; then
+		echo "***"
+		if [ ${ON_TTY} = "1" ]; then
 			echo "*** After fixing, restart allsky.sh. ***"
 		else
 			echo "*** After fixing, restart the allsky service. ***"
 		fi
+		echo "***"
+		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
+
+		# Don't let the service restart us 'cause we'll likely get the same error again
 		sudo systemctl stop allsky
 	else
 		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "NotRunning" 2>&1

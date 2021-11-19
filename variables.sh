@@ -32,6 +32,11 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 		exit 1
 	fi
 
+	if tty --silent ; then
+		ON_TTY=1
+	else
+		ON_TTY=0
+	fi
 	# Allow variables to be overridden for testing or to use different locations.
 
 	# For temporary files or files that can be deleted at reboot.

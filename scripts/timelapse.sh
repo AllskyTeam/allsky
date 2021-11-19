@@ -133,6 +133,7 @@ if [ $? -ne -0 ]; then
 	echo
 	echo "Links in '${SEQUENCE_DIR}' left for debugging."
 	echo -e "Remove them when the problem is fixed.${NC}\n"
+	rm -f "${OUTPUT_FILE}"	# don't leave around to confuse user
 	exit 1
 fi
 [ "${FFLOG}" = "info" ] && cat "${TMP}"	 # if the user wants output, give it to them...

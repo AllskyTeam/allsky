@@ -931,7 +931,7 @@ bool check_max_errors(int *e, int max_errors)
 	numErrors++; sleep(2);
 	if (numErrors >= max_errors)
 	{
-		*e = 2;		// exit code
+		*e = 99;		// exit code - needs to match what's in allsky.sh
 		Log(0, "*** ERROR: Maximum number of consecutive errors of %d reached; exiting...\n", max_errors);
 		return(false);	// gets us out of inner and outer loop
 	}
@@ -1558,7 +1558,7 @@ const char *locale = DEFAULT_LOCALE;
         if (Image_type == ASI_IMG_RAW16)
 		{
 			waitToFix("*** ERROR: RAW16 images only work with .png files; either change the Image Type or the Filename.\n");
-			exit(99);
+			exit(2);
 		}
 
         imagetype = "jpg";
@@ -1594,7 +1594,7 @@ const char *locale = DEFAULT_LOCALE;
     {
         sprintf(debug_text, "*** ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", ext);
         waitToFix(debug_text);
-    	exit(99);
+    	exit(100);
     }
     compression_parameters.push_back(quality);
 
@@ -1867,7 +1867,7 @@ const char *locale = DEFAULT_LOCALE;
     {
         sprintf(debug_text, "*** ERROR: ASI_IMG_TYPE: %d\n", Image_type);
         waitToFix(debug_text);
-    	exit(99);
+    	exit(100);
     }
 
     //-------------------------------------------------------------------------------------------------------
@@ -2034,7 +2034,7 @@ const char *locale = DEFAULT_LOCALE;
         if (asiRetCode != ASI_SUCCESS)
         {
             printf("*** ERROR: Unable to start video capture: %s\n", getRetCode(asiRetCode));
-            closeUp(99);
+            closeUp(2);
         }
     }
 
@@ -2252,7 +2252,7 @@ const char *locale = DEFAULT_LOCALE;
 				else
 				{
                     printf("ASISetROIFormat(%d, %dx%d, %d, %d) = %s\n", CamNum, width, height, currentBin, Image_type, getRetCode(asiRetCode));
-                    closeUp(1);
+                    closeUp(100);
 				}
             }
         }

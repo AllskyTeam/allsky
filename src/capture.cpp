@@ -118,7 +118,7 @@ int debugLevel = 0;
  * Helper function to display debug info
 **/
 // [[gnu::format(printf, 2, 3)]]
-static inline void Log(int required_level, const char *fmt, ...)
+void Log(int required_level, const char *fmt, ...)
 {
     if (debugLevel >= required_level) {
 		char msg[8192];
@@ -129,7 +129,6 @@ static inline void Log(int required_level, const char *fmt, ...)
 		va_end(va);
 	}
 }
-
 
 // Return the string for the specified color, or "" if we're not on a tty.
 char const *c(char const *color)
@@ -536,6 +535,46 @@ return;
     }
 }
 
+// Display a length of time in different units, depending on the length's value.
+// If the "multi" flag is set, display in multiple units if appropriate.
+char *length_in_units(long us, bool multi)	// microseconds
+{
+	static char length[50];
+	if (us == 0)
+	{
+		snprintf(length, sizeof(length), "0 us");
+	}
+	else
+	{
+		double us_in_ms = (double)us / US_IN_MS;
+		// The boundaries on when to display one unit and two are really a matter of taste.
+		if (us_in_ms < 0.5)		// less than 1/2 ms
+		{
+			snprintf(length, sizeof(length), "%'ld us", us);
+		}
+		else if (us_in_ms < 1.5)	// between 0.5 and 1.5 ms
+		{
+			if (multi)
+				snprintf(length, sizeof(length), "%'ld us (%.3f ms)", us, us_in_ms);
+			else
+				snprintf(length, sizeof(length), "%.3f ms", us_in_ms);
+		}
+		else if (us > (1 * US_IN_SEC))
+		{
+			snprintf(length, sizeof(length), "%.1lf sec", (double)us / US_IN_SEC);
+		}
+		else	// between 1.5 ms and 1 second
+		{
+			if (multi)
+				snprintf(length, sizeof(length), "%.3f ms (%.1lf sec)", us_in_ms, (double)us / US_IN_SEC);
+			else
+				snprintf(length, sizeof(length), "%.1f ms", us_in_ms);
+		}
+
+	}
+	return(length);
+}
+
 long last_exposure_us = 0;		// last exposure taken
 long reported_exposure_us = 0;	// exposure reported by the camera, either actual exposure or suggested next one
 long actualGain = 0;			// actual gain used, per the camera
@@ -565,9 +604,9 @@ ASI_ERROR_CODE takeOneExposure(
 
     // This debug message isn't typcally needed since we already displayed a message about
     // starting a new exposure, and below we display the result when the exposure is done.
-    Log(4, "  > %s to %'ld us (%'.2f ms), timeout: %'ld ms\n",
+    Log(4, "  > %s to %s, timeout: %'ld ms\n",
         wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Exposure set",
-        exposure_time_us, (float)exposure_time_us/US_IN_MS, timeout);
+        length_in_units(exposure_time_us, true), timeout);
 
     setControl(cameraId, ASI_EXPOSURE, exposure_time_us, currentAutoExposure);
 
@@ -602,13 +641,13 @@ ASI_ERROR_CODE takeOneExposure(
 			// When in auto-exposure mode, the returned exposure length is what the driver thinks the
 			// next exposure should be, and will eventually converge on the correct exposure.
             ASIGetControlValue(cameraId, ASI_EXPOSURE, &reported_exposure_us, &wasAutoExposure);
-            Log(3, "  > Got image%s.  Reported exposure: %'ld us (%'.2f ms), wasAuto=%s\n", debug_text, reported_exposure_us, (float)reported_exposure_us/US_IN_MS, wasAutoExposure == ASI_TRUE ? "yes" : "no");
+            Log(3, "  > Got image%s.  Reported exposure: %s, wasAuto=%s\n", debug_text, length_in_units(reported_exposure_us, true), wasAutoExposure == ASI_TRUE ? "yes" : "no");
 
             // If this was a manual exposure, make sure it took the correct exposure.
 			// Per ZWO, this should never happen.
             if (wasAutoExposure == ASI_FALSE && exposure_time_us != reported_exposure_us)
             {
-                Log(0, "  > WARNING: not correct exposure (requested: %'ld us, actual: %'ld us, diff: %'ld)\n", exposure_time_us, reported_exposure_us, reported_exposure_us - exposure_time_us);
+                Log(0, "  > WARNING: not correct exposure (requested: %'ld us, reported: %'ld us, diff: %'ld)\n", exposure_time_us, reported_exposure_us, reported_exposure_us - exposure_time_us);
             }
             ASIGetControlValue(cameraId, ASI_GAIN, &actualGain, &bAuto);
             ASIGetControlValue(cameraId, ASI_TEMPERATURE, &actualTemp, &bAuto);
@@ -881,21 +920,6 @@ int determineGainChange(int dayGain, int nightGain)
     Log(4, "  xxxx Adjusting %s gain by %d on next picture to %d; will be gain change # %d of %d.\n",
         dayOrNight.c_str(), amt, amt+currentGain, numGainChanges, gainTransitionImages);
     return(amt);
-}
-
-// Display a length of time in different units, depending on the length's value.
-char *length_in_units(float ms)	// milliseconds
-{
-    static char length[50];
-    if (ms == 0)
-        sprintf(length, "0 ms");
-    if (ms < 1)
-        sprintf(length, "%.3f ms", (float) ms);
-    else if (ms > (1 * MS_IN_SEC))
-        sprintf(length, "%.1f sec", (float) ms / MS_IN_SEC);
-    else
-        sprintf(length, "%.1f ms", ms);
-    return(length);
 }
 
 // Check if the maximum number of consecutive errors has been reached
@@ -2102,7 +2126,7 @@ const char *locale = DEFAULT_LOCALE;
                 }
                 else
                 {
-                    Log(2, "Using the last night exposure of %'ld us (%'.2lf ms)\n", current_exposure_us, (float)current_exposure_us / US_IN_MS);
+                    Log(2, "Using the last night exposure of %s\n", length_in_units(current_exposure_us, true));
                 }
 
                 current_max_autoexposure_us = asi_day_max_autoexposure_ms * US_IN_MS;
@@ -2152,7 +2176,7 @@ const char *locale = DEFAULT_LOCALE;
             if (numExposures == 0 || asiNightAutoExposure == ASI_FALSE)
             {
                 current_exposure_us = asi_night_exposure_us;
-                Log(4, "Using night exposure (%'ld ms)\n", asi_night_exposure_us / US_IN_MS);
+                Log(4, "Using night exposure (%s)\n", length_in_units(asi_night_exposure_us, true));
             }
 
             currentAutoExposure = asiNightAutoExposure ? ASI_TRUE : ASI_FALSE;
@@ -2256,7 +2280,7 @@ const char *locale = DEFAULT_LOCALE;
             char exposureStart[128];
             char f[10] = "%F %T";
             sprintf(exposureStart, "%s", formatTime(t, f));
-            Log(0, "STARTING EXPOSURE at: %s   @ %'ld us\n", exposureStart, current_exposure_us);
+            Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(current_exposure_us, true));
 
             // Get start time for overlay.  Make sure it has the same time as exposureStart.
             if (showTime == 1)
@@ -2555,7 +2579,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 
                     if (asiRetCode != ASI_SUCCESS)
                     {
-                        Log(2,"  > Sleeping %s from failed exposure\n", length_in_units(currentDelay_ms));
+                        Log(2,"  > Sleeping %s from failed exposure\n", length_in_units(currentDelay_ms * US_IN_MS, false));
                         usleep(currentDelay_ms * US_IN_MS);
                         // Don't save the file or do anything below.
                         continue;
@@ -2568,13 +2592,13 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     }
                     else if (attempts > maxHistogramAttempts)
                     {
-                         Log(3, "  > max attempts reached - using exposure of %'ld us with mean %d\n", current_exposure_us, mean);
+                         Log(3, "  > max attempts reached - using exposure of %s us with mean %d\n", length_in_units(current_exposure_us, true), mean);
                     }
                     else if (attempts >= 1)
                     {
                          if (current_exposure_us > current_max_autoexposure_us)
                          {
-                             Log(3, "  > Stopped trying: new exposure of %'ld us would be over max of %'ld\n", current_exposure_us, current_max_autoexposure_us);
+                             Log(3, "  > Stopped trying: new exposure of %s would be over max of %s\n", length_in_units(current_exposure_us, false), length_in_units(current_max_autoexposure_us, false));
 
                              long diff = (long)((float)current_exposure_us * (1/(float)percent_change));
                              current_exposure_us -= diff;
@@ -2582,7 +2606,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                          }
                          else if (current_exposure_us == current_max_autoexposure_us)
                          {
-                             Log(3, "  > Stopped trying: hit max exposure limit of %'ld, mean %d\n", current_max_autoexposure_us, mean);
+                             Log(3, "  > Stopped trying: hit max exposure limit of %s, mean %d\n", length_in_units(current_max_autoexposure_us, false), mean);
                              // If current_exposure_us causes too high of a mean, decrease exposure
                              // so on the next loop we'll adjust it.
                              if (mean > maxAcceptableMean)
@@ -2590,16 +2614,16 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                          }
                          else if (new_exposure_us == current_exposure_us)
                          {
-                             Log(3, "  > Stopped trying: new_exposure_us == current_exposure_us (%'ld)\n", current_exposure_us);
+                             Log(3, "  > Stopped trying: new_exposure_us == current_exposure_us == %s\n", length_in_units(current_exposure_us, false));
                          }
                          else
                          {
-                             Log(3, "  > Stopped trying, using exposure of %'ld us with mean %d, min=%d, max=%d\n", current_exposure_us, mean, minAcceptableMean, maxAcceptableMean);
+                             Log(3, "  > Stopped trying, using exposure of %s us with mean %d, min=%d, max=%d\n", length_in_units(current_exposure_us, false), mean, minAcceptableMean, maxAcceptableMean);
                          }
                     }
                     else if (current_exposure_us == current_max_autoexposure_us)
                     {
-                         Log(3, "  > Did not make any additional attempts - at max exposure limit of %'ld, mean %d\n", current_max_autoexposure_us, mean);
+                         Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %d\n", length_in_units(current_max_autoexposure_us, false), mean);
                     }
                     // xxxx TODO: this was "actual_exposure_us = ..."    reported_exposure_us = current_exposure_us;
 
@@ -2863,16 +2887,16 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         // we still wait until we reach maxexposure, then wait for the delay period.
                         // This is important for a constant frame rate during timelapse generation.
                         // This doesn't apply during the day since we don't have a max time then.
-                        int s = (asi_night_max_autoexposure_ms * US_IN_MS) - last_exposure_us; // to get to max
-                        s += currentDelay_ms * US_IN_MS;   // Add standard delay amount
-                        Log(0, "  > Sleeping: %s\n", length_in_units(s / US_IN_MS));
-                        usleep(s);	// usleep() is in microseconds
+                        long s_us = (asi_night_max_autoexposure_ms * US_IN_MS) - last_exposure_us; // to get to max
+                        s_us += currentDelay_ms * US_IN_MS;   // Add standard delay amount
+                        Log(0, "  > Sleeping: %s\n", length_in_units(s_us, false));
+                        usleep(s_us);	// usleep() is in us (microseconds)
                     }
                     else
                     {
                         // Sleep even if taking dark frames so the sensor can cool between shots like it would
                         // do on a normal night.  With no delay the sensor may get hotter than it would at night.
-                        Log(0, "  > Sleeping %s from %s exposure\n", length_in_units(currentDelay_ms), taking_dark_frames ? "dark frame" : "auto");
+                        Log(0, "  > Sleeping %s from %s exposure\n", length_in_units(currentDelay_ms * US_IN_MS, false), taking_dark_frames ? "dark frame" : "auto");
                         usleep(currentDelay_ms * US_IN_MS);
                     }
                 }
@@ -2887,7 +2911,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     if (usedHistogram == 1)
                         s = "histogram";
 #endif
-                    Log(0, "  > Sleeping %s from %s exposure\n", length_in_units(currentDelay_ms), s.c_str());
+                    Log(0, "  > Sleeping %s from %s exposure\n", length_in_units(currentDelay_ms * US_IN_MS, false), s.c_str());
                     usleep(currentDelay_ms * US_IN_MS);
                 }
                 calculateDayOrNight(latitude, longitude, angle);

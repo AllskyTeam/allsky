@@ -1122,7 +1122,7 @@ const char *locale = DEFAULT_LOCALE;
     //-------------------------------------------------------------------------------------------------------
     setlinebuf(stdout);   // Line buffer output so entries appear in the log immediately.
     if (setlocale(LC_NUMERIC, locale) == NULL)
-        printf("WARNING: Could not set locale to %s\n", locale);
+        printf("*** WARNING: Could not set locale to %s ***\n", locale);
 
     printf("\n%s", c(KGRN));
     printf("**********************************************\n");
@@ -1687,9 +1687,9 @@ const char *locale = DEFAULT_LOCALE;
 #endif
 
     printf("\n%s Information:\n", ASICameraInfo.Name);
-    printf("  - Native Resolution:%dx%d\n", iMaxWidth, iMaxHeight);
+    printf("  - Native Resolution: %dx%d\n", iMaxWidth, iMaxHeight);
     printf("  - Pixel Size: %1.1fmicrons\n", pixelSize);
-    printf("  - Supported Bin: ");
+    printf("  - Supported Bins: ");
     for (int i = 0; i < 16; ++i)
     {
         if (ASICameraInfo.SupportedBins[i] == 0)
@@ -1879,18 +1879,14 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Resolution (before any binning): %dx%d\n", width, height);
     printf(" Quality: %d\n", quality);
     printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
-    printf(" Exposure (day): %'1.3fms\n", (float)asi_day_exposure_us / US_IN_MS);
-    printf(" Exposure (night): %'1.0fms\n", round(asi_night_exposure_us / US_IN_MS));
-    printf(" Auto-Exposure (day): %s\n", yesNo(asiDayAutoExposure));
-    printf(" Auto-Exposure (night): %s\n", yesNo(asiNightAutoExposure));
+    printf(" Exposure (day): %'1.3fms, Auto: %s\n", (float)asi_day_exposure_us / US_IN_MS, yesNo(asiDayAutoExposure));
+    printf(" Exposure (night): %'1.0fms, Auto: %s\n", round(asi_night_exposure_us / US_IN_MS), yesNo(asiNightAutoExposure));
     printf(" Max Auto-Exposure (day): %'dms (%'.1fs)\n", asi_day_max_autoexposure_ms, (float)asi_day_max_autoexposure_ms / MS_IN_SEC);
     printf(" Max Auto-Exposure (night): %'dms (%'.1fs)\n", asi_night_max_autoexposure_ms, (float)asi_night_max_autoexposure_ms / MS_IN_SEC);
 
     printf(" Delay (day): %'dms\n", dayDelay_ms);
     printf(" Delay (night): %'dms\n", nightDelay_ms);
-    printf(" Gain (night only): %d\n", asiNightGain);
-    printf(" Auto Gain (night only): %s\n", yesNo(asiNightAutoGain));
-    printf(" Max Gain (night only): %d\n", asiNightMaxGain);
+    printf(" Gain (night only): %d, Auto: %s, max: %d\n", asiNightGain, yesNo(asiNightAutoGain), asiNightMaxGain);
     printf(" Gain Transition Time: %.1f minutes\n", (float) gainTransitionTime/60);
     printf(" Brightness (day): %d\n", asiDayBrightness);
     printf(" Brightness (night): %d\n", asiNightBrightness);
@@ -1901,30 +1897,30 @@ const char *locale = DEFAULT_LOCALE;
     if (ASICameraInfo.IsCoolerCam)
 	{
 		printf(" Cooler Enabled: %s", yesNo(asiCoolerEnabled));
-		if (asiCoolerEnabled) printf(", Target Temperature: %ldC\n", asiTargetTemp);
+		if (asiCoolerEnabled) printf(", Target Temperature: %ld C\n", asiTargetTemp);
 		printf("\n");
 	}
     printf(" Gamma: %d\n", asiGamma);
     if (ASICameraInfo.IsColorCam)
     {
-        printf(" WB Red: %d, Blue: %d\n", asiWBR, asiWBB);
-		printf(" Auto WB: %s\n", yesNo(asiAutoWhiteBalance));
+        printf(" WB Red: %d, Blue: %d\n, Auto: %s", asiWBR, asiWBB, yesNo(asiAutoWhiteBalance));
     }
     printf(" Binning (day): %d\n", dayBin);
     printf(" Binning (night): %d\n", nightBin);
-    printf(" USB Speed: %d\n", asiBandwidth);
-    printf(" Auto USB Speed: %s\n", yesNo(asiAutoBandwidth));
+    printf(" USB Speed: %d, auto: %s\n", asiBandwidth, yesNo(asiAutoBandwidth));
+
     printf(" Text Overlay: %s\n", ImgText[0] == '\0' ? "[none]" : ImgText);
-    printf(" Text Extra Filename: %s, Age: %d\n", ImgExtraText[0] == '\0' ? "[none]" : ImgExtraText, extraFileAge);
+    printf(" Text Extra Filename: %s, Age: %d seconds\n", ImgExtraText[0] == '\0' ? "[none]" : ImgExtraText, extraFileAge);
     printf(" Text Line Height %dpx\n", iTextLineHeight);
-    printf(" Text Position: %dpx left, %dpx top\n", iTextX, iTextY);
-    printf(" Font Name:  %d (%s)\n", fontname[fontnumber], fontnames[fontnumber]);
+    printf(" Text Position: %dpx from left, %dpx from top\n", iTextX, iTextY);
+    printf(" Font Name:  %s (%d)\n", fontnames[fontnumber], fontname[fontnumber]);
     printf(" Font Color: %d, %d, %d\n", fontcolor[0], fontcolor[1], fontcolor[2]);
     printf(" Small Font Color: %d, %d, %d\n", smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
     printf(" Font Line Type: %d\n", linetype[linenumber]);
     printf(" Font Size: %1.1f\n", fontsize);
     printf(" Font Line Width: %d\n", linewidth);
     printf(" Outline Font : %s\n", yesNo(outlinefont));
+
     printf(" Flip Image: %d\n", asiFlip);
     printf(" Filename: %s\n", fileName);
     printf(" Latitude: %s, Longitude: %s\n", latitude, longitude);
@@ -2264,11 +2260,6 @@ const char *locale = DEFAULT_LOCALE;
         int mean = 0;
         int attempts = 0;
         int histogram[256];
-#define MEAN &mean
-#define HISTOGRAM histogram
-#else
-#define MEAN NULL
-#define HISTOGRAM NULL
 #endif
 
         while (bMain && lastDayOrNight == dayOrNight)
@@ -2286,7 +2277,7 @@ const char *locale = DEFAULT_LOCALE;
             if (showTime == 1)
             	sprintf(bufTime, "%s", formatTime(t, timeFormat));
 
-            asiRetCode = takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, HISTOGRAM, MEAN);
+            asiRetCode = takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram, &mean);
             if (asiRetCode == ASI_SUCCESS)
             {
                 numErrors = 0;
@@ -2628,7 +2619,13 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     // xxxx TODO: this was "actual_exposure_us = ..."    reported_exposure_us = current_exposure_us;
 
                 } else {
-                    current_exposure_us = last_exposure_us;
+                    // Didn't use histogram method.
+                    // If we used auto-exposure, set the next exposure to the last reported exposure, which is what.
+                    // the camera driver thinks the next exposure should be.
+                    if (currentAutoExposure == ASI_TRUE)
+                        current_exposure_us = reported_exposure_us;
+					else
+                        current_exposure_us = last_exposure_us;
                 }
 #endif
                 if (current_skip_frames > 0)
@@ -2787,7 +2784,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         if (access(ImgExtraText, F_OK ) == -1 ) {
                             Log(1, "  > *** WARNING: Extra Text File Does Not Exist So Ignoring It\n");
                         } else if (access(ImgExtraText, R_OK ) == -1 ) {
-                            Log(1, "  > *** ERROR: Cannot Read From Extra Text File So Ignoring It\n");
+                            Log(1, "  > *** WARNING: Cannot Read From Extra Text File So Ignoring It\n");
                         } else {
                             FILE *fp = fopen(ImgExtraText, "r");
 

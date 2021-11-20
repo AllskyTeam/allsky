@@ -3,7 +3,7 @@
 # This file is "source"d into another.
 # "${CURRENT_IMAGE}" is the name of the current image we're working on.
 
-ME="$(basename "${BASH_ARGV0}")"
+ME="$(basename "${BASH_SOURCE[0]}")"
 
 # Subtract dark frame if there is one defined in config.sh
 # This has to come after executing darkCapture.sh which sets ${TEMPERATURE}.

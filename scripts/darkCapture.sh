@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # This file is "source"d into another.
+# "${CURRENT_IMAGE}" is the name of the current image we're working on.
 
 # ${TEMPERATURE} is passed to us by saveImage.sh, but may be null.
 # If ${TEMPERATURE} is set, use it as the temperature, otherwise read the ${TEMPERATURE_FILE}.
@@ -16,7 +17,6 @@ fi
 
 DARK_MODE=$(jq -r '.darkframe' "$CAMERA_SETTINGS")
 if [ "$DARK_MODE" = "1" ] ; then
-	# "${CURRENT_IMAGE}" is the name of the current image we're working on.
 	CURRENT_IMAGE="dark.${EXTENSION}"		# XXXXX in future release this will be set by saveImage.sh
 
 	mkdir -p "${ALLSKY_DARKS}"

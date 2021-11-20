@@ -63,8 +63,15 @@ if [ "${DARK_FRAME_SUBTRACTION}" = "true" ]; then
 				CLOSEST_TEMPERATURE=${DARK_TEMPERATURE}
 				let DIFF=${TEMPERATURE}-${CLOSEST_TEMPERATURE}
 			else
-				echo "${ME}: INFORMATION: dark file '${DARKS_DIR}/${file}' is zero-length; deleting."
-				rm -f "${DARKS_DIR}/${file}"
+				
+				echo -n "${ME}: INFORMATION: dark file '${DARKS_DIR}/${file}' "
+				if [ ! -f "${DARKS_DIR}/${file}" ]; then
+					echo "$is does not exist  Huh?."
+				else
+					echo "$is zero-length; deleting."
+					ls -l "${DARKS_DIR}/${file}"
+					rm -f "${DARKS_DIR}/${file}"
+				fi
 			fi
 		done
 

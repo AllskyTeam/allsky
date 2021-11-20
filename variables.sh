@@ -9,16 +9,18 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	ALLSKY_VARIABLE_SET="true"	# so we only do the following once
 
-	ME="$(basename "${BASH_ARGV0}")"
+	ME="$(basename "${BASH_SOURCE[0]}")"
 
 	# Set colors used by many scripts in output.
 	# If we're not on a tty output is likely being written to a file, so don't use colors.
 	if tty --silent ; then
+		ON_TTY=1
 		RED="\033[0;31m"
 		GREEN="\033[0;32m"
 		YELLOW="\033[0;33m"
 		NC="\033[0m" # No Color
 	else
+		ON_TTY=0
 		RED=""
 		GREEN=""
 		YELLOW=""
@@ -32,11 +34,6 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 		exit 1
 	fi
 
-	if tty --silent ; then
-		ON_TTY=1
-	else
-		ON_TTY=0
-	fi
 	# Allow variables to be overridden for testing or to use different locations.
 
 	# For temporary files or files that can be deleted at reboot.

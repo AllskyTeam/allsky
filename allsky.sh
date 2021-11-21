@@ -197,6 +197,7 @@ elif [[ $CAMERA == "RPiHQ" ]]; then
 
 		# Don't let the service restart us 'cause we'll get the same error again
 		sudo systemctl stop allsky
+		exit 99
 	fi
 fi
 "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"

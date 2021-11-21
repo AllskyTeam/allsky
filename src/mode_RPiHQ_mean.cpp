@@ -99,7 +99,8 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 	compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
 	compression_params.push_back(95);
 
-	cv::imwrite("test.jpg", dstImage, compression_params);
+bool result = cv::imwrite("test.jpg", dstImage, compression_params);
+if (! result) printf("*** ERROR: Unable to write to test.jpg\n");
 
 	cv::Scalar mean_scalar = cv::mean(image, mask);
 	switch (image.channels())

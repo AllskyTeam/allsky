@@ -159,6 +159,7 @@ if [[ ${CAMERA} == "RPiHQ" ]]; then
 		grep --silent -i "VERSION_CODENAME=bullseye" /etc/os-release ||
 		grep --silent "^dtoverlay=imx477" /boot/config.txt
 	)
+	# This argument needs to come first since the capture code checks for it first.
 	if [ $? -eq 0 ]; then
 		ARGUMENTS+=(-cmd libcamera)
 	else
@@ -166,8 +167,12 @@ if [[ ${CAMERA} == "RPiHQ" ]]; then
 	fi
 fi
 
-# This argument should come second so the capture program knows if it should use colors.
+# This argument should come second so the capture program knows if it should display debug output.
+ARGUMENTS+=(-debuglevel ${ALLSKY_DEBUG_LEVEL})
+
+# This argument should come next so the capture program knows if it should use colors.
 ARGUMENTS+=(-tty ${ON_TTY})
+
 
 KEYS=( $(jq -r 'keys[]' $CAMERA_SETTINGS) )
 for KEY in ${KEYS[@]}

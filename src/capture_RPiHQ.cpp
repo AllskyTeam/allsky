@@ -1229,7 +1229,7 @@ int main(int argc, char *argv[])
 
 	printf("%s", c(KGRN));
 	printf("\nCapture Settings:\n");
-	printf(" Command: %s\n" is_libcamera ? "libcamera-still" : "raspistill");
+	printf(" Command: %s\n", is_libcamera ? "libcamera-still" : "raspistill");
 	printf(" Resolution (before any binning): %dx%d\n", width, height);
 	printf(" Quality: %d\n", quality);
 	printf(" Exposure (night): %1.0fms\n", round(asiNightExposure / US_IN_MS));

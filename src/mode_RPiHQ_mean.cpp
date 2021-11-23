@@ -47,7 +47,7 @@ double get_focus_measure(cv::Mat img, modeMeanSetting &currentModeMeanSetting)
 	cv::meanStdDev(lap, mu, sigma);
 
 	double focusMeasure = sigma.val[0]*sigma.val[0];
-	Log(2, "focusMeasure: %'f\n", focusMeasure);
+	Log(3, "  > Focus: %'f\n", focusMeasure);
 	return(focusMeasure);
 }
 
@@ -65,7 +65,7 @@ void RPiHQcalcMean(const char* fileName, int asiExposure_us, double asiGain, ras
 		currentModeMeanSetting.init = false;
 		currentModeMeanSetting.ExposureLevelMax = log(asiGain * asiExposure_us/US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) + 1; 
 		currentModeMeanSetting.ExposureLevelMin = log(1.0     * 1.0        /US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) - 1;
-		Log(1, "ExposureLevel: %1.8f ... %1.8f\n", currentModeMeanSetting.ExposureLevelMin, currentModeMeanSetting.ExposureLevelMax);
+		Log(1, "  > ExposureLevel: %1.8f ... %1.8f\n", currentModeMeanSetting.ExposureLevelMin, currentModeMeanSetting.ExposureLevelMax);
 	}
 
 	// get old ExposureTime
@@ -125,18 +125,17 @@ if (! result) printf("*** ERROR: Unable to write to test.jpg\n");
 			break;
 	}
 		 
-	Log(1, "%s %.1f %f %f\n", basename(fileName), ExposureTime_s, mean, (currentModeMeanSetting.mean_value - mean));
+	Log(1, "  > %s %.1f %f %f\n", basename(fileName), ExposureTime_s, mean, (currentModeMeanSetting.mean_value - mean));
 
 	// avg of mean history 
-	Log(3, "MeanCnt: %d\n", MeanCnt);
-	Log(3, "mean_historySize: %d\n", currentModeMeanSetting.historySize);
+	Log(3, "  > MeanCnt: %d, mean_historySize: %d\n", MeanCnt, currentModeMeanSetting.historySize);
 
 	mean_history[MeanCnt % currentModeMeanSetting.historySize] = mean;
 	int values = 0;
 	mean=0.0;
 	for (int i=1; i <= currentModeMeanSetting.historySize; i++) {
 		int idx =  (MeanCnt + i) % currentModeMeanSetting.historySize;
-		Log(1, "i=%d: idx=%d mean=%1.4f exp=%d\n", i, idx, mean_history[idx], exp_history[idx]);
+		Log(1, "  > i=%d: idx=%d mean=%1.4f exp=%d\n", i, idx, mean_history[idx], exp_history[idx]);
 		mean += mean_history[idx] * (double) i;
 		values += i;
 	} 
@@ -150,16 +149,16 @@ if (! result) printf("*** ERROR: Unable to write to test.jpg\n");
 	// forcast (m_forcast = m_neu + diff = m_neu + m_neu - m_alt = 2*m_neu - m_alt)
 	double mean_forecast = 2.0 * mean_history[idx] - mean_history[idxN1];
 	mean_forecast = std::min((double) std::max((double) mean_forecast, 0.0), 1.0);
-	Log(2, "mean_forecast: %1.4f\n", mean_forecast);
+	Log(2, "  > mean_forecast: %1.4f\n", mean_forecast);
 	// gleiche Wertigkeit wie aktueller Wert
 	mean += mean_forecast * currentModeMeanSetting.historySize;
 	values += currentModeMeanSetting.historySize;
 
-	Log(3, "values: %d\n", values);
+	Log(2, "  > values: %d\n", values);
 	
 	mean = mean / (double) values;
 	mean_diff = abs(mean - currentModeMeanSetting.mean_value);
-	Log(2, "mean_diff: %1.4f\n", mean_diff);
+	Log(2, "  > mean_diff: %1.4f\n", mean_diff);
 
 	int ExposureChange = currentModeMeanSetting.shuttersteps / 2;
 		
@@ -175,7 +174,7 @@ if (! result) printf("*** ERROR: Unable to write to test.jpg\n");
 	dExposureChange = ExposureChange-lastExposureChange;
 	lastExposureChange = ExposureChange;
 
-	Log(1, "ExposureChange: %d (%d)\n", ExposureChange, dExposureChange);
+	Log(2, "  > ExposureChange: %d (%d)\n", ExposureChange, dExposureChange);
 
 	if (mean < (currentModeMeanSetting.mean_value - (currentModeMeanSetting.mean_threshold))) {
 		if ((currentRaspistillSetting.analoggain < asiGain) || (currentRaspistillSetting.shutter_us < asiExposure_us)) {  // obere Grenze durch Gaim und shutter
@@ -184,7 +183,7 @@ if (! result) printf("*** ERROR: Unable to write to test.jpg\n");
 	}
 	if (mean > (currentModeMeanSetting.mean_value + currentModeMeanSetting.mean_threshold))  {
 		if (ExposureTime_s <= 1 / US_IN_SEC) { // untere Grenze durch shuttertime
-			Log(2, "ExposureTime_s too low - stop !\n");
+			Log(2, "  > ExposureTime_s too low - stop !\n");
 		}
 		else {
 			currentModeMeanSetting.ExposureLevel -= ExposureChange;
@@ -197,12 +196,12 @@ if (! result) printf("*** ERROR: Unable to write to test.jpg\n");
 	// fastforward ?
 	if ((currentModeMeanSetting.ExposureLevel == (int)currentModeMeanSetting.ExposureLevelMax) || (currentModeMeanSetting.ExposureLevel == (int)currentModeMeanSetting.ExposureLevelMin)) {
 		fastforward = true;
-		printf("FF aktiviert\n");
+		Log(2, "  > FF aktiviert\n");
 	}
 	if ((abs(mean_history[idx] - currentModeMeanSetting.mean_value) < currentModeMeanSetting.mean_threshold) &&
 		(abs(mean_history[idxN1] - currentModeMeanSetting.mean_value) < currentModeMeanSetting.mean_threshold)) {
 		fastforward = false;
-		printf("FF deaktiviert\n");
+		Log(2, "  > FF deaktiviert\n");
 	}
 		
 	//#############################################################################################################
@@ -231,5 +230,5 @@ if (! result) printf("*** ERROR: Unable to write to test.jpg\n");
 	exp_history[MeanCnt % currentModeMeanSetting.historySize] = currentModeMeanSetting.ExposureLevel;
 
 	currentRaspistillSetting.shutter_us = ExposureTime_s * US_IN_SEC;
-	printf("Mean: %1.4f (%1.4f) Exposure level:%d (%d) Exposure time:%1.8f analoggain:%1.2f\n", mean, mean_diff, currentModeMeanSetting.ExposureLevel, currentModeMeanSetting.ExposureLevel-exp_history[idx], ExposureTime_s, currentRaspistillSetting.analoggain);
+	Log(2, "  > Mean: %1.4f (%1.4f) Exposure level:%d (%d) Exposure time:%1.8f analoggain:%1.2f\n", mean, mean_diff, currentModeMeanSetting.ExposureLevel, currentModeMeanSetting.ExposureLevel-exp_history[idx], ExposureTime_s, currentRaspistillSetting.analoggain);
 }

@@ -153,7 +153,17 @@ echo "Starting allsky camera..."
 # but in order for it to work need to make ARGUMENTS an array.
 ARGUMENTS=()
 
-# This argument should come first so the capture program knows if it should use colors.
+if [[ ${CAMERA} == "RPiHQ" ]]; then
+	# The Bullseye operating system deprecated raspistill so we use libcamera instead.
+	grep --silent -i "VERSION_CODENAME=bullseye" /etc/os-release
+	if [ $? -eq 0 ]; then
+		ARGUMENTS+=(-cmd libcamera)
+	else
+		ARGUMENTS+=(-cmd raspistill)
+	fi
+fi
+
+# This argument should come second so the capture program knows if it should use colors.
 ARGUMENTS+=(-tty ${ON_TTY})
 
 KEYS=( $(jq -r 'keys[]' $CAMERA_SETTINGS) )
@@ -187,17 +197,6 @@ if [[ $CAMERA == "ZWO" ]]; then
 	CAPTURE="capture"
 elif [[ $CAMERA == "RPiHQ" ]]; then
 	CAPTURE="capture_RPiHQ"
-	grep --silent -i "VERSION_CODENAME=bullseye" /etc/os-release
-	if [ $? -eq 0 ]; then
-		echo "***"
-		echo -e "${YELLOW}Sorry, AllSky with RPiHQ cameras on the Bullseye operating system does not yet work.${NC}"
-		echo "See https://github.com/thomasjacquin/allsky/discussions/802 for more information."
-		echo "***"
-		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
-
-		# Don't let the service restart us 'cause we'll get the same error again
-		sudo systemctl stop allsky
-	fi
 fi
 "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
 RETCODE=$?

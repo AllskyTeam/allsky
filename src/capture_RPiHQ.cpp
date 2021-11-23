@@ -751,9 +751,9 @@ int main(int argc, char *argv[])
 	int dayBin            = 1;
 	int nightBin          = 2;
 	int currentBin        = NOT_SET;
-	int asiDayExposure    = 32;	// milliseconds
-	int asiNightExposure  = 60000000;
-	int currentExposure   = NOT_SET;
+	int asiDayExposure_us = 32;
+	int asiNightExposure_us = 60 * US_IN_SEC;
+	int currentExposure_us = NOT_SET;
 	int asiNightAutoExposure = 0;
 	int asiDayAutoExposure= 1;
 	int currentAutoExposure = 0;
@@ -765,9 +765,9 @@ int main(int argc, char *argv[])
 	int asiDayAutoGain    = 0;
 	int currentAutoGain   = NOT_SET;
 	int asiAutoAWB        = 0;
-	int nightDelay        = 10;   // Delay in milliseconds. Default is 10ms
-	int dayDelay          = 15000; // Delay in milliseconds. Default is 15 seconds
-	int currentDelay      = NOT_SET;
+	int nightDelay_ms     = 10;   // Delay in milliseconds. Default is 10ms
+	int dayDelay_ms       = 15000; // Delay in milliseconds. Default is 15 seconds
+	int currentDelay_ms   = NOT_SET;
 	double asiWBR         = 2.5;
 	double asiWBB         = 2;
 	float saturation;
@@ -869,7 +869,7 @@ int main(int argc, char *argv[])
 			// check for old names as well - the "||" part is the old name
 			else if (strcmp(argv[i], "-nightexposure") == 0 || strcmp(argv[i], "-exposure") == 0)
 			{
-				asiNightExposure = atoi(argv[++i]) * US_IN_MS;
+				asiNightExposure_us = atoi(argv[++i]) * US_IN_MS;
 			}
 
 			else if (strcmp(argv[i], "-nightautoexposure") == 0 || strcmp(argv[i], "-autoexposure") == 0)
@@ -917,11 +917,11 @@ int main(int argc, char *argv[])
 			}
 			else if (strcmp(argv[i], "-nightdelay") == 0 || strcmp(argv[i], "-delay") == 0)
 			{
-				nightDelay = atoi(argv[++i]);
+				nightDelay_ms = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-daydelay") == 0 || strcmp(argv[i], "-daytimeDelay") == 0)
 			{
-				dayDelay = atoi(argv[++i]);
+				dayDelay_ms = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-awb") == 0)
 			{
@@ -1159,8 +1159,8 @@ int main(int argc, char *argv[])
 		printf(" -wbb                               - Default = 2 - White Balance Blue (0 = off)\n");
 		printf(" -daybin                            - Default = 1 - binning OFF (1x1), 2 = 2x2, 3 = 3x3 binning\n");
 		printf(" -nightbin                          - Default = 1 - same as -daybin but for nighttime\n");
-		printf(" -nightdelay                        - Default = 10 - Delay between images in milliseconds - %d = 1 sec.\n", MS_IN_SEC);
-		printf(" -daydelay                          - Default = 5000 - Delay between images in milliseconds - 5000 = 5 sec.\n");
+		printf(" -nightdelay                        - Default = 10 ms - Delay between nighttime images - %d = 1 sec.\n", MS_IN_SEC);
+		printf(" -daydelay                          - Default = 5000 ms - Delay between daytime images - 5000 = 5 sec.\n");
 		printf(" -type = Image Type                 - Default = 0 - 0 = RAW8,  1 = RGB24,  2 = RAW16\n");
 		printf(" -quality                           - Default = 70%%, 0%% (poor) 100%% (perfect)\n");
 		printf(" -filename                          - Default = image.jpg\n");
@@ -1235,7 +1235,7 @@ int main(int argc, char *argv[])
 	printf(" Resolution (before any binning): %dx%d\n", width, height);
 	printf(" Quality: %d\n", quality);
     printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
-	printf(" Exposure (night): %1.0fms\n", round(asiNightExposure / US_IN_MS));
+	printf(" Exposure (night): %1.0fms\n", round(asiNightExposure_us / US_IN_MS));
 	printf(" Auto Exposure (night): %s\n", yesNo(asiNightAutoExposure));
 	printf(" Auto Focus: %s\n", yesNo(asiAutoFocus));
 	printf(" Gain (night): %1.2f\n", asiNightGain);
@@ -1248,8 +1248,8 @@ int main(int argc, char *argv[])
 	printf(" WB Blue: %1.2f\n", asiWBB);
 	printf(" Binning (day): %d\n", dayBin);
 	printf(" Binning (night): %d\n", nightBin);
-	printf(" Delay (day): %dms\n", dayDelay);
-	printf(" Delay (night): %dms\n", nightDelay);
+	printf(" Delay (day): %dms\n", dayDelay_ms);
+	printf(" Delay (night): %dms\n", nightDelay_ms);
 	printf(" Text Overlay: %s\n", ImgText);
 //	printf(" Text Position: %dpx left, %dpx top\n", iTextX, iTextY);
 //	printf(" Font Name:  %d\n", fontname[fontnumber]);
@@ -1299,7 +1299,7 @@ int main(int argc, char *argv[])
 		lastDayOrNight = dayOrNight;
 
 		if (myModeMeanSetting.mode_mean && numExposures > 0) {
-  			RPiHQcalcMean(fileName, asiNightExposure, asiNightGain, myRaspistillSetting, myModeMeanSetting);
+  			RPiHQcalcMean(fileName, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
 		}
 
 		printf("\n");
@@ -1310,8 +1310,8 @@ int main(int argc, char *argv[])
 			currentAutoExposure = 0;
 			currentAutoGain = 0;
 			currentGain = asiNightGain;
-			currentDelay = nightDelay;
-			currentExposure = asiNightExposure;
+			currentDelay_ms = nightDelay_ms;
+			currentExposure_us = asiNightExposure_us;
 			currentBrightness = asiNightBrightness;
 			currentBin = nightBin;
 
@@ -1374,13 +1374,13 @@ int main(int argc, char *argv[])
 				currentAutoExposure = asiDayAutoExposure;
 				currentAutoGain = asiDayAutoGain;
 				currentGain = asiDayGain;
-				currentDelay = dayDelay;
-				currentExposure = asiDayExposure;
+				currentDelay_ms = dayDelay_ms;
+				currentExposure_us = asiDayExposure_us;
 				currentBrightness = asiDayBrightness;
 				currentBin = dayBin;
 
 				// Inform user
-				Log(0, "Saving %d ms exposed images with %d seconds delays in between...\n\n", currentExposure * US_IN_MS, currentDelay / MS_IN_SEC);
+				Log(0, "Saving %d ms exposure images with %.1f ms delays in between...\n\n", (int)round(currentExposure_us / US_IN_SEC), nightDelay_ms);
 			}
 		}
 
@@ -1397,13 +1397,13 @@ int main(int argc, char *argv[])
 			currentAutoExposure = asiNightAutoExposure;
 			currentAutoGain = asiNightAutoGain;
 			currentGain = asiNightGain;
-			currentDelay = nightDelay;
-			currentExposure = asiNightExposure;
+			currentDelay_ms = nightDelay_ms;
+			currentExposure_us = asiNightExposure_us;
 			currentBrightness = asiNightBrightness;
 			currentBin = nightBin;
 
 			// Inform user
-			Log(0, "Saving %d seconds exposure images with %d ms delays in between...\n\n", (int)round(currentExposure / US_IN_SEC), nightDelay);
+			Log(0, "Saving %d ms exposure images with %.1f ms delays in between...\n\n", (int)round(currentExposure_us / US_IN_SEC), nightDelay_ms);
 		}
 
 		// Adjusting variables for chosen binning
@@ -1427,7 +1427,7 @@ int main(int argc, char *argv[])
 			Log(0, "Capturing & saving image...\n");
 
 			// Capture and save image
-			retCode = RPiHQcapture(asiAutoFocus, currentAutoExposure, currentExposure, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, saturation, currentBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe, preview, width, height, is_libcamera);
+			retCode = RPiHQcapture(asiAutoFocus, currentAutoExposure, currentExposure_us, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, saturation, currentBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe, preview, width, height, is_libcamera);
 			if (retCode == 0)
 			{
 				numExposures++;
@@ -1435,8 +1435,8 @@ int main(int argc, char *argv[])
 			else
 			{
 				printf(" >>> Unable to take picture, return code=%d\n", (retCode >> 8));
-				Log(1, "  > Sleeping from failed exposure: %d seconds\n", currentDelay / MS_IN_SEC);
-				usleep(currentDelay * US_IN_MS);
+				Log(1, "  > Sleeping from failed exposure: %.1f seconds\n", (float)currentDelay_ms / MS_IN_SEC);
+				usleep(currentDelay_ms * US_IN_MS);
 				continue;
 			}
 
@@ -1453,25 +1453,25 @@ int main(int argc, char *argv[])
 			}
 
 			if (myModeMeanSetting.mode_mean) {
-				RPiHQcalcMean(fileName, asiNightExposure, asiNightGain, myRaspistillSetting, myModeMeanSetting);
-				Log(2, "asiExposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart);
+				RPiHQcalcMean(fileName, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
+				Log(2, "asiExposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart);
 				if (myModeMeanSetting.quickstart) {
-					currentDelay = 1000;
+					currentDelay_ms = 1 * MS_IN_SEC;
 				}
 				else if ((dayOrNight == "NIGHT")) {
-					//xxx currentDelay = (asiNightExposure / US_IN_MS) - (int) (myRaspistillSetting.shutter_us / US_IN_MS) + nightDelay;
-					currentDelay = ((asiNightExposure - myRaspistillSetting.shutter_us) / (float) US_IN_MS) + nightDelay;
+					//xxx currentDelay_ms = (asiNightExposure_us / US_IN_MS) - (int) (myRaspistillSetting.shutter_us / US_IN_MS) + nightDelay_ms;
+					currentDelay_ms = ((asiNightExposure_us - myRaspistillSetting.shutter_us) / (float) US_IN_MS) + nightDelay_ms;
 				}
 				else {
-					currentDelay = dayDelay;
+					currentDelay_ms = dayDelay_ms;
 				}
 			}
 
 			// Inform user
-			Log(0, "Capturing & saving %s done, now wait %.1f seconds...\n", darkframe ? "dark frame" : "image", (float)currentDelay / MS_IN_SEC);
+			Log(0, "Capturing & saving %s done, now wait %.1f seconds...\n", darkframe ? "dark frame" : "image", (float)currentDelay_ms / MS_IN_SEC);
 
 			// Sleep for a moment
-			usleep(currentDelay * US_IN_MS);
+			usleep(currentDelay_ms * US_IN_MS);
 
 			// Check for day or night based on location and angle
 			calculateDayOrNight(latitude, longitude, angle);

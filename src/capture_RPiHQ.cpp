@@ -273,7 +273,7 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 	// Define command line.
 	string command;
 	if (libcamera) command = "libcamera-still";
-	command = "raspistill";
+	else command = "raspistill";
 
 	// Ensure no process is still running.
 	// Include "--" so we only find the command, not a different program with the command
@@ -639,10 +639,8 @@ if (! libcamera) { // TODO: need to fix this for libcamera
 		}
 		if (info_text != "")
 		{
-			if (libcamera)
-// xxxxxxxxxxx libcamera: this only sets text on title bar of preview window
-				command += " --info-text \"" + info_text + "\"";
-			else
+// xxxxxxxxxxx libcamera: this only sets text on title bar of preview window, so don't bother.
+			if (! libcamera)
 				command += " --info-text \"" + info_text + "\"";
 		}
 
@@ -676,8 +674,12 @@ if (! libcamera)	// xxxx libcamera doesn't have fontsize, color, or background.
 }
 	}
 
+
 	if (libcamera)
-		command += " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
+	{
+		// gets rid of a bunch of libcamera verbose messages
+		command = "LIBCAMERA_LOG_LEVELS='ERROR,FATAL' " + command;
+	}
 
 	// Define char variable
 	char cmd[command.length() + 1];
@@ -836,7 +838,7 @@ int main(int argc, char *argv[])
 
 		for (i = 1; i <= argc - 1; i++)
 		{
-			Log(4, "Processing argument: %s\n\n", argv[i]);
+			Log(4, "Processing argument %2d: %s\n", i, argv[i]);
 
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
@@ -1232,6 +1234,7 @@ int main(int argc, char *argv[])
 	printf(" Command: %s\n", is_libcamera ? "libcamera-still" : "raspistill");
 	printf(" Resolution (before any binning): %dx%d\n", width, height);
 	printf(" Quality: %d\n", quality);
+    printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
 	printf(" Exposure (night): %1.0fms\n", round(asiNightExposure / US_IN_MS));
 	printf(" Auto Exposure (night): %s\n", yesNo(asiNightAutoExposure));
 	printf(" Auto Focus: %s\n", yesNo(asiAutoFocus));
@@ -1295,9 +1298,6 @@ int main(int argc, char *argv[])
 
 		lastDayOrNight = dayOrNight;
 
-// Next lines are present for testing purposes
-Log(3, "Daytimecapture: %d\n", daytimeCapture);
-
 		if (myModeMeanSetting.mode_mean && numExposures > 0) {
   			RPiHQcalcMean(fileName, asiNightExposure, asiNightGain, myRaspistillSetting, myModeMeanSetting);
 		}
@@ -1332,9 +1332,6 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 
 				displayedNoDaytimeMsg = 0;
 			}
-
-// Next line is present for testing purposes
-// daytimeCapture = 1;
 
 			// Check if images should not be captured during day-time
 			if (daytimeCapture != 1)
@@ -1471,7 +1468,7 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 			}
 
 			// Inform user
-			Log(0, "Capturing & saving %s done, now wait %d seconds...\n", darkframe ? "dark frame" : "image", currentDelay / MS_IN_SEC);
+			Log(0, "Capturing & saving %s done, now wait %.1f seconds...\n", darkframe ? "dark frame" : "image", (float)currentDelay / MS_IN_SEC);
 
 			// Sleep for a moment
 			usleep(currentDelay * US_IN_MS);

@@ -47,6 +47,12 @@ bool bMain					= true;
 //ol bDisplay = false;
 std::string dayOrNight;
 int numExposures			= 0;	// how many valid pictures have we taken so far?
+float min_saturation;				// produces black and white
+float max_saturation;
+float default_saturation;
+int min_brightness;					// what user enters on command line
+int max_brightness;
+int default_brightness;
 
 // Some command-line and other option definitions needed outside of main():
 bool tty					= false;	// are we on a tty?
@@ -268,8 +274,6 @@ void writeToLog(int val)
 // Build capture command to capture the image from the HQ camera
 int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asiAutoGain, int asiAutoAWB, double asiGain, int bin, double asiWBR, double asiWBB, int asiRotation, int asiFlip, float saturation, int asiBrightness, int quality, const char* fileName, int time, int showDetails, const char* ImgText, int fontsize, int fontcolor, int background, int darkframe, int preview, int width, int height, bool libcamera)
 {
-	Log(3, "capturing image in file %s\n", fileName);
-
 	// Define command line.
 	string command;
 	if (libcamera) command = "libcamera-still";
@@ -282,7 +286,7 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 	char kcmd[kill.length() + 1];		// Define char variable
 	strcpy(kcmd, kill.c_str());			// Convert command to character variable
 
-	Log(4, "Kill command: %s\n", kcmd);
+	Log(4, " > Kill command: %s\n", kcmd);
 	system(kcmd);						// Stop any currently running process
 
 	stringstream ss;
@@ -383,10 +387,10 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 	{
 		asiExposure = 1;
 	}
-	else if (asiExposure > 200000000)
+	else if (asiExposure > 200 * US_IN_SEC)
 	{
-		// https://www.raspberrypi.org/documentation/raspbian/applications/camera.md : HQ (IMX477) 	200000000 (i.e. 200s)
-		asiExposure = 200000000;
+		// https://www.raspberrypi.org/documentation/raspbian/applications/camera.md : HQ (IMX477) 	200s
+		asiExposure = 200 * US_IN_SEC;
 	}
 
 	// Check if automatic determined exposure time is selected
@@ -541,50 +545,32 @@ if (! libcamera) { // TODO: need to fix this for libcamera
 		command += " --vflip";
 	}
 
-//xxx libcamera: saturation from 0.0 to ???.   1.0 is "normal".
-	float min_saturation;
-	if (libcamera)
-		min_saturation = 0.0;
-	else
-		min_saturation = -100.0;
 	if (saturation < min_saturation)
 		saturation = min_saturation;
-	else if (saturation > 100.0)
-		saturation = 100.0;
+	else if (saturation > max_saturation)
+		saturation = max_saturation;
+	ss.str("");
+	ss << saturation;
+	command += " --saturation "+ ss.str();
 
-	if (saturation != 1.0)
+	ss.str("");
+	if (asiBrightness < min_brightness)
 	{
-		ss.str("");
-		ss << saturation;
-		command += " --saturation "+ ss.str();
+		asiBrightness = min_brightness;
 	}
-
+	else if (asiBrightness > max_brightness)
+	{
+		asiBrightness = max_brightness;
+	}
 	if (libcamera)
 	{
 		// User enters -100 to 100.  Convert to -1.0 to 1.0.
-		float brightness = asiBrightness / 100.0;
-		if (brightness < -1.0)
-		{
-			brightness = 0.0;
-		}
-		else if (brightness > 1.0)
-		{
-			brightness = 1.0;
-		}
+		ss << (float) asiBrightness / 100;
 	}
 	else
 	{
-		if (asiBrightness < 0)
-		{
-			asiBrightness = 0;
-		}
-		else if (asiBrightness > 100)
-		{
-			asiBrightness = 100;
-		}
+		ss << asiBrightness;
 	}
-	ss.str("");
-	ss << asiBrightness;
 	command += " --brightness " + ss.str();
 
 	if (quality < 0)
@@ -687,7 +673,7 @@ if (! libcamera)	// xxxx libcamera doesn't have fontsize, color, or background.
 	// Convert command to character variable
 	strcpy(cmd, command.c_str());
 
-	Log(1, "Capture command: %s\n", cmd);
+	Log(1, " > Capture command: %s\n", cmd);
 
 	// Execute the command.
 	return(system(cmd));
@@ -765,8 +751,8 @@ int main(int argc, char *argv[])
 	int asiDayAutoGain    = 0;
 	int currentAutoGain   = NOT_SET;
 	int asiAutoAWB        = 0;
-	int nightDelay_ms     = 10;   // Delay in milliseconds. Default is 10ms
-	int dayDelay_ms       = 15000; // Delay in milliseconds. Default is 15 seconds
+	int nightDelay_ms     = 10;
+	int dayDelay_ms       = 15 * MS_IN_SEC;
 	int currentDelay_ms   = NOT_SET;
 	double asiWBR         = 2.5;
 	double asiWBB         = 2;
@@ -775,15 +761,29 @@ int main(int argc, char *argv[])
 	int asiNightBrightness;
 	if (is_libcamera)
 	{
-		saturation        = 1.0;
-		asiDayBrightness  = 0;	// xxx libcamera: middle value is 0
-		asiNightBrightness= 0;	// xxx libcamera: middle value is 0
+		default_saturation= 1.0;
+		saturation        = default_saturation;
+		min_saturation    = 0.0;
+		max_saturation    = 2.0;
+
+		default_brightness= 0;
+		asiDayBrightness  = default_brightness;
+		asiNightBrightness= default_brightness;
+		min_brightness    = -100;
+		max_brightness    = 100;
 	}
 	else
 	{
-		saturation        = 0.0;
-		asiDayBrightness  = 50;
-		asiNightBrightness= 50;
+		default_saturation= 0.0;
+		saturation        = default_saturation;
+		min_saturation    = -100.0;
+		max_saturation    = 100.0;
+
+		default_brightness= 50;
+		asiDayBrightness  = default_brightness;
+		asiNightBrightness= default_brightness;
+		min_brightness    = 0;
+		max_brightness    = 100;
 	}
 	int currentBrightness = NOT_SET;
 	int asiFlip           = 0;
@@ -821,7 +821,6 @@ int main(int argc, char *argv[])
 	printf("\%sContributors:\n", c(KNRM));
 	printf("-Knut Olav Klo\n");
 	printf("-Daniel Johnsen\n");
-	printf("-Yang and Sam from ZWO\n");
 	printf("-Robert Wagner\n");
 	printf("-Michael J. Kidd - <linuxkidd@gmail.com>\n");
 	printf("-Rob Musquetier\n");	
@@ -1144,16 +1143,8 @@ int main(int argc, char *argv[])
 		printf(" -autofocus                         - Default = 0 - Set to 1 to enable auto Focus\n");
 		printf(" -nightgain                         - Default = 4.0 (1.0 - 16.0)\n");
 		printf(" -nightautogain                     - Default = 0 - Set to 1 to enable auto Gain at night\n");
-		if (is_libcamera)
-		{
-			printf(" -saturation                        - Default = 1.0 (-1.0 to ?)\n");
-			printf(" -brightness                        - Default = 0 (-100 to  100)\n");
-		}
-		else
-		{
-			printf(" -saturation                        - Default = 0 (-100 to 100)\n");
-			printf(" -brightness                        - Default = 50 (0 to 100)\n");
-		}
+		printf(" -saturation                        - Default = %.1f (%.1f to %.1f)\n", default_saturation, min_saturation, max_saturation);
+		printf(" -brightness                        - Default = %d (%d to  %d)\n", default_brightness, min_brightness, max_brightness);
 		printf(" -awb                               - Default = 0 - Auto White Balance (0 = off)\n");
 		printf(" -wbr                               - Default = 2 - White Balance Red  (0 = off)\n");
 		printf(" -wbb                               - Default = 2 - White Balance Blue (0 = off)\n");
@@ -1242,7 +1233,7 @@ int main(int argc, char *argv[])
 	printf(" Auto Gain (night): %s\n", yesNo(asiNightAutoGain));
 	printf(" Brightness (day): %d\n", asiDayBrightness);
 	printf(" Brightness (night): %d\n", asiNightBrightness);
-	printf(" Saturation: %.2f\n", saturation);
+	printf(" Saturation: %.1f\n", saturation);
 	printf(" Auto White Balance: %s\n", yesNo(asiAutoAWB));
 	printf(" WB Red: %1.2f\n", asiWBR);
 	printf(" WB Blue: %1.2f\n", asiWBB);
@@ -1362,48 +1353,52 @@ int main(int argc, char *argv[])
 			// Images should be captured during day-time
 			else
 			{
-				// Inform user
-				char const *x;
-				if (numExposures > 0)	// so it's easier to see in log file
-					x = "\n==========\n";
-				else
-					x = "";
-				Log(0, "%s=== Starting daytime capture ===\n%s", x, x);
+				Log(0, "==========\n=== Starting daytime capture ===\n==========\n");
 
-				// set daytime settings
+                // If we went from Night to Day, then currentExposure_us will be the last night
+                // exposure so leave it if we're using auto-exposure so there's a seamless change from
+                // Night to Day, i.e., if the exposure was fine a minute ago it will likely be fine now.
+                // On the other hand, if this program just started or we're using manual exposures,
+                // use what the user specified.
+                if (numExposures == 0 || ! asiDayAutoExposure)
+                {
+					currentExposure_us = asiDayExposure_us;
+					myRaspistillSetting.shutter_us = currentExposure_us;
+                }
+                else
+                {
+                    Log(2, "Using the last night exposure of %'ld\n", currentExposure_us);
+                }
 				currentAutoExposure = asiDayAutoExposure;
-				currentAutoGain = asiDayAutoGain;
-				currentGain = asiDayGain;
-				currentDelay_ms = dayDelay_ms;
-				currentExposure_us = asiDayExposure_us;
 				currentBrightness = asiDayBrightness;
+				currentDelay_ms = dayDelay_ms;
 				currentBin = dayBin;
+				currentGain = asiDayGain;
+				currentAutoGain = asiDayAutoGain;
 
-				// Inform user
-				Log(0, "Saving %d ms exposure images with %.1f ms delays in between...\n\n", (int)round(currentExposure_us / US_IN_SEC), nightDelay_ms);
+				Log(0, "Saving %'ld us (%'.2f ms) exposure images with %d ms delays in between...\n\n", currentExposure_us,  (float)currentExposure_us / US_IN_SEC, nightDelay_ms);
 			}
 		}
 
 		else	// NIGHT
 		{
-			char const *x;
-			if (numExposures > 0)	// so it's easier to see in log file
-				x = "\n==========\n";
-			else
-				x = "";
-			Log(0, "%s=== Starting nighttime capture ===\n%s", x, x);
+			Log(0, "==========\n=== Starting nighttime capture ===\n==========\n");
 
-			// Set nighttime settings
+			// Setup the night time capture parameters
+			if (numExposures == 0 || ! asiNightAutoExposure)
+			{
+				currentExposure_us = asiNightExposure_us;
+				Log(4, "Using night exposure (%'ld)\n", asiNightExposure_us);
+				myRaspistillSetting.shutter_us = currentExposure_us;
+			}
 			currentAutoExposure = asiNightAutoExposure;
-			currentAutoGain = asiNightAutoGain;
-			currentGain = asiNightGain;
-			currentDelay_ms = nightDelay_ms;
-			currentExposure_us = asiNightExposure_us;
 			currentBrightness = asiNightBrightness;
+			currentDelay_ms = nightDelay_ms;
 			currentBin = nightBin;
+			currentGain = asiNightGain;
+			currentAutoGain = asiNightAutoGain;
 
-			// Inform user
-			Log(0, "Saving %d ms exposure images with %.1f ms delays in between...\n\n", (int)round(currentExposure_us / US_IN_SEC), nightDelay_ms);
+			Log(0, "Saving %'ld us (%'.2f ms) exposure images with %d ms delays in between...\n\n", currentExposure_us,  (float)currentExposure_us / US_IN_SEC, nightDelay_ms);
 		}
 
 		// Adjusting variables for chosen binning
@@ -1414,7 +1409,6 @@ int main(int argc, char *argv[])
 //		fontsize  = fontsize / currentBin;
 //		linewidth = linewidth / currentBin;
 
-		// Inform user
 		if (tty)
 			printf("Press Ctrl+Z to stop\n\n");	// xxx ECC: Ctrl-Z stops a process, it doesn't kill it
 		else

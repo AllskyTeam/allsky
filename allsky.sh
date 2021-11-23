@@ -155,7 +155,10 @@ ARGUMENTS=()
 
 if [[ ${CAMERA} == "RPiHQ" ]]; then
 	# The Bullseye operating system deprecated raspistill so we use libcamera instead.
-	grep --silent -i "VERSION_CODENAME=bullseye" /etc/os-release
+	(
+		grep --silent -i "VERSION_CODENAME=bullseye" /etc/os-release ||
+		grep --silent "^dtoverlay=imx477" /boot/config.txt
+	)
 	if [ $? -eq 0 ]; then
 		ARGUMENTS+=(-cmd libcamera)
 	else

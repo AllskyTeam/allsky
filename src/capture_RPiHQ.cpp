@@ -24,6 +24,18 @@
 #include "include/RPiHQ_raspistill.h"
 #include "include/mode_RPiHQ_mean.h"
 
+#ifndef ASI_IMG_RAW8
+#define ASI_IMG_RAW8	0
+#define ASI_IMG_RGB24	1
+#define ASI_IMG_RAW16	2
+#define ASI_IMG_Y8		3
+#endif
+
+#ifndef ASI_TRUE
+#define ASI_TRUE true
+#define ASI_FALSE false
+#endif
+
 using namespace std;
 
 #define KNRM "\x1B[0m"
@@ -104,6 +116,32 @@ char const *c(char const *color)
 	}
 }
 
+// Create Hex value from RGB
+unsigned long createRGB(int r, int g, int b)
+{
+    return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+}
+
+void cvText(cv::Mat img, const char *text, int x, int y, double fontsize, int linewidth, int linetype, int fontname,
+            int fontcolor[], int imgtype, int outlinefont)
+{
+    int outline_size = std::max(2.0, (fontsize/4));	// need smaller outline when font size is smaller
+    if (imgtype == ASI_IMG_RAW16)
+    {
+        unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
+        if (outlinefont)
+            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0), linewidth+outline_size, linetype);
+        cv::putText(img, text, cv::Point(x, y), fontname, fontsize, fontcolor16, linewidth, linetype);
+    }
+    else
+    {
+        if (outlinefont)
+            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0, 255), linewidth+outline_size, linetype);
+        cv::putText(img, text, cv::Point(x, y), fontname, fontsize,
+                    cv::Scalar(fontcolor[0], fontcolor[1], fontcolor[2], 255), linewidth, linetype);
+    }
+}
+
 // Return the numeric time.
 timeval getTimeval()
 {
@@ -166,6 +204,54 @@ void *Display(void *params)
 	return (void *)0;
 }
 */
+
+// Display a length of time in different units, depending on the length's value.
+// If the "multi" flag is set, display in multiple units if appropriate.
+char *length_in_units(long us, bool multi)	// microseconds
+{
+	const int l = 50;
+	static char length[l];
+	if (us == 0)
+	{
+		snprintf(length, l, "0 us");
+	}
+	else
+	{
+		double us_in_ms = (double)us / US_IN_MS;
+		// The boundaries on when to display one or two units are really a matter of taste.
+		if (us_in_ms < 0.5)						// less than 0.5 ms
+		{
+			snprintf(length, l, "%'ld us", us);
+		}
+		else if (us_in_ms < 1.5)				// between 0.5 and 1.5 ms
+		{
+			if (multi)
+				snprintf(length, l, "%'ld us (%.3f ms)", us, us_in_ms);
+			else
+				snprintf(length, l, "%'ld us", us);
+		}
+		else if (us_in_ms < (0.5 * MS_IN_SEC))	// 1.5 ms to 0.5 sec
+		{
+			if (multi)
+				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
+			else
+				snprintf(length, l, "%.2f ms", us_in_ms);
+		}
+		else if (us_in_ms < (1.0 * MS_IN_SEC))	// between 0.5 sec and 1 sec
+		{
+			if (multi)
+				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
+			else
+				snprintf(length, l, "%.1f ms", us_in_ms);
+		}
+		else									// over 1 sec
+		{
+			snprintf(length, l, "%.1lf sec", (double)us / US_IN_SEC);
+		}
+
+	}
+	return(length);
+}
 
 // Exit the program gracefully.
 void closeUp(int e)
@@ -1279,6 +1365,13 @@ const char *locale         = DEFAULT_LOCALE;
 		fileName = "dark.jpg";
 	}
 
+	// Handle "auto" Image_type.
+	if (Image_type == AUTO_IMAGE_TYPE)
+	{
+		// user will have to manually set for 8- or 16-bit mono mode
+		Image_type = ASI_IMG_RGB24;
+	}
+
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 
@@ -1345,7 +1438,6 @@ const char *locale         = DEFAULT_LOCALE;
 
 	while (bMain)
 	{
-		printf("\n");
 
 		// Find out if it is currently DAY or NIGHT
 		calculateDayOrNight(latitude, longitude, angle);
@@ -1356,10 +1448,12 @@ const char *locale         = DEFAULT_LOCALE;
 		lastDayOrNight = dayOrNight;
 
 		if (myModeMeanSetting.mode_mean && numExposures > 0) {
+// TODO: Is this needed?  We also call RPiHQcalcMean() after the exposure.
+
+// TODO: xxxxx shouldn't this be "currentExposure_us" instead of "asiNightExposure_us" ?
+// xxxxxx and "currentGain" instead of "asiNightGain"?
   			RPiHQcalcMean(fileName, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
 		}
-
-		printf("\n");
 
 		if (darkframe) {
 			// We're doing dark frames so turn off autoexposure and autogain, and use
@@ -1433,7 +1527,7 @@ const char *locale         = DEFAULT_LOCALE;
                 }
                 else
                 {
-                    Log(2, "Using the last night exposure of %'ld\n", currentExposure_us);
+                    Log(3, "Using the last night exposure of %'ld\n", currentExposure_us);
                 }
 				currentAutoExposure = asiDayAutoExposure;
 				currentBrightness = asiDayBrightness;
@@ -1441,8 +1535,6 @@ const char *locale         = DEFAULT_LOCALE;
 				currentBin = dayBin;
 				currentGain = asiDayGain;
 				currentAutoGain = asiDayAutoGain;
-
-				Log(0, "Saving %'ld us (%'.2f ms) exposure images with %d ms delays in between...\n\n", currentExposure_us,  (float)currentExposure_us / US_IN_SEC, nightDelay_ms);
 			}
 		}
 
@@ -1454,7 +1546,7 @@ const char *locale         = DEFAULT_LOCALE;
 			if (numExposures == 0 || ! asiNightAutoExposure)
 			{
 				currentExposure_us = asiNightExposure_us;
-				Log(4, "Using night exposure (%'ld)\n", asiNightExposure_us);
+				Log(3, "Using night exposure (%'ld)\n", asiNightExposure_us);
 				myRaspistillSetting.shutter_us = currentExposure_us;
 			}
 			currentAutoExposure = asiNightAutoExposure;
@@ -1463,8 +1555,6 @@ const char *locale         = DEFAULT_LOCALE;
 			currentBin = nightBin;
 			currentGain = asiNightGain;
 			currentAutoGain = asiNightAutoGain;
-
-			Log(0, "Saving %'ld us (%'.2f ms) exposure images with %d ms delays in between...\n\n", currentExposure_us,  (float)currentExposure_us / US_IN_SEC, nightDelay_ms);
 		}
 
 		// Adjusting variables for chosen binning
@@ -1475,6 +1565,20 @@ const char *locale         = DEFAULT_LOCALE;
 //		fontsize  = fontsize / currentBin;
 //		linewidth = linewidth / currentBin;
 
+// TODO: if not the first time, should we free the old pRgb?
+		if (Image_type == ASI_IMG_RAW16)
+		{
+			pRgb.create(cv::Size(width, height), CV_16UC1);
+		}
+		else if (Image_type == ASI_IMG_RGB24)
+		{
+			pRgb.create(cv::Size(width, height), CV_8UC3);
+		}
+		else // RAW8 and Y8
+		{
+			pRgb.create(cv::Size(width, height), CV_8UC1);
+		}
+
 		if (tty)
 			printf("Press Ctrl+Z to stop\n\n");	// xxx ECC: Ctrl-Z stops a process, it doesn't kill it
 		else
@@ -1483,7 +1587,6 @@ const char *locale         = DEFAULT_LOCALE;
 		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)
 		{
-			// Inform user
 			Log(0, "Capturing & saving image...\n");
 
 			// Capture and save image
@@ -1527,7 +1630,6 @@ const char *locale         = DEFAULT_LOCALE;
 				}
 			}
 
-			// Inform user
 			Log(0, "Capturing & saving %s done, now wait %.1f seconds...\n", darkframe ? "dark frame" : "image", (float)currentDelay_ms / MS_IN_SEC);
 
 			// Sleep for a moment

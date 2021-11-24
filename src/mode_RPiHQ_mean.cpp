@@ -90,8 +90,6 @@ void RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistil
 	//Now you can copy your source image to destination image with masking
 	image.copyTo(dstImage, mask);
 
-	(void) get_focus_measure(dstImage, currentModeMeanSetting);
-
 	std::vector<int> compression_params;
 	compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
 	compression_params.push_back(9);

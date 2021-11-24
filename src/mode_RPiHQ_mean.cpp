@@ -53,7 +53,7 @@ double get_focus_measure(cv::Mat img, modeMeanSetting &currentModeMeanSetting)
 
 // Calculate new raspistillSettings (exposure, gain)
 // Algorithm not perfect, but better than no exposure control at all
-int RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
+float RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
 {
 	//Hauptvariablen
 	double mean;
@@ -127,13 +127,13 @@ if (0)
 	}
 		 
 	Log(1, "  > %s: %.1f sec, mean: %f %f\n", basename(fileName), ExposureTime_s, mean, (currentModeMeanSetting.mean_value - mean));
+	this_mean = mean;	// return current image's mean
 
 	// avg of mean history 
 	Log(3, "  > MeanCnt: %d, mean_historySize: %d\n", MeanCnt, currentModeMeanSetting.historySize);
 
 	mean_history[MeanCnt % currentModeMeanSetting.historySize] = mean;
 	int values = 0;
-	this_mean = mean;	// return current image's mean
 	mean=0.0;
 	for (int i=1; i <= currentModeMeanSetting.historySize; i++) {
 		int idx =  (MeanCnt + i) % currentModeMeanSetting.historySize;
@@ -241,7 +241,7 @@ if (0)
 	exp_history[MeanCnt % currentModeMeanSetting.historySize] = currentModeMeanSetting.ExposureLevel;
 
 	currentRaspistillSetting.shutter_us = ExposureTime_s * US_IN_SEC;
-	Log(2, "  > Mean: %1.4f us, diff: %1.4f us, Exposure level:%d (%d), Exposure time:%1.8f ms, analoggain:%1.2f\n", mean, mean_diff, currentModeMeanSetting.ExposureLevel, currentModeMeanSetting.ExposureLevel-exp_history[idx], ExposureTime_s, currentRaspistillSetting.analoggain);
+	Log(2, "  > Mean: %f, diff: %f, Exposure level:%d (%d), Exposure time:%1.8f ms, analoggain:%1.2f\n", mean, mean_diff, currentModeMeanSetting.ExposureLevel, currentModeMeanSetting.ExposureLevel-exp_history[idx], ExposureTime_s, currentRaspistillSetting.analoggain);
 
 	return(this_mean);
 }

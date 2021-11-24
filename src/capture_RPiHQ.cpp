@@ -1352,11 +1352,24 @@ const char *locale         = DEFAULT_LOCALE;
 	int iMaxWidth = 4096;
 	int iMaxHeight = 3040;
 	double pixelSize = 1.55;
+	if (width == 0 || height == 0)
+	{
+		width  = iMaxWidth;
+		height = iMaxHeight;
+	}
+	originalWidth = width;
+	originalHeight = height;
 
 	printf(" Camera: Raspberry Pi HQ camera\n");
 	printf("  - Resolution: %dx%d\n", iMaxWidth, iMaxHeight);
 	printf("  - Pixel Size: %1.2fmicrons\n", pixelSize);
 	printf("  - Supported Bins: 1x, 2x and 3x\n");
+
+	std::vector<int> compression_params;
+	compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+	compression_params.push_back(9);
+	compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
+	compression_params.push_back(95);
 
 	if (darkframe)
 	{
@@ -1433,11 +1446,16 @@ const char *locale         = DEFAULT_LOCALE;
 	printf("%s", c(KNRM));
 
 	// Initialization
-	std::string lastDayOrNight;
-	int displayedNoDaytimeMsg = 0; // Have we displayed "not taking picture during day" message, if applicable?
+	int originalITextX = iTextX;
+	int originalITextY = iTextY;
+	int originalFontsize = fontsize;
+	int originalLinewidth = linewidth;
+	// Have we displayed "not taking picture during day" message, if applicable?
+	int displayedNoDaytimeMsg = 0;
 
 	while (bMain)
 	{
+		std::string lastDayOrNight;
 
 		// Find out if it is currently DAY or NIGHT
 		calculateDayOrNight(latitude, longitude, angle);
@@ -1558,12 +1576,12 @@ const char *locale         = DEFAULT_LOCALE;
 		}
 
 		// Adjusting variables for chosen binning
-		width  = iMaxWidth / currentBin;
-		height = iMaxHeight / currentBin;
-//		iTextX    = iTextX / currentBin;
-//		iTextY    = iTextY / currentBin;
-//		fontsize  = fontsize / currentBin;
-//		linewidth = linewidth / currentBin;
+		height    = originalHeight / currentBin;
+		width     = originalWidth / currentBin;
+		iTextX    = originalITextX / currentBin;
+		iTextY    = originalITextY / currentBin;
+		fontsize  = originalFontsize / currentBin;
+		linewidth = originalLinewidth / currentBin;
 
 // TODO: if not the first time, should we free the old pRgb?
 		if (Image_type == ASI_IMG_RAW16)

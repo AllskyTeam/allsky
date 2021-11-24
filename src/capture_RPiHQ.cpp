@@ -905,7 +905,6 @@ const char *locale         = DEFAULT_LOCALE;
 	char const *angle     = "0"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
 	int preview           = 0;
 	int showTime          = 0;
-	int showDetails       = 0;
 	int showExposure      = 0;
 	int showGain          = 0;
 	int showBrightness    = 0;
@@ -1239,10 +1238,6 @@ const char *locale         = DEFAULT_LOCALE;
 			else if (strcmp(argv[i], "-darkframe") == 0)
 			{
 				darkframe = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showDetails") == 0)
-			{
-				showDetails = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-showExposure") == 0)
 			{

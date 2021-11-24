@@ -426,8 +426,6 @@ int RPiHQcapture(int auto_exposure, int *exposure, int auto_gain, int auto_AWB, 
 		}
 		command += " --timeout " + ss.str();
 		command += " --nopreview";
-		if (libcamera)
-			command += "=1";
 	}
 
 	if (bin > 3) 	{

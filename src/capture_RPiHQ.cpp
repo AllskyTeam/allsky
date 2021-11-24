@@ -711,6 +711,10 @@ int main(int argc, char *argv[])
 	int fontname[] = { CV_FONT_HERSHEY_SIMPLEX,        CV_FONT_HERSHEY_PLAIN,         CV_FONT_HERSHEY_DUPLEX,
 					   CV_FONT_HERSHEY_COMPLEX,        CV_FONT_HERSHEY_TRIPLEX,       CV_FONT_HERSHEY_COMPLEX_SMALL,
 					   CV_FONT_HERSHEY_SCRIPT_SIMPLEX, CV_FONT_HERSHEY_SCRIPT_COMPLEX };
+*/
+#define DEFAULT_LOCALE           "en_US.UTF-8"
+	const char *locale = DEFAULT_LOCALE;
+/*
 	int fontnumber = 0;
 	int iStrLen;
 	int iTextX = 15, iTextY = 25;
@@ -808,6 +812,9 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 	setlinebuf(stdout);   // Line buffer output so entries appear in the log immediately.
+	if (setlocale(LC_NUMERIC, locale) == NULL)
+		printf("*** WARNING: Could not set locale to %s ***\n", locale);
+	
 	printf("\n");
 	printf("%s ********************************************\n", c(KGRN));
 	printf("%s *** Allsky Camera Software v0.8.1 | 2021 ***\n", c(KGRN));

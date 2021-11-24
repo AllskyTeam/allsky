@@ -218,6 +218,13 @@ void RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistil
 		currentRaspistillSetting.analoggain = newGain;
 	}
 	// min=1 us, max exposure_us
+	Log(5, "XXXX exposure_US/US_IN_SEC: %.2f, ExposureLevel:%d, shuttersteps: %.2f, analoggain: %.1f, pow=%.2f\n",
+		exposure_us/US_IN_SEC,
+		currentModeMeanSetting.ExposureLevel,
+		currentModeMeanSetting.shuttersteps,
+		currentRaspistillSetting.analoggain,
+		pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)));
+
 	ExposureTime_s = std::min(exposure_us/US_IN_SEC, std::max(1 / US_IN_SEC, pow(2.0, double(currentModeMeanSetting.ExposureLevel)/pow(currentModeMeanSetting.shuttersteps,2.0)) / currentRaspistillSetting.analoggain));
 
 	//#############################################################################################################

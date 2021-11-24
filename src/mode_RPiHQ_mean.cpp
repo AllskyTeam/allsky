@@ -53,12 +53,12 @@ double get_focus_measure(cv::Mat img, modeMeanSetting &currentModeMeanSetting)
 
 // Calculate new raspistillSettings (exposure, gain)
 // Algorithm not perfect, but better than no exposure control at all
-void RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
+int RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
 {
-
 	//Hauptvariablen
 	double mean;
 	double mean_diff;
+	double this_mean;
 
 	// Init some values first
 	if (currentModeMeanSetting.init) {
@@ -73,8 +73,8 @@ void RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistil
 
 	cv::Mat image = cv::imread(fileName, cv::IMREAD_UNCHANGED);
 	if (!image.data) {
-		std::cout << "Error reading file " << basename(fileName) << std::endl;
-		return;
+		fprintf(stderr, "*** ERROR Error reading file '%s'\n", basename(fileName));
+		return(-1);
 	}
 
 	//Then define your mask image
@@ -90,21 +90,24 @@ void RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistil
 	//Now you can copy your source image to destination image with masking
 	image.copyTo(dstImage, mask);
 
+if (0)
+{
 	std::vector<int> compression_params;
 	compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
 	compression_params.push_back(9);
 	compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
 	compression_params.push_back(95);
 
-// Don't need to save file
-//	bool result = cv::imwrite("test.jpg", dstImage, compression_params);
-//	if (! result) printf("*** ERROR: Unable to write to test.jpg\n");
+	// Don't need to save file
+	bool result = cv::imwrite("mask.jpg", dstImage, compression_params);
+	if (! result) fprintf(stderr, "*** ERROR: Unable to write to 'mask.jpg'\n");
+}
 
 	cv::Scalar mean_scalar = cv::mean(image, mask);
 	switch (image.channels())
 	{
 		default: // mono case
-			std::cout <<  "mean_scalar.val[0]" << mean_scalar.val[0] << std::endl;
+			Log(3, "  > mean_scalar.val[0] %d\n", mean_scalar.val[0]);
 			mean = mean_scalar.val[0];
 			break;
 		case 3: // for color use average of the channels
@@ -130,6 +133,7 @@ void RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistil
 
 	mean_history[MeanCnt % currentModeMeanSetting.historySize] = mean;
 	int values = 0;
+	this_mean = mean;	// return current image's mean
 	mean=0.0;
 	for (int i=1; i <= currentModeMeanSetting.historySize; i++) {
 		int idx =  (MeanCnt + i) % currentModeMeanSetting.historySize;
@@ -215,7 +219,7 @@ void RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistil
 	else {
 		currentRaspistillSetting.analoggain = newGain;
 	}
-	// min=1 us, max exposure_us
+	// min=1 us, max=exposure_us
 	Log(5, "XXXX exposure_US/US_IN_SEC: %.2f, ExposureLevel:%d, shuttersteps: %.2f, analoggain: %.1f, pow=%.2f\n",
 		exposure_us/US_IN_SEC,
 		currentModeMeanSetting.ExposureLevel,
@@ -228,6 +232,8 @@ void RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistil
 	//#############################################################################################################
 	// prepare for the next measurement
 	if (currentModeMeanSetting.quickstart > 0) {
+// xxxx  TODO: If already at the max exposure and we want to increase, then set quickstart to 0.
+// xxxx OR, if at a good exposure, set quickstart to 0.
 		currentModeMeanSetting.quickstart--;
 	}
 	// Exposure gilt fuer die naechste Messung
@@ -236,4 +242,6 @@ void RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistil
 
 	currentRaspistillSetting.shutter_us = ExposureTime_s * US_IN_SEC;
 	Log(2, "  > Mean: %1.4f us, diff: %1.4f us, Exposure level:%d (%d), Exposure time:%1.8f ms, analoggain:%1.2f\n", mean, mean_diff, currentModeMeanSetting.ExposureLevel, currentModeMeanSetting.ExposureLevel-exp_history[idx], ExposureTime_s, currentRaspistillSetting.analoggain);
+
+	return(this_mean);
 }

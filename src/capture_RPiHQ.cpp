@@ -514,7 +514,8 @@ int RPiHQcapture(int auto_exposure, int *exposure, int auto_gain, int auto_AWB, 
 	// Check if auto gain is selected
 	if (auto_gain)
 	{
-		if (myModeMeanSetting.mode_mean) {
+		if (myModeMeanSetting.mode_mean)
+		{
 			ss.str("");
 			ss << myRaspistillSetting.analoggain;
 			if (libcamera)
@@ -532,14 +533,16 @@ if (! libcamera) { // TODO: need to fix this for libcamera
 			}
 }
 		}
-		else {
-		if (libcamera)
-			command += " --gain 1";	// 1 effectively makes it autogain
 		else
-			command += " --analoggain 1";	// 1 effectively makes it autogain
+		{
+			if (libcamera)
+				command += " --gain 1";	// 1 effectively makes it autogain
+			else
+				command += " --analoggain 1";	// 1 effectively makes it autogain
 		}
 	}
-	else {							// Is manual gain
+	else	// Is manual gain
+	{
 		// xxx what are libcamera limits?
 		if (gain < 1.0) {
 			gain = 1.0;
@@ -985,29 +988,44 @@ const char *locale         = DEFAULT_LOCALE;
 			{
 				quality = atoi(argv[++i]);
 			}
+			else if (strcmp(argv[i], "-focus") == 0 || strcmp(argv[i], "-autofocus") == 0)
+			{
+				showFocus = atoi(argv[++i]);
+			}
 			// check for old names as well - the "||" part is the old name
+			else if (strcmp(argv[i], "-dayexposure") == 0)
+			{
+				asiDayExposure_us = atoi(argv[++i]) * US_IN_MS;
+			}
 			else if (strcmp(argv[i], "-nightexposure") == 0 || strcmp(argv[i], "-exposure") == 0)
 			{
 				asiNightExposure_us = atoi(argv[++i]) * US_IN_MS;
 			}
 
+			else if (strcmp(argv[i], "-dayautoexposure") == 0)
+			{
+				asiDayAutoExposure = atoi(argv[++i]);
+			}
 			else if (strcmp(argv[i], "-nightautoexposure") == 0 || strcmp(argv[i], "-autoexposure") == 0)
 			{
 				asiNightAutoExposure = atoi(argv[++i]);
 			}
 
-			else if (strcmp(argv[i], "-focus") == 0 || strcmp(argv[i], "-autofocus") == 0)
+			else if (strcmp(argv[i], "-dayautogain") == 0)
 			{
-				showFocus = atoi(argv[++i]);
-			}
-			// xxxx Day gain isn't settable by the user.  Should it be?
-			else if (strcmp(argv[i], "-nightgain") == 0 || strcmp(argv[i], "-gain") == 0)
-			{
-				asiNightGain = atof(argv[++i]);
+				asiDayAutoGain = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightautogain") == 0 || strcmp(argv[i], "-autogain") == 0)
 			{
 				asiNightAutoGain = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daygain") == 0)
+			{
+				asiDayGain = atof(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightgain") == 0 || strcmp(argv[i], "-gain") == 0)
+			{
+				asiNightGain = atof(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-saturation") == 0)
 			{
@@ -1034,13 +1052,13 @@ const char *locale         = DEFAULT_LOCALE;
 			{
 				nightBin = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightdelay") == 0 || strcmp(argv[i], "-delay") == 0)
-			{
-				nightDelay_ms = atoi(argv[++i]);
-			}
 			else if (strcmp(argv[i], "-daydelay") == 0 || strcmp(argv[i], "-daytimeDelay") == 0)
 			{
 				dayDelay_ms = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightdelay") == 0 || strcmp(argv[i], "-delay") == 0)
+			{
+				nightDelay_ms = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-awb") == 0)
 			{
@@ -1275,7 +1293,7 @@ const char *locale         = DEFAULT_LOCALE;
 	if (help == 1)
 	{
 		printf("%sUsage:\n", c(KRED));
-		printf(" ./capture_RPiHQ -width 640 -height 480 -nightexposure 5000000 -gamma 50 -nightbin 1 -filename Lake-Laberge.JPG\n\n");
+		printf(" ./capture_RPiHQ -width 640 -height 480 -nightexposure 5000000 -nightbin 1 -filename Lake-Laberge.JPG\n\n");
 		printf("%s", c(KNRM));
 
 		printf("%sAvailable Arguments:\n", c(KYEL));

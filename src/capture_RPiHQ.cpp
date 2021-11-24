@@ -1623,6 +1623,105 @@ const char *locale         = DEFAULT_LOCALE;
 			if (retCode == 0)
 			{
 				numExposures++;
+
+				// If taking_dark_frames is off, add overlay text to the image
+				if (! darkframe)
+				{
+					long last_exposure_us = currentExposure_us;
+
+					long actualGain = currentGain;	// to be compatible with ZWO
+					int iYOffset = 0;
+					float mean = -1;
+
+					if (myModeMeanSetting.mode_mean)
+					{
+						mean = RPiHQcalcMean(fileName, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
+						Log(2, "  > exposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart);
+					}
+
+					if (showTime == 1)
+					{
+						// The time and ImgText are in the larger font; everything else is in smaller font.
+						cvText(pRgb, bufTime, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * 0.1, linewidth,
+							linetype[linenumber], fontname[fontnumber], fontcolor,
+							Image_type, outlinefont);
+						iYOffset += iTextLineHeight;
+					}
+
+					if (ImgText[0] != '\0')
+					{
+						cvText(pRgb, ImgText, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * 0.1, linewidth,
+							linetype[linenumber], fontname[fontnumber], fontcolor,
+							Image_type, outlinefont);
+						iYOffset+=iTextLineHeight;
+					}
+
+					if (showExposure == 1)
+					{
+						// display in seconds if >= 1 second, else in ms
+						if (last_exposure_us >= (1 * US_IN_SEC))
+							sprintf(bufTemp, "Exposure: %'.2f s%s", (float)last_exposure_us / US_IN_SEC, bufTemp2);
+						else
+							sprintf(bufTemp, "Exposure: %'.2f ms%s", (float)last_exposure_us / US_IN_MS, bufTemp2);
+						// Indicate if in auto-exposure mode.
+						if (currentAutoExposure == ASI_TRUE) strcat(bufTemp, " (auto)");
+						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
+							linetype[linenumber], fontname[fontnumber], smallFontcolor,
+							Image_type, outlinefont);
+						iYOffset += iTextLineHeight;
+					}
+
+					if (showGain == 1)
+					{
+						sprintf(bufTemp, "Gain: %ld", actualGain);
+						// Indicate if in auto gain mode.
+						if (currentAutoGain == ASI_TRUE) strcat(bufTemp, " (auto)");
+						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
+							linetype[linenumber], fontname[fontnumber], smallFontcolor,
+							Image_type, outlinefont);
+						iYOffset += iTextLineHeight;
+					}
+
+					if (showBrightness == 1)
+					{
+						sprintf(bufTemp, "Brightness: %d", currentBrightness);
+						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
+							linetype[linenumber], fontname[fontnumber], smallFontcolor,
+							Image_type, outlinefont);
+						iYOffset += iTextLineHeight;
+					}
+
+					if (showMean == 1 && myModeMeanSetting.mode_mean)
+					{
+						sprintf(bufTemp, "Mean: %.6f", mean);
+						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
+							linetype[linenumber], fontname[fontnumber], smallFontcolor,
+							Image_type, outlinefont);
+						iYOffset += iTextLineHeight;
+					}
+
+					if (showFocus == 1)
+					{
+						sprintf(bufTemp, "Focus: %.2f", get_focus_measure(pRgb, myModeMeanSetting));
+						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
+							linetype[linenumber], fontname[fontnumber], smallFontcolor,
+							Image_type, outlinefont);
+						iYOffset += iTextLineHeight;
+					}
+
+					if (iYOffset > 0)	// if we added anything to overlay, write the file out
+					{
+						bool result = cv::imwrite(fileName, pRgb, compression_params);
+						if (! result) printf("*** ERROR: Unable to write to '%s'\n", fileName);
+					}
+				}
 			}
 			else
 			{
@@ -1644,10 +1743,6 @@ const char *locale         = DEFAULT_LOCALE;
 				system("scripts/saveImageDay.sh &");
 			}
 
-			if (myModeMeanSetting.mode_mean) {
-				RPiHQcalcMean(fileName, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
-				Log(2, "asiExposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart);
-			}
 			long s;
 			if (myModeMeanSetting.mode_mean && myModeMeanSetting.quickstart)
 			{

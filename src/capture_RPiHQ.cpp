@@ -1605,7 +1605,18 @@ const char *locale         = DEFAULT_LOCALE;
 		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)
 		{
-			Log(0, "Capturing & saving image...\n");
+			// date/time is added to many log entries to make it easier to associate them
+			// with an image (which has the date/time in the filename).
+			timeval t;
+			t = getTimeval();
+			char exposureStart[128];
+			char f[10] = "%F %T";
+			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(t, f));
+			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(currentExposure_us, true));
+
+			// Get start time for overlay.  Make sure it has the same time as exposureStart.
+			if (showTime == 1)
+				sprintf(bufTime, "%s", formatTime(t, timeFormat));
 
 			// Capture and save image
 			retCode = RPiHQcapture(currentAutoExposure, &currentExposure_us, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, saturation, currentBrightness, quality, fileName, showTime, ImgText, fontsize, fontcolor, background, darkframe, preview, width, height, is_libcamera, &pRgb);
@@ -1636,22 +1647,22 @@ const char *locale         = DEFAULT_LOCALE;
 			if (myModeMeanSetting.mode_mean) {
 				RPiHQcalcMean(fileName, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
 				Log(2, "asiExposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart);
-				if (myModeMeanSetting.quickstart) {
-					currentDelay_ms = 1 * MS_IN_SEC;
-				}
-				else if ((dayOrNight == "NIGHT")) {
-					//xxx currentDelay_ms = (asiNightExposure_us / US_IN_MS) - (int) (myRaspistillSetting.shutter_us / US_IN_MS) + nightDelay_ms;
-					currentDelay_ms = ((asiNightExposure_us - myRaspistillSetting.shutter_us) / (float) US_IN_MS) + nightDelay_ms;
-				}
-				else {
-					currentDelay_ms = dayDelay_ms;
-				}
 			}
-
-			Log(0, "Capturing & saving %s done, now wait %.1f seconds...\n", darkframe ? "dark frame" : "image", (float)currentDelay_ms / MS_IN_SEC);
-
-			// Sleep for a moment
-			usleep(currentDelay_ms * US_IN_MS);
+			long s;
+			if (myModeMeanSetting.mode_mean && myModeMeanSetting.quickstart)
+			{
+				s = 1 * US_IN_SEC;
+			}
+			else if ((dayOrNight == "NIGHT"))
+			{
+				s = (asiNightExposure_us - myRaspistillSetting.shutter_us) + (nightDelay_ms * US_IN_MS);
+			}
+			else
+			{
+				s = currentDelay_ms * US_IN_MS;
+			}
+			Log(0, "Sleeping %.1f seconds...\n", (float)s / US_IN_SEC);
+			usleep(s);
 
 			// Check for day or night based on location and angle
 			calculateDayOrNight(latitude, longitude, angle);

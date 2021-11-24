@@ -30,6 +30,6 @@ struct modeMeanSetting {
 };
 
 
-int RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting);
+float RPiHQcalcMean(const char* fileName, int asiExposure, double asiGain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting);
 
 #endif

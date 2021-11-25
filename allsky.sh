@@ -53,7 +53,15 @@ ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 # old/regular manual camera selection mode => exit if no requested camera was found
 # Buster and Bullseye have different output so only check the part they have in common.
 # TODO: this check only needs to be done if CAMERA = RPiHQ
-vcgencmd get_camera | grep --silent "supported=1"
+# vcgencmd get_camera | grep --silent "supported=1"
+# bullseye has problems to dedect cameras - workaround
+which libcamera-still
+if [ $? -eq 0 ]; then
+        libcamera-still -v -t 1
+else
+        vcgencmd get_camera | grep --silent "supported=1" 
+fi
+
 if [ $? -eq 0 ]; then
 	RPiHQIsPresent=1
 else

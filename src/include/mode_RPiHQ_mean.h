@@ -27,6 +27,7 @@ struct modeMeanSetting {
 	//int maskHorizon		= 0;
 	//int longplay			= 0;		// make delay between captures 
 	//int brightnessControl	= 0;
+	int debugLevel = 0;
 };
 
 

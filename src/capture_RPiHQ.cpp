@@ -1640,7 +1640,10 @@ const char *locale         = DEFAULT_LOCALE;
 				{
 					long last_exposure_us = currentExposure_us;
 
-					long actualGain = currentGain;	// to be compatible with ZWO
+					//long actualGain = currentGain;	// to be compatible with ZWO
+					float actualGain = currentGain; // to be compatible with ZWO - ZWO gain=0.1 dB , RPiHQ gain=factor
+					if (myModeMeanSetting.mode_mean)
+						actualGain =  myRaspistillSetting.analoggain;
 					int iYOffset = 0;
 					float mean = -1;
 
@@ -1687,7 +1690,8 @@ const char *locale         = DEFAULT_LOCALE;
 
 					if (showGain == 1)
 					{
-						sprintf(bufTemp, "Gain: %ld", actualGain);
+						//sprintf(bufTemp, "Gain: %ld", actualGain);
+						sprintf(bufTemp, "Gain: %1.2f", actualGain);
 						// Indicate if in auto gain mode.
 						if (currentAutoGain == ASI_TRUE) strcat(bufTemp, " (auto)");
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),

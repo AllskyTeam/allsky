@@ -57,7 +57,7 @@ ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 # bullseye has problems to dedect cameras - workaround
 which libcamera-still
 if [ $? -eq 0 ]; then
-        libcamera-still -v -t 1
+        LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still -t 1 --nopreview
 else
         vcgencmd get_camera | grep --silent "supported=1" 
 fi

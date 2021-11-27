@@ -37,6 +37,9 @@
 #define MS_IN_SEC 1000                    // milliseconds in a second
 #define US_IN_SEC (US_IN_MS * MS_IN_SEC)  // microseconds in a second
 
+// Forward definitions
+char *getRetCode(ASI_ERROR_CODE);
+
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
@@ -151,6 +154,11 @@ ASI_ERROR_CODE setControl(int CamNum, ASI_CONTROL_TYPE control, long value, ASI_
     for (i = 0; i < iNumOfCtrl && i <= control; i++)    // controls are sorted 1 to n
     {
         ret = ASIGetControlCaps(CamNum, i, &ControlCaps);
+		if (ret != ASI_SUCCESS)
+		{
+			Log(0, "WARNING: ASIGetControlCaps() for control %d failed: %s\n", i, getRetCode(ret));
+			return(ret);
+		}
 
         if (ControlCaps.ControlType == control)
         {
@@ -171,6 +179,11 @@ ASI_ERROR_CODE setControl(int CamNum, ASI_CONTROL_TYPE control, long value, ASI_
                     makeAuto = ASI_FALSE;
                 }
                 ret = ASISetControlValue(CamNum, control, value, makeAuto);
+				if (ret != ASI_SUCCESS)
+				{
+					Log(0, "WARNING: ASISetControlCaps() for control %d, value=%ld failed: %s\n", control, value, getRetCode(ret));
+					return(ret);
+				}
             } else {
                 printf("ERROR: ControlCap: '%s' (#%d) not writable; not setting to %ld.\n", ControlCaps.Name, ControlCaps.ControlType, value);
                 ret = ASI_ERROR_INVALID_MODE;	// this seemed like the closest error
@@ -539,36 +552,44 @@ return;
 // If the "multi" flag is set, display in multiple units if appropriate.
 char *length_in_units(long us, bool multi)	// microseconds
 {
-	static char length[50];
+	const int l = 50;
+	static char length[l];
 	if (us == 0)
 	{
-		snprintf(length, sizeof(length), "0 us");
+		snprintf(length, l, "0 us");
 	}
 	else
 	{
 		double us_in_ms = (double)us / US_IN_MS;
-		// The boundaries on when to display one unit and two are really a matter of taste.
-		if (us_in_ms < 0.5)		// less than 1/2 ms
+		// The boundaries on when to display one or two units are really a matter of taste.
+		if (us_in_ms < 0.5)						// less than 0.5 ms
 		{
-			snprintf(length, sizeof(length), "%'ld us", us);
+			snprintf(length, l, "%'ld us", us);
 		}
-		else if (us_in_ms < 1.5)	// between 0.5 and 1.5 ms
+		else if (us_in_ms < 1.5)				// between 0.5 and 1.5 ms
 		{
 			if (multi)
-				snprintf(length, sizeof(length), "%'ld us (%.3f ms)", us, us_in_ms);
+				snprintf(length, l, "%'ld us (%.3f ms)", us, us_in_ms);
 			else
-				snprintf(length, sizeof(length), "%.3f ms", us_in_ms);
+				snprintf(length, l, "%'ld us", us);
 		}
-		else if (us > (1 * US_IN_SEC))
-		{
-			snprintf(length, sizeof(length), "%.1lf sec", (double)us / US_IN_SEC);
-		}
-		else	// between 1.5 ms and 1 second
+		else if (us_in_ms < (0.5 * MS_IN_SEC))	// 1.5 ms to 0.5 sec
 		{
 			if (multi)
-				snprintf(length, sizeof(length), "%.3f ms (%.1lf sec)", us_in_ms, (double)us / US_IN_SEC);
+				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
 			else
-				snprintf(length, sizeof(length), "%.1f ms", us_in_ms);
+				snprintf(length, l, "%.2f ms", us_in_ms);
+		}
+		else if (us_in_ms < (1.0 * MS_IN_SEC))	// between 0.5 sec and 1 sec
+		{
+			if (multi)
+				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
+			else
+				snprintf(length, l, "%.1f ms", us_in_ms);
+		}
+		else									// over 1 sec
+		{
+			snprintf(length, l, "%.1lf sec", (double)us / US_IN_SEC);
 		}
 
 	}
@@ -602,6 +623,15 @@ ASI_ERROR_CODE takeOneExposure(
 	// USB contention, such as that caused by heavy USB disk IO
     long timeout = ((exposure_time_us * 2) / US_IN_MS) + 5000;	// timeout is in ms
 
+	if (currentAutoExposure == ASI_TRUE && exposure_time_us > current_max_autoexposure_us)
+	{
+		// If we call length_in_units() twice in same command line they both return the last value.
+		char x[20];
+		snprintf(x, sizeof(x), "%s", length_in_units(exposure_time_us, true));
+		Log(0, "*** WARNING: exposure_time_us requested [%s] > current_max_autoexposure_us [%s]\n", x, length_in_units(current_max_autoexposure_us, true));
+		exposure_time_us = current_max_autoexposure_us;
+	}
+
     // This debug message isn't typcally needed since we already displayed a message about
     // starting a new exposure, and below we display the result when the exposure is done.
     Log(4, "  > %s to %s, timeout: %'ld ms\n",
@@ -621,7 +651,8 @@ ASI_ERROR_CODE takeOneExposure(
 
     if (status == ASI_SUCCESS) {
         status = ASIGetVideoData(cameraId, imageBuffer, bufferSize, timeout);
-        if (status != ASI_SUCCESS) {
+        if (status != ASI_SUCCESS)
+		{
             Log(0, "  > ERROR: Failed getting image: %s\n", getRetCode(status));
         }
         else
@@ -641,7 +672,7 @@ ASI_ERROR_CODE takeOneExposure(
 			// When in auto-exposure mode, the returned exposure length is what the driver thinks the
 			// next exposure should be, and will eventually converge on the correct exposure.
             ASIGetControlValue(cameraId, ASI_EXPOSURE, &reported_exposure_us, &wasAutoExposure);
-            Log(3, "  > Got image%s.  Reported exposure: %s, wasAuto=%s\n", debug_text, length_in_units(reported_exposure_us, true), wasAutoExposure == ASI_TRUE ? "yes" : "no");
+            Log(3, "  > Got image%s.  Reported exposure: %s, auto=%s\n", debug_text, length_in_units(reported_exposure_us, true), wasAutoExposure == ASI_TRUE ? "yes" : "no");
 
             // If this was a manual exposure, make sure it took the correct exposure.
 			// Per ZWO, this should never happen.
@@ -816,14 +847,14 @@ bool resetGainTransitionVariables(int dayGain, int nightGain)
     if (adjustGain == false)
     {
         // determineGainChange() will never be called so no need to set any variables.
-        Log(4, "xxx will not adjust gain - adjustGain == false\n");
+        Log(5, "xxx will not adjust gain - adjustGain == false\n");
         return(false);
     }
 
     if (numExposures == 0)
     {
         // we don't adjust when the program first starts since there's nothing to transition from
-        Log(4, "xxx will not adjust gain right now - numExposures == 0\n");
+        Log(5, "xxx will not adjust gain right now - numExposures == 0\n");
         return(false);
     }
 
@@ -1014,8 +1045,8 @@ const char *locale = DEFAULT_LOCALE;
     int nightBin               = DEFAULT_NIGHTBIN;
     int currentBin             = NOT_SET;
 
-#define DEFAULT_IMAGE_TYPE       1
 #define AUTO_IMAGE_TYPE         99	// needs to match what's in the camera_settings.json file
+#define DEFAULT_IMAGE_TYPE       AUTO_IMAGE_TYPE
     int Image_type             = DEFAULT_IMAGE_TYPE;
 
 #define DEFAULT_ASIBANDWIDTH    40
@@ -1126,7 +1157,7 @@ const char *locale = DEFAULT_LOCALE;
 
     printf("\n%s", c(KGRN));
     printf("**********************************************\n");
-    printf("*** Allsky Camera Software v0.8.2  |  2021 ***\n");
+    printf("*** Allsky Camera Software v0.8.2c |  2021 ***\n");
     printf("**********************************************\n\n");
     printf("Capture images of the sky with a Raspberry Pi and an ASI Camera\n");
     printf("%s\n", c(KNRM));
@@ -1649,6 +1680,10 @@ const char *locale = DEFAULT_LOCALE;
     originalHeight = height;
 
 #ifdef USE_HISTOGRAM
+    int centerX, centerY;
+    int left_of_box, right_of_box;
+    int top_of_box, bottom_of_box;
+
     // The histogram box needs to fit on the image.
     // If we're binning we'll decrease the size of the box accordingly.
     bool ok = true;
@@ -1667,13 +1702,12 @@ const char *locale = DEFAULT_LOCALE;
     }
 	else
     {
-        int centerX = width * histogramBoxPercentFromLeft;
-        int centerY = height * histogramBoxPercentFromTop;
-        int left_of_box = centerX - (histogramBoxSizeX / 2);
-        int right_of_box = centerX + (histogramBoxSizeX / 2);
-        int top_of_box = centerY - (histogramBoxSizeY / 2);
-        int bottom_of_box = centerY + (histogramBoxSizeY / 2);
-        Log(0, "Image: %dx%d, HISTOGRAM BOX: center @ %dx%d, upper left: %dx%d, lower right: %dx%d\n", width, height, centerX, centerY, left_of_box, top_of_box, right_of_box, bottom_of_box);
+        centerX = width * histogramBoxPercentFromLeft;
+        centerY = height * histogramBoxPercentFromTop;
+        left_of_box = centerX - (histogramBoxSizeX / 2);
+        right_of_box = centerX + (histogramBoxSizeX / 2);
+        top_of_box = centerY - (histogramBoxSizeY / 2);
+        bottom_of_box = centerY + (histogramBoxSizeY / 2);
 
         if (left_of_box < 0 || right_of_box >= width || top_of_box < 0 || bottom_of_box >= height)
 		{
@@ -1781,6 +1815,7 @@ const char *locale = DEFAULT_LOCALE;
         if (debugLevel >= 4)
         {
             printf("- %s:\n", ControlCaps.Name);
+            printf("   - Description = %s\n", ControlCaps.Description);
             printf("   - MinValue = %'ld\n", ControlCaps.MinValue);
             printf("   - MaxValue = %'ld\n", ControlCaps.MaxValue);
             printf("   - DefaultValue = %'ld\n", ControlCaps.DefaultValue);
@@ -1792,13 +1827,23 @@ const char *locale = DEFAULT_LOCALE;
 
 	if (asi_day_exposure_us < camera_min_exposure_us)
 	{
-	    fprintf(stderr, "WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", asi_day_exposure_us, camera_min_exposure_us);
-	    asi_day_exposure_us = camera_min_exposure_us;
+	   	fprintf(stderr, "*** WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", asi_day_exposure_us, camera_min_exposure_us);
+	   	asi_day_exposure_us = camera_min_exposure_us;
+	}
+	else if (asiDayAutoExposure && asi_day_exposure_us > camera_max_autoexposure_us)
+	{
+	   	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", asi_day_exposure_us, camera_max_autoexposure_us);
+	   	asi_day_exposure_us = camera_max_autoexposure_us;
 	}
 	if (asi_night_exposure_us < camera_min_exposure_us)
 	{
-	    fprintf(stderr, "WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", asi_night_exposure_us, camera_min_exposure_us);
-	    asi_night_exposure_us = camera_min_exposure_us;
+	   	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", asi_night_exposure_us, camera_min_exposure_us);
+	   	asi_night_exposure_us = camera_min_exposure_us;
+	}
+	else if (asiNightAutoExposure && asi_night_exposure_us > camera_max_autoexposure_us)
+	{
+	   	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", asi_night_exposure_us, camera_max_autoexposure_us);
+	   	asi_night_exposure_us = camera_max_autoexposure_us;
 	}
 
     if (debugLevel >= 4)
@@ -1821,7 +1866,7 @@ const char *locale = DEFAULT_LOCALE;
     }
 
     ASIGetControlValue(CamNum, ASI_TEMPERATURE, &actualTemp, &bAuto);
-    printf("- Sensor temperature:%0.2f\n", (float)actualTemp / 10.0);
+    printf("- Sensor temperature: %0.2f\n", (float)actualTemp / 10.0);
 
     // Handle "auto" Image_type.
     if (Image_type == AUTO_IMAGE_TYPE)
@@ -1903,14 +1948,14 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Gamma: %d\n", asiGamma);
     if (ASICameraInfo.IsColorCam)
     {
-        printf(" WB Red: %d, Blue: %d\n, Auto: %s", asiWBR, asiWBB, yesNo(asiAutoWhiteBalance));
+        printf(" WB Red: %d, Blue: %d, Auto: %s\n", asiWBR, asiWBB, yesNo(asiAutoWhiteBalance));
     }
     printf(" Binning (day): %d\n", dayBin);
     printf(" Binning (night): %d\n", nightBin);
     printf(" USB Speed: %d, auto: %s\n", asiBandwidth, yesNo(asiAutoBandwidth));
 
     printf(" Text Overlay: %s\n", ImgText[0] == '\0' ? "[none]" : ImgText);
-    printf(" Text Extra Filename: %s, Age: %d seconds\n", ImgExtraText[0] == '\0' ? "[none]" : ImgExtraText, extraFileAge);
+    printf(" Text Extra File: %s, Age: %d seconds\n", ImgExtraText[0] == '\0' ? "[none]" : ImgExtraText, extraFileAge);
     printf(" Text Line Height %dpx\n", iTextLineHeight);
     printf(" Text Position: %dpx from left, %dpx from top\n", iTextX, iTextY);
     printf(" Font Name:  %s (%d)\n", fontnames[fontnumber], fontname[fontnumber]);
@@ -1928,8 +1973,10 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Locale: %s\n", locale);
     printf(" Notification Images: %s\n", yesNo(notificationImages));
 #ifdef USE_HISTOGRAM
-    printf(" Histogram Box: %d %d %0.0f %0.0f\n", histogramBoxSizeX, histogramBoxSizeY,
-            histogramBoxPercentFromLeft * 100, histogramBoxPercentFromTop * 100);
+    printf(" Histogram Box: %d %d %0.0f %0.0f, center: %dx%d, upper left: %dx%d, lower right: %dx%d\n",
+        histogramBoxSizeX, histogramBoxSizeY,
+        histogramBoxPercentFromLeft * 100, histogramBoxPercentFromTop * 100,
+        centerX, centerY, left_of_box, top_of_box, right_of_box, bottom_of_box);
     printf(" Show Histogram Box: %s\n", yesNo(showHistogramBox));
     printf(" Show Histogram Mean: %s\n", yesNo(showHistogram));
 #endif
@@ -2056,7 +2103,7 @@ const char *locale = DEFAULT_LOCALE;
                 currentGain = asiNightGain;
                 gainChange = 0;
                 currentDelay_ms = nightDelay_ms;
-                current_exposure_us = asi_night_max_autoexposure_ms * US_IN_MS;
+                current_max_autoexposure_us = current_exposure_us = asi_night_max_autoexposure_ms * US_IN_MS;
                 currentBin = nightBin;
                 currentBrightness = asiNightBrightness;
 
@@ -2118,6 +2165,12 @@ const char *locale = DEFAULT_LOCALE;
                 // use what the user specified.
                 if (numExposures == 0 || ! asiDayAutoExposure)
                 {
+					if (asiDayAutoExposure && asi_day_exposure_us > asi_day_max_autoexposure_ms*US_IN_MS)
+					{
+						snprintf(bufTemp, sizeof(bufTemp), "%s", length_in_units(asi_day_exposure_us, true));
+						Log(0, "*** WARNING: daytime Manual Exposure [%s] > Max Auto-Exposure [%s]; user smaller number.\n", bufTemp, length_in_units(asi_day_max_autoexposure_ms*US_IN_MS, true));
+						asi_day_exposure_us = asi_day_max_autoexposure_ms * US_IN_MS;
+					}
                     current_exposure_us = asi_day_exposure_us;
                 }
                 else
@@ -2171,6 +2224,12 @@ const char *locale = DEFAULT_LOCALE;
             // Setup the night time capture parameters
             if (numExposures == 0 || asiNightAutoExposure == ASI_FALSE)
             {
+				if (asiNightAutoExposure && asi_night_exposure_us > asi_night_max_autoexposure_ms*US_IN_MS)
+				{
+					snprintf(bufTemp, sizeof(bufTemp), "%s", length_in_units(asi_night_exposure_us, true));
+					Log(0, "*** WARNING: nighttime Manual Exposure [%s] > Max Auto-Exposure [%s]; user smaller number.\n", bufTemp, length_in_units(asi_night_max_autoexposure_ms*US_IN_MS, true));
+					asi_night_exposure_us = asi_night_max_autoexposure_ms * US_IN_MS;
+				}
                 current_exposure_us = asi_night_exposure_us;
                 Log(4, "Using night exposure (%s)\n", length_in_units(asi_night_exposure_us, true));
             }
@@ -2478,6 +2537,7 @@ const char *locale = DEFAULT_LOCALE;
 // xxxxxxxxxxxxxxxx test new formula-based method
 long new_new_exposure_us;
 int acceptable;
+float multiplier = 1.10;
 const char *acceptable_type;
 if (mean < minAcceptableMean) {
     acceptable = minAcceptableMean;
@@ -2485,18 +2545,18 @@ if (mean < minAcceptableMean) {
 } else {
     acceptable = maxAcceptableMean;
     acceptable_type = "max";
+	multiplier = 1 / multiplier;
 }
 long e_us;
 e_us = current_exposure_us;
 e_us = last_exposure_us;
 if (current_exposure_us != last_exposure_us) printf("xxxxxxxxxxx current_exposure_us %'ld != last_exposure_us %'ld\n", current_exposure_us, last_exposure_us);
 // if mean/acceptable is 9/90, it's 1/10th of the way there, so multiple exposure by 90/9 (10).
-// ZWO cameras don't appear to be linear so increase the multiply amount some.
-float multiplier = 1.05;
+// ZWO cameras don't appear to be linear so increase the multiplier amount some.
 float multiply = ((double)acceptable / mean) * multiplier;
 new_new_exposure_us= e_us * multiply;
-printf("=== old way new_exposure_us=%'ld, new way=%'ld (multiply by %.3f) [last_exposure_us=%'ld, %sAcceptable=%d, mean=%d]\n", roundTo(new_exposure_us, roundToMe), new_new_exposure_us, multiply, e_us, acceptable_type, acceptable, mean);
-printf("     using new way\n");	 new_exposure_us = new_new_exposure_us;
+printf("=== next exposure: old way=%'ld, new way=%'ld (multiply by %.3f) [last_exposure_us=%'ld, %sAcceptable=%d, mean=%d]\n", roundTo(new_exposure_us, roundToMe), new_new_exposure_us, multiply, e_us, acceptable_type, acceptable, mean);
+new_exposure_us = new_new_exposure_us;	// use new way
 
                         if (prior_mean_diff > 0 && last_mean_diff < 0)
                         { 
@@ -2565,8 +2625,9 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 							{
 								closeUp(exitCode);
 							}
+							break;
                          }
-                    }
+                    } // end of "Retry" loop
 
                     if (asiRetCode != ASI_SUCCESS)
                     {
@@ -2660,15 +2721,19 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     if (showTime == 1)
                     {
                         // The time and ImgText are in the larger font; everything else is in smaller font.
-                        cvText(pRgb, bufTime, iTextX, iTextY + (iYOffset / currentBin), fontsize * 0.1, linewidth,
-                               linetype[linenumber], fontname[fontnumber], fontcolor, Image_type, outlinefont);
+                        cvText(pRgb, bufTime, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * 0.1, linewidth,
+                            linetype[linenumber], fontname[fontnumber], fontcolor,
+							Image_type, outlinefont);
                         iYOffset += iTextLineHeight;
                     }
 
                     if (ImgText[0] != '\0')
                     {
-                        cvText(pRgb, ImgText, iTextX, iTextY + (iYOffset / currentBin), fontsize * 0.1, linewidth,
-                               linetype[linenumber], fontname[fontnumber], fontcolor, Image_type, outlinefont);
+                        cvText(pRgb, ImgText, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * 0.1, linewidth,
+                            linetype[linenumber], fontname[fontnumber], fontcolor,
+							Image_type, outlinefont);
                         iYOffset+=iTextLineHeight;
                     }
 
@@ -2685,8 +2750,10 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 							sprintf(F, "  %.0fF", (((float)actualTemp / 10 * 1.8) + 32));
 						}
                         sprintf(bufTemp, "Sensor: %s %s", C, F);
-                        cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin), fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
-                               linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
+                        cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
+                            linetype[linenumber], fontname[fontnumber], smallFontcolor,
+							Image_type, outlinefont);
                         iYOffset += iTextLineHeight;
                     }
 
@@ -2699,8 +2766,10 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                             sprintf(bufTemp, "Exposure: %'.2f ms%s", (float)last_exposure_us / US_IN_MS, bufTemp2);
                         // Indicate if in auto-exposure mode.
                         if (currentAutoExposure == ASI_TRUE) strcat(bufTemp, " (auto)");
-                        cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin), fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
-                               linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
+                        cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
+                            linetype[linenumber], fontname[fontnumber], smallFontcolor,
+							Image_type, outlinefont);
                         iYOffset += iTextLineHeight;
                     }
 
@@ -2718,8 +2787,10 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                             strcat(bufTemp, x);
                         }
 
-                        cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin), fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
-                               linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
+                        cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
+                            linetype[linenumber], fontname[fontnumber], smallFontcolor,
+							Image_type, outlinefont);
                         iYOffset += iTextLineHeight;
                     }
                     if (currentAdjustGain)
@@ -2733,8 +2804,10 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     if (showBrightness == 1)
                     {
                         sprintf(bufTemp, "Brightness: %d", currentBrightness);
-                        cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin), fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
-                           linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
+                        cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
+							linetype[linenumber], fontname[fontnumber], smallFontcolor,
+							Image_type, outlinefont);
                         iYOffset += iTextLineHeight;
                      }
 
@@ -2742,8 +2815,10 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     if (showHistogram)
                     {
                         sprintf(bufTemp, "Mean: %d", mean);
-                        cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin), fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
-                        linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
+                        cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
+							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
+							linetype[linenumber], fontname[fontnumber], smallFontcolor,
+							Image_type, outlinefont);
                         iYOffset += iTextLineHeight;
                     }
                     if (showHistogramBox && usedHistogram)
@@ -2797,7 +2872,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 
                                         time_t now = time(NULL);
                                         double ageInSeconds = difftime(now, mktime(&modifiedTime));
-                                        Log(3, "  > Extra Text File (%s) Modified %.1f seconds ago", ImgExtraText, ageInSeconds);
+                                        Log(4, "  > Extra Text File (%s) Modified %.1f seconds ago", ImgExtraText, ageInSeconds);
                                         if (ageInSeconds < extraFileAge) {
                                             Log(1, ", so Using It\n");
                                             bAddExtra = true;
@@ -2823,7 +2898,10 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                                             line[slen-1] = '\0';
                                         }
 
-                                        cvText(pRgb, line, iTextX, iTextY + (iYOffset / currentBin), fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth, linetype[linenumber], fontname[fontnumber], smallFontcolor, Image_type, outlinefont);
+                                        cvText(pRgb, line, iTextX, iTextY + (iYOffset / currentBin),
+											fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
+											linetype[linenumber], fontname[fontnumber],
+											smallFontcolor, Image_type, outlinefont);
                                         iYOffset += iTextLineHeight;
                                     }
                                 }

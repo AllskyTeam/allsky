@@ -23,7 +23,7 @@ void Log(int, const char *, ...);
 
 #define US_IN_SEC (1000000.0)  // microseconds in a second
 
-double mean_history [5] = {0.0,1.0,0.0,1.0,0.0};
+double mean_history [5] = {0.0,0.0,0.0,0.0,0.0};
 int exp_history [5] = {0,0,0,0,0};
 
 int MeanCnt = 0;
@@ -65,6 +65,13 @@ float RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspisti
 		currentModeMeanSetting.init = false;
 		currentModeMeanSetting.ExposureLevelMax = log(gain * exposure_us/US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) + 1; 
 		currentModeMeanSetting.ExposureLevelMin = log(1.0  * 1.0        /US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) - 1;
+		// only for the output
+		for (int i=0; i < currentModeMeanSetting.historySize; i++) {
+			mean_history[i] = currentModeMeanSetting.mean_value;
+			exp_history[i] = log(1.0  * currentRaspistillSetting.shutter_us/US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) - 1;
+		}
+		// first exposure with currentRaspistillSetting.shutter_us, so we have to calculate the startpoint for ExposureLevel 
+		currentModeMeanSetting.ExposureLevel = log(1.0  * currentRaspistillSetting.shutter_us/US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) - 1;
 		Log(1, "  > Valid ExposureLevels: %1.8f to %1.8f\n", currentModeMeanSetting.ExposureLevelMin, currentModeMeanSetting.ExposureLevelMax);
 	}
 
@@ -241,7 +248,7 @@ if (0)
 	exp_history[MeanCnt % currentModeMeanSetting.historySize] = currentModeMeanSetting.ExposureLevel;
 
 	currentRaspistillSetting.shutter_us = ExposureTime_s * US_IN_SEC;
-	Log(2, "  > Mean: %f, diff: %f, Exposure level:%d (%d), Exposure time:%1.8f ms, analoggain:%1.2f\n", mean, mean_diff, currentModeMeanSetting.ExposureLevel, currentModeMeanSetting.ExposureLevel-exp_history[idx], ExposureTime_s, currentRaspistillSetting.analoggain);
+	Log(2, "  > Mean: %f, diff: %f, Exposure level:%d (%d), Exposure time:%1.8f s, analoggain:%1.2f\n", mean, mean_diff, currentModeMeanSetting.ExposureLevel, currentModeMeanSetting.ExposureLevel-exp_history[idx], ExposureTime_s, currentRaspistillSetting.analoggain);
 
 	return(this_mean);
 }

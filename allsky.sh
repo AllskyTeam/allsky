@@ -53,7 +53,15 @@ ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 # old/regular manual camera selection mode => exit if no requested camera was found
 # Buster and Bullseye have different output so only check the part they have in common.
 # TODO: this check only needs to be done if CAMERA = RPiHQ
-vcgencmd get_camera | grep --silent "supported=1"
+# vcgencmd get_camera | grep --silent "supported=1"
+# bullseye has problems to dedect cameras - workaround
+which libcamera-still
+if [ $? -eq 0 ]; then
+        LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still -t 1 --nopreview
+else
+        vcgencmd get_camera | grep --silent "supported=1" 
+fi
+
 if [ $? -eq 0 ]; then
 	RPiHQIsPresent=1
 else
@@ -153,8 +161,26 @@ echo "Starting allsky camera..."
 # but in order for it to work need to make ARGUMENTS an array.
 ARGUMENTS=()
 
-# This argument should come first so the capture program knows if it should use colors.
+if [[ ${CAMERA} == "RPiHQ" ]]; then
+	# The Bullseye operating system deprecated raspistill so we use libcamera instead.
+	(
+		grep --silent -i "VERSION_CODENAME=bullseye" /etc/os-release ||
+		grep --silent "^dtoverlay=imx477" /boot/config.txt
+	)
+	# This argument needs to come first since the capture code checks for it first.
+	if [ $? -eq 0 ]; then
+		ARGUMENTS+=(-cmd libcamera)
+	else
+		ARGUMENTS+=(-cmd raspistill)
+	fi
+fi
+
+# This argument should come second so the capture program knows if it should display debug output.
+ARGUMENTS+=(-debuglevel ${ALLSKY_DEBUG_LEVEL})
+
+# This argument should come next so the capture program knows if it should use colors.
 ARGUMENTS+=(-tty ${ON_TTY})
+
 
 KEYS=( $(jq -r 'keys[]' $CAMERA_SETTINGS) )
 for KEY in ${KEYS[@]}
@@ -187,17 +213,6 @@ if [[ $CAMERA == "ZWO" ]]; then
 	CAPTURE="capture"
 elif [[ $CAMERA == "RPiHQ" ]]; then
 	CAPTURE="capture_RPiHQ"
-	grep --silent -i "VERSION_CODENAME=bullseye" /etc/os-release
-	if [ $? -eq 0 ]; then
-		echo "***"
-		echo -e "${YELLOW}Sorry, AllSky with RPiHQ cameras on the Bullseye operating system does not yet work.${NC}"
-		echo "See https://github.com/thomasjacquin/allsky/discussions/802 for more information."
-		echo "***"
-		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
-
-		# Don't let the service restart us 'cause we'll get the same error again
-		sudo systemctl stop allsky
-	fi
 fi
 "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
 RETCODE=$?

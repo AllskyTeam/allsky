@@ -266,12 +266,19 @@ void writeToLog(int val)
 }
 
 // Build capture command to capture the image from the HQ camera
-int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asiAutoGain, int asiAutoAWB, double asiGain, int bin, double asiWBR, double asiWBB, int asiRotation, int asiFlip, float saturation, int asiBrightness, int quality, const char* fileName, int time, int showDetails, const char* ImgText, int fontsize, int fontcolor, int background, int darkframe, int preview, int width, int height)
+int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asiAutoGain, int asiAutoAWB, double asiGain, int bin, double asiWBR, double asiWBB, int asiRotation, int asiFlip, float saturation, int asiBrightness, int quality, const char* fileName, int time, int showDetails, const char* ImgText, int fontsize, int fontcolor, int background, int darkframe, int preview, int width, int height, bool libcamera)
 {
 	Log(3, "capturing image in file %s\n", fileName);
 
+	// Define command line.
+	string command;
+	if (libcamera) command = "libcamera-still";
+	command = "raspistill";
+
 	// Ensure no process is still running.
-	string kill = "ps -ef | grep 'raspistill' | grep -v color | awk '{print $2}' | xargs kill -9 1> /dev/null 2>&1";
+	// Include "--" so we only find the command, not a different program with the command
+	// on its command line.
+	string kill = "ps -ef | grep '" + command + " --' | grep -v color | awk '{print $2}' | xargs kill -9 1> /dev/null 2>&1";
 	char kcmd[kill.length() + 1];		// Define char variable
 	strcpy(kcmd, kill.c_str());			// Convert command to character variable
 
@@ -280,11 +287,12 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 
 	stringstream ss;
 
-	// Define command line.
-	string command = "raspistill";
 	ss << fileName;
 	command += " --output '" + ss.str() + "'";
-	command += " --thumb none --burst -st";
+	if (libcamera)
+		command += " --tuning-file /usr/share/libcamera/ipa/raspberrypi/imx477.json";
+	else
+		command += " --thumb none --burst -st";
 
 	// --timeout (in MS) determines how long the video will run before it takes a picture.
 	if (preview)
@@ -323,6 +331,8 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 		}
 		command += " --timeout " + ss.str();
 		command += " --nopreview";
+		if (libcamera)
+			command += "=1";
 	}
 
 	if (bin > 3) 	{
@@ -332,6 +342,7 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 		bin = 1;
 	}
 
+//xxxx not sure if this still applies for libcamera
 	// https://www.raspberrypi.com/documentation/accessories/camera.html#raspistill
 	// Mode   Size         Aspect Ratio  Frame rates  FOV      Binning/Scaling
 	// 0      automatic selection
@@ -342,14 +353,30 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 	//
   // TODO: please change gui description !
 
-	if (bin==1)	{
-		command += " --mode 3";
+//xxx libcamera doesn't have --mode; it only uses width and height
+	if (libcamera)
+	{
+		if (bin==1)	{
+			command += " --width 4060 --height 3056";
+		}
+		else if (bin==2) 	{
+			command += " --width 2028 --height 1520";
+		}
+		else 	{
+			command += " --width 1012 --height 760";
+		}
 	}
-	else if (bin==2) 	{
-		command += " --mode 2  --width 2028 --height 1520";
-	}
-	else 	{
-		command += " --mode 4 --width 1012 --height 760";
+	else
+	{
+		if (bin==1)	{
+			command += " --mode 3";
+		}
+		else if (bin==2) 	{
+			command += " --mode 2  --width 2028 --height 1520";
+		}
+		else 	{
+			command += " --mode 4 --width 1012 --height 760";
+		}
 	}
 
 	if (asiExposure < 1)
@@ -363,16 +390,20 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 	}
 
 	// Check if automatic determined exposure time is selected
-
+//xxx libcamera doesn's use "exposure off/auto".  For auto-exposure set shutter to 0.
 	if (asiAutoExposure)
 	{
 		if (myModeMeanSetting.mode_mean) {
 			ss.str("");
 			ss << myRaspistillSetting.shutter_us;
-			command += " --exposure off";
+			if (! libcamera)
+				command += " --exposure off";
 			command += " --shutter " + ss.str();
 		} else {
-			command += " --exposure auto";
+			if (libcamera)
+				command += " --shutter 0";
+			else
+				command += " --exposure auto";
 		}
 	}
 	// Set exposure time
@@ -380,7 +411,8 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 	{
 		ss.str("");
 		ss << asiExposure;
-		command += " --exposure off";
+		if (! libcamera)
+			command += " --exposure off";
 		command += " --shutter " + ss.str();
 	}
 
@@ -395,19 +427,30 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 		if (myModeMeanSetting.mode_mean) {
 			ss.str("");
 			ss << myRaspistillSetting.analoggain;
-			command += " --analoggain " + ss.str();
+			if (libcamera)
+				command += " --gain " + ss.str();
+			else
+				command += " --analoggain " + ss.str();
 
+//xxxx libcamera just has "gain".  If it's higher than what the camera supports,
+// the excess is the "digital" gain.
+if (! libcamera) { // TODO: need to fix this for libcamera
 			if (myRaspistillSetting.digitalgain > 1.0) {
 				ss.str("");
 				ss << myRaspistillSetting.digitalgain;
 				command += " --digitalgain " + ss.str();
 			}
+}
 		}
 		else {
+		if (libcamera)
+			command += " --gain 1";	// 1 effectively makes it autogain
+		else
 			command += " --analoggain 1";	// 1 effectively makes it autogain
 		}
 	}
 	else {							// Is manual gain
+		// xxx what are libcamera limits?
 		if (asiGain < 1.0) {
 			asiGain = 1.0;
 		}
@@ -416,7 +459,10 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 		}
 		ss.str("");
 		ss << asiGain;
-		command += " --analoggain " + ss.str();
+		if (libcamera)
+			command += " --gain " + ss.str();
+		else
+			command += " --analoggain " + ss.str();
 	}
 
 	if (myModeMeanSetting.mode_mean) {
@@ -442,6 +488,8 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 		asiWBB = 10;
 	}
 
+//xxx libcamera: if the red and blue numbers are given it turns off AWB.
+//xxx I don't think the check for myModeMeanSetting.mode_mean is needed anymore.
 	// Check if R and B component are given
 	if (myModeMeanSetting.mode_mean) {
 		// support asiAutoAWB, asiWBR and asiWBB
@@ -451,14 +499,16 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 		else {
 			ss.str("");
 			ss << asiWBR << "," << asiWBB;
-			command += " --awb off";
+			if (! libcamera)
+				command += " --awb off";
 			command += " --awbgains " + ss.str();
 		}
 	}
 	else if (! asiAutoAWB) {
 		ss.str("");
 		ss << asiWBR << "," << asiWBB;
-		command += " --awb off";
+		if (! libcamera)
+			command += " --awb off";
 		command += " --awbgains " + ss.str();
 	}
 	// Use automatic white balance
@@ -466,8 +516,8 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 		command += " --awb auto";
 	}
 
-	// Check if rotation is at least 0 degrees
-	if (asiRotation != 0 && asiRotation != 90 && asiRotation != 180 && asiRotation != 270)
+//xxx libcamera only supports 0 and 180 degree rotation
+	if (asiRotation != 0 && asiRotation != 90 && (! libcamera && asiRotation != 180 && asiRotation != 270))
 	{
 		asiRotation = 0;
 	}
@@ -491,39 +541,51 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 		command += " --vflip";
 	}
 
-	if (saturation < -100.0)
-	{
-		saturation = -100.0;
-	}
+//xxx libcamera: saturation from 0.0 to ???.   1.0 is "normal".
+	float min_saturation;
+	if (libcamera)
+		min_saturation = 0.0;
+	else
+		min_saturation = -100.0;
+	if (saturation < min_saturation)
+		saturation = min_saturation;
 	else if (saturation > 100.0)
-	{
 		saturation = 100.0;
-	}
 
-	if (saturation)
+	if (saturation != 1.0)
 	{
 		ss.str("");
 		ss << saturation;
 		command += " --saturation "+ ss.str();
 	}
 
-	// Brightness
-	if (asiBrightness < 0)
+	if (libcamera)
 	{
-		asiBrightness = 0;
+		// User enters -100 to 100.  Convert to -1.0 to 1.0.
+		float brightness = asiBrightness / 100.0;
+		if (brightness < -1.0)
+		{
+			brightness = 0.0;
+		}
+		else if (brightness > 1.0)
+		{
+			brightness = 1.0;
+		}
 	}
-	else if (asiBrightness > 100)
+	else
 	{
-		asiBrightness = 100;
+		if (asiBrightness < 0)
+		{
+			asiBrightness = 0;
+		}
+		else if (asiBrightness > 100)
+		{
+			asiBrightness = 100;
+		}
 	}
-
-	// check if brightness setting is set
-	if (asiBrightness!=50)
-	{
-		ss.str("");
-		ss << asiBrightness;
-		command += " --brightness " + ss.str();
-	}
+	ss.str("");
+	ss << asiBrightness;
+	command += " --brightness " + ss.str();
 
 	if (quality < 0)
 	{
@@ -533,21 +595,33 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 	{
 		quality = 100;
 	}
-
 	ss.str("");
 	ss << quality;
 	command += " --quality " + ss.str();
 
 	if (!darkframe) {
+		string info_text = "";
+
 		if (showDetails)
-			command += " -a 1104";
+		{
+			if (libcamera)
+				info_text += " Exposure: %exp, Gain: %ag, Focus: %focus, red: %rg, blue: %bg";
+			else
+				info_text += " -a 1104";
+		}
 
 		if (time==1)
-			command += " -a 1036";
+		{
+			if (libcamera)
+				info_text += " Time: %F %n";	//xxx TODO: use timeFormat
+			else
+				info_text += " -a 1036";
+		}
 
 		if (strcmp(ImgText, "") != 0) {
 			ss.str("");
-			ss << ImgText; 
+			ss << " " << ImgText; 
+//xxxx this should use showExposure and showGain, not debugLevel
 			if (debugLevel > 0) {
 				ss << " shutter:" << myRaspistillSetting.shutter_us 
 				<< " gain:"	<< myRaspistillSetting.analoggain;
@@ -558,9 +632,22 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 					<< " WBB:" << asiWBB;
 				}
 			}
-			command += " -a \"" + ss.str() + "\"";
+			if (libcamera)
+				info_text += ss.str();
+			else
+				info_text += " -a \"" + ss.str() + "\"";
+		}
+		if (info_text != "")
+		{
+			if (libcamera)
+// xxxxxxxxxxx libcamera: this only sets text on title bar of preview window
+				command += " --info-text \"" + info_text + "\"";
+			else
+				command += " --info-text \"" + info_text + "\"";
 		}
 
+if (! libcamera)	// xxxx libcamera doesn't have fontsize, color, or background.
+{
 		if (fontsize < 6)
 			fontsize = 6;
 		else if (fontsize > 160)
@@ -586,7 +673,11 @@ int RPiHQcapture(int asiAutoFocus, int asiAutoExposure, int asiExposure, int asi
 		B  << std::setfill ('0') << std::setw(2) << std::hex << background;
 
 		command += " -ae " + ss.str() + ",0x" + C.str() + ",0x8080" + B.str();
+}
 	}
+
+	if (libcamera)
+		command += " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
 
 	// Define char variable
 	char cmd[command.length() + 1];
@@ -617,6 +708,14 @@ char const *yesNo(int flag)
 
 int main(int argc, char *argv[])
 {
+	// is_libcamera is only temporary so do a hack to determine if we should use raspistill or libcamera.
+	// We need to know its value before setting other variables.
+	bool is_libcamera;	// are we using libcamera or raspistill?
+	if (argc > 2 && strcmp(argv[1], "-cmd") == 0 && strcmp(argv[2], "libcamera") == 0)
+		is_libcamera = true;
+	else
+		is_libcamera = false;
+
 	tty = isatty(fileno(stdout)) ? true : false;
 	signal(SIGINT, IntHandle);
 	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
@@ -669,9 +768,21 @@ int main(int argc, char *argv[])
 	int currentDelay      = NOT_SET;
 	double asiWBR         = 2.5;
 	double asiWBB         = 2;
-	float saturation      = 0.0;
-	int asiDayBrightness  = 50;
-	int asiNightBrightness= 50;
+	float saturation;
+	int asiDayBrightness;
+	int asiNightBrightness;
+	if (is_libcamera)
+	{
+		saturation        = 1.0;
+		asiDayBrightness  = 0;	// xxx libcamera: middle value is 0
+		asiNightBrightness= 0;	// xxx libcamera: middle value is 0
+	}
+	else
+	{
+		saturation        = 0.0;
+		asiDayBrightness  = 50;
+		asiNightBrightness= 50;
+	}
 	int currentBrightness = NOT_SET;
 	int asiFlip           = 0;
 	int asiRotation       = 0;
@@ -696,9 +807,9 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	setlinebuf(stdout);   // Line buffer output so entries appear in the log immediately.
 	printf("\n");
-	printf("%s ******************************************\n", c(KGRN));
-	printf("%s *** Allsky Camera Software v0.8 | 2021 ***\n", c(KGRN));
-	printf("%s ******************************************\n\n", c(KGRN));
+	printf("%s ********************************************\n", c(KGRN));
+	printf("%s *** Allsky Camera Software v0.8.1 | 2021 ***\n", c(KGRN));
+	printf("%s ********************************************\n\n", c(KGRN));
 	printf("\%sCapture images of the sky with a Raspberry Pi and a RPi HQ camera\n", c(KGRN));
 	printf("\n");
 	printf("%sAdd -h or -help for available options\n", c(KYEL));
@@ -730,6 +841,10 @@ int main(int argc, char *argv[])
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
 				help = 1;
+			}
+			else if (strcmp(argv[i], "-cmd") == 0)
+			{
+				is_libcamera = strcmp(argv[i+1], "libcamera") == 0 ? true : false;
 			}
 			else if (strcmp(argv[i], "-width") == 0)
 			{
@@ -791,9 +906,9 @@ int main(int argc, char *argv[])
 				asiNightBrightness = atoi(argv[++i]);
 			}
  			else if (strcmp(argv[i], "-daybin") == 0)
-      {
-      	dayBin = atoi(argv[++i]);
-      }
+			{
+				dayBin = atoi(argv[++i]);
+			}
 			else if (strcmp(argv[i], "-nightbin") == 0 || strcmp(argv[i], "-bin") == 0)
 			{
 				nightBin = atoi(argv[++i]);
@@ -842,7 +957,7 @@ int main(int argc, char *argv[])
 				myModeMeanSetting.mode_mean = true;
 				i++;
 			}
-      else if (strcmp(argv[i], "-mean-p2") == 0)
+			else if (strcmp(argv[i], "-mean-p2") == 0)
 			{
 				myModeMeanSetting.mean_p2 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
 				myModeMeanSetting.mode_mean = true;
@@ -1014,7 +1129,12 @@ int main(int argc, char *argv[])
 
 	if (help == 1)
 	{
+		printf("%sUsage:\n", c(KRED));
+		printf(" ./capture_RPiHQ -width 640 -height 480 -nightexposure 5000000 -gamma 50 -nightbin 1 -filename Lake-Laberge.JPG\n\n");
+		printf("%s", c(KNRM));
+
 		printf("%sAvailable Arguments:\n", c(KYEL));
+		printf(" -cmd                               - Default = raspistill - cmd being used\n");
 		printf(" -width                             - Default = Camera Max Width\n");
 		printf(" -height                            - Default = Camera Max Height\n");
 		printf(" -nightexposure                     - Default = 5000000 - Time in us (equals to 5 sec)\n");
@@ -1022,8 +1142,16 @@ int main(int argc, char *argv[])
 		printf(" -autofocus                         - Default = 0 - Set to 1 to enable auto Focus\n");
 		printf(" -nightgain                         - Default = 4.0 (1.0 - 16.0)\n");
 		printf(" -nightautogain                     - Default = 0 - Set to 1 to enable auto Gain at night\n");
-		printf(" -saturation                        - Default = 0 (-100 to 100)\n");
-		printf(" -brightness                        - Default = 50 (0 to 100)\n");
+		if (is_libcamera)
+		{
+			printf(" -saturation                        - Default = 1.0 (-1.0 to ?)\n");
+			printf(" -brightness                        - Default = 0 (-100 to  100)\n");
+		}
+		else
+		{
+			printf(" -saturation                        - Default = 0 (-100 to 100)\n");
+			printf(" -brightness                        - Default = 50 (0 to 100)\n");
+		}
 		printf(" -awb                               - Default = 0 - Auto White Balance (0 = off)\n");
 		printf(" -wbr                               - Default = 2 - White Balance Red  (0 = off)\n");
 		printf(" -wbb                               - Default = 2 - White Balance Blue (0 = off)\n");
@@ -1034,7 +1162,10 @@ int main(int argc, char *argv[])
 		printf(" -type = Image Type                 - Default = 0 - 0 = RAW8,  1 = RGB24,  2 = RAW16\n");
 		printf(" -quality                           - Default = 70%%, 0%% (poor) 100%% (perfect)\n");
 		printf(" -filename                          - Default = image.jpg\n");
-		printf(" -rotation                          - Default = 0 degrees - Options 0, 90, 180 or 270\n");
+		if (is_libcamera)
+			printf(" -rotation                          - Default = 0 degrees - Options 0 or 180\n");
+		else
+			printf(" -rotation                          - Default = 0 degrees - Options 0, 90, 180 or 270\n");
 		printf(" -flip                              - Default = 0 - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
 		printf("\n");
 		printf(" -text                              - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c "
@@ -1061,7 +1192,7 @@ int main(int argc, char *argv[])
 		printf(" -showDetails                       - Set to 1 to display the metadata on the image\n");
 		printf(" -notificationimages                - Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
 		printf(" -debuglevel                        - Default = 0. Set to 1,2 or 3 for more debugging information.\n");
-	  printf("%s", c(KBLU));
+
 		printf(" -mean-value                        - Default = 0.3 Set mean-value and activates exposure control\n");
 		printf("                                    - info: Auto-Gain should be set (gui)\n");
 		printf("                                    -       -autoexposure should be set (extra parameter)\n");
@@ -1072,21 +1203,19 @@ int main(int argc, char *argv[])
 		printf(" -mean-p0                           - Default = 5.0, be careful changing these values, ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2\n");
 		printf(" -mean-p1                           - Default = 20.0\n");
 		printf(" -mean-p2                           - Default = 45.0\n");
-	  printf("%s", c(KNRM));
-		printf("%sUsage:\n", c(KRED));
-		printf(" ./capture_RPiHQ -width 640 -height 480 -nightexposure 5000000 -gamma 50 -nightbin 1 -filename Lake-Laberge.JPG\n\n");
+
+		printf("%s", c(KNRM));
 		exit(0);
 	}
-
-	printf("%s", c(KNRM));
 
 	int iMaxWidth = 4096;
 	int iMaxHeight = 3040;
 	double pixelSize = 1.55;
 
-	printf("- Resolution: %dx%d\n", iMaxWidth, iMaxHeight);
-	printf("- Pixel Size: %1.2fmicrons\n", pixelSize);
-	printf("- Supported Bin: 1x, 2x and 3x\n");
+	printf(" Camera: Raspberry Pi HQ camera\n");
+	printf("  - Resolution: %dx%d\n", iMaxWidth, iMaxHeight);
+	printf("  - Pixel Size: %1.2fmicrons\n", pixelSize);
+	printf("  - Supported Bins: 1x, 2x and 3x\n");
 
 	if (darkframe)
 	{
@@ -1100,6 +1229,7 @@ int main(int argc, char *argv[])
 
 	printf("%s", c(KGRN));
 	printf("\nCapture Settings:\n");
+	printf(" Command: %s\n" is_libcamera ? "libcamera-still" : "raspistill");
 	printf(" Resolution (before any binning): %dx%d\n", width, height);
 	printf(" Quality: %d\n", quality);
 	printf(" Exposure (night): %1.0fms\n", round(asiNightExposure / US_IN_MS));
@@ -1147,10 +1277,6 @@ int main(int argc, char *argv[])
 		printf("    p1: %1.3f\n", myModeMeanSetting.mean_p1);
 		printf("    p2: %1.3f\n", myModeMeanSetting.mean_p2);
 	}
-
-	// Show selected camera type
-	printf(" Camera: Raspberry Pi HQ camera\n");
-
 	printf("%s", c(KNRM));
 
 	// Initialization
@@ -1304,7 +1430,7 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 			Log(0, "Capturing & saving image...\n");
 
 			// Capture and save image
-			retCode = RPiHQcapture(asiAutoFocus, currentAutoExposure, currentExposure, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, saturation, currentBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe, preview, width, height);
+			retCode = RPiHQcapture(asiAutoFocus, currentAutoExposure, currentExposure, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, saturation, currentBrightness, quality, fileName, time, showDetails, ImgText, fontsize, fontcolor, background, darkframe, preview, width, height, is_libcamera);
 			if (retCode == 0)
 			{
 				numExposures++;
@@ -1331,12 +1457,13 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 
 			if (myModeMeanSetting.mode_mean) {
 				RPiHQcalcMean(fileName, asiNightExposure, asiNightGain, myRaspistillSetting, myModeMeanSetting);
-				Log(2, "asiExposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure, (double) myRaspistillSetting.shutter_us / 1000000.0, myModeMeanSetting.quickstart);
+				Log(2, "asiExposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart);
 				if (myModeMeanSetting.quickstart) {
 					currentDelay = 1000;
 				}
 				else if ((dayOrNight == "NIGHT")) {
-					currentDelay = (asiNightExposure / 1000) - (int) (myRaspistillSetting.shutter_us / 1000.0) + nightDelay;
+					//xxx currentDelay = (asiNightExposure / US_IN_MS) - (int) (myRaspistillSetting.shutter_us / US_IN_MS) + nightDelay;
+					currentDelay = ((asiNightExposure - myRaspistillSetting.shutter_us) / (float) US_IN_MS) + nightDelay;
 				}
 				else {
 					currentDelay = dayDelay;
@@ -1363,4 +1490,3 @@ Log(3, "Daytimecapture: %d\n", daytimeCapture);
 
 	closeUp(0);
 }
-

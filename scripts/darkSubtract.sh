@@ -3,7 +3,7 @@
 # This file is "source"d into another.
 # "${CURRENT_IMAGE}" is the name of the current image we're working on.
 
-ME="$(basename "${BASH_ARGV0}")"
+ME="$(basename "${BASH_SOURCE[0]}")"
 
 # Subtract dark frame if there is one defined in config.sh
 # This has to come after executing darkCapture.sh which sets ${TEMPERATURE}.
@@ -63,8 +63,15 @@ if [ "${DARK_FRAME_SUBTRACTION}" = "true" ]; then
 				CLOSEST_TEMPERATURE=${DARK_TEMPERATURE}
 				let DIFF=${TEMPERATURE}-${CLOSEST_TEMPERATURE}
 			else
-				echo "${ME}: INFORMATION: dark file '${DARKS_DIR}/${file}' is zero-length; deleting."
-				rm -f "${DARKS_DIR}/${file}"
+				
+				echo -n "${ME}: INFORMATION: dark file '${DARKS_DIR}/${file}' "
+				if [ ! -f "${DARKS_DIR}/${file}" ]; then
+					echo "${file} does not exist  Huh?."
+				else
+					echo "${file} zero-length; deleting."
+					ls -l "${DARKS_DIR}/${file}"
+					rm -f "${DARKS_DIR}/${file}"
+				fi
 			fi
 		done
 

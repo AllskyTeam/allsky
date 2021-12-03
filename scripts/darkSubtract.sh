@@ -66,9 +66,9 @@ if [ "${DARK_FRAME_SUBTRACTION}" = "true" ]; then
 				
 				echo -n "${ME}: INFORMATION: dark file '${DARKS_DIR}/${file}' "
 				if [ ! -f "${DARKS_DIR}/${file}" ]; then
-					echo "$is does not exist  Huh?."
+					echo "${file} does not exist  Huh?."
 				else
-					echo "$is zero-length; deleting."
+					echo "${file} zero-length; deleting."
 					ls -l "${DARKS_DIR}/${file}"
 					rm -f "${DARKS_DIR}/${file}"
 				fi

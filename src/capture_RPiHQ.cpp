@@ -362,7 +362,7 @@ void writeToLog(int val)
 }
 
 // Build capture command to capture the image from the HQ camera
-int RPiHQcapture(int auto_exposure, int *exposure, int auto_gain, int auto_AWB, double gain, int bin, double WBR, double WBB, int rotation, int flip, float saturation, int brightness, int quality, const char* fileName, int time, const char* ImgText, int fontsize, int *fontcolor, int background, int darkframe, int preview, int width, int height, bool libcamera, cv::Mat *image)
+int RPiHQcapture(int auto_exposure, int *exposure_us, int auto_gain, int auto_AWB, double gain, int bin, double WBR, double WBB, int rotation, int flip, float saturation, int brightness, int quality, const char* fileName, int time, const char* ImgText, int fontsize, int *fontcolor, int background, int darkframe, int preview, int width, int height, bool libcamera, cv::Mat *image)
 {
 	// Define command line.
 	string command;
@@ -385,7 +385,7 @@ int RPiHQcapture(int auto_exposure, int *exposure, int auto_gain, int auto_AWB, 
 	command += " --output '" + ss.str() + "'";
 	if (libcamera)
 		// xxx TODO: does this do anything?
-		command += "";    // --tuning-file /usr/share/libcamera/ipa/raspberrypi/imx477.json";
+		command += " --tuning-file /usr/share/libcamera/ipa/raspberrypi/imx477.json";
 	else
 		command += " --thumb none --burst -st";
 
@@ -426,6 +426,8 @@ int RPiHQcapture(int auto_exposure, int *exposure, int auto_gain, int auto_AWB, 
 		}
 		command += " --timeout " + ss.str();
 		command += " --nopreview";
+		if (libcamera)
+			command += "=1";
 	}
 
 	if (bin > 3) 	{
@@ -473,16 +475,16 @@ int RPiHQcapture(int auto_exposure, int *exposure, int auto_gain, int auto_AWB, 
 	}
 
 	if (myModeMeanSetting.mode_mean)
-		*exposure = myRaspistillSetting.shutter_us;
+		*exposure_us = myRaspistillSetting.shutter_us;
 
-	if (*exposure < 1)
+	if (*exposure_us < 1)
 	{
-		*exposure = 1;
+		*exposure_us = 1;
 	}
-	else if (*exposure > 200 * US_IN_SEC)
+	else if (*exposure_us > 200 * US_IN_SEC)
 	{
 		// https://www.raspberrypi.org/documentation/raspbian/applications/camera.md : HQ (IMX477) 	200s
-		*exposure = 200 * US_IN_SEC;
+		*exposure_us = 200 * US_IN_SEC;
 	}
 
 	// Check if automatic determined exposure time is selected
@@ -490,7 +492,7 @@ int RPiHQcapture(int auto_exposure, int *exposure, int auto_gain, int auto_AWB, 
 	{
 		if (myModeMeanSetting.mode_mean) {
 			ss.str("");
-			ss << *exposure;
+			ss << *exposure_us;
 			if (! libcamera)
 				command += " --exposure off";
 			command += " --shutter " + ss.str();
@@ -502,10 +504,10 @@ int RPiHQcapture(int auto_exposure, int *exposure, int auto_gain, int auto_AWB, 
 				command += " --exposure auto";
 		}
 	}
-	else if (*exposure)		// manual exposure
+	else if (*exposure_us)		// manual exposure
 	{
 		ss.str("");
-		ss << *exposure;
+		ss << *exposure_us;
 		if (! libcamera)
 			command += " --exposure off";
 		command += " --shutter " + ss.str();
@@ -676,7 +678,7 @@ if (! libcamera) { // TODO: need to fix this for libcamera
 	if (!darkframe) {
 		string info_text = "";
 
-		bool showDetails = false;	// will be remove in the future
+		bool showDetails = false;	// will be removed in the future
 		if (showDetails)
 		{
 			if (libcamera)
@@ -755,6 +757,9 @@ if (! libcamera)	// xxxx libcamera doesn't have fontsize, color, or background.
 		// gets rid of a bunch of libcamera verbose messages
 		command = "LIBCAMERA_LOG_LEVELS='ERROR,FATAL' " + command;
 	}
+
+	if (libcamera)
+		command += " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
 
 	// Define char variable
 	char cmd[command.length() + 1];
@@ -1640,7 +1645,6 @@ const char *locale         = DEFAULT_LOCALE;
 				{
 					long last_exposure_us = currentExposure_us;
 
-					//long actualGain = currentGain;	// to be compatible with ZWO
 					float actualGain = currentGain; // to be compatible with ZWO - ZWO gain=0.1 dB , RPiHQ gain=factor
 					if (myModeMeanSetting.mode_mean)
 						actualGain =  myRaspistillSetting.analoggain;
@@ -1690,7 +1694,6 @@ const char *locale         = DEFAULT_LOCALE;
 
 					if (showGain == 1)
 					{
-						//sprintf(bufTemp, "Gain: %ld", actualGain);
 						sprintf(bufTemp, "Gain: %1.2f", actualGain);
 						// Indicate if in auto gain mode.
 						if (currentAutoGain == ASI_TRUE) strcat(bufTemp, " (auto)");

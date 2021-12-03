@@ -8,7 +8,7 @@
 if [ "${TEMPERATURE}" = "" ]; then
 	TEMPERATURE_FILE="${ALLSKY_HOME}/temperature.txt"
 	if [ -s "${TEMPERATURE_FILE}" ]; then	# -s so we don't use an empty file
-		TEMPERATURE=$(printf "%2.0f" "$(< ${TEMPERATURE_FILE})")
+		TEMPERATURE=$(printf "%02.0f" "$(< ${TEMPERATURE_FILE})")
 	else
 		TEMPERATURE="n/a"
 	fi

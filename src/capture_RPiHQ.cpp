@@ -828,6 +828,8 @@ const char *locale         = DEFAULT_LOCALE;
 	char const *ImgText   = "";
 	char const *ImgExtraText   = "";
 	int extraFileAge           = 0;   // 0 disables it
+// The "extra text" file hasn't been implemented in RPiHQ.  The next line keeps the compiler quiet so users don't think there's a problem.
+if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   keep compiler quiet";
 #define DEFAULT_FONTSIZE    32
 	double fontsize       = DEFAULT_FONTSIZE;
 #define SMALLFONTSIZE_MULTIPLIER 0.08
@@ -1645,7 +1647,7 @@ const char *locale         = DEFAULT_LOCALE;
 				{
 					long last_exposure_us = currentExposure_us;
 
-					float actualGain = currentGain; // to be compatible with ZWO - ZWO gain=0.1 dB , RPiHQ gain=factor
+					float actualGain = currentGain;	// to be compatible with ZWO - ZWO gain=0.1 dB , RPiHQ gain=factor
 					if (myModeMeanSetting.mode_mean)
 						actualGain =  myRaspistillSetting.analoggain;
 					int iYOffset = 0;

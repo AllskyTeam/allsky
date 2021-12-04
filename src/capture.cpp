@@ -626,7 +626,7 @@ ASI_ERROR_CODE takeOneExposure(
 	if (currentAutoExposure == ASI_TRUE && exposure_time_us > current_max_autoexposure_us)
 	{
 		// If we call length_in_units() twice in same command line they both return the last value.
-		char x[20];
+		char x[100];
 		snprintf(x, sizeof(x), "%s", length_in_units(exposure_time_us, true));
 		Log(0, "*** WARNING: exposure_time_us requested [%s] > current_max_autoexposure_us [%s]\n", x, length_in_units(current_max_autoexposure_us, true));
 		exposure_time_us = current_max_autoexposure_us;

@@ -11,7 +11,6 @@
 #include <iomanip>
 #include <cstring>
 #include <sstream>
-//include <iostream>
 //#include <cstdio>
 #include <tr1/memory>
 //#include <ctime>
@@ -717,7 +716,7 @@ if (! libcamera) { // TODO: need to fix this for libcamera
 		{
 // xxxxxxxxxxx libcamera: this only sets text on title bar of preview window, so don't bother.
 			if (! libcamera)
-				command += " --info-text \"" + info_text + "\"";
+				command += " " + info_text;
 		}
 
 if (! libcamera)	// xxxx libcamera doesn't have fontsize, color, or background.

@@ -3,9 +3,15 @@
 # This file is "source"d into another.
 # "${CURRENT_IMAGE}" is the name of the current image we're working on and is passed to us.
 ME2="$(basename "${BASH_SOURCE[0]}")"
+
+# Make sure the input file exists; if not, something major is wrong so exit.
 if [ "${CURRENT_IMAGE}" = "" ]; then
-	echo "${ME2}: *** ERROR: 'CURRENT_IMAGE' null."
+	echo "*** ${ME2}: ERROR: 'CURRENT_IMAGE' not set; aborting."
 	exit 1
+fi
+if [ ! -f "${CURRENT_IMAGE}" ]; then
+	echo "*** ${ME2}: ERROR: '${CURRENT_IMAGE}' does not exist; aborting."
+	exit 2
 fi
 
 # ${THIS_TEMPERATURE} is passed to us by saveImage.sh, but may be null.

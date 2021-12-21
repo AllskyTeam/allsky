@@ -2,6 +2,11 @@
 
 # This file is "source"d into another.
 # "${CURRENT_IMAGE}" is the name of the current image we're working on and is passed to us.
+ME2="$(basename "${BASH_SOURCE[0]}")"
+if [ "${CURRENT_IMAGE}" = "" ]; then
+	echo "${ME2}: *** ERROR: 'CURRENT_IMAGE' null."
+	exit 1
+fi
 
 # ${THIS_TEMPERATURE} is passed to us by saveImage.sh, but may be null.
 # If ${THIS_TEMPERATURE} is set, use it as the temperature, otherwise read the ${TEMPERATURE_FILE}.
@@ -17,10 +22,6 @@ fi
 
 DARK_MODE=$(jq -r '.darkframe' "${CAMERA_SETTINGS}")
 if [ "${DARK_MODE}" = "1" ] ; then
-	# XXXXX in future release $CURRENT_IMAGE will be set by saveImage.sh
-	# and passed to us.  Doing this conditional set works either way.
-	CURRENT_IMAGE=${CURRENT_IMAGE:-"dark.${EXTENSION}"}
-
 	# The extension on $CURRENT_IMAGE may not be $EXTENSION.
 	DARK_EXTENSION="${CURRENT_IMAGE##*.}"
 
@@ -45,7 +46,4 @@ if [ "${DARK_MODE}" = "1" ] ; then
 	fi
 
 	exit 0	# exit so the calling script exits and doesn't try to process the file.
-else	
-	# XXXXX Need this until saveImage.sh passes $CURRENT_IMAGE to us.
-	CURRENT_IMAGE="${CURRENT_IMAGE:-${FULL_FILENAME}}"	# Not capturing darks so use standard file name
 fi

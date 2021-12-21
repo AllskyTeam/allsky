@@ -79,6 +79,7 @@ cd "${DATE}"
 if [ "${FILE}" != "" ]; then
 	IMAGE_FILES="${FILE}"
 else
+	set +a	# turn off auto-export since $IMAGE_FILES might be HUGE, producing errors later
 	IMAGE_FILES="$( find . -type f -iname "${FILENAME}"-\*.${EXTENSION} \! -ipath \*thumbnail\* )"
 fi
 ERROR_WORDS="Huffman|Bogus|Corrupt|Invalid|Trunc|Missing|insufficient image data|no decode delegate|no images defined"

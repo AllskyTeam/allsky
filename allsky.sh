@@ -179,7 +179,6 @@ ARGUMENTS+=(-debuglevel ${ALLSKY_DEBUG_LEVEL})
 # This argument should come next so the capture program knows if it should use colors.
 ARGUMENTS+=(-tty ${ON_TTY})
 
-
 KEYS=( $(jq -r 'keys[]' $CAMERA_SETTINGS) )
 for KEY in ${KEYS[@]}
 do
@@ -193,9 +192,7 @@ if [[ $1 == "preview" ]] ; then
 	ARGUMENTS+=(-preview 1)
 fi
 
-if [ "${CAPTURE_SAVE_DIR}" != "" ]; then
-	ARGUMENTS+=(-save_dir "${CAPTURE_SAVE_DIR}")
-fi
+ARGUMENTS+=(-save_dir "${CAPTURE_SAVE_DIR}")
 
 # If the user wants images uploaded only every n times, save that number to a file.
 if [ "${IMG_UPLOAD_FREQUENCY}" != "0" ]; then

@@ -53,16 +53,16 @@ ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 # old/regular manual camera selection mode => exit if no requested camera was found
 # Buster and Bullseye have different output so only check the part they have in common.
 # TODO: this check only needs to be done if CAMERA = RPiHQ
-# vcgencmd get_camera | grep --silent "supported=1"
-# bullseye has problems to dedect cameras - workaround
+# Bullseye has problems detecting RPiHQ cameras - workaround
 which libcamera-still
 if [ $? -eq 0 ]; then
-        LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still -t 1 --nopreview
+	LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still -t 1 --nopreview
+	RET=$?
 else
-        vcgencmd get_camera | grep --silent "supported=1" 
+	vcgencmd get_camera | grep --silent "supported=1" 
+	RET=$?
 fi
-
-if [ $? -eq 0 ]; then
+if [ $RET -eq 0 ]; then
 	RPiHQIsPresent=1
 else
 	RPiHQIsPresent=0
@@ -193,6 +193,17 @@ done
 # The preview mode does not work if allsky.sh is started as a service or if the debian distribution has no desktop environment.
 if [[ $1 == "preview" ]] ; then
 	ARGUMENTS+=(-preview 1)
+fi
+
+if [ "${CAPTURE_SAVE_DIR}" != "" ]; then
+	ARGUMENTS+=(-save_dir "${CAPTURE_SAVE_DIR}")
+fi
+
+# If the user wants images uploaded only every n times, save that number to a file.
+if [ "${IMG_UPLOAD_FREQUENCY}" != "0" ]; then
+	echo "${IMG_UPLOAD_FREQUENCY}" > "${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY"
+else
+	rm -f "${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY"
 fi
 
 # "capture" expects 0 or 1; newer versions of config.sh use "true" and "false".

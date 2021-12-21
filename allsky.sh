@@ -54,7 +54,7 @@ ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 # Buster and Bullseye have different output so only check the part they have in common.
 # TODO: this check only needs to be done if CAMERA = RPiHQ
 # Bullseye has problems detecting RPiHQ cameras - workaround
-which libcamera-still
+which libcamera-still > /dev/null
 if [ $? -eq 0 ]; then
 	LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still -t 1 --nopreview
 	RET=$?
@@ -153,8 +153,6 @@ if [ "$USE_NOTIFICATION_IMAGES" = "1" ] ; then
 	# Can do this in the background to speed up startup
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
 fi
-
-echo "Starting allsky camera..."
 
 # Building the arguments to pass to the capture binary.
 # Want to allow spaces in arguments so need to put quotes around them,

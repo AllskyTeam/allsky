@@ -75,13 +75,20 @@ long camera_min_exposure_us= 100;	// camera's minimum exposure
 long current_exposure_us   = NOT_SET;
 long actualTemp            = 0;	// actual sensor temp, per the camera
 int taking_dark_frames     = 0;
+int asiFlip                = 0;
+int current_bpp            = NOT_SET;	// bytes per pixel: 8, 16, or 24
+int current_bit_depth      = NOT_SET;	// 8 or 16
+int currentBin             = NOT_SET;
 
 // Some command-line and other option definitions needed outside of main():
 bool tty                   = false;	// are we on a tty?
 #define DEFAULT_NOTIFICATIONIMAGES 1
 int notificationImages     = DEFAULT_NOTIFICATIONIMAGES;
+#define DEFAULT_SAVEDIR     "tmp"
+char const *save_dir       = DEFAULT_SAVEDIR;
 #define DEFAULT_FILENAME     "image.jpg"
 char const *fileName       = DEFAULT_FILENAME;
+char final_file_name[500];	// final name of the file that's written to disk
 #define DEFAULT_TIMEFORMAT   "%Y%m%d %H:%M:%S"	// format the time should be displayed in
 char const *timeFormat     = DEFAULT_TIMEFORMAT;
 
@@ -207,6 +214,11 @@ unsigned long createRGB(int r, int g, int b)
 void cvText(cv::Mat &img, const char *text, int x, int y, double fontsize, int linewidth, int linetype, int fontname,
             int fontcolor[], int imgtype, int outlinefont)
 {
+// TODO: Adjust the fontsize and linewidth
+// adjusted_fontsize_ = fontsize_ * width_ / 1200;
+// adjusted_linewidth_ = std::max(linewidth_ * width_ / 700, 1u);
+
+
     int outline_size = std::max(2.0, (fontsize/4));	// need smaller outline when font size is smaller
     if (imgtype == ASI_IMG_RAW16)
     {
@@ -305,31 +317,36 @@ void *SaveImgThd(void *para)
 
         bSavingImg = true;
 
-        Log(1, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), fileName);
         int64 st, et;
 
         bool result = false;
         if (pRgb.data)
         {
-            const char *s;	// TODO: use saveImage.sh
-            if (dayOrNight == "NIGHT")
-            {
-                s = "scripts/saveImageNight.sh";
-            }
-            else
-            {
-                s = "scripts/saveImageDay.sh";
-            }
+            char f[1000];
+            char cmd[1100];
+			char tmp[50];
+			snprintf(f, sizeof(f), "%s/%s", save_dir, final_file_name);
+			Log(1, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), final_file_name);
+            snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), f);
+			snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", current_exposure_us);
+			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
+			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " GAIN=%d", currentGain);
+			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " BIN=%d", currentBin);
+			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " FLIP=%d", asiFlip);
+			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%d", current_bit_depth);
+			strcat(cmd, tmp);
 
-            char cmd[100];
-			// imwrite() may take several seconds and while it's running, "fileName" could change,
-			// so set "cmd" before imwrite().
-			// The temperature must be a 2-digit number with an optional "-" sign.
-            sprintf(cmd, "%s %s '%s' '%2.0f' %ld &", s, dayOrNight.c_str(), fileName, (float) actualTemp/10, current_exposure_us);
+			strcat(cmd, " &");
+
             st = cv::getTickCount();
             try
             {
-                result = imwrite(fileName, pRgb, compression_parameters);
+                result = imwrite(f, pRgb, compression_parameters);
             }
             catch (const cv::Exception& ex)
             {
@@ -340,7 +357,7 @@ void *SaveImgThd(void *para)
             if (result)
                 system(cmd);
 			else
-                printf("*** ERROR: Unable to save image '%s'.\n", fileName);
+                printf("*** ERROR: Unable to save image '%s'.\n", f);
 
         } else {
             // This can happen if the program is closed before the first picture.
@@ -369,13 +386,13 @@ void *SaveImgThd(void *para)
     return (void *)0;
 }
 
-char retCodeBuffer[100];
-int asi_error_timeout_cntr = 0;
-
 // Display ASI errors in human-readable format
 char *getRetCode(ASI_ERROR_CODE code)
 {
+	static char retCodeBuffer[100];
+	int asi_error_timeout_cntr = 0;
     std::string ret;
+
     if (code == ASI_SUCCESS) ret = "ASI_SUCCESS";
     else if (code == ASI_ERROR_INVALID_INDEX) ret = "ASI_ERROR_INVALID_INDEX";
     else if (code == ASI_ERROR_INVALID_ID) ret = "ASI_ERROR_INVALID_ID";
@@ -414,21 +431,6 @@ long roundTo(long n, int roundTo)
     return (n - a > b - n)? b : a;		// Return of closest of two
 }
 
-int bytesPerPixel(ASI_IMG_TYPE imageType) {
-    switch (imageType) {
-        case ASI_IMG_RGB24:
-            return 3;
-            break;
-        case ASI_IMG_RAW16:
-            return 2;
-            break;
-        case ASI_IMG_RAW8:
-        case ASI_IMG_Y8:
-        default:
-            return 1;
-    }
-}
-
 #ifdef USE_HISTOGRAM
 // As of July 2021, ZWO's SDK (version 1.9) has a bug where autoexposure daylight shots'
 // exposures jump all over the place.  One is way too dark and the next way too light, etc.
@@ -450,41 +452,40 @@ int computeHistogram(unsigned char *imageBuffer, int width, int height, ASI_IMG_
     }
 
     // Different image types have a different number of bytes per pixel.
-    int bpp = bytesPerPixel(imageType);
-    width *= bpp;
-    int roiX1 = (width * histogramBoxPercentFromLeft) - (current_histogramBoxSizeX * bpp / 2);
-    int roiX2 = roiX1 + (bpp * current_histogramBoxSizeX);
+    width *= current_bpp;
+    int roiX1 = (width * histogramBoxPercentFromLeft) - (current_histogramBoxSizeX * current_bpp / 2);
+    int roiX2 = roiX1 + (current_bpp * current_histogramBoxSizeX);
     int roiY1 = (height * histogramBoxPercentFromTop) - (current_histogramBoxSizeY / 2);
     int roiY2 = roiY1 + current_histogramBoxSizeY;
 
     // Start off and end on a logical pixel boundries.
-    roiX1 = (roiX1 / bpp) * bpp;
-    roiX2 = (roiX2 / bpp) * bpp;
+    roiX1 = (roiX1 / current_bpp) * current_bpp;
+    roiX2 = (roiX2 / current_bpp) * current_bpp;
 
     // For RGB24, data for each pixel is stored in 3 consecutive bytes: blue, green, red.
     // For all image types, each row in the image contains one row of pixels.
-    // bpp doesn't apply to rows, just columns.
+    // current_bpp doesn't apply to rows, just columns.
     switch (imageType) {
     case ASI_IMG_RGB24:
     case ASI_IMG_RAW8:
     case ASI_IMG_Y8:
         for (int y = roiY1; y < roiY2; y++) {
-            for (int x = roiX1; x < roiX2; x+=bpp) {
+            for (int x = roiX1; x < roiX2; x+=current_bpp) {
                 i = (width * y) + x;
                 int total = 0;
-                for (int z = 0; z < bpp; z++)
+                for (int z = 0; z < current_bpp; z++)
                 {
                     // For RGB24 this averages the blue, green, and red pixels.
                     total += buf[i+z];
                 }
-                int avg = total / bpp;
+                int avg = total / current_bpp;
                 histogram[avg]++;
             }
         }
         break;
     case ASI_IMG_RAW16:
         for (int y = roiY1; y < roiY2; y++) {
-            for (int x = roiX1; x < roiX2; x+=bpp) {
+            for (int x = roiX1; x < roiX2; x+=current_bpp) {
                 i = (width * y) + x;
                 int pixelValue;
                 // This assumes the image data is laid out in big endian format.
@@ -1043,7 +1044,6 @@ const char *locale = DEFAULT_LOCALE;
 #define DEFAULT_NIGHTBIN         1
     int dayBin                 = DEFAULT_DAYBIN;
     int nightBin               = DEFAULT_NIGHTBIN;
-    int currentBin             = NOT_SET;
 
 #define AUTO_IMAGE_TYPE         99	// needs to match what's in the camera_settings.json file
 #define DEFAULT_IMAGE_TYPE       AUTO_IMAGE_TYPE
@@ -1145,7 +1145,6 @@ const char *locale = DEFAULT_LOCALE;
 
     int help                   = 0;
     int quality                = NOT_SET;
-    int asiFlip                = 0;
     int asiCoolerEnabled       = 0;
     long asiTargetTemp         = 0;
 
@@ -1157,7 +1156,7 @@ const char *locale = DEFAULT_LOCALE;
 
     printf("\n%s", c(KGRN));
     printf("**********************************************\n");
-    printf("*** Allsky Camera Software v0.8.2c |  2021 ***\n");
+    printf("*** Allsky Camera Software v0.8.3  |  2021 ***\n");
     printf("**********************************************\n\n");
     printf("Capture images of the sky with a Raspberry Pi and an ASI Camera\n");
     printf("%s\n", c(KNRM));
@@ -1183,6 +1182,10 @@ const char *locale = DEFAULT_LOCALE;
             if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0)
             {
                 help = 1;
+            }
+            else if (strcmp(argv[i], "-save_dir") == 0)
+            {
+                save_dir = argv[++i];
             }
             else if (strcmp(argv[i], "-newexposure") == 0)
             {
@@ -1533,6 +1536,7 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -usb = USB Speed       - Default = %d: Values between 40-100, This is BandwidthOverload\n", DEFAULT_ASIBANDWIDTH);
         printf(" -autousb               - Default = 0: 1 enables auto USB Speed\n");
         printf(" -filename              - Default = %s\n", DEFAULT_FILENAME);
+        printf(" -save_dir              - Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
         printf(" -flip                  - Default = 0: 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both\n");
         printf("\n");
         printf(" -text                  - Default = \"\": Text Overlay\n");
@@ -1584,7 +1588,14 @@ const char *locale = DEFAULT_LOCALE;
 
     const char *imagetype = "";
     const char *ext = strrchr(fileName, '.');
-    if (strcasecmp(ext + 1, "jpg") == 0 || strcasecmp(ext + 1, "jpeg") == 0)
+	if (ext == NULL)
+	{
+        sprintf(debug_text, "*** ERROR: No extension given on filename: [%s]\n", fileName);
+        waitToFix(debug_text);
+    	exit(100);
+	}
+	ext++;
+    if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
     {
         if (Image_type == ASI_IMG_RAW16)
 		{
@@ -1604,7 +1615,7 @@ const char *locale = DEFAULT_LOCALE;
             quality = 95;
         }
     }
-    else if (strcasecmp(ext + 1, "png") == 0)
+    else if (strcasecmp(ext, "png") == 0)
     {
         imagetype = "png";
         compression_parameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
@@ -1629,6 +1640,8 @@ const char *locale = DEFAULT_LOCALE;
     }
     compression_parameters.push_back(quality);
 
+	// Get just the name of the file, without any directories or the extension.
+	char fileNameOnly[100] = { 0 };
     if (taking_dark_frames)
     {
         // To avoid overwriting the optional notification inage with the dark image,
@@ -1636,7 +1649,18 @@ const char *locale = DEFAULT_LOCALE;
         static char darkFilename[200];
         sprintf(darkFilename, "dark.%s", imagetype);
         fileName = darkFilename;
+		strncat(final_file_name, fileName, sizeof(final_file_name)-1);
     }
+	else
+	{
+    	const char *slash = strrchr(fileName, '/');
+		if (slash == NULL)
+			strncat(fileNameOnly, fileName, sizeof(fileNameOnly)-1);
+		else
+			strncat(fileNameOnly, slash + 1, sizeof(fileNameOnly)-1);
+    	char *dot = strrchr(fileNameOnly, '.');	// we know there's an extension
+		*dot = '\0';
+	}
 
     int numDevices = ASIGetNumOfConnectedCameras();
     if (numDevices <= 0)
@@ -1915,6 +1939,22 @@ const char *locale = DEFAULT_LOCALE;
     	exit(100);
     }
 
+	switch (Image_type) {
+		case ASI_IMG_RGB24:
+			current_bpp = 3;
+			current_bit_depth = 8;
+			break;
+		case ASI_IMG_RAW16:
+			current_bpp = 2;
+			current_bit_depth = 16;
+			break;
+		case ASI_IMG_RAW8:
+		case ASI_IMG_Y8:
+		default:
+			current_bpp = 1;
+			current_bit_depth = 8;
+	}
+
     //-------------------------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
 
@@ -1968,6 +2008,7 @@ const char *locale = DEFAULT_LOCALE;
 
     printf(" Flip Image: %d\n", asiFlip);
     printf(" Filename: %s\n", fileName);
+    printf(" Filename Save Directory: %s\n", save_dir);
     printf(" Latitude: %s, Longitude: %s\n", latitude, longitude);
     printf(" Sun Elevation: %s\n", angle);
     printf(" Locale: %s\n", locale);
@@ -2278,7 +2319,7 @@ const char *locale = DEFAULT_LOCALE;
             current_histogramBoxSizeX = histogramBoxSizeX / currentBin;
             current_histogramBoxSizeY = histogramBoxSizeY / currentBin;
 
-            bufferSize = width * height * bytesPerPixel((ASI_IMG_TYPE) Image_type);
+            bufferSize = width * height * current_bpp;
             Log(4, "Buffer size: %ld\n", bufferSize);
 
 // TODO: if not the first time, should we free the old pRgb?
@@ -2295,7 +2336,9 @@ const char *locale = DEFAULT_LOCALE;
 				pRgb.create(cv::Size(width, height), CV_8UC1);
 			}
 
-// TODO: ASISetStartPos(CamNum, from_left_xxx, from_top_xxx);
+// TODO: ASISetStartPos(CamNum, from_left_xxx, from_top_xxx);	By default it's at the center.
+// TODO: width % 8 must be 0.   height % 2 must be 0.
+// TODO: ASI120's (width*height) % 1024 must be 0
 			asiRetCode = ASISetROIFormat(CamNum, width, height, currentBin, (ASI_IMG_TYPE)Image_type);
 			if (asiRetCode != ASI_SUCCESS)
 			{
@@ -2925,6 +2968,12 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                 // Save the image
                 if (! bSavingImg)
                 {
+					// Create the final file name that goes in the images/<date> directory.
+					if (! taking_dark_frames)
+					{
+						snprintf(final_file_name, sizeof(final_file_name), "%s-%s.%s",
+							fileNameOnly, formatTime(t, "%Y%m%d%H%M%S"), imagetype);
+					}
                     pthread_mutex_lock(&mtx_SaveImg);
                     pthread_cond_signal(&cond_SatrtSave);
                     pthread_mutex_unlock(&mtx_SaveImg);

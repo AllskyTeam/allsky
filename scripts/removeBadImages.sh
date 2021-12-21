@@ -114,8 +114,9 @@ for f in ${IMAGE_FILES} ; do
 		# MEAN is a number between 0.0 and 1.0.
 		MEAN=$(${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2> "${TMP}")
 		if egrep -q "${ERROR_WORDS}" "${TMP}"; then
-			# at least one error word was found in the output
-			BAD="'${f}' (corrupt file: $(< "${TMP}"))"
+			# At least one error word was found in the output.
+			# Try to get rid of unnecessary error text.
+			BAD="'${f}' (corrupt file: $(head -1 "${TMP}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;'))"
 		else
 			# Multiply MEAN by 100 to convert to integer (0-100 %) since
 			# bash doesn't work with floats.

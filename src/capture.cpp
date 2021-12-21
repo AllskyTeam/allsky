@@ -813,14 +813,6 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
     }
 }
 
-void writeTemperatureToFile(float val)
-{
-    std::ofstream outfile;
-    outfile.open("temperature.txt", std::ios_base::trunc);
-    outfile << val;
-    outfile << "\n";
-}
-
 // Simple function to make flags easier to read for humans.
 char const *yesNo(int flag)
 {
@@ -2752,9 +2744,6 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         continue;
                     }
                 }
-
-                // Write temperature to file
-                writeTemperatureToFile((float)actualTemp / 10.0);
 
                 // If taking_dark_frames is off, add overlay text to the image
                 if (! taking_dark_frames)

@@ -26,7 +26,7 @@ fi
 if [ -f "${ALLSKY_CONFIG}/config.sh" ]; then
 	source "${ALLSKY_CONFIG}/config.sh"
 	RET=$?
-	if [ -z "${ALLSKY_DEBUG_LEVEL}" ]; then
+	if [ -z "${CAPTURE_SAVE_DIR}" ]; then
 		echo "${RED}*** ERROR: old version of config.sh detected.${NC}"
 		RET=1
 	fi

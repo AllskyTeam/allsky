@@ -199,7 +199,9 @@ fi
 
 # If the user wants images uploaded only every n times, save that number to a file.
 if [ "${IMG_UPLOAD_FREQUENCY}" != "0" ]; then
-	echo "${IMG_UPLOAD_FREQUENCY}" > "${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY"
+	# Save "1" so we upload the first image.
+	# saveImage.sh will write ${IMG_UPLOAD_FREQUENCY} to the file as needed.
+	echo "1" > "${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY"
 else
 	rm -f "${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY"
 fi

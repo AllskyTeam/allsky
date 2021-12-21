@@ -4,6 +4,8 @@
 
 ME="$(basename "${BASH_ARGV0}")"
 
+[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "DEBUG: ${ME} $*"
+
 source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_SCRIPTS}/filename.sh"
@@ -29,11 +31,11 @@ DAY_OR_NIGHT="${1}"
 IMAGE_TO_USE="${2}"
 shift 2
 if [ ! -f "${IMAGE_TO_USE}" ] ; then
-	echo -e "${RED}*** ${ME}: ERROR: '${IMAGE_TO_USE}' not found; ignoring${NC}"
+	echo -e "${RED}*** ${ME}: ERROR: File '${IMAGE_TO_USE}' not found; ignoring${NC}"
 	exit 2
 fi
 if [ ! -s "${IMAGE_TO_USE}" ] ; then
-	echo -e "${RED}*** ${ME}: ERROR: '${IMAGE_TO_USE}' is empty; ignoring${NC}"
+	echo -e "${RED}*** ${ME}: ERROR: File '${IMAGE_TO_USE}' is empty; ignoring${NC}"
 	exit 2
 fi
 

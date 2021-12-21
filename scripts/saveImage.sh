@@ -164,7 +164,8 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 				# Not ready to upload yet, so decrement the counter
 				let LEFT=LEFT-1
 				echo "${LEFT}" > "${FREQUENCY_FILE}"
-				[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Not uploading: ${LEFT} images(s) left."
+				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
+				[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ] && echo "${ME}: Not uploading: ${LEFT} images(s) left."
 				exit 0
 			fi
 		fi

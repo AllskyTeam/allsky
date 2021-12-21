@@ -25,16 +25,16 @@ fi
 # If not found, force the user to upgrade config.sh
 if [ -f "${ALLSKY_CONFIG}/config.sh" ]; then
 	source "${ALLSKY_CONFIG}/config.sh"
-	RET=$?
 	if [ -z "${CAPTURE_SAVE_DIR}" ]; then
 		echo "${RED}*** ERROR: old version of config.sh detected.${NC}"
-		RET=1
+		echo "See https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions"
+
+		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
+		sudo systemctl stop allsky
+		exit 1
 	fi
 else
-	echo "${RED}*** ERROR: cannot find config.sh.${NC}"
-	RET=1
-fi
-if [ ${RET} -ne 0 ]; then
+	echo "${RED}*** ERROR: config.sh not in ${ALLSKY_CONFIG}.${NC}"
 	echo "Please make a backup of your config.sh, ftp-settings.sh, and settings_*.json files,"
 	echo "then do a full re-install of AllSky."
 	echo "After the re-install, copy your settings from the backup files to the new files."

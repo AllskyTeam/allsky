@@ -26,10 +26,6 @@ IMG_UPLOAD_FREQUENCY=0
 # Using "current" avoids copying the image to the website.
 IMG_DIR="current"
 
-# Set an optional prefix on the image file name, before "$FILENAME.$EXTENSION".
-# This must match what the local web site thinks the name is (see /var/www/html/allsky/config.js).
-IMG_PREFIX="liveview-"
-
 # Resize images before cropping, stretching, and saving.
 # Adjust IMG_WIDTH and IMG_HEIGHT according to your camera's sensor ratio.
 IMG_RESIZE="false"
@@ -54,10 +50,12 @@ AUTO_STRETCH_MID_POINT="10%"
 RESIZE_UPLOADS="false"
 RESIZE_UPLOADS_SIZE="962x720"
 
-# Remove corrupt images before generating keograms and startrails.
-# This can take tens of minutes to run and isn't necessary unless your system produces
-# corrupt images which then generate funny colors in the summary images...
-REMOVE_BAD_IMAGES="false"
+# Create thumbnails of images.  If you are not running the WebUI consider changing this to "false".
+IMG_CREATE_THUMBNAILS="true"
+
+# Remove corrupt images before generating keograms, startrails, and timelapse videos.
+# This only adds a few seconds per image as it's being processed.
+REMOVE_BAD_IMAGES="true"
 
 # If REMOVE_BAD_IMAGES is "true", images whose mean brightness is
 # less than THRESHOLD_LOW or greater than THRESHOLD_HIGH percent (max: 100) will be removed.

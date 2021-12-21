@@ -15,8 +15,8 @@ CAMERA=""
 IMG_UPLOAD="false"
 
 # If UPLOAD_IMG is "true", upload images every IMG_UPLOAD_FREQUENCY frames, e.g., every 5 frames.
-# 0 uploades every frame.
-IMG_UPLOAD_FREQUENCY=0
+# 1 uploades every frame.
+IMG_UPLOAD_FREQUENCY=1
 
 # The websites look in IMG_DIR for the current image.
 # When using the Allsky website from the "allsky-website" packge,

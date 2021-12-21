@@ -45,8 +45,6 @@ if [ ${RET} -ne 0 ]; then
 	exit 1
 fi
 
-mkdir -p "${ALLSKY_TMP}"	# Re-create in case it's on a memory filesystem that gets wiped out at reboot
-
 # Make sure allsky.sh is not already running.
 ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
@@ -146,6 +144,14 @@ echo "export CAMERA=${CAMERA}" > "${ALLSKY_CONFIG}/autocam.sh"
 
 # This must be called after CAMERA AUTOSELECT above to refresh the file name.
 source "${ALLSKY_SCRIPTS}/filename.sh"
+
+if [ -d "${ALLSKY_TMP}" ]; then
+	# remove any lingering old image files.
+	rm -f "${ALLSKY_TMP}/${FILENAME}"-202*.${EXTENSION}	# "202" for 2021 and later
+else
+	# Re-create in case it's on a memory filesystem that gets wiped out at reboot
+	mkdir -p "${ALLSKY_TMP}"
+fi
 
 # Optionally display a notification image. This must come after the creation of "autocam.sh" above.
 USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")

@@ -73,7 +73,8 @@ int currentGain            = NOT_SET;
 long camera_max_autoexposure_us= NOT_SET;	// camera's max auto-exposure
 long camera_min_exposure_us= 100;	// camera's minimum exposure
 long current_exposure_us   = NOT_SET;
-long actualTemp            = 0;	// actual sensor temp, per the camera
+long actualTemp            = 0;			// actual sensor temp, per the camera
+long last_exposure_us      = 0;			// last exposure taken
 int taking_dark_frames     = 0;
 int asiFlip                = 0;
 int current_bpp            = NOT_SET;	// bytes per pixel: 8, 16, or 24
@@ -328,7 +329,7 @@ void *SaveImgThd(void *para)
 			snprintf(f, sizeof(f), "%s/%s", save_dir, final_file_name);
 			Log(1, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), final_file_name);
             snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), f);
-			snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", current_exposure_us);
+			snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", last_exposure_us);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
 			strcat(cmd, tmp);
@@ -597,7 +598,6 @@ char *length_in_units(long us, bool multi)	// microseconds
 	return(length);
 }
 
-long last_exposure_us = 0;		// last exposure taken
 long reported_exposure_us = 0;	// exposure reported by the camera, either actual exposure or suggested next one
 long actualGain = 0;			// actual gain used, per the camera
 ASI_BOOL bAuto = ASI_FALSE;		// "auto" flag returned by ASIGetControlValue, when we don't care what it is

@@ -129,26 +129,35 @@ unsigned long createRGB(int r, int g, int b)
     return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
 }
 
-void cvText(cv::Mat img, const char *text, int x, int y, double fontsize, int linewidth, int linetype, int fontname,
-            int fontcolor[], int imgtype, int outlinefont)
+void cvText(cv::Mat img, const char *text, int x, int y, double fontsize,
+	int linewidth, int linetype,
+	int fontname, int fontcolor[], int imgtype, int use_outline, int width)
 {
-    // Need smaller outline when font size is smaller.
-    int outline_size = std::max(2.0, (fontsize * 1.5));
+	cv::Point xy = cv::Point(x, y);
 
-    if (imgtype == ASI_IMG_RAW16)
-    {
-        unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
-        if (outlinefont)
-            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0), linewidth+outline_size, linetype);
-        cv::putText(img, text, cv::Point(x, y), fontname, fontsize, fontcolor16, linewidth, linetype);
-    }
-    else
-    {
-        if (outlinefont)
-            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0, 255), linewidth+outline_size, linetype);
-        cv::putText(img, text, cv::Point(x, y), fontname, fontsize,
-                    cv::Scalar(fontcolor[0], fontcolor[1], fontcolor[2], 255), linewidth, linetype);
-    }
+	// Resize for screen width so the same numbers on small and big screens produce
+	// roughly the same size font on the image.
+	fontsize = fontsize * width / 1200;
+	linewidth = std::max(linewidth * width / 700, 1);
+	int outline_size = linewidth * 1.5;
+
+	// int baseline = 0;
+	// cv::Size textSize = cv::getTextSize(text, fontname, fontsize, linewidth, &baseline);
+
+	if (imgtype == ASI_IMG_RAW16)
+	{
+		unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
+		if (use_outline)
+			cv::putText(img, text, xy, fontname, fontsize, cv::Scalar(0,0,0), outline_size, linetype);
+		cv::putText(img, text, xy, fontname, fontsize, fontcolor16, linewidth, linetype);
+	}
+	else
+	{
+		cv::Scalar font_color = cv::Scalar(fontcolor[0], fontcolor[1], fontcolor[2]);
+		if (use_outline)
+			cv::putText(img, text, xy, fontname, fontsize, cv::Scalar(0,0,0, 255), outline_size, linetype);
+		cv::putText(img, text, xy, fontname, fontsize, font_color, linewidth, linetype);
+	}
 }
 
 // Return the numeric time.
@@ -1138,8 +1147,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			else if (strcmp(argv[i], "-outlinefont") == 0)
 			{
 				outlinefont = atoi(argv[++i]);
-				if (outlinefont != 0)
-					outlinefont = 1;
 			}
 			else if (strcmp(argv[i], "-rotation") == 0)
 			{
@@ -1690,7 +1697,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 						cvText(pRgb, bufTime, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * 0.1, linewidth,
 							linetype[linenumber], fontname[fontnumber], fontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
 						iYOffset += iTextLineHeight;
 					}
 
@@ -1699,7 +1706,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 						cvText(pRgb, ImgText, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * 0.1, linewidth,
 							linetype[linenumber], fontname[fontnumber], fontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
 						iYOffset+=iTextLineHeight;
 					}
 
@@ -1715,7 +1722,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
 							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
 						iYOffset += iTextLineHeight;
 					}
 
@@ -1727,7 +1734,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
 							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
 						iYOffset += iTextLineHeight;
 					}
 
@@ -1737,7 +1744,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
 							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
 						iYOffset += iTextLineHeight;
 					}
 
@@ -1747,7 +1754,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
 							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
 						iYOffset += iTextLineHeight;
 					}
 
@@ -1757,7 +1764,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
 							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
 						iYOffset += iTextLineHeight;
 					}
 

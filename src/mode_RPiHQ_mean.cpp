@@ -52,7 +52,7 @@ double get_focus_metric(cv::Mat img, modeMeanSetting &currentModeMeanSetting)
 
 // Calculate new raspistillSettings (exposure, gain)
 // Algorithm not perfect, but better than no exposure control at all
-float RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
+float RPiHQcalcMean(cv::Mat image, int exposure_us, double gain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
 {
 	//Hauptvariablen
 	double mean;
@@ -76,12 +76,6 @@ float RPiHQcalcMean(const char* fileName, int exposure_us, double gain, raspisti
 
 	// get old ExposureTime
 	double ExposureTime_s = (double) currentRaspistillSetting.shutter_us/US_IN_SEC;
-
-	cv::Mat image = cv::imread(fileName, cv::IMREAD_UNCHANGED);
-	if (!image.data) {
-		fprintf(stderr, "*** ERROR Error reading file '%s'\n", basename(fileName));
-		return(-1);
-	}
 
 	//Then define your mask image
 	//cv::Mat mask = cv::Mat::zeros(image.size(), image.type());
@@ -132,7 +126,7 @@ if (0)
 			break;
 	}
 		 
-	Log(1, "  > %s: %.1f sec, mean: %f %f\n", basename(fileName), ExposureTime_s, mean, (currentModeMeanSetting.mean_value - mean));
+	Log(1, "  > image: %.1f sec, mean: %f %f\n", ExposureTime_s, mean, (currentModeMeanSetting.mean_value - mean));
 	this_mean = mean;	// return current image's mean
 
 	// avg of mean history 

@@ -1654,7 +1654,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			if (retCode == 0)
 			{
 				numExposures++;
-				focus_metric = (int)round(get_focus_metric(pRgb, myModeMeanSetting));
+				focus_metric = (int)round(get_focus_metric(pRgb));
 
 				// If taking_dark_frames is off, add overlay text to the image
 				if (! darkframe)

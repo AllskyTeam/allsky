@@ -37,7 +37,7 @@ fi
 # Don't save in main image directory because we don't want the notification image in timelapses.
 # If at nighttime, save them in (possibly) yesterday's directory.
 # If during day, save in today's directory.
-if [ "${DAYTIME_SAVE}" = "true" -o "${CAPTURE_24HR}" = "true" ] ; then	# CAPTURE_24HR is OLD name
+if [ "${DAYTIME_SAVE}" = "true" ] ; then
 	DATE_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
 	# Use today's folder if it exists, otherwise yesterday's
 	[ ! -d "${DATE_DIR}" ] && DATE_DIR="${ALLSKY_IMAGES}/$(date -d '12 hours ago' +'%Y%m%d')"

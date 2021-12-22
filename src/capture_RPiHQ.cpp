@@ -60,6 +60,7 @@ std::string dayOrNight;
 
 // These are global so they can be used by other routines.
 #define NOT_SET				  -1	// signifies something isn't set yet
+int numErrors				= 0;	// Number of errors in a row.
 int numExposures			= 0;	// how many valid pictures have we taken so far?
 double currentGain			= NOT_SET;
 float min_saturation;				// produces black and white
@@ -1581,14 +1582,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 		lastDayOrNight = dayOrNight;
 
-		if (myModeMeanSetting.mode_mean && numExposures > 0) {
-// TODO: Is this needed?  We also call RPiHQcalcMean() after the exposure.
-
-// TODO: xxxxx shouldn't this be "currentExposure_us" instead of "asiNightExposure_us" ?
-// xxxxxx and "currentGain" instead of "asiNightGain"?
-  			RPiHQcalcMean(pRgb, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
-		}
-
 		if (darkframe) {
 			// We're doing dark frames so turn off autoexposure and autogain, and use
 			// nightime gain, delay, exposure, and brightness to mimic a nightime shot.
@@ -1766,6 +1759,12 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 					{
 						mean = RPiHQcalcMean(pRgb, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
 						Log(2, "  > exposure: %'ld us, shutter: %1.4f s, quickstart: %d, mean=%1.6f\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart, mean);
+						if (mean == -1)
+						{
+							numErrors++;
+							Log(0, "ERROR: RPiHQcalcMean() returned mean of -1.\n");
+							// xxxxxxx now what?
+						}
 					}
 
 					if (showTime == 1)

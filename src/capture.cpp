@@ -205,31 +205,36 @@ unsigned long createRGB(int r, int g, int b)
     return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
 }
 
-void cvText(cv::Mat &img, const char *text, int x, int y, double fontsize, int linewidth, int linetype, int fontname,
-            int fontcolor[], int imgtype, int outlinefont)
+void cvText(cv::Mat &img, const char *text, int x, int y, double fontsize,
+	int linewidth, int linetype,
+	int fontname, int fontcolor[], int imgtype, int use_outline, int width)
 {
-// TODO: Adjust the fontsize and linewidth
-// int baseline=0; cv::Size textSize = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
-// adjusted_fontsize_ = fontsize_ * width_ / 1200;
-// adjusted_linewidth_ = std::max(linewidth_ * width_ / 700, 1u);
+	cv::Point xy = cv::Point(x, y);
 
-	// Need smaller outline when font size is smaller.
-    int outline_size = std::max(2.0, (fontsize/4));
+	// Resize for screen width so the same numbers on small and big screens produce
+	// roughly the same size font on the image.
+	fontsize = fontsize * width / 1200; // Small resolution: x 1.6.   High: x 2
+	linewidth = std::max(linewidth * width / 700, 1); // Small resolution: x 2.    High: x 3.2
+	int outline_size = linewidth * 1.5;
 
-    if (imgtype == ASI_IMG_RAW16)
-    {
-        unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
-        if (outlinefont)
-            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0), linewidth+outline_size, linetype);
-        cv::putText(img, text, cv::Point(x, y), fontname, fontsize, fontcolor16, linewidth, linetype);
-    }
-    else
-    {
-        if (outlinefont)
-            cv::putText(img, text, cv::Point(x, y), fontname, fontsize, cv::Scalar(0,0,0, 255), linewidth+outline_size, linetype);
-        cv::putText(img, text, cv::Point(x, y), fontname, fontsize,
-                    cv::Scalar(fontcolor[0], fontcolor[1], fontcolor[2], 255), linewidth, linetype);
-    }
+	//int baseline = 0;
+	//cv::Size textSize = cv::getTextSize(text, fontname, fontsize, linewidth, &baseline);
+	// baseline: Small resolution:  16 / 13     High res: 36 / 30
+
+	if (imgtype == ASI_IMG_RAW16)
+	{
+		unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
+		if (use_outline)
+			cv::putText(img, text, xy, fontname, fontsize, cv::Scalar(0,0,0), linewidth+outline_size, linetype);
+		cv::putText(img, text, xy, fontname, fontsize, fontcolor16, linewidth, linetype);
+	}
+	else
+	{
+		cv::Scalar font_color = cv::Scalar(fontcolor[0], fontcolor[1], fontcolor[2], 255);
+		if (use_outline)
+			cv::putText(img, text, xy, fontname, fontsize, cv::Scalar(0,0,0, 255), outline_size, linetype);
+		cv::putText(img, text, xy, fontname, fontsize, font_color, linewidth, linetype);
+	}
 }
 
 // Return the numeric time.
@@ -2744,7 +2749,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         cvText(pRgb, bufTime, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * 0.1, linewidth,
                             linetype[linenumber], fontname[fontnumber], fontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
                         iYOffset += iTextLineHeight;
                     }
 
@@ -2753,7 +2758,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         cvText(pRgb, ImgText, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * 0.1, linewidth,
                             linetype[linenumber], fontname[fontnumber], fontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
                         iYOffset+=iTextLineHeight;
                     }
 
@@ -2773,7 +2778,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
                             linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
                         iYOffset += iTextLineHeight;
                     }
 
@@ -2789,7 +2794,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
                             linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
                         iYOffset += iTextLineHeight;
                     }
 
@@ -2810,7 +2815,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
                             linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
                         iYOffset += iTextLineHeight;
                     }
                     if (currentAdjustGain)
@@ -2827,7 +2832,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
 							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
                         iYOffset += iTextLineHeight;
                      }
 
@@ -2838,7 +2843,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
 							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont);
+							Image_type, outlinefont, width);
                         iYOffset += iTextLineHeight;
                     }
                     if (showHistogramBox && usedHistogram)
@@ -2921,7 +2926,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                                         cvText(pRgb, line, iTextX, iTextY + (iYOffset / currentBin),
 											fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
 											linetype[linenumber], fontname[fontnumber],
-											smallFontcolor, Image_type, outlinefont);
+											smallFontcolor, Image_type, outlinefont, width);
                                         iYOffset += iTextLineHeight;
                                     }
                                 }

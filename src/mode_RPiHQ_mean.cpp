@@ -157,16 +157,12 @@ if (0)
 	// forcast (m_forcast = m_neu + diff = m_neu + m_neu - m_alt = 2*m_neu - m_alt)
 	double mean_forecast = 2.0 * mean_history[idx] - mean_history[idxN1];
 	mean_forecast = std::min((double) std::max((double) mean_forecast, 0.0), 1.0);
-	Log(2, "  > mean_forecast: %1.4f\n", mean_forecast);
 	// gleiche Wertigkeit wie aktueller Wert
 	mean += mean_forecast * currentModeMeanSetting.historySize;
 	values += currentModeMeanSetting.historySize;
-
-	Log(2, "  > values: %d\n", values);
-	
 	mean = mean / (double) values;
 	mean_diff = abs(mean - currentModeMeanSetting.mean_value);
-	Log(2, "  > mean_diff: %1.4f\n", mean_diff);
+	Log(2, "  > mean_forecast: %1.4f, values: %d, mean_diff: %1.4f\n", mean_forecast, values, mean_diff);
 
 	int ExposureChange = currentModeMeanSetting.shuttersteps / 2;
 		
@@ -251,4 +247,3 @@ if (0)
 
 	return(this_mean);
 }
-

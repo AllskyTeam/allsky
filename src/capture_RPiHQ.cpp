@@ -2,18 +2,14 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <sys/time.h>
-//#include <time.h>
 #include <unistd.h>
 #include <string.h>
-//#include <sys/types.h>
 #include <errno.h>
 #include <string>
 #include <iomanip>
 #include <cstring>
 #include <sstream>
-//#include <cstdio>
 #include <tr1/memory>
-//#include <ctime>
 #include <stdlib.h>
 #include <signal.h>
 #include <fstream>
@@ -102,7 +98,6 @@ int debugLevel = 0;
 /**
  * Helper function to display debug info
 **/
-// [[gnu::format(printf, 2, 3)]]
 void Log(int required_level, const char *fmt, ...)
 {
     if (debugLevel >= required_level) {
@@ -203,21 +198,6 @@ std::string exec(const char *cmd)
 	}
 	return result;
 }
-/*
-void *Display(void *params)
-{
-	cv::Mat *pImg = (cv::Mat *)params;
-	cvNamedWindow("video", 1);
-	while (bDisplay)
-	{
-		cvShowImage("video", pImg);
-		cvWaitKey(100);
-	}
-	cvDestroyWindow("video");
-	printf("Display thread over\n");
-	return (void *)0;
-}
-*/
 
 // Display a length of time in different units, depending on the length's value.
 // If the "multi" flag is set, display in multiple units if appropriate.
@@ -408,19 +388,11 @@ int RPiHQcapture(int auto_exposure, int *exposure_us, int auto_gain, int auto_AW
 		if (auto_exposure)
 		{
 			if (myModeMeanSetting.mode_mean)
-			{
-				// We do our own auto-exposure so no need to wait at all.
-				ss << 1;
-			}
+				ss << 1;	// We do our own auto-exposure so no need to wait at all.
 			else if (dayOrNight == "DAY")
-			{
 				ss << 1000;
-			}
 			else	// NIGHT
-			{
-				// really could use longer but then it'll take forever for pictures to appear
-				ss << 10000;
-			}
+				ss << 10000;	// could use longer but it'll take forever for pictures to appear
 		}
 		else
 		{
@@ -433,12 +405,10 @@ int RPiHQcapture(int auto_exposure, int *exposure_us, int auto_gain, int auto_AW
 			command += "=1";
 	}
 
-	if (bin > 3) 	{
+	if (bin > 3)
 		bin = 3;
-	}
-	else if (bin < 1) 	{
+	else if (bin < 1)
 		bin = 1;
-	}
 
 //xxxx not sure if this still applies for libcamera
 	// https://www.raspberrypi.com/documentation/accessories/camera.html#raspistill
@@ -448,47 +418,33 @@ int RPiHQcapture(int auto_exposure, int *exposure_us, int auto_gain, int auto_AW
 	// 2      2028x1520    4:3           0.1-50fps    Full     2x2 binned      <<< bin==2
 	// 3      4056x3040    4:3           0.005-10fps  Full     None            <<< bin==1
 	// 4      1332x990     74:55         50.1-120fps  Partial  2x2 binned      <<< else 
-	//
-  // TODO: please change gui description !
 
-//xxx libcamera doesn't have --mode; it only uses width and height
 	if (libcamera)
 	{
-		if (bin==1)	{
+		if (bin==1)
 			command += " --width 4060 --height 3056";
-		}
-		else if (bin==2) 	{
+		else if (bin==2)
 			command += " --width 2028 --height 1520";
-		}
-		else 	{
+		else
 			command += " --width 1012 --height 760";
-		}
 	}
 	else
 	{
-		if (bin==1)	{
+		if (bin==1)
 			command += " --mode 3";
-		}
-		else if (bin==2) 	{
+		else if (bin==2)
 			command += " --mode 2  --width 2028 --height 1520";
-		}
-		else 	{
+		else
 			command += " --mode 4 --width 1012 --height 760";
-		}
 	}
 
 	if (myModeMeanSetting.mode_mean)
 		*exposure_us = myRaspistillSetting.shutter_us;
 
 	if (*exposure_us < 1)
-	{
 		*exposure_us = 1;
-	}
 	else if (*exposure_us > 200 * US_IN_SEC)
-	{
-		// https://www.raspberrypi.org/documentation/raspbian/applications/camera.md : HQ (IMX477) 	200s
 		*exposure_us = 200 * US_IN_SEC;
-	}
 
 	// Check if automatic determined exposure time is selected
 	if (auto_exposure)
@@ -528,8 +484,8 @@ int RPiHQcapture(int auto_exposure, int *exposure_us, int auto_gain, int auto_AW
 			else
 				command += " --analoggain " + ss.str();
 
-//xxxx libcamera just has "gain".  If it's higher than what the camera supports,
-// the excess is the "digital" gain.
+			// libcamera just has "gain".  If it's higher than what the camera supports,
+			// the excess is the "digital" gain.
 if (! libcamera) { // TODO: need to fix this for libcamera
 			if (myRaspistillSetting.digitalgain > 1.0) {
 				ss.str("");
@@ -549,12 +505,10 @@ if (! libcamera) { // TODO: need to fix this for libcamera
 	else	// Is manual gain
 	{
 		// xxx what are libcamera limits?
-		if (gain < 1.0) {
+		if (gain < 1.0)
 			gain = 1.0;
-		}
-		else if (gain > 16.0) {
+		else if (gain > 16.0)
 			gain = 16.0;
-		}
 		ss.str("");
 		ss << gain;
 		if (libcamera)
@@ -573,20 +527,16 @@ if (! libcamera) { // TODO: need to fix this for libcamera
 	}
 
 	// White balance
-	if (WBR < 0.1) {
+	if (WBR < 0.1)
 		WBR = 0.1;
-	}
-	else if (WBR > 10) {
+	else if (WBR > 10)
 		WBR = 10;
-	}
-	if (WBB < 0.1) {
+	if (WBB < 0.1)
 		WBB = 0.1;
-	}
-	else if (WBB > 10) {
+	else if (WBB > 10)
 		WBB = 10;
-	}
 
-//xxx libcamera: if the red and blue numbers are given it turns off AWB.
+	// libcamera: if the red and blue numbers are given it turns off AWB.
 //xxx I don't think the check for myModeMeanSetting.mode_mean is needed anymore.
 	// Check if R and B component are given
 	if (myModeMeanSetting.mode_mean) {
@@ -613,30 +563,20 @@ if (! libcamera) { // TODO: need to fix this for libcamera
 		command += " --awb auto";
 	}
 
-//xxx libcamera only supports 0 and 180 degree rotation
+	// libcamera only supports 0 and 180 degree rotation
 	if (rotation != 0 && rotation != 90 && (! libcamera && rotation != 180 && rotation != 270))
-	{
 		rotation = 0;
-	}
 
-	// check if rotation is needed
 	if (rotation != 0) {
 		ss.str("");
 		ss << rotation;
 		command += " --rotation "  + ss.str();
 	}
 
-	// Check if flip is selected
 	if (flip == 1 || flip == 3)
-	{
-		// Set horizontal flip
-		command += " --hflip";
-	}
+		command += " --hflip";		// horizontal flip
 	if (flip == 2 || flip == 3)
-	{
-		// Set vertical flip
-		command += " --vflip";
-	}
+		command += " --vflip";		// vertical flip
 
 	if (saturation < min_saturation)
 		saturation = min_saturation;
@@ -648,22 +588,13 @@ if (! libcamera) { // TODO: need to fix this for libcamera
 
 	ss.str("");
 	if (brightness < min_brightness)
-	{
 		brightness = min_brightness;
-	}
 	else if (brightness > max_brightness)
-	{
 		brightness = max_brightness;
-	}
 	if (libcamera)
-	{
-		// User enters -100 to 100.  Convert to -1.0 to 1.0.
-		ss << (float) brightness / 100;
-	}
+		ss << (float) brightness / 100;	// User enters -100 to 100.  Convert to -1.0 to 1.0.
 	else
-	{
 		ss << brightness;
-	}
 	command += " --brightness " + ss.str();
 
 	ss.str("");
@@ -751,10 +682,8 @@ if (! libcamera)	// xxxx libcamera doesn't have fontsize, color, or background.
 	{
 		// gets rid of a bunch of libcamera verbose messages
 		command = "LIBCAMERA_LOG_LEVELS='ERROR,FATAL' " + command;
-	}
-
-	if (libcamera)
 		command += " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
+	}
 
 	// Define char variable
 	char cmd[command.length() + 1];
@@ -766,7 +695,6 @@ if (! libcamera)	// xxxx libcamera doesn't have fontsize, color, or background.
 
 	// Execute the command.
 	int ret = system(cmd);
-
 	if (ret == 0)
 	{
 		*image = cv::imread(fileName, cv::IMREAD_UNCHANGED);
@@ -916,9 +844,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 	int quality           = 90;
 
 	int i;
-	//id *retval;
 	bool endOfNight    = false;
-	//hread_t hthdSave = 0;
 	int retCode;
 	cv::Mat pRgb;	// the image
 
@@ -945,6 +871,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 	printf("-Michael J. Kidd - <linuxkidd@gmail.com>\n");
 	printf("-Rob Musquetier\n");	
 	printf("-Eric Claeys\n");
+	printf("-Andreas Lindinger\n");
 	printf("\n");
 
 	// The newer "allsky.sh" puts quotes around arguments so we can have spaces in them.
@@ -1566,9 +1493,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 		// Find out if it is currently DAY or NIGHT
 		calculateDayOrNight(latitude, longitude, angle);
 
-// Next line is present for testing purposes
-// dayOrNight.assign("NIGHT");
-
 		lastDayOrNight = dayOrNight;
 
 		if (darkframe) {
@@ -1901,7 +1825,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			calculateDayOrNight(latitude, longitude, angle);
 		}
 
-		// Check for night situation
 		if (lastDayOrNight == "NIGHT")
 		{
 			// Flag end of night processing is needed

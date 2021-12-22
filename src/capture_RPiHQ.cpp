@@ -51,7 +51,7 @@ using namespace std;
 
 std::vector<int> compression_parameters;
 bool bMain					= true;
-//ol bDisplay = false;
+//bool bDisplay = false;
 std::string dayOrNight;
 
 // These are global so they can be used by other routines.
@@ -92,7 +92,7 @@ modeMeanSetting myModeMeanSetting;
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
-char debugText[500];		// buffer to hold debug messages
+char debug_text[500];		// buffer to hold debug messages
 int debugLevel = 0;
 
 /**
@@ -309,8 +309,8 @@ void calculateDayOrNight(const char *latitude, const char *longitude, const char
 
 	if (dayOrNight != "DAY" && dayOrNight != "NIGHT")
 	{
-		sprintf(debugText, "*** ERROR: dayOrNight isn't DAY or NIGHT, it's '%s'\n", dayOrNight.c_str());
-		waitToFix(debugText);
+		sprintf(debug_text, "*** ERROR: dayOrNight isn't DAY or NIGHT, it's '%s'\n", dayOrNight.c_str());
+		waitToFix(debug_text);
 		closeUp(2);
 	}
 }
@@ -1295,8 +1295,8 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 	const char *ext = strrchr(fileName, '.');
 	if (ext == NULL)
 	{
-		sprintf(debugText, "*** ERROR: No extension given on filename: [%s]\n", fileName);
-		waitToFix(debugText);
+		sprintf(debug_text, "*** ERROR: No extension given on filename: [%s]\n", fileName);
+		waitToFix(debug_text);
 		exit(100);
 	}
 	ext++;
@@ -1339,8 +1339,8 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 	}
 	else
 	{
-		sprintf(debugText, "*** ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", ext);
-		waitToFix(debugText);
+		sprintf(debug_text, "*** ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", ext);
+		waitToFix(debug_text);
 		exit(100);
 	}
 	compression_parameters.push_back(quality);
@@ -1411,8 +1411,8 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 	}
 	else
 	{
-		sprintf(debugText, "*** ERROR: Unknown Image Type: %d\n", Image_type);
-		waitToFix(debugText);
+		sprintf(debug_text, "*** ERROR: Unknown Image Type: %d\n", Image_type);
+		waitToFix(debug_text);
 		exit(100);
 	}
 

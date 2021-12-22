@@ -1650,7 +1650,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
                 if (numExposures == 0 || ! asiDayAutoExposure)
                 {
 					currentExposure_us = asiDayExposure_us;
-					myRaspistillSetting.shutter_us = currentExposure_us;
                 }
                 else
                 {
@@ -1674,7 +1673,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			{
 				currentExposure_us = asiNightExposure_us;
 				Log(3, "Using night exposure (%'ld)\n", asiNightExposure_us);
-				myRaspistillSetting.shutter_us = currentExposure_us;
 			}
 			currentAutoExposure = asiNightAutoExposure;
 			currentBrightness = asiNightBrightness;
@@ -1683,6 +1681,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			currentGain = asiNightGain;
 			currentAutoGain = asiNightAutoGain;
 		}
+		myRaspistillSetting.shutter_us = currentExposure_us;
 
 		// Adjusting variables for chosen binning
 		height    = originalHeight / currentBin;
@@ -1757,13 +1756,16 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 					if (myModeMeanSetting.mode_mean)
 					{
+// xxxxxx ? use currentExposure_us and currentGain ?
 						mean = RPiHQcalcMean(pRgb, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
-						Log(2, "  > exposure: %'ld us, shutter: %1.4f s, quickstart: %d, mean=%1.6f\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart, mean);
+						Log(2, "  > Got exposure: %'ld us, shutter: %1.4f s, quickstart: %d, mean=%1.6f\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart, mean);
 						if (mean == -1)
 						{
 							numErrors++;
 							Log(0, "ERROR: RPiHQcalcMean() returned mean of -1.\n");
-							// xxxxxxx now what?
+							Log(1, "  > Sleeping from failed exposure: %.1f seconds\n", (float)currentDelay_ms / MS_IN_SEC);
+							usleep(currentDelay_ms * US_IN_MS);
+							continue;
 						}
 					}
 
@@ -1853,6 +1855,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			}
 			else
 			{
+				numErrors++;
 				printf(" >>> Unable to take picture, return code=%d\n", (retCode >> 8));
 				Log(1, "  > Sleeping from failed exposure: %.1f seconds\n", (float)currentDelay_ms / MS_IN_SEC);
 				usleep(currentDelay_ms * US_IN_MS);

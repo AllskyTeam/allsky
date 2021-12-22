@@ -18,7 +18,7 @@ fi
 # If ${THIS_TEMPERATURE} is set, use it as the temperature, otherwise read the ${TEMPERATURE_FILE}.
 # If the ${TEMPERATURE_FILE} file doesn't exist, set the temperature to "n/a".
 if [ "${THIS_TEMPERATURE}" = "" ]; then
-	TEMPERATURE_FILE="${ALLSKY_HOME}/temperature.txt"
+	TEMPERATURE_FILE="${ALLSKY_TMP}/temperature.txt"
 	if [ -s "${TEMPERATURE_FILE}" ]; then	# -s so we don't use an empty file
 		THIS_TEMPERATURE=$( < ${TEMPERATURE_FILE})
 	else

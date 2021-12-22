@@ -30,8 +30,7 @@ struct modeMeanSetting {
 };
 
 
-float RPiHQcalcMean(const char* fileName, int exposure_us, double Gain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting);
-
+float RPiHQcalcMean(cv::Mat, const char*, int, double, raspistillSetting &, modeMeanSetting &);
 double get_focus_metric(cv::Mat, modeMeanSetting &);
 
 #endif

@@ -23,8 +23,10 @@ void Log(int, const char *, ...);
 
 #define US_IN_SEC (1000000.0)  // microseconds in a second
 
-double mean_history [5] = {0.0,0.0,0.0,0.0,0.0};
-int exp_history [5] = {0,0,0,0,0};
+// These only need to be as large as modeMeanSetting.historySize.
+const int history_size = 5;
+double mean_history [history_size]; // = {0.0,0.0,0.0,0.0,0.0};
+int     exp_history [history_size]; // = {0,0,0,0,0};
 
 int MeanCnt = 0;
 double dMean = 1.0; // Mean(n-1)-Mean(n)
@@ -65,13 +67,17 @@ float RPiHQcalcMean(cv::Mat image, int exposure_us, double gain, raspistillSetti
 		currentModeMeanSetting.ExposureLevelMax = log(gain * exposure_us/US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) + 1; 
 		currentModeMeanSetting.ExposureLevelMin = log(1.0  * 1.0        /US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) - 1;
 		// only for the output
+		if (history_size < currentModeMeanSetting.historySize) {
+			fprintf(stderr, "*** ERROR: history_size (%d) < currentModeMeanSetting.historySize (%d)\n", history_size, currentModeMeanSetting.historySize);
+			return(-1);
+		}
 		for (int i=0; i < currentModeMeanSetting.historySize; i++) {
 			mean_history[i] = currentModeMeanSetting.mean_value;
 			exp_history[i] = log(1.0  * currentRaspistillSetting.shutter_us/US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) - 1;
 		}
 		// first exposure with currentRaspistillSetting.shutter_us, so we have to calculate the startpoint for ExposureLevel 
 		currentModeMeanSetting.ExposureLevel = log(1.0  * currentRaspistillSetting.shutter_us/US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0) - 1;
-		Log(1, "  > Valid ExposureLevels: %1.8f to %1.8f\n", currentModeMeanSetting.ExposureLevelMin, currentModeMeanSetting.ExposureLevelMax);
+		Log(3, "  > Valid ExposureLevels: %1.8f to %1.8f\n", currentModeMeanSetting.ExposureLevelMin, currentModeMeanSetting.ExposureLevelMax);
 	}
 
 	// get old ExposureTime
@@ -126,18 +132,18 @@ if (0)
 			break;
 	}
 		 
-	Log(1, "  > image: %.1f sec, mean: %f %f\n", ExposureTime_s, mean, (currentModeMeanSetting.mean_value - mean));
+	Log(3, "  > exposure: %.3f sec, mean: %1.4f, mean_value: %1.4f, diff: %1.4f\n", ExposureTime_s, mean, currentModeMeanSetting.mean_value, (currentModeMeanSetting.mean_value - mean));
 	this_mean = mean;	// return current image's mean
 
 	// avg of mean history 
-	Log(3, "  > MeanCnt: %d, mean_historySize: %d\n", MeanCnt, currentModeMeanSetting.historySize);
+	Log(3, "  > MeanCnt: %d, historySize: %d\n", MeanCnt, currentModeMeanSetting.historySize);
 
 	mean_history[MeanCnt % currentModeMeanSetting.historySize] = mean;
 	int values = 0;
 	mean=0.0;
 	for (int i=1; i <= currentModeMeanSetting.historySize; i++) {
 		int idx =  (MeanCnt + i) % currentModeMeanSetting.historySize;
-		Log(1, "  > i=%d: idx=%d mean=%1.4f exp=%d\n", i, idx, mean_history[idx], exp_history[idx]);
+		Log(3, "  > i=%d: mean_history[%d]=%1.4f exp_history[%d]=%d\n", i, idx, mean_history[idx], idx, exp_history[idx]);
 		mean += mean_history[idx] * (double) i;
 		values += i;
 	} 
@@ -156,7 +162,7 @@ if (0)
 	values += currentModeMeanSetting.historySize;
 	mean = mean / (double) values;
 	mean_diff = abs(mean - currentModeMeanSetting.mean_value);
-	Log(2, "  > mean_forecast: %1.4f, values: %d, mean_diff: %1.4f\n", mean_forecast, values, mean_diff);
+	Log(3, "  > mean_forecast: %1.4f, values: %d, mean_diff: %1.4f\n", mean_forecast, values, mean_diff);
 
 	int ExposureChange = currentModeMeanSetting.shuttersteps / 2;
 		
@@ -172,7 +178,7 @@ if (0)
 	dExposureChange = ExposureChange-lastExposureChange;
 	lastExposureChange = ExposureChange;
 
-	Log(2, "  > ExposureChange: %d (%d)\n", ExposureChange, dExposureChange);
+	Log(3, "  > ExposureChange: %d (%d)\n", ExposureChange, dExposureChange);
 
 	if (mean < (currentModeMeanSetting.mean_value - (currentModeMeanSetting.mean_threshold))) {
 		if ((currentRaspistillSetting.analoggain < gain) || (currentRaspistillSetting.shutter_us < exposure_us)) {  // obere Grenze durch Gaim und shutter
@@ -181,7 +187,7 @@ if (0)
 	}
 	if (mean > (currentModeMeanSetting.mean_value + currentModeMeanSetting.mean_threshold))  {
 		if (ExposureTime_s <= 1 / US_IN_SEC) { // untere Grenze durch shuttertime
-			Log(2, "  > ExposureTime_s too low - stop !\n");
+			Log(3, "  > ExposureTime_s too low - stop !\n");
 		}
 		else {
 			currentModeMeanSetting.ExposureLevel -= ExposureChange;
@@ -194,12 +200,12 @@ if (0)
 	// fastforward ?
 	if ((currentModeMeanSetting.ExposureLevel == (int)currentModeMeanSetting.ExposureLevelMax) || (currentModeMeanSetting.ExposureLevel == (int)currentModeMeanSetting.ExposureLevelMin)) {
 		fastforward = true;
-		Log(2, "  > FF aktiviert\n");
+		Log(3, "  > FF aktiviert\n");
 	}
 	if ((abs(mean_history[idx] - currentModeMeanSetting.mean_value) < currentModeMeanSetting.mean_threshold) &&
 		(abs(mean_history[idxN1] - currentModeMeanSetting.mean_value) < currentModeMeanSetting.mean_threshold)) {
 		fastforward = false;
-		Log(2, "  > FF deaktiviert\n");
+		Log(3, "  > FF deaktiviert\n");
 	}
 		
 	//#############################################################################################################
@@ -237,7 +243,7 @@ if (0)
 	exp_history[MeanCnt % currentModeMeanSetting.historySize] = currentModeMeanSetting.ExposureLevel;
 
 	currentRaspistillSetting.shutter_us = ExposureTime_s * US_IN_SEC;
-	Log(2, "  > Mean: %f, diff: %f, Exposure level:%d (%d), Exposure time:%1.8f s, analoggain:%1.2f\n", mean, mean_diff, currentModeMeanSetting.ExposureLevel, currentModeMeanSetting.ExposureLevel-exp_history[idx], ExposureTime_s, currentRaspistillSetting.analoggain);
+	Log(3, "  > Mean: %f, diff: %f, Exposure level:%d (%d), Exposure time:%1.8f s, analoggain:%1.2f\n", mean, mean_diff, currentModeMeanSetting.ExposureLevel, currentModeMeanSetting.ExposureLevel-exp_history[idx], ExposureTime_s, currentRaspistillSetting.analoggain);
 
 	return(this_mean);
 }

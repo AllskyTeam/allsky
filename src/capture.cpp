@@ -1,25 +1,18 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-#include <opencv2/viz.hpp>
 #include "include/ASICamera2.h"
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <time.h>
 #include <math.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/types.h>
 #include <errno.h>
 #include <string>
-#include <iostream>
-#include <cstdio>
 #include <tr1/memory>
-#include <ctime>
 #include <stdlib.h>
 #include <signal.h>
 #include <fstream>
-#include <locale.h>
 #include <stdarg.h>
 
 #define KNRM "\x1B[0m"
@@ -59,9 +52,8 @@ pthread_mutex_t mtx_SaveImg;
 pthread_cond_t cond_SatrtSave;
 
 // These are global so they can be used by other routines.
-#define NOT_SET -1	// signifies something isn't set yet
+#define NOT_SET				 -1		// signifies something isn't set yet
 ASI_CONTROL_CAPS ControlCaps;
-void *retval;
 int numErrors              = 0;	// Number of errors in a row.
 int gotSignal              = 0;	// did we get a SIGINT (from keyboard) or SIGTERM (from service)?
 int iNumOfCtrl             = 0;
@@ -89,7 +81,8 @@ int notificationImages     = DEFAULT_NOTIFICATIONIMAGES;
 char const *save_dir       = DEFAULT_SAVEDIR;
 #define DEFAULT_FILENAME     "image.jpg"
 char const *fileName       = DEFAULT_FILENAME;
-char final_file_name[500];	// final name of the file that's written to disk
+char final_file_name[200];	// final name of the file that's written to disk, with no directories
+char full_filename[1000];	// full name of file written to disk
 #define DEFAULT_TIMEFORMAT   "%Y%m%d %H:%M:%S"	// format the time should be displayed in
 char const *timeFormat     = DEFAULT_TIMEFORMAT;
 
@@ -216,11 +209,13 @@ void cvText(cv::Mat &img, const char *text, int x, int y, double fontsize, int l
             int fontcolor[], int imgtype, int outlinefont)
 {
 // TODO: Adjust the fontsize and linewidth
+// int baseline=0; cv::Size textSize = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
 // adjusted_fontsize_ = fontsize_ * width_ / 1200;
 // adjusted_linewidth_ = std::max(linewidth_ * width_ / 700, 1u);
 
+	// Need smaller outline when font size is smaller.
+    int outline_size = std::max(2.0, (fontsize/4));
 
-    int outline_size = std::max(2.0, (fontsize/4));	// need smaller outline when font size is smaller
     if (imgtype == ASI_IMG_RAW16)
     {
         unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
@@ -323,23 +318,23 @@ void *SaveImgThd(void *para)
         bool result = false;
         if (pRgb.data)
         {
-            char f[1000];
-            char cmd[1100];
+			char cmd[1100];
 			char tmp[50];
-			snprintf(f, sizeof(f), "%s/%s", save_dir, final_file_name);
 			Log(1, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), final_file_name);
-            snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), f);
+			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
 			snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", last_exposure_us);
 			strcat(cmd, tmp);
+			// If the remainder can be multiple digits, make them fixed width so
+			// it's easier for the invoked command to compare.
 			snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " GAIN=%d", currentGain);
+			snprintf(tmp, sizeof(tmp), " GAIN=%03d", currentGain);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " BIN=%d", currentBin);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " FLIP=%d", asiFlip);
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%d", current_bit_depth);
+			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%02d", current_bit_depth);
 			strcat(cmd, tmp);
 
 			strcat(cmd, " &");
@@ -347,7 +342,7 @@ void *SaveImgThd(void *para)
             st = cv::getTickCount();
             try
             {
-                result = imwrite(f, pRgb, compression_parameters);
+                result = imwrite(full_filename, pRgb, compression_parameters);
             }
             catch (const cv::Exception& ex)
             {
@@ -358,7 +353,7 @@ void *SaveImgThd(void *para)
             if (result)
                 system(cmd);
 			else
-                printf("*** ERROR: Unable to save image '%s'.\n", f);
+                printf("*** ERROR: Unable to save image '%s'.\n", full_filename);
 
         } else {
             // This can happen if the program is closed before the first picture.
@@ -716,6 +711,7 @@ void closeUp(int e)
     if (bDisplay)
     {
         bDisplay = 0;
+		void *retval;
         pthread_join(thread_display, &retval);
     }
 
@@ -1633,24 +1629,24 @@ const char *locale = DEFAULT_LOCALE;
     compression_parameters.push_back(quality);
 
 	// Get just the name of the file, without any directories or the extension.
-	char fileNameOnly[100] = { 0 };
+	char fileNameOnly[50] = { 0 };
     if (taking_dark_frames)
     {
-        // To avoid overwriting the optional notification inage with the dark image,
+        // To avoid overwriting the optional notification image with the dark image,
         // during dark frames we use a different file name.
-        static char darkFilename[200];
+        static char darkFilename[20];
         sprintf(darkFilename, "dark.%s", imagetype);
         fileName = darkFilename;
 		strncat(final_file_name, fileName, sizeof(final_file_name)-1);
     }
 	else
 	{
-    	const char *slash = strrchr(fileName, '/');
+		const char *slash = strrchr(fileName, '/');
 		if (slash == NULL)
 			strncat(fileNameOnly, fileName, sizeof(fileNameOnly)-1);
 		else
 			strncat(fileNameOnly, slash + 1, sizeof(fileNameOnly)-1);
-    	char *dot = strrchr(fileNameOnly, '.');	// we know there's an extension
+		char *dot = strrchr(fileNameOnly, '.');	// we know there's an extension
 		*dot = '\0';
 	}
 
@@ -1901,11 +1897,15 @@ const char *locale = DEFAULT_LOCALE;
     const char *sType;		// displayed in output
     if (Image_type == ASI_IMG_RAW16)
     {
-        sType = "ASI_IMG_RAW16";
+        sType = "RAW16";
+		current_bpp = 2;
+		current_bit_depth = 16;
     }
     else if (Image_type == ASI_IMG_RGB24)
     {
-        sType = "ASI_IMG_RGB24";
+        sType = "RGB24";
+		current_bpp = 3;
+		current_bit_depth = 8;
     }
     else if (Image_type == ASI_IMG_RAW8)
     {
@@ -1913,39 +1913,27 @@ const char *locale = DEFAULT_LOCALE;
         if (ASICameraInfo.IsColorCam)
 		{
 			Image_type = ASI_IMG_Y8;
-            sType = "ASI_IMG_Y8 (not RAW8 for color cameras)";
+            sType = "Y8 (not RAW8 for color cameras)";
 		}
 		else
 		{
-            sType = "ASI_IMG_RAW8";
+            sType = "RAW8";
 		}
+		current_bpp = 1;
+		current_bit_depth = 8;
     }
-    else if (Image_type == ASI_IMG_RAW8)
+    else if (Image_type == ASI_IMG_Y8)
     {
-        sType = "ASI_IMG_Y8";
+        sType = "Y8";
+		current_bpp = 1;
+		current_bit_depth = 8;
     }
     else
     {
-        sprintf(debug_text, "*** ERROR: ASI_IMG_TYPE: %d\n", Image_type);
+        sprintf(debug_text, "*** ERROR: Unknown Image Type: %d\n", Image_type);
         waitToFix(debug_text);
     	exit(100);
     }
-
-	switch (Image_type) {
-		case ASI_IMG_RGB24:
-			current_bpp = 3;
-			current_bit_depth = 8;
-			break;
-		case ASI_IMG_RAW16:
-			current_bpp = 2;
-			current_bit_depth = 16;
-			break;
-		case ASI_IMG_RAW8:
-		case ASI_IMG_Y8:
-		default:
-			current_bpp = 1;
-			current_bit_depth = 8;
-	}
 
     //-------------------------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
@@ -2957,12 +2945,14 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                 // Save the image
                 if (! bSavingImg)
                 {
-					// Create the final file name that goes in the images/<date> directory.
 					if (! taking_dark_frames)
 					{
+						// Create the name of the file that goes in the images/<date> directory.
 						snprintf(final_file_name, sizeof(final_file_name), "%s-%s.%s",
 							fileNameOnly, formatTime(t, "%Y%m%d%H%M%S"), imagetype);
 					}
+					snprintf(full_filename, sizeof(full_filename), "%s/%s", save_dir, final_file_name);
+
                     pthread_mutex_lock(&mtx_SaveImg);
                     pthread_cond_signal(&cond_SatrtSave);
                     pthread_mutex_unlock(&mtx_SaveImg);

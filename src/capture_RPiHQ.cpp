@@ -53,27 +53,39 @@ using namespace std;
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
-#define DEFAULT_FILENAME     "image.jpg"
-char const *fileName       = DEFAULT_FILENAME;
-#define DEFAULT_TIMEFORMAT   "%Y%m%d %H:%M:%S"	// format the time should be displayed in
-char const *timeFormat     = DEFAULT_TIMEFORMAT;
-
+std::vector<int> compression_parameters;
 bool bMain					= true;
 //ol bDisplay = false;
 std::string dayOrNight;
+
+// These are global so they can be used by other routines.
+#define NOT_SET				  -1	// signifies something isn't set yet
 int numExposures			= 0;	// how many valid pictures have we taken so far?
+double currentGain			= NOT_SET;
 float min_saturation;				// produces black and white
 float max_saturation;
 float default_saturation;
 int min_brightness;					// what user enters on command line
 int max_brightness;
 int default_brightness;
+long last_exposure_us		= 0;		// last exposure taken
+int asiFlip					= 0;
+int current_bpp				= NOT_SET;	// bytes per pixel: 8, 16, or 24
+int current_bit_depth		= NOT_SET;	// 8 or 16
+int currentBin				= NOT_SET;
 
 // Some command-line and other option definitions needed outside of main():
 bool tty					= false;	// are we on a tty?
-#define NOT_SET				  -1		// signifies something isn't set yet
 #define DEFAULT_NOTIFICATIONIMAGES 1
 int notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
+#define DEFAULT_SAVEDIR		  "tmp"
+char const *save_dir		= DEFAULT_SAVEDIR;
+#define DEFAULT_FILENAME	  "image.jpg"
+char const *fileName		= DEFAULT_FILENAME;
+char final_file_name[200];	// final name of the file that's written to disk, with no directories
+char full_filename[1000];	// full name of file written to disk
+#define DEFAULT_TIMEFORMAT	  "%Y%m%d %H:%M:%S"	// format the time should be displayed in
+char const *timeFormat		= DEFAULT_TIMEFORMAT;
 
 //bool bSavingImg = false;
 
@@ -124,7 +136,9 @@ unsigned long createRGB(int r, int g, int b)
 void cvText(cv::Mat img, const char *text, int x, int y, double fontsize, int linewidth, int linetype, int fontname,
             int fontcolor[], int imgtype, int outlinefont)
 {
-    int outline_size = std::max(2.0, (fontsize/4));	// need smaller outline when font size is smaller
+    // Need smaller outline when font size is smaller.
+    int outline_size = std::max(2.0, (fontsize * 1.5));
+
     if (imgtype == ASI_IMG_RAW16)
     {
         unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
@@ -662,14 +676,6 @@ if (! libcamera) { // TODO: need to fix this for libcamera
 	}
 	command += " --brightness " + ss.str();
 
-	if (quality < 0)
-	{
-		quality = 0;
-	}
-	else if (quality > 100)
-	{
-		quality = 100;
-	}
 	ss.str("");
 	ss << quality;
 	command += " --quality " + ss.str();
@@ -852,7 +858,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 	int height            = DEFAULT_HEIGHT;		int originalHeight = height;
 	int dayBin            = 1;
 	int nightBin          = 1;
-	int currentBin        = NOT_SET;
 
 #define AUTO_IMAGE_TYPE     99	// needs to match what's in the camera_settings.json file
 #define DEFAULT_IMAGE_TYPE       AUTO_IMAGE_TYPE
@@ -865,7 +870,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 	int currentAutoExposure= 0;
 	double asiNightGain   = 4.0;
 	double asiDayGain     = 1.0;
-	double currentGain    = NOT_SET;
 	int asiNightAutoGain  = 0;
 	int asiDayAutoGain    = 0;
 	int currentAutoGain   = NOT_SET;
@@ -905,7 +909,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 		max_brightness    = 100;
 	}
 	int currentBrightness = NOT_SET;
-	int asiFlip           = 0;
 	int asiRotation       = 0;
 	char const *latitude  = "52.57N";
 	char const *longitude = "4.70E";
@@ -937,7 +940,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 	printf("\n");
 	printf("%s ********************************************\n", c(KGRN));
-	printf("%s *** Allsky Camera Software v0.8.1 | 2021 ***\n", c(KGRN));
+	printf("%s *** Allsky Camera Software v0.8.3 | 2021 ***\n", c(KGRN));
 	printf("%s ********************************************\n\n", c(KGRN));
 	printf("\%sCapture images of the sky with a Raspberry Pi and a RPi HQ camera\n", c(KGRN));
 	printf("\n");
@@ -969,6 +972,10 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
 				help = 1;
+			}
+			else if (strcmp(argv[i], "-save_dir") == 0)
+			{
+				save_dir = argv[++i];
 			}
 			else if (strcmp(argv[i], "-cmd") == 0)
 			{
@@ -1322,6 +1329,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 		printf(" -type = Image Type                 - Default = 0 - 0 = RAW8,  1 = RGB24,  2 = RAW16\n");
 		printf(" -quality                           - Default = 70%%, 0%% (poor) 100%% (perfect)\n");
 		printf(" -filename                          - Default = image.jpg\n");
+		printf(" -save_dir                          - Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
 		if (is_libcamera)
 			printf(" -rotation                          - Default = 0 degrees - Options 0 or 180\n");
 		else
@@ -1366,6 +1374,60 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 		exit(0);
 	}
 
+	const char *imagetype = "";
+	const char *ext = strrchr(fileName, '.');
+	if (ext == NULL)
+	{
+		sprintf(debugText, "*** ERROR: No extension given on filename: [%s]\n", fileName);
+		waitToFix(debugText);
+		exit(100);
+	}
+	ext++;
+	if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
+	{
+		if (Image_type == ASI_IMG_RAW16)
+		{
+			waitToFix("*** ERROR: RAW16 images only work with .png files; either change the Image Type or the Filename.\n");
+			exit(2);
+		}
+
+		imagetype = "jpg";
+		compression_parameters.push_back(cv::IMWRITE_JPEG_QUALITY);
+		// want dark frames to be at highest quality
+		if (quality > 100 || darkframe)
+		{
+			quality = 100;
+		}
+		else if (quality == NOT_SET)
+		{
+			quality = 95;
+		}
+	}
+	else if (strcasecmp(ext, "png") == 0)
+	{
+		imagetype = "png";
+		compression_parameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
+		if (darkframe)
+		{
+			quality = 0;	// actually, it's PNG compression - 0 is highest quality
+		}
+		else if (quality > 9)
+		{
+			quality = 9;
+		}
+		else if (quality == NOT_SET)
+		{
+			quality = 3;
+		}
+	}
+	else
+	{
+		sprintf(debugText, "*** ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", ext);
+		waitToFix(debugText);
+		exit(100);
+	}
+	compression_parameters.push_back(quality);
+
 	int iMaxWidth = 4096;
 	int iMaxHeight = 3040;
 	double pixelSize = 1.55;
@@ -1382,17 +1444,26 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 	printf("  - Pixel Size: %1.2fmicrons\n", pixelSize);
 	printf("  - Supported Bins: 1x, 2x and 3x\n");
 
-	std::vector<int> compression_params;
-	compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
-	compression_params.push_back(9);
-	compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
-	compression_params.push_back(95);
-
+	// Get just the name of the file, without any directories or the extension.
+	char fileNameOnly[50] = { 0 };
 	if (darkframe)
 	{
-		// To avoid overwriting the optional notification inage with the dark image,
+		// To avoid overwriting the optional notification image with the dark image,
 		// during dark frames we use a different file name.
-		fileName = "dark.jpg";
+        static char darkFilename[20];
+        sprintf(darkFilename, "dark.%s", imagetype);
+        fileName = darkFilename;
+		strncat(final_file_name, fileName, sizeof(final_file_name)-1);
+	}
+	else
+	{
+		const char *slash = strrchr(fileName, '/');
+		if (slash == NULL)
+			strncat(fileNameOnly, fileName, sizeof(fileNameOnly)-1);
+		else
+			strncat(fileNameOnly, slash + 1, sizeof(fileNameOnly)-1);
+		char *dot = strrchr(fileNameOnly, '.');	// we know there's an extension
+		*dot = '\0';
 	}
 
 	// Handle "auto" Image_type.
@@ -1402,15 +1473,42 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 		Image_type = ASI_IMG_RGB24;
 	}
 
+	const char *sType;		// displayed in output
+	if (Image_type == ASI_IMG_RAW16)
+	{
+		sType = "RAW16";
+		current_bpp = 2;
+		current_bit_depth = 16;
+	}
+	else if (Image_type == ASI_IMG_RGB24)
+	{
+		sType = "RGB24";
+		current_bpp = 3;
+		current_bit_depth = 8;
+	}
+	else if (Image_type == ASI_IMG_RAW8)
+	{
+		sType = "RAW8";
+		current_bpp = 1;
+		current_bit_depth = 8;
+	}
+	else
+	{
+		sprintf(debugText, "*** ERROR: Unknown Image Type: %d\n", Image_type);
+		waitToFix(debugText);
+		exit(100);
+	}
+
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 
 	printf("%s", c(KGRN));
 	printf("\nCapture Settings:\n");
 	printf(" Command: %s\n", is_libcamera ? "libcamera-still" : "raspistill");
+	printf(" Image Type: %s\n", sType);
 	printf(" Resolution (before any binning): %dx%d\n", width, height);
 	printf(" Quality: %d\n", quality);
-    printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
+	printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
 	printf(" Exposure (night): %1.0fms\n", round(asiNightExposure_us / US_IN_MS));
 	printf(" Auto Exposure (night): %s\n", yesNo(asiNightAutoExposure));
 	printf(" Gain (night): %1.2f\n", asiNightGain);
@@ -1438,6 +1536,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 	printf(" Rotation: %d\n", asiRotation);
 	printf(" Flip Image: %d\n", asiFlip);
 	printf(" Filename: %s\n", fileName);
+	printf(" Filename Save Directory: %s\n", save_dir);
 	printf(" Latitude: %s\n", latitude);
 	printf(" Longitude: %s\n", longitude);
 	printf(" Sun Elevation: %s\n", angle);
@@ -1487,7 +1586,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 // TODO: xxxxx shouldn't this be "currentExposure_us" instead of "asiNightExposure_us" ?
 // xxxxxx and "currentGain" instead of "asiNightGain"?
-  			RPiHQcalcMean(fileName, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
+  			RPiHQcalcMean(pRgb, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
 		}
 
 		if (darkframe) {
@@ -1635,16 +1734,27 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			if (showTime == 1)
 				sprintf(bufTime, "%s", formatTime(t, timeFormat));
 
+			if (! darkframe)
+			{
+				// Create the name of the file that goes in the images/<date> directory.
+				snprintf(final_file_name, sizeof(final_file_name), "%s-%s.%s",
+					fileNameOnly, formatTime(t, "%Y%m%d%H%M%S"), imagetype);
+			}
+			snprintf(full_filename, sizeof(full_filename), "%s/%s", save_dir, final_file_name);
+
 			// Capture and save image
-			retCode = RPiHQcapture(currentAutoExposure, &currentExposure_us, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, saturation, currentBrightness, quality, fileName, showTime, ImgText, fontsize, fontcolor, background, darkframe, preview, width, height, is_libcamera, &pRgb);
+			retCode = RPiHQcapture(currentAutoExposure, &currentExposure_us, currentAutoGain, asiAutoAWB, currentGain, currentBin, asiWBR, asiWBB, asiRotation, asiFlip, saturation, currentBrightness, quality, full_filename, showTime, ImgText, fontsize, fontcolor, background, darkframe, preview, width, height, is_libcamera, &pRgb);
+
+			int focus_metric;
 			if (retCode == 0)
 			{
 				numExposures++;
+				focus_metric = (int)round(get_focus_metric(pRgb, myModeMeanSetting));
 
 				// If taking_dark_frames is off, add overlay text to the image
 				if (! darkframe)
 				{
-					long last_exposure_us = currentExposure_us;
+					last_exposure_us = currentExposure_us;
 
 					float actualGain = currentGain;	// to be compatible with ZWO - ZWO gain=0.1 dB , RPiHQ gain=factor
 					if (myModeMeanSetting.mode_mean)
@@ -1654,8 +1764,8 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 					if (myModeMeanSetting.mode_mean)
 					{
-						mean = RPiHQcalcMean(fileName, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
-						Log(2, "  > exposure: %d shutter: %1.4f s quickstart: %d\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart);
+						mean = RPiHQcalcMean(pRgb, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
+						Log(2, "  > exposure: %'ld us, shutter: %1.4f s, quickstart: %d, mean=%1.6f\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart, mean);
 					}
 
 					if (showTime == 1)
@@ -1727,7 +1837,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 					if (showFocus == 1)
 					{
-						sprintf(bufTemp, "Focus: %.2f", get_focus_measure(pRgb, myModeMeanSetting));
+						sprintf(bufTemp, "Focus: %d", focus_metric);
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
 							linetype[linenumber], fontname[fontnumber], smallFontcolor,
@@ -1737,8 +1847,8 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 					if (iYOffset > 0)	// if we added anything to overlay, write the file out
 					{
-						bool result = cv::imwrite(fileName, pRgb, compression_params);
-						if (! result) printf("*** ERROR: Unable to write to '%s'\n", fileName);
+						bool result = cv::imwrite(full_filename, pRgb, compression_parameters);
+						if (! result) printf("*** ERROR: Unable to write to '%s'\n", full_filename);
 					}
 				}
 			}
@@ -1750,17 +1860,33 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 				continue;
 			}
 
-			// Check for night time
-			if (dayOrNight == "NIGHT")
-			{
-				// Preserve image during night time
-				system("scripts/saveImageNight.sh &");
-			}
-			else
-			{
-				// Upload and resize image when configured
-				system("scripts/saveImageDay.sh &");
-			}
+			char cmd[1100];
+			char tmp[50];
+			Log(1, "  > Saving %s image '%s'\n", darkframe ? "dark" : dayOrNight.c_str(), final_file_name);
+			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
+			snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", last_exposure_us);
+			strcat(cmd, tmp);
+			// If the remainder can be multiple digits, make them fixed width so
+			// it's easier for the invoked command to compare.
+
+			// There's currently no way to get to the RPiHQ camera's temperature sensor.
+			//snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
+			//strcat(cmd, tmp);
+
+			snprintf(tmp, sizeof(tmp), " GAIN=%03d", (int)round(currentGain));
+			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " BIN=%d", currentBin);
+			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " FLIP=%d", asiFlip);
+			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%02d", current_bit_depth);
+			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " FOCUS=%03d", focus_metric);
+			strcat(cmd, tmp);
+
+			strcat(cmd, " &");
+
+			system(cmd);
 
 			long s;
 			if (myModeMeanSetting.mode_mean && myModeMeanSetting.quickstart)

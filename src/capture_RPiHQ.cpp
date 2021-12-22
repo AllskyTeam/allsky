@@ -364,17 +364,6 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
     }
 }
 
-// write value to log file
-void writeToLog(int val)
-{
-	std::ofstream outfile;
-
-	// Append value to the logfile
-	outfile.open("log.txt", std::ios_base::app);
-	outfile << val;
-	outfile << "\n";
-}
-
 // Build capture command to capture the image from the HQ camera
 int RPiHQcapture(int auto_exposure, int *exposure_us, int auto_gain, int auto_AWB, double gain, int bin, double WBR, double WBB, int rotation, int flip, float saturation, int brightness, int quality, const char* fileName, int time, const char* ImgText, int fontsize, int *fontcolor, int background, int darkframe, int preview, int width, int height, bool libcamera, cv::Mat *image)
 {
@@ -1756,7 +1745,9 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 					if (myModeMeanSetting.mode_mean)
 					{
-// xxxxxx ? use currentExposure_us and currentGain ?
+// xxxxxx ? use currentExposure_us and currentGain ?   OR max values?
+// xxxxxx May need to re-initialize at day/night boundary.
+
 						mean = RPiHQcalcMean(pRgb, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
 						Log(2, "  > Got exposure: %'ld us, shutter: %1.4f s, quickstart: %d, mean=%1.6f\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart, mean);
 						if (mean == -1)

@@ -204,7 +204,7 @@ if [ "${DO_TIMELAPSE}" = "true" ] ; then
 	VIDEOS_FILE="allsky-${DATE}.mp4"
 	UPLOAD_FILE="${DATE_DIR}/${VIDEOS_FILE}"
 	if [ "${TYPE}" = "GENERATE" ]; then
-		CMD="'${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE} ${TIMELAPSE_EXTRA_PARAMETERS}"
+		CMD="'${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE}"
 		generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 		let EXIT_CODE=${EXIT_CODE}+${?}
 	else

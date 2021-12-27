@@ -36,4 +36,5 @@ jobs:
           echo test, and deploy your project.
           ls -la
           uptime
-          make all
+          sudo make deps
+          sudo make all

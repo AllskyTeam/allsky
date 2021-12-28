@@ -214,7 +214,7 @@ if [ "${DO_TIMELAPSE}" = "true" ] ; then
 fi
 
 
-if [ "${TYPE}" = "GENERATE" -a ${SILENT} = "false" ]; then
+if [ "${TYPE}" = "GENERATE" -a ${SILENT} = "false" -a ${EXIT_CODE} -eq 0 ]; then
 	ARGS=""
 	[ "${DO_KEOGRAM}" = "true" ] && ARGS="${ARGS} -k"
 	[ "${DO_STARTRAILS}" = "true" ] && ARGS="${ARGS} -s"

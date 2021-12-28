@@ -43,6 +43,9 @@ if [ ${DEBUG} = "true" -o "${ON_TTY}" = "1" ]; then
 else
 	ME="${ME}:"
 fi
+
+# If it's not a full pathname, assume it's in $ALLSKY_IMAGES which is what many other scripts do.
+[ "${DATE:0:1}" != "/" ] && DATE="${ALLSKY_IMAGES}/${DATE}"
 if [ ! -d "${DATE}" ]; then
 	echo -e "${RED}${ME} '${DATE}' is not a directory${NC}"
 	exit 2
@@ -123,7 +126,7 @@ for f in ${IMAGE_FILES} ; do
 			MEAN=$(echo "${MEAN} * 100" | bc)
 			MSG=""
 
-			if [ ${HIGH} -ne 0 ]; then
+			if [ "${HIGH}" != "0" ]; then
 				x=$(echo "${MEAN} > ${HIGH}" | bc)
 				if [ ${x} -eq 1 ]; then
 					BAD="'${f}' (above threshold: MEAN=${MEAN}, threshold = ${HIGH})"
@@ -133,7 +136,7 @@ for f in ${IMAGE_FILES} ; do
 			fi
 
 			# An image can't be both HIGH and LOW so if it was HIGH don't check for LOW.
-			if [ "${BAD}" = "" -a ${LOW} -ne 0 ]; then
+			if [ "${BAD}" = "" -a "${LOW}" != "0" ]; then
 				x=$(echo "${MEAN} < ${LOW}" | bc)
 				if [ ${x} -eq 1 ]; then
 					BAD="'${f}' (below threshold: MEAN=${MEAN}, threshold = ${LOW})"

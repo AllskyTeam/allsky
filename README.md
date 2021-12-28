@@ -306,7 +306,7 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* Many bug fixes, error checks, and warnings added.
 * version **0.8.3**: Works on Bullseye operating system.
 	* RPiHQ version:
-	  * Has an improved auto-exposure algorithm.  To use it, set `CAPTURE_EXTRA_PARAMETERS="-mean-value 0.3 -autoexposure 1"` in config.sh (a ffuture version will allow this to be set via the WebUI).
+	  * Has an improved auto-exposure algorithm.  To use it, set `CAPTURE_EXTRA_PARAMETERS="-mean-value 0.3 -autoexposure 1"` in config.sh (a future version will allow this to be set via the WebUI).
 	  * Has many new settings including support for most of the text overlay features that are supported by the ZWO version.  The "extra text" feature will be supported in a future version).
 	* New and changed config.sh variables, see the [Software Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) Wiki page for more information:
 	  * `IMG_UPLOAD_FREQUENCY`: how often the image should be uploaded to a website.  Useful with slow uplinks or metered Internet connections.

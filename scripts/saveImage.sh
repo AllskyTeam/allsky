@@ -65,7 +65,8 @@ while [ $# -gt 0 ]; do
 	VARIABLE="THIS_${1%=*}"		# everything before the "="
 	VALUE="${1##*=}"			# everything after the "="
 	shift
-	declare ${VARIABLE}="${VALUE}"	# need "declare" to get this indirection to work
+	# Export the variable so other scripts we call can use it.
+	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
 done
 
 CURRENT_IMAGE="${IMAGE_TO_USE}"		# darkCapture.sh and darkSubtract.sh expect CURRENT_IMAGE

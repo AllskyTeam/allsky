@@ -70,6 +70,7 @@ int asiFlip					= 0;
 int current_bpp				= NOT_SET;	// bytes per pixel: 8, 16, or 24
 int current_bit_depth		= NOT_SET;	// 8 or 16
 int currentBin				= NOT_SET;
+float mean					= NOT_SET;	// mean brightness of image
 
 // Some command-line and other option definitions needed outside of main():
 bool tty					= false;	// are we on a tty?
@@ -1691,7 +1692,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 					if (myModeMeanSetting.mode_mean)
 						actualGain =  myRaspistillSetting.analoggain;
 					int iYOffset = 0;
-					float mean = -1;
 
 					if (myModeMeanSetting.mode_mean)
 					{
@@ -1836,6 +1836,8 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
 			snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", last_exposure_us);
 			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " MEAN=%.6f", mean);
+			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " AUTOEXPOSURE=%d", currentAutoExposure ? 1 : 0);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " AUTOGAIN=%d", currentAutoGain ? 1 : 0);
@@ -1845,6 +1847,8 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 			snprintf(tmp, sizeof(tmp), " WBR=%1.2f", WBR);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " WBB=%1.2f", WBB);
+			strcat(cmd, tmp);
+
 			// If the remainder can be multiple digits, make them fixed width so
 			// it's easier for the invoked command to compare.
 

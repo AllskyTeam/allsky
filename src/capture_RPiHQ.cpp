@@ -65,6 +65,7 @@ float default_saturation;
 int min_brightness;					// what user enters on command line
 int max_brightness;
 int default_brightness;
+int currentBrightness		= NOT_SET;
 long last_exposure_us		= 0;		// last exposure taken
 int asiFlip					= 0;
 int current_bpp				= NOT_SET;	// bytes per pixel: 8, 16, or 24
@@ -855,7 +856,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 		min_brightness    = 0;
 		max_brightness    = 100;
 	}
-	int currentBrightness = NOT_SET;
 	int asiRotation       = 0;
 	char const *latitude  = "52.57N";
 	char const *longitude = "4.70E";
@@ -1836,6 +1836,8 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
 			snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", last_exposure_us);
 			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " BRIGHTNESS=%d", currentBrightness);
+			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " MEAN=%.6f", mean);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " AUTOEXPOSURE=%d", currentAutoExposure ? 1 : 0);
@@ -1849,13 +1851,12 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 			snprintf(tmp, sizeof(tmp), " WBB=%1.2f", WBB);
 			strcat(cmd, tmp);
 
-			// If the remainder can be multiple digits, make them fixed width so
-			// it's easier for the invoked command to compare.
+			// TEMPERATURE, GAIN, and BIN are used by the dark* scripts to sort and compare against
+			// prior values, so make them fixed width to aid in doing that.
 
 			// There's currently no way to get to the RPiHQ camera's temperature sensor.
 			//snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
 			//strcat(cmd, tmp);
-
 			snprintf(tmp, sizeof(tmp), " GAIN=%03d", (int)round(currentGain));
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " BIN=%d", currentBin);
@@ -1864,7 +1865,7 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%02d", current_bit_depth);
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " FOCUS=%03d", focus_metric);
+			snprintf(tmp, sizeof(tmp), " FOCUS=%3d", focus_metric);
 			strcat(cmd, tmp);
 
 			strcat(cmd, " &");

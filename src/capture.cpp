@@ -122,6 +122,7 @@ int current_histogramBoxSizeY = NOT_SET;
 // % from left/top side that the center of the box is.  0.5 == the center of the image's X/Y axis
 float histogramBoxPercentFromLeft = DEFAULT_BOX_FROM_LEFT;
 float histogramBoxPercentFromTop = DEFAULT_BOX_FROM_TOP;
+int mean                      = 0;		// histogram mean
 #endif	// USE_HISTOGRAM
 
 char debug_text[500];		// buffer to hold debug messages
@@ -337,6 +338,10 @@ void *SaveImgThd(void *para)
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
 			snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", last_exposure_us);
 			strcat(cmd, tmp);
+#ifdef USE_HISTOGRAM
+			snprintf(tmp, sizeof(tmp), " MEAN=%03d", mean);
+			strcat(cmd, tmp);
+#endif
 			snprintf(tmp, sizeof(tmp), " AUTOEXPOSURE=%d", currentAutoExposure ? 1 : 0);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " AUTOGAIN=%d", currentAutoGain ? 1 : 0);
@@ -347,8 +352,10 @@ void *SaveImgThd(void *para)
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " WBB=%d", WBB);
 			strcat(cmd, tmp);
+
 			// If the remainder can be multiple digits, make them fixed width so
 			// it's easier for the invoked command to compare.
+
 			snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " GAIN=%03d", currentGain);
@@ -2354,7 +2361,7 @@ const char *locale = DEFAULT_LOCALE;
         // This simply makes it easier to see things in the log file.
 
 #ifdef USE_HISTOGRAM
-        int mean = 0;
+        mean = 0;
         int attempts = 0;
         int histogram[256];
 #endif

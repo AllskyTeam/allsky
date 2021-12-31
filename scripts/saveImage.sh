@@ -151,7 +151,7 @@ fi
 if [ "${UPLOAD_IMG}" = "true" ] ; then
 	# First check if we should save this image
 	if [ "${IMG_UPLOAD_FREQUENCY}" != "1" ]; then
-		FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY"
+		FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 		if [ ! -f "${FREQUENCY_FILE}" ]; then
 			# Not sure where it went, so recreate it.
 			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
@@ -198,3 +198,4 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 fi
 
 exit 0
+

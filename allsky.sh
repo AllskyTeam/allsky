@@ -202,7 +202,7 @@ ARGUMENTS+=(-save_dir "${CAPTURE_SAVE_DIR}")
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 # If the user wants images uploaded only every n times, save that number to a file.
-if [ "${IMG_UPLOAD_FREQUENCY}" != "0" ]; then
+if [ "${IMG_UPLOAD_FREQUENCY}" != "1" ]; then
 	# Save "1" so we upload the first image.
 	# saveImage.sh will write ${IMG_UPLOAD_FREQUENCY} to the file as needed.
 	echo "1" > "${FREQUENCY_FILE}"

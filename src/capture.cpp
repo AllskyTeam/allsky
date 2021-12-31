@@ -72,6 +72,7 @@ int asiFlip                = 0;
 int current_bpp            = NOT_SET;	// bytes per pixel: 8, 16, or 24
 int current_bit_depth      = NOT_SET;	// 8 or 16
 int currentBin             = NOT_SET;
+int currentBrightness      = NOT_SET;
 
 // Some command-line and other option definitions needed outside of main():
 bool tty                   = false;	// are we on a tty?
@@ -338,8 +339,10 @@ void *SaveImgThd(void *para)
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
 			snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", last_exposure_us);
 			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " BRIGHTNESS=%d", currentBrightness);
+			strcat(cmd, tmp);
 #ifdef USE_HISTOGRAM
-			snprintf(tmp, sizeof(tmp), " MEAN=%03d", mean);
+			snprintf(tmp, sizeof(tmp), " MEAN=%d", mean);
 			strcat(cmd, tmp);
 #endif
 			snprintf(tmp, sizeof(tmp), " AUTOEXPOSURE=%d", currentAutoExposure ? 1 : 0);
@@ -353,9 +356,8 @@ void *SaveImgThd(void *para)
 			snprintf(tmp, sizeof(tmp), " WBB=%d", WBB);
 			strcat(cmd, tmp);
 
-			// If the remainder can be multiple digits, make them fixed width so
-			// it's easier for the invoked command to compare.
-
+			// TEMPERATURE, GAIN, and BIN are used by the dark* scripts to sort and compare against
+			// prior values, so make them fixed width to aid in doing that.
 			snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " GAIN=%03d", currentGain);
@@ -1105,7 +1107,6 @@ const char *locale = DEFAULT_LOCALE;
 #define DEFAULT_BRIGHTNESS       50
     int asiDayBrightness       = DEFAULT_BRIGHTNESS;
     int asiNightBrightness     = DEFAULT_BRIGHTNESS;
-    int currentBrightness      = NOT_SET;
 
 #define DEFAULT_LATITUDE         "60.7N" //GPS Coordinates of Whitehorse, Yukon where the code was created
     char const *latitude       = DEFAULT_LATITUDE;

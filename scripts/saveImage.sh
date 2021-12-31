@@ -19,7 +19,8 @@ usage_and_exit()
 	exit ${retcode}
 }
 [ $# -lt 2 ] && usage_and_exit 1
-DAY_OR_NIGHT="${1}"
+# Export so other scripts can use it.
+export DAY_OR_NIGHT="${1}"
 [ "${DAY_OR_NIGHT}" != "DAY" -a "${DAY_OR_NIGHT}" != "NIGHT"  ] && usage_and_exit 1
 
 # ${IMAGE_TO_USE} is the full path to a uniquely-named file created by the capture program.

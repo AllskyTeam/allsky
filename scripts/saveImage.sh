@@ -69,7 +69,8 @@ while [ $# -gt 0 ]; do
 	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
 done
 
-CURRENT_IMAGE="${IMAGE_TO_USE}"		# darkCapture.sh and darkSubtract.sh expect CURRENT_IMAGE
+# Export so other scripts can use it.
+export CURRENT_IMAGE="${IMAGE_TO_USE}"		# darkCapture.sh and darkSubtract.sh expect CURRENT_IMAGE
 source "${ALLSKY_SCRIPTS}/darkCapture.sh"		# does not return if in darkframe mode
 # xxxx TODO: Dark subtract long-exposure images, even if during daytime.
 # xxxx TODO: Need a config variable to specify the threshold to dark subtract.
@@ -198,4 +199,3 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 fi
 
 exit 0
-

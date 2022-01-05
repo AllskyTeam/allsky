@@ -87,53 +87,17 @@ if [ $# -eq 12 ]; then
 	make_image "${@}"
 
 elif [ $# -eq 0 ]; then
-	#ake_image  1: Basename            2: "TxtColor"                          \
-	#           3: "Font"              4: "FontSize"                          \
-	#		    5: "StrokeColor"       6: "StrokeWidth"                       \
-	#		    7: "BgColor"           8: "BorderWidth"    9: "BorderColor"   \
-	#		   10: "Extensions"       11: "ImageSize"                         \
-	#		   12: "Message"
-	make_image NotRunning                 ""                                  \
-			       ""                     ""                                  \
-			       ""                     ""                                  \
-				   ""                     ""                  ""              \
-				   ""                     ""                                  \
-				   "AllSky\nsoftware\nis not running"
-
-	make_image DarkFrames                 "green"                             \
-				   ""                     ""                                  \
-				   "white"                ""                                  \
-				   "black"                ""                  ""              \
-				   ""                     ""                                  \
-				   "Camera\nis taking\ndark frames"
-
-	make_image StartingUp                 "green"                             \
-				   ""                     ""                                  \
-				   ""                     ""                                  \
-				   ""                     ""                  ""              \
-				   ""                     ""                                  \
-				   "AllSky\nsoftware\nis starting up"
-
-	make_image Restarting                 "lime"                              \
-				   ""                     ""                                  \
-				   ""                     ""                                  \
-				   ""                     ""                  ""              \
-				   ""                     ""                                  \
-				   "AllSky\nsoftware\nis restarting"
-
-	make_image CameraOffDuringDay         "#ffff4a"                           \
-				   ""                     ""                                  \
-				   ""                     ""                                  \
-				   ""                     ""                  ""              \
-				   ""                     ""                                  \
-				   "Camera\nis off\nduring the day"
-
-	make_image Error                      "red"                               \
-				   ""                     100                                 \
-				   ""                     ""                                  \
-				   ""                     "10"                "red"           \
-				   ""                     ""                                  \
-				   "ERROR:\nSee\n/var/log/allsky.log\nfor details"
+#            #1                   #2         #3                 #4     #5        #6      #7         #8      #9        #10         #11       #12
+#            Basename             Text       Font               Font   Stroke    Stroke  Background Border  Border    Extensions  Image     Message
+#                                 Color      Name               Size   Color     Width   Color      Width   Color                 Size
+#            ""                   "white"    "Helvetica-Bold"   128    "black"   2       "#404040"  0       "white"   ${ALL_EXTS} "959x719" ""
+#            +--------------------+----------+------------------+------+---------+-------+----------+-------+---------+-----------+---------+--------------------------------------
+  make_image NotRunning           ""         ""                 ""     ""        ""      ""         ""      ""        ""          ""        "AllSky\nsoftware\nis not running"
+  make_image DarkFrames           "green"    ""                 ""     "white"   ""      "black"    ""      ""        ""          ""        "Camera\nis taking\ndark frames"
+  make_image StartingUp           "green"    ""                 ""     ""        ""      ""         ""      ""        ""          ""        "AllSky\nsoftware\nis starting up"
+  make_image Restarting           "lime"     ""                 ""     ""        ""      ""         ""      ""        ""          ""        "AllSky\nsoftware\nis restarting"
+  make_image CameraOffDuringDay   "#ffff4a"  ""                 ""     ""        ""      ""         ""      ""        ""          ""        "Camera\nis off\nduring the day"
+  make_image Error                "red"      ""                 80     ""        ""      ""         10      "red"     ""          ""        "ERROR\n\nSee\n/var/log/allsky.log\nfor details"
 
 else
 	echo -e "${RED}ERROR: Either specify ALL arguments, or don't specify any.${NC}" >&2

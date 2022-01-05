@@ -144,9 +144,9 @@ if [ "${DAYTIME_SAVE}" = "true" -o "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 	# it to use.
 
 	FINAL_FILE="${DATE_DIR}/${IMAGE_NAME}"
-	mv "${IMAGE_TO_USE}" "${FINAL_FILE}"
-	IMAGE_TO_USE="${WORKING_DIR}/${FULL_FILENAME}"	# Websites look for $FULL_FILENAME
-	cp -f "${FINAL_FILE}" "${IMAGE_TO_USE}" || echo "*** ERROR: ${ME}: unable to copy file ***"
+	cp "${IMAGE_TO_USE}" "${FINAL_FILE}" || echo "*** ERROR: ${ME}: unable to copy ${IMAGE_TO_USE} ***"
+	mv "${IMAGE_TO_USE}" "${WORKING_DIR}/${FULL_FILENAME}"	# Websites look for $FULL_FILENAME
+	IMAGE_TO_USE="${FINAL_FILE}"
 fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
@@ -181,10 +181,9 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 	if [ "${RESIZE_UPLOADS}" = "true" ] ; then
 		# Need a copy of the image since we are going to resize it.
 		# Put the copy in ${WORKING_DIR}.
-		FILE_TO_UPLOAD="${WORKING_DIR}/${FULL_FILENAME}"
-		cp "${IMAGE_TO_USE}" "${FILE_TO_UPLOAD}"
+		FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
 		[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${RESIZE_UPLOADS_SIZE}"
-		convert "${FILE_TO_UPLOAD}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}"
+		convert "${IMAGE_TO_USE}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}"
 		if [ $? -ne 0 ] ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: RESIZE_UPLOADS failed; continuing with larger image.${NC}"
 			# We don't know the state of $FILE_TO_UPLOAD so use the larger file.

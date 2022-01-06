@@ -353,27 +353,40 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
 {
     std::string t;
     char sunwaitCommand[128];	// returns "hh:mm, hh:mm" (sunrise, sunset)
-    sprintf(sunwaitCommand, "sunwait list angle %s %s %s | awk '{print $2}'", angle, latitude, longitude);
+    sprintf(sunwaitCommand, "sunwait list set angle %s %s %s", angle, latitude, longitude);
     t = exec(sunwaitCommand);
     t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
 
-    int h=0, m=0, secs;
-    sscanf(t.c_str(), "%d:%d", &h, &m);
-    secs = (h*60*60) + (m*60);
+    int hNight=0, mNight=0, secsNight;
+	// It's possible for sunwait to return "--:--" if the angle causes sunset to start
+	// after midnight or before noon.
+	if (sscanf(t.c_str(), "%d:%d", &hNight, &mNight) != 2)
+	{
+		Log(0, "ERROR: With angle %s sunwait returned unknown time to nighttime: %s\n", angle, t.c_str());
+		return(1 * 60 * 60);	// 1 hour - should we exit instead?
+	}
+    secsNight = (hNight*60*60) + (mNight*60);	// seconds to nighttime from start of today
+	// sunwait doesn't return seconds so on average the actual time will be 30 seconds
+	// after the stated time. So, add 30 seconds.
+	secsNight += 30;
 
-    char *now = getTime("%H:%M");
-    int hNow=0, mNow=0, secsNow;
-    sscanf(now, "%d:%d", &hNow, &mNow);
-    secsNow = (hNow*60*60) + (mNow*60);
+	char *now = getTime("%H:%M:%S");
+    int hNow=0, mNow=0, sNow=0, secsNow;
+    sscanf(now, "%d:%d:%d", &hNow, &mNow, &sNow);
+    secsNow = (hNow*60*60) + (mNow*60) + sNow;	// seconds to now from start of today
+	Log(3, "Now=%s, nighttime starts at %s\n", now, t.c_str());
 
-    // Handle the (probably rare) case where nighttime is tomorrow
-    if (secsNow > secs)
+	// Handle the (probably rare) case where nighttime is tomorrow.
+	// We are only called during the day, so if nighttime is earlier than now, it was past midnight.
+	int diff = secsNight - secsNow;
+    if (diff < 0)
     {
-        return(secs + (60*60*24) - secsNow);
+		// This assumes tomorrow's nighttime starts same as today's, which is close enough.
+		return(diff + (60*60*24));	// Add one day
     }
     else
     {
-        return(secs - secsNow);
+        return(diff);
     }
 }
 
@@ -634,6 +647,7 @@ if (! libcamera) { // TODO: need to fix this for libcamera
 	ss << quality;
 	command += " --quality " + ss.str();
 
+#ifdef DO_NOT_USE
 	if (!darkframe) {
 		string info_text = "";
 
@@ -709,6 +723,7 @@ if (! libcamera)	// xxxx libcamera doesn't have fontsize, color, or background.
 		command += " -ae " + ss.str() + ",0x" + C.str() + ",0x8080" + B.str();
 }
 	}
+#endif //DO_NOT_USE
 
 
 	if (libcamera)
@@ -1563,14 +1578,20 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 						tty ? "Press Ctrl+C to stop" : "Stop the allsky service to end this process.");
 					displayedNoDaytimeMsg = 1;
 
-					// sleep until almost nighttime, then wake up and sleep a short time
+					// sleep until around nighttime, then wake up and sleep more if needed.
 					int secsTillNight = calculateTimeToNightTime(latitude, longitude, angle);
-					sleep(secsTillNight - 10);
+					timeval t;
+					t = getTimeval();
+					t.tv_sec += secsTillNight;
+					Log(1, "Sleeping until %s (%'d seconds)\n", formatTime(t, timeFormat), secsTillNight);
+					sleep(secsTillNight);
 				}
 				else
 				{
 					// Shouldn't need to sleep more than a few times before nighttime.
-					sleep(5);
+					int s = 5;
+					Log(1, "Not quite nighttime; sleeping %'d more seconds\n", s);
+					sleep(s);
 				}
 
 				// No need to do any of the code below so go back to the main loop.

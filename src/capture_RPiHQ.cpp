@@ -66,7 +66,6 @@ int min_brightness;					// what user enters on command line
 int max_brightness;
 int default_brightness;
 int currentBrightness		= NOT_SET;
-long last_exposure_us		= 0;		// last exposure taken
 int asiFlip					= 0;
 int current_bpp				= NOT_SET;	// bytes per pixel: 8, 16, or 24
 int current_bit_depth		= NOT_SET;	// 8 or 16
@@ -835,10 +834,12 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 	int currentExposure_us= NOT_SET;
 	int asiNightAutoExposure= 0;
 	int asiDayAutoExposure= 1;
+	long last_exposure_us = 0;		// last exposure taken
 	double asiNightGain   = 4.0;
 	double asiDayGain     = 1.0;
 	int asiNightAutoGain  = 0;
 	int asiDayAutoGain    = 0;
+	float last_gain		  = 0.0;		// last gain taken
 	int nightDelay_ms     = 10;
 	int dayDelay_ms       = 15 * MS_IN_SEC;
 	int currentDelay_ms   = NOT_SET;
@@ -1708,10 +1709,10 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 				if (! darkframe)
 				{
 					last_exposure_us = currentExposure_us;
-
-					float actualGain = currentGain;	// to be compatible with ZWO - ZWO gain=0.1 dB , RPiHQ gain=factor
 					if (myModeMeanSetting.mode_mean)
-						actualGain =  myRaspistillSetting.analoggain;
+						last_gain =  myRaspistillSetting.analoggain;
+					else
+						last_gain = currentGain;	// ZWO gain=0.1 dB , RPiHQ gain=factor
 					int iYOffset = 0;
 
 					if (myModeMeanSetting.mode_mean)
@@ -1768,7 +1769,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 					if (showGain == 1)
 					{
-						sprintf(bufTemp, "Gain: %1.2f", actualGain);
+						sprintf(bufTemp, "Gain: %1.2f", last_gain);
 						// Indicate if in auto gain mode.
 						if (currentAutoGain) strcat(bufTemp, " (auto)");
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
@@ -1859,7 +1860,7 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " BRIGHTNESS=%d", currentBrightness);
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " MEAN=%.6f", mean);
+			snprintf(tmp, sizeof(tmp), " MEAN=%.3f", mean);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " AUTOEXPOSURE=%d", currentAutoExposure ? 1 : 0);
 			strcat(cmd, tmp);
@@ -1878,7 +1879,9 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 			// There's currently no way to get to the RPiHQ camera's temperature sensor.
 			//snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
 			//strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " GAIN=%03d", (int)round(currentGain));
+			snprintf(tmp, sizeof(tmp), " GAIN=%1.2f", last_gain);
+			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " GAINDB=%03d", (int)round(20.0 * 10.0 * log10(last_gain)));
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " BIN=%d", currentBin);
 			strcat(cmd, tmp);

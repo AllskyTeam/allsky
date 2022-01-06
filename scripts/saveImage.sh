@@ -112,6 +112,7 @@ if [ "${DAY_OR_NIGHT}" = "NIGHT" -a ${AUTO_STRETCH} = "true" ]; then
 	fi
 fi
 
+# If needed, save the current image in today's directory.
 if [ "${DAYTIME_SAVE}" = "true" -o "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 	# Determine what directory is the final resting place.
 	if [ "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
@@ -123,10 +124,6 @@ if [ "${DAYTIME_SAVE}" = "true" -o "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 		DATE_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
 	fi
 	mkdir -p "${DATE_DIR}"
-fi
-
-# If needed, save the current image in today's directory.
-if [ "${DAYTIME_SAVE}" = "true" -o "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 
 	if [ "${IMG_CREATE_THUMBNAILS}" = "true" ]; then
 		THUMBNAILS_DIR="${DATE_DIR}/thumbnails"

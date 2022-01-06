@@ -1796,7 +1796,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 					if (showMean == 1 && myModeMeanSetting.mode_mean)
 					{
-						sprintf(bufTemp, "Mean: %.6f", mean);
+						sprintf(bufTemp, "Mean: %.3f", mean);
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
 							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
 							linetype[linenumber], fontname[fontnumber], smallFontcolor,

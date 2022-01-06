@@ -400,7 +400,7 @@ int RPiHQcapture(bool auto_exposure, int *exposure_us, bool auto_gain, bool auto
 	// Ensure no process is still running.
 	// Include "--" so we only find the command, not a different program with the command
 	// on its command line.
-	string kill = "ps -ef | grep '" + command + " --' | grep -v color | awk '{print $2}' | xargs kill -9 1> /dev/null 2>&1";
+	string kill = "pgrep '" + command + "' | xargs kill -9 2> /dev/null";
 	char kcmd[kill.length() + 1];		// Define char variable
 	strcpy(kcmd, kill.c_str());			// Convert command to character variable
 
@@ -412,10 +412,15 @@ int RPiHQcapture(bool auto_exposure, int *exposure_us, bool auto_gain, bool auto
 	ss << fileName;
 	command += " --output '" + ss.str() + "'";
 	if (libcamera)
+	{
 		// xxx TODO: does this do anything?
-		command += " --tuning-file /usr/share/libcamera/ipa/raspberrypi/imx477.json";
+		// command += " --tuning-file /usr/share/libcamera/ipa/raspberrypi/imx477.json";
+		command += "";	// xxxx
+	}
 	else
+	{
 		command += " --thumb none --burst -st";
+	}
 
 	// --timeout (in MS) determines how long the video will run before it takes a picture.
 	if (preview)

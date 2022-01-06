@@ -440,9 +440,12 @@ int RPiHQcapture(bool auto_exposure, int *exposure_us, bool auto_gain, bool auto
 			if (myModeMeanSetting.mode_mean)
 				ss << 1;	// We do our own auto-exposure so no need to wait at all.
 			else if (dayOrNight == "DAY")
-				ss << 1000;
+				ss << 2 * MS_IN_SEC;
 			else	// NIGHT
-				ss << 10000;	// could use longer but it'll take forever for pictures to appear
+			{
+				// could use longer but it'll take forever for pictures to appear
+				ss << 10 * MS_IN_SEC;
+			}
 		}
 		else
 		{

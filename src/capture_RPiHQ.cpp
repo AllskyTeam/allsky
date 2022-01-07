@@ -476,7 +476,8 @@ int RPiHQcapture(bool auto_exposure, int *exposure_us, bool auto_gain, bool auto
 	if (libcamera)
 	{
 		if (bin==1)
-			command += " --width 4060 --height 3056";
+			// xxxxxx command += " --width 4060 --height 3056";
+			command += " --width 4056 --height 3040";
 		else if (bin==2)
 			command += " --width 2028 --height 1520";
 		else
@@ -487,7 +488,7 @@ int RPiHQcapture(bool auto_exposure, int *exposure_us, bool auto_gain, bool auto
 		if (bin==1)
 			command += " --mode 3";
 		else if (bin==2)
-			command += " --mode 2  --width 2028 --height 1520";
+			command += " --mode 2 --width 2028 --height 1520";
 		else
 			command += " --mode 4 --width 1012 --height 760";
 	}
@@ -1735,9 +1736,8 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 // xxxxxx use max exposure and gain values, current_max_autoexposure_us, asiNightMaxGain (current_max_gain)
 // xxxxxx May need to re-initialize at day/night boundary.
 
-//xxx						mean = RPiHQcalcMean(pRgb, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
-						mean = RPiHQcalcMean(pRgb, currentExposure_us, currentGain, myRaspistillSetting, myModeMeanSetting);
-						Log(2, "  > Got exposure: %'ld us, shutter: %1.4f s, quickstart: %d, mean=%1.6f\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart, mean);
+						mean = RPiHQcalcMean(pRgb, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
+						Log(2, "  > Got exposure: %'ld us, shutter: %1.4f s, quickstart: %d, mean=%1.6f\n", currentExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart, mean);
 						if (mean == -1)
 						{
 							numErrors++;

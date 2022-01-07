@@ -380,15 +380,15 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
 
 	// Handle the (probably rare) case where nighttime is tomorrow.
 	// We are only called during the day, so if nighttime is earlier than now, it was past midnight.
-	int diff = secsNight - secsNow;
-    if (diff < 0)
+	int diff_s = secsNight - secsNow;
+    if (diff_s < 0)
     {
 		// This assumes tomorrow's nighttime starts same as today's, which is close enough.
-		return(diff + S_IN_DAY);	// Add one day
+		return(diff_s + S_IN_DAY);	// Add one day
     }
     else
     {
-        return(diff);
+        return(diff_s);
     }
 }
 

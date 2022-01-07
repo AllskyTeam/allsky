@@ -35,14 +35,6 @@ if [[ ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
 	"${ALLSKY_SCRIPTS}/postData.sh"
 fi
 
-# Remove corrupt images before generating keograms and startrails.
-# This can take several (tens of) minutes to run and isn't necessary unless the system
-# produces corrupt images which then generate funny colors in the summary images.
-if [[ "${REMOVE_BAD_IMAGES}" == "true" ]]; then
-	echo -e "${ME}: ===== Removing bad images"
-	"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${DATE_DIR}"
-fi
-
 # Generate keogram from collected images
 if [[ ${KEOGRAM} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Keogram"

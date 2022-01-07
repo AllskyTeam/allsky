@@ -2,25 +2,32 @@
 
 # This file is "source"d into another.
 # "${CURRENT_IMAGE}" is the name of the current image we're working on and is passed to us.
+ME2="$(basename "${BASH_SOURCE[0]}")"
 
-# ${TEMPERATURE} is passed to us by saveImage.sh, but may be null.
-# If ${TEMPERATURE} is set, use it as the temperature, otherwise read the ${TEMPERATURE_FILE}.
+# Make sure the input file exists; if not, something major is wrong so exit.
+if [ "${CURRENT_IMAGE}" = "" ]; then
+	echo "*** ${ME2}: ERROR: 'CURRENT_IMAGE' not set; aborting."
+	exit 1
+fi
+if [ ! -f "${CURRENT_IMAGE}" ]; then
+	echo "*** ${ME2}: ERROR: '${CURRENT_IMAGE}' does not exist; aborting."
+	exit 2
+fi
+
+# ${THIS_TEMPERATURE} is passed to us by saveImage.sh, but may be null.
+# If ${THIS_TEMPERATURE} is set, use it as the temperature, otherwise read the ${TEMPERATURE_FILE}.
 # If the ${TEMPERATURE_FILE} file doesn't exist, set the temperature to "n/a".
-if [ "${TEMPERATURE}" = "" ]; then
-	TEMPERATURE_FILE="${ALLSKY_HOME}/temperature.txt"
+if [ "${THIS_TEMPERATURE}" = "" ]; then
+	TEMPERATURE_FILE="${ALLSKY_TMP}/temperature.txt"
 	if [ -s "${TEMPERATURE_FILE}" ]; then	# -s so we don't use an empty file
-		TEMPERATURE=$(printf "%02.0f" "$(< ${TEMPERATURE_FILE})")
+		THIS_TEMPERATURE=$( < ${TEMPERATURE_FILE})
 	else
-		TEMPERATURE="n/a"
+		THIS_TEMPERATURE="n/a"
 	fi
 fi
 
 DARK_MODE=$(jq -r '.darkframe' "${CAMERA_SETTINGS}")
 if [ "${DARK_MODE}" = "1" ] ; then
-	# XXXXX in future release $CURRENT_IMAGE will be set by saveImage.sh
-	# and passed to us.  Doing this conditional set works either way.
-	CURRENT_IMAGE=${CURRENT_IMAGE:-"dark.${EXTENSION}"}
-
 	# The extension on $CURRENT_IMAGE may not be $EXTENSION.
 	DARK_EXTENSION="${CURRENT_IMAGE##*.}"
 
@@ -28,10 +35,10 @@ if [ "${DARK_MODE}" = "1" ] ; then
 	mkdir -p "${DARKS_DIR}"
 	# If the camera doesn't support temperature, we will keep overwriting the file until
 	# the user creates a temperature.txt file.
-	if [ "${TEMPERATURE}" = "n/a" ]; then
+	if [ "${THIS_TEMPERATURE}" = "n/a" ]; then
 		cp "${CURRENT_IMAGE}" "${DARKS_DIR}"
 	else
-		cp "${CURRENT_IMAGE}" "${DARKS_DIR}/${TEMPERATURE}.${DARK_EXTENSION}"
+		cp "${CURRENT_IMAGE}" "${DARKS_DIR}/${THIS_TEMPERATURE}.${DARK_EXTENSION}"
 	fi
 
 	# If the user has notification images on, the current image says we're taking dark frames,
@@ -45,7 +52,4 @@ if [ "${DARK_MODE}" = "1" ] ; then
 	fi
 
 	exit 0	# exit so the calling script exits and doesn't try to process the file.
-else	
-	# XXXXX Need this until saveImage.sh passes $CURRENT_IMAGE to us.
-	CURRENT_IMAGE="${CURRENT_IMAGE:-${FULL_FILENAME}}"	# Not capturing darks so use standard file name
 fi

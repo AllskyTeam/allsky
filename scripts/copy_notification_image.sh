@@ -19,7 +19,7 @@ if [ ! -e "${NOTIFICATIONFILE}" ] ; then
 	exit 2
 fi
 
-IMAGE_TO_USE="${ALLSKY_TMP}/notification-${FULL_FILENAME}"
+IMAGE_TO_USE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
 # Don't overwrite notification image so create a temporary copy and use that.
 cp "${NOTIFICATIONFILE}" "${IMAGE_TO_USE}"
 
@@ -32,32 +32,34 @@ if [ "${IMG_RESIZE}" = "true" ]; then
 	fi
 fi
 
-# If daytime saving is desired, save the image in today's thumbnail directory
+# If daytime saving is desired, save the image in today's thumbnail directory if desired
 # so the user can see when things changed.
 # Don't save in main image directory because we don't want the notification image in timelapses.
 # If at nighttime, save them in (possibly) yesterday's directory.
 # If during day, save in today's directory.
-if [ "${DAYTIME_SAVE}" = "true" -o "${CAPTURE_24HR}" = "true" ] ; then	# CAPTURE_24HR is OLD name
+if [ "${DAYTIME_SAVE}" = "true" -a "${IMG_CREATE_THUMBNAILS}" = "true" ] ; then
 	DATE_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
 	# Use today's folder if it exists, otherwise yesterday's
 	[ ! -d "${DATE_DIR}" ] && DATE_DIR="${ALLSKY_IMAGES}/$(date -d '12 hours ago' +'%Y%m%d')"
-	THUMB="${DATE_DIR}/thumbnails/${FILENAME}-$(date +'%Y%m%d%H%M%S').${EXTENSION}"
+	THUMBNAILS_DIR="${DATE_DIR}/thumbnails"
+	mkdir -p ${THUMBNAILS_DIR}
+	THUMB="${THUMBNAILS_DIR}/${FILENAME}-$(date +'%Y%m%d%H%M%S').${EXTENSION}"
 
 	convert "${IMAGE_TO_USE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}"
 	if [ $? -ne 0 ] ; then
 		echo "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
-    	fi
+	fi
 fi
 
 FULL_FILENAME="${IMG_PREFIX}${FULL_FILENAME}"
-FINAL_IMAGE="${ALLSKY_HOME}/${FULL_FILENAME}"	# final resting place - no more changes to it.  TODO: put in ALLSKY_TMP
+FINAL_IMAGE="${CAPTURE_SAVE_DIR}/${FULL_FILENAME}"	# final resting place - no more changes to it.
 mv -f "${IMAGE_TO_USE}" "${FINAL_IMAGE}"	# so web severs can see it.
 
 # If upload is true, optionally create a smaller version of the image, either way, upload it.
 if [ "${UPLOAD_IMG}" = "true" ] ; then
 	if [ "${RESIZE_UPLOADS}" = "true" ]; then
 		# Don't overwrite FINAL_IMAGE since the web server(s) may be looking at it.
-		TEMP_FILE="${ALLSKY_TMP}/resize-${FULL_FILENAME}"
+		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"
 		cp "${FINAL_IMAGE}" "${TEMP_FILE}"  # create temporary copy to resize
 		convert "${TEMP_FILE}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${TEMP_FILE}"
 		if [ $? -ne 0 ] ; then

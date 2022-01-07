@@ -45,6 +45,9 @@ using namespace std;
 #define US_IN_MS 1000                     // microseconds in a millisecond
 #define MS_IN_SEC 1000                    // milliseconds in a second
 #define US_IN_SEC (US_IN_MS * MS_IN_SEC)  // microseconds in a second
+#define S_IN_MIN 60
+#define S_IN_HOUR (60 * 60)
+#define S_IN_DAY (24 * S_IN_HOUR)
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -351,7 +354,7 @@ void calculateDayOrNight(const char *latitude, const char *longitude, const char
 int calculateTimeToNightTime(const char *latitude, const char *longitude, const char *angle)
 {
     std::string t;
-    char sunwaitCommand[128];	// returns "hh:mm, hh:mm" (sunrise, sunset)
+    char sunwaitCommand[128];	// returns "hh:mm"
     sprintf(sunwaitCommand, "sunwait list set angle %s %s %s", angle, latitude, longitude);
     t = exec(sunwaitCommand);
     t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
@@ -362,9 +365,9 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
 	if (sscanf(t.c_str(), "%d:%d", &hNight, &mNight) != 2)
 	{
 		Log(0, "ERROR: With angle %s sunwait returned unknown time to nighttime: %s\n", angle, t.c_str());
-		return(1 * 60 * 60);	// 1 hour - should we exit instead?
+		return(1 * S_IN_HOUR);	// 1 hour - should we exit instead?
 	}
-    secsNight = (hNight*60*60) + (mNight*60);	// seconds to nighttime from start of today
+    secsNight = (hNight * S_IN_HOUR) + (mNight * S_IN_MIN);	// secs to nighttime from start of today
 	// sunwait doesn't return seconds so on average the actual time will be 30 seconds
 	// after the stated time. So, add 30 seconds.
 	secsNight += 30;
@@ -372,7 +375,7 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
 	char *now = getTime("%H:%M:%S");
     int hNow=0, mNow=0, sNow=0, secsNow;
     sscanf(now, "%d:%d:%d", &hNow, &mNow, &sNow);
-    secsNow = (hNow*60*60) + (mNow*60) + sNow;	// seconds to now from start of today
+    secsNow = (hNow*S_IN_HOUR) + (mNow*S_IN_MIN) + sNow;	// seconds to now from start of today
 	Log(3, "Now=%s, nighttime starts at %s\n", now, t.c_str());
 
 	// Handle the (probably rare) case where nighttime is tomorrow.
@@ -381,7 +384,7 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
     if (diff < 0)
     {
 		// This assumes tomorrow's nighttime starts same as today's, which is close enough.
-		return(diff + (60*60*24));	// Add one day
+		return(diff + S_IN_DAY);	// Add one day
     }
     else
     {
@@ -454,8 +457,6 @@ int RPiHQcapture(bool auto_exposure, int *exposure_us, bool auto_gain, bool auto
 		}
 		command += " --timeout " + ss.str();
 		command += " --nopreview";
-		if (libcamera)
-			command += "=1";
 	}
 
 	if (bin > 3)
@@ -1642,7 +1643,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			if (numExposures == 0 || ! asiNightAutoExposure)
 			{
 				currentExposure_us = asiNightExposure_us;
-				Log(3, "Using night exposure (%'ld)\n", asiNightExposure_us);
+				Log(3, "Using night exposure (%'ld us)\n", asiNightExposure_us);
 			}
 			currentAutoExposure = asiNightAutoExposure;
 			currentBrightness = asiNightBrightness;
@@ -1651,7 +1652,13 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			currentGain = asiNightGain;
 			currentAutoGain = asiNightAutoGain;
 		}
-		myRaspistillSetting.shutter_us = currentExposure_us;
+
+		// Want initial exposures to have the exposure time and gain the user specified.
+		if (numExposures == 0)
+		{
+			myRaspistillSetting.shutter_us = currentExposure_us;
+			// xxx this doesn't work    myRaspistillSetting.analoggain = currentGain;
+		}
 
 		// Adjusting variables for chosen binning
 		height    = originalHeight / currentBin;
@@ -1676,7 +1683,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 		}
 
 		if (tty)
-			printf("Press Ctrl+Z to stop\n\n");	// xxx ECC: Ctrl-Z stops a process, it doesn't kill it
+			printf("Press Ctrl+C to stop\n\n");
 		else
 			printf("Stop the allsky service to end this process.\n\n");
 
@@ -1725,10 +1732,11 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 					if (myModeMeanSetting.mode_mean)
 					{
-// xxxxxx ? use currentExposure_us and currentGain ?   OR max values?
+// xxxxxx use max exposure and gain values, current_max_autoexposure_us, asiNightMaxGain (current_max_gain)
 // xxxxxx May need to re-initialize at day/night boundary.
 
-						mean = RPiHQcalcMean(pRgb, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
+//xxx						mean = RPiHQcalcMean(pRgb, asiNightExposure_us, asiNightGain, myRaspistillSetting, myModeMeanSetting);
+						mean = RPiHQcalcMean(pRgb, currentExposure_us, currentGain, myRaspistillSetting, myModeMeanSetting);
 						Log(2, "  > Got exposure: %'ld us, shutter: %1.4f s, quickstart: %d, mean=%1.6f\n", asiNightExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart, mean);
 						if (mean == -1)
 						{

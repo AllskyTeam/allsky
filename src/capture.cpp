@@ -29,6 +29,9 @@
 #define US_IN_MS 1000                     // microseconds in a millisecond
 #define MS_IN_SEC 1000                    // milliseconds in a second
 #define US_IN_SEC (US_IN_MS * MS_IN_SEC)  // microseconds in a second
+#define S_IN_MIN 60
+#define S_IN_HOUR (60 * 60)
+#define S_IN_DAY (24 * S_IN_HOUR)
 
 // Forward definitions
 char *getRetCode(ASI_ERROR_CODE);
@@ -361,6 +364,8 @@ void *SaveImgThd(void *para)
 			snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " GAIN=%03d", currentGain);
+			strcat(cmd, tmp);
+			snprintf(tmp, sizeof(tmp), " GAINDB=%03d", (int)round(20.0 * 10.0 * log10(currentGain)));
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " BIN=%d", currentBin);
 			strcat(cmd, tmp);
@@ -820,36 +825,36 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
     t = exec(sunwaitCommand);
     t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
 
-    int h=0, m=0, secsNight;
+    int hNight=0, mNight=0, secsNight;
 	// It's possible for sunwait to return "--:--" if the angle causes sunset to start
 	// after midnight or before noon.
     if (sscanf(t.c_str(), "%d:%d", &hNight, &mNight) != 2)
 	{
 		Log(0, "ERROR: With angle %s sunwait returned unknown time to nighttime: %s\n", angle, t.c_str());
-		return(1 * 60 * 60);	// 1 hour - should we exit instead?
+		return(1 * S_IN_HOUR);	// 1 hour - should we exit instead?
 	}
-    secsNight = (hNight*60*60) + (mNight*60);	// seconds to nighttime from start of today
+    secsNight = (hNight * S_IN_HOUR) + (mNight * S_IN_MIN);	// secs to nighttime from start of today
 	// sunwait doesn't return seconds so on average the actual time will be 30 seconds
 	// after the stated time. So, add 30 seconds.
 	secsNight += 30;
 
 	char *now = getTime("%H:%M:%S");
     int hNow=0, mNow=0, sNow=0, secsNow;
-    sscanf(now, "%d:%d", &hNow, &mNow, &sNow);
-    secsNow = (hNow*60*60) + (mNow*60) + sNow;	// seconds to now from start of today
+    sscanf(now, "%d:%d:%d", &hNow, &mNow, &sNow);
+    secsNow = (hNow*S_IN_HOUR) + (mNow*S_IN_MIN) + sNow;	// seconds to now from start of today
 	Log(3, "Now=%s, nighttime starts at %s\n", now, t.c_str());
 
 	// Handle the (probably rare) case where nighttime is tomorrow.
 	// We are only called during the day, so if nighttime is earlier than now, it was past midnight.
-	int diff = secsNight - secsNow;
-    if (diff < 0)
+	int diff_s = secsNight - secsNow;
+    if (diff_s < 0)
     {
 		// This assumes tomorrow's nighttime starts same as today's, which is close enough.
-		return(diff + (60*60*24));	// Add one day
+		return(diff_s + S_IN_DAY);	// Add one day
     }
     else
     {
-        return(diff);
+        return(diff_s);
     }
 }
 

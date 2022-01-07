@@ -6,8 +6,10 @@
 	#  "local"	copies to a location on your Pi.
 	#  "ftp"	uploads to an FTP server.
 	#		See the section for ftp PROTOCOL below.
+	#  "ftps"	uploads to an FTP server that supports secure FTP transfer.
+	# 		*** Use "ftps" instead of "ftp" if you can - it's more secure than ftp. ***
+	#		See the section for ftp PROTOCOL below.
 	#  "sftp"	(SSH file transfer) - uploads to an FTP server that supports secure transfer.
-	# 		Use "sftp" instead of "ftp" if you can - it's more secure.
 	#		See the section for sftp PROTOCOL below.
 	#  "scp"	(secure copy) - copies to a remote server.
 	#		See the section for scp PROTOCOL below.   NOTE: "scp" PROTOCOL IS NOT IMPLEMENTED YET.
@@ -67,7 +69,7 @@ IMGDIR="${IMAGE_DIR}"
 MP4DIR="${VIDEOS_DIR}"
 
 
-############### ftp, sftp, and scp PROTOCOLS only:
+############### ftp, ftps, sftp, and scp PROTOCOLS only:
 	# Enter the name of the remote server.  If you don't know it, ask your service provider.
 REMOTE_HOST=""
 

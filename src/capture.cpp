@@ -363,9 +363,9 @@ void *SaveImgThd(void *para)
 			// prior values, so make them fixed width to aid in doing that.
 			snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " GAIN=%03d", currentGain);
+			snprintf(tmp, sizeof(tmp), " GAINDB=%03d", currentGain);
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " GAINDB=%03d", (int)round(20.0 * 10.0 * log10(currentGain)));
+			snprintf(tmp, sizeof(tmp), " GAIN=%1.2f", pow(10, (float)currentGain / 10.0 / 20.0));
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " BIN=%d", currentBin);
 			strcat(cmd, tmp);

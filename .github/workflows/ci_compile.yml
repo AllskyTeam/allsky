@@ -17,18 +17,25 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
-      #- name: Run a one-line script
-      #  run: echo Hello, world!
+      # Runs a set of commands using the runners shell
+      - name: some useful outputs
+        run: |
+          ls -la
+          uptime
+          echo make
+
+      # Runs a set of commands using the runners shell
+      - name: make deps
+        run: |
+          sudo make deps
+
+      # Runs a set of commands using the runners shell
+      - name: make deps
+        run: |
+          sudo make all
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
         run: |
-          echo some useful outputs
-          ls -la
-          uptime
-          echo make
-          sudo make deps
-          sudo make all
           echo check bash files
           err=0;for i in $(find . -name '*.sh'); do echo "$i"; bash -n $i; if [ $? -ne 0 ]; then err=$((err + 1)); fi; done; echo $err

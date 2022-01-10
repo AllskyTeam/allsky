@@ -401,8 +401,6 @@ int RPiHQcapture(bool auto_exposure, int *exposure_us, bool auto_gain, bool auto
 	else command = "raspistill";
 
 	// Ensure no process is still running.
-	// Include "--" so we only find the command, not a different program with the command
-	// on its command line.
 	string kill = "pgrep '" + command + "' | xargs kill -9 2> /dev/null";
 	char kcmd[kill.length() + 1];		// Define char variable
 	strcpy(kcmd, kill.c_str());			// Convert command to character variable
@@ -1377,11 +1375,8 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 	{
 		imagetype = "png";
 		compression_parameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
-		if (darkframe)
-		{
-			quality = 0;	// actually, it's PNG compression - 0 is highest quality
-		}
-		else if (quality > 9)
+		// png is lossless so "quality" is really just the amount of compression.
+		if (quality > 9  || darkframe)
 		{
 			quality = 9;
 		}

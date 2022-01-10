@@ -37,4 +37,4 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: check bash files
         run: |
-          err=0;for i in $(find . -name '*.sh'); do echo "$i"; bash -n $i; if [ $? -ne 0 ]; then err=$((err + 1)); fi; done; echo $err; exit err
+          err=0;for i in $(find . -name '*.sh'); do echo "$i"; bash -n $i; if [ $? -ne 0 ]; then err=$((err + 1)); fi; done; echo $err; exit $err

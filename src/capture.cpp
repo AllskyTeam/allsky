@@ -1647,11 +1647,8 @@ const char *locale = DEFAULT_LOCALE;
     {
         imagetype = "png";
         compression_parameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
-        if (taking_dark_frames)
-        {
-            quality = 0;	// actually, it's PNG compression - 0 is highest quality
-        }
-        else if (quality > 9)
+	// png is lossless so "quality" is really just the amount of compression.
+        if (quality > 9 || taking_dark_frames)
         {
             quality = 9;
         }

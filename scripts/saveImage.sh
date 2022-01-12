@@ -148,7 +148,7 @@ fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
 if [ "${UPLOAD_IMG}" = "true" ] ; then
-	# First check if we should save this image
+	# First check if we should upload this image
 	if [ "${IMG_UPLOAD_FREQUENCY}" != "1" ]; then
 		FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 		if [ ! -f "${FREQUENCY_FILE}" ]; then
@@ -194,5 +194,8 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 
 	[ "${RESIZE_UPLOADS}" = "true" ] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
 fi
+
+# If it's daytime and we didn't save the image, delete it.
+[ "${DAYTIME_SAVE}" = "false" -a "${DAY_OR_NIGHT}" = "DAY" ] && rm -f "${IMAGE_TO_USE}"
 
 exit 0

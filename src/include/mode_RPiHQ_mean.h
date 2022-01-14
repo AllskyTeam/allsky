@@ -4,9 +4,7 @@
 // 2021-06-06  initial state
 //
 
-
-#ifndef MEAN_H
-#define MEAN_H
+#pragma once
 
 struct modeMeanSetting {
 	bool mode_mean			= false;	// Activate mode mean.  User can change this.
@@ -30,8 +28,5 @@ struct modeMeanSetting {
 };
 
 
-float RPiHQcalcMean(const char* fileName, int exposure_us, double Gain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting);
-
-double get_focus_measure(cv::Mat, modeMeanSetting &);
-
-#endif
+float RPiHQcalcMean(cv::Mat, int, double, raspistillSetting &, modeMeanSetting &);
+double get_focus_metric(cv::Mat);

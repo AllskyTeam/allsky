@@ -180,11 +180,10 @@ if [ "${DO_KEOGRAM}" = "true" ] ; then
 	if [ "${TYPE}" = "GENERATE" ]; then
 		CMD="'${ALLSKY_HOME}/keogram' ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
-		let EXIT_CODE=${EXIT_CODE}+${?}
 	else
 		upload "Keogram" "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" "${KEOGRAM_DESTINATION_NAME}" "${WEB_KEOGRAM_DIR}"
-		let EXIT_CODE=${EXIT_CODE}+${?}
 	fi
+	[ $? -ne 0 ] && let EXIT_CODE=${EXIT_CODE}+1
 fi
 
 if [ "${DO_STARTRAILS}" = "true" ] ; then
@@ -193,11 +192,10 @@ if [ "${DO_STARTRAILS}" = "true" ] ; then
 	if [ "${TYPE}" = "GENERATE" ]; then
 		CMD="'${ALLSKY_HOME}/startrails' ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' ${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
-		let EXIT_CODE=${EXIT_CODE}+${?}
 	else
 		upload "Startrails" "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" "${STARTRAILS_DESTINATION_NAME}" "${WEB_STARTRAILS_DIR}"
-		let EXIT_CODE=${EXIT_CODE}+${?}
 	fi
+	[ $? -ne 0 ] && let EXIT_CODE=${EXIT_CODE}+1
 fi
 
 if [ "${DO_TIMELAPSE}" = "true" ] ; then
@@ -206,15 +204,14 @@ if [ "${DO_TIMELAPSE}" = "true" ] ; then
 	if [ "${TYPE}" = "GENERATE" ]; then
 		CMD="'${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE}"
 		generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
-		let EXIT_CODE=${EXIT_CODE}+${?}
 	else
 		upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
-		let EXIT_CODE=${EXIT_CODE}+${?}
 	fi
+	[ $? -ne 0 ] && let EXIT_CODE=${EXIT_CODE}+1
 fi
 
 
-if [ "${TYPE}" = "GENERATE" -a ${SILENT} = "false" ]; then
+if [ "${TYPE}" = "GENERATE" -a ${SILENT} = "false" -a ${EXIT_CODE} -eq 0 ]; then
 	ARGS=""
 	[ "${DO_KEOGRAM}" = "true" ] && ARGS="${ARGS} -k"
 	[ "${DO_STARTRAILS}" = "true" ] && ARGS="${ARGS} -s"

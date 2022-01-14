@@ -19,6 +19,8 @@ scripts/startrails_manual.sh
 scripts/startrails_only.sh
 scripts/stretch.sh
 scripts/endOfNight_additionalSteps.sh
+scripts/saveImageDay.sh
+scripts/saveImageNight.sh
 settings_RPiHQ.json
 settings_ZWO.json
 

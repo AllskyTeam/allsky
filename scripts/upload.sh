@@ -37,7 +37,7 @@ if [ $# -lt 3 ] ; then
 	echo "   'local_directory' is the name of an optional local directory the file should be"
 	echo "        copied to in addition to being uploaded."
 	echo
-	echo -n "For example: ${ME}  keogram-20210710.jpg  /keograms  keogram.jpg"
+	echo "For example: ${ME}  keogram-20210710.jpg  /keograms  keogram.jpg"
 	exit 1
 fi
 FILE_TO_UPLOAD="${1}"
@@ -90,7 +90,7 @@ elif [[ ${PROTOCOL} == "local" ]] ; then
 	cp "${FILE_TO_UPLOAD}" "${REMOTE_DIR}/${DESTINATION_FILE}"
 	RET=$?
 
-else # sftp/ftp
+else # sftp/ftp/ftps
 	# People sometimes have problems with ftp not working,
 	# so save the commands we use so they can run lftp manually to debug.
 

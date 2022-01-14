@@ -1,10 +1,14 @@
-# Allsky Camera ![Release 0.8.1](https://img.shields.io/badge/Release-0.8.1-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
-
+# Allsky Camera ![Release 0.8.3](https://img.shields.io/badge/Release-0.8.3-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 
+## Required Action Needed
+When upgrading from a release _prior to_ 0.8.3 you **MUST** follow the steps [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
+
+
 
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg)
+
 
 ## Requirements
 
@@ -196,7 +200,7 @@ Set to "false" to keep all nights (requires manual management of SD card free sp
 
 ## Logging issues
 
-When using the allsky service, issues are written to a log file. In case the program stopped, crashed, or behaved in an abnormal way, take a look at this log file:
+When using the allsky service, issues are written to a log file. In case the program stopped, crashed, or behaved in an abnormal way, take a look at:
 ```
 tail /var/log/allsky.log
 ```
@@ -232,8 +236,7 @@ Once you've installed the website, either on your Pi or another machine, look at
 Experienced users may want to add some additional processing steps at the end of nighttime.
 To do so, copy `scripts/endOfNight_additionalSteps.repo` to 
 `scripts/endOfNight_additionalSteps.sh` and then add your additional processing steps which
-will be run after the usual end-of-night processing, but before the deletion of any
-old image files.
+will be run after the usual end-of-night processing, but before the deletion of any old image files.
 
 Edit this file via the "Editor" link on the left side of the WebUI page.
 
@@ -301,7 +304,19 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* The WebUI will now show the Pi's throttle and low-voltage states, which is useful for debugging.
 	* Darks work better.
 	* Many bug fixes, error checks, and warnings added.
-
+* version **0.8.3**: Works on Bullseye operating system.
+	* RPiHQ version:
+	  * Has an improved auto-exposure algorithm.  To use it, set `CAPTURE_EXTRA_PARAMETERS="-mean-value 0.3 -autoexposure 1"` in config.sh (a future version will allow this to be set via the WebUI).
+	  * Has many new settings including support for most of the text overlay features that are supported by the ZWO version.  The "extra text" feature will be supported in a future version).
+	* New and changed config.sh variables, see the [Software Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) Wiki page for more information:
+	  * `IMG_UPLOAD_FREQUENCY`: how often the image should be uploaded to a website.  Useful with slow uplinks or metered Internet connections.
+	  * `IMG_CREATE_THUMBNAILS`: specifies whether or not thumbnails should be created for each image.
+	  * `REMOVE_BAD_IMAGES` now defaults to "true" since bad-image detection is now done after a picture is saved rather than once for all pictures at the end of the night.  This helps decrease problems when creating startrails, keograms, and timelapse videos.
+	  * `IMG_PREFIX`: no longer used - the name of the image used by the websites is now whatever you specify in the WebUI (default: image.jpg).
+	  * **NOTE**: When upgrading to 0.8.3 you MUST follow the steps listed [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
+	* Replaced `saveImageDay.sh` and `saveImageNight.sh` with `saveImage.sh` that has improved functionality, including passing the sensor temperature to the dark subtraction commands, thereby eliminating the need for the "temperature.txt" file.
+	* The image used by the websites (default: image.jpg) as well as all temporary files are now written to `allsky/tmp`.  **NOTE**: if you are using the Allsky Website you will need to change the "imageName" variable in `/var/www/html/allsky/config.js` to `"/current/tmp/"`.
+	* You can **significanly** reduce wear on your SD card by making `allsky/tmp` a [memory-based filesystem](https://github.com/thomasjacquin/allsky/wiki/Miscellaneous-Tips) for instructions).
 ## Donation
 
 If you found this project useful, here's a link to send me a cup of coffee :)

@@ -25,16 +25,16 @@ fi
 # If not found, force the user to upgrade config.sh
 if [ -f "${ALLSKY_CONFIG}/config.sh" ]; then
 	source "${ALLSKY_CONFIG}/config.sh"
-	RET=$?
-	if [ -z "${ALLSKY_DEBUG_LEVEL}" ]; then
+	if [ -z "${CAPTURE_SAVE_DIR}" ]; then
 		echo "${RED}*** ERROR: old version of config.sh detected.${NC}"
-		RET=1
+		echo "See https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions"
+
+		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
+		sudo systemctl stop allsky
+		exit 1
 	fi
 else
-	echo "${RED}*** ERROR: cannot find config.sh.${NC}"
-	RET=1
-fi
-if [ ${RET} -ne 0 ]; then
+	echo "${RED}*** ERROR: config.sh not in ${ALLSKY_CONFIG}.${NC}"
 	echo "Please make a backup of your config.sh, ftp-settings.sh, and settings_*.json files,"
 	echo "then do a full re-install of AllSky."
 	echo "After the re-install, copy your settings from the backup files to the new files."
@@ -45,24 +45,22 @@ if [ ${RET} -ne 0 ]; then
 	exit 1
 fi
 
-mkdir -p "${ALLSKY_TMP}"	# Re-create in case it's on a memory filesystem that gets wiped out at reboot
-
 # Make sure allsky.sh is not already running.
 ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 # old/regular manual camera selection mode => exit if no requested camera was found
 # Buster and Bullseye have different output so only check the part they have in common.
 # TODO: this check only needs to be done if CAMERA = RPiHQ
-# vcgencmd get_camera | grep --silent "supported=1"
-# bullseye has problems to dedect cameras - workaround
-which libcamera-still
+# Bullseye has problems detecting RPiHQ cameras - workaround
+which libcamera-still > /dev/null
 if [ $? -eq 0 ]; then
-        LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still -t 1 --nopreview
+	LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still -t 1 --nopreview
+	RET=$?
 else
-        vcgencmd get_camera | grep --silent "supported=1" 
+	vcgencmd get_camera | grep --silent "supported=1" 
+	RET=$?
 fi
-
-if [ $? -eq 0 ]; then
+if [ $RET -eq 0 ]; then
 	RPiHQIsPresent=1
 else
 	RPiHQIsPresent=0
@@ -147,14 +145,20 @@ echo "export CAMERA=${CAMERA}" > "${ALLSKY_CONFIG}/autocam.sh"
 # This must be called after CAMERA AUTOSELECT above to refresh the file name.
 source "${ALLSKY_SCRIPTS}/filename.sh"
 
+if [ -d "${ALLSKY_TMP}" ]; then
+	# remove any lingering old image files.
+	rm -f "${ALLSKY_TMP}/${FILENAME}"-202*.${EXTENSION}	# "202" for 2021 and later
+else
+	# Re-create in case it's on a memory filesystem that gets wiped out at reboot
+	mkdir -p "${ALLSKY_TMP}"
+fi
+
 # Optionally display a notification image. This must come after the creation of "autocam.sh" above.
 USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
 if [ "$USE_NOTIFICATION_IMAGES" = "1" ] ; then
 	# Can do this in the background to speed up startup
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
 fi
-
-echo "Starting allsky camera..."
 
 # Building the arguments to pass to the capture binary.
 # Want to allow spaces in arguments so need to put quotes around them,
@@ -181,7 +185,6 @@ ARGUMENTS+=(-debuglevel ${ALLSKY_DEBUG_LEVEL})
 # This argument should come next so the capture program knows if it should use colors.
 ARGUMENTS+=(-tty ${ON_TTY})
 
-
 KEYS=( $(jq -r 'keys[]' $CAMERA_SETTINGS) )
 for KEY in ${KEYS[@]}
 do
@@ -193,6 +196,18 @@ done
 # The preview mode does not work if allsky.sh is started as a service or if the debian distribution has no desktop environment.
 if [[ $1 == "preview" ]] ; then
 	ARGUMENTS+=(-preview 1)
+fi
+
+ARGUMENTS+=(-save_dir "${CAPTURE_SAVE_DIR}")
+
+FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
+# If the user wants images uploaded only every n times, save that number to a file.
+if [ "${IMG_UPLOAD_FREQUENCY}" != "1" ]; then
+	# Save "1" so we upload the first image.
+	# saveImage.sh will write ${IMG_UPLOAD_FREQUENCY} to the file as needed.
+	echo "1" > "${FREQUENCY_FILE}"
+else
+	rm -f "${FREQUENCY_FILE}"
 fi
 
 # "capture" expects 0 or 1; newer versions of config.sh use "true" and "false".

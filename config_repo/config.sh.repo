@@ -15,20 +15,18 @@ CAMERA=""
 IMG_UPLOAD="false"
 
 # If UPLOAD_IMG is "true", upload images every IMG_UPLOAD_FREQUENCY frames, e.g., every 5 frames.
-# 0 uploades every frame.
-IMG_UPLOAD_FREQUENCY=0
+# 1 uploades every frame.
+IMG_UPLOAD_FREQUENCY=1
 
 # The websites look in IMG_DIR for the current image.
-# When using the Allsky website from the "allsky-website" packge, "allsky" is an
-# alias for "/var/www/html/allsky/"  and   "current" is an alias for "/home/pi/allsky".
-# If you use "current" and have the Allsky website, prepend "/current/" to
-# the "imageName" in /var/www/html/allsky/config.js, for example:  imageName: "/current/image.jpg",
-# Using "current" avoids copying the image to the website.
-IMG_DIR="current"
-
-# Set an optional prefix on the image file name, before "$FILENAME.$EXTENSION".
-# This must match what the local web site thinks the name is (see /var/www/html/allsky/config.js).
-IMG_PREFIX="liveview-"
+# When using the Allsky website from the "allsky-website" packge,
+# "current" is an alias for "/home/pi/allsky".
+# If you use the default IMG_DIR and have the Allsky website, set "imageName" in
+# /var/www/html/allsky/config.js to:
+#     imageName: "/current/tmp/image.jpg",
+# This avoids copying the image to the website.
+# Only change IMG_DIR if you know what you are doing.
+IMG_DIR="current/tmp"
 
 # Resize images before cropping, stretching, and saving.
 # Adjust IMG_WIDTH and IMG_HEIGHT according to your camera's sensor ratio.
@@ -54,10 +52,12 @@ AUTO_STRETCH_MID_POINT="10%"
 RESIZE_UPLOADS="false"
 RESIZE_UPLOADS_SIZE="962x720"
 
-# Remove corrupt images before generating keograms and startrails.
-# This can take tens of minutes to run and isn't necessary unless your system produces
-# corrupt images which then generate funny colors in the summary images...
-REMOVE_BAD_IMAGES="false"
+# Create thumbnails of images.  If you are not running the WebUI consider changing this to "false".
+IMG_CREATE_THUMBNAILS="true"
+
+# Remove corrupt images before generating keograms, startrails, and timelapse videos.
+# This only adds a few seconds per image as it's being processed.
+REMOVE_BAD_IMAGES="true"
 
 # If REMOVE_BAD_IMAGES is "true", images whose mean brightness is
 # less than THRESHOLD_LOW or greater than THRESHOLD_HIGH percent (max: 100) will be removed.
@@ -142,6 +142,7 @@ AUTO_DELETE="true"
 NIGHTS_TO_KEEP=14
 
 # Set to "true" to upload data to your server at the end of each night.
+# This is needed if you are running the Allsky Website.
 POST_END_OF_NIGHT_DATA="false"
 
 # Set to "true" if you want to enable dark frame subtraction on your night-time images.
@@ -173,6 +174,13 @@ if [ "${CAMERA}" = "" ]; then
 elif [ "${CAMERA}" = "auto" ]; then
 	echo "${RED}ERROR: 'auto' is no longer a valid CAMERA type.  Please reset CAMERA in config/config.sh${NC}"
 	exit 1
+fi
+
+# This is needed in case the user changed the default location the current image is saved to.
+if [ "${IMG_DIR}" = "current/tmp" ]; then
+	CAPTURE_SAVE_DIR="${ALLSKY_TMP}"
+else
+	CAPTURE_SAVE_DIR="${IMG_DIR}"
 fi
 
 # !!! The next few lines are for backwards compatibility and will be removed in the future - do not change !!!

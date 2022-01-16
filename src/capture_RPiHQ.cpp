@@ -1900,7 +1900,7 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%02d", current_bit_depth);
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " FOCUS=%3d", focus_metric);
+			snprintf(tmp, sizeof(tmp), " FOCUS=%03d", focus_metric);
 			strcat(cmd, tmp);
 
 			strcat(cmd, " &");

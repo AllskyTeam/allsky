@@ -50,11 +50,7 @@ fi
 
 REMOTE_DIR="${2}"
 DESTINATION_FILE="${3}"
-if [ "${4}" = "" ] ; then
-	TEMP_NAME="x-${RANDOM}"
-else
-	TEMP_NAME="${4}-${RANDOM}"
-fi
+# ${4} only used by ftp
 COPY_TO="${5}"
 if [ "${COPY_TO}" != "" -a ! -d "${COPY_TO}" ] ; then
 	echo -en "${RED}"
@@ -94,11 +90,17 @@ else # sftp/ftp/ftps
 	# People sometimes have problems with ftp not working,
 	# so save the commands we use so they can run lftp manually to debug.
 
+	if [ "${4}" = "" ] ; then
+		TEMP_NAME="x-${RANDOM}"
+	else
+		TEMP_NAME="${4}-${RANDOM}"
+	fi
+
 	# If REMOTE_DIR isn't null (which it can be) and doesn't already have a trailing "/", append one.
 	[ "${REMOTE_DIR}" != "" -a "${REMOTE_DIR: -1:1}" != "/" ] && REMOTE_DIR="${REMOTE_DIR}/"
 
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
-		echo "${ME}: FTP'ing ${FILE_TO_UPLOAD} to ${REMOTE_DIR}${DESTINATION_FILE}"
+		echo "${ME}: FTP'ing ${FILE_TO_UPLOAD} to ${REMOTE_DIR}${DESTINATION_FILE}, TEMP_NAME=${TEMP_NAME}"
 	fi
 	LFTP_CMDS="${ALLSKY_TMP}/lftp_cmds.txt"
 	# COMPATIBILITY CHECK.  New names start with "REMOTE_".
@@ -109,6 +111,7 @@ else # sftp/ftp/ftps
 		REMOTE_PASSWORD="${PASSWORD}"
 		REMOTE_USER="${USER}"
 	fi
+set +H # XXXX needed so !! isn't processed in REMOTE_PASSWORD
 	(
 		[ "${LFTP_COMMANDS}" != "" ] && echo ${LFTP_COMMANDS}
 		# xxx TODO: escape single quotes in REMOTE_PASSWORD - how?  With \ ?

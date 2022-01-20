@@ -43,6 +43,7 @@ if [[ ${KEOGRAM} == "true" ]]; then
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RET} = 0 ]] ; then
 		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -k ${DATE}
 	fi
+	echo -e "${ME}: ===== Keogram complete"
 fi
 
 # Generate startrails from collected images.
@@ -53,6 +54,7 @@ if [[ ${STARTRAILS} == "true" ]]; then
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${?} = 0 ]] ; then
 		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -s ${DATE}
 	fi
+	echo -e "${ME}: ===== Startrails complete"
 fi
 
 # Generate timelapse from collected images.
@@ -64,6 +66,7 @@ if [[ ${TIMELAPSE} == "true" ]]; then
 	if [[ ${UPLOAD_VIDEO} == "true" && ${?} = 0 ]] ; then
 		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -t ${DATE}
 	fi
+	echo -e "${ME}: ===== Timelapse complete"
 fi
 
 # Run custom script at the end of a night. This is run BEFORE the automatic deletion

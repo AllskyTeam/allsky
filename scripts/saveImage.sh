@@ -63,7 +63,7 @@ fi
 # Get passed-in variables.
 # Normally at least the exposure will be passed and the sensor temp if known.
 while [ $# -gt 0 ]; do
-	VARIABLE="THIS_${1%=*}"		# everything before the "="
+	VARIABLE="AS_${1%=*}"		# everything before the "="
 	VALUE="${1##*=}"			# everything after the "="
 	shift
 	# Export the variable so other scripts we call can use it.

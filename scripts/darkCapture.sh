@@ -14,15 +14,15 @@ if [ ! -f "${CURRENT_IMAGE}" ]; then
 	exit 2
 fi
 
-# ${THIS_TEMPERATURE} is passed to us by saveImage.sh, but may be null.
-# If ${THIS_TEMPERATURE} is set, use it as the temperature, otherwise read the ${TEMPERATURE_FILE}.
+# ${AS_TEMPERATURE} is passed to us by saveImage.sh, but may be null.
+# If ${AS_TEMPERATURE} is set, use it as the temperature, otherwise read the ${TEMPERATURE_FILE}.
 # If the ${TEMPERATURE_FILE} file doesn't exist, set the temperature to "n/a".
-if [ "${THIS_TEMPERATURE}" = "" ]; then
+if [ "${AS_TEMPERATURE}" = "" ]; then
 	TEMPERATURE_FILE="${ALLSKY_TMP}/temperature.txt"
 	if [ -s "${TEMPERATURE_FILE}" ]; then	# -s so we don't use an empty file
-		THIS_TEMPERATURE=$( < ${TEMPERATURE_FILE})
+		AS_TEMPERATURE=$( < ${TEMPERATURE_FILE})
 	else
-		THIS_TEMPERATURE="n/a"
+		AS_TEMPERATURE="n/a"
 	fi
 fi
 
@@ -35,10 +35,10 @@ if [ "${DARK_MODE}" = "1" ] ; then
 	mkdir -p "${DARKS_DIR}"
 	# If the camera doesn't support temperature, we will keep overwriting the file until
 	# the user creates a temperature.txt file.
-	if [ "${THIS_TEMPERATURE}" = "n/a" ]; then
+	if [ "${AS_TEMPERATURE}" = "n/a" ]; then
 		cp "${CURRENT_IMAGE}" "${DARKS_DIR}"
 	else
-		cp "${CURRENT_IMAGE}" "${DARKS_DIR}/${THIS_TEMPERATURE}.${DARK_EXTENSION}"
+		cp "${CURRENT_IMAGE}" "${DARKS_DIR}/${AS_TEMPERATURE}.${DARK_EXTENSION}"
 	fi
 
 	# If the user has notification images on, the current image says we're taking dark frames,

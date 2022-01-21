@@ -37,7 +37,7 @@ if [ "${DARK_FRAME_SUBTRACTION}" = "true" ]; then
 		# Find the closest dark frame temperature wise
 		typeset -i CLOSEST_TEMPERATURE	# don't set yet
 		typeset -i DIFF=100		# any sufficiently high number
-		typeset -i THIS_TEMPERATURE=${THIS_TEMPERATURE##0}
+		typeset -i THIS_TEMPERATURE=${THIS_TEMPERATURE##*(0)}
 		typeset -i OVERDIFF		# DIFF when dark file temp > ${THIS_TEMPERATURE}
 		typeset -i DARK_TEMPERATURE
 

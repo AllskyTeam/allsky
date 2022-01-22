@@ -198,6 +198,8 @@ void keogram_worker(int thread_num,
 				// expand ?
 				if (cf->img_expand) {
 					cf->num_img_expand = std::max(1, (int) (imagesrc.cols / (float) nfiles));
+					if (((float)(cf->num_img_expand * nfiles) / imagesrc.cols) < 0.8) // minimal size 0.8 * imagesrc.cols 
+						cf->num_img_expand++;
 				}
 				// channel_info ?
 				if (cf->channel_info) {

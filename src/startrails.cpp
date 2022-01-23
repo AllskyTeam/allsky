@@ -311,8 +311,6 @@ void usage_and_exit(int x) {
 int main(int argc, char* argv[]) {
   int r;
   struct config_t config;
-  int i;
-  char* e;
 
   parse_args(argc, argv, &config);
 

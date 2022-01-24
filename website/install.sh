@@ -41,7 +41,7 @@ modify_configuration_variables() {	# Update some of the configuration variables
 
 	if [ "${SAVED_OLD}" = "true" ]; then
 		echo -e "${GREEN}* Retoring prior 'config.js' and 'virtualsky.json' files.${NC}"
-		cp "${WEBSITE_DIR_OLD}/config.js "${WEBSITE_DIR_OLD}/virtualsky.json "${WEBSITE_DIR}"
+		cp "${WEBSITE_DIR_OLD}/config.js" "${WEBSITE_DIR_OLD}/virtualsky.json" "${WEBSITE_DIR}"
 	else
 		echo -e "${GREEN}* Updating settings in ${WEBSITE_DIR}/config.js${NC}"
 		# These have N/S and E/W but the config.js needs decimal numbers.
@@ -82,7 +82,8 @@ modify_configuration_variables() {	# Update some of the configuration variables
 if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
 	shift
 	if [ ! -d "${WEBSITE_DIR}" ]; then
-		echo -e "${RED}Update specified but no existing website found in '${WEBSITE_DIR}'${NC}" 1>&2
+		echo -e "${RED}*** ERROR: Update specified but no existing website found in '${WEBSITE_DIR}'${NC}" 1>&2
+		echo
 		exit 2
 	fi
 
@@ -95,6 +96,11 @@ if [ -d "${WEBSITE_DIR}" ]; then
 	WEBSITE_DIR_OLD="${WEBSITE_DIR}-OLD"
 	echo -e "${GREEN}* Saving old website to '${WEBSITE_DIR_OLD}'${NC}"
 	mv "${WEBSITE_DIR}" "${WEBSITE_DIR_OLD}"
+	if [ $? -ne 0 ]; then
+		echo -e "${RED}*** ERROR: Unable to save old website.  Exiting.${NC}" 1>&2
+		echo
+		exit 3
+	fi
 	SAVED_OLD=true
 else
 	SAVED_OLD=false
@@ -102,7 +108,7 @@ fi
 
 echo -e "${GREEN}* Fetching website files into '${WEBSITE_DIR}'${NC}"
 git clone https://github.com/thomasjacquin/allsky-website.git "${WEBSITE_DIR}"
-[ $? -ne 0 ] && echo -e "\n${RED}Exiting installation${NC}\n" && exit 1
+[ $? -ne 0 ] && echo -e "\n${RED}*** ERROR: Exiting installation${NC}\n" && exit 4
 echo
 
 cd "${WEBSITE_DIR}"
@@ -153,24 +159,25 @@ if [ "${SAVED_OLD}" = "true" ]; then
 		echo -e "${GREEN}* Restoring prior startrails${NC}"
 		mv "${WEBSITE_DIR_OLD}"/startrails/startrails-* startrails
 	fi
-set +x
 fi
 
 echo
 echo -e "${GREEN}* Installation complete${NC}"
 echo
 
-# In the meantime, let the user know to do it.
 echo    "+++++++++++++++++++++++++++++++++++++"
-echo    "Before using the website you should:"
-echo -e "   * Edit ${YELLOW}${WEBSITE_DIR}/config.js${NC}"
-echo -e "   * Look at, and possibly edit ${YELLOW}${WEBSITE_DIR}/virtualsky.json${NC}"
 if [ "${SAVED_OLD}" = "true" ]; then
-	echo -e "Your prior versions are in '${WEBSITE_DIR_OLD}'"
-	echo -e "\n${YELLOW}After you are convinced everything is working,"
-	echo -e "remove your prior version at '${WEBSITE_DIR_OLD}'.${NC}\n"
+	echo -e "Your prior website is in '${WEBSITE_DIR_OLD}'."
+	echo    "All your prior videos, keograms, and startrails, as well as prior configuration files"
+	echo    "were MOVED to the updated website".
+	echo -e "\nAfter you are convinced everything is working remove your prior version.\n"
+else
+	echo    "Before using the website you should:"
+	echo -e "   * Edit ${YELLOW}${WEBSITE_DIR}/config.js${NC}"
+	echo -e "   * Look at, and possibly edit ${YELLOW}${WEBSITE_DIR}/virtualsky.json${NC}"
+	echo    "     See https://github.com/thomasjacquin/allsky/wiki/allsky-website-Settings for more information".
 fi
 if [ "${POST_END_OF_NIGHT_DATA}" != "true" ]; then
-	echo "   * Set 'POST_END_OF_NIGHT_DATA=true' in ${ALLSKY_CONFIG}/config.sh"
+	echo    "   * Set 'POST_END_OF_NIGHT_DATA=true' in ${ALLSKY_CONFIG}/config.sh"
 fi
 echo

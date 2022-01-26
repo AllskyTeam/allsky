@@ -30,8 +30,9 @@ modify_locations() {	# Some files have placeholders for certain locations.  Modi
 	(
 		cd "${WEBSITE_DIR}"
 
-		# NOTE: Only want to replace the FIRST instance of XX_ALLSKY_CONFIG_XX.
-		sed -i "0,/XX_ALLSKY_CONFIG_XX/{s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};}" functions.php
+		sed -i -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
+			   -e "s;XX_ON_PI_XX;true;" \
+			functions.php
 	)
 }
 
@@ -88,7 +89,7 @@ if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
 	fi
 
 	modify_locations
-	
+
 	echo
 	echo -e "${GREEN}* Update complete${NC}"
 	echo

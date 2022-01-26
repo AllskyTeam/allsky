@@ -88,6 +88,10 @@ if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
 	fi
 
 	modify_locations
+	
+	echo
+	echo -e "${GREEN}* Update complete${NC}"
+	echo
 	exit 0		# currently nothing else to do for updates
 fi
 

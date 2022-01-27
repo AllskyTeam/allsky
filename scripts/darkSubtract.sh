@@ -6,7 +6,7 @@
 ME2="$(basename "${BASH_SOURCE[0]}")"
 
 # Subtract dark frame if there is one defined in config.sh
-# This has to come after executing darkCapture.sh which sets ${THIS_TEMPERATURE}.
+# This has to come after executing darkCapture.sh which sets ${AS_TEMPERATURE}.
 
 if [ "${DARK_FRAME_SUBTRACTION}" = "true" ]; then
 	# Make sure the input file exists; if not, something major is wrong so exit.

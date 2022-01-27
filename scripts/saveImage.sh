@@ -112,6 +112,9 @@ if [ "${DAY_OR_NIGHT}" = "NIGHT" -a ${AUTO_STRETCH} = "true" ]; then
 	fi
 fi
 
+SAVED_FILE="${IMAGE_TO_USE}"				# The name of the file saved from the camera.
+WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
+
 # If needed, save the current image in today's directory.
 if [ "${DAYTIME_SAVE}" = "true" -o "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 	# Determine what directory is the final resting place.
@@ -142,32 +145,35 @@ if [ "${DAYTIME_SAVE}" = "true" -o "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 
 	FINAL_FILE="${DATE_DIR}/${IMAGE_NAME}"
 	cp "${IMAGE_TO_USE}" "${FINAL_FILE}" || echo "*** ERROR: ${ME}: unable to copy ${IMAGE_TO_USE} ***"
-	IMAGE_TO_USE="${FINAL_FILE}"
 fi
-cp "${IMAGE_TO_USE}" "${WORKING_DIR}/${FULL_FILENAME}"	# Websites look for $FULL_FILENAME
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
 if [ "${UPLOAD_IMG}" = "true" ] ; then
 	# First check if we should upload this image
 	if [ "${IMG_UPLOAD_FREQUENCY}" != "1" ]; then
 		FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
+		typeset -i LEFT
 		if [ ! -f "${FREQUENCY_FILE}" ]; then
-			# Not sure where it went, so recreate it.
+			# The file may have been deleted, or the user may have just changed the frequency.
+			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
+			let LEFT=${IMG_UPLOAD_FREQUENCY}
+		else
+			let LEFT=$( < "${FREQUENCY_FILE}" )
+		fi
+		if [ ${LEFT} -le 1 ]; then
+			# upload this one and reset the counter
 			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
 		else
-			typeset -i LEFT
-			LEFT=$( < "${FREQUENCY_FILE}" )
-			if [ ${LEFT} -le 1 ]; then
-				# upload this one and reset the counter
-				echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
-			else
-				# Not ready to upload yet, so decrement the counter
-				let LEFT=LEFT-1
-				echo "${LEFT}" > "${FREQUENCY_FILE}"
-				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
-				[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ] && echo "${ME}: Not uploading: ${LEFT} images(s) left."
-				exit 0
-			fi
+			# Not ready to upload yet, so decrement the counter
+			let LEFT=LEFT-1
+			echo "${LEFT}" > "${FREQUENCY_FILE}"
+			# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
+			[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ] && echo "${ME}: Not uploading: ${LEFT} images(s) left."
+
+			# We didn't create ${WEBSITE_FILE} yet so do that now.
+			mv "${IMAGE_TO_USE}" "${WEBSITE_FILE}"
+
+			exit 0
 		fi
 	fi
 
@@ -195,7 +201,7 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 	[ "${RESIZE_UPLOADS}" = "true" ] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
 fi
 
-# If it's daytime and we didn't save the image, delete it.
-[ "${DAYTIME_SAVE}" = "false" -a "${DAY_OR_NIGHT}" = "DAY" ] && rm -f "${IMAGE_TO_USE}"
+# We create $WEBSITE_FILE as late as possible to avoid it being overwritten.
+mv "${SAVED_FILE}" "${WEBSITE_FILE}"
 
 exit 0

@@ -113,6 +113,7 @@ sunwait:
 	@git submodule init
 	@git submodule update
 	@echo `date +%F\ %R:%S` Building sunwait...
+	@sed -i -e "s/CFLAGS=/CFLAGS=-w /" sunwait-src/makefile
 	@$(MAKE) -C sunwait-src
 	@cp sunwait-src/sunwait .
 	@echo `date +%F\ %R:%S` Done.

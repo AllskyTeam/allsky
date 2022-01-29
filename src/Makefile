@@ -107,11 +107,15 @@ ifeq (,$(OPENCV))
 endif
 .PHONY : check_deps
 
-
-sunwait:
+patchsunwait:
 	@echo `date +%F\ %R:%S` Initializing sunwait submodule...
 	@git submodule init
 	@git submodule update
+	@echo `date +%F\ %R:%s` Patching sunwait compile warnings...
+	@patch -p1 -d sunwait-src/ < sunwait.patch
+	@touch patchsunwait
+
+sunwait: patchsunwait
 	@echo `date +%F\ %R:%S` Building sunwait...
 	@$(MAKE) -C sunwait-src
 	@cp sunwait-src/sunwait .

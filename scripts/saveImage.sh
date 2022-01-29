@@ -186,14 +186,14 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 		# Put the copy in ${WORKING_DIR}.
 		FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
 		[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${RESIZE_UPLOADS_SIZE}"
-		convert "${WORKING_DIR}/${FULL_FILENAME}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}"
+		convert "${IMAGE_TO_USE}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}"
 		if [ $? -ne 0 ] ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: RESIZE_UPLOADS failed; continuing with larger image.${NC}"
 			# We don't know the state of $FILE_TO_UPLOAD so use the larger file.
-			FILE_TO_UPLOAD="${WORKING_DIR}/${FULL_FILENAME}"
+			FILE_TO_UPLOAD="${IMAGE_TO_USE}"
 		fi
 	else
-		FILE_TO_UPLOAD="${WORKING_DIR}/${FULL_FILENAME}"
+		FILE_TO_UPLOAD="${IMAGE_TO_USE}"
 	fi
 
 	"${ALLSKY_SCRIPTS}/upload.sh" "${FILE_TO_UPLOAD}" "${IMAGE_DIR}" "${FULL_FILENAME}" "SaveImage"

@@ -534,6 +534,10 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 				break;
 			case 'L':
 				cf->lineWidth = atoi(optarg);
+				if (cf->lineWidth < 1) {
+					cf->lineWidth = 1;
+					fprintf(stderr, "font-line changed to 1 (=minimum)\n");
+				}				
 				break;
 			case 'N':
 				cf->fontFace = get_font_by_name(optarg);
@@ -590,7 +594,7 @@ void usage_and_exit(int x) {
   std::cout << "-v | --verbose : Increase logging verbosity" << std::endl;
   std::cout << "-n | --no-label : Disable hour labels" << std::endl;
   std::cout << "-C | --font-color <str> : label font color, in HTML format (0000ff)" << std::endl;
-  std::cout << "-L | --font-line <int> : font line thickness (3)" << std::endl;
+  std::cout << "-L | --font-line <int> : font line thickness (3), (min=1)" << std::endl;
   std::cout << "-N | --font-name <str> : font name (simplex)" << std::endl;
   std::cout << "-S | --font-size <float> : font size (2.0)" << std::endl;
   std::cout << "-T | --font-type <int> : font line type (1)" << std::endl;
@@ -599,11 +603,14 @@ void usage_and_exit(int x) {
   std::cout << "-x | --image-expand : expand image to get the proportions of source" << std::endl;
   std::cout << "-c | --channel-info : show channel infos - mean value of R/G/B" << std::endl;
   std::cout << "-f | --fixed-channel-number <int> : define number of channels 0=auto, 1=mono, 3=rgb (0=auto)" << std::endl;
+  std::cout << "-p | --parse-filename : parse time using filename instead of stat(filename)" << std::endl;
 
   std::cout << KNRM << std::endl;
   std::cout << "Font name is one of these OpenCV font names:\n\tSimplex, Plain, "
 	"Duplex, Complex, Triplex, ComplexSmall, ScriptSimplex, ScriptComplex" << std::endl;
   std::cout << "Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected" << std::endl;
+  std::cout << KNRM << std::endl;
+  std::cout << "In some cases --font-line and --font-size can lead to annoying horizontal lines. Solution: try other values" << std::endl;
   std::cout << KNRM << std::endl;
   std::cout << "	ex: keogram --directory ../images/current/ --extension jpg --output-file keogram.jpg --font-size 2" << std::endl;
   std::cout << "	ex: keogram -d . -e png -o /home/pi/allsky/keogram.jpg -n" << KNRM << std::endl;

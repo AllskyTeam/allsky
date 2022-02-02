@@ -1,5 +1,7 @@
 # Allsky Camera ![Release 0.8.3](https://img.shields.io/badge/Release-0.8.3-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
+**This README and our [Wiki page](https://github.com/thomasjacquin/allsky/wiki) will help get the system up and running.**
+
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 
 ## Required Action Needed

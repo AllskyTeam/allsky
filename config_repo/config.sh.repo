@@ -14,7 +14,7 @@ CAMERA=""
 # Set to "true" to upload the current image to your website.
 IMG_UPLOAD="false"
 
-# If UPLOAD_IMG is "true", upload images every IMG_UPLOAD_FREQUENCY frames, e.g., every 5 frames.
+# If IMG_UPLOAD is "true", upload images every IMG_UPLOAD_FREQUENCY frames, e.g., every 5 frames.
 # 1 uploades every frame.
 IMG_UPLOAD_FREQUENCY=1
 

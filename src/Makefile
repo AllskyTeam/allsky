@@ -39,7 +39,7 @@ ifneq ($(PKGPATH),)
   OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || (pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4))
 endif
 DEFS = -D_LIN -D_DEBUG -DGLIBC_20
-CFLAGS = -Wall -Wno-psabi -Wno-unused-result -g -O2 -lpthread
+CFLAGS = -Werror -Wall -Wno-psabi -Wno-unused-result -g -O2 -lpthread
 
 ifeq ($(platform), armv6l)
   CC = arm-linux-gnueabihf-g++
@@ -107,11 +107,15 @@ ifeq (,$(OPENCV))
 endif
 .PHONY : check_deps
 
-
-sunwait:
+patchsunwait:
 	@echo `date +%F\ %R:%S` Initializing sunwait submodule...
 	@git submodule init
 	@git submodule update
+	@echo `date +%F\ %R:%s` Patching sunwait compile warnings...
+	@patch -p1 -d sunwait-src/ < sunwait.patch
+	@touch patchsunwait
+
+sunwait: patchsunwait
 	@echo `date +%F\ %R:%S` Building sunwait...
 	@$(MAKE) -C sunwait-src
 	@cp sunwait-src/sunwait .

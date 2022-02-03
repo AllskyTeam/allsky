@@ -361,9 +361,9 @@ void *SaveImgThd(void *para)
 
 			// TEMPERATURE, GAIN, and BIN are used by the dark* scripts to sort and compare against
 			// prior values, so make them fixed width to aid in doing that.
-			snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
+			snprintf(tmp, sizeof(tmp), " TEMPERATURE=%d", (int)round(actualTemp/10));
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " GAINDB=%03d", currentGain);
+			snprintf(tmp, sizeof(tmp), " GAINDB=%d", currentGain);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " GAIN=%1.2f", pow(10, (float)currentGain / 10.0 / 20.0));
 			strcat(cmd, tmp);
@@ -371,7 +371,7 @@ void *SaveImgThd(void *para)
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " FLIP=%d", asiFlip);
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%02d", current_bit_depth);
+			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%d", current_bit_depth);
 			strcat(cmd, tmp);
 
 			strcat(cmd, " &");

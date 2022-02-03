@@ -311,15 +311,8 @@ void usage_and_exit(int x) {
 int main(int argc, char* argv[]) {
   int r;
   struct config_t config;
-  int i;
-  char* e;
 
   parse_args(argc, argv, &config);
-
-  if (config.verbose < 1)
-    if ((e = getenv("ALLSKY_DEBUG_LEVEL")))
-      if ((i = atoi(e)) > 0)
-        config.verbose = i;
 
   if (config.img_src_dir.empty() || config.img_src_ext.empty())
     usage_and_exit(3);

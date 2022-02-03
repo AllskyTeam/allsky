@@ -1888,19 +1888,19 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 			// prior values, so make them fixed width to aid in doing that.
 
 			// There's currently no way to get to the RPiHQ camera's temperature sensor.
-			//snprintf(tmp, sizeof(tmp), " TEMPERATURE=%02d", (int)round(actualTemp/10));
+			//snprintf(tmp, sizeof(tmp), " TEMPERATURE=%d", (int)round(actualTemp/10));
 			//strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " GAIN=%1.2f", last_gain);
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " GAINDB=%03d", (int)round(20.0 * 10.0 * log10(last_gain)));
+			snprintf(tmp, sizeof(tmp), " GAINDB=%d", (int)round(20.0 * 10.0 * log10(last_gain)));
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " BIN=%d", currentBin);
 			strcat(cmd, tmp);
 			snprintf(tmp, sizeof(tmp), " FLIP=%d", asiFlip);
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%02d", current_bit_depth);
+			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%d", current_bit_depth);
 			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " FOCUS=%3d", focus_metric);
+			snprintf(tmp, sizeof(tmp), " FOCUS=%d", focus_metric);
 			strcat(cmd, tmp);
 
 			strcat(cmd, " &");

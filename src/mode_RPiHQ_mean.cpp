@@ -1,5 +1,5 @@
 // 2022-01-14  MEAN_AUTO_MODE, depending in autoGain and autoExposure different modes are in use  
-//             new optional start parameter -mean-value-day
+//             new optional start parameter -daymean
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -267,10 +267,10 @@ if (0)
 	if (currentModeMeanSetting.mean_auto == MEAN_AUTO) {
 		double newGain = std::min(gain, std::max(1.0, ExposureTimeEff_s / (exposure_us/US_IN_SEC))); 
 		currentRaspistillSetting.analoggain = newGain;
-		ExposureTime_s = std::min(exposure_us/US_IN_SEC, std::max(1 / US_IN_SEC, ExposureTimeEff_s / currentRaspistillSetting.analoggain));
+		ExposureTime_s = std::min((double)exposure_us/(double)US_IN_SEC, std::max(1 / US_IN_SEC, ExposureTimeEff_s / currentRaspistillSetting.analoggain));
 	}
 	else if (currentModeMeanSetting.mean_auto == MEAN_AUTO_GAIN_ONLY) {
-		ExposureTime_s = (double)exposure_us/US_IN_SEC;
+		ExposureTime_s = (double)exposure_us/(double)US_IN_SEC;
 		currentRaspistillSetting.analoggain = std::min(gain,std::max(1.0,ExposureTimeEff_s / (exposure_us/US_IN_SEC)));
 	}
 	else if (currentModeMeanSetting.mean_auto == MEAN_AUTO_EXPOSURE_ONLY) {
@@ -278,7 +278,7 @@ if (0)
 		ExposureTime_s = std::min((double)exposure_us/(double)US_IN_SEC,std::max(0.000001, ExposureTimeEff_s / gain));
 	}
 	else {
-		ExposureTime_s = exposure_us/US_IN_SEC;
+		ExposureTime_s = (double)exposure_us/(double)US_IN_SEC;
 		currentRaspistillSetting.analoggain = gain;
 	}
 

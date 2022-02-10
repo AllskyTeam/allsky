@@ -19,13 +19,13 @@ if [ ! -e "${NOTIFICATIONFILE}" ] ; then
 	exit 2
 fi
 
-IMAGE_TO_USE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
+CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
 # Don't overwrite notification image so create a temporary copy and use that.
-cp "${NOTIFICATIONFILE}" "${IMAGE_TO_USE}"
+cp "${NOTIFICATIONFILE}" "${CURRENT_IMAGE}"
 
 # Resize the image if required
 if [ "${IMG_RESIZE}" = "true" ]; then
-	convert "${IMAGE_TO_USE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${IMAGE_TO_USE}"
+	convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}"
 	if [ $? -ne 0 ] ; then
 		echo "${RED}*** ${ME}: ERROR: IMG_RESIZE failed${NC}"
 		exit 3
@@ -45,7 +45,7 @@ if [ "${DAYTIME_SAVE}" = "true" -a "${IMG_CREATE_THUMBNAILS}" = "true" ] ; then
 	mkdir -p ${THUMBNAILS_DIR}
 	THUMB="${THUMBNAILS_DIR}/${FILENAME}-$(date +'%Y%m%d%H%M%S').${EXTENSION}"
 
-	convert "${IMAGE_TO_USE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}"
+	convert "${CURRENT_IMAGE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}"
 	if [ $? -ne 0 ] ; then
 		echo "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
 	fi
@@ -53,7 +53,7 @@ fi
 
 FULL_FILENAME="${IMG_PREFIX}${FULL_FILENAME}"
 FINAL_IMAGE="${CAPTURE_SAVE_DIR}/${FULL_FILENAME}"	# final resting place - no more changes to it.
-mv -f "${IMAGE_TO_USE}" "${FINAL_IMAGE}"	# so web severs can see it.
+mv -f "${CURRENT_IMAGE}" "${FINAL_IMAGE}"	# so web severs can see it.
 
 # If upload is true, optionally create a smaller version of the image, either way, upload it.
 if [ "${UPLOAD_IMG}" = "true" ] ; then

@@ -1,5 +1,5 @@
 // 2022-01-14  MEAN_AUTO_MODE, depending in autoGain and autoExposure different modes are in use  
-//             new optional start parameter -mean-value-day
+//             new optional start parameter -daymean
 //             use can define different values for day and night (autoExposure, Exposure, mean-value,...)
 
 #include <opencv2/core/core.hpp>
@@ -1341,10 +1341,10 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 		printf(" -notificationimages                - Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
 		printf(" -debuglevel                        - Default = 0. Set to 1,2 or 3 for more debugging information.\n");
 
-		printf(" -nightmean                         - Default = 0.3 Set night mean value and activates exposure control\n");
+		printf(" -nightmean                         - Default = 0.3 Sets night mean value and activates exposure control\n");
 		printf("                                      NOTE: Auto-Gain and Auto-Exposure (day&night) should be On in the WebUI for best results\n");
 		printf("                                            CAPTURE_EXTRA_PARAMETERS='-nightmean 0.3'\n"); 
-		printf(" -daymean                           - Default = same value as nightmean. Set day mean value-day and activates exposure control\n");
+		printf(" -daymean                           - Default = same value as nightmean. Sets day mean value and activates exposure control\n");
 		printf(" -mean-threshold                    - Default = 0.01 Set mean-value and activates exposure control\n");
 		printf(" -mean-p0                           - Default = 5.0, be careful changing these values, ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2\n");
 		printf(" -mean-p1                           - Default = 20.0\n");

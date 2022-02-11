@@ -23,27 +23,28 @@ usage_and_exit()
 export DAY_OR_NIGHT="${1}"
 [ "${DAY_OR_NIGHT}" != "DAY" -a "${DAY_OR_NIGHT}" != "NIGHT"  ] && usage_and_exit 1
 
-# ${IMAGE_TO_USE} is the full path to a uniquely-named file created by the capture program.
+# ${CURRENT_IMAGE} is the full path to a uniquely-named file created by the capture program.
 # The file name is its final name in the ${ALLSKY_IMAGES}/<date> directory.
 # Because it's a unique name we don't have to worry about another process overwritting it.
 # We modify the file as needed and ultimately save a link to it as ${FULL_FILENAME} since
 # that's what websites look for and what is uploaded.
 
-IMAGE_TO_USE="${2}"
+# Export so other scripts can use it.
+export CURRENT_IMAGE="${2}"
 shift 2
-if [ ! -f "${IMAGE_TO_USE}" ] ; then
-	echo -e "${RED}*** ${ME}: ERROR: File '${IMAGE_TO_USE}' not found; ignoring${NC}"
+if [ ! -f "${CURRENT_IMAGE}" ] ; then
+	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE}' not found; ignoring${NC}"
 	exit 2
 fi
-if [ ! -s "${IMAGE_TO_USE}" ] ; then
-	echo -e "${RED}*** ${ME}: ERROR: File '${IMAGE_TO_USE}' is empty; ignoring${NC}"
+if [ ! -s "${CURRENT_IMAGE}" ] ; then
+	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE}' is empty; ignoring${NC}"
 	exit 2
 fi
 
 # The image may be in a memory filesystem, so do all the processing there and
 # leave the image used by the website(s) in that directory.
-IMAGE_NAME=$(basename "${IMAGE_TO_USE}")	# just the file name
-WORKING_DIR=$(dirname "${IMAGE_TO_USE}")	# the directory the image is currently in
+IMAGE_NAME=$(basename "${CURRENT_IMAGE}")	# just the file name
+WORKING_DIR=$(dirname "${CURRENT_IMAGE}")	# the directory the image is currently in
 
 # Optional full check for bad images.
 if [ "${REMOVE_BAD_IMAGES}" = "true" ]; then
@@ -53,9 +54,9 @@ if [ "${REMOVE_BAD_IMAGES}" = "true" ]; then
 	[ $? -eq 99 ] && exit 99
 else
 	# Quick check to make sure the image isn't corrupted.
-	identify "${IMAGE_TO_USE}" >/dev/null 2>&1
+	identify "${CURRENT_IMAGE}" >/dev/null 2>&1
 	if [ $? -ne 0 ] ; then
-		echo -e "${RED}*** ${ME}: ERROR: '${IMAGE_TO_USE}' is corrupt; not saving.${NC}"
+		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving.${NC}"
 		exit 3
 	fi
 fi
@@ -70,8 +71,6 @@ while [ $# -gt 0 ]; do
 	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
 done
 
-# Export so other scripts can use it.
-export CURRENT_IMAGE="${IMAGE_TO_USE}"		# darkCapture.sh and darkSubtract.sh expect CURRENT_IMAGE
 source "${ALLSKY_SCRIPTS}/darkCapture.sh"		# does not return if in darkframe mode
 # xxxx TODO: Dark subtract long-exposure images, even if during daytime.
 # xxxx TODO: Need a config variable to specify the threshold to dark subtract.
@@ -84,8 +83,8 @@ fi
 
 # Resize the image if required
 if [ "${IMG_RESIZE}" = "true" ] ; then
-	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing '${IMAGE_TO_USE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
-	convert "${IMAGE_TO_USE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${IMAGE_TO_USE}"
+	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
+	convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}"
 	if [ $? -ne 0 ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed; not saving{$NC}"
 		exit 4
@@ -94,8 +93,8 @@ fi
 
 # Crop the image if required
 if [ "${CROP_IMAGE}" = "true" ] ; then
-	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Cropping '${IMAGE_TO_USE}' to ${CROP_WIDTH}x${CROP_HEIGHT}"
-	convert "${IMAGE_TO_USE}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${IMAGE_TO_USE}"
+	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}"
+	convert "${CURRENT_IMAGE}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${CURRENT_IMAGE}"
 	if [ $? -ne 0 ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: CROP_IMAGE failed; not saving{$NC}"
 		exit 4
@@ -104,15 +103,15 @@ fi
 
 # Stretch the image if required, but only at night.
 if [ "${DAY_OR_NIGHT}" = "NIGHT" -a ${AUTO_STRETCH} = "true" ]; then
-	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Stretching '${IMAGE_TO_USE}' by ${AUTO_STRETCH_AMOUNT}"
- 	convert "${IMAGE_TO_USE}" -sigmoidal-contrast "${AUTO_STRETCH_AMOUNT},${AUTO_STRETCH_MID_POINT}" "${IMAGE_TO_USE}"
+	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${AUTO_STRETCH_AMOUNT}"
+ 	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${AUTO_STRETCH_AMOUNT},${AUTO_STRETCH_MID_POINT}" "${IMAGE_TO_USE}"
 	if [ $? -ne 0 ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: AUTO_STRETCH failed; not saving${NC}"
 		exit 4
 	fi
 fi
 
-SAVED_FILE="${IMAGE_TO_USE}"				# The name of the file saved from the camera.
+SAVED_FILE="${CURRENT_IMAGE}"				# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 
 # If needed, save the current image in today's directory.
@@ -134,7 +133,7 @@ if [ "${DAYTIME_SAVE}" = "true" -o "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 		# Create a thumbnail of the image for faster load in the WebUI.
 		# If we resized above, this will be a resize of a resize,
 		# but for thumbnails that should be ok.
-		convert "${IMAGE_TO_USE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMBNAILS_DIR}/${IMAGE_NAME}"
+		convert "${CURRENT_IMAGE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMBNAILS_DIR}/${IMAGE_NAME}"
 		if [ $? -ne 0 ] ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
 		fi
@@ -144,7 +143,7 @@ if [ "${DAYTIME_SAVE}" = "true" -o "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 	# it to use.
 
 	FINAL_FILE="${DATE_DIR}/${IMAGE_NAME}"
-	cp "${IMAGE_TO_USE}" "${FINAL_FILE}" || echo "*** ERROR: ${ME}: unable to copy ${IMAGE_TO_USE} ***"
+	cp "${CURRENT_IMAGE}" "${FINAL_FILE}" || echo "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"
 fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
@@ -171,7 +170,7 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 			[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ] && echo "${ME}: Not uploading: ${LEFT} images(s) left."
 
 			# We didn't create ${WEBSITE_FILE} yet so do that now.
-			mv "${IMAGE_TO_USE}" "${WEBSITE_FILE}"
+			mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
 
 			exit 0
 		fi
@@ -186,14 +185,14 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 		# Put the copy in ${WORKING_DIR}.
 		FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
 		[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${RESIZE_UPLOADS_SIZE}"
-		convert "${IMAGE_TO_USE}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}"
+		convert "${CURRENT_IMAGE}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}"
 		if [ $? -ne 0 ] ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: RESIZE_UPLOADS failed; continuing with larger image.${NC}"
 			# We don't know the state of $FILE_TO_UPLOAD so use the larger file.
-			FILE_TO_UPLOAD="${IMAGE_TO_USE}"
+			FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 		fi
 	else
-		FILE_TO_UPLOAD="${IMAGE_TO_USE}"
+		FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 	fi
 
 	"${ALLSKY_SCRIPTS}/upload.sh" "${FILE_TO_UPLOAD}" "${IMAGE_DIR}" "${FULL_FILENAME}" "SaveImage"

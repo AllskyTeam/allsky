@@ -19,37 +19,23 @@ if [ -z "${ALLSKY_CONFIG}" ]; then
 	exit 100
 fi
 
-# Reset auto camera selection, so config.sh does not pick up old camera selection.
-> "${ALLSKY_CONFIG}/autocam.sh"
-
 # COMPATIBILITY CHECKS
-# config.sh moved to a new location in version 0.8.1.  Check for it.
 # Check for a new variable in config.sh that wasn't in prior versions.
-# If not found, force the user to upgrade config.sh
-if [ -f "${ALLSKY_CONFIG}/config.sh" ]; then
-	source "${ALLSKY_CONFIG}/config.sh"
-	if [ -z "${CAPTURE_SAVE_DIR}" ]; then
-		echo "${RED}*** ERROR: old version of config.sh detected.${NC}"
-		echo "See https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions"
+# If not set to something (even "") then it wasn't found and force the user to upgrade config.sh
+source "${ALLSKY_CONFIG}/config.sh"
+if [ ! -v FAN_DATA_FILE ]; then	# FAN_DATA_FILE added post version 0.8.3.
+	echo "${RED}*** ERROR: old version of ${ALLSKY_CONFIG}/config.sh detected.${NC}"
+	echo "Please move your current config.sh file to config.sh-OLD, then place the newest one"
+	echo "from https://github.com/thomasjacquin/allsky in ${ALLSKY_CONFIG} and"
+	echo "manually copy your data from the old file to the new one.".
 
-		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
-		sudo systemctl stop allsky
-		exit 100
-	fi
-else
-	echo "${RED}*** ERROR: config.sh not in ${ALLSKY_CONFIG}.${NC}"
-	echo "Please make a backup of your config.sh, ftp-settings.sh, and settings_*.json files,"
-	echo "then do a full re-install of AllSky."
-	echo "After the re-install, copy your settings from the backup files to the new files."
-	echo "Do NOT simply copy the old files over the new ones since several variables have been added or changed names."
-	
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
 	sudo systemctl stop allsky
 	exit 100
 fi
 
 # Make sure allsky.sh is not already running.
-ps -ef | grep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
+pgrep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 # old/regular manual camera selection mode => exit if no requested camera was found
 # Buster and Bullseye have different output so only check the part they have in common.
@@ -110,40 +96,10 @@ if [[ $CAMERA != "RPiHQ" ]]; then
 	fi
 fi
 
-# CAMERA AUTOSELECT
-# Exit if no camera found.
-WAS_AUTO=0
-
-if [[ $CAMERA == "auto" ]]; then
-	WAS_AUTO=1
-	echo "Trying to automatically determine camera type"
-	if [[ $ZWOIsPresent -eq 0 && $RPiHQIsPresent -eq 0 ]]; then
-		echo "${RED}*** ERROR: None of RPI or ZWO Cameras were found. Exiting.${NC}" >&2
-		sudo systemctl stop allsky
-		exit 100
-	fi
-	# Prioritize ZWO camera if exists, otherwise use RPI camera.
-	if [[ $ZWOIsPresent -eq 0 ]]; then
-		CAMERA="RPiHQ"
-	else
-		CAMERA="ZWO"
-	fi
-
-	# redefine the settings variable
-	CAMERA_SETTINGS="${CAMERA_SETTINGS_DIR}/settings_${CAMERA}.json"
-fi
-
-if [ $WAS_AUTO -eq 1 ]; then	# Get the proper debug level since earlier config.sh run couldn't.
-	ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")
-fi
-
 echo "CAMERA: ${CAMERA}"
 if [ "${ALLSKY_DEBUG_LEVEL}" -gt 0 ]; then
 	echo "CAMERA_SETTINGS: ${CAMERA_SETTINGS}"
 fi
-
-# Save auto camera selection for the current session, will be read in config.sh file.
-echo "export CAMERA=${CAMERA}" > "${ALLSKY_CONFIG}/autocam.sh"
 
 # This must be called after CAMERA AUTOSELECT above to refresh the file name.
 source "${ALLSKY_SCRIPTS}/filename.sh"
@@ -156,7 +112,7 @@ else
 	mkdir -p "${ALLSKY_TMP}"
 fi
 
-# Optionally display a notification image. This must come after the creation of "autocam.sh" above.
+# Optionally display a notification image.
 USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
 if [ "$USE_NOTIFICATION_IMAGES" = "1" ] ; then
 	# Can do this in the background to speed up startup

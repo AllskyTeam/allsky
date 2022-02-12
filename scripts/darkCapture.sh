@@ -36,10 +36,11 @@ if [ "${DARK_MODE}" = "1" ] ; then
 	# If the camera doesn't support temperature, we will keep overwriting the file until
 	# the user creates a temperature.txt file.
 	if [ "${AS_TEMPERATURE}" = "n/a" ]; then
-		cp "${CURRENT_IMAGE}" "${DARKS_DIR}"
+		MOVE_TO_FILE="${DARKS_DIR}/$(basename "${CURRENT_IMAGE}")"
 	else
-		cp "${CURRENT_IMAGE}" "${DARKS_DIR}/${AS_TEMPERATURE}.${DARK_EXTENSION}"
+		MOVE_TO_FILE="${DARKS_DIR}/${AS_TEMPERATURE}.${DARK_EXTENSION}"
 	fi
+	mv "${CURRENT_IMAGE}" "${MOVE_TO_FILE}"
 
 	# If the user has notification images on, the current image says we're taking dark frames,
 	# so don't overwrite it.
@@ -48,7 +49,14 @@ if [ "${DARK_MODE}" = "1" ] ; then
 	USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "${CAMERA_SETTINGS}")
 	if [ "${USE_NOTIFICATION_IMAGES}" = "0" ] ; then
 		# Go ahead and let the web sites see the dark frame to see if it's working.
-		cp "${CURRENT_IMAGE}" "${FULL_FILENAME}"
+		# We're copying back the file we just moved, but the assumption is few people
+		# will want to see the dark frames on the web.
+
+		# xxxx  TODO: don't use $FULL_FILENAME since that assumes $EXTENSION is the same as
+		# $DARK_EXTENSION.  If we start saving darks as .png files the extensions will be
+		# different and we'll need to run "convert" to make the dark a .jpg file to
+		# be displayed on the web.
+		cp "${MOVE_TO_FILE}" "${FULL_FILENAME}"
 	fi
 
 	exit 0	# exit so the calling script exits and doesn't try to process the file.

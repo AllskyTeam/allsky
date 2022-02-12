@@ -176,6 +176,8 @@ CAMERA_SETTINGS_DIR="${ALLSKY_CONFIG}"
 
 
 # ================ Do not change anything below this line.
+END_OF_USER_SETTINGS="true"		# During upgrades, stop looking for variables here.
+
 if [ "${CAMERA}" = "" ]; then
 	echo "${RED}ERROR: Please set CAMERA in config/config.sh${NC}"
 	sudo systemctl stop allsky

@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# TODO: remove these lines once we know they are in the new unified configuration file.
-TIMELAPSEWIDTH=${TIMELAPSEWIDTH:-0}
-TIMELAPSEHEIGHT=${TIMELAPSEHEIGHT:-0}
-FFLOG=${FFLOG:-warning}
-FPS=${FPS:-25}
-VCODEC=${VCODEC:-libx264}
-TIMELAPSE_BITRATE=${TIMELAPSE_BITRATE:-2000k}
-PIX_FMT=${PIX_FMT:-yuv420p}
-
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
 	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}")/..)"
@@ -16,7 +7,6 @@ fi
 
 source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_SCRIPTS}/filename.sh"
 
 # If we're on a tty that means we're being manually run and $RED != "".
 # In that case, don't display $ME.

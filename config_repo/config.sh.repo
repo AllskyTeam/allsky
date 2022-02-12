@@ -6,7 +6,7 @@
 #  - Values can optionally be quoted with double quotes, NOT single quotes.
 #  - If a variable occurs multiple times, only the last value is used.
 
-# Choose between "ZWO" or "RPiHQ".  Note that "auto" is no longer allowed.
+# Choose between "ZWO" or "RPiHQ".
 CAMERA=""
 
 
@@ -69,6 +69,15 @@ REMOVE_BAD_IMAGES_THRESHOLD_HIGH=90
 # e.g. activate autoexposure algorithm "mean" for RPiHQ: "-mean-value 0.3 -autoexposure 1"
 CAPTURE_EXTRA_PARAMETERS=""
 
+# Set to "false" to disable daytime capture.
+DAYTIME_CAPTURE="true"
+
+# Night images are always taken and saved to disk.
+# Setting DAYTIME_SAVE to "true" also saves daytime images to disk.
+# Will only save daytime images if DAYTIME_CAPTURE="true".
+DAYTIME_SAVE="false"
+
+
 ########## Timelapse
 # Set to "true" to generate a timelapse video at the end of each night.
 TIMELAPSE="true"
@@ -106,10 +115,7 @@ UPLOAD_VIDEO="false"
 KEOGRAM="true"
 
 # Additional Keogram parameters.  Run "keogram --help" to see the options.
-# Keograms work best if North is at the top of the image.  If this is not the case you can
-# rotate the image; for example, if North is straight down in your image, rotate it 180 degrees.
-# Rotation is anticlockwise. 0 disables rotation.
-KEOGRAM_EXTRA_PARAMETERS="--rotate 0 --font-size 1.0 --font-line 1 --font-color '255 255 255'"
+KEOGRAM_EXTRA_PARAMETERS="--font-size 1.0 --font-line 1 --font-color '255 255 255'"
 
 # Set to "true" to upload the keogram to your website at the end of each night.
 UPLOAD_KEOGRAM="false"
@@ -149,13 +155,10 @@ POST_END_OF_NIGHT_DATA="false"
 # You must first create dark frames - see the README.md file for instructions.
 DARK_FRAME_SUBTRACTION="false"
 
-# Set to "false" to disable daytime capture.
-DAYTIME_CAPTURE="true"
-
-# Night images are always taken and saved to disk.
-# Setting DAYTIME_SAVE to "true" also saves daytime images to disk.
-# Will only save daytime images if DAYTIME_CAPTURE="true".
-DAYTIME_SAVE="false"
+# If you have a fan in your Allsky camera enclosure that reports its speed,
+# set this to the full pathname of that file.
+# The file should include two numbers: the fan speed in RPM and the percent of maximum speed.
+FAN_DATA_FILE=""
 
 # The uhubctl command can reset the USB bus if the camera isn't found and you know it's there.
 # Allsky.sh uses this to try and fix "missing" cameras.
@@ -168,12 +171,14 @@ UHUBCTL_PORT=2
 # Do not change unless you know what you are doing.
 CAMERA_SETTINGS_DIR="${ALLSKY_CONFIG}"
 
+
+# ================ Do not change anything below this line.
+END_OF_USER_SETTINGS="true"		# During upgrades, stop looking for variables here.
+
 if [ "${CAMERA}" = "" ]; then
 	echo "${RED}ERROR: Please set CAMERA in config/config.sh${NC}"
-	exit 1
-elif [ "${CAMERA}" = "auto" ]; then
-	echo "${RED}ERROR: 'auto' is no longer a valid CAMERA type.  Please reset CAMERA in config/config.sh${NC}"
-	exit 1
+	sudo systemctl stop allsky
+	exit 100
 fi
 
 # This is needed in case the user changed the default location the current image is saved to.
@@ -183,23 +188,12 @@ else
 	CAPTURE_SAVE_DIR="${IMG_DIR}"
 fi
 
-# !!! The next few lines are for backwards compatibility and will be removed in the future - do not change !!!
-UPLOAD_IMG="${IMG_UPLOAD}"	# UPLOAD_IMG is th eold name for IMG_UPLOAD
-if [ "${DAYTIME_CAPTURE}" = "true" ]; then
-	DAYTIME=1		# DAYTIME is the old name for DAYTIME_CAPTURE
-else
-	DAYTIME=0
-fi
-CAPTURE_24HR=${DAYTIME_SAVE}	# CAPTURE_24HR is the old name for DAYTIME_SAVE
+CAMERA_SETTINGS="${CAMERA_SETTINGS_DIR}/settings_${CAMERA}.json"
 
-if [[ ${CAMERA} == "auto" ]]; then
-	# Restore currently saved autodiscovered camera type, if any.
-	source "${ALLSKY_CONFIG}/autocam.sh"	# May reset ${CAMERA}
-fi
-if [[ ${CAMERA} != "auto" ]]; then
-	CAMERA_SETTINGS="${CAMERA_SETTINGS_DIR}/settings_${CAMERA}.json"
+# Get the name of the file the websites will look for, and split into name and extension.
+FULL_FILENAME=$(jq -r '.filename' "$CAMERA_SETTINGS")
+EXTENSION="${FULL_FILENAME##*.}"
+FILENAME="${FULL_FILENAME%.*}"
  
-	# So scripts can conditionally ouput messages; DO NOT CHANGE NEXT LINES.
-	ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")
-fi
-ALLSKY_DEBUG_LEVEL=${ALLSKY_DEBUG_LEVEL:-0}
+# So scripts can conditionally ouput messages; DO NOT CHANGE NEXT LINES.
+ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")

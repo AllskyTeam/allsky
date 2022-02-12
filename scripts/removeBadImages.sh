@@ -4,7 +4,6 @@ ME="$(basename "${BASH_ARGV0}")"
 
 source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_SCRIPTS}/filename.sh"
 
 usage()
 {

@@ -23,7 +23,6 @@ fi
 
 source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_SCRIPTS}/filename.sh"
 [ "${TYPE}" = "UPLOAD" ] && source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 # If we're on a tty we are being invoked manually so no need to display ${ME} in error messages.

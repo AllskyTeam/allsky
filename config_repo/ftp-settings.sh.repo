@@ -64,10 +64,6 @@ STARTRAILS_DIR=""
 STARTRAILS_DESTINATION_NAME=""
 WEB_STARTRAILS_DIR=""
 
-# These are for for backwards compatibility and will be removed in the future. DO NOT CHANGE!
-IMGDIR="${IMAGE_DIR}"
-MP4DIR="${VIDEOS_DIR}"
-
 
 ############### ftp, ftps, sftp, and scp PROTOCOLS only:
 	# Enter the name of the remote server.  If you don't know it, ask your service provider.

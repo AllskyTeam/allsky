@@ -192,6 +192,7 @@ fi
 RETCODE=$?
 if [ $RETCODE -ne 0 ]; then
 	  echo -e "${RED}'${CAPTURE}' exited with RETCODE=${RETCODE}, GOT_SIGTERM=$GOT_SIGTERM, GOT_SIGUSR1=$GOT_SIGUSR1${NC}"
+fi
 
 # 98 return code means we are restarting.  The capture program dealt with notification images.
 if [ "${RETCODE}" -eq 98 ] ; then
@@ -225,4 +226,3 @@ if [ "${USE_NOTIFICATION_IMAGES}" = "1" -a "${RETCODE}" -ne 0 ] ; then
 fi
 
 exit $RETCODE
-

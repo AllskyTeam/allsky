@@ -227,6 +227,11 @@ ARGUMENTS+=(-daytime $DAYTIME_CAPTURE)
 
 echo "${ARGUMENTS[@]}" > ${ALLSKY_TMP}/capture_args.txt
 
+GOT_SIGTERM="false"
+GOT_SIGUSR1="false"
+# trap "GOT_SIGTERM=true" SIGTERM
+# trap "GOT_SIGUSR1=true" SIGUSR1
+
 if [[ $CAMERA == "ZWO" ]]; then
 	CAPTURE="capture"
 elif [[ $CAMERA == "RPiHQ" ]]; then
@@ -234,7 +239,18 @@ elif [[ $CAMERA == "RPiHQ" ]]; then
 fi
 "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
 RETCODE=$?
-[ $RETCODE -ne 0 ] && echo "'${CAPTURE}' exited with RETCODE=${RETCODE}"
+[ $RETCODE -ne 0 ] && echo "'${CAPTURE}' exited with RETCODE=${RETCODE}, GOT_SIGTERM=$GOT_SIGTERM, GOT_SIGUSR1=$GOT_SIGUSR1"
+
+# 98 return code means we are restarting.  The capture program dealt with notification images.
+if [ "${RETCODE}" -eq 98 ] ; then
+	exit 0	# use 0 so the service is restarted
+fi
+
+# 99 is a special return code which means to reset usb bus if possible.
+if [ "${RETCODE}" -eq 99 -a "$UHUBCTL_PATH" != "" ] ; then
+	reset_usb
+	exit 0	# use 0 so the service is restarted
+fi
 
 if [ "${USE_NOTIFICATION_IMAGES}" = "1" -a "${RETCODE}" -ne 0 ] ; then
 
@@ -263,4 +279,3 @@ if [ "${USE_NOTIFICATION_IMAGES}" = "1" -a "${RETCODE}" -ne 0 ] ; then
 fi
 
 exit $RETCODE
-

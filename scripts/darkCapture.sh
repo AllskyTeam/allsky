@@ -56,7 +56,7 @@ if [ "${DARK_MODE}" = "1" ] ; then
 		# $DARK_EXTENSION.  If we start saving darks as .png files the extensions will be
 		# different and we'll need to run "convert" to make the dark a .jpg file to
 		# be displayed on the web.
-		cp "${MOVE_TO_FILE}" "${FULL_FILENAME}"
+		cp "${MOVE_TO_FILE}" "$(dirname ${CURRENT_IMAGE})/${FULL_FILENAME}"
 	fi
 
 	exit 0	# exit so the calling script exits and doesn't try to process the file.

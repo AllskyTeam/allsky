@@ -225,3 +225,4 @@ if [ "${USE_NOTIFICATION_IMAGES}" = "1" -a "${RETCODE}" -ne 0 ] ; then
 fi
 
 exit $RETCODE
+

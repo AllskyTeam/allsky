@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Exit code 100 will cause the service to be stopped so the user can fix the problem.
+
 # Make it easy to find the beginning of this run in the log file.
 echo "     ***** Starting AllSky *****"
 
@@ -23,7 +24,7 @@ fi
 # Check for a new variable in config.sh that wasn't in prior versions.
 # If not set to something (even "") then it wasn't found and force the user to upgrade config.sh
 source "${ALLSKY_CONFIG}/config.sh"
-if [ ! -v FAN_DATA_FILE ]; then	# FAN_DATA_FILE added post version 0.8.3.
+if [ ! -v FAN_DATA_FILE ]; then	# FAN_DATA_FILE added after version 0.8.3.
 	echo "${RED}*** ERROR: old version of ${ALLSKY_CONFIG}/config.sh detected.${NC}"
 	echo "Please move your current config.sh file to config.sh-OLD, then place the newest one"
 	echo "from https://github.com/thomasjacquin/allsky in ${ALLSKY_CONFIG} and"
@@ -34,33 +35,34 @@ if [ ! -v FAN_DATA_FILE ]; then	# FAN_DATA_FILE added post version 0.8.3.
 	exit 100
 fi
 
-# Make sure allsky.sh is not already running.
-pgrep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
-
-# old/regular manual camera selection mode => exit if no requested camera was found
-# Buster and Bullseye have different output so only check the part they have in common.
-# TODO: this check only needs to be done if CAMERA = RPiHQ
-# Bullseye has problems detecting RPiHQ cameras - workaround
-which libcamera-still > /dev/null
-if [ $? -eq 0 ]; then
-	LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still -t 1 --nopreview
-	RET=$?
-else
-	vcgencmd get_camera | grep --silent "supported=1" 
-	RET=$?
-fi
-if [ $RET -eq 0 ]; then
-	RPiHQIsPresent=1
-else
-	RPiHQIsPresent=0
-fi
-if [[ $CAMERA == "RPiHQ" && $RPiHQIsPresent -eq 0 ]]; then
-	echo "${RED}*** ERROR: RPiHQ Camera not found. Exiting.${NC}" >&2
+if [ -z "${CAMERA}" ]; then
+	echo "${RED}*** ERROR: CAMERA not set, can't continue!${NC}"
+	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
 	sudo systemctl stop allsky
 	exit 100
 fi
 
-if [[ $CAMERA != "RPiHQ" ]]; then
+# Make sure allsky.sh is not already running.
+pgrep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
+
+if [ "${CAMERA}" = "RPiHQ" ]; then
+	# See if we should use libcamera-still or raspistill.
+	which libcamera-still > /dev/null
+	if [ $? -eq 0 ]; then
+		LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still --timeout 1 --nopreview > /dev/null 2>&1
+		RET=$?
+	else
+		# Buster and Bullseye have different output so only check the part they have in common.
+		vcgencmd get_camera | grep --silent "supported=1" 
+		RET=$?
+	fi
+	if [ $RET -ne 0 ]; then
+		echo "${RED}*** ERROR: RPiHQ Camera not found. Exiting.${NC}" >&2
+		sudo systemctl stop allsky
+		exit 100
+	fi
+
+else	# ZWO CAMERA
 	reset_usb()		# resets the USB bus
 	{
 		if [ "${ON_TTY}" = "1" ]; then
@@ -73,10 +75,9 @@ if [[ $CAMERA != "RPiHQ" ]]; then
 	}
 
 	# Use two commands to better aid debugging when camera isn't found.
-	# xxxxx This doesn't catch cases where CAMERA is "auto" and we should use ZWO.
 	ZWOdev=$(lsusb | awk '/ 03c3:/ { bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}')
 	ZWOIsPresent=$(lsusb -D ${ZWOdev} 2>/dev/null | grep -c 'iProduct .*ASI[0-9]')
-	if [[ $CAMERA == "ZWO" && $ZWOIsPresent -eq 0 ]]; then
+	if [ $ZWOIsPresent -eq 0 ]; then
 		echo "${RED}*** ERROR: ZWO Camera not found...${NC}" >&2
 		if [[ $ZWOdev == "" ]]; then
 			echo "  and no USB entry found for it." >&2
@@ -101,12 +102,9 @@ if [ "${ALLSKY_DEBUG_LEVEL}" -gt 0 ]; then
 	echo "CAMERA_SETTINGS: ${CAMERA_SETTINGS}"
 fi
 
-# This must be called after CAMERA AUTOSELECT above to refresh the file name.
-source "${ALLSKY_SCRIPTS}/filename.sh"
-
 if [ -d "${ALLSKY_TMP}" ]; then
 	# remove any lingering old image files.
-	rm -f "${ALLSKY_TMP}/${FILENAME}"-202*.${EXTENSION}	# "202" for 2021 and later
+	rm -f "${ALLSKY_TMP}/${FILENAME}"-202*.${EXTENSION}	# "202" for 2020 and later
 else
 	# Re-create in case it's on a memory filesystem that gets wiped out at reboot
 	mkdir -p "${ALLSKY_TMP}"
@@ -169,19 +167,16 @@ else
 	rm -f "${FREQUENCY_FILE}"
 fi
 
-# "capture" expects 0 or 1; newer versions of config.sh use "true" and "false".
-# DAYTIME is the old name for DAYTIME_CAPTURE.
-# TODO: These checks will go away in the future.
-if [ "${DAYTIME_CAPTURE}" = "true" -o "${DAYTIME}" = "1" ] ; then
+if [ "${DAYTIME_CAPTURE}" = "true" ] ; then
 	DAYTIME_CAPTURE=1
-elif [ "${DAYTIME_CAPTURE}" = "false" -o "${DAYTIME}" = "0" ] ; then
+else
 	DAYTIME_CAPTURE=0
 fi
 ARGUMENTS+=(-daytime $DAYTIME_CAPTURE)
 
 [ "$CAPTURE_EXTRA_PARAMETERS" != "" ] && ARGUMENTS+=(${CAPTURE_EXTRA_PARAMETERS})	# Any additional parameters
 
-echo "${ARGUMENTS[@]}" > ${ALLSKY_TMP}/capture_args.txt
+echo "${ARGUMENTS[@]}" > ${ALLSKY_TMP}/capture_args.txt		# for debugging
 
 GOT_SIGTERM="false"
 GOT_SIGUSR1="false"
@@ -195,7 +190,8 @@ elif [[ $CAMERA == "RPiHQ" ]]; then
 fi
 "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
 RETCODE=$?
-[ $RETCODE -ne 0 ] && echo "'${CAPTURE}' exited with RETCODE=${RETCODE}, GOT_SIGTERM=$GOT_SIGTERM, GOT_SIGUSR1=$GOT_SIGUSR1"
+if [ $RETCODE -ne 0 ]; then
+	  echo -e "${RED}'${CAPTURE}' exited with RETCODE=${RETCODE}, GOT_SIGTERM=$GOT_SIGTERM, GOT_SIGUSR1=$GOT_SIGUSR1${NC}"
 
 # 98 return code means we are restarting.  The capture program dealt with notification images.
 if [ "${RETCODE}" -eq 98 ] ; then
@@ -209,12 +205,6 @@ if [ "${RETCODE}" -eq 99 -a "$UHUBCTL_PATH" != "" ] ; then
 fi
 
 if [ "${USE_NOTIFICATION_IMAGES}" = "1" -a "${RETCODE}" -ne 0 ] ; then
-
-	# 99 is a special return code which means to reset usb bus if possible.
-	if [ "${RETCODE}" -eq 99 -a "$UHUBCTL_PATH" != "" ] ; then
-		reset_usb
-	fi
-
 	# RETCODE -ge 100 means the we should not restart until the user fixes the error.
 	if [ "$RETCODE" -ge 100 ]; then
 		echo "***"

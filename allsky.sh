@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Exit code 100 will cause the service to be stopped so the user can fix the problem.
 # Make it easy to find the beginning of this run in the log file.
 echo "     ***** Starting AllSky *****"
 
@@ -13,7 +14,9 @@ cd "${ALLSKY_HOME}"
 source "${ALLSKY_HOME}/variables.sh"
 if [ -z "${ALLSKY_CONFIG}" ]; then
 	echo "${RED}*** ERROR: variables not set, can't continue!${NC}"
-	exit 1
+	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
+	sudo systemctl stop allsky
+	exit 100
 fi
 
 # Reset auto camera selection, so config.sh does not pick up old camera selection.
@@ -31,7 +34,7 @@ if [ -f "${ALLSKY_CONFIG}/config.sh" ]; then
 
 		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
 		sudo systemctl stop allsky
-		exit 1
+		exit 100
 	fi
 else
 	echo "${RED}*** ERROR: config.sh not in ${ALLSKY_CONFIG}.${NC}"
@@ -42,7 +45,7 @@ else
 	
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
 	sudo systemctl stop allsky
-	exit 1
+	exit 100
 fi
 
 # Make sure allsky.sh is not already running.
@@ -66,9 +69,9 @@ else
 	RPiHQIsPresent=0
 fi
 if [[ $CAMERA == "RPiHQ" && $RPiHQIsPresent -eq 0 ]]; then
-	echo "RPiHQ Camera not found. Exiting." >&2
+	echo "${RED}*** ERROR: RPiHQ Camera not found. Exiting.${NC}" >&2
 	sudo systemctl stop allsky
-	exit 1
+	exit 100
 fi
 
 if [[ $CAMERA != "RPiHQ" ]]; then
@@ -88,7 +91,7 @@ if [[ $CAMERA != "RPiHQ" ]]; then
 	ZWOdev=$(lsusb | awk '/ 03c3:/ { bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}')
 	ZWOIsPresent=$(lsusb -D ${ZWOdev} 2>/dev/null | grep -c 'iProduct .*ASI[0-9]')
 	if [[ $CAMERA == "ZWO" && $ZWOIsPresent -eq 0 ]]; then
-		echo "ZWO Camera not found..." >&2
+		echo "${RED}*** ERROR: ZWO Camera not found...${NC}" >&2
 		if [[ $ZWOdev == "" ]]; then
 			echo "  and no USB entry found for it." >&2
 		else
@@ -96,13 +99,13 @@ if [[ $CAMERA != "RPiHQ" ]]; then
 		fi
 		if [ "$UHUBCTL_PATH" != "" ] ; then
 			reset_usb
-			exit 1
+			exit 0	# exit with 0 so the service is restarted
 		else
 			echo "  Exiting." >&2
 			echo "  If you have the 'uhubctl' command installed, add it to config.sh." >&2
 			echo "  In the meantime, try running it to reset the USB bus." >&2
 			sudo systemctl stop allsky
-			exit 1
+			exit 100
 		fi
 	fi
 fi
@@ -115,9 +118,9 @@ if [[ $CAMERA == "auto" ]]; then
 	WAS_AUTO=1
 	echo "Trying to automatically determine camera type"
 	if [[ $ZWOIsPresent -eq 0 && $RPiHQIsPresent -eq 0 ]]; then
-		echo "None of RPI or ZWO Cameras were found. Exiting." >&2
+		echo "${RED}*** ERROR: None of RPI or ZWO Cameras were found. Exiting.${NC}" >&2
 		sudo systemctl stop allsky
-		exit 1
+		exit 100
 	fi
 	# Prioritize ZWO camera if exists, otherwise use RPI camera.
 	if [[ $ZWOIsPresent -eq 0 ]]; then
@@ -260,3 +263,4 @@ if [ "${USE_NOTIFICATION_IMAGES}" = "1" -a "${RETCODE}" -ne 0 ] ; then
 fi
 
 exit $RETCODE
+

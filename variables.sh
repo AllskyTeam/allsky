@@ -9,7 +9,7 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	ALLSKY_VARIABLE_SET="true"	# so we only do the following once
 
-	ME="$(basename "${BASH_SOURCE[0]}")"
+	ME2="$(basename "${BASH_SOURCE[0]}")"
 
 	# Set colors used by many scripts in output.
 	# If we're not on a tty output is likely being written to a file, so don't use colors.
@@ -29,7 +29,7 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	if [ "${ALLSKY_HOME}" = "" ] ; then	# This must come after setting colors above
 		echo -en "${RED}"
-		echo -n "${ME}: ERROR: ALLSKY_HOME not set!  Exiting..."
+		echo -n "${ME2}: ERROR: ALLSKY_HOME not set!  Exiting..."
 		echo -e "${NC}"
 		exit 1
 	fi

@@ -160,11 +160,6 @@ DARK_FRAME_SUBTRACTION="false"
 # The file should include two numbers: the fan speed in RPM and the percent of maximum speed.
 FAN_DATA_FILE=""
 
-# If you have a fan in your Allsky camera enclosure that reports its speed,
-# set this to the full pathname of that file.
-# The file should include two numbers: the fan speed in RPM and the percent of maximum speed.
-FAN_DATA_FILE=""
-
 # The uhubctl command can reset the USB bus if the camera isn't found and you know it's there.
 # Allsky.sh uses this to try and fix "missing" cameras.
 # Specify the path to the command and the USB bus number (on a Pi 4, bus 1 is USB 2.0 and

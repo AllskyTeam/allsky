@@ -146,7 +146,7 @@ if [ "${DAYTIME_SAVE}" = "true" -o "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
-if [ "${UPLOAD_IMG}" = "true" ] ; then
+if [ "${IMG_UPLOAD}" = "true" ] ; then
 	# First check if we should upload this image
 	if [ "${IMG_UPLOAD_FREQUENCY}" != "1" ]; then
 		FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"

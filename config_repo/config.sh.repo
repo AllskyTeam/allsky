@@ -95,6 +95,9 @@ FPS=25
 # Encoder for timelapse video. May be changed to use a hardware encoder or different codec.
 VCODEC="libx264"
 
+# Pixel format.
+PIX_FMT=${PIX_FMT:-yuv420p}
+
 # FFLOG determines the amount of log information displayed while creating a timelapse video.
 # Set to "info" to see additional information if you are tuning the algorithm.
 FFLOG="warning"

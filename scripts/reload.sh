@@ -1,17 +1,18 @@
 #!/bin/bash
 
-# ${1} is allsky.sh.  Send a signal to any child process.
+# ${1} is allsky.sh's process ID (PID).  Send a signal to any child process
+# which should normally just be the "capture" program.
 PID=${1}
 if [ -z "${PID}" ]; then
-	echo "*** ERROR on reload - no PID specified ***"
+	echo "*** ERROR in reload.sh: no PID specified on command line ***"
 	exit 1
 fi
 
 TO_SEND_SIGNAL=$(ps --ppid ${PID} -o pid | grep -v PID)
 if [ -z "${TO_SEND_SIGNAL}" ]; then
-	echo "*** ERROR on reload - cannot find any children of PID ${PID} ***"
+	echo "*** ERROR in reload.sh: cannot find any children of PID ${PID} ***"
 	exit 2
 fi
 
-echo "TO_SEND_SIGNAL=$TO_SEND_SIGNAL"
+echo "$0: Sending SIGUSR1 to PID $TO_SEND_SIGNAL"
 kill -USR1 $TO_SEND_SIGNAL

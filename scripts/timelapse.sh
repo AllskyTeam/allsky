@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Remove this line when we know it is in config.sh
+PIX_FMT=${PIX_FMT:-yuv420p}
+
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
 	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}")/..)"

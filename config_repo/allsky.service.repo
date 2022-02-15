@@ -10,8 +10,8 @@ Restart=on-success
 RestartSec=5
 ; exit status 100 means fatal error the user needs to fix, so don't restart
 RestartPreventExitStatus=100
-; XXX RestartKillSignal is not recognized by systemd despite it being described in the documentation.
-; Not sure why, so use ExecReload instead.
+; XXX RestartKillSignal is not recognized by the systemd that comes with Buster (not sure about Bullseye),
+; so use ExecReload instead.
 ; RestartKillSignal=SIGUSR1
 ExecReload=/home/pi/allsky/scripts/reload.sh $MAINPID
 

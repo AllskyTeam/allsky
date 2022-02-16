@@ -82,7 +82,8 @@ DAYTIME_SAVE="false"
 # Set to "true" to generate a timelapse video at the end of each night.
 TIMELAPSE="true"
 
-# Set the image width and height for timelapse video (sizes must be divisible by 2).
+# Set the resolution of the timelapse video (sizes must be EVEN numbers).
+# 0 disables resize and uses the same resolution as the images.
 TIMELAPSEWIDTH=0
 TIMELAPSEHEIGHT=0
 

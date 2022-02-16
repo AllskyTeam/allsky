@@ -443,7 +443,7 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, bool auto_gain, bool auto_
 		// normally short so the camera can home in on the correct exposure quickly.
 		if (auto_exposure)
 		{
-			if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto == MEAN_AUTO_OFF)
+			if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
 				ss << 1;	// We do our own auto-exposure so no need to wait at all.
 			else if (dayOrNight == "DAY")
 				ss << 2 * MS_IN_SEC;

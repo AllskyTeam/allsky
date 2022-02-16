@@ -1,6 +1,6 @@
 // 2022-01-14  MEAN_AUTO_MODE, depending in autoGain and autoExposure different modes are in use  
-//             new optional start parameter -daymean
-//             use can define different values for day and night (autoExposure, Exposure, mean-value,...)
+//             New optional start parameter -daymean.
+//             User can define different values for day and night (autoExposure, Exposure, mean-value, ...).
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -27,7 +27,7 @@
 #define ASI_IMG_RAW8	0
 #define ASI_IMG_RGB24	1
 #define ASI_IMG_RAW16	2
-#define ASI_IMG_Y8		3
+#define ASI_IMG_Y8	3
 #endif
 
 #ifndef ASI_TRUE
@@ -1703,7 +1703,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			char exposureStart[128];
 			char f[10] = "%F %T";
 			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(t, f));
-			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(currentExposure_us, true));
+			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(myRaspistillSetting.shutter_us, true));
 
 			// Get start time for overlay.  Make sure it has the same time as exposureStart.
 			if (showTime == 1)
@@ -1740,7 +1740,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 					if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
 					{
 						mean = RPiHQcalcMean(pRgb, currentExposure_us, currentGain, myRaspistillSetting, myModeMeanSetting);
-						Log(2, "  > Got exposure: %'ld us, shutter: %1.4f s, quickstart: %d, mean=%1.6f\n", currentExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart, mean);
+						Log(2, "  > Got exposure: %'ld us, shutter: %s, quickstart: %d, mean=%1.6f\n", currentExposure_us, length_in_units(myRaspistillSetting.shutter_us, false), myModeMeanSetting.quickstart, mean);
 						if (mean == -1)
 						{
 							numErrors++;
@@ -1776,11 +1776,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 					if (showExposure == 1)
 					{
-						// display in seconds if >= 1 second, else in ms
-						if (last_exposure_us >= (1 * US_IN_SEC))
-							sprintf(bufTemp, "Exposure: %'.2f s", (float)last_exposure_us / US_IN_SEC);
-						else
-							sprintf(bufTemp, "Exposure: %'.2f ms", (float)last_exposure_us / US_IN_MS);
+						sprintf(bufTemp, "Exposure: %s", length_in_units(last_exposure_us, false));
 						// Indicate if in auto-exposure mode.
 						if (currentAutoExposure) strcat(bufTemp, " (auto)");
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),

@@ -831,7 +831,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 	char bufTime[128]     = { 0 };
 	char bufTemp[128]     = { 0 };
-	char bufTemp2[50]     = { 0 };
 #define DEFAULT_WIDTH            0
 #define DEFAULT_HEIGHT           0
 	int width             = DEFAULT_WIDTH;		int originalWidth  = width;
@@ -1779,9 +1778,9 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 					{
 						// display in seconds if >= 1 second, else in ms
 						if (last_exposure_us >= (1 * US_IN_SEC))
-							sprintf(bufTemp, "Exposure: %'.2f s%s", (float)last_exposure_us / US_IN_SEC, bufTemp2);
+							sprintf(bufTemp, "Exposure: %'.2f s", (float)last_exposure_us / US_IN_SEC);
 						else
-							sprintf(bufTemp, "Exposure: %'.2f ms%s", (float)last_exposure_us / US_IN_MS, bufTemp2);
+							sprintf(bufTemp, "Exposure: %'.2f ms", (float)last_exposure_us / US_IN_MS);
 						// Indicate if in auto-exposure mode.
 						if (currentAutoExposure) strcat(bufTemp, " (auto)");
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),

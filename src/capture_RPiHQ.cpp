@@ -1,6 +1,6 @@
 // 2022-01-14  MEAN_AUTO_MODE, depending in autoGain and autoExposure different modes are in use  
-//             new optional start parameter -daymean
-//             use can define different values for day and night (autoExposure, Exposure, mean-value,...)
+//			New optional start parameter -daymean.
+//			User can define different values for day and night (autoExposure, Exposure, mean-value, ...).
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -46,9 +46,9 @@ using namespace std;
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
 
-#define US_IN_MS 1000                     // microseconds in a millisecond
-#define MS_IN_SEC 1000                    // milliseconds in a second
-#define US_IN_SEC (US_IN_MS * MS_IN_SEC)  // microseconds in a second
+#define US_IN_MS 1000						// microseconds in a millisecond
+#define MS_IN_SEC 1000						// milliseconds in a second
+#define US_IN_SEC (US_IN_MS * MS_IN_SEC)	// microseconds in a second
 #define S_IN_MIN 60
 #define S_IN_HOUR (60 * 60)
 #define S_IN_DAY (24 * S_IN_HOUR)
@@ -92,10 +92,10 @@ char full_filename[1000];	// full name of file written to disk
 #define DEFAULT_TIMEFORMAT	  "%Y%m%d %H:%M:%S"	// format the time should be displayed in
 char const *timeFormat		= DEFAULT_TIMEFORMAT;
 bool currentAutoExposure	= false;	// is auto-exposure currently on?
-bool currentAutoGain   		= false;	// is auto-gain currently on?
-bool AutoAWB	       		= false;
-double WBR         			= 2.5;
-double WBB         			= 2;
+bool currentAutoGain		= false;	// is auto-gain currently on?
+bool AutoAWB				= false;
+double WBR					= 2.5;
+double WBB					= 2;
 
 //bool bSavingImg = false;
 
@@ -113,7 +113,7 @@ int debugLevel = 0;
 **/
 void Log(int required_level, const char *fmt, ...)
 {
-    if (debugLevel >= required_level) {
+	if (debugLevel >= required_level) {
 		char msg[8192];
 		snprintf(msg, sizeof(msg), "%s", fmt);
 		va_list va;
@@ -139,7 +139,7 @@ char const *c(char const *color)
 // Create Hex value from RGB
 unsigned long createRGB(int r, int g, int b)
 {
-    return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+	return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
 }
 
 void cvText(cv::Mat img, const char *text, int x, int y, double fontsize,
@@ -176,23 +176,23 @@ void cvText(cv::Mat img, const char *text, int x, int y, double fontsize,
 // Return the numeric time.
 timeval getTimeval()
 {
-    timeval curTime;
-    gettimeofday(&curTime, NULL);
-    return(curTime);
+	timeval curTime;
+	gettimeofday(&curTime, NULL);
+	return(curTime);
 }
 
 // Format a numeric time as a string.
 char *formatTime(timeval t, char const *tf)
 {
-    static char TimeString[128];
-    strftime(TimeString, 80, tf, localtime(&t.tv_sec));
-    return(TimeString);
+	static char TimeString[128];
+	strftime(TimeString, 80, tf, localtime(&t.tv_sec));
+	return(TimeString);
 }
 
 // Return the current time as a string.  Uses both functions above.
 char *getTime(char const *tf)
 {
-    return(formatTime(getTimeval(), tf));
+	return(formatTime(getTimeval(), tf));
 }
 
 std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
@@ -319,19 +319,19 @@ printf("XXXXXX == in IntHandle(), got signal %d\n", i);
 // A user error was found.  Wait for the user to fix it.
 void waitToFix(char const *msg)
 {
-    printf("**********\n");
-    printf("%s\n", msg);
-    printf("*** After fixing, ");
-    if (tty)
-        printf("restart allsky.sh.\n");
-    else
-        printf("restart the allsky service.\n");
-    if (notificationImages)
-        system("scripts/copy_notification_image.sh Error &");
-    sleep(5);	// give time for image to be copied
-    printf("*** Sleeping until you fix the problem.\n");
-    printf("**********\n");
-    sleep(100000);	// basically, sleep forever until the user fixes this.
+	printf("**********\n");
+	printf("%s\n", msg);
+	printf("*** After fixing, ");
+	if (tty)
+		printf("restart allsky.sh.\n");
+	else
+		printf("restart the allsky service.\n");
+	if (notificationImages)
+		system("scripts/copy_notification_image.sh Error &");
+	sleep(5);	// give time for image to be copied
+	printf("*** Sleeping until you fix the problem.\n");
+	printf("**********\n");
+	sleep(100000);	// basically, sleep forever until the user fixes this.
 }
 
 // Calculate if it is day or night
@@ -357,14 +357,14 @@ void calculateDayOrNight(const char *latitude, const char *longitude, const char
 // Calculate how long until nighttime.
 int calculateTimeToNightTime(const char *latitude, const char *longitude, const char *angle)
 {
-    std::string t;
-    char sunwaitCommand[128];	// returns "hh:mm"
-    sprintf(sunwaitCommand, "sunwait list set angle %s %s %s", angle, latitude, longitude);
-    t = exec(sunwaitCommand);
+	std::string t;
+	char sunwaitCommand[128];	// returns "hh:mm"
+	sprintf(sunwaitCommand, "sunwait list set angle %s %s %s", angle, latitude, longitude);
+	t = exec(sunwaitCommand);
 
-    t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
+	t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
 
-    int hNight=0, mNight=0, secsNight;
+	int hNight=0, mNight=0, secsNight;
 	// It's possible for sunwait to return "--:--" if the angle causes sunset to start
 	// after midnight or before noon.
 	if (sscanf(t.c_str(), "%d:%d", &hNight, &mNight) != 2)
@@ -372,29 +372,29 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
 		Log(0, "ERROR: With angle %s sunwait returned unknown time to nighttime: %s\n", angle, t.c_str());
 		return(1 * S_IN_HOUR);	// 1 hour - should we exit instead?
 	}
-    secsNight = (hNight * S_IN_HOUR) + (mNight * S_IN_MIN);	// secs to nighttime from start of today
+	secsNight = (hNight * S_IN_HOUR) + (mNight * S_IN_MIN);	// secs to nighttime from start of today
 	// sunwait doesn't return seconds so on average the actual time will be 30 seconds
 	// after the stated time. So, add 30 seconds.
 	secsNight += 30;
 
 	char *now = getTime("%H:%M:%S");
-    int hNow=0, mNow=0, sNow=0, secsNow;
-    sscanf(now, "%d:%d:%d", &hNow, &mNow, &sNow);
-    secsNow = (hNow*S_IN_HOUR) + (mNow*S_IN_MIN) + sNow;	// seconds to now from start of today
+	int hNow=0, mNow=0, sNow=0, secsNow;
+	sscanf(now, "%d:%d:%d", &hNow, &mNow, &sNow);
+	secsNow = (hNow*S_IN_HOUR) + (mNow*S_IN_MIN) + sNow;	// seconds to now from start of today
 	Log(3, "Now=%s, nighttime starts at %s\n", now, t.c_str());
 
 	// Handle the (probably rare) case where nighttime is tomorrow.
 	// We are only called during the day, so if nighttime is earlier than now, it was past midnight.
 	int diff_s = secsNight - secsNow;
-    if (diff_s < 0)
-    {
+	if (diff_s < 0)
+	{
 		// This assumes tomorrow's nighttime starts same as today's, which is close enough.
 		return(diff_s + S_IN_DAY);	// Add one day
-    }
-    else
-    {
-        return(diff_s);
-    }
+	}
+	else
+	{
+		return(diff_s);
+	}
 }
 
 // Build capture command to capture the image from the HQ camera
@@ -443,7 +443,7 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, bool auto_gain, bool auto_
 		// normally short so the camera can home in on the correct exposure quickly.
 		if (auto_exposure)
 		{
-			if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto == MEAN_AUTO_OFF)
+			if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
 				ss << 1;	// We do our own auto-exposure so no need to wait at all.
 			else if (dayOrNight == "DAY")
 				ss << 2 * MS_IN_SEC;
@@ -469,12 +469,12 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, bool auto_gain, bool auto_
 
 //xxxx not sure if this still applies for libcamera
 	// https://www.raspberrypi.com/documentation/accessories/camera.html#raspistill
-	// Mode   Size         Aspect Ratio  Frame rates  FOV      Binning/Scaling
-	// 0      automatic selection
-	// 1      2028x1080    169:90        0.1-50fps    Partial  2x2 binned
-	// 2      2028x1520    4:3           0.1-50fps    Full     2x2 binned      <<< bin==2
-	// 3      4056x3040    4:3           0.005-10fps  Full     None            <<< bin==1
-	// 4      1332x990     74:55         50.1-120fps  Partial  2x2 binned      <<< else 
+	// Mode		Size		Aspect Ratio	Frame rates		FOV		Binning/Scaling
+	// 0		automatic selection
+	// 1		2028x1080		169:90		0.1-50fps		Partial	2x2 binned
+	// 2		2028x1520		4:3			0.1-50fps		Full	2x2 binned	<<< bin==2
+	// 3		4056x3040		4:3			0.005-10fps		Full	None		<<< bin==1
+	// 4		1332x990		74:55		50.1-120fps		Partial	2x2 binned	<<< else 
 
 	if (libcamera)
 	{
@@ -576,12 +576,12 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, bool auto_gain, bool auto_
 	}
 
 	if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) {
-	   	stringstream Str_ExposureTime;
-   		stringstream Str_Reinforcement;
-   		Str_ExposureTime <<  myRaspistillSetting.shutter_us;
+		stringstream Str_ExposureTime;
+			stringstream Str_Reinforcement;
+			Str_ExposureTime <<  myRaspistillSetting.shutter_us;
 			Str_Reinforcement << myRaspistillSetting.analoggain;
 		
-   		command += " --exif IFD0.Artist=li_" + Str_ExposureTime.str() + "_" + Str_Reinforcement.str();
+			command += " --exif IFD0.Artist=li_" + Str_ExposureTime.str() + "_" + Str_Reinforcement.str();
 	}
 
 	// White balance
@@ -770,10 +770,10 @@ char const *yes = "1 (yes)";
 char const *no  = "0 (no)";
 char const *yesNo(int flag)
 {
-    if (flag)
-        return(yes);
-    else
-        return(no);
+	if (flag)
+		return(yes);
+	else
+		return(no);
 }
 
 
@@ -796,113 +796,112 @@ int main(int argc, char *argv[])
 	signal(SIGHUP, sig);	// xxxxxxxxxx Reload the service
 	signal(SIGUSR1, sig);	// xxxxxxxxxx Reload the service
 
-	int fontname[] = { cv::FONT_HERSHEY_SIMPLEX,        cv::FONT_HERSHEY_PLAIN,         cv::FONT_HERSHEY_DUPLEX,
-					   cv::FONT_HERSHEY_COMPLEX,        cv::FONT_HERSHEY_TRIPLEX,       cv::FONT_HERSHEY_COMPLEX_SMALL,
+	int fontname[] = { cv::FONT_HERSHEY_SIMPLEX,		cv::FONT_HERSHEY_PLAIN,		cv::FONT_HERSHEY_DUPLEX,
+					   cv::FONT_HERSHEY_COMPLEX,		cv::FONT_HERSHEY_TRIPLEX,	cv::FONT_HERSHEY_COMPLEX_SMALL,
 					   cv::FONT_HERSHEY_SCRIPT_SIMPLEX, cv::FONT_HERSHEY_SCRIPT_COMPLEX };
-#define DEFAULT_LOCALE       "en_US.UTF-8"
-const char *locale         = DEFAULT_LOCALE;
+#define DEFAULT_LOCALE			"en_US.UTF-8"
+const char *locale				= DEFAULT_LOCALE;
 	// All the font settings apply to both day and night.
-#define DEFAULT_FONTNUMBER  0
-	int fontnumber        = DEFAULT_FONTNUMBER;
-#define DEFAULT_ITEXTX      15
-#define DEFAULT_ITEXTY      25
-	int iTextX            = DEFAULT_ITEXTX;
-	int iTextY            = DEFAULT_ITEXTY;
-#define DEFAULT_ITEXTLINEHEIGHT  30
-	int iTextLineHeight   = DEFAULT_ITEXTLINEHEIGHT;
-	char const *ImgText   = "";
-	char const *ImgExtraText   = "";
-	int extraFileAge           = 0;   // 0 disables it
+#define DEFAULT_FONTNUMBER		0
+	int fontnumber				= DEFAULT_FONTNUMBER;
+#define DEFAULT_ITEXTX			15
+#define DEFAULT_ITEXTY			25
+	int iTextX					= DEFAULT_ITEXTX;
+	int iTextY					= DEFAULT_ITEXTY;
+#define DEFAULT_ITEXTLINEHEIGHT	30
+	int iTextLineHeight			= DEFAULT_ITEXTLINEHEIGHT;
+	char const *ImgText			= "";
+	char const *ImgExtraText	= "";
+	int extraFileAge			= 0;	// 0 disables it
 // The "extra text" file hasn't been implemented in RPiHQ.  The next line keeps the compiler quiet so users don't think there's a problem.
-if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   keep compiler quiet";
-#define DEFAULT_FONTSIZE    32
-	double fontsize       = DEFAULT_FONTSIZE;
+if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx keep compiler quiet";
+#define DEFAULT_FONTSIZE		32
+	double fontsize				= DEFAULT_FONTSIZE;
 #define SMALLFONTSIZE_MULTIPLIER 0.08
-#define DEFAULT_LINEWIDTH   1
-	int linewidth         = DEFAULT_LINEWIDTH;
-#define DEFAULT_OUTLINEFONT 0
-	int outlinefont       = DEFAULT_OUTLINEFONT;
-	int fontcolor[3]      = { 255, 0, 0 };
-	int background        = 0;
-	int smallFontcolor[3] = { 0, 0, 255 };
-	int linetype[3]       = { cv::LINE_AA, 8, 4 };
-#define DEFAULT_LINENUMBER       0
-	int linenumber             =DEFAULT_LINENUMBER;
+#define DEFAULT_LINEWIDTH		1
+	int linewidth				= DEFAULT_LINEWIDTH;
+#define DEFAULT_OUTLINEFONT		0
+	int outlinefont				= DEFAULT_OUTLINEFONT;
+	int fontcolor[3]			= { 255, 0, 0 };
+	int background				= 0;
+	int smallFontcolor[3]		= { 0, 0, 255 };
+	int linetype[3]				= { cv::LINE_AA, 8, 4 };
+#define DEFAULT_LINENUMBER		0
+	int linenumber				=DEFAULT_LINENUMBER;
 
-	char bufTime[128]     = { 0 };
-	char bufTemp[128]     = { 0 };
-	char bufTemp2[50]     = { 0 };
-#define DEFAULT_WIDTH            0
-#define DEFAULT_HEIGHT           0
-	int width             = DEFAULT_WIDTH;		int originalWidth  = width;
-	int height            = DEFAULT_HEIGHT;		int originalHeight = height;
-	int dayBin            = 1;
-	int nightBin          = 1;
+	char bufTime[128]			= { 0 };
+	char bufTemp[128]			= { 0 };
+#define DEFAULT_WIDTH			0
+#define DEFAULT_HEIGHT			0
+	int width					= DEFAULT_WIDTH;		int originalWidth  = width;
+	int height					= DEFAULT_HEIGHT;		int originalHeight = height;
+	int dayBin					= 1;
+	int nightBin				= 1;
 
-#define AUTO_IMAGE_TYPE     99	// needs to match what's in the camera_settings.json file
-#define DEFAULT_IMAGE_TYPE       AUTO_IMAGE_TYPE
-	int Image_type        = DEFAULT_IMAGE_TYPE;
-	int asiDayExposure_us = 32;
-	int asiNightExposure_us= 60 * US_IN_SEC;
-	int currentExposure_us= NOT_SET;
-	int asiNightAutoExposure= 0;
-	int asiDayAutoExposure= 1;
-	long last_exposure_us = 0;		// last exposure taken
-	double asiNightGain   = 4.0;
-	double asiDayGain     = 1.0;
-	int asiNightAutoGain  = 0;
-	int asiDayAutoGain    = 0;
-	float last_gain		  = 0.0;		// last gain taken
-	int nightDelay_ms     = 10;
-	int dayDelay_ms       = 15 * MS_IN_SEC;
-	int currentDelay_ms   = NOT_SET;
+#define AUTO_IMAGE_TYPE			99	// needs to match what's in the camera_settings.json file
+#define DEFAULT_IMAGE_TYPE		AUTO_IMAGE_TYPE
+	int Image_type				= DEFAULT_IMAGE_TYPE;
+	int asiDayExposure_us		= 32;
+	int asiNightExposure_us		= 60 * US_IN_SEC;
+	int currentExposure_us		= NOT_SET;
+	int asiNightAutoExposure	= 0;
+	int asiDayAutoExposure		= 1;
+	long last_exposure_us 		= 0;		// last exposure taken
+	double asiNightGain   		= 4.0;
+	double asiDayGain     		= 1.0;
+	int asiNightAutoGain  		= 0;
+	int asiDayAutoGain    		= 0;
+	float last_gain		  		= 0.0;		// last gain taken
+	int nightDelay_ms     		= 10;
+	int dayDelay_ms       		= 15 * MS_IN_SEC;
+	int currentDelay_ms   		= NOT_SET;
 	float saturation;
 	int asiDayBrightness;
 	int asiNightBrightness;
 	if (is_libcamera)
 	{
-		default_saturation= 1.0;
-		saturation        = default_saturation;
-		min_saturation    = 0.0;
-		max_saturation    = 2.0;
+		default_saturation		= 1.0;
+		saturation        		= default_saturation;
+		min_saturation    		= 0.0;
+		max_saturation    		= 2.0;
 
-		default_brightness= 0;
-		asiDayBrightness  = default_brightness;
-		asiNightBrightness= default_brightness;
-		min_brightness    = -100;
-		max_brightness    = 100;
+		default_brightness		= 0;
+		asiDayBrightness  		= default_brightness;
+		asiNightBrightness		= default_brightness;
+		min_brightness    		= -100;
+		max_brightness    		= 100;
 	}
 	else
 	{
-		default_saturation= 0.0;
-		saturation        = default_saturation;
-		min_saturation    = -100.0;
-		max_saturation    = 100.0;
+		default_saturation		= 0.0;
+		saturation        		= default_saturation;
+		min_saturation    		= -100.0;
+		max_saturation    		= 100.0;
 
-		default_brightness= 50;
-		asiDayBrightness  = default_brightness;
-		asiNightBrightness= default_brightness;
-		min_brightness    = 0;
-		max_brightness    = 100;
+		default_brightness		= 50;
+		asiDayBrightness  		= default_brightness;
+		asiNightBrightness		= default_brightness;
+		min_brightness    		= 0;
+		max_brightness    		= 100;
 	}
-	int asiRotation       = 0;
-	char const *latitude  = "52.57N";
-	char const *longitude = "4.70E";
-	char const *angle     = "0"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
-	int preview           = 0;
-	int showTime          = 0;
-	int showExposure      = 0;
-	int showGain          = 0;
-	int showBrightness    = 0;
-	int showMean          = 0;
-	int showFocus         = 0;
-	int darkframe         = 0;
-	int daytimeCapture    = 0;
-	int help              = 0;
-	int quality           = 90;
+	int asiRotation       		= 0;
+	char const *latitude  		= "52.57N";
+	char const *longitude 		= "4.70E";
+	char const *angle     		= "0"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
+	int preview           		= 0;
+	int showTime          		= 0;
+	int showExposure      		= 0;
+	int showGain          		= 0;
+	int showBrightness    		= 0;
+	int showMean          		= 0;
+	int showFocus         		= 0;
+	int darkframe         		= 0;
+	int daytimeCapture    		= 0;
+	int help              		= 0;
+	int quality           		= 90;
 
 	int i;
-	bool endOfNight    = false;
+	bool endOfNight    			= false;
 	int retCode;
 	cv::Mat pRgb;	// the image
 
@@ -1704,7 +1703,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 			char exposureStart[128];
 			char f[10] = "%F %T";
 			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(t, f));
-			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(currentExposure_us, true));
+			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(myRaspistillSetting.shutter_us, true));
 
 			// Get start time for overlay.  Make sure it has the same time as exposureStart.
 			if (showTime == 1)
@@ -1741,7 +1740,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 					if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
 					{
 						mean = RPiHQcalcMean(pRgb, currentExposure_us, currentGain, myRaspistillSetting, myModeMeanSetting);
-						Log(2, "  > Got exposure: %'ld us, shutter: %1.4f s, quickstart: %d, mean=%1.6f\n", currentExposure_us, (double) myRaspistillSetting.shutter_us / US_IN_SEC, myModeMeanSetting.quickstart, mean);
+						Log(2, "  > Got exposure: %'ld us, shutter: %s, quickstart: %d, mean=%1.6f\n", currentExposure_us, length_in_units(myRaspistillSetting.shutter_us, false), myModeMeanSetting.quickstart, mean);
 						if (mean == -1)
 						{
 							numErrors++;
@@ -1777,11 +1776,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx   k
 
 					if (showExposure == 1)
 					{
-						// display in seconds if >= 1 second, else in ms
-						if (last_exposure_us >= (1 * US_IN_SEC))
-							sprintf(bufTemp, "Exposure: %'.2f s%s", (float)last_exposure_us / US_IN_SEC, bufTemp2);
-						else
-							sprintf(bufTemp, "Exposure: %'.2f ms%s", (float)last_exposure_us / US_IN_MS, bufTemp2);
+						sprintf(bufTemp, "Exposure: %s", length_in_units(last_exposure_us, false));
 						// Indicate if in auto-exposure mode.
 						if (currentAutoExposure) strcat(bufTemp, " (auto)");
 						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),

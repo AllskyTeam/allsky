@@ -470,7 +470,7 @@ int doOverlay(cv::Mat image,
 			sprintf(F, "  %.0fF", (((float)temp / 10 * 1.8) + 32));
 		}
 		sprintf(tmp, "Sensor: %s %s", C, F);
-		cvText(image, tmp, x, x + (iYOffset / bin),
+		cvText(image, tmp, x, y + (iYOffset / bin),
 			fontSize * SMALLFONTSIZE_MULTIPLIER, lineWidth,
 			lineType, font, smallFontColor, imageType, useOutline, width);
 		iYOffset += textLineHeight;

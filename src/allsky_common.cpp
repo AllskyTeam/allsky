@@ -68,7 +68,7 @@ void cvText(cv::Mat img, const char *text, int x, int y, double fontsize,
 	// int baseline = 0;
 	// cv::Size textSize = cv::getTextSize(text, fontname, fontsize, linewidth, &baseline);
 
-	if (imgtype == ASI_IMG_RAW16)
+	if (imgtype == IMG_RAW16)
 	{
 		unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
 		if (useOutline)
@@ -426,21 +426,25 @@ const char *checkForValidExtension(const char *fileName, int imageType)
 }
 
 int doOverlay(cv::Mat image,
-	bool showTime, bool showExposure, bool showTemp,
-	bool showGain, bool showMean, bool showBrightness, bool showFocus,
-	int x, int y, int bin, int width, int textLineHeight, char *exposureTime, int brightness,
-	int focusMetric, long exposure_us, bool autoExposure, bool autoGain, float gain,
-	float mean, int extraFileAge,
-	int fontSize, int lineWidth, int lineType, int font, int fontColor[], int smallFontColor[],
-	bool useOutline, int imageType, char *ImgText, char *ImgExtraText)
+	bool showTime, char *startTime,
+	bool showExposure, long exposure_us, bool autoExposure,
+	bool showTemp, int temp, const char *tempType,
+	bool showGain, float gain, bool autoGain, int gainChange,
+	bool showMean, float mean,
+	bool showBrightness, int brightness,
+	bool showFocus, int focusMetric,
+	const char *ImgText, const char *ImgExtraText, int extraFileAge,
+	int x, int y, int bin, int width, int textLineHeight,
+	int fontSize, int lineWidth, int lineType, int font,
+	int fontColor[], int smallFontColor[], bool useOutline, int imageType)
 {
 	int iYOffset = 0;
     char tmp[128]     = { 0 };
 
-	if (showTime == 1)
+	if (showTime)
 	{
 		// The time and ImgText are in the larger font; everything else is in smaller font.
-		cvText(image, exposureTime, x, y + (iYOffset / bin),
+		cvText(image, startTime, x, y + (iYOffset / bin),
 			fontSize * 0.1, lineWidth,
 			lineType, font, fontColor, imageType, useOutline, width);
 		iYOffset += textLineHeight;
@@ -454,7 +458,25 @@ int doOverlay(cv::Mat image,
 		iYOffset+=textLineHeight;
 	}
 
-	if (showExposure == 1)
+	if (showTemp)
+	{
+		char C[20] = { 0 }, F[20] = { 0 };
+		if (strcmp(tempType, "C") == 0 || strcmp(tempType, "B") == 0)
+		{
+			sprintf(C, "  %.0fC", (float)temp / 10);
+		}
+		if (strcmp(tempType, "F") == 0 || strcmp(tempType, "B") == 0)
+		{
+			sprintf(F, "  %.0fF", (((float)temp / 10 * 1.8) + 32));
+		}
+		sprintf(tmp, "Sensor: %s %s", C, F);
+		cvText(image, tmp, x, x + (iYOffset / bin),
+			fontSize * SMALLFONTSIZE_MULTIPLIER, lineWidth,
+			lineType, font, smallFontColor, imageType, useOutline, width);
+		iYOffset += textLineHeight;
+	}
+
+	if (showExposure)
 	{
 		sprintf(tmp, "Exposure: %s", length_in_units(exposure_us, false));
 		// Indicate if in auto-exposure mode.
@@ -465,22 +487,29 @@ int doOverlay(cv::Mat image,
 		iYOffset += textLineHeight;
 	}
 
-	if (showGain == 1)
+	if (showGain)
 	{
 		if (gain == (int)gain)
-			snprintf(tmp, sizeof(tmp), "Gain: =%d", (int)gain);
+			snprintf(tmp, sizeof(tmp), "Gain: %d", (int)gain);
 		else
 			snprintf(tmp, sizeof(tmp), "Gain: %1.2f", gain);
 
 		// Indicate if in auto gain mode.
 		if (autoGain) strcat(tmp, " (auto)");
+		// Indicate if in gain transition mode.
+		if (gainChange != 0)
+		{
+			char x[20];
+			sprintf(x, " (adj: %+d)", gainChange);
+			strcat(tmp, x);
+		}
 		cvText(image, tmp, x, y + (iYOffset / bin),
 			fontSize * SMALLFONTSIZE_MULTIPLIER, lineWidth,
 			lineType, font, smallFontColor, imageType, useOutline, width);
 		iYOffset += textLineHeight;
 	}
 
-	if (showBrightness == 1)
+	if (showBrightness)
 	{
 		sprintf(tmp, "Brightness: %d", brightness);
 		cvText(image, tmp, x, y + (iYOffset / bin),
@@ -489,16 +518,19 @@ int doOverlay(cv::Mat image,
 		iYOffset += textLineHeight;
 	}
 
-	if (showMean == 1)
+	if (showMean)
 	{
-		sprintf(tmp, "Mean: %.3f", mean);
+		if (mean == (int)mean)
+			snprintf(tmp, sizeof(tmp), "Mean: %d", (int)mean);
+		else
+			snprintf(tmp, sizeof(tmp), "Mean: %.3f", mean);
 		cvText(image, tmp, x, y + (iYOffset / bin),
 			fontSize * SMALLFONTSIZE_MULTIPLIER, lineWidth,
 			lineType, font, smallFontColor, imageType, useOutline, width);
 		iYOffset += textLineHeight;
 	}
 
-	if (showFocus == 1)
+	if (showFocus)
 	{
 		sprintf(tmp, "Focus: %d", focusMetric);
 		cvText(image, tmp, x, y + (iYOffset / bin),

@@ -1,21 +1,10 @@
-// Items used by the "capture" and other programs.
+// Items used by the "capture*" programs.
 
 // Image formats.  Match the ASI_* settings to make it consistent with ZWO's library.
-#ifndef ASI_IMG_RAW8
-#define ASI_IMG_RAW8	0	// xxxx OLD name
-#define ASI_IMG_RGB24	1	// xxxx OLD name
-#define ASI_IMG_RAW16	2	// xxxx OLD name
-#define ASI_IMG_Y8		3	// xxxx OLD name
-#endif
 #define IMG_RAW8	0
 #define IMG_RGB24	1
 #define IMG_RAW16	2
 #define IMG_Y8		3
-
-#ifndef ASI_TRUE
-#define ASI_TRUE true
-#define ASI_FALSE false
-#endif
 
 // Colors for messages
 #define KNRM "\x1B[0m"
@@ -36,7 +25,7 @@
 #define S_IN_DAY (24 * S_IN_HOUR)
 
 // Defaults
-#define NOT_SET						-1					// signifies something isn't set yet
+#define NOT_SET						-1				// signifies something isn't set yet
 #define DEFAULT_NOTIFICATIONIMAGES	1
 #define DEFAULT_SAVEDIR				"tmp"
 #define DEFAULT_FILENAME			"image.jpg"
@@ -47,8 +36,8 @@
 #define DEFAULT_DAYTIMECAPTURE		0	// Capture images during the day?
 #define DEFAULT_WIDTH				0
 #define DEFAULT_HEIGHT				0
-#define	DEFAULT_LONGITUDE			NOT_SET
-#define DEFAULT_LATITUDE			NOT_SET
+#define	DEFAULT_LONGITUDE			""
+#define DEFAULT_LATITUDE			""
 #define DEFAULT_ANGLE				"-6"
 
 // Default overlay values - will go away once external overlay program is implemented
@@ -56,7 +45,6 @@
 #define DEFAULT_ITEXTX				15
 #define DEFAULT_ITEXTY				25
 #define DEFAULT_ITEXTLINEHEIGHT		30
-#define DEFAULT_FONTSIZE			32
 #define SMALLFONTSIZE_MULTIPLIER	0.08
 #define DEFAULT_LINEWIDTH			1
 #define DEFAULT_OUTLINEFONT			0
@@ -93,3 +81,15 @@ char const *c(char const *);
 void closeUp(int);
 char const *yesNo(int);
 char *length_in_units(long, bool);
+int doOverlay(cv::Mat,
+	bool, char *,
+	bool, long, bool,
+	bool, int,
+	bool, float, bool,
+	bool, float,
+	bool, int,
+	bool, int,
+	const char *, const char *, int,
+	int, int, int, int, int,
+	int, int, int, int,
+	int[], int[], bool, int);

@@ -71,6 +71,15 @@ jobs:
                 #SC2012: Use find instead of ls to better handle non-alphanumeric filenames.
                 shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2164 -e SC2166 -e SC2181 -e SC2012
                 ;;
+              ./install.sh)
+                #SC2155: Declare and assign separately to avoid masking return values.
+                #SC2046: Quote this to prevent word splitting.
+                #SC1090: Can't follow non-constant source. Use a directive to specify location.
+                #SC2004: $/${} is unnecessary on arithmetic variables.
+                #SC2086: Double quote to prevent globbing and word splitting.
+                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
+                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2004 -e SC2086 -e SC2181
+                ;;
               *)
                 shellcheck $i
                 ;;

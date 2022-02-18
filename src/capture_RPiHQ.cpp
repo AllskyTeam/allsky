@@ -19,39 +19,13 @@
 #include <fstream>
 #include <stdarg.h>
 
+#include "include/allsky_common.h"
+
 // new includes (MEAN)
 #include "include/RPiHQ_raspistill.h"
 #include "include/mode_RPiHQ_mean.h"
 
-#ifndef ASI_IMG_RAW8
-#define ASI_IMG_RAW8	0
-#define ASI_IMG_RGB24	1
-#define ASI_IMG_RAW16	2
-#define ASI_IMG_Y8		3
-#endif
-
-#ifndef ASI_TRUE
-#define ASI_TRUE true
-#define ASI_FALSE false
-#endif
-
 using namespace std;
-
-#define KNRM "\x1B[0m"
-#define KRED "\x1B[31m"
-#define KGRN "\x1B[32m"
-#define KYEL "\x1B[33m"
-#define KBLU "\x1B[34m"
-#define KMAG "\x1B[35m"
-#define KCYN "\x1B[36m"
-#define KWHT "\x1B[37m"
-
-#define US_IN_MS 1000						// microseconds in a millisecond
-#define MS_IN_SEC 1000						// milliseconds in a second
-#define US_IN_SEC (US_IN_MS * MS_IN_SEC)	// microseconds in a second
-#define S_IN_MIN 60
-#define S_IN_HOUR (60 * 60)
-#define S_IN_DAY (24 * S_IN_HOUR)
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -62,7 +36,6 @@ bool bMain					= true;
 std::string dayOrNight;
 
 // These are global so they can be used by other routines.
-#define NOT_SET				  -1	// signifies something isn't set yet
 int numErrors				= 0;	// Number of errors in a row.
 int numExposures			= 0;	// how many valid pictures have we taken so far?
 double currentGain			= NOT_SET;
@@ -104,170 +77,6 @@ modeMeanSetting myModeMeanSetting;
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
-
-char debug_text[500];		// buffer to hold debug messages
-int debugLevel = 0;
-
-/**
- * Helper function to display debug info
-**/
-void Log(int required_level, const char *fmt, ...)
-{
-	if (debugLevel >= required_level) {
-		char msg[8192];
-		snprintf(msg, sizeof(msg), "%s", fmt);
-		va_list va;
-		va_start(va, fmt);
-		vfprintf(stdout, msg, va);
-		va_end(va);
-	}
-}
-
-// Return the string for the specified color, or "" if we're not on a tty.
-char const *c(char const *color)
-{
-	if (tty)
-	{
-		return(color);
-	}
-	else
-	{
-		return("");
-	}
-}
-
-// Create Hex value from RGB
-unsigned long createRGB(int r, int g, int b)
-{
-	return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
-}
-
-void cvText(cv::Mat img, const char *text, int x, int y, double fontsize,
-	int linewidth, int linetype,
-	int fontname, int fontcolor[], int imgtype, int use_outline, int width)
-{
-	cv::Point xy = cv::Point(x, y);
-
-	// Resize for screen width so the same numbers on small and big screens produce
-	// roughly the same size font on the image.
-	fontsize = fontsize * width / 1200;
-	linewidth = std::max(linewidth * width / 700, 1);
-	int outline_size = linewidth * 1.5;
-
-	// int baseline = 0;
-	// cv::Size textSize = cv::getTextSize(text, fontname, fontsize, linewidth, &baseline);
-
-	if (imgtype == ASI_IMG_RAW16)
-	{
-		unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
-		if (use_outline)
-			cv::putText(img, text, xy, fontname, fontsize, cv::Scalar(0,0,0), outline_size, linetype);
-		cv::putText(img, text, xy, fontname, fontsize, fontcolor16, linewidth, linetype);
-	}
-	else
-	{
-		cv::Scalar font_color = cv::Scalar(fontcolor[0], fontcolor[1], fontcolor[2]);
-		if (use_outline)
-			cv::putText(img, text, xy, fontname, fontsize, cv::Scalar(0,0,0, 255), outline_size, linetype);
-		cv::putText(img, text, xy, fontname, fontsize, font_color, linewidth, linetype);
-	}
-}
-
-// Return the numeric time.
-timeval getTimeval()
-{
-	timeval curTime;
-	gettimeofday(&curTime, NULL);
-	return(curTime);
-}
-
-// Format a numeric time as a string.
-char *formatTime(timeval t, char const *tf)
-{
-	static char TimeString[128];
-	strftime(TimeString, 80, tf, localtime(&t.tv_sec));
-	return(TimeString);
-}
-
-// Return the current time as a string.  Uses both functions above.
-char *getTime(char const *tf)
-{
-	return(formatTime(getTimeval(), tf));
-}
-
-std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
-	size_t start_pos = 0;
-	while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-		str.replace(start_pos, from.length(), to);
-		start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-	}
-	return str;
-}
-
-std::string exec(const char *cmd)
-{
-	std::tr1::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
-	if (!pipe)
-		return "ERROR";
-	char buffer[128];
-	std::string result = "";
-	while (!feof(pipe.get()))
-	{
-		if (fgets(buffer, 128, pipe.get()) != NULL)
-		{
-			result += buffer;
-		}
-	}
-	return result;
-}
-
-// Display a length of time in different units, depending on the length's value.
-// If the "multi" flag is set, display in multiple units if appropriate.
-char *length_in_units(long us, bool multi)	// microseconds
-{
-	const int l = 50;
-	static char length[l];
-	if (us == 0)
-	{
-		snprintf(length, l, "0 us");
-	}
-	else
-	{
-		double us_in_ms = (double)us / US_IN_MS;
-		// The boundaries on when to display one or two units are really a matter of taste.
-		if (us_in_ms < 0.5)						// less than 0.5 ms
-		{
-			snprintf(length, l, "%'ld us", us);
-		}
-		else if (us_in_ms < 1.5)				// between 0.5 and 1.5 ms
-		{
-			if (multi)
-				snprintf(length, l, "%'ld us (%.3f ms)", us, us_in_ms);
-			else
-				snprintf(length, l, "%'ld us", us);
-		}
-		else if (us_in_ms < (0.5 * MS_IN_SEC))	// 1.5 ms to 0.5 sec
-		{
-			if (multi)
-				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
-			else
-				snprintf(length, l, "%.2f ms", us_in_ms);
-		}
-		else if (us_in_ms < (1.0 * MS_IN_SEC))	// between 0.5 sec and 1 sec
-		{
-			if (multi)
-				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
-			else
-				snprintf(length, l, "%.1f ms", us_in_ms);
-		}
-		else									// over 1 sec
-		{
-			snprintf(length, l, "%.1lf sec", (double)us / US_IN_SEC);
-		}
-
-	}
-	return(length);
-}
 
 // Exit the program gracefully.
 void closeUp(int e)
@@ -314,87 +123,6 @@ void IntHandle(int i)
 printf("XXXXXX == in IntHandle(), got signal %d\n", i);
 	bMain = false;
 	closeUp(0);
-}
-
-// A user error was found.  Wait for the user to fix it.
-void waitToFix(char const *msg)
-{
-	printf("**********\n");
-	printf("%s\n", msg);
-	printf("*** After fixing, ");
-	if (tty)
-		printf("restart allsky.sh.\n");
-	else
-		printf("restart the allsky service.\n");
-	if (notificationImages)
-		system("scripts/copy_notification_image.sh Error &");
-	sleep(5);	// give time for image to be copied
-	printf("*** Sleeping until you fix the problem.\n");
-	printf("**********\n");
-	sleep(100000);	// basically, sleep forever until the user fixes this.
-}
-
-// Calculate if it is day or night
-void calculateDayOrNight(const char *latitude, const char *longitude, const char *angle)
-{
-	char sunwaitCommand[128];
-
-	// Log data.  Don't need "exit" or "set".
-	sprintf(sunwaitCommand, "sunwait poll angle %s %s %s", angle, latitude, longitude);
-	dayOrNight = exec(sunwaitCommand);
-
-	// RMu, I have no clue what this does...
-	dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
-
-	if (dayOrNight != "DAY" && dayOrNight != "NIGHT")
-	{
-		sprintf(debug_text, "*** ERROR: dayOrNight isn't DAY or NIGHT, it's '%s'\n", dayOrNight.c_str());
-		waitToFix(debug_text);
-		closeUp(100);
-	}
-}
-
-// Calculate how long until nighttime.
-int calculateTimeToNightTime(const char *latitude, const char *longitude, const char *angle)
-{
-	std::string t;
-	char sunwaitCommand[128];	// returns "hh:mm"
-	sprintf(sunwaitCommand, "sunwait list set angle %s %s %s", angle, latitude, longitude);
-	t = exec(sunwaitCommand);
-
-	t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
-
-	int hNight=0, mNight=0, secsNight;
-	// It's possible for sunwait to return "--:--" if the angle causes sunset to start
-	// after midnight or before noon.
-	if (sscanf(t.c_str(), "%d:%d", &hNight, &mNight) != 2)
-	{
-		Log(0, "ERROR: With angle %s sunwait returned unknown time to nighttime: %s\n", angle, t.c_str());
-		return(1 * S_IN_HOUR);	// 1 hour - should we exit instead?
-	}
-	secsNight = (hNight * S_IN_HOUR) + (mNight * S_IN_MIN);	// secs to nighttime from start of today
-	// sunwait doesn't return seconds so on average the actual time will be 30 seconds
-	// after the stated time. So, add 30 seconds.
-	secsNight += 30;
-
-	char *now = getTime("%H:%M:%S");
-	int hNow=0, mNow=0, sNow=0, secsNow;
-	sscanf(now, "%d:%d:%d", &hNow, &mNow, &sNow);
-	secsNow = (hNow*S_IN_HOUR) + (mNow*S_IN_MIN) + sNow;	// seconds to now from start of today
-	Log(3, "Now=%s, nighttime starts at %s\n", now, t.c_str());
-
-	// Handle the (probably rare) case where nighttime is tomorrow.
-	// We are only called during the day, so if nighttime is earlier than now, it was past midnight.
-	int diff_s = secsNight - secsNow;
-	if (diff_s < 0)
-	{
-		// This assumes tomorrow's nighttime starts same as today's, which is close enough.
-		return(diff_s + S_IN_DAY);	// Add one day
-	}
-	else
-	{
-		return(diff_s);
-	}
 }
 
 // Build capture command to capture the image from the HQ camera
@@ -765,17 +493,6 @@ if (! libcamera)	// xxxx libcamera doesn't have fontsize, color, or background.
 	return(ret);
 }
 
-// Simple function to make flags easier to read for humans.
-char const *yes = "1 (yes)";
-char const *no  = "0 (no)";
-char const *yesNo(int flag)
-{
-	if (flag)
-		return(yes);
-	else
-		return(no);
-}
-
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -813,8 +530,6 @@ const char *locale				= DEFAULT_LOCALE;
 	char const *ImgText			= "";
 	char const *ImgExtraText	= "";
 	int extraFileAge			= 0;	// 0 disables it
-// The "extra text" file hasn't been implemented in RPiHQ.  The next line keeps the compiler quiet so users don't think there's a problem.
-if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx keep compiler quiet";
 #define DEFAULT_FONTSIZE		32
 	double fontsize				= DEFAULT_FONTSIZE;
 #define SMALLFONTSIZE_MULTIPLIER 0.08
@@ -830,7 +545,6 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx kee
 	int linenumber				=DEFAULT_LINENUMBER;
 
 	char bufTime[128]			= { 0 };
-	char bufTemp[128]			= { 0 };
 #define DEFAULT_WIDTH			0
 #define DEFAULT_HEIGHT			0
 	int width					= DEFAULT_WIDTH;		int originalWidth  = width;
@@ -885,11 +599,14 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx kee
 		max_brightness    		= 100;
 	}
 	int asiRotation       		= 0;
-	char const *latitude  		= "52.57N";
-	char const *longitude 		= "4.70E";
-	char const *angle     		= "0"; // angle of the sun with the horizon (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
+	char const *latitude  		= DEFAULT_LATITUDE;
+	char const *longitude 		= DEFAULT_LONGITUDE;
+	// angle of the sun with the horizon
+	// (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
+	char const *angle     		= DEFAULT_ANGLE;
+
 	int preview           		= 0;
-	int showTime          		= 0;
+	int showTime          		= DEFAULT_SHOWTIME;
 	int showExposure      		= 0;
 	int showGain          		= 0;
 	int showBrightness    		= 0;
@@ -913,7 +630,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx kee
 
 	printf("\n");
 	printf("%s ********************************************\n", c(KGRN));
-	printf("%s *** Allsky Camera Software v0.8.3 | 2021 ***\n", c(KGRN));
+	printf("%s *** Allsky Camera Software v0.8.3.2 | 2021 ***\n", c(KGRN));
 	printf("%s ********************************************\n\n", c(KGRN));
 	printf("\%sCapture images of the sky with a Raspberry Pi and a RPi HQ camera\n", c(KGRN));
 	printf("\n");
@@ -1364,7 +1081,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx kee
 	ext++;
 	if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
 	{
-		if (Image_type == ASI_IMG_RAW16)
+		if (Image_type == IMG_RAW16)
 		{
 			waitToFix("*** ERROR: RAW16 images only work with .png files; either change the Image Type or the Filename.\n");
 			exit(100);
@@ -1446,23 +1163,23 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx kee
 	if (Image_type == AUTO_IMAGE_TYPE)
 	{
 		// user will have to manually set for 8- or 16-bit mono mode
-		Image_type = ASI_IMG_RGB24;
+		Image_type = IMG_RGB24;
 	}
 
 	const char *sType;		// displayed in output
-	if (Image_type == ASI_IMG_RAW16)
+	if (Image_type == IMG_RAW16)
 	{
 		sType = "RAW16";
 		current_bpp = 2;
 		current_bit_depth = 16;
 	}
-	else if (Image_type == ASI_IMG_RGB24)
+	else if (Image_type == IMG_RGB24)
 	{
 		sType = "RGB24";
 		current_bpp = 3;
 		current_bit_depth = 8;
 	}
-	else if (Image_type == ASI_IMG_RAW8)
+	else if (Image_type == IMG_RAW8)
 	{
 		sType = "RAW8";
 		current_bpp = 1;
@@ -1675,11 +1392,11 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx kee
 		linewidth = originalLinewidth / currentBin;
 
 // TODO: if not the first time, should we free the old pRgb?
-		if (Image_type == ASI_IMG_RAW16)
+		if (Image_type == IMG_RAW16)
 		{
 			pRgb.create(cv::Size(width, height), CV_16UC1);
 		}
-		else if (Image_type == ASI_IMG_RGB24)
+		else if (Image_type == IMG_RGB24)
 		{
 			pRgb.create(cv::Size(width, height), CV_8UC3);
 		}
@@ -1737,6 +1454,7 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx kee
 
 					int iYOffset = 0;
 
+					mean = -1;
 					if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
 					{
 						mean = RPiHQcalcMean(pRgb, currentExposure_us, currentGain, myRaspistillSetting, myModeMeanSetting);
@@ -1755,79 +1473,19 @@ if (extraFileAge == 99999 && ImgExtraText[0] == '\0') ImgExtraText = "xxxxxx kee
 						myRaspistillSetting.analoggain = currentGain;
 					}
 
-					if (showTime == 1)
-					{
-						// The time and ImgText are in the larger font; everything else is in smaller font.
-						cvText(pRgb, bufTime, iTextX, iTextY + (iYOffset / currentBin),
-							fontsize * 0.1, linewidth,
-							linetype[linenumber], fontname[fontnumber], fontcolor,
-							Image_type, outlinefont, width);
-						iYOffset += iTextLineHeight;
-					}
-
-					if (ImgText[0] != '\0')
-					{
-						cvText(pRgb, ImgText, iTextX, iTextY + (iYOffset / currentBin),
-							fontsize * 0.1, linewidth,
-							linetype[linenumber], fontname[fontnumber], fontcolor,
-							Image_type, outlinefont, width);
-						iYOffset+=iTextLineHeight;
-					}
-
-					if (showExposure == 1)
-					{
-						sprintf(bufTemp, "Exposure: %s", length_in_units(last_exposure_us, false));
-						// Indicate if in auto-exposure mode.
-						if (currentAutoExposure) strcat(bufTemp, " (auto)");
-						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
-							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
-							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont, width);
-						iYOffset += iTextLineHeight;
-					}
-
-					if (showGain == 1)
-					{
-						sprintf(bufTemp, "Gain: %1.2f", last_gain);
-						// Indicate if in auto gain mode.
-						if (currentAutoGain) strcat(bufTemp, " (auto)");
-						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
-							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
-							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont, width);
-						iYOffset += iTextLineHeight;
-					}
-
-					if (showBrightness == 1)
-					{
-						sprintf(bufTemp, "Brightness: %d", currentBrightness);
-						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
-							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
-							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont, width);
-						iYOffset += iTextLineHeight;
-					}
-
-					// TODO: in the future the calculation of mean should independend from mode_mean 
-					if (showMean == 1 && myModeMeanSetting.mode_mean  && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
-					{
-						sprintf(bufTemp, "Mean: %.3f", mean);
-						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
-							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
-							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont, width);
-						iYOffset += iTextLineHeight;
-					}
-
-					if (showFocus == 1)
-					{
-						sprintf(bufTemp, "Focus: %d", focus_metric);
-						cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
-							fontsize * SMALLFONTSIZE_MULTIPLIER, linewidth,
-							linetype[linenumber], fontname[fontnumber], smallFontcolor,
-							Image_type, outlinefont, width);
-						iYOffset += iTextLineHeight;
-					}
+					// false and 0 are for showTemp, which RPiHQ cameras don't support.
+					iYOffset = doOverlay(pRgb,
+						showTime, bufTime,
+						showExposure, last_exposure_us, currentAutoExposure,
+						false, 0, "",
+ 						showGain, last_gain, currentAutoGain, 0,
+						(showMean && mean != -1), mean,
+						showBrightness, currentBrightness,
+						showFocus, focus_metric,
+						ImgText, ImgExtraText, extraFileAge,
+						iTextX, iTextY, currentBin, width, iTextLineHeight,
+						fontsize, linewidth, linetype[linenumber], fontname[fontnumber],
+						fontcolor, smallFontcolor, outlinefont, Image_type);
 
 					if (iYOffset > 0)	// if we added anything to overlay, write the file out
 					{
@@ -1948,3 +1606,4 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 
 	closeUp(0);
 }
+

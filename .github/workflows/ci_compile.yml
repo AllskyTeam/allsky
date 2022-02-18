@@ -100,6 +100,17 @@ jobs:
                 #SC2162: read without -r will mangle backslashes.
                 shellcheck $i -e SC2034 -e SC2162
                 ;;
+              ./scripts/generate_notification_images.sh)
+                #SC2155: Declare and assign separately to avoid masking return values.
+                #SC2046: Quote this to prevent word splitting.
+                #SC1090: Can't follow non-constant source. Use a directive to specify location.
+                #SC2086: Double quote to prevent globbing and word splitting.
+                #SC2230: which is non-standard. Use builtin 'command -v' instead.
+                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
+                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
+                #SC2016: Expressions don't expand in single quotes, use double quotes for that.
+                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2086 -e SC2230 -e SC2181 -e SC2166 -e SC2016
+                ;;
               *)
                 shellcheck $i
                 ;;

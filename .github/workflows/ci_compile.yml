@@ -139,6 +139,10 @@ jobs:
                 #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
                 shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2086 -e SC2166 -e SC2219 -e SC2181
                 ;;
+              ./scripts/allsky_mfs.sh)
+                #SC2086: Double quote to prevent globbing and word splitting.
+                shellcheck $i -e SC2086
+                ;;
               *)
                 shellcheck $i
                 ;;

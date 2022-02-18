@@ -127,7 +127,7 @@ jobs:
                 #SC2086: Double quote to prevent globbing and word splitting.
                 #SC2044: For loops over find output are fragile. Use find -exec or a while read loop.
                 #SC2004: $/${} is unnecessary on arithmetic variables.
-                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2166 +e SC2086 -e SC2044 -e SC2004
+                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2166 -e SC2086 -e SC2044 -e SC2004
                 ;;
               *)
                 shellcheck $i

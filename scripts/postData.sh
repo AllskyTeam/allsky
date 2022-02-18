@@ -47,16 +47,19 @@ OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
 ) > "${OUTPUT_FILE}"
 
 COPIED=false
+typeset -i RETCODE=0
 
 # Copy to local Allsky website if it exists.
 if [ -d "${WEBSITE_DIR}" ]; then
 	cp "${OUTPUT_FILE}" "${WEBSITE_DIR}"
+	let RETCODE=$?
 	COPIED=true
 fi
 
 # Upload to remote website
 if [ "${REMOTE_HOST}" != "" ]; then
 	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${OUTPUT_FILE}" "${IMAGE_DIR}" "${FILE}" "PostData"
+	let RETCODE=RETCODE+$?
 	COPIED=true
 fi
 
@@ -67,4 +70,4 @@ if [ "${COPIED}" = "false" ]; then
 	exit 1
 fi
 
-exit 0
+exit $RETCODE

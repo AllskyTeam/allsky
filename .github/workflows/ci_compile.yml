@@ -44,7 +44,7 @@ jobs:
             if [ $? -ne 0 ]; then
               err=$((err + 1))
             fi
-            if [ "$i" = "variables.sh" ]; then
+            if [ "$i" = "./variables.sh" ]; then
               #SC2034: ON_TTY appears unused. Verify use (or export if used externally).
               shellcheck $i -e SC2034 
             else

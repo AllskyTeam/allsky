@@ -26,7 +26,7 @@ source "${ALLSKY_CONFIG}/config.sh"
 [ "${TYPE}" = "UPLOAD" ] && source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 # If we're on a tty we are being invoked manually so no need to display ${ME} in error messages.
-if tty --silent ; then
+if [ "${ON_TTY}" = "1" ]; then
 	ME=""
 else
 	ME="${ME_USAGE}: "	# include trailing space

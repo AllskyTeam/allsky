@@ -122,7 +122,7 @@ sunwait: patchsunwait
 	@echo `date +%F\ %R:%S` Done.
 
 allsky_common.o: allsky_common.cpp include/allsky_common.h
-	$(CC) -c  allsky_common.cpp -o $@ $(CFLAGS)
+	$(CC) -c  allsky_common.cpp -o $@ $(CFLAGS) $(OPENCV)
 
 capture:capture.cpp allsky_common.o
 	@echo `date +%F\ %R:%S` Building $@ program...
@@ -155,7 +155,7 @@ symlink: all
 
 ifneq ($(ROOTCHECK), 0)
 install uninstall:
-	@echo This must be ran with root permissions.
+	@echo This must be run with root permissions.
 	@echo Please run \'sudo make $@\'
 else
 install:

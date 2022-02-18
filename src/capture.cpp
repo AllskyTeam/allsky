@@ -15,26 +15,14 @@
 #include <fstream>
 #include <stdarg.h>
 
-#define KNRM "\x1B[0m"
-#define KRED "\x1B[31m"
-#define KGRN "\x1B[32m"
-#define KYEL "\x1B[33m"
-#define KBLU "\x1B[34m"
-#define KMAG "\x1B[35m"
-#define KCYN "\x1B[36m"
-#define KWHT "\x1B[37m"
+#include "include/allsky_common.h"
 
 #define USE_HISTOGRAM                     // use the histogram code as a workaround to ZWO's bug
 
-#define US_IN_MS 1000                     // microseconds in a millisecond
-#define MS_IN_SEC 1000                    // milliseconds in a second
-#define US_IN_SEC (US_IN_MS * MS_IN_SEC)  // microseconds in a second
-#define S_IN_MIN 60
-#define S_IN_HOUR (60 * 60)
-#define S_IN_DAY (24 * S_IN_HOUR)
-
 // Forward definitions
 char *getRetCode(ASI_ERROR_CODE);
+void closeUp(int);
+bool check_max_errors(int *, int);
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -55,9 +43,9 @@ pthread_mutex_t mtx_SaveImg;
 pthread_cond_t cond_SatrtSave;
 
 // These are global so they can be used by other routines.
-#define NOT_SET				 -1		// signifies something isn't set yet
 ASI_CONTROL_CAPS ControlCaps;
 int numErrors              = 0;	// Number of errors in a row.
+int maxErrors              = 5;	// Max number of errors in a row before we exit
 int gotSignal              = 0;	// did we get a SIGINT (from keyboard) or SIGTERM (from service)?
 int iNumOfCtrl             = 0;
 int CamNum                 = 0;
@@ -79,15 +67,11 @@ int currentBrightness      = NOT_SET;
 
 // Some command-line and other option definitions needed outside of main():
 bool tty                   = false;	// are we on a tty?
-#define DEFAULT_NOTIFICATIONIMAGES 1
 int notificationImages     = DEFAULT_NOTIFICATIONIMAGES;
-#define DEFAULT_SAVEDIR     "tmp"
 char const *save_dir       = DEFAULT_SAVEDIR;
-#define DEFAULT_FILENAME     "image.jpg"
 char const *fileName       = DEFAULT_FILENAME;
 char final_file_name[200];	// final name of the file that's written to disk, with no directories
 char full_filename[1000];	// full name of file written to disk
-#define DEFAULT_TIMEFORMAT   "%Y%m%d %H:%M:%S"	// format the time should be displayed in
 char const *timeFormat     = DEFAULT_TIMEFORMAT;
 
 #define DEFAULT_ASIDAYEXPOSURE   500	// microseconds - good starting point for daytime exposures
@@ -129,36 +113,6 @@ float histogramBoxPercentFromTop = DEFAULT_BOX_FROM_TOP;
 int mean                      = 0;		// histogram mean
 #endif	// USE_HISTOGRAM
 
-char debug_text[500];		// buffer to hold debug messages
-int debugLevel = 0;
-/**
- * Helper function to display debug info
-**/
-// [[gnu::format(printf, 2, 3)]]
-void Log(int required_level, const char *fmt, ...)
-{
-    if (debugLevel >= required_level) {
-		char msg[8192];
-		snprintf(msg, sizeof(msg), "%s", fmt);
-		va_list va;
-		va_start(va, fmt);
-		vfprintf(stdout, msg, va);
-		va_end(va);
-	}
-}
-
-// Return the string for the specified color, or "" if we're not on a tty.
-char const *c(char const *color)
-{
-	if (tty)
-	{
-		return(color);
-	}
-	else
-	{
-		return("");
-	}
-}
 
 // Make sure we don't try to update a non-updateable control, and check for errors.
 ASI_ERROR_CODE setControl(int CamNum, ASI_CONTROL_TYPE control, long value, ASI_BOOL makeAuto)
@@ -211,89 +165,6 @@ ASI_ERROR_CODE setControl(int CamNum, ASI_CONTROL_TYPE control, long value, ASI_
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
-
-// Create Hex value from RGB
-unsigned long createRGB(int r, int g, int b)
-{
-    return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
-}
-
-void cvText(cv::Mat &img, const char *text, int x, int y, double fontsize,
-	int linewidth, int linetype,
-	int fontname, int fontcolor[], int imgtype, int use_outline, int width)
-{
-	cv::Point xy = cv::Point(x, y);
-
-	// Resize for screen width so the same numbers on small and big screens produce
-	// roughly the same size font on the image.
-	fontsize = fontsize * width / 1200; // Small resolution: x 1.6.   High: x 2
-	linewidth = std::max(linewidth * width / 700, 1); // Small resolution: x 2.    High: x 3.2
-	int outline_size = linewidth * 1.5;
-
-	//int baseline = 0;
-	//cv::Size textSize = cv::getTextSize(text, fontname, fontsize, linewidth, &baseline);
-	// baseline: Small resolution:  16 / 13     High res: 36 / 30
-
-	if (imgtype == ASI_IMG_RAW16)
-	{
-		unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
-		if (use_outline)
-			cv::putText(img, text, xy, fontname, fontsize, cv::Scalar(0,0,0), outline_size, linetype);
-		cv::putText(img, text, xy, fontname, fontsize, fontcolor16, linewidth, linetype);
-	}
-	else
-	{
-		cv::Scalar font_color = cv::Scalar(fontcolor[0], fontcolor[1], fontcolor[2], 255);
-		if (use_outline)
-			cv::putText(img, text, xy, fontname, fontsize, cv::Scalar(0,0,0, 255), outline_size, linetype);
-		cv::putText(img, text, xy, fontname, fontsize, font_color, linewidth, linetype);
-	}
-}
-
-// Return the numeric time.
-timeval getTimeval()
-{
-    timeval curTime;
-    gettimeofday(&curTime, NULL);
-    return(curTime);
-}
-
-// Format a numeric time as a string.
-char *formatTime(timeval t, char const *tf)
-{
-    static char TimeString[128];
-    strftime(TimeString, 80, tf, localtime(&t.tv_sec));
-    return(TimeString);
-}
-
-// Return the current time as a string.  Uses both functions above.
-char *getTime(char const *tf)
-{
-    return(formatTime(getTimeval(), tf));
-}
-
-double time_diff_us(int64 start, int64 end)
-{
-	double frequency = cv::getTickFrequency();
-	return (double)(end - start) / frequency;	// in Microseconds
-}
-
-std::string exec(const char *cmd)
-{
-    std::tr1::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
-    if (!pipe)
-        return "ERROR";
-    char buffer[128];
-    std::string result = "";
-    while (!feof(pipe.get()))
-    {
-        if (fgets(buffer, 128, pipe.get()) != NULL)
-        {
-            result += buffer;
-        }
-    }
-    return result;
-}
 
 void *Display(void *params)
 {
@@ -423,7 +294,7 @@ void *SaveImgThd(void *para)
 char *getRetCode(ASI_ERROR_CODE code)
 {
 	static char retCodeBuffer[100];
-	int asi_error_timeout_cntr = 0;
+	static int asi_error_timeout_cntr = 0;
     std::string ret;
 
     if (code == ASI_SUCCESS) ret = "ASI_SUCCESS";
@@ -455,6 +326,25 @@ char *getRetCode(ASI_ERROR_CODE code)
 
     sprintf(retCodeBuffer, "%s (%d)", ret.c_str(), (int) code);
     return(retCodeBuffer);
+}
+
+char *getCameraMode(ASI_CAMERA_MODE mode)
+{
+	static char retModeBuffer[100];
+	std::string ret;
+
+	if (mode == ASI_MODE_NORMAL) ret = "NORMAL";
+	else if (mode == ASI_MODE_TRIG_SOFT_EDGE) ret = "TRIG_SOFT_EDGE";
+	else if (mode == ASI_MODE_TRIG_RISE_EDGE) ret = "TRIG_RISE_EDGE";
+	else if (mode == ASI_MODE_TRIG_FALL_EDGE) ret = "TRIG_FALL_EDGE";
+	else if (mode == ASI_MODE_TRIG_SOFT_LEVEL) ret = "TRIG_SOFT_LEVEL";
+	else if (mode == ASI_MODE_TRIG_HIGH_LEVEL) ret = "TRIG_HIGH_LEVEL";
+	else if (mode == ASI_MODE_TRIG_LOW_LEVEL) ret = "TRIG_LOW_LEVEL";
+	else if (mode == ASI_MODE_END) ret = "End of list";
+	else ret = "UNKNOWN MODE";
+
+    sprintf(retModeBuffer, "%s (%d)", ret.c_str(), (int) mode);
+    return(retModeBuffer);
 }
 
 long roundTo(long n, int roundTo)
@@ -582,53 +472,6 @@ return;
     }
 }
 
-// Display a length of time in different units, depending on the length's value.
-// If the "multi" flag is set, display in multiple units if appropriate.
-char *length_in_units(long us, bool multi)	// microseconds
-{
-	const int l = 50;
-	static char length[l];
-	if (us == 0)
-	{
-		snprintf(length, l, "0 us");
-	}
-	else
-	{
-		double us_in_ms = (double)us / US_IN_MS;
-		// The boundaries on when to display one or two units are really a matter of taste.
-		if (us_in_ms < 0.5)						// less than 0.5 ms
-		{
-			snprintf(length, l, "%'ld us", us);
-		}
-		else if (us_in_ms < 1.5)				// between 0.5 and 1.5 ms
-		{
-			if (multi)
-				snprintf(length, l, "%'ld us (%.3f ms)", us, us_in_ms);
-			else
-				snprintf(length, l, "%'ld us", us);
-		}
-		else if (us_in_ms < (0.5 * MS_IN_SEC))	// 1.5 ms to 0.5 sec
-		{
-			if (multi)
-				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
-			else
-				snprintf(length, l, "%.2f ms", us_in_ms);
-		}
-		else if (us_in_ms < (1.0 * MS_IN_SEC))	// between 0.5 sec and 1 sec
-		{
-			if (multi)
-				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
-			else
-				snprintf(length, l, "%.1f ms", us_in_ms);
-		}
-		else									// over 1 sec
-		{
-			snprintf(length, l, "%.1lf sec", (double)us / US_IN_SEC);
-		}
-
-	}
-	return(length);
-}
 
 long reported_exposure_us = 0;	// exposure reported by the camera, either actual exposure or suggested next one
 long actualGain = 0;			// actual gain used, per the camera
@@ -683,13 +526,37 @@ ASI_ERROR_CODE takeOneExposure(
     }
 
     if (status == ASI_SUCCESS) {
+		// Make sure the actual time to take the picture is "close" to the requested time.
+		timeval tStart = getTimeval();
         status = ASIGetVideoData(cameraId, imageBuffer, bufferSize, timeout);
         if (status != ASI_SUCCESS)
 		{
-            Log(0, "  > ERROR: Failed getting image: %s\n", getRetCode(status));
+			int exitCode;
+			Log(0, "  > ERROR: Failed getting image: %s\n", getRetCode(status));
+
+			// Check if we reached the maximum number of consective errors
+			if (! check_max_errors(&exitCode, maxErrors))
+			{
+				closeUp(exitCode);
+			}
         }
         else
         {
+			// There is too much variance in the overhead of taking a picture to accurately
+			// determine the time to take an image at short exposures, so only check for longer ones.
+			if (exposure_time_us > (5 * US_IN_SEC))
+			{
+           		timeval tEnd = getTimeval();
+				// After testing there seems to be about 500,000 us overhead, so subtract it.
+				long timeToTakeImage_us = timeval_diff_us(tStart, tEnd) - 600000;
+printf("xxxxxxx exposure_time_us=%'ld, timeToTakeImage_us=%'ld\n", exposure_time_us, timeToTakeImage_us);
+				long diff_us = timeToTakeImage_us - exposure_time_us;
+				long threshold_us = exposure_time_us * 0.25;
+				if (abs(diff_us) > threshold_us) {
+					Log(1, "*** WARNING: time to take image (%'ld) differs from requested exposure timme (%'ld) by %'ld, threshold=%'ld\n", timeToTakeImage_us, exposure_time_us, diff_us, threshold_us);
+				}
+			}
+
             numErrors = 0;
             debug_text[0] = '\0';
 #ifdef USE_HISTOGRAM
@@ -782,90 +649,6 @@ void IntHandle(int i)
     closeUp(0);
 }
 
-// A user error was found.  Wait for the user to fix it.
-void waitToFix(char const *msg)
-{
-    printf("**********\n");
-    printf("%s\n", msg);
-    printf("*** After fixing, ");
-    if (tty)
-        printf("restart allsky.sh.\n");
-    else
-        printf("restart the allsky service.\n");
-    if (notificationImages)
-        system("scripts/copy_notification_image.sh Error &");
-    sleep(5);	// give time for image to be copied
-    printf("*** Sleeping until you fix the problem.\n");
-    printf("**********\n");
-    sleep(100000);	// basically, sleep forever until the user fixes this.
-}
-
-// Calculate if it is day or night
-void calculateDayOrNight(const char *latitude, const char *longitude, const char *angle)
-{
-    char sunwaitCommand[128];
-    sprintf(sunwaitCommand, "sunwait poll angle %s %s %s", angle, latitude, longitude);
-    dayOrNight = exec(sunwaitCommand);
-    dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
-
-    if (dayOrNight != "DAY" && dayOrNight != "NIGHT")
-    {
-        sprintf(debug_text, "*** ERROR: dayOrNight isn't DAY or NIGHT, it's '%s'\n", dayOrNight == "" ? "[empty]" : dayOrNight.c_str());
-        waitToFix(debug_text);
-        closeUp(100);
-    }
-}
-
-// Calculate how long until nighttime.
-int calculateTimeToNightTime(const char *latitude, const char *longitude, const char *angle)
-{
-    std::string t;
-    char sunwaitCommand[128];	// returns "hh:mm"
-    sprintf(sunwaitCommand, "sunwait list set angle %s %s %s", angle, latitude, longitude);
-    t = exec(sunwaitCommand);
-    t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
-
-    int hNight=0, mNight=0, secsNight;
-	// It's possible for sunwait to return "--:--" if the angle causes sunset to start
-	// after midnight or before noon.
-    if (sscanf(t.c_str(), "%d:%d", &hNight, &mNight) != 2)
-	{
-		Log(0, "ERROR: With angle %s sunwait returned unknown time to nighttime: %s\n", angle, t.c_str());
-		return(1 * S_IN_HOUR);	// 1 hour - should we exit instead?
-	}
-    secsNight = (hNight * S_IN_HOUR) + (mNight * S_IN_MIN);	// secs to nighttime from start of today
-	// sunwait doesn't return seconds so on average the actual time will be 30 seconds
-	// after the stated time. So, add 30 seconds.
-	secsNight += 30;
-
-	char *now = getTime("%H:%M:%S");
-    int hNow=0, mNow=0, sNow=0, secsNow;
-    sscanf(now, "%d:%d:%d", &hNow, &mNow, &sNow);
-    secsNow = (hNow*S_IN_HOUR) + (mNow*S_IN_MIN) + sNow;	// seconds to now from start of today
-	Log(3, "Now=%s, nighttime starts at %s\n", now, t.c_str());
-
-	// Handle the (probably rare) case where nighttime is tomorrow.
-	// We are only called during the day, so if nighttime is earlier than now, it was past midnight.
-	int diff_s = secsNight - secsNow;
-    if (diff_s < 0)
-    {
-		// This assumes tomorrow's nighttime starts same as today's, which is close enough.
-		return(diff_s + S_IN_DAY);	// Add one day
-    }
-    else
-    {
-        return(diff_s);
-    }
-}
-
-// Simple function to make flags easier to read for humans.
-char const *yesNo(int flag)
-{
-    if (flag)
-        return("Yes");
-    else
-        return("No");
-}
 
 bool adjustGain = false;	// Should we adjust the gain?  Set by user on command line.
 bool currentAdjustGain = false;	// Adjusting it right now?
@@ -1029,7 +812,6 @@ int main(int argc, char *argv[])
 
     char bufTime[128]     = { 0 };
     char bufTemp[128]     = { 0 };
-    char bufTemp2[50]     = { 0 };
     char const *bayer[]   = { "RG", "BG", "GR", "GB" };
     bool endOfNight       = false;
     int i;
@@ -1045,16 +827,11 @@ int main(int argc, char *argv[])
 
     // #define the defaults so we can use the same value in the help message.
 
-#define DEFAULT_LOCALE           "en_US.UTF-8"
 const char *locale = DEFAULT_LOCALE;
     // All the font settings apply to both day and night.
-#define DEFAULT_FONTNUMBER       0
     int fontnumber             = DEFAULT_FONTNUMBER;
-#define DEFAULT_ITEXTX           15
-#define DEFAULT_ITEXTY           25
     int iTextX                 = DEFAULT_ITEXTX;
     int iTextY                 = DEFAULT_ITEXTY;
-#define DEFAULT_ITEXTLINEHEIGHT  30
     int iTextLineHeight        = DEFAULT_ITEXTLINEHEIGHT;
     char const *ImgText        = "";
     char const *ImgExtraText   = "";
@@ -1062,18 +839,13 @@ const char *locale = DEFAULT_LOCALE;
 #define DEFAULT_FONTSIZE         7
     double fontsize            = DEFAULT_FONTSIZE;
 #define SMALLFONTSIZE_MULTIPLIER 0.08
-#define DEFAULT_LINEWIDTH        1
     int linewidth              = DEFAULT_LINEWIDTH;
-#define DEFAULT_OUTLINEFONT      0
     int outlinefont            = DEFAULT_OUTLINEFONT;
     int fontcolor[3]           = { 255, 0, 0 };
     int smallFontcolor[3]      = { 0, 0, 255 };
     int linetype[3]            = { cv::LINE_AA, 8, 4 };
-#define DEFAULT_LINENUMBER       0
     int linenumber             = DEFAULT_LINENUMBER;
 
-#define DEFAULT_WIDTH            0
-#define DEFAULT_HEIGHT           0
     int width                  = DEFAULT_WIDTH;		int originalWidth  = width;
     int height                 = DEFAULT_HEIGHT;	int originalHeight = height;
 
@@ -1082,7 +854,6 @@ const char *locale = DEFAULT_LOCALE;
     int dayBin                 = DEFAULT_DAYBIN;
     int nightBin               = DEFAULT_NIGHTBIN;
 
-#define AUTO_IMAGE_TYPE         99	// needs to match what's in the camera_settings.json file
 #define DEFAULT_IMAGE_TYPE       AUTO_IMAGE_TYPE
     int Image_type             = DEFAULT_IMAGE_TYPE;
 
@@ -1125,17 +896,13 @@ const char *locale = DEFAULT_LOCALE;
     int asiDayBrightness       = DEFAULT_BRIGHTNESS;
     int asiNightBrightness     = DEFAULT_BRIGHTNESS;
 
-#define DEFAULT_LATITUDE         "60.7N" //GPS Coordinates of Whitehorse, Yukon where the code was created
     char const *latitude       = DEFAULT_LATITUDE;
-#define DEFAULT_LONGITUDE        "135.05W"
     char const *longitude      = DEFAULT_LONGITUDE;
-#define DEFAULT_ANGLE            "-6"
     // angle of the sun with the horizon
     // (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
     char const *angle          = DEFAULT_ANGLE;
 
     int preview                = 0;
-#define DEFAULT_SHOWTIME         1
     int showTime               = DEFAULT_SHOWTIME;
     char const *tempType       = "C";	// Celsius
 
@@ -1146,7 +913,7 @@ const char *locale = DEFAULT_LOCALE;
         int showGain           = 0;
         int showBrightness     = 0;
 #ifdef USE_HISTOGRAM
-        int showHistogram      = 0;
+        int showMean           = 0;
     int maxHistogramAttempts   = 15;	// max number of times we'll try for a better histogram mean
     int showHistogramBox       = 0;
     int histogramBoxSizeX      = DEFAULT_BOX_SIZEX;
@@ -1168,7 +935,6 @@ const char *locale = DEFAULT_LOCALE;
     const int percent_change = DEFAULT_PERCENTCHANGE;
 #endif
 
-#define DEFAULT_DAYTIMECAPTURE   0
     int daytimeCapture         = DEFAULT_DAYTIMECAPTURE;  // are we capturing daytime pictures?
 
     int help                   = 0;
@@ -1184,7 +950,7 @@ const char *locale = DEFAULT_LOCALE;
 
     printf("\n%s", c(KGRN));
     printf("**********************************************\n");
-    printf("*** Allsky Camera Software v0.8.3  |  2021 ***\n");
+    printf("*** Allsky Camera Software v0.8.3.2 |  2021 ***\n");
     printf("**********************************************\n\n");
     printf("Capture images of the sky with a Raspberry Pi and an ASI Camera\n");
     printf("%s\n", c(KNRM));
@@ -1506,7 +1272,7 @@ const char *locale = DEFAULT_LOCALE;
 #ifdef USE_HISTOGRAM
             else if (strcmp(argv[i], "-showHistogram") == 0)
             {
-                showHistogram = atoi(argv[++i]);
+                showMean = atoi(argv[++i]);
             }
 #endif
             else if (strcmp(argv[i], "-daytime") == 0)
@@ -1606,7 +1372,7 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -showGain              - 1 display the gain\n");
         printf(" -showBrightness        - 1 displays the brightness\n");
 #ifdef USE_HISTOGRAM
-        printf(" -showHistogram         - 1 displays the histogram mean\n");
+        printf(" -showMean              - 1 displays the histogram mean\n");
 #endif
         printf(" -debuglevel            - Default = 0. Set to 1,2, 3, or 4 for more debugging information.\n");
 
@@ -1833,6 +1599,18 @@ const char *locale = DEFAULT_LOCALE;
         printf("\n");
     }
 
+    ASIGetControlValue(CamNum, ASI_TEMPERATURE, &actualTemp, &bAuto);
+    printf("- Sensor temperature: %0.2f\n", (float)actualTemp / 10.0);
+
+	ASI_CAMERA_MODE CamMode;
+	asiRetCode = ASIGetCameraMode(CamNum, &CamMode);
+    if (asiRetCode != ASI_SUCCESS)
+    {
+        printf("*** ERROR getting camera mode (%s)\n", getRetCode(asiRetCode));
+        closeUp(100);      // Can't do anything so might as well exit.
+    }
+	printf("  - Current camera mode: %s\n", getCameraMode(CamMode));
+
     asiRetCode = ASIInitCamera(CamNum);
     if (asiRetCode != ASI_SUCCESS)
     {
@@ -1914,8 +1692,28 @@ const char *locale = DEFAULT_LOCALE;
         }
     }
 
-    ASIGetControlValue(CamNum, ASI_TEMPERATURE, &actualTemp, &bAuto);
-    printf("- Sensor temperature: %0.2f\n", (float)actualTemp / 10.0);
+    if (debugLevel >= 4)
+    {
+		ASI_SUPPORTED_MODE CamSupportedModes;
+		asiRetCode = ASIGetCameraSupportMode(CamNum, &CamSupportedModes);
+    	if (asiRetCode != ASI_SUCCESS)
+    	{
+        	printf("*** WARNING: unable to get camera supported modes (%s)\n", getRetCode(asiRetCode));
+    	}
+		else
+		{
+    		printf("Supported modes:\n");
+    		for (int i = 0; i < 16; ++i)
+    		{
+        		if (CamSupportedModes.SupportedCameraMode[i] == ASI_MODE_END)
+        		{
+            		break;
+        		}
+        		printf("   - %s ", getCameraMode(CamSupportedModes.SupportedCameraMode[i]));
+    		}
+    		printf("\n");
+    	}
+    }
 
     // Handle "auto" Image_type.
     if (Image_type == AUTO_IMAGE_TYPE)
@@ -2036,7 +1834,7 @@ const char *locale = DEFAULT_LOCALE;
         histogramBoxPercentFromLeft * 100, histogramBoxPercentFromTop * 100,
         centerX, centerY, left_of_box, top_of_box, right_of_box, bottom_of_box);
     printf(" Show Histogram Box: %s\n", yesNo(showHistogramBox));
-    printf(" Show Histogram Mean: %s\n", yesNo(showHistogram));
+    printf(" Show Histogram Mean: %s\n", yesNo(showMean));
 #endif
     printf(" Show Time: %s (format: %s)\n", yesNo(showTime), timeFormat);
     printf(" Show Details: %s\n", yesNo(showDetails));
@@ -2091,7 +1889,6 @@ const char *locale = DEFAULT_LOCALE;
 
     // Initialization
     int exitCode        = 0;    // Exit code for main()
-    int maxErrors       = 5;    // Max number of errors in a row before we exit
     int originalITextX = iTextX;
     int originalITextY = iTextY;
     int originalFontsize = fontsize;
@@ -2239,7 +2036,15 @@ const char *locale = DEFAULT_LOCALE;
                 }
                 else
                 {
-                    Log(2, "Using the last night exposure of %s\n", length_in_units(current_exposure_us, true));
+					// If gain changes, we have to change the exposure time to get an equally
+					// exposed image.
+					// ZWO gain has unit 0.1dB, so we have to convert the gain values to a factor first
+					//    newExp = (oldExp * oldGain) / newGain
+					// e.g.  20s = (10s    * 2.0)     / (1.0) 
+
+                    // current values are here the last night values
+                    current_exposure_us = (current_exposure_us * pow(10, (float)currentGain / 10.0 / 20.0)) / pow(10, (float)asiDayGain / 10.0 / 20.0);
+                    Log(2, "Using the last night exposure, old and new Gain to calculate new exposure of %s\n", length_in_units(current_exposure_us, true));
                 }
 
                 current_max_autoexposure_us = asi_day_max_autoexposure_ms * US_IN_MS;
@@ -2391,8 +2196,7 @@ const char *locale = DEFAULT_LOCALE;
         {
             // date/time is added to many log entries to make it easier to associate them
             // with an image (which has the date/time in the filename).
-            timeval t;
-            t = getTimeval();
+            timeval t = getTimeval();
             char exposureStart[128];
             char f[10] = "%F %T";
             sprintf(exposureStart, "%s", formatTime(t, f));
@@ -2400,7 +2204,9 @@ const char *locale = DEFAULT_LOCALE;
 
             // Get start time for overlay.  Make sure it has the same time as exposureStart.
             if (showTime == 1)
+			{
             	sprintf(bufTime, "%s", formatTime(t, timeFormat));
+			}
 
             asiRetCode = takeOneExposure(CamNum, current_exposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) Image_type, histogram, &mean);
             if (asiRetCode == ASI_SUCCESS)
@@ -2686,11 +2492,6 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                          }
                          else
                          {
-							// Check if we reached the maximum number of consective errors
-							if (! check_max_errors(&exitCode, maxErrors))
-							{
-								closeUp(exitCode);
-							}
 							break;
                          }
                     } // end of "Retry" loop
@@ -2716,7 +2517,10 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     {
                          if (current_exposure_us > current_max_autoexposure_us)
                          {
-                             Log(3, "  > Stopped trying: new exposure of %s would be over max of %s\n", length_in_units(current_exposure_us, false), length_in_units(current_max_autoexposure_us, false));
+							 // If we call length_in_units() twice in same command line they both return the last value.
+							 char x[100];
+							 snprintf(x, sizeof(x), "%s", length_in_units(current_exposure_us, false));
+                             Log(3, "  > Stopped trying: new exposure of %s would be over max of %s\n", x, length_in_units(current_max_autoexposure_us, false));
 
                              long diff = (long)((float)current_exposure_us * (1/(float)percent_change));
                              current_exposure_us -= diff;
@@ -2781,6 +2585,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                 {
                     int iYOffset = 0;
 
+#ifdef XXXXXXXX
                     if (showTime == 1)
                     {
                         // The time and ImgText are in the larger font; everything else is in smaller font.
@@ -2822,11 +2627,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 
                     if (showExposure == 1)
                     {
-                        // display in seconds if >= 1 second, else in ms
-                        if (last_exposure_us >= (1 * US_IN_SEC))
-                            sprintf(bufTemp, "Exposure: %'.2f s%s", (float)last_exposure_us / US_IN_SEC, bufTemp2);
-                        else
-                            sprintf(bufTemp, "Exposure: %'.2f ms%s", (float)last_exposure_us / US_IN_MS, bufTemp2);
+                        sprintf(bufTemp, "Exposure: %s", length_in_units(last_exposure_us, false));
                         // Indicate if in auto-exposure mode.
                         if (currentAutoExposure) strcat(bufTemp, " (auto)");
                         cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
@@ -2856,13 +2657,6 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 							Image_type, outlinefont, width);
                         iYOffset += iTextLineHeight;
                     }
-                    if (currentAdjustGain)
-                    {
-                        // Determine if we need to change the gain on the next image.
-                        // This must come AFTER the "showGain" above.
-                        gainChange = determineGainChange(asiDayGain, asiNightGain);
-                        setControl(CamNum, ASI_GAIN, currentGain + gainChange, currentAutoGain ? ASI_TRUE : ASI_FALSE);
-                    }
 
                     if (showBrightness == 1)
                     {
@@ -2875,7 +2669,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                      }
 
 #ifdef USE_HISTOGRAM
-                    if (showHistogram)
+                    if (showMean)
                     {
                         sprintf(bufTemp, "Mean: %d", mean);
                         cvText(pRgb, bufTemp, iTextX, iTextY + (iYOffset / currentBin),
@@ -2884,33 +2678,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 							Image_type, outlinefont, width);
                         iYOffset += iTextLineHeight;
                     }
-                    if (showHistogramBox && usedHistogram)
-                    {
-                        // Draw a rectangle where the histogram box is.
-                        // Put a black and white line one next to each other so they
-                        // can be seen in light and dark images.
-                        int lt = cv::LINE_AA, thickness = 2;
-                        int X1 = (width * histogramBoxPercentFromLeft) - (histogramBoxSizeX / 2);
-                        int X2 = X1 + histogramBoxSizeX;
-                        int Y1 = (height * histogramBoxPercentFromTop) - (histogramBoxSizeY / 2);
-                        int Y2 = Y1 + histogramBoxSizeY;
-                        cv::Scalar outer_line, inner_line;
-// xxxxxxx  TODO: can we use Scalar(x,y,z) for both?
-                        if (1 || Image_type == ASI_IMG_RAW16)
-                        {
-                            outer_line = cv::Scalar(0,0,0);
-                            inner_line = cv::Scalar(255,255,255);
-                        }
-                        else
-                        {
-                            outer_line = cv::Scalar(0,0,0, 255);
-                            inner_line = cv::Scalar(255,255,255, 255);
-                        }
-                        cv::rectangle(pRgb, cv::Point(X1, Y1), cv::Point(X2, Y2), outer_line,  thickness, lt, 0);
-                        cv::rectangle(pRgb, cv::Point(X1+thickness, Y1+thickness), cv::Point(X2-thickness, Y2-thickness), inner_line,  thickness, lt, 0);
-                    }
 #endif
-
                     /**
                      * Optionally display extra text which is read from the provided file. If the
                      * age of the file exceeds the specified limit then ignore the file.
@@ -2973,6 +2741,51 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                                 Log(0, "  > *** WARNING: Failed To Open Extra Text File\n");
                             }
                         }
+                    }
+#else // XXXXXXXXX
+					// false and 0 are for showFocus and focus_metric which ZWO doesn't have yet
+					iYOffset = doOverlay(pRgb,
+						showTime, bufTime,
+						showExposure, last_exposure_us, currentAutoExposure,
+						showTemp, actualTemp, tempType,
+ 						showGain, actualGain, currentAutoGain, gainChange,
+						showMean, mean,
+						showBrightness, currentBrightness,
+						false, 0,
+						ImgText, ImgExtraText, extraFileAge,
+						iTextX, iTextY, currentBin, width, iTextLineHeight,
+						fontsize, linewidth, linetype[linenumber], fontname[fontnumber],
+						fontcolor, smallFontcolor, outlinefont, Image_type);
+					iYOffset += 0;		// keeps compiler quiet about "not used" message
+
+
+
+#endif // XXXXXXXXXX
+#ifdef USE_HISTOGRAM
+                    if (showHistogramBox && usedHistogram)
+                    {
+                        // Draw a rectangle where the histogram box is.
+                        // Put a black and white line one next to each other so they
+                        // can be seen in light and dark images.
+                        int lt = cv::LINE_AA, thickness = 2;
+                        int X1 = (width * histogramBoxPercentFromLeft) - (histogramBoxSizeX / 2);
+                        int X2 = X1 + histogramBoxSizeX;
+                        int Y1 = (height * histogramBoxPercentFromTop) - (histogramBoxSizeY / 2);
+                        int Y2 = Y1 + histogramBoxSizeY;
+                        cv::Scalar outer_line, inner_line;
+                        outer_line = cv::Scalar(0,0,0);
+                        inner_line = cv::Scalar(255,255,255);
+                        cv::rectangle(pRgb, cv::Point(X1, Y1), cv::Point(X2, Y2), outer_line,  thickness, lt, 0);
+                        cv::rectangle(pRgb, cv::Point(X1+thickness, Y1+thickness), cv::Point(X2-thickness, Y2-thickness), inner_line,  thickness, lt, 0);
+                    }
+#endif
+
+                    if (currentAdjustGain)
+                    {
+                        // Determine if we need to change the gain on the next image.
+                        // This must come AFTER the "showGain" above.
+                        gainChange = determineGainChange(asiDayGain, asiNightGain);
+                        setControl(CamNum, ASI_GAIN, currentGain + gainChange, currentAutoGain ? ASI_TRUE : ASI_FALSE);
                     }
                 }
 
@@ -3061,10 +2874,6 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     usleep(currentDelay_ms * US_IN_MS);
                 }
                 calculateDayOrNight(latitude, longitude, angle);
-
-            } else {
-				// Check if we reached the maximum number of consective errors
-                bMain = check_max_errors(&exitCode, maxErrors);
             }
         }
         if (lastDayOrNight == "NIGHT")

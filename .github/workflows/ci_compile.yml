@@ -44,12 +44,21 @@ jobs:
             if [ $? -ne 0 ]; then
               err=$((err + 1))
             fi
-            if [ "$i" = "./variables.sh" ]; then
-              #SC2034: ON_TTY appears unused. Verify use (or export if used externally).
-              shellcheck $i -e SC2034 
-            else
-              shellcheck $i
-            fi
+            case $i in
+              ./variables.sh)
+                #SC2034: ON_TTY appears unused. Verify use (or export if used externally).
+                shellcheck $i -e SC2034 
+                ;;
+              ./gui/install.sh)
+                #SC2155: Declare and assign separately to avoid masking return values.
+                #SC2046: Quote this to prevent word splitting.
+                #SC2086: Double quote to prevent globbing and word splitting.
+                shellcheck $i -e SC2155 -e SC2046 -e SC2086
+                ;;
+              *)
+                shellcheck $i
+                ;;
+            esac
             if [ $? -ne 0 ]; then
               err=$((err + 1))
             fi

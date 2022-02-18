@@ -58,12 +58,18 @@ jobs:
                 #SC2002: Useless cat. Consider 'cmd < file | ..' or 'cmd file | ..' instead.
                 #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
                 #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
-                ##SC2006: Use $(...) notation instead of legacy backticked `...`.
+                #SC2006: Use $(...) notation instead of legacy backticked `...`.
                 shellcheck $i -e SC2155 -e SC2046 -e SC2086 -e SC1090 -e SC2164 -e SC2002 -e SC2166 -e SC2181 -e SC2006
                 ;;
-              next)
-                #SC2006: Use $(...) notation instead of legacy backticked `...`.
-                shellcheck $i -e SC2006 
+              ./website/install.sh)
+                #SC2155: Declare and assign separately to avoid masking return values.
+                #SC2046: Quote this to prevent word splitting.
+                #SC1090: Can't follow non-constant source. Use a directive to specify location.
+                #SC2164: Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
+                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
+                #SC2012: Use find instead of ls to better handle non-alphanumeric filenames.
+                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2164 -e SC2166 -e SC2181 -e SC2012
                 ;;
               *)
                 shellcheck $i

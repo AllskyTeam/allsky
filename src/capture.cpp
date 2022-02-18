@@ -35,6 +35,8 @@
 
 // Forward definitions
 char *getRetCode(ASI_ERROR_CODE);
+void closeUp(int);
+bool check_max_errors(int *, int);
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -58,6 +60,7 @@ pthread_cond_t cond_SatrtSave;
 #define NOT_SET				 -1		// signifies something isn't set yet
 ASI_CONTROL_CAPS ControlCaps;
 int numErrors              = 0;	// Number of errors in a row.
+int maxErrors              = 5;	// Max number of errors in a row before we exit
 int gotSignal              = 0;	// did we get a SIGINT (from keyboard) or SIGTERM (from service)?
 int iNumOfCtrl             = 0;
 int CamNum                 = 0;
@@ -423,8 +426,8 @@ void *SaveImgThd(void *para)
 char *getRetCode(ASI_ERROR_CODE code)
 {
 	static char retCodeBuffer[100];
-	int asi_error_timeout_cntr = 0;
-    std::string ret;
+	static int asi_error_timeout_cntr = 0;
+	std::string ret;
 
     if (code == ASI_SUCCESS) ret = "ASI_SUCCESS";
     else if (code == ASI_ERROR_INVALID_INDEX) ret = "ASI_ERROR_INVALID_INDEX";
@@ -686,7 +689,14 @@ ASI_ERROR_CODE takeOneExposure(
         status = ASIGetVideoData(cameraId, imageBuffer, bufferSize, timeout);
         if (status != ASI_SUCCESS)
 		{
-            Log(0, "  > ERROR: Failed getting image: %s\n", getRetCode(status));
+			int exitCode;
+			Log(0, "  > ERROR: Failed getting image: %s\n", getRetCode(status));
+
+			// Check if we reached the maximum number of consective errors
+			if (! check_max_errors(&exitCode, maxErrors))
+			{
+				closeUp(exitCode);
+			}
         }
         else
         {
@@ -1833,6 +1843,9 @@ const char *locale = DEFAULT_LOCALE;
         printf("\n");
     }
 
+    ASIGetControlValue(CamNum, ASI_TEMPERATURE, &actualTemp, &bAuto);
+    printf("- Sensor temperature: %0.2f\n", (float)actualTemp / 10.0);
+
     asiRetCode = ASIInitCamera(CamNum);
     if (asiRetCode != ASI_SUCCESS)
     {
@@ -1913,9 +1926,6 @@ const char *locale = DEFAULT_LOCALE;
                 "unknown video format");
         }
     }
-
-    ASIGetControlValue(CamNum, ASI_TEMPERATURE, &actualTemp, &bAuto);
-    printf("- Sensor temperature: %0.2f\n", (float)actualTemp / 10.0);
 
     // Handle "auto" Image_type.
     if (Image_type == AUTO_IMAGE_TYPE)
@@ -2091,7 +2101,6 @@ const char *locale = DEFAULT_LOCALE;
 
     // Initialization
     int exitCode        = 0;    // Exit code for main()
-    int maxErrors       = 5;    // Max number of errors in a row before we exit
     int originalITextX = iTextX;
     int originalITextY = iTextY;
     int originalFontsize = fontsize;
@@ -2686,11 +2695,6 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                          }
                          else
                          {
-							// Check if we reached the maximum number of consective errors
-							if (! check_max_errors(&exitCode, maxErrors))
-							{
-								closeUp(exitCode);
-							}
 							break;
                          }
                     } // end of "Retry" loop
@@ -3062,9 +3066,6 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                 }
                 calculateDayOrNight(latitude, longitude, angle);
 
-            } else {
-				// Check if we reached the maximum number of consective errors
-                bMain = check_max_errors(&exitCode, maxErrors);
             }
         }
         if (lastDayOrNight == "NIGHT")

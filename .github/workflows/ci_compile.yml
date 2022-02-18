@@ -95,6 +95,11 @@ jobs:
                 #SC2166: Prefer [ p ] && [ q ] as [ p -a q ] is not well defined.
                 shellcheck $i -e SC2155 -e SC2046 -e SC2164 -e SC1090 -e SC2230 -e SC2181 -e SC2086 -e SC2206 -e SC2207 -e SC2068 -e SC2006 -e SC2166
                 ;;
+              ./uninstall.sh)
+                #SC2034: GREEN appears unused. Verify use (or export if used externally).
+                #SC2162: read without -r will mangle backslashes.
+                shellcheck $i -e SC2034 -e SC2162
+                ;;
               *)
                 shellcheck $i
                 ;;

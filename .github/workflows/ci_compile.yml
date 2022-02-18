@@ -111,6 +111,14 @@ jobs:
                 #SC2016: Expressions don't expand in single quotes, use double quotes for that.
                 shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2086 -e SC2230 -e SC2181 -e SC2166 -e SC2016
                 ;;
+              ./scripts/postData.sh)
+                #SC1090: Can't follow non-constant source. Use a directive to specify location.
+                #SC2086: Double quote to prevent globbing and word splitting.
+                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
+                #SC2154: sunriset_hhmm is referenced but not assigned (did you mean 'sunrise_hhmm'?).
+                #SC1083: This { is literal. Check expression (missing ;/\n?) or quote it.
+                shellcheck $i -e SC1090 -e SC2086 -e SC2166 -e SC2154 -e SC1083
+                ;;
               *)
                 shellcheck $i
                 ;;

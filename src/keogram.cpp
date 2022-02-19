@@ -32,11 +32,19 @@ using namespace std;
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
 
+// Annotation fields
+#define ANN_COLUMN	0
+#define ANN_HOUR	1
+#define ANN_YEAR	2
+#define ANN_MONTH	3
+#define ANN_DAY		4
+
 using namespace cv;
 
 struct config_t {
 	std::string img_src_dir, img_src_ext, dst_keogram;
-	bool labels_enabled, keogram_enabled, parse_filename, junk, img_expand, channel_info;
+	bool labels_enabled, date_enabled, keogram_enabled;
+	bool parse_filename, junk, img_expand, channel_info;
 	int img_width;
 	int img_height;
 	int fontFace;
@@ -106,6 +114,9 @@ int get_font_by_name(char*);
 // Keep track of number of digits in nfiles so file numbers will be consistent width.
 char s_[10];
 
+const int num_hours = 24;
+bool hours[num_hours];
+
 void keogram_worker(int thread_num,			// thread num
 					struct config_t* cf,	// config
 					glob_t* files,			// file list
@@ -114,7 +125,7 @@ void keogram_worker(int thread_num,			// thread num
 					cv::Mat* ann,			// annotations
 					cv::Mat* mask)			// mask
 {
-	int start_num, end_num, batch_size, prevHour = -1;
+	int start_num, end_num, batch_size;
 	cv::Mat thread_accumulator;
 
 	batch_size = nfiles / cf->num_threads;
@@ -224,6 +235,8 @@ void keogram_worker(int thread_num,			// thread num
 			if (cf->parse_filename) {
 				// engage your safety squints!
 				char* s;
+				// TODO: make sure strrchr() and sscanf work
+				// Example of name:  image-yyyymmddhhmmss.jpg
 				s = strrchr(filename, '-');
 				s++;
 				sscanf(s, "%04d%02d%02d%02d%02d%02d.%*s", &ft.tm_year, &ft.tm_mon,
@@ -239,19 +252,17 @@ void keogram_worker(int thread_num,			// thread num
 					ft.tm_year = t->tm_year+1900;
 				} else {
 					fprintf(stderr, "WARNING: unable to get time of '%s': %s\n", filename, strerror(errno));
-					ft.tm_hour = prevHour;
+					ft.tm_hour = -1;
 				}
 			}
 
-			// record the annotation
-			if (ft.tm_hour != prevHour) {
-				if (prevHour != -1) {
-					mtx->lock();
-					cv::Mat a = (cv::Mat_<int>(1, 5) << destCol, ft.tm_hour, ft.tm_year, ft.tm_mon, ft.tm_mday);
-					ann->push_back(a);
-					mtx->unlock();
-				}
-				prevHour = ft.tm_hour;
+			// record the annotation if we haven't already
+			if (ft.tm_hour != -1 && ! hours[ft.tm_hour]) {
+				mtx->lock();
+				cv::Mat a = (cv::Mat_<int>(1, 5) << destCol, ft.tm_hour, ft.tm_year, ft.tm_mon, ft.tm_mday);
+				ann->push_back(a);
+				mtx->unlock();
+				hours[ft.tm_hour] = true;
 			}
 		}
 
@@ -347,12 +358,65 @@ void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
 	int baseline = 0;
 	char hour[3];
 
-	if (cf->labels_enabled && !ann->empty())
+	if (! ann->empty())
 	{
+		int column = -1;
+		int date_hour = -1;
+		// Date is for the last file so draw date at location of 0 hours if there is one,
+		// otherwise right-justify it.
+		if (cf->date_enabled) {
+			for (int r = 0; r < ann->rows; r++)
+			{
+				if (ann->at<int>(r, ANN_HOUR) == 0)
+				{
+					column = ann->at<int>(r, ANN_COLUMN);
+					date_hour = r;
+					break;
+				}
+			}
+			if (column == -1)
+			{
+				// No 0 hour so right-justify but use date from lowest numbered hour.
+				column = acc->cols - 5;		// give the date some breathing room on the right
+				int min_hour = ann->at<int>(0, ANN_HOUR);
+				date_hour = 0;
+				for (int r = 1; r < ann->rows; r++)
+				{
+					// compare based on hour, e.g., 22, but need the ann->at subscript
+					if (ann->at<int>(r, ANN_HOUR) < min_hour)
+						date_hour = r;
+				}
+			}
+			// Draw date
+			char time_buf[256];
+			snprintf(time_buf, 256, "%02d-%02d-%02d", ann->at<int>(date_hour, ANN_MONTH), ann->at<int>(date_hour, ANN_DAY), ann->at<int>(date_hour, ANN_YEAR));
+			std::string text(time_buf);
+			cv::Size textSize = cv::getTextSize(text, cf->fontFace, cf->fontScale, cf->lineWidth, &baseline);
+
+			if (column - textSize.width >= 0) {
+				// black background
+				cv::putText(*acc, text,
+					cv::Point(column - textSize.width, acc->rows - (2.5 * textSize.height)),
+					cf->fontFace, cf->fontScale,
+					cv::Scalar(0, 0, 0), cf->lineWidth+2,
+					cf->fontType);
+				// Text
+				cv::putText(*acc, text,
+					cv::Point(column - textSize.width, acc->rows - (2.5 * textSize.height)),
+					cf->fontFace, cf->fontScale,
+					cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
+					cf->fontType);
+			} else if (cf->verbose) {
+				fprintf(stderr, "WARNING: not enough space to print date '%s' at column %d\n", text.c_str(), column);
+			}
+		}
+
 		for (int r = 0; r < ann->rows; r++)
  		{
+			column = ann->at<int>(r, ANN_COLUMN);
+
 			// Draw a dashed line and label for hour
-			cv::LineIterator it(*acc, cv::Point(ann->at<int>(r, 0), 0), cv::Point(ann->at<int>(r, 0), acc->rows));
+			cv::LineIterator it(*acc, cv::Point(column, 0), cv::Point(column, acc->rows));
 			for (int i = 0; i < it.count; i++, ++it)
 			{
 				// 4 pixel dashed line
@@ -366,49 +430,24 @@ void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
 			}
 
 			// Draw text label to the left of the dash
-			snprintf(hour, 3, "%02d", ann->at<int>(r, 1));
+			snprintf(hour, 3, "%02d", ann->at<int>(r, ANN_HOUR));
 			std::string text(hour);
 			cv::Size textSize = cv::getTextSize(text, cf->fontFace, cf->fontScale, cf->lineWidth, &baseline);
 
-			if (ann->at<int>(r, 0) - textSize.width >= 0) {
+			if (column - textSize.width >= 0) {
 				// black background
 				cv::putText(*acc, text,
-					cv::Point(ann->at<int>(r, 0) - textSize.width, 
-					acc->rows - (textSize.height)),
+					cv::Point(column - textSize.width, acc->rows - textSize.height),
 					cf->fontFace, cf->fontScale,
 					cv::Scalar(0, 0, 0), cf->lineWidth+2,
 					cf->fontType);
 				cv::putText(*acc, text,
-					cv::Point(ann->at<int>(r, 0) - textSize.width,
-					acc->rows - textSize.height),
+					cv::Point(column - textSize.width, acc->rows - textSize.height),
 					cf->fontFace, cf->fontScale,
 					cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
 					cf->fontType);
-			}
-
-			if (ann->at<int>(r, 1) == 0) {
-				// Draw date
-				char time_buf[256];
-				snprintf(time_buf, 256, "%02d-%02d-%02d", ann->at<int>(r, 3), ann->at<int>(r, 4), ann->at<int>(r, 2));
-				std::string text(time_buf);
-				cv::Size textSize = cv::getTextSize(text, cf->fontFace, cf->fontScale, cf->lineWidth, &baseline);
-
-				if (ann->at<int>(r, 0) - textSize.width >= 0) {
-					// black background
-					cv::putText(*acc, text,
-						cv::Point(ann->at<int>(r, 0) - textSize.width, 
-						acc->rows - (2.5 * textSize.height)),
-						cf->fontFace, cf->fontScale,
-						cv::Scalar(0, 0, 0), cf->lineWidth+2,
-						cf->fontType);
-					// Text
-					cv::putText(*acc, text,
-						cv::Point(ann->at<int>(r, 0) - textSize.width, 
-						acc->rows - (2.5 * textSize.height)),
-						cf->fontFace, cf->fontScale,
-						cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
-						cf->fontType);
-				}
+			} else if (cf->verbose) {
+				fprintf(stderr, "WARNING: not enough space to print hour label '%s' at column %d\n", text.c_str(), column);
 			}
 		}
 	}
@@ -418,6 +457,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 	int c, tmp, ncpu = std::thread::hardware_concurrency();
 
 	cf->labels_enabled = true;
+	cf->date_enabled = true;
 	cf->parse_filename = false;
 	cf->fontFace = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
 	cf->fontScale = 2;
@@ -450,6 +490,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 		{"nice-level", required_argument, 0, 'q'},
 		{"parse-filename", no_argument, 0, 'p'},
 		{"no-label", no_argument, 0, 'n'},
+		{"no-date", no_argument, 0, 'D'},
 		{"verbose", no_argument, 0, 'v'},
 		{"help", no_argument, 0, 'h'},
 		{"image-expand", no_argument, 0, 'x'},
@@ -457,7 +498,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 		{"fixed-channel-number", required_argument, 0, 'f'},
 		{0, 0, 0, 0}};
 
-		c = getopt_long(argc, argv, "d:e:o:r:s:L:C:N:S:T:Q:q:f:npvhxc", long_options, &option_index);
+		c = getopt_long(argc, argv, "d:e:o:r:s:L:C:N:S:T:Q:q:f:nDpvhxc", long_options, &option_index);
 		if (c == -1)
 			break;
 
@@ -491,6 +532,10 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 				break;
 			case 'n':
 				cf->labels_enabled = false;
+				cf->date_enabled = false;
+				break;
+			case 'D':
+				cf->date_enabled = false;
 				break;
 			case 'r':
 				cf->rotation_angle = atof(optarg);
@@ -554,15 +599,15 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 				if ((tmp >= 1) && (tmp <= ncpu))
 					cf->num_threads = tmp;
 				else
-					fprintf(stderr, "invalid number of threads %d; using %d\n", tmp, cf->num_threads);
+					fprintf(stderr, "WARNING: invalid number of threads %d; using %d\n", tmp, cf->num_threads);
 				break;
 			case 'q':
 				tmp = atoi(optarg);
 				if (PRIO_MIN > tmp) {
 					tmp = PRIO_MIN;
-					fprintf(stderr, "clamping scheduler priority to PRIO_MIN\n");
+					fprintf(stderr, "WARNING: clamping scheduler priority to PRIO_MIN (%d)\n", PRIO_MIN);
 				} else if (PRIO_MAX < tmp) {
-					fprintf(stderr, "clamping scheduler priority to PRIO_MAX\n");
+					fprintf(stderr, "WARNING: clamping scheduler priority to PRIO_MAX (%d)\n", PRIO_MAX);
 					tmp = PRIO_MAX;
 				}
 				cf->nice_level = atoi(optarg);
@@ -587,7 +632,8 @@ void usage_and_exit(int x) {
 	std::cout << "-s | --image-size <int>x<int> : only process images of a given size, eg. 1280x960" << std::endl;
 	std::cout << "-h | --help : display this help message" << std::endl;
 	std::cout << "-v | --verbose : Increase logging verbosity" << std::endl;
-	std::cout << "-n | --no-label : Disable hour labels" << std::endl;
+	std::cout << "-n | --no-label : Disable hour and date labels" << std::endl;
+	std::cout << "-D | --no-date : Disable date label" << std::endl;
 	std::cout << "-C | --font-color <str> : label font color, in HTML format (0000ff)" << std::endl;
 	std::cout << "-L | --font-line <int> : font line thickness (3), (min=1)" << std::endl;
 	std::cout << "-N | --font-name <str> : font name (simplex)" << std::endl;
@@ -704,6 +750,8 @@ int main(int argc, char* argv[]) {
 			fprintf(stderr, "\tsize = %d x %d\n", config.img_width, config.img_height);
 		}
 	}
+
+	for (int i = 0; i < num_hours; i++) hours[i] = false;	// initialize them
 
 	std::vector<std::thread> threadpool;
 	for (int tid = 0; tid < config.num_threads; tid++)

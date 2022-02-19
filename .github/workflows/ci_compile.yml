@@ -152,6 +152,13 @@ jobs:
                 #SC2219: Instead of 'let expr', prefer (( expr )) .
                 shellcheck $i -e SC1090 -e SC2086 -e SC2166 -e SC2181 -e SC2166 -e SC2219
                 ;;
+              ./scripts/copy_notification_image.sh)
+                #SC1090: Can't follow non-constant source. Use a directive to specify location.
+                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
+                #SC2166: Prefer [ p ] && [ q ] as [ p -a q ] is not well defined.
+                #SC2086: Double quote to prevent globbing and word splitting.
+                shellcheck $i -e SC1090 -e SC2181 -e SC2166 -e SC2086
+                ;;
               *)
                 shellcheck $i
                 ;;
@@ -160,5 +167,7 @@ jobs:
               err=$((err + 1))
             fi
           done
-          echo $err
+          if [ $err -ne 0 ]; then
+            echo "shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
+          fi
           exit $err

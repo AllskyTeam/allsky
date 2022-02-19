@@ -174,6 +174,12 @@ jobs:
                 #SC2086: Double quote to prevent globbing and word splitting.
                 shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2166 -e SC2086
                 ;;
+              ./scripts/darkSubtract.sh)
+                #SC2086: Double quote to prevent globbing and word splitting.
+                #SC2219: Instead of 'let expr', prefer (( expr )) .
+                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
+                shellcheck $i -e SC2086 -e SC2219 -e SC2181
+                ;;
               *)
                 shellcheck $i
                 ;;
@@ -183,6 +189,7 @@ jobs:
             fi
           done
           if [ $err -ne 0 ]; then
+            echo '::echo::on'
             echo "::warning:: bash or shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
           fi
           exit $err

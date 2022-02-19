@@ -200,8 +200,13 @@ jobs:
                 #SC2086: Double quote to prevent globbing and word splitting.
                 shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2166 -e SC2012 -e SC2188 -e SC2086
                 ;;
+              ./scripts/darkCapture.sh)
+                #SC2086: Double quote to prevent globbing and word splitting.
+                shellcheck $i -e SC2086
+                ;;
               *)
-                shellcheck $i
+                #SC2086: Double quote to prevent globbing and word splitting.
+                shellcheck $i -e SC2086
                 ;;
             esac
             if [ $? -ne 0 ]; then
@@ -209,7 +214,6 @@ jobs:
             fi
           done
           if [ $err -ne 0 ]; then
-            echo '::echo::on'
-            echo "::error:: bash or shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
+            echo "bash or shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
           fi
           exit $err

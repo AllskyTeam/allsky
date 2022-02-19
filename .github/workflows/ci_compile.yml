@@ -190,6 +190,16 @@ jobs:
                 #SC2219: Instead of 'let expr', prefer (( expr )) .
                 shellcheck $i -e SC1090 -e SC2086 -e SC2166 -e SC2164 -e SC2188 -e SC2196 -e SC2219
                 ;;
+              ./scripts/timelapse.sh)
+                #SC2155: Declare and assign separately to avoid masking return values.
+                #SC2046: Quote this to prevent word splitting.
+                #SC1090: Can't follow non-constant source. Use a directive to specify location.
+                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
+                #SC2012: Use find instead of ls to better handle non-alphanumeric filenames.
+                #SC2188: This redirection doesn't have a command. Move to its command (or use 'true' as no-op).
+                #SC2086: Double quote to prevent globbing and word splitting.
+                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2166 -e SC2012 -e SC2188 -e SC2086
+                ;;
               *)
                 shellcheck $i
                 ;;

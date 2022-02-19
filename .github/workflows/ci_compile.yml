@@ -159,6 +159,12 @@ jobs:
                 #SC2086: Double quote to prevent globbing and word splitting.
                 shellcheck $i -e SC1090 -e SC2181 -e SC2166 -e SC2086
                 ;;
+              ./scripts/uploadForDay.sh)
+                #SC2155: Declare and assign separately to avoid masking return values.
+                #SC2046: Quote this to prevent word splitting.
+                #SC1090: Can't follow non-constant source. Use a directive to specify location.
+                shellcheck $i -e SC2155 -e SC2046 -e SC1090
+                ;;
               *)
                 shellcheck $i
                 ;;
@@ -168,6 +174,6 @@ jobs:
             fi
           done
           if [ $err -ne 0 ]; then
-            echo "shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
+            echo "::warning::bash or shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
           fi
           exit $err

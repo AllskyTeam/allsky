@@ -119,7 +119,8 @@ jobs:
                 #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
                 #SC2154: sunriset_hhmm is referenced but not assigned (did you mean 'sunrise_hhmm'?).
                 #SC1083: This { is literal. Check expression (missing ;/\n?) or quote it.
-                shellcheck $i -e SC1090 -e SC2086 -e SC2166 -e SC2154 -e SC1083
+                #SC2219: Instead of 'let expr', prefer (( expr )) .
+                shellcheck $i -e SC1090 -e SC2086 -e SC2166 -e SC2154 -e SC1083 -e SC2219
                 ;;
               ./scripts/endOfNight.sh)
                 #SC2155: Declare and assign separately to avoid masking return values.

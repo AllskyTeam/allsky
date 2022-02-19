@@ -143,6 +143,15 @@ jobs:
                 #SC2086: Double quote to prevent globbing and word splitting.
                 shellcheck $i -e SC2086
                 ;;
+              ./scripts/saveImage.sh)
+                #SC1090: Can't follow non-constant source. Use a directive to specify location.
+                #SC2086: Double quote to prevent globbing and word splitting.
+                #SC2166: Prefer [ p ] && [ q ] as [ p -a q ] is not well defined.
+                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
+                #SC2166: Prefer [ p ] && [ q ] as [ p -a q ] is not well defined.
+                #SC2219: Instead of 'let expr', prefer (( expr )) .
+                shellcheck $i -e SC1090 -e SC2086 -e SC2166 -e SC2181 -e SC2166 -e SC2219
+                ;;
               *)
                 shellcheck $i
                 ;;

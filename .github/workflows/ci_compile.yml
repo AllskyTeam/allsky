@@ -37,6 +37,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: check bash files
         run: |
+          # check bash files (bash -n, shellcheck)
           err=0
           for i in $(find . -name '*.sh'); do
             echo "$i"
@@ -165,6 +166,14 @@ jobs:
                 #SC1090: Can't follow non-constant source. Use a directive to specify location.
                 shellcheck $i -e SC2155 -e SC2046 -e SC1090
                 ;;
+              ./scripts/upload.sh)
+                #SC2155: Declare and assign separately to avoid masking return values.
+                #SC2046: Quote this to prevent word splitting.
+                #SC1090: Can't follow non-constant source. Use a directive to specify location.
+                #SC2166: Prefer [ p ] && [ q ] as [ p -a q ] is not well defined.
+                #SC2086: Double quote to prevent globbing and word splitting.
+                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2166 -e SC2086
+                ;;
               *)
                 shellcheck $i
                 ;;
@@ -174,6 +183,6 @@ jobs:
             fi
           done
           if [ $err -ne 0 ]; then
-            echo "::warning::bash or shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
+            echo "::warning:: bash or shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
           fi
           exit $err

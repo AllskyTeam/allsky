@@ -35,21 +35,21 @@ using namespace std;
 using namespace cv;
 
 struct config_t {
-  std::string img_src_dir, img_src_ext, dst_keogram;
-  bool labels_enabled, keogram_enabled, parse_filename, junk, img_expand, channel_info;
-  int img_width;
-  int img_height;
-  int fontFace;
-  int fontType;
-  int lineWidth;
-  int verbose;
-  int num_threads;
-  int nice_level;
-  int num_img_expand;
-  uint8_t a, r, g, b;
-  double fontScale;
-  double rotation_angle;
-  double brightness_limit;
+	std::string img_src_dir, img_src_ext, dst_keogram;
+	bool labels_enabled, keogram_enabled, parse_filename, junk, img_expand, channel_info;
+	int img_width;
+	int img_height;
+	int fontFace;
+	int fontType;
+	int lineWidth;
+	int verbose;
+	int num_threads;
+	int nice_level;
+	int num_img_expand;
+	uint8_t a, r, g, b;
+	double fontScale;
+	double rotation_angle;
+	double brightness_limit;
 } config;
 
 std::mutex stdio_mutex;
@@ -90,7 +90,7 @@ bool read_file(struct config_t* cf, char* filename, cv::Mat* mat, int file_num, 
 	if (mat->cols == 0 || mat->rows == 0) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
-			fprintf(stderr, "%s image size %dx%d is invalid; ignoring\n", filename, mat->rows, mat->cols);
+			fprintf(stderr, "%s invalid image size %dx%d; ignoring file\n", filename, mat->rows, mat->cols);
 			stdio_mutex.unlock();
 		}
 		return(false);
@@ -131,29 +131,29 @@ void keogram_worker(int thread_num,
 					cv::Mat* acc,
 					cv::Mat* ann,
 					cv::Mat* mask) {
-  int start_num, end_num, batch_size, prevHour = -1;
-  cv::Mat thread_accumulator;
+	int start_num, end_num, batch_size, prevHour = -1;
+	cv::Mat thread_accumulator;
 
-  batch_size = nfiles / cf->num_threads;
-  start_num = thread_num * batch_size;
-  thread_num++;	// so messages start at human-friendly thread 1, not 0.
+	batch_size = nfiles / cf->num_threads;
+	start_num = thread_num * batch_size;
+	thread_num++;	// so messages start at human-friendly thread 1, not 0.
 
-  // last thread has more work to do if the number of images isn't multiple of
-  // the number of threads
-  if (thread_num == cf->num_threads)
+	// last thread has more work to do if the number of images isn't multiple of
+	// the number of threads
+	if (thread_num == cf->num_threads)
 		end_num = nfiles - 1;
-  else
+	else
 		end_num = start_num + batch_size - 1;
 
-  if (cf->verbose > 2 && cf->num_threads > 1) {
+	if (cf->verbose > 2 && cf->num_threads > 1) {
 		stdio_mutex.lock();
 		fprintf(stderr, "thread %d/%d processing files %*d-%d (%d/%lu)\n",
 		thread_num, cf->num_threads, s_len, start_num +1, end_num + 1,
 		end_num - start_num + 1, nfiles);
 		stdio_mutex.unlock();
-  }
+	}
 
-  for (int f = start_num; f <= end_num; f++) {
+	for (int f = start_num; f <= end_num; f++) {
 		char* filename = files->gl_pathv[f];
 		cv::Mat imagesrc;
 		if (! read_file(cf, filename, &imagesrc, f+1, true)) continue;
@@ -182,15 +182,15 @@ void keogram_worker(int thread_num,
 		}
 
 		/* This seemingly redundant check saves a bunch of locking and unlocking
-	   later. Maybe all the threads will see the accumlator as empty, so they will
-	   all try grab the lock...
+		 later. Maybe all the threads will see the accumlator as empty, so they will
+		 all try grab the lock...
 
-	   The winner of that race initializes the accumulator with its image, and
-	   releases the lock. The rest of the threads will - in turn - get the lock,
-	   and on checking the accumulator again, find it no longer in need of
-	   initialization, so they skip the .create().
+		 The winner of that race initializes the accumulator with its image, and
+		 releases the lock. The rest of the threads will - in turn - get the lock,
+		 and on checking the accumulator again, find it no longer in need of
+		 initialization, so they skip the .create().
 
-	   Future iterations will all see that the accumulator is non-empty.
+		 Future iterations will all see that the accumulator is non-empty.
 		*/
 		if (acc->empty()) {
 			mtx->lock();
@@ -222,7 +222,7 @@ void keogram_worker(int thread_num,
 		int destCol = f * cf->num_img_expand;
 		for (int i=0; i < cf->num_img_expand; i++) {
 			try {
-				imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(destCol+i));   //copy
+				imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(destCol+i));	 //copy
 			} catch (cv::Exception& ex) {
 				fprintf(stderr, "WARNING: internal copy of '%s' failed; ignoring\n", filename);
 				continue;
@@ -230,7 +230,7 @@ void keogram_worker(int thread_num,
 		}
 
 		if (cf->labels_enabled) {
-			struct tm ft;  // the time of the file, by any means necessary
+			struct tm ft;	// the time of the file, by any means necessary
 			if (cf->parse_filename) {
 				// engage your safety squints!
 				char* s;
@@ -281,16 +281,16 @@ void keogram_worker(int thread_num,
 					break;
 			}
 
-	  	// background
+			// background
 			for (int i=0; i < cf->num_img_expand; i++) {
 				switch (nchan)
 				{
 				case 1:
-					line( *acc, Point(destCol+i,0), Point(destCol+i,100),  Scalar( 255 ), 1,  LINE_8 );
+					line( *acc, Point(destCol+i,0), Point(destCol+i,100), Scalar( 255 ), 1, LINE_8 );
 					break;
 				
 				default:
-				  line( *acc, Point(destCol+i,0), Point(destCol+i,100),  Scalar( 255, 255, 255 ), 1,  LINE_8 );
+					line( *acc, Point(destCol+i,0), Point(destCol+i,100), Scalar( 255, 255, 255 ), 1, LINE_8 );
 					break;
 				}
 			}
@@ -305,7 +305,7 @@ void keogram_worker(int thread_num,
 					break;
 				
 				default:
-				  acc->at<cv::Vec3b>(Point(destCol,100-10*j)) = color;
+					acc->at<cv::Vec3b>(Point(destCol,100-10*j)) = color;
 					break;
 				}
 			} 
@@ -325,7 +325,7 @@ void keogram_worker(int thread_num,
 						break;
 				
 					default:
-				  	acc->at<cv::Vec3b>(Point(destCol+i,100-mean)) = color;
+						acc->at<cv::Vec3b>(Point(destCol+i,100-mean)) = color;
 						break;
 					}
 				}
@@ -341,20 +341,20 @@ void keogram_worker(int thread_num,
 					break;
 			
 				default:
-			  	acc->at<cv::Vec3b>(Point(destCol+i,100-mean_Sum)) = color;
+					acc->at<cv::Vec3b>(Point(destCol+i,100-mean_Sum)) = color;
 					break;
 				}
 			}
 		}
-  }
+	}
 }
 
 void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
-  int baseline = 0;
-  char hour[3];
+	int baseline = 0;
+	char hour[3];
 
-  if (cf->labels_enabled && !ann->empty())
-  {
+	if (cf->labels_enabled && !ann->empty())
+	{
 		for (int r = 0; r < ann->rows; r++)
  		{
 			// Draw a dashed line and label for hour
@@ -417,29 +417,29 @@ void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
 				}
 			}
 		}
-  }
+	}
 }
 
 void parse_args(int argc, char** argv, struct config_t* cf) {
-  int c, tmp, ncpu = std::thread::hardware_concurrency();
+	int c, tmp, ncpu = std::thread::hardware_concurrency();
 
-  cf->labels_enabled = true;
-  cf->parse_filename = false;
-  cf->fontFace = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
-  cf->fontScale = 2;
-  cf->fontType = cv::LINE_8;
-  cf->lineWidth = 3;
-  cf->a = cf->r = cf->g = 0;
-  cf->b = 0xff;
-  cf->rotation_angle = 0;
-  cf->verbose = cf->img_width = cf->img_height = 0;
-  cf->num_threads = ncpu;
-  cf->nice_level = 10;
-  cf->img_expand = false;
-  cf->num_img_expand = 1;
-  cf->channel_info = false;
+	cf->labels_enabled = true;
+	cf->parse_filename = false;
+	cf->fontFace = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
+	cf->fontScale = 2;
+	cf->fontType = cv::LINE_8;
+	cf->lineWidth = 3;
+	cf->a = cf->r = cf->g = 0;
+	cf->b = 0xff;
+	cf->rotation_angle = 0;
+	cf->verbose = cf->img_width = cf->img_height = 0;
+	cf->num_threads = ncpu;
+	cf->nice_level = 10;
+	cf->img_expand = false;
+	cf->num_img_expand = 1;
+	cf->channel_info = false;
 
-  while (1) {  // getopt loop
+	while (1) {		// getopt loop
 	int option_index = 0;
 	static struct option long_options[] = {
 		{"directory", required_argument, 0, 'd'},
@@ -466,6 +466,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 		c = getopt_long(argc, argv, "d:e:o:r:s:L:C:N:S:T:Q:q:f:npvhxc", long_options, &option_index);
 		if (c == -1)
 			break;
+
 		if (cf->verbose >= 3)
 			fprintf(stderr, "Looking at [%c], optarg=[%s]\n", c, optarg);
 		switch (c)
@@ -525,7 +526,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 					cf->r = r & 0xff;
 					break;
 				}
-				if (optarg[0] == '#')  // skip '#' if input is like '#coffee'
+				if (optarg[0] == '#')	// skip '#' if input is like '#coffee'
 					optarg++;
 				sscanf(optarg, "%06x", &tmp);
 				cf->b = tmp & 0xff;
@@ -575,68 +576,69 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 			default:
 				break;
 		}	// option switch
-  	}		// getopt loop
+	}		// getopt loop
 }
 
 void usage_and_exit(int x) {
-  std::cout << "Usage:\tkeogram -d <imagedir> -e <ext> -o <outputfile> [<other_args>]" << std::endl;
-  if (x)
-	std::cout << KRED << "Source directory, image extension, and output file are required" << std::endl;
+	std::cout << "Usage:\tkeogram -d <imagedir> -e <ext> -o <outputfile> [<other_args>]" << std::endl;
+	if (x)
+		std::cout << KRED << "Source directory, image extension, and output file are required" << std::endl;
 
-  std::cout << KNRM << std::endl;
-  std::cout << "Arguments:" << std::endl;
-  std::cout << "-d | --directory <str> : directory from which to load images (required)" << std::endl;
-  std::cout << "-e | --extension <str> : image extension to process (required)" << std::endl;
-  std::cout << "-o | --output-file <str> : name of output file (required)" << std::endl;
-  std::cout << "-r | --rotate <float> : number of degrees to rotate image, counterclockwise (0)" << std::endl;
-  std::cout << "-s | --image-size <int>x<int> : only process images of a given size, eg. 1280x960" << std::endl;
-  std::cout << "-h | --help : display this help message" << std::endl;
-  std::cout << "-v | --verbose : Increase logging verbosity" << std::endl;
-  std::cout << "-n | --no-label : Disable hour labels" << std::endl;
-  std::cout << "-C | --font-color <str> : label font color, in HTML format (0000ff)" << std::endl;
-  std::cout << "-L | --font-line <int> : font line thickness (3), (min=1)" << std::endl;
-  std::cout << "-N | --font-name <str> : font name (simplex)" << std::endl;
-  std::cout << "-S | --font-size <float> : font size (2.0)" << std::endl;
-  std::cout << "-T | --font-type <int> : font line type (1)" << std::endl;
-  std::cout << "-Q | --max-threads <int> : limit maximum number of processing threads. (use all cpus)" << std::endl;
-  std::cout << "-q | --nice-level <int> : nice(2) level of processing threads (10)" << std::endl;
-  std::cout << "-x | --image-expand : expand image to get the proportions of source" << std::endl;
-  std::cout << "-c | --channel-info : show channel infos - mean value of R/G/B" << std::endl;
-  std::cout << "-f | --fixed-channel-number <int> : define number of channels 0=auto, 1=mono, 3=rgb (0=auto)" << std::endl;
-  std::cout << "-p | --parse-filename : parse time using filename instead of stat(filename)" << std::endl;
+	std::cout << KNRM << std::endl;
+	std::cout << "Arguments:" << std::endl;
+	std::cout << "-d | --directory <str> : directory from which to load images (required)" << std::endl;
+	std::cout << "-e | --extension <str> : image extension to process (required)" << std::endl;
+	std::cout << "-o | --output-file <str> : name of output file (required)" << std::endl;
+	std::cout << "-r | --rotate <float> : number of degrees to rotate image, counterclockwise (0)" << std::endl;
+	std::cout << "-s | --image-size <int>x<int> : only process images of a given size, eg. 1280x960" << std::endl;
+	std::cout << "-h | --help : display this help message" << std::endl;
+	std::cout << "-v | --verbose : Increase logging verbosity" << std::endl;
+	std::cout << "-n | --no-label : Disable hour labels" << std::endl;
+	std::cout << "-C | --font-color <str> : label font color, in HTML format (0000ff)" << std::endl;
+	std::cout << "-L | --font-line <int> : font line thickness (3), (min=1)" << std::endl;
+	std::cout << "-N | --font-name <str> : font name (simplex)" << std::endl;
+	std::cout << "-S | --font-size <float> : font size (2.0)" << std::endl;
+	std::cout << "-T | --font-type <int> : font line type (1)" << std::endl;
+	std::cout << "-Q | --max-threads <int> : limit maximum number of processing threads. (use all cpus)" << std::endl;
+	std::cout << "-q | --nice-level <int> : nice(2) level of processing threads (10)" << std::endl;
+	std::cout << "-x | --image-expand : expand image to get the proportions of source" << std::endl;
+	std::cout << "-c | --channel-info : show channel infos - mean value of R/G/B" << std::endl;
+	std::cout << "-f | --fixed-channel-number <int> : define number of channels 0=auto, 1=mono, 3=rgb (0=auto)" << std::endl;
+	std::cout << "-p | --parse-filename : parse time using filename instead of stat(filename)" << std::endl;
 
-  std::cout << KNRM << std::endl;
-  std::cout << "Font name is one of these OpenCV font names:\n\tSimplex, Plain, "
+	std::cout << KNRM << std::endl;
+	std::cout << "Font name is one of these OpenCV font names:\n\tSimplex, Plain, "
 	"Duplex, Complex, Triplex, ComplexSmall, ScriptSimplex, ScriptComplex" << std::endl;
-  std::cout << "Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected" << std::endl;
-  std::cout << KNRM << std::endl;
-  std::cout << "In some cases --font-line and --font-size can lead to annoying horizontal lines. Solution: try other values" << std::endl;
-  std::cout << KNRM << std::endl;
-  std::cout << "	ex: keogram --directory ../images/current/ --extension jpg --output-file keogram.jpg --font-size 2" << std::endl;
-  std::cout << "	ex: keogram -d . -e png -o /home/pi/allsky/keogram.jpg -n" << KNRM << std::endl;
-  exit(x);
+	std::cout << "Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected" << std::endl;
+	std::cout << KNRM << std::endl;
+	std::cout << "In some cases --font-line and --font-size can lead to annoying horizontal lines. Solution: try other values" << std::endl;
+	std::cout << KNRM << std::endl;
+	std::cout << "	ex: keogram --directory ../images/current/ --extension jpg --output-file keogram.jpg --font-size 2" << std::endl;
+	std::cout << "	ex: keogram -d . -e png -o /home/pi/allsky/keogram.jpg -n" << KNRM << std::endl;
+	exit(x);
 }
 
 int get_font_by_name(char* s) {
-  // case insensitively check the user-specified font, and use something
-  // sensible in case of erroneous input
-  if (strcasecmp(s, "plain") == 0)
-	return cv::FONT_HERSHEY_PLAIN;
-  if (strcasecmp(s, "duplex") == 0)
-	return cv::FONT_HERSHEY_DUPLEX;
-  if (strcasecmp(s, "complex") == 0)
-	return cv::FONT_HERSHEY_COMPLEX;
-  if (strcasecmp(s, "complexsmall") == 0)
-	return cv::FONT_HERSHEY_COMPLEX_SMALL;
-  if (strcasecmp(s, "triplex") == 0)
-	return cv::FONT_HERSHEY_TRIPLEX;
-  if (strcasecmp(s, "scriptsimplex") == 0)
-	return cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
-  if (strcasecmp(s, "scriptcomplex") == 0)
-	return cv::FONT_HERSHEY_SCRIPT_COMPLEX;
-  if (strcasecmp(s, "simplex"))  // yes, this is intentional
-	std::cout << KRED << "Unknown font '" << s << "', using SIMPLEX " << KNRM << std::endl;
-  return cv::FONT_HERSHEY_SIMPLEX;
+	// case insensitively check the user-specified font, and use something
+	// sensible in case of erroneous input
+	if (strcasecmp(s, "plain") == 0)
+		return cv::FONT_HERSHEY_PLAIN;
+	if (strcasecmp(s, "duplex") == 0)
+		return cv::FONT_HERSHEY_DUPLEX;
+	if (strcasecmp(s, "complex") == 0)
+		return cv::FONT_HERSHEY_COMPLEX;
+	if (strcasecmp(s, "complexsmall") == 0)
+		return cv::FONT_HERSHEY_COMPLEX_SMALL;
+	if (strcasecmp(s, "triplex") == 0)
+		return cv::FONT_HERSHEY_TRIPLEX;
+	if (strcasecmp(s, "scriptsimplex") == 0)
+		return cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
+	if (strcasecmp(s, "scriptcomplex") == 0)
+		return cv::FONT_HERSHEY_SCRIPT_COMPLEX;
+	if (strcasecmp(s, "simplex"))	// yes, this is intentional
+		std::cout << KRED << "Unknown font '" << s << "', using SIMPLEX " << KNRM << std::endl;
+
+	return cv::FONT_HERSHEY_SIMPLEX;
 }
 
 int main(int argc, char* argv[]) {
@@ -654,6 +656,7 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "unable to set nice level: %s\n", strerror(errno));
 	}
 
+	// Find files
 	glob_t files;
 	std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
 	glob(wildcard.c_str(), 0, NULL, &files);
@@ -664,7 +667,7 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	}
 	// Determine width of the number of files, e.g., "1234" is 4 characters wide.
-	sprintf(s_, "%d", (int)files.gl_pathc);
+	sprintf(s_, "%d", (int)nfiles);
 	s_len = strlen(s_);
 
 	std::mutex accumulated_mutex;
@@ -674,17 +677,17 @@ int main(int argc, char* argv[]) {
 	annotations.create(0, 2, CV_32S);
 	annotations = -1;
 
-	// Set the global "nchan" variable to be the number of channels in the 1st file.
+	// Set the global "nchan" variable to be the number of channels in one of the images.
 	// Any subsequent file with a different number of channels will be converted to
-	// the first file's number.
+	// the sample file's number.
 	// Ditto for the width and height.
 	// In both cases only set the variables if not specified on the command line.
 	cv::Mat temp;
-	const int sample_file_num = 0;
+	const int sample_file_num = 0;	// 1st file
 	char *sample_file = files.gl_pathv[sample_file_num];
 	if (nchan == 0 || (config.img_width == 0 && config.img_height == 0)) {
 		if (! read_file(&config, sample_file, &temp, sample_file_num+1, false)) {
-			fprintf(stderr, "Unable to read first file (%s); quitting\n", sample_file);
+			fprintf(stderr, "Unable to read sample file '%s'; quitting\n", sample_file);
 			exit(1);
 		}
 		if (config.verbose > 1) {

@@ -198,7 +198,7 @@ void keogram_worker(int thread_num,			// thread num
 					cv::circle(*mask, cv::Point(mask->cols/2, mask->rows/2), mask->rows/3, cv::Scalar(255, 255, 255), -1, 8, 0);
 				}
 				acc->create(imagesrc.rows, nfiles * cf->num_img_expand , imagesrc.type());
-				if (cf->verbose > 2) {
+				if (cf->verbose > 3) {
 					stdio_mutex.lock();
 					fprintf(stderr, "thread %d initialized accumulator\n", thread_num);
 					stdio_mutex.unlock();
@@ -231,12 +231,16 @@ void keogram_worker(int thread_num,			// thread num
 			} else {
 				// sometimes you can believe the file time on disk
 				struct stat s;
-				stat(filename, &s);
-				struct tm* t = localtime(&s.st_mtime);
-				ft.tm_hour = t->tm_hour;
-				ft.tm_mday = t->tm_mday;
-				ft.tm_mon = t->tm_mon +1;
-				ft.tm_year = t->tm_year+1900;
+				if (stat(filename, &s) == 0) {
+					struct tm* t = localtime(&s.st_mtime);
+					ft.tm_hour = t->tm_hour;
+					ft.tm_mday = t->tm_mday;
+					ft.tm_mon = t->tm_mon +1;
+					ft.tm_year = t->tm_year+1900;
+				} else {
+					fprintf(stderr, "WARNING: unable to get time of '%s': %s\n", filename, strerror(errno));
+					ft.tm_hour = prevHour;
+				}
 			}
 
 			// record the annotation
@@ -457,7 +461,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 		if (c == -1)
 			break;
 
-		if (cf->verbose >= 3)
+		if (cf->verbose > 3)
 			fprintf(stderr, "Looking at [%c], optarg=[%s]\n", c, optarg);
 		switch (c)
 		{

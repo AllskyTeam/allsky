@@ -266,7 +266,7 @@ char *getRetCode(ASI_ERROR_CODE code)
 {
 	static char retCodeBuffer[100];
 	static int asi_error_timeout_cntr = 0;
-	std::string ret;
+    std::string ret;
 
     if (code == ASI_SUCCESS) ret = "ASI_SUCCESS";
     else if (code == ASI_ERROR_INVALID_INDEX) ret = "ASI_ERROR_INVALID_INDEX";
@@ -902,7 +902,7 @@ const char *locale = DEFAULT_LOCALE;
 
     printf("\n%s", c(KGRN));
     printf("**********************************************\n");
-    printf("*** Allsky Camera Software v0.8.3.2 |  2021 ***\n");
+    printf("*** Allsky Camera Software v0.8.3.2 |  2022 ***\n");
     printf("**********************************************\n\n");
     printf("Capture images of the sky with a Raspberry Pi and an ASI Camera\n");
     printf("%s\n", c(KNRM));
@@ -1828,7 +1828,7 @@ const char *locale = DEFAULT_LOCALE;
     }
 
     // Initialization
-    int exitCode       = EXIT_OK;    // Exit code for main()
+    int exitCode        = EXIT_OK;    // Exit code for main()
     int originalITextX = iTextX;
     int originalITextY = iTextY;
     int originalFontsize = fontsize;

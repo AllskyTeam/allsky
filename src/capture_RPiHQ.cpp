@@ -93,8 +93,7 @@ void closeUp(int e)
 	// will soon be overwritten.  Since we don't know, always copy it.
 	const char *a = "Stopping";
 	if (notificationImages) {
-		// 98 tells the invoker we're restarting
-		if (e == 98)
+		if (e == EXIT_RESTARTING)
 		{
 			system("scripts/copy_notification_image.sh Restarting &");
 			a = "Restarting";
@@ -116,7 +115,7 @@ void sig(int i)
 {
 	printf("XXXXXX == got %s %d in sig()\n", i == SIGUSR1 ? "SIGUSR1" : i == SIGHUP ? "SIGHUP" : "unknown signal", i);
 	bMain = false;
-	closeUp(98);
+	closeUp(EXIT_RESTARTING);
 }
 void IntHandle(int i)
 {
@@ -1075,7 +1074,7 @@ const char *locale				= DEFAULT_LOCALE;
 	if (ext == NULL)
 	{
 		// checkForValidExtension() displayed the error message.
-    	closeUp(100);
+    	closeUp(EXIT_ERROR_STOP);
 	}
 	if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
 	{
@@ -1173,9 +1172,8 @@ const char *locale				= DEFAULT_LOCALE;
 	}
 	else
 	{
-		sprintf(debug_text, "*** ERROR: Unknown Image Type: %d\n", Image_type);
-		waitToFix(debug_text);
-		exit(100);
+		Log(0, "*** ERROR: Unknown Image Type: %d\n", Image_type);
+		exit(EXIT_ERROR_STOP);
 	}
 
 	//-------------------------------------------------------------------------------------------------------
@@ -1504,7 +1502,7 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 					if (z != "")
 					{
 						printf("xxxx Got %s in capture_RPiHQ.cpp\n", z.c_str());
-						closeUp(98);
+						closeUp(EXIT_RESTARTING);
 					}
 					else
 					{

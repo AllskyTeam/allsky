@@ -146,7 +146,7 @@ std::string exec(const char *cmd)
 
 void add_variables_to_command(char *cmd, long exposure_us, int brightness, float mean,
 	bool autoExposure, bool autoGain, bool autoAWB, float WBR, float WBB,
-	int temperature, float gain, int gainDB,
+	int temperature, float gainDB, int gain,
 	int bin, int flip, int bitDepth, int focusMetric)
 {
 	// If the double variables are an integer value, pass an integer value.
@@ -206,13 +206,13 @@ void add_variables_to_command(char *cmd, long exposure_us, int brightness, float
 		strcat(cmd, tmp);
 	}
 
-	if (gainDB >= 0) {
-		snprintf(tmp, sizeof(tmp), " GAINDB=%d", gainDB);
+	if (gain >= 0) {
+		snprintf(tmp, sizeof(tmp), " GAIN=%d", gain);
 		strcat(cmd, tmp);
 	}
 
-	if (gain >= 0.0) {
-		snprintf(tmp, sizeof(tmp), " GAIN=%1.2f", pow(10, gain / 10.0 / 20.0));
+	if (gainDB >= 0.0) {
+		snprintf(tmp, sizeof(tmp), " GAINDB=%1.2f", gainDB);
 		strcat(cmd, tmp);
 	}
 

@@ -124,14 +124,17 @@ sunwait: patchsunwait
 allsky_common.o: allsky_common.cpp include/allsky_common.h
 	@$(CC) -c  allsky_common.cpp -o $@ $(CFLAGS) $(OPENCV)
 
+mode_RPiHQ_mean.o: mode_RPiHQ_mean.cpp
+	@$(CC) -c  mode_RPiHQ_mean.cpp -o $@ $(CFLAGS) $(OPENCV)
+
 capture:capture.cpp allsky_common.o
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC)  $@.cpp -o $@ $(CFLAGS) $(OPENCV) -lASICamera2 $(USB) allsky_common.o
 	@echo `date +%F\ %R:%S` Done.
 
-capture_RPiHQ:capture_RPiHQ.cpp allsky_common.o
+capture_RPiHQ:capture_RPiHQ.cpp allsky_common.o mode_RPiHQ_mean.o
 	@echo `date +%F\ %R:%S` Building $@ program...
-	@$(CC)  $@.cpp -o $@ mode_RPiHQ_mean.cpp $(CFLAGS) $(OPENCV) allsky_common.o
+	@$(CC)  $@.cpp -o $@ mode_RPiHQ_mean.o $(CFLAGS) $(OPENCV) allsky_common.o
 	@echo `date +%F\ %R:%S` Done.
 
 keogram:keogram.cpp

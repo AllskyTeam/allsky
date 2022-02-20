@@ -23,7 +23,7 @@ mkdir -p "${CONFIG_DIR}"
 modify_locations() {	# Some files have placeholders for certain locations.  Modify them.
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
 	(
-		cd "${PORTAL_DIR}/includes"
+		cd "${PORTAL_DIR}/includes" || exit 1
 		# NOTE: Only want to replace the FIRST instance of XX_ALLSKY_HOME_XX in funciton.php
 		#       Otherwise, the edit check in functions.php will always fail.
 		sed -i "0,/XX_ALLSKY_HOME_XX/{s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};}" functions.php
@@ -37,10 +37,10 @@ modify_locations() {	# Some files have placeholders for certain locations.  Modi
 }
 
 NEED_TO_UPDATE_HOST_NAME="true"
-CURRENT_HOSTNAME=`cat /etc/hostname | tr -d " \t\n\r"`
+CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
 
 # Check if the user is updating an existing installation.
-if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
+if [ "${1}" = "--update" ] || [ "${1}" = "-update" ] ; then
 	shift
 
 	echo -en '\n'

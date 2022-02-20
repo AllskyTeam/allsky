@@ -93,7 +93,7 @@ int gainTransitionTime     = DEFAULT_GAIN_TRANSITION_TIME;
 bool currentAutoExposure   = false;		// is auto-exposure currently on or off?
 bool currentAutoGain       = false;		// is auto-gain currently on or off?
 #define DEFAULT_AUTOAWB      false
-bool AutoAWB               = DEFAULT_AUTOAWB;	// is Auto White Balance on or off?
+bool autoAWB               = DEFAULT_AUTOAWB;	// is Auto White Balance on or off?
 #define DEFAULT_WBR          65
 int WBR                    = DEFAULT_WBR;
 #define DEFAULT_WBB          85
@@ -110,8 +110,8 @@ int current_histogramBoxSizeY = NOT_SET;
 // % from left/top side that the center of the box is.  0.5 == the center of the image's X/Y axis
 float histogramBoxPercentFromLeft = DEFAULT_BOX_FROM_LEFT;
 float histogramBoxPercentFromTop = DEFAULT_BOX_FROM_TOP;
-int mean                      = 0;		// histogram mean
 #endif	// USE_HISTOGRAM
+int mean                      = NOT_SET;		// histogram mean
 
 
 // Make sure we don't try to update a non-updateable control, and check for errors.
@@ -208,43 +208,14 @@ void *SaveImgThd(void *para)
         if (pRgb.data)
         {
 			char cmd[1100];
-			char tmp[50];
 			Log(1, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), final_file_name);
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
-			snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", last_exposure_us);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " BRIGHTNESS=%d", currentBrightness);
-			strcat(cmd, tmp);
-#ifdef USE_HISTOGRAM
-			snprintf(tmp, sizeof(tmp), " MEAN=%d", mean);
-			strcat(cmd, tmp);
-#endif
-			snprintf(tmp, sizeof(tmp), " AUTOEXPOSURE=%d", currentAutoExposure ? 1 : 0);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " AUTOGAIN=%d", currentAutoGain ? 1 : 0);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " AUTOWB=%d", AutoAWB ? 1 : 0);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " WBR=%d", WBR);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " WBB=%d", WBB);
-			strcat(cmd, tmp);
-
-			// TEMPERATURE, GAIN, and BIN are used by the dark* scripts to sort and compare against
-			// prior values, so make them fixed width to aid in doing that.
-			snprintf(tmp, sizeof(tmp), " TEMPERATURE=%d", (int)round(actualTemp/10));
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " GAINDB=%d", currentGain);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " GAIN=%1.2f", pow(10, (float)currentGain / 10.0 / 20.0));
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " BIN=%d", currentBin);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " FLIP=%d", asiFlip);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%d", current_bit_depth);
-			strcat(cmd, tmp);
-
+			// -1 for no focusMetric
+			add_variables_to_command(cmd, last_exposure_us, currentBrightness,
+				mean,
+				currentAutoExposure, currentAutoGain, autoAWB, WBR, WBB,
+				actualTemp, currentGain, pow(10, (float)currentGain / 10.0 / 20.0),
+				currentBin, asiFlip, current_bit_depth, -1);
 			strcat(cmd, " &");
 
             st = cv::getTickCount();
@@ -1086,7 +1057,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-autowhitebalance") == 0)
             {
-                AutoAWB = atoi(argv[++i]) == 1 ? true : false;
+                autoAWB = atoi(argv[++i]) == 1 ? true : false;
             }
             else if (strcmp(argv[i], "-text") == 0)
             {
@@ -1772,7 +1743,7 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Gamma: %d\n", asiGamma);
     if (ASICameraInfo.IsColorCam)
     {
-        printf(" WB Red: %d, Blue: %d, Auto: %s\n", WBR, WBB, yesNo(AutoAWB));
+        printf(" WB Red: %d, Blue: %d, Auto: %s\n", WBR, WBB, yesNo(autoAWB));
     }
     printf(" Binning (day): %d\n", dayBin);
     printf(" Binning (night): %d\n", nightBin);
@@ -1827,8 +1798,8 @@ const char *locale = DEFAULT_LOCALE;
     setControl(CamNum, ASI_HIGH_SPEED_MODE, 0, ASI_FALSE);  // ZWO sets this in their program
     if (ASICameraInfo.IsColorCam)
     {
-        setControl(CamNum, ASI_WB_R, WBR, AutoAWB ? ASI_TRUE : ASI_FALSE);
-        setControl(CamNum, ASI_WB_B, WBB, AutoAWB ? ASI_TRUE : ASI_FALSE);
+        setControl(CamNum, ASI_WB_R, WBR, autoAWB ? ASI_TRUE : ASI_FALSE);
+        setControl(CamNum, ASI_WB_B, WBB, autoAWB ? ASI_TRUE : ASI_FALSE);
     }
     setControl(CamNum, ASI_GAMMA, asiGamma, ASI_FALSE);
     setControl(CamNum, ASI_FLIP, asiFlip, ASI_FALSE);

@@ -550,7 +550,7 @@ const char *locale				= DEFAULT_LOCALE;
 
 	printf("\n");
 	printf("%s ********************************************\n", c(KGRN));
-	printf("%s *** Allsky Camera Software v0.8.3.2 | 2021 ***\n", c(KGRN));
+	printf("%s *** Allsky Camera Software v0.8.3.2 | 2022 ***\n", c(KGRN));
 	printf("%s ********************************************\n\n", c(KGRN));
 	printf("\%sCapture images of the sky with a Raspberry Pi and a RPi HQ camera\n", c(KGRN));
 	printf("\n");

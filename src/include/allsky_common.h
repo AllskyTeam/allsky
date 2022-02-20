@@ -75,8 +75,8 @@ long timeval_diff_us(timeval, timeval);
 std::string exec(const char *);
 void add_variables_to_command(char *, long, int, float,
 	bool, bool, bool, float, float,
-	int, int, float,
-	int, int, int);
+	int, float, int,
+	int, int, int, int);
 const char *checkForValidExtension(const char *, int);
 void calculateDayOrNight(const char *, const char *, const char *);
 int calculateTimeToNightTime(const char *, const char *, const char *);

@@ -44,6 +44,7 @@ PROTOCOL=""
 
 	# The remote directory where the current "image.jpg" file be copied to.
 IMAGE_DIR=""
+WEB_IMAGE_DIR=""
 
 	# The remote directory where the timelapse video should be uploaded to.
 	# Some people prefer to put timelapse, keogram, and startrails in separate directories.

@@ -1439,8 +1439,8 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 
 			// -999 for temperature says the camera doesn't support it
 			// TODO: in the future the calculation of mean should independent from mode_mean. -1 means don't display.
-			add_variables_to_command(cmd, last_exposure_us, currentBrightness,
-				(myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) ? mean : -1.0,
+			float m = (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) ? mean : -1.0;
+			add_variables_to_command(cmd, last_exposure_us, currentBrightness, m,
 				currentAutoExposure, currentAutoGain, autoAWB, WBR, WBB,
 				-999, last_gain, (int)round(20.0 * 10.0 * log10(last_gain)),
 				currentBin, asiFlip, current_bit_depth, focus_metric);

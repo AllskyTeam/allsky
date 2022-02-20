@@ -620,17 +620,6 @@ void closeUp(int e)
         pthread_join(thread_display, &retval);
     }
 
-    // If we're not on a tty assume we were started by the service.
-    // Unfortunately we don't know if the service is stopping us, or restarting us.
-    // If it was restarting there'd be no reason to copy a notification image since it
-    // will soon be overwritten.  Since we don't know, always copy it.
-    if (notificationImages) {
-        system("scripts/copy_notification_image.sh NotRunning &");
-        // Sleep to give it a chance to print any messages so they (hopefully) get printed
-        // before the one below.  This is only so it looks nicer in the log file.
-        sleep(3);
-    }
-
     printf("     ***** Stopping AllSky *****\n");
     exit(e);
 }
@@ -775,7 +764,7 @@ bool check_max_errors(int *e, int max_errors)
 	numErrors++; sleep(2);
 	if (numErrors >= max_errors)
 	{
-		*e = 99;		// exit code - needs to match what's in allsky.sh
+		*e = EXIT_RESET_USB;		// exit code.  Need to reset USB bus
 		Log(0, "*** ERROR: Maximum number of consecutive errors of %d reached; exiting...\n", max_errors);
 		return(false);	// gets us out of inner and outer loop
 	}
@@ -1377,7 +1366,7 @@ const char *locale = DEFAULT_LOCALE;
 	if (ext == NULL)
 	{
 		// checkForValidExtension() displayed the error message.
-    	closeUp(100);
+    	closeUp(EXIT_ERROR_STOP);
 	}
     if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
     {
@@ -1437,7 +1426,7 @@ const char *locale = DEFAULT_LOCALE;
         printf("*** ERROR: No Connected Camera...\n");
         // Don't wait here since it's possible the camera is physically connected
         // but the software doesn't see it and the USB bus needs to be reset.
-    	closeUp(100);   // If there are no cameras we can't do anything.
+    	closeUp(EXIT_ERROR_STOP);   // If there are no cameras we can't do anything.
     }
 
     ASI_CAMERA_INFO ASICameraInfo;
@@ -1456,7 +1445,7 @@ const char *locale = DEFAULT_LOCALE;
     if (asiRetCode != ASI_SUCCESS)
     {
         printf("*** ERROR opening camera, check that you have root permissions! (%s)\n", getRetCode(asiRetCode));
-        closeUp(100);      // Can't do anything so might as well exit.
+        closeUp(EXIT_ERROR_STOP);      // Can't do anything so might as well exit.
     }
 
     int iMaxWidth, iMaxHeight;
@@ -1492,6 +1481,8 @@ const char *locale = DEFAULT_LOCALE;
         fprintf(stderr, "%s*** ERROR: Bad values for histogram percents; you entered X=%.0f%%, Y=%.0f%%%s\n",
             c(KRED), (histogramBoxPercentFromLeft*100.0), (histogramBoxPercentFromTop*100.0), c(KNRM));
         ok = false;
+		centerX = centerY = 0;		// keeps compiler quiet
+    	left_of_box = right_of_box = top_of_box = bottom_of_box = 0;	// keeps compiler quiet
     }
 	else
     {
@@ -1510,7 +1501,7 @@ const char *locale = DEFAULT_LOCALE;
     }
 
     if (! ok)
-        closeUp(100);	// force the user to fix it
+        closeUp(EXIT_ERROR_STOP);	// force the user to fix it
 #endif
 
     printf("\n%s Information:\n", ASICameraInfo.Name);
@@ -1585,7 +1576,7 @@ const char *locale = DEFAULT_LOCALE;
     if (asiRetCode != ASI_SUCCESS)
     {
         printf("*** ERROR getting camera mode (%s)\n", getRetCode(asiRetCode));
-        closeUp(100);      // Can't do anything so might as well exit.
+        closeUp(EXIT_ERROR_STOP);      // Can't do anything so might as well exit.
     }
 	printf("  - Current camera mode: %s\n", getCameraMode(CamMode));
 
@@ -1593,7 +1584,7 @@ const char *locale = DEFAULT_LOCALE;
     if (asiRetCode != ASI_SUCCESS)
     {
         printf("*** ERROR: Unable to initialise camera: %s\n", getRetCode(asiRetCode));
-        closeUp(100);      // Can't do anything so might as well exit.
+        closeUp(EXIT_ERROR_STOP);      // Can't do anything so might as well exit.
     }
 
     // Get a few values from the camera that we need elsewhere.
@@ -1743,9 +1734,9 @@ const char *locale = DEFAULT_LOCALE;
     }
     else
     {
-        sprintf(debug_text, "*** ERROR: Unknown Image Type: %d\n", Image_type);
-        waitToFix(debug_text);
-    	closeUp(100);
+        sType = "unknown";		// keeps compiler quiet
+        Log(0, "*** ERROR: Unknown Image Type: %d\n", Image_type);
+    	closeUp(EXIT_ERROR_STOP);
     }
 
     //-------------------------------------------------------------------------------------------------------
@@ -1866,7 +1857,7 @@ const char *locale = DEFAULT_LOCALE;
     }
 
     // Initialization
-    int exitCode        = 0;    // Exit code for main()
+    int exitCode        = EXIT_OK;    // Exit code for main()
     int originalITextX = iTextX;
     int originalITextY = iTextY;
     int originalFontsize = fontsize;
@@ -1909,8 +1900,8 @@ const char *locale = DEFAULT_LOCALE;
         asiRetCode = ASIStartVideoCapture(CamNum);
         if (asiRetCode != ASI_SUCCESS)
         {
-            printf("*** ERROR: Unable to start video capture: %s\n", getRetCode(asiRetCode));
-            closeUp(100);
+            Log(0, "*** ERROR: Unable to start video capture: %s\n", getRetCode(asiRetCode));
+            closeUp(EXIT_ERROR_STOP);
         }
     }
 
@@ -2150,13 +2141,13 @@ const char *locale = DEFAULT_LOCALE;
 			{
 				if (asiRetCode == ASI_ERROR_INVALID_SIZE)
 				{
-                    printf("*** ERROR: your camera does not support bin %dx%d.\n", currentBin, currentBin);
-                    closeUp(100);
+                    Log(0, "*** ERROR: your camera does not support bin %dx%d.\n", currentBin, currentBin);
+                    closeUp(EXIT_ERROR_STOP);
 				}
 				else
 				{
-                    printf("ASISetROIFormat(%d, %dx%d, %d, %d) = %s\n", CamNum, width, height, currentBin, Image_type, getRetCode(asiRetCode));
-                    closeUp(100);
+                    Log(0, "ASISetROIFormat(%d, %dx%d, %d, %d) = %s\n", CamNum, width, height, currentBin, Image_type, getRetCode(asiRetCode));
+                    closeUp(EXIT_ERROR_STOP);
 				}
             }
         }

@@ -211,8 +211,7 @@ void *SaveImgThd(void *para)
 			Log(1, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), final_file_name);
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
 			// -1 for no focusMetric
-			add_variables_to_command(cmd, last_exposure_us, currentBrightness,
-				mean,
+			add_variables_to_command(cmd, last_exposure_us, currentBrightness, mean,
 				currentAutoExposure, currentAutoGain, autoAWB, WBR, WBB,
 				actualTemp, currentGain, pow(10, (float)currentGain / 10.0 / 20.0),
 				currentBin, asiFlip, current_bit_depth, -1);

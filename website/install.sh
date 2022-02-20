@@ -36,7 +36,27 @@ modify_locations() {	# Some files have placeholders for certain locations.  Modi
 	)
 }
 
-modify_configuration_variables() {	# Update some of the configuration variables
+create_data_json_file() {	# Create a new data.json file and check that it's newest version
+	OUTPUT=$(${ALLSKY_SCRIPTS}/postData.sh 2>&1)
+	if [ $? -eq 0 -a -f "${WEBSITE_DIR}/data.json" ]; then
+		grep --silent "sunrise" "${WEBSITE_DIR}/data.json"
+		if [ $? -ne 0 ]; then
+			echo -e "${YELLOW}WARNING: you have an old version of ${ALLSKY_SCRIPTS}/postData.sh."
+			echo -e "Please grab the latest version from GitHub and"
+			echo -e "run it to update the 'data.json' file.${NC}"
+		else
+			echo -e "${GREEN}* Created new 'data.json' file.${NC}"
+		fi
+	else
+		echo -e "${RED}* Unable to create new 'data.json' file:"
+		echo -e "${OUTPUT}"
+		echo -e "${NC}"
+		echo -e "Make sure 'REMOTE_HOST' is set in 'config/config.sh' to a valid remote server"
+		echo -e "or to '', then run ${ALLSKY_SCRIPTS}/postData.sh to create a 'data.json' file."
+	fi
+}
+
+modify_configuration_variables() {	# Update some of the configuration files and variables
 	# If the user is updating the website, use the prior config files.
 	# NOTE: if we add/delete a setting in the files we'll need to change the code below.
 
@@ -83,12 +103,13 @@ modify_configuration_variables() {	# Update some of the configuration variables
 if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
 	shift
 	if [ ! -d "${WEBSITE_DIR}" ]; then
-		echo -e "${RED}*** ERROR: Update specified but no existing website found in '${WEBSITE_DIR}'${NC}" 1>&2
+		echo -e "${RED}*** ERROR: --update specified but no existing website found in '${WEBSITE_DIR}'${NC}" 1>&2
 		echo
 		exit 2
 	fi
 
 	modify_locations
+	create_data_json_file
 
 	echo
 	echo -e "${GREEN}* Update complete${NC}"
@@ -99,6 +120,13 @@ fi
 if [ -d "${WEBSITE_DIR}" ]; then
 	# git will fail if the directory already exists
 	WEBSITE_DIR_OLD="${WEBSITE_DIR}-OLD"
+	if [ -d "${WEBSITE_DIR_OLD}" ]; then
+		echo -e "${RED}*** ERROR: OLD allsky website directory already exists.  Exiting.${NC}" 1>&2
+		echo -e "See '${WEBSITE_DIR_OLD}'." 1>&2
+		echo -e "Can only have one OLD directory at a time." 1>&2
+		echo
+		exit 3
+	fi
 	echo -e "${GREEN}* Saving old website to '${WEBSITE_DIR_OLD}'${NC}"
 	mv "${WEBSITE_DIR}" "${WEBSITE_DIR_OLD}"
 	if [ $? -ne 0 ]; then
@@ -133,6 +161,7 @@ fi
 
 modify_locations
 modify_configuration_variables
+create_data_json_file
 
 if [ "${SAVED_OLD}" = "true" ]; then
 	# Each directory has one .php file plus zero or more images.

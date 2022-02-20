@@ -52,7 +52,7 @@ if [[ ${STARTRAILS} == "true" ]]; then
 	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -s ${DATE}
 	RET=$?
 	echo -e "${ME}: ===== Startrails complete"
-	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RET} = 0 ]] ; then
+	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RET} = 0 ]] ; then
 		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -s ${DATE}
 	fi
 fi

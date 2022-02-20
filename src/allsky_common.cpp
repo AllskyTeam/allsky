@@ -391,15 +391,14 @@ bool getBoolean(const char* arg)
 	return(false);
 }
 
-// Check for a valid file extension
+// Check for a valid file extension and return it, or NULL on error.
 const char *checkForValidExtension(const char *fileName, int imageType)
 {
 	const char *ext = strrchr(fileName, '.');
 	if (ext == NULL)
 	{
-		sprintf(debug_text, "*** ERROR: No extension given on filename: [%s]\n", fileName);
-		waitToFix(debug_text);
-		exit(100);
+		Log(0, "*** ERROR: No extension given on filename: [%s]\n", fileName);
+		return(NULL);
 	}
 
 	ext++;
@@ -407,8 +406,8 @@ const char *checkForValidExtension(const char *fileName, int imageType)
 	{
 		if (imageType == IMG_RAW16)
 		{
-			waitToFix("*** ERROR: RAW16 images only work with .png files; either change the Image Type or the Filename.\n");
-			exit(100);
+			Log(0, "*** ERROR: RAW16 images only work with .png files; either change the Image Type or the Filename.\n");
+			return(NULL);
 		}
 
 		return("jpg");
@@ -419,9 +418,8 @@ const char *checkForValidExtension(const char *fileName, int imageType)
 	}
 	else
 	{
-		sprintf(debug_text, "*** ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", ext);
-		waitToFix(debug_text);
-		exit(100);
+		Log(0, "*** ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", ext);
+		return(NULL);
 	}
 }
 

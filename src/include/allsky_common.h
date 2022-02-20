@@ -17,12 +17,12 @@
 #define KWHT "\x1B[37m"
 
 // Times
-#define US_IN_MS 1000						// microseconds in a millisecond
-#define MS_IN_SEC 1000						// milliseconds in a second
-#define US_IN_SEC (US_IN_MS * MS_IN_SEC)	// microseconds in a second
-#define S_IN_MIN 60
-#define S_IN_HOUR (60 * 60)
-#define S_IN_DAY (24 * S_IN_HOUR)
+#define US_IN_MS	1000						// microseconds in a millisecond
+#define MS_IN_SEC	1000						// milliseconds in a second
+#define US_IN_SEC	(US_IN_MS * MS_IN_SEC)		// microseconds in a second
+#define S_IN_MIN	60
+#define S_IN_HOUR	(60 * 60)
+#define S_IN_DAY	(24 * S_IN_HOUR)
 
 // Defaults
 #define NOT_SET						-1				// signifies something isn't set yet
@@ -77,7 +77,7 @@ void add_variables_to_command(char *, long, int, float,
 	bool, bool, bool, float, float,
 	int, int, float,
 	int, int, int);
-void waitToFix(char const *);
+const char *checkForValidExtension(const char *, int);
 void calculateDayOrNight(const char *, const char *, const char *);
 int calculateTimeToNightTime(const char *, const char *, const char *);
 void Log(int, const char *, ...);

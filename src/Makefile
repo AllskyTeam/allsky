@@ -122,7 +122,7 @@ sunwait: patchsunwait
 	@echo `date +%F\ %R:%S` Done.
 
 allsky_common.o: allsky_common.cpp include/allsky_common.h
-	$(CC) -c  allsky_common.cpp -o $@ $(CFLAGS) $(OPENCV)
+	@$(CC) -c  allsky_common.cpp -o $@ $(CFLAGS) $(OPENCV)
 
 capture:capture.cpp allsky_common.o
 	@echo `date +%F\ %R:%S` Building $@ program...

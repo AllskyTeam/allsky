@@ -51,7 +51,11 @@
 #define DEFAULT_LINENUMBER			0
 #define DEFAULT_SHOWTIME			1	// Show the date/time in the overlay?
 
-
+// Exit codes.  Need to match what's in allsky.sh
+#define EXIT_OK				0
+#define EXIT_RESTARTING		98		// process is restarting, i.e., stop, then start
+#define EXIT_RESET_USB		99		// need to reset USB bus; cannot continue
+#define EXIT_ERROR_STOP		100		// Got an unrecoverable ERROR
 
 // Global variables and functions.
 extern int debugLevel;

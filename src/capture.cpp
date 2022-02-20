@@ -612,20 +612,12 @@ void closeUp(int e)
     // Prior versions of allsky didn't do any cleanup, so it should be ok not to close the camera.
     //    ASICloseCamera(CamNum);
 
+	// Close the optional display window.
     if (bDisplay)
     {
         bDisplay = 0;
 		void *retval;
         pthread_join(thread_display, &retval);
-    }
-
-    if (bSaveRun)
-    {
-        bSaveRun = false;
-        pthread_mutex_lock(&mtx_SaveImg);
-        pthread_cond_signal(&cond_StartSave);
-        pthread_mutex_unlock(&mtx_SaveImg);
-        pthread_join(hthdSave, 0);
     }
 
     // If we're not on a tty assume we were started by the service.
@@ -1377,7 +1369,7 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -debuglevel            - Default = 0. Set to 1,2, 3, or 4 for more debugging information.\n");
 
         printf("%s", c(KNRM));
-        exit(0);
+        closeUp(0);
     }
 
     const char *imagetype = "";
@@ -1386,7 +1378,7 @@ const char *locale = DEFAULT_LOCALE;
 	{
         sprintf(debug_text, "*** ERROR: No extension given on filename: [%s]\n", fileName);
         waitToFix(debug_text);
-    	exit(100);
+    	closeUp(100);
 	}
 	ext++;
     if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
@@ -1394,7 +1386,7 @@ const char *locale = DEFAULT_LOCALE;
         if (Image_type == ASI_IMG_RAW16)
 		{
 			waitToFix("*** ERROR: RAW16 images only work with .png files; either change the Image Type or the Filename.\n");
-			exit(100);
+			closeUp(100);
 		}
 
         imagetype = "jpg";
@@ -1427,7 +1419,7 @@ const char *locale = DEFAULT_LOCALE;
     {
         sprintf(debug_text, "*** ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", ext);
         waitToFix(debug_text);
-    	exit(100);
+    	closeUp(100);
     }
     compression_parameters.push_back(quality);
 
@@ -1532,7 +1524,7 @@ const char *locale = DEFAULT_LOCALE;
     }
 
     if (! ok)
-        exit(100);	// force the user to fix it
+        closeUp(100);	// force the user to fix it
 #endif
 
     printf("\n%s Information:\n", ASICameraInfo.Name);
@@ -1767,7 +1759,7 @@ const char *locale = DEFAULT_LOCALE;
     {
         sprintf(debug_text, "*** ERROR: Unknown Image Type: %d\n", Image_type);
         waitToFix(debug_text);
-    	exit(100);
+    	closeUp(100);
     }
 
     //-------------------------------------------------------------------------------------------------------

@@ -1373,22 +1373,14 @@ const char *locale = DEFAULT_LOCALE;
     }
 
     const char *imagetype = "";
-    const char *ext = strrchr(fileName, '.');
+    const char *ext = checkForValidExtension(fileName, Image_type);
 	if (ext == NULL)
 	{
-        sprintf(debug_text, "*** ERROR: No extension given on filename: [%s]\n", fileName);
-        waitToFix(debug_text);
+		// checkForValidExtension() displayed the error message.
     	closeUp(100);
 	}
-	ext++;
     if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
     {
-        if (Image_type == ASI_IMG_RAW16)
-		{
-			waitToFix("*** ERROR: RAW16 images only work with .png files; either change the Image Type or the Filename.\n");
-			closeUp(100);
-		}
-
         imagetype = "jpg";
         compression_parameters.push_back(cv::IMWRITE_JPEG_QUALITY);
         // want dark frames to be at highest quality
@@ -1414,12 +1406,6 @@ const char *locale = DEFAULT_LOCALE;
         {
             quality = 3;
         }
-    }
-    else
-    {
-        sprintf(debug_text, "*** ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", ext);
-        waitToFix(debug_text);
-    	closeUp(100);
     }
     compression_parameters.push_back(quality);
 

@@ -40,7 +40,7 @@ std::string dayOrNight;
 
 bool bSaveRun = false, bSavingImg = false;
 pthread_mutex_t mtx_SaveImg;
-pthread_cond_t cond_SatrtSave;
+pthread_cond_t cond_StartSave;
 
 // These are global so they can be used by other routines.
 ASI_CONTROL_CAPS ControlCaps;
@@ -191,7 +191,7 @@ void *SaveImgThd(void *para)
     while (bSaveRun)
     {
         pthread_mutex_lock(&mtx_SaveImg);
-        pthread_cond_wait(&cond_SatrtSave, &mtx_SaveImg);
+        pthread_cond_wait(&cond_StartSave, &mtx_SaveImg);
 
         if (gotSignal)
         {
@@ -623,7 +623,7 @@ void closeUp(int e)
     {
         bSaveRun = false;
         pthread_mutex_lock(&mtx_SaveImg);
-        pthread_cond_signal(&cond_SatrtSave);
+        pthread_cond_signal(&cond_StartSave);
         pthread_mutex_unlock(&mtx_SaveImg);
         pthread_join(hthdSave, 0);
     }
@@ -799,7 +799,7 @@ int main(int argc, char *argv[])
     signal(SIGINT, IntHandle);
     signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
     pthread_mutex_init(&mtx_SaveImg, 0);
-    pthread_cond_init(&cond_SatrtSave, 0);
+    pthread_cond_init(&cond_StartSave, 0);
 
     int fontname[] = {
         cv::FONT_HERSHEY_SIMPLEX,        cv::FONT_HERSHEY_PLAIN,         cv::FONT_HERSHEY_DUPLEX,
@@ -2649,7 +2649,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					snprintf(full_filename, sizeof(full_filename), "%s/%s", save_dir, final_file_name);
 
                     pthread_mutex_lock(&mtx_SaveImg);
-                    pthread_cond_signal(&cond_SatrtSave);
+                    pthread_cond_signal(&cond_StartSave);
                     pthread_mutex_unlock(&mtx_SaveImg);
                 }
                 else

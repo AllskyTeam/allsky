@@ -349,10 +349,10 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
 // Simple function to make flags easier to read for humans.
 char const *yesNo(int flag)
 {
-    if (flag)
-        return("Yes");
-    else
-        return("No");
+	if (flag)
+		return("Yes");
+	else
+		return("No");
 }
 
 // Convert "arg" to a boolean.
@@ -416,8 +416,8 @@ int doOverlay(cv::Mat image,
 	int fontSize, int lineWidth, int lineType, int font,
 	int fontColor[], int smallFontColor[], bool useOutline, int imageType)
 {
-	int iYOffset = 0;
-    char tmp[128]     = { 0 };
+	int iYOffset	= 0;
+	char tmp[128]	= { 0 };
 
 	if (showTime)
 	{

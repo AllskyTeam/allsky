@@ -194,7 +194,7 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 		FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 	fi
 
-	"${ALLSKY_SCRIPTS}/upload.sh" "${FILE_TO_UPLOAD}" "${IMAGE_DIR}" "${FULL_FILENAME}" "SaveImage"
+	"${ALLSKY_SCRIPTS}/upload.sh" "${FILE_TO_UPLOAD}" "${IMAGE_DIR}" "${FULL_FILENAME}" "SaveImage" "${WEB_IMAGE_DIR}"
 
 	[ "${RESIZE_UPLOADS}" = "true" ] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
 fi

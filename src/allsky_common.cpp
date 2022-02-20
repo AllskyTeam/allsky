@@ -286,25 +286,6 @@ char *length_in_units(long us, bool multi)	// microseconds
 	return(length);
 }
 
-
-// A user error was found.  Wait for the user to fix it.
-void waitToFix(char const *msg)
-{
-	printf("**********\n");
-	printf("%s\n", msg);
-	printf("*** After fixing, ");
-	if (tty)
-		printf("restart allsky.sh.\n");
-	else
-		printf("restart the allsky service.\n");
-	if (notificationImages)
-		system("scripts/copy_notification_image.sh Error &");
-	sleep(5);	// give time for image to be copied
-	printf("*** Sleeping until you fix the problem.\n");
-	printf("**********\n");
-	sleep(100000);	// basically, sleep forever until the user fixes this.
-}
-
 // Calculate if it is day or night
 void calculateDayOrNight(const char *latitude, const char *longitude, const char *angle)
 {
@@ -317,9 +298,8 @@ void calculateDayOrNight(const char *latitude, const char *longitude, const char
 
 	if (dayOrNight != "DAY" && dayOrNight != "NIGHT")
 	{
-		sprintf(debug_text, "*** ERROR: dayOrNight isn't DAY or NIGHT, it's '%s'\n", dayOrNight.c_str());
-		waitToFix(debug_text);
-		closeUp(100);
+		Log(0, "*** ERROR: dayOrNight isn't DAY or NIGHT, it's '%s'\n", dayOrNight.c_str());
+		closeUp(EXIT_ERROR_STOP);
 	}
 }
 

@@ -146,7 +146,7 @@ std::string exec(const char *cmd)
 
 void add_variables_to_command(char *cmd, long exposure_us, int brightness, float mean,
 	bool autoExposure, bool autoGain, bool autoAWB, float WBR, float WBB,
-	int temperature, int gainDB, float gain,
+	int temperature, float gain, int gainDB,
 	int bin, int flip, int bitDepth, int focusMetric)
 {
 	// If the double variables are an integer value, pass an integer value.
@@ -201,7 +201,7 @@ void add_variables_to_command(char *cmd, long exposure_us, int brightness, float
 	// Since negative temperatures are valid, check against an impossible temperature.
 	// The temperature passed to us is 10 times the actual temperature so we can deal with
 	// integers with 1 decimal place, which is all we care about.
-	if (temperature >= -999) {
+	if (temperature != -999) {
 		snprintf(tmp, sizeof(tmp), " TEMPERATURE=%d", (int)round(temperature/10));
 		strcat(cmd, tmp);
 	}

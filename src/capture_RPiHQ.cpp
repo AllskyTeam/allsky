@@ -56,13 +56,13 @@ float mean					= NOT_SET;	// mean brightness of image
 bool tty					= false;	// are we on a tty?
 #define DEFAULT_NOTIFICATIONIMAGES 1
 int notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
-#define DEFAULT_SAVEDIR		  "tmp"
+#define DEFAULT_SAVEDIR		"tmp"
 char const *save_dir		= DEFAULT_SAVEDIR;
-#define DEFAULT_FILENAME	  "image.jpg"
+#define DEFAULT_FILENAME	"image.jpg"
 char const *fileName		= DEFAULT_FILENAME;
 char final_file_name[200];	// final name of the file that's written to disk, with no directories
 char full_filename[1000];	// full name of file written to disk
-#define DEFAULT_TIMEFORMAT	  "%Y%m%d %H:%M:%S"	// format the time should be displayed in
+#define DEFAULT_TIMEFORMAT	"%Y%m%d %H:%M:%S"	// format the time should be displayed in
 char const *timeFormat		= DEFAULT_TIMEFORMAT;
 bool currentAutoExposure	= false;	// is auto-exposure currently on?
 bool currentAutoGain		= false;	// is auto-gain currently on?
@@ -326,7 +326,7 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, bool auto_gain, bool auto_
 	// Check if R and B component are given
 	if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) {
 		if (auto_AWB) {
-  			command += " --awb auto";
+			command += " --awb auto";
 		}
 		else {
 			ss.str("");
@@ -355,7 +355,7 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, bool auto_gain, bool auto_
 	if (rotation != 0) {
 		ss.str("");
 		ss << rotation;
-		command += " --rotation "  + ss.str();
+		command += " --rotation " + ss.str();
 	}
 
 	if (flip == 1 || flip == 3)
@@ -385,85 +385,6 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, bool auto_gain, bool auto_
 	ss.str("");
 	ss << quality;
 	command += " --quality " + ss.str();
-
-#ifdef DO_NOT_USE
-	if (!darkframe) {
-		string info_text = "";
-
-		bool showDetails = false;	// will be removed in the future
-		if (showDetails)
-		{
-			if (libcamera)
-				info_text += " Exposure: %exp, Gain: %ag, Focus: %focus, red: %rg, blue: %bg";
-			else
-				info_text += " -a 1104";
-		}
-
-		if (time==1)
-		{
-			if (libcamera)
-			{
-				ss.str("");
-				ss << timeFormat;
-				info_text += " Time: " + ss.str();
-			}
-			else
-				info_text += " -a 1036";
-		}
-
-		if (strcmp(ImgText, "") != 0) {
-			ss.str("");
-			ss << " " << ImgText; 
-			if (debugLevel > 1) {
-				ss << " (li-" << __TIMESTAMP__ 
-				<< ") br:" << myRaspistillSetting.brightness 
-				<< " WBR:" << WBR 
-				<< " WBB:" << WBB;
-			}
-			if (libcamera)
-				info_text += ss.str();
-			else
-				info_text += " -a \"" + ss.str() + "\"";
-		}
-		if (info_text != "")
-		{
-// xxxxxxxxxxx libcamera: this only sets text on title bar of preview window, so don't bother.
-			if (! libcamera)
-				command += " " + info_text;
-		}
-
-if (! libcamera)	// xxxx libcamera doesn't have fontsize, color, or background.
-{
-		if (fontsize < 6)
-			fontsize = 6;
-		else if (fontsize > 160)
-			fontsize = 160;
-
-		ss.str("");
-		ss << fontsize;
-
-		// xxxxxxxx use all 3
-		if (fontcolor[0] < 0)
-			fontcolor[0] = 0;
-		else if (fontcolor[0] > 255)
-			fontcolor[0] = 255;
-
-		std::stringstream C;
-		C  << std::setfill ('0') << std::setw(2) << std::hex << fontcolor[0];
-
-		if (background < 0)
-			background = 0;
-		else if (background > 255)
-			background = 255;
-
-		std::stringstream B;
-		B  << std::setfill ('0') << std::setw(2) << std::hex << background;
-
-		command += " -ae " + ss.str() + ",0x" + C.str() + ",0x8080" + B.str();
-}
-	}
-#endif //DO_NOT_USE
-
 
 	if (libcamera)
 	{
@@ -512,9 +433,9 @@ int main(int argc, char *argv[])
 	signal(SIGHUP, sig);	// xxxxxxxxxx Reload the service
 	signal(SIGUSR1, sig);	// xxxxxxxxxx Reload the service
 
-	int fontname[] = { cv::FONT_HERSHEY_SIMPLEX,		cv::FONT_HERSHEY_PLAIN,		cv::FONT_HERSHEY_DUPLEX,
-					   cv::FONT_HERSHEY_COMPLEX,		cv::FONT_HERSHEY_TRIPLEX,	cv::FONT_HERSHEY_COMPLEX_SMALL,
-					   cv::FONT_HERSHEY_SCRIPT_SIMPLEX, cv::FONT_HERSHEY_SCRIPT_COMPLEX };
+	int fontname[] = {	cv::FONT_HERSHEY_SIMPLEX,		cv::FONT_HERSHEY_PLAIN,		cv::FONT_HERSHEY_DUPLEX,
+						cv::FONT_HERSHEY_COMPLEX,		cv::FONT_HERSHEY_TRIPLEX,	cv::FONT_HERSHEY_COMPLEX_SMALL,
+						cv::FONT_HERSHEY_SCRIPT_SIMPLEX, cv::FONT_HERSHEY_SCRIPT_COMPLEX };
 #define DEFAULT_LOCALE			"en_US.UTF-8"
 const char *locale				= DEFAULT_LOCALE;
 	// All the font settings apply to both day and night.
@@ -560,70 +481,70 @@ const char *locale				= DEFAULT_LOCALE;
 	int asiNightAutoExposure	= 0;
 	int asiDayAutoExposure		= 1;
 	long last_exposure_us 		= 0;		// last exposure taken
-	double asiNightGain   		= 4.0;
-	double asiDayGain     		= 1.0;
-	int asiNightAutoGain  		= 0;
-	int asiDayAutoGain    		= 0;
-	float last_gain		  		= 0.0;		// last gain taken
-	int nightDelay_ms     		= 10;
-	int dayDelay_ms       		= 15 * MS_IN_SEC;
-	int currentDelay_ms   		= NOT_SET;
+	double asiNightGain 		= 4.0;
+	double asiDayGain			= 1.0;
+	int asiNightAutoGain		= 0;
+	int asiDayAutoGain			= 0;
+	float last_gain				= 0.0;		// last gain taken
+	int nightDelay_ms			= 10;
+	int dayDelay_ms				= 15 * MS_IN_SEC;
+	int currentDelay_ms 		= NOT_SET;
 	float saturation;
 	int asiDayBrightness;
 	int asiNightBrightness;
 	if (is_libcamera)
 	{
 		default_saturation		= 1.0;
-		saturation        		= default_saturation;
-		min_saturation    		= 0.0;
-		max_saturation    		= 2.0;
+		saturation				= default_saturation;
+		min_saturation			= 0.0;
+		max_saturation			= 2.0;
 
 		default_brightness		= 0;
-		asiDayBrightness  		= default_brightness;
+		asiDayBrightness		= default_brightness;
 		asiNightBrightness		= default_brightness;
-		min_brightness    		= -100;
-		max_brightness    		= 100;
+		min_brightness			= -100;
+		max_brightness			= 100;
 	}
 	else
 	{
 		default_saturation		= 0.0;
-		saturation        		= default_saturation;
-		min_saturation    		= -100.0;
-		max_saturation    		= 100.0;
+		saturation				= default_saturation;
+		min_saturation			= -100.0;
+		max_saturation			= 100.0;
 
 		default_brightness		= 50;
-		asiDayBrightness  		= default_brightness;
+		asiDayBrightness		= default_brightness;
 		asiNightBrightness		= default_brightness;
-		min_brightness    		= 0;
-		max_brightness    		= 100;
+		min_brightness			= 0;
+		max_brightness			= 100;
 	}
-	int asiRotation       		= 0;
-	char const *latitude  		= DEFAULT_LATITUDE;
+	int asiRotation				= 0;
+	char const *latitude		= DEFAULT_LATITUDE;
 	char const *longitude 		= DEFAULT_LONGITUDE;
 	// angle of the sun with the horizon
 	// (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
-	char const *angle     		= DEFAULT_ANGLE;
+	char const *angle			= DEFAULT_ANGLE;
 
-	int preview           		= 0;
-	int showTime          		= DEFAULT_SHOWTIME;
-	int showExposure      		= 0;
-	int showGain          		= 0;
-	int showBrightness    		= 0;
-	int showMean          		= 0;
-	int showFocus         		= 0;
-	int darkframe         		= 0;
-	int daytimeCapture    		= 0;
-	int help              		= 0;
-	int quality           		= 90;
+	int preview					= 0;
+	int showTime				= DEFAULT_SHOWTIME;
+	int showExposure			= 0;
+	int showGain				= 0;
+	int showBrightness			= 0;
+	int showMean				= 0;
+	int showFocus				= 0;
+	int darkframe				= 0;
+	int daytimeCapture			= 0;
+	int help					= 0;
+	int quality					= 90;
 
 	int i;
-	bool endOfNight    			= false;
+	bool endOfNight				= false;
 	int retCode;
 	cv::Mat pRgb;	// the image
 
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
-	setlinebuf(stdout);   // Line buffer output so entries appear in the log immediately.
+	setlinebuf(stdout);		// Line buffer output so entries appear in the log immediately.
 	if (setlocale(LC_NUMERIC, locale) == NULL)
 		printf("*** WARNING: Could not set locale to %s ***\n", locale);
 
@@ -1005,76 +926,74 @@ const char *locale				= DEFAULT_LOCALE;
 		printf("%s", c(KNRM));
 
 		printf("%sAvailable Arguments:\n", c(KYEL));
-		printf(" -cmd                               - Default = raspistill - cmd being used\n");
-		printf(" -width                             - Default = Camera Max Width\n");
-		printf(" -height                            - Default = Camera Max Height\n");
-		printf(" -nightexposure                     - Default = 5000000 - Time in us (equals to 5 sec)\n");
-		printf(" -nightautoexposure                 - Default = 0 - Set to 1 to enable auto Exposure\n");
-		printf(" -nightgain                         - Default = 4.0 (1.0 - 16.0)\n");
-		printf(" -nightautogain                     - Default = 0 - Set to 1 to enable auto Gain at night\n");
-		printf(" -saturation                        - Default = %.1f (%.1f to %.1f)\n", default_saturation, min_saturation, max_saturation);
-		printf(" -brightness                        - Default = %d (%d to  %d)\n", default_brightness, min_brightness, max_brightness);
-		printf(" -awb                               - Default = 0 - Auto White Balance (0 = off)\n");
-		printf(" -wbr                               - Default = 2 - White Balance Red  (0 = off)\n");
-		printf(" -wbb                               - Default = 2 - White Balance Blue (0 = off)\n");
-		printf(" -daybin                            - Default = 1 - binning OFF (1x1), 2 = 2x2, 3 = 3x3 binning\n");
-		printf(" -nightbin                          - Default = 1 - same as -daybin but for nighttime\n");
-		printf(" -nightdelay                        - Default = 10 ms - Delay between nighttime images - %d = 1 sec.\n", MS_IN_SEC);
-		printf(" -daydelay                          - Default = 5000 ms - Delay between daytime images - 5000 = 5 sec.\n");
-		printf(" -type = Image Type                 - Default = 0 - 0 = RAW8,  1 = RGB24,  2 = RAW16\n");
-		printf(" -quality                           - Default = 70%%, 0%% (poor) 100%% (perfect)\n");
-		printf(" -filename                          - Default = image.jpg\n");
-		printf(" -save_dir                          - Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
+		printf(" -cmd								- Default = raspistill - cmd being used\n");
+		printf(" -width								- Default = Camera Max Width\n");
+		printf(" -height							- Default = Camera Max Height\n");
+		printf(" -nightexposure						- Default = 5000000 - Time in us (equals to 5 sec)\n");
+		printf(" -nightautoexposure					- Default = 0 - Set to 1 to enable auto Exposure\n");
+		printf(" -nightgain							- Default = 4.0 (1.0 - 16.0)\n");
+		printf(" -nightautogain						- Default = 0 - Set to 1 to enable auto Gain at night\n");
+		printf(" -saturation						- Default = %.1f (%.1f to %.1f)\n", default_saturation, min_saturation, max_saturation);
+		printf(" -brightness						- Default = %d (%d to %d)\n", default_brightness, min_brightness, max_brightness);
+		printf(" -awb								- Default = 0 - Auto White Balance (0 = off)\n");
+		printf(" -wbr								- Default = 2 - White Balance Red (0 = off)\n");
+		printf(" -wbb								- Default = 2 - White Balance Blue (0 = off)\n");
+		printf(" -daybin							- Default = 1 - binning OFF (1x1), 2 = 2x2, 3 = 3x3 binning\n");
+		printf(" -nightbin							- Default = 1 - same as -daybin but for nighttime\n");
+		printf(" -nightdelay						- Default = 10 ms - Delay between nighttime images - %d = 1 sec.\n", MS_IN_SEC);
+		printf(" -daydelay							- Default = 5000 ms - Delay between daytime images - 5000 = 5 sec.\n");
+		printf(" -type = Image Type					- Default = 0; 0=RAW8, 1=RGB24, 2=RAW16\n");
+		printf(" -quality							- Default = 70%%, 0%% (poor) 100%% (perfect)\n");
+		printf(" -filename							- Default = image.jpg\n");
+		printf(" -save_dir							- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
 		if (is_libcamera)
-			printf(" -rotation                          - Default = 0 degrees - Options 0 or 180\n");
+			printf(" -rotation							- Default = 0 degrees - Options 0 or 180\n");
 		else
-			printf(" -rotation                          - Default = 0 degrees - Options 0, 90, 180 or 270\n");
-		printf(" -flip                              - Default = 0 - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
+			printf(" -rotation							- Default = 0 degrees - Options 0, 90, 180 or 270\n");
+		printf(" -flip								- Default = 0 - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
 		printf("\n");
-		printf(" -text                              - Default =      - Character/Text Overlay. Use Quotes.  Ex. -c "
-			   "\"Text Overlay\"\n");
-		printf(" -textx                             - Default = 15   - Text Placement Horizontal from LEFT in Pixels\n");
-		printf(" -texty = Text Y                    - Default = 25   - Text Placement Vertical from TOP in Pixels\n");
-		printf(" -fontname = Font Name              - Default = 0    - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n");
-		printf(" -fontcolor = Font Color            - Default = 255  - Text gray scale color  (0 - 255)\n");
-		printf(" -background= Font Color            - Default = 0  - Backgroud gray scale color (0 - 255)\n");
-		printf(" -smallfontcolor = Small Font Color - Default = 0 0 255  - Text red (BGR)\n");
-		printf(" -fonttype = Font Type              - Default = 0    - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
-		printf(" -fontsize                          - Default = 32  - Text Font Size (range 6 - 160, 32 default)\n");
-		printf(" -fontline                          - Default = 1    - Text Font Line Thickness\n");
+		printf(" -text								- Default = "" - Character/Text Overlay. Use Quotes. Ex. -c \"Text Overlay\"\n");
+		printf(" -textx								- Default = 15 - Text Placement Horizontal from LEFT in Pixels\n");
+		printf(" -texty = Text Y					- Default = 25 - Text Placement Vertical from TOP in Pixels\n");
+		printf(" -fontname = Font Name				- Default = 0 - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n");
+		printf(" -fontcolor = Font Color			- Default = 255 - Text gray scale color (0 - 255)\n");
+		printf(" -background= Font Color			- Default = 0 - Backgroud gray scale color (0 - 255)\n");
+		printf(" -smallfontcolor = Small Font Color - Default = 0 0 255 - Text red (BGR)\n");
+		printf(" -fonttype = Font Type				- Default = 0 - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
+		printf(" -fontsize							- Default = 32 - Text Font Size (range 6 - 160, 32 default)\n");
+		printf(" -fontline							- Default = 1 - Text Font Line Thickness\n");
 		printf("\n");
 		printf("\n");
-		printf(" -latitude                          - Default = 60.7N (Whitehorse)   - Latitude of the camera.\n");
-		printf(" -longitude                         - Default = 135.05W (Whitehorse) - Longitude of the camera\n");
-		printf(" -angle                             - Default = -6 - Angle of the sun below the horizon. -6=civil "
-			   "twilight, -12=nautical twilight, -18=astronomical twilight\n");
+		printf(" -latitude							- Default = 60.7N (Whitehorse) - Latitude of the camera.\n");
+		printf(" -longitude							- Default = 135.05W (Whitehorse) - Longitude of the camera\n");
+		printf(" -angle								- Default = -6 - Angle of the sun below the horizon. -6=civil "
+			"twilight, -12=nautical twilight, -18=astronomical twilight\n");
 		printf("\n");
-		printf(" -preview                           - set to 1 to preview the captured images. Only works with a Desktop Environment\n");
-		printf(" -darkframe                         - Set to 1 to grab dark frame and cover your camera\n");
-		printf(" -time                              - Set to 1 to display the time on the image.\n");
-		printf(" -focus                             - Set to 1 to display a focus metric on the image.\n");
-		printf(" -notificationimages                - Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
-		printf(" -debuglevel                        - Default = 0. Set to 1,2 or 3 for more debugging information.\n");
+		printf(" -preview							- Set to 1 to preview the captured images. Only works with a Desktop Environment\n");
+		printf(" -darkframe							- Set to 1 to grab dark frame and cover your camera\n");
+		printf(" -time								- Set to 1 to display the time on the image.\n");
+		printf(" -focus								- Set to 1 to display a focus metric on the image.\n");
+		printf(" -notificationimages				- Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
+		printf(" -debuglevel						- Default = 0. Set to 1,2 or 3 for more debugging information.\n");
 
-		printf(" -nightmean                         - Default = 0.3 Sets night mean value and activates exposure control\n");
-		printf("                                      NOTE: Auto-Gain and Auto-Exposure (day&night) should be On in the WebUI for best results\n");
-		printf("                                            CAPTURE_EXTRA_PARAMETERS='-nightmean 0.3'\n"); 
-		printf(" -daymean                           - Default = same value as nightmean. Sets day mean value and activates exposure control\n");
-		printf(" -mean-threshold                    - Default = 0.01 Set mean-value and activates exposure control\n");
-		printf(" -mean-p0                           - Default = 5.0, be careful changing these values, ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2\n");
-		printf(" -mean-p1                           - Default = 20.0\n");
-		printf(" -mean-p2                           - Default = 45.0\n");
+		printf(" -nightmean							- Default = 0.3 Sets night mean value and activates exposure control\n");
+		printf("									  NOTE: Auto-Gain and Auto-Exposure (day & night) should be On in the WebUI for best results\n");
+		printf(" -daymean							- Default = same value as nightmean but for the day.\n");
+		printf(" -mean-threshold					- Default = 0.01 Set mean-value and activates exposure control\n");
+		printf(" -mean-p0							- Default = 5.0, be careful changing these values, ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2\n");
+		printf(" -mean-p1							- Default = 20.0\n");
+		printf(" -mean-p2							- Default = 45.0\n");
 
 		printf("%s", c(KNRM));
 		exit(0);
 	}
 
 	const char *imagetype = "";
-    const char *ext = checkForValidExtension(fileName, Image_type);
+	const char *ext = checkForValidExtension(fileName, Image_type);
 	if (ext == NULL)
 	{
 		// checkForValidExtension() displayed the error message.
-    	closeUp(EXIT_ERROR_STOP);
+		closeUp(EXIT_ERROR_STOP);
 	}
 	if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
 	{
@@ -1095,7 +1014,7 @@ const char *locale				= DEFAULT_LOCALE;
 		imagetype = "png";
 		compression_parameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
 		// png is lossless so "quality" is really just the amount of compression.
-		if (quality > 9  || darkframe)
+		if (quality > 9 || darkframe)
 		{
 			quality = 9;
 		}
@@ -1128,9 +1047,9 @@ const char *locale				= DEFAULT_LOCALE;
 	{
 		// To avoid overwriting the optional notification image with the dark image,
 		// during dark frames we use a different file name.
-        static char darkFilename[20];
-        sprintf(darkFilename, "dark.%s", imagetype);
-        fileName = darkFilename;
+		static char darkFilename[20];
+		sprintf(darkFilename, "dark.%s", imagetype);
+		fileName = darkFilename;
 		strncat(final_file_name, fileName, sizeof(final_file_name)-1);
 	}
 	else
@@ -1203,7 +1122,7 @@ const char *locale				= DEFAULT_LOCALE;
 	printf(" Delay (night): %dms\n", nightDelay_ms);
 	printf(" Text Overlay: %s\n", ImgText);
 	printf(" Text Position: %dpx left, %dpx top\n", iTextX, iTextY);
-	printf(" Font Name:  %d\n", fontname[fontnumber]);
+	printf(" Font Name: %d\n", fontname[fontnumber]);
 	printf(" Font Color: %d, %d, %d\n", fontcolor[0], fontcolor[1], fontcolor[2]);
 	printf(" Font Background Color: %d\n", background);
 	printf(" Small Font Color: %d, %d, %d\n", smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
@@ -1368,12 +1287,12 @@ const char *locale				= DEFAULT_LOCALE;
 		}
 
 		// Adjusting variables for chosen binning
-		height    = originalHeight / currentBin;
-		width     = originalWidth / currentBin;
-		iTextX    = originalITextX / currentBin;
-		iTextY    = originalITextY / currentBin;
-		fontsize  = originalFontsize / currentBin;
-		linewidth = originalLinewidth / currentBin;
+		height		= originalHeight / currentBin;
+		width		= originalWidth / currentBin;
+		iTextX		= originalITextX / currentBin;
+		iTextY		= originalITextY / currentBin;
+		fontsize	= originalFontsize / currentBin;
+		linewidth	= originalLinewidth / currentBin;
 
 // TODO: if not the first time, should we free the old pRgb?
 		if (Image_type == IMG_RAW16)
@@ -1406,7 +1325,7 @@ const char *locale				= DEFAULT_LOCALE;
 			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(t, f));
 			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(myRaspistillSetting.shutter_us, true));
 
-			// Get start time for overlay.  Make sure it has the same time as exposureStart.
+			// Get start time for overlay. Make sure it has the same time as exposureStart.
 			if (showTime == 1)
 				sprintf(bufTime, "%s", formatTime(t, timeFormat));
 

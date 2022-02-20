@@ -66,7 +66,7 @@ char full_filename[1000];	// full name of file written to disk
 char const *timeFormat		= DEFAULT_TIMEFORMAT;
 bool currentAutoExposure	= false;	// is auto-exposure currently on?
 bool currentAutoGain		= false;	// is auto-gain currently on?
-bool AutoAWB				= false;
+bool autoAWB				= false;
 double WBR					= 2.5;
 double WBB					= 2;
 
@@ -686,7 +686,7 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-awb") == 0)
 			{
-				AutoAWB = atoi(argv[++i]) == 1 ? true : false;
+				autoAWB = atoi(argv[++i]) == 1 ? true : false;
 			}
 			else if (strcmp(argv[i], "-wbr") == 0)
 			{
@@ -1113,7 +1113,7 @@ const char *locale				= DEFAULT_LOCALE;
 	printf(" Brightness (day): %d\n", asiDayBrightness);
 	printf(" Brightness (night): %d\n", asiNightBrightness);
 	printf(" Saturation: %.1f\n", saturation);
-	printf(" Auto White Balance: %s\n", yesNo(AutoAWB));
+	printf(" Auto White Balance: %s\n", yesNo(autoAWB));
 	printf(" WB Red: %1.2f\n", WBR);
 	printf(" WB Blue: %1.2f\n", WBB);
 	printf(" Binning (day): %d\n", dayBin);
@@ -1338,7 +1338,7 @@ const char *locale				= DEFAULT_LOCALE;
 			snprintf(full_filename, sizeof(full_filename), "%s/%s", save_dir, final_file_name);
 
 			// Capture and save image
-			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentAutoGain, AutoAWB, currentGain, currentBin, WBR, WBB, asiRotation, asiFlip, saturation, currentBrightness, quality, full_filename, showTime, ImgText, fontsize, fontcolor, background, darkframe, preview, width, height, is_libcamera, &pRgb);
+			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentAutoGain, autoAWB, currentGain, currentBin, WBR, WBB, asiRotation, asiFlip, saturation, currentBrightness, quality, full_filename, showTime, ImgText, fontsize, fontcolor, background, darkframe, preview, width, height, is_libcamera, &pRgb);
 
 			int focus_metric;
 			if (retCode == 0)
@@ -1434,48 +1434,16 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 			}
 
 			char cmd[1100];
-			char tmp[50];
 			Log(1, "  > Saving %s image '%s'\n", darkframe ? "dark" : dayOrNight.c_str(), final_file_name);
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
-			snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", last_exposure_us);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " BRIGHTNESS=%d", currentBrightness);
-			strcat(cmd, tmp);
-			// TODO: in the future the calculation of mean should independend from mode_mean 
-			if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) {
-				snprintf(tmp, sizeof(tmp), " MEAN=%.3f", mean);
-				strcat(cmd, tmp);
-			}
-			snprintf(tmp, sizeof(tmp), " AUTOEXPOSURE=%d", currentAutoExposure ? 1 : 0);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " AUTOGAIN=%d", currentAutoGain ? 1 : 0);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " AUTOWB=%d", AutoAWB ? 1 : 0);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " WBR=%1.2f", WBR);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " WBB=%1.2f", WBB);
-			strcat(cmd, tmp);
 
-			// TEMPERATURE, GAIN, and BIN are used by the dark* scripts to sort and compare against
-			// prior values, so make them fixed width to aid in doing that.
-
-			// There's currently no way to get to the RPiHQ camera's temperature sensor.
-			//snprintf(tmp, sizeof(tmp), " TEMPERATURE=%d", (int)round(actualTemp/10));
-			//strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " GAIN=%1.2f", last_gain);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " GAINDB=%d", (int)round(20.0 * 10.0 * log10(last_gain)));
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " BIN=%d", currentBin);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " FLIP=%d", asiFlip);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%d", current_bit_depth);
-			strcat(cmd, tmp);
-			snprintf(tmp, sizeof(tmp), " FOCUS=%d", focus_metric);
-			strcat(cmd, tmp);
-
+			// -999 for temperature says the camera doesn't support it
+			// TODO: in the future the calculation of mean should independent from mode_mean. -1 means don't display.
+			add_variables_to_command(cmd, last_exposure_us, currentBrightness,
+				(myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) ? mean : -1.0,
+				currentAutoExposure, currentAutoGain, autoAWB, WBR, WBB,
+				-999, last_gain, (int)round(20.0 * 10.0 * log10(last_gain)),
+				currentBin, asiFlip, current_bit_depth, focus_metric);
 			strcat(cmd, " &");
 
 			system(cmd);

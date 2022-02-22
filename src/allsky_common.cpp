@@ -287,20 +287,22 @@ char *length_in_units(long us, bool multi)	// microseconds
 }
 
 // Calculate if it is day or night
-void calculateDayOrNight(const char *latitude, const char *longitude, const char *angle)
+std::string calculateDayOrNight(const char *latitude, const char *longitude, const char *angle)
 {
 	char sunwaitCommand[128];
+	std::string d;
 
 	sprintf(sunwaitCommand, "sunwait poll angle %s %s %s", angle, latitude, longitude);
-	dayOrNight = exec(sunwaitCommand);
+	d = exec(sunwaitCommand);
 
-	dayOrNight.erase(std::remove(dayOrNight.begin(), dayOrNight.end(), '\n'), dayOrNight.end());
+	d.erase(std::remove(d.begin(), d.end(), '\n'), d.end());
 
-	if (dayOrNight != "DAY" && dayOrNight != "NIGHT")
+	if (d != "DAY" && d != "NIGHT")
 	{
-		Log(0, "*** ERROR: dayOrNight isn't DAY or NIGHT, it's '%s'\n", dayOrNight.c_str());
+		Log(0, "*** ERROR: it's not DAY or NIGHT, it's '%s'\n", d.c_str());
 		closeUp(EXIT_ERROR_STOP);
 	}
+	return(d);
 }
 
 // Calculate how long until nighttime.

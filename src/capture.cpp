@@ -1878,15 +1878,13 @@ const char *locale = DEFAULT_LOCALE;
 
     while (bMain)
     {
-        std::string lastDayOrNight;
-
         // Find out if it is currently DAY or NIGHT
-        calculateDayOrNight(latitude, longitude, angle);
+        dayOrNight = calculateDayOrNight(latitude, longitude, angle);
+        std::string lastDayOrNight = lastDayOrNight = dayOrNight;
 
         if (! taking_dark_frames)
             currentAdjustGain = resetGainTransitionVariables(asiDayGain, asiNightGain);
 
-        lastDayOrNight = dayOrNight;
         if (taking_dark_frames)
         {
                 // We're doing dark frames so turn off autoexposure and autogain, and use
@@ -2652,7 +2650,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     Log(0, "  > Sleeping %s from %s exposure\n", length_in_units(currentDelay_ms * US_IN_MS, false), s.c_str());
                     usleep(currentDelay_ms * US_IN_MS);
                 }
-                calculateDayOrNight(latitude, longitude, angle);
+                dayOrNight = calculateDayOrNight(latitude, longitude, angle);
             }
         }
         if (lastDayOrNight == "NIGHT")

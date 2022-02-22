@@ -1880,7 +1880,7 @@ const char *locale = DEFAULT_LOCALE;
     {
         // Find out if it is currently DAY or NIGHT
         dayOrNight = calculateDayOrNight(latitude, longitude, angle);
-        std::string lastDayOrNight = lastDayOrNight = dayOrNight;
+        std::string lastDayOrNight = dayOrNight;
 
         if (! taking_dark_frames)
             currentAdjustGain = resetGainTransitionVariables(asiDayGain, asiNightGain);

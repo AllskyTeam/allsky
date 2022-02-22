@@ -67,8 +67,8 @@ char const *timeFormat		= DEFAULT_TIMEFORMAT;
 bool currentAutoExposure	= false;	// is auto-exposure currently on?
 bool currentAutoGain		= false;	// is auto-gain currently on?
 bool autoAWB				= false;
-double WBR					= 2.5;
-double WBB					= 2;
+float WBR					= 2.5;
+float WBB					= 2;
 
 //bool bSavingImg = false;
 
@@ -125,7 +125,7 @@ printf("XXXXXX == in IntHandle(), got signal %d\n", i);
 }
 
 // Build capture command to capture the image from the HQ camera
-int RPiHQcapture(bool auto_exposure, int exposure_us, bool auto_gain, bool auto_AWB, double gain, int bin, double WBR, double WBB, int rotation, int flip, float saturation, int brightness, int quality, const char* fileName, int time, const char* ImgText, int fontsize, int *fontcolor, int background, int darkframe, int preview, int width, int height, bool libcamera, cv::Mat *image)
+int RPiHQcapture(bool auto_exposure, int exposure_us, int bin, bool auto_gain, double gain, bool auto_AWB, float WBR, float WBB, int rotation, int flip, float saturation, int brightness, int quality, const char* fileName, int darkframe, int preview, int width, int height, bool libcamera, cv::Mat *image)
 {
 	// Define command line.
 	string command;
@@ -1341,7 +1341,7 @@ const char *locale				= DEFAULT_LOCALE;
 			snprintf(full_filename, sizeof(full_filename), "%s/%s", save_dir, final_file_name);
 
 			// Capture and save image
-			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentAutoGain, autoAWB, currentGain, currentBin, WBR, WBB, asiRotation, asiFlip, saturation, currentBrightness, quality, full_filename, showTime, ImgText, fontsize, fontcolor, background, darkframe, preview, width, height, is_libcamera, &pRgb);
+			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, autoAWB, WBR, WBB, asiRotation, asiFlip, saturation, currentBrightness, quality, full_filename, darkframe, preview, width, height, is_libcamera, &pRgb);
 
 			int focus_metric;
 			if (retCode == 0)

@@ -78,7 +78,7 @@ void add_variables_to_command(char *, long, int, float,
 	int, float, int,
 	int, int, int, int);
 const char *checkForValidExtension(const char *, int);
-void calculateDayOrNight(const char *, const char *, const char *);
+std::string calculateDayOrNight(const char *, const char *, const char *);
 int calculateTimeToNightTime(const char *, const char *, const char *);
 void Log(int, const char *, ...);
 char const *c(char const *);

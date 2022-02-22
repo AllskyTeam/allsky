@@ -1175,12 +1175,10 @@ const char *locale				= DEFAULT_LOCALE;
 
 	while (bMain)
 	{
-		std::string lastDayOrNight;
 
 		// Find out if it is currently DAY or NIGHT
-		calculateDayOrNight(latitude, longitude, angle);
-
-		lastDayOrNight = dayOrNight;
+		dayOrNight = calculateDayOrNight(latitude, longitude, angle);
+		std::string lastDayOrNight = dayOrNight;
 
 		if (darkframe) {
 			// We're doing dark frames so turn off autoexposure and autogain, and use
@@ -1468,7 +1466,7 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 			usleep(s);
 
 			// Check for day or night based on location and angle
-			calculateDayOrNight(latitude, longitude, angle);
+			dayOrNight = calculateDayOrNight(latitude, longitude, angle);
 		}
 
 		if (lastDayOrNight == "NIGHT")

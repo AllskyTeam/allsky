@@ -389,7 +389,6 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, bool auto_gain, bool auto_
 	if (libcamera)
 	{
 		// gets rid of a bunch of libcamera verbose messages
-		command = "LIBCAMERA_LOG_LEVELS='ERROR,FATAL' " + command;
 		command += " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
 	}
 
@@ -423,9 +422,13 @@ int main(int argc, char *argv[])
 	// We need to know its value before setting other variables.
 	bool is_libcamera;	// are we using libcamera or raspistill?
 	if (argc > 2 && strcmp(argv[1], "-cmd") == 0 && strcmp(argv[2], "libcamera") == 0)
+	{
+		char c[] = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL";
+		putenv(c);
 		is_libcamera = true;
-	else
+	} else {
 		is_libcamera = false;
+	}
 
 	tty = isatty(fileno(stdout)) ? true : false;
 	signal(SIGINT, IntHandle);

@@ -24,7 +24,7 @@ fi
 # Check for a new variable in config.sh that wasn't in prior versions.
 # If not set to something (even "") then it wasn't found and force the user to upgrade config.sh
 source "${ALLSKY_CONFIG}/config.sh"
-if [ ! -v FAN_DATA_FILE ]; then	# FAN_DATA_FILE added after version 0.8.3.
+if [ ! -v WEB_DATA_FILES ]; then	# WEB_DATA_FILES added after version 0.8.3.
 	echo "${RED}*** ERROR: old version of ${ALLSKY_CONFIG}/config.sh detected.${NC}"
 	echo "Please move your current config.sh file to config.sh-OLD, then place the newest one"
 	echo "from https://github.com/thomasjacquin/allsky in ${ALLSKY_CONFIG} and"

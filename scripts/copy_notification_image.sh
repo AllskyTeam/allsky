@@ -8,13 +8,13 @@ source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 NOTIFICATIONFILE="$1"	# filename, minus the extension, since the extension may vary
 if [ "$1" = "" ] ; then
-	echo "${RED}*** ${ME}: ERROR: no file specified.${NC}" >&2
+	echo -e "${RED}*** ${ME}: ERROR: no file specified.${NC}" >&2
 	exit 1
 fi
 
 NOTIFICATIONFILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATIONFILE}.${EXTENSION}"
 if [ ! -e "${NOTIFICATIONFILE}" ] ; then
-	echo "${RED}*** ${ME}: ERROR: File '${NOTIFICATIONFILE}' does not exist or is empty!${NC}" >&2
+	echo -e "${RED}*** ${ME}: ERROR: File '${NOTIFICATIONFILE}' does not exist or is empty!${NC}" >&2
 	exit 2
 fi
 
@@ -26,7 +26,7 @@ cp "${NOTIFICATIONFILE}" "${CURRENT_IMAGE}"
 if [ "${IMG_RESIZE}" = "true" ]; then
 	convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}"
 	if [ $? -ne 0 ] ; then
-		echo "${RED}*** ${ME}: ERROR: IMG_RESIZE failed${NC}"
+		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed${NC}"
 		exit 3
 	fi
 fi
@@ -46,7 +46,7 @@ if [ "${DAYTIME_SAVE}" = "true" -a "${IMG_CREATE_THUMBNAILS}" = "true" ] ; then
 
 	convert "${CURRENT_IMAGE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}"
 	if [ $? -ne 0 ] ; then
-		echo "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
+		echo -e "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
 	fi
 fi
 
@@ -62,7 +62,7 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 		cp "${FINAL_IMAGE}" "${TEMP_FILE}"  # create temporary copy to resize
 		convert "${TEMP_FILE}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${TEMP_FILE}"
 		if [ $? -ne 0 ] ; then
-			echo "${RED}*** ${ME}: ERROR: RESIZE_UPLOADS failed${NC}"
+			echo -e "${RED}*** ${ME}: ERROR: RESIZE_UPLOADS failed${NC}"
 			# Leave temporary file for possible debugging.
 			exit 4
 		fi
@@ -73,7 +73,7 @@ if [ "${UPLOAD_IMG}" = "true" ] ; then
 	fi
 
 	# We're actually uploading $UPLOAD_FILE, but show $NOTIFICATIONFILE in the message since it's more descriptive.
-	echo "${ME}: Uploading $(basename "${NOTIFICATIONFILE}")"
+	echo -e "${ME}: Uploading $(basename "${NOTIFICATIONFILE}")"
 	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage"
 	RET=$?
 

@@ -6,21 +6,44 @@ source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
-NOTIFICATIONFILE="$1"	# filename, minus the extension, since the extension may vary
-if [ "$1" = "" ] ; then
+NOTIFICATIONFILETYPE="${1}"	# filename, minus the extension, since the extension may vary
+if [ "${NOTIFICATIONFILETYPE}" = "" ] ; then
 	echo -e "${RED}*** ${ME}: ERROR: no file specified.${NC}" >&2
 	exit 1
 fi
 
-NOTIFICATIONFILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATIONFILE}.${EXTENSION}"
+NOTIFICATIONFILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATIONFILETYPE}.${EXTENSION}"
 if [ ! -e "${NOTIFICATIONFILE}" ] ; then
 	echo -e "${RED}*** ${ME}: ERROR: File '${NOTIFICATIONFILE}' does not exist or is empty!${NC}" >&2
 	exit 2
 fi
 
+# If a notification images was just posted, don't post this one.
+# We'll look at the timestamp of $LAST_NOTIFICATION_FILE and if it's within $RECENTLY seconds of
+# now, we'll skip the current notification.
+LAST_NOTIFICATION_FILE="${ALLSKY_TMP}/last_notification.txt"
+RECENTLY=5		# seconds
+
+if [ -f "${LAST_NOTIFICATION_FILE}" ]; then
+	# TODO: there has to be a better way to compare times??
+	COMPARE_TIME=$(date -d "${RECENTLY} seconds ago" +'%Y%m%d%H%M%S')
+	FILE_TIME=$(ls -l --time=ctime --time-style="+%Y%m%d%H%M%S" ${LAST_NOTIFICATION_FILE} | awk '{ print $6 }')
+
+	if [ ${FILE_TIME} -gt ${COMPARE_TIME} ]; then
+		RECENT_NOTIFICATION=$(< "${LAST_NOTIFICATION_FILE}")
+		if [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
+			  echo "${ME}: Not copying '${NOTIFICATIONFILETYPE}' notification; prior '${RECENT_NOTIFICATION}' recently posted."
+		fi
+		exit 0
+	fi
+fi
+
 CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
 # Don't overwrite notification image so create a temporary copy and use that.
 cp "${NOTIFICATIONFILE}" "${CURRENT_IMAGE}"
+
+# Keep track of last notification type and time.
+echo "${NOTIFICATIONFILETYPE}" > "${LAST_NOTIFICATION_FILE}"
 
 # Resize the image if required
 if [ "${IMG_RESIZE}" = "true" ]; then

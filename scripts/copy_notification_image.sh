@@ -20,6 +20,7 @@ if [ ! -e "${NOTIFICATION_FILE}" ] ; then
 fi
 
 # Optional argument specifying when the ALLSKY_NOTIFICATION_LOG should expire.
+# If it's 0, then force the use of this notification.
 EXPIRES_IN_SECONDS="${2:-5}"	# default of 5 seconds
 
 # If a notification image was "recently" posted, don't post this one.
@@ -28,7 +29,7 @@ EXPIRES_IN_SECONDS="${2:-5}"	# default of 5 seconds
 # it's given a timestamp of NOW + $EXPIRES_IN_SECONDS.
 # We will APPEND to the file so we have a record of all notifications since Allsky started.
 
-if [ -f "${ALLSKY_NOTIFICATION_LOG}" ]; then
+if [ -f "${ALLSKY_NOTIFICATION_LOG}" ] && [ ${EXPIRES_IN_SECONDS} -ne 0 ]; then
 	# TODO: there has to be a better way to compare the time of a file??
 	NOW=$(date +'%Y%m%d%H%M%S')
 	FILE_TIME=$(ls -l --time-style="+%Y%m%d%H%M%S" ${ALLSKY_NOTIFICATION_LOG} | awk '{ print $6 }')

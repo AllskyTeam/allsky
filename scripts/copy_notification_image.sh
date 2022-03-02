@@ -44,14 +44,11 @@ if [ "${NOTIFICATION_TYPE}" = "custom" ]; then
 		usage_and_exit 1
 	fi
 
-	# Create a custom message, which is created in $PWD so change to the directory we want it in.
-	(
-		cd "${ALLSKY_TMP}"
-		# Extensions ($10) will normally be null since the invoker may not know what to use.
-		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" "${NOTIFICATION_TYPE}" \
-			"${2}" "${3}" "${4}" "${5}" "${6}" \
-			 "${7}" "${8}" "${9}" "${10:-${EXTENSION}}" "${11}" "${12}"
-	)
+	# Create a custom message.
+	# Extensions ($10) will normally be null since the invoker may not know what to use.
+	"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${NOTIFICATION_TYPE}" \
+		"${2}" "${3}" "${4}" "${5}" "${6}" \
+		"${7}" "${8}" "${9}" "${10:-${EXTENSION}}" "${11}" "${12}"
 	[ $? -ne 0 ] && exit 2
 	NOTIFICATION_FILE="${ALLSKY_TMP}/${NOTIFICATION_TYPE}.${EXTENSION}"
 else

@@ -124,13 +124,19 @@ printf("XXXXXX == in IntHandle(), got signal %d\n", i);
 	closeUp(0);
 }
 
+const char *getCameraCommand(bool libcamera)
+{
+	if (libcamera)
+		return("libcamera-still");
+	else
+		return("raspistill");
+}
+
 // Build capture command to capture the image from the HQ camera
 int RPiHQcapture(bool auto_exposure, int exposure_us, int bin, bool auto_gain, double gain, bool auto_AWB, float WBR, float WBB, int rotation, int flip, float saturation, int brightness, int quality, const char* fileName, int darkframe, int preview, int width, int height, bool libcamera, cv::Mat *image)
 {
 	// Define command line.
-	string command;
-	if (libcamera) command = "libcamera-still";
-	else command = "raspistill";
+	string command = getCameraCommand(libcamera);
 
 	// Ensure no process is still running.
 	string kill = "pgrep '" + command + "' | xargs kill -9 2> /dev/null";
@@ -388,8 +394,15 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, int bin, bool auto_gain, d
 
 	if (libcamera)
 	{
-		// gets rid of a bunch of libcamera verbose messages
-		command += " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
+		if (DebugLevel >= 4)
+		{
+			command += " > /tmp/capture_RPiHQ_debug.txt 2>&1";
+		}
+		else
+		{
+			// Hide verbose libcamera messages that are only needed when debugging.
+			command += " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
+		}
 	}
 
 	// Define char variable
@@ -423,7 +436,7 @@ int main(int argc, char *argv[])
 	bool is_libcamera;	// are we using libcamera or raspistill?
 	if (argc > 2 && strcmp(argv[1], "-cmd") == 0 && strcmp(argv[2], "libcamera") == 0)
 	{
-		char c[] = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL";
+		char c[] = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL";	// for debugging outptu: "LIBCAMERA_LOG_LEVELS=RPI:0"
 		putenv(c);
 		is_libcamera = true;
 	} else {
@@ -552,9 +565,9 @@ const char *locale				= DEFAULT_LOCALE;
 		printf("*** WARNING: Could not set locale to %s ***\n", locale);
 
 	printf("\n");
-	printf("%s ********************************************\n", c(KGRN));
-	printf("%s *** Allsky Camera Software v0.8.3.2 | 2022 ***\n", c(KGRN));
-	printf("%s ********************************************\n\n", c(KGRN));
+	printf("%s ************************************************\n", c(KGRN));
+	printf("%s *** Allsky Camera Software v0.8.3.2  |  2022 ***\n", c(KGRN));
+	printf("%s ************************************************\n\n", c(KGRN));
 	printf("\%sCapture images of the sky with a Raspberry Pi and a RPi HQ camera\n", c(KGRN));
 	printf("\n");
 	printf("%sAdd -h or --help for available options\n", c(KYEL));
@@ -1103,7 +1116,7 @@ const char *locale				= DEFAULT_LOCALE;
 
 	printf("%s", c(KGRN));
 	printf("\nCapture Settings:\n");
-	printf(" Command: %s\n", is_libcamera ? "libcamera-still" : "raspistill");
+	printf(" Command: %s\n", getCameraCommand(is_libcamera));
 	printf(" Image Type: %s\n", sType);
 	printf(" Resolution (before any binning): %dx%d\n", width, height);
 	printf(" Quality: %d\n", quality);
@@ -1403,17 +1416,9 @@ const char *locale				= DEFAULT_LOCALE;
 				numErrors++;
 				int r = retCode >> 8;
 				printf(" >>> Unable to take picture, return code=%d, r=%d\n", retCode, r);
-#if 1 == 1
-r = retCode;
-if (WIFSIGNALED(r)) r = WTERMSIG(r);
-{
-
-#else
-				if (r > 128)
+				if (WIFSIGNALED(r)) r = WTERMSIG(r);
 				{
 					// Got a signal.  See if it's one we care about.
-					r -= 128;
-#endif
 					std::string z = "";
 					if (r == SIGINT) z = "SIGINT";
 					else if (r == SIGTERM) z = "SIGTERM";
@@ -1421,16 +1426,17 @@ if (WIFSIGNALED(r)) r = WTERMSIG(r);
 					else if (r == SIGHUP) z = "SIGHUP";
 					if (z != "")
 					{
-						printf("xxxx Got %s in capture_RPiHQ.cpp\n", z.c_str());
-						closeUp(EXIT_RESTARTING);
+						printf("xxxx Got %s in %s\n", z.c_str(), getCameraCommand(is_libcamera));
 					}
 					else
 					{
 						printf("xxxx Got signal %d in capture_RPiHQ.cpp\n", r);
 					}
 				}
-				Log(1, "  > Sleeping from failed exposure: %.1f seconds\n", (float)currentDelay_ms / MS_IN_SEC);
-				usleep(currentDelay_ms * US_IN_MS);
+				// Don't wait the full amount on error.
+				long timeToSleep = (float)currentDelay_ms * .25;
+				Log(1, "  > Sleeping from failed exposure: %.1f seconds\n", (float)timeToSleep / MS_IN_SEC);
+				usleep(timeToSleep * US_IN_MS);
 				continue;
 			}
 

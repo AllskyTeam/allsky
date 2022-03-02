@@ -394,7 +394,7 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, int bin, bool auto_gain, d
 
 	if (libcamera)
 	{
-		if (DebugLevel >= 4)
+		if (debugLevel >= 4)
 		{
 			command += " > /tmp/capture_RPiHQ_debug.txt 2>&1";
 		}
@@ -1410,6 +1410,37 @@ const char *locale				= DEFAULT_LOCALE;
 						if (! result) printf("*** ERROR: Unable to write to '%s'\n", full_filename);
 					}
 				}
+
+				char cmd[1100];
+				Log(1, "  > Saving %s image '%s'\n", darkframe ? "dark" : dayOrNight.c_str(), final_file_name);
+				snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
+
+				// -999 for temperature says the camera doesn't support it
+				// TODO: in the future the calculation of mean should independent from mode_mean. -1 means don't display.
+				float m = (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) ? mean : -1.0;
+				add_variables_to_command(cmd, last_exposure_us, currentBrightness, m,
+					currentAutoExposure, currentAutoGain, autoAWB, WBR, WBB,
+					-999, last_gain, (int)round(20.0 * 10.0 * log10(last_gain)),
+					currentBin, asiFlip, current_bit_depth, focus_metric);
+				strcat(cmd, " &");
+
+				system(cmd);
+
+				long s;
+				if (myModeMeanSetting.mode_mean && myModeMeanSetting.quickstart && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
+				{
+					s = 1 * US_IN_SEC;
+				}
+				else if ((dayOrNight == "NIGHT"))
+				{
+					s = (asiNightExposure_us - myRaspistillSetting.shutter_us) + (nightDelay_ms * US_IN_MS);
+				}
+				else
+				{
+					s = currentDelay_ms * US_IN_MS;
+				}
+				Log(0, "Sleeping %.1f seconds...\n", (float)s / US_IN_SEC);
+				usleep(s);
 			}
 			else
 			{
@@ -1437,39 +1468,7 @@ const char *locale				= DEFAULT_LOCALE;
 				long timeToSleep = (float)currentDelay_ms * .25;
 				Log(1, "  > Sleeping from failed exposure: %.1f seconds\n", (float)timeToSleep / MS_IN_SEC);
 				usleep(timeToSleep * US_IN_MS);
-				continue;
 			}
-
-			char cmd[1100];
-			Log(1, "  > Saving %s image '%s'\n", darkframe ? "dark" : dayOrNight.c_str(), final_file_name);
-			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
-
-			// -999 for temperature says the camera doesn't support it
-			// TODO: in the future the calculation of mean should independent from mode_mean. -1 means don't display.
-			float m = (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) ? mean : -1.0;
-			add_variables_to_command(cmd, last_exposure_us, currentBrightness, m,
-				currentAutoExposure, currentAutoGain, autoAWB, WBR, WBB,
-				-999, last_gain, (int)round(20.0 * 10.0 * log10(last_gain)),
-				currentBin, asiFlip, current_bit_depth, focus_metric);
-			strcat(cmd, " &");
-
-			system(cmd);
-
-			long s;
-			if (myModeMeanSetting.mode_mean && myModeMeanSetting.quickstart && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
-			{
-				s = 1 * US_IN_SEC;
-			}
-			else if ((dayOrNight == "NIGHT"))
-			{
-				s = (asiNightExposure_us - myRaspistillSetting.shutter_us) + (nightDelay_ms * US_IN_MS);
-			}
-			else
-			{
-				s = currentDelay_ms * US_IN_MS;
-			}
-			Log(0, "Sleeping %.1f seconds...\n", (float)s / US_IN_SEC);
-			usleep(s);
 
 			// Check for day or night based on location and angle
 			dayOrNight = calculateDayOrNight(latitude, longitude, angle);

@@ -59,7 +59,7 @@ function make_image() {
 		BORDER=""
 	fi
 
-	echo "Creating '${BASENAME}' in ${PWD}."
+	[ "${ON_TTY}" = "1" ] && echo "Creating '${BASENAME}' in ${PWD}."
 	for EXT in ${EXTS} ; do
 		# Make highest quality for jpg and highest loss-less compression for png.
 		# jpg files at 95% produce somewhat bad artifacts.  Even 100% produces some artifacts.
@@ -92,6 +92,7 @@ if [ $? -ne 0 ] ; then
 	exit 2
 fi
 
+# TODO: use getopt
 [ "${1}" = "--help" ] && usage_and_exit 0
 
 # Optional argument specifying where to create the image(s).

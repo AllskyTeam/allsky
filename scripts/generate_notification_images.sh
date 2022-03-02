@@ -13,8 +13,19 @@ fi
 source "${ALLSKY_HOME}/variables.sh"
 ME="$(basename "${BASH_ARGV0}")"
 
-readonly USAGE="Usage: ${ME} [type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']"
 readonly ALL_EXTS="jpg png"		# all the image filename extensions we support
+
+function usage_and_exit
+{
+	RET=${1}
+	(
+		[ ${RET} -ne 0 ] && echo -en "${RED}"
+		echo -e "\nUsage: ${ME} [--help] [type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']\n"
+		[ ${RET} -ne 0 ] && echo -en "${NC}"
+		echo "When run with no arguments, all notification types are created with extensions: ${ALL_EXTS}."
+	) >&2
+	exit $RET
+}
 
 function make_image() {
 	BASENAME="$1"
@@ -38,8 +49,7 @@ function make_image() {
 	echo "${BASENAME}" | grep -qEi "[.](${ALL_EXTS/ /|})"
 	if [ $? -ne 1 ] ; then
 		echo -e "${RED}${ME}: ERROR: Do not add an extension to the basename${NC}."
-		echo "${USAGE}"
-		exit 1
+		usage_and_exit 1
 	fi
 
 	if [ ${BORDER_WIDTH} -ne 0 ]; then
@@ -81,12 +91,13 @@ if [ $? -ne 0 ] ; then
 	exit 2
 fi
 
+[ "${1}" = "--help" ] && usage_and_exit 0
+
 # If the arguments were specified on the command line, use them instead of the list below.
 if [ $# -eq 12 ]; then
 	if [ "${1}" = "" -o "${12}" = "" ]; then
 		echo -e '${RED}${ME}: ERROR: Basename ($1) and message ($12) must be specified.${NC}' >&2
-		echo "${USAGE}"
-		exit 1
+		usage_and_exit 1
 	fi
 	make_image "${@}"
 
@@ -106,6 +117,5 @@ elif [ $# -eq 0 ]; then
 else
 	echo -e "${RED}${ME}: ERROR: Either specify ALL arguments, or don't specify any.${NC}" >&2
 	echo "You specified $# arguments." >&2
-	echo "${USAGE}"
-	exit 1
+	usage_and_exit 1
 fi

@@ -14,5 +14,5 @@ if [ -z "${TO_SEND_SIGNAL}" ]; then
 	exit 2
 fi
 
-echo "$0: Sending SIGUSR1 to PID $TO_SEND_SIGNAL"
-kill -USR1 $TO_SEND_SIGNAL
+echo "${0}: Sending SIGUSR1 to PID ${TO_SEND_SIGNAL}"
+kill -USR1 ${TO_SEND_SIGNAL}

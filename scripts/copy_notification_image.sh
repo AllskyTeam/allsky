@@ -6,22 +6,61 @@ source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
-NOTIFICATION_FILETYPE="${1}"	# filename, minus the extension, since the extension may vary
-if [ "${NOTIFICATION_FILETYPE}" = "" ] ; then
-	echo -e "${RED}*** ${ME}: ERROR: no file specified.${NC}" >&2
-	echo -e "\nUsage: ${ME} notification_file_type [expires_in_seconds]\n" >&2
-	exit 1
-fi
+function usage_and_exit
+{
+	RET=${1}
+	(
+		[ ${RET} -ne 0 ] && echo -en "${RED}"
+		echo -e "\nUsage: ${ME} [--help] [--expires seconds] notification_type [custom_args]\n"
+		echo "'--expires seconds' specifies how many seconds before the notification expires."
+		echo "If 'notification_type' is 'custom' then a custom message is created and 'custom_args'"
+		echo "must be given to specify arguments for the message:"
+		echo "  TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderColor BorderWidth Extensions ImageSize 'Message'"
+		[ ${RET} -ne 0 ] && echo -e "${NC}"
+	) >&2
+	exit $RET
+}
 
-NOTIFICATION_FILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATION_FILETYPE}.${EXTENSION}"
-if [ ! -e "${NOTIFICATION_FILE}" ] ; then
-	echo -e "${RED}*** ${ME}: ERROR: File '${NOTIFICATION_FILE}' does not exist or is empty!${NC}" >&2
-	exit 2
-fi
+# TODO: use getopt
+
+[ "${1}" = "--help" ] && usage_and_exit 0
 
 # Optional argument specifying when the ALLSKY_NOTIFICATION_LOG should expire.
 # If it's 0, then force the use of this notification.
-EXPIRES_IN_SECONDS="${2:-5}"	# default of 5 seconds
+if [ "${1}" = "--expires" ]; then
+	EXPIRES_IN_SECONDS="${2}"
+	[ -z "${EXPIRES_IN_SECONDS}" ] && usage_and_exit 2
+	shift 2
+else
+	EXPIRES_IN_SECONDS="5"	# default
+fi
+
+NOTIFICATION_TYPE="${1}"	# filename, minus the extension, since the extension may vary
+[ "${NOTIFICATION_TYPE}" = "" ] && usage_and_exit 1
+
+if [ "${NOTIFICATION_TYPE}" = "custom" ]; then
+	if [ $# -ne 12 ]; then
+		echo -e "${RED}'custom' notification type requires 12 arguments" >&2
+		usage_and_exit 1
+	fi
+
+	# Create a custom message, which is created in $PWD so change to the directory we want it in.
+	(
+		cd "${ALLSKY_TMP}"
+		# Extensions ($10) will normally be null since the invoker may not know what to use.
+		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" "${NOTIFICATION_TYPE}" \
+			"${2}" "${3}" "${4}" "${5}" "${6}" \
+			 "${7}" "${8}" "${9}" "${10:-${EXTENSION}}" "${11}" "${12}"
+	)
+	[ $? -ne 0 ] && exit 2
+	NOTIFICATION_FILE="${ALLSKY_TMP}/${NOTIFICATION_TYPE}.${EXTENSION}"
+else
+	NOTIFICATION_FILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATION_TYPE}.${EXTENSION}"
+	if [ ! -e "${NOTIFICATION_FILE}" ] ; then
+		echo -e "${RED}*** ${ME}: ERROR: File '${NOTIFICATION_FILE}' does not exist!${NC}" >&2
+		exit 2
+	fi
+fi
 
 # If a notification image was "recently" posted, don't post this one.
 # We'll look at the timestamp of $ALLSKY_NOTIFICATION_LOG (defined in variables.sh) and if it's
@@ -29,7 +68,7 @@ EXPIRES_IN_SECONDS="${2:-5}"	# default of 5 seconds
 # it's given a timestamp of NOW + $EXPIRES_IN_SECONDS.
 # We will APPEND to the file so we have a record of all notifications since Allsky started.
 
-if [ -f "${ALLSKY_NOTIFICATION_LOG}" ] && [ ${EXPIRES_IN_SECONDS} -ne 0 ]; then
+if [ "${NOTIFICATION_TYPE}" != "custom" ] && [ -f "${ALLSKY_NOTIFICATION_LOG}" ] && [ ${EXPIRES_IN_SECONDS} -ne 0 ]; then
 	# TODO: there has to be a better way to compare the time of a file??
 	NOW=$(date +'%Y%m%d%H%M%S')
 	FILE_TIME=$(ls -l --time-style="+%Y%m%d%H%M%S" ${ALLSKY_NOTIFICATION_LOG} | awk '{ print $6 }')
@@ -40,15 +79,20 @@ if [ -f "${ALLSKY_NOTIFICATION_LOG}" ] && [ ${EXPIRES_IN_SECONDS} -ne 0 ]; then
 			RECENT_NOTIFICATION=$(tail -1 "${ALLSKY_NOTIFICATION_LOG}")
 			RECENT_TYPE=${RECENT_NOTIFICATION%%,*}
 			RECENT_TIME=${RECENT_NOTIFICATION##*,}
-			echo "${ME}: Ignoring new '${NOTIFICATION_FILETYPE}'; prior '${RECENT_TYPE}' posted ${RECENT_TIME}."
+			echo "${ME}: Ignoring new '${NOTIFICATION_TYPE}'; prior '${RECENT_TYPE}' posted ${RECENT_TIME}."
 		fi
 		exit 0
 	fi
 fi
 
-CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
-# Don't overwrite notification image so create a temporary copy and use that.
-cp "${NOTIFICATION_FILE}" "${CURRENT_IMAGE}"
+if [ "${NOTIFICATION_TYPE}" = "custom" ]; then
+	# Custom notifications are temporary so go ahead and overwrite them.
+	CURRENT_IMAGE="${NOTIFICATION_FILE}"
+else
+	# Don't overwrite notification images so create a temporary copy and use that.
+	CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
+	cp "${NOTIFICATION_FILE}" "${CURRENT_IMAGE}"
+fi
 
 # Resize the image if required
 if [ "${IMG_RESIZE}" = "true" ]; then
@@ -85,7 +129,7 @@ mv -f "${CURRENT_IMAGE}" "${FINAL_IMAGE}"	# so web severs can see it.
 # We don't use the type (at least not yet), but save it anyhow so we can manually look at
 # it for debugging purposes.
 EXPIRE_TIME=$(date -d "$EXPIRES_IN_SECONDS seconds" +'%Y-%m-%d %H:%M:%S')
-echo "${NOTIFICATION_FILETYPE},${EXPIRES_IN_SECONDS},${EXPIRE_TIME}" >> "${ALLSKY_NOTIFICATION_LOG}"
+echo "${NOTIFICATION_TYPE},${EXPIRES_IN_SECONDS},${EXPIRE_TIME}" >> "${ALLSKY_NOTIFICATION_LOG}"
 touch --date="${EXPIRE_TIME}" "${ALLSKY_NOTIFICATION_LOG}"
 
 # If upload is true, optionally create a smaller version of the image, either way, upload it.

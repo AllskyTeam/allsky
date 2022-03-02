@@ -77,6 +77,14 @@ LOG="${ALLSKY_TMP}/upload_log.txt"
 # Convert to lowercase so we don't care if user specified upper or lowercase.
 PROTOCOL="${PROTOCOL,,}"
 
+# SIGTERM is sent by systemctl to stop Allsky and SIGUSR1 is sent to restart it.
+# SIGHUP is sent to have the capture program reload its arguments.
+# Ignore them so we don't leave a temporary or partially uploaded file if the service is stopped
+# in the middle of an upload.
+trap "" SIGTERM
+trap "" SIGUSR1
+trap "" SIGHUP
+
 if [[ "${PROTOCOL}" == "s3" ]] ; then
 	# xxxxxx How do you tell it the DESTINATION_FILE name ?
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then

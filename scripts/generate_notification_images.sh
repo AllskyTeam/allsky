@@ -20,9 +20,10 @@ function usage_and_exit
 	RET=${1}
 	(
 		[ ${RET} -ne 0 ] && echo -en "${RED}"
-		echo -e "\nUsage: ${ME} [--help] [type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']\n"
+		echo -e "\nUsage: ${ME} [--help] [--directory dir] [type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']\n"
 		[ ${RET} -ne 0 ] && echo -en "${NC}"
 		echo "When run with no arguments, all notification types are created with extensions: ${ALL_EXTS}."
+		echo "'--directory dir' creates the file(s) in that directory, otherwise in \${PWD}."
 	) >&2
 	exit $RET
 }
@@ -92,6 +93,19 @@ if [ $? -ne 0 ] ; then
 fi
 
 [ "${1}" = "--help" ] && usage_and_exit 0
+
+# Optional argument specifying where to create the image(s).
+# If not specified, create in current directory.
+if [ "${1}" = "--directory" ]; then
+	DIRECTORY="${2}"
+	[ -z "${DIRECTORY}" ] && usage_and_exit 2
+	if [ ! -d "${DIRECTORY}" ]; then
+		echo -e "\n${RED}*** ${ME} ERROR: Directory '${DIRECTORY}' not found!\n${NC}" >&2
+		exit 2
+	fi
+	shift 2
+	cd "${DIRECTORY}" || exit 3
+fi
 
 # If the arguments were specified on the command line, use them instead of the list below.
 if [ $# -eq 12 ]; then

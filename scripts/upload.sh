@@ -18,6 +18,12 @@ if [ "${1}" = "--silent" ] ; then
 else
 	SILENT="false"
 fi
+if [ "${1}" = "--debug" ] ; then
+	DEBUG="true"
+	shift
+else
+	DEBUG="false"
+fi
 
 ME="$(basename "${BASH_ARGV0}")"
 
@@ -25,7 +31,7 @@ ME="$(basename "${BASH_ARGV0}")"
 if [ $# -lt 3 ] ; then
 	# When run manually, the unique_name (arg $4) normally won't be given.
 	echo -en "${RED}"
-	echo -n "*** Usage: ${ME} [--silent]  file_to_upload  directory  destination_file_name [unique_name] [local_directory]"
+	echo -n "*** Usage: ${ME} [--silent] [--debug] file_to_upload  directory  destination_file_name [unique_name] [local_directory]"
 	echo -e "${NC}"
 	echo "Where:"
 	echo "   '--silent' doesn't display any status messages"
@@ -49,7 +55,8 @@ fi
 
 REMOTE_DIR="${2}"
 DESTINATION_FILE="${3}"
-# ${4} only used by ftp
+FILE_TYPE="${4}"
+# TODO: only allow one execution of this script for each $RIL#_TYPE.
 COPY_TO="${5}"
 if [ "${COPY_TO}" != "" -a ! -d "${COPY_TO}" ] ; then
 	echo -en "${RED}"
@@ -89,31 +96,23 @@ else # sftp/ftp/ftps
 	# People sometimes have problems with ftp not working,
 	# so save the commands we use so they can run lftp manually to debug.
 
-	if [ "${4}" = "" ] ; then
+	if [ "${FILE_TYPE}" = "" ] ; then
 		TEMP_NAME="x-${RANDOM}"
 	else
-		TEMP_NAME="${4}-${RANDOM}"
+		TEMP_NAME="${FILE_TYPE}-${RANDOM}"
 	fi
 
 	# If REMOTE_DIR isn't null (which it can be) and doesn't already have a trailing "/", append one.
 	[ "${REMOTE_DIR}" != "" -a "${REMOTE_DIR: -1:1}" != "/" ] && REMOTE_DIR="${REMOTE_DIR}/"
 
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
-		echo "${ME}: FTP'ing ${FILE_TO_UPLOAD} to ${REMOTE_DIR}${DESTINATION_FILE}, TEMP_NAME=${TEMP_NAME}"
+		echo "${ME}: FTP ${FILE_TO_UPLOAD} to ${REMOTE_DIR}${DESTINATION_FILE}, TEMP_NAME=${TEMP_NAME}"
 	fi
 	LFTP_CMDS="${ALLSKY_TMP}/lftp_cmds.txt"
-	# COMPATIBILITY CHECK.  New names start with "REMOTE_".
-	# If "REMOTE_HOST" doesn't exist assume the user has the old-style ftp-settings.sh file.
-	# xxxxx THIS CHECK WILL GO AWAY IN THE FUTURE.
-	if [ -z "${REMOTE_HOST}" ]; then
-		REMOTE_HOST="${HOST}"
-		REMOTE_PASSWORD="${PASSWORD}"
-		REMOTE_USER="${USER}"
-	fi
-set +H # XXXX needed so !! isn't processed in REMOTE_PASSWORD
+	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 	(
 		[ "${LFTP_COMMANDS}" != "" ] && echo ${LFTP_COMMANDS}
-		# xxx TODO: escape single quotes in REMOTE_PASSWORD - how?  With \ ?
+		# xxx TODO: escape single quotes in REMOTE_PASSWORD so lftp doesn't fail - how?  With \ ?
 		P="${REMOTE_PASSWORD}"
 
 		# Sometimes have problems with "max-reties 1", so make it 2
@@ -121,20 +120,37 @@ set +H # XXXX needed so !! isn't processed in REMOTE_PASSWORD
 		echo set net:timeout 10
 
 		echo "open --user '${REMOTE_USER}' --password '${P}' '${PROTOCOL}://${REMOTE_HOST}'"
+		if [ "${DEBUG}" = "true" ]; then
+			echo "quote PWD"
+			echo "ls"
+			echo "debug 5"
+		fi
+		if [ ! -z "${REMOTE_DIR}" ]; then
+			echo "cd '${REMOTE_DIR}' || (echo 'cd ${REMOTE_DIR} failed!'; exit 1) || exit 1"
+		fi
+
 		# unlikely, but just in case it's already there
-		echo "rm -f '${REMOTE_DIR}${TEMP_NAME}'"
-		echo "put '${FILE_TO_UPLOAD}' -o '${REMOTE_DIR}${TEMP_NAME}' || (echo 'put of ${FILE_TO_UPLOAD} failed!'; exit 1) || exit 2"
-		echo "rm -f '${REMOTE_DIR}${DESTINATION_FILE}'"
-		echo "mv '${REMOTE_DIR}${TEMP_NAME}' '${REMOTE_DIR}${DESTINATION_FILE}' || (echo 'mv of ${TEMP_NAME} to ${DESTINATION_FILE} in ${REMOTE_DIR} failed!'; exit 1) || exit 3"
+		echo "glob --exist '${TEMP_NAME}*' && rm '${TEMP_NAME}'"
+
+		echo "put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}' || (echo 'put of ${FILE_TO_UPLOAD} to ${TEMP_NAME} failed!'; rm -f '${TEMP_NAME}'; exit 1) || exit 2"
+
+		# Try to remove ${DESTINATION_FILE}, which may or may not exist.
+		# If the "rm" fails, the file may be in use by the web server or another lftp,
+		# so wait a few seconds and try again, but without the "-f" option so we see any error msg.
+		echo "rm  -f '${DESTINATION_FILE}'"
+		echo "glob --exist '${DESTINATION_FILE}*' && (echo 'rm of ${DESTINATION_FILE} failed!  Trying again...';  (!sleep 3);  rm '${DESTINATION_FILE}' && echo 'WORKED' && exit 1) && (echo '2nd rm failed, quiting.'; rm -f '${TEMP_NAME}'; exit 1) && exit 3"
+
+		echo "mv '${TEMP_NAME}' '${DESTINATION_FILE}' || (echo 'mv of ${TEMP_NAME} to ${DESTINATION_FILE} failed!'; exit 1) || exit 4"
 
 		echo exit 0
 	) > "${LFTP_CMDS}"
-	lftp -f "${LFTP_CMDS}" > "${LOG}" 2>&1
-	RET=$?
 
+	# To save a write to the SD card, only save output to ${LOG} on error.
+	OUTPUT="$(lftp -f "${LFTP_CMDS}" 2>&1)"
+	RET=$?
 	if [ ${RET} -ne 0 ] ; then
 		echo -en "${RED}"
-		echo "*** ${ME}: ERROR:"
+		echo "*** ${ME}: ERROR, RET=${RET}:"
 		echo "FILE_TO_UPLOAD='${FILE_TO_UPLOAD}'"
 		echo "REMOTE_HOST='${REMOTE_HOST}'"
 		echo "REMOTE_DIR='${REMOTE_DIR}'"
@@ -142,9 +158,19 @@ set +H # XXXX needed so !! isn't processed in REMOTE_PASSWORD
 		echo "DESTINATION_FILE='${DESTINATION_FILE}'"
 		echo -en "${NC}"
 		echo
-		cat "${LOG}"
+		if [ ! -z "${OUTPUT}" ]; then
+			echo "${OUTPUT}" > "${LOG}"
+			cat "${LOG}"
+		fi
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
+	else
+		if [ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ] && [ "${ON_TTY}" -eq 0 ]; then
+			echo "${ME}: FTP of '${FILE_TO_UPLOAD}' finished"
+		fi
+		if [ ! -z "${OUTPUT}" ]; then
+			echo -e "lftp OUTPUT:\n   ${OUTPUT}"
+		fi
 	fi
 fi
 

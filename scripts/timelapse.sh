@@ -80,12 +80,12 @@ if [ "${KEEP_SEQUENCE}" = "false" -o ${NSEQ} -lt 100 ] ; then
 
 	# capture the "ln" commands in case the user needs to debug
 	ls -rt "${DATE_DIR}"/*.${EXTENSION} |
-	gawk 'BEGIN { a=1 }
+	gawk 'BEGIN { a=0; }
 		{
-			printf "ln -s %s '${SEQUENCE_DIR}'/%04d.'${EXTENSION}'\n", $0, a;
-			printf "ln -s %s '${SEQUENCE_DIR}'/%04d.'${EXTENSION}'\n", $0, a >> "'${TMP}'";
 			a++;
-		}' |
+			printf "ln -s %s '${SEQUENCE_DIR}'/%04d.'${EXTENSION}'\n", $0, a;
+		}
+		END { if (a > 0) printf("Processed %d images\n", a) > "'${TMP}'"; }' |
 	bash
 
 	# Make sure there's at least one link.  If there is, the file will be > 0 bytes.
@@ -106,7 +106,6 @@ fi
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
 # set FFLOG=info in config.sh if you want to see what's going on for debugging.
-# TODO: remove ${TIMELAPSE_PARAMETERS} after 0.8.5 since it's the old name.
 OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
 ffmpeg -y -f image2 \
 	-loglevel ${FFLOG} \
@@ -117,7 +116,7 @@ ffmpeg -y -f image2 \
 	-pix_fmt ${PIX_FMT} \
 	-movflags +faststart \
 	$SCALE \
-	${TIMELAPSE_EXTRA_PARAMETERS} ${TIMELAPSE_PARAMETERS} \
+	${TIMELAPSE_EXTRA_PARAMETERS} \
 	"${OUTPUT_FILE}" >> "${TMP}" 2>&1
 
 if [ $? -ne -0 ]; then

@@ -95,7 +95,7 @@ void closeUp(int e)
 	if (notificationImages) {
 		if (e == EXIT_RESTARTING)
 		{
-			system("scripts/copy_notification_image.sh Restarting &");
+			system("scripts/copy_notification_image.sh --expires 15 Restarting &");
 			a = "Restarting";
 		}
 		else
@@ -635,11 +635,11 @@ const char *locale				= DEFAULT_LOCALE;
 			// check for old names as well - the "||" part is the old name
 			else if (strcmp(argv[i], "-dayexposure") == 0)
 			{
-				asiDayExposure_us = atoi(argv[++i]) * US_IN_MS;
+				asiDayExposure_us = atof(argv[++i]) * US_IN_MS;	// allow fractions
 			}
 			else if (strcmp(argv[i], "-nightexposure") == 0 || strcmp(argv[i], "-exposure") == 0)
 			{
-				asiNightExposure_us = atoi(argv[++i]) * US_IN_MS;
+				asiNightExposure_us = atof(argv[++i]) * US_IN_MS;
 			}
 
 			else if (strcmp(argv[i], "-dayautoexposure") == 0)

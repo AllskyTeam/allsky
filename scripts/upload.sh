@@ -29,16 +29,16 @@ ME="$(basename "${BASH_ARGV0}")"
 
 # TODO: Use getopt() so arguments can be in any order
 if [ $# -lt 3 ] ; then
-	# When run manually, the unique_name (arg $4) normally won't be given.
+	# When run manually, the file_type (arg $4) normally won't be given.
 	echo -en "${RED}"
-	echo -n "*** Usage: ${ME} [--silent] [--debug] file_to_upload  directory  destination_file_name [unique_name] [local_directory]"
+	echo -n "*** Usage: ${ME} [--silent] [--debug] file_to_upload  directory  destination_file_name [file_type] [local_directory]"
 	echo -e "${NC}"
 	echo "Where:"
 	echo "   '--silent' doesn't display any status messages"
 	echo "   'file_to_upload' is the path name of the file you want to upload."
 	echo "   'directory' is the directory ON THE SERVER the file should be uploaded to."
 	echo "   'destination_file_name' is the name the file should be called ON THE SERVER."
-	echo "   'unique_name' is an optional, temporary name to use when uploading the file."
+	echo "   'file_type' is an optional, temporary name to use when uploading the file."
 	echo "   'local_directory' is the name of an optional local directory the file should be"
 	echo "        copied to in addition to being uploaded."
 	echo
@@ -56,7 +56,7 @@ fi
 REMOTE_DIR="${2}"
 DESTINATION_FILE="${3}"
 FILE_TYPE="${4}"
-# TODO: only allow one execution of this script for each $RIL#_TYPE.
+# TODO: only allow one execution of this script for each $FILE_TYPE.
 COPY_TO="${5}"
 if [ "${COPY_TO}" != "" -a ! -d "${COPY_TO}" ] ; then
 	echo -en "${RED}"
@@ -125,7 +125,7 @@ else # sftp/ftp/ftps
 			echo "ls"
 			echo "debug 5"
 		fi
-		if [ ! -z "${REMOTE_DIR}" ]; then
+		if [ -n "${REMOTE_DIR}" ]; then
 			echo "cd '${REMOTE_DIR}' || (echo 'cd ${REMOTE_DIR} failed!'; exit 1) || exit 1"
 		fi
 
@@ -158,7 +158,7 @@ else # sftp/ftp/ftps
 		echo "DESTINATION_FILE='${DESTINATION_FILE}'"
 		echo -en "${NC}"
 		echo
-		if [ ! -z "${OUTPUT}" ]; then
+		if [ -n "${OUTPUT}" ]; then
 			echo "${OUTPUT}" > "${LOG}"
 			cat "${LOG}"
 		fi
@@ -168,7 +168,7 @@ else # sftp/ftp/ftps
 		if [ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ] && [ "${ON_TTY}" -eq 0 ]; then
 			echo "${ME}: FTP of '${FILE_TO_UPLOAD}' finished"
 		fi
-		if [ ! -z "${OUTPUT}" ]; then
+		if [ -n "${OUTPUT}" ]; then
 			echo -e "lftp OUTPUT:\n   ${OUTPUT}"
 		fi
 	fi

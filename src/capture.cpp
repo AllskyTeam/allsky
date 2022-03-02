@@ -978,7 +978,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-nightexposure") == 0 || strcmp(argv[i], "-exposure") == 0)
             {
-                asi_night_exposure_us = atoi(argv[++i]) * US_IN_MS;
+                asi_night_exposure_us = atof(argv[++i]) * US_IN_MS;
             }
             else if (strcmp(argv[i], "-dayautoexposure") == 0)
             {

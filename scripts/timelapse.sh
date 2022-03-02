@@ -107,7 +107,7 @@ fi
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
 # set FFLOG=info in config.sh if you want to see what's going on for debugging.
 OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
-ffmpeg -y -f image2 \
+X=$(ffmpeg -y -f image2 \
 	-loglevel ${FFLOG} \
 	-r ${FPS} \
 	-i "${SEQUENCE_DIR}/%04d.${EXTENSION}" \
@@ -117,9 +117,13 @@ ffmpeg -y -f image2 \
 	-movflags +faststart \
 	$SCALE \
 	${TIMELAPSE_EXTRA_PARAMETERS} \
-	"${OUTPUT_FILE}" >> "${TMP}" 2>&1
+	"${OUTPUT_FILE}" 2>&1)
+RET=$?
 
-if [ $? -ne -0 ]; then
+# The "deprecated..." message is useless and only confuses users, so hide it.
+echo "${X}" | grep -v "deprecated pixel format used" >> "${TMP}"
+
+if [ ${RET} -ne -0 ]; then
 	echo -e "\n${RED}*** $ME: ERROR: ffmpeg failed."
 	echo "Error log is in '${TMP}'."
 	echo

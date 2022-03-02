@@ -48,9 +48,13 @@ function make_image() {
 		BORDER=""
 	fi
 
-	echo "Creating '${BASENAME}'"
+	echo "Creating '${BASENAME}' in ${PWD}."
 	for EXT in ${EXTS} ; do
+		# Make highest quality for jpg and highest loss-less compression for png.
+		# jpg files at 95% produce somewhat bad artifacts.  Even 100% produces some artifacts.
+
 		convert \
+			-quality 100 \
 			-fill "${TEXTCOLOR}" \
 			-font "${FONT}" \
 			-pointsize "${FONT_SIZE}" \

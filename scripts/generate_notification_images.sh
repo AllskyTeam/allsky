@@ -13,7 +13,7 @@ fi
 source "${ALLSKY_HOME}/variables.sh"
 ME="$(basename "${BASH_ARGV0}")"
 
-readonly USAGE="Usage: ${ME} [StartingUp TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderColor Extensions ImageSize 'Message']"
+readonly USAGE="Usage: ${ME} [type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']"
 readonly ALL_EXTS="jpg png"		# all the image filename extensions we support
 
 function make_image() {
@@ -37,7 +37,7 @@ function make_image() {
 
 	echo "${BASENAME}" | grep -qEi "[.](${ALL_EXTS/ /|})"
 	if [ $? -ne 1 ] ; then
-		echo -e "${RED}ERROR: Do not add an extension to the basename${NC}."
+		echo -e "${RED}${ME}: ERROR: Do not add an extension to the basename${NC}."
 		echo "${USAGE}"
 		exit 1
 	fi
@@ -73,14 +73,14 @@ if [ $? -ne 0 ] ; then
 	# name than "convert". I assume that if "mogrify" is in the path, then
 	# ImageMagick is installed and "convert" will run ImageMagick and not some
 	# other tool.
-	echo -e "${RED}ERROR: ImageMagick does not appear to be installed. Please install it.${NC}" >&2
+	echo -e "${RED}${ME}: ERROR: ImageMagick does not appear to be installed. Please install it.${NC}" >&2
 	exit 2
 fi
 
 # If the arguments were specified on the command line, use them instead of the list below.
 if [ $# -eq 12 ]; then
 	if [ "${1}" = "" -o "${12}" = "" ]; then
-		echo -e '${RED}ERROR: Basename ($1) and message ($12) must be specified.${NC}' >&2
+		echo -e '${RED}${ME}: ERROR: Basename ($1) and message ($12) must be specified.${NC}' >&2
 		echo "${USAGE}"
 		exit 1
 	fi
@@ -100,7 +100,8 @@ elif [ $# -eq 0 ]; then
   make_image Error                "red"      ""                 80     ""        ""      ""         10      "red"     ""          ""        "ERROR\n\nSee\n/var/log/allsky.log\nfor details"
 
 else
-	echo -e "${RED}ERROR: Either specify ALL arguments, or don't specify any.${NC}" >&2
+	echo -e "${RED}${ME}: ERROR: Either specify ALL arguments, or don't specify any.${NC}" >&2
+	echo "You specified $# arguments." >&2
 	echo "${USAGE}"
 	exit 1
 fi

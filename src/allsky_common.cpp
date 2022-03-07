@@ -349,7 +349,7 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
 }
 
 // Simple function to make flags easier to read for humans.
-char const *yesNo(int flag)
+char const *yesNo(bool flag)
 {
 	if (flag)
 		return("Yes");

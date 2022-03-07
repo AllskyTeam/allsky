@@ -887,7 +887,7 @@ int main(int argc, char *argv[])
 
     bool daytimeCapture        = DEFAULT_DAYTIMECAPTURE;  // are we capturing daytime pictures?
 
-    bool help                  = true;
+    bool help                  = false;
     int quality                = NOT_SET;
     bool asiCoolerEnabled      = false;
     long asiTargetTemp         = 0;

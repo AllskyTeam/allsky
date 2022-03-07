@@ -97,3 +97,4 @@ int doOverlay(cv::Mat,
 	int, int, int, int, int,
 	int, int, int, int,
 	int[], int[], bool, int);
+bool getBoolean(const char *);

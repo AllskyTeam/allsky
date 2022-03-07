@@ -46,7 +46,7 @@ pthread_cond_t cond_StartSave;
 ASI_CONTROL_CAPS ControlCaps;
 int numErrors              = 0;	// Number of errors in a row.
 int maxErrors              = 5;	// Max number of errors in a row before we exit
-int gotSignal              = 0;	// did we get a SIGINT (from keyboard) or SIGTERM (from service)?
+bool gotSignal             = false;	// did we get a SIGINT (from keyboard) or SIGTERM (from service)?
 int iNumOfCtrl             = 0;
 int CamNum                 = 0;
 pthread_t thread_display   = 0;
@@ -58,7 +58,7 @@ long camera_min_exposure_us= 100;	// camera's minimum exposure
 long current_exposure_us   = NOT_SET;
 long actualTemp            = 0;			// actual sensor temp, per the camera
 long last_exposure_us      = 0;			// last exposure taken
-int taking_dark_frames     = 0;
+bool taking_dark_frames    = false;
 int asiFlip                = 0;
 int current_bpp            = NOT_SET;	// bytes per pixel: 8, 16, or 24
 int current_bit_depth      = NOT_SET;	// 8 or 16
@@ -67,7 +67,7 @@ int currentBrightness      = NOT_SET;
 
 // Some command-line and other option definitions needed outside of main():
 bool tty                   = false;	// are we on a tty?
-int notificationImages     = DEFAULT_NOTIFICATIONIMAGES;
+bool notificationImages    = DEFAULT_NOTIFICATIONIMAGES;
 char const *save_dir       = DEFAULT_SAVEDIR;
 char const *fileName       = DEFAULT_FILENAME;
 char final_file_name[200];	// final name of the file that's written to disk, with no directories
@@ -78,8 +78,8 @@ char const *timeFormat     = DEFAULT_TIMEFORMAT;
 long asi_day_exposure_us   = DEFAULT_ASIDAYEXPOSURE;
 #define DEFAULT_ASIDAYMAXAUTOEXPOSURE_MS  (60 * MS_IN_SEC)	// 60 seconds
 int asi_day_max_autoexposure_ms= DEFAULT_ASIDAYMAXAUTOEXPOSURE_MS;
-#define DEFAULT_DAYAUTOEXPOSURE  1
-int asiDayAutoExposure     = DEFAULT_DAYAUTOEXPOSURE;	// is it on or off for daylight?
+#define DEFAULT_DAYAUTOEXPOSURE  true
+bool asiDayAutoExposure    = DEFAULT_DAYAUTOEXPOSURE;	// is it on or off for daylight?
 #define DEFAULT_DAYDELAY     (5 * MS_IN_SEC)	// 5 seconds
 int dayDelay_ms            = DEFAULT_DAYDELAY;	// Delay in milliseconds.
 #define DEFAULT_NIGHTDELAY   (10 * MS_IN_SEC)	// 10 seconds
@@ -569,11 +569,11 @@ printf("xxxxxxx exposure_time_us=%'ld, timeToTakeImage_us=%'ld\n", exposure_time
 // Exit the program gracefully.
 void closeUp(int e)
 {
-    static int closingUp = 0;		// indicates if we're in the process of exiting.
+    static bool closingUp = false;		// indicates if we're in the process of exiting.
     // For whatever reason, we're sometimes called twice, but we should only execute once.
     if (closingUp) return;
 
-    closingUp = 1;
+    closingUp = true;
 
     ASIStopVideoCapture(CamNum);
 
@@ -586,7 +586,7 @@ void closeUp(int e)
 	// Close the optional display window.
     if (bDisplay)
     {
-        bDisplay = 0;
+        bDisplay = false;
 		void *retval;
         pthread_join(thread_display, &retval);
     }
@@ -597,7 +597,7 @@ void closeUp(int e)
 
 void IntHandle(int i)
 {
-    gotSignal = 1;
+    gotSignal = true;
     closeUp(0);
 }
 
@@ -779,7 +779,7 @@ int main(int argc, char *argv[])
 
     // #define the defaults so we can use the same value in the help message.
 
-const char *locale = DEFAULT_LOCALE;
+	const char *locale = DEFAULT_LOCALE;
     // All the font settings apply to both day and night.
     int fontnumber             = DEFAULT_FONTNUMBER;
     int iTextX                 = DEFAULT_ITEXTX;
@@ -811,13 +811,13 @@ const char *locale = DEFAULT_LOCALE;
 
 #define DEFAULT_ASIBANDWIDTH    40
     int asiBandwidth           = DEFAULT_ASIBANDWIDTH;
-    int asiAutoBandwidth       = 0;	// is Auto Bandwidth on or off?
+    bool asiAutoBandwidth      = false;	// is Auto Bandwidth on or off?
 
     // There is no max day autoexposure since daylight exposures are always pretty short.
 #define DEFAULT_ASINIGHTEXPOSURE (5 * US_IN_SEC)	// 5 seconds
     long asi_night_exposure_us = DEFAULT_ASINIGHTEXPOSURE;
-#define DEFAULT_NIGHTAUTOEXPOSURE 1
-    int asiNightAutoExposure   = DEFAULT_NIGHTAUTOEXPOSURE;	// is it on or off for nighttime?
+#define DEFAULT_NIGHTAUTOEXPOSURE true
+    bool asiNightAutoExposure  = DEFAULT_NIGHTAUTOEXPOSURE;	// is it on or off for nighttime?
     // currentAutoExposure is global so is defined outside of main()
 
 // Maximum number of auto-exposure frames to skip when starting the program.
@@ -829,13 +829,13 @@ const char *locale = DEFAULT_LOCALE;
     int night_skip_frames      = DEFAULT_NIGHTSKIPFRAMES;
     int current_skip_frames    = NOT_SET;
 
-#define DEFAULT_ASIDAYGHTGAIN    0
-    int asiDayGain             = DEFAULT_ASIDAYGHTGAIN;
-    int asiDayAutoGain         = 0;	// is Auto Gain on or off for daytime?
+#define DEFAULT_ASIDAYGHTGAIN    false
+    bool asiDayGain            = DEFAULT_ASIDAYGHTGAIN;
+    bool asiDayAutoGain        = false;	// is Auto Gain on or off for daytime?
 #define DEFAULT_ASINIGHTGAIN     150
     int asiNightGain           = DEFAULT_ASINIGHTGAIN;
-#define DEFAULT_NIGHTAUTOGAIN    0
-    int asiNightAutoGain       = DEFAULT_NIGHTAUTOGAIN;	// is Auto Gain on or off for nighttime?
+#define DEFAULT_NIGHTAUTOGAIN    false
+    bool asiNightAutoGain      = DEFAULT_NIGHTAUTOGAIN;	// is Auto Gain on or off for nighttime?
 #define DEFAULT_ASINIGHTMAXGAIN  200
     int asiNightMaxGain        = DEFAULT_ASINIGHTMAXGAIN;
 
@@ -854,20 +854,20 @@ const char *locale = DEFAULT_LOCALE;
     // (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
     char const *angle          = DEFAULT_ANGLE;
 
-    int preview                = 0;
-    int showTime               = DEFAULT_SHOWTIME;
+    bool preview               = false;
+    bool showTime              = DEFAULT_SHOWTIME;
     char const *tempType       = "C";	// Celsius
 
-    int showDetails            = 0;
+    bool showDetails           = false;
         // Allow for more granularity than showDetails, which shows everything:
-        int showTemp           = 0;
-        int showExposure       = 0;
-        int showGain           = 0;
-        int showBrightness     = 0;
+        bool showTemp          = false;
+        bool showExposure      = false;
+        bool showGain          = false;
+        bool showBrightness    = false;
 #ifdef USE_HISTOGRAM
         int showMean           = 0;
     int maxHistogramAttempts   = 15;	// max number of times we'll try for a better histogram mean
-    int showHistogramBox       = 0;
+    bool showHistogramBox      = false;
     int histogramBoxSizeX      = DEFAULT_BOX_SIZEX;
     int histogramBoxSizeY      = DEFAULT_BOX_SIZEY;
 #define DEFAULT_AGGRESSION       50
@@ -887,11 +887,11 @@ const char *locale = DEFAULT_LOCALE;
     const int percent_change = DEFAULT_PERCENTCHANGE;
 #endif
 
-    int daytimeCapture         = DEFAULT_DAYTIMECAPTURE;  // are we capturing daytime pictures?
+    bool daytimeCapture        = DEFAULT_DAYTIMECAPTURE;  // are we capturing daytime pictures?
 
-    int help                   = 0;
+    bool help                  = true;
     int quality                = NOT_SET;
-    int asiCoolerEnabled       = 0;
+    bool asiCoolerEnabled      = false;
     long asiTargetTemp         = 0;
 
     //-------------------------------------------------------------------------------------------------------
@@ -925,9 +925,9 @@ const char *locale = DEFAULT_LOCALE;
         // The old names should be removed below in a future version.
         for (i=1 ; i <= argc - 1 ; i++)
         {
-            if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0)
+            if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
             {
-                help = 1;
+                help = true;
             }
             else if (strcmp(argv[i], "-save_dir") == 0)
             {
@@ -935,10 +935,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-newexposure") == 0)
             {
-                if (atoi(argv[++i]))
-                    use_new_exposure_algorithm = true;
-                else
-                    use_new_exposure_algorithm = false;
+                use_new_exposure_algorithm = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-locale") == 0)
             {
@@ -954,7 +951,7 @@ const char *locale = DEFAULT_LOCALE;
             }
 	        else if (strcmp(argv[i], "-tty") == 0)	// overrides what was automatically determined
             {
-                tty = atoi(argv[++i]) ? true : false;
+                tty = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-width") == 0)
             {
@@ -982,11 +979,11 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-dayautoexposure") == 0)
             {
-                asiDayAutoExposure = atoi(argv[++i]);
+                asiDayAutoExposure = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-nightautoexposure") == 0 || strcmp(argv[i], "-autoexposure") == 0)
             {
-                asiNightAutoExposure = atoi(argv[++i]);
+                asiNightAutoExposure = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-daymaxexposure") == 0)
             {
@@ -1006,7 +1003,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-nightautogain") == 0 || strcmp(argv[i], "-autogain") == 0)
             {
-                asiNightAutoGain = atoi(argv[++i]);
+                asiNightAutoGain = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-gaintransitiontime") == 0)
             {
@@ -1057,7 +1054,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-autowhitebalance") == 0)
             {
-                autoAWB = atoi(argv[++i]) == 1 ? true : false;
+                autoAWB = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-text") == 0)
             {
@@ -1111,7 +1108,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-outlinefont") == 0)
             {
-                outlinefont = atoi(argv[++i]);
+                outlinefont = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-flip") == 0)
             {
@@ -1123,7 +1120,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-autousb") == 0)
             {
-                asiAutoBandwidth = atoi(argv[++i]);
+                asiAutoBandwidth = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-filename") == 0)
             {
@@ -1143,7 +1140,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-notificationimages") == 0)
             {
-                notificationImages = atoi(argv[++i]);
+                notificationImages = getBoolean(argv[++i]);
             }
 #ifdef USE_HISTOGRAM
             else if (strcmp(argv[i], "-histogrambox") == 0)
@@ -1157,7 +1154,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-showhistogrambox") == 0)
             {
-                showHistogramBox = atoi(argv[++i]);
+                showHistogramBox = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-aggression") == 0)
             {
@@ -1174,7 +1171,7 @@ const char *locale = DEFAULT_LOCALE;
 #endif
             else if (strcmp(argv[i], "-preview") == 0)
             {
-                preview = atoi(argv[++i]);
+                preview = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-debuglevel") == 0)
             {
@@ -1182,7 +1179,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-showTime") == 0 || strcmp(argv[i], "-time") == 0)
             {
-                showTime = atoi(argv[++i]);
+                showTime = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-timeformat") == 0)
             {
@@ -1190,11 +1187,11 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-darkframe") == 0)
             {
-                taking_dark_frames = atoi(argv[++i]);
+                taking_dark_frames = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-showDetails") == 0)
             {
-                showDetails = atoi(argv[++i]);
+                showDetails = getBoolean(argv[++i]);
                 // showDetails is an obsolete variable that shows ALL details except time.
                 // It's been replaced by separate variables for various lines.
                 showTemp = showDetails;
@@ -1203,7 +1200,7 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-showTemp") == 0)
             {
-                showTemp = atoi(argv[++i]);
+                showTemp = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-temptype") == 0)
             {
@@ -1211,29 +1208,29 @@ const char *locale = DEFAULT_LOCALE;
             }
             else if (strcmp(argv[i], "-showExposure") == 0)
             {
-                showExposure = atoi(argv[++i]);
+                showExposure = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-showGain") == 0)
             {
-                showGain = atoi(argv[++i]);
+                showGain = getBoolean(argv[++i]);
             }
             else if (strcmp(argv[i], "-showBrightness") == 0)
             {
-                showBrightness = atoi(argv[++i]);
+                showBrightness = getBoolean(argv[++i]);
             }
 #ifdef USE_HISTOGRAM
             else if (strcmp(argv[i], "-showHistogram") == 0)
             {
-                showMean = atoi(argv[++i]);
+                showMean = getBoolean(argv[++i]);
             }
 #endif
             else if (strcmp(argv[i], "-daytime") == 0)
             {
-                daytimeCapture = atoi(argv[++i]);
+                daytimeCapture = getBoolean(argv[++i]);
             }
 	        else if (strcmp(argv[i], "-coolerEnabled") == 0)
             {
-                asiCoolerEnabled = atoi(argv[++i]);
+                asiCoolerEnabled = getBoolean(argv[++i]);
             }
 	        else if (strcmp(argv[i], "-targetTemp") == 0)
             {
@@ -1251,18 +1248,18 @@ const char *locale = DEFAULT_LOCALE;
         printf("%sAvailable Arguments:\n", c(KYEL));
         printf(" -width                 - Default = %d = Camera Max Width\n", DEFAULT_WIDTH);
         printf(" -height                - Default = %d = Camera Max Height\n", DEFAULT_HEIGHT);
-        printf(" -daytime               - Default = %d: 1 enables capture daytime images\n", DEFAULT_DAYTIMECAPTURE);
+        printf(" -daytime               - Default = %s: 1 enables capture daytime images\n", yesNo(DEFAULT_DAYTIMECAPTURE));
         printf(" -dayexposure           - Default = %'d: Daytime exposure in us (equals to %.4f sec)\n", DEFAULT_ASIDAYEXPOSURE, (float)DEFAULT_ASIDAYEXPOSURE/US_IN_SEC);
         printf(" -nightexposure         - Default = %'d: Nighttime exposure in us (equals to %.4f sec)\n", DEFAULT_ASINIGHTEXPOSURE, (float)DEFAULT_ASINIGHTEXPOSURE/US_IN_SEC);
-        printf(" -dayautoexposure       - Default = %d: 1 enables daytime auto-exposure\n", DEFAULT_DAYAUTOEXPOSURE);
-        printf(" -nightautoexposure     - Default = %d: 1 enables nighttime auto-exposure\n", DEFAULT_NIGHTAUTOEXPOSURE);
+        printf(" -dayautoexposure       - Default = %s: 1 enables daytime auto-exposure\n", yesNo(DEFAULT_DAYAUTOEXPOSURE));
+        printf(" -nightautoexposure     - Default = %s: 1 enables nighttime auto-exposure\n", yesNo(DEFAULT_NIGHTAUTOEXPOSURE));
         printf(" -daymaxexposure        - Default = %'d: Maximum daytime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_ASIDAYMAXAUTOEXPOSURE_MS, (float)DEFAULT_ASIDAYMAXAUTOEXPOSURE_MS/US_IN_MS);
         printf(" -nightmaxexposure      - Default = %'d: Maximum nighttime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_ASINIGHTMAXAUTOEXPOSURE_MS, (float)DEFAULT_ASINIGHTMAXAUTOEXPOSURE_MS/US_IN_MS);
         printf(" -daybrightness         - Default = %d: Daytime brightness level\n", DEFAULT_BRIGHTNESS);
         printf(" -nightbrightness       - Default = %d: Nighttime brightness level\n", DEFAULT_BRIGHTNESS);
         printf(" -nightgain             - Default = %d: Nighttime gain\n", DEFAULT_ASINIGHTGAIN);
         printf(" -nightmaxgain          - Default = %d: Nighttime maximum auto gain\n", DEFAULT_ASINIGHTMAXGAIN);
-        printf(" -nightautogain         - Default = %d: 1 enables nighttime auto gain\n", DEFAULT_NIGHTAUTOGAIN);
+        printf(" -nightautogain         - Default = %s: 1 enables nighttime auto gain\n", yesNo(DEFAULT_NIGHTAUTOGAIN));
         printf(" -gaintransitiontime    - Default = %'d: Seconds to transition gain from day-to-night or night-to-day.  0 disable it.\n", DEFAULT_GAIN_TRANSITION_TIME);
         printf(" -dayskipframes         - Default = %d: Number of auto-exposure daytime frames to skip when starting software.\n", DEFAULT_DAYSKIPFRAMES);
         printf(" -nightskipframes       - Default = %d: Number of auto-exposure nighttime frames to skip when starting software.\n", DEFAULT_NIGHTSKIPFRAMES);
@@ -1272,7 +1269,7 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -gamma                 - Default = %d: Gamma level\n", DEFAULT_ASIGAMMA);
         printf(" -wbr                   - Default = %d: Manual White Balance Red\n", DEFAULT_WBR);
         printf(" -wbb                   - Default = %d: Manual White Balance Blue\n", DEFAULT_WBB);
-        printf(" -autowhitebalance      - Default = %d: 1 enables auto White Balance\n", DEFAULT_AUTOAWB);
+        printf(" -autowhitebalance      - Default = %s: 1 enables auto White Balance\n", yesNo(DEFAULT_AUTOAWB));
         printf(" -daybin                - Default = %d: 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n", DEFAULT_DAYBIN);
         printf(" -nightbin              - Default = %d: same as daybin but for night\n", DEFAULT_NIGHTBIN);
         printf(" -dayDelay              - Default = %'d: Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY);
@@ -1280,7 +1277,7 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -type = Image Type     - Default = %d: 99 = auto,  0 = RAW8,  1 = RGB24,  2 = RAW16,  3 = Y8\n", DEFAULT_IMAGE_TYPE);
         printf(" -quality               - Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
         printf(" -usb = USB Speed       - Default = %d: Values between 40-100, This is BandwidthOverload\n", DEFAULT_ASIBANDWIDTH);
-        printf(" -autousb               - Default = 0: 1 enables auto USB Speed\n");
+        printf(" -autousb               - Default = false: 1 enables auto USB Speed\n");
         printf(" -filename              - Default = %s\n", DEFAULT_FILENAME);
         printf(" -save_dir              - Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
         printf(" -flip                  - Default = 0: 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both\n");
@@ -1297,7 +1294,7 @@ const char *locale = DEFAULT_LOCALE;
         printf(" -fonttype              - Default = %d: Font Line Type: 0=AA, 1=8, 2=4\n", DEFAULT_LINENUMBER);
         printf(" -fontsize              - Default = %d: Text Font Size\n", DEFAULT_FONTSIZE);
         printf(" -fontline              - Default = %d: Text Font Line Thickness\n", DEFAULT_LINEWIDTH);
-        printf(" -outlinefont           - Default = %d: 1 enables outline font\n", DEFAULT_OUTLINEFONT);
+        printf(" -outlinefont           - Default = %s: 1 enables outline font\n", yesNo(DEFAULT_OUTLINEFONT));
         printf("\n");
         printf("\n");
         printf(" -latitude              - Default = %7s: Latitude of the camera.\n", DEFAULT_LATITUDE);
@@ -1316,7 +1313,7 @@ const char *locale = DEFAULT_LOCALE;
 #endif
         printf(" -darkframe             - 1 disables the overlay and takes dark frames instead\n");
         printf(" -preview               - 1 previews the captured images. Only works with a Desktop Environment\n");
-        printf(" -time                  - 1 displayes the time. Combine with Text X and Text Y for placement\n");
+        printf(" -time                  - 1 displays the time. Combine with Text X and Text Y for placement\n");
         printf(" -timeformat            - Format the optional time is displayed in; default is '%s'\n", DEFAULT_TIMEFORMAT);
         printf(" -showTemp              - 1 displays the camera sensor temperature\n");
         printf(" -temptype              - Units to display temperature in: 'C'elsius, 'F'ahrenheit, or 'B'oth.\n");
@@ -1357,7 +1354,7 @@ const char *locale = DEFAULT_LOCALE;
     {
         imagetype = "png";
         compression_parameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
-	// png is lossless so "quality" is really just the amount of compression.
+		// png is lossless so "quality" is really just the amount of compression.
         if (quality > 9 || taking_dark_frames)
         {
             quality = 9;
@@ -1785,7 +1782,7 @@ const char *locale = DEFAULT_LOCALE;
     printf(" Preview: %s\n", yesNo(preview));
     printf(" Taking Dark Frames: %s\n", yesNo(taking_dark_frames));
     printf(" Debug Level: %d\n", debugLevel);
-    printf(" On TTY: %s\n", tty ? "Yes" : "No");
+    printf(" On TTY: %s\n", yesNo(tty));
     printf(" Video OFF Between Images: %s\n", yesNo(use_new_exposure_algorithm));
     printf(" ZWO SDK version %s\n", ASIGetSDKVersion());
     printf("%s\n", c(KNRM));
@@ -1834,7 +1831,7 @@ const char *locale = DEFAULT_LOCALE;
     int originalFontsize = fontsize;
     int originalLinewidth = linewidth;
     // Have we displayed "not taking picture during day" message, if applicable?
-    int displayedNoDaytimeMsg = 0;
+    bool displayedNoDaytimeMsg = false;
     int gainChange = 0;			// how much to change gain up or down
 
     // Display one-time messages.
@@ -1843,7 +1840,7 @@ const char *locale = DEFAULT_LOCALE;
     // so don't transition.
     // gainTransitionTime of 0 means don't adjust gain.
     // No need to adjust gain if day and night gain are the same.
-    if (asiDayAutoGain == 1 || asiNightAutoGain == 1 || gainTransitionTime == 0 || asiDayGain == asiNightGain || taking_dark_frames == 1)
+    if (asiDayAutoGain || asiNightAutoGain || gainTransitionTime == 0 || asiDayGain == asiNightGain || taking_dark_frames)
     {
         adjustGain = false;
         Log(3, "Will NOT adjust gain at transitions\n");
@@ -1890,7 +1887,7 @@ const char *locale = DEFAULT_LOCALE;
                 // We're doing dark frames so turn off autoexposure and autogain, and use
                 // nightime gain, delay, max exposure, bin, and brightness to mimic a nightime shot.
                 currentAutoExposure = false;
-                asiNightAutoExposure = 0;
+                asiNightAutoExposure = false;
                 currentAutoGain = false;
                 // Don't need to set ASI_AUTO_MAX_GAIN since we're not using auto gain
                 currentGain = asiNightGain;
@@ -1915,19 +1912,19 @@ const char *locale = DEFAULT_LOCALE;
                 Log(0, "Processing end of night data\n");
                 system("scripts/endOfNight.sh &");
                 endOfNight = false;
-                displayedNoDaytimeMsg = 0;
+                displayedNoDaytimeMsg = false;
             }
 
             if (daytimeCapture != 1)
             {
                 // Only display messages once a day.
-                if (displayedNoDaytimeMsg == 0) {
+                if (! displayedNoDaytimeMsg) {
                     if (notificationImages) {
                         system("scripts/copy_notification_image.sh CameraOffDuringDay &");
                     }
                     Log(0, "It's daytime... we're not saving images.\n*** %s ***\n",
                         tty ? "Press Ctrl+C to stop" : "Stop the allsky service to end this process.");
-                    displayedNoDaytimeMsg = 1;
+                    displayedNoDaytimeMsg = true;
 
                     // sleep until almost nighttime, then wake up and sleep more if needed.
                     int secsTillNight = calculateTimeToNightTime(latitude, longitude, angle);
@@ -2029,7 +2026,7 @@ const char *locale = DEFAULT_LOCALE;
                 current_skip_frames = night_skip_frames;
 
             // Setup the night time capture parameters
-            if (numExposures == 0 || asiNightAutoExposure == ASI_FALSE)
+            if (numExposures == 0 || ! asiNightAutoExposure)
             {
 				if (asiNightAutoExposure && asi_night_exposure_us > asi_night_max_autoexposure_ms*US_IN_MS)
 				{
@@ -2155,17 +2152,17 @@ const char *locale = DEFAULT_LOCALE;
                 if (numExposures == 0 && preview == 1)
                 {
                     // Start the preview thread at the last possible moment.
-                    bDisplay = 1;
+                    bDisplay = true;
                     pthread_create(&thread_display, NULL, Display, (void *)&pRgb);
                 }
 
 #ifdef USE_HISTOGRAM
-                int usedHistogram = 0;	// did we use the histogram method?
+                bool usedHistogram = false;	// did we use the histogram method?
 
                 // We don't use this at night since the ZWO bug is only when it's light outside.
                 if (dayOrNight == "DAY" && asiDayAutoExposure && ! taking_dark_frames)
                 {
-                    usedHistogram = 1;	// we are using the histogram code on this exposure
+                    usedHistogram = true;	// we are using the histogram code on this exposure
                     attempts = 0;
 
 					// Got these by trial and error.  They are more-or-less half the max of 255.
@@ -2203,8 +2200,8 @@ const char *locale = DEFAULT_LOCALE;
                         const float adjustmentAmountPerMultiple = 0.12;
 
                         // The amount doesn't change after being set, so only display once.
-                        static int showedMessage = 0;
-                        if (showedMessage == 0)
+                        static bool showedMessage = false;
+                        if (! showedMessage)
                         {
                             float numMultiples;
 
@@ -2215,7 +2212,7 @@ const char *locale = DEFAULT_LOCALE;
                             numMultiples = (float)(asiDayBrightness - DEFAULT_BRIGHTNESS) / DEFAULT_BRIGHTNESS;
                             exposureAdjustment = 1 + (numMultiples * adjustmentAmountPerMultiple);
                             Log(3, "  > >>> Adjusting exposure x %.2f (%.1f%%) for daybrightness\n", exposureAdjustment, (exposureAdjustment - 1) * 100);
-                            showedMessage = 1;
+                            showedMessage = true;
                         }
 
                         // Now adjust the variables
@@ -2600,7 +2597,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                     // TODO: wait for the prior image to finish saving.
                 }
 
-                if (asiNightAutoGain == 1 && dayOrNight == "NIGHT" && ! taking_dark_frames)
+                if (asiNightAutoGain && dayOrNight == "NIGHT" && ! taking_dark_frames)
                 {
                     ASIGetControlValue(CamNum, ASI_GAIN, &actualGain, &bAuto);
                     Log(1, "  > Auto Gain value: %ld\n", actualGain);
@@ -2617,7 +2614,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 #endif
 
                     // Delay applied before next exposure
-                    if (dayOrNight == "NIGHT" && asiNightAutoExposure == 1 && last_exposure_us < (asi_night_max_autoexposure_ms * US_IN_MS) && ! taking_dark_frames)
+                    if (dayOrNight == "NIGHT" && asiNightAutoExposure && last_exposure_us < (asi_night_max_autoexposure_ms * US_IN_MS) && ! taking_dark_frames)
                     {
                         // If using auto-exposure and the actual exposure is less than the max,
                         // we still wait until we reach maxexposure, then wait for the delay period.
@@ -2644,7 +2641,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 		           else
                         s = "manual";
 #ifdef USE_HISTOGRAM
-                    if (usedHistogram == 1)
+                    if (usedHistogram)
                         s = "histogram";
 #endif
                     Log(0, "  > Sleeping %s from %s exposure\n", length_in_units(currentDelay_ms * US_IN_MS, false), s.c_str());

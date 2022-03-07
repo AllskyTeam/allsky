@@ -61,7 +61,7 @@
 extern int debugLevel;
 extern char debug_text[];
 extern bool tty;
-extern int notificationImages;
+extern bool notificationImages;
 extern std::string dayOrNight;
 
 void cvText(cv::Mat, const char *, int, int, double,

@@ -83,7 +83,7 @@ int calculateTimeToNightTime(const char *, const char *, const char *);
 void Log(int, const char *, ...);
 char const *c(char const *);
 void closeUp(int);
-char const *yesNo(int);
+char const *yesNo(bool);
 char *length_in_units(long, bool);
 int doOverlay(cv::Mat,
 	bool, char *,

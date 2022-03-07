@@ -32,7 +32,6 @@ using namespace std;
 
 std::vector<int> compression_parameters;
 bool bMain					= true;
-//bool bDisplay = false;
 std::string dayOrNight;
 
 // These are global so they can be used by other routines.
@@ -68,8 +67,6 @@ bool currentAutoGain		= false;	// is auto-gain currently on?
 bool autoAWB				= false;
 float WBR					= 2.5;
 float WBB					= 2;
-
-//bool bSavingImg = false;
 
 raspistillSetting myRaspistillSetting;
 modeMeanSetting myModeMeanSetting;
@@ -132,7 +129,7 @@ const char *getCameraCommand(bool libcamera)
 }
 
 // Build capture command to capture the image from the HQ camera
-int RPiHQcapture(bool auto_exposure, int exposure_us, int bin, bool auto_gain, double gain, bool auto_AWB, float WBR, float WBB, int rotation, int flip, float saturation, int brightness, int quality, const char* fileName, int darkframe, int preview, int width, int height, bool libcamera, cv::Mat *image)
+int RPiHQcapture(bool auto_exposure, int exposure_us, int bin, bool auto_gain, double gain, bool auto_AWB, float WBR, float WBB, int rotation, int flip, float saturation, int brightness, int quality, const char* fileName, int taking_dark_frames, int preview, int width, int height, bool libcamera, cv::Mat *image)
 {
 	// Define command line.
 	string command = getCameraCommand(libcamera);
@@ -211,7 +208,6 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, int bin, bool auto_gain, d
 	if (libcamera)
 	{
 		if (bin==1)
-			// xxxxxx command += " --width 4060 --height 3056";
 			command += " --width 4056 --height 3040";
 		else if (bin==2)
 			command += " --width 2028 --height 1520";
@@ -327,29 +323,15 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, int bin, bool auto_gain, d
 		WBB = 10;
 
 	// libcamera: if the red and blue numbers are given it turns off AWB.
-//xxx I don't think the check for myModeMeanSetting.mode_mean is needed anymore.
 	// Check if R and B component are given
-	if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) {
-		if (auto_AWB) {
-			command += " --awb auto";
-		}
-		else {
-			ss.str("");
-			ss << WBR << "," << WBB;
-			if (! libcamera)
-				command += " --awb off";
-			command += " --awbgains " + ss.str();
-		}
-	}
-	else if (! auto_AWB) {
+	if (! auto_AWB) {
 		ss.str("");
 		ss << WBR << "," << WBB;
 		if (! libcamera)
 			command += " --awb off";
 		command += " --awbgains " + ss.str();
 	}
-	// Use automatic white balance
-	else {
+	else {		// Use automatic white balance
 		command += " --awb auto";
 	}
 
@@ -430,7 +412,6 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, int bin, bool auto_gain, d
 
 int main(int argc, char *argv[])
 {
-	// is_libcamera is only temporary so do a hack to determine if we should use raspistill or libcamera.
 	// We need to know its value before setting other variables.
 	bool is_libcamera;	// are we using libcamera or raspistill?
 	if (argc > 2 && strcmp(argv[1], "-cmd") == 0 && strcmp(argv[2], "libcamera") == 0)
@@ -472,7 +453,6 @@ const char *locale				= DEFAULT_LOCALE;
 	int linewidth				= DEFAULT_LINEWIDTH;
 	bool outlinefont			= DEFAULT_OUTLINEFONT;
 	int fontcolor[3]			= { 255, 0, 0 };
-	int background				= 0;
 	int smallFontcolor[3]		= { 0, 0, 255 };
 	int linetype[3]				= { cv::LINE_AA, 8, 4 };
 #define DEFAULT_LINENUMBER		0
@@ -546,7 +526,7 @@ const char *locale				= DEFAULT_LOCALE;
 	bool showBrightness			= false;
 	bool showMean				= false;
 	bool showFocus				= false;
-	bool darkframe				= false;
+	bool taking_dark_frames		= false;
 	bool daytimeCapture			= false;
 	bool help					= false;
 	int quality					= 90;
@@ -564,7 +544,7 @@ const char *locale				= DEFAULT_LOCALE;
 
 	printf("\n");
 	printf("%s ************************************************\n", c(KGRN));
-	printf("%s *** Allsky Camera Software v0.8.3.2  |  2022 ***\n", c(KGRN));
+	printf("%s *** Allsky Camera Software v0.8.3.3  |  2022 ***\n", c(KGRN));
 	printf("%s ************************************************\n\n", c(KGRN));
 	printf("\%sCapture images of the sky with a Raspberry Pi and a RPi HQ camera\n", c(KGRN));
 	printf("\n");
@@ -582,21 +562,13 @@ const char *locale				= DEFAULT_LOCALE;
 	printf("-Andreas Lindinger\n");
 	printf("\n");
 
-	// The newer "allsky.sh" puts quotes around arguments so we can have spaces in them.
-	// If you are running the old allsky.sh, set this to false:
-	bool argumentsQuoted = true;
-
 	if (argc > 1)
 	{
-		Log(4, "Found %d parameters...\n", argc - 1);
-
 		for (i = 1; i <= argc - 1; i++)
 		{
-			Log(4, "Processing argument %2d: %s\n", i, argv[i]);
-
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
-				help = 1;
+				help = true;
 			}
 			else if (strcmp(argv[i], "-save_dir") == 0)
 			{
@@ -626,16 +598,15 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				quality = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-focus") == 0 || strcmp(argv[i], "-autofocus") == 0)
+			else if (strcmp(argv[i], "-focus") == 0)
 			{
 				showFocus = getBoolean(argv[++i]);
 			}
-			// check for old names as well - the "||" part is the old name
 			else if (strcmp(argv[i], "-dayexposure") == 0)
 			{
 				asiDayExposure_us = atof(argv[++i]) * US_IN_MS;	// allow fractions
 			}
-			else if (strcmp(argv[i], "-nightexposure") == 0 || strcmp(argv[i], "-exposure") == 0)
+			else if (strcmp(argv[i], "-nightexposure") == 0)
 			{
 				asiNightExposure_us = atof(argv[++i]) * US_IN_MS;
 			}
@@ -644,7 +615,7 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				asiDayAutoExposure = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightautoexposure") == 0 || strcmp(argv[i], "-autoexposure") == 0)
+			else if (strcmp(argv[i], "-nightautoexposure") == 0)
 			{
 				asiNightAutoExposure = getBoolean(argv[++i]);
 			}
@@ -653,7 +624,7 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				asiDayAutoGain = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightautogain") == 0 || strcmp(argv[i], "-autogain") == 0)
+			else if (strcmp(argv[i], "-nightautogain") == 0)
 			{
 				asiNightAutoGain = getBoolean(argv[++i]);
 			}
@@ -661,18 +632,13 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				asiDayGain = atof(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightgain") == 0 || strcmp(argv[i], "-gain") == 0)
+			else if (strcmp(argv[i], "-nightgain") == 0)
 			{
 				asiNightGain = atof(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-saturation") == 0)
 			{
 				saturation = atof(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-brightness") == 0)// old "-brightness" applied to day and night
-			{
-				asiDayBrightness = atoi(argv[++i]);
-				asiNightBrightness = asiDayBrightness;
 			}
 			else if (strcmp(argv[i], "-daybrightness") == 0)
 			{
@@ -686,15 +652,15 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				dayBin = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightbin") == 0 || strcmp(argv[i], "-bin") == 0)
+			else if (strcmp(argv[i], "-nightbin") == 0)
 			{
 				nightBin = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-daydelay") == 0 || strcmp(argv[i], "-daytimeDelay") == 0)
+			else if (strcmp(argv[i], "-daydelay") == 0)
 			{
 				dayDelay_ms = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightdelay") == 0 || strcmp(argv[i], "-delay") == 0)
+			else if (strcmp(argv[i], "-nightdelay") == 0)
 			{
 				nightDelay_ms = atoi(argv[++i]);
 			}
@@ -748,50 +714,9 @@ const char *locale				= DEFAULT_LOCALE;
 				i++;
 			}
 
-			// Check for text parameter
 			else if (strcmp(argv[i], "-text") == 0)
 			{
-				if (argumentsQuoted)
-				{
-					ImgText = argv[++i];
-				}
-				else
-				{
-					// Get first param
-					char *param = argv[i + 1];
-
-					// Space character
-					const char *space = " ";
-
-					// Temporary text buffer
-					char buffer[1024]; // <- danger, only storage for 1024 characters.
-
-					// First word flag
-					int j = 0;
-
-					// Loop while next parameter doesn't start with a - character
-					while (strncmp(param, "-", 1) != 0)
-					{
-						// Copy Text into buffer
-						strncpy(buffer, ImgText, sizeof(buffer));
-
-						// Add a space after each word (skip for first word)
-						if (j)
-							strncat(buffer, space, sizeof(buffer));
-
-						// Add parameter
-						strncat(buffer, param, sizeof(buffer));
-
-						// Copy buffer into ImgText variable
-						ImgText = buffer;
-
-						// Flag first word is entered
-						j = 1;
-
-						// Get next parameter
-						param = argv[++i];
-					}
-				}
+				ImgText = argv[++i];
 			}
 			else if (strcmp(argv[i], "-extratext") == 0)
 			{
@@ -817,26 +742,15 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				fontnumber = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-background") == 0)
-			{
-				background = atoi(argv[++i]);
-			}
 			else if (strcmp(argv[i], "-fontcolor") == 0)
 			{
-				sscanf(argv[++i], "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]);
+				if (sscanf(argv[++i], "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]) != 3)
+					fprintf(stderr, "%s*** ERROR: Not enough font color parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
 			}
 			else if (strcmp(argv[i], "-smallfontcolor") == 0)
 			{
-				if (argumentsQuoted)
-				{
-					sscanf(argv[++i], "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]);
-				}
-				else
-				{
-					smallFontcolor[0] = atoi(argv[++i]);
-					smallFontcolor[1] = atoi(argv[++i]);
-					smallFontcolor[2] = atoi(argv[++i]);
-				}
+				if (sscanf(argv[++i], "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]) != 3)
+					fprintf(stderr, "%s*** ERROR: Not enough small font color parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
 			}
 			else if (strcmp(argv[i], "-fonttype") == 0)
 			{
@@ -886,7 +800,7 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				debugLevel = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-showTime") == 0 || strcmp(argv[i], "-time") == 0)
+			else if (strcmp(argv[i], "-showTime") == 0)
 			{
 				showTime = getBoolean(argv[++i]);
 			}
@@ -896,7 +810,7 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-darkframe") == 0)
 			{
-				darkframe = getBoolean(argv[++i]);
+				taking_dark_frames = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-showExposure") == 0)
 			{
@@ -933,14 +847,14 @@ const char *locale				= DEFAULT_LOCALE;
 		}
 	}
 
-	if (help == 1)
+	if (help)
 	{
 		printf("%sUsage:\n", c(KRED));
 		printf(" ./capture_RPiHQ -width 640 -height 480 -nightexposure 5000000 -nightbin 1 -filename Lake-Laberge.JPG\n\n");
 		printf("%s", c(KNRM));
 
 		printf("%sAvailable Arguments:\n", c(KYEL));
-		printf(" -cmd								- Default = raspistill - cmd being used\n");
+		printf(" -cmd								- Default = raspistill - command being used to take pictures\n");
 		printf(" -width								- Default = Camera Max Width\n");
 		printf(" -height							- Default = Camera Max Height\n");
 		printf(" -nightexposure						- Default = 5000000 - Time in us (equals to 5 sec)\n");
@@ -971,7 +885,6 @@ const char *locale				= DEFAULT_LOCALE;
 		printf(" -texty = Text Y					- Default = 25 - Text Placement Vertical from TOP in Pixels\n");
 		printf(" -fontname = Font Name				- Default = 0 - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n");
 		printf(" -fontcolor = Font Color			- Default = 255 - Text gray scale color (0 - 255)\n");
-		printf(" -background= Font Color			- Default = 0 - Backgroud gray scale color (0 - 255)\n");
 		printf(" -smallfontcolor = Small Font Color - Default = 0 0 255 - Text red (BGR)\n");
 		printf(" -fonttype = Font Type				- Default = 0 - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
 		printf(" -fontsize							- Default = 32 - Text Font Size (range 6 - 160, 32 default)\n");
@@ -985,7 +898,7 @@ const char *locale				= DEFAULT_LOCALE;
 		printf("\n");
 		printf(" -preview							- Set to 1 to preview the captured images. Only works with a Desktop Environment\n");
 		printf(" -darkframe							- Set to 1 to grab dark frame and cover your camera\n");
-		printf(" -time								- Set to 1 to display the time on the image.\n");
+		printf(" -showTime								- Set to 1 to display the time on the image.\n");
 		printf(" -focus								- Set to 1 to display a focus metric on the image.\n");
 		printf(" -notificationimages				- Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
 		printf(" -debuglevel						- Default = 0. Set to 1,2 or 3 for more debugging information.\n");
@@ -1014,7 +927,7 @@ const char *locale				= DEFAULT_LOCALE;
 		imagetype = "jpg";
 		compression_parameters.push_back(cv::IMWRITE_JPEG_QUALITY);
 		// want dark frames to be at highest quality
-		if (quality > 100 || darkframe)
+		if (quality > 100 || taking_dark_frames)
 		{
 			quality = 100;
 		}
@@ -1028,7 +941,7 @@ const char *locale				= DEFAULT_LOCALE;
 		imagetype = "png";
 		compression_parameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
 		// png is lossless so "quality" is really just the amount of compression.
-		if (quality > 9 || darkframe)
+		if (quality > 9 || taking_dark_frames)
 		{
 			quality = 9;
 		}
@@ -1057,7 +970,7 @@ const char *locale				= DEFAULT_LOCALE;
 
 	// Get just the name of the file, without any directories or the extension.
 	char fileNameOnly[50] = { 0 };
-	if (darkframe)
+	if (taking_dark_frames)
 	{
 		// To avoid overwriting the optional notification image with the dark image,
 		// during dark frames we use a different file name.
@@ -1138,7 +1051,6 @@ const char *locale				= DEFAULT_LOCALE;
 	printf(" Text Position: %dpx left, %dpx top\n", iTextX, iTextY);
 	printf(" Font Name: %d\n", fontname[fontnumber]);
 	printf(" Font Color: %d, %d, %d\n", fontcolor[0], fontcolor[1], fontcolor[2]);
-	printf(" Font Background Color: %d\n", background);
 	printf(" Small Font Color: %d, %d, %d\n", smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
 	printf(" Font Line Type: %d\n", linetype[linenumber]);
 	printf(" Font Size: %1.1f\n", fontsize);
@@ -1159,7 +1071,7 @@ const char *locale				= DEFAULT_LOCALE;
 	printf(" Show Brightness: %s\n", yesNo(showBrightness));
 	printf(" Show Focus Metric: %s\n", yesNo(showFocus));
 	printf(" Preview: %s\n", yesNo(preview));
-	printf(" Taking Dark Frames: %s\n", yesNo(darkframe));
+	printf(" Taking Dark Frames: %s\n", yesNo(taking_dark_frames));
 	printf(" Debug Level: %d\n", debugLevel);
 	printf(" On TTY: %s\n", yesNo(tty));
 	printf(" Mode Mean: %s\n", yesNo(myModeMeanSetting.mode_mean));
@@ -1191,7 +1103,7 @@ const char *locale				= DEFAULT_LOCALE;
 		dayOrNight = calculateDayOrNight(latitude, longitude, angle);
 		std::string lastDayOrNight = dayOrNight;
 
-		if (darkframe) {
+		if (taking_dark_frames) {
 			// We're doing dark frames so turn off autoexposure and autogain, and use
 			// nightime gain, delay, exposure, and brightness to mimic a nightime shot.
 			currentAutoExposure = false;
@@ -1341,7 +1253,7 @@ const char *locale				= DEFAULT_LOCALE;
 			if (showTime == 1)
 				sprintf(bufTime, "%s", formatTime(t, timeFormat));
 
-			if (! darkframe)
+			if (! taking_dark_frames)
 			{
 				// Create the name of the file that goes in the images/<date> directory.
 				snprintf(final_file_name, sizeof(final_file_name), "%s-%s.%s",
@@ -1350,7 +1262,7 @@ const char *locale				= DEFAULT_LOCALE;
 			snprintf(full_filename, sizeof(full_filename), "%s/%s", save_dir, final_file_name);
 
 			// Capture and save image
-			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, autoAWB, WBR, WBB, asiRotation, asiFlip, saturation, currentBrightness, quality, full_filename, darkframe, preview, width, height, is_libcamera, &pRgb);
+			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, autoAWB, WBR, WBB, asiRotation, asiFlip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
 
 			int focus_metric;
 			if (retCode == 0)
@@ -1359,7 +1271,7 @@ const char *locale				= DEFAULT_LOCALE;
 				focus_metric = (int)round(get_focus_metric(pRgb));
 
 				// If taking_dark_frames is off, add overlay text to the image
-				if (! darkframe)
+				if (! taking_dark_frames)
 				{
 					last_exposure_us = myRaspistillSetting.shutter_us;
 					if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
@@ -1410,7 +1322,7 @@ const char *locale				= DEFAULT_LOCALE;
 				}
 
 				char cmd[1100];
-				Log(1, "  > Saving %s image '%s'\n", darkframe ? "dark" : dayOrNight.c_str(), final_file_name);
+				Log(1, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), final_file_name);
 				snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
 
 				// -999 for temperature says the camera doesn't support it

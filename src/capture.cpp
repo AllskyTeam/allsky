@@ -858,14 +858,12 @@ int main(int argc, char *argv[])
     bool showTime              = DEFAULT_SHOWTIME;
     char const *tempType       = "C";	// Celsius
 
-    bool showDetails           = false;
-        // Allow for more granularity than showDetails, which shows everything:
-        bool showTemp          = false;
-        bool showExposure      = false;
-        bool showGain          = false;
-        bool showBrightness    = false;
+    bool showTemp              = false;
+    bool showExposure          = false;
+    bool showGain              = false;
+    bool showBrightness        = false;
 #ifdef USE_HISTOGRAM
-        int showMean           = 0;
+    bool showMean              = false;
     int maxHistogramAttempts   = 15;	// max number of times we'll try for a better histogram mean
     bool showHistogramBox      = false;
     int histogramBoxSizeX      = DEFAULT_BOX_SIZEX;
@@ -902,7 +900,7 @@ int main(int argc, char *argv[])
 
     printf("\n%s", c(KGRN));
     printf("**********************************************\n");
-    printf("*** Allsky Camera Software v0.8.3.2 |  2022 ***\n");
+    printf("*** Allsky Camera Software v0.8.3.3 |  2022 ***\n");
     printf("**********************************************\n\n");
     printf("Capture images of the sky with a Raspberry Pi and an ASI Camera\n");
     printf("%s\n", c(KNRM));
@@ -973,7 +971,7 @@ int main(int argc, char *argv[])
             {
                 asi_day_exposure_us = atof(argv[++i]) * US_IN_MS;  // allow fractions
             }
-            else if (strcmp(argv[i], "-nightexposure") == 0 || strcmp(argv[i], "-exposure") == 0)
+            else if (strcmp(argv[i], "-nightexposure") == 0)
             {
                 asi_night_exposure_us = atof(argv[++i]) * US_IN_MS;
             }
@@ -981,7 +979,7 @@ int main(int argc, char *argv[])
             {
                 asiDayAutoExposure = getBoolean(argv[++i]);
             }
-            else if (strcmp(argv[i], "-nightautoexposure") == 0 || strcmp(argv[i], "-autoexposure") == 0)
+            else if (strcmp(argv[i], "-nightautoexposure") == 0)
             {
                 asiNightAutoExposure = getBoolean(argv[++i]);
             }
@@ -989,19 +987,19 @@ int main(int argc, char *argv[])
             {
                 asi_day_max_autoexposure_ms = atoi(argv[++i]);
             }
-            else if (strcmp(argv[i], "-nightmaxexposure") == 0 || strcmp(argv[i], "-maxexposure") == 0)
+            else if (strcmp(argv[i], "-nightmaxexposure") == 0)
             {
                 asi_night_max_autoexposure_ms = atoi(argv[++i]);
             }
-            else if (strcmp(argv[i], "-nightgain") == 0 || strcmp(argv[i], "-gain") == 0)
+            else if (strcmp(argv[i], "-nightgain") == 0)
             {
                 asiNightGain = atoi(argv[++i]);
             }
-            else if (strcmp(argv[i], "-nightmaxgain") == 0 || strcmp(argv[i], "-maxgain") == 0)
+            else if (strcmp(argv[i], "-nightmaxgain") == 0)
             {
                 asiNightMaxGain = atoi(argv[++i]);
             }
-            else if (strcmp(argv[i], "-nightautogain") == 0 || strcmp(argv[i], "-autogain") == 0)
+            else if (strcmp(argv[i], "-nightautogain") == 0)
             {
                 asiNightAutoGain = getBoolean(argv[++i]);
             }
@@ -1013,12 +1011,6 @@ int main(int argc, char *argv[])
             else if (strcmp(argv[i], "-gamma") == 0)
             {
                 asiGamma = atoi(argv[++i]);
-            }
-            // old "-brightness" applied to day and night
-            else if (strcmp(argv[i], "-brightness") == 0)
-            {
-                asiDayBrightness = atoi(argv[++i]);
-                asiNightBrightness = asiDayBrightness;
             }
             else if (strcmp(argv[i], "-daybrightness") == 0)
             {
@@ -1032,15 +1024,15 @@ int main(int argc, char *argv[])
             {
                 dayBin = atoi(argv[++i]);
             }
-            else if (strcmp(argv[i], "-nightbin") == 0 || strcmp(argv[i], "-bin") == 0)
+            else if (strcmp(argv[i], "-nightbin") == 0)
             {
                 nightBin = atoi(argv[++i]);
             }
-            else if (strcmp(argv[i], "-daydelay") == 0 || strcmp(argv[i], "-daytimeDelay") == 0)
+            else if (strcmp(argv[i], "-daydelay") == 0)
             {
                 dayDelay_ms = atoi(argv[++i]);
             }
-            else if (strcmp(argv[i], "-nightdelay") == 0 || strcmp(argv[i], "-delay") == 0)
+            else if (strcmp(argv[i], "-nightdelay") == 0)
             {
                 nightDelay_ms = atoi(argv[++i]);
             }
@@ -1177,7 +1169,7 @@ int main(int argc, char *argv[])
             {
                 debugLevel = atoi(argv[++i]);
             }
-            else if (strcmp(argv[i], "-showTime") == 0 || strcmp(argv[i], "-time") == 0)
+            else if (strcmp(argv[i], "-showTime") == 0)
             {
                 showTime = getBoolean(argv[++i]);
             }
@@ -1188,15 +1180,6 @@ int main(int argc, char *argv[])
             else if (strcmp(argv[i], "-darkframe") == 0)
             {
                 taking_dark_frames = getBoolean(argv[++i]);
-            }
-            else if (strcmp(argv[i], "-showDetails") == 0)
-            {
-                showDetails = getBoolean(argv[++i]);
-                // showDetails is an obsolete variable that shows ALL details except time.
-                // It's been replaced by separate variables for various lines.
-                showTemp = showDetails;
-		        showExposure = showDetails;
-		        showGain = showDetails;
             }
             else if (strcmp(argv[i], "-showTemp") == 0)
             {
@@ -1239,7 +1222,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (help == 1)
+    if (help)
     {
         printf("%sUsage:\n", c(KRED));
         printf(" ./capture -width 640 -height 480 -nightexposure 5000000 -gamma 50 -type 1 -nightbin 1 -filename Lake-Laberge.PNG\n\n");
@@ -1774,7 +1757,6 @@ int main(int argc, char *argv[])
     printf(" Show Histogram Mean: %s\n", yesNo(showMean));
 #endif
     printf(" Show Time: %s (format: %s)\n", yesNo(showTime), timeFormat);
-    printf(" Show Details: %s\n", yesNo(showDetails));
     printf(" Show Temperature: %s, type: %s\n", yesNo(showTemp), tempType);
     printf(" Show Exposure: %s\n", yesNo(showExposure));
     printf(" Show Gain: %s\n", yesNo(showGain));
@@ -2138,7 +2120,7 @@ int main(int argc, char *argv[])
             Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(current_exposure_us, true));
 
             // Get start time for overlay.  Make sure it has the same time as exposureStart.
-            if (showTime == 1)
+            if (showTime)
 			{
             	sprintf(bufTime, "%s", formatTime(t, timeFormat));
 			}
@@ -2222,8 +2204,6 @@ int main(int argc, char *argv[])
                         maxAcceptableMean *= exposureAdjustment;
                     }
 
-                    std::string why;	// Why did we adjust the exposure?  For debugging
-
                     // Keep track of whether or not we're bouncing around, for example,
                     // one exposure is less than the min and the second is greater than the max.
                     // When that happens we don't want to set the min to the second exposure
@@ -2251,14 +2231,6 @@ int main(int argc, char *argv[])
                     else if (mean > maxAcceptableMean)
                     {
                         prior_mean_diff = mean - maxAcceptableMean;
-#ifdef DO_NOT_USE_OVER_MAX	// xxxxx this allows the image to get too bright
-                        if (aggression != 100 && current_skip_frames <= 0)
-                        {
-                            adjustment = prior_mean_diff * (1 - ((float)aggression/100));
-                            if (adjustment > 1)
-                                maxAcceptableMean += adjustment;
-                        }
-#endif
                     }
                     if (adjustment != 0)
                     {
@@ -2270,100 +2242,24 @@ int main(int argc, char *argv[])
 
                     while ((mean < minAcceptableMean || mean > maxAcceptableMean) && ++attempts <= maxHistogramAttempts && current_exposure_us <= current_max_autoexposure_us)
                     {
-                        why = "";
-                        int num = 0;
-
-                        //  The code below looks at how far off we are from an acceptable mean.
-                        //  There's probably a better way to do this, like adjust by some multiple
-                        //  of how far of we are.  That exercise is left to the reader...
-                         if (mean < (minAcceptableMean * 0.04))
-                         {
-                             // The cameras don't appear linear at this low of a level,
-                             // so really crank it up to get into the linear area.
-                             new_exposure_us = current_exposure_us * 25;
-                             why = "< (minAcceptableMean * 0.04)";
-                             num = minAcceptableMean * 0.04;
-                         }
-                         else if (mean < (minAcceptableMean * 0.1))
-                         {
-                             new_exposure_us = current_exposure_us * 7;
-                             why = "< (minAcceptableMean * 0.1)";
-                             num = minAcceptableMean * 0.1;
-                         }
-                         else if (mean < (minAcceptableMean * 0.3))
-                         {
-                             new_exposure_us = current_exposure_us * 4;
-                             why = "< (minAcceptableMean * 0.3)";
-                             num = minAcceptableMean * 0.3;
-                         }
-                         else if (mean < (minAcceptableMean * 0.6))
-                         {
-                             new_exposure_us = current_exposure_us * 2.5;
-                             why = "< (minAcceptableMean * 0.6)";
-                             num = minAcceptableMean * 0.6;
-                         }
-                         else if (mean < (minAcceptableMean * 0.8))
-                         {
-                             new_exposure_us = current_exposure_us * 1.8;
-                             why = "< (minAcceptableMean * 0.8)";
-                             num = minAcceptableMean * 0.8;
-                         }
-                         else if (mean < (minAcceptableMean * 1.0))
-                         {
-                             new_exposure_us = current_exposure_us * 1.05;
-                             why = "< minAcceptableMean";
-                             num = minAcceptableMean * 1.0;
-                         }
-
-
-                         else if (mean > (maxAcceptableMean * 1.89))
-                         {
-                             new_exposure_us = current_exposure_us * 0.4;
-                             why = "> (maxAcceptableMean * 1.89)";
-                             num = (maxAcceptableMean * 1.89);
-                         }
-                         else if (mean > (maxAcceptableMean * 1.6))
-                         {
-                             new_exposure_us = current_exposure_us * 0.7;
-                             why = "> (maxAcceptableMean * 1.6)";
-                             num = (maxAcceptableMean * 1.6);
-                         }
-                         else if (mean > (maxAcceptableMean * 1.3))
-                         {
-                             new_exposure_us = current_exposure_us * 0.85;
-                             why = "> (maxAcceptableMean * 1.3)";
-                             num = (maxAcceptableMean * 1.3);
-                         }
-                         else if (mean > (maxAcceptableMean * 1.0))
-                         {
-                             new_exposure_us = current_exposure_us * 0.9;
-                             why = "> maxAcceptableMean";
-                             num = maxAcceptableMean;
-                         }
-
-// xxxxxxxxxxxxxxxx test new formula-based method
-long new_new_exposure_us;
-int acceptable;
-float multiplier = 1.10;
-const char *acceptable_type;
-if (mean < minAcceptableMean) {
-    acceptable = minAcceptableMean;
-    acceptable_type = "min";
-} else {
-    acceptable = maxAcceptableMean;
-    acceptable_type = "max";
-	multiplier = 1 / multiplier;
-}
-long e_us;
-e_us = current_exposure_us;
-e_us = last_exposure_us;
-if (current_exposure_us != last_exposure_us) printf("xxxxxxxxxxx current_exposure_us %'ld != last_exposure_us %'ld\n", current_exposure_us, last_exposure_us);
-// if mean/acceptable is 9/90, it's 1/10th of the way there, so multiple exposure by 90/9 (10).
-// ZWO cameras don't appear to be linear so increase the multiplier amount some.
-float multiply = ((double)acceptable / mean) * multiplier;
-new_new_exposure_us= e_us * multiply;
-printf("=== next exposure: old way=%'ld, new way=%'ld (multiply by %.3f) [last_exposure_us=%'ld, %sAcceptable=%d, mean=%d]\n", roundTo(new_exposure_us, roundToMe), new_new_exposure_us, multiply, e_us, acceptable_type, acceptable, mean);
-new_exposure_us = new_new_exposure_us;	// use new way
+						int acceptable;
+						float multiplier = 1.10;
+						const char *acceptable_type;
+						if (mean < minAcceptableMean) {
+    						acceptable = minAcceptableMean;
+    						acceptable_type = "min";
+						} else {
+    						acceptable = maxAcceptableMean;
+    						acceptable_type = "max";
+							multiplier = 1 / multiplier;
+						}
+						if (current_exposure_us != last_exposure_us)
+							printf("xxxxxxxxxxx current_exposure_us %'ld != last_exposure_us %'ld\n", current_exposure_us, last_exposure_us);
+						// if mean/acceptable is 9/90, it's 1/10th of the way there, so multiple exposure by 90/9 (10).
+						// ZWO cameras don't appear to be linear so increase the multiplier amount some.
+						float multiply = ((double)acceptable / mean) * multiplier;
+						new_exposure_us= last_exposure_us * multiply;
+						printf("=== next exposure=%'ld (multiply by %.3f) [last_exposure_us=%'ld, %sAcceptable=%d, mean=%d]\n", new_exposure_us, multiply, last_exposure_us, acceptable_type, acceptable, mean);
 
                         if (prior_mean_diff > 0 && last_mean_diff < 0)
                         { 
@@ -2407,7 +2303,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                              break;
                          }
 
-                         Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: mean (%d) %s (%d)\n", attempts, new_exposure_us, temp_min_exposure_us, temp_max_exposure_us, mean, why.c_str(), num);
+                         Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: mean (%d)\n", attempts, new_exposure_us, temp_min_exposure_us, temp_max_exposure_us, mean);
 
                          prior_mean = mean;
                          prior_mean_diff = last_mean_diff;
@@ -2486,7 +2382,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 
                 } else {
                     // Didn't use histogram method.
-                    // If we used auto-exposure, set the next exposure to the last reported exposure, which is what.
+                    // If we used auto-exposure, set the next exposure to the last reported exposure, which is what
                     // the camera driver thinks the next exposure should be.
                     if (currentAutoExposure)
                         current_exposure_us = reported_exposure_us;

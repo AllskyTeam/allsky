@@ -54,7 +54,6 @@ float mean					= NOT_SET;	// mean brightness of image
 
 // Some command-line and other option definitions needed outside of main():
 bool tty					= false;	// are we on a tty?
-#define DEFAULT_NOTIFICATIONIMAGES 1
 int notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
 #define DEFAULT_SAVEDIR		"tmp"
 char const *save_dir		= DEFAULT_SAVEDIR;
@@ -471,8 +470,7 @@ const char *locale				= DEFAULT_LOCALE;
 #define SMALLFONTSIZE_MULTIPLIER 0.08
 #define DEFAULT_LINEWIDTH		1
 	int linewidth				= DEFAULT_LINEWIDTH;
-#define DEFAULT_OUTLINEFONT		0
-	int outlinefont				= DEFAULT_OUTLINEFONT;
+	bool outlinefont			= DEFAULT_OUTLINEFONT;
 	int fontcolor[3]			= { 255, 0, 0 };
 	int background				= 0;
 	int smallFontcolor[3]		= { 0, 0, 255 };
@@ -494,13 +492,13 @@ const char *locale				= DEFAULT_LOCALE;
 	int asiDayExposure_us		= 32;
 	int asiNightExposure_us		= 60 * US_IN_SEC;
 	int currentExposure_us		= NOT_SET;
-	int asiNightAutoExposure	= 0;
-	int asiDayAutoExposure		= 1;
+	bool asiNightAutoExposure	= false;
+	bool asiDayAutoExposure		= true;
 	long last_exposure_us 		= 0;		// last exposure taken
 	double asiNightGain 		= 4.0;
 	double asiDayGain			= 1.0;
-	int asiNightAutoGain		= 0;
-	int asiDayAutoGain			= 0;
+	bool asiNightAutoGain		= false;
+	bool asiDayAutoGain			= false;
 	float last_gain				= 0.0;		// last gain taken
 	int nightDelay_ms			= 10;
 	int dayDelay_ms				= 15 * MS_IN_SEC;
@@ -541,16 +539,16 @@ const char *locale				= DEFAULT_LOCALE;
 	// (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
 	char const *angle			= DEFAULT_ANGLE;
 
-	int preview					= 0;
-	int showTime				= DEFAULT_SHOWTIME;
-	int showExposure			= 0;
-	int showGain				= 0;
-	int showBrightness			= 0;
-	int showMean				= 0;
-	int showFocus				= 0;
-	int darkframe				= 0;
-	int daytimeCapture			= 0;
-	int help					= 0;
+	bool preview				= false;
+	bool showTime				= DEFAULT_SHOWTIME;
+	bool showExposure			= false;
+	bool showGain				= false;
+	bool showBrightness			= false;
+	bool showMean				= false;
+	bool showFocus				= false;
+	bool darkframe				= false;
+	bool daytimeCapture			= false;
+	bool help					= false;
 	int quality					= 90;
 
 	int i;
@@ -630,7 +628,7 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-focus") == 0 || strcmp(argv[i], "-autofocus") == 0)
 			{
-				showFocus = atoi(argv[++i]);
+				showFocus = getBoolean(argv[++i]);
 			}
 			// check for old names as well - the "||" part is the old name
 			else if (strcmp(argv[i], "-dayexposure") == 0)
@@ -644,20 +642,20 @@ const char *locale				= DEFAULT_LOCALE;
 
 			else if (strcmp(argv[i], "-dayautoexposure") == 0)
 			{
-				asiDayAutoExposure = atoi(argv[++i]);
+				asiDayAutoExposure = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightautoexposure") == 0 || strcmp(argv[i], "-autoexposure") == 0)
 			{
-				asiNightAutoExposure = atoi(argv[++i]);
+				asiNightAutoExposure = getBoolean(argv[++i]);
 			}
 
 			else if (strcmp(argv[i], "-dayautogain") == 0)
 			{
-				asiDayAutoGain = atoi(argv[++i]);
+				asiDayAutoGain = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightautogain") == 0 || strcmp(argv[i], "-autogain") == 0)
 			{
-				asiNightAutoGain = atoi(argv[++i]);
+				asiNightAutoGain = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-daygain") == 0)
 			{
@@ -702,7 +700,7 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-awb") == 0)
 			{
-				autoAWB = atoi(argv[++i]) == 1 ? true : false;
+				autoAWB = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-wbr") == 0)
 			{
@@ -854,7 +852,7 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-outlinefont") == 0)
 			{
-				outlinefont = atoi(argv[++i]);
+				outlinefont = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-rotation") == 0)
 			{
@@ -882,7 +880,7 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-preview") == 0)
 			{
-				preview = atoi(argv[++i]);
+				preview = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-debuglevel") == 0)
 			{
@@ -890,7 +888,7 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-showTime") == 0 || strcmp(argv[i], "-time") == 0)
 			{
-				showTime = atoi(argv[++i]);
+				showTime = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-timeformat") == 0)
 			{
@@ -898,39 +896,39 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-darkframe") == 0)
 			{
-				darkframe = atoi(argv[++i]);
+				darkframe = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-showExposure") == 0)
 			{
-				showExposure = atoi(argv[++i]);
+				showExposure = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-showGain") == 0)
 			{
-				showGain = atoi(argv[++i]);
+				showGain = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-showBrightness") == 0)
 			{
-				showBrightness = atoi(argv[++i]);
+				showBrightness = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-showMean") == 0)
 			{
-				showMean = atoi(argv[++i]);
+				showMean = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-showFocus") == 0)
 			{
-				showFocus = atoi(argv[++i]);
+				showFocus = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-daytime") == 0)
 			{
-				daytimeCapture = atoi(argv[++i]);
+				daytimeCapture = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-notificationimages") == 0)
 			{
-				notificationImages = atoi(argv[++i]);
+				notificationImages = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-tty") == 0)
 			{
-				tty = atoi(argv[++i]) ? true : false;
+				tty = getBoolean(argv[++i]);
 			}
 		}
 	}
@@ -1163,7 +1161,7 @@ const char *locale				= DEFAULT_LOCALE;
 	printf(" Preview: %s\n", yesNo(preview));
 	printf(" Taking Dark Frames: %s\n", yesNo(darkframe));
 	printf(" Debug Level: %d\n", debugLevel);
-	printf(" On TTY: %s\n", tty ? "Yes" : "No");
+	printf(" On TTY: %s\n", yesNo(tty));
 	printf(" Mode Mean: %s\n", yesNo(myModeMeanSetting.mode_mean));
 	if (myModeMeanSetting.mode_mean) {
 		if (myModeMeanSetting.dayMean == -1.0) {

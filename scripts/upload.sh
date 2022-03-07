@@ -114,7 +114,7 @@ else # sftp/ftp/ftps
 	[ "${REMOTE_DIR}" != "" -a "${REMOTE_DIR: -1:1}" != "/" ] && REMOTE_DIR="${REMOTE_DIR}/"
 
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
-		echo "${ME}: FTP ${FILE_TO_UPLOAD} to ${REMOTE_DIR}${DESTINATION_FILE}, TEMP_NAME=${TEMP_NAME}"
+		echo "${ME}: FTP '${FILE_TO_UPLOAD}' to '${REMOTE_DIR}${DESTINATION_FILE}', TEMP_NAME=${TEMP_NAME}"
 	fi
 	LFTP_CMDS="${ALLSKY_TMP}/lftp_cmds.txt"
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
@@ -174,7 +174,7 @@ else # sftp/ftp/ftps
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
 	else
 		if [ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ] && [ "${ON_TTY}" -eq 0 ]; then
-			echo "${ME}: FTP of '${FILE_TO_UPLOAD}' finished"
+			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
 		if [ -n "${OUTPUT}" ]; then
 			echo -e "lftp OUTPUT:\n   ${OUTPUT}"

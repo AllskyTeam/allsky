@@ -53,7 +53,7 @@ float mean					= NOT_SET;	// mean brightness of image
 
 // Some command-line and other option definitions needed outside of main():
 bool tty					= false;	// are we on a tty?
-int notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
+bool notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
 #define DEFAULT_SAVEDIR		"tmp"
 char const *save_dir		= DEFAULT_SAVEDIR;
 #define DEFAULT_FILENAME	"image.jpg"

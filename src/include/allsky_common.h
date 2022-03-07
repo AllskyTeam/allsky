@@ -26,14 +26,14 @@
 
 // Defaults
 #define NOT_SET						-1				// signifies something isn't set yet
-#define DEFAULT_NOTIFICATIONIMAGES	1
+#define DEFAULT_NOTIFICATIONIMAGES	true
 #define DEFAULT_SAVEDIR				"tmp"
 #define DEFAULT_FILENAME			"image.jpg"
 #define DEFAULT_TIMEFORMAT			"%Y%m%d %H:%M:%S"	// format to display time in
 #define DEFAULT_LOCALE				"en_US.UTF-8"
 #define AUTO_IMAGE_TYPE				99	// must match what's in the camera_settings.json file
 #define DEFAULT_IMAGE_TYPE			AUTO_IMAGE_TYPE
-#define DEFAULT_DAYTIMECAPTURE		0	// Capture images during the day?
+#define DEFAULT_DAYTIMECAPTURE		false	// Capture images during the day?
 #define DEFAULT_WIDTH				0
 #define DEFAULT_HEIGHT				0
 #define	DEFAULT_LONGITUDE			""
@@ -47,9 +47,9 @@
 #define DEFAULT_ITEXTLINEHEIGHT		30
 #define SMALLFONTSIZE_MULTIPLIER	0.08
 #define DEFAULT_LINEWIDTH			1
-#define DEFAULT_OUTLINEFONT			0
+#define DEFAULT_OUTLINEFONT			false
 #define DEFAULT_LINENUMBER			0
-#define DEFAULT_SHOWTIME			1	// Show the date/time in the overlay?
+#define DEFAULT_SHOWTIME			true	// Show the date/time in the overlay?
 
 // Exit codes.  Need to match what's in allsky.sh
 #define EXIT_OK				0

@@ -89,6 +89,10 @@ else
 	# Don't overwrite notification images so create a temporary copy and use that.
 	CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
 	cp "${NOTIFICATION_FILE}" "${CURRENT_IMAGE}"
+	if [ $? -ne 0 ]; then
+		echo -e "${RED}*** ${ME}: ERROR: copy of '${NOTIFICATION_FILE}' to '${CURRENT_IMAGE}' failed!${NC}"
+		exit 3
+	fi
 fi
 
 # Resize the image if required

@@ -2393,10 +2393,13 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
                         	long exposureDiff_us;
                         	exposureDiff_us = reported_exposure_us - current_exposure_us;
 							exposureDiff_us *= (float)aggression / 100;
-							Log(3, "  > Changing next exposure by %s ", length_in_units(exposureDiff_us, true));
-							Log(3, "from %s ", length_in_units(current_exposure_us, true));
-                        	current_exposure_us += exposureDiff_us;
-							Log(3, "to %s\n", length_in_units(current_exposure_us, true));
+							if (exposureDiff_us != 0)
+							{
+								Log(4, "  > Changing next exposure by %s ", length_in_units(exposureDiff_us, true));
+								Log(4, "from %s ", length_in_units(current_exposure_us, true));
+                        		current_exposure_us += exposureDiff_us;
+								Log(4, "to %s\n", length_in_units(current_exposure_us, true));
+							}
 						}
 						else
 						{

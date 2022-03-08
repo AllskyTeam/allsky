@@ -519,7 +519,7 @@ ASI_ERROR_CODE takeOneExposure(
            		timeval tEnd = getTimeval();
 				// After testing there seems to be about 500,000 us overhead, so subtract it.
 				long timeToTakeImage_us = timeval_diff_us(tStart, tEnd) - 600000;
-printf("xxxxxxx exposure_time_us=%'ld, timeToTakeImage_us=%'ld\n", exposure_time_us, timeToTakeImage_us);
+Log(4, "xxxxxxx exposure_time_us=%'ld, timeToTakeImage_us=%'ld\n", exposure_time_us, timeToTakeImage_us);
 				long diff_us = timeToTakeImage_us - exposure_time_us;
 				long threshold_us = exposure_time_us * 0.25;
 				if (abs(diff_us) > threshold_us) {

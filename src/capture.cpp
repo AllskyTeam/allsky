@@ -590,14 +590,36 @@ void closeUp(int e)
         pthread_join(thread_display, &retval);
     }
 
-    printf("     ***** Stopping AllSky *****\n");
+	const char *a = "Stopping";
+	if (notificationImages) {
+		if (e == EXIT_RESTARTING)
+		{
+			system("scripts/copy_notification_image.sh --expires 15 Restarting &");
+			a = "Restarting";
+		}
+		else
+		{
+			system("scripts/copy_notification_image.sh NotRunning &");
+		}
+		// Sleep to give it a chance to print any messages so they (hopefully) get printed
+		// before the one below.  This is only so it looks nicer in the log file.
+		sleep(3);
+	}
+
+    printf("     ***** %s AllSky *****\n", a);
     exit(e);
 }
 
+void sig(int i)
+{
+	printf("XXXXXX == got %s %d in sig()\n", i == SIGUSR1 ? "SIGUSR1" : i == SIGHUP ? "SIGHUP" : "unknown signal", i);
+	gotSignal = true;
+	closeUp(EXIT_RESTARTING);
+}
 void IntHandle(int i)
 {
     gotSignal = true;
-    closeUp(0);
+    closeUp(EXIT_OK);
 }
 
 
@@ -749,6 +771,9 @@ int main(int argc, char *argv[])
 	tty = isatty(fileno(stdout)) ? true : false;
     signal(SIGINT, IntHandle);
     signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
+	signal(SIGHUP, sig);	// xxxxxxxxxx Reload the service
+	signal(SIGUSR1, sig);	// xxxxxxxxxx Reload the service
+
     pthread_mutex_init(&mtx_SaveImg, 0);
     pthread_cond_init(&cond_StartSave, 0);
 
@@ -1308,7 +1333,7 @@ int main(int argc, char *argv[])
         printf(" -debuglevel            - Default = 0. Set to 1,2, 3, or 4 for more debugging information.\n");
 
         printf("%s", c(KNRM));
-        closeUp(0);
+        closeUp(EXIT_OK);
     }
 
     const char *imagetype = "";

@@ -517,11 +517,11 @@ ASI_ERROR_CODE takeOneExposure(
 			if (exposure_time_us > (5 * US_IN_SEC))
 			{
            		timeval tEnd = getTimeval();
-				// After testing there seems to be about 500,000 us overhead, so subtract it.
-				long timeToTakeImage_us = timeval_diff_us(tStart, tEnd) - 600000;
-Log(4, "xxxxxxx exposure_time_us=%'ld, timeToTakeImage_us=%'ld\n", exposure_time_us, timeToTakeImage_us);
+				// After testing there seems to be about 450,000 us overhead, so subtract it.
+				long timeToTakeImage_us = timeval_diff_us(tStart, tEnd) - 450000;
+Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exposure_time_us, timeToTakeImage_us);
 				long diff_us = timeToTakeImage_us - exposure_time_us;
-				long threshold_us = exposure_time_us * 0.25;
+				long threshold_us = exposure_time_us * 0.5;
 				if (abs(diff_us) > threshold_us) {
 					Log(1, "*** WARNING: time to take image (%'ld) differs from requested exposure timme (%'ld) by %'ld, threshold=%'ld\n", timeToTakeImage_us, exposure_time_us, diff_us, threshold_us);
 				}
@@ -867,7 +867,7 @@ int main(int argc, char *argv[])
     bool showHistogramBox      = false;
     int histogramBoxSizeX      = DEFAULT_BOX_SIZEX;
     int histogramBoxSizeY      = DEFAULT_BOX_SIZEY;
-#define DEFAULT_AGGRESSION       50
+#define DEFAULT_AGGRESSION       75
     int aggression             = DEFAULT_AGGRESSION; // ala PHD2.  Percent of change made, 1 - 100.
 
     // If we just transitioned from night to day, it's possible current_exposure_us will
@@ -2219,7 +2219,7 @@ int main(int argc, char *argv[])
                     {
                         prior_mean_diff = mean - minAcceptableMean;
                         // If we're skipping frames we want to get to a good exposure as fast as
-                        // possible so don't set a adjustment.
+                        // possible so don't set an adjustment.
                         if (aggression != 100 && current_skip_frames <= 0)
                         {
                             adjustment = prior_mean_diff * (1 - ((float)aggression/100));
@@ -2381,12 +2381,32 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 
                 } else {
                     // Didn't use histogram method.
-                    // If we used auto-exposure, set the next exposure to the last reported exposure, which is what
-                    // the camera driver thinks the next exposure should be.
+                    // If we used auto-exposure, set the next exposure to the last reported
+					// exposure, which is what the camera driver thinks the next exposure should be.
+					// But temper it by the agression value so we don't bounce up and down.
                     if (currentAutoExposure)
-                        current_exposure_us = reported_exposure_us;
+					{
+                        // If we're skipping frames we want to get to a good exposure as fast as
+                        // possible so don't set an adjustment.
+                        if (aggression != 100 && current_skip_frames <= 0)
+						{
+                        	long exposureDiff_us;
+                        	exposureDiff_us = reported_exposure_us - current_exposure_us;
+							exposureDiff_us *= (float)aggression / 100;
+							Log(3, "  > Changing next exposure by %s ", length_in_units(exposureDiff_us, true));
+							Log(3, "from %s ", length_in_units(current_exposure_us, true));
+                        	current_exposure_us += exposureDiff_us;
+							Log(3, "to %s\n", length_in_units(current_exposure_us, true));
+						}
+						else
+						{
+                        	current_exposure_us = reported_exposure_us;
+						}
+					}
 					else
-                        current_exposure_us = last_exposure_us;
+					{
+						// Didn't use auto-exposure - don't change exposure
+					}
                 }
 #endif
                 if (current_skip_frames > 0)

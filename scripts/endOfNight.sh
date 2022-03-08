@@ -83,4 +83,24 @@ if [[ ${AUTO_DELETE} == "true" ]]; then
 	done
 fi
 
+# Automatically delete old website images and videos
+if [[ ! -z "${WEB_DAYS_TO_KEEP}" ]]; then
+	if [ ! -d "${WEBSITE_DIR}" ]; then
+		echo -e "${ME}: ${YELLOW}WARNING: 'WEB_DAYS_TO_KEEP' set but no website found in '${WEBSITE_DIR}!${NC}"
+		echo -e 'Set WEB_DAYS_TO_KEEP to ""'
+	else
+		del=$(date --date="${WEB_DAYS_TO_KEEP} days ago" +%Y%m%d)
+		(
+			cd "${WEBSITE_DIR}"
+			for i in $(find startrails keograms videos -type f -name "*-202*"); do	# "*-202*" for years >= 2020
+				# Remove everything but the date
+				DATE="${i##*-}"
+				DATE="${DATE%.*}"
+				# Thumbnails will typically be owned and grouped to www-data so use "rm -f".
+				((${del} > ${DATE})) && echo "Deleting old website file ${i}" && rm -f ${i}
+			done
+		)
+	fi
+fi
+
 exit 0

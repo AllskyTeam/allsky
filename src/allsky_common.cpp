@@ -251,26 +251,27 @@ char *length_in_units(long us, bool multi)	// microseconds
 	else
 	{
 		double us_in_ms = (double)us / US_IN_MS;
+		double abs_us_in_ms = abs(us_in_ms);
 		// The boundaries on when to display one or two units are really a matter of taste.
-		if (us_in_ms < 0.5)						// less than 0.5 ms
+		if (abs_us_in_ms < 0.5)						// less than 0.5 ms
 		{
 			snprintf(length, l, "%'ld us", us);
 		}
-		else if (us_in_ms < 1.5)				// between 0.5 and 1.5 ms
+		else if (abs_us_in_ms < 1.5)				// between 0.5 and 1.5 ms
 		{
 			if (multi)
 				snprintf(length, l, "%'ld us (%.3f ms)", us, us_in_ms);
 			else
 				snprintf(length, l, "%'ld us", us);
 		}
-		else if (us_in_ms < (0.5 * MS_IN_SEC))	// 1.5 ms to 0.5 sec
+		else if (abs_us_in_ms < (0.5 * MS_IN_SEC))	// 1.5 ms to 0.5 sec
 		{
 			if (multi)
 				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
 			else
 				snprintf(length, l, "%.2f ms", us_in_ms);
 		}
-		else if (us_in_ms < (1.0 * MS_IN_SEC))	// between 0.5 sec and 1 sec
+		else if (abs_us_in_ms < (1.0 * MS_IN_SEC))	// between 0.5 sec and 1 sec
 		{
 			if (multi)
 				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);

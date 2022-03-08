@@ -45,7 +45,7 @@ int min_brightness;					// what user enters on command line
 int max_brightness;
 int default_brightness;
 int currentBrightness		= NOT_SET;
-int asiFlip					= 0;
+int flip					= 0;
 int current_bpp				= NOT_SET;	// bytes per pixel: 8, 16, or 24
 int current_bit_depth		= NOT_SET;	// 8 or 16
 int currentBin				= NOT_SET;
@@ -469,23 +469,23 @@ const char *locale				= DEFAULT_LOCALE;
 #define AUTO_IMAGE_TYPE			99	// needs to match what's in the camera_settings.json file
 #define DEFAULT_IMAGE_TYPE		AUTO_IMAGE_TYPE
 	int Image_type				= DEFAULT_IMAGE_TYPE;
-	int asiDayExposure_us		= 32;
-	int asiNightExposure_us		= 60 * US_IN_SEC;
+	int dayExposure_us			= 32;
+	int nightExposure_us		= 60 * US_IN_SEC;
 	int currentExposure_us		= NOT_SET;
-	bool asiNightAutoExposure	= false;
-	bool asiDayAutoExposure		= true;
+	bool nightAutoExposure		= false;
+	bool dayAutoExposure		= true;
 	long last_exposure_us 		= 0;		// last exposure taken
-	double asiNightGain 		= 4.0;
-	double asiDayGain			= 1.0;
-	bool asiNightAutoGain		= false;
-	bool asiDayAutoGain			= false;
+	double nightGain	 		= 4.0;
+	double dayGain				= 1.0;
+	bool nightAutoGain			= false;
+	bool dayAutoGain			= false;
 	float last_gain				= 0.0;		// last gain taken
 	int nightDelay_ms			= 10;
 	int dayDelay_ms				= 15 * MS_IN_SEC;
 	int currentDelay_ms 		= NOT_SET;
 	float saturation;
-	int asiDayBrightness;
-	int asiNightBrightness;
+	int dayBrightness;
+	int nightBrightness;
 	if (is_libcamera)
 	{
 		default_saturation		= 1.0;
@@ -494,8 +494,8 @@ const char *locale				= DEFAULT_LOCALE;
 		max_saturation			= 2.0;
 
 		default_brightness		= 0;
-		asiDayBrightness		= default_brightness;
-		asiNightBrightness		= default_brightness;
+		dayBrightness			= default_brightness;
+		nightBrightness			= default_brightness;
 		min_brightness			= -100;
 		max_brightness			= 100;
 	}
@@ -507,12 +507,12 @@ const char *locale				= DEFAULT_LOCALE;
 		max_saturation			= 100.0;
 
 		default_brightness		= 50;
-		asiDayBrightness		= default_brightness;
-		asiNightBrightness		= default_brightness;
+		dayBrightness			= default_brightness;
+		nightBrightness			= default_brightness;
 		min_brightness			= 0;
 		max_brightness			= 100;
 	}
-	int asiRotation				= 0;
+	int rotation				= 0;
 	char const *latitude		= DEFAULT_LATITUDE;
 	char const *longitude 		= DEFAULT_LONGITUDE;
 	// angle of the sun with the horizon
@@ -604,37 +604,37 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-dayexposure") == 0)
 			{
-				asiDayExposure_us = atof(argv[++i]) * US_IN_MS;	// allow fractions
+				dayExposure_us = atof(argv[++i]) * US_IN_MS;	// allow fractions
 			}
 			else if (strcmp(argv[i], "-nightexposure") == 0)
 			{
-				asiNightExposure_us = atof(argv[++i]) * US_IN_MS;
+				nightExposure_us = atof(argv[++i]) * US_IN_MS;
 			}
 
 			else if (strcmp(argv[i], "-dayautoexposure") == 0)
 			{
-				asiDayAutoExposure = getBoolean(argv[++i]);
+				dayAutoExposure = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightautoexposure") == 0)
 			{
-				asiNightAutoExposure = getBoolean(argv[++i]);
+				nightAutoExposure = getBoolean(argv[++i]);
 			}
 
 			else if (strcmp(argv[i], "-dayautogain") == 0)
 			{
-				asiDayAutoGain = getBoolean(argv[++i]);
+				dayAutoGain = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightautogain") == 0)
 			{
-				asiNightAutoGain = getBoolean(argv[++i]);
+				nightAutoGain = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-daygain") == 0)
 			{
-				asiDayGain = atof(argv[++i]);
+				dayGain = atof(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightgain") == 0)
 			{
-				asiNightGain = atof(argv[++i]);
+				nightGain = atof(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-saturation") == 0)
 			{
@@ -642,11 +642,11 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-daybrightness") == 0)
 			{
-				asiDayBrightness = atoi(argv[++i]);
+				dayBrightness = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightbrightness") == 0)
 			{
-				asiNightBrightness = atoi(argv[++i]);
+				nightBrightness = atoi(argv[++i]);
 			}
  			else if (strcmp(argv[i], "-daybin") == 0)
 			{
@@ -770,11 +770,11 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-rotation") == 0)
 			{
-				asiRotation = atoi(argv[++i]);
+				rotation = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-flip") == 0)
 			{
-				asiFlip = atoi(argv[++i]);
+				flip = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-filename") == 0)
 			{
@@ -1032,13 +1032,13 @@ const char *locale				= DEFAULT_LOCALE;
 	printf(" Resolution (before any binning): %dx%d\n", width, height);
 	printf(" Quality: %d\n", quality);
 	printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
-	printf(" Exposure (night): %1.0fms\n", round(asiNightExposure_us / US_IN_MS));
-	printf(" Auto Exposure (night): %s\n", yesNo(asiNightAutoExposure));
-	printf(" Gain (day): %1.2f\n", asiDayGain);
-	printf(" Gain (night): %1.2f\n", asiNightGain);
-	printf(" Auto Gain (night): %s\n", yesNo(asiNightAutoGain));
-	printf(" Brightness (day): %d\n", asiDayBrightness);
-	printf(" Brightness (night): %d\n", asiNightBrightness);
+	printf(" Exposure (night): %1.0fms\n", round(nightExposure_us / US_IN_MS));
+	printf(" Auto Exposure (night): %s\n", yesNo(nightAutoExposure));
+	printf(" Gain (day): %1.2f\n", dayGain);
+	printf(" Gain (night): %1.2f\n", nightGain);
+	printf(" Auto Gain (night): %s\n", yesNo(nightAutoGain));
+	printf(" Brightness (day): %d\n", dayBrightness);
+	printf(" Brightness (night): %d\n", nightBrightness);
 	printf(" Saturation: %.1f\n", saturation);
 	printf(" Auto White Balance: %s\n", yesNo(autoAWB));
 	printf(" WB Red: %1.2f\n", WBR);
@@ -1056,8 +1056,8 @@ const char *locale				= DEFAULT_LOCALE;
 	printf(" Font Size: %1.1f\n", fontsize);
 	printf(" Font Line: %d\n", linewidth);
 	printf(" Outline Font : %s\n", yesNo(outlinefont));
-	printf(" Rotation: %d\n", asiRotation);
-	printf(" Flip Image: %d\n", asiFlip);
+	printf(" Rotation: %d\n", rotation);
+	printf(" Flip Image: %d\n", flip);
 	printf(" Filename: %s\n", fileName);
 	printf(" Filename Save Directory: %s\n", save_dir);
 	printf(" Latitude: %s\n", latitude);
@@ -1108,10 +1108,10 @@ const char *locale				= DEFAULT_LOCALE;
 			// nightime gain, delay, exposure, and brightness to mimic a nightime shot.
 			currentAutoExposure = false;
 			currentAutoGain = false;
-			currentGain = asiNightGain;
+			currentGain = nightGain;
 			currentDelay_ms = nightDelay_ms;
-			currentExposure_us = asiNightExposure_us;
-			currentBrightness = asiNightBrightness;
+			currentExposure_us = nightExposure_us;
+			currentBrightness = nightBrightness;
 			currentBin = nightBin;
 
  			Log(0, "Taking dark frames...\n");
@@ -1169,13 +1169,13 @@ const char *locale				= DEFAULT_LOCALE;
 				{
 					Log(0, "==========\n=== Starting daytime capture ===\n==========\n");
 
-					currentExposure_us = asiDayExposure_us;
-					currentAutoExposure = asiDayAutoExposure;
-					currentBrightness = asiDayBrightness;
+					currentExposure_us = dayExposure_us;
+					currentAutoExposure = dayAutoExposure;
+					currentBrightness = dayBrightness;
 					currentDelay_ms = dayDelay_ms;
 					currentBin = dayBin;
-					currentGain = asiDayGain;
-					currentAutoGain = asiDayAutoGain;
+					currentGain = dayGain;
+					currentAutoGain = dayAutoGain;
 					if (myModeMeanSetting.mode_mean)
 					{
 						myModeMeanSetting.mean_value = myModeMeanSetting.dayMean;
@@ -1188,13 +1188,13 @@ const char *locale				= DEFAULT_LOCALE;
 				Log(0, "==========\n=== Starting nighttime capture ===\n==========\n");
 
 				// Setup the night time capture parameters
-				currentExposure_us = asiNightExposure_us;
-				currentAutoExposure = asiNightAutoExposure;
-				currentBrightness = asiNightBrightness;
+				currentExposure_us = nightExposure_us;
+				currentAutoExposure = nightAutoExposure;
+				currentBrightness = nightBrightness;
 				currentDelay_ms = nightDelay_ms;
 				currentBin = nightBin;
-				currentGain = asiNightGain;
-				currentAutoGain = asiNightAutoGain;
+				currentGain = nightGain;
+				currentAutoGain = nightAutoGain;
 				if (myModeMeanSetting.mode_mean)
 				{
 					myModeMeanSetting.mean_value = myModeMeanSetting.nightMean;
@@ -1262,7 +1262,7 @@ const char *locale				= DEFAULT_LOCALE;
 			snprintf(full_filename, sizeof(full_filename), "%s/%s", save_dir, final_file_name);
 
 			// Capture and save image
-			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, autoAWB, WBR, WBB, asiRotation, asiFlip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
+			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, autoAWB, WBR, WBB, rotation, flip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
 
 			int focus_metric;
 			if (retCode == 0)
@@ -1331,7 +1331,7 @@ const char *locale				= DEFAULT_LOCALE;
 				add_variables_to_command(cmd, last_exposure_us, currentBrightness, m,
 					currentAutoExposure, currentAutoGain, autoAWB, WBR, WBB,
 					-999, last_gain, (int)round(20.0 * 10.0 * log10(last_gain)),
-					currentBin, asiFlip, current_bit_depth, focus_metric);
+					currentBin, flip, current_bit_depth, focus_metric);
 				strcat(cmd, " &");
 
 				system(cmd);
@@ -1343,7 +1343,7 @@ const char *locale				= DEFAULT_LOCALE;
 				}
 				else if ((dayOrNight == "NIGHT"))
 				{
-					s = (asiNightExposure_us - myRaspistillSetting.shutter_us) + (nightDelay_ms * US_IN_MS);
+					s = (nightExposure_us - myRaspistillSetting.shutter_us) + (nightDelay_ms * US_IN_MS);
 				}
 				else
 				{

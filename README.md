@@ -255,14 +255,16 @@ scripts/generateForDay.sh -s 20220710
 <details><summary>Click here</summary>
 
 &nbsp;  
-You can specify how many days worth of images to keep in order to keep the Raspberry Pi SD card from filling up. Automatic deletion is enabled by default and will keep 2 weeks of data on the card.
+You can specify how many days worth of images to keep in order to keep the Raspberry Pi SD card from filling up. To change the default number of days, change the number below in `allsky/config/config.sh`:
 ```
-AUTO_DELETE="true"
-NIGHTS_TO_KEEP=14
+DAYS_TO_KEEP=14
 ```
-Set to "false" to keep all nights (requires manual management of SD card free space).
-
-**NOTE:** "NIGHTS_TO_KEEP" should really be "DAYS_TO_KEEP" since it will keep that many 24-hour days of data, not just the nighttime data.
+	
+If you have the Allsky website installed on your Pi, you can specify how many days worth of its imags to keep:
+```
+WEB_DAYS_TO_KEEP=28
+```
+In both cases, set to "" to keep all days' data but be careful that your SD card doesn't fill up
 </details>
 
 
@@ -412,8 +414,11 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 * version **0.8.3.3**: 
 	* Significantly enhanced Wiki - more pages and more information on existing pages.  All known issues are described there as well as fixes / workarounds.
 	* Added an option to keograms to make them full width, even if few images were used in creating the keogram.  In config.sh, set `KEOGRAM_EXTRA_PARAMETERS="--image-expand"`.
-	* Add a config.sh variable:
-	  * `WEBUI_DATA_FILES`: contains the name of one or more files that contain information to be added to the WebUI's "System" page.  See [this Wiki page[(https://github.com/thomasjacquin/allsky/wiki/allsky-portal-(WebUI)-settings) for more information.
+	* Added/changed/deleted config.sh variables:
+	  * Added `WEBUI_DATA_FILES`: contains the name of one or more files that contain information to be added to the WebUI's "System" page.  See [this Wiki page[(https://github.com/thomasjacquin/allsky/wiki/allsky-portal-(WebUI)-settings) for more information.
+	  * Renamed `NIGHTS_TO_KEEP` to `DAYS_TO_KEEP` since it determines how many days of data to keep, not just nighttime data.  If "", ALL days' data are kept.
+	  * Deleted `AUTO_DELETE`: its functionality is now in `DAYS_TO_KEEP`.
+	  * Added `WEB_DAYS_TO_KEEP`: specifies how many days of Allsky website images and videos to keep, if the website is installed on your Pi.
 	* Added a `--debug` option to `allsky/scripts/upload.sh` to aid in debugging uploads.
 	* Allsky will now stop with an error message on unrecoverable errors (e.g., not camera found).  It used to keep restarting and failing forever.
 	* Removed the `allsky/scripts/filename.sh` file.

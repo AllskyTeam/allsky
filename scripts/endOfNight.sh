@@ -76,15 +76,15 @@ cmd="${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh"
 test -x "${cmd}" && "${cmd}"
 
 # Automatically delete old images and videos
-if [[ ${AUTO_DELETE} == "true" ]]; then
-	del=$(date --date="${NIGHTS_TO_KEEP} days ago" +%Y%m%d)
+if [ -n "${DAYS_TO_KEEP}" ]; then
+	del=$(date --date="${DAYS_TO_KEEP} days ago" +%Y%m%d)
 	for i in $(find "${ALLSKY_IMAGES}/" -type d -name "2*"); do	# "2*" for years >= 2000
-		((${del} > $(basename ${i}))) && echo "Deleting old directory ${i}" && rm -rf ${i}
+		((${del} > $(basename ${i}))) && echo "${ME}: Deleting old directory ${i}" && rm -rf ${i}
 	done
 fi
 
 # Automatically delete old website images and videos
-if [[ -n "${WEB_DAYS_TO_KEEP}" ]]; then
+if [ -n "${WEB_DAYS_TO_KEEP}" ]; then
 	if [ ! -d "${WEBSITE_DIR}" ]; then
 		echo -e "${ME}: ${YELLOW}WARNING: 'WEB_DAYS_TO_KEEP' set but no website found in '${WEBSITE_DIR}!${NC}"
 		echo -e 'Set WEB_DAYS_TO_KEEP to ""'
@@ -97,7 +97,7 @@ if [[ -n "${WEB_DAYS_TO_KEEP}" ]]; then
 				DATE="${i##*-}"
 				DATE="${DATE%.*}"
 				# Thumbnails will typically be owned and grouped to www-data so use "rm -f".
-				((${del} > ${DATE})) && echo "Deleting old website file ${i}" && rm -f ${i}
+				((${del} > ${DATE})) && echo "${ME}: Deleting old website file ${i}" && rm -f ${i}
 			done
 		)
 	fi

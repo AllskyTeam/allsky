@@ -1264,11 +1264,12 @@ const char *locale				= DEFAULT_LOCALE;
 			// Capture and save image
 			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, autoAWB, WBR, WBB, rotation, flip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
 
-			int focus_metric;
 			if (retCode == 0)
 			{
 				numExposures++;
-				focus_metric = (int)round(get_focus_metric(pRgb));
+
+				int focus_metric;
+				focus_metric = showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
 
 				// If taking_dark_frames is off, add overlay text to the image
 				if (! taking_dark_frames)

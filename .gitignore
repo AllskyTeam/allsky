@@ -21,6 +21,7 @@ scripts/stretch.sh
 scripts/endOfNight_additionalSteps.sh
 scripts/saveImageDay.sh
 scripts/saveImageNight.sh
+scripts/postToMap.sh
 settings_RPiHQ.json
 settings_ZWO.json
 

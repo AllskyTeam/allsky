@@ -83,4 +83,8 @@ if [[ ${AUTO_DELETE} == "true" ]]; then
 	done
 fi
 
+if [[ ${POST_TO_MAP} == "true" ]]; then
+	../config/postToMap.sh
+fi
+
 exit 0

@@ -1,27 +1,21 @@
 #!/bin/bash
 
 # Remove this line when we know it is in config.sh
-PIX_FMT=${PIX_FMT:-yuv420p}
+PIX_FMT="${PIX_FMT:-yuv420p}"
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
-	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}")/..)"
+	ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}")/..)"; export ALLSKY_HOME
 fi
 
 source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 
-# If we're on a tty that means we're being manually run and $RED != "".
-# In that case, don't display $ME.
-if [ "${RED}" != "" ]; then
-	ME=""
-else
-	ME="$(basename "${BASH_ARGV0}")"
-fi
+ME="$(basename "${BASH_ARGV0}")"
 
-if [ $# -eq 0 -o $# -gt 2 -o "${1}" = "-h" -o "${1}" = "--help" ] ; then
+if [ $# -eq 0 ] || [ $# -gt 2 ] || [ "${1}" = "-h" ] || [ "${1}" = "--help" ] ; then
 	XD="/path/to/nonstandard/location/of/allsky_images"
-	TODAY=$(date +%Y%m%d)
+	TODAY="$(date +%Y%m%d)"
 	echo -en "${RED}"
 	echo -n "Usage: ${ME} [-h|--help] <DATE> [<IMAGE_DIR>]"
 	echo -e "${NC}"
@@ -32,9 +26,9 @@ if [ $# -eq 0 -o $# -gt 2 -o "${1}" = "-h" -o "${1}" = "--help" ] ; then
 	echo "<DATE> must be of the form YYYYMMDD."
 	echo
 	echo "<IMAGE_DIR> defaults to '\${ALLSKY_IMAGES}' but may be overridden to use a"
-	echo "nonstandard location such as a usb stick or a network drive (eg. for"
-	echo "regenerating timelapses)."
-	echo "In that case <DATE> must exist inside <IMAGE_DIR>, eg. '${XD}/${TODAY}'."
+	echo "nonstandard location such as a usb stick or a network drive (eg. for regenerating timelapses)."
+	echo "In that case <DATE> must exist inside <IMAGE_DIR>,"
+	echo "eg. '${XD}/${TODAY}'."
 	echo
 	echo "Produces a movie in <IMAGE_DIR>/<DATE>/allsky-<DATE>.mp4"
 	echo "eg. ${ALLSKY_IMAGES}/${TODAY}/allsky-${TODAY}.mp4"
@@ -42,6 +36,9 @@ if [ $# -eq 0 -o $# -gt 2 -o "${1}" = "-h" -o "${1}" = "--help" ] ; then
 	echo -en "${NC}"
 	exit 1
 fi
+
+# If we're on a tty that means we're being manually run so don't display $ME.
+[ "${ON_TTY}" = "1" ] && ME=""
 
 # Allow timelapses of pictures not in the standard $ALLSKY_IMAGES directory.
 # If $2 is passed, it's the top folder, otherwise use the one in $ALLSKY_IMAGES.
@@ -66,15 +63,15 @@ fi
 # put the sequence files there.
 SEQUENCE_DIR="${ALLSKY_TMP}/sequence-${DATE}"
 if [ -d "${SEQUENCE_DIR}" ]; then
-	NSEQ=$(ls "${SEQUENCE_DIR}" 2>/dev/null | wc -l)	# left over from last time
+	NSEQ=$(find "${SEQUENCE_DIR}/*" 2>/dev/null | wc -l)	# left over from last time
 else
 	NSEQ=0
 fi
 
 TMP="${ALLSKY_TMP}/timelapseTMP.txt"
-> "${TMP}"
+: > "${TMP}"
 
-if [ "${KEEP_SEQUENCE}" = "false" -o ${NSEQ} -lt 100 ] ; then
+if [ "${KEEP_SEQUENCE}" = "false" ] || [ ${NSEQ} -lt 100 ]; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
 
@@ -107,7 +104,7 @@ fi
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
 # set FFLOG=info in config.sh if you want to see what's going on for debugging.
 OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
-X=$(ffmpeg -y -f image2 \
+X="$(ffmpeg -y -f image2 \
 	-loglevel ${FFLOG} \
 	-r ${FPS} \
 	-i "${SEQUENCE_DIR}/%04d.${EXTENSION}" \
@@ -117,7 +114,7 @@ X=$(ffmpeg -y -f image2 \
 	-movflags +faststart \
 	$SCALE \
 	${TIMELAPSE_EXTRA_PARAMETERS} \
-	"${OUTPUT_FILE}" 2>&1)
+	"${OUTPUT_FILE}" 2>&1)"
 RET=$?
 
 # The "deprecated..." message is useless and only confuses users, so hide it.

@@ -21,6 +21,7 @@ function doExit()
 	EXITCODE=$1
 	TYPE=${2:-Error}
 	CUSTOM_MESSAGE="${3}"
+
 	if [ ${EXITCODE} -eq ${EXIT_ERROR_STOP} ]; then
 		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
 		# even if the user has them turned off.
@@ -121,7 +122,7 @@ elif [ "${CAMERA}" = "ZWO" ]; then
 			# The service will automatically restart this script.
 		fi
 
-		let COUNT=${COUNT}+1
+		((COUNT=COUNT+1))
 		echo "${COUNT}" > "${RESETTING_USB_LOG}"
 
 		# Display a warning message

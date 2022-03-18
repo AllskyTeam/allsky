@@ -37,13 +37,12 @@ fi
 # Check for a new variable in config.sh that wasn't in prior versions.
 # If not set to something (even "") then it wasn't found and force the user to upgrade config.sh
 source "${ALLSKY_CONFIG}/config.sh"
-if [ ! -v FAN_DATA_FILE ]; then	# FAN_DATA_FILE added after version 0.8.3.
-	echo "${RED}*** ERROR: old version of ${ALLSKY_CONFIG}/config.sh detected.${NC}"
+if [ ! -v WEBUI_DATA_FILES ]; then	# WEBUI_DATA_FILES added after version 0.8.3.
+	echo -e "${RED}*** FATAL ERROR: old version of ${ALLSKY_CONFIG}/config.sh detected.${NC}"
 	echo "Please move your current config.sh file to config.sh-OLD, then place the newest one"
 	echo "from https://github.com/thomasjacquin/allsky in ${ALLSKY_CONFIG} and"
-	echo "manually copy your data from the old file to the new one.".
-	USE_NOTIFICATION_IMAGES=1	# forces displaying notification
-	doExit ${EXIT_ERROR_STOP} "Error"
+	echo "manually copy your data from the old file to the new one."
+	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_CONFIG})/config.sh\nis an old version.  See\n/var/log/allsky.log"
 fi
 USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
 

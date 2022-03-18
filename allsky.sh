@@ -83,7 +83,7 @@ if [ "${CAMERA}" = "RPiHQ" ]; then
 		doExit ${EXIT_ERROR_STOP} "Error"
 	fi
 
-else	# ZWO CAMERA
+elif [ "${CAMERA}" = "ZWO" ]; then
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 	reset_usb()		# resets the USB bus
 	{
@@ -122,22 +122,30 @@ else	# ZWO CAMERA
 	ZWOdev=$(lsusb | awk '/ 03c3:/ { bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}')
 	ZWOIsPresent=$(lsusb -D ${ZWOdev} 2>/dev/null | grep -c 'iProduct .*ASI[0-9]')
 	if [ $ZWOIsPresent -eq 0 ]; then
-		echo "${RED}*** ERROR: ZWO Camera not found...${NC}" >&2
-		if [[ $ZWOdev == "" ]]; then
-			echo "  and no USB entry found for it." >&2
-		else
-			echo "  but USB entry '$ZWOdev' found for it." >&2
-		fi
-		if [ "$UHUBCTL_PATH" != "" ] ; then
-			reset_usb
+		if [ -n "${UHUBCTL_PATH}" ] ; then
+			reset_usb "looking for a\nZWO camera"		# reset_usb exits if too many tries
 			exit 0	# exit with 0 so the service is restarted
 		else
-			echo "  Exiting." >&2
+			echo -en "${RED}*** FATAL ERROR: ZWO Camera not found" >&2
+			if [[ $ZWOdev == "" ]]; then
+				echo " and no USB entry either.${NC}" >&2
+				USB_MSG=""
+			else
+				echo " but $ZWOdev found.${NC}" >&2
+				USB_MSG="\n${SEE_LOG_MSG}"
+			fi
+
 			echo "  If you have the 'uhubctl' command installed, add it to config.sh." >&2
 			echo "  In the meantime, try running it to reset the USB bus." >&2
-			doExit ${EXIT_ERROR_STOP} "Error"
+			doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nNo ZWO camera\nfound!${USB_MSG}"
 		fi
 	fi
+
+	rm -f "${RESETTING_USB_LOG}"	# We found the camera so don't need to reset.
+
+else
+	echo -e "${RED}FATAL ERROR: Unknown CAMERA type: ${CAMERA}!  Stopping.${NC}" >&2
+	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nUnknown CAMERA\ntype: ${CAMERA}"
 fi
 
 echo "CAMERA: ${CAMERA}"
@@ -266,7 +274,7 @@ if [ "${RETCODE}" -eq ${EXIT_RESET_USB} ]; then
 		if [ ${ON_TTY} = "1" ]; then
 			echo "*** Non-recoverable ERROR found - see /var/log/allsky.log for details. ***"
 		fi
-		doExit ${EXIT_ERROR_STOP} "Error"		# hard stop
+		doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}Too many\nASI_ERROR_TIMEOUT\nerrors received!\n${SEE_LOG_MSG}"
 	fi
 fi
 

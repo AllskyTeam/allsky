@@ -410,19 +410,29 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* Replaced `saveImageDay.sh` and `saveImageNight.sh` with `saveImage.sh` that has improved functionality, including passing the sensor temperature to the dark subtraction commands, thereby eliminating the need for the "temperature.txt" file.
 	* The image used by the websites (default: image.jpg) as well as all temporary files are now written to `allsky/tmp`.  **NOTE**: if you are using the Allsky Website you will need to change the "imageName" variable in `/var/www/html/allsky/config.js` to `"/current/tmp/image.jpg"`.
 	* You can **significanly** reduce wear on your SD card by making `allsky/tmp` a [memory-based filesystem](https://github.com/thomasjacquin/allsky/wiki/Miscellaneous-Tips).
-<!--
+
 * version **0.8.3.3**: 
 	* Significantly enhanced Wiki - more pages and more information on existing pages.  All known issues are described there as well as fixes / workarounds.
 	* Added an option to keograms to make them full width, even if few images were used in creating the keogram.  In config.sh, set `KEOGRAM_EXTRA_PARAMETERS="--image-expand"`.
-	* Added/changed/deleted config.sh variables:
-	  * Added `WEBUI_DATA_FILES`: contains the name of one or more files that contain information to be added to the WebUI's "System" page.  See [this Wiki page[(https://github.com/thomasjacquin/allsky/wiki/allsky-portal-(WebUI)-settings) for more information.
-	  * Renamed `NIGHTS_TO_KEEP` to `DAYS_TO_KEEP` since it determines how many days of data to keep, not just nighttime data.  If "", ALL days' data are kept.
-	  * Deleted `AUTO_DELETE`: its functionality is now in `DAYS_TO_KEEP`.
+	* Added/changed/deleted config.sh and ftp-settings.sh variables:
+	  * Added `WEBUI_DATA_FILES`: contains the name of one or more files that contain information to be added to the WebUI's "System" page.  See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/allsky-portal-(WebUI)-settings) for more information.
+	  * Renamed `NIGHTS_TO_KEEP` to `DAYS_TO_KEEP` since it determines how many days of data to keep, not just nighttime data.  If blank (""), ALL days' data are kept.
+	  * Deleted `AUTO_DELETE`: its functionality is now in `DAYS_TO_KEEP`.  `DAYS_TO_KEEP=""` is similar to the old `AUTO_DELETE=false`.
 	  * Added `WEB_DAYS_TO_KEEP`: specifies how many days of Allsky website images and videos to keep, if the website is installed on your Pi.
+	  * Added `WEB_IMAGE_DIR` to allow the images to be copied to a location on your Pi (usually the Allsky website) as well as being copied to a remote machine.  This functionality already existed with timelapse, startrails, and keogram files.
+	* The RPiHQ camera now supports all the text overlay features as the ZWO camera, including the "Extra Text" file.
+	* Removed the harmless `deprecated pixel format used` message from the timelapse log file.  That message only confused people.
+	* Improved the auto-exposure for RPiHQ cameras.
+	* Made numerous changes to the ZWO and RPiHQ camera's code that will make it easier to maintain and add new features in the future.
+	* If Allsky is stopped while a file is being uploaded to a remote server, that upload will continue, eliminating cases where a temporary file would be left.
+	* Decreased other cases where temporary files would be left on remote servers during uploads.  Also, uploads now perform additional error checking to help in debugging.
 	* Added a `--debug` option to `allsky/scripts/upload.sh` to aid in debugging uploads.
+	* Upload log files are only created if there was an error; this saves writes to SD cards.
 	* Allsky will now stop with an error message on unrecoverable errors (e.g., not camera found).  It used to keep restarting and failing forever.
+	* More meaningful messages are displayed as images.  For example, in most cases `ERROR.  See /var/log/allsky.log` messages have been replaced with messages containing additional information, for example, `*** ERROR ***  Allsky Stopped!  ZWO camera not found!`.
+	* The timelapse debug output no longer includes one line for each of several thousand images proced.  This make it easier to see any actual errors.
+	* Startrails and Keogram creation no longer crash if invalid files are found.
 	* Removed the `allsky/scripts/filename.sh` file.
--->
 
 
 <!------------------------------------------------------------------------------------------->

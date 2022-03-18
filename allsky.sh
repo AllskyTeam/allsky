@@ -14,13 +14,28 @@ if [ -z "${ALLSKY_HOME}" ]; then
 fi
 cd "${ALLSKY_HOME}"
 
+ERROR_MSG_PREFIX="*** ERROR ***\nAllsky Stopped!\n"
+SEE_LOG_MSG="See /var/log/allsky.log"
 function doExit()
 {
 	EXITCODE=$1
 	TYPE=${2:-Error}
-	if [ ${EXITCODE} -eq ${EXIT_ERROR_STOP} ] && [ "${USE_NOTIFICATION_IMAGES}" = "1" ]; then
-		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${TYPE}" 2>&1
+	CUSTOM_MESSAGE="${3}"
+	if [ ${EXITCODE} -eq ${EXIT_ERROR_STOP} ]; then
+		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
+		# even if the user has them turned off.
+		if [ -n "${CUSTOM_MESSAGE}" ]; then
+			# Create a custom error message.
+			# If we error out before config.sh is sourced in, $FILENAME and $EXTENSION won't be
+			# set so guess at what they are.
+			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${FILENAME:-image}" \
+				"red" "" "85" "" "" \
+				"" "10" "red" "${EXTENSION:-jpg}" "" "${CUSTOM_MESSAGE}"
+		else
+			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "${TYPE}" 2>&1
+		fi
 		# Don't let the service restart us because we'll likely get the same error again.
+		echo "     ***** AllSky Stopped *****"
 		sudo systemctl stop allsky
 	fi
 	exit ${EXITCODE}
@@ -164,7 +179,6 @@ fi
 # Optionally display a notification image.
 if [ "$USE_NOTIFICATION_IMAGES" = "1" ] ; then
 	# Can do this in the background to speed up startup
-	# TODO: if we are restarting, don't display this since the prior allsky.sh displayed msg
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
 fi
 

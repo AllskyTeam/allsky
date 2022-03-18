@@ -56,13 +56,26 @@ pgrep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 if [ "${CAMERA}" = "RPiHQ" ]; then
 	# See if we should use libcamera-still or raspistill.
+	# If libcamera is installed and works, we'll use it.
+	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
+	# we'll use raspistill.
 	which libcamera-still > /dev/null
-	if [ $? -eq 0 ]; then
+	RET=$?
+	if [ ${RET} -eq 0 ]; then
 		LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
+	fi
+	if [ ${RET} -eq 0 ]; then
+		RPiHQ_SOFTWARE_TO_USE="libcamera"
 	else
-		# Buster and Bullseye have different output so only check the part they have in common.
-		vcgencmd get_camera | grep --silent "supported=1" 
+		RPiHQ_SOFTWARE_TO_USE="raspistill"
+		# Either libcamera isn't installed or it doesn't work, so try raspistill instead.
+
+		# TODO: Should try and run raspistill command - doing that is more reliable since
+		# the output of vcgencmd changes depending on the OS and how the Pi is configured.
+		# Newer kernels/libcamera give:   supported=1 detected=0, libcamera interfaces=1
+		# but only if    start_x=1    is in /boot/config.txt
+		vcgencmd get_camera | grep --silent "supported=1" ######### detected=1"
 		RET=$?
 	fi
 	if [ ${RET} -ne 0 ]; then
@@ -130,17 +143,8 @@ fi
 ARGUMENTS=()
 
 if [[ ${CAMERA} == "RPiHQ" ]]; then
-	# The Bullseye operating system deprecated raspistill so we use libcamera instead.
-	(
-		grep --silent -i "VERSION_CODENAME=bullseye" /etc/os-release ||
-		grep --silent "^dtoverlay=imx477" /boot/config.txt
-	)
 	# This argument needs to come first since the capture code checks for it first.
-	if [ $? -eq 0 ]; then
-		ARGUMENTS+=(-cmd libcamera)
-	else
-		ARGUMENTS+=(-cmd raspistill)
-	fi
+	ARGUMENTS+=(-cmd ${RPiHQ_SOFTWARE_TO_USE})
 fi
 
 # This argument should come second so the capture program knows if it should display debug output.

@@ -231,6 +231,7 @@ if [[ $CAMERA == "ZWO" ]]; then
 elif [[ $CAMERA == "RPiHQ" ]]; then
 	CAPTURE="capture_RPiHQ"
 fi
+rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"		# run the main program
 RETCODE=$?
 
@@ -279,7 +280,7 @@ if [ "${RETCODE}" -eq ${EXIT_RESET_USB} ]; then
 fi
 
 # RETCODE -ge ${EXIT_ERROR_STOP} means we should not restart until the user fixes the error.
-if [ "${RETCODE}" -ge ${EXIT_CODE_STOP} ]; then
+if [ "${RETCODE}" -ge ${EXIT_ERROR_STOP} ]; then
 	echo "***"
 	if [ ${ON_TTY} = "1" ]; then
 		echo "*** After fixing, restart allsky.sh. ***"
@@ -287,7 +288,7 @@ if [ "${RETCODE}" -ge ${EXIT_CODE_STOP} ]; then
 		echo "*** After fixing, restart the allsky service. ***"
 	fi
 	echo "***"
-	doExit ${EXIT_ERROR_STOP} "Error"
+	doExit ${EXIT_ERROR_STOP} "Error"	# Can't do a custom message since we don't know the problem
 fi
 
 # Some other error

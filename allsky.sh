@@ -43,9 +43,8 @@ function doExit()
 
 source "${ALLSKY_HOME}/variables.sh"
 if [ -z "${ALLSKY_CONFIG}" ]; then
-	echo "${RED}*** ERROR: variables not set, can't continue!${NC}"
-	USE_NOTIFICATION_IMAGES=1	# forces displaying notification
-	doExit ${EXIT_ERROR_STOP} "Error"
+	echo -e "${RED}*** FATAL ERROR: variables not set, can't continue!${NC}"
+	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_HOME})/variables.sh\nis corrupted!"
 fi
 
 # COMPATIBILITY CHECKS
@@ -62,8 +61,8 @@ fi
 USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
 
 if [ -z "${CAMERA}" ]; then
-	echo "${RED}*** ERROR: CAMERA not set, can't continue!${NC}"
-	doExit ${EXIT_ERROR_STOP} "Error"
+	echo -e "${RED}*** FATAL ERROR: CAMERA not set, can't continue!${NC}"
+	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nCAMERA type\nnot specified in\n$(basename ${ALLSKY_CONFIG})/config.sh."
 fi
 
 # Make sure allsky.sh is not already running.
@@ -94,8 +93,8 @@ if [ "${CAMERA}" = "RPiHQ" ]; then
 		RET=$?
 	fi
 	if [ ${RET} -ne 0 ]; then
-		echo "${RED}*** ERROR: RPiHQ Camera not found. Exiting.${NC}" >&2
-		doExit ${EXIT_ERROR_STOP} "Error"
+		echo -e "${RED}*** FATAL ERROR: RPiHQ Camera not found.  Make sure it's enabled. Stopping.${NC}" >&2
+		doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nRPiHQ Camera\nnot found!\nMake sure it's enabled."
 	fi
 
 elif [ "${CAMERA}" = "ZWO" ]; then

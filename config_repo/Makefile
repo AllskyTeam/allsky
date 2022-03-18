@@ -23,7 +23,7 @@ ifeq ($(PKGBUILD),)
 endif
 
 
-CONFIGFILES := settings_ZWO.json settings_RPiHQ.json config.sh ftp-settings.sh postToMap.sh
+CONFIGFILES := settings_ZWO.json settings_RPiHQ.json config.sh ftp-settings.sh
 UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service
 
 %:

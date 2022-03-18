@@ -84,15 +84,38 @@ if [ "${CAMERA}" = "RPiHQ" ]; then
 	fi
 
 else	# ZWO CAMERA
+	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 	reset_usb()		# resets the USB bus
 	{
+		REASON="${1}"		# why are we resetting the bus?
+		# Only reset a couple times, then exit with fatal error.
+		typeset -i COUNT
+		if [ -f "${RESETTING_USB_LOG}" ]; then
+			COUNT=$(< "${RESETTING_USB_LOG}")
+		fi
+		COUNT=${COUNT:-0}
+		if [ ${COUNT} -eq 2 ]; then
+			echo -e "${RED}*** FATAL ERROR: Too many consecutive USB bus resets done (${COUNT})! Stopping." >&2
+			rm -f "${RESETTING_USB_LOG}"
+			doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}"
+		fi
+
 		if [ "${ON_TTY}" = "1" ]; then
-			echo "  Resetting USB ports; restart allsky.sh when done." >&2
+			echo "${YELLOW}WARNING: Resetting USB ports ${REASON/\\n/ }; restart allsky.sh when done.${NC}" >&2
 		else
-			echo "  Resetting USB ports and restarting." >&2
+			echo "${YELLOW}WARNING: Resetting USB ports ${REASON/\\n/ }, then restarting.${NC}" >&2
 			# The service will automatically restart this script.
 		fi
+
+		let COUNT=${COUNT}+1
+		echo "${COUNT}" > "${RESETTING_USB_LOG}"
+
+		# Display a warning message
+		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${FILENAME}" \
+			"yellow" "" "85" "" "" \
+			"" "5" "yellow" "${EXTENSION}" "" "WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${COUNT}."
 		sudo "$UHUBCTL_PATH" -a cycle -l "$UHUBCTL_PORT"
+		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 	}
 
 	# Use two commands to better aid debugging when camera isn't found.
@@ -227,11 +250,11 @@ fi
 
 if [ "${RETCODE}" -eq ${EXIT_RESET_USB} ]; then
 	# Reset the USB bus if possible
-	if [ "$UHUBCTL_PATH" != "" ] ; then
-		reset_usb
+	if [ "${UHUBCTL_PATH}" != "" ] ; then
+		reset_usb " (ASI_ERROR_TIMEOUTs)"
 		NOTIFICATION_TYPE="Restarting"
 		if [ ${ON_TTY} = "1" ]; then
-			echo "*** USB reset; can restart allsky now. ***"
+			echo "*** USB bus was reset; You can restart allsky now. ***"
 			NOTIFICATION_TYPE="NotRunning"
 		fi
 		if [ "${USE_NOTIFICATION_IMAGES}" = "1" ]; then

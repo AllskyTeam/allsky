@@ -15,7 +15,7 @@ IMAGE_URL="http://www.thomasjacquin.com/allsky/image.jpg"
 CAMERA="ASI 224MC"
 LENS="Areconnt 1.55"
 COMPUTER="Raspberry Pi 3"
-MAC_ADDRESS=$(sudo cat /sys/class/net/$(ip route show default | awk '/default/ {print $5}')/address)
+MAC_ADDRESS="$(sudo cat /sys/class/net/$(ip route show default | awk '/default/ {print $5}')/address)"
 
 generate_post_data()
 {
@@ -35,15 +35,13 @@ generate_post_data()
 EOF
 }
 
-echo $(generate_post_data)
-
 # Extract last character of mac address and find its parity
 digit="${MAC_ADDRESS: -1}"
 decimal=$(( 16#$digit ))
-parity="$(( $decimal % 2 ))"
+parity="$(( decimal % 2 ))"
 
 # Only upload every other day to save on server bandwidth
-if  (( $(date +%d) % 2 == $parity ))
+if  (( $(date +%d) % 2 == parity ))
 then
    echo "Week day matches Mac Address ending - upload"
    curl -i \

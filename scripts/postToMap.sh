@@ -8,15 +8,15 @@
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh"
 
-LOCATION="Whitehorse YT"
-OWNER="Thomas Jacquin"
+LOCATION=$(jq -r '.location' "$CAMERA_SETTINGS")
+OWNER=$(jq -r '.owner' "$CAMERA_SETTINGS")
 LATITUDE=$(jq -r '.latitude' "$CAMERA_SETTINGS")
 LONGITUDE=$(jq -r '.longitude' "$CAMERA_SETTINGS")
-WEBSITE_URL="http://www.thomasjacquin.com/allsky"
-IMAGE_URL="http://www.thomasjacquin.com/allsky/image.jpg"
-CAMERA="ASI 224MC"
-LENS="Areconnt 1.55"
-COMPUTER="Raspberry Pi 3"
+WEBSITE_URL=$(jq -r '.websiteurl' "$CAMERA_SETTINGS")
+IMAGE_URL=$(jq -r '.imageurl' "$CAMERA_SETTINGS")
+CAMERA=$(jq -r '.camera' "$CAMERA_SETTINGS")
+LENS=$(jq -r '.lens' "$CAMERA_SETTINGS")
+COMPUTER=$(jq -r '.computer' "$CAMERA_SETTINGS")
 MAC_ADDRESS="$(sudo cat /sys/class/net/"$(ip route show default | awk '/default/ {print $5}')"/address)"
 
 generate_post_data()

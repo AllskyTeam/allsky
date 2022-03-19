@@ -6,7 +6,7 @@
 
 # Disabling shellcheck to force CI to compile - May need to find a better way to deal with this
 # shellcheck disable=SC1090
-source "${ALLSKY_CONFIG}/config.sh"
+source "/home/pi/allsky/config/config.sh"
 
 LOCATION=$(jq -r '.location' "$CAMERA_SETTINGS")
 OWNER=$(jq -r '.owner' "$CAMERA_SETTINGS")

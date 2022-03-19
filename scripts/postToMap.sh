@@ -4,7 +4,7 @@
 # https://www.thomasjacquin.com/allsky-map/
 # Information is gathered automatically from the settings file
 
-source "/home/pi/allsky/config/config.sh"
+source "${ALLSKY_CONFIG}/config.sh"
 
 LOCATION="Whitehorse YT"
 OWNER="Thomas Jacquin"
@@ -15,7 +15,7 @@ IMAGE_URL="http://www.thomasjacquin.com/allsky/image.jpg"
 CAMERA="ASI 224MC"
 LENS="Areconnt 1.55"
 COMPUTER="Raspberry Pi 3"
-MAC_ADDRESS="$(sudo cat /sys/class/net/$(ip route show default | awk '/default/ {print $5}')/address)"
+MAC_ADDRESS="$(sudo cat /sys/class/net/"$(ip route show default | awk '/default/ {print $5}')"/address)"
 
 generate_post_data()
 {

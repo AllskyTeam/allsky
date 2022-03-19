@@ -1,5 +1,12 @@
 #!/bin/bash
 
+ME="$(basename "${BASH_ARGV0}")"
+
+# Allow this script to be executed manually, which requires several variables to be set.
+if [ -z "${ALLSKY_HOME}" ] ; then
+	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
+fi
+
 # This script uploads various information relative to the camera setup to the allsky map.
 # https://www.thomasjacquin.com/allsky-map/
 # Information is gathered automatically from the settings file

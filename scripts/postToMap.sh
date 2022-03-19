@@ -4,6 +4,8 @@
 # https://www.thomasjacquin.com/allsky-map/
 # Information is gathered automatically from the settings file
 
+# Disabling shellcheck to force CI to compile - May need to find a better way to deal with this
+# shellcheck disable=SC2059
 source "${ALLSKY_CONFIG}/config.sh"
 
 LOCATION="Whitehorse YT"

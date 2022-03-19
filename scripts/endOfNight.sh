@@ -83,8 +83,9 @@ if [[ ${AUTO_DELETE} == "true" ]]; then
 	done
 fi
 
-if [[ ${POST_TO_MAP} == "true" ]]; then
-	./postToMap.sh
+SHOW_ON_MAP=$(jq -r '.showonmap' "$CAMERA_SETTINGS")
+if [[ ${SHOW_ON_MAP} == "1" ]]; then
+	"${ALLSKY_SCRIPTS}/postToMap.sh"
 fi
 
 exit 0

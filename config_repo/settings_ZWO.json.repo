@@ -60,6 +60,7 @@
    "debuglevel":"1",
    "newexposure":"0",
    "alwaysshowadvanced":"0",
+   "showonmap":0,
    "location":"",
    "owner":"",
    "websiteurl":"",

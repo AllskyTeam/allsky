@@ -32,6 +32,7 @@
    "darkframe":"0",
    "debuglevel":"1",
    "alwaysshowadvanced":"0",
+   "showonmap":"0",
    "location":"",
    "owner":"",
    "websiteurl":"",

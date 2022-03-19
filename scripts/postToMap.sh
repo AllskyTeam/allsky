@@ -1,10 +1,12 @@
 #!/bin/bash
 
+# shellcheck disable=SC2034
 ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
-	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
+	ALLSKY_HOME=$(realpath "$(dirname "${BASH_ARGV0}")"/..)
+	export ALLSKY_HOME
 fi
 
 # This script uploads various information relative to the camera setup to the allsky map.
@@ -13,7 +15,9 @@ fi
 
 # Disabling shellcheck to force CI to compile - May need to find a better way to deal with this
 # shellcheck disable=SC1090
-source "/home/pi/allsky/config/config.sh"
+source "${ALLSKY_HOME}/variables.sh"
+# shellcheck disable=SC1090
+source "${ALLSKY_CONFIG}/config.sh"
 
 LOCATION=$(jq -r '.location' "$CAMERA_SETTINGS")
 OWNER=$(jq -r '.owner' "$CAMERA_SETTINGS")

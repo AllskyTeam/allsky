@@ -31,5 +31,13 @@
    "autofocus":"0",
    "darkframe":"0",
    "debuglevel":"1",
-   "alwaysshowadvanced":"0"
+   "alwaysshowadvanced":"0",
+   "showonmap":"0",
+   "location":"",
+   "owner":"",
+   "websiteurl":"",
+   "imageurl":"",
+   "camera":"",
+   "lens":"",
+   "computer":""
 }

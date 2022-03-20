@@ -4,16 +4,19 @@ ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
-	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
+	ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
+  export ALLSKY_HOME
 fi
-
+# shellcheck disable=SC1090
 source "${ALLSKY_HOME}/variables.sh"
+# shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh"
+# shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 if [ $# -eq 1 ] ; then
 	if [ "${1}" = "-h" -o "${1}" = "--help" ] ; then
-		echo -e "${RED}Usage: ${ME} [YYYYmmdd]${NC}"
+		echo -e "Usage: ${ME} [YYYYmmdd]"
 		exit 0
 	else
 		DATE="${1}"
@@ -101,6 +104,11 @@ if [ -n "${WEB_DAYS_TO_KEEP}" ]; then
 			done
 		)
 	fi
+
+SHOW_ON_MAP=$(jq -r '.showonmap' "$CAMERA_SETTINGS")
+if [[ ${SHOW_ON_MAP} == "1" ]]; then
+  echo -e "${ME}: ===== Posting camera details to allsky map"
+	"${ALLSKY_SCRIPTS}/postToMap.sh"
 fi
 
 exit 0

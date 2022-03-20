@@ -19,12 +19,10 @@
 #include <fstream>
 #include <algorithm> 
 
-void Log(int, const char *, ...);
+#include "include/allsky_common.h"
 
 #include "include/RPiHQ_raspistill.h"
 #include "include/mode_RPiHQ_mean.h"
-
-#define US_IN_SEC (1000000.0)  // microseconds in a second
 
 // These only need to be as large as modeMeanSetting.historySize.
 const int history_size = 5;
@@ -58,7 +56,7 @@ double get_focus_metric(cv::Mat img)
 
 int calcExposureLevel (int exposure_us, double gain, modeMeanSetting &currentModeMeanSetting)
 {
-	return log(gain  * exposure_us/US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0);
+	return log(gain  * exposure_us/(double)US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0);
 }
 
 double calcExposureTimeEff (int exposureLevel, modeMeanSetting &currentModeMeanSetting)
@@ -131,7 +129,7 @@ float RPiHQcalcMean(cv::Mat image, int exposure_us, double gain, raspistillSetti
 	double this_mean;
 
 	// get old ExposureTime
-	double ExposureTime_s = (double) currentRaspistillSetting.shutter_us/US_IN_SEC;
+	double ExposureTime_s = (double) currentRaspistillSetting.shutter_us/(double)US_IN_SEC;
 
 	//Then define your mask image
 	//cv::Mat mask = cv::Mat::zeros(image.size(), image.type());
@@ -225,7 +223,7 @@ if (0)
 		ExposureChange = std::max(1.0, currentModeMeanSetting.mean_p0 + currentModeMeanSetting.mean_p1 * mean_diff);
 	}
 
-  ExposureChange = std::min(50, ExposureChange);
+	ExposureChange = std::min(50, ExposureChange);
 
 	dExposureChange = ExposureChange-lastExposureChange;
 	lastExposureChange = ExposureChange;
@@ -239,8 +237,8 @@ if (0)
 		}
 	}
 	if (mean > (currentModeMeanSetting.mean_value + currentModeMeanSetting.mean_threshold))  {
-		if (ExposureTime_s <= 1 / US_IN_SEC) { // untere Grenze durch shuttertime
-			Log(3, "  > ExposureTime_s too low - stop !\n");
+		if (ExposureTime_s <= 1 / (double)US_IN_SEC) { // untere Grenze durch shuttertime
+			Log(3, "  > ExposureTime_s <= 1 microsecond can't go any lower!\n");
 		}
 		else {
 			currentModeMeanSetting.ExposureLevel -= ExposureChange;
@@ -265,13 +263,13 @@ if (0)
 	//#############################################################################################################
 	// calculate gain und exposuretime
 	if (currentModeMeanSetting.mean_auto == MEAN_AUTO) {
-		double newGain = std::min(gain, std::max(1.0, ExposureTimeEff_s / (exposure_us/US_IN_SEC))); 
+		double newGain = std::min(gain, std::max(1.0, ExposureTimeEff_s / (exposure_us/(double)US_IN_SEC))); 
 		currentRaspistillSetting.analoggain = newGain;
-		ExposureTime_s = std::min((double)exposure_us/(double)US_IN_SEC, std::max(1 / US_IN_SEC, ExposureTimeEff_s / currentRaspistillSetting.analoggain));
+		ExposureTime_s = std::min((double)exposure_us/(double)US_IN_SEC, std::max(1 / (double)US_IN_SEC, ExposureTimeEff_s / currentRaspistillSetting.analoggain));
 	}
 	else if (currentModeMeanSetting.mean_auto == MEAN_AUTO_GAIN_ONLY) {
 		ExposureTime_s = (double)exposure_us/(double)US_IN_SEC;
-		currentRaspistillSetting.analoggain = std::min(gain,std::max(1.0,ExposureTimeEff_s / (exposure_us/US_IN_SEC)));
+		currentRaspistillSetting.analoggain = std::min(gain,std::max(1.0,ExposureTimeEff_s / (exposure_us/(double)US_IN_SEC)));
 	}
 	else if (currentModeMeanSetting.mean_auto == MEAN_AUTO_EXPOSURE_ONLY) {
 		currentRaspistillSetting.analoggain = gain;
@@ -293,7 +291,7 @@ if (0)
 	MeanCnt++;
 	exp_history[MeanCnt % currentModeMeanSetting.historySize] = currentModeMeanSetting.ExposureLevel;
 
-	currentRaspistillSetting.shutter_us = ExposureTime_s * US_IN_SEC;
+	currentRaspistillSetting.shutter_us = ExposureTime_s * (double)US_IN_SEC;
 	Log(3, "  > Mean: %f, diff: %f, Exposure level:%d (%d), Exposure time:%1.8f s, analoggain:%1.2f\n", mean, mean_diff, currentModeMeanSetting.ExposureLevel, currentModeMeanSetting.ExposureLevel-exp_history[idx], ExposureTime_s, currentRaspistillSetting.analoggain);
 
 	return(this_mean);

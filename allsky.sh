@@ -1,23 +1,36 @@
 #!/bin/bash
 
-# Exit code 100 will cause the service to be stopped so the user can fix the problem.
+# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
+EXIT_OK=0
+EXIT_RESTARTING=98		# process is restarting, i.e., stop, then start
+EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
+EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 
 # Make it easy to find the beginning of this run in the log file.
 echo "     ***** Starting AllSky *****"
 
-if [ -z "${ALLSKY_HOME}" ]
-then
+if [ -z "${ALLSKY_HOME}" ]; then
 	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}"))"
 fi
-
 cd "${ALLSKY_HOME}"
+
+function doExit()
+{
+	EXITCODE=$1
+	TYPE=${2:-Error}
+	if [ ${EXITCODE} -eq ${EXIT_ERROR_STOP} ] && [ "${USE_NOTIFICATION_IMAGES}" = "1" ]; then
+		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${TYPE}" 2>&1
+		# Don't let the service restart us because we'll likely get the same error again.
+		sudo systemctl stop allsky
+	fi
+	exit ${EXITCODE}
+}
 
 source "${ALLSKY_HOME}/variables.sh"
 if [ -z "${ALLSKY_CONFIG}" ]; then
 	echo "${RED}*** ERROR: variables not set, can't continue!${NC}"
-	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
-	sudo systemctl stop allsky
-	exit 100
+	USE_NOTIFICATION_IMAGES=1	# forces displaying notification
+	doExit ${EXIT_ERROR_STOP} "Error"
 fi
 
 # COMPATIBILITY CHECKS
@@ -34,12 +47,11 @@ if [ ! -v WEBUI_DATA_FILES ]; then	# WEBUI_DATA_FILES added after version 0.8.3.
 	sudo systemctl stop allsky
 	exit 100
 fi
+USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
 
 if [ -z "${CAMERA}" ]; then
 	echo "${RED}*** ERROR: CAMERA not set, can't continue!${NC}"
-	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
-	sudo systemctl stop allsky
-	exit 100
+	doExit ${EXIT_ERROR_STOP} "Error"
 fi
 
 # Make sure allsky.sh is not already running.
@@ -56,10 +68,9 @@ if [ "${CAMERA}" = "RPiHQ" ]; then
 		vcgencmd get_camera | grep --silent "supported=1" 
 		RET=$?
 	fi
-	if [ $RET -ne 0 ]; then
+	if [ ${RET} -ne 0 ]; then
 		echo "${RED}*** ERROR: RPiHQ Camera not found. Exiting.${NC}" >&2
-		sudo systemctl stop allsky
-		exit 100
+		doExit ${EXIT_ERROR_STOP} "Error"
 	fi
 
 else	# ZWO CAMERA
@@ -91,8 +102,7 @@ else	# ZWO CAMERA
 			echo "  Exiting." >&2
 			echo "  If you have the 'uhubctl' command installed, add it to config.sh." >&2
 			echo "  In the meantime, try running it to reset the USB bus." >&2
-			sudo systemctl stop allsky
-			exit 100
+			doExit ${EXIT_ERROR_STOP} "Error"
 		fi
 	fi
 fi
@@ -111,9 +121,9 @@ else
 fi
 
 # Optionally display a notification image.
-USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
 if [ "$USE_NOTIFICATION_IMAGES" = "1" ] ; then
 	# Can do this in the background to speed up startup
+	# TODO: if we are restarting, don't display this since the prior allsky.sh displayed msg
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
 fi
 
@@ -174,55 +184,84 @@ else
 fi
 ARGUMENTS+=(-daytime $DAYTIME_CAPTURE)
 
-[ "$CAPTURE_EXTRA_PARAMETERS" != "" ] && ARGUMENTS+=(${CAPTURE_EXTRA_PARAMETERS})	# Any additional parameters
+if [ "$CAPTURE_EXTRA_PARAMETERS" != "" ]; then
+	ARGUMENTS+=(${CAPTURE_EXTRA_PARAMETERS})	# Any additional parameters
+fi
 
 echo "${ARGUMENTS[@]}" > ${ALLSKY_TMP}/capture_args.txt		# for debugging
 
-GOT_SIGTERM="false"
-GOT_SIGUSR1="false"
-# trap "GOT_SIGTERM=true" SIGTERM
-# trap "GOT_SIGUSR1=true" SIGUSR1
+GOT_SIGTERM="false"	&& trap "GOT_SIGTERM=true" SIGTERM
+GOT_SIGINT="false"  && trap "GOT_SIGINT=true" SIGINT
+GOT_SIGUSR1="false" && trap "GOT_SIGUSR1=true" SIGUSR1
 
 if [[ $CAMERA == "ZWO" ]]; then
 	CAPTURE="capture"
 elif [[ $CAMERA == "RPiHQ" ]]; then
 	CAPTURE="capture_RPiHQ"
 fi
-"${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
+"${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"		# run the main program
 RETCODE=$?
-if [ $RETCODE -ne 0 ]; then
-	  echo -e "${RED}'${CAPTURE}' exited with RETCODE=${RETCODE}, GOT_SIGTERM=$GOT_SIGTERM, GOT_SIGUSR1=$GOT_SIGUSR1${NC}"
+
+if [ ${RETCODE} -ne ${EXIT_OK} ]; then
+	# for testing
+	echo -e "${RED}'${CAPTURE}' exited with RETCODE=${RETCODE}${NC}"
+fi
+if [ "${GOT_SIGTERM}" = "true" ] || [ "${GOT_SIGUSR1}" = "true" ] || [ "${GOT_SIGINT}" = "true" ]; then
+	# for testing
+	echo "allsky.sh: GOT_SIGTERM=$GOT_SIGTERM, GOT_SIGUSR1=$GOT_SIGUSR1, GOT_SIGINT=$GOT_SIGINT"
 fi
 
-# 98 return code means we are restarting.  The capture program dealt with notification images.
-if [ "${RETCODE}" -eq 98 ] ; then
-	exit 0	# use 0 so the service is restarted
+if [ "${RETCODE}" -eq ${EXIT_OK} ] ; then
+	doExit ${EXIT_OK} ""
 fi
 
-# 99 is a special return code which means to reset usb bus if possible.
-if [ "${RETCODE}" -eq 99 -a "$UHUBCTL_PATH" != "" ] ; then
-	reset_usb
-	exit 0	# use 0 so the service is restarted
+if [ "${RETCODE}" -eq ${EXIT_RESTARTING} ] ; then
+	NOTIFICATION_TYPE="Restarting"
+	if [ ${ON_TTY} = "1" ]; then
+		echo "*** Can restart allsky now. ***"
+		NOTIFICATION_TYPE="NotRunning"
+	fi
+	doExit 0 "${NOTIFICATION_TYPE}"		# use 0 so the service is restarted
 fi
 
-if [ "${USE_NOTIFICATION_IMAGES}" = "1" -a "${RETCODE}" -ne 0 ] ; then
-	# RETCODE -ge 100 means the we should not restart until the user fixes the error.
-	if [ "$RETCODE" -ge 100 ]; then
-		echo "***"
+if [ "${RETCODE}" -eq ${EXIT_RESET_USB} ]; then
+	# Reset the USB bus if possible
+	if [ "$UHUBCTL_PATH" != "" ] ; then
+		reset_usb
+		NOTIFICATION_TYPE="Restarting"
 		if [ ${ON_TTY} = "1" ]; then
-			echo "*** After fixing, restart allsky.sh. ***"
-		else
-			echo "*** After fixing, restart the allsky service. ***"
+			echo "*** USB reset; can restart allsky now. ***"
+			NOTIFICATION_TYPE="NotRunning"
 		fi
-		echo "***"
-		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "Error" 2>&1
-
-		# Don't let the service restart us 'cause we'll likely get the same error again
-		sudo systemctl stop allsky
+		if [ "${USE_NOTIFICATION_IMAGES}" = "1" ]; then
+			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${NOTIFICATION_TYPE}" 2>&1
+		fi
+		doExit 0 ""		# use 0 so the service is restarted
 	else
-		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "NotRunning" 2>&1
-		# If started by the service, it will restart us once we exit.
+		# TODO: use ASI_ERROR_TIMEOUT message
+		if [ ${ON_TTY} = "1" ]; then
+			echo "*** Non-recoverable ERROR found - see /var/log/allsky.log for details. ***"
+		fi
+		doExit ${EXIT_ERROR_STOP} "Error"		# hard stop
 	fi
 fi
 
-exit $RETCODE
+# RETCODE -ge ${EXIT_ERROR_STOP} means we should not restart until the user fixes the error.
+if [ "${RETCODE}" -ge ${EXIT_CODE_STOP} ]; then
+	echo "***"
+	if [ ${ON_TTY} = "1" ]; then
+		echo "*** After fixing, restart allsky.sh. ***"
+	else
+		echo "*** After fixing, restart the allsky service. ***"
+	fi
+	echo "***"
+	doExit ${EXIT_ERROR_STOP} "Error"
+fi
+
+# Some other error
+if [ "${USE_NOTIFICATION_IMAGES}" = "1" ]; then
+	# If started by the service, it will restart us once we exit.
+	doExit ${RETCODE} "NotRunning"
+else
+	doExit ${RETCODE} ""
+fi

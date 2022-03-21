@@ -1,22 +1,20 @@
-# Allsky Camera ![Release 0.8.3](https://img.shields.io/badge/Release-0.8.3-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release 0.8.3.3](https://img.shields.io/badge/Release-0.8.3.3-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 **This README and our [Wiki pages](https://github.com/thomasjacquin/allsky/wiki) will help get your Allsky camera up and running.  Please review them _before_ submitting an Issue.**
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 
-
 &nbsp;
-## Required Action Needed
-When upgrading from a release _prior to_ 0.8.3 you **MUST** follow the steps [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
+> **NOTE**: When upgrading from a release **prior to** 0.8.3 you **MUST** follow the steps [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
 
-
+&nbsp;  
 &nbsp;
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg)
 
 
 &nbsp;
 <!------------------------------------------------------------------------------------------->
-## Requirements
+### Requirements
 <details><summary>Click here</summary>
 
 &nbsp;  
@@ -28,12 +26,14 @@ In order to get the camera working properly you will need the following hardware
 **NOTE:** Owners of USB2.0 cameras such as ASI120MC and ASI120MM may need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software-drivers). This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.
 
 **NOTE:** The T7 / T7C cameras, e.g., from Datyson or other sellers, are not officially supported but persistent users may get them to work by following [these instructions](https://github.com/thomasjacquin/allsky/wiki/Troubleshoot:-T7-Cameras).
+
+***
 </details>
 
 
 &nbsp;
 <!------------------------------------------------------------------------------------------->
-## Software Installation - 1st time only
+### Software Installation - 1st time only
 <details><summary>Click here</summary>
 
 &nbsp;  
@@ -64,12 +64,14 @@ Make sure you have a working Internet connection by setting it through [the term
 Some users have reported ASI_ERROR_TIMEOUT errors with their ZWO cameras.  Click [here](https://github.com/thomasjacquin/allsky/wiki/Troubleshoot:-ASI_ERROR_TIMEOUTs) to troubleshoot.
 
 There are many configuration variables that need to be set.  Please see the [allsky Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) page for a list of them.
+
+***
 </details>
 
 
 &nbsp;
 <!------------------------------------------------------------------------------------------->
-## Usage
+### Usage
 <details><summary>Click here</summary>
 
 ### Autostart
@@ -107,12 +109,14 @@ If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote 
 ```
 ./allsky.sh preview
 ```
+
+***
 </details>
 
 
 &nbsp;
 <!------------------------------------------------------------------------------------------->
-## Updating the software
+### Updating the software
 <details><summary>Click here</summary>
 
 &nbsp;  
@@ -122,12 +126,14 @@ See this [Wiki page](https://github.com/thomasjacquin/allsky/wiki/How-to-update-
 The WebUI from the `allsky-portal` package uses these new settings so it's also important to update AllSky **prior to** updating the WebUI.
 
 Also note that in version 0.8.3 the default image file created and uploaded is called **image.jpg**.  The prior "image-resize.jpg" and "liveview-image.jpg" are no longer created. Keep that in mind if you copy the image to a remote web server - it will need to know about the new name.
+
+***
 </details>
 
 
 &nbsp;
 <!------------------------------------------------------------------------------------------->
-## Web User Interface (WebUI)
+### Web User Interface (WebUI) - `allsky-portal` package
 <details><summary>Click here</summary>
 
 &nbsp;  
@@ -168,124 +174,14 @@ http://your_raspberry_IP/public.php
 
 Make sure this page is publically viewable.
 If it is behind a firewall consult the documentation for your network equipment for information on allowing inbound connections.
+
+***
 </details>
 
 
 &nbsp;
 <!------------------------------------------------------------------------------------------->
-## Dark frame subtraction
-<details><summary>Click here</summary>
-
-&nbsp;  
-The dark frame subtraction feature removes hot pixels from night sky images. The concept is the following: Take an image with a cover on your camera lens and let the software subtract that image later from all images taken throughout the night.
-
-See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Dark-Frames-Explained) on dark frames for instructions on how to use them.
-</details>
-
-
-&nbsp;
-<!------------------------------------------------------------------------------------------->
-## Timelapse
-<details><summary>Click here</summary>
-
-&nbsp;  
-By default, a timelapse video is generated at the end of nighttime from all of the images captured in the last 24 hours.
-
-To disable timelapse, open `allsky/config/config.sh` and set
-
-```shell
-TIMELAPSE="false"
-```
-
-To generate a timelapse video manually:
-
-```shell
-cd ~/allsky
-scripts/generateForDay.sh -t 20220710
-```
-
-**Note:** If you are unable to create a timelapse, see [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Troubleshooting:-timelapse).
-</details>
-
-
-&nbsp;
-<!------------------------------------------------------------------------------------------->
-## Keograms
-<details><summary>Click here</summary>
-
-&nbsp;  
-![](http://www.thomasjacquin.com/allsky-portal/screenshots/keogram-annotated.jpg)
-
-A **Keogram** is an image giving a quick view of the day's activity. It was originally invented to study the aurora borealis.
-For each image a central vertical column 1 pixel wide is extracted. All these columns are then stitched together from left to right. This results in a timeline that reads from dawn to the end of nighttime (the image above only shows nighttime data since daytime images were turned off).
-
-See the [Keogram Wiki page](https://github.com/thomasjacquin/allsky/wiki/Keograms-explained) for more details.
-	
-To generate a keogram image manually:
-```shell
-cd ~/allsky
-scripts/generateForDay.sh -k 20220710
-```
-</details>
-
-
-&nbsp;
-<!------------------------------------------------------------------------------------------->
-## Startrails
-<details><summary>Click here</summary>
-
-&nbsp;  
-![](http://www.thomasjacquin.com/allsky-portal/screenshots/startrail.jpg)
-
-**Startrails** are generated by stacking all the images from a night on top of each other.
-
-See the [Startrails Wiki page](https://github.com/thomasjacquin/allsky/wiki/Startrails-Explained) for more details.
-	
-To generate a startrails image manually:
-```shell
-cd ~/allsky
-scripts/generateForDay.sh -s 20220710
-```
-</details>
-
-
-&nbsp;
-<!------------------------------------------------------------------------------------------->
-## Automatic deletion of old data
-<details><summary>Click here</summary>
-
-&nbsp;  
-You can specify how many days worth of images to keep in order to keep the Raspberry Pi SD card from filling up. To change the default number of days, change the number below in `allsky/config/config.sh`:
-```
-DAYS_TO_KEEP=14
-```
-	
-If you have the Allsky website installed on your Pi, you can specify how many days worth of its imags to keep:
-```
-WEB_DAYS_TO_KEEP=28
-```
-In both cases, set to "" to keep all days' data but be careful that your SD card doesn't fill up
-</details>
-
-
-&nbsp;
-<!------------------------------------------------------------------------------------------->
-## Logging information
-<details><summary>Click here</summary>
-
-&nbsp;  
-When using Allsky, information is written to a log file. In case the program stopped, crashed, or behaved in an abnormal way, take a look at:
-```
-tail /var/log/allsky.log
-```
-	
-There are other temporary log files in `allsky/tmp` that are used for debugging.
-</details>
-
-
-&nbsp;
-<!------------------------------------------------------------------------------------------->
-## Allsky Website
+### Allsky Website - `allsky-website` package
 <details><summary>Click here</summary>
 
 &nbsp;  
@@ -313,12 +209,138 @@ If you want to host the website on a _different_ machine, like in this [example]
 
 ### Website settings
 Once you've installed the website, either on your Pi or another machine, look at the descriptions of the settings on the [allsky-website Settings page](https://github.com/thomasjacquin/allsky/wiki/allsky-website-Settings).
+
+***
 </details>
 
 
 &nbsp;
 <!------------------------------------------------------------------------------------------->
-## Information for advanced users
+### Dark frame subtraction
+<details><summary>Click here</summary>
+
+&nbsp;  
+The dark frame subtraction feature removes hot pixels from night sky images. The concept is the following: Take an image with a cover on your camera lens and let the software subtract that image later from all images taken throughout the night.
+
+See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Dark-Frames-Explained) on dark frames for instructions on how to use them.
+
+***
+</details>
+
+
+&nbsp;
+<!------------------------------------------------------------------------------------------->
+### Timelapse
+<details><summary>Click here</summary>
+
+&nbsp;  
+By default, a timelapse video is generated at the end of nighttime from all of the images captured in the last 24 hours.
+
+To disable timelapse, open `allsky/config/config.sh` and set
+
+```shell
+TIMELAPSE="false"
+```
+
+To generate a timelapse video manually:
+
+```shell
+cd ~/allsky
+scripts/generateForDay.sh -t 20220710
+```
+
+**Note:** If you are unable to create a timelapse, see [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Troubleshooting:-timelapse).
+
+***
+</details>
+
+
+&nbsp;
+<!------------------------------------------------------------------------------------------->
+### Keograms
+<details><summary>Click here</summary>
+
+&nbsp;  
+![](http://www.thomasjacquin.com/allsky-portal/screenshots/keogram-annotated.jpg)
+
+A **Keogram** is an image giving a quick view of the day's activity. It was originally invented to study the aurora borealis.
+For each image a central vertical column 1 pixel wide is extracted. All these columns are then stitched together from left to right. This results in a timeline that reads from dawn to the end of nighttime (the image above only shows nighttime data since daytime images were turned off).
+
+See the [Keogram Wiki page](https://github.com/thomasjacquin/allsky/wiki/Keograms-explained) for more details.
+	
+To generate a keogram image manually:
+```shell
+cd ~/allsky
+scripts/generateForDay.sh -k 20220710
+```
+
+***
+</details>
+
+
+&nbsp;
+<!------------------------------------------------------------------------------------------->
+### Startrails
+<details><summary>Click here</summary>
+
+&nbsp;  
+![](http://www.thomasjacquin.com/allsky-portal/screenshots/startrail.jpg)
+
+**Startrails** are generated by stacking all the images from a night on top of each other.
+
+See the [Startrails Wiki page](https://github.com/thomasjacquin/allsky/wiki/Startrails-Explained) for more details.
+	
+To generate a startrails image manually:
+```shell
+cd ~/allsky
+scripts/generateForDay.sh -s 20220710
+```
+
+***
+</details>
+
+
+&nbsp;
+<!------------------------------------------------------------------------------------------->
+### Automatic deletion of old data
+<details><summary>Click here</summary>
+
+&nbsp;  
+You can specify how many days worth of images to keep in order to keep the Raspberry Pi SD card from filling up. To change the default number of days, change the number below in `allsky/config/config.sh`:
+```
+DAYS_TO_KEEP=14
+```
+	
+If you have the Allsky website installed on your Pi, you can specify how many days worth of its imags to keep:
+```
+WEB_DAYS_TO_KEEP=28
+```
+In both cases, set to "" to keep all days' data but be careful that your SD card doesn't fill up.
+
+***
+</details>
+
+
+&nbsp;
+<!------------------------------------------------------------------------------------------->
+### Logging information
+<details><summary>Click here</summary>
+
+&nbsp;  
+When using Allsky, information is written to a log file. In case the program stopped, crashed, or behaved in an abnormal way, take a look at:
+```
+tail /var/log/allsky.log
+```
+	
+There are other temporary log files in `allsky/tmp` that are used for debugging.
+
+***
+</details>
+
+
+&nbsp;
+<!------------------------------------------------------------------------------------------->
+### Information for advanced users
 <details><summary>Click here</summary>
 
 &nbsp;  
@@ -332,20 +354,22 @@ and then add your additional processing steps which
 will be run after the usual end-of-night processing, but before the deletion of any old image files.
 
 After you rename the file above, you can edit the file via the "Editor" link on the left side of the WebUI page.
+
+***
 </details>
 
 
 &nbsp;
 <!------------------------------------------------------------------------------------------->
-## Share your sky
+### Share your sky
 
-If you've built an allsky camera, please send me a message and I'll add you to the [map](http://www.thomasjacquin.com/allsky-map).
+If you want your allsky camera to be added to the [Allsky map](http://www.thomasjacquin.com/allsky-map), see [these settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings/_edit#map-settings).
 
 ![](http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg)
 
 
 <!------------------------------------------------------------------------------------------->
-## Release notes
+### Release notes
 <!--
 * version **0.1**: Initial release
 * version **0.2**: Separated camera settings from code logic
@@ -412,14 +436,15 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* You can **significanly** reduce wear on your SD card by making `allsky/tmp` a [memory-based filesystem](https://github.com/thomasjacquin/allsky/wiki/Miscellaneous-Tips).
 
 * version **0.8.3.3**: 
+	* Added ability to have your allsky camera added to the [Allsky map](http://www.thomasjacquin.com/allsky-map) by configuring [these settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings/_edit#map-settings).  Added `Allsky Map Setup` section to the WebUI to configure the map settings.
 	* Significantly enhanced Wiki - more pages and more information on existing pages.  All known issues are described there as well as fixes / workarounds.
 	* Added an option to keograms to make them full width, even if few images were used in creating the keogram.  In config.sh, set `KEOGRAM_EXTRA_PARAMETERS="--image-expand"`.
-	* Added/changed/deleted config.sh and ftp-settings.sh variables:
-	  * Added `WEBUI_DATA_FILES`: contains the name of one or more files that contain information to be added to the WebUI's "System" page.  See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/allsky-portal-(WebUI)-settings) for more information.
+	* Added/changed/deleted settings (in config/config.sh unless otherwise noted):
+	  * Added `WEBUI_DATA_FILES`: contains the name of one or more files that contain information to be added to the WebUI's "System" page.  See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/WEBUI_DATA_FILES) for more information.
 	  * Renamed `NIGHTS_TO_KEEP` to `DAYS_TO_KEEP` since it determines how many days of data to keep, not just nighttime data.  If blank (""), ALL days' data are kept.
 	  * Deleted `AUTO_DELETE`: its functionality is now in `DAYS_TO_KEEP`.  `DAYS_TO_KEEP=""` is similar to the old `AUTO_DELETE=false`.
 	  * Added `WEB_DAYS_TO_KEEP`: specifies how many days of Allsky website images and videos to keep, if the website is installed on your Pi.
-	  * Added `WEB_IMAGE_DIR` to allow the images to be copied to a location on your Pi (usually the Allsky website) as well as being copied to a remote machine.  This functionality already existed with timelapse, startrails, and keogram files.
+	  * Added `WEB_IMAGE_DIR` in config/ftp-settings.sh to allow the images to be copied to a location on your Pi (usually the Allsky website) as well as being copied to a remote machine.  This functionality already existed with timelapse, startrails, and keogram files.
 	* The RPiHQ camera now supports all the text overlay features as the ZWO camera, including the "Extra Text" file.
 	* Removed the harmless `deprecated pixel format used` message from the timelapse log file.  That message only confused people.
 	* Improved the auto-exposure for RPiHQ cameras.
@@ -435,8 +460,10 @@ If you've built an allsky camera, please send me a message and I'll add you to t
 	* Removed the `allsky/scripts/filename.sh` file.
 
 
+***
+
 <!------------------------------------------------------------------------------------------->
-## Donation
+### Donation
 If you found this project useful, here's a link to send me a cup of coffee :)
 
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)

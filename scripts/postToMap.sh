@@ -19,16 +19,16 @@ source "${ALLSKY_HOME}/variables.sh"
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh"
 
-LOCATION=$(jq -r '.location' "$CAMERA_SETTINGS")
-OWNER=$(jq -r '.owner' "$CAMERA_SETTINGS")
-LATITUDE=$(jq -r '.latitude' "$CAMERA_SETTINGS")
-LONGITUDE=$(jq -r '.longitude' "$CAMERA_SETTINGS")
-WEBSITE_URL=$(jq -r '.websiteurl' "$CAMERA_SETTINGS")
-IMAGE_URL=$(jq -r '.imageurl' "$CAMERA_SETTINGS")
-CAMERA=$(jq -r '.camera' "$CAMERA_SETTINGS")
-LENS=$(jq -r '.lens' "$CAMERA_SETTINGS")
-COMPUTER=$(jq -r '.computer' "$CAMERA_SETTINGS")
-MACHINE_ID="$(cat /etc/machine-id)"
+LOCATION="$(jq -r '.location' "${CAMERA_SETTINGS}")"
+OWNER="$(jq -r '.owner' "${CAMERA_SETTINGS}")"
+LATITUDE="$(jq -r '.latitude' "${CAMERA_SETTINGS}")"
+LONGITUDE="$(jq -r '.longitude' "${CAMERA_SETTINGS}")"
+WEBSITE_URL="$(jq -r '.websiteurl' "${CAMERA_SETTINGS}")"
+IMAGE_URL="$(jq -r '.imageurl' "${CAMERA_SETTINGS}")"
+CAMERA="$(jq -r '.camera' "${CAMERA_SETTINGS}")"
+LENS="$(jq -r '.lens' "${CAMERA_SETTINGS}")"
+COMPUTER="$(jq -r '.computer' "${CAMERA_SETTINGS}")"
+MACHINE_ID="$(< /etc/machine-id)"
 
 generate_post_data()
 {

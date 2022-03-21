@@ -55,11 +55,14 @@ parity="$(( decimal % 2 ))"
 # Only upload every other day to save on server bandwidth
 if  (( $(date +%d) % 2 == parity ))
 then
-	echo "${ME}: Week day matches Machine ID ending - upload."
+	if [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
+		echo "${ME}: Week day matches Machine ID ending - upload"
+	fi
+
 	curl -i \
 		-H "Accept: application/json" \
 		-H "Content-Type:application/json" \
 		--data "$(generate_post_data)" "https://www.thomasjacquin.com/allsky-map/postToMap.php"
-else
+elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
 	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
 fi

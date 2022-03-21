@@ -145,11 +145,13 @@ UPLOAD_STARTRAILS="false"
 THUMBNAIL_SIZE_X=100
 THUMBNAIL_SIZE_Y=75
 
-# Set to "true" to enable automatic deletion of archived data (images + videos).
-AUTO_DELETE="true"
+# Set this value to the number of days images plus videos you want to keep.
+# Set to "" to keep ALL days.
+DAYS_TO_KEEP=14
 
-# If AUTO_DELETE="true", set this value to the number of archived nights you want to keep.
-NIGHTS_TO_KEEP=14
+# Same as DAYS_TO_KEEP, but for the Allsky website, if installed.
+# Set to "" to keep ALL days.
+WEB_DAYS_TO_KEEP=""
 
 # Set to "true" to upload data to your server at the end of each night.
 # This is needed if you are running the Allsky Website.
@@ -185,6 +187,14 @@ if [ "${CAMERA}" = "" ]; then
 	echo "${RED}ERROR: Please set CAMERA in config/config.sh${NC}"
 	sudo systemctl stop allsky
 	exit 100
+fi
+
+# COMPATIBILITY CHECK
+if [ -z "${DAYS_TO_KEEP}" ]; then		# Old version had AUTO_DELETE and NIGHTS_TO_KEEP
+	AUTO_DELETE="false"
+else
+	AUTO_DELETE="true"
+	NIGHTS_TO_KEEP="${DAYS_TO_KEEP}"
 fi
 
 # This is needed in case the user changed the default location the current image is saved to.

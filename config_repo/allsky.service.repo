@@ -6,8 +6,14 @@ After=multi-user.target
 User=pi
 ExecStart=/home/pi/allsky/allsky.sh
 SyslogFacility=local5
-Restart=always
+Restart=on-success
 RestartSec=5
+; exit status 100 means fatal error the user needs to fix, so don't restart
+RestartPreventExitStatus=100
+; XXX RestartKillSignal is not recognized by the systemd that comes with Buster (not sure about Bullseye),
+; so use ExecReload instead.
+; RestartKillSignal=SIGUSR1
+ExecReload=/home/pi/allsky/scripts/reload.sh $MAINPID
 
 [Install]
 WantedBy=multi-user.target

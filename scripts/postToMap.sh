@@ -49,7 +49,7 @@ if [ "${DELETE}" = "true" ]; then
 	{
 		cat <<-EOF
 		{
-		"website_url": "DELETE"
+		"website_url": "DELETE",
 		"machine_id": "${MACHINE_ID}"
 		}
 		EOF
@@ -65,6 +65,26 @@ else
 	CAMERA="$(jq -r '.camera' "${CAMERA_SETTINGS}")"
 	LENS="$(jq -r '.lens' "${CAMERA_SETTINGS}")"
 	COMPUTER="$(jq -r '.computer' "${CAMERA_SETTINGS}")"
+
+	OK=true
+	if [ "${CAMERA}" = "" ]; then
+		echo -e "${RED}*** ${ME}: ERROR: CAMERA required.${NC}"
+		OK=false
+	fi
+	if [ "${COMPUTER}" = "" ]; then
+		echo -e "${RED}*** ${ME}: ERROR: COMPUTER required.${NC}"
+		OK=false
+	fi
+	if [ "${LOCATION}" = "" ]; then
+		echo -e "${YELLOW}*** ${ME}: WARNING: LOCATION not set; continuing.${NC}"
+	fi
+	if [ "${OWNER}" = "" ]; then
+		echo -e "${YELLOW}*** ${ME}: WARNING: OWNER not set; continuing.${NC}"
+	fi
+	if [ "${LENS}" = "" ]; then
+		echo -e "${YELLOW}*** ${ME}: WARNING: LENS not set; continuing.${NC}"
+	fi
+	[ "${OK}" = "false" ] && exit 2
 
 	generate_post_data()
 	{
@@ -85,27 +105,31 @@ else
 	}
 fi
 
-# Extract last character of machine ID and find its parity
-digit="${MACHINE_ID: -1}"
-decimal=$(( 16#$digit ))
-parity="$(( decimal % 2 ))"
+# Always upload DELETEs.
+UPLOAD=true
+if [ "${DELETE}" = "false" ]; then
+	# Extract last character of machine ID and find its parity
+	digit="${MACHINE_ID: -1}"
+	decimal=$(( 16#$digit ))
+	parity="$(( decimal % 2 ))"
+	(( $(date +%d) % 2 != parity )) && UPLOAD=false
+fi
 
 # Only upload every other day to save on server bandwidth
 RETURN_CODE=0
-if (( $(date +%d) % 2 == parity ))
-then
+if [ "${UPLOAD}" = "true" ]; then
 	if [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
 		echo "${ME}: Week day matches Machine ID ending - upload"
 	fi
-	COMMAND="curl --silent -i \
-		-H 'Accept: application/json' \
-		-H 'Content-Type:application/json' \
-		--data '$(generate_post_data)' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
-	[ "${DEBUG}" = "true" ] && echo -e "${ME}: executing:\n${COMMAND}"
-	${COMMAND}
+	CMD="curl --silent -i"
+	CMD="${CMD} -H 'Accept: application/json'"
+	CMD="${CMD} -H 'Content-Type:application/json'"
+	CMD="${CMD} --data '$(generate_post_data)' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
+	[ "${DEBUG}" = "true" ] && echo -e "\nExecuting:\n${GREEN}${CMD}${NC}\n"
+	RET="$(echo ${CMD} | bash)"
 	RETURN_CODE=$?
 	if [ ${RETURN_CODE} -ne 0 ]; then
-		echo "${RED}*** ${ME}: ERROR while uploading map data: ${RET}.${NC}"
+		echo -e "${RED}*** ${ME}: ERROR while uploading map data with curl: ${RET}.${NC}"
 		exit ${RETURN_CODE}
 	fi
 
@@ -114,9 +138,9 @@ then
 	if [ "${RET}" = "INSERTED" ] || [ "${RET}" = "UPDATED" ] || [ "${RET}" = "DELETED" ]; then
 		echo "${ME}: Map data ${RET}."
 	elif [ "${RET}" = "ALREADY UPDATED" ]; then
-		echo "${YELLOW}*** ${ME}: NOTICE returned while uploading map data: ${RET}.${NC}"
+		echo -e "${YELLOW}*** ${ME}: NOTICE returned while uploading map data: ${RET}.${NC}"
 	else
-		echo "${RED}*** ${ME}: ERROR returned while uploading map data: ${RET}.${NC}"
+		echo -e "${RED}*** ${ME}: ERROR returned while uploading map data: ${RET}.${NC}"
 		RETURN_CODE=2
 	fi
 

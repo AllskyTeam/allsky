@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# shellcheck disable=SC2034
 ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
@@ -32,19 +31,19 @@ MACHINE_ID="$(< /etc/machine-id)"
 
 generate_post_data()
 {
-  cat <<EOF
-{
-  "location": "$LOCATION",
-  "owner": "$OWNER",
-  "latitude": "$LATITUDE",
-  "longitude": "$LONGITUDE",
-  "website_url": "$WEBSITE_URL",
-  "image_url": "$IMAGE_URL",
-  "camera": "$CAMERA",
-  "lens": "$LENS",
-  "computer": "$COMPUTER",
-  "machine_id": "$MACHINE_ID"
-}
+	cat <<EOF
+	{
+	"location": "${LOCATION}",
+	"owner": "${OWNER}",
+	"latitude": "${LATITUDE}",
+	"longitude": "${LONGITUDE}",
+	"website_url": "${WEBSITE_URL}",
+	"image_url": "${IMAGE_URL}",
+	"camera": "${CAMERA}",
+	"lens": "${LENS}",
+	"computer": "${COMPUTER}",
+	"machine_id": "${MACHINE_ID}"
+	}
 EOF
 }
 
@@ -56,11 +55,11 @@ parity="$(( decimal % 2 ))"
 # Only upload every other day to save on server bandwidth
 if  (( $(date +%d) % 2 == parity ))
 then
-   echo "Week day matches Machine ID ending - upload"
-   curl -i \
-   -H "Accept: application/json" \
-   -H "Content-Type:application/json" \
-   --data "$(generate_post_data)" "https://www.thomasjacquin.com/allsky-map/postToMap.php"
+	echo "${ME}: Week day matches Machine ID ending - upload."
+	curl -i \
+		-H "Accept: application/json" \
+		-H "Content-Type:application/json" \
+		--data "$(generate_post_data)" "https://www.thomasjacquin.com/allsky-map/postToMap.php"
 else
-   echo "Week day doesn't match Machine ID ending - don't upload"
+	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
 fi

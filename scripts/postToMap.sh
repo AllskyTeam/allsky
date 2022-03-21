@@ -140,7 +140,9 @@ fi
 
 RETURN_CODE=0
 if [ "${UPLOAD}" = "true" ]; then
-	if [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
+	if [ "${DELETE}" = "true" ]; then
+		echo "${ME}: Deleting map data."
+	elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
 		echo "${ME}: Uploading map data."
 	fi
 	CMD="curl --silent -i"

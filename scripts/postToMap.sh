@@ -22,21 +22,26 @@ function usage_and_exit()
 {
 	RET_CODE=${1}
 	[ ${RET_CODE} -ne 0 ] && echo -e "${RED}"
-	echo -e "\nUsage: ${ME} [--help] | [ [--delete] [--debug] ]\n"
+	echo -e "\nUsage: ${ME} [--help] | [ [--delete] [--debug] [--force]]\n"
 	[ ${RET_CODE} -ne 0 ] && echo -e "${NC}"
 	exit ${RET_CODE}
 }
 
 DEBUG=false
 DELETE=false
+UPLOAD=false
 while [ $# -ne 0 ]; do
 	if [ "${1}" = "--help" ]; then
 		usage_and_exit 0;
 	elif [ "${1}" = "--delete" ]; then
 		DELETE=true
+		UPLOAD=true		# always upload DELETEs
 		shift
 	elif [ "${1}" = "--debug" ]; then
 		DEBUG=true
+		shift
+	elif [ "${1}" = "--force" ]; then
+		UPLOAD=true
 		shift
 	else
 		usage_and_exit 1;
@@ -105,38 +110,44 @@ else
 	}
 fi
 
-# Always upload DELETEs.
-UPLOAD=true
-if [ "${DELETE}" = "false" ]; then
+if [ "${UPLOAD}" = "false" ]; then
+	# Only upload every other day to save on server bandwidth.
 	# Extract last character of machine ID and find its parity
 	digit="${MACHINE_ID: -1}"
 	decimal=$(( 16#$digit ))
 	parity="$(( decimal % 2 ))"
-	(( $(date +%d) % 2 != parity )) && UPLOAD=false
+	(( $(date +%d) % 2 == parity )) && UPLOAD=true
 fi
 
-# Only upload every other day to save on server bandwidth
 RETURN_CODE=0
 if [ "${UPLOAD}" = "true" ]; then
 	if [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
 		echo "${ME}: Week day matches Machine ID ending - upload"
 	fi
 	CMD="curl --silent -i"
+	# shellcheck disable=SC2089
 	CMD="${CMD} -H 'Accept: application/json'"
+	# shellcheck disable=SC2089
 	CMD="${CMD} -H 'Content-Type:application/json'"
+	# shellcheck disable=SC2089
 	CMD="${CMD} --data '$(generate_post_data)' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
 	[ "${DEBUG}" = "true" ] && echo -e "\nExecuting:\n${GREEN}${CMD}${NC}\n"
-	RET="$(echo ${CMD} | bash)"
+	# shellcheck disable=SC2089
+	RETURN="$(echo ${CMD} | bash)"
 	RETURN_CODE=$?
+	[ "${DEBUG}" = "true" ] && echo -e "\nReturned:\n${YELLOW}${RETURN}${NC}.\n"
 	if [ ${RETURN_CODE} -ne 0 ]; then
-		echo -e "${RED}*** ${ME}: ERROR while uploading map data with curl: ${RET}.${NC}"
+		echo -e "${RED}*** ${ME}: ERROR while uploading map data with curl: ${RETURN}.${NC}"
 		exit ${RETURN_CODE}
 	fi
 
 	# Get the return string from the server.  It's the last line of output.
-	RET="$(echo "${RET}" | tail -1)"
+	RET="$(echo "${RETURN}" | tail -1)"
 	if [ "${RET}" = "INSERTED" ] || [ "${RET}" = "UPDATED" ] || [ "${RET}" = "DELETED" ]; then
 		echo "${ME}: Map data ${RET}."
+	elif [ -n "${RET}" ]; then
+		echo -e "${RED}*** ${ME}: ERROR: Unknown reply from server: ${RETURN}.${NC}"
+		RETURN_CODE=2
 	elif [ "${RET}" = "ALREADY UPDATED" ]; then
 		echo -e "${YELLOW}*** ${ME}: NOTICE returned while uploading map data: ${RET}.${NC}"
 	else

@@ -141,7 +141,7 @@ fi
 RETURN_CODE=0
 if [ "${UPLOAD}" = "true" ]; then
 	if [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
-		echo "${ME}: Week day matches Machine ID ending - upload"
+		echo "${ME}: Uploading map data."
 	fi
 	CMD="curl --silent -i"
 	# shellcheck disable=SC2089

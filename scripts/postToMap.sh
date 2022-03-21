@@ -49,6 +49,11 @@ while [ $# -ne 0 ]; do
 done
 
 MACHINE_ID="$(< /etc/machine-id)"
+if [ -z "${MACHINE_ID}" ]; then
+	echo -e "${RED}*** ${ME}: ERROR: Unable to get 'machine_id': check /etc/machine-id.${NC}"
+	exit 3
+fi
+
 if [ "${DELETE}" = "true" ]; then
 	generate_post_data()
 	{
@@ -72,23 +77,37 @@ else
 	COMPUTER="$(jq -r '.computer' "${CAMERA_SETTINGS}")"
 
 	OK=true
+	# Check for required fields
+	if [ "${LATITUDE}" = "" ]; then
+		echo -e "${RED}*** ${ME}: ERROR: 'latitude' is required.${NC}"
+		OK=false
+	fi
+	if [ "${LONGITUDE}" = "" ]; then
+		echo -e "${RED}*** ${ME}: ERROR: 'longitude' is required.${NC}"
+		OK=false
+	fi
 	if [ "${CAMERA}" = "" ]; then
-		echo -e "${RED}*** ${ME}: ERROR: CAMERA required.${NC}"
+		echo -e "${RED}*** ${ME}: ERROR: 'camera' is required.${NC}"
 		OK=false
 	fi
 	if [ "${COMPUTER}" = "" ]; then
-		echo -e "${RED}*** ${ME}: ERROR: COMPUTER required.${NC}"
+		echo -e "${RED}*** ${ME}: ERROR: 'computer' is required.${NC}"
 		OK=false
 	fi
+
+	# Check for optional, but suggested fields
 	if [ "${LOCATION}" = "" ]; then
-		echo -e "${YELLOW}*** ${ME}: WARNING: LOCATION not set; continuing.${NC}"
+		echo -e "${YELLOW}*** ${ME}: WARNING: 'location' not set; continuing.${NC}"
 	fi
 	if [ "${OWNER}" = "" ]; then
-		echo -e "${YELLOW}*** ${ME}: WARNING: OWNER not set; continuing.${NC}"
+		echo -e "${YELLOW}*** ${ME}: WARNING: 'owner' not set; continuing.${NC}"
 	fi
 	if [ "${LENS}" = "" ]; then
-		echo -e "${YELLOW}*** ${ME}: WARNING: LENS not set; continuing.${NC}"
+		echo -e "${YELLOW}*** ${ME}: WARNING: 'lens' not set; continuing.${NC}"
 	fi
+
+	# website_url and image_url are optional
+
 	[ "${OK}" = "false" ] && exit 2
 
 	generate_post_data()
@@ -145,11 +164,15 @@ if [ "${UPLOAD}" = "true" ]; then
 	RET="$(echo "${RETURN}" | tail -1)"
 	if [ "${RET}" = "INSERTED" ] || [ "${RET}" = "UPDATED" ] || [ "${RET}" = "DELETED" ]; then
 		echo "${ME}: Map data ${RET}."
-	elif [ -n "${RET}" ]; then
+	elif [ -z "${RET}" ]; then
 		echo -e "${RED}*** ${ME}: ERROR: Unknown reply from server: ${RETURN}.${NC}"
+		[ -n "${RET}" ] && echo -e "\t[${RET}]"
+		RETURN_CODE=2
+	elif [ "${RET:0:6}" = "ERROR " ]; then
+		echo -e "${RED}*** ${ME}: ERROR returned while uploading map data: ${RET:6}.${NC}"
 		RETURN_CODE=2
 	elif [ "${RET}" = "ALREADY UPDATED" ]; then
-		echo -e "${YELLOW}*** ${ME}: NOTICE returned while uploading map data: ${RET}.${NC}"
+		echo -e "${YELLOW}*** ${ME}: NOTICE: You can only insert/delete map data once per day.${NC}"
 	else
 		echo -e "${RED}*** ${ME}: ERROR returned while uploading map data: ${RET}.${NC}"
 		RETURN_CODE=2

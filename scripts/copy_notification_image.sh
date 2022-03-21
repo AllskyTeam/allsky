@@ -61,16 +61,14 @@ fi
 
 # If a notification image was "recently" posted, don't post this one.
 # We'll look at the timestamp of $ALLSKY_NOTIFICATION_LOG (defined in variables.sh) and if it's
-# in the future we'll skip the current notification. When the file is updated below.
+# in the future we'll skip the current notification. When the file is updated below,
 # it's given a timestamp of NOW + $EXPIRES_IN_SECONDS.
 # We will APPEND to the file so we have a record of all notifications since Allsky started.
 
 if [ "${NOTIFICATION_TYPE}" != "custom" ] && [ -f "${ALLSKY_NOTIFICATION_LOG}" ] && [ ${EXPIRES_IN_SECONDS} -ne 0 ]; then
-	# TODO: there has to be a better way to compare the time of a file??
-	NOW=$(date +'%Y%m%d%H%M%S')
-	FILE_TIME=$(ls -l --time-style="+%Y%m%d%H%M%S" ${ALLSKY_NOTIFICATION_LOG} | awk '{ print $6 }')
-
-	if [ ${FILE_TIME} -gt ${NOW} ]; then
+	NOW=$(date +'%Y-%m-%d %H:%M:%S')
+	RESULTS="$(find "${ALLSKY_NOTIFICATION_LOG}" -newermt "${NOW}" -print)"
+	if [ -n "${RESULTS}" ]; then	# the file is in the future
 		if [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
 			# File contains:	Notification_type,expires_in_seconds,expiration_time
 			RECENT_NOTIFICATION=$(tail -1 "${ALLSKY_NOTIFICATION_LOG}")
@@ -89,10 +87,6 @@ else
 	# Don't overwrite notification images so create a temporary copy and use that.
 	CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
 	cp "${NOTIFICATION_FILE}" "${CURRENT_IMAGE}"
-	if [ $? -ne 0 ]; then
-		echo -e "${RED}*** ${ME}: ERROR: copy of '${NOTIFICATION_FILE}' to '${CURRENT_IMAGE}' failed!${NC}"
-		exit 3
-	fi
 fi
 
 # Resize the image if required

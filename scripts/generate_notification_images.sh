@@ -13,8 +13,20 @@ fi
 source "${ALLSKY_HOME}/variables.sh"
 ME="$(basename "${BASH_ARGV0}")"
 
-readonly USAGE="Usage: ${ME} [StartingUp TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderColor Extensions ImageSize 'Message']"
 readonly ALL_EXTS="jpg png"		# all the image filename extensions we support
+
+function usage_and_exit
+{
+	RET=${1}
+	(
+		[ ${RET} -ne 0 ] && echo -en "${RED}"
+		echo -e "\nUsage: ${ME} [--help] [--directory dir] [type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']\n"
+		[ ${RET} -ne 0 ] && echo -en "${NC}"
+		echo "When run with no arguments, all notification types are created with extensions: ${ALL_EXTS}."
+		echo "'--directory dir' creates the file(s) in that directory, otherwise in \${PWD}."
+	) >&2
+	exit $RET
+}
 
 function make_image() {
 	BASENAME="$1"
@@ -37,9 +49,8 @@ function make_image() {
 
 	echo "${BASENAME}" | grep -qEi "[.](${ALL_EXTS/ /|})"
 	if [ $? -ne 1 ] ; then
-		echo -e "${RED}ERROR: Do not add an extension to the basename${NC}."
-		echo "${USAGE}"
-		exit 1
+		echo -e "${RED}${ME}: ERROR: Do not add an extension to the basename${NC}."
+		usage_and_exit 1
 	fi
 
 	if [ ${BORDER_WIDTH} -ne 0 ]; then
@@ -48,9 +59,13 @@ function make_image() {
 		BORDER=""
 	fi
 
-	echo "Creating '${BASENAME}'"
+	[ "${ON_TTY}" = "1" ] && echo "Creating '${BASENAME}' in ${PWD}."
 	for EXT in ${EXTS} ; do
+		# Make highest quality for jpg and highest loss-less compression for png.
+		# jpg files at 95% produce somewhat bad artifacts.  Even 100% produces some artifacts.
+
 		convert \
+			-quality 100 \
 			-fill "${TEXTCOLOR}" \
 			-font "${FONT}" \
 			-pointsize "${FONT_SIZE}" \
@@ -73,16 +88,31 @@ if [ $? -ne 0 ] ; then
 	# name than "convert". I assume that if "mogrify" is in the path, then
 	# ImageMagick is installed and "convert" will run ImageMagick and not some
 	# other tool.
-	echo -e "${RED}ERROR: ImageMagick does not appear to be installed. Please install it.${NC}" >&2
+	echo -e "${RED}${ME}: ERROR: ImageMagick does not appear to be installed. Please install it.${NC}" >&2
 	exit 2
+fi
+
+# TODO: use getopt
+[ "${1}" = "--help" ] && usage_and_exit 0
+
+# Optional argument specifying where to create the image(s).
+# If not specified, create in current directory.
+if [ "${1}" = "--directory" ]; then
+	DIRECTORY="${2}"
+	[ -z "${DIRECTORY}" ] && usage_and_exit 2
+	if [ ! -d "${DIRECTORY}" ]; then
+		echo -e "\n${RED}*** ${ME} ERROR: Directory '${DIRECTORY}' not found!\n${NC}" >&2
+		exit 2
+	fi
+	shift 2
+	cd "${DIRECTORY}" || exit 3
 fi
 
 # If the arguments were specified on the command line, use them instead of the list below.
 if [ $# -eq 12 ]; then
 	if [ "${1}" = "" -o "${12}" = "" ]; then
-		echo -e '${RED}ERROR: Basename ($1) and message ($12) must be specified.${NC}' >&2
-		echo "${USAGE}"
-		exit 1
+		echo -e '${RED}${ME}: ERROR: Basename ($1) and message ($12) must be specified.${NC}' >&2
+		usage_and_exit 1
 	fi
 	make_image "${@}"
 
@@ -100,7 +130,7 @@ elif [ $# -eq 0 ]; then
   make_image Error                "red"      ""                 80     ""        ""      ""         10      "red"     ""          ""        "ERROR\n\nSee\n/var/log/allsky.log\nfor details"
 
 else
-	echo -e "${RED}ERROR: Either specify ALL arguments, or don't specify any.${NC}" >&2
-	echo "${USAGE}"
-	exit 1
+	echo -e "${RED}${ME}: ERROR: Either specify ALL arguments, or don't specify any.${NC}" >&2
+	echo "You specified $# arguments." >&2
+	usage_and_exit 1
 fi

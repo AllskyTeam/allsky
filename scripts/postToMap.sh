@@ -29,7 +29,6 @@ function usage_and_exit()
 
 DEBUG=false
 DELETE=false
-OK=true
 while [ $# -ne 0 ]; do
 	if [ "${1}" = "--help" ]; then
 		usage_and_exit 0;
@@ -121,7 +120,7 @@ then
 		RETURN_CODE=2
 	fi
 
-elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]
+elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
 	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
 fi
 

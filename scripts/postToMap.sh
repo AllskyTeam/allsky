@@ -53,16 +53,36 @@ decimal=$(( 16#$digit ))
 parity="$(( decimal % 2 ))"
 
 # Only upload every other day to save on server bandwidth
-if  (( $(date +%d) % 2 == parity ))
+RETURN_CODE=0
+if (( $(date +%d) % 2 == parity ))
 then
-	if [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
+	if [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]
 		echo "${ME}: Week day matches Machine ID ending - upload"
 	fi
-
-	curl -i \
+	RET="$(curl --silent -i \
 		-H "Accept: application/json" \
 		-H "Content-Type:application/json" \
-		--data "$(generate_post_data)" "https://www.thomasjacquin.com/allsky-map/postToMap.php"
-elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
+		--data "$(generate_post_data)" "https://www.thomasjacquin.com/allsky-map/postToMap.php")"
+	RETURN_CODE=$?
+	if [ ${RETURN_CODE} -ne 0 ]; then
+		echo "${RED}*** ${ME}: ERROR while uploading map data: ${RET}.${NC}"
+		exit ${RETURN_CODE}
+	fi
+
+	# Get the return string from the server.  It's the last line of output.
+	RET="$(echo "${RET}" | tail -1)"
+	if [ "${RET}" = "INSERTED" ] || [ "${RET}" = "UPDATED" ] || [ "${RET}" = "DELETED" ]; then
+		echo "${ME}: Map data ${RET}."
+	elif [ "${RET}" = "ALREADY UPDATED" ]; then
+		echo "${YELLOW}*** ${ME}: NOTICE returned while uploading map data: ${RET}.${NC}"
+	else
+		echo "${RED}*** ${ME}: ERROR returned while uploading map data: ${RET}.${NC}"
+		RETURN_CODE=2
+	fi
+
+elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]
 	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
 fi
+
+exit ${RETURN_CODE}
+

@@ -21,8 +21,13 @@ source "${ALLSKY_CONFIG}/config.sh"
 function usage_and_exit()
 {
 	RET_CODE=${1}
-	[ ${RET_CODE} -ne 0 ] && echo -e "${RED}"
-	echo -e "\nUsage: ${ME} [--help] | [ [--delete] [--debug] [--force]]\n"
+	[ ${RET_CODE} -ne 0 ] && echo -en "${RED}"
+	echo -e "\nUsage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug]\n"
+	echo "--help: Print this usage message and exit immediately."
+	echo "--whisper: Be quiet with non-error related output - only display results."
+	echo "--delete: Delete map data; all fields except machine_id are ignored."
+	echo "--force: Force updates, even if not scheduled automatically for today."
+	echo "--debug: Output debugging statements."
 	[ ${RET_CODE} -ne 0 ] && echo -e "${NC}"
 	exit ${RET_CODE}
 }
@@ -30,6 +35,7 @@ function usage_and_exit()
 DEBUG=false
 DELETE=false
 UPLOAD=false
+WHISPER=false
 while [ $# -ne 0 ]; do
 	if [ "${1}" = "--help" ]; then
 		usage_and_exit 0;
@@ -43,14 +49,31 @@ while [ $# -ne 0 ]; do
 	elif [ "${1}" = "--force" ]; then
 		UPLOAD=true
 		shift
+	elif [ "${1}" = "--whisper" ]; then
+		WHISPER=true
+		shift
 	else
 		usage_and_exit 1;
 	fi
 done
 
+if [ "${WHISPER}" = "true" ];then
+		MSG_START=""
+		ERROR_MSG_START="<span style='color: red;'>"
+		ERROR_MSG_END="</span>"
+		WARNING_MSG_START="<span style='color: yellow;'>"
+		WARNING_MSG_END="</span>"
+else
+		MSG_START="${ME}: "
+		ERROR_MSG_START="${RED}*** ${ME}: "
+		ERROR_MSG_END="${NC}"
+		WARNING_MSG_START="${YELLOW}*** ${ME}: "
+		WARNING_MSG_END="${NC}"
+fi
+
 MACHINE_ID="$(< /etc/machine-id)"
 if [ -z "${MACHINE_ID}" ]; then
-	echo -e "${RED}*** ${ME}: ERROR: Unable to get 'machine_id': check /etc/machine-id.${NC}"
+	echo -e "${ERROR_MSG_START}ERROR: Unable to get 'machine_id': check /etc/machine-id.${ERROR_MSG_END}"
 	exit 3
 fi
 
@@ -79,31 +102,31 @@ else
 	OK=true
 	# Check for required fields
 	if [ "${LATITUDE}" = "" ]; then
-		echo -e "${RED}*** ${ME}: ERROR: 'latitude' is required.${NC}"
+		echo -e "${ERROR_MSG_START}ERROR: 'latitude' is required.${ERROR_MSG_END}"
 		OK=false
 	fi
 	if [ "${LONGITUDE}" = "" ]; then
-		echo -e "${RED}*** ${ME}: ERROR: 'longitude' is required.${NC}"
+		echo -e "${ERROR_MSG_START}ERROR: 'longitude' is required.${ERROR_MSG_END}"
 		OK=false
 	fi
 	if [ "${CAMERA}" = "" ]; then
-		echo -e "${RED}*** ${ME}: ERROR: 'camera' is required.${NC}"
+		echo -e "${ERROR_MSG_START}ERROR: 'camera' is required.${ERROR_MSG_END}"
 		OK=false
 	fi
 	if [ "${COMPUTER}" = "" ]; then
-		echo -e "${RED}*** ${ME}: ERROR: 'computer' is required.${NC}"
+		echo -e "${ERROR_MSG_START}ERROR: 'computer' is required.${ERROR_MSG_END}"
 		OK=false
 	fi
 
 	# Check for optional, but suggested fields
 	if [ "${LOCATION}" = "" ]; then
-		echo -e "${YELLOW}*** ${ME}: WARNING: 'location' not set; continuing.${NC}"
+		echo -e "${WARNING_MSG_START}WARNING: 'location' not set; continuing.${WARNING_MSG_END}"
 	fi
 	if [ "${OWNER}" = "" ]; then
-		echo -e "${YELLOW}*** ${ME}: WARNING: 'owner' not set; continuing.${NC}"
+		echo -e "${WARNING_MSG_START}WARNING: 'owner' not set; continuing.${WARNING_MSG_END}"
 	fi
 	if [ "${LENS}" = "" ]; then
-		echo -e "${YELLOW}*** ${ME}: WARNING: 'lens' not set; continuing.${NC}"
+		echo -e "${WARNING_MSG_START}WARNING: 'lens' not set; continuing.${WARNING_MSG_END}"
 	fi
 
 	# website_url and image_url are optional
@@ -141,9 +164,9 @@ fi
 RETURN_CODE=0
 if [ "${UPLOAD}" = "true" ]; then
 	if [ "${DELETE}" = "true" ]; then
-		echo "${ME}: Deleting map data."
+		[ "${WHISPER}" = "false" ] && echo "${ME}: Deleting map data."
 	elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
-		echo "${ME}: Uploading map data."
+		[ "${WHISPER}" = "false" ] && echo "${ME}: Uploading map data."
 	fi
 	CMD="curl --silent -i"
 	# shellcheck disable=SC2089
@@ -158,25 +181,25 @@ if [ "${UPLOAD}" = "true" ]; then
 	RETURN_CODE=$?
 	[ "${DEBUG}" = "true" ] && echo -e "\nReturned:\n${YELLOW}${RETURN}${NC}.\n"
 	if [ ${RETURN_CODE} -ne 0 ]; then
-		echo -e "${RED}*** ${ME}: ERROR while uploading map data with curl: ${RETURN}.${NC}"
+		echo -e "${ERROR_MSG_START}ERROR while uploading map data with curl: ${RETURN}.${ERROR_MSG_END}"
 		exit ${RETURN_CODE}
 	fi
 
 	# Get the return string from the server.  It's the last line of output.
 	RET="$(echo "${RETURN}" | tail -1)"
 	if [ "${RET}" = "INSERTED" ] || [ "${RET}" = "UPDATED" ] || [ "${RET}" = "DELETED" ]; then
-		echo "${ME}: Map data ${RET}."
+		echo "${MSG_START}Map data ${RET}."
 	elif [ -z "${RET}" ]; then
-		echo -e "${RED}*** ${ME}: ERROR: Unknown reply from server: ${RETURN}.${NC}"
+		echo -e "${ERROR_MSG_START}ERROR: Unknown reply from server: ${RETURN}.${ERROR_MSG_END}"
 		[ -n "${RET}" ] && echo -e "\t[${RET}]"
 		RETURN_CODE=2
 	elif [ "${RET:0:6}" = "ERROR " ]; then
-		echo -e "${RED}*** ${ME}: ERROR returned while uploading map data: ${RET:6}.${NC}"
+		echo -e "${ERROR_MSG_START}ERROR returned while uploading map data: ${RET:6}.${ERROR_MSG_END}"
 		RETURN_CODE=2
 	elif [ "${RET}" = "ALREADY UPDATED" ]; then
-		echo -e "${YELLOW}*** ${ME}: NOTICE: You can only insert/delete map data once per day.${NC}"
+		echo -e "${WARNING_MSG_START}NOTICE: You can only insert/delete map data once per day.${WARNING_MSG_END}"
 	else
-		echo -e "${RED}*** ${ME}: ERROR returned while uploading map data: ${RET}.${NC}"
+		echo -e "${ERROR_MSG_START}ERROR returned while uploading map data: ${RET}.${ERROR_MSG_END}"
 		RETURN_CODE=2
 	fi
 

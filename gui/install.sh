@@ -1,8 +1,10 @@
 #!/bin/bash
 
 if [ -z "${ALLSKY_HOME}" ] ; then
-	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
+	ALLSKY_HOME=$(realpath "$(dirname "${BASH_ARGV0}")"/..)
+	export ALLSKY_HOME
 fi
+# shellcheck disable=SC1090
 source ${ALLSKY_HOME}/variables.sh
 
 echo -en '\n'
@@ -19,11 +21,11 @@ fi
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 CONFIG_DIR="/etc/raspap"	# settings_*.json files go here
-mkdir -p "${CONFIG_DIR}"
+mkdir -p "${CONFIG_DIR}" || exit 2
 modify_locations() {	# Some files have placeholders for certain locations.  Modify them.
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
 	(
-		cd "${PORTAL_DIR}/includes"
+		cd "${PORTAL_DIR}/includes" || exit 1
 		# NOTE: Only want to replace the FIRST instance of XX_ALLSKY_HOME_XX in funciton.php
 		#       Otherwise, the edit check in functions.php will always fail.
 		sed -i "0,/XX_ALLSKY_HOME_XX/{s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};}" functions.php
@@ -36,11 +38,17 @@ modify_locations() {	# Some files have placeholders for certain locations.  Modi
 	)
 }
 
+do_sudoers()
+{
+	echo -e "${GREEN}* Creating/updating sudoers file${NC}"
+	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" ${SCRIPTPATH}/sudoers > /etc/sudoers.d/allsky
+}
+
 NEED_TO_UPDATE_HOST_NAME="true"
-CURRENT_HOSTNAME=`cat /etc/hostname | tr -d " \t\n\r"`
+CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
 
 # Check if the user is updating an existing installation.
-if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
+if [ "${1}" = "--update" ] || [ "${1}" = "-update" ] ; then
 	shift
 
 	echo -en '\n'
@@ -59,15 +67,18 @@ if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
 	# Add entries to sudoers file if not already there.
 	# This is only needed for people who updated allsky-portal but didn't update allsky.
 	# Don't simply copy the "allsky" file to /etc/sudoers.d in case "allsky" isn't up to date.
-	grep --silent "/usr/bin/vcgencmd" /etc/sudoers.d/allsky
+	grep --silent "/usr/bin/vcgencmd" /etc/sudoers.d/allsky &&
+	grep --silent "postData.sh" /etc/sudoers.d/allsky
+	# shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then
 		echo -e "${GREEN}* Updating sudoers list${NC}"
-		grep --silent "/usr/bin/vcgencmd" ${SCRIPTPATH}/sudoers
+		grep --silent "postData.sh" ${SCRIPTPATH}/sudoers
+		# shellcheck disable=SC2181
 		if [ $? -ne 0 ]; then
 				echo -e "${RED}Please get the newest '$(basename "${SCRIPTPATH}")/sudoers' file from Git and try again.${NC}"
 			exit 2
 		fi
-		cp ${SCRIPTPATH}/sudoers /etc/sudoers.d/allsky
+		do_sudoers
 	fi
 
 	exit 0		# currently nothing else to do for updates
@@ -116,7 +127,7 @@ fi
 echo -e "${GREEN}* Adding the right permissions to the web server${NC}"
 # Remove any old entries; we now use /etc/sudoers.d/allsky instead of /etc/sudoers.
 sed -i -e '/allsky/d' -e '/www-data/d' /etc/sudoers
-cp $SCRIPTPATH/sudoers /etc/sudoers.d/allsky
+do_sudoers
 echo
 
 # As of October 2021, WEBSITE_DIR is a subdirectory of PORTAL_DIR.

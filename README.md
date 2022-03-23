@@ -436,7 +436,7 @@ If you want your allsky camera to be added to the [Allsky map](http://www.thomas
 	* You can **significanly** reduce wear on your SD card by making `allsky/tmp` a [memory-based filesystem](https://github.com/thomasjacquin/allsky/wiki/Miscellaneous-Tips).
 
 * version **0.8.3.3**: 
-	* Added ability to have your allsky camera added to the [Allsky map](http://www.thomasjacquin.com/allsky-map) by configuring [these settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings/_edit#map-settings).  Added `Allsky Map Setup` section to the WebUI to configure the map settings.
+	* Added ability to have your allsky camera added to the [Allsky map](http://www.thomasjacquin.com/allsky-map) by configuring [these settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings/_edit#map-settings).  Added `Allsky Map Setup` section to the WebUI to configure the map settings.  The "Lens" field now shows in the popout on the website (if installed).
 	* Significantly enhanced Wiki - more pages and more information on existing pages.  All known issues are described there as well as fixes / workarounds.
 	* Added an option to keograms to make them full width, even if few images were used in creating the keogram.  In config.sh, set `KEOGRAM_EXTRA_PARAMETERS="--image-expand"`.
 	* Added/changed/deleted settings (in config/config.sh unless otherwise noted):
@@ -449,12 +449,13 @@ If you want your allsky camera to be added to the [Allsky map](http://www.thomas
 	* Removed the harmless `deprecated pixel format used` message from the timelapse log file.  That message only confused people.
 	* Improved the auto-exposure for RPiHQ cameras.
 	* Made numerous changes to the ZWO and RPiHQ camera's code that will make it easier to maintain and add new features in the future.
-	* If Allsky is stopped while a file is being uploaded to a remote server, that upload will continue, eliminating cases where a temporary file would be left.
+	* If Allsky is stopped while a file is being uploaded to a remote server, the upload continues, eliminating cases where a temporary file would be left.
 	* Decreased other cases where temporary files would be left on remote servers during uploads.  Also, uploads now perform additional error checking to help in debugging.
 	* Added a `--debug` option to `allsky/scripts/upload.sh` to aid in debugging uploads.
 	* Upload log files are only created if there was an error; this saves writes to SD cards.
-	* Allsky will now stop with an error message on unrecoverable errors (e.g., not camera found).  It used to keep restarting and failing forever.
+	* Allsky will now stop with an error message on unrecoverable errors (e.g., no camera found).  It used to keep restarting and failing forever.
 	* More meaningful messages are displayed as images.  For example, in most cases `ERROR.  See /var/log/allsky.log` messages have been replaced with messages containing additional information, for example, `*** ERROR ***  Allsky Stopped!  ZWO camera not found!`.
+	* If Allsky is restarted, a new "Allsky software is restarting" message is displayed, instead of a "stopping" followed by "starting" message.
 	* The timelapse debug output no longer includes one line for each of several thousand images proced.  This make it easier to see any actual errors.
 	* Startrails and Keogram creation no longer crash if invalid files are found.
 	* Removed the `allsky/scripts/filename.sh` file.

@@ -4,7 +4,7 @@ ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
-	ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
+	ALLSKY_HOME=$(realpath "$(dirname "${BASH_ARGV0}")"/..)
 	export ALLSKY_HOME
 fi
 # shellcheck disable=SC1090
@@ -106,6 +106,7 @@ done
 
 if [ "${RUN_POSTDATA}" = "true" ] && [ ${POST_END_OF_NIGHT_DATA} = "true" ]; then
 	RESULT="$(sudo --user pi --group pi "${ALLSKY_SCRIPTS}/postData.sh")"
+	# shellcheck disable=SC2181
 	if [ $? -eq 0 ]; then
 		echo "Twilight data posted."
 	else

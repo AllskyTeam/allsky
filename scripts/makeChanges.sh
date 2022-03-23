@@ -39,16 +39,18 @@ function update_config_js()
 		# If ${OLD} is set, only update its value, not the whole line.
 		OLD="${2}"
 		# Convert HTML code for apostophy back to character.
-		NEW="${3/&#x27/\'}"
+		apos="&#x27"
+		NEW="${3/${apos}/\'}"
 		[ "${DEBUG}" = "true" ] && echo "${ME} update config.js field '${FIELD}' to [${NEW}]"
 		if [ -n "${OLD}" ]; then
-			OUTPUT="$(sed -i -e "/${FIELD}:/ s/${OLD_VALUE}/${NEW_VALUE}/" "${FILE}" 2>&1)"
+			OUTPUT="$(sed -i -e "/[ \t]*${FIELD}:/ s/${OLD}/${NEW}/" "${FILE}" 2>&1)"
 			RET=$?
 		else
-			OUTPUT="$(sed -i -e "s/[ 	]*${FIELD}.*\"/	${FIELD}: \"${NEW_VALUE}\"/" "${FILE}" 2>&1)"
+			OUTPUT="$(sed -i -e "s/[ \t]*${FIELD}:.*$/\t${FIELD}: \"${NEW}\",/" "${FILE}" 2>&1)"
 			RET=$?
 		fi
 		if [ ${RET} -eq 0 ]; then
+			echo "'${FIELD}' updated in config.js to <b>${NEW}</b>."
 			sudo chown pi "${FILE}"
 		else
 			echo "<span style='color: red'>WARNING: '${FIELD}' in config.js could not be updated; ignoring</span>: ${OUTPUT}"

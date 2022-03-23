@@ -72,7 +72,7 @@ if [ "${1}" = "--update" ] || [ "${1}" = "-update" ] ; then
 	# shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then
 		echo -e "${GREEN}* Updating sudoers list${NC}"
-		grep --silent "/usr/bin/vcgencmd" ${SCRIPTPATH}/sudoers
+		grep --silent "postData.sh" ${SCRIPTPATH}/sudoers
 		# shellcheck disable=SC2181
 		if [ $? -ne 0 ]; then
 				echo -e "${RED}Please get the newest '$(basename "${SCRIPTPATH}")/sudoers' file from Git and try again.${NC}"

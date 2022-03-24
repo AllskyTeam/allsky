@@ -125,7 +125,7 @@ void keogram_worker(int thread_num,			// thread num
 					cv::Mat* ann,			// annotations
 					cv::Mat* mask)			// mask
 {
-	int start_num, end_num, batch_size;
+	int start_num, end_num, batch_size, prevHour = -1;
 	cv::Mat thread_accumulator;
 
 	batch_size = nfiles / cf->num_threads;
@@ -256,13 +256,18 @@ void keogram_worker(int thread_num,			// thread num
 				}
 			}
 
-			// record the annotation if we haven't already
-			if (ft.tm_hour != -1 && ! hours[ft.tm_hour]) {
-				mtx->lock();
-				cv::Mat a = (cv::Mat_<int>(1, 5) << destCol, ft.tm_hour, ft.tm_year, ft.tm_mon, ft.tm_mday);
-				ann->push_back(a);
-				mtx->unlock();
-				hours[ft.tm_hour] = true;
+			if (ft.tm_hour != prevHour) {
+				if (prevHour != -1) {
+					// record the annotation if we haven't already (only for the hour change)
+					if (ft.tm_hour != -1 && ! hours[ft.tm_hour]) {
+						mtx->lock();
+						cv::Mat a = (cv::Mat_<int>(1, 5) << destCol, ft.tm_hour, ft.tm_year, ft.tm_mon, ft.tm_mday);
+						ann->push_back(a);
+						hours[ft.tm_hour] = true;
+						mtx->unlock();
+					}
+				}
+				prevHour = ft.tm_hour;
 			}
 		}
 

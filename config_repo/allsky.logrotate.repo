@@ -1,6 +1,6 @@
 /var/log/allsky.log
 {
-	rotate 4
+	rotate 2
 	weekly
 	missingok
 	notifempty
@@ -11,4 +11,3 @@
 		invoke-rc.d rsyslog rotate > /dev/null
 	endscript
 }
-

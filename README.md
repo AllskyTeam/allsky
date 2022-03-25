@@ -363,9 +363,9 @@ After you rename the file above, you can edit the file via the "Editor" link on 
 <!------------------------------------------------------------------------------------------->
 ### Share your sky
 
-If you want your allsky camera to be added to the [Allsky map](http://www.thomasjacquin.com/allsky-map), see [these settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings/_edit#map-settings).
+If you want your allsky camera added to the [Allsky map](http://www.thomasjacquin.com/allsky-map), see [these settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings/_edit#map-settings).
 
-![](http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg)
+[![Global allsky map](http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg "Global allsky map example - click to see real map")](https://www.thomasjacquin.com/allsky-map/)
 
 
 <!------------------------------------------------------------------------------------------->

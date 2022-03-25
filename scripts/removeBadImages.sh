@@ -83,8 +83,6 @@ else
 fi
 ERROR_WORDS="Huffman|Bogus|Corrupt|Invalid|Trunc|Missing|insufficient image data|no decode delegate|no images defined"
 
-TMP="${ALLSKY_TMP}/badError.txt"
-
 # Save all output to a temp file so don't potentially swamp the system log file.
 OUTPUT="${ALLSKY_TMP}/removeBadImages.log"
 > ${OUTPUT}
@@ -114,11 +112,18 @@ for f in ${IMAGE_FILES} ; do
 		BAD="'${f}' (zero length)"
 	else
 		# MEAN is a number between 0.0 and 1.0.
-		MEAN=$(${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2> "${TMP}")
-		if egrep -q "${ERROR_WORDS}" "${TMP}"; then
+		MEAN=$(${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1)
+		if [ $? -ne 0 ]; then
+			# Do NOT set BAD since this isn't necessarily a problem with the file.
+			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' failed; leaving file.${NC}"
+			echo "Message=${MEAN}"
+		elif [ -z "${MEAN}" ]; then
+			# Do NOT set BAD since this isn't necessarily a problem with the file.
+			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' returned nothing; leaving file.${NC}"
+		elif echo "${MEAN}" | egrep -q "${ERROR_WORDS}"; then
 			# At least one error word was found in the output.
-			# Try to get rid of unnecessary error text.
-			BAD="'${f}' (corrupt file: $(head -1 "${TMP}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;'))"
+			# Get rid of unnecessary error text, and only look at first line of error message.
+			BAD="'${f}' (corrupt file: $(echo "${MEAN}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;' -e q))"
 		else
 			# Multiply MEAN by 100 to convert to integer (0-100 %) since
 			# bash doesn't work with floats.
@@ -148,7 +153,6 @@ for f in ${IMAGE_FILES} ; do
 				echo "${MSG}"
 			fi
 		fi
-
 	fi
 
 	if [ "${BAD}" != "" ]; then
@@ -172,10 +176,9 @@ else
 	fi
 fi
 
-rm -f "${TMP}"
-
 if [ $num_bad -eq 0 ]; then
 	exit 0
 else
 	exit 99		# "99" means we deleted at least one file.
 fi
+

@@ -50,6 +50,8 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	# Holds all the notification images.
 	ALLSKY_NOTIFICATION_IMAGES="${ALLSKY_NOTIFICATION_IMAGES:-${ALLSKY_HOME}/notification_images}"
+	# Holds log of notifications displayed during this session.
+	ALLSKY_NOTIFICATION_LOG="${ALLSKY_TMP}/notification_log.txt"
 
 	# Holds all the dark frames.
 	ALLSKY_DARKS="${ALLSKY_DARKS:-${ALLSKY_HOME}/darks}"

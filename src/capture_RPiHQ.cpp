@@ -96,7 +96,7 @@ void closeUp(int e)
 		}
 		else
 		{
-			system("scripts/copy_notification_image.sh NotRunning &");
+			system("scripts/copy_notification_image.sh --expires 2 NotRunning &");
 		}
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
 		// before the one below.  This is only so it looks nicer in the log file.
@@ -1116,7 +1116,7 @@ const char *locale				= DEFAULT_LOCALE;
 
  			Log(0, "Taking dark frames...\n");
 			if (notificationImages) {
-				system("scripts/copy_notification_image.sh DarkFrames &");
+				system("scripts/copy_notification_image.sh --expires 0 DarkFrames &");
 			}
 		}
 		else {
@@ -1138,7 +1138,7 @@ const char *locale				= DEFAULT_LOCALE;
 					// Only display messages once a day.
 					if (displayedNoDaytimeMsg == 0) {
 						if (notificationImages) {
-							system("scripts/copy_notification_image.sh CameraOffDuringDay &");
+							system("scripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &");
 						}
 						Log(0, "It's daytime... we're not saving images.\n%s\n",
 							tty ? "Press Ctrl+C to stop" : "Stop the allsky service to end this process.");
@@ -1286,7 +1286,8 @@ const char *locale				= DEFAULT_LOCALE;
 					if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
 					{
 						mean = RPiHQcalcMean(pRgb, currentExposure_us, currentGain, myRaspistillSetting, myModeMeanSetting);
-						Log(2, "  > Got exposure: %'ld us, shutter: %s, quickstart: %d, mean=%1.6f\n", currentExposure_us, length_in_units(myRaspistillSetting.shutter_us, false), myModeMeanSetting.quickstart, mean);
+						Log(2, "  > Got exposure: %s,", length_in_units(currentExposure_us, false));
+						Log(2, " shutter: %s, quickstart: %d, mean=%1.3f\n", length_in_units(myRaspistillSetting.shutter_us, false), myModeMeanSetting.quickstart, mean);
 						if (mean == -1)
 						{
 							numErrors++;

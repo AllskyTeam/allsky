@@ -85,7 +85,7 @@ if [ "${IMG_RESIZE}" = "true" ] ; then
 	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
 	convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}"
 	if [ $? -ne 0 ] ; then
-		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed; not saving{$NC}"
+		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed; not saving${NC}"
 		exit 4
 	fi
 fi
@@ -95,7 +95,7 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}"
 	convert "${CURRENT_IMAGE}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${CURRENT_IMAGE}"
 	if [ $? -ne 0 ] ; then
-		echo -e "${RED}*** ${ME}: ERROR: CROP_IMAGE failed; not saving{$NC}"
+		echo -e "${RED}*** ${ME}: ERROR: CROP_IMAGE failed; not saving${NC}"
 		exit 4
 	fi
 fi

@@ -5,7 +5,8 @@
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
-	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}")/..)"
+	ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}")/..)"
+	export ALLSKY_HOME
 fi
 
 source "${ALLSKY_HOME}/variables.sh"
@@ -80,7 +81,9 @@ LOG="${ALLSKY_TMP}/upload_log.txt"
 PID_FILE="${ALLSKY_TMP}/${FILE_TYPE}-pid.txt"
 if [ -f "${PID_FILE}" ]; then
 		PID=$(< "${PID_FILE}")
+		# shellcheck disable=SC2009
 		ps -f -p${PID} | grep --silent "${ME}"
+		# shellcheck disable=SC2181
 		if [ $? -eq 0 ]; then
 			echo -en "${YELLOW}"
 			echo "*** ${ME}: WARNING: Another upload of type '${FILE_TYPE}' is in progress."
@@ -91,7 +94,6 @@ if [ -f "${PID_FILE}" ]; then
 		fi
 fi
 echo $$ > "${PID_FILE}"
-echo $ME; ls -l $PID_FILE
 
 # Convert to lowercase so we don't care if user specified upper or lowercase.
 PROTOCOL="${PROTOCOL,,}"

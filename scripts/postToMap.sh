@@ -210,7 +210,7 @@ if [ "${UPLOAD}" = "true" ]; then
 		RETURN_CODE=2
 	elif [ "${RET:0:15}" = "ALREADY UPDATED" ]; then
 		MAX_UPDATES=${RET:17}
-		echo -e "${WARNING_MSG_START}NOTICE:You have already updated your map data the maximum times per day (${MAX_UPDATED}).  Try again tomorrow.${WARNING_MSG_END}"
+		echo -e "${WARNING_MSG_START}NOTICE:You have already updated your map data the maximum times per day (${MAX_UPDATES}).  Try again tomorrow.${WARNING_MSG_END}"
 	else
 		echo -e "${ERROR_MSG_START}ERROR returned while uploading map data: ${RET}.${ERROR_MSG_END}"
 		RETURN_CODE=2

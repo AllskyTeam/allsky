@@ -2392,9 +2392,10 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						{
 							Log(3, "  > Stopped trying: new_exposure_us == current_exposure_us == %s\n", length_in_units(current_exposure_us, false));
 						}
-						 else
+						else
 						{
 							Log(3, "  > Stopped trying, using exposure of %s us with mean %d, min=%d, max=%d\n", length_in_units(current_exposure_us, false), mean, minAcceptableMean, maxAcceptableMean);
+						}
 						 
 					}
 					else if (current_exposure_us == currentMaxAutoexposure_us)

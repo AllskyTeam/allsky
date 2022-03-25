@@ -55,7 +55,7 @@ fi
 
 REMOTE_DIR="${2}"
 DESTINATION_FILE="${3}"
-FILE_TYPE="${4}"
+FILE_TYPE="${4:-x}"		# A unique identifier for this type of file
 # TODO: only allow one execution of this script for each $FILE_TYPE.
 COPY_TO="${5}"
 if [ "${COPY_TO}" != "" -a ! -d "${COPY_TO}" ] ; then
@@ -74,11 +74,30 @@ fi
 
 LOG="${ALLSKY_TMP}/upload_log.txt"
 
+# Make sure only one upload of this file type happens at once.
+# Multiple concurrent uploads (which can happen if the system and/or network is slow can
+# cause errors and files left on the server.
+PID_FILE="${ALLSKY_TMP}/${FILE_TYPE}-pid.txt"
+if [ -f "${PID_FILE}" ]; then
+		PID=$(< "${PID_FILE}")
+		ps -f -p${PID} | grep --silent "${ME}"
+		if [ $? -eq 0 ]; then
+			echo -en "${YELLOW}"
+			echo "*** ${ME}: WARNING: Another upload of type '${FILE_TYPE}' is in progress."
+			echo "This new upload is being aborted. If this happens often, check your network"
+			echo -n "and delay settings."
+			echo -e "${NC}"
+			exit 99
+		fi
+fi
+echo $$ > "${PID_FILE}"
+echo $ME; ls -l $PID_FILE
+
 # Convert to lowercase so we don't care if user specified upper or lowercase.
 PROTOCOL="${PROTOCOL,,}"
 
 # SIGTERM is sent by systemctl to stop Allsky and SIGUSR1 is sent to restart it.
-# SIGHUP is sent to have the capture program reload its arguments.
+# SIGHUP is sent to have the capture program reload their arguments.
 # Ignore them so we don't leave a temporary or partially uploaded file if the service is stopped
 # in the middle of an upload.
 trap "" SIGTERM
@@ -104,11 +123,7 @@ else # sftp/ftp/ftps
 	# People sometimes have problems with ftp not working,
 	# so save the commands we use so they can run lftp manually to debug.
 
-	if [ "${FILE_TYPE}" = "" ] ; then
-		TEMP_NAME="x-${RANDOM}"
-	else
-		TEMP_NAME="${FILE_TYPE}-${RANDOM}"
-	fi
+	TEMP_NAME="${FILE_TYPE}-${RANDOM}"
 
 	# If REMOTE_DIR isn't null (which it can be) and doesn't already have a trailing "/", append one.
 	[ "${REMOTE_DIR}" != "" -a "${REMOTE_DIR: -1:1}" != "/" ] && REMOTE_DIR="${REMOTE_DIR}/"
@@ -119,7 +134,6 @@ else # sftp/ftp/ftps
 	LFTP_CMDS="${ALLSKY_TMP}/lftp_cmds.txt"
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 	(
-		[ "${LFTP_COMMANDS}" != "" ] && echo ${LFTP_COMMANDS}
 		# xxx TODO: escape single quotes in REMOTE_PASSWORD so lftp doesn't fail - how?  With \ ?
 		P="${REMOTE_PASSWORD}"
 
@@ -146,9 +160,15 @@ else # sftp/ftp/ftps
 		# If the "rm" fails, the file may be in use by the web server or another lftp,
 		# so wait a few seconds and try again, but without the "-f" option so we see any error msg.
 		echo "rm  -f '${DESTINATION_FILE}'"
-		echo "glob --exist '${DESTINATION_FILE}*' && (echo 'rm of ${DESTINATION_FILE} failed!  Trying again...';  (!sleep 3);  rm '${DESTINATION_FILE}' && echo 'WORKED' && exit 1) && (echo '2nd rm failed, quiting.'; rm -f '${TEMP_NAME}'; exit 1) && exit 3"
+		echo "glob --exist '${DESTINATION_FILE}*'
+			&& (echo 'rm of ${DESTINATION_FILE} failed!  Trying again...';  (!sleep 3);  rm '${DESTINATION_FILE}' && echo 'WORKED' && exit 1)
+			&& (echo '2nd rm failed, quiting.'; rm -f '${TEMP_NAME}'; exit 1)
+			&& exit 3"
 
-		echo "mv '${TEMP_NAME}' '${DESTINATION_FILE}' || (echo 'mv of ${TEMP_NAME} to ${DESTINATION_FILE} failed!'; exit 1) || exit 4"
+		echo "mv '${TEMP_NAME}' '${DESTINATION_FILE}'
+			|| (echo 'mv of ${TEMP_NAME} to ${DESTINATION_FILE} failed!  Trying again...'; (!sleep 3); mv '${TEMP_NAME} '${DESTINATION_FILE}' && echo 'WORKED' && exit 0)
+			|| (echo '2nd mv failed, quitting.'; rm -f '${TEMP_NAME}; exit 1)
+			|| exit 4"
 
 		echo exit 0
 	) > "${LFTP_CMDS}"
@@ -177,7 +197,7 @@ else # sftp/ftp/ftps
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
 		if [ -n "${OUTPUT}" ]; then
-			echo -e "lftp OUTPUT:\n   ${OUTPUT}"
+			echo -e "lftp OUTPUT from '${FILE_TO_UPLOAD}:\n   ${OUTPUT}"
 		fi
 	fi
 fi
@@ -191,5 +211,7 @@ if [ ${RET} -eq 0 -a "${COPY_TO}" != "" ]; then
 	cp "${FILE_TO_UPLOAD}" "${COPY_TO}/${DESTINATION_FILE}"
 	RET=$?
 fi
+
+rm -f "${PID_FILE}"
 
 exit ${RET}

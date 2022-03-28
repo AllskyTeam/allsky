@@ -4,8 +4,6 @@
 // Rotation added by Agustin Nunez @agnunez
 // SPDX-License-Identifier: MIT
 
-// testing workflow-splitting 
-
 using namespace std;
 
 #include <getopt.h>

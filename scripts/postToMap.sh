@@ -102,35 +102,35 @@ else
 	OK=true
 	# Check for required fields
 	if [ "${LATITUDE}" = "" ]; then
-		echo -e "${ERROR_MSG_START}ERROR: 'latitude' is required.${ERROR_MSG_END}"
+		echo -e "${ERROR_MSG_START}ERROR: 'Latitude' is required.${ERROR_MSG_END}"
 		OK=false
 	fi
 	if [ "${LONGITUDE}" = "" ]; then
-		echo -e "${ERROR_MSG_START}ERROR: 'longitude' is required.${ERROR_MSG_END}"
+		echo -e "${ERROR_MSG_START}ERROR: 'Longitude' is required.${ERROR_MSG_END}"
 		OK=false
 	fi
 	if [ "${CAMERA}" = "" ]; then
-		echo -e "${ERROR_MSG_START}ERROR: 'camera' is required.${ERROR_MSG_END}"
+		echo -e "${ERROR_MSG_START}ERROR: 'Camera' is required.${ERROR_MSG_END}"
 		OK=false
 	fi
 	if [ "${COMPUTER}" = "" ]; then
-		echo -e "${ERROR_MSG_START}ERROR: 'computer' is required.${ERROR_MSG_END}"
+		echo -e "${ERROR_MSG_START}ERROR: 'Computer' is required.${ERROR_MSG_END}"
 		OK=false
 	fi
 
 	# Check for optional, but suggested fields
 	if [ "${LOCATION}" = "" ]; then
-		echo -e "${WARNING_MSG_START}WARNING: 'location' not set; continuing.${WARNING_MSG_END}"
+		echo -e "${WARNING_MSG_START}WARNING: 'Location' not set; continuing.${WARNING_MSG_END}"
 	fi
 	if [ "${OWNER}" = "" ]; then
-		echo -e "${WARNING_MSG_START}WARNING: 'owner' not set; continuing.${WARNING_MSG_END}"
+		echo -e "${WARNING_MSG_START}WARNING: 'Owner' not set; continuing.${WARNING_MSG_END}"
 	fi
 	if [ "${LENS}" = "" ]; then
-		echo -e "${WARNING_MSG_START}WARNING: 'lens' not set; continuing.${WARNING_MSG_END}"
+		echo -e "${WARNING_MSG_START}WARNING: 'Lens' not set; continuing.${WARNING_MSG_END}"
 	fi
 
 	# website_url and image_url are optional, but need to start with "http:" or "https:" if present
-	if [ "${WEBSITE_URL}" != "" ] && [ "${WEBSITE_URL:0:5}" != "http:" ] && [ ${WEBSITE_URL:0:6}" != "http:" ]; then
+	if [ "${WEBSITE_URL}" != "" ] && [ "${WEBSITE_URL:0:5}" != "http:" ] && [ "${WEBSITE_URL:0:6}" != "http:" ]; then
 		echo -e "${ERROR_MSG_START}ERROR: 'Website URL' must begin with 'http:' or 'https:'.${ERROR_MSG_END}"
 		OK=false
 	fi
@@ -176,11 +176,7 @@ if [ "${UPLOAD}" = "true" ]; then
 	elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
 		[ "${WHISPER}" = "false" ] && echo "${ME}: Uploading map data."
 	fi
-	CMD="curl --silent -i"
-	# shellcheck disable=SC2089
-	CMD="${CMD} -H 'Accept: application/json'"
-	# shellcheck disable=SC2089
-	CMD="${CMD} -H 'Content-Type:application/json'"
+	CMD="curl --silent -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
 	CMD="${CMD} --data '$(generate_post_data)' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
 	[ "${DEBUG}" = "true" ] && echo -e "\nExecuting:\n${GREEN}${CMD}${NC}\n"

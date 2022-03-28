@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# test workflow splitting
-
 # This script uploads a file to a website to tell the website when the user has defined
 # "sunrise" and "sunset".  Use the angle set by the user.
 

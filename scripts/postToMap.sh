@@ -130,11 +130,11 @@ else
 	fi
 
 	# website_url and image_url are optional, but need to start with "http:" or "https:" if present
-	if [ "${WEBSITE_URL}" != "" ] && [ "${WEBSITE_URL:0:5}" != "http:" ] && [ "${WEBSITE_URL:0:6}" != "http:" ]; then
+	if [ "${WEBSITE_URL}" != "" ] && [ "${WEBSITE_URL:0:5}" != "http:" ] && [ "${WEBSITE_URL:0:6}" != "https:" ]; then
 		echo -e "${ERROR_MSG_START}ERROR: 'Website URL' must begin with 'http:' or 'https:'.${ERROR_MSG_END}"
 		OK=false
 	fi
-	if [ "${IMAGE_URL}" != "" ] && [ "${IMAGE_URL:0:5}" != "http:" ] && [ "${IMAGE_URL:0:6}" != "http:" ]; then
+	if [ "${IMAGE_URL}" != "" ] && [ "${IMAGE_URL:0:5}" != "http:" ] && [ "${IMAGE_URL:0:6}" != "https:" ]; then
 		echo -e "${ERROR_MSG_START}ERROR: 'Image URL' must begin with 'http:' or 'https:'.${ERROR_MSG_END}"
 		OK=false
 	fi

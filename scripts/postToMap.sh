@@ -176,6 +176,7 @@ if [ "${UPLOAD}" = "true" ]; then
 	elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
 		[ "${WHISPER}" = "false" ] && echo "${ME}: Uploading map data."
 	fi
+	# shellcheck disable=SC2089
 	CMD="curl --silent -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
 	CMD="${CMD} --data '$(generate_post_data)' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"

@@ -22,7 +22,10 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 CONFIG_DIR="/etc/raspap"	# settings_*.json files go here
 mkdir -p "${CONFIG_DIR}" || exit 2
-modify_locations() {	# Some files have placeholders for certain locations.  Modify them.
+
+# Some files have placeholders for certain locations.  Modify them.
+modify_locations()
+{
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
 	(
 		cd "${PORTAL_DIR}/includes" || exit 1
@@ -36,6 +39,20 @@ modify_locations() {	# Some files have placeholders for certain locations.  Modi
 		       -e "s;XX_RASPI_CONFIG_XX;${CONFIG_DIR};" \
 				functions.php
 	)
+}
+
+# Set up lighttpd to only save 2 weeks of log files instead of the default of 12.
+modify_logrotate()
+{
+	WEEKS=2
+	echo -e "${GREEN}* Modifying lighttpd in to save ${WEEKS} weeks of logs.${NC}"
+	ROTATE_CONFIG=/etc/logrotate.d/lighttpd
+	if [ -f "${ROTATE_CONFIG}" ]; then
+		sed -i "s; rotate [0-9]*; rotate ${WEEKS};" "${ROTATE_CONFIG}"
+		systemctl restart logrotate
+	else
+		echo -e "${YELLOW}* WARNING: '${ROTATE_CONFIG}' not found; continuing.${NC}"
+	fi
 }
 
 do_sudoers()
@@ -63,6 +80,7 @@ if [ "${1}" = "--update" ] || [ "${1}" = "-update" ] ; then
 	fi
 
 	modify_locations
+	modify_logrotate
 
 	# Add entries to sudoers file if not already there.
 	# This is only needed for people who updated allsky-portal but didn't update allsky.
@@ -158,6 +176,7 @@ if [ "${TMP_WEBSITE_DIR}" != "" ]; then
 fi
 
 modify_locations	# replace placeholders in some files with actual path names
+modify_logrotate	# Set number of weeks of logs that are kept
 
 mv "${PORTAL_DIR}"/raspap.php "${CONFIG_DIR}"
 mv "${PORTAL_DIR}"/camera_options_ZWO.json "${CONFIG_DIR}"

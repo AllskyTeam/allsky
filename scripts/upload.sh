@@ -136,6 +136,7 @@ else # sftp/ftp/ftps
 	LFTP_CMDS="${ALLSKY_TMP}/lftp_cmds.txt"
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 	(
+		[ "${LFTP_COMMANDS}" != "" ] && echo ${LFTP_COMMANDS}
 		# xxx TODO: escape single quotes in REMOTE_PASSWORD so lftp doesn't fail - how?  With \ ?
 		P="${REMOTE_PASSWORD}"
 

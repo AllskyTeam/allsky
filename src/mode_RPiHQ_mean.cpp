@@ -38,22 +38,6 @@ int dExposureChange = 0;
 bool createMaskHorizon = true;
 bool fastforward = false;
 
-// https://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry
-// https://drive.google.com/file/d/0B6UHr3GQEkQwYnlDY2dKNTdudjg/view?resourcekey=0-a73PvBnc3a2B5wztAV0QaA
-double get_focus_metric(cv::Mat img)
-{
- 	cv::Mat lap;
-	cv::Laplacian(img, lap, CV_64F);
-
-	cv::Scalar mu, sigma;
-	cv::meanStdDev(lap, mu, sigma);
-
-	double focusMetric = sigma.val[0]*sigma.val[0];
-	Log(4, "  > Focus: %'f\n", focusMetric);
-	return(focusMetric);
-}
-
-
 int calcExposureLevel (int exposure_us, double gain, modeMeanSetting &currentModeMeanSetting)
 {
 	return log(gain  * exposure_us/(double)US_IN_SEC) / log (2.0) * pow(currentModeMeanSetting.shuttersteps,2.0);

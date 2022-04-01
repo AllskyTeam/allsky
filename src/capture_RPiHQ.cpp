@@ -598,10 +598,6 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				quality = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-focus") == 0)
-			{
-				showFocus = getBoolean(argv[++i]);
-			}
 			else if (strcmp(argv[i], "-dayexposure") == 0)
 			{
 				dayExposure_us = atof(argv[++i]) * US_IN_MS;	// allow fractions
@@ -898,7 +894,7 @@ const char *locale				= DEFAULT_LOCALE;
 		printf("\n");
 		printf(" -preview							- Set to 1 to preview the captured images. Only works with a Desktop Environment\n");
 		printf(" -darkframe							- Set to 1 to grab dark frame and cover your camera\n");
-		printf(" -showTime								- Set to 1 to display the time on the image.\n");
+		printf(" -showTime							- Set to 1 to display the time on the image.\n");
 		printf(" -focus								- Set to 1 to display a focus metric on the image.\n");
 		printf(" -notificationimages				- Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
 		printf(" -debuglevel						- Default = 0. Set to 1,2 or 3 for more debugging information.\n");

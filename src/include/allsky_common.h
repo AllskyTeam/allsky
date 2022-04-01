@@ -98,3 +98,4 @@ int doOverlay(cv::Mat,
 	int, int, int, int,
 	int[], int[], bool, int);
 bool getBoolean(const char *);
+double get_focus_metric(cv::Mat);

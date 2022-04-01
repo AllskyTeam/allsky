@@ -64,6 +64,7 @@ int current_bpp					= NOT_SET;			// bytes per pixel: 8, 16, or 24
 int current_bit_depth			= NOT_SET;			// 8 or 16
 int currentBin					= NOT_SET;
 int currentBrightness			= NOT_SET;
+int focus_metric				= NOT_SET;
 
 // Some command-line and other option definitions needed outside of main():
 bool tty						= false;			// are we on a tty?
@@ -208,12 +209,11 @@ void *SaveImgThd(void *para)
 			char cmd[1100];
 			Log(1, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), final_file_name);
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
-			// -1 for no focusMetric
 			float gainDB = pow(10, (float)currentGain / 10.0 / 20.0);
 			add_variables_to_command(cmd, last_exposure_us, currentBrightness, mean,
 				currentAutoExposure, currentAutoGain, autoAWB, WBR, WBB,
 				actualTemp, gainDB, currentGain,
-				currentBin, flip, current_bit_depth, -1);
+				currentBin, flip, current_bit_depth, focus_metric);
 			strcat(cmd, " &");
 
 			st = cv::getTickCount();
@@ -892,6 +892,7 @@ int main(int argc, char *argv[])
 	int histogramBoxSizeX		= DEFAULT_BOX_SIZEX;
 	int histogramBoxSizeY		= DEFAULT_BOX_SIZEY;
 #define DEFAULT_AGGRESSION		75
+	bool showFocus				= false;
 	int aggression				= DEFAULT_AGGRESSION; // ala PHD2. Percent of change made, 1 - 100.
 
 	// If we just transitioned from night to day, it's possible current_exposure_us will
@@ -1230,6 +1231,10 @@ int main(int argc, char *argv[])
 				showMean = getBoolean(argv[++i]);
 			}
 #endif
+			else if (strcmp(argv[i], "-showFocus") == 0)
+			{
+				showFocus = getBoolean(argv[++i]);
+			}
 			else if (strcmp(argv[i], "-daytime") == 0)
 			{
 				daytimeCapture = getBoolean(argv[++i]);
@@ -1318,8 +1323,9 @@ int main(int argc, char *argv[])
 		printf(" -aggression			- Default = %d%%: Percent of exposure change to make, similar to PHD2.\n", DEFAULT_AGGRESSION);
 #endif
 		printf(" -darkframe				- 1 disables the overlay and takes dark frames instead\n");
+		printf(" -showTime				- Set to 1 to display the time on the image.\n");
+		printf(" -focus					- Set to 1 to display a focus metric on the image.\n");
 		printf(" -preview				- 1 previews the captured images. Only works with a Desktop Environment\n");
-		printf(" -time					- 1 displays the time. Combine with Text X and Text Y for placement\n");
 		printf(" -timeformat			- Format the optional time is displayed in; default is '%s'\n", DEFAULT_TIMEFORMAT);
 		printf(" -showTemp				- 1 displays the camera sensor temperature\n");
 		printf(" -temptype				- Units to display temperature in: 'C'elsius, 'F'ahrenheit, or 'B'oth.\n");
@@ -1784,6 +1790,7 @@ int main(int argc, char *argv[])
 	printf(" Show Exposure: %s\n", yesNo(showExposure));
 	printf(" Show Gain: %s\n", yesNo(showGain));
 	printf(" Show Brightness: %s\n", yesNo(showBrightness));
+	printf(" Show Focus Metric: %s\n", yesNo(showFocus));
 	printf(" Preview: %s\n", yesNo(preview));
 	printf(" Taking Dark Frames: %s\n", yesNo(taking_dark_frames));
 	printf(" Debug Level: %d\n", debugLevel);
@@ -2154,6 +2161,8 @@ int main(int argc, char *argv[])
 				numErrors = 0;
 				numExposures++;
 
+				focus_metric = showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
+
 				if (numExposures == 0 && preview)
 				{
 					// Start the preview thread at the last possible moment.
@@ -2463,7 +2472,6 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 				{
 					int iYOffset = 0;
 
-					// false and 0 are for showFocus and focus_metric which ZWO doesn't have yet
 					iYOffset = doOverlay(pRgb,
 						showTime, bufTime,
 						showExposure, last_exposure_us, currentAutoExposure,
@@ -2471,7 +2479,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
  						showGain, actualGain, currentAutoGain, gainChange,
 						showMean, mean,
 						showBrightness, currentBrightness,
-						false, 0,
+						showFocus, focus_metric,
 						ImgText, ImgExtraText, extraFileAge,
 						iTextX, iTextY, currentBin, width, iTextLineHeight,
 						fontsize, linewidth, linetype[linenumber], fontname[fontnumber],

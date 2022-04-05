@@ -29,13 +29,16 @@ modify_locations()
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
 	(
 		cd "${PORTAL_DIR}/includes" || exit 1
-		# NOTE: Only want to replace the FIRST instance of XX_ALLSKY_HOME_XX in funciton.php
-		#       Otherwise, the edit check in functions.php will always fail.
-		sed -i "0,/XX_ALLSKY_HOME_XX/{s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};}" functions.php
-		sed -i "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" save_file.php
-		sed -i -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+
+		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		       -e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
+				save_file.php
+
+		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		       -e "s;XX_ALLSKY_SCRIPTS;${ALLSKY_SCRIPTS};" \
 		       -e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
 		       -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
+		       -e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
 		       -e "s;XX_RASPI_CONFIG_XX;${CONFIG_DIR};" \
 				functions.php
 	)

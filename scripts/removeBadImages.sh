@@ -83,11 +83,16 @@ else
 fi
 ERROR_WORDS="Huffman|Bogus|Corrupt|Invalid|Trunc|Missing|insufficient image data|no decode delegate|no images defined"
 
-TMP="${ALLSKY_TMP}/badError.txt"
-
-# Save all output to a temp file so don't potentially swamp the system log file.
-OUTPUT="${ALLSKY_TMP}/removeBadImages.log"
-> ${OUTPUT}
+# Reduce writes to disk if possible.  This script is normally called once for each file,
+# and most files are good so no output is created and hence no reason to create a temporary
+# OUTPUT file.  Only use OUTPUT if we're doing a whole directory at once,
+# otherwise put a single file's output in a variable.
+if [ -n "${FILE}" ]; then		# looking at one file
+	OUTPUT=""
+else							# looking at a directory
+	OUTPUT="${ALLSKY_TMP}/removeBadImages.log"
+	> ${OUTPUT}
+fi
 
 typeset -i num_bad=0
 # If the low threshold is 0 it's disabled.
@@ -114,11 +119,19 @@ for f in ${IMAGE_FILES} ; do
 		BAD="'${f}' (zero length)"
 	else
 		# MEAN is a number between 0.0 and 1.0.
-		MEAN=$(${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2> "${TMP}")
-		if egrep -q "${ERROR_WORDS}" "${TMP}"; then
+		MEAN=$(${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1)
+		# shellcheck disable=SC2181
+		if [ $? -ne 0 ]; then
+			# Do NOT set BAD since this isn't necessarily a problem with the file.
+			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' failed; leaving file.${NC}"
+			echo "Message=${MEAN}"
+		elif [ -z "${MEAN}" ]; then
+			# Do NOT set BAD since this isn't necessarily a problem with the file.
+			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' returned nothing; leaving file.${NC}"
+		elif echo "${MEAN}" | egrep -q "${ERROR_WORDS}"; then
 			# At least one error word was found in the output.
-			# Try to get rid of unnecessary error text.
-			BAD="'${f}' (corrupt file: $(head -1 "${TMP}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;'))"
+			# Get rid of unnecessary error text, and only look at first line of error message.
+			BAD="'${f}' (corrupt file: $(echo "${MEAN}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;' -e q))"
 		else
 			# Multiply MEAN by 100 to convert to integer (0-100 %) since
 			# bash doesn't work with floats.
@@ -148,11 +161,14 @@ for f in ${IMAGE_FILES} ; do
 				echo "${MSG}"
 			fi
 		fi
-
 	fi
 
 	if [ "${BAD}" != "" ]; then
-		echo "${r} ${BAD}" >> "${OUTPUT}"
+		if [ -n "${FILE}" ]; then		# looking at one file, save message in variable
+			OUTPUT="${r} ${BAD}"
+		else							# looking at a directory, save message in tmp file
+			echo "${r} ${BAD}" >> "${OUTPUT}"
+		fi
 		[ ${DEBUG} = "false" ] && rm -f "${f}" "thumbnails/${f}"
 		let num_bad=num_bad+1
 	fi
@@ -160,22 +176,22 @@ done
 
 if [ $num_bad -eq 0 ]; then
 	# If only one file, "no news is good news".
-	[ "${FILE}" = "" ] && echo -e "\n${ME} ${GREEN}No bad files found.${NC}"
-	rm -f "${OUTPUT}"
+	if [ "${FILE}" = "" ]; then
+		echo -e "\n${ME} ${GREEN}No bad files found.${NC}"
+		rm -f "${OUTPUT}"
+	fi
 else
 	if [ "${FILE}" = "" ]; then
 		echo "${ME} ${num_bad} bad file(s) found and ${r}. See ${OUTPUT}."
 		# Do NOT remove ${OUTPUT} in case the user wants to look at it.
 	else	# only 1 file so show it
-		echo "${ME} File is bad: $(< "${OUTPUT}")"
-		rm -f "${OUTPUT}"
+		echo "${ME} File is bad: ${OUTPUT}"
 	fi
 fi
-
-rm -f "${TMP}"
 
 if [ $num_bad -eq 0 ]; then
 	exit 0
 else
 	exit 99		# "99" means we deleted at least one file.
 fi
+

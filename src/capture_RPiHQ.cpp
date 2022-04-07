@@ -539,8 +539,6 @@ const char *locale				= DEFAULT_LOCALE;
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 	setlinebuf(stdout);		// Line buffer output so entries appear in the log immediately.
-	if (setlocale(LC_NUMERIC, locale) == NULL)
-		printf("*** WARNING: Could not set locale to %s ***\n", locale);
 
 	printf("\n");
 	printf("%s ************************************************\n", c(KGRN));
@@ -842,6 +840,9 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 		}
 	}
+	
+	if (setlocale(LC_NUMERIC, locale) == NULL)
+		printf("*** WARNING: Could not set locale to %s ***\n", locale);
 
 	if (help)
 	{

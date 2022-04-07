@@ -919,8 +919,6 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 	setlinebuf(stdout);				// Line buffer output so entries appear in the log immediately.
-	if (setlocale(LC_NUMERIC, locale) == NULL)
-		printf("*** WARNING: Could not set locale to %s ***\n", locale);
 
 	printf("\n%s", c(KGRN));
 	printf("**********************************************\n");
@@ -1249,6 +1247,9 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	
+	if (setlocale(LC_NUMERIC, locale) == NULL)
+		printf("*** WARNING: Could not set locale to %s ***\n", locale);
 
 	if (help)
 	{

@@ -1250,7 +1250,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-	
+
 	if (setlocale(LC_NUMERIC, locale) == NULL)
 		printf("*** WARNING: Could not set locale to %s ***\n", locale);
 
@@ -1993,12 +1993,19 @@ int main(int argc, char *argv[])
 					//		newExp =  (oldExp * oldGain) / newGain
 					// e.g.		20s = (10s    * 2.0)     / (1.0) 
 
-					// current values are here the last night values
-					current_exposure_us = (current_exposure_us * pow(10, (float)currentGain / 10.0 / 20.0)) / pow(10, (float)dayGain / 10.0 / 20.0);
-					Log(2, "Using the last night exposure, old and new Gain to calculate new exposure of %s\n", length_in_units(current_exposure_us, true));
+					// current values here are last night's values
+					double oldGain = pow(10, (float)currentGain / 10.0 / 20.0);
+					double newGain = pow(10, (float)dayGain / 10.0 / 20.0);
+					Log(2, "Using the last night exposure (%s),", length_in_units(current_exposure_us, true));
+					current_exposure_us = (current_exposure_us * oldGain) / newGain;
+					Log(2," old (%'f) and new (%'f) Gain to calculate new exposure of %s\n", oldGain, newGain, length_in_units(current_exposure_us, true));
 				}
 
 				currentMaxAutoexposure_us = dayMaxAutoexposure_ms * US_IN_MS;
+				if (dayAutoExposure && current_exposure_us > currentMaxAutoexposure_us)
+				{
+					current_exposure_us = currentMaxAutoexposure_us;
+				}
 #ifdef USE_HISTOGRAM
 				// Don't use camera auto-exposure since we mimic it ourselves.
 				if (dayAutoExposure)

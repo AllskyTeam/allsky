@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <fstream>
 #include <stdarg.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "include/allsky_common.h"
 
@@ -297,12 +299,22 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, con
 	sprintf(sunwaitCommand, "sunwait poll exit angle %s %s %s", angle, latitude, longitude);
 	d = system(sunwaitCommand);	// returns exit code 2 for DAY, 3 for night
 
-	if (d != 2 && d != 3)
+	if (WIFEXITED(d))
 	{
-		Log(0, "*** ERROR: sunwait returned %d, not DAY or NIGHT\n", d);
-		closeUp(EXIT_ERROR_STOP);
+		d = WEXITSTATUS(d);
+		if (d != 2 && d != 3)
+		{
+			Log(0, "*** ERROR: sunwait returned %d, not DAY or NIGHT\n", d);
+			closeUp(EXIT_ERROR_STOP);
+		}
+		return(d == 2 ? _day : _night);
 	}
-	return(d == 2 ? _day : _night);
+
+	// Didn't exit normally
+	Log(0, "*** ERROR: sunwait exited abnormally: 0x%x\n", d);
+	closeUp(EXIT_ERROR_STOP);
+	/*NOTREACHED*/
+	return("");
 }
 
 // Calculate how long until nighttime.

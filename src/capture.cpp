@@ -611,7 +611,10 @@ void closeUp(int e)
 
 void sig(int i)
 {
-	printf("XXXXXX == got %s %d in sig()\n", i == SIGUSR1 ? "SIGUSR1" : i == SIGHUP ? "SIGHUP" : "unknown signal", i);
+	if (i == SIGHUP)
+		Log(3, "Got signal to restart\n");
+	else
+		printf("XXXXXX == got %s %d in sig()\n", i == SIGUSR1 ? "SIGUSR1" : "unknown signal", i);
 	gotSignal = true;
 	closeUp(EXIT_RESTARTING);
 }

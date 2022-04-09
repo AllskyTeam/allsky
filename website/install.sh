@@ -51,7 +51,7 @@ create_data_json_file() {	# Create a new data.json file and check that it's newe
 		echo -e "${RED}* Unable to create new 'data.json' file:"
 		echo -e "${OUTPUT}"
 		echo -e "${NC}"
-		echo -e "Make sure 'REMOTE_HOST' is set in 'config/config.sh' to a valid remote server"
+		echo -e "Make sure 'REMOTE_HOST' is set in 'config/ftp-settings.sh' to a valid remote server"
 		echo -e "or to '', then run ${ALLSKY_SCRIPTS}/postData.sh to create a 'data.json' file."
 	fi
 }

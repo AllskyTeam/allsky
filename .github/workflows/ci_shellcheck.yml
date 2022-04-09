@@ -1,12 +1,10 @@
-# This is a basic workflow to help you get started with Actions
-
-name: CI
+name: CI_shellcheck
 
 # Controls when the workflow will run
 on: 
   push:
     paths:
-      - 'src/**'
+      - '**.sh'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -19,12 +17,6 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-
-      # Runs a set of commands using the runners shell
-      - name: some useful outputs
-        run: |
-          ls -la
-          uptime
 
       # Runs a set of commands using the runners shell
       - name: check bash files
@@ -211,14 +203,3 @@ jobs:
             echo "bash or shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
           fi
           exit $err
-
-      # Runs a set of commands using the runners shell
-      - name: make deps
-        run: |
-          sudo make deps
-
-      # Info: depends an step "make deps"
-      - name: make all
-        run: |
-          sudo make all
-

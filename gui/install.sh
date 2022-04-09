@@ -1,8 +1,10 @@
 #!/bin/bash
 
 if [ -z "${ALLSKY_HOME}" ] ; then
-	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
+	ALLSKY_HOME=$(realpath "$(dirname "${BASH_ARGV0}")"/..)
+	export ALLSKY_HOME
 fi
+# shellcheck disable=SC1090
 source ${ALLSKY_HOME}/variables.sh
 
 echo -en '\n'
@@ -19,21 +21,46 @@ fi
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 CONFIG_DIR="/etc/raspap"	# settings_*.json files go here
-mkdir -p "${CONFIG_DIR}"
-modify_locations() {	# Some files have placeholders for certain locations.  Modify them.
+mkdir -p "${CONFIG_DIR}" || exit 2
+
+# Some files have placeholders for certain locations.  Modify them.
+modify_locations()
+{
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
 	(
 		cd "${PORTAL_DIR}/includes" || exit 1
-		# NOTE: Only want to replace the FIRST instance of XX_ALLSKY_HOME_XX in funciton.php
-		#       Otherwise, the edit check in functions.php will always fail.
-		sed -i "0,/XX_ALLSKY_HOME_XX/{s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};}" functions.php
-		sed -i "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" save_file.php
-		sed -i -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		       -e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
+				save_file.php
+
+		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		       -e "s;XX_ALLSKY_SCRIPTS;${ALLSKY_SCRIPTS};" \
 		       -e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
 		       -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
+		       -e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
 		       -e "s;XX_RASPI_CONFIG_XX;${CONFIG_DIR};" \
 				functions.php
 	)
+}
+
+# Set up lighttpd to only save 2 weeks of log files instead of the default of 12.
+modify_logrotate()
+{
+	WEEKS=2
+	echo -e "${GREEN}* Modifying lighttpd in to save ${WEEKS} weeks of logs.${NC}"
+	ROTATE_CONFIG=/etc/logrotate.d/lighttpd
+	if [ -f "${ROTATE_CONFIG}" ]; then
+		sed -i "s; rotate [0-9]*; rotate ${WEEKS};" "${ROTATE_CONFIG}"
+		systemctl restart logrotate
+	else
+		echo -e "${YELLOW}* WARNING: '${ROTATE_CONFIG}' not found; continuing.${NC}"
+	fi
+}
+
+do_sudoers()
+{
+	echo -e "${GREEN}* Creating/updating sudoers file${NC}"
+	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" ${SCRIPTPATH}/sudoers > /etc/sudoers.d/allsky
 }
 
 NEED_TO_UPDATE_HOST_NAME="true"
@@ -55,19 +82,23 @@ if [ "${1}" = "--update" ] || [ "${1}" = "-update" ] ; then
 	fi
 
 	modify_locations
+	modify_logrotate
 
 	# Add entries to sudoers file if not already there.
 	# This is only needed for people who updated allsky-portal but didn't update allsky.
 	# Don't simply copy the "allsky" file to /etc/sudoers.d in case "allsky" isn't up to date.
-	grep --silent "/usr/bin/vcgencmd" /etc/sudoers.d/allsky
+	grep --silent "/usr/bin/vcgencmd" /etc/sudoers.d/allsky &&
+	grep --silent "postData.sh" /etc/sudoers.d/allsky
+	# shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then
 		echo -e "${GREEN}* Updating sudoers list${NC}"
-		grep --silent "/usr/bin/vcgencmd" ${SCRIPTPATH}/sudoers
+		grep --silent "postData.sh" ${SCRIPTPATH}/sudoers
+		# shellcheck disable=SC2181
 		if [ $? -ne 0 ]; then
 				echo -e "${RED}Please get the newest '$(basename "${SCRIPTPATH}")/sudoers' file from Git and try again.${NC}"
 			exit 2
 		fi
-		cp ${SCRIPTPATH}/sudoers /etc/sudoers.d/allsky
+		do_sudoers
 	fi
 
 	exit 0		# currently nothing else to do for updates
@@ -116,7 +147,7 @@ fi
 echo -e "${GREEN}* Adding the right permissions to the web server${NC}"
 # Remove any old entries; we now use /etc/sudoers.d/allsky instead of /etc/sudoers.
 sed -i -e '/allsky/d' -e '/www-data/d' /etc/sudoers
-cp $SCRIPTPATH/sudoers /etc/sudoers.d/allsky
+do_sudoers
 echo
 
 # As of October 2021, WEBSITE_DIR is a subdirectory of PORTAL_DIR.
@@ -147,6 +178,7 @@ if [ "${TMP_WEBSITE_DIR}" != "" ]; then
 fi
 
 modify_locations	# replace placeholders in some files with actual path names
+modify_logrotate	# Set number of weeks of logs that are kept
 
 mv "${PORTAL_DIR}"/raspap.php "${CONFIG_DIR}"
 mv "${PORTAL_DIR}"/camera_options_ZWO.json "${CONFIG_DIR}"

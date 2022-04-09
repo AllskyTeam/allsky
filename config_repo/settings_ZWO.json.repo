@@ -58,6 +58,14 @@
    "darkframe":"0",
    "locale":"en_US.UTF-8",
    "debuglevel":"1",
-   "newexposure":"0",
-   "alwaysshowadvanced":"0"
+   "newexposure":"1",
+   "alwaysshowadvanced":"0",
+   "showonmap":"0",
+   "location":"",
+   "owner":"",
+   "websiteurl":"",
+   "imageurl":"",
+   "camera":"",
+   "lens":"",
+   "computer":""
 }

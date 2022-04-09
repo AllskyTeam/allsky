@@ -24,3 +24,4 @@ www-data ALL=(ALL) NOPASSWD:/bin/rm
 www-data ALL=(ALL) NOPASSWD:/bin/cp
 www-data ALL=(ALL) NOPASSWD:/bin/mv
 www-data ALL=(ALL) NOPASSWD:/usr/bin/vcgencmd
+www-data ALL=(ALL) NOPASSWD:XX_ALLSKY_SCRIPTS_XX/postData.sh

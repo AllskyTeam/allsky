@@ -29,7 +29,6 @@ modify_locations()
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
 	(
 		cd "${PORTAL_DIR}/includes" || exit 1
-
 		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 		       -e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
 				save_file.php

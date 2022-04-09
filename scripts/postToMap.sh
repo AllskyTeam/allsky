@@ -4,7 +4,7 @@ ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
-	ALLSKY_HOME=$(realpath "$(dirname "${BASH_ARGV0}")"/..)
+	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
 
@@ -166,7 +166,7 @@ if [ "${UPLOAD}" = "false" ]; then
 	digit="${MACHINE_ID: -1}"
 	decimal=$(( 16#$digit ))
 	parity="$(( decimal % 2 ))"
-	(( $(date +%d) % 2 == parity )) && UPLOAD=true
+	(( $(date +%e) % 2 == parity )) && UPLOAD=true
 fi
 
 RETURN_CODE=0

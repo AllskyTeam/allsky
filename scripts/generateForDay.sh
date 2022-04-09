@@ -6,7 +6,8 @@ ME_USAGE="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
-	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
+	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
+	export ALLSKY_HOME
 fi
 
 # If the first argument is "--upload" then we upload files, otherwise we create them.

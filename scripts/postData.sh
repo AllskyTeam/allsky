@@ -5,7 +5,7 @@
 
 # Allow this script to be executed manually or by sudo, which requires several variables to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
-	ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
+	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
 

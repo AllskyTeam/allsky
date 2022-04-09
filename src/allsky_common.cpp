@@ -296,7 +296,7 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, con
 	char sunwaitCommand[128];
 	int d;
 
-	sprintf(sunwaitCommand, "sunwait poll exit angle %s %s %s", angle, latitude, longitude);
+	sprintf(sunwaitCommand, "sunwait poll exit angle %s %s %s > /dev/null", angle, latitude, longitude);
 	d = system(sunwaitCommand);	// returns exit code 2 for DAY, 3 for night
 
 	if (WIFEXITED(d))

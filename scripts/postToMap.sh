@@ -166,7 +166,7 @@ if [ "${UPLOAD}" = "false" ]; then
 	digit="${MACHINE_ID: -1}"
 	decimal=$(( 16#$digit ))
 	parity="$(( decimal % 2 ))"
-	(( $(date +%d) % 2 == parity )) && UPLOAD=true
+	(( $(date +%e) % 2 == parity )) && UPLOAD=true
 fi
 
 RETURN_CODE=0

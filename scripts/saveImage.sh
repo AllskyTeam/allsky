@@ -51,12 +51,24 @@ if [ "${REMOVE_BAD_IMAGES}" = "true" ]; then
 	"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
 	# removeBadImages.sh displayed error message and deleted the file.
 	[ $? -eq 99 ] && exit 99
-else
-	# Quick check to make sure the image isn't corrupted.
-	identify "${CURRENT_IMAGE}" >/dev/null 2>&1
+fi
+
+# If we didn't execute removeBadImages.sh do a quick sanity check on the image.
+# OR, if we did execute removeBaImages.sh but we're cropping the image, get the image resolution.
+if [ "${REMOVE_BAD_IMAGES}" != "true" ] || [ "${CROP_IMAGE}" = "true" ] ; then
+	x=$(identify "${CURRENT_IMAGE}" 2>/dev/null)
 	if [ $? -ne 0 ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving.${NC}"
 		exit 3
+	fi
+
+	if [ "${CROP_IMAGE}" = "true" ] ; then
+		# Typical output
+		# image-20220228094835.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
+			RESOLUTION=$(echo "${x}" | awk '{ print $3 }')
+			# These are the resolution of the image (which may have been binned), not the sensor.
+			typeset -i RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
+			typeset -i RESOLUTION_Y=${RESOLUTION##*x}	# everything after the "x"
 	fi
 fi
 
@@ -92,11 +104,75 @@ fi
 
 # Crop the image if required
 if [ "${CROP_IMAGE}" = "true" ] ; then
-	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}"
-	convert "${CURRENT_IMAGE}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${CURRENT_IMAGE}"
-	if [ $? -ne 0 ] ; then
-		echo -e "${RED}*** ${ME}: ERROR: CROP_IMAGE failed; not saving${NC}"
-		exit 4
+	# Do some sanity checks on the CROP_* variables.
+	# The crop rectangle needs to fit within the image.
+	ERROR_MSG=""
+	if [ ${CROP_WIDTH} -gt ${RESOLUTION_X} ]; then
+		ERROR_MSG="${ERROR_MSG}\n*** CROP_WIDTH (${CROP_WIDTH}) larger than image width (${RESOLUTION_X})."
+	fi
+	if [ ${CROP_HEIGHT} -gt ${RESOLUTION_Y} ]; then
+		ERROR_MSG="${ERROR_MSG}\n*** CROP_HEIGHT (${CROP_HEIGHT}) larger than image height (${RESOLUTION_Y})."
+	fi
+	if [ -z "${ERROR_MSG}" ]; then
+			# bc doesn't accept numbers starting with "+" (e.g., "+1") so strip the "+".
+			CROP_WIDTH=${CROP_WIDTH#+}
+			CROP_HEIGHT=${CROP_HEIGHT#+}
+			CROP_OFFSET_X=${CROP_OFFSET_X#+}
+			CROP_OFFSET_Y=${CROP_OFFSET_Y#+}
+			typeset -i IMAGE_CENTER_X=$(echo ${RESOLUTION_X} / 2 | bc)
+			typeset -i IMAGE_CENTER_Y=$(echo ${RESOLUTION_Y} / 2 | bc)
+			typeset -i HALF_CROP_X=$(echo ${CROP_WIDTH} / 2 | bc)
+			typeset -i HALF_CROP_Y=$(echo ${CROP_HEIGHT} / 2 | bc)
+			typeset -i CROP_TOP=$(echo ${IMAGE_CENTER_Y} - ${HALF_CROP_Y} + ${CROP_OFFSET_Y} | bc)
+			typeset -i CROP_BOTTOM=$(echo ${IMAGE_CENTER_Y} + ${HALF_CROP_Y} + ${CROP_OFFSET_Y} | bc)
+			typeset -i CROP_LEFT=$(echo ${IMAGE_CENTER_X} - ${HALF_CROP_X} + ${CROP_OFFSET_X} | bc)
+			typeset -i CROP_RIGHT=$(echo ${IMAGE_CENTER_X} + ${HALF_CROP_X} + ${CROP_OFFSET_X} | bc)
+			if [ ${CROP_LEFT} -lt 0 ]; then
+				ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the left of the image - ${CROP_LEFT} is less than 0."
+			fi
+			if [ ${CROP_RIGHT} -gt ${RESOLUTION_X} ]; then
+				ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the right of the image - ${CROP_RIGHT} is greater than image width (${RESOLUTION_X})."
+			fi
+			if [ ${CROP_TOP} -lt 0 ]; then
+				ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the top of the image - ${CROP_TOP} is less than 0."
+			fi
+			if [ ${CROP_BOTTOM} -gt ${RESOLUTION_Y} ]; then
+				ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the bottom of the image - ${CROP_BOTTOM} is greater than image height (${RESOLUTION_Y})."
+			fi
+	fi
+	if [ -z "${ERROR_MSG}" ]; then
+		if [ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ]; then
+			echo -e "${RED}*** ${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}.${NC}"
+		fi
+		convert "${CURRENT_IMAGE}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${CURRENT_IMAGE}"
+		if [ $? -ne 0 ] ; then
+			echo -e "${RED}*** ${ME}: ERROR: CROP_IMAGE failed; not saving${NC}"
+			exit 4
+		fi
+	else
+		if false; then		# for debugging - remove after we're 110% sure these crop checks work
+			echo "SENSOR_CENTER: X=$SENSOR_CENTER_X, Y=$SENSOR_CENTER_Y"
+			echo "CROP_WIDTH=${CROP_WIDTH}, SENSOR WIDTH=${RESOLUTION_X}"
+			echo "CROP_HEIGHT=${CROP_HEIGHT}, SENSOR HEIGHT=${RESOLUTION_Y}"
+			if [ ! -z "${HALF_CROP_X}" ]; then
+				# These are set if the overall crop size is ok.
+				echo "HALF_CROP:     X=$HALF_CROP_X, Y=$HALF_CROP_Y"
+				echo "CROP_OFFSET:   X=$CROP_OFFSET_X, Y=$CROP_OFFSET_Y"
+				echo "CROP_:         L=$CROP_LEFT,  R=$CROP_RIGHT  (Left, Right)"
+				echo "CROP_:         T=$CROP_TOP,  B=$CROP_BOTTOM  (Top, Bottom)"
+			fi
+		fi
+
+		echo -e "${RED}*** ${ME}: ERROR: Crop failed.${NC}"
+		echo -e "${RED}${ERROR_MSG}${NC}"
+		# Create a custom error message.
+		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${FILENAME}" \
+			"red" "" "85" "" "" \
+			"" "10" "red" "${EXTENSION}" "" "CROP failed - bad size"
+
+		# Don't let the service restart us because we will get the same error again.
+		sudo systemctl stop allsky
+		exit ${EXIT_ERROR_STOP}
 	fi
 fi
 

@@ -192,8 +192,23 @@ if [ "${UPLOAD}" = "true" ]; then
 
 	# Get the return string from the server.  It's the last line of output.
 	RET="$(echo "${RETURN}" | tail -1)"
-	if [ "${RET}" = "INSERTED" ] || [ "${RET}" = "UPDATED" ] || [ "${RET}" = "DELETED" ]; then
+	if [ "${RET}" = "INSERTED" ] || [ "${RET}" = "DELETED" ]; then
 		echo "${MSG_START}Map data ${RET}."
+	elif [ "${RET:0:7}" = "UPDATED" ]; then
+		echo -n "${MSG_START}Map data UPDATED."
+		NUMBERS=${RET:8}	# num_updates max
+		if [ -n "${NUMBERS}" ]; then
+			NUM_UPDATES=${NUMBERS% *}
+			MAX_UPDATES=${NUMBERS##* }
+			NUM_LEFT=$((MAX_UPDATES - NUM_UPDATES))
+			if [ ${NUM_LEFT} -eq 0 ]; then
+				echo "  This is your last update allowed today."
+			else
+				echo "  You can make ${NUM_LEFT} more today."
+			fi
+		else
+			echo	# terminating newline
+		fi
 	elif [ -z "${RET}" ]; then
 		echo -e "${ERROR_MSG_START}ERROR: Unknown reply from server: ${RETURN}.${ERROR_MSG_END}"
 		[ -n "${RET}" ] && echo -e "\t[${RET}]"
@@ -201,8 +216,9 @@ if [ "${UPLOAD}" = "true" ]; then
 	elif [ "${RET:0:6}" = "ERROR " ]; then
 		echo -e "${ERROR_MSG_START}ERROR returned while uploading map data: ${RET:6}.${ERROR_MSG_END}"
 		RETURN_CODE=2
-	elif [ "${RET}" = "ALREADY UPDATED" ]; then
-		echo -e "${WARNING_MSG_START}NOTICE: You can only insert/delete map data once per day.${WARNING_MSG_END}"
+	elif [ "${RET:0:15}" = "ALREADY UPDATED" ]; then
+		MAX_UPDATES=${RET:17}
+		echo -e "${WARNING_MSG_START}NOTICE:You have already updated your map data the maximum times per day (${MAX_UPDATES}).  Try again tomorrow.${WARNING_MSG_END}"
 	else
 		echo -e "${ERROR_MSG_START}ERROR returned while uploading map data: ${RET}.${ERROR_MSG_END}"
 		RETURN_CODE=2

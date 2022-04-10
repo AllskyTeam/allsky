@@ -1,9 +1,6 @@
 #!/bin/bash
 
-# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
-EXIT_OK=0
-EXIT_RESTARTING=98		# process is restarting, i.e., stop, then start
-EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
+# This EXIT code is also defined in variables.sh, but in case we can't open that file, we need it here.
 EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 
 # Make it easy to find the beginning of this run in the log file.

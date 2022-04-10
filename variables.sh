@@ -63,4 +63,10 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Location of optional allsky-website package.
 	ALLSKY_WEBSITE=${ALLSKY_WEBSITE:-${ALLSKY_WEBUI}/allsky}
 	WEBSITE_DIR=${ALLSKY_WEBSITE}		# old name - will eventually remove this
+
+	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
+	EXIT_OK=0
+	EXIT_RESTARTING=98		# process is restarting, i.e., stop, then start
+	EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
+	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 fi

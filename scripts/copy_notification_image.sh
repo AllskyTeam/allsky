@@ -15,7 +15,7 @@ function usage_and_exit
 		echo "'--expires seconds' specifies how many seconds before the notification expires."
 		echo "If 'notification_type' is 'custom' then a custom message is created and 'custom_args'"
 		echo "must be given to specify arguments for the message:"
-		echo "  TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderColor BorderWidth Extensions ImageSize 'Message'"
+		echo "  TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message'"
 		[ ${RET} -ne 0 ] && echo -e "${NC}"
 	) >&2
 	exit $RET

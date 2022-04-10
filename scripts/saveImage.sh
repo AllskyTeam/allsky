@@ -151,7 +151,7 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 		fi
 	else
 		if false; then		# for debugging - remove after we're 110% sure these crop checks work
-			echo "SENSOR_CENTER: X=$SENSOR_CENTER_X, Y=$SENSOR_CENTER_Y"
+			echo "IMAGE_CENTER: X=$IMAGE_CENTER_X, Y=$IMAGE_CENTER_Y"
 			echo "CROP_WIDTH=${CROP_WIDTH}, SENSOR WIDTH=${RESOLUTION_X}"
 			echo "CROP_HEIGHT=${CROP_HEIGHT}, SENSOR HEIGHT=${RESOLUTION_Y}"
 			if [ ! -z "${HALF_CROP_X}" ]; then
@@ -166,9 +166,9 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: Crop failed.${NC}"
 		echo -e "${RED}${ERROR_MSG}${NC}"
 		# Create a custom error message.
-		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${FILENAME}" \
-			"red" "" "85" "" "" \
-			"" "10" "red" "${EXTENSION}" "" "CROP failed - bad size"
+		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 15 "custom" \
+			"red" "" "85" "" "" "" "10" "red" "${EXTENSION}" "" \
+			"*** ERROR ***\nAllsky Stopped!\nInvalid CROP settings\nSee\n/var/log/allsky.log"
 
 		# Don't let the service restart us because we will get the same error again.
 		sudo systemctl stop allsky

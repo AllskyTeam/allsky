@@ -61,6 +61,38 @@ void cvText(cv::Mat img, const char *text, int x, int y, double fontsize,
 {
 	cv::Point xy = cv::Point(x, y);
 
+	// Replace HTML codes for apostrophy and double quotes with actual characters
+	std::string s = text;
+	std::size_t pos;
+	stringstream ss;
+	ss << "";
+	int l;
+	l = strlen("&#x27");
+	for ( pos = s.find("&#x27"); pos != string::npos; pos = s.find("&#x27"))
+	{
+//printf("&#x27 found at position %u in [%s]\n", pos, s.c_str());
+		if (pos == 0)
+			ss << "'" << s.substr(l);
+		else
+			ss << s.substr(0, pos) << "'" << s.substr(pos+l);
+
+		s = ss.str();
+		ss.str("");
+	}
+
+	l = strlen("&quot;");
+	for ( pos = s.find("&quot;"); pos != string::npos; pos = s.find("&quot;"))
+	{
+//printf("&quot; found at position %u in [%s]\n", pos, s.c_str());
+		if (pos == 0)
+			ss << "'" << s.substr(l);
+		else
+			ss << s.substr(0, pos) << "\"" << s.substr(pos+l);
+
+		s = ss.str();
+		ss.str("");
+	}
+
 	// Resize for screen width so the same numbers on small and big screens produce
 	// roughly the same size font on the image.
 	fontsize = fontsize * width / 1200;
@@ -68,21 +100,21 @@ void cvText(cv::Mat img, const char *text, int x, int y, double fontsize,
 	int outline_size = linewidth * 1.5;
 
 	// int baseline = 0;
-	// cv::Size textSize = cv::getTextSize(text, fontname, fontsize, linewidth, &baseline);
+	// cv::Size textSize = cv::getTextSize(s.c_str(), fontname, fontsize, linewidth, &baseline);
 
 	if (imgtype == IMG_RAW16)
 	{
 		unsigned long fontcolor16 = createRGB(fontcolor[2], fontcolor[1], fontcolor[0]);
 		if (useOutline)
-			cv::putText(img, text, xy, fontname, fontsize, cv::Scalar(0,0,0), outline_size, linetype);
-		cv::putText(img, text, xy, fontname, fontsize, fontcolor16, linewidth, linetype);
+			cv::putText(img, s.c_str(), xy, fontname, fontsize, cv::Scalar(0,0,0), outline_size, linetype);
+		cv::putText(img, s.c_str(), xy, fontname, fontsize, fontcolor16, linewidth, linetype);
 	}
 	else
 	{
 		cv::Scalar font_color = cv::Scalar(fontcolor[0], fontcolor[1], fontcolor[2]);
 		if (useOutline)
-			cv::putText(img, text, xy, fontname, fontsize, cv::Scalar(0,0,0, 255), outline_size, linetype);
-		cv::putText(img, text, xy, fontname, fontsize, font_color, linewidth, linetype);
+			cv::putText(img, s.c_str(), xy, fontname, fontsize, cv::Scalar(0,0,0, 255), outline_size, linetype);
+		cv::putText(img, s.c_str(), xy, fontname, fontsize, font_color, linewidth, linetype);
 	}
 }
 
@@ -269,20 +301,20 @@ char *length_in_units(long us, bool multi)	// microseconds
 		else if (abs_us_in_ms < (0.5 * MS_IN_SEC))	// 1.5 ms to 0.5 sec
 		{
 			if (multi)
-				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
+				snprintf(length, l, "%'.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
 			else
-				snprintf(length, l, "%.2f ms", us_in_ms);
+				snprintf(length, l, "%'.2f ms", us_in_ms);
 		}
 		else if (abs_us_in_ms < (1.0 * MS_IN_SEC))	// between 0.5 sec and 1 sec
 		{
 			if (multi)
-				snprintf(length, l, "%.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
+				snprintf(length, l, "%'.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
 			else
-				snprintf(length, l, "%.1f ms", us_in_ms);
+				snprintf(length, l, "%'.1f ms", us_in_ms);
 		}
 		else									// over 1 sec
 		{
-			snprintf(length, l, "%.1lf sec", (double)us / US_IN_SEC);
+			snprintf(length, l, "%'.1lf sec", (double)us / US_IN_SEC);
 		}
 
 	}

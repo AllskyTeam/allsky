@@ -92,6 +92,21 @@ fi
 
 # If any of the "convert"s below fail, exit since we won't know if the file was corrupted.
 
+function display_error_and_exit()	# error message, notification string
+{
+	ERROR_MESSAGE="${1}"
+	NOTIFICATION_STRING="${2}"
+	echo -e "${RED}${ERROR_MESSAGE}${NC}"
+	# Create a custom error message.
+	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 15 "custom" \
+		"red" "" "85" "" "" "" "10" "red" "${EXTENSION}" "" \
+		"*** ERROR ***\nAllsky Stopped!\nInvalid ${NOTIFICATION_STRING} settings\nSee\n/var/log/allsky.log"
+
+	# Don't let the service restart us because we will get the same error again.
+	sudo systemctl stop allsky
+	exit ${EXIT_ERROR_STOP}
+}
+
 # Resize the image if required
 if [ "${IMG_RESIZE}" = "true" ] ; then
 	# Make sure we were given numbers.
@@ -104,15 +119,7 @@ if [ "${IMG_RESIZE}" = "true" ] ; then
 	fi
 	if [ -n "${ERROR_MSG}" ]; then
 		echo -e "${RED}*** ${ME}: ERROR: Image resize number(s) invalid.${NC}"
-		echo -e "${RED}${ERROR_MSG}${NC}"
-		# Create a custom error message.
-		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 15 "custom" \
-			"red" "" "85" "" "" "" "10" "red" "${EXTENSION}" "" \
-			"*** ERROR ***\nAllsky Stopped!\nInvalid IMG_RESIZE settings\nSee\n/var/log/allsky.log"
-
-		# Don't let the service restart us because we will get the same error again.
-		sudo systemctl stop allsky
-		exit ${EXIT_ERROR_STOP}
+		display_error_and_exit "${ERROR_MSG}" "IMG_RESIZE"
 	fi
 
 	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
@@ -224,15 +231,7 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 		fi
 	else
 		echo -e "${RED}*** ${ME}: ERROR: Crop number(s) invalid.${NC}"
-		echo -e "${RED}${ERROR_MSG}${NC}"
-		# Create a custom error message.
-		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 15 "custom" \
-			"red" "" "85" "" "" "" "10" "red" "${EXTENSION}" "" \
-			"*** ERROR ***\nAllsky Stopped!\nInvalid CROP settings\nSee\n/var/log/allsky.log"
-
-		# Don't let the service restart us because we will get the same error again.
-		sudo systemctl stop allsky
-		exit ${EXIT_ERROR_STOP}
+		display_error_and_exit "${ERROR_MSG}" "CROP"
 	fi
 fi
 

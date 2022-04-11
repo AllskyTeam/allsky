@@ -3,17 +3,18 @@
 # Upload settings
 
 	# PROTOCOL determines how the files will be uploaded and is one of:
-	#  "local"	copies to a location on your Pi.
-	#  "ftp"	uploads to an FTP server.
+	#  "local"	Copies to a location on your Pi.
+	#		Use this if you have the "allsky-website" package installed.
+	#  "ftp"	Uploads to a remote FTP server.
 	#		See the section for ftp PROTOCOL below.
-	#  "ftps"	uploads to an FTP server that supports secure FTP transfer.
+	#  "ftps"	Uploads to a remote FTP server that supports secure FTP transfer.
 	# 		*** Use "ftps" instead of "ftp" if you can - it's more secure than ftp. ***
 	#		See the section for ftp PROTOCOL below.
-	#  "sftp"	(SSH file transfer) - uploads to an FTP server that supports secure transfer.
+	#  "sftp"	(SSH file transfer) - Uploads to a remote FTP server that supports secure transfer.
 	#		See the section for sftp PROTOCOL below.
-	#  "scp"	(secure copy) - copies to a remote server.
+	#  "scp"	(secure copy) - Copies to a remote server.
 	#		See the section for scp PROTOCOL below.   NOTE: "scp" PROTOCOL IS NOT IMPLEMENTED YET.
-	#  "S3"		uploads to an Amazon Web Services (AWS) server.
+	#  "S3"		Uploads to an Amazon Web Services (AWS) server.
 	#		See the "S3 PROTOCOL only" section below.
 PROTOCOL=""
 
@@ -43,11 +44,11 @@ PROTOCOL=""
 # which will usually be in /var/www/html/allsky/videos.
 
 	# The remote directory where the current "image.jpg" file be copied to.
+	# If you have the "allsky-website" package installed, use IMAGE_DIR="/var/www/html/allsky".
 IMAGE_DIR=""
 WEB_IMAGE_DIR=""
 
 	# The remote directory where the timelapse video should be uploaded to.
-	# Some people prefer to put timelapse, keogram, and startrails in separate directories.
 	# If you have the "allsky-website" package installed, use VIDEOS_DIR="/var/www/html/allsky/videos".
 VIDEOS_DIR=""
 VIDEOS_DESTINATION_NAME=""

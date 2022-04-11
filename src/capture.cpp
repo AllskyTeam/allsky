@@ -35,10 +35,12 @@ std::vector<int> compression_parameters;
 // but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures.
 // So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
 bool use_new_exposure_algorithm = true;
-bool bMain = true, bDisplay = false;
+bool bMain						= true;
+bool bDisplay					= false;
 std::string dayOrNight;
 
-bool bSaveRun = false, bSavingImg = false;
+bool bSaveRun					= false;
+bool bSavingImg					= false;
 pthread_mutex_t mtx_SaveImg;
 pthread_cond_t cond_StartSave;
 
@@ -75,38 +77,63 @@ char final_file_name[200];							// final name of the file that's written to dis
 char full_filename[1000];							// full name of file written to disk
 char const *timeFormat			= DEFAULT_TIMEFORMAT;
 
+// define's for all settings
 #define DEFAULT_DAYEXPOSURE		500					// microseconds - good starting point for daytime exposures
-long dayExposure_us				= DEFAULT_DAYEXPOSURE;
 #define DEFAULT_DAYMAXAUTOEXPOSURE_MS (60 * MS_IN_SEC)	// 60 seconds
-int dayMaxAutoexposure_ms		= DEFAULT_DAYMAXAUTOEXPOSURE_MS;
 #define DEFAULT_DAYAUTOEXPOSURE	true
-bool dayAutoExposure			= DEFAULT_DAYAUTOEXPOSURE;	// is it on or off for daylight?
 #define DEFAULT_DAYDELAY		(5 * MS_IN_SEC)		// 5 seconds
-int dayDelay_ms					= DEFAULT_DAYDELAY;	// Delay in milliseconds.
 #define DEFAULT_NIGHTDELAY		(10 * MS_IN_SEC)	// 10 seconds
-int nightDelay_ms				= DEFAULT_NIGHTDELAY;	// Delay in milliseconds.
 #define DEFAULT_NIGHTMAXAUTOEXPOSURE_MS (20 * MS_IN_SEC)	// 20 seconds
-int nightMaxAutoexposure_ms		= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
-long currentMaxAutoexposure_us	= NOT_SET;
-
 #define DEFAULT_GAIN_TRANSITION_TIME 5				// user specifies minutes
-int gainTransitionTime			= DEFAULT_GAIN_TRANSITION_TIME;
-bool currentAutoExposure		= false;			// is auto-exposure currently on or off?
-bool currentAutoGain			= false;			// is auto-gain currently on or off?
 #define DEFAULT_AUTOAWB			false
-bool autoAWB					= DEFAULT_AUTOAWB;	// is Auto White Balance on or off?
 #define DEFAULT_WBR				65
-int WBR							= DEFAULT_WBR;
 #define DEFAULT_WBB				85
-int WBB							= DEFAULT_WBB;
+#define DEFAULT_FONTSIZE		7
+#define SMALLFONTSIZE_MULTIPLIER 0.08
+#define DEFAULT_DAYBIN			1					// binning during the day probably isn't too useful...
+#define DEFAULT_NIGHTBIN		1
+#define DEFAULT_IMAGE_TYPE		AUTO_IMAGE_TYPE
+#define DEFAULT_ASIBANDWIDTH	40
+#define DEFAULT_NIGHTEXPOSURE	(5 * US_IN_SEC)		// 5 seconds
+#define DEFAULT_NIGHTAUTOEXPOSURE true
+#define DEFAULT_DAYSKIPFRAMES	5
+#define DEFAULT_NIGHTSKIPFRAMES	1
+#define DEFAULT_DAYGAIN			false
+#define DEFAULT_NIGHTGAIN		150
+#define DEFAULT_NIGHTAUTOGAIN	false
+#define DEFAULT_NIGHTMAXGAIN	200
+#define DEFAULT_GAMMA			50					// not supported by all cameras
+#define DEFAULT_BRIGHTNESS		50
 
 #ifdef USE_HISTOGRAM
 #define DEFAULT_BOX_SIZEX		500					// Must be a multiple of 2
 #define DEFAULT_BOX_SIZEY		500					// Must be a multiple of 2
-int current_histogramBoxSizeX =	NOT_SET;
-int current_histogramBoxSizeY =	NOT_SET;
 #define DEFAULT_BOX_FROM_LEFT	0.5
 #define DEFAULT_BOX_FROM_TOP	0.5
+#define DEFAULT_AGGRESSION		75
+#define DEFAULT_PERCENTCHANGE	10.0				// percent of ORIGINAL difference
+#define MINMEAN					122
+#define MAXMEAN					134
+#endif
+
+long dayExposure_us				= DEFAULT_DAYEXPOSURE;
+int dayMaxAutoexposure_ms		= DEFAULT_DAYMAXAUTOEXPOSURE_MS;
+bool dayAutoExposure			= DEFAULT_DAYAUTOEXPOSURE;	// is it on or off for daylight?
+int dayDelay_ms					= DEFAULT_DAYDELAY;	// Delay in milliseconds.
+int nightDelay_ms				= DEFAULT_NIGHTDELAY;	// Delay in milliseconds.
+int nightMaxAutoexposure_ms		= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
+long currentMaxAutoexposure_us	= NOT_SET;
+
+int gainTransitionTime			= DEFAULT_GAIN_TRANSITION_TIME;
+bool currentAutoExposure		= false;			// is auto-exposure currently on or off?
+bool currentAutoGain			= false;			// is auto-gain currently on or off?
+bool autoAWB					= DEFAULT_AUTOAWB;	// is Auto White Balance on or off?
+int WBR							= DEFAULT_WBR;
+int WBB							= DEFAULT_WBB;
+
+#ifdef USE_HISTOGRAM
+int current_histogramBoxSizeX =	NOT_SET;
+int current_histogramBoxSizeY =	NOT_SET;
 // % from left/top side that the center of the box is. 0.5 == the center of the image's X/Y axis
 float histogramBoxPercentFromLeft = DEFAULT_BOX_FROM_LEFT;
 float histogramBoxPercentFromTop = DEFAULT_BOX_FROM_TOP;
@@ -802,8 +829,6 @@ int main(int argc, char *argv[])
 	// In theory, almost every setting could have both day and night versions (e.g., width & height),
 	// but the chances of someone wanting different versions.
 
-	// #define the defaults so we can use the same value in the help message.
-
 	const char *locale			= DEFAULT_LOCALE;
 	// All the font settings apply to both day and night.
 	int fontnumber				= DEFAULT_FONTNUMBER;
@@ -813,63 +838,42 @@ int main(int argc, char *argv[])
 	char const *ImgText			= "";
 	char const *ImgExtraText	= "";
 	int extraFileAge			= 0;	// 0 disables it
-#define DEFAULT_FONTSIZE		7
 	double fontsize				= DEFAULT_FONTSIZE;
-#define SMALLFONTSIZE_MULTIPLIER 0.08
 	int linewidth				= DEFAULT_LINEWIDTH;
 	int outlinefont				= DEFAULT_OUTLINEFONT;
 	int fontcolor[3]			= { 255, 0, 0 };
 	int smallFontcolor[3]		= { 0, 0, 255 };
 	int linetype[3]				= { cv::LINE_AA, 8, 4 };
 	int linenumber				= DEFAULT_LINENUMBER;
-
 	int width					= DEFAULT_WIDTH;	int originalWidth  = width;
 	int height					= DEFAULT_HEIGHT;	int originalHeight = height;
-
-#define DEFAULT_DAYBIN			1		// binning during the day probably isn't too useful...
-#define DEFAULT_NIGHTBIN		1
 	int dayBin					= DEFAULT_DAYBIN;
 	int nightBin				= DEFAULT_NIGHTBIN;
-
-#define DEFAULT_IMAGE_TYPE		AUTO_IMAGE_TYPE
 	int Image_type				= DEFAULT_IMAGE_TYPE;
-
-#define DEFAULT_ASIBANDWIDTH	40
 	int asiBandwidth			= DEFAULT_ASIBANDWIDTH;
 	bool asiAutoBandwidth		= false;						// is Auto Bandwidth on or off?
 
 	// There is no max day autoexposure since daylight exposures are always pretty short.
-#define DEFAULT_NIGHTEXPOSURE	(5 * US_IN_SEC)					// 5 seconds
 	long nightExposure_us = DEFAULT_NIGHTEXPOSURE;
-#define DEFAULT_NIGHTAUTOEXPOSURE true
 	bool nightAutoExposure		= DEFAULT_NIGHTAUTOEXPOSURE;	// is it on or off for nighttime?
 	// currentAutoExposure is global so is defined outside of main()
 
 // Maximum number of auto-exposure frames to skip when starting the program.
 // This helps eliminate overly bright or dark images before the auto-exposure algorith kicks in.
 // At night, don't use too big a number otherwise it takes a long time to get the first frame.
-#define DEFAULT_DAYSKIPFRAMES	5
 	int day_skip_frames			= DEFAULT_DAYSKIPFRAMES;
-#define DEFAULT_NIGHTSKIPFRAMES	1
 	int night_skip_frames		= DEFAULT_NIGHTSKIPFRAMES;
 	int current_skip_frames		= NOT_SET;
 
-#define DEFAULT_DAYGAIN			false
 	bool dayGain				= DEFAULT_DAYGAIN;
 	bool dayAutoGain			= false;						// is Auto Gain on or off for daytime?
-#define DEFAULT_NIGHTGAIN		150
 	int nightGain				= DEFAULT_NIGHTGAIN;
-#define DEFAULT_NIGHTAUTOGAIN	false
 	bool nightAutoGain			= DEFAULT_NIGHTAUTOGAIN;		// is Auto Gain on or off for nighttime?
-#define DEFAULT_NIGHTMAXGAIN	200
 	int nightMaxGain			= DEFAULT_NIGHTMAXGAIN;
 
 	int currentDelay_ms			= NOT_SET;
 
-#define DEFAULT_GAMMA			50								// not supported by all cameras
 	int gamma				 	= DEFAULT_GAMMA;
-
-#define DEFAULT_BRIGHTNESS		50
 	int dayBrightness			= DEFAULT_BRIGHTNESS;
 	int nightBrightness			= DEFAULT_BRIGHTNESS;
 
@@ -893,7 +897,6 @@ int main(int argc, char *argv[])
 	bool showHistogramBox		= false;
 	int histogramBoxSizeX		= DEFAULT_BOX_SIZEX;
 	int histogramBoxSizeY		= DEFAULT_BOX_SIZEY;
-#define DEFAULT_AGGRESSION		75
 	bool showFocus				= false;
 	int aggression				= DEFAULT_AGGRESSION; // ala PHD2. Percent of change made, 1 - 100.
 
@@ -907,7 +910,6 @@ int main(int argc, char *argv[])
 
 	// Note that it's likely getting lighter outside with every exposure
 	// so the mean will eventually get into the valid range.
-#define DEFAULT_PERCENTCHANGE	10.0	// percent of ORIGINAL difference
 	const int percent_change	= DEFAULT_PERCENTCHANGE;
 #endif
 
@@ -2190,8 +2192,6 @@ int main(int argc, char *argv[])
 					attempts = 0;
 
 					// Got these by trial and error. They are more-or-less half the max of 255.
-#define MINMEAN 122
-#define MAXMEAN 134
 					int minAcceptableMean = MINMEAN;
 					int maxAcceptableMean = MAXMEAN;
 					int roundToMe = 5; // round exposures to this many microseconds

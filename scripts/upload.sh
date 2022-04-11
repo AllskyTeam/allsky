@@ -98,12 +98,11 @@ echo $$ > "${PID_FILE}"
 # Convert to lowercase so we don't care if user specified upper or lowercase.
 PROTOCOL="${PROTOCOL,,}"
 
-# SIGTERM is sent by systemctl to stop Allsky and SIGUSR1 is sent to restart it.
+# SIGTERM is sent by systemctl to stop Allsky.
 # SIGHUP is sent to have the capture program reload their arguments.
 # Ignore them so we don't leave a temporary or partially uploaded file if the service is stopped
 # in the middle of an upload.
 trap "" SIGTERM
-trap "" SIGUSR1
 trap "" SIGHUP
 
 if [[ "${PROTOCOL}" == "s3" ]] ; then

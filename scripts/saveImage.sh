@@ -105,41 +105,78 @@ fi
 # Crop the image if required
 if [ "${CROP_IMAGE}" = "true" ] ; then
 	# Do some sanity checks on the CROP_* variables.
-	# The crop rectangle needs to fit within the image.
+	# The crop rectangle needs to fit within the image, be an even number, and be greater than 0.
 	ERROR_MSG=""
-	if [ ${CROP_WIDTH} -gt ${RESOLUTION_X} ]; then
-		ERROR_MSG="${ERROR_MSG}\n*** CROP_WIDTH (${CROP_WIDTH}) larger than image width (${RESOLUTION_X})."
+	function check_value()	# variable name, variable value, width_or_height, resolution
+	{
+		VAR_NAME="${1}"
+		VAR_VALUE="${2}"
+		W_or_H="${3}"
+		RESOLUTION="${4}"
+		if [[ "${VAR_VALUE}" != +([0-9]) ]] || [ ${VAR_VALUE} -le 0 ]; then
+			ERROR_MSG="${ERROR_MSG}\n*** ${VAR_NAME} (${VAR_VALUE}) must be a positive number."
+			return 1
+		elif [ ${VAR_VALUE} -gt ${RESOLUTION} ]; then
+			ERROR_MSG="${ERROR_MSG}\n*** ${VAR_NAME} (${VAR_VALUE}) larger than image ${W_or_H}  (${RESOLUTION})."
+			return 1
+		fi
+		return 0
+	}
+	if check_value "CROP_WIDTH" "${CROP_WIDTH}" "width" "${RESOLUTION_X}"; then
+		if [ $(( ${CROP_WIDTH} % 2 )) = 1 ]; then
+			ERROR_MSG="${ERROR_MSG}\n*** CROP_WIDTH (${CROP_WIDTH}) must be an even number."
+		fi
 	fi
-	if [ ${CROP_HEIGHT} -gt ${RESOLUTION_Y} ]; then
-		ERROR_MSG="${ERROR_MSG}\n*** CROP_HEIGHT (${CROP_HEIGHT}) larger than image height (${RESOLUTION_Y})."
+	if check_value "CROP_HEIGHT" "${CROP_HEIGHT}" "height" "${RESOLUTION_Y}"; then
+		if [ $(( ${CROP_HEIGHT} % 2 )) = 1 ]; then
+			ERROR_MSG="${ERROR_MSG}\n*** CROP_HEIGHT (${CROP_HEIGHT}) must be an even number."
+		fi
 	fi
+
+	# Now for more intensive checks.
 	if [ -z "${ERROR_MSG}" ]; then
-			# bc doesn't accept numbers starting with "+" (e.g., "+1") so strip the "+".
-			CROP_WIDTH=${CROP_WIDTH#+}
-			CROP_HEIGHT=${CROP_HEIGHT#+}
-			CROP_OFFSET_X=${CROP_OFFSET_X#+}
-			CROP_OFFSET_Y=${CROP_OFFSET_Y#+}
-			typeset -i IMAGE_CENTER_X=$(echo ${RESOLUTION_X} / 2 | bc)
-			typeset -i IMAGE_CENTER_Y=$(echo ${RESOLUTION_Y} / 2 | bc)
-			typeset -i HALF_CROP_X=$(echo ${CROP_WIDTH} / 2 | bc)
-			typeset -i HALF_CROP_Y=$(echo ${CROP_HEIGHT} / 2 | bc)
-			typeset -i CROP_TOP=$(echo ${IMAGE_CENTER_Y} - ${HALF_CROP_Y} + ${CROP_OFFSET_Y} | bc)
-			typeset -i CROP_BOTTOM=$(echo ${IMAGE_CENTER_Y} + ${HALF_CROP_Y} + ${CROP_OFFSET_Y} | bc)
-			typeset -i CROP_LEFT=$(echo ${IMAGE_CENTER_X} - ${HALF_CROP_X} + ${CROP_OFFSET_X} | bc)
-			typeset -i CROP_RIGHT=$(echo ${IMAGE_CENTER_X} + ${HALF_CROP_X} + ${CROP_OFFSET_X} | bc)
-			if [ ${CROP_LEFT} -lt 0 ]; then
-				ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the left of the image - ${CROP_LEFT} is less than 0."
-			fi
-			if [ ${CROP_RIGHT} -gt ${RESOLUTION_X} ]; then
-				ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the right of the image - ${CROP_RIGHT} is greater than image width (${RESOLUTION_X})."
-			fi
-			if [ ${CROP_TOP} -lt 0 ]; then
-				ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the top of the image - ${CROP_TOP} is less than 0."
-			fi
-			if [ ${CROP_BOTTOM} -gt ${RESOLUTION_Y} ]; then
-				ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the bottom of the image - ${CROP_BOTTOM} is greater than image height (${RESOLUTION_Y})."
-			fi
+		typeset -i SENSOR_CENTER_X=$(( ${RESOLUTION_X} / 2 ))
+		typeset -i SENSOR_CENTER_Y=$(( ${RESOLUTION_Y} / 2 ))
+		typeset -i CROP_CENTER_ON_SENSOR_X=$(( ${SENSOR_CENTER_X} + ${CROP_OFFSET_X} ))
+		# There appears to be a bug in "convert" with "-gravity Center"; the Y offset is only applied half.
+		# Should the division round up or down or truncate (current method)?
+		typeset -i CROP_CENTER_ON_SENSOR_Y=$(( ${SENSOR_CENTER_Y} + (${CROP_OFFSET_Y} / 2) ))
+		typeset -i HALF_CROP_WIDTH=$(( ${CROP_WIDTH} / 2 ))
+		typeset -i HALF_CROP_HEIGHT=$(( ${CROP_HEIGHT} / 2 ))
+
+		typeset -i CROP_TOP=$(( ${CROP_CENTER_ON_SENSOR_Y} - ${HALF_CROP_HEIGHT} ))
+		typeset -i CROP_BOTTOM=$(( ${CROP_CENTER_ON_SENSOR_Y} + ${HALF_CROP_HEIGHT} ))
+		typeset -i CROP_LEFT=$(( ${CROP_CENTER_ON_SENSOR_X} - ${HALF_CROP_WIDTH} ))
+		typeset -i CROP_RIGHT=$(( ${CROP_CENTER_ON_SENSOR_X} + ${HALF_CROP_WIDTH} ))
+
+
+		if [ ${CROP_TOP} -lt 0 ]; then
+			ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the top of the image by ${CROP_TOP#-} pixel(s)."
+		fi
+		if [ ${CROP_BOTTOM} -gt ${RESOLUTION_Y} ]; then
+			ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the bottom of the image - ${CROP_BOTTOM} is greater than image height (${RESOLUTION_Y})."
+		fi
+		if [ ${CROP_LEFT} -lt 0 ]; then
+			ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the left of the image - ${CROP_LEFT} is less than 0."
+		fi
+		if [ ${CROP_RIGHT} -gt ${RESOLUTION_X} ]; then
+			ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the right of the image - ${CROP_RIGHT} is greater than image width (${RESOLUTION_X})."
+		fi
 	fi
+
+	if false; then		# for debugging - remove after we're 110% sure these crop checks work
+		echo "SENSOR WIDTH=${RESOLUTION_X}, SENSOR HEIGHT=${RESOLUTION_Y}"
+		echo "SENSOR_CENTER_: X=${SENSOR_CENTER_X}, Y=${SENSOR_CENTER_Y}"
+		echo "CROP_WIDTH=${CROP_WIDTH}, CROP_HEIGHT=${CROP_HEIGHT}"
+		if [ -n "${HALF_CROP_WIDTH}" ]; then
+			# These are set if the overall crop size is ok.
+			echo "CROP_OFFSET_:  X=${CROP_OFFSET_X}, Y=${CROP_OFFSET_Y}"
+			echo "HALF_CROP_:    WIDTH=${HALF_CROP_WIDTH}, HEIGHT=${HALF_CROP_HEIGHT}"
+			echo "CROP_:         LEFT=${CROP_LEFT},  RIGHT=${CROP_RIGHT}"
+			echo "CROP_:         TOP=${CROP_TOP},  BOTTOM=${CROP_BOTTOM}"
+		fi
+	fi
+
 	if [ -z "${ERROR_MSG}" ]; then
 		if [ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ]; then
 			echo -e "${RED}*** ${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}.${NC}"
@@ -150,19 +187,6 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 			exit 4
 		fi
 	else
-		if false; then		# for debugging - remove after we're 110% sure these crop checks work
-			echo "IMAGE_CENTER: X=$IMAGE_CENTER_X, Y=$IMAGE_CENTER_Y"
-			echo "CROP_WIDTH=${CROP_WIDTH}, SENSOR WIDTH=${RESOLUTION_X}"
-			echo "CROP_HEIGHT=${CROP_HEIGHT}, SENSOR HEIGHT=${RESOLUTION_Y}"
-			if [ ! -z "${HALF_CROP_X}" ]; then
-				# These are set if the overall crop size is ok.
-				echo "HALF_CROP:     X=$HALF_CROP_X, Y=$HALF_CROP_Y"
-				echo "CROP_OFFSET:   X=$CROP_OFFSET_X, Y=$CROP_OFFSET_Y"
-				echo "CROP_:         L=$CROP_LEFT,  R=$CROP_RIGHT  (Left, Right)"
-				echo "CROP_:         T=$CROP_TOP,  B=$CROP_BOTTOM  (Top, Bottom)"
-			fi
-		fi
-
 		echo -e "${RED}*** ${ME}: ERROR: Crop failed.${NC}"
 		echo -e "${RED}${ERROR_MSG}${NC}"
 		# Create a custom error message.

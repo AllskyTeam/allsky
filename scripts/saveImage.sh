@@ -94,6 +94,27 @@ fi
 
 # Resize the image if required
 if [ "${IMG_RESIZE}" = "true" ] ; then
+	# Make sure we were given numbers.
+	ERROR_MSG=""
+	if [[ "${IMG_WIDTH}" != +([+0-9]) ]]; then		# no negative numbers allowed
+		ERROR_MSG="${ERROR_MSG}\n*** IMG_WIDTH (${IMG_WIDTH}) must be a number."
+	fi
+	if [[ "${IMG_WIDTH}" != +([+0-9]) ]]; then
+		ERROR_MSG="${ERROR_MSG}\n*** IMG_HEIGHT (${IMG_HEIGHT}) must be a number."
+	fi
+	if [ -n "${ERROR_MSG}" ]; then
+		echo -e "${RED}*** ${ME}: ERROR: Image resize number(s) invalid.${NC}"
+		echo -e "${RED}${ERROR_MSG}${NC}"
+		# Create a custom error message.
+		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 15 "custom" \
+			"red" "" "85" "" "" "" "10" "red" "${EXTENSION}" "" \
+			"*** ERROR ***\nAllsky Stopped!\nInvalid IMG_RESIZE settings\nSee\n/var/log/allsky.log"
+
+		# Don't let the service restart us because we will get the same error again.
+		sudo systemctl stop allsky
+		exit ${EXIT_ERROR_STOP}
+	fi
+
 	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
 	convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}"
 	if [ $? -ne 0 ] ; then
@@ -202,7 +223,7 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 			exit 4
 		fi
 	else
-		echo -e "${RED}*** ${ME}: ERROR: Crop failed.${NC}"
+		echo -e "${RED}*** ${ME}: ERROR: Crop number(s) invalid.${NC}"
 		echo -e "${RED}${ERROR_MSG}${NC}"
 		# Create a custom error message.
 		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 15 "custom" \

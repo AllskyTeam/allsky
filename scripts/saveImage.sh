@@ -104,6 +104,12 @@ fi
 
 # Crop the image if required
 if [ "${CROP_IMAGE}" = "true" ] ; then
+	# If the image was just resized, the resolution changed, so reset the variables.
+	if [ "${IMG_RESIZE}" = "true" ] ; then
+		RESOLUTION_X=${IMG_WIDTH}
+		RESOLUTION_Y=${IMG_HEIGHT}
+	fi
+
 	# Do some sanity checks on the CROP_* variables.
 	# The crop rectangle needs to fit within the image, be an even number, and be greater than 0.
 	ERROR_MSG=""
@@ -140,7 +146,8 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 		typeset -i SENSOR_CENTER_X=$(( RESOLUTION_X / 2 ))
 		typeset -i SENSOR_CENTER_Y=$(( RESOLUTION_Y / 2 ))
 		typeset -i CROP_CENTER_ON_SENSOR_X=$(( SENSOR_CENTER_X + CROP_OFFSET_X ))
-		# There appears to be a bug in "convert" with "-gravity Center"; the Y offset is only applied half.
+		# There appears to be a bug in "convert" with "-gravity Center"; the Y offset is applied
+		# to the TOP of the image, not the CENTER.  The X offset is correctly applied to the image CENTER.
 		# Should the division round up or down or truncate (current method)?
 		typeset -i CROP_CENTER_ON_SENSOR_Y=$(( SENSOR_CENTER_Y + (CROP_OFFSET_Y / 2) ))
 		typeset -i HALF_CROP_WIDTH=$(( CROP_WIDTH / 2 ))

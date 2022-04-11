@@ -614,7 +614,7 @@ void sig(int i)
 	if (i == SIGHUP)
 		Log(3, "Got signal to restart\n");
 	else
-		printf("XXXXXX == got %s %d in sig()\n", i == SIGUSR1 ? "SIGUSR1" : "unknown signal", i);
+		printf("XXXXXX == got unknown signal %d\n", i);
 	gotSignal = true;
 	closeUp(EXIT_RESTARTING);
 }
@@ -773,8 +773,7 @@ int main(int argc, char *argv[])
 	tty = isatty(fileno(stdout)) ? true : false;
 	signal(SIGINT, IntHandle);
 	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
-	signal(SIGHUP, sig);		// xxxxxxxxxx Reload the service
-	signal(SIGUSR1, sig);		// xxxxxxxxxx Reload the service
+	signal(SIGHUP, sig);		// xxxxxxxxxx TODO: Re-read settings (we currently just restart).
 
 	pthread_mutex_init(&mtx_SaveImg, 0);
 	pthread_cond_init(&cond_StartSave, 0);

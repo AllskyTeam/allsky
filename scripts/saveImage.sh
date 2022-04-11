@@ -140,6 +140,12 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 			ERROR_MSG="${ERROR_MSG}\n*** CROP_HEIGHT (${CROP_HEIGHT}) must be an even number."
 		fi
 	fi
+	if [[ "${CROP_OFFSET_X}" != +([-+0-9]) ]]; then
+		ERROR_MSG="${ERROR_MSG}\n*** CROP_OFFSET_X (${CROP_OFFSET_X}) must be a number."
+	fi
+	if [[ "${CROP_OFFSET_Y}" != +([-+0-9]) ]]; then
+		ERROR_MSG="${ERROR_MSG}\n*** CROP_OFFSET_Y (${CROP_OFFSET_Y}) must be a number."
+	fi
 
 	# Now for more intensive checks.
 	if [ -z "${ERROR_MSG}" ]; then

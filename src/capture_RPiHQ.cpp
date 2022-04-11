@@ -1,40 +1,66 @@
-// 2022-01-14  MEAN_AUTO_MODE, depending in autoGain and autoExposure different modes are in use  
-//			New optional start parameter -daymean.
-//			User can define different values for day and night (autoExposure, Exposure, mean-value, ...).
-
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <string>
-#include <iomanip>
-#include <cstring>
-#include <sstream>
 #include <tr1/memory>
 #include <stdlib.h>
 #include <signal.h>
 #include <fstream>
 #include <stdarg.h>
 
-#include "include/allsky_common.h"
+#include <iomanip>
+#include <cstring>
+#include <sstream>
 
-// new includes (MEAN)
+#include "include/allsky_common.h"
 #include "include/RPiHQ_raspistill.h"
 #include "include/mode_RPiHQ_mean.h"
 
 using namespace std;
 
+// Define's specific to this camera type.  Others that apply to all camera types are in allsky_common.h
+#define DEFAULT_FONTSIZE		32
+#define DEFAULT_DAYGAIN			1.0
+#define DEFAULT_DAYAUTOGAIN		true
+#define DEFAULT_DAYMAXGAIN		16
+#define DEFAULT_NIGHTGAIN		4.0
+#define DEFAULT_NIGHTAUTOGAIN	true
+#define DEFAULT_NIGHTMAXGAIN	16
+
+#define DEFAULT_DAYWBR			2.5
+#define DEFAULT_DAYWBB			2.0
+#define DEFAULT_NIGHTWBR		DEFAULT_DAYWBR
+#define DEFAULT_NIGHTWBB		DEFAULT_DAYWBB
+#define DEFAULT_WBR				DEFAULT_DAYWBR	// XXX old - now have day and night versions
+#define DEFAULT_WBB				DEFAULT_DAYWBB	// XXX old - now have day and night versions
+
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
+
+// These are global so they can be used by other routines.  Variables for command-line settings are first.
+int flip					= DEFAULT_FLIP;
+bool tty					= false;	// are we on a tty?
+bool notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
+char const *save_dir		= DEFAULT_SAVEDIR;
+char const *fileName		= DEFAULT_FILENAME;
+char const *timeFormat		= DEFAULT_TIMEFORMAT;
+bool autoAWB				= DEFAULT_AUTOAWB;		// XXXX old
+float WBR					= DEFAULT_WBR;			// XXXX old
+float WBB					= DEFAULT_WBB;			// XXXX old
+bool dayAutoAWB				= DEFAULT_DAYAUTOAWB;
+float dayWBR				= DEFAULT_DAYWBR;
+float dayWBB				= DEFAULT_DAYWBB;
+bool nightAutoAWB			= DEFAULT_NIGHTAUTOAWB;
+float nightWBR				= DEFAULT_NIGHTWBR;
+float nightWBB				= DEFAULT_NIGHTWBB;
 
 std::vector<int> compression_parameters;
 bool bMain					= true;
 std::string dayOrNight;
-
-// These are global so they can be used by other routines.
 int numErrors				= 0;	// Number of errors in a row.
 int numExposures			= 0;	// how many valid pictures have we taken so far?
 double currentGain			= NOT_SET;
@@ -45,29 +71,14 @@ int min_brightness;					// what user enters on command line
 int max_brightness;
 int default_brightness;
 int currentBrightness		= NOT_SET;
-int flip					= 0;
 int current_bpp				= NOT_SET;	// bytes per pixel: 8, 16, or 24
 int current_bit_depth		= NOT_SET;	// 8 or 16
 int currentBin				= NOT_SET;
 float mean					= NOT_SET;	// mean brightness of image
-
-// Some command-line and other option definitions needed outside of main():
-bool tty					= false;	// are we on a tty?
-bool notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
-#define DEFAULT_SAVEDIR		"tmp"
-char const *save_dir		= DEFAULT_SAVEDIR;
-#define DEFAULT_FILENAME	"image.jpg"
-char const *fileName		= DEFAULT_FILENAME;
-char final_file_name[200];	// final name of the file that's written to disk, with no directories
-char full_filename[1000];	// full name of file written to disk
-#define DEFAULT_TIMEFORMAT	"%Y%m%d %H:%M:%S"	// format the time should be displayed in
-char const *timeFormat		= DEFAULT_TIMEFORMAT;
+char final_file_name[200];				// final name of the file that's written to disk, with no directories
+char full_filename[1000];				// full name of file written to disk
 bool currentAutoExposure	= false;	// is auto-exposure currently on?
 bool currentAutoGain		= false;	// is auto-gain currently on?
-bool autoAWB				= false;
-float WBR					= 2.5;
-float WBB					= 2;
-
 raspistillSetting myRaspistillSetting;
 modeMeanSetting myModeMeanSetting;
 
@@ -434,56 +445,41 @@ int main(int argc, char *argv[])
 	int fontname[] = {	cv::FONT_HERSHEY_SIMPLEX,		cv::FONT_HERSHEY_PLAIN,		cv::FONT_HERSHEY_DUPLEX,
 						cv::FONT_HERSHEY_COMPLEX,		cv::FONT_HERSHEY_TRIPLEX,	cv::FONT_HERSHEY_COMPLEX_SMALL,
 						cv::FONT_HERSHEY_SCRIPT_SIMPLEX, cv::FONT_HERSHEY_SCRIPT_COMPLEX };
-#define DEFAULT_LOCALE			"en_US.UTF-8"
 const char *locale				= DEFAULT_LOCALE;
 	// All the font settings apply to both day and night.
-#define DEFAULT_FONTNUMBER		0
 	int fontnumber				= DEFAULT_FONTNUMBER;
-#define DEFAULT_ITEXTX			15
-#define DEFAULT_ITEXTY			25
 	int iTextX					= DEFAULT_ITEXTX;
 	int iTextY					= DEFAULT_ITEXTY;
-#define DEFAULT_ITEXTLINEHEIGHT	30
 	int iTextLineHeight			= DEFAULT_ITEXTLINEHEIGHT;
 	char const *ImgText			= "";
 	char const *ImgExtraText	= "";
 	int extraFileAge			= 0;	// 0 disables it
-#define DEFAULT_FONTSIZE		32
 	double fontsize				= DEFAULT_FONTSIZE;
-#define SMALLFONTSIZE_MULTIPLIER 0.08
-#define DEFAULT_LINEWIDTH		1
 	int linewidth				= DEFAULT_LINEWIDTH;
 	bool outlinefont			= DEFAULT_OUTLINEFONT;
 	int fontcolor[3]			= { 255, 0, 0 };
 	int smallFontcolor[3]		= { 0, 0, 255 };
 	int linetype[3]				= { cv::LINE_AA, 8, 4 };
-#define DEFAULT_LINENUMBER		0
-	int linenumber				=DEFAULT_LINENUMBER;
-
+	int linenumber				= DEFAULT_LINENUMBER;
 	char bufTime[128]			= { 0 };
-#define DEFAULT_WIDTH			0
-#define DEFAULT_HEIGHT			0
 	int width					= DEFAULT_WIDTH;		int originalWidth  = width;
 	int height					= DEFAULT_HEIGHT;		int originalHeight = height;
-	int dayBin					= 1;
-	int nightBin				= 1;
-
-#define AUTO_IMAGE_TYPE			99	// needs to match what's in the camera_settings.json file
-#define DEFAULT_IMAGE_TYPE		AUTO_IMAGE_TYPE
+	int dayBin					= DEFAULT_DAYBIN;
+	int nightBin				= DEFAULT_NIGHTBIN;
 	int Image_type				= DEFAULT_IMAGE_TYPE;
-	int dayExposure_us			= 32;
-	int nightExposure_us		= 60 * US_IN_SEC;
+	int dayExposure_us			= DEFAULT_DAYEXPOSURE;
+	int nightExposure_us		= DEFAULT_NIGHTEXPOSURE;
 	int currentExposure_us		= NOT_SET;
-	bool nightAutoExposure		= false;
-	bool dayAutoExposure		= true;
+	bool dayAutoExposure		= DEFAULT_DAYAUTOEXPOSURE;
+	bool nightAutoExposure		= DEFAULT_NIGHTAUTOEXPOSURE;
 	long last_exposure_us 		= 0;		// last exposure taken
-	double nightGain	 		= 4.0;
-	double dayGain				= 1.0;
-	bool nightAutoGain			= false;
-	bool dayAutoGain			= false;
+	double nightGain	 		= DEFAULT_NIGHTGAIN;
+	double dayGain				= DEFAULT_DAYGAIN;
+	bool nightAutoGain			= DEFAULT_NIGHTAUTOGAIN;
+	bool dayAutoGain			= DEFAULT_DAYAUTOGAIN;
 	float last_gain				= 0.0;		// last gain taken
-	int nightDelay_ms			= 10;
-	int dayDelay_ms				= 15 * MS_IN_SEC;
+	int nightDelay_ms			= DEFAULT_NIGHTDELAY;
+	int dayDelay_ms				= DEFAULT_DAYDELAY;
 	int currentDelay_ms 		= NOT_SET;
 	float saturation;
 	int dayBrightness;
@@ -491,29 +487,27 @@ const char *locale				= DEFAULT_LOCALE;
 	if (is_libcamera)
 	{
 		default_saturation		= 1.0;
-		saturation				= default_saturation;
 		min_saturation			= 0.0;
 		max_saturation			= 2.0;
 
 		default_brightness		= 0;
-		dayBrightness			= default_brightness;
-		nightBrightness			= default_brightness;
 		min_brightness			= -100;
 		max_brightness			= 100;
 	}
 	else
 	{
 		default_saturation		= 0.0;
-		saturation				= default_saturation;
 		min_saturation			= -100.0;
 		max_saturation			= 100.0;
 
 		default_brightness		= 50;
-		dayBrightness			= default_brightness;
-		nightBrightness			= default_brightness;
 		min_brightness			= 0;
 		max_brightness			= 100;
 	}
+	saturation					= default_saturation;
+	dayBrightness				= default_brightness;
+	nightBrightness				= default_brightness;
+
 	int rotation				= 0;
 	char const *latitude		= DEFAULT_LATITUDE;
 	char const *longitude 		= DEFAULT_LONGITUDE;
@@ -529,9 +523,9 @@ const char *locale				= DEFAULT_LOCALE;
 	bool showMean				= false;
 	bool showFocus				= false;
 	bool taking_dark_frames		= false;
-	bool daytimeCapture			= false;
+	bool daytimeCapture			= DEFAULT_DAYTIMECAPTURE;
 	bool help					= false;
-	int quality					= 90;
+	int quality					= DEFAULT_QUALITY;
 
 	int i;
 	bool endOfNight				= false;

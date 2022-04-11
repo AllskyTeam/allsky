@@ -33,12 +33,28 @@
 #define DEFAULT_LOCALE				"en_US.UTF-8"
 #define AUTO_IMAGE_TYPE				99	// must match what's in the camera_settings.json file
 #define DEFAULT_IMAGE_TYPE			AUTO_IMAGE_TYPE
+#define DEFAULT_DAYEXPOSURE			32	// milliseconds
+#define DEFAULT_DAYAUTOEXPOSURE		true
+#define DEFAULT_DAYMAXAUTOEXPOSURE_MS (30 * MS_IN_SEC)
+#define DEFAULT_NIGHTEXPOSURE		(20 * US_IN_SEC)
+#define DEFAULT_NIGHTAUTOEXPOSURE	true
+#define DEFAULT_NIGHTMAXAUTOEXPOSURE_MS (60 * MS_IN_SEC)
+#define DEFAULT_DAYDELAY			(5 * MS_IN_SEC)		// 5 seconds
+#define DEFAULT_NIGHTDELAY			(10 * MS_IN_SEC)	// 10 seconds
+#define DEFAULT_AUTOAWB				false	// XXX OLD name, now have day and night versions
+#define DEFAULT_DAYAUTOAWB			false
+#define DEFAULT_NIGHTAUTOAWB		false
+#define DEFAULT_DAYBIN				1		// binning during the day probably isn't too useful...
+#define DEFAULT_NIGHTBIN			1
 #define DEFAULT_DAYTIMECAPTURE		false	// Capture images during the day?
+
+#define DEFAULT_FLIP				0		// no flipping
 #define DEFAULT_WIDTH				0
 #define DEFAULT_HEIGHT				0
 #define	DEFAULT_LONGITUDE			""
 #define DEFAULT_LATITUDE			""
 #define DEFAULT_ANGLE				"-6"
+#define DEFAULT_QUALITY				99		// assumes .jpg
 
 // Default overlay values - will go away once external overlay program is implemented
 #define DEFAULT_FONTNUMBER			0
@@ -52,10 +68,10 @@
 #define DEFAULT_SHOWTIME			true	// Show the date/time in the overlay?
 
 // Exit codes.  Need to match what's in allsky.sh
-#define EXIT_OK				0
-#define EXIT_RESTARTING		98		// process is restarting, i.e., stop, then start
-#define EXIT_RESET_USB		99		// need to reset USB bus; cannot continue
-#define EXIT_ERROR_STOP		100		// Got an unrecoverable ERROR
+#define EXIT_OK						0
+#define EXIT_RESTARTING				98		// process is restarting, i.e., stop, then start
+#define EXIT_RESET_USB				99		// need to reset USB bus; cannot continue
+#define EXIT_ERROR_STOP				100		// Got an unrecoverable ERROR
 
 // Global variables and functions.
 extern int debugLevel;

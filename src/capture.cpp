@@ -19,91 +19,26 @@
 
 #define USE_HISTOGRAM		// use the histogram code as a workaround to ZWO's bug
 
-// Forward definitions
-char *getRetCode(ASI_ERROR_CODE);
-void closeUp(int);
-bool check_max_errors(int *, int);
-
-//-------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------
-
-cv::Mat pRgb;
-std::vector<int> compression_parameters;
-// In version 0.8 we introduced a different way to take exposures. Instead of turning video mode on at
-// the beginning of the program and off at the end (which kept the camera running all the time, heating it up),
-// version 0.8 turned video mode on, then took a picture, then turned it off. This helps cool the camera,
-// but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures.
-// So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
-bool use_new_exposure_algorithm = true;
-bool bMain						= true;
-bool bDisplay					= false;
-std::string dayOrNight;
-
-bool bSaveRun					= false;
-bool bSavingImg					= false;
-pthread_mutex_t mtx_SaveImg;
-pthread_cond_t cond_StartSave;
-
-// These are global so they can be used by other routines.
-ASI_CONTROL_CAPS ControlCaps;
-int numErrors					= 0;				// Number of errors in a row.
-int maxErrors					= 5;				// Max number of errors in a row before we exit
-bool gotSignal					= false;			// did we get a SIGINT (from keyboard) or SIGTERM (from service)?
-int iNumOfCtrl					= 0;
-int CamNum						= 0;
-pthread_t thread_display		= 0;
-pthread_t hthdSave				= 0;
-int numExposures				= 0;				// how many valid pictures have we taken so far?
-int currentGain					= NOT_SET;
-long camera_max_autoexposure_us	= NOT_SET;			// camera's max auto-exposure
-long camera_min_exposure_us		= 100;				// camera's minimum exposure
-long current_exposure_us		= NOT_SET;
-long actualTemp					= 0;				// actual sensor temp, per the camera
-long last_exposure_us			= 0;				// last exposure taken
-bool taking_dark_frames			= false;
-int flip						= 0;
-int current_bpp					= NOT_SET;			// bytes per pixel: 8, 16, or 24
-int current_bit_depth			= NOT_SET;			// 8 or 16
-int currentBin					= NOT_SET;
-int currentBrightness			= NOT_SET;
-int focus_metric				= NOT_SET;
-
-// Some command-line and other option definitions needed outside of main():
-bool tty						= false;			// are we on a tty?
-bool notificationImages			= DEFAULT_NOTIFICATIONIMAGES;
-char const *save_dir			= DEFAULT_SAVEDIR;
-char const *fileName			= DEFAULT_FILENAME;
-char final_file_name[200];							// final name of the file that's written to disk, with no directories
-char full_filename[1000];							// full name of file written to disk
-char const *timeFormat			= DEFAULT_TIMEFORMAT;
-
-// define's for all settings
-#define DEFAULT_DAYEXPOSURE		500					// microseconds - good starting point for daytime exposures
-#define DEFAULT_DAYMAXAUTOEXPOSURE_MS (60 * MS_IN_SEC)	// 60 seconds
-#define DEFAULT_DAYAUTOEXPOSURE	true
-#define DEFAULT_DAYDELAY		(5 * MS_IN_SEC)		// 5 seconds
-#define DEFAULT_NIGHTDELAY		(10 * MS_IN_SEC)	// 10 seconds
-#define DEFAULT_NIGHTMAXAUTOEXPOSURE_MS (20 * MS_IN_SEC)	// 20 seconds
-#define DEFAULT_GAIN_TRANSITION_TIME 5				// user specifies minutes
-#define DEFAULT_AUTOAWB			false
-#define DEFAULT_WBR				65
-#define DEFAULT_WBB				85
+// Define's specific to this camera type.  Others that apply to all camera types are in allsky_common.h
 #define DEFAULT_FONTSIZE		7
-#define SMALLFONTSIZE_MULTIPLIER 0.08
-#define DEFAULT_DAYBIN			1					// binning during the day probably isn't too useful...
-#define DEFAULT_NIGHTBIN		1
-#define DEFAULT_IMAGE_TYPE		AUTO_IMAGE_TYPE
-#define DEFAULT_ASIBANDWIDTH	40
-#define DEFAULT_NIGHTEXPOSURE	(5 * US_IN_SEC)		// 5 seconds
-#define DEFAULT_NIGHTAUTOEXPOSURE true
-#define DEFAULT_DAYSKIPFRAMES	5
-#define DEFAULT_NIGHTSKIPFRAMES	1
-#define DEFAULT_DAYGAIN			false
+#define DEFAULT_DAYWBR			65
+#define DEFAULT_DAYWBB			85
+#define DEFAULT_NIGHTWBR		DEFAULT_DAYWBR
+#define DEFAULT_NIGHTWBB		DEFAULT_DAYWBB
+#define DEFAULT_WBR				DEFAULT_DAYWBR	// XXX old - now have day and night versions
+#define DEFAULT_WBB				DEFAULT_DAYWBB	// XXX old - now have day and night versions
+#define DEFAULT_DAYGAIN			1
+#define DEFAULT_DAYAUTOGAIN		false		// TODO: will change when implementing modeMean
+#define DEFAULT_DAYMAXGAIN		200
 #define DEFAULT_NIGHTGAIN		150
-#define DEFAULT_NIGHTAUTOGAIN	false
+#define DEFAULT_NIGHTAUTOGAIN	false		// TODO: will change when implementing modeMean
 #define DEFAULT_NIGHTMAXGAIN	200
 #define DEFAULT_GAMMA			50					// not supported by all cameras
-#define DEFAULT_BRIGHTNESS		50
+#define DEFAULT_BRIGHTNESS		100
+#define DEFAULT_ASIBANDWIDTH	40
+#define DEFAULT_DAYSKIPFRAMES	5
+#define DEFAULT_NIGHTSKIPFRAMES	1
+#define DEFAULT_GAIN_TRANSITION_TIME 5				// user specifies minutes
 
 #ifdef USE_HISTOGRAM
 #define DEFAULT_BOX_SIZEX		500					// Must be a multiple of 2
@@ -116,21 +51,38 @@ char const *timeFormat			= DEFAULT_TIMEFORMAT;
 #define MAXMEAN					134
 #endif
 
+// Forward definitions
+char *getRetCode(ASI_ERROR_CODE);
+void closeUp(int);
+bool check_max_errors(int *, int);
+
+//-------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+
+// These are global so they can be used by other routines.  Variables for command-line settings are first.
+
+// In version 0.8 we introduced a different way to take exposures. Instead of turning video mode on at
+// the beginning of the program and off at the end (which kept the camera running all the time, heating it up),
+// version 0.8 turned video mode on, then took a picture, then turned it off. This helps cool the camera,
+// but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures.
+// So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
+bool use_new_exposure_algorithm = true;
+int flip						= DEFAULT_FLIP;
+bool tty						= false;			// are we on a tty?
+bool notificationImages			= DEFAULT_NOTIFICATIONIMAGES;
+char const *save_dir			= DEFAULT_SAVEDIR;
+char const *fileName			= DEFAULT_FILENAME;
+char const *timeFormat			= DEFAULT_TIMEFORMAT;
 long dayExposure_us				= DEFAULT_DAYEXPOSURE;
 int dayMaxAutoexposure_ms		= DEFAULT_DAYMAXAUTOEXPOSURE_MS;
 bool dayAutoExposure			= DEFAULT_DAYAUTOEXPOSURE;	// is it on or off for daylight?
 int dayDelay_ms					= DEFAULT_DAYDELAY;	// Delay in milliseconds.
 int nightDelay_ms				= DEFAULT_NIGHTDELAY;	// Delay in milliseconds.
 int nightMaxAutoexposure_ms		= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
-long currentMaxAutoexposure_us	= NOT_SET;
-
 int gainTransitionTime			= DEFAULT_GAIN_TRANSITION_TIME;
-bool currentAutoExposure		= false;			// is auto-exposure currently on or off?
-bool currentAutoGain			= false;			// is auto-gain currently on or off?
 bool autoAWB					= DEFAULT_AUTOAWB;	// is Auto White Balance on or off?
 int WBR							= DEFAULT_WBR;
 int WBB							= DEFAULT_WBB;
-
 #ifdef USE_HISTOGRAM
 int current_histogramBoxSizeX =	NOT_SET;
 int current_histogramBoxSizeY =	NOT_SET;
@@ -138,6 +90,42 @@ int current_histogramBoxSizeY =	NOT_SET;
 float histogramBoxPercentFromLeft = DEFAULT_BOX_FROM_LEFT;
 float histogramBoxPercentFromTop = DEFAULT_BOX_FROM_TOP;
 #endif	// USE_HISTOGRAM
+
+cv::Mat pRgb;
+std::vector<int> compression_parameters;
+bool bMain						= true;
+bool bDisplay					= false;
+std::string dayOrNight;
+bool bSaveRun					= false;
+bool bSavingImg					= false;
+pthread_mutex_t mtx_SaveImg;
+pthread_cond_t cond_StartSave;
+ASI_CONTROL_CAPS ControlCaps;
+int numErrors					= 0;				// Number of errors in a row.
+int maxErrors					= 5;				// Max number of errors in a row before we exit
+bool gotSignal					= false;			// did we get a SIGINT (from keyboard), or SIGTERM/SIGHUP (from service)?
+int iNumOfCtrl					= 0;
+int CamNum						= 0;
+pthread_t thread_display		= 0;
+pthread_t hthdSave				= 0;
+int numExposures				= 0;				// how many valid pictures have we taken so far?
+int currentGain					= NOT_SET;
+long camera_max_autoexposure_us	= NOT_SET;			// camera's max auto-exposure
+long camera_min_exposure_us		= 100;				// camera's minimum exposure
+long actualTemp					= 0;				// actual sensor temp, per the camera
+long last_exposure_us			= 0;				// last exposure taken
+bool taking_dark_frames			= false;
+long current_exposure_us		= NOT_SET;
+int current_bpp					= NOT_SET;			// bytes per pixel: 8, 16, or 24
+int current_bit_depth			= NOT_SET;			// 8 or 16
+int currentBin					= NOT_SET;
+int currentBrightness			= NOT_SET;
+long currentMaxAutoexposure_us	= NOT_SET;
+bool currentAutoExposure		= false;			// is auto-exposure currently on or off?
+bool currentAutoGain			= false;			// is auto-gain currently on or off?
+char final_file_name[200];							// final name of the file that's written to disk, with no directories
+char full_filename[1000];							// full name of file written to disk
+int focus_metric				= NOT_SET;
 int mean						= NOT_SET;			// histogram mean
 
 // Make sure we don't try to update a non-updateable control, and check for errors.
@@ -865,8 +853,9 @@ int main(int argc, char *argv[])
 	int night_skip_frames		= DEFAULT_NIGHTSKIPFRAMES;
 	int current_skip_frames		= NOT_SET;
 
-	bool dayGain				= DEFAULT_DAYGAIN;
-	bool dayAutoGain			= false;						// is Auto Gain on or off for daytime?
+	int dayGain					= DEFAULT_DAYGAIN;
+	bool dayAutoGain			= DEFAULT_DAYAUTOGAIN;			// is Auto Gain on or off for daytime?
+//	int dayMaxGain				= DEFAULT_DAYMAXGAIN;
 	int nightGain				= DEFAULT_NIGHTGAIN;
 	bool nightAutoGain			= DEFAULT_NIGHTAUTOGAIN;		// is Auto Gain on or off for nighttime?
 	int nightMaxGain			= DEFAULT_NIGHTMAXGAIN;
@@ -916,7 +905,7 @@ int main(int argc, char *argv[])
 	bool daytimeCapture			= DEFAULT_DAYTIMECAPTURE;	// are we capturing daytime pictures?
 
 	bool help					= false;
-	int quality					= NOT_SET;
+	int quality					= DEFAULT_QUALITY;
 	bool coolerEnabled		 	= false;
 	long targetTemp				= 0;
 
@@ -1291,7 +1280,7 @@ int main(int argc, char *argv[])
 		printf(" -dayDelay				- Default = %'d: Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY);
 		printf(" -nightDelay			- Default = %'d: Delay between nighttime images in milliseconds - %d = 1 sec.\n", DEFAULT_NIGHTDELAY, MS_IN_SEC);
 		printf(" -type = Image Type		- Default = %d: 99 = auto,  0 = RAW8,  1 = RGB24,  2 = RAW16,  3 = Y8\n", DEFAULT_IMAGE_TYPE);
-		printf(" -quality				- Default PNG=3, JPG=95, Values: PNG=0-9, JPG=0-100\n");
+		printf(" -quality				- Default PNG=3, JPG=%d, Values: PNG=0-9, JPG=0-100\n", DEFAULT_QUALITY);
 		printf(" -usb = USB Speed		- Default = %d: Values between 40-100, This is BandwidthOverload\n", DEFAULT_ASIBANDWIDTH);
 		printf(" -autousb				- Default = false: 1 enables auto USB Speed\n");
 		printf(" -filename				- Default = %s\n", DEFAULT_FILENAME);

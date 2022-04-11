@@ -112,7 +112,7 @@ void sig(int i)
 	if (i == SIGHUP)
 		Log(3, "Got signal to restart\n");
 	else
-		printf("XXXXXX == got %s %d in sig()\n", i == SIGUSR1 ? "SIGUSR1" : "unknown signal", i);
+		printf("XXXXXX == got unknown signal %d\n", i);
 	bMain = false;
 	closeUp(EXIT_RESTARTING);
 }
@@ -429,8 +429,7 @@ int main(int argc, char *argv[])
 	tty = isatty(fileno(stdout)) ? true : false;
 	signal(SIGINT, IntHandle);
 	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
-	signal(SIGHUP, sig);	// xxxxxxxxxx Reload the service
-	signal(SIGUSR1, sig);	// xxxxxxxxxx Reload the service
+	signal(SIGHUP, sig);		// xxxxxxxxxx TODO: Re-read settings (we currently just restart).
 
 	int fontname[] = {	cv::FONT_HERSHEY_SIMPLEX,		cv::FONT_HERSHEY_PLAIN,		cv::FONT_HERSHEY_DUPLEX,
 						cv::FONT_HERSHEY_COMPLEX,		cv::FONT_HERSHEY_TRIPLEX,	cv::FONT_HERSHEY_COMPLEX_SMALL,
@@ -1365,7 +1364,6 @@ const char *locale				= DEFAULT_LOCALE;
 					std::string z = "";
 					if (r == SIGINT) z = "SIGINT";
 					else if (r == SIGTERM) z = "SIGTERM";
-					else if (r == SIGUSR1) z = "SIGUSR1";
 					else if (r == SIGHUP) z = "SIGHUP";
 					if (z != "")
 					{

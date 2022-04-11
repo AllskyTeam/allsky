@@ -122,32 +122,34 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 		fi
 		return 0
 	}
+	# shellcheck disable=SC2153
 	if check_value "CROP_WIDTH" "${CROP_WIDTH}" "width" "${RESOLUTION_X}"; then
-		if [ $(( ${CROP_WIDTH} % 2 )) = 1 ]; then
+		if [ $(( CROP_WIDTH % 2 )) = 1 ]; then
 			ERROR_MSG="${ERROR_MSG}\n*** CROP_WIDTH (${CROP_WIDTH}) must be an even number."
 		fi
 	fi
+	# shellcheck disable=SC2153
 	if check_value "CROP_HEIGHT" "${CROP_HEIGHT}" "height" "${RESOLUTION_Y}"; then
-		if [ $(( ${CROP_HEIGHT} % 2 )) = 1 ]; then
+		if [ $(( CROP_HEIGHT % 2 )) = 1 ]; then
 			ERROR_MSG="${ERROR_MSG}\n*** CROP_HEIGHT (${CROP_HEIGHT}) must be an even number."
 		fi
 	fi
 
 	# Now for more intensive checks.
 	if [ -z "${ERROR_MSG}" ]; then
-		typeset -i SENSOR_CENTER_X=$(( ${RESOLUTION_X} / 2 ))
-		typeset -i SENSOR_CENTER_Y=$(( ${RESOLUTION_Y} / 2 ))
-		typeset -i CROP_CENTER_ON_SENSOR_X=$(( ${SENSOR_CENTER_X} + ${CROP_OFFSET_X} ))
+		typeset -i SENSOR_CENTER_X=$(( RESOLUTION_X / 2 ))
+		typeset -i SENSOR_CENTER_Y=$(( RESOLUTION_Y / 2 ))
+		typeset -i CROP_CENTER_ON_SENSOR_X=$(( SENSOR_CENTER_X + CROP_OFFSET_X ))
 		# There appears to be a bug in "convert" with "-gravity Center"; the Y offset is only applied half.
 		# Should the division round up or down or truncate (current method)?
-		typeset -i CROP_CENTER_ON_SENSOR_Y=$(( ${SENSOR_CENTER_Y} + (${CROP_OFFSET_Y} / 2) ))
-		typeset -i HALF_CROP_WIDTH=$(( ${CROP_WIDTH} / 2 ))
-		typeset -i HALF_CROP_HEIGHT=$(( ${CROP_HEIGHT} / 2 ))
+		typeset -i CROP_CENTER_ON_SENSOR_Y=$(( SENSOR_CENTER_Y + (CROP_OFFSET_Y / 2) ))
+		typeset -i HALF_CROP_WIDTH=$(( CROP_WIDTH / 2 ))
+		typeset -i HALF_CROP_HEIGHT=$(( CROP_HEIGHT / 2 ))
 
-		typeset -i CROP_TOP=$(( ${CROP_CENTER_ON_SENSOR_Y} - ${HALF_CROP_HEIGHT} ))
-		typeset -i CROP_BOTTOM=$(( ${CROP_CENTER_ON_SENSOR_Y} + ${HALF_CROP_HEIGHT} ))
-		typeset -i CROP_LEFT=$(( ${CROP_CENTER_ON_SENSOR_X} - ${HALF_CROP_WIDTH} ))
-		typeset -i CROP_RIGHT=$(( ${CROP_CENTER_ON_SENSOR_X} + ${HALF_CROP_WIDTH} ))
+		typeset -i CROP_TOP=$(( CROP_CENTER_ON_SENSOR_Y - HALF_CROP_HEIGHT ))
+		typeset -i CROP_BOTTOM=$(( CROP_CENTER_ON_SENSOR_Y + HALF_CROP_HEIGHT ))
+		typeset -i CROP_LEFT=$(( CROP_CENTER_ON_SENSOR_X - HALF_CROP_WIDTH ))
+		typeset -i CROP_RIGHT=$(( CROP_CENTER_ON_SENSOR_X + HALF_CROP_WIDTH ))
 
 
 		if [ ${CROP_TOP} -lt 0 ]; then

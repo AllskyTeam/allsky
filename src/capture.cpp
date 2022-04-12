@@ -1878,12 +1878,6 @@ i++;
 	// Other calls to setControl() are done after we know if we're in daytime or nighttime.
 	setControl(CamNum, ASI_BANDWIDTHOVERLOAD, asiBandwidth, asiAutoBandwidth ? ASI_TRUE : ASI_FALSE);
 	setControl(CamNum, ASI_HIGH_SPEED_MODE, 0, ASI_FALSE);	// ZWO sets this in their program
-	if (ASICameraInfo.IsColorCam)
-	{
-// TODO: implement current*.  For now, use day values.
-		setControl(CamNum, ASI_WB_R, dayWBR, dayAutoAWB ? ASI_TRUE : ASI_FALSE);
-		setControl(CamNum, ASI_WB_B, dayWBB, dayAutoAWB ? ASI_TRUE : ASI_FALSE);
-	}
 	setControl(CamNum, ASI_GAMMA, gamma, ASI_FALSE);
 	setControl(CamNum, ASI_FLIP, flip, ASI_FALSE);
 
@@ -1982,6 +1976,12 @@ i++;
 			currentMaxAutoexposure_us = current_exposure_us = nightMaxAutoexposure_ms * US_IN_MS;
 			currentBin = nightBin;
 			currentBrightness = nightBrightness;
+			if (ASICameraInfo.IsColorCam)
+			{
+				currentAutoAWB = false;
+				currentWBR = nightWBR;
+				currentWBB = nightWBB;
+			}
 
 			Log(0, "Taking dark frames...\n");
 
@@ -2089,6 +2089,12 @@ i++;
 				currentAutoExposure = dayAutoExposure;
 #endif
 				currentBrightness = dayBrightness;
+				if (ASICameraInfo.IsColorCam)
+				{
+					currentAutoAWB = dayAutoAWB;
+					currentWBR = dayWBR;
+					currentWBB = dayWBB;
+				}
 				currentDelay_ms = dayDelay_ms;
 				currentBin = dayBin;
 				currentGain = dayGain;	// must come before determineGainChange() below
@@ -2130,6 +2136,12 @@ i++;
 
 			currentAutoExposure = nightAutoExposure;
 			currentBrightness = nightBrightness;
+			if (ASICameraInfo.IsColorCam)
+			{
+				currentAutoAWB = nightAutoAWB;
+				currentWBR = nightWBR;
+				currentWBB = nightWBB;
+			}
 			currentDelay_ms = nightDelay_ms;
 			currentBin = nightBin;
 			currentMaxAutoexposure_us = nightMaxAutoexposure_ms * US_IN_MS;
@@ -2148,6 +2160,11 @@ i++;
 			currentAutoGain = nightAutoGain;
 		}
 		setControl(CamNum, ASI_AUTO_MAX_GAIN, currentMaxGain, ASI_FALSE);
+		if (ASICameraInfo.IsColorCam)
+		{
+			setControl(CamNum, ASI_WB_R, currentWBR, currentAutoAWB ? ASI_TRUE : ASI_FALSE);
+			setControl(CamNum, ASI_WB_B, currentWBB, currentAutoAWB ? ASI_TRUE : ASI_FALSE);
+		}
 
 		// never go over the camera's max auto exposure. ASI_AUTO_MAX_EXP is in ms so convert
 		currentMaxAutoexposure_us = std::min(currentMaxAutoexposure_us, camera_max_autoexposure_us);

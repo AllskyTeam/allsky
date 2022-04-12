@@ -443,7 +443,12 @@ int main(int argc, char *argv[])
 	int fontname[] = {	cv::FONT_HERSHEY_SIMPLEX,		cv::FONT_HERSHEY_PLAIN,		cv::FONT_HERSHEY_DUPLEX,
 						cv::FONT_HERSHEY_COMPLEX,		cv::FONT_HERSHEY_TRIPLEX,	cv::FONT_HERSHEY_COMPLEX_SMALL,
 						cv::FONT_HERSHEY_SCRIPT_SIMPLEX, cv::FONT_HERSHEY_SCRIPT_COMPLEX };
-const char *locale				= DEFAULT_LOCALE;
+	char const *fontnames[]		= {		// Character representation of names for clarity:
+		"SIMPLEX",							"PLAIN",					"DUPEX",
+		"COMPLEX",							"TRIPLEX",					"COMPLEX_SMALL",
+		"SCRIPT_SIMPLEX",					"SCRIPT_COMPLEX" };
+
+	const char *locale			= DEFAULT_LOCALE;
 	// All the font settings apply to both day and night.
 	int fontnumber				= DEFAULT_FONTNUMBER;
 	int iTextX					= DEFAULT_ITEXTX;
@@ -466,7 +471,9 @@ const char *locale				= DEFAULT_LOCALE;
 	int nightBin				= DEFAULT_NIGHTBIN;
 	int Image_type				= DEFAULT_IMAGE_TYPE;
 	int dayExposure_us			= DEFAULT_DAYEXPOSURE;
+	int dayMaxAutoexposure_ms	= DEFAULT_DAYMAXAUTOEXPOSURE_MS;
 	int nightExposure_us		= DEFAULT_NIGHTEXPOSURE;
+	int nightMaxAutoexposure_ms	= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
 	int currentExposure_us		= NOT_SET;
 	bool dayAutoExposure		= DEFAULT_DAYAUTOEXPOSURE;
 	bool nightAutoExposure		= DEFAULT_NIGHTAUTOEXPOSURE;
@@ -594,8 +601,7 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-daymaxexposure") == 0)
 			{
-// TODO				dayMaxAutoexposure_ms = atoi(argv[++i]);
-i++;
+				dayMaxAutoexposure_ms = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-dayexposure") == 0)
 			{
@@ -660,8 +666,7 @@ i++;
 			}
 			else if (strcmp(argv[i], "-nightmaxexposure") == 0)
 			{
-// TODO				nightMaxAutoexposure_ms = atoi(argv[++i]);
-i++;
+				nightMaxAutoexposure_ms = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightexposure") == 0)
 			{
@@ -1110,48 +1115,54 @@ i++;
 	printf(" Resolution (before any binning): %dx%d\n", width, height);
 	printf(" Quality: %d\n", quality);
 	printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
-	printf(" Exposure (night): %1.0fms\n", round(nightExposure_us / US_IN_MS));
-	printf(" Auto Exposure (night): %s\n", yesNo(nightAutoExposure));
-	printf(" Gain (day): %1.2f\n", dayGain);
-	printf(" Gain (night): %1.2f\n", nightGain);
-	printf(" Auto Gain (day): %s\n", yesNo(dayAutoGain));
-	printf(" Auto Gain (night): %s\n", yesNo(nightAutoGain));
+
+	printf(" Exposure (day): %s, Auto: %s\n", length_in_units(dayExposure_us, true), yesNo(dayAutoExposure));
+	printf(" Exposure (night): %s, Auto: %s\n", length_in_units(nightExposure_us, true), yesNo(nightAutoExposure));
+	printf(" Max Auto-Exposure (day): %s\n", length_in_units(dayMaxAutoexposure_ms, true));
+	printf(" Max Auto-Exposure (night): %s\n", length_in_units(nightMaxAutoexposure_ms, true));
+	printf(" Gain (day): %1.2f, Auto: %s, max: %1.2f\n", dayGain, yesNo(dayAutoGain), dayMaxGain);
+	printf(" Gain (night): %1.2f, Auto: %s, max: %1.2f\n", nightGain, yesNo(nightAutoGain), nightMaxGain);
 	printf(" Brightness (day): %d\n", dayBrightness);
 	printf(" Brightness (night): %d\n", nightBrightness);
-	printf(" Saturation: %.1f\n", saturation);
-	printf(" White Balance (day)   Red: %.2f, Blue: %.2f, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
-	printf(" White Balance (night) Red: %.2f, Blue: %.2f, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
 	printf(" Binning (day): %d\n", dayBin);
 	printf(" Binning (night): %d\n", nightBin);
-	printf(" Delay (day): %dms\n", dayDelay_ms);
-	printf(" Delay (night): %dms\n", nightDelay_ms);
-	printf(" Text Overlay: %s\n", ImgText);
-	printf(" Text Position: %dpx left, %dpx top\n", iTextX, iTextY);
-	printf(" Font Name: %d\n", fontname[fontnumber]);
-	printf(" Font Color: %d, %d, %d\n", fontcolor[0], fontcolor[1], fontcolor[2]);
-	printf(" Small Font Color: %d, %d, %d\n", smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
-	printf(" Font Line Type: %d\n", linetype[linenumber]);
-	printf(" Font Size: %1.1f\n", fontsize);
-	printf(" Font Line: %d\n", linewidth);
-	printf(" Outline Font : %s\n", yesNo(outlinefont));
+	printf(" White Balance (day)   Red: %.2f, Blue: %.2f, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
+	printf(" White Balance (night) Red: %.2f, Blue: %.2f, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
+	printf(" Delay (day): %s\n", length_in_units(dayDelay_ms, true));
+	printf(" Delay (night): %s\n", length_in_units(nightDelay_ms, true));
+
+	printf(" Saturation: %.1f\n", saturation);
 	printf(" Rotation: %d\n", rotation);
 	printf(" Flip Image: %d\n", flip);
 	printf(" Filename: %s\n", fileName);
 	printf(" Filename Save Directory: %s\n", save_dir);
-	printf(" Latitude: %s\n", latitude);
-	printf(" Longitude: %s\n", longitude);
+	printf(" Latitude: %s, Longitude: %s\n", latitude, longitude);
 	printf(" Sun Elevation: %s\n", angle);
 	printf(" Locale: %s\n", locale);
 	printf(" Notification Images: %s\n", yesNo(notificationImages));
-	printf(" Show Time: %s (format: %s)\n", yesNo(showTime), timeFormat);
-	printf(" Show Exposure: %s\n", yesNo(showExposure));
-	printf(" Show Gain: %s\n", yesNo(showGain));
-	printf(" Show Brightness: %s\n", yesNo(showBrightness));
-	printf(" Show Focus Metric: %s\n", yesNo(showFocus));
 	printf(" Preview: %s\n", yesNo(preview));
 	printf(" Taking Dark Frames: %s\n", yesNo(taking_dark_frames));
 	printf(" Debug Level: %d\n", debugLevel);
 	printf(" On TTY: %s\n", yesNo(tty));
+
+	printf(" Text Overlay: %s\n", ImgText[0] == '\0' ? "[none]" : ImgText);
+	printf(" Text Extra File: %s, Age: %d seconds\n", ImgExtraText[0] == '\0' ? "[none]" : ImgExtraText, extraFileAge);
+	printf(" Text Line Height %dpx\n", iTextLineHeight);
+	printf(" Text Position: %dpx from left, %dpx from top\n", iTextX, iTextY);
+	printf(" Font Name: %s (%d)\n", fontnames[fontnumber], fontname[fontnumber]);
+	printf(" Font Color: %d, %d, %d\n", fontcolor[0], fontcolor[1], fontcolor[2]);
+	printf(" Small Font Color: %d, %d, %d\n", smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
+	printf(" Font Line Type: %d\n", linetype[linenumber]);
+	printf(" Font Size: %1.1f\n", fontsize);
+	printf(" Font Line Width: %d\n", linewidth);
+	printf(" Outline Font : %s\n", yesNo(outlinefont));
+
+	printf(" Show Time: %s (format: %s)\n", yesNo(showTime), timeFormat);
+	printf(" Show Exposure: %s\n", yesNo(showExposure));
+	printf(" Show Gain: %s\n", yesNo(showGain));
+	printf(" Show Brightness: %s\n", yesNo(showBrightness));
+	printf(" Show Mean Brightness: %s\n", yesNo(showMean));
+	printf(" Show Focus Metric: %s\n", yesNo(showFocus));
 	printf(" Mode Mean: %s\n", yesNo(myModeMeanSetting.mode_mean));
 	if (myModeMeanSetting.mode_mean) {
 		if (myModeMeanSetting.dayMean == -1.0) {

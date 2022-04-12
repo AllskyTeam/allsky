@@ -33,10 +33,8 @@ using namespace std;
 
 #define DEFAULT_DAYWBR			2.5
 #define DEFAULT_DAYWBB			2.0
-#define DEFAULT_NIGHTWBR		DEFAULT_DAYWBR
-#define DEFAULT_NIGHTWBB		DEFAULT_DAYWBB
-#define DEFAULT_WBR				DEFAULT_DAYWBR	// XXX old - now have day and night versions
-#define DEFAULT_WBB				DEFAULT_DAYWBB	// XXX old - now have day and night versions
+#define DEFAULT_NIGHTWBR		DEFAULT_DAYWBR		// change if people report different values for night
+#define DEFAULT_NIGHTWBB		DEFAULT_DAYWBB		// change if people report different values for night
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -517,11 +515,11 @@ const char *locale				= DEFAULT_LOCALE;
 
 	bool preview				= false;
 	bool showTime				= DEFAULT_SHOWTIME;
-	bool showExposure			= false;
-	bool showGain				= false;
-	bool showBrightness			= false;
-	bool showMean				= false;
-	bool showFocus				= false;
+	bool showExposure			= DEFAULT_SHOWEXPOSURE;
+	bool showGain				= DEFAULT_SHOWGAIN;
+	bool showBrightness			= DEFAULT_SHOWBRIGHTNESS;
+	bool showMean				= DEFAULT_SHOWMEAN;
+	bool showFocus				= DEFAULT_SHOWFOCUS;
 	bool taking_dark_frames		= false;
 	bool daytimeCapture			= DEFAULT_DAYTIMECAPTURE;
 	bool help					= false;
@@ -884,10 +882,10 @@ const char *locale				= DEFAULT_LOCALE;
 		printf(" -fontline							- Default = 1 - Text Font Line Thickness\n");
 		printf("\n");
 		printf("\n");
-		printf(" -latitude							- Default = 60.7N (Whitehorse) - Latitude of the camera.\n");
-		printf(" -longitude							- Default = 135.05W (Whitehorse) - Longitude of the camera\n");
-		printf(" -angle								- Default = -6 - Angle of the sun below the horizon. -6=civil "
-			"twilight, -12=nautical twilight, -18=astronomical twilight\n");
+		printf(" -latitude							- No default - you must set it.  Latitude of the camera.\n");
+		printf(" -longitude							- No default - you must set it.  Longitude of the camera.\n");
+		printf(" -angle								- Default = %s: Angle of the sun below the horizon.\n", DEFAULT_ANGLE);
+		printf("		-6=civil twilight   -12=nautical twilight   -18=astronomical twilight\n");
 		printf("\n");
 		printf(" -preview							- Set to 1 to preview the captured images. Only works with a Desktop Environment\n");
 		printf(" -darkframe							- Set to 1 to grab dark frame and cover your camera\n");

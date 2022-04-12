@@ -46,9 +46,6 @@ bool notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
 char const *save_dir		= DEFAULT_SAVEDIR;
 char const *fileName		= DEFAULT_FILENAME;
 char const *timeFormat		= DEFAULT_TIMEFORMAT;
-bool autoAWB				= DEFAULT_AUTOAWB;		// XXXX old
-float WBR					= DEFAULT_WBR;			// XXXX old
-float WBB					= DEFAULT_WBB;			// XXXX old
 bool dayAutoAWB				= DEFAULT_DAYAUTOAWB;
 float dayWBR				= DEFAULT_DAYWBR;
 float dayWBB				= DEFAULT_DAYWBB;
@@ -589,7 +586,8 @@ const char *locale				= DEFAULT_LOCALE;
 			}
 			else if (strcmp(argv[i], "-daymaxexposure") == 0)
 			{
-				dayMaxAutoexposure_ms = atoi(argv[++i]);
+// TODO				dayMaxAutoexposure_ms = atoi(argv[++i]);
+i++;
 			}
 			else if (strcmp(argv[i], "-dayexposure") == 0)
 			{

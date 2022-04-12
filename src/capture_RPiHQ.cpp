@@ -1420,10 +1420,9 @@ i++;
 
 				// -999 for temperature says the camera doesn't support it
 				// TODO: in the future the calculation of mean should independent from mode_mean. -1 means don't display.
-// TODO: implement day/night AWB; for now, use day
 				float m = (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) ? mean : -1.0;
 				add_variables_to_command(cmd, last_exposure_us, currentBrightness, m,
-					currentAutoExposure, currentAutoGain, dayAutoAWB, dayWBR, dayWBB,
+					currentAutoExposure, currentAutoGain, currentAutoAWB, currentWBR, currentWBB,
 					-999, last_gain, (int)round(20.0 * 10.0 * log10(last_gain)),
 					currentBin, flip, current_bit_depth, focus_metric);
 				strcat(cmd, " &");

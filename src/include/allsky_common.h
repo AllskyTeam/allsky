@@ -41,7 +41,6 @@
 #define DEFAULT_NIGHTMAXAUTOEXPOSURE_MS (60 * MS_IN_SEC)
 #define DEFAULT_DAYDELAY			(5 * MS_IN_SEC)		// 5 seconds
 #define DEFAULT_NIGHTDELAY			(10 * MS_IN_SEC)	// 10 seconds
-#define DEFAULT_AUTOAWB				false	// XXX OLD name, now have day and night versions
 #define DEFAULT_DAYAUTOAWB			false
 #define DEFAULT_NIGHTAUTOAWB		false
 #define DEFAULT_DAYBIN				1		// binning during the day probably isn't too useful...
@@ -66,6 +65,12 @@
 #define DEFAULT_OUTLINEFONT			false
 #define DEFAULT_LINENUMBER			0
 #define DEFAULT_SHOWTIME			true	// Show the date/time in the overlay?
+#define DEFAULT_SHOWTEMP			false	// Show the sensor temperature?
+#define DEFAULT_SHOWEXPOSURE		false	// Show the exposure length?
+#define DEFAULT_SHOWGAIN			false	// Show the gain?
+#define DEFAULT_SHOWBRIGHTNESS		false	// Show the brightness?
+#define DEFAULT_SHOWMEAN			false	// Show the mean brightness?
+#define DEFAULT_SHOWFOCUS			false	// Show the focus metric?
 
 // Exit codes.  Need to match what's in allsky.sh
 #define EXIT_OK						0

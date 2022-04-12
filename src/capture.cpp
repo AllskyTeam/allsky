@@ -35,8 +35,7 @@
 #define DEFAULT_BRIGHTNESS		100
 #define DEFAULT_OFFSET			0
 #define DEFAULT_ASIBANDWIDTH	40
-#define DEFAULT_DAYSKIPFRAMES	5
-#define DEFAULT_NIGHTSKIPFRAMES	1
+
 #define DEFAULT_GAIN_TRANSITION_TIME 5				// user specifies minutes
 #define DEFAULT_NEWEXPOSURE		true
 
@@ -466,7 +465,7 @@ return;
 
 
 long reported_exposure_us = 0;	// exposure reported by the camera, either actual exposure or suggested next one
-long actualGain = 0;			// actual gain used, per the camera
+long actualGain = NOT_SET;		// actual gain used, per the camera
 ASI_BOOL bAuto = ASI_FALSE;		// "auto" flag returned by ASIGetControlValue, when we don't care what it is
 
 ASI_BOOL wasAutoExposure = ASI_FALSE;
@@ -863,10 +862,11 @@ int main(int argc, char *argv[])
 
 	int dayGain					= DEFAULT_DAYGAIN;
 	bool dayAutoGain			= DEFAULT_DAYAUTOGAIN;			// is Auto Gain on or off for daytime?
-//	int dayMaxGain				= DEFAULT_DAYMAXGAIN;
+	int dayMaxGain				= DEFAULT_DAYMAXGAIN;
 	int nightGain				= DEFAULT_NIGHTGAIN;
 	bool nightAutoGain			= DEFAULT_NIGHTAUTOGAIN;		// is Auto Gain on or off for nighttime?
 	int nightMaxGain			= DEFAULT_NIGHTMAXGAIN;
+	int currentMaxGain			= NOT_SET;
 	int currentDelay_ms			= NOT_SET;
 	int gamma				 	= DEFAULT_GAMMA;
 	int dayBrightness			= DEFAULT_BRIGHTNESS;
@@ -998,7 +998,7 @@ i++;
 			}
 			else if (strcmp(argv[i], "-daymaxgain") == 0)
 			{
-i++; // TODO:				dayMaxGain = atoi(argv[++i]);
+				dayMaxGain = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-daygain") == 0)
 			{
@@ -1975,8 +1975,8 @@ i++;
 			currentAutoExposure = false;
 			nightAutoExposure = false;
 			currentAutoGain = false;
-			// Don't need to set ASI_AUTO_MAX_GAIN since we're not using auto gain
 			currentGain = nightGain;
+			currentMaxGain = nightMaxGain;		// not needed since we're not using auto gain, but set to be consistent
 			gainChange = 0;
 			currentDelay_ms = nightDelay_ms;
 			currentMaxAutoexposure_us = current_exposure_us = nightMaxAutoexposure_ms * US_IN_MS;
@@ -2092,6 +2092,7 @@ i++;
 				currentDelay_ms = dayDelay_ms;
 				currentBin = dayBin;
 				currentGain = dayGain;	// must come before determineGainChange() below
+				currentMaxGain = dayMaxGain;
 				if (currentAdjustGain)
 				{
 					// we did some nightime images so adjust gain
@@ -2103,10 +2104,6 @@ i++;
 					gainChange = 0;
 				}
 				currentAutoGain = dayAutoGain;
-// xxxx TODO: add dayMaxGain and currentMaxGain.
-// xxxx then can move the setControl further below
-				// We don't have a separate dayMaxGain, so set to night one
-				setControl(CamNum, ASI_AUTO_MAX_GAIN, nightMaxGain, ASI_FALSE);
 			}
 		}
 
@@ -2137,6 +2134,7 @@ i++;
 			currentBin = nightBin;
 			currentMaxAutoexposure_us = nightMaxAutoexposure_ms * US_IN_MS;
 			currentGain = nightGain;	// must come before determineGainChange() below
+			currentMaxGain = nightMaxGain;
 			if (currentAdjustGain)
 			{
 				// we did some daytime images so adjust gain
@@ -2148,8 +2146,8 @@ i++;
 				gainChange = 0;
 			}
 			currentAutoGain = nightAutoGain;
-			setControl(CamNum, ASI_AUTO_MAX_GAIN, nightMaxGain, ASI_FALSE);
 		}
+		setControl(CamNum, ASI_AUTO_MAX_GAIN, currentMaxGain, ASI_FALSE);
 
 		// never go over the camera's max auto exposure. ASI_AUTO_MAX_EXP is in ms so convert
 		currentMaxAutoexposure_us = std::min(currentMaxAutoexposure_us, camera_max_autoexposure_us);
@@ -2627,7 +2625,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					// TODO: wait for the prior image to finish saving.
 				}
 
-				if (nightAutoGain && dayOrNight == "NIGHT" && ! taking_dark_frames)
+				if (currentAutoGain && ! taking_dark_frames)
 				{
 					ASIGetControlValue(CamNum, ASI_GAIN, &actualGain, &bAuto);
 					Log(1, "  > Auto Gain value: %ld\n", actualGain);

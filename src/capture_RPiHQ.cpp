@@ -26,10 +26,11 @@ using namespace std;
 #define DEFAULT_FONTSIZE		32
 #define DEFAULT_DAYGAIN			1.0
 #define DEFAULT_DAYAUTOGAIN		true
-#define DEFAULT_DAYMAXGAIN		16
+#define DEFAULT_DAYMAXGAIN		16.0
 #define DEFAULT_NIGHTGAIN		4.0
 #define DEFAULT_NIGHTAUTOGAIN	true
-#define DEFAULT_NIGHTMAXGAIN	16
+#define DEFAULT_NIGHTMAXGAIN	16.0
+
 
 #define DEFAULT_DAYWBR			2.5
 #define DEFAULT_DAYWBB			2.0
@@ -893,62 +894,90 @@ i++;
 		printf("%s", c(KNRM));
 
 		printf("%sAvailable Arguments:\n", c(KYEL));
-		printf(" -cmd								- Default = raspistill - command being used to take pictures\n");
-		printf(" -width								- Default = Camera Max Width\n");
-		printf(" -height							- Default = Camera Max Height\n");
-		printf(" -nightexposure						- Default = 5000000 - Time in us (equals to 5 sec)\n");
-		printf(" -nightautoexposure					- Default = 0 - Set to 1 to enable auto Exposure\n");
-		printf(" -nightgain							- Default = 4.0 (1.0 - 16.0)\n");
-		printf(" -nightautogain						- Default = 0 - Set to 1 to enable auto Gain at night\n");
-		printf(" -saturation						- Default = %.1f (%.1f to %.1f)\n", default_saturation, min_saturation, max_saturation);
-		printf(" -brightness						- Default = %d (%d to %d)\n", default_brightness, min_brightness, max_brightness);
-		printf(" -awb								- Default = 0 - Auto White Balance (0 = off)\n");
-		printf(" -wbr								- Default = 2 - White Balance Red (0 = off)\n");
-		printf(" -wbb								- Default = 2 - White Balance Blue (0 = off)\n");
-		printf(" -daybin							- Default = 1 - binning OFF (1x1), 2 = 2x2, 3 = 3x3 binning\n");
-		printf(" -nightbin							- Default = 1 - same as -daybin but for nighttime\n");
-		printf(" -nightdelay						- Default = 10 ms - Delay between nighttime images - %d = 1 sec.\n", MS_IN_SEC);
-		printf(" -daydelay							- Default = 5000 ms - Delay between daytime images - 5000 = 5 sec.\n");
-		printf(" -type = Image Type					- Default = 0; 0=RAW8, 1=RGB24, 2=RAW16\n");
-		printf(" -quality							- Default = 70%%, 0%% (poor) 100%% (perfect)\n");
-		printf(" -filename							- Default = image.jpg\n");
-		printf(" -save_dir							- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
+		printf(" -dayautoexposure		- Default = %s: 1 enables daytime auto-exposure\n", yesNo(DEFAULT_DAYAUTOEXPOSURE));
+		printf(" -daymaxexposure		- Default = %'d: Maximum daytime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_DAYMAXAUTOEXPOSURE_MS, (float)DEFAULT_DAYMAXAUTOEXPOSURE_MS/US_IN_MS);
+		printf(" -dayexposure			- Default = %'d: Daytime exposure in us (equals to %.4f sec)\n", DEFAULT_DAYEXPOSURE, (float)DEFAULT_DAYEXPOSURE/US_IN_SEC);
+		printf(" -daymean				- Default = %.2f: Daytime target exposure brightness\n", DEFAULT_DAYMEAN);
+		printf("						  NOTE: Daytime Auto-Gain and Auto-Exposure should be on for best results\n");
+		printf(" -daybrightness			- Default = %d: Daytime brightness level\n", default_brightness);
+		printf(" -dayDelay				- Default = %'d: Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY);
+		printf(" -dayautogain			- Default = %s: 1 enables daytime auto gain\n", yesNo(DEFAULT_DAYAUTOGAIN));
+		printf(" -daymaxgain			- Default = %.2f: Daytime maximum auto gain\n", DEFAULT_DAYMAXGAIN);
+		printf(" -daygain				- Default = %.2f: Daytime gain\n", DEFAULT_DAYGAIN);
+		printf(" -daybin				- Default = %d: 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n", DEFAULT_DAYBIN);
+		printf(" -dayautowhitebalance	- Default = %s: 1 enables auto White Balance\n", yesNo(DEFAULT_DAYAUTOAWB));
+		printf(" -daywbr				- Default = %.2f: Manual White Balance Red\n", DEFAULT_DAYWBR);
+		printf(" -daywbb				- Default = %.2f: Manual White Balance Blue\n", DEFAULT_DAYWBB);
+		printf(" -dayskipframes			- Default = %d: Number of auto-exposure frames to skip when starting software during daytime.\n", DEFAULT_DAYSKIPFRAMES);
+
+		printf(" -nightautoexposure		- Default = %s: 1 enables nighttime auto-exposure\n", yesNo(DEFAULT_NIGHTAUTOEXPOSURE));
+		printf(" -nightmaxexposure		- Default = %'d: Maximum nighttime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_NIGHTMAXAUTOEXPOSURE_MS, (float)DEFAULT_NIGHTMAXAUTOEXPOSURE_MS/US_IN_MS);
+		printf(" -nightexposure			- Default = %'d: Nighttime exposure in us (equals to %.4f sec)\n", DEFAULT_NIGHTEXPOSURE, (float)DEFAULT_NIGHTEXPOSURE/US_IN_SEC);
+		printf(" -nightmean				- Default = %.2f: Nighttime target exposure brightness\n", DEFAULT_NIGHTMEAN);
+		printf("						  NOTE: Nighttime Auto-Gain and Auto-Exposure should be on for best results\n");
+		printf(" -nightbrightness		- Default = %d: Nighttime brightness level\n", default_brightness);
+		printf(" -nightDelay			- Default = %'d: Delay between nighttime images in milliseconds - %d = 1 sec.\n", DEFAULT_NIGHTDELAY, MS_IN_SEC);
+		printf(" -nightautogain			- Default = %s: 1 enables nighttime auto gain\n", yesNo(DEFAULT_NIGHTAUTOGAIN));
+		printf(" -nightmaxgain			- Default = %.2f: Nighttime maximum auto gain\n", DEFAULT_NIGHTMAXGAIN);
+		printf(" -nightgain				- Default = %.2f: Nighttime gain\n", DEFAULT_NIGHTGAIN);
+		printf(" -nightbin				- Default = %d: same as daybin but for night\n", DEFAULT_NIGHTBIN);
+		printf(" -nightautowhitebalance	- Default = %s: 1 enables auto White Balance\n", yesNo(DEFAULT_NIGHTAUTOAWB));
+		printf(" -nightwbr				- Default = %.2f: Manual White Balance Red\n", DEFAULT_NIGHTWBR);
+		printf(" -nightwbb				- Default = %.2f: Manual White Balance Blue\n", DEFAULT_NIGHTWBB);
+		printf(" -nightskipframes		- Default = %d: Number of auto-exposure frames to skip when starting software during nighttime.\n", DEFAULT_NIGHTSKIPFRAMES);
+
+		printf(" -saturation			- Default = %.1f = Camera Max Width\n", default_saturation);
+		printf(" -width					- Default = %d = Camera Max Width\n", DEFAULT_WIDTH);
+		printf(" -height				- Default = %d = Camera Max Height\n", DEFAULT_HEIGHT);
+		printf(" -type = Image Type		- Default = %d: 99 = auto,  0 = RAW8,  1 = RGB24\n", DEFAULT_IMAGE_TYPE);
+		printf(" -quality				- Default PNG=3, JPG=%d, Values: PNG=0-9, JPG=0-100\n", DEFAULT_QUALITY);
+		printf(" -filename				- Default = %s\n", DEFAULT_FILENAME);
 		if (is_libcamera)
 			printf(" -rotation							- Default = 0 degrees - Options 0 or 180\n");
 		else
 			printf(" -rotation							- Default = 0 degrees - Options 0, 90, 180 or 270\n");
-		printf(" -flip								- Default = 0 - 0 = Orig, 1 = Horiz, 2 = Verti, 3 = Both\n");
-		printf("\n");
-		printf(" -text								- Default = "" - Character/Text Overlay. Use Quotes. Ex. -c \"Text Overlay\"\n");
-		printf(" -textx								- Default = 15 - Text Placement Horizontal from LEFT in Pixels\n");
-		printf(" -texty = Text Y					- Default = 25 - Text Placement Vertical from TOP in Pixels\n");
-		printf(" -fontname = Font Name				- Default = 0 - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n");
-		printf(" -fontcolor = Font Color			- Default = 255 - Text gray scale color (0 - 255)\n");
-		printf(" -smallfontcolor = Small Font Color - Default = 0 0 255 - Text red (BGR)\n");
-		printf(" -fonttype = Font Type				- Default = 0 - Font Line Type,(0-2), 0 = AA, 1 = 8, 2 = 4\n");
-		printf(" -fontsize							- Default = 32 - Text Font Size (range 6 - 160, 32 default)\n");
-		printf(" -fontline							- Default = 1 - Text Font Line Thickness\n");
-		printf("\n");
-		printf("\n");
-		printf(" -latitude							- No default - you must set it.  Latitude of the camera.\n");
-		printf(" -longitude							- No default - you must set it.  Longitude of the camera.\n");
-		printf(" -angle								- Default = %s: Angle of the sun below the horizon.\n", DEFAULT_ANGLE);
+		printf(" -flip					- Default = 0: 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both\n");
+		printf(" -notificationimages	- 1 enables notification images, for example, 'Camera is off during day'.\n");
+		printf(" -latitude				- No default - you must set it.  Latitude of the camera.\n");
+		printf(" -longitude				- No default - you must set it.  Longitude of the camera.\n");
+		printf(" -angle					- Default = %s: Angle of the sun below the horizon.\n", DEFAULT_ANGLE);
 		printf("		-6=civil twilight   -12=nautical twilight   -18=astronomical twilight\n");
-		printf("\n");
-		printf(" -preview							- Set to 1 to preview the captured images. Only works with a Desktop Environment\n");
-		printf(" -darkframe							- Set to 1 to grab dark frame and cover your camera\n");
-		printf(" -showTime							- Set to 1 to display the time on the image.\n");
-		printf(" -focus								- Set to 1 to display a focus metric on the image.\n");
-		printf(" -notificationimages				- Set to 1 to enable notification images, for example, 'Camera is off during day'.\n");
-		printf(" -debuglevel						- Default = 0. Set to 1,2 or 3 for more debugging information.\n");
+		printf(" -darkframe				- 1 disables the overlay and takes dark frames instead\n");
+		printf(" -locale				- Default = %s: Your locale - to determine thousands separator and decimal point.\n", DEFAULT_LOCALE);
+		printf("						  Type 'locale' at a command prompt to determine yours.\n");
+		printf(" -debuglevel			- Default = 0. Set to 1,2, 3, or 4 for more debugging information.\n");
 
-		printf(" -nightmean							- Default = 0.3 Sets night mean value and activates exposure control\n");
-		printf("									  NOTE: Auto-Gain and Auto-Exposure (day & night) should be On in the WebUI for best results\n");
-		printf(" -daymean							- Default = same value as nightmean but for the day.\n");
-		printf(" -mean-threshold					- Default = 0.01 Set mean-value and activates exposure control\n");
-		printf(" -mean-p0							- Default = 5.0, be careful changing these values, ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2\n");
-		printf(" -mean-p1							- Default = 20.0\n");
-		printf(" -mean-p2							- Default = 45.0\n");
+		printf(" -showTime				- Set to 1 to display the time on the image.\n");
+		printf(" -timeformat			- Format the optional time is displayed in; default is '%s'\n", DEFAULT_TIMEFORMAT);
+		printf(" -showExposure			- 1 displays the exposure length\n");
+		printf(" -showGain				- 1 display the gain\n");
+		printf(" -showBrightness		- 1 displays the brightness\n");
+		printf(" -showMean				- 1 displays the mean brightness\n");
+		printf(" -focus					- Set to 1 to display a focus metric on the image.\n");
+		printf(" -text					- Default = \"\": Text Overlay\n");
+		printf(" -extratext				- Default = \"\": Full Path to extra text to display\n");
+		printf(" -extratextage			- Default = 0: If the extra file is not updated after this many seconds its contents will not be displayed. 0 disables it.\n");
+		printf(" -textlineheight		- Default = %d: Text Line Height in pixels\n", DEFAULT_ITEXTLINEHEIGHT);
+		printf(" -textx					- Default = %d: Text Placement Horizontal from LEFT in pixels\n", DEFAULT_ITEXTX);
+		printf(" -texty					- Default = %d: Text Placement Vertical from TOP in pixels\n", DEFAULT_ITEXTY);
+		printf(" -fontname				- Default = %d: Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script\n", DEFAULT_FONTNUMBER);
+		printf(" -fontcolor				- Default = 255 0 0: Text font color (BGR)\n");
+		printf(" -smallfontcolor		- Default = 0 0 255: Small text font color (BGR)\n");
+		printf(" -fonttype				- Default = %d: Font Line Type: 0=AA, 1=8, 2=4\n", DEFAULT_LINENUMBER);
+		printf(" -fontsize				- Default = %d: Text Font Size\n", DEFAULT_FONTSIZE);
+		printf(" -fontline				- Default = %d: Text Font Line Thickness\n", DEFAULT_LINEWIDTH);
+		printf(" -outlinefont			- Default = %s: 1 enables outline font\n", yesNo(DEFAULT_OUTLINEFONT));
+
+		printf("\n");
+		printf(" -daytime				- Default = %s: 1 enables capture daytime images\n", yesNo(DEFAULT_DAYTIMECAPTURE));
+		printf(" -save_dir				- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
+		printf(" -preview				- 1 previews the captured images. Only works with a Desktop Environment\n");
+		printf(" -cmd					- Command being used to take pictures (Buster: raspistill, Bullseye: libcamera-still\n");
+
+		printf(" -mean-threshold		- Default = %.2f: Set mean-value and activates exposure control\n", DEFAULT_MEAN_THRESHOLD);
+		printf(" -mean-p0				- Default = %.1f: Be careful changing these values, ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2\n", DEFAULT_MEAN_P0);
+		printf(" -mean-p1				- Default = %.1f\n", DEFAULT_MEAN_P1);
+		printf(" -mean-p2				- Default = %.1f\n", DEFAULT_MEAN_P2);
 
 		printf("%s", c(KNRM));
 		exit(0);

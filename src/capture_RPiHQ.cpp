@@ -33,10 +33,8 @@ using namespace std;
 
 #define DEFAULT_DAYWBR			2.5
 #define DEFAULT_DAYWBB			2.0
-#define DEFAULT_NIGHTWBR		DEFAULT_DAYWBR
-#define DEFAULT_NIGHTWBB		DEFAULT_DAYWBB
-#define DEFAULT_WBR				DEFAULT_DAYWBR	// XXX old - now have day and night versions
-#define DEFAULT_WBB				DEFAULT_DAYWBB	// XXX old - now have day and night versions
+#define DEFAULT_NIGHTWBR		DEFAULT_DAYWBR		// change if people report different values for night
+#define DEFAULT_NIGHTWBB		DEFAULT_DAYWBB		// change if people report different values for night
 
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
@@ -48,9 +46,6 @@ bool notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
 char const *save_dir		= DEFAULT_SAVEDIR;
 char const *fileName		= DEFAULT_FILENAME;
 char const *timeFormat		= DEFAULT_TIMEFORMAT;
-bool autoAWB				= DEFAULT_AUTOAWB;		// XXXX old
-float WBR					= DEFAULT_WBR;			// XXXX old
-float WBB					= DEFAULT_WBB;			// XXXX old
 bool dayAutoAWB				= DEFAULT_DAYAUTOAWB;
 float dayWBR				= DEFAULT_DAYWBR;
 float dayWBB				= DEFAULT_DAYWBB;
@@ -517,11 +512,11 @@ const char *locale				= DEFAULT_LOCALE;
 
 	bool preview				= false;
 	bool showTime				= DEFAULT_SHOWTIME;
-	bool showExposure			= false;
-	bool showGain				= false;
-	bool showBrightness			= false;
-	bool showMean				= false;
-	bool showFocus				= false;
+	bool showExposure			= DEFAULT_SHOWEXPOSURE;
+	bool showGain				= DEFAULT_SHOWGAIN;
+	bool showBrightness			= DEFAULT_SHOWBRIGHTNESS;
+	bool showMean				= DEFAULT_SHOWMEAN;
+	bool showFocus				= DEFAULT_SHOWFOCUS;
 	bool taking_dark_frames		= false;
 	bool daytimeCapture			= DEFAULT_DAYTIMECAPTURE;
 	bool help					= false;
@@ -538,7 +533,7 @@ const char *locale				= DEFAULT_LOCALE;
 
 	printf("\n");
 	printf("%s ************************************************\n", c(KGRN));
-	printf("%s *** Allsky Camera Software v0.8.3.3  |  2022 ***\n", c(KGRN));
+	printf("%s *** Allsky Camera Software v0.8.4    |  2022 ***\n", c(KGRN));
 	printf("%s ************************************************\n\n", c(KGRN));
 	printf("\%sCapture images of the sky with a Raspberry Pi and a RPi HQ camera\n", c(KGRN));
 	printf("\n");
@@ -560,21 +555,160 @@ const char *locale				= DEFAULT_LOCALE;
 	{
 		for (i = 1; i <= argc - 1; i++)
 		{
+			// Misc. settings
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
 				help = true;
-			}
-			else if (strcmp(argv[i], "-save_dir") == 0)
-			{
-				save_dir = argv[++i];
 			}
 			else if (strcmp(argv[i], "-cmd") == 0)
 			{
 				is_libcamera = strcmp(argv[i+1], "libcamera") == 0 ? true : false;
 			}
-			else if (strcmp(argv[i], "-locale") == 0)
+			else if (strcmp(argv[i], "-save_dir") == 0)
 			{
-				locale = argv[++i];
+				save_dir = argv[++i];
+			}
+			else if (strcmp(argv[i], "-tty") == 0)
+			{
+				tty = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-preview") == 0)
+			{
+				preview = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daytime") == 0)
+			{
+				daytimeCapture = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayautoexposure") == 0)
+			{
+				dayAutoExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daymaxexposure") == 0)
+			{
+// TODO				dayMaxAutoexposure_ms = atoi(argv[++i]);
+i++;
+			}
+			else if (strcmp(argv[i], "-dayexposure") == 0)
+			{
+				dayExposure_us = atof(argv[++i]) * US_IN_MS;	// allow fractions
+			}
+			else if (strcmp(argv[i], "-daymean") == 0)
+			{
+				myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
+			}
+			else if (strcmp(argv[i], "-daybrightness") == 0)
+			{
+				dayBrightness = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daydelay") == 0)
+			{
+				dayDelay_ms = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayautogain") == 0)
+			{
+				dayAutoGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayautogain") == 0)
+			{
+				dayAutoGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daygain") == 0)
+			{
+				dayGain = atof(argv[++i]);
+			}
+ 			else if (strcmp(argv[i], "-daybin") == 0)
+			{
+				dayBin = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayawb") == 0)
+			{
+				dayAutoAWB = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daywbr") == 0)
+			{
+				dayWBR = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daywbb") == 0)
+			{
+				dayWBB = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayskipframes") == 0)
+			{
+// TODO				day_skip_frames = atoi(argv[++i]);
+i++;
+			}
+
+			// nighttime settings
+			else if (strcmp(argv[i], "-nightautoexposure") == 0)
+			{
+				nightAutoExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightmaxexposure") == 0)
+			{
+// TODO				nightMaxAutoexposure_ms = atoi(argv[++i]);
+i++;
+			}
+			else if (strcmp(argv[i], "-nightexposure") == 0)
+			{
+				nightExposure_us = atof(argv[++i]) * US_IN_MS;
+			}
+			else if (strcmp(argv[i], "-nightmean") == 0 || strcmp(argv[i], "-mean-value") == 0)
+			{
+				myModeMeanSetting.mean_value = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.nightMean = myModeMeanSetting.mean_value;
+				myModeMeanSetting.mode_mean = true;
+				i++;
+			}
+			else if (strcmp(argv[i], "-nightbrightness") == 0)
+			{
+				nightBrightness = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightdelay") == 0)
+			{
+				nightDelay_ms = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightautogain") == 0)
+			{
+				nightAutoGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightmaxgain") == 0)
+			{
+// TODO				nightMaxGain = atoi(argv[++i]);
+i++;
+			}
+			else if (strcmp(argv[i], "-nightgain") == 0)
+			{
+				nightGain = atof(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightbin") == 0)
+			{
+				nightBin = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightawb") == 0)
+			{
+				nightAutoAWB = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightwbr") == 0)
+			{
+				nightWBR = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightwbb") == 0)
+			{
+				nightWBB = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightskipframes") == 0)
+			{
+// TODO				night_skip_frames = atoi(argv[++i]);
+i++;
+			}
+
+			// daytime and nighttime settings
+			else if (strcmp(argv[i], "-saturation") == 0)
+			{
+				saturation = atof(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-width") == 0)
 			{
@@ -592,118 +726,80 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				quality = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-dayexposure") == 0)
+			else if (strcmp(argv[i], "-filename") == 0)
 			{
-				dayExposure_us = atof(argv[++i]) * US_IN_MS;	// allow fractions
+				fileName = (argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightexposure") == 0)
+			else if (strcmp(argv[i], "-rotation") == 0)
 			{
-				nightExposure_us = atof(argv[++i]) * US_IN_MS;
+				rotation = atoi(argv[++i]);
 			}
-
-			else if (strcmp(argv[i], "-dayautoexposure") == 0)
+			else if (strcmp(argv[i], "-flip") == 0)
 			{
-				dayAutoExposure = getBoolean(argv[++i]);
+				flip = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightautoexposure") == 0)
+			else if (strcmp(argv[i], "-notificationimages") == 0)
 			{
-				nightAutoExposure = getBoolean(argv[++i]);
+				notificationImages = getBoolean(argv[++i]);
 			}
-
-			else if (strcmp(argv[i], "-dayautogain") == 0)
+			else if (strcmp(argv[i], "-latitude") == 0)
 			{
-				dayAutoGain = getBoolean(argv[++i]);
+				latitude = argv[++i];
 			}
-			else if (strcmp(argv[i], "-nightautogain") == 0)
+			else if (strcmp(argv[i], "-longitude") == 0)
 			{
-				nightAutoGain = getBoolean(argv[++i]);
+				longitude = argv[++i];
 			}
-			else if (strcmp(argv[i], "-daygain") == 0)
+			else if (strcmp(argv[i], "-angle") == 0)
 			{
-				dayGain = atof(argv[++i]);
+				angle = argv[++i];
 			}
-			else if (strcmp(argv[i], "-nightgain") == 0)
+			else if (strcmp(argv[i], "-darkframe") == 0)
 			{
-				nightGain = atof(argv[++i]);
+				taking_dark_frames = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-saturation") == 0)
+			else if (strcmp(argv[i], "-locale") == 0)
 			{
-				saturation = atof(argv[++i]);
+				locale = argv[++i];
 			}
-			else if (strcmp(argv[i], "-daybrightness") == 0)
+			else if (strcmp(argv[i], "-debuglevel") == 0)
 			{
-				dayBrightness = atoi(argv[++i]);
+				debugLevel = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightbrightness") == 0)
+			else if (strcmp(argv[i], "-alwaysshowadvanced") == 0)
 			{
-				nightBrightness = atoi(argv[++i]);
-			}
- 			else if (strcmp(argv[i], "-daybin") == 0)
-			{
-				dayBin = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-nightbin") == 0)
-			{
-				nightBin = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-daydelay") == 0)
-			{
-				dayDelay_ms = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-nightdelay") == 0)
-			{
-				nightDelay_ms = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-awb") == 0)
-			{
-				autoAWB = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-wbr") == 0)
-			{
-				WBR = atof(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-wbb") == 0)
-			{
-				WBB = atof(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-nightmean") == 0 || strcmp(argv[i], "-mean-value") == 0)
-			{
-				myModeMeanSetting.mean_value = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.nightMean = myModeMeanSetting.mean_value;
-				myModeMeanSetting.mode_mean = true;
-				i++;
-			}
-			else if (strcmp(argv[i], "-daymean") == 0)
-			{
-				myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
-				i++;
-			}
-			else if (strcmp(argv[i], "-mean-threshold") == 0)
-			{
-				myModeMeanSetting.mean_threshold = std::min(0.1,std::max(0.0001,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
-				i++;
-			}
-			else if (strcmp(argv[i], "-mean-p0") == 0)
-			{
-				myModeMeanSetting.mean_p0 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
-				i++;
-			}
-			else if (strcmp(argv[i], "-mean-p1") == 0)
-			{
-				myModeMeanSetting.mean_p1 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
-				i++;
-			}
-			else if (strcmp(argv[i], "-mean-p2") == 0)
-			{
-				myModeMeanSetting.mean_p2 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
-				i++;
+				i++;	// not used
 			}
 
+			// overlay settings
+			else if (strcmp(argv[i], "-showTime") == 0)
+			{
+				showTime = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-timeformat") == 0)
+			{
+				timeFormat = argv[++i];
+			}
+			else if (strcmp(argv[i], "-showExposure") == 0)
+			{
+				showExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-showGain") == 0)
+			{
+				showGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-showBrightness") == 0)
+			{
+				showBrightness = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-showMean") == 0)
+			{
+				showMean = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-showFocus") == 0)
+			{
+				showFocus = getBoolean(argv[++i]);
+			}
 			else if (strcmp(argv[i], "-text") == 0)
 			{
 				ImgText = argv[++i];
@@ -758,81 +854,31 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				outlinefont = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-rotation") == 0)
+
+			// auto-exposure settings
+			else if (strcmp(argv[i], "-mean-threshold") == 0)
 			{
-				rotation = atoi(argv[++i]);
+				myModeMeanSetting.mean_threshold = std::min(0.1,std::max(0.0001,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
 			}
-			else if (strcmp(argv[i], "-flip") == 0)
+			else if (strcmp(argv[i], "-mean-p0") == 0)
 			{
-				flip = atoi(argv[++i]);
+				myModeMeanSetting.mean_p0 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
 			}
-			else if (strcmp(argv[i], "-filename") == 0)
+			else if (strcmp(argv[i], "-mean-p1") == 0)
 			{
-				fileName = (argv[++i]);
+				myModeMeanSetting.mean_p1 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
 			}
-			else if (strcmp(argv[i], "-latitude") == 0)
+			else if (strcmp(argv[i], "-mean-p2") == 0)
 			{
-				latitude = argv[++i];
-			}
-			else if (strcmp(argv[i], "-longitude") == 0)
-			{
-				longitude = argv[++i];
-			}
-			else if (strcmp(argv[i], "-angle") == 0)
-			{
-				angle = argv[++i];
-			}
-			else if (strcmp(argv[i], "-preview") == 0)
-			{
-				preview = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-debuglevel") == 0)
-			{
-				debugLevel = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showTime") == 0)
-			{
-				showTime = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-timeformat") == 0)
-			{
-				timeFormat = argv[++i];
-			}
-			else if (strcmp(argv[i], "-darkframe") == 0)
-			{
-				taking_dark_frames = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showExposure") == 0)
-			{
-				showExposure = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showGain") == 0)
-			{
-				showGain = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showBrightness") == 0)
-			{
-				showBrightness = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showMean") == 0)
-			{
-				showMean = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showFocus") == 0)
-			{
-				showFocus = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-daytime") == 0)
-			{
-				daytimeCapture = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-notificationimages") == 0)
-			{
-				notificationImages = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-tty") == 0)
-			{
-				tty = getBoolean(argv[++i]);
+				myModeMeanSetting.mean_p2 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
 			}
 		}
 	}
@@ -884,10 +930,10 @@ const char *locale				= DEFAULT_LOCALE;
 		printf(" -fontline							- Default = 1 - Text Font Line Thickness\n");
 		printf("\n");
 		printf("\n");
-		printf(" -latitude							- Default = 60.7N (Whitehorse) - Latitude of the camera.\n");
-		printf(" -longitude							- Default = 135.05W (Whitehorse) - Longitude of the camera\n");
-		printf(" -angle								- Default = -6 - Angle of the sun below the horizon. -6=civil "
-			"twilight, -12=nautical twilight, -18=astronomical twilight\n");
+		printf(" -latitude							- No default - you must set it.  Latitude of the camera.\n");
+		printf(" -longitude							- No default - you must set it.  Longitude of the camera.\n");
+		printf(" -angle								- Default = %s: Angle of the sun below the horizon.\n", DEFAULT_ANGLE);
+		printf("		-6=civil twilight   -12=nautical twilight   -18=astronomical twilight\n");
 		printf("\n");
 		printf(" -preview							- Set to 1 to preview the captured images. Only works with a Desktop Environment\n");
 		printf(" -darkframe							- Set to 1 to grab dark frame and cover your camera\n");
@@ -1033,9 +1079,8 @@ const char *locale				= DEFAULT_LOCALE;
 	printf(" Brightness (day): %d\n", dayBrightness);
 	printf(" Brightness (night): %d\n", nightBrightness);
 	printf(" Saturation: %.1f\n", saturation);
-	printf(" Auto White Balance: %s\n", yesNo(autoAWB));
-	printf(" WB Red: %1.2f\n", WBR);
-	printf(" WB Blue: %1.2f\n", WBB);
+	printf(" White Balance (day)   Red: %.2f, Blue: %.2f, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
+	printf(" White Balance (night) Red: %.2f, Blue: %.2f, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
 	printf(" Binning (day): %d\n", dayBin);
 	printf(" Binning (night): %d\n", nightBin);
 	printf(" Delay (day): %dms\n", dayDelay_ms);
@@ -1255,7 +1300,8 @@ const char *locale				= DEFAULT_LOCALE;
 			snprintf(full_filename, sizeof(full_filename), "%s/%s", save_dir, final_file_name);
 
 			// Capture and save image
-			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, autoAWB, WBR, WBB, rotation, flip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
+// TODO: implement day/night AWB; for now, use day
+			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, dayAutoAWB, dayWBR, dayWBB, rotation, flip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
 
 			if (retCode == 0)
 			{
@@ -1322,9 +1368,10 @@ const char *locale				= DEFAULT_LOCALE;
 
 				// -999 for temperature says the camera doesn't support it
 				// TODO: in the future the calculation of mean should independent from mode_mean. -1 means don't display.
+// TODO: implement day/night AWB; for now, use day
 				float m = (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) ? mean : -1.0;
 				add_variables_to_command(cmd, last_exposure_us, currentBrightness, m,
-					currentAutoExposure, currentAutoGain, autoAWB, WBR, WBB,
+					currentAutoExposure, currentAutoGain, dayAutoAWB, dayWBR, dayWBB,
 					-999, last_gain, (int)round(20.0 * 10.0 * log10(last_gain)),
 					currentBin, flip, current_bit_depth, focus_metric);
 				strcat(cmd, " &");

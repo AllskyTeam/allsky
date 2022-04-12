@@ -59,7 +59,6 @@ bool bMain					= true;
 std::string dayOrNight;
 int numErrors				= 0;	// Number of errors in a row.
 int numExposures			= 0;	// how many valid pictures have we taken so far?
-double currentGain			= NOT_SET;
 float min_saturation;				// produces black and white
 float max_saturation;
 float default_saturation;
@@ -469,10 +468,15 @@ const char *locale				= DEFAULT_LOCALE;
 	bool dayAutoExposure		= DEFAULT_DAYAUTOEXPOSURE;
 	bool nightAutoExposure		= DEFAULT_NIGHTAUTOEXPOSURE;
 	long last_exposure_us 		= 0;		// last exposure taken
-	double nightGain	 		= DEFAULT_NIGHTGAIN;
+	double currentMean			= NOT_SET;
 	double dayGain				= DEFAULT_DAYGAIN;
-	bool nightAutoGain			= DEFAULT_NIGHTAUTOGAIN;
 	bool dayAutoGain			= DEFAULT_DAYAUTOGAIN;
+	double dayMaxGain			= DEFAULT_DAYMAXGAIN;
+	double nightGain			= DEFAULT_NIGHTGAIN;
+	bool nightAutoGain			= DEFAULT_NIGHTAUTOGAIN;
+	double nightMaxGain	 		= DEFAULT_NIGHTMAXGAIN;
+	double currentGain			= NOT_SET;
+	double currentMaxGain		= NOT_SET;
 	float last_gain				= 0.0;		// last gain taken
 	int nightDelay_ms			= DEFAULT_NIGHTDELAY;
 	int dayDelay_ms				= DEFAULT_DAYDELAY;
@@ -616,6 +620,10 @@ i++;
 			{
 				dayAutoGain = getBoolean(argv[++i]);
 			}
+			else if (strcmp(argv[i], "-daymaxgain") == 0)
+			{
+				dayMaxGain = atoi(argv[++i]);
+			}
 			else if (strcmp(argv[i], "-daygain") == 0)
 			{
 				dayGain = atof(argv[++i]);
@@ -677,8 +685,7 @@ i++;
 			}
 			else if (strcmp(argv[i], "-nightmaxgain") == 0)
 			{
-// TODO				nightMaxGain = atoi(argv[++i]);
-i++;
+				nightMaxGain = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightgain") == 0)
 			{
@@ -1104,6 +1111,7 @@ i++;
 	printf(" Auto Exposure (night): %s\n", yesNo(nightAutoExposure));
 	printf(" Gain (day): %1.2f\n", dayGain);
 	printf(" Gain (night): %1.2f\n", nightGain);
+	printf(" Auto Gain (day): %s\n", yesNo(dayAutoGain));
 	printf(" Auto Gain (night): %s\n", yesNo(nightAutoGain));
 	printf(" Brightness (day): %d\n", dayBrightness);
 	printf(" Brightness (night): %d\n", nightBrightness);
@@ -1174,14 +1182,18 @@ i++;
 			// We're doing dark frames so turn off autoexposure and autogain, and use
 			// nightime gain, delay, exposure, and brightness to mimic a nightime shot.
 			currentAutoExposure = false;
+			nightAutoExposure = false;
 			currentAutoGain = false;
 			currentGain = nightGain;
+			currentMaxGain = nightMaxGain;		// not needed since we're not using auto gain, but set to be consistent
 			currentDelay_ms = nightDelay_ms;
 			currentExposure_us = nightExposure_us;
-			currentBrightness = nightBrightness;
 			currentBin = nightBin;
+			currentBrightness = nightBrightness;
+			myModeMeanSetting.mode_mean = MEAN_AUTO_OFF;
 
  			Log(0, "Taking dark frames...\n");
+
 			if (notificationImages) {
 				system("scripts/copy_notification_image.sh --expires 0 DarkFrames &");
 			}
@@ -1242,12 +1254,9 @@ i++;
 					currentDelay_ms = dayDelay_ms;
 					currentBin = dayBin;
 					currentGain = dayGain;
+					currentMaxGain = dayMaxGain;
 					currentAutoGain = dayAutoGain;
-					if (myModeMeanSetting.mode_mean)
-					{
-						myModeMeanSetting.mean_value = myModeMeanSetting.dayMean;
-						RPiHQInit(currentAutoExposure, currentExposure_us, currentAutoGain, currentGain, myRaspistillSetting, myModeMeanSetting);
-					}
+					currentMean = myModeMeanSetting.dayMean;
 				}
 			}
 			else	// NIGHT
@@ -1261,20 +1270,23 @@ i++;
 				currentDelay_ms = nightDelay_ms;
 				currentBin = nightBin;
 				currentGain = nightGain;
+				currentMaxGain = nightMaxGain;
 				currentAutoGain = nightAutoGain;
-				if (myModeMeanSetting.mode_mean)
-				{
-					myModeMeanSetting.mean_value = myModeMeanSetting.nightMean;
-					RPiHQInit(currentAutoExposure, currentExposure_us, currentAutoGain, currentGain, myRaspistillSetting, myModeMeanSetting);
-				}
+				currentMean = myModeMeanSetting.nightMean;
 			}
+		}
+		if (myModeMeanSetting.mode_mean)
+		{
+			myModeMeanSetting.mean_value = currentMean;
+// TODO: set to currentMaxExposure when implemented
+			RPiHQInit(currentAutoExposure, currentExposure_us, currentAutoGain, currentMaxGain, myRaspistillSetting, myModeMeanSetting);
 		}
 
 		// Want initial exposures to have the exposure time and gain the user specified.
 		if (numExposures == 0)
 		{
 			myRaspistillSetting.shutter_us = currentExposure_us;
-			// xxx this doesn't work    myRaspistillSetting.analoggain = currentGain;
+			myRaspistillSetting.analoggain = currentGain;
 		}
 
 		// Adjusting variables for chosen binning

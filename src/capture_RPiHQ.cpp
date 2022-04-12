@@ -536,7 +536,7 @@ const char *locale				= DEFAULT_LOCALE;
 
 	printf("\n");
 	printf("%s ************************************************\n", c(KGRN));
-	printf("%s *** Allsky Camera Software v0.8.3.3  |  2022 ***\n", c(KGRN));
+	printf("%s *** Allsky Camera Software v0.8.4    |  2022 ***\n", c(KGRN));
 	printf("%s ************************************************\n\n", c(KGRN));
 	printf("\%sCapture images of the sky with a Raspberry Pi and a RPi HQ camera\n", c(KGRN));
 	printf("\n");
@@ -558,21 +558,159 @@ const char *locale				= DEFAULT_LOCALE;
 	{
 		for (i = 1; i <= argc - 1; i++)
 		{
+			// Misc. settings
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
 				help = true;
-			}
-			else if (strcmp(argv[i], "-save_dir") == 0)
-			{
-				save_dir = argv[++i];
 			}
 			else if (strcmp(argv[i], "-cmd") == 0)
 			{
 				is_libcamera = strcmp(argv[i+1], "libcamera") == 0 ? true : false;
 			}
-			else if (strcmp(argv[i], "-locale") == 0)
+			else if (strcmp(argv[i], "-save_dir") == 0)
 			{
-				locale = argv[++i];
+				save_dir = argv[++i];
+			}
+			else if (strcmp(argv[i], "-tty") == 0)
+			{
+				tty = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-preview") == 0)
+			{
+				preview = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daytime") == 0)
+			{
+				daytimeCapture = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayautoexposure") == 0)
+			{
+				dayAutoExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daymaxexposure") == 0)
+			{
+				dayMaxAutoexposure_ms = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayexposure") == 0)
+			{
+				dayExposure_us = atof(argv[++i]) * US_IN_MS;	// allow fractions
+			}
+			else if (strcmp(argv[i], "-daymean") == 0)
+			{
+				myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
+			}
+			else if (strcmp(argv[i], "-daybrightness") == 0)
+			{
+				dayBrightness = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daydelay") == 0)
+			{
+				dayDelay_ms = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayautogain") == 0)
+			{
+				dayAutoGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayautogain") == 0)
+			{
+				dayAutoGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daygain") == 0)
+			{
+				dayGain = atof(argv[++i]);
+			}
+ 			else if (strcmp(argv[i], "-daybin") == 0)
+			{
+				dayBin = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayawb") == 0)
+			{
+				dayAutoAWB = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daywbr") == 0)
+			{
+				dayWBR = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daywbb") == 0)
+			{
+				dayWBB = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayskipframes") == 0)
+			{
+// TODO				day_skip_frames = atoi(argv[++i]);
+i++;
+			}
+
+			// nighttime settings
+			else if (strcmp(argv[i], "-nightautoexposure") == 0)
+			{
+				nightAutoExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightmaxexposure") == 0)
+			{
+// TODO				nightMaxAutoexposure_ms = atoi(argv[++i]);
+i++;
+			}
+			else if (strcmp(argv[i], "-nightexposure") == 0)
+			{
+				nightExposure_us = atof(argv[++i]) * US_IN_MS;
+			}
+			else if (strcmp(argv[i], "-nightmean") == 0 || strcmp(argv[i], "-mean-value") == 0)
+			{
+				myModeMeanSetting.mean_value = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.nightMean = myModeMeanSetting.mean_value;
+				myModeMeanSetting.mode_mean = true;
+				i++;
+			}
+			else if (strcmp(argv[i], "-nightbrightness") == 0)
+			{
+				nightBrightness = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightdelay") == 0)
+			{
+				nightDelay_ms = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightautogain") == 0)
+			{
+				nightAutoGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightmaxgain") == 0)
+			{
+// TODO				nightMaxGain = atoi(argv[++i]);
+i++;
+			}
+			else if (strcmp(argv[i], "-nightgain") == 0)
+			{
+				nightGain = atof(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightbin") == 0)
+			{
+				nightBin = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightawb") == 0)
+			{
+				nightAutoAWB = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightwbr") == 0)
+			{
+				nightWBR = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightwbb") == 0)
+			{
+				nightWBB = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightskipframes") == 0)
+			{
+// TODO				night_skip_frames = atoi(argv[++i]);
+i++;
+			}
+
+			// daytime and nighttime settings
+			else if (strcmp(argv[i], "-saturation") == 0)
+			{
+				saturation = atof(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-width") == 0)
 			{
@@ -590,118 +728,80 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				quality = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-dayexposure") == 0)
+			else if (strcmp(argv[i], "-filename") == 0)
 			{
-				dayExposure_us = atof(argv[++i]) * US_IN_MS;	// allow fractions
+				fileName = (argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightexposure") == 0)
+			else if (strcmp(argv[i], "-rotation") == 0)
 			{
-				nightExposure_us = atof(argv[++i]) * US_IN_MS;
+				rotation = atoi(argv[++i]);
 			}
-
-			else if (strcmp(argv[i], "-dayautoexposure") == 0)
+			else if (strcmp(argv[i], "-flip") == 0)
 			{
-				dayAutoExposure = getBoolean(argv[++i]);
+				flip = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightautoexposure") == 0)
+			else if (strcmp(argv[i], "-notificationimages") == 0)
 			{
-				nightAutoExposure = getBoolean(argv[++i]);
+				notificationImages = getBoolean(argv[++i]);
 			}
-
-			else if (strcmp(argv[i], "-dayautogain") == 0)
+			else if (strcmp(argv[i], "-latitude") == 0)
 			{
-				dayAutoGain = getBoolean(argv[++i]);
+				latitude = argv[++i];
 			}
-			else if (strcmp(argv[i], "-nightautogain") == 0)
+			else if (strcmp(argv[i], "-longitude") == 0)
 			{
-				nightAutoGain = getBoolean(argv[++i]);
+				longitude = argv[++i];
 			}
-			else if (strcmp(argv[i], "-daygain") == 0)
+			else if (strcmp(argv[i], "-angle") == 0)
 			{
-				dayGain = atof(argv[++i]);
+				angle = argv[++i];
 			}
-			else if (strcmp(argv[i], "-nightgain") == 0)
+			else if (strcmp(argv[i], "-darkframe") == 0)
 			{
-				nightGain = atof(argv[++i]);
+				taking_dark_frames = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-saturation") == 0)
+			else if (strcmp(argv[i], "-locale") == 0)
 			{
-				saturation = atof(argv[++i]);
+				locale = argv[++i];
 			}
-			else if (strcmp(argv[i], "-daybrightness") == 0)
+			else if (strcmp(argv[i], "-debuglevel") == 0)
 			{
-				dayBrightness = atoi(argv[++i]);
+				debugLevel = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightbrightness") == 0)
+			else if (strcmp(argv[i], "-alwaysshowadvanced") == 0)
 			{
-				nightBrightness = atoi(argv[++i]);
-			}
- 			else if (strcmp(argv[i], "-daybin") == 0)
-			{
-				dayBin = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-nightbin") == 0)
-			{
-				nightBin = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-daydelay") == 0)
-			{
-				dayDelay_ms = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-nightdelay") == 0)
-			{
-				nightDelay_ms = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-awb") == 0)
-			{
-				autoAWB = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-wbr") == 0)
-			{
-				WBR = atof(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-wbb") == 0)
-			{
-				WBB = atof(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-nightmean") == 0 || strcmp(argv[i], "-mean-value") == 0)
-			{
-				myModeMeanSetting.mean_value = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.nightMean = myModeMeanSetting.mean_value;
-				myModeMeanSetting.mode_mean = true;
-				i++;
-			}
-			else if (strcmp(argv[i], "-daymean") == 0)
-			{
-				myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
-				i++;
-			}
-			else if (strcmp(argv[i], "-mean-threshold") == 0)
-			{
-				myModeMeanSetting.mean_threshold = std::min(0.1,std::max(0.0001,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
-				i++;
-			}
-			else if (strcmp(argv[i], "-mean-p0") == 0)
-			{
-				myModeMeanSetting.mean_p0 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
-				i++;
-			}
-			else if (strcmp(argv[i], "-mean-p1") == 0)
-			{
-				myModeMeanSetting.mean_p1 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
-				i++;
-			}
-			else if (strcmp(argv[i], "-mean-p2") == 0)
-			{
-				myModeMeanSetting.mean_p2 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
-				i++;
+				i++;	// not used
 			}
 
+			// overlay settings
+			else if (strcmp(argv[i], "-showTime") == 0)
+			{
+				showTime = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-timeformat") == 0)
+			{
+				timeFormat = argv[++i];
+			}
+			else if (strcmp(argv[i], "-showExposure") == 0)
+			{
+				showExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-showGain") == 0)
+			{
+				showGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-showBrightness") == 0)
+			{
+				showBrightness = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-showMean") == 0)
+			{
+				showMean = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-showFocus") == 0)
+			{
+				showFocus = getBoolean(argv[++i]);
+			}
 			else if (strcmp(argv[i], "-text") == 0)
 			{
 				ImgText = argv[++i];
@@ -756,81 +856,31 @@ const char *locale				= DEFAULT_LOCALE;
 			{
 				outlinefont = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-rotation") == 0)
+
+			// auto-exposure settings
+			else if (strcmp(argv[i], "-mean-threshold") == 0)
 			{
-				rotation = atoi(argv[++i]);
+				myModeMeanSetting.mean_threshold = std::min(0.1,std::max(0.0001,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
 			}
-			else if (strcmp(argv[i], "-flip") == 0)
+			else if (strcmp(argv[i], "-mean-p0") == 0)
 			{
-				flip = atoi(argv[++i]);
+				myModeMeanSetting.mean_p0 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
 			}
-			else if (strcmp(argv[i], "-filename") == 0)
+			else if (strcmp(argv[i], "-mean-p1") == 0)
 			{
-				fileName = (argv[++i]);
+				myModeMeanSetting.mean_p1 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
 			}
-			else if (strcmp(argv[i], "-latitude") == 0)
+			else if (strcmp(argv[i], "-mean-p2") == 0)
 			{
-				latitude = argv[++i];
-			}
-			else if (strcmp(argv[i], "-longitude") == 0)
-			{
-				longitude = argv[++i];
-			}
-			else if (strcmp(argv[i], "-angle") == 0)
-			{
-				angle = argv[++i];
-			}
-			else if (strcmp(argv[i], "-preview") == 0)
-			{
-				preview = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-debuglevel") == 0)
-			{
-				debugLevel = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showTime") == 0)
-			{
-				showTime = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-timeformat") == 0)
-			{
-				timeFormat = argv[++i];
-			}
-			else if (strcmp(argv[i], "-darkframe") == 0)
-			{
-				taking_dark_frames = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showExposure") == 0)
-			{
-				showExposure = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showGain") == 0)
-			{
-				showGain = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showBrightness") == 0)
-			{
-				showBrightness = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showMean") == 0)
-			{
-				showMean = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showFocus") == 0)
-			{
-				showFocus = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-daytime") == 0)
-			{
-				daytimeCapture = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-notificationimages") == 0)
-			{
-				notificationImages = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-tty") == 0)
-			{
-				tty = getBoolean(argv[++i]);
+				myModeMeanSetting.mean_p2 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
+				myModeMeanSetting.mode_mean = true;
+				i++;
 			}
 		}
 	}

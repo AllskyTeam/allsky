@@ -49,6 +49,8 @@
 #define DEFAULT_NIGHTMEAN			0.2		// target nighttime mean brightness
 #define DEFAULT_DAYTIMECAPTURE		false	// Capture images during the day?
 
+#define DEFAULT_DAYSKIPFRAMES		5
+#define DEFAULT_NIGHTSKIPFRAMES		1
 #define DEFAULT_FLIP				0		// no flipping
 #define DEFAULT_WIDTH				0
 #define DEFAULT_HEIGHT				0

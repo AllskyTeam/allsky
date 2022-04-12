@@ -25,8 +25,6 @@
 #define DEFAULT_DAYWBB			85
 #define DEFAULT_NIGHTWBR		DEFAULT_DAYWBR
 #define DEFAULT_NIGHTWBB		DEFAULT_DAYWBB
-#define DEFAULT_WBR				DEFAULT_DAYWBR	// XXX old - now have day and night versions
-#define DEFAULT_WBB				DEFAULT_DAYWBB	// XXX old - now have day and night versions
 #define DEFAULT_DAYGAIN			1
 #define DEFAULT_DAYAUTOGAIN		false		// TODO: will change when implementing modeMean
 #define DEFAULT_DAYMAXGAIN		200
@@ -35,6 +33,7 @@
 #define DEFAULT_NIGHTMAXGAIN	200
 #define DEFAULT_GAMMA			50					// not supported by all cameras
 #define DEFAULT_BRIGHTNESS		100
+#define DEFAULT_OFFSET			0
 #define DEFAULT_ASIBANDWIDTH	40
 #define DEFAULT_DAYSKIPFRAMES	5
 #define DEFAULT_NIGHTSKIPFRAMES	1
@@ -80,9 +79,17 @@ int dayDelay_ms					= DEFAULT_DAYDELAY;	// Delay in milliseconds.
 int nightDelay_ms				= DEFAULT_NIGHTDELAY;	// Delay in milliseconds.
 int nightMaxAutoexposure_ms		= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
 int gainTransitionTime			= DEFAULT_GAIN_TRANSITION_TIME;
-bool autoAWB					= DEFAULT_AUTOAWB;	// is Auto White Balance on or off?
-int WBR							= DEFAULT_WBR;
-int WBB							= DEFAULT_WBB;
+bool dayAutoAWB					= DEFAULT_DAYAUTOAWB;	// is Auto White Balance on or off?
+int dayWBR						= DEFAULT_DAYWBR;		// red component
+int dayWBB						= DEFAULT_DAYWBB;		// blue component
+bool nightAutoAWB				= DEFAULT_NIGHTAUTOAWB;
+int nightWBR					= DEFAULT_NIGHTWBR;
+int nightWBB					= DEFAULT_NIGHTWBB;
+// TODO: implement currentAWB, WBR, and WBB
+bool currentAutoAWB				= false;
+int currentWBR					= NOT_SET;
+int currentWBB					= NOT_SET;
+
 #ifdef USE_HISTOGRAM
 int current_histogramBoxSizeX =	NOT_SET;
 int current_histogramBoxSizeY =	NOT_SET;
@@ -226,7 +233,7 @@ void *SaveImgThd(void *para)
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
 			float gainDB = pow(10, (float)currentGain / 10.0 / 20.0);
 			add_variables_to_command(cmd, last_exposure_us, currentBrightness, mean,
-				currentAutoExposure, currentAutoGain, autoAWB, WBR, WBB,
+				currentAutoExposure, currentAutoGain, currentAutoAWB, currentWBR, currentWBB,
 				actualTemp, gainDB, currentGain,
 				currentBin, flip, current_bit_depth, focus_metric);
 			strcat(cmd, " &");
@@ -842,7 +849,7 @@ int main(int argc, char *argv[])
 	bool asiAutoBandwidth		= false;						// is Auto Bandwidth on or off?
 
 	// There is no max day autoexposure since daylight exposures are always pretty short.
-	long nightExposure_us = DEFAULT_NIGHTEXPOSURE;
+	long nightExposure_us		= DEFAULT_NIGHTEXPOSURE;
 	bool nightAutoExposure		= DEFAULT_NIGHTAUTOEXPOSURE;	// is it on or off for nighttime?
 	// currentAutoExposure is global so is defined outside of main()
 
@@ -859,12 +866,11 @@ int main(int argc, char *argv[])
 	int nightGain				= DEFAULT_NIGHTGAIN;
 	bool nightAutoGain			= DEFAULT_NIGHTAUTOGAIN;		// is Auto Gain on or off for nighttime?
 	int nightMaxGain			= DEFAULT_NIGHTMAXGAIN;
-
 	int currentDelay_ms			= NOT_SET;
-
 	int gamma				 	= DEFAULT_GAMMA;
 	int dayBrightness			= DEFAULT_BRIGHTNESS;
 	int nightBrightness			= DEFAULT_BRIGHTNESS;
+	int offset					= DEFAULT_OFFSET;
 
 	char const *latitude		= DEFAULT_LATITUDE;
 	char const *longitude		= DEFAULT_LONGITUDE;
@@ -875,18 +881,18 @@ int main(int argc, char *argv[])
 	bool preview				= false;
 	bool showTime				= DEFAULT_SHOWTIME;
 	char const *tempType		= "C";							// Celsius
-
-	bool showTemp				= false;
-	bool showExposure			= false;
-	bool showGain				= false;
-	bool showBrightness			= false;
+	bool showTemp				= DEFAULT_SHOWTEMP;
+	bool showExposure			= DEFAULT_SHOWEXPOSURE;
+	bool showGain				= DEFAULT_SHOWGAIN;
+	bool showBrightness			= DEFAULT_SHOWBRIGHTNESS;
+	bool showUSB				= false;						// specific to ZWO
+	bool showMean				= DEFAULT_SHOWMEAN;
 #ifdef USE_HISTOGRAM
-	bool showMean				= false;
 	int maxHistogramAttempts	= 15;	// max number of times we'll try for a better histogram mean
 	bool showHistogramBox		= false;
 	int histogramBoxSizeX		= DEFAULT_BOX_SIZEX;
 	int histogramBoxSizeY		= DEFAULT_BOX_SIZEY;
-	bool showFocus				= false;
+	bool showFocus				= DEFAULT_SHOWFOCUS;
 	int aggression				= DEFAULT_AGGRESSION; // ala PHD2. Percent of change made, 1 - 100.
 
 	// If we just transitioned from night to day, it's possible current_exposure_us will
@@ -938,6 +944,7 @@ int main(int argc, char *argv[])
 		// The old names should be removed below in a future version.
 		for (i=1 ; i <= argc - 1 ; i++)
 		{
+			// Misc. settings
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
 				help = true;
@@ -946,25 +953,165 @@ int main(int argc, char *argv[])
 			{
 				save_dir = argv[++i];
 			}
-			else if (strcmp(argv[i], "-newexposure") == 0)
+			else if (strcmp(argv[i], "-tty") == 0)	// overrides what was automatically determined
 			{
-				use_new_exposure_algorithm = getBoolean(argv[++i]);
+				tty = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-locale") == 0)
+			else if (strcmp(argv[i], "-preview") == 0)
 			{
-				locale = argv[++i];
+				preview = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daytime") == 0)
+			{
+				daytimeCapture = getBoolean(argv[++i]);
+			}
+
+			// daytime settings
+			else if (strcmp(argv[i], "-dayautoexposure") == 0)
+			{
+				dayAutoExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daymaxexposure") == 0)
+			{
+				dayMaxAutoexposure_ms = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayexposure") == 0)
+			{
+				dayExposure_us = atof(argv[++i]) * US_IN_MS;	// allow fractions
+			}
+			else if (strcmp(argv[i], "-daymean") == 0)
+			{
+//FUTURE
+i++;  //		myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,atof(argv[++i])));
+//				myModeMeanSetting.mode_mean = true;
+			}
+			else if (strcmp(argv[i], "-daybrightness") == 0)
+			{
+				dayBrightness = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daydelay") == 0)
+			{
+				dayDelay_ms = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayautogain") == 0)
+			{
+				dayAutoGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daymaxgain") == 0)
+			{
+i++; // TODO:				dayMaxGain = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daygain") == 0)
+			{
+				dayGain = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daybin") == 0)
+			{
+				dayBin = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-dayawb") == 0)
+			{
+				dayAutoAWB = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daywbr") == 0)
+			{
+				dayWBR = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-daywbb") == 0)
+			{
+				dayWBB = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-dayskipframes") == 0)
 			{
 				day_skip_frames = atoi(argv[++i]);
 			}
+
+			// nighttime settings
+			else if (strcmp(argv[i], "-nightautoexposure") == 0)
+			{
+				nightAutoExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightmaxexposure") == 0)
+			{
+				nightMaxAutoexposure_ms = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightexposure") == 0)
+			{
+				nightExposure_us = atof(argv[++i]) * US_IN_MS;
+			}
+			else if (strcmp(argv[i], "-nightmean") == 0)
+			{
+//FUTURE
+i++;  //		myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,atof(argv[++i])));
+//				myModeMeanSetting.mode_mean = true;
+			}
+			else if (strcmp(argv[i], "-nightbrightness") == 0)
+			{
+				nightBrightness = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightdelay") == 0)
+			{
+				nightDelay_ms = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightautogain") == 0)
+			{
+				nightAutoGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightmaxgain") == 0)
+			{
+				nightMaxGain = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightgain") == 0)
+			{
+				nightGain = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightbin") == 0)
+			{
+				nightBin = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightawb") == 0)
+			{
+				nightAutoAWB = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightwbr") == 0)
+			{
+				nightWBR = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-nightwbb") == 0)
+			{
+				nightWBB = atoi(argv[++i]);
+			}
 			else if (strcmp(argv[i], "-nightskipframes") == 0)
 			{
 				night_skip_frames = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-tty") == 0)	// overrides what was automatically determined
+
+			// daytime and nighttime settings
+			else if (strcmp(argv[i], "-gamma") == 0)
 			{
-				tty = getBoolean(argv[++i]);
+				gamma = atoi(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-offset") == 0)
+			{
+				offset = atoi(argv[++i]);
+{ int x; if (offset) x=1; if (x) x=1;} // This keeps the compiler quiet.    TODO: implement offset
+			}
+			else if (strcmp(argv[i], "-aggression") == 0)
+			{
+				aggression = atoi(argv[++i]);
+				if (aggression < 1)
+				{
+					fprintf(stderr, "Aggression must be between 1 and 100; setting to 1.\n");
+				}
+				else if (aggression > 100)
+				{
+					fprintf(stderr, "Aggression must be between 1 and 100; setting to 100.\n");
+				}
+			}
+			else if (strcmp(argv[i], "-gaintransitiontime") == 0)
+			{
+				// user specifies minutes but we want seconds.
+				gainTransitionTime = atoi(argv[++i]) * 60;
 			}
 			else if (strcmp(argv[i], "-width") == 0)
 			{
@@ -982,86 +1129,125 @@ int main(int argc, char *argv[])
 			{
 				quality = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-dayexposure") == 0)
+			else if (strcmp(argv[i], "-autousb") == 0)
 			{
-				dayExposure_us = atof(argv[++i]) * US_IN_MS;	// allow fractions
+				asiAutoBandwidth = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightexposure") == 0)
+			else if (strcmp(argv[i], "-usb") == 0)
 			{
-				nightExposure_us = atof(argv[++i]) * US_IN_MS;
+				asiBandwidth = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-dayautoexposure") == 0)
+			else if (strcmp(argv[i], "-filename") == 0)
 			{
-				dayAutoExposure = getBoolean(argv[++i]);
+				fileName = argv[++i];
 			}
-			else if (strcmp(argv[i], "-nightautoexposure") == 0)
+			else if (strcmp(argv[i], "-flip") == 0)
 			{
-				nightAutoExposure = getBoolean(argv[++i]);
+				flip = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-daymaxexposure") == 0)
+			else if (strcmp(argv[i], "-notificationimages") == 0)
 			{
-				dayMaxAutoexposure_ms = atoi(argv[++i]);
+				notificationImages = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightmaxexposure") == 0)
+			else if (strcmp(argv[i], "-coolerEnabled") == 0)
 			{
-				nightMaxAutoexposure_ms = atoi(argv[++i]);
+				coolerEnabled = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightgain") == 0)
+			else if (strcmp(argv[i], "-targetTemp") == 0)
 			{
-				nightGain = atoi(argv[++i]);
+				targetTemp = atol(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightmaxgain") == 0)
+			else if (strcmp(argv[i], "-latitude") == 0)
 			{
-				nightMaxGain = atoi(argv[++i]);
+				latitude = argv[++i];
 			}
-			else if (strcmp(argv[i], "-nightautogain") == 0)
+			else if (strcmp(argv[i], "-longitude") == 0)
 			{
-				nightAutoGain = getBoolean(argv[++i]);
+				longitude = argv[++i];
 			}
-			else if (strcmp(argv[i], "-gaintransitiontime") == 0)
+			else if (strcmp(argv[i], "-angle") == 0)
 			{
-				// user specifies minutes but we want seconds.
-				gainTransitionTime = atoi(argv[++i]) * 60;
+				angle = argv[++i];
 			}
-			else if (strcmp(argv[i], "-gamma") == 0)
+			else if (strcmp(argv[i], "-darkframe") == 0)
 			{
-				gamma = atoi(argv[++i]);
+				taking_dark_frames = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-daybrightness") == 0)
+			else if (strcmp(argv[i], "-locale") == 0)
 			{
-				dayBrightness = atoi(argv[++i]);
+				locale = argv[++i];
 			}
-			else if (strcmp(argv[i], "-nightbrightness") == 0)
+#ifdef USE_HISTOGRAM
+			else if (strcmp(argv[i], "-histogrambox") == 0)
 			{
-				nightBrightness = atoi(argv[++i]);
+				if (sscanf(argv[++i], "%d %d %f %f", &histogramBoxSizeX, &histogramBoxSizeY, &histogramBoxPercentFromLeft, &histogramBoxPercentFromTop) != 4)
+					fprintf(stderr, "%s*** ERROR: Not enough histogram box parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
+
+				// scale user-input 0-100 to 0.0-1.0
+				histogramBoxPercentFromLeft /= 100;
+				histogramBoxPercentFromTop /= 100;
 			}
-			else if (strcmp(argv[i], "-daybin") == 0)
+#endif
+			else if (strcmp(argv[i], "-debuglevel") == 0)
 			{
-				dayBin = atoi(argv[++i]);
+				debugLevel = atoi(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-nightbin") == 0)
+			else if (strcmp(argv[i], "-newexposure") == 0)
 			{
-				nightBin = atoi(argv[++i]);
+				use_new_exposure_algorithm = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-daydelay") == 0)
+			else if (strcmp(argv[i], "-alwaysshowadvanced") == 0)
 			{
-				dayDelay_ms = atoi(argv[++i]);
+				i++;	// not used
 			}
-			else if (strcmp(argv[i], "-nightdelay") == 0)
+
+			// overlay settings
+			else if (strcmp(argv[i], "-showTime") == 0)
 			{
-				nightDelay_ms = atoi(argv[++i]);
+				showTime = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-wbr") == 0)
+			else if (strcmp(argv[i], "-timeformat") == 0)
 			{
-				WBR = atoi(argv[++i]);
+				timeFormat = argv[++i];
 			}
-			else if (strcmp(argv[i], "-wbb") == 0)
+			else if (strcmp(argv[i], "-showTemp") == 0)
 			{
-				WBB = atoi(argv[++i]);
+				showTemp = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-awb") == 0 || strcmp(argv[i], "-autowhitebalance") == 0)
+			else if (strcmp(argv[i], "-temptype") == 0)
 			{
-				autoAWB = getBoolean(argv[++i]);
+				tempType = argv[++i];
+			}
+			else if (strcmp(argv[i], "-showExposure") == 0)
+			{
+				showExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-showGain") == 0)
+			{
+				showGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-showBrightness") == 0)
+			{
+				showBrightness = getBoolean(argv[++i]);
+			}
+			else if (strcmp(argv[i], "-showUSB") == 0)
+			{
+				showUSB = getBoolean(argv[++i]);
+{ int x; if (showUSB) x=1; if (x) x=1;} // This keeps the compiler quiet.    TODO: implement showUSB
+			}
+			else if (strcmp(argv[i], "-showMean") == 0)
+			{
+				showMean = getBoolean(argv[++i]);
+			}
+#ifdef USE_HISTOGRAM
+			else if (strcmp(argv[i], "-showhistogrambox") == 0)
+			{
+				showHistogramBox = getBoolean(argv[++i]);
+			}
+#endif
+			else if (strcmp(argv[i], "-showFocus") == 0)
+			{
+				showFocus = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-text") == 0)
 			{
@@ -1117,127 +1303,6 @@ int main(int argc, char *argv[])
 			{
 				outlinefont = getBoolean(argv[++i]);
 			}
-			else if (strcmp(argv[i], "-flip") == 0)
-			{
-				flip = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-usb") == 0)
-			{
-				asiBandwidth = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-autousb") == 0)
-			{
-				asiAutoBandwidth = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-filename") == 0)
-			{
-				fileName = argv[++i];
-			}
-			else if (strcmp(argv[i], "-latitude") == 0)
-			{
-				latitude = argv[++i];
-			}
-			else if (strcmp(argv[i], "-longitude") == 0)
-			{
-				longitude = argv[++i];
-			}
-			else if (strcmp(argv[i], "-angle") == 0)
-			{
-				angle = argv[++i];
-			}
-			else if (strcmp(argv[i], "-notificationimages") == 0)
-			{
-				notificationImages = getBoolean(argv[++i]);
-			}
-#ifdef USE_HISTOGRAM
-			else if (strcmp(argv[i], "-histogrambox") == 0)
-			{
-				if (sscanf(argv[++i], "%d %d %f %f", &histogramBoxSizeX, &histogramBoxSizeY, &histogramBoxPercentFromLeft, &histogramBoxPercentFromTop) != 4)
-					fprintf(stderr, "%s*** ERROR: Not enough histogram box parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
-
-				// scale user-input 0-100 to 0.0-1.0
-				histogramBoxPercentFromLeft /= 100;
-				histogramBoxPercentFromTop /= 100;
-			}
-			else if (strcmp(argv[i], "-showhistogrambox") == 0)
-			{
-				showHistogramBox = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-aggression") == 0)
-			{
-				aggression = atoi(argv[++i]);
-				if (aggression < 1)
-				{
-					fprintf(stderr, "Aggression must be between 1 and 100; setting to 1.\n");
-				}
-				else if (aggression > 100)
-				{
-					fprintf(stderr, "Aggression must be between 1 and 100; setting to 100.\n");
-				}
-			}
-#endif
-			else if (strcmp(argv[i], "-preview") == 0)
-			{
-				preview = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-debuglevel") == 0)
-			{
-				debugLevel = atoi(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showTime") == 0)
-			{
-				showTime = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-timeformat") == 0)
-			{
-				timeFormat = argv[++i];
-			}
-			else if (strcmp(argv[i], "-darkframe") == 0)
-			{
-				taking_dark_frames = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showTemp") == 0)
-			{
-				showTemp = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-temptype") == 0)
-			{
-				tempType = argv[++i];
-			}
-			else if (strcmp(argv[i], "-showExposure") == 0)
-			{
-				showExposure = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showGain") == 0)
-			{
-				showGain = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-showBrightness") == 0)
-			{
-				showBrightness = getBoolean(argv[++i]);
-			}
-#ifdef USE_HISTOGRAM
-			else if (strcmp(argv[i], "-showMean") == 0 || strcmp(argv[i], "-showHistogram") == 0)
-			{
-				showMean = getBoolean(argv[++i]);
-			}
-#endif
-			else if (strcmp(argv[i], "-showFocus") == 0)
-			{
-				showFocus = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-daytime") == 0)
-			{
-				daytimeCapture = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-coolerEnabled") == 0)
-			{
-				coolerEnabled = getBoolean(argv[++i]);
-			}
-			else if (strcmp(argv[i], "-targetTemp") == 0)
-			{
-				targetTemp = atol(argv[++i]);
-			}
 		}
 	}
 
@@ -1272,9 +1337,12 @@ int main(int argc, char *argv[])
 		printf(" -coolerEnabled			- 1 enables cooler (cooled cameras only)\n");
 		printf(" -targetTemp			- Target temperature in degrees C (cooled cameras only)\n");
 		printf(" -gamma					- Default = %d: Gamma level\n", DEFAULT_GAMMA);
-		printf(" -wbr					- Default = %d: Manual White Balance Red\n", DEFAULT_WBR);
-		printf(" -wbb					- Default = %d: Manual White Balance Blue\n", DEFAULT_WBB);
-		printf(" -autowhitebalance		- Default = %s: 1 enables auto White Balance\n", yesNo(DEFAULT_AUTOAWB));
+		printf(" -daywbr				- Default = %d: Manual White Balance Red\n", DEFAULT_DAYWBR);
+		printf(" -daywbb				- Default = %d: Manual White Balance Blue\n", DEFAULT_DAYWBB);
+		printf(" -dayautowhitebalance	- Default = %s: 1 enables auto White Balance\n", yesNo(DEFAULT_DAYAUTOAWB));
+		printf(" -nightwbr				- Default = %d: Manual White Balance Red\n", DEFAULT_NIGHTWBR);
+		printf(" -nightwbb				- Default = %d: Manual White Balance Blue\n", DEFAULT_NIGHTWBB);
+		printf(" -nightautowhitebalance	- Default = %s: 1 enables auto White Balance\n", yesNo(DEFAULT_NIGHTAUTOAWB));
 		printf(" -daybin				- Default = %d: 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n", DEFAULT_DAYBIN);
 		printf(" -nightbin				- Default = %d: same as daybin but for night\n", DEFAULT_NIGHTBIN);
 		printf(" -dayDelay				- Default = %'d: Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY);
@@ -1326,9 +1394,7 @@ int main(int argc, char *argv[])
 		printf(" -showExposure			- 1 displays the exposure length\n");
 		printf(" -showGain				- 1 display the gain\n");
 		printf(" -showBrightness		- 1 displays the brightness\n");
-#ifdef USE_HISTOGRAM
 		printf(" -showMean				- 1 displays the histogram mean\n");
-#endif
 		printf(" -debuglevel			- Default = 0. Set to 1,2, 3, or 4 for more debugging information.\n");
 
 		printf("%s", c(KNRM));
@@ -1746,7 +1812,8 @@ int main(int argc, char *argv[])
 	printf(" Gamma: %d\n", gamma);
 	if (ASICameraInfo.IsColorCam)
 	{
-		printf(" WB Red: %d, Blue: %d, Auto: %s\n", WBR, WBB, yesNo(autoAWB));
+		printf(" (day)   WB Red: %d, Blue: %d, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
+		printf(" (night) WB Red: %d, Blue: %d, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
 	}
 	printf(" Binning (day): %d\n", dayBin);
 	printf(" Binning (night): %d\n", nightBin);
@@ -1777,8 +1844,8 @@ int main(int argc, char *argv[])
 		histogramBoxPercentFromLeft * 100, histogramBoxPercentFromTop * 100,
 		centerX, centerY, left_of_box, top_of_box, right_of_box, bottom_of_box);
 	printf(" Show Histogram Box: %s\n", yesNo(showHistogramBox));
-	printf(" Show Histogram Mean: %s\n", yesNo(showMean));
 #endif
+	printf(" Show Mean Brightness: %s\n", yesNo(showMean));
 	printf(" Show Time: %s (format: %s)\n", yesNo(showTime), timeFormat);
 	printf(" Show Temperature: %s, type: %s\n", yesNo(showTemp), tempType);
 	printf(" Show Exposure: %s\n", yesNo(showExposure));
@@ -1801,8 +1868,9 @@ int main(int argc, char *argv[])
 	setControl(CamNum, ASI_HIGH_SPEED_MODE, 0, ASI_FALSE);	// ZWO sets this in their program
 	if (ASICameraInfo.IsColorCam)
 	{
-		setControl(CamNum, ASI_WB_R, WBR, autoAWB ? ASI_TRUE : ASI_FALSE);
-		setControl(CamNum, ASI_WB_B, WBB, autoAWB ? ASI_TRUE : ASI_FALSE);
+// TODO: implement current*.  For now, use day values.
+		setControl(CamNum, ASI_WB_R, dayWBR, dayAutoAWB ? ASI_TRUE : ASI_FALSE);
+		setControl(CamNum, ASI_WB_B, dayWBB, dayAutoAWB ? ASI_TRUE : ASI_FALSE);
 	}
 	setControl(CamNum, ASI_GAMMA, gamma, ASI_FALSE);
 	setControl(CamNum, ASI_FLIP, flip, ASI_FALSE);
@@ -2416,7 +2484,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					// Didn't use histogram method.
 					// If we used auto-exposure, set the next exposure to the last reported
 					// exposure, which is what the camera driver thinks the next exposure should be.
-					// But temper it by the agression value so we don't bounce up and down.
+					// But temper it by the aggression value so we don't bounce up and down.
 					if (currentAutoExposure)
 					{
 						// If we're skipping frames we want to get to a good exposure as fast as

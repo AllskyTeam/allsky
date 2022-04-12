@@ -38,6 +38,7 @@
 #define DEFAULT_DAYSKIPFRAMES	5
 #define DEFAULT_NIGHTSKIPFRAMES	1
 #define DEFAULT_GAIN_TRANSITION_TIME 5				// user specifies minutes
+#define DEFAULT_NEWEXPOSURE		true
 
 #ifdef USE_HISTOGRAM
 #define DEFAULT_BOX_SIZEX		500					// Must be a multiple of 2
@@ -65,7 +66,7 @@ bool check_max_errors(int *, int);
 // version 0.8 turned video mode on, then took a picture, then turned it off. This helps cool the camera,
 // but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures.
 // So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
-bool use_new_exposure_algorithm = true;
+bool use_new_exposure_algorithm = DEFAULT_NEWEXPOSURE;
 int flip						= DEFAULT_FLIP;
 bool tty						= false;			// are we on a tty?
 bool notificationImages			= DEFAULT_NOTIFICATIONIMAGES;
@@ -921,7 +922,7 @@ int main(int argc, char *argv[])
 
 	printf("\n%s", c(KGRN));
 	printf("**********************************************\n");
-	printf("*** Allsky Camera Software v0.8.3.3 |  2022 ***\n");
+	printf("*** Allsky Camera Software v0.8.4   |  2022 ***\n");
 	printf("**********************************************\n\n");
 	printf("Capture images of the sky with a Raspberry Pi and an ASI Camera\n");
 	printf("%s\n", c(KNRM));
@@ -939,9 +940,6 @@ int main(int argc, char *argv[])
 
 	if (argc > 1)
 	{
-		// Many of the argument names changed to allow day and night values.
-		// However, still check for the old names in case the user didn't update their settings.json file.
-		// The old names should be removed below in a future version.
 		for (i=1 ; i <= argc - 1 ; i++)
 		{
 			// Misc. settings
@@ -981,9 +979,10 @@ int main(int argc, char *argv[])
 			}
 			else if (strcmp(argv[i], "-daymean") == 0)
 			{
-//FUTURE
-i++;  //		myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,atof(argv[++i])));
+// TODO
+//				myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,atof(argv[++i])));
 //				myModeMeanSetting.mode_mean = true;
+i++;
 			}
 			else if (strcmp(argv[i], "-daybrightness") == 0)
 			{
@@ -1041,9 +1040,11 @@ i++; // TODO:				dayMaxGain = atoi(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightmean") == 0)
 			{
-//FUTURE
-i++;  //		myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,atof(argv[++i])));
+// TODO
+//				myModeMeanSetting.mean_value = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
+//				myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,atof(argv[++i])));
 //				myModeMeanSetting.mode_mean = true;
+i++;
 			}
 			else if (strcmp(argv[i], "-nightbrightness") == 0)
 			{
@@ -1316,45 +1317,77 @@ i++;  //		myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,atof(argv[++i]
 		printf("%s", c(KNRM));
 
 		printf("%sAvailable Arguments:\n", c(KYEL));
-		printf(" -width					- Default = %d = Camera Max Width\n", DEFAULT_WIDTH);
-		printf(" -height				- Default = %d = Camera Max Height\n", DEFAULT_HEIGHT);
-		printf(" -daytime				- Default = %s: 1 enables capture daytime images\n", yesNo(DEFAULT_DAYTIMECAPTURE));
-		printf(" -dayexposure			- Default = %'d: Daytime exposure in us (equals to %.4f sec)\n", DEFAULT_DAYEXPOSURE, (float)DEFAULT_DAYEXPOSURE/US_IN_SEC);
-		printf(" -nightexposure			- Default = %'d: Nighttime exposure in us (equals to %.4f sec)\n", DEFAULT_NIGHTEXPOSURE, (float)DEFAULT_NIGHTEXPOSURE/US_IN_SEC);
 		printf(" -dayautoexposure		- Default = %s: 1 enables daytime auto-exposure\n", yesNo(DEFAULT_DAYAUTOEXPOSURE));
-		printf(" -nightautoexposure		- Default = %s: 1 enables nighttime auto-exposure\n", yesNo(DEFAULT_NIGHTAUTOEXPOSURE));
 		printf(" -daymaxexposure		- Default = %'d: Maximum daytime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_DAYMAXAUTOEXPOSURE_MS, (float)DEFAULT_DAYMAXAUTOEXPOSURE_MS/US_IN_MS);
-		printf(" -nightmaxexposure		- Default = %'d: Maximum nighttime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_NIGHTMAXAUTOEXPOSURE_MS, (float)DEFAULT_NIGHTMAXAUTOEXPOSURE_MS/US_IN_MS);
+		printf(" -dayexposure			- Default = %'d: Daytime exposure in us (equals to %.4f sec)\n", DEFAULT_DAYEXPOSURE, (float)DEFAULT_DAYEXPOSURE/US_IN_SEC);
+		printf(" -daymean				- Default = %.2f: Daytime target exposure brightness\n", DEFAULT_DAYMEAN);
 		printf(" -daybrightness			- Default = %d: Daytime brightness level\n", DEFAULT_BRIGHTNESS);
-		printf(" -nightbrightness		- Default = %d: Nighttime brightness level\n", DEFAULT_BRIGHTNESS);
-		printf(" -nightgain				- Default = %d: Nighttime gain\n", DEFAULT_NIGHTGAIN);
-		printf(" -nightmaxgain			- Default = %d: Nighttime maximum auto gain\n", DEFAULT_NIGHTMAXGAIN);
-		printf(" -nightautogain			- Default = %s: 1 enables nighttime auto gain\n", yesNo(DEFAULT_NIGHTAUTOGAIN));
-		printf(" -gaintransitiontime	- Default = %'d: Seconds to transition gain from day-to-night or night-to-day.  0 disable it.\n", DEFAULT_GAIN_TRANSITION_TIME);
-		printf(" -dayskipframes			- Default = %d: Number of auto-exposure daytime frames to skip when starting software.\n", DEFAULT_DAYSKIPFRAMES);
-		printf(" -nightskipframes		- Default = %d: Number of auto-exposure nighttime frames to skip when starting software.\n", DEFAULT_NIGHTSKIPFRAMES);
-
-		printf(" -coolerEnabled			- 1 enables cooler (cooled cameras only)\n");
-		printf(" -targetTemp			- Target temperature in degrees C (cooled cameras only)\n");
-		printf(" -gamma					- Default = %d: Gamma level\n", DEFAULT_GAMMA);
+		printf(" -dayDelay				- Default = %'d: Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY);
+		printf(" -dayautogain			- Default = %s: 1 enables daytime auto gain\n", yesNo(DEFAULT_DAYAUTOGAIN));
+		printf(" -daymaxgain			- Default = %d: Daytime maximum auto gain\n", DEFAULT_DAYMAXGAIN);
+		printf(" -daygain				- Default = %d: Daytime gain\n", DEFAULT_DAYGAIN);
+		printf(" -daybin				- Default = %d: 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n", DEFAULT_DAYBIN);
+		printf(" -dayautowhitebalance	- Default = %s: 1 enables auto White Balance\n", yesNo(DEFAULT_DAYAUTOAWB));
 		printf(" -daywbr				- Default = %d: Manual White Balance Red\n", DEFAULT_DAYWBR);
 		printf(" -daywbb				- Default = %d: Manual White Balance Blue\n", DEFAULT_DAYWBB);
-		printf(" -dayautowhitebalance	- Default = %s: 1 enables auto White Balance\n", yesNo(DEFAULT_DAYAUTOAWB));
+		printf(" -dayskipframes			- Default = %d: Number of auto-exposure frames to skip when starting software during daytime.\n", DEFAULT_DAYSKIPFRAMES);
+
+		printf(" -nightautoexposure		- Default = %s: 1 enables nighttime auto-exposure\n", yesNo(DEFAULT_NIGHTAUTOEXPOSURE));
+		printf(" -nightmaxexposure		- Default = %'d: Maximum nighttime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_NIGHTMAXAUTOEXPOSURE_MS, (float)DEFAULT_NIGHTMAXAUTOEXPOSURE_MS/US_IN_MS);
+		printf(" -nightexposure			- Default = %'d: Nighttime exposure in us (equals to %.4f sec)\n", DEFAULT_NIGHTEXPOSURE, (float)DEFAULT_NIGHTEXPOSURE/US_IN_SEC);
+		printf(" -nightmean				- Default = %.2f: Nighttime target exposure brightness\n", DEFAULT_NIGHTMEAN);
+		printf(" -nightbrightness		- Default = %d: Nighttime brightness level\n", DEFAULT_BRIGHTNESS);
+		printf(" -nightDelay			- Default = %'d: Delay between nighttime images in milliseconds - %d = 1 sec.\n", DEFAULT_NIGHTDELAY, MS_IN_SEC);
+		printf(" -nightautogain			- Default = %s: 1 enables nighttime auto gain\n", yesNo(DEFAULT_NIGHTAUTOGAIN));
+		printf(" -nightmaxgain			- Default = %d: Nighttime maximum auto gain\n", DEFAULT_NIGHTMAXGAIN);
+		printf(" -nightgain				- Default = %d: Nighttime gain\n", DEFAULT_NIGHTGAIN);
+		printf(" -nightbin				- Default = %d: same as daybin but for night\n", DEFAULT_NIGHTBIN);
+		printf(" -nightautowhitebalance	- Default = %s: 1 enables auto White Balance\n", yesNo(DEFAULT_NIGHTAUTOAWB));
 		printf(" -nightwbr				- Default = %d: Manual White Balance Red\n", DEFAULT_NIGHTWBR);
 		printf(" -nightwbb				- Default = %d: Manual White Balance Blue\n", DEFAULT_NIGHTWBB);
-		printf(" -nightautowhitebalance	- Default = %s: 1 enables auto White Balance\n", yesNo(DEFAULT_NIGHTAUTOAWB));
-		printf(" -daybin				- Default = %d: 1 = binning OFF (1x1), 2 = 2x2 binning, 4 = 4x4 binning\n", DEFAULT_DAYBIN);
-		printf(" -nightbin				- Default = %d: same as daybin but for night\n", DEFAULT_NIGHTBIN);
-		printf(" -dayDelay				- Default = %'d: Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY);
-		printf(" -nightDelay			- Default = %'d: Delay between nighttime images in milliseconds - %d = 1 sec.\n", DEFAULT_NIGHTDELAY, MS_IN_SEC);
+		printf(" -nightskipframes		- Default = %d: Number of auto-exposure frames to skip when starting software during nighttime.\n", DEFAULT_NIGHTSKIPFRAMES);
+
+		printf(" -gamma					- Default = %d: Gamma level\n", DEFAULT_GAMMA);
+		printf(" -aggression			- Default = %d%%: Percent of exposure change to make, similar to PHD2.\n", DEFAULT_AGGRESSION);
+		printf(" -gaintransitiontime	- Default = %'d: Seconds to transition gain from day-to-night or night-to-day.  0 disable it.\n", DEFAULT_GAIN_TRANSITION_TIME);
+		printf(" -width					- Default = %d = Camera Max Width\n", DEFAULT_WIDTH);
+		printf(" -height				- Default = %d = Camera Max Height\n", DEFAULT_HEIGHT);
 		printf(" -type = Image Type		- Default = %d: 99 = auto,  0 = RAW8,  1 = RGB24,  2 = RAW16,  3 = Y8\n", DEFAULT_IMAGE_TYPE);
 		printf(" -quality				- Default PNG=3, JPG=%d, Values: PNG=0-9, JPG=0-100\n", DEFAULT_QUALITY);
-		printf(" -usb = USB Speed		- Default = %d: Values between 40-100, This is BandwidthOverload\n", DEFAULT_ASIBANDWIDTH);
 		printf(" -autousb				- Default = false: 1 enables auto USB Speed\n");
+		printf(" -usb = USB Speed		- Default = %d: Values between 40-100, This is BandwidthOverload\n", DEFAULT_ASIBANDWIDTH);
 		printf(" -filename				- Default = %s\n", DEFAULT_FILENAME);
-		printf(" -save_dir				- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
 		printf(" -flip					- Default = 0: 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both\n");
-		printf("\n");
+		printf(" -notificationimages	- 1 enables notification images, for example, 'Camera is off during day'.\n");
+		printf(" -coolerEnabled			- 1 enables cooler (cooled cameras only)\n");
+		printf(" -targetTemp			- Target temperature in degrees C (cooled cameras only)\n");
+		printf(" -latitude				- No default - you must set it.  Latitude of the camera.\n");
+		printf(" -longitude				- No default - you must set it.  Longitude of the camera.\n");
+		printf(" -angle					- Default = %s: Angle of the sun below the horizon.\n", DEFAULT_ANGLE);
+		printf("		-6=civil twilight   -12=nautical twilight   -18=astronomical twilight\n");
+		printf(" -darkframe				- 1 disables the overlay and takes dark frames instead\n");
+		printf(" -locale				- Default = %s: Your locale - to determine thousands separator and decimal point.\n", DEFAULT_LOCALE);
+		printf("						  Type 'locale' at a command prompt to determine yours.\n");
+#ifdef USE_HISTOGRAM
+		printf(" -histogrambox			- Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", DEFAULT_BOX_SIZEX, DEFAULT_BOX_SIZEY, DEFAULT_BOX_FROM_LEFT * 100, DEFAULT_BOX_FROM_TOP * 100);
+#endif
+		printf(" -debuglevel			- Default = 0. Set to 1,2, 3, or 4 for more debugging information.\n");
+		printf(" -newexposure			- Default = %s. Determines if version 0.8 exposure method should be used.\n", yesNo(DEFAULT_NEWEXPOSURE));
+
+		printf(" -showTime				- Set to 1 to display the time on the image.\n");
+		printf(" -timeformat			- Format the optional time is displayed in; default is '%s'\n", DEFAULT_TIMEFORMAT);
+		printf(" -showTemp				- 1 displays the camera sensor temperature\n");
+		printf(" -temptype				- Units to display temperature in: 'C'elsius, 'F'ahrenheit, or 'B'oth.\n");
+		printf(" -showExposure			- 1 displays the exposure length\n");
+		printf(" -showGain				- 1 display the gain\n");
+		printf(" -showBrightness		- 1 displays the brightness\n");
+		printf(" -showUSB				- 1 displays the USB bandwidth\n");
+		printf(" -showMean				- 1 displays the mean brightness\n");
+#ifdef USE_HISTOGRAM
+		printf(" -showhistogrambox		- 1 displays an outline of the histogram box on the image overlay.\n");
+		printf("						  Useful to determine what parameters to use with -histogrambox.\n");
+#endif
+		printf(" -focus					- Set to 1 to display a focus metric on the image.\n");
 		printf(" -text					- Default = \"\": Text Overlay\n");
 		printf(" -extratext				- Default = \"\": Full Path to extra text to display\n");
 		printf(" -extratextage			- Default = 0: If the extra file is not updated after this many seconds its contents will not be displayed. 0 disables it.\n");
@@ -1368,34 +1401,11 @@ i++;  //		myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,atof(argv[++i]
 		printf(" -fontsize				- Default = %d: Text Font Size\n", DEFAULT_FONTSIZE);
 		printf(" -fontline				- Default = %d: Text Font Line Thickness\n", DEFAULT_LINEWIDTH);
 		printf(" -outlinefont			- Default = %s: 1 enables outline font\n", yesNo(DEFAULT_OUTLINEFONT));
+
 		printf("\n");
-		printf("\n");
-		printf(" -latitude				- Default = %7s: Latitude of the camera.\n", DEFAULT_LATITUDE);
-		printf(" -longitude				- Default = %7s: Longitude of the camera\n", DEFAULT_LONGITUDE);
-		printf(" -angle					- Default = %s: Angle of the sun below the horizon.\n", DEFAULT_ANGLE);
-		printf("		-6=civil twilight   -12=nautical twilight   -18=astronomical twilight\n");
-		printf("\n");
-		printf(" -locale				- Default = %s: Your locale - to determine thousands separator and decimal point.\n", DEFAULT_LOCALE);
-		printf("						  Type 'locale' at a command prompt to determine yours.\n");
-		printf(" -notificationimages	- 1 enables notification images, for example, 'Camera is off during day'.\n");
-#ifdef USE_HISTOGRAM
-		printf(" -histogrambox			- Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", DEFAULT_BOX_SIZEX, DEFAULT_BOX_SIZEY, DEFAULT_BOX_FROM_LEFT * 100, DEFAULT_BOX_FROM_TOP * 100);
-		printf(" -showhistogrambox		- 1 displays an outline of the histogram box on the image overlay.\n");
-		printf("						  Useful to determine what parameters to use with -histogrambox.\n");
-		printf(" -aggression			- Default = %d%%: Percent of exposure change to make, similar to PHD2.\n", DEFAULT_AGGRESSION);
-#endif
-		printf(" -darkframe				- 1 disables the overlay and takes dark frames instead\n");
-		printf(" -showTime				- Set to 1 to display the time on the image.\n");
-		printf(" -focus					- Set to 1 to display a focus metric on the image.\n");
+		printf(" -daytime				- Default = %s: 1 enables capture daytime images\n", yesNo(DEFAULT_DAYTIMECAPTURE));
+		printf(" -save_dir				- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
 		printf(" -preview				- 1 previews the captured images. Only works with a Desktop Environment\n");
-		printf(" -timeformat			- Format the optional time is displayed in; default is '%s'\n", DEFAULT_TIMEFORMAT);
-		printf(" -showTemp				- 1 displays the camera sensor temperature\n");
-		printf(" -temptype				- Units to display temperature in: 'C'elsius, 'F'ahrenheit, or 'B'oth.\n");
-		printf(" -showExposure			- 1 displays the exposure length\n");
-		printf(" -showGain				- 1 display the gain\n");
-		printf(" -showBrightness		- 1 displays the brightness\n");
-		printf(" -showMean				- 1 displays the histogram mean\n");
-		printf(" -debuglevel			- Default = 0. Set to 1,2, 3, or 4 for more debugging information.\n");
 
 		printf("%s", c(KNRM));
 		closeUp(EXIT_OK);
@@ -1812,8 +1822,8 @@ i++;  //		myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,atof(argv[++i]
 	printf(" Gamma: %d\n", gamma);
 	if (ASICameraInfo.IsColorCam)
 	{
-		printf(" (day)   WB Red: %d, Blue: %d, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
-		printf(" (night) WB Red: %d, Blue: %d, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
+		printf(" White Balance (day)   Red: %d, Blue: %d, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
+		printf(" White Balance (night) Red: %d, Blue: %d, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
 	}
 	printf(" Binning (day): %d\n", dayBin);
 	printf(" Binning (night): %d\n", nightBin);

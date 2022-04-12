@@ -1804,21 +1804,29 @@ i++;
 	printf(" Resolution (before any binning): %dx%d\n", width, height);
 	printf(" Quality: %d\n", quality);
 	printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
-	printf(" Exposure (day): %'1.3fms, Auto: %s\n", (float)dayExposure_us / US_IN_MS, yesNo(dayAutoExposure));
-	printf(" Exposure (night): %'1.0fms, Auto: %s\n", round(nightExposure_us / US_IN_MS), yesNo(nightAutoExposure));
-	printf(" Max Auto-Exposure (day): %'dms (%'.1fs)\n", dayMaxAutoexposure_ms, (float)dayMaxAutoexposure_ms / MS_IN_SEC);
-	printf(" Max Auto-Exposure (night): %'dms (%'.1fs)\n", nightMaxAutoexposure_ms, (float)nightMaxAutoexposure_ms / MS_IN_SEC);
 
-	printf(" Delay (day): %'dms\n", dayDelay_ms);
-	printf(" Delay (night): %'dms\n", nightDelay_ms);
-	printf(" Gain (night only): %d, Auto: %s, max: %d\n", nightGain, yesNo(nightAutoGain), nightMaxGain);
+	printf(" Exposure (day): %s, Auto: %s\n", length_in_units(dayExposure_us, true), yesNo(dayAutoExposure));
+	printf(" Exposure (night): %s, Auto: %s\n", length_in_units(nightExposure_us, true), yesNo(nightAutoExposure));
+	printf(" Max Auto-Exposure (day): %s\n", length_in_units(dayMaxAutoexposure_ms, true));
+	printf(" Max Auto-Exposure (night): %s\n", length_in_units(nightMaxAutoexposure_ms, true));
+	printf(" Gain (day): %d, Auto: %s, max: %d\n", dayGain, yesNo(dayAutoGain), dayMaxGain);
+	printf(" Gain (night): %d, Auto: %s, max: %d\n", nightGain, yesNo(nightAutoGain), nightMaxGain);
 	printf(" Gain Transition Time: %.1f minutes\n", (float) gainTransitionTime/60);
 	printf(" Brightness (day): %d\n", dayBrightness);
 	printf(" Brightness (night): %d\n", nightBrightness);
+	printf(" Binning (day): %d\n", dayBin);
+	printf(" Binning (night): %d\n", nightBin);
+	if (ASICameraInfo.IsColorCam)
+	{
+		printf(" White Balance (day)   Red: %ld, Blue: %ld, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
+		printf(" White Balance (night) Red: %ld, Blue: %ld, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
+	}
+	printf(" Delay (day): %s\n", length_in_units(dayDelay_ms, true));
+	printf(" Delay (night): %s\n", length_in_units(nightDelay_ms, true));
 	printf(" Skip Frames (day): %d\n", day_skip_frames);
 	printf(" Skip Frames (night): %d\n", night_skip_frames);
-	printf(" Aggression: %d%%\n", aggression);
 
+	printf(" Aggression: %d%%\n", aggression);
 	if (ASICameraInfo.IsCoolerCam)
 	{
 		printf(" Cooler Enabled: %s", yesNo(coolerEnabled));
@@ -1826,27 +1834,7 @@ i++;
 		printf("\n");
 	}
 	printf(" Gamma: %d\n", gamma);
-	if (ASICameraInfo.IsColorCam)
-	{
-		printf(" White Balance (day)   Red: %ld, Blue: %ld, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
-		printf(" White Balance (night) Red: %ld, Blue: %ld, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
-	}
-	printf(" Binning (day): %d\n", dayBin);
-	printf(" Binning (night): %d\n", nightBin);
 	printf(" USB Speed: %d, auto: %s\n", asiBandwidth, yesNo(asiAutoBandwidth));
-
-	printf(" Text Overlay: %s\n", ImgText[0] == '\0' ? "[none]" : ImgText);
-	printf(" Text Extra File: %s, Age: %d seconds\n", ImgExtraText[0] == '\0' ? "[none]" : ImgExtraText, extraFileAge);
-	printf(" Text Line Height %dpx\n", iTextLineHeight);
-	printf(" Text Position: %dpx from left, %dpx from top\n", iTextX, iTextY);
-	printf(" Font Name: %s (%d)\n", fontnames[fontnumber], fontname[fontnumber]);
-	printf(" Font Color: %d, %d, %d\n", fontcolor[0], fontcolor[1], fontcolor[2]);
-	printf(" Small Font Color: %d, %d, %d\n", smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
-	printf(" Font Line Type: %d\n", linetype[linenumber]);
-	printf(" Font Size: %1.1f\n", fontsize);
-	printf(" Font Line Width: %d\n", linewidth);
-	printf(" Outline Font : %s\n", yesNo(outlinefont));
-
 	printf(" Flip Image: %d\n", flip);
 	printf(" Filename: %s\n", fileName);
 	printf(" Filename Save Directory: %s\n", save_dir);
@@ -1861,18 +1849,31 @@ i++;
 		centerX, centerY, left_of_box, top_of_box, right_of_box, bottom_of_box);
 	printf(" Show Histogram Box: %s\n", yesNo(showHistogramBox));
 #endif
-	printf(" Show Mean Brightness: %s\n", yesNo(showMean));
-	printf(" Show Time: %s (format: %s)\n", yesNo(showTime), timeFormat);
-	printf(" Show Temperature: %s, type: %s\n", yesNo(showTemp), tempType);
-	printf(" Show Exposure: %s\n", yesNo(showExposure));
-	printf(" Show Gain: %s\n", yesNo(showGain));
-	printf(" Show Brightness: %s\n", yesNo(showBrightness));
-	printf(" Show Focus Metric: %s\n", yesNo(showFocus));
 	printf(" Preview: %s\n", yesNo(preview));
 	printf(" Taking Dark Frames: %s\n", yesNo(taking_dark_frames));
 	printf(" Debug Level: %d\n", debugLevel);
 	printf(" On TTY: %s\n", yesNo(tty));
 	printf(" Video OFF Between Images: %s\n", yesNo(use_new_exposure_algorithm));
+
+	printf(" Text Overlay: %s\n", ImgText[0] == '\0' ? "[none]" : ImgText);
+	printf(" Text Extra File: %s, Age: %d seconds\n", ImgExtraText[0] == '\0' ? "[none]" : ImgExtraText, extraFileAge);
+	printf(" Text Line Height %dpx\n", iTextLineHeight);
+	printf(" Text Position: %dpx from left, %dpx from top\n", iTextX, iTextY);
+	printf(" Font Name: %s (%d)\n", fontnames[fontnumber], fontname[fontnumber]);
+	printf(" Font Color: %d, %d, %d\n", fontcolor[0], fontcolor[1], fontcolor[2]);
+	printf(" Small Font Color: %d, %d, %d\n", smallFontcolor[0], smallFontcolor[1], smallFontcolor[2]);
+	printf(" Font Line Type: %d\n", linetype[linenumber]);
+	printf(" Font Size: %1.1f\n", fontsize);
+	printf(" Font Line Width: %d\n", linewidth);
+	printf(" Outline Font : %s\n", yesNo(outlinefont));
+
+	printf(" Show Time: %s (format: %s)\n", yesNo(showTime), timeFormat);
+	printf(" Show Exposure: %s\n", yesNo(showExposure));
+	printf(" Show Temperature: %s, type: %s\n", yesNo(showTemp), tempType);
+	printf(" Show Gain: %s\n", yesNo(showGain));
+	printf(" Show Brightness: %s\n", yesNo(showBrightness));
+	printf(" Show Mean Brightness: %s\n", yesNo(showMean));
+	printf(" Show Focus Metric: %s\n", yesNo(showFocus));
 	printf(" ZWO SDK version %s\n", ASIGetSDKVersion());
 	printf("%s\n", c(KNRM));
 

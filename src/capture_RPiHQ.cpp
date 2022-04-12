@@ -1079,8 +1079,8 @@ i++;
 	printf(" Brightness (day): %d\n", dayBrightness);
 	printf(" Brightness (night): %d\n", nightBrightness);
 	printf(" Saturation: %.1f\n", saturation);
-	printf(" White Balance (day)   Red: %d, Blue: %d, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
-	printf(" White Balance (night) Red: %d, Blue: %d, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
+	printf(" White Balance (day)   Red: %.2f, Blue: %.2f, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
+	printf(" White Balance (night) Red: %.2f, Blue: %.2f, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
 	printf(" Binning (day): %d\n", dayBin);
 	printf(" Binning (night): %d\n", nightBin);
 	printf(" Delay (day): %dms\n", dayDelay_ms);
@@ -1300,7 +1300,8 @@ i++;
 			snprintf(full_filename, sizeof(full_filename), "%s/%s", save_dir, final_file_name);
 
 			// Capture and save image
-			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, autoAWB, WBR, WBB, rotation, flip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
+// TODO: implement day/night AWB; for now, use day
+			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, dayAutoAWB, dayWBR, dayWBB, rotation, flip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
 
 			if (retCode == 0)
 			{
@@ -1367,9 +1368,10 @@ i++;
 
 				// -999 for temperature says the camera doesn't support it
 				// TODO: in the future the calculation of mean should independent from mode_mean. -1 means don't display.
+// TODO: implement day/night AWB; for now, use day
 				float m = (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) ? mean : -1.0;
 				add_variables_to_command(cmd, last_exposure_us, currentBrightness, m,
-					currentAutoExposure, currentAutoGain, autoAWB, WBR, WBB,
+					currentAutoExposure, currentAutoGain, dayAutoAWB, dayWBR, dayWBB,
 					-999, last_gain, (int)round(20.0 * 10.0 * log10(last_gain)),
 					currentBin, flip, current_bit_depth, focus_metric);
 				strcat(cmd, " &");

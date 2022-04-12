@@ -53,6 +53,9 @@ float dayWBB				= DEFAULT_DAYWBB;
 bool nightAutoAWB			= DEFAULT_NIGHTAUTOAWB;
 float nightWBR				= DEFAULT_NIGHTWBR;
 float nightWBB				= DEFAULT_NIGHTWBB;
+bool currentAutoAWB			= false;
+float currentWBR			= NOT_SET;
+float currentWBB			= NOT_SET;
 
 std::vector<int> compression_parameters;
 bool bMain					= true;
@@ -1190,6 +1193,9 @@ i++;
 			currentExposure_us = nightExposure_us;
 			currentBin = nightBin;
 			currentBrightness = nightBrightness;
+			currentAutoAWB = false;
+			currentWBR = nightWBR;
+			currentWBB = nightWBB;
 			myModeMeanSetting.mode_mean = MEAN_AUTO_OFF;
 
  			Log(0, "Taking dark frames...\n");
@@ -1251,6 +1257,9 @@ i++;
 					currentExposure_us = dayExposure_us;
 					currentAutoExposure = dayAutoExposure;
 					currentBrightness = dayBrightness;
+					currentAutoAWB = dayAutoAWB;
+					currentWBR = dayWBR;
+					currentWBB = dayWBB;
 					currentDelay_ms = dayDelay_ms;
 					currentBin = dayBin;
 					currentGain = dayGain;
@@ -1267,6 +1276,9 @@ i++;
 				currentExposure_us = nightExposure_us;
 				currentAutoExposure = nightAutoExposure;
 				currentBrightness = nightBrightness;
+				currentAutoAWB = nightAutoAWB;
+				currentWBR = nightWBR;
+				currentWBB = nightWBB;
 				currentDelay_ms = nightDelay_ms;
 				currentBin = nightBin;
 				currentGain = nightGain;
@@ -1341,8 +1353,7 @@ i++;
 			snprintf(full_filename, sizeof(full_filename), "%s/%s", save_dir, final_file_name);
 
 			// Capture and save image
-// TODO: implement day/night AWB; for now, use day
-			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, dayAutoAWB, dayWBR, dayWBB, rotation, flip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
+			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, currentAutoAWB, currentWBR, currentWBB, rotation, flip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
 
 			if (retCode == 0)
 			{

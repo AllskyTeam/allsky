@@ -53,6 +53,9 @@ float dayWBB				= DEFAULT_DAYWBB;
 bool nightAutoAWB			= DEFAULT_NIGHTAUTOAWB;
 float nightWBR				= DEFAULT_NIGHTWBR;
 float nightWBB				= DEFAULT_NIGHTWBB;
+bool currentAutoAWB			= false;
+float currentWBR			= NOT_SET;
+float currentWBB			= NOT_SET;
 
 std::vector<int> compression_parameters;
 bool bMain					= true;
@@ -1190,6 +1193,9 @@ i++;
 			currentExposure_us = nightExposure_us;
 			currentBin = nightBin;
 			currentBrightness = nightBrightness;
+			currentAutoAWB = false;
+			currentWBR = nightWBR;
+			currentWBB = nightWBB;
 			myModeMeanSetting.mode_mean = MEAN_AUTO_OFF;
 
  			Log(0, "Taking dark frames...\n");
@@ -1251,6 +1257,9 @@ i++;
 					currentExposure_us = dayExposure_us;
 					currentAutoExposure = dayAutoExposure;
 					currentBrightness = dayBrightness;
+					currentAutoAWB = dayAutoAWB;
+					currentWBR = dayWBR;
+					currentWBB = dayWBB;
 					currentDelay_ms = dayDelay_ms;
 					currentBin = dayBin;
 					currentGain = dayGain;
@@ -1267,6 +1276,9 @@ i++;
 				currentExposure_us = nightExposure_us;
 				currentAutoExposure = nightAutoExposure;
 				currentBrightness = nightBrightness;
+				currentAutoAWB = nightAutoAWB;
+				currentWBR = nightWBR;
+				currentWBB = nightWBB;
 				currentDelay_ms = nightDelay_ms;
 				currentBin = nightBin;
 				currentGain = nightGain;
@@ -1341,8 +1353,7 @@ i++;
 			snprintf(full_filename, sizeof(full_filename), "%s/%s", save_dir, final_file_name);
 
 			// Capture and save image
-// TODO: implement day/night AWB; for now, use day
-			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, dayAutoAWB, dayWBR, dayWBB, rotation, flip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
+			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, currentAutoAWB, currentWBR, currentWBB, rotation, flip, saturation, currentBrightness, quality, full_filename, taking_dark_frames, preview, width, height, is_libcamera, &pRgb);
 
 			if (retCode == 0)
 			{
@@ -1409,10 +1420,9 @@ i++;
 
 				// -999 for temperature says the camera doesn't support it
 				// TODO: in the future the calculation of mean should independent from mode_mean. -1 means don't display.
-// TODO: implement day/night AWB; for now, use day
 				float m = (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) ? mean : -1.0;
 				add_variables_to_command(cmd, last_exposure_us, currentBrightness, m,
-					currentAutoExposure, currentAutoGain, dayAutoAWB, dayWBR, dayWBB,
+					currentAutoExposure, currentAutoGain, currentAutoAWB, currentWBR, currentWBB,
 					-999, last_gain, (int)round(20.0 * 10.0 * log10(last_gain)),
 					currentBin, flip, current_bit_depth, focus_metric);
 				strcat(cmd, " &");

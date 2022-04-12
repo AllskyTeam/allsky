@@ -80,15 +80,14 @@ int nightDelay_ms				= DEFAULT_NIGHTDELAY;	// Delay in milliseconds.
 int nightMaxAutoexposure_ms		= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
 int gainTransitionTime			= DEFAULT_GAIN_TRANSITION_TIME;
 bool dayAutoAWB					= DEFAULT_DAYAUTOAWB;	// is Auto White Balance on or off?
-int dayWBR						= DEFAULT_DAYWBR;		// red component
-int dayWBB						= DEFAULT_DAYWBB;		// blue component
+long dayWBR						= DEFAULT_DAYWBR;		// red component
+long dayWBB						= DEFAULT_DAYWBB;		// blue component
 bool nightAutoAWB				= DEFAULT_NIGHTAUTOAWB;
-int nightWBR					= DEFAULT_NIGHTWBR;
-int nightWBB					= DEFAULT_NIGHTWBB;
-// TODO: implement currentAWB, WBR, and WBB
+long nightWBR					= DEFAULT_NIGHTWBR;
+long nightWBB					= DEFAULT_NIGHTWBB;
 bool currentAutoAWB				= false;
-int currentWBR					= NOT_SET;
-int currentWBB					= NOT_SET;
+long currentWBR					= NOT_SET;
+long currentWBB					= NOT_SET;
 
 #ifdef USE_HISTOGRAM
 int current_histogramBoxSizeX =	NOT_SET;
@@ -98,6 +97,7 @@ float histogramBoxPercentFromLeft = DEFAULT_BOX_FROM_LEFT;
 float histogramBoxPercentFromTop = DEFAULT_BOX_FROM_TOP;
 #endif	// USE_HISTOGRAM
 
+ASI_CAMERA_INFO ASICameraInfo;
 cv::Mat pRgb;
 std::vector<int> compression_parameters;
 bool bMain						= true;
@@ -119,7 +119,7 @@ int numExposures				= 0;				// how many valid pictures have we taken so far?
 int currentGain					= NOT_SET;
 long camera_max_autoexposure_us	= NOT_SET;			// camera's max auto-exposure
 long camera_min_exposure_us		= 100;				// camera's minimum exposure
-long actualTemp					= 0;				// actual sensor temp, per the camera
+long actualTemp					= NOT_SET;			// actual sensor temp, per the camera
 long last_exposure_us			= 0;				// last exposure taken
 bool taking_dark_frames			= false;
 long current_exposure_us		= NOT_SET;
@@ -233,7 +233,7 @@ void *SaveImgThd(void *para)
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
 			float gainDB = pow(10, (float)currentGain / 10.0 / 20.0);
 			add_variables_to_command(cmd, last_exposure_us, currentBrightness, mean,
-				currentAutoExposure, currentAutoGain, currentAutoAWB, currentWBR, currentWBB,
+				currentAutoExposure, currentAutoGain, currentAutoAWB, (float)currentWBR, (float)currentWBB,
 				actualTemp, gainDB, currentGain,
 				currentBin, flip, current_bit_depth, focus_metric);
 			strcat(cmd, " &");
@@ -573,6 +573,11 @@ Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exp
 			}
 			ASIGetControlValue(cameraId, ASI_GAIN, &actualGain, &bAuto);
 			ASIGetControlValue(cameraId, ASI_TEMPERATURE, &actualTemp, &bAuto);
+			if (ASICameraInfo.IsColorCam)
+			{
+				ASIGetControlValue(CamNum, ASI_WB_R, &currentWBR, &bAuto);
+				ASIGetControlValue(CamNum, ASI_WB_B, &currentWBB, &bAuto);
+			}
 		}
 
 		if (use_new_exposure_algorithm)
@@ -1014,11 +1019,11 @@ i++;
 			}
 			else if (strcmp(argv[i], "-daywbr") == 0)
 			{
-				dayWBR = atoi(argv[++i]);
+				dayWBR = atol(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-daywbb") == 0)
 			{
-				dayWBB = atoi(argv[++i]);
+				dayWBB = atol(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-dayskipframes") == 0)
 			{
@@ -1076,11 +1081,11 @@ i++;
 			}
 			else if (strcmp(argv[i], "-nightwbr") == 0)
 			{
-				nightWBR = atoi(argv[++i]);
+				nightWBR = atol(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightwbb") == 0)
 			{
-				nightWBB = atoi(argv[++i]);
+				nightWBB = atol(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightskipframes") == 0)
 			{
@@ -1481,7 +1486,6 @@ i++;
 		closeUp(EXIT_ERROR_STOP);		// If there are no cameras we can't do anything.
 	}
 
-	ASI_CAMERA_INFO ASICameraInfo;
 	if (numDevices > 1)
 	{
 		printf("\nAttached Cameras%s:\n", numDevices == 1 ? "" : " (using first one)");
@@ -1824,8 +1828,8 @@ i++;
 	printf(" Gamma: %d\n", gamma);
 	if (ASICameraInfo.IsColorCam)
 	{
-		printf(" White Balance (day)   Red: %d, Blue: %d, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
-		printf(" White Balance (night) Red: %d, Blue: %d, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
+		printf(" White Balance (day)   Red: %ld, Blue: %ld, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
+		printf(" White Balance (night) Red: %ld, Blue: %ld, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
 	}
 	printf(" Binning (day): %d\n", dayBin);
 	printf(" Binning (night): %d\n", nightBin);
@@ -1878,12 +1882,6 @@ i++;
 	// Other calls to setControl() are done after we know if we're in daytime or nighttime.
 	setControl(CamNum, ASI_BANDWIDTHOVERLOAD, asiBandwidth, asiAutoBandwidth ? ASI_TRUE : ASI_FALSE);
 	setControl(CamNum, ASI_HIGH_SPEED_MODE, 0, ASI_FALSE);	// ZWO sets this in their program
-	if (ASICameraInfo.IsColorCam)
-	{
-// TODO: implement current*.  For now, use day values.
-		setControl(CamNum, ASI_WB_R, dayWBR, dayAutoAWB ? ASI_TRUE : ASI_FALSE);
-		setControl(CamNum, ASI_WB_B, dayWBB, dayAutoAWB ? ASI_TRUE : ASI_FALSE);
-	}
 	setControl(CamNum, ASI_GAMMA, gamma, ASI_FALSE);
 	setControl(CamNum, ASI_FLIP, flip, ASI_FALSE);
 
@@ -1982,6 +1980,12 @@ i++;
 			currentMaxAutoexposure_us = current_exposure_us = nightMaxAutoexposure_ms * US_IN_MS;
 			currentBin = nightBin;
 			currentBrightness = nightBrightness;
+			if (ASICameraInfo.IsColorCam)
+			{
+				currentAutoAWB = false;
+				currentWBR = nightWBR;
+				currentWBB = nightWBB;
+			}
 
 			Log(0, "Taking dark frames...\n");
 
@@ -2089,6 +2093,12 @@ i++;
 				currentAutoExposure = dayAutoExposure;
 #endif
 				currentBrightness = dayBrightness;
+				if (ASICameraInfo.IsColorCam)
+				{
+					currentAutoAWB = dayAutoAWB;
+					currentWBR = dayWBR;
+					currentWBB = dayWBB;
+				}
 				currentDelay_ms = dayDelay_ms;
 				currentBin = dayBin;
 				currentGain = dayGain;	// must come before determineGainChange() below
@@ -2130,6 +2140,12 @@ i++;
 
 			currentAutoExposure = nightAutoExposure;
 			currentBrightness = nightBrightness;
+			if (ASICameraInfo.IsColorCam)
+			{
+				currentAutoAWB = nightAutoAWB;
+				currentWBR = nightWBR;
+				currentWBB = nightWBB;
+			}
 			currentDelay_ms = nightDelay_ms;
 			currentBin = nightBin;
 			currentMaxAutoexposure_us = nightMaxAutoexposure_ms * US_IN_MS;
@@ -2148,6 +2164,11 @@ i++;
 			currentAutoGain = nightAutoGain;
 		}
 		setControl(CamNum, ASI_AUTO_MAX_GAIN, currentMaxGain, ASI_FALSE);
+		if (ASICameraInfo.IsColorCam)
+		{
+			setControl(CamNum, ASI_WB_R, currentWBR, currentAutoAWB ? ASI_TRUE : ASI_FALSE);
+			setControl(CamNum, ASI_WB_B, currentWBB, currentAutoAWB ? ASI_TRUE : ASI_FALSE);
+		}
 
 		// never go over the camera's max auto exposure. ASI_AUTO_MAX_EXP is in ms so convert
 		currentMaxAutoexposure_us = std::min(currentMaxAutoexposure_us, camera_max_autoexposure_us);

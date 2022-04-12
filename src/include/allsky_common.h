@@ -45,6 +45,8 @@
 #define DEFAULT_NIGHTAUTOAWB		false
 #define DEFAULT_DAYBIN				1		// binning during the day probably isn't too useful...
 #define DEFAULT_NIGHTBIN			1
+#define DEFAULT_DAYMEAN				0.5		// target daytime mean brightness
+#define DEFAULT_NIGHTMEAN			0.2		// target nighttime mean brightness
 #define DEFAULT_DAYTIMECAPTURE		false	// Capture images during the day?
 
 #define DEFAULT_FLIP				0		// no flipping

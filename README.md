@@ -372,7 +372,36 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 ### Release notes
 
 * version **v2022.MM.DD**: 
-	* 
+	* Allsky package:
+		* Many settings were added, and can be modified in the WebUI:
+			* **Max Auto-Exposure** for day and night.  When using auto exposure, exposure lengths will not exceed this number.
+			* **Max Auto-Gain** for day and night.  When using auto gain, gain values will not exceed this number.
+			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
+			* **Frames to Skip** for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed.
+			* **Aggression** determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
+		* Latitue and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).
+	* WebUI:
+<!--
+		* The WebUI is now installed as part of the larger Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
+-->
+		* The "Editor" page now allows editting the Allsky Website's `config.js` and `virtualsky.json` files if you have the website installed on your Pi.  This is now the preferred way to edit those files, since the editor performs basic syntax checking.
+		* The order of items in the "Camera Settings" page changed slightly.
+		* Buttons in the "Dark" mode are now darker.
+		* Several bugs and minor enhancements were made.
+	* Allsky Website:
+<!--
+		* You can now specify the order and contents of the popout that appears when clicking on the camera icon.  For example, you could add a link to local weather or to pictures of your allsky camera.
+		* The hope page can be slightly customized:
+			* What the background should be.
+			* Whether or not a border should appear around the image.
+			* Whether or not the "Make Your Own" link should appear at the bottom right.
+-->
+		* The Timelapse, Keogram, and Startrails pages now have titles so it's obvious what you are looking at.
+		* You can now specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`).  This can be helpful when trying to get the overlay to line up with the actual stars.
+		* Latitue and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  They will still appear with N, S, E, W on the camera popout.
+		* The **virtualsky** program that draws the constellation overlay was updated to the latest release.  This added some new settings, including the ability to specify the opacity of the overlay.  It also adds a small box with a question mark in it when viewing the overlay; clicking on the icon brings up a list of commands you can perforrm.
+		* Font Awesome was updated to 5.14 and its file is now included with the website, eliminating a call to the Internet.
+		* The name of the home page file is now `index.php`.  The old `index.html` file is gone.  This change allowed some of the new features above.
 
 * version **v2022.03.01**:
 	* Switched to date-based release names.

@@ -1,9 +1,8 @@
-# Allsky Camera ![Release 0.8.3.3](https://img.shields.io/badge/Release-0.8.3.3-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![v2020.MM.DD](https://img.shields.io/badge/Version-2022.05.01-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 **This README and our [Wiki pages](https://github.com/thomasjacquin/allsky/wiki) will help get your Allsky camera up and running.  Please review them _before_ submitting an Issue.**
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
-
 &nbsp;
 > **NOTE**: When upgrading from a release **prior to** 0.8.3 you **MUST** follow the steps [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
 
@@ -61,9 +60,9 @@ Make sure you have a working Internet connection by setting it through [the term
     ./install.sh  # PatriotAstro's video shows using "sudo"; that is no longer needed
     ```
 
-Some users have reported ASI_ERROR_TIMEOUT errors with their ZWO cameras.  Click [here](https://github.com/thomasjacquin/allsky/wiki/Troubleshoot:-ASI_ERROR_TIMEOUTs) to troubleshoot.
-
 There are many configuration variables that need to be set.  Please see the [allsky Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) page for a list of them.
+	
+> NOTE: Starting with this release, the WebUI is included in the main Allsky package.
 
 ***
 </details>
@@ -133,26 +132,18 @@ Also note that in version 0.8.3 the default image file created and uploaded is c
 
 &nbsp;
 <!------------------------------------------------------------------------------------------->
-### Web User Interface (WebUI) - `allsky-portal` package
+### Web User Interface (WebUI)
 <details><summary>Click here</summary>
 
 &nbsp;  
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg)
 
-If you don't want to configure the camera using the terminal, you can install the [WebUI](https://github.com/thomasjacquin/allsky-portal).
-Note that this will:
-* change your hostname to **allsky** (or whatever you called it when installing)
-* install the lighttpd web server
-* replace your `/var/www/html` directory
-* move the `allsky/config/settings_*.json` configuration files to `/etc/raspap`
+The WebUI is installed as part of the installation of allsky.  It:
+* changed your hostname to **allsky** (or whatever you called it when installing)
+* installed the lighttpd web server
+* replaced your `/var/www/html` directory
 
-Using the WebUI is **highly** recommended as it provides additional information on each setting and allows error checking behind the scenes.  The Wiki and other documentation assume you have WebUI installed.  To install it:
-
-```shell
-sudo gui/install.sh
-```
-
-After you complete the WebUI setup, you'll be able to administer the camera using the WebUI by navigating to
+After you complete allsky setup, you can administer the software using the WebUI by navigating to
 ```
 http://your_raspberry_IP_address
     OR
@@ -205,7 +196,7 @@ STARTRAILS_DIR='/var/www/html/allsky/startrails'
 ```
 
 ### On a different machine
-If you want to host the website on a _different_ machine, like in this [example](http://www.thomasjacquin.com/allsky), download the source files from this repository: [https://github.com/thomasjacquin/allsky-website.git](https://github.com/thomasjacquin/allsky-website.git).
+If you want to host the website on a _different_ machine, like in this [example](http://www.thomasjacquin.com/allsky), see [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Installation-Tips#install-the-web-interface-on-a-remote-machine).
 
 ### Website settings
 Once you've installed the website, either on your Pi or another machine, look at the descriptions of the settings on the [allsky-website Settings page](https://github.com/thomasjacquin/allsky/wiki/allsky-website-Settings).
@@ -373,13 +364,17 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 
 * version **v2022.MM.DD**: 
 	* Allsky package:
-		* Many settings were added, and can be modified in the WebUI:
+		* Several settings were added and can be modified in the WebUI:
 			* **Max Auto-Exposure** for day and night.  When using auto exposure, exposure lengths will not exceed this number.
 			* **Max Auto-Gain** for day and night.  When using auto gain, gain values will not exceed this number.
 			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
 			* **Frames to Skip** for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed.
 			* **Aggression** determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
+			* **Mean Target** (RPiHQ only) for day and night.  This specifies the target brightness when in auto exposure mode and works best if auto gain is also enabled.
 		* Latitue and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).
+		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers and the crop area must fit within the image.
+		* The log output of the ZWO and RPiHQ cameras is more similar, aiding in debugging and maintenance.
+		* Several bugs and minor enhancements were made.
 	* WebUI:
 <!--
 		* The WebUI is now installed as part of the larger Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
@@ -479,7 +474,6 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 	* Ability to specify the format of the time displayed on images.
 	* Ability to have the temperature displayed in Celcius, Fahrenheit, or both.
 	* Ability to set bitrate on timelapse video.
-
 
 <!--
 * version **0.7**:

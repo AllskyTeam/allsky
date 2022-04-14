@@ -81,6 +81,12 @@ if [ "${CAMERA}" = "RPiHQ" ]; then
 	if [ ${RET} -eq 0 ]; then
 		RPiHQ_SOFTWARE_TO_USE="libcamera"
 	else
+		which raspistill > /dev/null
+		if [ $? -ne 0 ]; then
+			echo -e "${RED}*** FATAL ERROR: Can't determine what software to use forRPiHQ camera. Stopping.${NC}" >&2
+			doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nRPiHQ software\nnot found!."
+		fi
+
 		RPiHQ_SOFTWARE_TO_USE="raspistill"
 		# Either libcamera isn't installed or it doesn't work, so try raspistill instead.
 

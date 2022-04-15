@@ -348,7 +348,7 @@ Experienced users may want to add some additional processing steps at the end of
 To do so:
 ```shell
 cd ~/allsky/scripts
-mv endOfNight_additionalSteps.repo   scripts/endOfNight_additionalSteps.sh
+mv endOfNight_additionalSteps.repo  endOfNight_additionalSteps.sh
 ```
 and then add your additional processing steps which
 will be run after the usual end-of-night processing, but before the deletion of any old image files.

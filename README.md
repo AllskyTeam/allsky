@@ -8,7 +8,7 @@ This is the source code for the Allsky Camera project described [on Instructable
 
 &nbsp;  
 &nbsp;
-![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg)
+<img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg" width="75%">
 
 
 &nbsp;
@@ -339,7 +339,7 @@ Experienced users may want to add some additional processing steps at the end of
 To do so:
 ```shell
 cd ~/allsky/scripts
-mv endOfNight_additionalSteps.repo   scripts/endOfNight_additionalSteps.sh
+mv endOfNight_additionalSteps.repo   endOfNight_additionalSteps.sh
 ```
 and then add your additional processing steps which
 will be run after the usual end-of-night processing, but before the deletion of any old image files.
@@ -361,6 +361,9 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 
 <!------------------------------------------------------------------------------------------->
 ### Release notes
+<details><summary>Click here</summary>
+
+&nbsp;  
 
 * version **v2022.MM.DD**: 
 	* Allsky package:
@@ -499,7 +502,10 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 * version **0.1**: Initial release
 -->
 ***
+</details>
 
+
+&nbsp;
 <!------------------------------------------------------------------------------------------->
 ### Donation
 If you found this project useful, here's a link to send me a cup of coffee :)

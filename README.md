@@ -11,7 +11,8 @@ This is the source code for the Allsky Camera project described [on Instructable
 <img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg" width="50%">
 </p>
 
-<!------------------------------------------------------------------------------------------->
+
+<!-------------------------------------------------------------------------------------------> 
 ### Requirements
 <details><summary>Click here</summary>
 
@@ -135,7 +136,7 @@ Also note that in version 0.8.3 the default image file created and uploaded is c
 <details><summary>Click here</summary>
 
 &nbsp;  
-![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg)
+<p align="center"><img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg" width="75%"></p>
 
 The WebUI is installed as part of the installation of allsky.  It:
 * changed your hostname to **allsky** (or whatever you called it when installing)
@@ -178,7 +179,7 @@ If it is behind a firewall consult the documentation for your network equipment 
 You can display your files on a website, either on the Pi itself or on another machine.
 
 ### On the Pi
-If you want to host the website on your Raspberry Pi, run the following command. Note that this requires first installing the WebUI.
+If you want to host the website on your Raspberry Pi, run the following command:
 
 ```shell
 cd ~/allsky
@@ -367,7 +368,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 <details><summary>Click here</summary>
 
 &nbsp;  
-
+<!-- some of the changes haven't been made as of April 13, 2022, but should be for the next release -->
 * version **v2022.MM.DD**: 
 	* Allsky package:
 		* Several settings were added and can be modified in the WebUI:
@@ -382,21 +383,17 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 		* The log output of the ZWO and RPiHQ cameras is more similar, aiding in debugging and maintenance.
 		* Several bugs and minor enhancements were made.
 	* WebUI:
-<!--
 		* The WebUI is now installed as part of the larger Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
--->
 		* The "Editor" page now allows editting the Allsky Website's `config.js` and `virtualsky.json` files if you have the website installed on your Pi.  This is now the preferred way to edit those files, since the editor performs basic syntax checking.
 		* The order of items in the "Camera Settings" page changed slightly.
 		* Buttons in the "Dark" mode are now darker.
 		* Several bugs and minor enhancements were made.
 	* Allsky Website:
-<!--
 		* You can now specify the order and contents of the popout that appears when clicking on the camera icon.  For example, you could add a link to local weather or to pictures of your allsky camera.
-		* The hope page can be slightly customized:
+		* The home page can be customized:
 			* What the background should be.
 			* Whether or not a border should appear around the image.
 			* Whether or not the "Make Your Own" link should appear at the bottom right.
--->
 		* The Timelapse, Keogram, and Startrails pages now have titles so it's obvious what you are looking at.
 		* You can now specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`).  This can be helpful when trying to get the overlay to line up with the actual stars.
 		* Latitue and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  They will still appear with N, S, E, W on the camera popout.
@@ -507,8 +504,6 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 ***
 </details>
 
-
-&nbsp;
 <!------------------------------------------------------------------------------------------->
 ### Donation
 If you found this project useful, here's a link to send me a cup of coffee :)

@@ -7,11 +7,10 @@ This is the source code for the Allsky Camera project described [on Instructable
 > **NOTE**: When upgrading from a release **prior to** 0.8.3 you **MUST** follow the steps [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
 
 &nbsp;  
-&nbsp;
-<img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg" width="75%">
+<p align="center">
+<img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg" width="50%">
+</p>
 
-
-&nbsp;
 <!------------------------------------------------------------------------------------------->
 ### Requirements
 <details><summary>Click here</summary>
@@ -356,7 +355,11 @@ After you rename the file above, you can edit the file via the "Editor" link on 
 
 If you want your allsky camera added to the [Allsky map](http://www.thomasjacquin.com/allsky-map), see [these settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings/_edit#map-settings).
 
-[![Global allsky map](http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg "Global allsky map example - click to see real map")](https://www.thomasjacquin.com/allsky-map/)
+<p align="center">
+<a href="https://www.thomasjacquin.com/allsky-map/">
+<img src="http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg" title="Global allsky map example - click to see real map" width="75%">
+</a>
+</p>
 
 
 <!------------------------------------------------------------------------------------------->

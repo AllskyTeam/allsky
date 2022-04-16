@@ -52,7 +52,7 @@ AUTO_STRETCH_MID_POINT="10%"
 RESIZE_UPLOADS="false"
 RESIZE_UPLOADS_SIZE="962x720"
 
-# Create thumbnails of images.  If you are not running the WebUI consider changing this to "false".
+# Create thumbnails of images.  If you never look at them, consider changing this to "false".
 IMG_CREATE_THUMBNAILS="true"
 
 # Remove corrupt images before generating keograms, startrails, and timelapse videos.
@@ -65,16 +65,16 @@ REMOVE_BAD_IMAGES="true"
 REMOVE_BAD_IMAGES_THRESHOLD_LOW=1
 REMOVE_BAD_IMAGES_THRESHOLD_HIGH=90
 
-# Additional Capture parameters.  Run "capture_RPiHQ -h" to see the options.
-# e.g. activate autoexposure algorithm "mean" for RPiHQ: "-nightmean 0.3 -daymean 0.3"
+# Additional Capture parameters.  Run either "capture --help" or "capture_RPiHQ -help" to see the options,
+# depending on what camera you have (ZWO or RPiHQ).
 CAPTURE_EXTRA_PARAMETERS=""
 
 # Set to "false" to disable daytime capture.
 DAYTIME_CAPTURE="true"
 
 # Night images are always taken and saved to disk.
-# Setting DAYTIME_SAVE to "true" also saves daytime images to disk.
-# Will only save daytime images if DAYTIME_CAPTURE="true".
+# Set DAYTIME_SAVE to "true" to also save daytime images.
+# This will only save daytime images if DAYTIME_CAPTURE="true".
 DAYTIME_SAVE="false"
 
 
@@ -110,7 +110,7 @@ KEEP_SEQUENCE="false"
 # Any additional timelapse parameters.  Run "ffmpeg -?" to see the options.
 TIMELAPSE_EXTRA_PARAMETERS=""
 
-# Set to "true" to upload timelapse video to your website at the end of each night.
+# Set to "true" to upload the timelapse video to your website at the end of each night.
 UPLOAD_VIDEO="false"
 
 
@@ -149,7 +149,7 @@ THUMBNAIL_SIZE_Y=75
 # Set to "" to keep ALL days.
 DAYS_TO_KEEP=14
 
-# Same as DAYS_TO_KEEP, but for the Allsky website, if installed.
+# Same as DAYS_TO_KEEP, but for the Allsky Website, if installed.
 # Set to "" to keep ALL days.
 WEB_DAYS_TO_KEEP=""
 
@@ -157,14 +157,12 @@ WEB_DAYS_TO_KEEP=""
 # This is needed if you are running the Allsky Website.
 POST_END_OF_NIGHT_DATA="false"
 
-# Set to "true" if you want to enable dark frame subtraction on your night-time images.
+# Set to "true" if you want to enable dark frame subtraction on your nighttime images.
 # You must first create dark frames - see the README.md file for instructions.
 DARK_FRAME_SUBTRACTION="false"
 
 # If you have additional data or buttons you want displayed on the WebUI's System page,
-# specify one or more colon-separated files that contain that data.
-# You must provide scripts to update those files.
-# See the WEBUI_DATA_FILES configuration variable in the "Software settings" section of
+# see the WEBUI_DATA_FILES configuration variable in the "Software settings" section of
 # https://github.com/thomasjacquin/allsky/wiki/allsky-Settings for details.
 WEBUI_DATA_FILES=""
 

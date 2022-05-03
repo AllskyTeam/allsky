@@ -13,7 +13,7 @@ echo    "*** Welcome to the Allsky Web User Interface (WebUI) installation ***"
 echo -e "*********************************************************************"
 echo -en '\n'
 
-if [[ $EUID -ne 0 ]]; then
+if [[ ${EUID} -ne 0 ]]; then
 	echo -e "${RED}This script must be run as root${NC}" 1>&2
 	exit 1
 fi
@@ -121,14 +121,14 @@ echo
 
 echo -e "${GREEN}* Configuring lighttpd${NC}"
 # "/home/pi/allsky" is hard coded into file we distribute
-sed -i "s|/home/pi/allsky|$(dirname "$SCRIPTPATH")|g" $SCRIPTPATH/lighttpd.conf
-install -m 0644 $SCRIPTPATH/lighttpd.conf /etc/lighttpd/lighttpd.conf
+sed -i "s|/home/pi/allsky|$(dirname "${SCRIPTPATH}")|g" "${SCRIPTPATH}/lighttpd.conf"
+install -m 0644 "${SCRIPTPATH}/lighttpd.conf" /etc/lighttpd/lighttpd.conf
 echo
 
 if [ "${NEED_TO_UPDATE_HOST_NAME}" = "true" ]; then
 	echo -e "${GREEN}* Changing hostname to '${HOST_NAME}'${NC}"
-	echo "$HOST_NAME" > /etc/hostname
-	sed -i "s/127.0.1.1.*$CURRENT_HOSTNAME/127.0.1.1\t$HOST_NAME/g" /etc/hosts
+	echo "${HOST_NAME}" > /etc/hostname
+	sed -i "s/127.0.1.1.*${CURRENT_HOSTNAME}/127.0.1.1\t${HOST_NAME}/g" /etc/hosts
 	echo
 else
 	echo -e "${GREEN}* Leaving hostname at '${HOST_NAME}'${NC}"
@@ -139,8 +139,8 @@ FILE="/etc/avahi/avahi-daemon.conf"
 if [ $? -ne 0 ]; then
 	# New HOST_NAME not found, or file doesn't exist, so need to configure file.
 	echo -e "${GREEN}* Configuring avahi-daemon${NC}"
-	install -m 0644 $SCRIPTPATH/avahi-daemon.conf "${FILE}"
-	sed -i "s/allsky/$HOST_NAME/g" "${FILE}"	# "allsky" is hard coded in file we distribute
+	install -m 0644 "${SCRIPTPATH}/avahi-daemon.conf" "${FILE}"
+	sed -i "s/allsky/${HOST_NAME}/g" "${FILE}"	# "allsky" is hard coded in file we distribute
 	echo
 fi
 
@@ -197,7 +197,7 @@ else
 	install -m 0644 -o www-data -g www-data ${ALLSKY_CONFIG}/settings_RPiHQ.json "${CONFIG_DIR}"
 fi
 chown -R www-data:www-data "${CONFIG_DIR}"
-usermod -a -G www-data $SUDO_USER
+usermod -a -G www-data ${SUDO_USER}
 echo
 # don't leave unused files around
 rm -f ${ALLSKY_CONFIG}/settings_ZWO.json ${ALLSKY_CONFIG}/settings_RPiHQ.json
@@ -206,7 +206,7 @@ echo -e "${GREEN}* Modify config.sh${NC}"
 sed -i "/CAMERA_SETTINGS_DIR=/c\CAMERA_SETTINGS_DIR=\"${CONFIG_DIR}\"" ${ALLSKY_CONFIG}/config.sh
 echo -en '\n'
 
-if (whiptail --title "Allsky Software Installer" --yesno "The Allsky WebUI is now installed. You can now reboot the Raspberry Pi and connect to it at this address: http://$HOST_NAME.local or http://$(hostname -I | sed -e 's/ .*$//')   Would you like to Reboot now?" 10 60 \
+if (whiptail --title "Allsky Software Installer" --yesno "The Allsky WebUI is now installed. You can now reboot the Raspberry Pi and connect to it at this address: http://${HOST_NAME}.local or http://$(hostname -I | sed -e 's/ .*$//')   Would you like to Reboot now?" 10 60 \
 	3>&1 1>&2 2>&3); then 
 	reboot now
 else

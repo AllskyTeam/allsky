@@ -169,7 +169,8 @@ fi
 echo -e "${GREEN}* Retrieving github files to build admin portal${NC}"
 git clone https://github.com/thomasjacquin/allsky-portal.git "${PORTAL_DIR}"
 chown -R ${SUDO_USER}:www-data "${PORTAL_DIR}"
-chmod -R 775 "${PORTAL_DIR}"
+find "{PORTAL_DIR}/" -type f -exec chmod 644 {} \;
+find "{PORTAL_DIR}/" -type d -exec chmod 775 {} \;
 
 # Restore WEBSITE_DIR if it existed before
 if [ "${TMP_WEBSITE_DIR}" != "" ]; then

@@ -120,8 +120,11 @@ service lighttpd restart
 echo
 
 echo -e "${GREEN}* Configuring lighttpd${NC}"
-# "/home/pi/allsky" is hard coded into file we distribute
-sed -i "s|/home/pi/allsky|$(dirname "${SCRIPTPATH}")|g" "${SCRIPTPATH}/lighttpd.conf"
+sed -i \
+	  -e "s|XX_ALLSKY_HOME_XX|${ALLSKY_HOME}|g" \
+	  -e "s|XX_ALLSKY_IMAGES_XX|${ALLSKY_IMAGES}|g" \
+	  -e "s|XX_ALLSKY_WEBSITE_XX|${ALLSKY_WEBSITE}|g" \
+	  "${SCRIPTPATH}/lighttpd.conf"
 install -m 0644 "${SCRIPTPATH}/lighttpd.conf" /etc/lighttpd/lighttpd.conf
 echo
 

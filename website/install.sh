@@ -151,7 +151,7 @@ mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails
 echo
 
 echo -e "${GREEN}* Fixing ownership and permissions${NC}"
-U=${id --name --user)
+U=$(id --name --user)
 chown -R "${U}:www-data" .
 find ./ -type f -exec chmod 644 {} \;
 find ./ -type d -exec chmod 775 {} \;

@@ -1108,10 +1108,12 @@ i++;
 				if (aggression < 1)
 				{
 					fprintf(stderr, "Aggression must be between 1 and 100; setting to 1.\n");
+					aggression = 1;
 				}
 				else if (aggression > 100)
 				{
 					fprintf(stderr, "Aggression must be between 1 and 100; setting to 100.\n");
+					aggression = 100;
 				}
 			}
 			else if (strcmp(argv[i], "-gaintransitiontime") == 0)

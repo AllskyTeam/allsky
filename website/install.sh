@@ -153,7 +153,8 @@ if [ ! -d startrails/thumbnails -o ! -d keograms/thumbnails -o ! -d videos/thumb
 	echo
 
 	echo -e "${GREEN}* Fixing ownership and permissions${NC}"
-	chown -R pi:www-data .
+	U=$(id -n -u)
+	chown -R "${U}:www-data" .
 	find ./ -type f -exec chmod 644 {} \;
 	find ./ -type d -exec chmod 775 {} \;
 	echo

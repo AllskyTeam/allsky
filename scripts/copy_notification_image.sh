@@ -103,7 +103,7 @@ fi
 # Don't save in main image directory because we don't want the notification image in timelapses.
 # If at nighttime, save them in (possibly) yesterday's directory.
 # If during day, save in today's directory.
-if [ "${DAYTIME_SAVE}" = "true" -a "${IMG_CREATE_THUMBNAILS}" = "true" ] ; then
+if [ "${DAYTIME_CAPTURE}" = "true" ] && [ "${DAYTIME_SAVE}" = "true" ] && [ "${IMG_CREATE_THUMBNAILS}" = "true" ]; then
 	DATE_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
 	# Use today's folder if it exists, otherwise yesterday's
 	[ ! -d "${DATE_DIR}" ] && DATE_DIR="${ALLSKY_IMAGES}/$(date -d '12 hours ago' +'%Y%m%d')"
@@ -128,7 +128,7 @@ echo "${NOTIFICATION_TYPE},${EXPIRES_IN_SECONDS},${EXPIRE_TIME}" >> "${ALLSKY_NO
 touch --date="${EXPIRE_TIME}" "${ALLSKY_NOTIFICATION_LOG}"
 
 # If upload is true, optionally create a smaller version of the image, either way, upload it.
-if [ "${UPLOAD_IMG}" = "true" ] ; then
+if [ "${IMG_UPLOAD}" = "true" ] ; then
 	if [ "${RESIZE_UPLOADS}" = "true" ]; then
 		# Don't overwrite FINAL_IMAGE since the web server(s) may be looking at it.
 		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"

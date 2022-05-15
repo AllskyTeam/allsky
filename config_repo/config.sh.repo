@@ -188,12 +188,7 @@ if [ "${CAMERA}" = "" ]; then
 fi
 
 # COMPATIBILITY CHECK
-if [ -z "${DAYS_TO_KEEP}" ]; then		# Old version had AUTO_DELETE and NIGHTS_TO_KEEP
-	AUTO_DELETE="false"
-else
-	AUTO_DELETE="true"
-	NIGHTS_TO_KEEP="${DAYS_TO_KEEP}"
-fi
+## None for this release
 
 # This is needed in case the user changed the default location the current image is saved to.
 if [ "${IMG_DIR}" = "current/tmp" ]; then

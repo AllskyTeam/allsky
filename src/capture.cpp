@@ -2013,7 +2013,7 @@ i++;
 					if (notificationImages) {
 						system("scripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &");
 					}
-					Log(0, "It's daytime... we're not saving images.\n%s\n",
+					Log(0, "It's daytime... we're not saving images.\n%s",
 						tty ? "*** Press Ctrl+C to stop ***\n" : "");
 					displayedNoDaytimeMsg = true;
 

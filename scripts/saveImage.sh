@@ -4,7 +4,7 @@
 
 ME="$(basename "${BASH_ARGV0}")"
 
-[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "DEBUG: ${ME} $*"
+[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME} $*"
 
 source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"

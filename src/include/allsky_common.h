@@ -101,7 +101,7 @@ std::string exec(const char *);
 void add_variables_to_command(char *, long, int, float,
 	bool, bool, bool, float, float,
 	int, float, int,
-	int, int, int, int);
+	int, const char *, int, int);
 const char *checkForValidExtension(const char *, int);
 std::string calculateDayOrNight(const char *, const char *, const char *);
 int calculateTimeToNightTime(const char *, const char *, const char *);

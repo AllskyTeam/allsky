@@ -89,6 +89,11 @@ bool currentAutoAWB				= false;
 long currentWBR					= NOT_SET;
 long currentWBB					= NOT_SET;
 
+long actualWBR					= NOT_SET;		// actual values per camera
+long actualWBB					= NOT_SET;
+long actualTemp					= NOT_SET;
+long actualGain					= NOT_SET;
+
 #ifdef USE_HISTOGRAM
 int current_histogramBoxSizeX =	NOT_SET;
 int current_histogramBoxSizeY =	NOT_SET;
@@ -119,7 +124,6 @@ int numExposures				= 0;				// how many valid pictures have we taken so far?
 int currentGain					= NOT_SET;
 long camera_max_autoexposure_us	= NOT_SET;			// camera's max auto-exposure
 long camera_min_exposure_us		= 100;				// camera's minimum exposure
-long actualTemp					= NOT_SET;			// actual sensor temp, per the camera
 long last_exposure_us			= 0;				// last exposure taken
 bool taking_dark_frames			= false;
 long current_exposure_us		= NOT_SET;
@@ -231,10 +235,10 @@ void *SaveImgThd(void *para)
 			char cmd[1100];
 			Log(1, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), final_file_name);
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
-			float gainDB = pow(10, (float)currentGain / 10.0 / 20.0);
+			float gainDB = pow(10, (float)actualGain / 10.0 / 20.0);
 			add_variables_to_command(cmd, last_exposure_us, currentBrightness, mean,
-				currentAutoExposure, currentAutoGain, currentAutoAWB, (float)currentWBR, (float)currentWBB,
-				actualTemp, gainDB, currentGain,
+				currentAutoExposure, currentAutoGain, currentAutoAWB, (float)actualWBR, (float)actualWBB,
+				actualTemp, gainDB, actualGain,
 				currentBin, flip, current_bit_depth, focus_metric);
 			strcat(cmd, " &");
 
@@ -465,7 +469,6 @@ return;
 
 
 long reported_exposure_us = 0;	// exposure reported by the camera, either actual exposure or suggested next one
-long actualGain = NOT_SET;		// actual gain used, per the camera
 ASI_BOOL bAuto = ASI_FALSE;		// "auto" flag returned by ASIGetControlValue, when we don't care what it is
 
 ASI_BOOL wasAutoExposure = ASI_FALSE;
@@ -501,11 +504,18 @@ ASI_ERROR_CODE takeOneExposure(
 
 	// This debug message isn't typcally needed since we already displayed a message about
 	// starting a new exposure, and below we display the result when the exposure is done.
-	Log(4, "  > %s to %s, timeout: %'ld ms\n",
+	Log(4, "  > %s to %s\n",
 		wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Exposure set",
-		length_in_units(exposure_time_us, true), timeout);
+		length_in_units(exposure_time_us, true));
 
+{
+  static bool called = false;
+	// XXXXXXXXXXXXXXXXXX testing.  If in auto exposure, only set exposure time once.
+  if (! called || ! currentAutoExposure) {
+	called = true;
 	setControl(cameraId, ASI_EXPOSURE, exposure_time_us, currentAutoExposure ? ASI_TRUE :ASI_FALSE);
+  }
+}
 
 	flush_buffered_image(cameraId, imageBuffer, bufferSize);
 
@@ -540,7 +550,7 @@ ASI_ERROR_CODE takeOneExposure(
 		 		timeval tEnd = getTimeval();
 				// After testing there seems to be about 450,000 us overhead, so subtract it.
 				long timeToTakeImage_us = timeval_diff_us(tStart, tEnd) - 450000;
-Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exposure_time_us, timeToTakeImage_us);
+//Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exposure_time_us, timeToTakeImage_us);
 				long diff_us = timeToTakeImage_us - exposure_time_us;
 				long threshold_us = exposure_time_us * 0.5;
 				if (abs(diff_us) > threshold_us) {
@@ -549,12 +559,18 @@ Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exp
 			}
 
 			numErrors = 0;
+			ASIGetControlValue(cameraId, ASI_GAIN, &actualGain, &bAuto);
 			debug_text[0] = '\0';
 #ifdef USE_HISTOGRAM
 			if (histogram != NULL && mean != NULL)
 			{
 				*mean = computeHistogram(imageBuffer, width, height, imageType, histogram);
 				sprintf(debug_text, " @ mean %d", *mean);
+				if (currentAutoGain && ! taking_dark_frames)
+				{
+					char *p = debug_text + strlen(debug_text);
+					sprintf(p, ", auto gain %ld", actualGain);
+				}
 			}
 #endif
 			last_exposure_us = exposure_time_us;
@@ -563,7 +579,7 @@ Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exp
 			// When in auto-exposure mode, the returned exposure length is what the driver thinks the
 			// next exposure should be, and will eventually converge on the correct exposure.
 			ASIGetControlValue(cameraId, ASI_EXPOSURE, &reported_exposure_us, &wasAutoExposure);
-			Log(3, "  > Got image%s.  Reported exposure: %s, auto=%s\n", debug_text, length_in_units(reported_exposure_us, true), wasAutoExposure == ASI_TRUE ? "yes" : "no");
+			Log(3, "  > Got image%s.  Returned exposure: %s\n", debug_text, length_in_units(reported_exposure_us, true));
 
 			// If this was a manual exposure, make sure it took the correct exposure.
 			// Per ZWO, this should never happen.
@@ -571,12 +587,11 @@ Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exp
 			{
 				Log(0, "  > WARNING: not correct exposure (requested: %'ld us, reported: %'ld us, diff: %'ld)\n", exposure_time_us, reported_exposure_us, reported_exposure_us - exposure_time_us);
 			}
-			ASIGetControlValue(cameraId, ASI_GAIN, &actualGain, &bAuto);
 			ASIGetControlValue(cameraId, ASI_TEMPERATURE, &actualTemp, &bAuto);
 			if (ASICameraInfo.IsColorCam)
 			{
-				ASIGetControlValue(CamNum, ASI_WB_R, &currentWBR, &bAuto);
-				ASIGetControlValue(CamNum, ASI_WB_B, &currentWBB, &bAuto);
+				ASIGetControlValue(CamNum, ASI_WB_R, &actualWBR, &bAuto);
+				ASIGetControlValue(CamNum, ASI_WB_B, &actualWBB, &bAuto);
 			}
 		}
 
@@ -665,7 +680,7 @@ int numGainChanges = 0;		// This is reset at every day/night and night/day trans
 bool resetGainTransitionVariables(int dayGain, int nightGain)
 {
 	// Many of the "xxx" messages below will go away once we're sure gain transition works.
-	Log(4, "xxx resetGainTransitionVariables(%d, %d) called at %s\n", dayGain, nightGain, dayOrNight.c_str());
+	Log(5, "xxx resetGainTransitionVariables(%d, %d) called at %s\n", dayGain, nightGain, dayOrNight.c_str());
 
 	if (adjustGain == false)
 	{
@@ -691,14 +706,14 @@ bool resetGainTransitionVariables(int dayGain, int nightGain)
 	if (dayOrNight == "DAY")
 	{
 		totalTimeInSec = (dayExposure_us / US_IN_SEC) + (dayDelay_ms / MS_IN_SEC);
-		Log(4, "xxx totalTimeInSec=%.1fs, dayExposure_us=%'ldus , daydelay_ms=%'dms\n", totalTimeInSec, dayExposure_us, dayDelay_ms);
+		Log(5, "xxx totalTimeInSec=%.1fs, dayExposure_us=%'ldus , daydelay_ms=%'dms\n", totalTimeInSec, dayExposure_us, dayDelay_ms);
 	}
 	else	// NIGHT
 	{
 		// At nightime if the exposure is less than the max, we wait until max has expired,
 		// so use it instead of the exposure time.
 		totalTimeInSec = (nightMaxAutoexposure_ms / MS_IN_SEC) + (nightDelay_ms / MS_IN_SEC);
-		Log(4, "xxx totalTimeInSec=%.1fs, nightMaxAutoexposure_ms=%'dms, nightDelay_ms=%'dms\n", totalTimeInSec, nightMaxAutoexposure_ms, nightDelay_ms);
+		Log(5, "xxx totalTimeInSec=%.1fs, nightMaxAutoexposure_ms=%'dms, nightDelay_ms=%'dms\n", totalTimeInSec, nightMaxAutoexposure_ms, nightDelay_ms);
 	}
 
 	gainTransitionImages = ceil(gainTransitionTime / totalTimeInSec);
@@ -721,7 +736,7 @@ bool resetGainTransitionVariables(int dayGain, int nightGain)
 			gainTransitionImages++;		// this one will get the remaining amount
 	}
 
-	Log(4, "xxx gainTransitionImages=%d, gainTransitionTime=%ds, perImageAdjustGain=%d, totalAdjustGain=%d\n",
+	Log(5, "xxx gainTransitionImages=%d, gainTransitionTime=%ds, perImageAdjustGain=%d, totalAdjustGain=%d\n",
 		gainTransitionImages, gainTransitionTime, perImageAdjustGain, totalAdjustGain);
 
 	return(true);
@@ -739,7 +754,7 @@ int determineGainChange(int dayGain, int nightGain)
 	if (numGainChanges > gainTransitionImages || totalAdjustGain == 0)
 	{
 		// no more changes needed in this transition
-		Log(4, "  xxxx No more gain changes needed.\n");
+		Log(5, "  xxxx No more gain changes needed.\n");
 		currentAdjustGain = false;
 		return(0);
 	}
@@ -1939,12 +1954,11 @@ i++;
 	}
 
 	if (ImgExtraText[0] != '\0' && extraFileAge > 0) {
-		Log(1, "Extra Text File Age Disabled So Displaying Anyway\n");
+		Log(3, "Extra Text File Age Disabled So Displaying Anyway\n");
 	}
 
 	if (tty)
 		printf("*** Press Ctrl+C to stop ***\n\n");
-
 
 	// Start taking pictures
 
@@ -2195,7 +2209,6 @@ i++;
 			current_histogramBoxSizeY	= histogramBoxSizeY / currentBin;
 
 			bufferSize = width * height * current_bpp;
-			Log(4, "Buffer size: %ld\n", bufferSize);
 
 // TODO: if not the first time, should we free the old pRgb?
 			if (Image_type == IMG_RAW16)
@@ -2645,12 +2658,6 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					Log(0, "  > WARNING: currently saving an image; can't save new one at %s.\n", exposureStart);
 
 					// TODO: wait for the prior image to finish saving.
-				}
-
-				if (currentAutoGain && ! taking_dark_frames)
-				{
-					ASIGetControlValue(CamNum, ASI_GAIN, &actualGain, &bAuto);
-					Log(1, "  > Auto Gain value: %ld\n", actualGain);
 				}
 
 				if (currentAutoExposure)

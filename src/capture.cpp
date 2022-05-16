@@ -67,6 +67,7 @@ bool check_max_errors(int *, int);
 // So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
 bool use_new_exposure_algorithm = DEFAULT_NEWEXPOSURE;
 int flip						= DEFAULT_FLIP;
+char const *str_flip			= "";
 bool tty						= false;			// are we on a tty?
 bool notificationImages			= DEFAULT_NOTIFICATIONIMAGES;
 char const *save_dir			= DEFAULT_SAVEDIR;
@@ -239,7 +240,7 @@ void *SaveImgThd(void *para)
 			add_variables_to_command(cmd, last_exposure_us, currentBrightness, mean,
 				currentAutoExposure, currentAutoGain, currentAutoAWB, (float)actualWBR, (float)actualWBB,
 				actualTemp, gainDB, actualGain,
-				currentBin, flip, current_bit_depth, focus_metric);
+				currentBin, str_flip, current_bit_depth, focus_metric);
 			strcat(cmd, " &");
 
 			st = cv::getTickCount();
@@ -1329,6 +1330,15 @@ i++;
 		}
 	}
 
+	if (flip == 0)
+		str_flip = "none";
+	else if (flip == 1)
+		str_flip = "horizontal";
+	else if (flip == 2)
+		str_flip = "vertical";
+	else if (flip == 3)
+		str_flip = "both";
+
 	if (setlocale(LC_NUMERIC, locale) == NULL)
 		printf("*** WARNING: Could not set locale to %s ***\n", locale);
 
@@ -1852,7 +1862,7 @@ i++;
 	}
 	printf(" Gamma: %d\n", gamma);
 	printf(" USB Speed: %d, auto: %s\n", asiBandwidth, yesNo(asiAutoBandwidth));
-	printf(" Flip Image: %d\n", flip);
+	printf(" Flip Image: %s (%d)\n", str_flip, flip);
 	printf(" Filename: %s\n", fileName);
 	printf(" Filename Save Directory: %s\n", save_dir);
 	printf(" Latitude: %s, Longitude: %s\n", latitude, longitude);

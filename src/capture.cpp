@@ -1944,8 +1944,6 @@ i++;
 
 	if (tty)
 		printf("*** Press Ctrl+C to stop ***\n\n");
-	else
-		printf("*** Stop the allsky service to end this process. ***\n\n");
 
 
 	// Start taking pictures
@@ -2015,8 +2013,8 @@ i++;
 					if (notificationImages) {
 						system("scripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &");
 					}
-					Log(0, "It's daytime... we're not saving images.\n*** %s ***\n",
-						tty ? "Press Ctrl+C to stop" : "Stop the allsky service to end this process.");
+					Log(0, "It's daytime... we're not saving images.\n%s",
+						tty ? "*** Press Ctrl+C to stop ***\n" : "");
 					displayedNoDaytimeMsg = true;
 
 					// sleep until almost nighttime, then wake up and sleep more if needed.
@@ -2138,7 +2136,6 @@ i++;
 					nightExposure_us = nightMaxAutoexposure_ms * US_IN_MS;
 				}
 				current_exposure_us = nightExposure_us;
-				Log(4, "Using night exposure (%s)\n", length_in_units(nightExposure_us, true));
 			}
 
 			currentAutoExposure = nightAutoExposure;
@@ -2525,12 +2522,13 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						// possible so don't set an adjustment.
 						if (aggression != 100 && current_skip_frames <= 0)
 						{
-							long exposureDiff_us;
-							exposureDiff_us = reported_exposure_us - current_exposure_us;
-							exposureDiff_us *= (float)aggression / 100;
+							long exposureDiff_us, diff_us;
+							diff_us = reported_exposure_us - current_exposure_us;
+							exposureDiff_us = diff_us * (float)aggression / 100;
 							if (exposureDiff_us != 0)
 							{
-								Log(4, "  > Changing next exposure by %s ", length_in_units(exposureDiff_us, true));
+								Log(4, "  > Next exposure full change is %s, ", length_in_units(diff_us, true));
+								Log(4, "after aggression: %s ", length_in_units(exposureDiff_us, true));
 								Log(4, "from %s ", length_in_units(current_exposure_us, true));
 								current_exposure_us += exposureDiff_us;
 								Log(4, "to %s\n", length_in_units(current_exposure_us, true));

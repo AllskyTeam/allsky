@@ -1236,8 +1236,8 @@ i++;
 						if (notificationImages) {
 							system("scripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &");
 						}
-						Log(0, "It's daytime... we're not saving images.\n%s\n",
-							tty ? "Press Ctrl+C to stop" : "Stop the allsky service to end this process.");
+						Log(0, "It's daytime... we're not saving images.\n%s",
+							tty ? "*** Press Ctrl+C to stop ***\n" : "");
 						displayedNoDaytimeMsg = 1;
 
 						// sleep until around nighttime, then wake up and sleep more if needed.
@@ -1336,8 +1336,6 @@ i++;
 
 		if (tty)
 			printf("Press Ctrl+C to stop\n\n");
-		else
-			printf("Stop the allsky service to end this process.\n\n");
 
 		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)

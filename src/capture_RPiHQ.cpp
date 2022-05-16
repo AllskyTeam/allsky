@@ -42,6 +42,7 @@ using namespace std;
 
 // These are global so they can be used by other routines.  Variables for command-line settings are first.
 int flip					= DEFAULT_FLIP;
+char const *str_flip		= "";
 bool tty					= false;	// are we on a tty?
 bool notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
 char const *save_dir		= DEFAULT_SAVEDIR;
@@ -899,6 +900,15 @@ i++;
 		}
 	}
 
+	if (flip == 0)
+		str_flip = "none";
+	else if (flip == 1)
+		str_flip = "horizontal";
+	else if (flip == 2)
+		str_flip = "vertical";
+	else if (flip == 3)
+		str_flip = "both";
+
 	if (setlocale(LC_NUMERIC, locale) == NULL)
 		printf("*** WARNING: Could not set locale to %s ***\n", locale);
 
@@ -1133,7 +1143,7 @@ i++;
 
 	printf(" Saturation: %.1f\n", saturation);
 	printf(" Rotation: %d\n", rotation);
-	printf(" Flip Image: %d\n", flip);
+	printf(" Flip Image: %s (%d)\n", str_flip, flip);
 	printf(" Filename: %s\n", fileName);
 	printf(" Filename Save Directory: %s\n", save_dir);
 	printf(" Latitude: %s, Longitude: %s\n", latitude, longitude);
@@ -1433,7 +1443,7 @@ i++;
 				add_variables_to_command(cmd, last_exposure_us, currentBrightness, m,
 					currentAutoExposure, currentAutoGain, currentAutoAWB, currentWBR, currentWBB,
 					-999, last_gain, (int)round(20.0 * 10.0 * log10(last_gain)),
-					currentBin, flip, current_bit_depth, focus_metric);
+					currentBin, str_flip, current_bit_depth, focus_metric);
 				strcat(cmd, " &");
 
 				system(cmd);

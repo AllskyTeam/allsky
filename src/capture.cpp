@@ -2187,11 +2187,18 @@ i++;
 			}
 			currentAutoGain = nightAutoGain;
 		}
+
 		setControl(CamNum, ASI_AUTO_MAX_GAIN, currentMaxGain, ASI_FALSE);
 		if (ASICameraInfo.IsColorCam)
 		{
 			setControl(CamNum, ASI_WB_R, currentWBR, currentAutoAWB ? ASI_TRUE : ASI_FALSE);
 			setControl(CamNum, ASI_WB_B, currentWBB, currentAutoAWB ? ASI_TRUE : ASI_FALSE);
+		}
+		else if (! currentAutoAWB && ! taking_dark_frames)
+		{
+			// We only read the actual values if in auto white balance; since we're not, get them now.
+			actualWBR = currentWBR;
+			actualWBB = currentWBB;
 		}
 
 		// never go over the camera's max auto exposure. ASI_AUTO_MAX_EXP is in ms so convert

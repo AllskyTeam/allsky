@@ -13,7 +13,7 @@ echo    "*** Welcome to the Allsky Web User Interface (WebUI) installation ***"
 echo -e "*********************************************************************"
 echo -en '\n'
 
-if [[ $EUID -ne 0 ]]; then
+if [[ ${EUID} -ne 0 ]]; then
 	echo -e "${RED}This script must be run as root${NC}" 1>&2
 	exit 1
 fi
@@ -29,13 +29,15 @@ modify_locations()
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
 	(
 		cd "${PORTAL_DIR}/includes" || exit 1
-		# NOTE: Only want to replace the FIRST instance of XX_ALLSKY_HOME_XX in funciton.php
-		#       Otherwise, the edit check in functions.php will always fail.
-		sed -i "0,/XX_ALLSKY_HOME_XX/{s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};}" functions.php
-		sed -i "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" save_file.php
-		sed -i -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		       -e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
+				save_file.php
+
+		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		       -e "s;XX_ALLSKY_SCRIPTS;${ALLSKY_SCRIPTS};" \
 		       -e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
 		       -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
+		       -e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
 		       -e "s;XX_RASPI_CONFIG_XX;${CONFIG_DIR};" \
 				functions.php
 	)
@@ -85,8 +87,8 @@ if [ "${1}" = "--update" ] || [ "${1}" = "-update" ] ; then
 	# Add entries to sudoers file if not already there.
 	# This is only needed for people who updated allsky-portal but didn't update allsky.
 	# Don't simply copy the "allsky" file to /etc/sudoers.d in case "allsky" isn't up to date.
-	grep --silent "/usr/bin/vcgencmd" /etc/sudoers.d/allsky &&
-	grep --silent "postData.sh" /etc/sudoers.d/allsky
+	grep --silent "postData.sh" /etc/sudoers.d/allsky &&
+	grep --silent "ifconfig" /etc/sudoers.d/allsky
 	# shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then
 		echo -e "${GREEN}* Updating sudoers list${NC}"
@@ -118,15 +120,18 @@ service lighttpd restart
 echo
 
 echo -e "${GREEN}* Configuring lighttpd${NC}"
-# "/home/pi/allsky" is hard coded into file we distribute
-sed -i "s|/home/pi/allsky|$(dirname "$SCRIPTPATH")|g" $SCRIPTPATH/lighttpd.conf
-install -m 0644 $SCRIPTPATH/lighttpd.conf /etc/lighttpd/lighttpd.conf
+sed -i \
+	  -e "s|XX_ALLSKY_HOME_XX|${ALLSKY_HOME}|g" \
+	  -e "s|XX_ALLSKY_IMAGES_XX|${ALLSKY_IMAGES}|g" \
+	  -e "s|XX_ALLSKY_WEBSITE_XX|${ALLSKY_WEBSITE}|g" \
+	  "${SCRIPTPATH}/lighttpd.conf"
+install -m 0644 "${SCRIPTPATH}/lighttpd.conf" /etc/lighttpd/lighttpd.conf
 echo
 
 if [ "${NEED_TO_UPDATE_HOST_NAME}" = "true" ]; then
 	echo -e "${GREEN}* Changing hostname to '${HOST_NAME}'${NC}"
-	echo "$HOST_NAME" > /etc/hostname
-	sed -i "s/127.0.1.1.*$CURRENT_HOSTNAME/127.0.1.1\t$HOST_NAME/g" /etc/hosts
+	echo "${HOST_NAME}" > /etc/hostname
+	sed -i "s/127.0.1.1.*${CURRENT_HOSTNAME}/127.0.1.1\t${HOST_NAME}/g" /etc/hosts
 	echo
 else
 	echo -e "${GREEN}* Leaving hostname at '${HOST_NAME}'${NC}"
@@ -137,8 +142,8 @@ FILE="/etc/avahi/avahi-daemon.conf"
 if [ $? -ne 0 ]; then
 	# New HOST_NAME not found, or file doesn't exist, so need to configure file.
 	echo -e "${GREEN}* Configuring avahi-daemon${NC}"
-	install -m 0644 $SCRIPTPATH/avahi-daemon.conf "${FILE}"
-	sed -i "s/allsky/$HOST_NAME/g" "${FILE}"	# "allsky" is hard coded in file we distribute
+	install -m 0644 "${SCRIPTPATH}/avahi-daemon.conf" "${FILE}"
+	sed -i "s/allsky/${HOST_NAME}/g" "${FILE}"	# "allsky" is hard coded in file we distribute
 	echo
 fi
 
@@ -167,7 +172,8 @@ fi
 echo -e "${GREEN}* Retrieving github files to build admin portal${NC}"
 git clone https://github.com/thomasjacquin/allsky-portal.git "${PORTAL_DIR}"
 chown -R ${SUDO_USER}:www-data "${PORTAL_DIR}"
-chmod -R 775 "${PORTAL_DIR}"
+find "${PORTAL_DIR}/" -type f -exec chmod 644 {} \;
+find "${PORTAL_DIR}/" -type d -exec chmod 775 {} \;
 
 # Restore WEBSITE_DIR if it existed before
 if [ "${TMP_WEBSITE_DIR}" != "" ]; then
@@ -194,7 +200,7 @@ else
 	install -m 0644 -o www-data -g www-data ${ALLSKY_CONFIG}/settings_RPiHQ.json "${CONFIG_DIR}"
 fi
 chown -R www-data:www-data "${CONFIG_DIR}"
-usermod -a -G www-data $SUDO_USER
+usermod -a -G www-data ${SUDO_USER}
 echo
 # don't leave unused files around
 rm -f ${ALLSKY_CONFIG}/settings_ZWO.json ${ALLSKY_CONFIG}/settings_RPiHQ.json
@@ -203,7 +209,7 @@ echo -e "${GREEN}* Modify config.sh${NC}"
 sed -i "/CAMERA_SETTINGS_DIR=/c\CAMERA_SETTINGS_DIR=\"${CONFIG_DIR}\"" ${ALLSKY_CONFIG}/config.sh
 echo -en '\n'
 
-if (whiptail --title "Allsky Software Installer" --yesno "The Allsky WebUI is now installed. You can now reboot the Raspberry Pi and connect to it at this address: http://$HOST_NAME.local or http://$(hostname -I | sed -e 's/ .*$//')   Would you like to Reboot now?" 10 60 \
+if (whiptail --title "Allsky Software Installer" --yesno "The Allsky WebUI is now installed. You can now reboot the Raspberry Pi and connect to it at this address: http://${HOST_NAME}.local or http://$(hostname -I | sed -e 's/ .*$//')   Would you like to Reboot now?" 10 60 \
 	3>&1 1>&2 2>&3); then 
 	reboot now
 else

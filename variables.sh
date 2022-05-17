@@ -57,8 +57,10 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	ALLSKY_DARKS="${ALLSKY_DARKS:-${ALLSKY_HOME}/darks}"
 
 	# Location of optional allsky-portal package.
-	PORTAL_DIR=${PORTAL_DIR:-/var/www/html}
+	ALLSKY_WEBUI=${ALLSKY_WEBUI:-/var/www/html}
+	PORTAL_DIR=${ALLSKY_WEBUI}		# old name - will eventually remove this
 
 	# Location of optional allsky-website package.
-	WEBSITE_DIR=${WEBSITE_DIR:-${PORTAL_DIR}/allsky}
+	ALLSKY_WEBSITE=${ALLSKY_WEBSITE:-${ALLSKY_WEBUI}/allsky}
+	WEBSITE_DIR=${ALLSKY_WEBSITE}		# old name - will eventually remove this
 fi

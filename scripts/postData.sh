@@ -13,6 +13,7 @@ ME="$(basename "${BASH_ARGV0}")"
 
 # shellcheck disable=SC1090
 source "${ALLSKY_HOME}/variables.sh"
+# shellcheck disable=SC2181
 [ $? -ne 0 ] && echo "${ME}: ERROR: unable to source variables.sh file!" && exit 1
 
 # shellcheck disable=SC1090

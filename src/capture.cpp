@@ -474,6 +474,7 @@ ASI_BOOL bAuto = ASI_FALSE;		// "auto" flag returned by ASIGetControlValue, when
 
 ASI_BOOL wasAutoExposure = ASI_FALSE;
 long bufferSize = NOT_SET;
+bool set_auto_exposure = false;
 
 ASI_ERROR_CODE takeOneExposure(
 		int cameraId,
@@ -509,13 +510,10 @@ ASI_ERROR_CODE takeOneExposure(
 		wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Exposure set",
 		length_in_units(exposure_time_us, true));
 
-{
-  static bool called = false;
-	// XXXXXXXXXXXXXXXXXX testing.  If in auto exposure, only set exposure time once.
-  if (! called || ! currentAutoExposure) {
-	called = true;
+// XXXXXXXXXXXXXXXXXX testing.  If in auto exposure, only set exposure time once per day/night.
+if (! set_auto_exposure || ! currentAutoExposure) {
+	set_auto_exposure = true;
 	setControl(cameraId, ASI_EXPOSURE, exposure_time_us, currentAutoExposure ? ASI_TRUE :ASI_FALSE);
-  }
 }
 
 	flush_buffered_image(cameraId, imageBuffer, bufferSize);
@@ -1587,9 +1585,47 @@ i++;
 		closeUp(EXIT_ERROR_STOP);	// force the user to fix it
 #endif
 
-	printf("\n%s Information:\n", ASICameraInfo.Name);
+	printf("\nCamera Information:\n");
+	printf("  - Model: %s\n", ASICameraInfo.Name);
+	ASI_ID cameraID;	// USB 3 cameras only
+	if (ASICameraInfo.IsUSB3Camera == ASI_TRUE && ASIGetID(CamNum, &cameraID) == ASI_SUCCESS)
+	{
+		printf("  - Camera ID: ");
+		if (cameraID.id[0] == '\0')
+		{
+			printf("[none]");
+		} else {
+			for (unsigned int i=0; i<sizeof(cameraID.id); i++)
+				printf("%c", cameraID.id[i]);
+		}
+		printf("\n");
+	}
+	// To clear the camera ID:
+		// cameraID.id[0] = '\0';
+		// ASISetID(CamNum, cameraID);
+	ASI_SN serialNumber;
+	asiRetCode = ASIGetSerialNumber(CamNum, &serialNumber);
+	if (asiRetCode != ASI_SUCCESS)
+	{
+		if (asiRetCode == ASI_ERROR_GENERAL_ERROR)
+			printf("Camera does not support serialNumber\n");
+		else
+			printf("*** WARNING: unable to get serialNumber (%s)\n", getRetCode(asiRetCode));
+	}
+	else
+	{
+		printf("  - Camera Serial Number: ");
+		if (serialNumber.id[0] == '\0')
+		{
+			printf("[none]");
+		} else {
+			for (unsigned int i=0; i<sizeof(serialNumber.id); i++)
+				printf("%02x", serialNumber.id[i]);
+		}
+		printf("\n");
+	}
 	printf("  - Native Resolution: %dx%d\n", iMaxWidth, iMaxHeight);
-	printf("  - Pixel Size: %1.1fmicrons\n", pixelSize);
+	printf("  - Pixel Size: %1.1f microns\n", pixelSize);
 	printf("  - Supported Bins: ");
 	for (int i = 0; i < 16; ++i)
 	{
@@ -1614,45 +1650,8 @@ i++;
 		printf("  - Camera with cooling capabilities\n");
 	}
 
-	printf("\n");
-	ASI_ID cameraID;	// USB 3 cameras only
-	if (ASICameraInfo.IsUSB3Camera == ASI_TRUE && ASIGetID(CamNum, &cameraID) == ASI_SUCCESS)
-	{
-		printf("  - Camera ID: ");
-		if (cameraID.id[0] == '\0')
-		{
-			printf("[none]");
-		} else {
-			for (unsigned int i=0; i<sizeof(cameraID.id); i++) printf("%c", cameraID.id[i]);
-		}
-		printf("\n");
-	}
-	// To clear the camera ID:
-		// cameraID.id[0] = '\0';
-		// ASISetID(CamNum, cameraID);
-	ASI_SN serialNumber;
-	asiRetCode = ASIGetSerialNumber(CamNum, &serialNumber);
-	if (asiRetCode != ASI_SUCCESS)
-	{
-		if (asiRetCode == ASI_ERROR_GENERAL_ERROR)
-			printf("Camera does not support serialNumber\n");
-		else
-			printf("*** WARNING: unable to get serialNumber (%s)\n", getRetCode(asiRetCode));
-	}
-	else
-	{
-		printf("  - Camera Serial Number: ");
-		if (serialNumber.id[0] == '\0')
-		{
-			printf("[none]");
-		} else {
-			for (unsigned int i=0; i<sizeof(serialNumber.id); i++) printf("%02x", serialNumber.id[i]);
-		}
-		printf("\n");
-	}
-
 	ASIGetControlValue(CamNum, ASI_TEMPERATURE, &actualTemp, &bAuto);
-	printf("- Sensor temperature: %0.2f\n", (float)actualTemp / 10.0);
+	printf("  - Sensor temperature: %0.2f\n", (float)actualTemp / 10.0);
 
 	ASI_CAMERA_MODE CamMode;
 	asiRetCode = ASIGetCameraMode(CamNum, &CamMode);
@@ -1693,14 +1692,14 @@ i++;
 		}
 		if (debugLevel >= 4)
 		{
-			printf("- %s:\n", ControlCaps.Name);
-			printf("   - Description = %s\n", ControlCaps.Description);
-			printf("   - MinValue = %'ld\n", ControlCaps.MinValue);
-			printf("   - MaxValue = %'ld\n", ControlCaps.MaxValue);
-			printf("   - DefaultValue = %'ld\n", ControlCaps.DefaultValue);
-			printf("   - IsAutoSupported = %d\n", ControlCaps.IsAutoSupported);
-			printf("   - IsWritable = %d\n", ControlCaps.IsWritable);
-			printf("   - ControlType = %d\n", ControlCaps.ControlType);
+			printf("  - %s:\n", ControlCaps.Name);
+			printf("    - Description = %s\n", ControlCaps.Description);
+			printf("    - MinValue = %'ld\n", ControlCaps.MinValue);
+			printf("    - MaxValue = %'ld\n", ControlCaps.MaxValue);
+			printf("    - DefaultValue = %'ld\n", ControlCaps.DefaultValue);
+			printf("    - IsAutoSupported = %d\n", ControlCaps.IsAutoSupported);
+			printf("    - IsWritable = %d\n", ControlCaps.IsWritable);
+			printf("    - ControlType = %d\n", ControlCaps.ControlType);
 		}
 	}
 
@@ -1984,6 +1983,7 @@ i++;
 
 	while (bMain)
 	{
+set_auto_exposure = false;	// XXXXXXXXXXXX testing
 		// Find out if it is currently DAY or NIGHT
 		dayOrNight = calculateDayOrNight(latitude, longitude, angle);
 		std::string lastDayOrNight = dayOrNight;

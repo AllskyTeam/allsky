@@ -3,11 +3,22 @@
 # This script uploads a file to a website to tell the website when the user has defined
 # "sunrise" and "sunset".  Use the angle set by the user.
 
-source "${ALLSKY_HOME}/variables.sh"
-source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_CONFIG}/ftp-settings.sh"
+# Allow this script to be executed manually or by sudo, which requires several variables to be set.
+if [ -z "${ALLSKY_HOME}" ] ; then
+	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
+	export ALLSKY_HOME
+fi
 
 ME="$(basename "${BASH_ARGV0}")"
+
+# shellcheck disable=SC1090
+source "${ALLSKY_HOME}/variables.sh"
+[ $? -ne 0 ] && echo "${ME}: ERROR: unable to source variables.sh file!" && exit 1
+
+# shellcheck disable=SC1090
+source "${ALLSKY_CONFIG}/config.sh"
+# shellcheck disable=SC1090
+source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 angle=$(jq -r '.angle' "${CAMERA_SETTINGS}")
 latlong=$(jq -r '.latitude,.longitude' "${CAMERA_SETTINGS}")

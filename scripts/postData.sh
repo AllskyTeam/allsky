@@ -9,14 +9,16 @@ if [ -z "${ALLSKY_HOME}" ] ; then
 	export ALLSKY_HOME
 fi
 
+ME="$(basename "${BASH_ARGV0}")"
+
 # shellcheck disable=SC1090
 source "${ALLSKY_HOME}/variables.sh"
+[ $? -ne 0 ] && echo "${ME}: ERROR: unable to source variables.sh file!" && exit 1
+
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh"
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
-
-ME="$(basename "${BASH_ARGV0}")"
 
 angle="$(jq -r '.angle' "${CAMERA_SETTINGS}")"
 latlong="$(jq -r '.latitude,.longitude' "${CAMERA_SETTINGS}")"

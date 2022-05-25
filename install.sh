@@ -18,7 +18,7 @@ fi
 
 # The user should be running this in the "allsky" directory.  Make sure they are.
 INSTALL_DIR="allsky"
-DIR="$(basename "$PWD")"
+DIR="$(basename "${PWD}")"
 if [ "${DIR}" != "${INSTALL_DIR}" ] ; then
 	(echo
 	 echo -e "${RED}**********"
@@ -133,6 +133,10 @@ if [ ${RETVAL} -ne 0 ]; then
 	exit 1
 fi
 echo
+
+#### Future: Install WebUI
+
+chmod 755 ${ALLSKY_HOME}	# Some versions of Linux default to 750 so web server can't read it
 
 if [ ${NEEDCAM} -eq 1 ]; then
 	set_camera

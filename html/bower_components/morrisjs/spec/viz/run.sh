@@ -11,8 +11,9 @@ rm -f diff/*
 PASS=1
 for i in exemplary/*.png
 do
-  FN=`basename $i`
+  FN=$(basename $i)
   perceptualdiff $i output/$FN -output diff/$FN
+  # shellcheck disable=SC2181
   if [ $? -eq 0 ]
   then
     echo "OK:   $FN"

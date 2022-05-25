@@ -43,8 +43,8 @@ PROTOCOL=""
 # remote web server, and set WEB_VIDEOS_DIR to the name of the directory on your Pi,
 # which will usually be in /var/www/html/allsky/videos.
 
-	# The remote directory where the current "image.jpg" file be copied to.
-	# If you have the "allsky-website" package installed, use IMAGE_DIR="/var/www/html/allsky".
+	# The remote directory where the current "image.jpg" file should be copied to.
+	# If you have the "allsky-website" package installed, leave it blank.
 IMAGE_DIR=""
 WEB_IMAGE_DIR=""
 

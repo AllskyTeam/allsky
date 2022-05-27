@@ -1,11 +1,10 @@
-# Allsky Camera ![v2020.MM.DD](https://img.shields.io/badge/Version-2022.05.01-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![v2020.MM.DD](https://img.shields.io/badge/Version-2022.06.01-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 **This README and our [Wiki pages](https://github.com/thomasjacquin/allsky/wiki) will help get your Allsky camera up and running.  Please review them _before_ submitting an Issue.**
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 &nbsp;
 > **NOTE**: When upgrading from a release **prior to** 0.8.3 you **MUST** follow the steps [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
-
 &nbsp;  
 <p align="center">
 <img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg" width="50%">
@@ -20,9 +19,11 @@ This is the source code for the Allsky Camera project described [on Instructable
 In order to get the camera working properly you will need the following hardware:
 
  * A camera (Raspberry Pi HQ or ZWO ASI)
- * A Raspberry Pi (2, 3, 4 or Zero)
+	- The ZWO ASI 120-series cameras are not recommended due to somewhat poor quality.
+ * A Raspberry Pi (2, 3, 4 or Zero).
+	- The Pi Zero, with its limited memory, is not recommended unless cost is a major concern.
 
-**NOTE:** Owners of USB2.0 cameras such as ASI120MC and ASI120MM may need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software-drivers). This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.
+**NOTE:** Owners of USB2.0 cameras such as ASI120MC and ASI120MM may need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software-drivers).
 
 **NOTE:** The T7 / T7C cameras, e.g., from Datyson or other sellers, are not officially supported but persistent users may get them to work by following [these instructions](https://github.com/thomasjacquin/allsky/wiki/Troubleshoot:-T7-Cameras).
 
@@ -36,8 +37,7 @@ In order to get the camera working properly you will need the following hardware
 <details><summary>Click here</summary>
 
 &nbsp;  
-PatriotAstro has a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) that describes the Allsky software and the installation steps below.  We suggest viewing it before installing the software.
-Another [video](https://www.youtube.com/watch?v=y6EFfLo4XxE) covers the installation on a Raspberry Pi Zero with both ZWO and RPiHQ cameras.
+PatriotAstro has a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) that describes the Allsky software including installation.  **We suggest viewing it before installing the software.**
 
 You will need to install the Raspbian Operating System on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
 
@@ -96,7 +96,7 @@ alias start='sudo systemctl start allsky'
 You will then only need to type `start` to start the software.  Do this for **stop** and **reload** as well.
 
 ### Manual Start
-Starting the program from the terminal can be a great way to track down issues as it provides debug information.
+Starting the program from the terminal can be a great way to track down issues as it provides debug information to the terminal window.
 To start the program manually, run:
 ```
 sudo systemctl stop allsky
@@ -138,10 +138,11 @@ Also note that in version 0.8.3 the default image file created and uploaded is c
 &nbsp;  
 <p align="center"><img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg" width="75%"></p>
 
-The WebUI is now installed as part of the installation of Allsky in `~/allsky/html`.  It:
-* changed your hostname to **allsky** (or whatever you called it when installing)
-* installed the **lighttpd** web server
-* moved images from your old WebUI in `/var/www/html/allsky` if installed
+The WebUI is now installed in `~/allsky/html` as part of the installation of Allsky.  It:
+* changes your hostname to **allsky** (or whatever you called it when installing)
+* installs the **lighttpd** web server
+* moves images from your old WebUI in `/var/www/html/allsky` if installed, to the new location
+* removes `/var/www`.
 
 After you complete Allsky setup, you can administer the software using the WebUI by navigating to
 ```
@@ -176,7 +177,7 @@ If it is behind a firewall consult the documentation for your network equipment 
 <details><summary>Click here</summary>
 
 &nbsp;  
-You can display your files on a website, either on the Pi itself or on another machine.
+You can display your files on a website, either on the Pi or on another machine.
 
 ### On the Pi
 If you want to host the website on your Raspberry Pi, run the following command:
@@ -211,7 +212,7 @@ Once you've installed the website, either on your Pi or another machine, look at
 <details><summary>Click here</summary>
 
 &nbsp;  
-Dark frame subtraction removes hot pixels from images. The concept is the following: Take an image with a cover on your camera lens and let the software subtract that image later from all images taken throughout the night.
+Dark frame subtraction removes hot pixels from images. It does this by taking images at different temperatures with a cover on your camera lens and subtracting those images from all images taken throughout the night.
 
 See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Dark-Frames-Explained) on dark frames for instructions on how to use them.
 
@@ -376,7 +377,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
 			* **Frames to Skip** (ZWO only) for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving.
 			* **Aggression** (ZWO only) determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
-			* **Mean Target** (RPiHQ only) for day and night.  This specifies the target brightness when in auto exposure mode and works best if auto gain is also enabled.
+			* **Mean Target** (RPiHQ only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
 		* Latitue and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).
 		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers and the crop area must fit within the image.
 		* Several bugs and minor enhancements were made.

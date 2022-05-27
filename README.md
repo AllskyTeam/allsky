@@ -36,7 +36,7 @@ In order to get the camera working properly you will need the following hardware
 <details><summary>Click here</summary>
 
 &nbsp;  
-PatriotAstro created a [video](https://www.youtube.com/watch?v=j9xHsST2EeY) describing the installation steps below. Feel free to check it out.
+PatriotAstro has a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) that describes the Allsky software and the installation steps below.  We suggest viewing it before installing the software.
 Another [video](https://www.youtube.com/watch?v=y6EFfLo4XxE) covers the installation on a Raspberry Pi Zero with both ZWO and RPiHQ cameras.
 
 You will need to install the Raspbian Operating System on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
@@ -93,7 +93,7 @@ sudo systemctl status allsky
 ```shell
 alias start='sudo systemctl start allsky'
 ```
-You will then only need to type `start` to start the software.
+You will then only need to type `start` to start the software.  Do this for **stop** and **reload** as well.
 
 ### Manual Start
 Starting the program from the terminal can be a great way to track down issues as it provides debug information.
@@ -138,26 +138,26 @@ Also note that in version 0.8.3 the default image file created and uploaded is c
 &nbsp;  
 <p align="center"><img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg" width="75%"></p>
 
-The WebUI is installed as part of the installation of allsky.  It:
+The WebUI is now installed as part of the installation of Allsky in `~/allsky/html`.  It:
 * changed your hostname to **allsky** (or whatever you called it when installing)
-* installed the lighttpd web server
-* replaced your `/var/www/html` directory
+* installed the **lighttpd** web server
+* moved images from your old WebUI in `/var/www/html/allsky` if installed
 
-After you complete allsky setup, you can administer the software using the WebUI by navigating to
+After you complete Allsky setup, you can administer the software using the WebUI by navigating to
 ```
 http://your_raspberry_IP_address
     OR
 http://allsky.local
 ```
 
-Note: If you changed the name of your Pi (to 'piname', for example) during the WebUI installation then use this:
+Note: If you changed the name of your Pi (to 'piname', for example) during installation then use this:
 ```
 http://piname.local
 ```
 
 The default username is **admin** and the default password is **secret**.  If this website is publically viewable you should change those settings.
 
-A public page is also available in order to view the current image without having to log into the portal and without being able to do any administrative tasks. This can be useful for people who don't have a personal website but still want to share a view of their sky:
+A public page is also available in order to view the current image without having to log into the WebUI and without being able to do any administrative tasks. This can be useful for people who don't have a personal website but still want to share a view of their sky:
 
 ```
 http://your_raspberry_IP/public.php
@@ -188,11 +188,11 @@ website/install.sh
 
 And set these variables in `allsky/config/ftp-settings.sh`:
 ```shell
-PROTOCOL='local'
-IMAGE_DIR='/var/www/html/allsky/'
-VIDEOS_DIR='/var/www/html/allsky/videos'
-KEOGRAM_DIR='/var/www/html/allsky/keograms'
-STARTRAILS_DIR='/var/www/html/allsky/startrails'
+PROTOCOL="local"
+IMAGE_DIR=""
+VIDEOS_DIR="/home/pi/allsky/html/videos"
+KEOGRAM_DIR="/home/pi/allsky/html/keograms"
+STARTRAILS_DIR="/home/pi/allsky/html/startrails"
 ```
 
 ### On a different machine
@@ -211,7 +211,7 @@ Once you've installed the website, either on your Pi or another machine, look at
 <details><summary>Click here</summary>
 
 &nbsp;  
-The dark frame subtraction feature removes hot pixels from night sky images. The concept is the following: Take an image with a cover on your camera lens and let the software subtract that image later from all images taken throughout the night.
+Dark frame subtraction removes hot pixels from images. The concept is the following: Take an image with a cover on your camera lens and let the software subtract that image later from all images taken throughout the night.
 
 See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Dark-Frames-Explained) on dark frames for instructions on how to use them.
 
@@ -254,7 +254,7 @@ scripts/generateForDay.sh -t 20220710
 &nbsp;  
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/keogram-annotated.jpg)
 
-A **Keogram** is an image giving a quick view of the day's activity. It was originally invented to study the aurora borealis.
+A **Keogram** is an image giving a quick view of the day's activity.
 For each image a central vertical column 1 pixel wide is extracted. All these columns are then stitched together from left to right. This results in a timeline that reads from dawn to the end of nighttime (the image above only shows nighttime data since daytime images were turned off).
 
 See the [Keogram Wiki page](https://github.com/thomasjacquin/allsky/wiki/Keograms-explained) for more details.
@@ -341,8 +341,7 @@ To do so:
 cd ~/allsky/scripts
 mv endOfNight_additionalSteps.repo   endOfNight_additionalSteps.sh
 ```
-and then add your additional processing steps which
-will be run after the usual end-of-night processing, but before the deletion of any old image files.
+and then add your additional processing steps which will be run after the usual end-of-night processing, but before the deletion of any old image files.
 
 After you rename the file above, you can edit the file via the "Editor" link on the left side of the WebUI page.
 
@@ -375,26 +374,28 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Max Auto-Exposure** for day and night.  When using auto exposure, exposure lengths will not exceed this number.
 			* **Max Auto-Gain** for day and night.  When using auto gain, gain values will not exceed this number.
 			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
-			* **Frames to Skip** for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed.
-			* **Aggression** determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
+			* **Frames to Skip** (ZWO only) for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving.
+			* **Aggression** (ZWO only) determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
 			* **Mean Target** (RPiHQ only) for day and night.  This specifies the target brightness when in auto exposure mode and works best if auto gain is also enabled.
 		* Latitue and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).
 		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers and the crop area must fit within the image.
-		* The log output of the ZWO and RPiHQ cameras is more similar, aiding in debugging and maintenance.
 		* Several bugs and minor enhancements were made.
 	* WebUI:
-		* The WebUI is now installed as part of the larger Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
+		* The WebUI is now installed as part of the Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
+		* The WebUI (and allsky-website) are now installed in ~/allsky/html (and ~/allsky/html/allsky).  Any images in the old locations are moved to the new locations.
 		* The "Editor" page now allows editting the Allsky Website's `config.js` and `virtualsky.json` files if you have the website installed on your Pi.  This is now the preferred way to edit those files, since the editor performs basic syntax checking.
 		* The order of items in the "Camera Settings" page changed slightly.
 		* Buttons in the "Dark" mode are now darker.
 		* Several bugs and minor enhancements were made.
 	* Allsky Website:
+		* You can now specify the order and contents of the icons on the left side.  The overlay icon (Casseopea icon) only appears after you've set the overlay to match the stars.
 		* You can now specify the order and contents of the popout that appears when clicking on the camera icon.  For example, you could add a link to local weather or to pictures of your allsky camera.
 		* The home page can be customized:
-			* What the background should be.
+			* What the background image should be.
+			* An optional link to a personal website can be added to the top of the page.
 			* Whether or not a border should appear around the image.
 			* Whether or not the "Make Your Own" link should appear at the bottom right.
-		* The Timelapse, Keogram, and Startrails pages now have titles so it's obvious what you are looking at.
+		* The Timelapse, Keogram, and Startrails pages now have titles so it's obvious what you're looking at.
 		* You can now specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`).  This can be helpful when trying to get the overlay to line up with the actual stars.
 		* Latitue and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  They will still appear with N, S, E, W on the camera popout.
 		* The **virtualsky** program that draws the constellation overlay was updated to the latest release.  This added some new settings, including the ability to specify the opacity of the overlay.  It also adds a small box with a question mark in it when viewing the overlay; clicking on the icon brings up a list of commands you can perforrm.

@@ -109,7 +109,7 @@ fi
 SHOW_ON_MAP=$(jq -r '.showonmap' "$CAMERA_SETTINGS")
 if [[ ${SHOW_ON_MAP} == "1" ]]; then
 	echo -e "${ME}: ===== Posting camera details to allsky map"
-	"${ALLSKY_SCRIPTS}/postToMap.sh"
+	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight
 fi
 
 exit 0

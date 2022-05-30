@@ -205,7 +205,7 @@ else
 
 	# website_url and image_url are optional
 
-	if [ -n "${WEBSITE_URL}" -a -z "${IMAGE_URL}" ] || [ -z "${WEBSITE_URL}" -a -n "${IMAGE_URL}" ]; then
+	if [[ -n "${WEBSITE_URL}" && -z "${IMAGE_URL}" ]] || [[ -z "${WEBSITE_URL}" && -n "${IMAGE_URL}" ]]; then
 		M="${ERROR_MSG_START}ERROR: If you specify the Website URL or Image URL, you must specify both URLs.${ERROR_MSG_END}${BR}${M}"
 		OK=false
 	elif [ -n "${WEBSITE_URL}" ]; then		# they specified both

@@ -180,7 +180,7 @@ $csrf_token = $_SESSION['csrf_token'];
                 <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" href="index.php">
-                <img src="img/allsky-logo.png">
+                <img src="img/allsky-logo.png" title="Allsky logo">
                 <div class="navbar-title">AllSky Administration Panel</div>
             </a>
         </div>
@@ -202,7 +202,7 @@ $csrf_token = $_SESSION['csrf_token'];
                     <li>
                         <a href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>
                     </li>
-		    <li>
+					<li>
                         <a href="index.php?page=eth0_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>LAN</b> Connection Status</a>
                     </li>
                     <li>
@@ -241,6 +241,23 @@ $csrf_token = $_SESSION['csrf_token'];
         <div class="row right-panel">
             <div class="col-lg-12">
                 <?php
+				$status = new StatusMessages();
+				if (isset($_GET['clear'])) {
+					exec("sudo truncate -s 0 " . ALLSKY_MESSAGES . " 2>&1", $result, $retcode);
+					if ($retcode !== 0) {
+						$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
+						$status->showMessages();
+					}
+				}
+
+				if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
+					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+					foreach ($contents_array as $line) {
+						$status->addMessage($line, 'danger', false);	// warning, danger, success
+					}
+					$status->showMessages();
+					echo "<form action='?page=$page&clear=true' method='POST'><input type='submit' class='btn btn-danger' value='Clear all messages' /></form>";
+				}
 
                 switch ($page) {
                     case "live_view":

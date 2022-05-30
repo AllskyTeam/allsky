@@ -1,19 +1,17 @@
-# Allsky Camera ![Release 0.8.3.3](https://img.shields.io/badge/Release-0.8.3.3-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![v2020.MM.DD](https://img.shields.io/badge/Version-2022.06.01-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 **This README and our [Wiki pages](https://github.com/thomasjacquin/allsky/wiki) will help get your Allsky camera up and running.  Please review them _before_ submitting an Issue.**
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
-
 &nbsp;
 > **NOTE**: When upgrading from a release **prior to** 0.8.3 you **MUST** follow the steps [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
-
 &nbsp;  
-&nbsp;
-![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg)
+<p align="center">
+<img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg" width="50%">
+</p>
 
 
-&nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-------------------------------------------------------------------------------------------> 
 ### Requirements
 <details><summary>Click here</summary>
 
@@ -21,9 +19,11 @@ This is the source code for the Allsky Camera project described [on Instructable
 In order to get the camera working properly you will need the following hardware:
 
  * A camera (Raspberry Pi HQ or ZWO ASI)
- * A Raspberry Pi (2, 3, 4 or Zero)
+	- The ZWO ASI 120-series cameras are not recommended due to somewhat poor quality.
+ * A Raspberry Pi (2, 3, 4 or Zero).
+	- The Pi Zero, with its limited memory, is not recommended unless cost is a major concern.
 
-**NOTE:** Owners of USB2.0 cameras such as ASI120MC and ASI120MM may need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software-drivers). This changes the camera to use 512 byte packets instead of 1024 which makes it more compatible with most hardware.
+**NOTE:** Owners of USB2.0 cameras such as ASI120MC and ASI120MM may need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software-drivers).
 
 **NOTE:** The T7 / T7C cameras, e.g., from Datyson or other sellers, are not officially supported but persistent users may get them to work by following [these instructions](https://github.com/thomasjacquin/allsky/wiki/Troubleshoot:-T7-Cameras).
 
@@ -37,8 +37,7 @@ In order to get the camera working properly you will need the following hardware
 <details><summary>Click here</summary>
 
 &nbsp;  
-PatriotAstro created a [video](https://www.youtube.com/watch?v=j9xHsST2EeY) describing the installation steps below. Feel free to check it out.
-Another [video](https://www.youtube.com/watch?v=y6EFfLo4XxE) covers the installation on a Raspberry Pi Zero with both ZWO and RPiHQ cameras.
+PatriotAstro has a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) that describes the Allsky software including installation.  **We suggest viewing it before installing the software.**
 
 You will need to install the Raspbian Operating System on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
 
@@ -61,9 +60,9 @@ Make sure you have a working Internet connection by setting it through [the term
     ./install.sh  # PatriotAstro's video shows using "sudo"; that is no longer needed
     ```
 
-Some users have reported ASI_ERROR_TIMEOUT errors with their ZWO cameras.  Click [here](https://github.com/thomasjacquin/allsky/wiki/Troubleshoot:-ASI_ERROR_TIMEOUTs) to troubleshoot.
-
 There are many configuration variables that need to be set.  Please see the [allsky Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) page for a list of them.
+	
+> NOTE: Starting with this release, the WebUI is included in the main Allsky package.
 
 ***
 </details>
@@ -94,10 +93,10 @@ sudo systemctl status allsky
 ```shell
 alias start='sudo systemctl start allsky'
 ```
-You will then only need to type `start` to start the software.
+You will then only need to type `start` to start the software.  Do this for **stop** and **reload** as well.
 
 ### Manual Start
-Starting the program from the terminal can be a great way to track down issues as it provides debug information.
+Starting the program from the terminal can be a great way to track down issues as it provides debug information to the terminal window.
 To start the program manually, run:
 ```
 sudo systemctl stop allsky
@@ -133,40 +132,33 @@ Also note that in version 0.8.3 the default image file created and uploaded is c
 
 &nbsp;
 <!------------------------------------------------------------------------------------------->
-### Web User Interface (WebUI) - `allsky-portal` package
+### Web User Interface (WebUI)
 <details><summary>Click here</summary>
 
 &nbsp;  
-![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg)
+<p align="center"><img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg" width="75%"></p>
 
-If you don't want to configure the camera using the terminal, you can install the [WebUI](https://github.com/thomasjacquin/allsky-portal).
-Note that this will:
-* change your hostname to **allsky** (or whatever you called it when installing)
-* install the lighttpd web server
-* replace your `/var/www/html` directory
-* move the `allsky/config/settings_*.json` configuration files to `/etc/raspap`
+The WebUI is now installed in `~/allsky/html` as part of the installation of Allsky.  It:
+* changes your hostname to **allsky** (or whatever you called it when installing)
+* installs the **lighttpd** web server
+* moves images from your old WebUI in `/var/www/html/allsky` if installed, to the new location
+* removes `/var/www`.
 
-Using the WebUI is **highly** recommended as it provides additional information on each setting and allows error checking behind the scenes.  The Wiki and other documentation assume you have WebUI installed.  To install it:
-
-```shell
-sudo gui/install.sh
-```
-
-After you complete the WebUI setup, you'll be able to administer the camera using the WebUI by navigating to
+After you complete Allsky setup, you can administer the software using the WebUI by navigating to
 ```
 http://your_raspberry_IP_address
     OR
 http://allsky.local
 ```
 
-Note: If you changed the name of your Pi (to 'piname', for example) during the WebUI installation then use this:
+Note: If you changed the name of your Pi (to 'piname', for example) during installation then use this:
 ```
 http://piname.local
 ```
 
 The default username is **admin** and the default password is **secret**.  If this website is publically viewable you should change those settings.
 
-A public page is also available in order to view the current image without having to log into the portal and without being able to do any administrative tasks. This can be useful for people who don't have a personal website but still want to share a view of their sky:
+A public page is also available in order to view the current image without having to log into the WebUI and without being able to do any administrative tasks. This can be useful for people who don't have a personal website but still want to share a view of their sky:
 
 ```
 http://your_raspberry_IP/public.php
@@ -185,10 +177,10 @@ If it is behind a firewall consult the documentation for your network equipment 
 <details><summary>Click here</summary>
 
 &nbsp;  
-You can display your files on a website, either on the Pi itself or on another machine.
+You can display your files on a website, either on the Pi or on another machine.
 
 ### On the Pi
-If you want to host the website on your Raspberry Pi, run the following command. Note that this requires first installing the WebUI.
+If you want to host the website on your Raspberry Pi, run the following command:
 
 ```shell
 cd ~/allsky
@@ -197,15 +189,15 @@ website/install.sh
 
 And set these variables in `allsky/config/ftp-settings.sh`:
 ```shell
-PROTOCOL='local'
-IMAGE_DIR='/var/www/html/allsky/'
-VIDEOS_DIR='/var/www/html/allsky/videos'
-KEOGRAM_DIR='/var/www/html/allsky/keograms'
-STARTRAILS_DIR='/var/www/html/allsky/startrails'
+PROTOCOL="local"
+IMAGE_DIR=""
+VIDEOS_DIR="/home/pi/allsky/html/videos"
+KEOGRAM_DIR="/home/pi/allsky/html/keograms"
+STARTRAILS_DIR="/home/pi/allsky/html/startrails"
 ```
 
 ### On a different machine
-If you want to host the website on a _different_ machine, like in this [example](http://www.thomasjacquin.com/allsky), download the source files from this repository: [https://github.com/thomasjacquin/allsky-website.git](https://github.com/thomasjacquin/allsky-website.git).
+If you want to host the website on a _different_ machine, like in this [example](http://www.thomasjacquin.com/allsky), see [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Installation-Tips#install-the-web-interface-on-a-remote-machine).
 
 ### Website settings
 Once you've installed the website, either on your Pi or another machine, look at the descriptions of the settings on the [allsky-website Settings page](https://github.com/thomasjacquin/allsky/wiki/allsky-website-Settings).
@@ -220,7 +212,7 @@ Once you've installed the website, either on your Pi or another machine, look at
 <details><summary>Click here</summary>
 
 &nbsp;  
-The dark frame subtraction feature removes hot pixels from night sky images. The concept is the following: Take an image with a cover on your camera lens and let the software subtract that image later from all images taken throughout the night.
+Dark frame subtraction removes hot pixels from images. It does this by taking images at different temperatures with a cover on your camera lens and subtracting those images from all images taken throughout the night.
 
 See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Dark-Frames-Explained) on dark frames for instructions on how to use them.
 
@@ -263,7 +255,7 @@ scripts/generateForDay.sh -t 20220710
 &nbsp;  
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/keogram-annotated.jpg)
 
-A **Keogram** is an image giving a quick view of the day's activity. It was originally invented to study the aurora borealis.
+A **Keogram** is an image giving a quick view of the day's activity.
 For each image a central vertical column 1 pixel wide is extracted. All these columns are then stitched together from left to right. This results in a timeline that reads from dawn to the end of nighttime (the image above only shows nighttime data since daytime images were turned off).
 
 See the [Keogram Wiki page](https://github.com/thomasjacquin/allsky/wiki/Keograms-explained) for more details.
@@ -348,10 +340,9 @@ Experienced users may want to add some additional processing steps at the end of
 To do so:
 ```shell
 cd ~/allsky/scripts
-mv endOfNight_additionalSteps.repo  endOfNight_additionalSteps.sh
+mv endOfNight_additionalSteps.repo   endOfNight_additionalSteps.sh
 ```
-and then add your additional processing steps which
-will be run after the usual end-of-night processing, but before the deletion of any old image files.
+and then add your additional processing steps which will be run after the usual end-of-night processing, but before the deletion of any old image files.
 
 After you rename the file above, you can edit the file via the "Editor" link on the left side of the WebUI page.
 
@@ -365,77 +356,55 @@ After you rename the file above, you can edit the file via the "Editor" link on 
 
 If you want your allsky camera added to the [Allsky map](http://www.thomasjacquin.com/allsky-map), see [these settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings/_edit#map-settings).
 
-[![Global allsky map](http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg "Global allsky map example - click to see real map")](https://www.thomasjacquin.com/allsky-map/)
+<p align="center">
+<a href="https://www.thomasjacquin.com/allsky-map/">
+<img src="http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg" title="Global allsky map example - click to see real map" width="75%">
+</a>
+</p>
 
 
 <!------------------------------------------------------------------------------------------->
 ### Release notes
-<!--
-* version **0.1**: Initial release
-* version **0.2**: Separated camera settings from code logic
-* version **0.3**: Added dark frame subtraction
-* version **0.4**: Added Keograms (summary of the night in one image)
-* version **0.5**: Added Startrails (image stacking) with brightness control
-	* Keograms and Startrails generation is now much faster thanks to a rewrite by Jarno Paananen.
-* version **0.6**: Added daytime exposure and auto-exposure capability
-	* Added -maxexposure, -autoexposure, -maxgain, -autogain options. Note that using autoexposure and autogain at the same time may produce unexpected results (black frames).
-	* Autostart is now based on systemd and should work on all raspbian based systems, including headless distributions. Remote controlling will not start multiple instances of the software.
-	* Replaced `nodisplay` option with `preview` argument. No preview in autostart mode.
-	* When using the WebUI, camera options can be saved without rebooting the RPi.
-	* Added a publicly accessible preview to the WebUI: public.php
-	* Changed exposure unit to milliseconds instead of microseconds
-* version **0.7**:
-	* Added Raspberry Pi camera HQ support (Based on Rob Musquetier's fork)
-	* Support for x86 architecture (Ubuntu, etc)
-	* Temperature dependant dark frame library
-	* Browser based script editor
-	* Configuration variables to crop black area around image
-	* Timelapse frame rate setting
-	* Changed font size default value
--->
-* version **0.8**:
-	* Workaround for ZWO daytime autoexposure bug.
-	* Improved exposure transitions between day and night so there's not such a huge change in brightness.
-	* Decrease in ZWO sensor temperature.
-	* Lots of new settings, including splitting some settings into day and night versions.
-	* Error checking and associated log messages added in many places to aid in debugging.
-	* Ability to have "notification" images displayed, such as "Allsky is starting up" and "Taking dark frames".
-	* Ability to resize uploaded images.
-	* Ability to set thumbnail size.
-	* Ability to delete bad images (corrupt and too light/dark).
-	* Ability to set an image file name prefix.
-	* Ability to reset USB bus if ZWO camera isn't found (requires "uhubctl" command to be installed).
-	* Ability to specify the format of the time displayed on images.
-	* Ability to have the temperature displayed in Celcius, Fahrenheit, or both.
-	* Ability to set bitrate on timelapse video.
-* version **0.8.1**:
-	* Rearranged the directory structure.
-	* Created a Wiki with additional documentation and troubleshooting tips.
-	* Renamed several variables in `config.sh` and `ftp-settings.sh`.
-	* CAMERA type of "auto" is no longer supported - you must specify "ZWO" or "RPiHQ".
-	* Startrails and keograms are now created using all CPUs on the Pi, drastically speeding up creation time.
-	* Installing the WebUI now preserves any website files (keograms, startrails, etc.) you have.  This allows for non-destructive updates of the WebUI.
-	* New script called `upload.sh` centralizes all the upload code from other scripts, and can be used to debug uploading issues.  See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Troubleshooting:-uploads) for more information.
-	* The RPiHQ camera does much better auto-exposure if you set the `-mode-mean` and `-autoexposure` options.
-	* The WebUI will now show the Pi's throttle and low-voltage states, which is useful for debugging.
-	* Darks work better.
-	* Many bug fixes, error checks, and warnings added.
-* version **0.8.3**: 
-	* Works on Bullseye operating system.
-	* RPiHQ version:
-	  * Has an improved auto-exposure algorithm.  To use it, set `CAPTURE_EXTRA_PARAMETERS="-daymean 0.5 -nightmean 0.2"` in config.sh (a future version will allow this to be set via the WebUI).
-	  * Has many new settings including support for most of the text overlay features that are supported by the ZWO version.  The "extra text" feature will be supported in a future version.
-	* New and changed config.sh variables, see the [Software Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) Wiki page for more information:
-	  * `IMG_UPLOAD_FREQUENCY`: how often the image should be uploaded to a website.  Useful with slow uplinks or metered Internet connections.
-	  * `IMG_CREATE_THUMBNAILS`: specifies whether or not thumbnails should be created for each image.
-	  * `REMOVE_BAD_IMAGES` now defaults to "true" since bad-image detection is now done after a picture is saved rather than once for all pictures at the end of the night.  This helps decrease problems when creating startrails, keograms, and timelapse videos.
-	  * `IMG_PREFIX`: no longer used - the name of the image used by the websites is now whatever you specify in the WebUI (default: image.jpg).
-	  * **NOTE**: When upgrading to 0.8.3 you MUST follow the steps listed [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
-	* Replaced `saveImageDay.sh` and `saveImageNight.sh` with `saveImage.sh` that has improved functionality, including passing the sensor temperature to the dark subtraction commands, thereby eliminating the need for the "temperature.txt" file.
-	* The image used by the websites (default: image.jpg) as well as all temporary files are now written to `allsky/tmp`.  **NOTE**: if you are using the Allsky Website you will need to change the "imageName" variable in `/var/www/html/allsky/config.js` to `"/current/tmp/image.jpg"`.
-	* You can **significanly** reduce wear on your SD card by making `allsky/tmp` a [memory-based filesystem](https://github.com/thomasjacquin/allsky/wiki/Miscellaneous-Tips).
+<details><summary>Click here</summary>
 
-* version **0.8.3.3**: 
+&nbsp;  
+<!-- some of the changes haven't been made as of April 13, 2022, but should be for the next release -->
+* version **v2022.MM.DD**: 
+	* Allsky package:
+		* Several settings were added and can be modified in the WebUI:
+			* **Max Auto-Exposure** for day and night.  When using auto exposure, exposure lengths will not exceed this number.
+			* **Max Auto-Gain** for day and night.  When using auto gain, gain values will not exceed this number.
+			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
+			* **Frames to Skip** (ZWO only) for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving.
+			* **Aggression** (ZWO only) determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
+			* **Mean Target** (RPiHQ only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
+		* Latitue and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).
+		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers and the crop area must fit within the image.
+		* Several bugs and minor enhancements were made.
+	* WebUI:
+		* The WebUI is now installed as part of the Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
+		* The WebUI (and allsky-website) are now installed in ~/allsky/html (and ~/allsky/html/allsky).  Any images in the old locations are moved to the new locations.
+		* The "Editor" page now allows editting the Allsky Website's `config.js` and `virtualsky.json` files if you have the website installed on your Pi.  This is now the preferred way to edit those files, since the editor performs basic syntax checking.
+		* The order of items in the "Camera Settings" page changed slightly.
+		* Buttons in the "Dark" mode are now darker.
+		* Several bugs and minor enhancements were made.
+	* Allsky Website:
+		* You can now specify the order and contents of the icons on the left side.  The overlay icon (Casseopea icon) only appears after you've set the overlay to match the stars.
+		* You can now specify the order and contents of the popout that appears when clicking on the camera icon.  For example, you could add a link to local weather or to pictures of your allsky camera.
+		* The home page can be customized:
+			* What the background image should be.
+			* An optional link to a personal website can be added to the top of the page.
+			* Whether or not a border should appear around the image.
+			* Whether or not the "Make Your Own" link should appear at the bottom right.
+		* The Timelapse, Keogram, and Startrails pages now have titles so it's obvious what you're looking at.
+		* You can now specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`).  This can be helpful when trying to get the overlay to line up with the actual stars.
+		* Latitue and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  They will still appear with N, S, E, W on the camera popout.
+		* The **virtualsky** program that draws the constellation overlay was updated to the latest release.  This added some new settings, including the ability to specify the opacity of the overlay.  It also adds a small box with a question mark in it when viewing the overlay; clicking on the icon brings up a list of commands you can perforrm.
+		* Font Awesome was updated to 5.14 and its file is now included with the website, eliminating a call to the Internet.
+		* The name of the home page file is now `index.php`.  The old `index.html` file is gone.  This change allowed some of the new features above.
+
+* version **v2022.03.01**:
+	* Switched to date-based release names.
 	* Added ability to have your allsky camera added to the [Allsky map](http://www.thomasjacquin.com/allsky-map) by configuring [these settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings/_edit#map-settings).  Added `Allsky Map Setup` section to the WebUI to configure the map settings.  The "Lens" field now shows in the popout on the Allsky website (if installed).
 	* Significantly enhanced Wiki - more pages and more information on existing pages.  All known issues are described there as well as fixes / workarounds.
 	* Added an option to keograms to make them full width, even if few images were used in creating the keogram.  In config.sh, set `KEOGRAM_EXTRA_PARAMETERS="--image-expand"`.
@@ -467,8 +436,75 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 	  * The startrails and keogram programs don't work well if you bin differently during the day and night.  If you don't save daytime images this won't be a problem.
 	  * The minimum, maximum, and default values in the "Camera Settings" page of the WebUI, especially for the RPiHQ camera, aren't always correct.  This is especially try if running on the Bullseye operating system, where many of the settings changed.
 
+* version **0.8.3**:
+	* Works on Bullseye operating system.
+	* RPiHQ version:
+	  * Has an improved auto-exposure algorithm.  To use it, set `CAPTURE_EXTRA_PARAMETERS="-daymean 0.5 -nightmean 0.2"` in config.sh (a future version will allow this to be set via the WebUI).
+	  * Has many new settings including support for most of the text overlay features that are supported by the ZWO version.  The "extra text" feature will be supported in a future version.
+	* New and changed config.sh variables, see the [Software Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) Wiki page for more information:
+	  * `IMG_UPLOAD_FREQUENCY`: how often the image should be uploaded to a website.  Useful with slow uplinks or metered Internet connections.
+	  * `IMG_CREATE_THUMBNAILS`: specifies whether or not thumbnails should be created for each image.
+	  * `REMOVE_BAD_IMAGES` now defaults to "true" since bad-image detection is now done after a picture is saved rather than once for all pictures at the end of the night.  This helps decrease problems when creating startrails, keograms, and timelapse videos.
+	  * `IMG_PREFIX`: no longer used - the name of the image used by the websites is now whatever you specify in the WebUI (default: image.jpg).
+	  * **NOTE**: When upgrading to 0.8.3 you MUST follow the steps listed [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
+	* Replaced `saveImageDay.sh` and `saveImageNight.sh` with `saveImage.sh` that has improved functionality, including passing the sensor temperature to the dark subtraction commands, thereby eliminating the need for the "temperature.txt" file.
+	* The image used by the websites (default: image.jpg) as well as all temporary files are now written to `allsky/tmp`.  **NOTE**: if you are using the Allsky Website you will need to change the "imageName" variable in `/var/www/html/allsky/config.js` to `"/current/tmp/image.jpg"`.
+	* You can **significanly** reduce wear on your SD card by making `allsky/tmp` a [memory-based filesystem](https://github.com/thomasjacquin/allsky/wiki/Miscellaneous-Tips).
 
+* version **0.8.1**:
+	* Rearranged the directory structure.
+	* Created a Wiki with additional documentation and troubleshooting tips.
+	* Renamed several variables in `config.sh` and `ftp-settings.sh`.
+	* CAMERA type of "auto" is no longer supported - you must specify "ZWO" or "RPiHQ".
+	* Startrails and keograms are now created using all CPUs on the Pi, drastically speeding up creation time.
+	* Installing the WebUI now preserves any website files (keograms, startrails, etc.) you have.  This allows for non-destructive updates of the WebUI.
+	* New script called `upload.sh` centralizes all the upload code from other scripts, and can be used to debug uploading issues.  See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Troubleshooting:-uploads) for more information.
+	* The RPiHQ camera does much better auto-exposure if you set the `-mode-mean` and `-autoexposure` options.
+	* The WebUI will now show the Pi's throttle and low-voltage states, which is useful for debugging.
+	* Darks work better.
+	* Many bug fixes, error checks, and warnings added.
+
+* version **0.8**:
+	* Workaround for ZWO daytime autoexposure bug.
+	* Improved exposure transitions between day and night so there's not such a huge change in brightness.
+	* Decrease in ZWO sensor temperature.
+	* Lots of new settings, including splitting some settings into day and night versions.
+	* Error checking and associated log messages added in many places to aid in debugging.
+	* Ability to have "notification" images displayed, such as "Allsky is starting up" and "Taking dark frames".
+	* Ability to resize uploaded images.
+	* Ability to set thumbnail size.
+	* Ability to delete bad images (corrupt and too light/dark).
+	* Ability to set an image file name prefix.
+	* Ability to reset USB bus if ZWO camera isn't found (requires "uhubctl" command to be installed).
+	* Ability to specify the format of the time displayed on images.
+	* Ability to have the temperature displayed in Celcius, Fahrenheit, or both.
+	* Ability to set bitrate on timelapse video.
+
+<!--
+* version **0.7**:
+	* Added Raspberry Pi camera HQ support (Based on Rob Musquetier's fork)
+	* Support for x86 architecture (Ubuntu, etc)
+	* Temperature dependant dark frame library
+	* Browser based script editor
+	* Configuration variables to crop black area around image
+	* Timelapse frame rate setting
+	* Changed font size default value
+* version **0.6**: Added daytime exposure and auto-exposure capability
+	* Added -maxexposure, -autoexposure, -maxgain, -autogain options. Note that using autoexposure and autogain at the same time may produce unexpected results (black frames).
+	* Autostart is now based on systemd and should work on all raspbian based systems, including headless distributions. Remote controlling will not start multiple instances of the software.
+	* Replaced `nodisplay` option with `preview` argument. No preview in autostart mode.
+	* When using the WebUI, camera options can be saved without rebooting the RPi.
+	* Added a publicly accessible preview to the WebUI: public.php
+	* Changed exposure unit to milliseconds instead of microseconds
+* version **0.5**: Added Startrails (image stacking) with brightness control
+	* Keograms and Startrails generation is now much faster thanks to a rewrite by Jarno Paananen.
+* version **0.4**: Added Keograms (summary of the night in one image)
+* version **0.3**: Added dark frame subtraction
+* version **0.2**: Separated camera settings from code logic
+* version **0.1**: Initial release
+-->
 ***
+</details>
 
 <!------------------------------------------------------------------------------------------->
 ### Donation

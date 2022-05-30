@@ -36,12 +36,13 @@ function usage_and_exit()
 {
 	RET_CODE=${1}
 	[ ${RET_CODE} -ne 0 ] && echo -en "${RED_START}"
-	echo -e "${BR}Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug]${BR}"
+	echo -e "${BR}Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--endofnight]${BR}"
 	echo "--help: Print this usage message and exit immediately."
 	echo "--whisper: Be quiet with non-error related output - only display results."
 	echo "--delete: Delete map data; all fields except machine_id are ignored."
 	echo "--force: Force updates, even if not scheduled automatically for today."
 	echo "--debug: Output debugging statements."
+	echo "--endofnight: Indicates how ${ME} was invoked."
 	[ ${RET_CODE} -ne 0 ] && echo -e "${COLOR_END}"
 	exit ${RET_CODE}
 }
@@ -68,7 +69,7 @@ function check_URL()
 	FIELD_NAME="${3}"
 
 	D="$(get_domain "${URL}")"
-	if [ "${D:0:7}" = "192.168" -o "${D:0:4}" = "10.0" -o "${D:0:6}" = "172.16" -o "${D:0:9}" = "169.254.0" -o "${D:0:6}" = "198.18" -o "${D:0:10}" = "198.51.100"  -o "${D:0:9}" = "203.0.113" -o "${D:0:3}" = "240" ]; then
+	if [[ "${D:0:7}" = "192.168" || "${D:0:4}" = "10.0" || "${D:0:6}" = "172.16" || "${D:0:9}" = "169.254.0" || "${D:0:6}" = "198.18" || "${D:0:10}" = "198.51.100"  || "${D:0:9}" = "203.0.113" || "${D:0:3}" = "240" ]]; then
 		M="${ERROR_MSG_START}ERROR: '${URL}' is not reachable from the Internet.${ERROR_MSG_END}${BR}${M}"
 	elif [ "${URL:0:5}" != "http:" ] && [ "${URL:0:6}" != "https:" ]; then
 		M="${ERROR_MSG_START}ERROR: 'Website URL' must begin with 'http:' or 'https:'.${ERROR_MSG_END}${BR}${M}"
@@ -104,6 +105,7 @@ DEBUG=false
 DELETE=false
 UPLOAD=false
 WHISPER=false
+ENDOFNIGHT=false
 while [ $# -ne 0 ]; do
 	if [ "${1}" = "--help" ]; then
 		usage_and_exit 0;
@@ -119,6 +121,9 @@ while [ $# -ne 0 ]; do
 		shift
 	elif [ "${1}" = "--whisper" ]; then
 		WHISPER=true
+		shift
+	elif [ "${1}" = "--endofnight" ]; then
+		ENDOFNIGHT=true
 		shift
 	else
 		usage_and_exit 1;
@@ -139,7 +144,9 @@ WARNING_MSG_END="${COLOR_END}"
 
 MACHINE_ID="$(< /etc/machine-id)"
 if [ -z "${MACHINE_ID}" ]; then
-	echo -e "${ERROR_MSG_START}ERROR: Unable to get 'machine_id': check /etc/machine-id.${ERROR_MSG_END}"
+	M="${ERROR_MSG_START}ERROR: Unable to get 'machine_id': check /etc/machine-id.${ERROR_MSG_END}"
+	echo -e "${M}"
+	[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
 	exit 3
 fi
 
@@ -219,6 +226,7 @@ else
 
 	if [ "${OK}" = "false" ]; then
 		echo -e "${M%%${BR}}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M%%${BR}}" >> "${ALLSKY_MESSAGES}"
 		exit 2
 	fi
 
@@ -268,7 +276,9 @@ if [ "${UPLOAD}" = "true" ]; then
 	RETURN_CODE=$?
 	[ "${DEBUG}" = "true" ] && echo -e "\nReturned:\n${YELLOW_START}${RETURN}${COLOR_END}.\n"
 	if [ ${RETURN_CODE} -ne 0 ]; then
-		echo -e "${ERROR_MSG_START}ERROR while uploading map data with curl: ${RETURN}.${ERROR_MSG_END}"
+		M="${ERROR_MSG_START}ERROR while uploading map data with curl: ${RETURN}.${ERROR_MSG_END}"
+		echo -e "${M}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
 		exit ${RETURN_CODE}
 	fi
 
@@ -292,17 +302,24 @@ if [ "${UPLOAD}" = "true" ]; then
 			echo	# terminating newline
 		fi
 	elif [ -z "${RET}" ]; then
-		echo -e "${ERROR_MSG_START}ERROR: Unknown reply from server: ${RETURN}.${ERROR_MSG_END}"
-		[ -n "${RET}" ] && echo -e "\t[${RET}]"
+		M="${ERROR_MSG_START}ERROR: Unknown reply from server: ${RETURN}.${ERROR_MSG_END}"
+		echo -e "${M}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
 		RETURN_CODE=2
 	elif [ "${RET:0:6}" = "ERROR " ]; then
-		echo -e "${ERROR_MSG_START}ERROR returned while uploading map data: ${RET:6}.${ERROR_MSG_END}"
+		M="${ERROR_MSG_START}ERROR returned while uploading map data: ${RET:6}.${ERROR_MSG_END}"
+		echo -e "${M}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
 		RETURN_CODE=2
 	elif [ "${RET:0:15}" = "ALREADY UPDATED" ]; then
 		MAX_UPDATES=${RET:17}
-		echo -e "${WARNING_MSG_START}NOTICE:You have already updated your map data the maximum times per day (${MAX_UPDATES}).  Try again tomorrow.${WARNING_MSG_END}"
+		M="${WARNING_MSG_START}NOTICE:You have already updated your map data the maximum times per day (${MAX_UPDATES}).  Try again tomorrow.${WARNING_MSG_END}"
+		echo -e "${M}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
 	else
-		echo -e "${ERROR_MSG_START}ERROR returned while uploading map data: ${RET}.${ERROR_MSG_END}"
+		M="${ERROR_MSG_START}ERROR returned while uploading map data: ${RET}.${ERROR_MSG_END}"
+		echo -e "${M}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
 		RETURN_CODE=2
 	fi
 

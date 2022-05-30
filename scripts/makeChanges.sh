@@ -69,7 +69,6 @@ function update_website_config()
 RUN_POSTDATA=false
 RUN_POSTTOMAP=false
 POSTTOMAP_ACTION=""
-typeset -i sawURLs=0
 while [ $# -gt 0 ]; do
 	KEY="${1}"
 	OLD_VALUE="${2}"

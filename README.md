@@ -380,11 +380,13 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Mean Target** (RPiHQ only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
 		* Latitude and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  The Allsky Website will always display with N, S, E, or W.
 		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers, and the crop area must fit within the image.
+		* Sanity checking is done on Allsky Map data, for example, the URLs are reachable from the Internet.
 		* Many minor enhancements were made.
 	* WebUI:
 		* The WebUI is now installed as part of the Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
 		* The WebUI (and Allsky Website) are now installed in ~/allsky/html (and ~/allsky/html/allsky).  Any images in the old locations are moved to the new locations when upgrading to this release.
 		* The "Editor" page can edit the Allsky Website's `configuration.json` file if you have the website installed on your Pi.  This is the preferred way to edit that file, since the editor performs basic syntax checking.
+		* Some errors that appear in the log file also appear in the WebUI.  Currently this is limited to Allsky Map data errors, but will be expanded in the future.
 		* The order of items in the "Camera Settings" page changed slightly.
 		* Buttons in the "Dark" mode are now darker.
 		* Several minor enhancements were made.

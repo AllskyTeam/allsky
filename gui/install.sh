@@ -37,7 +37,8 @@ modify_locations()
 		       -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 		       -e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
 		       -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
-		       -e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
+		       -e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
+		       -e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
 		       -e "s;XX_RASPI_CONFIG_XX;${CONFIG_DIR};" \
 				functions.php
 	)

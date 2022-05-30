@@ -53,6 +53,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Holds log of notifications displayed during this session.
 	ALLSKY_NOTIFICATION_LOG="${ALLSKY_TMP}/notification_log.txt"
 
+	# Holds temporary messages to display in the WebUI.
+	ALLSKY_MESSAGES="${ALLSKY_TMP}/messages.txt"
+
 	# Holds all the dark frames.
 	ALLSKY_DARKS="${ALLSKY_DARKS:-${ALLSKY_HOME}/darks}"
 

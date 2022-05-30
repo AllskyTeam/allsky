@@ -56,13 +56,11 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Holds all the dark frames.
 	ALLSKY_DARKS="${ALLSKY_DARKS:-${ALLSKY_HOME}/darks}"
 
-	# Location of optional allsky-portal package.
-	ALLSKY_WEBUI=${ALLSKY_WEBUI:-/var/www/html}
-	PORTAL_DIR=${ALLSKY_WEBUI}		# old name - will eventually remove this
+	# Location of WebUI.
+	ALLSKY_WEBUI=${ALLSKY_WEBUI:-${ALLSKY_HOME}/html}
 
 	# Location of optional allsky-website package.
 	ALLSKY_WEBSITE=${ALLSKY_WEBSITE:-${ALLSKY_WEBUI}/allsky}
-	WEBSITE_DIR=${ALLSKY_WEBSITE}		# old name - will eventually remove this
 
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	EXIT_OK=0

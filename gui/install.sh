@@ -123,6 +123,7 @@ echo -e "${GREEN}* Configuring lighttpd${NC}"
 sed -i \
 	  -e "s|XX_ALLSKY_HOME_XX|${ALLSKY_HOME}|g" \
 	  -e "s|XX_ALLSKY_IMAGES_XX|${ALLSKY_IMAGES}|g" \
+	  -e "s|XX_ALLSKY_WEBUI_XX|${ALLSKY_WEBUI}|g" \
 	  -e "s|XX_ALLSKY_WEBSITE_XX|${ALLSKY_WEBSITE}|g" \
 	  "${SCRIPTPATH}/lighttpd.conf"
 install -m 0644 "${SCRIPTPATH}/lighttpd.conf" /etc/lighttpd/lighttpd.conf

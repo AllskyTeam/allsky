@@ -1,10 +1,8 @@
-# Allsky Camera ![v2020.MM.DD](https://img.shields.io/badge/Version-2022.06.01-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![v2020.MM.DD](https://img.shields.io/badge/Version-2022.07.01-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
-**This README and our [Wiki pages](https://github.com/thomasjacquin/allsky/wiki) will help get your Allsky camera up and running.  Please review them _before_ submitting an Issue.**
+> **This README and our [Wiki pages](https://github.com/thomasjacquin/allsky/wiki) will help get your Allsky camera up and running.  Please review them _before_ submitting an Issue.**
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
-&nbsp;
-> **NOTE**: When upgrading from a release **prior to** 0.8.3 you **MUST** follow the steps [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
 &nbsp;  
 <p align="center">
 <img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-header-photo.jpg" width="50%">
@@ -37,7 +35,7 @@ In order to get the camera working properly you will need the following hardware
 <details><summary>Click here</summary>
 
 &nbsp;  
-PatriotAstro has a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) that describes the Allsky software including installation.  **We suggest viewing it before installing the software.**
+PatriotAstro has a [great video](https://www.youtube.com/watch?v=7TGpGz5SeVI) that describes the Allsky software including installation.  **We highly suggest viewing it before installing the software.**
 
 You will need to install the Raspbian Operating System on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
 
@@ -60,9 +58,27 @@ Make sure you have a working Internet connection by setting it through [the term
     ./install.sh  # PatriotAstro's video shows using "sudo"; that is no longer needed
     ```
 
-There are many configuration variables that need to be set.  Please see the [allsky Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) page for a list of them.
+There are many configuration variables that need to be set as described on the [allsky Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) page.
 	
 > NOTE: Starting with this release, the WebUI is included in the main Allsky package.
+
+***
+</details>
+
+
+
+&nbsp;
+<!------------------------------------------------------------------------------------------->
+### Updating the software
+<details><summary>Click here</summary>
+	
+&nbsp;  
+> **NOTE**: When upgrading from a release **prior to** 0.8.3 you **MUST** follow the steps [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
+
+&nbsp;  
+See this [Wiki page](https://github.com/thomasjacquin/allsky/wiki/How-to-update-the-software) if you are upgrading from a release _after_ 0.8.3.
+
+Note that in version 0.8.3 the default image created and uploaded is called **image.jpg**.  The prior "image-resize.jpg" and "liveview-image.jpg" files are no longer created. Keep that in mind if you copy the image to a remote web server - it will need to know about the new name.
 
 ***
 </details>
@@ -115,23 +131,6 @@ If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote 
 
 &nbsp;
 <!------------------------------------------------------------------------------------------->
-### Updating the software
-<details><summary>Click here</summary>
-
-&nbsp;  
-See this [Wiki page](https://github.com/thomasjacquin/allsky/wiki/How-to-update-the-software) for instructions on how to update the AllSky software.
-
-**NOTE:** Version 0.8 added many new settings and changed the name of several existing settings.  For example, there are now separate brightness levels for daytime and nighttime, called "daybrightness" and "nightbrightness".  Version 0.7 only had "brightness" that applied to both day and nighttime. It's very important that you save a copy of your current settings prior to upgrading to version 0.8 so you can restore them properly.
-The WebUI from the `allsky-portal` package uses these new settings so it's also important to update AllSky **prior to** updating the WebUI.
-
-Also note that in version 0.8.3 the default image file created and uploaded is called **image.jpg**.  The prior "image-resize.jpg" and "liveview-image.jpg" are no longer created. Keep that in mind if you copy the image to a remote web server - it will need to know about the new name.
-
-***
-</details>
-
-
-&nbsp;
-<!------------------------------------------------------------------------------------------->
 ### Web User Interface (WebUI)
 <details><summary>Click here</summary>
 
@@ -141,8 +140,9 @@ Also note that in version 0.8.3 the default image file created and uploaded is c
 The WebUI is now installed in `~/allsky/html` as part of the installation of Allsky.  It:
 * changes your hostname to **allsky** (or whatever you called it when installing)
 * installs the **lighttpd** web server
-* moves images from your old WebUI in `/var/www/html/allsky` if installed, to the new location
-* removes `/var/www`.
+* if you have a previous version in `/var/www/html/allsky`, upgrading Allsky also:
+  * moves images from your old WebUI to the new location
+  * removes `/var/www`.
 
 After you complete Allsky setup, you can administer the software using the WebUI by navigating to
 ```
@@ -156,7 +156,7 @@ Note: If you changed the name of your Pi (to 'piname', for example) during insta
 http://piname.local
 ```
 
-The default username is **admin** and the default password is **secret**.  If this website is publically viewable you should change those settings.
+The default username is **admin** and the default password is **secret**.  **If your website is publically viewable you should change those settings**.
 
 A public page is also available in order to view the current image without having to log into the WebUI and without being able to do any administrative tasks. This can be useful for people who don't have a personal website but still want to share a view of their sky:
 
@@ -180,14 +180,14 @@ If it is behind a firewall consult the documentation for your network equipment 
 You can display your files on a website, either on the Pi or on another machine.
 
 ### On the Pi
-If you want to host the website on your Raspberry Pi, run the following command:
+To host the website on your Raspberry Pi, do the following:
 
 ```shell
 cd ~/allsky
 website/install.sh
 ```
 
-And set these variables in `allsky/config/ftp-settings.sh`:
+Then set these variables in `allsky/config/ftp-settings.sh`:
 ```shell
 PROTOCOL="local"
 IMAGE_DIR=""
@@ -197,10 +197,10 @@ STARTRAILS_DIR="/home/pi/allsky/html/startrails"
 ```
 
 ### On a different machine
-If you want to host the website on a _different_ machine, like in this [example](http://www.thomasjacquin.com/allsky), see [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Installation-Tips#install-the-web-interface-on-a-remote-machine).
+To host the website on a _different_ machine, like in this [example](http://www.thomasjacquin.com/allsky), see [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Installation-Tips#install-the-web-interface-on-a-remote-machine).
 
 ### Website settings
-Once you've installed the website, either on your Pi or another machine, look at the descriptions of the settings on the [allsky-website Settings page](https://github.com/thomasjacquin/allsky/wiki/allsky-website-Settings).
+Once you've installed the website look at the descriptions of the settings on the [allsky-website Settings page](https://github.com/thomasjacquin/allsky/wiki/allsky-website-Settings).
 
 ***
 </details>
@@ -227,8 +227,7 @@ See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Dark-Frames-Ex
 
 &nbsp;  
 By default, a timelapse video is generated at the end of nighttime from all of the images captured in the last 24 hours.
-
-To disable timelapse, open `allsky/config/config.sh` and set
+To disable this, open `allsky/config/config.sh` and set
 
 ```shell
 TIMELAPSE="false"
@@ -307,7 +306,7 @@ If you have the Allsky website installed on your Pi, you can specify how many da
 ```
 WEB_DAYS_TO_KEEP=28
 ```
-In both cases, set to "" to keep all days' data but be careful that your SD card doesn't fill up.
+In both cases, set to `""` to keep all days' data, but be careful that your SD card doesn't fill up.
 
 ***
 </details>
@@ -338,6 +337,7 @@ There are other temporary log files in `allsky/tmp` that are used for debugging.
 &nbsp;  
 Experienced users may want to add some additional processing steps at the end of nighttime.
 To do so:
+
 ```shell
 cd ~/allsky/scripts
 mv endOfNight_additionalSteps.repo   endOfNight_additionalSteps.sh
@@ -358,7 +358,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 
 <p align="center">
 <a href="https://www.thomasjacquin.com/allsky-map/">
-<img src="http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg" title="Global allsky map example - click to see real map" width="75%">
+<img src="http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg" title="Allsky map example - click to see real map" width="75%">
 </a>
 </p>
 
@@ -378,27 +378,26 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Frames to Skip** (ZWO only) for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving.
 			* **Aggression** (ZWO only) determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
 			* **Mean Target** (RPiHQ only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
-		* Latitue and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).
-		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers and the crop area must fit within the image.
-		* Several bugs and minor enhancements were made.
+		* Latitude and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  The Allsky Website will always display with N, S, E, or W.
+		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers, and the crop area must fit within the image.
+		* Many minor enhancements were made.
 	* WebUI:
 		* The WebUI is now installed as part of the Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
-		* The WebUI (and allsky-website) are now installed in ~/allsky/html (and ~/allsky/html/allsky).  Any images in the old locations are moved to the new locations.
-		* The "Editor" page now allows editting the Allsky Website's `config.js` and `virtualsky.json` files if you have the website installed on your Pi.  This is now the preferred way to edit those files, since the editor performs basic syntax checking.
+		* The WebUI (and Allsky Website) are now installed in ~/allsky/html (and ~/allsky/html/allsky).  Any images in the old locations are moved to the new locations when upgrading to this release.
+		* The "Editor" page can edit the Allsky Website's `configuration.json` file if you have the website installed on your Pi.  This is the preferred way to edit that file, since the editor performs basic syntax checking.
 		* The order of items in the "Camera Settings" page changed slightly.
 		* Buttons in the "Dark" mode are now darker.
-		* Several bugs and minor enhancements were made.
+		* Several minor enhancements were made.
 	* Allsky Website:
-		* You can now specify the order and contents of the icons on the left side.  The overlay icon (Casseopea icon) only appears after you've set the overlay to match the stars.
-		* You can now specify the order and contents of the popout that appears when clicking on the camera icon.  For example, you could add a link to local weather or to pictures of your allsky camera.
 		* The home page can be customized:
-			* What the background image should be.
-			* An optional link to a personal website can be added to the top of the page.
-			* Whether or not a border should appear around the image.
-			* Whether or not the "Make Your Own" link should appear at the bottom right.
+			* You can specify the order and contents of the icons on the left side.  The overlay icon (Casseopea icon) only appears after you've set the overlay to match the stars.
+			* You can specify the order and contents of the popout that appears when clicking on the camera icon.  For example, you could add a link to local weather or to pictures of your allsky camera.
+			* You can set a background image.
+			* You can add an optional link to a personal website at the top of the page.
+			* You can add a border around the image to have it stand out on the page.
+			* You can hide the "Make Your Own" link on the bottom right of the page.
 		* The Timelapse, Keogram, and Startrails pages now have titles so it's obvious what you're looking at.
-		* You can now specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`).  This can be helpful when trying to get the overlay to line up with the actual stars.
-		* Latitue and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  They will still appear with N, S, E, W on the camera popout.
+		* You can specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`).  This can be helpful when trying to get the overlay to line up with the actual stars.
 		* The **virtualsky** program that draws the constellation overlay was updated to the latest release.  This added some new settings, including the ability to specify the opacity of the overlay.  It also adds a small box with a question mark in it when viewing the overlay; clicking on the icon brings up a list of commands you can perforrm.
 		* Font Awesome was updated to 5.14 and its file is now included with the website, eliminating a call to the Internet.
 		* The name of the home page file is now `index.php`.  The old `index.html` file is gone.  This change allowed some of the new features above.

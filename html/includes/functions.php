@@ -13,6 +13,7 @@ define('ALLSKY_SCRIPTS', 'XX_ALLSKY_SCRIPTS_XX');
 define('ALLSKY_IMAGES',  'XX_ALLSKY_IMAGES_XX');
 define('ALLSKY_CONFIG',  'XX_ALLSKY_CONFIG_XX');
 define('ALLSKY_WEBSITE',  'XX_ALLSKY_WEBSITE_XX');
+define('ALLSKY_MESSAGES',  'XX_ALLSKY_MESSAGES_XX');
 define('RASPI_CONFIG',   'XX_RASPI_CONFIG_XX');
 
 // Split the placeholder so it doesn't get replaced if the update script is run multiple times.

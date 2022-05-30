@@ -67,6 +67,7 @@ bool check_max_errors(int *, int);
 // So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
 bool use_new_exposure_algorithm = DEFAULT_NEWEXPOSURE;
 int flip						= DEFAULT_FLIP;
+char const *str_flip			= "";
 bool tty						= false;			// are we on a tty?
 bool notificationImages			= DEFAULT_NOTIFICATIONIMAGES;
 char const *save_dir			= DEFAULT_SAVEDIR;
@@ -88,6 +89,11 @@ long nightWBB					= DEFAULT_NIGHTWBB;
 bool currentAutoAWB				= false;
 long currentWBR					= NOT_SET;
 long currentWBB					= NOT_SET;
+
+long actualWBR					= NOT_SET;		// actual values per camera
+long actualWBB					= NOT_SET;
+long actualTemp					= NOT_SET;
+long actualGain					= NOT_SET;
 
 #ifdef USE_HISTOGRAM
 int current_histogramBoxSizeX =	NOT_SET;
@@ -119,7 +125,6 @@ int numExposures				= 0;				// how many valid pictures have we taken so far?
 int currentGain					= NOT_SET;
 long camera_max_autoexposure_us	= NOT_SET;			// camera's max auto-exposure
 long camera_min_exposure_us		= 100;				// camera's minimum exposure
-long actualTemp					= NOT_SET;			// actual sensor temp, per the camera
 long last_exposure_us			= 0;				// last exposure taken
 bool taking_dark_frames			= false;
 long current_exposure_us		= NOT_SET;
@@ -231,11 +236,11 @@ void *SaveImgThd(void *para)
 			char cmd[1100];
 			Log(1, "  > Saving %s image '%s'\n", taking_dark_frames ? "dark" : dayOrNight.c_str(), final_file_name);
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), full_filename);
-			float gainDB = pow(10, (float)currentGain / 10.0 / 20.0);
+			float gainDB = pow(10, (float)actualGain / 10.0 / 20.0);
 			add_variables_to_command(cmd, last_exposure_us, currentBrightness, mean,
-				currentAutoExposure, currentAutoGain, currentAutoAWB, (float)currentWBR, (float)currentWBB,
-				actualTemp, gainDB, currentGain,
-				currentBin, flip, current_bit_depth, focus_metric);
+				currentAutoExposure, currentAutoGain, currentAutoAWB, (float)actualWBR, (float)actualWBB,
+				actualTemp, gainDB, actualGain,
+				currentBin, str_flip, current_bit_depth, focus_metric);
 			strcat(cmd, " &");
 
 			st = cv::getTickCount();
@@ -465,11 +470,11 @@ return;
 
 
 long reported_exposure_us = 0;	// exposure reported by the camera, either actual exposure or suggested next one
-long actualGain = NOT_SET;		// actual gain used, per the camera
 ASI_BOOL bAuto = ASI_FALSE;		// "auto" flag returned by ASIGetControlValue, when we don't care what it is
 
 ASI_BOOL wasAutoExposure = ASI_FALSE;
 long bufferSize = NOT_SET;
+bool set_auto_exposure = false;
 
 ASI_ERROR_CODE takeOneExposure(
 		int cameraId,
@@ -501,11 +506,15 @@ ASI_ERROR_CODE takeOneExposure(
 
 	// This debug message isn't typcally needed since we already displayed a message about
 	// starting a new exposure, and below we display the result when the exposure is done.
-	Log(4, "  > %s to %s, timeout: %'ld ms\n",
+	Log(4, "  > %s to %s\n",
 		wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Exposure set",
-		length_in_units(exposure_time_us, true), timeout);
+		length_in_units(exposure_time_us, true));
 
+// XXXXXXXXXXXXXXXXXX testing.  If in auto exposure, only set exposure time once per day/night.
+if (! set_auto_exposure || ! currentAutoExposure) {
+	set_auto_exposure = true;
 	setControl(cameraId, ASI_EXPOSURE, exposure_time_us, currentAutoExposure ? ASI_TRUE :ASI_FALSE);
+}
 
 	flush_buffered_image(cameraId, imageBuffer, bufferSize);
 
@@ -540,7 +549,7 @@ ASI_ERROR_CODE takeOneExposure(
 		 		timeval tEnd = getTimeval();
 				// After testing there seems to be about 450,000 us overhead, so subtract it.
 				long timeToTakeImage_us = timeval_diff_us(tStart, tEnd) - 450000;
-Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exposure_time_us, timeToTakeImage_us);
+//Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exposure_time_us, timeToTakeImage_us);
 				long diff_us = timeToTakeImage_us - exposure_time_us;
 				long threshold_us = exposure_time_us * 0.5;
 				if (abs(diff_us) > threshold_us) {
@@ -549,12 +558,18 @@ Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exp
 			}
 
 			numErrors = 0;
+			ASIGetControlValue(cameraId, ASI_GAIN, &actualGain, &bAuto);
 			debug_text[0] = '\0';
 #ifdef USE_HISTOGRAM
 			if (histogram != NULL && mean != NULL)
 			{
 				*mean = computeHistogram(imageBuffer, width, height, imageType, histogram);
 				sprintf(debug_text, " @ mean %d", *mean);
+				if (currentAutoGain && ! taking_dark_frames)
+				{
+					char *p = debug_text + strlen(debug_text);
+					sprintf(p, ", auto gain %ld", actualGain);
+				}
 			}
 #endif
 			last_exposure_us = exposure_time_us;
@@ -563,7 +578,7 @@ Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exp
 			// When in auto-exposure mode, the returned exposure length is what the driver thinks the
 			// next exposure should be, and will eventually converge on the correct exposure.
 			ASIGetControlValue(cameraId, ASI_EXPOSURE, &reported_exposure_us, &wasAutoExposure);
-			Log(3, "  > Got image%s.  Reported exposure: %s, auto=%s\n", debug_text, length_in_units(reported_exposure_us, true), wasAutoExposure == ASI_TRUE ? "yes" : "no");
+			Log(3, "  > Got image%s.  Returned exposure: %s\n", debug_text, length_in_units(reported_exposure_us, true));
 
 			// If this was a manual exposure, make sure it took the correct exposure.
 			// Per ZWO, this should never happen.
@@ -571,12 +586,11 @@ Log(4, "xxxxxxx exposure_time_us=%'ld, estimated timeToTakeImage_us=%'ld\n", exp
 			{
 				Log(0, "  > WARNING: not correct exposure (requested: %'ld us, reported: %'ld us, diff: %'ld)\n", exposure_time_us, reported_exposure_us, reported_exposure_us - exposure_time_us);
 			}
-			ASIGetControlValue(cameraId, ASI_GAIN, &actualGain, &bAuto);
 			ASIGetControlValue(cameraId, ASI_TEMPERATURE, &actualTemp, &bAuto);
 			if (ASICameraInfo.IsColorCam)
 			{
-				ASIGetControlValue(CamNum, ASI_WB_R, &currentWBR, &bAuto);
-				ASIGetControlValue(CamNum, ASI_WB_B, &currentWBB, &bAuto);
+				ASIGetControlValue(CamNum, ASI_WB_R, &actualWBR, &bAuto);
+				ASIGetControlValue(CamNum, ASI_WB_B, &actualWBB, &bAuto);
 			}
 		}
 
@@ -665,7 +679,7 @@ int numGainChanges = 0;		// This is reset at every day/night and night/day trans
 bool resetGainTransitionVariables(int dayGain, int nightGain)
 {
 	// Many of the "xxx" messages below will go away once we're sure gain transition works.
-	Log(4, "xxx resetGainTransitionVariables(%d, %d) called at %s\n", dayGain, nightGain, dayOrNight.c_str());
+	Log(5, "xxx resetGainTransitionVariables(%d, %d) called at %s\n", dayGain, nightGain, dayOrNight.c_str());
 
 	if (adjustGain == false)
 	{
@@ -691,14 +705,14 @@ bool resetGainTransitionVariables(int dayGain, int nightGain)
 	if (dayOrNight == "DAY")
 	{
 		totalTimeInSec = (dayExposure_us / US_IN_SEC) + (dayDelay_ms / MS_IN_SEC);
-		Log(4, "xxx totalTimeInSec=%.1fs, dayExposure_us=%'ldus , daydelay_ms=%'dms\n", totalTimeInSec, dayExposure_us, dayDelay_ms);
+		Log(5, "xxx totalTimeInSec=%.1fs, dayExposure_us=%'ldus , daydelay_ms=%'dms\n", totalTimeInSec, dayExposure_us, dayDelay_ms);
 	}
 	else	// NIGHT
 	{
 		// At nightime if the exposure is less than the max, we wait until max has expired,
 		// so use it instead of the exposure time.
 		totalTimeInSec = (nightMaxAutoexposure_ms / MS_IN_SEC) + (nightDelay_ms / MS_IN_SEC);
-		Log(4, "xxx totalTimeInSec=%.1fs, nightMaxAutoexposure_ms=%'dms, nightDelay_ms=%'dms\n", totalTimeInSec, nightMaxAutoexposure_ms, nightDelay_ms);
+		Log(5, "xxx totalTimeInSec=%.1fs, nightMaxAutoexposure_ms=%'dms, nightDelay_ms=%'dms\n", totalTimeInSec, nightMaxAutoexposure_ms, nightDelay_ms);
 	}
 
 	gainTransitionImages = ceil(gainTransitionTime / totalTimeInSec);
@@ -721,7 +735,7 @@ bool resetGainTransitionVariables(int dayGain, int nightGain)
 			gainTransitionImages++;		// this one will get the remaining amount
 	}
 
-	Log(4, "xxx gainTransitionImages=%d, gainTransitionTime=%ds, perImageAdjustGain=%d, totalAdjustGain=%d\n",
+	Log(5, "xxx gainTransitionImages=%d, gainTransitionTime=%ds, perImageAdjustGain=%d, totalAdjustGain=%d\n",
 		gainTransitionImages, gainTransitionTime, perImageAdjustGain, totalAdjustGain);
 
 	return(true);
@@ -739,7 +753,7 @@ int determineGainChange(int dayGain, int nightGain)
 	if (numGainChanges > gainTransitionImages || totalAdjustGain == 0)
 	{
 		// no more changes needed in this transition
-		Log(4, "  xxxx No more gain changes needed.\n");
+		Log(5, "  xxxx No more gain changes needed.\n");
 		currentAdjustGain = false;
 		return(0);
 	}
@@ -1108,10 +1122,12 @@ i++;
 				if (aggression < 1)
 				{
 					fprintf(stderr, "Aggression must be between 1 and 100; setting to 1.\n");
+					aggression = 1;
 				}
 				else if (aggression > 100)
 				{
 					fprintf(stderr, "Aggression must be between 1 and 100; setting to 100.\n");
+					aggression = 100;
 				}
 			}
 			else if (strcmp(argv[i], "-gaintransitiontime") == 0)
@@ -1311,6 +1327,15 @@ i++;
 			}
 		}
 	}
+
+	if (flip == 0)
+		str_flip = "none";
+	else if (flip == 1)
+		str_flip = "horizontal";
+	else if (flip == 2)
+		str_flip = "vertical";
+	else if (flip == 3)
+		str_flip = "both";
 
 	if (setlocale(LC_NUMERIC, locale) == NULL)
 		printf("*** WARNING: Could not set locale to %s ***\n", locale);
@@ -1560,9 +1585,47 @@ i++;
 		closeUp(EXIT_ERROR_STOP);	// force the user to fix it
 #endif
 
-	printf("\n%s Information:\n", ASICameraInfo.Name);
+	printf("\nCamera Information:\n");
+	printf("  - Model: %s\n", ASICameraInfo.Name);
+	ASI_ID cameraID;	// USB 3 cameras only
+	if (ASICameraInfo.IsUSB3Camera == ASI_TRUE && ASIGetID(CamNum, &cameraID) == ASI_SUCCESS)
+	{
+		printf("  - Camera ID: ");
+		if (cameraID.id[0] == '\0')
+		{
+			printf("[none]");
+		} else {
+			for (unsigned int i=0; i<sizeof(cameraID.id); i++)
+				printf("%c", cameraID.id[i]);
+		}
+		printf("\n");
+	}
+	// To clear the camera ID:
+		// cameraID.id[0] = '\0';
+		// ASISetID(CamNum, cameraID);
+	ASI_SN serialNumber;
+	asiRetCode = ASIGetSerialNumber(CamNum, &serialNumber);
+	if (asiRetCode != ASI_SUCCESS)
+	{
+		if (asiRetCode == ASI_ERROR_GENERAL_ERROR)
+			printf("Camera does not support serialNumber\n");
+		else
+			printf("*** WARNING: unable to get serialNumber (%s)\n", getRetCode(asiRetCode));
+	}
+	else
+	{
+		printf("  - Camera Serial Number: ");
+		if (serialNumber.id[0] == '\0')
+		{
+			printf("[none]");
+		} else {
+			for (unsigned int i=0; i<sizeof(serialNumber.id); i++)
+				printf("%02x", serialNumber.id[i]);
+		}
+		printf("\n");
+	}
 	printf("  - Native Resolution: %dx%d\n", iMaxWidth, iMaxHeight);
-	printf("  - Pixel Size: %1.1fmicrons\n", pixelSize);
+	printf("  - Pixel Size: %1.1f microns\n", pixelSize);
 	printf("  - Supported Bins: ");
 	for (int i = 0; i < 16; ++i)
 	{
@@ -1587,45 +1650,8 @@ i++;
 		printf("  - Camera with cooling capabilities\n");
 	}
 
-	printf("\n");
-	ASI_ID cameraID;	// USB 3 cameras only
-	if (ASICameraInfo.IsUSB3Camera == ASI_TRUE && ASIGetID(CamNum, &cameraID) == ASI_SUCCESS)
-	{
-		printf("  - Camera ID: ");
-		if (cameraID.id[0] == '\0')
-		{
-			printf("[none]");
-		} else {
-			for (unsigned int i=0; i<sizeof(cameraID.id); i++) printf("%c", cameraID.id[i]);
-		}
-		printf("\n");
-	}
-	// To clear the camera ID:
-		// cameraID.id[0] = '\0';
-		// ASISetID(CamNum, cameraID);
-	ASI_SN serialNumber;
-	asiRetCode = ASIGetSerialNumber(CamNum, &serialNumber);
-	if (asiRetCode != ASI_SUCCESS)
-	{
-		if (asiRetCode == ASI_ERROR_GENERAL_ERROR)
-			printf("Camera does not support serialNumber\n");
-		else
-			printf("*** WARNING: unable to get serialNumber (%s)\n", getRetCode(asiRetCode));
-	}
-	else
-	{
-		printf("  - Camera Serial Number: ");
-		if (serialNumber.id[0] == '\0')
-		{
-			printf("[none]");
-		} else {
-			for (unsigned int i=0; i<sizeof(serialNumber.id); i++) printf("%02x", serialNumber.id[i]);
-		}
-		printf("\n");
-	}
-
 	ASIGetControlValue(CamNum, ASI_TEMPERATURE, &actualTemp, &bAuto);
-	printf("- Sensor temperature: %0.2f\n", (float)actualTemp / 10.0);
+	printf("  - Sensor temperature: %0.2f\n", (float)actualTemp / 10.0);
 
 	ASI_CAMERA_MODE CamMode;
 	asiRetCode = ASIGetCameraMode(CamNum, &CamMode);
@@ -1666,14 +1692,14 @@ i++;
 		}
 		if (debugLevel >= 4)
 		{
-			printf("- %s:\n", ControlCaps.Name);
-			printf("   - Description = %s\n", ControlCaps.Description);
-			printf("   - MinValue = %'ld\n", ControlCaps.MinValue);
-			printf("   - MaxValue = %'ld\n", ControlCaps.MaxValue);
-			printf("   - DefaultValue = %'ld\n", ControlCaps.DefaultValue);
-			printf("   - IsAutoSupported = %d\n", ControlCaps.IsAutoSupported);
-			printf("   - IsWritable = %d\n", ControlCaps.IsWritable);
-			printf("   - ControlType = %d\n", ControlCaps.ControlType);
+			printf("  - %s:\n", ControlCaps.Name);
+			printf("    - Description = %s\n", ControlCaps.Description);
+			printf("    - MinValue = %'ld\n", ControlCaps.MinValue);
+			printf("    - MaxValue = %'ld\n", ControlCaps.MaxValue);
+			printf("    - DefaultValue = %'ld\n", ControlCaps.DefaultValue);
+			printf("    - IsAutoSupported = %d\n", ControlCaps.IsAutoSupported);
+			printf("    - IsWritable = %d\n", ControlCaps.IsWritable);
+			printf("    - ControlType = %d\n", ControlCaps.ControlType);
 		}
 	}
 
@@ -1835,7 +1861,7 @@ i++;
 	}
 	printf(" Gamma: %d\n", gamma);
 	printf(" USB Speed: %d, auto: %s\n", asiBandwidth, yesNo(asiAutoBandwidth));
-	printf(" Flip Image: %d\n", flip);
+	printf(" Flip Image: %s (%d)\n", str_flip, flip);
 	printf(" Filename: %s\n", fileName);
 	printf(" Filename Save Directory: %s\n", save_dir);
 	printf(" Latitude: %s, Longitude: %s\n", latitude, longitude);
@@ -1937,14 +1963,11 @@ i++;
 	}
 
 	if (ImgExtraText[0] != '\0' && extraFileAge > 0) {
-		Log(1, "Extra Text File Age Disabled So Displaying Anyway\n");
+		Log(3, "Extra Text File Age Disabled So Displaying Anyway\n");
 	}
 
 	if (tty)
 		printf("*** Press Ctrl+C to stop ***\n\n");
-	else
-		printf("*** Stop the allsky service to end this process. ***\n\n");
-
 
 	// Start taking pictures
 
@@ -1960,6 +1983,7 @@ i++;
 
 	while (bMain)
 	{
+set_auto_exposure = false;	// XXXXXXXXXXXX testing
 		// Find out if it is currently DAY or NIGHT
 		dayOrNight = calculateDayOrNight(latitude, longitude, angle);
 		std::string lastDayOrNight = dayOrNight;
@@ -2013,8 +2037,8 @@ i++;
 					if (notificationImages) {
 						system("scripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &");
 					}
-					Log(0, "It's daytime... we're not saving images.\n*** %s ***\n",
-						tty ? "Press Ctrl+C to stop" : "Stop the allsky service to end this process.");
+					Log(0, "It's daytime... we're not saving images.\n%s",
+						tty ? "*** Press Ctrl+C to stop ***\n" : "");
 					displayedNoDaytimeMsg = true;
 
 					// sleep until almost nighttime, then wake up and sleep more if needed.
@@ -2136,7 +2160,6 @@ i++;
 					nightExposure_us = nightMaxAutoexposure_ms * US_IN_MS;
 				}
 				current_exposure_us = nightExposure_us;
-				Log(4, "Using night exposure (%s)\n", length_in_units(nightExposure_us, true));
 			}
 
 			currentAutoExposure = nightAutoExposure;
@@ -2164,11 +2187,18 @@ i++;
 			}
 			currentAutoGain = nightAutoGain;
 		}
+
 		setControl(CamNum, ASI_AUTO_MAX_GAIN, currentMaxGain, ASI_FALSE);
 		if (ASICameraInfo.IsColorCam)
 		{
 			setControl(CamNum, ASI_WB_R, currentWBR, currentAutoAWB ? ASI_TRUE : ASI_FALSE);
 			setControl(CamNum, ASI_WB_B, currentWBB, currentAutoAWB ? ASI_TRUE : ASI_FALSE);
+		}
+		else if (! currentAutoAWB && ! taking_dark_frames)
+		{
+			// We only read the actual values if in auto white balance; since we're not, get them now.
+			actualWBR = currentWBR;
+			actualWBB = currentWBB;
 		}
 
 		// never go over the camera's max auto exposure. ASI_AUTO_MAX_EXP is in ms so convert
@@ -2196,7 +2226,6 @@ i++;
 			current_histogramBoxSizeY	= histogramBoxSizeY / currentBin;
 
 			bufferSize = width * height * current_bpp;
-			Log(4, "Buffer size: %ld\n", bufferSize);
 
 // TODO: if not the first time, should we free the old pRgb?
 			if (Image_type == IMG_RAW16)
@@ -2523,12 +2552,13 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						// possible so don't set an adjustment.
 						if (aggression != 100 && current_skip_frames <= 0)
 						{
-							long exposureDiff_us;
-							exposureDiff_us = reported_exposure_us - current_exposure_us;
-							exposureDiff_us *= (float)aggression / 100;
+							long exposureDiff_us, diff_us;
+							diff_us = reported_exposure_us - current_exposure_us;
+							exposureDiff_us = diff_us * (float)aggression / 100;
 							if (exposureDiff_us != 0)
 							{
-								Log(4, "  > Changing next exposure by %s ", length_in_units(exposureDiff_us, true));
+								Log(4, "  > Next exposure full change is %s, ", length_in_units(diff_us, true));
+								Log(4, "after aggression: %s ", length_in_units(exposureDiff_us, true));
 								Log(4, "from %s ", length_in_units(current_exposure_us, true));
 								current_exposure_us += exposureDiff_us;
 								Log(4, "to %s\n", length_in_units(current_exposure_us, true));
@@ -2645,12 +2675,6 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					Log(0, "  > WARNING: currently saving an image; can't save new one at %s.\n", exposureStart);
 
 					// TODO: wait for the prior image to finish saving.
-				}
-
-				if (currentAutoGain && ! taking_dark_frames)
-				{
-					ASIGetControlValue(CamNum, ASI_GAIN, &actualGain, &bAuto);
-					Log(1, "  > Auto Gain value: %ld\n", actualGain);
 				}
 
 				if (currentAutoExposure)

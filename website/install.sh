@@ -146,32 +146,29 @@ echo
 
 cd "${WEBSITE_DIR}"
 
-# If the directories already exist, don't mess with them.
-if [ ! -d startrails/thumbnails -o ! -d keograms/thumbnails -o ! -d videos/thumbnails ]; then
-	echo -e "${GREEN}* Creating thumbnails directories${NC}"
-	mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails
-	echo
+echo -e "${GREEN}* Creating thumbnails directories${NC}"
+mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails
+echo
 
-	echo -e "${GREEN}* Fixing ownership and permissions${NC}"
-	chown -R pi:www-data .
-	find ./ -type f -exec chmod 644 {} \;
-	find ./ -type d -exec chmod 775 {} \;
-	echo
-fi
+echo -e "${GREEN}* Fixing ownership and permissions${NC}"
+U=$(id -n -u)
+chown -R "${U}:www-data" .
+find ./ -type f -exec chmod 644 {} \;
+find ./ -type d -exec chmod 775 {} \;
+echo
 
 modify_locations
 modify_configuration_variables
 create_data_json_file
 
 if [ "${SAVED_OLD}" = "true" ]; then
-	# Each directory has one .php file plus zero or more images.
-	# Move the thumbnails first so it doesn't appear in the count.
+	# Each directory will have zero or more images.
 
 	if [ -d "${WEBSITE_DIR_OLD}/videos/thumbnails" ]; then
 		mv "${WEBSITE_DIR_OLD}/videos/thumbnails" videos
 	fi
-	count=$(ls -1 "${WEBSITE_DIR_OLD}/videos" | wc -l)
-	if [ "${count}" -gt 1 ]; then
+	count=$(ls -1 "${WEBSITE_DIR_OLD}"/videos/allsky-* 2>/dev/null  | wc -l)
+	if [ "${count}" -ge 1 ]; then
 		echo -e "${GREEN}* Restoring prior videos${NC}"
 		mv "${WEBSITE_DIR_OLD}"/videos/allsky-* videos
 	fi
@@ -179,8 +176,8 @@ if [ "${SAVED_OLD}" = "true" ]; then
 	if [ -d "${WEBSITE_DIR_OLD}/keograms/thumbnails" ]; then
 		mv "${WEBSITE_DIR_OLD}/keograms/thumbnails" keograms
 	fi
-	count=$(ls -1 "${WEBSITE_DIR_OLD}/keograms" | wc -l)
-	if [ "${count}" -gt 1 ]; then
+	count=$(ls -1 "${WEBSITE_DIR_OLD}"/keograms/keogram-* 2>/dev/null | wc -l)
+	if [ "${count}" -ge 1 ]; then
 		echo -e "${GREEN}* Restoring prior keograms${NC}"
 		mv "${WEBSITE_DIR_OLD}"/keograms/keogram-* keograms
 	fi
@@ -188,8 +185,8 @@ if [ "${SAVED_OLD}" = "true" ]; then
 	if [ -d "${WEBSITE_DIR_OLD}/startrails/thumbnails" ]; then
 		mv "${WEBSITE_DIR_OLD}/startrails/thumbnails" startrails
 	fi
-	count=$(ls -1 "${WEBSITE_DIR_OLD}/startrails" | wc -l)
-	if [ "${count}" -gt 1 ]; then
+	count=$(ls -1 "${WEBSITE_DIR_OLD}"/startrails/startrails-* 2>/dev/null | wc -l)
+	if [ "${count}" -ge 1 ]; then
 		echo -e "${GREEN}* Restoring prior startrails${NC}"
 		mv "${WEBSITE_DIR_OLD}"/startrails/startrails-* startrails
 	fi

@@ -1,0 +1,960 @@
+[
+{
+"name":"",
+"default":"",
+"description":"Daytime settings",
+"label":"",
+"type":"header",
+"display":1,
+"advanced":0
+},
+{
+"name":"dayautoexposure",
+"default":1,
+"description":"Activate to enable daytime auto-exposure.",
+"label":"Auto-Exposure",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
+"name":"daymaxexposure",
+"minimum":"camera-specific",
+"maximum":"camera-specific",
+"default":10000,
+"description":"Maximum daytime Auto-Exposure time in ms (1000ms = 1 sec).<br>Only applies if 'Auto-Exposure' is enabled.",
+"label":"Max Auto-Exposure",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"dayexposure",
+"minimum":"camera-specific",
+"maximum":"camera-specific",
+"default":0.5,
+"description":"Daytime manual exposure time in ms (1000ms = 1 sec). Can be a fraction.<br>If using Auto-Exposure, this number is used as a starting point.",
+"label":"Manual Exposure",
+"type":"text",
+"display":1,
+"advanced":1
+},
+{
+"name":"daymean",
+"minimum":0.0,
+"maximum":1.0,
+"default":0.5,
+"description":"The target mean brightness level when Auto-Exposure is on. 0.0 is pure black, 1.0 is pure white.<br>Best used when Auto-Exposure and Auto-Gain are on.",
+"label":"Mean Target",
+"type":"text",
+"display":0,
+"advanced":1
+},
+{
+"name":"daybrightness",
+"minimum":50,
+"maximum":160,
+"default":100,
+"description":"Changes the amount of light in the image.<br>Higher values are brighter.",
+"label":"Brightness",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"daydelay",
+"minimum":10,
+"default":15000,
+"description":"Delay between daytime images in milliseconds. 1000ms = 1 sec.",
+"label":"Delay",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"dayautogain",
+"default":0,
+"description":"Activate to enable dayime Auto-Gain.",
+"label":"Auto-Gain",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
+"name":"daymaxgain",
+"minimum":1,
+"maximum":"camera-specific",
+"default":200,
+"description":"Maximum gain when using Auto-Gain.",
+"label":"Max Auto-Gain",
+"type":"number",
+"display":1,
+"advanced":1
+},
+{
+"name":"daygain",
+"minimum":1,
+"maximum":"camera-specific",
+"default":1,
+"description":"Manually sets the light sensitivity of the camera.<br>A high value returns a brighter image but more noise too.",
+"label":"Gain",
+"type":"number",
+"display":1,
+"advanced":1
+},
+{
+"name":"daybin",
+"default":1,
+"description":"Binning level. 1x1 = binning OFF.",
+"label":"Binning",
+"type":"select",
+"options": [
+	{"value": 1, "label": "1x1"},
+	{"value": 2, "label": "2x2"},
+	{"value": 4, "label": "4x4"}
+],
+"display":1,
+"advanced":1
+},
+{
+"name":"dayawb",
+"default":0,
+"description":"Sets Auto White Balance.",
+"label":"Auto White Balance",
+"type":"checkbox",
+"display":0,
+"advanced":0
+},
+{
+"name":"daywbr",
+"minimum":0,
+"maximum":100,
+"default":53,
+"description":"Red component for the white balance.<br>When using Auto White Balance, this number is a starting point.",
+"label":"Red Balance",
+"type":"text",
+"display":0,
+"advanced":0
+},
+{
+"name":"daywbb",
+"minimum":0,
+"maximum":100,
+"default":90,
+"description":"Blue component for the white balance.<br>When using auto white balance, this number is a starting point.",
+"label":"Blue Balance",
+"type":"text",
+"display":0,
+"advanced":0
+},
+{
+"name":"dayskipframes",
+"minimum":0,
+"default":5,
+"description":"When starting Allsky during the day, skip up to this many frames while the software gets to the correct exposure.",
+"label":"Frames To Skip",
+"type":"number",
+"display":1,
+"advanced":1
+},
+
+{
+"name":"",
+"default":"",
+"description":"Nighttime settings",
+"label":"",
+"type":"header",
+"display":1,
+"advanced":0
+},
+{
+"name":"nightautoexposure",
+"default":1,
+"description":"Activate to enable nighttime auto-exposure.",
+"label":"Auto-Exposure",
+"type":"checkbox",
+"display":1,
+"advanced":0
+},
+{
+"name":"nightmaxexposure",
+"minimum":"",
+"maximum":"",
+"default":60000,
+"description":"Maximum nighttime Auto-Exposure time in ms (1000ms = 1 sec).<br>Only applies if 'Auto-Exposure' is enabled.",
+"label":"Max Auto-Exposure",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"nightexposure",
+"minimum":"camera-specific",
+"maximum":"none",
+"default":10000,
+"description":"Manual nighttime exposure time in ms (1000ms = 1 sec).<br>If using Auto-Exposure, this number is used as a starting point.",
+"label":"Manual Exposure",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"nightmean",
+"minimum":0.0,
+"maximum":1.0,
+"default":0.2,
+"description":"The target mean brightness level when Auto-Exposure is on. 0.0 is pure black, 1.0 is pure white.<br>Best used when Auto-Exposure and Auto-Gain are on.",
+"label":"Mean Target",
+"type":"text",
+"display":0,
+"advanced":1
+},
+{
+"name":"nightbrightness",
+"minimum":50,
+"maximum":160,
+"default":100,
+"description":"Changes the amount of light in the image.<br>Higher values are brighter.",
+"label":"Auto-Exposure Brightness",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"nightdelay",
+"minimum":10,
+"default":10,
+"description":"Delay between nighttime images in milliseconds (1000ms = 1 sec).",
+"label":"Delay",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"nightautogain",
+"default":0,
+"description":"Activate to enable nighttime Auto-Gain.",
+"label":"Auto-Gain",
+"type":"checkbox",
+"display":1,
+"advanced":0
+},
+{
+"name":"nightmaxgain",
+"minimum":1,
+"maximum":"camera-specific",
+"default":200,
+"description":"Maximum gain when using Auto-Gain.",
+"label":"Max Auto-Gain",
+"type":"number",
+"display":1,
+"advanced":1
+},
+{
+"name":"nightgain",
+"minimum":1,
+"maximum":"camera-specific",
+"default":50,
+"description":"Manually sets the light sensitivity of the camera.<br>A high value returns a brighter image but more noise too.",
+"label":"Gain",
+"type":"text",
+"display":1,
+"advanced":0
+},
+{
+"name":"nightbin",
+"default":1,
+"description":"Binning level. 1x1 = binning OFF.",
+"label":"Binning",
+"type":"select",
+"options": [
+	{"value": 1, "label": "1x1"},
+	{"value": 2, "label": "2x2"},
+	{"value": 4, "label": "4x4"}
+],
+"display":1,
+"advanced":0
+},
+{
+"name":"nightawb",
+"default":0,
+"description":"Activate to enable Auto White Balance (camera adjusts color).<br>When activated, the Red and Blue Balance numbers are used as a staring point.",
+"label":"Auto White Balance",
+"type":"checkbox",
+"display":1,
+"advanced":0
+},
+{
+"name":"nightwbr",
+"minimum":0,
+"maximum":100,
+"default":53,
+"description":"Red component for the white balance.",
+"label":"Red Balance",
+"type":"text",
+"display":1,
+"advanced":0
+},
+{
+"name":"nightwbb",
+"minimum":0,
+"maximum":100,
+"default":90,
+"description":"Blue component for the white balance.",
+"label":"Blue Balance",
+"type":"text",
+"display":1,
+"advanced":0
+},
+{
+"name":"nightskipframes",
+"minimum":0,
+"default":1,
+"description":"When starting Allsky at night, skip up to this many frames while the software gets to the correct exposure.",
+"label":"Frames To Skip",
+"type":"number",
+"display":1,
+"advanced":1
+},
+
+{
+"name":"",
+"default":"",
+"description":"Both daytime and nighttime settings",
+"label":"",
+"type":"header",
+"display":1,
+"advanced":0
+},
+{
+"name":"saturation",
+"minimum":"",
+"maximum":"",
+"default":50,
+"description":"-100 to 100 on Buster, 0.0 to 2.0 on Bullseye.",
+"label":"Saturation",
+"type":"text",
+"display":0,
+"advanced":0
+},
+{
+"name":"gamma",
+"minimum":0,
+"maximum":100,
+"default":50,
+"description":"Changes the difference between light and dark areas.<br>higher values increase contrast. <i>Not supported on all cameras</i>.",
+"label":"Gamma",
+"type":"number",
+"display":0,
+"advanced":0
+},
+{
+"name":"offset",
+"minimum":0,
+"maximum":"camera-specific",
+"default":0,
+"description":"Adds about 1/10 the specified value to every pixel to brighten everything.",
+"label":"Offset",
+"type":"number",
+"display":0,
+"advanced":1
+},
+{
+"name":"aggression",
+"minimum":0,
+"maximum":100,
+"default":75,
+"description":"How much of a calculated exposure change should be made during Auto-Exposure?<br>Lower numbers smooth out changes but take longer to react to brightness changes.",
+"label":"Aggression",
+"type":"number",
+"display":1,
+"advanced":1
+},
+{
+"name":"gaintransitiontime",
+"default":15,
+"description":"Number of <b>minutes</b> over which to increase or decrease the gain when switching between day and night.<br>This helps smooth brightness differences.  Only works if nighttime Auto-Gain is off. 0 disables transitions.",
+"label":"Gain Transition Time",
+"type":"number",
+"display":1,
+"advanced":1
+},
+{
+"name":"width",
+"minimum":1,
+"maximum":"camera-specific",
+"default":0,
+"description":"Image width in pixels. 0 = max sensor width.",
+"label":"Image Width",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"height",
+"minimum":1,
+"maximum":"camera-specific",
+"default":0,
+"description":"Image height in pixels. 0 = max sensor height.",
+"label":"Image Height",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"type",
+"default":99,
+"description":"Choose between auto, color (RGB24), or grayscale (RAW8 or RAW16 for mono cameras, Y8 for color cameras).<br>16 bits only works with PNG extension. 'auto' tries color first, then RAW16, then RAW8.",
+"label":"Image Type",
+"type":"select",
+"display":1,
+"options": [
+	{"value": 99, "label": "auto"},
+	{"value": 0, "label": "RAW8"},
+	{"value": 1, "label": "RGB24"},
+	{"value": 2, "label": "RAW16"},
+	{"value": 3, "label": "Y8"}
+],
+"advanced":1
+},
+{
+"name":"quality",
+"minimum":1,
+"maximum":100,
+"default":95,
+"description":"Range for a PNG image: 0-9. Range for a JPG image: 0-100.<br>Higher numbers produce larger, clearer files.",
+"label":"Quality",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"autousb",
+"default":1,
+"description":"Automatically set the USB bandwidth.",
+"label":"Auto USB Bandwidth",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
+"name":"usb",
+"minimum":40,
+"maximum":100,
+"default":80,
+"description":"USB bandwidth.<br>If you get ASI_ERROR_TIMEOUT errors in the log file, try chaning this value.",
+"label":"USB Bandwidth",
+"type":"number",
+"display":1,
+"advanced":1
+},
+{
+"name":"filename",
+"default":"image.jpg",
+"description":"Extensions allowed: .jpg or .png.<br>WARNING: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the 'Debug Level' to 3 and look in the log file.",
+"label":"Filename",
+"type":"text",
+"display":1,
+"checkchanges": true,
+"advanced":1
+},
+{
+"name":"rotation",
+"minimum":0,
+"maximum":"",
+"default":0,
+"description":"Set image rotation to enable proper orientation.  **NOTE**: on Bullseye only 180 is available.",
+"label":"Rotation",
+"type":"select",
+"options": [
+	{"value": 0, "label": "None"},
+	{"value": 90, "label": "90 degrees"},
+	{"value": 180, "label": "180 degrees"},
+	{"value": 270, "label": "270 degrees"}
+],
+"display":0,
+"advanced":0
+},
+{
+"name":"flip",
+"default":0,
+"description":"Select a flipping option if you want to reverse the image along an axis.",
+"label":"Flip",
+"type":"select",
+"display":1,
+"options": [
+	{"value": 0, "label": "None"},
+	{"value": 1, "label": "Horizontal"},
+	{"value": 2, "label": "Vertical"},
+	{"value": 3, "label": "Both"}
+],
+"advanced":0
+},
+{
+"name":"notificationimages",
+"default":1,
+"description":"Activate to display notification images, e.g., 'Camera is off during the day'.",
+"label":"Notification Images",
+"type":"checkbox",
+"display":1,
+"advanced":0
+},
+{
+"name":"coolerEnabled",
+"default":0,
+"description":"Activate to use cooling (works only on cooled cameras).",
+"label":"Cooling",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
+"name":"targetTemp",
+"minimum":"camera-specific",
+"maximum":"camera-specific",
+"default":0,
+"description":"Sensor's target temperature <i>when cooler is enabled</i> (degrees Celsius).",
+"label":"Target Temp.",
+"type":"number",
+"display":1,
+"advanced":1
+},
+{
+"name":"latitude",
+"default":"",
+"description":"Latitude of the camera. Needs a number (0 to 90) and direction (N or S), for example: 60.7N.",
+"label":"Latitude",
+"type":"text",
+"display":1,
+"checkchanges": true,
+"advanced":0
+},
+{
+"name":"longitude",
+"default":"",
+"description":"Longitude of the camera. Needs a number (0 to 180) and direction (E or W), for example: 135.05W.",
+"label":"Longitude",
+"type":"text",
+"display":1,
+"checkchanges": true,
+"advanced":0
+},
+{
+"name":"angle",
+"default":"-6",
+"description":"Altitude of the Sun in degrees relative to the horizon at which to switch between day and night.",
+"label":"Angle",
+"type":"text",
+"display":1,
+"checkchanges": true,
+"advanced":0
+},
+{
+"name":"darkframe",
+"default":0,
+"description":"Activate to capture dark frames. This mode hides text and time overlays.<br>Will continually take dark frames until restarted.",
+"label":"Capture Dark Frames",
+"type":"checkbox",
+"display":1,
+"advanced":0
+},
+{
+"name":"locale",
+"default":"en_US.UTF-8",
+"description":"Your locale, used to determine what the thousands and decimal separators are.<br>Type 'locale' at a command prompt to see your choices (use the LC_NUMERIC entry).",
+"label":"Locale",
+"type":"text",
+"display":1,
+"advanced":0
+},
+{
+"name":"histogrambox",
+"default":"500 500 50 50",
+"description":"Size of the histogram box (X and Y in pixels) and offset from left and top (0-100 percent). Sizes must be even numbers.",
+"label":"Histogram Box",
+"type":"text",
+"display":1,
+"advanced":1
+},
+{
+"name":"debuglevel",
+"default":0,
+"description":"Debug level, 0 is lowest level.",
+"label":"Debug Level",
+"type":"select",
+"options": [
+	{"value": 0, "label": 0},
+	{"value": 1, "label": 1},
+	{"value": 2, "label": 2},
+	{"value": 3, "label": 3},
+	{"value": 4, "label": 4}
+],
+"display":1,
+"advanced":0
+},
+{
+"name":"newexposure",
+"default":0,
+"description":"Activate to use the version 0.8 exposure method which decreases sensor temperature.  If you see ASI_ERROR_TIMEOUTs in the log file, deactivate this.",
+"label":"Version 0.8 Exposure",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
+"name":"alwaysshowadvanced",
+"default":0,
+"description":"Activate to always show the advanced options.",
+"label":"Always Show Advanced",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+
+{
+"name":"",
+"default":"",
+"description":"Image overlay settings",
+"label":"",
+"type":"header",
+"display":1,
+"advanced":0
+},
+{
+"name":"showTime",
+"default":1,
+"description":"Activate to display the time an image was taken on the overlay.",
+"label":"Show Time",
+"type":"checkbox",
+"display":1,
+"advanced":0
+},
+{
+"name":"timeformat",
+"default":"%Y%m%d %H:%M:%S",
+"description":"Determines the format of the displayed time. Run 'man 3 strftime' to see the options.",
+"label":"Time Format",
+"type":"text",
+"display":1,
+"advanced":0
+},
+{
+"name":"showTemp",
+"default":1,
+"description":"Activate to display the camera sensor temperature on the overlay.",
+"label":"Show Temperature",
+"type":"checkbox",
+"display":1,
+"advanced":0
+},
+{
+"name":"temptype",
+"default":"C",
+"description":"Unit(s) to display temperature in.",
+"label":"Temperature Units",
+"type":"select",
+"options": [
+	{"value": "C", "label": "Celcius"},
+	{"value": "F", "label": "Fahrenheit"},
+	{"value": "B", "label": "Both"}
+],
+"display":1,
+"advanced":0
+},
+{
+"name":"showExposure",
+"default":1,
+"description":"Activate to display the exposure length on the overlay.<br>If Auto-Exposure is set, '(auto)' will appear after the exposure time.",
+"label":"Show Exposure",
+"type":"checkbox",
+"display":1,
+"advanced":0
+},
+{
+"name":"showGain",
+"default":0,
+"description":"Activate to display the camera gain on the overlay.<br>If Auto-Gain is set, '(auto)' will appear after the gain value.",
+"label":"Show Gain",
+"type":"checkbox",
+"display":1,
+"advanced":0
+},
+{
+"name":"showBrightness",
+"default":0,
+"description":"Activate to display the Brightness value on the overlay.",
+"label":"Show Brightness",
+"type":"checkbox",
+"display":1,
+"advanced":0
+},
+{
+"name":"showUSB",
+"default":0,
+"description":"Activate to display the USB Bandwidth value on the overlay.<br>This is mostly for testing.",
+"label":"Show USB",
+"type":"checkbox",
+"display":0,
+"advanced":1
+},
+{
+"name":"showMean",
+"default":0,
+"description":"Activate to display the mean brightness on the overlay.",
+"label":"Show Mean Brightness",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
+"name":"showhistogrambox",
+"default":0,
+"description":"Enable to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
+"label":"Show Histogram Box",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
+"name":"showFocus",
+"default":0,
+"description":"Activate to display a focus metric to help you focus the camera.",
+"label":"Show Focus Metric",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
+"name":"text",
+"default":"",
+"description":"Text that appears below the optional time with the same color and size.",
+"label":"Text Overlay",
+"type":"widetext",
+"display":1,
+"advanced":0
+},
+{
+"name":"extratext",
+"default":"",
+"description":"Extra Text File (enter full path to the file).<br>Leave blank if NOT using an extra text file.",
+"label":"Extra Text File",
+"type":"widetext",
+"display":1,
+"checkchanges": true,
+"advanced":0
+},
+{
+"name":"extratextage",
+"default":0,
+"description":"The maximum age of the Extra Text File in seconds.<br>After this time the contents of the file will no longer be displayed. Set to 0 to always display.",
+"label":"Max Age Of Extra",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"textlineheight",
+"default":30,
+"description":"The line height of the text in pixels. If increasing the font size causes the text to overlap then increase this value.",
+"label":"Line Height",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"textx",
+"default":15,
+"description":"Text placement horizontal from LEFT in pixels.",
+"label":"Text X",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"texty",
+"default":35,
+"description":"Text placement vertical from TOP in pixels.",
+"label":"Text Y",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"fontname",
+"default":0,
+"description":"Font name for the text overlay. Used for both large and small text.",
+"label":"Font Name",
+"type":"select",
+"display":1,
+"options": [
+	{"value": 0, "label": "Simplex"},
+	{"value": 1, "label": "Plain"},
+	{"value": 2, "label": "Duplex"},
+	{"value": 3, "label": "Complex"},
+	{"value": 4, "label": "Triplex"},
+	{"value": 5, "label": "Complex Small"},
+	{"value": 6, "label": "Script Simplex"},
+	{"value": 7, "label": "Script Complex"}
+],
+"advanced":0
+},
+{
+"name":"fontcolor",
+"minimum":0,
+"maximum":255,
+"default":"255 255 255",
+"description":"Blue, Green, and Red (BGR) values of text color.<br>NOTE: When using RAW 16 only the first two values are used i.e., 255 128 0.",
+"label":"Font Color",
+"type":"text",
+"display":1,
+"advanced":0
+},
+{
+"name":"smallfontcolor",
+"minimum":0,
+"maximum":255,
+"default":"0 0 255",
+"description":"BGR value of text color.<br>NOTE: When using RAW 16 only the first two values are used i.e., 255 128 0.",
+"label":"Small Font Color",
+"type":"text",
+"display":1,
+"advanced":0
+},
+{
+"name":"fonttype",
+"default":0,
+"description":"Choose between smooth font lines (antialiased), 8-pixel, or 4 pixel connectivity (harder edges).",
+"label":"Font Smoothness",
+"type":"select",
+"display":1,
+"options": [
+	{"value": 0, "label": "Antialiased"},
+	{"value": 1, "label": "8 connected"},
+	{"value": 2, "label": "4 connected"}
+],
+"advanced":0
+},
+{
+"name":"fontsize",
+"minimum":1,
+"maximum":100,
+"default":7,
+"description":"Text Font Size. The time, if displayed, will use this size; other text displayed will be about 20% smaller.",
+"label":"Font Size",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"fontline",
+"minimum":1,
+"maximum":20,
+"default":1,
+"description":"Text Font Line Thickness.",
+"label":"Font Weight",
+"type":"number",
+"display":1,
+"advanced":0
+},
+{
+"name":"outlinefont",
+"default":0,
+"description":"Adds a black outline to the text overlay to improve contrast.",
+"label":"Use Outline Font",
+"type":"checkbox",
+"display":1,
+"advanced":0
+},
+
+
+{
+"name":"",
+"default":"",
+"description":"Allsky Map and Website Settings",
+"label":"",
+"type":"header",
+"display":1,
+"advanced":0
+},
+{
+"name":"showonmap",
+"default":0,
+"description":"Activate to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>.",
+"label":"Show on Map",
+"type":"checkbox",
+"display":1,
+"checkchanges": true,
+"advanced":0
+},
+{
+"name":"websiteurl",
+"default":"",
+"description":"The URL of your website, for example: https://www.thomasjacquin.com/allsky.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
+"label":"Website URL",
+"type":"widetext",
+"display":1,
+"checkchanges": true,
+"advanced":0
+},
+{
+"name":"imageurl",
+"default":"",
+"description":"The URL of the image on your website, for example: https://wwww.thomasjacquin.com/allsky/image.jpg.<br/>Right-click on the image and select <i>Copy Image Address</i>.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
+"label":"Image URL",
+"type":"widetext",
+"display":1,
+"checkchanges": true,
+"advanced":0
+},
+{
+"name":"location",
+"default":"",
+"description":"The location of your camera, for example: Whitehorse, YT.<br>No need to enter country since it'll be obvious looking at the map.<br>This setting and the remaining ones also appear on the Allsky Website, if installed.",
+"label":"Location",
+"type":"widetext",
+"display":1,
+"checkchanges": true,
+"advanced":0
+},
+{
+"name":"owner",
+"default":"",
+"description":"The owner of the camera. It can be your name or an association or observatory, etc.",
+"label":"Owner",
+"type":"text",
+"display":1,
+"checkchanges": true,
+"advanced":0
+},
+{
+"name":"camera",
+"default":"",
+"description":"The model of your camera, for example: ASI 224MC or RPiHQ.",
+"label":"Camera",
+"type":"widetext",
+"display":1,
+"checkchanges": true,
+"advanced":0
+},
+{
+"name":"lens",
+"default":"",
+"description":"The lens you're using on your camera, for example: Arecont 1.55.",
+"label":"Lens",
+"type":"text",
+"display":1,
+"checkchanges": true,
+"advanced":0
+},
+{
+"name":"computer",
+"default":"",
+"description":"The computer inside your allsky enclosure, for example: Raspberry Pi 3.",
+"label":"Computer",
+"type":"widetext",
+"display":1,
+"checkchanges": true,
+"advanced":0
+}
+]
+

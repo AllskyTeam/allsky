@@ -61,7 +61,7 @@ if [[ ${STARTRAILS} == "true" ]]; then
 fi
 
 # Generate timelapse from collected images.
-# Use timelapse.sh instead of putting all the commands here so users can easily
+# Use generateForDay.sh instead of putting all the commands here so users can easily
 # test the timelapse creation, which sometimes has issues.
 if [[ ${TIMELAPSE} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Timelapse"

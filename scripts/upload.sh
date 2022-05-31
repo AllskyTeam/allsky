@@ -144,6 +144,7 @@ else # sftp/ftp/ftps
 		echo set net:timeout 10
 
 		[ -n "${REMOTE_PORT}" ] && REMOTE_PORT="-p ${REMOTE_PORT}"
+		# shellcheck disable=SC2153
 		echo "open --user '${REMOTE_USER}' --password '${P}' ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
 		if [ "${DEBUG}" = "true" ]; then
 			echo "quote PWD"

@@ -77,6 +77,9 @@ REMOTE_USER=""
 	# Enter the password of the login on your FTP server.  Does not apply to PROTOCOL=scp.
 REMOTE_PASSWORD=""
 
+	# Optionally enter the port required by your FTP server.  This rarely has to be done.
+REMOTE_PORT=""
+
 	# If you need special commands executed when connecting to the FTP server enter them here.
 	# See the Wiki (https://github.com/thomasjacquin/allsky/wiki/11-Troubleshooting:-uploads)
 	# for example commands to enter into LFTP_COMMANDS.

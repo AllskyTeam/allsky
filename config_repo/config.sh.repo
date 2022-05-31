@@ -113,6 +113,9 @@ TIMELAPSE_EXTRA_PARAMETERS=""
 # Set to "true" to upload the timelapse video to your website at the end of each night.
 UPLOAD_VIDEO="false"
 
+# Set to "true" to upload timelapse video' thumbnail to your website at the end of each night.
+TIMELAPSE_UPLOAD_THUMBNAIL="false"
+
 
 ########## Keogram
 # Set to "true" to generate a keogram at the end of each night.

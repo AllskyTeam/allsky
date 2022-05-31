@@ -138,6 +138,6 @@ else
 	echo -e "${ME}: ${GREEN}Keeping sequence${NC}"
 fi
 
-# timelapse is uploaded via generateForDay.sh or endOfNight.sh, which called us.
+# timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
 exit 0

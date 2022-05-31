@@ -398,8 +398,9 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* You can add an optional link to a personal website at the top of the page.
 			* You can add a border around the image to have it stand out on the page.
 			* You can hide the "Make Your Own" link on the bottom right of the page.
+		* Timelapse video thumbnails can be created on the Pi and uploaded to a remote server.  This resolves issues with most remote servers that don't support creating thumbnails.  See the `TIMELAPSE_THUMBNAIL_UPLOAD` setting.
 		* The Timelapse, Keogram, and Startrails pages now have titles so it's obvious what you're looking at.
-		* You can specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`).  This can be helpful when trying to get the overlay to line up with the actual stars.
+		* You can specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`, which has been deprecated).  This can be helpful when trying to get the overlay to line up with the actual stars.
 		* The **virtualsky** program that draws the constellation overlay was updated to the latest release.  This added some new settings, including the ability to specify the opacity of the overlay.  It also adds a small box with a question mark in it when viewing the overlay; clicking on the icon brings up a list of commands you can perforrm.
 		* Font Awesome was updated to 5.14 and its file is now included with the website, eliminating a call to the Internet.
 		* The name of the home page file is now `index.php`.  The old `index.html` file is gone.  This change allowed some of the new features above.

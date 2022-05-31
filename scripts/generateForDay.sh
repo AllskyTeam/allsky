@@ -147,6 +147,7 @@ else
 			"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} "${UPLOAD_FILE}" "${DIRECTORY}" "${DESTINATION_NAME}" "${FILE_TYPE}" "${WEB_DIRECTORY}"
 			RET=$?
 			[ ${RET} -eq 0 -a ${SILENT} = "false" ] && echo "${DESTINATION_NAME} uploaded"
+			return ${RET}
 		else
 			echo -en "${YELLOW}"
 			echo -n "WARNING: ${FILE_TYPE} file '${UPLOAD_FILE}' not found; skipping."
@@ -200,14 +201,25 @@ fi
 
 if [ "${DO_TIMELAPSE}" = "true" ] ; then
 	VIDEOS_FILE="allsky-${DATE}.mp4"
+	THUMBNAIL_FILE="allsky-${DATE}.jpg"
 	UPLOAD_FILE="${DATE_DIR}/${VIDEOS_FILE}"
+	UPLOAD_THUMBNAIL="${DATE_DIR}/${THUMBNAIL_FILE}"
 	if [ "${TYPE}" = "GENERATE" ]; then
 		CMD="'${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE}"
 		generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
+		RET=$?
+		if [ ${RET} -eq 0 ] && [ "${TIMELAPSE_UPLOAD_THUMBNAIL}" = "true" ]; then
+			ffmpeg -loglevel error -ss 00:00:05 -i "${UPLOAD_FILE}" \
+				-filter:v scale="${THUMBNAIL_SIZE_X}:-1" -frames:v 1 "${UPLOAD_THUMBNAIL}"
+		fi
 	else
 		upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
+		RET=$?
+		if [ ${RET} -eq 0 ] && [ "${TIMELAPSE_UPLOAD_THUMBNAIL}" = "true" ]; then
+			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" "${THUMBNAIL_FILE}" "" "${WEB_VIDEOS_DIR}/thumbnails"
+		fi
 	fi
-	[ $? -ne 0 ] && let EXIT_CODE=${EXIT_CODE}+1
+	[ $RET -ne 0 ] && let EXIT_CODE=${EXIT_CODE}+1
 fi
 
 

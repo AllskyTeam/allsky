@@ -143,7 +143,8 @@ else # sftp/ftp/ftps
 		echo set net:max-retries 2
 		echo set net:timeout 10
 
-		echo "open --user '${REMOTE_USER}' --password '${P}' '${PROTOCOL}://${REMOTE_HOST}'"
+		[ -n "${REMOTE_PORT}" ] && REMOTE_PORT="-p ${REMOTE_PORT}"
+		echo "open --user '${REMOTE_USER}' --password '${P}' ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
 		if [ "${DEBUG}" = "true" ]; then
 			echo "quote PWD"
 			echo "ls"

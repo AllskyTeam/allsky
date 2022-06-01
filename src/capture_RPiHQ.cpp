@@ -321,7 +321,7 @@ int RPiHQcapture(bool autoExposure, int exposure_us, int bin, bool autoGain, dou
 		stringstream strReinforcement;
 		strExposureTime <<  myRaspistillSetting.shutter_us;
 		strReinforcement << myRaspistillSetting.analoggain;
-		
+
 		command += " --exif IFD0.Artist=li_" + strExposureTime.str() + "_" + strReinforcement.str();
 	}
 
@@ -476,6 +476,7 @@ int main(int argc, char *argv[])
 	int nightExposure_us		= DEFAULT_NIGHTEXPOSURE;
 	int nightMaxAutoexposure_ms	= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
 	int currentExposure_us		= NOT_SET;
+	int currentMaxAutoexposure_us = NOT_SET;	// _us to match ZWO version
 	bool dayAutoExposure		= DEFAULT_DAYAUTOEXPOSURE;
 	bool nightAutoExposure		= DEFAULT_NIGHTAUTOEXPOSURE;
 	long lastExposure_us 		= 0;		// last exposure taken
@@ -580,7 +581,7 @@ int main(int argc, char *argv[])
 			{
 				isLibcamera = strcmp(argv[i+1], "libcamera") == 0 ? true : false;
 			}
-			else if (strcmp(argv[i], "-saveDir") == 0)
+			else if (strcmp(argv[i], "-save_dir") == 0)
 			{
 				saveDir = argv[++i];
 			}
@@ -610,9 +611,13 @@ int main(int argc, char *argv[])
 			}
 			else if (strcmp(argv[i], "-daymean") == 0)
 			{
-				myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
-				i++;
+				// If the user specified 0.0, that means don't use modeMean auto exposure/gain.
+				double m = atof(argv[i++ + 1]);
+				if (m > 0.0)
+				{
+					myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,m));
+					myModeMeanSetting.mode_mean = true;
+				}
 			}
 			else if (strcmp(argv[i], "-daybrightness") == 0)
 			{
@@ -673,12 +678,14 @@ i++;
 			{
 				nightExposure_us = atof(argv[++i]) * US_IN_MS;
 			}
-			else if (strcmp(argv[i], "-nightmean") == 0 || strcmp(argv[i], "-mean-value") == 0)
+			else if (strcmp(argv[i], "-nightmean") == 0)
 			{
-				myModeMeanSetting.mean_value = std::min(1.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.nightMean = myModeMeanSetting.mean_value;
-				myModeMeanSetting.mode_mean = true;
-				i++;
+				double m = atof(argv[i++ + 1]);
+				if (m > 0.0)
+				{
+					myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,m));
+					myModeMeanSetting.mode_mean = true;
+				}
 			}
 			else if (strcmp(argv[i], "-nightbrightness") == 0)
 			{
@@ -995,7 +1002,7 @@ i++;
 
 		printf("\n");
 		printf(" -daytime				- Default = %s: 1 enables capture daytime images\n", yesNo(DEFAULT_DAYTIMECAPTURE));
-		printf(" -saveDir				- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
+		printf(" -save_dir				- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
 		printf(" -preview				- 1 previews the captured images. Only works with a Desktop Environment\n");
 		printf(" -cmd					- Command being used to take pictures (Buster: raspistill, Bullseye: libcamera-still\n");
 
@@ -1175,9 +1182,6 @@ i++;
 	printf(" Show Focus Metric: %s\n", yesNo(showFocus));
 	printf(" Mode Mean: %s\n", yesNo(myModeMeanSetting.mode_mean));
 	if (myModeMeanSetting.mode_mean) {
-		if (myModeMeanSetting.dayMean == -1.0) {
-			myModeMeanSetting.dayMean = myModeMeanSetting.mean_value;
-		}
 		printf("    Mean Value (night): %1.3f\n", myModeMeanSetting.nightMean);
 		printf("    Mean Value (day): %1.3f\n", myModeMeanSetting.dayMean);
 		printf("    Threshold: %1.3f\n", myModeMeanSetting.mean_threshold);
@@ -1211,13 +1215,13 @@ i++;
 			currentGain = nightGain;
 			currentMaxGain = nightMaxGain;		// not needed since we're not using auto gain, but set to be consistent
 			currentDelay_ms = nightDelay_ms;
-			currentExposure_us = nightExposure_us;
+			currentMaxAutoexposure_us = currentExposure_us = nightMaxAutoexposure_ms * US_IN_MS;
 			currentBin = nightBin;
 			currentBrightness = nightBrightness;
 			currentAutoAWB = false;
 			currentWBR = nightWBR;
 			currentWBB = nightWBB;
-			myModeMeanSetting.mode_mean = MEAN_AUTO_OFF;
+			currentMean = NOT_SET;
 
  			Log(0, "Taking dark frames...\n");
 
@@ -1276,6 +1280,7 @@ i++;
 					Log(0, "==========\n=== Starting daytime capture ===\n==========\n");
 
 					currentExposure_us = dayExposure_us;
+					currentMaxAutoexposure_us = dayMaxAutoexposure_ms * US_IN_MS;
 					currentAutoExposure = dayAutoExposure;
 					currentBrightness = dayBrightness;
 					currentAutoAWB = dayAutoAWB;
@@ -1302,17 +1307,27 @@ i++;
 				currentWBB = nightWBB;
 				currentDelay_ms = nightDelay_ms;
 				currentBin = nightBin;
+				currentMaxAutoexposure_us = nightMaxAutoexposure_ms * US_IN_MS;
 				currentGain = nightGain;
 				currentMaxGain = nightMaxGain;
 				currentAutoGain = nightAutoGain;
 				currentMean = myModeMeanSetting.nightMean;
 			}
 		}
-		if (myModeMeanSetting.mode_mean)
+		if (currentMean > 0.0)
 		{
+			myModeMeanSetting.mode_mean = true;
 			myModeMeanSetting.mean_value = currentMean;
-// TODO: set to currentMaxExposure when implemented
-			RPiHQInit(currentAutoExposure, currentExposure_us, currentAutoGain, currentMaxGain, myRaspistillSetting, myModeMeanSetting);
+			RPiHQInit(currentAutoExposure, currentMaxAutoexposure_us, currentAutoGain, currentMaxGain, myRaspistillSetting, myModeMeanSetting);
+		}
+		else
+		{
+			myModeMeanSetting.mode_mean = false;
+		}
+
+		if (currentAutoExposure && currentExposure_us > currentMaxAutoexposure_us)
+		{
+			currentExposure_us = currentMaxAutoexposure_us;
 		}
 
 		// Want initial exposures to have the exposure time and gain the user specified.

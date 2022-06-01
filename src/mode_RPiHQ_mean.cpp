@@ -46,7 +46,7 @@ double calcExposureTimeEff (int exposureLevel, modeMeanSetting &currentModeMeanS
 }
 
 // set limits.  aeg == Auto Exposure / Gain
-void aeg_Init(bool autoExposure, int exposure_us, bool autoGain, double gain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
+void aegInit(bool autoExposure, int exposure_us, bool autoGain, double gain, raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
 {
 	// Init some values first
 	if (currentModeMeanSetting.init) {

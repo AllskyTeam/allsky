@@ -27,8 +27,8 @@ struct modeMeanSetting {
 	double exposureLevelMin	= NOT_SET;		// Set during initialization.
 	double exposureLevelMax	= NOT_SET;		// Set during initialization.
 	double meanValue = NOT_SET;				// Default mean value for well exposed images.
-	double nightMean = DEFAULT_NIGHTMEAN;	// Default mean value for well exposed nighttime images.  User can change.
-	double dayMean = DEFAULT_DAYMEAN;		// Default mean value for well exposed daytime images.  User can change.
+	double nightMean = DEFAULT_NIGHTMEAN;	// Default mean value for nighttime images.  User can change.
+	double dayMean = DEFAULT_DAYMEAN;		// Default mean value for daytime images.  User can change.
 	double mean_threshold = DEFAULT_MEAN_THRESHOLD;	// threshold value.
 	double shuttersteps = 6.0;				// shuttersteps, i.e., exposure time.
 	int historySize = 3;					// Number of last images for mean target calculation.

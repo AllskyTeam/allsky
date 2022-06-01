@@ -1239,7 +1239,7 @@ i++;
 				}
 
 				// Check if images should not be captured during day-time
-				if (daytimeCapture != 1)
+				if (! daytimeCapture)
 				{
 					// Only display messages once a day.
 					if (displayedNoDaytimeMsg == 0) {

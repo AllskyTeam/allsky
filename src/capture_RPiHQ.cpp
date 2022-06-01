@@ -618,6 +618,10 @@ int main(int argc, char *argv[])
 					myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,m));
 					myModeMeanSetting.modeMean = true;
 				}
+				else
+				{
+					myModeMeanSetting.dayMean = 0.0;
+				}
 			}
 			else if (strcmp(argv[i], "-daybrightness") == 0)
 			{
@@ -685,6 +689,10 @@ i++;
 				{
 					myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,m));
 					myModeMeanSetting.modeMean = true;
+				}
+				else
+				{
+					myModeMeanSetting.nightMean = 0.0;
 				}
 			}
 			else if (strcmp(argv[i], "-nightbrightness") == 0)

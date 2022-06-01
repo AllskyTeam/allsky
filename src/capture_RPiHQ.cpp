@@ -185,7 +185,7 @@ int RPiHQcapture(bool autoExposure, int exposure_us, int bin, bool autoGain, dou
 		// normally short so the camera can home in on the correct exposure quickly.
 		if (autoExposure)
 		{
-			if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
+			if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 				ss << 1;	// We do our own auto-exposure so no need to wait at all.
 			else if (dayOrNight == "DAY")
 				ss << 2 * MS_IN_SEC;
@@ -237,7 +237,7 @@ int RPiHQcapture(bool autoExposure, int exposure_us, int bin, bool autoGain, dou
 			command += " --mode 4 --width 1012 --height 760";
 	}
 
-	if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
+	if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 		exposure_us = myRaspistillSetting.shutter_us;
 
 	if (exposure_us < 1)
@@ -248,7 +248,7 @@ int RPiHQcapture(bool autoExposure, int exposure_us, int bin, bool autoGain, dou
 	// Check if automatic determined exposure time is selected
 	if (autoExposure)
 	{
-		if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) {
+		if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) {
 			ss.str("");
 			ss << exposure_us;
 			if (! libcamera)
@@ -274,7 +274,7 @@ int RPiHQcapture(bool autoExposure, int exposure_us, int bin, bool autoGain, dou
 	// Check if auto gain is selected
 	if (autoGain)
 	{
-		if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
+		if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 		{
 			ss.str("");
 			ss << myRaspistillSetting.analoggain;
@@ -316,7 +316,7 @@ int RPiHQcapture(bool autoExposure, int exposure_us, int bin, bool autoGain, dou
 			command += " --analoggain " + ss.str();
 	}
 
-	if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) {
+	if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) {
 		stringstream strExposureTime;
 		stringstream strReinforcement;
 		strExposureTime <<  myRaspistillSetting.shutter_us;
@@ -616,7 +616,7 @@ int main(int argc, char *argv[])
 				if (m > 0.0)
 				{
 					myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,m));
-					myModeMeanSetting.mode_mean = true;
+					myModeMeanSetting.modeMean = true;
 				}
 			}
 			else if (strcmp(argv[i], "-daybrightness") == 0)
@@ -684,7 +684,7 @@ i++;
 				if (m > 0.0)
 				{
 					myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,m));
-					myModeMeanSetting.mode_mean = true;
+					myModeMeanSetting.modeMean = true;
 				}
 			}
 			else if (strcmp(argv[i], "-nightbrightness") == 0)
@@ -883,25 +883,25 @@ i++;
 			else if (strcmp(argv[i], "-mean-threshold") == 0)
 			{
 				myModeMeanSetting.mean_threshold = std::min(0.1,std::max(0.0001,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
+				myModeMeanSetting.modeMean = true;
 				i++;
 			}
 			else if (strcmp(argv[i], "-mean-p0") == 0)
 			{
 				myModeMeanSetting.mean_p0 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
+				myModeMeanSetting.modeMean = true;
 				i++;
 			}
 			else if (strcmp(argv[i], "-mean-p1") == 0)
 			{
 				myModeMeanSetting.mean_p1 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
+				myModeMeanSetting.modeMean = true;
 				i++;
 			}
 			else if (strcmp(argv[i], "-mean-p2") == 0)
 			{
 				myModeMeanSetting.mean_p2 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.mode_mean = true;
+				myModeMeanSetting.modeMean = true;
 				i++;
 			}
 		}
@@ -1180,8 +1180,8 @@ i++;
 	printf(" Show Brightness: %s\n", yesNo(showBrightness));
 	printf(" Show Mean Brightness: %s\n", yesNo(showMean));
 	printf(" Show Focus Metric: %s\n", yesNo(showFocus));
-	printf(" Mode Mean: %s\n", yesNo(myModeMeanSetting.mode_mean));
-	if (myModeMeanSetting.mode_mean) {
+	printf(" Mode Mean: %s\n", yesNo(myModeMeanSetting.modeMean));
+	if (myModeMeanSetting.modeMean) {
 		printf("    Mean Value (night): %1.3f\n", myModeMeanSetting.nightMean);
 		printf("    Mean Value (day): %1.3f\n", myModeMeanSetting.dayMean);
 		printf("    Threshold: %1.3f\n", myModeMeanSetting.mean_threshold);
@@ -1316,13 +1316,13 @@ i++;
 		}
 		if (currentMean > 0.0)
 		{
-			myModeMeanSetting.mode_mean = true;
-			myModeMeanSetting.mean_value = currentMean;
-			RPiHQInit(currentAutoExposure, currentMaxAutoexposure_us, currentAutoGain, currentMaxGain, myRaspistillSetting, myModeMeanSetting);
+			myModeMeanSetting.modeMean = true;
+			myModeMeanSetting.meanValue = currentMean;
+			aegInit(currentAutoExposure, currentMaxAutoexposure_us, currentAutoGain, currentMaxGain, myRaspistillSetting, myModeMeanSetting);
 		}
 		else
 		{
-			myModeMeanSetting.mode_mean = false;
+			myModeMeanSetting.modeMean = false;
 		}
 
 		if (currentAutoExposure && currentExposure_us > currentMaxAutoexposure_us)
@@ -1400,7 +1400,7 @@ i++;
 				if (! takingDarkFrames)
 				{
 					lastExposure_us = myRaspistillSetting.shutter_us;
-					if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
+					if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 						lastGain =  myRaspistillSetting.analoggain;
 					else
 						lastGain = currentGain;	// ZWO gain=0.1 dB , RPiHQ gain=factor
@@ -1408,15 +1408,15 @@ i++;
 					int iYOffset = 0;
 
 					mean = -1;
-					if (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
+					if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
-						mean = RPiHQcalcMean(pRgb, currentExposure_us, currentGain, myRaspistillSetting, myModeMeanSetting);
+						mean = aegCalcMean(pRgb, currentExposure_us, currentGain, myRaspistillSetting, myModeMeanSetting);
 						Log(2, "  > Got exposure: %s,", length_in_units(currentExposure_us, false));
 						Log(2, " shutter: %s, quickstart: %d, mean=%1.3f\n", length_in_units(myRaspistillSetting.shutter_us, false), myModeMeanSetting.quickstart, mean);
 						if (mean == -1)
 						{
 							numErrors++;
-							Log(0, "ERROR: RPiHQcalcMean() returned mean of -1.\n");
+							Log(0, "ERROR: aegCalcMean() returned mean of -1.\n");
 							Log(1, "  > Sleeping from failed exposure: %.1f seconds\n", (float)currentDelay_ms / MS_IN_SEC);
 							usleep(currentDelay_ms * US_IN_MS);
 							continue;
@@ -1453,8 +1453,8 @@ i++;
 				snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), fullFilename);
 
 				// -999 for temperature says the camera doesn't support it
-				// TODO: in the future the calculation of mean should independent from mode_mean. -1 means don't display.
-				float m = (myModeMeanSetting.mode_mean && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF) ? mean : -1.0;
+				// TODO: in the future the calculation of mean should independent from modeMean. -1 means don't display.
+				float m = (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) ? mean : -1.0;
 				add_variables_to_command(cmd, lastExposure_us, currentBrightness, m,
 					currentAutoExposure, currentAutoGain, currentAutoAWB, currentWBR, currentWBB,
 					-999, lastGain, (int)round(20.0 * 10.0 * log10(lastGain)),
@@ -1464,7 +1464,7 @@ i++;
 				system(cmd);
 
 				long s;
-				if (myModeMeanSetting.mode_mean && myModeMeanSetting.quickstart && myModeMeanSetting.mean_auto != MEAN_AUTO_OFF)
+				if (myModeMeanSetting.modeMean && myModeMeanSetting.quickstart && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 				{
 					s = 1 * US_IN_SEC;
 				}

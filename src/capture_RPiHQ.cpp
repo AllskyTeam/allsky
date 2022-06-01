@@ -42,7 +42,7 @@ using namespace std;
 
 // These are global so they can be used by other routines.  Variables for command-line settings are first.
 int flip					= DEFAULT_FLIP;
-char const *strFlip`		= "";
+char const *strFlip			= "";
 bool tty					= false;	// are we on a tty?
 bool notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
 char const *saveDir			= DEFAULT_SAVEDIR;

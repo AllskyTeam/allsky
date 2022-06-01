@@ -198,7 +198,7 @@ int RPiHQcapture(bool auto_exposure, int exposure_us, int bin, bool auto_gain, d
 		else
 		{
 			// Manual exposure shots don't need any time to home in since we're specifying the time.
-			ss << 10;
+			ss << 1;
 		}
 		command += " --timeout " + ss.str();
 		command += " --nopreview";

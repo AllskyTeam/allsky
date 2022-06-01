@@ -2030,7 +2030,7 @@ set_auto_exposure = false;	// XXXXXXXXXXXX testing
 				displayedNoDaytimeMsg = false;
 			}
 
-			if (daytimeCapture != 1)
+			if (! daytimeCapture)
 			{
 				// Only display messages once a day.
 				if (! displayedNoDaytimeMsg) {

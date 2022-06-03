@@ -122,7 +122,7 @@
 "description":"Sets Auto White Balance.",
 "label":"Auto White Balance",
 "type":"checkbox",
-"display":0,
+"display":1,
 "advanced":0
 },
 {
@@ -133,7 +133,7 @@
 "description":"Red component for the white balance.<br>When using Auto White Balance, this number is a starting point.",
 "label":"Red Balance",
 "type":"text",
-"display":0,
+"display":1,
 "advanced":0
 },
 {
@@ -144,7 +144,7 @@
 "description":"Blue component for the white balance.<br>When using auto white balance, this number is a starting point.",
 "label":"Blue Balance",
 "type":"text",
-"display":0,
+"display":1,
 "advanced":0
 },
 {

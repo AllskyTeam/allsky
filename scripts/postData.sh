@@ -21,9 +21,9 @@ source "${ALLSKY_CONFIG}/config.sh"
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
-angle=$(jq -r '.angle' "${CAMERA_SETTINGS}")
-latlong=$(jq -r '.latitude,.longitude' "${CAMERA_SETTINGS}")
-timezone=$(date "+%z")
+angle="$(jq -r '.angle' "${CAMERA_SETTINGS}")"
+latlong="$(jq -r '.latitude,.longitude' "${CAMERA_SETTINGS}")"
+timezone="$(date "+%z")"
 
 # If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
 # If nighttime happens before noon, sunwait returns "--:-- (Polar night)"

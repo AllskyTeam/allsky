@@ -346,7 +346,7 @@
 "label":"Gamma",
 "type":"number",
 "display":0,
-"advanced":0
+"advanced":1
 },
 {
 "name":"offset",

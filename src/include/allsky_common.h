@@ -78,9 +78,10 @@
 
 // Exit codes.  Need to match what's in allsky.sh
 #define EXIT_OK						0
-#define EXIT_RESTARTING				98		// process is restarting, i.e., stop, then start
-#define EXIT_RESET_USB				99		// need to reset USB bus; cannot continue
+#define EXIT_RESTARTING				98		// Process is restarting, i.e., stop, then start
+#define EXIT_RESET_USB				99		// Need to reset USB bus; cannot continue
 #define EXIT_ERROR_STOP				100		// Got an unrecoverable ERROR
+#define EXIT_NO_CAMERA				101		// Could not find a camera - is unrecoverable
 
 // Global variables and functions.
 extern int debugLevel;

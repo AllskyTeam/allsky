@@ -1115,7 +1115,6 @@ i++;
 			else if (strcmp(argv[i], "-offset") == 0)
 			{
 				offset = atoi(argv[++i]);
-{ int x; if (offset) x=1; if (x) x=1;} // This keeps the compiler quiet.    TODO: implement offset
 			}
 			else if (strcmp(argv[i], "-aggression") == 0)
 			{
@@ -1344,7 +1343,7 @@ i++;
 	if (help)
 	{
 		printf("%sUsage:\n", c(KRED));
-		printf(" ./capture -width 640 -height 480 -nightexposure 5000000 -gamma 50 -type 1 -nightbin 1 -filename Lake-Laberge.PNG\n\n");
+		printf(" ./capture -width 640 -height 480 -nightexposure 5000000 -type 1 -nightbin 1 -filename Lake-Laberge.PNG\n\n");
 		printf("%s", c(KNRM));
 
 		printf("%sAvailable Arguments:\n", c(KYEL));
@@ -1381,6 +1380,7 @@ i++;
 		printf(" -nightskipframes		- Default = %d: Number of auto-exposure frames to skip when starting software during nighttime.\n", DEFAULT_NIGHTSKIPFRAMES);
 
 		printf(" -gamma					- Default = %d: Gamma level\n", DEFAULT_GAMMA);
+		printf(" -offset				- Default = %d: Offset\n", DEFAULT_OFFSET);
 		printf(" -aggression			- Default = %d%%: Percent of exposure change to make, similar to PHD2.\n", DEFAULT_AGGRESSION);
 		printf(" -gaintransitiontime	- Default = %'d: Seconds to transition gain from day-to-night or night-to-day.  0 disable it.\n", DEFAULT_GAIN_TRANSITION_TIME);
 		printf(" -width					- Default = %d = Camera Max Width\n", DEFAULT_WIDTH);
@@ -1879,6 +1879,7 @@ i++;
 		printf("\n");
 	}
 	printf(" Gamma: %d\n", gamma);
+	printf(" Offset: %d\n", offset);
 	printf(" USB Speed: %d, auto: %s\n", asiBandwidth, yesNo(asiAutoBandwidth));
 	printf(" Flip Image: %s (%d)\n", strFlip, flip);
 	printf(" Filename: %s\n", fileName);
@@ -1929,6 +1930,7 @@ i++;
 	setControl(CamNum, ASI_BANDWIDTHOVERLOAD, asiBandwidth, asiAutoBandwidth ? ASI_TRUE : ASI_FALSE);
 	setControl(CamNum, ASI_HIGH_SPEED_MODE, 0, ASI_FALSE);	// ZWO sets this in their program
 	setControl(CamNum, ASI_GAMMA, gamma, ASI_FALSE);
+	setControl(CamNum, ASI_OFFSET, offset, ASI_FALSE);
 	setControl(CamNum, ASI_FLIP, flip, ASI_FALSE);
 
 	if (ASICameraInfo.IsCoolerCam)

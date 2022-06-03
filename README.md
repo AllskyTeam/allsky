@@ -364,11 +364,11 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 
 
 <!------------------------------------------------------------------------------------------->
-### Release notes
+### Release changes
 <details><summary>Click here</summary>
 
 &nbsp;  
-<!-- some of the changes haven't been made as of April 13, 2022, but should be for the next release -->
+<!-- some of the changes haven't been made as of June 3, 2022, but should be for the next release -->
 * version **v2022.MM.DD**: 
 	* Allsky package:
 		* Several settings were added and can be modified in the WebUI:
@@ -377,6 +377,8 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
 			* **Frames to Skip** (ZWO only) for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving.
 			* **Aggression** (ZWO only) determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
+			* **Gamma** (ZWO only) changes the contrast of an image.  It is only supported by a few cameras; for those that don't, the `AUTO_STRETCH` setting can produce a similar effect.
+			* **Offset** (ZWO only) adds about 1/10th the specified amount to each pixel, thereby brightening the whole image.  Setting this too high causes the image to turn gray.
 			* **Mean Target** (RPiHQ only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
 		* Latitude and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  The Allsky Website will always display with N, S, E, or W.
 		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers, and the crop area must fit within the image.

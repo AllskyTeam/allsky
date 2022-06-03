@@ -383,6 +383,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 		* Latitude and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  The Allsky Website will always display with N, S, E, or W.
 		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers, and the crop area must fit within the image.
 		* Sanity checking is done on Allsky Map data, for example, the URLs are reachable from the Internet.
+		* If the camera isn't found, a notification message stating that is displayed.
 		* Many minor enhancements were made.
 	* WebUI:
 		* The WebUI is now installed as part of the Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
@@ -512,6 +513,6 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 
 <!------------------------------------------------------------------------------------------->
 ### Donation
-If you found this project useful, here's a link to send me a cup of coffee :)
+If you found this project useful, here's a link to send Thomas a cup of coffee :)
 
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)

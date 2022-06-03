@@ -123,8 +123,9 @@ pthread_t threadDisplay			= 0;
 pthread_t hthdSave				= 0;
 int numExposures				= 0;				// how many valid pictures have we taken so far?
 int currentGain					= NOT_SET;
+long cameraMinExposure_us		= NOT_SET;			// camera's minimum exposure - camera dependent
+long cameraMaxExposure_us		= NOT_SET;			// camera's maximum exposure - camera dependent
 long cameraMaxAutoexposure_us	= NOT_SET;			// camera's max auto-exposure
-long cameraMinExposure_us		= 100;				// camera's minimum exposure
 long lastExposure_us			= 0;				// last exposure taken
 bool takingDarkFrames			= false;
 long currentExposure_us			= NOT_SET;
@@ -1682,16 +1683,20 @@ i++;
 		switch (ControlCaps.ControlType) {
 		case ASI_EXPOSURE:
 			cameraMinExposure_us = ControlCaps.MinValue;
+			cameraMaxExposure_us = ControlCaps.MaxValue;
 			break;
-#ifdef USE_HISTOGRAM
 		case ASI_AUTO_MAX_EXP:
 			// Keep track of the camera's max auto-exposure so we don't try to exceed it.
 			// MaxValue is in MS so convert to microseconds
+#ifdef HISTOGRAM
+			// If using histogram algorithm we use manual exposure so set this to a value that will never be exceeded.
+			cameraMaxAutoexposure_us	= cameraMaxExposure_us == NOT_SET ? cameraMaxExposure_us+1 : 9999999999999;
+#else
 			cameraMaxAutoexposure_us = ControlCaps.MaxValue * US_IN_MS;
+#endif
 			break;
 		default:	// needed to keep compiler quiet
 			break;
-#endif
 		}
 		if (debugLevel >= 4)
 		{
@@ -1711,15 +1716,26 @@ i++;
 	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", dayExposure_us, cameraMinExposure_us);
 	 	dayExposure_us = cameraMinExposure_us;
 	}
+	else if (dayExposure_us > cameraMaxExposure_us)
+	{
+	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", dayExposure_us, cameraMaxExposure_us);
+	 	dayExposure_us = cameraMaxExposure_us;
+	}
 	else if (dayAutoExposure && dayExposure_us > cameraMaxAutoexposure_us)
 	{
 	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", dayExposure_us, cameraMaxAutoexposure_us);
 	 	dayExposure_us = cameraMaxAutoexposure_us;
 	}
+
 	if (nightExposure_us < cameraMinExposure_us)
 	{
 	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", nightExposure_us, cameraMinExposure_us);
 	 	nightExposure_us = cameraMinExposure_us;
+	}
+	else if (nightExposure_us > cameraMaxExposure_us)
+	{
+	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", nightExposure_us, cameraMaxExposure_us);
+	 	nightExposure_us = cameraMaxExposure_us;
 	}
 	else if (nightAutoExposure && nightExposure_us > cameraMaxAutoexposure_us)
 	{
@@ -2191,7 +2207,6 @@ setAutoExposure = false;	// XXXXXXXXXXXX testing
 			currentAutoGain = nightAutoGain;
 		}
 
-		setControl(CamNum, ASI_AUTO_MAX_GAIN, currentMaxGain, ASI_FALSE);
 		if (ASICameraInfo.IsColorCam)
 		{
 			setControl(CamNum, ASI_WB_R, currentWBR, currentAutoAWB ? ASI_TRUE : ASI_FALSE);
@@ -2204,15 +2219,21 @@ setAutoExposure = false;	// XXXXXXXXXXXX testing
 			actualWBB = currentWBB;
 		}
 
+		setControl(CamNum, ASI_GAIN, currentGain + gainChange, currentAutoGain ? ASI_TRUE : ASI_FALSE);
+		if (currentAutoGain)
+			setControl(CamNum, ASI_AUTO_MAX_GAIN, currentMaxGain, ASI_FALSE);
+
 		// never go over the camera's max auto exposure. ASI_AUTO_MAX_EXP is in ms so convert
 		currentMaxAutoexposure_us = std::min(currentMaxAutoexposure_us, cameraMaxAutoexposure_us);
-		setControl(CamNum, ASI_AUTO_MAX_EXP, currentMaxAutoexposure_us / US_IN_MS, ASI_FALSE);
-		setControl(CamNum, ASI_GAIN, currentGain + gainChange, currentAutoGain ? ASI_TRUE : ASI_FALSE);
-		// ASI_BRIGHTNESS is also called ASI_OFFSET
-		setControl(CamNum, ASI_BRIGHTNESS, currentBrightness, ASI_FALSE);
+		if (currentAutoExposure)
+		{
+			setControl(CamNum, ASI_AUTO_MAX_EXP, currentMaxAutoexposure_us / US_IN_MS, ASI_FALSE);
+			setControl(CamNum, ASI_AUTO_TARGET_BRIGHTNESS, currentBrightness, ASI_FALSE);
+		}
 
 #ifndef USE_HISTOGRAM
 		setControl(CamNum, ASI_EXPOSURE, currentExposure_us, currentAutoExposure ? ASI_TRUE : ASI_FALSE);
+		// If not using histogram algorithm, ASI_EXPOSURE is set in takeOneExposure()
 #endif
 
 		if (numExposures == 0 || dayBin != nightBin)

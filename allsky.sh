@@ -19,7 +19,7 @@ function doExit()
 	TYPE=${2:-Error}
 	CUSTOM_MESSAGE="${3}"
 
-	if [ ${EXITCODE} -eq ${EXIT_ERROR_STOP} ]; then
+	if [ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]; then
 		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
 		# even if the user has them turned off.
 		if [ -n "${CUSTOM_MESSAGE}" ]; then
@@ -61,7 +61,7 @@ USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
 
 if [ -z "${CAMERA}" ]; then
 	echo -e "${RED}*** FATAL ERROR: CAMERA not set, can't continue!${NC}"
-	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nCAMERA type\nnot specified in\n$(basename ${ALLSKY_CONFIG})/config.sh."
+	doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nCAMERA type\nnot specified in\n$(basename ${ALLSKY_CONFIG})/config.sh."
 fi
 
 # Make sure allsky.sh is not already running.
@@ -99,7 +99,7 @@ if [ "${CAMERA}" = "RPiHQ" ]; then
 	fi
 	if [ ${RET} -ne 0 ]; then
 		echo -e "${RED}*** FATAL ERROR: RPiHQ Camera not found.  Make sure it's enabled. Stopping.${NC}" >&2
-		doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nRPiHQ Camera\nnot found!\nMake sure it's enabled."
+		doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nRPiHQ Camera\nnot found!\nMake sure it's enabled."
 	fi
 
 elif [ "${CAMERA}" = "ZWO" ]; then
@@ -156,7 +156,7 @@ elif [ "${CAMERA}" = "ZWO" ]; then
 
 			echo "  If you have the 'uhubctl' command installed, add it to config.sh." >&2
 			echo "  In the meantime, try running it to reset the USB bus." >&2
-			doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nNo ZWO camera\nfound!${USB_MSG}"
+			doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nNo ZWO camera\nfound!${USB_MSG}"
 		fi
 	fi
 
@@ -164,7 +164,7 @@ elif [ "${CAMERA}" = "ZWO" ]; then
 
 else
 	echo -e "${RED}FATAL ERROR: Unknown CAMERA type: ${CAMERA}!  Stopping.${NC}" >&2
-	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nUnknown CAMERA\ntype: ${CAMERA}"
+	doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nUnknown CAMERA\ntype: ${CAMERA}"
 fi
 
 echo "CAMERA: ${CAMERA}"

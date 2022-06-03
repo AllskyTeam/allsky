@@ -1509,7 +1509,7 @@ i++;
 		printf("*** ERROR: No Connected Camera...\n");
 		// Don't wait here since it's possible the camera is physically connected
 		// but the software doesn't see it and the USB bus needs to be reset.
-		closeUp(EXIT_ERROR_STOP);		// If there are no cameras we can't do anything.
+		closeUp(EXIT_NO_CAMERA);		// If there are no cameras we can't do anything.
 	}
 
 	if (numDevices > 1)
@@ -1527,7 +1527,7 @@ i++;
 	if (asiRetCode != ASI_SUCCESS)
 	{
 		printf("*** ERROR opening camera, check that you have root permissions! (%s)\n", getRetCode(asiRetCode));
-		closeUp(EXIT_ERROR_STOP);				// Can't do anything so might as well exit.
+		closeUp(EXIT_NO_CAMERA);				// Can't do anything so might as well exit.
 	}
 
 	int iMaxWidth, iMaxHeight;

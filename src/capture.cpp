@@ -1639,7 +1639,7 @@ i++;
 
 	if (ASICameraInfo.IsColorCam)
 	{
-		printf("  - Color Camera: bayer pattern: %s\n", bayer[ASICameraInfo.BayerPattern]);
+		printf("  - Color camera, bayer pattern: %s\n", bayer[ASICameraInfo.BayerPattern]);
 	}
 	else
 	{
@@ -1651,7 +1651,7 @@ i++;
 	}
 
 	ASIGetControlValue(CamNum, ASI_TEMPERATURE, &actualTemp, &bAuto);
-	printf("  - Sensor temperature: %0.2f\n", (float)actualTemp / 10.0);
+	printf("  - Sensor temperature: %0.2f C\n", (float)actualTemp / 10.0);
 
 	ASI_CAMERA_MODE CamMode;
 	asiRetCode = ASIGetCameraMode(CamNum, &CamMode);
@@ -1660,7 +1660,10 @@ i++;
 		printf("*** ERROR getting camera mode (%s)\n", getRetCode(asiRetCode));
 		closeUp(EXIT_ERROR_STOP);	// Can't do anything so might as well exit.
 	}
-	printf("  - Current camera mode: %s\n", getCameraMode(CamMode));
+	printf("  - Bit depth: %d\n", ASICameraInfo.BitDepth);
+	printf("  - Trigger camera: %s\n", ASICameraInfo.IsTriggerCam == ASI_TRUE ? "Yes" : "No");
+	if (ASICameraInfo.IsTriggerCam == ASI_TRUE)	// Mode will always be "Normal"
+		printf("  - Current camera mode: %s\n", getCameraMode(CamMode));
 
 	asiRetCode = ASIInitCamera(CamNum);
 	if (asiRetCode != ASI_SUCCESS)
@@ -1734,7 +1737,7 @@ i++;
 			{
 				break;
 			}
-			printf("   - %s\n",
+			printf("  - %s\n",
 				it == ASI_IMG_RAW8 ?  "ASI_IMG_RAW8" :
 				it == ASI_IMG_RGB24 ?  "ASI_IMG_RGB24" :
 				it == ASI_IMG_RAW16 ?  "ASI_IMG_RAW16" :
@@ -1743,7 +1746,7 @@ i++;
 		}
 	}
 
-	if (debugLevel >= 4)
+	if (debugLevel >= 4 && ASICameraInfo.IsTriggerCam == ASI_TRUE)
 	{
 		ASI_SUPPORTED_MODE CamSupportedModes;
 		asiRetCode = ASIGetCameraSupportMode(CamNum, &CamSupportedModes);

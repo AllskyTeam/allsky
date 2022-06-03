@@ -345,8 +345,8 @@
 "description":"Changes the difference between light and dark areas.<br>higher values increase contrast. <i>Not supported on all cameras</i>.",
 "label":"Gamma",
 "type":"number",
-"display":0,
-"advanced":0
+"display":1,
+"advanced":1
 },
 {
 "name":"offset",
@@ -356,7 +356,7 @@
 "description":"Adds about 1/10 the specified value to every pixel to brighten everything.",
 "label":"Offset",
 "type":"number",
-"display":0,
+"display":1,
 "advanced":1
 },
 {

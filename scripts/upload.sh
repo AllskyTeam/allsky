@@ -121,6 +121,14 @@ elif [[ ${PROTOCOL} == "local" ]] ; then
 	cp "${FILE_TO_UPLOAD}" "${REMOTE_DIR}/${DESTINATION_FILE}"
 	RET=$?
 
+elif [[ "${PROTOCOL}" == "scp" ]] ; then
+	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
+		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_FILE}"
+	fi
+
+	scp -i "${SSH_KEY_FILE}" "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_FILE}"
+	RET=$?
+
 else # sftp/ftp/ftps
 	# People sometimes have problems with ftp not working,
 	# so save the commands we use so they can run lftp manually to debug.

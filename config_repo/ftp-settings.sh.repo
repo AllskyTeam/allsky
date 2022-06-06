@@ -13,7 +13,7 @@
 	#  "sftp"	(SSH file transfer) - Uploads to a remote FTP server that supports secure transfer.
 	#		See the section for sftp PROTOCOL below.
 	#  "scp"	(secure copy) - Copies to a remote server.
-	#		See the section for scp PROTOCOL below.   NOTE: "scp" PROTOCOL IS NOT IMPLEMENTED YET.
+	#		See the section for scp PROTOCOL below.
 	#  "S3"		Uploads to an Amazon Web Services (AWS) server.
 	#		See the "S3 PROTOCOL only" section below.
 PROTOCOL=""
@@ -71,6 +71,7 @@ WEB_STARTRAILS_DIR=""
 	# Enter the name of the remote server.  If you don't know it, ask your service provider.
 REMOTE_HOST=""
 
+############### ftp, ftps, and sftp PROTOCOLS only:
 	# Enter the username of the login on the remote server.
 REMOTE_USER=""
 
@@ -87,6 +88,17 @@ REMOTE_PORT=""
 	# This setting does not apply to the "scp" PROTOCOL.
 LFTP_COMMANDS=""
 
+############### scp PROTOCOL only:
+	# You will need to set up SSH key authentication on your server.
+	# First, generate a SSH key on your client:
+	#   ssh-keygen -t rsa
+	# When prompted, leave default filename, and use an empty passphrase.
+	# Then, copy the generated key to your server:
+	#   ssh-copy-id remote_username@server_ip_address
+	# The private SSH key will be stored in ~/.ssh (default filename is id_rsa)
+
+	# Enter the path to the SSH key
+SSH_KEY_FILE=""
 
 ############### S3 PROTOCOL only:
 	# You will need to install the AWS CLI:

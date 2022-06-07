@@ -384,6 +384,9 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers, and the crop area must fit within the image.
 		* Sanity checking is done on Allsky Map data, for example, the URLs are reachable from the Internet.
 		* If the camera isn't found, a notification message stating that is displayed.
+		* The `scp` protocol is now supported for file uploads.
+		* New ftp-settings.sh variable:
+			* `SSH_KEY_FILE`: path to a SSH private key. When `scp` is used for uploads, this identify file will be used to establish the secure connection.
 		* Many minor enhancements were made.
 	* WebUI:
 		* The WebUI is now installed as part of the Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.

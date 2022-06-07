@@ -57,7 +57,6 @@ fi
 REMOTE_DIR="${2}"
 DESTINATION_FILE="${3}"
 FILE_TYPE="${4:-x}"		# A unique identifier for this type of file
-# TODO: only allow one execution of this script for each $FILE_TYPE.
 COPY_TO="${5}"
 if [ "${COPY_TO}" != "" -a ! -d "${COPY_TO}" ] ; then
 	echo -en "${RED}"
@@ -122,6 +121,7 @@ elif [[ ${PROTOCOL} == "local" ]] ; then
 
 elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
+		# shellcheck disable=SC2153
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_FILE}"
 	fi
 	scp -i "${SSH_KEY_FILE}" "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_FILE}"
@@ -191,6 +191,7 @@ else # sftp/ftp/ftps
 		echo -en "${RED}"
 		echo "*** ${ME}: ERROR, RET=${RET}:"
 		echo "FILE_TO_UPLOAD='${FILE_TO_UPLOAD}'"
+		# shellcheck disable=SC2153
 		echo "REMOTE_HOST='${REMOTE_HOST}'"
 		echo "REMOTE_DIR='${REMOTE_DIR}'"
 		echo "TEMP_NAME='${TEMP_NAME}'"

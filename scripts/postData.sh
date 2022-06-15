@@ -62,8 +62,8 @@ COPIED=false
 typeset -i RETCODE=0
 
 # Copy to local Allsky website if it exists.
-if [ -d "${WEBSITE_DIR}" ]; then
-	cp "${OUTPUT_FILE}" "${WEBSITE_DIR}"
+if [ -d "${ALLSKY_WEBSITE}" ]; then
+	cp "${OUTPUT_FILE}" "${ALLSKY_WEBSITE}"
 	let RETCODE=$?
 	COPIED=true
 fi

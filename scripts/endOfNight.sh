@@ -88,13 +88,13 @@ fi
 
 # Automatically delete old website images and videos
 if [ -n "${WEB_DAYS_TO_KEEP}" ]; then
-	if [ ! -d "${WEBSITE_DIR}" ]; then
-		echo -e "${ME}: ${YELLOW}WARNING: 'WEB_DAYS_TO_KEEP' set but no website found in '${WEBSITE_DIR}!${NC}"
+	if [ ! -d "${ALLSKY_WEBSITE}" ]; then
+		echo -e "${ME}: ${YELLOW}WARNING: 'WEB_DAYS_TO_KEEP' set but no website found in '${ALLSKY_WEBSITE}!${NC}"
 		echo -e 'Set WEB_DAYS_TO_KEEP to ""'
 	else
 		del=$(date --date="${WEB_DAYS_TO_KEEP} days ago" +%Y%m%d)
 		(
-			cd "${WEBSITE_DIR}" || exit 1
+			cd "${ALLSKY_WEBSITE}" || exit 1
 			for i in $(find startrails keograms videos -type f -name "*-202*"); do	# "*-202*" for years >= 2020
 				# Remove everything but the date
 				DATE="${i##*-}"

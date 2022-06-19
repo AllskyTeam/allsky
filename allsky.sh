@@ -138,7 +138,7 @@ elif [ "${CAMERA}" = "ZWO" ]; then
 	}
 
 	# Use two commands to better aid debugging when camera isn't found.
-	ZWOdev=$(lsusb | awk '/ 03c3:/ { bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}')
+	ZWOdev=$(lsusb -d '03c3:' | awk '{ bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}')
 	ZWOIsPresent=$(lsusb -D ${ZWOdev} 2>/dev/null | grep -c 'iProduct .*ASI[0-9]')
 	if [ $ZWOIsPresent -eq 0 ]; then
 		if [ -n "${UHUBCTL_PATH}" ] ; then
@@ -190,6 +190,8 @@ fi
 # Want to allow spaces in arguments so need to put quotes around them,
 # but in order for it to work need to make ARGUMENTS an array.
 ARGUMENTS=()
+
+[ -s "${ALLSKY_HOME}/version" ] && ARGUMENTS+=(-version "$(< "${ALLSKY_HOME}/version")")
 
 if [[ ${CAMERA} == "RPiHQ" ]]; then
 	# This argument needs to come first since the capture code checks for it first.
@@ -250,7 +252,7 @@ elif [[ $CAMERA == "RPiHQ" ]]; then
 	CAPTURE="capture_RPiHQ"
 fi
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
-"${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"		# run the main program
+"${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"		# run the main program - this is the main attraction...
 RETCODE=$?
 
 if [ ${RETCODE} -ne ${EXIT_OK} ]; then

@@ -546,31 +546,12 @@ int main(int argc, char *argv[])
 	int i;
 	bool endOfNight				= false;
 	int retCode;
+	char const *version			= NULL;		// version of Allsky
 	cv::Mat pRgb;	// the image
 
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 	setlinebuf(stdout);		// Line buffer output so entries appear in the log immediately.
-
-	printf("\n");
-	printf("%s ************************************************\n", c(KGRN));
-	printf("%s *** Allsky Camera Software v0.8.4    |  2022 ***\n", c(KGRN));
-	printf("%s ************************************************\n\n", c(KGRN));
-	printf("\%sCapture images of the sky with a Raspberry Pi and a RPi HQ camera\n", c(KGRN));
-	printf("\n");
-	printf("%sAdd -h or --help for available options\n", c(KYEL));
-	printf("\n");
-	printf("\%sAuthor: ", c(KNRM));
-	printf("Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
-	printf("\%sContributors:\n", c(KNRM));
-	printf("-Knut Olav Klo\n");
-	printf("-Daniel Johnsen\n");
-	printf("-Robert Wagner\n");
-	printf("-Michael J. Kidd - <linuxkidd@gmail.com>\n");
-	printf("-Rob Musquetier\n");	
-	printf("-Eric Claeys\n");
-	printf("-Andreas Lindinger\n");
-	printf("\n");
 
 	char const *fc = NULL, *sfc = NULL;	// temporary pointers to fontcolor and smallfontcolor
 	if (argc > 1)
@@ -581,6 +562,11 @@ int main(int argc, char *argv[])
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
 				help = true;
+			}
+			}
+			else if (strcmp(argv[i], "-version") == 0)
+			{
+				version = argv[++i];
 			}
 			else if (strcmp(argv[i], "-cmd") == 0)
 			{
@@ -918,6 +904,30 @@ i++;
 		}
 	}
 
+	{
+		printf("\n%s", c(KGRN));
+		if (version == NULL) version = "UNKNOWN";
+		char v[100]; snprintf(v, sizeof(v), "*** Allsky Camera Software Version %s ***", version);
+		for (size_t i=0; i<strlen(v); i++) printf("*");
+		printf("\n");
+		printf("%s\n", v);
+		for (size_t i=0; i<strlen(v); i++) printf("*");
+		printf("\n\n");
+		printf("Capture images of the sky with a Raspberry Pi and a RPi HQ camera\n");
+		printf("%s\n", c(KNRM));
+		if (! help) printf("%sAdd -h or --help for available options%s\n\n", c(KYEL), c(KNRM));
+		printf("Author: Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
+		printf("Contributors:\n");
+		printf(" -Knut Olav Klo\n");
+		printf(" -Daniel Johnsen\n");
+		printf(" -Robert Wagner\n");
+		printf(" -Michael J. Kidd - <linuxkidd@gmail.com>\n");
+		printf("-Rob Musquetier\n");	
+		printf(" -Eric Claeys\n");
+		printf("-Andreas Lindinger\n");
+		printf("\n");
+	}
+
 	// Do argument error checking
 	if (fc != NULL && sscanf(fc, "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]) != 3)
 		fprintf(stderr, "%s*** WARNING: Not enough font color parameters: '%s'%s\n", c(KRED), fc, c(KNRM));
@@ -1021,8 +1031,8 @@ i++;
 		printf(" -daytime				- Default = %s: 1 enables capture daytime images\n", yesNo(DEFAULT_DAYTIMECAPTURE));
 		printf(" -save_dir				- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
 		printf(" -preview				- 1 previews the captured images. Only works with a Desktop Environment\n");
+		printf(" -version				- Version of Allsky in use.\n");
 		printf(" -cmd					- Command being used to take pictures (Buster: raspistill, Bullseye: libcamera-still\n");
-
 		printf(" -mean-threshold		- Default = %.2f: Set mean-value and activates exposure control\n", DEFAULT_MEAN_THRESHOLD);
 		printf(" -mean-p0				- Default = %.1f: Be careful changing these values, ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2\n", DEFAULT_MEAN_P0);
 		printf(" -mean-p1				- Default = %.1f\n", DEFAULT_MEAN_P1);

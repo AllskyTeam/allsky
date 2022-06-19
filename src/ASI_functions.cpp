@@ -10,15 +10,18 @@
 // Forward definitions of variables in capture*.cpp.
 extern int debugLevel;
 extern int iNumOfCtrl;
-extern const char *CC_saveDir;
+extern char const *CC_saveDir;
 extern long cameraMinExposure_us;
 extern long cameraMaxExposure_us;
 extern long cameraMaxAutoexposure_us;
 #ifdef IS_RPi
 extern bool isLibcamera;
-const char *getCameraCommand(bool);
+char const *getCameraCommand(bool);
+#else
+extern bool useNewExposureAlgorithm;
 #endif
 
+int numCameras = 0;		// used by several functions
 
 //-----------------------------------------------------------------------------------------
 // Info and routines for RPi only
@@ -103,11 +106,7 @@ typedef struct _ASI_CONTROL_CAPS
 typedef enum ASI_ERROR_CODE {
 	ASI_SUCCESS=0,
 	ASI_ERROR_INVALID_INDEX,		// no camera connected or index value out of boundary
-	ASI_ERROR_INVALID_ID,			// invalid ID
 	ASI_ERROR_INVALID_CONTROL_TYPE,	// invalid control type
-	ASI_ERROR_INVALID_SIZE,			// wrong video format size
-	ASI_ERROR_INVALID_IMGTYPE,		// unsupported image formate
-	ASI_ERROR_TIMEOUT,				// timeout
 	ASI_ERROR_GENERAL_ERROR,		// general error, eg: value is out of valid range
 	ASI_ERROR_END
 } ASI_ERROR_CODE;
@@ -123,12 +122,13 @@ typedef ASI_ID ASI_SN;
 ASI_CAMERA_INFO ASICameraInfoArray[] =
 {
 	// Module (sensor), Name, CameraID, MaxHeight, MaxWidth, IsColorCam, BayerPattern, SupportedBins,
-	//	SupportedVideoFormat, PixelSixe, IsCoolerCam, BitDepth, SupportsTemperature
-	{ "imx477", "RPi HQ", 0, 3040, 4056, true, BAYER_RG, {1, 2, 3, 0},
+	//	SupportedVideoFormat, PixelSize, IsCoolerCam, BitDepth, SupportsTemperature
+	{ "imx477", "RPi HQ", 0, 3040, 4056, true, BAYER_RG, {1, 2, 0},
 		{ASI_IMG_RAW8, ASI_IMG_RGB24, ASI_IMG_RAW16}, 1.55, false, 12, false},
-	{ "arducam_64mp", "ARDU 64 MB", 0, 6944, 9248, true, BAYER_GR, {1, 2, 4, 0},
+	{ "arducam_64mp", "ARDUCAM 64 MB", 0, 6944, 9248, true, BAYER_GR, {1, 2, 4, 0},
 		{ASI_IMG_RAW8, ASI_IMG_RGB24, ASI_IMG_RAW16}, 1.55, false, 12, false},	// xxxxx check on 1.55
-	// FUTURE CAMERAS TO GO HERE...
+
+	// FUTURE CAMERAS GO HERE...
 };
 
 #define MAX_NUM_CONTROL_CAPS (CONTROL_TYPE_END)
@@ -183,7 +183,12 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	// TODO: add 2 entries for arducam_64mp (2nd entry can be empty since it's not supported on raspistill
 };
 
-char camerasInfoFile[50]	= { 0 };
+char camerasInfoFile[128]	= { 0 };	// name of temporary file
+
+
+// Return the number of connected cameras and put basic info on each camera in a file.
+// We need the temporary file because it's a quick and dirty way to get output from system().
+// TODO: use fork() and inter-process communication to get the info to avoid a temporary file.
 int ASIGetNumOfConnectedCameras()
 {
 	// File to hold info on all the cameras.
@@ -220,8 +225,8 @@ int ASIGetNumOfConnectedCameras()
 		(bit-depth and packing are optional)
 */
 
-int numCameras = 0;		// used by several functions
 
+// Put the properties for the specified camera into pASICameraInfo.
 ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCameraIndex)
 {
 	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
@@ -270,6 +275,8 @@ ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCamera
 	return(ASI_SUCCESS);
 }
 
+
+// Get the number of capabilities supported by this camera and put in piNumberOfControls.
 ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
 {
 	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
@@ -284,24 +291,31 @@ ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
 			break;
 		num++;
 	}
-	*piNumberOfControls = num;		// This sets the global iNumOfCtrl variable
+	*piNumberOfControls = num;		// This also sets the global iNumOfCtrl variable
 	return(ASI_SUCCESS);
 }
 
+
+// Get the camera control at index iControlIndex in the array, and put in pControlCaps.
+// This is typically used in a loop over all the control capabilities.
 ASI_ERROR_CODE ASIGetControlCaps(int iCameraIndex, int iControlIndex, ASI_CONTROL_CAPS *pControlCaps)
 {
 	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
+
 	int numCaps = iNumOfCtrl != NOT_SET ? iNumOfCtrl : MAX_NUM_CONTROL_CAPS;
 	if (iControlIndex < 0 || iControlIndex > numCaps)
 		return(ASI_ERROR_INVALID_CONTROL_TYPE);
 
 	if (! isLibcamera)
 		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
+
 	*pControlCaps = ControlCapsArray[iCameraIndex][iControlIndex];
 	return(ASI_SUCCESS);
 }
 
+
+// Get the specified control capability's data value and put in plValue.
 ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType, double *plValue, ASI_BOOL *pbAuto)
 {
 	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
@@ -327,6 +341,8 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 
 }
 
+
+// Get the camera's serial number.  RPi cameras don't support serial numbers.
 ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
 {
 	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
@@ -335,19 +351,11 @@ ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
 	return(ASI_ERROR_GENERAL_ERROR);		// Not supported on RPi cameras
 }
 
-char *getRetCode(ASI_ERROR_CODE asiRetCode)
-{
-	static char code[5];
-	snprintf(code, sizeof(code), "%d", asiRetCode);
-	// TODO: replace with ZWO version
-	return(code);
-}
-
 
 // Control type name, command-line argument name (without leading "day" and "night").
 // ControlType is the array index.
 // NULL argument name means there is not a command-line argument for it.
-const char *argumentNames[][2] = {
+char const *argumentNames[][2] = {
 	{ "Gain", "gain" },							// day/night
 	{ "Exposure", "exposure" },					// day/night
 	{ "Gamma", "gamma" },
@@ -372,7 +380,7 @@ const char *argumentNames[][2] = {
 #else		// ZWO
 
 // Same ideas as for RPi but somewhat different options.
-const char *argumentNames[][2] = {
+char const *argumentNames[][2] = {
 	{ "Gain", "gain" },							// day/night
 	{ "Exposure", "exposure" },					// day/night
 	{ "Gamma", "gamma" },
@@ -400,6 +408,45 @@ const char *argumentNames[][2] = {
 
 #endif		// IS_RPi
 
+// Display ASI errors in human-readable format
+char *getRetCode(ASI_ERROR_CODE code)
+{
+	static char retCodeBuffer[100];
+	std::string ret;
+
+	if (code == ASI_SUCCESS) ret = "ASI_SUCCESS";
+	else if (code == ASI_ERROR_INVALID_INDEX) ret = "ASI_ERROR_INVALID_INDEX";
+	else if (code == ASI_ERROR_INVALID_CONTROL_TYPE) ret = "ASI_ERROR_INVALID_CONTROL_TYPE";
+	else if (code == ASI_ERROR_GENERAL_ERROR) ret = "ASI_ERROR_GENERAL_ERROR";
+#ifdef IS_ZWO
+	else if (code == ASI_ERROR_INVALID_ID) ret = "ASI_ERROR_INVALID_ID";
+	else if (code == ASI_ERROR_CAMERA_CLOSED) ret = "ASI_ERROR_CAMERA_CLOSED";
+	else if (code == ASI_ERROR_CAMERA_REMOVED) ret = "ASI_ERROR_CAMERA_REMOVED";
+	else if (code == ASI_ERROR_INVALID_PATH) ret = "ASI_ERROR_INVALID_PATH";
+	else if (code == ASI_ERROR_INVALID_FILEFORMAT) ret = "ASI_ERROR_INVALID_FILEFORMAT";
+	else if (code == ASI_ERROR_INVALID_SIZE) ret = "ASI_ERROR_INVALID_SIZE";
+	else if (code == ASI_ERROR_INVALID_IMGTYPE) ret = "ASI_ERROR_INVALID_IMGTYPE";
+	else if (code == ASI_ERROR_OUTOF_BOUNDARY) ret = "ASI_ERROR_OUTOF_BOUNDARY";
+	else if (code == ASI_ERROR_TIMEOUT)
+	{
+		static int errorTimeoutCntr = 0;
+		// To aid in debugging these errors, keep track of how many we see.
+		errorTimeoutCntr += 1;
+		ret = "ASI_ERROR_TIMEOUT #" + std::to_string(errorTimeoutCntr) +
+			  " (with 0.8 exposure = " + ((useNewExposureAlgorithm)?("YES"):("NO")) + ")";
+	}
+	else if (code == ASI_ERROR_INVALID_SEQUENCE) ret = "ASI_ERROR_INVALID_SEQUENCE";
+	else if (code == ASI_ERROR_BUFFER_TOO_SMALL) ret = "ASI_ERROR_BUFFER_TOO_SMALL";
+	else if (code == ASI_ERROR_VIDEO_MODE_ACTIVE) ret = "ASI_ERROR_VIDEO_MODE_ACTIVE";
+	else if (code == ASI_ERROR_EXPOSURE_IN_PROGRESS) ret = "ASI_ERROR_EXPOSURE_IN_PROGRESS";
+#endif
+	else if (code == ASI_ERROR_END) ret = "ASI_ERROR_END";
+	else if (code == -1) ret = "Non-ASI ERROR";
+	else ret = "UNKNOWN ASI ERROR";
+
+	sprintf(retCodeBuffer, "%s (%d)", ret.c_str(), (int) code);
+	return(retCodeBuffer);
+}
 
 //-----------------------------------------------------------------------------------------
 // Routines common to all camera brands
@@ -428,16 +475,16 @@ void processConnectedCameras()
 	}
 }
 
-#ifdef ZWO
+#ifdef IS_ZWO
 ASI_ID cameraID;	// USB 3 cameras only
 bool hasCameraID = false;
 unsigned char cID[sizeof(cameraID)+1] = { '[', 'n', 'o', 'n', 'e', ']', 0 };
 
 ASI_ID getCameraID(ASI_CAMERA_INFO camInfo)
 {
-	// To CLEAR the camera ID:		cameraID.id[0] = '\0'; ASISetID(CamNum, cameraID);
+	// To CLEAR the camera ID:		cameraID.id[0] = '\0'; ASISetID(camInfo.CameraID, cameraID);
 	cameraID.id[0] = '\0';
-	if (cameraInfo.IsUSB3Camera == ASI_TRUE && ASIGetID(camInfo.CameraID, &cameraID) == ASI_SUCCESS)
+	if (camInfo.IsUSB3Camera == ASI_TRUE && ASIGetID(camInfo.CameraID, &cameraID) == ASI_SUCCESS)
 	{
 		if (cameraID.id[0] != '\0')
 		{
@@ -512,7 +559,7 @@ char *getCameraModel(ASI_CAMERA_INFO cameraInfo)
 }
 
 // Save information on the specified camera.
-void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, const char *dir, int width, int height, double pixelSize, const char *bayer)
+void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int height, double pixelSize, char const *bayer)
 {
 	char *camModel = getCameraModel(cameraInfo);
 	char *sn = getSerialNumber(cameraInfo.CameraID);
@@ -531,8 +578,8 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, const char *dir, int width, int 
 	fprintf(f, "\t\"cameraBrand\" : \"%s\",\n", CAMERA_BRAND);
 	fprintf(f, "\t\"cameraName\" : \"%s\",\n", cameraInfo.Name);
 	fprintf(f, "\t\"cameraModel\" : \"%s\",\n", camModel);
-#ifdef ZWO
-	fprintf(f, "\t\"cameraID\" : \"%s\",\n", hasCameraID ? (const char *)cID : "");
+#ifdef IS_ZWO
+	fprintf(f, "\t\"cameraID\" : \"%s\",\n", hasCameraID ? (char const *)cID : "");
 #endif
 	fprintf(f, "\t\"serialNumber\" : \"%s\",\n", hasSerialNumber ? sn : "");
 	fprintf(f, "\t\"sensorWidth\" : %d,\n", width);
@@ -560,13 +607,20 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, const char *dir, int width, int 
 		ASI_CONTROL_CAPS cc;
 		ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
 		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Brand\" : \"%s\",\n", CAMERA_BRAND);
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", cc.Name);
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", argumentNames[cc.ControlType][1]);
+#ifdef IS_ZWO
+		fprintf(f, "\t\t\t\"MinValue\" : %ld,\n", cc.MinValue);
+		fprintf(f, "\t\t\t\"MaxValue\" : %ld,\n", cc.MaxValue);
+		fprintf(f, "\t\t\t\"DefaultValue\" : %ld,\n", cc.DefaultValue);
+#else
 		fprintf(f, "\t\t\t\"MinValue\" : %.3f,\n", cc.MinValue);
 		fprintf(f, "\t\t\t\"MaxValue\" : %.3f,\n", cc.MaxValue);
 		fprintf(f, "\t\t\t\"DefaultValue\" : %.3f,\n", cc.DefaultValue);
+#endif
 		fprintf(f, "\t\t\t\"ControlType\" : %d\n", cc.ControlType);
-		fprintf(f, "\t\t}%s\n", i < iNumOfCtrl-1 ? "," : "");
+		fprintf(f, "\t\t}%s\n", i < iNumOfCtrl-1 ? "," : "");		// comma on all but last one
 	}
 	fprintf(f, "\t]\n");
 	fprintf(f, "}\n");
@@ -574,12 +628,12 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, const char *dir, int width, int 
 }
 
 // Output basic camera information.
-void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, int width, int height, double pixelSize, const char *bayer)
+void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, int width, int height, double pixelSize, char const *bayer)
 {
 	printf(" Camera Information:\n");
 	printf("  - Brand: %s\n", CAMERA_BRAND);
 	printf("  - Model: %s\n", getCameraModel(cameraInfo));
-#ifdef ZWO
+#ifdef IS_ZWO
 	printf("  - Camera ID: %s\n", cID);
 #endif
 	printf("  - Camera Serial Number: %s\n", getSerialNumber(cameraInfo.CameraID));
@@ -607,7 +661,7 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, int width, int height, double 
 		printf("  - Camera with cooling capabilities\n");
 	}
 	bool supportsTemperature;
-#ifdef ZWO
+#ifdef IS_ZWO
 	supportsTemperature = true;
 #else
 	supportsTemperature = cameraInfo.SupportsTemperature;
@@ -615,19 +669,20 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, int width, int height, double 
 	if (supportsTemperature)
 	{
 		ASI_BOOL a;
+#ifdef IS_ZWO
+		long temp = 0;
+#else
 		double temp = 0.0;
+#endif
 		ASIGetControlValue(cameraInfo.CameraID, ASI_TEMPERATURE, &temp, &a);
 		printf("  - Sensor temperature: %0.2f C\n", (float)temp / 10.0);
 	}
-
 	printf("  - Bit depth: %d\n", cameraInfo.BitDepth);
 
 	// Get a few values from the camera that we need elsewhere.
-	if (debugLevel >= 4)
-		printf("Control Caps:\n");
+	ASI_CONTROL_CAPS cc;
 	for (int i = 0; i < iNumOfCtrl; i++)
 	{
-		ASI_CONTROL_CAPS cc;
 		ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
 		switch (cc.ControlType) {
 		case ASI_EXPOSURE:
@@ -637,21 +692,75 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, int width, int height, double 
 		case ASI_AUTO_MAX_EXP:
 			// Keep track of the camera's max auto-exposure so we don't try to exceed it.
 			// MaxValue is in MS so convert to microseconds
+#ifdef HISTOGRAM
+			// If using histogram algorithm we use manual exposure so set this to a value that will never be exceeded.
+			cameraMaxAutoexposure_us = cameraMaxExposure_us == NOT_SET ? cameraMaxExposure_us+1 : 9999999999999;
+#else
 			cameraMaxAutoexposure_us = cc.MaxValue * US_IN_MS;
+#endif
 			break;
 		default:	// needed to keep compiler quiet
 			break;
 		}
-		if (debugLevel >= 4)
+	}
+	if (debugLevel >= 4)
+	{
+		for (int i = 0; i < iNumOfCtrl; i++)
 		{
+			ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
+			printf("Control Caps:\n");
 			printf("  - %s:\n", cc.Name);
 			printf("    - Description = %s\n", cc.Description);
+#ifdef IS_ZWO
+			printf("    - MinValue = %'ld\n", cc.MinValue);
+			printf("    - MaxValue = %'ld\n", cc.MaxValue);
+			printf("    - DefaultValue = %'ld\n", cc.DefaultValue);
+#else
 			printf("    - MinValue = %.3f\n", cc.MinValue);
 			printf("    - MaxValue = %.3f\n", cc.MaxValue);
 			printf("    - DefaultValue = %.3f\n", cc.DefaultValue);
+#endif
 			printf("    - IsAutoSupported = %d\n", cc.IsAutoSupported);
 			printf("    - IsWritable = %d\n", cc.IsWritable);
 			printf("    - ControlType = %d\n", cc.ControlType);
 		}
 	}
+}
+
+// Ensure the exposure values are valid.
+bool checkExposureValues(long day_us, bool dayAuto, long night_us, bool nightAuto)
+{
+	if (day_us < cameraMinExposure_us)
+	{
+	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", day_us, cameraMinExposure_us);
+	 	day_us = cameraMinExposure_us;
+	}
+	else if (day_us > cameraMaxExposure_us)
+	{
+	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", day_us, cameraMaxExposure_us);
+	 	day_us = cameraMaxExposure_us;
+	}
+	else if (dayAuto && day_us > cameraMaxAutoexposure_us)
+	{
+	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", day_us, cameraMaxAutoexposure_us);
+	 	day_us = cameraMaxAutoexposure_us;
+	}
+
+	if (night_us < cameraMinExposure_us)
+	{
+	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", night_us, cameraMinExposure_us);
+	 	night_us = cameraMinExposure_us;
+	}
+	else if (night_us > cameraMaxExposure_us)
+	{
+	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", night_us, cameraMaxExposure_us);
+	 	night_us = cameraMaxExposure_us;
+	}
+	else if (nightAuto && night_us > cameraMaxAutoexposure_us)
+	{
+	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", night_us, cameraMaxAutoexposure_us);
+	 	night_us = cameraMaxAutoexposure_us;
+	}
+
+	return(true);		// only WARNINGs above
 }

@@ -17,6 +17,10 @@
 
 #include "include/allsky_common.h"
 
+#define CAMERA_BRAND			"ZWO"
+#define IS_ZWO
+#include "ASI_functions.cpp"
+
 #define USE_HISTOGRAM		// use the histogram code as a workaround to ZWO's bug
 
 // Define's specific to this camera type.  Others that apply to all camera types are in allsky_common.h
@@ -117,8 +121,8 @@ ASI_CONTROL_CAPS ControlCaps;
 int numErrors					= 0;				// Number of errors in a row.
 int maxErrors					= 5;				// Max number of errors in a row before we exit
 bool gotSignal					= false;			// did we get a SIGINT (from keyboard), or SIGTERM/SIGHUP (from service)?
-int iNumOfCtrl					= 0;
-int CamNum						= 0;
+int iNumOfCtrl					= NOT_SET;			// Number of camera control capabilities
+int CamNum						= 0;				// 1st camera - we don't support multiple cams
 pthread_t threadDisplay			= 0;
 pthread_t hthdSave				= 0;
 int numExposures				= 0;				// how many valid pictures have we taken so far?
@@ -138,17 +142,22 @@ bool currentAutoExposure		= false;			// is auto-exposure currently on or off?
 bool currentAutoGain			= false;			// is auto-gain currently on or off?
 char finalFileName[200];							// final name of the file that's written to disk, with no directories
 char fullFilename[1000];							// full name of file written to disk
-int focusMetric				= NOT_SET;
+int focusMetric					= NOT_SET;
 int mean						= NOT_SET;			// histogram mean
+bool quietExit					= false;			// Hide meesage on exit?
 
 // Make sure we don't try to update a non-updateable control, and check for errors.
-ASI_ERROR_CODE setControl(int CamNum, ASI_CONTROL_TYPE control, long value, ASI_BOOL makeAuto)
+ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_BOOL makeAuto)
 {
 	ASI_ERROR_CODE ret = ASI_SUCCESS;
-	int i;
-	for (i = 0; i < iNumOfCtrl && i <= control; i++)	// controls are sorted 1 to n
+	// The array of controls might contain 3 items, control IDs 1, 5, and 9.
+	// The 2nd argument to ASIGetControlCaps() is the INDEX into the controll array,
+	// NOT the control ID (e.g., 1, 5, or 9).
+	// Hence if we're looking for control ID 5 we can't do
+	// ASIGetControlCaps(camNum, 5, &ControlCaps) since there are only 3 elements in the array.
+	for (int i = 0; i < iNumOfCtrl && i <= control; i++)	// controls are sorted 1 to n
 	{
-		ret = ASIGetControlCaps(CamNum, i, &ControlCaps);
+		ret = ASIGetControlCaps(camNum, i, &ControlCaps);
 		if (ret != ASI_SUCCESS)
 		{
 			Log(0, "WARNING: ASIGetControlCaps() for control %d failed: %s\n", i, getRetCode(ret));
@@ -173,7 +182,7 @@ ASI_ERROR_CODE setControl(int CamNum, ASI_CONTROL_TYPE control, long value, ASI_
 					printf("WARNING: control '%s' (#%d) doesn't support auto mode.\n", ControlCaps.Name, ControlCaps.ControlType);
 					makeAuto = ASI_FALSE;
 				}
-				ret = ASISetControlValue(CamNum, control, value, makeAuto);
+				ret = ASISetControlValue(camNum, control, value, makeAuto);
 				if (ret != ASI_SUCCESS)
 				{
 					Log(0, "WARNING: ASISetControlCaps() for control %d, value=%ld failed: %s\n", control, value, getRetCode(ret));
@@ -285,63 +294,6 @@ void *SaveImgThd(void *para)
 	}
 
 	return (void *)0;
-}
-
-// Display ASI errors in human-readable format
-char *getRetCode(ASI_ERROR_CODE code)
-{
-	static char retCodeBuffer[100];
-	static int errorTimeoutCntr = 0;
-	std::string ret;
-
-	if (code == ASI_SUCCESS) ret = "ASI_SUCCESS";
-	else if (code == ASI_ERROR_INVALID_INDEX) ret = "ASI_ERROR_INVALID_INDEX";
-	else if (code == ASI_ERROR_INVALID_ID) ret = "ASI_ERROR_INVALID_ID";
-	else if (code == ASI_ERROR_INVALID_CONTROL_TYPE) ret = "ASI_ERROR_INVALID_CONTROL_TYPE";
-	else if (code == ASI_ERROR_CAMERA_CLOSED) ret = "ASI_ERROR_CAMERA_CLOSED";
-	else if (code == ASI_ERROR_CAMERA_REMOVED) ret = "ASI_ERROR_CAMERA_REMOVED";
-	else if (code == ASI_ERROR_INVALID_PATH) ret = "ASI_ERROR_INVALID_PATH";
-	else if (code == ASI_ERROR_INVALID_FILEFORMAT) ret = "ASI_ERROR_INVALID_FILEFORMAT";
-	else if (code == ASI_ERROR_INVALID_SIZE) ret = "ASI_ERROR_INVALID_SIZE";
-	else if (code == ASI_ERROR_INVALID_IMGTYPE) ret = "ASI_ERROR_INVALID_IMGTYPE";
-	else if (code == ASI_ERROR_OUTOF_BOUNDARY) ret = "ASI_ERROR_OUTOF_BOUNDARY";
-	else if (code == ASI_ERROR_TIMEOUT)
-	{
-		// To aid in debugging these errors, keep track of how many we see.
-		errorTimeoutCntr += 1;
-		ret = "ASI_ERROR_TIMEOUT #" + std::to_string(errorTimeoutCntr) +
-			  " (with 0.8 exposure = " + ((useNewExposureAlgorithm)?("YES"):("NO")) + ")";
-	}
-	else if (code == ASI_ERROR_INVALID_SEQUENCE) ret = "ASI_ERROR_INVALID_SEQUENCE";
-	else if (code == ASI_ERROR_BUFFER_TOO_SMALL) ret = "ASI_ERROR_BUFFER_TOO_SMALL";
-	else if (code == ASI_ERROR_VIDEO_MODE_ACTIVE) ret = "ASI_ERROR_VIDEO_MODE_ACTIVE";
-	else if (code == ASI_ERROR_EXPOSURE_IN_PROGRESS) ret = "ASI_ERROR_EXPOSURE_IN_PROGRESS";
-	else if (code == ASI_ERROR_GENERAL_ERROR) ret = "ASI_ERROR_GENERAL_ERROR";
-	else if (code == ASI_ERROR_END) ret = "ASI_ERROR_END";
-	else if (code == -1) ret = "Non-ASI ERROR";
-	else ret = "UNKNOWN ASI ERROR";
-
-	sprintf(retCodeBuffer, "%s (%d)", ret.c_str(), (int) code);
-	return(retCodeBuffer);
-}
-
-char *getCameraMode(ASI_CAMERA_MODE mode)
-{
-	static char retModeBuffer[100];
-	std::string ret;
-
-	if (mode == ASI_MODE_NORMAL) ret = "NORMAL";
-	else if (mode == ASI_MODE_TRIG_SOFT_EDGE) ret = "TRIG_SOFT_EDGE";
-	else if (mode == ASI_MODE_TRIG_RISE_EDGE) ret = "TRIG_RISE_EDGE";
-	else if (mode == ASI_MODE_TRIG_FALL_EDGE) ret = "TRIG_FALL_EDGE";
-	else if (mode == ASI_MODE_TRIG_SOFT_LEVEL) ret = "TRIG_SOFT_LEVEL";
-	else if (mode == ASI_MODE_TRIG_HIGH_LEVEL) ret = "TRIG_HIGH_LEVEL";
-	else if (mode == ASI_MODE_TRIG_LOW_LEVEL) ret = "TRIG_LOW_LEVEL";
-	else if (mode == ASI_MODE_END) ret = "End of list";
-	else ret = "UNKNOWN MODE";
-
-	sprintf(retModeBuffer, "%s (%d)", ret.c_str(), (int) mode);
-	return(retModeBuffer);
 }
 
 long roundTo(long n, int roundTo)
@@ -512,7 +464,9 @@ ASI_ERROR_CODE takeOneExposure(
 		length_in_units(exposureTime_us, true));
 
 // XXXXXXXXXXXXXXXXXX testing.  If in auto exposure, only set exposure time once per day/night.
-if (! setAutoExposure || ! currentAutoExposure) {
+// xxxxxxxxxxx June 13, 2022: At night, it doesn't work to only set the exposure once - I assume
+// the camera isn't on long enough to get a good auto exposure time.
+if (1 || ! setAutoExposure || ! currentAutoExposure) {
 	setAutoExposure = true;
 	setControl(cameraId, ASI_EXPOSURE, exposureTime_us, currentAutoExposure ? ASI_TRUE :ASI_FALSE);
 }
@@ -590,8 +544,8 @@ if (! setAutoExposure || ! currentAutoExposure) {
 			ASIGetControlValue(cameraId, ASI_TEMPERATURE, &actualTemp, &bAuto);
 			if (ASICameraInfo.IsColorCam)
 			{
-				ASIGetControlValue(CamNum, ASI_WB_R, &actualWBR, &bAuto);
-				ASIGetControlValue(CamNum, ASI_WB_B, &actualWBB, &bAuto);
+				ASIGetControlValue(cameraId, ASI_WB_R, &actualWBR, &bAuto);
+				ASIGetControlValue(cameraId, ASI_WB_B, &actualWBB, &bAuto);
 			}
 		}
 
@@ -609,6 +563,8 @@ if (! setAutoExposure || ! currentAutoExposure) {
 // Exit the program gracefully.
 void closeUp(int e)
 {
+	if (quietExit) exit(e);		// Called manually so don't display anything.
+
 	static bool closingUp = false;		// indicates if we're in the process of exiting.
 	// For whatever reason, we're sometimes called twice, but we should only execute once.
 	if (closingUp) return;
@@ -834,7 +790,9 @@ int main(int argc, char *argv[])
 	char const *bayer[]			= { "RG", "BG", "GR", "GB" };
 	bool endOfNight				= false;
 	int i;
-	ASI_ERROR_CODE asiRetCode;			// used for return code from ASI functions.
+	ASI_ERROR_CODE asiRetCode;				// used for return code from ASI functions.
+	bool saveCC					= false;	// Save Camera Capabilities and exit?
+	char const *CC_saveDir		= DEFAULT_SAVEDIR;		// Where to put camera's capabilities
 	char const *version			= NULL;		// version of Allsky
 
 	// Some settings have both day and night versions, some have only one version that applies to both,
@@ -900,6 +858,7 @@ int main(int argc, char *argv[])
 	// (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
 	char const *angle			= DEFAULT_ANGLE;
 
+	bool help					= false;
 	bool preview				= false;
 	bool showTime				= DEFAULT_SHOWTIME;
 	char const *tempType		= "C";							// Celsius
@@ -932,14 +891,13 @@ int main(int argc, char *argv[])
 
 	bool daytimeCapture			= DEFAULT_DAYTIMECAPTURE;	// are we capturing daytime pictures?
 
-	bool help					= false;
 	int quality					= DEFAULT_QUALITY;
 	bool coolerEnabled		 	= false;
 	long targetTemp				= 0;
 
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
-	setlinebuf(stdout);				// Line buffer output so entries appear in the log immediately.
+	setlinebuf(stdout);					// Line buffer output so entries appear in the log immediately.
 
 	char const *fc = NULL, *sfc = NULL;	// temporary pointers to fontcolor and smallfontcolor
 	if (argc > 1)
@@ -950,6 +908,7 @@ int main(int argc, char *argv[])
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
 				help = true;
+				quietExit = true;	// we display the help message and quit
 			}
 			else if (strcmp(argv[i], "-version") == 0)
 			{
@@ -958,6 +917,12 @@ int main(int argc, char *argv[])
 			else if (strcmp(argv[i], "-save_dir") == 0)
 			{
 				saveDir = argv[++i];
+			}
+			else if (strcmp(argv[i], "-cc_save_dir") == 0)
+			{
+				CC_saveDir = argv[++i];
+				saveCC = true;
+				quietExit = true;	// we display info and quit
 			}
 			else if (strcmp(argv[i], "-tty") == 0)	// overrides what was automatically determined
 			{
@@ -1107,16 +1072,6 @@ i++;
 			else if (strcmp(argv[i], "-aggression") == 0)
 			{
 				aggression = atoi(argv[++i]);
-				if (aggression < 1)
-				{
-					fprintf(stderr, "Aggression must be between 1 and 100; setting to 1.\n");
-					aggression = 1;
-				}
-				else if (aggression > 100)
-				{
-					fprintf(stderr, "Aggression must be between 1 and 100; setting to 100.\n");
-					aggression = 100;
-				}
 			}
 			else if (strcmp(argv[i], "-gaintransitiontime") == 0)
 			{
@@ -1314,6 +1269,7 @@ i++;
 		}
 	}
 
+	if (! saveCC)
 	{
 		printf("\n%s", c(KGRN));
 		if (version == NULL) version = "UNKNOWN";
@@ -1463,8 +1419,9 @@ i++;
 
 		printf("\n");
 		printf(" -daytime				- Default = %s: 1 enables capture daytime images\n", yesNo(DEFAULT_DAYTIMECAPTURE));
-		printf(" -save_dir				- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
+		printf(" -save_dir directory	- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
 		printf(" -preview				- 1 previews the captured images. Only works with a Desktop Environment\n");
+		printf(" -cc_save_dir directory	- Outputs the camera's capabilities to the specified directory and exists.\n");
 		printf(" -version				- Version of Allsky in use.\n");
 
 		printf("%s", c(KNRM));
@@ -1530,25 +1487,8 @@ i++;
 		*dot = '\0';
 	}
 
-	int numDevices = ASIGetNumOfConnectedCameras();
-	if (numDevices <= 0)
-	{
-		printf("*** ERROR: No Connected Camera...\n");
-		// Don't wait here since it's possible the camera is physically connected
-		// but the software doesn't see it and the USB bus needs to be reset.
-		closeUp(EXIT_NO_CAMERA);		// If there are no cameras we can't do anything.
-	}
-
-	if (numDevices > 1)
-	{
-		printf("\nAttached Cameras%s:\n", numDevices == 1 ? "" : " (using first one)");
-		for (i = 0; i < numDevices; i++)
-		{
-			ASIGetCameraProperty(&ASICameraInfo, i);
-			printf("  - %d %s\n", i, ASICameraInfo.Name);
-		}
-	}
-	ASIGetCameraProperty(&ASICameraInfo, 0);	// want info on 1st camera
+	processConnectedCameras();	// exits on error
+	ASIGetCameraProperty(&ASICameraInfo, CamNum);
 
 	asiRetCode = ASIOpenCamera(CamNum);
 	if (asiRetCode != ASI_SUCCESS)
@@ -1569,6 +1509,18 @@ i++;
 	}
 	originalWidth = width;
 	originalHeight = height;
+
+	ASIGetNumOfControls(CamNum, &iNumOfCtrl);
+
+	if (saveCC)
+	{
+		saveCameraInfo(ASICameraInfo, CC_saveDir, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
+		closeUp(EXIT_OK);
+	}
+
+	outputCameraInfo(ASICameraInfo, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
+	// checkExposureValues() must come after outputCameraInfo().
+	(void) checkExposureValues(dayExposure_us, dayAutoExposure, nightExposure_us, nightAutoExposure);
 
 #ifdef USE_HISTOGRAM
 	int centerX, centerY;
@@ -1613,161 +1565,11 @@ i++;
 		closeUp(EXIT_ERROR_STOP);	// force the user to fix it
 #endif
 
-	printf("\nCamera Information:\n");
-	printf("  - Model: %s\n", ASICameraInfo.Name);
-	ASI_ID cameraID;	// USB 3 cameras only
-	if (ASICameraInfo.IsUSB3Camera == ASI_TRUE && ASIGetID(CamNum, &cameraID) == ASI_SUCCESS)
-	{
-		printf("  - Camera ID: ");
-		if (cameraID.id[0] == '\0')
-		{
-			printf("[none]");
-		} else {
-			for (unsigned int i=0; i<sizeof(cameraID.id); i++)
-				printf("%c", cameraID.id[i]);
-		}
-		printf("\n");
-	}
-	// To clear the camera ID:
-		// cameraID.id[0] = '\0';
-		// ASISetID(CamNum, cameraID);
-	ASI_SN serialNumber;
-	asiRetCode = ASIGetSerialNumber(CamNum, &serialNumber);
-	if (asiRetCode != ASI_SUCCESS)
-	{
-		if (asiRetCode == ASI_ERROR_GENERAL_ERROR)
-			printf("Camera does not support serialNumber\n");
-		else
-			printf("*** WARNING: unable to get serialNumber (%s)\n", getRetCode(asiRetCode));
-	}
-	else
-	{
-		printf("  - Camera Serial Number: ");
-		if (serialNumber.id[0] == '\0')
-		{
-			printf("[none]");
-		} else {
-			for (unsigned int i=0; i<sizeof(serialNumber.id); i++)
-				printf("%02x", serialNumber.id[i]);
-		}
-		printf("\n");
-	}
-	printf("  - Native Resolution: %dx%d\n", iMaxWidth, iMaxHeight);
-	printf("  - Pixel Size: %1.1f microns\n", pixelSize);
-	printf("  - Supported Bins: ");
-	for (int i = 0; i < 16; ++i)
-	{
-		if (ASICameraInfo.SupportedBins[i] == 0)
-		{
-			break;
-		}
-		printf("%d ", ASICameraInfo.SupportedBins[i]);
-	}
-	printf("\n");
-
-	if (ASICameraInfo.IsColorCam)
-	{
-		printf("  - Color camera, bayer pattern: %s\n", bayer[ASICameraInfo.BayerPattern]);
-	}
-	else
-	{
-		printf("  - Mono camera\n");
-	}
-	if (ASICameraInfo.IsCoolerCam)
-	{
-		printf("  - Camera with cooling capabilities\n");
-	}
-
-	ASIGetControlValue(CamNum, ASI_TEMPERATURE, &actualTemp, &bAuto);
-	printf("  - Sensor temperature: %0.2f C\n", (float)actualTemp / 10.0);
-
-	ASI_CAMERA_MODE CamMode;
-	asiRetCode = ASIGetCameraMode(CamNum, &CamMode);
-	if (asiRetCode != ASI_SUCCESS)
-	{
-		printf("*** ERROR getting camera mode (%s)\n", getRetCode(asiRetCode));
-		closeUp(EXIT_ERROR_STOP);	// Can't do anything so might as well exit.
-	}
-	printf("  - Bit depth: %d\n", ASICameraInfo.BitDepth);
-	printf("  - Trigger camera: %s\n", ASICameraInfo.IsTriggerCam == ASI_TRUE ? "Yes" : "No");
-	if (ASICameraInfo.IsTriggerCam == ASI_TRUE)	// Mode will always be "Normal"
-		printf("  - Current camera mode: %s\n", getCameraMode(CamMode));
-
 	asiRetCode = ASIInitCamera(CamNum);
 	if (asiRetCode != ASI_SUCCESS)
 	{
 		printf("*** ERROR: Unable to initialise camera: %s\n", getRetCode(asiRetCode));
 		closeUp(EXIT_ERROR_STOP);	// Can't do anything so might as well exit.
-	}
-
-	// Get a few values from the camera that we need elsewhere.
-	ASIGetNumOfControls(CamNum, &iNumOfCtrl);
-	if (debugLevel >= 4)
-		printf("Control Caps:\n");
-	for (i = 0; i < iNumOfCtrl; i++)
-	{
-		ASIGetControlCaps(CamNum, i, &ControlCaps);
-		switch (ControlCaps.ControlType) {
-		case ASI_EXPOSURE:
-			cameraMinExposure_us = ControlCaps.MinValue;
-			cameraMaxExposure_us = ControlCaps.MaxValue;
-			break;
-		case ASI_AUTO_MAX_EXP:
-			// Keep track of the camera's max auto-exposure so we don't try to exceed it.
-			// MaxValue is in MS so convert to microseconds
-#ifdef HISTOGRAM
-			// If using histogram algorithm we use manual exposure so set this to a value that will never be exceeded.
-			cameraMaxAutoexposure_us	= cameraMaxExposure_us == NOT_SET ? cameraMaxExposure_us+1 : 9999999999999;
-#else
-			cameraMaxAutoexposure_us = ControlCaps.MaxValue * US_IN_MS;
-#endif
-			break;
-		default:	// needed to keep compiler quiet
-			break;
-		}
-		if (debugLevel >= 4)
-		{
-			printf("  - %s:\n", ControlCaps.Name);
-			printf("    - Description = %s\n", ControlCaps.Description);
-			printf("    - MinValue = %'ld\n", ControlCaps.MinValue);
-			printf("    - MaxValue = %'ld\n", ControlCaps.MaxValue);
-			printf("    - DefaultValue = %'ld\n", ControlCaps.DefaultValue);
-			printf("    - IsAutoSupported = %d\n", ControlCaps.IsAutoSupported);
-			printf("    - IsWritable = %d\n", ControlCaps.IsWritable);
-			printf("    - ControlType = %d\n", ControlCaps.ControlType);
-		}
-	}
-
-	if (dayExposure_us < cameraMinExposure_us)
-	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", dayExposure_us, cameraMinExposure_us);
-	 	dayExposure_us = cameraMinExposure_us;
-	}
-	else if (dayExposure_us > cameraMaxExposure_us)
-	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", dayExposure_us, cameraMaxExposure_us);
-	 	dayExposure_us = cameraMaxExposure_us;
-	}
-	else if (dayAutoExposure && dayExposure_us > cameraMaxAutoexposure_us)
-	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", dayExposure_us, cameraMaxAutoexposure_us);
-	 	dayExposure_us = cameraMaxAutoexposure_us;
-	}
-
-	if (nightExposure_us < cameraMinExposure_us)
-	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", nightExposure_us, cameraMinExposure_us);
-	 	nightExposure_us = cameraMinExposure_us;
-	}
-	else if (nightExposure_us > cameraMaxExposure_us)
-	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", nightExposure_us, cameraMaxExposure_us);
-	 	nightExposure_us = cameraMaxExposure_us;
-	}
-	else if (nightAutoExposure && nightExposure_us > cameraMaxAutoexposure_us)
-	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", nightExposure_us, cameraMaxAutoexposure_us);
-	 	nightExposure_us = cameraMaxAutoexposure_us;
 	}
 
 	if (debugLevel >= 4)
@@ -1786,29 +1588,6 @@ i++;
 				it == ASI_IMG_RAW16 ?  "ASI_IMG_RAW16" :
 				it == ASI_IMG_Y8 ?  "ASI_IMG_Y8" :
 				"unknown video format");
-		}
-	}
-
-	if (debugLevel >= 4 && ASICameraInfo.IsTriggerCam == ASI_TRUE)
-	{
-		ASI_SUPPORTED_MODE CamSupportedModes;
-		asiRetCode = ASIGetCameraSupportMode(CamNum, &CamSupportedModes);
-		if (asiRetCode != ASI_SUCCESS)
-		{
-			printf("*** WARNING: unable to get camera supported modes (%s)\n", getRetCode(asiRetCode));
-		}
-		else
-		{
-			printf("Supported modes:\n");
-			for (int i = 0; i < 16; ++i)
-			{
-				if (CamSupportedModes.SupportedCameraMode[i] == ASI_MODE_END)
-				{
-					break;
-				}
-				printf("   - %s ", getCameraMode(CamSupportedModes.SupportedCameraMode[i]));
-			}
-			printf("\n");
 		}
 	}
 
@@ -1948,6 +1727,7 @@ i++;
 	printf(" Show Mean Brightness: %s\n", yesNo(showMean));
 	printf(" Show Focus Metric: %s\n", yesNo(showFocus));
 	printf(" ZWO SDK version %s\n", ASIGetSDKVersion());
+	printf(" Allsky version: %s\n", version);
 	printf("%s\n", c(KNRM));
 
 	//-------------------------------------------------------------------------------------------------------

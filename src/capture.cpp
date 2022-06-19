@@ -835,6 +835,7 @@ int main(int argc, char *argv[])
 	bool endOfNight				= false;
 	int i;
 	ASI_ERROR_CODE asiRetCode;			// used for return code from ASI functions.
+	const char *version			= NULL;		// version of Allsky
 
 	// Some settings have both day and night versions, some have only one version that applies to both,
 	// and some have either a day OR night version but not both.
@@ -940,24 +941,6 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	setlinebuf(stdout);				// Line buffer output so entries appear in the log immediately.
 
-	printf("\n%s", c(KGRN));
-	printf("**********************************************\n");
-	printf("*** Allsky Camera Software v0.8.4   |  2022 ***\n");
-	printf("**********************************************\n\n");
-	printf("Capture images of the sky with a Raspberry Pi and an ASI Camera\n");
-	printf("%s\n", c(KNRM));
-	printf("%sAdd -h or --help for available options%s\n\n", c(KYEL), c(KNRM));
-	printf("Author: Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
-	printf("Contributors:\n");
-	printf(" -Knut Olav Klo\n");
-	printf(" -Daniel Johnsen\n");
-	printf(" -Yang and Sam from ZWO\n");
-	printf(" -Robert Wagner\n");
-	printf(" -Michael J. Kidd - <linuxkidd@gmail.com>\n");
-	printf(" -Chris Kuethe\n");
-	printf(" -Eric Claeys\n");
-	printf("\n");
-
 	if (argc > 1)
 	{
 		for (i=1 ; i <= argc - 1 ; i++)
@@ -966,6 +949,10 @@ int main(int argc, char *argv[])
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
 				help = true;
+			}
+			else if (strcmp(argv[i], "-version") == 0)
+			{
+				version = argv[++i];
 			}
 			else if (strcmp(argv[i], "-save_dir") == 0)
 			{
@@ -1328,6 +1315,30 @@ i++;
 		}
 	}
 
+	{
+		printf("\n%s", c(KGRN));
+		if (version == NULL) version = "UNKNOWN";
+		char v[100]; snprintf(v, sizeof(v), "*** Allsky Camera Software Version %s ***", version);
+		for (size_t i=0; i<strlen(v); i++) printf("*");
+		printf("\n");
+		printf("%s\n", v);
+		for (size_t i=0; i<strlen(v); i++) printf("*");
+		printf("\n\n");
+		printf("Capture images of the sky with a Raspberry Pi and an ASI Camera\n");
+		printf("%s\n", c(KNRM));
+		if (! help) printf("%sAdd -h or --help for available options%s\n\n", c(KYEL), c(KNRM));
+		printf("Author: Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
+		printf("Contributors:\n");
+		printf(" -Knut Olav Klo\n");
+		printf(" -Daniel Johnsen\n");
+		printf(" -Yang and Sam from ZWO\n");
+		printf(" -Robert Wagner\n");
+		printf(" -Michael J. Kidd - <linuxkidd@gmail.com>\n");
+		printf(" -Chris Kuethe\n");
+		printf(" -Eric Claeys\n");
+		printf("\n");
+	}
+
 	if (flip == 0)
 		strFlip = "none";
 	else if (flip == 1)
@@ -1439,6 +1450,7 @@ i++;
 		printf(" -daytime				- Default = %s: 1 enables capture daytime images\n", yesNo(DEFAULT_DAYTIMECAPTURE));
 		printf(" -save_dir				- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
 		printf(" -preview				- 1 previews the captured images. Only works with a Desktop Environment\n");
+		printf(" -version				- Version of Allsky in use.\n");
 
 		printf("%s", c(KNRM));
 		closeUp(EXIT_OK);

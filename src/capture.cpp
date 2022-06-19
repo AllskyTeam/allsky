@@ -631,7 +631,7 @@ void closeUp(int e)
 		pthread_join(threadDisplay, &retval);
 	}
 
-	const char *a = "Stopping";
+	char const *a = "Stopping";
 	if (notificationImages) {
 		if (e == EXIT_RESTARTING)
 		{
@@ -835,7 +835,7 @@ int main(int argc, char *argv[])
 	bool endOfNight				= false;
 	int i;
 	ASI_ERROR_CODE asiRetCode;			// used for return code from ASI functions.
-	const char *version			= NULL;		// version of Allsky
+	char const *version			= NULL;		// version of Allsky
 
 	// Some settings have both day and night versions, some have only one version that applies to both,
 	// and some have either a day OR night version but not both.
@@ -845,7 +845,7 @@ int main(int argc, char *argv[])
 	// In theory, almost every setting could have both day and night versions (e.g., width & height),
 	// but the chances of someone wanting different versions.
 
-	const char *locale			= DEFAULT_LOCALE;
+	char const *locale			= DEFAULT_LOCALE;
 	// All the font settings apply to both day and night.
 	int fontnumber				= DEFAULT_FONTNUMBER;
 	int iTextX					= DEFAULT_ITEXTX;
@@ -941,6 +941,7 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	setlinebuf(stdout);				// Line buffer output so entries appear in the log immediately.
 
+	char const *fc = NULL, *sfc = NULL;	// temporary pointers to fontcolor and smallfontcolor
 	if (argc > 1)
 	{
 		for (i=1 ; i <= argc - 1 ; i++)
@@ -1288,13 +1289,11 @@ i++;
 			}
 			else if (strcmp(argv[i], "-fontcolor") == 0)
 			{
-				if (sscanf(argv[++i], "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]) != 3)
-					fprintf(stderr, "%s*** ERROR: Not enough font color parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
+				fc = argv[++i];
 			}
 			else if (strcmp(argv[i], "-smallfontcolor") == 0)
 			{
-				if (sscanf(argv[++i], "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]) != 3)
-					fprintf(stderr, "%s*** ERROR: Not enough small font color parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
+				sfc = argv[++i];
 			}
 			else if (strcmp(argv[i], "-fonttype") == 0)
 			{
@@ -1339,6 +1338,22 @@ i++;
 		printf("\n");
 	}
 
+	// Do argument error checking
+	if (aggression < 1)
+	{
+		fprintf(stderr, "WARNING: Aggression must be between 1 and 100; setting to 1.\n");
+		aggression = 1;
+	}
+	else if (aggression > 100)
+	{
+		fprintf(stderr, "WARNING: Aggression must be between 1 and 100; setting to 100.\n");
+		aggression = 100;
+	}
+	if (fc != NULL && sscanf(fc, "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]) != 3)
+		fprintf(stderr, "%s*** ERROR: Not enough font color parameters: '%s'%s\n", c(KRED), fc, c(KNRM));
+	if (sfc != NULL && sscanf(sfc, "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]) != 3)
+		fprintf(stderr, "%s*** ERROR: Not enough small font color parameters: '%s'%s\n", c(KRED), sfc, c(KNRM));
+
 	if (flip == 0)
 		strFlip = "none";
 	else if (flip == 1)
@@ -1349,7 +1364,7 @@ i++;
 		strFlip = "both";
 
 	if (setlocale(LC_NUMERIC, locale) == NULL)
-		printf("*** WARNING: Could not set locale to %s ***\n", locale);
+		fprintf(stderr, "*** WARNING: Could not set locale to %s ***\n", locale);
 
 	if (help)
 	{
@@ -1456,8 +1471,8 @@ i++;
 		closeUp(EXIT_OK);
 	}
 
-	const char *imagetype = "";
-	const char *ext = checkForValidExtension(fileName, imageType);
+	char const *imagetype = "";
+	char const *ext = checkForValidExtension(fileName, imageType);
 	if (ext == NULL)
 	{
 		// checkForValidExtension() displayed the error message.
@@ -1506,7 +1521,7 @@ i++;
 	}
 	else
 	{
-		const char *slash = strrchr(fileName, '/');
+		char const *slash = strrchr(fileName, '/');
 		if (slash == NULL)
 			strncat(fileNameOnly, fileName, sizeof(fileNameOnly)-1);
 		else
@@ -1811,7 +1826,7 @@ i++;
 			imageType = IMG_RAW8;
 	}
 
-	const char *sType;		// displayed in output
+	char const *sType;		// displayed in output
 	if (imageType == IMG_RAW16)
 	{
 		sType = "RAW16";
@@ -2442,7 +2457,7 @@ setAutoExposure = false;	// XXXXXXXXXXXX testing
 					{
 						int acceptable;
 						float multiplier = 1.10;
-						const char *acceptableType;
+						char const *acceptableType;
 						if (mean < minAcceptableMean) {
 							acceptable = minAcceptableMean;
 							acceptableType = "min";

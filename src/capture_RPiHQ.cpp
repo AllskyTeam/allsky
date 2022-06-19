@@ -44,11 +44,12 @@ using namespace std;
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
-// These are global so they can be used by other routines.  Variables for command-line settings are first.
-bool isLibcamera;			// are we using libcamera or raspistill?
+// These are global so they can be used by other routines.
+// Variables for command-line settings are first.
+bool isLibcamera;									// are we using libcamera or raspistill?
 int flip					= DEFAULT_FLIP;
 char const *strFlip			= "";
-bool tty					= false;	// are we on a tty?
+bool tty					= false;				// are we on a tty?
 bool notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
 char const *fileName		= DEFAULT_FILENAME;
 char const *timeFormat		= DEFAULT_TIMEFORMAT;
@@ -62,35 +63,35 @@ bool currentAutoAWB			= false;
 float currentWBR			= NOT_SET;
 float currentWBB			= NOT_SET;
 
-double actualTemp			= NOT_SET;		// temp of sensor during last image
+double actualTemp			= NOT_SET;				// temp of sensor during last image
 
 std::vector<int> compressionParameters;
 bool bMain					= true;
 std::string dayOrNight;
-bool saveCC					= false;	// Save Camera Capabilities and exit?
+bool saveCC					= false;				// Save Camera Capabilities and exit?
 char const *CC_saveDir		= DEFAULT_SAVEDIR;		// Where to put camera's capabilities
-int numErrors				= 0;		// Number of errors in a row
-int iNumOfCtrl				= NOT_SET;	// Number of camera controls
-int numExposures			= 0;		// how many valid pictures have we taken so far?
-long cameraMinExposure_us	= NOT_SET;	// camera's minimum exposure - camera dependent
-long cameraMaxExposure_us	= NOT_SET;	// camera's maximum exposure - camera dependent
-long cameraMaxAutoexposure_us = NOT_SET;	// camera's max auto-exposure
-float minSaturation;					// produces black and white
+int numErrors				= 0;					// Number of errors in a row
+int iNumOfCtrl				= NOT_SET;				// Number of camera control capabilities
+int numExposures			= 0;					// how many valid pictures have we taken so far?
+long cameraMinExposure_us	= NOT_SET;				// camera's minimum exposure - camera dependent
+long cameraMaxExposure_us	= NOT_SET;				// camera's maximum exposure - camera dependent
+long cameraMaxAutoexposure_us = NOT_SET;			// camera's max auto-exposure
+float minSaturation;								// produces black and white
 float maxSaturation;
 float defaultSaturation;
-int minBrightness;						// what user enters on command line
+int minBrightness;									// what user enters on command line
 int maxBrightness;
 int defaultBrightness;
 int currentBrightness		= NOT_SET;
-int currentBpp				= NOT_SET;	// bytes per pixel: 8, 16, or 24
-int currentBitDepth			= NOT_SET;	// 8 or 16
+int currentBpp				= NOT_SET;				// bytes per pixel: 8, 16, or 24
+int currentBitDepth			= NOT_SET;				// 8 or 16
 int currentBin				= NOT_SET;
-float mean					= NOT_SET;	// mean brightness of image
-char finalFileName[200];				// final name of the file that's written to disk, with no directories
-char fullFilename[1000];				// full name of file written to disk
-bool currentAutoExposure	= false;	// is auto-exposure currently on?
-bool currentAutoGain		= false;	// is auto-gain currently on?
-bool quietExit				= false;	// Hide message on exit?
+float mean					= NOT_SET;				// mean brightness of image
+char finalFileName[200];							// final name of the file that's written to disk, with no directories
+char fullFilename[1000];							// full name of file written to disk
+bool currentAutoExposure	= false;				// is auto-exposure currently on?
+bool currentAutoGain		= false;				// is auto-gain currently on?
+bool quietExit				= false;				// Hide message on exit?
 raspistillSetting myRaspistillSetting;
 modeMeanSetting myModeMeanSetting;
 
@@ -584,23 +585,23 @@ int main(int argc, char *argv[])
 				help = true;
 				quietExit = true;	// we display the help message and quit
 			}
+			else if (strcmp(argv[i], "-version") == 0)
+			{
+				version = argv[++i];
+			}
+			else if (strcmp(argv[i], "-save_dir") == 0)
+			{
+				saveDir = argv[++i];
+			}
 			else if (strcmp(argv[i], "-cc_save_dir") == 0)
 			{
 				CC_saveDir = argv[++i];
 				saveCC = true;
 				quietExit = true;	// we display info and quit
 			}
-			else if (strcmp(argv[i], "-version") == 0)
-			{
-				version = argv[++i];
-			}
 			else if (strcmp(argv[i], "-cmd") == 0)
 			{
 				isLibcamera = strcmp(argv[i+1], "libcamera") == 0 ? true : false;
-			}
-			else if (strcmp(argv[i], "-save_dir") == 0)
-			{
-				saveDir = argv[++i];
 			}
 			else if (strcmp(argv[i], "-tty") == 0)
 			{
@@ -1157,6 +1158,8 @@ i++;
 	}
 
 	outputCameraInfo(ASICameraInfo, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
+	// checkExposureValues() must come after outputCameraInfo().
+	(void) checkExposureValues(dayExposure_us, dayAutoExposure, nightExposure_us, nightAutoExposure);
 
 	// Handle "auto" imageType.
 	if (imageType == AUTO_IMAGE_TYPE)

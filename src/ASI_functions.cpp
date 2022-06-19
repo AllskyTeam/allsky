@@ -615,7 +615,7 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, int width, int height, double 
 	if (supportsTemperature)
 	{
 		ASI_BOOL a;
-		double temp;
+		double temp = 0.0;
 		ASIGetControlValue(cameraInfo.CameraID, ASI_TEMPERATURE, &temp, &a);
 		printf("  - Sensor temperature: %0.2f C\n", (float)temp / 10.0);
 	}

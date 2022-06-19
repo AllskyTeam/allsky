@@ -20,6 +20,10 @@
 #include "include/RPiHQ_raspistill.h"
 #include "include/mode_RPiHQ_mean.h"
 
+#define CAMERA_BRAND			"RPi"
+#define IS_RPi
+#include "ASI_functions.cpp"
+
 using namespace std;
 
 // Define's specific to this camera type.  Others that apply to all camera types are in allsky_common.h
@@ -41,11 +45,11 @@ using namespace std;
 //-------------------------------------------------------------------------------------------------------
 
 // These are global so they can be used by other routines.  Variables for command-line settings are first.
+bool isLibcamera;			// are we using libcamera or raspistill?
 int flip					= DEFAULT_FLIP;
 char const *strFlip			= "";
 bool tty					= false;	// are we on a tty?
 bool notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
-char const *saveDir			= DEFAULT_SAVEDIR;
 char const *fileName		= DEFAULT_FILENAME;
 char const *timeFormat		= DEFAULT_TIMEFORMAT;
 bool dayAutoAWB				= DEFAULT_DAYAUTOAWB;
@@ -58,11 +62,19 @@ bool currentAutoAWB			= false;
 float currentWBR			= NOT_SET;
 float currentWBB			= NOT_SET;
 
+double actualTemp			= NOT_SET;		// temp of sensor during last image
+
 std::vector<int> compressionParameters;
 bool bMain					= true;
 std::string dayOrNight;
-int numErrors				= 0;		// Number of errors in a row.
+bool saveCC					= false;	// Save Camera Capabilities and exit?
+char const *CC_saveDir		= DEFAULT_SAVEDIR;		// Where to put camera's capabilities
+int numErrors				= 0;		// Number of errors in a row
+int iNumOfCtrl				= NOT_SET;	// Number of camera controls
 int numExposures			= 0;		// how many valid pictures have we taken so far?
+long cameraMinExposure_us	= NOT_SET;	// camera's minimum exposure - camera dependent
+long cameraMaxExposure_us	= NOT_SET;	// camera's maximum exposure - camera dependent
+long cameraMaxAutoexposure_us = NOT_SET;	// camera's max auto-exposure
 float minSaturation;					// produces black and white
 float maxSaturation;
 float defaultSaturation;
@@ -78,6 +90,7 @@ char finalFileName[200];				// final name of the file that's written to disk, wi
 char fullFilename[1000];				// full name of file written to disk
 bool currentAutoExposure	= false;	// is auto-exposure currently on?
 bool currentAutoGain		= false;	// is auto-gain currently on?
+bool quietExit				= false;	// Hide message on exit?
 raspistillSetting myRaspistillSetting;
 modeMeanSetting myModeMeanSetting;
 
@@ -87,6 +100,8 @@ modeMeanSetting myModeMeanSetting;
 // Exit the program gracefully.
 void closeUp(int e)
 {
+	if (quietExit) exit(e);			// Called manually so don't display anything.
+
 	static int closingUp = 0;		// indicates if we're in the process of exiting.
 	// For whatever reason, we're sometimes called twice, but we should only execute once.
 	if (closingUp) return;
@@ -145,7 +160,13 @@ char const *getCameraCommand(bool libcamera)
 int RPiHQcapture(bool autoExposure, int exposure_us, int bin, bool autoGain, double gain, bool autoAWB, float WBR, float WBB, int rotation, int flip, float saturation, int brightness, int quality, char const* fileName, int takingDarkFrames, int preview, int width, int height, bool libcamera, cv::Mat *image)
 {
 	// Define command line.
-	string command = getCameraCommand(libcamera);
+	string command = "";
+	if (libcamera)
+	{
+		// Tried putting this in putenv() but it didn't seem to work.
+		command = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL ";
+	}
+	command += getCameraCommand(libcamera);
 
 	// Ensure no process is still running.
 	string kill = "pgrep '" + command + "' | xargs kill -9 2> /dev/null";
@@ -430,11 +451,8 @@ int RPiHQcapture(bool autoExposure, int exposure_us, int bin, bool autoGain, dou
 int main(int argc, char *argv[])
 {
 	// We need to know its value before setting other variables.
-	bool isLibcamera;	// are we using libcamera or raspistill?
 	if (argc > 2 && strcmp(argv[1], "-cmd") == 0 && strcmp(argv[2], "libcamera") == 0)
 	{
-		char c[] = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL";	// for debugging output: "LIBCAMERA_LOG_LEVELS=RPI:0"
-		putenv(c);
 		isLibcamera = true;
 	} else {
 		isLibcamera = false;
@@ -542,12 +560,14 @@ int main(int argc, char *argv[])
 	bool daytimeCapture			= DEFAULT_DAYTIMECAPTURE;
 	bool help					= false;
 	int quality					= DEFAULT_QUALITY;
+	char const *saveDir			= DEFAULT_SAVEDIR;
 
 	int i;
+	char const *bayer[]			= { "RG", "BG", "GR", "GB" };
 	bool endOfNight				= false;
 	int retCode;
 	char const *version			= NULL;		// version of Allsky
-	cv::Mat pRgb;	// the image
+	cv::Mat pRgb;							// the image
 
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
@@ -562,6 +582,13 @@ int main(int argc, char *argv[])
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
 				help = true;
+				quietExit = true;	// we display the help message and quit
+			}
+			else if (strcmp(argv[i], "-cc_save_dir") == 0)
+			{
+				CC_saveDir = argv[++i];
+				saveCC = true;
+				quietExit = true;	// we display info and quit
 			}
 			else if (strcmp(argv[i], "-version") == 0)
 			{
@@ -903,6 +930,7 @@ i++;
 		}
 	}
 
+	if (! saveCC)
 	{
 		printf("\n%s", c(KGRN));
 		if (version == NULL) version = "UNKNOWN";
@@ -1028,8 +1056,9 @@ i++;
 
 		printf("\n");
 		printf(" -daytime				- Default = %s: 1 enables capture daytime images\n", yesNo(DEFAULT_DAYTIMECAPTURE));
-		printf(" -save_dir				- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
+		printf(" -save_dir directory	- Default = %s: where to save 'filename'\n", DEFAULT_SAVEDIR);
 		printf(" -preview				- 1 previews the captured images. Only works with a Desktop Environment\n");
+		printf(" -cc_save_dir directory	- Outputs the camera's capabilities to the specified directory and exists.\n");
 		printf(" -version				- Version of Allsky in use.\n");
 		printf(" -cmd					- Command being used to take pictures (Buster: raspistill, Bullseye: libcamera-still\n");
 		printf(" -mean-threshold		- Default = %.2f: Set mean-value and activates exposure control\n", DEFAULT_MEAN_THRESHOLD);
@@ -1078,22 +1107,6 @@ i++;
 	}
 	compressionParameters.push_back(quality);
 
-	int iMaxWidth = 4096;
-	int iMaxHeight = 3040;
-	double pixelSize = 1.55;
-	if (width == 0 || height == 0)
-	{
-		width  = iMaxWidth;
-		height = iMaxHeight;
-	}
-	originalWidth = width;
-	originalHeight = height;
-
-	printf(" Camera: Raspberry Pi HQ camera\n");
-	printf("  - Resolution: %dx%d\n", iMaxWidth, iMaxHeight);
-	printf("  - Pixel Size: %1.2fmicrons\n", pixelSize);
-	printf("  - Supported Bins: 1x, 2x and 3x\n");
-
 	// Get just the name of the file, without any directories or the extension.
 	char fileNameOnly[50] = { 0 };
 	if (takingDarkFrames)
@@ -1115,6 +1128,35 @@ i++;
 		char *dot = strrchr(fileNameOnly, '.');	// we know there's an extension
 		*dot = '\0';
 	}
+
+	ASI_CAMERA_INFO ASICameraInfo;
+	int CamNum = 0;				// use 1st camera - we don't support multiple cameras
+
+	processConnectedCameras();	// exits on error
+	ASIGetCameraProperty(&ASICameraInfo, CamNum);
+
+	int iMaxWidth, iMaxHeight;
+	double pixelSize;
+	iMaxWidth  = ASICameraInfo.MaxWidth;
+	iMaxHeight = ASICameraInfo.MaxHeight;
+	pixelSize  = ASICameraInfo.PixelSize;
+	if (width == 0 || height == 0)
+	{
+		width  = iMaxWidth;
+		height = iMaxHeight;
+	}
+	originalWidth = width;
+	originalHeight = height;
+
+	ASIGetNumOfControls(CamNum, &iNumOfCtrl);
+
+	if (saveCC)
+	{
+		saveCameraInfo(ASICameraInfo, CC_saveDir, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
+		closeUp(EXIT_OK);
+	}
+
+	outputCameraInfo(ASICameraInfo, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
 
 	// Handle "auto" imageType.
 	if (imageType == AUTO_IMAGE_TYPE)
@@ -1215,6 +1257,7 @@ i++;
 		printf("    p1: %1.3f\n", myModeMeanSetting.mean_p1);
 		printf("    p2: %1.3f\n", myModeMeanSetting.mean_p2);
 	}
+	printf(" Allsky version: %s\n", version);
 	printf("%s", c(KNRM));
 
 	// Initialization

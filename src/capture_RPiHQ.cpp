@@ -61,12 +61,12 @@ float currentWBB			= NOT_SET;
 std::vector<int> compressionParameters;
 bool bMain					= true;
 std::string dayOrNight;
-int numErrors				= 0;	// Number of errors in a row.
-int numExposures			= 0;	// how many valid pictures have we taken so far?
-float minSaturation;				// produces black and white
+int numErrors				= 0;		// Number of errors in a row.
+int numExposures			= 0;		// how many valid pictures have we taken so far?
+float minSaturation;					// produces black and white
 float maxSaturation;
 float defaultSaturation;
-int minBrightness;					// what user enters on command line
+int minBrightness;						// what user enters on command line
 int maxBrightness;
 int defaultBrightness;
 int currentBrightness		= NOT_SET;
@@ -97,7 +97,7 @@ void closeUp(int e)
 	// Unfortunately we don't know if the service is stopping us, or restarting us.
 	// If it was restarting there'd be no reason to copy a notification image since it
 	// will soon be overwritten.  Since we don't know, always copy it.
-	const char *a = "Stopping";
+	char const *a = "Stopping";
 	if (notificationImages) {
 		if (e == EXIT_RESTARTING)
 		{
@@ -133,7 +133,7 @@ printf("XXXXXX == in IntHandle(), got signal %d\n", i);
 	closeUp(0);
 }
 
-const char *getCameraCommand(bool libcamera)
+char const *getCameraCommand(bool libcamera)
 {
 	if (libcamera)
 		return("libcamera-still");
@@ -142,7 +142,7 @@ const char *getCameraCommand(bool libcamera)
 }
 
 // Build capture command to capture the image from the HQ camera
-int RPiHQcapture(bool autoExposure, int exposure_us, int bin, bool autoGain, double gain, bool autoAWB, float WBR, float WBB, int rotation, int flip, float saturation, int brightness, int quality, const char* fileName, int takingDarkFrames, int preview, int width, int height, bool libcamera, cv::Mat *image)
+int RPiHQcapture(bool autoExposure, int exposure_us, int bin, bool autoGain, double gain, bool autoAWB, float WBR, float WBB, int rotation, int flip, float saturation, int brightness, int quality, char const* fileName, int takingDarkFrames, int preview, int width, int height, bool libcamera, cv::Mat *image)
 {
 	// Define command line.
 	string command = getCameraCommand(libcamera);
@@ -220,12 +220,16 @@ int RPiHQcapture(bool autoExposure, int exposure_us, int bin, bool autoGain, dou
 
 	if (libcamera)
 	{
+		// xxxx TODO: supported modes:
+		//	'SRGGB10_CSI2P' : 1332x990 
+		//	'SRGGB12_CSI2P' : 2028x1080 2028x1520 4056x3040 
+		//								bin 2x2   bin 1x1
 		if (bin==1)
 			command += " --width 4056 --height 3040";
 		else if (bin==2)
 			command += " --width 2028 --height 1520";
 		else
-			command += " --width 1012 --height 760";
+			command += " --width 1012 --height 760";		// xxxx FIX: not supported mode
 	}
 	else
 	{
@@ -429,7 +433,7 @@ int main(int argc, char *argv[])
 	bool isLibcamera;	// are we using libcamera or raspistill?
 	if (argc > 2 && strcmp(argv[1], "-cmd") == 0 && strcmp(argv[2], "libcamera") == 0)
 	{
-		char c[] = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL";	// for debugging outptu: "LIBCAMERA_LOG_LEVELS=RPI:0"
+		char c[] = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL";	// for debugging output: "LIBCAMERA_LOG_LEVELS=RPI:0"
 		putenv(c);
 		isLibcamera = true;
 	} else {
@@ -449,7 +453,7 @@ int main(int argc, char *argv[])
 		"COMPLEX",							"TRIPLEX",					"COMPLEX_SMALL",
 		"SCRIPT_SIMPLEX",					"SCRIPT_COMPLEX" };
 
-	const char *locale			= DEFAULT_LOCALE;
+	char const *locale			= DEFAULT_LOCALE;
 	// All the font settings apply to both day and night.
 	int fontnumber				= DEFAULT_FONTNUMBER;
 	int iTextX					= DEFAULT_ITEXTX;
@@ -476,12 +480,12 @@ int main(int argc, char *argv[])
 	int nightExposure_us		= DEFAULT_NIGHTEXPOSURE;
 	int nightMaxAutoexposure_ms	= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
 	int currentExposure_us		= NOT_SET;
-	int currentMaxAutoexposure_us = NOT_SET;	// _us to match ZWO version
+	int currentMaxAutoexposure_us = NOT_SET;			// _us to match ZWO version
 	bool dayAutoExposure		= DEFAULT_DAYAUTOEXPOSURE;
 	bool nightAutoExposure		= DEFAULT_NIGHTAUTOEXPOSURE;
-	long lastExposure_us 		= 0;		// last exposure taken
+	long lastExposure_us 		= 0;					// last exposure taken
 	double currentMean			= NOT_SET;
-	double dayGain				= DEFAULT_DAYGAIN;
+	double dayGain				= DEFAULT_DAYGAIN;		// ISO == gain * 100
 	bool dayAutoGain			= DEFAULT_DAYAUTOGAIN;
 	double dayMaxGain			= DEFAULT_DAYMAXGAIN;
 	double nightGain			= DEFAULT_NIGHTGAIN;
@@ -489,7 +493,7 @@ int main(int argc, char *argv[])
 	double nightMaxGain	 		= DEFAULT_NIGHTMAXGAIN;
 	double currentGain			= NOT_SET;
 	double currentMaxGain		= NOT_SET;
-	float lastGain				= 0.0;		// last gain taken
+	float lastGain				= 0.0;					// last gain taken
 	int nightDelay_ms			= DEFAULT_NIGHTDELAY;
 	int dayDelay_ms				= DEFAULT_DAYDELAY;
 	int currentDelay_ms 		= NOT_SET;
@@ -568,6 +572,7 @@ int main(int argc, char *argv[])
 	printf("-Andreas Lindinger\n");
 	printf("\n");
 
+	char const *fc = NULL, *sfc = NULL;	// temporary pointers to fontcolor and smallfontcolor
 	if (argc > 1)
 	{
 		for (i = 1; i <= argc - 1; i++)
@@ -862,13 +867,11 @@ i++;
 			}
 			else if (strcmp(argv[i], "-fontcolor") == 0)
 			{
-				if (sscanf(argv[++i], "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]) != 3)
-					fprintf(stderr, "%s*** ERROR: Not enough font color parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
+				fc = argv[++i];
 			}
 			else if (strcmp(argv[i], "-smallfontcolor") == 0)
 			{
-				if (sscanf(argv[++i], "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]) != 3)
-					fprintf(stderr, "%s*** ERROR: Not enough small font color parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
+				sfc = argv[++i];
 			}
 			else if (strcmp(argv[i], "-fonttype") == 0)
 			{
@@ -915,6 +918,12 @@ i++;
 		}
 	}
 
+	// Do argument error checking
+	if (fc != NULL && sscanf(fc, "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]) != 3)
+		fprintf(stderr, "%s*** WARNING: Not enough font color parameters: '%s'%s\n", c(KRED), fc, c(KNRM));
+	if (sfc != NULL && sscanf(sfc, "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]) != 3)
+		fprintf(stderr, "%s*** WARNING: Not enough small font color parameters: '%s'%s\n", c(KRED), sfc, c(KNRM));
+
 	if (flip == 0)
 		strFlip = "none";
 	else if (flip == 1)
@@ -925,7 +934,7 @@ i++;
 		strFlip = "both";
 
 	if (setlocale(LC_NUMERIC, locale) == NULL)
-		printf("*** WARNING: Could not set locale to %s ***\n", locale);
+		fprintf(stderr, "*** WARNING: Could not set locale to %s ***\n", locale);
 
 	if (help)
 	{
@@ -1020,11 +1029,11 @@ i++;
 		printf(" -mean-p2				- Default = %.1f\n", DEFAULT_MEAN_P2);
 
 		printf("%s", c(KNRM));
-		exit(0);
+		exit(EXIT_OK);
 	}
 
-	const char *imagetype = "";
-	const char *ext = checkForValidExtension(fileName, imageType);
+	char const *imagetype = "";
+	char const *ext = checkForValidExtension(fileName, imageType);
 	if (ext == NULL)
 	{
 		// checkForValidExtension() displayed the error message.
@@ -1089,7 +1098,7 @@ i++;
 	}
 	else
 	{
-		const char *slash = strrchr(fileName, '/');
+		char const *slash = strrchr(fileName, '/');
 		if (slash == NULL)
 			strncat(fileNameOnly, fileName, sizeof(fileNameOnly)-1);
 		else
@@ -1105,7 +1114,7 @@ i++;
 		imageType = IMG_RGB24;
 	}
 
-	const char *sType;		// displayed in output
+	char const *sType;		// displayed in output
 	if (imageType == IMG_RAW16)
 	{
 		sType = "RAW16";

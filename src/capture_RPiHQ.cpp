@@ -563,7 +563,6 @@ int main(int argc, char *argv[])
 			{
 				help = true;
 			}
-			}
 			else if (strcmp(argv[i], "-version") == 0)
 			{
 				version = argv[++i];

@@ -1656,25 +1656,25 @@ i++;
 	printf(" Quality: %d\n", quality);
 	printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
 
-	printf(" Exposure (day): %s, Auto: %s\n", length_in_units(dayExposure_us, true), yesNo(dayAutoExposure));
+	printf(" Exposure (day):   %s, Auto: %s\n", length_in_units(dayExposure_us, true), yesNo(dayAutoExposure));
 	printf(" Exposure (night): %s, Auto: %s\n", length_in_units(nightExposure_us, true), yesNo(nightAutoExposure));
-	printf(" Max Auto-Exposure (day): %s\n", length_in_units(dayMaxAutoexposure_ms, true));
+	printf(" Max Auto-Exposure (day):   %s\n", length_in_units(dayMaxAutoexposure_ms, true));
 	printf(" Max Auto-Exposure (night): %s\n", length_in_units(nightMaxAutoexposure_ms, true));
-	printf(" Gain (day): %d, Auto: %s, max: %d\n", dayGain, yesNo(dayAutoGain), dayMaxGain);
+	printf(" Gain (day):   %d, Auto: %s, max: %d\n", dayGain, yesNo(dayAutoGain), dayMaxGain);
 	printf(" Gain (night): %d, Auto: %s, max: %d\n", nightGain, yesNo(nightAutoGain), nightMaxGain);
 	printf(" Gain Transition Time: %.1f minutes\n", (float) gainTransitionTime/60);
-	printf(" Brightness (day): %d\n", dayBrightness);
+	printf(" Brightness (day):   %d\n", dayBrightness);
 	printf(" Brightness (night): %d\n", nightBrightness);
-	printf(" Binning (day): %d\n", dayBin);
+	printf(" Binning (day):   %d\n", dayBin);
 	printf(" Binning (night): %d\n", nightBin);
 	if (ASICameraInfo.IsColorCam)
 	{
 		printf(" White Balance (day)   Red: %ld, Blue: %ld, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
 		printf(" White Balance (night) Red: %ld, Blue: %ld, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
 	}
-	printf(" Delay (day): %s\n", length_in_units(dayDelay_ms, true));
+	printf(" Delay (day):   %s\n", length_in_units(dayDelay_ms, true));
 	printf(" Delay (night): %s\n", length_in_units(nightDelay_ms, true));
-	printf(" Skip Frames (day): %d\n", daySkipFrames);
+	printf(" Skip Frames (day):   %d\n", daySkipFrames);
 	printf(" Skip Frames (night): %d\n", nightSkipFrames);
 
 	printf(" Aggression: %d%%\n", aggression);

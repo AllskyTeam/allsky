@@ -1204,19 +1204,19 @@ i++;
 	printf(" Quality: %d\n", quality);
 	printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
 
-	printf(" Exposure (day): %s, Auto: %s\n", length_in_units(dayExposure_us, true), yesNo(dayAutoExposure));
+	printf(" Exposure (day):   %s, Auto: %s\n", length_in_units(dayExposure_us, true), yesNo(dayAutoExposure));
 	printf(" Exposure (night): %s, Auto: %s\n", length_in_units(nightExposure_us, true), yesNo(nightAutoExposure));
-	printf(" Max Auto-Exposure (day): %s\n", length_in_units(dayMaxAutoexposure_ms, true));
+	printf(" Max Auto-Exposure (day):   %s\n", length_in_units(dayMaxAutoexposure_ms, true));
 	printf(" Max Auto-Exposure (night): %s\n", length_in_units(nightMaxAutoexposure_ms, true));
-	printf(" Gain (day): %1.2f, Auto: %s, max: %1.2f\n", dayGain, yesNo(dayAutoGain), dayMaxGain);
+	printf(" Gain (day):   %1.2f, Auto: %s, max: %1.2f\n", dayGain, yesNo(dayAutoGain), dayMaxGain);
 	printf(" Gain (night): %1.2f, Auto: %s, max: %1.2f\n", nightGain, yesNo(nightAutoGain), nightMaxGain);
-	printf(" Brightness (day): %d\n", dayBrightness);
+	printf(" Brightness (day):   %d\n", dayBrightness);
 	printf(" Brightness (night): %d\n", nightBrightness);
-	printf(" Binning (day): %d\n", dayBin);
+	printf(" Binning (day):   %d\n", dayBin);
 	printf(" Binning (night): %d\n", nightBin);
 	printf(" White Balance (day)   Red: %.2f, Blue: %.2f, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
 	printf(" White Balance (night) Red: %.2f, Blue: %.2f, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
-	printf(" Delay (day): %s\n", length_in_units(dayDelay_ms, true));
+	printf(" Delay (day):   %s\n", length_in_units(dayDelay_ms, true));
 	printf(" Delay (night): %s\n", length_in_units(nightDelay_ms, true));
 
 	printf(" Saturation: %.1f\n", saturation);
@@ -1254,7 +1254,7 @@ i++;
 	printf(" Mode Mean: %s\n", yesNo(myModeMeanSetting.modeMean));
 	if (myModeMeanSetting.modeMean) {
 		printf("    Mean Value (night): %1.3f\n", myModeMeanSetting.nightMean);
-		printf("    Mean Value (day): %1.3f\n", myModeMeanSetting.dayMean);
+		printf("    Mean Value (day):   %1.3f\n", myModeMeanSetting.dayMean);
 		printf("    Threshold: %1.3f\n", myModeMeanSetting.mean_threshold);
 		printf("    p0: %1.3f\n", myModeMeanSetting.mean_p0);
 		printf("    p1: %1.3f\n", myModeMeanSetting.mean_p1);

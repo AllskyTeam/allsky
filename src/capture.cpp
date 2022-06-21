@@ -71,7 +71,6 @@ bool checkMaxErrors(int *, int);
 // So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
 bool useNewExposureAlgorithm	= DEFAULT_NEWEXPOSURE;
 int flip						= DEFAULT_FLIP;
-char const *strFlip				= "";
 bool tty						= false;			// are we on a tty?
 bool notificationImages			= DEFAULT_NOTIFICATIONIMAGES;
 char const *saveDir				= DEFAULT_SAVEDIR;
@@ -250,7 +249,7 @@ void *SaveImgThd(void *para)
 			add_variables_to_command(cmd, lastExposure_us, currentBrightness, mean,
 				currentAutoExposure, currentAutoGain, currentAutoAWB, (float)actualWBR, (float)actualWBB,
 				actualTemp, gainDB, actualGain,
-				currentBin, strFlip, currentBitDepth, focusMetric);
+				currentBin, getFlip(flip), currentBitDepth, focusMetric);
 			strcat(cmd, " &");
 
 			st = cv::getTickCount();
@@ -559,69 +558,6 @@ if (1 || ! setAutoExposure || ! currentAutoExposure) {
 
 	return status;
 }
-
-// Exit the program gracefully.
-void closeUp(int e)
-{
-	if (quietExit) exit(e);		// Called manually so don't display anything.
-
-	static bool closingUp = false;		// indicates if we're in the process of exiting.
-	// For whatever reason, we're sometimes called twice, but we should only execute once.
-	if (closingUp) return;
-
-	closingUp = true;
-
-	ASIStopVideoCapture(CamNum);
-
-	// Seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
-	// until the exposure finishes, then it never returns so the remaining code doesn't
-	// get executed. Don't know a way around that, so don't bother closing the camera.
-	// Prior versions of allsky didn't do any cleanup, so it should be ok not to close the camera.
-	//	ASICloseCamera(CamNum);
-
-	// Close the optional display window.
-	if (bDisplay)
-	{
-		bDisplay = false;
-		void *retval;
-		pthread_join(threadDisplay, &retval);
-	}
-
-	char const *a = "Stopping";
-	if (notificationImages) {
-		if (e == EXIT_RESTARTING)
-		{
-			system("scripts/copy_notification_image.sh --expires 15 Restarting &");
-			a = "Restarting";
-		}
-		else
-		{
-			system("scripts/copy_notification_image.sh --expires 2 NotRunning &");
-		}
-		// Sleep to give it a chance to print any messages so they (hopefully) get printed
-		// before the one below. This is only so it looks nicer in the log file.
-		sleep(3);
-	}
-
-	printf("     ***** %s AllSky *****\n", a);
-	exit(e);
-}
-
-void sig(int i)
-{
-	if (i == SIGHUP)
-		Log(3, "Got signal to restart\n");
-	else
-		printf("XXXXXX == got unknown signal %d\n", i);
-	gotSignal = true;
-	closeUp(EXIT_RESTARTING);
-}
-void IntHandle(int i)
-{
-	gotSignal = true;
-	closeUp(EXIT_OK);
-}
-
 
 bool adjustGain = false;	// Should we adjust the gain? Set by user on command line.
 bool currentAdjustGain = false;	// Adjusting it right now?
@@ -1310,15 +1246,6 @@ i++;
 	if (sfc != NULL && sscanf(sfc, "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]) != 3)
 		fprintf(stderr, "%s*** ERROR: Not enough small font color parameters: '%s'%s\n", c(KRED), sfc, c(KNRM));
 
-	if (flip == 0)
-		strFlip = "none";
-	else if (flip == 1)
-		strFlip = "horizontal";
-	else if (flip == 2)
-		strFlip = "vertical";
-	else if (flip == 3)
-		strFlip = "both";
-
 	if (setlocale(LC_NUMERIC, locale) == NULL)
 		fprintf(stderr, "*** WARNING: Could not set locale to %s ***\n", locale);
 
@@ -1687,7 +1614,7 @@ i++;
 	printf(" Gamma: %d\n", gamma);
 	printf(" Offset: %d\n", offset);
 	printf(" USB Speed: %d, auto: %s\n", asiBandwidth, yesNo(asiAutoBandwidth));
-	printf(" Flip Image: %s (%d)\n", strFlip, flip);
+	printf(" Flip Image: %s (%d)\n", getFlip(flip), flip);
 	printf(" Filename: %s\n", fileName);
 	printf(" Filename Save Directory: %s\n", saveDir);
 	printf(" Latitude: %s, Longitude: %s\n", latitude, longitude);

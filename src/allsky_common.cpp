@@ -643,3 +643,85 @@ double get_focus_metric(cv::Mat img)
 	Log(4, "  > Focus: %'f\n", focusMetric);
 	return(focusMetric);
 }
+
+
+// Return the flip value as a human-readable string
+char const *getFlip(int f)
+{
+	if (f == 0)
+		return("none");
+	else if (f == 1)
+		return("horizontal");
+	else if (f == 2)
+		return("vertical");
+	else if (f == 3)
+		return("both");
+	else
+	{
+		static char u[40];
+		snprintf(u, sizeof(u), "Unknown flip: %d", f);
+		return(u);
+	}
+}
+
+// Exit the program gracefully.
+void closeUp(int e)
+{
+	if (quietExit) exit(e);		// Called manually so don't display anything.
+
+	static bool closingUp = false;		// indicates if we're in the process of exiting.
+	// For whatever reason, we're sometimes called twice, but we should only execute once.
+	if (closingUp) return;
+
+	closingUp = true;
+
+	stopVideoCapture(CamNum);
+	// Seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
+	// until the exposure finishes, then it never returns so the remaining code doesn't
+	// get executed. Don't know a way around that, so don't bother closing the camera.
+	// Prior versions of allsky didn't do any cleanup, so it should be ok not to close the camera.
+	//	ASICloseCamera(CamNum);
+
+	// Close the optional display window.	// not used by RPi
+	if (bDisplay)
+	{
+		bDisplay = false;
+		void *retval;
+		pthread_join(threadDisplay, &retval);
+	}
+
+	char const *a = "Stopping";
+	if (notificationImages) {
+		if (e == EXIT_RESTARTING)
+		{
+			system("scripts/copy_notification_image.sh --expires 15 Restarting &");
+			a = "Restarting";
+		}
+		else
+		{
+			system("scripts/copy_notification_image.sh --expires 2 NotRunning &");
+		}
+		// Sleep to give it a chance to print any messages so they (hopefully) get printed
+		// before the one below. This is only so it looks nicer in the log file.
+		sleep(3);
+	}
+
+	printf("     ***** %s AllSky *****\n", a);
+	exit(e);
+}
+
+// Handle signals
+void sig(int i)
+{
+	if (i == SIGHUP)
+		Log(3, "Got signal to restart\n");
+	else
+		printf("XXXXXX == got unknown signal %d\n", i);
+	gotSignal = true;
+	closeUp(EXIT_RESTARTING);
+}
+void IntHandle(int i)
+{
+	gotSignal = true;
+	closeUp(EXIT_OK);
+}

@@ -89,6 +89,11 @@ extern char debug_text[];
 extern bool tty;
 extern bool notificationImages;
 extern std::string dayOrNight;
+extern bool quietExit;
+extern bool gotSignal;
+extern bool bDisplay;
+extern pthread_t threadDisplay;
+extern int CamNum;
 
 void cvText(cv::Mat, const char *, int, int, double,
 	int, int,
@@ -125,3 +130,8 @@ int doOverlay(cv::Mat,
 	int[], int[], bool, int);
 bool getBoolean(const char *);
 double get_focus_metric(cv::Mat);
+char const *getFlip(int);
+void closeUp(int);
+void sig(int);
+void IntHandle(int);
+int stopVideoCapture(int);

@@ -73,32 +73,32 @@ bool checkMaxErrors(int *, int);
 // So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
 bool videoOffBetweenImages		= DEFAULT_VIDEO_OFF;
 long flip						= DEFAULT_FLIP;
-bool tty						= false;			// are we on a tty?
+bool tty						= false;						// are we on a tty?
 bool notificationImages			= DEFAULT_NOTIFICATIONIMAGES;
 char const *saveDir				= DEFAULT_SAVEDIR;
 char const *fileName			= DEFAULT_FILENAME;
 char const *timeFormat			= DEFAULT_TIMEFORMAT;
 long dayExposure_us				= DEFAULT_DAYEXPOSURE_MS * US_IN_MS;
 long dayMaxAutoexposure_us		= DEFAULT_DAYMAXAUTOEXPOSURE_MS * US_IN_MS;
-bool dayAutoExposure			= DEFAULT_DAYAUTOEXPOSURE;	// is it on or off for daylight?
-long dayDelay_ms				= DEFAULT_DAYDELAY_MS;	// Delay in milliseconds.
-long nightDelay_ms				= DEFAULT_NIGHTDELAY_MS;	// Delay in milliseconds.
+bool dayAutoExposure			= DEFAULT_DAYAUTOEXPOSURE;		// is it on or off for daylight?
+long dayDelay_ms				= DEFAULT_DAYDELAY_MS;			// Delay in milliseconds.
+long nightDelay_ms				= DEFAULT_NIGHTDELAY_MS;		// Delay in milliseconds.
 long nightMaxAutoexposure_us	= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS * US_IN_MS;
 long gainTransitionTime			= DEFAULT_GAIN_TRANSITION_TIME;
-bool dayAutoAWB					= DEFAULT_DAYAUTOAWB;	// is Auto White Balance on or off?
-long dayWBR						= DEFAULT_DAYWBR;		// red component
-long dayWBB						= DEFAULT_DAYWBB;		// blue component
+bool dayAutoAWB					= DEFAULT_DAYAUTOAWB;			// is Auto White Balance on or off?
+long dayWBR						= DEFAULT_DAYWBR;				// red component
+long dayWBB						= DEFAULT_DAYWBB;				// blue component
 bool nightAutoAWB				= DEFAULT_NIGHTAUTOAWB;
 long nightWBR					= DEFAULT_NIGHTWBR;
 long nightWBB					= DEFAULT_NIGHTWBB;
 bool currentAutoAWB				= false;
 long currentWBR					= NOT_SET;
 long currentWBB					= NOT_SET;
-
-long actualWBR					= NOT_SET;		// actual values per camera
+long actualWBR					= NOT_SET;						// actual values per camera
 long actualWBB					= NOT_SET;
 long actualTemp					= NOT_SET;
 long actualGain					= NOT_SET;
+timeval exposureStartDateTime;									// date/time an image started
 
 #ifdef USE_HISTOGRAM
 int currentHistogramBoxSizeX =	NOT_SET;
@@ -247,11 +247,10 @@ void *SaveImgThd(void *para)
 			char cmd[1100];
 			Log(1, "  > Saving %s image '%s'\n", takingDarkFrames ? "dark" : dayOrNight.c_str(), finalFileName);
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), fullFilename);
-			float gainDB = pow(10, (float)actualGain / 10.0 / 20.0);
-			add_variables_to_command(cmd, lastExposure_us, currentBrightness, mean,
+			add_variables_to_command(cmd, exposureStartDateTime,
+				lastExposure_us, currentBrightness, mean,
 				currentAutoExposure, currentAutoGain, currentAutoAWB, (float)actualWBR, (float)actualWBB,
-				actualTemp, gainDB, actualGain,
-				currentBin, getFlip(flip), currentBitDepth, focusMetric);
+				actualTemp, (float)actualGain, currentBin, getFlip(flip), currentBitDepth, focusMetric);
 			strcat(cmd, " &");
 
 			st = cv::getTickCount();
@@ -2072,16 +2071,15 @@ i++;
 		{
 			// date/time is added to many log entries to make it easier to associate them
 			// with an image (which has the date/time in the filename).
-			timeval t = getTimeval();
+			exposureStartDateTime = getTimeval();
 			char exposureStart[128];
-			char f[10] = "%F %T";
-			sprintf(exposureStart, "%s", formatTime(t, f));
+			sprintf(exposureStart, "%s", formatTime(exposureStartDateTime, "%F %T"));
 			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(currentExposure_us, true));
 
 			// Get start time for overlay. Make sure it has the same time as exposureStart.
 			if (showTime)
 			{
-				sprintf(bufTime, "%s", formatTime(t, timeFormat));
+				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, timeFormat));
 			}
 
 			asiRetCode = takeOneExposure(CamNum, currentExposure_us, pRgb.data, width, height, (ASI_IMG_TYPE) imageType, histogram, &mean);
@@ -2457,7 +2455,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					{
 						// Create the name of the file that goes in the images/<date> directory.
 						snprintf(finalFileName, sizeof(finalFileName), "%s-%s.%s",
-							fileNameOnly, formatTime(t, "%Y%m%d%H%M%S"), imagetype);
+							fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), imagetype);
 					}
 					snprintf(fullFilename, sizeof(fullFilename), "%s/%s", saveDir, finalFileName);
 

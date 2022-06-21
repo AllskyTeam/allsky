@@ -61,8 +61,8 @@ double nightWBB				= DEFAULT_NIGHTWBB;
 bool currentAutoAWB			= false;
 double currentWBR			= NOT_SET;
 double currentWBB			= NOT_SET;
-
 double actualTemp			= NOT_SET;				// temp of sensor during last image
+timeval exposureStartDateTime;						// date/time an image started
 
 std::vector<int> compressionParameters;
 bool bMain					= true;
@@ -111,7 +111,7 @@ char const *getCameraCommand(bool libcamera)
 }
 
 // Build capture command to capture the image from the HQ camera
-int RPiHQcapture(bool autoExposure, long exposure_us, long bin, bool autoGain, double gain, bool autoAWB, double WBR, double WBB, long rotation, long flip, double saturation, long brightness, long quality, char const* fileName, int takingDarkFrames, int preview, long width, long height, bool libcamera, cv::Mat *image)
+int RPiHQcapture(bool autoExposure, long exposure_us, long bin, bool autoGain, double gain, bool autoAWB, double WBR, double WBB, long rotation, long flip, double saturation, long brightness, long quality, char const* fileName, int takingDarkFrames, int preview, long width, long height, bool libcamera, cv::Mat *image, char const *imagetype)
 {
 	// Define command line.
 	string command = "";
@@ -138,6 +138,9 @@ int RPiHQcapture(bool autoExposure, long exposure_us, long bin, bool autoGain, d
 		// xxx TODO: does this do anything?
 		// command += " --tuning-file /usr/share/libcamera/ipa/raspberrypi/imx477.json";
 		command += "";	// xxxx
+
+		if (strcmp(imagetype, "png") == 0)
+			command += " --encoding png";
 	}
 	else
 	{
@@ -1411,27 +1414,26 @@ i++;
 		{
 			// date/time is added to many log entries to make it easier to associate them
 			// with an image (which has the date/time in the filename).
-			timeval t;
-			t = getTimeval();
+			exposureStartDateTime = getTimeval();
 			char exposureStart[128];
-			char f[10] = "%F %T";
-			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(t, f));
+			sprintf(exposureStart, "%s", formatTime(exposureStartDateTime, "%F %T"));
+			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(exposureStartDateTime, "%F %T"));
 			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(myRaspistillSetting.shutter_us, true));
 
 			// Get start time for overlay. Make sure it has the same time as exposureStart.
 			if (showTime == 1)
-				sprintf(bufTime, "%s", formatTime(t, timeFormat));
+				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, timeFormat));
 
 			if (! takingDarkFrames)
 			{
 				// Create the name of the file that goes in the images/<date> directory.
 				snprintf(finalFileName, sizeof(finalFileName), "%s-%s.%s",
-					fileNameOnly, formatTime(t, "%Y%m%d%H%M%S"), imagetype);
+					fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), imagetype);
 			}
 			snprintf(fullFilename, sizeof(fullFilename), "%s/%s", saveDir, finalFileName);
 
 			// Capture and save image
-			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, currentAutoAWB, currentWBR, currentWBB, rotation, flip, saturation, currentBrightness, quality, fullFilename, takingDarkFrames, preview, width, height, isLibcamera, &pRgb);
+			retCode = RPiHQcapture(currentAutoExposure, currentExposure_us, currentBin, currentAutoGain, currentGain, currentAutoAWB, currentWBR, currentWBB, rotation, flip, saturation, currentBrightness, quality, fullFilename, takingDarkFrames, preview, width, height, isLibcamera, &pRgb, imagetype);
 
 			if (retCode == 0)
 			{
@@ -1499,10 +1501,10 @@ i++;
 				// -999 for temperature says the camera doesn't support it
 				// TODO: in the future the calculation of mean should independent from modeMean. -1 means don't display.
 				float m = (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) ? mean : -1.0;
-				add_variables_to_command(cmd, lastExposure_us, currentBrightness, m,
+				add_variables_to_command(cmd, exposureStartDateTime,
+					lastExposure_us, currentBrightness, m,
 					currentAutoExposure, currentAutoGain, currentAutoAWB, currentWBR, currentWBB,
-					-999, lastGain, (int)round(20.0 * 10.0 * log10(lastGain)),
-					currentBin, getFlip(flip), currentBitDepth, focusMetric);
+					-999, lastGain, currentBin, getFlip(flip), currentBitDepth, focusMetric);
 				strcat(cmd, " &");
 
 				system(cmd);

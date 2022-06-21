@@ -135,7 +135,7 @@ timeval getTimeval()
 // Format a numeric time as a string.
 char *formatTime(timeval t, char const *tf)
 {
-	static char TimeString[128];
+	static char TimeString[50];
 	strftime(TimeString, 80, tf, localtime(&t.tv_sec));
 	return(TimeString);
 }
@@ -184,19 +184,27 @@ std::string exec(const char *cmd)
 	return result;
 }
 
-void add_variables_to_command(char *cmd, long exposure_us, int brightness, float mean,
+void add_variables_to_command(char *cmd, timeval startDateTime,
+	long exposure_us, int brightness, float mean,
 	bool autoExposure, bool autoGain, bool autoAWB, float WBR, float WBB,
-	int temperature, float gainDB, int gain,
-	int bin, char const *flip, int bitDepth, int focusMetric)
+	int temperature, float gain, int bin, char const *flip, int bitDepth, int focusMetric)
 {
 	// If the double variables are an integer value, pass an integer value.
 	// Pass boolean values as 0 or 1.
 	// If any value < 0 don't use it.
 
-	char tmp[50];
+	char tmp[100];
+
+	snprintf(tmp, sizeof(tmp), " DATE=%s", formatTime(startDateTime, "%Y%m%d"));
+	strcat(cmd, tmp);
+	snprintf(tmp, sizeof(tmp), " TIME=%s", formatTime(startDateTime, "%H%M%S"));
+	strcat(cmd, tmp);
 
 	if (exposure_us >= 0) {
 		snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", exposure_us);
+		strcat(cmd, tmp);
+
+		snprintf(tmp, sizeof(tmp), " EXPOSURE_STRING='%s%s%s", length_in_units(exposure_us, true), autoExposure ? " (auto)" : "", "'");
 		strcat(cmd, tmp);
 	}
 
@@ -224,18 +232,28 @@ void add_variables_to_command(char *cmd, long exposure_us, int brightness, float
 
 	if (WBR >= 0.0) {
 		if (WBR == (int)WBR)
-			snprintf(tmp, sizeof(tmp), " WBR=%d", (int)WBR);
+			snprintf(tmp, sizeof(tmp), "WBR=%d", (int)WBR);
 		else
-			snprintf(tmp, sizeof(tmp), " WBR=%f", WBR);
+			snprintf(tmp, sizeof(tmp), "WBR=%f", WBR);
+		strcat(cmd, " ");
 		strcat(cmd, tmp);
+
+		char tmp2[sizeof(tmp) * 2];
+		snprintf(tmp2, sizeof(tmp2), " WBR_STRING='%s%s%s", tmp, autoAWB ? " (auto)" : "", "'");
+		strcat(cmd, tmp2);
 	}
 
 	if (WBB >= 0.0) {
 		if (WBB == (int)WBB)
-			snprintf(tmp, sizeof(tmp), " WBB=%d", (int)WBB);
+			snprintf(tmp, sizeof(tmp), "WBB=%d", (int)WBB);
 		else
-			snprintf(tmp, sizeof(tmp), " WBB=%f", WBB);
+			snprintf(tmp, sizeof(tmp), "WBB=%f", WBB);
+		strcat(cmd, " ");
 		strcat(cmd, tmp);
+
+		char tmp2[sizeof(tmp) * 2];
+		snprintf(tmp2, sizeof(tmp2), " WBB_STRING='%s%s%s", tmp, autoAWB ? " (auto)" : "", "'");
+		strcat(cmd, tmp2);
 	}
 
 	// Since negative temperatures are valid, check against an impossible temperature.
@@ -246,14 +264,16 @@ void add_variables_to_command(char *cmd, long exposure_us, int brightness, float
 		strcat(cmd, tmp);
 	}
 
-	if (gain >= 0) {
-		snprintf(tmp, sizeof(tmp), " GAIN=%d", gain);
+	if (gain >= 0.0) {
+		if (gain == (int)gain)
+			snprintf(tmp, sizeof(tmp), " GAIN=%d", (int)gain);
+		else
+			snprintf(tmp, sizeof(tmp), " GAIN=%f", gain);
 		strcat(cmd, tmp);
-	}
 
-	if (gainDB >= 0.0) {
-		snprintf(tmp, sizeof(tmp), " GAINDB=%1.2f", gainDB);
-		strcat(cmd, tmp);
+		char tmp2[sizeof(tmp) * 2];
+		snprintf(tmp2, sizeof(tmp2), " GAIN_STRING='%s%s%s", tmp, autoGain ? " (auto)" : "", "'");
+		strcat(cmd, tmp2);
 	}
 
 	if (bin >= 0) {

@@ -8,7 +8,7 @@
 #endif
 
 // Forward definitions of variables in capture*.cpp.
-extern int debugLevel;
+extern long debugLevel;
 extern int iNumOfCtrl;
 extern char const *CC_saveDir;
 extern long cameraMinExposure_us;
@@ -41,27 +41,28 @@ typedef enum ASI_BAYER_PATTERN {
 } ASI_BAYER_PATTERN;
 
 typedef enum ASI_IMG_TYPE {	// Supported Video/Image Formats
-	ASI_IMG_RAW8 = 0,		// xxx ?
+	ASI_IMG_RAW8 = 0,
 	ASI_IMG_RGB24,
-	ASI_IMG_RAW16,			// xxx ?
+	ASI_IMG_RAW16,
+	ASI_IMG_Y8,
 	ASI_IMG_END = -1
 } ASI_IMG_TYPE;
 
 typedef struct ASI_CAMERA_INFO
 {
-	char Module[100];		// sensor type
+	char Module[100];		// sensor type; RPi only
 	char Name[64];			// Name of camera
 	int CameraID;
 	long MaxHeight;			// sensor height
 	long MaxWidth;
-	bool IsColorCam;		// Is this a color camera?
+	ASI_BOOL IsColorCam;		// Is this a color camera?
 	ASI_BAYER_PATTERN BayerPattern;
 	int SupportedBins[5];	// 1 means bin 1x1 is supported, 2 means 2x2 is supported, etc.
 	ASI_IMG_TYPE SupportedVideoFormat[8];	// Supported image formats
 	double PixelSize;		// e.g, 5.6 um
-	bool IsCoolerCam;
+	ASI_BOOL IsCoolerCam;
 	int BitDepth;
-	bool SupportsTemperature;
+	ASI_BOOL SupportsTemperature;
 } ASI_CAMERA_INFO;
 
 typedef enum ASI_CONTROL_TYPE{ //Control type//
@@ -123,10 +124,12 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 {
 	// Module (sensor), Name, CameraID, MaxHeight, MaxWidth, IsColorCam, BayerPattern, SupportedBins,
 	//	SupportedVideoFormat, PixelSize, IsCoolerCam, BitDepth, SupportsTemperature
-	{ "imx477", "RPi HQ", 0, 3040, 4056, true, BAYER_RG, {1, 2, 0},
-		{ASI_IMG_RAW8, ASI_IMG_RGB24, ASI_IMG_RAW16}, 1.55, false, 12, false},
-	{ "arducam_64mp", "ARDUCAM 64 MB", 0, 6944, 9248, true, BAYER_GR, {1, 2, 4, 0},
-		{ASI_IMG_RAW8, ASI_IMG_RGB24, ASI_IMG_RAW16}, 1.55, false, 12, false},	// xxxxx check on 1.55
+	{ "imx477", "RPi HQ", 0, 3040, 4056, ASI_TRUE, BAYER_RG, {1, 2, 0},
+		{ASI_IMG_RAW8, ASI_IMG_RGB24, ASI_IMG_RAW16}, 1.55, ASI_FALSE, 12, ASI_FALSE},
+
+	// xxxxx TODO: check on 1.55 andA other settings
+	{ "arducam_64mp", "ARDUCAM 64 MB", 0, 6944, 9248, ASI_TRUE, BAYER_GR, {1, 2, 4, 0},
+		{ASI_IMG_RAW8, ASI_IMG_RGB24, ASI_IMG_RAW16}, 1.55, ASI_FALSE, 12, ASI_FALSE},
 
 	// FUTURE CAMERAS GO HERE...
 };
@@ -136,22 +139,17 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 {
 	// Index 0 = RPiHQ on libcamera. 1 = RPiHQ on raspistill.
 
+	// The "Name" must match what ZWO uses.
 	// Name, MaxValue, MinValue, DefaultValue, CurrentValue, IsAutoSupported, IsWritable, ControlType
 	// -1 == does not apply.  99 == don't know
 	{ // libcamera
-		{ "Gain", "Gain", 16.0, 0, 0, NOT_SET, true, true, ASI_GAIN },
+		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, true, true, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 32, NOT_SET, true, true, ASI_EXPOSURE },
-//		{ "Gamma", "Gamma", -1, -1, -1, NOT_SET, false, false, ASI_GAMMA },
-		{ "WB_R", "Whit balance: Red component", 99.0, 0.0, 2.5, NOT_SET, true, true, ASI_WB_R },
-		{ "WB_B", "Whit balance: Blue component", 99.0, 0.0, 2.0, NOT_SET, true, true, ASI_WB_B },
-//		{ "Temperature", "Sensor Temperature (Celsius)", -1, -1, -1, NOT_SET, false, false, ASI_TEMPERATURE },
+		{ "WB_R", "Whit balance: Red component", 10.0, 0.1, 2.5, NOT_SET, true, true, ASI_WB_R },
+		{ "WB_B", "Whit balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, true, true, ASI_WB_B },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, false, true, ASI_FLIP },
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, false, true, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, false, true, ASI_AUTO_MAX_EXP },
-//		{ "CoolerPowerPerc", "Cooler Power Percent", -1, -1, -1, NOT_SET, false, false, ASI_COOLER_POWER_PERC },
-//		{ "TargetTemp", "Target Temperature", -1, -1, -1, NOT_SET, false, false, ASI_TARGET_TEMP },
-//		{ "CoolerOn", "Cooler On?", -1, -1, -1, NOT_SET, false, false, ASI_COOLER_ON },
-//		{ "FanOn",  "Fan On?", -1, -1, -1, NOT_SET, false, false, ASI_FAN_ON },
 		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, false, true, EV },
 		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, false, true, BRIGHTNESS },
 		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, false, true, CONTRAST },
@@ -160,19 +158,13 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, false, false, CONTROL_TYPE_END },	// Signals end of list
 	},
 	{ // raspistill.  Minimum width and height are 64.
-		{ "Gain", "Gain", 16.0, 0, 0, NOT_SET, true, true, ASI_GAIN },
+		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, true, true, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 32, NOT_SET, true, true, ASI_EXPOSURE },
-//		{ "Gamma", "Gamma", -1, -1, -1, NOT_SET, false, false, ASI_GAMMA },
-		{ "WB_R", "White balance: Red component", 99.0, 0.0, 2.5, NOT_SET, true, true, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 99.0, 0.0, 2.0, NOT_SET, true, true, ASI_WB_B },
-//		{ "Temperature", "Sensor Temperature (Celsius)", -1, -1, -1, NOT_SET, false, false, ASI_TEMPERATURE },
+		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, true, true, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, true, true, ASI_WB_B },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, false, true, ASI_FLIP },
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, false, true, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, false, true, ASI_AUTO_MAX_EXP },
-//		{ "CoolerPowerPerc", "Cooler Power Percent", -1, -1, -1, NOT_SET, false, false, ASI_COOLER_POWER_PERC },
-//		{ "TargetTemp", "Target Temperature", -1, -1, -1, NOT_SET, false, false, ASI_TARGET_TEMP },
-//		{ "CoolerOn", "Cooler On?", -1, -1, -1, NOT_SET, false, false, ASI_COOLER_ON },
-//		{ "FanOn",  "Fan On?", -1, -1, -1, NOT_SET, false, false, ASI_FAN_ON },
 		{ "ExposureCompensation", "Exposure Compensation", 10, -10, 0, NOT_SET, false, true, EV },
 		{ "Brightness", "Brightness", 100, 0, 50, NOT_SET, false, true, BRIGHTNESS },		// xxx default ???
 		{ "Contrast", "Contrast", 100, -100, 0, NOT_SET, false, true, CONTRAST },
@@ -248,6 +240,7 @@ ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCamera
 	int num = NOT_SET;
 	char sensor[25];
 	bool found = false;
+	int actualIndex = NOT_SET;	// index into ASICameraInfoArray[]
 	while (fgets(line, sizeof(line), f) != NULL)
 	{
 		if (sscanf(line, "%d : %s ", &num, sensor) == 2 && num == iCameraIndex)
@@ -260,6 +253,7 @@ ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCamera
 				if (strcmp(sensor, ASICameraInfoArray[i].Module) == 0)
 				{
 					found = true;
+					actualIndex = i;
 					break;
 				}
 			}
@@ -271,7 +265,7 @@ ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCamera
 		closeUp(EXIT_ERROR_STOP);
 	}
 
-	*pASICameraInfo = ASICameraInfoArray[iCameraIndex];
+	*pASICameraInfo = ASICameraInfoArray[actualIndex];
 	return(ASI_SUCCESS);
 }
 
@@ -333,12 +327,11 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 			// We'd need to see if the control type supports auto and if it was last set to auto (and
 			// we're not setting any control values).
 			*pbAuto = ASI_FALSE;
-			
 		}
 		return(ASI_SUCCESS);
 	}
-	return(ASI_ERROR_INVALID_CONTROL_TYPE);
 
+	return(ASI_ERROR_INVALID_CONTROL_TYPE);
 }
 
 
@@ -414,6 +407,34 @@ int stopVideoCapture(int cameraID)
 	return((int) ASIStopVideoCapture(cameraID));
 }
 #endif		// IS_RPi
+
+
+// Get the camera control with the specified control type.
+ASI_ERROR_CODE getControlCapForControlType(int iCameraIndex, ASI_CONTROL_TYPE ControlType, ASI_CONTROL_CAPS *pControlCap)
+{
+	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
+		return(ASI_ERROR_INVALID_INDEX);
+
+	if (iNumOfCtrl == NOT_SET)
+		return(ASI_ERROR_GENERAL_ERROR);
+
+#ifdef IS_RPi
+	if (! isLibcamera)
+		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
+#endif
+	for (int i=0; i < iNumOfCtrl ; i++)
+	{
+		ASI_CONTROL_CAPS cc;
+		ASIGetControlCaps(iCameraIndex, i, &cc);
+		if (ControlType == cc.ControlType)
+		{
+			*pControlCap = cc;
+			return(ASI_SUCCESS);
+		}
+	}
+
+	return(ASI_ERROR_INVALID_CONTROL_TYPE);
+}
 
 // Display ASI errors in human-readable format
 char *getRetCode(ASI_ERROR_CODE code)
@@ -730,6 +751,23 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, int width, int height, double 
 			printf("    - IsAutoSupported = %d\n", cc.IsAutoSupported);
 			printf("    - IsWritable = %d\n", cc.IsWritable);
 			printf("    - ControlType = %d\n", cc.ControlType);
+		}
+
+		printf("Supported image formats:\n");
+		size_t s_ = sizeof(cameraInfo.SupportedVideoFormat);
+		for (unsigned int i = 0; i < sizeof(s_); i++)
+		{
+			ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];
+			if (it == ASI_IMG_END)
+			{
+				break;
+			}
+			printf("  - %s\n",
+				it == ASI_IMG_RAW8 ?  "ASI_IMG_RAW8" :
+				it == ASI_IMG_RGB24 ?  "ASI_IMG_RGB24" :
+				it == ASI_IMG_RAW16 ?  "ASI_IMG_RAW16" :
+				it == ASI_IMG_Y8 ?  "ASI_IMG_Y8" :
+				"unknown video format");
 		}
 	}
 }

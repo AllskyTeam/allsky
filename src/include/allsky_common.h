@@ -26,6 +26,7 @@
 
 // Defaults
 #define NOT_SET						-1				// signifies something isn't set yet
+#define NO_MAX_VALUE				9999999		// signifies a number has no maximum value
 #define DEFAULT_NOTIFICATIONIMAGES	true
 #define DEFAULT_SAVEDIR				"tmp"
 #define DEFAULT_FILENAME			"image.jpg"
@@ -57,7 +58,10 @@
 #define	DEFAULT_LONGITUDE			""
 #define DEFAULT_LATITUDE			""
 #define DEFAULT_ANGLE				"-6"
-#define DEFAULT_QUALITY				99		// assumes .jpg
+#define DEFAULT_JPG_QUALITY			95
+#define DEFAULT_PNG_COMPRESSION		3
+#define DEFAULT_DEBUG_LEVEL			1
+
 
 // Default overlay values - will go away once external overlay program is implemented
 #define DEFAULT_FONTNUMBER			0
@@ -84,7 +88,7 @@
 #define EXIT_NO_CAMERA				101		// Could not find a camera - is unrecoverable
 
 // Global variables and functions.
-extern int debugLevel;
+extern long debugLevel;
 extern char debug_text[];
 extern bool tty;
 extern bool notificationImages;
@@ -135,3 +139,5 @@ void closeUp(int);
 void sig(int);
 void IntHandle(int);
 int stopVideoCapture(int);
+bool validateLong(long *, long, long, char const *, bool);
+bool validateFloat(double *, double, double, char const *, bool);

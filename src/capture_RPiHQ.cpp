@@ -246,37 +246,18 @@ int RPiHQcapture(bool autoExposure, long exposure_us, long bin, bool autoGain, d
 		{
 			ss.str("");
 			ss << myRaspistillSetting.analoggain;
-			if (libcamera)
-				command += " --gain " + ss.str();
-			else
-				command += " --analoggain " + ss.str();
-
-			// libcamera just has "gain".  If it's higher than what the camera supports,
-			// the excess is the "digital" gain.
-			if (! libcamera) { // TODO: need to fix this for libcamera
-				if (myRaspistillSetting.digitalgain > 1.0) {
-					ss.str("");
-					ss << myRaspistillSetting.digitalgain;
-					command += " --digitalgain " + ss.str();
-				}
-			}
+			command += " --analoggain " + ss.str();
 		}
 		else
 		{
-			if (libcamera)
-				command += " --gain 1";	// 1 effectively makes it autogain
-			else
-				command += " --analoggain 1";	// 1 effectively makes it autogain
+			command += " --analoggain 1";	// 1 makes it autogain
 		}
 	}
 	else	// Is manual gain
 	{
 		ss.str("");
 		ss << gain;
-		if (libcamera)
-			command += " --gain " + ss.str();
-		else
-			command += " --analoggain " + ss.str();
+		command += " --analoggain " + ss.str();
 	}
 
 	if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) {
@@ -1017,13 +998,12 @@ i++;
 
 		validateLong(&extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);
 		validateLong(&fontnumber, 0, sizeof(fontname)-1, "Font Name", true);
-		long four=4, eight=8; long aa = (long)cv::LINE_AA;	// min() and max() don't take constants
-		validateLong(&linenumber, (long)std::min(aa, four), (long)std::max(aa, eight), "Font Smoothness", true);
+		validateLong(&linenumber, 0, sizeof(linetype)-1, "Font Smoothness", true);
 
 		if (fc != NULL && sscanf(fc, "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]) != 3)
-			fprintf(stderr, "%s*** WARNING: Not enough font color parameters: '%s'%s\n", c(KRED), fc, c(KNRM));
+			Log(-1, "%s*** WARNING: Not enough font color parameters: '%s'%s\n", c(KRED), fc, c(KNRM));
 		if (sfc != NULL && sscanf(sfc, "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]) != 3)
-			fprintf(stderr, "%s*** WARNING: Not enough small font color parameters: '%s'%s\n", c(KRED), sfc, c(KNRM));
+			Log(-1, "%s*** WARNING: Not enough small font color parameters: '%s'%s\n", c(KRED), sfc, c(KNRM));
 
 		// libcamera only supports 0 and 180 degree rotation
 		if (rotation != 0)
@@ -1032,14 +1012,14 @@ i++;
 			{
 				if (rotation != 180)
 				{
-					fprintf(stderr, "%s*** ERROR: Only 0 and 180 degrees are supported for rotation; you entered %ld.%s\n", c(KRED), rotation, c(KNRM));
-					exit(1);
+					Log(0, "%s*** ERROR: Only 0 and 180 degrees are supported for rotation; you entered %ld.%s\n", c(KRED), rotation, c(KNRM));
+					closeUp(EXIT_ERROR_STOP);
 				}
 			}
 			else if (rotation != 90 && rotation != 180 && rotation != 270)
 			{
-				fprintf(stderr, "%s*** ERROR: Only 0, 90, 180, and 270 degrees are supported for rotation; you entered %ld.%s\n", c(KRED), rotation, c(KNRM));
-				exit(1);
+				Log(0, "%s*** ERROR: Only 0, 90, 180, and 270 degrees are supported for rotation; you entered %ld.%s\n", c(KRED), rotation, c(KNRM));
+				closeUp(EXIT_ERROR_STOP);
 			}
 		}
 	}
@@ -1479,7 +1459,7 @@ i++;
 						if (mean == -1)
 						{
 							numErrors++;
-							Log(0, "ERROR: aegCalcMean() returned mean of -1.\n");
+							Log(-1, "ERROR: aegCalcMean() returned mean of -1.\n");
 							Log(1, "  > Sleeping from failed exposure: %.1f seconds\n", (float)currentDelay_ms / MS_IN_SEC);
 							usleep(currentDelay_ms * US_IN_MS);
 							continue;

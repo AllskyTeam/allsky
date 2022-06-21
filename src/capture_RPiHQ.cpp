@@ -856,9 +856,9 @@ i++;
 		printf(" -Daniel Johnsen\n");
 		printf(" -Robert Wagner\n");
 		printf(" -Michael J. Kidd - <linuxkidd@gmail.com>\n");
-		printf("-Rob Musquetier\n");	
+		printf(" -Rob Musquetier\n");	
 		printf(" -Eric Claeys\n");
-		printf("-Andreas Lindinger\n");
+		printf(" -Andreas Lindinger\n");
 		printf("\n");
 	}
 
@@ -968,33 +968,36 @@ i++;
 	{
 		// xxxx TODO: NO_MAX_VALUE will be replaced by acutal values
 		validateLong(&dayMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Daytime Max Auto-Exposure", true);	// camera-specific
-		validateFloat(&temp_dayExposure_ms, 1, NO_MAX_VALUE, "Daytime Manual Exposure", true);		// camera-specific
-				dayExposure_us = temp_dayExposure_ms * US_IN_MS;
+		validateFloat(&temp_dayExposure_ms, 1, dayAutoExposure ? dayMaxAutoexposure_ms : NO_MAX_VALUE, "Daytime Manual Exposure", true);
+
+			dayExposure_us = temp_dayExposure_ms * US_IN_MS;
 		validateLong(&dayBrightness, minBrightness, maxBrightness, "Daytime Brightness", true);
 		validateLong(&dayDelay_ms, 10, NO_MAX_VALUE, "Daytime Delay", false);
 		validateFloat(&dayMaxGain, 0, NO_MAX_VALUE, "Daytime Max Auto-Gain", true);					// camera-specific
-		validateFloat(&dayGain, 0, NO_MAX_VALUE, "Daytime Gain", true);								// camera-specific
+		validateFloat(&dayGain, 0, dayAutoGain ? dayMaxGain : NO_MAX_VALUE, "Daytime Gain", true);
 		validateLong(&dayBin, 1, 3, "Daytime Binning", false);								// camera-specific
 		validateFloat(&dayWBR, 0, NO_MAX_VALUE, "Daytime Red Balance", true);							// camera-specific
 		validateFloat(&dayWBB, 0, NO_MAX_VALUE, "Daytime Blue Balance", true);						// camera-specific
 //		validateLong(&daySkipFrames, 0, 50, "Daytime Skip Frames", true);
+
 		validateLong(&nightMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Nighttime Max Auto-Exposure", true);// camera-specific
-		validateFloat(&temp_nightExposure_ms, 1, NO_MAX_VALUE, "Nighttime Manual Exposure", true);	// camera-specific
-				nightExposure_us = temp_nightExposure_ms * US_IN_MS;
+		validateFloat(&temp_nightExposure_ms, 1, nightAutoExposure ? nightMaxAutoexposure_ms : NO_MAX_VALUE, "Nighttime Manual Exposure", true);
+			nightExposure_us = temp_nightExposure_ms * US_IN_MS;
 		validateLong(&nightBrightness, minBrightness, maxBrightness, "Nighttime Brightness", true);
 		validateLong(&nightDelay_ms, 10, NO_MAX_VALUE, "Nighttime Delay", false);
 		validateFloat(&nightMaxGain, 0, NO_MAX_VALUE, "Nighttime Max Auto-Gain", true);				// camera-specific
-		validateFloat(&nightGain, 0, NO_MAX_VALUE, "Nighttime Gain", true);							// camera-specific
+		validateFloat(&nightGain, 0, nightAutoGain ? nightMaxGain : NO_MAX_VALUE, "Nighttime Gain", true);
 		validateLong(&nightBin, 1, 3, "Nighttime Binning", false);							// camera-specific
 		validateFloat(&nightWBR, 0, NO_MAX_VALUE, "Nighttime Red Balance", true);						// camera-specific
 		validateFloat(&nightWBB, 0, NO_MAX_VALUE, "Nighttime Blue Balance", true);					// camera-specific
 //		validateLong(&nightSkipFrames, 0, 50, "Nighttime Skip Frames", true);
+
+		validateFloat(&saturation, minSaturation, maxSaturation, "Saturation", true);
+		validateLong(&rotation, 0, 180, "Rotation", true);
 		if (imageType != AUTO_IMAGE_TYPE)
 			validateLong(&imageType, 0, ASI_IMG_END, "Image Type", false);
 		validateLong(&flip, 0, 3, "Flip", false);
 		validateLong(&debugLevel, 0, 5, "Debug Level", true);
-		validateFloat(&saturation, minSaturation, maxSaturation, "Saturation", true);
-		validateLong(&rotation, 0, 180, "Rotation", true);
 
 		validateLong(&extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);
 		validateLong(&fontnumber, 0, sizeof(fontname)-1, "Font Name", true);
@@ -1175,20 +1178,30 @@ i++;
 	printf(" Quality: %ld\n", quality);
 	printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
 
-	printf(" Exposure (day):   %s, Auto: %s\n", length_in_units(dayExposure_us, true), yesNo(dayAutoExposure));
-	printf(" Exposure (night): %s, Auto: %s\n", length_in_units(nightExposure_us, true), yesNo(nightAutoExposure));
-	printf(" Max Auto-Exposure (day):   %s\n", length_in_units(dayMaxAutoexposure_ms, true));
-	printf(" Max Auto-Exposure (night): %s\n", length_in_units(nightMaxAutoexposure_ms, true));
-	printf(" Gain (day):   %1.2f, Auto: %s, max: %1.2f\n", dayGain, yesNo(dayAutoGain), dayMaxGain);
-	printf(" Gain (night): %1.2f, Auto: %s, max: %1.2f\n", nightGain, yesNo(nightAutoGain), nightMaxGain);
+	printf(" Exposure (day):   %s, Auto: %s", length_in_units(dayExposure_us, true), yesNo(dayAutoExposure));
+		if (dayAutoExposure)
+			printf(", Max Auto-Exposure: %s\n", length_in_units(dayMaxAutoexposure_ms*US_IN_MS, true));
+		printf("\n");
+	printf(" Exposure (night): %s, Auto: %s", length_in_units(nightExposure_us, true), yesNo(nightAutoExposure));
+		if (nightAutoExposure)
+			printf(", Max Auto-Exposure: %s\n", length_in_units(nightMaxAutoexposure_ms*US_IN_MS, true));
+		printf("\n");
+	printf(" Gain (day):   %1.2f, Auto: %s", dayGain, yesNo(dayAutoGain));
+		if (dayAutoGain)
+			printf(", Max Auto-Gain: %1.2f\n", dayMaxGain);
+		printf("\n");
+	printf(" Gain (night): %1.2f, Auto: %s", nightGain, yesNo(nightAutoGain));
+		if (nightAutoGain)
+			printf(", Max Auto-Gain: %1.2f\n", nightMaxGain);
+		printf("\n");
 	printf(" Brightness (day):   %ld\n", dayBrightness);
 	printf(" Brightness (night): %ld\n", nightBrightness);
 	printf(" Binning (day):   %ld\n", dayBin);
 	printf(" Binning (night): %ld\n", nightBin);
 	printf(" White Balance (day)   Red: %.2f, Blue: %.2f, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
 	printf(" White Balance (night) Red: %.2f, Blue: %.2f, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
-	printf(" Delay (day):   %s\n", length_in_units(dayDelay_ms, true));
-	printf(" Delay (night): %s\n", length_in_units(nightDelay_ms, true));
+	printf(" Delay (day):   %s\n", length_in_units(dayDelay_ms*US_IN_MS, true));
+	printf(" Delay (night): %s\n", length_in_units(nightDelay_ms*US_IN_MS, true));
 
 	printf(" Saturation: %.1f\n", saturation);
 	printf(" Rotation: %ld\n", rotation);

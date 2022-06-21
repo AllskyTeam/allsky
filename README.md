@@ -137,6 +137,9 @@ If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote 
 &nbsp;  
 <p align="center"><img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg" width="75%"></p>
 
+The WebUI
+	The WebUI code is based on an older version of [**RaspAP**](https://github.com/billz/raspap-webgui).
+	
 The WebUI is now installed in `~/allsky/html` as part of the installation of Allsky.  It:
 * changes your hostname to **allsky** (or whatever you called it when installing)
 * installs the **lighttpd** web server
@@ -156,7 +159,8 @@ Note: If you changed the name of your Pi (to 'piname', for example) during insta
 http://piname.local
 ```
 
-The default username is **admin** and the default password is **secret**.  **If your website is publically viewable you should change those settings**.
+The default username is **admin** and the default password is **secret**.
+> **If your website is publically viewable you should change the username and password via the `Change Password` link on the WebUI**.
 
 A public page is also available in order to view the current image without having to log into the WebUI and without being able to do any administrative tasks. This can be useful for people who don't have a personal website but still want to share a view of their sky:
 
@@ -167,6 +171,9 @@ http://your_raspberry_IP/public.php
 Make sure this page is publically viewable.
 If it is behind a firewall consult the documentation for your network equipment for information on allowing inbound connections.
 
+
+A demo of the WebUI is available [**here**](http://thomasjacquin.com/allsky-portal). **Note**: Most of the buttons have been disabled for the demo.
+	
 ***
 </details>
 
@@ -372,7 +379,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 * version **v2022.MM.DD**: 
 	* Allsky package:
 		* Several settings were added and can be modified in the WebUI:
-			* **Max Auto-Exposure** for day and night.  When using auto exposure, exposure lengths will not exceed this number.
+			* **Max Auto-Exposure** for day and night.  When using auto exposure, exposure times will not exceed this number.
 			* **Max Auto-Gain** for day and night.  When using auto gain, gain values will not exceed this number.
 			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
 			* **Frames to Skip** (ZWO only) for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving.
@@ -380,17 +387,28 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Gamma** (ZWO only) changes the contrast of an image.  It is only supported by a few cameras; for those that don't, the `AUTO_STRETCH` setting can produce a similar effect.
 			* **Offset** (ZWO only) adds about 1/10th the specified amount to each pixel, thereby brightening the whole image.  Setting this too high causes the image to turn gray.
 			* **Mean Target** (RPiHQ only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
+		* The **Focus Metric** setting is now available for ZWO cameras.
+		* The camera-checking algorithm was improved, resulting in fewer failures.
+		* If the camera isn't found, a notification message stating that is displayed.
+		* Settings are checked for validity (for example, a valid **Brightness* value was specified) and messages added to the log if there are problems; critical errors cause the program to stop until they are fixed.
 		* Latitude and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  The Allsky Website will always display with N, S, E, or W.
 		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers, and the crop area must fit within the image.
 		* Sanity checking is done on Allsky Map data, for example, the URLs are reachable from the Internet.
-		* If the camera isn't found, a notification message stating that is displayed.
+		* The software version displayed in the log file is now taken from `~/allsky/version`.
+		* Installation no longer assume the login is `pi`.
+		* The delay between RPi images has been shortened (but is still fairly long).
 		* The `scp` protocol is now supported for file uploads.
-		* New ftp-settings.sh variable:
+		* New ftp-settings.sh variables:
+			* `REMOTE_PORT`: specifies a non-default FTP port.
 			* `SSH_KEY_FILE`: path to a SSH private key. When `scp` is used for uploads, this identify file will be used to establish the secure connection.
+		* There are fewer writes to the SD card, saving wear and tear.
+		* Several variables in the `config/config.sh` file were renamed.  It's important to NOT simply copy that file from an old release to the new one.
+		* Common code between the ZWO and RPi versions was moved to the `allsky_common.cpp` file, making Allsky easier to maintain.
 		* Many minor enhancements were made.
 	* WebUI:
 		* The WebUI is now installed as part of the Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
-		* The WebUI (and Allsky Website) are now installed in ~/allsky/html (and ~/allsky/html/allsky).  Any images in the old locations are moved to the new locations when upgrading to this release.
+		* The WebUI and Allsky Website are now installed in ~/allsky/html and ~/allsky/html/allsky, respectively.  Any images in the old locations are moved to the new locations when upgrading to this release.
+		* Minimum, maximum, and default values are now correct for all camera models.  This was accomplished by having the camera's capabilities stored in a configuration file which is used by the WebUI.
 		* The "Editor" page can edit the Allsky Website's `configuration.json` file if you have the website installed on your Pi.  This is the preferred way to edit that file, since the editor performs basic syntax checking.
 		* Some errors that appear in the log file also appear in the WebUI.  Currently this is limited to Allsky Map data errors, but will be expanded in the future.
 		* The order of items in the "Camera Settings" page changed slightly.
@@ -404,7 +422,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* You can add an optional link to a personal website at the top of the page.
 			* You can add a border around the image to have it stand out on the page.
 			* You can hide the "Make Your Own" link on the bottom right of the page.
-		* Timelapse video thumbnails can be created on the Pi and uploaded to a remote server.  This resolves issues with most remote servers that don't support creating thumbnails.  See the `TIMELAPSE_THUMBNAIL_UPLOAD` setting.
+		* Timelapse video thumbnails can be created on the Pi and uploaded to a remote server.  This resolves issues with most remote servers that don't support creating thumbnails.  See the `TIMELAPSE_UPLOAD_THUMBNAIL` setting.
 		* The Timelapse, Keogram, and Startrails pages now have titles so it's obvious what you're looking at.
 		* You can specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`, which has been deprecated).  This can be helpful when trying to get the overlay to line up with the actual stars.
 		* The **virtualsky** program that draws the constellation overlay was updated to the latest release.  This added some new settings, including the ability to specify the opacity of the overlay.  It also adds a small box with a question mark in it when viewing the overlay; clicking on the icon brings up a list of commands you can perforrm.

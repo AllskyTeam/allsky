@@ -23,14 +23,14 @@ using namespace std;
 
 
 char debug_text[500];		// buffer to hold debug messages
-int debugLevel = 0;
+long debugLevel = 0;
 
 /**
  * Helper function to display debug info
 **/
 void Log(int required_level, const char *fmt, ...)
 {
-	if (debugLevel >= required_level) {
+	if ((int)debugLevel >= required_level) {
 		char msg[8192];
 		snprintf(msg, sizeof(msg), "%s", fmt);
 		va_list va;
@@ -724,4 +724,64 @@ void IntHandle(int i)
 {
 	gotSignal = true;
 	closeUp(EXIT_OK);
+}
+
+
+// Validate a long integer, typically a command-line argument.
+// errorReturn determines whether we return "true" if the number out of bounds, or "false".
+// "false" means it's an error, "true" means it's a warning.
+bool validateLong(long *num, long min, long max, char const *name, bool errorReturn)
+{
+	if (*num < min) {
+		fprintf(stderr, "** %s: '%s' (%'ld) is less than the minimum of %'ld",
+			errorReturn == false ? "ERROR" : "WARNING", name, *num, min);
+		if (errorReturn == true)
+		{
+			fprintf(stderr, "; setting to the minimum");
+			*num = min;
+		}
+		fprintf(stderr, "\n");
+		return errorReturn;
+
+	} else if (*num > max) {
+		fprintf(stderr, "** %s: '%s' (%'ld) is greater than the maximum of %'ld",
+			errorReturn == false ? "ERROR" : "WARNING", name, *num, max);
+		if (errorReturn == true)
+		{
+			fprintf(stderr, "; setting to the maximum");
+			*num = max;
+		}
+		fprintf(stderr, "\n");
+		return errorReturn;
+	}
+	return true;
+}
+
+// Ditto but for floating-point numbers.
+bool validateFloat(double *num, double min, double max, char const *name, bool errorReturn)
+{
+	if (*num < min) {
+		fprintf(stderr, "** %s: '%s' (%'.1f) is less than the minimum of %'.1f",
+			errorReturn == false ? "ERROR" : "WARNING", name, *num, min);
+		if (errorReturn == true)
+		{
+			fprintf(stderr, "; setting to the minimum.");
+			*num = min;
+		}
+		fprintf(stderr, "\n");
+		return errorReturn;
+
+	} else if (*num > max) {
+		fprintf(stderr, "** %s: '%s' (%'.1f) is greater than the maximum of %'.1f",
+			errorReturn == false ? "ERROR" : "WARNING", name, *num, max);
+		if (errorReturn == true)
+		{
+			fprintf(stderr, "; setting to the maximum.");
+			*num = max;
+		}
+		fprintf(stderr, "\n");
+		return errorReturn;
+	}
+
+	return true;
 }

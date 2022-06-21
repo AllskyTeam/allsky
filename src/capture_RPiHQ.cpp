@@ -48,7 +48,6 @@ using namespace std;
 // Variables for command-line settings are first.
 bool isLibcamera;									// are we using libcamera or raspistill?
 int flip					= DEFAULT_FLIP;
-char const *strFlip			= "";
 bool tty					= false;				// are we on a tty?
 bool notificationImages		= DEFAULT_NOTIFICATIONIMAGES;
 char const *fileName		= DEFAULT_FILENAME;
@@ -67,11 +66,15 @@ double actualTemp			= NOT_SET;				// temp of sensor during last image
 
 std::vector<int> compressionParameters;
 bool bMain					= true;
+bool bDisplay				= false;
 std::string dayOrNight;
 bool saveCC					= false;				// Save Camera Capabilities and exit?
 char const *CC_saveDir		= DEFAULT_SAVEDIR;		// Where to put camera's capabilities
 int numErrors				= 0;					// Number of errors in a row
+bool gotSignal				= false;				// did we get a SIGINT (from keyboard), or SIGTERM/SIGHUP (from service)?
 int iNumOfCtrl				= NOT_SET;				// Number of camera control capabilities
+int CamNum					= 0;					// 1st camera - we don't support multiple cams
+pthread_t threadDisplay		= 0;					// Not used by Rpi;
 int numExposures			= 0;					// how many valid pictures have we taken so far?
 long cameraMinExposure_us	= NOT_SET;				// camera's minimum exposure - camera dependent
 long cameraMaxExposure_us	= NOT_SET;				// camera's maximum exposure - camera dependent
@@ -98,56 +101,6 @@ modeMeanSetting myModeMeanSetting;
 //-------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
-// Exit the program gracefully.
-void closeUp(int e)
-{
-	if (quietExit) exit(e);			// Called manually so don't display anything.
-
-	static int closingUp = 0;		// indicates if we're in the process of exiting.
-	// For whatever reason, we're sometimes called twice, but we should only execute once.
-	if (closingUp) return;
-
-	closingUp = 1;
-
-	// If we're not on a tty assume we were started by the service.
-	// Unfortunately we don't know if the service is stopping us, or restarting us.
-	// If it was restarting there'd be no reason to copy a notification image since it
-	// will soon be overwritten.  Since we don't know, always copy it.
-	char const *a = "Stopping";
-	if (notificationImages) {
-		if (e == EXIT_RESTARTING)
-		{
-			system("scripts/copy_notification_image.sh --expires 15 Restarting &");
-			a = "Restarting";
-		}
-		else
-		{
-			system("scripts/copy_notification_image.sh --expires 2 NotRunning &");
-		}
-		// Sleep to give it a chance to print any messages so they (hopefully) get printed
-		// before the one below.  This is only so it looks nicer in the log file.
-		sleep(3);
-	}
-
-	printf("     ***** %s AllSky *****\n", a);
-	exit(e);
-}
-
-void sig(int i)
-{
-	if (i == SIGHUP)
-		Log(3, "Got signal to restart\n");
-	else
-		printf("XXXXXX == got unknown signal %d\n", i);
-	bMain = false;
-	closeUp(EXIT_RESTARTING);
-}
-void IntHandle(int i)
-{
-printf("XXXXXX == in IntHandle(), got signal %d\n", i);
-	bMain = false;
-	closeUp(0);
-}
 
 char const *getCameraCommand(bool libcamera)
 {
@@ -962,15 +915,6 @@ i++;
 	if (sfc != NULL && sscanf(sfc, "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]) != 3)
 		fprintf(stderr, "%s*** WARNING: Not enough small font color parameters: '%s'%s\n", c(KRED), sfc, c(KNRM));
 
-	if (flip == 0)
-		strFlip = "none";
-	else if (flip == 1)
-		strFlip = "horizontal";
-	else if (flip == 2)
-		strFlip = "vertical";
-	else if (flip == 3)
-		strFlip = "both";
-
 	if (setlocale(LC_NUMERIC, locale) == NULL)
 		fprintf(stderr, "*** WARNING: Could not set locale to %s ***\n", locale);
 
@@ -1131,7 +1075,6 @@ i++;
 	}
 
 	ASI_CAMERA_INFO ASICameraInfo;
-	int CamNum = 0;				// use 1st camera - we don't support multiple cameras
 
 	processConnectedCameras();	// exits on error
 	ASIGetCameraProperty(&ASICameraInfo, CamNum);
@@ -1221,7 +1164,7 @@ i++;
 
 	printf(" Saturation: %.1f\n", saturation);
 	printf(" Rotation: %d\n", rotation);
-	printf(" Flip Image: %s (%d)\n", strFlip, flip);
+	printf(" Flip Image: %s (%d)\n", getFlip(flip), flip);
 	printf(" Filename: %s\n", fileName);
 	printf(" Filename Save Directory: %s\n", saveDir);
 	printf(" Latitude: %s, Longitude: %s\n", latitude, longitude);
@@ -1530,7 +1473,7 @@ i++;
 				add_variables_to_command(cmd, lastExposure_us, currentBrightness, m,
 					currentAutoExposure, currentAutoGain, currentAutoAWB, currentWBR, currentWBB,
 					-999, lastGain, (int)round(20.0 * 10.0 * log10(lastGain)),
-					currentBin, strFlip, currentBitDepth, focusMetric);
+					currentBin, getFlip(flip), currentBitDepth, focusMetric);
 				strcat(cmd, " &");
 
 				system(cmd);

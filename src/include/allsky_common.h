@@ -57,7 +57,7 @@
 #define DEFAULT_HEIGHT				0
 #define	DEFAULT_LONGITUDE			""
 #define DEFAULT_LATITUDE			""
-#define DEFAULT_ANGLE				"-6"
+#define DEFAULT_ANGLE				-6.0
 #define DEFAULT_JPG_QUALITY			95
 #define DEFAULT_PNG_COMPRESSION		3
 #define DEFAULT_DEBUG_LEVEL			1
@@ -113,8 +113,8 @@ void add_variables_to_command(char *, timeval,
 	bool, bool, bool, float, float,
 	int, float, int, const char *, int, int);
 const char *checkForValidExtension(const char *, int);
-std::string calculateDayOrNight(const char *, const char *, const char *);
-int calculateTimeToNightTime(const char *, const char *, const char *);
+std::string calculateDayOrNight(const char *, const char *, float);
+int calculateTimeToNightTime(const char *, const char *, float);
 void Log(int, const char *, ...);
 char const *c(char const *);
 void closeUp(int);

@@ -781,7 +781,7 @@ int main(int argc, char *argv[])
 	char const *longitude		= DEFAULT_LONGITUDE;
 	// angle of the sun with the horizon
 	// (0=sunset, -6=civil twilight, -12=nautical twilight, -18=astronomical twilight)
-	char const *angle			= DEFAULT_ANGLE;
+	float angle					= DEFAULT_ANGLE;
 
 	bool help					= false;
 	bool preview				= false;
@@ -1060,7 +1060,7 @@ i++;
 			}
 			else if (strcmp(argv[i], "-angle") == 0)
 			{
-				angle = argv[++i];
+				angle = atof(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-darkframe") == 0)
 			{
@@ -1282,7 +1282,7 @@ i++;
 		printf(" -targetTemp			- Target temperature in degrees C (cooled cameras only)\n");
 		printf(" -latitude				- No default - you must set it.  Latitude of the camera.\n");
 		printf(" -longitude				- No default - you must set it.  Longitude of the camera.\n");
-		printf(" -angle					- Default = %s: Angle of the sun below the horizon.\n", DEFAULT_ANGLE);
+		printf(" -angle					- Default = %.2f: Angle of the sun below the horizon.\n", DEFAULT_ANGLE);
 		printf("		-6=civil twilight   -12=nautical twilight   -18=astronomical twilight\n");
 		printf(" -darkframe				- 1 disables the overlay and takes dark frames instead\n");
 		printf(" -locale				- Default = %s: Your locale - to determine thousands separator and decimal point.\n", DEFAULT_LOCALE);
@@ -1657,7 +1657,7 @@ i++;
 	printf(" Filename: %s\n", fileName);
 	printf(" Filename Save Directory: %s\n", saveDir);
 	printf(" Latitude: %s, Longitude: %s\n", latitude, longitude);
-	printf(" Sun Elevation: %s\n", angle);
+	printf(" Sun Elevation: %.4f\n", angle);
 	printf(" Locale: %s\n", locale);
 	printf(" Notification Images: %s\n", yesNo(notificationImages));
 #ifdef USE_HISTOGRAM

@@ -367,7 +367,7 @@
 "description":"How much of a calculated exposure change should be made during Auto-Exposure?<br>Lower numbers smooth out changes but take longer to react to brightness changes.",
 "label":"Aggression",
 "type":"number",
-"display":1,
+"display":0,
 "advanced":1
 },
 {
@@ -376,7 +376,7 @@
 "description":"Number of <b>minutes</b> over which to increase or decrease the gain when switching between day and night.<br>This helps smooth brightness differences.  Only works if nighttime Auto-Gain is off. 0 disables transitions.",
 "label":"Gain Transition Time",
 "type":"number",
-"display":1,
+"display":0,
 "advanced":1
 },
 {

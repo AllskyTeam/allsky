@@ -204,7 +204,7 @@ int ASIGetNumOfConnectedCameras()
 	num = system(cmd);
 	if (WIFEXITED(num))
 		num = WEXITSTATUS(num);
-	Log(4, "cmd='%s', num=%d\n", cmd, num);
+	Log(5, "cmd='%s', num=%d\n", cmd, num);
 	return(num);
 }
 
@@ -797,10 +797,10 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, long width, long height, doubl
 				"unknown video format");
 		}
 
+		printf("Control Caps:\n");
 		for (int i = 0; i < iNumOfCtrl; i++)
 		{
 			ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
-			printf("Control Caps:\n");
 			printf("  - %s:\n", cc.Name);
 			printf("    - Description = %s\n", cc.Description);
 #ifdef IS_ZWO

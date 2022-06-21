@@ -42,7 +42,7 @@
 #define MIN_ASIBANDWIDTH		40
 #define MAX_ASIBANDWIDTH		100
 #define DEFAULT_GAIN_TRANSITION_TIME 5				// user specifies minutes
-#define DEFAULT_NEWEXPOSURE		true
+#define DEFAULT_VIDEO_OFF		true
 
 #ifdef USE_HISTOGRAM
 #define DEFAULT_BOX_SIZEX		500					// Must be a multiple of 2
@@ -69,21 +69,21 @@ bool checkMaxErrors(int *, int);
 // In version 0.8 we introduced a different way to take exposures. Instead of turning video mode on at
 // the beginning of the program and off at the end (which kept the camera running all the time, heating it up),
 // version 0.8 turned video mode on, then took a picture, then turned it off. This helps cool the camera,
-// but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures.
+// but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures with the new method.
 // So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
-bool useNewExposureAlgorithm	= DEFAULT_NEWEXPOSURE;
+bool videoOffBetweenImages		= DEFAULT_VIDEO_OFF;
 long flip						= DEFAULT_FLIP;
 bool tty						= false;			// are we on a tty?
 bool notificationImages			= DEFAULT_NOTIFICATIONIMAGES;
 char const *saveDir				= DEFAULT_SAVEDIR;
 char const *fileName			= DEFAULT_FILENAME;
 char const *timeFormat			= DEFAULT_TIMEFORMAT;
-long dayExposure_us				= DEFAULT_DAYEXPOSURE;
-long dayMaxAutoexposure_ms		= DEFAULT_DAYMAXAUTOEXPOSURE_MS;
+long dayExposure_us				= DEFAULT_DAYEXPOSURE_MS * US_IN_MS;
+long dayMaxAutoexposure_us		= DEFAULT_DAYMAXAUTOEXPOSURE_MS * US_IN_MS;
 bool dayAutoExposure			= DEFAULT_DAYAUTOEXPOSURE;	// is it on or off for daylight?
-long dayDelay_ms				= DEFAULT_DAYDELAY;	// Delay in milliseconds.
-long nightDelay_ms				= DEFAULT_NIGHTDELAY;	// Delay in milliseconds.
-long nightMaxAutoexposure_ms	= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
+long dayDelay_ms				= DEFAULT_DAYDELAY_MS;	// Delay in milliseconds.
+long nightDelay_ms				= DEFAULT_NIGHTDELAY_MS;	// Delay in milliseconds.
+long nightMaxAutoexposure_us	= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS * US_IN_MS;
 long gainTransitionTime			= DEFAULT_GAIN_TRANSITION_TIME;
 bool dayAutoAWB					= DEFAULT_DAYAUTOAWB;	// is Auto White Balance on or off?
 long dayWBR						= DEFAULT_DAYWBR;		// red component
@@ -161,7 +161,7 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 		ret = ASIGetControlCaps(camNum, i, &ControlCaps);
 		if (ret != ASI_SUCCESS)
 		{
-			Log(0, "WARNING: ASIGetControlCaps() for control %d failed: %s\n", i, getRetCode(ret));
+			Log(-1, "WARNING: ASIGetControlCaps() for control %d failed: %s\n", i, getRetCode(ret));
 			return(ret);
 		}
 
@@ -186,7 +186,7 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 				ret = ASISetControlValue(camNum, control, value, makeAuto);
 				if (ret != ASI_SUCCESS)
 				{
-					Log(0, "WARNING: ASISetControlCaps() for control %d, value=%ld failed: %s\n", control, value, getRetCode(ret));
+					Log(-1, "WARNING: ASISetControlCaps() for control %d, value=%ld failed: %s\n", control, value, getRetCode(ret));
 					return(ret);
 				}
 			} else {
@@ -398,27 +398,17 @@ int computeHistogram(unsigned char *imageBuffer, long width, long height, ASI_IM
 // Camera has 2 internal frame buffers we need to clear.
 // The camera and/or driver will buffer frames and return the oldest one which
 // could be very old. Read out all the buffered frames so the frame we get is current.
-static void flushBufferedImages(int cameraId, void *buf, size_t size)
+void flushBufferedImages(int cameraId, void *buf, size_t size)
 {
 	enum { NUM_IMAGE_BUFFERS = 2 };
 
 	int numCleared;
 	for (numCleared = 0; numCleared < NUM_IMAGE_BUFFERS; numCleared++)
 	{
-		ASI_ERROR_CODE status = ASIGetVideoData(cameraId, (unsigned char *) buf, size, 0);
+		ASI_ERROR_CODE status = ASIGetVideoData(cameraId, (unsigned char *) buf, size, 1);
 		if (status != ASI_SUCCESS)
 			break; // no more buffered frames
-long us;
-ASI_BOOL b;
-ASIGetControlValue(cameraId, ASI_EXPOSURE, &us, &b);
-Log(3, "  > [Cleared buffer frame, next exposure: %'ld, auto=%s]\n", us, b==ASI_TRUE ? "yes" : "no");
-	}
-
-// xxxxxxxxxx For now, display message above for each one rather than a summary.
-return;
-	if (numCleared > 0)
-	{
-		Log(3, "  > [Cleared %d buffer frame%s]\n", numCleared, numCleared > 1 ? "s" : "");
+		Log(3, "  > [Cleared buffer frame]\n");
 	}
 }
 
@@ -428,7 +418,6 @@ ASI_BOOL bAuto = ASI_FALSE;		// "auto" flag returned by ASIGetControlValue, when
 
 ASI_BOOL wasAutoExposure = ASI_FALSE;
 long bufferSize = NOT_SET;
-bool setAutoExposure = false;
 
 ASI_ERROR_CODE takeOneExposure(
 		int cameraId,
@@ -464,17 +453,11 @@ ASI_ERROR_CODE takeOneExposure(
 		wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Exposure set",
 		length_in_units(exposureTime_us, true));
 
-// XXXXXXXXXXXXXXXXXX testing.  If in auto exposure, only set exposure time once per day/night.
-// xxxxxxxxxxx June 13, 2022: At night, it doesn't work to only set the exposure once - I assume
-// the camera isn't on long enough to get a good auto exposure time.
-if (1 || ! setAutoExposure || ! currentAutoExposure) {
-	setAutoExposure = true;
 	setControl(cameraId, ASI_EXPOSURE, exposureTime_us, currentAutoExposure ? ASI_TRUE :ASI_FALSE);
-}
 
 	flushBufferedImages(cameraId, imageBuffer, bufferSize);
 
-	if (useNewExposureAlgorithm)
+	if (videoOffBetweenImages)
 	{
 		status = ASIStartVideoCapture(cameraId);
 	} else {
@@ -483,8 +466,13 @@ if (1 || ! setAutoExposure || ! currentAutoExposure) {
 
 	if (status == ASI_SUCCESS) {
 		// Make sure the actual time to take the picture is "close" to the requested time.
-		timeval tStart = getTimeval();
+		timeval tStart;
+		if (exposureTime_us > (5 * US_IN_SEC)) tStart = getTimeval();
+
 		status = ASIGetVideoData(cameraId, imageBuffer, bufferSize, timeout);
+		if (videoOffBetweenImages)
+			(void) ASIStopVideoCapture(cameraId);
+
 		if (status != ASI_SUCCESS)
 		{
 			int exitCode;
@@ -500,14 +488,17 @@ if (1 || ! setAutoExposure || ! currentAutoExposure) {
 		{
 			// There is too much variance in the overhead of taking a picture to accurately
 			// determine the time to take an image at short exposures, so only check for longer ones.
-			if (exposureTime_us > (5 * US_IN_SEC))
+			long timeToTakeImage_us = timeval_diff_us(tStart, getTimeval());
+			if (timeToTakeImage_us < exposureTime_us && exposureTime_us > (5 * US_IN_SEC))
 			{
-		 		timeval tEnd = getTimeval();
-				// After testing there seems to be about 450,000 us overhead, so subtract it.
-				long timeToTakeImage_us = timeval_diff_us(tStart, tEnd) - 450000;
+				// Testing shows there's about this much us overhead, so subtract it to get actual time.
+				const int OVERHEAD = 450000;
+				if (timeToTakeImage_us > OVERHEAD)	// don't subtract if it makes timeToTakeImage_us negative
+					timeToTakeImage_us -= OVERHEAD;
 				long diff_us = timeToTakeImage_us - exposureTime_us;
-				long threshold_us = exposureTime_us * 0.5;
-				if (abs(diff_us) > threshold_us) {
+				long threshold_us = exposureTime_us * 0.5;		// 50% seems like a good number
+				if (abs(diff_us) > threshold_us)
+				{
 					Log(1, "*** WARNING: time to take image (%s) ", length_in_units(timeToTakeImage_us, true));
 					Log(1, "differs from requested exposure time (%s) ", length_in_units(exposureTime_us, true));
 					Log(1, "by %s, ", length_in_units(diff_us, true));
@@ -551,10 +542,6 @@ if (1 || ! setAutoExposure || ! currentAutoExposure) {
 				ASIGetControlValue(cameraId, ASI_WB_B, &actualWBB, &bAuto);
 			}
 		}
-
-		if (useNewExposureAlgorithm)
-			ASIStopVideoCapture(cameraId);
-
 	}
 	else {
 		Log(0, "  > ERROR: Not fetching exposure data because status is %s\n", getRetCode(status));
@@ -608,14 +595,14 @@ bool resetGainTransitionVariables(int dayGain, int nightGain)
 	{
 		// At nightime if the exposure is less than the max, we wait until max has expired,
 		// so use it instead of the exposure time.
-		totalTimeInSec = (nightMaxAutoexposure_ms / MS_IN_SEC) + (nightDelay_ms / MS_IN_SEC);
-		Log(5, "xxx totalTimeInSec=%.1fs, nightMaxAutoexposure_ms=%'dms, nightDelay_ms=%'dms\n", totalTimeInSec, nightMaxAutoexposure_ms, nightDelay_ms);
+		totalTimeInSec = (nightMaxAutoexposure_us / US_IN_SEC) + (nightDelay_ms / MS_IN_SEC);
+		Log(5, "xxx totalTimeInSec=%.1fs, nightMaxAutoexposure_us=%'ldus, nightDelay_ms=%'dms\n", totalTimeInSec, nightMaxAutoexposure_us, nightDelay_ms);
 	}
 
 	gainTransitionImages = ceil(gainTransitionTime / totalTimeInSec);
 	if (gainTransitionImages == 0)
 	{
-		Log(0, "*** INFORMATION: Not adjusting gain - your 'gaintransitiontime' (%d seconds) is less than the time to take one image plus its delay (%.1f seconds).\n", gainTransitionTime, totalTimeInSec);
+		Log(-1, "*** INFORMATION: Not adjusting gain - your 'gaintransitiontime' (%d seconds) is less than the time to take one image plus its delay (%.1f seconds).\n", gainTransitionTime, totalTimeInSec);
 		return(false);
 	}
 
@@ -767,8 +754,7 @@ int main(int argc, char *argv[])
 	long asiBandwidth			= DEFAULT_ASIBANDWIDTH;
 	bool asiAutoBandwidth		= false;						// is Auto Bandwidth on or off?
 
-	// There is no max day autoexposure since daylight exposures are always pretty short.
-	long nightExposure_us		= DEFAULT_NIGHTEXPOSURE;
+	long nightExposure_us		= DEFAULT_NIGHTEXPOSURE_MS * US_IN_MS;
 	bool nightAutoExposure		= DEFAULT_NIGHTAUTOEXPOSURE;	// is it on or off for nighttime?
 	// currentAutoExposure is global so is defined outside of main()
 
@@ -839,8 +825,11 @@ int main(int argc, char *argv[])
 	setlinebuf(stdout);					// Line buffer output so entries appear in the log immediately.
 
 	char const *fc = NULL, *sfc = NULL;	// temporary pointers to fontcolor and smallfontcolor
-	double temp_dayExposure_ms = DEFAULT_DAYEXPOSURE;			// entered in ms - converted to us later
-	double temp_nightExposure_ms = DEFAULT_NIGHTEXPOSURE;		// entered in ms - converted to us later
+	// These are entered in ms and we convert to us later
+	double temp_dayExposure_ms = DEFAULT_DAYEXPOSURE_MS;
+	double temp_nightExposure_ms = DEFAULT_NIGHTEXPOSURE_MS;
+	double temp_dayMaxAutoexposure_ms = DEFAULT_DAYMAXAUTOEXPOSURE_MS;
+	double temp_nightMaxAutoexposure_ms = DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
 	if (argc > 1)
 	{
 		for (i=1 ; i <= argc - 1 ; i++)
@@ -885,7 +874,7 @@ int main(int argc, char *argv[])
 			}
 			else if (strcmp(argv[i], "-daymaxexposure") == 0)
 			{
-				dayMaxAutoexposure_ms = atol(argv[++i]);
+				temp_dayMaxAutoexposure_ms = atof(argv[++i]);	// allow fractions
 			}
 			else if (strcmp(argv[i], "-dayexposure") == 0)
 			{
@@ -946,7 +935,7 @@ i++;
 			}
 			else if (strcmp(argv[i], "-nightmaxexposure") == 0)
 			{
-				nightMaxAutoexposure_ms = atol(argv[++i]);
+				temp_nightMaxAutoexposure_ms = atof(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-nightexposure") == 0)
 			{
@@ -1086,7 +1075,7 @@ i++;
 			else if (strcmp(argv[i], "-histogrambox") == 0)
 			{
 				if (sscanf(argv[++i], "%d %d %f %f", &histogramBoxSizeX, &histogramBoxSizeY, &histogramBoxPercentFromLeft, &histogramBoxPercentFromTop) != 4)
-					fprintf(stderr, "%s*** ERROR: Not enough histogram box parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
+					Log(-1, "%s*** ERROR: Not enough histogram box parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
 
 				// scale user-input 0-100 to 0.0-1.0
 				histogramBoxPercentFromLeft /= 100;
@@ -1099,7 +1088,7 @@ i++;
 			}
 			else if (strcmp(argv[i], "-newexposure") == 0)
 			{
-				useNewExposureAlgorithm = getBoolean(argv[++i]);
+				videoOffBetweenImages = getBoolean(argv[++i]);
 			}
 			else if (strcmp(argv[i], "-alwaysshowadvanced") == 0)
 			{
@@ -1236,7 +1225,7 @@ i++;
 	}
 
 	if (setlocale(LC_NUMERIC, locale) == NULL)
-		fprintf(stderr, "*** WARNING: Could not set locale to %s ***\n", locale);
+		Log(-1, "*** WARNING: Could not set locale to %s ***\n", locale);
 
 	if (help)
 	{
@@ -1247,11 +1236,11 @@ i++;
 		printf("%sAvailable Arguments:\n", c(KYEL));
 		printf(" -dayautoexposure		- Default = %s: 1 enables daytime auto-exposure\n", yesNo(DEFAULT_DAYAUTOEXPOSURE));
 		printf(" -daymaxexposure		- Default = %'d: Maximum daytime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_DAYMAXAUTOEXPOSURE_MS, (float)DEFAULT_DAYMAXAUTOEXPOSURE_MS/US_IN_MS);
-		printf(" -dayexposure			- Default = %'d: Daytime exposure in us (equals to %.4f sec)\n", DEFAULT_DAYEXPOSURE, (float)DEFAULT_DAYEXPOSURE/US_IN_SEC);
+		printf(" -dayexposure			- Default = %'d: Daytime exposure in us (equals to %.4f sec)\n", DEFAULT_DAYEXPOSURE_MS*US_IN_MS, (float)DEFAULT_DAYEXPOSURE_MS/MS_IN_SEC);
 		printf(" -daymean				- Default = %.2f: Daytime target exposure brightness\n", DEFAULT_DAYMEAN);
 		printf("						  NOTE: Daytime Auto-Gain and Auto-Exposure should be on for best results\n");
 		printf(" -daybrightness			- Default = %d: Daytime brightness level\n", DEFAULT_BRIGHTNESS);
-		printf(" -dayDelay				- Default = %'d: Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY);
+		printf(" -dayDelay				- Default = %'d: Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY_MS);
 		printf(" -dayautogain			- Default = %s: 1 enables daytime auto gain\n", yesNo(DEFAULT_DAYAUTOGAIN));
 		printf(" -daymaxgain			- Default = %d: Daytime maximum auto gain\n", DEFAULT_DAYMAXGAIN);
 		printf(" -daygain				- Default = %d: Daytime gain\n", DEFAULT_DAYGAIN);
@@ -1263,11 +1252,11 @@ i++;
 
 		printf(" -nightautoexposure		- Default = %s: 1 enables nighttime auto-exposure\n", yesNo(DEFAULT_NIGHTAUTOEXPOSURE));
 		printf(" -nightmaxexposure		- Default = %'d: Maximum nighttime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_NIGHTMAXAUTOEXPOSURE_MS, (float)DEFAULT_NIGHTMAXAUTOEXPOSURE_MS/US_IN_MS);
-		printf(" -nightexposure			- Default = %'d: Nighttime exposure in us (equals to %.4f sec)\n", DEFAULT_NIGHTEXPOSURE, (float)DEFAULT_NIGHTEXPOSURE/US_IN_SEC);
+		printf(" -nightexposure			- Default = %'d: Nighttime exposure in us (equals to %.4f sec)\n", DEFAULT_NIGHTEXPOSURE_MS*US_IN_MS, (float)DEFAULT_NIGHTEXPOSURE_MS/MS_IN_SEC);
 		printf(" -nightmean				- Default = %.2f: Nighttime target exposure brightness\n", DEFAULT_NIGHTMEAN);
 		printf("						  NOTE: Nighttime Auto-Gain and Auto-Exposure should be on for best results\n");
 		printf(" -nightbrightness		- Default = %d: Nighttime brightness level\n", DEFAULT_BRIGHTNESS);
-		printf(" -nightDelay			- Default = %'d: Delay between nighttime images in milliseconds - %d = 1 sec.\n", DEFAULT_NIGHTDELAY, MS_IN_SEC);
+		printf(" -nightDelay			- Default = %'d: Delay between nighttime images in milliseconds - %d = 1 sec.\n", DEFAULT_NIGHTDELAY_MS, MS_IN_SEC);
 		printf(" -nightautogain			- Default = %s: 1 enables nighttime auto gain\n", yesNo(DEFAULT_NIGHTAUTOGAIN));
 		printf(" -nightmaxgain			- Default = %d: Nighttime maximum auto gain\n", DEFAULT_NIGHTMAXGAIN);
 		printf(" -nightgain				- Default = %d: Nighttime gain\n", DEFAULT_NIGHTGAIN);
@@ -1303,7 +1292,7 @@ i++;
 		printf(" -histogrambox			- Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", DEFAULT_BOX_SIZEX, DEFAULT_BOX_SIZEY, DEFAULT_BOX_FROM_LEFT * 100, DEFAULT_BOX_FROM_TOP * 100);
 #endif
 		printf(" -debuglevel			- Default = 0. Set to 1, 2, 3, or 4 for more debugging information.\n");
-		printf(" -newexposure			- Default = %s. Determines if version 0.8 exposure method should be used.\n", yesNo(DEFAULT_NEWEXPOSURE));
+		printf(" -newexposure			- Default = %s. Determines if version 0.8 exposure method should be used.\n", yesNo(DEFAULT_VIDEO_OFF));
 
 		printf(" -showTime				- Set to 1 to display the time on the image.\n");
 		printf(" -timeformat			- Format the optional time is displayed in; default is '%s'\n", DEFAULT_TIMEFORMAT);
@@ -1348,31 +1337,36 @@ i++;
 	if (! saveCC)
 	{
 		// xxxx TODO: NO_MAX_VALUE will be replaced by acutal values
-		validateLong(&dayMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Daytime Max Auto-Exposure", true);	// camera-specific
-		validateFloat(&temp_dayExposure_ms, 1, NO_MAX_VALUE, "Daytime Manual Exposure", true);		// camera-specific
-				dayExposure_us = temp_dayExposure_ms * US_IN_MS;
+		validateFloat(&temp_dayMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Daytime Max Auto-Exposure", true);	// camera-specific
+			dayMaxAutoexposure_us = temp_dayMaxAutoexposure_ms * US_IN_MS;
+		validateFloat(&temp_dayExposure_ms, 1, dayAutoExposure ? (dayMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Daytime Manual Exposure", true);
+			dayExposure_us = temp_dayExposure_ms * US_IN_MS;
 		validateLong(&dayBrightness, 0, 100, "Daytime Brightness", true);					// camera-specific
 		validateLong(&dayDelay_ms, 10, NO_MAX_VALUE, "Daytime Delay", false);
 		validateLong(&dayMaxGain, 0, NO_MAX_VALUE, "Daytime Max Auto-Gain", true);					// camera-specific
-		validateLong(&dayGain, 0, NO_MAX_VALUE, "Daytime Gain", true);								// camera-specific
+		validateLong(&dayGain, 0, dayAutoGain ? dayMaxGain : NO_MAX_VALUE, "Daytime Gain", true);
 		validateLong(&dayBin, 1, NO_MAX_VALUE, "Daytime Binning", false);								// camera-specific
 		validateLong(&dayWBR, 0, NO_MAX_VALUE, "Daytime Red Balance", true);							// camera-specific
 		validateLong(&dayWBB, 0, NO_MAX_VALUE, "Daytime Blue Balance", true);						// camera-specific
 		validateLong(&daySkipFrames, 0, 50, "Daytime Skip Frames", true);
-		validateLong(&nightMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Nighttime Max Auto-Exposure", true);// camera-specific
-		validateFloat(&temp_nightExposure_ms, 1, NO_MAX_VALUE, "Nighttime Manual Exposure", true);	// camera-specific
-				nightExposure_us = temp_nightExposure_ms * US_IN_MS;
+
+		validateFloat(&temp_nightMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Nighttime Max Auto-Exposure", true);	// camera-specific
+			nightMaxAutoexposure_us = temp_nightMaxAutoexposure_ms * US_IN_MS;
+		validateFloat(&temp_nightExposure_ms, 1, nightAutoExposure ? (nightMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Nighttime Manual Exposure", true);
+			nightExposure_us = temp_nightExposure_ms * US_IN_MS;
 		validateLong(&nightBrightness, 0, 100, "Nighttime Brightness", true);				// camera-specific
 		validateLong(&nightDelay_ms, 10, NO_MAX_VALUE, "Nighttime Delay", false);
 		validateLong(&nightMaxGain, 0, NO_MAX_VALUE, "Nighttime Max Auto-Gain", true);				// camera-specific
-		validateLong(&nightGain, 0, NO_MAX_VALUE, "Nighttime Gain", true);							// camera-specific
+		validateLong(&nightGain, 0, nightAutoGain ? nightMaxGain : NO_MAX_VALUE, "Nighttime Gain", true);
 		validateLong(&nightBin, 1, NO_MAX_VALUE, "Nighttime Binning", false);							// camera-specific
 		validateLong(&nightWBR, 0, NO_MAX_VALUE, "Nighttime Red Balance", true);						// camera-specific
 		validateLong(&nightWBB, 0, NO_MAX_VALUE, "Nighttime Blue Balance", true);					// camera-specific
 		validateLong(&nightSkipFrames, 0, 50, "Nighttime Skip Frames", true);
+
 		validateLong(&gamma, 0, NO_MAX_VALUE, "Gamma", true);										// camera-specific
 		validateLong(&offset, 0, NO_MAX_VALUE, "Offset", true);										// camera-specific
 		validateLong(&aggression, 1, 100, "Aggression", true);
+		validateLong(&targetTemp, -50, NO_MAX_VALUE, "Target Sensor Temperature", true);				// camera-specific
 		validateLong(&gainTransitionTime, 0, NO_MAX_VALUE, "Gain Transition Time", true);
 		// user specifies minutes but we want seconds.
 		gainTransitionTime *= 60;
@@ -1380,18 +1374,16 @@ i++;
 			validateLong(&imageType, 0, ASI_IMG_END, "Image Type", false);
 		validateLong(&asiBandwidth, MIN_ASIBANDWIDTH, MAX_ASIBANDWIDTH, "USB Bandwidth", true);
 		validateLong(&flip, 0, 3, "Flip", false);
-		validateLong(&targetTemp, -50, NO_MAX_VALUE, "Target Sensor Temperature", true);				// camera-specific
 		validateLong(&debugLevel, 0, 5, "Debug Level", true);
 
 		validateLong(&extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);
 		validateLong(&fontnumber, 0, sizeof(fontname)-1, "Font Name", true);
-		long four=4, eight=8; long aa = (long)cv::LINE_AA;	// min() and max() don't take constants
-		validateLong(&linenumber, (long)std::min(aa, four), (long)std::max(aa, eight), "Font Smoothness", true);
+		validateLong(&linenumber, 0, sizeof(linetype)-1, "Font Smoothness", true);
 
 		if (fc != NULL && sscanf(fc, "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]) != 3)
-			fprintf(stderr, "%s*** ERROR: Not enough font color parameters: '%s'%s\n", c(KRED), fc, c(KNRM));
+			Log(-1, "%s*** WARNING: Not enough font color parameters: '%s'%s\n", c(KRED), fc, c(KNRM));
 		if (sfc != NULL && sscanf(sfc, "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]) != 3)
-			fprintf(stderr, "%s*** ERROR: Not enough small font color parameters: '%s'%s\n", c(KRED), sfc, c(KNRM));
+			Log(-1, "%s*** WARNING: Not enough small font color parameters: '%s'%s\n", c(KRED), sfc, c(KNRM));
 	}
 	char const *imagetype = "";
 	char const *ext = checkForValidExtension(fileName, imageType);
@@ -1516,14 +1508,14 @@ i++;
 	bool ok = true;
 	if (histogramBoxSizeX < 1 || histogramBoxSizeY < 1)
 	{
-		fprintf(stderr, "%s*** ERROR: Histogram box size must be > 0; you entered X=%d, Y=%d%s\n",
+		Log(-1, "%s*** ERROR: Histogram box size must be > 0; you entered X=%d, Y=%d%s\n",
 			c(KRED), histogramBoxSizeX, histogramBoxSizeY, c(KNRM));
 		ok = false;
 	}
 	if (isnan(histogramBoxPercentFromLeft) || isnan(histogramBoxPercentFromTop) || 
 		histogramBoxPercentFromLeft < 0.0 || histogramBoxPercentFromTop < 0.0)
 	{
-		fprintf(stderr, "%s*** ERROR: Bad values for histogram percents; you entered X=%.0f%%, Y=%.0f%%%s\n",
+		Log(-1, "%s*** ERROR: Bad values for histogram percents; you entered X=%.0f%%, Y=%.0f%%%s\n",
 			c(KRED), (histogramBoxPercentFromLeft*100.0), (histogramBoxPercentFromTop*100.0), c(KNRM));
 		ok = false;
 		centerX = centerY = 0;		// keeps compiler quiet
@@ -1540,7 +1532,7 @@ i++;
 
 		if (leftOfBox < 0 || rightOfBox >= width || topOfBox < 0 || bottomOfBox >= height)
 		{
-			fprintf(stderr, "%s*** ERROR: Histogram box location must fit on image; upper left of box is %dx%d, lower right %dx%d%s\n", c(KRED), leftOfBox, topOfBox, rightOfBox, bottomOfBox, c(KNRM));
+			Log(-1, "%s*** ERROR: Histogram box location must fit on image; upper left of box is %dx%d, lower right %dx%d%s\n", c(KRED), leftOfBox, topOfBox, rightOfBox, bottomOfBox, c(KNRM));
 			ok = false;
 		}
 	}
@@ -1621,12 +1613,22 @@ i++;
 	printf(" Quality: %ld\n", quality);
 	printf(" Daytime capture: %s\n", yesNo(daytimeCapture));
 
-	printf(" Exposure (day):   %s, Auto: %s\n", length_in_units(dayExposure_us, true), yesNo(dayAutoExposure));
-	printf(" Exposure (night): %s, Auto: %s\n", length_in_units(nightExposure_us, true), yesNo(nightAutoExposure));
-	printf(" Max Auto-Exposure (day):   %s\n", length_in_units(dayMaxAutoexposure_ms, true));
-	printf(" Max Auto-Exposure (night): %s\n", length_in_units(nightMaxAutoexposure_ms, true));
-	printf(" Gain (day):   %ld, Auto: %s, max: %ld\n", dayGain, yesNo(dayAutoGain), dayMaxGain);
-	printf(" Gain (night): %ld, Auto: %s, max: %ld\n", nightGain, yesNo(nightAutoGain), nightMaxGain);
+	printf(" Exposure (day):   %s, Auto: %s", length_in_units(dayExposure_us, true), yesNo(dayAutoExposure));
+		if (dayAutoExposure)
+			printf(", Max Auto-Exposure: %s\n", length_in_units(dayMaxAutoexposure_us, true));
+		printf("\n");
+	printf(" Exposure (night): %s, Auto: %s", length_in_units(nightExposure_us, true), yesNo(nightAutoExposure));
+		if (nightAutoExposure)
+			printf(", Max Auto-Exposure: %s\n", length_in_units(nightMaxAutoexposure_us, true));
+		printf("\n");
+	printf(" Gain (day):   %ld, Auto: %s", dayGain, yesNo(dayAutoGain));
+		if (dayAutoGain)
+			printf(", Max Auto-Gain: %ld\n", dayMaxGain);
+		printf("\n");
+	printf(" Gain (night): %ld, Auto: %s", nightGain, yesNo(nightAutoGain));
+		if (nightAutoGain)
+			printf(", Max Auto-Gain: %ld\n", nightMaxGain);
+		printf("\n");
 	printf(" Gain Transition Time: %.1f minutes\n", (float) gainTransitionTime/60);
 	printf(" Brightness (day):   %ld\n", dayBrightness);
 	printf(" Brightness (night): %ld\n", nightBrightness);
@@ -1637,8 +1639,8 @@ i++;
 		printf(" White Balance (day)   Red: %ld, Blue: %ld, Auto: %s\n", dayWBR, dayWBB, yesNo(dayAutoAWB));
 		printf(" White Balance (night) Red: %ld, Blue: %ld, Auto: %s\n", nightWBR, nightWBB, yesNo(nightAutoAWB));
 	}
-	printf(" Delay (day):   %s\n", length_in_units(dayDelay_ms, true));
-	printf(" Delay (night): %s\n", length_in_units(nightDelay_ms, true));
+	printf(" Delay (day):   %s\n", length_in_units(dayDelay_ms*US_IN_MS, true));
+	printf(" Delay (night): %s\n", length_in_units(nightDelay_ms*US_IN_MS, true));
 	printf(" Skip Frames (day):   %ld\n", daySkipFrames);
 	printf(" Skip Frames (night): %ld\n", nightSkipFrames);
 
@@ -1670,7 +1672,7 @@ i++;
 	printf(" Taking Dark Frames: %s\n", yesNo(takingDarkFrames));
 	printf(" Debug Level: %ld\n", debugLevel);
 	printf(" On TTY: %s\n", yesNo(tty));
-	printf(" Video OFF Between Images: %s\n", yesNo(useNewExposureAlgorithm));
+	printf(" Video OFF Between Images: %s\n", yesNo(videoOffBetweenImages));
 
 	printf(" Text Overlay: %s\n", ImgText[0] == '\0' ? "[none]" : ImgText);
 	printf(" Text Extra File: %s, Age: %ld seconds\n", ImgExtraText[0] == '\0' ? "[none]" : ImgExtraText, extraFileAge);
@@ -1764,7 +1766,7 @@ i++;
 
 	// Start taking pictures
 
-	if (! useNewExposureAlgorithm)
+	if (! videoOffBetweenImages)
 	{
 		asiRetCode = ASIStartVideoCapture(CamNum);
 		if (asiRetCode != ASI_SUCCESS)
@@ -1776,7 +1778,6 @@ i++;
 
 	while (bMain)
 	{
-setAutoExposure = false;	// XXXXXXXXXXXX testing
 		// Find out if it is currently DAY or NIGHT
 		dayOrNight = calculateDayOrNight(latitude, longitude, angle);
 		std::string lastDayOrNight = dayOrNight;
@@ -1795,7 +1796,7 @@ setAutoExposure = false;	// XXXXXXXXXXXX testing
 			currentMaxGain = nightMaxGain;		// not needed since we're not using auto gain, but set to be consistent
 			gainChange = 0;
 			currentDelay_ms = nightDelay_ms;
-			currentMaxAutoexposure_us = currentExposure_us = nightMaxAutoexposure_ms * US_IN_MS;
+			currentMaxAutoexposure_us = currentExposure_us = nightMaxAutoexposure_us;
 			currentBin = nightBin;
 			currentBrightness = nightBrightness;
 			if (ASICameraInfo.IsColorCam)
@@ -1869,11 +1870,11 @@ setAutoExposure = false;	// XXXXXXXXXXXX testing
 				// use what the user specified.
 				if (numExposures == 0 || ! dayAutoExposure)
 				{
-					if (dayAutoExposure && dayExposure_us > dayMaxAutoexposure_ms*US_IN_MS)
+					if (dayAutoExposure && dayExposure_us > dayMaxAutoexposure_us)
 					{
-						snprintf(bufTemp, sizeof(bufTemp), "%s", length_in_units(dayExposure_us, true));
-						Log(0, "*** WARNING: daytime Manual Exposure [%s] > Max Auto-Exposure [%s]; user smaller number.\n", bufTemp, length_in_units(dayMaxAutoexposure_ms*US_IN_MS, true));
-						dayExposure_us = dayMaxAutoexposure_ms * US_IN_MS;
+						Log(0, "*** WARNING: daytime Manual Exposure [%s] ", length_in_units(dayExposure_us, true));
+						Log(0, "> Max Auto-Exposure [%s]; using smaller number.\n", length_in_units(dayMaxAutoexposure_us, true));
+						dayExposure_us = dayMaxAutoexposure_us;
 					}
 					currentExposure_us = dayExposure_us;
 				}
@@ -1893,7 +1894,7 @@ setAutoExposure = false;	// XXXXXXXXXXXX testing
 					Log(2," old (%'f) and new (%'f) Gain to calculate new exposure of %s\n", oldGain, newGain, length_in_units(currentExposure_us, true));
 				}
 
-				currentMaxAutoexposure_us = dayMaxAutoexposure_ms * US_IN_MS;
+				currentMaxAutoexposure_us = dayMaxAutoexposure_us;
 				if (dayAutoExposure && currentExposure_us > currentMaxAutoexposure_us)
 				{
 					currentExposure_us = currentMaxAutoexposure_us;
@@ -1946,11 +1947,11 @@ setAutoExposure = false;	// XXXXXXXXXXXX testing
 			// Setup the night time capture parameters
 			if (numExposures == 0 || ! nightAutoExposure)
 			{
-				if (nightAutoExposure && nightExposure_us > nightMaxAutoexposure_ms*US_IN_MS)
+				if (nightAutoExposure && nightExposure_us > nightMaxAutoexposure_us)
 				{
 					snprintf(bufTemp, sizeof(bufTemp), "%s", length_in_units(nightExposure_us, true));
-					Log(0, "*** WARNING: nighttime Manual Exposure [%s] > Max Auto-Exposure [%s]; user smaller number.\n", bufTemp, length_in_units(nightMaxAutoexposure_ms*US_IN_MS, true));
-					nightExposure_us = nightMaxAutoexposure_ms * US_IN_MS;
+					Log(0, "*** WARNING: nighttime Manual Exposure [%s] > Max Auto-Exposure [%s]; user smaller number.\n", bufTemp, length_in_units(nightMaxAutoexposure_us, true));
+					nightExposure_us = nightMaxAutoexposure_us;
 				}
 				currentExposure_us = nightExposure_us;
 			}
@@ -1965,7 +1966,7 @@ setAutoExposure = false;	// XXXXXXXXXXXX testing
 			}
 			currentDelay_ms = nightDelay_ms;
 			currentBin = nightBin;
-			currentMaxAutoexposure_us = nightMaxAutoexposure_ms * US_IN_MS;
+			currentMaxAutoexposure_us = nightMaxAutoexposure_us;
 			currentGain = nightGain;	// must come before determineGainChange() below
 			currentMaxGain = nightMaxGain;
 			if (currentAdjustGain)
@@ -2307,13 +2308,12 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						if (currentExposure_us > currentMaxAutoexposure_us)
 						{
 							 // If we call length_in_units() twice in same command line they both return the last value.
-							 char x[100];
-							 snprintf(x, sizeof(x), "%s", length_in_units(currentExposure_us, false));
-							 Log(3, "  > Stopped trying: new exposure of %s would be over max of %s\n", x, length_in_units(currentMaxAutoexposure_us, false));
+							Log(3, "  > Stopped trying: new exposure of %s ", length_in_units(currentExposure_us, false));
+							Log(3, "would be over max of %s\n", length_in_units(currentMaxAutoexposure_us, false));
 
-							 long diff = (long)((float)currentExposure_us * (1/(float)percentChange));
-							 currentExposure_us -= diff;
-							 Log(3, "  > Decreasing next exposure by %d%% (%'ld us) to %'ld\n", percentChange, diff, currentExposure_us);
+							long diff = (long)((float)currentExposure_us * (1/(float)percentChange));
+							currentExposure_us -= diff;
+							Log(3, "  > Decreasing next exposure by %d%% (%'ld us) to %'ld\n", percentChange, diff, currentExposure_us);
 						}
 						else if (currentExposure_us == currentMaxAutoexposure_us)
 						{
@@ -2486,13 +2486,13 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 #endif
 
 					// Delay applied before next exposure
-					if (dayOrNight == "NIGHT" && nightAutoExposure && lastExposure_us < (nightMaxAutoexposure_ms * US_IN_MS) && ! takingDarkFrames)
+					if (dayOrNight == "NIGHT" && nightAutoExposure && lastExposure_us < nightMaxAutoexposure_us && ! takingDarkFrames)
 					{
 						// If using auto-exposure and the actual exposure is less than the max,
 						// we still wait until we reach maxexposure, then wait for the delay period.
 						// This is important for a constant frame rate during timelapse generation.
 						// This doesn't apply during the day since we don't have a max time then.
-						long s_us = (nightMaxAutoexposure_ms * US_IN_MS) - lastExposure_us; // to get to max
+						long s_us = nightMaxAutoexposure_us - lastExposure_us; // to get to max
 						s_us += currentDelay_ms * US_IN_MS;		// Add standard delay amount
 						Log(0, "  > Sleeping: %s\n", length_in_units(s_us, false));
 						usleep(s_us);	// usleep() is in us (microseconds)

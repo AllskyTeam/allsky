@@ -18,7 +18,7 @@ extern long cameraMaxAutoexposure_us;
 extern bool isLibcamera;
 char const *getCameraCommand(bool);
 #else
-extern bool useNewExposureAlgorithm;
+extern bool videoOffBetweenImages;
 #endif
 
 int numCameras = 0;		// used by several functions
@@ -117,19 +117,20 @@ typedef struct _ASI_ID {
 } ASI_ID;
 typedef ASI_ID ASI_SN;
 
-// We vary somewhat from ZWO here.  First, we have to hard-code the values since we can't query the camera.
-// Second, some values differ between raspistill and libcamera.
+// We vary somewhat from ZWO here:
+//	* We must hard-code the values since we can't query the camera.
+//	* Some values differ between raspistill and libcamera.
 
 ASI_CAMERA_INFO ASICameraInfoArray[] =
 {
 	// Module (sensor), Name, CameraID, MaxHeight, MaxWidth, IsColorCam, BayerPattern, SupportedBins,
 	//	SupportedVideoFormat, PixelSize, IsCoolerCam, BitDepth, SupportsTemperature
 	{ "imx477", "RPi HQ", 0, 3040, 4056, ASI_TRUE, BAYER_RG, {1, 2, 0},
-		{ASI_IMG_RAW8, ASI_IMG_RGB24, ASI_IMG_RAW16}, 1.55, ASI_FALSE, 12, ASI_FALSE},
+		{ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE, 12, ASI_FALSE},
 
-	// xxxxx TODO: check on 1.55 andA other settings
+	// xxxxx TODO: check on 1.55 and other settings
 	{ "arducam_64mp", "ARDUCAM 64 MB", 0, 6944, 9248, ASI_TRUE, BAYER_GR, {1, 2, 4, 0},
-		{ASI_IMG_RAW8, ASI_IMG_RGB24, ASI_IMG_RAW16}, 1.55, ASI_FALSE, 12, ASI_FALSE},
+		{ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE, 12, ASI_FALSE},
 
 	// FUTURE CAMERAS GO HERE...
 };
@@ -137,40 +138,40 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 #define MAX_NUM_CONTROL_CAPS (CONTROL_TYPE_END)
 ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 {
-	// Index 0 = RPiHQ on libcamera. 1 = RPiHQ on raspistill.
+	// Odd index = libcamera. Even = raspistill.
 
 	// The "Name" must match what ZWO uses.
 	// Name, MaxValue, MinValue, DefaultValue, CurrentValue, IsAutoSupported, IsWritable, ControlType
 	// -1 == does not apply.  99 == don't know
 	{ // libcamera
-		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, true, true, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 32, NOT_SET, true, true, ASI_EXPOSURE },
-		{ "WB_R", "Whit balance: Red component", 10.0, 0.1, 2.5, NOT_SET, true, true, ASI_WB_R },
-		{ "WB_B", "Whit balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, true, true, ASI_WB_B },
-		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, false, true, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, false, true, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, false, true, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, false, true, EV },
-		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, false, true, BRIGHTNESS },
-		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, false, true, CONTRAST },
-		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, false, true, SATURATION },
-		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, false, true, SHARPNESS },
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, false, false, CONTROL_TYPE_END },	// Signals end of list
+		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 32, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+		{ "WB_R", "Whit balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "Whit balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
+		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
+		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
+		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, BRIGHTNESS },
+		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	},
 	{ // raspistill.  Minimum width and height are 64.
-		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, true, true, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 32, NOT_SET, true, true, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, true, true, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, true, true, ASI_WB_B },
-		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, false, true, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, false, true, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, false, true, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10, -10, 0, NOT_SET, false, true, EV },
-		{ "Brightness", "Brightness", 100, 0, 50, NOT_SET, false, true, BRIGHTNESS },		// xxx default ???
-		{ "Contrast", "Contrast", 100, -100, 0, NOT_SET, false, true, CONTRAST },
-		{ "Saturation", "Saturation", 100, -100, 0, NOT_SET, false, true, SATURATION },
-		{ "Sharpness", "Sharpness", 100, -100, 0, NOT_SET, false, true, SHARPNESS },
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, false, false, CONTROL_TYPE_END },	// Signals end of list
+		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 32, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
+		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
+		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
+		{ "ExposureCompensation", "Exposure Compensation", 10, -10, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 100, 0, 50, NOT_SET, ASI_FALSE, ASI_TRUE, BRIGHTNESS },		// xxx default ???
+		{ "Contrast", "Contrast", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Saturation", "Saturation", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Sharpness", "Sharpness", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	}
 	// TODO: add 2 entries for arducam_64mp (2nd entry can be empty since it's not supported on raspistill
 };
@@ -203,7 +204,7 @@ int ASIGetNumOfConnectedCameras()
 	num = system(cmd);
 	if (WIFEXITED(num))
 		num = WEXITSTATUS(num);
-	Log(4, "cmd='%s', num=%d\n", cmd, num);
+	Log(5, "cmd='%s', num=%d\n", cmd, num);
 	return(num);
 }
 
@@ -461,7 +462,7 @@ char *getRetCode(ASI_ERROR_CODE code)
 		// To aid in debugging these errors, keep track of how many we see.
 		errorTimeoutCntr += 1;
 		ret = "ASI_ERROR_TIMEOUT #" + std::to_string(errorTimeoutCntr) +
-			  " (with 0.8 exposure = " + ((useNewExposureAlgorithm)?("YES"):("NO")) + ")";
+			  " (with 0.8 exposure = " + ((videoOffBetweenImages)?("YES"):("NO")) + ")";
 	}
 	else if (code == ASI_ERROR_INVALID_SEQUENCE) ret = "ASI_ERROR_INVALID_SEQUENCE";
 	else if (code == ASI_ERROR_BUFFER_TOO_SMALL) ret = "ASI_ERROR_BUFFER_TOO_SMALL";
@@ -613,15 +614,27 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 	fprintf(f, "\t\"sensorWidth\" : %d,\n", width);
 	fprintf(f, "\t\"sensorHeight\" : %d,\n", height);
 	fprintf(f, "\t\"pixelSize\" : %1.2f,\n", pixelSize);
-	fprintf(f, "\t\"supportedBins\" : \"");
+	fprintf(f, "\t\"supportedBins\" : [\n");
 	for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedBins); ++i)
 	{
-		if (cameraInfo.SupportedBins[i] == 0)
+		int b = cameraInfo.SupportedBins[i];
+		if (b == 0)
+		{
+			fprintf(f, "\n");
 			break;
-		if (i > 0) fprintf(f, ",");
-		fprintf(f, "%d", cameraInfo.SupportedBins[i]);
+		}
+		if (i > 0)
+		{
+			fprintf(f, ",");		// comma on all but last one
+			fprintf(f, "\n");
+		}
+		fprintf(f, "\t\t{ ");
+		fprintf(f, "\"name\" : \"%dx%d\",  ", b, b);
+		fprintf(f, "\"bin\" : %d", b);
+		fprintf(f, " }");
 	}
-	fprintf(f, "\",\n");
+	fprintf(f, "\t],\n");;
+
 	fprintf(f, "\t\"colorCamera\" : %s,\n", cameraInfo.IsColorCam ? "true" : "false");
 	if (cameraInfo.IsColorCam)
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
@@ -629,13 +642,45 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 #ifdef IS_RPi
 	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", getCameraCommand(isLibcamera));
 #endif
+
+	fprintf(f, "\t\"suportedImageFormats\": [\n");
+	for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedVideoFormat); i++)
+	{
+		ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];
+		if (it == ASI_IMG_END)
+		{
+			fprintf(f, "\n");
+			break;
+		}
+		if (i > 0)
+		{
+			fprintf(f, ",");		// comma on all but last one
+			fprintf(f, "\n");
+		}
+		fprintf(f, "\t\t{ ");
+		fprintf(f, "\"name\" : \"%s\",  ",
+			it == ASI_IMG_RAW8 ?  "ASI_IMG_RAW8" :
+			it == ASI_IMG_RGB24 ?  "ASI_IMG_RGB24" :
+			it == ASI_IMG_RAW16 ?  "ASI_IMG_RAW16" :
+			it == ASI_IMG_Y8 ?  "ASI_IMG_Y8" :
+			"unknown video format");
+		fprintf(f, "\"number\" : %d", (int) it);
+		fprintf(f, " }");
+	}
+	fprintf(f, "\t],\n");;
+
 	fprintf(f, "\t\"controls\": [\n");
 	for (int i = 0; i < iNumOfCtrl; i++)
 	{
+		if (i > 0)
+		{
+			fprintf(f, ",");		// comma on all but last one
+			fprintf(f, "\n");
+		}
+
 		ASI_CONTROL_CAPS cc;
 		ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
 		fprintf(f, "\t\t{\n");
-		fprintf(f, "\t\t\t\"Brand\" : \"%s\",\n", CAMERA_BRAND);
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", cc.Name);
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", argumentNames[cc.ControlType][1]);
 #ifdef IS_ZWO
@@ -648,15 +693,17 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 		fprintf(f, "\t\t\t\"DefaultValue\" : %.3f,\n", cc.DefaultValue);
 #endif
 		fprintf(f, "\t\t\t\"ControlType\" : %d\n", cc.ControlType);
-		fprintf(f, "\t\t}%s\n", i < iNumOfCtrl-1 ? "," : "");		// comma on all but last one
+		fprintf(f, "\t\t}");
 	}
+	fprintf(f, "\n");
 	fprintf(f, "\t]\n");
+
 	fprintf(f, "}\n");
 	fclose(f);
 }
 
 // Output basic camera information.
-void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, int width, int height, double pixelSize, char const *bayer)
+void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, long width, long height, double pixelSize, char const *bayer)
 {
 	printf(" Camera Information:\n");
 	printf("  - Brand: %s\n", CAMERA_BRAND);
@@ -665,7 +712,7 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, int width, int height, double 
 	printf("  - Camera ID: %s\n", cID);
 #endif
 	printf("  - Camera Serial Number: %s\n", getSerialNumber(cameraInfo.CameraID));
-	printf("  - Native Resolution: %dx%d\n", width, height);
+	printf("  - Native Resolution: %ldx%ld\n", width, height);
 	printf("  - Pixel Size: %1.2f microns\n", pixelSize);
 	printf("  - Supported Bins: ");
 	for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedBins); ++i)
@@ -733,10 +780,27 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, int width, int height, double 
 	}
 	if (debugLevel >= 4)
 	{
+		printf("Supported image formats:\n");
+		size_t s_ = sizeof(cameraInfo.SupportedVideoFormat);
+		for (unsigned int i = 0; i < s_; i++)
+		{
+			ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];
+			if (it == ASI_IMG_END)
+			{
+				break;
+			}
+			printf("  - %s\n",
+				it == ASI_IMG_RAW8 ?  "ASI_IMG_RAW8" :
+				it == ASI_IMG_RGB24 ?  "ASI_IMG_RGB24" :
+				it == ASI_IMG_RAW16 ?  "ASI_IMG_RAW16" :
+				it == ASI_IMG_Y8 ?  "ASI_IMG_Y8" :
+				"unknown video format");
+		}
+
+		printf("Control Caps:\n");
 		for (int i = 0; i < iNumOfCtrl; i++)
 		{
 			ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
-			printf("Control Caps:\n");
 			printf("  - %s:\n", cc.Name);
 			printf("    - Description = %s\n", cc.Description);
 #ifdef IS_ZWO
@@ -751,23 +815,6 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, int width, int height, double 
 			printf("    - IsAutoSupported = %d\n", cc.IsAutoSupported);
 			printf("    - IsWritable = %d\n", cc.IsWritable);
 			printf("    - ControlType = %d\n", cc.ControlType);
-		}
-
-		printf("Supported image formats:\n");
-		size_t s_ = sizeof(cameraInfo.SupportedVideoFormat);
-		for (unsigned int i = 0; i < sizeof(s_); i++)
-		{
-			ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];
-			if (it == ASI_IMG_END)
-			{
-				break;
-			}
-			printf("  - %s\n",
-				it == ASI_IMG_RAW8 ?  "ASI_IMG_RAW8" :
-				it == ASI_IMG_RGB24 ?  "ASI_IMG_RGB24" :
-				it == ASI_IMG_RAW16 ?  "ASI_IMG_RAW16" :
-				it == ASI_IMG_Y8 ?  "ASI_IMG_Y8" :
-				"unknown video format");
 		}
 	}
 }

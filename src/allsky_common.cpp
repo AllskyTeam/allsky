@@ -26,16 +26,22 @@ char debug_text[500];		// buffer to hold debug messages
 long debugLevel = 0;
 
 /**
- * Helper function to display debug info
+ * Helper function to display debug info.
+ * If the required_level is negative then also put the info in a "message" file.
 **/
 void Log(int required_level, const char *fmt, ...)
 {
-	if ((int)debugLevel >= required_level) {
+	if ((int)abs(debugLevel) >= required_level) {
 		char msg[8192];
 		snprintf(msg, sizeof(msg), "%s", fmt);
 		va_list va;
 		va_start(va, fmt);
 		vfprintf(stdout, msg, va);
+
+		if (debugLevel < 0)
+		{
+// xxxx TODO:
+		}
 		va_end(va);
 	}
 }
@@ -716,7 +722,7 @@ void sig(int i)
 	if (i == SIGHUP)
 		Log(3, "Got signal to restart\n");
 	else
-		printf("XXXXXX == got unknown signal %d\n", i);
+		Log(0, "Got unknown signal %d\n", i);
 	gotSignal = true;
 	closeUp(EXIT_RESTARTING);
 }

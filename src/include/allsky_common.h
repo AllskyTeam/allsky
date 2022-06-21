@@ -34,14 +34,14 @@
 #define DEFAULT_LOCALE				"en_US.UTF-8"
 #define AUTO_IMAGE_TYPE				99	// must match what's in the camera_settings.json file
 #define DEFAULT_IMAGE_TYPE			AUTO_IMAGE_TYPE
-#define DEFAULT_DAYEXPOSURE			32	// milliseconds
+#define DEFAULT_DAYEXPOSURE_MS		32		// ms
 #define DEFAULT_DAYAUTOEXPOSURE		true
 #define DEFAULT_DAYMAXAUTOEXPOSURE_MS (30 * MS_IN_SEC)
-#define DEFAULT_NIGHTEXPOSURE		(20 * US_IN_SEC)
+#define DEFAULT_NIGHTEXPOSURE_MS	(20 * MS_IN_SEC)
 #define DEFAULT_NIGHTAUTOEXPOSURE	true
 #define DEFAULT_NIGHTMAXAUTOEXPOSURE_MS (60 * MS_IN_SEC)
-#define DEFAULT_DAYDELAY			(5 * MS_IN_SEC)		// 5 seconds
-#define DEFAULT_NIGHTDELAY			(10 * MS_IN_SEC)	// 10 seconds
+#define DEFAULT_DAYDELAY_MS			(5 * MS_IN_SEC)		// 5 seconds
+#define DEFAULT_NIGHTDELAY_MS		(10 * MS_IN_SEC)	// 10 seconds
 #define DEFAULT_DAYAUTOAWB			false
 #define DEFAULT_NIGHTAUTOAWB		false
 #define DEFAULT_DAYBIN				1		// binning during the day probably isn't too useful...

@@ -8,7 +8,7 @@
 #endif
 
 // Forward definitions of variables in capture*.cpp.
-extern int debugLevel;
+extern long debugLevel;
 extern int iNumOfCtrl;
 extern char const *CC_saveDir;
 extern long cameraMinExposure_us;
@@ -136,6 +136,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 {
 	// Index 0 = RPiHQ on libcamera. 1 = RPiHQ on raspistill.
 
+	// The "Name" must match what ZWO uses.
 	// Name, MaxValue, MinValue, DefaultValue, CurrentValue, IsAutoSupported, IsWritable, ControlType
 	// -1 == does not apply.  99 == don't know
 	{ // libcamera
@@ -333,12 +334,11 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 			// We'd need to see if the control type supports auto and if it was last set to auto (and
 			// we're not setting any control values).
 			*pbAuto = ASI_FALSE;
-			
 		}
 		return(ASI_SUCCESS);
 	}
-	return(ASI_ERROR_INVALID_CONTROL_TYPE);
 
+	return(ASI_ERROR_INVALID_CONTROL_TYPE);
 }
 
 
@@ -414,6 +414,32 @@ int stopVideoCapture(int cameraID)
 	return((int) ASIStopVideoCapture(cameraID));
 }
 #endif		// IS_RPi
+
+
+// Get the camera control with the specified control type.
+ASI_ERROR_CODE getControlCapForControlType(int iCameraIndex, ASI_CONTROL_TYPE ControlType, ASI_CONTROL_CAPS *pControlCap)
+{
+	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
+		return(ASI_ERROR_INVALID_INDEX);
+
+	int numCaps = iNumOfCtrl != NOT_SET ? iNumOfCtrl : MAX_NUM_CONTROL_CAPS;
+#ifdef IS_RPi
+	if (! isLibcamera)
+		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
+#endif
+	for (int i=0; i < numCaps ; i++)
+	{
+		ASI_CONTROL_CAPS cc;
+		ASIGetControlCaps(iCameraIndex, i, &cc);
+		if (ControlType == cc.ControlType)
+		{
+			*pControlCap = cc;
+			return(ASI_SUCCESS);
+		}
+	}
+
+	return(ASI_ERROR_INVALID_CONTROL_TYPE);
+}
 
 // Display ASI errors in human-readable format
 char *getRetCode(ASI_ERROR_CODE code)

@@ -349,12 +349,12 @@ char *length_in_units(long us, bool multi)	// microseconds
 
 // Calculate if it is day or night
 std::string _day = "DAY", _night = "NIGHT";
-std::string calculateDayOrNight(const char *latitude, const char *longitude, const char *angle)
+std::string calculateDayOrNight(const char *latitude, const char *longitude, float angle)
 {
 	char sunwaitCommand[128];
 	int d;
 
-	sprintf(sunwaitCommand, "sunwait poll exit angle %s %s %s > /dev/null", angle, latitude, longitude);
+	sprintf(sunwaitCommand, "sunwait poll exit angle %.4f %s %s > /dev/null", angle, latitude, longitude);
 	d = system(sunwaitCommand);	// returns exit code 2 for DAY, 3 for night
 
 	if (WIFEXITED(d))
@@ -376,11 +376,11 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, con
 }
 
 // Calculate how long until nighttime.
-int calculateTimeToNightTime(const char *latitude, const char *longitude, const char *angle)
+int calculateTimeToNightTime(const char *latitude, const char *longitude, float angle)
 {
 	std::string t;
 	char sunwaitCommand[128];	// returns "hh:mm"
-	sprintf(sunwaitCommand, "sunwait list set angle %s %s %s", angle, latitude, longitude);
+	sprintf(sunwaitCommand, "sunwait list set angle %.4f %s %s", angle, latitude, longitude);
 	t = exec(sunwaitCommand);
 
 	t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
@@ -390,7 +390,7 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, const 
 	// after midnight or before noon.
 	if (sscanf(t.c_str(), "%d:%d", &hNight, &mNight) != 2)
 	{
-		Log(0, "ERROR: With angle %s sunwait returned unknown time to nighttime: %s\n", angle, t.c_str());
+		Log(0, "ERROR: With angle %.4f sunwait returned unknown time to nighttime: %s\n", angle, t.c_str());
 		return(1 * S_IN_HOUR);	// 1 hour - should we exit instead?
 	}
 	secsNight = (hNight * S_IN_HOUR) + (mNight * S_IN_MIN);	// secs to nighttime from start of today

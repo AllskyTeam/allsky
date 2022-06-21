@@ -161,7 +161,7 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 		ret = ASIGetControlCaps(camNum, i, &ControlCaps);
 		if (ret != ASI_SUCCESS)
 		{
-			Log(0, "WARNING: ASIGetControlCaps() for control %d failed: %s\n", i, getRetCode(ret));
+			Log(-1, "WARNING: ASIGetControlCaps() for control %d failed: %s\n", i, getRetCode(ret));
 			return(ret);
 		}
 
@@ -186,7 +186,7 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 				ret = ASISetControlValue(camNum, control, value, makeAuto);
 				if (ret != ASI_SUCCESS)
 				{
-					Log(0, "WARNING: ASISetControlCaps() for control %d, value=%ld failed: %s\n", control, value, getRetCode(ret));
+					Log(-1, "WARNING: ASISetControlCaps() for control %d, value=%ld failed: %s\n", control, value, getRetCode(ret));
 					return(ret);
 				}
 			} else {
@@ -483,8 +483,13 @@ if (1 || ! setAutoExposure || ! currentAutoExposure) {
 
 	if (status == ASI_SUCCESS) {
 		// Make sure the actual time to take the picture is "close" to the requested time.
-		timeval tStart = getTimeval();
+		timeval tStart;
+		if (exposureTime_us > (5 * US_IN_SEC)) tStart = getTimeval();
+
 		status = ASIGetVideoData(cameraId, imageBuffer, bufferSize, timeout);
+		if (useNewExposureAlgorithm)
+			(void) ASIStopVideoCapture(cameraId);
+
 		if (status != ASI_SUCCESS)
 		{
 			int exitCode;
@@ -500,14 +505,17 @@ if (1 || ! setAutoExposure || ! currentAutoExposure) {
 		{
 			// There is too much variance in the overhead of taking a picture to accurately
 			// determine the time to take an image at short exposures, so only check for longer ones.
-			if (exposureTime_us > (5 * US_IN_SEC))
+			long timeToTakeImage_us = timeval_diff_us(tStart, getTimeval());
+			if (timeToTakeImage_us < exposureTime_us && exposureTime_us > (5 * US_IN_SEC))
 			{
-		 		timeval tEnd = getTimeval();
-				// After testing there seems to be about 450,000 us overhead, so subtract it.
-				long timeToTakeImage_us = timeval_diff_us(tStart, tEnd) - 450000;
+				// Testing shows there's about this much us overhead, so subtract it to get actual time.
+				const int OVERHEAD = 450000;
+				if (timeToTakeImage_us > OVERHEAD)	// don't subtract if it makes timeToTakeImage_us negative
+					timeToTakeImage_us -= OVERHEAD;
 				long diff_us = timeToTakeImage_us - exposureTime_us;
-				long threshold_us = exposureTime_us * 0.5;
-				if (abs(diff_us) > threshold_us) {
+				long threshold_us = exposureTime_us * 0.5;		// 50% seems like a good number
+				if (abs(diff_us) > threshold_us)
+				{
 					Log(1, "*** WARNING: time to take image (%s) ", length_in_units(timeToTakeImage_us, true));
 					Log(1, "differs from requested exposure time (%s) ", length_in_units(exposureTime_us, true));
 					Log(1, "by %s, ", length_in_units(diff_us, true));
@@ -551,10 +559,6 @@ if (1 || ! setAutoExposure || ! currentAutoExposure) {
 				ASIGetControlValue(cameraId, ASI_WB_B, &actualWBB, &bAuto);
 			}
 		}
-
-		if (useNewExposureAlgorithm)
-			ASIStopVideoCapture(cameraId);
-
 	}
 	else {
 		Log(0, "  > ERROR: Not fetching exposure data because status is %s\n", getRetCode(status));
@@ -1086,7 +1090,7 @@ i++;
 			else if (strcmp(argv[i], "-histogrambox") == 0)
 			{
 				if (sscanf(argv[++i], "%d %d %f %f", &histogramBoxSizeX, &histogramBoxSizeY, &histogramBoxPercentFromLeft, &histogramBoxPercentFromTop) != 4)
-					fprintf(stderr, "%s*** ERROR: Not enough histogram box parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
+					Log(-1, "%s*** ERROR: Not enough histogram box parameters: '%s'%s\n", c(KRED), argv[i], c(KNRM));
 
 				// scale user-input 0-100 to 0.0-1.0
 				histogramBoxPercentFromLeft /= 100;
@@ -1236,7 +1240,7 @@ i++;
 	}
 
 	if (setlocale(LC_NUMERIC, locale) == NULL)
-		fprintf(stderr, "*** WARNING: Could not set locale to %s ***\n", locale);
+		Log(-1, "*** WARNING: Could not set locale to %s ***\n", locale);
 
 	if (help)
 	{
@@ -1385,13 +1389,12 @@ i++;
 
 		validateLong(&extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);
 		validateLong(&fontnumber, 0, sizeof(fontname)-1, "Font Name", true);
-		long four=4, eight=8; long aa = (long)cv::LINE_AA;	// min() and max() don't take constants
-		validateLong(&linenumber, (long)std::min(aa, four), (long)std::max(aa, eight), "Font Smoothness", true);
+		validateLong(&linenumber, 0, sizeof(linetype)-1, "Font Smoothness", true);
 
 		if (fc != NULL && sscanf(fc, "%d %d %d", &fontcolor[0], &fontcolor[1], &fontcolor[2]) != 3)
-			fprintf(stderr, "%s*** ERROR: Not enough font color parameters: '%s'%s\n", c(KRED), fc, c(KNRM));
+			Log(0, "%s*** ERROR: Not enough font color parameters: '%s'%s\n", c(KRED), fc, c(KNRM));
 		if (sfc != NULL && sscanf(sfc, "%d %d %d", &smallFontcolor[0], &smallFontcolor[1], &smallFontcolor[2]) != 3)
-			fprintf(stderr, "%s*** ERROR: Not enough small font color parameters: '%s'%s\n", c(KRED), sfc, c(KNRM));
+			Log(0, "%s*** ERROR: Not enough small font color parameters: '%s'%s\n", c(KRED), sfc, c(KNRM));
 	}
 	char const *imagetype = "";
 	char const *ext = checkForValidExtension(fileName, imageType);
@@ -1516,14 +1519,14 @@ i++;
 	bool ok = true;
 	if (histogramBoxSizeX < 1 || histogramBoxSizeY < 1)
 	{
-		fprintf(stderr, "%s*** ERROR: Histogram box size must be > 0; you entered X=%d, Y=%d%s\n",
+		Log(-1, "%s*** ERROR: Histogram box size must be > 0; you entered X=%d, Y=%d%s\n",
 			c(KRED), histogramBoxSizeX, histogramBoxSizeY, c(KNRM));
 		ok = false;
 	}
 	if (isnan(histogramBoxPercentFromLeft) || isnan(histogramBoxPercentFromTop) || 
 		histogramBoxPercentFromLeft < 0.0 || histogramBoxPercentFromTop < 0.0)
 	{
-		fprintf(stderr, "%s*** ERROR: Bad values for histogram percents; you entered X=%.0f%%, Y=%.0f%%%s\n",
+		Log(-1, "%s*** ERROR: Bad values for histogram percents; you entered X=%.0f%%, Y=%.0f%%%s\n",
 			c(KRED), (histogramBoxPercentFromLeft*100.0), (histogramBoxPercentFromTop*100.0), c(KNRM));
 		ok = false;
 		centerX = centerY = 0;		// keeps compiler quiet
@@ -1540,7 +1543,7 @@ i++;
 
 		if (leftOfBox < 0 || rightOfBox >= width || topOfBox < 0 || bottomOfBox >= height)
 		{
-			fprintf(stderr, "%s*** ERROR: Histogram box location must fit on image; upper left of box is %dx%d, lower right %dx%d%s\n", c(KRED), leftOfBox, topOfBox, rightOfBox, bottomOfBox, c(KNRM));
+			Log(-1, "%s*** ERROR: Histogram box location must fit on image; upper left of box is %dx%d, lower right %dx%d%s\n", c(KRED), leftOfBox, topOfBox, rightOfBox, bottomOfBox, c(KNRM));
 			ok = false;
 		}
 	}

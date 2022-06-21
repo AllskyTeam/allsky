@@ -18,7 +18,7 @@ extern long cameraMaxAutoexposure_us;
 extern bool isLibcamera;
 char const *getCameraCommand(bool);
 #else
-extern bool useNewExposureAlgorithm;
+extern bool videoOffBetweenImages;
 #endif
 
 int numCameras = 0;		// used by several functions
@@ -462,7 +462,7 @@ char *getRetCode(ASI_ERROR_CODE code)
 		// To aid in debugging these errors, keep track of how many we see.
 		errorTimeoutCntr += 1;
 		ret = "ASI_ERROR_TIMEOUT #" + std::to_string(errorTimeoutCntr) +
-			  " (with 0.8 exposure = " + ((useNewExposureAlgorithm)?("YES"):("NO")) + ")";
+			  " (with 0.8 exposure = " + ((videoOffBetweenImages)?("YES"):("NO")) + ")";
 	}
 	else if (code == ASI_ERROR_INVALID_SEQUENCE) ret = "ASI_ERROR_INVALID_SEQUENCE";
 	else if (code == ASI_ERROR_BUFFER_TOO_SMALL) ret = "ASI_ERROR_BUFFER_TOO_SMALL";

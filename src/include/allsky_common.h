@@ -108,10 +108,10 @@ char *getTime(char const *);
 double time_diff_us(int64, int64);
 long timeval_diff_us(timeval, timeval);
 std::string exec(const char *);
-void add_variables_to_command(char *, long, int, float,
+void add_variables_to_command(char *, timeval,
+	long, int, float,
 	bool, bool, bool, float, float,
-	int, float, int,
-	int, const char *, int, int);
+	int, float, int, const char *, int, int);
 const char *checkForValidExtension(const char *, int);
 std::string calculateDayOrNight(const char *, const char *, const char *);
 int calculateTimeToNightTime(const char *, const char *, const char *);

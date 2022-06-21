@@ -189,7 +189,7 @@ int RPiHQcapture(bool autoExposure, long exposure_us, long bin, bool autoGain, d
 
 	if (libcamera)
 	{
-		// xxxx TODO: supported modes:
+		// xxxx TODO: don't hard code resolutions - use what's defined for camera.
 		//	'SRGGB10_CSI2P' : 1332x990 
 		//	'SRGGB12_CSI2P' : 2028x1080 2028x1520 4056x3040 
 		//								bin 2x2   bin 1x1
@@ -197,8 +197,6 @@ int RPiHQcapture(bool autoExposure, long exposure_us, long bin, bool autoGain, d
 			command += " --width 4056 --height 3040";
 		else if (bin==2)
 			command += " --width 2028 --height 1520";
-		else
-			command += " --width 1012 --height 760";		// xxxx FIX: not supported mode
 	}
 	else
 	{
@@ -206,8 +204,6 @@ int RPiHQcapture(bool autoExposure, long exposure_us, long bin, bool autoGain, d
 			command += " --mode 3";
 		else if (bin==2)
 			command += " --mode 2 --width 2028 --height 1520";
-		else
-			command += " --mode 4 --width 1012 --height 760";
 	}
 
 	if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
@@ -293,19 +289,11 @@ int RPiHQcapture(bool autoExposure, long exposure_us, long bin, bool autoGain, d
 	if (flip == 2 || flip == 3)
 		command += " --vflip";		// vertical flip
 
-	if (saturation < minSaturation)
-		saturation = minSaturation;
-	else if (saturation > maxSaturation)
-		saturation = maxSaturation;
 	ss.str("");
 	ss << saturation;
 	command += " --saturation "+ ss.str();
 
 	ss.str("");
-	if (brightness < minBrightness)
-		brightness = minBrightness;
-	else if (brightness > maxBrightness)
-		brightness = maxBrightness;
 	if (libcamera)
 		ss << (float) brightness / 100;	// User enters -100 to 100.  Convert to -1.0 to 1.0.
 	else
@@ -404,10 +392,10 @@ int main(int argc, char *argv[])
 	long dayBin					= DEFAULT_DAYBIN;
 	long nightBin				= DEFAULT_NIGHTBIN;
 	long imageType				= DEFAULT_IMAGE_TYPE;
-	long dayExposure_us			= DEFAULT_DAYEXPOSURE;
-	long dayMaxAutoexposure_ms	= DEFAULT_DAYMAXAUTOEXPOSURE_MS;
-	long nightExposure_us		= DEFAULT_NIGHTEXPOSURE;
-	long nightMaxAutoexposure_ms= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
+	long dayExposure_us			= DEFAULT_DAYEXPOSURE_MS * US_IN_MS;
+	long dayMaxAutoexposure_us	= DEFAULT_DAYMAXAUTOEXPOSURE_MS * US_IN_MS;
+	long nightExposure_us		= DEFAULT_NIGHTEXPOSURE_MS * US_IN_MS;
+	long nightMaxAutoexposure_us= DEFAULT_NIGHTMAXAUTOEXPOSURE_MS * US_IN_MS;
 	long currentExposure_us		= NOT_SET;
 	long currentMaxAutoexposure_us = NOT_SET;			// _us to match ZWO version
 	bool dayAutoExposure		= DEFAULT_DAYAUTOEXPOSURE;
@@ -423,8 +411,8 @@ int main(int argc, char *argv[])
 	double currentGain			= NOT_SET;
 	double currentMaxGain		= NOT_SET;
 	double lastGain				= 0.0;					// last gain taken
-	long nightDelay_ms			= DEFAULT_NIGHTDELAY;
-	long dayDelay_ms			= DEFAULT_DAYDELAY;
+	long nightDelay_ms			= DEFAULT_NIGHTDELAY_MS;
+	long dayDelay_ms			= DEFAULT_DAYDELAY_MS;
 	long currentDelay_ms 		= NOT_SET;
 	double saturation;
 	long dayBrightness;
@@ -481,8 +469,11 @@ int main(int argc, char *argv[])
 	setlinebuf(stdout);		// Line buffer output so entries appear in the log immediately.
 
 	char const *fc = NULL, *sfc = NULL;	// temporary pointers to fontcolor and smallfontcolor
-	double temp_dayExposure_ms = DEFAULT_DAYEXPOSURE;			// entered in ms - converted to us later
-	double temp_nightExposure_ms = DEFAULT_NIGHTEXPOSURE;		// entered in ms - converted to us later
+	// These are entered in ms and we convert to us later
+	double temp_dayExposure_ms = DEFAULT_DAYEXPOSURE_MS;
+	double temp_nightExposure_ms = DEFAULT_NIGHTEXPOSURE_MS;
+	double temp_dayMaxAutoexposure_ms = DEFAULT_DAYMAXAUTOEXPOSURE_MS;
+	double temp_nightMaxAutoexposure_ms = DEFAULT_NIGHTMAXAUTOEXPOSURE_MS;
 	if (argc > 1)
 	{
 		for (i = 1; i <= argc - 1; i++)
@@ -529,7 +520,7 @@ int main(int argc, char *argv[])
 			}
 			else if (strcmp(argv[i], "-daymaxexposure") == 0)
 			{
-				dayMaxAutoexposure_ms = atol(argv[++i]);
+				temp_dayMaxAutoexposure_ms = atof(argv[++i]);	// allow fractions
 			}
 			else if (strcmp(argv[i], "-dayexposure") == 0)
 			{
@@ -598,7 +589,7 @@ i++;
 			}
 			else if (strcmp(argv[i], "-nightmaxexposure") == 0)
 			{
-				nightMaxAutoexposure_ms = atol(argv[++i]);
+				temp_nightMaxAutoexposure_ms = atof(argv[++i]);	// allow fractions
 			}
 			else if (strcmp(argv[i], "-nightexposure") == 0)
 			{
@@ -807,25 +798,21 @@ i++;
 			else if (strcmp(argv[i], "-mean-threshold") == 0)
 			{
 				myModeMeanSetting.mean_threshold = std::min(0.1,std::max(0.0001,atof(argv[i + 1])));
-				myModeMeanSetting.modeMean = true;
 				i++;
 			}
 			else if (strcmp(argv[i], "-mean-p0") == 0)
 			{
 				myModeMeanSetting.mean_p0 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.modeMean = true;
 				i++;
 			}
 			else if (strcmp(argv[i], "-mean-p1") == 0)
 			{
 				myModeMeanSetting.mean_p1 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.modeMean = true;
 				i++;
 			}
 			else if (strcmp(argv[i], "-mean-p2") == 0)
 			{
 				myModeMeanSetting.mean_p2 = std::min(50.0,std::max(0.0,atof(argv[i + 1])));
-				myModeMeanSetting.modeMean = true;
 				i++;
 			}
 
@@ -874,11 +861,11 @@ i++;
 		printf("%sAvailable Arguments:\n", c(KYEL));
 		printf(" -dayautoexposure		- Default = %s: 1 enables daytime auto-exposure\n", yesNo(DEFAULT_DAYAUTOEXPOSURE));
 		printf(" -daymaxexposure		- Default = %'d: Maximum daytime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_DAYMAXAUTOEXPOSURE_MS, (float)DEFAULT_DAYMAXAUTOEXPOSURE_MS/US_IN_MS);
-		printf(" -dayexposure			- Default = %'d: Daytime exposure in us (equals to %.4f sec)\n", DEFAULT_DAYEXPOSURE, (float)DEFAULT_DAYEXPOSURE/US_IN_SEC);
+		printf(" -dayexposure			- Default = %'d: Daytime exposure in us (equals to %.4f sec)\n", DEFAULT_DAYEXPOSURE_MS*US_IN_MS, (float)DEFAULT_DAYEXPOSURE_MS/MS_IN_SEC);
 		printf(" -daymean				- Default = %.2f: Daytime target exposure brightness\n", DEFAULT_DAYMEAN);
 		printf("						  NOTE: Daytime Auto-Gain and Auto-Exposure should be on for best results\n");
 		printf(" -daybrightness			- Default = %ld: Daytime brightness level\n", defaultBrightness);
-		printf(" -dayDelay				- Default = %'d: Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY);
+		printf(" -dayDelay				- Default = %'d: Delay between daytime images in milliseconds - 5000 = 5 sec.\n", DEFAULT_DAYDELAY_MS);
 		printf(" -dayautogain			- Default = %s: 1 enables daytime auto gain\n", yesNo(DEFAULT_DAYAUTOGAIN));
 		printf(" -daymaxgain			- Default = %.2f: Daytime maximum auto gain\n", DEFAULT_DAYMAXGAIN);
 		printf(" -daygain				- Default = %.2f: Daytime gain\n", DEFAULT_DAYGAIN);
@@ -890,11 +877,11 @@ i++;
 
 		printf(" -nightautoexposure		- Default = %s: 1 enables nighttime auto-exposure\n", yesNo(DEFAULT_NIGHTAUTOEXPOSURE));
 		printf(" -nightmaxexposure		- Default = %'d: Maximum nighttime auto-exposure in ms (equals to %.1f sec)\n", DEFAULT_NIGHTMAXAUTOEXPOSURE_MS, (float)DEFAULT_NIGHTMAXAUTOEXPOSURE_MS/US_IN_MS);
-		printf(" -nightexposure			- Default = %'d: Nighttime exposure in us (equals to %.4f sec)\n", DEFAULT_NIGHTEXPOSURE, (float)DEFAULT_NIGHTEXPOSURE/US_IN_SEC);
+		printf(" -nightexposure			- Default = %'d: Nighttime exposure in us (equals to %.4f sec)\n", DEFAULT_NIGHTEXPOSURE_MS*US_IN_MS, (float)DEFAULT_NIGHTEXPOSURE_MS/MS_IN_SEC);
 		printf(" -nightmean				- Default = %.2f: Nighttime target exposure brightness\n", DEFAULT_NIGHTMEAN);
 		printf("						  NOTE: Nighttime Auto-Gain and Auto-Exposure should be on for best results\n");
 		printf(" -nightbrightness		- Default = %ld: Nighttime brightness level\n", defaultBrightness);
-		printf(" -nightDelay			- Default = %'d: Delay between nighttime images in milliseconds - %d = 1 sec.\n", DEFAULT_NIGHTDELAY, MS_IN_SEC);
+		printf(" -nightDelay			- Default = %'d: Delay between nighttime images in milliseconds - %d = 1 sec.\n", DEFAULT_NIGHTDELAY_MS, MS_IN_SEC);
 		printf(" -nightautogain			- Default = %s: 1 enables nighttime auto gain\n", yesNo(DEFAULT_NIGHTAUTOGAIN));
 		printf(" -nightmaxgain			- Default = %.2f: Nighttime maximum auto gain\n", DEFAULT_NIGHTMAXGAIN);
 		printf(" -nightgain				- Default = %.2f: Nighttime gain\n", DEFAULT_NIGHTGAIN);
@@ -967,21 +954,22 @@ i++;
 	if (! saveCC)
 	{
 		// xxxx TODO: NO_MAX_VALUE will be replaced by acutal values
-		validateLong(&dayMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Daytime Max Auto-Exposure", true);	// camera-specific
-		validateFloat(&temp_dayExposure_ms, 1, dayAutoExposure ? dayMaxAutoexposure_ms : NO_MAX_VALUE, "Daytime Manual Exposure", true);
-
+		validateFloat(&temp_dayMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Daytime Max Auto-Exposure", true);	// camera-specific
+			dayMaxAutoexposure_us = temp_dayMaxAutoexposure_ms * US_IN_MS;
+		validateFloat(&temp_dayExposure_ms, 1, dayAutoExposure ? (dayMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Daytime Manual Exposure", true);
 			dayExposure_us = temp_dayExposure_ms * US_IN_MS;
 		validateLong(&dayBrightness, minBrightness, maxBrightness, "Daytime Brightness", true);
 		validateLong(&dayDelay_ms, 10, NO_MAX_VALUE, "Daytime Delay", false);
-		validateFloat(&dayMaxGain, 0, NO_MAX_VALUE, "Daytime Max Auto-Gain", true);					// camera-specific
-		validateFloat(&dayGain, 0, dayAutoGain ? dayMaxGain : NO_MAX_VALUE, "Daytime Gain", true);
+		validateFloat(&dayMaxGain, 1, NO_MAX_VALUE, "Daytime Max Auto-Gain", true);					// camera-specific
+		validateFloat(&dayGain, 1, dayAutoGain ? dayMaxGain : NO_MAX_VALUE, "Daytime Gain", true);
 		validateLong(&dayBin, 1, 3, "Daytime Binning", false);								// camera-specific
 		validateFloat(&dayWBR, 0, NO_MAX_VALUE, "Daytime Red Balance", true);							// camera-specific
 		validateFloat(&dayWBB, 0, NO_MAX_VALUE, "Daytime Blue Balance", true);						// camera-specific
 //		validateLong(&daySkipFrames, 0, 50, "Daytime Skip Frames", true);
 
-		validateLong(&nightMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Nighttime Max Auto-Exposure", true);// camera-specific
-		validateFloat(&temp_nightExposure_ms, 1, nightAutoExposure ? nightMaxAutoexposure_ms : NO_MAX_VALUE, "Nighttime Manual Exposure", true);
+		validateFloat(&temp_nightMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Nighttime Max Auto-Exposure", true);	// camera-specific
+			nightMaxAutoexposure_us = temp_nightMaxAutoexposure_ms * US_IN_MS;
+		validateFloat(&temp_nightExposure_ms, 1, nightAutoExposure ? (nightMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Nighttime Manual Exposure", true);
 			nightExposure_us = temp_nightExposure_ms * US_IN_MS;
 		validateLong(&nightBrightness, minBrightness, maxBrightness, "Nighttime Brightness", true);
 		validateLong(&nightDelay_ms, 10, NO_MAX_VALUE, "Nighttime Delay", false);
@@ -1180,11 +1168,11 @@ i++;
 
 	printf(" Exposure (day):   %s, Auto: %s", length_in_units(dayExposure_us, true), yesNo(dayAutoExposure));
 		if (dayAutoExposure)
-			printf(", Max Auto-Exposure: %s\n", length_in_units(dayMaxAutoexposure_ms*US_IN_MS, true));
+			printf(", Max Auto-Exposure: %s\n", length_in_units(dayMaxAutoexposure_us, true));
 		printf("\n");
 	printf(" Exposure (night): %s, Auto: %s", length_in_units(nightExposure_us, true), yesNo(nightAutoExposure));
 		if (nightAutoExposure)
-			printf(", Max Auto-Exposure: %s\n", length_in_units(nightMaxAutoexposure_ms*US_IN_MS, true));
+			printf(", Max Auto-Exposure: %s\n", length_in_units(nightMaxAutoexposure_us, true));
 		printf("\n");
 	printf(" Gain (day):   %1.2f, Auto: %s", dayGain, yesNo(dayAutoGain));
 		if (dayAutoGain)
@@ -1271,7 +1259,7 @@ i++;
 			currentGain = nightGain;
 			currentMaxGain = nightMaxGain;		// not needed since we're not using auto gain, but set to be consistent
 			currentDelay_ms = nightDelay_ms;
-			currentMaxAutoexposure_us = currentExposure_us = nightMaxAutoexposure_ms * US_IN_MS;
+			currentMaxAutoexposure_us = currentExposure_us = nightMaxAutoexposure_us;
 			currentBin = nightBin;
 			currentBrightness = nightBrightness;
 			currentAutoAWB = false;
@@ -1336,7 +1324,7 @@ i++;
 					Log(0, "==========\n=== Starting daytime capture ===\n==========\n");
 
 					currentExposure_us = dayExposure_us;
-					currentMaxAutoexposure_us = dayMaxAutoexposure_ms * US_IN_MS;
+					currentMaxAutoexposure_us = dayMaxAutoexposure_us;
 					currentAutoExposure = dayAutoExposure;
 					currentBrightness = dayBrightness;
 					currentAutoAWB = dayAutoAWB;
@@ -1363,7 +1351,7 @@ i++;
 				currentWBB = nightWBB;
 				currentDelay_ms = nightDelay_ms;
 				currentBin = nightBin;
-				currentMaxAutoexposure_us = nightMaxAutoexposure_ms * US_IN_MS;
+				currentMaxAutoexposure_us = nightMaxAutoexposure_us;
 				currentGain = nightGain;
 				currentMaxGain = nightMaxGain;
 				currentAutoGain = nightAutoGain;
@@ -1573,5 +1561,5 @@ i++;
 		}
 	}
 
-	closeUp(0);
+	closeUp(EXIT_OK);
 }

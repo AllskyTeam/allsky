@@ -342,6 +342,9 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 }
 
 
+// Empty routine so code compiles.
+int stopVideoCapture(int cameraID) { return(ASI_SUCCESS); }
+
 // Get the camera's serial number.  RPi cameras don't support serial numbers.
 ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
 {
@@ -406,6 +409,10 @@ char const *argumentNames[][2] = {
 	{ "NEW", "" } // In case a new type is added we won't get an error
 };
 
+int stopVideoCapture(int cameraID)
+{
+	return((int) ASIStopVideoCapture(cameraID));
+}
 #endif		// IS_RPi
 
 // Display ASI errors in human-readable format

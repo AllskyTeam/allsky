@@ -1635,11 +1635,11 @@ i++;
 			printf(", Max Auto-Exposure: %s\n", length_in_units(nightMaxAutoexposure_ms*US_IN_MS, true));
 		printf("\n");
 	printf(" Gain (day):   %ld, Auto: %s", dayGain, yesNo(dayAutoGain));
-		if (dayAutoExposure)
+		if (dayAutoGain)
 			printf(", Max Auto-Gain: %ld\n", dayMaxGain);
 		printf("\n");
 	printf(" Gain (night): %ld, Auto: %s", nightGain, yesNo(nightAutoGain));
-		if (dayAutoExposure)
+		if (nightAutoGain)
 			printf(", Max Auto-Gain: %ld\n", nightMaxGain);
 		printf("\n");
 	printf(" Gain Transition Time: %.1f minutes\n", (float) gainTransitionTime/60);

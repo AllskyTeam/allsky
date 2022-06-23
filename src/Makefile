@@ -141,7 +141,7 @@ capture.o: capture.cpp ASI_functions.cpp include/allsky_common.h
 
 capture: capture.o allsky_common.o
 	@echo `date +%F\ %R:%S` Building $@ program...
-	@$(CC) -o $@ $(CFLAGS) $(OPENCV) $(USB) capture.o allsky_common.o -lASICamera2
+	@$(CC) -o $@ $(CFLAGS) $(OPENCV) capture.o allsky_common.o -lASICamera2 $(USB)
 	@echo `date +%F\ %R:%S` Done.
 
 capture_RPiHQ:capture_RPiHQ.o allsky_common.o mode_RPiHQ_mean.o

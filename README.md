@@ -9,7 +9,7 @@ This is the source code for the Allsky Camera project described [on Instructable
 </p>
 
 
-<!-------------------------------------------------------------------------------------------> 
+<!-- =============================================================================== --> 
 ### Requirements
 <details><summary>Click here</summary>
 
@@ -25,12 +25,12 @@ In order to get the camera working properly you will need the following hardware
 
 **NOTE:** The T7 / T7C cameras, e.g., from Datyson or other sellers, are not officially supported but persistent users may get them to work by following [these instructions](https://github.com/thomasjacquin/allsky/wiki/Troubleshoot:-T7-Cameras).
 
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Software Installation - 1st time only
 <details><summary>Click here</summary>
 
@@ -62,13 +62,13 @@ There are many configuration variables that need to be set as described on the [
 	
 > NOTE: Starting with this release, the WebUI is included in the main Allsky package.
 
-***
+---
 </details>
 
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Updating the software
 <details><summary>Click here</summary>
 	
@@ -80,12 +80,12 @@ See this [Wiki page](https://github.com/thomasjacquin/allsky/wiki/How-to-update-
 
 Note that in version 0.8.3 the default image created and uploaded is called **image.jpg**.  The prior "image-resize.jpg" and "liveview-image.jpg" files are no longer created. Keep that in mind if you copy the image to a remote web server - it will need to know about the new name.
 
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Usage
 <details><summary>Click here</summary>
 
@@ -125,12 +125,12 @@ If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote 
 ./allsky.sh preview
 ```
 
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Web User Interface (WebUI)
 <details><summary>Click here</summary>
 
@@ -174,12 +174,12 @@ If it is behind a firewall consult the documentation for your network equipment 
 
 A demo of the WebUI is available [**here**](http://thomasjacquin.com/allsky-portal). **Note**: Most of the buttons have been disabled for the demo.
 	
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Allsky Website - `allsky-website` package
 <details><summary>Click here</summary>
 
@@ -209,12 +209,12 @@ To host the website on a _different_ machine, like in this [example](http://www.
 ### Website settings
 Once you've installed the website look at the descriptions of the settings on the [allsky-website Settings page](https://github.com/thomasjacquin/allsky/wiki/allsky-website-Settings).
 
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Dark frame subtraction
 <details><summary>Click here</summary>
 
@@ -223,12 +223,12 @@ Dark frame subtraction removes hot pixels from images. It does this by taking im
 
 See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Dark-Frames-Explained) on dark frames for instructions on how to use them.
 
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Timelapse
 <details><summary>Click here</summary>
 
@@ -249,12 +249,12 @@ scripts/generateForDay.sh -t 20220710
 
 **Note:** If you are unable to create a timelapse, see [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Troubleshooting:-timelapse).
 
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Keograms
 <details><summary>Click here</summary>
 
@@ -272,12 +272,12 @@ cd ~/allsky
 scripts/generateForDay.sh -k 20220710
 ```
 
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Startrails
 <details><summary>Click here</summary>
 
@@ -294,12 +294,12 @@ cd ~/allsky
 scripts/generateForDay.sh -s 20220710
 ```
 
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Automatic deletion of old data
 <details><summary>Click here</summary>
 
@@ -315,12 +315,12 @@ WEB_DAYS_TO_KEEP=28
 ```
 In both cases, set to `""` to keep all days' data, but be careful that your SD card doesn't fill up.
 
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Logging information
 <details><summary>Click here</summary>
 
@@ -332,12 +332,12 @@ tail /var/log/allsky.log
 	
 There are other temporary log files in `allsky/tmp` that are used for debugging.
 
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Information for advanced users
 <details><summary>Click here</summary>
 
@@ -353,12 +353,12 @@ and then add your additional processing steps which will be run after the usual 
 
 After you rename the file above, you can edit the file via the "Editor" link on the left side of the WebUI page.
 
-***
+---
 </details>
 
 
 &nbsp;
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Share your sky
 
 If you want your allsky camera added to the [Allsky map](http://www.thomasjacquin.com/allsky-map), see [these settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings/_edit#map-settings).
@@ -370,7 +370,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 </p>
 
 
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Release changes
 <details><summary>Click here</summary>
 
@@ -382,11 +382,12 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Max Auto-Exposure** for day and night.  When using auto exposure, exposure times will not exceed this number.
 			* **Max Auto-Gain** for day and night.  When using auto gain, gain values will not exceed this number.
 			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
-			* **Frames to Skip** (ZWO only) for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving.
+			* **Frames to Skip** for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving.
 			* **Aggression** (ZWO only) determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
 			* **Gamma** (ZWO only) changes the contrast of an image.  It is only supported by a few cameras; for those that don't, the `AUTO_STRETCH` setting can produce a similar effect.
 			* **Offset** (ZWO only) adds about 1/10th the specified amount to each pixel, thereby brightening the whole image.  Setting this too high causes the image to turn gray.
 			* **Mean Target** (RPiHQ only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
+			* **Mean Threshold** (RPiHQ only).  This specifies how close the actual mean brightness must be to the **Mean Target**.  For example, if **Mean Target** is 0.5 and **Mean Threshold** is 0.1, the actual mean can vary between 0.4 and 0.6 (0.5 +/- 0.1).
 		* The **Focus Metric** setting is now available for ZWO cameras.
 		* The camera-checking algorithm was improved, resulting in fewer failures.
 		* If the camera isn't found, a notification message stating that is displayed.
@@ -529,11 +530,12 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 * version **0.2**: Separated camera settings from code logic
 * version **0.1**: Initial release
 -->
-***
+---
 </details>
 
-<!------------------------------------------------------------------------------------------->
+<!-- =============================================================================== --> 
 ### Donation
 If you found this project useful, here's a link to send Thomas a cup of coffee :)
 
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+

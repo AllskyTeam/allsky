@@ -88,7 +88,7 @@ if [ -f "${PID_FILE}" ]; then
 			echo "*** ${ME}: WARNING: Another upload of type '${FILE_TYPE}' is in progress."
 			echo -n "This new upload is being aborted. If this happens often, check your network"
 			echo -n " and delay settings."
-			echo "$(ps -fp ${PID})"
+			ps -fp ${PID}
 			echo -e "${NC}"
 			exit 99
 		fi

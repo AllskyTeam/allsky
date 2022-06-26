@@ -39,7 +39,7 @@ ifneq ($(PKGPATH),)
   OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || (pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4))
 endif
 DEFS = -D_LIN -D_DEBUG -DGLIBC_20
-CFLAGS = -Werror -Wall -Wno-psabi -Wno-unused-result -g -O2 -lpthread
+CFLAGS = -Werror -Wall -Wno-psabi -Wno-unused-result -g -O2 -lpthread -pthread
 
 ifeq ($(platform), armv6l)
   CC = arm-linux-gnueabihf-g++
@@ -136,17 +136,17 @@ capture_RPiHQ.o: capture_RPiHQ.cpp ASI_functions.cpp include/RPiHQ_raspistill.h 
 
 capture.o: capture.cpp ASI_functions.cpp include/allsky_common.h
 	@echo `date +%F\ %R:%S` Building $@ ...
-	@$(CC) -c  capture.cpp -o $@ $(CFLAGS) $(OPENCV)
+	@$(CC) -c capture.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
 capture: capture.o allsky_common.o
 	@echo `date +%F\ %R:%S` Building $@ program...
-	@$(CC) -o $@ $(CFLAGS) $(OPENCV) allsky_common.o capture.o -lASICamera2 $(USB)
+	@$(CC) -o $@ $(CFLAGS)  allsky_common.o capture.o $(OPENCV) -lASICamera2 $(USB)
 	@echo `date +%F\ %R:%S` Done.
 
 capture_RPiHQ:capture_RPiHQ.o allsky_common.o mode_RPiHQ_mean.o
 	@echo `date +%F\ %R:%S` Building $@ program...
-	@$(CC)  -o $@ $(CFLAGS) $(OPENCV) capture_RPiHQ.o allsky_common.o mode_RPiHQ_mean.o
+	@$(CC) -o $@ $(CFLAGS) capture_RPiHQ.o allsky_common.o $(OPENCV) mode_RPiHQ_mean.o
 	@echo `date +%F\ %R:%S` Done.
 
 keogram:keogram.cpp

@@ -201,7 +201,9 @@ fi
 
 if [ "${DO_TIMELAPSE}" = "true" ] ; then
 	VIDEOS_FILE="allsky-${DATE}.mp4"
-	THUMBNAIL_FILE="allsky-${DATE}.jpg"
+	UPLOAD_THUMBNAIL_NAME="allsky-${DATE}.jpg"
+	# Need a different name for the file on the Pi so it's not mistaken for a video file in the WebUI.
+	THUMBNAIL_FILE="thumbnail-${DATE}.jpg"
 	UPLOAD_FILE="${DATE_DIR}/${VIDEOS_FILE}"
 	UPLOAD_THUMBNAIL="${DATE_DIR}/${THUMBNAIL_FILE}"
 	if [ "${TYPE}" = "GENERATE" ]; then
@@ -211,12 +213,13 @@ if [ "${DO_TIMELAPSE}" = "true" ] ; then
 		if [ ${RET} -eq 0 ] && [ "${TIMELAPSE_UPLOAD_THUMBNAIL}" = "true" ]; then
 			ffmpeg -loglevel error -ss 00:00:05 -i "${UPLOAD_FILE}" \
 				-filter:v scale="${THUMBNAIL_SIZE_X}:-1" -frames:v 1 "${UPLOAD_THUMBNAIL}"
+			[ ! -f "${UPLOAD_THUMBNAIL}" ] && echo "${ME} video thumbnail not created!"
 		fi
 	else
 		upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
 		RET=$?
-		if [ ${RET} -eq 0 ] && [ "${TIMELAPSE_UPLOAD_THUMBNAIL}" = "true" ]; then
-			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" "${THUMBNAIL_FILE}" "" "${WEB_VIDEOS_DIR}/thumbnails"
+		if [ ${RET} -eq 0 ] && [ "${TIMELAPSE_UPLOAD_THUMBNAIL}" = "true" ] && [ -f "${UPLOAD_THUMBNAIL}" ]; then
+			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" "${UPLOAD_THUMBNAIL_NAME}" "" "${WEB_VIDEOS_DIR}/thumbnails"
 		fi
 	fi
 	[ $RET -ne 0 ] && let EXIT_CODE=${EXIT_CODE}+1

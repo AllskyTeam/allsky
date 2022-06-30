@@ -20,15 +20,14 @@ fi
 
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
-CONFIG_DIR="/etc/raspap"	# settings_*.json files go here
-mkdir -p "${CONFIG_DIR}" || exit 2
+CONFIG_DIR="${ALLSKY_CONFIG}"	# settings_*.json files go here
 
 # Some files have placeholders for certain locations.  Modify them.
 modify_locations()
 {
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
 	(
-		cd "${PORTAL_DIR}/includes" || exit 1
+		cd "${ALLSKY_WEBUI}/includes" || exit 1
 		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 		       -e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
 				save_file.php
@@ -37,9 +36,10 @@ modify_locations()
 		       -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 		       -e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
 		       -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
+		       -e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
 		       -e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
 		       -e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
-		       -e "s;XX_RASPI_CONFIG_XX;${CONFIG_DIR};" \
+		       -e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
 				functions.php
 	)
 }
@@ -77,8 +77,8 @@ if [ "${1}" = "--update" ] || [ "${1}" = "-update" ] ; then
 	echo -e "*********************************************"
 	echo -en '\n'
 
-	if [ ! -d "${PORTAL_DIR}" ]; then
-		echo -e "${RED}Update specified but no existing WebUI found in '${PORTAL_DIR}'${NC}" 1>&2
+	if [ ! -d "${ALLSKY_WEBUI}" ]; then
+		echo -e "${RED}Update specified but no existing WebUI found in '${ALLSKY_WEBUI}'${NC}" 1>&2
 		exit 2
 	fi
 
@@ -117,7 +117,6 @@ echo -e "${GREEN}* Installing the webserver${NC}"
 echo
 apt-get update && apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
 lighty-enable-mod fastcgi-php
-service lighttpd restart
 echo
 
 echo -e "${GREEN}* Configuring lighttpd${NC}"
@@ -128,6 +127,7 @@ sed -i \
 	  -e "s|XX_ALLSKY_WEBSITE_XX|${ALLSKY_WEBSITE}|g" \
 	  "${SCRIPTPATH}/lighttpd.conf"
 install -m 0644 "${SCRIPTPATH}/lighttpd.conf" /etc/lighttpd/lighttpd.conf
+service lighttpd restart
 echo
 
 if [ "${NEED_TO_UPDATE_HOST_NAME}" = "true" ]; then
@@ -155,10 +155,10 @@ sed -i -e '/allsky/d' -e '/www-data/d' /etc/sudoers
 do_sudoers
 echo
 
-# As of October 2021, WEBSITE_DIR is a subdirectory of PORTAL_DIR.
-# Before we remove PORTAL_DIR, save WEBSITE_DIR to the partent of PORTAL_DIR, then restore it.
+# As of October 2021, WEBSITE_DIR is a subdirectory of ALLSKY_WEBUI.
+# Before we remove ALLSKY_WEBUI, save WEBSITE_DIR to the partent of ALLSKY_WEBUI, then restore it.
 if [ -d "${WEBSITE_DIR}" ]; then
-	TMP_WEBSITE_DIR="$(dirname "${PORTAL_DIR}")"
+	TMP_WEBSITE_DIR="$(dirname "${ALLSKY_WEBUI}")"
 	echo -e "${GREEN}* Backing up ${WEBSITE_DIR} to ${TMP_WEBSITE_DIR}${NC}"
 	sudo mv "${WEBSITE_DIR}" "${TMP_WEBSITE_DIR}"
 	WEBSITE_DIR_NAME="$(basename "${WEBSITE_DIR}")"
@@ -166,50 +166,34 @@ else
 	TMP_WEBSITE_DIR=""
 fi
 
-if [ -d "${PORTAL_DIR}" ]; then
-	echo -e "${GREEN}* Removing old ${PORTAL_DIR}${NC}"
-	rm -rf "${PORTAL_DIR}"
+if [ -d "${ALLSKY_WEBUI}" ]; then
+	echo -e "${GREEN}* Removing old ${ALLSKY_WEBUI}${NC}"
+	rm -rf "${ALLSKY_WEBUI}"
 fi
 
 echo -e "${GREEN}* Retrieving github files to build admin portal${NC}"
-git clone https://github.com/thomasjacquin/allsky-portal.git "${PORTAL_DIR}"
-chown -R ${SUDO_USER}:www-data "${PORTAL_DIR}"
-find "${PORTAL_DIR}/" -type f -exec chmod 644 {} \;
-find "${PORTAL_DIR}/" -type d -exec chmod 775 {} \;
+git clone https://github.com/thomasjacquin/allsky-portal.git "${ALLSKY_WEBUI}"
+find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
+find "${ALLSKY_WEBUI}/" -type d -exec chmod 775 {} \;
+# The web server needs to be able to read everything.
+chown -R ${SUDO_USER}:www-data "${ALLSKY_WEBUI}"
+
+# These files are updated by the web server so need to be writable by the server.
+chown www-data "${CONFIG_DIR}"/raspap.php
+chown www-data "${CONFIG_DIR}"/camera_options_ZWO.json
+chown www-data "${CONFIG_DIR}"/camera_options_RPiHQ.json
 
 # Restore WEBSITE_DIR if it existed before
 if [ "${TMP_WEBSITE_DIR}" != "" ]; then
-	echo -e "${GREEN}* Restoring ${TMP_WEBSITE_DIR}/${WEBSITE_DIR_NAME} to ${PORTAL_DIR}${NC}"
-	sudo mv "${TMP_WEBSITE_DIR}/${WEBSITE_DIR_NAME}" "${PORTAL_DIR}"
+	echo -e "${GREEN}* Restoring ${TMP_WEBSITE_DIR}/${WEBSITE_DIR_NAME} to ${ALLSKY_WEBUI}${NC}"
+	sudo mv "${TMP_WEBSITE_DIR}/${WEBSITE_DIR_NAME}" "${ALLSKY_WEBUI}"
 fi
 
 modify_locations	# replace placeholders in some files with actual path names
 modify_logrotate	# Set number of weeks of logs that are kept
 
-mv "${PORTAL_DIR}"/raspap.php "${CONFIG_DIR}"
-mv "${PORTAL_DIR}"/camera_options_ZWO.json "${CONFIG_DIR}"
-mv "${PORTAL_DIR}"/camera_options_RPiHQ.json "${CONFIG_DIR}"
-
-# If the user is doing a re-install, don't overwrite their existing settings.
-if [ -f "${CONFIG_DIR}/settings_ZWO.json" ]; then
-	echo -e "${GREEN}* Leaving existing ZWO settings file as is.${NC}"
-else
-	install -m 0644 -o www-data -g www-data ${ALLSKY_CONFIG}/settings_ZWO.json "${CONFIG_DIR}"
-fi
-if [ -f "${CONFIG_DIR}/settings_RPiHQ.json" ]; then
-	echo -e "${GREEN}* Leaving existing RPiHQ settings file as is.${NC}"
-else
-	install -m 0644 -o www-data -g www-data ${ALLSKY_CONFIG}/settings_RPiHQ.json "${CONFIG_DIR}"
-fi
-chown -R www-data:www-data "${CONFIG_DIR}"
-usermod -a -G www-data ${SUDO_USER}
+# XXXXXXXXXXXX   ????    usermod -a -G www-data ${SUDO_USER}
 echo
-# don't leave unused files around
-rm -f ${ALLSKY_CONFIG}/settings_ZWO.json ${ALLSKY_CONFIG}/settings_RPiHQ.json
-
-echo -e "${GREEN}* Modify config.sh${NC}"
-sed -i "/CAMERA_SETTINGS_DIR=/c\CAMERA_SETTINGS_DIR=\"${CONFIG_DIR}\"" ${ALLSKY_CONFIG}/config.sh
-echo -en '\n'
 
 if (whiptail --title "Allsky Software Installer" --yesno "The Allsky WebUI is now installed. You can now reboot the Raspberry Pi and connect to it at this address: http://${HOST_NAME}.local or http://$(hostname -I | sed -e 's/ .*$//')   Would you like to Reboot now?" 10 60 \
 	3>&1 1>&2 2>&3); then 

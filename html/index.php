@@ -18,7 +18,7 @@
 // It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
 
-define('RASPI_CAMERA_OPTIONS', RASPI_CONFIG . '/camera_options_'.$cam.'.json');
+define('RASPI_CAMERA_OPTIONS', ALLSKY_WEBUI . '/camera_options_'.$cam.'.json');
 
 
 // Constants for configuration file paths.

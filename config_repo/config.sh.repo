@@ -56,7 +56,6 @@ RESIZE_UPLOADS_SIZE="962x720"
 IMG_CREATE_THUMBNAILS="true"
 
 # Remove corrupt images before generating keograms, startrails, and timelapse videos.
-# This only adds a few seconds per image as it's being processed.
 REMOVE_BAD_IMAGES="true"
 
 # If REMOVE_BAD_IMAGES is "true", images whose mean brightness is
@@ -97,7 +96,7 @@ FPS=25
 VCODEC="libx264"
 
 # Pixel format.
-PIX_FMT=${PIX_FMT:-yuv420p}
+PIX_FMT="${PIX_FMT:-yuv420p}"
 
 # FFLOG determines the amount of log information displayed while creating a timelapse video.
 # Set to "info" to see additional information if you are tuning the algorithm.
@@ -203,9 +202,9 @@ fi
 CAMERA_SETTINGS="${CAMERA_SETTINGS_DIR}/settings_${CAMERA}.json"
 
 # Get the name of the file the websites will look for, and split into name and extension.
-FULL_FILENAME=$(jq -r '.filename' "$CAMERA_SETTINGS")
+FULL_FILENAME="$(jq -r '.filename' "${CAMERA_SETTINGS}")"
 EXTENSION="${FULL_FILENAME##*.}"
 FILENAME="${FULL_FILENAME%.*}"
  
 # So scripts can conditionally ouput messages; DO NOT CHANGE NEXT LINES.
-ALLSKY_DEBUG_LEVEL=$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")
+ALLSKY_DEBUG_LEVEL="$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")"

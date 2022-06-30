@@ -175,10 +175,6 @@ WEBUI_DATA_FILES=""
 UHUBCTL_PATH=""
 UHUBCTL_PORT=2
 
-# Path to the camera settings (exposure, gain, delay, overlay, etc) files.
-# Do not change unless you know what you are doing.
-CAMERA_SETTINGS_DIR="${ALLSKY_CONFIG}"
-
 
 # ================ Do not change anything below this line.
 END_OF_USER_SETTINGS="true"		# During upgrades, stop looking for variables here.
@@ -199,7 +195,7 @@ else
 	CAPTURE_SAVE_DIR="${IMG_DIR}"
 fi
 
-CAMERA_SETTINGS="${CAMERA_SETTINGS_DIR}/settings_${CAMERA}.json"
+CAMERA_SETTINGS="${ALLSKY_CONFIG}/settings_${CAMERA}.json"
 
 # Get the name of the file the websites will look for, and split into name and extension.
 FULL_FILENAME="$(jq -r '.filename' "${CAMERA_SETTINGS}")"

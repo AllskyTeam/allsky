@@ -197,7 +197,7 @@ $csrf_token = $_SESSION['csrf_token'];
                         <a href="index.php?page=list_days"><i class="fa fa-image fa-fw"></i> Images</a>
                     </li>
                     <li>
-                        <a href="index.php?page=camera_conf"><i class="fa fa-camera fa-fw"></i> Camera Settings</a>
+                        <a href="index.php?page=camera_conf"><i class="fa fa-camera fa-fw"></i> Allsky Settings</a>
                     </li>
                     <li>
                         <a href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>

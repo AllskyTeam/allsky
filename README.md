@@ -55,7 +55,7 @@ Make sure you have a working Internet connection by setting it through [the term
 3. Then navigate to the new allsky directory and run the installation script:
     ```shell
     cd allsky
-    ./install.sh  # PatriotAstro's video shows using "sudo"; that is no longer needed
+    ./install.sh
     ```
 
 There are many configuration variables that need to be set as described on the [allsky Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) page.
@@ -386,9 +386,9 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Aggression** (ZWO only) determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
 			* **Gamma** (ZWO only) changes the contrast of an image.  It is only supported by a few cameras; for those that don't, the `AUTO_STRETCH` setting can produce a similar effect.
 			* **Offset** (ZWO only) adds about 1/10th the specified amount to each pixel, thereby brightening the whole image.  Setting this too high causes the image to turn gray.
-			* **Mean Target** (RPiHQ only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
-			* **Mean Threshold** (RPiHQ only).  This specifies how close the actual mean brightness must be to the **Mean Target**.  For example, if **Mean Target** is 0.5 and **Mean Threshold** is 0.1, the actual mean can vary between 0.4 and 0.6 (0.5 +/- 0.1).
-		* The **Focus Metric** setting is now available for ZWO cameras.
+			* **Mean Target** (RPi only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
+			* **Mean Threshold** (RPi only).  This specifies how close the actual mean brightness must be to the **Mean Target**.  For example, if **Mean Target** is 0.5 and **Mean Threshold** is 0.1, the actual mean can vary between 0.4 and 0.6 (0.5 +/- 0.1).
+		* "Mini" timelapse videos can be created that contain a user-configurable number of the most recent images.  This allows you to continually see the recent sky conditions.  These "mini" timelapse videos are updated every frame.
 		* The camera-checking algorithm was improved, resulting in fewer failures.
 		* If the camera isn't found, a notification message stating that is displayed.
 		* Settings are checked for validity (for example, a valid **Brightness* value was specified) and messages added to the log if there are problems; critical errors cause the program to stop until they are fixed.
@@ -409,9 +409,10 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 	* WebUI:
 		* The WebUI is now installed as part of the Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
 		* The WebUI and Allsky Website are now installed in ~/allsky/html and ~/allsky/html/allsky, respectively.  Any images in the old locations are moved to the new locations when upgrading to this release.
-		* Minimum, maximum, and default values are now correct for all camera models.  This was accomplished by having the camera's capabilities stored in a configuration file which is used by the WebUI.
-		* The "Editor" page can edit the Allsky Website's `configuration.json` file if you have the website installed on your Pi.  This is the preferred way to edit that file, since the editor performs basic syntax checking.
-		* Some errors that appear in the log file also appear in the WebUI.  Currently this is limited to Allsky Map data errors, but will be expanded in the future.
+		* Minimum, maximum, and default values are now correct for all camera models.
+		* The **Focus Metric** setting in the WebUI is now available for ZWO cameras.
+		* The "Editor" page can edit the Allsky Website's configuration file(s) if you have the website installed on your Pi.  This is the preferred way to edit the configuration file(s), since the editor performs basic syntax checking.
+		* Some errors that appear in the `/var/log/allsky.log` file also appear in the WebUI so you don't miss them.  Currently this is limited to Allsky Map data errors, but will be expanded in the future.
 		* The order of items in the "Camera Settings" page changed slightly.
 		* Buttons in the "Dark" mode are now darker.
 		* Several minor enhancements were made.
@@ -441,10 +442,10 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 	  * Deleted `AUTO_DELETE`: its functionality is now in `DAYS_TO_KEEP`.  `DAYS_TO_KEEP=""` is similar to the old `AUTO_DELETE=false`.
 	  * Added `WEB_DAYS_TO_KEEP`: specifies how many days of Allsky website images and videos to keep, if the website is installed on your Pi.
 	  * Added `WEB_IMAGE_DIR` in config/ftp-settings.sh to allow the images to be copied to a location on your Pi (usually the Allsky website) as well as being copied to a remote machine.  This functionality already existed with timelapse, startrails, and keogram files.
-	* The RPiHQ camera now supports all the text overlay features as the ZWO camera, including the "Extra Text" file.
+	* The RPi camera now supports all the text overlay features as the ZWO camera, including the "Extra Text" file.
 	* Removed the harmless `deprecated pixel format used` message from the timelapse log file.  That message only confused people.
-	* Improved the auto-exposure for RPiHQ cameras.
-	* Made numerous changes to the ZWO and RPiHQ camera's code that will make it easier to maintain and add new features in the future.
+	* Improved the auto-exposure for RPi cameras.
+	* Made numerous changes to the ZWO and RPi camera's code that will make it easier to maintain and add new features in the future.
 	* If Allsky is stopped or restarted while a file is being uploaded to a remote server, the upload continues, eliminating cases where a temporary file would be left on the server.
 	* Decreased other cases where temporary files would be left on remote servers during uploads.  Also, uploads now perform additional error checking to help in debugging.
 	* Only one upload can now be done at a time.  Any additional uploads display a message in the log file and then exit. This should eliminate (or signifiantly decrease) cases where a file is overwritten or not found, resulting in an error message or a temporary file left on the server.
@@ -458,14 +459,14 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 	* The "Camera Settings" page of the WebUI now displays the minimum, maximum, and default values in a popup for numerical fields.
 	* Startrails and Keogram creation no longer crash if invalid files are found.
 	* Removed the `allsky/scripts/filename.sh` file.
-	* The RPiHQ `Gamma` value in the WebUI was renamed to `Saturation`, which is what it always adjusted; `Gamma` was incorrect.
+	* The RPi `Gamma` value in the WebUI was renamed to `Saturation`, which is what it always adjusted; `Gamma` was incorrect.
 	* Known issues:
 	  * The startrails and keogram programs don't work well if you bin differently during the day and night.  If you don't save daytime images this won't be a problem.
-	  * The minimum, maximum, and default values in the "Camera Settings" page of the WebUI, especially for the RPiHQ camera, aren't always correct.  This is especially try if running on the Bullseye operating system, where many of the settings changed.
+	  * The minimum, maximum, and default values in the "Camera Settings" page of the WebUI, especially for the RPi camera, aren't always correct.  This is especially try if running on the Bullseye operating system, where many of the settings changed.
 
 * version **0.8.3**:
 	* Works on Bullseye operating system.
-	* RPiHQ version:
+	* RPi version:
 	  * Has an improved auto-exposure algorithm.  To use it, set `CAPTURE_EXTRA_PARAMETERS="-daymean 0.5 -nightmean 0.2"` in config.sh (a future version will allow this to be set via the WebUI).
 	  * Has many new settings including support for most of the text overlay features that are supported by the ZWO version.  The "extra text" feature will be supported in a future version.
 	* New and changed config.sh variables, see the [Software Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) Wiki page for more information:
@@ -482,11 +483,11 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 	* Rearranged the directory structure.
 	* Created a Wiki with additional documentation and troubleshooting tips.
 	* Renamed several variables in `config.sh` and `ftp-settings.sh`.
-	* CAMERA type of "auto" is no longer supported - you must specify "ZWO" or "RPiHQ".
+	* CAMERA type of "auto" is no longer supported - you must specify "ZWO" or "RPi".
 	* Startrails and keograms are now created using all CPUs on the Pi, drastically speeding up creation time.
 	* Installing the WebUI now preserves any website files (keograms, startrails, etc.) you have.  This allows for non-destructive updates of the WebUI.
 	* New script called `upload.sh` centralizes all the upload code from other scripts, and can be used to debug uploading issues.  See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Troubleshooting:-uploads) for more information.
-	* The RPiHQ camera does much better auto-exposure if you set the `-mode-mean` and `-autoexposure` options.
+	* The RPi camera does much better auto-exposure if you set the `-mode-mean` and `-autoexposure` options.
 	* The WebUI will now show the Pi's throttle and low-voltage states, which is useful for debugging.
 	* Darks work better.
 	* Many bug fixes, error checks, and warnings added.

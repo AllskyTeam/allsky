@@ -173,7 +173,7 @@ if [ "${KEEP_SEQUENCE}" = "false" ] || [ ${NSEQ} -lt 100 ]; then
 				elif [ "${DEBUG}" = "true" ]; then
 					echo -e "${YELLOW}'${CURRENT_IMAGE}' already in set.${NC}" >&2
 				fi
-				if [ ${OK} = "false" ] && [${DEBUG} = "true" ]; then
+				if [ ${OK} = "false" ] && [ ${DEBUG} = "true" ]; then
 					echo -e "\n${YELLOW}Not creating mini-timelapse yet; only ${NUM_IMAGES} of ${MINI_COUNT} images ready.${NC}\n" >&2
 				fi
 			fi

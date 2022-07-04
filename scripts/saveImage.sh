@@ -254,11 +254,12 @@ if [ "${DAYTIME_SAVE}" = "true" -o "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 	if [ "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 		# The 12 hours ago option ensures that we're always using today's date
 		# even at high latitudes where civil twilight can start after midnight.
-		DATE_DIR="${ALLSKY_IMAGES}/$(date -d '12 hours ago' +'%Y%m%d')"
+		DATE_NAME="$(date -d '12 hours ago' +'%Y%m%d')"
 	else
 		# During the daytime we alway save the file in today's directory.
-		DATE_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
+		DATE_NAME="$(date +'%Y%m%d')"
 	fi
+	DATE_DIR="${ALLSKY_IMAGES}/${DATE_NAME}"
 	mkdir -p "${DATE_DIR}"
 
 	if [ "${IMG_CREATE_THUMBNAILS}" = "true" ]; then
@@ -277,7 +278,19 @@ if [ "${DAYTIME_SAVE}" = "true" -o "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 	# it to use.
 
 	FINAL_FILE="${DATE_DIR}/${IMAGE_NAME}"
-	cp "${CURRENT_IMAGE}" "${FINAL_FILE}" || echo "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"
+	if cp "${CURRENT_IMAGE}" "${FINAL_FILE}" ; then
+		if [ ${TIMELAPSE_MINI_IMAGES:-0} -ne 0 ]; then
+			"${ALLSKY_SCRIPTS}"/timelapse.sh -m ${TIMELAPSE_MINI_IMAGES} "${DATE_NAME}"
+			[ $? -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
+		fi
+	else
+		echo "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"
+		TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# so we can easily compare below
+	fi
+fi
+
+if [ "${IMG_UPLOAD}" = "true" ] || [ "${TIMELAPSE_MINI_UPLOAD_VIDEO}" = "true" ]; then
+	source "${ALLSKY_CONFIG}/ftp-settings.sh"
 fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
@@ -310,8 +323,6 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 		fi
 	fi
 
-	source "${ALLSKY_CONFIG}/ftp-settings.sh"
-
 	# We no longer use the "permanent" image name; instead, use the one the user specified
 	# in the config file (${FULL_FILENAME}).
 	if [ "${RESIZE_UPLOADS}" = "true" ] ; then
@@ -334,7 +345,30 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 	[ "${RESIZE_UPLOADS}" = "true" ] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
 fi
 
-# We create $WEBSITE_FILE as late as possible to avoid it being overwritten.
+# If needed, upload the mini timelapse
+if [ "${TIMELAPSE_MINI_UPLOAD_VIDEO}" = "true" ] ; then
+	MINI="mini-timelapse.mp4"
+	FILE_TO_UPLOAD="${ALLSKY_TMP}/${MINI}"
+
+	"${ALLSKY_SCRIPTS}/upload.sh" "${FILE_TO_UPLOAD}" "${IMAGE_DIR}" "${MINI}" "MiniTimelapse" "${WEB_IMAGE_DIR}"
+	RET=$?
+	if [ ${RET} -eq 0 ] && [ "${TIMELAPSE_MINI_UPLOAD_THUMBNAIL}" = "true" ]; then
+		UPLOAD_THUMBNAIL_NAME="mini-timelapse.jpg"
+		UPLOAD_THUMBNAIL="${ALLSKY_TMP}/${UPLOAD_THUMBNAIL_NAME}"
+		# Create the thumbnail for the mini timelapse, then upload it.
+		rm -f "${UPLOAD_THUMBNAIL}"
+		ffmpeg -loglevel error -i "${FILE_TO_UPLOAD}" \
+			-filter:v scale="${THUMBNAIL_SIZE_X}:-1" -frames:v 1 "${UPLOAD_THUMBNAIL}"
+		if [ ! -f "${UPLOAD_THUMBNAIL}" ]; then
+			echo "${ME}Mini timelapse thumbnail not created!"
+		else
+			# Use --silent because we just displayed message(s) above for this image.
+			"${ALLSKY_SCRIPTS}/upload.sh" --silent "${UPLOAD_THUMBNAIL}" "${IMAGE_DIR}" "${UPLOAD_THUMBNAIL_NAME}" "MiniThumbnail" "${WEB_VIDEOS_DIR}/thumbnails"
+		fi
+	fi
+fi
+
+# We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.
 mv "${SAVED_FILE}" "${WEBSITE_FILE}"
 
 exit 0

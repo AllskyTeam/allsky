@@ -115,6 +115,25 @@ UPLOAD_VIDEO="false"
 # Set to "true" to upload timelapse video' thumbnail to your website at the end of each night.
 TIMELAPSE_UPLOAD_THUMBNAIL="false"
 
+# A "mini" timelapse is one that only includes the most recent images, and is created often.
+# TIMELAPSE_MINI is the number of images you want in the mini timelapse.  0 disables mini timelapses.
+TIMELAPSE_MINI_IMAGES=0
+# How often should the mini timelapse be made?
+# If you have a slow Pi or short delays between images, set this to a higher number (i.e., not as often).
+TIMELAPSE_MINI_FREQUENCY=3
+
+# These variables service the same function as for daily timelapse.
+TIMELAPSE_MINI_UPLOAD_VIDEO="true"
+TIMELAPSE_MINI_UPLOAD_THUMBNAIL="true"
+
+# Since a mini timelapse doesn't have many frames, the FPS should be much lower than a normal timelapse.
+TIMELAPSE_MINI_FPS=2
+
+# In order to decrease the time spent making mini timelapse, you should set these lower than a normal timelapse.
+TIMELAPSE_MINI_BITRATE="1000k"
+TIMELAPSE_MINI_WIDTH=1014
+TIMELAPSE_MINI_HEIGHT=760
+
 
 ########## Keogram
 # Set to "true" to generate a keogram at the end of each night.

@@ -32,7 +32,7 @@ if ($num > 0) asort($images);
 $( document ).ready(function() {
 	$('#images').viewer({
 		url(image) {
-			return image.src.replace('/thumbnails', '/');
+			return image.src.replace('/thumbnails', '');
 		},
 		<?php
 			// if there are a lot of images it takes forever to display the navbar.
@@ -41,7 +41,7 @@ $( document ).ready(function() {
 		transition: false
 	});
 	$('.thumb').each(function(){		
-		this.title = this.title + "\n" + getTimeStamp(this.src);
+		this.title = this.title + "\n" + getTimeStamp(this.src) + "\n" + "Click for full resolution image.";
 	});
 });
 
@@ -70,12 +70,14 @@ if ($num == 0) {
 	echo "<br>Check <b>$dir</b>";
 } else {
 	foreach ($images as $image) {
-		echo "<div style='float: left'>";
+		echo "<div class='left'>";
 		if(file_exists("$dir/thumbnails/$image"))
 			// "/images" is an alias for ALLSKY_IMAGES in lighttpd
-			echo "<img src='/images/$chosen_day/thumbnails/$image' style='width: 100px;' title='$image' class='thumb'/>";
+			$t = "/thumbnails";
 		else
-			echo "<img src='/images/$chosen_day/$image' style='width: 100px;'  title='$image' class='thumb'/>";
+			$t = "";
+		echo "<a href='images/$chosen_day/$image'>";
+		echo "<img src='/images/$chosen_day$t/$image' title='$image' class='thumb'/>";
 		echo "</a>";
 		echo "</div>";
 	}

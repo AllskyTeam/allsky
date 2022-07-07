@@ -23,13 +23,18 @@ function DisplayEditor()
 				editor.display.input.blur();
 				var content = editor.doc.getValue(); //textarea text
 				var path = $("#script_path").val(); //path of the file to save
+				var isRemote = path.substr(0,8) === "{REMOTE}";
+				if (isRemote)
+					fileName = path.substr(8);
+				else
+					fileName = path;
 				var response = confirm("Do you want to save your changes?");
 				if(response)
 				{
 					$.ajax({
 						type: "POST",
 						url: "includes/save_file.php",
-						data: {content:content, path:path},
+						data: {content:content, path:fileName, isRemote:isRemote},
 						dataType: 'text',
 						cache: false,
 						success: function(data){
@@ -38,7 +43,7 @@ function DisplayEditor()
 							// else alert("File saved!");
 						},
 						error: function(XMLHttpRequest, textStatus, errorThrown) {
-							alert("Unable to save '" + path + ": " + errorThrown);
+							alert("Unable to save '" + fileName + ": " + errorThrown);
 						}
 					});
 				}
@@ -49,7 +54,10 @@ function DisplayEditor()
 
 			$("#script_path").change(function(e) {
 				editor.getDoc().setValue("");	// Keeps new file from reading old one first.
-				var ext = e.currentTarget.value.substring(e.currentTarget.value.lastIndexOf(".") + 1);
+				var fileName = e.currentTarget.value;
+				if (fileName.substr(0,8) === "{REMOTE}")
+					fileName = fileName.substr(8);
+				var ext = fileName.substring(fileName.lastIndexOf(".") + 1);
 				if (ext == "js") {
 					editor.setOption("mode", "javascript");
 				} else if (ext == "json") {
@@ -58,13 +66,13 @@ function DisplayEditor()
 					editor.setOption("mode", "shell");
 				}
 				// It would be easy to support other files types.  Would need "type.js" file to do the formatting.
-				$.get(e.currentTarget.value + "?_ts=" + new Date().getTime(), function (data) {
+				$.get(fileName + "?_ts=" + new Date().getTime(), function (data) {
 					editor.getDoc().setValue(data);
 				}).fail(function(x) {
 					if (x.status == 200) {	// json files can fail but actually work
 						editor.getDoc().setValue(x.responseText);
 					} else {
-						alert('Requested file [' + e.currentTarget.value + '] not found or an unsupported language.');
+						alert('Requested file [' + fileName + '] not found or an unsupported language.');
 					}
 				})
 			});
@@ -104,16 +112,20 @@ function DisplayEditor()
 									echo "<option value='current/" . basename(ALLSKY_SCRIPTS) . "/$script'>$script</option>";
 								}
 							}
+							if (file_exists(ALLSKY_CONFIG . "/configuration.json")) {
+								// The website is remote, but a copy of the config file is on the Pi.
+								echo "<option value='{REMOTE}current/$config_dir/configuration.json'>configuration.json (remote Allsky Website)</option>";
+							}
 							if (is_dir(ALLSKY_WEBSITE)) {
 								// The website is installed on this Pi.
 								// The physical path is ALLSKY_WEBSITE; the virtual pathe is "website".
 								if (file_exists(ALLSKY_WEBSITE . "/configuration.json"))
-									echo "<option value='website/configuration.json'>Allsky Website configuration.json</option>";
-								// TODO: when the new version of the website is deployed, remove these files:
+									echo "<option value='website/configuration.json'>configuration.json (Allsky Website)</option>";
+// TODO: when the new version of the website is deployed, remove these files:
 								if (file_exists(ALLSKY_WEBSITE . "/config.js"))
-									echo "<option value='website/config.js'>Allsky Website config.js</option>";
+									echo "<option value='website/config.js'>config.js (Allsky Website)</option>";
 								if (file_exists(ALLSKY_WEBSITE . "/virtualsky.json"))
-									echo "<option value='website/virtualsky.json'>Allsky Website virtualsky.json</option>";
+									echo "<option value='website/virtualsky.json'>virtualsky.json (Allsky Website)</option>";
 							}
 			   ?>
 						</select>

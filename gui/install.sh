@@ -29,18 +29,18 @@ modify_locations()
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
 	(
 		cd "${ALLSKY_WEBUI}/includes" || exit 1
-		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-		       -e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
+		sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+				-e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
 				save_file.php
 
-		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-		       -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
-		       -e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
-		       -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
-		       -e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
-		       -e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
-		       -e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
-		       -e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
+		sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+				-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+				-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
+				-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
+				-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
+				-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
+				-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
+				-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
 				functions.php
 	)
 }

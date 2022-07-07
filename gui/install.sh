@@ -6,6 +6,7 @@ if [ -z "${ALLSKY_HOME}" ] ; then
 fi
 # shellcheck disable=SC1090
 source ${ALLSKY_HOME}/variables.sh
+REPO_DIR="${ALLSKY_HOME}/config_repo"
 
 echo -en '\n'
 echo -e "*********************************************************************"
@@ -28,18 +29,18 @@ modify_locations()
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
 	(
 		cd "${ALLSKY_WEBUI}/includes" || exit 1
-		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-		       -e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
+		sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+				-e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
 				save_file.php
 
-		sed -i -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-		       -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
-		       -e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
-		       -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
-		       -e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
-		       -e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
-		       -e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
-		       -e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
+		sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+				-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+				-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
+				-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
+				-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
+				-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
+				-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
+				-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
 				functions.php
 	)
 }
@@ -120,13 +121,18 @@ lighty-enable-mod fastcgi-php
 echo
 
 echo -e "${GREEN}* Configuring lighttpd${NC}"
-sed -i \
-	  -e "s|XX_ALLSKY_HOME_XX|${ALLSKY_HOME}|g" \
-	  -e "s|XX_ALLSKY_IMAGES_XX|${ALLSKY_IMAGES}|g" \
-	  -e "s|XX_ALLSKY_WEBUI_XX|${ALLSKY_WEBUI}|g" \
-	  -e "s|XX_ALLSKY_WEBSITE_XX|${ALLSKY_WEBSITE}|g" \
-	  "${SCRIPTPATH}/lighttpd.conf"
-install -m 0644 "${SCRIPTPATH}/lighttpd.conf" /etc/lighttpd/lighttpd.conf
+REPO_FILE="${REPO_DIR}/lighttpd.conf.repo"
+CONFIG_FILE="${ALLSKY_CONFIG}/lighttpd.conf"
+FINAL_FILE="/etc/lighttpd/lighttpd.conf"
+sed \
+	-e "s|XX_ALLSKY_HOME_XX|${ALLSKY_HOME}|g" \
+	-e "s|XX_ALLSKY_IMAGES_XX|${ALLSKY_IMAGES}|g" \
+	-e "s|XX_ALLSKY_WEBUI_XX|${ALLSKY_WEBUI}|g" \
+	-e "s|XX_ALLSKY_WEBSITE_XX|${ALLSKY_WEBSITE}|g" \
+	-e "s|XX_ALLSKY_DOCUMENTATION_XX|${ALLSKY_WEBSITE}|g" \
+	"${REPO_FILE}" > "${CONFIG_FILE}"
+chown ${SUDO_USER}:${SUDO_USER} "${CONFIG_FILE}"
+install -m 0644 "${CONFIG_FILE}" "${FINAL_FILE}"
 service lighttpd restart
 echo
 
@@ -139,13 +145,17 @@ else
 	echo -e "${GREEN}* Leaving hostname at '${HOST_NAME}'${NC}"
 fi
 
-FILE="/etc/avahi/avahi-daemon.conf"
-[ -f "${FILE}" ] && grep -i --quiet "host-name=${HOST_NAME}" "${FILE}"
+FINAL_FILE="/etc/avahi/avahi-daemon.conf"
+[ -f "${FINAL_FILE}" ] && grep -i --quiet "host-name=${HOST_NAME}" "${FINAL_FILE}"
 if [ $? -ne 0 ]; then
 	# New HOST_NAME not found, or file doesn't exist, so need to configure file.
 	echo -e "${GREEN}* Configuring avahi-daemon${NC}"
-	install -m 0644 "${SCRIPTPATH}/avahi-daemon.conf" "${FILE}"
-	sed -i "s/allsky/${HOST_NAME}/g" "${FILE}"	# "allsky" is hard coded in file we distribute
+	REPO_FILE="${REPO_DIR}/avahi-daemon.conf.repo"
+	CONFIG_FILE="${ALLSKY_CONFIG}/avahi-daemon.conf"
+	sed "s/XX_HOST_NAME_XX/${HOST_NAME}/g" "${REPO_FILE}" > "${CONFIG_FILE}"
+	chown ${SUDO_USER}:${SUDO_USER} "${CONFIG_FILE}"
+	install -m 0644 "${CONFIG_FILE}" "${FINAL_FILE}"
+
 	echo
 fi
 

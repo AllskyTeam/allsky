@@ -10,11 +10,13 @@ server.port                 = 80
 server.tag                  = "Allsky"
 
 dir-listing.activate = "enable"
+setenv.add-response-header += ( "X-Content-Type-Options" => "nosniff" )
 
-$HTTP["url"] =~ "^/current" {
+$HTTP["url"] =~ "^/current|.json$" {
 	# Don't cache the "current" image since it is constantly changing.
-	expire.url = ( "" => "access plus 0 seconds")
-	setenv.add-response-header += ( "Cache-Control" => "must-revalidate, proxy-revalidate, max-age=0" )
+	# Also don't cache .json files since they are configuration files that can change.
+	# This eliminates the need to add timestamps to URLs.
+	setenv.add-response-header += ( "Cache-Control" => "no-cache, proxy-revalidate" )
 } else {
 	$HTTP["url"] =~ "thumbnails|allsky/videos|allsky/startrails|allsky/keograms" {
 		# Output web pages with thumbnails as each thumbnail is read (or created) so the thumbnails appear quickly,
@@ -22,7 +24,7 @@ $HTTP["url"] =~ "^/current" {
 		server.stream-response-body = 1
 	}
 
-	# Cache other pages
+	# Cache pages
 	setenv.add-response-header += ( "Cache-Control" => "max-age=31536000, immutable" )
 }
 

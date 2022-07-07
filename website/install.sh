@@ -38,7 +38,7 @@ modify_locations() {	# Some files have placeholders for certain locations.  Modi
 
 create_data_json_file() {	# Create a new data.json file and check that it's newest version
 	OUTPUT=$(${ALLSKY_SCRIPTS}/postData.sh 2>&1)
-	if [ $? -eq 0 -a -f "${WEBSITE_DIR}/data.json" ]; then
+	if [ $? -eq 0 ] && [ -f "${WEBSITE_DIR}/data.json" ]; then
 		grep --silent "sunrise" "${WEBSITE_DIR}/data.json"
 		if [ $? -ne 0 ]; then
 			echo -e "${YELLOW}WARNING: you have an old version of ${ALLSKY_SCRIPTS}/postData.sh."
@@ -68,7 +68,7 @@ modify_configuration_variables() {	# Update some of the configuration files and 
 		# These have N/S and E/W but the config.js needs decimal numbers.
 		# "N" is positive, "S" negative for LATITUDE.
 		# "E" is positive, "W" negative for LONGITUDE.
-		LATITUDE=$(jq -r '.latitude' "$CAMERA_SETTINGS")
+		LATITUDE="$(jq -r '.latitude' "$CAMERA_SETTINGS")"
 		DIRECTION=${LATITUDE:1,-1}
 		if [ "${DIRECTION}" = "S" ]; then
 			SIGN="-"
@@ -79,7 +79,7 @@ modify_configuration_variables() {	# Update some of the configuration files and 
 		fi
 		LATITUDE="${SIGN}${LATITUDE%${DIRECTION}}"
 
-		LONGITUDE=$(jq -r '.longitude' "$CAMERA_SETTINGS")
+		LONGITUDE="$(jq -r '.longitude' "$CAMERA_SETTINGS")"
 		DIRECTION=${LONGITUDE:1,-1}
 		if [ "${DIRECTION}" = "W" ]; then
 			SIGN="-"
@@ -87,7 +87,7 @@ modify_configuration_variables() {	# Update some of the configuration files and 
 			SIGN=""
 		fi
 		LONGITUDE="${SIGN}${LONGITUDE%${DIRECTION}}"
-		COMPUTER=$(tail -1 /proc/cpuinfo | sed 's/.*: //')
+		COMPUTER="$(tail -1 /proc/cpuinfo | sed 's/.*: //')"
 		# xxxx TODO: anything else we can set?
 		sed -i \
 			-e "/latitude:/c\    latitude: ${LATITUDE}," \
@@ -144,7 +144,7 @@ git clone https://github.com/thomasjacquin/allsky-website.git "${WEBSITE_DIR}"
 [ $? -ne 0 ] && echo -e "\n${RED}*** ERROR: Exiting installation${NC}\n" && exit 4
 echo
 
-cd "${WEBSITE_DIR}"
+cd "${WEBSITE_DIR}" || exit 1
 
 echo -e "${GREEN}* Creating thumbnails directories${NC}"
 mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails

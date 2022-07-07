@@ -1,9 +1,15 @@
+---
+name: Bug report
+about: Create a report to help us improve
+title: "[BUG]"
+---
+***
+
 ### Is this a QUESTION or FEATURE REQUEST?
 
-If so, please add a **Discussion** item by clicking on the `Discussions` link above;
-do NOT create an Issue.
+If so, please add a **Discussion** item by clicking on the `Discussions` link above;  do NOT create an Issue.
 
-
+***
 
 **Describe the bug** 
 

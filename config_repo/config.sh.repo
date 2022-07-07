@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# NOTES:
-#  - Variable names must start at the beginning of a line.
-#  - There should be nothing after a variable's value, i.e., no comments on the same line.
-#  - Values can optionally be quoted with double quotes, NOT single quotes.
-#  - If a variable occurs multiple times, only the last value is used.
-
 # Choose between "ZWO" or "RPiHQ".
 CAMERA=""
 
@@ -19,7 +13,7 @@ IMG_UPLOAD="false"
 IMG_UPLOAD_FREQUENCY=1
 
 # The websites look in IMG_DIR for the current image.
-# When using the Allsky website from the "allsky-website" packge,
+# When using the Allsky website from the "allsky-website" package,
 # "current" is an alias for "/home/pi/allsky".
 # If you use the default IMG_DIR and have the Allsky website, set "imageName" in
 # /var/www/html/allsky/config.js to:
@@ -30,6 +24,7 @@ IMG_DIR="current/tmp"
 
 # Resize images before cropping, stretching, and saving.
 # Adjust IMG_WIDTH and IMG_HEIGHT according to your camera's sensor ratio.
+# The numbers below are only examples.
 IMG_RESIZE="false"
 IMG_WIDTH=2028
 IMG_HEIGHT=1520
@@ -37,6 +32,7 @@ IMG_HEIGHT=1520
 # Crop images before stretching and saving.
 # This is useful to remove some of the black border when using a fisheye lens.
 # If you crop an image you may need to change the "Text X" and/or "Text Y" settings in the WebUI.
+# The numbers below are only examples.
 CROP_IMAGE="false"
 CROP_WIDTH=640
 CROP_HEIGHT=480
@@ -44,11 +40,13 @@ CROP_OFFSET_X=0
 CROP_OFFSET_Y=0
 
 # Auto stretch images saved at night.
+# The numbers below are good defaults.
 AUTO_STRETCH="false"
 AUTO_STRETCH_AMOUNT=10
 AUTO_STRETCH_MID_POINT="10%"
 
-# Resize uploaded images.  Change the size to fit your sensor.
+# Resize uploaded images.  Change the size to fit your sensor.  
+# The numbers below are only examples.
 RESIZE_UPLOADS="false"
 RESIZE_UPLOADS_SIZE="962x720"
 
@@ -56,11 +54,14 @@ RESIZE_UPLOADS_SIZE="962x720"
 IMG_CREATE_THUMBNAILS="true"
 
 # Remove corrupt images before generating keograms, startrails, and timelapse videos.
+# We recommend ALWAYS leaving this enabled.
+# If the software is deleting images you want to keep, change the settings below.
 REMOVE_BAD_IMAGES="true"
 
 # If REMOVE_BAD_IMAGES is "true", images whose mean brightness is
 # less than THRESHOLD_LOW or greater than THRESHOLD_HIGH percent (max: 100) will be removed.
-# Set to 0 to disable the brightness checks.
+# Set either variable to 0 to disable its brightness check.
+# The numbers below are good defaults.
 REMOVE_BAD_IMAGES_THRESHOLD_LOW=1
 REMOVE_BAD_IMAGES_THRESHOLD_HIGH=90
 
@@ -112,25 +113,28 @@ TIMELAPSE_EXTRA_PARAMETERS=""
 # Set to "true" to upload the timelapse video to your website at the end of each night.
 UPLOAD_VIDEO="false"
 
-# Set to "true" to upload timelapse video' thumbnail to your website at the end of each night.
+# Set to "true" to upload the timelapse video's thumbnail to your website at the end of each night.
+# Not needed if the Allsky Website is on your Pi.
 TIMELAPSE_UPLOAD_THUMBNAIL="false"
 
-# A "mini" timelapse is one that only includes the most recent images, and is created often.
-# TIMELAPSE_MINI is the number of images you want in the mini timelapse.  0 disables mini timelapses.
+### Mini timelapse
+# A "mini" timelapse is one that only includes the most recent images, is created often, and overwrites the prior mini video.
+# TIMELAPSE_MINI_IMAGES is the number of images you want in the mini timelapse.  0 disables mini timelapses.
 TIMELAPSE_MINI_IMAGES=0
 # How often should the mini timelapse be made?
 # If you have a slow Pi or short delays between images, set this to a higher number (i.e., not as often).
 TIMELAPSE_MINI_FREQUENCY=3
 
-# These variables service the same function as for daily timelapse.
+# The remaining TIMELAPSE_MINI variables serve the same function as the daily timelapse.
 TIMELAPSE_MINI_UPLOAD_VIDEO="true"
 TIMELAPSE_MINI_UPLOAD_THUMBNAIL="true"
 
 # Since a mini timelapse doesn't have many frames, the FPS should be much lower than a normal timelapse.
 TIMELAPSE_MINI_FPS=2
 
-# In order to decrease the time spent making mini timelapse, you should set these lower than a normal timelapse.
+# In order to decrease the time spent making mini timelapse, set these lower than a normal timelapse.
 TIMELAPSE_MINI_BITRATE="1000k"
+# The numbers below are only examples, but sizes must be EVEN numbers.
 TIMELAPSE_MINI_WIDTH=1014
 TIMELAPSE_MINI_HEIGHT=760
 
@@ -142,7 +146,7 @@ KEOGRAM="true"
 # Additional Keogram parameters.  Run "keogram --help" to see the options.
 KEOGRAM_EXTRA_PARAMETERS="--font-size 1.0 --font-line 1 --font-color '255 255 255'"
 
-# Set to "true" to upload the keogram to your website at the end of each night.
+# Set to "true" to upload the keogram image to your website at the end of each night.
 UPLOAD_KEOGRAM="false"
 
 
@@ -223,3 +227,5 @@ FILENAME="${FULL_FILENAME%.*}"
  
 # So scripts can conditionally ouput messages; DO NOT CHANGE NEXT LINES.
 ALLSKY_DEBUG_LEVEL="$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")"
+
+GITHUB_ROOT="https://github.com/thomasjacquin"

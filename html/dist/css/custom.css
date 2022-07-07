@@ -399,3 +399,6 @@ select {
 	color: red;
 	font-size: 125%;
 }
+
+.thumb { width: 100px; margin: 0 1px 1px 0; }
+.left { float: left; }

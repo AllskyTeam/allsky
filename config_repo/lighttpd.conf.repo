@@ -1,11 +1,4 @@
-server.modules = (
-	"mod_expire",
-	"mod_setenv",
-	"mod_indexfile",
-	"mod_access",
-	"mod_alias",
- 	"mod_redirect",
-)
+server.modules = ( "mod_expire", "mod_setenv", "mod_indexfile", "mod_access", "mod_alias", "mod_redirect",)
 
 server.document-root        = "XX_ALLSKY_WEBUI_XX"
 server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
@@ -18,16 +11,25 @@ server.tag                  = "Allsky"
 
 dir-listing.activate = "enable"
 
-$HTTP["url"] =~ "thumbnails|allsky/videos|allsky/startrails|allsky/keograms" {
-	server.stream-response-body = 1
-} else $HTTP["url"] =~ "^/current" {
+$HTTP["url"] =~ "^/current" {
+	# Don't cache the "current" image since it is constantly changing.
 	expire.url = ( "" => "access plus 0 seconds")
 	setenv.add-response-header += ( "Cache-Control" => "must-revalidate, proxy-revalidate, max-age=0" )
+} else {
+	$HTTP["url"] =~ "thumbnails|allsky/videos|allsky/startrails|allsky/keograms" {
+		# Output web pages with thumbnails as each thumbnail is read (or created) so the thumbnails appear quickly,
+		# rather than not outputing anything until the last thumbnail is created, which can be tens of seconds.
+		server.stream-response-body = 1
+	}
+
+	# Cache other pages
+	setenv.add-response-header += ( "Cache-Control" => "max-age=31536000, immutable" )
 }
 
 alias.url		    = ("/current/" => "XX_ALLSKY_HOME_XX/")
 alias.url		    += ("/images/" => "XX_ALLSKY_IMAGES_XX/")
 alias.url		    += ("/website/" => "XX_ALLSKY_WEBSITE_XX/")
+alias.url		    += ("/documentation/" => "XX_ALLSKY_DOCUMENTATION_XX/")
 
 # strict parsing and normalization of URL for consistency and security
 # https://redmine.lighttpd.net/projects/lighttpd/wiki/Server_http-parseoptsDetails

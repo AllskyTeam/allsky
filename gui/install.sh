@@ -62,7 +62,12 @@ modify_logrotate()
 do_sudoers()
 {
 	echo -e "${GREEN}* Creating/updating sudoers file${NC}"
-	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" ${SCRIPTPATH}/sudoers > /etc/sudoers.d/allsky
+	REPO_FILE="${REPO_DIR}/sudoers.repo"
+	CONFIG_FILE="${ALLSKY_CONFIG}/sudoers"
+	FINAL_FILE="/etc/sudoers.d/allsky"
+	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" "${REPO_FILE}" > "${CONFIG_FILE}"
+	chown ${SUDO_USER}:${SUDO_USER} "${CONFIG_FILE}"
+	install -m 0644 "${CONFIG_FILE}" "${FINAL_FILE}"
 }
 
 NEED_TO_UPDATE_HOST_NAME="true"

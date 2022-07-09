@@ -27,13 +27,7 @@ fi
 
 modify_locations() {	# Some files have placeholders for certain locations.  Modify them.
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
-	(
-		cd "${WEBSITE_DIR}"
-
-		sed -i -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
-			   -e "s;XX_ON_PI_XX;true;" \
-			functions.php
-	)
+	sed -i -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" "${WEBSITE_DIR}/functions.php"
 }
 
 create_data_json_file() {	# Create a new data.json file and check that it's newest version
@@ -100,7 +94,7 @@ modify_configuration_variables() {	# Update some of the configuration files and 
 
 
 # Check if the user is updating an existing installation.
-if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
+if [ "${1}" = "--update" ] ; then
 	shift
 	if [ ! -d "${WEBSITE_DIR}" ]; then
 		echo -e "${RED}*** ERROR: --update specified but no existing website found in '${WEBSITE_DIR}'${NC}" 1>&2
@@ -140,7 +134,8 @@ else
 fi
 
 echo -e "${GREEN}* Fetching website files into '${WEBSITE_DIR}'${NC}"
-git clone https://github.com/thomasjacquin/allsky-website.git "${WEBSITE_DIR}"
+BRANCH="-b home-page-customizations"
+git clone ${BRANCH} https://github.com/thomasjacquin/allsky-website.git "${WEBSITE_DIR}"
 [ $? -ne 0 ] && echo -e "\n${RED}*** ERROR: Exiting installation${NC}\n" && exit 4
 echo
 
@@ -151,7 +146,7 @@ mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails
 echo
 
 echo -e "${GREEN}* Fixing ownership and permissions${NC}"
-U=$(id -n -u)
+U=$(id --name --user)
 chown -R "${U}:www-data" .
 find ./ -type f -exec chmod 644 {} \;
 find ./ -type d -exec chmod 775 {} \;

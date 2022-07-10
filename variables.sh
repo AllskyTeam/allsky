@@ -13,18 +13,21 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	# Set colors used by many scripts in output.
 	# If we're not on a tty output is likely being written to a file, so don't use colors.
+	# The "w" colors are for when output may go to a web page.
 	if tty --silent ; then
 		ON_TTY=1
-		RED="\033[0;31m"
-		GREEN="\033[0;32m"
-		YELLOW="\033[0;33m"
-		NC="\033[0m" # No Color
+		GREEN="\033[0;32m";		wOK="${GREEN}"
+		YELLOW="\033[0;33m";	wWARNING="${YELLOW}"
+		RED="\033[0;31m";		wERROR="${RED}"
+		DEBUG="${YELLOW}";		wDEBUG="${YELLOW}"
+		NC="\033[0m";			wNC="${NC}"
 	else
 		ON_TTY=0
-		RED=""
-		GREEN=""
-		YELLOW=""
-		NC=""
+		GREEN="";				wOK="<span style='color: green'>"
+		YELLOW="";				wWARNING="<span style='color: #FFCC00'>"
+		RED="";					wERROR="<span style='color: red'>"
+		DEBUG="";				wDEBUG="${wWARNING}"
+		NC="";					wNC="</span>"
 	fi
 
 	if [ "${ALLSKY_HOME}" = "" ] ; then	# This must come after setting colors above

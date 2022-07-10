@@ -1,44 +1,65 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: If you have a QUESTION enter a Discussion item using the link above.  Do NOT enter an Issue.
 title: "[BUG]"
 ---
 ***
 
-### Is this a QUESTION or FEATURE REQUEST?
+# Is this a QUESTION or FEATURE REQUEST?
 
-If so, please add a **Discussion** item by clicking on the `Discussions` link above;  do NOT create an Issue.
+If so, please add a **Discussion** item by clicking on the [Discussions](https://github.com/thomasjacquin/allsky/discussions) link above;  do NOT create an Issue. 
+&nbsp; 
+
+&nbsp; 
 
 ***
+## Look in the Wiki before submitting an Issue
+The Wiki has lots of information including troubleshooting tips for the vast majority of known issues.
+&nbsp;
 
-**Describe the bug** 
+&nbsp;
 
-A clear and concise description of what the bug is.
-If you have code or multi-line messages to include,
-please add a line with three tildas (~~~),
-then add the code/message,
-then add another line with three tildas.
-That will format the message correctly.
+***
+<!-- ==================   Delete this line and everything above it ================== -->
+### Environment:
 
-
-**Desktop:** 
-
- - OS: [e.g. Buster or Bullseye]
- - Allsky version – look for a file called `~/allsky/version`;if that does not exist, look in `/var/log/allsky.log` for the word **Software**.
-
-
-**Additional context** 
-
-Add any other context about the problem here.
+* Camera: ZWO (including model) or RPi
+* OS: Buster or Bullseye
+* Allsky version
+  * The newest software includes a file called `~/allsky/version`.
+  * If it does not exist, run `grep Software /var/log/allsky.log`.
+* Pi model and amount of memory (512 MB, 1, 2, 4, or 8 GB)
 
 
-**Log file** 
+***
+### Describe the bug
 
-Follow the instructions on the https://github.com/thomasjacquin/allsky/wiki/Reporting-Issues Wiki page,
-then **attach a copy of the log file**.
-Do NOT copy/paste the log file into this Issue.
+* Include a clear and concise description of what the bug is.
+* Can it be reproduced?  If so, how?
+* Did anything change?  Any settings?  Most issues occur after _some_ change was made.
+* Please include **exact** messages, or better yet, include a screenshot.
+
+* If this is a configuration-related issue (or you are not sure), attach these files, appending ".txt" to their names first:
+  * Allsky or WebUI:
+    * `~/allsky/config/config.sh`
+    * `/etc/raspap/settings_ZWO.json` or `/etc/raspap/settings_RPiHQ.json`, depending on the camera type you have.
+    * `~/allsky/config/ftp-settings.sh` (upload-related problems)
+  * Allsky Website:
+    * `/var/www/html/allsky/config.js` (Allsky Website problems)
+
+If you have program output or multi-line messages to include,
+add it like this so it formats correctly:
+~~~
+	~~~
+	output/message line 1
+	output/message line 2
+	~~~
+~~~
 
 
-**Screenshots** 
+***
+### Log / configuration files
 
-If applicable, add screenshots to help explain your problem.  If the screenshot is of a browser window, make sure it includes the URL at the top of the browser.
+Follow the instructions for [Reporting Issues](https://github.com/thomasjacquin/allsky/wiki/Reporting-Issues),
+then **attach a copy** of the file(s) above.
+Do **NOT** copy/paste them into this Issue.

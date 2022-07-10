@@ -20,9 +20,8 @@ The Wiki has lots of information including troubleshooting tips for the vast maj
 
 
 
-<!-- =================================================================================================== -->
+<!-- ========================================================================  -->
 <!-- ============= Delete this line and everything above it before submitting this Issue =============== -->
-
 
 
 
@@ -65,7 +64,7 @@ output/message line 2
 
 
 <!-- ==================== Section 3 ==================== -->
-<!-- Leave the next line but delete the remaining lines in this section after you've atached any files. -->
+<!-- Leave the next line but delete the remaining lines in this section after you've attached any files. -->
 
 ### Log / configuration files
 

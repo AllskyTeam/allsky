@@ -58,21 +58,22 @@ function DisplayCameraConfig(){
 			}
 
 			if (isset($_POST['restart'])) {
-				$msg .= " and service restarted";
+				$msg .= " and service restarted.";
 				// runCommand displays $msg.
 				runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
 			} else {
-				$msg .= " and service NOT restarted";
+				$msg .= " and service NOT restarted.";
 				$status->addMessage($msg, 'info');
 			}
 
-			if ($changes !== "" && file_exists(ALLSKY_SCRIPTS . "/makeChanges.sh")) {
+			if ($changes !== "") {
 				$CMD = ALLSKY_SCRIPTS . "/makeChanges.sh $changes";
 				# Let makeChanges.sh display any output
+				echo '<script>console.log("Running: ' . $CMD . '");</script>';
 				runCommand($CMD, "-", "success");
 			}
 		} else {
-			$status->addMessage('Unable to save settings - session timeout', 'danger');
+			$status->addMessage('Unable to save settings - session timeout.', 'danger');
 		}
 	}
 

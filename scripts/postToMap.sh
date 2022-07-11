@@ -10,7 +10,8 @@ fi
 
 # This script uploads various information relative to the camera setup to the allsky map.
 # https://www.thomasjacquin.com/allsky-map/
-# Information is gathered automatically from the settings file
+# Information is gathered automatically from the settings file.
+# The script can be called manually, via endOfNight.sh, or via the WebUI.
 
 # Disabling shellcheck to force CI to compile - May need to find a better way to deal with this
 # shellcheck disable=SC1090
@@ -18,24 +19,10 @@ source "${ALLSKY_HOME}/variables.sh"
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh"
 
-if [ ${ON_TTY} -eq 1 ]; then
-	RED_START="${RED}"
-	GREEN_START="${GREEN}"
-	YELLOW_START="${YELLOW}"
-	COLOR_END="${NC}"
-	BR=" \n"
-else
-	RED_START="<span style='color: red'>"
-	GREEN_START="<span style='color: green'>"
-	YELLOW_START="<span style='color: yellow'>"
-	COLOR_END="</span>"
-	BR="<br>"
-fi
-
 function usage_and_exit()
 {
 	RET_CODE=${1}
-	[ ${RET_CODE} -ne 0 ] && echo -en "${RED_START}"
+	[ ${RET_CODE} -ne 0 ] && echo -en "${wERROR}"
 	echo -e "${BR}Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--endofnight]${BR}"
 	echo "--help: Print this usage message and exit immediately."
 	echo "--whisper: Be quiet with non-error related output - only display results."
@@ -43,7 +30,7 @@ function usage_and_exit()
 	echo "--force: Force updates, even if not scheduled automatically for today."
 	echo "--debug: Output debugging statements."
 	echo "--endofnight: Indicates how ${ME} was invoked."
-	[ ${RET_CODE} -ne 0 ] && echo -e "${COLOR_END}"
+	[ ${RET_CODE} -ne 0 ] && echo -e "${wNC}"
 	exit ${RET_CODE}
 }
 
@@ -70,19 +57,19 @@ function check_URL()
 
 	D="$(get_domain "${URL}")"
 	if [[ "${D:0:7}" = "192.168" || "${D:0:4}" = "10.0" || "${D:0:6}" = "172.16" || "${D:0:9}" = "169.254.0" || "${D:0:6}" = "198.18" || "${D:0:10}" = "198.51.100"  || "${D:0:9}" = "203.0.113" || "${D:0:3}" = "240" ]]; then
-		M="${ERROR_MSG_START}ERROR: '${URL}' is not reachable from the Internet.${ERROR_MSG_END}${BR}${M}"
+		E="ERROR: '${URL}' is not reachable from the Internet.${BR}${E}"
 	elif [ "${URL:0:5}" != "http:" ] && [ "${URL:0:6}" != "https:" ]; then
-		M="${ERROR_MSG_START}ERROR: 'Website URL' must begin with 'http:' or 'https:'.${ERROR_MSG_END}${BR}${M}"
+		E="ERROR: 'Website URL' must begin with 'http:' or 'https:'.${BR}${E}"
 	else
 		# Make sure it's a valid URL
 		CONTENT="$(curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1)"
 		RET=$?
 		if [ ${RET} -eq 6 ]; then
-			M="${ERROR_MSG_START}ERROR: '${URL}' not found - check spelling.${ERROR_MSG_END}${BR}${M}"
+			E="ERROR: '${URL}' not found - check spelling.${BR}${E}"
 		elif [ ${RET} -eq 28 ]; then
-			M="${ERROR_MSG_START}ERROR: Could not connect to '${URL}' after ${TIMEOUT} seconds.${ERROR_MSG_END}${BR}${M}"
+			E="ERROR: Could not connect to '${URL}' after ${TIMEOUT} seconds.${BR}${E}"
 		elif [ ${RET} -ne 0 ]; then
-				M="${ERROR_MSG_START}ERROR: '${URL}' cannot be reached (${CONTENT}).${ERROR_MSG_END}${BR}${M}"
+				E="ERROR: '${URL}' cannot be reached (${CONTENT}).${BR}${E}"
 		else
 			if [ "${URL_TYPE}" = "websiteurl" ]; then
 				TYPE="$(echo "${CONTENT}" | grep -i "Content-Type: text")"
@@ -92,7 +79,7 @@ function check_URL()
 				T="image"
 			fi
 			if [ -z "${TYPE}" ]; then
-				M="${ERROR_MSG_START}ERROR: ${FIELD_NAME} '${URL}' does not appear to be a valid ${T}.${ERROR_MSG_END}${BR}${M}"
+				E="ERROR: ${FIELD_NAME} '${URL}' does not appear to be a valid ${T}.${BR}${E}"
 			else
 				return 0
 			fi
@@ -112,41 +99,49 @@ while [ $# -ne 0 ]; do
 	elif [ "${1}" = "--delete" ]; then
 		DELETE=true
 		UPLOAD=true		# always upload DELETEs
-		shift
 	elif [ "${1}" = "--debug" ]; then
 		DEBUG=true
-		shift
 	elif [ "${1}" = "--force" ]; then
 		UPLOAD=true
-		shift
 	elif [ "${1}" = "--whisper" ]; then
 		WHISPER=true
-		shift
 	elif [ "${1}" = "--endofnight" ]; then
 		ENDOFNIGHT=true
-		shift
 	else
 		usage_and_exit 1;
 	fi
+	shift
 done
+
+# If not on a tty, then we're either called from the endOfNight.sh script (plain text), or the WebUI (html).
+if [[ ${ON_TTY} -eq 0 && ${ENDOFNIGHT} = "false" ]]; then
+	BR="<br>"		# Line break
+else
+	BR="\n"
+fi
+
+# shell check doesn't realize there were set in variables.sh
+wOK="${wOK}"
+wWARNING="${wWARNING}"
+wERROR="${wERROR}"
+wDEBUG="${wDEBUG}"
+wNC="${wNC}"
 
 if [ "${WHISPER}" = "true" ];then
 	MSG_START=""
-	ERROR_MSG_START="${RED_START}"
-	WARNING_MSG_START="${YELLOW_START}"
+	ERROR_MSG_START="${wERROR}"
+	WARNING_MSG_START="${wWARNING}"
 else
 	MSG_START="${ME}: "
-	ERROR_MSG_START="${RED_START}*** ${ME}: "
-	WARNING_MSG_START="${YELLOW_START}*** ${ME}: "
+	ERROR_MSG_START="${wERROR}*** ${ME}: "
+	WARNING_MSG_START="${wWARNING}*** ${ME}: "
 fi
-ERROR_MSG_END="${COLOR_END}"
-WARNING_MSG_END="${COLOR_END}"
 
 MACHINE_ID="$(< /etc/machine-id)"
 if [ -z "${MACHINE_ID}" ]; then
-	M="${ERROR_MSG_START}ERROR: Unable to get 'machine_id': check /etc/machine-id.${ERROR_MSG_END}"
-	echo -e "${M}"
-	[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
+	E="ERROR: Unable to get 'machine_id': check /etc/machine-id."
+	echo -e "${ERROR_MSG_START}${E}${wNC}"
+	[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
 	exit 3
 fi
 
@@ -173,47 +168,48 @@ else
 	COMPUTER="$(jq -r '.computer' "${CAMERA_SETTINGS}")"
 
 	OK=true
-	M=""
+	E=""
+	W=""
 	# Check for required fields
 	if [ "${LATITUDE}" = "" ]; then
-		M="${ERROR_MSG_START}ERROR: 'Latitude' is required.${ERROR_MSG_END}${BR}${M}"
+		E="ERROR: 'Latitude' is required.${BR}${E}"
 		OK=false
 	fi
 	if [ "${LONGITUDE}" = "" ]; then
-		M="${ERROR_MSG_START}ERROR: 'Longitude' is required.${ERROR_MSG_END}${BR}${M}"
+		E="ERROR: 'Longitude' is required.${BR}${E}"
 		OK=false
 	fi
 	if [ "${CAMERA}" = "" ]; then
-		M="${ERROR_MSG_START}ERROR: 'Camera' is required.${ERROR_MSG_END}${BR}${M}"
+		E="ERROR: 'Camera' is required.${BR}${E}"
 		OK=false
 	fi
 	if [ "${COMPUTER}" = "" ]; then
-		M="${ERROR_MSG_START}ERROR: 'Computer' is required.${ERROR_MSG_END}${BR}${M}"
+		E="ERROR: 'Computer' is required.${BR}${E}"
 		OK=false
 	fi
 
 	# Check for optional, but suggested fields
 	if [ "${LOCATION}" = "" ]; then
-		M="${WARNING_MSG_START}WARNING: 'Location' not set; continuing.${WARNING_MSG_END}${BR}${M}"
+		W="WARNING: 'Location' not set; continuing.${BR}${W}"
 	fi
 	if [ "${OWNER}" = "" ]; then
-		M="${WARNING_MSG_START}WARNING: 'Owner' not set; continuing.${WARNING_MSG_END}${BR}${M}"
+		W="WARNING: 'Owner' not set; continuing.${BR}${W}"
 	fi
 	if [ "${LENS}" = "" ]; then
-		M="${WARNING_MSG_START}WARNING: 'Lens' not set; continuing.${WARNING_MSG_END}${BR}${M}"
+		W="WARNING: 'Lens' not set; continuing.${BR}${W}"
 	fi
 
 	# website_url and image_url are optional
 
 	if [[ -n "${WEBSITE_URL}" && -z "${IMAGE_URL}" ]] || [[ -z "${WEBSITE_URL}" && -n "${IMAGE_URL}" ]]; then
-		M="${ERROR_MSG_START}ERROR: If you specify the Website URL or Image URL, you must specify both URLs.${ERROR_MSG_END}${BR}${M}"
+		E="ERROR: If you specify the Website URL or Image URL, you must specify both URLs.${BR}${E}"
 		OK=false
 	elif [ -n "${WEBSITE_URL}" ]; then		# they specified both
 		# The domain names (or IP addresses) must be the same.
 		W="$(get_domain "${WEBSITE_URL}")"
 		I="$(get_domain "${IMAGE_URL}")"
 		if [ "${W}" != "${I}" ]; then
-			M="${ERROR_MSG_START}ERROR: The Website and Image URLs must have the same domain name or IP address.${ERROR_MSG_END}${BR}${M}"
+			E="ERROR: The Website and Image URLs must have the same domain name or IP address.${BR}${E}"
 			OK=false
 		fi
 		if [ -n "${WEBSITE_URL}" ]; then
@@ -224,12 +220,22 @@ else
 		fi
 	fi
 
+	if [ "${W}" != "" ]; then
+		echo -e "${WARNING_MSG_START}${W%%${BR}}${NC}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wWARNING}${ME}: ${W%%${BR}}${wNC}" >> "${ALLSKY_MESSAGES}"
+	fi
 	if [ "${OK}" = "false" ]; then
-		echo -e "${M%%${BR}}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M%%${BR}}" >> "${ALLSKY_MESSAGES}"
+		echo -e "${ERROR_MSG_START}${M%%${BR}}${NC}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${M%%${BR}}${wNC}" >> "${ALLSKY_MESSAGES}"
 		exit 2
 	fi
 
+	if [ -f "${ALLSKY_HOME}/version" ]; then
+		ALLSKY_VERSION="$(< "${ALLSKY_HOME/version}")"
+	else
+		ALLSKY_VERSION="$(grep "Allsky Camera Software" /var/log/allsky.log | tail -1 | sed -e 's/.*Software //' -e 's/ .*//')"
+		[ -z "${ALLSKY_VERSION}" ] && ALLSKY_VERSION="unknown"
+	fi
 
 	generate_post_data()
 	{
@@ -244,6 +250,8 @@ else
 		"camera": "${CAMERA}",
 		"lens": "${LENS}",
 		"computer": "${COMPUTER}",
+		"allskyVersion": "${ALLSKY_VERSION}"
+
 		"machine_id": "${MACHINE_ID}"
 		}
 		EOF
@@ -270,24 +278,25 @@ if [ "${UPLOAD}" = "true" ]; then
 	CMD="curl --silent -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
 	CMD="${CMD} --data '$(generate_post_data)' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
-	[ "${DEBUG}" = "true" ] && echo -e "\nExecuting:\n${GREEN_START}${CMD}${COLOR_END}\n"
+	[ "${DEBUG}" = "true" ] && echo -e "\n${wDEBUG}Executing:\n${CMD}${wNC}\n"
 	# shellcheck disable=SC2090
 	RETURN="$(echo ${CMD} | bash)"
 	RETURN_CODE=$?
-	[ "${DEBUG}" = "true" ] && echo -e "\nReturned:\n${YELLOW_START}${RETURN}${COLOR_END}.\n"
+	[ "${DEBUG}" = "true" ] && echo -e "\n${wDEBUG}Returned:\n${RETURN}${wNC}.\n"
 	if [ ${RETURN_CODE} -ne 0 ]; then
-		M="${ERROR_MSG_START}ERROR while uploading map data with curl: ${RETURN}.${ERROR_MSG_END}"
-		echo -e "${M}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
+		E="ERROR while uploading map data with curl: ${RETURN}."
+		echo -e "${ERROR_MSG_START}${E}${RETURN}${wNC}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
 		exit ${RETURN_CODE}
 	fi
 
 	# Get the return string from the server.  It's the last line of output.
 	RET="$(echo "${RETURN}" | tail -1)"
 	if [ "${RET}" = "INSERTED" ] || [ "${RET}" = "DELETED" ]; then
-		echo "${MSG_START}Map data ${RET}."
+		echo -e "${wOK}${MSG_START}Map data ${RET}.${wNC}"
+
 	elif [ "${RET:0:7}" = "UPDATED" ]; then
-		echo -n "${MSG_START}Map data UPDATED."
+		echo -en "${wOK}${MSG_START}Map data UPDATED.${wNC}"
 		NUMBERS=${RET:8}	# num_updates max
 		if [ -n "${NUMBERS}" ]; then
 			NUM_UPDATES=${NUMBERS% *}
@@ -301,29 +310,33 @@ if [ "${UPLOAD}" = "true" ]; then
 		else
 			echo	# terminating newline
 		fi
+
 	elif [ -z "${RET}" ]; then
-		M="${ERROR_MSG_START}ERROR: Unknown reply from server: ${RETURN}.${ERROR_MSG_END}"
-		echo -e "${M}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
+		E="ERROR: Unknown reply from server: ${RETURN}."
+		echo -e "${ERROR_MSG_START}${E}${wNC}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
 		RETURN_CODE=2
+
 	elif [ "${RET:0:6}" = "ERROR " ]; then
-		M="${ERROR_MSG_START}ERROR returned while uploading map data: ${RET:6}.${ERROR_MSG_END}"
-		echo -e "${M}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
+		E="ERROR returned while uploading map data: ${RET:6}."
+		echo -e "${ERROR_MSG_START}${E}${wNC}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
 		RETURN_CODE=2
+
 	elif [ "${RET:0:15}" = "ALREADY UPDATED" ]; then
 		MAX_UPDATES=${RET:17}
-		M="${WARNING_MSG_START}NOTICE:You have already updated your map data the maximum times per day (${MAX_UPDATES}).  Try again tomorrow.${WARNING_MSG_END}"
-		echo -e "${M}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
+		W="NOTICE: You have already updated your map data the maximum times per day (${MAX_UPDATES}).  Try again tomorrow."
+		echo -e "${WARNING_MSG_START}${W}${wNC}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wWARNING}${ME}: ${W}${wNC}" >> "${ALLSKY_MESSAGES}"
+
 	else
-		M="${ERROR_MSG_START}ERROR returned while uploading map data: ${RET}.${ERROR_MSG_END}"
-		echo -e "${M}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${ME}: ${M}" >> "${ALLSKY_MESSAGES}"
+		E="ERROR returned while uploading map data: ${RET}."
+		echo -e "${ERROR_MSG_START}${E}${wNC}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
 		RETURN_CODE=2
 	fi
 
-elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
+elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]; then
 	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
 fi
 

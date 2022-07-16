@@ -1,10 +1,10 @@
 // This file is #include'd into the capture*.cpp files.
-// The CAMERA_BRAND #define must be set.
+// The CAMERA_TYPE #define must be set.
 // For the RPi, functions that mimic the ZWO "ASI" functions were added so the capture
 // code for both cameras can be as similar as possible.
 
-#if !defined(CAMERA_BRAND)
-#error ERROR: CAMERA_BRAND not defined
+#if !defined(CAMERA_TYPE)
+#error ERROR: CAMERA_TYPE not defined
 #endif
 
 // Forward definitions of variables in capture*.cpp.
@@ -129,7 +129,7 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 		{ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE, 12, ASI_FALSE},
 
 	// xxxxx TODO: check on 1.55 and other settings
-	{ "arducam_64mp", "ARDUCAM 64 MB", 0, 6944, 9248, ASI_TRUE, BAYER_GR, {1, 2, 4, 0},
+	{ "arducam_64mp", "ARDUCAM 64 MB", 0, 6944, 9248, ASI_TRUE, BAYER_GR, {1, 2, 0},
 		{ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE, 12, ASI_FALSE},
 
 	// FUTURE CAMERAS GO HERE...
@@ -153,9 +153,9 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
 		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
 		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, BRIGHTNESS },
-		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "Contrast", "Contrast", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Saturation", "Saturation", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	},
 	{ // raspistill.  Minimum width and height are 64.
@@ -362,10 +362,6 @@ char const *argumentNames[][2] = {
 	{ "Flip", "flip" },
 	{ "AutoExpMaxGain", "maxgain" },			// day/night
 	{ "AutoExpMaxExpMS", "maxexposure" },		// day/night
-	{ "CoolerPowerPerc", "" },		// correct Control name?			// read-only so no argument
-	{ "TargetTemp", "targetTemp" },	// correct Control name?
-	{ "CoolerOn", "coolerEnabled" },// correct Control name?
-	{ "FanOn", "??" },				// correct Control name?
 	{ "ExposureCompensation", "ev" },
 	{ "Brightness", "brightness" },
 	{ "Contrast", "contrast" },
@@ -376,7 +372,7 @@ char const *argumentNames[][2] = {
 
 #else		// ZWO
 
-// Same ideas as for RPi but somewhat different options.
+// Same ideas as for RPi but some different options.
 char const *argumentNames[][2] = {
 	{ "Gain", "gain" },							// day/night
 	{ "Exposure", "exposure" },					// day/night
@@ -386,6 +382,7 @@ char const *argumentNames[][2] = {
 	{ "Offset", "offset" },
 	{ "BandWidth", "usb" },
 	{ "OverCLK" "" },
+	{ "MonoBin", "" },
 	{ "Temperature", "" },						// read-only so no argument
 	{ "Flip", "flip" },
 	{ "AutoExpMaxGain", "maxgain" },			// day/night
@@ -393,10 +390,9 @@ char const *argumentNames[][2] = {
 	{ "AutoExpTargetBrightness", "brightness" },// day/night
 	{ "HardwareBin", "" },
 	{ "HighSpeedMode", "" },
-	{ "CoolerPowerPerc", "" },		// correct Control name?			// read-only so no argument
-	{ "TargetTemp", "targetTemp" },	// correct Control name?
-	{ "CoolerOn", "coolerEnabled" },// correct Control name?
-	{ "MonoBin", "" },
+	{ "CoolerPowerPerc", "" },					// read-only so no argument
+	{ "TargetTemp", "targetTemp" },
+	{ "CoolerOn", "coolerEnabled" },			// day/night
 	{ "FanOn", "??" },				// correct Control name?
 	{ "PatternAdjust", "" },		// correct Control name?
 	{ "AntiDewHeater", "" },		// correct Control name?
@@ -478,7 +474,7 @@ char *getRetCode(ASI_ERROR_CODE code)
 }
 
 //-----------------------------------------------------------------------------------------
-// Routines common to all camera brands
+// Routines common to all camera types
 //-----------------------------------------------------------------------------------------
 
 // Get the number of cameras connected, making sure there is at least one.
@@ -506,8 +502,8 @@ void processConnectedCameras()
 
 #ifdef IS_ZWO
 ASI_ID cameraID;	// USB 3 cameras only
-bool hasCameraID = false;
 unsigned char cID[sizeof(cameraID)+1] = { '[', 'n', 'o', 'n', 'e', ']', 0 };
+bool hasCameraID = false;
 
 ASI_ID getCameraID(ASI_CAMERA_INFO camInfo)
 {
@@ -532,8 +528,8 @@ ASI_ID getCameraID(ASI_CAMERA_INFO camInfo)
 
 // Get the camera's serial number, if it has one.
 char sn[100] = { 0 };
-
 bool hasSerialNumber = true;
+
 char *getSerialNumber(int camNum)
 {
 	ASI_SN serialNumber;
@@ -571,10 +567,10 @@ char cameraModel[sizeof(x_.Name) + 1];
 
 char *getCameraModel(ASI_CAMERA_INFO cameraInfo)
 {
-	// Remove the camera brand from the name if it's there.
+	// Remove the camera type from the name if it's there.
 	char *p = cameraInfo.Name;
-	if (strncmp(CAMERA_BRAND, p, strlen(CAMERA_BRAND)) == 0)
-		p += strlen(CAMERA_BRAND);
+	if (strncmp(CAMERA_TYPE, p, strlen(CAMERA_TYPE)) == 0)
+		p += strlen(CAMERA_TYPE);
 	if (*p == ' ') p++;		// skip optional space
 	strncpy(cameraModel, p, s_-1);
 	for (unsigned int i=0; i<s_; i++)
@@ -594,7 +590,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 	char *sn = getSerialNumber(cameraInfo.CameraID);
 
 	char fileName[128];
-	snprintf(fileName, sizeof(fileName), "%s/%s_%s.json", dir, CAMERA_BRAND, camModel);
+	snprintf(fileName, sizeof(fileName), "%s/%s_%s.json", dir, CAMERA_TYPE, camModel);
 	FILE *f = fopen(fileName, "w");
 	if (f == NULL)
 	{
@@ -604,7 +600,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 
 	// output basic information on camera as well as all it's capabilities
 	fprintf(f, "{\n");
-	fprintf(f, "\t\"cameraBrand\" : \"%s\",\n", CAMERA_BRAND);
+	fprintf(f, "\t\"cameraType\" : \"%s\",\n", CAMERA_TYPE);
 	fprintf(f, "\t\"cameraName\" : \"%s\",\n", cameraInfo.Name);
 	fprintf(f, "\t\"cameraModel\" : \"%s\",\n", camModel);
 #ifdef IS_ZWO
@@ -692,6 +688,8 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 		fprintf(f, "\t\t\t\"MaxValue\" : %.3f,\n", cc.MaxValue);
 		fprintf(f, "\t\t\t\"DefaultValue\" : %.3f,\n", cc.DefaultValue);
 #endif
+		fprintf(f, "\t\t\t\"IsAutoSupported\" : %s,\n", cc.IsAutoSupported == ASI_TRUE ? "true" : "false");
+		fprintf(f, "\t\t\t\"IsWritable\" : %s,\n", cc.IsWritable == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"ControlType\" : %d\n", cc.ControlType);
 		fprintf(f, "\t\t}");
 	}
@@ -706,7 +704,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, long width, long height, double pixelSize, char const *bayer)
 {
 	printf(" Camera Information:\n");
-	printf("  - Brand: %s\n", CAMERA_BRAND);
+	printf("  - Type: %s\n", CAMERA_TYPE);
 	printf("  - Model: %s\n", getCameraModel(cameraInfo));
 #ifdef IS_ZWO
 	printf("  - Camera ID: %s\n", cID);
@@ -820,38 +818,38 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, long width, long height, doubl
 }
 
 // Ensure the exposure values are valid.
-bool checkExposureValues(long day_us, bool dayAuto, long night_us, bool nightAuto)
+bool checkExposureValues(long *day_us, bool dayAuto, long *night_us, bool nightAuto)
 {
-	if (day_us < cameraMinExposure_us)
+	if (*day_us < cameraMinExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", day_us, cameraMinExposure_us);
-	 	day_us = cameraMinExposure_us;
+	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", *day_us, cameraMinExposure_us);
+	 	*day_us = cameraMinExposure_us;
 	}
-	else if (day_us > cameraMaxExposure_us)
+	else if (*day_us > cameraMaxExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", day_us, cameraMaxExposure_us);
-	 	day_us = cameraMaxExposure_us;
+	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", *day_us, cameraMaxExposure_us);
+	 	*day_us = cameraMaxExposure_us;
 	}
-	else if (dayAuto && day_us > cameraMaxAutoexposure_us)
+	else if (dayAuto && *day_us > cameraMaxAutoexposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", day_us, cameraMaxAutoexposure_us);
-	 	day_us = cameraMaxAutoexposure_us;
+	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", *day_us, cameraMaxAutoexposure_us);
+	 	*day_us = cameraMaxAutoexposure_us;
 	}
 
-	if (night_us < cameraMinExposure_us)
+	if (*night_us < cameraMinExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", night_us, cameraMinExposure_us);
-	 	night_us = cameraMinExposure_us;
+	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", *night_us, cameraMinExposure_us);
+	 	*night_us = cameraMinExposure_us;
 	}
-	else if (night_us > cameraMaxExposure_us)
+	else if (*night_us > cameraMaxExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", night_us, cameraMaxExposure_us);
-	 	night_us = cameraMaxExposure_us;
+	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", *night_us, cameraMaxExposure_us);
+	 	*night_us = cameraMaxExposure_us;
 	}
-	else if (nightAuto && night_us > cameraMaxAutoexposure_us)
+	else if (nightAuto && *night_us > cameraMaxAutoexposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", night_us, cameraMaxAutoexposure_us);
-	 	night_us = cameraMaxAutoexposure_us;
+	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", *night_us, cameraMaxAutoexposure_us);
+	 	*night_us = cameraMaxAutoexposure_us;
 	}
 
 	return(true);		// only WARNINGs above

@@ -20,7 +20,7 @@
 #include "include/RPiHQ_raspistill.h"
 #include "include/mode_RPiHQ_mean.h"
 
-#define CAMERA_BRAND			"RPi"
+#define CAMERA_TYPE				"RPi"
 #define IS_RPi
 #include "ASI_functions.cpp"
 
@@ -61,7 +61,7 @@ double nightWBB				= DEFAULT_NIGHTWBB;
 bool currentAutoAWB			= false;
 double currentWBR			= NOT_SET;
 double currentWBB			= NOT_SET;
-double actualTemp			= NOT_SET;				// temp of sensor during last image
+long actualTemp				= -999;				// temp of sensor during last image. -999 means not supported
 timeval exposureStartDateTime;						// date/time an image started
 
 std::vector<int> compressionParameters;
@@ -114,21 +114,20 @@ char const *getCameraCommand(bool libcamera)
 int RPiHQcapture(bool autoExposure, long exposure_us, long bin, bool autoGain, double gain, bool autoAWB, double WBR, double WBB, long rotation, long flip, double saturation, long brightness, long quality, char const* fileName, int takingDarkFrames, int preview, long width, long height, bool libcamera, cv::Mat *image, char const *imagetype)
 {
 	// Define command line.
-	string command = "";
-	if (libcamera)
-	{
-		// Tried putting this in putenv() but it didn't seem to work.
-		command = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL ";
-	}
-	command += getCameraCommand(libcamera);
+	string command = getCameraCommand(libcamera);
 
 	// Ensure no process is still running.
 	string kill = "pgrep '" + command + "' | xargs kill -9 2> /dev/null";
 	char kcmd[kill.length() + 1];		// Define char variable
 	strcpy(kcmd, kill.c_str());			// Convert command to character variable
-	Log(4, " > Kill command: %s\n", kcmd);
+	Log(5, " > Kill command: %s\n", kcmd);
 	system(kcmd);						// Stop any currently running process
 
+	if (libcamera)
+	{
+		// Tried putting this in putenv() but it didn't seem to work.
+		command = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL " + command;
+	}
 	stringstream ss;
 
 	ss << fileName;
@@ -210,7 +209,14 @@ int RPiHQcapture(bool autoExposure, long exposure_us, long bin, bool autoGain, d
 	}
 
 	if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
+	{
+if (0 && exposure_us != myRaspistillSetting.shutter_us)
+{
+printf("xxxxxxxxxxx exposure_us = %s != ", length_in_units(exposure_us, true));
+printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSetting.shutter_us, true));
+}
 		exposure_us = myRaspistillSetting.shutter_us;
+	}
 
 	// Check if automatic determined exposure time is selected
 	if (autoExposure)
@@ -246,6 +252,10 @@ int RPiHQcapture(bool autoExposure, long exposure_us, long bin, bool autoGain, d
 			ss.str("");
 			ss << myRaspistillSetting.analoggain;
 			command += " --analoggain " + ss.str();
+		}
+		else if (libcamera)
+		{
+			command += " --analoggain 0";	// 0 makes it autogain
 		}
 		else
 		{
@@ -453,6 +463,8 @@ int main(int argc, char *argv[])
 
 	bool preview				= false;
 	bool showTime				= DEFAULT_SHOWTIME;
+	char const *tempType		= "C";							// Celsius
+	bool showTemp				= false; // temperature not supported on RPi
 	bool showExposure			= DEFAULT_SHOWEXPOSURE;
 	bool showGain				= DEFAULT_SHOWGAIN;
 	bool showBrightness			= DEFAULT_SHOWBRIGHTNESS;
@@ -800,7 +812,7 @@ i++;
 			// auto-exposure settings
 			else if (strcmp(argv[i], "-mean-threshold") == 0)
 			{
-				myModeMeanSetting.mean_threshold = std::min(0.1,std::max(0.0001,atof(argv[i + 1])));
+				myModeMeanSetting.mean_threshold = std::min(0.1,std::max(0.01,atof(argv[i + 1])));
 				i++;
 			}
 			else if (strcmp(argv[i], "-mean-p0") == 0)
@@ -837,7 +849,7 @@ i++;
 		printf("%s\n", v);
 		for (size_t i=0; i<strlen(v); i++) printf("*");
 		printf("\n\n");
-		printf("Capture images of the sky with a Raspberry Pi and a RPi HQ camera\n");
+		printf("Capture images of the sky with a Raspberry Pi and an RPi camera\n");
 		printf("%s\n", c(KNRM));
 		if (! help) printf("%sAdd -h or --help for available options%s\n\n", c(KYEL), c(KNRM));
 		printf("Author: Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
@@ -954,12 +966,14 @@ i++;
 
 	// Do argument error checking if we're not going to exit soon.
 	// Some checks are done lower in the code, after we processed some values.
+const int minExposure_us = 1;	// TODO: determine based on camera
+const double minGain = 1.0;		// TODO: determine based on camera
 	if (! saveCC)
 	{
 		// xxxx TODO: NO_MAX_VALUE will be replaced by acutal values
-		validateFloat(&temp_dayMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Daytime Max Auto-Exposure", true);	// camera-specific
+		validateFloat(&temp_dayMaxAutoexposure_ms, minExposure_us/US_IN_MS, NO_MAX_VALUE, "Daytime Max Auto-Exposure", true);	// camera-specific
 			dayMaxAutoexposure_us = temp_dayMaxAutoexposure_ms * US_IN_MS;
-		validateFloat(&temp_dayExposure_ms, 1, dayAutoExposure ? (dayMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Daytime Manual Exposure", true);
+		validateFloat(&temp_dayExposure_ms, minExposure_us/US_IN_MS, dayAutoExposure ? (dayMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Daytime Manual Exposure", true);
 			dayExposure_us = temp_dayExposure_ms * US_IN_MS;
 		validateLong(&dayBrightness, minBrightness, maxBrightness, "Daytime Brightness", true);
 		validateLong(&dayDelay_ms, 10, NO_MAX_VALUE, "Daytime Delay", false);
@@ -970,9 +984,9 @@ i++;
 		validateFloat(&dayWBB, 0, NO_MAX_VALUE, "Daytime Blue Balance", true);						// camera-specific
 //		validateLong(&daySkipFrames, 0, 50, "Daytime Skip Frames", true);
 
-		validateFloat(&temp_nightMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Nighttime Max Auto-Exposure", true);	// camera-specific
+		validateFloat(&temp_nightMaxAutoexposure_ms, minExposure_us*US_IN_MS, NO_MAX_VALUE, "Nighttime Max Auto-Exposure", true);	// camera-specific
 			nightMaxAutoexposure_us = temp_nightMaxAutoexposure_ms * US_IN_MS;
-		validateFloat(&temp_nightExposure_ms, 1, nightAutoExposure ? (nightMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Nighttime Manual Exposure", true);
+		validateFloat(&temp_nightExposure_ms, minExposure_us*US_IN_MS, nightAutoExposure ? (nightMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Nighttime Manual Exposure", true);
 			nightExposure_us = temp_nightExposure_ms * US_IN_MS;
 		validateLong(&nightBrightness, minBrightness, maxBrightness, "Nighttime Brightness", true);
 		validateLong(&nightDelay_ms, 10, NO_MAX_VALUE, "Nighttime Delay", false);
@@ -1085,9 +1099,9 @@ i++;
 		*dot = '\0';
 	}
 
-	ASI_CAMERA_INFO ASICameraInfo;
-
 	processConnectedCameras();	// exits on error
+
+	ASI_CAMERA_INFO ASICameraInfo;
 	ASIGetCameraProperty(&ASICameraInfo, CamNum);
 
 	int iMaxWidth, iMaxHeight;
@@ -1124,7 +1138,7 @@ i++;
 
 	outputCameraInfo(ASICameraInfo, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
 	// checkExposureValues() must come after outputCameraInfo().
-	(void) checkExposureValues(dayExposure_us, dayAutoExposure, nightExposure_us, nightAutoExposure);
+	(void) checkExposureValues(&dayExposure_us, dayAutoExposure, &nightExposure_us, nightAutoExposure);
 
 	// Handle "auto" imageType.
 	if (imageType == AUTO_IMAGE_TYPE)
@@ -1244,11 +1258,10 @@ i++;
 	int originalFontsize = fontsize;
 	int originalLinewidth = linewidth;
 	// Have we displayed "not taking picture during day" message, if applicable?
-	int displayedNoDaytimeMsg = 0;
+	bool displayedNoDaytimeMsg = false;
 
 	while (bMain)
 	{
-
 		// Find out if it is currently DAY or NIGHT
 		dayOrNight = calculateDayOrNight(latitude, longitude, angle);
 		std::string lastDayOrNight = dayOrNight;
@@ -1276,96 +1289,101 @@ i++;
 				system("scripts/copy_notification_image.sh --expires 0 DarkFrames &");
 			}
 		}
-		else {
-			if (dayOrNight == "DAY")
+
+		else if (dayOrNight == "DAY")
+		{
+			if (endOfNight == true)		// Execute end of night script
 			{
-				if (endOfNight == true)		// Execute end of night script
-				{
-					system("scripts/endOfNight.sh &");
+				Log(0, "Processing end of night data\n");
+				system("scripts/endOfNight.sh &");
+				endOfNight = false;
+				displayedNoDaytimeMsg = false;
+			}
 
-					// Reset end of night indicator
-					endOfNight = false;
-
-					displayedNoDaytimeMsg = 0;
-				}
-
-				// Check if images should not be captured during day-time
-				if (! daytimeCapture)
-				{
-					// Only display messages once a day.
-					if (displayedNoDaytimeMsg == 0) {
-						if (notificationImages) {
-							system("scripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &");
-						}
-						Log(0, "It's daytime... we're not saving images.\n%s",
-							tty ? "*** Press Ctrl+C to stop ***\n" : "");
-						displayedNoDaytimeMsg = 1;
-
-						// sleep until around nighttime, then wake up and sleep more if needed.
-						int secsTillNight = calculateTimeToNightTime(latitude, longitude, angle);
-						timeval t;
-						t = getTimeval();
-						t.tv_sec += secsTillNight;
-						Log(1, "Sleeping until %s (%'d seconds)\n", formatTime(t, timeFormat), secsTillNight);
-						sleep(secsTillNight);
+			if (! daytimeCapture)
+			{
+				// Only display messages once a day.
+				if (! displayedNoDaytimeMsg) {
+					if (notificationImages) {
+						system("scripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &");
 					}
-					else
-					{
-						// Shouldn't need to sleep more than a few times before nighttime.
-						int s = 5;
-						Log(1, "Not quite nighttime; sleeping %'d more seconds\n", s);
-						sleep(s);
-					}
+					Log(0, "It's daytime... we're not saving images.\n%s",
+						tty ? "*** Press Ctrl+C to stop ***\n" : "");
+					displayedNoDaytimeMsg = true;
 
-					// No need to do any of the code below so go back to the main loop.
-					continue;
+					// sleep until around nighttime, then wake up and sleep more if needed.
+					int secsTillNight = calculateTimeToNightTime(latitude, longitude, angle);
+					timeval t;
+					t = getTimeval();
+					t.tv_sec += secsTillNight;
+					Log(1, "Sleeping until %s (%'d seconds)\n", formatTime(t, timeFormat), secsTillNight);
+					sleep(secsTillNight);
 				}
-
-				// Images should be captured during day-time
 				else
 				{
-					Log(0, "==========\n=== Starting daytime capture ===\n==========\n");
-
-					currentExposure_us = dayExposure_us;
-					currentMaxAutoexposure_us = dayMaxAutoexposure_us;
-					currentAutoExposure = dayAutoExposure;
-					currentBrightness = dayBrightness;
-					currentAutoAWB = dayAutoAWB;
-					currentWBR = dayWBR;
-					currentWBB = dayWBB;
-					currentDelay_ms = dayDelay_ms;
-					currentBin = dayBin;
-					currentGain = dayGain;
-					currentMaxGain = dayMaxGain;
-					currentAutoGain = dayAutoGain;
-					currentMean = myModeMeanSetting.dayMean;
+					// Shouldn't need to sleep more than a few times before nighttime.
+					int s = 5;
+					Log(1, "Not quite nighttime; sleeping %'d more seconds\n", s);
+					sleep(s);
 				}
-			}
-			else	// NIGHT
-			{
-				Log(0, "==========\n=== Starting nighttime capture ===\n==========\n");
 
-				// Setup the night time capture parameters
-				currentExposure_us = nightExposure_us;
-				currentAutoExposure = nightAutoExposure;
-				currentBrightness = nightBrightness;
+				// No need to do any of the code below so go back to the main loop.
+				continue;
+			}
+
+			else
+			{
+				Log(0, "==========\n=== Starting daytime capture ===\n==========\n");
+
+				currentExposure_us = dayExposure_us;
+				currentMaxAutoexposure_us = dayMaxAutoexposure_us;
+				currentAutoExposure = dayAutoExposure;
+				currentBrightness = dayBrightness;
+				currentAutoAWB = dayAutoAWB;
+				currentWBR = dayWBR;
+				currentWBB = dayWBB;
+				currentDelay_ms = dayDelay_ms;
+				currentBin = dayBin;
+				currentGain = dayGain;
+				currentMaxGain = dayMaxGain;
+				currentAutoGain = dayAutoGain;
+				currentMean = myModeMeanSetting.dayMean;
+			}
+		}
+
+		else	// NIGHT
+		{
+			Log(0, "==========\n=== Starting nighttime capture ===\n==========\n");
+
+			// Setup the night time capture parameters
+			currentExposure_us = nightExposure_us;
+			currentAutoExposure = nightAutoExposure;
+			currentBrightness = nightBrightness;
+			if (ASICameraInfo.IsColorCam)
+			{
 				currentAutoAWB = nightAutoAWB;
 				currentWBR = nightWBR;
 				currentWBB = nightWBB;
-				currentDelay_ms = nightDelay_ms;
-				currentBin = nightBin;
-				currentMaxAutoexposure_us = nightMaxAutoexposure_us;
-				currentGain = nightGain;
-				currentMaxGain = nightMaxGain;
-				currentAutoGain = nightAutoGain;
-				currentMean = myModeMeanSetting.nightMean;
 			}
+			currentDelay_ms = nightDelay_ms;
+			currentBin = nightBin;
+			currentMaxAutoexposure_us = nightMaxAutoexposure_us;
+			currentGain = nightGain;
+			currentMaxGain = nightMaxGain;
+			currentAutoGain = nightAutoGain;
+			currentMean = myModeMeanSetting.nightMean;
 		}
+
 		if (currentMean > 0.0)
 		{
 			myModeMeanSetting.modeMean = true;
 			myModeMeanSetting.meanValue = currentMean;
-			aegInit(currentAutoExposure, currentMaxAutoexposure_us, currentAutoGain, currentMaxGain, myRaspistillSetting, myModeMeanSetting);
+			if (! aegInit(currentAutoExposure, minExposure_us, currentMaxAutoexposure_us, currentExposure_us,
+				currentAutoGain, minGain, currentMaxGain, currentGain,
+				myRaspistillSetting, myModeMeanSetting))
+			{
+				closeUp(EXIT_ERROR_STOP);
+			}
 		}
 		else
 		{
@@ -1406,9 +1424,6 @@ i++;
 			pRgb.create(cv::Size(width, height), CV_8UC1);
 		}
 
-		if (tty)
-			printf("Press Ctrl+C to stop\n\n");
-
 		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)
 		{
@@ -1416,13 +1431,14 @@ i++;
 			// with an image (which has the date/time in the filename).
 			exposureStartDateTime = getTimeval();
 			char exposureStart[128];
-			sprintf(exposureStart, "%s", formatTime(exposureStartDateTime, "%F %T"));
 			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(exposureStartDateTime, "%F %T"));
 			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(myRaspistillSetting.shutter_us, true));
 
 			// Get start time for overlay. Make sure it has the same time as exposureStart.
-			if (showTime == 1)
+			if (showTime)
+			{
 				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, timeFormat));
+			}
 
 			if (! takingDarkFrames)
 			{
@@ -1451,13 +1467,15 @@ i++;
 					else
 						lastGain = currentGain;	// ZWO gain=0.1 dB , RPiHQ gain=factor
 
-					int iYOffset = 0;
-
 					mean = -1;
 					if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
-						mean = aegCalcMean(pRgb, currentExposure_us, currentGain, myRaspistillSetting, myModeMeanSetting);
-						Log(2, "  > Got exposure: %s,", length_in_units(currentExposure_us, false));
+if (lastExposure_us != myRaspistillSetting.shutter_us)
+  Log(0, " xxxx lastExposure_us (%ld) != shutter_us (%ld)\n", lastExposure_us, myRaspistillSetting.shutter_us);
+//xxx						mean = aegCalcMean(pRgb, currentExposure_us, currentGain,
+						mean = aegCalcMean(pRgb, lastExposure_us, lastGain,
+									myRaspistillSetting, myModeMeanSetting);
+						Log(2, "  > Got exposure: %s, gain: %1.3f,", length_in_units(lastExposure_us, false), lastGain);
 						Log(2, " shutter: %s, quickstart: %d, mean=%1.3f\n", length_in_units(myRaspistillSetting.shutter_us, false), myModeMeanSetting.quickstart, mean);
 						if (mean == -1)
 						{
@@ -1473,11 +1491,10 @@ i++;
 						myRaspistillSetting.analoggain = currentGain;
 					}
 
-					// false and 0 are for showTemp, which RPiHQ cameras don't support.
-					iYOffset = doOverlay(pRgb,
+					if (doOverlay(pRgb,
 						showTime, bufTime,
 						showExposure, lastExposure_us, currentAutoExposure,
-						false, 0, "",
+						showTemp, actualTemp, tempType,
  						showGain, lastGain, currentAutoGain, 0,
 						(showMean && mean != -1), mean,
 						showBrightness, currentBrightness,
@@ -1485,12 +1502,11 @@ i++;
 						ImgText, ImgExtraText, extraFileAge,
 						iTextX, iTextY, currentBin, width, iTextLineHeight,
 						fontsize, linewidth, linetype[linenumber], fontname[fontnumber],
-						fontcolor, smallFontcolor, outlinefont, imageType);
-
-					if (iYOffset > 0)	// if we added anything to overlay, write the file out
+						fontcolor, smallFontcolor, outlinefont, imageType) > 0)
 					{
+						// if we added anything to overlay, write the file out
 						bool result = cv::imwrite(fullFilename, pRgb, compressionParameters);
-						if (! result) printf("*** ERROR: Unable to write to '%s'\n", fullFilename);
+						if (! result) fprintf(stderr, "*** ERROR: Unable to write to '%s'\n", fullFilename);
 					}
 				}
 
@@ -1498,13 +1514,12 @@ i++;
 				Log(1, "  > Saving %s image '%s'\n", takingDarkFrames ? "dark" : dayOrNight.c_str(), finalFileName);
 				snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), fullFilename);
 
-				// -999 for temperature says the camera doesn't support it
 				// TODO: in the future the calculation of mean should independent from modeMean. -1 means don't display.
 				float m = (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) ? mean : -1.0;
 				add_variables_to_command(cmd, exposureStartDateTime,
 					lastExposure_us, currentBrightness, m,
 					currentAutoExposure, currentAutoGain, currentAutoAWB, currentWBR, currentWBB,
-					-999, lastGain, currentBin, getFlip(flip), currentBitDepth, focusMetric);
+					actualTemp, lastGain, currentBin, getFlip(flip), currentBitDepth, focusMetric);
 				strcat(cmd, " &");
 
 				system(cmd);

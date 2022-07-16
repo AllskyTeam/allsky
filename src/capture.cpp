@@ -17,7 +17,7 @@
 
 #include "include/allsky_common.h"
 
-#define CAMERA_BRAND			"ZWO"
+#define CAMERA_TYPE			"ZWO"
 #define IS_ZWO
 #include "ASI_functions.cpp"
 
@@ -249,7 +249,8 @@ void *SaveImgThd(void *para)
 			snprintf(cmd, sizeof(cmd), "scripts/saveImage.sh %s '%s'", dayOrNight.c_str(), fullFilename);
 			add_variables_to_command(cmd, exposureStartDateTime,
 				lastExposure_us, currentBrightness, mean,
-				currentAutoExposure, currentAutoGain, currentAutoAWB, (float)actualWBR, (float)actualWBB,
+				currentAutoExposure, currentAutoGain,
+				currentAutoAWB, (float)actualWBR, (float)actualWBB,
 				actualTemp, (float)actualGain, currentBin, getFlip(flip), currentBitDepth, focusMetric);
 			strcat(cmd, " &");
 
@@ -1333,30 +1334,32 @@ i++;
 
 	// Do argument error checking if we're not going to exit soon.
 	// Some checks are done lower in the code, after we processed some values.
+const int minExposure_us = 1;
+const int minGain = 0;
 	if (! saveCC)
 	{
 		// xxxx TODO: NO_MAX_VALUE will be replaced by acutal values
-		validateFloat(&temp_dayMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Daytime Max Auto-Exposure", true);	// camera-specific
+		validateFloat(&temp_dayMaxAutoexposure_ms, minExposure_us/US_IN_MS, NO_MAX_VALUE, "Daytime Max Auto-Exposure", true);	// camera-specific
 			dayMaxAutoexposure_us = temp_dayMaxAutoexposure_ms * US_IN_MS;
-		validateFloat(&temp_dayExposure_ms, 1, dayAutoExposure ? (dayMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Daytime Manual Exposure", true);
+		validateFloat(&temp_dayExposure_ms, minExposure_us/US_IN_MS, dayAutoExposure ? (dayMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Daytime Manual Exposure", true);
 			dayExposure_us = temp_dayExposure_ms * US_IN_MS;
 		validateLong(&dayBrightness, 0, 100, "Daytime Brightness", true);					// camera-specific
 		validateLong(&dayDelay_ms, 10, NO_MAX_VALUE, "Daytime Delay", false);
-		validateLong(&dayMaxGain, 0, NO_MAX_VALUE, "Daytime Max Auto-Gain", true);					// camera-specific
-		validateLong(&dayGain, 0, dayAutoGain ? dayMaxGain : NO_MAX_VALUE, "Daytime Gain", true);
+		validateLong(&dayMaxGain, minGain, NO_MAX_VALUE, "Daytime Max Auto-Gain", true);					// camera-specific
+		validateLong(&dayGain, minGain, dayAutoGain ? dayMaxGain : NO_MAX_VALUE, "Daytime Gain", true);
 		validateLong(&dayBin, 1, NO_MAX_VALUE, "Daytime Binning", false);								// camera-specific
 		validateLong(&dayWBR, 0, NO_MAX_VALUE, "Daytime Red Balance", true);							// camera-specific
 		validateLong(&dayWBB, 0, NO_MAX_VALUE, "Daytime Blue Balance", true);						// camera-specific
 		validateLong(&daySkipFrames, 0, 50, "Daytime Skip Frames", true);
 
-		validateFloat(&temp_nightMaxAutoexposure_ms, 1, NO_MAX_VALUE, "Nighttime Max Auto-Exposure", true);	// camera-specific
+		validateFloat(&temp_nightMaxAutoexposure_ms, minExposure_us/US_IN_MS, NO_MAX_VALUE, "Nighttime Max Auto-Exposure", true);	// camera-specific
 			nightMaxAutoexposure_us = temp_nightMaxAutoexposure_ms * US_IN_MS;
-		validateFloat(&temp_nightExposure_ms, 1, nightAutoExposure ? (nightMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Nighttime Manual Exposure", true);
+		validateFloat(&temp_nightExposure_ms, minExposure_us/US_IN_MS, nightAutoExposure ? (nightMaxAutoexposure_us/US_IN_MS) : NO_MAX_VALUE, "Nighttime Manual Exposure", true);
 			nightExposure_us = temp_nightExposure_ms * US_IN_MS;
 		validateLong(&nightBrightness, 0, 100, "Nighttime Brightness", true);				// camera-specific
 		validateLong(&nightDelay_ms, 10, NO_MAX_VALUE, "Nighttime Delay", false);
-		validateLong(&nightMaxGain, 0, NO_MAX_VALUE, "Nighttime Max Auto-Gain", true);				// camera-specific
-		validateLong(&nightGain, 0, nightAutoGain ? nightMaxGain : NO_MAX_VALUE, "Nighttime Gain", true);
+		validateLong(&nightMaxGain, minGain, NO_MAX_VALUE, "Nighttime Max Auto-Gain", true);				// camera-specific
+		validateLong(&nightGain, minGain, nightAutoGain ? nightMaxGain : NO_MAX_VALUE, "Nighttime Gain", true);
 		validateLong(&nightBin, 1, NO_MAX_VALUE, "Nighttime Binning", false);							// camera-specific
 		validateLong(&nightWBR, 0, NO_MAX_VALUE, "Nighttime Red Balance", true);						// camera-specific
 		validateLong(&nightWBB, 0, NO_MAX_VALUE, "Nighttime Blue Balance", true);					// camera-specific
@@ -1495,7 +1498,7 @@ i++;
 
 	outputCameraInfo(ASICameraInfo, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
 	// checkExposureValues() must come after outputCameraInfo().
-	(void) checkExposureValues(dayExposure_us, dayAutoExposure, nightExposure_us, nightAutoExposure);
+	(void) checkExposureValues(&dayExposure_us, dayAutoExposure, &nightExposure_us, nightAutoExposure);
 
 #ifdef USE_HISTOGRAM
 	int centerX, centerY;
@@ -2067,13 +2070,14 @@ i++;
 		int histogram[256];
 #endif
 
+		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)
 		{
 			// date/time is added to many log entries to make it easier to associate them
 			// with an image (which has the date/time in the filename).
 			exposureStartDateTime = getTimeval();
 			char exposureStart[128];
-			sprintf(exposureStart, "%s", formatTime(exposureStartDateTime, "%F %T"));
+			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(exposureStartDateTime, "%F %T"));
 			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(currentExposure_us, true));
 
 			// Get start time for overlay. Make sure it has the same time as exposureStart.
@@ -2395,9 +2399,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 				// If takingDarkFrames is off, add overlay text to the image
 				if (! takingDarkFrames)
 				{
-					int iYOffset = 0;
-
-					iYOffset = doOverlay(pRgb,
+					(void) doOverlay(pRgb,
 						showTime, bufTime,
 						showExposure, lastExposure_us, currentAutoExposure,
 						showTemp, actualTemp, tempType,
@@ -2409,7 +2411,6 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						iTextX, iTextY, currentBin, width, iTextLineHeight,
 						fontsize, linewidth, linetype[linenumber], fontname[fontnumber],
 						fontcolor, smallFontcolor, outlinefont, imageType);
-					iYOffset += 0;		// keeps compiler quiet about "not used" message
 
 #ifdef USE_HISTOGRAM
 					if (showHistogramBox && usedHistogram)

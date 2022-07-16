@@ -17,7 +17,7 @@
 
 #include "include/allsky_common.h"
 
-#define CAMERA_BRAND			"ZWO"
+#define CAMERA_TYPE			"ZWO"
 #define IS_ZWO
 #include "ASI_functions.cpp"
 

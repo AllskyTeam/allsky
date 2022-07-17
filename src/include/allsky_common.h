@@ -26,59 +26,13 @@
 
 // Defaults
 #define NOT_SET						-1				// signifies something isn't set yet
-#define NO_MAX_VALUE				9999999		// signifies a number has no maximum value
-#define DEFAULT_NOTIFICATIONIMAGES	true
-#define DEFAULT_SAVEDIR				"tmp"
-#define DEFAULT_FILENAME			"image.jpg"
-#define DEFAULT_TIMEFORMAT			"%Y%m%d %H:%M:%S"	// format to display time in
-#define DEFAULT_LOCALE				"en_US.UTF-8"
+#define NO_MAX_VALUE				9999999		// signifies a number has no maximum value//
 #define AUTO_IMAGE_TYPE				99	// must match what's in the camera_settings.json file
-#define DEFAULT_IMAGE_TYPE			AUTO_IMAGE_TYPE
-#define DEFAULT_DAYEXPOSURE_MS		32		// ms
-#define DEFAULT_DAYAUTOEXPOSURE		true
-#define DEFAULT_DAYMAXAUTOEXPOSURE_MS (30 * MS_IN_SEC)
-#define DEFAULT_NIGHTEXPOSURE_MS	(20 * MS_IN_SEC)
-#define DEFAULT_NIGHTAUTOEXPOSURE	true
-#define DEFAULT_NIGHTMAXAUTOEXPOSURE_MS (60 * MS_IN_SEC)
-#define DEFAULT_DAYDELAY_MS			(5 * MS_IN_SEC)		// 5 seconds
-#define DEFAULT_NIGHTDELAY_MS		(10 * MS_IN_SEC)	// 10 seconds
-#define DEFAULT_DAYAUTOAWB			false
-#define DEFAULT_NIGHTAUTOAWB		false
-#define DEFAULT_DAYBIN				1		// binning during the day probably isn't too useful...
-#define DEFAULT_NIGHTBIN			1
-#define DEFAULT_DAYMEAN				0.5		// target daytime mean brightness
-#define DEFAULT_NIGHTMEAN			0.2		// target nighttime mean brightness
-#define DEFAULT_DAYTIMECAPTURE		false	// Capture images during the day?
-
-#define DEFAULT_DAYSKIPFRAMES		5
-#define DEFAULT_NIGHTSKIPFRAMES		1
-#define DEFAULT_FLIP				0		// no flipping
-#define DEFAULT_WIDTH				0
-#define DEFAULT_HEIGHT				0
-#define	DEFAULT_LONGITUDE			""
-#define DEFAULT_LATITUDE			""
-#define DEFAULT_ANGLE				-6.0
-#define DEFAULT_JPG_QUALITY			95
-#define DEFAULT_PNG_COMPRESSION		3
-#define DEFAULT_DEBUG_LEVEL			1
-
+#define DEFAULT_DAYMEAN				0.5
+#define DEFAULT_NIGHTMEAN			0.2
 
 // Default overlay values - will go away once external overlay program is implemented
-#define DEFAULT_FONTNUMBER			0
-#define DEFAULT_ITEXTX				15
-#define DEFAULT_ITEXTY				25
-#define DEFAULT_ITEXTLINEHEIGHT		30
 #define SMALLFONTSIZE_MULTIPLIER	0.08
-#define DEFAULT_LINEWIDTH			1
-#define DEFAULT_OUTLINEFONT			false
-#define DEFAULT_LINENUMBER			0
-#define DEFAULT_SHOWTIME			true	// Show the date/time in the overlay?
-#define DEFAULT_SHOWTEMP			false	// Show the sensor temperature?
-#define DEFAULT_SHOWEXPOSURE		false	// Show the exposure length?
-#define DEFAULT_SHOWGAIN			false	// Show the gain?
-#define DEFAULT_SHOWBRIGHTNESS		false	// Show the brightness?
-#define DEFAULT_SHOWMEAN			false	// Show the mean brightness?
-#define DEFAULT_SHOWFOCUS			false	// Show the focus metric?
 
 // Exit codes.  Need to match what's in allsky.sh
 #define EXIT_OK						0
@@ -87,17 +41,175 @@
 #define EXIT_ERROR_STOP				100		// Got an unrecoverable ERROR
 #define EXIT_NO_CAMERA				101		// Could not find a camera - is unrecoverable
 
+enum isDayOrNight {
+	isDay,
+	isNight
+};
+
+enum cameraType {
+	ctZWO,
+	ctRPi
+};
+
+// Use long instead of int so we can use validateLong() without creating validateInt().
+struct overlay {
+	char const *ImgText;
+	char const *ImgExtraText;
+	long extraFileAge;
+	long iTextLineHeight;
+	long iTextX, iTextY;					// calculated for day and night
+	char const *fontname_s;					// fontnames[fontnumber] (calculated value)
+	long fontnumber;
+	int fontcolor[3];
+	char const *fc;							// string version of fontcolor[]
+	int smallFontcolor[3];
+	char const *sfc;						// string version of smallfontcolor[]
+	int linetype[3];
+	long linenumber;
+	double fontsize;						// calculated for day and night
+	long linewidth;							// calculated for day and night
+	bool outlinefont;
+	bool showTime;
+	bool showExposure;
+	bool showTemp;
+	bool showGain;
+	bool showBrightness;
+	bool showMean;
+	bool showFocus;
+	bool showHistogramBox;
+	bool externalOverlay;
+};
+
+// Histogram Box, ZWO only
+struct HB {
+	int histogramBoxSizeX;				// width of box in pixels
+	int currentHistogramBoxSizeX;		// day and night values can be different
+	int histogramBoxSizeY;				// height of box in pixels
+	int currentHistogramBoxSizeY;		// day and night values can be different
+	float histogramBoxPercentFromLeft;	// e.g., 25% means left side starts 25% of the image width
+	float histogramBoxPercentFromTop;	// ditto for top percent
+	int centerX, centerY;				// center X and Y pixel (calculated value)
+	int leftOfBox, topOfBox;			// top left pixel (calculated value)
+	int rightOfBox, bottomOfBox;		// bottom right pixel (calculated value)
+	char const *sArgs;					// string version of arguments
+};
+
+struct myModeMeanSetting {
+	bool modeMean;
+	double nightMean, dayMean;
+	double currentMean;
+	double Mean;						// (calculated value)
+	double mean_threshold;
+	double mean_p0, mean_p1, mean_p2;
+};
+
+
+struct config {			// for configuration variables
+	// Camera number, type and model
+	int cameraNumber;						// 0 to number-of-cameras-attached minus 1
+	cameraType ct;
+	char const *cm;
+
+	bool isColorCamera;						// xxx from ASICameraInfo.IsColorCam)
+	bool isCooledCamera;					// from ASICameraInfo.IsCoolerCam
+	bool supportsTemperature;				// sensor temperature from ASICameraInfo
+	bool supportsAggression;				// currently ZWO only
+	bool gainTransitionTimeImplemented;		// currently ZWO only
+	long cameraMinExposure_us;				// camera's minimum exposure - camera dependent
+	long cameraMaxExposure_us;				// camera's maximum exposure - camera dependent
+	long cameraMaxAutoExposure_us;			// camera's max auto-exposure
+
+	// The following are settings based on command-line arguments
+	bool help;
+	bool quietExit;
+	const char *version;
+	bool isLibcamera;						// RPi only
+	char const *saveDir;
+	char const *CC_saveDir;	bool saveCC;
+	bool tty;
+	bool preview;
+	bool daytimeCapture;					// capture images during daytime?
+	char const *timeFormat;
+
+	bool dayAutoExposure, nightAutoExposure;
+	long dayMaxAutoExposure_us, nightMaxAutoExposure_us;
+	long dayExposure_us, nightExposure_us;
+	long dayBrightness, nightBrightness;
+	long dayDelay_ms, nightDelay_ms;
+	bool dayAutoGain, nightAutoGain;
+	double dayMaxAutoGain, nightMaxAutoGain;
+	double dayGain, nightGain;
+	long dayBin, nightBin;
+	bool dayAutoAWB, nightAutoAWB;
+	double dayWBR, nightWBR, dayWBB, nightWBB;
+	long daySkipFrames, nightSkipFrames;
+	bool dayEnableCooler, nightEnableCooler;
+	long dayTargetTemp, nightTargetTemp;
+	// These are entered in ms and we convert to us later
+	double temp_dayExposure_ms;
+	double temp_nightExposure_ms;
+	double temp_dayMaxAutoExposure_ms;
+	double temp_nightMaxAutoExposure_ms;
+
+	double saturation;
+	long gamma;
+	long offset;
+	long aggression;
+	long gainTransitionTime;
+	long width, height;						// image width and height
+	long imageType;
+	char const *sType;						// string version of imageType
+	long quality, qualityJPG, qualityPNG;
+	bool asiAutoBandwidth;
+	long asiBandwidth, minAsiBandwidth, maxAsiBandwidth;
+	char const *fileName;
+		char fileNameOnly[50];
+		// final name of the file that's written to disk, with no directories
+		char finalFileName[200];
+		// full name of file written to disk
+		char fullFilename[1000];
+	long rotation;
+	long flip;
+	bool notificationImages;
+	char const *tempType;
+	char const *latitude, *longitude;
+	float angle;
+	bool takingDarkFrames;
+	char const *locale;
+	long debugLevel;
+	bool consistentDelays;
+	bool videoOffBetweenImages;
+	char const *ASIversion;					// calculated value
+
+	struct overlay overlay;
+	struct myModeMeanSetting myModeMeanSetting;
+	struct HB HB;							// Histogram Box, ZWO only
+
+	// Current values - may vary between day and night
+	bool currentAutoExposure;
+	long currentMaxAutoExposure_us;
+	long currentExposure_us;
+	long currentBrightness;
+	int currentDelay_ms;
+	bool currentAutoGain;
+	double currentMaxAutoGain;
+	double currentGain;
+	long currentBin;
+	bool currentAutoAWB;
+	double currentWBR, currentWBB;
+	long currentSkipFrames;
+	bool currentEnableCooler;
+	long currentTargetTemp;
+};
+
 // Global variables and functions.
-extern long debugLevel;
 extern char debug_text[];
-extern bool tty;
-extern bool notificationImages;
+extern char allskyHome[];
 extern std::string dayOrNight;
-extern bool quietExit;
 extern bool gotSignal;
 extern bool bDisplay;
 extern pthread_t threadDisplay;
-extern int CamNum;
+extern config cg;
 
 void cvText(cv::Mat, const char *, int, int, double,
 	int, int,
@@ -120,18 +232,8 @@ char const *c(char const *);
 void closeUp(int);
 char const *yesNo(bool);
 char *length_in_units(long, bool);
-int doOverlay(cv::Mat,
-	bool, char *,
-	bool, long, bool,
-	bool, int, const char *,
-	bool, float, bool, int,
-	bool, float,
-	bool, int,
-	bool, int,
-	const char *, const char *, int,
-	int, int, int, int, int,
-	int, int, int, int,
-	int[], int[], bool, int);
+int doOverlay(cv::Mat, config, char *,
+	long, int, float, int, float, int);
 bool getBoolean(const char *);
 double get_focus_metric(cv::Mat);
 char const *getFlip(int);
@@ -141,3 +243,12 @@ void IntHandle(int);
 int stopVideoCapture(int);
 bool validateLong(long *, long, long, char const *, bool);
 bool validateFloat(double *, double, double, char const *, bool);
+void displayHeader(config);
+void displayHelp(config);
+void displaySettings(config);
+char *LorF(double, char const *, char const *);
+bool daytimeSleep(bool, config);
+void delayBetweenImages(config, long, std::string);
+void setDefaults(config *, cameraType);
+char const *getCameraCommand(bool);
+void getCommandLineArguments(config *, int, char *[]);

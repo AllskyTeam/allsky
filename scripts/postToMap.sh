@@ -206,9 +206,9 @@ else
 		OK=false
 	elif [ -n "${WEBSITE_URL}" ]; then		# they specified both
 		# The domain names (or IP addresses) must be the same.
-		W="$(get_domain "${WEBSITE_URL}")"
-		I="$(get_domain "${IMAGE_URL}")"
-		if [ "${W}" != "${I}" ]; then
+		Wurl="$(get_domain "${WEBSITE_URL}")"
+		Iurl="$(get_domain "${IMAGE_URL}")"
+		if [ "${Wurl}" != "${Iurl}" ]; then
 			E="ERROR: The Website and Image URLs must have the same domain name or IP address.${BR}${E}"
 			OK=false
 		fi

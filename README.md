@@ -176,7 +176,18 @@ A demo of the WebUI is available [**here**](http://thomasjacquin.com/allsky-port
 	
 ---
 </details>
+<!--  Eventually put these in a Wiki web page
+## Screenshots
+Here are some screenshots:
 
+![](http://www.thomasjacquin.com/allsky-portal/screenshots/connection-info.jpg)
+![](http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg)
+![](http://www.thomasjacquin.com/allsky-portal/screenshots/wifi-list.jpg)
+![](http://www.thomasjacquin.com/allsky-portal/screenshots/change-password.jpg)
+![](http://www.thomasjacquin.com/allsky-portal/screenshots/days-list.jpg)
+![](http://www.thomasjacquin.com/allsky-portal/screenshots/images-list.jpg)
+![](http://www.thomasjacquin.com/allsky-portal/screenshots/system-info.jpg)
+-->
 
 &nbsp;
 <!-- =============================================================================== --> 

@@ -42,20 +42,6 @@ modify_locations()
 		"${ALLSKY_WEBUI}/includes/functions.php"
 }
 
-# Set up lighttpd to only save 2 weeks of log files instead of the default of 12.
-modify_logrotate()
-{
-	WEEKS=2
-	echo -e "${GREEN}* Modifying lighttpd in to save ${WEEKS} weeks of logs.${NC}"
-	ROTATE_CONFIG=/etc/logrotate.d/lighttpd
-	if [ -f "${ROTATE_CONFIG}" ]; then
-		sed -i "s; rotate [0-9]*; rotate ${WEEKS};" "${ROTATE_CONFIG}"
-		systemctl restart logrotate
-	else
-		echo -e "${YELLOW}* WARNING: '${ROTATE_CONFIG}' not found; continuing.${NC}"
-	fi
-}
-
 do_sudoers()
 {
 	echo -e "${GREEN}* Creating/updating sudoers file${NC}"

@@ -2,6 +2,8 @@
 define('ALLSKY_HOME', 'XX_ALLSKY_HOME_XX');			// value updated during installation
 define('ALLSKY_SCRIPTS', 'XX_ALLSKY_SCRIPTS_XX');	// value updated during installation
 define('ALLSKY_WEBSITE', 'XX_ALLSKY_WEBSITE_XX');	// value updated during installation
+define('ALLSKY_OWNER', 'XX_ALLSKY_OWNER_XX');		// value updated during installation
+define('ALLSKY_GROUP', 'XX_ALLSKY_GROUP_XX');		// value updated during installation
 
 $content = "";
 $path = "";
@@ -44,8 +46,7 @@ if (file_put_contents($tempFile, $content) == false) {
 	// shell_exec() doesn't return anything unless there is an error.
 	$msg = shell_exec("x=\$(sudo mv '$tempFile' '$file' 2>&1) || echo 'Unable to mv [$tempFile] to [$file]': \${x}");
 	if ($msg == "") {
-// TODO: don't hard-code login/group
-		shell_exec("sudo chown pi:www-data '$file'; sudo chmod 664 '$file'");
+		shell_exec("sudo chown " . ALLSKY_OWNER . ":" . ALLSKY_GROUP . " '$file'; sudo chmod 664 '$file'");
 // TODO: 
 // echo ALLSKY_SCRIPTS . "/upload.sh";
 	} else {

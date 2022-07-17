@@ -115,10 +115,7 @@ bool aegInit(config cg, int minExposure_us, double minGain,
 // Calculate mean of current image.
 float aegCalcMean(cv::Mat image)
 {
-	//Hauptvariablen
-	double mean;
-	double mean_diff;
-	double max_;			// calculate std::max() by itself to make the code easier to read.
+	float mean;
 
 	// Only create the destination image and mask the first time we're called.
 	static cv::Mat mask;
@@ -178,10 +175,12 @@ float aegCalcMean(cv::Mat image)
 
 // Calculate then new exposure and gain values.
 // Algorithm not perfect, but better than no exposure control at all
-void aegGetNextExposureSettings(double prevMean, int exposure_us, double gain,
+void aegGetNextExposureSettings(float prevMean, int exposure_us, double gain,
 		raspistillSetting & currentRaspistillSetting,
 		modeMeanSetting & currentModeMeanSetting)
 {
+	double mean_diff;
+	double max_;			// calculate std::max() by itself to make the code easier to read.
 	// get old exposureTime_s in seconds
 	double exposureTime_s = (double) currentRaspistillSetting.shutter_us/(double)US_IN_SEC;
 
@@ -244,7 +243,7 @@ void aegGetNextExposureSettings(double prevMean, int exposure_us, double gain,
 		ExposureChange = currentModeMeanSetting.shuttersteps / 2;
 	}
 
-int const maxChange = 75;		// xxxxx for testing: s/50/75/
+	int const maxChange = 75;		// xxxxx for testing: s/50/75/
 	ExposureChange = std::min(maxChange, ExposureChange);			// limit how big of a change we make each time
 	dExposureChange = ExposureChange - lastExposureChange;
 	lastExposureChange = ExposureChange;

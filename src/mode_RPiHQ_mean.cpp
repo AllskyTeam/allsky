@@ -45,8 +45,7 @@ double calcExposureTimeEff (int exposureLevel, modeMeanSetting &currentModeMeanS
 }
 
 // set limits.  aeg == Auto Exposure / Gain
-bool aegInit(bool autoExposure, int minExposure_us, int maxExposure_us, int initialExposure_us,
-		bool autoGain, double minGain, double maxGain, double initialGain,
+bool aegInit(config cg, int minExposure_us, double minGain,
 		raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
 {
 	// Init some values first
@@ -59,11 +58,12 @@ bool aegInit(bool autoExposure, int minExposure_us, int maxExposure_us, int init
 			return false;
 		}
 
-// XXXXXX    TODO:  Does this need to be done every change between day and night?
+		// XXXXXX    Does this need to be done every transition between day and night,
+		// or just once when Allsky starts?
 		// first exposure with currentRaspistillSetting.shutter_us, so we have to calculate the startpoint for ExposureLevel
-		initialExposureLevel = calcExposureLevel(initialExposure_us, initialGain, currentModeMeanSetting) - 1;
+		initialExposureLevel = calcExposureLevel(cg.currentExposure_us, cg.currentGain, currentModeMeanSetting) - 1;
 		currentModeMeanSetting.exposureLevel = initialExposureLevel;
-		currentRaspistillSetting.shutter_us = initialExposure_us;
+		currentRaspistillSetting.shutter_us = cg.currentExposure_us;
 
 		for (int i=0; i < currentModeMeanSetting.historySize; i++) {
 			// Pretend like all prior images had the target mean and initial exposure level.
@@ -73,58 +73,52 @@ bool aegInit(bool autoExposure, int minExposure_us, int maxExposure_us, int init
 	}
 
 	// check and set meanAuto
-	if (autoGain && autoExposure)
+	if (cg.currentAutoGain && cg.currentAutoExposure)
 		currentModeMeanSetting.meanAuto = MEAN_AUTO;
-	else if (autoGain)
+	else if (cg.currentAutoGain)
 		currentModeMeanSetting.meanAuto = MEAN_AUTO_GAIN_ONLY;
-	else if (autoExposure)
+	else if (cg.currentAutoExposure)
 		currentModeMeanSetting.meanAuto = MEAN_AUTO_EXPOSURE_ONLY;
 	else
 		currentModeMeanSetting.meanAuto = MEAN_AUTO_OFF;
 
 	// calculate min and max exposurelevels
 	if (currentModeMeanSetting.meanAuto == MEAN_AUTO) {
-		currentModeMeanSetting.exposureLevelMax = calcExposureLevel(maxExposure_us, maxGain, currentModeMeanSetting) + 1;
+		currentModeMeanSetting.exposureLevelMax = calcExposureLevel(cg.currentMaxAutoExposure_us, cg.currentMaxAutoGain, currentModeMeanSetting) + 1;
 		currentModeMeanSetting.exposureLevelMin = calcExposureLevel(minExposure_us, minGain, currentModeMeanSetting) - 1;
 	}
 	else if (currentModeMeanSetting.meanAuto == MEAN_AUTO_GAIN_ONLY) {
-		currentModeMeanSetting.exposureLevelMax = calcExposureLevel(maxExposure_us, maxGain, currentModeMeanSetting) + 1;
-		currentModeMeanSetting.exposureLevelMin = calcExposureLevel(maxExposure_us, minGain, currentModeMeanSetting) - 1;
+		currentModeMeanSetting.exposureLevelMax = calcExposureLevel(cg.currentMaxAutoExposure_us, cg.currentMaxAutoGain, currentModeMeanSetting) + 1;
+		currentModeMeanSetting.exposureLevelMin = calcExposureLevel(cg.currentMaxAutoExposure_us, minGain, currentModeMeanSetting) - 1;
 	}
 	else if (currentModeMeanSetting.meanAuto == MEAN_AUTO_EXPOSURE_ONLY) {
-		currentModeMeanSetting.exposureLevelMax = calcExposureLevel(maxExposure_us, maxGain, currentModeMeanSetting) + 1;
-		currentModeMeanSetting.exposureLevelMin = calcExposureLevel(minExposure_us, maxGain, currentModeMeanSetting) - 1;
+		currentModeMeanSetting.exposureLevelMax = calcExposureLevel(cg.currentMaxAutoExposure_us, cg.currentMaxAutoGain, currentModeMeanSetting) + 1;
+		currentModeMeanSetting.exposureLevelMin = calcExposureLevel(minExposure_us, cg.currentMaxAutoGain, currentModeMeanSetting) - 1;
 	}
 	else if (currentModeMeanSetting.meanAuto == MEAN_AUTO_OFF) {
-		currentModeMeanSetting.exposureLevelMax = calcExposureLevel(maxExposure_us, maxGain, currentModeMeanSetting) + 1;
-		currentModeMeanSetting.exposureLevelMin = calcExposureLevel(maxExposure_us, maxGain, currentModeMeanSetting) - 1;
+		// xxxx Do we need to set these?  Are they even used in MEAN_AUTO_OFF mode?
+		currentModeMeanSetting.exposureLevelMax = calcExposureLevel(cg.currentMaxAutoExposure_us, cg.currentMaxAutoGain, currentModeMeanSetting) + 1;
+		currentModeMeanSetting.exposureLevelMin = calcExposureLevel(cg.currentMaxAutoExposure_us, cg.currentMaxAutoGain, currentModeMeanSetting) - 1;
 	}
 	currentModeMeanSetting.minExposure_us = minExposure_us;
-	currentModeMeanSetting.maxExposure_us = maxExposure_us;
+	currentModeMeanSetting.maxExposure_us = cg.currentMaxAutoExposure_us;
 	currentModeMeanSetting.minGain = minGain;
-	currentModeMeanSetting.maxGain = maxGain;
+	currentModeMeanSetting.maxGain = cg.currentMaxAutoGain;
 
 	Log(3, "  > Valid exposureLevels: %'1.3f to %'1.3f\n", currentModeMeanSetting.exposureLevelMin, currentModeMeanSetting.exposureLevelMax);
-	Log(3, "  > Starting:   exposure: %s, gain: %1.3f, exposure level: %d\n", length_in_units(initialExposure_us, true), initialGain, initialExposureLevel);
+	Log(3, "  > Starting:   exposure: %s, gain: %1.3f, exposure level: %d\n", length_in_units(cg.currentExposure_us, true), cg.currentGain, initialExposureLevel);
 
 	return true;
 }
 
 
-// Calculate mean of current image and then new exposure and gain values.
-// Algorithm not perfect, but better than no exposure control at all
-float aegCalcMean(cv::Mat image, int exposure_us, double gain,
-		raspistillSetting &currentRaspistillSetting,
-		modeMeanSetting &currentModeMeanSetting)
+// Calculate mean of current image.
+float aegCalcMean(cv::Mat image)
 {
 	//Hauptvariablen
 	double mean;
 	double mean_diff;
-	double this_mean;		// mean of current image
 	double max_;			// calculate std::max() by itself to make the code easier to read.
-
-	// get old exposureTime_s in seconds
-	double exposureTime_s = (double) currentRaspistillSetting.shutter_us/(double)US_IN_SEC;
 
 	// Only create the destination image and mask the first time we're called.
 	static cv::Mat mask;
@@ -178,7 +172,18 @@ float aegCalcMean(cv::Mat image, int exposure_us, double gain,
 			mean /= 65535.0;
 			break;
 	}
-	this_mean = mean;	// save this image's mean so we can return it
+
+	return(mean);	// return this image's mean
+}
+
+// Calculate then new exposure and gain values.
+// Algorithm not perfect, but better than no exposure control at all
+void aegGetNextExposureSettings(double prevMean, int exposure_us, double gain,
+		raspistillSetting & currentRaspistillSetting,
+		modeMeanSetting & currentModeMeanSetting)
+{
+	// get old exposureTime_s in seconds
+	double exposureTime_s = (double) currentRaspistillSetting.shutter_us/(double)US_IN_SEC;
 
 	static int values = 0;
 	// "values" will always be the same value for every image so only calculate once.
@@ -191,10 +196,10 @@ float aegCalcMean(cv::Mat image, int exposure_us, double gain,
 	}
 
 	Log(3, "  > Just got:    shutter_us: %s, mean: %1.3f, target mean: %1.3f, diff (target - mean): %'1.3f, MeanCnt: %d, values: %d\n",
-		length_in_units(currentRaspistillSetting.shutter_us, true), this_mean,
-		currentModeMeanSetting.meanValue, (currentModeMeanSetting.meanValue - this_mean), MeanCnt, values);
+		length_in_units(currentRaspistillSetting.shutter_us, true), prevMean,
+		currentModeMeanSetting.meanValue, (currentModeMeanSetting.meanValue - prevMean), MeanCnt, values);
 
-	meanHistory[MeanCnt % currentModeMeanSetting.historySize] = this_mean;
+	meanHistory[MeanCnt % currentModeMeanSetting.historySize] = prevMean;
 
 	int idx = (MeanCnt + currentModeMeanSetting.historySize) % currentModeMeanSetting.historySize;
 	int idxN1 = (MeanCnt + currentModeMeanSetting.historySize-1) % currentModeMeanSetting.historySize;
@@ -210,16 +215,16 @@ float aegCalcMean(cv::Mat image, int exposure_us, double gain,
 	// gleiche Wertigkeit wie aktueller Wert
 
 	// avg of mean history
-	mean = 0.0;
+	double newMean = 0.0;
 	for (int i=1; i <= currentModeMeanSetting.historySize; i++) {
 		int ii =  (MeanCnt + i) % currentModeMeanSetting.historySize;
-		mean += meanHistory[ii] * (double) i;		// This gives more weight to means later in the history array.
-		Log(5, "  > index: %d, meanHistory[]=%1.3f exposureLevelHistory[]=%d, new mean=%1.3f\n", ii, meanHistory[ii], exposureLevelHistory[ii], mean);
+		newMean += meanHistory[ii] * (double) i;		// This gives more weight to means later in the history array.
+		Log(5, "  > index: %d, meanHistory[]=%1.3f exposureLevelHistory[]=%d, newNean=%1.3f\n", ii, meanHistory[ii], exposureLevelHistory[ii], newMean);
 	}
-	mean += mean_forecast * currentModeMeanSetting.historySize;
-	mean /= (double) values;
-	mean_diff = abs(mean - currentModeMeanSetting.meanValue);
-	Log(3, "  > New mean: %1.3f, mean_forecast: %1.3f, mean_diff (new mean - target mean): %'1.3f, idx=%d, idxN1=%d\n", mean, mean_forecast, mean_diff, idx, idxN1);
+	newMean += mean_forecast * currentModeMeanSetting.historySize;
+	newMean /= (double) values;
+	mean_diff = abs(newMean - currentModeMeanSetting.meanValue);
+	Log(3, "  > New mean: %1.3f, mean_forecast: %1.3f, mean_diff (newMean - target mean): %'1.3f, idx=%d, idxN1=%d\n", newMean, mean_forecast, mean_diff, idx, idxN1);
 
 	int ExposureChange;
 
@@ -249,11 +254,8 @@ int const maxChange = 75;		// xxxxx for testing: s/50/75/
 	bool changeNeeded = false;		// is a change to exposureLevel needed?
 // TODO: make mean_threshold a percent instead of an actual value.  This will allow us to use 0 to 100 for what user enters as mean.
 
-// ??????? shouldn't the following check with "mean" use "this_mean" instead?
-double meanCheck = this_mean;
-	if (meanCheck < (currentModeMeanSetting.meanValue - currentModeMeanSetting.mean_threshold)) {
+	if (prevMean < (currentModeMeanSetting.meanValue - currentModeMeanSetting.mean_threshold)) {
 		// mean too low
-		//xxxxx if ((currentRaspistillSetting.analoggain <= gain) || (currentRaspistillSetting.shutter_us <= exposure_us)) {  // obere Grenze durch Gain und shutter
 		if ((currentRaspistillSetting.analoggain < currentModeMeanSetting.maxGain) || (currentRaspistillSetting.shutter_us < currentModeMeanSetting.maxExposure_us)) {  // obere Grenze durch Gain und shutter
 			changeNeeded = true;
 			currentModeMeanSetting.exposureLevel += ExposureChange;
@@ -263,7 +265,7 @@ double meanCheck = this_mean;
 			Log(3, "  >> Already at max gain (%1.3f) and/or max exposure (%s) - can't go any higher!\n", currentModeMeanSetting.maxGain, length_in_units(currentModeMeanSetting.maxExposure_us, true));
 		}
 	}
-	else if (meanCheck > (currentModeMeanSetting.meanValue + currentModeMeanSetting.mean_threshold))  {
+	else if (prevMean > (currentModeMeanSetting.meanValue + currentModeMeanSetting.mean_threshold))  {
 		// mean too high
 /// xxxxxxx how about minGain?
 		if (exposureTime_s > currentModeMeanSetting.minExposure_us / (double)US_IN_SEC) { // untere Grenze durch shuttertime
@@ -276,7 +278,7 @@ double meanCheck = this_mean;
 		}
 	}
 	else {
-		Log(4, "  >> Image mean good - no changes needed, mean=%1.3f, target mean=%1.3f threshold=%1.3f +++++++++\n", meanCheck, currentModeMeanSetting.meanValue, currentModeMeanSetting.mean_threshold);
+		Log(4, "  >> Prior image mean good - no changes needed, mean=%1.3f, target mean=%1.3f threshold=%1.3f +++++++++\n", prevMean, currentModeMeanSetting.meanValue, currentModeMeanSetting.mean_threshold);
 		if (currentModeMeanSetting.quickstart > 0)
 			currentModeMeanSetting.quickstart = 0;		// Got a good exposure - turn quickstart off if on
 	}
@@ -299,7 +301,7 @@ printf(">>>>>>>>> fastforward=%s\n", fastforward ? "true" : "false");
 		Log(4, "  > FF deactivated\n");
 	}
 
-	//#############################################################################################################
+	//########################################################################
 	// calculate new gain
 if (changeNeeded) { // xxxxx===============
 
@@ -328,17 +330,16 @@ if (changeNeeded) { // xxxxx===============
 			Log(4, "  >> No change to analoggain is %s (is %1.3f) +++\n", isWhat, newGain);
 		}
 	}
-	else if (currentRaspistillSetting.analoggain != gain) {		// it should already be at "gain", but just in case, set it anyhow
+	else if (currentRaspistillSetting.analoggain != gain) {
+		// it should already be at "gain", but just in case, set it anyhow
 		currentRaspistillSetting.analoggain = gain;
 		Log(4, "  >> setting new gain to %1.3f\n", gain);
 	}
  
 	// calculate new exposure time based on the (possibly) new gain
 	if (currentModeMeanSetting.meanAuto == MEAN_AUTO || currentModeMeanSetting.meanAuto == MEAN_AUTO_EXPOSURE_ONLY) {
-		// XXX max_ = std::max((double)currentModeMeanSetting.maxExposure_us / (double)US_IN_SEC, exposureTimeEff_s / currentRaspistillSetting.analoggain);
 		max_ = std::max((double)currentModeMeanSetting.minExposure_us / (double)US_IN_SEC, exposureTimeEff_s / currentRaspistillSetting.analoggain);
 		double eOLD_s = exposureTime_s * US_IN_SEC;
-		//xxxxxx exposureTime_s = std::min((double)exposure_us / (double)US_IN_SEC, max_);
 		double eNEW_s = std::min((double)currentModeMeanSetting.maxExposure_us / (double)US_IN_SEC, max_);
 		if (exposureTime_s == eNEW_s) {
 			Log(4, "  >> No change to exposure time needed +++\n");
@@ -351,9 +352,7 @@ if (changeNeeded) { // xxxxx===============
 		}
 	}
 	else if (0 && currentModeMeanSetting.meanAuto == MEAN_AUTO_EXPOSURE_ONLY) {		// xxxxx don't use
-		//xxxxxx max_ = std::max(currentModeMeanSetting.minExposure_us / (double)US_IN_SEC, exposureTimeEff_s / gain);
 		max_ = std::max((double)currentModeMeanSetting.minExposure_us / (double)US_IN_SEC, exposureTimeEff_s / currentRaspistillSetting.analoggain);
-		//xxxxxx exposureTime_s = std::min((double)exposure_us/(double)US_IN_SEC, max_);
 		exposureTime_s = std::min((double)currentModeMeanSetting.maxExposure_us / (double)US_IN_SEC, max_);
 	}
 	else { // MEAN_AUTO_GAIN_ONLY || MEAN_AUTO_OFF
@@ -372,10 +371,8 @@ if (changeNeeded) { // xxxxx===============
 
 	currentRaspistillSetting.shutter_us = exposureTime_s * (double)US_IN_SEC;
 	Log(3, "  > Next image:  mean: %'1.3f (diff from target: %'1.3f), Exposure level: %'d (minus %d: %d), Exposure time: %s, gain: %1.2f\n",
-		mean, mean_diff,
+		newMean, mean_diff,
 		currentModeMeanSetting.exposureLevel,
 		exposureLevelHistory[idx], currentModeMeanSetting.exposureLevel - exposureLevelHistory[idx],
 		length_in_units(currentRaspistillSetting.shutter_us, true), currentRaspistillSetting.analoggain);
-
-	return(this_mean);
 }

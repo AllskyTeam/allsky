@@ -1,10 +1,10 @@
 [Unit]
-Description=All Sky Camera
+Description=AllSky Camera Service
 After=multi-user.target
 
 [Service]
-User=pi
-ExecStart=/home/pi/allsky/allsky.sh
+User=XX_ALLSKY_OWNER_XX
+ExecStart=XX_ALLSKY_HOME_XX/allsky.sh
 SyslogFacility=local5
 Restart=on-success
 RestartSec=5
@@ -13,7 +13,7 @@ RestartPreventExitStatus=100 101
 ; XXX RestartKillSignal is not recognized by the systemd that comes with Buster (not sure about Bullseye),
 ; so use ExecReload instead.
 ; RestartKillSignal=SIGUSR1
-ExecReload=/home/pi/allsky/scripts/reload.sh $MAINPID
+ExecReload=XX_ALLSKY_HOME_XX/scripts/reload.sh $MAINPID
 
 [Install]
 WantedBy=multi-user.target

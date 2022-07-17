@@ -23,7 +23,6 @@ if [[ ${EUID} -ne 0 ]]; then
 	exit 1
 fi
 
-SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 ALLSKY_OWNER="${SUDO_USER}"
 ALLSKY_GROUP="${SUDO_USER}"
 

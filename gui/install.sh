@@ -27,24 +27,19 @@ CONFIG_DIR="${ALLSKY_CONFIG}"	# settings_*.json files go here
 modify_locations()
 {
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
-	(
-		cd "${ALLSKY_WEBUI}/includes" || exit 1
-		sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-				-e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
-				-e "s;XX_ALLSKY_OWNER_XX;${SUDO_USER};" \
-				-e "s;XX_ALLSKY_GROUP_XX;${SUDO_USER};" \
-				save_file.php
+	# Not all files have all variables
 
-		sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-				-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
-				-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
-				-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
-				-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
-				-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
-				-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
-				-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
-				functions.php
-	)
+	sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
+			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
+			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
+			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
+			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
+			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
+			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};" \
+		"${ALLSKY_WEBUI}/includes/save_file.php" \
+		"${ALLSKY_WEBUI}/includes/functions.php"
 }
 
 # Set up lighttpd to only save 2 weeks of log files instead of the default of 12.

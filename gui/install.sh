@@ -1,11 +1,11 @@
 #!/bin/bash
 
 if [ -z "${ALLSKY_HOME}" ] ; then
-	ALLSKY_HOME=$(realpath "$(dirname "${BASH_ARGV0}")"/..)
+	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")"/..)"
 	export ALLSKY_HOME
 fi
 # shellcheck disable=SC1090
-source ${ALLSKY_HOME}/variables.sh
+source "${ALLSKY_HOME}/variables.sh"
 REPO_DIR="${ALLSKY_HOME}/config_repo"
 
 echo -en '\n'
@@ -30,7 +30,8 @@ modify_locations()
 	(
 		cd "${ALLSKY_WEBUI}/includes" || exit 1
 		sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-				-e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
+				-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+				-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
 				save_file.php
 
 		sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
@@ -134,7 +135,7 @@ sed \
 	-e "s|XX_ALLSKY_IMAGES_XX|${ALLSKY_IMAGES}|g" \
 	-e "s|XX_ALLSKY_WEBUI_XX|${ALLSKY_WEBUI}|g" \
 	-e "s|XX_ALLSKY_WEBSITE_XX|${ALLSKY_WEBSITE}|g" \
-	-e "s|XX_ALLSKY_DOCUMENTATION_XX|${ALLSKY_WEBSITE}|g" \
+	-e "s|XX_ALLSKY_DOCUMENTATION_XX|${ALLSKY_DOCUMENTATION}|g" \
 	"${REPO_FILE}" > "${CONFIG_FILE}"
 chown ${SUDO_USER}:${SUDO_USER} "${CONFIG_FILE}"
 install -m 0644 "${CONFIG_FILE}" "${FINAL_FILE}"
@@ -170,15 +171,15 @@ sed -i -e '/allsky/d' -e '/www-data/d' /etc/sudoers
 do_sudoers
 echo
 
-# As of October 2021, WEBSITE_DIR is a subdirectory of ALLSKY_WEBUI.
-# Before we remove ALLSKY_WEBUI, save WEBSITE_DIR to the partent of ALLSKY_WEBUI, then restore it.
-if [ -d "${WEBSITE_DIR}" ]; then
-	TMP_WEBSITE_DIR="$(dirname "${ALLSKY_WEBUI}")"
-	echo -e "${GREEN}* Backing up ${WEBSITE_DIR} to ${TMP_WEBSITE_DIR}${NC}"
-	sudo mv "${WEBSITE_DIR}" "${TMP_WEBSITE_DIR}"
-	WEBSITE_DIR_NAME="$(basename "${WEBSITE_DIR}")"
+# As of October 2021, ALLSKY_WEBSITE is a subdirectory of ALLSKY_WEBUI.
+# Before we remove ALLSKY_WEBUI, save ALLSKY_WEBSITE to the partent of ALLSKY_WEBUI, then restore it.
+if [ -d "${ALLSKY_WEBSITE}" ]; then
+	TMP_ALLSKY_WEBSITE="$(dirname "${ALLSKY_WEBUI}")"
+	echo -e "${GREEN}* Backing up ${ALLSKY_WEBSITE} to ${TMP_ALLSKY_WEBSITE}${NC}"
+	sudo mv "${ALLSKY_WEBSITE}" "${TMP_ALLSKY_WEBSITE}"
+	ALLSKY_WEBSITE_NAME="$(basename "${ALLSKY_WEBSITE}")"
 else
-	TMP_WEBSITE_DIR=""
+	TMP_ALLSKY_WEBSITE=""
 fi
 
 if [ -d "${ALLSKY_WEBUI}" ]; then
@@ -198,10 +199,10 @@ chown www-data "${CONFIG_DIR}"/raspap.php
 chown www-data "${CONFIG_DIR}"/camera_options_ZWO.json
 chown www-data "${CONFIG_DIR}"/camera_options_RPiHQ.json
 
-# Restore WEBSITE_DIR if it existed before
-if [ "${TMP_WEBSITE_DIR}" != "" ]; then
-	echo -e "${GREEN}* Restoring ${TMP_WEBSITE_DIR}/${WEBSITE_DIR_NAME} to ${ALLSKY_WEBUI}${NC}"
-	sudo mv "${TMP_WEBSITE_DIR}/${WEBSITE_DIR_NAME}" "${ALLSKY_WEBUI}"
+# Restore ALLSKY_WEBSITE if it existed before
+if [ "${TMP_ALLSKY_WEBSITE}" != "" ]; then
+	echo -e "${GREEN}* Restoring ${TMP_ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_NAME} to ${ALLSKY_WEBUI}${NC}"
+	sudo mv "${TMP_ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_NAME}" "${ALLSKY_WEBUI}"
 fi
 
 modify_locations	# replace placeholders in some files with actual path names

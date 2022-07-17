@@ -31,6 +31,8 @@ modify_locations()
 		cd "${ALLSKY_WEBUI}/includes" || exit 1
 		sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 				-e "s;XX_ALLSKY_WEBSITE_XX;${WEBSITE_DIR};" \
+				-e "s;XX_ALLSKY_OWNER_XX;${SUDO_USER};" \
+				-e "s;XX_ALLSKY_GROUP_XX;${SUDO_USER};" \
 				save_file.php
 
 		sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \

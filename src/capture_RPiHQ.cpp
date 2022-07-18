@@ -331,12 +331,11 @@ printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSett
 
 int main(int argc, char *argv[])
 {
-	setDefaults(&cg, ctRPi);
-	cg.ct = ctRPi;
-
-	char * a = getenv("ALLSKY_HOME");
+	char * a = getenv("ALLSKY_HOME");		// This needs to come before anything else
 	if (a != NULL)
 		snprintf(allskyHome, sizeof(allskyHome)-1, "%s/", a);
+
+	setDefaults(&cg, ctRPi);
 
 	cg.tty = isatty(fileno(stdout)) ? true : false;
 	signal(SIGINT, IntHandle);
@@ -390,7 +389,11 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	setlinebuf(stdout);		// Line buffer output so entries appear in the log immediately.
 
-	getCommandLineArguments(&cg, argc, argv);
+	if (! getCommandLineArguments(&cg, argc, argv))
+	{
+		// getCommandLineArguents outputs an error message.
+		exit(EXIT_ERROR_STOP);
+	}
 
 // TODO: after merging myModeMeanSetting into cg.myModeMeanSetting, delete these lines.
 	myModeMeanSetting.dayMean = cg.myModeMeanSetting.dayMean;

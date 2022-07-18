@@ -21,9 +21,14 @@
 
 using namespace std;
 
-
 char debug_text[500];		// buffer to hold debug messages
-long debugLevel = 0;
+static char const *fontnames[]		= {		// Character representation of names for clarity:
+	"SIMPLEX",				"PLAIN",				"DUPEX",
+	"COMPLEX",				"TRIPLEX",				"COMPLEX_SMALL",
+	"SCRIPT_SIMPLEX",		"SCRIPT_COMPLEX" };
+
+//xxxxxxxxxxxxxx TODO: isDayOrNight dayOrNight;
+
 
 /**
  * Helper function to display debug info.
@@ -31,14 +36,14 @@ long debugLevel = 0;
 **/
 void Log(int required_level, const char *fmt, ...)
 {
-	if ((int)abs(debugLevel) >= required_level) {
+	if ((int)abs(cg.debugLevel) >= required_level) {
 		char msg[8192];
 		snprintf(msg, sizeof(msg), "%s", fmt);
 		va_list va;
 		va_start(va, fmt);
 		vfprintf(stdout, msg, va);
 
-		if (debugLevel < 0)
+		if (cg.debugLevel < 0)
 		{
 // xxxx TODO:
 		}
@@ -49,7 +54,7 @@ void Log(int required_level, const char *fmt, ...)
 // Return the string for the specified color, or "" if we're not on a tty.
 char const *c(char const *color)
 {
-	if (tty)
+	if (cg.tty)
 		return(color);
 	else
 		return("");
@@ -475,69 +480,66 @@ const char *checkForValidExtension(const char *fileName, int imageType)
 	}
 }
 
-int doOverlay(cv::Mat image,
-	bool showTime, char *startTime,
-	bool showExposure, long exposure_us, bool autoExposure,
-	bool showTemp, int temp, const char *tempType,
-	bool showGain, float gain, bool autoGain, int gainChange,
-	bool showMean, float mean,
-	bool showBrightness, int brightness,
-	bool showFocus, int focusMetric,
-	const char *ImgText, const char *ImgExtraText, int extraFileAge,
-	int x, int y, int bin, int width, int textLineHeight,
-	int fontSize, int lineWidth, int lineType, int font,
-	int fontColor[], int smallFontColor[], bool useOutline, int imageType)
+int fontname[] = {
+	cv::FONT_HERSHEY_SIMPLEX,			cv::FONT_HERSHEY_PLAIN,		cv::FONT_HERSHEY_DUPLEX,
+	cv::FONT_HERSHEY_COMPLEX,			cv::FONT_HERSHEY_TRIPLEX,	cv::FONT_HERSHEY_COMPLEX_SMALL,
+	cv::FONT_HERSHEY_SCRIPT_SIMPLEX,	cv::FONT_HERSHEY_SCRIPT_COMPLEX };
+
+int doOverlay(cv::Mat image, config cg, char *startTime,
+	long exposure_us, int temp, float gain, int gainChange, float mean, int focusMetric)
 {
 	int iYOffset	= 0;
 	char tmp[128]	= { 0 };
+	int lineType = cg.overlay.linetype[cg.overlay.linenumber];
+	int font = fontname[cg.overlay.fontnumber];
 
-	if (showTime)
+	if (cg.overlay.showTime)
 	{
 		// The time and ImgText are in the larger font; everything else is in smaller font.
-		cvText(image, startTime, x, y + (iYOffset / bin),
-			fontSize * 0.1, lineWidth,
-			lineType, font, fontColor, imageType, useOutline, width);
-		iYOffset += textLineHeight;
+		cvText(image, startTime, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+			cg.overlay.fontsize * 0.1, cg.overlay.linewidth,
+			lineType, font, cg.overlay.fontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
-	if (ImgText[0] != '\0')
+	if (cg.overlay.ImgText[0] != '\0')
 	{
-		cvText(image, ImgText, x, y + (iYOffset / bin),
-			fontSize * 0.1, lineWidth,
-			lineType, font, fontColor, imageType, useOutline, width);
-		iYOffset+=textLineHeight;
+		cvText(image, cg.overlay.ImgText, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+			cg.overlay.fontsize * 0.1, cg.overlay.linewidth,
+			lineType, font, cg.overlay.fontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+		iYOffset+=cg.overlay.iTextLineHeight;
 	}
 
-	if (showTemp)
+	if (cg.overlay.showTemp)
 	{
 		char C[20] = { 0 }, F[20] = { 0 };
-		if (strcmp(tempType, "C") == 0 || strcmp(tempType, "B") == 0)
+		if (strcmp(cg.tempType, "C") == 0 || strcmp(cg.tempType, "B") == 0)
 		{
 			sprintf(C, "  %.0fC", (float)temp / 10);
 		}
-		if (strcmp(tempType, "F") == 0 || strcmp(tempType, "B") == 0)
+		if (strcmp(cg.tempType, "F") == 0 || strcmp(cg.tempType, "B") == 0)
 		{
 			sprintf(F, "  %.0fF", (((float)temp / 10 * 1.8) + 32));
 		}
 		sprintf(tmp, "Sensor: %s %s", C, F);
-		cvText(image, tmp, x, y + (iYOffset / bin),
-			fontSize * SMALLFONTSIZE_MULTIPLIER, lineWidth,
-			lineType, font, smallFontColor, imageType, useOutline, width);
-		iYOffset += textLineHeight;
+		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
+			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
-	if (showExposure)
+	if (cg.overlay.showExposure)
 	{
 		sprintf(tmp, "Exposure: %s", length_in_units(exposure_us, false));
 		// Indicate if in auto-exposure mode.
-		if (autoExposure) strcat(tmp, " (auto)");
-		cvText(image, tmp, x, y + (iYOffset / bin),
-			fontSize * SMALLFONTSIZE_MULTIPLIER, lineWidth,
-			lineType, font, smallFontColor, imageType, useOutline, width);
-		iYOffset += textLineHeight;
+		if (cg.currentAutoExposure) strcat(tmp, " (auto)");
+		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
+			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
-	if (showGain)
+	if (cg.overlay.showGain)
 	{
 		if (gain == (int)gain)
 			snprintf(tmp, sizeof(tmp), "Gain: %d", (int)gain);
@@ -545,7 +547,7 @@ int doOverlay(cv::Mat image,
 			snprintf(tmp, sizeof(tmp), "Gain: %1.2f", gain);
 
 		// Indicate if in auto gain mode.
-		if (autoGain) strcat(tmp, " (auto)");
+		if (cg.currentAutoGain) strcat(tmp, " (auto)");
 		// Indicate if in gain transition mode.
 		if (gainChange != 0)
 		{
@@ -553,40 +555,40 @@ int doOverlay(cv::Mat image,
 			sprintf(x, " (adj: %+d)", gainChange);
 			strcat(tmp, x);
 		}
-		cvText(image, tmp, x, y + (iYOffset / bin),
-			fontSize * SMALLFONTSIZE_MULTIPLIER, lineWidth,
-			lineType, font, smallFontColor, imageType, useOutline, width);
-		iYOffset += textLineHeight;
+		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
+			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
-	if (showBrightness)
+	if (cg.overlay.showBrightness)
 	{
-		sprintf(tmp, "Brightness: %d", brightness);
-		cvText(image, tmp, x, y + (iYOffset / bin),
-			fontSize * SMALLFONTSIZE_MULTIPLIER, lineWidth,
-			lineType, font, smallFontColor, imageType, useOutline, width);
-		iYOffset += textLineHeight;
+		sprintf(tmp, "Brightness: %ld", cg.currentBrightness);
+		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
+			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
-	if (showMean)
+	if (cg.overlay.showMean && mean != 1)
 	{
 		if (mean == (int)mean)
 			snprintf(tmp, sizeof(tmp), "Mean: %d", (int)mean);
 		else
 			snprintf(tmp, sizeof(tmp), "Mean: %.3f", mean);
-		cvText(image, tmp, x, y + (iYOffset / bin),
-			fontSize * SMALLFONTSIZE_MULTIPLIER, lineWidth,
-			lineType, font, smallFontColor, imageType, useOutline, width);
-		iYOffset += textLineHeight;
+		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
+			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
-	if (showFocus)
+	if (cg.overlay.showFocus)
 	{
 		sprintf(tmp, "Focus: %d", focusMetric);
-		cvText(image, tmp, x, y + (iYOffset / bin),
-			fontSize * SMALLFONTSIZE_MULTIPLIER, lineWidth,
-			lineType, font, smallFontColor, imageType, useOutline, width);
-		iYOffset += textLineHeight;
+		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
+			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
 	/**
@@ -594,26 +596,26 @@ int doOverlay(cv::Mat image,
 	 * age of the file exceeds the specified limit then ignore the file.
 	 * This prevents situations where the program updating the file stops working.
 	**/
-	if (ImgExtraText[0] != '\0') {
+	if (cg.overlay.ImgExtraText[0] != '\0') {
 		// Display these messages every time, since it's possible the user will
 		// correct the issue while we're running.
-		if (access(ImgExtraText, F_OK ) == -1 ) {
+		if (access(cg.overlay.ImgExtraText, F_OK ) == -1 ) {
 			Log(1, "  > *** WARNING: Extra Text File Does Not Exist So Ignoring It\n");
-		} else if (access(ImgExtraText, R_OK ) == -1 ) {
+		} else if (access(cg.overlay.ImgExtraText, R_OK ) == -1 ) {
 			Log(1, "  > *** WARNING: Cannot Read From Extra Text File So Ignoring It\n");
 		} else {
-			FILE *fp = fopen(ImgExtraText, "r");
+			FILE *fp = fopen(cg.overlay.ImgExtraText, "r");
 
 			if (fp != NULL) {
 				bool bAddExtra = false;
-				if (extraFileAge > 0) {
+				if (cg.overlay.extraFileAge > 0) {
 					struct stat buffer;
-					if (stat(ImgExtraText, &buffer) == 0) {
+					if (stat(cg.overlay.ImgExtraText, &buffer) == 0) {
 						struct tm modifiedTime = *localtime(&buffer.st_mtime);
 						time_t now = time(NULL);
 						double ageInSeconds = difftime(now, mktime(&modifiedTime));
-						Log(4, "  > Extra Text File (%s) Modified %.1f seconds ago", ImgExtraText, ageInSeconds);
-						if (ageInSeconds < extraFileAge) {
+						Log(4, "  > Extra Text File (%s) Modified %.1f seconds ago", cg.overlay.ImgExtraText, ageInSeconds);
+						if (ageInSeconds < cg.overlay.extraFileAge) {
 							Log(1, ", so Using It\n");
 							bAddExtra = true;
 						} else {
@@ -638,11 +640,11 @@ int doOverlay(cv::Mat image,
 							line[slen-1] = '\0';
 						}
 
-						cvText(image, line, x, y + (iYOffset / bin),
-							fontSize * SMALLFONTSIZE_MULTIPLIER, lineWidth,
+						cvText(image, line, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+							cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
 							lineType, font,
-							smallFontColor, imageType, useOutline, width);
-						iYOffset += textLineHeight;
+							cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+						iYOffset += cg.overlay.iTextLineHeight;
 					}
 				}
 				fclose(fp);
@@ -693,7 +695,7 @@ char const *getFlip(int f)
 // Exit the program gracefully.
 void closeUp(int e)
 {
-	if (quietExit) exit(e);		// Called manually so don't display anything.
+	if (cg.quietExit) exit(e);		// Called manually so don't display anything.
 
 	static bool closingUp = false;		// indicates if we're in the process of exiting.
 	// For whatever reason, we're sometimes called twice, but we should only execute once.
@@ -701,12 +703,12 @@ void closeUp(int e)
 
 	closingUp = true;
 
-	stopVideoCapture(CamNum);
+	stopVideoCapture(cg.cameraNumber);
 	// Seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
 	// until the exposure finishes, then it never returns so the remaining code doesn't
 	// get executed. Don't know a way around that, so don't bother closing the camera.
 	// Prior versions of allsky didn't do any cleanup, so it should be ok not to close the camera.
-	//	ASICloseCamera(CamNum);
+	//	ASICloseCamera(cg.cameraNumber);
 
 	// Close the optional display window.	// not used by RPi
 	if (bDisplay)
@@ -717,16 +719,18 @@ void closeUp(int e)
 	}
 
 	char const *a = "Stopping";
-	if (notificationImages) {
+	if (cg.notificationImages) {
+		char cmd[256];
 		if (e == EXIT_RESTARTING)
 		{
-			system("scripts/copy_notification_image.sh --expires 15 Restarting &");
+			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 15 Restarting &", allskyHome);
 			a = "Restarting";
 		}
 		else
 		{
-			system("scripts/copy_notification_image.sh --expires 2 NotRunning &");
+			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 2 NotRunning &", allskyHome);
 		}
+		system(cmd);
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
 		// before the one below. This is only so it looks nicer in the log file.
 		sleep(3);
@@ -810,4 +814,960 @@ bool validateFloat(double *num, double min, double max, char const *name, bool e
 	}
 
 	return true;
+}
+
+
+// Display the header whenever Allsky starts.
+void displayHeader(config cg)
+{
+	// Display the version
+	printf("\n%s", c(KGRN));
+	char v[100]; snprintf(v, sizeof(v), "*** Allsky Camera Software Version %s ***", cg.version);
+	for (size_t i=0; i<strlen(v); i++) printf("*");
+	printf("\n");
+	printf("%s\n", v);
+	for (size_t i=0; i<strlen(v); i++) printf("*");
+	printf("\n\n");
+
+	if (cg.ct == ctZWO)
+		printf("Capture images of the sky with a Raspberry Pi and a ZWO ASI camera\n");
+	else
+		printf("Capture images of the sky with a Raspberry Pi and an RPi camera\n");
+	printf("%s\n", c(KNRM));
+
+	if (! cg.help) printf("%sAdd -h or --help for available options%s\n\n", c(KYEL), c(KNRM));
+	printf("Author: Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
+	printf("Contributors:\n");
+	printf(" -Knut Olav Klo\n");
+	printf(" -Daniel Johnsen\n");
+	printf(" -Robert Wagner\n");
+	printf(" -Michael J. Kidd - <linuxkidd@gmail.com>\n");
+	printf(" -Rob Musquetier\n");	
+	if (cg.ct == ctZWO) {
+		printf(" -Yang and Sam from ZWO\n");
+		printf(" -Chris Kuethe\n");
+	}
+	printf(" -Eric Claeys\n");
+	printf(" -Andreas Lindinger\n");
+	printf("\n");
+}
+
+
+// Display the help message.
+void displayHelp(config cg)
+{
+	int const n = 25;		// width of argument name
+	printf("%sUsage:\n", c(KRED));
+	printf(" capture%s -width 0 -height 0 -nightexposure 5000000 -daybin 1 -nightbin 2\n\n", cg.ct == ctRPi ? "_RPiHQ" : "");
+	printf("%s", c(KNRM));
+	printf("%sAvailable Arguments (see the WebUI for more details):\n", c(KYEL));
+	printf("     'b' is a boolean (0 or 1), 'n' is a number, 's' is a string\n");
+	printf("     %'d ms (milli-seconds) = 1 second.  %'d us (micro-seconds) = 1 second.\n", 1000, 1000000);
+	printf("     Defaults are in [brackets].\n");
+
+	printf("\nDaytime settings:\n");
+	printf(" -%-*s - 1 enables daytime auto-exposure [%s].\n", n, "dayautoexposure b", yesNo(cg.dayAutoExposure));
+	printf(" -%-*s - Maximum daytime auto-exposure in ms [%'ld].\n", n, "daymaxexposure n", cg.dayMaxAutoExposure_us);
+	printf(" -%-*s - Daytime exposure in us [%'ld].\n", n, "dayexposure n", cg.dayExposure_us);
+	printf(" -%-*s - Daytime mean target brightness [%.2f].\n", n, "daymean", cg.myModeMeanSetting.dayMean);
+	printf("  %-*s   NOTE: Daytime auto-gain and auto-exposure should be on for best results.\n", n, "");
+	printf(" -%-*s - Daytime brightness change [%'ld].\n", n, "daybrightness n", cg.dayBrightness);
+	printf(" -%-*s - Delay between daytime images in ms [%'ld].\n", n, "dayDelay n", cg.dayDelay_ms);
+	printf(" -%-*s - 1 enables daytime auto gain [%s].\n", n, "dayautogain b", yesNo(cg.dayAutoGain));
+	printf(" -%-*s - Daytime maximum auto gain [%s].\n", n, "daymaxautogain n", LorF(cg.dayMaxAutoGain, "%ld", "%.2f"));
+	printf(" -%-*s - Daytime gain [%s].\n", n, "daygain n", LorF(cg.dayGain, "%ld", "%.2f"));
+	printf(" -%-*s - 1 = binning OFF (1x1), 2 = 2x2 binning, etc. [%ld]\n", n, "daybin n", cg.dayBin);
+	printf(" -%-*s - 1 enables auto White Balance [%s].\n", n, "dayautowhitebalance b", yesNo(cg.dayAutoAWB));
+	printf(" -%-*s - Manual White Balance Red [%s].\n", n, "daywbr n", LorF(cg.dayWBR, "%ld", "%.2f"));
+	printf(" -%-*s - Manual White Balance Blue [%s].\n", n, "daywbb n", LorF(cg.dayWBB, "%ld", "%.2f"));
+	printf(" -%-*s - Number of auto-exposure frames to skip when starting software during daytime [%ld].\n", n, "dayskipframes n", cg.daySkipFrames);
+	if (cg.ct == ctZWO) {
+		printf(" -%-*s - 1 enables cooler (cooled cameras only) [%s].\n", n, "dayEnableCooler b", yesNo(cg.dayEnableCooler));
+		printf(" -%-*s - Target temperature in degrees C (cooled cameras only) [%ld].\n", n, "dayTargetTemp n", cg.dayTargetTemp);
+	}
+
+	printf("\nNighttime settings:\n");
+	printf(" -%-*s - 1 enables nighttime auto-exposure [%s].\n", n, "nightautoexposure b", yesNo(cg.nightAutoExposure));
+	printf(" -%-*s - Maximum nighttime auto-exposure in ms [%'ld].\n", n, "nightmaxexposure n", cg.nightMaxAutoExposure_us);
+	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us * US_IN_MS);
+	printf(" -%-*s - Nighttime mean target brightness [%.2f].\n", n, "nightmean n", cg.myModeMeanSetting.nightMean);
+	printf("  %-*s   NOTE: Nighttime auto-gain and auto-exposure should be on for best results.\n", n, "");
+	printf(" -%-*s - Nighttime brightness change [%ld].\n", n, "nightbrightness n n", cg.nightBrightness);
+	printf(" -%-*s - Delay between nighttime images in ms [%'ld].\n", n, "nightDelay n", cg.nightDelay_ms);
+	printf(" -%-*s - 1 enables nighttime auto gain [%s].\n", n, "nightautogain b", yesNo(cg.nightAutoGain));
+	printf(" -%-*s - Nighttime maximum auto gain [%s].\n", n, "nightmaxautogain n", LorF(cg.nightMaxAutoGain, "%ld", "%.2f"));
+	printf(" -%-*s - Nighttime gain [%s].\n", n, "nightgain n", LorF(cg.nightGain, "%ld", "%.2f"));
+	printf(" -%-*s - Same as daybin but for night [%ld].\n", n, "nightbin n", cg.nightBin);
+	printf(" -%-*s - 1 enables auto White Balance [%s].\n", n, "nightautowhitebalance n", yesNo(cg.nightAutoAWB));
+	printf(" -%-*s - Manual White Balance Red [%s].\n", n, "nightwbr n", LorF(cg.nightWBR, "%ld", "%.2f"));
+	printf(" -%-*s - Manual White Balance Blue [%s].\n", n, "nightwbb n", LorF(cg.nightWBB, "%ld", "%.2f"));
+	printf(" -%-*s - Number of auto-exposure frames to skip when starting software during nighttime [%ld].\n", n, "nightskipframes n", cg.nightSkipFrames);
+	if (cg.ct == ctZWO) {
+		printf(" -%-*s - 1 enables cooler (cooled cameras only) [%s]\n", n, "nightEnableCooler b", yesNo(cg.nightEnableCooler));
+		printf(" -%-*s - Target temperature in degrees C (cooled cameras only) [%ld].\n", n, "nightTargetTemp n", cg.nightTargetTemp);
+	}
+
+	printf("\nDay and nighttime settings:\n");
+	if (cg.ct == ctRPi) {
+		printf(" -%-*s - Image saturation [%.1f].\n", n, "saturation n", cg.saturation);
+	}
+	if (cg.ct == ctZWO) {
+		printf(" -%-*s - Gamma level [%ld].\n", n, "gamma n", cg.gamma);
+		printf(" -%-*s - Offset [%ld].\n", n, "offset n", cg.offset);
+		printf(" -%-*s - Percent of exposure change to make, similar to PHD2 [%ld%%].\n", n, "aggression n", cg.aggression);
+		printf(" -%-*s - Seconds to transition gain from day-to-night or night-to-day.  0 disable it [%'ld].\n", n, "gaintransitiontime n", cg.gainTransitionTime);
+	}
+	printf(" -%-*s - Camera Maximum Width [%ld].\n", n, "width n", cg.width);
+	printf(" -%-*s - Camera Maximum Height [%ld].\n", n, "height n", cg.height);
+	printf(" -%-*s - Type of image: 99 = auto,  0 = RAW8,  1 = RGB24 [%ld].\n", n, "type n", cg.imageType);
+	if (cg.ct == ctZWO) {
+		printf(",  2 = RAW16,  3 = Y8");
+	}
+	printf("\n");
+	printf(" -%-*s - Quality (JPG, 0-100) or compression (PNG, 0-9) of image [JPG=%ld, PNG=%ld].\n", n, "quality n", cg.qualityJPG, cg.qualityPNG);
+	printf(" -%-*s - Name of image file to create [%s].\n", n, "filename s", cg.fileName);
+	if (cg.ct == ctRPi) {
+		if (cg.isLibcamera)
+			printf(" -%-*s - Amount to rotate image in degrees - 0 or 180 [%ld].\n", n, "rotation n", cg.rotation);
+		else
+			printf(" -%-*s - Amount to rotate image in degrees - 0, 90, 180, or 270 [%ld].\n", n, "rotation n", cg.rotation);
+	}
+	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
+	printf(" -%-*s - 1 enables consistent delays between images [%s].\n", n, "consistentDelays b", yesNo(cg.consistentDelays));
+	printf(" -%-*s - 1 enables notification images, for example, 'Camera is off during day' [%s].\n", n, "notificationimages b", yesNo(cg.notificationImages));
+	printf(" -%-*s - Latitude of the camera [no default - you must set it].\n", n, "latitude s");
+	printf(" -%-*s - Longitude of the camera [no default - you must set it].\n", n, "longitude s");
+	printf(" -%-*s - Angle of the sun below the horizon [%.2f].\n", n, "angle n", cg.angle);
+	printf("  %-*s   -6 = civil twilight   -12 = nautical twilight   -18 = astronomical twilight.\n", n, "");
+	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "daytime b", yesNo(cg.daytimeCapture));
+	printf(" -%-*s - 1 takes dark frames and disables the overlay [%s].\n", n, "darkframe b", yesNo(cg.takingDarkFrames));
+	printf(" -%-*s - Your locale - to determine thousands separator and decimal point [%s].\n", n, "locale s", cg.locale);
+	printf("  %-*s   Type 'locale' at a command prompt to determine yours.\n", n, "");
+	if (cg.ct == ctZWO) {
+		printf(" -%-*s - Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", n, "histogrambox n n n n", cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY, cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0);
+		printf(" -%-*s - 1 enables auto USB Speed\n", n, "autousb b");
+		printf(" -%-*s - USB bandwidth percent from %ld to %ld [%ld]\n", n, "usb n", cg.minAsiBandwidth, cg.maxAsiBandwidth, cg.asiBandwidth);
+		printf(" -%-*s - Determines if version 0.8 exposure method should be used [%s].\n", n, "newexposure b", yesNo(cg.videoOffBetweenImages));
+	}
+	printf(" -%-*s - Set to 1, 2, 3, or 4 for more debugging information [%ld].\n", n, "debuglevel n", cg.debugLevel);
+
+	printf("\nOverlay settings:\n");
+	printf(" -%-*s - Set to 1 to use the new, external overlay program [%s].\n", n, "externalOverlay b", yesNo(cg.overlay.externalOverlay));
+	printf("  %-*s   ** NOTE: The older, internal overlays will go away in the next release.\n", n, "");
+	printf(" -%-*s - Set to 1 to display the time [%s].\n", n, "showTime b", yesNo(cg.overlay.showTime));
+	printf(" -%-*s - Format the optional time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
+	printf(" -%-*s - 1 displays the exposure length [%s].\n", n, "showExposure b", yesNo(cg.overlay.showExposure));
+	if (cg.ct == ctZWO) {
+		printf(" -%-*s - 1 displays the camera sensor temperature [%s].\n", n, "showTemp b", yesNo(cg.overlay.showTemp));
+	}
+	printf(" -%-*s - Units to display temperature in: 'C'elsius, 'F'ahrenheit, or 'B'oth [%s].\n", n, "temptype s", cg.tempType);
+	printf(" -%-*s - 1 displays the gain [%s].\n", n, "showGain b", yesNo(cg.overlay.showGain));
+	printf(" -%-*s - 1 displays the brightness [%s].\n", n, "showBrightness b", yesNo(cg.overlay.showBrightness));
+	printf(" -%-*s - 1 displays the mean brightness used in auto-exposure [%s].\n", n, "showMean b", yesNo(cg.overlay.showMean));
+	printf(" -%-*s - 1 displays a focus metric - the higher the number the better focus [%s].\n", n, "showFOcus b", yesNo(cg.overlay.showFocus));
+	if (cg.ct == ctZWO) {
+		printf(" -%-*s - 1 displays an outline of the histogram box.\n", n, "showhistogrambox b");
+		printf("  %-*s   Useful to determine what parameters to use with -histogrambox.\n", n, "");
+	}
+	printf(" -%-*s - Text Overlay [\"\"].\n", n, "text s");
+	printf(" -%-*s - Full Path to extra text to display [\"\"].\n", n, "extratext s");
+	printf(" -%-*s - If the extra file is not updated after this many seconds its contents will not be displayecg. 0 disables it [0].\n", n, "extratextage n");
+	printf(" -%-*s - Text Line Height in pixels [%ld].\n", n, "textlineheight n", cg.overlay.iTextLineHeight);
+	printf(" -%-*s - Text Placement Horizontal from LEFT in pixels [%'ld].\n", n, "textx n", cg.overlay.iTextX);
+	printf(" -%-*s - Text Placement Vertical from TOP in pixels [%'ld].\n", n, "texty n", cg.overlay.iTextY);
+	printf(" -%-*s - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script [%ld]\n", n, "fontname n", cg.overlay.fontnumber);
+	printf(" -%-*s - Text font color (BGR) [255 0 0].\n", n, "fontcolor n n n");
+	printf(" -%-*s - Small text font color (BGR) [0 0 255].\n", n, "smallfontcolor n n n");
+	printf(" -%-*s - Font Line Type: 0=AA, 1=8, 2=4 [%ld].\n", n, "fonttype n", cg.overlay.linenumber);
+	printf(" -%-*s - Text Font Size [%.2f].\n", n, "fontsize n", cg.overlay.fontsize);
+	printf(" -%-*s - Text Font Line Thickness [%ld].\n", n, "fontline n", cg.overlay.linewidth);
+	printf(" -%-*s - 1 enables outline font [%s].\n", n, "outlinefont b", yesNo(cg.overlay.outlinefont));
+
+	printf("\nMisc. settings:\n");
+	printf(" -%-*s - Where to save 'filename' [%s].\n", n, "save_dir s", cg.saveDir);
+	printf(" -%-*s - 1 previews the captured images. Only works with a Desktop Environment [%s]\n", n, "preview", yesNo(cg.preview));
+	printf(" -%-*s - Outputs the camera's capabilities to the specified directory and exists.\n", n, "cc_save_dir s");
+	printf(" -%-*s - Set mean-value and activates exposure control [%.2f].\n", n, "mean-threshold n", cg.myModeMeanSetting.mean_threshold);
+	if (cg.ct == ctRPi) {
+		printf(" -%-*s - Command being used to take pictures (Buster: raspistill, Bullseye: libcamera-still\n", n, "cmd s");
+	}
+/* These are too advanced for anyone other than developers.
+	printf(" -%-*s - Be careful changing these values, ExposureChange (Steps) = p0 + (p1*diff) + (p2*diff)^2 [%.1f].\n", n, "mean-p0 n", cg.myModeMeanSetting.mean_threshold);
+	printf(" -%-*s - [%.1f].\n", n, "mean-p1 n", cg.myModeMeanSetting.mean_p1);
+	printf(" -%-*s - [%.1f].\n", n, "mean-p2 n", cg.myModeMeanSetting.mean_p2);
+*/
+
+	printf(" -%-*s - Version of Allsky in use.\n", n, "version s");
+
+	printf("%s\n", c(KNRM));
+}
+
+// If it's a Long integer, return a string representation with the specified "L" format.
+// If the passed in value is a Float, return a string representation of it with the specified "F" format.
+// Alternate use of static variables so LorF() can be called multiple times in one printf() statement.
+char *LorF(double num, char const *L, char const *F)
+{
+#define NUM_BUFS 4
+	static char n[NUM_BUFS][20];
+	static int on = 0;
+	int o = on;
+	if (num == (int)num) {
+		snprintf(n[on], sizeof(n[0]), L, (long)num);
+	} else {
+		snprintf(n[on], sizeof(n[0]), F, num);
+	}
+	if (++on == NUM_BUFS) on = 0;
+	return(n[o]);
+}
+
+// Display settings.
+void displaySettings(config cg)
+{
+	printf("%s", c(KGRN));
+	printf("\nCapture Settings:\n");
+
+	if (cg.ct == ctRPi)
+		printf("   Command: %s\n", getCameraCommand(cg.isLibcamera));
+	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
+	printf("   Resolution (before any binning): %ldx%ld\n", cg.width, cg.height);
+	printf("   Quality: %ld\n", cg.quality);
+	printf("   Daytime capture: %s\n", yesNo(cg.daytimeCapture));
+
+	printf("   Exposure (day):   %s, Auto: %s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
+		if (cg.dayAutoExposure)
+			printf(", Max Auto-Exposure: %s", length_in_units(cg.dayMaxAutoExposure_us, true));
+		printf("\n");
+	printf("   Exposure (night): %s, Auto: %s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
+		if (cg.nightAutoExposure)
+			printf(", Max Auto-Exposure: %s", length_in_units(cg.nightMaxAutoExposure_us, true));
+		printf("\n");
+	printf("   Gain (day):   %s, Auto: %s", LorF(cg.dayGain, "%ld", "%1.2f"), yesNo(cg.dayAutoGain));
+		if (cg.dayAutoGain)
+			printf(", Max Auto-Gain: %s", LorF(cg.dayMaxAutoGain, "%ld", "%1.2f"));
+		printf("\n");
+	printf("   Gain (night): %s, Auto: %s", LorF(cg.nightGain, "%ld", "%1.2f"), yesNo(cg.nightAutoGain));
+		if (cg.nightAutoGain)
+			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
+		printf("\n");
+	if (cg.gainTransitionTimeImplemented)
+		printf("   Gain Transition Time: %.1f minutes\n", (float) cg.gainTransitionTime/60);
+	printf("   Brightness (day):   %ld\n", cg.dayBrightness);
+	printf("   Brightness (night): %ld\n", cg.nightBrightness);
+	printf("   Binning (day):   %ld\n", cg.dayBin);
+	printf("   Binning (night): %ld\n", cg.nightBin);
+	if (cg.isColorCamera) {
+		printf("   White Balance (day)   Red: %s, Blue: %s, Auto: %s\n", LorF(cg.dayWBR, "%ld", "%.2f"), LorF(cg.dayWBB, "%ld", "%.2f"), yesNo(cg.dayAutoAWB));
+		printf("   White Balance (night) Red: %s, Blue: %s, Auto: %s\n", LorF(cg.nightWBR, "%ld", "%.2f"), LorF(cg.nightWBB, "%ld", "%.2f"), yesNo(cg.nightAutoAWB));
+	}
+	printf("   Delay (day):   %s\n", length_in_units(cg.dayDelay_ms * US_IN_MS, true));
+	printf("   Delay (night): %s\n", length_in_units(cg.nightDelay_ms * US_IN_MS, true));
+	printf("   Consistent delays: %s\n", yesNo(cg.consistentDelays));
+	printf("   Skip Frames (day):   %ld\n", cg.daySkipFrames);
+	printf("   Skip Frames (night): %ld\n", cg.nightSkipFrames);
+
+	if (cg.supportsAggression)
+		printf("   Aggression: %ld%%\n", cg.aggression);
+	if (cg.isCooledCamera) {
+		printf("   Enable Cooler (day): %s", yesNo(cg.dayEnableCooler));
+		if (cg.dayEnableCooler) printf(", Target Temperature (day): %ld C\n", cg.dayTargetTemp);
+		printf("   Enable Cooler (night): %s", yesNo(cg.nightEnableCooler));
+		if (cg.nightEnableCooler) printf(", Target Temperature (night): %ld C\n", cg.nightTargetTemp);
+		printf("\n");
+	}
+	if (cg.ct == ctZWO) {
+		printf("   Gamma: %ld\n", cg.gamma);
+		printf("   Offset: %ld\n", cg.offset);
+		printf("   USB Speed: %ld, auto: %s\n", cg.asiBandwidth, yesNo(cg.asiAutoBandwidth));
+	}
+	if (cg.ct == ctRPi) {
+		printf("   Saturation: %.1f\n", cg.saturation);
+		printf("   Rotation: %ld\n", cg.rotation);
+	}
+	printf("   Flip Image: %s (%ld)\n", getFlip(cg.flip), cg.flip);
+	printf("   Filename: %s\n", cg.fileName);
+	printf("   Filename Save Directory: %s\n", cg.saveDir);
+	printf("   Latitude: %s, Longitude: %s\n", cg.latitude, cg.longitude);
+	printf("   Sun Elevation: %.4f\n", cg.angle);
+	printf("   Locale: %s\n", cg.locale);
+	printf("   Notification Images: %s\n", yesNo(cg.notificationImages));
+	if (cg.ct == ctZWO) {
+		printf("   Histogram Box: %d %d %0.0f %0.0f, center: %dx%d, upper left: %dx%d, lower right: %dx%d\n",
+			cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY,
+			cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0,
+			cg.HB.centerX, cg.HB.centerY, cg.HB.leftOfBox, cg.HB.topOfBox, cg.HB.rightOfBox, cg.HB.bottomOfBox);
+		printf("   Video OFF Between Images: %s\n", yesNo(cg.videoOffBetweenImages));
+	}
+	printf("   Preview: %s\n", yesNo(cg.preview));
+	printf("   Taking Dark Frames: %s\n", yesNo(cg.takingDarkFrames));
+	printf("   Debug Level: %ld\n", cg.debugLevel);
+	printf("   On TTY: %s\n", yesNo(cg.tty));
+	if (cg.ct == ctRPi) {
+		printf("   Mode Mean: %s\n", yesNo(cg.myModeMeanSetting.modeMean));
+		if (cg.myModeMeanSetting.modeMean) {
+			printf("      Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
+			printf("      Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
+			printf("      Threshold: %1.3f\n", cg.myModeMeanSetting.mean_threshold);
+			printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
+			printf("      p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
+			printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
+		}
+	}
+	printf("   Allsky version: %s\n", cg.version);
+	if (cg.ct == ctZWO) {
+		printf("   ZWO SDK version %s\n", cg.ASIversion);
+	}
+
+	printf("   Overlay settings:\n");
+	printf("      Text Overlay: %s\n", cg.overlay.ImgText[0] == '\0' ? "[none]" : cg.overlay.ImgText);
+	printf("      Text Extra File: %s, Age: %ld seconds\n", cg.overlay.ImgExtraText[0] == '\0' ? "[none]" : cg.overlay.ImgExtraText, cg.overlay.extraFileAge);
+	printf("      Text Line Height %ldpx\n", cg.overlay.iTextLineHeight);
+	printf("      Text Position: %ldpx from left, %ldpx from top\n", cg.overlay.iTextX, cg.overlay.iTextY);
+	printf("      Font Name: %s (%ld)\n", fontnames[cg.overlay.fontnumber], cg.overlay.fontnumber);
+	printf("      Font Color: %d, %d, %d\n", cg.overlay.fontcolor[0], cg.overlay.fontcolor[1], cg.overlay.fontcolor[2]);
+	printf("      Small Font Color: %d, %d, %d\n", cg.overlay.smallFontcolor[0], cg.overlay.smallFontcolor[1], cg.overlay.smallFontcolor[2]);
+	printf("      Font Line Type: %d\n", cg.overlay.linetype[cg.overlay.linenumber]);
+	printf("      Font Size: %1.1f\n", cg.overlay.fontsize);
+	printf("      Font Line Width: %ld\n", cg.overlay.linewidth);
+	printf("      Outline Font : %s\n", yesNo(cg.overlay.outlinefont));
+
+	printf("      Show Time: %s (format: %s)\n", yesNo(cg.overlay.showTime), cg.timeFormat);
+	printf("      Show Exposure: %s\n", yesNo(cg.overlay.showExposure));
+	if (cg.supportsTemperature)
+		printf("      Show Temperature: %s, type: %s\n", yesNo(cg.overlay.showTemp), cg.tempType);
+	printf("      Show Gain: %s\n", yesNo(cg.overlay.showGain));
+	printf("      Show Brightness: %s\n", yesNo(cg.overlay.showBrightness));
+	printf("      Show Target Mean Brightness: %s\n", yesNo(cg.overlay.showMean));
+	printf("      Show Focus Metric: %s\n", yesNo(cg.overlay.showFocus));
+	if (cg.ct == ctZWO) {
+		printf("      Show Histogram Box: %s\n", yesNo(cg.overlay.showHistogramBox));
+	}
+	printf("%s", c(KNRM));
+}
+
+// Sleep when we're not taking daytime images.
+// Try to be smart about it so we don't sleep a gazillion times.
+bool daytimeSleep(bool displayedMsg, config cg)
+{
+	// Only display messages once a day.
+	if (! displayedMsg)
+	{
+		if (cg.notificationImages) {
+			char cmd[256];
+			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &", allskyHome);
+			system(cmd);
+		}
+		Log(0, "It's daytime... we're not saving images.\n%s",
+			cg.tty ? "*** Press Ctrl+C to stop ***\n" : "");
+		displayedMsg = true;
+
+		// sleep until around nighttime, then wake up and sleep more if needed.
+		int secsTillNight = calculateTimeToNightTime(cg.latitude, cg.longitude, cg.angle);
+		timeval t;
+		t = getTimeval();
+		t.tv_sec += secsTillNight;
+		Log(1, "Sleeping until %s (%'d seconds)\n", formatTime(t, cg.timeFormat), secsTillNight);
+		sleep(secsTillNight);
+	}
+	else
+	{
+		// Shouldn't need to sleep more than a few times before nighttime.
+		int s = 5;
+		Log(1, "Not quite nighttime; sleeping %'d more seconds\n", s);
+		sleep(s);
+	}
+
+	return(displayedMsg);
+}
+
+
+void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
+{
+	if (cg.takingDarkFrames) {
+		Log(2, "  > Not sleeping between dark frames\n");
+		return;
+	}
+
+	long s_us = 0;
+	if (cg.consistentDelays && cg.currentAutoExposure && lastExposure_us < cg.currentMaxAutoExposure_us) {
+		// If using auto-exposure and the actual exposure is less than the max,
+		// we still wait until we reach maxexposure, then wait for the delay period.
+		// This is important for a constant frame rate during timelapse generation.
+
+		if (lastExposure_us < cg.currentMaxAutoExposure_us)
+			s_us = cg.currentMaxAutoExposure_us - lastExposure_us;	// how much longer till max?
+		s_us += cg.currentDelay_ms * US_IN_MS;		// Add standard delay amount
+		Log(0, "  > Sleeping: %s\n", length_in_units(s_us, false));
+
+	} else {
+		s_us = cg.currentDelay_ms * US_IN_MS;
+		Log(0, "  > Sleeping %s between %s exposures\n", length_in_units(s_us, false), sleepType.c_str());
+	}
+
+	usleep(s_us);	// usleep() is in us (microseconds)
+}
+
+void setDefaults(config *cg, cameraType ct)
+{
+	cg->version = "UNKNOWN";
+	cg->ASIversion = "UNKNOWN";
+	cg->help = false;
+	static char s[256];
+	snprintf(s, sizeof(s), "%s%s", allskyHome, "tmp");
+	cg->saveDir = s;
+	cg->CC_saveDir = cg->saveDir;
+	cg->tty = false;
+	cg->preview = false;
+	cg->daytimeCapture = false;
+	cg->cameraNumber = 0;
+	cg->cameraMinExposure_us		= NOT_SET;
+	cg->cameraMaxExposure_us		= NOT_SET;
+	cg->cameraMaxAutoExposure_us	= NOT_SET;
+
+	cg->dayAutoExposure = true;
+	cg->dayMaxAutoExposure_us = 30 * US_IN_SEC;
+	cg->dayExposure_us = 32 * US_IN_MS;
+	cg->dayDelay_ms = 5 * MS_IN_SEC;
+	cg->dayAutoGain = true;
+	cg->dayBin = 1;
+	cg->dayAutoAWB = false;
+	cg->daySkipFrames = 5;
+
+	cg->nightAutoExposure = true;
+	cg->nightMaxAutoExposure_us = 60 * US_IN_SEC;
+	cg->nightExposure_us = 20 * US_IN_SEC;
+	cg->nightDelay_ms = 10 * MS_IN_SEC;
+	cg->nightAutoGain = true;
+	cg->nightBin = 1;
+	cg->nightAutoAWB = false;
+	cg->nightSkipFrames = 1;
+
+	// These are entered in ms on the command line, and are converted to _us afterwards.
+	cg->temp_dayExposure_ms = cg->dayExposure_us / US_IN_MS;
+	cg->temp_nightExposure_ms = cg->nightExposure_us / US_IN_MS;
+	cg->temp_dayMaxAutoExposure_ms = cg->dayMaxAutoExposure_us / US_IN_MS;
+	cg->temp_nightMaxAutoExposure_ms = cg->nightMaxAutoExposure_us / US_IN_MS;
+
+	if (ct == ctZWO) {
+		// Gain and brightness are camera model-dependent, but use a reasonable value.
+		cg->dayBrightness = 100;
+		cg->dayMaxAutoGain = 100;
+		cg->dayGain = 1;
+		cg->dayWBR = 65;
+		cg->dayWBB = 85;
+		cg->nightBrightness = 100;
+		cg->nightMaxAutoGain = 200;
+		cg->nightGain = 150;
+		cg->nightWBR = cg->dayWBR;
+		cg->nightWBB = cg->dayWBB;
+	} else {
+		if (cg->isLibcamera)
+			cg->dayBrightness = 0;
+		else
+			cg->dayBrightness = 50;
+		cg->dayMaxAutoGain = 16.0;
+		cg->dayGain = 1.0;
+		cg->dayWBR = 2.5;
+		cg->dayWBB = 2.0;
+		cg->nightBrightness = 0;
+		cg->nightMaxAutoGain = 16.0;
+		cg->nightGain = 4.0;
+		cg->nightWBR = cg->nightWBR;
+		cg->nightWBB = cg->nightWBB;
+	}
+
+	if (ct == ctRPi) {
+		if (cg->isLibcamera)
+			cg->saturation = 1.0;
+		else
+			cg->saturation = 0.0;
+		cg->rotation = 0;
+	}
+	cg->gamma = 50;
+	cg->offset = 0;
+	cg->aggression = 75;
+	cg->gainTransitionTime = 5;
+	cg->width = 0;
+	cg->height = 0;
+	cg->imageType = AUTO_IMAGE_TYPE;
+	cg->sType = "";
+	cg->qualityJPG = 95;
+	cg->qualityPNG = 3;
+	cg->quality = cg->qualityJPG;
+	cg->asiAutoBandwidth = false;
+	cg->asiBandwidth = 40;
+		cg->minAsiBandwidth = 40;
+		cg->maxAsiBandwidth = 100;
+	cg->fileName = "image.jpg";
+	cg->flip = 0;
+	cg->notificationImages = true;
+	cg->dayEnableCooler = false;
+	cg->nightEnableCooler = false;
+	cg->dayTargetTemp = 0;
+	cg->nightTargetTemp = 0;
+	cg->latitude = "";
+	cg->longitude = "";
+	cg->angle = -6.0;
+	cg->timeFormat = "%Y%m%d %H:%M:%S";
+	cg->takingDarkFrames = false;
+	cg->locale = "en_US.UTF-8";
+	cg->debugLevel = 1;
+	cg->videoOffBetweenImages = true;
+	cg->consistentDelays = true;
+
+	cg->HB.histogramBoxSizeX = 500;
+	cg->HB.histogramBoxSizeY = 500;
+	cg->HB.histogramBoxPercentFromLeft = 0.5;
+	cg->HB.histogramBoxPercentFromTop = 0.5;
+	cg->HB.sArgs = NULL;
+
+	cg->myModeMeanSetting.modeMean = false;
+	cg->myModeMeanSetting.dayMean = DEFAULT_DAYMEAN;
+	cg->myModeMeanSetting.nightMean = DEFAULT_NIGHTMEAN;
+	cg->myModeMeanSetting.mean_threshold = 0.1;
+	cg->myModeMeanSetting.mean_p0 = 5.0;
+	cg->myModeMeanSetting.mean_p1 = 20.0;
+	cg->myModeMeanSetting.mean_p2 = 45.0;
+
+	cg->overlay.externalOverlay = false;
+	cg->overlay.ImgText = "";
+	cg->overlay.ImgExtraText = "";
+	cg->overlay.extraFileAge = 0;
+	cg->overlay.iTextLineHeight = 30;
+	cg->overlay.iTextX = 15;
+	cg->overlay.iTextY = 25;
+	cg->overlay.fontname_s = "";
+	cg->overlay.fontnumber = 0;
+	cg->overlay.fontcolor[0] = 255;
+	cg->overlay.fontcolor[1] = 0;
+	cg->overlay.fontcolor[2] = 0;
+	cg->overlay.fc = NULL;
+	cg->overlay.smallFontcolor[0] = 0;
+	cg->overlay.smallFontcolor[1] = 0;
+	cg->overlay.smallFontcolor[2] = 255;
+	cg->overlay.sfc = NULL;
+	cg->overlay.linetype[0] = cv::LINE_AA;
+	cg->overlay.linetype[1] = 8;
+	cg->overlay.linetype[2] = 4;
+	cg->overlay.linenumber = 0;
+	cg->overlay.fontsize = 10;
+	cg->overlay.linewidth = 1;
+	cg->overlay.outlinefont = false;
+	cg->overlay.showTime = true;
+	cg->overlay.showExposure = false;
+	cg->overlay.showTemp = false;
+	cg->tempType = "C";
+	cg->overlay.showGain = false;
+	cg->overlay.showBrightness = false;
+	cg->overlay.showMean = false;
+	cg->overlay.showFocus = false;
+	cg->overlay.showHistogramBox = false;
+}
+
+void getCommandLineArguments(config *cg, int argc, char *argv[])
+{
+	if (argc > 1)
+	{
+		for (int i=1 ; i <= argc - 1 ; i++)
+		{
+			char *a = argv[i];
+// TODO: convert to lower case
+
+			// Misc. settings
+			if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0)
+			{
+				cg->help = true;
+				cg->quietExit = true;	// we display the help message and quit
+			}
+			else if (strcmp(a, "-version") == 0)
+			{
+				cg->version = argv[++i];
+			}
+			else if (strcmp(a, "-save_dir") == 0)
+			{
+				cg->saveDir = argv[++i];
+			}
+			else if (strcmp(a, "-cc_save_dir") == 0)
+			{
+				cg->CC_saveDir = argv[++i];
+				cg->saveCC = true;
+				cg->quietExit = true;	// we display info and quit
+			}
+			else if (strcmp(a, "-cmd") == 0)
+			{
+				cg->isLibcamera = strcmp(argv[i+1], "libcamera") == 0 ? true : false;
+			}
+			else if (strcmp(a, "-tty") == 0)	// overrides what was automatically determined
+			{
+				cg->tty = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-preview") == 0)
+			{
+				cg->preview = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-daytime") == 0)
+			{
+				cg->daytimeCapture = getBoolean(argv[++i]);
+			}
+
+			// daytime settings
+			else if (strcmp(a, "-dayautoexposure") == 0)
+			{
+				cg->dayAutoExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-daymaxautoexposure") == 0)
+			{
+				cg->temp_dayMaxAutoExposure_ms = atof(argv[++i]);	// allow fractions
+			}
+			else if (strcmp(a, "-dayexposure") == 0)
+			{
+				cg->temp_dayExposure_ms = atof(argv[++i]);	// allow fractions
+			}
+			else if (strcmp(a, "-daymean") == 0)
+			{
+				// If the user specified 0.0, that means don't use modeMean auto exposure/gain.
+				double m = atof(argv[++i]);
+				if (m == 0.0)
+				{
+					cg->myModeMeanSetting.dayMean = 0.0;
+				}
+				else
+				{
+					cg->myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,m));
+				}
+			}
+			else if (strcmp(a, "-daybrightness") == 0)
+			{
+				cg->dayBrightness = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-daydelay") == 0)
+			{
+				cg->dayDelay_ms = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-dayautogain") == 0)
+			{
+				cg->dayAutoGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-daymaxautogain") == 0)
+			{
+				cg->dayMaxAutoGain = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-daygain") == 0)
+			{
+				cg->dayGain = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-daybin") == 0)
+			{
+				cg->dayBin = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-dayawb") == 0)
+			{
+				cg->dayAutoAWB = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-daywbr") == 0)
+			{
+				cg->dayWBR = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-daywbb") == 0)
+			{
+				cg->dayWBB = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-dayskipframes") == 0)
+			{
+				cg->daySkipFrames = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-dayenablecooler") == 0)
+			{
+				cg->dayEnableCooler = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-daytargettemp") == 0)
+			{
+				cg->dayTargetTemp = atol(argv[++i]);
+			}
+
+			// nighttime settings
+			else if (strcmp(a, "-nightautoexposure") == 0)
+			{
+				cg->nightAutoExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-nightmaxautoexposure") == 0)
+			{
+				cg->temp_nightMaxAutoExposure_ms = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-nightexposure") == 0)
+			{
+				cg->temp_nightExposure_ms = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-nightmean") == 0)
+			{
+				double m = atof(argv[++i]);
+				if (m == 0.0)
+				{
+					cg->myModeMeanSetting.nightMean = 0.0;
+				}
+				else
+				{
+					cg->myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,m));
+				}
+			}
+			else if (strcmp(a, "-nightbrightness") == 0)
+			{
+				cg->nightBrightness = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-nightdelay") == 0)
+			{
+				cg->nightDelay_ms = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-nightautogain") == 0)
+			{
+				cg->nightAutoGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-nightmaxautogain") == 0)
+			{
+				cg->nightMaxAutoGain = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-nightgain") == 0)
+			{
+				cg->nightGain = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-nightbin") == 0)
+			{
+				cg->nightBin = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-nightawb") == 0)
+			{
+				cg->nightAutoAWB = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-nightwbr") == 0)
+			{
+				cg->nightWBR = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-nightwbb") == 0)
+			{
+				cg->nightWBB = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-nightskipframes") == 0)
+			{
+				cg->nightSkipFrames = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-nightenablecooler") == 0)
+			{
+				cg->nightEnableCooler = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-nighttargettemp") == 0)
+			{
+				cg->nightTargetTemp = atol(argv[++i]);
+			}
+
+			// daytime and nighttime settings
+			else if (strcmp(a, "-mean-threshold") == 0)
+			{
+				// Must be between 0.01 and 0.1.
+				cg->myModeMeanSetting.mean_threshold = std::min(0.1, std::max(0.01,atof(argv[++i])));
+			}
+			else if (strcmp(a, "-mean-p0") == 0)
+			{
+				cg->myModeMeanSetting.mean_p0 = std::min(50.0, std::max(0.0,atof(argv[++i])));
+			}
+			else if (strcmp(a, "-mean-p1") == 0)
+			{
+				cg->myModeMeanSetting.mean_p1 = std::min(50.0, std::max(0.0,atof(argv[++i])));
+			}
+			else if (strcmp(a, "-mean-p2") == 0)
+			{
+				cg->myModeMeanSetting.mean_p2 = std::min(50.0, std::max(0.0,atof(argv[++i])));
+			}
+			else if (strcmp(a, "-saturation") == 0)
+			{
+				cg->saturation = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-gamma") == 0)
+			{
+				cg->gamma = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-offset") == 0)
+			{
+				cg->offset = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-aggression") == 0)
+			{
+				cg->aggression = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-gaintransitiontime") == 0)
+			{
+				cg->gainTransitionTime = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-width") == 0)
+			{
+				cg->width = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-height") == 0)
+			{
+				cg->height = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-type") == 0)
+			{
+				cg->imageType = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-quality") == 0)
+			{
+				cg->quality = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-autousb") == 0)
+			{
+				cg->asiAutoBandwidth = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-usb") == 0)
+			{
+				cg->asiBandwidth = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-filename") == 0)
+			{
+				cg->fileName = argv[++i];
+			}
+			else if (strcmp(a, "-rotation") == 0)
+			{
+				cg->rotation = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-flip") == 0)
+			{
+				cg->flip = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-notificationimages") == 0)
+			{
+				cg->notificationImages = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-latitude") == 0)
+			{
+				cg->latitude = argv[++i];
+			}
+			else if (strcmp(a, "-longitude") == 0)
+			{
+				cg->longitude = argv[++i];
+			}
+			else if (strcmp(a, "-angle") == 0)
+			{
+				cg->angle = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-darkframe") == 0)
+			{
+				cg->takingDarkFrames = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-locale") == 0)
+			{
+				cg->locale = argv[++i];
+			}
+			else if (strcmp(a, "-histogrambox") == 0)
+			{
+				cg->HB.sArgs = argv[++i];
+			}
+			else if (strcmp(a, "-debuglevel") == 0)
+			{
+				cg->debugLevel = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-newexposure") == 0)
+			{
+				cg->videoOffBetweenImages = getBoolean(argv[++i]);
+			}
+
+			// overlay settings
+			else if (strcmp(a, "-showTime") == 0)
+			{
+				cg->overlay.showTime = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-timeformat") == 0)
+			{
+				cg->timeFormat = argv[++i];
+			}
+			else if (strcmp(a, "-showTemp") == 0)
+			{
+				cg->overlay.showTemp = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-temptype") == 0)
+			{
+				cg->tempType = argv[++i];
+			}
+			else if (strcmp(a, "-showExposure") == 0)
+			{
+				cg->overlay.showExposure = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-showGain") == 0)
+			{
+				cg->overlay.showGain = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-showBrightness") == 0)
+			{
+				cg->overlay.showBrightness = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-showMean") == 0)
+			{
+				cg->overlay.showMean = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-showhistogrambox") == 0)
+			{
+				cg->overlay.showHistogramBox = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-showFocus") == 0)
+			{
+				cg->overlay.showFocus = getBoolean(argv[++i]);
+			}
+			else if (strcmp(a, "-text") == 0)
+			{
+				cg->overlay.ImgText = argv[++i];
+			}
+			else if (strcmp(a, "-extratext") == 0)
+			{
+				cg->overlay.ImgExtraText = argv[++i];
+			}
+			else if (strcmp(a, "-extratextage") == 0)
+			{
+				cg->overlay.extraFileAge = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-textlineheight") == 0)
+			{
+				cg->overlay.iTextLineHeight = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-textx") == 0)
+			{
+				cg->overlay.iTextX = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-texty") == 0)
+			{
+				cg->overlay.iTextY = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-fontname") == 0)
+			{
+				cg->overlay.fontnumber = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-fontcolor") == 0)
+			{
+				cg->overlay.fc = argv[++i];
+			}
+			else if (strcmp(a, "-smallfontcolor") == 0)
+			{
+				cg->overlay.sfc = argv[++i];
+			}
+			else if (strcmp(a, "-fonttype") == 0)
+			{
+				cg->overlay.linenumber = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-fontsize") == 0)
+			{
+				cg->overlay.fontsize = atof(argv[++i]);
+			}
+			else if (strcmp(a, "-fontline") == 0)
+			{
+				cg->overlay.linewidth = atol(argv[++i]);
+			}
+			else if (strcmp(a, "-outlinefont") == 0)
+			{
+				cg->overlay.outlinefont = getBoolean(argv[++i]);
+			}
+
+			// Arguments that may be passed to us but we don't use.
+			else if (strcmp(a, "-alwaysshowadvanced") == 0)
+			{
+				i++;	// not used
+			}
+		}
+	}
 }

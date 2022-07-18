@@ -8,17 +8,11 @@
 #endif
 
 // Forward definitions of variables in capture*.cpp.
-extern long debugLevel;
 extern int iNumOfCtrl;
-extern char const *CC_saveDir;
-extern long cameraMinExposure_us;
-extern long cameraMaxExposure_us;
-extern long cameraMaxAutoexposure_us;
 #ifdef IS_RPi
-extern bool isLibcamera;
 char const *getCameraCommand(bool);
 #else
-extern bool videoOffBetweenImages;
+char const *getCameraCommand(bool x) { return yesNo(x); }		// keeps compiler quiet
 #endif
 
 int numCameras = 0;		// used by several functions
@@ -185,12 +179,12 @@ char camerasInfoFile[128]	= { 0 };	// name of temporary file
 int ASIGetNumOfConnectedCameras()
 {
 	// File to hold info on all the cameras.
-	snprintf(camerasInfoFile, sizeof(camerasInfoFile), "%s/cameras.txt", CC_saveDir);
+	snprintf(camerasInfoFile, sizeof(camerasInfoFile), "%s/cameras.txt", cg.CC_saveDir);
 
 	char cmd[300];
 	int num;
 	// Put the list of cameras and attributes in a file and return the number of cameras (the exit code).
-	if (isLibcamera)
+	if (cg.isLibcamera)
 	{
 		// "libcamera-still --list-cameras" writes to stderr.
 		snprintf(cmd, sizeof(cmd), "NUM=$(LIBCAMERA_LOG_LEVELS=FATAL libcamera-still --list-cameras 2>&1 | grep -E '^[0-9 ]' | tee '%s' | grep -E '^[0-9] : ' | wc -l); exit ${NUM}", camerasInfoFile);
@@ -277,7 +271,7 @@ ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
 	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
 
-	if (! isLibcamera)
+	if (! cg.isLibcamera)
 		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
 	int num = 0;
 	for (int i=0; i < MAX_NUM_CONTROL_CAPS; i++)
@@ -302,7 +296,7 @@ ASI_ERROR_CODE ASIGetControlCaps(int iCameraIndex, int iControlIndex, ASI_CONTRO
 	if (iControlIndex < 0 || iControlIndex > numCaps)
 		return(ASI_ERROR_INVALID_CONTROL_TYPE);
 
-	if (! isLibcamera)
+	if (! cg.isLibcamera)
 		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
 
 	*pControlCaps = ControlCapsArray[iCameraIndex][iControlIndex];
@@ -316,7 +310,7 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
 
-	if (! isLibcamera)
+	if (! cg.isLibcamera)
 		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
 	int numCaps = iNumOfCtrl != NOT_SET ? iNumOfCtrl : MAX_NUM_CONTROL_CAPS;
 	for (int i=0; i < numCaps ; i++)
@@ -416,7 +410,7 @@ ASI_ERROR_CODE getControlCapForControlType(int iCameraIndex, ASI_CONTROL_TYPE Co
 		return(ASI_ERROR_GENERAL_ERROR);
 
 #ifdef IS_RPi
-	if (! isLibcamera)
+	if (! cg.isLibcamera)
 		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
 #endif
 	for (int i=0; i < iNumOfCtrl ; i++)
@@ -458,7 +452,7 @@ char *getRetCode(ASI_ERROR_CODE code)
 		// To aid in debugging these errors, keep track of how many we see.
 		errorTimeoutCntr += 1;
 		ret = "ASI_ERROR_TIMEOUT #" + std::to_string(errorTimeoutCntr) +
-			  " (with 0.8 exposure = " + ((videoOffBetweenImages)?("YES"):("NO")) + ")";
+			  " (with 0.8 exposure = " + ((cg.videoOffBetweenImages)?("YES"):("NO")) + ")";
 	}
 	else if (code == ASI_ERROR_INVALID_SEQUENCE) ret = "ASI_ERROR_INVALID_SEQUENCE";
 	else if (code == ASI_ERROR_BUFFER_TOO_SMALL) ret = "ASI_ERROR_BUFFER_TOO_SMALL";
@@ -636,7 +630,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
 	fprintf(f, "\t\"bitDepth\" : %d,\n", cameraInfo.BitDepth);
 #ifdef IS_RPi
-	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", getCameraCommand(isLibcamera));
+	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", getCameraCommand(cg.isLibcamera));
 #endif
 
 	fprintf(f, "\t\"suportedImageFormats\": [\n");
@@ -759,24 +753,24 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, long width, long height, doubl
 		ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
 		switch (cc.ControlType) {
 		case ASI_EXPOSURE:
-			cameraMinExposure_us = cc.MinValue;
-			cameraMaxExposure_us = cc.MaxValue;
+			cg.cameraMinExposure_us = cc.MinValue;
+			cg.cameraMaxExposure_us = cc.MaxValue;
 			break;
 		case ASI_AUTO_MAX_EXP:
 			// Keep track of the camera's max auto-exposure so we don't try to exceed it.
 			// MaxValue is in MS so convert to microseconds
 #ifdef HISTOGRAM
 			// If using histogram algorithm we use manual exposure so set this to a value that will never be exceeded.
-			cameraMaxAutoexposure_us = cameraMaxExposure_us == NOT_SET ? cameraMaxExposure_us+1 : 9999999999999;
+			cg.cameraMaxAutoExposure_us = cg.cameraMaxExposure_us == NOT_SET ? cg.cameraMaxExposure_us+1 : 9999999999999;
 #else
-			cameraMaxAutoexposure_us = cc.MaxValue * US_IN_MS;
+			cg.cameraMaxAutoExposure_us = cc.MaxValue * US_IN_MS;
 #endif
 			break;
 		default:	// needed to keep compiler quiet
 			break;
 		}
 	}
-	if (debugLevel >= 4)
+	if (cg.debugLevel >= 4)
 	{
 		printf("Supported image formats:\n");
 		size_t s_ = sizeof(cameraInfo.SupportedVideoFormat);
@@ -818,38 +812,38 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, long width, long height, doubl
 }
 
 // Ensure the exposure values are valid.
-bool checkExposureValues(long *day_us, bool dayAuto, long *night_us, bool nightAuto)
+bool checkExposureValues(config *cg)
 {
-	if (*day_us < cameraMinExposure_us)
+	if (cg->dayExposure_us < cg->cameraMinExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", *day_us, cameraMinExposure_us);
-	 	*day_us = cameraMinExposure_us;
+	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", cg->dayExposure_us, cg->cameraMinExposure_us);
+	 	cg->dayExposure_us = cg->cameraMinExposure_us;
 	}
-	else if (*day_us > cameraMaxExposure_us)
+	else if (cg->dayExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", *day_us, cameraMaxExposure_us);
-	 	*day_us = cameraMaxExposure_us;
+	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->dayExposure_us, cg->cameraMaxExposure_us);
+	 	cg->dayExposure_us = cg->cameraMaxExposure_us;
 	}
-	else if (dayAuto && *day_us > cameraMaxAutoexposure_us)
+	else if (cg->dayAutoExposure && cg->dayExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", *day_us, cameraMaxAutoexposure_us);
-	 	*day_us = cameraMaxAutoexposure_us;
+	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->dayExposure_us, cg->cameraMaxAutoExposure_us);
+	 	cg->dayExposure_us = cg->cameraMaxAutoExposure_us;
 	}
 
-	if (*night_us < cameraMinExposure_us)
+	if (cg->nightExposure_us < cg->cameraMinExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", *night_us, cameraMinExposure_us);
-	 	*night_us = cameraMinExposure_us;
+	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", cg->nightExposure_us, cg->cameraMinExposure_us);
+	 	cg->nightExposure_us = cg->cameraMinExposure_us;
 	}
-	else if (*night_us > cameraMaxExposure_us)
+	else if (cg->nightExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", *night_us, cameraMaxExposure_us);
-	 	*night_us = cameraMaxExposure_us;
+	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->nightExposure_us, cg->cameraMaxExposure_us);
+	 	cg->nightExposure_us = cg->cameraMaxExposure_us;
 	}
-	else if (nightAuto && *night_us > cameraMaxAutoexposure_us)
+	else if (cg->nightAutoExposure && cg->nightExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", *night_us, cameraMaxAutoexposure_us);
-	 	*night_us = cameraMaxAutoexposure_us;
+	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->nightExposure_us, cg->cameraMaxAutoExposure_us);
+	 	cg->nightExposure_us = cg->cameraMaxAutoExposure_us;
 	}
 
 	return(true);		// only WARNINGs above

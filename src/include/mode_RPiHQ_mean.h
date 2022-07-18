@@ -44,7 +44,6 @@ struct modeMeanSetting {
 	double mean_p2 = DEFAULT_MEAN_P2;
 };
 
-bool aegInit(bool, int, int, int,
-	bool, double, double, double,
-	raspistillSetting &, modeMeanSetting &);
-float aegCalcMean(cv::Mat, int, double, raspistillSetting &, modeMeanSetting &);
+bool aegInit(config, int, double, raspistillSetting &, modeMeanSetting &);
+float aegCalcMean(cv::Mat);
+void aegGetNextExposureSettings(float, int, double, raspistillSetting &, modeMeanSetting &);

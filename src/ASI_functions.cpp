@@ -782,11 +782,11 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, long width, long height, doubl
 				break;
 			}
 			printf("  - %s\n",
-				it == ASI_IMG_RAW8 ?  "ASI_IMG_RAW8" :
-				it == ASI_IMG_RGB24 ?  "ASI_IMG_RGB24" :
-				it == ASI_IMG_RAW16 ?  "ASI_IMG_RAW16" :
-				it == ASI_IMG_Y8 ?  "ASI_IMG_Y8" :
-				"unknown video format");
+				it == ASI_IMG_RAW8 ?  "RAW8" :
+				it == ASI_IMG_RGB24 ?  "RGB24" :
+				it == ASI_IMG_RAW16 ?  "RAW16" :
+				it == ASI_IMG_Y8 ?  "Y8" :
+				"unknown format");
 		}
 
 		printf("Control Caps:\n");
@@ -800,9 +800,9 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, long width, long height, doubl
 			printf("    - MaxValue = %'ld\n", cc.MaxValue);
 			printf("    - DefaultValue = %'ld\n", cc.DefaultValue);
 #else
-			printf("    - MinValue = %.3f\n", cc.MinValue);
-			printf("    - MaxValue = %.3f\n", cc.MaxValue);
-			printf("    - DefaultValue = %.3f\n", cc.DefaultValue);
+			printf("    - MinValue = %'.3f\n", cc.MinValue);
+			printf("    - MaxValue = %'.3f\n", cc.MaxValue);
+			printf("    - DefaultValue = %'.3f\n", cc.DefaultValue);
 #endif
 			printf("    - IsAutoSupported = %d\n", cc.IsAutoSupported);
 			printf("    - IsWritable = %d\n", cc.IsWritable);

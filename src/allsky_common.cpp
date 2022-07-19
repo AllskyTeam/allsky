@@ -1427,7 +1427,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 	{
 		for (int i=1 ; i <= argc - 1 ; i++)
 		{
-			char *a = argv[i];
 			// Allow UPPER and lower case on the command line.
 			// Note that all strings in strcmp() must be lowercase.
 			char *a = argv[i];

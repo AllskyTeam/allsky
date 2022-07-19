@@ -44,7 +44,7 @@
 "minimum":0.0,
 "maximum":1.0,
 "default":0.5,
-"description":"The target mean brightness level when Auto-Exposure is on. 0.0 is pure black, 1.0 is pure white.<br>Best used when Auto-Exposure and Auto-Gain are on.",
+"description":"The target mean brightness level when Auto-Exposure is on. 0.0 is pure black, 1.0 is pure white.<br>Best used when Auto-Exposure and Auto-Gain are on.<br>0 disables this auto-exposure mode.",
 "label":"Mean Target",
 "type":"text",
 "display":0,
@@ -223,7 +223,7 @@
 "minimum":0.0,
 "maximum":1.0,
 "default":0.2,
-"description":"The target mean brightness level when Auto-Exposure is on. 0.0 is pure black, 1.0 is pure white.<br>Best used when Auto-Exposure and Auto-Gain are on.",
+"description":"The target mean brightness level when Auto-Exposure is on. 0.0 is pure black, 1.0 is pure white.<br>Best used when Auto-Exposure and Auto-Gain are on.<br>0 disables this auto-exposure mode.",
 "label":"Mean Target",
 "type":"text",
 "display":0,
@@ -467,6 +467,15 @@
 "type":"number",
 "display":1,
 "advanced":0
+},
+{
+"name":"mean-threshold",
+"default":"0.1",
+"description":"When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
+"label":"Mean Threshold",
+"type":"text",
+"display":0,
+"advanced":1
 },
 {
 "name":"autousb",
@@ -995,3 +1004,4 @@
 "advanced":0
 }
 ]
+

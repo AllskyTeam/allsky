@@ -1707,7 +1707,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 				// If takingDarkFrames is off, add overlay text to the image
 				if (! cg.takingDarkFrames)
 				{
-					if (! externalOverlay)
+					if (! cg.overlay.externalOverlay)
 					{
 						(void) doOverlay(pRgb, cg, bufTime,
 							lastExposure_us, actualTemp, actualGain, gainChange, mean, focusMetric);

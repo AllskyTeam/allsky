@@ -157,6 +157,26 @@
 "display":1,
 "advanced":1
 },
+{
+"name":"dayEnableCooler",
+"default":0,
+"description":"Activate to use cooling (works only on cooled cameras).",
+"label":"Cooling",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
+"name":"dayTargetTemp",
+"minimum":"camera-specific",
+"maximum":"camera-specific",
+"default":0,
+"description":"Sensor's target temperature <i>when cooler is enabled</i> (degrees Celsius).",
+"label":"Target Temp.",
+"type":"number",
+"display":1,
+"advanced":1
+},
 
 {
 "name":"",
@@ -312,6 +332,26 @@
 "default":1,
 "description":"When starting Allsky at night, skip up to this many frames while the software gets to the correct exposure.",
 "label":"Frames To Skip",
+"type":"number",
+"display":1,
+"advanced":1
+},
+{
+"name":"nightEnableCooler",
+"default":0,
+"description":"Activate to use cooling (works only on cooled cameras).",
+"label":"Cooling",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
+"name":"nightTargetTemp",
+"minimum":"camera-specific",
+"maximum":"camera-specific",
+"default":0,
+"description":"Sensor's target temperature <i>when cooler is enabled</i> (degrees Celsius).",
+"label":"Target Temp.",
 "type":"number",
 "display":1,
 "advanced":1
@@ -500,22 +540,11 @@
 "advanced":0
 },
 {
-"name":"coolerEnabled",
-"default":0,
-"description":"Activate to use cooling (works only on cooled cameras).",
-"label":"Cooling",
+"name":"consistentDelays",
+"default":1,
+"description":"Activate to have the delays between images be of consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
+"label":"Consistent Delays Between Images",
 "type":"checkbox",
-"display":1,
-"advanced":1
-},
-{
-"name":"targetTemp",
-"minimum":"camera-specific",
-"maximum":"camera-specific",
-"default":0,
-"description":"Sensor's target temperature <i>when cooler is enabled</i> (degrees Celsius).",
-"label":"Target Temp.",
-"type":"number",
 "display":1,
 "advanced":1
 },
@@ -617,6 +646,15 @@
 "description":"Image overlay settings",
 "label":"",
 "type":"header",
+"display":1,
+"advanced":0
+},
+{
+"name":"externalOverlay",
+"default":0,
+"description":"Activate to have image overlays done by the enhanced external program.",
+"label":"External Overlay",
+"type":"checkbox",
 "display":1,
 "advanced":0
 },
@@ -957,4 +995,3 @@
 "advanced":0
 }
 ]
-

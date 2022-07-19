@@ -133,6 +133,7 @@ struct config {			// for configuration variables
 	long cameraMinExposure_us			= NOT_SET;
 	long cameraMaxExposure_us			= NOT_SET;
 	long cameraMaxAutoExposure_us		= NOT_SET;
+	bool goodLastExposure				= false;
 
 	// The following are settings based on command-line arguments.
 	bool help							= false;
@@ -191,6 +192,7 @@ struct config {			// for configuration variables
 	long height							= 0;		// use full sensor height
 	long imageType						= AUTO_IMAGE_TYPE;
 	char const *sType					= "";		// string version of imageType
+	char const *imageExt				= "jpg";	// image extension
 	long qualityJPG						= 95;
 	long qualityPNG						= 3;
 	long quality						= qualityJPG;

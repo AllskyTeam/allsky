@@ -173,8 +173,8 @@ float aegCalcMean(cv::Mat image)
 	return(mean);	// return this image's mean
 }
 
-// Calculate then new exposure and gain values.
-// Algorithm not perfect, but better than no exposure control at all
+
+// Calculate the new exposure and gain values.
 void aegGetNextExposureSettings(float prevMean, int exposure_us, double gain,
 		raspistillSetting & currentRaspistillSetting,
 		modeMeanSetting & currentModeMeanSetting)
@@ -250,13 +250,14 @@ void aegGetNextExposureSettings(float prevMean, int exposure_us, double gain,
 
 	Log(3, "  > ExposureChange clipped to %d (diff from last change: %d)\n", ExposureChange, dExposureChange);
 
-	bool changeNeeded = false;		// is a change to exposureLevel needed?
+	// If the last image's mean was good, no changes are needed to the next one.
+	bool goodLastExposure = true;
 // TODO: make mean_threshold a percent instead of an actual value.  This will allow us to use 0 to 100 for what user enters as mean.
 
 	if (prevMean < (currentModeMeanSetting.meanValue - currentModeMeanSetting.mean_threshold)) {
 		// mean too low
 		if ((currentRaspistillSetting.analoggain < currentModeMeanSetting.maxGain) || (currentRaspistillSetting.shutter_us < currentModeMeanSetting.maxExposure_us)) {  // obere Grenze durch Gain und shutter
-			changeNeeded = true;
+			goodLastExposure = false;
 			currentModeMeanSetting.exposureLevel += ExposureChange;
 			Log(4, "  >> exposureLevel increased by %d to %d\n", ExposureChange, currentModeMeanSetting.exposureLevel);
 		}
@@ -268,7 +269,7 @@ void aegGetNextExposureSettings(float prevMean, int exposure_us, double gain,
 		// mean too high
 /// xxxxxxx how about minGain?
 		if (exposureTime_s > currentModeMeanSetting.minExposure_us / (double)US_IN_SEC) { // untere Grenze durch shuttertime
-			changeNeeded = true;
+			goodLastExposure = false;
 			currentModeMeanSetting.exposureLevel -= ExposureChange;
 			Log(4, "  > exposureLevel decreased by %d to %d\n", ExposureChange, currentModeMeanSetting.exposureLevel);
 		}
@@ -279,7 +280,10 @@ void aegGetNextExposureSettings(float prevMean, int exposure_us, double gain,
 	else {
 		Log(4, "  >> Prior image mean good - no changes needed, mean=%1.3f, target mean=%1.3f threshold=%1.3f +++++++++\n", prevMean, currentModeMeanSetting.meanValue, currentModeMeanSetting.mean_threshold);
 		if (currentModeMeanSetting.quickstart > 0)
+		{
 			currentModeMeanSetting.quickstart = 0;		// Got a good exposure - turn quickstart off if on
+			Log(4, "  >> Disabling quickstart\n");
+		}
 	}
 
 	// Make sure exposureLevel is within min - max range.
@@ -302,62 +306,63 @@ printf(">>>>>>>>> fastforward=%s\n", fastforward ? "true" : "false");
 
 	//########################################################################
 	// calculate new gain
-if (changeNeeded) { // xxxxx===============
+	if (! goodLastExposure)
+	{
 
 // xxxx TODO:  when INCREASING the mean, the gain goes to the max before the exposure increases.
 // It should increase exposure, then gain, then exposure, ...
 
-	if (currentModeMeanSetting.meanAuto == MEAN_AUTO || currentModeMeanSetting.meanAuto == MEAN_AUTO_GAIN_ONLY) {
+		if (currentModeMeanSetting.meanAuto == MEAN_AUTO || currentModeMeanSetting.meanAuto == MEAN_AUTO_GAIN_ONLY) {
 // xxxxxxx ??? "exposure_us" or maxExposure_us or exposureTime_s ?
-		max_ = std::max(currentModeMeanSetting.minGain, exposureTimeEff_s / (exposure_us/(double)US_IN_SEC));
-		// xxxx  double newGain = std::min(gain, max_);
-		double newGain = std::min(currentModeMeanSetting.maxGain, max_);
-		if (newGain > currentModeMeanSetting.maxGain) {
-			currentRaspistillSetting.analoggain = currentModeMeanSetting.maxGain;
-			Log(4, "  >> Setting new analoggain to %1.3f (max value) (newGain was %1.3f)\n", currentRaspistillSetting.analoggain, newGain);
+			max_ = std::max(currentModeMeanSetting.minGain, exposureTimeEff_s / (exposure_us/(double)US_IN_SEC));
+			// xxxx  double newGain = std::min(gain, max_);
+			double newGain = std::min(currentModeMeanSetting.maxGain, max_);
+			if (newGain > currentModeMeanSetting.maxGain) {
+				currentRaspistillSetting.analoggain = currentModeMeanSetting.maxGain;
+				Log(4, "  >> Setting new analoggain to %1.3f (max value) (newGain was %1.3f)\n", currentRaspistillSetting.analoggain, newGain);
+			}
+			else if (newGain < currentModeMeanSetting.minGain) {
+				currentRaspistillSetting.analoggain = currentModeMeanSetting.minGain;
+				Log(4, "  >> Setting new analoggain to %1.3f (min value) (newGain was %1.3f)\n", currentRaspistillSetting.analoggain, newGain);
+			}
+			else if (currentRaspistillSetting.analoggain != newGain) {
+				currentRaspistillSetting.analoggain = newGain;
+				Log(4, "  >> Setting new analoggain to %1.3f\n", newGain);
+			}
+			else {
+				char const *isWhat = ((newGain == currentModeMeanSetting.minGain) || (newGain == currentModeMeanSetting.maxGain)) ? "possible" : "needed";
+				Log(4, "  >> No change to analoggain is %s (is %1.3f) +++\n", isWhat, newGain);
+			}
 		}
-		else if (newGain < currentModeMeanSetting.minGain) {
-			currentRaspistillSetting.analoggain = currentModeMeanSetting.minGain;
-			Log(4, "  >> Setting new analoggain to %1.3f (min value) (newGain was %1.3f)\n", currentRaspistillSetting.analoggain, newGain);
+		else if (currentRaspistillSetting.analoggain != gain) {
+			// it should already be at "gain", but just in case, set it anyhow
+			currentRaspistillSetting.analoggain = gain;
+			Log(4, "  >> setting new gain to %1.3f\n", gain);
 		}
-		else if (currentRaspistillSetting.analoggain != newGain) {
-			currentRaspistillSetting.analoggain = newGain;
-			Log(4, "  >> Setting new analoggain to %1.3f\n", newGain);
-		}
-		else {
-			char const *isWhat = ((newGain == currentModeMeanSetting.minGain) || (newGain == currentModeMeanSetting.maxGain)) ? "possible" : "needed";
-			Log(4, "  >> No change to analoggain is %s (is %1.3f) +++\n", isWhat, newGain);
-		}
-	}
-	else if (currentRaspistillSetting.analoggain != gain) {
-		// it should already be at "gain", but just in case, set it anyhow
-		currentRaspistillSetting.analoggain = gain;
-		Log(4, "  >> setting new gain to %1.3f\n", gain);
-	}
  
-	// calculate new exposure time based on the (possibly) new gain
-	if (currentModeMeanSetting.meanAuto == MEAN_AUTO || currentModeMeanSetting.meanAuto == MEAN_AUTO_EXPOSURE_ONLY) {
-		max_ = std::max((double)currentModeMeanSetting.minExposure_us / (double)US_IN_SEC, exposureTimeEff_s / currentRaspistillSetting.analoggain);
-		double eOLD_s = exposureTime_s * US_IN_SEC;
-		double eNEW_s = std::min((double)currentModeMeanSetting.maxExposure_us / (double)US_IN_SEC, max_);
-		if (exposureTime_s == eNEW_s) {
-			Log(4, "  >> No change to exposure time needed +++\n");
+		// calculate new exposure time based on the (possibly) new gain
+		if (currentModeMeanSetting.meanAuto == MEAN_AUTO || currentModeMeanSetting.meanAuto == MEAN_AUTO_EXPOSURE_ONLY) {
+			max_ = std::max((double)currentModeMeanSetting.minExposure_us / (double)US_IN_SEC, exposureTimeEff_s / currentRaspistillSetting.analoggain);
+			double eOLD_s = exposureTime_s * US_IN_SEC;
+			double eNEW_s = std::min((double)currentModeMeanSetting.maxExposure_us / (double)US_IN_SEC, max_);
+			if (exposureTime_s == eNEW_s) {
+				Log(4, "  >> No change to exposure time needed +++\n");
+			}
+			else {
+				Log(4, "  >> Setting new exposureTime_s to %s ", length_in_units((long)(eNEW_s * US_IN_SEC), true));
+				Log(4, "(was %s: ", length_in_units(eOLD_s, true));
+				Log(4, "diff %s)\n", length_in_units((eNEW_s-exposureTime_s) * US_IN_SEC, true));
+				exposureTime_s = eNEW_s;
+			}
 		}
-		else {
-			Log(4, "  >> Setting new exposureTime_s to %s ", length_in_units((long)(eNEW_s * US_IN_SEC), true));
-			Log(4, "(was %s: ", length_in_units(eOLD_s, true));
-			Log(4, "diff %s)\n", length_in_units((eNEW_s-exposureTime_s) * US_IN_SEC, true));
-			exposureTime_s = eNEW_s;
+		else if (0 && currentModeMeanSetting.meanAuto == MEAN_AUTO_EXPOSURE_ONLY) {		// xxxxx don't use
+			max_ = std::max((double)currentModeMeanSetting.minExposure_us / (double)US_IN_SEC, exposureTimeEff_s / currentRaspistillSetting.analoggain);
+			exposureTime_s = std::min((double)currentModeMeanSetting.maxExposure_us / (double)US_IN_SEC, max_);
+		}
+		else { // MEAN_AUTO_GAIN_ONLY || MEAN_AUTO_OFF
+			// exposureTime_s = (double)exposure_us/(double)US_IN_SEC;		// leave exposure alone
 		}
 	}
-	else if (0 && currentModeMeanSetting.meanAuto == MEAN_AUTO_EXPOSURE_ONLY) {		// xxxxx don't use
-		max_ = std::max((double)currentModeMeanSetting.minExposure_us / (double)US_IN_SEC, exposureTimeEff_s / currentRaspistillSetting.analoggain);
-		exposureTime_s = std::min((double)currentModeMeanSetting.maxExposure_us / (double)US_IN_SEC, max_);
-	}
-	else { // MEAN_AUTO_GAIN_ONLY || MEAN_AUTO_OFF
-		// exposureTime_s = (double)exposure_us/(double)US_IN_SEC;		// leave exposure alone
-	}
-} // xxxxx===============
 
 	//#############################################################################################################
 	// prepare for the next measurement

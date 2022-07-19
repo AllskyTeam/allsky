@@ -1224,7 +1224,11 @@ void setDefaults(config *cg, cameraType ct)
 	cg->saveDir = s;
 	cg->CC_saveDir = cg->saveDir;
 	if (ct == ctZWO) {
-		// Gain and brightness are camera model-dependent, but use a reasonable value.
+// TODO: Get from camera model
+		// Gain, brightness, and min/max are camera model-dependent, but use a reasonable value.
+		cg->cameraMinExposure_us = 32 * US_IN_MS;
+		cg->cameraMaxExposure_us = 2000 * US_IN_SEC;
+		cg->cameraMaxAutoExposure_us = 60 * US_IN_SEC;
 		cg->dayBrightness = 100;
 		cg->dayMaxAutoGain = 100;
 		cg->dayGain = 1;
@@ -1236,10 +1240,20 @@ void setDefaults(config *cg, cameraType ct)
 		cg->nightWBR = cg->dayWBR;		// TODO: should night be different than day?
 		cg->nightWBB = cg->dayWBB;
 	} else {
+		cg->cameraMinExposure_us = 1;
+		cg->cameraMaxExposure_us = 230 * US_IN_SEC;	// HQ camera
+		cg->cameraMaxAutoExposure_us = cg->cameraMaxExposure_us;
 		if (cg->isLibcamera)
+		{
 			cg->dayBrightness = 0;
+			cg->saturation = 1.0;
+		}
 		else
+		{
 			cg->dayBrightness = 50;
+			cg->saturation = 0.0;
+		}
+		cg->rotation = 0;
 		cg->dayMaxAutoGain = 16.0;
 		cg->dayGain = 1.0;
 		cg->dayWBR = 2.5;
@@ -1249,14 +1263,6 @@ void setDefaults(config *cg, cameraType ct)
 		cg->nightGain = 4.0;
 		cg->nightWBR = cg->dayWBR;
 		cg->nightWBB = cg->dayWBB;
-	}
-
-	if (ct == ctRPi) {
-		if (cg->isLibcamera)
-			cg->saturation = 1.0;
-		else
-			cg->saturation = 0.0;
-		cg->rotation = 0;
 	}
 }
 

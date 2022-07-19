@@ -16,6 +16,8 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <stdio.h>
+#include <fcntl.h>
 
 #include "include/allsky_common.h"
 
@@ -45,7 +47,7 @@ void Log(int required_level, const char *fmt, ...)
 
 		if (cg.debugLevel < 0)
 		{
-// xxxx TODO:
+// xxxx TODO: write to message file
 		}
 		va_end(va);
 	}
@@ -744,9 +746,13 @@ void closeUp(int e)
 void sig(int i)
 {
 	if (i == SIGHUP)
+	{
 		Log(3, "Got signal to restart\n");
+	}
 	else
+	{
 		Log(0, "Got unknown signal %d\n", i);
+	}
 	gotSignal = true;
 	closeUp(EXIT_RESTARTING);
 }
@@ -763,7 +769,7 @@ void IntHandle(int i)
 bool validateLong(long *num, long min, long max, char const *name, bool errorReturn)
 {
 	if (*num < min) {
-		fprintf(stderr, "** %s: '%s' (%'ld) is less than the minimum of %'ld",
+		fprintf(stderr, "*** %s: '%s' (%'ld) is less than the minimum of %'ld",
 			errorReturn == false ? "ERROR" : "WARNING", name, *num, min);
 		if (errorReturn == true)
 		{
@@ -774,7 +780,7 @@ bool validateLong(long *num, long min, long max, char const *name, bool errorRet
 		return errorReturn;
 
 	} else if (*num > max) {
-		fprintf(stderr, "** %s: '%s' (%'ld) is greater than the maximum of %'ld",
+		fprintf(stderr, "*** %s: '%s' (%'ld) is greater than the maximum of %'ld",
 			errorReturn == false ? "ERROR" : "WARNING", name, *num, max);
 		if (errorReturn == true)
 		{
@@ -791,7 +797,7 @@ bool validateLong(long *num, long min, long max, char const *name, bool errorRet
 bool validateFloat(double *num, double min, double max, char const *name, bool errorReturn)
 {
 	if (*num < min) {
-		fprintf(stderr, "** %s: '%s' (%'.1f) is less than the minimum of %'.1f",
+		fprintf(stderr, "*** %s: '%s' (%'.1f) is less than the minimum of %'.1f",
 			errorReturn == false ? "ERROR" : "WARNING", name, *num, min);
 		if (errorReturn == true)
 		{
@@ -802,7 +808,7 @@ bool validateFloat(double *num, double min, double max, char const *name, bool e
 		return errorReturn;
 
 	} else if (*num > max) {
-		fprintf(stderr, "** %s: '%s' (%'.1f) is greater than the maximum of %'.1f",
+		fprintf(stderr, "*** %s: '%s' (%'.1f) is greater than the maximum of %'.1f",
 			errorReturn == false ? "ERROR" : "WARNING", name, *num, max);
 		if (errorReturn == true)
 		{
@@ -864,6 +870,9 @@ void displayHelp(config cg)
 	printf("     'b' is a boolean (0 or 1), 'n' is a number, 's' is a string\n");
 	printf("     %'d ms (milli-seconds) = 1 second.  %'d us (micro-seconds) = 1 second.\n", 1000, 1000000);
 	printf("     Defaults are in [brackets].\n");
+
+	printf(" -%-*s - Optional configuration file to use instead of, or in addition to,\n", n, "config s");
+	printf("  %-*s   command-line arguments.  The file is read when seen on the command line.\n", n, "");
 
 	printf("\nDaytime settings:\n");
 	printf(" -%-*s - 1 enables daytime auto-exposure [%s].\n", n, "dayautoexposure b", yesNo(cg.dayAutoExposure));
@@ -1024,12 +1033,13 @@ char *LorF(double num, char const *L, char const *F)
 void displaySettings(config cg)
 {
 	printf("%s", c(KGRN));
-	printf("\nCapture Settings:\n");
+	printf("\nSettings:\n");
 
 	if (cg.ct == ctRPi)
 		printf("   Command: %s\n", getCameraCommand(cg.isLibcamera));
 	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
 	printf("   Resolution (before any binning): %ldx%ld\n", cg.width, cg.height);
+	printf("   Configuration file: %s\n", cg.configFile[0] == '\0' ? "none" : cg.configFile);
 	printf("   Quality: %ld\n", cg.quality);
 	printf("   Daytime capture: %s\n", yesNo(cg.daytimeCapture));
 
@@ -1084,10 +1094,9 @@ void displaySettings(config cg)
 		printf("   Rotation: %ld\n", cg.rotation);
 	}
 	printf("   Flip Image: %s (%ld)\n", getFlip(cg.flip), cg.flip);
-	printf("   Filename: %s\n", cg.fileName);
-	printf("   Filename Save Directory: %s\n", cg.saveDir);
+	printf("   Filename: %s  saved to %s\n", cg.fileName, cg.saveDir);
 	printf("   Latitude: %s, Longitude: %s\n", cg.latitude, cg.longitude);
-	printf("   Sun Elevation: %.4f\n", cg.angle);
+	printf("   Sun Elevation: %.2f\n", cg.angle);
 	printf("   Locale: %s\n", cg.locale);
 	printf("   Notification Images: %s\n", yesNo(cg.notificationImages));
 	if (cg.ct == ctZWO) {
@@ -1206,49 +1215,20 @@ void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 	usleep(s_us);	// usleep() is in us (microseconds)
 }
 
+// Set defaults that depend on camera type or otherwise can't be set at compile time.
 void setDefaults(config *cg, cameraType ct)
 {
-	cg->version = "UNKNOWN";
-	cg->ASIversion = "UNKNOWN";
-	cg->help = false;
+	cg->ct = ct;
 	static char s[256];
 	snprintf(s, sizeof(s), "%s%s", allskyHome, "tmp");
 	cg->saveDir = s;
 	cg->CC_saveDir = cg->saveDir;
-	cg->tty = false;
-	cg->preview = false;
-	cg->daytimeCapture = false;
-	cg->cameraNumber = 0;
-	cg->cameraMinExposure_us		= NOT_SET;
-	cg->cameraMaxExposure_us		= NOT_SET;
-	cg->cameraMaxAutoExposure_us	= NOT_SET;
-
-	cg->dayAutoExposure = true;
-	cg->dayMaxAutoExposure_us = 30 * US_IN_SEC;
-	cg->dayExposure_us = 32 * US_IN_MS;
-	cg->dayDelay_ms = 5 * MS_IN_SEC;
-	cg->dayAutoGain = true;
-	cg->dayBin = 1;
-	cg->dayAutoAWB = false;
-	cg->daySkipFrames = 5;
-
-	cg->nightAutoExposure = true;
-	cg->nightMaxAutoExposure_us = 60 * US_IN_SEC;
-	cg->nightExposure_us = 20 * US_IN_SEC;
-	cg->nightDelay_ms = 10 * MS_IN_SEC;
-	cg->nightAutoGain = true;
-	cg->nightBin = 1;
-	cg->nightAutoAWB = false;
-	cg->nightSkipFrames = 1;
-
-	// These are entered in ms on the command line, and are converted to _us afterwards.
-	cg->temp_dayExposure_ms = cg->dayExposure_us / US_IN_MS;
-	cg->temp_nightExposure_ms = cg->nightExposure_us / US_IN_MS;
-	cg->temp_dayMaxAutoExposure_ms = cg->dayMaxAutoExposure_us / US_IN_MS;
-	cg->temp_nightMaxAutoExposure_ms = cg->nightMaxAutoExposure_us / US_IN_MS;
-
 	if (ct == ctZWO) {
-		// Gain and brightness are camera model-dependent, but use a reasonable value.
+// TODO: Get from camera model
+		// Gain, brightness, and min/max are camera model-dependent, but use a reasonable value.
+		cg->cameraMinExposure_us = 32 * US_IN_MS;
+		cg->cameraMaxExposure_us = 2000 * US_IN_SEC;
+		cg->cameraMaxAutoExposure_us = 60 * US_IN_SEC;
 		cg->dayBrightness = 100;
 		cg->dayMaxAutoGain = 100;
 		cg->dayGain = 1;
@@ -1257,13 +1237,23 @@ void setDefaults(config *cg, cameraType ct)
 		cg->nightBrightness = 100;
 		cg->nightMaxAutoGain = 200;
 		cg->nightGain = 150;
-		cg->nightWBR = cg->dayWBR;
+		cg->nightWBR = cg->dayWBR;		// TODO: should night be different than day?
 		cg->nightWBB = cg->dayWBB;
 	} else {
+		cg->cameraMinExposure_us = 1;
+		cg->cameraMaxExposure_us = 230 * US_IN_SEC;	// HQ camera
+		cg->cameraMaxAutoExposure_us = cg->cameraMaxExposure_us;
 		if (cg->isLibcamera)
+		{
 			cg->dayBrightness = 0;
+			cg->saturation = 1.0;
+		}
 		else
+		{
 			cg->dayBrightness = 50;
+			cg->saturation = 0.0;
+		}
+		cg->rotation = 0;
 		cg->dayMaxAutoGain = 16.0;
 		cg->dayGain = 1.0;
 		cg->dayWBR = 2.5;
@@ -1271,100 +1261,168 @@ void setDefaults(config *cg, cameraType ct)
 		cg->nightBrightness = 0;
 		cg->nightMaxAutoGain = 16.0;
 		cg->nightGain = 4.0;
-		cg->nightWBR = cg->nightWBR;
-		cg->nightWBB = cg->nightWBB;
+		cg->nightWBR = cg->dayWBR;
+		cg->nightWBB = cg->dayWBB;
 	}
-
-	if (ct == ctRPi) {
-		if (cg->isLibcamera)
-			cg->saturation = 1.0;
-		else
-			cg->saturation = 0.0;
-		cg->rotation = 0;
-	}
-	cg->gamma = 50;
-	cg->offset = 0;
-	cg->aggression = 75;
-	cg->gainTransitionTime = 5;
-	cg->width = 0;
-	cg->height = 0;
-	cg->imageType = AUTO_IMAGE_TYPE;
-	cg->sType = "";
-	cg->qualityJPG = 95;
-	cg->qualityPNG = 3;
-	cg->quality = cg->qualityJPG;
-	cg->asiAutoBandwidth = false;
-	cg->asiBandwidth = 40;
-		cg->minAsiBandwidth = 40;
-		cg->maxAsiBandwidth = 100;
-	cg->fileName = "image.jpg";
-	cg->flip = 0;
-	cg->notificationImages = true;
-	cg->dayEnableCooler = false;
-	cg->nightEnableCooler = false;
-	cg->dayTargetTemp = 0;
-	cg->nightTargetTemp = 0;
-	cg->latitude = "";
-	cg->longitude = "";
-	cg->angle = -6.0;
-	cg->timeFormat = "%Y%m%d %H:%M:%S";
-	cg->takingDarkFrames = false;
-	cg->locale = "en_US.UTF-8";
-	cg->debugLevel = 1;
-	cg->videoOffBetweenImages = true;
-	cg->consistentDelays = true;
-
-	cg->HB.histogramBoxSizeX = 500;
-	cg->HB.histogramBoxSizeY = 500;
-	cg->HB.histogramBoxPercentFromLeft = 0.5;
-	cg->HB.histogramBoxPercentFromTop = 0.5;
-	cg->HB.sArgs = NULL;
-
-	cg->myModeMeanSetting.modeMean = false;
-	cg->myModeMeanSetting.dayMean = DEFAULT_DAYMEAN;
-	cg->myModeMeanSetting.nightMean = DEFAULT_NIGHTMEAN;
-	cg->myModeMeanSetting.mean_threshold = 0.1;
-	cg->myModeMeanSetting.mean_p0 = 5.0;
-	cg->myModeMeanSetting.mean_p1 = 20.0;
-	cg->myModeMeanSetting.mean_p2 = 45.0;
-
-	cg->overlay.externalOverlay = false;
-	cg->overlay.ImgText = "";
-	cg->overlay.ImgExtraText = "";
-	cg->overlay.extraFileAge = 0;
-	cg->overlay.iTextLineHeight = 30;
-	cg->overlay.iTextX = 15;
-	cg->overlay.iTextY = 25;
-	cg->overlay.fontname_s = "";
-	cg->overlay.fontnumber = 0;
-	cg->overlay.fontcolor[0] = 255;
-	cg->overlay.fontcolor[1] = 0;
-	cg->overlay.fontcolor[2] = 0;
-	cg->overlay.fc = NULL;
-	cg->overlay.smallFontcolor[0] = 0;
-	cg->overlay.smallFontcolor[1] = 0;
-	cg->overlay.smallFontcolor[2] = 255;
-	cg->overlay.sfc = NULL;
-	cg->overlay.linetype[0] = cv::LINE_AA;
-	cg->overlay.linetype[1] = 8;
-	cg->overlay.linetype[2] = 4;
-	cg->overlay.linenumber = 0;
-	cg->overlay.fontsize = 10;
-	cg->overlay.linewidth = 1;
-	cg->overlay.outlinefont = false;
-	cg->overlay.showTime = true;
-	cg->overlay.showExposure = false;
-	cg->overlay.showTemp = false;
-	cg->tempType = "C";
-	cg->overlay.showGain = false;
-	cg->overlay.showBrightness = false;
-	cg->overlay.showMean = false;
-	cg->overlay.showFocus = false;
-	cg->overlay.showHistogramBox = false;
 }
 
-void getCommandLineArguments(config *cg, int argc, char *argv[])
+
+// Get a line from the specified buffer.
+// The first time getLine() is called, it starts at the beginning of the buffer.
+// Subsequent calls start at the beginning on the next line.
+// A line ends with NULL, or the last CR/LF.
+// NULL-out CR or LF, or both if they are in a row.
+// Keep track of the beginning of the next line.
+// Return a pointer to the beginning of the line or NULL if at the end of the file.
+char *getLine(char *buffer)
 {
+	static char *nextLine = NULL;
+	char *startOfLine;
+	char *ptr;
+
+	if (nextLine == NULL)
+		ptr = buffer;
+	else
+		ptr = nextLine;
+
+	if (*ptr == '\0')
+		return(NULL);		// end of the buffer
+
+	startOfLine = ptr;
+	for (; *ptr != '\0'; ptr++)
+	{
+		if (*ptr == '\r' || *ptr == '\n')
+		{
+			*ptr = '\0';
+			ptr++;
+			if (*ptr == '\r' || *ptr == '\n')
+			{
+				*ptr = '\0';
+				ptr++;
+			}
+		}
+	}
+	nextLine = ptr;
+
+	return(startOfLine);
+}
+
+// Get settings from a configuration file.
+bool called_from_getConfigFileArguments = false;
+static bool getConfigFileArguments(config *cg)
+{
+	if (called_from_getConfigFileArguments)
+	{
+		Log(0, "*** WARNING: Configuration file calls itself; ignoring!\n");
+// TODO: write to messages file
+		return true;
+	}
+
+	if (cg->configFile[0] == '\0') {
+		Log(0, "*** ERROR: Unable to read configuration file: no file specified!\n");
+// TODO: write to messages file
+		return false;
+	}
+
+	// Read the whole configuration file into memory so we can create argv with pointers
+	static char *buf = NULL;
+	int fd;
+	if ((fd = open(cg->configFile, O_RDONLY)) == -1)
+	{
+		int e = errno;
+		Log(0, "*** ERROR: Could not open configuration file '%s': %s!", cg->configFile, strerror(e));
+// TODO: write to messages file
+		return false;
+	}
+	struct stat statbuf;
+	if (fstat(fd, &statbuf) == 1)		// This should never fail
+	{
+		int e = errno;
+		Log(0, "*** ERROR: Could not fstat() configuration file '%s': %s!", cg->configFile, strerror(e));
+// TODO: write to messages file
+		return false;
+	}
+	// + 1 for trailing NULL
+	if ((buf = (char *) realloc(buf, statbuf.st_size + 1)) == NULL)
+	{
+		int e = errno;
+		Log(0, "*** ERROR: Could not malloc() configuration file '%s': %s!", cg->configFile, strerror(e));
+// TODO: write to messages file
+		return false;
+	}
+	if (read(fd, buf, statbuf.st_size) != statbuf.st_size)
+	{
+		int e = errno;
+		Log(0, "*** ERROR: Could not read() configuration file '%s': %s!", cg->configFile, strerror(e));
+// TODO: write to messages file
+		return false;
+	}
+	buf[statbuf.st_size] = '\0';
+	(void) close(fd);
+
+	int const numSettings = 500 * 2;	// some settings take an argument
+	char *argv[numSettings];
+
+	int lineNum = 0;		// number of arguments found
+	int argc = 0;
+
+	argv[argc++] = (char *) "getConfigFileArguments()";
+	char *line;
+	while ((line = getLine(buf)) != NULL)
+	{
+		lineNum++;
+//x printf("\tline # %d = %s\n", lineNum, line);
+		if (*line == '#' || *line == '\0')
+		{
+			continue;		// comment or blank line
+		}
+
+		if (*line == '=')		// still at start of line
+		{
+			Log(0, "*** WARNING: Line %d in configuration file '%s' has nothing before '='!\n", lineNum, cg->configFile);
+			continue;
+// TODO: write to messages file
+		}
+
+		// Find a "setting=value" pair or just "setting"
+		char *equal = line;			// beginning of an argument
+		while (*equal != '=' && *equal != '\0')
+		{
+			equal++;
+		}
+		// "equal" is pointing at equal sign or end of argumment
+// TODO: if line doesn't start with "-", add it
+		argv[argc++] = line;
+		if (*equal == '=')
+		{
+			*equal = '\0';
+			argv[argc++] = equal+1;
+		}
+	}
+
+	if (argc == 1)
+	{
+		Log(0, "*** WARNING: configuration file '%s' has no valid entries!\n", cg->configFile);
+// TODO: write to messages file
+	}
+
+	// Let's hope the config file doesn't call itself!
+	called_from_getConfigFileArguments = true;
+	bool ret = getCommandLineArguments(cg, argc, argv);
+	called_from_getConfigFileArguments = false;
+	return(ret);
+}
+
+
+// Get arguments from the command line.
+bool getCommandLineArguments(config *cg, int argc, char *argv[])
+{
+	const char *b;
+	if (called_from_getConfigFileArguments)
+		b = "\t";
+	else
+		b = "";
+
 	if (argc > 1)
 	{
 		for (int i=1 ; i <= argc - 1 ; i++)
@@ -1372,11 +1430,23 @@ void getCommandLineArguments(config *cg, int argc, char *argv[])
 			char *a = argv[i];
 // TODO: convert to lower case
 
+if (0) printf("%sargc %d: %s\n", b, i, a);
+
 			// Misc. settings
 			if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0)
 			{
 				cg->help = true;
 				cg->quietExit = true;	// we display the help message and quit
+			}
+			else if (strcmp(a, "-config") == 0)
+			{
+				// Read the file as soon as we see it on the command line.
+				// This means any command-line arguments after it will overwrite the config file.
+				cg->configFile = argv[++i];
+				if (! getConfigFileArguments(cg))
+				{
+					return(false);
+				}
 			}
 			else if (strcmp(a, "-version") == 0)
 			{
@@ -1770,4 +1840,6 @@ void getCommandLineArguments(config *cg, int argc, char *argv[])
 			}
 		}
 	}
+
+	return(true);
 }

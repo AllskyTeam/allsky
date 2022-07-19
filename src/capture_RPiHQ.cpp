@@ -86,7 +86,7 @@ char const *getCameraCommand(bool libcamera)
 }
 
 // Build capture command to capture the image from the camera.
-int RPicapture(config cg, cv::Mat *image, char const *imagetype)
+int RPicapture(config cg, cv::Mat *image)
 {
 	// Define command line.
 	string command = getCameraCommand(cg.isLibcamera);
@@ -113,7 +113,7 @@ int RPicapture(config cg, cv::Mat *image, char const *imagetype)
 		// command += " --tuning-file /usr/share/libcamera/ipa/raspberrypi/imx477.json";
 		command += "";	// xxxx
 
-		if (strcmp(imagetype, "png") == 0)
+		if (strcmp(cg.imageExt, "png") == 0)
 			command += " --encoding png";
 	}
 	else
@@ -331,12 +331,11 @@ printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSett
 
 int main(int argc, char *argv[])
 {
-	setDefaults(&cg, ctRPi);
-	cg.ct = ctRPi;
-
-	char * a = getenv("ALLSKY_HOME");
+	char * a = getenv("ALLSKY_HOME");		// This needs to come before anything else
 	if (a != NULL)
 		snprintf(allskyHome, sizeof(allskyHome)-1, "%s/", a);
+
+	setDefaults(&cg, ctRPi);
 
 	cg.tty = isatty(fileno(stdout)) ? true : false;
 	signal(SIGINT, IntHandle);
@@ -390,7 +389,11 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	setlinebuf(stdout);		// Line buffer output so entries appear in the log immediately.
 
-	getCommandLineArguments(&cg, argc, argv);
+	if (! getCommandLineArguments(&cg, argc, argv))
+	{
+		// getCommandLineArguents outputs an error message.
+		exit(EXIT_ERROR_STOP);
+	}
 
 // TODO: after merging myModeMeanSetting into cg.myModeMeanSetting, delete these lines.
 	myModeMeanSetting.dayMean = cg.myModeMeanSetting.dayMean;
@@ -417,35 +420,58 @@ int main(int argc, char *argv[])
 
 	// Do argument error checking if we're not going to exit soon.
 	// Some checks are done lower in the code, after we processed some values.
-const int minExposure_us = 1;	// TODO: determine based on camera
 const double minGain = 1.0;		// TODO: determine based on camera
 	if (! cg.saveCC)
 	{
 		// xxxx TODO: NO_MAX_VALUE will be replaced by acutal values
-		validateFloat(&cg.temp_dayMaxAutoExposure_ms, minExposure_us/US_IN_MS, NO_MAX_VALUE, "Daytime Max Auto-Exposure", true);	// camera-specific
-			cg.dayMaxAutoExposure_us = cg.temp_dayMaxAutoExposure_ms * US_IN_MS;
-		validateFloat(&cg.temp_dayExposure_ms, minExposure_us/US_IN_MS, cg.dayAutoExposure ? (cg.dayMaxAutoExposure_us/US_IN_MS) : NO_MAX_VALUE, "Daytime Manual Exposure", true);
-			cg.dayExposure_us = cg.temp_dayExposure_ms * US_IN_MS;
+
+		// If an exposure value, which was entered on the command-line in MS, is out of range,
+		// we want to specify the valid range in MS, not US which we use internally.
+		validateFloat(&cg.temp_dayExposure_ms,
+			cg.cameraMinExposure_us/US_IN_MS,
+			(cg.dayAutoExposure ? cg.dayMaxAutoExposure_us : cg.cameraMaxExposure_us) / US_IN_MS,
+			"Daytime Exposure vs. camera limits", true);
+		if (cg.dayAutoExposure)
+		{
+			validateFloat(&cg.temp_dayMaxAutoExposure_ms,
+				cg.cameraMinExposure_us/US_IN_MS,
+				cg.cameraMaxExposure_us,
+				"Daytime Max Auto-Exposure", true);
+		}
+		validateFloat(&cg.temp_nightExposure_ms,
+			cg.cameraMinExposure_us/US_IN_MS,
+			(cg.nightAutoExposure ? cg.nightMaxAutoExposure_us : cg.cameraMaxExposure_us) / US_IN_MS,
+			"Nighttime Exposure vs. camera limits", true);
+		if (cg.nightAutoExposure)
+		{
+			validateFloat(&cg.temp_nightMaxAutoExposure_ms,
+				cg.cameraMinExposure_us/US_IN_MS,
+				cg.cameraMaxExposure_us/US_IN_MS,
+				"Nighttime Max Auto-Exposure", true);
+		}
+
+		// The user entered these in MS on the command line, but we need US, so convert.
+		cg.dayExposure_us = cg.temp_dayExposure_ms * US_IN_MS;
+		cg.dayMaxAutoExposure_us = cg.temp_dayMaxAutoExposure_ms * US_IN_MS;
+		cg.nightExposure_us = cg.temp_nightExposure_ms * US_IN_MS;
+		cg.nightMaxAutoExposure_us = cg.temp_nightMaxAutoExposure_ms * US_IN_MS;
+
 		validateLong(&cg.dayBrightness, minBrightness, maxBrightness, "Daytime Brightness", true);
 		validateLong(&cg.dayDelay_ms, 10, NO_MAX_VALUE, "Daytime Delay", false);
-		validateFloat(&cg.dayMaxAutoGain, 1, NO_MAX_VALUE, "Daytime Max Auto-Gain", true);					// camera-specific
+		validateFloat(&cg.dayMaxAutoGain, 1, NO_MAX_VALUE, "Daytime Max Auto-Gain", true);
 		validateFloat(&cg.dayGain, 1, cg.dayAutoGain ? cg.dayMaxAutoGain : NO_MAX_VALUE, "Daytime Gain", true);
-		validateLong(&cg.dayBin, 1, 3, "Daytime Binning", false);								// camera-specific
-		validateFloat(&cg.dayWBR, 0, NO_MAX_VALUE, "Daytime Red Balance", true);							// camera-specific
-		validateFloat(&cg.dayWBB, 0, NO_MAX_VALUE, "Daytime Blue Balance", true);						// camera-specific
+		validateLong(&cg.dayBin, 1, 3, "Daytime Binning", false);
+		validateFloat(&cg.dayWBR, 0, NO_MAX_VALUE, "Daytime Red Balance", true);
+		validateFloat(&cg.dayWBB, 0, NO_MAX_VALUE, "Daytime Blue Balance", true);
 		validateLong(&cg.daySkipFrames, 0, 50, "Daytime Skip Frames", true);
 
-		validateFloat(&cg.temp_nightMaxAutoExposure_ms, minExposure_us*US_IN_MS, NO_MAX_VALUE, "Nighttime Max Auto-Exposure", true);	// camera-specific
-			cg.nightMaxAutoExposure_us = cg.temp_nightMaxAutoExposure_ms * US_IN_MS;
-		validateFloat(&cg.temp_nightExposure_ms, minExposure_us*US_IN_MS, cg.nightAutoExposure ? (cg.nightMaxAutoExposure_us/US_IN_MS) : NO_MAX_VALUE, "Nighttime Manual Exposure", true);
-			cg.nightExposure_us = cg.temp_nightExposure_ms * US_IN_MS;
 		validateLong(&cg.nightBrightness, minBrightness, maxBrightness, "Nighttime Brightness", true);
 		validateLong(&cg.nightDelay_ms, 10, NO_MAX_VALUE, "Nighttime Delay", false);
-		validateFloat(&cg.nightMaxAutoGain, 0, NO_MAX_VALUE, "Nighttime Max Auto-Gain", true);				// camera-specific
+		validateFloat(&cg.nightMaxAutoGain, 0, NO_MAX_VALUE, "Nighttime Max Auto-Gain", true);
 		validateFloat(&cg.nightGain, 0, cg.nightAutoGain ? cg.nightMaxAutoGain : NO_MAX_VALUE, "Nighttime Gain", true);
-		validateLong(&cg.nightBin, 1, 3, "Nighttime Binning", false);							// camera-specific
-		validateFloat(&cg.nightWBR, 0, NO_MAX_VALUE, "Nighttime Red Balance", true);						// camera-specific
-		validateFloat(&cg.nightWBB, 0, NO_MAX_VALUE, "Nighttime Blue Balance", true);					// camera-specific
+		validateLong(&cg.nightBin, 1, 3, "Nighttime Binning", false);
+		validateFloat(&cg.nightWBR, 0, NO_MAX_VALUE, "Nighttime Red Balance", true);
+		validateFloat(&cg.nightWBB, 0, NO_MAX_VALUE, "Nighttime Blue Balance", true);
 		validateLong(&cg.nightSkipFrames, 0, 50, "Nighttime Skip Frames", true);
 
 		validateFloat(&cg.saturation, minSaturation, maxSaturation, "Saturation", true);
@@ -485,16 +511,17 @@ const double minGain = 1.0;		// TODO: determine based on camera
 		}
 	}
 
-	char const *imagetype = "";
 	char const *ext = checkForValidExtension(cg.fileName, cg.imageType);
 	if (ext == NULL)
 	{
 		// checkForValidExtension() displayed the error message.
 		closeUp(EXIT_ERROR_STOP);
 	}
+
+// TODO: make common
 	if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
 	{
-		imagetype = "jpg";
+		cg.imageExt = "jpg";
 		compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
 		// want dark frames to be at highest quality
 		if (cg.takingDarkFrames)
@@ -512,7 +539,7 @@ const double minGain = 1.0;		// TODO: determine based on camera
 	}
 	else if (strcasecmp(ext, "png") == 0)
 	{
-		imagetype = "png";
+		cg.imageExt = "png";
 		compressionParameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
 		// png is lossless so "quality" is really just the amount of compression.
 		if (cg.takingDarkFrames)
@@ -530,13 +557,14 @@ const double minGain = 1.0;		// TODO: determine based on camera
 	}
 	compressionParameters.push_back(cg.quality);
 
+// TODO: make common.
 	// Get just the name of the file, without any directories or the extension.
 	if (cg.takingDarkFrames)
 	{
 		// To avoid overwriting the optional notification image with the dark image,
 		// during dark frames we use a different file name.
 		static char darkFilename[20];
-		sprintf(darkFilename, "dark.%s", imagetype);
+		sprintf(darkFilename, "dark.%s", cg.imageExt);
 		cg.fileName = darkFilename;
 		strncat(cg.finalFileName, cg.fileName, sizeof(cg.finalFileName)-1);
 	}
@@ -632,12 +660,17 @@ const double minGain = 1.0;		// TODO: determine based on camera
 	displaySettings(cg);
 
 	// Initialization
-	int originalITextX = cg.overlay.iTextX;
-	int originalITextY = cg.overlay.iTextY;
-	int originalFontsize = cg.overlay.fontsize;
-	int originalLinewidth = cg.overlay.linewidth;
+	int originalITextX		= cg.overlay.iTextX;
+	int originalITextY		= cg.overlay.iTextY;
+	int originalFontsize	= cg.overlay.fontsize;
+	int originalLinewidth	= cg.overlay.linewidth;
 	// Have we displayed "not taking picture during day" message, if applicable?
 	bool displayedNoDaytimeMsg = false;
+
+	if (cg.tty)
+		printf("*** Press Ctrl+C to stop ***\n\n");
+
+	// Start taking pictures
 
 	while (bMain)
 	{
@@ -645,9 +678,11 @@ const double minGain = 1.0;		// TODO: determine based on camera
 		dayOrNight = calculateDayOrNight(cg.latitude, cg.longitude, cg.angle);
 		std::string lastDayOrNight = dayOrNight;
 
-		if (cg.takingDarkFrames) {
+		if (cg.takingDarkFrames)
+		{
 			// We're doing dark frames so turn off autoexposure and autogain, and use
 			// nightime gain, delay, exposure, and brightness to mimic a nightime shot.
+			cg.currentSkipFrames = 0;
 			cg.currentAutoExposure = false;
 			cg.nightAutoExposure = false;
 			cg.currentAutoGain = false;
@@ -657,9 +692,17 @@ const double minGain = 1.0;		// TODO: determine based on camera
 			cg.currentMaxAutoExposure_us = cg.currentExposure_us = cg.nightMaxAutoExposure_us;
 			cg.currentBin = cg.nightBin;
 			cg.currentBrightness = cg.nightBrightness;
-			cg.currentAutoAWB = false;
-			cg.currentWBR = cg.nightWBR;
-			cg.currentWBB = cg.nightWBB;
+			if (cg.isColorCamera)
+			{
+				cg.currentAutoAWB = false;
+				cg.currentWBR = cg.nightWBR;
+				cg.currentWBB = cg.nightWBB;
+			}
+			if (cg.isCooledCamera)
+			{
+				cg.currentEnableCooler = cg.nightEnableCooler;
+				cg.currentTargetTemp = cg.nightTargetTemp;
+			}
 			cg.myModeMeanSetting.currentMean = NOT_SET;
 			cg.myModeMeanSetting.modeMean = false;
 // TODO: after merging myModeMeanSetting into cg.myModeMeanSetting, delete these lines.
@@ -696,25 +739,41 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 			{
 				Log(0, "==========\n=== Starting daytime capture ===\n==========\n");
 
+				// We only skip initial frames if we are starting in daytime and using auto-exposure.
+				if (numExposures == 0 && cg.dayAutoExposure)
+					cg.currentSkipFrames = cg.daySkipFrames;
+
 				cg.currentExposure_us = cg.dayExposure_us;
 				cg.currentMaxAutoExposure_us = cg.dayMaxAutoExposure_us;
 				cg.currentAutoExposure = cg.dayAutoExposure;
 				cg.currentBrightness = cg.dayBrightness;
-				cg.currentAutoAWB = cg.dayAutoAWB;
-				cg.currentWBR = cg.dayWBR;
-				cg.currentWBB = cg.dayWBB;
+				if (cg.isColorCamera)
+				{
+					cg.currentAutoAWB = cg.dayAutoAWB;
+					cg.currentWBR = cg.dayWBR;
+					cg.currentWBB = cg.dayWBB;
+				}
 				cg.currentDelay_ms = cg.dayDelay_ms;
 				cg.currentBin = cg.dayBin;
 				cg.currentGain = cg.dayGain;
 				cg.currentMaxAutoGain = cg.dayMaxAutoGain;
 				cg.currentAutoGain = cg.dayAutoGain;
 				cg.myModeMeanSetting.currentMean = cg.myModeMeanSetting.dayMean;
+				if (cg.isCooledCamera)
+				{
+					cg.currentEnableCooler = cg.dayEnableCooler;
+					cg.currentTargetTemp = cg.dayTargetTemp;
+				}
 			}
 		}
 
 		else	// NIGHT
 		{
 			Log(0, "==========\n=== Starting nighttime capture ===\n==========\n");
+
+			// We only skip initial frames if we are starting in nighttime and using auto-exposure.
+			if (numExposures == 0 && cg.nightAutoExposure)
+				cg.currentSkipFrames = cg.nightSkipFrames;
 
 			// Setup the night time capture parameters
 			cg.currentExposure_us = cg.nightExposure_us;
@@ -732,15 +791,21 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 			cg.currentGain = cg.nightGain;
 			cg.currentMaxAutoGain = cg.nightMaxAutoGain;
 			cg.currentAutoGain = cg.nightAutoGain;
+			if (cg.isCooledCamera)
+			{
+				cg.currentEnableCooler = cg.nightEnableCooler;
+				cg.currentTargetTemp = cg.nightTargetTemp;
+			}
 			cg.myModeMeanSetting.currentMean = cg.myModeMeanSetting.nightMean;
 		}
+		// ========== Done with dark fram / day / night settings
 
 
 		if (cg.myModeMeanSetting.currentMean > 0.0)
 		{
 			cg.myModeMeanSetting.modeMean = true;
 			myModeMeanSetting.meanValue = cg.myModeMeanSetting.currentMean;
-			if (! aegInit(cg, minExposure_us, minGain, myRaspistillSetting, myModeMeanSetting))
+			if (! aegInit(cg, cg.cameraMinExposure_us, minGain, myRaspistillSetting, myModeMeanSetting))
 			{
 				closeUp(EXIT_ERROR_STOP);
 			}
@@ -749,13 +814,8 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 		{
 			cg.myModeMeanSetting.modeMean = false;
 		}
-// TODO: after merging myModeMeanSetting into cg.myModeMeanSetting, delete these lines.
+// TODO: after merging myModeMeanSetting into cg.myModeMeanSetting, delete this line.
 myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
-
-		if (cg.currentAutoExposure && cg.currentExposure_us > cg.currentMaxAutoExposure_us)
-		{
-			cg.currentExposure_us = cg.currentMaxAutoExposure_us;
-		}
 
 		// Want initial exposures to have the exposure time and gain the user specified.
 		if (numExposures == 0)
@@ -764,27 +824,34 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 			myRaspistillSetting.analoggain = cg.currentGain;
 		}
 
-		// Adjusting variables for chosen binning
-		cg.height				= originalHeight / cg.currentBin;
-		cg.width				= originalWidth / cg.currentBin;
-		cg.overlay.iTextX		= originalITextX / cg.currentBin;
-		cg.overlay.iTextY		= originalITextY / cg.currentBin;
-		cg.overlay.fontsize		= originalFontsize / cg.currentBin;
-		cg.overlay.linewidth	= originalLinewidth / cg.currentBin;
+		if (numExposures == 0 || cg.dayBin != cg.nightBin)
+		{
+			// Adjusting variables for chosen binning.
+			// Only need to do at the beginning and if bin changes.
+			cg.height				= originalHeight / cg.currentBin;
+			cg.width				= originalWidth / cg.currentBin;
+			cg.overlay.iTextX		= originalITextX / cg.currentBin;
+			cg.overlay.iTextY		= originalITextY / cg.currentBin;
+			cg.overlay.fontsize		= originalFontsize / cg.currentBin;
+			cg.overlay.linewidth	= originalLinewidth / cg.currentBin;
 
 // TODO: if not the first time, should we free the old pRgb?
-		if (cg.imageType == IMG_RAW16)
-		{
-			pRgb.create(cv::Size(cg.width, cg.height), CV_16UC1);
+			if (cg.imageType == IMG_RAW16)
+			{
+				pRgb.create(cv::Size(cg.width, cg.height), CV_16UC1);
+			}
+				else if (cg.imageType == IMG_RGB24)
+			{
+				pRgb.create(cv::Size(cg.width, cg.height), CV_8UC3);
+			}
+			else // RAW8 and Y8
+			{
+				pRgb.create(cv::Size(cg.width, cg.height), CV_8UC1);
+			}
 		}
-		else if (cg.imageType == IMG_RGB24)
-		{
-			pRgb.create(cv::Size(cg.width, cg.height), CV_8UC3);
-		}
-		else // RAW8 and Y8
-		{
-			pRgb.create(cv::Size(cg.width, cg.height), CV_8UC1);
-		}
+
+		// Here and below, indent sub-messages with "  > " so it's clear they go with the un-indented line.
+		// This simply makes it easier to see things in the log file.
 
 		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)
@@ -806,13 +873,12 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 			{
 				// Create the name of the file that goes in the images/<date> directory.
 				snprintf(cg.finalFileName, sizeof(cg.finalFileName), "%s-%s.%s",
-					cg.fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), imagetype);
+					cg.fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), cg.imageExt);
 			}
 			snprintf(cg.fullFilename, sizeof(cg.fullFilename), "%s/%s", cg.saveDir, cg.finalFileName);
 
 			// Capture and save image
-			retCode = RPicapture(cg, &pRgb, imagetype);
-
+			retCode = RPicapture(cg, &pRgb);
 			if (retCode == 0)
 			{
 				numExposures++;
@@ -859,7 +925,7 @@ if (lastExposure_us != myRaspistillSetting.shutter_us)
 						myRaspistillSetting.analoggain = cg.currentGain;
 					}
 
-					if (doOverlay(pRgb, cg, bufTime,
+					if (cg.currentSkipFrames == 0 && ! cg.overlay.externalOverlay && doOverlay(pRgb, cg, bufTime,
 						lastExposure_us, actualTemp, lastGain, 0, mean, focusMetric) > 0)
 					{
 						// if we added anything to overlay, write the file out
@@ -868,18 +934,36 @@ if (lastExposure_us != myRaspistillSetting.shutter_us)
 					}
 				}
 
-				char cmd[1100+sizeof(allskyHome)];
-				Log(1, "  > Saving %s image '%s'\n", cg.takingDarkFrames ? "dark" : dayOrNight.c_str(), cg.finalFileName);
-				snprintf(cmd, sizeof(cmd), "%sscripts/saveImage.sh %s '%s'", allskyHome, dayOrNight.c_str(), cg.fullFilename);
+				if (cg.currentSkipFrames > 0)
+				{
+					Log(2, "  >>>> Skipping this frame\n");
+					cg.currentSkipFrames--;
+					// Do not save this frame or sleep after it.
+					// We just started taking images so no need to check if DAY or NIGHT changed
+					continue;
+				}
+				else
+				{
+					// We primarily skip the initial frames to give auto-exposure time to
+					// lock in on a good exposure.  If it does that quickly, stop skipping images.
+					if (cg.goodLastExposure)
+					{
+						cg.currentSkipFrames = 0;
+					}
 
-				// TODO: in the future the calculation of mean should independent from modeMean. -1 means don't display.
-				float m = (cg.myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) ? mean : -1.0;
-				add_variables_to_command(cmd, exposureStartDateTime,
-					lastExposure_us, cg.currentBrightness, m,
-					cg.currentAutoExposure, cg.currentAutoGain, cg.currentAutoAWB, cg.currentWBR, cg.currentWBB,
-					actualTemp, lastGain, cg.currentBin, getFlip(cg.flip), currentBitDepth, focusMetric);
-				strcat(cmd, " &");
-				system(cmd);
+					char cmd[1100+sizeof(allskyHome)];
+					Log(1, "  > Saving %s image '%s'\n", cg.takingDarkFrames ? "dark" : dayOrNight.c_str(), cg.finalFileName);
+					snprintf(cmd, sizeof(cmd), "%sscripts/saveImage.sh %s '%s'", allskyHome, dayOrNight.c_str(), cg.fullFilename);
+
+					// TODO: in the future the calculation of mean should independent from modeMean. -1 means don't display.
+					float m = (cg.myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) ? mean : -1.0;
+					add_variables_to_command(cmd, exposureStartDateTime,
+						lastExposure_us, cg.currentBrightness, m,
+						cg.currentAutoExposure, cg.currentAutoGain, cg.currentAutoAWB, cg.currentWBR, cg.currentWBB,
+						actualTemp, lastGain, cg.currentBin, getFlip(cg.flip), currentBitDepth, focusMetric);
+					strcat(cmd, " &");
+					system(cmd);
+				}
 
 				if (cg.myModeMeanSetting.modeMean && myModeMeanSetting.quickstart && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 				{

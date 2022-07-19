@@ -53,133 +53,172 @@ enum cameraType {
 
 // Use long instead of int so we can use validateLong() without creating validateInt().
 struct overlay {
-	char const *ImgText;
-	char const *ImgExtraText;
-	long extraFileAge;
-	long iTextLineHeight;
-	long iTextX, iTextY;					// calculated for day and night
-	char const *fontname_s;					// fontnames[fontnumber] (calculated value)
-	long fontnumber;
-	int fontcolor[3];
-	char const *fc;							// string version of fontcolor[]
-	int smallFontcolor[3];
-	char const *sfc;						// string version of smallfontcolor[]
-	int linetype[3];
-	long linenumber;
-	double fontsize;						// calculated for day and night
-	long linewidth;							// calculated for day and night
-	bool outlinefont;
-	bool showTime;
-	bool showExposure;
-	bool showTemp;
-	bool showGain;
-	bool showBrightness;
-	bool showMean;
-	bool showFocus;
-	bool showHistogramBox;
-	bool externalOverlay;
+	char const *ImgText					= "";
+	char const *ImgExtraText			= "";
+	long extraFileAge					= 0;
+	long iTextLineHeight				= 30;
+	long iTextX							= 15;
+	long iTextY							= 25;
+	long fontnumber						= 0;
+	// fontcolor / fc, and smallfontcolor / sfc should match
+	int fontcolor[3]					= { 255, 0, 0 };
+	char const *fc						= "0 0 255"; 			// string version of fontcolor[]
+	int smallFontcolor[3]				= { 0, 0, 255 };
+	char const *sfc						= "0 0 255";			// string version of smallfontcolor[]
+	int linetype[3]						= { cv::LINE_AA, 8, 4 };
+	long linenumber						= 0;
+	double fontsize						= 10;
+	long linewidth						= 1;
+	bool outlinefont					= false;
+	bool showTime						= true;
+	bool showExposure					= false;
+	bool showTemp						= false;
+	bool showGain						= false;
+	bool showBrightness					= false;
+	bool showMean						= false;
+	bool showFocus						= false;
+	bool showHistogramBox				= false;
+	bool externalOverlay				= false;
 };
 
 // Histogram Box, ZWO only
 struct HB {
-	int histogramBoxSizeX;				// width of box in pixels
-	int currentHistogramBoxSizeX;		// day and night values can be different
-	int histogramBoxSizeY;				// height of box in pixels
-	int currentHistogramBoxSizeY;		// day and night values can be different
-	float histogramBoxPercentFromLeft;	// e.g., 25% means left side starts 25% of the image width
-	float histogramBoxPercentFromTop;	// ditto for top percent
-	int centerX, centerY;				// center X and Y pixel (calculated value)
-	int leftOfBox, topOfBox;			// top left pixel (calculated value)
-	int rightOfBox, bottomOfBox;		// bottom right pixel (calculated value)
-	char const *sArgs;					// string version of arguments
+	int histogramBoxSizeX				= 500;			// width of box in pixels
+	int currentHistogramBoxSizeX		= NOT_SET;
+	int histogramBoxSizeY				= 500;			// height of box in pixels
+	int currentHistogramBoxSizeY		= NOT_SET;
+	float histogramBoxPercentFromLeft	= 0.5;			// 25% means left/top side starts 25% of
+	float histogramBoxPercentFromTop	= 0.5;			//    the image width/height
+	int centerX							= NOT_SET;		// center X and Y pixel (calculated value)
+	int centerY							= NOT_SET;		// center X and Y pixel (calculated value)
+	int leftOfBox						= NOT_SET;		// top left pixel (calculated value)
+	int topOfBox						= NOT_SET;		// top left pixel (calculated value)
+	int rightOfBox						= NOT_SET;		// bottom right pixel (calculated value)
+	int bottomOfBox						= NOT_SET;		// bottom right pixel (calculated value)
+	char const *sArgs					= NULL;			// string version of arguments
 };
 
 struct myModeMeanSetting {
-	bool modeMean;
-	double nightMean, dayMean;
-	double currentMean;
-	double Mean;						// (calculated value)
-	double mean_threshold;
-	double mean_p0, mean_p1, mean_p2;
+	bool modeMean						= false;
+	double dayMean						= DEFAULT_DAYMEAN;
+	double nightMean					= DEFAULT_NIGHTMEAN;
+	double currentMean					= NOT_SET;
+	double Mean							= NOT_SET;		// (calculated value)
+	double mean_threshold				= 0.1;
+	double mean_p0						= 5.0;
+	double mean_p1						= 20.0;
+	double mean_p2						= 45.0;
 };
 
 
 struct config {			// for configuration variables
+	// The ones with no default (or NOT_SET) will be set at run-time.
+	// Some of these variables aren't settings, but are temporary variables that need to be
+	// passed around.
+
 	// Camera number, type and model
-	int cameraNumber;						// 0 to number-of-cameras-attached minus 1
-	cameraType ct;
-	char const *cm;
+	int cameraNumber					= 0;			// 0 to number-of-cameras-attached minus 1
+	cameraType ct						= ctRPi;
+	char const *cm						= "";
 
-	bool isColorCamera;						// xxx from ASICameraInfo.IsColorCam)
-	bool isCooledCamera;					// from ASICameraInfo.IsCoolerCam
-	bool supportsTemperature;				// sensor temperature from ASICameraInfo
-	bool supportsAggression;				// currently ZWO only
-	bool gainTransitionTimeImplemented;		// currently ZWO only
-	long cameraMinExposure_us;				// camera's minimum exposure - camera dependent
-	long cameraMaxExposure_us;				// camera's maximum exposure - camera dependent
-	long cameraMaxAutoExposure_us;			// camera's max auto-exposure
+	// Settings can be in the config file and/or command-line.
+	char const *configFile				= "";
 
-	// The following are settings based on command-line arguments
-	bool help;
-	bool quietExit;
-	const char *version;
-	bool isLibcamera;						// RPi only
-	char const *saveDir;
-	char const *CC_saveDir;	bool saveCC;
-	bool tty;
-	bool preview;
-	bool daytimeCapture;					// capture images during daytime?
-	char const *timeFormat;
+	bool isColorCamera					= false;
+	bool isCooledCamera					= false;
+	bool supportsTemperature			= true;
+	bool supportsAggression				= false;		// currently ZWO only
+	bool gainTransitionTimeImplemented	= false;		// currently ZWO only
+	// camera's min and max exposures (camera dependent), and max auto-exposure length
+	long cameraMinExposure_us			= NOT_SET;
+	long cameraMaxExposure_us			= NOT_SET;
+	long cameraMaxAutoExposure_us		= NOT_SET;
+	bool goodLastExposure				= false;
 
-	bool dayAutoExposure, nightAutoExposure;
-	long dayMaxAutoExposure_us, nightMaxAutoExposure_us;
-	long dayExposure_us, nightExposure_us;
-	long dayBrightness, nightBrightness;
-	long dayDelay_ms, nightDelay_ms;
-	bool dayAutoGain, nightAutoGain;
-	double dayMaxAutoGain, nightMaxAutoGain;
-	double dayGain, nightGain;
-	long dayBin, nightBin;
-	bool dayAutoAWB, nightAutoAWB;
-	double dayWBR, nightWBR, dayWBB, nightWBB;
-	long daySkipFrames, nightSkipFrames;
-	bool dayEnableCooler, nightEnableCooler;
-	long dayTargetTemp, nightTargetTemp;
-	// These are entered in ms and we convert to us later
-	double temp_dayExposure_ms;
-	double temp_nightExposure_ms;
-	double temp_dayMaxAutoExposure_ms;
-	double temp_nightMaxAutoExposure_ms;
+	// The following are settings based on command-line arguments.
+	bool help							= false;
+	bool quietExit						= false;
+	const char *version					= "UNKNOWN";
+	bool isLibcamera					= false;		// RPi only
+	char const *saveDir					= "";
+	char const *CC_saveDir				= "";
+	bool saveCC							= false;
+	bool tty							= false;
+	bool preview						= false;
+	bool daytimeCapture					= false;		// capture images during daytime?
+	char const *timeFormat				= "%Y%m%d %H:%M:%S";
 
-	double saturation;
-	long gamma;
-	long offset;
-	long aggression;
-	long gainTransitionTime;
-	long width, height;						// image width and height
-	long imageType;
-	char const *sType;						// string version of imageType
-	long quality, qualityJPG, qualityPNG;
-	bool asiAutoBandwidth;
-	long asiBandwidth, minAsiBandwidth, maxAsiBandwidth;
-	char const *fileName;
-		char fileNameOnly[50];
+	bool dayAutoExposure				= true;
+	bool nightAutoExposure				= true;
+	long dayMaxAutoExposure_us			= 30 * US_IN_SEC;
+	double temp_dayMaxAutoExposure_ms	= dayMaxAutoExposure_us / US_IN_MS;
+	long nightMaxAutoExposure_us		= 60 * US_IN_SEC;
+	double temp_nightMaxAutoExposure_ms	= nightMaxAutoExposure_us / US_IN_MS;
+	long dayExposure_us					= 32 * US_IN_MS;
+	double temp_dayExposure_ms			= dayExposure_us / US_IN_MS;
+	long nightExposure_us				= 20 * US_IN_SEC;
+	double temp_nightExposure_ms		= nightExposure_us / US_IN_MS;
+	long dayBrightness					= NOT_SET;
+	long nightBrightness				= NOT_SET;
+	long dayDelay_ms					= 5 * MS_IN_SEC;
+	long nightDelay_ms					= 10 * MS_IN_SEC;
+	bool dayAutoGain					= true;
+	bool nightAutoGain					= true;
+	double dayMaxAutoGain				= NOT_SET;
+	double nightMaxAutoGain				= NOT_SET;
+	double dayGain						= NOT_SET;
+	double nightGain					= NOT_SET;
+	long dayBin							= 1;
+	long nightBin						= 1;
+	bool dayAutoAWB						= false;
+	bool nightAutoAWB					= false;
+	double dayWBR						= NOT_SET;
+	double nightWBR						= NOT_SET;
+	double dayWBB						= NOT_SET;
+	double nightWBB						= NOT_SET;
+	long daySkipFrames					= 5;
+	long nightSkipFrames				= 1;
+	bool dayEnableCooler				= false;
+	bool nightEnableCooler				= false;
+	long dayTargetTemp					= 0;
+	long nightTargetTemp				= 0;
+
+	double saturation					= NOT_SET;
+	long gamma							= 50;
+	long offset							= 0;
+	long aggression						= 75;
+	long gainTransitionTime				= 5;
+	long width							= 0;		// use full sensor width
+	long height							= 0;		// use full sensor height
+	long imageType						= AUTO_IMAGE_TYPE;
+	char const *sType					= "";		// string version of imageType
+	char const *imageExt				= "jpg";	// image extension
+	long qualityJPG						= 95;
+	long qualityPNG						= 3;
+	long quality						= qualityJPG;
+	bool asiAutoBandwidth				= true;
+	long minAsiBandwidth				= 40;
+	long maxAsiBandwidth				= 100;
+	long asiBandwidth					= 40;
+	char const *fileName				= "image.jpg";
+		char fileNameOnly[50]			= { 0 };
 		// final name of the file that's written to disk, with no directories
-		char finalFileName[200];
+		char finalFileName[200]			= { 0 };
 		// full name of file written to disk
-		char fullFilename[1000];
-	long rotation;
-	long flip;
-	bool notificationImages;
-	char const *tempType;
-	char const *latitude, *longitude;
-	float angle;
-	bool takingDarkFrames;
-	char const *locale;
-	long debugLevel;
-	bool consistentDelays;
-	bool videoOffBetweenImages;
-	char const *ASIversion;					// calculated value
+		char fullFilename[1000]			= { 0 };
+	long rotation						= 0;
+	long flip							= 0;
+	bool notificationImages				= true;
+	char const *tempType				= "C";
+	char const *latitude				= "";
+	char const *longitude				= "";
+	float angle							= -6.0;
+	bool takingDarkFrames				= false;
+	char const *locale					= "en_US.UTF-8";
+	long debugLevel						= 1;
+	bool consistentDelays				= true;
+	bool videoOffBetweenImages			= true;
+	char const *ASIversion				= "UNKNOWN";		// calculated value
 
 	struct overlay overlay;
 	struct myModeMeanSetting myModeMeanSetting;
@@ -251,4 +290,4 @@ bool daytimeSleep(bool, config);
 void delayBetweenImages(config, long, std::string);
 void setDefaults(config *, cameraType);
 char const *getCameraCommand(bool);
-void getCommandLineArguments(config *, int, char *[]);
+bool getCommandLineArguments(config *, int, char *[]);

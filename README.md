@@ -389,20 +389,23 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 <!-- some of the changes haven't been made as of June 3, 2022, but should be for the next release -->
 * version **v2022.MM.DD**: 
 	* Allsky package:
-		* Several settings were added and can be modified in the WebUI:
+		* New settings available in the WebUI:
 			* **Max Auto-Exposure** for day and night.  When using auto exposure, exposure times will not exceed this number.
 			* **Max Auto-Gain** for day and night.  When using auto gain, gain values will not exceed this number.
 			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
-			* **Frames to Skip** for day and night determine how many initial auto exposure frames to ignore when starting Allsky during the day and night, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving.
+			* **Frames to Skip** for day and night determine how many initial auto exposure frames to ignore when starting Allsky, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving anyhow.
+			* **Consistent Delays** determines whether or not the time between the start of exposures will be consistent (current behavior) or not.  When enabled, the time between images is the maximum exposure plus the delay you set.
+			* **External Overlays** determines if the text overlay (exposure, time, etc.) should be done in the capture program or by an external program that has **significanly** more capabilities (see below).  **NOTE**: the default will change to the external program in a feature release, and after that the "internal" overlay will be removed.
+			* **Cooling** and **Target Temp.** (ZWO only) now have separate settings for day and night.
 			* **Aggression** (ZWO only) determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
 			* **Gamma** (ZWO only) changes the contrast of an image.  It is only supported by a few cameras; for those that don't, the `AUTO_STRETCH` setting can produce a similar effect.
 			* **Offset** (ZWO only) adds about 1/10th the specified amount to each pixel, thereby brightening the whole image.  Setting this too high causes the image to turn gray.
 			* **Mean Target** (RPi only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
 			* **Mean Threshold** (RPi only).  This specifies how close the actual mean brightness must be to the **Mean Target**.  For example, if **Mean Target** is 0.5 and **Mean Threshold** is 0.1, the actual mean can vary between 0.4 and 0.6 (0.5 +/- 0.1).
-		* "Mini" timelapse videos can be created that contain a user-configurable number of the most recent images.  This allows you to continually see the recent sky conditions.  These "mini" timelapse videos are updated every frame.
-		* The camera-checking algorithm was improved, resulting in fewer failures.
+		* "Mini" timelapse videos can be created that contain a user-configurable number of the most recent images.  This allows you to continually see the recent sky conditions.
+		* Settings can be specified in a configuration file via a new "-config file" option to the capture programs. In the future this will allow allsky to simply re-read the settings rather than re-starting when you change settings in the WebUI.
 		* If the camera isn't found, a notification message stating that is displayed.
-		* Settings are checked for validity (for example, a valid **Brightness* value was specified) and messages added to the log if there are problems; critical errors cause the program to stop until they are fixed.
+		* Settings are checked for validity (for example, a valid **Brightness** value was specified) and messages added to the log if there are problems; critical errors cause the program to stop until they are fixed.
 		* Latitude and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  The Allsky Website will always display with N, S, E, or W.
 		* Sanity checking is done on crop and image resize settings before performing those actions.  For example, sizes must be positive, even numbers, and the crop area must fit within the image.
 		* Sanity checking is done on Allsky Map data, for example, the URLs are reachable from the Internet.
@@ -415,27 +418,31 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* `SSH_KEY_FILE`: path to a SSH private key. When `scp` is used for uploads, this identify file will be used to establish the secure connection.
 		* There are fewer writes to the SD card, saving wear and tear.
 		* Several variables in the `config/config.sh` file were renamed.  It's important to NOT simply copy that file from an old release to the new one.
-		* Common code between the ZWO and RPi versions was moved to the `allsky_common.cpp` file, making Allsky easier to maintain.
+		* A LOT of common code between the ZWO and RPi versions was moved to the `allsky_common.cpp` file, making Allsky easier to maintain.
 		* Many minor enhancements were made.
 	* WebUI:
 		* The WebUI is now installed as part of the Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
-		* The WebUI and Allsky Website are now installed in ~/allsky/html and ~/allsky/html/allsky, respectively.  Any images in the old locations are moved to the new locations when upgrading to this release.
+		* The WebUI and Allsky Website are now installed in `~/allsky/html` and `~/allsky/html/allsky`, respectively.  Any images in the old locations are moved to the new locations when upgrading to this release.
+		* New links on the left side:
+			* **Overlay Editor** allows you to drag and drop what text and images you want overlayed on the images.  This is a **significant** improvement over the old mechanism; the new way lets you vary the font size, color, rotation, etc. for everything you add and let you use variables in the text which gets replaced at run-time, e.g., the time.
+			* **Module Editor** allows you to specify what actions should take place after an image has been saved, for example, add an overlay or count the number of stars.  Users can add (and hopefully share) their own modules.
+		* The "Camera Settings" link was renamed to "Allsky Settings" since there are non-camera settings there.
 		* Minimum, maximum, and default values are now correct for all camera models.
 		* The **Focus Metric** setting in the WebUI is now available for ZWO cameras.
 		* The "Editor" page can edit the Allsky Website's configuration file(s) if you have the website installed on your Pi.  This is the preferred way to edit the configuration file(s), since the editor performs basic syntax checking.
 		* Some errors that appear in the `/var/log/allsky.log` file also appear in the WebUI so you don't miss them.  Currently this is limited to Allsky Map data errors, but will be expanded in the future.
-		* The order of items in the "Camera Settings" page changed slightly.
 		* Buttons in the "Dark" mode are now darker.
 		* Several minor enhancements were made.
 	* Allsky Website:
 		* The home page can be customized:
-			* You can specify the order and contents of the icons on the left side.  The overlay icon (Casseopea icon) only appears after you've set the overlay to match the stars.
+			* You can specify the order and contents of the icons on the left side.  **NOTE**: The constellation overlay icon (Casseopeia icon) only appears after you've set the overlay to match your stars.
 			* You can specify the order and contents of the popout that appears when clicking on the camera icon.  For example, you could add a link to local weather or to pictures of your allsky camera.
 			* You can set a background image.
 			* You can add an optional link to a personal website at the top of the page.
 			* You can add a border around the image to have it stand out on the page.
 			* You can hide the "Make Your Own" link on the bottom right of the page.
-		* Timelapse video thumbnails can be created on the Pi and uploaded to a remote server.  This resolves issues with most remote servers that don't support creating thumbnails.  See the `TIMELAPSE_UPLOAD_THUMBNAIL` setting.
+		* The two configuration files (`config.js` and `virtualsky.json`) were combined into `configuration.json`, which can be edited via the **Editor** link in the WebUI.  This file is significantly larger than the old files due to all the customization that's now possible.
+		* Timelapse video thumbnails can be created on the Pi and uploaded to a remote server.  This resolves issues with remote servers that don't support creating thumbnails.  See the `TIMELAPSE_UPLOAD_THUMBNAIL` setting.
 		* The Timelapse, Keogram, and Startrails pages now have titles so it's obvious what you're looking at.
 		* You can specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`, which has been deprecated).  This can be helpful when trying to get the overlay to line up with the actual stars.
 		* The **virtualsky** program that draws the constellation overlay was updated to the latest release.  This added some new settings, including the ability to specify the opacity of the overlay.  It also adds a small box with a question mark in it when viewing the overlay; clicking on the icon brings up a list of commands you can perforrm.

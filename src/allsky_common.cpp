@@ -1427,8 +1427,12 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 	{
 		for (int i=1 ; i <= argc - 1 ; i++)
 		{
+			// Allow UPPER and lower case on the command line.
+			// Note that all strings in strcmp() must be lowercase.
 			char *a = argv[i];
-// TODO: convert to lower case
+			for (int j=0; a[j] != '\0'; j++) {
+				a[j] = (char) tolower(a[j]);
+			}
 
 if (0) printf("%sargc %d: %s\n", b, i, a);
 
@@ -1740,7 +1744,7 @@ if (0) printf("%sargc %d: %s\n", b, i, a);
 			}
 
 			// overlay settings
-			else if (strcmp(a, "-showTime") == 0)
+			else if (strcmp(a, "-showtime") == 0)
 			{
 				cg->overlay.showTime = getBoolean(argv[++i]);
 			}
@@ -1748,7 +1752,7 @@ if (0) printf("%sargc %d: %s\n", b, i, a);
 			{
 				cg->timeFormat = argv[++i];
 			}
-			else if (strcmp(a, "-showTemp") == 0)
+			else if (strcmp(a, "-showtemp") == 0)
 			{
 				cg->overlay.showTemp = getBoolean(argv[++i]);
 			}
@@ -1756,19 +1760,19 @@ if (0) printf("%sargc %d: %s\n", b, i, a);
 			{
 				cg->tempType = argv[++i];
 			}
-			else if (strcmp(a, "-showExposure") == 0)
+			else if (strcmp(a, "-showexposure") == 0)
 			{
 				cg->overlay.showExposure = getBoolean(argv[++i]);
 			}
-			else if (strcmp(a, "-showGain") == 0)
+			else if (strcmp(a, "-showgain") == 0)
 			{
 				cg->overlay.showGain = getBoolean(argv[++i]);
 			}
-			else if (strcmp(a, "-showBrightness") == 0)
+			else if (strcmp(a, "-showbrightness") == 0)
 			{
 				cg->overlay.showBrightness = getBoolean(argv[++i]);
 			}
-			else if (strcmp(a, "-showMean") == 0)
+			else if (strcmp(a, "-showmean") == 0)
 			{
 				cg->overlay.showMean = getBoolean(argv[++i]);
 			}
@@ -1776,7 +1780,7 @@ if (0) printf("%sargc %d: %s\n", b, i, a);
 			{
 				cg->overlay.showHistogramBox = getBoolean(argv[++i]);
 			}
-			else if (strcmp(a, "-showFocus") == 0)
+			else if (strcmp(a, "-showfocus") == 0)
 			{
 				cg->overlay.showFocus = getBoolean(argv[++i]);
 			}

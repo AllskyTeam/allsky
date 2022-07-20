@@ -215,5 +215,9 @@ FILENAME="${FULL_FILENAME%.*}"
  
 # So scripts can conditionally ouput messages; DO NOT CHANGE NEXT LINES.
 ALLSKY_DEBUG_LEVEL="$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")"/
-DAYTIME_CAPTURE="$(jq -r '.takeDaytimeImages' "${CAMERA_SETTINGS}")"/
-DAYTIME_SAVE="$(jq -r '.saveDaytimeImages' "${CAMERA_SETTINGS}")"/
+
+# Simple way to get a setting that hides the details.
+function setting()
+{
+	echo "$(jq -r '.$1' "${CAMERA_SETTINGS}")"
+}

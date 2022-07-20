@@ -38,7 +38,7 @@ if (! file_exists($file)) {
 	exit;
 }
 
-$tempFile = getcwd() . "/temp";
+$tempFile = "/tmp/save_file-temp.txt";		// web server must have write permissions here
 if (file_put_contents($tempFile, $content) == false) {
 	echo error_get_last()['message'];
 	exit;
@@ -47,7 +47,7 @@ if (file_put_contents($tempFile, $content) == false) {
 	$msg = shell_exec("x=\$(sudo mv '$tempFile' '$file' 2>&1) || echo 'Unable to mv [$tempFile] to [$file]': \${x}");
 	if ($msg == "") {
 		shell_exec("sudo chown " . ALLSKY_OWNER . ":" . ALLSKY_GROUP . " '$file'; sudo chmod 664 '$file'");
-// TODO: 
+// TODO: if isRemote, then upload the file to the remote server
 // echo ALLSKY_SCRIPTS . "/upload.sh";
 	} else {
 		//header("HTTP/1.0 400 Bad Request");

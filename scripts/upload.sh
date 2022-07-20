@@ -140,7 +140,8 @@ else # sftp/ftp/ftps
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
 		echo "${ME}: FTP '${FILE_TO_UPLOAD}' to '${REMOTE_DIR}${DESTINATION_FILE}', TEMP_NAME=${TEMP_NAME}"
 	fi
-	LFTP_CMDS="${ALLSKY_TMP}/lftp_cmds.txt"
+	# LFTP_CMDS needs to be unique per file type so we don't overwrite a different upload type.
+	LFTP_CMDS="${ALLSKY_TMP}/${FILE_TYPE}-lftp_cmds.txt"
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 	(
 		[ "${LFTP_COMMANDS}" != "" ] && echo ${LFTP_COMMANDS}
@@ -210,7 +211,7 @@ else # sftp/ftp/ftps
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
 		if [ -n "${OUTPUT}" ]; then
-			echo -e "lftp OUTPUT from '${FILE_TO_UPLOAD}:\n   ${OUTPUT}"
+			echo -e "lftp OUTPUT from '${FILE_TO_UPLOAD}:\n   ${OUTPUT}\n"
 		fi
 	fi
 fi

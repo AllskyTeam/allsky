@@ -68,14 +68,6 @@ REMOVE_BAD_IMAGES_THRESHOLD_HIGH=90
 # depending on what camera you have (ZWO or RPiHQ).
 CAPTURE_EXTRA_PARAMETERS=""
 
-# Set to "false" to disable daytime capture.
-DAYTIME_CAPTURE="true"
-
-# Night images are always taken and saved to disk.
-# Set DAYTIME_SAVE to "true" to also save daytime images.
-# This will only save daytime images if DAYTIME_CAPTURE="true".
-DAYTIME_SAVE="false"
-
 
 ########## Timelapse
 # Set to "true" to generate a timelapse video at the end of each night.
@@ -222,4 +214,6 @@ EXTENSION="${FULL_FILENAME##*.}"
 FILENAME="${FULL_FILENAME%.*}"
  
 # So scripts can conditionally ouput messages; DO NOT CHANGE NEXT LINES.
-ALLSKY_DEBUG_LEVEL="$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")"
+ALLSKY_DEBUG_LEVEL="$(jq -r '.debuglevel' "${CAMERA_SETTINGS}")"/
+DAYTIME_CAPTURE="$(jq -r '.takeDaytimeImages' "${CAMERA_SETTINGS}")"/
+DAYTIME_SAVE="$(jq -r '.saveDaytimeImages' "${CAMERA_SETTINGS}")"/

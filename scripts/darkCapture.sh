@@ -26,7 +26,7 @@ if [ "${AS_TEMPERATURE}" = "" ]; then
 	fi
 fi
 
-if [ "$(settings ".darkframe")" = "1" ] ; then
+if [ "$(settings ".takeDarkFrames")" = "1" ]; then
 	# The extension on $CURRENT_IMAGE may not be $EXTENSION.
 	DARK_EXTENSION="${CURRENT_IMAGE##*.}"
 

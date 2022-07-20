@@ -57,7 +57,7 @@ if [ ! -v WEBUI_DATA_FILES ]; then	# WEBUI_DATA_FILES added after version 0.8.3.
 	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_CONFIG})/config.sh\nis an old version.  See\n/var/log/allsky.log"
 
 fi
-USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
+USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
 
 if [ -z "${CAMERA}" ]; then
 	echo -e "${RED}*** FATAL ERROR: CAMERA not set, can't continue!${NC}"
@@ -210,10 +210,10 @@ ARGUMENTS+=(-debuglevel ${ALLSKY_DEBUG_LEVEL})
 # This argument should come next so the capture program knows if it should use colors.
 ARGUMENTS+=(-tty ${ON_TTY})
 
-KEYS=( $(jq -r 'keys[]' $CAMERA_SETTINGS) )
+KEYS=( $(settings 'keys[]') )
 for KEY in ${KEYS[@]}
 do
-	K="`jq -r '.'$KEY $CAMERA_SETTINGS`"
+	K="$(settings '.'$KEY$)"
 	ARGUMENTS+=(-$KEY "$K")
 done
 

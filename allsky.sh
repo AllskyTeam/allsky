@@ -213,7 +213,7 @@ ARGUMENTS+=(-tty ${ON_TTY})
 KEYS=( $(settings 'keys[]') )
 for KEY in ${KEYS[@]}
 do
-	K="$(settings '.'$KEY$)"
+	K="$(settings "."$KEY)"
 	ARGUMENTS+=(-$KEY "$K")
 done
 

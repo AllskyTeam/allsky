@@ -90,6 +90,8 @@ if [ -f "${PID_FILE}" ]; then
 			echo -n " and delay settings."
 			ps -fp ${PID}
 			echo -e "${NC}"
+			# Keep track of aborts so user can be notified
+			echo -e "$(date)\t${FILE_TYPE}\t${FILE_TO_UPLOAD}" >> "${ALLSKY_ABORTEDUPLOADS}"
 			exit 99
 		fi
 fi

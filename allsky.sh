@@ -175,6 +175,11 @@ fi
 if [ -d "${ALLSKY_TMP}" ]; then
 	# remove any lingering old image files.
 	rm -f "${ALLSKY_TMP}/${FILENAME}"-202*.${EXTENSION}	# "202" for 2020 and later
+
+	# Clear out this file and allow the web server to write to it.
+	> "${ALLSKY_ABORTEDUPLOADS}"
+	sudo chgrp www-data "${ALLSKY_ABORTEDUPLOADS}"
+	sudo chmod 664 "${ALLSKY_ABORTEDUPLOADS}"
 else
 	# Re-create in case it's on a memory filesystem that gets wiped out at reboot
 	mkdir -p "${ALLSKY_TMP}"
@@ -252,9 +257,12 @@ elif [[ $CAMERA == "RPiHQ" ]]; then
 	CAPTURE="capture_RPiHQ"
 fi
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
-"${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"		# run the main program - this is the main attraction...
+# Run the main program - this is the main attraction...
+"${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
 RETCODE=$?
 
+### TODO: can probably remove this code
+if false; then
 if [ ${RETCODE} -ne ${EXIT_OK} ]; then
 	# for testing
 	echo -e "${RED}'${CAPTURE}' exited with RETCODE=${RETCODE}${NC}"
@@ -263,6 +271,7 @@ if [ "${GOT_SIGTERM}" = "true" ] || [ "${GOT_SIGUSR1}" = "true" ] || [ "${GOT_SI
 	# for testing
 	echo "allsky.sh: GOT_SIGTERM=$GOT_SIGTERM, GOT_SIGUSR1=$GOT_SIGUSR1, GOT_SIGINT=$GOT_SIGINT"
 fi
+fi	# if false
 
 if [ "${RETCODE}" -eq ${EXIT_OK} ] ; then
 	doExit ${EXIT_OK} ""

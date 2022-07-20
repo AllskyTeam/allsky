@@ -426,22 +426,24 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 		* New links on the left side:
 			* **Overlay Editor** allows you to drag and drop what text and images you want overlayed on the images.  This is a **significant** improvement over the old mechanism; the new way lets you vary the font size, color, rotation, etc. for everything you add and let you use variables in the text which gets replaced at run-time, e.g., the time.
 			* **Module Editor** allows you to specify what actions should take place after an image has been saved, for example, add an overlay or count the number of stars.  Users can add (and hopefully share) their own modules.
-		* The "Camera Settings" link was renamed to "Allsky Settings" since there are non-camera settings there.
+		* The **Camera Settings** link was renamed to **Allsky Settings** since there are non-camera settings there.
 		* Minimum, maximum, and default values are now correct for all camera models.
 		* The **Focus Metric** setting in the WebUI is now available for ZWO cameras.
-		* The "Editor" page can edit the Allsky Website's configuration file(s) if you have the website installed on your Pi.  This is the preferred way to edit the configuration file(s), since the editor performs basic syntax checking.
+		* The **Editor** page can edit the Allsky Website's configuration file(s) if you have the website installed on your Pi.  This is the preferred way to edit the configuration file(s), since the editor performs basic syntax checking.
+		* If you have the Allsky Website on a remote server and put it's `configuration.json` file in ~/allsky/config, the **Editor** page can also edit that file and upload it to the server so you can update the configuration without having to log into the server.  The drop-down list on the page will have `configuration.json (remote Allsky Website)` to distinguish it from a local Website's file.
 		* Some errors that appear in the `/var/log/allsky.log` file also appear in the WebUI so you don't miss them.  Currently this is limited to Allsky Map data errors, but will be expanded in the future.
 		* Buttons in the "Dark" mode are now darker.
 		* Several minor enhancements were made.
 	* Allsky Website:
 		* The home page can be customized:
 			* You can specify the order and contents of the icons on the left side.  **NOTE**: The constellation overlay icon (Casseopeia icon) only appears after you've set the overlay to match your stars.
+			* If you are creating mini-timelapse videos an icon for the current file can appear.  See the Wiki for more info.
 			* You can specify the order and contents of the popout that appears when clicking on the camera icon.  For example, you could add a link to local weather or to pictures of your allsky camera.
 			* You can set a background image.
 			* You can add an optional link to a personal website at the top of the page.
 			* You can add a border around the image to have it stand out on the page.
 			* You can hide the "Make Your Own" link on the bottom right of the page.
-		* The two configuration files (`config.js` and `virtualsky.json`) were combined into `configuration.json`, which can be edited via the **Editor** link in the WebUI.  This file is significantly larger than the old files due to all the customization that's now possible.
+		* The two configuration files (`config.js` and `virtualsky.json`) were combined into `configuration.json`, which should be edited via the **Editor** link in the WebUI.
 		* Timelapse video thumbnails can be created on the Pi and uploaded to a remote server.  This resolves issues with remote servers that don't support creating thumbnails.  See the `TIMELAPSE_UPLOAD_THUMBNAIL` setting.
 		* The Timelapse, Keogram, and Startrails pages now have titles so it's obvious what you're looking at.
 		* You can specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`, which has been deprecated).  This can be helpful when trying to get the overlay to line up with the actual stars.

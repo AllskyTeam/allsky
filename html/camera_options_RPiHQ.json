@@ -385,6 +385,16 @@
 "advanced":0
 },
 {
+"name":"config",
+"default":"",
+"description":"Configuration file to use for settings",
+"label":"Configuration File",
+"type":"widetext",
+"display":1,
+"checkchanges": false,
+"advanced":1
+},
+{
 "name":"saturation",
 "minimum":"",
 "maximum":"",
@@ -1030,4 +1040,3 @@
 "advanced":0
 }
 ]
-

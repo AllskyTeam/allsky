@@ -204,7 +204,7 @@ CAMERA_SETTINGS="${ALLSKY_CONFIG}/settings_${CAMERA}.json"
 # Simple way to get a setting that hides the details.
 function setting()
 {
-	echo "$(jq -r '$1' "${CAMERA_SETTINGS}")"
+	echo "$(jq -r "${1}" "${CAMERA_SETTINGS}")"
 }
 
 # Get the name of the file the websites will look for, and split into name and extension.

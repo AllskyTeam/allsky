@@ -1,13 +1,21 @@
 <?php
-define('ALLSKY_HOME', 'XX_ALLSKY_HOME_XX');			// value updated during installation
-define('ALLSKY_SCRIPTS', 'XX_ALLSKY_SCRIPTS_XX');	// value updated during installation
-define('ALLSKY_WEBSITE', 'XX_ALLSKY_WEBSITE_XX');	// value updated during installation
+
 define('ALLSKY_OWNER', 'XX_ALLSKY_OWNER_XX');		// value updated during installation
 define('ALLSKY_GROUP', 'XX_ALLSKY_GROUP_XX');		// value updated during installation
 
+$isRemote = false;
+if (isset($_POST['isRemote'])) {
+	$isRemote = $_POST['isRemote'];
+}
+if ($isRemote) {
+	include_once('functions.php');
+} else {
+	define('ALLSKY_HOME', 'XX_ALLSKY_HOME_XX');			// value updated during installation
+	define('ALLSKY_SCRIPTS', 'XX_ALLSKY_SCRIPTS_XX');	// value updated during installation
+	define('ALLSKY_WEBSITE', 'XX_ALLSKY_WEBSITE_XX');	// value updated during installation
+
 $content = "";
 $path = "";
-$isRemote = false;
 
 // On error, return a string.  On success, return nothing.
 
@@ -21,9 +29,6 @@ if (isset($_POST['path'])) {
 if ($path == "") {
 	echo "save_file.php: Path to save to is null";
 	exit;
-}
-if (isset($_POST['isRemote'])) {
-	$isRemote = $_POST['isRemote'];
 }
 
 // "current" is a web alias to ALLSKY_HOME.
@@ -47,8 +52,13 @@ if (file_put_contents($tempFile, $content) == false) {
 	$msg = shell_exec("x=\$(sudo mv '$tempFile' '$file' 2>&1) || echo 'Unable to mv [$tempFile] to [$file]': \${x}");
 	if ($msg == "") {
 		shell_exec("sudo chown " . ALLSKY_OWNER . ":" . ALLSKY_GROUP . " '$file'; sudo chmod 664 '$file'");
-// TODO: if isRemote, then upload the file to the remote server
-// echo ALLSKY_SCRIPTS . "/upload.sh";
+		$imageDir = get_variable(ALLSKY_CONFIG .'/config.sh', 'IMAGE_DIR=', '');
+		$cmd = ALLSKY_SCRIPTS . "/upload.sh --silent '$file' '$imageDir' " . basename($file) . " 'remote_file'";
+		$msg = shell_exec("$cmd > /dev/null");	# Ignore non-error output from the command
+		if ($msg == "")
+			echo "File sent to remote host.";
+		else
+			echo $msg;
 	} else {
 		//header("HTTP/1.0 400 Bad Request");
 		echo "save_file.php: $msg";

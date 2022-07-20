@@ -59,6 +59,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Holds temporary messages to display in the WebUI.
 	ALLSKY_MESSAGES="${ALLSKY_TMP}/messages.txt"
 
+	# Holds temporary list of aborted uploads since another one was in progress
+	ALLSKY_ABORTEDUPLOADS="${ALLSKY_TMP}/aborted_uploads.txt"
+
 	# Holds all the dark frames.
 	ALLSKY_DARKS="${ALLSKY_DARKS:-${ALLSKY_HOME}/darks}"
 

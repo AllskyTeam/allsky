@@ -157,15 +157,15 @@ if [ "${DELETE}" = "true" ]; then
 	}
 
 else
-	LOCATION="$(jq -r '.location' "${CAMERA_SETTINGS}")"
-	OWNER="$(jq -r '.owner' "${CAMERA_SETTINGS}")"
-	LATITUDE="$(jq -r '.latitude' "${CAMERA_SETTINGS}")"
-	LONGITUDE="$(jq -r '.longitude' "${CAMERA_SETTINGS}")"
-	WEBSITE_URL="$(jq -r '.websiteurl' "${CAMERA_SETTINGS}")"
-	IMAGE_URL="$(jq -r '.imageurl' "${CAMERA_SETTINGS}")"
-	CAMERA="$(jq -r '.camera' "${CAMERA_SETTINGS}")"
-	LENS="$(jq -r '.lens' "${CAMERA_SETTINGS}")"
-	COMPUTER="$(jq -r '.computer' "${CAMERA_SETTINGS}")"
+	LOCATION="$(settings ".location")"
+	OWNER="$(settings ".owner")"
+	LATITUDE="$(settings ".latitude")"
+	LONGITUDE="$(settings ".longitude")"
+	WEBSITE_URL="$(settings ".websiteurl")"
+	IMAGE_URL="$(settings ".imageurl")"
+	CAMERA="$(settings ".camera")"
+	LENS="$(settings ".lens")"
+	COMPUTER="$(settings ".computer")"
 
 	OK=true
 	E=""
@@ -251,7 +251,6 @@ else
 		"lens": "${LENS}",
 		"computer": "${COMPUTER}",
 		"allskyVersion": "${ALLSKY_VERSION}"
-
 		"machine_id": "${MACHINE_ID}"
 		}
 		EOF

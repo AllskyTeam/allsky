@@ -235,13 +235,6 @@ else
 	rm -f "${FREQUENCY_FILE}"
 fi
 
-if [ "${DAYTIME_CAPTURE}" = "true" ] ; then
-	DAYTIME_CAPTURE=1
-else
-	DAYTIME_CAPTURE=0
-fi
-ARGUMENTS+=(-daytime $DAYTIME_CAPTURE)
-
 if [ "$CAPTURE_EXTRA_PARAMETERS" != "" ]; then
 	ARGUMENTS+=(${CAPTURE_EXTRA_PARAMETERS})	# Any additional parameters
 fi

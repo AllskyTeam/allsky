@@ -177,6 +177,7 @@ if [ -d "${ALLSKY_TMP}" ]; then
 	rm -f "${ALLSKY_TMP}/${FILENAME}"-202*.${EXTENSION}	# "202" for 2020 and later
 
 	# Clear out this file and allow the web server to write to it.
+	# shellcheck disable=SC2188
 	> "${ALLSKY_ABORTEDUPLOADS}"
 	sudo chgrp www-data "${ALLSKY_ABORTEDUPLOADS}"
 	sudo chmod 664 "${ALLSKY_ABORTEDUPLOADS}"

@@ -27,18 +27,12 @@ fi
 
 modify_locations() {	# Some files have placeholders for certain locations.  Modify them.
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
-	(
-		cd "${WEBSITE_DIR}"
-
-		sed -i -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
-			   -e "s;XX_ON_PI_XX;true;" \
-			functions.php
-	)
+	sed -i -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" "${WEBSITE_DIR}/functions.php"
 }
 
 create_data_json_file() {	# Create a new data.json file and check that it's newest version
 	OUTPUT=$(${ALLSKY_SCRIPTS}/postData.sh 2>&1)
-	if [ $? -eq 0 -a -f "${WEBSITE_DIR}/data.json" ]; then
+	if [ $? -eq 0 ] && [ -f "${WEBSITE_DIR}/data.json" ]; then
 		grep --silent "sunrise" "${WEBSITE_DIR}/data.json"
 		if [ $? -ne 0 ]; then
 			echo -e "${YELLOW}WARNING: you have an old version of ${ALLSKY_SCRIPTS}/postData.sh."
@@ -68,7 +62,7 @@ modify_configuration_variables() {	# Update some of the configuration files and 
 		# These have N/S and E/W but the config.js needs decimal numbers.
 		# "N" is positive, "S" negative for LATITUDE.
 		# "E" is positive, "W" negative for LONGITUDE.
-		LATITUDE=$(jq -r '.latitude' "$CAMERA_SETTINGS")
+		LATITUDE="$(jq -r '.latitude' "$CAMERA_SETTINGS")"
 		DIRECTION=${LATITUDE:1,-1}
 		if [ "${DIRECTION}" = "S" ]; then
 			SIGN="-"
@@ -79,7 +73,7 @@ modify_configuration_variables() {	# Update some of the configuration files and 
 		fi
 		LATITUDE="${SIGN}${LATITUDE%${DIRECTION}}"
 
-		LONGITUDE=$(jq -r '.longitude' "$CAMERA_SETTINGS")
+		LONGITUDE="$(jq -r '.longitude' "$CAMERA_SETTINGS")"
 		DIRECTION=${LONGITUDE:1,-1}
 		if [ "${DIRECTION}" = "W" ]; then
 			SIGN="-"
@@ -87,7 +81,7 @@ modify_configuration_variables() {	# Update some of the configuration files and 
 			SIGN=""
 		fi
 		LONGITUDE="${SIGN}${LONGITUDE%${DIRECTION}}"
-		COMPUTER=$(tail -1 /proc/cpuinfo | sed 's/.*: //')
+		COMPUTER="$(tail -1 /proc/cpuinfo | sed 's/.*: //')"
 		# xxxx TODO: anything else we can set?
 		sed -i \
 			-e "/latitude:/c\    latitude: ${LATITUDE}," \
@@ -100,7 +94,7 @@ modify_configuration_variables() {	# Update some of the configuration files and 
 
 
 # Check if the user is updating an existing installation.
-if [ "${1}" = "--update" -o "${1}" = "-update" ] ; then
+if [ "${1}" = "--update" ] ; then
 	shift
 	if [ ! -d "${WEBSITE_DIR}" ]; then
 		echo -e "${RED}*** ERROR: --update specified but no existing website found in '${WEBSITE_DIR}'${NC}" 1>&2
@@ -140,18 +134,19 @@ else
 fi
 
 echo -e "${GREEN}* Fetching website files into '${WEBSITE_DIR}'${NC}"
-git clone https://github.com/thomasjacquin/allsky-website.git "${WEBSITE_DIR}"
+BRANCH="-b home-page-customizations"
+git clone ${BRANCH} https://github.com/thomasjacquin/allsky-website.git "${WEBSITE_DIR}"
 [ $? -ne 0 ] && echo -e "\n${RED}*** ERROR: Exiting installation${NC}\n" && exit 4
 echo
 
-cd "${WEBSITE_DIR}"
+cd "${WEBSITE_DIR}" || exit 1
 
 echo -e "${GREEN}* Creating thumbnails directories${NC}"
 mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails
 echo
 
 echo -e "${GREEN}* Fixing ownership and permissions${NC}"
-U=$(id -n -u)
+U=$(id --name --user)
 chown -R "${U}:www-data" .
 find ./ -type f -exec chmod 644 {} \;
 find ./ -type d -exec chmod 775 {} \;

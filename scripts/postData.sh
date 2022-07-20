@@ -21,8 +21,8 @@ source "${ALLSKY_CONFIG}/config.sh"
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
-angle="$(jq -r '.angle' "${CAMERA_SETTINGS}")"
-latlong="$(jq -r '.latitude,.longitude' "${CAMERA_SETTINGS}")"
+angle="$(settings ".angle")"
+latlong="$(settings ".latitude,.longitude")"
 timezone="$(date "+%z")"
 
 # If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
@@ -51,10 +51,15 @@ fi
 FILE="data.json"
 OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
 (
+	if [ "$(settings ".takeDaytimeImages")" = "1" ]; then
+		D="true"
+	else
+		D="false"
+	fi
 	echo "{"
 	echo "\"sunrise\": \"${today}T${sunrise_hhmm}:00.000${timezone}\","
 	echo "\"sunset\": \"${today}T${sunset_hhmm}:00.000${timezone}\","
-	echo "\"streamDaytime\": \"${DAYTIME_CAPTURE}\""
+	echo "\"streamDaytime\": \"${D}\""
 	echo "}"
 ) > "${OUTPUT_FILE}"
 

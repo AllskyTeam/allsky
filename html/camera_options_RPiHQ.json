@@ -9,6 +9,24 @@
 "advanced":0
 },
 {
+"name":"takeDaytimeImages",
+"default":1,
+"description":"Activate to enable daytime",
+"label":"Daytime Capture",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
+"name":"saveDaytimeImages",
+"default":0,
+"description":"Activate to daytime images.<br>Only applies if <b>Daytime Capture</b> is enabled.",
+"label":"Daytime Save",
+"type":"checkbox",
+"display":1,
+"advanced":1
+},
+{
 "name":"dayautoexposure",
 "default":1,
 "description":"Activate to enable daytime auto-exposure.",
@@ -18,7 +36,7 @@
 "advanced":1
 },
 {
-"name":"daymaxexposure",
+"name":"daymaxautoexposure",
 "minimum":"",
 "maximum":"none",
 "default":10000,
@@ -81,7 +99,7 @@
 "advanced":1
 },
 {
-"name":"daymaxgain",
+"name":"daymaxautogain",
 "minimum":1,
 "maximum":16,
 "default":200,
@@ -197,7 +215,7 @@
 "advanced":0
 },
 {
-"name":"nightmaxexposure",
+"name":"nightmaxautoexposure",
 "minimum":"",
 "maximum":"",
 "default":60000,
@@ -260,7 +278,7 @@
 "advanced":0
 },
 {
-"name":"nightmaxgain",
+"name":"nightmaxautogain",
 "minimum":1,
 "maximum":16,
 "default":16,
@@ -468,7 +486,7 @@
 "advanced":0
 },
 {
-"name":"mean-threshold",
+"name":"meanthreshold",
 "default":"0.1",
 "description":"When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
 "label":"Mean Threshold",
@@ -587,13 +605,22 @@
 "advanced":0
 },
 {
-"name":"darkframe",
+"name":"takeDarkFrames",
 "default":0,
-"description":"Activate to capture dark frames. This mode hides text and time overlays.<br>Will continually take dark frames until restarted.",
-"label":"Capture Dark Frames",
+"description":"Activate to capture dark frames, which are used to decrease noise. This mode hides text and time overlays.<br>Will continually take dark frames until restarted.",
+"label":"Take Dark Frames",
 "type":"checkbox",
 "display":1,
-"advanced":0
+"advanced":1
+},
+{
+"name":"useDarkFrames",
+"default":0,
+"description":"This enables dark frame subtraction, assuming you have dark frames.",
+"label":"Use Dark Frames",
+"type":"checkbox",
+"display":1,
+"advanced":1
 },
 {
 "name":"locale",
@@ -660,7 +687,7 @@
 {
 "name":"externalOverlay",
 "default":0,
-"description":"Activate to have image overlays done by the enhanced external program.",
+"description":"Activate to have image overlays done by the enhanced external program.<br>When active, the overlay settings do NOT apply.",
 "label":"External Overlay",
 "type":"checkbox",
 "display":1,

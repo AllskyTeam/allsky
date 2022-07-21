@@ -35,6 +35,8 @@
 	"nightTargetTemp" : "0",
 	"config" : "[none]",
 	"saturation" : "",
+	"contrast" : "",
+	"sharpness" : "",
 	"gamma" : "50",
 	"offset" : "0",
 	"aggression" : "75",

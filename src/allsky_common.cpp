@@ -919,6 +919,8 @@ void displayHelp(config cg)
 	printf("\nDay and nighttime settings:\n");
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Image saturation [%.1f].\n", n, "saturation n", cg.saturation);
+		printf(" -%-*s - Image contrast [%.1f].\n", n, "contrast n", cg.contrast);
+		printf(" -%-*s - Image sharpness [%.1f].\n", n, "sharpness n", cg.sharpness);
 	}
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - Gamma level [%ld].\n", n, "gamma n", cg.gamma);
@@ -1036,7 +1038,7 @@ void displaySettings(config cg)
 	printf("\nSettings:\n");
 
 	if (cg.ct == ctRPi)
-		printf("   Command: %s\n", getCameraCommand(cg.isLibcamera));
+		printf("   Command: %s\n", cg.cmdToUse);
 	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
 	printf("   Resolution (before any binning): %ldx%ld\n", cg.width, cg.height);
 	printf("   Configuration file: %s\n", cg.configFile[0] == '\0' ? "none" : cg.configFile);
@@ -1103,6 +1105,8 @@ void displaySettings(config cg)
 	}
 	if (cg.ct == ctRPi) {
 		printf("   Saturation: %.1f\n", cg.saturation);
+		printf("   Contrast: %.1f\n", cg.contrast);
+		printf("   Sharpness: %.1f\n", cg.sharpness);
 		printf("   Rotation: %ld\n", cg.rotation);
 	}
 	printf("   Flip Image: %s (%ld)\n", getFlip(cg.flip), cg.flip);
@@ -1219,6 +1223,7 @@ void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 }
 
 // Set defaults that depend on camera type or otherwise can't be set at compile time.
+// If a value is currently NOT_CHANGED, the user didn't specify
 void setDefaults(config *cg, cameraType ct)
 {
 	cg->ct = ct;
@@ -1257,11 +1262,15 @@ void setDefaults(config *cg, cameraType ct)
 		{
 			cg->dayBrightness = 0;
 			cg->saturation = 1.0;
+			cg->contrast = 1.0;
+			cg->sharpness = 0.0;
 		}
 		else
 		{
 			cg->dayBrightness = 50;
 			cg->saturation = 0.0;
+			cg->contrast = 0.0;
+			cg->sharpness = 0.0;
 		}
 		cg->rotation = 0;
 		cg->dayMaxAutoGain = 16.0;
@@ -1482,7 +1491,8 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "cmd") == 0)
 		{
-			cg->isLibcamera = strcmp(argv[++i], "libcamera") == 0 ? true : false;
+			cg->cmdToUse = argv[++i];
+			cg->isLibcamera = strcmp(cg->cmdToUse, "libcamera-still") == 0 ? true : false;
 		}
 		else if (strcmp(a, "tty") == 0)	// overrides what was automatically determined
 		{
@@ -1652,6 +1662,14 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "saturation") == 0)
 		{
 			cg->saturation = atof(argv[++i]);
+		}
+		else if (strcmp(a, "contrast") == 0)
+		{
+			cg->contrast = atof(argv[++i]);
+		}
+		else if (strcmp(a, "sharpness") == 0)
+		{
+			cg->sharpness = atof(argv[++i]);
 		}
 		else if (strcmp(a, "gamma") == 0)
 		{

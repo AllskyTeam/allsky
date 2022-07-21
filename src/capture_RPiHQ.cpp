@@ -77,19 +77,13 @@ modeMeanSetting myModeMeanSetting;
 //-------------------------------------------------------------------------------------------------------
 
 
-char const *getCameraCommand(bool libcamera)
-{
-	if (libcamera)
-		return("libcamera-still");
-	else
-		return("raspistill");
-}
-
 // Build capture command to capture the image from the camera.
+// If an argument is IS_DEFAULT, the user didn't set it so don't pass to the program and
+// the default will be used.
 int RPicapture(config cg, cv::Mat *image)
 {
 	// Define command line.
-	string command = getCameraCommand(cg.isLibcamera);
+	string command = cg.cmdToUse;
 
 	// Ensure no process is still running.
 	string kill = "pgrep '" + command + "' | xargs kill -9 2> /dev/null";
@@ -137,7 +131,10 @@ int RPicapture(config cg, cv::Mat *image)
 		if (cg.currentAutoExposure)
 		{
 			if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
-				ss << 1;	// We do our own auto-exposure so no need to wait at all.
+			{
+				// We do our own auto-exposure so no need to wait at all.
+				command += " --immediate";
+			}
 			else if (dayOrNight == "DAY")
 				ss << 2 * MS_IN_SEC;
 			else	// NIGHT
@@ -151,7 +148,7 @@ int RPicapture(config cg, cv::Mat *image)
 			// Manual exposure shots don't need any time to home in since we're specifying the time.
 			ss << 1;
 		}
-		command += " --timeout " + ss.str();
+		if (ss.str() != "") command += " --timeout " + ss.str();
 		command += " --nopreview";
 	}
 
@@ -237,7 +234,7 @@ printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSett
 			command += " --analoggain 1";	// 1 makes it autogain
 		}
 	}
-	else	// Is manual gain
+	else if (cg.currentGain != IS_DEFAULT)	// Is manual gain
 	{
 		ss.str("");
 		ss << cg.currentGain;
@@ -260,7 +257,8 @@ printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSett
 		ss << cg.currentWBR << "," << cg.currentWBB;
 		if (! cg.isLibcamera)
 			command += " --awb off";
-		command += " --awbgains " + ss.str();
+		if (cg.currentWBR != IS_DEFAULT and cg.currentWBB != IS_DEFAULT)
+			command += " --awbgains " + ss.str();
 	}
 	else {		// Use automatic white balance
 		command += " --awb auto";
@@ -277,20 +275,38 @@ printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSett
 	if (cg.flip == 2 || cg.flip == 3)
 		command += " --vflip";		// vertical flip
 
-	ss.str("");
-	ss << cg.saturation;
-	command += " --saturation "+ ss.str();
+	if (cg.saturation != IS_DEFAULT) {
+		ss.str("");
+		ss << cg.saturation;
+		command += " --saturation "+ ss.str();
+	}
 
-	ss.str("");
-	if (cg.isLibcamera)
-		ss << (float) cg.currentBrightness / 100;	// User enters -100 to 100.  Convert to -1.0 to 1.0.
-	else
-		ss << cg.currentBrightness;
-	command += " --brightness " + ss.str();
+	if (cg.contrast != IS_DEFAULT) {
+		ss.str("");
+		ss << cg.contrast;
+		command += " --contrast "+ ss.str();
+	}
 
-	ss.str("");
-	ss << cg.quality;
-	command += " --quality " + ss.str();
+	if (cg.sharpness != IS_DEFAULT) {
+		ss.str("");
+		ss << cg.sharpness;
+		command += " --sharpness "+ ss.str();
+	}
+
+	if (cg.currentBrightness != IS_DEFAULT) {
+		ss.str("");
+		if (cg.isLibcamera)
+			ss << (float) cg.currentBrightness / 100;	// User enters -100 to 100.  Convert to -1.0 to 1.0.
+		else
+			ss << cg.currentBrightness;
+		command += " --brightness " + ss.str();
+	}
+
+	if (cg.quality != IS_DEFAULT) {
+		ss.str("");
+		ss << cg.quality;
+		command += " --quality " + ss.str();
+	}
 
 	if (cg.isLibcamera)
 	{
@@ -335,8 +351,6 @@ int main(int argc, char *argv[])
 	if (a != NULL)
 		snprintf(allskyHome, sizeof(allskyHome)-1, "%s/", a);
 
-	setDefaults(&cg, ctRPi);
-
 	cg.tty = isatty(fileno(stdout)) ? true : false;
 	signal(SIGINT, IntHandle);
 	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
@@ -348,12 +362,16 @@ int main(int argc, char *argv[])
 	bool endOfNight				= false;
 
 	// We need to know its value before setting other variables.
-	if (argc > 2 && strcmp(argv[1], "-cmd") == 0 && strcmp(argv[2], "libcamera") == 0)
+	cg.cmdToUse = "libcamera-still";		// default
+	if (argc > 2 && strcmp(argv[1], "-cmd") == 0 && strcmp(argv[2], cg.cmdToUse) == 0)
 	{
 		cg.isLibcamera = true;
 	} else {
 		cg.isLibcamera = false;
+		cg.cmdToUse = "raspistill";
 	}
+
+	setDefaults(&cg, ctRPi);
 
 	// All the font settings apply to both day and night.
 	long lastExposure_us 		= 0;					// last exposure taken
@@ -423,7 +441,7 @@ int main(int argc, char *argv[])
 const double minGain = 1.0;		// TODO: determine based on camera
 	if (! cg.saveCC)
 	{
-		// xxxx TODO: NO_MAX_VALUE will be replaced by acutal values
+		// xxxx TODO: NO_MAX_VALUE will be replaced by actual values
 
 		// If an exposure value, which was entered on the command-line in MS, is out of range,
 		// we want to specify the valid range in MS, not US which we use internally.
@@ -1001,7 +1019,7 @@ if (lastExposure_us != myRaspistillSetting.shutter_us)
 					else if (r == SIGHUP) z = "SIGHUP";
 					if (z != "")
 					{
-						printf("xxxx Got %s in %s\n", z.c_str(), getCameraCommand(cg.isLibcamera));
+						printf("xxxx Got %s in %s\n", z.c_str(), cg.cmdToUse);
 					}
 					else
 					{

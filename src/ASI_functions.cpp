@@ -9,11 +9,6 @@
 
 // Forward definitions of variables in capture*.cpp.
 extern int iNumOfCtrl;
-#ifdef IS_RPi
-char const *getCameraCommand(bool);
-#else
-char const *getCameraCommand(bool x) { return yesNo(x); }		// keeps compiler quiet
-#endif
 
 int numCameras = 0;		// used by several functions
 
@@ -77,8 +72,8 @@ typedef enum ASI_CONTROL_TYPE{ //Control type//
 	// RPI only:
 	EV,
 	BRIGHTNESS,
-	CONTRAST,
 	SATURATION,
+	CONTRAST,
 	SHARPNESS,
 
 	CONTROL_TYPE_END
@@ -147,9 +142,9 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
 		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
 		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, BRIGHTNESS },
-		{ "Contrast", "Contrast", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Saturation", "Saturation", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "Saturation", "Saturation", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Sharpness", "Sharpness", 99.0, 0.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	},
 	{ // raspistill.  Minimum width and height are 64.
@@ -161,9 +156,9 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
 		{ "ExposureCompensation", "Exposure Compensation", 10, -10, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Brightness", "Brightness", 100, 0, 50, NOT_SET, ASI_FALSE, ASI_TRUE, BRIGHTNESS },		// xxx default ???
-		{ "Contrast", "Contrast", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Brightness", "Brightness", 100, 0, 50, NOT_SET, ASI_FALSE, ASI_TRUE, BRIGHTNESS },
 		{ "Saturation", "Saturation", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
 		{ "Sharpness", "Sharpness", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	}
@@ -186,8 +181,8 @@ int ASIGetNumOfConnectedCameras()
 	// Put the list of cameras and attributes in a file and return the number of cameras (the exit code).
 	if (cg.isLibcamera)
 	{
-		// "libcamera-still --list-cameras" writes to stderr.
-		snprintf(cmd, sizeof(cmd), "NUM=$(LIBCAMERA_LOG_LEVELS=FATAL libcamera-still --list-cameras 2>&1 | grep -E '^[0-9 ]' | tee '%s' | grep -E '^[0-9] : ' | wc -l); exit ${NUM}", camerasInfoFile);
+		// --list-cameras" writes to stderr.
+		snprintf(cmd, sizeof(cmd), "NUM=$(LIBCAMERA_LOG_LEVELS=FATAL %s --list-cameras 2>&1 | grep -E '^[0-9 ]' | tee '%s' | grep -E '^[0-9] : ' | wc -l); exit ${NUM}", cg.cmdToUse, camerasInfoFile);
 	}
 	else
 	{
@@ -630,7 +625,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
 	fprintf(f, "\t\"bitDepth\" : %d,\n", cameraInfo.BitDepth);
 #ifdef IS_RPi
-	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", getCameraCommand(cg.isLibcamera));
+	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", cg.cmdToUse);
 #endif
 
 	fprintf(f, "\t\"suportedImageFormats\": [\n");

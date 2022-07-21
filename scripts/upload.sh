@@ -13,29 +13,18 @@ source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
-if [ "${1}" = "--silent" ] ; then
-	SILENT="true"
-	shift
-else
-	SILENT="false"
-fi
-if [ "${1}" = "--debug" ] ; then
-	DEBUG="true"
-	shift
-else
-	DEBUG="false"
-fi
-
 ME="$(basename "${BASH_ARGV0}")"
 
-# TODO: Use getopt() so arguments can be in any order
-if [ $# -lt 3 ] ; then
-	# When run manually, the file_type (arg $4) normally won't be given.
-	echo -en "${RED}"
-	echo -n "*** Usage: ${ME} [--silent] [--debug] file_to_upload  directory  destination_file_name [file_type] [local_directory]"
-	echo -e "${NC}"
+usage_and_exit() {
+	RET=$1
+	[ ${RET} -ne 0 ] && echo -en "${RED}"
+	echo -n "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] file_to_upload  directory  destination_file_name [file_type] [local_directory]"
+	[ ${RET} -ne 0 ] && echo -e "${NC}"
+
 	echo "Where:"
-	echo "   '--silent' doesn't display any status messages"
+	echo "   '--help' displays this message and exits."
+	echo "   '--wait' waits for any upload of the same type to finish."
+	echo "   '--silent' doesn't display any status messages."
 	echo "   'file_to_upload' is the path name of the file you want to upload."
 	echo "   'directory' is the directory ON THE SERVER the file should be uploaded to."
 	echo "   'destination_file_name' is the name the file should be called ON THE SERVER."
@@ -44,13 +33,53 @@ if [ $# -lt 3 ] ; then
 	echo "        copied to in addition to being uploaded."
 	echo
 	echo "For example: ${ME}  keogram-20210710.jpg  /keograms  keogram.jpg"
-	exit 1
-fi
+
+	exit ${RET}
+}
+
+
+	# When run manually, the file_type (arg $4) normally won't be given.
+HELP="false"
+WAIT="false"
+SILENT="false"
+DEBUG="false"
+RET=0
+while [ $# -gt 0 ]; do
+	case "${1}" in
+		--help)
+			HELP="true"
+			shift
+			;;
+		--wait)
+			WAIT="true"
+			shift
+			;;
+		--silent)
+			SILENT="true"
+			shift
+			;;
+		--debug)
+			DEBUG="true"
+			shift
+			;;
+		-*)
+			echo -e "${RED}Unknown argument '${1}'.${NC}" >&2
+			shift
+			RET=1
+			;;
+		*)
+			break		# done with arguments
+			;;
+	esac
+done
+[[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit ${RET}
+[ "${HELP}" = "true" ] && usage_and_exit 0
+
 FILE_TO_UPLOAD="${1}"
 if [ ! -f "${FILE_TO_UPLOAD}" ] ; then
-	echo -en "${RED}"
-	echo -n "*** ${ME}: ERROR: File to upload '${FILE_TO_UPLOAD}' not found!"
-	echo -e "${NC}"
+	echo -en "${RED}" >&2
+	echo -n "*** ${ME}: ERROR: File to upload '${FILE_TO_UPLOAD}' not found!" >&2
+	echo -e "${NC}" >&2
 	exit 2
 fi
 
@@ -59,9 +88,9 @@ DESTINATION_FILE="${3}"
 FILE_TYPE="${4:-x}"		# A unique identifier for this type of file
 COPY_TO="${5}"
 if [ "${COPY_TO}" != "" -a ! -d "${COPY_TO}" ] ; then
-	echo -en "${RED}"
-	echo -n "*** ${ME}: ERROR: '${COPY_TO}' directory not found!"
-	echo -e "${NC}"
+	echo -en "${RED}" >&2
+	echo -n "*** ${ME}: ERROR: '${COPY_TO}' directory not found!" >&2
+	echo -e "${NC}" >&2
 	exit 2
 fi
 
@@ -78,23 +107,44 @@ LOG="${ALLSKY_TMP}/upload_log.txt"
 # Multiple concurrent uploads (which can happen if the system and/or network is slow can
 # cause errors and files left on the server.
 PID_FILE="${ALLSKY_TMP}/${FILE_TYPE}-pid.txt"
-if [ -f "${PID_FILE}" ]; then
+CHECK="true"
+NUM_CHECKS=0
+while [ "${CHECK}" = "true" ]; do
+	if [ -f "${PID_FILE}" ]; then
 		PID=$(< "${PID_FILE}")
 		# shellcheck disable=SC2009
 		ps -f -p${PID} | grep --silent "${ME}"
 		# shellcheck disable=SC2181
 		if [ $? -eq 0 ]; then
-			echo -en "${YELLOW}"
-			echo "*** ${ME}: WARNING: Another upload of type '${FILE_TYPE}' is in progress."
-			echo -n "This new upload is being aborted. If this happens often, check your network"
-			echo -n " and delay settings."
-			ps -fp ${PID}
-			echo -e "${NC}"
-			# Keep track of aborts so user can be notified
-			echo -e "$(date)\t${FILE_TYPE}\t${FILE_TO_UPLOAD}" >> "${ALLSKY_ABORTEDUPLOADS}"
-			exit 99
+			if [ "${WAIT}" = "true" ]; then
+				((NUM_CHECKS=NUM_CHECKS+1))
+				if [ $NUM_CHECKS -gt 10 ]; then
+					echo -en "${YELLOW}" >&2
+					echo "*** ${ME}: WARNING: Another '${FILE_TYPE}' upload is still in progress so" >&2
+					echo "this upload is being aborted." >&2
+					echo "Made ${NUM_CHECKS} attempts at waiting." >&2
+					echo -e "${NC}" >&2
+				else
+					sleep 5
+				fi
+			else
+				echo -en "${YELLOW}" >&2
+				echo "*** ${ME}: WARNING: Another upload of type '${FILE_TYPE}' is in progress." >&2
+				echo -n "This new upload is being aborted. If this happens often, check your network" >&2
+				echo -n " and delay settings." >&2
+				ps -fp ${PID}
+				echo -e "${NC}" >&2
+				# Keep track of aborts so user can be notified
+				echo -e "$(date)\t${FILE_TYPE}\t${FILE_TO_UPLOAD}" >> "${ALLSKY_ABORTEDUPLOADS}"
+				exit 99
+			fi
+		else
+			CHECK="false"	# Not sure why the PID file existed if the process didn't exist...
 		fi
-fi
+	else
+		CHECK="false"		# Prior upload finished.
+	fi
+done
 echo $$ > "${PID_FILE}"
 
 # Convert to lowercase so we don't care if user specified upper or lowercase.
@@ -204,7 +254,7 @@ else # sftp/ftp/ftps
 		echo
 		if [ -n "${OUTPUT}" ]; then
 			echo "${OUTPUT}" > "${LOG}"
-			cat "${LOG}"
+			cat "${LOG}" >&2
 		fi
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"

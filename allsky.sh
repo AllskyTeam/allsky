@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ME="$(basename "${BASH_ARGV0}")"
+
 # This EXIT code is also defined in variables.sh, but in case we can't open that file, we need it here.
 EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 
@@ -57,15 +59,15 @@ if [ ! -v WEBUI_DATA_FILES ]; then	# WEBUI_DATA_FILES added after version 0.8.3.
 	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_CONFIG})/config.sh\nis an old version.  See\n/var/log/allsky.log"
 
 fi
-USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "$CAMERA_SETTINGS")
+USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
 
 if [ -z "${CAMERA}" ]; then
 	echo -e "${RED}*** FATAL ERROR: CAMERA not set, can't continue!${NC}"
 	doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nCAMERA type\nnot specified in\n$(basename ${ALLSKY_CONFIG})/config.sh."
 fi
 
-# Make sure allsky.sh is not already running.
-pgrep allsky.sh | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
+# Make sure we are not already running.
+pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 if [ "${CAMERA}" = "RPiHQ" ]; then
 	# See if we should use libcamera-still or raspistill.
@@ -120,7 +122,7 @@ elif [ "${CAMERA}" = "ZWO" ]; then
 		fi
 
 		if [ "${ON_TTY}" = "1" ]; then
-			echo "${YELLOW}WARNING: Resetting USB ports ${REASON/\\n/ }; restart allsky.sh when done.${NC}" >&2
+			echo "${YELLOW}WARNING: Resetting USB ports ${REASON/\\n/ }; restart ${ME} when done.${NC}" >&2
 		else
 			echo "${YELLOW}WARNING: Resetting USB ports ${REASON/\\n/ }, then restarting.${NC}" >&2
 			# The service will automatically restart this script.
@@ -210,15 +212,15 @@ ARGUMENTS+=(-debuglevel ${ALLSKY_DEBUG_LEVEL})
 # This argument should come next so the capture program knows if it should use colors.
 ARGUMENTS+=(-tty ${ON_TTY})
 
-KEYS=( $(jq -r 'keys[]' $CAMERA_SETTINGS) )
+KEYS=( $(settings 'keys[]') )
 for KEY in ${KEYS[@]}
 do
-	K="`jq -r '.'$KEY $CAMERA_SETTINGS`"
+	K="$(settings "."$KEY)"
 	ARGUMENTS+=(-$KEY "$K")
 done
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
-# The preview mode does not work if allsky.sh is started as a service or if the debian distribution has no desktop environment.
+# The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
 if [[ $1 == "preview" ]] ; then
 	ARGUMENTS+=(-preview 1)
 fi
@@ -235,13 +237,6 @@ else
 	rm -f "${FREQUENCY_FILE}"
 fi
 
-if [ "${DAYTIME_CAPTURE}" = "true" ] ; then
-	DAYTIME_CAPTURE=1
-else
-	DAYTIME_CAPTURE=0
-fi
-ARGUMENTS+=(-daytime $DAYTIME_CAPTURE)
-
 if [ "$CAPTURE_EXTRA_PARAMETERS" != "" ]; then
 	ARGUMENTS+=(${CAPTURE_EXTRA_PARAMETERS})	# Any additional parameters
 fi
@@ -257,7 +252,9 @@ if [[ $CAMERA == "ZWO" ]]; then
 elif [[ $CAMERA == "RPiHQ" ]]; then
 	CAPTURE="capture_RPiHQ"
 fi
+
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
+
 # Run the main program - this is the main attraction...
 "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
 RETCODE=$?
@@ -270,7 +267,7 @@ if [ ${RETCODE} -ne ${EXIT_OK} ]; then
 fi
 if [ "${GOT_SIGTERM}" = "true" ] || [ "${GOT_SIGUSR1}" = "true" ] || [ "${GOT_SIGINT}" = "true" ]; then
 	# for testing
-	echo "allsky.sh: GOT_SIGTERM=$GOT_SIGTERM, GOT_SIGUSR1=$GOT_SIGUSR1, GOT_SIGINT=$GOT_SIGINT"
+	echo "${ME}: GOT_SIGTERM=$GOT_SIGTERM, GOT_SIGUSR1=$GOT_SIGUSR1, GOT_SIGINT=$GOT_SIGINT"
 fi
 fi	# if false
 
@@ -313,7 +310,7 @@ fi
 if [ "${RETCODE}" -ge ${EXIT_ERROR_STOP} ]; then
 	echo "***"
 	if [ ${ON_TTY} = "1" ]; then
-		echo "*** After fixing, restart allsky.sh. ***"
+		echo "*** After fixing, restart ${ME}.sh. ***"
 	else
 		echo "*** After fixing, restart the allsky service. ***"
 	fi

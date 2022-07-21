@@ -8,7 +8,7 @@ ME2="$(basename "${BASH_SOURCE[0]}")"
 # Subtract dark frame if there is one defined in config.sh
 # This has to come after executing darkCapture.sh which sets ${AS_TEMPERATURE}.
 
-if [ "${DARK_FRAME_SUBTRACTION}" = "true" ]; then
+if [ "$(settings ".useDarkFrames")" = "1" ]; then
 	# Make sure the input file exists; if not, something major is wrong so exit.
 	if [ "${CURRENT_IMAGE}" = "" ]; then
 		echo "*** ${ME2}: ERROR: 'CURRENT_IMAGE' not set; aborting."
@@ -77,7 +77,7 @@ if [ "${DARK_FRAME_SUBTRACTION}" = "true" ]; then
 
 		if [ "${CLOSEST_TEMPERATURE}" = "" ]; then
 			echo "*** ${ME2}: ERROR: No dark frame found for ${CURRENT_IMAGE} at temperature ${AS_TEMPERATURE}."
-			echo "Either take dark frames or turn DARK_FRAME_SUBTRACTION off in config.sh"
+			echo "Either take dark frames or turn 'Use Dark Frames' off in the WebUI"
 			echo "Continuing without dark subtraction."
 			return
 		fi
@@ -96,4 +96,3 @@ if [ "${DARK_FRAME_SUBTRACTION}" = "true" ]; then
 		exit 4
 	fi
 fi
-

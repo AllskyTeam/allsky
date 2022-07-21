@@ -106,7 +106,7 @@ if [ -n "${WEB_DAYS_TO_KEEP}" ]; then
 	fi
 fi
 
-SHOW_ON_MAP=$(jq -r '.showonmap' "$CAMERA_SETTINGS")
+SHOW_ON_MAP=$(settings ".showonmap")
 if [[ ${SHOW_ON_MAP} == "1" ]]; then
 	echo -e "${ME}: ===== Posting camera details to allsky map"
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight

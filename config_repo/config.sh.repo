@@ -69,14 +69,6 @@ REMOVE_BAD_IMAGES_THRESHOLD_HIGH=90
 # depending on what camera you have (ZWO or RPiHQ).
 CAPTURE_EXTRA_PARAMETERS=""
 
-# Set to "false" to disable daytime capture.
-DAYTIME_CAPTURE="true"
-
-# Night images are always taken and saved to disk.
-# Set DAYTIME_SAVE to "true" to also save daytime images.
-# This will only save daytime images if DAYTIME_CAPTURE="true".
-DAYTIME_SAVE="false"
-
 
 ########## Timelapse
 # Set to "true" to generate a timelapse video at the end of each night.
@@ -182,10 +174,6 @@ WEB_DAYS_TO_KEEP=""
 # This is needed if you are running the Allsky Website.
 POST_END_OF_NIGHT_DATA="false"
 
-# Set to "true" if you want to enable dark frame subtraction on your nighttime images.
-# You must first create dark frames - see the README.md file for instructions.
-DARK_FRAME_SUBTRACTION="false"
-
 # If you have additional data or buttons you want displayed on the WebUI's System page,
 # see the WEBUI_DATA_FILES configuration variable in the "Software settings" section of
 # https://github.com/thomasjacquin/allsky/wiki/allsky-Settings for details.
@@ -199,7 +187,7 @@ UHUBCTL_PATH=""
 UHUBCTL_PORT=2
 
 
-# ================ Do not change anything below this line.
+# ================ DO NOT CHANGE ANYTHING BELOW THIS LINE ================
 END_OF_USER_SETTINGS="true"		# During upgrades, stop looking for variables here.
 
 if [ "${CAMERA}" = "" ]; then
@@ -207,9 +195,6 @@ if [ "${CAMERA}" = "" ]; then
 	sudo systemctl stop allsky
 	exit 100
 fi
-
-# COMPATIBILITY CHECK
-## None for this release
 
 # This is needed in case the user changed the default location the current image is saved to.
 if [ "${IMG_DIR}" = "current/tmp" ]; then
@@ -220,8 +205,14 @@ fi
 
 CAMERA_SETTINGS="${ALLSKY_CONFIG}/settings_${CAMERA}.json"
 
+# Simple way to get a setting that hides the details.
+function setting()
+{
+	echo "$(jq -r "${1}" "${CAMERA_SETTINGS}")"
+}
+
 # Get the name of the file the websites will look for, and split into name and extension.
-FULL_FILENAME="$(jq -r '.filename' "${CAMERA_SETTINGS}")"
+FULL_FILENAME="$(settings ".filename")"
 EXTENSION="${FULL_FILENAME##*.}"
 FILENAME="${FULL_FILENAME%.*}"
  

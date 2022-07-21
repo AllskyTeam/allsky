@@ -136,7 +136,7 @@ int RPicapture(config cg, cv::Mat *image)
 		// normally short so the camera can home in on the correct exposure quickly.
 		if (cg.currentAutoExposure)
 		{
-			if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
+			if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 				ss << 1;	// We do our own auto-exposure so no need to wait at all.
 			else if (dayOrNight == "DAY")
 				ss << 2 * MS_IN_SEC;
@@ -183,7 +183,7 @@ int RPicapture(config cg, cv::Mat *image)
 			command += " --mode 2 --width 2028 --height 1520";
 	}
 
-	if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
+	if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 	{
 if (0 && cg.currentExposure_us != myRaspistillSetting.shutter_us)
 {
@@ -196,7 +196,7 @@ printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSett
 	// Check if automatic determined exposure time is selected
 	if (cg.currentAutoExposure)
 	{
-		if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) {
+		if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) {
 			ss.str("");
 			ss << cg.currentExposure_us;
 			if (! cg.isLibcamera)
@@ -222,7 +222,7 @@ printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSett
 	// Check if auto gain is selected
 	if (cg.currentAutoGain)
 	{
-		if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
+		if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 		{
 			ss.str("");
 			ss << myRaspistillSetting.analoggain;
@@ -244,7 +244,7 @@ printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSett
 		command += " --analoggain " + ss.str();
 	}
 
-	if (myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) {
+	if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) {
 		stringstream strExposureTime;
 		stringstream strReinforcement;
 		strExposureTime <<  myRaspistillSetting.shutter_us;
@@ -704,9 +704,6 @@ const double minGain = 1.0;		// TODO: determine based on camera
 				cg.currentTargetTemp = cg.nightTargetTemp;
 			}
 			cg.myModeMeanSetting.currentMean = NOT_SET;
-			cg.myModeMeanSetting.modeMean = false;
-// TODO: after merging myModeMeanSetting into cg.myModeMeanSetting, delete these lines.
-myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 
  			Log(0, "Taking dark frames...\n");
 
@@ -798,7 +795,7 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 			}
 			cg.myModeMeanSetting.currentMean = cg.myModeMeanSetting.nightMean;
 		}
-		// ========== Done with dark fram / day / night settings
+		// ========== Done with dark frame / day / night settings
 
 
 		if (cg.myModeMeanSetting.currentMean > 0.0)
@@ -813,6 +810,7 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 		else
 		{
 			cg.myModeMeanSetting.modeMean = false;
+			myModeMeanSetting.meanAuto = MEAN_AUTO_OFF;
 		}
 // TODO: after merging myModeMeanSetting into cg.myModeMeanSetting, delete this line.
 myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
@@ -890,7 +888,7 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 				if (! cg.takingDarkFrames)
 				{
 					lastExposure_us = myRaspistillSetting.shutter_us;
-					if (cg.myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
+					if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
 						lastGain =  myRaspistillSetting.analoggain;
 					}
@@ -900,11 +898,11 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 					}
 
 					mean = -1;
-					if (cg.myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
+					if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
 if (lastExposure_us != myRaspistillSetting.shutter_us)
   Log(0, " xxxx lastExposure_us (%ld) != shutter_us (%ld)\n", lastExposure_us, myRaspistillSetting.shutter_us);
-//xxx						mean = aegCalcMean(pRgb, cg.currentExposure_us, cg.currentGain,
+// TODO: always calculate mean ???
 						mean = aegCalcMean(pRgb);
 						aegGetNextExposureSettings(mean, lastExposure_us, lastGain,
 								myRaspistillSetting, myModeMeanSetting);
@@ -925,8 +923,8 @@ if (lastExposure_us != myRaspistillSetting.shutter_us)
 						myRaspistillSetting.analoggain = cg.currentGain;
 					}
 
-					if (cg.currentSkipFrames == 0 && ! cg.overlay.externalOverlay && doOverlay(pRgb, cg, bufTime,
-						lastExposure_us, actualTemp, lastGain, 0, mean, focusMetric) > 0)
+					if (cg.currentSkipFrames == 0 && ! cg.overlay.externalOverlay && \
+						doOverlay(pRgb, cg, bufTime, lastExposure_us, actualTemp, lastGain, 0, mean, focusMetric) > 0)
 					{
 						// if we added anything to overlay, write the file out
 						bool result = cv::imwrite(cg.fullFilename, pRgb, compressionParameters);
@@ -940,6 +938,8 @@ if (lastExposure_us != myRaspistillSetting.shutter_us)
 					cg.currentSkipFrames--;
 					// Do not save this frame or sleep after it.
 					// We just started taking images so no need to check if DAY or NIGHT changed
+					if (remove(cg.fullFilename) != 0)
+						Log(0, "ERROR: Unable to remove '%s': %s\n", cg.fullFilename, strerror(errno));
 					continue;
 				}
 				else
@@ -956,7 +956,7 @@ if (lastExposure_us != myRaspistillSetting.shutter_us)
 					snprintf(cmd, sizeof(cmd), "%sscripts/saveImage.sh %s '%s'", allskyHome, dayOrNight.c_str(), cg.fullFilename);
 
 					// TODO: in the future the calculation of mean should independent from modeMean. -1 means don't display.
-					float m = (cg.myModeMeanSetting.modeMean && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) ? mean : -1.0;
+					float m = (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) ? mean : -1.0;
 					add_variables_to_command(cmd, exposureStartDateTime,
 						lastExposure_us, cg.currentBrightness, m,
 						cg.currentAutoExposure, cg.currentAutoGain, cg.currentAutoAWB, cg.currentWBR, cg.currentWBB,
@@ -965,7 +965,7 @@ if (lastExposure_us != myRaspistillSetting.shutter_us)
 					system(cmd);
 				}
 
-				if (cg.myModeMeanSetting.modeMean && myModeMeanSetting.quickstart && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
+				if (myModeMeanSetting.quickstart && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 				{
 					long x = 1 * US_IN_SEC;
 					Log(0, "Sleeping 1 second (quickstart on, %d left)...\n", myModeMeanSetting.quickstart);

@@ -26,8 +26,7 @@ if [ "${AS_TEMPERATURE}" = "" ]; then
 	fi
 fi
 
-DARK_MODE=$(jq -r '.darkframe' "${CAMERA_SETTINGS}")
-if [ "${DARK_MODE}" = "1" ] ; then
+if [ "$(settings ".takeDarkFrames")" = "1" ]; then
 	# The extension on $CURRENT_IMAGE may not be $EXTENSION.
 	DARK_EXTENSION="${CURRENT_IMAGE##*.}"
 
@@ -46,7 +45,7 @@ if [ "${DARK_MODE}" = "1" ] ; then
 	# so don't overwrite it.
 	# xxxx It's possible some people will want to see the dark frame even if notification images
 	# are being used - may need to make it optional to see the dark frame.
-	USE_NOTIFICATION_IMAGES=$(jq -r '.notificationimages' "${CAMERA_SETTINGS}")
+	USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
 	if [ "${USE_NOTIFICATION_IMAGES}" = "0" ] ; then
 		# Go ahead and let the web sites see the dark frame to see if it's working.
 		# We're copying back the file we just moved, but the assumption is few people

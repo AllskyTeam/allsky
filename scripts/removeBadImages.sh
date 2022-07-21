@@ -55,8 +55,7 @@ if [ "${FILE}" != "" -a ! -f "${DATE}/${FILE}" ]; then
 	exit 2
 fi
 
-DARK_MODE=$(jq -r '.darkframe' "${CAMERA_SETTINGS}")
-if [ "${DARK_MODE}" = "1" ]; then
+if [ "$(settings ".takeDarkFrames")" = "1" ]; then
 	# Disable low brightness check since darks will have extremely low brightness.
 	# But continue with the other checks in case the dark file is corrupted.
 	REMOVE_BAD_IMAGES_THRESHOLD_LOW=0

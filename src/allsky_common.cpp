@@ -860,9 +860,9 @@ void displayHeader(config cg)
 
 
 // Display the help message.
+int const n = 25;		// width of argument name
 void displayHelp(config cg)
 {
-	int const n = 25;		// width of argument name
 	printf("%sUsage:\n", c(KRED));
 	printf(" capture%s -width 0 -height 0 -nightexposure 5000000 -daybin 1 -nightbin 2\n\n", cg.ct == ctRPi ? "_RPiHQ" : "");
 	printf("%s", c(KNRM));
@@ -948,8 +948,8 @@ void displayHelp(config cg)
 	printf(" -%-*s - Longitude of the camera [no default - you must set it].\n", n, "longitude s");
 	printf(" -%-*s - Angle of the sun below the horizon [%.2f].\n", n, "angle n", cg.angle);
 	printf("  %-*s   -6 = civil twilight   -12 = nautical twilight   -18 = astronomical twilight.\n", n, "");
-	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "daytime b", yesNo(cg.daytimeCapture));
-	printf(" -%-*s - 1 takes dark frames and disables the overlay [%s].\n", n, "darkframe b", yesNo(cg.takingDarkFrames));
+	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "takeDaytimeImages b", yesNo(cg.daytimeCapture));
+	printf(" -%-*s - 1 takes dark frames and disables the overlay [%s].\n", n, "takeDarkFrames b", yesNo(cg.takingDarkFrames));
 	printf(" -%-*s - Your locale - to determine thousands separator and decimal point [%s].\n", n, "locale s", cg.locale);
 	printf("  %-*s   Type 'locale' at a command prompt to determine yours.\n", n, "");
 	if (cg.ct == ctZWO) {
@@ -1059,6 +1059,18 @@ void displaySettings(config cg)
 		if (cg.nightAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
+	if (cg.myModeMeanSetting.dayMean > 0.0)
+		printf("   Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
+	if (cg.myModeMeanSetting.nightMean > 0.0)
+		printf("   Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
+	if (cg.myModeMeanSetting.dayMean > 0.0 || cg.myModeMeanSetting.dayMean > 0.0)
+	{
+		printf("   Threshold: %1.3f\n", cg.myModeMeanSetting.mean_threshold);
+		printf("   p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
+		printf("   p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
+		printf("   p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
+	}
+
 	if (cg.gainTransitionTimeImplemented)
 		printf("   Gain Transition Time: %.1f minutes\n", (float) cg.gainTransitionTime/60);
 	printf("   Brightness (day):   %ld\n", cg.dayBrightness);
@@ -1110,17 +1122,7 @@ void displaySettings(config cg)
 	printf("   Taking Dark Frames: %s\n", yesNo(cg.takingDarkFrames));
 	printf("   Debug Level: %ld\n", cg.debugLevel);
 	printf("   On TTY: %s\n", yesNo(cg.tty));
-	if (cg.ct == ctRPi) {
-		printf("   Mode Mean: %s\n", yesNo(cg.myModeMeanSetting.modeMean));
-		if (cg.myModeMeanSetting.modeMean) {
-			printf("      Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
-			printf("      Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
-			printf("      Threshold: %1.3f\n", cg.myModeMeanSetting.mean_threshold);
-			printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
-			printf("      p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
-			printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
-		}
-	}
+
 	printf("   Allsky version: %s\n", cg.version);
 	if (cg.ct == ctZWO) {
 		printf("   ZWO SDK version %s\n", cg.ASIversion);
@@ -1162,6 +1164,7 @@ bool daytimeSleep(bool displayedMsg, config cg)
 	{
 		if (cg.notificationImages) {
 			char cmd[256];
+			sleep(5);		// In case another notification image is being upload, give it time to finish.
 			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &", allskyHome);
 			system(cmd);
 		}
@@ -1223,6 +1226,12 @@ void setDefaults(config *cg, cameraType ct)
 	snprintf(s, sizeof(s), "%s%s", allskyHome, "tmp");
 	cg->saveDir = s;
 	cg->CC_saveDir = cg->saveDir;
+
+// TODO: Get from camera model
+	cg->isColorCamera = false;
+	cg->isCooledCamera = false;
+	cg->supportsTemperature = false;
+
 	if (ct == ctZWO) {
 // TODO: Get from camera model
 		// Gain, brightness, and min/max are camera model-dependent, but use a reasonable value.
@@ -1239,6 +1248,7 @@ void setDefaults(config *cg, cameraType ct)
 		cg->nightGain = 150;
 		cg->nightWBR = cg->dayWBR;		// TODO: should night be different than day?
 		cg->nightWBB = cg->dayWBB;
+		cg->supportsAggression = true;
 	} else {
 		cg->cameraMinExposure_us = 1;
 		cg->cameraMaxExposure_us = 230 * US_IN_SEC;	// HQ camera
@@ -1263,6 +1273,7 @@ void setDefaults(config *cg, cameraType ct)
 		cg->nightGain = 4.0;
 		cg->nightWBR = cg->dayWBR;
 		cg->nightWBB = cg->dayWBB;
+		cg->supportsAggression = false;
 	}
 }
 
@@ -1423,426 +1434,454 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 	else
 		b = "";
 
-	if (argc > 1)
+	if (argc <= 1)		
+		return(true);
+
+	for (int i=1; i <= argc - 1; i++)
 	{
-		for (int i=1 ; i <= argc - 1 ; i++)
+		// Allow UPPER and lower case on the command line.
+		// Note that all strings in strcmp() must be lowercase.
+		char *a = argv[i];
+		for (int j=0; a[j] != '\0'; j++) {
+			a[j] = (char) tolower(a[j]);
+		}
+		if (*a == '-') a++;		// skip leading "-"
+
+		Log(4, "%s >>> Parameter [%-*s]  Value: [%s]\n", b, n, a, argv[i+1]);
+
+		// Misc. settings
+		if (strcmp(a, "config") == 0)
 		{
-			// Allow UPPER and lower case on the command line.
-			// Note that all strings in strcmp() must be lowercase.
-			char *a = argv[i];
-			for (int j=0; a[j] != '\0'; j++) {
-				a[j] = (char) tolower(a[j]);
-			}
-
-if (0) printf("%sargc %d: %s\n", b, i, a);
-
-			// Misc. settings
-			if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0)
-			{
-				cg->help = true;
-				cg->quietExit = true;	// we display the help message and quit
-			}
-			else if (strcmp(a, "-config") == 0)
-			{
-				// Read the file as soon as we see it on the command line.
-				// This means any command-line arguments after it will overwrite the config file.
-				cg->configFile = argv[++i];
-				if (! getConfigFileArguments(cg))
-				{
-					return(false);
-				}
-			}
-			else if (strcmp(a, "-version") == 0)
-			{
-				cg->version = argv[++i];
-			}
-			else if (strcmp(a, "-save_dir") == 0)
-			{
-				cg->saveDir = argv[++i];
-			}
-			else if (strcmp(a, "-cc_save_dir") == 0)
-			{
-				cg->CC_saveDir = argv[++i];
-				cg->saveCC = true;
-				cg->quietExit = true;	// we display info and quit
-			}
-			else if (strcmp(a, "-cmd") == 0)
-			{
-				cg->isLibcamera = strcmp(argv[i+1], "libcamera") == 0 ? true : false;
-			}
-			else if (strcmp(a, "-tty") == 0)	// overrides what was automatically determined
-			{
-				cg->tty = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-preview") == 0)
-			{
-				cg->preview = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-daytime") == 0)
-			{
-				cg->daytimeCapture = getBoolean(argv[++i]);
-			}
-
-			// daytime settings
-			else if (strcmp(a, "-dayautoexposure") == 0)
-			{
-				cg->dayAutoExposure = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-daymaxautoexposure") == 0)
-			{
-				cg->temp_dayMaxAutoExposure_ms = atof(argv[++i]);	// allow fractions
-			}
-			else if (strcmp(a, "-dayexposure") == 0)
-			{
-				cg->temp_dayExposure_ms = atof(argv[++i]);	// allow fractions
-			}
-			else if (strcmp(a, "-daymean") == 0)
-			{
-				// If the user specified 0.0, that means don't use modeMean auto exposure/gain.
-				double m = atof(argv[++i]);
-				if (m == 0.0)
-				{
-					cg->myModeMeanSetting.dayMean = 0.0;
-				}
-				else
-				{
-					cg->myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,m));
-				}
-			}
-			else if (strcmp(a, "-daybrightness") == 0)
-			{
-				cg->dayBrightness = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-daydelay") == 0)
-			{
-				cg->dayDelay_ms = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-dayautogain") == 0)
-			{
-				cg->dayAutoGain = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-daymaxautogain") == 0)
-			{
-				cg->dayMaxAutoGain = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-daygain") == 0)
-			{
-				cg->dayGain = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-daybin") == 0)
-			{
-				cg->dayBin = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-dayawb") == 0)
-			{
-				cg->dayAutoAWB = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-daywbr") == 0)
-			{
-				cg->dayWBR = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-daywbb") == 0)
-			{
-				cg->dayWBB = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-dayskipframes") == 0)
-			{
-				cg->daySkipFrames = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-dayenablecooler") == 0)
-			{
-				cg->dayEnableCooler = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-daytargettemp") == 0)
-			{
-				cg->dayTargetTemp = atol(argv[++i]);
-			}
-
-			// nighttime settings
-			else if (strcmp(a, "-nightautoexposure") == 0)
-			{
-				cg->nightAutoExposure = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-nightmaxautoexposure") == 0)
-			{
-				cg->temp_nightMaxAutoExposure_ms = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-nightexposure") == 0)
-			{
-				cg->temp_nightExposure_ms = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-nightmean") == 0)
-			{
-				double m = atof(argv[++i]);
-				if (m == 0.0)
-				{
-					cg->myModeMeanSetting.nightMean = 0.0;
-				}
-				else
-				{
-					cg->myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,m));
-				}
-			}
-			else if (strcmp(a, "-nightbrightness") == 0)
-			{
-				cg->nightBrightness = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-nightdelay") == 0)
-			{
-				cg->nightDelay_ms = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-nightautogain") == 0)
-			{
-				cg->nightAutoGain = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-nightmaxautogain") == 0)
-			{
-				cg->nightMaxAutoGain = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-nightgain") == 0)
-			{
-				cg->nightGain = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-nightbin") == 0)
-			{
-				cg->nightBin = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-nightawb") == 0)
-			{
-				cg->nightAutoAWB = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-nightwbr") == 0)
-			{
-				cg->nightWBR = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-nightwbb") == 0)
-			{
-				cg->nightWBB = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-nightskipframes") == 0)
-			{
-				cg->nightSkipFrames = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-nightenablecooler") == 0)
-			{
-				cg->nightEnableCooler = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-nighttargettemp") == 0)
-			{
-				cg->nightTargetTemp = atol(argv[++i]);
-			}
-
-			// daytime and nighttime settings
-			else if (strcmp(a, "-mean-threshold") == 0)
-			{
-				// Must be between 0.01 and 0.1.
-				cg->myModeMeanSetting.mean_threshold = std::min(0.1, std::max(0.01,atof(argv[++i])));
-			}
-			else if (strcmp(a, "-mean-p0") == 0)
-			{
-				cg->myModeMeanSetting.mean_p0 = std::min(50.0, std::max(0.0,atof(argv[++i])));
-			}
-			else if (strcmp(a, "-mean-p1") == 0)
-			{
-				cg->myModeMeanSetting.mean_p1 = std::min(50.0, std::max(0.0,atof(argv[++i])));
-			}
-			else if (strcmp(a, "-mean-p2") == 0)
-			{
-				cg->myModeMeanSetting.mean_p2 = std::min(50.0, std::max(0.0,atof(argv[++i])));
-			}
-			else if (strcmp(a, "-saturation") == 0)
-			{
-				cg->saturation = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-gamma") == 0)
-			{
-				cg->gamma = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-offset") == 0)
-			{
-				cg->offset = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-aggression") == 0)
-			{
-				cg->aggression = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-gaintransitiontime") == 0)
-			{
-				cg->gainTransitionTime = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-width") == 0)
-			{
-				cg->width = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-height") == 0)
-			{
-				cg->height = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-type") == 0)
-			{
-				cg->imageType = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-quality") == 0)
-			{
-				cg->quality = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-autousb") == 0)
-			{
-				cg->asiAutoBandwidth = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-usb") == 0)
-			{
-				cg->asiBandwidth = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-filename") == 0)
-			{
-				cg->fileName = argv[++i];
-			}
-			else if (strcmp(a, "-rotation") == 0)
-			{
-				cg->rotation = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-flip") == 0)
-			{
-				cg->flip = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-notificationimages") == 0)
-			{
-				cg->notificationImages = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-latitude") == 0)
-			{
-				cg->latitude = argv[++i];
-			}
-			else if (strcmp(a, "-longitude") == 0)
-			{
-				cg->longitude = argv[++i];
-			}
-			else if (strcmp(a, "-angle") == 0)
-			{
-				cg->angle = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-darkframe") == 0)
-			{
-				cg->takingDarkFrames = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-locale") == 0)
-			{
-				cg->locale = argv[++i];
-			}
-			else if (strcmp(a, "-histogrambox") == 0)
-			{
-				cg->HB.sArgs = argv[++i];
-			}
-			else if (strcmp(a, "-debuglevel") == 0)
-			{
-				cg->debugLevel = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-newexposure") == 0)
-			{
-				cg->videoOffBetweenImages = getBoolean(argv[++i]);
-			}
-
-			// overlay settings
-			else if (strcmp(a, "-showtime") == 0)
-			{
-				cg->overlay.showTime = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-timeformat") == 0)
-			{
-				cg->timeFormat = argv[++i];
-			}
-			else if (strcmp(a, "-showtemp") == 0)
-			{
-				cg->overlay.showTemp = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-temptype") == 0)
-			{
-				cg->tempType = argv[++i];
-			}
-			else if (strcmp(a, "-showexposure") == 0)
-			{
-				cg->overlay.showExposure = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-showgain") == 0)
-			{
-				cg->overlay.showGain = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-showbrightness") == 0)
-			{
-				cg->overlay.showBrightness = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-showmean") == 0)
-			{
-				cg->overlay.showMean = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-showhistogrambox") == 0)
-			{
-				cg->overlay.showHistogramBox = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-showfocus") == 0)
-			{
-				cg->overlay.showFocus = getBoolean(argv[++i]);
-			}
-			else if (strcmp(a, "-text") == 0)
-			{
-				cg->overlay.ImgText = argv[++i];
-			}
-			else if (strcmp(a, "-extratext") == 0)
-			{
-				cg->overlay.ImgExtraText = argv[++i];
-			}
-			else if (strcmp(a, "-extratextage") == 0)
-			{
-				cg->overlay.extraFileAge = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-textlineheight") == 0)
-			{
-				cg->overlay.iTextLineHeight = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-textx") == 0)
-			{
-				cg->overlay.iTextX = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-texty") == 0)
-			{
-				cg->overlay.iTextY = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-fontname") == 0)
-			{
-				cg->overlay.fontnumber = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-fontcolor") == 0)
-			{
-				cg->overlay.fc = argv[++i];
-			}
-			else if (strcmp(a, "-smallfontcolor") == 0)
-			{
-				cg->overlay.sfc = argv[++i];
-			}
-			else if (strcmp(a, "-fonttype") == 0)
-			{
-				cg->overlay.linenumber = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-fontsize") == 0)
-			{
-				cg->overlay.fontsize = atof(argv[++i]);
-			}
-			else if (strcmp(a, "-fontline") == 0)
-			{
-				cg->overlay.linewidth = atol(argv[++i]);
-			}
-			else if (strcmp(a, "-outlinefont") == 0)
-			{
-				cg->overlay.outlinefont = getBoolean(argv[++i]);
-			}
-
-			// Arguments that may be passed to us but we don't use.
-			else if (strcmp(a, "-alwaysshowadvanced") == 0)
-			{
-				i++;	// not used
+			// Read the file as soon as we see it on the command line so
+			// any command-line arguments after it will overwrite the config file.
+			// A file name of "[none]" means to ignore the option.
+			cg->configFile = argv[++i];
+			if (strcmp(cg->configFile, "[none]") != 0 && ! getConfigFileArguments(cg))
+			{
+				return(false);
 			}
 		}
+		else if (strcmp(a, "h") == 0 || strcmp(a, "-help") == 0)
+		{
+			cg->help = true;
+			cg->quietExit = true;	// we display the help message and quit
+		}
+		else if (strcmp(a, "version") == 0)
+		{
+			cg->version = argv[++i];
+		}
+		else if (strcmp(a, "save_dir") == 0)
+		{
+			cg->saveDir = argv[++i];
+		}
+		else if (strcmp(a, "cc_save_dir") == 0)
+		{
+			cg->CC_saveDir = argv[++i];
+			cg->saveCC = true;
+			cg->quietExit = true;	// we display info and quit
+		}
+		else if (strcmp(a, "cmd") == 0)
+		{
+			cg->isLibcamera = strcmp(argv[++i], "libcamera") == 0 ? true : false;
+		}
+		else if (strcmp(a, "tty") == 0)	// overrides what was automatically determined
+		{
+			cg->tty = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "preview") == 0)
+		{
+			cg->preview = getBoolean(argv[++i]);
+		}
+
+		// daytime settings
+		else if (strcmp(a, "takedaytimeimages") == 0)
+		{
+			cg->daytimeCapture = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "dayautoexposure") == 0)
+		{
+			cg->dayAutoExposure = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "daymaxautoexposure") == 0)
+		{
+			cg->temp_dayMaxAutoExposure_ms = atof(argv[++i]);	// allow fractions
+		}
+		else if (strcmp(a, "dayexposure") == 0)
+		{
+			cg->temp_dayExposure_ms = atof(argv[++i]);	// allow fractions
+		}
+		else if (strcmp(a, "daymean") == 0)
+		{
+// TODO: this check should be done in capture program with all the other argument checks
+			// If the user specified 0.0, that means don't use modeMean auto exposure/gain.
+			double m = atof(argv[++i]);
+			if (m == 0.0)
+			{
+				cg->myModeMeanSetting.dayMean = 0.0;
+			}
+			else
+			{
+				cg->myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,m));
+			}
+		}
+		else if (strcmp(a, "daybrightness") == 0)
+		{
+			cg->dayBrightness = atol(argv[++i]);
+		}
+		else if (strcmp(a, "daydelay") == 0)
+		{
+			cg->dayDelay_ms = atol(argv[++i]);
+		}
+		else if (strcmp(a, "dayautogain") == 0)
+		{
+			cg->dayAutoGain = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "daymaxautogain") == 0)
+		{
+			cg->dayMaxAutoGain = atof(argv[++i]);
+		}
+		else if (strcmp(a, "daygain") == 0)
+		{
+			cg->dayGain = atof(argv[++i]);
+		}
+		else if (strcmp(a, "daybin") == 0)
+		{
+			cg->dayBin = atol(argv[++i]);
+		}
+		else if (strcmp(a, "dayawb") == 0)
+		{
+			cg->dayAutoAWB = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "daywbr") == 0)
+		{
+			cg->dayWBR = atof(argv[++i]);
+		}
+		else if (strcmp(a, "daywbb") == 0)
+		{
+			cg->dayWBB = atof(argv[++i]);
+		}
+		else if (strcmp(a, "dayskipframes") == 0)
+		{
+			cg->daySkipFrames = atol(argv[++i]);
+		}
+		else if (strcmp(a, "dayenablecooler") == 0)
+		{
+			cg->dayEnableCooler = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "daytargettemp") == 0)
+		{
+			cg->dayTargetTemp = atol(argv[++i]);
+		}
+
+		// nighttime settings
+		else if (strcmp(a, "nightautoexposure") == 0)
+		{
+			cg->nightAutoExposure = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "nightmaxautoexposure") == 0)
+		{
+			cg->temp_nightMaxAutoExposure_ms = atof(argv[++i]);
+		}
+		else if (strcmp(a, "nightexposure") == 0)
+		{
+			cg->temp_nightExposure_ms = atof(argv[++i]);
+		}
+		else if (strcmp(a, "nightmean") == 0)
+		{
+// TODO: this check should be done in capture program with all the other argument checks
+			double m = atof(argv[++i]);
+			if (m == 0.0)
+			{
+				cg->myModeMeanSetting.nightMean = 0.0;
+			}
+			else
+			{
+				cg->myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,m));
+			}
+		}
+		else if (strcmp(a, "nightbrightness") == 0)
+		{
+			cg->nightBrightness = atol(argv[++i]);
+		}
+		else if (strcmp(a, "nightdelay") == 0)
+		{
+			cg->nightDelay_ms = atol(argv[++i]);
+		}
+		else if (strcmp(a, "nightautogain") == 0)
+		{
+			cg->nightAutoGain = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "nightmaxautogain") == 0)
+		{
+			cg->nightMaxAutoGain = atof(argv[++i]);
+		}
+		else if (strcmp(a, "nightgain") == 0)
+		{
+			cg->nightGain = atof(argv[++i]);
+		}
+		else if (strcmp(a, "nightbin") == 0)
+		{
+			cg->nightBin = atol(argv[++i]);
+		}
+		else if (strcmp(a, "nightawb") == 0)
+		{
+			cg->nightAutoAWB = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "nightwbr") == 0)
+		{
+			cg->nightWBR = atof(argv[++i]);
+		}
+		else if (strcmp(a, "nightwbb") == 0)
+		{
+			cg->nightWBB = atof(argv[++i]);
+		}
+		else if (strcmp(a, "nightskipframes") == 0)
+		{
+			cg->nightSkipFrames = atol(argv[++i]);
+		}
+		else if (strcmp(a, "nightenablecooler") == 0)
+		{
+			cg->nightEnableCooler = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "nighttargettemp") == 0)
+		{
+			cg->nightTargetTemp = atol(argv[++i]);
+		}
+
+		// daytime and nighttime settings
+		else if (strcmp(a, "saturation") == 0)
+		{
+			cg->saturation = atof(argv[++i]);
+		}
+		else if (strcmp(a, "gamma") == 0)
+		{
+			cg->gamma = atol(argv[++i]);
+		}
+		else if (strcmp(a, "offset") == 0)
+		{
+			cg->offset = atol(argv[++i]);
+		}
+		else if (strcmp(a, "aggression") == 0)
+		{
+			cg->aggression = atol(argv[++i]);
+		}
+		else if (strcmp(a, "gaintransitiontime") == 0)
+		{
+			cg->gainTransitionTime = atol(argv[++i]);
+		}
+		else if (strcmp(a, "width") == 0)
+		{
+			cg->width = atol(argv[++i]);
+		}
+		else if (strcmp(a, "height") == 0)
+		{
+			cg->height = atol(argv[++i]);
+		}
+		else if (strcmp(a, "type") == 0)
+		{
+			cg->imageType = atol(argv[++i]);
+		}
+		else if (strcmp(a, "quality") == 0)
+		{
+			cg->quality = atol(argv[++i]);
+		}
+		else if (strcmp(a, "meanthreshold") == 0)
+		{
+// TODO: this check should be done in capture program with all the other argument checks
+			// Must be between 0.01 and 0.1.
+			cg->myModeMeanSetting.mean_threshold = std::min(0.1, std::max(0.01,atof(argv[++i])));
+		}
+		else if (strcmp(a, "meanp0") == 0)
+		{
+			cg->myModeMeanSetting.mean_p0 = std::min(50.0, std::max(0.0,atof(argv[++i])));
+		}
+		else if (strcmp(a, "meanp1") == 0)
+		{
+			cg->myModeMeanSetting.mean_p1 = std::min(50.0, std::max(0.0,atof(argv[++i])));
+		}
+		else if (strcmp(a, "meanp2") == 0)
+		{
+			cg->myModeMeanSetting.mean_p2 = std::min(50.0, std::max(0.0,atof(argv[++i])));
+		}
+		else if (strcmp(a, "autousb") == 0)
+		{
+			cg->asiAutoBandwidth = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "usb") == 0)
+		{
+			cg->asiBandwidth = atol(argv[++i]);
+		}
+		else if (strcmp(a, "filename") == 0)
+		{
+			cg->fileName = argv[++i];
+		}
+		else if (strcmp(a, "rotation") == 0)
+		{
+			cg->rotation = atol(argv[++i]);
+		}
+		else if (strcmp(a, "flip") == 0)
+		{
+			cg->flip = atol(argv[++i]);
+		}
+		else if (strcmp(a, "notificationimages") == 0)
+		{
+			cg->notificationImages = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "consistentdelays") == 0)
+		{
+        		cg->consistentDelays = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "latitude") == 0)
+		{
+			cg->latitude = argv[++i];
+		}
+		else if (strcmp(a, "longitude") == 0)
+		{
+			cg->longitude = argv[++i];
+		}
+		else if (strcmp(a, "angle") == 0)
+		{
+			cg->angle = atof(argv[++i]);
+		}
+		else if (strcmp(a, "takedarkframes") == 0)
+		{
+			cg->takingDarkFrames = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "locale") == 0)
+		{
+			cg->locale = argv[++i];
+		}
+		else if (strcmp(a, "histogrambox") == 0)
+		{
+			cg->HB.sArgs = argv[++i];
+		}
+		else if (strcmp(a, "debuglevel") == 0)
+		{
+			cg->debugLevel = atol(argv[++i]);
+		}
+		else if (strcmp(a, "newexposure") == 0)
+		{
+			cg->videoOffBetweenImages = getBoolean(argv[++i]);
+		}
+
+		// overlay settings
+		else if (strcmp(a, "externaloverlay") == 0)
+		{
+			cg->overlay.externalOverlay = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "showtime") == 0)
+		{
+			cg->overlay.showTime = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "timeformat") == 0)
+		{
+			cg->timeFormat = argv[++i];
+		}
+		else if (strcmp(a, "showtemp") == 0)
+		{
+			cg->overlay.showTemp = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "temptype") == 0)
+		{
+			cg->tempType = argv[++i];
+		}
+		else if (strcmp(a, "showexposure") == 0)
+		{
+			cg->overlay.showExposure = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "showgain") == 0)
+		{
+			cg->overlay.showGain = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "showbrightness") == 0)
+		{
+			cg->overlay.showBrightness = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "showmean") == 0)
+		{
+			cg->overlay.showMean = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "showhistogrambox") == 0)
+		{
+			cg->overlay.showHistogramBox = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "showfocus") == 0)
+		{
+			cg->overlay.showFocus = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "text") == 0)
+		{
+			cg->overlay.ImgText = argv[++i];
+		}
+		else if (strcmp(a, "extratext") == 0)
+		{
+			cg->overlay.ImgExtraText = argv[++i];
+		}
+		else if (strcmp(a, "extratextage") == 0)
+		{
+			cg->overlay.extraFileAge = atol(argv[++i]);
+		}
+		else if (strcmp(a, "textlineheight") == 0)
+		{
+			cg->overlay.iTextLineHeight = atol(argv[++i]);
+		}
+		else if (strcmp(a, "textx") == 0)
+		{
+			cg->overlay.iTextX = atol(argv[++i]);
+		}
+		else if (strcmp(a, "texty") == 0)
+		{
+			cg->overlay.iTextY = atol(argv[++i]);
+		}
+		else if (strcmp(a, "fontname") == 0)
+		{
+			cg->overlay.fontnumber = atol(argv[++i]);
+		}
+		else if (strcmp(a, "fontcolor") == 0)
+		{
+			cg->overlay.fc = argv[++i];
+		}
+		else if (strcmp(a, "smallfontcolor") == 0)
+		{
+			cg->overlay.sfc = argv[++i];
+		}
+		else if (strcmp(a, "fonttype") == 0)
+		{
+			cg->overlay.linenumber = atol(argv[++i]);
+		}
+		else if (strcmp(a, "fontsize") == 0)
+		{
+			cg->overlay.fontsize = atof(argv[++i]);
+		}
+		else if (strcmp(a, "fontline") == 0)
+		{
+			cg->overlay.linewidth = atol(argv[++i]);
+		}
+		else if (strcmp(a, "outlinefont") == 0)
+		{
+			cg->overlay.outlinefont = getBoolean(argv[++i]);
+		}
+
+		// Arguments that may be passed to us but we don't use.
+		else if (
+			strcmp(a, "showonmap") == 0 ||
+			strcmp(a, "websiteurl") == 0 ||
+			strcmp(a, "imageurl") == 0 ||
+			strcmp(a, "location") == 0 ||
+			strcmp(a, "owner") == 0 ||
+			strcmp(a, "camera") == 0 ||
+			strcmp(a, "lens") == 0 ||
+			strcmp(a, "computer") == 0 ||
+			strcmp(a, "savedaytimeimages") == 0 ||
+			strcmp(a, "usedarkframes") == 0 ||
+			strcmp(a, "alwaysshowadvanced") == 0
+			)
+		{
+			i++;
+		}
+
+		else
+			Log(1, "*** WARNING: Unknown argument: [%s]\n", a);
 	}
 
 	return(true);

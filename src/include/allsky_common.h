@@ -62,9 +62,9 @@ struct overlay {
 	long fontnumber						= 0;
 	// fontcolor / fc, and smallfontcolor / sfc should match
 	int fontcolor[3]					= { 255, 0, 0 };
-	char const *fc						= "0 0 255"; 			// string version of fontcolor[]
+	char const *fc						= "0 0 255"; 		// string version of fontcolor[]
 	int smallFontcolor[3]				= { 0, 0, 255 };
-	char const *sfc						= "0 0 255";			// string version of smallfontcolor[]
+	char const *sfc						= "0 0 255";		// string version of smallfontcolor[]
 	int linetype[3]						= { cv::LINE_AA, 8, 4 };
 	long linenumber						= 0;
 	double fontsize						= 10;
@@ -99,7 +99,7 @@ struct HB {
 };
 
 struct myModeMeanSetting {
-	bool modeMean						= false;
+	bool modeMean						= false;		// currently using it?
 	double dayMean						= DEFAULT_DAYMEAN;
 	double nightMean					= DEFAULT_NIGHTMEAN;
 	double currentMean					= NOT_SET;
@@ -126,7 +126,7 @@ struct config {			// for configuration variables
 
 	bool isColorCamera					= false;
 	bool isCooledCamera					= false;
-	bool supportsTemperature			= true;
+	bool supportsTemperature			= false;
 	bool supportsAggression				= false;		// currently ZWO only
 	bool gainTransitionTimeImplemented	= false;		// currently ZWO only
 	// camera's min and max exposures (camera dependent), and max auto-exposure length
@@ -150,17 +150,17 @@ struct config {			// for configuration variables
 
 	bool dayAutoExposure				= true;
 	bool nightAutoExposure				= true;
-	long dayMaxAutoExposure_us			= 30 * US_IN_SEC;
+	long dayMaxAutoExposure_us			= 10 * US_IN_SEC;
 	double temp_dayMaxAutoExposure_ms	= dayMaxAutoExposure_us / US_IN_MS;
 	long nightMaxAutoExposure_us		= 60 * US_IN_SEC;
 	double temp_nightMaxAutoExposure_ms	= nightMaxAutoExposure_us / US_IN_MS;
-	long dayExposure_us					= 32 * US_IN_MS;
+	long dayExposure_us					= 0.3 * US_IN_SEC;
 	double temp_dayExposure_ms			= dayExposure_us / US_IN_MS;
 	long nightExposure_us				= 20 * US_IN_SEC;
 	double temp_nightExposure_ms		= nightExposure_us / US_IN_MS;
 	long dayBrightness					= NOT_SET;
 	long nightBrightness				= NOT_SET;
-	long dayDelay_ms					= 5 * MS_IN_SEC;
+	long dayDelay_ms					= 10 * MS_IN_SEC;
 	long nightDelay_ms					= 10 * MS_IN_SEC;
 	bool dayAutoGain					= true;
 	bool nightAutoGain					= true;

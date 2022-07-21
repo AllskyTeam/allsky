@@ -386,7 +386,7 @@
 },
 {
 "name":"config",
-"default":"",
+"default":"[none]",
 "description":"Configuration file to use for settings.",
 "label":"Configuration File",
 "type":"widetext",
@@ -883,8 +883,6 @@
 },
 {
 "name":"fontcolor",
-"minimum":0,
-"maximum":255,
 "default":"255 255 255",
 "description":"Blue, Green, and Red (BGR) values of text color.<br>NOTE: When using RAW 16 only the first two values are used i.e., 255 128 0.",
 "label":"Font Color",
@@ -894,8 +892,6 @@
 },
 {
 "name":"smallfontcolor",
-"minimum":0,
-"maximum":255,
 "default":"0 0 255",
 "description":"BGR value of text color.<br>NOTE: When using RAW 16 only the first two values are used i.e., 255 128 0.",
 "label":"Small Font Color",

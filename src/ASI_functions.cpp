@@ -9,11 +9,6 @@
 
 // Forward definitions of variables in capture*.cpp.
 extern int iNumOfCtrl;
-#ifdef IS_RPi
-char const *getCameraCommand(bool);
-#else
-char const *getCameraCommand(bool x) { return yesNo(x); }		// keeps compiler quiet
-#endif
 
 int numCameras = 0;		// used by several functions
 
@@ -186,8 +181,8 @@ int ASIGetNumOfConnectedCameras()
 	// Put the list of cameras and attributes in a file and return the number of cameras (the exit code).
 	if (cg.isLibcamera)
 	{
-		// "libcamera-still --list-cameras" writes to stderr.
-		snprintf(cmd, sizeof(cmd), "NUM=$(LIBCAMERA_LOG_LEVELS=FATAL libcamera-still --list-cameras 2>&1 | grep -E '^[0-9 ]' | tee '%s' | grep -E '^[0-9] : ' | wc -l); exit ${NUM}", camerasInfoFile);
+		// --list-cameras" writes to stderr.
+		snprintf(cmd, sizeof(cmd), "NUM=$(LIBCAMERA_LOG_LEVELS=FATAL %s --list-cameras 2>&1 | grep -E '^[0-9 ]' | tee '%s' | grep -E '^[0-9] : ' | wc -l); exit ${NUM}", cg.cmdToUse, camerasInfoFile);
 	}
 	else
 	{
@@ -630,7 +625,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
 	fprintf(f, "\t\"bitDepth\" : %d,\n", cameraInfo.BitDepth);
 #ifdef IS_RPi
-	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", getCameraCommand(cg.isLibcamera));
+	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", cg.cmdToUse);
 #endif
 
 	fprintf(f, "\t\"suportedImageFormats\": [\n");

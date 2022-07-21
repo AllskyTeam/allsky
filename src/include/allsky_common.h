@@ -184,6 +184,8 @@ struct config {			// for configuration variables
 	long nightTargetTemp				= 0;
 
 	double saturation					= NOT_SET;
+	double contrast						= NOT_SET;
+	double sharpness					= NOT_SET;
 	long gamma							= 50;
 	long offset							= 0;
 	long aggression						= 75;

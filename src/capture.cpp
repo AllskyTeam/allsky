@@ -739,7 +739,10 @@ const int minGain = 0;
 		validateLong(&cg.dayBin, 1, NO_MAX_VALUE, "Daytime Binning", false);
 		validateFloat(&cg.dayWBR, 0, NO_MAX_VALUE, "Daytime Red Balance", true);
 		validateFloat(&cg.dayWBB, 0, NO_MAX_VALUE, "Daytime Blue Balance", true);
-		validateLong(&cg.daySkipFrames, 0, 50, "Daytime Skip Frames", true);
+		if (cg.dayAutoExposure)	// SkipFrames only applies if auto-exposure is on
+			validateLong(&cg.daySkipFrames, 0, 50, "Daytime Skip Frames", true);
+		else
+			cg.daySkipFrames = 0;
 
 		validateLong(&cg.nightBrightness, 0, 100, "Nighttime Brightness", true);
 		validateLong(&cg.nightDelay_ms, 10, NO_MAX_VALUE, "Nighttime Delay", false);
@@ -748,7 +751,10 @@ const int minGain = 0;
 		validateLong(&cg.nightBin, 1, NO_MAX_VALUE, "Nighttime Binning", false);
 		validateFloat(&cg.nightWBR, 0, NO_MAX_VALUE, "Nighttime Red Balance", true);
 		validateFloat(&cg.nightWBB, 0, NO_MAX_VALUE, "Nighttime Blue Balance", true);
-		validateLong(&cg.nightSkipFrames, 0, 50, "Nighttime Skip Frames", true);
+		if (cg.nightAutoExposure)
+			validateLong(&cg.nightSkipFrames, 0, 50, "Nighttime Skip Frames", true);
+		else
+			cg.nightSkipFrames = 0;
 
 		validateLong(&cg.gamma, 0, NO_MAX_VALUE, "Gamma", true);
 		validateLong(&cg.offset, 0, NO_MAX_VALUE, "Offset", true);

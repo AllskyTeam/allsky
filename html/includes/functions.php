@@ -14,6 +14,8 @@ define('ALLSKY_IMAGES',  'XX_ALLSKY_IMAGES_XX');
 define('ALLSKY_CONFIG',  'XX_ALLSKY_CONFIG_XX');
 define('ALLSKY_WEBUI',  'XX_ALLSKY_WEBUI_XX');
 define('ALLSKY_WEBSITE',  'XX_ALLSKY_WEBSITE_XX');
+define('ALLSKY_OWNER', 'XX_ALLSKY_OWNER_XX');
+define('ALLSKY_GROUP', 'XX_ALLSKY_GROUP_XX');
 define('ALLSKY_MESSAGES',  'XX_ALLSKY_MESSAGES_XX');
 define('RASPI_CONFIG',   'XX_RASPI_CONFIG_XX');
 
@@ -59,22 +61,17 @@ $camera_settings_array = json_decode($camera_settings_str, true);
 // It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 $img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 $image_name = $img_dir . "/" . $camera_settings_array['filename'];
-$darkframe = $camera_settings_array['darkframe'];
+$darkframe = $camera_settings_array['takeDarkFrames'];
 
 
 ////////////////// Determine delay between refreshes of the image.
+$consistentDelays = $camera_settings_array["consistentDelays"] == 1 ? true : false;
+$daydelay = $camera_settings_array["daydelay"] +
+	($consistentDelays == 1 ? $camera_settings_array["daymaxautoexposure"] : $camera_settings_array["dayexposure"]);
+$nightdelay = $camera_settings_array["nightdelay"] +
+	($consistentDelays == 1 ? $camera_settings_array["nightmaxautoexposure"] : $camera_settings_array["nightexposure"]);
+
 // Determine if it's day or night so we know which delay to use.
-// The time between daylight exposures is (daydelay + dayexposure).
-$daydelay = $camera_settings_array["daydelay"] + $camera_settings_array["dayexposure"];
-
-// The time between night exposures is (nightdelay + nightmaxexposure).
-// Both can be large numbers so use both.
-if (isset($camera_settings_array['nightmaxexposure']))	// not defined for RPiHQ cameras
-	$x = $camera_settings_array['nightmaxexposure'];
-else
-	$x = $camera_settings_array['nightexposure'];
-$nightdelay = $camera_settings_array["nightdelay"] + $x;
-
 $angle = $camera_settings_array['angle'];
 $lat = $camera_settings_array['latitude'];
 $lon = $camera_settings_array['longitude'];
@@ -738,7 +735,6 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {	// if
 							echo "<label style='vertical-align: middle'>$day &nbsp; &nbsp;</label>";
 							echo "<video width='85%' height='85%' controls style='vertical-align: middle'>";
 							echo "<source src='$fullFilename' type='video/mp4'>";
-							echo "<source src='movie.ogg' type='video/ogg'>";
 							echo "Your browser does not support the video tag.";
 							echo "</video>";
 							echo "</div></a>\n";
@@ -771,7 +767,6 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {	// if
 				    echo "<div style='float: left; width: 100%'>
 					<video width='85%' height='85%' controls>
 						<source src='$fullFilename' type='video/mp4'>
-						<source src='movie.ogg' type='video/ogg'>
 						Your browser does not support the video tag.
 					</video>
 					</div></a>\n";
@@ -808,6 +803,30 @@ function runCommand($cmd, $message, $messageColor)
 	if ($result != null) $status->addMessage(implode("<br>", $result), "message", true);
 
 	return true;
+}
+
+// Update a file, taking into account that the webserver can't directly update it
+// with PHP functions.
+// Return any error message.
+function updateFile($file, $contents, $fileName) {
+	// Save a temporary copy of the file in a place the webserver can write to,
+	// then use sudo to "mv" the file to the final place.
+	$tempFile = "/tmp/$fileName-temp.txt";
+			
+	if (file_put_contents($tempFile, $contents) == false) {
+		$err = "Failed to save settings: " . error_get_last()['message'];
+	} else {
+		// shell_exec() doesn't return anything unless there is an error.
+		$ret = shell_exec("x=\$(sudo mv '$tempFile' '$file' 2>&1) || echo 'Unable to mv [$tempFile] to [$file]': \${x}");
+		if ($ret == "") {
+			shell_exec("sudo chown " . ALLSKY_OWNER . ":" . ALLSKY_GROUP . " '$file'; sudo chmod 644 '$file'");
+			$err = "";
+		} else {
+			$err = "Failed to rename $fileName file: $ret.";
+		}
+	}
+
+	return $err;
 }
 
 ?>

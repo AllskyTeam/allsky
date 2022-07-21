@@ -38,6 +38,7 @@ function DisplayEditor()
 						dataType: 'text',
 						cache: false,
 						success: function(data){
+// TODO: assume "data" is a status message formatted in html, so add it.
 							if (data != "")
 								alert(data);
 							// else alert("File saved!");

@@ -1038,7 +1038,7 @@ void displaySettings(config cg)
 	printf("\nSettings:\n");
 
 	if (cg.ct == ctRPi)
-		printf("   Command: %s\n", getCameraCommand(cg.isLibcamera));
+		printf("   Command: %s\n", cg.cmdToUse);
 	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
 	printf("   Resolution (before any binning): %ldx%ld\n", cg.width, cg.height);
 	printf("   Configuration file: %s\n", cg.configFile[0] == '\0' ? "none" : cg.configFile);
@@ -1223,6 +1223,7 @@ void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 }
 
 // Set defaults that depend on camera type or otherwise can't be set at compile time.
+// If a value is currently NOT_CHANGED, the user didn't specify
 void setDefaults(config *cg, cameraType ct)
 {
 	cg->ct = ct;
@@ -1268,8 +1269,8 @@ void setDefaults(config *cg, cameraType ct)
 		{
 			cg->dayBrightness = 50;
 			cg->saturation = 0.0;
-			cg->contrast = NOT_SET;		// not supported
-			cg->sharpness = NOT_SET;	// not supported
+			cg->contrast = 0.0;
+			cg->sharpness = 0.0;
 		}
 		cg->rotation = 0;
 		cg->dayMaxAutoGain = 16.0;
@@ -1490,7 +1491,8 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "cmd") == 0)
 		{
-			cg->isLibcamera = strcmp(argv[++i], "libcamera") == 0 ? true : false;
+			cg->cmdToUse = argv[++i];
+			cg->isLibcamera = strcmp(cg->cmdToUse, "libcamera-still") == 0 ? true : false;
 		}
 		else if (strcmp(a, "tty") == 0)	// overrides what was automatically determined
 		{

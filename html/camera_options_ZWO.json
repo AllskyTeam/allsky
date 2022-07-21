@@ -399,11 +399,33 @@
 "minimum":"",
 "maximum":"",
 "default":50,
-"description":"-100 to 100 on Buster, 0.0 to 2.0 on Bullseye.",
+"description":"-100 to 100 on Buster, 0.0 to 99 on Bullseye.",
 "label":"Saturation",
 "type":"text",
 "display":0,
-"advanced":0
+"advanced":1
+},
+{
+"name":"contrast",
+"minimum":"",
+"maximum":"",
+"default":1,
+"description":"-100 to 100 on Buster, 0.0 to 99 on Bullseye.",
+"label":"Contrast",
+"type":"text",
+"display":0,
+"advanced":1
+},
+{
+"name":"sharpness",
+"minimum":"",
+"maximum":"",
+"default":0,
+"description":"-100 to 100 on Buster, 0.0 to 99 on Bullseye.",
+"label":"Sharpness",
+"type":"text",
+"display":0,
+"advanced":1
 },
 {
 "name":"gamma",
@@ -1037,3 +1059,4 @@
 "advanced":0
 }
 ]
+

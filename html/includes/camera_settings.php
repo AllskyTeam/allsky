@@ -45,32 +45,39 @@ function DisplayCameraConfig(){
 					}
 				}
 			}
+
+			$ok = true;
 			if ($somethingChanged) {
-				if ($settings_file = fopen(RASPI_CAMERA_SETTINGS, 'w')) {
+				$file = RASPI_CAMERA_SETTINGS;
+				$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+				// updateFile() only returns error messages.
+				$msg = updateFile($file, $content, "settings");
+				if ($msg === "")
 					$msg = "Settings saved";
-					fwrite($settings_file, json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
-					fclose($settings_file);
-				} else {
-					$status->addMessage('Failed to save settings', 'danger');
-				}
+				else
+					$ok = false;
 			} else {
 				$msg = "No settings changed (file not updated)";
 			}
 
-			if (isset($_POST['restart'])) {
-				$msg .= " and service restarted.";
-				// runCommand displays $msg.
-				runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
-			} else {
-				$msg .= " and service NOT restarted.";
-				$status->addMessage($msg, 'info');
-			}
+			if ($ok) {
+				if (isset($_POST['restart'])) {
+					$msg .= " and service restarted.";
+					// runCommand displays $msg.
+					runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
+				} else {
+					$msg .= " and service NOT restarted.";
+					$status->addMessage($msg, 'info');
+				}
 
-			if ($changes !== "") {
-				$CMD = ALLSKY_SCRIPTS . "/makeChanges.sh $changes";
-				# Let makeChanges.sh display any output
-				echo '<script>console.log("Running: ' . $CMD . '");</script>';
-				runCommand($CMD, "-", "success");
+				if ($changes !== "") {
+					$CMD = ALLSKY_SCRIPTS . "/makeChanges.sh $changes";
+					# Let makeChanges.sh display any output
+					echo '<script>console.log("Running: ' . $CMD . '");</script>';
+					runCommand($CMD, "-", "success");
+				}
+			} else {	// not $ok
+				$status->addMessage($msg, 'danger');
 			}
 		} else {
 			$status->addMessage('Unable to save settings - session timeout.', 'danger');
@@ -79,19 +86,19 @@ function DisplayCameraConfig(){
 
 	if (isset($_POST['reset_settings'])) {
 		if (CSRFValidate()) {
-			if ($settings_file = fopen(RASPI_CAMERA_SETTINGS, 'w')) {
-				$settings = array();
-				foreach ($options_array as $option){
-					$key = $option['name'];
-					$value = $option['default'];
-					$settings[$key] = $value;
-				}
-				fwrite($settings_file, json_encode($settings,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK));
-				fclose($settings_file);
-				$status->addMessage('Settings reset to default');
-			} else {
-				$status->addMessage('Failed to reset settings', 'danger');
+			$file = RASPI_CAMERA_SETTINGS;
+			$settings = array();
+			foreach ($options_array as $option){
+				$key = $option['name'];
+				$value = $option['default'];
+				$settings[$key] = $value;
 			}
+			$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK);
+			$msg = updateFile($file, $content, "settings");
+			if ($msg === "")
+				$status->addMessage("Settings reset to default", 'info');
+			else
+				$status->addMessage("Failed to reset settings: $msg", 'danger');
 		} else {
 			$status->addMessage('Unable to reset settings - session timeout', 'danger');
 		}

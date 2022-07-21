@@ -1059,6 +1059,18 @@ void displaySettings(config cg)
 		if (cg.nightAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
+	if (cg.myModeMeanSetting.dayMean > 0.0)
+		printf("   Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
+	if (cg.myModeMeanSetting.nightMean > 0.0)
+		printf("   Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
+	if (cg.myModeMeanSetting.dayMean > 0.0 || cg.myModeMeanSetting.dayMean > 0.0)
+	{
+		printf("   Threshold: %1.3f\n", cg.myModeMeanSetting.mean_threshold);
+		printf("   p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
+		printf("   p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
+		printf("   p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
+	}
+
 	if (cg.gainTransitionTimeImplemented)
 		printf("   Gain Transition Time: %.1f minutes\n", (float) cg.gainTransitionTime/60);
 	printf("   Brightness (day):   %ld\n", cg.dayBrightness);
@@ -1110,17 +1122,7 @@ void displaySettings(config cg)
 	printf("   Taking Dark Frames: %s\n", yesNo(cg.takingDarkFrames));
 	printf("   Debug Level: %ld\n", cg.debugLevel);
 	printf("   On TTY: %s\n", yesNo(cg.tty));
-	if (cg.ct == ctRPi) {
-		printf("   Mode Mean: %s\n", yesNo(cg.myModeMeanSetting.modeMean));
-		if (cg.myModeMeanSetting.modeMean) {
-			printf("      Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
-			printf("      Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
-			printf("      Threshold: %1.3f\n", cg.myModeMeanSetting.mean_threshold);
-			printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
-			printf("      p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
-			printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
-		}
-	}
+
 	printf("   Allsky version: %s\n", cg.version);
 	if (cg.ct == ctZWO) {
 		printf("   ZWO SDK version %s\n", cg.ASIversion);
@@ -1224,6 +1226,12 @@ void setDefaults(config *cg, cameraType ct)
 	snprintf(s, sizeof(s), "%s%s", allskyHome, "tmp");
 	cg->saveDir = s;
 	cg->CC_saveDir = cg->saveDir;
+
+// TODO: Get from camera model
+	cg->isColorCamera = false;
+	cg->isColledCamera = false;
+	cg->supportsTemperature = false;
+
 	if (ct == ctZWO) {
 // TODO: Get from camera model
 		// Gain, brightness, and min/max are camera model-dependent, but use a reasonable value.
@@ -1240,6 +1248,7 @@ void setDefaults(config *cg, cameraType ct)
 		cg->nightGain = 150;
 		cg->nightWBR = cg->dayWBR;		// TODO: should night be different than day?
 		cg->nightWBB = cg->dayWBB;
+		cg->supportsAggression = true;
 	} else {
 		cg->cameraMinExposure_us = 1;
 		cg->cameraMaxExposure_us = 230 * US_IN_SEC;	// HQ camera
@@ -1264,6 +1273,7 @@ void setDefaults(config *cg, cameraType ct)
 		cg->nightGain = 4.0;
 		cg->nightWBR = cg->dayWBR;
 		cg->nightWBB = cg->dayWBB;
+		cg->supportsAggression = false;
 	}
 }
 

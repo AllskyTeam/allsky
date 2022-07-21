@@ -41,7 +41,7 @@ modify_locations()
 			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
 			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
 			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};" \
-		"${ALLSKY_WEBUI}/includes/save_file.php" \
+			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
 		"${ALLSKY_WEBUI}/includes/functions.php"
 }
 

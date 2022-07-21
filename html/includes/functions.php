@@ -61,22 +61,17 @@ $camera_settings_array = json_decode($camera_settings_str, true);
 // It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 $img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 $image_name = $img_dir . "/" . $camera_settings_array['filename'];
-$darkframe = $camera_settings_array['darkframe'];
+$darkframe = $camera_settings_array['takeDarkFrames'];
 
 
 ////////////////// Determine delay between refreshes of the image.
+$consistentDelays = $camera_settings_array["consistentDelays"] == 1 ? true : false;
+$daydelay = $camera_settings_array["daydelay"] +
+	($consistentDelays == 1 ? $camera_settings_array["daymaxautoexposure"] : $camera_settings_array["dayexposure"]);
+$nightdelay = $camera_settings_array["nightdelay"] +
+	($consistentDelays == 1 ? $camera_settings_array["nightmaxautoexposure"] : $camera_settings_array["nightexposure"]);
+
 // Determine if it's day or night so we know which delay to use.
-// The time between daylight exposures is (daydelay + dayexposure).
-$daydelay = $camera_settings_array["daydelay"] + $camera_settings_array["dayexposure"];
-
-// The time between night exposures is (nightdelay + nightmaxexposure).
-// Both can be large numbers so use both.
-if (isset($camera_settings_array['nightmaxexposure']))	// not defined for RPiHQ cameras
-	$x = $camera_settings_array['nightmaxexposure'];
-else
-	$x = $camera_settings_array['nightexposure'];
-$nightdelay = $camera_settings_array["nightdelay"] + $x;
-
 $angle = $camera_settings_array['angle'];
 $lat = $camera_settings_array['latitude'];
 $lon = $camera_settings_array['longitude'];
@@ -740,7 +735,6 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {	// if
 							echo "<label style='vertical-align: middle'>$day &nbsp; &nbsp;</label>";
 							echo "<video width='85%' height='85%' controls style='vertical-align: middle'>";
 							echo "<source src='$fullFilename' type='video/mp4'>";
-							echo "<source src='movie.ogg' type='video/ogg'>";
 							echo "Your browser does not support the video tag.";
 							echo "</video>";
 							echo "</div></a>\n";
@@ -773,7 +767,6 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {	// if
 				    echo "<div style='float: left; width: 100%'>
 					<video width='85%' height='85%' controls>
 						<source src='$fullFilename' type='video/mp4'>
-						<source src='movie.ogg' type='video/ogg'>
 						Your browser does not support the video tag.
 					</video>
 					</div></a>\n";
@@ -811,7 +804,6 @@ function runCommand($cmd, $message, $messageColor)
 
 	return true;
 }
-
 
 // Update a file, taking into account that the webserver can't directly update it
 // with PHP functions.

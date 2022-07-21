@@ -1229,7 +1229,7 @@ void setDefaults(config *cg, cameraType ct)
 
 // TODO: Get from camera model
 	cg->isColorCamera = false;
-	cg->isColledCamera = false;
+	cg->isCooledCamera = false;
 	cg->supportsTemperature = false;
 
 	if (ct == ctZWO) {

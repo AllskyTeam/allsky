@@ -919,6 +919,8 @@ void displayHelp(config cg)
 	printf("\nDay and nighttime settings:\n");
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Image saturation [%.1f].\n", n, "saturation n", cg.saturation);
+		printf(" -%-*s - Image contrast [%.1f].\n", n, "contrast n", cg.contrast);
+		printf(" -%-*s - Image sharpness [%.1f].\n", n, "sharpness n", cg.sharpness);
 	}
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - Gamma level [%ld].\n", n, "gamma n", cg.gamma);
@@ -1103,6 +1105,8 @@ void displaySettings(config cg)
 	}
 	if (cg.ct == ctRPi) {
 		printf("   Saturation: %.1f\n", cg.saturation);
+		printf("   Contrast: %.1f\n", cg.contrast);
+		printf("   Sharpness: %.1f\n", cg.sharpness);
 		printf("   Rotation: %ld\n", cg.rotation);
 	}
 	printf("   Flip Image: %s (%ld)\n", getFlip(cg.flip), cg.flip);
@@ -1257,11 +1261,15 @@ void setDefaults(config *cg, cameraType ct)
 		{
 			cg->dayBrightness = 0;
 			cg->saturation = 1.0;
+			cg->contrast = 1.0;
+			cg->sharpness = 0.0;
 		}
 		else
 		{
 			cg->dayBrightness = 50;
 			cg->saturation = 0.0;
+			cg->contrast = NOT_SET;		// not supported
+			cg->sharpness = NOT_SET;	// not supported
 		}
 		cg->rotation = 0;
 		cg->dayMaxAutoGain = 16.0;
@@ -1652,6 +1660,14 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "saturation") == 0)
 		{
 			cg->saturation = atof(argv[++i]);
+		}
+		else if (strcmp(a, "contrast") == 0)
+		{
+			cg->contrast = atof(argv[++i]);
+		}
+		else if (strcmp(a, "sharpness") == 0)
+		{
+			cg->sharpness = atof(argv[++i]);
 		}
 		else if (strcmp(a, "gamma") == 0)
 		{

@@ -25,7 +25,8 @@ function usage_and_exit
 
 [ "${1}" = "--help" ] && usage_and_exit 0
 
-# Optional argument specifying when the ALLSKY_NOTIFICATION_LOG should expire.
+# Optional argument specifying when the ALLSKY_NOTIFICATION_LOG should expire,
+# i.e., the period of time in which no other notification images will be displayed.
 # If it's 0, then force the use of this notification.
 if [ "${1}" = "--expires" ]; then
 	EXPIRES_IN_SECONDS="${2}"
@@ -146,8 +147,9 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 	fi
 
 	# We're actually uploading $UPLOAD_FILE, but show $NOTIFICATION_FILE in the message since it's more descriptive.
+	# If an existing notification is being uploaded, wait for it to finish then upload this one.
 	echo -e "${ME}: Uploading $(basename "${NOTIFICATION_FILE}")"
-	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage"
+	"${ALLSKY_SCRIPTS}/upload.sh" --wait --silent "${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage"
 	RET=$?
 
 	# If we created a temporary copy, delete it.

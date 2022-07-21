@@ -19,11 +19,13 @@ usage_and_exit()
 		C="${RED}"
 	fi
 	echo
-	echo -e "${C}Usage: ${ME} [--help] [--update] [--remote] [--branch branch_name]${NC}"
+	echo -e "${C}Usage: ${ME} [--help] [--remote] [--branch branch_name] [--update]${NC}"
 	echo
-	echo "The '--remote' option will help install the Website on a remote server.  ${RED}XXXX NOT IMPLEMENTED YET${NC}".
+	echo "'--help' displays this message and exits."
+	echo "The '--remote' option will HELP install the Website on a remote server."
 	echo "The '--branch' option should only be used when instructed to by an Allsky developer."
 	echo "  'branch_name' is a valid branch at ${GITHUB_ROOT}/allsky-website."
+	echo "'--update' should only be used when instructed to by the Allsky Website."
 	echo
 	exit ${RET}
 }
@@ -121,7 +123,7 @@ else
 			echo "'${ALLSKY_WEBSITE_OLD}/config.js' and"
 			echo "'${ALLSKY_WEBSITE_OLD}/virtualsky.json' files"
 			echo "into '${CONFIGURATION_FILE_NAME}'."
-			echo "${NC}\n"
+			echo -e "${NC}\n"
 fi
 		fi
 	else
@@ -234,12 +236,15 @@ if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 	fi
 
 	if [[ -f ${ALLSKY_CONFIG}/${CONFIGURATION_FILE_NAME} ]]; then
-		HAS_OLD_SERVER="true"
+		# The user is upgrading a new-style website.
+		HAS_PRIOR_REMOTE_SERVER="true"
 		echo -e "\n${GREEN}"
 		echo "You can continue to configure your remote Allsky Website via the WebUI."
 		echo -e "${NC}\n"
 	else
-		HAS_OLD_SERVER="false"
+		# Don't know if the user is upgrading and old-style remote website,
+		# or they don't even have a remote website.
+		HAS_PRIOR_REMOTE_SERVER="false"
 		MSG="You can keep a copy of your remote website configuration file on your Pi"
 		MSG="${MSG}\nso you can easily edit it in the WebUI and have it automatically uploaded."
 		MSG="${MSG}\n\nWould you like to do that?"
@@ -260,7 +265,7 @@ if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 
 	echo -e "\n${GREEN}"
 	echo "*** The Pi portion of the Allsky Website Installation is complete."
-	if [ "${HAS_OLD_SERVER}" = "true" ]; then
+	if [ "${HAS_PRIOR_REMOTE_SERVER}" = "true" ]; then
 		echo "Please manually update all the code"
 		echo "on the remote server in the same way you installed it orginally."
 	else

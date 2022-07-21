@@ -206,7 +206,7 @@ fi
 CAMERA_SETTINGS="${ALLSKY_CONFIG}/settings_${CAMERA}.json"
 
 # Simple way to get a setting that hides the details.
-function setting()
+function settings()
 {
 	echo "$(jq -r "${1}" "${CAMERA_SETTINGS}")"
 }

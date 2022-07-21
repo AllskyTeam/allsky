@@ -140,8 +140,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	{ // libcamera
 		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 32, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "Whit balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "Whit balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
@@ -649,11 +649,11 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 		}
 		fprintf(f, "\t\t{ ");
 		fprintf(f, "\"name\" : \"%s\",  ",
-			it == ASI_IMG_RAW8 ?  "ASI_IMG_RAW8" :
-			it == ASI_IMG_RGB24 ?  "ASI_IMG_RGB24" :
-			it == ASI_IMG_RAW16 ?  "ASI_IMG_RAW16" :
-			it == ASI_IMG_Y8 ?  "ASI_IMG_Y8" :
-			"unknown video format");
+			it == ASI_IMG_RAW8 ?  "RAW8" :
+			it == ASI_IMG_RGB24 ?  "RGB24" :
+			it == ASI_IMG_RAW16 ?  "RAW16" :
+			it == ASI_IMG_Y8 ?  "Y8" :
+			"unknown format");
 		fprintf(f, "\"number\" : %d", (int) it);
 		fprintf(f, " }");
 	}
@@ -673,15 +673,9 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", cc.Name);
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", argumentNames[cc.ControlType][1]);
-#ifdef IS_ZWO
-		fprintf(f, "\t\t\t\"MinValue\" : %ld,\n", cc.MinValue);
-		fprintf(f, "\t\t\t\"MaxValue\" : %ld,\n", cc.MaxValue);
-		fprintf(f, "\t\t\t\"DefaultValue\" : %ld,\n", cc.DefaultValue);
-#else
-		fprintf(f, "\t\t\t\"MinValue\" : %.3f,\n", cc.MinValue);
-		fprintf(f, "\t\t\t\"MaxValue\" : %.3f,\n", cc.MaxValue);
-		fprintf(f, "\t\t\t\"DefaultValue\" : %.3f,\n", cc.DefaultValue);
-#endif
+		fprintf(f, "\t\t\t\"MinValue\" : %s,\n", LorF(cc.MinValue, "%ld", "%.3f"));
+		fprintf(f, "\t\t\t\"MaxValue\" : %s,\n", LorF(cc.MaxValue, "%ld", "%.3f"));
+		fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(cc.DefaultValue, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"IsAutoSupported\" : %s,\n", cc.IsAutoSupported == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"IsWritable\" : %s,\n", cc.IsWritable == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"ControlType\" : %d\n", cc.ControlType);
@@ -795,15 +789,9 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, long width, long height, doubl
 			ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
 			printf("  - %s:\n", cc.Name);
 			printf("    - Description = %s\n", cc.Description);
-#ifdef IS_ZWO
-			printf("    - MinValue = %'ld\n", cc.MinValue);
-			printf("    - MaxValue = %'ld\n", cc.MaxValue);
-			printf("    - DefaultValue = %'ld\n", cc.DefaultValue);
-#else
-			printf("    - MinValue = %'.3f\n", cc.MinValue);
-			printf("    - MaxValue = %'.3f\n", cc.MaxValue);
-			printf("    - DefaultValue = %'.3f\n", cc.DefaultValue);
-#endif
+			printf("    - MinValue = %s\n", LorF(cc.MinValue, "%'ld", "%'.3f"));
+			printf("    - MaxValue = %s\n", LorF(cc.MaxValue, "%ld", "%'.3f"));
+			printf("    - DefaultValue = %s\n", LorF(cc.DefaultValue, "%ld", "%'.3f"));
 			printf("    - IsAutoSupported = %d\n", cc.IsAutoSupported);
 			printf("    - IsWritable = %d\n", cc.IsWritable);
 			printf("    - ControlType = %d\n", cc.ControlType);

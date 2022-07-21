@@ -74,22 +74,21 @@ if [ "${CAMERA}" = "RPiHQ" ]; then
 	# If libcamera is installed and works, we'll use it.
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
 	# we'll use raspistill.
-	which libcamera-still > /dev/null
+	RPi_COMMAND_TO_USE="libcamera-still"
+	which ${RPi_COMMAND_TO_USE} > /dev/null
 	RET=$?
 	if [ ${RET} -eq 0 ]; then
-		LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still --timeout 1 --nopreview > /dev/null 2>&1
+		LIBCAMERA_LOG_LEVELS="ERROR,FATAL" "${RPi_COMMAND_TO_USE}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
 	fi
-	if [ ${RET} -eq 0 ]; then
-		RPiHQ_SOFTWARE_TO_USE="libcamera"
-	else
-		which raspistill > /dev/null
+	if [ ${RET} -ne 0 ]; then
+		RPi_COMMAND_TO_USE="raspistill"
+		which "${RPi_COMMAND_TO_USE}" > /dev/null
 		if [ $? -ne 0 ]; then
-			echo -e "${RED}*** FATAL ERROR: Can't determine what software to use forRPiHQ camera. Stopping.${NC}" >&2
-			doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nRPiHQ software\nnot found!."
+			echo -e "${RED}*** FATAL ERROR: Can't determine what software to use forRPi camera. Stopping.${NC}" >&2
+			doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nRPi software\nnot found!."
 		fi
 
-		RPiHQ_SOFTWARE_TO_USE="raspistill"
 		# Either libcamera isn't installed or it doesn't work, so try raspistill instead.
 
 		# TODO: Should try and run raspistill command - doing that is more reliable since
@@ -100,8 +99,8 @@ if [ "${CAMERA}" = "RPiHQ" ]; then
 		RET=$?
 	fi
 	if [ ${RET} -ne 0 ]; then
-		echo -e "${RED}*** FATAL ERROR: RPiHQ Camera not found.  Make sure it's enabled. Stopping.${NC}" >&2
-		doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nRPiHQ Camera\nnot found!\nMake sure it's enabled."
+		echo -e "${RED}*** FATAL ERROR: RPi camera not found.  Make sure it's enabled. Stopping.${NC}" >&2
+		doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
 	fi
 
 elif [ "${CAMERA}" = "ZWO" ]; then
@@ -199,12 +198,12 @@ fi
 # but in order for it to work need to make ARGUMENTS an array.
 ARGUMENTS=()
 
-[ -s "${ALLSKY_HOME}/version" ] && ARGUMENTS+=(-version "$(< "${ALLSKY_HOME}/version")")
-
 if [[ ${CAMERA} == "RPiHQ" ]]; then
 	# This argument needs to come first since the capture code checks for it first.
-	ARGUMENTS+=(-cmd ${RPiHQ_SOFTWARE_TO_USE})
+	ARGUMENTS+=(-cmd ${RPi_COMMAND_TO_USE})
 fi
+
+[ -s "${ALLSKY_HOME}/version" ] && ARGUMENTS+=(-version "$(< "${ALLSKY_HOME}/version")")
 
 # This argument should come second so the capture program knows if it should display debug output.
 ARGUMENTS+=(-debuglevel ${ALLSKY_DEBUG_LEVEL})

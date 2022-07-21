@@ -1,35 +1,29 @@
 <?php
 
-define('ALLSKY_OWNER', 'XX_ALLSKY_OWNER_XX');		// value updated during installation
-define('ALLSKY_GROUP', 'XX_ALLSKY_GROUP_XX');		// value updated during installation
+include_once('functions.php');
 
-$isRemote = false;
-if (isset($_POST['isRemote'])) {
-	$isRemote = $_POST['isRemote'];
-}
-if ($isRemote) {
-	include_once('functions.php');
-} else {
-	define('ALLSKY_HOME', 'XX_ALLSKY_HOME_XX');			// value updated during installation
-	define('ALLSKY_SCRIPTS', 'XX_ALLSKY_SCRIPTS_XX');	// value updated during installation
-	define('ALLSKY_WEBSITE', 'XX_ALLSKY_WEBSITE_XX');	// value updated during installation
+// TODO: when editor.php understands that what we return is a $status message,
+// change the "echo"s below to $status->AddMessage().
 
-$content = "";
-$path = "";
+// On error, return a string.
 
-// On error, return a string.  On success, return nothing.
-
-if (isset($_POST['content'])) {
+if (isset($_POST['content']))
 	$content = $_POST['content'];
-}
+else
+	$content = "";
 
-if (isset($_POST['path'])) {
+$path = "";
+if (isset($_POST['path']))
 	$path = $_POST['path'];
-}
 if ($path == "") {
-	echo "save_file.php: Path to save to is null";
+	echo "No file name specified to save!";
 	exit;
 }
+
+if (isset($_POST['isRemote']))
+	$isRemote = $_POST['isRemote'] == "true" ? true : false;
+else
+	$isRemote = false;
 
 // "current" is a web alias to ALLSKY_HOME.
 // "website" is a web alias to ALLSKY_WEBSITE.
@@ -39,30 +33,32 @@ if (substr($path, 0, 7) === "current")
 else	// website
 	$file = str_replace('website', ALLSKY_WEBSITE, $path);
 if (! file_exists($file)) {
-	echo "save_file.php: file to save '$file' does not exist!";
+	echo "File to save '$file' does not exist!";
 	exit;
 }
 
-$tempFile = "/tmp/save_file-temp.txt";		// web server must have write permissions here
-if (file_put_contents($tempFile, $content) == false) {
-	echo error_get_last()['message'];
-	exit;
-} else {
-	// shell_exec() doesn't return anything unless there is an error.
-	$msg = shell_exec("x=\$(sudo mv '$tempFile' '$file' 2>&1) || echo 'Unable to mv [$tempFile] to [$file]': \${x}");
-	if ($msg == "") {
-		shell_exec("sudo chown " . ALLSKY_OWNER . ":" . ALLSKY_GROUP . " '$file'; sudo chmod 664 '$file'");
+$ok = true;
+$msg = updateFile($file, $content, "save_file");
+if ($msg == "") {
+	if ($isRemote) {
 		$imageDir = get_variable(ALLSKY_CONFIG .'/config.sh', 'IMAGE_DIR=', '');
 		$cmd = ALLSKY_SCRIPTS . "/upload.sh --silent '$file' '$imageDir' " . basename($file) . " 'remote_file'";
 		$msg = shell_exec("$cmd > /dev/null");	# Ignore non-error output from the command
-		if ($msg == "")
-			echo "File sent to remote host.";
-		else
-			echo $msg;
+		if ($msg == "") {
+			$msg = "File saved and sent to remote host.";
+		} else {
+			$ok = false;
+			$msg = "File saved but unable to send to remote host: $msg";
+		}
 	} else {
-		//header("HTTP/1.0 400 Bad Request");
-		echo "save_file.php: $msg";
+		// $msg = "File saved";
 		exit;
 	}
+} else {
+	//header("HTTP/1.0 400 Bad Request");
+	$ok = false;
+	$msg = "Failed to save '$file': $msg";
 }
+echo $msg;
+
 ?>

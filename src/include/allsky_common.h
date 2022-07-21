@@ -24,8 +24,16 @@
 #define S_IN_HOUR	(60 * 60)
 #define S_IN_DAY	(24 * S_IN_HOUR)
 
+// NOT_SET are items that aren't set yet and will be calculated at run time.
+// NOT_CHANGED items are command-line arguments where the default is camera-dependent,
+// and we can't use NOT_SET because -1 may be a legal value.
+// IS_DEFAULT means the value is the same as the camera default, so don't pass to camera program
+// since it'll use the default anyway.
+#define NOT_SET						-1
+#define NOT_CHANGED					-999999
+#define	IS_DEFAULT					NOT_CHANGED
+
 // Defaults
-#define NOT_SET						-1				// signifies something isn't set yet
 #define NO_MAX_VALUE				9999999		// signifies a number has no maximum value//
 #define AUTO_IMAGE_TYPE				99	// must match what's in the camera_settings.json file
 #define DEFAULT_DAYMEAN				0.5
@@ -84,9 +92,9 @@ struct overlay {
 // Histogram Box, ZWO only
 struct HB {
 	int histogramBoxSizeX				= 500;			// width of box in pixels
-	int currentHistogramBoxSizeX		= NOT_SET;
+	int currentHistogramBoxSizeX		= NOT_CHANGED;
 	int histogramBoxSizeY				= 500;			// height of box in pixels
-	int currentHistogramBoxSizeY		= NOT_SET;
+	int currentHistogramBoxSizeY		= NOT_CHANGED;
 	float histogramBoxPercentFromLeft	= 0.5;			// 25% means left/top side starts 25% of
 	float histogramBoxPercentFromTop	= 0.5;			//    the image width/height
 	int centerX							= NOT_SET;		// center X and Y pixel (calculated value)
@@ -102,7 +110,7 @@ struct myModeMeanSetting {
 	bool modeMean						= false;		// currently using it?
 	double dayMean						= DEFAULT_DAYMEAN;
 	double nightMean					= DEFAULT_NIGHTMEAN;
-	double currentMean					= NOT_SET;
+	double currentMean					= NOT_SET;		// (calculated value)
 	double Mean							= NOT_SET;		// (calculated value)
 	double mean_threshold				= 0.1;
 	double mean_p0						= 5.0;
@@ -112,7 +120,6 @@ struct myModeMeanSetting {
 
 
 struct config {			// for configuration variables
-	// The ones with no default (or NOT_SET) will be set at run-time.
 	// Some of these variables aren't settings, but are temporary variables that need to be
 	// passed around.
 
@@ -124,77 +131,79 @@ struct config {			// for configuration variables
 	// Settings can be in the config file and/or command-line.
 	char const *configFile				= "";
 
-	bool isColorCamera					= false;
-	bool isCooledCamera					= false;
-	bool supportsTemperature			= false;
+	bool isColorCamera					= false;		// Is the camera color or mono?
+	bool isCooledCamera					= false;		// Does the camera have a cooler?
+	bool supportsTemperature			= false;		// Does the camera have a temp sensor?
 	bool supportsAggression				= false;		// currently ZWO only
 	bool gainTransitionTimeImplemented	= false;		// currently ZWO only
 	// camera's min and max exposures (camera dependent), and max auto-exposure length
-	long cameraMinExposure_us			= NOT_SET;
-	long cameraMaxExposure_us			= NOT_SET;
-	long cameraMaxAutoExposure_us		= NOT_SET;
-	bool goodLastExposure				= false;
+	long cameraMinExposure_us			= NOT_SET;		// Minimum exposure supported by camera
+	long cameraMaxExposure_us			= NOT_SET;		// Maximum exposure supported by camera
+	long cameraMaxAutoExposure_us		= NOT_SET;		// Maximum exposure supported by camera
+	bool goodLastExposure				= false;		// Was the last image propery exposed?
 
 	// The following are settings based on command-line arguments.
-	bool help							= false;
-	bool quietExit						= false;
-	const char *version					= "UNKNOWN";
-	bool isLibcamera					= false;		// RPi only
-	char const *saveDir					= "";
-	char const *CC_saveDir				= "";
-	bool saveCC							= false;
-	bool tty							= false;
-	bool preview						= false;
-	bool daytimeCapture					= false;		// capture images during daytime?
+	bool help							= false;		// User wants usage message displayed
+	bool quietExit						= false;		// Exit without any messages
+	const char *version					= "UNKNOWN";	// Allsky version
+	bool isLibcamera					= true;			// RPi only
+	char const *cmdToUse				= "";			// RPi command to us to take images
+	char const *saveDir					= "";			// Directory to save images
+	char const *CC_saveDir				= "";			// Directory to save camera controls file
+	bool saveCC							= false;		// Save camera controls file?
+	bool tty							= false;		// Running on a tty?
+	bool preview						= false;		// Display a preview windoe?
+	bool daytimeCapture					= false;		// Capture images during daytime?
 	char const *timeFormat				= "%Y%m%d %H:%M:%S";
 
-	bool dayAutoExposure				= true;
+	// To make the code cleaner, comments are only given for daytime variables.
+	bool dayAutoExposure				= true;				// Use auto-exposure?
 	bool nightAutoExposure				= true;
-	long dayMaxAutoExposure_us			= 10 * US_IN_SEC;
+	long dayMaxAutoExposure_us			= 10 * US_IN_SEC;	// Max exposure in auto-exposure mode
 	double temp_dayMaxAutoExposure_ms	= dayMaxAutoExposure_us / US_IN_MS;
 	long nightMaxAutoExposure_us		= 60 * US_IN_SEC;
 	double temp_nightMaxAutoExposure_ms	= nightMaxAutoExposure_us / US_IN_MS;
-	long dayExposure_us					= 0.3 * US_IN_SEC;
+	long dayExposure_us					= 0.3 * US_IN_SEC;	// Exposure requested by user
 	double temp_dayExposure_ms			= dayExposure_us / US_IN_MS;
 	long nightExposure_us				= 20 * US_IN_SEC;
 	double temp_nightExposure_ms		= nightExposure_us / US_IN_MS;
-	long dayBrightness					= NOT_SET;
-	long nightBrightness				= NOT_SET;
-	long dayDelay_ms					= 10 * MS_IN_SEC;
+	long dayBrightness					= NOT_CHANGED;		// Brightness requested by user
+	long nightBrightness				= NOT_CHANGED;
+	long dayDelay_ms					= 10 * MS_IN_SEC;	// Delay between capture end and start
 	long nightDelay_ms					= 10 * MS_IN_SEC;
-	bool dayAutoGain					= true;
+	bool dayAutoGain					= true;				// Use auto-gain?
 	bool nightAutoGain					= true;
-	double dayMaxAutoGain				= NOT_SET;
-	double nightMaxAutoGain				= NOT_SET;
-	double dayGain						= NOT_SET;
-	double nightGain					= NOT_SET;
-	long dayBin							= 1;
+	double dayMaxAutoGain				= NOT_CHANGED;		// Max gain in auto-gain mode
+	double nightMaxAutoGain				= NOT_CHANGED;
+	double dayGain						= NOT_CHANGED;		// Gain requested by user
+	double nightGain					= NOT_CHANGED;
+	long dayBin							= 1;				// Bin requested by user
 	long nightBin						= 1;
-	bool dayAutoAWB						= false;
+	bool dayAutoAWB						= false;			// Use auto AWB?
 	bool nightAutoAWB					= false;
-	double dayWBR						= NOT_SET;
-	double nightWBR						= NOT_SET;
-	double dayWBB						= NOT_SET;
-	double nightWBB						= NOT_SET;
-	long daySkipFrames					= 5;
+	double dayWBR						= NOT_CHANGED;		// Red balance requested by user
+	double nightWBR						= NOT_CHANGED;
+	double dayWBB						= NOT_CHANGED;		// Blue balance requested by user
+	double nightWBB						= NOT_CHANGED;
+	long daySkipFrames					= 5;				// # images to skip when starting
 	long nightSkipFrames				= 1;
-	bool dayEnableCooler				= false;
+	bool dayEnableCooler				= false;			// Enable the cooler?
 	bool nightEnableCooler				= false;
-	long dayTargetTemp					= 0;
+	long dayTargetTemp					= 0;				// Target temp when cooler is enabled
 	long nightTargetTemp				= 0;
 
-	double saturation					= NOT_SET;
-	double contrast						= NOT_SET;
-	double sharpness					= NOT_SET;
+	double saturation					= NOT_CHANGED;
+	double contrast						= NOT_CHANGED;
+	double sharpness					= NOT_CHANGED;
 	long gamma							= 50;
 	long offset							= 0;
 	long aggression						= 75;
 	long gainTransitionTime				= 5;
-	long width							= 0;		// use full sensor width
-	long height							= 0;		// use full sensor height
+	long width							= 0;				// use full sensor width
+	long height							= 0;				// use full sensor height
 	long imageType						= AUTO_IMAGE_TYPE;
-	char const *sType					= "";		// string version of imageType
-	char const *imageExt				= "jpg";	// image extension
+	char const *sType					= "";				// string version of imageType
+	char const *imageExt				= "jpg";			// image extension
 	long qualityJPG						= 95;
 	long qualityPNG						= 3;
 	long quality						= qualityJPG;
@@ -291,5 +300,4 @@ char *LorF(double, char const *, char const *);
 bool daytimeSleep(bool, config);
 void delayBetweenImages(config, long, std::string);
 void setDefaults(config *, cameraType);
-char const *getCameraCommand(bool);
 bool getCommandLineArguments(config *, int, char *[]);

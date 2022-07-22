@@ -228,6 +228,7 @@ function displayUserData($file, $displayType)
 				$num_buttons++;
 				if ($displayType === "button-action") {
 					$u = "user_$num_buttons";
+// TODO: does runCommand need to be run as ALLSKY_OWNER ?
 					if (isset($_POST[$u]))
 						runCommand($action, $message, "success");
 				} else {	// "button-button"

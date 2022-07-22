@@ -15,6 +15,12 @@ source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 
 # This output may go to a web page, so use "w" colors.
+# shell check doesn't realize there were set in variables.sh
+wOK="${wOK}"
+wWARNING="${wWARNING}"
+wERROR="${wERROR}"
+wDEBUG="${wDEBUG}"
+wNC="${wNC}"
 
 function usage_and_exit()
 {

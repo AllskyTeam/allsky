@@ -145,6 +145,7 @@ done
 
 if [[ ${DEBUG} == "true" ]]; then
 	echo -e "${wDEBUG}DEBUG: not running:"
+	# shellcheck disable=SC2145
 	echo -e "  sed -i ${SED_STRING[@]} ${CONFIG_FILE}${wNC}"
 else
 	# shellcheck disable=SC2145

@@ -224,7 +224,7 @@ struct config {			// for configuration variables
 	char const *latitude				= "";
 	char const *longitude				= "";
 	float angle							= -6.0;
-	bool takingDarkFrames				= false;
+	bool takeDarkFrames					= false;
 	char const *locale					= "en_US.UTF-8";
 	long debugLevel						= 1;
 	bool consistentDelays				= true;
@@ -250,6 +250,15 @@ struct config {			// for configuration variables
 	long currentSkipFrames;
 	bool currentEnableCooler;
 	long currentTargetTemp;
+	int currentBitDepth;
+
+	// Last values - from image just taken.  Only for settings that can change image to image.
+	long lastExposure_us;
+	double lastGain;
+	double lastWBR, lastWBB;
+	long lastSensorTemp;
+	long lastFocusMetric;
+	double lastMean;
 };
 
 // Global variables and functions.
@@ -270,10 +279,7 @@ char *getTime(char const *);
 double time_diff_us(int64, int64);
 long timeval_diff_us(timeval, timeval);
 std::string exec(const char *);
-void add_variables_to_command(char *, timeval,
-	long, int, float,
-	bool, bool, bool, float, float,
-	int, float, int, const char *, int, int);
+void add_variables_to_command(config, char *, timeval);
 const char *checkForValidExtension(const char *, int);
 std::string calculateDayOrNight(const char *, const char *, float);
 int calculateTimeToNightTime(const char *, const char *, float);
@@ -282,8 +288,7 @@ char const *c(char const *);
 void closeUp(int);
 char const *yesNo(bool);
 char *length_in_units(long, bool);
-int doOverlay(cv::Mat, config, char *,
-	long, int, float, int, float, int);
+int doOverlay(cv::Mat, config, char *, int);
 bool getBoolean(const char *);
 double get_focus_metric(cv::Mat);
 char const *getFlip(int);

@@ -20,6 +20,7 @@ wOK="${wOK}"
 wWARNING="${wWARNING}"
 wERROR="${wERROR}"
 wDEBUG="${wDEBUG}"
+wYELLOW="${wYELLOW}"
 wNC="${wNC}"
 
 function usage_and_exit()
@@ -30,7 +31,7 @@ function usage_and_exit()
 	else
 		C="${wERROR}"
 	fi
-	echo -e "${C}Usage: ${ME} [--help] [--debug] [--config file] [--upload] key old_value new_value [...]${wNC}" >&2
+	echo -e "${C}Usage: ${ME} [--help] [--debug] [--config file] key old_value new_value [...]${wNC}" >&2
 	echo "There must be a multiple of 3 arguments." >&2
 	exit ${RET}
 }
@@ -39,7 +40,6 @@ OK="true"
 HELP="false"
 DEBUG="false"
 CONFIG_FILE=""
-UPLOAD="false"
 while [ $# -gt 0 ]; do
 	ARG="${1}"
 	case "${ARG}" in
@@ -57,9 +57,6 @@ while [ $# -gt 0 ]; do
 				shift	# skip over CONFIG_FILE
 			fi
 			;;
-		--upload)
-			UPLOAD="true"
-			;;
 		-*)
 			echo -e "${wERROR}ERROR: Unknown argument: '${ARG}'${wNC}" >&2
 			OK="false"
@@ -72,6 +69,7 @@ while [ $# -gt 0 ]; do
 done
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
 [[ $# -eq 0 ]] && usage_and_exit 1
 [[ $(($# % 3)) -ne 0 ]] && usage_and_exit 2
 
@@ -149,8 +147,8 @@ if [[ ${DEBUG} == "true" ]]; then
 	echo -e "${wDEBUG}DEBUG: not running:"
 	echo -e "  sed -i ${SED_STRING[@]} ${CONFIG_FILE}${wNC}"
 else
-	OUTPUT="$(sed -i "${SED_STRING[@]}" "${CONFIG_FILE}" 2>&1)"
-	if [ ${?} -eq 0 ]; then
+	# shellcheck disable=SC2145
+	if OUTPUT="$(sed -i "${SED_STRING[@]}" "${CONFIG_FILE}" 2>&1)"; then
 		echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
 	else
 		echo -e "${wERROR}ERROR: unable to update data in '${CONFIG_FILE}':${wNC}" >&2

@@ -699,14 +699,14 @@ int main(int argc, char *argv[])
 const int minGain = 0;
 	if (! cg.saveCC)
 	{
-		// xxxx TODO: NO_MAX_VALUE will be replaced by acutal camera-specific values
+		// xxxx TODO: NO_MAX_VALUE will be replaced by actual camera-specific values
 
 		// If an exposure value, which was entered on the command-line in MS, is out of range,
 		// we want to specify the valid range in MS, not US which we use internally.
 		validateFloat(&cg.temp_dayExposure_ms,
 			cg.cameraMinExposure_us/US_IN_MS,
 			(cg.dayAutoExposure ? cg.dayMaxAutoExposure_us : cg.cameraMaxExposure_us) / US_IN_MS,
-			"Daytime Exposure vs. camera limits", true);
+			"Daytime Exposure", true);
 		if (cg.dayAutoExposure)
 		{
 			validateFloat(&cg.temp_dayMaxAutoExposure_ms,
@@ -781,6 +781,7 @@ const int minGain = 0;
 				&cg.overlay.smallFontcolor[0], &cg.overlay.smallFontcolor[1], &cg.overlay.smallFontcolor[2]) != 3)
 			Log(-1, "%s*** WARNING: Not enough small font color parameters: '%s'%s\n", c(KRED), cg.overlay.sfc, c(KNRM));
 	}
+
 	char const *ext = checkForValidExtension(cg.fileName, cg.imageType);
 	if (ext == NULL)
 	{
@@ -1702,8 +1703,8 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					else
 #endif
 					{
-						Log(2, "  >>>> Skipping this frame\n");
 						cg.currentSkipFrames--;
+						Log(2, "  >>>> Skipping this frame.  %d left to skip\n", cg.currentSkipFrames);
 						// Do not save this frame or sleep after it.
 						// We just started taking images so no need to check if DAY or NIGHT changed
 						continue;

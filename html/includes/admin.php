@@ -13,14 +13,13 @@ function DisplayAuthConfig($username, $password){
         } else if ($new_username == '') {
           $status->addMessage('Username must not be empty', 'danger');
         } else {
-          if ($auth_file = fopen(RASPI_ADMIN_DETAILS, 'w')) {
-            fwrite($auth_file, $new_username.PHP_EOL);
-            fwrite($auth_file, password_hash($_POST['newpass'], PASSWORD_BCRYPT).PHP_EOL);
-            fclose($auth_file);
+          $contents = $new_username.PHP_EOL . password_hash($_POST['newpass'], PASSWORD_BCRYPT).PHP_EOL;
+          $ret = updateFile(RASPI_ADMIN_DETAILS, $contents, "admin password file");
+          if ($ret === "") {
             $username = $new_username;
             $status->addMessage('Admin password updated');
           } else {
-            $status->addMessage('Failed to update admin password', 'danger');
+            $status->addMessage($ret, 'danger');
           }
         }
       } else {

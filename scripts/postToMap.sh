@@ -113,6 +113,7 @@ while [ $# -ne 0 ]; do
 	shift
 done
 
+
 # If not on a tty, then we're either called from the endOfNight.sh script (plain text), or the WebUI (html).
 if [[ ${ON_TTY} -eq 0 && ${ENDOFNIGHT} = "false" ]]; then
 	BR="<br>"		# Line break
@@ -127,6 +128,13 @@ wERROR="${wERROR}"
 wDEBUG="${wDEBUG}"
 wNC="${wNC}"
 
+if [[ ${ENDOFNIGHT} = "true" ]]; then
+	# All stdout/stderr output goes to the log file so don't include colors.
+	wERROR=""
+	wWARNING=""
+	wNC=""
+fi
+
 if [ "${WHISPER}" = "true" ];then
 	MSG_START=""
 	ERROR_MSG_START="${wERROR}"
@@ -136,6 +144,7 @@ else
 	ERROR_MSG_START="${wERROR}*** ${ME}: "
 	WARNING_MSG_START="${wWARNING}*** ${ME}: "
 fi
+
 
 MACHINE_ID="$(< /etc/machine-id)"
 if [ -z "${MACHINE_ID}" ]; then

@@ -765,7 +765,7 @@
 	{"value": "B", "label": "Both"}
 ],
 "display":1,
-"advanced":0
+"advanced":1
 },
 {
 "name":"showExposure",

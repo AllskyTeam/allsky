@@ -5,7 +5,6 @@ function DisplayCameraConfig(){
 	$options_str = file_get_contents(RASPI_CAMERA_OPTIONS, true);
 	$options_array = json_decode($options_str, true);
 
-	global $camera_settings_array;
 	global $status;
 	$status = new StatusMessages();
 
@@ -106,6 +105,8 @@ function DisplayCameraConfig(){
 	}
 
 	// Determine if the advanced settings should always be shown.
+	$camera_settings_str = file_get_contents(RASPI_CAMERA_SETTINGS, true);
+	$camera_settings_array = json_decode($camera_settings_str, true);
 	$initial_display = $camera_settings_array['alwaysshowadvanced'] == 1 ? "table-row" : "none";
 ?>
 <script language="javascript">

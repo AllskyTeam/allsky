@@ -763,8 +763,8 @@
 	{"value": "F", "label": "Fahrenheit"},
 	{"value": "B", "label": "Both"}
 ],
-"display":0,
-"advanced":0
+"display":1,
+"advanced":1
 },
 {
 "name":"showExposure",

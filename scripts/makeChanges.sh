@@ -121,9 +121,9 @@ if [[ ${RUN_POSTDATA} == "true" && ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
 fi
 
 # shellcheck disable=SC2128
-if [[ ${WEBSITE_CONFIG} != "" && (-d ${ALLSKY_WEBSITE} || -f ${ALLSKY_CONFIG}/configuration.json) ]]; then
-	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --upload "${WEBSITE_CONFIG[@]}" >&2
-fi	# else the Website isn't installed on the Pi or a remote server
+if [[ ${WEBSITE_CONFIG} != "" && -d ${ALLSKY_WEBSITE} ]]; then
+	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" "${WEBSITE_CONFIG[@]}" >&2
+fi	# else the Website isn't installed on the Pi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${POSTTOMAP_ACTION} >&2

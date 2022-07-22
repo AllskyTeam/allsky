@@ -18,6 +18,12 @@ DEBUG=false
 [ "${1}" = "--debug" ] && DEBUG=true && shift
 
 # This output may go to a web page, so use "w" colors.
+# shell check doesn't realize there were set in variables.sh
+wOK="${wOK}"
+wWARNING="${wWARNING}"
+wERROR="${wERROR}"
+wDEBUG="${wDEBUG}"
+wNC="${wNC}"
 
 function usage_and_exit()
 {
@@ -32,7 +38,6 @@ RUN_POSTDATA=false
 RUN_POSTTOMAP=false
 POSTTOMAP_ACTION=""
 WEBSITE_CONFIG=()
-typeset -i sawURLs=0
 while [ $# -gt 0 ]; do
 	KEY="${1}"
 	OLD_VALUE="${2}"
@@ -115,9 +120,10 @@ if [[ ${RUN_POSTDATA} == "true" && ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
 	fi
 fi
 
+# shellcheck disable=SC2128
 if [[ ${WEBSITE_CONFIG} != "" && (-d ${ALLSKY_WEBSITE} || -f ${ALLSKY_CONFIG}/configuration.json) ]]; then
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --upload "${WEBSITE_CONFIG[@]}" >&2
-fi	# else the website isn't installed on the Pi or a remote server
+fi	# else the Website isn't installed on the Pi or a remote server
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${POSTTOMAP_ACTION} >&2

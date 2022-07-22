@@ -391,7 +391,7 @@
 "label":"Configuration File",
 "type":"widetext",
 "display":1,
-"checkchanges": false,
+"checkchanges": true,
 "advanced":1
 },
 {
@@ -695,6 +695,15 @@
 "label":"Version 0.8 Exposure",
 "type":"checkbox",
 "display":0,
+"advanced":1
+},
+{
+"name":"useLogin",
+"default":1,
+"description":"Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
+"label":"Require WebUI Login",
+"type":"checkbox",
+"display":1,
 "advanced":1
 },
 {

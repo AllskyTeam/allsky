@@ -205,11 +205,37 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	snprintf(tmp, s, " TIME=%s", formatTime(startDateTime, "%H%M%S"));
 	strcat(cmd, tmp);
 
+	snprintf(tmp, s, " AUTOEXPOSURE=%d", cg.currentAutoExposure ? 1 : 0);
+	strcat(cmd, tmp);
+	snprintf(tmp, s, " sAUTOEXPOSURE='%s'", cg.currentAutoExposure ? "(auto)" : "");
+	strcat(cmd, tmp);
 	if (cg.lastExposure_us >= 0) {
 		snprintf(tmp, s, " EXPOSURE_US=%ld", cg.lastExposure_us);
 		strcat(cmd, tmp);
 
 		snprintf(tmp, s, " sEXPOSURE='%s'", length_in_units(cg.lastExposure_us, true));
+		strcat(cmd, tmp);
+	}
+
+	snprintf(tmp, s, " AUTOGAIN=%d", cg.currentAutoGain ? 1 : 0);
+	strcat(cmd, tmp);
+	snprintf(tmp, s, " sAUTOGAIN='%s'", cg.currentAutoGain ? "(auto)" : "");
+	strcat(cmd, tmp);
+	if (cg.lastGain >= 0.0) {
+		snprintf(tmp, s, " GAIN=%s", LorF(cg.lastGain, "%d", "%f"));
+		strcat(cmd, tmp);
+	}
+
+	snprintf(tmp, s, " AUTOWB=%d", cg.currentAutoAWB ? 1 : 0);
+	strcat(cmd, tmp);
+	snprintf(tmp, s, " sAUTOAWB='%s'", cg.currentAutoAWB ? "(auto)" : "");
+	strcat(cmd, tmp);
+	if (cg.lastWBR >= 0.0) {
+		snprintf(tmp, s, " WBR=%s", LorF(cg.lastWBR, "%d", "%f"));
+		strcat(cmd, tmp);
+	}
+	if (cg.lastWBB >= 0.0) {
+		snprintf(tmp, s, " WBB=%s", LorF(cg.lastWBB, "%d", "%f"));
 		strcat(cmd, tmp);
 	}
 
@@ -223,27 +249,6 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		strcat(cmd, tmp);
 	}
 
-	snprintf(tmp, s, " AUTOEXPOSURE=%d", cg.currentAutoExposure ? 1 : 0);
-	strcat(cmd, tmp);
-	snprintf(tmp, s, " sAUTOEXPOSURE='%s'", cg.currentAutoExposure ? " (auto)" : "");
-
-	snprintf(tmp, s, " AUTOGAIN=%d", cg.currentAutoGain ? 1 : 0);
-	strcat(cmd, tmp);
-
-	snprintf(tmp, s, " AUTOWB=%d", cg.currentAutoAWB ? 1 : 0);
-	strcat(cmd, tmp);
-
-	snprintf(tmp, s, " sAUTOAWB='%s'", cg.currentAutoAWB ? " (auto)" : "");
-	strcat(cmd, tmp);
-	if (cg.lastWBR >= 0.0) {
-		snprintf(tmp, s, " WBR=%s", LorF(cg.lastWBR, "%d", "%f"));
-		strcat(cmd, tmp);
-	}
-	if (cg.lastWBB >= 0.0) {
-		snprintf(tmp, s, " WBB=%s", LorF(cg.lastWBB, "%d", "%f"));
-		strcat(cmd, tmp);
-	}
-
 	// Since negative temperatures are valid, check against an impossible temperature.
 	// The temperature passed to us is 10 times the actual temperature so we can deal with
 	// integers with 1 decimal place, which is all we care about.
@@ -252,12 +257,6 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		strcat(cmd, tmp);
 	}
 
-	snprintf(tmp, s, " sGAIN='%s'", cg.currentAutoGain ? " (auto)" : "");
-	strcat(cmd, tmp);
-	if (cg.lastGain >= 0.0) {
-		snprintf(tmp, s, " GAIN=%s", LorF(cg.lastGain, "%d", "%f"));
-		strcat(cmd, tmp);
-	}
 
 	if (cg.currentBin >= 0) {
 		snprintf(tmp, s, " BIN=%ld", cg.currentBin);
@@ -287,7 +286,7 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	strcat(cmd, tmp);
 
 	if (cg.ct == ctZWO) {
-		snprintf(tmp, s, " eUSB=%d", cg.asiAutoBandwidth ? 1 : 0);
+		snprintf(tmp, s, " AUTOUSB=%d", cg.asiAutoBandwidth ? 1 : 0);
 		strcat(cmd, tmp);
 		snprintf(tmp, s, " USB=%ld", cg.asiBandwidth);
 		strcat(cmd, tmp);

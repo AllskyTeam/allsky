@@ -5,6 +5,7 @@ function DisplayCameraConfig(){
 	$options_str = file_get_contents(RASPI_CAMERA_OPTIONS, true);
 	$options_array = json_decode($options_str, true);
 
+	global $camera_settings_array;
 	global $status;
 	$status = new StatusMessages();
 
@@ -104,11 +105,8 @@ function DisplayCameraConfig(){
 		}
 	}
 
-	$settings_str = file_get_contents(RASPI_CAMERA_SETTINGS, true);
-	$settings_array = json_decode($settings_str, true);
-
 	// Determine if the advanced settings should always be shown.
-	$initial_display = $settings_array['alwaysshowadvanced'] == 1 ? "table-row" : "none";
+	$initial_display = $camera_settings_array['alwaysshowadvanced'] == 1 ? "table-row" : "none";
 ?>
 <script language="javascript">
 function toggle_advanced()
@@ -197,8 +195,8 @@ function toggle_advanced()
 				if ($type == "header") {
 					$value = "";
 				} else {
-					if (isset($settings_array[$name]))
-						$value = $settings_array[$name] != null ? $settings_array[$name] : $default;
+					if (isset($camera_settings_array[$name]))
+						$value = $camera_settings_array[$name] != null ? $camera_settings_array[$name] : $default;
 					else
 						$value = $default;
 					// Allow single quotes in values (for string values).

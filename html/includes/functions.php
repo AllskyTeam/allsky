@@ -115,6 +115,7 @@ function is_valid_directory($directory_name) {
 *
 */
 function CSRFToken() {
+	global $useLogin;
 	if (! $useLogin) return;
 ?>
 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>" />
@@ -127,6 +128,7 @@ function CSRFToken() {
 *
 */
 function CSRFValidate() {
+  global $useLogin;
   if (! $useLogin) return true;
   if ( hash_equals($_POST['csrf_token'], $_SESSION['csrf_token']) ) {
     return true;

@@ -1892,6 +1892,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 			strcmp(a, "computer") == 0 ||
 			strcmp(a, "savedaytimeimages") == 0 ||
 			strcmp(a, "usedarkframes") == 0 ||
+			strcmp(a, "useLogin") == 0 ||
 			strcmp(a, "alwaysshowadvanced") == 0
 			)
 		{

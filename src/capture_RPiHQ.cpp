@@ -133,7 +133,8 @@ int RPicapture(config cg, cv::Mat *image)
 			if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 			{
 				// We do our own auto-exposure so no need to wait at all.
-				command += " --immediate";
+				// Tried --immediate, but on Buster (don't know about Bullseye), it hung exposures.
+				ss << 1;
 			}
 			else if (dayOrNight == "DAY")
 				ss << 2 * MS_IN_SEC;

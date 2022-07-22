@@ -191,115 +191,105 @@ std::string exec(const char *cmd)
 	return result;
 }
 
-void add_variables_to_command(char *cmd, timeval startDateTime,
-	long exposure_us, int brightness, float mean,
-	bool autoExposure, bool autoGain, bool autoAWB, float WBR, float WBB,
-	int temperature, float gain, int bin, char const *flip, int bitDepth, int focusMetric)
+void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 {
 	// If the double variables are an integer value, pass an integer value.
 	// Pass boolean values as 0 or 1.
 	// If any value < 0 don't use it.
 
-	char tmp[100];
+	int const s = 100;
+	char tmp[s];
 
-	snprintf(tmp, sizeof(tmp), " DATE=%s", formatTime(startDateTime, "%Y%m%d"));
+	snprintf(tmp, s, " DATE=%s", formatTime(startDateTime, "%Y%m%d"));
 	strcat(cmd, tmp);
-	snprintf(tmp, sizeof(tmp), " TIME=%s", formatTime(startDateTime, "%H%M%S"));
+	snprintf(tmp, s, " TIME=%s", formatTime(startDateTime, "%H%M%S"));
 	strcat(cmd, tmp);
 
-	if (exposure_us >= 0) {
-		snprintf(tmp, sizeof(tmp), " EXPOSURE_US=%ld", exposure_us);
+	if (cg.lastExposure_us >= 0) {
+		snprintf(tmp, s, " EXPOSURE_US=%ld", cg.lastExposure_us);
 		strcat(cmd, tmp);
 
-		snprintf(tmp, sizeof(tmp), " EXPOSURE_STRING='%s%s%s", length_in_units(exposure_us, true), autoExposure ? " (auto)" : "", "'");
+		snprintf(tmp, s, " sEXPOSURE='%s'", length_in_units(cg.lastExposure_us, true));
 		strcat(cmd, tmp);
 	}
 
-	if (brightness >= 0) {
-		snprintf(tmp, sizeof(tmp), " BRIGHTNESS=%d", brightness);
+	if (cg.currentBrightness >= 0) {
+		snprintf(tmp, s, " BRIGHTNESS=%ld", cg.currentBrightness);
 		strcat(cmd, tmp);
 	}
 
-	if (mean >= 0.0) {
-		if (mean == (int)mean)
-			snprintf(tmp, sizeof(tmp), " MEAN=%d", (int)mean);
-		else
-			snprintf(tmp, sizeof(tmp), " MEAN=%f", mean);
+	if (cg.lastMean >= 0.0) {
+		snprintf(tmp, s, " MEAN=%s", LorF(cg.lastMean, "%d", "%f"));
 		strcat(cmd, tmp);
 	}
 
-	snprintf(tmp, sizeof(tmp), " AUTOEXPOSURE=%d", autoExposure ? 1 : 0);
+	snprintf(tmp, s, " AUTOEXPOSURE=%d", cg.currentAutoExposure ? 1 : 0);
+	strcat(cmd, tmp);
+	snprintf(tmp, s, " sAUTOEXPOSURE='%s'", cg.currentAutoExposure ? " (auto)" : "");
+
+	snprintf(tmp, s, " AUTOGAIN=%d", cg.currentAutoGain ? 1 : 0);
 	strcat(cmd, tmp);
 
-	snprintf(tmp, sizeof(tmp), " AUTOGAIN=%d", autoGain ? 1 : 0);
+	snprintf(tmp, s, " AUTOWB=%d", cg.currentAutoAWB ? 1 : 0);
 	strcat(cmd, tmp);
 
-	snprintf(tmp, sizeof(tmp), " AUTOWB=%d", autoAWB ? 1 : 0);
+	snprintf(tmp, s, " sAUTOAWB='%s'", cg.currentAutoAWB ? " (auto)" : "");
 	strcat(cmd, tmp);
-
-	if (WBR >= 0.0) {
-		if (WBR == (int)WBR)
-			snprintf(tmp, sizeof(tmp), "WBR=%d", (int)WBR);
-		else
-			snprintf(tmp, sizeof(tmp), "WBR=%f", WBR);
-		strcat(cmd, " ");
+	if (cg.lastWBR >= 0.0) {
+		snprintf(tmp, s, " WBR=%s", LorF(cg.lastWBR, "%d", "%f"));
 		strcat(cmd, tmp);
-
-		char tmp2[sizeof(tmp) * 2];
-		snprintf(tmp2, sizeof(tmp2), " WBR_STRING='%s%s%s", tmp, autoAWB ? " (auto)" : "", "'");
-		strcat(cmd, tmp2);
 	}
-
-	if (WBB >= 0.0) {
-		if (WBB == (int)WBB)
-			snprintf(tmp, sizeof(tmp), "WBB=%d", (int)WBB);
-		else
-			snprintf(tmp, sizeof(tmp), "WBB=%f", WBB);
-		strcat(cmd, " ");
+	if (cg.lastWBB >= 0.0) {
+		snprintf(tmp, s, " WBB=%s", LorF(cg.lastWBB, "%d", "%f"));
 		strcat(cmd, tmp);
-
-		char tmp2[sizeof(tmp) * 2];
-		snprintf(tmp2, sizeof(tmp2), " WBB_STRING='%s%s%s", tmp, autoAWB ? " (auto)" : "", "'");
-		strcat(cmd, tmp2);
 	}
 
 	// Since negative temperatures are valid, check against an impossible temperature.
 	// The temperature passed to us is 10 times the actual temperature so we can deal with
 	// integers with 1 decimal place, which is all we care about.
-	if (temperature != -999) {
-		snprintf(tmp, sizeof(tmp), " TEMPERATURE=%d", (int)round(temperature/10));
+	if (cg.lastSensorTemp != -999) {
+		snprintf(tmp, s, " TEMPERATURE=%d", (int)round(cg.lastSensorTemp/10));
 		strcat(cmd, tmp);
 	}
 
-	if (gain >= 0.0) {
-		if (gain == (int)gain)
-			snprintf(tmp, sizeof(tmp), " GAIN=%d", (int)gain);
-		else
-			snprintf(tmp, sizeof(tmp), " GAIN=%f", gain);
-		strcat(cmd, tmp);
-
-		char tmp2[sizeof(tmp) * 2];
-		snprintf(tmp2, sizeof(tmp2), " GAIN_STRING='%s%s%s", tmp, autoGain ? " (auto)" : "", "'");
-		strcat(cmd, tmp2);
-	}
-
-	if (bin >= 0) {
-		snprintf(tmp, sizeof(tmp), " BIN=%d", bin);
+	snprintf(tmp, s, " sGAIN='%s'", cg.currentAutoGain ? " (auto)" : "");
+	strcat(cmd, tmp);
+	if (cg.lastGain >= 0.0) {
+		snprintf(tmp, s, " GAIN=%s", LorF(cg.lastGain, "%d", "%f"));
 		strcat(cmd, tmp);
 	}
 
-	if (flip[0] != '\0') {
-		snprintf(tmp, sizeof(tmp), " FLIP=%s", flip);
+	if (cg.currentBin >= 0) {
+		snprintf(tmp, s, " BIN=%ld", cg.currentBin);
 		strcat(cmd, tmp);
 	}
 
-	if (bitDepth >= 0) {
-		snprintf(tmp, sizeof(tmp), " BIT_DEPTH=%d", bitDepth);
+	char const *f = getFlip(cg.flip);
+	if (f[0] != '\0') {
+		snprintf(tmp, s, " FLIP=%s", f);
 		strcat(cmd, tmp);
 	}
 
-	if (focusMetric >= 0) {
-		snprintf(tmp, sizeof(tmp), " FOCUS=%d", focusMetric);
+	if (cg.currentBitDepth >= 0) {
+		snprintf(tmp, s, " BIT_DEPTH=%d", cg.currentBitDepth);
+		strcat(cmd, tmp);
+	}
+
+	if (cg.lastFocusMetric >= 0) {
+		snprintf(tmp, s, " FOCUS=%ld", cg.lastFocusMetric);
+		strcat(cmd, tmp);
+	}
+
+	snprintf(tmp, s, " DARKFRAME=%d", cg.takeDarkFrames ? 1 : 0);
+	strcat(cmd, tmp);
+
+	snprintf(tmp, s, " eOVERLAY=%d", cg.overlay.externalOverlay ? 1 : 0);
+	strcat(cmd, tmp);
+
+	if (cg.ct == ctZWO) {
+		snprintf(tmp, s, " eUSB=%d", cg.asiAutoBandwidth ? 1 : 0);
+		strcat(cmd, tmp);
+		snprintf(tmp, s, " USB=%ld", cg.asiBandwidth);
 		strcat(cmd, tmp);
 	}
 }
@@ -487,8 +477,7 @@ int fontname[] = {
 	cv::FONT_HERSHEY_COMPLEX,			cv::FONT_HERSHEY_TRIPLEX,	cv::FONT_HERSHEY_COMPLEX_SMALL,
 	cv::FONT_HERSHEY_SCRIPT_SIMPLEX,	cv::FONT_HERSHEY_SCRIPT_COMPLEX };
 
-int doOverlay(cv::Mat image, config cg, char *startTime,
-	long exposure_us, int temp, float gain, int gainChange, float mean, int focusMetric)
+int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 {
 	int iYOffset	= 0;
 	char tmp[128]	= { 0 };
@@ -517,11 +506,11 @@ int doOverlay(cv::Mat image, config cg, char *startTime,
 		char C[20] = { 0 }, F[20] = { 0 };
 		if (strcmp(cg.tempType, "C") == 0 || strcmp(cg.tempType, "B") == 0)
 		{
-			sprintf(C, "  %.0fC", (float)temp / 10);
+			sprintf(C, "  %.0fC", (float)cg.lastSensorTemp / 10);
 		}
 		if (strcmp(cg.tempType, "F") == 0 || strcmp(cg.tempType, "B") == 0)
 		{
-			sprintf(F, "  %.0fF", (((float)temp / 10 * 1.8) + 32));
+			sprintf(F, "  %.0fF", (((float)cg.lastSensorTemp / 10 * 1.8) + 32));
 		}
 		sprintf(tmp, "Sensor: %s %s", C, F);
 		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
@@ -532,7 +521,7 @@ int doOverlay(cv::Mat image, config cg, char *startTime,
 
 	if (cg.overlay.showExposure)
 	{
-		sprintf(tmp, "Exposure: %s", length_in_units(exposure_us, false));
+		sprintf(tmp, "Exposure: %s", length_in_units(cg.lastExposure_us, false));
 		// Indicate if in auto-exposure mode.
 		if (cg.currentAutoExposure) strcat(tmp, " (auto)");
 		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
@@ -543,10 +532,7 @@ int doOverlay(cv::Mat image, config cg, char *startTime,
 
 	if (cg.overlay.showGain)
 	{
-		if (gain == (int)gain)
-			snprintf(tmp, sizeof(tmp), "Gain: %d", (int)gain);
-		else
-			snprintf(tmp, sizeof(tmp), "Gain: %1.2f", gain);
+		snprintf(tmp, sizeof(tmp), "Gain: %s", LorF(cg.lastGain, "%d", "%1.2f"));
 
 		// Indicate if in auto gain mode.
 		if (cg.currentAutoGain) strcat(tmp, " (auto)");
@@ -572,12 +558,9 @@ int doOverlay(cv::Mat image, config cg, char *startTime,
 		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
-	if (cg.overlay.showMean && mean != 1)
+	if (cg.overlay.showMean && cg.lastMean != 1)
 	{
-		if (mean == (int)mean)
-			snprintf(tmp, sizeof(tmp), "Mean: %d", (int)mean);
-		else
-			snprintf(tmp, sizeof(tmp), "Mean: %.3f", mean);
+		snprintf(tmp, sizeof(tmp), "Mean: %s", LorF(cg.lastMean, "%d", "%.3f"));
 		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
 			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
 			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
@@ -586,7 +569,7 @@ int doOverlay(cv::Mat image, config cg, char *startTime,
 
 	if (cg.overlay.showFocus)
 	{
-		sprintf(tmp, "Focus: %d", focusMetric);
+		sprintf(tmp, "Focus: %ld", cg.lastFocusMetric);
 		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
 			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
 			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
@@ -951,7 +934,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - Angle of the sun below the horizon [%.2f].\n", n, "angle n", cg.angle);
 	printf("  %-*s   -6 = civil twilight   -12 = nautical twilight   -18 = astronomical twilight.\n", n, "");
 	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "takeDaytimeImages b", yesNo(cg.daytimeCapture));
-	printf(" -%-*s - 1 takes dark frames and disables the overlay [%s].\n", n, "takeDarkFrames b", yesNo(cg.takingDarkFrames));
+	printf(" -%-*s - 1 takes dark frames and disables the overlay [%s].\n", n, "takeDarkFrames b", yesNo(cg.takeDarkFrames));
 	printf(" -%-*s - Your locale - to determine thousands separator and decimal point [%s].\n", n, "locale s", cg.locale);
 	printf("  %-*s   Type 'locale' at a command prompt to determine yours.\n", n, "");
 	if (cg.ct == ctZWO) {
@@ -1123,7 +1106,7 @@ void displaySettings(config cg)
 		printf("   Video OFF Between Images: %s\n", yesNo(cg.videoOffBetweenImages));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
-	printf("   Taking Dark Frames: %s\n", yesNo(cg.takingDarkFrames));
+	printf("   Taking Dark Frames: %s\n", yesNo(cg.takeDarkFrames));
 	printf("   Debug Level: %ld\n", cg.debugLevel);
 	printf("   On TTY: %s\n", yesNo(cg.tty));
 
@@ -1198,7 +1181,7 @@ bool daytimeSleep(bool displayedMsg, config cg)
 
 void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 {
-	if (cg.takingDarkFrames) {
+	if (cg.takeDarkFrames) {
 		Log(2, "  > Not sleeping between dark frames\n");
 		return;
 	}
@@ -1763,7 +1746,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "takedarkframes") == 0)
 		{
-			cg->takingDarkFrames = getBoolean(argv[++i]);
+			cg->takeDarkFrames = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "locale") == 0)
 		{

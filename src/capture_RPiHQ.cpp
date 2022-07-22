@@ -958,8 +958,8 @@ if (lastExposure_us != myRaspistillSetting.shutter_us)
 
 				if (cg.currentSkipFrames > 0)
 				{
-					Log(2, "  >>>> Skipping this frame\n");
 					cg.currentSkipFrames--;
+					Log(2, "  >>>> Skipping this frame.  %d left to skip\n", cg.currentSkipFrames);
 					// Do not save this frame or sleep after it.
 					// We just started taking images so no need to check if DAY or NIGHT changed
 					if (remove(cg.fullFilename) != 0)

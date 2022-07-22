@@ -989,7 +989,7 @@
 {
 "name":"showonmap",
 "default":0,
-"description":"Activate to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>.",
+"description":"Activate to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank'><b>Allsky Map</b></a>.",
 "label":"Show on Map",
 "type":"checkbox",
 "display":1,

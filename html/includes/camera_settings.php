@@ -10,16 +10,18 @@ function DisplayCameraConfig(){
 
 	if (isset($_POST['save_settings'])) {
 		if (CSRFValidate()) {
+/* xxxxxxx $checkChanges is never used
 			$checkChanges = array();	// holds all settings where "checkchanges" is on
 			foreach ($options_array as $option){
 				if (isset($option['checkchanges']) && $option['checkchanges'])
 					$checkChanges[$option['name']] = $option['checkchanges'];
 			}
+*/
 			$settings = array();
 			$changes = "";
 			$somethingChanged = false;
 	 		foreach ($_POST as $key => $value){
-				// We look into POST data to only select settings
+				// We look into POST data to only select settings.
 				// Instead of trying to escape single and double quotes, which I never figured out how to do,
 				// convert them to HTML codes.
 				$isOLD = substr($key, 0, 4) === "OLD_";
@@ -71,7 +73,8 @@ function DisplayCameraConfig(){
 				}
 
 				if ($changes !== "") {
-					$CMD = ALLSKY_SCRIPTS . "/makeChanges.sh $changes";
+					// This must run with different permissions so makeChanges.sh can write to the allsky directory.
+					$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_SCRIPTS . "/makeChanges.sh $changes";
 					# Let makeChanges.sh display any output
 					echo '<script>console.log("Running: ' . $CMD . '");</script>';
 					runCommand($CMD, "-", "success");

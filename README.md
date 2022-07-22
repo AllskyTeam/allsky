@@ -403,6 +403,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Contrast** and **Sharpness** (RPi only).  The WebUI lists the minimum and maximum values.
 			* **Mean Target** (RPi only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
 			* **Mean Threshold** (RPi only).  This specifies how close the actual mean brightness must be to the **Mean Target**.  For example, if **Mean Target** is 0.5 and **Mean Threshold** is 0.1, the actual mean can vary between 0.4 and 0.6 (0.5 +/- 0.1).
+			* **Require WebUI Login** specifies whether or not the WebUI should require you to login.  Only set this to "No" if your Pi is on a local network and you trust everyone else.  **Do NOT disable it if your Pi is accessible via the Internet!**
 		* **NOTE**: the following settings moved from config.sh to the WebUI, and are "advanced" options so you'll need to click the "Show Advanced Options" button to see them:
 			* "DAYTIME_CAPTURE" in config.sh is now **Take Daytime Images** in the WebUI.
 			* "DAYTIME_SAVE" is **Save Daytime Images**.

@@ -62,6 +62,10 @@ $camera_settings_array = json_decode($camera_settings_str, true);
 $img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 $image_name = $img_dir . "/" . $camera_settings_array['filename'];
 $darkframe = $camera_settings_array['takeDarkFrames'];
+if (isset($camera_settings_array['useLogin']))
+	$useLogin = $camera_settings_array['useLogin'];
+else
+	$useLogin = true;
 
 
 ////////////////// Determine delay between refreshes of the image.
@@ -111,6 +115,8 @@ function is_valid_directory($directory_name) {
 *
 */
 function CSRFToken() {
+	global $useLogin;
+	if (! $useLogin) return;
 ?>
 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>" />
 <?php
@@ -122,6 +128,8 @@ function CSRFToken() {
 *
 */
 function CSRFValidate() {
+  global $useLogin;
+  if (! $useLogin) return true;
   if ( hash_equals($_POST['csrf_token'], $_SESSION['csrf_token']) ) {
     return true;
   } else {

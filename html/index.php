@@ -59,15 +59,17 @@ if (isset($_GET['page']))
 else
     $page = "";
 
-session_start();
-if (empty($_SESSION['csrf_token'])) {
-    if (function_exists('mcrypt_create_iv')) {
-        $_SESSION['csrf_token'] = bin2hex(mcrypt_create_iv(32, MCRYPT_DEV_URANDOM));
-    } else {
-        $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
-    }
+if ($useLogin) {
+	session_start();
+	if (empty($_SESSION['csrf_token'])) {
+    	if (function_exists('mcrypt_create_iv')) {
+        	$_SESSION['csrf_token'] = bin2hex(mcrypt_create_iv(32, MCRYPT_DEV_URANDOM));
+    	} else {
+        	$_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+    	}
+	}
+	$csrf_token = $_SESSION['csrf_token'];
 }
-$csrf_token = $_SESSION['csrf_token'];
 
 ?>
 
@@ -108,18 +110,12 @@ $csrf_token = $_SESSION['csrf_token'];
     <link href="dist/css/custom.css" rel="stylesheet">
 
     <link rel="shortcut icon" type="image/png" href="img/allsky-favicon.png">
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
 
     <!-- RaspAP JavaScript -->
     <script src="dist/js/functions.js"></script>
 
     <!-- jQuery -->
-    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="/javascript/jquery/jquery.min.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
     <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>

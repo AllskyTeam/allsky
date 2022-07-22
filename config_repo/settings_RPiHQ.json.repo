@@ -62,6 +62,7 @@
 	"histogrambox" : "500 500 50 50",
 	"debuglevel" : "0",
 	"newexposure" : "1",
+	"useLogin" : "1",
 	"alwaysshowadvanced" : "0",
 	"externalOverlay" : "0",
 	"showTime" : "1",

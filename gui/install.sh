@@ -75,7 +75,7 @@ if [ "${1}" = "--update" ] || [ "${1}" = "-update" ] ; then
 	# shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then
 		echo -e "${GREEN}* Updating sudoers list${NC}"
-		grep --silent "truncate" "${REPO_SUDOERS_FILE}"
+		grep --silent "makeChanges.sh" "${REPO_SUDOERS_FILE}"
 		# shellcheck disable=SC2181
 		if [ $? -ne 0 ]; then
 				echo -e "${RED}Please get the newest '$(basename "${REPO_SUDOERS_FILE}")' file from Git and try again.${NC}"

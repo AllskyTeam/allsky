@@ -50,10 +50,6 @@ bool checkMaxErrors(int *, int);
 // version 0.8 turned video mode on, then took a picture, then turned it off. This helps cool the camera,
 // but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures with the new method.
 // So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
-long actualWBR					= NOT_SET;						// actual values per camera
-long actualWBB					= NOT_SET;
-long actualTemp					= NOT_SET;
-long actualGain					= NOT_SET;
 timeval exposureStartDateTime;									// date/time an image started
 char allskyHome[100]			= { 0 };
 
@@ -74,11 +70,7 @@ int iNumOfCtrl					= NOT_SET;			// Number of camera control capabilities
 pthread_t threadDisplay			= 0;
 pthread_t hthdSave				= 0;
 int numExposures				= 0;				// how many valid pictures have we taken so far?
-long lastExposure_us			= 0;				// last exposure taken
 int currentBpp					= NOT_SET;			// bytes per pixel: 8, 16, or 24
-int currentBitDepth				= NOT_SET;			// 8 or 16
-int focusMetric					= NOT_SET;
-int mean						= NOT_SET;			// histogram mean
 
 // Make sure we don't try to update a non-updateable control, and check for errors.
 ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_BOOL makeAuto)
@@ -178,13 +170,9 @@ void *SaveImgThd(void *para)
 		if (pRgb.data)
 		{
 			char cmd[1100+sizeof(allskyHome)];
-			Log(1, "  > Saving %s image '%s'\n", cg.takingDarkFrames ? "dark" : dayOrNight.c_str(), cg.finalFileName);
+			Log(1, "  > Saving %s image '%s'\n", cg.takeDarkFrames ? "dark" : dayOrNight.c_str(), cg.finalFileName);
 			snprintf(cmd, sizeof(cmd), "%sscripts/saveImage.sh %s '%s'", allskyHome, dayOrNight.c_str(), cg.fullFilename);
-			add_variables_to_command(cmd, exposureStartDateTime,
-				lastExposure_us, cg.currentBrightness, mean,
-				cg.currentAutoExposure, cg.currentAutoGain,
-				cg.currentAutoAWB, actualWBR, actualWBB,
-				actualTemp, actualGain, cg.currentBin, getFlip(cg.flip), currentBitDepth, focusMetric);
+			add_variables_to_command(cg, cmd, exposureStartDateTime);
 			strcat(cmd, " &");
 
 			st = cv::getTickCount();
@@ -356,7 +344,7 @@ ASI_ERROR_CODE takeOneExposure(
 		config cg,
 		unsigned char *imageBuffer,		// where to put image
 		int *histogram,
-		int *mean)
+		double *mean)
 {
 	if (imageBuffer == NULL) {
 		return (ASI_ERROR_CODE) -1;
@@ -437,21 +425,21 @@ ASI_ERROR_CODE takeOneExposure(
 			}
 
 			numErrors = 0;
-			ASIGetControlValue(cg.cameraNumber, ASI_GAIN, &actualGain, &bAuto);
+			ASIGetControlValue(cg.cameraNumber, ASI_GAIN, (long *)&cg.lastGain, &bAuto);
 			debug_text[0] = '\0';
 #ifdef USE_HISTOGRAM
 			if (histogram != NULL && mean != NULL)
 			{
-				*mean = computeHistogram(imageBuffer, cg.width, cg.height, (ASI_IMG_TYPE) cg.imageType, histogram);
-				sprintf(debug_text, " @ mean %d", *mean);
-				if (cg.currentAutoGain && ! cg.takingDarkFrames)
+				*mean = (double)computeHistogram(imageBuffer, cg.width, cg.height, (ASI_IMG_TYPE) cg.imageType, histogram);
+				sprintf(debug_text, " @ mean %d", (int)*mean);
+				if (cg.currentAutoGain && ! cg.takeDarkFrames)
 				{
 					char *p = debug_text + strlen(debug_text);
-					sprintf(p, ", auto gain %ld", actualGain);
+					sprintf(p, ", auto gain %ld", (long) cg.lastGain);
 				}
 			}
 #endif
-			lastExposure_us = cg.currentExposure_us;
+			cg.lastExposure_us = cg.currentExposure_us;
 			// Per ZWO, when in manual-exposure mode, the returned exposure length should always
 			// be equal to the requested length; in fact, "there's no need to call ASIGetControlValue()".
 			// When in auto-exposure mode, the returned exposure length is what the driver thinks the
@@ -465,11 +453,11 @@ ASI_ERROR_CODE takeOneExposure(
 			{
 				Log(0, "  > WARNING: not correct exposure (requested: %'ld us, reported: %'ld us, diff: %'ld)\n", cg.currentExposure_us, reportedExposure_us, reportedExposure_us - cg.currentExposure_us);
 			}
-			ASIGetControlValue(cg.cameraNumber, ASI_TEMPERATURE, &actualTemp, &bAuto);
+			ASIGetControlValue(cg.cameraNumber, ASI_TEMPERATURE, &cg.lastSensorTemp, &bAuto);
 			if (cg.isColorCamera)
 			{
-				ASIGetControlValue(cg.cameraNumber, ASI_WB_R, &actualWBR, &bAuto);
-				ASIGetControlValue(cg.cameraNumber, ASI_WB_B, &actualWBB, &bAuto);
+				ASIGetControlValue(cg.cameraNumber, ASI_WB_R, (long *)&cg.lastWBR, &bAuto);
+				ASIGetControlValue(cg.cameraNumber, ASI_WB_B, (long *)&cg.lastWBB, &bAuto);
 			}
 		}
 	}
@@ -795,7 +783,7 @@ const int minGain = 0;
 		cg.imageExt = "jpg";
 		compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
 		// want dark frames to be at highest quality
-		if (cg.takingDarkFrames)
+		if (cg.takeDarkFrames)
 		{
 			cg.quality = 100;
 		}
@@ -813,7 +801,7 @@ const int minGain = 0;
 		cg.imageExt = "png";
 		compressionParameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
 		// png is lossless so "quality" is really just the amount of compression.
-		if (cg.takingDarkFrames)
+		if (cg.takeDarkFrames)
 		{
 			cg.quality = 9;
 		}
@@ -830,7 +818,7 @@ const int minGain = 0;
 
 // TODO: make common.
 	// Get just the name of the file, without any directories or the extension.
-	if (cg.takingDarkFrames)
+	if (cg.takeDarkFrames)
 	{
 		// To avoid overwriting the optional notification image with the dark image,
 		// during dark frames we use a different file name.
@@ -978,13 +966,13 @@ const int minGain = 0;
 	{
 		cg.sType = "RAW16";
 		currentBpp = 2;
-		currentBitDepth = 16;
+		cg.currentBitDepth = 16;
 	}
 	else if (cg.imageType == IMG_RGB24)
 	{
 		cg.sType = "RGB24";
 		currentBpp = 3;
-		currentBitDepth = 8;
+		cg.currentBitDepth = 8;
 	}
 	else if (cg.imageType == IMG_RAW8)
 	{
@@ -999,13 +987,13 @@ const int minGain = 0;
 			cg.sType = "RAW8";
 		}
 		currentBpp = 1;
-		currentBitDepth = 8;
+		cg.currentBitDepth = 8;
 	}
 	else if (cg.imageType == IMG_Y8)
 	{
 		cg.sType = "Y8";
 		currentBpp = 1;
-		currentBitDepth = 8;
+		cg.currentBitDepth = 8;
 	}
 	else
 	{
@@ -1045,7 +1033,7 @@ const int minGain = 0;
 	// so don't transition.
 	// gainTransitionTime of 0 means don't adjust gain.
 	// No need to adjust gain if day and night gain are the same.
-	if (cg.dayAutoGain || cg.nightAutoGain || cg.gainTransitionTime == 0 || cg.dayGain == cg.nightGain || cg.takingDarkFrames)
+	if (cg.dayAutoGain || cg.nightAutoGain || cg.gainTransitionTime == 0 || cg.dayGain == cg.nightGain || cg.takeDarkFrames)
 	{
 		adjustGain = false;
 		Log(3, "Will NOT adjust gain at transitions\n");
@@ -1081,10 +1069,10 @@ const int minGain = 0;
 		dayOrNight = calculateDayOrNight(cg.latitude, cg.longitude, cg.angle);
 		std::string lastDayOrNight = dayOrNight;
 
-		if (! cg.takingDarkFrames)
+		if (! cg.takeDarkFrames)
 			currentAdjustGain = resetGainTransitionVariables(cg.dayGain, cg.nightGain);
 
-		if (cg.takingDarkFrames)
+		if (cg.takeDarkFrames)
 		{
 			// We're doing dark frames so turn off autoexposure and autogain, and use
 			// nightime gain, delay, max exposure, bin, and brightness to mimic a nightime shot.
@@ -1287,11 +1275,11 @@ const int minGain = 0;
 			setControl(cg.cameraNumber, ASI_WB_R, cg.currentWBR, cg.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
 			setControl(cg.cameraNumber, ASI_WB_B, cg.currentWBB, cg.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
 		}
-		else if (! cg.currentAutoAWB && ! cg.takingDarkFrames)
+		else if (! cg.currentAutoAWB && ! cg.takeDarkFrames)
 		{
 			// We only read the actual values if in auto white balance; since we're not, get them now.
-			actualWBR = cg.currentWBR;
-			actualWBB = cg.currentWBB;
+			cg.lastWBR = cg.currentWBR;
+			cg.lastWBB = cg.currentWBB;
 		}
 		if (cg.isCooledCamera)
 		{
@@ -1380,7 +1368,7 @@ const int minGain = 0;
 		// This simply makes it easier to see things in the log file.
 
 #ifdef USE_HISTOGRAM
-		mean = 0;
+		cg.lastMean = 0;
 		int attempts = 0;
 		int histogram[256];
 #endif
@@ -1393,6 +1381,7 @@ const int minGain = 0;
 			exposureStartDateTime = getTimeval();
 			char exposureStart[128];
 			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(exposureStartDateTime, "%F %T"));
+			Log(3, "-----\n");
 			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(cg.currentExposure_us, true));
 
 			// Get start time for overlay. Make sure it has the same time as exposureStart.
@@ -1401,13 +1390,13 @@ const int minGain = 0;
 				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, cg.timeFormat));
 			}
 
-			asiRetCode = takeOneExposure(cg, pRgb.data, histogram, &mean);
+			asiRetCode = takeOneExposure(cg, pRgb.data, histogram, &cg.lastMean);
 			if (asiRetCode == ASI_SUCCESS)
 			{
 				numErrors = 0;
 				numExposures++;
 
-				focusMetric = cg.overlay.showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
+				cg.lastFocusMetric = cg.overlay.showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
 
 				if (numExposures == 0 && cg.preview)
 				{
@@ -1420,7 +1409,7 @@ const int minGain = 0;
 				bool usedHistogram = false;	// did we use the histogram method?
 
 				// We don't use this at night since the ZWO bug is only when it's light outside.
-				if (dayOrNight == "DAY" && cg.dayAutoExposure && ! cg.takingDarkFrames)
+				if (dayOrNight == "DAY" && cg.dayAutoExposure && ! cg.takeDarkFrames)
 				{
 					usedHistogram = true;	// we are using the histogram code on this exposure
 					attempts = 0;
@@ -1486,15 +1475,15 @@ const int minGain = 0;
 					// or else we'll never get low enough.
 					// Negative is below lower limit, positive is above upper limit.
 					// Adjust the min or maxAcceptableMean depending on the aggression.
-					int priorMean = mean;
+					int priorMean = cg.lastMean;
 					int priorMeanDiff = 0;
 					int adjustment = 0;
 
 					int lastMeanDiff = 0;	// like priorMeanDiff but for next exposure
 
-					if (mean < minAcceptableMean)
+					if (cg.lastMean < minAcceptableMean)
 					{
-						priorMeanDiff = mean - minAcceptableMean;
+						priorMeanDiff = cg.lastMean - minAcceptableMean;
 						// If we're skipping frames we want to get to a good exposure as fast as
 						// possible so don't set an adjustment.
 						if (cg.aggression != 100 && cg.currentSkipFrames <= 0)
@@ -1504,9 +1493,9 @@ const int minGain = 0;
 								minAcceptableMean += adjustment;
 						}
 					}
-					else if (mean > maxAcceptableMean)
+					else if (cg.lastMean > maxAcceptableMean)
 					{
-						priorMeanDiff = mean - maxAcceptableMean;
+						priorMeanDiff = cg.lastMean - maxAcceptableMean;
 					}
 					if (adjustment != 0)
 					{
@@ -1516,12 +1505,12 @@ const int minGain = 0;
 							adjustment < 0 ? minAcceptableMean : maxAcceptableMean);
 					}
 
-					while ((mean < minAcceptableMean || mean > maxAcceptableMean) && ++attempts <= maxHistogramAttempts && cg.currentExposure_us <= cg.currentMaxAutoExposure_us)
+					while ((cg.lastMean < minAcceptableMean || cg.lastMean > maxAcceptableMean) && ++attempts <= maxHistogramAttempts && cg.currentExposure_us <= cg.currentMaxAutoExposure_us)
 					{
 						int acceptable;
 						float multiplier = 1.10;
 						char const *acceptableType;
-						if (mean < minAcceptableMean) {
+						if (cg.lastMean < minAcceptableMean) {
 							acceptable = minAcceptableMean;
 							acceptableType = "min";
 						} else {
@@ -1529,19 +1518,19 @@ const int minGain = 0;
 							acceptableType = "max";
 							multiplier = 1 / multiplier;
 						}
-						if (cg.currentExposure_us != lastExposure_us)
-							printf("xxxxxxxxxxx currentExposure_us %'ld != lastExposure_us %'ld\n", cg.currentExposure_us, lastExposure_us);
-						// if mean/acceptable is 9/90, it's 1/10th of the way there, so multiple exposure by 90/9 (10).
+						if (cg.currentExposure_us != cg.lastExposure_us)
+							printf("xxxxxxxxxxx currentExposure_us %'ld != cg.lastExposure_us %'ld\n", cg.currentExposure_us, cg.lastExposure_us);
+						// if lastMean/acceptable is 9/90, it's 1/10th of the way there, so multiple exposure by 90/9 (10).
 						// ZWO cameras don't appear to be linear so increase the multiplier amount some.
-						float multiply = ((double)acceptable / mean) * multiplier;
-						newExposure_us= lastExposure_us * multiply;
-						printf("=== next exposure=%'ld (multiply by %.3f) [lastExposure_us=%'ld, %sAcceptable=%d, mean=%d]\n", newExposure_us, multiply, lastExposure_us, acceptableType, acceptable, mean);
+						float multiply = ((double)acceptable / cg.lastMean) * multiplier;
+						newExposure_us= cg.lastExposure_us * multiply;
+						printf("=== next exposure=%'ld (multiply by %.3f) [cg.lastExposure_us=%'ld, %sAcceptable=%d, lastMean=%d]\n", newExposure_us, multiply, cg.lastExposure_us, acceptableType, acceptable, (int)cg.lastMean);
 
 						if (priorMeanDiff > 0 && lastMeanDiff < 0)
 						{ 
-printf(" >xxx mean was %d and went from %d above max of %d to %d below min of %d, is now at %d; should NOT set temp min to currentExposure_us of %'ld\n",
+printf(" >xxx lastMean was %d and went from %d above max of %d to %d below min of %d, is now at %d; should NOT set temp min to currentExposure_us of %'ld\n",
 							priorMean, priorMeanDiff, maxAcceptableMean,
-							-lastMeanDiff, minAcceptableMean, mean, cg.currentExposure_us);
+							-lastMeanDiff, minAcceptableMean, (int)cg.lastMean, cg.currentExposure_us);
 						} 
 						else
 						{
@@ -1550,14 +1539,14 @@ printf(" >xxx mean was %d and went from %d above max of %d to %d below min of %d
 							// OK to set upper limit since we know it's too high.
 printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d, is now at %d; OK to set temp max to currentExposure_us of %'ld\n",
 								priorMean, -priorMeanDiff, minAcceptableMean,
-								lastMeanDiff, maxAcceptableMean, mean, cg.currentExposure_us);
+								lastMeanDiff, maxAcceptableMean, (int)cg.lastMean, cg.currentExposure_us);
 							}
 
-							if (mean < minAcceptableMean)
+							if (cg.lastMean < minAcceptableMean)
 							{
 								tempMinExposure_us = cg.currentExposure_us;
 							} 
-							else if (mean > maxAcceptableMean)
+							else if (cg.lastMean > maxAcceptableMean)
 							{
 								tempMaxExposure_us = cg.currentExposure_us;
 							} 
@@ -1579,19 +1568,19 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 							break;
 						}
 
-						Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: mean (%d)\n", attempts, newExposure_us, tempMinExposure_us, tempMaxExposure_us, mean);
+						Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: lastMean (%d)\n", attempts, newExposure_us, tempMinExposure_us, tempMaxExposure_us, cg.lastMean);
 
-						priorMean = mean;
+						priorMean = cg.lastMean;
 						priorMeanDiff = lastMeanDiff;
 
-						asiRetCode = takeOneExposure(cg, pRgb.data, histogram, &mean);
+						asiRetCode = takeOneExposure(cg, pRgb.data, histogram, &cg.lastMean);
 						if (asiRetCode == ASI_SUCCESS)
 						{
 
-							if (mean < minAcceptableMean)
-								lastMeanDiff = mean - minAcceptableMean;
-							else if (mean > maxAcceptableMean)
-								lastMeanDiff = mean - maxAcceptableMean;
+							if (cg.lastMean < minAcceptableMean)
+								lastMeanDiff = cg.lastMean - minAcceptableMean;
+							else if (cg.lastMean > maxAcceptableMean)
+								lastMeanDiff = cg.lastMean - maxAcceptableMean;
 							else
 								lastMeanDiff = 0;
 
@@ -1611,14 +1600,14 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						continue;
 					}
 
-					if (mean >= minAcceptableMean && mean <= maxAcceptableMean)
+					if (cg.lastMean >= minAcceptableMean && cg.lastMean <= maxAcceptableMean)
 					{
 						// +++ at end makes it easier to see in log file
-						Log(3, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n", minAcceptableMean, maxAcceptableMean, mean);
+						Log(3, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n", minAcceptableMean, maxAcceptableMean, cg.lastMean);
 					}
 					else if (attempts > maxHistogramAttempts)
 					{
-						 Log(3, "  > max attempts reached - using exposure of %s us with mean %d\n", length_in_units(cg.currentExposure_us, true), mean);
+						 Log(3, "  > max attempts reached - using exposure of %s us with mean %d\n", length_in_units(cg.currentExposure_us, true), cg.lastMean);
 					}
 					else if (attempts >= 1)
 					{
@@ -1634,10 +1623,10 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						}
 						else if (cg.currentExposure_us == cg.currentMaxAutoExposure_us)
 						{
-							Log(3, "  > Stopped trying: hit max exposure limit of %s, mean %d\n", length_in_units(cg.currentMaxAutoExposure_us, false), mean);
+							Log(3, "  > Stopped trying: hit max exposure limit of %s, mean %d\n", length_in_units(cg.currentMaxAutoExposure_us, false), cg.lastMean);
 							// If currentExposure_us causes too high of a mean, decrease exposure
 							// so on the next loop we'll adjust it.
-							if (mean > maxAcceptableMean)
+							if (cg.lastMean > maxAcceptableMean)
 								cg.currentExposure_us--;
 						}
 						else if (newExposure_us == cg.currentExposure_us)
@@ -1646,13 +1635,13 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						}
 						else
 						{
-							Log(3, "  > Stopped trying, using exposure of %s us with mean %d, min=%d, max=%d\n", length_in_units(cg.currentExposure_us, false), mean, minAcceptableMean, maxAcceptableMean);
+							Log(3, "  > Stopped trying, using exposure of %s us with mean %d, min=%d, max=%d\n", length_in_units(cg.currentExposure_us, false), cg.lastMean, minAcceptableMean, maxAcceptableMean);
 						}
 						 
 					}
 					else if (cg.currentExposure_us == cg.currentMaxAutoExposure_us)
 					{
-						Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %d\n", length_in_units(cg.currentMaxAutoExposure_us, false), mean);
+						Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %d\n", length_in_units(cg.currentMaxAutoExposure_us, false), cg.lastMean);
 					}
 					// xxxx TODO: this was "actualExposure_us = ..."	reportedExposure_us = currentExposure_us;
 
@@ -1696,7 +1685,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					// If we're already at a good exposure, or the last exposure was longer
 					// than the max, don't skip any more frames.
 // xxx TODO: should we have a separate variable to define "too long" instead of currentMaxAutoExposure_us?
-					if ((mean >= MINMEAN && mean <= MAXMEAN) || lastExposure_us > cg.currentMaxAutoExposure_us)
+					if ((cg.lastMean >= MINMEAN && cg.lastMean <= MAXMEAN) || cg.lastExposure_us > cg.currentMaxAutoExposure_us)
 					{
 						cg.currentSkipFrames = 0;
 					}
@@ -1711,13 +1700,12 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					}
 				}
 
-				// If takingDarkFrames is off, add overlay text to the image
-				if (! cg.takingDarkFrames)
+				// If takeDarkFrames is off, add overlay text to the image
+				if (! cg.takeDarkFrames)
 				{
 					if (! cg.overlay.externalOverlay)
 					{
-						(void) doOverlay(pRgb, cg, bufTime,
-							lastExposure_us, actualTemp, actualGain, gainChange, mean, focusMetric);
+						(void) doOverlay(pRgb, cg, bufTime, gainChange);
 
 #ifdef USE_HISTOGRAM
 						if (cg.overlay.showHistogramBox && usedHistogram)
@@ -1752,14 +1740,14 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 				{
 					// Retrieve the current Exposure for smooth transition to night time
 					// as long as auto-exposure is enabled during night time
-					cg.currentExposure_us = lastExposure_us;
+					cg.currentExposure_us = cg.lastExposure_us;
 				}
 #endif
 
 				// Save the image
 				if (! bSavingImg)
 				{
-					if (! cg.takingDarkFrames)
+					if (! cg.takeDarkFrames)
 					{
 						// Create the name of the file that goes in the images/<date> directory.
 						snprintf(cg.finalFileName, sizeof(cg.finalFileName), "%s-%s.%s",
@@ -1785,7 +1773,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 
 				if (cg.currentAutoExposure && dayOrNight == "DAY")
 				{
-					cg.currentExposure_us = lastExposure_us;
+					cg.currentExposure_us = cg.lastExposure_us;
 				}
 #endif
 				std::string s;
@@ -1802,7 +1790,7 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 #endif
 				}
 				// Delay applied before next exposure
-				delayBetweenImages(cg, lastExposure_us, s);
+				delayBetweenImages(cg, cg.lastExposure_us, s);
 
 				dayOrNight = calculateDayOrNight(cg.latitude, cg.longitude, cg.angle);
 			}

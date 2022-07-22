@@ -48,7 +48,6 @@ using namespace std;
 
 // These are global so they can be used by other routines.
 // Variables for command-line settings are first.
-long actualTemp				= -999;					// temp of sensor during last image. -999 means not supported
 timeval exposureStartDateTime;						// date/time an image started
 char allskyHome[100]			= { 0 };
 
@@ -69,7 +68,6 @@ long maxBrightness;
 long defaultBrightness;
 int currentBpp				= NOT_SET;				// bytes per pixel: 8, 16, or 24
 int currentBitDepth			= NOT_SET;				// 8 or 16
-float mean					= NOT_SET;				// mean brightness of image
 raspistillSetting myRaspistillSetting;
 modeMeanSetting myModeMeanSetting;
 
@@ -375,8 +373,6 @@ int main(int argc, char *argv[])
 	setDefaults(&cg, ctRPi);
 
 	// All the font settings apply to both day and night.
-	long lastExposure_us 		= 0;					// last exposure taken
-	double lastGain				= 0.0;					// last gain taken
 	if (cg.isLibcamera)
 	{
 		defaultSaturation		= 1.0;
@@ -549,7 +545,7 @@ const double minGain = 1.0;		// TODO: determine based on camera
 		cg.imageExt = "jpg";
 		compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
 		// want dark frames to be at highest quality
-		if (cg.takingDarkFrames)
+		if (cg.takeDarkFrames)
 		{
 			cg.quality = 100;
 		}
@@ -567,7 +563,7 @@ const double minGain = 1.0;		// TODO: determine based on camera
 		cg.imageExt = "png";
 		compressionParameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
 		// png is lossless so "quality" is really just the amount of compression.
-		if (cg.takingDarkFrames)
+		if (cg.takeDarkFrames)
 		{
 			cg.quality = 9;
 		}
@@ -584,7 +580,7 @@ const double minGain = 1.0;		// TODO: determine based on camera
 
 // TODO: make common.
 	// Get just the name of the file, without any directories or the extension.
-	if (cg.takingDarkFrames)
+	if (cg.takeDarkFrames)
 	{
 		// To avoid overwriting the optional notification image with the dark image,
 		// during dark frames we use a different file name.
@@ -703,7 +699,7 @@ const double minGain = 1.0;		// TODO: determine based on camera
 		dayOrNight = calculateDayOrNight(cg.latitude, cg.longitude, cg.angle);
 		std::string lastDayOrNight = dayOrNight;
 
-		if (cg.takingDarkFrames)
+		if (cg.takeDarkFrames)
 		{
 			// We're doing dark frames so turn off autoexposure and autogain, and use
 			// nightime gain, delay, exposure, and brightness to mimic a nightime shot.
@@ -884,6 +880,7 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 			exposureStartDateTime = getTimeval();
 			char exposureStart[128];
 			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(exposureStartDateTime, "%F %T"));
+			Log(3, "-----\n");
 			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(myRaspistillSetting.shutter_us, true));
 
 			// Get start time for overlay. Make sure it has the same time as exposureStart.
@@ -892,7 +889,7 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, cg.timeFormat));
 			}
 
-			if (! cg.takingDarkFrames)
+			if (! cg.takeDarkFrames)
 			{
 				// Create the name of the file that goes in the images/<date> directory.
 				snprintf(cg.finalFileName, sizeof(cg.finalFileName), "%s-%s.%s",
@@ -906,35 +903,37 @@ myModeMeanSetting.modeMean = cg.myModeMeanSetting.modeMean;
 			{
 				numExposures++;
 
-				int focusMetric;
-				focusMetric = cg.overlay.showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
+				// We currently have no way to get the actual white balance values,
+				// so use what the user requested.
+				cg.lastWBR = cg.currentWBR;
+				cg.lastWBB = cg.currentWBB;
 
-				// If takingDarkFrames is off, add overlay text to the image
-				if (! cg.takingDarkFrames)
+				cg.lastFocusMetric = cg.overlay.showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
+
+				// If takeDarkFrames is off, add overlay text to the image
+				if (! cg.takeDarkFrames)
 				{
-					lastExposure_us = myRaspistillSetting.shutter_us;
+					cg.lastExposure_us = myRaspistillSetting.shutter_us;
 					if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
-						lastGain =  myRaspistillSetting.analoggain;
+						cg.lastGain =  myRaspistillSetting.analoggain;
 					}
 					else
 					{
-						lastGain = cg.currentGain;	// ZWO gain=0.1 dB , RPi gain=factor
+						cg.lastGain = cg.currentGain;	// ZWO gain=0.1 dB , RPi gain=factor
 					}
 
-					mean = -1;
+					cg.lastMean = aegCalcMean(pRgb);
 					if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
-if (lastExposure_us != myRaspistillSetting.shutter_us)
-  Log(0, " xxxx lastExposure_us (%ld) != shutter_us (%ld)\n", lastExposure_us, myRaspistillSetting.shutter_us);
-// TODO: always calculate mean ???
-						mean = aegCalcMean(pRgb);
-						aegGetNextExposureSettings(mean, lastExposure_us, lastGain,
+if (cg.lastExposure_us != myRaspistillSetting.shutter_us)
+  Log(0, " xxxx lastExposure_us (%ld) != shutter_us (%ld)\n", cg.lastExposure_us, myRaspistillSetting.shutter_us);
+						aegGetNextExposureSettings(cg.lastMean, cg.lastExposure_us, cg.lastGain,
 								myRaspistillSetting, myModeMeanSetting);
 
-						Log(2, "  > Got exposure: %s, gain: %1.3f,", length_in_units(lastExposure_us, false), lastGain);
-						Log(2, " shutter: %s, quickstart: %d, mean=%1.3f\n", length_in_units(myRaspistillSetting.shutter_us, false), myModeMeanSetting.quickstart, mean);
-						if (mean == -1)
+						Log(2, "  > Got exposure: %s, gain: %1.3f,", length_in_units(cg.lastExposure_us, false), cg.lastGain);
+						Log(2, " shutter: %s, quickstart: %d, mean=%1.3f\n", length_in_units(myRaspistillSetting.shutter_us, false), myModeMeanSetting.quickstart, cg.lastMean);
+						if (cg.lastMean == -1)
 						{
 							numErrors++;
 							Log(-1, "ERROR: aegCalcMean() returned mean of -1.\n");
@@ -949,7 +948,7 @@ if (lastExposure_us != myRaspistillSetting.shutter_us)
 					}
 
 					if (cg.currentSkipFrames == 0 && ! cg.overlay.externalOverlay && \
-						doOverlay(pRgb, cg, bufTime, lastExposure_us, actualTemp, lastGain, 0, mean, focusMetric) > 0)
+						doOverlay(pRgb, cg, bufTime, 0) > 0)
 					{
 						// if we added anything to overlay, write the file out
 						bool result = cv::imwrite(cg.fullFilename, pRgb, compressionParameters);
@@ -977,15 +976,11 @@ if (lastExposure_us != myRaspistillSetting.shutter_us)
 					}
 
 					char cmd[1100+sizeof(allskyHome)];
-					Log(1, "  > Saving %s image '%s'\n", cg.takingDarkFrames ? "dark" : dayOrNight.c_str(), cg.finalFileName);
+					Log(1, "  > Saving %s image '%s'\n", cg.takeDarkFrames ? "dark" : dayOrNight.c_str(), cg.finalFileName);
 					snprintf(cmd, sizeof(cmd), "%sscripts/saveImage.sh %s '%s'", allskyHome, dayOrNight.c_str(), cg.fullFilename);
 
 					// TODO: in the future the calculation of mean should independent from modeMean. -1 means don't display.
-					float m = (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) ? mean : -1.0;
-					add_variables_to_command(cmd, exposureStartDateTime,
-						lastExposure_us, cg.currentBrightness, m,
-						cg.currentAutoExposure, cg.currentAutoGain, cg.currentAutoAWB, cg.currentWBR, cg.currentWBB,
-						actualTemp, lastGain, cg.currentBin, getFlip(cg.flip), currentBitDepth, focusMetric);
+					add_variables_to_command(cg, cmd, exposureStartDateTime);
 					strcat(cmd, " &");
 					system(cmd);
 				}

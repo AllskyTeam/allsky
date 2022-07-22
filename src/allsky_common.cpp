@@ -343,6 +343,23 @@ char *length_in_units(long us, bool multi)	// microseconds
 	return(length);
 }
 
+// sunwait barfs if it receives an angle with a comma in it,
+// so convert it to a period.
+char const *convertCommaToPeriod(float n, char const *format)
+{
+	static char number[20];
+	char *p = number;
+	snprintf(number, sizeof(number), format, n);
+	while (*p != '\0') {
+		if (*p == ',') {
+			*p = '.';
+			break;
+		}
+		p++;
+	}
+	return(number);
+}
+
 // Calculate if it is day or night
 std::string _day = "DAY", _night = "NIGHT";
 std::string calculateDayOrNight(const char *latitude, const char *longitude, float angle)
@@ -350,7 +367,7 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, flo
 	char sunwaitCommand[128];
 	int d;
 
-	sprintf(sunwaitCommand, "sunwait poll exit angle %.4f %s %s > /dev/null", angle, latitude, longitude);
+	sprintf(sunwaitCommand, "sunwait poll exit angle %s %s %s > /dev/null", convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
 	d = system(sunwaitCommand);	// returns exit code 2 for DAY, 3 for night
 
 	if (WIFEXITED(d))
@@ -376,7 +393,7 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, float 
 {
 	std::string t;
 	char sunwaitCommand[128];	// returns "hh:mm"
-	sprintf(sunwaitCommand, "sunwait list set angle %.4f %s %s", angle, latitude, longitude);
+	sprintf(sunwaitCommand, "sunwait list set angle %s %s %s", convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
 	t = exec(sunwaitCommand);
 
 	t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());

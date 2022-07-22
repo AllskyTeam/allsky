@@ -240,7 +240,7 @@ else
 	fi
 
 	if [ -f "${ALLSKY_HOME}/version" ]; then
-		ALLSKY_VERSION="$(< "${ALLSKY_HOME/version}")"
+		ALLSKY_VERSION="$(< "${ALLSKY_HOME}/version")"
 	else
 		ALLSKY_VERSION="$(grep "Allsky Camera Software" /var/log/allsky.log | tail -1 | sed -e 's/.*Software //' -e 's/ .*//')"
 		[ -z "${ALLSKY_VERSION}" ] && ALLSKY_VERSION="unknown"

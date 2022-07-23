@@ -1,5 +1,19 @@
 [
 {
+"name":"cameraType",
+"default":"ZWO",
+"description":"The type of camera you are using.  'RPi' includes the HD and compatible cameras.<br>You <b>must</b> set and change the camera here, not in config.sh.",
+"label":"Camera Type",
+"type":"select",
+"options": [
+	{"value": "RPi", "label": "RPi"},
+	{"value": "ZWO", "label": "ZWO ASI"}
+],
+"display":1,
+"checkchanges": true,
+"advanced":1
+},
+{
 "name":"",
 "default":"",
 "description":"Daytime settings",
@@ -676,7 +690,7 @@
 {
 "name":"debuglevel",
 "default":1,
-"description":"Debug level, 0 is lowest level.",
+"description":"Debug level. 0 is errors only.",
 "label":"Debug Level",
 "type":"select",
 "options": [

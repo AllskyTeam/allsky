@@ -60,7 +60,7 @@
 	"useDarkFrames" : "0",
 	"localt" : "en_US.UTF-8",
 	"histogrambox" : "500 500 50 50",
-	"debuglevel" : "0",
+	"debuglevel" : "1",
 	"newexposure" : "1",
 	"useLogin" : "1",
 	"alwaysshowadvanced" : "0",

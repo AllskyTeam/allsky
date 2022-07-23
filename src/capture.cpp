@@ -17,7 +17,10 @@
 
 #include "include/allsky_common.h"
 
-config cg;					// holds all configuration variables
+// CG holds all configuration variables.
+// There are only a few cases where it's not passed to a function.
+// When it's passed, functions call it "cg", so use upper case for global version.
+config CG;
 
 #define CAMERA_TYPE			"ZWO"
 #define IS_ZWO
@@ -51,7 +54,6 @@ bool checkMaxErrors(int *, int);
 // but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures with the new method.
 // So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
 timeval exposureStartDateTime;									// date/time an image started
-char allskyHome[100]			= { 0 };
 
 cv::Mat pRgb;
 std::vector<int> compressionParameters;
@@ -169,16 +171,16 @@ void *SaveImgThd(void *para)
 		bool result = false;
 		if (pRgb.data)
 		{
-			char cmd[1100+sizeof(allskyHome)];
-			Log(1, "  > Saving %s image '%s'\n", cg.takeDarkFrames ? "dark" : dayOrNight.c_str(), cg.finalFileName);
-			snprintf(cmd, sizeof(cmd), "%sscripts/saveImage.sh %s '%s'", allskyHome, dayOrNight.c_str(), cg.fullFilename);
-			add_variables_to_command(cg, cmd, exposureStartDateTime);
+			char cmd[1100+sizeof(CG.allskyHome)];
+			Log(1, "  > Saving %s image '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
+			snprintf(cmd, sizeof(cmd), "%sscripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
+			add_variables_to_command(CG, cmd, exposureStartDateTime);
 			strcat(cmd, " &");
 
 			st = cv::getTickCount();
 			try
 			{
-				result = imwrite(cg.fullFilename, pRgb, compressionParameters);
+				result = imwrite(CG.fullFilename, pRgb, compressionParameters);
 			}
 			catch (const cv::Exception& ex)
 			{
@@ -189,7 +191,7 @@ void *SaveImgThd(void *para)
 			if (result)
 				system(cmd);
 			else
-				printf("*** ERROR: Unable to save image '%s'.\n", cg.fullFilename);
+				printf("*** ERROR: Unable to save image '%s'.\n", CG.fullFilename);
 
 		} else {
 			// This can happen if the program is closed before the first picture.
@@ -235,7 +237,7 @@ long roundTo(long n, int roundTo)
 // eg. box size 0x0, box size WxW, box crosses image edge, ... basically
 // anything that would read/write out-of-bounds
 
-int computeHistogram(unsigned char *imageBuffer, long width, long height, ASI_IMG_TYPE imageType, int *histogram)
+int computeHistogram(unsigned char *imageBuffer, config cg, int *histogram)
 {
 	int h, i;
 	unsigned char *buf = imageBuffer;
@@ -246,10 +248,10 @@ int computeHistogram(unsigned char *imageBuffer, long width, long height, ASI_IM
 	}
 
 	// Different image types have a different number of bytes per pixel.
-	width *= currentBpp;
-	int roiX1 = (width * cg.HB.histogramBoxPercentFromLeft) - (cg.HB.currentHistogramBoxSizeX * currentBpp / 2);
+	cg.width *= currentBpp;
+	int roiX1 = (cg.width * cg.HB.histogramBoxPercentFromLeft) - (cg.HB.currentHistogramBoxSizeX * currentBpp / 2);
 	int roiX2 = roiX1 + (currentBpp * cg.HB.currentHistogramBoxSizeX);
-	int roiY1 = (height * cg.HB.histogramBoxPercentFromTop) - (cg.HB.currentHistogramBoxSizeY / 2);
+	int roiY1 = (cg.height * cg.HB.histogramBoxPercentFromTop) - (cg.HB.currentHistogramBoxSizeY / 2);
 	int roiY2 = roiY1 + cg.HB.currentHistogramBoxSizeY;
 
 	// Start off and end on a logical pixel boundries.
@@ -259,13 +261,13 @@ int computeHistogram(unsigned char *imageBuffer, long width, long height, ASI_IM
 	// For RGB24, data for each pixel is stored in 3 consecutive bytes: blue, green, red.
 	// For all image types, each row in the image contains one row of pixels.
 	// currentBpp doesn't apply to rows, just columns.
-	switch (imageType) {
+	switch (cg.imageType) {
 	case IMG_RGB24:
 	case IMG_RAW8:
 	case IMG_Y8:
 		for (int y = roiY1; y < roiY2; y++) {
 			for (int x = roiX1; x < roiX2; x+=currentBpp) {
-				i = (width * y) + x;
+				i = (cg.width * y) + x;
 				int total = 0;
 				for (int z = 0; z < currentBpp; z++)
 				{
@@ -280,7 +282,7 @@ int computeHistogram(unsigned char *imageBuffer, long width, long height, ASI_IM
 	case IMG_RAW16:
 		for (int y = roiY1; y < roiY2; y++) {
 			for (int x = roiX1; x < roiX2; x+=currentBpp) {
-				i = (width * y) + x;
+				i = (cg.width * y) + x;
 				int pixelValue;
 				// This assumes the image data is laid out in big endian format.
 				// We are going to grab the most significant byte
@@ -340,11 +342,7 @@ ASI_BOOL bAuto = ASI_FALSE;		// "auto" flag returned by ASIGetControlValue, when
 ASI_BOOL wasAutoExposure = ASI_FALSE;
 long bufferSize = NOT_SET;
 
-ASI_ERROR_CODE takeOneExposure(
-		config cg,
-		unsigned char *imageBuffer,		// where to put image
-		int *histogram,
-		double *mean)
+ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *histogram)
 {
 	if (imageBuffer == NULL) {
 		return (ASI_ERROR_CODE) -1;
@@ -354,30 +352,30 @@ ASI_ERROR_CODE takeOneExposure(
 	// ZWO recommends timeout = (exposure*2) + 500 ms
 	// After some discussion, we're doing +5000ms to account for delays induced by
 	// USB contention, such as that caused by heavy USB disk IO
-	long timeout = ((cg.currentExposure_us * 2) / US_IN_MS) + 5000;	// timeout is in ms
+	long timeout = ((cg->currentExposure_us * 2) / US_IN_MS) + 5000;	// timeout is in ms
 
-	if (cg.currentAutoExposure && cg.currentExposure_us > cg.currentMaxAutoExposure_us)
+	if (cg->currentAutoExposure && cg->currentExposure_us > cg->currentMaxAutoExposure_us)
 	{
 		// If we call length_in_units() twice in same command line they both return the last value.
 		char x[100];
-		snprintf(x, sizeof(x), "%s", length_in_units(cg.currentExposure_us, true));
-		Log(0, "*** WARNING: cg.currentExposure_us requested [%s] > currentMaxAutoExposure_us [%s]\n", x, length_in_units(cg.currentMaxAutoExposure_us, true));
-		cg.currentExposure_us = cg.currentMaxAutoExposure_us;
+		snprintf(x, sizeof(x), "%s", length_in_units(cg->currentExposure_us, true));
+		Log(0, "*** WARNING: cg->currentExposure_us requested [%s] > currentMaxAutoExposure_us [%s]\n", x, length_in_units(cg->currentMaxAutoExposure_us, true));
+		cg->currentExposure_us = cg->currentMaxAutoExposure_us;
 	}
 
 	// This debug message isn't typcally needed since we already displayed a message about
 	// starting a new exposure, and below we display the result when the exposure is done.
 	Log(4, "  > %s to %s\n",
 		wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Exposure set",
-		length_in_units(cg.currentExposure_us, true));
+		length_in_units(cg->currentExposure_us, true));
 
-	setControl(cg.cameraNumber, ASI_EXPOSURE, cg.currentExposure_us, cg.currentAutoExposure ? ASI_TRUE :ASI_FALSE);
+	setControl(cg->cameraNumber, ASI_EXPOSURE, cg->currentExposure_us, cg->currentAutoExposure ? ASI_TRUE :ASI_FALSE);
 
-	flushBufferedImages(cg.cameraNumber, imageBuffer, bufferSize);
+	flushBufferedImages(cg->cameraNumber, imageBuffer, bufferSize);
 
-	if (cg.videoOffBetweenImages)
+	if (cg->videoOffBetweenImages)
 	{
-		status = ASIStartVideoCapture(cg.cameraNumber);
+		status = ASIStartVideoCapture(cg->cameraNumber);
 	} else {
 		status = ASI_SUCCESS;
 	}
@@ -385,11 +383,11 @@ ASI_ERROR_CODE takeOneExposure(
 	if (status == ASI_SUCCESS) {
 		// Make sure the actual time to take the picture is "close" to the requested time.
 		timeval tStart;
-		if (cg.currentExposure_us > (5 * US_IN_SEC)) tStart = getTimeval();
+		if (cg->currentExposure_us > (5 * US_IN_SEC)) tStart = getTimeval();
 
-		status = ASIGetVideoData(cg.cameraNumber, imageBuffer, bufferSize, timeout);
-		if (cg.videoOffBetweenImages)
-			(void) ASIStopVideoCapture(cg.cameraNumber);
+		status = ASIGetVideoData(cg->cameraNumber, imageBuffer, bufferSize, timeout);
+		if (cg->videoOffBetweenImages)
+			(void) ASIStopVideoCapture(cg->cameraNumber);
 
 		if (status != ASI_SUCCESS)
 		{
@@ -407,58 +405,66 @@ ASI_ERROR_CODE takeOneExposure(
 			// There is too much variance in the overhead of taking a picture to accurately
 			// determine the time to take an image at short exposures, so only check for longer ones.
 			long timeToTakeImage_us = timeval_diff_us(tStart, getTimeval());
-			if (timeToTakeImage_us < cg.currentExposure_us && cg.currentExposure_us > (5 * US_IN_SEC))
+			if (timeToTakeImage_us < cg->currentExposure_us && cg->currentExposure_us > (5 * US_IN_SEC))
 			{
 				// Testing shows there's about this much us overhead, so subtract it to get actual time.
 				const int OVERHEAD = 450000;
 				if (timeToTakeImage_us > OVERHEAD)	// don't subtract if it makes timeToTakeImage_us negative
 					timeToTakeImage_us -= OVERHEAD;
-				long diff_us = timeToTakeImage_us - cg.currentExposure_us;
-				long threshold_us = cg.currentExposure_us * 0.5;		// 50% seems like a good number
+				long diff_us = timeToTakeImage_us - cg->currentExposure_us;
+				long threshold_us = cg->currentExposure_us * 0.5;		// 50% seems like a good number
 				if (abs(diff_us) > threshold_us)
 				{
 					Log(1, "*** WARNING: time to take image (%s) ", length_in_units(timeToTakeImage_us, true));
-					Log(1, "differs from requested exposure time (%s) ", length_in_units(cg.currentExposure_us, true));
+					Log(1, "differs from requested exposure time (%s) ", length_in_units(cg->currentExposure_us, true));
 					Log(1, "by %s, ", length_in_units(diff_us, true));
 					Log(1, "threshold=%'ld\n", length_in_units(threshold_us, true));
 				}
 			}
 
 			numErrors = 0;
-			ASIGetControlValue(cg.cameraNumber, ASI_GAIN, (long *)&cg.lastGain, &bAuto);
+			long l;
+			ASIGetControlValue(cg->cameraNumber, ASI_GAIN, &l, &bAuto);
+			cg->lastGain = (double) l;
+
 			debug_text[0] = '\0';
+
 #ifdef USE_HISTOGRAM
-			if (histogram != NULL && mean != NULL)
+			if (histogram != NULL && cg->lastMean != NOT_SET)
 			{
-				*mean = (double)computeHistogram(imageBuffer, cg.width, cg.height, (ASI_IMG_TYPE) cg.imageType, histogram);
-				sprintf(debug_text, " @ mean %d", (int)*mean);
-				if (cg.currentAutoGain && ! cg.takeDarkFrames)
+				cg->lastMean = (double)computeHistogram(imageBuffer, *cg, histogram);
+				sprintf(debug_text, " @ mean %d", (int) cg->lastMean);
+				if (cg->currentAutoGain && ! cg->takeDarkFrames)
 				{
 					char *p = debug_text + strlen(debug_text);
-					sprintf(p, ", auto gain %ld", (long) cg.lastGain);
+					sprintf(p, ", auto gain %ld", (long) cg->lastGain);
 				}
 			}
 #endif
-			cg.lastExposure_us = cg.currentExposure_us;
+			cg->lastExposure_us = cg->currentExposure_us;
 			// Per ZWO, when in manual-exposure mode, the returned exposure length should always
 			// be equal to the requested length; in fact, "there's no need to call ASIGetControlValue()".
 			// When in auto-exposure mode, the returned exposure length is what the driver thinks the
 			// next exposure should be, and will eventually converge on the correct exposure.
-			ASIGetControlValue(cg.cameraNumber, ASI_EXPOSURE, &reportedExposure_us, &wasAutoExposure);
+			ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &reportedExposure_us, &wasAutoExposure);
 			Log(3, "  > Got image%s.  Returned exposure: %s\n", debug_text, length_in_units(reportedExposure_us, true));
 
 			// If this was a manual exposure, make sure it took the correct exposure.
 			// Per ZWO, this should never happen.
-			if (wasAutoExposure == ASI_FALSE && cg.currentExposure_us != reportedExposure_us)
+			if (wasAutoExposure == ASI_FALSE && cg->currentExposure_us != reportedExposure_us)
 			{
-				Log(0, "  > WARNING: not correct exposure (requested: %'ld us, reported: %'ld us, diff: %'ld)\n", cg.currentExposure_us, reportedExposure_us, reportedExposure_us - cg.currentExposure_us);
+				Log(0, "  > WARNING: not correct exposure (requested: %'ld us, reported: %'ld us, diff: %'ld)\n", cg->currentExposure_us, reportedExposure_us, reportedExposure_us - cg->currentExposure_us);
 			}
-			ASIGetControlValue(cg.cameraNumber, ASI_TEMPERATURE, &cg.lastSensorTemp, &bAuto);
-			if (cg.isColorCamera)
+			ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &cg->lastSensorTemp, &bAuto);
+			if (cg->isColorCamera)
 			{
-				ASIGetControlValue(cg.cameraNumber, ASI_WB_R, (long *)&cg.lastWBR, &bAuto);
-				ASIGetControlValue(cg.cameraNumber, ASI_WB_B, (long *)&cg.lastWBB, &bAuto);
+				ASIGetControlValue(cg->cameraNumber, ASI_WB_R, &l, &bAuto);
+				cg->lastWBR = (double) l;
+				ASIGetControlValue(cg->cameraNumber, ASI_WB_B, &l, &bAuto);
+				cg->lastWBB = (double) l;
 			}
+
+			ASIGetControlValue(cg->cameraNumber, ASI_BANDWIDTHOVERLOAD, &cg->lastAsiBandwidth, &wasAutoExposure);
 		}
 	}
 	else {
@@ -478,10 +484,10 @@ int numGainChanges = 0;		// This is reset at every day/night and night/day trans
 // Reset the gain transition variables for the first transition image.
 // This is called when the program first starts and at the beginning of every day/night transition.
 // "dayOrNight" is the new value, e.g., if we just transitioned from day to night, it's "NIGHT".
-bool resetGainTransitionVariables(int dayGain, int nightGain)
+bool resetGainTransitionVariables(config cg)
 {
 	// Many of the "xxx" messages below will go away once we're sure gain transition works.
-	Log(5, "xxx resetGainTransitionVariables(%d, %d) called at %s\n", dayGain, nightGain, dayOrNight.c_str());
+	Log(5, "xxx resetGainTransitionVariables(%d, %d) called at %s\n", cg.dayGain, cg.nightGain, dayOrNight.c_str());
 
 	if (adjustGain == false)
 	{
@@ -524,7 +530,7 @@ bool resetGainTransitionVariables(int dayGain, int nightGain)
 		return(false);
 	}
 
-	totalAdjustGain = nightGain - dayGain;
+	totalAdjustGain = cg.nightGain - cg.dayGain;
 	perImageAdjustGain = ceil(totalAdjustGain / gainTransitionImages);	// spread evenly
 	if (perImageAdjustGain == 0)
 		perImageAdjustGain = totalAdjustGain;
@@ -550,7 +556,7 @@ bool resetGainTransitionVariables(int dayGain, int nightGain)
 // transition.
 // Try to mitigate that by changing the gain over several images at each transition.
 
-int determineGainChange(int dayGain, int nightGain)
+int determineGainChange(config cg)
 {
 	if (numGainChanges > gainTransitionImages || totalAdjustGain == 0)
 	{
@@ -613,16 +619,9 @@ bool checkMaxErrors(int *e, int maxErrors)
 
 int main(int argc, char *argv[])
 {
-	char * a = getenv("ALLSKY_HOME");
+	char * a = getenv("ALLSKY_HOME");		// This must come before anything else
 	if (a != NULL)
-		snprintf(allskyHome, sizeof(allskyHome)-1, "%s/", a);
-
-	setDefaults(&cg, ctZWO);
-
-	cg.tty = isatty(fileno(stdout)) ? true : false;
-	signal(SIGINT, IntHandle);
-	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
-	signal(SIGHUP, sig);		// xxxxxxxxxx TODO: Re-read settings (we currently just restart).
+		snprintf(CG.allskyHome, sizeof(CG.allskyHome)-1, "%s/", a);
 
 	pthread_mutex_init(&mtxSaveImg, 0);
 	pthread_cond_init(&condStartSave, 0);
@@ -661,116 +660,57 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 	setlinebuf(stdout);					// Line buffer output so entries appear in the log immediately.
 
-	if (! getCommandLineArguments(&cg, argc, argv))
+	CG.ct = ctZWO;
+	if (! getCommandLineArguments(&CG, argc, argv))
 	{
 		// getCommandLineArguents outputs an error message.
 		exit(EXIT_ERROR_STOP);
 	}
-	cg.ASIversion = ASIGetSDKVersion();
 
-	if (! cg.saveCC && ! cg.help)
+	if (! CG.saveCC && ! CG.help)
 	{
-		displayHeader(cg);
+		displayHeader(CG);
 	}
 
-	if (setlocale(LC_NUMERIC, cg.locale) == NULL)
-		Log(-1, "*** WARNING: Could not set locale to %s ***\n", cg.locale);
+	if (setlocale(LC_NUMERIC, CG.locale) == NULL)
+		Log(-1, "*** WARNING: Could not set locale to %s ***\n", CG.locale);
 
-	if (cg.help)
+	if (CG.help)
 	{
-		displayHelp(cg);
+		displayHelp(CG);
 		closeUp(EXIT_OK);
 	}
 
-	// Do argument error checking if we're not going to exit soon.
-	// Some checks are done lower in the code, after we processed some values.
-const int minGain = 0;
-	if (! cg.saveCC)
+	processConnectedCameras();	// exits on error
+
+	ASI_CAMERA_INFO ASICameraInfo;
+	asiRetCode = ASIOpenCamera(CG.cameraNumber);
+	if (asiRetCode != ASI_SUCCESS)
 	{
-		// xxxx TODO: NO_MAX_VALUE will be replaced by actual camera-specific values
-
-		// If an exposure value, which was entered on the command-line in MS, is out of range,
-		// we want to specify the valid range in MS, not US which we use internally.
-		validateFloat(&cg.temp_dayExposure_ms,
-			cg.cameraMinExposure_us/US_IN_MS,
-			(cg.dayAutoExposure ? cg.dayMaxAutoExposure_us : cg.cameraMaxExposure_us) / US_IN_MS,
-			"Daytime Exposure", true);
-		if (cg.dayAutoExposure)
-		{
-			validateFloat(&cg.temp_dayMaxAutoExposure_ms,
-				cg.cameraMinExposure_us/US_IN_MS,
-				cg.cameraMaxExposure_us,
-				"Daytime Max Auto-Exposure", true);
-		}
-		validateFloat(&cg.temp_nightExposure_ms,
-			cg.cameraMinExposure_us/US_IN_MS,
-			(cg.nightAutoExposure ? cg.nightMaxAutoExposure_us : cg.cameraMaxExposure_us) / US_IN_MS,
-			"Nighttime Exposure vs. camera limits", true);
-		if (cg.nightAutoExposure)
-		{
-			validateFloat(&cg.temp_nightMaxAutoExposure_ms,
-				cg.cameraMinExposure_us/US_IN_MS,
-				cg.cameraMaxExposure_us/US_IN_MS,
-				"Nighttime Max Auto-Exposure", true);
-		}
-
-		// The user entered these in MS on the command line, but we need US, so convert.
-		cg.dayExposure_us = cg.temp_dayExposure_ms * US_IN_MS;
-		cg.dayMaxAutoExposure_us = cg.temp_dayMaxAutoExposure_ms * US_IN_MS;
-		cg.nightExposure_us = cg.temp_nightExposure_ms * US_IN_MS;
-		cg.nightMaxAutoExposure_us = cg.temp_nightMaxAutoExposure_ms * US_IN_MS;
-
-		validateLong(&cg.dayBrightness, 0, 100, "Daytime Brightness", true);
-		validateLong(&cg.dayDelay_ms, 10, NO_MAX_VALUE, "Daytime Delay", false);
-		validateFloat(&cg.dayMaxAutoGain, minGain, NO_MAX_VALUE, "Daytime Max Auto-Gain", true);
-		validateFloat(&cg.dayGain, minGain, cg.dayAutoGain ? cg.dayMaxAutoGain : NO_MAX_VALUE, "Daytime Gain", true);
-		validateLong(&cg.dayBin, 1, NO_MAX_VALUE, "Daytime Binning", false);
-		validateFloat(&cg.dayWBR, 0, NO_MAX_VALUE, "Daytime Red Balance", true);
-		validateFloat(&cg.dayWBB, 0, NO_MAX_VALUE, "Daytime Blue Balance", true);
-		if (cg.dayAutoExposure)	// SkipFrames only applies if auto-exposure is on
-			validateLong(&cg.daySkipFrames, 0, 50, "Daytime Skip Frames", true);
-		else
-			cg.daySkipFrames = 0;
-
-		validateLong(&cg.nightBrightness, 0, 100, "Nighttime Brightness", true);
-		validateLong(&cg.nightDelay_ms, 10, NO_MAX_VALUE, "Nighttime Delay", false);
-		validateFloat(&cg.nightMaxAutoGain, minGain, NO_MAX_VALUE, "Nighttime Max Auto-Gain", true);
-		validateFloat(&cg.nightGain, minGain, cg.nightAutoGain ? cg.nightMaxAutoGain : NO_MAX_VALUE, "Nighttime Gain", true);
-		validateLong(&cg.nightBin, 1, NO_MAX_VALUE, "Nighttime Binning", false);
-		validateFloat(&cg.nightWBR, 0, NO_MAX_VALUE, "Nighttime Red Balance", true);
-		validateFloat(&cg.nightWBB, 0, NO_MAX_VALUE, "Nighttime Blue Balance", true);
-		if (cg.nightAutoExposure)
-			validateLong(&cg.nightSkipFrames, 0, 50, "Nighttime Skip Frames", true);
-		else
-			cg.nightSkipFrames = 0;
-
-		validateLong(&cg.gamma, 0, NO_MAX_VALUE, "Gamma", true);
-		validateLong(&cg.offset, 0, NO_MAX_VALUE, "Offset", true);
-		validateLong(&cg.aggression, 1, 100, "Aggression", true);
-		validateLong(&cg.dayTargetTemp, -50, NO_MAX_VALUE, "Target Sensor Temperature", true);
-		validateLong(&cg.nightTargetTemp, -50, NO_MAX_VALUE, "Target Sensor Temperature", true);
-		validateLong(&cg.gainTransitionTime, 0, NO_MAX_VALUE, "Gain Transition Time", true);
-		// user specifies minutes but we want seconds.
-		cg.gainTransitionTime *= 60;
-		if (cg.imageType != AUTO_IMAGE_TYPE)
-			validateLong(&cg.imageType, 0, ASI_IMG_END, "Image Type", false);
-		validateLong(&cg.asiBandwidth, cg.minAsiBandwidth, cg.maxAsiBandwidth, "USB Bandwidth", true);
-		validateLong(&cg.flip, 0, 3, "Flip", false);
-		validateLong(&cg.debugLevel, 0, 5, "Debug Level", true);
-
-		validateLong(&cg.overlay.extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);
-		validateLong(&cg.overlay.fontnumber, 0, 8-1, "Font Name", true);
-		validateLong(&cg.overlay.linenumber, 0, sizeof(cg.overlay.linetype)-1, "Font Smoothness", true);
-
-		if (cg.overlay.fc != NULL && sscanf(cg.overlay.fc, "%d %d %d",
-				&cg.overlay.fontcolor[0], &cg.overlay.fontcolor[1], &cg.overlay.fontcolor[2]) != 3)
-			Log(-1, "%s*** WARNING: Not enough font color parameters: '%s'%s\n", c(KRED), cg.overlay.fc, c(KNRM));
-		if (cg.overlay.sfc != NULL && sscanf(cg.overlay.sfc, "%d %d %d",
-				&cg.overlay.smallFontcolor[0], &cg.overlay.smallFontcolor[1], &cg.overlay.smallFontcolor[2]) != 3)
-			Log(-1, "%s*** WARNING: Not enough small font color parameters: '%s'%s\n", c(KRED), cg.overlay.sfc, c(KNRM));
+		Log(0, "*** ERROR opening camera, check that you have root permissions! (%s)\n", getRetCode(asiRetCode));
+		closeUp(EXIT_NO_CAMERA);
 	}
 
-	char const *ext = checkForValidExtension(cg.fileName, cg.imageType);
+	asiRetCode = ASIGetCameraProperty(&ASICameraInfo, CG.cameraNumber);
+	if (asiRetCode != ASI_SUCCESS)
+	{
+		Log(0, "ERROR: ASIGetCamerProperty() returned: %s\n", getRetCode(asiRetCode));
+		exit(EXIT_ERROR_STOP);
+	}
+	asiRetCode = ASIGetNumOfControls(CG.cameraNumber, &iNumOfCtrl);
+	if (asiRetCode != ASI_SUCCESS)
+	{
+		Log(0, "ERROR: ASIGetNumOfControls() returned: %s\n", getRetCode(asiRetCode));
+		exit(EXIT_ERROR_STOP);
+	}
+	CG.ASIversion = ASIGetSDKVersion();
+
+
+	// Do argument error checking if we're not going to exit soon.
+	if (! CG.saveCC && ! setDefaultsAndValidateSettings(&CG, ASICameraInfo))
+		closeUp(EXIT_ERROR_STOP);
+
+	char const *ext = checkForValidExtension(CG.fileName, CG.imageType);
 	if (ext == NULL)
 	{
 		// checkForValidExtension() displayed the error message.
@@ -780,76 +720,62 @@ const int minGain = 0;
 // TODO: make common
 	if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
 	{
-		cg.imageExt = "jpg";
+		CG.imageExt = "jpg";
 		compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
 		// want dark frames to be at highest quality
-		if (cg.takeDarkFrames)
+		if (CG.takeDarkFrames)
 		{
-			cg.quality = 100;
+			CG.quality = 100;
 		}
-		else if (cg.quality == NOT_SET)
+		else if (CG.quality == NOT_SET)
 		{
-			cg.quality = cg.qualityJPG;
+			CG.quality = CG.qualityJPG;
 		}
 		else
 		{
-			validateLong(&cg.quality, 0, 100, "JPG Quality", true);
+			validateLong(&CG.quality, 0, 100, "JPG Quality", true);
 		}
 	}
 	else if (strcasecmp(ext, "png") == 0)
 	{
-		cg.imageExt = "png";
+		CG.imageExt = "png";
 		compressionParameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
 		// png is lossless so "quality" is really just the amount of compression.
-		if (cg.takeDarkFrames)
+		if (CG.takeDarkFrames)
 		{
-			cg.quality = 9;
+			CG.quality = 9;
 		}
-		else if (cg.quality == NOT_SET)
+		else if (CG.quality == NOT_SET)
 		{
-			cg.quality = cg.qualityPNG;
+			CG.quality = CG.qualityPNG;
 		}
 		else
 		{
-			validateLong(&cg.quality, 0, 9, "PNG Quality/Compression", true);
+			validateLong(&CG.quality, 0, 9, "PNG Quality/Compression", true);
 		}
 	}
-	compressionParameters.push_back(cg.quality);
+	compressionParameters.push_back(CG.quality);
 
 // TODO: make common.
 	// Get just the name of the file, without any directories or the extension.
-	if (cg.takeDarkFrames)
+	if (CG.takeDarkFrames)
 	{
 		// To avoid overwriting the optional notification image with the dark image,
 		// during dark frames we use a different file name.
 		static char darkFilename[20];
-		sprintf(darkFilename, "dark.%s", cg.imageExt);
-		cg.fileName = darkFilename;
-		strncat(cg.finalFileName, cg.fileName, sizeof(cg.finalFileName)-1);
+		sprintf(darkFilename, "dark.%s", CG.imageExt);
+		CG.fileName = darkFilename;
+		strncat(CG.finalFileName, CG.fileName, sizeof(CG.finalFileName)-1);
 	}
 	else
 	{
-		char const *slash = strrchr(cg.fileName, '/');
+		char const *slash = strrchr(CG.fileName, '/');
 		if (slash == NULL)
-			strncat(cg.fileNameOnly, cg.fileName, sizeof(cg.fileNameOnly)-1);
+			strncat(CG.fileNameOnly, CG.fileName, sizeof(CG.fileNameOnly)-1);
 		else
-			strncat(cg.fileNameOnly, slash + 1, sizeof(cg.fileNameOnly)-1);
-		char *dot = strrchr(cg.fileNameOnly, '.');	// we know there's an extension
+			strncat(CG.fileNameOnly, slash + 1, sizeof(CG.fileNameOnly)-1);
+		char *dot = strrchr(CG.fileNameOnly, '.');	// we know there's an extension
 		*dot = '\0';
-	}
-
-	processConnectedCameras();	// exits on error
-
-	ASI_CAMERA_INFO ASICameraInfo;
-	ASIGetCameraProperty(&ASICameraInfo, cg.cameraNumber);
-	cg.isColorCamera = ASICameraInfo.IsColorCam == ASI_TRUE ? true : false;
-	cg.isCooledCamera = ASICameraInfo.IsCoolerCam == ASI_TRUE ? true : false;
-
-	asiRetCode = ASIOpenCamera(cg.cameraNumber);
-	if (asiRetCode != ASI_SUCCESS)
-	{
-		printf("*** ERROR opening camera, check that you have root permissions! (%s)\n", getRetCode(asiRetCode));
-		closeUp(EXIT_NO_CAMERA);				// Can't do anything so might as well exit.
 	}
 
 	int iMaxWidth, iMaxHeight;
@@ -857,91 +783,93 @@ const int minGain = 0;
 	iMaxWidth  = ASICameraInfo.MaxWidth;
 	iMaxHeight = ASICameraInfo.MaxHeight;
 	pixelSize  = ASICameraInfo.PixelSize;
-	if (cg.width == 0 || cg.height == 0)
+	if (CG.width == 0 || CG.height == 0)
 	{
-		cg.width  = iMaxWidth;
-		cg.height = iMaxHeight;
+		CG.width  = iMaxWidth;
+		CG.height = iMaxHeight;
 	}
 	else
 	{
-		validateLong(&cg.width, 0, iMaxWidth, "Width", true);
-		validateLong(&cg.height, 0, iMaxHeight, "Height", true);
+		validateLong(&CG.width, 0, iMaxWidth, "Width", true);
+		validateLong(&CG.height, 0, iMaxHeight, "Height", true);
 	}
 
-	long originalWidth  = cg.width;
-	long originalHeight = cg.height;
+	long originalWidth  = CG.width;
+	long originalHeight = CG.height;
 	// Limit these to a reasonable value based on the size of the sensor.
-	validateLong(&cg.overlay.iTextLineHeight, 0, (long)(iMaxHeight / 2), "Line Height", true);
-	validateLong(&cg.overlay.iTextX, 0, (long)iMaxWidth - 10, "Text X", true);
-	validateLong(&cg.overlay.iTextY, 0, (long)iMaxHeight - 10, "Text Y", true);
-	validateFloat(&cg.overlay.fontsize, 0.1, iMaxHeight / 2, "Font Size", true);
-	validateLong(&cg.overlay.linewidth, 0, (long)(iMaxWidth / 2), "Font Weight", true);
+	validateLong(&CG.overlay.iTextLineHeight, 0, (long)(iMaxHeight / 2), "Line Height", true);
+	validateLong(&CG.overlay.iTextX, 0, (long)iMaxWidth - 10, "Text X", true);
+	validateLong(&CG.overlay.iTextY, 0, (long)iMaxHeight - 10, "Text Y", true);
+	validateFloat(&CG.overlay.fontsize, 0.1, iMaxHeight / 2, "Font Size", true);
+	validateLong(&CG.overlay.linewidth, 0, (long)(iMaxWidth / 2), "Font Weight", true);
 
-	ASIGetNumOfControls(cg.cameraNumber, &iNumOfCtrl);
-
-	if (cg.saveCC)
+	if (CG.saveCC)
 	{
-		saveCameraInfo(ASICameraInfo, cg.CC_saveDir, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
+		saveCameraInfo(ASICameraInfo, CG.CC_saveDir, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
 		closeUp(EXIT_OK);
 	}
 
-	outputCameraInfo(ASICameraInfo, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
+	outputCameraInfo(ASICameraInfo, CG, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
 	// checkExposureValues() must come after outputCameraInfo().
-	(void) checkExposureValues(&cg);
+	(void) checkExposureValues(&CG);
 
 #ifdef USE_HISTOGRAM
 	// The histogram box needs to fit on the image.
 	// If we're binning we'll decrease the size of the box accordingly.
 	bool ok = true;
-	if (cg.HB.sArgs != NULL)
+	if (CG.HB.sArgs[0] != '\0')
 	{
-		if (sscanf(cg.HB.sArgs, "%d %d %f %f", &cg.HB.histogramBoxSizeX, &cg.HB.histogramBoxSizeY, &cg.HB.histogramBoxPercentFromLeft, &cg.HB.histogramBoxPercentFromTop) != 4)
+		if (sscanf(CG.HB.sArgs, "%d %d %f %f", &CG.HB.histogramBoxSizeX, &CG.HB.histogramBoxSizeY, &CG.HB.histogramBoxPercentFromLeft, &CG.HB.histogramBoxPercentFromTop) != 4)
 		{
-			Log(-1, "%s*** ERROR: Not enough histogram box parameters: '%s'%s\n", c(KRED), cg.HB.sArgs, c(KNRM));
+			Log(0, "%s*** ERROR: Not enough histogram box parameters should be 4: '%s'%s\n", c(KRED), CG.HB.sArgs, c(KNRM));
 			ok = false;
 		} else {
-			// scale user-input 0-100 to 0.0-1.0
-			cg.HB.histogramBoxPercentFromLeft /= 100;
-			cg.HB.histogramBoxPercentFromTop /= 100;
-		}
-	}
-	else
-	{
-		if (cg.HB.histogramBoxSizeX < 1 || cg.HB.histogramBoxSizeY < 1)
-		{
-			Log(-1, "%s*** ERROR: Histogram box size must be > 0; you entered X=%d, Y=%d%s\n",
-				c(KRED), cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY, c(KNRM));
-			ok = false;
-		}
-		if (isnan(cg.HB.histogramBoxPercentFromLeft) || isnan(cg.HB.histogramBoxPercentFromTop) || 
-			cg.HB.histogramBoxPercentFromLeft < 0.0 || cg.HB.histogramBoxPercentFromTop < 0.0)
-		{
-			Log(-1, "%s*** ERROR: Bad values for histogram percents; you entered X=%.0f%%, Y=%.0f%%%s\n",
-				c(KRED), (cg.HB.histogramBoxPercentFromLeft*100.0), (cg.HB.histogramBoxPercentFromTop*100.0), c(KNRM));
-			ok = false;
-		}
-		else
-		{
-			cg.HB.centerX = cg.width * cg.HB.histogramBoxPercentFromLeft;
-			cg.HB.centerY = cg.height * cg.HB.histogramBoxPercentFromTop;
-			cg.HB.leftOfBox = cg.HB.centerX - (cg.HB.histogramBoxSizeX / 2);
-			cg.HB.rightOfBox = cg.HB.centerX + (cg.HB.histogramBoxSizeX / 2);
-			cg.HB.topOfBox = cg.HB.centerY - (cg.HB.histogramBoxSizeY / 2);
-			cg.HB.bottomOfBox = cg.HB.centerY + (cg.HB.histogramBoxSizeY / 2);
-	
-			if (cg.HB.leftOfBox < 0 || cg.HB.rightOfBox >= cg.width || cg.HB.topOfBox < 0 || cg.HB.bottomOfBox >= cg.height)
+			if (CG.HB.histogramBoxSizeX < 1 || CG.HB.histogramBoxSizeY < 1)
 			{
-				Log(-1, "%s*** ERROR: Histogram box location must fit on image; upper left of box is %dx%d, lower right %dx%d%s\n", c(KRED), cg.HB.leftOfBox, cg.HB.topOfBox, cg.HB.rightOfBox, cg.HB.bottomOfBox, c(KNRM));
+				Log(0, "%s*** ERROR: Histogram box size must be > 0; you entered X=%d, Y=%d%s\n",
+					c(KRED), CG.HB.histogramBoxSizeX, CG.HB.histogramBoxSizeY, c(KNRM));
 				ok = false;
 			}
+			if (CG.HB.histogramBoxPercentFromLeft < 0.0 || CG.HB.histogramBoxPercentFromTop < 0.0)
+			{
+				Log(0, "%s*** ERROR: Histogram box percents must be > 0; you entered X=%.0f%%, Y=%.0f%%%s\n",
+					c(KRED), (CG.HB.histogramBoxPercentFromLeft*100.0), (CG.HB.histogramBoxPercentFromTop*100.0), c(KNRM));
+				ok = false;
+			}
+			else
+			{
+				// scale user-input 0-100 to 0.0-1.0
+				CG.HB.histogramBoxPercentFromLeft /= 100;
+				CG.HB.histogramBoxPercentFromTop /= 100;
+
+				// Now check if the box fits the image.
+				CG.HB.centerX = CG.width * CG.HB.histogramBoxPercentFromLeft;
+				CG.HB.centerY = CG.height * CG.HB.histogramBoxPercentFromTop;
+				CG.HB.leftOfBox = CG.HB.centerX - (CG.HB.histogramBoxSizeX / 2);
+				CG.HB.rightOfBox = CG.HB.centerX + (CG.HB.histogramBoxSizeX / 2);
+				CG.HB.topOfBox = CG.HB.centerY - (CG.HB.histogramBoxSizeY / 2);
+				CG.HB.bottomOfBox = CG.HB.centerY + (CG.HB.histogramBoxSizeY / 2);
+	
+				if (CG.HB.leftOfBox < 0 || CG.HB.rightOfBox  >= CG.width ||
+				    CG.HB.topOfBox  < 0 || CG.HB.bottomOfBox >= CG.height)
+				{
+					Log(0, "%s*** ERROR: Histogram box location must fit on image; upper left of box is %dx%d, lower right %dx%d%s\n", c(KRED), CG.HB.leftOfBox, CG.HB.topOfBox, CG.HB.rightOfBox, CG.HB.bottomOfBox, c(KNRM));
+					ok = false;
+				}	// else everything is hunky dory
+			}
 		}
+	} else {
+		Log(0, "%s*** ERROR: No values specified for histogram box%s\n", c(KRED), c(KNRM));
+		ok = false;
 	}
 
 	if (! ok)
+	{
 		closeUp(EXIT_ERROR_STOP);	// force the user to fix it
+	}
 #endif
 
-	asiRetCode = ASIInitCamera(cg.cameraNumber);
+	asiRetCode = ASIInitCamera(CG.cameraNumber);
 	if (asiRetCode != ASI_SUCCESS)
 	{
 		printf("*** ERROR: Unable to initialise camera: %s\n", getRetCode(asiRetCode));
@@ -949,69 +877,69 @@ const int minGain = 0;
 	}
 
 	// Handle "auto" imageType.
-	if (cg.imageType == AUTO_IMAGE_TYPE)
+	if (CG.imageType == AUTO_IMAGE_TYPE)
 	{
 		// If it's a color camera, create color pictures.
 		// If it's a mono camera use RAW16 if the image file is a .png, otherwise use RAW8.
 		// There is no good way to handle Y8 automatically so it has to be set manually.
-		if (cg.isColorCamera)
-			cg.imageType = IMG_RGB24;
-		else if (strcmp(cg.imageExt, "png") == 0)
-			cg.imageType = IMG_RAW16;
+		if (CG.isColorCamera)
+			CG.imageType = IMG_RGB24;
+		else if (strcmp(CG.imageExt, "png") == 0)
+			CG.imageType = IMG_RAW16;
 		else // jpg
-			cg.imageType = IMG_RAW8;
+			CG.imageType = IMG_RAW8;
 	}
 
-	if (cg.imageType == IMG_RAW16)
+	if (CG.imageType == IMG_RAW16)
 	{
-		cg.sType = "RAW16";
+		CG.sType = "RAW16";
 		currentBpp = 2;
-		cg.currentBitDepth = 16;
+		CG.currentBitDepth = 16;
 	}
-	else if (cg.imageType == IMG_RGB24)
+	else if (CG.imageType == IMG_RGB24)
 	{
-		cg.sType = "RGB24";
+		CG.sType = "RGB24";
 		currentBpp = 3;
-		cg.currentBitDepth = 8;
+		CG.currentBitDepth = 8;
 	}
-	else if (cg.imageType == IMG_RAW8)
+	else if (CG.imageType == IMG_RAW8)
 	{
 		// Color cameras should use Y8 instead of RAW8. Y8 is the mono mode for color cameras.
-		if (cg.isColorCamera)
+		if (CG.isColorCamera)
 		{
-			cg.imageType = IMG_Y8;
-			cg.sType = "Y8 (not RAW8 for color cameras)";
+			CG.imageType = IMG_Y8;
+			CG.sType = "Y8 (not RAW8 for color cameras)";
 		}
 		else
 		{
-			cg.sType = "RAW8";
+			CG.sType = "RAW8";
 		}
 		currentBpp = 1;
-		cg.currentBitDepth = 8;
+		CG.currentBitDepth = 8;
 	}
-	else if (cg.imageType == IMG_Y8)
+	else if (CG.imageType == IMG_Y8)
 	{
-		cg.sType = "Y8";
+		CG.sType = "Y8";
 		currentBpp = 1;
-		cg.currentBitDepth = 8;
+		CG.currentBitDepth = 8;
 	}
 	else
 	{
-		Log(0, "*** ERROR: Unknown Image Type: %d\n", cg.imageType);
+		Log(0, "*** ERROR: Unknown Image Type: %d\n", CG.imageType);
 		closeUp(EXIT_ERROR_STOP);
 	}
 
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
 
-	displaySettings(cg);
+	displaySettings(CG);
 
 	// These configurations apply to both day and night.
 	// Other calls to setControl() are done after we know if we're in daytime or nighttime.
-	setControl(cg.cameraNumber, ASI_BANDWIDTHOVERLOAD, cg.asiBandwidth, cg.asiAutoBandwidth ? ASI_TRUE : ASI_FALSE);
-	setControl(cg.cameraNumber, ASI_GAMMA, cg.gamma, ASI_FALSE);
-	setControl(cg.cameraNumber, ASI_OFFSET, cg.offset, ASI_FALSE);
-	setControl(cg.cameraNumber, ASI_FLIP, cg.flip, ASI_FALSE);
+	setControl(CG.cameraNumber, ASI_BANDWIDTHOVERLOAD, CG.asiBandwidth, CG.asiAutoBandwidth ? ASI_TRUE : ASI_FALSE);
+	setControl(CG.cameraNumber, ASI_GAMMA, CG.gamma, ASI_FALSE);
+	setControl(CG.cameraNumber, ASI_OFFSET, CG.offset, ASI_FALSE);
+	setControl(CG.cameraNumber, ASI_FLIP, CG.flip, ASI_FALSE);
 
 	if (! bSaveRun && pthread_create(&hthdSave, 0, SaveImgThd, 0) == 0)
 	{
@@ -1019,10 +947,10 @@ const int minGain = 0;
 	}
 
 	// Initialization
-	int originalITextX		= cg.overlay.iTextX;
-	int originalITextY		= cg.overlay.iTextY;
-	int originalFontsize	= cg.overlay.fontsize;
-	int originalLinewidth	= cg.overlay.linewidth;
+	int originalITextX		= CG.overlay.iTextX;
+	int originalITextY		= CG.overlay.iTextY;
+	int originalFontsize	= CG.overlay.fontsize;
+	int originalLinewidth	= CG.overlay.linewidth;
 	// Have we displayed "not taking picture during day" message, if applicable?
 	bool displayedNoDaytimeMsg	= false;
 	int gainChange				= 0;		// how much to change gain up or down
@@ -1033,7 +961,7 @@ const int minGain = 0;
 	// so don't transition.
 	// gainTransitionTime of 0 means don't adjust gain.
 	// No need to adjust gain if day and night gain are the same.
-	if (cg.dayAutoGain || cg.nightAutoGain || cg.gainTransitionTime == 0 || cg.dayGain == cg.nightGain || cg.takeDarkFrames)
+	if (CG.dayAutoGain || CG.nightAutoGain || CG.gainTransitionTime == 0 || CG.dayGain == CG.nightGain || CG.takeDarkFrames)
 	{
 		adjustGain = false;
 		Log(3, "Will NOT adjust gain at transitions\n");
@@ -1044,18 +972,18 @@ const int minGain = 0;
 		Log(3, "Will adjust gain at transitions\n");
 	}
 
-	if (cg.overlay.ImgExtraText[0] != '\0' && cg.overlay.extraFileAge > 0) {
+	if (CG.overlay.ImgExtraText[0] != '\0' && CG.overlay.extraFileAge > 0) {
 		Log(3, "Extra Text File Age Disabled So Displaying Anyway\n");
 	}
 
-	if (cg.tty)
+	if (CG.tty)
 		printf("*** Press Ctrl+C to stop ***\n\n");
 
 	// Start taking pictures
 
-	if (! cg.videoOffBetweenImages)
+	if (! CG.videoOffBetweenImages)
 	{
-		asiRetCode = ASIStartVideoCapture(cg.cameraNumber);
+		asiRetCode = ASIStartVideoCapture(CG.cameraNumber);
 		if (asiRetCode != ASI_SUCCESS)
 		{
 			Log(0, "*** ERROR: Unable to start video capture: %s\n", getRetCode(asiRetCode));
@@ -1066,45 +994,45 @@ const int minGain = 0;
 	while (bMain)
 	{
 		// Find out if it is currently DAY or NIGHT
-		dayOrNight = calculateDayOrNight(cg.latitude, cg.longitude, cg.angle);
+		dayOrNight = calculateDayOrNight(CG.latitude, CG.longitude, CG.angle);
 		std::string lastDayOrNight = dayOrNight;
 
-		if (! cg.takeDarkFrames)
-			currentAdjustGain = resetGainTransitionVariables(cg.dayGain, cg.nightGain);
+		if (! CG.takeDarkFrames)
+			currentAdjustGain = resetGainTransitionVariables(CG);
 
-		if (cg.takeDarkFrames)
+		if (CG.takeDarkFrames)
 		{
 			// We're doing dark frames so turn off autoexposure and autogain, and use
 			// nightime gain, delay, max exposure, bin, and brightness to mimic a nightime shot.
-			cg.currentSkipFrames = 0;
-			cg.currentAutoExposure = false;
-			cg.nightAutoExposure = false;
-			cg.currentAutoGain = false;
-			cg.currentGain = cg.nightGain;
-			cg.currentMaxAutoGain = cg.nightMaxAutoGain;	// not needed since we're not using auto gain, but set to be consistent
+			CG.currentSkipFrames = 0;
+			CG.currentAutoExposure = false;
+			CG.nightAutoExposure = false;
+			CG.currentAutoGain = false;
+			CG.currentGain = CG.nightGain;
+			CG.currentMaxAutoGain = CG.nightMaxAutoGain;	// not needed since we're not using auto gain, but set to be consistent
 			gainChange = 0;
-			cg.currentDelay_ms = cg.nightDelay_ms;
-			cg.currentMaxAutoExposure_us = cg.currentExposure_us = cg.nightMaxAutoExposure_us;
-			cg.currentBin = cg.nightBin;
-			cg.currentBrightness = cg.nightBrightness;
-			if (cg.isColorCamera)
+			CG.currentDelay_ms = CG.nightDelay_ms;
+			CG.currentMaxAutoExposure_us = CG.currentExposure_us = CG.nightMaxAutoExposure_us;
+			CG.currentBin = CG.nightBin;
+			CG.currentBrightness = CG.nightBrightness;
+			if (CG.isColorCamera)
 			{
-				cg.currentAutoAWB = false;
-				cg.currentWBR = cg.nightWBR;
-				cg.currentWBB = cg.nightWBB;
+				CG.currentAutoAWB = false;
+				CG.currentWBR = CG.nightWBR;
+				CG.currentWBB = CG.nightWBB;
 			}
-			if (cg.isCooledCamera)
+			if (CG.isCooledCamera)
 			{
-				cg.currentEnableCooler = cg.nightEnableCooler;
-				cg.currentTargetTemp = cg.nightTargetTemp;
+				CG.currentEnableCooler = CG.nightEnableCooler;
+				CG.currentTargetTemp = CG.nightTargetTemp;
 			}
-			cg.myModeMeanSetting.currentMean = NOT_SET;
-			cg.myModeMeanSetting.modeMean = false;
+			CG.myModeMeanSetting.currentMean = NOT_SET;
+			CG.myModeMeanSetting.modeMean = false;
 
 			Log(0, "Taking dark frames...\n");
 
-			if (cg.notificationImages) {
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/copy_notification_image.sh --expires 0 DarkFrames &", allskyHome);
+			if (CG.notificationImages) {
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/copy_notification_image.sh --expires 0 DarkFrames &", CG.allskyHome);
 				system(bufTemp);
 			}
 		}
@@ -1114,15 +1042,15 @@ const int minGain = 0;
 			if (endOfNight == true)		// Execute end of night script
 			{
 				Log(0, "Processing end of night data\n");
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/endOfNight.sh &", allskyHome);
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/endOfNight.sh &", CG.allskyHome);
 				system(bufTemp);
 				endOfNight = false;
 				displayedNoDaytimeMsg = false;
 			}
 
-			if (! cg.daytimeCapture)
+			if (! CG.daytimeCapture)
 			{
-				displayedNoDaytimeMsg = daytimeSleep(displayedNoDaytimeMsg, cg);
+				displayedNoDaytimeMsg = daytimeSleep(displayedNoDaytimeMsg, CG);
 
 				// No need to do any of the code below so go back to the main loop.
 				continue;
@@ -1133,17 +1061,17 @@ const int minGain = 0;
 				Log(0, "==========\n=== Starting daytime capture ===\n==========\n");
 
 				// We only skip initial frames if we are starting in daytime and using auto-exposure.
-				if (numExposures == 0 && cg.dayAutoExposure)
-					cg.currentSkipFrames = cg.daySkipFrames;
+				if (numExposures == 0 && CG.dayAutoExposure)
+					CG.currentSkipFrames = CG.daySkipFrames;
 
 				// If we went from Night to Day, then currentExposure_us will be the last night
 				// exposure so leave it if we're using auto-exposure so there's a seamless change from
 				// Night to Day, i.e., if the exposure was fine a minute ago it will likely be fine now.
 				// On the other hand, if this program just started or we're using manual exposures,
 				// use what the user specified.
-				if (numExposures == 0 || ! cg.dayAutoExposure)
+				if (numExposures == 0 || ! CG.dayAutoExposure)
 				{
-					cg.currentExposure_us = cg.dayExposure_us;
+					CG.currentExposure_us = CG.dayExposure_us;
 				}
 				else
 				{
@@ -1154,53 +1082,53 @@ const int minGain = 0;
 					// e.g.		20s = (10s    * 2.0)     / (1.0) 
 
 					// current values here are last night's values
-					double oldGain = pow(10, cg.currentGain / 10.0 / 20.0);
-					double newGain = pow(10, cg.dayGain / 10.0 / 20.0);
-					Log(2, "Using the last night exposure (%s),", length_in_units(cg.currentExposure_us, true));
-					cg.currentExposure_us = (cg.currentExposure_us * oldGain) / newGain;
-					Log(2," old (%'f) and new (%'f) Gain to calculate new exposure of %s\n", oldGain, newGain, length_in_units(cg.currentExposure_us, true));
+					double oldGain = pow(10, CG.currentGain / 10.0 / 20.0);
+					double newGain = pow(10, CG.dayGain / 10.0 / 20.0);
+					Log(2, "Using the last night exposure (%s),", length_in_units(CG.currentExposure_us, true));
+					CG.currentExposure_us = (CG.currentExposure_us * oldGain) / newGain;
+					Log(2," old (%'f) and new (%'f) Gain to calculate new exposure of %s\n", oldGain, newGain, length_in_units(CG.currentExposure_us, true));
 				}
 
-				cg.currentMaxAutoExposure_us = cg.dayMaxAutoExposure_us;
+				CG.currentMaxAutoExposure_us = CG.dayMaxAutoExposure_us;
 #ifdef USE_HISTOGRAM
 				// Don't use camera auto-exposure since we mimic it ourselves.
-				if (cg.dayAutoExposure)
+				if (CG.dayAutoExposure)
 				{
 					Log(2, "Turning off ZWO auto-exposure to use Allsky auto-exposure.\n");
 				}
 				// With the histogram method we NEVER use ZWO auto exposure - either the user said
 				// not to, or we turn it off ourselves.
-				cg.currentAutoExposure = false;
+				CG.currentAutoExposure = false;
 #else
-				cg.currentAutoExposure = cg.dayAutoExposure;
+				CG.currentAutoExposure = CG.dayAutoExposure;
 #endif
-				cg.currentBrightness = cg.dayBrightness;
-				if (cg.isColorCamera)
+				CG.currentBrightness = CG.dayBrightness;
+				if (CG.isColorCamera)
 				{
-					cg.currentAutoAWB = cg.dayAutoAWB;
-					cg.currentWBR = cg.dayWBR;
-					cg.currentWBB = cg.dayWBB;
+					CG.currentAutoAWB = CG.dayAutoAWB;
+					CG.currentWBR = CG.dayWBR;
+					CG.currentWBB = CG.dayWBB;
 				}
-				cg.currentDelay_ms = cg.dayDelay_ms;
-				cg.currentBin = cg.dayBin;
-				cg.currentGain = cg.dayGain;	// must come before determineGainChange() below
-				cg.currentMaxAutoGain = cg.dayMaxAutoGain;
+				CG.currentDelay_ms = CG.dayDelay_ms;
+				CG.currentBin = CG.dayBin;
+				CG.currentGain = CG.dayGain;	// must come before determineGainChange() below
+				CG.currentMaxAutoGain = CG.dayMaxAutoGain;
 				if (currentAdjustGain)
 				{
 					// we did some nightime images so adjust gain
 					numGainChanges = 0;
-					gainChange = determineGainChange(cg.dayGain, cg.nightGain);
+					gainChange = determineGainChange(CG);
 				}
 				else
 				{
 					gainChange = 0;
 				}
-				cg.currentAutoGain = cg.dayAutoGain;
-				cg.myModeMeanSetting.currentMean = cg.myModeMeanSetting.dayMean;
-				if (cg.isCooledCamera)
+				CG.currentAutoGain = CG.dayAutoGain;
+				CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.dayMean;
+				if (CG.isCooledCamera)
 				{
-					cg.currentEnableCooler = cg.dayEnableCooler;
-					cg.currentTargetTemp = cg.dayTargetTemp;
+					CG.currentEnableCooler = CG.dayEnableCooler;
+					CG.currentTargetTemp = CG.dayTargetTemp;
 				}
 
 			}
@@ -1211,55 +1139,55 @@ const int minGain = 0;
 			Log(0, "==========\n=== Starting nighttime capture ===\n==========\n");
 
 			// We only skip initial frames if we are starting in nighttime and using auto-exposure.
-			if (numExposures == 0 && cg.nightAutoExposure)
-				cg.currentSkipFrames = cg.nightSkipFrames;
+			if (numExposures == 0 && CG.nightAutoExposure)
+				CG.currentSkipFrames = CG.nightSkipFrames;
 
 			// Setup the night time capture parameters
-			if (numExposures == 0 || ! cg.nightAutoExposure)
+			if (numExposures == 0 || ! CG.nightAutoExposure)
 			{
-				cg.currentExposure_us = cg.nightExposure_us;
+				CG.currentExposure_us = CG.nightExposure_us;
 			}
 
-			cg.currentAutoExposure = cg.nightAutoExposure;
-			cg.currentBrightness = cg.nightBrightness;
-			if (cg.isColorCamera)
+			CG.currentAutoExposure = CG.nightAutoExposure;
+			CG.currentBrightness = CG.nightBrightness;
+			if (CG.isColorCamera)
 			{
-				cg.currentAutoAWB = cg.nightAutoAWB;
-				cg.currentWBR = cg.nightWBR;
-				cg.currentWBB = cg.nightWBB;
+				CG.currentAutoAWB = CG.nightAutoAWB;
+				CG.currentWBR = CG.nightWBR;
+				CG.currentWBB = CG.nightWBB;
 			}
-			cg.currentDelay_ms = cg.nightDelay_ms;
-			cg.currentBin = cg.nightBin;
-			cg.currentMaxAutoExposure_us = cg.nightMaxAutoExposure_us;
-			cg.currentGain = cg.nightGain;	// must come before determineGainChange() below
-			cg.currentMaxAutoGain = cg.nightMaxAutoGain;
+			CG.currentDelay_ms = CG.nightDelay_ms;
+			CG.currentBin = CG.nightBin;
+			CG.currentMaxAutoExposure_us = CG.nightMaxAutoExposure_us;
+			CG.currentGain = CG.nightGain;	// must come before determineGainChange() below
+			CG.currentMaxAutoGain = CG.nightMaxAutoGain;
 			if (currentAdjustGain)
 			{
 				// we did some daytime images so adjust gain
 				numGainChanges = 0;
-				gainChange = determineGainChange(cg.dayGain, cg.nightGain);
+				gainChange = determineGainChange(CG);
 			}
 			else
 			{
 				gainChange = 0;
 			}
-			cg.currentAutoGain = cg.nightAutoGain;
-			cg.myModeMeanSetting.currentMean = cg.myModeMeanSetting.nightMean;
-			if (cg.isCooledCamera)
+			CG.currentAutoGain = CG.nightAutoGain;
+			CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.nightMean;
+			if (CG.isCooledCamera)
 			{
-				cg.currentEnableCooler = cg.nightEnableCooler;
-				cg.currentTargetTemp = cg.nightTargetTemp;
+				CG.currentEnableCooler = CG.nightEnableCooler;
+				CG.currentTargetTemp = CG.nightTargetTemp;
 			}
 		}
 		// ========== Done with dark fram / day / night settings
 
 
-		if (cg.myModeMeanSetting.currentMean > 0.0)
+		if (CG.myModeMeanSetting.currentMean > 0.0)
 		{
-			cg.myModeMeanSetting.modeMean = true;
+			CG.myModeMeanSetting.modeMean = true;
 /* FUTURE
-			myModeMeanSetting.meanValue = cg.myModeMeanSetting.currentMean;
-			if (! aegInit(cg, minExposure_us, minGain, myRaspistillSetting, myModeMeanSetting))
+			myModeMeanSetting.meanValue = CG.myModeMeanSetting.currentMean;
+			if (! aegInit(cg, minExposure_us, CG.cameraMinGain, myRaspistillSetting, myModeMeanSetting))
 			{
 				closeUp(EXIT_ERROR_STOP);
 			}
@@ -1267,30 +1195,30 @@ const int minGain = 0;
 		}
 		else
 		{
-			cg.myModeMeanSetting.modeMean = false;
+			CG.myModeMeanSetting.modeMean = false;
 		}
 
-		if (cg.isColorCamera)
+		if (CG.isColorCamera)
 		{
-			setControl(cg.cameraNumber, ASI_WB_R, cg.currentWBR, cg.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
-			setControl(cg.cameraNumber, ASI_WB_B, cg.currentWBB, cg.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
+			setControl(CG.cameraNumber, ASI_WB_R, CG.currentWBR, CG.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
+			setControl(CG.cameraNumber, ASI_WB_B, CG.currentWBB, CG.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
 		}
-		else if (! cg.currentAutoAWB && ! cg.takeDarkFrames)
+		else if (! CG.currentAutoAWB && ! CG.takeDarkFrames)
 		{
 			// We only read the actual values if in auto white balance; since we're not, get them now.
-			cg.lastWBR = cg.currentWBR;
-			cg.lastWBB = cg.currentWBB;
+			CG.lastWBR = CG.currentWBR;
+			CG.lastWBB = CG.currentWBB;
 		}
-		if (cg.isCooledCamera)
+		if (CG.isCooledCamera)
 		{
-			asiRetCode = setControl(cg.cameraNumber, ASI_COOLER_ON, cg.currentEnableCooler ? ASI_TRUE : ASI_FALSE, ASI_FALSE);
+			asiRetCode = setControl(CG.cameraNumber, ASI_COOLER_ON, CG.currentEnableCooler ? ASI_TRUE : ASI_FALSE, ASI_FALSE);
 			if (asiRetCode != ASI_SUCCESS)
 			{
 				printf("%s", c(KRED));
 				printf(" WARNING: Could not change cooler state: %s; continuing.\n", getRetCode(asiRetCode));
 				printf("%s", c(KNRM));
 			}
-			asiRetCode = setControl(cg.cameraNumber, ASI_TARGET_TEMP, cg.currentTargetTemp, ASI_FALSE);
+			asiRetCode = setControl(CG.cameraNumber, ASI_TARGET_TEMP, CG.currentTargetTemp, ASI_FALSE);
 			if (asiRetCode != ASI_SUCCESS)
 			{
 				printf("%s", c(KRED));
@@ -1299,66 +1227,66 @@ const int minGain = 0;
 			}
 		}
 
-		setControl(cg.cameraNumber, ASI_GAIN, cg.currentGain + gainChange, cg.currentAutoGain ? ASI_TRUE : ASI_FALSE);
-		if (cg.currentAutoGain)
-			setControl(cg.cameraNumber, ASI_AUTO_MAX_GAIN, cg.currentMaxAutoGain, ASI_FALSE);
+		setControl(CG.cameraNumber, ASI_GAIN, CG.currentGain + gainChange, CG.currentAutoGain ? ASI_TRUE : ASI_FALSE);
+		if (CG.currentAutoGain)
+			setControl(CG.cameraNumber, ASI_AUTO_MAX_GAIN, CG.currentMaxAutoGain, ASI_FALSE);
 
 		// never go over the camera's max auto exposure. ASI_AUTO_MAX_EXP is in ms so convert
-		cg.currentMaxAutoExposure_us = std::min(cg.currentMaxAutoExposure_us, cg.cameraMaxAutoExposure_us);
-		if (cg.currentAutoExposure)
+		CG.currentMaxAutoExposure_us = std::min(CG.currentMaxAutoExposure_us, CG.cameraMaxAutoExposure_us);
+		if (CG.currentAutoExposure)
 		{
-			setControl(cg.cameraNumber, ASI_AUTO_MAX_EXP, cg.currentMaxAutoExposure_us / US_IN_MS, ASI_FALSE);
-			setControl(cg.cameraNumber, ASI_AUTO_TARGET_BRIGHTNESS, cg.currentBrightness, ASI_FALSE);
+			setControl(CG.cameraNumber, ASI_AUTO_MAX_EXP, CG.currentMaxAutoExposure_us / US_IN_MS, ASI_FALSE);
+			setControl(CG.cameraNumber, ASI_AUTO_TARGET_BRIGHTNESS, CG.currentBrightness, ASI_FALSE);
 		}
 
 #ifndef USE_HISTOGRAM
-		setControl(cg.cameraNumber, ASI_EXPOSURE, cg.currentExposure_us, cg.currentAutoExposure ? ASI_TRUE : ASI_FALSE);
+		setControl(CG.cameraNumber, ASI_EXPOSURE, CG.currentExposure_us, CG.currentAutoExposure ? ASI_TRUE : ASI_FALSE);
 		// If not using histogram algorithm, ASI_EXPOSURE is set in takeOneExposure()
 #endif
 
-		if (numExposures == 0 || cg.dayBin != cg.nightBin)
+		if (numExposures == 0 || CG.dayBin != CG.nightBin)
 		{
 			// Adjusting variables for chosen binning.
 			// Only need to do at the beginning and if bin changes.
-			cg.height						= originalHeight / cg.currentBin;
-			cg.width						= originalWidth / cg.currentBin;
-			cg.overlay.iTextX				= originalITextX / cg.currentBin;
-			cg.overlay.iTextY				= originalITextY / cg.currentBin;
-			cg.overlay.fontsize				= originalFontsize / cg.currentBin;
-			cg.overlay.linewidth			= originalLinewidth / cg.currentBin;
-			cg.HB.currentHistogramBoxSizeX	= cg.HB.histogramBoxSizeX / cg.currentBin;
-			cg.HB.currentHistogramBoxSizeY	= cg.HB.histogramBoxSizeY / cg.currentBin;
+			CG.height						= originalHeight / CG.currentBin;
+			CG.width						= originalWidth / CG.currentBin;
+			CG.overlay.iTextX				= originalITextX / CG.currentBin;
+			CG.overlay.iTextY				= originalITextY / CG.currentBin;
+			CG.overlay.fontsize				= originalFontsize / CG.currentBin;
+			CG.overlay.linewidth			= originalLinewidth / CG.currentBin;
+			CG.HB.currentHistogramBoxSizeX	= CG.HB.histogramBoxSizeX / CG.currentBin;
+			CG.HB.currentHistogramBoxSizeY	= CG.HB.histogramBoxSizeY / CG.currentBin;
 
-			bufferSize = cg.width * cg.height * currentBpp;
+			bufferSize = CG.width * CG.height * currentBpp;
 
 // TODO: if not the first time, should we free the old pRgb?
-			if (cg.imageType == IMG_RAW16)
+			if (CG.imageType == IMG_RAW16)
 			{
-				pRgb.create(cv::Size(cg.width, cg.height), CV_16UC1);
+				pRgb.create(cv::Size(CG.width, CG.height), CV_16UC1);
 			}
-			else if (cg.imageType == IMG_RGB24)
+			else if (CG.imageType == IMG_RGB24)
 			{
-				pRgb.create(cv::Size(cg.width, cg.height), CV_8UC3);
+				pRgb.create(cv::Size(CG.width, CG.height), CV_8UC3);
 			}
 			else // RAW8 and Y8
 			{
-				pRgb.create(cv::Size(cg.width, cg.height), CV_8UC1);
+				pRgb.create(cv::Size(CG.width, CG.height), CV_8UC1);
 			}
 
-// TODO: ASISetStartPos(cg.cameraNumber, from_left_xxx, from_top_xxx);	By default it's at the center.
+// TODO: ASISetStartPos(CG.cameraNumber, from_left_xxx, from_top_xxx);	By default it's at the center.
 // TODO: width % 8 must be 0. height % 2 must be 0.
 // TODO: ASI120's (width*height) % 1024 must be 0
-			asiRetCode = ASISetROIFormat(cg.cameraNumber, cg.width, cg.height, cg.currentBin, (ASI_IMG_TYPE)cg.imageType);
+			asiRetCode = ASISetROIFormat(CG.cameraNumber, CG.width, CG.height, CG.currentBin, (ASI_IMG_TYPE)CG.imageType);
 			if (asiRetCode != ASI_SUCCESS)
 			{
 				if (asiRetCode == ASI_ERROR_INVALID_SIZE)
 				{
-					Log(0, "*** ERROR: your camera does not support bin %dx%d.\n", cg.currentBin, cg.currentBin);
+					Log(0, "*** ERROR: your camera does not support bin %dx%d.\n", CG.currentBin, CG.currentBin);
 					closeUp(EXIT_ERROR_STOP);
 				}
 				else
 				{
-					Log(0, "ASISetROIFormat(%d, %dx%d, %d, %d) = %s\n", cg.cameraNumber, cg.width, cg.height, cg.currentBin, cg.imageType, getRetCode(asiRetCode));
+					Log(0, "ASISetROIFormat(%d, %dx%d, %d, %d) = %s\n", CG.cameraNumber, CG.width, CG.height, CG.currentBin, CG.imageType, getRetCode(asiRetCode));
 					closeUp(EXIT_ERROR_STOP);
 				}
 			}
@@ -1368,7 +1296,7 @@ const int minGain = 0;
 		// This simply makes it easier to see things in the log file.
 
 #ifdef USE_HISTOGRAM
-		cg.lastMean = 0;
+		CG.lastMean = 0;
 		int attempts = 0;
 		int histogram[256];
 #endif
@@ -1382,23 +1310,23 @@ const int minGain = 0;
 			char exposureStart[128];
 			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(exposureStartDateTime, "%F %T"));
 			Log(3, "-----\n");
-			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(cg.currentExposure_us, true));
+			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(CG.currentExposure_us, true));
 
 			// Get start time for overlay. Make sure it has the same time as exposureStart.
-			if (cg.overlay.showTime)
+			if (CG.overlay.showTime)
 			{
-				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, cg.timeFormat));
+				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
 			}
 
-			asiRetCode = takeOneExposure(cg, pRgb.data, histogram, &cg.lastMean);
+			asiRetCode = takeOneExposure(&CG, pRgb.data, histogram);
 			if (asiRetCode == ASI_SUCCESS)
 			{
 				numErrors = 0;
 				numExposures++;
 
-				cg.lastFocusMetric = cg.overlay.showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
+				CG.lastFocusMetric = CG.overlay.showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
 
-				if (numExposures == 0 && cg.preview)
+				if (numExposures == 0 && CG.preview)
 				{
 					// Start the preview thread at the last possible moment.
 					bDisplay = true;
@@ -1409,7 +1337,7 @@ const int minGain = 0;
 				bool usedHistogram = false;	// did we use the histogram method?
 
 				// We don't use this at night since the ZWO bug is only when it's light outside.
-				if (dayOrNight == "DAY" && cg.dayAutoExposure && ! cg.takeDarkFrames)
+				if (dayOrNight == "DAY" && CG.dayAutoExposure && ! CG.takeDarkFrames)
 				{
 					usedHistogram = true;	// we are using the histogram code on this exposure
 					attempts = 0;
@@ -1424,11 +1352,11 @@ const int minGain = 0;
 					// cameraMinExposure_us is a camera property.
 					// histMinExposure_us is the min exposure used in the histogram calculation.
 // xxxxxxxxx dump histMinExposure_us? Set tempMinExposure_us = cameraMinExposure_us ? ...
-					long histMinExposure_us = cg.cameraMinExposure_us ? cg.cameraMinExposure_us : 100;
+					long histMinExposure_us = CG.cameraMinExposure_us ? CG.cameraMinExposure_us : 100;
 					long tempMinExposure_us = histMinExposure_us;
-					long tempMaxExposure_us = cg.currentMaxAutoExposure_us;
+					long tempMaxExposure_us = CG.currentMaxAutoExposure_us;
 
-					if (cg.dayBrightness != DEFAULT_BRIGHTNESS)
+					if (CG.dayBrightness != DEFAULT_BRIGHTNESS)
 					{
 						// Adjust brightness based on dayBrightness.
 						// The default value has no adjustment.
@@ -1456,7 +1384,7 @@ const int minGain = 0;
 							// See how many multiples we're different.
 							// If dayBrightnes < DEFAULT_BRIGHTNESS then numMultiples will be negative,
 							// which is ok - it just means the multiplier will be less than 1.
-							numMultiples = (float)(cg.dayBrightness - DEFAULT_BRIGHTNESS) / DEFAULT_BRIGHTNESS;
+							numMultiples = (float)(CG.dayBrightness - DEFAULT_BRIGHTNESS) / DEFAULT_BRIGHTNESS;
 							exposureAdjustment = 1 + (numMultiples * adjustmentAmountPerMultiple);
 							Log(3, "  > >>> Adjusting exposure x %.2f (%.1f%%) for daybrightness\n", exposureAdjustment, (exposureAdjustment - 1) * 100);
 							showedMessage = true;
@@ -1475,27 +1403,27 @@ const int minGain = 0;
 					// or else we'll never get low enough.
 					// Negative is below lower limit, positive is above upper limit.
 					// Adjust the min or maxAcceptableMean depending on the aggression.
-					int priorMean = cg.lastMean;
+					int priorMean = CG.lastMean;
 					int priorMeanDiff = 0;
 					int adjustment = 0;
 
 					int lastMeanDiff = 0;	// like priorMeanDiff but for next exposure
 
-					if (cg.lastMean < minAcceptableMean)
+					if (CG.lastMean < minAcceptableMean)
 					{
-						priorMeanDiff = cg.lastMean - minAcceptableMean;
+						priorMeanDiff = CG.lastMean - minAcceptableMean;
 						// If we're skipping frames we want to get to a good exposure as fast as
 						// possible so don't set an adjustment.
-						if (cg.aggression != 100 && cg.currentSkipFrames <= 0)
+						if (CG.aggression != 100 && CG.currentSkipFrames <= 0)
 						{
-							adjustment = priorMeanDiff * (1 - ((float)cg.aggression/100));
+							adjustment = priorMeanDiff * (1 - ((float)CG.aggression/100));
 							if (adjustment < 1)
 								minAcceptableMean += adjustment;
 						}
 					}
-					else if (cg.lastMean > maxAcceptableMean)
+					else if (CG.lastMean > maxAcceptableMean)
 					{
-						priorMeanDiff = cg.lastMean - maxAcceptableMean;
+						priorMeanDiff = CG.lastMean - maxAcceptableMean;
 					}
 					if (adjustment != 0)
 					{
@@ -1505,12 +1433,12 @@ const int minGain = 0;
 							adjustment < 0 ? minAcceptableMean : maxAcceptableMean);
 					}
 
-					while ((cg.lastMean < minAcceptableMean || cg.lastMean > maxAcceptableMean) && ++attempts <= maxHistogramAttempts && cg.currentExposure_us <= cg.currentMaxAutoExposure_us)
+					while ((CG.lastMean < minAcceptableMean || CG.lastMean > maxAcceptableMean) && ++attempts <= maxHistogramAttempts && CG.currentExposure_us <= CG.currentMaxAutoExposure_us)
 					{
 						int acceptable;
 						float multiplier = 1.10;
 						char const *acceptableType;
-						if (cg.lastMean < minAcceptableMean) {
+						if (CG.lastMean < minAcceptableMean) {
 							acceptable = minAcceptableMean;
 							acceptableType = "min";
 						} else {
@@ -1518,19 +1446,19 @@ const int minGain = 0;
 							acceptableType = "max";
 							multiplier = 1 / multiplier;
 						}
-						if (cg.currentExposure_us != cg.lastExposure_us)
-							printf("xxxxxxxxxxx currentExposure_us %'ld != cg.lastExposure_us %'ld\n", cg.currentExposure_us, cg.lastExposure_us);
+						if (CG.currentExposure_us != CG.lastExposure_us)
+							printf("xxxxxxxxxxx currentExposure_us %'ld != CG.lastExposure_us %'ld\n", CG.currentExposure_us, CG.lastExposure_us);
 						// if lastMean/acceptable is 9/90, it's 1/10th of the way there, so multiple exposure by 90/9 (10).
 						// ZWO cameras don't appear to be linear so increase the multiplier amount some.
-						float multiply = ((double)acceptable / cg.lastMean) * multiplier;
-						newExposure_us= cg.lastExposure_us * multiply;
-						printf("=== next exposure=%'ld (multiply by %.3f) [cg.lastExposure_us=%'ld, %sAcceptable=%d, lastMean=%d]\n", newExposure_us, multiply, cg.lastExposure_us, acceptableType, acceptable, (int)cg.lastMean);
+						float multiply = ((double)acceptable / CG.lastMean) * multiplier;
+						newExposure_us= CG.lastExposure_us * multiply;
+						printf("=== next exposure=%'ld (multiply by %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, lastMean=%d]\n", newExposure_us, multiply, CG.lastExposure_us, acceptableType, acceptable, (int)CG.lastMean);
 
 						if (priorMeanDiff > 0 && lastMeanDiff < 0)
 						{ 
 printf(" >xxx lastMean was %d and went from %d above max of %d to %d below min of %d, is now at %d; should NOT set temp min to currentExposure_us of %'ld\n",
 							priorMean, priorMeanDiff, maxAcceptableMean,
-							-lastMeanDiff, minAcceptableMean, (int)cg.lastMean, cg.currentExposure_us);
+							-lastMeanDiff, minAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 						} 
 						else
 						{
@@ -1539,48 +1467,48 @@ printf(" >xxx lastMean was %d and went from %d above max of %d to %d below min o
 							// OK to set upper limit since we know it's too high.
 printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d, is now at %d; OK to set temp max to currentExposure_us of %'ld\n",
 								priorMean, -priorMeanDiff, minAcceptableMean,
-								lastMeanDiff, maxAcceptableMean, (int)cg.lastMean, cg.currentExposure_us);
+								lastMeanDiff, maxAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 							}
 
-							if (cg.lastMean < minAcceptableMean)
+							if (CG.lastMean < minAcceptableMean)
 							{
-								tempMinExposure_us = cg.currentExposure_us;
+								tempMinExposure_us = CG.currentExposure_us;
 							} 
-							else if (cg.lastMean > maxAcceptableMean)
+							else if (CG.lastMean > maxAcceptableMean)
 							{
-								tempMaxExposure_us = cg.currentExposure_us;
+								tempMaxExposure_us = CG.currentExposure_us;
 							} 
 						} 
 
 						newExposure_us = roundTo(newExposure_us, roundToMe);
 						newExposure_us = std::max(tempMinExposure_us, newExposure_us);
 						newExposure_us = std::min(tempMaxExposure_us, newExposure_us);
-						newExposure_us = std::min(cg.currentMaxAutoExposure_us, newExposure_us);
+						newExposure_us = std::min(CG.currentMaxAutoExposure_us, newExposure_us);
 
-						if (newExposure_us == cg.currentExposure_us)
+						if (newExposure_us == CG.currentExposure_us)
 						{
 							break;
 						}
 
-						cg.currentExposure_us = newExposure_us;
-						if (cg.currentExposure_us > cg.currentMaxAutoExposure_us)
+						CG.currentExposure_us = newExposure_us;
+						if (CG.currentExposure_us > CG.currentMaxAutoExposure_us)
 						{
 							break;
 						}
 
-						Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: lastMean (%d)\n", attempts, newExposure_us, tempMinExposure_us, tempMaxExposure_us, cg.lastMean);
+						Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: lastMean (%d)\n", attempts, newExposure_us, tempMinExposure_us, tempMaxExposure_us, CG.lastMean);
 
-						priorMean = cg.lastMean;
+						priorMean = CG.lastMean;
 						priorMeanDiff = lastMeanDiff;
 
-						asiRetCode = takeOneExposure(cg, pRgb.data, histogram, &cg.lastMean);
+						asiRetCode = takeOneExposure(&CG, pRgb.data, histogram);
 						if (asiRetCode == ASI_SUCCESS)
 						{
 
-							if (cg.lastMean < minAcceptableMean)
-								lastMeanDiff = cg.lastMean - minAcceptableMean;
-							else if (cg.lastMean > maxAcceptableMean)
-								lastMeanDiff = cg.lastMean - maxAcceptableMean;
+							if (CG.lastMean < minAcceptableMean)
+								lastMeanDiff = CG.lastMean - minAcceptableMean;
+							else if (CG.lastMean > maxAcceptableMean)
+								lastMeanDiff = CG.lastMean - maxAcceptableMean;
 							else
 								lastMeanDiff = 0;
 
@@ -1594,54 +1522,54 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 
 					if (asiRetCode != ASI_SUCCESS)
 					{
-						Log(2,"  > Sleeping %s from failed exposure\n", length_in_units(cg.currentDelay_ms * US_IN_MS, false));
-						usleep(cg.currentDelay_ms * US_IN_MS);
+						Log(2,"  > Sleeping %s from failed exposure\n", length_in_units(CG.currentDelay_ms * US_IN_MS, false));
+						usleep(CG.currentDelay_ms * US_IN_MS);
 						// Don't save the file or do anything below.
 						continue;
 					}
 
-					if (cg.lastMean >= minAcceptableMean && cg.lastMean <= maxAcceptableMean)
+					if (CG.lastMean >= minAcceptableMean && CG.lastMean <= maxAcceptableMean)
 					{
 						// +++ at end makes it easier to see in log file
-						Log(3, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n", minAcceptableMean, maxAcceptableMean, cg.lastMean);
+						Log(3, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n", minAcceptableMean, maxAcceptableMean, CG.lastMean);
 					}
 					else if (attempts > maxHistogramAttempts)
 					{
-						 Log(3, "  > max attempts reached - using exposure of %s us with mean %d\n", length_in_units(cg.currentExposure_us, true), cg.lastMean);
+						 Log(3, "  > max attempts reached - using exposure of %s us with mean %d\n", length_in_units(CG.currentExposure_us, true), CG.lastMean);
 					}
 					else if (attempts >= 1)
 					{
-						if (cg.currentExposure_us > cg.currentMaxAutoExposure_us)
+						if (CG.currentExposure_us > CG.currentMaxAutoExposure_us)
 						{
 							 // If we call length_in_units() twice in same command line they both return the last value.
-							Log(3, "  > Stopped trying: new exposure of %s ", length_in_units(cg.currentExposure_us, false));
-							Log(3, "would be over max of %s\n", length_in_units(cg.currentMaxAutoExposure_us, false));
+							Log(3, "  > Stopped trying: new exposure of %s ", length_in_units(CG.currentExposure_us, false));
+							Log(3, "would be over max of %s\n", length_in_units(CG.currentMaxAutoExposure_us, false));
 
-							long diff = (long)((float)cg.currentExposure_us * (1/(float)percentChange));
-							cg.currentExposure_us -= diff;
-							Log(3, "  > Decreasing next exposure by %d%% (%'ld us) to %'ld\n", percentChange, diff, cg.currentExposure_us);
+							long diff = (long)((float)CG.currentExposure_us * (1/(float)percentChange));
+							CG.currentExposure_us -= diff;
+							Log(3, "  > Decreasing next exposure by %d%% (%'ld us) to %'ld\n", percentChange, diff, CG.currentExposure_us);
 						}
-						else if (cg.currentExposure_us == cg.currentMaxAutoExposure_us)
+						else if (CG.currentExposure_us == CG.currentMaxAutoExposure_us)
 						{
-							Log(3, "  > Stopped trying: hit max exposure limit of %s, mean %d\n", length_in_units(cg.currentMaxAutoExposure_us, false), cg.lastMean);
+							Log(3, "  > Stopped trying: hit max exposure limit of %s, mean %d\n", length_in_units(CG.currentMaxAutoExposure_us, false), CG.lastMean);
 							// If currentExposure_us causes too high of a mean, decrease exposure
 							// so on the next loop we'll adjust it.
-							if (cg.lastMean > maxAcceptableMean)
-								cg.currentExposure_us--;
+							if (CG.lastMean > maxAcceptableMean)
+								CG.currentExposure_us--;
 						}
-						else if (newExposure_us == cg.currentExposure_us)
+						else if (newExposure_us == CG.currentExposure_us)
 						{
-							Log(3, "  > Stopped trying: newExposure_us == currentExposure_us == %s\n", length_in_units(cg.currentExposure_us, false));
+							Log(3, "  > Stopped trying: newExposure_us == currentExposure_us == %s\n", length_in_units(CG.currentExposure_us, false));
 						}
 						else
 						{
-							Log(3, "  > Stopped trying, using exposure of %s us with mean %d, min=%d, max=%d\n", length_in_units(cg.currentExposure_us, false), cg.lastMean, minAcceptableMean, maxAcceptableMean);
+							Log(3, "  > Stopped trying, using exposure of %s us with mean %d, min=%d, max=%d\n", length_in_units(CG.currentExposure_us, false), CG.lastMean, minAcceptableMean, maxAcceptableMean);
 						}
 						 
 					}
-					else if (cg.currentExposure_us == cg.currentMaxAutoExposure_us)
+					else if (CG.currentExposure_us == CG.currentMaxAutoExposure_us)
 					{
-						Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %d\n", length_in_units(cg.currentMaxAutoExposure_us, false), cg.lastMean);
+						Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %d\n", length_in_units(CG.currentMaxAutoExposure_us, false), CG.lastMean);
 					}
 					// xxxx TODO: this was "actualExposure_us = ..."	reportedExposure_us = currentExposure_us;
 
@@ -1650,27 +1578,27 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					// If we used auto-exposure, set the next exposure to the last reported
 					// exposure, which is what the camera driver thinks the next exposure should be.
 					// But temper it by the aggression value so we don't bounce up and down.
-					if (cg.currentAutoExposure)
+					if (CG.currentAutoExposure)
 					{
 						// If we're skipping frames we want to get to a good exposure as fast as
 						// possible so don't set an adjustment.
-						if (cg.aggression != 100 && cg.currentSkipFrames <= 0)
+						if (CG.aggression != 100 && CG.currentSkipFrames <= 0)
 						{
 							long exposureDiff_us, diff_us;
-							diff_us = reportedExposure_us - cg.currentExposure_us;
-							exposureDiff_us = diff_us * (float)cg.aggression / 100;
+							diff_us = reportedExposure_us - CG.currentExposure_us;
+							exposureDiff_us = diff_us * (float)CG.aggression / 100;
 							if (exposureDiff_us != 0)
 							{
 								Log(4, "  > Next exposure full change is %s, ", length_in_units(diff_us, true));
 								Log(4, "after aggression: %s ", length_in_units(exposureDiff_us, true));
-								Log(4, "from %s ", length_in_units(cg.currentExposure_us, true));
-								cg.currentExposure_us += exposureDiff_us;
-								Log(4, "to %s\n", length_in_units(cg.currentExposure_us, true));
+								Log(4, "from %s ", length_in_units(CG.currentExposure_us, true));
+								CG.currentExposure_us += exposureDiff_us;
+								Log(4, "to %s\n", length_in_units(CG.currentExposure_us, true));
 							}
 						}
 						else
 						{
-							cg.currentExposure_us = reportedExposure_us;
+							CG.currentExposure_us = reportedExposure_us;
 						}
 					}
 					else
@@ -1679,21 +1607,21 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					}
 				}
 #endif
-				if (cg.currentSkipFrames > 0)
+				if (CG.currentSkipFrames > 0)
 				{
 #ifdef USE_HISTOGRAM
 					// If we're already at a good exposure, or the last exposure was longer
 					// than the max, don't skip any more frames.
 // xxx TODO: should we have a separate variable to define "too long" instead of currentMaxAutoExposure_us?
-					if ((cg.lastMean >= MINMEAN && cg.lastMean <= MAXMEAN) || cg.lastExposure_us > cg.currentMaxAutoExposure_us)
+					if ((CG.lastMean >= MINMEAN && CG.lastMean <= MAXMEAN) || CG.lastExposure_us > CG.currentMaxAutoExposure_us)
 					{
-						cg.currentSkipFrames = 0;
+						CG.currentSkipFrames = 0;
 					}
 					else
 #endif
 					{
-						cg.currentSkipFrames--;
-						Log(2, "  >>>> Skipping this frame.  %d left to skip\n", cg.currentSkipFrames);
+						CG.currentSkipFrames--;
+						Log(2, "  >>>> Skipping this frame.  %d left to skip\n", CG.currentSkipFrames);
 						// Do not save this frame or sleep after it.
 						// We just started taking images so no need to check if DAY or NIGHT changed
 						continue;
@@ -1701,23 +1629,23 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 				}
 
 				// If takeDarkFrames is off, add overlay text to the image
-				if (! cg.takeDarkFrames)
+				if (! CG.takeDarkFrames)
 				{
-					if (! cg.overlay.externalOverlay)
+					if (! CG.overlay.externalOverlay)
 					{
-						(void) doOverlay(pRgb, cg, bufTime, gainChange);
+						(void) doOverlay(pRgb, CG, bufTime, gainChange);
 
 #ifdef USE_HISTOGRAM
-						if (cg.overlay.showHistogramBox && usedHistogram)
+						if (CG.overlay.showHistogramBox && usedHistogram)
 						{
 							// Draw a rectangle where the histogram box is.
 							// Put a black and white line one next to each other so they
 							// can be seen in light and dark images.
 							int lt = cv::LINE_AA, thickness = 2;
-							int X1 = (cg.width * cg.HB.histogramBoxPercentFromLeft) - (cg.HB.histogramBoxSizeX / 2);
-							int X2 = X1 + cg.HB.histogramBoxSizeX;
-							int Y1 = (cg.height * cg.HB.histogramBoxPercentFromTop) - (cg.HB.histogramBoxSizeY / 2);
-							int Y2 = Y1 + cg.HB.histogramBoxSizeY;
+							int X1 = (CG.width * CG.HB.histogramBoxPercentFromLeft) - (CG.HB.histogramBoxSizeX / 2);
+							int X2 = X1 + CG.HB.histogramBoxSizeX;
+							int Y1 = (CG.height * CG.HB.histogramBoxPercentFromTop) - (CG.HB.histogramBoxSizeY / 2);
+							int Y2 = Y1 + CG.HB.histogramBoxSizeY;
 							cv::Scalar outerLine, innerLine;
 							outerLine = cv::Scalar(0,0,0);
 							innerLine = cv::Scalar(255,255,255);
@@ -1730,30 +1658,30 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					{
 						// Determine if we need to change the gain on the next image.
 						// This must come AFTER the "showGain" above.
-						gainChange = determineGainChange(cg.dayGain, cg.nightGain);
-						setControl(cg.cameraNumber, ASI_GAIN, cg.currentGain + gainChange, cg.currentAutoGain ? ASI_TRUE : ASI_FALSE);
+						gainChange = determineGainChange(CG);
+						setControl(CG.cameraNumber, ASI_GAIN, CG.currentGain + gainChange, CG.currentAutoGain ? ASI_TRUE : ASI_FALSE);
 					}
 				}
 
 #ifndef USE_HISTOGRAM
-				if (cg.currentAutoExposure)
+				if (CG.currentAutoExposure)
 				{
 					// Retrieve the current Exposure for smooth transition to night time
 					// as long as auto-exposure is enabled during night time
-					cg.currentExposure_us = cg.lastExposure_us;
+					CG.currentExposure_us = CG.lastExposure_us;
 				}
 #endif
 
 				// Save the image
 				if (! bSavingImg)
 				{
-					if (! cg.takeDarkFrames)
+					if (! CG.takeDarkFrames)
 					{
 						// Create the name of the file that goes in the images/<date> directory.
-						snprintf(cg.finalFileName, sizeof(cg.finalFileName), "%s-%s.%s",
-							cg.fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), cg.imageExt);
+						snprintf(CG.finalFileName, sizeof(CG.finalFileName), "%s-%s.%s",
+							CG.fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), CG.imageExt);
 					}
-					snprintf(cg.fullFilename, sizeof(cg.fullFilename), "%s/%s", cg.saveDir, cg.finalFileName);
+					snprintf(CG.fullFilename, sizeof(CG.fullFilename), "%s/%s", CG.saveDir, CG.finalFileName);
 
 					pthread_mutex_lock(&mtxSaveImg);
 					pthread_cond_signal(&condStartSave);
@@ -1771,13 +1699,13 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 
 #ifndef USE_HISTOGRAM
 
-				if (cg.currentAutoExposure && dayOrNight == "DAY")
+				if (CG.currentAutoExposure && dayOrNight == "DAY")
 				{
-					cg.currentExposure_us = cg.lastExposure_us;
+					CG.currentExposure_us = CG.lastExposure_us;
 				}
 #endif
 				std::string s;
-				if (cg.currentAutoExposure)
+				if (CG.currentAutoExposure)
 				{
 					s = "auto";
 				}
@@ -1790,9 +1718,9 @@ printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d
 #endif
 				}
 				// Delay applied before next exposure
-				delayBetweenImages(cg, cg.lastExposure_us, s);
+				delayBetweenImages(CG, CG.lastExposure_us, s);
 
-				dayOrNight = calculateDayOrNight(cg.latitude, cg.longitude, cg.angle);
+				dayOrNight = calculateDayOrNight(CG.latitude, CG.longitude, CG.angle);
 			}
 		}
 		if (lastDayOrNight == "NIGHT")

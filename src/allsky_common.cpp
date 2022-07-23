@@ -38,14 +38,14 @@ static char const *fontnames[]		= {		// Character representation of names for cl
 **/
 void Log(int required_level, const char *fmt, ...)
 {
-	if ((int)abs(cg.debugLevel) >= required_level) {
+	if ((int)abs(CG.debugLevel) >= required_level) {
 		char msg[8192];
 		snprintf(msg, sizeof(msg), "%s", fmt);
 		va_list va;
 		va_start(va, fmt);
 		vfprintf(stdout, msg, va);
 
-		if (cg.debugLevel < 0)
+		if (CG.debugLevel < 0)
 		{
 // xxxx TODO: write to message file
 		}
@@ -56,7 +56,7 @@ void Log(int required_level, const char *fmt, ...)
 // Return the string for the specified color, or "" if we're not on a tty.
 char const *c(char const *color)
 {
-	if (cg.tty)
+	if (CG.tty)
 		return(color);
 	else
 		return("");
@@ -288,7 +288,7 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	if (cg.ct == ctZWO) {
 		snprintf(tmp, s, " AUTOUSB=%d", cg.asiAutoBandwidth ? 1 : 0);
 		strcat(cmd, tmp);
-		snprintf(tmp, s, " USB=%ld", cg.asiBandwidth);
+		snprintf(tmp, s, " USB=%ld", cg.lastAsiBandwidth);
 		strcat(cmd, tmp);
 	}
 }
@@ -343,6 +343,23 @@ char *length_in_units(long us, bool multi)	// microseconds
 	return(length);
 }
 
+// sunwait barfs if it receives an angle with a comma in it,
+// so convert it to a period.
+char const *convertCommaToPeriod(float n, char const *format)
+{
+	static char number[20];
+	char *p = number;
+	snprintf(number, sizeof(number), format, n);
+	while (*p != '\0') {
+		if (*p == ',') {
+			*p = '.';
+			break;
+		}
+		p++;
+	}
+	return(number);
+}
+
 // Calculate if it is day or night
 std::string _day = "DAY", _night = "NIGHT";
 std::string calculateDayOrNight(const char *latitude, const char *longitude, float angle)
@@ -350,7 +367,7 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, flo
 	char sunwaitCommand[128];
 	int d;
 
-	sprintf(sunwaitCommand, "sunwait poll exit angle %.4f %s %s > /dev/null", angle, latitude, longitude);
+	sprintf(sunwaitCommand, "sunwait poll exit angle %s %s %s > /dev/null", convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
 	d = system(sunwaitCommand);	// returns exit code 2 for DAY, 3 for night
 
 	if (WIFEXITED(d))
@@ -376,7 +393,7 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, float 
 {
 	std::string t;
 	char sunwaitCommand[128];	// returns "hh:mm"
-	sprintf(sunwaitCommand, "sunwait list set angle %.4f %s %s", angle, latitude, longitude);
+	sprintf(sunwaitCommand, "sunwait list set angle %s %s %s", convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
 	t = exec(sunwaitCommand);
 
 	t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
@@ -575,6 +592,15 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
+	if (cg.overlay.showUSB)
+	{
+		sprintf(tmp, "USB Bandwidth: %ld", cg.lastAsiBandwidth);
+		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
+			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+		iYOffset += cg.overlay.iTextLineHeight;
+	}
+
 	/**
 	 * Optionally display extra text which is read from the provided file. If the
 	 * age of the file exceeds the specified limit then ignore the file.
@@ -679,7 +705,7 @@ char const *getFlip(int f)
 // Exit the program gracefully.
 void closeUp(int e)
 {
-	if (cg.quietExit) exit(e);		// Called manually so don't display anything.
+	if (CG.quietExit) exit(e);		// Called manually so don't display anything.
 
 	static bool closingUp = false;		// indicates if we're in the process of exiting.
 	// For whatever reason, we're sometimes called twice, but we should only execute once.
@@ -687,12 +713,12 @@ void closeUp(int e)
 
 	closingUp = true;
 
-	stopVideoCapture(cg.cameraNumber);
+	stopVideoCapture(CG.cameraNumber);
 	// Seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
 	// until the exposure finishes, then it never returns so the remaining code doesn't
 	// get executed. Don't know a way around that, so don't bother closing the camera.
 	// Prior versions of allsky didn't do any cleanup, so it should be ok not to close the camera.
-	//	ASICloseCamera(cg.cameraNumber);
+	//	ASICloseCamera(CG.cameraNumber);
 
 	// Close the optional display window.	// not used by RPi
 	if (bDisplay)
@@ -703,16 +729,16 @@ void closeUp(int e)
 	}
 
 	char const *a = "Stopping";
-	if (cg.notificationImages) {
+	if (CG.notificationImages) {
 		char cmd[256];
 		if (e == EXIT_RESTARTING)
 		{
-			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 15 Restarting &", allskyHome);
+			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 15 Restarting &", CG.allskyHome);
 			a = "Restarting";
 		}
 		else
 		{
-			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 2 NotRunning &", allskyHome);
+			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 2 NotRunning &", CG.allskyHome);
 		}
 		system(cmd);
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
@@ -746,59 +772,59 @@ void IntHandle(int i)
 
 
 // Validate a long integer, typically a command-line argument.
-// errorReturn determines whether we return "true" if the number out of bounds, or "false".
+// invalidIsOK determines whether we return "true" if the number out of bounds, or "false".
 // "false" means it's an error, "true" means it's a warning.
-bool validateLong(long *num, long min, long max, char const *name, bool errorReturn)
+bool validateLong(long *num, long min, long max, char const *name, bool invalidIsOK)
 {
 	if (*num < min) {
 		fprintf(stderr, "*** %s: '%s' (%'ld) is less than the minimum of %'ld",
-			errorReturn == false ? "ERROR" : "WARNING", name, *num, min);
-		if (errorReturn == true)
+			invalidIsOK ? "WARNING" : "ERROR", name, *num, min);
+		if (invalidIsOK)
 		{
 			fprintf(stderr, "; setting to the minimum");
 			*num = min;
 		}
 		fprintf(stderr, "\n");
-		return errorReturn;
+		return invalidIsOK;
 
 	} else if (*num > max) {
 		fprintf(stderr, "*** %s: '%s' (%'ld) is greater than the maximum of %'ld",
-			errorReturn == false ? "ERROR" : "WARNING", name, *num, max);
-		if (errorReturn == true)
+			invalidIsOK ? "WARNING" : "ERROR", name, *num, max);
+		if (invalidIsOK)
 		{
 			fprintf(stderr, "; setting to the maximum");
 			*num = max;
 		}
 		fprintf(stderr, "\n");
-		return errorReturn;
+		return invalidIsOK;
 	}
 	return true;
 }
 
 // Ditto but for floating-point numbers.
-bool validateFloat(double *num, double min, double max, char const *name, bool errorReturn)
+bool validateFloat(double *num, double min, double max, char const *name, bool invalidIsOK)
 {
 	if (*num < min) {
 		fprintf(stderr, "*** %s: '%s' (%'.1f) is less than the minimum of %'.1f",
-			errorReturn == false ? "ERROR" : "WARNING", name, *num, min);
-		if (errorReturn == true)
+			invalidIsOK ? "WARNING" : "ERROR", name, *num, min);
+		if (invalidIsOK == true)
 		{
 			fprintf(stderr, "; setting to the minimum.");
 			*num = min;
 		}
 		fprintf(stderr, "\n");
-		return errorReturn;
+		return invalidIsOK;
 
 	} else if (*num > max) {
 		fprintf(stderr, "*** %s: '%s' (%'.1f) is greater than the maximum of %'.1f",
-			errorReturn == false ? "ERROR" : "WARNING", name, *num, max);
-		if (errorReturn == true)
+			invalidIsOK ? "WARNING" : "ERROR", name, *num, max);
+		if (invalidIsOK == true)
 		{
 			fprintf(stderr, "; setting to the maximum.");
 			*num = max;
 		}
 		fprintf(stderr, "\n");
-		return errorReturn;
+		return invalidIsOK;
 	}
 
 	return true;
@@ -851,62 +877,63 @@ void displayHelp(config cg)
 	printf("%sAvailable Arguments (see the WebUI for more details):\n", c(KYEL));
 	printf("     'b' is a boolean (0 or 1), 'n' is a number, 's' is a string\n");
 	printf("     %'d ms (milli-seconds) = 1 second.  %'d us (micro-seconds) = 1 second.\n", 1000, 1000000);
-	printf("     Defaults are in [brackets].\n");
+	printf("     See the Allsky WebUI for camera-dependent defaults.\n");
+	printf("     Non camera-depenent defaults are in [brackets].\n");
 
 	printf(" -%-*s - Optional configuration file to use instead of, or in addition to,\n", n, "config s");
-	printf("  %-*s   command-line arguments.  The file is read when seen on the command line.\n", n, "");
+	printf("  %-*s   command-line arguments.  The file is read when seen on the command line [none].\n", n, "");
 
 	printf("\nDaytime settings:\n");
 	printf(" -%-*s - 1 enables daytime auto-exposure [%s].\n", n, "dayautoexposure b", yesNo(cg.dayAutoExposure));
-	printf(" -%-*s - Maximum daytime auto-exposure in ms [%'ld].\n", n, "daymaxexposure n", cg.dayMaxAutoExposure_us);
+	printf(" -%-*s - Maximum daytime auto-exposure in ms.\n", n, "daymaxexposure n");
 	printf(" -%-*s - Daytime exposure in us [%'ld].\n", n, "dayexposure n", cg.dayExposure_us);
 	printf(" -%-*s - Daytime mean target brightness [%.2f].\n", n, "daymean", cg.myModeMeanSetting.dayMean);
 	printf("  %-*s   NOTE: Daytime auto-gain and auto-exposure should be on for best results.\n", n, "");
 	printf(" -%-*s - Daytime brightness change [%'ld].\n", n, "daybrightness n", cg.dayBrightness);
 	printf(" -%-*s - Delay between daytime images in ms [%'ld].\n", n, "dayDelay n", cg.dayDelay_ms);
 	printf(" -%-*s - 1 enables daytime auto gain [%s].\n", n, "dayautogain b", yesNo(cg.dayAutoGain));
-	printf(" -%-*s - Daytime maximum auto gain [%s].\n", n, "daymaxautogain n", LorF(cg.dayMaxAutoGain, "%ld", "%.2f"));
-	printf(" -%-*s - Daytime gain [%s].\n", n, "daygain n", LorF(cg.dayGain, "%ld", "%.2f"));
+	printf(" -%-*s - Daytime maximum auto gain.\n", n, "daymaxautogain n");
+	printf(" -%-*s - Daytime gain.\n", n, "daygain n");
 	printf(" -%-*s - 1 = binning OFF (1x1), 2 = 2x2 binning, etc. [%ld]\n", n, "daybin n", cg.dayBin);
 	printf(" -%-*s - 1 enables auto White Balance [%s].\n", n, "dayautowhitebalance b", yesNo(cg.dayAutoAWB));
-	printf(" -%-*s - Manual White Balance Red [%s].\n", n, "daywbr n", LorF(cg.dayWBR, "%ld", "%.2f"));
-	printf(" -%-*s - Manual White Balance Blue [%s].\n", n, "daywbb n", LorF(cg.dayWBB, "%ld", "%.2f"));
+	printf(" -%-*s - Manual White Balance Red.\n", n, "daywbr n");
+	printf(" -%-*s - Manual White Balance Blue.\n", n, "daywbb n");
 	printf(" -%-*s - Number of auto-exposure frames to skip when starting software during daytime [%ld].\n", n, "dayskipframes n", cg.daySkipFrames);
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - 1 enables cooler (cooled cameras only) [%s].\n", n, "dayEnableCooler b", yesNo(cg.dayEnableCooler));
-		printf(" -%-*s - Target temperature in degrees C (cooled cameras only) [%ld].\n", n, "dayTargetTemp n", cg.dayTargetTemp);
+		printf(" -%-*s - Target temperature in degrees C (cooled cameras only).\n", n, "dayTargetTemp n");
 	}
 
 	printf("\nNighttime settings:\n");
 	printf(" -%-*s - 1 enables nighttime auto-exposure [%s].\n", n, "nightautoexposure b", yesNo(cg.nightAutoExposure));
-	printf(" -%-*s - Maximum nighttime auto-exposure in ms [%'ld].\n", n, "nightmaxexposure n", cg.nightMaxAutoExposure_us);
+	printf(" -%-*s - Maximum nighttime auto-exposure in ms.\n", n, "nightmaxexposure n");
 	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us * US_IN_MS);
 	printf(" -%-*s - Nighttime mean target brightness [%.2f].\n", n, "nightmean n", cg.myModeMeanSetting.nightMean);
 	printf("  %-*s   NOTE: Nighttime auto-gain and auto-exposure should be on for best results.\n", n, "");
 	printf(" -%-*s - Nighttime brightness change [%ld].\n", n, "nightbrightness n n", cg.nightBrightness);
 	printf(" -%-*s - Delay between nighttime images in ms [%'ld].\n", n, "nightDelay n", cg.nightDelay_ms);
 	printf(" -%-*s - 1 enables nighttime auto gain [%s].\n", n, "nightautogain b", yesNo(cg.nightAutoGain));
-	printf(" -%-*s - Nighttime maximum auto gain [%s].\n", n, "nightmaxautogain n", LorF(cg.nightMaxAutoGain, "%ld", "%.2f"));
-	printf(" -%-*s - Nighttime gain [%s].\n", n, "nightgain n", LorF(cg.nightGain, "%ld", "%.2f"));
+	printf(" -%-*s - Nighttime maximum auto gain.\n", n, "nightmaxautogain n");
+	printf(" -%-*s - Nighttime gain.\n", n, "nightgain n");
 	printf(" -%-*s - Same as daybin but for night [%ld].\n", n, "nightbin n", cg.nightBin);
 	printf(" -%-*s - 1 enables auto White Balance [%s].\n", n, "nightautowhitebalance n", yesNo(cg.nightAutoAWB));
-	printf(" -%-*s - Manual White Balance Red [%s].\n", n, "nightwbr n", LorF(cg.nightWBR, "%ld", "%.2f"));
-	printf(" -%-*s - Manual White Balance Blue [%s].\n", n, "nightwbb n", LorF(cg.nightWBB, "%ld", "%.2f"));
+	printf(" -%-*s - Manual White Balance Red.\n", n, "nightwbr n");
+	printf(" -%-*s - Manual White Balance Blue.\n", n, "nightwbb n");
 	printf(" -%-*s - Number of auto-exposure frames to skip when starting software during nighttime [%ld].\n", n, "nightskipframes n", cg.nightSkipFrames);
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - 1 enables cooler (cooled cameras only) [%s]\n", n, "nightEnableCooler b", yesNo(cg.nightEnableCooler));
-		printf(" -%-*s - Target temperature in degrees C (cooled cameras only) [%ld].\n", n, "nightTargetTemp n", cg.nightTargetTemp);
+		printf(" -%-*s - Target temperature in degrees C (cooled cameras only).\n", n, "nightTargetTemp n");
 	}
 
 	printf("\nDay and nighttime settings:\n");
 	if (cg.ct == ctRPi) {
-		printf(" -%-*s - Image saturation [%.1f].\n", n, "saturation n", cg.saturation);
-		printf(" -%-*s - Image contrast [%.1f].\n", n, "contrast n", cg.contrast);
-		printf(" -%-*s - Image sharpness [%.1f].\n", n, "sharpness n", cg.sharpness);
+		printf(" -%-*s - Image saturation.\n", n, "saturation n");
+		printf(" -%-*s - Image contrast..\n", n, "contrast n");
+		printf(" -%-*s - Image sharpness.\n", n, "sharpness n");
 	}
 	if (cg.ct == ctZWO) {
-		printf(" -%-*s - Gamma level [%ld].\n", n, "gamma n", cg.gamma);
-		printf(" -%-*s - Offset [%ld].\n", n, "offset n", cg.offset);
+		printf(" -%-*s - Gamma level.\n", n, "gamma n");
+		printf(" -%-*s - Offset.\n", n, "offset n");
 		printf(" -%-*s - Percent of exposure change to make, similar to PHD2 [%ld%%].\n", n, "aggression n", cg.aggression);
 		printf(" -%-*s - Seconds to transition gain from day-to-night or night-to-day.  0 disable it [%'ld].\n", n, "gaintransitiontime n", cg.gainTransitionTime);
 	}
@@ -938,8 +965,8 @@ void displayHelp(config cg)
 	printf("  %-*s   Type 'locale' at a command prompt to determine yours.\n", n, "");
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", n, "histogrambox n n n n", cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY, cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0);
-		printf(" -%-*s - 1 enables auto USB Speed\n", n, "autousb b");
-		printf(" -%-*s - USB bandwidth percent from %ld to %ld [%ld]\n", n, "usb n", cg.minAsiBandwidth, cg.maxAsiBandwidth, cg.asiBandwidth);
+		printf(" -%-*s - 1 enables auto USB Speed.\n", n, "autousb b");
+		printf(" -%-*s - USB bandwidth percent.\n", n, "usb n");
 		printf(" -%-*s - Determines if version 0.8 exposure method should be used [%s].\n", n, "newexposure b", yesNo(cg.videoOffBetweenImages));
 	}
 	printf(" -%-*s - Set to 1, 2, 3, or 4 for more debugging information [%ld].\n", n, "debuglevel n", cg.debugLevel);
@@ -1049,10 +1076,10 @@ void displaySettings(config cg)
 		printf("   Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
 	if (cg.myModeMeanSetting.dayMean > 0.0 || cg.myModeMeanSetting.dayMean > 0.0)
 	{
-		printf("   Threshold: %1.3f\n", cg.myModeMeanSetting.mean_threshold);
-		printf("   p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
-		printf("   p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
-		printf("   p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
+		printf("      Threshold: %1.3f\n", cg.myModeMeanSetting.mean_threshold);
+		printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
+		printf("      p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
+		printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
 	}
 
 	if (cg.gainTransitionTimeImplemented)
@@ -1151,7 +1178,7 @@ bool daytimeSleep(bool displayedMsg, config cg)
 		if (cg.notificationImages) {
 			char cmd[256];
 			sleep(5);		// In case another notification image is being upload, give it time to finish.
-			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &", allskyHome);
+			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &", cg.allskyHome);
 			system(cmd);
 		}
 		Log(0, "It's daytime... we're not saving images.\n%s",
@@ -1202,70 +1229,6 @@ void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 	}
 
 	usleep(s_us);	// usleep() is in us (microseconds)
-}
-
-// Set defaults that depend on camera type or otherwise can't be set at compile time.
-// If a value is currently NOT_CHANGED, the user didn't specify
-void setDefaults(config *cg, cameraType ct)
-{
-	cg->ct = ct;
-	static char s[256];
-	snprintf(s, sizeof(s), "%s%s", allskyHome, "tmp");
-	cg->saveDir = s;
-	cg->CC_saveDir = cg->saveDir;
-
-// TODO: Get from camera model
-	cg->isColorCamera = false;
-	cg->isCooledCamera = false;
-	cg->supportsTemperature = false;
-
-	if (ct == ctZWO) {
-// TODO: Get from camera model
-		// Gain, brightness, and min/max are camera model-dependent, but use a reasonable value.
-		cg->cameraMinExposure_us = 32 * US_IN_MS;
-		cg->cameraMaxExposure_us = 2000 * US_IN_SEC;
-		cg->cameraMaxAutoExposure_us = 60 * US_IN_SEC;
-		cg->dayBrightness = 100;
-		cg->dayMaxAutoGain = 100;
-		cg->dayGain = 1;
-		cg->dayWBR = 65;
-		cg->dayWBB = 85;
-		cg->nightBrightness = 100;
-		cg->nightMaxAutoGain = 200;
-		cg->nightGain = 150;
-		cg->nightWBR = cg->dayWBR;		// TODO: should night be different than day?
-		cg->nightWBB = cg->dayWBB;
-		cg->supportsAggression = true;
-	} else {
-		cg->cameraMinExposure_us = 1;
-		cg->cameraMaxExposure_us = 230 * US_IN_SEC;	// HQ camera
-		cg->cameraMaxAutoExposure_us = cg->cameraMaxExposure_us;
-		if (cg->isLibcamera)
-		{
-			cg->dayBrightness = 0;
-			cg->saturation = 1.0;
-			cg->contrast = 1.0;
-			cg->sharpness = 0.0;
-		}
-		else
-		{
-			cg->dayBrightness = 50;
-			cg->saturation = 0.0;
-			cg->contrast = 0.0;
-			cg->sharpness = 0.0;
-		}
-		cg->rotation = 0;
-		cg->dayMaxAutoGain = 16.0;
-		cg->dayGain = 1.0;
-		cg->dayWBR = 2.5;
-		cg->dayWBB = 2.0;
-		cg->nightBrightness = 0;
-		cg->nightMaxAutoGain = 16.0;
-		cg->nightGain = 4.0;
-		cg->nightWBR = cg->dayWBR;
-		cg->nightWBB = cg->dayWBB;
-		cg->supportsAggression = false;
-	}
 }
 
 
@@ -1438,7 +1401,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		if (*a == '-') a++;		// skip leading "-"
 
-		Log(4, "%s >>> Parameter [%-*s]  Value: [%s]\n", b, n, a, argv[i+1]);
+		Log(5, "%s >>> Parameter [%-*s]  Value: [%s]\n", b, n, a, argv[i+1]);
 
 		// Misc. settings
 		if (strcmp(a, "config") == 0)
@@ -1468,6 +1431,8 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "cc_save_dir") == 0)
 		{
 			cg->CC_saveDir = argv[++i];
+			// Since the user specified the CC_saveDir that means they want to save
+			// the camera capabilities and quit.
 			cg->saveCC = true;
 			cg->quietExit = true;	// we display info and quit
 		}
@@ -1489,6 +1454,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "takedaytimeimages") == 0)
 		{
 			cg->daytimeCapture = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "savedaytimeimages") == 0)
+		{
+			cg->daytimeSave = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "dayautoexposure") == 0)
 		{
@@ -1872,9 +1841,8 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 			strcmp(a, "camera") == 0 ||
 			strcmp(a, "lens") == 0 ||
 			strcmp(a, "computer") == 0 ||
-			strcmp(a, "savedaytimeimages") == 0 ||
 			strcmp(a, "usedarkframes") == 0 ||
-			strcmp(a, "useLogin") == 0 ||
+			strcmp(a, "uselogin") == 0 ||
 			strcmp(a, "alwaysshowadvanced") == 0
 			)
 		{
@@ -1884,6 +1852,14 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else
 			Log(1, "*** WARNING: Unknown argument: [%s]\n", a);
 	}
+
+
+	if (cg->saveDir == NULL) {
+			cg->saveDir = cg->allskyHome;
+			Log(0, "*** WARNING: No directory to save Images was specified. Using: [%s]\n", cg->saveDir);
+	}
+	if (cg->CC_saveDir == NULL)
+		cg->CC_saveDir = cg->saveDir;
 
 	return(true);
 }

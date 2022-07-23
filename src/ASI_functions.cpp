@@ -15,7 +15,9 @@ int numCameras = 0;		// used by several functions
 //-----------------------------------------------------------------------------------------
 // Info and routines for RPi only
 //-----------------------------------------------------------------------------------------
+
 #ifdef IS_RPi
+
 // Mirror the ZWO structs as much as possible to keep the code similar (including the "ASI" in the names).
 typedef enum ASI_BOOL{
 	ASI_FALSE =0,
@@ -60,6 +62,8 @@ typedef enum ASI_CONTROL_TYPE{ //Control type//
 	ASI_GAMMA,
 	ASI_WB_R,
 	ASI_WB_B,
+	ASI_OFFSET,
+	ASI_BANDWIDTHOVERLOAD,			// ZWO only
 	ASI_TEMPERATURE,				// returns 10*temperature
 	ASI_FLIP,
 	ASI_AUTO_MAX_GAIN,				// Max gain in auto-gain mode
@@ -70,11 +74,11 @@ typedef enum ASI_CONTROL_TYPE{ //Control type//
 	ASI_FAN_ON,
 
 	// RPI only:
-	EV,
 	BRIGHTNESS,
 	SATURATION,
 	CONTRAST,
 	SHARPNESS,
+	EV,
 
 	CONTROL_TYPE_END
 } ASI_CONTROL_TYPE;
@@ -96,7 +100,7 @@ typedef struct _ASI_CONTROL_CAPS
 typedef enum ASI_ERROR_CODE {
 	ASI_SUCCESS=0,
 	ASI_ERROR_INVALID_INDEX,		// no camera connected or index value out of boundary
-	ASI_ERROR_INVALID_CONTROL_TYPE,	// invalid control type
+	ASI_ERROR_INVALID_CONTROL_TYPE,	// invalid control type, usually because control isn't supported
 	ASI_ERROR_GENERAL_ERROR,		// general error, eg: value is out of valid range
 	ASI_ERROR_END
 } ASI_ERROR_CODE;
@@ -173,16 +177,23 @@ char camerasInfoFile[128]	= { 0 };	// name of temporary file
 // TODO: use fork() and inter-process communication to get the info to avoid a temporary file.
 int ASIGetNumOfConnectedCameras()
 {
+	// CG.CC_saveDir should be specified, but in case it isn't...
+	const char *dir = CG.CC_saveDir;
+	if (dir == NULL)
+		dir = CG.saveDir;
+	if (dir == NULL)
+		dir = "/tmp";
+
 	// File to hold info on all the cameras.
-	snprintf(camerasInfoFile, sizeof(camerasInfoFile), "%s/cameras.txt", cg.CC_saveDir);
+	snprintf(camerasInfoFile, sizeof(camerasInfoFile), "%s/cameras.txt", dir);
 
 	char cmd[300];
 	int num;
 	// Put the list of cameras and attributes in a file and return the number of cameras (the exit code).
-	if (cg.isLibcamera)
+	if (CG.isLibcamera)
 	{
 		// --list-cameras" writes to stderr.
-		snprintf(cmd, sizeof(cmd), "NUM=$(LIBCAMERA_LOG_LEVELS=FATAL %s --list-cameras 2>&1 | grep -E '^[0-9 ]' | tee '%s' | grep -E '^[0-9] : ' | wc -l); exit ${NUM}", cg.cmdToUse, camerasInfoFile);
+		snprintf(cmd, sizeof(cmd), "NUM=$(LIBCAMERA_LOG_LEVELS=FATAL %s --list-cameras 2>&1 | grep -E '^[0-9 ]' | tee '%s' | grep -E '^[0-9] : ' | wc -l); exit ${NUM}", CG.cmdToUse, camerasInfoFile);
 	}
 	else
 	{
@@ -266,7 +277,7 @@ ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
 	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
 
-	if (! cg.isLibcamera)
+	if (! CG.isLibcamera)
 		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
 	int num = 0;
 	for (int i=0; i < MAX_NUM_CONTROL_CAPS; i++)
@@ -291,7 +302,7 @@ ASI_ERROR_CODE ASIGetControlCaps(int iCameraIndex, int iControlIndex, ASI_CONTRO
 	if (iControlIndex < 0 || iControlIndex > numCaps)
 		return(ASI_ERROR_INVALID_CONTROL_TYPE);
 
-	if (! cg.isLibcamera)
+	if (! CG.isLibcamera)
 		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
 
 	*pControlCaps = ControlCapsArray[iCameraIndex][iControlIndex];
@@ -305,7 +316,7 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
 
-	if (! cg.isLibcamera)
+	if (! CG.isLibcamera)
 		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
 	int numCaps = iNumOfCtrl != NOT_SET ? iNumOfCtrl : MAX_NUM_CONTROL_CAPS;
 	for (int i=0; i < numCaps ; i++)
@@ -361,6 +372,14 @@ char const *argumentNames[][2] = {
 
 #else		// ZWO
 
+// To keep the compiler quiet, we need to define these - they are RPi only.
+// It doesn't matter what the value is.
+#define BRIGHTNESS	(ASI_CONTROL_TYPE) 0
+#define SATURATION	(ASI_CONTROL_TYPE) 0
+#define CONTRAST	(ASI_CONTROL_TYPE) 0
+#define SHARPNESS	(ASI_CONTROL_TYPE) 0
+#define EV			(ASI_CONTROL_TYPE) 0
+
 // Same ideas as for RPi but some different options.
 char const *argumentNames[][2] = {
 	{ "Gain", "gain" },							// day/night
@@ -405,7 +424,7 @@ ASI_ERROR_CODE getControlCapForControlType(int iCameraIndex, ASI_CONTROL_TYPE Co
 		return(ASI_ERROR_GENERAL_ERROR);
 
 #ifdef IS_RPi
-	if (! cg.isLibcamera)
+	if (! CG.isLibcamera)
 		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
 #endif
 	for (int i=0; i < iNumOfCtrl ; i++)
@@ -447,7 +466,7 @@ char *getRetCode(ASI_ERROR_CODE code)
 		// To aid in debugging these errors, keep track of how many we see.
 		errorTimeoutCntr += 1;
 		ret = "ASI_ERROR_TIMEOUT #" + std::to_string(errorTimeoutCntr) +
-			  " (with 0.8 exposure = " + ((cg.videoOffBetweenImages)?("YES"):("NO")) + ")";
+			  " (with 0.8 exposure = " + ((CG.videoOffBetweenImages)?("YES"):("NO")) + ")";
 	}
 	else if (code == ASI_ERROR_INVALID_SEQUENCE) ret = "ASI_ERROR_INVALID_SEQUENCE";
 	else if (code == ASI_ERROR_BUFFER_TOO_SMALL) ret = "ASI_ERROR_BUFFER_TOO_SMALL";
@@ -625,7 +644,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
 	fprintf(f, "\t\"bitDepth\" : %d,\n", cameraInfo.BitDepth);
 #ifdef IS_RPi
-	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", cg.cmdToUse);
+	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", CG.cmdToUse);
 #endif
 
 	fprintf(f, "\t\"suportedImageFormats\": [\n");
@@ -684,7 +703,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 }
 
 // Output basic camera information.
-void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, long width, long height, double pixelSize, char const *bayer)
+void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg, long width, long height, double pixelSize, char const *bayer)
 {
 	printf(" Camera Information:\n");
 	printf("  - Type: %s\n", CAMERA_TYPE);
@@ -830,4 +849,358 @@ bool checkExposureValues(config *cg)
 	}
 
 	return(true);		// only WARNINGs above
+}
+
+// Set defaults that depend on camera type or otherwise can't be set at compile time.
+// If a value is currently NOT_CHANGED, the user didn't specify so use the default.
+// Validate the command-line settings.
+bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
+{
+	if (cg->saveDir == NULL) {
+		static char s[256];
+		snprintf(s, sizeof(s), "%s%s", cg->allskyHome, "tmp");
+		cg->saveDir = s;
+	}
+	if (cg->CC_saveDir == NULL)
+		cg->CC_saveDir = cg->saveDir;
+
+	cg->tty = isatty(fileno(stdout)) ? true : false;
+
+	cg->isColorCamera = ci.IsColorCam == ASI_TRUE ? true : false;
+	cg->isCooledCamera = ci.IsCoolerCam == ASI_TRUE ? true : false;
+
+	ASI_ERROR_CODE ret;
+	ASI_CONTROL_CAPS cc;
+	bool ok = true;
+
+	if (cg->ct == ctZWO) {
+		cg->supportsAggression = true;
+		cg->supportsTemperature = true;
+	} else {	// RPi
+		cg->supportsAggression = false;
+		cg->supportsTemperature = false;
+	}
+
+	// Get values used in several validations.
+	ret = getControlCapForControlType(cg->cameraNumber, ASI_EXPOSURE, &cc);
+	if (ret == ASI_SUCCESS)
+	{
+		cg->cameraMinExposure_us = cc.MinValue;
+		cg->cameraMaxExposure_us = cc.MaxValue;
+	} else {
+		Log(0, "ASI_EXPOSURE failed with %s\n", getRetCode(ret));
+		ok = false;
+	}
+	ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_MAX_EXP, &cc);
+	if (ret == ASI_SUCCESS)
+	{
+		cg->cameraMaxAutoExposure_us = cc.MaxValue * US_IN_MS;
+	} else {
+		Log(0, "ASI_AUTO_MAX_EXP failed with %s\n", getRetCode(ret));
+		ok = false;
+	}
+
+	signal(SIGINT, IntHandle);
+	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
+	signal(SIGHUP, sig);		// xxxxxxxxxx TODO: Set up to re-read settings (we currently just restart).
+
+
+	// Validate input
+
+	// If an exposure value, which was entered on the command-line in MS, is out of range,
+	// we want to specify the valid range in MS, not US which we use internally.
+
+	validateFloat(&cg->temp_dayExposure_ms,
+		(double)cg->cameraMinExposure_us / US_IN_MS, (double)cg->cameraMaxExposure_us / US_IN_MS,
+		"Daytime Exposure", true);
+	if (cg->dayAutoExposure)
+	{
+		validateFloat(&cg->temp_dayMaxAutoExposure_ms,
+			(double)cg->cameraMinExposure_us / US_IN_MS, (double)cg->cameraMaxAutoExposure_us / US_IN_MS,
+			"Daytime Max Auto-Exposure", true);
+	}
+	validateFloat(&cg->temp_nightExposure_ms,
+		(double)cg->cameraMinExposure_us / US_IN_MS, (double)cg->cameraMaxExposure_us / US_IN_MS,
+		"Nighttime Exposure", true);
+	if (cg->nightAutoExposure)
+	{
+		validateFloat(&cg->temp_nightMaxAutoExposure_ms,
+			(double)cg->cameraMinExposure_us / US_IN_MS, (double)cg->cameraMaxExposure_us / US_IN_MS,
+			"Nighttime Max Auto-Exposure", true);
+	}
+
+	// The user entered these in MS on the command line, but we need US, so convert.
+	cg->dayExposure_us = cg->temp_dayExposure_ms * US_IN_MS;
+	cg->dayMaxAutoExposure_us = cg->temp_dayMaxAutoExposure_ms * US_IN_MS;
+	cg->nightExposure_us = cg->temp_nightExposure_ms * US_IN_MS;
+	cg->nightMaxAutoExposure_us = cg->temp_nightMaxAutoExposure_ms * US_IN_MS;
+
+	if (! validateFloat(&cg->myModeMeanSetting.dayMean, 0.0, 1.0, "Daytime Mean Target", false))
+		ok = false;
+	if (! validateFloat(&cg->myModeMeanSetting.nightMean, 0.0, 1.0, "Nighttime Mean Target", false))
+		ok = false;
+	if (! validateFloat(&cg->myModeMeanSetting.mean_threshold, 0.0, 1.0, "Mean Threshold", false))
+		ok = false;
+
+	// If there's too short of a delay, pictures won't upload fast enough.
+	int min_delay;
+	if (cg->daytimeSave)
+		min_delay = 10;
+	else
+		min_delay = 5;
+// TODO: determine average speed to save images on this Pi, and use that plus a buffer as min.
+	validateLong(&cg->dayDelay_ms, min_delay, NO_MAX_VALUE, "Daytime Delay", true);
+	validateLong(&cg->nightDelay_ms, min_delay, NO_MAX_VALUE, "Nighttime Delay", true);
+
+	// SkipFrames only applies if auto-exposure is on.  The max are arbitrary numbers.
+	if (cg->dayAutoExposure)
+		validateLong(&cg->daySkipFrames, 0, 50, "Daytime Skip Frames", true);
+	else
+		cg->daySkipFrames = 0;
+	if (cg->nightAutoExposure)
+		validateLong(&cg->nightSkipFrames, 0, 10, "Nighttime Skip Frames", true);
+	else
+		cg->nightSkipFrames = 0;
+
+	if (cg->imageType != AUTO_IMAGE_TYPE && ! validateLong(&cg->imageType, 0, ASI_IMG_END, "Image Type", false))
+		ok = false;
+
+	ret = getControlCapForControlType(cg->cameraNumber, ASI_FLIP, &cc);
+	if (ret == ASI_SUCCESS)
+	{
+		if (! validateLong(&cg->flip, cc.MinValue, cc.MaxValue, "Flip", false))
+			ok = false;
+	} else {
+		Log(0, "ASI_FLIP failed with %s\n", getRetCode(ret));
+		ok = false;
+	}
+	// libcamera only supports 0 and 180 degree rotation
+	if (cg->rotation != 0)
+	{
+		if (cg->ct == ctRPi && cg->isLibcamera)
+		{
+			if (cg->rotation != 180)
+			{
+				Log(0, "%s*** ERROR: Only 0 and 180 degrees are supported for rotation; you entered %ld.%s\n", c(KRED), cg->rotation, c(KNRM));
+				ok = false;
+			}
+		}
+		else if (cg->rotation != 90 && cg->rotation != 180 && cg->rotation != 270)
+		{
+			Log(0, "%s*** ERROR: Only 0, 90, 180, and 270 degrees are supported for rotation; you entered %ld.%s\n", c(KRED), cg->rotation, c(KNRM));
+			ok = false;
+		}
+	}
+
+	if (cg->ct == ctZWO) {
+		validateLong(&cg->aggression, 1, 100, "Aggression", true);
+
+		validateLong(&cg->gainTransitionTime, 0, NO_MAX_VALUE, "Gain Transition Time", true);
+		// user specifies minutes but we want seconds.
+		cg->gainTransitionTime *= 60;
+	}
+
+	if (cg->imageType != AUTO_IMAGE_TYPE)
+		validateLong(&cg->imageType, 0, ASI_IMG_END, "Image Type", false);
+
+	validateLong(&cg->debugLevel, 0, 4, "Debug Level", true);
+	validateLong(&cg->overlay.extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);
+	validateLong(&cg->overlay.fontnumber, 0, 8-1, "Font Name", true);
+	validateLong(&cg->overlay.linenumber, 0, sizeof(cg->overlay.linetype)-1, "Font Smoothness", true);
+
+	if (cg->overlay.fc != NULL && sscanf(cg->overlay.fc, "%d %d %d",
+			&cg->overlay.fontcolor[0], &cg->overlay.fontcolor[1], &cg->overlay.fontcolor[2]) != 3)
+		Log(-1, "%s*** WARNING: Not enough font color parameters: '%s'%s\n", c(KRED), cg->overlay.fc, c(KNRM));
+	if (cg->overlay.sfc != NULL && sscanf(cg->overlay.sfc, "%d %d %d",
+			&cg->overlay.smallFontcolor[0], &cg->overlay.smallFontcolor[1], &cg->overlay.smallFontcolor[2]) != 3)
+		Log(-1, "%s*** WARNING: Not enough small font color parameters: '%s'%s\n", c(KRED), cg->overlay.sfc, c(KNRM));
+
+// TODO: look in supported bin list to see if the specified bin is there.  No need for validateLong
+	int max_bin;
+	if (cg->ct == ctZWO)
+		max_bin = 3;
+	else
+		max_bin = 2;
+	validateLong(&cg->dayBin, 1, max_bin, "Daytime Binning", false);
+	validateLong(&cg->nightBin, 1, max_bin, "Nighttime Binning", false);
+
+
+	// The remaining settings are camera-specific and have camera defaults.
+	// If the user didn't specify anything (i.e., the value is NOT_CHANGED), set it to the default.
+	ret = getControlCapForControlType(cg->cameraNumber, BRIGHTNESS, &cc);
+	if (ret == ASI_SUCCESS)
+	{
+		if (cg->dayBrightness == NOT_CHANGED)
+			cg->dayBrightness = cc.DefaultValue;
+		else
+			validateLong(&cg->dayBrightness, cc.MinValue, cc.MaxValue, "Daytime Brightness", true);
+
+		if (cg->nightBrightness == NOT_CHANGED)
+			cg->nightBrightness = cc.DefaultValue;
+		else
+			validateLong(&cg->nightBrightness, cc.MinValue, cc.MaxValue, "Nighttime Brightness", true);
+	} else {
+		Log(0, "BRIGHTNESS failed with %s\n", getRetCode(ret));
+		ok = false;
+	}
+
+	ret = getControlCapForControlType(cg->cameraNumber, ASI_GAIN, &cc);
+	if (ret == ASI_SUCCESS)
+	{
+		cg->cameraMinGain = cc.MinValue;		// used elsewhere
+		validateFloat(&cg->dayGain, cc.MinValue, cc.MaxValue, "Daytime Gain", true);
+		validateFloat(&cg->nightGain, cc.MinValue, cc.MaxValue, "Nighttime Gain", true);
+	} else {
+		Log(0, "ASI_GAIN failed with %s\n", getRetCode(ret));
+		ok = false;
+	}
+	ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_MAX_GAIN, &cc);
+	if (ret == ASI_SUCCESS)
+	{
+		if (cg->dayMaxAutoGain == NOT_CHANGED)
+			cg->dayMaxAutoGain = cc.DefaultValue;
+		else
+			validateFloat(&cg->dayMaxAutoGain, cc.MinValue, cc.MaxValue, "Daytime Max Auto-Gain", true);
+
+		if (cg->nightMaxAutoGain == NOT_CHANGED)
+			cg->nightMaxAutoGain = cc.DefaultValue;
+		else
+			validateFloat(&cg->nightMaxAutoGain, cc.MinValue, cc.MaxValue, "Nighttime Max Auto-Gain", true);
+	} else {
+		Log(0, "ASI_AUTO_MAX_GAIN failed with %s\n", getRetCode(ret));
+		ok = false;
+	}
+
+	if (cg->isColorCamera) {
+		ret = getControlCapForControlType(cg->cameraNumber, ASI_WB_R, &cc);
+		if (ret == ASI_SUCCESS)
+		{
+			if (cg->dayWBR == NOT_CHANGED)
+				cg->dayWBR = cc.DefaultValue;
+			else
+				validateFloat(&cg->dayWBR, cc.MinValue, cc.MaxValue, "Daytime Red Balance", true);
+	
+			if (cg->nightWBR == NOT_CHANGED)
+				cg->nightWBR = cc.DefaultValue;
+			else
+				validateFloat(&cg->nightWBR, cc.MinValue, cc.MaxValue, "Nighttime Red Balance", true);
+		} else {
+			Log(0, "ASI_WB_R failed with %s\n", getRetCode(ret));
+			ok = false;
+		}
+		ret = getControlCapForControlType(cg->cameraNumber, ASI_WB_B, &cc);
+		if (ret == ASI_SUCCESS)
+		{
+			if (cg->dayWBB == NOT_CHANGED)
+				cg->dayWBB = cc.DefaultValue;
+			else
+				validateFloat(&cg->dayWBB, cc.MinValue, cc.MaxValue, "Daytime Blue Balance", true);
+	
+			if (cg->nightWBB == NOT_CHANGED)
+				cg->nightWBB = cc.DefaultValue;
+			else
+				validateFloat(&cg->nightWBB, cc.MinValue, cc.MaxValue, "Nighttime Blue Balance", true);
+		} else {
+			Log(0, "ASI_WB_B failed with %s\n", getRetCode(ret));
+			ok = false;
+		}
+	}
+
+	if (cg->ct == ctRPi) {
+		ret = getControlCapForControlType(cg->cameraNumber, SATURATION, &cc);
+		if (ret == ASI_SUCCESS)
+		{
+			if (cg->saturation == NOT_CHANGED)
+				cg->saturation = cc.DefaultValue;
+			else
+				validateFloat(&cg->saturation, cc.MinValue, cc.MaxValue, "Saturation", true);
+		} else {
+			Log(0, "SATURATION failed with %s\n", getRetCode(ret));
+			ok = false;
+		}
+	
+		ret = getControlCapForControlType(cg->cameraNumber, CONTRAST, &cc);
+		if (ret == ASI_SUCCESS)
+		{
+			if (cg->contrast == NOT_CHANGED)
+				cg->contrast = cc.DefaultValue;
+			else
+				validateFloat(&cg->contrast, cc.MinValue, cc.MaxValue, "Contrast", true);
+		} else {
+			Log(0, "CONTRAST failed with %s\n", getRetCode(ret));
+			ok = false;
+		}
+	
+		ret = getControlCapForControlType(cg->cameraNumber, SHARPNESS, &cc);
+		if (ret == ASI_SUCCESS)
+		{
+			if (cg->sharpness == NOT_CHANGED)
+				cg->sharpness = cc.DefaultValue;
+			else
+				validateFloat(&cg->sharpness, cc.MinValue, cc.MaxValue, "Sharpness", true);
+		} else {
+			Log(0, "SHARPNESS failed with %s\n", getRetCode(ret));
+			ok = false;
+		}
+	}
+
+
+	if (cg->ct == ctZWO) {
+		ret = getControlCapForControlType(cg->cameraNumber, ASI_GAMMA, &cc);
+		if (ret == ASI_SUCCESS)
+		{
+			if (cg->gamma == NOT_CHANGED)
+				cg->gamma = cc.DefaultValue;
+			else
+				validateLong(&cg->gamma, cc.MinValue, cc.MaxValue, "gamma", true);
+		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
+			Log(0, "ASI_GAMMA failed with %s\n", getRetCode(ret));
+			ok = false;
+		}
+
+		ret = getControlCapForControlType(cg->cameraNumber, ASI_OFFSET, &cc);
+		if (ret == ASI_SUCCESS)
+		{
+			if (cg->offset == NOT_CHANGED)
+				cg->offset = cc.DefaultValue;
+			else
+				validateLong(&cg->offset, cc.MinValue, cc.MaxValue, "offset", true);
+		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
+			Log(0, "ASI_OFFSET failed with %s\n", getRetCode(ret));
+			ok = false;
+		}
+
+		if (cg->isCooledCamera && (cg->dayEnableCooler || cg->nightEnableCooler)) {
+			ret = getControlCapForControlType(cg->cameraNumber, ASI_TARGET_TEMP, &cc);
+			if (ret == ASI_SUCCESS)
+			{
+				if (cg->dayTargetTemp == NOT_CHANGED)
+					cg->dayTargetTemp = cc.DefaultValue;
+				else
+					validateLong(&cg->dayTargetTemp, cc.MinValue, cc.MaxValue, "Daytime Target Sensor Temperature", true);
+
+				if (cg->nightTargetTemp == NOT_CHANGED)
+					cg->nightTargetTemp = cc.DefaultValue;
+				else
+					validateLong(&cg->nightTargetTemp, cc.MinValue, cc.MaxValue, "Nighttime Target Sensor Temperature", true);
+			} else {
+				Log(0, "ASI_TARGET_TEMP failed with %s\n", getRetCode(ret));
+				ok = false;
+			}
+		}
+
+		ret = getControlCapForControlType(cg->cameraNumber, ASI_BANDWIDTHOVERLOAD, &cc);
+		if (ret == ASI_SUCCESS)
+		{
+			if (cg->asiBandwidth == NOT_CHANGED)
+				cg->asiBandwidth = cc.DefaultValue;
+			else
+				validateLong(&cg->asiBandwidth, cc.MinValue, cc.MaxValue, "USB Bandwidth", true);
+		} else {
+			Log(0, "ASI_BANDWIDTHOVERLOAD failed with %s\n", getRetCode(ret));
+			ok = false;
+		}
+	}
+
+	return(ok);
 }

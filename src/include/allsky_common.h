@@ -34,7 +34,7 @@
 #define	IS_DEFAULT					NOT_CHANGED
 
 // Defaults
-#define NO_MAX_VALUE				9999999		// signifies a number has no maximum value//
+#define NO_MAX_VALUE				9999999		// signifies a number has no maximum value
 #define AUTO_IMAGE_TYPE				99	// must match what's in the camera_settings.json file
 #define DEFAULT_DAYMEAN				0.5
 #define DEFAULT_NIGHTMEAN			0.2
@@ -86,6 +86,7 @@ struct overlay {
 	bool showMean						= false;
 	bool showFocus						= false;
 	bool showHistogramBox				= false;
+	bool showUSB						= false;
 	bool externalOverlay				= false;
 };
 
@@ -103,7 +104,7 @@ struct HB {
 	int topOfBox						= NOT_SET;		// top left pixel (calculated value)
 	int rightOfBox						= NOT_SET;		// bottom right pixel (calculated value)
 	int bottomOfBox						= NOT_SET;		// bottom right pixel (calculated value)
-	char const *sArgs					= NULL;			// string version of arguments
+	char const *sArgs					= "500 500 50 50";		// string version of arguments
 };
 
 struct myModeMeanSetting {
@@ -127,8 +128,10 @@ struct config {			// for configuration variables
 	int cameraNumber					= 0;			// 0 to number-of-cameras-attached minus 1
 	cameraType ct						= ctRPi;
 	char const *cm						= "";
+	bool goodLastExposure				= false;		// Was the last image propery exposed?
 
 	// Settings can be in the config file and/or command-line.
+	char allskyHome[100]				= { 0 };
 	char const *configFile				= "";
 
 	bool isColorCamera					= false;		// Is the camera color or mono?
@@ -136,27 +139,49 @@ struct config {			// for configuration variables
 	bool supportsTemperature			= false;		// Does the camera have a temp sensor?
 	bool supportsAggression				= false;		// currently ZWO only
 	bool gainTransitionTimeImplemented	= false;		// currently ZWO only
-	// camera's min and max exposures (camera dependent), and max auto-exposure length
-	long cameraMinExposure_us			= NOT_SET;		// Minimum exposure supported by camera
-	long cameraMaxExposure_us			= NOT_SET;		// Maximum exposure supported by camera
-	long cameraMaxAutoExposure_us		= NOT_SET;		// Maximum exposure supported by camera
-	bool goodLastExposure				= false;		// Was the last image propery exposed?
 
-	// The following are settings based on command-line arguments.
+	// These are camera-specific and are here because they are used in a lot of places.
+	long cameraMinExposure_us			= NOT_SET;		// Minimum exposure
+	long cameraMaxExposure_us			= NOT_SET;		// Maximum exposure
+	long cameraMaxAutoExposure_us		= NOT_SET;		// Maximum exposure in auto-exposure mode
+	double cameraMinGain				= NOT_SET;		// Minimum gain
+
+	// The following settings are based on command-line arguments.
 	bool help							= false;		// User wants usage message displayed
 	bool quietExit						= false;		// Exit without any messages
 	const char *version					= "UNKNOWN";	// Allsky version
 	bool isLibcamera					= true;			// RPi only
-	char const *cmdToUse				= "";			// RPi command to us to take images
-	char const *saveDir					= "";			// Directory to save images
-	char const *CC_saveDir				= "";			// Directory to save camera controls file
+	char const *cmdToUse				= NULL;			// RPi command to us to take images
+	char const *saveDir					= NULL;			// Directory to save images
+	char const *CC_saveDir				= NULL;			// Directory to save camera controls file
 	bool saveCC							= false;		// Save camera controls file?
 	bool tty							= false;		// Running on a tty?
 	bool preview						= false;		// Display a preview windoe?
 	bool daytimeCapture					= false;		// Capture images during daytime?
+	bool daytimeSave					= false;		// Save images during daytime?
 	char const *timeFormat				= "%Y%m%d %H:%M:%S";
 
 	// To make the code cleaner, comments are only given for daytime variables.
+
+	// Settings not camera-dependent.
+	long dayDelay_ms					= 10 * MS_IN_SEC;	// Delay between capture end and start
+	long nightDelay_ms					= 10 * MS_IN_SEC;
+	long daySkipFrames					= 5;				// # images to skip when starting
+	long nightSkipFrames				= 1;
+	bool dayEnableCooler				= false;			// Enable the cooler?
+	bool nightEnableCooler				= false;
+	long aggression						= 75;
+	long gainTransitionTime				= 5;
+	long width							= 0;				// use full sensor width
+	long height							= 0;				// use full sensor height
+	long imageType						= AUTO_IMAGE_TYPE;
+	char const *sType					= "";				// string version of imageType
+	char const *imageExt				= "jpg";			// image extension
+	long qualityJPG						= 95;
+	long qualityPNG						= 3;
+	long quality						= qualityJPG;
+
+	// Camera-dependent settings.  Numeric values will be checked for validity.
 	bool dayAutoExposure				= true;				// Use auto-exposure?
 	bool nightAutoExposure				= true;
 	long dayMaxAutoExposure_us			= 10 * US_IN_SEC;	// Max exposure in auto-exposure mode
@@ -167,10 +192,9 @@ struct config {			// for configuration variables
 	double temp_dayExposure_ms			= dayExposure_us / US_IN_MS;
 	long nightExposure_us				= 20 * US_IN_SEC;
 	double temp_nightExposure_ms		= nightExposure_us / US_IN_MS;
+
 	long dayBrightness					= NOT_CHANGED;		// Brightness requested by user
 	long nightBrightness				= NOT_CHANGED;
-	long dayDelay_ms					= 10 * MS_IN_SEC;	// Delay between capture end and start
-	long nightDelay_ms					= 10 * MS_IN_SEC;
 	bool dayAutoGain					= true;				// Use auto-gain?
 	bool nightAutoGain					= true;
 	double dayMaxAutoGain				= NOT_CHANGED;		// Max gain in auto-gain mode
@@ -185,32 +209,15 @@ struct config {			// for configuration variables
 	double nightWBR						= NOT_CHANGED;
 	double dayWBB						= NOT_CHANGED;		// Blue balance requested by user
 	double nightWBB						= NOT_CHANGED;
-	long daySkipFrames					= 5;				// # images to skip when starting
-	long nightSkipFrames				= 1;
-	bool dayEnableCooler				= false;			// Enable the cooler?
-	bool nightEnableCooler				= false;
-	long dayTargetTemp					= 0;				// Target temp when cooler is enabled
-	long nightTargetTemp				= 0;
-
+	long dayTargetTemp					= NOT_CHANGED;		// Target temp when cooler is enabled
+	long nightTargetTemp				= NOT_CHANGED;
 	double saturation					= NOT_CHANGED;
 	double contrast						= NOT_CHANGED;
 	double sharpness					= NOT_CHANGED;
-	long gamma							= 50;
-	long offset							= 0;
-	long aggression						= 75;
-	long gainTransitionTime				= 5;
-	long width							= 0;				// use full sensor width
-	long height							= 0;				// use full sensor height
-	long imageType						= AUTO_IMAGE_TYPE;
-	char const *sType					= "";				// string version of imageType
-	char const *imageExt				= "jpg";			// image extension
-	long qualityJPG						= 95;
-	long qualityPNG						= 3;
-	long quality						= qualityJPG;
+	long gamma							= NOT_CHANGED;
+	long offset							= NOT_CHANGED;
 	bool asiAutoBandwidth				= true;
-	long minAsiBandwidth				= 40;
-	long maxAsiBandwidth				= 100;
-	long asiBandwidth					= 40;
+	long asiBandwidth					= NOT_CHANGED;
 	char const *fileName				= "image.jpg";
 		char fileNameOnly[50]			= { 0 };
 		// final name of the file that's written to disk, with no directories
@@ -253,12 +260,13 @@ struct config {			// for configuration variables
 	int currentBitDepth;
 
 	// Last values - from image just taken.  Only for settings that can change image to image.
-	long lastExposure_us;
-	double lastGain;
-	double lastWBR, lastWBB;
-	long lastSensorTemp;
-	long lastFocusMetric;
-	double lastMean;
+	long lastExposure_us				= NOT_SET;
+	double lastGain						= NOT_SET;
+	double lastWBR, lastWBB				= NOT_SET;
+	long lastSensorTemp					= NOT_SET;
+	long lastFocusMetric				= NOT_SET;
+	long lastAsiBandwidth				= NOT_SET;
+	double lastMean						= NOT_SET;
 };
 
 // Global variables and functions.
@@ -268,7 +276,7 @@ extern std::string dayOrNight;
 extern bool gotSignal;
 extern bool bDisplay;
 extern pthread_t threadDisplay;
-extern config cg;
+extern config CG;
 
 void cvText(cv::Mat, const char *, int, int, double,
 	int, int,
@@ -304,5 +312,4 @@ void displaySettings(config);
 char *LorF(double, char const *, char const *);
 bool daytimeSleep(bool, config);
 void delayBetweenImages(config, long, std::string);
-void setDefaults(config *, cameraType);
 bool getCommandLineArguments(config *, int, char *[]);

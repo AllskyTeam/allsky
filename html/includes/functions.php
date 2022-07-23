@@ -31,29 +31,24 @@ if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	exit;
 }
 
-$cam = get_variable(ALLSKY_CONFIG .'/config.sh', 'CAMERA=', '');
-if ($cam == '') {
+$cam_type = get_variable(ALLSKY_CONFIG .'/config.sh', 'CAMERA_TYPE=', '');
+if ($cam_type == '') {
 	echo "<div style='color: red; font-size: 200%;'>";
-	echo "CAMERA type not defined.";
-	echo "<br>Please update '" . ALLSKY_CONFIG . "/config.sh'";
-	echo "</div>";
-	exit;
-} else if ($cam == 'auto') {
-	echo "<div style='color: red; font-size: 200%;'>";
-	echo "A CAMERA setting of 'auto' is no longer supported.<br>You must set it to the type of camera you have.";
-	echo "<br>Please update '" . ALLSKY_CONFIG . "/config.sh'";
+	echo "'Camera Type' not defined in the WebUI.  Please update it.";
 	echo "</div>";
 	exit;
 }
 
-define('RASPI_CAMERA_SETTINGS', RASPI_CONFIG . '/settings_'.$cam.'.json');
+define('RASPI_CAMERA_SETTINGS', RASPI_CONFIG . "/settings_$cam_type.json");
 if (! file_exists(RASPI_CAMERA_SETTINGS)) {
 	echo "<div style='color: red; font-size: 200%;'>";
-	echo "ERROR: Unable to find camera settings file for camera of type '$cam'.";
-	echo "<br>Please check the " . RASPI_CONFIG . " directory for 'settings_$cam.json'.";
+	echo "ERROR: Unable to find camera settings file for camera of type '$cam_type'.";
+	echo "<br>Please check the " . RASPI_CONFIG . " directory for 'settings_$cam_type.json'.";
 	echo "</div>";
 	exit;
 }
+define('RASPI_CAMERA_OPTIONS', ALLSKY_WEBUI . "/camera_options_$cam_type.json");
+
 
 $camera_settings_str = file_get_contents(RASPI_CAMERA_SETTINGS, true);
 $camera_settings_array = json_decode($camera_settings_str, true);

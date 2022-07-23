@@ -1,5 +1,5 @@
 {
-	"camera" : "",
+	"cameraType" : "ZWO",
 	"takeDaytimeImage" : "1",
 	"saveDaytimeImages" : "0",
 	"dayautoexposure" : "1",

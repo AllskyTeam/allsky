@@ -172,6 +172,7 @@ else
 	LONGITUDE="$(settings ".longitude")"
 	WEBSITE_URL="$(settings ".websiteurl")"
 	IMAGE_URL="$(settings ".imageurl")"
+# TODO: CAMERA should be a combination of CAMERA_TYPE (which we have) and CAMERA_MODEL
 	CAMERA="$(settings ".camera")"
 	LENS="$(settings ".lens")"
 	COMPUTER="$(settings ".computer")"

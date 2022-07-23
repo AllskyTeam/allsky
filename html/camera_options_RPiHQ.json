@@ -102,7 +102,7 @@
 "name":"daymaxautogain",
 "minimum":1,
 "maximum":16,
-"default":200,
+"default":16,
 "description":"Maximum gain when using <b>Auto-Gain</b>.",
 "label":"Max Auto-Gain",
 "type":"number",
@@ -674,7 +674,7 @@
 },
 {
 "name":"debuglevel",
-"default":0,
+"default":1,
 "description":"Debug level, 0 is lowest level.",
 "label":"Debug Level",
 "type":"select",

@@ -70,7 +70,7 @@ int RPicapture(config cg, cv::Mat *image)
 	string kill = "pgrep '" + command + "' | xargs kill -9 2> /dev/null";
 	char kcmd[kill.length() + 1];		// Define char variable
 	strcpy(kcmd, kill.c_str());			// Convert command to character variable
-	Log(5, " > Kill command: %s\n", kcmd);
+	Log(4, " > Kill command: %s\n", kcmd);
 	system(kcmd);						// Stop any currently running process
 
 	if (cg.isLibcamera)
@@ -309,7 +309,7 @@ printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSett
 	// Convert command to character variable
 	strcpy(cmd, command.c_str());
 
-	Log(1, "  > Capture command: %s\n", cmd);
+	Log(2, "  > Capture command: %s\n", cmd);
 
 	// Execute the command.
 	int ret = system(cmd);
@@ -590,7 +590,7 @@ int main(int argc, char *argv[])
 			}
 			CG.myModeMeanSetting.currentMean = NOT_SET;
 
- 			Log(0, "Taking dark frames...\n");
+ 			Log(1, "Taking dark frames...\n");
 
 			if (CG.notificationImages) {
 				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/copy_notification_image.sh --expires 0 DarkFrames &", CG.allskyHome);
@@ -602,7 +602,7 @@ int main(int argc, char *argv[])
 		{
 			if (endOfNight == true)		// Execute end of night script
 			{
-				Log(0, "Processing end of night data\n");
+				Log(1, "Processing end of night data\n");
 				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/endOfNight.sh &", CG.allskyHome);
 				system(bufTemp);
 				endOfNight = false;
@@ -619,7 +619,7 @@ int main(int argc, char *argv[])
 
 			else
 			{
-				Log(0, "==========\n=== Starting daytime capture ===\n==========\n");
+				Log(1, "==========\n=== Starting daytime capture ===\n==========\n");
 
 				// We only skip initial frames if we are starting in daytime and using auto-exposure.
 				if (numExposures == 0 && CG.dayAutoExposure)
@@ -651,7 +651,7 @@ int main(int argc, char *argv[])
 
 		else	// NIGHT
 		{
-			Log(0, "==========\n=== Starting nighttime capture ===\n==========\n");
+			Log(1, "==========\n=== Starting nighttime capture ===\n==========\n");
 
 			// We only skip initial frames if we are starting in nighttime and using auto-exposure.
 			if (numExposures == 0 && CG.nightAutoExposure)
@@ -744,8 +744,8 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			exposureStartDateTime = getTimeval();
 			char exposureStart[128];
 			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(exposureStartDateTime, "%F %T"));
-			Log(3, "-----\n");
-			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(myRaspistillSetting.shutter_us, true));
+			Log(2, "-----\n");
+			Log(1, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(myRaspistillSetting.shutter_us, true));
 
 			// Get start time for overlay. Make sure it has the same time as exposureStart.
 			if (CG.overlay.showTime)
@@ -801,7 +801,7 @@ if (CG.lastExposure_us != myRaspistillSetting.shutter_us)
 						{
 							numErrors++;
 							Log(-1, "ERROR: aegCalcMean() returned mean of -1.\n");
-							Log(1, "  > Sleeping from failed exposure: %.1f seconds\n", (float)CG.currentDelay_ms / MS_IN_SEC);
+							Log(2, "  > Sleeping from failed exposure: %.1f seconds\n", (float)CG.currentDelay_ms / MS_IN_SEC);
 							usleep(CG.currentDelay_ms * US_IN_MS);
 							continue;
 						}
@@ -852,7 +852,7 @@ if (CG.lastExposure_us != myRaspistillSetting.shutter_us)
 				if (myModeMeanSetting.quickstart && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 				{
 					long x = 1 * US_IN_SEC;
-					Log(0, "Sleeping 1 second (quickstart on, %d left)...\n", myModeMeanSetting.quickstart);
+					Log(2, "Sleeping 1 second (quickstart on, %d left)...\n", myModeMeanSetting.quickstart);
 					usleep(x);
 				}
 				else
@@ -888,7 +888,7 @@ if (CG.lastExposure_us != myRaspistillSetting.shutter_us)
 				}
 				// Don't wait the full amount on error.
 				long timeToSleep = (float)CG.currentDelay_ms * .25;
-				Log(1, "  > Sleeping from failed exposure: %.1f seconds\n", (float)timeToSleep / MS_IN_SEC);
+				Log(2, "  > Sleeping from failed exposure: %.1f seconds\n", (float)timeToSleep / MS_IN_SEC);
 				usleep(timeToSleep * US_IN_MS);
 			}
 

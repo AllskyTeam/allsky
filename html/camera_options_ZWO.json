@@ -675,7 +675,7 @@
 },
 {
 "name":"debuglevel",
-"default":0,
+"default":1,
 "description":"Debug level, 0 is lowest level.",
 "label":"Debug Level",
 "type":"select",

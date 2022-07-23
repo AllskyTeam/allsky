@@ -218,7 +218,7 @@ void aegGetNextExposureSettings(float prevMean, int exposure_us, double gain,
 	for (int i=1; i <= currentModeMeanSetting.historySize; i++) {
 		int ii =  (MeanCnt + i) % currentModeMeanSetting.historySize;
 		newMean += meanHistory[ii] * (double) i;		// This gives more weight to means later in the history array.
-		Log(5, "  > index: %d, meanHistory[]=%1.3f exposureLevelHistory[]=%d, newNean=%1.3f\n", ii, meanHistory[ii], exposureLevelHistory[ii], newMean);
+		Log(4, "  > index: %d, meanHistory[]=%1.3f exposureLevelHistory[]=%d, newNean=%1.3f\n", ii, meanHistory[ii], exposureLevelHistory[ii], newMean);
 	}
 	newMean += mean_forecast * currentModeMeanSetting.historySize;
 	newMean /= (double) values;
@@ -231,13 +231,13 @@ void aegGetNextExposureSettings(float prevMean, int exposure_us, double gain,
 	if (fastforward || mean_diff > (currentModeMeanSetting.mean_threshold * 2.0)) {
 		// We are fairly far off from desired mean.
 		ExposureChange = std::max(1.0, currentModeMeanSetting.mean_p0 + (currentModeMeanSetting.mean_p1 * mean_diff) + pow(currentModeMeanSetting.mean_p2 * mean_diff, 2.0));
-		Log(4, "  > fast forward ExposureChange now %d (mean_diff=%1.3f > 2*threshold=%1.3f)\n", ExposureChange, mean_diff, currentModeMeanSetting.mean_threshold*2.0);
+		Log(3, "  > fast forward ExposureChange now %d (mean_diff=%1.3f > 2*threshold=%1.3f)\n", ExposureChange, mean_diff, currentModeMeanSetting.mean_threshold*2.0);
 	}
 	// slow forward
 	else if (mean_diff > currentModeMeanSetting.mean_threshold) {
 		// We are fairly close to desired mean.
 		ExposureChange = std::max(1.0, currentModeMeanSetting.mean_p0 + currentModeMeanSetting.mean_p1 * mean_diff);
-		Log(4, "  > slow forward ExposureChange now %d (mean_diff=%1.3f, threshold=%1.3f)\n", ExposureChange, mean_diff, currentModeMeanSetting.mean_threshold);
+		Log(3, "  > slow forward ExposureChange now %d (mean_diff=%1.3f, threshold=%1.3f)\n", ExposureChange, mean_diff, currentModeMeanSetting.mean_threshold);
 	}
 	else {
 		ExposureChange = currentModeMeanSetting.shuttersteps / 2;
@@ -248,7 +248,7 @@ void aegGetNextExposureSettings(float prevMean, int exposure_us, double gain,
 	dExposureChange = ExposureChange - lastExposureChange;
 	lastExposureChange = ExposureChange;
 
-	Log(3, "  > ExposureChange clipped to %d (diff from last change: %d)\n", ExposureChange, dExposureChange);
+	Log(4, "  > ExposureChange clipped to %d (diff from last change: %d)\n", ExposureChange, dExposureChange);
 
 	// If the last image's mean was good, no changes are needed to the next one.
 	bool goodLastExposure = true;
@@ -278,7 +278,7 @@ void aegGetNextExposureSettings(float prevMean, int exposure_us, double gain,
 		}
 	}
 	else {
-		Log(4, "  >> Prior image mean good - no changes needed, mean=%1.3f, target mean=%1.3f threshold=%1.3f +++++++++\n", prevMean, currentModeMeanSetting.meanValue, currentModeMeanSetting.mean_threshold);
+		Log(3, "  >> Prior image mean good - no changes needed, mean=%1.3f, target mean=%1.3f threshold=%1.3f +++++++++\n", prevMean, currentModeMeanSetting.meanValue, currentModeMeanSetting.mean_threshold);
 		if (currentModeMeanSetting.quickstart > 0)
 		{
 			currentModeMeanSetting.quickstart = 0;		// Got a good exposure - turn quickstart off if on
@@ -319,25 +319,25 @@ printf(">>>>>>>>> fastforward=%s\n", fastforward ? "true" : "false");
 			double newGain = std::min(currentModeMeanSetting.maxGain, max_);
 			if (newGain > currentModeMeanSetting.maxGain) {
 				currentRaspistillSetting.analoggain = currentModeMeanSetting.maxGain;
-				Log(4, "  >> Setting new analoggain to %1.3f (max value) (newGain was %1.3f)\n", currentRaspistillSetting.analoggain, newGain);
+				Log(3, "  >> Setting new analoggain to %1.3f (max value) (newGain was %1.3f)\n", currentRaspistillSetting.analoggain, newGain);
 			}
 			else if (newGain < currentModeMeanSetting.minGain) {
 				currentRaspistillSetting.analoggain = currentModeMeanSetting.minGain;
-				Log(4, "  >> Setting new analoggain to %1.3f (min value) (newGain was %1.3f)\n", currentRaspistillSetting.analoggain, newGain);
+				Log(3, "  >> Setting new analoggain to %1.3f (min value) (newGain was %1.3f)\n", currentRaspistillSetting.analoggain, newGain);
 			}
 			else if (currentRaspistillSetting.analoggain != newGain) {
 				currentRaspistillSetting.analoggain = newGain;
-				Log(4, "  >> Setting new analoggain to %1.3f\n", newGain);
+				Log(3, "  >> Setting new analoggain to %1.3f\n", newGain);
 			}
 			else {
 				char const *isWhat = ((newGain == currentModeMeanSetting.minGain) || (newGain == currentModeMeanSetting.maxGain)) ? "possible" : "needed";
-				Log(4, "  >> No change to analoggain is %s (is %1.3f) +++\n", isWhat, newGain);
+				Log(3, "  >> No change to analoggain is %s (is %1.3f) +++\n", isWhat, newGain);
 			}
 		}
 		else if (currentRaspistillSetting.analoggain != gain) {
 			// it should already be at "gain", but just in case, set it anyhow
 			currentRaspistillSetting.analoggain = gain;
-			Log(4, "  >> setting new gain to %1.3f\n", gain);
+			Log(3, "  >> setting new gain to %1.3f\n", gain);
 		}
  
 		// calculate new exposure time based on the (possibly) new gain
@@ -346,12 +346,12 @@ printf(">>>>>>>>> fastforward=%s\n", fastforward ? "true" : "false");
 			double eOLD_s = exposureTime_s * US_IN_SEC;
 			double eNEW_s = std::min((double)currentModeMeanSetting.maxExposure_us / (double)US_IN_SEC, max_);
 			if (exposureTime_s == eNEW_s) {
-				Log(4, "  >> No change to exposure time needed +++\n");
+				Log(3, "  >> No change to exposure time needed +++\n");
 			}
 			else {
-				Log(4, "  >> Setting new exposureTime_s to %s ", length_in_units((long)(eNEW_s * US_IN_SEC), true));
-				Log(4, "(was %s: ", length_in_units(eOLD_s, true));
-				Log(4, "diff %s)\n", length_in_units((eNEW_s-exposureTime_s) * US_IN_SEC, true));
+				Log(3, "  >> Setting new exposureTime_s to %s ", length_in_units((long)(eNEW_s * US_IN_SEC), true));
+				Log(3, "(was %s: ", length_in_units(eOLD_s, true));
+				Log(3, "diff %s)\n", length_in_units((eNEW_s-exposureTime_s) * US_IN_SEC, true));
 				exposureTime_s = eNEW_s;
 			}
 		}

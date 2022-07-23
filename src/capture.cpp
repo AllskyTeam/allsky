@@ -123,7 +123,7 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 			return ret;
 		}
 	}
-	Log(3, "NOTICE: Camera does not support ControlCap # %d; not setting to %ld.\n", control, value);
+	Log(2, "NOTICE: Camera does not support ControlCap # %d; not setting to %ld.\n", control, value);
 	return ASI_ERROR_INVALID_CONTROL_TYPE;
 }
 
@@ -195,7 +195,7 @@ void *SaveImgThd(void *para)
 
 		} else {
 			// This can happen if the program is closed before the first picture.
-			Log(2, "----- SaveImgThd(): pRgb.data is null\n");
+			Log(0, "----- SaveImgThd(): pRgb.data is null\n");
 		}
 		bSavingImg = false;
 
@@ -211,7 +211,7 @@ void *SaveImgThd(void *para)
 				x = "  > *****\n";	// indicate when it takes a REALLY long time to save
 			else
 				x = "";
-			Log(4, "%s  > Image took %'.1f ms to save (average %'.1f ms).\n%s", x, diff, totalTime_ms / totalSaves, x);
+			Log(3, "%s  > Image took %'.1f ms to save (average %'.1f ms).\n%s", x, diff, totalTime_ms / totalSaves, x);
 		}
 
 		pthread_mutex_unlock(&mtxSaveImg);
@@ -447,13 +447,13 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 			// When in auto-exposure mode, the returned exposure length is what the driver thinks the
 			// next exposure should be, and will eventually converge on the correct exposure.
 			ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &reportedExposure_us, &wasAutoExposure);
-			Log(3, "  > Got image%s.  Returned exposure: %s\n", debug_text, length_in_units(reportedExposure_us, true));
+			Log(2, "  > Got image%s.  Returned exposure: %s\n", debug_text, length_in_units(reportedExposure_us, true));
 
 			// If this was a manual exposure, make sure it took the correct exposure.
 			// Per ZWO, this should never happen.
 			if (wasAutoExposure == ASI_FALSE && cg->currentExposure_us != reportedExposure_us)
 			{
-				Log(0, "  > WARNING: not correct exposure (requested: %'ld us, reported: %'ld us, diff: %'ld)\n", cg->currentExposure_us, reportedExposure_us, reportedExposure_us - cg->currentExposure_us);
+				Log(1, "  > WARNING: not correct exposure (requested: %'ld us, reported: %'ld us, diff: %'ld)\n", cg->currentExposure_us, reportedExposure_us, reportedExposure_us - cg->currentExposure_us);
 			}
 			ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &cg->lastSensorTemp, &bAuto);
 			if (cg->isColorCamera)
@@ -486,20 +486,15 @@ int numGainChanges = 0;		// This is reset at every day/night and night/day trans
 // "dayOrNight" is the new value, e.g., if we just transitioned from day to night, it's "NIGHT".
 bool resetGainTransitionVariables(config cg)
 {
-	// Many of the "xxx" messages below will go away once we're sure gain transition works.
-	Log(5, "xxx resetGainTransitionVariables(%d, %d) called at %s\n", cg.dayGain, cg.nightGain, dayOrNight.c_str());
-
 	if (adjustGain == false)
 	{
 		// determineGainChange() will never be called so no need to set any variables.
-		Log(5, "xxx will not adjust gain - adjustGain == false\n");
 		return(false);
 	}
 
 	if (numExposures == 0)
 	{
 		// we don't adjust when the program first starts since there's nothing to transition from
-		Log(5, "xxx will not adjust gain right now - numExposures == 0\n");
 		return(false);
 	}
 
@@ -513,14 +508,12 @@ bool resetGainTransitionVariables(config cg)
 	if (dayOrNight == "DAY")
 	{
 		totalTimeInSec = (cg.dayExposure_us / US_IN_SEC) + (cg.dayDelay_ms / MS_IN_SEC);
-		Log(5, "xxx totalTimeInSec=%.1fs, dayExposure_us=%'ldus , daydelay_ms=%'dms\n", totalTimeInSec, cg.dayExposure_us, cg.dayDelay_ms);
 	}
 	else	// NIGHT
 	{
 		// At nightime if the exposure is less than the max, we wait until max has expired,
 		// so use it instead of the exposure time.
 		totalTimeInSec = (cg.nightMaxAutoExposure_us / US_IN_SEC) + (cg.nightDelay_ms / MS_IN_SEC);
-		Log(5, "xxx totalTimeInSec=%.1fs, nightMaxAutoExposure_us=%'ldus, nightDelay_ms=%'dms\n", totalTimeInSec, cg.nightMaxAutoExposure_us, cg.nightDelay_ms);
 	}
 
 	gainTransitionImages = ceil(cg.gainTransitionTime / totalTimeInSec);
@@ -543,9 +536,6 @@ bool resetGainTransitionVariables(config cg)
 			gainTransitionImages++;		// this one will get the remaining amount
 	}
 
-	Log(5, "xxx gainTransitionImages=%d, gainTransitionTime=%ds, perImageAdjustGain=%d, totalAdjustGain=%d\n",
-		gainTransitionImages, cg.gainTransitionTime, perImageAdjustGain, totalAdjustGain);
-
 	return(true);
 }
 
@@ -561,7 +551,7 @@ int determineGainChange(config cg)
 	if (numGainChanges > gainTransitionImages || totalAdjustGain == 0)
 	{
 		// no more changes needed in this transition
-		Log(5, "  xxxx No more gain changes needed.\n");
+		Log(4, "  xxxx No more gain changes needed.\n");
 		currentAdjustGain = false;
 		return(0);
 	}
@@ -964,16 +954,16 @@ int main(int argc, char *argv[])
 	if (CG.dayAutoGain || CG.nightAutoGain || CG.gainTransitionTime == 0 || CG.dayGain == CG.nightGain || CG.takeDarkFrames)
 	{
 		adjustGain = false;
-		Log(3, "Will NOT adjust gain at transitions\n");
+		Log(4, "Will NOT adjust gain at transitions\n");
 	}
 	else
 	{
 		adjustGain = true;
-		Log(3, "Will adjust gain at transitions\n");
+		Log(4, "Will adjust gain at transitions\n");
 	}
 
 	if (CG.overlay.ImgExtraText[0] != '\0' && CG.overlay.extraFileAge > 0) {
-		Log(3, "Extra Text File Age Disabled So Displaying Anyway\n");
+		Log(4, "Extra Text File Age Disabled So Displaying Anyway\n");
 	}
 
 	if (CG.tty)
@@ -1029,7 +1019,7 @@ int main(int argc, char *argv[])
 			CG.myModeMeanSetting.currentMean = NOT_SET;
 			CG.myModeMeanSetting.modeMean = false;
 
-			Log(0, "Taking dark frames...\n");
+			Log(1, "Taking dark frames...\n");
 
 			if (CG.notificationImages) {
 				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/copy_notification_image.sh --expires 0 DarkFrames &", CG.allskyHome);
@@ -1041,7 +1031,7 @@ int main(int argc, char *argv[])
 		{
 			if (endOfNight == true)		// Execute end of night script
 			{
-				Log(0, "Processing end of night data\n");
+				Log(1, "Processing end of night data\n");
 				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/endOfNight.sh &", CG.allskyHome);
 				system(bufTemp);
 				endOfNight = false;
@@ -1058,7 +1048,7 @@ int main(int argc, char *argv[])
 
 			else
 			{
-				Log(0, "==========\n=== Starting daytime capture ===\n==========\n");
+				Log(1, "==========\n=== Starting daytime capture ===\n==========\n");
 
 				// We only skip initial frames if we are starting in daytime and using auto-exposure.
 				if (numExposures == 0 && CG.dayAutoExposure)
@@ -1084,9 +1074,9 @@ int main(int argc, char *argv[])
 					// current values here are last night's values
 					double oldGain = pow(10, CG.currentGain / 10.0 / 20.0);
 					double newGain = pow(10, CG.dayGain / 10.0 / 20.0);
-					Log(2, "Using the last night exposure (%s),", length_in_units(CG.currentExposure_us, true));
+					Log(4, "Using the last night exposure (%s),", length_in_units(CG.currentExposure_us, true));
 					CG.currentExposure_us = (CG.currentExposure_us * oldGain) / newGain;
-					Log(2," old (%'f) and new (%'f) Gain to calculate new exposure of %s\n", oldGain, newGain, length_in_units(CG.currentExposure_us, true));
+					Log(4," old (%'f) and new (%'f) Gain to calculate new exposure of %s\n", oldGain, newGain, length_in_units(CG.currentExposure_us, true));
 				}
 
 				CG.currentMaxAutoExposure_us = CG.dayMaxAutoExposure_us;
@@ -1094,7 +1084,7 @@ int main(int argc, char *argv[])
 				// Don't use camera auto-exposure since we mimic it ourselves.
 				if (CG.dayAutoExposure)
 				{
-					Log(2, "Turning off ZWO auto-exposure to use Allsky auto-exposure.\n");
+					Log(4, "Turning off ZWO auto-exposure to use Allsky auto-exposure.\n");
 				}
 				// With the histogram method we NEVER use ZWO auto exposure - either the user said
 				// not to, or we turn it off ourselves.
@@ -1136,7 +1126,7 @@ int main(int argc, char *argv[])
 
 		else	// NIGHT
 		{
-			Log(0, "==========\n=== Starting nighttime capture ===\n==========\n");
+			Log(1, "==========\n=== Starting nighttime capture ===\n==========\n");
 
 			// We only skip initial frames if we are starting in nighttime and using auto-exposure.
 			if (numExposures == 0 && CG.nightAutoExposure)
@@ -1286,7 +1276,7 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-					Log(0, "ASISetROIFormat(%d, %dx%d, %d, %d) = %s\n", CG.cameraNumber, CG.width, CG.height, CG.currentBin, CG.imageType, getRetCode(asiRetCode));
+					Log(0, "*** ERROR: ASISetROIFormat(%d, %dx%d, %d, %d) failed (%s)\n", CG.cameraNumber, CG.width, CG.height, CG.currentBin, CG.imageType, getRetCode(asiRetCode));
 					closeUp(EXIT_ERROR_STOP);
 				}
 			}
@@ -1309,8 +1299,8 @@ int main(int argc, char *argv[])
 			exposureStartDateTime = getTimeval();
 			char exposureStart[128];
 			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(exposureStartDateTime, "%F %T"));
-			Log(3, "-----\n");
-			Log(0, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(CG.currentExposure_us, true));
+			Log(2, "-----\n");
+			Log(1, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(CG.currentExposure_us, true));
 
 			// Get start time for overlay. Make sure it has the same time as exposureStart.
 			if (CG.overlay.showTime)
@@ -1386,7 +1376,7 @@ int main(int argc, char *argv[])
 							// which is ok - it just means the multiplier will be less than 1.
 							numMultiples = (float)(CG.dayBrightness - DEFAULT_BRIGHTNESS) / DEFAULT_BRIGHTNESS;
 							exposureAdjustment = 1 + (numMultiples * adjustmentAmountPerMultiple);
-							Log(3, "  > >>> Adjusting exposure x %.2f (%.1f%%) for daybrightness\n", exposureAdjustment, (exposureAdjustment - 1) * 100);
+							Log(4, "  > >>> Adjusting exposure x %.2f (%.1f%%) for daybrightness\n", exposureAdjustment, (exposureAdjustment - 1) * 100);
 							showedMessage = true;
 						}
 
@@ -1427,7 +1417,7 @@ int main(int argc, char *argv[])
 					}
 					if (adjustment != 0)
 					{
-						Log(3, "  > !!! Adjusting %sAcceptableMean by %d to %d\n",
+						Log(4, "  > !!! Adjusting %sAcceptableMean by %d to %d\n",
 							adjustment < 0 ? "min" : "max",
 							adjustment,
 							adjustment < 0 ? minAcceptableMean : maxAcceptableMean);

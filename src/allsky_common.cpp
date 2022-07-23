@@ -415,7 +415,7 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, float 
 	int hNow=0, mNow=0, sNow=0, secsNow;
 	sscanf(now, "%d:%d:%d", &hNow, &mNow, &sNow);
 	secsNow = (hNow*S_IN_HOUR) + (mNow*S_IN_MIN) + sNow;	// seconds to now from start of today
-	Log(3, "Now=%s, nighttime starts at %s\n", now, t.c_str());
+	Log(4, "Now=%s, nighttime starts at %s\n", now, t.c_str());
 
 	// Handle the (probably rare) case where nighttime is tomorrow.
 	// We are only called during the day, so if nighttime is earlier than now, it was past midnight.
@@ -626,10 +626,10 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 						double ageInSeconds = difftime(now, mktime(&modifiedTime));
 						Log(4, "  > Extra Text File (%s) Modified %.1f seconds ago", cg.overlay.ImgExtraText, ageInSeconds);
 						if (ageInSeconds < cg.overlay.extraFileAge) {
-							Log(1, ", so Using It\n");
+							Log(4, ", so Using It\n");
 							bAddExtra = true;
 						} else {
-							Log(1, ", so Ignoring\n");
+							Log(4, ", so Ignoring\n");
 						}
 					} else {
 						Log(0, "  > *** ERROR: Stat Of Extra Text File Failed !\n");
@@ -659,7 +659,7 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 				}
 				fclose(fp);
 			} else {
-				Log(0, "  > *** WARNING: Failed To Open Extra Text File\n");
+				Log(1, "  > *** WARNING: Failed To Open Extra Text File\n");
 			}
 		}
 	}
@@ -755,11 +755,11 @@ void sig(int i)
 {
 	if (i == SIGHUP)
 	{
-		Log(3, "Got signal to restart\n");
+		Log(4, "Got signal to restart.\n");
 	}
 	else
 	{
-		Log(0, "Got unknown signal %d\n", i);
+		Log(0, "Got unknown signal %d in sig().\n", i);
 	}
 	gotSignal = true;
 	closeUp(EXIT_RESTARTING);
@@ -1181,7 +1181,7 @@ bool daytimeSleep(bool displayedMsg, config cg)
 			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &", cg.allskyHome);
 			system(cmd);
 		}
-		Log(0, "It's daytime... we're not saving images.\n%s",
+		Log(1, "It's daytime... we're not saving images.\n%s",
 			cg.tty ? "*** Press Ctrl+C to stop ***\n" : "");
 		displayedMsg = true;
 
@@ -1190,14 +1190,14 @@ bool daytimeSleep(bool displayedMsg, config cg)
 		timeval t;
 		t = getTimeval();
 		t.tv_sec += secsTillNight;
-		Log(1, "Sleeping until %s (%'d seconds)\n", formatTime(t, cg.timeFormat), secsTillNight);
+		Log(2, "Sleeping until %s (%'d seconds)\n", formatTime(t, cg.timeFormat), secsTillNight);
 		sleep(secsTillNight);
 	}
 	else
 	{
 		// Shouldn't need to sleep more than a few times before nighttime.
 		int s = 5;
-		Log(1, "Not quite nighttime; sleeping %'d more seconds\n", s);
+		Log(2, "Not quite nighttime; sleeping %'d more seconds\n", s);
 		sleep(s);
 	}
 
@@ -1221,11 +1221,11 @@ void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 		if (lastExposure_us < cg.currentMaxAutoExposure_us)
 			s_us = cg.currentMaxAutoExposure_us - lastExposure_us;	// how much longer till max?
 		s_us += cg.currentDelay_ms * US_IN_MS;		// Add standard delay amount
-		Log(0, "  > Sleeping: %s\n", length_in_units(s_us, false));
+		Log(2, "  > Sleeping: %s\n", length_in_units(s_us, false));
 
 	} else {
 		s_us = cg.currentDelay_ms * US_IN_MS;
-		Log(0, "  > Sleeping %s between %s exposures\n", length_in_units(s_us, false), sleepType.c_str());
+		Log(2, "  > Sleeping %s between %s exposures\n", length_in_units(s_us, false), sleepType.c_str());
 	}
 
 	usleep(s_us);	// usleep() is in us (microseconds)
@@ -1278,7 +1278,7 @@ static bool getConfigFileArguments(config *cg)
 {
 	if (called_from_getConfigFileArguments)
 	{
-		Log(0, "*** WARNING: Configuration file calls itself; ignoring!\n");
+		Log(1, "*** WARNING: Configuration file calls itself; ignoring!\n");
 // TODO: write to messages file
 		return true;
 	}
@@ -1344,7 +1344,7 @@ static bool getConfigFileArguments(config *cg)
 
 		if (*line == '=')		// still at start of line
 		{
-			Log(0, "*** WARNING: Line %d in configuration file '%s' has nothing before '='!\n", lineNum, cg->configFile);
+			Log(1, "*** WARNING: Line %d in configuration file '%s' has nothing before '='!\n", lineNum, cg->configFile);
 			continue;
 // TODO: write to messages file
 		}
@@ -1367,7 +1367,7 @@ static bool getConfigFileArguments(config *cg)
 
 	if (argc == 1)
 	{
-		Log(0, "*** WARNING: configuration file '%s' has no valid entries!\n", cg->configFile);
+		Log(1, "*** WARNING: configuration file '%s' has no valid entries!\n", cg->configFile);
 // TODO: write to messages file
 	}
 
@@ -1401,7 +1401,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		if (*a == '-') a++;		// skip leading "-"
 
-		Log(5, "%s >>> Parameter [%-*s]  Value: [%s]\n", b, n, a, argv[i+1]);
+		Log(4, "%s >>> Parameter [%-*s]  Value: [%s]\n", b, n, a, argv[i+1]);
 
 		// Misc. settings
 		if (strcmp(a, "config") == 0)
@@ -1856,7 +1856,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 
 	if (cg->saveDir == NULL) {
 			cg->saveDir = cg->allskyHome;
-			Log(0, "*** WARNING: No directory to save Images was specified. Using: [%s]\n", cg->saveDir);
+			Log(1, "*** WARNING: No directory to save Images was specified. Using: [%s]\n", cg->saveDir);
 	}
 	if (cg->CC_saveDir == NULL)
 		cg->CC_saveDir = cg->saveDir;

@@ -239,10 +239,6 @@ fi
 
 echo "${ARGUMENTS[@]}" > ${ALLSKY_TMP}/capture_args.txt		# for debugging
 
-GOT_SIGTERM="false"	&& trap "GOT_SIGTERM=true" SIGTERM
-GOT_SIGINT="false"  && trap "GOT_SIGINT=true" SIGINT
-GOT_SIGUSR1="false" && trap "GOT_SIGUSR1=true" SIGUSR1
-
 CAPTURE="capture_${CAMERA_TYPE}"
 
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.

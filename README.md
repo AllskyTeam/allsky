@@ -423,7 +423,13 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* `SSH_KEY_FILE`: path to a SSH private key. When `scp` is used for uploads, this identify file will be used to establish the secure connection.
 		* There are fewer writes to the SD card, saving wear and tear.
 		* Several variables in the `config/config.sh` file were renamed.  It's important to NOT simply copy that file from an old release to the new one.
-		* A LOT of common code between the ZWO and RPi versions was moved to the `allsky_common.cpp` file, making Allsky easier to maintain.
+		* **Debug Level** is more consistent:
+			* 0: errors only
+			* 1: level 0 plus warnings and messages about taking and saving pictures
+			* 2: level 1 plus details on images captured, sleep messages and the like
+			* 3: level 2 plus time to save image, details on exposure settings and capture retries.
+			* 4: lots of gory details for developers only
+			* the default is 1
 		* Several additional troubleshooting files are written to ~/allsky/tmp.
 		* Many minor enhancements were made.
 	* WebUI:

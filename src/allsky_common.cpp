@@ -1843,6 +1843,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 			strcmp(a, "computer") == 0 ||
 			strcmp(a, "usedarkframes") == 0 ||
 			strcmp(a, "uselogin") == 0 ||
+			strcmp(a, "cameratype") == 0 ||
 			strcmp(a, "alwaysshowadvanced") == 0
 			)
 		{

@@ -69,7 +69,7 @@ fi
 # Make sure we are not already running.
 pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
-if [ "${CAMERA}" = "RPiHQ" ]; then
+if [ "${CAMERA}" = "RPi" ]; then
 	# See if we should use libcamera-still or raspistill.
 	# If libcamera is installed and works, we'll use it.
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
@@ -198,7 +198,7 @@ fi
 # but in order for it to work need to make ARGUMENTS an array.
 ARGUMENTS=()
 
-if [[ ${CAMERA} == "RPiHQ" ]]; then
+if [[ ${CAMERA} == "RPi" ]]; then
 	# This argument needs to come first since the capture code checks for it first.
 	ARGUMENTS+=(-cmd ${RPi_COMMAND_TO_USE})
 fi
@@ -246,11 +246,7 @@ GOT_SIGTERM="false"	&& trap "GOT_SIGTERM=true" SIGTERM
 GOT_SIGINT="false"  && trap "GOT_SIGINT=true" SIGINT
 GOT_SIGUSR1="false" && trap "GOT_SIGUSR1=true" SIGUSR1
 
-if [[ $CAMERA == "ZWO" ]]; then
-	CAPTURE="capture"
-elif [[ $CAMERA == "RPiHQ" ]]; then
-	CAPTURE="capture_RPiHQ"
-fi
+CAPTURE="capture_${CAMERA}"
 
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 

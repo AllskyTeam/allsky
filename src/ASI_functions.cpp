@@ -204,7 +204,7 @@ int ASIGetNumOfConnectedCameras()
 	num = system(cmd);
 	if (WIFEXITED(num))
 		num = WEXITSTATUS(num);
-	Log(5, "cmd='%s', num=%d\n", cmd, num);
+	Log(4, "cmd='%s', num=%d\n", cmd, num);
 	return(num);
 }
 

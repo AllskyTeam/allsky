@@ -61,15 +61,15 @@ if [ ! -v WEBUI_DATA_FILES ]; then	# WEBUI_DATA_FILES added after version 0.8.3.
 fi
 USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
 
-if [ -z "${CAMERA}" ]; then
-	echo -e "${RED}*** FATAL ERROR: CAMERA not set, can't continue!${NC}"
-	doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nCAMERA type\nnot specified in\n$(basename ${ALLSKY_CONFIG})/config.sh."
+if [ -z "${CAMERA_TYPE}" ]; then
+	echo -e "${RED}*** FATAL ERROR: 'Camera Type' not set in WebUI, can't continue!${NC}"
+	doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nCamera Type\nnot specified the WebUI."
 fi
 
 # Make sure we are not already running.
 pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
-if [ "${CAMERA}" = "RPiHQ" ]; then
+if [ "${CAMERA_TYPE}" = "RPi" ]; then
 	# See if we should use libcamera-still or raspistill.
 	# If libcamera is installed and works, we'll use it.
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
@@ -103,7 +103,7 @@ if [ "${CAMERA}" = "RPiHQ" ]; then
 		doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
 	fi
 
-elif [ "${CAMERA}" = "ZWO" ]; then
+elif [ "${CAMERA_TYPE}" = "ZWO" ]; then
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 	reset_usb()		# resets the USB bus
 	{
@@ -164,14 +164,11 @@ elif [ "${CAMERA}" = "ZWO" ]; then
 	rm -f "${RESETTING_USB_LOG}"	# We found the camera so don't need to reset.
 
 else
-	echo -e "${RED}FATAL ERROR: Unknown CAMERA type: ${CAMERA}!  Stopping.${NC}" >&2
-	doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nUnknown CAMERA\ntype: ${CAMERA}"
+	echo -e "${RED}FATAL ERROR: Unknown Camera Type: ${CAMERA_TYPE}!  Stopping.${NC}" >&2
+	doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nUnknown Camera\nType: ${CAMERA_TYPE}"
 fi
 
-echo "CAMERA: ${CAMERA}"
-if [ "${ALLSKY_DEBUG_LEVEL}" -gt 0 ]; then
-	echo "CAMERA_SETTINGS: ${CAMERA_SETTINGS}"
-fi
+echo "CAMERA_TYPE: ${CAMERA_TYPE}"
 
 if [ -d "${ALLSKY_TMP}" ]; then
 	# remove any lingering old image files.
@@ -198,7 +195,7 @@ fi
 # but in order for it to work need to make ARGUMENTS an array.
 ARGUMENTS=()
 
-if [[ ${CAMERA} == "RPiHQ" ]]; then
+if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	# This argument needs to come first since the capture code checks for it first.
 	ARGUMENTS+=(-cmd ${RPi_COMMAND_TO_USE})
 fi
@@ -246,29 +243,13 @@ GOT_SIGTERM="false"	&& trap "GOT_SIGTERM=true" SIGTERM
 GOT_SIGINT="false"  && trap "GOT_SIGINT=true" SIGINT
 GOT_SIGUSR1="false" && trap "GOT_SIGUSR1=true" SIGUSR1
 
-if [[ $CAMERA == "ZWO" ]]; then
-	CAPTURE="capture"
-elif [[ $CAMERA == "RPiHQ" ]]; then
-	CAPTURE="capture_RPiHQ"
-fi
+CAPTURE="capture_${CAMERA_TYPE}"
 
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 
 # Run the main program - this is the main attraction...
 "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
 RETCODE=$?
-
-### TODO: can probably remove this code
-if false; then
-if [ ${RETCODE} -ne ${EXIT_OK} ]; then
-	# for testing
-	echo -e "${RED}'${CAPTURE}' exited with RETCODE=${RETCODE}${NC}"
-fi
-if [ "${GOT_SIGTERM}" = "true" ] || [ "${GOT_SIGUSR1}" = "true" ] || [ "${GOT_SIGINT}" = "true" ]; then
-	# for testing
-	echo "${ME}: GOT_SIGTERM=$GOT_SIGTERM, GOT_SIGUSR1=$GOT_SIGUSR1, GOT_SIGINT=$GOT_SIGINT"
-fi
-fi	# if false
 
 if [ "${RETCODE}" -eq ${EXIT_OK} ] ; then
 	doExit ${EXIT_OK} ""

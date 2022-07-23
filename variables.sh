@@ -24,7 +24,7 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	else
 		ON_TTY=0
 		GREEN="";				wOK="<span style='color: green'>"
-		YELLOW="";				wWARNING="<span style='color: #FFCC00'>"
+		YELLOW="";				wWARNING="<span style='color: #FF9800'>"
 		RED="";					wERROR="<span style='color: red'>"
 		DEBUG="";				wDEBUG="${wWARNING}"
 		NC="";					wNC="</span>"

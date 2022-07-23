@@ -82,7 +82,7 @@ endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
 
-all:check_deps capture capture_RPiHQ startrails keogram sunwait
+all:check_deps capture_ZWO capture_RPi startrails keogram sunwait
 .PHONY : all
 
 ifneq ($(shell id -u), 0)
@@ -124,29 +124,29 @@ sunwait: patchsunwait
 allsky_common.o: allsky_common.cpp include/allsky_common.h
 	@$(CC) -c  allsky_common.cpp -o $@ $(CFLAGS) $(OPENCV)
 
-mode_RPiHQ_mean.o: mode_RPiHQ_mean.cpp include/mode_RPiHQ_mean.h include/RPiHQ_raspistill.h include/allsky_common.h
+mode_mean.o: mode_mean.cpp include/mode_mean.h include/raspistill.h include/allsky_common.h
 	@echo `date +%F\ %R:%S` Building $@ ...
-	@$(CC) -c  mode_RPiHQ_mean.cpp -o $@ $(CFLAGS) $(OPENCV)
+	@$(CC) -c  mode_mean.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
-capture_RPiHQ.o: capture_RPiHQ.cpp ASI_functions.cpp include/RPiHQ_raspistill.h include/allsky_common.h
+capture_RPi.o: capture_RPi.cpp ASI_functions.cpp include/raspistill.h include/allsky_common.h
 	@echo `date +%F\ %R:%S` Building $@ ...
-	@$(CC) -c  capture_RPiHQ.cpp -o $@ $(CFLAGS) $(OPENCV)
+	@$(CC) -c  capture_RPi.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
-capture.o: capture.cpp ASI_functions.cpp include/allsky_common.h
+capture_ZWO.o: capture_ZWO.cpp ASI_functions.cpp include/allsky_common.h
 	@echo `date +%F\ %R:%S` Building $@ ...
-	@$(CC) -c capture.cpp -o $@ $(CFLAGS) $(OPENCV)
+	@$(CC) -c capture_ZWO.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
-capture: capture.o allsky_common.o
+capture_ZWO: capture_ZWO.o allsky_common.o
 	@echo `date +%F\ %R:%S` Building $@ program...
-	@$(CC) -o $@ $(CFLAGS)  allsky_common.o capture.o $(OPENCV) -lASICamera2 $(USB)
+	@$(CC) -o $@ $(CFLAGS)  capture_ZWO.o allsky_common.o $(OPENCV) -lASICamera2 $(USB)
 	@echo `date +%F\ %R:%S` Done.
 
-capture_RPiHQ:capture_RPiHQ.o allsky_common.o mode_RPiHQ_mean.o
+capture_RPi:capture_RPi.o allsky_common.o mode_mean.o
 	@echo `date +%F\ %R:%S` Building $@ program...
-	@$(CC) -o $@ $(CFLAGS) capture_RPiHQ.o allsky_common.o $(OPENCV) mode_RPiHQ_mean.o
+	@$(CC) -o $@ $(CFLAGS) capture_RPi.o allsky_common.o $(OPENCV) mode_mean.o
 	@echo `date +%F\ %R:%S` Done.
 
 keogram:keogram.cpp
@@ -161,8 +161,8 @@ startrails:startrails.cpp
 
 symlink: all
 	@echo `date +%F\ %R:%S` Symlinking binaries...
-	@ln -s $$PWD/capture ../
-	@ln -s $$PWD/capture_RPiHQ ../
+	@ln -s $$PWD/capture_ZWO ../
+	@ln -s $$PWD/capture_RPi ../
 	@ln -s $$PWD/keogram ../
 	@ln -s $$PWD/startrails ../
 
@@ -177,13 +177,13 @@ install:
 	@echo `date +%F\ %R:%S` Copying binaries...
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  [ ! -e $(DESTDIR)$(bindir) ] && mkdir -p $(DESTDIR)$(bindir); \
-	  install capture $(DESTDIR)$(bindir); \
-	  install capture_RPiHQ $(DESTDIR)$(bindir); \
+	  install capture_ZWO $(DESTDIR)$(bindir); \
+	  install capture_RPi $(DESTDIR)$(bindir); \
 	  install keogram $(DESTDIR)$(bindir); \
 	  install startrails $(DESTDIR)$(bindir); \
 	else \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) capture ../; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPiHQ ../; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_ZWO ../; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPi ../; \
 	  install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../; \
 	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../; \
 	fi
@@ -192,14 +192,14 @@ install:
 uninstall:
 	@echo `date +%F\ %R:%S` Removing binaries...
 	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  rm -f $(DESTDIR)$(bindir)/capture; \
-	  rm -f $(DESTDIR)$(bindir)/capture_RPiHQ; \
+	  rm -f $(DESTDIR)$(bindir)/capture_ZWO; \
+	  rm -f $(DESTDIR)$(bindir)/capture_RPi; \
 	  rm -f $(DESTDIR)$(bindir)/keogram; \
 	  rm -f $(DESTDIR)$(bindir)/startrails; \
 	  rm -f $(DESTDIR)$(bindir)/sunwait; \
 	else \
-	  rm -f ../capture; \
-	  rm -f ../capture_RPiHQ; \
+	  rm -f ../capture_ZWO; \
+	  rm -f ../capture_RPi; \
 	  rm -f ../keogram; \
 	  rm -f ../startrails; \
 	  rm -f $(DESTDIR)$(bindir)/startrails; \
@@ -209,10 +209,13 @@ endif # sudo / root check
 .PHONY : install uninstall
 
 clean:
-	rm -f capture capture_RPiHQ startrails keogram *.o *.a
+	rm -f capture_ZWO capture_RPi startrails keogram *.o *.a
 .PHONY : clean
 
 endif # Correct directory structure check
 
 %:
 	@echo `date +%F\ %R:%S` nothing to do for $@
+
+json:json.cpp
+	$(CC) $@.cpp -o $@ $(CFLAGS)

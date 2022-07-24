@@ -69,7 +69,7 @@ fi
 # Make sure we are not already running.
 pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
-if [ "${CAMERA}" = "RPi" ]; then
+if [[ ${CAMERA_TYPE} = "RPi" ]]; then
 	# See if we should use libcamera-still or raspistill.
 	# If libcamera is installed and works, we'll use it.
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),

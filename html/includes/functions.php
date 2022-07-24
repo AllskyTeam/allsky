@@ -22,6 +22,8 @@ define('RASPI_CONFIG',   'XX_RASPI_CONFIG_XX');
 // Split the placeholder so it doesn't get replaced if the update script is run multiple times.
 if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	// This file hasn't been updated yet after installation.
+	// This would only happen if they updated this file and not the whole Allsky release,
+	// which is hard since we only come out with releases.
 	echo "<div style='font-size: 200%;'>";
 	echo "<span style='color: red'>";
 	echo "Please run the following from the 'allsky' directory before using the WebUI:";
@@ -31,7 +33,8 @@ if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	exit;
 }
 
-$cam_type = get_variable(ALLSKY_CONFIG .'/config.sh', 'CAMERA_TYPE=', '');
+// The Camera Type should be set during the installation, so this "should" never fail...
+$cam_type = getCameraType();
 if ($cam_type == '') {
 	echo "<div style='color: red; font-size: 200%;'>";
 	echo "'Camera Type' not defined in the WebUI.  Please update it.";
@@ -39,28 +42,23 @@ if ($cam_type == '') {
 	exit;
 }
 
-define('RASPI_CAMERA_SETTINGS', RASPI_CONFIG . "/settings_$cam_type.json");
-if (! file_exists(RASPI_CAMERA_SETTINGS)) {
+$settings_file = getSettingsFile($cam_type);
+if (! file_exists($settings_file)) {
 	echo "<div style='color: red; font-size: 200%;'>";
 	echo "ERROR: Unable to find camera settings file for camera of type '$cam_type'.";
-	echo "<br>Please check the " . RASPI_CONFIG . " directory for 'settings_$cam_type.json'.";
+	echo "<br>File '$settings_file' missing!";
 	echo "</div>";
 	exit;
 }
-define('RASPI_CAMERA_OPTIONS', ALLSKY_WEBUI . "/camera_options_$cam_type.json");
 
-
-$camera_settings_str = file_get_contents(RASPI_CAMERA_SETTINGS, true);
+$camera_settings_str = file_get_contents($settings_file, true);
 $camera_settings_array = json_decode($camera_settings_str, true);
 // $img_dir is an alias in the web server's config that points to where the current image is.
 // It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 $img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 $image_name = $img_dir . "/" . $camera_settings_array['filename'];
 $darkframe = $camera_settings_array['takeDarkFrames'];
-if (isset($camera_settings_array['useLogin']))
-	$useLogin = $camera_settings_array['useLogin'];
-else
-	$useLogin = true;
+$useLogin = getVariableOrDefault($camera_settings_array, 'useLogin', true);
 
 
 ////////////////// Determine delay between refreshes of the image.
@@ -573,16 +571,16 @@ function parse_ifconfig($input, &$strHWAddress, &$strIPAddress, &$strNetMask, &$
 	preg_match( '/ether ([0-9a-f:]+)/i', $input, $result );
 	$strHWAddress = $result[1];
 	preg_match( '/inet ([0-9.]+)/i', $input, $result );
-	$strIPAddress = isset($result[1]) ?  $result[1] : "[not set]";
+	$strIPAddress = getVariableOrDefault($result[1], "[not set]");
 
 	preg_match( '/netmask ([0-9.]+)/i', $input, $result );
-	$strNetMask = isset($result[1]) ?  $result[1] : "[not set]";
+	$strNetMask = getVariableOrDefault($result[1], "[not set]");
 
 	preg_match( '/RX packets (\d+)/', $input, $result );
-	$strRxPackets = isset($result[1]) ?  $result[1] : "[not set]";
+	$strRxPackets = getVariableOrDefault($result[1], "[not set]");
 
 	preg_match( '/TX packets (\d+)/', $input, $result );
-	$strTxPackets = isset($result[1]) ?  $result[1] : "[not set]";
+	$strTxPackets = getVariableOrDefault($result[1], "[not set]");
 
 	preg_match_all( '/bytes (\d+ \(\d+.\d+ [K|M|G]iB\))/i', $input, $result );
 	if (isset($result[1][0])) {
@@ -788,11 +786,11 @@ function runCommand($cmd, $message, $messageColor)
 
 	exec("$cmd 2>&1", $result, $return_val);
 	if ($result === null || $return_val !== 0) {
-		// display the caller's message
-		$status->addMessage($message, "danger", true);
-		$message = "-";
+		// Error: display the caller's message, if any.
+		if ($message !== "")
+			$status->addMessage($message, "danger", true);
 
-		// now display the failed message
+		// now display the failed message from the program
 		$msg = "'$cmd' failed";
 		if ($result != null) $msg .= ": " . implode("<br>", $result);
 		$status->addMessage($msg, "danger", true);
@@ -830,6 +828,28 @@ function updateFile($file, $contents, $fileName) {
 	}
 
 	return $err;
+}
+
+function getCameraType() {
+	return get_variable(ALLSKY_CONFIG . '/config.sh', 'CAMERA_TYPE=', '');
+}
+
+// Return the settings file for the specified camera.
+function getSettingsFile($cam_type) {
+	return RASPI_CONFIG . "/settings_$cam_type.json";
+}
+
+// Return the options file for the specified camera.
+function getOptionsFile($cam_type) {
+	return ALLSKY_WEBUI . "/camera_options_$cam_type.json";
+}
+
+// Check if the specified variable is in the specified array.
+// If so, return it; if not, return default value;
+// This is used to make the code easier to read.
+function getVariableOrDefault($a, $v, $d) {
+	if (isset($a[$v])) return $a[$v];
+	return $d;
 }
 
 ?>

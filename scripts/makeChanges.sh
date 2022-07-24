@@ -23,6 +23,8 @@ wOK="${wOK}"
 wWARNING="${wWARNING}"
 wERROR="${wERROR}"
 wDEBUG="${wDEBUG}"
+wBOLD="${wBOLD}"
+wNBOLD="${wNBOLD}"
 wNC="${wNC}"
 
 function usage_and_exit()

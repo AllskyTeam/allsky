@@ -402,7 +402,8 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* `SSH_KEY_FILE`: path to a SSH private key. When `scp` is used for uploads, this identify file will be used to establish the secure connection.
 		* There are fewer writes to the SD card, saving wear and tear.
 		* Several variables in the `config/config.sh` file were renamed.  It's important to NOT simply copy that file from an old release to the new one.
-		* **Debug Level** in the WebUI is more consistent:
+		* The "capture" programs used to capture and save images were renamed to `capture_ZWO` and `capture_RPi`.  This should have no user impact.
+		* **Debug Level** is more consistent:
 			* 0: errors only
 			* 1: level 0 plus warnings and messages about taking and saving pictures
 			* 2: level 1 plus details on images captured, sleep messages and the like

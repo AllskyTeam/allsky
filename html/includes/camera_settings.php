@@ -86,7 +86,7 @@ function DisplayCameraConfig(){
 						$ok = false;
 				}
 			} else if ($newCameraType !== "") {
-				$msg = "<b>Camera Type</b> changed to $newCameraType";
+				$msg = "<b>Camera Type</b> changed to <b>$newCameraType</b>";
 			} else {
 				$msg = "No settings changed (file not updated)";
 			}

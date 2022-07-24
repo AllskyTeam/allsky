@@ -10,27 +10,19 @@ function DisplayCameraConfig(){
 
 	if (isset($_POST['save_settings'])) {
 		if (CSRFValidate()) {
-/* xxxxxxx $checkChanges is never used
-			$checkChanges = array();	// holds all settings where "checkchanges" is on
-			foreach ($options_array as $option){
-				if (isset($option['checkchanges']) && $option['checkchanges'])
-					$checkChanges[$option['name']] = $option['checkchanges'];
-			}
-*/
 			$settings = array();
 			$changes = "";
 			$somethingChanged = false;
 	 		foreach ($_POST as $key => $value){
 				// We look into POST data to only select settings.
-				// Instead of trying to escape single and double quotes, which I never figured out how to do,
-				// convert them to HTML codes.
+				// Because we are passing the changes enclosed in single quotes below, we need to escape the
+				// single quotes, but I never figured out how to do that, so convert them to HTML codes instead.
 				$isOLD = substr($key, 0, 4) === "OLD_";
 				if (!in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart"]) && ! $isOLD) {
-					$settings[$key] = str_replace("'", "&#x27", str_replace('"', '&quot;', $value));
-					$value = str_replace("'", "&#x27;", $value);
+					$settings[$key] = str_replace("'", "&#x27", $value);
 				} else if ($isOLD) {
 					$originalName = substr($key, 4);		// everything after "OLD_"
-					$oldValue = str_replace("'", "&#x27", str_replace('"', '&quot;', $value));
+					$oldValue = str_replace("'", "&#x27", $value);
 					$newValue = $settings[$originalName];
 					if ($oldValue !== $newValue) {
 						$somethingChanged = true;
@@ -39,11 +31,12 @@ function DisplayCameraConfig(){
 						foreach ($options_array as $option){
 							if ($option['name'] === $originalName) {
 								$checkchanges = isset($option['checkchanges']) && $option['checkchanges'];
+								$label = $option['label'];
 								break;
 							}
 						}
 						if ($checkchanges)
-							$changes .= "  '$originalName' '$oldValue' '$newValue'";
+							$changes .= "  '$originalName' '$label' '$oldValue' '$newValue'";
 					}
 				}
 			}

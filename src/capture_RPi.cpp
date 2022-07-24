@@ -23,8 +23,8 @@
 // When it's passed, functions call it "cg", so use upper case for global version.
 config CG;
 
-#include "include/RPiHQ_raspistill.h"
-#include "include/mode_RPiHQ_mean.h"
+#include "include/raspistill.h"
+#include "include/mode_mean.h"
 
 #define CAMERA_TYPE				"RPi"
 #define IS_RPi
@@ -883,7 +883,7 @@ if (CG.lastExposure_us != myRaspistillSetting.shutter_us)
 					}
 					else
 					{
-						printf("xxxx Got signal %d in capture_RPiHQ.cpp\n", r);
+						printf("xxxx Got signal %d in capture_RPi.cpp\n", r);
 					}
 				}
 				// Don't wait the full amount on error.

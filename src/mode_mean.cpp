@@ -18,8 +18,8 @@
 
 #include "include/allsky_common.h"
 
-#include "include/RPiHQ_raspistill.h"
-#include "include/mode_RPiHQ_mean.h"
+#include "include/raspistill.h"
+#include "include/mode_mean.h"
 
 // These only need to be as large as modeMeanSetting.historySize.
 const int historySize = 5;

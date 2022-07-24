@@ -20,6 +20,7 @@
 "label":"",
 "type":"header",
 "display":1,
+"checkchanges": true,
 "advanced":0
 },
 {

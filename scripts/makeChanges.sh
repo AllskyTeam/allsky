@@ -53,13 +53,10 @@ while [ $# -gt 0 ]; do
 	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
 	case "${KEY}" in
 		cameraType)
-			sed -i -e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${NEW_VALUE}\"/" "${ALLSKY_CONFIG}/config.sh"
+			sed -i -e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${NEW_VALUE}\"/" "${ALLSKY_CONFIG}/config.sh" >&2
 			# shellcheck disable=SC2181
-			if [ $? -eq 0 ]; then
-				echo -e "${wOK}'${LABEL}' changed to '${NEW_VALUE}'.${wNC}" >&2
-				echo -e "${wOK}Click on the <b>Allsky Settings</b> link on the left to fully refresh the WebUI window.${wNC}" >&2
-			else
-				echo -e "${wERROR}ERROR updating '${LABEL}'.${wNC}" >&2
+			if [ $? -ne 0 ]; then
+				echo -e "${wERROR}ERROR updating ${wBOLD}${LABEL}${wNBOLD}.${wNC}" >&2
 			fi
 			;;
 		filename)
@@ -122,7 +119,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [[ ${RUN_POSTDATA} == "true" && ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
-	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh")" ; then
+	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" >&2)" ; then
 		echo -e "${wOK}Twilight data posted.${wNC}"
 	else
 		echo -e "${wERROR}ERROR posting twilight data: ${RESULT}.${wNC}" >&2

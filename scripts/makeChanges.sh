@@ -27,12 +27,12 @@ wNC="${wNC}"
 
 function usage_and_exit()
 {
-	echo -e "${wERROR}Usage: ${ME} [--debug] key old_value new_value [...]${wNC}" >&2
-	echo "There must be a multiple of 3 arguments." >&2
+	echo -e "${wERROR}Usage: ${ME} [--debug] key label old_value new_value [...]${wNC}" >&2
+	echo "There must be a multiple of 4 arguments." >&2
 	exit ${1}
 }
 [ $# -eq 0 ] && usage_and_exit 1
-[ $(($# % 3)) -ne 0 ] && usage_and_exit 2
+[ $(($# % 4)) -ne 0 ] && usage_and_exit 2
 
 RUN_POSTDATA=false
 RUN_POSTTOMAP=false
@@ -40,8 +40,9 @@ POSTTOMAP_ACTION=""
 WEBSITE_CONFIG=()
 while [ $# -gt 0 ]; do
 	KEY="${1}"
-	OLD_VALUE="${2}"
-	NEW_VALUE="${3}"
+	LABEL="${2}"
+	OLD_VALUE="${3}"
+	NEW_VALUE="${4}"
 	if [ "${DEBUG}" = "true" ]; then
 		MSG="${KEY} old [${OLD_VALUE}], new [${NEW_VALUE}]"
 		echo "${wDEBUG}${ME}: ${MSG}${wNC}"
@@ -51,6 +52,13 @@ while [ $# -gt 0 ]; do
 	# Unfortunately, the Allsky configuration file was already updated,
 	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
 	case "${KEY}" in
+		cameraType)
+			sed -i -e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${NEW_VALUE}\"/" "${ALLSKY_CONFIG}/config.sh" >&2
+			# shellcheck disable=SC2181
+			if [ $? -ne 0 ]; then
+				echo -e "${wERROR}ERROR updating ${wBOLD}${LABEL}${wNBOLD}.${wNC}" >&2
+			fi
+			;;
 		filename)
 			WEBSITE_CONFIG+=("imageName" "${OLD_VALUE}" "${NEW_VALUE}")
 			;;
@@ -104,29 +112,32 @@ while [ $# -gt 0 ]; do
 			;;
 
 		*)
-			echo -e "${wWARNING}WARNING: Unknown key '${KEY}'; ignoring.${wNC}" >&2
+			echo -e "${wWARNING}WARNING: Unknown label '${LABEL}', key='${KEY}'; ignoring.${wNC}" >&2
 			;;
 		esac
-		shift 3
+		shift 4
 done
 
 if [[ ${RUN_POSTDATA} == "true" && ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
-	RESULT="$("${ALLSKY_SCRIPTS}/postData.sh")"
-	# shellcheck disable=SC2181
-	if [ $? -eq 0 ]; then
+	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" >&2)" ; then
 		echo -e "${wOK}Twilight data posted.${wNC}"
 	else
 		echo -e "${wERROR}ERROR posting twilight data: ${RESULT}.${wNC}" >&2
 	fi
 fi
 
+if [ "${DEBUG}" = "true" ]; then
+	D="--debug"
+else
+	D=""
+fi
 # shellcheck disable=SC2128
 if [[ ${WEBSITE_CONFIG} != "" && -d ${ALLSKY_WEBSITE} ]]; then
-	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" "${WEBSITE_CONFIG[@]}" >&2
+	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${D} "${WEBSITE_CONFIG[@]}" >&2
 fi	# else the Website isn't installed on the Pi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${POSTTOMAP_ACTION} >&2
+	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${D} ${POSTTOMAP_ACTION} >&2
 fi
 
 exit 0

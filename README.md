@@ -389,33 +389,12 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 <!-- some of the changes haven't been made as of June 3, 2022, but should be for the next release -->
 * version **v2022.MM.DD**: 
 	* Allsky package:
-		* New settings available in the WebUI:
-			* **Max Auto-Exposure** for day and night.  When using auto exposure, exposure times will not exceed this number.
-			* **Max Auto-Gain** for day and night.  When using auto gain, gain values will not exceed this number.
-			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
-			* **Frames to Skip** for day and night determine how many initial auto exposure frames to ignore when starting Allsky, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving anyhow.
-			* **Consistent Delays** determines whether or not the time between the start of exposures will be consistent (current behavior) or not.  When enabled, the time between images is the maximum exposure plus the delay you set.
-			* **External Overlays** determines if the text overlay (exposure, time, etc.) should be done in the capture program or by an external program that has **significanly** more capabilities (see below).  **NOTE**: the default will change to the external program in a feature release, and after that the "internal" overlay will be removed.
-			* **Cooling** and **Target Temp.** (ZWO only) now have separate settings for day and night.
-			* **Aggression** (ZWO only) determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
-			* **Gamma** (ZWO only) changes the contrast of an image.  It is only supported by a few cameras; for those that don't, the `AUTO_STRETCH` setting can produce a similar effect.
-			* **Offset** (ZWO only) adds about 1/10th the specified amount to each pixel, thereby brightening the whole image.  Setting this too high causes the image to turn gray.
-			* **Contrast** and **Sharpness** (RPi only).  The WebUI lists the minimum and maximum values.
-			* **Mean Target** (RPi only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
-			* **Mean Threshold** (RPi only).  This specifies how close the actual mean brightness must be to the **Mean Target**.  For example, if **Mean Target** is 0.5 and **Mean Threshold** is 0.1, the actual mean can vary between 0.4 and 0.6 (0.5 +/- 0.1).
-			* **Require WebUI Login** specifies whether or not the WebUI should require you to login.  Only set this to "No" if your Pi is on a local network and you trust everyone else.  **Do NOT disable it if your Pi is accessible via the Internet!**
-		* **NOTE**: the following settings moved from config.sh to the WebUI, and are "advanced" options so you'll need to click the "Show Advanced Options" button to see them:
-			* "DAYTIME_CAPTURE" in config.sh is now **Take Daytime Images** in the WebUI.
-			* "DAYTIME_SAVE" is **Save Daytime Images**.
-			* "DARK_CAPTURE" is *8Take Dark Frames**.
-			* 'DARK_FRAME_SUBTRACTION" is **Use Dark Frames**.
+		* The `CAMERA` variable in config/config.sh was removed; to update the camera type, use the **Camera Type** setting in the WebUI. This is an advanced setting so you need to click the "Show Advanced Options" button to view it.
 		* "Mini" timelapse videos can be created that contain a user-configurable number of the most recent images.  This allows you to continually see the recent sky conditions.
-		* Settings can be specified in a configuration file via a new "-config file" option to the capture programs. In the future this will allow allsky to simply re-read the settings rather than re-starting when you change settings in the WebUI.
 		* Settings are checked for validity (for example, images must be resized to even numbers and crop areas must fit within the image) and messages added to the log if there are problems; critical errors cause the program to stop until they are fixed.
 		* Latitude and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  The Allsky Website will always display with N, S, E, and W.
 		* Sanity checking is done on Allsky Map data, for example, the URLs are reachable from the Internet.
-		* The software version displayed in the log file is now taken from `~/allsky/version`.
-		* Installation no longer assume the login is `pi`.
+		* Installation no longer assumes the login is `pi`.
 		* The delay between RPi images has been shortened.
 		* The `scp` protocol is now supported for file uploads.
 		* New ftp-settings.sh variables:
@@ -440,6 +419,28 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Overlay Editor** allows you to drag and drop what text and images you want overlayed on the images.  This is a **significant** improvement over the old mechanism; the new way lets you vary the font size, color, rotation, etc. for everything you add and let you use variables in the text which gets replaced at run-time, e.g., the time.
 			* **Module Editor** allows you to specify what actions should take place after an image has been saved, for example, add an overlay or count the number of stars.  Users can add (and hopefully share) their own modules.
 		* The **Camera Settings** link was renamed to **Allsky Settings** since there are non-camera settings there.
+		* New settings on the **Allsky Settings** page:
+			* **Camera Type** is either ZWO or RPi.  **This replaces the `CAMERA`
+			**Max Auto-Exposure** for day and night.  When using auto exposure, exposure times will not exceed this number.
+			* **Max Auto-Gain** for day and night.  When using auto gain, gain values will not exceed this number.
+			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
+			* **Frames to Skip** for day and night determine how many initial auto exposure frames to ignore when starting Allsky, while the auto exposure algorithm hones in on the correct exposure.  These frames are often over or under exposed so not worth saving anyhow.
+			* **Consistent Delays** determines whether or not the time between the start of exposures will be consistent (current behavior) or not.  When enabled, the time between images is the maximum exposure plus the delay you set.
+			* **External Overlays** determines if the text overlay (exposure, time, etc.) should be done in the capture program or by an external program that has **significanly** more capabilities (see below).  **NOTE**: the default will change to the external program in a feature release, and after that the "internal" overlay will be removed.
+			* **Cooling** and **Target Temp.** (ZWO only) now have separate settings for day and night.
+			* **Aggression** (ZWO only) determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
+			* **Gamma** (ZWO only) changes the contrast of an image.  It is only supported by a few cameras; for those that don't, the `AUTO_STRETCH` setting can produce a similar effect.
+			* **Offset** (ZWO only) adds about 1/10th the specified amount to each pixel, thereby brightening the whole image.  Setting this too high causes the image to turn gray.
+			* **Contrast** and **Sharpness** (RPi only).  The WebUI lists the minimum and maximum values.
+			* **Mean Target** (RPi only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto exposure mode and works best if auto gain is also enabled.
+			* **Mean Threshold** (RPi only).  This specifies how close the actual mean brightness must be to the **Mean Target**.  For example, if **Mean Target** is 0.5 and **Mean Threshold** is 0.1, the actual mean can vary between 0.4 and 0.6 (0.5 +/- 0.1).
+			* **Require WebUI Login** specifies whether or not the WebUI should require you to login.  Only set this to "No" if your Pi is on a local network and you trust everyone else.  **Do NOT disable it if your Pi is accessible via the Internet!**
+			* **Configuration File** specifies a configuration file containing command-line options that's passed to the capture_* programs. In the future this will allow allsky to simply re-read the settings rather than re-starting when you change settings in the WebUI.
+		* **NOTE**: the following settings moved from config.sh to the WebUI, and are "advanced" options so you'll need to click the "Show Advanced Options" button to see them:
+			* "DAYTIME_CAPTURE" in config.sh is now **Take Daytime Images** in the WebUI.
+			* "DAYTIME_SAVE" is **Save Daytime Images**.
+			* "DARK_CAPTURE" is **Take Dark Frames**.
+			* 'DARK_FRAME_SUBTRACTION" is **Use Dark Frames**.
 		* Minimum, maximum, and default values are now correct for all camera models.
 		* The **Focus Metric** setting in the WebUI is now available for ZWO cameras.
 		* The **Editor** page can edit the Allsky Website's configuration file(s) if you have the website installed on your Pi.  This is the preferred way to edit the configuration file(s), since the editor performs basic syntax checking.

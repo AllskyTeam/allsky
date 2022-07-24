@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Choose between "ZWO" or "RPiHQ".
-CAMERA=""
+# CAMERA is no longer set here - set it in the WebUI.
+# It's an advanced option so you need to click on the "Show Advanced Options" button.
 
 
 ########## Images
@@ -190,8 +190,9 @@ UHUBCTL_PORT=2
 # ================ DO NOT CHANGE ANYTHING BELOW THIS LINE ================
 END_OF_USER_SETTINGS="true"		# During upgrades, stop looking for variables here.
 
-if [ "${CAMERA}" = "" ]; then
-	echo "${RED}ERROR: Please set CAMERA in config/config.sh${NC}"
+CAMERA_TYPE=""
+if [ "${CAMERA_TYPE}" = "" ]; then
+	echo "${RED}ERROR: Please set 'Camera Type' in the WebUI.${NC}"
 	sudo systemctl stop allsky
 	exit 100
 fi
@@ -203,7 +204,7 @@ else
 	CAPTURE_SAVE_DIR="${IMG_DIR}"
 fi
 
-CAMERA_SETTINGS="${ALLSKY_CONFIG}/settings_${CAMERA}.json"
+CAMERA_SETTINGS="${ALLSKY_CONFIG}/settings_${CAMERA_TYPE}.json"
 
 # Simple way to get a setting that hides the details.
 function settings()

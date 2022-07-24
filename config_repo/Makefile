@@ -23,7 +23,7 @@ ifeq ($(PKGBUILD),)
 endif
 
 
-CONFIGFILES := settings_ZWO.json settings_RPiHQ.json config.sh ftp-settings.sh raspap.php
+CONFIGFILES := settings_ZWO.json settings_RPi.json config.sh ftp-settings.sh raspap.php
 UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service
 
 %:

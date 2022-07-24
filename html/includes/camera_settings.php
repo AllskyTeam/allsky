@@ -2,67 +2,104 @@
 include_once( 'includes/status_messages.php' );
 
 function DisplayCameraConfig(){
-	$options_str = file_get_contents(RASPI_CAMERA_OPTIONS, true);
+	$cameraTypeName = "cameraType";		// json name
+	$cameraType = getCameraType();
+
+	$settings_file = getSettingsFile($cameraType);
+	$options_file = getOptionsFile($cameraType);
+
+	$options_str = file_get_contents($options_file, true);
 	$options_array = json_decode($options_str, true);
+
+//xx debugging: remove when working
+//xx echo "CAMERA_TYPE via getCameraType()=$cameraType<br>";
+//xx echo "options_file=$options_file<br>";
+//xx echo "settings_file=$settings_file<br>";
 
 	global $status;
 	$status = new StatusMessages();
 
 	if (isset($_POST['save_settings'])) {
+		// If the user changed the camera type and anything else,
+		// warn them and don't do anything.
+		// If we went ahead and made the changes, we would be making them to the NEW
+		// camera's settings file, but using values from the OLD file.
 		if (CSRFValidate()) {
-/* xxxxxxx $checkChanges is never used
-			$checkChanges = array();	// holds all settings where "checkchanges" is on
-			foreach ($options_array as $option){
-				if (isset($option['checkchanges']) && $option['checkchanges'])
-					$checkChanges[$option['name']] = $option['checkchanges'];
-			}
-*/
 			$settings = array();
 			$changes = "";
 			$somethingChanged = false;
+			$newCameraType = "";
+
 	 		foreach ($_POST as $key => $value){
+				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart"]))
+					continue;
 				// We look into POST data to only select settings.
-				// Instead of trying to escape single and double quotes, which I never figured out how to do,
-				// convert them to HTML codes.
+				// Because we are passing the changes enclosed in single quotes below,
+				// we need to escape the single quotes, but I never figured out how to do that,
+				// so convert them to HTML codes instead.
 				$isOLD = substr($key, 0, 4) === "OLD_";
-				if (!in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart"]) && ! $isOLD) {
-					$settings[$key] = str_replace("'", "&#x27", str_replace('"', '&quot;', $value));
-					$value = str_replace("'", "&#x27;", $value);
+//xxxx				if (!in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart"]) && ! $isOLD) {
+				if (! $isOLD) {
+					// Add the key/value pair to the array so we can see if it changed.
+					$settings[$key] = str_replace("'", "&#x27", $value);
 				} else if ($isOLD) {
 					$originalName = substr($key, 4);		// everything after "OLD_"
-					$oldValue = str_replace("'", "&#x27", str_replace('"', '&quot;', $value));
+					$oldValue = str_replace("'", "&#x27", $value);
 					$newValue = $settings[$originalName];
 					if ($oldValue !== $newValue) {
-						$somethingChanged = true;
+						if ($originalName === $cameraTypeName)
+							$newCameraType = $newValue;
+						else
+							$somethingChanged = true;	// want to know about other changes
 						// echo "<br>$key: old [$oldValue] !== new [$newValue]";
 						$checkchanges = false;
 						foreach ($options_array as $option){
 							if ($option['name'] === $originalName) {
-								$checkchanges = isset($option['checkchanges']) && $option['checkchanges'];
+								$checkchanges = getVariableOrDefault($option, 'checkchanges', false);
+								$label = $option['label'];
 								break;
 							}
 						}
 						if ($checkchanges)
-							$changes .= "  '$originalName' '$oldValue' '$newValue'";
+							$changes .= "  '$originalName' '$label' '$oldValue' '$newValue'";
 					}
 				}
 			}
 
+// TODO: should we update the settings file firt, or run makeChanges.sh ?
+// It's probably more likely makeChange.sh would fail than updating the settings file,
+// so it should probably go first.
+			$msg = "";
 			$ok = true;
 			if ($somethingChanged) {
-				$file = RASPI_CAMERA_SETTINGS;
-				$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
-				// updateFile() only returns error messages.
-				$msg = updateFile($file, $content, "settings");
-				if ($msg === "")
-					$msg = "Settings saved";
-				else
+				if ($newCameraType !== "") {
+					$msg = "If you change <b>Camera Type</b> you cannot change anything else.  No changes made.";
 					$ok = false;
+				} else {
+					$file = $settings_file;
+					$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+					// updateFile() only returns error messages.
+					$msg = updateFile($file, $content, "settings");
+					if ($msg === "")
+						$msg = "Settings saved";
+					else
+						$ok = false;
+				}
+			} else if ($newCameraType !== "") {
+				$msg = "<b>Camera Type</b> changed to <b>$newCameraType</b>";
 			} else {
 				$msg = "No settings changed (file not updated)";
 			}
 
 			if ($ok) {
+				if ($changes !== "") {
+					// This must run with different permissions so makeChanges.sh can write to the allsky directory.
+					$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_SCRIPTS . "/makeChanges.sh $changes";
+					# Let makeChanges.sh display any output
+					echo '<script>console.log("Running: ' . $CMD . '");</script>';
+					runCommand($CMD, "", "success");
+				}
+
 				if (isset($_POST['restart'])) {
 					$msg .= " and service restarted.";
 					// runCommand displays $msg.
@@ -72,13 +109,12 @@ function DisplayCameraConfig(){
 					$status->addMessage($msg, 'info');
 				}
 
-				if ($changes !== "") {
-					// This must run with different permissions so makeChanges.sh can write to the allsky directory.
-					$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_SCRIPTS . "/makeChanges.sh $changes";
-					# Let makeChanges.sh display any output
-					echo '<script>console.log("Running: ' . $CMD . '");</script>';
-					runCommand($CMD, "-", "success");
+				// Want this as a separate message after the one above.
+				if ($newCameraType !== "") {
+					$msg = "Click on the <b>Allsky Settings</b> link on the left to fully refresh this window.";
+					$status->addMessage($msg, 'info');
 				}
+
 			} else {	// not $ok
 				$status->addMessage($msg, 'danger');
 			}
@@ -89,7 +125,7 @@ function DisplayCameraConfig(){
 
 	if (isset($_POST['reset_settings'])) {
 		if (CSRFValidate()) {
-			$file = RASPI_CAMERA_SETTINGS;
+			$file = $settings_file;
 			$settings = array();
 			foreach ($options_array as $option){
 				$key = $option['name'];
@@ -108,7 +144,7 @@ function DisplayCameraConfig(){
 	}
 
 	// Determine if the advanced settings should always be shown.
-	$camera_settings_str = file_get_contents(RASPI_CAMERA_SETTINGS, true);
+	$camera_settings_str = file_get_contents($settings_file, true);
 	$camera_settings_array = json_decode($camera_settings_str, true);
 	$initial_display = $camera_settings_array['alwaysshowadvanced'] == 1 ? "table-row" : "none";
 ?>
@@ -155,7 +191,7 @@ function toggle_advanced()
   <div class="row">
     <div class="col-lg-12" style="padding: 0px 5px;">
       <div class="panel panel-primary">
-      <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Configure Settings <?php echo "&nbsp; &nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; " . RASPI_CAMERA_OPTIONS; ?></div>
+      <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Configure Settings &nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; <?php echo $options_file ?></div>
         <!-- /.panel-heading -->
         <div class="panel-body" style="padding: 5px;">
           <p><?php $status->showMessages(); ?></p>
@@ -170,17 +206,12 @@ function toggle_advanced()
 		echo "<table border='0'>";
 			foreach($options_array as $option) {
 				// Should this setting be displayed?
-				if (isset($option['display']) && ! $option['display']) continue;
+				$display = getVariableOrDefault($option, 'display', true);
+				if (! $display) continue;
 
-				if (isset($option['minimum']))
-					$minimum = $option['minimum'];
-				else
-					$minimum = "";
-				if (isset($option['maximum']))
-					$maximum = $option['maximum'];
-				else
-					$maximum = "";
-				$advanced = $option['advanced'];
+				$minimum = getVariableOrDefault($option, 'minimum', "");
+				$maximum = getVariableOrDefault($option, 'maximum', "");
+				$advanced = getVariableOrDefault($option, 'advanced', 0);
 				if ($advanced == 1) {
 					$numAdvanced++;
 					$advClass = "advanced";
@@ -191,10 +222,7 @@ function toggle_advanced()
 				}
 				$label = $option['label'];
 				$name = $option['name'];
-				if (isset($option['default']))
-					$default = $option['default'];
-				else
-					$default = "";
+				$default = getVariableOrDefault($option, 'default', "");
 				$type = $option['type'];
 				if ($type == "header") {
 					$value = "";

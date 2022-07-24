@@ -1,4 +1,5 @@
 {
+	"cameraType" : "RPi",
 	"takeDaytimeImage" : "1",
 	"saveDaytimeImages" : "0",
 	"dayautoexposure" : "1",

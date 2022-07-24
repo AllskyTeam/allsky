@@ -389,7 +389,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 <!-- some of the changes haven't been made as of June 3, 2022, but should be for the next release -->
 * version **v2022.MM.DD**: 
 	* Allsky package:
-		* The `CAMERA` variable in config/config.sh was removed; to update the camera type, use the **Camera Type** setting in the WebUI.  Allsky will automatically restart when changing **Camera Type**.  This is an advanced setting so you need to click the "Show Advanced Options" button to view it.
+		* The `CAMERA` variable in config/config.sh was removed; to update the camera type, use the **Camera Type** setting in the WebUI. This is an advanced setting so you need to click the "Show Advanced Options" button to view it.
 		* "Mini" timelapse videos can be created that contain a user-configurable number of the most recent images.  This allows you to continually see the recent sky conditions.
 		* Settings are checked for validity (for example, images must be resized to even numbers and crop areas must fit within the image) and messages added to the log if there are problems; critical errors cause the program to stop until they are fixed.
 		* Latitude and longitude can now be specified as either a decimal number (e.g., 32.29) or with N, S, E, W (e.g., 32.29N).  The Allsky Website will always display with N, S, E, and W.

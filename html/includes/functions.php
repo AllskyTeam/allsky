@@ -797,7 +797,7 @@ function runCommand($cmd, $message, $messageColor)
 		return false;
 	}
 
-	if ($message !== "-")
+	if ($message !== "")
 		$status->addMessage($message, $messageColor, true);
 
 	// Display any output

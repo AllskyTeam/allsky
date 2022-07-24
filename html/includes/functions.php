@@ -784,7 +784,8 @@ function runCommand($cmd, $message, $messageColor)
 {
 	global $status;
 
-	if (! exec("$cmd 2>&1", $result, $return_val) || $return_val !== 0) {
+	exec("$cmd 2>&1", $result, $return_val);
+	if ($return_val !== 0) {
 		// Display a failure message, plus the caller's message, if any.
 		$msg = "'$cmd' failed";
 		if ($result != null) $msg .= ": " . implode("<br>", $result);

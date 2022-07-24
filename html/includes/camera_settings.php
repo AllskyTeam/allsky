@@ -11,11 +11,6 @@ function DisplayCameraConfig(){
 	$options_str = file_get_contents($options_file, true);
 	$options_array = json_decode($options_str, true);
 
-//xx debugging: remove when working
-//xx echo "CAMERA_TYPE via getCameraType()=$cameraType<br>";
-//xx echo "options_file=$options_file<br>";
-//xx echo "settings_file=$settings_file<br>";
-
 	global $status;
 	$status = new StatusMessages();
 
@@ -33,15 +28,16 @@ function DisplayCameraConfig(){
 	 		foreach ($_POST as $key => $value){
 				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart"]))
 					continue;
+
 				// We look into POST data to only select settings.
 				// Because we are passing the changes enclosed in single quotes below,
 				// we need to escape the single quotes, but I never figured out how to do that,
 				// so convert them to HTML codes instead.
 				$isOLD = substr($key, 0, 4) === "OLD_";
-//xxxx				if (!in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart"]) && ! $isOLD) {
 				if (! $isOLD) {
 					// Add the key/value pair to the array so we can see if it changed.
 					$settings[$key] = str_replace("'", "&#x27", $value);
+
 				} else if ($isOLD) {
 					$originalName = substr($key, 4);		// everything after "OLD_"
 					$oldValue = str_replace("'", "&#x27", $value);
@@ -66,7 +62,7 @@ function DisplayCameraConfig(){
 				}
 			}
 
-// TODO: should we update the settings file firt, or run makeChanges.sh ?
+// TODO: should we update the settings file first, or run makeChanges.sh ?
 // It's probably more likely makeChange.sh would fail than updating the settings file,
 // so it should probably go first.
 			$msg = "";
@@ -92,15 +88,25 @@ function DisplayCameraConfig(){
 			}
 
 			if ($ok) {
+				// 'restart' is a checkbox: if check, it returns 'on', otherwise nothing.
+				$doingRestart = getVariableOrDefault($_POST, 'restart', false);
+				if ($doingRestart === "on") $doingRestart = true;
+
 				if ($changes !== "") {
-					// This must run with different permissions so makeChanges.sh can write to the allsky directory.
-					$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_SCRIPTS . "/makeChanges.sh $changes";
+					// This must run with different permissions so makeChanges.sh can
+					// write to the allsky directory.
+					if ($doingRestart)
+						$restarting = "--restarting";
+					else
+						$restarting = "";
+					$CMD = "sudo --user=" . ALLSKY_OWNER;
+					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $restarting $changes";
 					# Let makeChanges.sh display any output
 					echo '<script>console.log("Running: ' . $CMD . '");</script>';
 					runCommand($CMD, "", "success");
 				}
 
-				if (isset($_POST['restart'])) {
+				if ($doingRestart) {
 					$msg .= " and service restarted.";
 					// runCommand displays $msg.
 					runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");

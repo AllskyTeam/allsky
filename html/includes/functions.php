@@ -89,6 +89,7 @@ $delay /= 2;
 $daydelay /= 1000;
 $nightdelay /= 1000;
 
+$status = null;		// Global point to status messages
 
 /**
 *
@@ -778,29 +779,25 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {	// if
         echo "</div>";
 }
 
-$status = null;
 /* Run a command and display the appropriate status message */
 function runCommand($cmd, $message, $messageColor)
 {
 	global $status;
 
 	exec("$cmd 2>&1", $result, $return_val);
-	if ($result === null || $return_val !== 0) {
-		// Error: display the caller's message, if any.
-		if ($message !== "")
-			$status->addMessage($message, "danger", true);
-
-		// now display the failed message from the program
+	if ($return_val !== 0) {
+		// Display a failure message, plus the caller's message, if any.
 		$msg = "'$cmd' failed";
 		if ($result != null) $msg .= ": " . implode("<br>", $result);
 		$status->addMessage($msg, "danger", true);
 		return false;
 	}
 
+	// Display the caller's "on success" message, if any.
 	if ($message !== "")
 		$status->addMessage($message, $messageColor, true);
 
-	// Display any output
+	// Display any output from the command.
 	if ($result != null) $status->addMessage(implode("<br>", $result), "message", true);
 
 	return true;

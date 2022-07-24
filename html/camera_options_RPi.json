@@ -29,6 +29,7 @@
 "label":"Daytime Capture",
 "type":"checkbox",
 "display":1,
+"checkchanges": true,
 "advanced":1
 },
 {

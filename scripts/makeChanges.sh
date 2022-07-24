@@ -14,8 +14,13 @@ source "${ALLSKY_CONFIG}/config.sh"
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
+#### TODO: use getopt
 DEBUG=false
 [ "${1}" = "--debug" ] && DEBUG=true && shift
+
+# Will the caller restart Allsky?  Is 0/1.
+RESTARTING=false
+[ "${1}" = "--restarting" ] && RESTARTING=true && shift
 
 # This output may go to a web page, so use "w" colors.
 # shell check doesn't realize there were set in variables.sh
@@ -29,12 +34,15 @@ wNC="${wNC}"
 
 function usage_and_exit()
 {
-	echo -e "${wERROR}Usage: ${ME} [--debug] key label old_value new_value [...]${wNC}" >&2
-	echo "There must be a multiple of 4 arguments." >&2
+	echo -e "${wERROR}Usage: ${ME} [--debug] [--restarting] key label old_value new_value [...]${wNC}" >&2
+	echo "There must be a multiple of 4 key/label/old_value/new_value arguments." >&2
 	exit ${1}
 }
 [ $# -eq 0 ] && usage_and_exit 1
 [ $(($# % 4)) -ne 0 ] && usage_and_exit 2
+
+# Does the change need Allsky to be restarted in order to take affect?
+NEEDS_RESTART=false
 
 RUN_POSTDATA=false
 RUN_POSTTOMAP=false
@@ -60,9 +68,11 @@ while [ $# -gt 0 ]; do
 			if [ $? -ne 0 ]; then
 				echo -e "${wERROR}ERROR updating ${wBOLD}${LABEL}${wNBOLD}.${wNC}" >&2
 			fi
+			NEEDS_RESTART=true
 			;;
 		filename)
 			WEBSITE_CONFIG+=("imageName" "${OLD_VALUE}" "${NEW_VALUE}")
+			NEEDS_RESTART=true
 			;;
 		extratext)
 			# It's possible the user will create/populate the file while Allsky is running,
@@ -74,6 +84,7 @@ while [ $# -gt 0 ]; do
 					echo -e "${wWARNING}WARNING: '${NEW_VALUE}' is empty; please change it.${wNC}" >&2
 				fi
 			fi
+			NEEDS_RESTART=true
 			;;
 		latitude | longitude)
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
@@ -86,9 +97,15 @@ while [ $# -gt 0 ]; do
 				WEBSITE_CONFIG+=("${KEY}" "" "${NEW_VALUE}")
 				RUN_POSTDATA=true
 			fi
+			NEEDS_RESTART=true
 			;;
 		angle)
 			RUN_POSTDATA=true
+			NEEDS_RESTART=true
+			;;
+		takeDaytimeImages)
+			RUN_POSTDATA=true
+			NEEDS_RESTART=true
 			;;
 		config)
 			if [ "${NEW_VALUE}" = "" ]; then
@@ -122,9 +139,12 @@ done
 
 if [[ ${RUN_POSTDATA} == "true" && ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
 	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" >&2)" ; then
-		echo -e "${wOK}Twilight data posted.${wNC}"
+		echo -en "${wOK}" >&2
+		echo -e "Updated twilight data sent to your Allsky Website." >&2
+		echo -e "${wBOLD}If you have the website open in a browser, please refresh the window.${wNBOLD}" >&2
+		echo -en "${wNC}" >&2
 	else
-		echo -e "${wERROR}ERROR posting twilight data: ${RESULT}.${wNC}" >&2
+		echo -e "${wERROR}ERROR posting updated twilight data: ${RESULT}.${wNC}" >&2
 	fi
 fi
 
@@ -141,5 +161,12 @@ fi	# else the Website isn't installed on the Pi
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${D} ${POSTTOMAP_ACTION} >&2
 fi
+
+if [[ ${RESTARTING} == "false" && ${NEEDS_RESTART} == "true" ]]; then
+	echo -en "${wOK}${wBOLD}" >&2
+	echo "*** You must restart Allsky for your change to take affect. ***" >&2
+	echo -en "${wNBOLD}${wNC}" >&2
+fi
+
 
 exit 0

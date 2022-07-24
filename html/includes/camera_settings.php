@@ -97,7 +97,7 @@ function DisplayCameraConfig(){
 					$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_SCRIPTS . "/makeChanges.sh $changes";
 					# Let makeChanges.sh display any output
 					echo '<script>console.log("Running: ' . $CMD . '");</script>';
-					runCommand($CMD, "Unable to make changes.", "success");
+					runCommand($CMD, "", "success");
 				}
 
 				if (isset($_POST['restart'])) {

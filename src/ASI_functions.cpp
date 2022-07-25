@@ -56,22 +56,17 @@ typedef struct ASI_CAMERA_INFO
 	ASI_BOOL SupportsTemperature;
 } ASI_CAMERA_INFO;
 
-typedef enum ASI_CONTROL_TYPE{ //Control type//
+
+// The number and order of these needs to match argumentNames[]
+typedef enum ASI_CONTROL_TYPE{ //Control type
 	ASI_GAIN = 0,
 	ASI_EXPOSURE,
-	ASI_GAMMA,
 	ASI_WB_R,
 	ASI_WB_B,
-	ASI_OFFSET,
-	ASI_BANDWIDTHOVERLOAD,			// ZWO only
 	ASI_TEMPERATURE,				// returns 10*temperature
 	ASI_FLIP,
 	ASI_AUTO_MAX_GAIN,				// Max gain in auto-gain mode
 	ASI_AUTO_MAX_EXP,				// Max exposure in auto-exposure mode, in ms
-	ASI_COOLER_POWER_PERC,
-	ASI_TARGET_TEMP,
-	ASI_COOLER_ON,
-	ASI_FAN_ON,
 
 	// RPI only:
 	BRIGHTNESS,
@@ -79,6 +74,15 @@ typedef enum ASI_CONTROL_TYPE{ //Control type//
 	CONTRAST,
 	SHARPNESS,
 	EV,
+
+	// Put ZWO ones here - they need to be defined
+	ASI_GAMMA,
+	ASI_OFFSET,
+	ASI_BANDWIDTHOVERLOAD,			// ZWO only
+	ASI_COOLER_POWER_PERC,
+	ASI_TARGET_TEMP,
+	ASI_COOLER_ON,
+	ASI_FAN_ON,
 
 	CONTROL_TYPE_END
 } ASI_CONTROL_TYPE;
@@ -128,42 +132,76 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 	// FUTURE CAMERAS GO HERE...
 };
 
+
+// The number and order of these need to match what's in the ControlCapsArray.
+
+// Control type name, command-line argument name (without leading "day" and "night").
+// ControlType is the array index.
+// NULL argument name means there is not a command-line argument for it.
+char const *argumentNames[][2] = {
+	{ "Gain", "gain" },							// day/night
+	{ "Exposure", "exposure" },					// day/night
+	{ "WB_R", "wbr" },							// day/night
+	{ "WB_B", "wbb" },							// day/night
+	{ "Temperature", "" },						// read-only so no argument
+	{ "Flip", "flip" },
+	{ "AutoExpMaxGain", "maxgain" },			// day/night
+	{ "AutoExpMaxExpMS", "maxexposure" },		// day/night
+	{ "Brightness", "brightness" },
+	{ "Saturation", "saturation" },
+	{ "Contrast", "contrast" },
+	{ "Sharpness", "sharpness" },
+	{ "ExposureCompensation", "ev" },
+
+	{ "NEW", "" } // In case a new type is added we won't get an error
+};
+
 #define MAX_NUM_CONTROL_CAPS (CONTROL_TYPE_END)
 ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 {
-	// Odd index = libcamera. Even = raspistill.
+	// Each camera model has 2 entries, one for libcamera and one for raspistill.
+	// They need to be in that order.
 
-	// The "Name" must match what ZWO uses.
+	// The "Name" must match what ZWO uses; "" names means not supported.
+	// 99 == don't know
+
 	// Name, MaxValue, MinValue, DefaultValue, CurrentValue, IsAutoSupported, IsWritable, ControlType
-	// -1 == does not apply.  99 == don't know
 	{ // libcamera
 		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 32, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
 		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
 		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Temperature", "Sensor Temperature", 80, -20, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
+		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 230 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
 		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
 		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, BRIGHTNESS },
 		{ "Saturation", "Saturation", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
 		{ "Contrast", "Contrast", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
 		{ "Sharpness", "Sharpness", 99.0, 0.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+// TODO: what are these values?
+		{ "", "EV: Exposure compensation (not currently supported)", 99, 99, 0.0, NOT_SET, ASI_FALSE, ASI_FALSE, EV },
+
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	},
+
 	{ // raspistill.  Minimum width and height are 64.
 		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 32, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
 		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
 		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "", "Temperature, not supported", NOT_SET, NOT_SET, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
+		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 230 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
 		{ "ExposureCompensation", "Exposure Compensation", 10, -10, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
 		{ "Brightness", "Brightness", 100, 0, 50, NOT_SET, ASI_FALSE, ASI_TRUE, BRIGHTNESS },
 		{ "Saturation", "Saturation", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
 		{ "Contrast", "Contrast", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
 		{ "Sharpness", "Sharpness", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "", "EV: (not supported)", 99, 99, 0.0, NOT_SET, ASI_FALSE, ASI_FALSE, EV },
+
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	}
 	// TODO: add 2 entries for arducam_64mp (2nd entry can be empty since it's not supported on raspistill
@@ -349,28 +387,7 @@ ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
 }
 
 
-// Control type name, command-line argument name (without leading "day" and "night").
-// ControlType is the array index.
-// NULL argument name means there is not a command-line argument for it.
-char const *argumentNames[][2] = {
-	{ "Gain", "gain" },							// day/night
-	{ "Exposure", "exposure" },					// day/night
-	{ "Gamma", "gamma" },
-	{ "WB_R", "wbr" },							// day/night
-	{ "WB_B", "wbb" },							// day/night
-	{ "Temperature", "" },						// read-only so no argument
-	{ "Flip", "flip" },
-	{ "AutoExpMaxGain", "maxgain" },			// day/night
-	{ "AutoExpMaxExpMS", "maxexposure" },		// day/night
-	{ "ExposureCompensation", "ev" },
-	{ "Brightness", "brightness" },
-	{ "Contrast", "contrast" },
-	{ "Saturation", "saturation" },
-	{ "Sharpness", "sharpness" },
-	{ "NEW", "" } // In case a new type is added we won't get an error
-};
-
-#else		// ZWO
+#else		////////////////////// ZWO
 
 // To keep the compiler quiet, we need to define these - they are RPi only.
 // It doesn't matter what the value is.
@@ -381,29 +398,31 @@ char const *argumentNames[][2] = {
 #define EV			(ASI_CONTROL_TYPE) 0
 
 // Same ideas as for RPi but some different options.
+// These must match in number and order to the ASI_CONTROL_TYPE enum in ASICamera2.h.
 char const *argumentNames[][2] = {
-	{ "Gain", "gain" },							// day/night
-	{ "Exposure", "exposure" },					// day/night
+	{ "Gain", "gain" },								// day/night
+	{ "Exposure", "exposure" },						// day/night
 	{ "Gamma", "gamma" },
-	{ "WB_R", "wbr" },							// day/night
-	{ "WB_B", "wbb" },							// day/night
+	{ "WB_R", "wbr" },								// day/night
+	{ "WB_B", "wbb" },								// day/night
 	{ "Offset", "offset" },
 	{ "BandWidth", "usb" },
 	{ "OverCLK" "" },
-	{ "MonoBin", "" },
-	{ "Temperature", "" },						// read-only so no argument
+	{ "Temperature", "" },							// read-only so no argument
 	{ "Flip", "flip" },
-	{ "AutoExpMaxGain", "maxgain" },			// day/night
-	{ "AutoExpMaxExpMS", "maxexposure" },		// day/night
-	{ "AutoExpTargetBrightness", "brightness" },// day/night
+	{ "AutoExpMaxGain", "maxautogain" },			// day/night
+	{ "AutoExpMaxExpMS", "maxautoexposure" },		// day/night
+	{ "AutoExpTargetBrightness", "brightness" },	// day/night
 	{ "HardwareBin", "" },
 	{ "HighSpeedMode", "" },
-	{ "CoolerPowerPerc", "" },					// read-only so no argument
-	{ "TargetTemp", "targetTemp" },
-	{ "CoolerOn", "coolerEnabled" },			// day/night
+	{ "CoolerPowerPerc", "" },						// read-only so no argument
+	{ "TargetTemp", "TargetTemp" },
+	{ "CoolerOn", "EnableCooler" },					// day/night
+	{ "MonoBin", "" },
 	{ "FanOn", "??" },				// correct Control name?
 	{ "PatternAdjust", "" },		// correct Control name?
 	{ "AntiDewHeater", "" },		// correct Control name?
+
 	{ "NEW", "" } // In case a new type is added we won't get an error
 };
 
@@ -605,7 +624,9 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 		fprintf(stderr, "ERROR: Unable to open '%s': %s\n", fileName, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
+	Log(4, "saveCameraInfo(): saving to %s\n", fileName);
 
+setlinebuf(f);
 	// output basic information on camera as well as all it's capabilities
 	fprintf(f, "{\n");
 	fprintf(f, "\t\"cameraType\" : \"%s\",\n", CAMERA_TYPE);
@@ -676,17 +697,27 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 	fprintf(f, "\t\"controls\": [\n");
 	for (int i = 0; i < iNumOfCtrl; i++)
 	{
+		ASI_CONTROL_CAPS cc;
+		ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
+
+		// blank names means it's unsupported
+		if (cc.Name[0] == '\0')
+			continue;
+
+		// blank argument name means we don't have a command-line argument for it
+		char const *a =  argumentNames[cc.ControlType][1];
+		if (a == NULL or a[0] == '\0')
+			continue;
+
 		if (i > 0)
 		{
 			fprintf(f, ",");		// comma on all but last one
 			fprintf(f, "\n");
 		}
 
-		ASI_CONTROL_CAPS cc;
-		ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", cc.Name);
-		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", argumentNames[cc.ControlType][1]);
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", a);
 		fprintf(f, "\t\t\t\"MinValue\" : %s,\n", LorF(cc.MinValue, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"MaxValue\" : %s,\n", LorF(cc.MaxValue, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(cc.DefaultValue, "%ld", "%.3f"));

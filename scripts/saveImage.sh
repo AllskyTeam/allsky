@@ -249,7 +249,7 @@ SAVED_FILE="${CURRENT_IMAGE}"				# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 
 # If needed, save the current image in today's directory.
-if [[ "$(settings ".takeDaytimeImages")" = "1" || "${DAY_OR_NIGHT}" = "NIGHT" ]]; then
+if [[ "$(settings ".saveDaytimeImages")" = "1" || "${DAY_OR_NIGHT}" = "NIGHT" ]]; then
 	# Determine what directory is the final resting place.
 	if [ "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 		# The 12 hours ago option ensures that we're always using today's date

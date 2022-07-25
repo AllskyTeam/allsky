@@ -230,10 +230,11 @@ else # sftp/ftp/ftps
 			&& (echo '2nd rm failed, quiting.'; rm -f '${TEMP_NAME}'; exit 1)
 			&& exit 3"
 
+		# If the first "mv" fails, wait, then try again.  If that works, exit 0.
+		# If the 2nd "mv" also fails exit 4.  Either way, display a 2nd message.
 		echo "mv '${TEMP_NAME}' '${DESTINATION_FILE}'
-			|| (echo 'mv of ${TEMP_NAME} to ${DESTINATION_FILE} failed!  Trying again...'; (!sleep 3); mv '${TEMP_NAME} '${DESTINATION_FILE}' && echo 'WORKED' && exit 0)
-			|| (echo '2nd mv failed, quitting.'; rm -f '${TEMP_NAME}; exit 1)
-			|| exit 4"
+			|| (echo 'mv of ${TEMP_NAME} to ${DESTINATION_FILE} failed!  Trying again...'; (!sleep 3); mv '${TEMP_NAME}' '${DESTINATION_FILE}' && echo 'WORKED' && exit 0)
+			|| (echo '2nd mv failed, quitting.'; rm -f '${TEMP_NAME}'; exit 1) || exit 4"
 
 		echo exit 0
 	) > "${LFTP_CMDS}"

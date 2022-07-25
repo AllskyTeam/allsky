@@ -1855,9 +1855,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 	}
 
 
-	if (cg->saveDir == NULL) {
-			cg->saveDir = cg->allskyHome;
-			Log(1, "*** WARNING: No directory to save Images was specified. Using: [%s]\n", cg->saveDir);
+	// if cg_CC_saveDir is set, we'll output some info and exit, and won't take any images.
+	if (cg->saveDir == NULL && cg->CC_saveDir == NULL) {
+		cg->saveDir = cg->allskyHome;
+		Log(1, "*** WARNING: No directory to save Images was specified. Using: [%s]\n", cg->saveDir);
 	}
 	if (cg->CC_saveDir == NULL)
 		cg->CC_saveDir = cg->saveDir;

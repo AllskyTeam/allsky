@@ -572,16 +572,16 @@ function parse_ifconfig($input, &$strHWAddress, &$strIPAddress, &$strNetMask, &$
 	preg_match( '/ether ([0-9a-f:]+)/i', $input, $result );
 	$strHWAddress = $result[1];
 	preg_match( '/inet ([0-9.]+)/i', $input, $result );
-	$strIPAddress = getVariableOrDefault($result[1], "[not set]");
+	$strIPAddress = getVariableOrDefault($result, 1, "[not set]");
 
 	preg_match( '/netmask ([0-9.]+)/i', $input, $result );
-	$strNetMask = getVariableOrDefault($result[1], "[not set]");
+	$strNetMask = getVariableOrDefault($result, 1, "[not set]");
 
 	preg_match( '/RX packets (\d+)/', $input, $result );
-	$strRxPackets = getVariableOrDefault($result[1], "[not set]");
+	$strRxPackets = getVariableOrDefault($result, 1, "[not set]");
 
 	preg_match( '/TX packets (\d+)/', $input, $result );
-	$strTxPackets = getVariableOrDefault($result[1], "[not set]");
+	$strTxPackets = getVariableOrDefault($result, 1, "[not set]");
 
 	preg_match_all( '/bytes (\d+ \(\d+.\d+ [K|M|G]iB\))/i', $input, $result );
 	if (isset($result[1][0])) {

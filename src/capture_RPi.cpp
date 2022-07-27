@@ -317,7 +317,7 @@ printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSett
 	{
 		*image = cv::imread(cg.fullFilename, cv::IMREAD_UNCHANGED);
 		if (! image->data) {
-			printf("WARNING: Error re-reading file '%s'; skipping further processing.\n", basename(cg.fullFilename));
+			Log(1, "WARNING: Error re-reading file '%s'; skipping further processing.\n", basename(cg.fullFilename));
 		}
 	}
 	return(ret);
@@ -553,7 +553,7 @@ int main(int argc, char *argv[])
 	bool displayedNoDaytimeMsg = false;
 
 	if (CG.tty)
-		printf("*** Press Ctrl+C to stop ***\n\n");
+		Log(0, "*** Press Ctrl+C to stop ***\n\n");
 
 	// Start taking pictures
 
@@ -869,7 +869,7 @@ if (CG.lastExposure_us != myRaspistillSetting.shutter_us)
 			{
 				numErrors++;
 				int r = retCode >> 8;
-				printf(" >>> Unable to take picture, return code=%d, r=%d\n", retCode, r);
+				Log(0, " >>> ERROR: Unable to take picture, return code=%d, r=%d\n", retCode, r);
 				if (WIFSIGNALED(r)) r = WTERMSIG(r);
 				{
 					// Got a signal.  See if it's one we care about.
@@ -879,11 +879,11 @@ if (CG.lastExposure_us != myRaspistillSetting.shutter_us)
 					else if (r == SIGHUP) z = "SIGHUP";
 					if (z != "")
 					{
-						printf("xxxx Got %s in %s\n", z.c_str(), CG.cmdToUse);
+						Log(3, "xxxx Got %s in %s\n", z.c_str(), CG.cmdToUse);
 					}
 					else
 					{
-						printf("xxxx Got signal %d in capture_RPi.cpp\n", r);
+						Log(3, "xxxx Got signal %d in capture_RPi.cpp\n", r);
 					}
 				}
 				// Don't wait the full amount on error.

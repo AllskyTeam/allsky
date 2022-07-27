@@ -49,6 +49,11 @@
 #define EXIT_ERROR_STOP				100		// Got an unrecoverable ERROR
 #define EXIT_NO_CAMERA				101		// Could not find a camera - is unrecoverable
 
+enum extType {
+	isJPG,
+	isPNG
+};
+
 enum isDayOrNight {
 	isDay,
 	isNight
@@ -177,6 +182,7 @@ struct config {			// for configuration variables
 	long imageType						= AUTO_IMAGE_TYPE;
 	char const *sType					= "";				// string version of imageType
 	char const *imageExt				= "jpg";			// image extension
+	extType extensionType				= isJPG;
 	long qualityJPG						= 95;
 	long qualityPNG						= 3;
 	long quality						= qualityJPG;
@@ -218,7 +224,8 @@ struct config {			// for configuration variables
 	long offset							= NOT_CHANGED;
 	bool asiAutoBandwidth				= true;
 	long asiBandwidth					= NOT_CHANGED;
-	char const *fileName				= "image.jpg";
+	char const *fileName				= "image.jpg";		// value user specified
+		// name of file without any extension, e.g., "image"
 		char fileNameOnly[50]			= { 0 };
 		// final name of the file that's written to disk, with no directories
 		char finalFileName[200]			= { 0 };
@@ -277,6 +284,7 @@ extern bool gotSignal;
 extern bool bDisplay;
 extern pthread_t threadDisplay;
 extern config CG;
+extern std::vector<int>compressionParameters;
 
 void cvText(cv::Mat, const char *, int, int, double,
 	int, int,
@@ -288,7 +296,7 @@ double time_diff_us(int64, int64);
 long timeval_diff_us(timeval, timeval);
 std::string exec(const char *);
 void add_variables_to_command(config, char *, timeval);
-const char *checkForValidExtension(const char *, int);
+bool checkForValidExtension(config *);
 std::string calculateDayOrNight(const char *, const char *, float);
 int calculateTimeToNightTime(const char *, const char *, float);
 void Log(int, const char *, ...);

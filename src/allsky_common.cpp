@@ -750,6 +750,17 @@ char const *getFlip(int f)
 	}
 }
 
+// Display a notification image.
+int displayNotificationImage(char const *arguments)
+{
+	char cmd[1024];
+
+	snprintf(cmd, sizeof(cmd)-1, "%sscripts/copy_notification_image.sh %s", CG.allskyHome, arguments);
+	Log(0, "Calling system(%s)\n", cmd);
+	return(system(cmd));
+}
+
+
 // Exit the program gracefully.
 void closeUp(int e)
 {
@@ -778,17 +789,15 @@ void closeUp(int e)
 
 	char const *a = "Stopping";
 	if (CG.notificationImages) {
-		char cmd[256];
 		if (e == EXIT_RESTARTING)
 		{
-			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 15 Restarting &", CG.allskyHome);
+			(void) displayNotificationImage("--expires 15 Restarting");
 			a = "Restarting";
 		}
 		else
 		{
-			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 2 NotRunning &", CG.allskyHome);
+			(void) displayNotificationImage("--expires 2 NotRunning");
 		}
-		system(cmd);
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
 		// before the one below. This is only so it looks nicer in the log file.
 		sleep(3);
@@ -1224,10 +1233,8 @@ bool daytimeSleep(bool displayedMsg, config cg)
 	if (! displayedMsg)
 	{
 		if (cg.notificationImages) {
-			char cmd[256];
 			sleep(5);		// In case another notification image is being upload, give it time to finish.
-			snprintf(cmd, sizeof(cmd), "%sscripts/copy_notification_image.sh --expires 0 CameraOffDuringDay &", cg.allskyHome);
-			system(cmd);
+			(void) displayNotificationImage("--expires 0 CameraOffDuringDay &");
 		}
 		Log(1, "It's daytime... we're not saving images.\n%s",
 			cg.tty ? "*** Press Ctrl+C to stop ***\n" : "");

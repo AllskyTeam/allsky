@@ -98,16 +98,16 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 			{
 				if (value > ControlCaps.MaxValue)
 				{
-					printf("WARNING: Value of %ld greater than max value allowed (%ld) for control '%s' (#%d).\n", value, ControlCaps.MaxValue, ControlCaps.Name, ControlCaps.ControlType);
+					Log(1, "WARNING: Value of %ld greater than max value allowed (%ld) for control '%s' (#%d).\n", value, ControlCaps.MaxValue, ControlCaps.Name, ControlCaps.ControlType);
 					value = ControlCaps.MaxValue;
 				} else if (value < ControlCaps.MinValue)
 				{
-					printf("WARNING: Value of %ld less than min value allowed (%ld) for control '%s' (#%d).\n", value, ControlCaps.MinValue, ControlCaps.Name, ControlCaps.ControlType);
+					Log(1, "WARNING: Value of %ld less than min value allowed (%ld) for control '%s' (#%d).\n", value, ControlCaps.MinValue, ControlCaps.Name, ControlCaps.ControlType);
 					value = ControlCaps.MinValue;
 				}
 			 	if (makeAuto == ASI_TRUE && ControlCaps.IsAutoSupported == ASI_FALSE)
 				{
-					printf("WARNING: control '%s' (#%d) doesn't support auto mode.\n", ControlCaps.Name, ControlCaps.ControlType);
+					Log(1, "WARNING: control '%s' (#%d) doesn't support auto mode.\n", ControlCaps.Name, ControlCaps.ControlType);
 					makeAuto = ASI_FALSE;
 				}
 				ret = ASISetControlValue(camNum, control, value, makeAuto);
@@ -117,7 +117,7 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 					return(ret);
 				}
 			} else {
-				printf("ERROR: ControlCap: '%s' (#%d) not writable; not setting to %ld.\n", ControlCaps.Name, ControlCaps.ControlType, value);
+				Log(0, "ERROR: ControlCap: '%s' (#%d) not writable; not setting to %ld.\n", ControlCaps.Name, ControlCaps.ControlType, value);
 				ret = ASI_ERROR_INVALID_MODE;	// this seemed like the closest error
 			}
 			return ret;
@@ -146,7 +146,7 @@ void *Display(void *params)
 		cv::waitKey(500);	// TODO: wait for exposure time instead of hard-coding value
 	}
 	cv::destroyWindow("Preview");
-	printf("Display thread over\n");
+	Log(4, "Display thread over\n");
 	return (void *)0;
 }
 
@@ -184,14 +184,14 @@ void *SaveImgThd(void *para)
 			}
 			catch (const cv::Exception& ex)
 			{
-				printf("*** ERROR: Exception saving image: %s\n", ex.what());
+				Log(0, "*** ERROR: Exception saving image: %s\n", ex.what());
 			}
 			et = cv::getTickCount();
 
 			if (result)
 				system(cmd);
 			else
-				printf("*** ERROR: Unable to save image '%s'.\n", CG.fullFilename);
+				Log(0, "*** ERROR: Unable to save image '%s'.\n", CG.fullFilename);
 
 		} else {
 			// This can happen if the program is closed before the first picture.
@@ -862,7 +862,7 @@ int main(int argc, char *argv[])
 	asiRetCode = ASIInitCamera(CG.cameraNumber);
 	if (asiRetCode != ASI_SUCCESS)
 	{
-		printf("*** ERROR: Unable to initialise camera: %s\n", getRetCode(asiRetCode));
+		Log(0, "*** ERROR: Unable to initialise camera: %s\n", getRetCode(asiRetCode));
 		closeUp(EXIT_ERROR_STOP);	// Can't do anything so might as well exit.
 	}
 
@@ -967,7 +967,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (CG.tty)
-		printf("*** Press Ctrl+C to stop ***\n\n");
+		Log(0, "*** Press Ctrl+C to stop ***\n\n");
 
 	// Start taking pictures
 
@@ -1204,16 +1204,16 @@ int main(int argc, char *argv[])
 			asiRetCode = setControl(CG.cameraNumber, ASI_COOLER_ON, CG.currentEnableCooler ? ASI_TRUE : ASI_FALSE, ASI_FALSE);
 			if (asiRetCode != ASI_SUCCESS)
 			{
-				printf("%s", c(KRED));
-				printf(" WARNING: Could not change cooler state: %s; continuing.\n", getRetCode(asiRetCode));
-				printf("%s", c(KNRM));
+				Log(1, "%s", c(KYELLOW));
+				Log(1, " WARNING: Could not change cooler state: %s; continuing.\n", getRetCode(asiRetCode));
+				Log(1, "%s", c(KNRM));
 			}
 			asiRetCode = setControl(CG.cameraNumber, ASI_TARGET_TEMP, CG.currentTargetTemp, ASI_FALSE);
 			if (asiRetCode != ASI_SUCCESS)
 			{
-				printf("%s", c(KRED));
-				printf(" WARNING: Could not set cooler temperature: %s; continuing.\n", getRetCode(asiRetCode));
-				printf("%s", c(KNRM));
+				Log(1, "%s", c(KYELLOW));
+				Log(1, " WARNING: Could not set cooler temperature: %s; continuing.\n", getRetCode(asiRetCode));
+				Log(1, "%s", c(KNRM));
 			}
 		}
 
@@ -1437,16 +1437,16 @@ int main(int argc, char *argv[])
 							multiplier = 1 / multiplier;
 						}
 						if (CG.currentExposure_us != CG.lastExposure_us)
-							printf("xxxxxxxxxxx currentExposure_us %'ld != CG.lastExposure_us %'ld\n", CG.currentExposure_us, CG.lastExposure_us);
+							Log(3, "xxxxxxxxxxx currentExposure_us %'ld != CG.lastExposure_us %'ld\n", CG.currentExposure_us, CG.lastExposure_us);
 						// if lastMean/acceptable is 9/90, it's 1/10th of the way there, so multiple exposure by 90/9 (10).
 						// ZWO cameras don't appear to be linear so increase the multiplier amount some.
 						float multiply = ((double)acceptable / CG.lastMean) * multiplier;
 						newExposure_us= CG.lastExposure_us * multiply;
-						printf("=== next exposure=%'ld (multiply by %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, lastMean=%d]\n", newExposure_us, multiply, CG.lastExposure_us, acceptableType, acceptable, (int)CG.lastMean);
+						Log(3, "=== next exposure=%'ld (multiply by %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, lastMean=%d]\n", newExposure_us, multiply, CG.lastExposure_us, acceptableType, acceptable, (int)CG.lastMean);
 
 						if (priorMeanDiff > 0 && lastMeanDiff < 0)
 						{ 
-printf(" >xxx lastMean was %d and went from %d above max of %d to %d below min of %d, is now at %d; should NOT set temp min to currentExposure_us of %'ld\n",
+Log(3, " >xxx lastMean was %d and went from %d above max of %d to %d below min of %d, is now at %d; should NOT set temp min to currentExposure_us of %'ld\n",
 							priorMean, priorMeanDiff, maxAcceptableMean,
 							-lastMeanDiff, minAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 						} 
@@ -1455,7 +1455,7 @@ printf(" >xxx lastMean was %d and went from %d above max of %d to %d below min o
 							if (priorMeanDiff < 0 && lastMeanDiff > 0)
 							{
 							// OK to set upper limit since we know it's too high.
-printf(" >xxx mean was %d and went from %d below min of %d to %d above max of %d, is now at %d; OK to set temp max to currentExposure_us of %'ld\n",
+Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d, is now at %d; OK to set temp max to currentExposure_us of %'ld\n",
 								priorMean, -priorMeanDiff, minAcceptableMean,
 								lastMeanDiff, maxAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 							}

@@ -1,8 +1,8 @@
 // Functions used by the "capture" and other programs.
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -456,37 +456,85 @@ bool getBoolean(const char* arg)
 	return(false);
 }
 
-// Check for a valid file extension and return it, or NULL on error.
-const char *checkForValidExtension(const char *fileName, int imageType)
+// Check for a valid file extension.  Return false if it can't be determined.
+// If ok, set the quality based on the extension.
+bool checkForValidExtension(config *cg)
 {
-	const char *ext = strrchr(fileName, '.');
-	if (ext == NULL)
-	{
-		Log(0, "*** ERROR: No extension given on filename: [%s]\n", fileName);
-		return(NULL);
+	char const *ext = strrchr(cg->fileName, '.');		// e.g., "image.jpg"
+	if (ext == NULL) {
+		Log(0, "*** ERROR: No extension given on filename: [%s]\n", cg->fileName);
+		return(false);
 	}
 
 	ext++;
-	if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
-	{
-		if (imageType == IMG_RAW16)
-		{
+	if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0) {
+		if (cg->imageType == IMG_RAW16) {
 			Log(0, "*** ERROR: RAW16 images only work with .png files; either change the Image Type or the Filename.\n");
-			return(NULL);
+			return(false);
+		}
+		cg->imageExt = "jpg";
+		cg->extensionType = isJPG;
+
+		compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
+		// want dark frames to be at highest quality
+		if (cg->takeDarkFrames) {
+			cg->quality = 100;
+		} else if (cg->quality == NOT_SET) {
+			cg->quality = cg->qualityJPG;
+		} else {
+			validateLong(&cg->quality, 0, 100, "JPG Quality", true);
 		}
 
-		return("jpg");
+	} else if (strcasecmp(ext, "png") == 0) {
+		cg->imageExt = "png";
+		cg->extensionType = isPNG;
+
+		compressionParameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
+		// png is lossless so "quality" is really just the amount of compression.
+		if (cg->takeDarkFrames) {
+			cg->quality = 9;
+		} else if (cg->quality == NOT_SET) {
+			cg->quality = cg->qualityPNG;
+		} else {
+			validateLong(&cg->quality, 0, 9, "PNG Quality/Compression", true);
+		}
+
+	} else {
+		Log(0, "*** ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", ext);
+		return(false);
 	}
-	else if (strcasecmp(ext, "png") == 0)
+
+	compressionParameters.push_back(cg->quality);
+
+	// Get just the name of the file, without any directories or the extension.
+	if (cg->takeDarkFrames)
 	{
-		return("png");
+		// To avoid overwriting the optional notification image with the dark image,
+		// during dark frames we use a different file name.
+		static char darkFilename[20];
+		snprintf(darkFilename, sizeof(darkFilename), "dark.%s", cg->imageExt);
+		cg->fileName = darkFilename;
+		strncpy(cg->finalFileName, cg->fileName, sizeof(cg->finalFileName)-1);
 	}
 	else
 	{
-		Log(0, "*** ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", ext);
-		return(NULL);
+		// There shouldn't be any "/" in fileName; if there is, only get the file name portion.
+		char const *slash = strrchr(cg->fileName, '/');
+		if (slash == NULL)
+			strncpy(cg->fileNameOnly, cg->fileName, sizeof(cg->fileNameOnly)-1);
+		else
+			strncpy(cg->fileNameOnly, slash + 1, sizeof(cg->fileNameOnly)-1);
+
+		// Keep track of the filename without the extension, which we know is there.
+		char *dot = strrchr(cg->fileNameOnly, '.');
+		*dot = '\0';
 	}
+	Log(4, "fileName=[%s], fileNameOnly=[%s], finalFileName=[%s]\n", cg->fileName, cg->fileNameOnly, cg->finalFileName);
+
+	return(true);
 }
+
+
 
 int fontname[] = {
 	cv::FONT_HERSHEY_SIMPLEX,			cv::FONT_HERSHEY_PLAIN,		cv::FONT_HERSHEY_DUPLEX,

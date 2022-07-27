@@ -397,73 +397,11 @@ int main(int argc, char *argv[])
 	if (! CG.saveCC && ! setDefaultsAndValidateSettings(&CG, ASICameraInfo))
 		closeUp(EXIT_ERROR_STOP);
 
-	char const *ext = checkForValidExtension(CG.fileName, CG.imageType);
-	if (ext == NULL)
-	{
+	if (! checkForValidExtension(&CG)) {
 		// checkForValidExtension() displayed the error message.
 		closeUp(EXIT_ERROR_STOP);
 	}
 
-// TODO: make common
-	if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0)
-	{
-		CG.imageExt = "jpg";
-		compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
-		// want dark frames to be at highest quality
-		if (CG.takeDarkFrames)
-		{
-			CG.quality = 100;
-		}
-		else if (CG.quality == NOT_SET)
-		{
-			CG.quality = CG.qualityJPG;
-		}
-		else
-		{
-			validateLong(&CG.quality, 0, 100, "JPG Quality", true);
-		}
-	}
-	else if (strcasecmp(ext, "png") == 0)
-	{
-		CG.imageExt = "png";
-		compressionParameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
-		// png is lossless so "quality" is really just the amount of compression.
-		if (CG.takeDarkFrames)
-		{
-			CG.quality = 9;
-		}
-		else if (CG.quality == NOT_SET)
-		{
-			CG.quality = CG.qualityPNG;
-		}
-		else
-		{
-			validateLong(&CG.quality, 0, 9, "PNG Quality/Compression", true);
-		}
-	}
-	compressionParameters.push_back(CG.quality);
-
-// TODO: make common.
-	// Get just the name of the file, without any directories or the extension.
-	if (CG.takeDarkFrames)
-	{
-		// To avoid overwriting the optional notification image with the dark image,
-		// during dark frames we use a different file name.
-		static char darkFilename[20];
-		sprintf(darkFilename, "dark.%s", CG.imageExt);
-		CG.fileName = darkFilename;
-		strncat(CG.finalFileName, CG.fileName, sizeof(CG.finalFileName)-1);
-	}
-	else
-	{
-		char const *slash = strrchr(CG.fileName, '/');
-		if (slash == NULL)
-			strncat(CG.fileNameOnly, CG.fileName, sizeof(CG.fileNameOnly)-1);
-		else
-			strncat(CG.fileNameOnly, slash + 1, sizeof(CG.fileNameOnly)-1);
-		char *dot = strrchr(CG.fileNameOnly, '.');	// we know there's an extension
-		*dot = '\0';
-	}
 
 	int iMaxWidth, iMaxHeight;
 	double pixelSize;

@@ -36,7 +36,7 @@
 		"gridlines_eq": false,
 		"gridlineswidth": 0.75,
 		"showgalaxy": false,
-		"gaxaxywidth": 0.75,
+		"galaxywidth": 0.75,
 		"mouse": false,
 		"keyboard": true,
 		"showdate": false,

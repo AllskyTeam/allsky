@@ -47,6 +47,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Central location for all AllSky configuration files.
 	ALLSKY_CONFIG="${ALLSKY_CONFIG:-${ALLSKY_HOME}/config}"
 
+	# Central location for all master repository configuration files.
+	ALLSKY_REPO="${ALLSKY_REPO:-${ALLSKY_HOME}/config_repo}"
+
 	# Holds all the scripts.
 	ALLSKY_SCRIPTS="${ALLSKY_SCRIPTS:-${ALLSKY_HOME}/scripts}"
 

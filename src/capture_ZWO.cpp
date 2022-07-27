@@ -1204,14 +1204,14 @@ int main(int argc, char *argv[])
 			asiRetCode = setControl(CG.cameraNumber, ASI_COOLER_ON, CG.currentEnableCooler ? ASI_TRUE : ASI_FALSE, ASI_FALSE);
 			if (asiRetCode != ASI_SUCCESS)
 			{
-				Log(1, "%s", c(KYELLOW));
+				Log(1, "%s", c(KYEL));
 				Log(1, " WARNING: Could not change cooler state: %s; continuing.\n", getRetCode(asiRetCode));
 				Log(1, "%s", c(KNRM));
 			}
 			asiRetCode = setControl(CG.cameraNumber, ASI_TARGET_TEMP, CG.currentTargetTemp, ASI_FALSE);
 			if (asiRetCode != ASI_SUCCESS)
 			{
-				Log(1, "%s", c(KYELLOW));
+				Log(1, "%s", c(KYEL));
 				Log(1, " WARNING: Could not set cooler temperature: %s; continuing.\n", getRetCode(asiRetCode));
 				Log(1, "%s", c(KNRM));
 			}

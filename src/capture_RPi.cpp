@@ -531,8 +531,7 @@ int main(int argc, char *argv[])
  			Log(1, "Taking dark frames...\n");
 
 			if (CG.notificationImages) {
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/copy_notification_image.sh --expires 0 DarkFrames &", CG.allskyHome);
-				system(bufTemp);
+				(void) displayNotificationImage("--expires 0 DarkFrames &");
 			}
 		}
 

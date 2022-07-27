@@ -437,7 +437,7 @@ if [ "${SAVED_OLD}" = "true" ]; then
 else
 	echo -e "\n${YELLOW}"
 	echo    "Before using the website you must edit its configuration by clicking on"
-	echo	"the "Editor" link in the WebUI, then select the ${CONFIGURATION_FILE_NAME} entry."
+	echo	"the 'Editor' link in the WebUI, then select the ${CONFIGURATION_FILE_NAME} entry."
 	echo
 	echo	"There are many options, so see ${GITHUB_ROOT}/allsky/wiki/allsky-website-Settings"
 	echo	"for more information".

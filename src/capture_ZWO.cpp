@@ -960,8 +960,7 @@ int main(int argc, char *argv[])
 			Log(1, "Taking dark frames...\n");
 
 			if (CG.notificationImages) {
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/copy_notification_image.sh --expires 0 DarkFrames &", CG.allskyHome);
-				system(bufTemp);
+				(void) displayNotificationImage("--expires 0 DarkFrames &");
 			}
 		}
 
@@ -1620,7 +1619,7 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					// Hopefully the user can use the time it took to save a file to disk
 					// to help determine why they are getting this warning.
 					// Perhaps their disk is very slow or their delay is too short.
-					Log(0, "  > WARNING: currently saving an image; can't save new one at %s.\n", exposureStart);
+					Log(1, "  > WARNING: currently saving an image; can't save new one at %s.\n", exposureStart);
 
 					// TODO: wait for the prior image to finish saving.
 				}

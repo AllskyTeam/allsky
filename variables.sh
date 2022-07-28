@@ -21,7 +21,8 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 		RED="\033[0;31m";		wERROR="${RED}"
 		DEBUG="${YELLOW}";		wDEBUG="${YELLOW}"
 		NC="\033[0m";			wNC="${NC}"
-								wBOLD="'"; wNBOLD="'"
+								wBOLD="["; wNBOLD="]"
+								wBR="\n"
 	else
 		ON_TTY=0
 		GREEN="";				wOK="<span style='color: green'>"
@@ -30,6 +31,7 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 		DEBUG="";				wDEBUG="${wWARNING}"
 		NC="";					wNC="</span>"
 								wBOLD="<b>"; wNBOLD="</b>"
+								wBR="<br>"
 	fi
 
 	if [ "${ALLSKY_HOME}" = "" ] ; then	# This must come after setting colors above

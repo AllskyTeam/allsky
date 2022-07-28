@@ -223,7 +223,7 @@ int ASIGetNumOfConnectedCameras()
 		dir = "/tmp";
 
 	// File to hold info on all the cameras.
-	snprintf(camerasInfoFile, sizeof(camerasInfoFile), "%s/cameras.txt", dir);
+	snprintf(camerasInfoFile, sizeof(camerasInfoFile), "%s/%s_cameras.txt", dir, CAMERA_TYPE);
 
 	char cmd[300];
 	int num;
@@ -266,13 +266,13 @@ ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCamera
 	// Determine which camera sensor we have.
 	if (camerasInfoFile[0] == '\0')
 	{
-		fprintf(stderr, "ERROR: camerasInfoFile not created!\n");
+		Log(0, "ERROR: camerasInfoFile not created!\n");
 		closeUp(EXIT_ERROR_STOP);
 	}
 	FILE *f = fopen(camerasInfoFile, "r");
 	if (f == NULL)
 	{
-		fprintf(stderr, "ERROR: Unable to open '%s': %s\n", camerasInfoFile, strerror(errno));
+		Log(0, "ERROR: Unable to open '%s': %s\n", camerasInfoFile, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
 	char line[128];
@@ -300,7 +300,7 @@ ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCamera
 	}
 	if (! found)
 	{
-		fprintf(stderr, "ERROR: Could not find information on camera # %d\n", iCameraIndex);
+		Log(0, "ERROR: Could not find information on camera # %d\n", iCameraIndex);
 		closeUp(EXIT_ERROR_STOP);
 	}
 
@@ -510,7 +510,7 @@ void processConnectedCameras()
 	numCameras = ASIGetNumOfConnectedCameras();
 	if (numCameras <= 0)
 	{
-		printf("*** ERROR: No Connected Camera...\n");
+		Log(0, "*** ERROR: No Connected Camera...\n");
 		// Don't wait here since it's possible the camera is physically connected
 		// but the software doesn't see it.
 		closeUp(EXIT_NO_CAMERA);		// If there are no cameras we can't do anything.
@@ -567,7 +567,7 @@ char *getSerialNumber(int camNum)
 		if (asiRetCode == ASI_ERROR_GENERAL_ERROR)
 			snprintf(sn, sizeof(sn), "[not supported]");
 		else
-			fprintf(stderr, "*** WARNING: unable to get camera serial number (%s)\n", getRetCode(asiRetCode));
+			Log(1, "*** WARNING: unable to get camera serial number (%s)\n", getRetCode(asiRetCode));
 	}
 	else if (serialNumber.id[0] == '\0')
 	{
@@ -621,7 +621,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int 
 	FILE *f = fopen(fileName, "w");
 	if (f == NULL)
 	{
-		fprintf(stderr, "ERROR: Unable to open '%s': %s\n", fileName, strerror(errno));
+		Log(0, "ERROR: Unable to open '%s': %s\n", fileName, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
 	Log(4, "saveCameraInfo(): saving to %s\n", fileName);
@@ -849,33 +849,33 @@ bool checkExposureValues(config *cg)
 {
 	if (cg->dayExposure_us < cg->cameraMinExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", cg->dayExposure_us, cg->cameraMinExposure_us);
+	 	Log(1, "*** WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", cg->dayExposure_us, cg->cameraMinExposure_us);
 	 	cg->dayExposure_us = cg->cameraMinExposure_us;
 	}
 	else if (cg->dayExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->dayExposure_us, cg->cameraMaxExposure_us);
+	 	Log(1, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->dayExposure_us, cg->cameraMaxExposure_us);
 	 	cg->dayExposure_us = cg->cameraMaxExposure_us;
 	}
 	else if (cg->dayAutoExposure && cg->dayExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->dayExposure_us, cg->cameraMaxAutoExposure_us);
+	 	Log(1, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->dayExposure_us, cg->cameraMaxAutoExposure_us);
 	 	cg->dayExposure_us = cg->cameraMaxAutoExposure_us;
 	}
 
 	if (cg->nightExposure_us < cg->cameraMinExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", cg->nightExposure_us, cg->cameraMinExposure_us);
+	 	Log(1, "*** WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", cg->nightExposure_us, cg->cameraMinExposure_us);
 	 	cg->nightExposure_us = cg->cameraMinExposure_us;
 	}
 	else if (cg->nightExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->nightExposure_us, cg->cameraMaxExposure_us);
+	 	Log(1, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->nightExposure_us, cg->cameraMaxExposure_us);
 	 	cg->nightExposure_us = cg->cameraMaxExposure_us;
 	}
 	else if (cg->nightAutoExposure && cg->nightExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	fprintf(stderr, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->nightExposure_us, cg->cameraMaxAutoExposure_us);
+	 	Log(1, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->nightExposure_us, cg->cameraMaxAutoExposure_us);
 	 	cg->nightExposure_us = cg->cameraMaxAutoExposure_us;
 	}
 

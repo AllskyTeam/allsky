@@ -101,16 +101,6 @@ else
 	Q=''		# .js
 fi
 
-if [[ ${ON_TTY} -eq 0 ]]; then
-	BR="<br>"		# Line break
-	Bon="<b>"		# Bold on
-	Boff="</b>"		# Bold off
-else
-	BR="\n"
-	Bon="["
-	Boff="]"
-fi
-
 SED_STRING=()
 OUTPUT_MESSAGE=""
 while [ $# -gt 0 ]; do
@@ -135,12 +125,13 @@ while [ $# -gt 0 ]; do
 			NEW_VALUE="${Q}${NEW_VALUE}${Q}"
 		fi
 		# Only replace the value, which we consider anything after the ":"
+# TODO: BUG: This also replaces anything after the value.
 		SED_STRING+=(-e "/[ \t]*${Q}${FIELD}${Q}[ \t]*:/    s;:[ \t].*;: ${NEW_VALUE},;")
 	fi
 	shift 3
 
-	OUTPUT_MESSAGE="${OUTPUT_MESSAGE}'${FIELD}' updated to ${Bon}${NEW}${Boff}."
-	[ $# -gt 0 ] && OUTPUT_MESSAGE="${OUTPUT_MESSAGE}${BR}"
+	OUTPUT_MESSAGE="${OUTPUT_MESSAGE}'${FIELD}' updated to ${wBOLD}${NEW}${wNBOLD}."
+	[ $# -gt 0 ] && OUTPUT_MESSAGE="${OUTPUT_MESSAGE}${wBR}"
 done
 
 if [[ ${DEBUG} == "true" ]]; then

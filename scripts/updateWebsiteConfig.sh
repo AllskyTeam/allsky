@@ -15,7 +15,7 @@ source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 
 # This output may go to a web page, so use "w" colors.
-# shellcheck doesn't realize there were set in variables.sh so we have to reset them here.
+# shell check doesn't realize there were set in variables.sh so we have to reset them here.
 wOK="${wOK}"
 wWARNING="${wWARNING}"
 wERROR="${wERROR}"

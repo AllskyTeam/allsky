@@ -210,7 +210,7 @@ fi
 			longitude "" "${LONGITUDE}" \
 			auroraMap "" "${AURORAMAP}" \
 			computer "" "${COMPUTER}" \
-			camera "" "${CAMERA}" \
+			camera "" "${CAMERA_TYPE}" \
 			XX_MINI_TIMELAPSE_XX "" "${MINI_TIMELAPSE}" \
 			XX_MINI_TIMELAPSE_URL_XX "" "${MINI_TIMELAPSE_URL}" \
 			onPi "" "${ON_PI}"

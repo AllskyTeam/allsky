@@ -174,8 +174,7 @@ fi
 ### TODO: Not sure capture programs accept either way.
 ### TODO: Not sure CONFIGURATION_FILE_NAME only accepts numbers.
 
-		# Latitude and longitude may or may not have N/S and E/W,
-		# and CONFIGURATION_FILE_NAME needs decimal numbers.
+		# Latitude and longitude may or may not have N/S and E/W.
 		# "N" is positive, "S" negative for LATITUDE.
 		# "E" is positive, "W" negative for LONGITUDE.
 
@@ -211,8 +210,8 @@ fi
 			auroraMap "" "${AURORAMAP}" \
 			computer "" "${COMPUTER}" \
 			camera "" "${CAMERA_TYPE}" \
-			XX_MINI_TIMELAPSE_XX "" "${MINI_TIMELAPSE}" \
-			XX_MINI_TIMELAPSE_URL_XX "" "${MINI_TIMELAPSE_URL}" \
+			XX_MINI_TIMELAPSE_XX "XX_MINI_TIMELAPSE_XX" "${MINI_TIMELAPSE}" \
+			XX_MINI_TIMELAPSE_URL_XX "XX_MINI_TIMELAPSE_URL_XX" "${MINI_TIMELAPSE_URL}" \
 			onPi "" "${ON_PI}"
 # xxxx TODO: "camera" should be combination of "$CAMERA_TYPE and $CAMERA_MODEL"
 	fi

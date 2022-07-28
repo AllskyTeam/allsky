@@ -336,8 +336,11 @@ void flushBufferedImages(int cameraId, void *buf, size_t size)
 }
 
 
-long reportedExposure_us = 0;	// exposure reported by the camera, either actual exposure or suggested next one
-ASI_BOOL bAuto = ASI_FALSE;		// "auto" flag returned by ASIGetControlValue, when we don't care what it is
+// Next exposure suggested by the camera.
+long suggestedNextExposure_us = 0;
+
+// "auto" flag returned by ASIGetControlValue(), when we don't care what it is.
+ASI_BOOL bAuto = ASI_FALSE;
 
 ASI_BOOL wasAutoExposure = ASI_FALSE;
 long bufferSize = NOT_SET;
@@ -357,9 +360,8 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 	if (cg->currentAutoExposure && cg->currentExposure_us > cg->currentMaxAutoExposure_us)
 	{
 		// If we call length_in_units() twice in same command line they both return the last value.
-		char x[100];
-		snprintf(x, sizeof(x), "%s", length_in_units(cg->currentExposure_us, true));
-		Log(0, "*** WARNING: cg->currentExposure_us requested [%s] > currentMaxAutoExposure_us [%s]\n", x, length_in_units(cg->currentMaxAutoExposure_us, true));
+		Log(1, "*** WARNING: cg->currentExposure_us requested [%s] > ", length_in_units(cg->currentExposure_us, true));
+		Log(1, "currentMaxAutoExposure_us [%s]\n", length_in_units(cg->currentMaxAutoExposure_us, true));
 		cg->currentExposure_us = cg->currentMaxAutoExposure_us;
 	}
 
@@ -446,15 +448,18 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 			// be equal to the requested length; in fact, "there's no need to call ASIGetControlValue()".
 			// When in auto-exposure mode, the returned exposure length is what the driver thinks the
 			// next exposure should be, and will eventually converge on the correct exposure.
-			ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &reportedExposure_us, &wasAutoExposure);
-			Log(2, "  > Got image%s.  Returned exposure: %s\n", debug_text, length_in_units(reportedExposure_us, true));
+			ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &suggestedNextExposure_us, &wasAutoExposure);
+			Log(2, "  > Got image%s.", debug_text);
+			Log(3, "  Suggested next exposure: %s", length_in_units(suggestedNextExposure_us, true));
+			Log(2, "\n");
 
 			// If this was a manual exposure, make sure it took the correct exposure.
 			// Per ZWO, this should never happen.
-			if (wasAutoExposure == ASI_FALSE && cg->currentExposure_us != reportedExposure_us)
+			if (wasAutoExposure == ASI_FALSE && cg->currentExposure_us != suggestedNextExposure_us)
 			{
-				Log(1, "  > WARNING: not correct exposure (requested: %'ld us, reported: %'ld us, diff: %'ld)\n", cg->currentExposure_us, reportedExposure_us, reportedExposure_us - cg->currentExposure_us);
+				Log(1, "  > WARNING: not correct exposure (requested: %'ld us, suggested: %'ld us, diff: %'ld)\n", cg->currentExposure_us, suggestedNextExposure_us, suggestedNextExposure_us - cg->currentExposure_us);
 			}
+
 			ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &cg->lastSensorTemp, &bAuto);
 			if (cg->isColorCamera)
 			{
@@ -1112,7 +1117,7 @@ int main(int argc, char *argv[])
 		if (CG.myModeMeanSetting.currentMean > 0.0)
 		{
 			CG.myModeMeanSetting.modeMean = true;
-/* FUTURE
+/* TODO: FUTURE
 			myModeMeanSetting.meanValue = CG.myModeMeanSetting.currentMean;
 			if (! aegInit(cg, minExposure_us, CG.cameraMinGain, myRaspistillSetting, myModeMeanSetting))
 			{
@@ -1158,8 +1163,6 @@ int main(int argc, char *argv[])
 		if (CG.currentAutoGain)
 			setControl(CG.cameraNumber, ASI_AUTO_MAX_GAIN, CG.currentMaxAutoGain, ASI_FALSE);
 
-		// never go over the camera's max auto exposure. ASI_AUTO_MAX_EXP is in ms so convert
-		CG.currentMaxAutoExposure_us = std::min(CG.currentMaxAutoExposure_us, CG.cameraMaxAutoExposure_us);
 		if (CG.currentAutoExposure)
 		{
 			setControl(CG.cameraNumber, ASI_AUTO_MAX_EXP, CG.currentMaxAutoExposure_us / US_IN_MS, ASI_FALSE);
@@ -1236,6 +1239,8 @@ int main(int argc, char *argv[])
 			exposureStartDateTime = getTimeval();
 			char exposureStart[128];
 			snprintf(exposureStart, sizeof(exposureStart), "%s", formatTime(exposureStartDateTime, "%F %T"));
+			// Unfortunately our histogram method only does exposure, not gain, so we
+			// can't say what gain we are going to use.
 			Log(2, "-----\n");
 			Log(1, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(CG.currentExposure_us, true));
 
@@ -1379,7 +1384,7 @@ int main(int argc, char *argv[])
 						// ZWO cameras don't appear to be linear so increase the multiplier amount some.
 						float multiply = ((double)acceptable / CG.lastMean) * multiplier;
 						newExposure_us= CG.lastExposure_us * multiply;
-						Log(3, "=== next exposure=%'ld (multiply by %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, lastMean=%d]\n", newExposure_us, multiply, CG.lastExposure_us, acceptableType, acceptable, (int)CG.lastMean);
+						Log(4, "=== next exposure=%'ld (multiply by %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, lastMean=%d]\n", newExposure_us, multiply, CG.lastExposure_us, acceptableType, acceptable, (int)CG.lastMean);
 
 						if (priorMeanDiff > 0 && lastMeanDiff < 0)
 						{ 
@@ -1498,12 +1503,12 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					{
 						Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %d\n", length_in_units(CG.currentMaxAutoExposure_us, false), CG.lastMean);
 					}
-					// xxxx TODO: this was "actualExposure_us = ..."	reportedExposure_us = currentExposure_us;
+					// xxxx TODO: this was "actualExposure_us = ..."	suggestedNextExposure_us = currentExposure_us;
 
 				} else {
 					// Didn't use histogram method.
-					// If we used auto-exposure, set the next exposure to the last reported
-					// exposure, which is what the camera driver thinks the next exposure should be.
+					// If we used auto-exposure, set the next exposure to what the camera driver
+					// thinks the next exposure should be.
 					// But temper it by the aggression value so we don't bounce up and down.
 					if (CG.currentAutoExposure)
 					{
@@ -1512,7 +1517,7 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						if (CG.aggression != 100 && CG.currentSkipFrames <= 0)
 						{
 							long exposureDiff_us, diff_us;
-							diff_us = reportedExposure_us - CG.currentExposure_us;
+							diff_us = suggestedNextExposure_us - CG.currentExposure_us;
 							exposureDiff_us = diff_us * (float)CG.aggression / 100;
 							if (exposureDiff_us != 0)
 							{
@@ -1525,7 +1530,7 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						}
 						else
 						{
-							CG.currentExposure_us = reportedExposure_us;
+							CG.currentExposure_us = suggestedNextExposure_us;
 						}
 					}
 					else

@@ -1061,6 +1061,7 @@ bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
 	ret = getControlCapForControlType(cg->cameraNumber, BRIGHTNESS, &cc);
 	if (ret == ASI_SUCCESS)
 	{
+		cg->defaultBrightness = cc.DefaultValue;
 		if (cg->dayBrightness == NOT_CHANGED)
 			cg->dayBrightness = cc.DefaultValue;
 		else

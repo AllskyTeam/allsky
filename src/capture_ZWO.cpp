@@ -28,9 +28,6 @@ config CG;
 
 #define USE_HISTOGRAM		// use the histogram code as a workaround to ZWO's bug
 
-// Define's specific to this camera type.  Others that apply to all camera types are in allsky_common.h
-#define DEFAULT_BRIGHTNESS		100
-
 #ifdef USE_HISTOGRAM
 #define MINMEAN					122
 #define MAXMEAN					134
@@ -404,23 +401,43 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 		}
 		else
 		{
-			// There is too much variance in the overhead of taking a picture to accurately
-			// determine the time to take an image at short exposures, so only check for longer ones.
+			// The timeToTakeImage_us should never be less than what was requested.
 			long timeToTakeImage_us = timeval_diff_us(tStart, getTimeval());
-			if (timeToTakeImage_us < cg->currentExposure_us && cg->currentExposure_us > (5 * US_IN_SEC))
+
+			if (timeToTakeImage_us < cg->currentExposure_us)
 			{
-				// Testing shows there's about this much us overhead, so subtract it to get actual time.
-				const int OVERHEAD = 450000;
-				if (timeToTakeImage_us > OVERHEAD)	// don't subtract if it makes timeToTakeImage_us negative
-					timeToTakeImage_us -= OVERHEAD;
 				long diff_us = timeToTakeImage_us - cg->currentExposure_us;
-				long threshold_us = cg->currentExposure_us * 0.5;		// 50% seems like a good number
-				if (abs(diff_us) > threshold_us)
+				if (! cg->currentAutoExposure)						// manual exposure
 				{
-					Log(1, "*** WARNING: time to take image (%s) ", length_in_units(timeToTakeImage_us, true));
-					Log(1, "differs from requested exposure time (%s) ", length_in_units(cg->currentExposure_us, true));
-					Log(1, "by %s, ", length_in_units(diff_us, true));
-					Log(1, "threshold=%'ld\n", length_in_units(threshold_us, true));
+					Log(1, "  > WARNING: Time to take manual exposure (%s) ",
+						length_in_units(timeToTakeImage_us, true));
+					Log(1, " differs from requested exposure (%s),", 
+						length_in_units(cg->currentExposure_us, true));
+					Log(1, "by %s\n", length_in_units(diff_us, true));
+				}
+				else if (cg->currentExposure_us > (5 * US_IN_SEC))	// auto-exposure
+				{
+					// There is too much variance in the overhead of taking pictures to
+					// accurately determine the actual time to take an image at short exposures,
+					// so only check for long ones.
+					// Testing shows there's about this much us overhead,
+					// so subtract it to get our best estimate of the "actual" time.
+					const int OVERHEAD = 450000;
+
+					// Don't subtract if it makes timeToTakeImage_us negative.
+					if (timeToTakeImage_us > OVERHEAD)
+						timeToTakeImage_us -= OVERHEAD;
+					diff_us = timeToTakeImage_us - cg->currentExposure_us;
+					long threshold_us = cg->currentExposure_us * 0.5;		// 50% seems like a good number
+					if (abs(diff_us) > threshold_us)
+					{
+						Log(1, "*** WARNING: Time to take auto-exposure (%s) ",
+							length_in_units(timeToTakeImage_us, true));
+						Log(1, "differs from requested exposure time (%s) ",
+							length_in_units(cg->currentExposure_us, true));
+						Log(1, "by %s, ", length_in_units(diff_us, true));
+						Log(1, "threshold=%'ld\n", length_in_units(threshold_us, true));
+					}
 				}
 			}
 
@@ -452,13 +469,6 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 			Log(2, "  > Got image%s.", debug_text);
 			Log(3, "  Suggested next exposure: %s", length_in_units(suggestedNextExposure_us, true));
 			Log(2, "\n");
-
-			// If this was a manual exposure, make sure it took the correct exposure.
-			// Per ZWO, this should never happen.
-			if (wasAutoExposure == ASI_FALSE && cg->currentExposure_us != suggestedNextExposure_us)
-			{
-				Log(1, "  > WARNING: not correct exposure (requested: %'ld us, suggested: %'ld us, diff: %'ld)\n", cg->currentExposure_us, suggestedNextExposure_us, suggestedNextExposure_us - cg->currentExposure_us);
-			}
 
 			ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &cg->lastSensorTemp, &bAuto);
 			if (cg->isColorCamera)
@@ -1269,7 +1279,7 @@ int main(int argc, char *argv[])
 				bool usedHistogram = false;	// did we use the histogram method?
 
 				// We don't use this at night since the ZWO bug is only when it's light outside.
-				if (dayOrNight == "DAY" && CG.dayAutoExposure && ! CG.takeDarkFrames)
+				if (dayOrNight == "DAY" && CG.currentAutoExposure)
 				{
 					usedHistogram = true;	// we are using the histogram code on this exposure
 					attempts = 0;
@@ -1281,16 +1291,15 @@ int main(int argc, char *argv[])
 
 					long newExposure_us = 0;
 
-					// cameraMinExposure_us is a camera property.
 					// histMinExposure_us is the min exposure used in the histogram calculation.
-// xxxxxxxxx dump histMinExposure_us? Set tempMinExposure_us = cameraMinExposure_us ? ...
-					long histMinExposure_us = CG.cameraMinExposure_us ? CG.cameraMinExposure_us : 100;
+// xxx TODO: dump histMinExposure_us? Set tempMinExposure_us = cameraMinExposure_us ? ...
+					long histMinExposure_us = CG.cameraMinExposure_us;
 					long tempMinExposure_us = histMinExposure_us;
-					long tempMaxExposure_us = CG.currentMaxAutoExposure_us;
+					long tempMaxExposure_us = CG.cameraMaxExposure_us;
 
-					if (CG.dayBrightness != DEFAULT_BRIGHTNESS)
+					if (CG.currentBrightness != CG.defaultBrightness)
 					{
-						// Adjust brightness based on dayBrightness.
+						// Adjust brightness based on Brightness.
 						// The default value has no adjustment.
 						// The only way we can do this easily is via adjusting the exposure.
 						// We could apply a stretch to the image, but that's more difficult.
@@ -1314,11 +1323,12 @@ int main(int argc, char *argv[])
 
 							// Determine the adjustment amount - only done once.
 							// See how many multiples we're different.
-							// If dayBrightnes < DEFAULT_BRIGHTNESS then numMultiples will be negative,
+							// If currentBrightness < default then numMultiples will be negative,
 							// which is ok - it just means the multiplier will be less than 1.
-							numMultiples = (float)(CG.dayBrightness - DEFAULT_BRIGHTNESS) / DEFAULT_BRIGHTNESS;
+
+							numMultiples = (float)(CG.currentBrightness - CG.defaultBrightness) / CG.defaultBrightness;
 							exposureAdjustment = 1 + (numMultiples * adjustmentAmountPerMultiple);
-							Log(4, "  > >>> Adjusting exposure x %.2f (%.1f%%) for daybrightness\n", exposureAdjustment, (exposureAdjustment - 1) * 100);
+							Log(4, "  > >>> Adjusting exposure x %.2f (%.1f%%) for brightness\n", exposureAdjustment, (exposureAdjustment - 1) * 100);
 							showedMessage = true;
 						}
 
@@ -1607,13 +1617,14 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 				// Save the image
 				if (! bSavingImg)
 				{
+					// For dark frames we already know the finalFilename.
 					if (! CG.takeDarkFrames)
 					{
 						// Create the name of the file that goes in the images/<date> directory.
 						snprintf(CG.finalFileName, sizeof(CG.finalFileName), "%s-%s.%s",
 							CG.fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), CG.imageExt);
+						snprintf(CG.fullFilename, sizeof(CG.fullFilename), "%s/%s", CG.saveDir, CG.finalFileName);
 					}
-					snprintf(CG.fullFilename, sizeof(CG.fullFilename), "%s/%s", CG.saveDir, CG.finalFileName);
 
 					pthread_mutex_lock(&mtxSaveImg);
 					pthread_cond_signal(&condStartSave);

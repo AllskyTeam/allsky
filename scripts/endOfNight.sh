@@ -22,7 +22,7 @@ if [ $# -eq 1 ] ; then
 		DATE="${1}"
 	fi
 else
-	DATE=$(date -d '12 hours ago' +'%Y%m%d')
+	DATE=$(date -d 'yesterday' +'%Y%m%d')
 fi
 
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"

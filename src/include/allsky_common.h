@@ -158,7 +158,7 @@ struct config {			// for configuration variables
 	bool isLibcamera					= true;			// RPi only
 	char const *cmdToUse				= NULL;			// RPi command to us to take images
 	char const *saveDir					= NULL;			// Directory to save images
-	char const *CC_saveDir				= NULL;			// Directory to save camera controls file
+	char const *CC_saveFile				= NULL;			// File to save camera controls to
 	bool saveCC							= false;		// Save camera controls file?
 	bool tty							= false;		// Running on a tty?
 	bool preview						= false;		// Display a preview windoe?

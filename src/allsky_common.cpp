@@ -1064,7 +1064,7 @@ void displayHelp(config cg)
 	printf("\nMisc. settings:\n");
 	printf(" -%-*s - Where to save 'filename' [%s].\n", n, "save_dir s", cg.saveDir);
 	printf(" -%-*s - 1 previews the captured images. Only works with a Desktop Environment [%s]\n", n, "preview", yesNo(cg.preview));
-	printf(" -%-*s - Outputs the camera's capabilities to the specified directory and exists.\n", n, "cc_save_dir s");
+	printf(" -%-*s - Outputs the camera's capabilities to the specified file and exists.\n", n, "cc_file s");
 	printf(" -%-*s - Set mean-value and activates exposure control [%.2f].\n", n, "mean-threshold n", cg.myModeMeanSetting.mean_threshold);
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Command being used to take pictures (Buster: raspistill, Bullseye: libcamera-still\n", n, "cmd s");
@@ -1484,10 +1484,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->saveDir = argv[++i];
 		}
-		else if (strcmp(a, "cc_save_dir") == 0)
+		else if (strcmp(a, "cc_file") == 0)
 		{
-			cg->CC_saveDir = argv[++i];
-			// Since the user specified the CC_saveDir that means they want to save
+			cg->CC_saveFile = argv[++i];
+			// Since the user specified the CC_saveFile that means they want to save
 			// the camera capabilities and quit.
 			cg->saveCC = true;
 			cg->quietExit = true;	// we display info and quit
@@ -1911,13 +1911,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 	}
 
 
-	// if cg_CC_saveDir is set, we'll output some info and exit, and won't take any images.
-	if (cg->saveDir == NULL && cg->CC_saveDir == NULL) {
+	if (cg->saveDir == NULL) {
 		cg->saveDir = cg->allskyHome;
 		Log(1, "*** WARNING: No directory to save Images was specified. Using: [%s]\n", cg->saveDir);
 	}
-	if (cg->CC_saveDir == NULL)
-		cg->CC_saveDir = cg->saveDir;
 
 	return(true);
 }

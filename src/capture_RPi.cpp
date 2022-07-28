@@ -690,13 +690,14 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
 			}
 
+			// For dark frames we already know the finalFilename.
 			if (! CG.takeDarkFrames)
 			{
 				// Create the name of the file that goes in the images/<date> directory.
 				snprintf(CG.finalFileName, sizeof(CG.finalFileName), "%s-%s.%s",
 					CG.fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), CG.imageExt);
+				snprintf(CG.fullFilename, sizeof(CG.fullFilename), "%s/%s", CG.saveDir, CG.finalFileName);
 			}
-			snprintf(CG.fullFilename, sizeof(CG.fullFilename), "%s/%s", CG.saveDir, CG.finalFileName);
 
 			// Capture and save image
 			retCode = RPicapture(CG, &pRgb);

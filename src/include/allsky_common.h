@@ -249,6 +249,9 @@ struct config {			// for configuration variables
 	struct myModeMeanSetting myModeMeanSetting;
 	struct HB HB;							// Histogram Box, ZWO only
 
+	// Default values used in multiple places, so get just once.
+	long defaultBrightness				= NOT_SET;
+
 	// Current values - may vary between day and night
 	bool currentAutoExposure;
 	long currentMaxAutoExposure_us;

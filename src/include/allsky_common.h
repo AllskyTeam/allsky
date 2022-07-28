@@ -295,8 +295,6 @@ void cvText(cv::Mat, const char *, int, int, double,
 timeval getTimeval();
 char *formatTime(timeval, char const *);
 char *getTime(char const *);
-double time_diff_us(int64, int64);
-long timeval_diff_us(timeval, timeval);
 std::string exec(const char *);
 void add_variables_to_command(config, char *, timeval);
 bool checkForValidExtension(config *);

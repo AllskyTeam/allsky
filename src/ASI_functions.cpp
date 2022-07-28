@@ -215,8 +215,8 @@ char camerasInfoFile[128]	= { 0 };	// name of temporary file
 // TODO: use fork() and inter-process communication to get the info to avoid a temporary file.
 int ASIGetNumOfConnectedCameras()
 {
-	// CG.CC_saveDir should be specified, but in case it isn't...
-	const char *dir = CG.CC_saveDir;
+	// CG.saveDir should be specified, but in case it isn't...
+	const char *dir = CG.saveDir;
 	if (dir == NULL)
 		dir = CG.saveDir;
 	if (dir == NULL)
@@ -892,11 +892,8 @@ bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
 		snprintf(s, sizeof(s), "%s%s", cg->allskyHome, "tmp");
 		cg->saveDir = s;
 	}
-	if (cg->CC_saveDir == NULL)
-		cg->CC_saveDir = cg->saveDir;
 
 	cg->tty = isatty(fileno(stdout)) ? true : false;
-
 	cg->isColorCamera = ci.IsColorCam == ASI_TRUE ? true : false;
 	cg->isCooledCamera = ci.IsCoolerCam == ASI_TRUE ? true : false;
 

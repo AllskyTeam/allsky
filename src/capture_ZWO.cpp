@@ -748,7 +748,7 @@ int main(int argc, char *argv[])
 
 	if (CG.saveCC)
 	{
-		saveCameraInfo(ASICameraInfo, CG.CC_saveDir, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
+		saveCameraInfo(ASICameraInfo, CG.CC_saveFile, iMaxWidth, iMaxHeight, pixelSize, bayer[ASICameraInfo.BayerPattern]);
 		closeUp(EXIT_OK);
 	}
 

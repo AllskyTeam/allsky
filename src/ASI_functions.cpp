@@ -611,22 +611,19 @@ char *getCameraModel(ASI_CAMERA_INFO cameraInfo)
 }
 
 // Save information on the specified camera.
-void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *dir, int width, int height, double pixelSize, char const *bayer)
+void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int height, double pixelSize, char const *bayer)
 {
 	char *camModel = getCameraModel(cameraInfo);
 	char *sn = getSerialNumber(cameraInfo.CameraID);
 
-	char fileName[128];
-	snprintf(fileName, sizeof(fileName), "%s/%s_%s.json", dir, CAMERA_TYPE, camModel);
-	FILE *f = fopen(fileName, "w");
+	FILE *f = fopen(file, "w");
 	if (f == NULL)
 	{
-		Log(0, "ERROR: Unable to open '%s': %s\n", fileName, strerror(errno));
+		Log(0, "ERROR: Unable to open '%s': %s\n", file, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
-	Log(4, "saveCameraInfo(): saving to %s\n", fileName);
+	Log(4, "saveCameraInfo(): saving to %s\n", file);
 
-setlinebuf(f);
 	// output basic information on camera as well as all it's capabilities
 	fprintf(f, "{\n");
 	fprintf(f, "\t\"cameraType\" : \"%s\",\n", CAMERA_TYPE);

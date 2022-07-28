@@ -154,7 +154,7 @@ fi
 			IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
 			ON_PI="true"
 		fi
-		if [ "${TIMELAPSE_MINI_IMAGES}" -eq 0 ]; then
+		if [ "${TIMELAPSE_MINI_IMAGES:-0}" -eq 0 ]; then
 			MINI_TIMELAPSE="XX_MINI_TIMELAPSE_XX"
 			MINI_TIMELAPSE_URL="XX_MINI_TIMELAPSE_URL_XX"
 		else
@@ -172,10 +172,8 @@ fi
 		echo -e "${GREEN}* Updating settings in ${DIR}/${CONFIGURATION_FILE_NAME}${NC}"
 
 ### TODO: Not sure capture programs accept either way.
-### TODO: Not sure CONFIGURATION_FILE_NAME only accepts numbers.
 
-		# Latitude and longitude may or may not have N/S and E/W,
-		# and CONFIGURATION_FILE_NAME needs decimal numbers.
+		# Latitude and longitude may or may not have N/S and E/W.
 		# "N" is positive, "S" negative for LATITUDE.
 		# "E" is positive, "W" negative for LONGITUDE.
 
@@ -186,7 +184,7 @@ fi
 		else
 			SIGN=""
 		fi
-		LATITUDE="${SIGN}${LATITUDE%$DIRECTION}}"
+		LATITUDE="${SIGN}${LATITUDE%${DIRECTION}}"
 		if [ "${DIRECTION}" = "S" ]; then
 			AURORAMAP="south"
 		else
@@ -204,15 +202,16 @@ fi
 
 		COMPUTER="$(tail -1 /proc/cpuinfo | sed 's/.*: //')"
 
-		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --config "${DIR}/${CONFIGURATION_FILE_NAME}" \
+		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent \
+			--config "${DIR}/${CONFIGURATION_FILE_NAME}" \
 			imageName "" "${IMAGE_NAME}" \
 			latitude "" "${LATITUDE}" \
 			longitude "" "${LONGITUDE}" \
 			auroraMap "" "${AURORAMAP}" \
 			computer "" "${COMPUTER}" \
-			camera "" "${CAMERA}" \
-			XX_MINI_TIMELAPSE_XX "" "${MINI_TIMELAPSE}" \
-			XX_MINI_TIMELAPSE_URL_XX "" "${MINI_TIMELAPSE_URL}" \
+			camera "" "${CAMERA_TYPE}" \
+			XX_MINI_TIMELAPSE_XX "XX_MINI_TIMELAPSE_XX" "${MINI_TIMELAPSE}" \
+			XX_MINI_TIMELAPSE_URL_XX "XX_MINI_TIMELAPSE_URL_XX" "${MINI_TIMELAPSE_URL}" \
 			onPi "" "${ON_PI}"
 # xxxx TODO: "camera" should be combination of "$CAMERA_TYPE and $CAMERA_MODEL"
 	fi
@@ -335,7 +334,7 @@ fi
 
 
 if [ -d "${ALLSKY_WEBSITE_OLD}" ]; then
-	# git will fail if the new directory already exists
+	# git will fail if the new directory already exists and has something in it
 	PRIOR_WEBSITE="${ALLSKY_WEBSITE}-OLD"
 	if [ -d "${PRIOR_WEBSITE}" ]; then
 		echo -e "\n${RED}"

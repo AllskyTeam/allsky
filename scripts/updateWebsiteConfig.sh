@@ -15,13 +15,16 @@ source "${ALLSKY_HOME}/variables.sh"
 source "${ALLSKY_CONFIG}/config.sh"
 
 # This output may go to a web page, so use "w" colors.
-# shell check doesn't realize there were set in variables.sh
+# shell check doesn't realize there were set in variables.sh so we have to reset them here.
 wOK="${wOK}"
 wWARNING="${wWARNING}"
 wERROR="${wERROR}"
 wDEBUG="${wDEBUG}"
 wYELLOW="${wYELLOW}"
 wNC="${wNC}"
+wBOLD="${wBOLD}"
+wNBOLD="${wNBOLD}"
+wBR="${wBR}"
 
 function usage_and_exit()
 {
@@ -31,7 +34,7 @@ function usage_and_exit()
 	else
 		C="${wERROR}"
 	fi
-	echo -e "${C}Usage: ${ME} [--help] [--debug] [--config file] key old_value new_value [...]${wNC}" >&2
+	echo -e "${C}Usage: ${ME} [--help] [--debug] [--silent] [--config file] key old_value new_value [...]${wNC}" >&2
 	echo "There must be a multiple of 3 arguments." >&2
 	exit ${RET}
 }
@@ -39,6 +42,7 @@ function usage_and_exit()
 OK="true"
 HELP="false"
 DEBUG="false"
+SILENT="false"
 CONFIG_FILE=""
 while [ $# -gt 0 ]; do
 	ARG="${1}"
@@ -48,6 +52,9 @@ while [ $# -gt 0 ]; do
 			;;
 		--debug)
 			DEBUG="true"
+			;;
+		--silent)
+			SILENT="true"
 			;;
 		--config)
 			CONFIG_FILE="${2}"
@@ -101,16 +108,6 @@ else
 	Q=''		# .js
 fi
 
-if [[ ${ON_TTY} -eq 0 ]]; then
-	BR="<br>"		# Line break
-	Bon="<b>"		# Bold on
-	Boff="</b>"		# Bold off
-else
-	BR="\n"
-	Bon="["
-	Boff="]"
-fi
-
 SED_STRING=()
 OUTPUT_MESSAGE=""
 while [ $# -gt 0 ]; do
@@ -128,19 +125,21 @@ while [ $# -gt 0 ]; do
 	# TODO: or if there's a trailing comma.
 	if [ -n "${OLD_VALUE}" ]; then
 		# If ${OLD_VALUE} is set, only update its value, not the whole line.
-		SED_STRING+=(-e "/[ \t]*${Q}${FIELD}${Q}[ \t]*:/ s;${OLD_VALUE};${NEW_VALUE};")
+		SED_STRING+=(-e "/[ \t]*${Q}${FIELD}${Q}[ \t]*/ s;${OLD_VALUE};${NEW_VALUE};")
 	else
-		# Only put quotes around ${NEW_VALUE} if it's a string, i.e., not a number or a special name.
-		if [[ -n ${NEW_VALUE##?([+-])+([0-9.])} && ${NEW_VALUE} != "true" && ${NEW_VALUE} != "false" && ${NEW_VALUE} != "null" ]]; then
+		# Only put quotes around ${NEW_VALUE} if it's a string,
+		# i.e., not a number or a special name, or is blank.
+		if [[ ${NEW_VALUE} == "" || (-n ${NEW_VALUE##?([+-])+([0-9.])} && ${NEW_VALUE} != "true" && ${NEW_VALUE} != "false" && ${NEW_VALUE} != "null") ]]; then
 			NEW_VALUE="${Q}${NEW_VALUE}${Q}"
 		fi
 		# Only replace the value, which we consider anything after the ":"
+# TODO: BUG: This also replaces anything after the value.
 		SED_STRING+=(-e "/[ \t]*${Q}${FIELD}${Q}[ \t]*:/    s;:[ \t].*;: ${NEW_VALUE},;")
 	fi
 	shift 3
 
-	OUTPUT_MESSAGE="${OUTPUT_MESSAGE}'${FIELD}' updated to ${Bon}${NEW}${Boff}."
-	[ $# -gt 0 ] && OUTPUT_MESSAGE="${OUTPUT_MESSAGE}${BR}"
+	OUTPUT_MESSAGE="${OUTPUT_MESSAGE}'${FIELD}' updated to ${wBOLD}${NEW}${wNBOLD}."
+	[ $# -gt 0 ] && OUTPUT_MESSAGE="${OUTPUT_MESSAGE}${wBR}"
 done
 
 if [[ ${DEBUG} == "true" ]]; then
@@ -150,7 +149,7 @@ if [[ ${DEBUG} == "true" ]]; then
 else
 	# shellcheck disable=SC2145
 	if OUTPUT="$(sed -i "${SED_STRING[@]}" "${CONFIG_FILE}" 2>&1)"; then
-		echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
+		[ "${SILENT}" = "false" ] && echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
 	else
 		echo -e "${wERROR}ERROR: unable to update data in '${CONFIG_FILE}':${wNC}" >&2
 		echo "   ${OUTPUT}" >&2

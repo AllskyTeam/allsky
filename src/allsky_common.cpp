@@ -515,6 +515,7 @@ bool checkForValidExtension(config *cg)
 		snprintf(darkFilename, sizeof(darkFilename), "dark.%s", cg->imageExt);
 		cg->fileName = darkFilename;
 		strncpy(cg->finalFileName, cg->fileName, sizeof(cg->finalFileName)-1);
+		snprintf(cg->fullFilename, sizeof(cg->fullFilename), "%s/%s", cg->saveDir, cg->finalFileName);
 	}
 	else
 	{

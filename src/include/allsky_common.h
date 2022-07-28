@@ -97,6 +97,7 @@ struct overlay {
 
 // Histogram Box, ZWO only
 struct HB {
+	bool useHistogram					= false;		// Should we use histogram auto-exposure?
 	int histogramBoxSizeX				= 500;			// width of box in pixels
 	int currentHistogramBoxSizeX		= NOT_CHANGED;
 	int histogramBoxSizeY				= 500;			// height of box in pixels

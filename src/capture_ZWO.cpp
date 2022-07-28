@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <fstream>
 #include <stdarg.h>
+#include <chrono>
 
 #include "include/allsky_common.h"
 
@@ -163,7 +164,9 @@ void *SaveImgThd(void *para)
 
 		bSavingImg = true;
 
-		int64 st, et;
+		// I don't know how to cast "st" to 0, so call now() and ignore it.
+		auto st = std::chrono::high_resolution_clock::now();
+		auto et = st;
 
 		bool result = false;
 		if (pRgb.data)
@@ -174,7 +177,7 @@ void *SaveImgThd(void *para)
 			add_variables_to_command(CG, cmd, exposureStartDateTime);
 			strcat(cmd, " &");
 
-			st = cv::getTickCount();
+			st = std::chrono::high_resolution_clock::now();
 			try
 			{
 				result = imwrite(CG.fullFilename, pRgb, compressionParameters);
@@ -183,7 +186,7 @@ void *SaveImgThd(void *para)
 			{
 				Log(0, "*** ERROR: Exception saving image: %s\n", ex.what());
 			}
-			et = cv::getTickCount();
+			et = std::chrono::high_resolution_clock::now();
 
 			if (result)
 				system(cmd);
@@ -201,14 +204,16 @@ void *SaveImgThd(void *para)
 			static int totalSaves = 0;
 			static double totalTime_ms = 0;
 			totalSaves++;
-			double diff = time_diff_us(st, et) * US_IN_MS;	// we want ms
-			totalTime_ms += diff;
+// FIX: should be / ?
+			long long diff_us = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
+			double diff_ms = diff_us / US_IN_MS;
+			totalTime_ms += diff_ms;
 			char const *x;
-			if (diff > 1 * MS_IN_SEC)
+			if (diff_ms > 1 * MS_IN_SEC)
 				x = "  > *****\n";	// indicate when it takes a REALLY long time to save
 			else
 				x = "";
-			Log(3, "%s  > Image took %'.1f ms to save (average %'.1f ms).\n%s", x, diff, totalTime_ms / totalSaves, x);
+			Log(3, "%s  > Image took %'.1f ms to save (average %'.1f ms).\n%s", x, diff_ms, totalTime_ms / totalSaves, x);
 		}
 
 		pthread_mutex_unlock(&mtxSaveImg);
@@ -381,8 +386,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 
 	if (status == ASI_SUCCESS) {
 		// Make sure the actual time to take the picture is "close" to the requested time.
-		timeval tStart;
-		if (cg->currentExposure_us > (5 * US_IN_SEC)) tStart = getTimeval();
+		auto tStart = std::chrono::high_resolution_clock::now();
 
 		status = ASIGetVideoData(cg->cameraNumber, imageBuffer, bufferSize, timeout);
 		if (cg->videoOffBetweenImages)
@@ -402,43 +406,47 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 		else
 		{
 			// The timeToTakeImage_us should never be less than what was requested.
-			long timeToTakeImage_us = timeval_diff_us(tStart, getTimeval());
+			// and shouldn't be less then the time taked plus overhead of setting up the shot.
 
-			if (timeToTakeImage_us < cg->currentExposure_us)
+			auto tElapsed = std::chrono::high_resolution_clock::now() - tStart;
+			long timeToTakeImage_us = std::chrono::duration_cast<std::chrono::microseconds>(tElapsed).count();
+			long diff_us = timeToTakeImage_us - cg->currentExposure_us;
+			long threshold_us = 0;
+
+			bool tooShort = false;
+			if (diff_us < 0)
 			{
-				long diff_us = timeToTakeImage_us - cg->currentExposure_us;
-				if (! cg->currentAutoExposure)						// manual exposure
-				{
-					Log(1, "  > WARNING: Time to take manual exposure (%s) ",
-						length_in_units(timeToTakeImage_us, true));
-					Log(1, " differs from requested exposure (%s),", 
-						length_in_units(cg->currentExposure_us, true));
-					Log(1, "by %s\n", length_in_units(diff_us, true));
-				}
-				else if (cg->currentExposure_us > (5 * US_IN_SEC))	// auto-exposure
-				{
-					// There is too much variance in the overhead of taking pictures to
-					// accurately determine the actual time to take an image at short exposures,
-					// so only check for long ones.
-					// Testing shows there's about this much us overhead,
-					// so subtract it to get our best estimate of the "actual" time.
-					const int OVERHEAD = 450000;
+				tooShort = true;			// WAY too short
+			}
+			else if (cg->currentExposure_us > (5 * US_IN_SEC))
+			{
+				// There is too much variance in the overhead of taking pictures to
+				// accurately determine the actual time to take an image at short exposures,
+				// so only check for long ones.
+				// Testing shows there's about this much us overhead,
+				// so subtract it to get our best estimate of the "actual" time.
+				const int OVERHEAD = 340000;
 
-					// Don't subtract if it makes timeToTakeImage_us negative.
-					if (timeToTakeImage_us > OVERHEAD)
-						timeToTakeImage_us -= OVERHEAD;
-					diff_us = timeToTakeImage_us - cg->currentExposure_us;
-					long threshold_us = cg->currentExposure_us * 0.5;		// 50% seems like a good number
-					if (abs(diff_us) > threshold_us)
-					{
-						Log(1, "*** WARNING: Time to take auto-exposure (%s) ",
-							length_in_units(timeToTakeImage_us, true));
-						Log(1, "differs from requested exposure time (%s) ",
-							length_in_units(cg->currentExposure_us, true));
-						Log(1, "by %s, ", length_in_units(diff_us, true));
-						Log(1, "threshold=%'ld\n", length_in_units(threshold_us, true));
-					}
-				}
+				// Don't subtract if it would have made timeToTakeImage_us negative.
+				if (timeToTakeImage_us > OVERHEAD)
+					diff_us -= OVERHEAD;
+
+				threshold_us = cg->currentExposure_us * 0.5;	// 50% seems like a good number
+				if (abs(diff_us) > threshold_us)
+					tooShort = true;
+			}
+			if (tooShort)
+			{
+				Log(1, "*** WARNING: Time to take exposure (%s) ",
+					length_in_units(timeToTakeImage_us, true));
+				Log(1, "differs from requested exposure time (%s) ",
+					length_in_units(cg->currentExposure_us, true));
+				Log(1, "by %s, ", length_in_units(diff_us, true));
+				Log(1, "threshold=%'ld\n", length_in_units(threshold_us, true));
+			}
+			else
+			{
+				Log(4, "    > timeToTakeImage_us=%'ld us, diff_us=%'ld, threshold_us=%'ld\n", timeToTakeImage_us, diff_us, threshold_us);
 			}
 
 			numErrors = 0;

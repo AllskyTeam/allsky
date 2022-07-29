@@ -8,28 +8,24 @@ fi
 source "${ALLSKY_HOME}/variables.sh"
 
 if [[ ${EUID} -eq 0 ]]; then
-	(echo
-	 echo -e "${RED}**********"
-	 echo -e "This script must NOT be run as root, do NOT use 'sudo'."
-	 echo -e "**********${NC}"
-	 echo) 1>&2
+	echo -e "\n${RED}**********"
+	echo -e "This script must NOT be run as root, do NOT use 'sudo'."
+	echo -e "**********${NC}\n"
    exit 1
 fi
 
 # The user should be running this in the "allsky" directory.  Make sure they are.
 INSTALL_DIR="allsky"
-DIR="$(basename "${PWD}")"
+DIR=$(basename "${PWD}")
 if [ "${DIR}" != "${INSTALL_DIR}" ] ; then
-	(echo
-	 echo -e "${RED}**********"
-	 echo -e "Please run this script from the '${INSTALL_DIR}' directory."
-	 echo -e "**********${NC}"
-	 echo) 1>&2
+	echo -e "\n${RED}**********"
+	echo -e "Please run this script from the '${INSTALL_DIR}' directory."
+	echo -e "**********${NC}\n"
 	exit 1
 fi
 
 CAM=""
-NEEDCAM=0
+NEEDCAM=false
 
 echo
 echo "**********************************************"
@@ -50,31 +46,35 @@ calc_wt_size() {
 	if [ "${WT_WIDTH}" -gt 178 ]; then
 		WT_WIDTH=120
 	fi
-	WT_MENU_HEIGHT=$((WT_HEIGHT-7))
+	WT_MENU_HEIGHT=$((${WT_HEIGHT}-7))
 }
 
+
+# If they have a prior version of Allsky (${HAS_PRIOR}=true) then use its CAMERA or cameraType.
 select_camera() {
-	NEEDCAM=0
-	if [ ! -f "${ALLSKY_CONFIG}/config.sh" ]; then
-		NEEDCAM=1
+	NEEDCAM=false
+## TODO: search json
+	if [ ! -e "${ALLSKY_CONFIG}/config.sh" ]; then
+		NEEDCAM=true
 		# NOTE: The config.sh file is put in place during the 'make install' step below.
 		# This flag will be checked after 'make install', and trigger an edit to set the camera value.
 	else
 		source "${ALLSKY_CONFIG}/config.sh"
-		if [ -z "${CAMERA}" ]; then
-			NEEDCAM=1
-			# NOTE: The config.sh file is present, but the CAMERA variable is empty, thus we need to query it.
+		if [ -z "${CAMERA_TYPE}" ]; then
+			NEEDCAM=true
+			# NOTE: The config.sh file is present, but the CAMERA_TYPE variable is empty,
+			# thus we need to query it.
 		else
-			CAM=${CAMERA}
+			CAM_TYPE=${CAMERA_TYPE}
 		fi
 	fi
-	if [ ${NEEDCAM} -eq 1 ]; then
-		MYCAM=$(whiptail --title "Allsky Software Installer" --menu "Camera Type" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT \
-			"ZWO" "ZWO camera is used for allsky" \
-			"RPiHQ" "RPiHQ camera is used for allsky" \
+	if [[ ${NEEDCAM} == "true" ]]; then
+		MYCAM=$(whiptail --title "Allsky Software Installer" --menu "Camera Type" ${WT_HEIGHT} ${WT_WIDTH} ${WT_MENU_HEIGHT} \
+			"ZWO" "ZWO ASI" \
+			"RPiHQ" "Raspberry Pi HQ and compatible" \
 			3>&1 1>&2 2>&3)
 		if [ $? -eq 0 ]; then
-			CAM=${MYCAM}
+			CAM_TYPE=${MYCAM}
 		else
 			whiptail --msgbox "Camera selection required.  Please re-run './install.sh' and select a camera to continue." 10 60
 			exit 1
@@ -83,13 +83,10 @@ select_camera() {
 }
 
 set_camera() {
-	sed -i -e "s/^CAMERA=.*$/CAMERA=\"${CAM}\"/" "${ALLSKY_CONFIG}/config.sh"
-	RETVAL=$?
-	if [ ${RETVAL} -eq 0 ]; then
-		whiptail --msgbox "Camera set to ${CAM}" 10 60
-		return 0
-	else
-		whiptail --msgbox "Something went wrong setting camera to ${CAM}.  Error code ${RETVAL}?" 10 60
+## TODO: update json.  Look in prior json or prior config.sh
+	sed -i -e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${CAM_TYPE}\"/" "${ALLSKY_CONFIG}/config.sh"
+	if [ $? -ne 0 ]; then
+		whiptail --msgbox "Something went wrong setting camera type to ${CAM_TYPE}." 10 60
 		return 1
 	fi
 }
@@ -105,40 +102,38 @@ ask_reboot() {
 }
 
 calc_wt_size
+
 select_camera
 
 echo -e "${GREEN}* Dependencies installation\n${NC}"
 sudo make deps
-RETVAL=$?
-if [ ${RETVAL} -ne 0 ]; then
-	echo Installing dependencies failed\!
+if [ $? -ne 0 ]; then
+	echo "Installing dependencies failed"
 	exit 1
 fi
 echo
 
 echo -e "${GREEN}* Compile allsky software\n${NC}"
 make all
-RETVAL=$?
-if [ ${RETVAL} -ne 0 ]; then
-	echo Compile failed\!
+if [ $? -ne 0 ]; then
+	echo "Compile failed!"
 	exit 1
 fi
 echo
 
 echo -e "${GREEN}* Install allsky software\n${NC}"
 sudo make install
-RETVAL=$?
-if [ ${RETVAL} -ne 0 ]; then
-	echo Install failed\!
+if [ $? -ne 0 ]; then
+	echo "Install failed!"
 	exit 1
 fi
 echo
 
 #### Future: Install WebUI
 
-chmod 755 ${ALLSKY_HOME}	# Some versions of Linux default to 750 so web server can't read it
+chmod 755 "${ALLSKY_HOME}"	# Some versions of Linux default to 750 so web server can't read it
 
-if [ ${NEEDCAM} -eq 1 ]; then
+if [[ ${NEEDCAM} == "true" ]]; then
 	set_camera
 fi
 ask_reboot

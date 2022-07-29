@@ -358,14 +358,6 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 	// USB contention, such as that caused by heavy USB disk IO
 	long timeout = ((cg->currentExposure_us * 2) / US_IN_MS) + 5000;	// timeout is in ms
 
-	if (cg->currentAutoExposure && cg->currentExposure_us > cg->currentMaxAutoExposure_us)
-	{
-		// If we call length_in_units() twice in same command line they both return the last value.
-		Log(1, "*** WARNING: cg->currentExposure_us requested [%s] > ", length_in_units(cg->currentExposure_us, true));
-		Log(1, "currentMaxAutoExposure_us [%s]\n", length_in_units(cg->currentMaxAutoExposure_us, true));
-		cg->currentExposure_us = cg->currentMaxAutoExposure_us;
-	}
-
 	// This debug message isn't typcally needed since we already displayed a message about
 	// starting a new exposure, and below we display the result when the exposure is done.
 	Log(4, "  > %s to %s\n",
@@ -487,7 +479,8 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 				cg->lastWBB = (double) l;
 			}
 
-			ASIGetControlValue(cg->cameraNumber, ASI_BANDWIDTHOVERLOAD, &cg->lastAsiBandwidth, &wasAutoExposure);
+			if (cg->asiAutoBandwidth)
+				ASIGetControlValue(cg->cameraNumber, ASI_BANDWIDTHOVERLOAD, &cg->lastAsiBandwidth, &wasAutoExposure);
 		}
 	}
 	else {
@@ -1367,15 +1360,19 @@ int main(int argc, char *argv[])
 						priorMeanDiff = CG.lastMean - minAcceptableMean;
 						// If we're skipping frames we want to get to a good exposure as fast as
 						// possible so don't set an adjustment.
+/*
 						if (CG.aggression != 100 && CG.currentSkipFrames <= 0)
 						{
+// TODO: why are we adjusting the AcceptableMean?
 							adjustment = priorMeanDiff * (1 - ((float)CG.aggression/100));
 							if (adjustment < 1)
 								minAcceptableMean += adjustment;
 						}
+*/
 					}
 					else if (CG.lastMean > maxAcceptableMean)
 					{
+// TODO: why not adjust here if needed?
 						priorMeanDiff = CG.lastMean - maxAcceptableMean;
 					}
 					if (adjustment != 0)
@@ -1386,7 +1383,8 @@ int main(int argc, char *argv[])
 							adjustment < 0 ? minAcceptableMean : maxAcceptableMean);
 					}
 
-					while ((CG.lastMean < minAcceptableMean || CG.lastMean > maxAcceptableMean) && ++attempts <= maxHistogramAttempts && CG.currentExposure_us <= CG.currentMaxAutoExposure_us)
+					while ((CG.lastMean < minAcceptableMean || CG.lastMean > maxAcceptableMean) &&
+						    ++attempts <= maxHistogramAttempts && CG.currentExposure_us <= CG.cameraMaxExposure_us)
 					{
 						int acceptable;
 						float multiplier = 1.10;
@@ -1399,28 +1397,42 @@ int main(int argc, char *argv[])
 							acceptableType = "max";
 							multiplier = 1 / multiplier;
 						}
-						if (CG.currentExposure_us != CG.lastExposure_us)
-							Log(3, "xxxxxxxxxxx currentExposure_us %'ld != CG.lastExposure_us %'ld\n", CG.currentExposure_us, CG.lastExposure_us);
+
 						// if lastMean/acceptable is 9/90, it's 1/10th of the way there, so multiple exposure by 90/9 (10).
 						// ZWO cameras don't appear to be linear so increase the multiplier amount some.
 						float multiply = ((double)acceptable / CG.lastMean) * multiplier;
-						newExposure_us= CG.lastExposure_us * multiply;
-						Log(4, "=== next exposure=%'ld (multiply by %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, lastMean=%d]\n", newExposure_us, multiply, CG.lastExposure_us, acceptableType, acceptable, (int)CG.lastMean);
+						long exposureDiff_us = (CG.lastExposure_us * multiply) - CG.lastExposure_us;
+
+						// Adjust by aggression setting.
+						if (CG.aggression != 100 && CG.currentSkipFrames <= 0)
+						{
+							if (exposureDiff_us != 0)
+							{
+								Log(4, "  > Next exposure change going from %s, ", length_in_units(exposureDiff_us, true));
+								exposureDiff_us *= (float)CG.aggression / 100;
+								Log(4, "before aggression to %s after.\n", length_in_units(exposureDiff_us, true));
+							}
+						}
+						newExposure_us = CG.lastExposure_us + exposureDiff_us;
+						Log(4, "=== next exposure changing by %'ld us to %'ld (multiply by %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, lastMean=%d]\n",
+							exposureDiff_us, newExposure_us, multiply, CG.lastExposure_us, acceptableType, acceptable, (int)CG.lastMean);
 
 						if (priorMeanDiff > 0 && lastMeanDiff < 0)
 						{ 
-Log(3, " >xxx lastMean was %d and went from %d above max of %d to %d below min of %d, is now at %d; should NOT set temp min to currentExposure_us of %'ld\n",
-							priorMean, priorMeanDiff, maxAcceptableMean,
-							-lastMeanDiff, minAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
+							Log(3, " >xxx lastMean was %d and went from %d above max of %d to %d below min",
+								priorMean, priorMeanDiff, maxAcceptableMean);
+							Log(3, "  of %d, is now at %d; should NOT set temp min to currentExposure_us of %'ld\n",
+								-lastMeanDiff, minAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 						} 
 						else
 						{
 							if (priorMeanDiff < 0 && lastMeanDiff > 0)
 							{
 							// OK to set upper limit since we know it's too high.
-Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d, is now at %d; OK to set temp max to currentExposure_us of %'ld\n",
-								priorMean, -priorMeanDiff, minAcceptableMean,
-								lastMeanDiff, maxAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
+								Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max",
+									priorMean, -priorMeanDiff, minAcceptableMean);
+								Log(3, " of %d, is now at %d; OK to set temp max to currentExposure_us of %'ld\n",
+									lastMeanDiff, maxAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 							}
 
 							if (CG.lastMean < minAcceptableMean)
@@ -1434,9 +1446,9 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						} 
 
 						newExposure_us = roundTo(newExposure_us, roundToMe);
+						// Make sure newExposure_us is between min and max.
 						newExposure_us = std::max(tempMinExposure_us, newExposure_us);
 						newExposure_us = std::min(tempMaxExposure_us, newExposure_us);
-						newExposure_us = std::min(CG.currentMaxAutoExposure_us, newExposure_us);
 
 						if (newExposure_us == CG.currentExposure_us)
 						{
@@ -1444,12 +1456,13 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						}
 
 						CG.currentExposure_us = newExposure_us;
-						if (CG.currentExposure_us > CG.currentMaxAutoExposure_us)
+						if (CG.currentExposure_us > CG.cameraMaxExposure_us)
 						{
 							break;
 						}
 
-						Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: lastMean (%d)\n", attempts, newExposure_us, tempMinExposure_us, tempMaxExposure_us, (int)CG.lastMean);
+						Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: lastMean (%d)\n",
+							attempts, newExposure_us, tempMinExposure_us, tempMaxExposure_us, (int)CG.lastMean);
 
 						priorMean = CG.lastMean;
 						priorMeanDiff = lastMeanDiff;
@@ -1457,7 +1470,6 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						asiRetCode = takeOneExposure(&CG, pRgb.data, histogram);
 						if (asiRetCode == ASI_SUCCESS)
 						{
-
 							if (CG.lastMean < minAcceptableMean)
 								lastMeanDiff = CG.lastMean - minAcceptableMean;
 							else if (CG.lastMean > maxAcceptableMean)
@@ -1492,19 +1504,36 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					}
 					else if (attempts >= 1)
 					{
-						if (CG.currentExposure_us > CG.currentMaxAutoExposure_us)
+						if (CG.currentExposure_us < CG.cameraMinExposure_us)
 						{
 							 // If we call length_in_units() twice in same command line they both return the last value.
 							Log(3, "  > Stopped trying: new exposure of %s ", length_in_units(CG.currentExposure_us, false));
-							Log(3, "would be over max of %s\n", length_in_units(CG.currentMaxAutoExposure_us, false));
+							Log(3, "would be over min of %s\n", length_in_units(CG.cameraMinExposure_us, false));
+
+							long diff = (long)((float)CG.currentExposure_us * (1/(float)percentChange));
+							CG.currentExposure_us += diff;
+							Log(3, "  > Increasing next exposure by %d%% (%'ld us) to %'ld\n", percentChange, diff, CG.currentExposure_us);
+						}
+						else if (CG.currentExposure_us > CG.cameraMaxExposure_us)
+						{
+							Log(3, "  > Stopped trying: new exposure of %s ", length_in_units(CG.currentExposure_us, false));
+							Log(3, "would be over max of %s\n", length_in_units(CG.cameraMaxExposure_us, false));
 
 							long diff = (long)((float)CG.currentExposure_us * (1/(float)percentChange));
 							CG.currentExposure_us -= diff;
 							Log(3, "  > Decreasing next exposure by %d%% (%'ld us) to %'ld\n", percentChange, diff, CG.currentExposure_us);
 						}
-						else if (CG.currentExposure_us == CG.currentMaxAutoExposure_us)
+						else if (CG.currentExposure_us == CG.cameraMinExposure_us)
 						{
-							Log(3, "  > Stopped trying: hit max exposure limit of %s, mean %d\n", length_in_units(CG.currentMaxAutoExposure_us, false), CG.lastMean);
+							Log(3, "  > Stopped trying: hit min exposure limit of %s, mean %d\n", length_in_units(CG.cameraMinExposure_us, false), (int)CG.lastMean);
+							// If currentExposure_us causes too low of a mean, increase exposure
+							// so on the next loop we'll adjust it.
+							if (CG.lastMean < minAcceptableMean)
+								CG.currentExposure_us++;
+						}
+						else if (CG.currentExposure_us == CG.cameraMaxExposure_us)
+						{
+							Log(3, "  > Stopped trying: hit max exposure limit of %s, mean %d\n", length_in_units(CG.cameraMaxExposure_us, false), (int)CG.lastMean);
 							// If currentExposure_us causes too high of a mean, decrease exposure
 							// so on the next loop we'll adjust it.
 							if (CG.lastMean > maxAcceptableMean)
@@ -1512,19 +1541,26 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						}
 						else if (newExposure_us == CG.currentExposure_us)
 						{
-							Log(3, "  > Stopped trying: newExposure_us == currentExposure_us == %s\n", length_in_units(CG.currentExposure_us, false));
+							Log(3, "  > Stopped trying: newExposure_us == currentExposure_us == %s\n",
+								length_in_units(CG.currentExposure_us, false));
 						}
 						else
 						{
-							Log(3, "  > Stopped trying, using exposure of %s us with mean %d, min=%d, max=%d\n", length_in_units(CG.currentExposure_us, false), CG.lastMean, minAcceptableMean, maxAcceptableMean);
+							Log(3, "  > Stopped trying, using exposure of %s us with mean %d, min=%d, max=%d\n",
+								length_in_units(CG.currentExposure_us, false), (int)CG.lastMean, minAcceptableMean, maxAcceptableMean);
 						}
 						 
 					}
-					else if (CG.currentExposure_us == CG.currentMaxAutoExposure_us)
+					else if (CG.currentExposure_us == CG.cameraMinExposure_us)
 					{
-						Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %d\n", length_in_units(CG.currentMaxAutoExposure_us, false), CG.lastMean);
+						Log(3, "  > Did not make any additional attempts - at min exposure limit of %s, mean %d\n",
+							length_in_units(CG.cameraMinExposure_us, false), (int)CG.lastMean);
 					}
-					// xxxx TODO: this was "actualExposure_us = ..."	suggestedNextExposure_us = currentExposure_us;
+					else if (CG.currentExposure_us == CG.cameraMaxExposure_us)
+					{
+						Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %d\n",
+							length_in_units(CG.cameraMaxExposure_us, false), (int)CG.lastMean);
+					}
 
 				} else {
 					// Didn't use histogram method.

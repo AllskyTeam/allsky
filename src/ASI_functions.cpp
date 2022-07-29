@@ -123,6 +123,7 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 	// Module (sensor), Name, CameraID, MaxHeight, MaxWidth, IsColorCam, BayerPattern, SupportedBins,
 	//	SupportedVideoFormat, PixelSize, IsCoolerCam, BitDepth, SupportsTemperature
 	{ "imx477", "RPi HQ", 0, 3040, 4056, ASI_TRUE, BAYER_RG, {1, 2, 0},
+		// Need ASI_IMG_END so we know where the end of the list is.
 		{ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE, 12, ASI_FALSE},
 
 	// xxxxx TODO: check on 1.55 and other settings
@@ -391,7 +392,7 @@ ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
 
 // To keep the compiler quiet, we need to define these - they are RPi only.
 // It doesn't matter what the value is.
-#define BRIGHTNESS	(ASI_CONTROL_TYPE) 0
+#define BRIGHTNESS	ASI_AUTO_TARGET_BRIGHTNESS
 #define SATURATION	(ASI_CONTROL_TYPE) 0
 #define CONTRAST	(ASI_CONTROL_TYPE) 0
 #define SHARPNESS	(ASI_CONTROL_TYPE) 0
@@ -987,9 +988,6 @@ bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
 	else
 		cg->nightSkipFrames = 0;
 
-	if (cg->imageType != AUTO_IMAGE_TYPE && ! validateLong(&cg->imageType, 0, ASI_IMG_END, "Image Type", false))
-		ok = false;
-
 	ret = getControlCapForControlType(cg->cameraNumber, ASI_FLIP, &cc);
 	if (ret == ASI_SUCCESS)
 	{
@@ -1026,7 +1024,18 @@ bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
 	}
 
 	if (cg->imageType != AUTO_IMAGE_TYPE)
-		validateLong(&cg->imageType, 0, ASI_IMG_END, "Image Type", false);
+	{
+		ASI_IMG_TYPE highest = ASI_IMG_END;
+		for (unsigned int i = 0; i < sizeof(ci.SupportedVideoFormat); i++)
+		{
+			ASI_IMG_TYPE it = ci.SupportedVideoFormat[i];
+			if (it == ASI_IMG_END)
+				break;
+			highest = it;
+		}
+		if (! validateLong(&cg->imageType, 0, highest, "Image Type", false))
+			ok = false;
+	}
 
 	validateLong(&cg->debugLevel, 0, 4, "Debug Level", true);
 	validateLong(&cg->overlay.extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);

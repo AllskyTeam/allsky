@@ -1,6 +1,6 @@
 {
 	"cameraType" : "ZWO",
-	"takeDaytimeImage" : "1",
+	"takeDaytimeImages" : "1",
 	"saveDaytimeImages" : "0",
 	"dayautoexposure" : "1",
 	"daymaxautoexposure" : "10000",
@@ -59,7 +59,7 @@
 	"angle" : "-6",
 	"takeDarkFrames" : "0",
 	"useDarkFrames" : "0",
-	"localt" : "en_US.UTF-8",
+	"locale" : "en_US.UTF-8",
 	"histogrambox" : "500 500 50 50",
 	"debuglevel" : "1",
 	"newexposure" : "1",

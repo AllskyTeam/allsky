@@ -194,7 +194,7 @@ CAMERA_TYPE=""
 if [ "${CAMERA_TYPE}" = "" ]; then
 	echo "${RED}ERROR: Please set 'Camera Type' in the WebUI.${NC}"
 	sudo systemctl stop allsky
-	exit 100
+	exit ${EXIT_ERROR_STOP}
 fi
 
 # This is needed in case the user changed the default location the current image is saved to.

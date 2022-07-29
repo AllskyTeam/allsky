@@ -236,8 +236,8 @@ struct config {			// for configuration variables
 	long flip							= 0;
 	bool notificationImages				= true;
 	char const *tempType				= "C";
-	char const *latitude				= "";
-	char const *longitude				= "";
+	char const *latitude				= NULL;
+	char const *longitude				= NULL;
 	float angle							= -6.0;
 	bool takeDarkFrames					= false;
 	char const *locale					= "en_US.UTF-8";
@@ -324,3 +324,4 @@ bool daytimeSleep(bool, config);
 void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
+bool validateLatitudeLongitude(config *);

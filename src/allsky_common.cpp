@@ -1,4 +1,5 @@
 // Functions used by the "capture" and other programs.
+// When outputting messages containing settings, use the names as they appear in the WebUI.
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -23,7 +24,7 @@
 
 using namespace std;
 
-char debug_text[500];		// buffer to hold debug messages
+char debug_text[500];						// buffer to hold debug messages
 static char const *fontnames[]		= {		// Character representation of names for clarity:
 	"SIMPLEX",				"PLAIN",				"DUPEX",
 	"COMPLEX",				"TRIPLEX",				"COMPLEX_SMALL",
@@ -45,10 +46,11 @@ void Log(int required_level, const char *fmt, ...)
 		va_start(va, fmt);
 		vfprintf(stdout, msg, va);
 
-		if (CG.debugLevel < 0)
+		if (CG.debugLevel <= 0)
 		{
 // xxxx TODO: write to message file
 		}
+
 		va_end(va);
 	}
 }
@@ -1897,4 +1899,41 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 	}
 
 	return(true);
+}
+
+// validate and convert Latitude and Longitude to N, S, E, W versions.
+static char strLatitude[20], strLongitude[20];
+static bool validateLatLong(char const *l, char positive, char negative, char *savedLocation, char const *name)
+{
+	if (l == NULL) {
+		Log(0, "*** ERROR: %s not specified!\n", name);
+		return(false);
+	}
+
+	int len = strlen(l);
+	char direction = (char) toupper(l[len-1]);
+	if (direction == positive || direction == negative) {
+		if (l[0] == '+' || l[0] == '-') {
+			Log(0, "*** ERROR: %s cannot have BOTH + or - AND %c or %c.  You entered [%s].\n",
+				name, positive, negative, l);
+			return(false);
+		}
+		return(true);
+	}
+
+	// Assume it's a number, so convert to a string;
+	int num = atoi(l);
+	snprintf(savedLocation, sizeof(savedLocation)-1, "%d%c", num, num > 0 ? positive : negative);
+	l = savedLocation;
+	return(true);
+}
+
+bool validateLatitudeLongitude(config *cg)
+{
+	bool ret = true;
+	if (! validateLatLong(cg->latitude, 'N', 'S', strLatitude, "Latitude"))
+		ret = false;
+	if (! validateLatLong(cg->longitude, 'E', 'W', strLongitude, "Longitude"))
+		ret = false;
+	return(ret);
 }

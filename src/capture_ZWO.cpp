@@ -2,8 +2,6 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include "include/ASICamera2.h"
-#include <sys/time.h>
-#include <sys/stat.h>
 #include <math.h>
 #include <unistd.h>
 #include <string.h>
@@ -30,6 +28,7 @@ config CG;
 #define USE_HISTOGRAM		// use the histogram code as a workaround to ZWO's bug
 
 #ifdef USE_HISTOGRAM
+// Got these by trial and error. They are more-or-less half the max of 255, plus or minus some.
 #define MINMEAN					122
 #define MAXMEAN					134
 #endif
@@ -457,9 +456,10 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 			debug_text[0] = '\0';
 
 #ifdef USE_HISTOGRAM
-			if (histogram != NULL && cg->lastMean != NOT_SET)
+			if (histogram != NULL)
 			{
 				cg->lastMean = (double)computeHistogram(imageBuffer, *cg, histogram);
+
 				sprintf(debug_text, " @ mean %d", (int) cg->lastMean);
 				if (cg->currentAutoGain && ! cg->takeDarkFrames)
 				{
@@ -475,7 +475,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 			// next exposure should be, and will eventually converge on the correct exposure.
 			ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &suggestedNextExposure_us, &wasAutoExposure);
 			Log(2, "  > Got image%s.", debug_text);
-			Log(3, "  Suggested next exposure: %s", length_in_units(suggestedNextExposure_us, true));
+			if (cg->currentAutoExposure) Log(3, "  Suggested next exposure: %s", length_in_units(suggestedNextExposure_us, true));
 			Log(2, "\n");
 
 			ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &cg->lastSensorTemp, &bAuto);
@@ -979,6 +979,7 @@ int main(int argc, char *argv[])
 			}
 			CG.myModeMeanSetting.currentMean = NOT_SET;
 			CG.myModeMeanSetting.modeMean = false;
+			CG.HB.useHistogram = false;
 
 			Log(1, "Taking dark frames...\n");
 
@@ -1044,13 +1045,19 @@ int main(int argc, char *argv[])
 				// Don't use camera auto-exposure since we mimic it ourselves.
 				if (CG.dayAutoExposure)
 				{
+					CG.HB.useHistogram = true;
 					Log(4, "Turning off ZWO auto-exposure to use Allsky auto-exposure.\n");
+				}
+				else
+				{
+					CG.HB.useHistogram = false;
 				}
 				// With the histogram method we NEVER use ZWO auto exposure - either the user said
 				// not to, or we turn it off ourselves.
 				CG.currentAutoExposure = false;
 #else
 				CG.currentAutoExposure = CG.dayAutoExposure;
+				CG.HB.useHistogram = false;
 #endif
 				CG.currentBrightness = CG.dayBrightness;
 				if (CG.isColorCamera)
@@ -1080,7 +1087,6 @@ int main(int argc, char *argv[])
 					CG.currentEnableCooler = CG.dayEnableCooler;
 					CG.currentTargetTemp = CG.dayTargetTemp;
 				}
-
 			}
 		}
 
@@ -1128,6 +1134,7 @@ int main(int argc, char *argv[])
 				CG.currentEnableCooler = CG.nightEnableCooler;
 				CG.currentTargetTemp = CG.nightTargetTemp;
 			}
+			CG.HB.useHistogram = false;		// only used during day
 		}
 		// ========== Done with dark fram / day / night settings
 
@@ -1244,9 +1251,10 @@ int main(int argc, char *argv[])
 		// This simply makes it easier to see things in the log file.
 
 #ifdef USE_HISTOGRAM
-		CG.lastMean = 0;
 		int attempts = 0;
 		int histogram[256];
+#else
+		int *histogram = NULL;
 #endif
 
 		// Wait for switch day time -> night time or night time -> day time
@@ -1284,15 +1292,11 @@ int main(int argc, char *argv[])
 				}
 
 #ifdef USE_HISTOGRAM
-				bool usedHistogram = false;	// did we use the histogram method?
-
 				// We don't use this at night since the ZWO bug is only when it's light outside.
-				if (dayOrNight == "DAY" && CG.currentAutoExposure)
+				if (CG.HB.useHistogram)
 				{
-					usedHistogram = true;	// we are using the histogram code on this exposure
 					attempts = 0;
 
-					// Got these by trial and error. They are more-or-less half the max of 255.
 					int minAcceptableMean = MINMEAN;
 					int maxAcceptableMean = MAXMEAN;
 					int roundToMe = 5; // round exposures to this many microseconds
@@ -1314,7 +1318,6 @@ int main(int argc, char *argv[])
 						// Sure would be nice to see how ZWO handles this variable.
 						// We asked but got a useless reply.
 						// Values below the default make the image darker; above make it brighter.
-
 						float exposureAdjustment = 1.0;
 
 						// Adjustments of DEFAULT_BRIGHTNESS up or down make the image this much darker/lighter.
@@ -1446,7 +1449,7 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 							break;
 						}
 
-						Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: lastMean (%d)\n", attempts, newExposure_us, tempMinExposure_us, tempMaxExposure_us, CG.lastMean);
+						Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: lastMean (%d)\n", attempts, newExposure_us, tempMinExposure_us, tempMaxExposure_us, (int)CG.lastMean);
 
 						priorMean = CG.lastMean;
 						priorMeanDiff = lastMeanDiff;
@@ -1481,7 +1484,7 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 					if (CG.lastMean >= minAcceptableMean && CG.lastMean <= maxAcceptableMean)
 					{
 						// +++ at end makes it easier to see in log file
-						Log(3, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n", minAcceptableMean, maxAcceptableMean, CG.lastMean);
+						Log(3, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n", minAcceptableMean, maxAcceptableMean, (int)CG.lastMean);
 					}
 					else if (attempts > maxHistogramAttempts)
 					{
@@ -1586,7 +1589,7 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 						(void) doOverlay(pRgb, CG, bufTime, gainChange);
 
 #ifdef USE_HISTOGRAM
-						if (CG.overlay.showHistogramBox && usedHistogram)
+						if (CG.overlay.showHistogramBox && CG.HB.useHistogram)
 						{
 							// Draw a rectangle where the histogram box is.
 							// Put a black and white line one next to each other so they
@@ -1664,7 +1667,7 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 				{
 					s = "manual";
 #ifdef USE_HISTOGRAM
-					if (usedHistogram)
+					if (CG.HB.useHistogram)
 						s = "histogram";
 #endif
 				}
@@ -1682,3 +1685,4 @@ Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max of %d
 
 	closeUp(EXIT_OK);
 }
+

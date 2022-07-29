@@ -1,6 +1,6 @@
 {
 	"cameraType" : "RPi",
-	"takeDaytimeImage" : "1",
+	"takeDaytimeImages" : "1",
 	"saveDaytimeImages" : "0",
 	"dayautoexposure" : "1",
 	"daymaxautoexposure" : "10000",

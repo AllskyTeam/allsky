@@ -153,27 +153,6 @@ char *getTime(char const *tf)
 	return(formatTime(getTimeval(), tf));
 }
 
-double time_diff_us(int64 start, int64 end)
-{
-	double frequency = cv::getTickFrequency();
-	return (double)(end - start) / frequency;	// in Microseconds
-}
-
-long timeval_diff_us(timeval start, timeval end)
-{
-	time_t diff_s = end.tv_sec - start.tv_sec;
-	if (diff_s == 0)
-	{
-		// If in the same second, the difference is the usec's
-		return(end.tv_usec - start.tv_usec);
-	}
-
-	suseconds_t start_us = start.tv_usec;
-	suseconds_t end_us = (diff_s * US_IN_SEC) + end.tv_usec;
-// xxx printf("===== diff_s=%'ld, start.tv_usec=%'ld, end.tv_usec=%'ld\n", diff_s, start.tv_usec, end.tv_usec);
-	return (end_us - start_us);
-}
-
 std::string exec(const char *cmd)
 {
 	std::tr1::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);

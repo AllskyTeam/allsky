@@ -324,3 +324,5 @@ bool daytimeSleep(bool, config);
 void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
+bool validateLatitude(config *);
+bool validateLongitude(config *);

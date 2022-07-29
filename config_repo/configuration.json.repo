@@ -85,8 +85,8 @@
 		"sidebarStyle": "",
 		"popoutIcons": [
 			{ "label": "Location",  "icon": "fa-map-marker-alt",  "variable": "location",  "value": "" },
-			{ "label": "Latitude",  "icon": "fa-map-marker",  "variable": "latitude",  "value": "" },
-			{ "label": "Longitude",  "icon": "fa-map-marker",  "variable": "longitude",  "value": "" },
+			{ "label": "Latitude",  "icon": "fa-map-marker",  "variable": "s_latitude",  "value": "" },
+			{ "label": "Longitude",  "icon": "fa-map-marker",  "variable": "s_longitude",  "value": "" },
 			{ "label": "Camera",  "icon": "fa-camera-retro",  "variable": "camera",  "value": "" },
 			{ "label": "Lens",  "icon": "fa-dot-circle",  "variable": "lens",  "value": "" },
 			{ "label": "Computer",  "icon": "fa-microchip",  "variable": "computer",  "value": "" },

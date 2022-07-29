@@ -1058,6 +1058,8 @@ bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
 	validateLong(&cg->dayBin, 1, max_bin, "Daytime Binning", false);
 	validateLong(&cg->nightBin, 1, max_bin, "Nighttime Binning", false);
 
+	if (! validateLatitudeLongitude(cg))
+		ok = false;
 
 	// The remaining settings are camera-specific and have camera defaults.
 	// If the user didn't specify anything (i.e., the value is NOT_CHANGED), set it to the default.

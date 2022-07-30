@@ -883,7 +883,7 @@ bool checkExposureValues(config *cg)
 // Check that the specified bin is supported by this camera.
 static bool checkBin(long b, ASI_CAMERA_INFO ci, char const *field)
 {
-	ok = false;
+	bool ok = false;
 	for (unsigned int i = 0; i < sizeof(ci.SupportedBins); ++i)
 	{
 		if (ci.SupportedBins[i] == b)

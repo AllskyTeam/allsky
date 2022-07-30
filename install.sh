@@ -90,7 +90,7 @@ CAMERA_TYPE=""
 select_camera_type() {
 	NEEDCAM=false
 
-	if [[ ${HAS_PRIOR} == "true" && ${HAS_NEW_PRIOR} == "true" ]]; then
+	if [[ ${HAS_PRIOR_ALLSKY} == "true" && ${HAS_NEW_PRIOR_ALLSKY} == "true" ]]; then
 		# New style Allsky with CAMERA_TYPE in confgi.sh
 		OLD_CONFIG="${PRIOR_INSTALL_DIR}/config/config.sh"
 		if [ -f "${OLD_CONFIG}" ]; then
@@ -115,14 +115,14 @@ select_camera_type() {
 set_camera_type() {
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in set_camera_type()."
-		return false;
+		return 1
 	fi
 
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" "cameraType" "Camera Type" "" "${CAMERA_TYPE}"
 	# It displays an error message.
-	[ $? -ne 0 ] && return false;
+	[ $? -ne 0 ] && return 1
 
-	return true
+	return 0
 }
 
 
@@ -136,9 +136,9 @@ save_camera_capabilities() {
 			display_msg "" "After connecting your camera, run '${ME} --update'."
 		else
 			display_msg error "Unable to save camera capabilities."
-			display_msg "" "Look in ${ALLSKY_LOG} for any messages.\nAfter fixing things, run '${ME} --update'."
+			display_msg "" "Look in ${ALLSKY_LOG} for any messages.\nAfter fixing things, run '${ME} --update'.\n"
 		fi
-		return false
+		return 1
 	fi
 
 ## TODO:
@@ -147,7 +147,7 @@ save_camera_capabilities() {
 #  Error if the file doesn't exist or capture fails with $? -ne 0.
 #  Check for EXIT_NO_CAMERA_CONNECTED ret code
 
-	return true
+	return 0
 }
 
 
@@ -250,26 +250,26 @@ fi
 # If there's a prior version of the software,
 # ask the user if they want to move stuff from there to the new directory.
 # Look for a directory inside the old one to make sure it's really an old allsky.
-HAS_PRIOR=false
+HAS_PRIOR_ALLSKY=false
 if [ -d "${PRIOR_INSTALL_DIR}/images" ]; then
 	if (whiptail --title "${TITLE}" --yesno "You appear to have a prior version of Allsky in ${PRIOR_INSTALL_DIR}.\n\nDo you want to restore the prior images, any darks, and certain configuration settings?" 10 60 \
 		3>&1 1>&2 2>&3); then 
-		HAS_PRIOR=true
+		HAS_PRIOR_ALLSKY=true
 		if [ -f  "${PRIOR_INSTALL_DIR}/version" ]; then
-			HAS_NEW_PRIOR=true		# New style Allsky with CAMERA_TYPE set in config.sh
+			HAS_NEW_PRIOR_ALLSKY=true		# New style Allsky with CAMERA_TYPE set in config.sh
 		else
-			HAS_NEW_PRIOR=false		# Old style with CAMERA set in config.sh
+			HAS_NEW_PRIOR_ALLSKY=false		# Old style with CAMERA set in config.sh
 		fi
 	else
 		display_msg warning "If you want your old images, darks, etc. from the prior verion"
-		display_msg "" "of Allsky, you'll need to manually move them to the new version."
+		display_msg "" "of Allsky, you'll need to manually move them to the new version.\n"
 	fi
 else
 	if (whiptail --title "${TITLE}" --yesno "You do not appear to have prior version of Allsky.\nIf you DO, and you want items moved from the prior version to the new one\n, make sure the prior version is in ${PRIOR_INSTALL_DIR}.\n\nDo you want to continue withOUT using the prior version?" 10 60 \
 		3>&1 1>&2 2>&3); then 
 		true
 	else
-		display_msg "" "* Rename the directory with your prior version of Allsky to\n'${PRIOR_INSTALL_DIR}', then run the installation again."
+		display_msg "" "* Rename the directory with your prior version of Allsky to\n'${PRIOR_INSTALL_DIR}', then run the installation again.\n"
 		exit 0
 	fi
 fi
@@ -310,7 +310,7 @@ sudo chmod 664 "${ALLSKY_LOG}"
 sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
 
 # Restore any necessary file
-if [[ ${HAS_PRIOR} == "true" ]]; then
+if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 	if [ -d "${PRIOR_INSTALL_DIR}/images" ]; then
 		echo -e "${GREEN}* Restoring images.${NC}"
 		mv "${PRIOR_INSTALL_DIR}/images" "${ALLSKY_HOME}"
@@ -356,7 +356,7 @@ if [[ ${HAS_PRIOR} == "true" ]]; then
 #	- handle variable that were moved to WebUI
 #		> DAYTIME_CAPTURE
 
-	display_msg "" "IMPORTANT: check config/config.sh and config/ftp-settings.sh for correctness."
+	display_msg "" "IMPORTANT: check config/config.sh and config/ftp-settings.sh for correctness.\n"
 fi
 
 if [[ ${NEEDCAM} == "true" ]]; then
@@ -434,7 +434,7 @@ if [ "${ALLSKY_WEBSITE_OLD}" != "" ]; then
 		if [ $? -ne 0 ]; then
 			display_msg error "* New website in '${ALLSKY_WEBSITE}' is not empty."
 			display_msg "" "  Move the contents manually from '${ALLSKY_WEBSITE_OLD}',"
-			display_msg "" "  and then remove the old location."
+			display_msg "" "  and then remove the old location.\n"
 			OK=false
 		fi
 	fi
@@ -473,6 +473,7 @@ echo -e "${GREEN}* Setting permissions on WebUI files.${NC}"
 # The files should already be the correct permissions/owners, but just in case, set them.
 find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
 find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
+chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 
 
 # Check if there's an outdated website in the old or new location.
@@ -480,19 +481,15 @@ find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
 if [ -d "${OLD_WEBSITE}" ]; then
 	display_msg warning "There is an old version of the Allsky Website in ${OLD_WEBSITE}."
 	display_msg "" "You should update to the newest version after rebooting your Pi"
-	display_msg "" "by executing 'cd ~/allsky; website/install.sh'."
+	display_msg "" "by executing 'cd ~/allsky; website/install.sh'.\n"
 
-elif [[ ${HAS_PRIOR} == "true" && -d "${PRIOR_INSTALL_DIR}/html/allsky" ]]; then
+elif [[ ${HAS_PRIOR_ALLSKY} == "true" && -d "${PRIOR_INSTALL_DIR}/html/allsky" ]]; then
 	# Newer location of website - see if it's the current version.
-	HAS_NEW_PRIOR=true		# New style Allsky with CAMERA_TYPE set in config.sh
-
+	OLD_VERSION=$(< "${PRIOR_INSTALL_DIR}/version")
 #### TODO: 
-# If the user has the Allsky Website in the old location, or the new location but
-# is an old version, ask them to install newest release.
-	# If in new location:
-		# Get version of prior website
-		# Get version from Git
-		# If different - suggest they upgrade
+	# curl "${GITHUB_ROOT}/allsky-website/blob/home-page-customizations/version"
+	# Get version from Git
+	# If different - suggest they upgrade
 fi
 
 ######## All done

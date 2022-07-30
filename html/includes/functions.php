@@ -33,63 +33,67 @@ if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	exit;
 }
 
-// The Camera Type should be set during the installation, so this "should" never fail...
-$cam_type = getCameraType();
-if ($cam_type == '') {
-	echo "<div style='color: red; font-size: 200%;'>";
-	echo "'Camera Type' not defined in the WebUI.  Please update it.";
-	echo "</div>";
-	exit;
+$image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null; $status=null;
+
+function initialize_variables() {
+	global $image_name, $delay, $daydelay, $nightdelay, $darkframe, $useLogin;
+
+	// The Camera Type should be set during the installation, so this "should" never fail...
+	$cam_type = getCameraType();
+	if ($cam_type == '') {
+		echo "<div style='color: red; font-size: 200%;'>";
+		echo "'Camera Type' not defined in the WebUI.  Please update it.";
+		echo "</div>";
+		exit;
+	}
+
+	$settings_file = getSettingsFile($cam_type);
+	if (! file_exists($settings_file)) {
+		echo "<div style='color: red; font-size: 200%;'>";
+		echo "ERROR: Unable to find camera settings file for camera of type '$cam_type'.";
+		echo "<br>File '$settings_file' missing!";
+		echo "</div>";
+		exit;
+	}
+
+	$camera_settings_str = file_get_contents($settings_file, true);
+	$camera_settings_array = json_decode($camera_settings_str, true);
+	// $img_dir is an alias in the web server's config that points to where the current image is.
+	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
+	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
+	$image_name = $img_dir . "/" . $camera_settings_array['filename'];
+	$darkframe = $camera_settings_array['takeDarkFrames'];
+	$useLogin = getVariableOrDefault($camera_settings_array, 'useLogin', true);
+
+
+	////////////////// Determine delay between refreshes of the image.
+	$consistentDelays = $camera_settings_array["consistentDelays"] == 1 ? true : false;
+	$daydelay = $camera_settings_array["daydelay"] +
+		($consistentDelays == 1 ? $camera_settings_array["daymaxautoexposure"] : $camera_settings_array["dayexposure"]);
+	$nightdelay = $camera_settings_array["nightdelay"] +
+		($consistentDelays == 1 ? $camera_settings_array["nightmaxautoexposure"] : $camera_settings_array["nightexposure"]);
+
+	// Determine if it's day or night so we know which delay to use.
+	$angle = $camera_settings_array['angle'];
+	$lat = $camera_settings_array['latitude'];
+	$lon = $camera_settings_array['longitude'];
+	exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+	if ($retval == 2) {
+		$delay = $daydelay;
+	} else if ($retval == 3) {
+		$delay = $nightdelay;
+	} else {
+		echo "<p class='errorMsg'>ERROR: 'sunwait' returned exit code $retval so we don't know if it's day or night.</p>";
+		$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
+	}
+
+	// Divide by 2 to lessen the delay between a new picture and when we check.
+	$delay /= 2;
+
+	// Convert to seconds for display.
+	$daydelay /= 1000;
+	$nightdelay /= 1000;
 }
-
-$settings_file = getSettingsFile($cam_type);
-if (! file_exists($settings_file)) {
-	echo "<div style='color: red; font-size: 200%;'>";
-	echo "ERROR: Unable to find camera settings file for camera of type '$cam_type'.";
-	echo "<br>File '$settings_file' missing!";
-	echo "</div>";
-	exit;
-}
-
-$camera_settings_str = file_get_contents($settings_file, true);
-$camera_settings_array = json_decode($camera_settings_str, true);
-// $img_dir is an alias in the web server's config that points to where the current image is.
-// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
-$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
-$image_name = $img_dir . "/" . $camera_settings_array['filename'];
-$darkframe = $camera_settings_array['takeDarkFrames'];
-$useLogin = getVariableOrDefault($camera_settings_array, 'useLogin', true);
-
-
-////////////////// Determine delay between refreshes of the image.
-$consistentDelays = $camera_settings_array["consistentDelays"] == 1 ? true : false;
-$daydelay = $camera_settings_array["daydelay"] +
-	($consistentDelays == 1 ? $camera_settings_array["daymaxautoexposure"] : $camera_settings_array["dayexposure"]);
-$nightdelay = $camera_settings_array["nightdelay"] +
-	($consistentDelays == 1 ? $camera_settings_array["nightmaxautoexposure"] : $camera_settings_array["nightexposure"]);
-
-// Determine if it's day or night so we know which delay to use.
-$angle = $camera_settings_array['angle'];
-$lat = $camera_settings_array['latitude'];
-$lon = $camera_settings_array['longitude'];
-exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
-if ($retval == 2) {
-	$delay = $daydelay;
-} else if ($retval == 3) {
-	$delay = $nightdelay;
-} else {
-	echo "<p class='errorMsg'>ERROR: 'sunwait' returned exit code $retval so we don't know if it's day or night.</p>";
-	$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
-}
-
-// Divide by 2 to lessen the delay between a new picture and when we check.
-$delay /= 2;
-
-// Convert to seconds for display.
-$daydelay /= 1000;
-$nightdelay /= 1000;
-
-$status = null;		// Global point to status messages
 
 /**
 *

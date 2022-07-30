@@ -880,6 +880,23 @@ bool checkExposureValues(config *cg)
 	return(true);		// only WARNINGs above
 }
 
+// Check that the specified bin is supported by this camera.
+static bool checkBin(long b, ASI_CAMERA_INFO ci, char const *field)
+{
+	ok = false;
+	for (unsigned int i = 0; i < sizeof(ci.SupportedBins); ++i)
+	{
+		if (ci.SupportedBins[i] == b)
+			ok = true;
+		if (ci.SupportedBins[i] == 0)
+			break;
+	}
+	if (! ok)
+		Log(0, "*** ERROR: %s bin of %ldx%ld not supported by camera.\n", field, b, b);
+
+	return(ok);
+}
+
 // Set defaults that depend on camera type or otherwise can't be set at compile time.
 // If a value is currently NOT_CHANGED, the user didn't specify so use the default.
 // Validate the command-line settings.
@@ -1049,14 +1066,10 @@ bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
 			&cg->overlay.smallFontcolor[0], &cg->overlay.smallFontcolor[1], &cg->overlay.smallFontcolor[2]) != 3)
 		Log(-1, "%s*** WARNING: Not enough small font color parameters: '%s'%s\n", c(KRED), cg->overlay.sfc, c(KNRM));
 
-// TODO: look in supported bin list to see if the specified bin is there.  No need for validateLong
-	int max_bin;
-	if (cg->ct == ctZWO)
-		max_bin = 3;
-	else
-		max_bin = 2;
-	validateLong(&cg->dayBin, 1, max_bin, "Daytime Binning", false);
-	validateLong(&cg->nightBin, 1, max_bin, "Nighttime Binning", false);
+	if (! checkBin(cg->dayBin, ci, "Daytime Binning"))
+		ok = false;
+	if (! checkBin(cg->nightBin, ci, "Nighttime Binning"))
+		ok = false;
 
 	if (! validateLatitudeLongitude(cg))
 		ok = false;
@@ -1066,7 +1079,7 @@ bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
 	ret = getControlCapForControlType(cg->cameraNumber, BRIGHTNESS, &cc);
 	if (ret == ASI_SUCCESS)
 	{
-		cg->defaultBrightness = cc.DefaultValue;
+		cg->defaultBrightness = cc.DefaultValue;		// used elsewhere
 		if (cg->dayBrightness == NOT_CHANGED)
 			cg->dayBrightness = cc.DefaultValue;
 		else
@@ -1085,8 +1098,14 @@ bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
 	if (ret == ASI_SUCCESS)
 	{
 		cg->cameraMinGain = cc.MinValue;		// used elsewhere
-		validateFloat(&cg->dayGain, cc.MinValue, cc.MaxValue, "Daytime Gain", true);
-		validateFloat(&cg->nightGain, cc.MinValue, cc.MaxValue, "Nighttime Gain", true);
+		if (cg->dayGain == NOT_CHANGED)
+			cg->dayGain = cc.DefaultValue;
+		else
+			validateFloat(&cg->dayGain, cc.MinValue, cc.MaxValue, "Daytime Gain", true);
+		if (cg->nightGain == NOT_CHANGED)
+			cg->nightGain = cc.DefaultValue;
+		else
+			validateFloat(&cg->nightGain, cc.MinValue, cc.MaxValue, "Nighttime Gain", true);
 	} else {
 		Log(0, "ASI_GAIN failed with %s\n", getRetCode(ret));
 		ok = false;

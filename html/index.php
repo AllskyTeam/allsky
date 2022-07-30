@@ -17,7 +17,7 @@
 // functions.php sets a bunch of constants and variables.
 // It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
-
+initialize_variables();		// sets some variables
 
 // Constants for configuration file paths.
 // These are typical for default RPi installs. Modify if needed.

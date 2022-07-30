@@ -78,6 +78,8 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Location of optional allsky-website package.
 	ALLSKY_WEBSITE=${ALLSKY_WEBSITE:-${ALLSKY_WEBUI}/allsky}
 
+	GITHUB_ROOT="https://github.com/thomasjacquin"
+
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped
 	EXIT_OK=0

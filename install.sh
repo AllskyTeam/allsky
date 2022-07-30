@@ -485,8 +485,8 @@ if [ -d "${OLD_WEBSITE}" ]; then
 
 elif [[ ${HAS_PRIOR_ALLSKY} == "true" && -d "${PRIOR_INSTALL_DIR}/html/allsky" ]]; then
 	# Newer location of website - see if it's the current version.
-	OLD_VERSION=$(< "${PRIOR_INSTALL_DIR}/version")
 #### TODO: 
+	# OLD_VERSION=$(< "${PRIOR_INSTALL_DIR}/version")
 	# curl "${GITHUB_ROOT}/allsky-website/blob/home-page-customizations/version"
 	# Get version from Git
 	# If different - suggest they upgrade

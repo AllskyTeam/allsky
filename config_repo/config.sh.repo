@@ -219,5 +219,3 @@ FILENAME="${FULL_FILENAME%.*}"
  
 # So scripts can conditionally output messages.
 ALLSKY_DEBUG_LEVEL="$(settings '.debuglevel')"
-
-GITHUB_ROOT="https://github.com/thomasjacquin"

@@ -14,7 +14,6 @@
 		"auroraForecast": false,
 		"auroraMap": "XX_NEED_TO_UPDATE_XX",
 		"intervalSeconds": 5,
-
 		"showOverlayAtStartup": false,
 		"overlayWidth": 875,
 		"overlayHeight": 875,
@@ -81,6 +80,7 @@
 			{ "XX_MINI_TIMELAPSE_XX": "XX_MINI_TIMELAPSE_URL_XX",  "title": "Mini-timelapse",  "icon": "icon-mini-timelapse" },
 			{ "url": "keograms",  "title": "Archived Keograms",  "icon": "fa-barcode" },
 			{ "url": "startrails",  "title": "Archived Startrails",  "icon": "fa-circle-notch" },
+			{ "variable": "imageName",  "title": "Full-sized image",  "icon": "fa-expand-arrows-alt" },
 			{ "comment": "Add sidebar items above." }
 		],
 		"sidebarStyle": "",

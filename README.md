@@ -137,15 +137,14 @@ If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote 
 &nbsp;  
 <p align="center"><img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg" width="75%"></p>
 
-The WebUI
-	The WebUI code is based on an older version of [**RaspAP**](https://github.com/billz/raspap-webgui).
+The WebUI code is based on an older version of [**RaspAP**](https://github.com/billz/raspap-webgui).
 	
-The WebUI is now installed in `~/allsky/html` as part of the installation of Allsky.  It:
-* changes your hostname to **allsky** (or whatever you called it when installing)
-* installs the **lighttpd** web server
-* if you have a previous version in `/var/www/html/allsky`, upgrading Allsky also:
-  * moves images from your old WebUI to the new location
-  * removes `/var/www`.
+The WebUI is installed in `~/allsky/html` as part of the installation of Allsky, and:
+* Changes your hostname to **allsky** (or whatever you called it during installation).
+* Installs the **lighttpd** web server.
+* Prompts to remove an old version of the WebUI in `/var/www/html`, if it exists (but keeps any old Allsky Website in `/var/www/html/allsky`).
+* Suggests you upgrade the Allsky Website if an old version is found.
+
 
 After you complete Allsky setup, you can administer the software using the WebUI by navigating to
 ```

@@ -450,20 +450,20 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 	* Allsky Website:
 		* The home page can be customized:
 			* You can specify the order and contents of the icons on the left side.  **NOTE**: The constellation overlay icon (Casseopeia icon) only appears after you've set the overlay to match your stars.
-			* If you are creating mini-timelapse videos an icon for the current file can appear.  See the Wiki for more info.
+			* If you are creating mini-timelapse videos when you install the website an icon for the current file will appear on the left side.  You can also manually show/hide the icon.
 			* You can specify the order and contents of the popout that appears when clicking on the camera icon.  For example, you could add a link to local weather or to pictures of your allsky camera.
 			* You can set a background image.
 			* You can add an optional link to a personal website at the top of the page.
 			* You can add a border around the image to have it stand out on the page.
 			* You can hide the "Make Your Own" link on the bottom right of the page.
+		* There's a new icon on the left to display the image full-size.
 		* The two configuration files (`config.js` and `virtualsky.json`) were combined into `configuration.json`, which should be edited via the **Editor** link in the WebUI.
 		* If you are going to install the Allsky Website on a **remote** server, a master copy of its **remote** server's `configuration.json` can be kept on the Pi where it can be edited in the WebUI and uploaded to the server.  This is the preferred method.  To do this, execute `cd ~/allsky; website/install.sh --remote` after you have copied the Allsky Website files to your server and have FTP working to it.
 		* If the installation script detects a prior website, you are given the option of moving its images to the new website.
 		* Timelapse video thumbnails can be created on the Pi and uploaded to a remote server.  This resolves issues with remote servers that don't support creating thumbnails.  See the `TIMELAPSE_UPLOAD_THUMBNAIL` setting.
 		* You can specify a different width and height (`overlayWidth` and `overlayHeight`) for the constellation overlay instead of only a square (`overlaySize`, which has been deprecated).  This can be helpful when trying to get the overlay to line up with the actual stars.
 		* The **virtualsky** program that draws the constellation overlay was updated to the latest release.  This added some new settings, including the ability to specify the opacity of the overlay.  It also adds a small box with a question mark in it when viewing the overlay; clicking on the icon brings up a list of commands you can perforrm.
-		* Font Awesome was updated to 5.14 and its file is now included with the website, eliminating a call to the Internet.
-		* The name of the home page file is now `index.php`.  The old `index.html` file is gone.  This change allowed some of the new features above.
+		* Resizing the home page with the constellation overlay showing now works.  Known bug: If you start out with a small window and turn the overlay on, it will not be the correct size.
 
 * version **v2022.03.01**:
 	* Switched to date-based release names.

@@ -379,7 +379,7 @@ mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails
 
 echo -e "${GREEN}* Fixing ownership and permissions${NC}"
 U=$(id --name --user)		# User running this script
-chown -R "${U}:www-data" .
+sudo chown -R "${U}:www-data" .
 find ./ -type f -exec chmod 644 {} \;
 find ./ -type d -exec chmod 775 {} \;
 

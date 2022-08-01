@@ -26,6 +26,9 @@
 		"XXX_objects": "virtualsky/messier.json",
 		"meridian": false,
 		"ecliptic": false,
+		"fontsize": "14px",
+		"cardinalpoints": true,
+		"cardinalpoints_fontsize": "18px",
 		"showstarlabels": true,
 		"projection": "fisheye",
 		"constellations": true,
@@ -44,8 +47,17 @@
 		"sky_gradient": false,
 		"gradient": false,
 		"transparent": true,
-		"live": true,
 		"lang": "en",
+		"colours" : {
+			"comment": "See the Wiki for how to change colors on the constellation overlay.",
+			"normal" : {
+				"XXX_cardinal": "rgba(0,255,0,1)"
+			},
+			"negative" : {
+				"XXX_cardinal": "rgba(255,255,255,1)"
+			}
+		},
+		"live": true,
 		"id": "starmap"
 	},
 

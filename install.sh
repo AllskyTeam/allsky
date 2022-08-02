@@ -176,7 +176,7 @@ do_sudoers()
 {
 	echo -e "${GREEN}* Creating/updating sudoers file${NC}"
 	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" "${REPO_SUDOERS_FILE}"  >  /tmp/x
-	install -m 0644 /tmp/x "${FINAL_SUDOERS_FILE}" && rm -f /tmp/x
+	sudo install -m 0644 /tmp/x "${FINAL_SUDOERS_FILE}" && rm -f /tmp/x
 }
 
 ask_reboot() {
@@ -376,14 +376,14 @@ NEW_HOST_NAME='allsky'
 if [ "${CURRENT_HOSTNAME}" != "${NEW_HOST_NAME}" ]; then
 	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "Please enter a hostname for your Pi" 20 60 "${NEW_HOST_NAME}" 3>&1 1>&2 2>&3)
 	if [ "${CURRENT_HOSTNAME}" != "${NEW_HOST_NAME}" ]; then
-		sudo echo "${NEW_HOST_NAME}" | tee /etc/hostname > /dev/null
+		echo "${NEW_HOST_NAME}" | sudo tee /etc/hostname > /dev/null
 		sudo sed -i "s/127.0.1.1.*${CURRENT_HOSTNAME}/127.0.1.1\t${NEW_HOST_NAME}/" /etc/hosts
 	fi
 fi
 
 echo -e "${GREEN}* Installing the lighttpd webserver and its dependencies${NC}"
 echo
-apt-get update && apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
+sudo apt-get update && sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
 sudo systemctl stop lighttpd 2> /dev/null
 sudo rm -fr /var/log/lighttpd/*		# Start off with a clean log file.
 sudo lighty-enable-mod fastcgi-php 2> /dev/null
@@ -397,7 +397,7 @@ sed \
 	-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
 	-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
 		"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
-install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
+sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
 sudo systemctl start lighttpd
 echo
 
@@ -408,7 +408,7 @@ if [ $? -ne 0 ]; then
 	echo -e "${GREEN}* Configuring avahi-daemon${NC}"
 	REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
 	sed "s/XX_HOST_NAME_XX/${NEW_HOST_NAME}/g" "${REPO_AVI_FILE}" > /tmp/x
-	install -m 0644 /tmp/x "${FINAL_AVI_FILE}" && rm -f /tmp/x
+	sudo install -m 0644 /tmp/x "${FINAL_AVI_FILE}" && rm -f /tmp/x
 	echo
 fi
 

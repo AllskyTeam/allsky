@@ -730,8 +730,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					{
 if (CG.lastExposure_us != myRaspistillSetting.shutter_us)
   Log(0, " xxxx lastExposure_us (%ld) != shutter_us (%ld)\n", CG.lastExposure_us, myRaspistillSetting.shutter_us);
-						aegGetNextExposureSettings(CG.lastMean, CG.lastExposure_us, CG.lastGain,
-								myRaspistillSetting, myModeMeanSetting);
+						aegGetNextExposureSettings(CG, myRaspistillSetting, myModeMeanSetting);
 
 						Log(2, "  > Got exposure: %s, gain: %1.3f,", length_in_units(CG.lastExposure_us, false), CG.lastGain);
 						Log(2, " shutter: %s, quickstart: %d, mean=%1.3f\n", length_in_units(myRaspistillSetting.shutter_us, false), myModeMeanSetting.quickstart, CG.lastMean);

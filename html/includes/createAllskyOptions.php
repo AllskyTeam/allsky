@@ -9,21 +9,23 @@ include_once('functions.php');
 
 $rest_index;
 $longopts = array(
+	"debug::",		// no arguments
+	"help::",		// no arguments
 	"dir:",
 	"cc_file:",
 	"options_file:",
 	"settings_file:",
-	"debug::",		// no arguments
-	"help::",		// no arguments
+	"force::",		// no arguments
 );
 $options = getopt("", $longopts, $rest_index);
 
-$debug = true;		// XXXXXXXX true during testing
+$debug = false;
 $help = false;
 $directory = "";	// All the files will go in $directory.
 $cc_file = "";
 $options_file = "";
 $settings_file = "";
+$force = false;		// force creation of settings file even if it already exists?
 
 foreach ($options as $opt => $val) {
 	if ($debug) echo "Argument $opt = $val\n";
@@ -40,6 +42,8 @@ foreach ($options as $opt => $val) {
 		$options_file = $val;
 	else if ($opt === "settings_file")
 		$settings_file = $val;
+	else if ($opt === "force")
+		$force = true;
 }
 
 if ($help || $directory === "" || $cc_file === "" || $options_file === "") {
@@ -49,36 +53,62 @@ if ($help || $directory === "" || $cc_file === "" || $options_file === "") {
 
 $cc_file_full = "$directory/$cc_file";
 if (! file_exists($cc_file_full)) {
-	echo "ERROR: Camera capabilities file $cc_file_full does not exist!";
+	echo "ERROR: Camera capabilities file $cc_file_full does not exist!\n";
 	echo "Run 'install.sh --update' to create it.";
 	exit;
 }
+$repo_file = ALLSKY_REPO . "/" . $options_file . ".repo";
+if (! file_exists($repo_file)) {
+	echo "ERROR: Template options file $repo_file does not exist!\n";
+	exit;
+}
+
 $options_file_full = "$directory/$options_file";
 $settings_file_full = "$directory/$settings_file";
-$repo_file = ALLSKY_REPO . "/" . $options_file . ".repo";
 
 // Create options file
 
 // Read $cc_file
-$str = file_get_contents($cc_file_full, true);
-$cc_array = json_decode($str, true);
+$cc_str = file_get_contents($cc_file_full, true);
+$cc_array = json_decode($cc_str, true);
 $cameraType = $cc_array["cameraType"];
 $cameraModel = $cc_array["cameraModel"];
 
 // Read $repo_file
-$str = file_get_contents($repo_file, true);
-$repo_array = json_decode($str, true);
+$repo_str = file_get_contents($repo_file, true);
+//$repo_str = file_get_contents(getOptionsFile($cameraType), true);	// xxxxxxxxxxxx
+if ($repo_str == "") {
+	echo "ERROR: Template options file $repo_file is empty!\n";
+	exit;
+}
+$repo_array = json_decode($repo_str, true);
+if ($repo_array === null) {
+	echo "ERROR: Cannot decode $repo_file!";
+	exit;
+}
 
+$options_str = "[\n";
 // TODO: *** Work magic to create $options_file_full, using $cc_array and $repo_array.
+$options_str .= "]\n";
 
-// XXXXXXXXXX TODO: check for errors opening, creating, and linking files.
+// Now save the file.
+$results = updateFile($options_file_full, $options_str, $options_file);
+if ($results != "") {
+	echo "ERROR: Unable to create $options_file_full.\n";
+	exit;
+}
+// $options_array = $cc_array = json_decode($options_str, true);
+$options_array = $repo_array;	// XXXXXX use this until the TODO above is done.
 
 if ($settings_file !== "") {
 	// If the file exists, it's a generic link to a camera-specific named file.
 	// Remove the link because it points to a prior camera.
 	if (file_exists($settings_file_full)) {
 		if ($debug) echo "Unlinking $settings_file_full.\n";
-		unlink($settings_file_full);
+		if (! unlink($settings_file_full)) {
+			echo "ERROR: Unable to delete $settings_file_full.\n";
+			exit;
+		}
 	}
 
 	// Determine the name of the camera type/model-specific file.
@@ -89,13 +119,34 @@ if ($settings_file !== "") {
 	$fullName = "$directory/$cameraSettingsFile";
 
 	// If there isn't a camera-specific file, create one.
-	if (! file_exists($fullName)) {
+	if ($force || ! file_exists($fullName)) {
+		// For each item in the options file, write the name and default value.
+		$contents = "{\n";
+		foreach ($repo_array as $option) {
+			$type = getVariableOrDefault($option, 'type', "");
+			if ($type == "header") continue;
+			$display = getVariableOrDefault($option, 'display', 0);
+			if ($display === 0) continue;
 
-		// TODO: *** Work magic to create $contents in json format.
-$contents = "this is a test.  Camera = $cameraType $cameraModel.\n";
+			$name = $option['name'];
+			$default = getVariableOrDefault($option, 'default', "");
+			if ($debug) echo ">> $name = [$default]\n";
+
+			// Don't worry about whether or not the default is a string, number, etc.
+			$contents .= "\t\"$name\" : \"$default\",\n";
+		}
+		// Thsi comes last so we don't worry about whether or not the items above
+		// need a trailing comma.
+		$contents .= "\t\"cameraModel\" : \"$cameraModel\"\n";
+		$contents .= "}\n";
 
 		if ($debug) echo "Creating settings file: $fullName.\n";
 		$results = updateFile($fullName, $contents, $cameraSettingsFile);
+		if ($results != "") {
+			echo "ERROR: Unable to create $fullName.\n";
+			exit;
+		}
+
 	} else if ($debug) {
 		// There IS a camera-specific file for the new camera type so we
 		// don't need to do anything special.
@@ -104,9 +155,12 @@ $contents = "this is a test.  Camera = $cameraType $cameraModel.\n";
 	}
 
 	if ($debug) echo "Linking $settings_file_full to $fullName.\n";
-	link($fullName, $settings_file_full);
-
-	echo "XX_WORKED_XX\n";
+	if (! link($fullName, $settings_file_full)) {
+		echo "ERROR: Unable to link $settings_file_full to $fullName.\n";
+		exit;
+	}
 }
+
+echo "XX_WORKED_XX\n";
 
 ?>

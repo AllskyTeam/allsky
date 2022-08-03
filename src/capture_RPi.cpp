@@ -730,7 +730,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					{
 if (CG.lastExposure_us != myRaspistillSetting.shutter_us)
   Log(0, " xxxx lastExposure_us (%ld) != shutter_us (%ld)\n", CG.lastExposure_us, myRaspistillSetting.shutter_us);
-						aegGetNextExposureSettings(CG, myRaspistillSetting, myModeMeanSetting);
+						aegGetNextExposureSettings(&CG, myRaspistillSetting, myModeMeanSetting);
 
 						Log(2, "  > Got exposure: %s, gain: %1.3f,", length_in_units(CG.lastExposure_us, false), CG.lastGain);
 						Log(2, " shutter: %s, quickstart: %d, mean=%1.3f\n", length_in_units(myRaspistillSetting.shutter_us, false), myModeMeanSetting.quickstart, CG.lastMean);
@@ -757,6 +757,14 @@ if (CG.lastExposure_us != myRaspistillSetting.shutter_us)
 					}
 				}
 
+				// We skip the initial frames to give auto-exposure time to
+				// lock in on a good exposure.  If it does that quickly, stop skipping images.
+				if (CG.goodLastExposure && CG.currentSkipFrames > 0)
+				{
+					Log(2, "Turning off Skip Frames\n");
+					CG.currentSkipFrames = 0;
+				}
+
 				if (CG.currentSkipFrames > 0)
 				{
 					CG.currentSkipFrames--;
@@ -769,13 +777,6 @@ if (CG.lastExposure_us != myRaspistillSetting.shutter_us)
 				}
 				else
 				{
-					// We primarily skip the initial frames to give auto-exposure time to
-					// lock in on a good exposure.  If it does that quickly, stop skipping images.
-					if (CG.goodLastExposure)
-					{
-						CG.currentSkipFrames = 0;
-					}
-
 					char cmd[1100+sizeof(CG.allskyHome)];
 					Log(1, "  > Saving %s image '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
 					snprintf(cmd, sizeof(cmd), "%sscripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);

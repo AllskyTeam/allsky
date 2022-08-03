@@ -488,7 +488,7 @@ elif [[ ${HAS_PRIOR_ALLSKY} == "true" && -d "${PRIOR_INSTALL_DIR}/html/allsky" ]
 	# Newer location of website - see if it's the current version.
 	OLD_VERSION=$(< "${PRIOR_INSTALL_DIR}/version")
 	NEW_VERSION="$(curl "${GITHUB_RAW_ROOT}/allsky-website/version")"
-	if [[ ${OLD_VERSION} != ${NEW_VERSION} ]]; then
+	if [[ ${OLD_VERSION} != "${NEW_VERSION}" ]]; then
 		display_msg warning "There is a newer Allsky Website and we suggest you upgrade to it."
 		display_msg "" "Your    version: ${OLD_VERSION}"
 		display_msg "" "Current version: ${NEW_VERSION}"

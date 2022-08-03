@@ -101,7 +101,7 @@ while [ $# -gt 0 ]; do
 			# When we're changing cameraType we're not changing anything else.
 
 			# Create the camera capabilities file for the new camera type.
-			CC_FILE="${ALLSKY_CONFIG}/${CC_FILE_NAME}"
+			CC_FILE="${ALLSKY_CONFIG}/${CC_FILE_NAME}.${CC_FILE_EXT}"
 
 			# Save the current file just in case creating a new one fails.
 			# It's a link so copy it to a temp name, then remove the old name.
@@ -121,15 +121,14 @@ while [ $# -gt 0 ]; do
 			CAMERA_TYPE="${NEW_VALUE}"		# already know it
 			CAMERA_MODEL="$(jq .cameraModel "${CC_FILE}" | sed 's;";;g')"
 			# Get the filename (without extension) and extension of the cc file.
-			E="${CC_FILE_NAME##*.}"
-			F="${CC_FILE_NAME%.*}"
 
-			LINKED_NAME="${ALLSKY_CONFIG}/${F}_${CAMERA_TYPE}_${CAMERA_MODEL}.${E}"
+			LINKED_NAME="${ALLSKY_CONFIG}/${CC_FILE_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_FILE_EXT}"
 			# Any old and new camera capabilities file should be the same unless the
 			# Allsky adds or changes capabilities, so delete the old one just in case.
 			ln --force "${CC_FILE}" "${LINKED_NAME}"
 
 			sed -i -e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${NEW_VALUE}\"/" "${ALLSKY_CONFIG}/config.sh" >&2
+			# shellcheck disable=SC2181
 			if [ $? -ne 0 ]; then
 				echo -e "${wERROR}ERROR updating ${wBOLD}${LABEL}${wNBOLD}.${wNC}" >&2
 				mv "${CC_FILE}-OLD" "${CC_FILE}"
@@ -139,11 +138,24 @@ while [ $# -gt 0 ]; do
 			# Remove the old file
 			rm -f "${CC_FILE}-OLD"
 
-			NEEDS_RESTART=true
+			# createAllskyOptions.php will use the cc file and the options template file
+			# to create an OPTIONS_FILE for this camera type/model.
+			CC_FILE="${CC_FILE_NAME}.${CC_FILE_EXT}"		# reset from full name above
+			OPTIONS_FILE="${OPTIONS_FILE_NAME}.${OPTIONS_FILE_EXT}"
+			SETTINGS_FILE="${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
+
+			# .php files don't return error codes so we check if it worked by
+			# looking for a string in its output.
+			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" --dir "${ALLSKY_CONFIG}" --cc_file "${CC_FILE}" --options_file "${OPTIONS_FILE}" --settings_file "${SETTINGS_FILE}" 2>&1)"
+			[ -n "${R}" ] && echo -e "${R}"
+			echo -e "${R}" | grep --silent "XX_WORKED_XX" || exit 2
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			[[ ${CAMERA_TYPE_ONLY} == "true" ]] && exit 0
+
+			NEEDS_RESTART=true
 			;;
+
 		filename)
 			WEBSITE_CONFIG+=("imageName" "${OLD_VALUE}" "${NEW_VALUE}")
 			NEEDS_RESTART=true

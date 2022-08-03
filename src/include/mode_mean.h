@@ -22,23 +22,26 @@ typedef enum {
 struct modeMeanSetting {
 	bool modeMean = false;					// Activate mode mean.  User can change this.
 	MEAN_AUTO_MODE meanAuto = MEAN_AUTO_OFF; // Different modes are available - see MEAN_AUTO_MODE.
-	bool init = true;						// Set some settings before first calculation.
+	bool init				= true;			// Set some settings before first calculation.
 											// This is set to "false" after calculation.
-	double exposureLevelMin	= NOT_SET;		// Set during initialization.
-	double exposureLevelMax	= NOT_SET;		// Set during initialization.
-	double minGain = NOT_SET;				// Set during initialization.
-	double maxGain = NOT_SET;				// Set during initialization.
-	int maxExposure_us = NOT_SET;			// Set during initialization.
-	int minExposure_us = NOT_SET;			// Set during initialization.
-	double meanValue = NOT_SET;				// Default mean value for well exposed images.
-	double nightMean = DEFAULT_NIGHTMEAN;	// Default mean value for nighttime images.  User can change.
-	double dayMean = DEFAULT_DAYMEAN;		// Default mean value for daytime images.  User can change.
-	double mean_threshold = DEFAULT_MEAN_THRESHOLD;	// threshold value.
+	int exposureLevelMin	= NOT_SET;		// Set during initialization.
+	int exposureLevelMax	= NOT_SET;		// Set during initialization.
+	int exposureLevel		= NOT_SET;		// current ExposureLevel.
+	double minGain			= NOT_SET;		// Set during initialization.
+	double maxGain			= NOT_SET;		// Set during initialization.
+	long maxExposure_us		= NOT_SET;		// Set during initialization.
+	long minExposure_us		= NOT_SET;		// Set during initialization.
+	double meanValue		= NOT_SET;		// Default mean value for well exposed images.
+
+	// Default mean value for daytime and nighttime images.  User can change.
+	double dayMean			= DEFAULT_DAYMEAN;
+	double nightMean		= DEFAULT_NIGHTMEAN;
+	double mean_threshold	= DEFAULT_MEAN_THRESHOLD;	// threshold value.  User can change.
+
 	double const shuttersteps = 6.0;		// shuttersteps
-	int const historySize = 3;				// Number of last images for mean target calculation.
-	int quickstart = 10;					// Shorten delay between captures for this many images.
+	int const historySize	= 3;			// Number of last images for mean target calculation.
+	int quickstart			= 10;			// Shorten delay between captures for this many images.
 											// to help get us to a good exposure quicker.
-	int exposureLevel = NOT_SET;			// current ExposureLevel.
 	double mean_p0 = DEFAULT_MEAN_P0;		// ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2
 	double mean_p1 = DEFAULT_MEAN_P1;
 	double mean_p2 = DEFAULT_MEAN_P2;

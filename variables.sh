@@ -82,6 +82,15 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	GITHUB_ROOT="https://github.com/thomasjacquin"
 	GITHUB_RAW_ROOT="https://raw.githubusercontent.com/thomasjacquin"
 
+	# NAMEs of some configuration files:
+	#	Camera Capabilities - specific to a camera type and model (cc.json)
+	#	Allsky WebUI settings - specific to a camera type and model (settings.json)
+	#	Allsky WebUI options - created at installation and when camera type changes (options.json)
+	# They are configuration files so go in ${ALLSKY_CONFIG) like all the other config files.
+	CC_FILE_NAME="cc.json"
+	SETTINGS_NAME="settings.json"
+	OPTIONS_NAME="options.json"
+
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped
 	EXIT_OK=0

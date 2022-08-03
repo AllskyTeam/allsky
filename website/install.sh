@@ -209,6 +209,7 @@ fi
 		LONGITUDE="${SIGN}${LONGITUDE%${DIRECTION}}"
 
 		COMPUTER="$(tail -1 /proc/cpuinfo | sed 's/.*: //')"
+		CAMERA_MODEL="$(settings ".cameraModel")"
 
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent \
 			--config "${DIR}/${CONFIGURATION_FILE_NAME}" \
@@ -217,38 +218,12 @@ fi
 			longitude "" "${LONGITUDE}" \
 			auroraMap "" "${AURORAMAP}" \
 			computer "" "${COMPUTER}" \
-			camera "" "${CAMERA_TYPE}" \
+			camera "" "${CAMERA_TYPE} ${CAMERA_MODEL}" \
 			XX_MINI_TIMELAPSE_XX "XX_MINI_TIMELAPSE_XX" "${MINI_TIMELAPSE}" \
 			XX_MINI_TIMELAPSE_URL_XX "XX_MINI_TIMELAPSE_URL_XX" "${MINI_TIMELAPSE_URL}" \
 			onPi "" "${ON_PI}"
-# xxxx TODO: "camera" should be combination of "$CAMERA_TYPE and $CAMERA_MODEL"
 	fi
 }
-
-
-if [[ ${REMOTE_WEBSITE} == "false" && ! -d ${ALLSKY_WEBUI} ]]; then
-	ALLSKY_VERSION=""
-	[[ -f ${ALLSKY_HOME}/version ]] && ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version")"
-	# In the version after v2022.03.01 the WebUI was installed as part of Allsky, so check that.
-	if [[ ${ALLSKY_VERSION} > "v2022.03.01" ]]; then
-		echo
-		echo -e "${RED}* ERROR: The WebUI is not installed in Allsky version ${ALLSKY_VERSION}!${NC}"
-		echo -e "${RED}Please check/re-do the installation of Allsky.${NC}"
-		echo
-		exit 2
-	else
-		MSG="The Allsky Website can use the WebUI, but it is not installed in '${ALLSKY_WEBSITE}'."
-		MSG="${MSG}\nIf you do NOT have a different web server installed on this machine,"
-		MSG="${MSG} we suggest you install the WebUI first."
-		MSG="${MSG}\n\nWould you like to manually install the WebUI now?"
-		if (whiptail --title "Allsky Website Installer" --yesno "${MSG}" 15 60 3>&1 1>&2 2>&3); then 
-			echo -e "\nTo install the WebUI, execute:"
-			echo -e "    sudo gui/install.sh"
-			exit 0
-		fi
-	fi
-	echo
-fi
 
 if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 	if [[ ${REMOTE_HOST} == "" ]]; then

@@ -322,7 +322,7 @@ function DisplaySystem()
 	if (preg_match("/^throttled=/", $x) == false) {
 			$throttle_status = "danger";
 			$throttle = "Not able to get throttle status:<br>$x";
-			$throttle .= "<br><span style='font-size: 150%'>Run 'sudo ~/allsky/gui/install.sh --update' to try and resolve.</style>";
+			$throttle .= "<br><span style='font-size: 150%'>Run '~/allsky/install.sh --update' to try and resolve.</style>";
 	} else {
 		$x = explode("x", $x);	// Output: throttled=0x12345...
 //FOR TESTING: $x[1] = "50001";

@@ -29,7 +29,7 @@ if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	echo "<span style='color: red'>";
 	echo "Please run the following from the 'allsky' directory before using the WebUI:";
 	echo "</span>";
-	echo "<code>   sudo gui/install.sh --update</code>";
+	echo "<code>   ./install.sh --update</code>";
 	echo "</div>";
 	exit;
 }

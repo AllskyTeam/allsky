@@ -738,7 +738,7 @@ int displayNotificationImage(char const *arguments)
 	char cmd[1024];
 
 	snprintf(cmd, sizeof(cmd)-1, "%sscripts/copy_notification_image.sh %s", CG.allskyHome, arguments);
-	Log(3, "Calling system(%s)\n", cmd);
+	Log(4, "Calling system(%s)\n", cmd);
 	return(system(cmd));
 }
 

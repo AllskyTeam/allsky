@@ -32,7 +32,10 @@ echo "************************************************"
 echo "*** Welcome to the Allsky Software Installer ***"
 echo "************************************************"
 echo
+
 TITLE="Allsky Installer"
+ALLSKY_OWNER=$(id --group --name)
+ALLSKY_GROUP=${ALLSKY_OWNER}
 
 
 ####################### functions
@@ -113,7 +116,7 @@ select_camera_type() {
 
 
 # Save the camera capabilities and use them to set the WebUI min, max, and defaults.
-get_camera_capabilities() {
+save_camera_capabilities() {
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in get_camera_capabilities()."
 		return 1
@@ -292,8 +295,6 @@ chmod 755 "${ALLSKY_HOME}"	# Some versions of Linux default to 750 so web server
 # Create the log file and make it readable by the user; this aids in debugging.
 ALLSKY_LOG="/var/log/allsky.log"
 echo -e "${GREEN}* Set permissions on Allsky log (${ALLSKY_LOG})\n${NC}"
-ALLSKY_OWNER=$(id --group --name)
-ALLSKY_GROUP=${ALLSKY_OWNER}
 sudo touch "${ALLSKY_LOG}"
 sudo chmod 664 "${ALLSKY_LOG}"
 sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"

@@ -87,9 +87,12 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	#	Allsky WebUI settings - specific to a camera type and model (settings.json)
 	#	Allsky WebUI options - created at installation and when camera type changes (options.json)
 	# They are configuration files so go in ${ALLSKY_CONFIG) like all the other config files.
-	CC_FILE_NAME="cc.json"
-	SETTINGS_NAME="settings.json"
-	OPTIONS_NAME="options.json"
+	CC_FILE_NAME="cc"
+	CC_FILE_EXT="json"
+	SETTINGS_FILE_NAME="settings"
+	SETTINGS_FILE_EXT="json"
+	OPTIONS_FILE_NAME="options"
+	OPTIONS_FILE_EXT="json"
 
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped

@@ -986,7 +986,7 @@ bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
 		ok = false;
 
 	// If there's too short of a delay, pictures won't upload fast enough.
-	const int min_delay = 10;
+	const int min_delay = 0;
 // TODO: determine average speed to save images on this Pi, and use that plus a buffer as min.
 	validateLong(&cg->dayDelay_ms, min_delay, NO_MAX_VALUE, "Daytime Delay", true);
 	validateLong(&cg->nightDelay_ms, min_delay, NO_MAX_VALUE, "Nighttime Delay", true);

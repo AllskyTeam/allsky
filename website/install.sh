@@ -385,12 +385,6 @@ cd "${ALLSKY_WEBSITE}" || exit 1
 echo -e "${GREEN}* Creating thumbnails directories${NC}"
 mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails
 
-echo -e "${GREEN}* Fixing ownership and permissions${NC}"
-U=$(id --name --user)		# User running this script
-sudo chown -R "${U}:www-data" .
-find ./ -type f -exec chmod 644 {} \;
-find ./ -type d -exec chmod 775 {} \;
-
 modify_locations
 modify_configuration_variables
 create_data_json_file
@@ -431,6 +425,13 @@ if [ "${SAVED_OLD}" = "true" ]; then
 		mv "${PRIOR_WEBSITE/myImages}"   .
 	fi
 fi
+
+echo -e "${GREEN}* Fixing ownership and permissions${NC}"
+U=$(id --name --user)		# User running this script
+sudo chown -R "${U}:www-data" .
+find ./ -type f -exec chmod 644 {} \;
+find ./ -type d -exec chmod 775 {} \;
+
 
 echo
 echo -e "${GREEN}***** Installation complete *****${NC}"

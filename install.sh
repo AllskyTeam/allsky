@@ -135,12 +135,6 @@ get_camera_capabilities() {
 		return 1
 	fi
 
-## TODO:
-#  then look in file for CAMERA_TYPE and CAMERA_MODEL and rename cc.json to
-#  ${CAMERA_TYPE}_${CAMERA_MODEL}.json.
-#  Error if the file doesn't exist or capture fails with $? -ne 0.
-#  Check for EXIT_NO_CAMERA_CONNECTED ret code
-
 	return 0
 }
 
@@ -365,8 +359,7 @@ if [[ ${NEEDCAM} == "true" ]]; then
 fi
 
 ### TODO: Check for size of RAM+swap during installation (Issue # 969).
-### TODO: Check if prior $ALLSKY_TMP was a memory filesystem.
-### TODO: If not, offer to make $ALLSKY_TMP a memory filesystem.
+### TODO: Check if prior $ALLSKY_TMP was a memory filesystem.  If not, offer to make $ALLSKY_TMP a memory filesystem.
 
 ### FUTURE: Prompt to install SSL certificate
 
@@ -421,8 +414,16 @@ sudo sed -i -e '/allsky/d' -e '/www-data/d' /etc/sudoers
 do_sudoers
 echo
 
-# TODO: If there was an ${ALLSKY_WEBSITE}, set its old location to ${ALLSKY_WEBSITE_OLD},
-# which may be in /var/www/html/allsky.
+
+OLD_WEBUI_LOCATION="/var/www/html"
+OLD_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
+if [ -d "${OLD_WEBSITE}" ]; then
+	ALLSKY_WEBSITE_OLD="${OLD_WEBSITE}"
+elif [ -d "${PRIOR_INSTALL_DIR}/html/allsky" ]; then
+	ALLSKY_WEBSITE_OLD="${PRIOR_INSTALL_DIR}/html/allsky"
+else
+	ALLSKY_WEBSITE_OLD=""
+fi
 
 # Restore files from any prior ALLSKY_WEBSITE.
 # Note: This MUST come before the old WebUI check below so we don't remove the website
@@ -445,8 +446,6 @@ if [ "${ALLSKY_WEBSITE_OLD}" != "" ]; then
 fi
 
 # Check if a WebUI exists in the old location.
-OLD_WEBUI_LOCATION="/var/www/html"
-OLD_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
 
 if [ -d "${OLD_WEBUI_LOCATION}" ]; then
 	if (whiptail --title "${TITLE}" --yesno "An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so do you want to remove it?" 10 60 \

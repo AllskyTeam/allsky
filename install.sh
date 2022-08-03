@@ -128,6 +128,7 @@ set_camera_type() {
 
 # Save the camera capabilities and use them to set the WebUI min, max, and defaults.
 save_camera_capabilities() {
+	# Debug leve 3 to give the user more info on error.
 	./capture_${CAMERA_TYPE} -debuglevel 3 -cc_file ${ALLSKY_CONFIG}/cc.json > "${ALLSKY_LOG}" 2>&1
 	RET=$?
 	if [ ${RET} -ne 0 ]; then
@@ -485,12 +486,15 @@ if [ -d "${OLD_WEBSITE}" ]; then
 
 elif [[ ${HAS_PRIOR_ALLSKY} == "true" && -d "${PRIOR_INSTALL_DIR}/html/allsky" ]]; then
 	# Newer location of website - see if it's the current version.
-true	##XXX need until code below is working
-#### TODO: 
-	# OLD_VERSION=$(< "${PRIOR_INSTALL_DIR}/version")
-	# curl "${GITHUB_ROOT}/allsky-website/blob/home-page-customizations/version"
-	# Get version from Git
-	# If different - suggest they upgrade
+	OLD_VERSION=$(< "${PRIOR_INSTALL_DIR}/version")
+	NEW_VERSION="$(curl "${GITHUB_RAW_ROOT}/allsky-website/version")"
+	if [[ ${OLD_VERSION} != "${NEW_VERSION}" ]]; then
+		display_msg warning "There is a newer Allsky Website and we suggest you upgrade to it."
+		display_msg "" "Your    version: ${OLD_VERSION}"
+		display_msg "" "Current version: ${NEW_VERSION}"
+		display_msg "" "\nAFTER you reboot, you can upgrade by executing:"
+		display_msg "" "     cd ~/allsky; website/install.sh\n"
+	fi
 fi
 
 ######## All done

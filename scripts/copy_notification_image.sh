@@ -148,7 +148,9 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 
 	# We're actually uploading $UPLOAD_FILE, but show $NOTIFICATION_FILE in the message since it's more descriptive.
 	# If an existing notification is being uploaded, wait for it to finish then upload this one.
-	echo -e "${ME}: Uploading $(basename "${NOTIFICATION_FILE}")"
+	if [ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]; then
+		echo -e "${ME}: Uploading $(basename "${NOTIFICATION_FILE}")"
+	fi
 	"${ALLSKY_SCRIPTS}/upload.sh" --wait --silent "${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage"
 	RET=$?
 

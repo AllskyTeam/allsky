@@ -728,8 +728,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					CG.lastMean = aegCalcMean(pRgb);
 					if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
-if (CG.lastExposure_us != myRaspistillSetting.shutter_us)
-  Log(0, " xxxx lastExposure_us (%ld) != shutter_us (%ld)\n", CG.lastExposure_us, myRaspistillSetting.shutter_us);
 						aegGetNextExposureSettings(&CG, myRaspistillSetting, myModeMeanSetting);
 
 						if (CG.lastMean == -1)

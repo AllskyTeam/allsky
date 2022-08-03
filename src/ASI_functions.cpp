@@ -180,7 +180,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, BRIGHTNESS },
 		{ "Saturation", "Saturation", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
 		{ "Contrast", "Contrast", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 99.0, 0.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "Sharpness", "Sharpness", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 // TODO: what are these values?
 		{ "", "EV: Exposure compensation (not currently supported)", 99, 99, 0.0, NOT_SET, ASI_FALSE, ASI_FALSE, EV },
 

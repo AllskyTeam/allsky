@@ -123,6 +123,14 @@ modify_configuration_variables() {
 	# If the user is updating the website, use the prior config file(s).
 
 	if [ "${SAVED_OLD}" = "true" ]; then
+		A="analyticsTracking.js"
+		if [ -f "${PRIOR_WEBSITE}/${A}" ]; then
+			if cmp --silent "${PRIOR_WEBSITE}/${A}" "${A}" ; then
+				echo -e "${GREEN}* Restoring prior '${A}'.${NC}"
+				mv "${PRIOR_WEBSITE}/${A}" .
+			fi
+		fi
+
 		if [ "${OLD_WEBSITE_TYPE}" = "new" ]; then
 			echo -e "${GREEN}* Restoring prior '${CONFIGURATION_FILE_NAME}'.${NC}"
 			cp "${PRIOR_WEBSITE}/${CONFIGURATION_FILE_NAME}" "${ALLSKY_WEBSITE}"

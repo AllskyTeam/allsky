@@ -52,9 +52,9 @@
 },
 {
 "name":"daymaxautoexposure",
-"minimum":maxautoexposure_min,
-"maximum":maxautoexposure_max,
-"default":maxautoexposure_default,
+"minimum":"maxautoexposure_min",
+"maximum":"maxautoexposure_max",
+"default":"maxautoexposure_default",
 "description":"Maximum daytime Auto-Exposure time in milliseconds (1000ms = 1 sec).<br>Only applies if daytime <b>Auto-Exposure</b> is enabled.",
 "label":"Max Auto-Exposure",
 "type":"number",
@@ -63,9 +63,9 @@
 },
 {
 "name":"dayexposure",
-"minimum":exposure_min,
-"maximum":exposure_max,
-"default":exposure_default,
+"minimum":"exposure_min",
+"maximum":"exposure_max",
+"default":"exposure_default",
 "description":"Manual exposure time in milliseconds. Can be a fraction.<br>If using daytime <b>Auto-Exposure</b>, this number is used as a starting point.",
 "label":"Manual Exposure",
 "type":"text",
@@ -80,25 +80,25 @@
 "description":"The target mean brightness level when <b>Auto-Exposure</b> is on. 1.0 is pure white.<br>Best used when <b>Auto-Exposure</b> and <b>Auto-Gain</b> are on.<br>0 disables this auto-exposure mode.",
 "label":"Mean Target",
 "type":"text",
-"display":mean_display,
+"display":"mean_display",
 "advanced":1
 },
 {
 "name":"daybrightness",
-"minimum":brightness_min,
-"maximum":brightness_max,
-"default":brightness_default,
+"minimum":"brightness_min",
+"maximum":"brightness_max",
+"default":"brightness_default",
 "description":"Changes the amount of light in the image.<br>Higher values are brighter.",
 "label":"Brightness",
 "type":"number",
-"display":brightness_display,
+"display":"brightness_display",
 "advanced":0
 },
 {
 "name":"daydelay",
-"minimum":delay_min,
-"maximum":delay_max,
-"default":delay_default,
+"minimum":"delay_min",
+"maximum":"delay_max",
+"default":"delay_default",
 "description":"Delay between daytime images in milliseconds.",
 "label":"Delay",
 "type":"number",
@@ -116,9 +116,9 @@
 },
 {
 "name":"daymaxautogain",
-"minimum":maxautogain_min,
-"maximum":"maxautogain_max,
-"default":maxautogain_default,
+"minimum":"maxautogain_min",
+"maximum":"maxautogain_max",
+"default":"maxautogain_default",
 "description":"Maximum gain when using <b>Auto-Gain</b>.",
 "label":"Max Auto-Gain",
 "type":"number",
@@ -127,9 +127,9 @@
 },
 {
 "name":"daygain",
-"minimum":gain_min,
-"maximum":gain_max,
-"default":gain_default,
+"minimum":"gain_min",
+"maximum":"gain_max",
+"default":"gain_default",
 "description":"Manually sets the light sensitivity of the camera.<br>A high value returns a brighter image but more noise too.",
 "label":"Gain",
 "type":"number",
@@ -143,7 +143,7 @@
 "label":"Binning",
 "type":"select",
 "options": [
-	bin_values
+	"bin_values"
 ],
 "display":1,
 "advanced":1
@@ -159,9 +159,9 @@
 },
 {
 "name":"daywbr",
-"minimum":wbr_min,
-"maximum":wbr_max,
-"default":wbr_default,
+"minimum":"wbr_min",
+"maximum":"wbr_max",
+"default":"wbr_default",
 "description":"Red component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label":"Red Balance",
 "type":"text",
@@ -170,9 +170,9 @@
 },
 {
 "name":"daywbb",
-"minimum":wbb_min,
-"maximum":wbb_max,
-"default":wbb_default,
+"minimum":"wbb_min",
+"maximum":"wbb_max",
+"default":"wbb_default",
 "description":"Blue component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label":"Blue Balance",
 "type":"text",
@@ -195,18 +195,18 @@
 "description":"Activate to use cooling (works only on cooled cameras).",
 "label":"Cooling",
 "type":"checkbox",
-"display":EnableCooler_display,
+"display":"EnableCooler_display",
 "advanced":1
 },
 {
 "name":"dayTargetTemp",
-"minimum":TargetTemp_min,
-"maximum":TargetTemp_max,
-"default":TargetTemp_default,
+"minimum":"TargetTemp_min",
+"maximum":"TargetTemp_max",
+"default":"TargetTemp_default",
 "description":"Sensor's target temperature <i>when cooler is enabled</i> (degrees Celsius).",
 "label":"Target Temp.",
 "type":"number",
-"display":TargetTemp_display,
+"display":"TargetTemp_display",
 "advanced":1
 },
 
@@ -230,9 +230,9 @@
 },
 {
 "name":"nightmaxautoexposure",
-"minimum":maxautoexposure_min,
-"maximum":maxautoexposure_max,
-"default":maxautoexposure_default,
+"minimum":"maxautoexposure_min",
+"maximum":"maxautoexposure_max",
+"default":"maxautoexposure_default",
 "description":"Maximum nighttime Auto-Exposure time in milliseconds.<br>Only applies if nighttime <b>Auto-Exposure</b> is enabled.",
 "label":"Max Auto-Exposure",
 "type":"number",
@@ -241,9 +241,9 @@
 },
 {
 "name":"nightexposure",
-"minimum":exposure_min,
-"maximum":exposure_max,
-"default":exposure_default,
+"minimum":"exposure_min",
+"maximum":"exposure_max",
+"default":"exposure_default",
 "description":"Manual exposure time in milliseconds. Can be a fraction.<br>If using nighttime <b>Auto-Exposure</b>, this number is used as a starting point.",
 "label":"Manual Exposure",
 "type":"number",
@@ -258,25 +258,25 @@
 "description":"The target mean brightness level when <b>Auto-Exposure</b> is on. 1.0 is pure white.<br>Best used when <b>Auto-Exposure</b> and <b>Auto-Gain</b> are on.<br>0 disables this auto-exposure mode.",
 "label":"Mean Target",
 "type":"text",
-"display":mean_display,
+"display":"mean_display",
 "advanced":1
 },
 {
 "name":"nightbrightness",
-"minimum":brightness_min,
-"maximum":brightness_max,
-"default":brightness_default,
+"minimum":"brightness_min",
+"maximum":"brightness_max",
+"default":"brightness_default",
 "description":"Changes the amount of light in the image.<br>Higher values are brighter.",
 "label":"Auto-Exposure Brightness",
 "type":"number",
-"display":brightness_display,
+"display":"brightness_display",
 "advanced":0
 },
 {
 "name":"nightdelay",
-"minimum":delay_min,
-"maximum":delay_max,
-"default":delay_default,
+"minimum":"delay_min",
+"maximum":"delay_max",
+"default":"delay_default",
 "description":"Delay between nighttime images in milliseconds.",
 "label":"Delay",
 "type":"number",
@@ -294,9 +294,9 @@
 },
 {
 "name":"nightmaxautogain",
-"minimum":maxautogain_min,
-"maximum":maxautogain_max,
-"default":maxautogain_default,
+"minimum":"maxautogain_min",
+"maximum":"maxautogain_max",
+"default":"maxautogain_default",
 "description":"Maximum gain when using <b>Auto-Gain</b>.",
 "label":"Max Auto-Gain",
 "type":"number",
@@ -305,9 +305,9 @@
 },
 {
 "name":"nightgain",
-"minimum":gain_min,
-"maximum":gain_max,
-"default":gain_default,
+"minimum":"gain_min",
+"maximum":"gain_max",
+"default":"gain_default",
 "description":"Manually sets the light sensitivity of the camera.<br>A high value returns a brighter image but more noise too.",
 "label":"Gain",
 "type":"text",
@@ -321,7 +321,7 @@
 "label":"Binning",
 "type":"select",
 "options": [
-	bin_values
+	"bin_values"
 ],
 "display":1,
 "advanced":0
@@ -337,9 +337,9 @@
 },
 {
 "name":"nightwbr",
-"minimum":wbr_min,
-"maximum":wbr_max,
-"default":wbr_default,
+"minimum":"wbr_min",
+"maximum":"wbr_max",
+"default":"wbr_default",
 "description":"Red component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label":"Red Balance",
 "type":"text",
@@ -348,9 +348,9 @@
 },
 {
 "name":"nightwbb",
-"minimum":wbb_min,
-"maximum":wbb_max,
-"default":wbb_default,
+"minimum":"wbb_min",
+"maximum":"wbb_max",
+"default":"wbb_default",
 "description":"Blue component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label":"Blue Balance",
 "type":"text",
@@ -373,18 +373,18 @@
 "description":"Activate to use cooling (works only on cooled cameras).",
 "label":"Cooling",
 "type":"checkbox",
-"display":EnableCooler_display,
+"display":"EnableCooler_display",
 "advanced":1
 },
 {
 "name":"nightTargetTemp",
-"minimum":TargetTemp_min,
-"maximum":TargetTemp_max,
-"default":TargetTemp_default,
+"minimum":"TargetTemp_min",
+"maximum":"TargetTemp_max",
+"default":"TargetTemp_default",
 "description":"Sensor's target temperature <i>when cooler is enabled</i> (degrees Celsius).",
 "label":"Target Temp.",
 "type":"number",
-"display":TargetTemp_display,
+"display":"TargetTemp_display",
 "advanced":1
 },
 
@@ -409,83 +409,83 @@
 },
 {
 "name":"saturation",
-"minimum":saturation_min,
-"maximum":saturation_max,
-"default":saturation_default,
+"minimum":"saturation_min",
+"maximum":"saturation_max",
+"default":"saturation_default",
 "description":"Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
 "label":"Saturation",
 "type":"text",
-"display":saturation_display,
+"display":"saturation_display",
 "advanced":1
 },
 {
 "name":"contrast",
-"minimum":contrast_min,
-"maximum":contrast_max,
-"default":contrast_default,
+"minimum":"contrast_min",
+"maximum":"contrast_max",
+"default":"contrast_default",
 "description":"Changes the contrast of an image.",
 "label":"Contrast",
 "type":"text",
-"display":contrast_display,
+"display":"contrast_display",
 "advanced":1
 },
 {
 "name":"sharpness",
-"minimum":sharpness_min,
-"maximum":sharpness_max,
-"default":sharpness_default,
+"minimum":"sharpness_min",
+"maximum":"sharpness_max",
+"default":"sharpness_default",
 "description":"Changes the sharpness of an image.<br>Too sharp and images look unnatural.",
 "label":"Sharpness",
 "type":"text",
-"display":sharpness_display,
+"display":"sharpness_display",
 "advanced":1
 },
 {
 "name":"gamma",
-"minimum":gamma_min,
-"maximum":gamma_max,
-"default":gamma_default,
+"minimum":"gamma_min",
+"maximum":"gamma_max",
+"default":"gamma_default",
 "description":"Changes the difference between light and dark areas.<br>higher values increase contrast.",
 "label":"Gamma",
 "type":"number",
-"display":gamma_display,
+"display":"gamma_display",
 "advanced":1
 },
 {
 "name":"offset",
-"minimum":offset_min,
-"maximum":offset_max,
-"default":offset_default,
+"minimum":"offset_min",
+"maximum":"offset_max",
+"default":"offset_default",
 "description":"Adds about 1/10 the specified value to every pixel to brighten everything.",
 "label":"Offset",
 "type":"number",
-"display":offset_display,
+"display":"offset_display",
 "advanced":1
 },
 {
 "name":"aggression",
-"minimum":aggression_min,
-"maximum":aggression_max,
-"default":aggression_default,
+"minimum":"aggression_min",
+"maximum":"aggression_max",
+"default":"aggression_default",
 "description":"How much of a calculated exposure change should be made during Auto-Exposure?<br>Lower numbers smooth out changes but take longer to react to brightness changes.",
 "label":"Aggression",
 "type":"number",
-"display":aggression_display,
+"display":"aggression_display",
 "advanced":1
 },
 {
 "name":"gaintransitiontime",
-"default":gaintransitiontime_default,
+"default":"gaintransitiontime_default",
 "description":"Number of <b>minutes</b> over which to increase or decrease the gain when switching between day and night.<br>This helps smooth brightness differences.  Only works if nighttime Auto-Gain is off. 0 disables transitions.",
 "label":"Gain Transition Time",
 "type":"number",
-"display":gaintransitiontime_display,
+"display":"gaintransitiontime_display",
 "advanced":1
 },
 {
 "name":"width",
-"minimum":width_min,
-"maximum":width_max,
+"minimum":"width_min",
+"maximum":"width_max",
 "default":0,
 "description":"Image width in pixels. 0 = max sensor width.",
 "label":"Image Width",
@@ -495,8 +495,8 @@
 },
 {
 "name":"height",
-"minimum":height_min,
-"maximum":height_max,
+"minimum":"height_min",
+"maximum":"height_max",
 "default":0,
 "description":"Image height in pixels. 0 = max sensor height.",
 "label":"Image Height",
@@ -512,7 +512,7 @@
 "type":"select",
 "display":1,
 "options": [
-	type_values
+	"type_values"
 ],
 "advanced":1
 },
@@ -542,18 +542,18 @@
 "description":"Automatically set the USB bandwidth.",
 "label":"Auto USB Bandwidth",
 "type":"checkbox",
-"display":autousb_display,
+"display":"autousb_display",
 "advanced":1
 },
 {
 "name":"usb",
-"minimum":usb_min,
-"maximum":usb_max,
-"default":usb_default,
+"minimum":"usb_min",
+"maximum":"usb_max",
+"default":"usb_default",
 "description":"USB bandwidth.<br>If you get ASI_ERROR_TIMEOUT errors in the log file, try chaning this value.",
 "label":"USB Bandwidth",
 "type":"number",
-"display":usb_display,
+"display":"usb_display",
 "advanced":1
 },
 {
@@ -573,7 +573,7 @@
 "label":"Rotation",
 "type":"select",
 "options": [
-	rotation_values
+	"rotation_values"
 ],
 "display":0,
 "advanced":0
@@ -674,7 +674,7 @@
 "description":"Size of the histogram box (X and Y in pixels) and offset from left and top (0-100 percent). Sizes must be even numbers.",
 "label":"Histogram Box",
 "type":"text",
-"display":histogrambox_display,
+"display":"histogrambox_display",
 "advanced":1
 },
 {
@@ -699,7 +699,7 @@
 "description":"Activate to use the version 0.8 exposure method which decreases sensor temperature.  If you see ASI_ERROR_TIMEOUTs in the log file, deactivate this.",
 "label":"Version 0.8 Exposure",
 "type":"checkbox",
-"display":newexposure_display,
+"display":"newexposure_display",
 "advanced":1
 },
 {
@@ -763,7 +763,7 @@
 "description":"Activate to display the camera sensor temperature on the overlay.",
 "label":"Show Temperature",
 "type":"checkbox",
-"display":showTemp_display,
+"display":"showTemp_display",
 "advanced":0
 },
 {
@@ -813,7 +813,7 @@
 "description":"Activate to display the USB Bandwidth value on the overlay.<br>This is primarily for troubleshooting.",
 "label":"Show USB",
 "type":"checkbox",
-"display":showUSB_display,
+"display":"showUSB_display",
 "advanced":1
 },
 {
@@ -831,7 +831,7 @@
 "description":"Enable to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
 "label":"Show Histogram Box",
 "type":"checkbox",
-"display":showhistogrambox_display,
+"display":"showhistogrambox_display",
 "advanced":1
 },
 {

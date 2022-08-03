@@ -17,9 +17,10 @@ define('ALLSKY_WEBSITE',  'XX_ALLSKY_WEBSITE_XX');
 define('ALLSKY_OWNER', 'XX_ALLSKY_OWNER_XX');
 define('ALLSKY_GROUP', 'XX_ALLSKY_GROUP_XX');
 define('ALLSKY_MESSAGES',  'XX_ALLSKY_MESSAGES_XX');
+define('ALLSKY_REPO',  'XX_ALLSKY_REPO_XX');
 define('RASPI_CONFIG',   'XX_RASPI_CONFIG_XX');
 
-// Split the placeholder so it doesn't get replaced if the update script is run multiple times.
+// Split the placeholder so it doesn't get replaced.
 if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	// This file hasn't been updated yet after installation.
 	// This would only happen if they updated this file and not the whole Allsky release,
@@ -33,7 +34,8 @@ if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	exit;
 }
 
-$image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null; $status=null;
+$status = null;		// Global pointer to status messages
+$image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
 
 function initialize_variables() {
 	global $image_name, $delay, $daydelay, $nightdelay, $darkframe, $useLogin;

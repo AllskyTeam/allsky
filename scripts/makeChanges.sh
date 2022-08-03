@@ -14,13 +14,54 @@ source "${ALLSKY_CONFIG}/config.sh"
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
-#### TODO: use getopt
-DEBUG=false
-[ "${1}" = "--debug" ] && DEBUG=true && shift
 
-# Will the caller restart Allsky?  Is 0/1.
-RESTARTING=false
-[ "${1}" = "--restarting" ] && RESTARTING=true && shift
+function usage_and_exit()
+{
+	echo -e "${wERROR}"
+	echo "Usage: ${ME} [--debug] [--cameraTypeOnly] [--restarting] key label old_value new_value [...]"
+	echo -e "${wNC}"
+	echo "There must be a multiple of 4 key/label/old_value/new_value arguments."
+	exit ${1}
+}
+
+# Check arguments
+OK=true
+DEBUG=false
+HELP=false
+RESTARTING=false			# Will the caller restart Allsky?
+CAMERA_TYPE_ONLY=false		# Only update the cameraType ?
+
+while [ $# -gt 0 ]; do
+	ARG="${1}"
+	case "${ARG}" in
+		--debug)
+			DEBUG="true"
+			;;
+		--help)
+			HELP="true"
+			;;
+		--cameraTypeOnly)
+			CAMERA_TYPE_ONLY="true"
+			;;
+		--restarting)
+			RESTARTING="true"
+			;;
+		-*)
+			echo -e "${wERROR}ERROR: Unknown argument: '${ARG}'${wNC}" >&2
+			OK="false"
+			;;
+		*)
+			break
+			;;
+	esac
+	shift
+done
+
+[[ ${HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
+[[ $# -eq 0 ]] && usage_and_exit 1
+[ $(($# % 4)) -ne 0 ] && usage_and_exit 2
+
 
 # This output may go to a web page, so use "w" colors.
 # shell check doesn't realize there were set in variables.sh
@@ -32,15 +73,6 @@ wBOLD="${wBOLD}"
 wNBOLD="${wNBOLD}"
 wNC="${wNC}"
 
-function usage_and_exit()
-{
-	echo -e "${wERROR}Usage: ${ME} [--debug] [--restarting] key label old_value new_value [...]${wNC}" >&2
-	echo "There must be a multiple of 4 key/label/old_value/new_value arguments." >&2
-	exit ${1}
-}
-[ $# -eq 0 ] && usage_and_exit 1
-[ $(($# % 4)) -ne 0 ] && usage_and_exit 2
-
 # Does the change need Allsky to be restarted in order to take affect?
 NEEDS_RESTART=false
 
@@ -48,6 +80,7 @@ RUN_POSTDATA=false
 RUN_POSTTOMAP=false
 POSTTOMAP_ACTION=""
 WEBSITE_CONFIG=()
+
 while [ $# -gt 0 ]; do
 	KEY="${1}"
 	LABEL="${2}"
@@ -62,14 +95,67 @@ while [ $# -gt 0 ]; do
 	# Unfortunately, the Allsky configuration file was already updated,
 	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
 	case "${KEY}" in
+
 		cameraType)
+			# If we can't set the new camera type, it's a major problem so exit right away.
+			# When we're changing cameraType we're not changing anything else.
+
+			# Create the camera capabilities file for the new camera type.
+			CC_FILE="${ALLSKY_CONFIG}/${CC_FILE_NAME}.${CC_FILE_EXT}"
+
+			# Save the current file just in case creating a new one fails.
+			# It's a link so copy it to a temp name, then remove the old name.
+			cp "${CC_FILE}" "${CC_FILE}-OLD"
+			rm -f "${CC_FILE}"
+
+			# Debug level 3 to give the user more info on error.
+			"${ALLSKY_HOME}/capture_${NEW_VALUE}" -debuglevel 3 -cc_file "${CC_FILE}"
+			RET=$?
+			if [ ${RET} -ne 0 ]; then
+				# Restore prior cc file.
+				mv "${CC_FILE}-OLD" "${CC_FILE}"
+				exit ${RET}		# the actual exit code is important
+			fi
+
+			# Create a link to a file that contains the camera type and model in the name.
+			CAMERA_TYPE="${NEW_VALUE}"		# already know it
+			CAMERA_MODEL="$(jq .cameraModel "${CC_FILE}" | sed 's;";;g')"
+			# Get the filename (without extension) and extension of the cc file.
+
+			LINKED_NAME="${ALLSKY_CONFIG}/${CC_FILE_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_FILE_EXT}"
+			# Any old and new camera capabilities file should be the same unless the
+			# Allsky adds or changes capabilities, so delete the old one just in case.
+			ln --force "${CC_FILE}" "${LINKED_NAME}"
+
 			sed -i -e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${NEW_VALUE}\"/" "${ALLSKY_CONFIG}/config.sh" >&2
 			# shellcheck disable=SC2181
 			if [ $? -ne 0 ]; then
 				echo -e "${wERROR}ERROR updating ${wBOLD}${LABEL}${wNBOLD}.${wNC}" >&2
+				mv "${CC_FILE}-OLD" "${CC_FILE}"
+				exit 1
 			fi
+
+			# Remove the old file
+			rm -f "${CC_FILE}-OLD"
+
+			# createAllskyOptions.php will use the cc file and the options template file
+			# to create an OPTIONS_FILE for this camera type/model.
+			CC_FILE="${CC_FILE_NAME}.${CC_FILE_EXT}"		# reset from full name above
+			OPTIONS_FILE="${OPTIONS_FILE_NAME}.${OPTIONS_FILE_EXT}"
+			SETTINGS_FILE="${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
+
+			# .php files don't return error codes so we check if it worked by
+			# looking for a string in its output.
+			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" --dir "${ALLSKY_CONFIG}" --cc_file "${CC_FILE}" --options_file "${OPTIONS_FILE}" --settings_file "${SETTINGS_FILE}" 2>&1)"
+			[ -n "${R}" ] && echo -e "${R}"
+			echo -e "${R}" | grep --silent "XX_WORKED_XX" || exit 2
+
+			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
+			[[ ${CAMERA_TYPE_ONLY} == "true" ]] && exit 0
+
 			NEEDS_RESTART=true
 			;;
+
 		filename)
 			WEBSITE_CONFIG+=("imageName" "${OLD_VALUE}" "${NEW_VALUE}")
 			NEEDS_RESTART=true

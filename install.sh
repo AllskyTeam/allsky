@@ -32,7 +32,7 @@ echo "************************************************"
 echo "*** Welcome to the Allsky Software Installer ***"
 echo "************************************************"
 echo
-TITLE="Allsky Software Installer"
+TITLE="Allsky Installer"
 
 
 ####################### functions
@@ -112,25 +112,18 @@ select_camera_type() {
 }
 
 
-set_camera_type() {
+# Save the camera capabilities and use them to set the WebUI min, max, and defaults.
+get_camera_capabilities() {
 	if [[ -z ${CAMERA_TYPE} ]]; then
-		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in set_camera_type()."
+		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in get_camera_capabilities()."
 		return 1
 	fi
 
-	"${ALLSKY_SCRIPTS}/makeChanges.sh" "cameraType" "Camera Type" "" "${CAMERA_TYPE}"
+	# --cameraTypeOnly tells makeChanges.sh to only change the camera info and exit.
+	"${ALLSKY_SCRIPTS}/makeChanges.sh" --cameraTypeOnly "cameraType" "Camera Type" "" "${CAMERA_TYPE}"
 	# It displays an error message.
-	[ $? -ne 0 ] && return 1
-
-	return 0
-}
-
-
-# Save the camera capabilities and use them to set the WebUI min, max, and defaults.
-save_camera_capabilities() {
-	# Debug leve 3 to give the user more info on error.
-	./capture_${CAMERA_TYPE} -debuglevel 3 -cc_file ${ALLSKY_CONFIG}/cc.json > "${ALLSKY_LOG}" 2>&1
 	RET=$?
+
 	if [ ${RET} -ne 0 ]; then
 		if [ ${RET} -eq ${EXIT_NO_CAMERA} ]; then
 			display_msg error "No camera found."
@@ -141,12 +134,6 @@ save_camera_capabilities() {
 		fi
 		return 1
 	fi
-
-## TODO:
-#  then look in file for CAMERA_TYPE and CAMERA_MODEL and rename cc.json to
-#  ${CAMERA_TYPE}_${CAMERA_MODEL}.json.
-#  Error if the file doesn't exist or capture fails with $? -ne 0.
-#  Check for EXIT_NO_CAMERA_CONNECTED ret code
 
 	return 0
 }
@@ -167,6 +154,7 @@ modify_locations()
 			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
 			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
 			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};" \
+			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
 		"${ALLSKY_WEBUI}/includes/functions.php"
 }
@@ -220,9 +208,9 @@ calc_wt_size
 
 if [[ ${UPDATE} == "true" ]]; then
 	echo -en '\n'
-	echo -e "***************************************"
-	echo    "*** Performing update of the Allsky ***"
-	echo -e "***************************************"
+	echo -e "***********************************"
+	echo    "*** Performing update of Allsky ***"
+	echo -e "***********************************"
 	echo -en '\n'
 
 	save_camera_capabilities
@@ -310,8 +298,14 @@ sudo touch "${ALLSKY_LOG}"
 sudo chmod 664 "${ALLSKY_LOG}"
 sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
 
-# Restore any necessary file
+# Restore any necessary files
 if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
+
+	if [ -f "${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh" ]; then
+		echo -e "${GREEN}* Restoring endOfNight_additionalSteps.sh.${NC}"
+		mv "${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
+	fi
+
 	if [ -d "${PRIOR_INSTALL_DIR}/images" ]; then
 		echo -e "${GREEN}* Restoring images.${NC}"
 		mv "${PRIOR_INSTALL_DIR}/images" "${ALLSKY_HOME}"
@@ -361,10 +355,11 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 fi
 
 if [[ ${NEEDCAM} == "true" ]]; then
-	set_camera_type
+	get_camera_capabilities
 fi
 
 ### TODO: Check for size of RAM+swap during installation (Issue # 969).
+### TODO: Check if prior $ALLSKY_TMP was a memory filesystem.  If not, offer to make $ALLSKY_TMP a memory filesystem.
 
 ### FUTURE: Prompt to install SSL certificate
 
@@ -419,8 +414,16 @@ sudo sed -i -e '/allsky/d' -e '/www-data/d' /etc/sudoers
 do_sudoers
 echo
 
-# TODO: If there was an ${ALLSKY_WEBSITE}, set its old location to ${ALLSKY_WEBSITE_OLD},
-# which may be in /var/www/html/allsky.
+
+OLD_WEBUI_LOCATION="/var/www/html"
+OLD_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
+if [ -d "${OLD_WEBSITE}" ]; then
+	ALLSKY_WEBSITE_OLD="${OLD_WEBSITE}"
+elif [ -d "${PRIOR_INSTALL_DIR}/html/allsky" ]; then
+	ALLSKY_WEBSITE_OLD="${PRIOR_INSTALL_DIR}/html/allsky"
+else
+	ALLSKY_WEBSITE_OLD=""
+fi
 
 # Restore files from any prior ALLSKY_WEBSITE.
 # Note: This MUST come before the old WebUI check below so we don't remove the website
@@ -443,8 +446,6 @@ if [ "${ALLSKY_WEBSITE_OLD}" != "" ]; then
 fi
 
 # Check if a WebUI exists in the old location.
-OLD_WEBUI_LOCATION="/var/www/html"
-OLD_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
 
 if [ -d "${OLD_WEBUI_LOCATION}" ]; then
 	if (whiptail --title "${TITLE}" --yesno "An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so do you want to remove it?" 10 60 \

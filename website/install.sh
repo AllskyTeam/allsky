@@ -6,10 +6,7 @@ fi
 source "${ALLSKY_HOME}/variables.sh"
 
 if [[ $EUID -eq 0 ]]; then
-	echo -e "\n${RED}**********"
-	echo -e "This script must NOT be run as root, do NOT use 'sudo'."
-	echo -e "**********${NC}\n"
-
+	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
 	exit 1
 fi
 
@@ -17,7 +14,45 @@ source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 ME="$(basename "${BASH_ARGV0}")"
 
-CONFIGURATION_FILE_NAME="configuration.json"
+if [[ ${REMOTE_WEBSITE} == "true" ]]; then
+	U1="*******************"	# these must be the same length
+	U2="for remote servers "
+else
+	U1=""
+	U2=""
+fi
+echo
+echo "********************************************${U1}***"
+echo "*** Welcome to the Allsky Website Installer ${U2}***"
+echo "********************************************${U1}***"
+echo
+
+TITLE="Allsky Website Installer"
+ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
+# Get the version now so we can use it with remote installations.
+WEBSITE_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/${BRANCH}/version")"
+
+
+####################### functions
+
+display_msg() {
+	if [[ $1 == "error" ]]; then
+		echo -e "\n${RED}*** ERROR: "
+	elif [[ $1 == "warning" ]]; then
+		echo -e "\n${YELLOW}*** WARNING: "
+	elif [[ $1 == "progress" ]]; then
+		echo -e "${GREEN}* ${2}${NC}"
+		return
+	elif [[ $1 == "info" ]]; then
+		echo -e "${YELLOW}${2}${NC}"
+		return
+	else
+		echo -e "${YELLOW}"
+	fi
+	echo -e "**********"
+	echo -e "${2}"
+	echo -e "**********${NC}"
+}
 
 usage_and_exit()
 {
@@ -43,6 +78,200 @@ usage_and_exit()
 	echo
 	exit ${RET}
 }
+
+
+##### Some files have placeholders for certain locations.  Modify them.
+modify_locations() {
+	display_msg progress "Modifying locations in web files."
+	sed -i -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" "${ALLSKY_WEBSITE}/functions.php"
+}
+
+
+##### Create and upload a new data.json file.
+create_data_json_file() {
+	if [ "${POST_END_OF_NIGHT_DATA}" != "true" ]; then
+		display_msg progress "Enabling POST_END_OF_NIGHT_DATA."
+		sed -i 's/^POST_END_OF_NIGHT_DATA.*/POST_END_OF_NIGHT_DATA="true"/' "${ALLSKY_CONFIG}/config.sh"
+	fi
+
+	# Create the file.  postData.sh copies it to ${ALLSKY_WEBSITE}.
+	OUTPUT="$(${ALLSKY_SCRIPTS}/postData.sh 2>&1)"
+	if [[ $? -ne 0 || ! -f ${ALLSKY_WEBSITE}/data.json ]]; then
+		echo -e "${RED}* Unable to create new 'data.json' file:"
+		echo -e "${OUTPUT}"
+		echo -e "${NC}"
+		echo -e "Make sure 'REMOTE_HOST' is set to a valid server in 'config/ftp-settings.sh',"
+		echo -e "or to '', then run ${ALLSKY_SCRIPTS}/postData.sh to create a 'data.json' file."
+	fi
+}
+
+
+##### Set up the location where the website configuration file will go.
+CONFIG_FILE_DIRECTORY=""
+IMAGE_NAME=""
+ON_PI=""
+set_configuration_file_variables() {
+
+	if [ "${REMOTE_WEBSITE}" = "true" ]; then
+		CONFIG_FILE_DIRECTORY=$"${ALLSKY_CONFIG}"
+		IMAGE_NAME="image.jpg"
+		ON_PI="false"
+	else
+		CONFIG_FILE_DIRECTORY=$"${ALLSKY_WEBSITE}"
+		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
+		ON_PI="true"
+	fi
+}
+
+##### Update the json configuration file, either for the local machine or a remote one.
+update_website_configuration_file() {
+	CONFIG_FILE="${1}"
+
+	display_msg progress "Updating settings in ${CONFIG_FILE}."
+
+
+	if [ "${TIMELAPSE_MINI_IMAGES:-0}" -eq 0 ]; then
+		MINI_TIMELAPSE="XX_MINI_TIMELAPSE_XX"
+		MINI_TIMELAPSE_URL="XX_MINI_TIMELAPSE_URL_XX"
+	else
+		MINI_TIMELAPSE="url"
+		if [ "${REMOTE_WEBSITE}" = "true" ]; then
+			MINI_TIMELAPSE_URL="mini-timelapse.mp4"
+		else
+			MINI_TIMELAPSE_URL="/${IMG_DIR}/mini-timelapse.mp4"
+		fi
+	fi
+
+
+### TODO: Not sure capture programs accept either way.
+
+	# Latitude and longitude may or may not have N/S and E/W.
+	# "N" is positive, "S" negative for LATITUDE.
+	# "E" is positive, "W" negative for LONGITUDE.
+
+	LATITUDE="$(settings ".latitude")"
+	DIRECTION=${LATITUDE:1,-1}			# last character
+	if [ "${DIRECTION}" = "S" ]; then
+		SIGN="-"
+	else
+		SIGN=""
+	fi
+	LATITUDE="${SIGN}${LATITUDE%${DIRECTION}}"
+	if [ "${DIRECTION}" = "S" ]; then
+		AURORAMAP="south"
+	else
+		AURORAMAP="north"
+	fi
+
+	LONGITUDE="$(settings ".longitude")"
+	DIRECTION=${LONGITUDE:1,-1}
+	if [ "${DIRECTION}" = "W" ]; then
+		SIGN="-"
+	else
+		SIGN=""
+	fi
+	LONGITUDE="${SIGN}${LONGITUDE%${DIRECTION}}"
+
+	COMPUTER="$(tail -1 /proc/cpuinfo | sed 's/.*: //')"
+	CAMERA_MODEL="$(settings ".cameraModel")"
+	if [[ ${CAMERA_MODEL} == "null" ]]; then
+		CAMERA_MODEL=""
+	else
+		CAMERA_MODEL=" ${CAMERA_MODEL}"		# adds a space
+	fi
+
+	# There are some settings we can't determine, like LENS.
+	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent \
+		--config "${CONFIG_FILE}" \
+		imageName "" "${IMAGE_NAME}" \
+		latitude "XX_NEED_TO_UPDATE_XX" "${LATITUDE}" \
+		longitude "XX_NEED_TO_UPDATE_XX" "${LONGITUDE}" \
+		auroraMap "XX_NEED_TO_UPDATE_XX" "${AURORAMAP}" \
+		computer "XX_NEED_TO_UPDATE_XX" "${COMPUTER}" \
+		camera "XX_NEED_TO_UPDATE_XX" "${CAMERA_TYPE}${CAMERA_MODEL}" \
+		XX_MINI_TIMELAPSE_XX "XX_MINI_TIMELAPSE_XX" "${MINI_TIMELAPSE}" \
+		XX_MINI_TIMELAPSE_URL_XX "XX_MINI_TIMELAPSE_URL_XX" "${MINI_TIMELAPSE_URL}" \
+		AllskyVersion "XX_ALLSKY_VERSION_XX" "${ALLSKY_VERSION}" \
+		WebsiteVersion "XX_WEBSITE_VERSION_XX" "${WEBSITE_VERSION}" \
+		onPi "" "${ON_PI}"
+}
+
+
+##### Update some of the configuration files and variables
+modify_configuration_variables() {
+	# If the user is updating the website, use the prior config file(s).
+
+	CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+
+	if [ "${SAVED_OLD}" = "true" ]; then
+		A="analyticsTracking.js"
+		if [ -f "${PRIOR_WEBSITE}/${A}" ]; then
+			if cmp --silent "${PRIOR_WEBSITE}/${A}" "${A}" ; then
+				display_msg progress "Restoring prior '${A}'."
+				mv "${PRIOR_WEBSITE}/${A}" .
+			fi
+		fi
+
+		# See if this is an older version of the website
+		VERSION_FILE="${PRIOR_WEBSITE}/version"
+		if [ -f "${VERSION_FILE}" ]; then
+			OLD_VERSION=$( < "${VERSION_FILE}" )
+		else
+			OLD_VERSION="** Unknown, but old **"
+		fi
+		if [[ ${OLD_VERSION} < "${WEBSITE_VERSION}" ]]; then
+			display_msg warning "There is a newer Allsky Website available; please upgrade to it."
+			display_msg info "Your    version: ${OLD_VERSION}"
+			display_msg info "Current version: ${WEBSITE_VERSION}"
+			display_msg info "\nYou can upgrade the Allky Website by executing:"
+			display_msg info "     cd ~/allsky; website/install.sh\n"
+		fi
+
+		if [ "${OLD_WEBSITE_TYPE}" = "new" ]; then
+			display_msg progress "Restoring prior '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
+			cp "${PRIOR_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" "${CONFIG_FILE}"
+
+			# Check if this is an older configuration file.
+			OLD=false
+			PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${CONFIG_FILE}")"
+			if [[ ${PRIOR_CONFIG_VERSION} == "null" ]]; then
+				OLD=true
+			else
+				NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_FILE}")"
+				if [[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]]; then
+					OLD=true
+				fi
+			fi
+			if [[ ${OLD} == "true" ]]; then
+				display_msg warning "Your ${CONFIG_FILE} is an older version."
+				display_msg info "Your    version: ${PRIOR_CONFIG_VERSION}"
+				display_msg info "Current version: ${NEW_CONFIG_VERSION}"
+				display_msg info "\nPlease compare it to the new one in ${REPO_FILE}"
+				display_msg info "to see what fields have been added, changed, or removed.\n"
+			fi
+
+		else
+			# User had the older Website - merge old config files into new one.
+if false; then
+	# TODO: Merge ${ALLSKY_WEBSITE_OLD}/config.js and ${ALLSKY_WEBSITE_OLD}/virtualsky.json
+	# into ${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.
+			display_msg progress "Merging contents of prior 'config.js' and 'virtualsky.json' files into '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
+else
+			display_msg info "When installation is done you must copy the contents of the prior"
+			display_msg info "'${ALLSKY_WEBSITE_OLD}/config.js' and"
+			display_msg info "'${ALLSKY_WEBSITE_OLD}/virtualsky.json' files"
+			display_msg info "into '${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
+			display_msg info "\nCheck the Wiki for the meaning of the MANY new options."
+fi
+		fi
+	else
+		cp "${REPO_FILE}" "${CONFIG_FILE}"
+		update_website_configuration_file "${CONFIG_FILE}"
+	fi
+}
+
+
+####################### main part of program
 
 # Check arguments
 OK="true"
@@ -80,150 +309,10 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-if [[ ${REMOTE_WEBSITE} == "true" ]]; then
-	U1="*******************"	# these must be the same length
-	U2="for remote servers "
-else
-	U1=""
-	U2=""
-fi
-echo
-echo "***********************************************${U1}***"
-echo "*** Welcome to the Allsky Website installation ${U2}***"
-echo "***********************************************${U1}***"
-echo
+REPO_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
+set_configuration_file_variables
 
-##### Some files have placeholders for certain locations.  Modify them.
-modify_locations() {
-	echo -e "${GREEN}* Modifying locations in web files${NC}"
-	sed -i -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" "${ALLSKY_WEBSITE}/functions.php"
-}
-
-
-##### Create and upload a new data.json file.
-create_data_json_file() {
-	if [ "${POST_END_OF_NIGHT_DATA}" != "true" ]; then
-		echo -e "${GREEN}* Enabling POST_END_OF_NIGHT_DATA.${NC}"
-		sed -i 's/^POST_END_OF_NIGHT_DATA.*/POST_END_OF_NIGHT_DATA="true"/' "${ALLSKY_CONFIG}/config.sh"
-	fi
-
-	# Create the file.  postData.sh copies it to ${ALLSKY_WEBSITE}.
-	OUTPUT="$(${ALLSKY_SCRIPTS}/postData.sh 2>&1)"
-	if [[ $? -ne 0 || ! -f ${ALLSKY_WEBSITE}/data.json ]]; then
-		echo -e "${RED}* Unable to create new 'data.json' file:"
-		echo -e "${OUTPUT}"
-		echo -e "${NC}"
-		echo -e "Make sure 'REMOTE_HOST' is set to a valid server in 'config/ftp-settings.sh',"
-		echo -e "or to '', then run ${ALLSKY_SCRIPTS}/postData.sh to create a 'data.json' file."
-	fi
-}
-
-##### Update some of the configuration files and variables
-modify_configuration_variables() {
-	# If the user is updating the website, use the prior config file(s).
-
-	if [ "${SAVED_OLD}" = "true" ]; then
-		A="analyticsTracking.js"
-		if [ -f "${PRIOR_WEBSITE}/${A}" ]; then
-			if cmp --silent "${PRIOR_WEBSITE}/${A}" "${A}" ; then
-				echo -e "${GREEN}* Restoring prior '${A}'.${NC}"
-				mv "${PRIOR_WEBSITE}/${A}" .
-			fi
-		fi
-
-		if [ "${OLD_WEBSITE_TYPE}" = "new" ]; then
-			echo -e "${GREEN}* Restoring prior '${CONFIGURATION_FILE_NAME}'.${NC}"
-			cp "${PRIOR_WEBSITE}/${CONFIGURATION_FILE_NAME}" "${ALLSKY_WEBSITE}"
-		else
-			# User had the older Website - merge old config files into new one.
-if false; then
-	# TODO: Merge ${ALLSKY_WEBSITE_OLD}/config.js and ${ALLSKY_WEBSITE_OLD}/virtualsky.json
-	# into ${ALLSKY_WEBSITE}/${CONFIGURATION_FILE_NAME}.
-			echo -e "${GREEN}* Merging contents of prior 'config.js' and 'virtualsky.json' files into '${CONFIGURATION_FILE_NAME}'.${NC}"
-else
-			echo -e "\b${YELLOW}"
-			echo "* When installation is done you must copy the contents of the prior"
-			echo "'${ALLSKY_WEBSITE_OLD}/config.js' and"
-			echo "'${ALLSKY_WEBSITE_OLD}/virtualsky.json' files"
-			echo "into '${ALLSKY_WEBSITE}/${CONFIGURATION_FILE_NAME}'."
-			echo
-			echo "Check the Wiki for meaning of the options - there are many new ones."
-			echo -e "${NC}\n"
-fi
-		fi
-	else
-		# No old web site, so just set up new one.
-		if [ "${REMOTE_WEBSITE}" = "true" ]; then
-			DIR=$"${ALLSKY_CONFIG}"
-			IMAGE_NAME="image.jpg"
-			ON_PI="false"
-		else
-			DIR=$"${ALLSKY_WEBSITE}"
-			IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
-			ON_PI="true"
-		fi
-		if [ "${TIMELAPSE_MINI_IMAGES:-0}" -eq 0 ]; then
-			MINI_TIMELAPSE="XX_MINI_TIMELAPSE_XX"
-			MINI_TIMELAPSE_URL="XX_MINI_TIMELAPSE_URL_XX"
-		else
-			MINI_TIMELAPSE="url"
-			if [ "${REMOTE_WEBSITE}" = "true" ]; then
-				MINI_TIMELAPSE_URL="mini-timelapse.mp4"
-			else
-				MINI_TIMELAPSE_URL="/${IMG_DIR}/mini-timelapse.mp4"
-			fi
-		fi
-## TODO: hide the "videos", "keograms", and/or "startrails" if not being used.
-		
- 
-		cp "${ALLSKY_REPO}/${CONFIGURATION_FILE_NAME}.repo" "${DIR}/${CONFIGURATION_FILE_NAME}"
-		echo -e "${GREEN}* Updating settings in ${DIR}/${CONFIGURATION_FILE_NAME}${NC}"
-
-### TODO: Not sure capture programs accept either way.
-
-		# Latitude and longitude may or may not have N/S and E/W.
-		# "N" is positive, "S" negative for LATITUDE.
-		# "E" is positive, "W" negative for LONGITUDE.
-
-		LATITUDE="$(settings ".latitude")"
-		DIRECTION=${LATITUDE:1,-1}			# last character
-		if [ "${DIRECTION}" = "S" ]; then
-			SIGN="-"
-		else
-			SIGN=""
-		fi
-		LATITUDE="${SIGN}${LATITUDE%${DIRECTION}}"
-		if [ "${DIRECTION}" = "S" ]; then
-			AURORAMAP="south"
-		else
-			AURORAMAP="north"
-		fi
-
-		LONGITUDE="$(settings ".longitude")"
-		DIRECTION=${LONGITUDE:1,-1}
-		if [ "${DIRECTION}" = "W" ]; then
-			SIGN="-"
-		else
-			SIGN=""
-		fi
-		LONGITUDE="${SIGN}${LONGITUDE%${DIRECTION}}"
-
-		COMPUTER="$(tail -1 /proc/cpuinfo | sed 's/.*: //')"
-		CAMERA_MODEL="$(settings ".cameraModel")"
-
-		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent \
-			--config "${DIR}/${CONFIGURATION_FILE_NAME}" \
-			imageName "" "${IMAGE_NAME}" \
-			latitude "" "${LATITUDE}" \
-			longitude "" "${LONGITUDE}" \
-			auroraMap "" "${AURORAMAP}" \
-			computer "" "${COMPUTER}" \
-			camera "" "${CAMERA_TYPE} ${CAMERA_MODEL}" \
-			XX_MINI_TIMELAPSE_XX "XX_MINI_TIMELAPSE_XX" "${MINI_TIMELAPSE}" \
-			XX_MINI_TIMELAPSE_URL_XX "XX_MINI_TIMELAPSE_URL_XX" "${MINI_TIMELAPSE_URL}" \
-			onPi "" "${ON_PI}"
-	fi
-}
+##### Handle remote websites
 
 if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 	if [[ ${REMOTE_HOST} == "" ]]; then
@@ -235,47 +324,45 @@ if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 		exit 1
 	fi
 
-	if [[ -f ${ALLSKY_CONFIG}/${CONFIGURATION_FILE_NAME} ]]; then
+	if [[ -f ${ALLSKY_CONFIG}/${ALLSKY_WEBSITE_CONFIGURATION_NAME} ]]; then
 		# The user is upgrading a new-style website.
 		HAS_PRIOR_REMOTE_SERVER="true"
-		echo -e "\n${GREEN}"
-		echo "You can continue to configure your remote Allsky Website via the WebUI."
-		echo -e "${NC}\n"
+		display_msg progress "\nYou can continue to configure your remote Allsky Website via the WebUI.\n"
 	else
 		# Don't know if the user is upgrading and old-style remote website,
 		# or they don't even have a remote website.
+
 		HAS_PRIOR_REMOTE_SERVER="false"
 		MSG="You can keep a copy of your remote website's configuration file on your Pi"
 		MSG="${MSG}\nso you can easily edit it in the WebUI and have it automatically uploaded."
 		MSG="${MSG}\n** This is the recommended way of making changes to the configuration **."
 		MSG="${MSG}\n\nWould you like to do that?"
-		if (whiptail --title "Allsky Website Installer" --yesno "${MSG}" 15 60 3>&1 1>&2 2>&3); then 
-			cp "${ALLSKY_REPO}/${CONFIGURATION_FILE_NAME}.repo" "${ALLSKY_CONFIG}/${CONFIGURATION_FILE_NAME}"
-			echo -e "${GREEN}\n"
-			echo "To edit the remote configuration file, go to the 'Editor' page in the WebUI"
-			echo "and select '${CONFIGURATION_FILE_NAME} (remote Allsky Website)'."
-			echo -e "\n${NC}"
+		if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 60 3>&1 1>&2 2>&3); then 
+
+			REMOTE_CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+			cp "${REPO_FILE}" "${REMOTE_CONFIG_FILE}"
+			update_website_configuration_file "${REMOTE_CONFIG_FILE}"
+
+			display_msg progress "\nTo edit the remote configuration file, go to the 'Editor' page in the WebUI\nand select '${ALLSKY_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"
 		else
-			echo -e "\n${YELLOW}"
-			echo "You need to manually copy '${ALLSKY_REPO}/${CONFIGURATION_FILE_NAME}.repo'"
-			echo "to your remote server and rename it to '${CONFIGURATION_FILE_NAME}'."
-			echo -e "${NC}\n"
+			display_msg info "\nYou need to manually copy '${REPO_FILE}'"
+			display_msg info "to your remote server and rename it to '${ALLSKY_WEBSITE_CONFIGURATION_NAME}',"
+			display_msg info "then modify it."
 		fi
 	fi
 
-	echo -e "\n${GREEN}"
-	echo "*** The Pi portion of the Remote Allsky Website Installation is complete."
+	display_msg progress "** The Pi portion of the Remote Allsky Website Installation is complete."
 	if [ "${HAS_PRIOR_REMOTE_SERVER}" = "true" ]; then
-		echo "Please manually update all the files"
-		echo "on the remote server the same way you installed them orginally."
+		display_msg info "Please manually update all the files"
+		display_msg info "on your remote server the same way you installed them orginally."
 	else
-		echo "Please manually install all the files"
-		echo "on the remote server from ${GITHUB_ROOT}/allsky-website.git."
+		display_msg info "Please manually install all the files"
+		display_msg info "on your remote server from ${GITHUB_ROOT}/allsky-website.git."
 ### TODO: Can we tell the user how?
 ### Is it possible to ask them if they want this script to download the files to the Pi
 ### and then ftp the whole directory structure?   Wouldn't that be cool?
 	fi
-	echo -e "${NC}\n"
+
 	exit 0
 fi
 
@@ -286,52 +373,49 @@ fi
 # See if they are upgrading the website, and if so, if the prior website was an "old" one.
 # "old" means in the old location and with the old configuration files.
 if [ -d "${ALLSKY_WEBSITE}" ]; then
-	OLD_WEBSITE_TYPE="new"
 	ALLSKY_WEBSITE_OLD="${ALLSKY_WEBSITE}"
+	OLD_WEBSITE_TYPE="new"
 elif [ -d "/var/www/html/allsky" ]; then
-	OLD_WEBSITE_TYPE="old"
 	ALLSKY_WEBSITE_OLD="/var/www/html/allsky"
+	OLD_WEBSITE_TYPE="old"
 else
-	OLD_WEBSITE_TYPE=""
 	ALLSKY_WEBSITE_OLD=""
+	OLD_WEBSITE_TYPE=""
 fi
 
 
 # Check if the user is updating an existing installation.
 # This really only applies if they manually update some files rather than the whole release,
 # and ideally would never happen.
+### TODO: Is this still needed?  Check the code to see if it ever mentions "--update".
 if [ "${UPDATE}" = "true" ] ; then
 	if [ ! -d "${ALLSKY_WEBSITE}" ]; then
-		echo -e "\n${RED}"
-		echo "*** ERROR: --update specified but no existing website found at '${ALLSKY_WEBSITE}'."
-		echo -e "${NC}\n"
+		display_msg error " --update specified but no existing website found at '${ALLSKY_WEBSITE}'."
 		exit 2
 	fi
 
 	modify_locations
 	create_data_json_file
 
-	echo -e "\n${GREEN}* Update complete${NC}\n"
+	display_msg progress -e "\nUpdate complete!\n"
 	exit 0
 fi
 
 
-if [ -d "${ALLSKY_WEBSITE_OLD}" ]; then
+if [[ -n ${ALLSKY_WEBSITE_OLD} &&  -d "${ALLSKY_WEBSITE_OLD}" ]]; then
 	# git will fail if the new directory already exists and has something in it
 	PRIOR_WEBSITE="${ALLSKY_WEBSITE}-OLD"
 	if [ -d "${PRIOR_WEBSITE}" ]; then
-		echo -e "\n${RED}"
-		echo "*** ERROR: A saved copy of a prior Allsky Website already exists."
-		echo "See '${PRIOR_WEBSITE}'."
-		echo "Can only have one saved prior directory at a time.  Exiting."
-		echo -e "${NC}\n"
+		display_msg error "A saved copy of a prior Allsky Website already exists."
+		display_msg info "See '${PRIOR_WEBSITE}'."
+		display_msg info "Can only have one saved prior directory at a time.  Exiting.\n"
 		exit 3
 	fi
 
-	echo -e "${GREEN}* Moving prior website to '${PRIOR_WEBSITE}'${NC}"
+	display_msg progress "Moving prior website to '${PRIOR_WEBSITE}'."
 	mv "${ALLSKY_WEBSITE}" "${PRIOR_WEBSITE}"
 	if [ $? -ne 0 ]; then
-		echo -e "\n${RED}*** ERROR: Unable to move prior website.  Exiting.${NC}\n"
+		display_msg error "Unable to move prior website.  Exiting.\n"
 		exit 3
 	fi
 	SAVED_OLD=true
@@ -340,24 +424,22 @@ else
 fi
 
 if [ "${BRANCH}" = "" ]; then
-	B=""
-else
-	B=" from branch ${BRANCH}"
-	BRANCH="-b ${BRANCH}"
+	BRANCH="master"
 fi
-echo -e "${GREEN}* Fetching new website files$B into '${ALLSKY_WEBSITE}'${NC}"
+B=" from branch ${BRANCH}"
+BRANCH="-b ${BRANCH}"
+
+display_msg progress "Fetching new website files$B into '${ALLSKY_WEBSITE}'."
 git clone ${BRANCH} ${GITHUB_ROOT}/allsky-website.git "${ALLSKY_WEBSITE}"
 if [ $? -ne 0 ]; then
-	echo -e "\n${RED}"
-	echo "*** ERROR: Unable to get Allsky Website files from git."
-	echo -e "${NC}\n"
+	display_msg error "Unable to get Allsky Website files from git.\n"
 	exit 4
 fi
 echo
 
 cd "${ALLSKY_WEBSITE}" || exit 1
 
-echo -e "${GREEN}* Creating thumbnails directories${NC}"
+display_msg progress "Creating thumbnails directories."
 mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails
 
 modify_locations
@@ -373,7 +455,7 @@ if [ "${SAVED_OLD}" = "true" ]; then
 	fi
 	count=$(ls -1 "${PRIOR_WEBSITE}"/videos/allsky-* 2>/dev/null  | wc -l)
 	if [ "${count}" -ge 1 ]; then
-		echo -e "${GREEN}* Restoring prior videos.${NC}"
+		display_msg progress "Restoring prior videos."
 		mv "${PRIOR_WEBSITE}"/videos/allsky-*   videos
 	fi
 
@@ -382,7 +464,7 @@ if [ "${SAVED_OLD}" = "true" ]; then
 	fi
 	count=$(ls -1 "${PRIOR_WEBSITE}"/keograms/keogram-* 2>/dev/null | wc -l)
 	if [ "${count}" -ge 1 ]; then
-		echo -e "${GREEN}* Restoring prior keograms.${NC}"
+		display_msg progress "Restoring prior keograms."
 		mv "${PRIOR_WEBSITE}"/keograms/keogram-*   keograms
 	fi
 
@@ -391,39 +473,35 @@ if [ "${SAVED_OLD}" = "true" ]; then
 	fi
 	count=$(ls -1 "${PRIOR_WEBSITE}"/startrails/startrails-* 2>/dev/null | wc -l)
 	if [ "${count}" -ge 1 ]; then
-		echo -e "${GREEN}* Restoring prior startrails.${NC}"
+		display_msg progress "Restoring prior startrails."
 		mv "${PRIOR_WEBSITE}"/startrails/startrails-*   startrails
 	fi
 
 	if [ -d "${PRIOR_WEBSITE}/myImages" ]; then
-		echo -e "${GREEN}* Restoring prior 'myImages' directory.${NC}"
+		display_msg progress "Restoring prior 'myImages' directory."
 		mv "${PRIOR_WEBSITE/myImages}"   .
 	fi
 fi
 
-echo -e "${GREEN}* Fixing ownership and permissions${NC}"
+display_msg progress "Fixing ownership and permissions."
 U=$(id --name --user)		# User running this script
 sudo chown -R "${U}:www-data" .
 find ./ -type f -exec chmod 644 {} \;
 find ./ -type d -exec chmod 775 {} \;
 
 
-echo
-echo -e "${GREEN}***** Installation complete *****${NC}"
-echo
-
+display_msg progress "\n**** Installation complete *****\n"
 echo    "+++++++++++++++++++++++++++++++++++++"
+
 if [ "${SAVED_OLD}" = "true" ]; then
-	echo -e "Your prior website is in '${PRIOR_WEBSITE}'."
-	echo    "All your prior videos, keograms, and startrails were MOVED to the updated website."
-	echo -e "\nAfter you are convinced everything is working, remove your prior version.\n"
+	display_msg info "Your prior website is in '${PRIOR_WEBSITE}'."
+	display_msg info "All your prior videos, keograms, and startrails were MOVED to the updated website."
+	display_msg info "\nAfter you are convinced everything is working, remove your prior version.\n"
 else
-	echo -e "\n${YELLOW}"
-	echo    "Before using the website you must edit its configuration by clicking on"
-	echo	"the 'Editor' link in the WebUI, then select the ${CONFIGURATION_FILE_NAME} entry."
-	echo
-	echo	"There are many options, so see ${GITHUB_ROOT}/allsky/wiki/allsky-website-Settings"
-	echo	"for more information".
-	echo -e "${NC}\n"
+	display_msg info "\nBefore using the website you must edit its configuration by clicking on"
+	display_msg info "the 'Editor' link in the WebUI, then select the ${ALLSKY_WEBSITE_CONFIGURATION_NAME} entry."
+	display_msg info "\nThere are many options, so see ${GITHUB_ROOT}/allsky/wiki/allsky-website-Settings"
+	display_msg info "for more information.\n"
 fi
+
 echo

@@ -94,10 +94,10 @@ select_camera_type() {
 	NEEDCAM=false
 
 	if [[ ${HAS_PRIOR_ALLSKY} == "true" && ${HAS_NEW_PRIOR_ALLSKY} == "true" ]]; then
-		# New style Allsky with CAMERA_TYPE in confgi.sh
+		# New style Allsky with CAMERA_TYPE in config.sh
 		OLD_CONFIG="${PRIOR_INSTALL_DIR}/config/config.sh"
 		if [ -f "${OLD_CONFIG}" ]; then
-			CAMERA_TYPE=$(source "${OLD_CONFIG}"; echo "${CAMERA_TYPE}")
+			CAMERA_TYPE=$(source "${OLD_CONFIG}" >/dev/null 2>&1; echo "${CAMERA_TYPE}")
 			[[ ${CAMERA_TYPE} != "" ]] && return
 		fi
 	fi
@@ -123,8 +123,9 @@ save_camera_capabilities() {
 	fi
 
 	# --cameraTypeOnly tells makeChanges.sh to only change the camera info and exit.
+	# It displays any error messages.
+	echo -e "${GREEN}* Setting up WebUI options for '${CAMERA_TYPE}' cameras.${NC}"
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" --cameraTypeOnly "cameraType" "Camera Type" "" "${CAMERA_TYPE}"
-	# It displays an error message.
 	RET=$?
 
 	if [ ${RET} -ne 0 ]; then
@@ -216,6 +217,7 @@ if [[ ${UPDATE} == "true" ]]; then
 	echo -e "***********************************"
 	echo -en '\n'
 
+	source "${ALLSKY_CONFIG}/config.sh"		# Sets CAMERA_TYPE
 	save_camera_capabilities
 	modify_locations
 
@@ -268,7 +270,6 @@ fi
 
 select_camera_type
 
-
 echo -e "${GREEN}* Installing dependencies\n${NC}"
 sudo make deps
 if [ $? -ne 0 ]; then
@@ -317,29 +318,39 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 		mv "${PRIOR_INSTALL_DIR}/darks" "${ALLSKY_HOME}"
 	fi
 
-	PRIOR_WEBSITE="${PRIOR_INSTALL_DIR}/html/allsky"
-	if [ -d "${PRIOR_WEBSITE}" ]; then
-		echo -e "${GREEN}* Restoring darks.${NC}"
-		mv "${PRIOR_WEBSITE}" "${ALLSKY_WEBSITE}/.."
-	fi
+	PRIOR_CONFIG_DIR="${PRIOR_INSTALL_DIR}/config"
 
-	if [ -f "${PRIOR_INSTALL_DIR}/config/raspap.auth" ]; then
+	if [ -f "${PRIOR_CONFIG_DIR}/raspap.auth" ]; then
 		echo -e "${GREEN}* Restoring WebUI security settings.${NC}"
-		mv "${PRIOR_INSTALL_DIR}/config/raspap.auth" "${ALLSKY_CONFIG}"
+		mv "${PRIOR_CONFIG_DIR}/raspap.auth" "${ALLSKY_CONFIG}"
 	fi
-	if [ -f "${PRIOR_INSTALL_DIR}/config/raspap.php" ]; then
-		mv "${PRIOR_INSTALL_DIR}/config/raspap.php" "${ALLSKY_CONFIG}"
+	if [ -f "${PRIOR_CONFIG_DIR}/raspap.php" ]; then
+		mv "${PRIOR_CONFIG_DIR}/raspap.php" "${ALLSKY_CONFIG}"
 	fi
 
-	if [ -f "${PRIOR_INSTALL_DIR}/config/configuration.json" ]; then
+	if [ -f "${PRIOR_CONFIG_DIR}/configuration.json" ]; then
 		echo -e "${GREEN}* Restoring remote Allsky Website configuration.${NC}"
-		mv "${PRIOR_INSTALL_DIR}/config/configuration.json" "${ALLSKY_CONFIG}"
+		mv "${PRIOR_CONFIG_DIR}/configuration.json" "${ALLSKY_CONFIG}"
+## TODO: should probably check if the version has changed.
 	fi
+
+	if [ -f "${PRIOR_CONFIG_DIR}/uservariables.sh" ]; then
+		echo -e "${GREEN}* Restoring uservariables.sh.${NC}"
+		mv "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
+	fi
+
+	if [ -f "${PRIOR_CONFIG_DIR}/settings.json" ]; then
+		echo -e "${GREEN}* Restoring WebUI settings.${NC}"
+		# This file is probably a link to a camera type/model-specific file,
+		# so copy it instead of moving it to not break the link.
+		cp "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
+	fi
+	# Do NOT restores options.json - it will be recreated.
 
 	echo -e "${GREEN}* Restoring settings from configuration files.${NC}"
 	# This may miss really-old variables that no longer exist.
 ## TODO: automate this
-# ( source ${PRIOR_INSTALL_DIR}/config/ftp-settings.sh
+# ( source ${PRIOR_CONFIG_DIR}/ftp-settings.sh
 #	for each variable:
 #		/^variable/ c;variable=$oldvalue;
 # ) > /tmp/x
@@ -426,14 +437,17 @@ else
 	ALLSKY_WEBSITE_OLD=""
 fi
 
-# Restore files from any prior ALLSKY_WEBSITE.
-# Note: This MUST come before the old WebUI check below so we don't remove the website
-# before moving the files to the new location.
+# Move any prior ALLSKY_WEBSITE to the new location.
+# This HAS to be done since the lighttpd server only looks in the new location.
+# Note: This MUST come before the old WebUI check below so we don't remove the prior website
+# when we remove the prior WebUI.
+
 if [ "${ALLSKY_WEBSITE_OLD}" != "" ]; then
-	echo -e "${GREEN}* Restoring ${ALLSKY_WEBSITE_OLD}${NC}"
+	echo -e "${GREEN}* Moving prior Allsky Website from ${ALLSKY_WEBSITE_OLD}${NC} to new location."
 	OK=true
 	if [ -d "${ALLSKY_WEBSITE}" ]; then
 		# Hmmm.  There's an old webite AND a new one.
+		# Allsky doesn't ship with the website directory, so not sure how one got there...
 		# Try to remove the new one - if it's not empty the remove will fail.
 		rmdir "${ALLSKY_WEBSITE}" 
 		if [ $? -ne 0 ]; then
@@ -443,8 +457,31 @@ if [ "${ALLSKY_WEBSITE_OLD}" != "" ]; then
 			OK=false
 		fi
 	fi
-	[[ ${OK} = "true" ]] && sudo mv "${ALLSKY_WEBSITE_OLD}" "${ALLSKY_WEBSITE}"
+	if [[ ${OK} = "true" ]]; then
+		sudo mv "${ALLSKY_WEBSITE_OLD}" "${ALLSKY_WEBSITE}"
+		PRIOR_SITE="${ALLSKY_WEBSITE}"
+	else
+		# Move failed, but still check if prior website is outdated.
+		PRIOR_SITE="${ALLSKY_WEBSITE_OLD}"
+	fi
+
+	# Check if the prior website is outdated.
+	VERSION_FILE="${PRIOR_SITE}/version"
+	if [ -f "${VERSION_FILE}" ]; then
+		OLD_VERSION=$(< "${VERSION_FILE}/version")
+	else
+		OLD_VERSION="** Unknown, but old **"
+	fi
+	NEW_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/version")"
+	if [[ ${OLD_VERSION} != "${NEW_VERSION}" ]]; then
+		display_msg warning "There is a newer Allsky Website available; please upgrade to it."
+		display_msg "" "Your    version: ${OLD_VERSION}"
+		display_msg "" "Current version: ${NEW_VERSION}"
+		display_msg "" "\nAFTER you reboot, you can upgrade the Allky Website by executing:"
+		display_msg "" "     cd ~/allsky; website/install.sh\n"
+	fi
 fi
+
 
 # Check if a WebUI exists in the old location.
 
@@ -453,51 +490,23 @@ if [ -d "${OLD_WEBUI_LOCATION}" ]; then
 		3>&1 1>&2 2>&3); then 
 		echo -e "${GREEN}* Removing old WebUI in ${OLD_WEBUI_LOCATION}${NC}"
 
-		# If an Allsky Website exists, save it before possibly blowing away the old WebUI.
-		SAVED_OLD_WEBSITE=""
-		if [ -d "${OLD_WEBSITE}" ]; then	# Save it
-			SAVED_OLD_WEBSITE="$(dirname "${OLD_WEBUI_LOCATION}")"
-			sudo mv "${OLD_WEBSITE}" "${SAVED_OLD_WEBSITE}"
-		fi
-
 		sudo rm -fr "${OLD_WEBUI_LOCATION}"
-
-		if [[ -n ${SAVED_OLD_WEBSITE} ]]; then		# Restore it
-			sudo mkdir "${OLD_WEBUI_LOCATION}"
-			sudo mv "${SAVED_OLD_WEBSITE}" "${OLD_WEBSITE}"
-		fi
 
 	else	# they don't want to remove the old WebUI.
 		display_msg warning "The old WebUI files are no longer used and are just taking up disk space."
+		echo
 	fi
 fi
+
+save_camera_capabilities
 
 echo -e "${GREEN}* Setting permissions on WebUI files.${NC}"
 # The files should already be the correct permissions/owners, but just in case, set them.
-find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
-find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
+# We don't know what permissions may have been on the old website, so use "sudo".
+sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
+sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
 chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 
-
-# Check if there's an outdated website in the old or new location.
-# If so, suggest the user update it after the reboot.
-if [ -d "${OLD_WEBSITE}" ]; then
-	display_msg warning "There is an old version of the Allsky Website in ${OLD_WEBSITE}."
-	display_msg "" "You should update to the newest version after rebooting your Pi"
-	display_msg "" "by executing 'cd ~/allsky; website/install.sh'.\n"
-
-elif [[ ${HAS_PRIOR_ALLSKY} == "true" && -d "${PRIOR_INSTALL_DIR}/html/allsky" ]]; then
-	# Newer location of website - see if it's the current version.
-	OLD_VERSION=$(< "${PRIOR_INSTALL_DIR}/version")
-	NEW_VERSION="$(curl "${GITHUB_RAW_ROOT}/allsky-website/version")"
-	if [[ ${OLD_VERSION} != "${NEW_VERSION}" ]]; then
-		display_msg warning "There is a newer Allsky Website and we suggest you upgrade to it."
-		display_msg "" "Your    version: ${OLD_VERSION}"
-		display_msg "" "Current version: ${NEW_VERSION}"
-		display_msg "" "\nAFTER you reboot, you can upgrade by executing:"
-		display_msg "" "     cd ~/allsky; website/install.sh\n"
-	fi
-fi
 
 ######## All done
 

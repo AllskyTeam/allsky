@@ -77,6 +77,7 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	# Location of optional allsky-website package.
 	ALLSKY_WEBSITE=${ALLSKY_WEBSITE:-${ALLSKY_WEBUI}/allsky}
+	ALLSKY_WEBSITE_CONFIGURATION_NAME="configuration.json"
 
 	# Root of GitHub locations - repository, and contents of a file.
 	GITHUB_ROOT="https://github.com/thomasjacquin"

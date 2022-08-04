@@ -107,5 +107,6 @@
 			{ "comment": "Add popout items above." }
 		]
 	},
-	"AllskyVersion" : "XX_ALLSKY_VERSION_XX"
+	"AllskyVersion" : "XX_ALLSKY_VERSION_XX",
+	"ConfigVersion" : "1"
 }

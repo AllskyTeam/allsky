@@ -219,3 +219,4 @@ FILENAME="${FULL_FILENAME%.*}"
  
 # So scripts can conditionally output messages.
 ALLSKY_DEBUG_LEVEL="$(settings '.debuglevel')"
+ALLSKY_VERSION="XX_ALLSKY_VERSION_XX"	# Updated during installation

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Update the specified Allsky Website configuration file; it will either be .json or .js.
+# Update the specified Allsky Website configuration file.
 
 ME="$(basename "${BASH_ARGV0}")"
 
@@ -34,8 +34,8 @@ function usage_and_exit()
 	else
 		C="${wERROR}"
 	fi
-	echo -e "${C}Usage: ${ME} [--help] [--debug] [--silent] [--config file] key old_value new_value [...]${wNC}" >&2
-	echo "There must be a multiple of 3 arguments." >&2
+	echo -e "${C}Usage: ${ME} [--help] [--debug] [--silent] [--config file] key new_value [...]${wNC}" >&2
+	echo "There must be a multiple of 2 arguments." >&2
 	exit ${RET}
 }
 # Check arguments
@@ -78,7 +78,7 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 [[ $# -eq 0 ]] && usage_and_exit 1
-[[ $(($# % 3)) -ne 0 ]] && usage_and_exit 2
+[[ $(($# % 2)) -ne 0 ]] && usage_and_exit 2
 
 if [[ ${CONFIG_FILE} != "" ]]; then
 	if [[ ! -f "${CONFIG_FILE}" ]]; then
@@ -91,64 +91,52 @@ else
 	if [ ! -f "${CONFIG_FILE}" ]; then
 		CONFIG_FILE="${ALLSKY_CONFIG}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"	# remote website
 		if [ ! -f "${CONFIG_FILE}" ]; then
-			# OLD .js name - leave for compatibility for a while
-			CONFIG_FILE="${WEBSITE_DIR}/config.js"			# local website, old name
-			if [ ! -f "${CONFIG_FILE}" ]; then
-				# Can't find the configuration file on the Pi or for remote.
-				echo -e "${wWARNING}WARNING: No configuration file found.${wNC}" >&2
-				exit 99
-			fi
+			# Can't find the configuration file on the Pi or for remote.
+			echo -e "${wWARNING}WARNING: No configuration file found.${wNC}" >&2
+			exit 99
 		fi
 	fi
 fi
-EXTENSION="${CONFIG_FILE##*.}"
-if [[ ${EXTENSION} == "json" ]]; then
-	Q='"'		# JSON files have quotes around field names
-else
-	Q=''		# .js
-fi
 
-SED_STRING=()
+#shellcheck disable=SC2191
+JQ_STRING=(.comment = .comment)
 OUTPUT_MESSAGE=""
+NUMRE="^[+-]?[0-9]+([.][0-9]+)?$"
+
 while [ $# -gt 0 ]; do
 	FIELD="${1}"
-	OLD_VALUE="${2}"
+	NEW_VALUE="${2}"
 	# Convert HTML code for apostrophy back to character.
 	apos="&#x27"
-	NEW_VALUE="${3/${apos}/\'}"
+	NEW_VALUE="${NEW_VALUE/${apos}/\'}"
 	NEW="${NEW_VALUE}"
+	NEW_VALUE="${NEW_VALUE//\"/\\\"}"	# Handle double quotes
 
 	[ "${DEBUG}" = "true" ] && echo -e "${wDEBUG}DEBUG: update '${FIELD}' to [${NEW_VALUE}].${wNC}"
 
-	# TODO: Use a true JSON program so it'll handle fields within other fields,
-	# TODO: and we don't have to worry about whether or not the ":" has whitespace before or after it,
-	# TODO: or if there's a trailing comma.
-	if [ -n "${OLD_VALUE}" ]; then
-		# If ${OLD_VALUE} is set, only update its value, not the whole line.
-		SED_STRING+=(-e "/[ \t]*${Q}${FIELD}${Q}[ \t]*/ s;${OLD_VALUE};${NEW_VALUE};")
-	else
-		# Only put quotes around ${NEW_VALUE} if it's a string,
-		# i.e., not a number or a special name, or is blank.
-		if [[ ${NEW_VALUE} == "" || (-n ${NEW_VALUE##?([+-])+([0-9.])} && ${NEW_VALUE} != "true" && ${NEW_VALUE} != "false" && ${NEW_VALUE} != "null") ]]; then
-			NEW_VALUE="${Q}${NEW_VALUE}${Q}"
-		fi
-		# Only replace the value, which we consider anything after the ":"
-# TODO: BUG: This also replaces anything after the value.
-		SED_STRING+=(-e "/[ \t]*${Q}${FIELD}${Q}[ \t]*:/    s;:[ \t].*;: ${NEW_VALUE},;")
+	# Only put quotes around ${NEW_VALUE} if it's a string,
+	# i.e., not a number or a special name.
+	if  [[ ! (${NEW_VALUE} =~ ${NUMRE}) && ${NEW_VALUE} != "true" && ${NEW_VALUE} != "false" && ${NEW_VALUE} != "null" ]]; then
+		Q='"'
+		NEW_VALUE="${Q}${NEW_VALUE}${Q}"
 	fi
-	shift 3
+	JQ_STRING+=( "| .${FIELD} = ${NEW_VALUE}" )
+
+	shift 2
 
 	OUTPUT_MESSAGE="${OUTPUT_MESSAGE}'${FIELD}' updated to ${wBOLD}${NEW}${wNBOLD}."
 	[ $# -gt 0 ] && OUTPUT_MESSAGE="${OUTPUT_MESSAGE}${wBR}"
 done
 
+
 if [[ ${DEBUG} == "true" ]]; then
 	echo -e "${wDEBUG}DEBUG: not running:"
 	# shellcheck disable=SC2145
-	echo -e "  sed -i ${SED_STRING[@]} ${CONFIG_FILE}${wNC}"
+	echo -e "  jq '${JQ_STRING[@]}' ${CONFIG_FILE}${wNC}"
 else
-	# shellcheck disable=SC2145
-	if OUTPUT="$(sed -i "${SED_STRING[@]}" "${CONFIG_FILE}" 2>&1)"; then
+	# shellcheck disable=SC2124
+	S="${JQ_STRING[@]}"
+	if OUTPUT="$(jq "${S}" "${CONFIG_FILE}" 2>&1 > /tmp/x && mv /tmp/x "${CONFIG_FILE}")"; then
 		[ "${SILENT}" = "false" ] && echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
 	else
 		echo -e "${wERROR}ERROR: unable to update data in '${CONFIG_FILE}':${wNC}" >&2

@@ -164,11 +164,6 @@ int RPicapture(config cg, cv::Mat *image)
 
 	if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 	{
-if (0 && cg.currentExposure_us != myRaspistillSetting.shutter_us)
-{
-printf("xxxxxxxxxxx cg.currentExposure_us = %s != ", length_in_units(cg.currentExposure_us, true));
-printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSetting.shutter_us, true));
-}
 		cg.currentExposure_us = myRaspistillSetting.shutter_us;
 	}
 
@@ -624,7 +619,7 @@ int main(int argc, char *argv[])
 		{
 			CG.myModeMeanSetting.modeMean = true;
 			myModeMeanSetting.meanValue = CG.myModeMeanSetting.currentMean;
-			if (! aegInit(CG, CG.cameraMinExposure_us, CG.cameraMinGain, myRaspistillSetting, myModeMeanSetting))
+			if (! aegInit(CG, myRaspistillSetting, myModeMeanSetting))
 			{
 				closeUp(EXIT_ERROR_STOP);
 			}

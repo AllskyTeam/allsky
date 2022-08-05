@@ -102,7 +102,7 @@ bool aegInit(config cg, int exposure_us, double gain,
 	}
 	currentModeMeanSetting.minExposure_us = cg.cameraMinExposure_us;
 	currentModeMeanSetting.maxExposure_us = cg.currentMaxAutoExposure_us;
-	currentModeMeanSetting.minGain = cg.cameraMinGain.
+	currentModeMeanSetting.minGain = cg.cameraMinGain;
 	currentModeMeanSetting.maxGain = cg.currentMaxAutoGain;
 
 	Log(4, "  > Valid exposureLevels: %'d to %'d starting at %d\n",
@@ -339,7 +339,7 @@ void aegGetNextExposureSettings(config * cg,
 			double newGain = std::min(cg->currentGain, max_);
 
 			max_ = std::max((double)cg->cameraMinExposure_us, (double)exposureTimeEff_us / newGain);
-			newExposureTime_us = std::min((double)cg->currentExposure_us, max_)
+			newExposureTime_us = std::min((double)cg->currentExposure_us, max_);
 
 printf("=== newGain=%f, cg->currentExposure_us=%s, max=%f\n", newGain, length_in_units(cg->currentExposure_us, true), max_);
 printf("===== exposureTimeEff_us=%s\n", length_in_units(exposureTimeEff_us, true));
@@ -367,15 +367,15 @@ printf("===== exposureTimeEff_us=%s\n", length_in_units(exposureTimeEff_us, true
 			}
 		}
 
-		else if (currentModeMeanSetting.mean_auto == MEAN_AUTO_GAIN_ONLY) {
+		else if (currentModeMeanSetting.meanAuto == MEAN_AUTO_GAIN_ONLY) {
 			newExposureTime_us = cg->currentExposure_us;
-			max_ = std::max((double)cg->minCameraGain, (double)ExposureTimeEff_us / (double)cg->currentExposure_us);
-			currentRaspistillSetting.analoggain = std::min(cg->currentGain, max);
+			max_ = std::max((double)cg->cameraMinGain, (double)exposureTimeEff_us / (double)cg->currentExposure_us);
+			currentRaspistillSetting.analoggain = std::min(cg->currentGain, max_);
 		}
 
-		else if (currentModeMeanSetting.mean_auto == MEAN_AUTO_EXPOSURE_ONLY) {
+		else if (currentModeMeanSetting.meanAuto == MEAN_AUTO_EXPOSURE_ONLY) {
 			currentRaspistillSetting.analoggain = cg->currentGain;
-			max_ = std::max((double)cg->cameraMinExposure, (double)ExposureTimeEff_us / cg->currentGain);
+			max_ = std::max((double)cg->cameraMinExposure_us, (double)exposureTimeEff_us / cg->currentGain);
 			newExposureTime_us = std::min((double)cg->currentExposure_us, max_);
 		}
 

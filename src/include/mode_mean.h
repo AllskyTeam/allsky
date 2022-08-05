@@ -40,8 +40,6 @@ struct modeMeanSetting {
 
 	double const shuttersteps = 6.0;		// shuttersteps
 	int const historySize	= 3;			// Number of last images for mean target calculation.
-	int quickstart			= 10;			// Shorten delay between captures for this many images.
-											// to help get us to a good exposure quicker.
 	double mean_p0 = DEFAULT_MEAN_P0;		// ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2
 	double mean_p1 = DEFAULT_MEAN_P1;
 	double mean_p2 = DEFAULT_MEAN_P2;

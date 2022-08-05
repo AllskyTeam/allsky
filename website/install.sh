@@ -14,6 +14,9 @@ source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 ME="$(basename "${BASH_ARGV0}")"
 
+TITLE="Allsky Website Installer"
+ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
+
 if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 	U1="*******************"	# these must be the same length
 	U2="for remote servers "
@@ -27,10 +30,6 @@ echo "*** Welcome to the Allsky Website Installer ${U2}***"
 echo "********************************************${U1}***"
 echo
 
-TITLE="Allsky Website Installer"
-ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
-# Get the version now so we can use it with remote installations.
-WEBSITE_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/${BRANCH}/version")"
 
 
 ####################### functions
@@ -129,7 +128,6 @@ update_website_configuration_file() {
 
 	display_msg progress "Updating settings in ${CONFIG_FILE}."
 
-
 	if [ "${TIMELAPSE_MINI_IMAGES:-0}" -eq 0 ]; then
 		MINI_TIMELAPSE="XX_MINI_TIMELAPSE_XX"
 		MINI_TIMELAPSE_URL="XX_MINI_TIMELAPSE_URL_XX"
@@ -141,9 +139,6 @@ update_website_configuration_file() {
 			MINI_TIMELAPSE_URL="/${IMG_DIR}/mini-timelapse.mp4"
 		fi
 	fi
-
-
-### TODO: Not sure capture programs accept either way.
 
 	# Latitude and longitude may or may not have N/S and E/W.
 	# "N" is positive, "S" negative for LATITUDE.
@@ -192,7 +187,6 @@ update_website_configuration_file() {
 		XX_MINI_TIMELAPSE_XX "XX_MINI_TIMELAPSE_XX" "${MINI_TIMELAPSE}" \
 		XX_MINI_TIMELAPSE_URL_XX "XX_MINI_TIMELAPSE_URL_XX" "${MINI_TIMELAPSE_URL}" \
 		AllskyVersion "XX_ALLSKY_VERSION_XX" "${ALLSKY_VERSION}" \
-		WebsiteVersion "XX_WEBSITE_VERSION_XX" "${WEBSITE_VERSION}" \
 		onPi "" "${ON_PI}"
 }
 
@@ -246,7 +240,8 @@ modify_configuration_variables() {
 				display_msg warning "Your ${CONFIG_FILE} is an older version."
 				display_msg info "Your    version: ${PRIOR_CONFIG_VERSION}"
 				display_msg info "Current version: ${NEW_CONFIG_VERSION}"
-				display_msg info "\nPlease compare it to the new one in ${REPO_FILE}"
+				display_msg info "\nPlease compare your file to the new one in"
+				display_msg info "${REPO_FILE}"
 				display_msg info "to see what fields have been added, changed, or removed.\n"
 			fi
 
@@ -276,7 +271,7 @@ fi
 # Check arguments
 OK="true"
 HELP="false"
-BRANCH=""
+BRANCH="master"
 UPDATE="false"
 REMOTE_WEBSITE="false"
 while [ $# -gt 0 ]; do
@@ -308,6 +303,9 @@ while [ $# -gt 0 ]; do
 done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
+
+# Get the version now so we can use it with remote installations.
+WEBSITE_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/${BRANCH}/version")"
 
 REPO_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 set_configuration_file_variables
@@ -490,8 +488,11 @@ find ./ -type f -exec chmod 644 {} \;
 find ./ -type d -exec chmod 775 {} \;
 
 
-display_msg progress "\n**** Installation complete *****\n"
-echo    "+++++++++++++++++++++++++++++++++++++"
+echo
+display_msg progress "***********************************"
+display_msg progress "**** Installation is complete *****"
+display_msg progress "***********************************\n"
+
 
 if [ "${SAVED_OLD}" = "true" ]; then
 	display_msg info "Your prior website is in '${PRIOR_WEBSITE}'."

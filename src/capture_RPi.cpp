@@ -164,11 +164,6 @@ int RPicapture(config cg, cv::Mat *image)
 
 	if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 	{
-if (0 && cg.currentExposure_us != myRaspistillSetting.shutter_us)
-{
-printf("xxxxxxxxxxx cg.currentExposure_us = %s != ", length_in_units(cg.currentExposure_us, true));
-printf(" myRaspistillSetting.shutter_us= %s\n", length_in_units(myRaspistillSetting.shutter_us, true));
-}
 		cg.currentExposure_us = myRaspistillSetting.shutter_us;
 	}
 

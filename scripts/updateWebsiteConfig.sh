@@ -87,9 +87,9 @@ if [[ ${CONFIG_FILE} != "" ]]; then
 	fi
 else
 	# Look for the configuration file.
-	CONFIG_FILE="${ALLSKY_WEBSITE}/configuration.json"		# local website
+	CONFIG_FILE="${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"	# local website
 	if [ ! -f "${CONFIG_FILE}" ]; then
-		CONFIG_FILE="${ALLSKY_CONFIG}/configuration.json"	# remote website
+		CONFIG_FILE="${ALLSKY_CONFIG}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"	# remote website
 		if [ ! -f "${CONFIG_FILE}" ]; then
 			# OLD .js name - leave for compatibility for a while
 			CONFIG_FILE="${WEBSITE_DIR}/config.js"			# local website, old name

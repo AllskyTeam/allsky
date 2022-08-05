@@ -106,5 +106,7 @@
 			{ "label": "Owner",  "icon": "fa-user",  "variable": "owner",  "value": "" },
 			{ "comment": "Add popout items above." }
 		]
-	}
+	},
+	"AllskyVersion" : "XX_ALLSKY_VERSION_XX",
+	"ConfigVersion" : "1"
 }

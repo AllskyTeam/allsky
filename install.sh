@@ -36,6 +36,7 @@ echo
 TITLE="Allsky Installer"
 ALLSKY_OWNER=$(id --group --name)
 ALLSKY_GROUP=${ALLSKY_OWNER}
+ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
 
 
 ####################### functions
@@ -147,7 +148,6 @@ save_camera_capabilities() {
 modify_locations()
 {
 	echo -e "${GREEN}* Modifying locations in web files${NC}"
-	# Not all files have all variables
 
 	sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
@@ -159,6 +159,7 @@ modify_locations()
 			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
 			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};" \
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};" \
+			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
 		"${ALLSKY_WEBUI}/includes/functions.php"
 }
@@ -246,7 +247,7 @@ fi
 # Look for a directory inside the old one to make sure it's really an old allsky.
 HAS_PRIOR_ALLSKY=false
 if [ -d "${PRIOR_INSTALL_DIR}/images" ]; then
-	if (whiptail --title "${TITLE}" --yesno "You appear to have a prior version of Allsky in ${PRIOR_INSTALL_DIR}.\n\nDo you want to restore the prior images, any darks, and certain configuration settings?" 10 60 \
+	if (whiptail --title "${TITLE}" --yesno "You appear to have a prior version of Allsky in ${PRIOR_INSTALL_DIR}.\n\nDo you want to restore the prior images, any darks, and certain configuration settings?" 12 60 \
 		3>&1 1>&2 2>&3); then 
 		HAS_PRIOR_ALLSKY=true
 		if [ -f  "${PRIOR_INSTALL_DIR}/version" ]; then
@@ -299,6 +300,9 @@ echo -e "${GREEN}* Set permissions on Allsky log (${ALLSKY_LOG})\n${NC}"
 sudo touch "${ALLSKY_LOG}"
 sudo chmod 664 "${ALLSKY_LOG}"
 sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
+
+echo -e "${GREEN}* Updating ALLSKY_VERSION\n${NC}"
+sudo sed -i "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" "${ALLSKY_CONFIG}/config.sh"
 
 # Restore any necessary files
 if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then

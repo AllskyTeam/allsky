@@ -39,7 +39,6 @@ ALLSKY_GROUP=${ALLSKY_OWNER}
 ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
 REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
-REPO_WEBSITE_CONFIG_FILE="$ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 
 
 
@@ -49,6 +48,12 @@ display_msg() {
 		echo -e "\n${RED}*** ERROR: "
 	elif [[ $1 == "warning" ]]; then
 		echo -e "\n${YELLOW}*** WARNING: "
+	elif [[ $1 == "progress" ]]; then
+		echo -e "${GREEN}* ${2}${NC}"
+		return
+	elif [[ $1 == "info" ]]; then
+		echo -e "${YELLOW}${2}${NC}"
+		return
 	else
 		echo -e "${YELLOW}"
 	fi
@@ -114,7 +119,7 @@ select_camera_type() {
 		"RPi"  "Raspberry Pi HQ and compatible" \
 		3>&1 1>&2 2>&3)
 	if [ $? -ne 0 ]; then
-		display_msg warning "Camera selection required.  Please re-run the installation and select a camera to continue."
+		display_msg warning "Camera selection required.  Please re-run the installation and select a camera to continue.\n"
 		exit 1
 	fi
 }
@@ -129,14 +134,14 @@ save_camera_capabilities() {
 
 	# --cameraTypeOnly tells makeChanges.sh to only change the camera info and exit.
 	# It displays any error messages.
-	echo -e "${GREEN}* Setting up WebUI options for '${CAMERA_TYPE}' cameras.${NC}"
+	display_msg progress "Setting up WebUI options for '${CAMERA_TYPE}' cameras."
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" --cameraTypeOnly "cameraType" "Camera Type" "" "${CAMERA_TYPE}"
 	RET=$?
 
 	if [ ${RET} -ne 0 ]; then
 		if [ ${RET} -eq ${EXIT_NO_CAMERA} ]; then
 			display_msg error "No camera found."
-			display_msg "" "After connecting your camera, run '${ME} --update'."
+			display_msg "" "After connecting your camera, run '${ME} --update'.\n"
 		else
 			display_msg error "Unable to save camera capabilities."
 			display_msg "" "Look in ${ALLSKY_LOG} for any messages.\nAfter fixing things, run '${ME} --update'.\n"
@@ -151,7 +156,7 @@ save_camera_capabilities() {
 # Some files have placeholders for certain locations.  Modify them.
 modify_locations()
 {
-	echo -e "${GREEN}* Modifying locations in web files${NC}"
+	display_msg progress "Modifying locations in web files."
 
 	sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
@@ -170,7 +175,7 @@ modify_locations()
 
 do_sudoers()
 {
-	echo -e "${GREEN}* Creating/updating sudoers file${NC}"
+	display_msg progress "Creating/updating sudoers file."
 	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" "${REPO_SUDOERS_FILE}"  >  /tmp/x
 	sudo install -m 0644 /tmp/x "${FINAL_SUDOERS_FILE}" && rm -f /tmp/x
 }
@@ -180,7 +185,7 @@ ask_reboot() {
 		3>&1 1>&2 2>&3); then 
 		sudo reboot now
 	else
-		display_msg warning "You will need to reboot the Pi before Allsky will work."
+		display_msg warning "You will need to reboot the Pi before Allsky will work.\n"
 		exit 3
 	fi
 }
@@ -230,11 +235,11 @@ if [[ ${UPDATE} == "true" ]]; then
 	grep --silent "truncate" "${FINAL_SUDOERS_FILE}"
 	# shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then
-		echo -e "${GREEN}* Updating sudoers list${NC}"
+		display_msg progress "Updating sudoers list."
 		grep --silent "truncate" "${REPO_SUDOERS_FILE}"
 		# shellcheck disable=SC2181
 		if [ $? -ne 0 ]; then
-				echo -e "${RED}Please get the newest '$(basename "${REPO_SUDOERS_FILE}")' file from Git and try again.${NC}"
+				display_msg error "Please get the newest '$(basename "${REPO_SUDOERS_FILE}")' file from Git and try again."
 			exit 2
 		fi
 		do_sudoers
@@ -259,21 +264,21 @@ if [ -d "${PRIOR_INSTALL_DIR}/images" ]; then
 		fi
 	else
 		display_msg warning "If you want your old images, darks, etc. from the prior verion"
-		display_msg "" "of Allsky, you'll need to manually move them to the new version.\n"
+		display_msg info "of Allsky, you'll need to manually move them to the new version.\n"
 	fi
 else
 	if (whiptail --title "${TITLE}" --yesno "You do not appear to have prior version of Allsky.\nIf you DO, and you want items moved from the prior version to the new one\n, make sure the prior version is in ${PRIOR_INSTALL_DIR}.\n\nDo you want to continue withOUT using the prior version?" 10 60 \
 		3>&1 1>&2 2>&3); then 
 		true
 	else
-		display_msg "" "* Rename the directory with your prior version of Allsky to\n'${PRIOR_INSTALL_DIR}', then run the installation again.\n"
+		display_msg info "* Rename the directory with your prior version of Allsky to\n'${PRIOR_INSTALL_DIR}', then run the installation again.\n"
 		exit 0
 	fi
 fi
 
 select_camera_type
 
-echo -e "${GREEN}* Installing dependencies\n${NC}"
+display_msg progress "Installing dependencies.\n"
 sudo make deps
 if [ $? -ne 0 ]; then
 	echo "Installing dependencies failed"
@@ -281,7 +286,7 @@ if [ $? -ne 0 ]; then
 fi
 echo
 
-echo -e "${GREEN}* Compile and install Allsky software\n${NC}"
+display_msg progress "Compile and install Allsky software.\n"
 make all
 if [ $? -ne 0 ]; then
 	echo "Compile failed!"
@@ -298,36 +303,36 @@ chmod 755 "${ALLSKY_HOME}"	# Some versions of Linux default to 750 so web server
 
 # Create the log file and make it readable by the user; this aids in debugging.
 ALLSKY_LOG="/var/log/allsky.log"
-echo -e "${GREEN}* Set permissions on Allsky log (${ALLSKY_LOG})\n${NC}"
+display_msg progress "Set permissions on Allsky log (${ALLSKY_LOG}).\n"
 sudo touch "${ALLSKY_LOG}"
 sudo chmod 664 "${ALLSKY_LOG}"
 sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
 
-echo -e "${GREEN}* Updating versions.\n${NC}"
+display_msg progress "Updating versions.\n"
 sed -i "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" "${ALLSKY_CONFIG}/config.sh"
 
 # Restore any necessary files
 if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 
 	if [ -f "${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh" ]; then
-		echo -e "${GREEN}* Restoring endOfNight_additionalSteps.sh.${NC}"
+		display_msg progress "Restoring endOfNight_additionalSteps.sh."
 		mv "${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
 	fi
 
 	if [ -d "${PRIOR_INSTALL_DIR}/images" ]; then
-		echo -e "${GREEN}* Restoring images.${NC}"
+		display_msg progress "Restoring images."
 		mv "${PRIOR_INSTALL_DIR}/images" "${ALLSKY_HOME}"
 	fi
 
 	if [ -d "${PRIOR_INSTALL_DIR}/darks" ]; then
-		echo -e "${GREEN}* Restoring darks.${NC}"
+		display_msg progress "Restoring darks."
 		mv "${PRIOR_INSTALL_DIR}/darks" "${ALLSKY_HOME}"
 	fi
 
 	PRIOR_CONFIG_DIR="${PRIOR_INSTALL_DIR}/config"
 
 	if [ -f "${PRIOR_CONFIG_DIR}/raspap.auth" ]; then
-		echo -e "${GREEN}* Restoring WebUI security settings.${NC}"
+		display_msg progress "Restoring WebUI security settings."
 		mv "${PRIOR_CONFIG_DIR}/raspap.auth" "${ALLSKY_CONFIG}"
 	fi
 	if [ -f "${PRIOR_CONFIG_DIR}/raspap.php" ]; then
@@ -335,14 +340,14 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 	fi
 
 	if [ -f "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ]; then
-		echo -e "${GREEN}* Restoring remote Allsky Website configuration.${NC}"
+		display_msg progress "Restoring remote Allsky Website configuration."
 		mv "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_CONFIG}"
 
 		# Check if this is an older configuration file type.
 		CONFIG_FILE="${ALLSKY_CONFIG}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 		OLD=false
 		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${CONFIG_FILE}")"
-		REPO_FILE=="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		REPO_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 		if [[ ${PRIOR_CONFIG_VERSION} == "null" ]]; then
 			OLD=true		# Hmmm, it should have the version
 		else
@@ -353,29 +358,29 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 		fi
 		if [[ ${OLD} == "true" ]]; then
 			display_msg warning "Your ${CONFIG_FILE} is an older version."
-			display_msg "" "Your    version: ${PRIOR_CONFIG_VERSION}"
-			display_msg "" "Current version: ${NEW_CONFIG_VERSION}"
-			display_msg "" "\nPlease compare it to the new one in ${REPO_FILE}"
-			display_msg "" "to see what fields have been added, changed, or removed.\n"
+			display_msg info "Your    version: ${PRIOR_CONFIG_VERSION}"
+			display_msg info "Current version: ${NEW_CONFIG_VERSION}"
+			display_msg info "\nPlease compare it to the new one in ${REPO_FILE}"
+			display_msg info "to see what fields have been added, changed, or removed.\n"
 		fi
 
 ## TODO: should check if the version has changed.
 	fi
 
 	if [ -f "${PRIOR_CONFIG_DIR}/uservariables.sh" ]; then
-		echo -e "${GREEN}* Restoring uservariables.sh.${NC}"
+		display_msg progress "Restoring uservariables.sh."
 		mv "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
 	fi
 
 	if [ -f "${PRIOR_CONFIG_DIR}/settings.json" ]; then
-		echo -e "${GREEN}* Restoring WebUI settings.${NC}"
+		display_msg progress "Restoring WebUI settings."
 		# This file is probably a link to a camera type/model-specific file,
 		# so copy it instead of moving it to not break the link.
 		cp "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
 	fi
 	# Do NOT restores options.json - it will be recreated.
 
-	echo -e "${GREEN}* Restoring settings from configuration files.${NC}"
+	display_msg progress "Restoring settings from configuration files."
 	# This may miss really-old variables that no longer exist.
 ## TODO: automate this
 # ( source ${PRIOR_CONFIG_DIR}/ftp-settings.sh
@@ -391,7 +396,7 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 #	- handle variable that were moved to WebUI
 #		> DAYTIME_CAPTURE
 
-	display_msg "" "IMPORTANT: check config/config.sh and config/ftp-settings.sh for correctness.\n"
+	display_msg info "IMPORTANT: check config/config.sh and config/ftp-settings.sh for correctness.\n"
 fi
 
 if [[ ${NEEDCAM} == "true" ]]; then
@@ -403,7 +408,7 @@ fi
 
 ### FUTURE: Prompt to install SSL certificate
 
-echo -e "${GREEN}* Configure the WebUI.\n${NC}"
+display_msg progress "Configure the WebUI.\n"
 CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
 NEW_HOST_NAME='allsky'
 
@@ -417,7 +422,7 @@ if [ "${CURRENT_HOSTNAME}" != "${NEW_HOST_NAME}" ]; then
 	fi
 fi
 
-echo -e "${GREEN}* Installing the lighttpd webserver and its dependencies${NC}"
+display_msg progress "Installing the lighttpd webserver and its dependencies."
 echo
 sudo apt-get update && sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
 sudo systemctl stop lighttpd 2> /dev/null
@@ -441,14 +446,14 @@ FINAL_AVI_FILE="/etc/avahi/avahi-daemon.conf"
 [ -f "${FINAL_AVI_FILE}" ] && grep -i --quiet "host-name=${NEW_HOST_NAME}" "${FINAL_AVI_FILE}"
 if [ $? -ne 0 ]; then
 	# New NEW_HOST_NAME not found in file, or file doesn't exist, so need to configure file.
-	echo -e "${GREEN}* Configuring avahi-daemon${NC}"
+	display_msg progress "Configuring avahi-daemon."
 	REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
 	sed "s/XX_HOST_NAME_XX/${NEW_HOST_NAME}/g" "${REPO_AVI_FILE}" > /tmp/x
 	sudo install -m 0644 /tmp/x "${FINAL_AVI_FILE}" && rm -f /tmp/x
 	echo
 fi
 
-echo -e "${GREEN}* Adding the right permissions to the webserver${NC}"
+display_msg progress "Adding the right permissions to the webserver."
 # Remove any old entries; we now use /etc/sudoers.d/allsky instead of /etc/sudoers.
 sudo sed -i -e '/allsky/d' -e '/www-data/d' /etc/sudoers
 do_sudoers
@@ -471,7 +476,7 @@ fi
 # when we remove the prior WebUI.
 
 if [ "${ALLSKY_WEBSITE_OLD}" != "" ]; then
-	echo -e "${GREEN}* Moving prior Allsky Website from ${ALLSKY_WEBSITE_OLD}${NC} to new location."
+	display_msg progress "Moving prior Allsky Website from ${ALLSKY_WEBSITE_OLD} to new location."
 	OK=true
 	if [ -d "${ALLSKY_WEBSITE}" ]; then
 		# Hmmm.  There's an old webite AND a new one.
@@ -480,8 +485,8 @@ if [ "${ALLSKY_WEBSITE_OLD}" != "" ]; then
 		rmdir "${ALLSKY_WEBSITE}" 
 		if [ $? -ne 0 ]; then
 			display_msg error "* New website in '${ALLSKY_WEBSITE}' is not empty."
-			display_msg "" "  Move the contents manually from '${ALLSKY_WEBSITE_OLD}',"
-			display_msg "" "  and then remove the old location.\n"
+			display_msg info "  Move the contents manually from '${ALLSKY_WEBSITE_OLD}',"
+			display_msg info "  and then remove the old location.\n"
 			OK=false
 		fi
 	fi
@@ -496,17 +501,17 @@ if [ "${ALLSKY_WEBSITE_OLD}" != "" ]; then
 	# Check if the prior website is outdated.
 	VERSION_FILE="${PRIOR_SITE}/version"
 	if [ -f "${VERSION_FILE}" ]; then
-		OLD_VERSION=$(< "${VERSION_FILE}/version")
+		OLD_VERSION=$( < "${VERSION_FILE}/version" )
 	else
 		OLD_VERSION="** Unknown, but old **"
 	fi
 	NEW_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/master/version")"
 	if [[ ${OLD_VERSION} < "${NEW_VERSION}" ]]; then
 		display_msg warning "There is a newer Allsky Website available; please upgrade to it."
-		display_msg "" "Your    version: ${OLD_VERSION}"
-		display_msg "" "Current version: ${NEW_VERSION}"
-		display_msg "" "\nAFTER you reboot, you can upgrade the Allky Website by executing:"
-		display_msg "" "     cd ~/allsky; website/install.sh\n"
+		display_msg info "Your    version: ${OLD_VERSION}"
+		display_msg info "Current version: ${NEW_VERSION}"
+		display_msg info "\nAFTER you reboot, you can upgrade the Allky Website by executing:"
+		display_msg info "     cd ~/allsky; website/install.sh\n"
 	fi
 fi
 
@@ -516,19 +521,18 @@ fi
 if [ -d "${OLD_WEBUI_LOCATION}" ]; then
 	if (whiptail --title "${TITLE}" --yesno "An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so do you want to remove it?" 10 60 \
 		3>&1 1>&2 2>&3); then 
-		echo -e "${GREEN}* Removing old WebUI in ${OLD_WEBUI_LOCATION}${NC}"
+		display_msg progress "Removing old WebUI in ${OLD_WEBUI_LOCATION}."
 
 		sudo rm -fr "${OLD_WEBUI_LOCATION}"
 
 	else	# they don't want to remove the old WebUI.
-		display_msg warning "The old WebUI files are no longer used and are just taking up disk space."
-		echo
+		display_msg warning "The old WebUI files are no longer used and are just taking up disk space.\n"
 	fi
 fi
 
 save_camera_capabilities
 
-echo -e "${GREEN}* Setting permissions on WebUI files.${NC}"
+display_msg progress "Setting permissions on WebUI files."
 # The files should already be the correct permissions/owners, but just in case, set them.
 # We don't know what permissions may have been on the old website, so use "sudo".
 sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;

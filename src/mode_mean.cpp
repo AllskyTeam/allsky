@@ -45,7 +45,7 @@ long calcExposureTimeEff_us(int exposureLevel, modeMeanSetting &currentModeMeanS
 }
 
 // set limits.  aeg == Auto Exposure / Gain
-bool aegInit(config cg, int exposure_us, double gain,
+bool aegInit(config cg,
 		raspistillSetting &currentRaspistillSetting, modeMeanSetting &currentModeMeanSetting)
 {
 	// Init some values first

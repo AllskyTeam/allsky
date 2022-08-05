@@ -282,6 +282,8 @@ if [[ "$(settings ".saveDaytimeImages")" = "1" || "${DAY_OR_NIGHT}" = "NIGHT" ]]
 		if [ ${TIMELAPSE_MINI_IMAGES:-0} -ne 0 ]; then
 			"${ALLSKY_SCRIPTS}"/timelapse.sh -m ${TIMELAPSE_MINI_IMAGES} "${DATE_NAME}"
 			[ $? -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
+		else
+			TIMELAPSE_MINI_UPLOAD_VIDEO="false"	# not using mini-timelapse
 		fi
 	else
 		echo "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"

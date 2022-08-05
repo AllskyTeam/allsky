@@ -779,21 +779,12 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					system(cmd);
 				}
 
-				if (myModeMeanSetting.quickstart && myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
-				{
-					long x = 1 * US_IN_SEC;
-					Log(2, "Sleeping 1 second (quickstart on, %d left)...\n", myModeMeanSetting.quickstart);
-					usleep(x);
-				}
+				std::string s;
+				if (CG.currentAutoExposure)
+					s = "auto";
 				else
-				{
-					std::string s;
-					if (CG.currentAutoExposure)
-						s = "auto";
-					else
-						s = "manual";
-					delayBetweenImages(CG, myRaspistillSetting.shutter_us, s);
-				}
+					s = "manual";
+				delayBetweenImages(CG, myRaspistillSetting.shutter_us, s);
 			}
 			else
 			{

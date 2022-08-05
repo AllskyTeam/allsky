@@ -619,7 +619,7 @@ int main(int argc, char *argv[])
 		{
 			CG.myModeMeanSetting.modeMean = true;
 			myModeMeanSetting.meanValue = CG.myModeMeanSetting.currentMean;
-			if (! aegInit(CG, CG.cameraMinExposure_us, CG.cameraMinGain, myRaspistillSetting, myModeMeanSetting))
+			if (! aegInit(CG, myRaspistillSetting, myModeMeanSetting))
 			{
 				closeUp(EXIT_ERROR_STOP);
 			}

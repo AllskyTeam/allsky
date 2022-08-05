@@ -10,20 +10,6 @@
 // Sets all the define() variables.
 require 'allskyDefines.inc';
 
-// Split the placeholder so it doesn't get replaced.
-if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
-	// This file hasn't been updated yet after installation.
-	// This would only happen if they updated this file and not the whole Allsky release,
-	// which is hard since we only come out with releases.
-	echo "<div style='font-size: 200%;'>";
-	echo "<span style='color: red'>";
-	echo "Please run the following from the 'allsky' directory before using the WebUI:";
-	echo "</span>";
-	echo "<code>   ./install.sh --update</code>";
-	echo "</div>";
-	exit;
-}
-
 $status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
 

@@ -299,11 +299,6 @@ void aegGetNextExposureSettings(config * cg,
 		Log(3, "  > ++++++++++ Prior image mean good - no changes needed, mean=%1.3f, target mean=%1.3f threshold=%1.3f\n",
 			cg->lastMean, currentModeMeanSetting.meanValue, currentModeMeanSetting.mean_threshold);
 		cg->goodLastExposure = true;
-		if (currentModeMeanSetting.quickstart > 0)
-		{
-			currentModeMeanSetting.quickstart = 0;		// Got a good exposure - turn quickstart off if on
-			Log(4, "  >> Disabling quickstart\n");
-		}
 	}
 
 	// Make sure exposureLevel is within min - max range.
@@ -365,10 +360,6 @@ void aegGetNextExposureSettings(config * cg,
 
 	//#############################################################################################################
 	// prepare for the next measurement
-	if (currentModeMeanSetting.quickstart > 0) {
-		currentModeMeanSetting.quickstart--;
-	}
-	// Exposure gilt fuer die naechste Messung
 	MeanCnt++;
 	exposureLevelHistory[MeanCnt % currentModeMeanSetting.historySize] = currentModeMeanSetting.exposureLevel;
 

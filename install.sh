@@ -38,6 +38,7 @@ ALLSKY_OWNER=$(id --group --name)
 ALLSKY_GROUP=${ALLSKY_OWNER}
 ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
 REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
+REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/allskyDefines.inc.repo"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 
 
@@ -153,12 +154,13 @@ save_camera_capabilities() {
 }
 
 
-# Some files have placeholders for certain locations.  Modify them.
+# Modify placeholders for various directories.
 modify_locations()
 {
-	display_msg progress "Modifying locations in web files."
+	display_msg progress "Modifying locations for WebUI."
+	FILE="${ALLSKY_WEBUI}/includes/allskyDefines.inc"
 
-	sed -i  -e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+	sed		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
 			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
@@ -170,7 +172,8 @@ modify_locations()
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
-		"${ALLSKY_WEBUI}/includes/functions.php"
+		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
+		chmod 644 "{FILE}"
 }
 
 do_sudoers()

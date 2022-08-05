@@ -98,8 +98,7 @@ else
 	fi
 fi
 
-FIELD_Q='"'		# JSON files have quotes around field names and strings
-
+#shellcheck disable=SC2191
 JQ_STRING=(.comment = .comment)
 OUTPUT_MESSAGE=""
 NUMRE="^[+-]?[0-9]+([.][0-9]+)?$"
@@ -135,7 +134,7 @@ if [[ ${DEBUG} == "true" ]]; then
 	# shellcheck disable=SC2145
 	echo -e "  jq '${JQ_STRING[@]}' ${CONFIG_FILE}${wNC}"
 else
-	# shellcheck disable=SC2145
+	# shellcheck disable=SC2124
 	S="${JQ_STRING[@]}"
 	if OUTPUT="$(jq "${S}" "${CONFIG_FILE}" 2>&1 > /tmp/x && mv /tmp/x "${CONFIG_FILE}")"; then
 		[ "${SILENT}" = "false" ] && echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"

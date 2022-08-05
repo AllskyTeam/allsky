@@ -37,6 +37,10 @@ TITLE="Allsky Installer"
 ALLSKY_OWNER=$(id --group --name)
 ALLSKY_GROUP=${ALLSKY_OWNER}
 ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
+REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
+FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
+REPO_WEBSITE_CONFIG_FILE="$ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+
 
 
 ####################### functions
@@ -164,8 +168,6 @@ modify_locations()
 		"${ALLSKY_WEBUI}/includes/functions.php"
 }
 
-REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
-FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 do_sudoers()
 {
 	echo -e "${GREEN}* Creating/updating sudoers file${NC}"
@@ -301,8 +303,8 @@ sudo touch "${ALLSKY_LOG}"
 sudo chmod 664 "${ALLSKY_LOG}"
 sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
 
-echo -e "${GREEN}* Updating ALLSKY_VERSION\n${NC}"
-sudo sed -i "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" "${ALLSKY_CONFIG}/config.sh"
+echo -e "${GREEN}* Updating versions.\n${NC}"
+sed -i "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" "${ALLSKY_CONFIG}/config.sh"
 
 # Restore any necessary files
 if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
@@ -332,10 +334,32 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 		mv "${PRIOR_CONFIG_DIR}/raspap.php" "${ALLSKY_CONFIG}"
 	fi
 
-	if [ -f "${PRIOR_CONFIG_DIR}/configuration.json" ]; then
+	if [ -f "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ]; then
 		echo -e "${GREEN}* Restoring remote Allsky Website configuration.${NC}"
-		mv "${PRIOR_CONFIG_DIR}/configuration.json" "${ALLSKY_CONFIG}"
-## TODO: should probably check if the version has changed.
+		mv "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_CONFIG}"
+
+		# Check if this is an older configuration file type.
+		CONFIG_FILE="${ALLSKY_CONFIG}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		OLD=false
+		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${CONFIG_FILE}")"
+		REPO_FILE=="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		if [[ ${PRIOR_CONFIG_VERSION} == "null" ]]; then
+			OLD=true		# Hmmm, it should have the version
+		else
+			NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_FILE}")"
+			if [[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]]; then
+				OLD=true
+			fi
+		fi
+		if [[ ${OLD} == "true" ]]; then
+			display_msg warning "Your ${CONFIG_FILE} is an older version."
+			display_msg "" "Your    version: ${PRIOR_CONFIG_VERSION}"
+			display_msg "" "Current version: ${NEW_CONFIG_VERSION}"
+			display_msg "" "\nPlease compare it to the new one in ${REPO_FILE}"
+			display_msg "" "to see what fields have been added, changed, or removed.\n"
+		fi
+
+## TODO: should check if the version has changed.
 	fi
 
 	if [ -f "${PRIOR_CONFIG_DIR}/uservariables.sh" ]; then
@@ -476,8 +500,8 @@ if [ "${ALLSKY_WEBSITE_OLD}" != "" ]; then
 	else
 		OLD_VERSION="** Unknown, but old **"
 	fi
-	NEW_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/version")"
-	if [[ ${OLD_VERSION} != "${NEW_VERSION}" ]]; then
+	NEW_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/master/version")"
+	if [[ ${OLD_VERSION} < "${NEW_VERSION}" ]]; then
 		display_msg warning "There is a newer Allsky Website available; please upgrade to it."
 		display_msg "" "Your    version: ${OLD_VERSION}"
 		display_msg "" "Current version: ${NEW_VERSION}"

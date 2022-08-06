@@ -573,7 +573,7 @@
 "options" : [
 	"rotation_values"
 ],
-"display" : 0,
+"display" : "rotation_display",
 "advanced" : 0
 },
 {

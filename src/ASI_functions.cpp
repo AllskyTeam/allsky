@@ -730,15 +730,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"Name\" : \"delayBetweenImages_ms\",\n");
 	fprintf(f, "\t\t\t\"argumentName\" : \"delay\",\n");
 	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");
-	int delay_ms = 0;
-#ifdef IS_ZWO
-	// Images are saved in a separate thread so need to give time for an image to be saved.
-	delay_ms = 10;
-#else
-	// Apparently there is no lower limit.  The capture program waits for the image to be saved.
-	delay_ms = 0;
-#endif
-	fprintf(f, "\t\t\t\"MinValue\" : %d,\n", delay_ms);
+	fprintf(f, "\t\t\t\"MinValue\" : %ld,\n", CG.minDelay_ms);
 	fprintf(f, "\t\t\t\"DefaultValue\" : %ld\n", std::min(CG.dayDelay_ms, CG.nightDelay_ms) / MS_IN_SEC);
 	fprintf(f, "\t\t},\n");
 
@@ -1025,10 +1017,20 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->supportsTemperature = true;
 		cg->supportsAggression = true;
 		cg->gainTransitionTimeImplemented = true;
+		cg->imagesSavedInBackground = true;
 	} else {	// RPi
 		cg->supportsTemperature = false;
 		cg->supportsAggression = false;
 		cg->gainTransitionTimeImplemented = false;
+		cg->imagesSavedInBackground = false;
+	}
+
+	if (cg->imagesSavedInBackground) {
+		// Images are saved in a separate thread so need to give time for an image to be saved.
+		cg->minDelay_ms = 10;
+	} else {
+		// The capture program waits for the image to be saved.
+		cg->minDelay_ms = 0;
 	}
 
 	// Get values used in several validations.

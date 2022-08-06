@@ -339,12 +339,23 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 
 	PRIOR_CONFIG_DIR="${PRIOR_INSTALL_DIR}/config"
 
-	if [ -f "${PRIOR_CONFIG_DIR}/raspap.auth" ]; then
-		display_msg progress "Restoring WebUI security settings."
-		mv "${PRIOR_CONFIG_DIR}/raspap.auth" "${ALLSKY_CONFIG}"
+	# If the user has an older release, these files may be in /etc/raspap.
+	# Check for both.
+	if [[ ${HAS_NEW_PRIOR_ALLSKY} == "true" ]]; then
+		RASPAP_DIR="${PRIOR_CONFIG_DIR}"
+	else
+		RASPAP_DIR="/etc/raspap"
+		if [ -d "${RASPAP_DIR}" ]; then
+			display_msg warning "\nThe '${RASPAP_DIR}' directory is no longer used."
+			display_msg info "When installation is done you may remove it.\n"
+		fi
 	fi
-	if [ -f "${PRIOR_CONFIG_DIR}/raspap.php" ]; then
-		mv "${PRIOR_CONFIG_DIR}/raspap.php" "${ALLSKY_CONFIG}"
+	if [ -f "${RASPAP_DIR}/raspap.auth" ]; then
+		display_msg progress "Restoring WebUI security settings."
+		mv "${RASPAP_DIR}/raspap.auth" "${ALLSKY_CONFIG}"
+	fi
+	if [ -f "${RASPAP_DIR}/raspap.php" ]; then
+		mv "${RASPAP_DIR}/raspap.php" "${ALLSKY_CONFIG}"
 	fi
 
 	if [ -f "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ]; then
@@ -386,7 +397,7 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 	fi
 	# Do NOT restores options.json - it will be recreated.
 
-	display_msg progress "Restoring settings from configuration files."
+	display_msg progress "Restoring settings from config.sh and ftp-settings.sh."
 	# This may miss really-old variables that no longer exist.
 ## TODO: automate this
 # ( source ${PRIOR_CONFIG_DIR}/ftp-settings.sh

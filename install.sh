@@ -581,7 +581,7 @@ install_overlay()
 
 }
 
-install_overlay()
+install_overlay
 
 ######## All done
 

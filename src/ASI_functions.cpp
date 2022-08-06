@@ -652,7 +652,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 			fprintf(f, "\n");
 		}
 		fprintf(f, "\t\t{ ");
-		fprintf(f, "\"name\" : \"%dx%d\",  ", b, b);
+		fprintf(f, "\"value\" : \"%dx%d\",  ", b, b);
 		fprintf(f, "\"bin\" : %d", b);
 		fprintf(f, " }");
 	}
@@ -666,17 +666,17 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", CG.cmdToUse);
 
 	fprintf(f, "\t\"suportedRotations\": [\n");
-	fprintf(f, "\t\t{\"value\" : 0, \"label\" : \"None\"},\n");
+	fprintf(f, "\t\t{ \"value\" : 0, \"label\" : \"None\" },\n");
 	if (CG.ct == ctRPi && CG.isLibcamera)
 	{
 		// libcamera only supports 0 and 180 degree rotation
-		fprintf(f, "\t\t{\"value\" : 180, \"label\" : \"180 degrees\"}\n");
+		fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" }\n");
 	}
 	else
 	{
-		fprintf(f, "\t\t{\"value\" : 90, \"label\" : \"90 degrees\"},\n");
-		fprintf(f, "\t\t{\"value\" : 180, \"label\" : \"180 degrees\"},\n");
-		fprintf(f, "\t\t{\"value\" : 270, \"label\" : \"270 degrees\"}\n");
+		fprintf(f, "\t\t{ \"value\" : 90, \"label\" : \"90 degrees\" },\n");
+		fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" },\n");
+		fprintf(f, "\t\t{ \"value\" : 270, \"label\" : \"270 degrees\" }\n");
 	}
 	fprintf(f, "\t],\n");;
 #endif
@@ -696,13 +696,13 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 			fprintf(f, "\n");
 		}
 		fprintf(f, "\t\t{ ");
-		fprintf(f, "\"name\" : \"%s\",  ",
+		fprintf(f, "\"value\" : %d, ", (int) it);
+		fprintf(f, "\"label\" : \"%s\"",
 			it == ASI_IMG_RAW8 ?  "RAW8" :
 			it == ASI_IMG_RGB24 ?  "RGB24" :
 			it == ASI_IMG_RAW16 ?  "RAW16" :
 			it == ASI_IMG_Y8 ?  "Y8" :
 			"unknown format");
-		fprintf(f, "\"number\" : %d", (int) it);
 		fprintf(f, " }");
 	}
 	fprintf(f, "\t],\n");;

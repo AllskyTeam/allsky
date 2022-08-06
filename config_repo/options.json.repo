@@ -6,11 +6,11 @@
 "label" : "Camera Type",
 "type" : "select",
 "options" : [
-	{"value" : "RPi", "label": "RPi"},
-	{"value" : "ZWO", "label": "ZWO ASI"}
+	{"value" : "RPi", "label" : "RPi"},
+	{"value" : "ZWO", "label" : "ZWO ASI"}
 ],
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 1
 },
 {
@@ -29,7 +29,7 @@
 "label" : "Daytime Capture",
 "type" : "checkbox",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 1
 },
 {
@@ -209,7 +209,6 @@
 "display" : "TargetTemp_display",
 "advanced" : 1
 },
-
 {
 "name" : "",
 "default" : "",
@@ -387,7 +386,6 @@
 "display" : "TargetTemp_display",
 "advanced" : 1
 },
-
 {
 "name" : "",
 "default" : "",
@@ -404,7 +402,7 @@
 "label" : "Configuration File",
 "type" : "widetext",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 1
 },
 {
@@ -563,7 +561,7 @@
 "label" : "Filename",
 "type" : "text",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 1
 },
 {
@@ -584,13 +582,13 @@
 "description" : "Select a flipping option if you want to reverse the image along an axis.",
 "label" : "Flip",
 "type" : "select",
-"display" : 1,
 "options" : [
-	{"value" : 0, "label": "None"},
-	{"value" : 1, "label": "Horizontal"},
-	{"value" : 2, "label": "Vertical"},
-	{"value" : 3, "label": "Both"}
+	{"value" : 0, "label" : "None"},
+	{"value" : 1, "label" : "Horizontal"},
+	{"value" : 2, "label" : "Vertical"},
+	{"value" : 3, "label" : "Both"}
 ],
+"display" : 1,
 "advanced" : 0
 },
 {
@@ -618,7 +616,7 @@
 "label" : "Latitude",
 "type" : "text",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {
@@ -628,7 +626,7 @@
 "label" : "Longitude",
 "type" : "text",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {
@@ -638,7 +636,7 @@
 "label" : "Angle",
 "type" : "text",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {
@@ -684,11 +682,11 @@
 "label" : "Debug Level",
 "type" : "select",
 "options" : [
-	{"value" : 0, "label": 0},
-	{"value" : 1, "label": 1},
-	{"value" : 2, "label": 2},
-	{"value" : 3, "label": 3},
-	{"value" : 4, "label": 4}
+	{"value" : 0, "label" : 0},
+	{"value" : 1, "label" : 1},
+	{"value" : 2, "label" : 2},
+	{"value" : 3, "label" : 3},
+	{"value" : 4, "label" : 4}
 ],
 "display" : 1,
 "advanced" : 0
@@ -720,7 +718,6 @@
 "display" : 1,
 "advanced" : 1
 },
-
 {
 "name" : "",
 "default" : "",
@@ -773,9 +770,9 @@
 "label" : "Temperature Units",
 "type" : "select",
 "options" : [
-	{"value" : "C", "label": "Celcius"},
-	{"value" : "F", "label": "Fahrenheit"},
-	{"value" : "B", "label": "Both"}
+	{"value" : "C", "label" : "Celcius"},
+	{"value" : "F", "label" : "Fahrenheit"},
+	{"value" : "B", "label" : "Both"}
 ],
 "display" : 1,
 "advanced" : 1
@@ -859,7 +856,7 @@
 "label" : "Extra Text File",
 "type" : "widetext",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {
@@ -904,17 +901,17 @@
 "description" : "Font name for the text overlay. Used for both large and small text.",
 "label" : "Font Name",
 "type" : "select",
-"display" : 1,
 "options" : [
-	{"value" : 0, "label": "Simplex"},
-	{"value" : 1, "label": "Plain"},
-	{"value" : 2, "label": "Duplex"},
-	{"value" : 3, "label": "Complex"},
-	{"value" : 4, "label": "Triplex"},
-	{"value" : 5, "label": "Complex Small"},
-	{"value" : 6, "label": "Script Simplex"},
-	{"value" : 7, "label": "Script Complex"}
+	{"value" : 0, "label" : "Simplex"},
+	{"value" : 1, "label" : "Plain"},
+	{"value" : 2, "label" : "Duplex"},
+	{"value" : 3, "label" : "Complex"},
+	{"value" : 4, "label" : "Triplex"},
+	{"value" : 5, "label" : "Complex Small"},
+	{"value" : 6, "label" : "Script Simplex"},
+	{"value" : 7, "label" : "Script Complex"}
 ],
+"display" : 1,
 "advanced" : 0
 },
 {
@@ -941,12 +938,12 @@
 "description" : "Choose between smooth font lines (antialiased), 8-pixel, or 4 pixel connectivity (harder edges).",
 "label" : "Font Smoothness",
 "type" : "select",
-"display" : 1,
 "options" : [
-	{"value" : 0, "label": "Antialiased"},
-	{"value" : 1, "label": "8 connected"},
-	{"value" : 2, "label": "4 connected"}
+	{"value" : 0, "label" : "Antialiased"},
+	{"value" : 1, "label" : "8 connected"},
+	{"value" : 2, "label" : "4 connected"}
 ],
+"display" : 1,
 "advanced" : 0
 },
 {
@@ -980,8 +977,6 @@
 "display" : 1,
 "advanced" : 0
 },
-
-
 {
 "name" : "",
 "default" : "",
@@ -998,7 +993,7 @@
 "label" : "Show on Map",
 "type" : "checkbox",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {
@@ -1008,7 +1003,7 @@
 "label" : "Website URL",
 "type" : "widetext",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {
@@ -1018,7 +1013,7 @@
 "label" : "Image URL",
 "type" : "widetext",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {
@@ -1028,7 +1023,7 @@
 "label" : "Location",
 "type" : "widetext",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {
@@ -1038,7 +1033,7 @@
 "label" : "Owner",
 "type" : "text",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {
@@ -1048,7 +1043,7 @@
 "label" : "Camera",
 "type" : "widetext",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {
@@ -1058,7 +1053,7 @@
 "label" : "Lens",
 "type" : "text",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {
@@ -1068,9 +1063,11 @@
 "label" : "Computer",
 "type" : "widetext",
 "display" : 1,
-"checkchanges" : true,
+"checkchanges" : 1,
 "advanced" : 0
 },
-{ "name" : "XX_END_XX" }
+{
+"name" : "XX_END_XX"
+}
 ]
 

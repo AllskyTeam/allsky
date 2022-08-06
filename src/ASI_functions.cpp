@@ -664,6 +664,21 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\"bitDepth\" : %d,\n", cameraInfo.BitDepth);
 #ifdef IS_RPi
 	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", CG.cmdToUse);
+
+	fprintf(f, "\t\"suportedRotations\": [\n");
+	fprintf(f, "\t\t{\"value\" : 0, \"label\" : \"None\"},\n");
+	if (CG.ct == ctRPi && CG.isLibcamera)
+	{
+		// libcamera only supports 0 and 180 degree rotation
+		fprintf(f, "\t\t{\"value\" : 180, \"label\" : \"180 degrees\"}\n");
+	}
+	else
+	{
+		fprintf(f, "\t\t{\"value\" : 90, \"label\" : \"90 degrees\"},\n");
+		fprintf(f, "\t\t{\"value\" : 180, \"label\" : \"180 degrees\"},\n");
+		fprintf(f, "\t\t{\"value\" : 270, \"label\" : \"270 degrees\"}\n");
+	}
+	fprintf(f, "\t],\n");;
 #endif
 
 	fprintf(f, "\t\"suportedImageFormats\": [\n");

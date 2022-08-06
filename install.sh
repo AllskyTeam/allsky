@@ -156,7 +156,7 @@ save_camera_capabilities() {
 
 
 # Modify placeholders for various directories.
-modify_locations()
+create_WebUI_locations()
 {
 	display_msg progress "Modifying locations for WebUI."
 	FILE="${ALLSKY_WEBUI}/includes/allskyDefines.inc"
@@ -231,7 +231,7 @@ if [[ ${UPDATE} == "true" ]]; then
 
 	source "${ALLSKY_CONFIG}/config.sh"		# Sets CAMERA_TYPE
 	save_camera_capabilities
-	modify_locations
+	create_WebUI_locations
 
 	# Update the sudoers file if it's missing some entries.
 	# Look for the last entry added (should be the last entry in the file).
@@ -311,8 +311,12 @@ sudo touch "${ALLSKY_LOG}"
 sudo chmod 664 "${ALLSKY_LOG}"
 sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
 
-display_msg progress "Updating versions.\n"
-sed -i "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" "${ALLSKY_CONFIG}/config.sh"
+display_msg progress "Updating version and CAMERA_TYPE in config.sh.\n"
+sed -i \
+	-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
+	-e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${CAMERA_TYPE}\"/" \
+	"${ALLSKY_CONFIG}/config.sh" >&2
+
 
 # Restore any necessary files
 if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
@@ -366,8 +370,6 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 			display_msg info "\nPlease compare it to the new one in ${REPO_FILE}"
 			display_msg info "to see what fields have been added, changed, or removed.\n"
 		fi
-
-## TODO: should check if the version has changed.
 	fi
 
 	if [ -f "${PRIOR_CONFIG_DIR}/uservariables.sh" ]; then
@@ -536,6 +538,7 @@ if [ -d "${OLD_WEBUI_LOCATION}" ]; then
 fi
 
 save_camera_capabilities
+create_WebUI_locations
 
 display_msg progress "Setting permissions on WebUI files."
 # The files should already be the correct permissions/owners, but just in case, set them.

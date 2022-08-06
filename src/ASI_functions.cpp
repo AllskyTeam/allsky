@@ -705,6 +705,65 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t],\n");;
 
 	fprintf(f, "\t\"controls\": [\n");
+
+	// Add some other things the camera supports, or the software supports for this camera.
+	// Adding it to the "controls" array makes the code that checks what's available easier.
+	if (CG.supportsTemperature) {
+		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showTemp");
+		fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showTemp ? 1 : 0);
+		fprintf(f, "\t\t},\n");
+	}
+	if (CG.supportsAggression) {
+		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "aggression");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "aggression");
+		fprintf(f, "\t\t\t\"MinValue\" : 0,\n");
+		fprintf(f, "\t\t\t\"MaxValue\" : 100,\n");
+		fprintf(f, "\t\t\t\"DefaultValue\" : %ld\n", CG.aggression);
+		fprintf(f, "\t\t},\n");
+	}
+	if (CG.gainTransitionTimeImplemented) {
+		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "gaintransitiontime");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "gaintransitiontime");
+		fprintf(f, "\t\t\t\"MinValue\" : 0,\n");
+		fprintf(f, "\t\t\t\"DefaultValue\" : %ld\n", CG.gainTransitionTime);
+		fprintf(f, "\t\t},\n");
+	}
+#ifdef IS_ZWO
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "autousb");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "autousb");
+	fprintf(f, "\t\t\t\"DefaultValue\" : 1\n");
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showUSB");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showUSB");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showUSB ? 1 : 0);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "histogrambox");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "histogrambox");
+	fprintf(f, "\t\t\t\"DefaultValue\" : \"%s\"\n", CG.HB.sArgs);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showhistogrambox");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showhistogrambox");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showHistogramBox ? 1 : 0);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "newexposure");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "newexposure");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.videoOffBetweenImages ? 1 : 0);
+	fprintf(f, "\t\t},\n");
+#endif
+	
 	for (int i = 0; i < iNumOfCtrl; i++)
 	{
 		ASI_CONTROL_CAPS cc;
@@ -912,7 +971,7 @@ static bool checkBin(long b, ASI_CAMERA_INFO ci, char const *field)
 // Set defaults that depend on camera type or otherwise can't be set at compile time.
 // If a value is currently NOT_CHANGED, the user didn't specify so use the default.
 // Validate the command-line settings.
-bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
+bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 {
 	if (cg->saveDir == NULL) {
 		static char s[256];
@@ -929,11 +988,13 @@ bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
 	bool ok = true;
 
 	if (cg->ct == ctZWO) {
-		cg->supportsAggression = true;
 		cg->supportsTemperature = true;
+		cg->supportsAggression = true;
+		cg->gainTransitionTimeImplemented = true;
 	} else {	// RPi
-		cg->supportsAggression = false;
 		cg->supportsTemperature = false;
+		cg->supportsAggression = false;
+		cg->gainTransitionTimeImplemented = false;
 	}
 
 	// Get values used in several validations.
@@ -959,8 +1020,16 @@ bool setDefaultsAndValidateSettings(config *cg, ASI_CAMERA_INFO ci)
 	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
 	signal(SIGHUP, sig);		// xxxxxxxxxx TODO: Set up to re-read settings (we currently just restart).
 
+	return(ok);
+}
 
-	// Validate input
+// If a value is currently NOT_CHANGED, the user didn't specify so use the default.
+// Validate the command-line settings.
+bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
+{
+	ASI_ERROR_CODE ret;
+	ASI_CONTROL_CAPS cc;
+	bool ok = true;
 
 	// If an exposure value, which was entered on the command-line in MS, is out of range,
 	// we want to specify the valid range in MS, not US which we use internally.

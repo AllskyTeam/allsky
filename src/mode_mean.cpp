@@ -178,6 +178,7 @@ float aegCalcMean(cv::Mat image)
 
 
 // Calculate the new exposure and gain values.
+
 void aegGetNextExposureSettings(config * cg,
 		raspistillSetting & currentRaspistillSetting,
 		modeMeanSetting & currentModeMeanSetting)
@@ -327,6 +328,36 @@ void aegGetNextExposureSettings(config * cg,
 		// This is done to maximize the time taking picture for the many people that use Allsky to
 		// track meteors, and don't want to miss "the big one".
 		// This also helps to minimize gain since it adds noise.
+
+		// Notes from Andreas, the creator of the algorithm:
+
+		// first priority: minimum gain (because of image noise)
+		// second priority: choose gain and exposure so the image is well exposed (mean value)
+ 
+		// Values for the calculation are only adjusted at the day/night change in aegInit().
+		// Formulas calculated in this order:
+		// Gain min = cameraMinGain (below this is not possible).  1 in examples below
+		// Gain max = currentMaxAutoGain (user value).  14 in examples below.
+		// Exposure min = cameraMinExposure_us.  1 in examples below
+		// Exposure max = currentMaxAutoExposure_us (user value).  60 seconds in examples below.
+		// There is no way (or need as far as we know) to allow the user to specify the min values.
+
+		// 1. Set new gain so maximum exposure time is possible:
+		// Formula:   effective_exposure_time / currentMaxAutoExposure_us
+		// Example 1 daylight: gain: 1us / 60s = 1.6E-8; limited to the minimum gain = 1
+		// Example 2 twilight: gain: 1s / 60s = 0.016; limited to the minimum gain = 1
+		// Example 3 night: gain: 120s / 60s = 2
+		// Example 4 dark night: gain: 600s / 60s = 10
+		// Example 5 very dark night: gain: 1200s / 60s = 20; limited to the maximum gain = 14
+ 
+		// 2. Calculate new exposure time with the calculated gain from above:
+ 		// Formula:   effective_exposure_time / gain
+		// Example 1 daylight: exposure time: 1us / 1 = 1us  
+		// Example 2 twilight: exposure time: 1s / 1 = 1s  
+		// Example 3 night: Exposure time: 120s/ 2 = 60s
+		// Example 4 dark night: Exposure time: 600s/ 10 = 60s
+		// Example 5 very dark night: exposure time: 1200s / 14 = 85.7s; limited to maximum exposure time = 60s  
+
 
 		if (currentModeMeanSetting.meanAuto == MEAN_AUTO) {
 			max_ = std::max((double)cg->cameraMinGain, (double)exposureTimeEff_us  / (double)cg->currentMaxAutoExposure_us);

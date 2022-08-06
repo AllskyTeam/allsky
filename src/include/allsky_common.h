@@ -145,6 +145,7 @@ struct config {			// for configuration variables
 	bool supportsTemperature			= false;		// Does the camera have a temp sensor?
 	bool supportsAggression				= false;		// currently ZWO only
 	bool gainTransitionTimeImplemented	= false;		// currently ZWO only
+	bool imagesSavedInBackground		= false;		// are images save in background?
 
 	// These are camera-specific and are here because they are used in a lot of places.
 	long cameraMinExposure_us			= NOT_SET;		// Minimum exposure
@@ -172,6 +173,7 @@ struct config {			// for configuration variables
 	// Settings not camera-dependent.
 	long dayDelay_ms					= 10 * MS_IN_SEC;	// Delay between capture end and start
 	long nightDelay_ms					= 10 * MS_IN_SEC;
+	long minDelay_ms					= NOT_SET;			// Minimum delay between images
 	long daySkipFrames					= 5;				// # images to skip when starting
 	long nightSkipFrames				= 1;
 	bool dayEnableCooler				= false;			// Enable the cooler?

@@ -50,6 +50,8 @@ include_once('includes/camera_settings.php');
 include_once('includes/days.php');
 include_once('includes/images.php');
 include_once('includes/editor.php');
+include_once('includes/overlay.php');
+include_once('includes/module.php');
 
 $output = $return = 0;
 if (isset($_GET['page']))
@@ -196,7 +198,13 @@ if ($useLogin) {
                     <li>
                         <a href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>
                     </li>
-					<li>
+                    <li>
+                        <a href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i> Overlay Editor</a>
+                    </li>
+                    <li>
+                        <a href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Editor</a>
+                    </li>
+	            <li>
                         <a href="index.php?page=eth0_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>LAN</b> Connection Status</a>
                     </li>
                     <li>
@@ -295,6 +303,12 @@ if ($useLogin) {
                         break;
                     case "editor":
                         DisplayEditor();
+                        break;
+                    case "overlay":
+                        DisplayOverlay("$image_name");
+                        break;
+                    case "module":
+                        DisplayModule();
                         break;
                     default:
                         DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);

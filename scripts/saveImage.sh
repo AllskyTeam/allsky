@@ -245,6 +245,8 @@ if [ "${DAY_OR_NIGHT}" = "NIGHT" -a ${AUTO_STRETCH} = "true" ]; then
 	fi
 fi
 
+python ${ALLSKY_SCRIPTS}/post-process.py
+
 SAVED_FILE="${CURRENT_IMAGE}"				# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 

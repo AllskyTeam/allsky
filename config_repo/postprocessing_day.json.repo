@@ -1,0 +1,48 @@
+[
+    {
+        "module": "loadimage",
+        "arguments": {},
+        "enabled": true,
+        "position": "first",
+        "name": "Loads the latest image",
+        "description": "Loads the last captured image",
+        "argumentdetails": null,
+        "type": "system"
+    },
+    {
+        "module": "export",
+        "arguments": {
+            "filelocation": "${ALLSKY_TMP}/allskydata.json"
+        },
+        "enabled": true,
+        "name": "AllSKY Export",
+        "description": "Exports AllSKY data to json",
+        "argumentdetails": {
+            "filelocation": {
+                "required": "true",
+                "description": "File Location",
+                "help": "The location to save the json date"
+            }
+        },
+        "type": "system"
+    },
+    {
+        "module": "overlay",
+        "arguments": {},
+        "enabled": true,
+        "name": "Overlays data on the image",
+        "description": "Overlays data fileds on the image",
+        "argumentdetails": null,
+        "type": "system"
+    },
+    {
+        "module": "saveimage",
+        "arguments": {},
+        "enabled": true,
+        "position": "last",
+        "name": "Saves the image",
+        "description": "Saves the image",
+        "argumentdetails": null,
+        "type": "system"
+    }
+]

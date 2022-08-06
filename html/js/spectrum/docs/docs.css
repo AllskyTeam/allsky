@@ -1,0 +1,224 @@
+/* Styles for the demo page only. See spectrum.css for the actual colorpicker styles */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Nunito Regular'), local('Nunito-Regular'),
+       url('fonts/nunito-v11-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('fonts/nunito-v11-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+
+/* nunito-600 - latin */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 600;
+  src: local('Nunito SemiBold'), local('Nunito-SemiBold'),
+       url('fonts/nunito-v11-latin-600.woff2') format('woff2'), /* Super Modern Browsers */
+       url('fonts/nunito-v11-latin-600.woff') format('woff'); /* Modern Browsers */
+}
+
+/* nunito-800 - latin */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 800;
+  src: local('Nunito ExtraBold'), local('Nunito-ExtraBold'),
+       url('fonts/nunito-v11-latin-800.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('fonts/nunito-v11-latin-800.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+
+:root {
+  --primary-color: #276cb8;
+  --secondary-color: #e83072;
+  --neutral-color:#606c71;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-size: 17px;
+  line-height: 1.5;
+  font-family: 'Nunito', sans-serif;
+  color: var(--neutral-color);
+}
+
+/* ---- TABLE OF CONTENT ---- */
+#toc {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  overflow: auto;
+  width: 280px;
+  border-right: 1px solid #eeee;
+  font-size: .9rem;
+}
+#toc::-webkit-scrollbar-track {
+    background-color: #f6f6f6;;
+    border: 1px solid #f0f0f0;
+}
+
+#toc::-webkit-scrollbar {
+    width: 7px;
+}
+#toc::-webkit-scrollbar-thumb {
+    background-color: #c3c3c3;
+}
+#toc ul {
+  padding: 0;
+  margin: 0;
+}
+#toc li {
+  list-style: none;
+  line-height: 2;
+  padding: 0 1rem;
+}
+#toc li a {
+  text-transform: capitalize;
+}
+#toc .toc-active {
+  color: var(--secondary-color);
+  font-weight: bold;
+}
+#toc .toc-h1 {
+  font-weight: bold;
+  text-align: center;
+  font-size: 2rem;
+  padding: 0;
+  border-bottom: 1px solid #eee;
+  color: var(--secondary-color);
+}
+#toc .toc-h2 {
+  font-weight: bold;
+  margin-top: 1rem;
+  font-size: 1.3rem;
+  color: var(--primary-color);
+}
+#toc .toc-h3 {
+  padding-left: 2rem;
+}
+#toc a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---- CONTAINERS ---- */
+.main-container {
+  margin-left: 280px;
+}
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ---- HEADER ---- */
+#header {
+  border-bottom: 1px solid #eeee;
+  text-align: center;
+  padding-bottom: 1.5rem;
+}
+#header h1 {
+  margin-bottom: -.5rem;
+}
+#header h1 a {
+  color: var(--secondary-color);
+}
+#header h1 a:hover {
+  text-decoration: none;
+}
+
+/* ---- DOCS ---- */
+#docs {
+  padding: 3rem 1rem 2rem 4rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+h1, h2 {
+  color: var(--primary-color);
+}
+h3 {
+  text-transform: capitalize;
+}
+a {
+  color: var(--secondary-color);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+pre.hljs {
+  background: #373834;
+  border-radius: 5px;
+  padding: .8em;
+  font-size: 16px;
+}
+strong {
+  font-weight: 600;
+}
+code {
+  padding: 2px 4px;
+  color: #e83072;
+  white-space: nowrap;
+  background-color: #f7f7f9;
+  border: 1px solid #e1e1e8;
+  font-size: 12px;
+}
+button {
+  background-color: var(--secondary-color);
+  color: white;
+  box-shadow: none;
+  cursor: pointer;
+  margin-left: .5rem;
+  border: none;
+  border-radius: 4px;
+  padding: .3em .8em;
+  font-size: inherit;
+  font-family: inherit;
+}
+button:hover {
+  opacity: .9;
+}
+input {
+  box-shadow: none;
+  color: inherit;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  padding: .3em .8em;
+  font-size: inherit;
+  font-family: inherit;
+  margin-bottom: 10px;
+  margin-right: 10px;
+  background-color: white;
+}
+.configurator-container {
+  background-color: #f8f8f8;
+  padding: 1rem;
+  /*border: 2px solid #dddfe0;*/
+  padding: 1rem;
+  border-radius: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.config-section {
+  /*width: 33%;*/
+}
+.config-section label {
+  display: block;
+}
+.config-section h5 {
+  margin: 0 0 .5rem 0;
+  font-size: 1rem;
+}
+
+.configurator-renderer {
+  text-align: center;
+}
+.configurator-renderer .sp-flat {
+  margin-bottom: 10px;
+}
+#sp-options {
+  text-align: left;
+}

@@ -1,0 +1,187 @@
+<h2>Format Help</h2>
+<p>The Format field allows the data to be formatted using a coding system. The system is different for each type of
+    field as detailed below.</p>
+
+
+
+
+<div>
+
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#oe-date-format-help-tab"
+                aria-controls="oe-date-format-help-tab" role="tab" data-toggle="tab">Dates</a></li>
+        <li role="presentation"><a href="#oe-time-format-help-tab" aria-controls="oe-time-format-help-tab" role="tab"
+                data-toggle="tab">Times</a></li>
+
+    </ul>
+
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="oe-date-format-help-tab">
+
+            <h3>Date Type: Date</h3>
+            The date field format is used to format a date, please note that there is a seperate format option for
+            times. The
+            following codes are available
+            <br>
+            <table width="100%" class="table table-bordered table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th width="10%">Code</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>j</td>
+                        <td>Day of the month without leading zeros (1 to 31).</td>
+                    </tr>
+                    <tr>
+                        <td>d</td>
+                        <td>Day of the month, 2 digits with leading zeros (01 to 31).</td>
+                    </tr>
+                    <tr>
+                        <td>l</td>
+                        <td>(lowercase 'L') A full textual representation of the day of the week (Monday, Tuesday,...).
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>w</td>
+                        <td>Numeric representation of the day of the week (0=Sunday,1=Monday,...6=Saturday).</td>
+                    </tr>
+                    <tr>
+                        <td>D</td>
+                        <td>A textual representation of a day, three letters.</td>
+                    </tr>
+                    <tr>
+                        <td>S</td>
+                        <td>The English ordinal suffix for the day of the month (2 characters st, nd, rd or th. Works
+                            well with j).
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>m</td>
+                        <td>Numeric representation of a month, with leading zeros (01 to 12).</td>
+                    </tr>
+                    <tr>
+                        <td>n</td>
+                        <td>Numeric representation of a month, without leading zeros (1 to 12).</td>
+                    </tr>
+                    <tr>
+                        <td>F</td>
+                        <td>A full textual representation of a month, such as January - March.</td>
+                    </tr>
+                    <tr>
+                        <td>M</td>
+                        <td>A short textual representation of a month, three letters (Jan - Dec).</td>
+                    </tr>
+                    <tr>
+                        <td>Y</td>
+                        <td>A full numeric representation of a year, 4 digits (1999 OR 2022).</td>
+                    </tr>
+                    <tr>
+                        <td>y</td>
+                        <td>A two digit representation of a year (99 OR 22)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Date Format Examples</h4>
+            <p><b>NOTE:</b> When creating formats any characters not recognised as a formatting character will simply be
+                added to
+                the
+                output. This allows you to use delimiting characters in the format.</p>
+            <p>The below examples all use the 8th May 2022 as the source date</p>
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th width="10%">Format</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>d/m/y</td>
+                        <td>08/05/22</td>
+                    </tr>
+                    <tr>
+                        <td>dS F Y</td>
+                        <td>08th May 2022</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="oe-time-format-help-tab">
+
+
+            <h3>Date Type: Time</h3>
+            The time field format is used to format a time, please note that there is a seperate format option for
+            dates. The following codes are available
+            <br>
+            <table width="100%" class="table table-bordered table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th width="10%">Code</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>H</td>
+                        <td>24-hour format of an hour with leading zeros (00 to 23).</td>
+                    </tr>
+                    <tr>
+                        <td>g</td>
+                        <td>12-hour format of an hour without leading zeros (1 to 12).</td>
+                    </tr>
+                    <tr>
+                        <td>h</td>
+                        <td>12-hour format of an hour with leading zeros (01 to 12).</td>
+                    </tr>
+                    <tr>
+                        <td>a</td>
+                        <td>Lowercase Ante meridiem and Post meridiem (am or pm).</td>
+                    </tr>                    
+                    <tr>
+                        <td>i</td>
+                        <td>Minutes with leading zeros (00 to 59).</td>
+                    </tr>  
+                    <tr>
+                        <td>s</td>
+                        <td>Seconds, with leading zeros (00 to 59).</td>
+                    </tr> 
+                    <tr>
+                        <td>c</td>
+                        <td>ISO 8601 date (eg: 2022-05-08T21:00:54.944Z).</td>
+                    </tr>                    
+                </tbody>
+            </table>
+
+            <h4>Time Format Examples</h4>
+            <p><b>NOTE:</b> When creating formats any characters not recognised as a formatting character will simply be
+                added to the output. This allows you to use delimiting characters in the format.</p>
+            <p>The below examples all use the 21:00 as the source date</p>
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th width="10%">Format</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>H:m:s</td>
+                        <td>21:00:00</td>
+                    </tr>
+                    <tr>
+                        <td>g:ma</td>
+                        <td>9:00pm</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>

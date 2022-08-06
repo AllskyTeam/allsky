@@ -1,0 +1,4 @@
+{
+    "watchdog": true,
+    "timeout": 10000
+}

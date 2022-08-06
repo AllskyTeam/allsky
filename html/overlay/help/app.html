@@ -1,0 +1,132 @@
+<div>
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#oe-app-basic-help-tab" aria-controls="oe-app-basic-help-tab"
+                role="tab" data-toggle="tab">Introduction</a></li>
+        <li role="presentation"><a href="#oe-app-fields-help-tab" aria-controls="oe-app-fields-help-tab" role="tab"
+                data-toggle="tab">Fields</a></li>
+        <li role="presentation"><a href="#oe-app-fonts-help-tab" aria-controls="oe-app-fonts-help-tab" role="tab"
+                data-toggle="tab">Fonts</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="oe-app-basic-help-tab">
+            <div class="oe-help">
+                <dl>
+                    <dt>The Overlay Editor Basics</dt>
+                    <dd>The editor allows you to control the data that is displayed on each frame captured by the AllSky
+                        software.</dd>
+                    <dd>A drag and drop user iterfance allows for fields to be managed.</dd>
+                    <dd>Data is displayed by adding 'fields' which define the data and format to be displayed, currently
+                        two field formats are available text and images.</dd>
+                    <dd>Text fields allow textual data to be displayed and are dynamic, that is they can change between
+                        each captured frame. Images are static and do not change between frames.</dd>
+                    <dd>Text fields are either 'System' or 'User' fields. System fields contain data defined by the
+                        AllSky software, such as the date or exposure duration. User fields conatin data provied by
+                        source sother than AllSky, an example might be weather data. User fields replace the 'extra
+                        text' feature in AllSky.</dd>
+                    <dd>Text fields also support the use of 3rd party fonts. The editor has an inbuilt font manager
+                        where you can upload your own fonts.</dd>
+                </dl>
+            </div>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="oe-app-fields-help-tab">
+            <div class="oe-help">
+                <dl>
+                    <dt>The Field Manager</dt>
+                    <dd>This provides a list of available fields and defines their format. Once a field has been created
+                        it can be added or its label used in composite fields, a composite field is one that consists of
+                        more than on field</dd>
+                    <dd>The field manager is accessed by clicking on the 'field manager' icon in the toolbar. Once
+                        selected a list of existing fields is displayed. NOTE: The default page size for the list can be
+                        controlled in the overlay editor options.</dd>
+                    <dd>
+                    <dd>When adding or editing a field the following fields are available</dd>
+                    <table class="table">
+                        <tr>
+                            <td>Name</td>
+                            <td>This is the label used for the field. The format needs to be specific
+                                ${VARIABLENAME}</td>
+                        </tr>
+                        <tr>
+                            <td>Description</td>
+                            <td>The description for the field.</td>
+                        </tr>
+                        <tr>
+                            <td>Format</td>
+                            <td>Fot non text fields this will define the format used for this field, see the formats
+                                section for more details</td>
+                        </tr>
+                        <tr>
+                            <td>Sample</td>
+                            <td>If the field is a non system field then this is the sample data used when using
+                                switch the 'sample data' option.</td>
+                        </tr>
+                        <tr>
+                            <td>Category</td>
+                            <td>The category the field belongs to, this is purley for display purposes</td>
+                        </tr>
+                        <tr>
+                            <td>Type</td>
+                            <td>The type of field. </td>
+                        </tr>
+                        <tr>
+                            <td>Source</td>
+                            <td>Either 'System' or 'User'. System fields cannot be deleted but can be edited.</td>
+                        </tr>
+                    </table>
+                    </dd>
+                </dl>
+                <h4>Adding a simple field</h4>
+                <p>Select the field manager and click the + button. The new field will be added to the overlay. Change
+                    the 'field' to show the data you require. Be careful NOT to modify the placeholders </p>
+                <h4>Creating a composite field</h4>
+                <p>A Composite field is one that consists of more than one piece of data. For example if you want to
+                    display the Date and Time using a single field then the following should be enteried in the fields
+                    properties</p>
+                <p>Think of it like the sprintf command in c. The 'Field' value specifies the data you wish to display
+                    with placeholders for the actual data, the Format and Sample field contain comma speeraterd lists
+                    that control the formatting and sample data for each field. The position in the list equates to the
+                    order in which the fields appear.</p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <td width="10%">Field</td>
+                            <td width="25%">Value</td>
+                            <td>Description</td>
+                        </tr>
+                    </thead>
+                    <tr>
+                        <td>Field</td>
+                        <td>${DATE} ${TIME}</td>
+                        <td>Specifies the two fields we are using, date and time</td>
+                    </tr>
+                    <tr>
+                        <td>Format</td>
+                        <td>%d-%m-%Y,%H:%M:%S</td>
+                        <td>Specifies the formats for the date and time. NOTE: the comma so that the first format
+                            applies to the DATE field and the second to the TIME field.</td>
+                    </tr>
+                    <tr>
+                        <td>Sample</td>
+                        <td>DATE,DATE</td>
+                        <td>DATE specifies that the overlay editor should use the current date/time for the sample data
+                            for the field, again note the comma seperation</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div role="tabpanel" class="tab-pane active" id="oe-app-fonts-help-tab">
+            <blockquote>
+                <p>The Font Manager</p>
+            </blockquote>
+            <p>The overlay editor support additional fonts which are managed via the font manager. The Font Manager is
+                accessed from the main toolbar.</p>
+            <p>The font manager will display all availabel fonts, both system and user uploaded fonts. The system fonts
+                cannot be removed but it is possible to delete user fonts if they are no longer required.</p>
+            <p>The font manager ONLY supports fonts from daFont.com.</p>
+            <p>To upload a new font first ensure that the current config has been saved then select the 'Add Font' button from the Font Manager. Find the font you wish to upload on daFont.com and copy the url from the brower. NOTE: The url will always end in .font</p>
+            <p>Enter the font url in the dialog and the overlay editor will do the rest. If there is an issue installing the font an error will be displayed. If the font uploads ok then it will be available for use in fields.</p>
+            <p>To delete a font open the Font Manager and click the delete button. If any field is using the font it will revert to use whichever font is set as the default in the overlay editor options.</p>
+        </div>
+    </div>
+</div>

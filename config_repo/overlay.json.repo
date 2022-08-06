@@ -1,0 +1,44 @@
+{
+    "fields": [
+        {
+            "label": "${DATE}",
+            "x": 20,
+            "y": 0,
+            "fontsize": 80,
+            "format": "%d-%m-%Y",
+            "id": "oe-field-0"
+        },
+        {
+            "label": "${TIME}",
+            "x": 520,
+            "y": 0,
+            "fontsize": 80,
+            "format": "%H:%M:%S",
+            "id": "oe-field-1"
+        }
+    ],
+    "images": [],
+    "settings": {
+        "defaultdatafileexpiry": "550",
+        "defaultincludeplanets": false,
+        "defaultincludesun": false,
+        "defaultincludemoon": false,
+        "defaultimagetopacity": 0.63,
+        "defaultimagerotation": 0,
+        "defaulttextrotation": 0,
+        "defaultfontopacity": 1,
+        "defaultfontcolour": "white",
+        "defaultfont": "Arial",
+        "defaultfontsize": 52,
+        "defaultimagescale": 1,
+        "defaultnoradids": ""
+    },
+    "fonts": {
+        "moon_phases": {
+            "fontPath": "fonts\/moon_phases.ttf",
+            "fonttcolour": "red",
+            "backgroundcolor": "white",
+            "fontopacity": 0.5
+        }
+    }
+}

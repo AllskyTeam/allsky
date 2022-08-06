@@ -1,0 +1,22 @@
+{
+	// Enforcing options
+	"bitwise": true,
+	"curly": true,
+	"eqeqeq": true,
+	"forin": false,
+	"freeze": true,
+	"noarg": true,
+	"nonew": true,
+	"undef": true,
+	"unused": "vars",
+
+	// Environments
+	"node": true,
+	"browser": true,
+	"devel": true,
+
+	// Deprecated
+	"noempty": true,
+	"newcap": true,
+	"quotmark": true  // Validates consistency per file, as opposed to 'single'|'double'.
+}

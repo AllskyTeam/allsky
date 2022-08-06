@@ -1,0 +1,145 @@
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>jqPropertyGrid Example</title>
+
+	<style>
+		body {
+			font-family: 'verdana';
+			font-size: 12px;
+		}
+	</style>
+
+	<link rel='stylesheet' href='../jqPropertyGrid.css' />
+	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
+	<link rel='stylesheet' href='http://bgrins.github.com/spectrum/spectrum.css' />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="http://bgrins.github.com/spectrum/spectrum.js" ></script>
+	<script src="../jqPropertyGrid.js"></script>
+
+	<script>
+		$(function() {
+			// This is our settings object
+			var setObj = {
+				accumulateTicks: true,
+				filter: false,
+				filterSize: 200,
+				buyColor: '#00ff00',
+				sellColor: '#ff0000',
+				someOption: 'Maybe',
+				noGroup: 'I have no group',
+				dontShowMe: 'please',
+				readOnly: 'I am read only'
+			};
+
+			// This is our settings object metadata
+			var cpOptions = { preferredFormat: 'hex', showInput: true, showInitial: true };
+			var metaObj = {
+				dontShowMe: {browsable: false},
+				filter: {group: 'Behavior', name: 'Filter', type: 'boolean'},
+				filterSize: {group: 'Behavior', name: 'Filter size', type: 'number', options: { min: 0, max: 500, step: 10 }},
+				accumulateTicks: {group: 'Behavior', name: 'Accumulate ticks', type: 'boolean'},
+				buyColor: {group: 'Appearance', name: 'Buy color', type: 'color', options: cpOptions},
+				sellColor: {group: 'Appearance', name: 'Sell color', type: 'color', options: { preferredFormat: 'hex', showInput: true, showInitial: true }},
+				someOption: {name: 'Some option', type: 'options', options: ['Yes', 'No', {text:'Not sure', value: 'Maybe'}]},
+				readOnly: {name: 'Read Only', type: 'label', description: 'This is a label', showHelp: false}
+			};
+
+			// Lets create the grid for it
+			$('#propGrid').jqPropertyGrid(setObj, {meta: metaObj});
+
+			// Now create another grid
+			var theObj = {
+				font: 'Consolas',
+				fontSize: 14,
+				fontColor: '#a3ac03',
+				jQuery: true,
+				modernizr: false,
+				framework: 'angular',
+				iHaveNoMeta: 'Never mind...',
+				icon: 'HOME',
+ 				choices: ["Choice 1", "Choice 2", "A really long choice which should trigger the horizontal scrollbar!"]
+			};
+
+			// This is the metadata object that describes the target object properties (optional)
+			var theMeta = {
+				// Since string is the default no nees to specify type
+				font: { group: 'Editor', name: 'Font', description: 'The font editor to use'},
+				// The "options" would be passed to jQueryUI as its options
+				fontSize: { group: 'Editor', name: 'Font size', type: 'number', options: { min: 0, max: 20, step: 2 }},
+				// The "options" would be passed to Spectrum as its options
+				fontColor: { group: 'Editor', name: 'Font color', type: 'color', options: { preferredFormat: 'hex' }},
+				// since typeof jQuery is boolean no need to specify type, also since "jQuery" is also the display text no need to specify name
+				jQuery: { group: 'Plugins', description: 'Whether or not to include jQuery on the page', showHelp: false },
+				// We can specify type boolean if we want...
+				modernizr: {group: 'Plugins', type: 'boolean', description: 'Whether or not to include modernizr on the page'},
+				framework: {name: 'Framework', group: 'Plugins', type: 'options', options: ['None', {text:'AngularJS', value: 'angular'}, {text:'Backbone.js', value: 'backbone'}], description: 'Whether to include any additional framework'},
+				icon: {name: 'Icon', type: 'icon'},
+ 				choices: {name: 'n/a', group: 'Choices (1 per line):', type: 'textarea', colspan2: true}
+			};
+
+			var theCustomTypes = {
+				icon: {
+					html: function(elemId, name, value, meta) { // custom renderer for type (required)
+						return '<i class="fa fa-' + value + '"></i>';
+					},
+					valueFn: function() {return 'Icon field value';}
+				},
+				textarea: {
+					html: function(elemId, name, value, meta) {
+						var html = '<textarea id="' + elemId + '" rows=6 style="white-space: nowrap; overflow-x: auto; width:100%">';
+						if (value instanceof Array) {
+							html += value.join("\n");
+						}
+						html += '</textarea>';
+						return html;
+					},
+					makeValueFn: function(elemId, name, value, meta) {
+						return function() {
+							return $('#' + elemId).val().split('\n');
+						}
+					}
+				}
+			};
+
+			function propertyChangedCallback(grid, name, value) {
+				// handle callback
+				console.log(name + ' ' + value);
+				$('#events-log').html( "property '" + name + "' changed to '" + value + "'<br>" + $('#events-log').html() );
+			}
+
+
+			$('#propGrid2').jqPropertyGrid(theObj, {
+				meta: theMeta, 
+				customTypes: theCustomTypes,
+				helpHtml: '<i class="fa fa-question-circle-o"></i>',
+				callback: propertyChangedCallback,
+				isCollapsible: true,
+				sort: function(a,b){
+					return a > b ? 1 : a < b ? -1 : 0; 
+				},
+			});
+
+			$('#btnGetValues').click(function() {
+				var first = JSON.stringify($('#propGrid').jqPropertyGrid('get'), null, '\t');
+				var second = JSON.stringify($('#propGrid2').jqPropertyGrid('get'), null, '\t');
+
+				$('#txtValues').val(first + '\n\n' + second);
+			});
+		});
+	</script>
+</head>
+<body>
+	<div id="propGrid" style="float:left"></div>
+	<div id="propGrid2" style="float:left; margin-left:10px"></div>
+	<div>
+		<textarea id="txtValues" rows="20" cols="50"></textarea>
+		<input id="btnGetValues" type="button" value="Get values"/>
+	</div>
+	<div id="events-log" style="float:left;"></div>
+</body>
+</html>

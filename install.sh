@@ -156,7 +156,7 @@ save_camera_capabilities() {
 
 
 # Modify placeholders for various directories.
-modify_locations()
+create_WebUI_locations()
 {
 	display_msg progress "Modifying locations for WebUI."
 	FILE="${ALLSKY_WEBUI}/includes/allskyDefines.inc"
@@ -231,7 +231,7 @@ if [[ ${UPDATE} == "true" ]]; then
 
 	source "${ALLSKY_CONFIG}/config.sh"		# Sets CAMERA_TYPE
 	save_camera_capabilities
-	modify_locations
+	create_WebUI_locations
 
 	# Update the sudoers file if it's missing some entries.
 	# Look for the last entry added (should be the last entry in the file).
@@ -536,6 +536,7 @@ if [ -d "${OLD_WEBUI_LOCATION}" ]; then
 fi
 
 save_camera_capabilities
+create_WebUI_locations
 
 display_msg progress "Setting permissions on WebUI files."
 # The files should already be the correct permissions/owners, but just in case, set them.

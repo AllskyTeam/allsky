@@ -103,10 +103,12 @@ while [ $# -gt 0 ]; do
 			# Create the camera capabilities file for the new camera type.
 			CC_FILE="${ALLSKY_CONFIG}/${CC_FILE_NAME}.${CC_FILE_EXT}"
 
-			# Save the current file just in case creating a new one fails.
-			# It's a link so copy it to a temp name, then remove the old name.
-			cp "${CC_FILE}" "${CC_FILE}-OLD"
-			rm -f "${CC_FILE}"
+			if [ -f "${CC_FILE}" ]; then
+				# Save the current file just in case creating a new one fails.
+				# It's a link so copy it to a temp name, then remove the old name.
+				cp "${CC_FILE}" "${CC_FILE}-OLD"
+				rm -f "${CC_FILE}"
+			fi
 
 			# Debug level 3 to give the user more info on error.
 			"${ALLSKY_HOME}/capture_${NEW_VALUE}" -debuglevel 3 -cc_file "${CC_FILE}"

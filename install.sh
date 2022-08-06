@@ -408,6 +408,7 @@ if [[ ${NEEDCAM} == "true" ]]; then
 	get_camera_capabilities
 fi
 
+### TODO: Run "locale | grep LC_NUMERIC" and update "locale" in settings file.
 ### TODO: Check for size of RAM+swap during installation (Issue # 969).
 ### TODO: Check if prior $ALLSKY_TMP was a memory filesystem.  If not, offer to make $ALLSKY_TMP a memory filesystem.
 
@@ -537,7 +538,6 @@ if [ -d "${OLD_WEBUI_LOCATION}" ]; then
 	fi
 fi
 
-save_camera_capabilities
 create_WebUI_locations
 
 display_msg progress "Setting permissions on WebUI files."
@@ -547,6 +547,7 @@ sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
 sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
 chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 
+save_camera_capabilities
 
 ######## All done
 

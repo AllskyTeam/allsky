@@ -678,7 +678,7 @@ int main(int argc, char *argv[])
 		displayHeader(CG);
 	}
 
-	if (setlocale(LC_NUMERIC, CG.locale) == NULL)
+	if (setlocale(LC_NUMERIC, CG.locale) == NULL && ! CG.saveCC)
 		Log(-1, "*** WARNING: Could not set locale to %s ***\n", CG.locale);
 
 	if (CG.help)
@@ -712,8 +712,12 @@ int main(int argc, char *argv[])
 	CG.ASIversion = ASIGetSDKVersion();
 
 
+	// Set defaults that depend on the camera type.
+	if (! setDefaults(&CG, ASICameraInfo))
+		closeUp(EXIT_ERROR_STOP);
+
 	// Do argument error checking if we're not going to exit soon.
-	if (! CG.saveCC && ! setDefaultsAndValidateSettings(&CG, ASICameraInfo))
+	if (! CG.saveCC && ! validateSettings(&CG, ASICameraInfo))
 		closeUp(EXIT_ERROR_STOP);
 
 	if (! checkForValidExtension(&CG)) {

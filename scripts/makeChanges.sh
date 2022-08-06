@@ -148,8 +148,18 @@ while [ $# -gt 0 ]; do
 
 			# .php files don't return error codes so we check if it worked by
 			# looking for a string in its output.
-			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" --dir "${ALLSKY_CONFIG}" --cc_file "${CC_FILE}" --options_file "${OPTIONS_FILE}" --settings_file "${SETTINGS_FILE}" 2>&1)"
-			[ -n "${R}" ] && echo -e "${R}"
+			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+				--dir "${ALLSKY_CONFIG}" \
+				--cc_file "${CC_FILE}" \
+				--options_file "${OPTIONS_FILE}" \
+				--settings_file "${SETTINGS_FILE}" \
+				2>&1)"
+			if [ -n "${R}" ]; then
+				# The user shouldn't see XX_WORKED_XX.
+				OTHER_OUTPUT="$(echo -e "${R}" | grep -v "XX_WORKED_XX")"
+				[ -n "${OTHER_OUTPUT}" ] && echo "${OTHER_OUTPUT}"
+			fi
+			# It's an error if XX_WORKED_XX is NOT in the output.
 			echo -e "${R}" | grep --silent "XX_WORKED_XX" || exit 2
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.

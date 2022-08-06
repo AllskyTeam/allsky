@@ -665,7 +665,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 #ifdef IS_RPi
 	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", CG.cmdToUse);
 
-	fprintf(f, "\t\"suportedRotations\": [\n");
+	fprintf(f, "\t\"supportedRotations\": [\n");
 	fprintf(f, "\t\t{ \"value\" : 0, \"label\" : \"None\" },\n");
 	if (CG.ct == ctRPi && CG.isLibcamera)
 	{
@@ -681,7 +681,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t],\n");;
 #endif
 
-	fprintf(f, "\t\"suportedImageFormats\": [\n");
+	fprintf(f, "\t\"supportedImageFormats\": [\n");
 	for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedVideoFormat); i++)
 	{
 		ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];

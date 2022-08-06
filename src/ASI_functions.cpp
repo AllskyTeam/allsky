@@ -708,6 +708,32 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 
 	// Add some other things the camera supports, or the software supports for this camera.
 	// Adding it to the "controls" array makes the code that checks what's available easier.
+
+	// sensor size was also saved above, but save here with min/max/default
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"sensorWidth\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"width\",\n");
+	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");		// TODO: I <think> some ZWO cameras have a min
+	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", width);
+	fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"sensorHeight\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"height\",\n");
+	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");		// TODO: I <think> some ZWO cameras have a min
+	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", height);
+	fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"delayBetweenImages_ms\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"delay\",\n");
+	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");
+	fprintf(f, "\t\t\t\"MinValue\" : %ld,\n", CG.minDelay_ms);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %ld\n", std::min(CG.dayDelay_ms, CG.nightDelay_ms) / MS_IN_SEC);
+	fprintf(f, "\t\t},\n");
+
 	if (CG.supportsTemperature) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
@@ -991,10 +1017,20 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->supportsTemperature = true;
 		cg->supportsAggression = true;
 		cg->gainTransitionTimeImplemented = true;
+		cg->imagesSavedInBackground = true;
 	} else {	// RPi
 		cg->supportsTemperature = false;
 		cg->supportsAggression = false;
 		cg->gainTransitionTimeImplemented = false;
+		cg->imagesSavedInBackground = false;
+	}
+
+	if (cg->imagesSavedInBackground) {
+		// Images are saved in a separate thread so need to give time for an image to be saved.
+		cg->minDelay_ms = 10;
+	} else {
+		// The capture program waits for the image to be saved.
+		cg->minDelay_ms = 0;
 	}
 
 	// Get values used in several validations.

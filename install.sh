@@ -40,6 +40,7 @@ ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
 REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
 REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/allskyDefines.inc.repo"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
+ALLSKY_LOG="/var/log/allsky.log"
 
 
 
@@ -173,7 +174,7 @@ modify_locations()
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
-		chmod 644 "{FILE}"
+		chmod 644 "${FILE}"
 }
 
 do_sudoers()
@@ -305,7 +306,6 @@ echo
 chmod 755 "${ALLSKY_HOME}"	# Some versions of Linux default to 750 so web server can't read it
 
 # Create the log file and make it readable by the user; this aids in debugging.
-ALLSKY_LOG="/var/log/allsky.log"
 display_msg progress "Set permissions on Allsky log (${ALLSKY_LOG}).\n"
 sudo touch "${ALLSKY_LOG}"
 sudo chmod 664 "${ALLSKY_LOG}"
@@ -425,12 +425,10 @@ if [ "${CURRENT_HOSTNAME}" != "${NEW_HOST_NAME}" ]; then
 	fi
 fi
 
-display_msg progress "Installing the lighttpd webserver and its dependencies."
-echo
-sudo apt-get update && sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
+display_msg progress "Installing the lighttpd webserver and its dependencies.\n"
+sudo systemctl stop hostapd 2> /dev/null
 sudo systemctl stop lighttpd 2> /dev/null
-sudo rm -fr /var/log/lighttpd/*		# Start off with a clean log file.
-sudo lighty-enable-mod fastcgi-php 2> /dev/null
+sudo apt-get update && sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
 
 REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
@@ -442,7 +440,11 @@ sed \
 	-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
 		"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
 sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
+
+sudo lighty-enable-mod fastcgi-php 2> /dev/null
+sudo systemctl force-reload lighttpd 2> /dev/null
 sudo systemctl start lighttpd
+sudo rm -fr /var/log/lighttpd/*		# Start off with a clean log file.
 echo
 
 FINAL_AVI_FILE="/etc/avahi/avahi-daemon.conf"

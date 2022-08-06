@@ -94,7 +94,7 @@ calc_wt_size() {
 	elif [ "${WT_WIDTH}" -gt 178 ]; then
 		WT_WIDTH=120
 	fi
-	WT_MENU_HEIGHT=$((${WT_HEIGHT}-7))
+##	WT_MENU_HEIGHT=$((${WT_HEIGHT}-7))
 }
 
 
@@ -116,9 +116,10 @@ select_camera_type() {
 	# If they have the "old" style Allsky, don't bother trying to map the old $CAMERA
 	# to the new $CAMERA_TYPE.
 
-	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "Camera Type" ${WT_HEIGHT} ${WT_WIDTH} ${WT_MENU_HEIGHT} \
-		"ZWO"  "ZWO ASI" \
-		"RPi"  "Raspberry Pi HQ and compatible" \
+	# "2" is the number of menu items.
+	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "\nSelect your camera type:\n" ${WT_HEIGHT} ${WT_WIDTH} 2 \
+		"ZWO"  "   ZWO ASI" \
+		"RPi"  "   Raspberry Pi HQ and compatible" \
 		3>&1 1>&2 2>&3)
 	if [ $? -ne 0 ]; then
 		display_msg warning "Camera selection required.  Please re-run the installation and select a camera to continue.\n"

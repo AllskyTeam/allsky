@@ -366,8 +366,6 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 			display_msg info "\nPlease compare it to the new one in ${REPO_FILE}"
 			display_msg info "to see what fields have been added, changed, or removed.\n"
 		fi
-
-## TODO: should check if the version has changed.
 	fi
 
 	if [ -f "${PRIOR_CONFIG_DIR}/uservariables.sh" ]; then

@@ -651,10 +651,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 			fprintf(f, ",");		// comma on all but last one
 			fprintf(f, "\n");
 		}
-		fprintf(f, "\t\t{ ");
-		fprintf(f, "\"value\" : \"%dx%d\",  ", b, b);
-		fprintf(f, "\"bin\" : %d", b);
-		fprintf(f, " }");
+		fprintf(f, "\t\t{ \"value\" : %d, \"label\" : \"%dx%d\" }", b, b, b);
 	}
 	fprintf(f, "\t],\n");;
 

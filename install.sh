@@ -311,8 +311,12 @@ sudo touch "${ALLSKY_LOG}"
 sudo chmod 664 "${ALLSKY_LOG}"
 sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
 
-display_msg progress "Updating versions.\n"
-sed -i "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" "${ALLSKY_CONFIG}/config.sh"
+display_msg progress "Updating version and CAMERA_TYPE in config.sh.\n"
+sed -i \
+	-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
+	-e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${CAMERA_TYPE}\"/" \
+	"${ALLSKY_CONFIG}/config.sh" >&2
+
 
 # Restore any necessary files
 if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then

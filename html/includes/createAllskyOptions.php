@@ -261,8 +261,6 @@ if (! file_exists($repo_file)) {
 $options_file_full = "$directory/$options_file";
 $settings_file_full = "$directory/$settings_file";
 
-// Create options file
-
 // Read $cc_file
 $cc_str = file_get_contents($cc_file_full, true);
 $cc_array = json_decode($cc_str, true);
@@ -272,7 +270,6 @@ $cameraModel = $cc_array["cameraModel"];
 
 // Read $repo_file
 $repo_str = file_get_contents($repo_file, true);
-//$repo_str = file_get_contents(getOptionsFile($cameraType), true);	// xxxxxxxxxxxx
 if ($repo_str == "") {
 	echo "ERROR: Template options file $repo_file is empty!\n";
 	exit;
@@ -298,6 +295,9 @@ if ($repo_array === null) {
 	// checkchanges		[true/false]
 	// advanced 		[0/1]	(last, so no comma after it)
 
+
+// Create options file
+
 $options_str = "[\n";
 foreach ($repo_array as $repo) {
 	global $cc_controls;
@@ -318,15 +318,12 @@ foreach ($repo_array as $repo) {
 		// should be a placeholder
 		$n = get_generic_name($name);
 		if ($display === $n . "_display") {
-//x echo "Looking up _display for $name\n";
 			if (! get_control($cc_controls, $n, $min, $max, $default)) {
-//x echo "    skipping, display= $display\n";
 				continue;
 			}
 			$repo["display"] = 2;
 		}
 	}
-//echo "Looking up $name\n";
 
 	$options_str .= "{\n";
 		add_non_null_field($repo, "name", $name);
@@ -344,16 +341,18 @@ foreach ($repo_array as $repo) {
 }
 $options_str .= "]\n\n";
 
-// Now save the file.
+// Save the options file.
 $results = updateFile($options_file_full, $options_str, $options_file);
 if ($results != "") {
 	echo "ERROR: Unable to create $options_file_full.\n";
 	exit;
 }
-$options_array = json_decode($options_str, true);
-//x $options_array = $repo_array;	// XXXXXX use this until the TODO above is done.
+
+// Optionally create a basic "settings" file with the default for this camera type/model.
 
 if ($settings_file !== "") {
+	$options_array = json_decode($options_str, true);
+
 	// If the file exists, it's a generic link to a camera-specific named file.
 	// Remove the link because it points to a prior camera.
 	if (file_exists($settings_file_full)) {
@@ -365,9 +364,10 @@ if ($settings_file !== "") {
 	}
 
 	// Determine the name of the camera type/model-specific file.
-	$pieces = explode(".", $settings_file);
-	$cameraSettingsFileName = $pieces[0];
-	$cameraSettingsFileExt = $pieces[1];
+	$pieces = explode(".", $settings_file);		// e.g., "settings.json"
+	$cameraSettingsFileName = $pieces[0];		// e.g., "settings"
+	$cameraSettingsFileExt = $pieces[1];		// e.g., "json"
+	// e.g., "settings_ZWO_ASI123.json"
 	$cameraSettingsFile = $cameraSettingsFileName . "_$cameraType" . "_$cameraModel.$cameraSettingsFileExt";
 	$fullName = "$directory/$cameraSettingsFile";
 

@@ -122,7 +122,6 @@ while [ $# -gt 0 ]; do
 			RET=$?
 			if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
 				echo -e "${wERROR}ERROR: Unable to create cc file '${CC_FILE}'.${wNC}"
-				echo -e "${wERROR}Look in ${ALLSKY_LOG} for any messages.\nAfter fixing things, run '${ME} --update'.\n${wNC}"
 
 				# Restore prior cc file if there was one.
 				[ -f "${CC_FILE_OLD}" ] && mv "${CC_FILE_OLD}" "${CC_FILE}"

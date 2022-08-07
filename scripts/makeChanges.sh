@@ -123,7 +123,7 @@ while [ $# -gt 0 ]; do
 			# Create a link to a file that contains the camera type and model in the name.
 			CAMERA_TYPE="${NEW_VALUE}"		# already know it
 			CAMERA_MODEL="$(jq .cameraModel "${CC_FILE}" | sed 's;";;g')"
-			if [[ -n ${CAMERA_MODEL} ]]; then
+			if [[ -z ${CAMERA_MODEL} ]]; then
 				echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}" >&2
 				[ -f "${CC_FILE_OLD}" ] && mv "${CC_FILE_OLD}" "${CC_FILE}"
 				exit 1

@@ -41,6 +41,7 @@ REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
 REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/allskyDefines.inc.repo"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 ALLSKY_LOG="/var/log/allsky.log"
+RASPAP_DIR="/etc/raspap"
 
 
 
@@ -103,8 +104,6 @@ calc_wt_size() {
 # we can use its value and not prompt.
 CAMERA_TYPE=""
 select_camera_type() {
-	NEEDCAM=false
-
 	if [[ ${HAS_PRIOR_ALLSKY} == "true" && ${HAS_NEW_PRIOR_ALLSKY} == "true" ]]; then
 		# New style Allsky with CAMERA_TYPE in config.sh
 		OLD_CONFIG="${PRIOR_INSTALL_DIR}/config/config.sh"
@@ -131,10 +130,11 @@ select_camera_type() {
 # Save the camera capabilities and use them to set the WebUI min, max, and defaults.
 save_camera_capabilities() {
 	if [[ -z ${CAMERA_TYPE} ]]; then
-		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in get_camera_capabilities()."
+		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in save_camera_capabilities()."
 		return 1
 	fi
 
+	# makeChanges.sh creates the camera type/model-specific 
 	# --cameraTypeOnly tells makeChanges.sh to only change the camera info and exit.
 	# It displays any error messages.
 	display_msg progress "Setting up WebUI options for '${CAMERA_TYPE}' cameras."
@@ -283,26 +283,37 @@ fi
 
 select_camera_type
 
-display_msg progress "Installing dependencies.\n"
-sudo make deps
+# These commands produce a TON of output that's not needed unless there's a problem.
+# They also take a little while, so hide the output and let the user know.
+
+whiptail --title "${TITLE}" --msgbox "The next steps can take a few minutes.\nOutput will only be displayed if there was a problem.\n" \
+	10 60  3>&1 1>&2 2>&3
+
+#shellcheck disable=SC2024
+sudo make deps > /tmp/deps.tmp 2>&1
 if [ $? -ne 0 ]; then
-	echo "Installing dependencies failed"
+	echo "Installing dependencies failed:"
+	cat /tmp/deps.tmp
 	exit 1
 fi
 echo
 
-display_msg progress "Compile and install Allsky software.\n"
-make all
+#shellcheck disable=SC2024
+make all > /tmp/all.tmp 2>&1
 if [ $? -ne 0 ]; then
-	echo "Compile failed!"
+	echo "Compile failed:"
+	cat /tmp/all.tmp
 	exit 1
 fi
-sudo make install
+
+#shellcheck disable=SC2024
+sudo make install > /tmp/install.tmp
 if [ $? -ne 0 ]; then
-	echo "Install failed!"
+	echo "Install failed:"
+	cat /tmp/install.tmp
 	exit 1
 fi
-echo
+display_msg progress "Installing dependencies and compiling software completed.\n"
 
 chmod 755 "${ALLSKY_HOME}"	# Some versions of Linux default to 750 so web server can't read it
 
@@ -316,7 +327,7 @@ display_msg progress "Updating version and CAMERA_TYPE in config.sh.\n"
 sed -i \
 	-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
 	-e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${CAMERA_TYPE}\"/" \
-	"${ALLSKY_CONFIG}/config.sh" >&2
+	"${ALLSKY_CONFIG}/config.sh"
 
 
 # Restore any necessary files
@@ -339,12 +350,23 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 
 	PRIOR_CONFIG_DIR="${PRIOR_INSTALL_DIR}/config"
 
-	if [ -f "${PRIOR_CONFIG_DIR}/raspap.auth" ]; then
-		display_msg progress "Restoring WebUI security settings."
-		mv "${PRIOR_CONFIG_DIR}/raspap.auth" "${ALLSKY_CONFIG}"
+	# If the user has an older release, these files may be in /etc/raspap.
+	# Check for both.
+	if [[ ${HAS_NEW_PRIOR_ALLSKY} == "true" ]]; then
+		RASPAP_DIR="${PRIOR_CONFIG_DIR}"
+	else
+		# RASPAP_DIR set at top of script
+		if [ -d "${RASPAP_DIR}" ]; then
+			display_msg warning "\nThe '${RASPAP_DIR}' directory is no longer used."
+			display_msg info "When installation is done you may remove it.\n"
+		fi
 	fi
-	if [ -f "${PRIOR_CONFIG_DIR}/raspap.php" ]; then
-		mv "${PRIOR_CONFIG_DIR}/raspap.php" "${ALLSKY_CONFIG}"
+	if [ -f "${RASPAP_DIR}/raspap.auth" ]; then
+		display_msg progress "Restoring WebUI security settings."
+		mv "${RASPAP_DIR}/raspap.auth" "${ALLSKY_CONFIG}"
+	fi
+	if [ -f "${RASPAP_DIR}/raspap.php" ]; then
+		mv "${RASPAP_DIR}/raspap.php" "${ALLSKY_CONFIG}"
 	fi
 
 	if [ -f "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ]; then
@@ -378,15 +400,29 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 		mv "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
 	fi
 
-	if [ -f "${PRIOR_CONFIG_DIR}/settings.json" ]; then
-		display_msg progress "Restoring WebUI settings."
-		# This file is probably a link to a camera type/model-specific file,
-		# so copy it instead of moving it to not break the link.
-		cp "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
+	MSG=""
+	if [[ ${HAS_NEW_PRIOR_ALLSKY} == "true" ]]; then
+		if [ -f "${PRIOR_CONFIG_DIR}/settings.json" ]; then
+			display_msg progress "Restoring WebUI settings."
+			# This file is probably a link to a camera type/model-specific file,
+			# so copy it instead of moving it to not break the link.
+			cp "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
+		fi
+	else
+		# settings file is one one in ${RASPAP_DIR}.
+		if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
+			CT="ZWO"
+		else
+			CT="RPi"
+		fi
+		SETTINGS="${RASPAP_DIR}/settings_${CT}.json"
+		if [[ -f ${SETTINGS} ]]; then
+			MSG="\nYou also need to transfer your old settings to the WebUI.\nUse ${SETTINGS} as a guide.\n"
+		fi
 	fi
 	# Do NOT restores options.json - it will be recreated.
 
-	display_msg progress "Restoring settings from configuration files."
+	display_msg progress "Restoring settings from config.sh and ftp-settings.sh."
 	# This may miss really-old variables that no longer exist.
 ## TODO: automate this
 # ( source ${PRIOR_CONFIG_DIR}/ftp-settings.sh
@@ -402,12 +438,11 @@ if [[ ${HAS_PRIOR_ALLSKY} == "true" ]]; then
 #	- handle variable that were moved to WebUI
 #		> DAYTIME_CAPTURE
 
+	whiptail --title "${TITLE}" --msgbox "You need to manually move the contents of\n     ${PRIOR_CONFIG_DIR}/config.sh\n     ${PRIOR_CONFIG_DIR}/ftp-settings.sh\nto the new files in ${ALLSKY_CONFIG}.\n${MSG}" \
+		12 60  3>&1 1>&2 2>&3
 	display_msg info "IMPORTANT: check config/config.sh and config/ftp-settings.sh for correctness.\n"
 fi
 
-if [[ ${NEEDCAM} == "true" ]]; then
-	get_camera_capabilities
-fi
 
 ### TODO: Run "locale | grep LC_NUMERIC" and update "locale" in settings file.
 ### TODO: Check for size of RAM+swap during installation (Issue # 969).

@@ -100,48 +100,58 @@ while [ $# -gt 0 ]; do
 			# If we can't set the new camera type, it's a major problem so exit right away.
 			# When we're changing cameraType we're not changing anything else.
 
-			# Create the camera capabilities file for the new camera type.
 			CC_FILE="${ALLSKY_CONFIG}/${CC_FILE_NAME}.${CC_FILE_EXT}"
+			CC_FILE_OLD="${CC_FILE}-OLD"
 
 			if [ -f "${CC_FILE}" ]; then
 				# Save the current file just in case creating a new one fails.
 				# It's a link so copy it to a temp name, then remove the old name.
-				cp "${CC_FILE}" "${CC_FILE}-OLD"
+				cp "${CC_FILE}" "${CC_FILE_OLD}"
 				rm -f "${CC_FILE}"
 			fi
 
+			# Create the camera capabilities file for the new camera type.
 			# Debug level 3 to give the user more info on error.
 			"${ALLSKY_HOME}/capture_${NEW_VALUE}" -debuglevel 3 -cc_file "${CC_FILE}"
 			RET=$?
-			if [ ${RET} -ne 0 ]; then
-				# Restore prior cc file.
-				mv "${CC_FILE}-OLD" "${CC_FILE}"
+			if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
+				# Restore prior cc file if there was one.
+				[ -f "${CC_FILE_OLD}" ] && mv "${CC_FILE_OLD}" "${CC_FILE}"
 				exit ${RET}		# the actual exit code is important
 			fi
 
 			# Create a link to a file that contains the camera type and model in the name.
 			CAMERA_TYPE="${NEW_VALUE}"		# already know it
 			CAMERA_MODEL="$(jq .cameraModel "${CC_FILE}" | sed 's;";;g')"
-			# Get the filename (without extension) and extension of the cc file.
+			if [[ -n ${CAMERA_MODEL} ]]; then
+				echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}" >&2
+				[ -f "${CC_FILE_OLD}" ] && mv "${CC_FILE_OLD}" "${CC_FILE}"
+				exit 1
+			fi
 
-			LINKED_NAME="${ALLSKY_CONFIG}/${CC_FILE_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_FILE_EXT}"
-			# Any old and new camera capabilities file should be the same unless the
-			# Allsky adds or changes capabilities, so delete the old one just in case.
-			ln --force "${CC_FILE}" "${LINKED_NAME}"
+			# ${CC_FILE} is a generic name defined in config.sh.
+			# ${SPECIFIC_NAME} is specific to the camera type/model.
+			# It isn't really needed except debugging.
+			SPECIFIC_NAME="${ALLSKY_CONFIG}/${CC_FILE_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_FILE_EXT}"
+
+			# Any old and new camera capabilities file should be the same unless Allsky
+			# adds or changes capabilities, so delete the old one just in case.
+			ln --force "${CC_FILE}" "${SPECIFIC_NAME}"
 
 			sed -i -e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${NEW_VALUE}\"/" "${ALLSKY_CONFIG}/config.sh" >&2
 			# shellcheck disable=SC2181
 			if [ $? -ne 0 ]; then
 				echo -e "${wERROR}ERROR updating ${wBOLD}${LABEL}${wNBOLD}.${wNC}" >&2
-				mv "${CC_FILE}-OLD" "${CC_FILE}"
+				[ -f "${CC_FILE_OLD}" ] && mv "${CC_FILE_OLD}" "${CC_FILE}"
 				exit 1
 			fi
 
-			# Remove the old file
-			rm -f "${CC_FILE}-OLD"
+			# The old file is no longer needed.
+			rm -f "${CC_FILE_OLD}"
 
 			# createAllskyOptions.php will use the cc file and the options template file
 			# to create an OPTIONS_FILE for this camera type/model.
+			# These variables don't include a directory since the directory is specified with "--dir" below.
 			CC_FILE="${CC_FILE_NAME}.${CC_FILE_EXT}"		# reset from full name above
 			OPTIONS_FILE="${OPTIONS_FILE_NAME}.${OPTIONS_FILE_EXT}"
 			SETTINGS_FILE="${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"

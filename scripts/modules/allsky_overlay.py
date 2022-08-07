@@ -66,7 +66,7 @@ class ALLSKYOVERLAY:
 
     def __init__(self):
 
-        self._verbose = s.args.logLevel
+        self._verbose = s.LOGLEVEL
         
 
         self._overlayConfigFile = os.path.join(os.environ['ALLSKY_CONFIG'], self._OVERLAYCONFIGFILE)  

@@ -33,7 +33,7 @@ function get_control($array, $setting, &$min, &$max, &$default) {
 //x echo "$setting match at number $i\n";
 			$min = getVariableOrDefault($cc, "MinValue", null);
 			$max = getVariableOrDefault($cc, "MaxValue", null);
-			$default = getVariableOrDefault($cc, "Defaultvalue", null);
+			$default = getVariableOrDefault($cc, "DefaultValue", null);
 			return true;
 		}
 	}
@@ -97,7 +97,6 @@ if ($debug) echo "Setting '$setting', field '$f', v='$v'\n";
 if ($debug) echo "   >>> found in controls list\n";
 			if ($f === "minimum") {
 				if ($v === $setting . "_min") {
-if ($debug) echo "     >>>>> found _min\n";
 					$v = $min;
 				}
 			} else if ($f === "maximum") {
@@ -106,6 +105,7 @@ if ($debug) echo "     >>>>> found _min\n";
 				}
 			} else if ($f === "default") {
 				if ($v === $setting . "_default") {
+if ($debug) echo "     >>>>> Setting '$setting', field '$f' _default=[$default]\n";
 					$v = $default;
 				}
 			}

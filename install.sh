@@ -590,7 +590,7 @@ install_overlay()
 {
 
         echo -e "${GREEN}* Installing PHP Modules${NC}"
-        apt-get install -y php-zip
+        sudo apt-get install -y php-zip
 
         echo -e "${GREEN}* Installing Python dependencies${NC}"
         pip3 install --no-warn-script-location -r requirements.txt 2>&1 > dependencies.log
@@ -599,20 +599,20 @@ install_overlay()
         sudo apt-get -y install msttcorefonts 2>&1 >> dependencies.log
 
         echo -e "${GREEN}* Setting up modules${NC}"
-        mkdir -p /etc/allsky/modules
-        chown -R www-data /etc/allsky
-        chmod -R 774 /etc/allsky
+        sudo mkdir -p /etc/allsky/modules
+        sudo chown -R www-data /etc/allsky
+        sudo chmod -R 774 /etc/allsky
 
         echo -e "${GREEN}* Fixing permissions${NC}"
 
-        chown www-data "${ALLSKY_CONFIG}"/fields.json
-        chown www-data "${ALLSKY_CONFIG}"/module-settings.json
-        chown www-data "${ALLSKY_CONFIG}"/postprocessing_day.json
-        chown www-data "${ALLSKY_CONFIG}"/postprocessing_night.json
-        chown www-data "${ALLSKY_CONFIG}"/autoexposure.json
-        chown www-data "${ALLSKY_CONFIG}"/overlay.json
-        chown www-data "${ALLSKY_CONFIG}"/settings_RPiHQ.json
-        chown www-data "${ALLSKY_CONFIG}"/settings_ZWO.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/fields.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/module-settings.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/postprocessing_day.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/postprocessing_night.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/autoexposure.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/overlay.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/settings_RPiHQ.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/settings_ZWO.json
 
 }
 

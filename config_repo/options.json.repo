@@ -14,10 +14,8 @@
 "advanced" : 1
 },
 {
-"name" : "",
-"default" : "",
+"name" : "daytimeSettingsHeader",
 "description" : "Daytime settings",
-"label" : "",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
@@ -97,7 +95,7 @@
 {
 "name" : "daydelay",
 "minimum" : "delay_min",
-"maximum" : "delay_max",
+"maximum" : "none",
 "default" : "delay_default",
 "description" : "Delay between daytime images in milliseconds.",
 "label" : "Delay",
@@ -154,7 +152,7 @@
 "description" : "Sets Auto White Balance.",
 "label" : "Auto White Balance",
 "type" : "checkbox",
-"display" : 1,
+"display" : "awb_display",
 "advanced" : 0
 },
 {
@@ -165,7 +163,7 @@
 "description" : "Red component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Red Balance",
 "type" : "text",
-"display" : 1,
+"display" : "wbr_display",
 "advanced" : 0
 },
 {
@@ -176,12 +174,13 @@
 "description" : "Blue component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Blue Balance",
 "type" : "text",
-"display" : 1,
+"display" : "wbb_display",
 "advanced" : 0
 },
 {
 "name" : "dayskipframes",
 "minimum" : 0,
+"maximum" : "none",
 "default" : 5,
 "description" : "When starting Allsky during the day, skip up to this many frames while the software gets to the correct exposure.<br>Only applies if daytime <b>Auto-Exposure</b> is on.",
 "label" : "Frames To Skip",
@@ -210,10 +209,8 @@
 "advanced" : 1
 },
 {
-"name" : "",
-"default" : "",
+"name" : "nighttimeSettingsHeader",
 "description" : "Nighttime settings",
-"label" : "",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
@@ -274,7 +271,7 @@
 {
 "name" : "nightdelay",
 "minimum" : "delay_min",
-"maximum" : "delay_max",
+"maximum" : "none",
 "default" : "delay_default",
 "description" : "Delay between nighttime images in milliseconds.",
 "label" : "Delay",
@@ -331,7 +328,7 @@
 "description" : "Activate to enable Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
 "type" : "checkbox",
-"display" : 1,
+"display" : "awb_display",
 "advanced" : 0
 },
 {
@@ -342,7 +339,7 @@
 "description" : "Red component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Red Balance",
 "type" : "text",
-"display" : 1,
+"display" : "wbr_display",
 "advanced" : 0
 },
 {
@@ -353,12 +350,13 @@
 "description" : "Blue component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Blue Balance",
 "type" : "text",
-"display" : 1,
+"display" : "wbb_display",
 "advanced" : 0
 },
 {
 "name" : "nightskipframes",
 "minimum" : 0,
+"maximum" : "none",
 "default" : 1,
 "description" : "When starting Allsky at night, skip up to this many frames while the software gets to the correct exposure.<br>Only applies if nighttime <b>Auto-Exposure</b> is on.",
 "label" : "Frames To Skip",
@@ -387,10 +385,8 @@
 "advanced" : 1
 },
 {
-"name" : "",
-"default" : "",
+"name" : "dayAndNightHeader",
 "description" : "Both daytime and nighttime settings",
-"label" : "",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
@@ -473,6 +469,8 @@
 },
 {
 "name" : "gaintransitiontime",
+"minimum" : 0,
+"maximum" : "none",
 "default" : "gaintransitiontime_default",
 "description" : "Number of <b>minutes</b> over which to increase or decrease the gain when switching between day and night.<br>This helps smooth brightness differences.  Only works if nighttime Auto-Gain is off. 0 disables transitions.",
 "label" : "Gain Transition Time",
@@ -527,7 +525,9 @@
 },
 {
 "name" : "meanthreshold",
-"default" : "0.1",
+"minimum" : 0.01,
+"maximum" : "none",
+"default" : 0.1,
 "description" : "When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",
 "type" : "text",
@@ -719,10 +719,8 @@
 "advanced" : 1
 },
 {
-"name" : "",
-"default" : "",
+"name" : "overlayHeader",
 "description" : "Image overlay settings",
-"label" : "",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
@@ -861,6 +859,8 @@
 },
 {
 "name" : "extratextage",
+"minimum" : 1,
+"maximum" : "none",
 "default" : 0,
 "description" : "The maximum age of the <b>Extra Text File</b> in seconds.<br>After this time the contents of the file will no longer be displayed. Set to 0 to always display.",
 "label" : "Max Age Of Extra",
@@ -870,6 +870,8 @@
 },
 {
 "name" : "textlineheight",
+"minimum" : "font height",
+"maximum" : "image height",
 "default" : 30,
 "description" : "The line height of the text in pixels. If increasing the font size causes the text to overlap then increase this value.",
 "label" : "Line Height",
@@ -879,6 +881,8 @@
 },
 {
 "name" : "textx",
+"minimum" : 0,
+"maximum" : "image width",
 "default" : 15,
 "description" : "Text will begin this many pixels from the left.",
 "label" : "Text X",
@@ -888,6 +892,8 @@
 },
 {
 "name" : "texty",
+"minimum" : 0,
+"maximum" : "image height",
 "default" : 35,
 "description" : "Text will begin this many pixels from the top.",
 "label" : "Text Y",
@@ -978,10 +984,8 @@
 "advanced" : 0
 },
 {
-"name" : "",
-"default" : "",
+"name" : "AllskyMapHeader",
 "description" : "Allsky Map and Website Settings",
-"label" : "",
 "type" : "header",
 "display" : 1,
 "advanced" : 0

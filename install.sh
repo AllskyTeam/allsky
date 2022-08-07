@@ -289,6 +289,7 @@ select_camera_type
 whiptail --title "${TITLE}" --msgbox "The next steps can take a few minutes.\nOutput will only be displayed if there was a problem.\n" \
 	10 60  3>&1 1>&2 2>&3
 
+#shellcheck disable=SC2024
 sudo make deps > /tmp/deps.tmp 2>&1
 if [ $? -ne 0 ]; then
 	echo "Installing dependencies failed:"
@@ -297,6 +298,7 @@ if [ $? -ne 0 ]; then
 fi
 echo
 
+#shellcheck disable=SC2024
 make all > /tmp/all.tmp 2>&1
 if [ $? -ne 0 ]; then
 	echo "Compile failed:"
@@ -304,6 +306,7 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
+#shellcheck disable=SC2024
 sudo make install > /tmp/install.tmp
 if [ $? -ne 0 ]; then
 	echo "Install failed:"

@@ -125,7 +125,9 @@ while [ $# -gt 0 ]; do
 			# The software for RPi cameras needs to know what command is being used to
 			# capture the images.
 			if [[ ${NEW_VALUE} == "RPi" ]]; then
+				# shellcheck disable=SC1090
 				source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
+				# shellcheck disable=SC2181
 				C="$(determineCommandToUse "false" "" )"
 				if [ $? -ne 0 ]; then
 					exit $?

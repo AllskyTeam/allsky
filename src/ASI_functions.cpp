@@ -67,9 +67,9 @@ typedef enum ASI_CONTROL_TYPE{ //Control type
 	ASI_FLIP,
 	ASI_AUTO_MAX_GAIN,				// Max gain in auto-gain mode
 	ASI_AUTO_MAX_EXP,				// Max exposure in auto-exposure mode, in ms
+	ASI_AUTO_TARGET_BRIGHTNESS,
 
 	// RPI only:
-	BRIGHTNESS,
 	SATURATION,
 	CONTRAST,
 	SHARPNESS,
@@ -146,8 +146,8 @@ char const *argumentNames[][2] = {
 	{ "WB_B", "wbb" },							// day/night
 	{ "Temperature", "" },						// read-only so no argument
 	{ "Flip", "flip" },
-	{ "AutoExpMaxGain", "maxgain" },			// day/night
-	{ "AutoExpMaxExpMS", "maxexposure" },		// day/night
+	{ "AutoExpMaxGain", "maxautogain" },		// day/night
+	{ "AutoExpMaxExpMS", "maxautoexposure" },	// day/night
 	{ "Brightness", "brightness" },
 	{ "Saturation", "saturation" },
 	{ "Contrast", "contrast" },
@@ -166,7 +166,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	// The "Name" must match what ZWO uses; "" names means not supported.
 	// 99 == don't know
 
-	// Name, MaxValue, MinValue, DefaultValue, CurrentValue, IsAutoSupported, IsWritable, ControlType
+	// Name, Description, MaxValue, MinValue, DefaultValue, CurrentValue, IsAutoSupported, IsWritable, ControlType
 	{ // libcamera
 		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 32, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
@@ -177,12 +177,10 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 230 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
 		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, BRIGHTNESS },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
 		{ "Saturation", "Saturation", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
 		{ "Contrast", "Contrast", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
 		{ "Sharpness", "Sharpness", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-// TODO: what are these values?
-		{ "", "EV: Exposure compensation (not currently supported)", 99, 99, 0.0, NOT_SET, ASI_FALSE, ASI_FALSE, EV },
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	},
@@ -197,11 +195,10 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 230 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
 		{ "ExposureCompensation", "Exposure Compensation", 10, -10, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Brightness", "Brightness", 100, 0, 50, NOT_SET, ASI_FALSE, ASI_TRUE, BRIGHTNESS },
+		{ "Brightness", "Brightness", 100, 0, 50, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
 		{ "Saturation", "Saturation", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
 		{ "Contrast", "Contrast", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
 		{ "Sharpness", "Sharpness", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-		{ "", "EV: (not supported)", 99, 99, 0.0, NOT_SET, ASI_FALSE, ASI_FALSE, EV },
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	}
@@ -213,7 +210,7 @@ char camerasInfoFile[128]	= { 0 };	// name of temporary file
 
 // Return the number of connected cameras and put basic info on each camera in a file.
 // We need the temporary file because it's a quick and dirty way to get output from system().
-// TODO: use fork() and inter-process communication to get the info to avoid a temporary file.
+// TODO: use std::string exec(cmd) from allsky_common.cpp to avoid a temporary file
 int ASIGetNumOfConnectedCameras()
 {
 	// CG.saveDir should be specified, but in case it isn't...
@@ -392,7 +389,6 @@ ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
 
 // To keep the compiler quiet, we need to define these - they are RPi only.
 // It doesn't matter what the value is.
-#define BRIGHTNESS	ASI_AUTO_TARGET_BRIGHTNESS
 #define SATURATION	(ASI_CONTROL_TYPE) 0
 #define CONTRAST	(ASI_CONTROL_TYPE) 0
 #define SHARPNESS	(ASI_CONTROL_TYPE) 0
@@ -434,6 +430,8 @@ int stopVideoCapture(int cameraID)
 #endif		// IS_RPi
 
 
+char *getRetCode(ASI_ERROR_CODE);
+
 // Get the camera control with the specified control type.
 ASI_ERROR_CODE getControlCapForControlType(int iCameraIndex, ASI_CONTROL_TYPE ControlType, ASI_CONTROL_CAPS *pControlCap)
 {
@@ -443,14 +441,15 @@ ASI_ERROR_CODE getControlCapForControlType(int iCameraIndex, ASI_CONTROL_TYPE Co
 	if (iNumOfCtrl == NOT_SET)
 		return(ASI_ERROR_GENERAL_ERROR);
 
-#ifdef IS_RPi
-	if (! CG.isLibcamera)
-		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
-#endif
 	for (int i=0; i < iNumOfCtrl ; i++)
 	{
 		ASI_CONTROL_CAPS cc;
-		ASIGetControlCaps(iCameraIndex, i, &cc);
+		ASI_ERROR_CODE ret;
+		ret = ASIGetControlCaps(iCameraIndex, i, &cc);
+		if (ret != ASI_SUCCESS) {
+			Log(3, "ASIGetControlCaps(%d, %i, &cc) failed: %s\n", iCameraIndex, i, getRetCode(ret));
+			return(ret);
+		}
 		if (ControlType == cc.ControlType)
 		{
 			*pControlCap = cc;
@@ -734,6 +733,20 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"DefaultValue\" : %ld\n", std::min(CG.dayDelay_ms, CG.nightDelay_ms) / MS_IN_SEC);
 	fprintf(f, "\t\t},\n");
 
+	if (CG.isColorCamera) {
+		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "AutoWhiteBalance");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "awb");
+		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+		fprintf(f, "\t\t},\n");
+	}
+	if (CG.isCooledCamera) {
+		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "EnableCooler");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "EnableCooler");
+		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+		fprintf(f, "\t\t},\n");
+	}
 	if (CG.supportsTemperature) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
@@ -789,7 +802,26 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.videoOffBetweenImages ? 1 : 0);
 	fprintf(f, "\t\t},\n");
 #endif
-	
+#ifdef IS_RPI
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ModeMean");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "mean");
+	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n",
+	fprintf(f, "\t\t\t\"DefaultValue\" : \"day: %.2f, night: %.2f\"\n",
+		CG.myModeMeanSetting.mean.dayMean, CG.myModeMeanSetting.mean.nightMean);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "MeanThreshold");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "meanthreshold");
+	fprintf(f, "\t\t\t\"MinValue\" : .01,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.mean_threshold);
+	fprintf(f, "\t\t},\n");
+#endif
+
 	for (int i = 0; i < iNumOfCtrl; i++)
 	{
 		ASI_CONTROL_CAPS cc;
@@ -1189,7 +1221,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 
 	// The remaining settings are camera-specific and have camera defaults.
 	// If the user didn't specify anything (i.e., the value is NOT_CHANGED), set it to the default.
-	ret = getControlCapForControlType(cg->cameraNumber, BRIGHTNESS, &cc);
+	ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_TARGET_BRIGHTNESS, &cc);
 	if (ret == ASI_SUCCESS)
 	{
 		cg->defaultBrightness = cc.DefaultValue;		// used elsewhere
@@ -1203,7 +1235,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		else
 			validateLong(&cg->nightBrightness, cc.MinValue, cc.MaxValue, "Nighttime Brightness", true);
 	} else {
-		Log(0, "BRIGHTNESS failed with %s\n", getRetCode(ret));
+		Log(0, "ASI_AUTO_TARGET_BRIGHTNESS failed with %s\n", getRetCode(ret));
 		ok = false;
 	}
 

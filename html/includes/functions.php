@@ -814,13 +814,13 @@ function getCameraType() {
 }
 
 // Return the settings file for the specified camera.
-function getSettingsFile($cam_type) {
-	return RASPI_CONFIG . "/settings_$cam_type.json";
+function getSettingsFile() {
+	return ALLSKY_CONFIG . "/settings.json";
 }
 
 // Return the options file for the specified camera.
-function getOptionsFile($cam_type) {
-	return ALLSKY_WEBUI . "/camera_options_$cam_type.json";
+function getOptionsFile() {
+	return ALLSKY_CONFIG . "/options.json";
 }
 
 // Check if the specified variable is in the specified array.

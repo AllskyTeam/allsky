@@ -15,38 +15,14 @@ cd "${ALLSKY_HOME}"
 
 ERROR_MSG_PREFIX="*** ERROR ***\nAllsky Stopped!\n"
 SEE_LOG_MSG="See /var/log/allsky.log"
-function doExit()
-{
-	EXITCODE=$1
-	TYPE=${2:-Error}
-	CUSTOM_MESSAGE="${3}"
-
-	if [ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]; then
-		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
-		# even if the user has them turned off.
-		if [ -n "${CUSTOM_MESSAGE}" ]; then
-			# Create a custom error message.
-			# If we error out before config.sh is sourced in, $FILENAME and $EXTENSION won't be
-			# set so guess at what they are.
-			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${FILENAME:-image}" \
-				"red" "" "85" "" "" \
-				"" "10" "red" "${EXTENSION:-jpg}" "" "${CUSTOM_MESSAGE}"
-		else
-			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "${TYPE}" 2>&1
-		fi
-		# Don't let the service restart us because we'll likely get the same error again.
-		echo "     ***** AllSky Stopped *****"
-		sudo systemctl stop allsky
-	fi
-	exit ${EXITCODE}
-}
 
 source "${ALLSKY_HOME}/variables.sh"
 if [ -z "${ALLSKY_CONFIG}" ]; then
 	echo -e "${RED}*** FATAL ERROR: variables not set, can't continue!${NC}"
 	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_HOME})/variables.sh\nis corrupted!"
 fi
-source "${ALLSKY_CONFIG}/config.sh" || exit $?		# it displays any error message
+source "${ALLSKY_CONFIG}/config.sh" || exit $?			# it displays any error message
+source "${ALLSKY_SCRIPTS}/functions.sh" || exit $?		# it displays any error message
 
 # COMPATIBILITY CHECKS
 # Check for a new variable in config.sh that wasn't in prior versions.
@@ -70,38 +46,8 @@ fi
 pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 if [[ ${CAMERA_TYPE} == "RPi" ]]; then
-	# See if we should use libcamera-still or raspistill.
-	# If libcamera is installed and works, we'll use it.
-	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
-	# we'll use raspistill.
-	RPi_COMMAND_TO_USE="libcamera-still"
-	which ${RPi_COMMAND_TO_USE} > /dev/null
-	RET=$?
-	if [ ${RET} -eq 0 ]; then
-		LIBCAMERA_LOG_LEVELS="ERROR,FATAL" "${RPi_COMMAND_TO_USE}" --timeout 1 --nopreview > /dev/null 2>&1
-		RET=$?
-	fi
-	if [ ${RET} -ne 0 ]; then
-		RPi_COMMAND_TO_USE="raspistill"
-		which "${RPi_COMMAND_TO_USE}" > /dev/null
-		if [ $? -ne 0 ]; then
-			echo -e "${RED}*** FATAL ERROR: Can't determine what software to use forRPi camera. Stopping.${NC}" >&2
-			doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nRPi software\nnot found!."
-		fi
-
-		# Either libcamera isn't installed or it doesn't work, so try raspistill instead.
-
-		# TODO: Should try and run raspistill command - doing that is more reliable since
-		# the output of vcgencmd changes depending on the OS and how the Pi is configured.
-		# Newer kernels/libcamera give:   supported=1 detected=0, libcamera interfaces=1
-		# but only if    start_x=1    is in /boot/config.txt
-		vcgencmd get_camera | grep --silent "supported=1" ######### detected=1"
-		RET=$?
-	fi
-	if [ ${RET} -ne 0 ]; then
-		echo -e "${RED}*** FATAL ERROR: RPi camera not found.  Make sure it's enabled. Stopping.${NC}" >&2
-		doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
-	fi
+	# "true" means use doExit() on error
+	RPi_COMMAND_TO_USE="$(determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
 
 elif [ "${CAMERA_TYPE}" = "ZWO" ]; then
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"

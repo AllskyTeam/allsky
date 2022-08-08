@@ -16,6 +16,8 @@ ME="$(basename "${BASH_ARGV0}")"
 
 TITLE="Allsky Website Installer"
 ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
+ALLSKY_OWNER=$(id --group --name)
+WEBSERVER_GROUP="www-data"
 
 if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 	U1="*******************"	# these must be the same length
@@ -178,16 +180,16 @@ update_website_configuration_file() {
 	# There are some settings we can't determine, like LENS.
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent \
 		--config "${CONFIG_FILE}" \
-		imageName "" "${IMAGE_NAME}" \
-		latitude "XX_NEED_TO_UPDATE_XX" "${LATITUDE}" \
-		longitude "XX_NEED_TO_UPDATE_XX" "${LONGITUDE}" \
-		auroraMap "XX_NEED_TO_UPDATE_XX" "${AURORAMAP}" \
-		computer "XX_NEED_TO_UPDATE_XX" "${COMPUTER}" \
-		camera "XX_NEED_TO_UPDATE_XX" "${CAMERA_TYPE}${CAMERA_MODEL}" \
-		XX_MINI_TIMELAPSE_XX "XX_MINI_TIMELAPSE_XX" "${MINI_TIMELAPSE}" \
-		XX_MINI_TIMELAPSE_URL_XX "XX_MINI_TIMELAPSE_URL_XX" "${MINI_TIMELAPSE_URL}" \
-		AllskyVersion "XX_ALLSKY_VERSION_XX" "${ALLSKY_VERSION}" \
-		onPi "" "${ON_PI}"
+		imageName "${IMAGE_NAME}" \
+		latitude "${LATITUDE}" \
+		longitude "${LONGITUDE}" \
+		auroraMap "${AURORAMAP}" \
+		computer "${COMPUTER}" \
+		camera "${CAMERA_TYPE}${CAMERA_MODEL}" \
+		XX_MINI_TIMELAPSE_XX "${MINI_TIMELAPSE}" \
+		XX_MINI_TIMELAPSE_URL_XX "${MINI_TIMELAPSE_URL}" \
+		AllskyVersion "${ALLSKY_VERSION}" \
+		onPi "${ON_PI}"
 }
 
 
@@ -260,6 +262,7 @@ else
 fi
 		fi
 	else
+		# New website, so set up a default configuration file.
 		cp "${REPO_FILE}" "${CONFIG_FILE}"
 		update_website_configuration_file "${CONFIG_FILE}"
 	fi
@@ -336,7 +339,6 @@ if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 		MSG="${MSG}\n** This is the recommended way of making changes to the configuration **."
 		MSG="${MSG}\n\nWould you like to do that?"
 		if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 60 3>&1 1>&2 2>&3); then 
-
 			REMOTE_CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 			cp "${REPO_FILE}" "${REMOTE_CONFIG_FILE}"
 			update_website_configuration_file "${REMOTE_CONFIG_FILE}"
@@ -423,22 +425,26 @@ fi
 
 if [ "${BRANCH}" = "" ]; then
 	BRANCH="master"
+	B=""
+else
+	B=" from branch ${BRANCH}"
 fi
-B=" from branch ${BRANCH}"
 BRANCH="-b ${BRANCH}"
 
-display_msg progress "Fetching new website files$B into '${ALLSKY_WEBSITE}'."
-git clone ${BRANCH} ${GITHUB_ROOT}/allsky-website.git "${ALLSKY_WEBSITE}"
+MSG="The Allsky Website files${B} will now be downloaded into ${ALLSKY_WEBSITE}."
+MSG="${MSG}\nThis can take a minute."
+MSG="${MSG}\n\nOutput will only be displayed if there was a problem."
+whiptail --title "${TITLE}" --msgbox "${MSG}" 10 ${WT_WIDTH} 3>&1 1>&2 2>&3
+TMP="/tmp/git.install.tmp"
+git clone ${BRANCH} ${GITHUB_ROOT}/allsky-website.git "${ALLSKY_WEBSITE}" > ${TMP} 2>&1
 if [ $? -ne 0 ]; then
 	display_msg error "Unable to get Allsky Website files from git.\n"
+	cat ${TMP}
 	exit 4
 fi
 echo
 
 cd "${ALLSKY_WEBSITE}" || exit 1
-
-display_msg progress "Creating thumbnails directories."
-mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails
 
 modify_locations
 modify_configuration_variables
@@ -481,9 +487,12 @@ if [ "${SAVED_OLD}" = "true" ]; then
 	fi
 fi
 
-display_msg progress "Fixing ownership and permissions."
-U=$(id --name --user)		# User running this script
-sudo chown -R "${U}:www-data" .
+# Create any directories not created above.
+mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails
+
+# The webserver needs to be able to update the configuration file and create thumbnails.
+display_msg progress "Setting ownership and permissions."
+sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" .
 find ./ -type f -exec chmod 644 {} \;
 find ./ -type d -exec chmod 775 {} \;
 

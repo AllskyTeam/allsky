@@ -79,6 +79,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	ALLSKY_WEBSITE=${ALLSKY_WEBSITE:-${ALLSKY_WEBUI}/allsky}
 	ALLSKY_WEBSITE_CONFIGURATION_NAME="configuration.json"
 
+	# Log the capture_${CAMERA_TYPE} programs write to.
+	ALLSKY_LOG="/var/log/allsky.log"
+
 	# Root of GitHub locations - repository, and contents of a file.
 	GITHUB_ROOT="https://github.com/thomasjacquin"
 	GITHUB_RAW_ROOT="https://raw.githubusercontent.com/thomasjacquin"

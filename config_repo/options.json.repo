@@ -922,6 +922,7 @@
 },
 {
 "name" : "fontcolor",
+"default" : "255 0 0",
 "minimum" : 0,
 "description" : "Blue, Green, and Red (BGR) values of text color.<br>NOTE: When using RAW 16 only the first two values are used i.e., 255 128 0.",
 "label" : "Font Color",

@@ -204,7 +204,7 @@ else
 	CAPTURE_SAVE_DIR="${IMG_DIR}"
 fi
 
-CAMERA_SETTINGS="${ALLSKY_CONFIG}/settings_${CAMERA_TYPE}.json"
+CAMERA_SETTINGS="${ALLSKY_CONFIG}/settings.json"
 
 # Simple way to get a setting that hides the details.
 function settings()

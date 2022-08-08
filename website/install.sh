@@ -431,10 +431,7 @@ else
 fi
 BRANCH="-b ${BRANCH}"
 
-MSG="The Allsky Website files${B} will now be downloaded into ${ALLSKY_WEBSITE}."
-MSG="${MSG}\nThis can take a minute."
-MSG="${MSG}\n\nOutput will only be displayed if there was a problem."
-whiptail --title "${TITLE}" --msgbox "${MSG}" 10 ${WT_WIDTH} 3>&1 1>&2 2>&3
+display_msg progress "The Allsky Website files${B} will now be downloaded into ${ALLSKY_WEBSITE}."
 TMP="/tmp/git.install.tmp"
 git clone ${BRANCH} ${GITHUB_ROOT}/allsky-website.git "${ALLSKY_WEBSITE}" > ${TMP} 2>&1
 if [ $? -ne 0 ]; then
@@ -509,8 +506,8 @@ if [ "${SAVED_OLD}" = "true" ]; then
 	display_msg info "\nAfter you are convinced everything is working, remove your prior version.\n"
 else
 	display_msg info "\nBefore using the website you must edit its configuration by clicking on"
-	display_msg info "the 'Editor' link in the WebUI, then select the ${ALLSKY_WEBSITE_CONFIGURATION_NAME} entry."
-	display_msg info "\nThere are many options, so see ${GITHUB_ROOT}/allsky/wiki/allsky-website-Settings"
+	display_msg info "the 'Editor' link in the WebUI, then select the\n    ${ALLSKY_WEBSITE_CONFIGURATION_NAME} (Allsky Website)\nentry."
+	display_msg info "There are many options, so see ${GITHUB_ROOT}/allsky/wiki/allsky-website-Settings"
 	display_msg info "for more information.\n"
 fi
 

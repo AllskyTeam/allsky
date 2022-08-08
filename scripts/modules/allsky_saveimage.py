@@ -31,15 +31,16 @@ def writeImage(image, path):
         s.log(0, "ERROR: Failed to save image {0}".format(path), exitCode=1)
 
 def saveimage(params):
-    if s.settings["takeDaytimeImages"] or s.tod == "night":
-        if not os.path.exists(s.imageFolder):
-            os.makedirs(s.imageFolder)
+    #if s.settings["takeDaytimeImages"] or s.tod == "night":
+    #    if not os.path.exists(s.imageFolder):
+    #        os.makedirs(s.imageFolder)
 
-        if s.createThumbnails:
-            if not os.path.exists(s.thumbnailFolder):
-                os.makedirs(s.thumbnailFolder)
-            createThumbnail()
+    #    if s.createThumbnails:
+    #        if not os.path.exists(s.thumbnailFolder):
+    #            os.makedirs(s.thumbnailFolder)
+    #        createThumbnail()
 
-    writeImage(s.image, s.websiteImageFile)
-    writeImage(s.image, s.imageFile)
-    os.remove(s.CURRENTIMAGEPATH)
+    #writeImage(s.image, s.websiteImageFile)
+    #writeImage(s.image, s.imageFile)
+    writeImage(s.image, s.CURRENTIMAGEPATH)
+    #os.remove(s.CURRENTIMAGEPATH)

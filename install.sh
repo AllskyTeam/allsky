@@ -611,6 +611,7 @@ install_overlay()
         sudo chown www-data "${ALLSKY_CONFIG}"/postprocessing_night.json
         sudo chown www-data "${ALLSKY_CONFIG}"/autoexposure.json
         sudo chown www-data "${ALLSKY_CONFIG}"/overlay.json
+        sudo chown -R www-data "${ALLSKY_WEBUI}"/overlay
 
 }
 

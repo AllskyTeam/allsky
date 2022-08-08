@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Shell functions used by multiple scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh
 # and config.sh.
@@ -45,9 +47,7 @@ function determineCommandToUse() {
 	# use raspistill.
 
 	CMD="libcamera-still"
-	which ${CMD} > /dev/null
-	RET=$?
-	if [ ${RET} -eq 0 ]; then
+	if command -v ${CMD} > /dev/null; then
 		# Found the command - see if it works.
 		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
@@ -57,8 +57,7 @@ function determineCommandToUse() {
 		# Didn't find libcamera-still, or it didn't work.
 
 		CMD="raspistill"
-		which "${CMD}" > /dev/null
-		if [ $? -ne 0 ]; then
+		if ! command -v "${CMD}" > /dev/null; then
 			echo -e "${RED}*** ERROR: Can't determine what command to use for RPi camera.${NC}"
 			if [[ ${USE_doExit} == "true" ]]; then
 				doExit ${EXIT_ERROR_STOP} "Error" "${PREFIX}\nRPi camera command\nnot found!."

@@ -1,7 +1,7 @@
 [
 {
 "name" : "cameraType",
-"default" : "ZWO",
+"default" : "",
 "description" : "The type of camera you are using.  'RPi' includes the HD and compatible cameras.<br>You <b>must</b> set and change the camera here, not in config.sh.",
 "label" : "Camera Type",
 "type" : "select",
@@ -385,7 +385,7 @@
 "advanced" : 1
 },
 {
-"name" : "dayAndNightHeader",
+"name" : "DayAndNightHeader",
 "description" : "Both daytime and nighttime settings",
 "type" : "header",
 "display" : 1,
@@ -525,13 +525,13 @@
 },
 {
 "name" : "meanthreshold",
-"minimum" : 0.01,
-"maximum" : "none",
-"default" : 0.1,
+"minimum" : "meanthreshold_min",
+"maximum" : "meanthreshold_max",
+"default" : "meanthreshold_default",
 "description" : "When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",
 "type" : "text",
-"display" : 0,
+"display" : "meanthreshold_display",
 "advanced" : 1
 },
 {

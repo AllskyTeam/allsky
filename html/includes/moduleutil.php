@@ -141,9 +141,13 @@ class MODULEUTIL
     }
 
     public function getModuleBaseData() {
-        global $lat, $lon, $angle;
-
-        $result = [];
+        $cam_type = getCameraType();
+        $settings_file = getSettingsFile($cam_type);
+        $camera_settings_str = file_get_contents($settings_file, true);
+        $camera_settings_array = json_decode($camera_settings_str, true);
+        $angle = $camera_settings_array['angle'];
+        $lat = $camera_settings_array['latitude'];
+        $lon = $camera_settings_array['longitude'];
 
         $result['lat'] = $lat;
         $result['lon'] = $lon;

@@ -30,6 +30,7 @@ DEBUG=false
 HELP=false
 RESTARTING=false			# Will the caller restart Allsky?
 CAMERA_TYPE_ONLY=false		# Only update the cameraType ?
+FORCE=""					# Passed to createAllskyOptions.php
 
 while [ $# -gt 0 ]; do
 	ARG="${1}"
@@ -42,6 +43,9 @@ while [ $# -gt 0 ]; do
 			;;
 		--cameraTypeOnly)
 			CAMERA_TYPE_ONLY="true"
+			;;
+		--force)
+			FORCE="${ARG}"
 			;;
 		--restarting)
 			RESTARTING="true"
@@ -117,8 +121,23 @@ while [ $# -gt 0 ]; do
 
 			# Create the camera capabilities file for the new camera type.
 			# Debug level 3 to give the user more info on error.
-			[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}DEBUG: Calling capture_${NEW_VALUE} -cc_file '${CC_FILE}'${wNC}"
-			"${ALLSKY_HOME}/capture_${NEW_VALUE}" -debuglevel 3 -cc_file "${CC_FILE}"
+
+			# The software for RPi cameras needs to know what command is being used to
+			# capture the images.
+			if [[ ${NEW_VALUE} == "RPi" ]]; then
+				# shellcheck disable=SC1090
+				source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
+				C="$(determineCommandToUse "false" "" )"
+				# shellcheck disable=SC2181
+				if [ $? -ne 0 ]; then
+					exit $?
+				fi
+				C="-cmd ${C}"
+			else
+				C=""
+			fi
+			[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}DEBUG: Calling capture_${NEW_VALUE} ${C} -cc_file '${CC_FILE}'${wNC}"
+			"${ALLSKY_HOME}/capture_${NEW_VALUE}" ${C} -debuglevel 3 -cc_file "${CC_FILE}"
 			RET=$?
 			if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
 				echo -e "${wERROR}ERROR: Unable to create cc file '${CC_FILE}'.${wNC}"
@@ -167,6 +186,7 @@ while [ $# -gt 0 ]; do
 			# .php files don't return error codes so we check if it worked by
 			# looking for a string in its output.
 			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+				${FORCE} \
 				--dir "${ALLSKY_CONFIG}" \
 				--cc_file "${CC_FILE}" \
 				--options_file "${OPTIONS_FILE}" \

@@ -15,7 +15,7 @@ fi
 
 # This script assumes the user already did the "git clone" into the "allsky" directory.
 INSTALL_DIR="allsky"
-cd ~${INSTALL_DIR}
+cd ~${INSTALL_DIR}  || exit 1
 
 # Location of possible prior version of Allsky.
 # If the user wants items copied from there to the new version,
@@ -552,7 +552,7 @@ if [[ -z ${LOCALE} ]]; then
 	if [[ -z ${LOCALE} ]]; then
 		diplay_msg warning "Unable to determine your locale.\nRun the 'locale' command and then update the WebUI."
 	else
-		SETTING_FILE="${ALLSKY_CONFIG}/${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
+		SETTINGS_FILE="${ALLSKY_CONFIG}/${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
 		jq ".locale = ${LOCALE}" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
 	fi
 fi

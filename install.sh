@@ -81,16 +81,8 @@ usage_and_exit()
 }
 
 calc_wt_size() {
-	# NOTE: it's tempting to redirect stderr to /dev/null to supress error
-	# output from tput. However in this case, tput detects neither stdout or
-	# stderr is a tty and so only gives default 80, 24 values
 	WT_WIDTH=$(tput cols)
-	
-	if [ "${WT_WIDTH:-0}" -lt 60 ]; then
-		WT_WIDTH=80
-	elif [ "${WT_WIDTH}" -gt 178 ]; then
-		WT_WIDTH=120
-	fi
+	[ "${WT_WIDTH}" -gt 80 ] && WT_WIDTH=80
 }
 
 
@@ -112,12 +104,12 @@ select_camera_type() {
 
 	# "2" is the number of menu items.
 	MSG="\nSelect your camera type:\n"
-	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "${MSG}" 10 ${WT_WIDTH} 2 \
+	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "${MSG}" 15 ${WT_WIDTH} 2 \
 		"ZWO"  "   ZWO ASI" \
 		"RPi"  "   Raspberry Pi HQ and compatible" \
 		3>&1 1>&2 2>&3)
 	if [ $? -ne 0 ]; then
-		display_msg warning "Camera selection required.  Please re-run the installation and select a camera to continue.\n"
+		display_msg warning "Camera selection required.  Please re-run the installation and select a camera to continue."
 		exit 1
 	fi
 }
@@ -202,9 +194,9 @@ do_sudoers()
 ask_reboot() {
 	AT="http://${NEW_HOST_NAME}.local or http://$(hostname -I | sed -e 's/ .*$//')"
 	MSG="The Allsky Software is now installed. You must reboot the Raspberry Pi to finish the installation."
-	MSG="${MSG}\nAfter reboot you can connect to the WebUI at: ${AT}"
+	MSG="${MSG}\n\nAfter reboot you can connect to the WebUI at: ${AT}"
 	MSG="${MSG}\n\nReboot now?"
-	if (whiptail --title "${TITLE}" --yesno "${MSG}" 10 ${WT_WIDTH} 3>&1 1>&2 2>&3); then 
+	if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH} 3>&1 1>&2 2>&3); then 
 		sudo reboot now
 	else
 		display_msg warning "You will need to reboot the Pi before Allsky will work.\n"
@@ -240,7 +232,7 @@ check_swap() {
 		MSG="${MSG}\nHaving sufficient swap will decrease the chance of timelapse and other failures."
 		MSG="${MSG}\n\nDo you want swap space ${M}?"
 		MSG="${MSG}\n\nIf you do NOT want to change anything, enter 0."
-		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 10 ${WT_WIDTH} \
+		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 15 ${WT_WIDTH} \
 			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
 		if [[ ${SWAP_SIZE} != "0" ]]; then
 # TODO: Set swap - either increase, or create
@@ -264,7 +256,7 @@ check_memory_filesystem() {
 	MSG="Making ${ALLSKY_TMP} reside in memory can drastically decrease the amount of writes to the SD card, increasing its life."
 	MSG="${MSG}\n\nDo you want to make it reside in memory?"
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
-	if (whiptail --title "${TITLE}" --yesno "${MSG}" 12 ${WT_WIDTH}  3>&1 1>&2 2>&3); then 
+	if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3); then 
 echo "TODO: make memory filesystem"
 	fi
 }
@@ -342,7 +334,7 @@ fi
 if [ -d "${PRIOR_INSTALL_DIR}/images" ]; then
 	MSG="You appear to have a prior version of Allsky in ${PRIOR_INSTALL_DIR}."
 	MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
-	if (whiptail --title "${TITLE}" --yesno "${MSG}" 12 ${WT_WIDTH}  3>&1 1>&2 2>&3); then 
+	if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3); then 
 		if [ -f  "${PRIOR_INSTALL_DIR}/version" ]; then
 			PRIOR_ALLSKY="new"		# New style Allsky with CAMERA_TYPE set in config.sh
 		else
@@ -353,10 +345,10 @@ if [ -d "${PRIOR_INSTALL_DIR}/images" ]; then
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	fi
 else
-	MSG="You do not appear to have prior version of Allsky."
+	MSG="You do NOT appear to have prior version of Allsky."
 	MSG="${MSG}\n\nIf you DO have a prior version and you want images, darks, and certain settings moved from the prior version to the new one, rename the prior version to ${PRIOR_INSTALL_DIR} before running this installation."
 	MSG="${MSG}\n\nDo you want to continue withOUT using the prior version?"
-	if (! whiptail --title "${TITLE}" --yesno "${MSG}" 10 ${WT_WIDTH} 3>&1 1>&2 2>&3); then 
+	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH} 3>&1 1>&2 2>&3; then 
 		display_msg info "* Rename the directory with your prior version of Allsky to\n'${PRIOR_INSTALL_DIR}', then run the installation again.\n"
 		exit 0
 	fi
@@ -372,6 +364,7 @@ MSG="The next step can take a few minutes."
 MSG="${MSG}\n\nOutput will only be displayed if there was a problem."
 whiptail --title "${TITLE}" --msgbox "${MSG}" 10 ${WT_WIDTH} 3>&1 1>&2 2>&3
 
+display_msg progress "Installing dependencies and preparing commands.\nMay take a while..."
 TMP="/tmp/deps.install.tmp"
 #shellcheck disable=SC2024
 sudo make deps > ${TMP} 2>&1
@@ -400,6 +393,16 @@ if [ $? -ne 0 ]; then
 fi
 display_msg progress "Dependencies installed."
 
+##### Update config.sh
+# This must come before save_camera_capabilities, since it needs to know the camera type.
+sed -i \
+	-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
+	-e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${CAMERA_TYPE}\"/" \
+	"${ALLSKY_CONFIG}/config.sh"
+
+# Code later needs "settings()" function.
+source "${ALLSKY_CONFIG}/config.sh"
+
 ##### Create the camera type-model-specific "options" file
 # This should come after the steps above because the create ${ALLSKY_CONFIG}.
 # This will error out and exit if no camera installed
@@ -412,14 +415,6 @@ display_msg progress "Set permissions on Allsky log (${ALLSKY_LOG}).\n"
 sudo touch "${ALLSKY_LOG}"
 sudo chmod 664 "${ALLSKY_LOG}"
 sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
-
-
-##### Update config.sh
-display_msg progress "Updating version and CAMERA_TYPE in config.sh.\n"
-sed -i \
-	-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
-	-e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${CAMERA_TYPE}\"/" \
-	"${ALLSKY_CONFIG}/config.sh"
 
 
 ##### Restore prior files
@@ -542,7 +537,7 @@ if [[ -n ${PRIOR_ALLSKY} ]]; then
 	MSG="${MSG}\n\nNOTE: some settings are no longer in config.sh and some changed names."
 	MSG="${MSG}\nDo NOT add the old settings back in."
 	MSG="${MSG}${SETTINGS_MSG}" 
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	display_msg info "IMPORTANT: check config/config.sh and config/ftp-settings.sh for correctness.\n"
 
 else
@@ -554,9 +549,9 @@ fi
 LOCALE="$(settings .locale)"
 if [[ -z ${LOCALE} ]]; then
 	display_msg progress "Setting locale.\n"
-	LOCALE="$(locale | grep LC_NUMERIC | sed -e 's;LC_NUMERIC=";;' -e 's;";')"
+	LOCALE="$(locale | grep LC_NUMERIC | sed -e 's;LC_NUMERIC=";;' -e 's;";;')"
 	if [[ -z ${LOCALE} ]]; then
-		diplay_msg warning "Unable to determine your locale.\nRun the 'locale' command and then update the WebUI."
+		display_msg warning "Unable to determine your locale.\nRun the 'locale' command and then update the WebUI."
 	else
 		SETTINGS_FILE="${ALLSKY_CONFIG}/${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
 		jq ".locale = ${LOCALE}" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
@@ -616,8 +611,8 @@ sed \
 		"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
 sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
 
-sudo lighty-enable-mod fastcgi-php 2> /dev/null
-sudo systemctl force-reload lighttpd 2> /dev/null
+sudo lighty-enable-mod fastcgi-php > /dev/null 2>&1
+sudo systemctl force-reload lighttpd > /dev/null 2>&1
 sudo systemctl start lighttpd
 sudo rm -fr /var/log/lighttpd/*		# Start off with a clean log file.
 

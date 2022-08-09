@@ -39,6 +39,7 @@ FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 RASPAP_DIR="/etc/raspap"
 FORCE_CREATING_SETTINGS_FILE=false		# should a default settings file be created?
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
+chmod 755 "${ALLSKY_HOME}"	# Some versions of Linux default to 750 so web server can't read it
 
 
 ####################### functions
@@ -128,6 +129,12 @@ save_camera_capabilities() {
 		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in save_camera_capabilities()."
 		return 1
 	fi
+
+	# The web server needs to be able to create and update file in ${ALLSKY_CONFIG}
+	chmod 775 "${ALLSKY_CONFIG}"
+	chmod 664 "${ALLSKY_CONFIG}"/*
+	sudo chgrp -R ${WEBSERVER_GROUP} "${ALLSKY_CONFIG}"
+	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 
 	# makeChanges.sh creates the camera type/model-specific 
 	# --cameraTypeOnly tells makeChanges.sh to only change the camera info and exit.
@@ -393,7 +400,6 @@ if [ $? -ne 0 ]; then
 fi
 display_msg progress "Dependencies installed."
 
-
 ##### Create the camera type-model-specific "options" file
 # This should come after the steps above because the create ${ALLSKY_CONFIG}.
 # This will error out and exit if no camera installed
@@ -637,7 +643,6 @@ display_msg progress "Setting permissions for WebUI."
 # We don't know what permissions may have been on the old website, so use "sudo".
 sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
 sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
-chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 
 OLD_WEBUI_LOCATION="/var/www/html"
 OLD_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
@@ -702,13 +707,6 @@ if [ -d "${OLD_WEBUI_LOCATION}" ]; then
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
 fi
 
-
-# The web server needs to be able to create and update file in ${ALLSKY_CONFIG}
-chmod 775 "${ALLSKY_CONFIG}"
-chmod 664 "${ALLSKY_CONFIG}"/*
-sudo chgrp -R ${WEBSERVER_GROUP} "${ALLSKY_CONFIG}"
-
-chmod 755 "${ALLSKY_HOME}"	# Some versions of Linux default to 750 so web server can't read it
 
 ######## All done
 

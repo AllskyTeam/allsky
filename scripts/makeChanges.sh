@@ -88,10 +88,9 @@ WEBSITE_CONFIG=()
 while [ $# -gt 0 ]; do
 	KEY="${1}"
 	LABEL="${2}"
-	OLD_VALUE="${3}"
 	NEW_VALUE="${4}"
 	if [ "${DEBUG}" = "true" ]; then
-		MSG="${KEY}: old [${OLD_VALUE}], new [${NEW_VALUE}]"
+		MSG="${KEY}: new [${NEW_VALUE}]"
 		if [[ ${ON_TTY} -eq 1 ]]; then
 			echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
 		else	# called from WebUI.
@@ -210,7 +209,7 @@ while [ $# -gt 0 ]; do
 			;;
 
 		filename)
-			WEBSITE_CONFIG+=("imageName" "${OLD_VALUE}" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=("imageName" "${NEW_VALUE}")
 			NEEDS_RESTART=true
 			;;
 		extratext)
@@ -233,7 +232,7 @@ while [ $# -gt 0 ]; do
 			if [[ (${SIGN} = "+" || ${SIGN} == "-") && (${LAST%[NSEW]} == "") ]]; then
 				echo -e "${wWARNING}WARNING: '${NEW_VALUE}' should contain EITHER a \"${SIGN}\" OR a \"${LAST}\", but not both; please change it.${wNC}"
 			else
-				WEBSITE_CONFIG+=("${KEY}" "" "${NEW_VALUE}")
+				WEBSITE_CONFIG+=("${KEY}" "${NEW_VALUE}")
 				RUN_POSTDATA=true
 			fi
 			NEEDS_RESTART=true
@@ -263,7 +262,7 @@ while [ $# -gt 0 ]; do
 			;;
 		location | owner | camera | lens | computer)
 			RUN_POSTTOMAP=true
-			WEBSITE_CONFIG+=("${KEY}" "" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=("${KEY}" "${NEW_VALUE}")
 			;;
 		websiteurl | imageurl)
 			RUN_POSTTOMAP=true

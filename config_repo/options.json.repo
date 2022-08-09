@@ -75,7 +75,7 @@
 "default" : "exposure_default",
 "description" : "Manual exposure time in milliseconds. Can be a fraction.<br>If using daytime <b>Auto-Exposure</b>, this number is used as a starting point.",
 "label" : "Manual Exposure",
-"type" : "text",
+"type" : "number",
 "display" : 1,
 "advanced" : 1
 },
@@ -86,7 +86,7 @@
 "default" : 0.5,
 "description" : "The target mean brightness level when <b>Auto-Exposure</b> is on. 1.0 is pure white.<br>Best used when <b>Auto-Exposure</b> and <b>Auto-Gain</b> are on.<br>0 disables this auto-exposure mode.",
 "label" : "Mean Target",
-"type" : "text",
+"type" : "number",
 "display" : "mean_display",
 "advanced" : 1
 },
@@ -171,7 +171,7 @@
 "default" : "wbr_default",
 "description" : "Red component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Red Balance",
-"type" : "text",
+"type" : "number",
 "display" : "wbr_display",
 "advanced" : 0
 },
@@ -182,7 +182,7 @@
 "default" : "wbb_default",
 "description" : "Blue component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Blue Balance",
-"type" : "text",
+"type" : "number",
 "display" : "wbb_display",
 "advanced" : 0
 },
@@ -262,7 +262,7 @@
 "default" : 0.2,
 "description" : "The target mean brightness level when <b>Auto-Exposure</b> is on. 1.0 is pure white.<br>Best used when <b>Auto-Exposure</b> and <b>Auto-Gain</b> are on.<br>0 disables this auto-exposure mode.",
 "label" : "Mean Target",
-"type" : "text",
+"type" : "number",
 "display" : "mean_display",
 "advanced" : 1
 },
@@ -315,7 +315,7 @@
 "default" : "gain_default",
 "description" : "Manually sets the light sensitivity of the camera.<br>A high value returns a brighter image but more noise too.",
 "label" : "Gain",
-"type" : "text",
+"type" : "number",
 "display" : 1,
 "advanced" : 0
 },
@@ -347,7 +347,7 @@
 "default" : "wbr_default",
 "description" : "Red component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Red Balance",
-"type" : "text",
+"type" : "number",
 "display" : "wbr_display",
 "advanced" : 0
 },
@@ -358,7 +358,7 @@
 "default" : "wbb_default",
 "description" : "Blue component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Blue Balance",
-"type" : "text",
+"type" : "number",
 "display" : "wbb_display",
 "advanced" : 0
 },
@@ -417,7 +417,7 @@
 "default" : "saturation_default",
 "description" : "Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
 "label" : "Saturation",
-"type" : "text",
+"type" : "number",
 "display" : "saturation_display",
 "advanced" : 1
 },
@@ -428,7 +428,7 @@
 "default" : "contrast_default",
 "description" : "Changes the contrast of an image.",
 "label" : "Contrast",
-"type" : "text",
+"type" : "number",
 "display" : "contrast_display",
 "advanced" : 1
 },
@@ -439,7 +439,7 @@
 "default" : "sharpness_default",
 "description" : "Changes the sharpness of an image.<br>Too sharp and images look unnatural.",
 "label" : "Sharpness",
-"type" : "text",
+"type" : "number",
 "display" : "sharpness_display",
 "advanced" : 1
 },
@@ -539,7 +539,7 @@
 "default" : "meanthreshold_default",
 "description" : "When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",
-"type" : "text",
+"type" : "number",
 "display" : "meanthreshold_display",
 "advanced" : 1
 },
@@ -571,6 +571,7 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
+"nullOK" : 0,
 "advanced" : 1
 },
 {
@@ -626,6 +627,7 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
+"nullOK" : 0,
 "advanced" : 0
 },
 {
@@ -636,6 +638,7 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
+"nullOK" : 0,
 "advanced" : 0
 },
 {
@@ -643,7 +646,7 @@
 "default" : "-6",
 "description" : "Altitude of the Sun in degrees relative to the horizon at which to switch between day and night.",
 "label" : "Angle",
-"type" : "text",
+"type" : "number",
 "display" : 1,
 "checkchanges" : 1,
 "advanced" : 0
@@ -673,6 +676,7 @@
 "label" : "Locale",
 "type" : "text",
 "display" : 1,
+"nullOK" : 0,
 "advanced" : 0
 },
 {
@@ -682,6 +686,7 @@
 "label" : "Histogram Box",
 "type" : "text",
 "display" : "histogrambox_display",
+"nullOK" : 0,
 "advanced" : 1
 },
 {
@@ -759,6 +764,7 @@
 "label" : "Time Format",
 "type" : "text",
 "display" : 1,
+"nullOK" : 0,
 "advanced" : 0
 },
 {
@@ -937,6 +943,7 @@
 "label" : "Font Color",
 "type" : "text",
 "display" : 1,
+"nullOK" : 0,
 "advanced" : 0
 },
 {
@@ -946,6 +953,7 @@
 "label" : "Small Font Color",
 "type" : "text",
 "display" : 1,
+"nullOK" : 0,
 "advanced" : 0
 },
 {

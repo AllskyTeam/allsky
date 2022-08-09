@@ -14,6 +14,15 @@
 "advanced" : 1
 },
 {
+"name" : "cameraModel",
+"default" : "",
+"description" : "The model of camera you are using.  Cannot be changed here.",
+"label" : "Camera Model",
+"type" : "readonly",
+"display" : 1,
+"advanced" : 1
+},
+{
 "name" : "daytimeSettingsHeader",
 "description" : "Daytime settings",
 "type" : "header",
@@ -1072,7 +1081,8 @@
 "advanced" : 0
 },
 {
-"name" : "XX_END_XX"
+"name" : "XX_END_XX",
+"display" : 0
 }
 ]
 

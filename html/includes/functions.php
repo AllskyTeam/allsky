@@ -786,30 +786,33 @@ function runCommand($cmd, $message, $messageColor)
 	return true;
 }
 
-// Update a file, taking into account that the webserver can't directly update it
-// with PHP functions.
+// Update a file.
+// Files should be writable by the web server, but if they aren't, use a temporary file.
 // Return any error message.
 function updateFile($file, $contents, $fileName) {
-	// Save a temporary copy of the file in a place the webserver can write to,
-	// then use sudo to "mv" the file to the final place.
-	$tempFile = "/tmp/$fileName-temp.txt";
+	if (@file_put_contents($file, $contents) == false) {
+		// Assumed it failed due to lack of permissions.
 
-// xxxxxxxxxxxxxx TODO: FIX: if settings file, deal with link
+		// Save a temporary copy of the file in a place the webserver can write to,
+		// then use sudo to "mv" the file to the final place.
+		$tempFile = "/tmp/$fileName-temp.txt";
 
-	if (file_put_contents($tempFile, $contents) == false) {
-		$err = "Failed to save settings: " . error_get_last()['message'];
-	} else {
-		// shell_exec() doesn't return anything unless there is an error.
-		$ret = shell_exec("x=\$(sudo mv '$tempFile' '$file' 2>&1) || echo 'Unable to mv [$tempFile] to [$file]': \${x}");
-		if ($ret == "") {
-			shell_exec("sudo chown " . ALLSKY_OWNER . ":" . ALLSKY_GROUP . " '$file'; sudo chmod 644 '$file'");
-			$err = "";
+		if (file_put_contents($tempFile, $contents) == false) {
+			$err = "Failed to save settings: " . error_get_last()['message'];
 		} else {
-			$err = "Failed to rename $fileName file: $ret.";
+			// shell_exec() doesn't return anything unless there is an error.
+			$ret = shell_exec("x=\$(sudo mv '$tempFile' '$file' 2>&1) || echo 'Unable to mv [$tempFile] to [$file]': \${x}");
+			if ($ret == "") {
+				shell_exec("sudo chown " . ALLSKY_OWNER . ":" . ALLSKY_GROUP . " '$file'; sudo chmod 644 '$file'");
+				$err = "";
+			} else {
+				$err = "Failed to rename $fileName file: $ret.";
+			}
 		}
-	}
 
-	return $err;
+		return $err;
+	}
+	return "";
 }
 
 function getCameraType() {

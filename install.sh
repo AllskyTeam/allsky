@@ -707,6 +707,37 @@ if [ -d "${OLD_WEBUI_LOCATION}" ]; then
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
 fi
 
+######## TEMP functiont to install the overlay and modules system
+install_overlay()
+{
+
+        echo -e "${GREEN}* Installing PHP Modules${NC}"
+        sudo apt-get install -y php-zip
+
+        echo -e "${GREEN}* Installing Python dependencies${NC}"
+        pip3 install --no-warn-script-location -r requirements.txt 2>&1 > dependencies.log
+        sudo apt-get -y install libatlas-base-dev 2>&1 >> dependencies.log
+        echo -e "${GREEN}* Installing Trutype fonts - This will take a while please be patient${NC}"
+        sudo apt-get -y install msttcorefonts 2>&1 >> dependencies.log
+
+        echo -e "${GREEN}* Setting up modules${NC}"
+        sudo mkdir -p /etc/allsky/modules
+        sudo chown -R www-data /etc/allsky
+        sudo chmod -R 774 /etc/allsky
+
+        echo -e "${GREEN}* Fixing permissions${NC}"
+
+        sudo chown www-data "${ALLSKY_CONFIG}"/fields.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/module-settings.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/postprocessing_day.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/postprocessing_night.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/autoexposure.json
+        sudo chown www-data "${ALLSKY_CONFIG}"/overlay.json
+        sudo chown -R www-data "${ALLSKY_WEBUI}"/overlay
+
+}
+
+install_overlay
 
 ######## All done
 

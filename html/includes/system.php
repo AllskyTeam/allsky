@@ -249,19 +249,10 @@ function displayUserData($file, $displayType)
  */
 function DisplaySystem()
 {
-	global $status;
+	global $status, $temptype;
 	$status = new StatusMessages();
 
 	$top_dir = dirname(ALLSKY_WEBSITE, 1);
-
-	$camera_settings_str = file_get_contents(getSettingsFile(getCameraType()), true);
-	$camera_settings_array = json_decode($camera_settings_str, true);
-	if (isset($camera_settings_array['temptype'])) {
-		$temp_type = $camera_settings_array['temptype'];
-		if ($temp_type == "") $temp_type = "C";
-	} else {
-		$temp_type = "C";
-	}
 
 	// hostname
 	exec("hostname -f", $hostarray);

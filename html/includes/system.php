@@ -371,9 +371,9 @@ function DisplaySystem()
 		$temperature_status = "";
 	}
 	$display_temperature = "";
-	if ($temp_type == "C" || $temp_type == "B")
+	if ($temptype == "C" || $temptype == "B")
 		$display_temperature = number_format($temperature, 1, '.', '') . "&deg;C";
-	if ($temp_type == "F" || $temp_type == "B")
+	if ($temptype == "F" || $temptype == "B")
 		$display_temperature = $display_temperature . "&nbsp; &nbsp;" . number_format((($temperature * 1.8) + 32), 1, '.', '') . "&deg;F";
 
 	// Optional user-specified data.

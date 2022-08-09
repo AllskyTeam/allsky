@@ -249,19 +249,10 @@ function displayUserData($file, $displayType)
  */
 function DisplaySystem()
 {
-	global $status;
+	global $status, $temptype;
 	$status = new StatusMessages();
 
 	$top_dir = dirname(ALLSKY_WEBSITE, 1);
-
-	$camera_settings_str = file_get_contents(getSettingsFile(getCameraType()), true);
-	$camera_settings_array = json_decode($camera_settings_str, true);
-	if (isset($camera_settings_array['temptype'])) {
-		$temp_type = $camera_settings_array['temptype'];
-		if ($temp_type == "") $temp_type = "C";
-	} else {
-		$temp_type = "C";
-	}
 
 	// hostname
 	exec("hostname -f", $hostarray);
@@ -380,9 +371,9 @@ function DisplaySystem()
 		$temperature_status = "";
 	}
 	$display_temperature = "";
-	if ($temp_type == "C" || $temp_type == "B")
+	if ($temptype == "C" || $temptype == "B")
 		$display_temperature = number_format($temperature, 1, '.', '') . "&deg;C";
-	if ($temp_type == "F" || $temp_type == "B")
+	if ($temptype == "F" || $temptype == "B")
 		$display_temperature = $display_temperature . "&nbsp; &nbsp;" . number_format((($temperature * 1.8) + 32), 1, '.', '') . "&deg;F";
 
 	// Optional user-specified data.

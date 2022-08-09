@@ -12,9 +12,9 @@ require 'allskyDefines.inc';
 
 $status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
-
+$temptype = null;
 function initialize_variables() {
-	global $image_name, $delay, $daydelay, $nightdelay, $darkframe, $useLogin;
+	global $image_name, $delay, $daydelay, $nightdelay, $darkframe, $useLogin, $temptype;
 
 	// The Camera Type should be set during the installation, so this "should" never fail...
 	$cam_type = getCameraType();
@@ -25,7 +25,7 @@ function initialize_variables() {
 		exit;
 	}
 
-	$settings_file = getSettingsFile($cam_type);
+	$settings_file = getSettingsFile();
 	if (! file_exists($settings_file)) {
 		echo "<div style='color: red; font-size: 200%;'>";
 		echo "ERROR: Unable to find camera settings file for camera of type '$cam_type'.";
@@ -42,6 +42,7 @@ function initialize_variables() {
 	$image_name = $img_dir . "/" . $camera_settings_array['filename'];
 	$darkframe = $camera_settings_array['takeDarkFrames'];
 	$useLogin = getVariableOrDefault($camera_settings_array, 'useLogin', true);
+	$temptype = getVariableOrDefault($camera_settings_array, 'temptype', "C");
 
 
 	////////////////// Determine delay between refreshes of the image.
@@ -106,7 +107,7 @@ function CSRFToken() {
 function CSRFValidate() {
   global $useLogin;
   if (! $useLogin) return true;
-  if ( hash_equals($_POST['csrf_token'], $_SESSION['csrf_token']) ) {
+  if (isset($_POST['csrf_token']) && hash_equals($_POST['csrf_token'], $_SESSION['csrf_token']) ) {
     return true;
   } else {
     error_log('CSRF violation');
@@ -785,28 +786,33 @@ function runCommand($cmd, $message, $messageColor)
 	return true;
 }
 
-// Update a file, taking into account that the webserver can't directly update it
-// with PHP functions.
+// Update a file.
+// Files should be writable by the web server, but if they aren't, use a temporary file.
 // Return any error message.
 function updateFile($file, $contents, $fileName) {
-	// Save a temporary copy of the file in a place the webserver can write to,
-	// then use sudo to "mv" the file to the final place.
-	$tempFile = "/tmp/$fileName-temp.txt";
-			
-	if (file_put_contents($tempFile, $contents) == false) {
-		$err = "Failed to save settings: " . error_get_last()['message'];
-	} else {
-		// shell_exec() doesn't return anything unless there is an error.
-		$ret = shell_exec("x=\$(sudo mv '$tempFile' '$file' 2>&1) || echo 'Unable to mv [$tempFile] to [$file]': \${x}");
-		if ($ret == "") {
-			shell_exec("sudo chown " . ALLSKY_OWNER . ":" . ALLSKY_GROUP . " '$file'; sudo chmod 644 '$file'");
-			$err = "";
-		} else {
-			$err = "Failed to rename $fileName file: $ret.";
-		}
-	}
+	if (@file_put_contents($file, $contents) == false) {
+		// Assumed it failed due to lack of permissions.
 
-	return $err;
+		// Save a temporary copy of the file in a place the webserver can write to,
+		// then use sudo to "mv" the file to the final place.
+		$tempFile = "/tmp/$fileName-temp.txt";
+
+		if (file_put_contents($tempFile, $contents) == false) {
+			$err = "Failed to save settings: " . error_get_last()['message'];
+		} else {
+			// shell_exec() doesn't return anything unless there is an error.
+			$ret = shell_exec("x=\$(sudo mv '$tempFile' '$file' 2>&1) || echo 'Unable to mv [$tempFile] to [$file]': \${x}");
+			if ($ret == "") {
+				shell_exec("sudo chown " . ALLSKY_OWNER . ":" . ALLSKY_GROUP . " '$file'; sudo chmod 644 '$file'");
+				$err = "";
+			} else {
+				$err = "Failed to rename $fileName file: $ret.";
+			}
+		}
+
+		return $err;
+	}
+	return "";
 }
 
 function getCameraType() {

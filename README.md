@@ -418,6 +418,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Overlay Editor** allows you to drag and drop what text and images you want overlayed on the images.  This is a **significant** improvement over the old mechanism; the new way lets you vary the font size, color, rotation, etc. for everything you add and let you use variables in the text which gets replaced at run-time, e.g., the time.
 			* **Module Editor** allows you to specify what actions should take place after an image has been saved, for example, add an overlay or count the number of stars.  Users can add (and hopefully share) their own modules.
 		* The **Camera Settings** link was renamed to **Allsky Settings** since there are non-camera settings there.
+		* Fields with missing data are shown in red with a message saying the data is missing.  For example, **latitude** is a required field.
 		* New settings on the **Allsky Settings** page:
 			* **Camera Type** is either ZWO or RPi.  **This replaces the `CAMERA`
 			**Max Auto-Exposure** for day and night.  When using auto exposure, exposure times will not exceed this number.

@@ -18,9 +18,9 @@ source "${ALLSKY_CONFIG}/ftp-settings.sh"
 function usage_and_exit()
 {
 	echo -e "${wERROR}"
-	echo "Usage: ${ME} [--debug] [--cameraTypeOnly] [--restarting] key label old_value new_value [...]"
+	echo "Usage: ${ME} [--debug] [--cameraTypeOnly] [--restarting] key label new_value [...]"
 	echo -e "${wNC}"
-	echo "There must be a multiple of 4 key/label/old_value/new_value arguments."
+	echo "There must be a multiple of 3 key/label/old_value/new_value arguments."
 	exit ${1}
 }
 
@@ -64,7 +64,7 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 [[ $# -eq 0 ]] && usage_and_exit 1
-[ $(($# % 4)) -ne 0 ] && usage_and_exit 2
+[ $(($# % 3)) -ne 0 ] && usage_and_exit 2
 
 
 # This output may go to a web page, so use "w" colors.
@@ -88,10 +88,9 @@ WEBSITE_CONFIG=()
 while [ $# -gt 0 ]; do
 	KEY="${1}"
 	LABEL="${2}"
-	OLD_VALUE="${3}"
-	NEW_VALUE="${4}"
+	NEW_VALUE="${3}"
 	if [ "${DEBUG}" = "true" ]; then
-		MSG="${KEY}: old [${OLD_VALUE}], new [${NEW_VALUE}]"
+		MSG="${KEY}: new [${NEW_VALUE}]"
 		if [[ ${ON_TTY} -eq 1 ]]; then
 			echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
 		else	# called from WebUI.
@@ -210,7 +209,7 @@ while [ $# -gt 0 ]; do
 			;;
 
 		filename)
-			WEBSITE_CONFIG+=("imageName" "${OLD_VALUE}" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=("imageName" "${NEW_VALUE}")
 			NEEDS_RESTART=true
 			;;
 		extratext)
@@ -233,7 +232,7 @@ while [ $# -gt 0 ]; do
 			if [[ (${SIGN} = "+" || ${SIGN} == "-") && (${LAST%[NSEW]} == "") ]]; then
 				echo -e "${wWARNING}WARNING: '${NEW_VALUE}' should contain EITHER a \"${SIGN}\" OR a \"${LAST}\", but not both; please change it.${wNC}"
 			else
-				WEBSITE_CONFIG+=("${KEY}" "" "${NEW_VALUE}")
+				WEBSITE_CONFIG+=("${KEY}" "${NEW_VALUE}")
 				RUN_POSTDATA=true
 			fi
 			NEEDS_RESTART=true
@@ -263,7 +262,7 @@ while [ $# -gt 0 ]; do
 			;;
 		location | owner | camera | lens | computer)
 			RUN_POSTTOMAP=true
-			WEBSITE_CONFIG+=("${KEY}" "" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=("${KEY}" "${NEW_VALUE}")
 			;;
 		websiteurl | imageurl)
 			RUN_POSTTOMAP=true
@@ -273,7 +272,7 @@ while [ $# -gt 0 ]; do
 			echo -e "${wWARNING}WARNING: Unknown label '${LABEL}', key='${KEY}'; ignoring.${wNC}"
 			;;
 		esac
-		shift 4
+		shift 3
 done
 
 if [[ ${RUN_POSTDATA} == "true" && ${POST_END_OF_NIGHT_DATA} == "true" ]]; then

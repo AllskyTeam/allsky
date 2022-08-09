@@ -1906,7 +1906,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 static char strLatitude[20], strLongitude[20];
 static bool validateLatLong(char const *l, char positive, char negative, char *savedLocation, char const *name)
 {
-	if (l == NULL) {
+	if (l == NULL || *l == '\0') {
 		Log(0, "*** ERROR: %s not specified!\n", name);
 		return(false);
 	}

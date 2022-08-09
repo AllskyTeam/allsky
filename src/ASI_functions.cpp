@@ -678,6 +678,12 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 #endif
 
 	fprintf(f, "\t\"supportedImageFormats\": [\n");
+
+	fprintf(f, "\t\t{ ");
+	fprintf(f, "\"value\" : %d, ", AUTO_IMAGE_TYPE);
+	fprintf(f, "\"label\" : \"%s\"", "auto");
+	fprintf(f, " },\n");
+
 	for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedVideoFormat); i++)
 	{
 		ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];
@@ -728,9 +734,8 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"delayBetweenImages_ms\",\n");
 	fprintf(f, "\t\t\t\"argumentName\" : \"delay\",\n");
-	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");
 	fprintf(f, "\t\t\t\"MinValue\" : %ld,\n", CG.minDelay_ms);
-	fprintf(f, "\t\t\t\"DefaultValue\" : %ld\n", std::min(CG.dayDelay_ms, CG.nightDelay_ms) / MS_IN_SEC);
+	fprintf(f, "\t\t\t\"MaxValue\" : \"%s\"\n", "none");
 	fprintf(f, "\t\t},\n");
 
 	if (CG.isColorCamera) {

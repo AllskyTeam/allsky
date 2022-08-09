@@ -25,12 +25,11 @@ function get_generic_name($s) {
 // If it exists, set the min, max, and default.
 function get_control($array, $setting, &$min, &$max, &$default) {
 	$i = 0;
-//x echo "\nLooking for control [$setting]\n";
+//x echo "Looking for control [$setting]: ";
 	foreach ($array as $cc) {
-//x echo "   [" . $cc["argumentName"] . "]\n";
 		$i++;
 		if ($cc["argumentName"] === $setting) {
-//x echo "$setting match at number $i\n";
+//x echo "match at number $i\n";
 			$min = getVariableOrDefault($cc, "MinValue", null);
 			$max = getVariableOrDefault($cc, "MaxValue", null);
 			$default = getVariableOrDefault($cc, "DefaultValue", null);
@@ -91,10 +90,10 @@ function add_field($f, $v, $setting) {	// field, value, name_of_setting
 		// These are the only fields that have placeholders.
 		// The "options" field is handles in add_options_field() since it's value is an array.
 		// The "display" field was handled earlier.
-if ($debug) echo "Setting '$setting', field '$f', v='$v'\n";
+if ($debug > 1) echo "Setting '$setting', field '$f', v='$v'\n";
 
 		if (get_control($cc_controls, $setting, $min, $max, $default)) {
-if ($debug) echo "   >>> found in controls list\n";
+if ($debug > 1) echo "   >>> found in controls list\n";
 			if ($f === "minimum") {
 				if ($v === $setting . "_min") {
 					$v = $min;
@@ -105,7 +104,7 @@ if ($debug) echo "   >>> found in controls list\n";
 				}
 			} else if ($f === "default") {
 				if ($v === $setting . "_default") {
-if ($debug) echo "     >>>>> Setting '$setting', field '$f' _default=[$default]\n";
+if ($debug > 1) echo "     >>>>> Setting '$setting', field '$f' _default=[$default]\n";
 					$v = $default;
 				}
 			}
@@ -213,7 +212,7 @@ $longopts = array(
 );
 $options = getopt("", $longopts, $rest_index);
 
-$debug = false;
+$debug = 0;			// Can be specified mutliple time
 $help = false;
 $directory = "";	// All the files will go in $directory.
 $cc_file = "";
@@ -222,10 +221,10 @@ $settings_file = "";
 $force = false;		// force creation of settings file even if it already exists?
 
 foreach ($options as $opt => $val) {
-	if ($debug) echo "Argument $opt = $val\n";
+	if ($debug > 1) echo "Argument $opt = $val\n";
 
 	if ($opt === "debug")
-		$debug = $val === "true" ? true : false;
+		$debug++;
 	else if ($opt === "help")
 		$help = true;
 	else if ($opt === "dir")
@@ -241,7 +240,7 @@ foreach ($options as $opt => $val) {
 }
 
 if ($help || $directory === "" || $cc_file === "" || $options_file === "") {
-	echo "\nUsage: " . basename($argv[0]) . " [--debug] [--help] [--settings_file file] --dir directory --cc_file file --options_file file\n";
+	echo "\nUsage: " . basename($argv[0]) . " [--debug ...] [--help] [--settings_file file] --dir directory --cc_file file --options_file file\n";
 	echo "'directory' is where the files are\n\n";
 	exit;
 }
@@ -249,7 +248,7 @@ if ($help || $directory === "" || $cc_file === "" || $options_file === "") {
 $cc_file_full = "$directory/$cc_file";
 if (! file_exists($cc_file_full)) {
 	echo "ERROR: Camera capabilities file $cc_file_full does not exist!\n";
-	echo "Run 'install.sh --update' to create it.";
+	echo "Run 'install.sh --update' to create it.\n";
 	exit;
 }
 $repo_file = ALLSKY_REPO . "/" . $options_file . ".repo";
@@ -267,6 +266,7 @@ $cc_array = json_decode($cc_str, true);
 $cc_controls = $cc_array["controls"];
 $cameraType = $cc_array["cameraType"];
 $cameraModel = $cc_array["cameraModel"];
+if ($debug > 0) echo "cameraType=$cameraType, cameraModel=$cameraModel\n";
 
 // Read $repo_file
 $repo_str = file_get_contents($repo_file, true);
@@ -289,10 +289,11 @@ if ($repo_array === null) {
 	// default			[string, but usually a number]
 	// description		[string]
 	// label			[string]
-	// type				[string - header, number, text, checkbox, select]
+	// type				[string - header, number, text, checkbox, select, readonly]
 	// options			[array with 1 or more entries] (only if "type" == "select")
 	// display			[0/1]
-	// checkchanges		[true/false]
+	// checkchanges		[0/1]
+	// nullOK			[0/1]
 	// advanced 		[0/1]	(last, so no comma after it)
 
 
@@ -300,30 +301,52 @@ if ($repo_array === null) {
 
 $options_str = "[\n";
 foreach ($repo_array as $repo) {
+	global $debug;
 	global $cc_controls;
 
 	$type = getVariableOrDefault($repo, "type", null);
 	$name = getVariableOrDefault($repo, "name", null);
 	if ($type === null && $name === "XX_END_XX") {
-		$options_str .= "{\n$q" . "name$q : $q$name$q\n}\n";
+		$options_str .= "{\n";
+		$options_str .= "$q" . "name$q : $q$name$q,\n";
+		$options_str .= "$q" . "display$q : 0\n";
+		$options_str .= "}\n";
 		break;		// hit the end
 	}
 
+	if ($debug > 0) echo "Processing setting [$name]: ";
+
 	// Before adding the setting, make sure the "display field says we can.
 	// Typically the value will be 1 (can display) or a placeholder.
-	// It should normally not be 0 or missing, but check anyhow.
+	// It should normally not be missing, but check anyhow.
 	$display = getVariableOrDefault($repo, "display", null);
-	if ($display === null || $display === 0) continue;
+	if ($display === null) {
+		if ($debug > 0) echo "display field=null\n";
+		continue;
+	}
 	if ($display !== 1) {
 		// should be a placeholder
 		$n = get_generic_name($name);
 		if ($display === $n . "_display") {
+			if ($debug > 0) echo "display=$display.";
 			if (! get_control($cc_controls, $n, $min, $max, $default)) {
+				if ($debug > 0) echo "     <<<<< NOT SUPPORTED >>>>>\n";
+				// Not an error - just means this isn't supported.
 				continue;
 			}
-			$repo["display"] = 2;
+			if ($debug > 0) echo "\n";
+			$repo["display"] = 1;	// a control exists for it, so display the setting.
 		}
+	} elseif ($debug > 0) {
+		echo "standard setting.\n";
 	}
+
+	// Have to handle camera type and model differently because the defaults
+	// might not be what we want.
+	if ($name === "cameraType")
+			$repo["default"] = $cameraType;
+	elseif ($name === "cameraModel")
+			$repo["default"] = $cameraModel;
 
 	$options_str .= "{\n";
 		add_non_null_field($repo, "name", $name);
@@ -336,6 +359,7 @@ foreach ($repo_array as $repo) {
 		add_non_null_field($repo, "options", $name);
 		add_non_null_field($repo, "display", $name);
 		add_non_null_field($repo, "checkchanges", $name);
+		add_non_null_field($repo, "nullOK", $name);
 		add_non_null_field($repo, "advanced", $name);
 	$options_str .= "},\n";
 }
@@ -356,7 +380,7 @@ if ($settings_file !== "") {
 	// If the file exists, it's a generic link to a camera-specific named file.
 	// Remove the link because it points to a prior camera.
 	if (file_exists($settings_file_full)) {
-		if ($debug) echo "Unlinking $settings_file_full.\n";
+		if ($debug > 0) echo "Removing $settings_file_full.\n";
 		if (! unlink($settings_file_full)) {
 			echo "ERROR: Unable to delete $settings_file_full.\n";
 			exit;
@@ -377,37 +401,37 @@ if ($settings_file !== "") {
 		$contents = "{\n";
 		foreach ($options_array as $option) {
 			$type = getVariableOrDefault($option, 'type', "");
-			if ($type == "header") continue;
+			if ($type == "header") continue;	// don't put in settings file
 			$display = getVariableOrDefault($option, 'display', 0);
 			if ($display === 0) continue;
 
 			$name = $option['name'];
 			$default = getVariableOrDefault($option, 'default', "");
-			if ($debug) echo ">> $name = [$default]\n";
+			if ($debug > 1) echo ">> $name = [$default]\n";
 
 			// Don't worry about whether or not the default is a string, number, etc.
 			$contents .= "\t\"$name\" : \"$default\",\n";
 		}
 		// This comes last so we don't worry about whether or not the items above
 		// need a trailing comma.
-		$contents .= "\t\"cameraModel\" : \"$cameraModel\"\n";
+		$contents .= "\t\"XX_END_XX\" : 1\n";
 		$contents .= "}\n";
 
-		if ($debug) echo "Creating settings file: $fullName.\n";
+		if ($debug > 0) echo "Creating settings file: $fullName.\n";
 		$results = updateFile($fullName, $contents, $cameraSettingsFile);
 		if ($results != "") {
 			echo "ERROR: Unable to create $fullName.\n";
 			exit;
 		}
 
-	} else if ($debug) {
+	} else if ($debug > 0) {
 		// There IS a camera-specific file for the new camera type so we
 		// don't need to do anything special.
 		// The generic name will be linked to the specific name below.
 		echo "Using existing $fullName.\n";
 	}
 
-	if ($debug) echo "Linking $settings_file_full to $fullName.\n";
+	if ($debug > 0) echo "Linking $settings_file_full to $fullName.\n";
 	if (! link($fullName, $settings_file_full)) {
 		echo "ERROR: Unable to link $settings_file_full to $fullName.\n";
 		exit;

@@ -15,6 +15,9 @@ function DisplayModule() {
 <script src="/js/bootbox/bootbox.all.js"></script>
 <script src="/js/bootbox/bootbox.locales.min.js"></script>
 
+<link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css' />
+<script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js"></script>
+
 <div class="row">
     <div class="col-lg-12">
 		<div class="panel panel-primary">
@@ -36,7 +39,7 @@ function DisplayModule() {
                                             <select class="form-control navbar-form" id="module-editor-config" name="module-editor-config" width="200px">
                                                 <option value="day">Daytime Configuration</option>
                                                 <option value="night">Nighttime Configuration</option>
-                                                <option value="endofnight">End Of Day Configuration</option>
+                                                <!-- <option value="endofnight">End Of Day Configuration</option> -->
                                             </select>
                                         </div>
                                     </form>
@@ -56,12 +59,12 @@ function DisplayModule() {
                     </div>
                 </nav>
                 <div class="row">
-                    <div class="col-sm-5 col-md-5 col-lg-5">
+                    <div class="col-sm-5 col-md-5 col-lg-5 module-column">
                         <h4 class="text-center">Available Modules</h4>
                         <div id="modules-available" class="list-group">
                         </div>
                     </div>
-                    <div class="col-sm-5 col-md-5 col-lg-5">
+                    <div class="col-sm-5 col-md-5 col-lg-5 module-column">
                         <h4 class="text-center">Selected Modules</h4>
                         <div id="modules-selected" class="list-group">
                         </div>
@@ -70,6 +73,10 @@ function DisplayModule() {
             </div>
 		</div>
 	</div>
+</div>
+
+<div id="app-module-helpdialog"  title="Help">
+    <div id="app-module-helptext"></div>
 </div>
 
 <div class="modal" role="dialog" id="module-upload-dialog">

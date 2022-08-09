@@ -51,6 +51,17 @@ class MODULESEDITOR {
                 this.#addModules(this.#configData.available, '#modules-available')
                 this.#addModules(this.#configData.selected, '#modules-selected')
 
+                $(document).on('click', '#module-help', (event) => {
+                    $('#app-module-helpdialog').dialog({
+                        width: 1024,
+                        height: 800,
+                        open: function (event, ui) {
+                            $('#app-module-helptext').load('/help/modules/modules.html?dt' + (new Date()).valueOf(), function () {
+                            });
+                        }
+                    });
+                });                
+
                 $(document).on('click', '.module-delete-button', (event) => {
                     if (this.#dirty) {
                         bootbox.alert('Please save the current configuration before deleting the module');
@@ -156,8 +167,10 @@ class MODULESEDITOR {
     #updateToolbar() {
         if (this.#dirty) {
             $('#module-editor-save').addClass('green pulse');
+            $('#module-editor-save').removeClass('disabled');
         } else {
             $('#module-editor-save').removeClass('green pulse');
+            $('#module-editor-save').addClass('disabled');
         }
     }
 
@@ -187,23 +200,31 @@ class MODULESEDITOR {
         }
 
         let locked = '';
+        let enabledHTML = '';
         if (data.position !== undefined) {
             locked = 'filtered locked';
-        }
-
-        let enabled = '';
-        if (data.enabled !== undefined) {
-            if (data.enabled) {
-                enabled = 'checked="checked"';
+        } else {
+            let enabled = '';
+            if (data.enabled !== undefined) {
+                if (data.enabled) {
+                    enabled = 'checked="checked"';
+                }
             }
+            enabledHTML = '<div class="pull-right module-enable">Enabled <input type="checkbox" ' + enabled + ' id="' + data.module + 'enabled" data-module="' + data.module + '"></div>';
         }
 
         let type = 'fa-wrench';
+        let typeAlt = 'System Module';
         let deleteHtml = '';
         if (data.type !== undefined) {
             if (data.type == 'user') {
+                let disabled = '';
+                if (element == '#modules-selected') {
+                    disabled = 'disabled="disabled"';
+                }
                 type = 'fa-user';
-                deleteHtml = '<button type="button" class="btn btn-danger module-delete-button" id="' + data.module + 'delete" data-module="' + data.module + '">Delete</button>';
+                typeAlt = 'User Module';
+                deleteHtml = '<button type="button" class="btn btn-danger module-delete-button" id="' + data.module + 'delete" data-module="' + data.module + '" ' + disabled + '>Delete</button>';
             }
         }
 
@@ -215,7 +236,7 @@ class MODULESEDITOR {
         let template = '\
             <div id="' + data.module + '" data-id="' + data.module + '" class="list-group-item ' + locked + '"> \
                 <div class="panel panel-default"> \
-                    <div class="panel-heading"><i class="fa fa-bars fa-fw"></i><i class="fa ' + type + ' fa-fw"></i> ' + data.name + ' <div class="pull-right module-enable">Enabled <input type="checkbox" ' + enabled + ' id="' + data.module + 'enabled" data-module="' + data.module + '" ' + disabled + '></div></div> \
+                    <div class="panel-heading"><i class="fa fa-bars fa-fw"></i>&nbsp;<i class="fa ' + type + ' fa-fw" title="' + typeAlt + '"></i> ' + data.name + ' ' + enabledHTML + '</div> \
                     <div class="panel-body">' + data.description + ' <div class="pull-right">' + deleteHtml + ' ' + settingsHtml + '</div></div> \
                 </div> \
             </div>';
@@ -428,8 +449,20 @@ class MODULESEDITOR {
     }
 
     run() {
+
+        jQuery(window).bind('beforeunload', ()=> {
+            if (this.#dirty) {
+                return ' ';
+            } else {
+                return undefined;
+            }
+        });
+
         $(document).on('click', '#module-options', () => {
-            $.LoadingOverlay('show');
+            let loadingTimer = setTimeout(() => {
+                $.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
+            }, 500);
+
             $.ajax({
                 url: 'includes/moduleutil.php?request=ModulesSettings',
                 type: 'GET',
@@ -441,13 +474,16 @@ class MODULESEDITOR {
                 $('#watchdog-timeout').val(result.timeout);                
                 $('#module-editor-settings-dialog').modal('show');
             }).always(() => {
+                clearTimeout(loadingTimer);
                 $.LoadingOverlay('hide');
             });
         });
 
         
         $(document).on('click', '#module-editor-settings-dialog-save', () => {
-            $.LoadingOverlay('show');
+            let loadingTimer = setTimeout(() => {
+                $.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
+            }, 500)
             let settings = {
                 watchdog: $('#enablewatchdog').prop('checked'),
                 timeout: $('#watchdog-timeout').val() | 0
@@ -465,6 +501,7 @@ class MODULESEDITOR {
             }).fail((result) => {
                 bootbox.alert('Failed to save the module settings configuration');
             }).always(() => {
+                clearTimeout(loadingTimer);
                 $.LoadingOverlay('hide');
             });
 

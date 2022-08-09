@@ -7,13 +7,16 @@
 .list-group-item {
     padding: 10px !important;
 }
+.list-group-item {
+  border-radius: 10px !important;
+}
 .dark .list-group-item {
     background: #444 !important;
     border: 1px solid #666 !important;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 .list-group .panel {
-    margin: 10px 0px !important;
+    margin: 0px 0px !important;
 }
 .list-group .locked .panel-heading {
     background-color: #990000 !important;

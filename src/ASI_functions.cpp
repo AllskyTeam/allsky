@@ -678,6 +678,12 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 #endif
 
 	fprintf(f, "\t\"supportedImageFormats\": [\n");
+
+	fprintf(f, "\t\t{ ");
+	fprintf(f, "\"value\" : %d, ", AUTO_IMAGE_TYPE);
+	fprintf(f, "\"label\" : \"%s\"", "auto");
+	fprintf(f, " },");
+
 	for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedVideoFormat); i++)
 	{
 		ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];

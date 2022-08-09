@@ -2,11 +2,11 @@
 include_once( 'includes/status_messages.php' );
 
 function DisplayCameraConfig(){
-	$cameraTypeName = "cameraType";		// json name
-	$cameraType = getCameraType();
+	$cameraTypeName = "cameraType";		// json setting name
+	$cameraModelName = "cameraModel";	// json setting name
 
-	$settings_file = getSettingsFile($cameraType);
-	$options_file = getOptionsFile($cameraType);
+	$settings_file = getSettingsFile();
+	$options_file = getOptionsFile();
 
 	$options_str = file_get_contents($options_file, true);
 	$options_array = json_decode($options_str, true);
@@ -41,18 +41,18 @@ function DisplayCameraConfig(){
 				} else if ($isOLD) {
 					$originalName = substr($key, 4);		// everything after "OLD_"
 					$oldValue = str_replace("'", "&#x27", $value);
-					$newValue = $settings[$originalName];
+					$newValue = getVariableOrDefault($settings, $originalName, "");
 					if ($oldValue !== $newValue) {
 						if ($originalName === $cameraTypeName)
 							$newCameraType = $newValue;
 						else
 							$somethingChanged = true;	// want to know about other changes
-						// echo "<br>$key: old [$oldValue] !== new [$newValue]";
+						// echo "<br>$key: old [$oldValue] !== new [$newValue], originalName=$originalName";
 						$checkchanges = false;
 						foreach ($options_array as $option){
 							if ($option['name'] === $originalName) {
 								$checkchanges = getVariableOrDefault($option, 'checkchanges', false);
-								$label = $option['label'];
+								$label = getVariableOrDefault($option, 'label', "");
 								break;
 							}
 						}
@@ -72,10 +72,9 @@ function DisplayCameraConfig(){
 					$msg = "If you change <b>Camera Type</b> you cannot change anything else.  No changes made.";
 					$ok = false;
 				} else {
-					$file = $settings_file;
 					$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
 					// updateFile() only returns error messages.
-					$msg = updateFile($file, $content, "settings");
+					$msg = updateFile($settings_file, $content, "settings");
 					if ($msg === "")
 						$msg = "Settings saved";
 					else
@@ -131,15 +130,14 @@ function DisplayCameraConfig(){
 
 	if (isset($_POST['reset_settings'])) {
 		if (CSRFValidate()) {
-			$file = $settings_file;
 			$settings = array();
 			foreach ($options_array as $option){
 				$key = $option['name'];
-				$value = $option['default'];
-				$settings[$key] = $value;
+				$value = getVariableOrDefault($option, 'default', null);
+				if ($value !== null) $settings[$key] = $value;
 			}
 			$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK);
-			$msg = updateFile($file, $content, "settings");
+			$msg = updateFile($settings_file, $content, "settings");
 			if ($msg === "")
 				$status->addMessage("Settings reset to default", 'info');
 			else
@@ -152,6 +150,8 @@ function DisplayCameraConfig(){
 	// Determine if the advanced settings should always be shown.
 	$camera_settings_str = file_get_contents($settings_file, true);
 	$camera_settings_array = json_decode($camera_settings_str, true);
+	$cameraType = getVariableOrDefault($camera_settings_array, $cameraTypeName, "");
+	$cameraModel = getVariableOrDefault($camera_settings_array, $cameraModelName, "");
 	$initial_display = $camera_settings_array['alwaysshowadvanced'] == 1 ? "table-row" : "none";
 ?>
 <script language="javascript">
@@ -197,15 +197,14 @@ function toggle_advanced()
   <div class="row">
     <div class="col-lg-12" style="padding: 0px 5px;">
       <div class="panel panel-primary">
-      <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Configure Settings &nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; <?php echo $options_file ?></div>
+      <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Configure Settings for <b><?php echo "$cameraType $cameraModel"; ?></b>&nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; <?php echo $settings_file ?></div>
         <!-- /.panel-heading -->
         <div class="panel-body" style="padding: 5px;">
           <p><?php $status->showMessages(); ?></p>
 
           <form method="POST" action="?page=camera_conf" name="conf_form">
-            <?php CSRFToken()?>
+		<?php CSRFToken();
 
-             <?php
 		// Allow for "advanced" options that aren't displayed by default to avoid
 		// confusing novice users.
 		$numAdvanced = 0;
@@ -226,23 +225,28 @@ function toggle_advanced()
 					$advClass = "";
 					$advStyle = "";
 				}
-				$label = $option['label'];
+				$label = getVariableOrDefault($option, 'label', "");
 				$name = $option['name'];
 				$default = getVariableOrDefault($option, 'default', "");
-				$type = $option['type'];
+				$type = getVariableOrDefault($option, 'type', "");	// should be a type
 				if ($type == "header") {
 					$value = "";
 				} else {
-					if (isset($camera_settings_array[$name]))
-						$value = $camera_settings_array[$name] != null ? $camera_settings_array[$name] : $default;
-					else
-						$value = $default;
+					$value = getVariableOrDefault($camera_settings_array, $name, $default);
+					$nullOK = getVariableOrDefault($option, 'nullOK', true);
+					$nullOKbg = "";
+					$nullOKmsg = "";
+					// Numbers can never be mising; certain text can't either.
+					if ($value === "" && ($nullOK === 0 || $type == "number")) {
+						$nullOKbg = "background-color: red";
+						$nullOKmsg = "<span style='color: red'>This field cannot be empty.</span><br>";
+					}
 					// Allow single quotes in values (for string values).
 					// &apos; isn't supported by all browsers so use &#x27.
 					$value = str_replace("'", "&#x27;", $value);
 					$default = str_replace("'", "&#x27;", $default);
 				}
-				$description = $option['description'];
+				$description = getVariableOrDefault($option, 'description', "");
 				// "widetext" should have the label spanning 2 rows,
 				// a wide input box on the top row spanning the 2nd and 3rd columns,
 				// and the description on the bottom row in the 3rd column.
@@ -252,12 +256,12 @@ function toggle_advanced()
 				echo "\n";	// to make it easier to read web source when debugging
 
 				// Put some space before and after headers.  This next line is the "before":
-				if ($type == "header") echo "<tr style='height: 10px'><td colspan='3'></td></tr>";
-
-				echo "<tr class='form-group $advClass $class' style='margin-bottom: 0px; $advStyle'>";
-				if ($type === "header"){
+				if ($type == "header") {
+					echo "<tr style='height: 10px'><td colspan='3'></td></tr>";
 					echo "<td colspan='3' style='padding: 8px 0px;' class='settingsHeader'>$description</td>";
+					echo "<tr class='rowSeparator' style='height: 10px'><td colspan='3'></td></tr>";
 				} else {
+					echo "<tr class='form-group $advClass $class' style='margin-bottom: 0px; $advStyle'>";
 					// Show the default in a popup
 					if ($type == "checkbox") {
 						if ($default == "0") $default = "No";
@@ -269,10 +273,11 @@ function toggle_advanced()
 							$default = $opt['label'];
 							break;
 						}
-					} elseif ($default == "") {
-						$default = "[empty]";
 					}
-					$popup = "Default=$default";
+					if ($default !== "")
+						$popup = "Default=$default";
+					else
+						$popup = "";
 					if ($minimum !== "") $popup .= "\nMinimum=$minimum";
 					if ($maximum !== "") $popup .= "\nMaximum=$maximum";
 
@@ -289,14 +294,25 @@ function toggle_advanced()
 					// May want to consider having a symbol next to the field
 					// that has the popup.
 					echo "<span title='$popup'>";
-					if ($type == "text" || $type == "number"){
-						echo "<input class='form-control boxShadow' type='$type'" .
+					if ($type == "text" || $type == "number" || $type == "readonly"){
+						if ($type == "readonly") {
+							$readonly = "readonly";
+							$t = "text";
+						} else {
+							$readonly = "";
+							// Browsers put the up/down arrows for numbers which moves the
+							// numbers to the left, and they don't line up with text.
+							// Plus, they don't accept decimal points in "number".
+							if ($type == "number") $type = "text";
+							$t = $type;
+						}
+						echo "<input $readonly class='form-control boxShadow' type='$t'" .
 							" name='$name' value='$value'" .
-							" style='padding: 0px 3px 0px 0px; text-align: right; width: 120px;'>";
+							" style='padding: 0px 3px 0px 0px; text-align: right; width: 120px; $nullOKbg'>";
 					} else if ($type == "widetext"){
 						echo "<input class='form-control boxShadow' type='text'" .
 							" name='$name' value='$value'" .
-						   	" style='padding: 6px 5px;'>";
+						   	" style='padding: 6px 5px; $nullOKbg'>";
 					} else if ($type == "select"){
 						// text-align for <select> works on Firefox but not Chrome or Edge
 						echo "<select class='form-control boxShadow' name='$name'" .
@@ -331,11 +347,9 @@ function toggle_advanced()
 					echo "</td>";
 					if ($type == "widetext")
 						echo "</tr><tr class='rowSeparator'><td></td>";
-					echo "<td>$description</td>";
+					echo "<td>$nullOKmsg$description</td>";
 				}
 				echo "</tr>";
-				if ($type == "header") echo "<tr class='rowSeparator' style='height: 10px;'><td colspan='3'></td></tr>";
-
 			 }
 		echo "</table>";
 	?>

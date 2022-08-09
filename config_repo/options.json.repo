@@ -105,7 +105,7 @@
 "name" : "daydelay",
 "minimum" : "delay_min",
 "maximum" : "none",
-"default" : "delay_default",
+"default" : 30000,
 "description" : "Delay between daytime images in milliseconds.",
 "label" : "Delay",
 "type" : "number",
@@ -281,7 +281,7 @@
 "name" : "nightdelay",
 "minimum" : "delay_min",
 "maximum" : "none",
-"default" : "delay_default",
+"default" : 30000,
 "description" : "Delay between nighttime images in milliseconds.",
 "label" : "Delay",
 "type" : "number",
@@ -1089,8 +1089,7 @@
 "advanced" : 0
 },
 {
-"name" : "XX_END_XX",
-"display" : 0
+"name" : "XX_END_XX"
 }
 ]
 

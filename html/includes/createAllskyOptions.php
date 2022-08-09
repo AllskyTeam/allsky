@@ -307,7 +307,10 @@ foreach ($repo_array as $repo) {
 	$type = getVariableOrDefault($repo, "type", null);
 	$name = getVariableOrDefault($repo, "name", null);
 	if ($type === null && $name === "XX_END_XX") {
-		$options_str .= "{\n$q" . "name$q : $q$name$q\n}\n";
+		$options_str .= "{\n";
+		$options_str .= "$q" . "name$q : $q$name$q,\n";
+		$options_str .= "$q" . "display$q : 0\n";
+		$options_str .= "}\n";
 		break;		// hit the end
 	}
 
@@ -411,7 +414,7 @@ if ($settings_file !== "") {
 		}
 		// This comes last so we don't worry about whether or not the items above
 		// need a trailing comma.
-		$contents .= "\t\"cameraModel\" : \"$cameraModel\"\n";
+		$contents .= "\t\"XX_END_XX\" : 1\n";
 		$contents .= "}\n";
 
 		if ($debug > 0) echo "Creating settings file: $fullName.\n";

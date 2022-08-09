@@ -15,7 +15,7 @@ fi
 
 # This script assumes the user already did the "git clone" into the "allsky" directory.
 INSTALL_DIR="allsky"
-cd ~${INSTALL_DIR}  || exit 1
+cd ~/${INSTALL_DIR}  || exit 1
 
 # Location of possible prior version of Allsky.
 # If the user wants items copied from there to the new version,
@@ -142,7 +142,7 @@ save_camera_capabilities() {
 
 	display_msg progress "Setting up WebUI options${MSG} for '${CAMERA_TYPE}' cameras."
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} --cameraTypeOnly \
-		"cameraType" "Camera Type" "" "${CAMERA_TYPE}"
+		"cameraType" "Camera Type" "${CAMERA_TYPE}"
 	RET=$?
 
 	if [ ${RET} -ne 0 ]; then

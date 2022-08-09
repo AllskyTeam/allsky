@@ -257,6 +257,7 @@ class MODULESEDITOR {
         let args = moduleData.argumentdetails;
         for (let key in args) {
             let fieldData = args[key];
+            let extraClass = 'input-group-allsky';
 
             let helpText = '';
             if (fieldData.help !== undefined) {
@@ -287,6 +288,7 @@ class MODULESEDITOR {
                         step = 'step="' + fieldType.step + '"';
                     }
                     inputHTML = '<input id="' + key + '" name="' + key + '" type="number" ' + min + ' ' + max + ' ' + step + ' class="form-control" value="' + fieldValue + '">'
+                    extraClass = 'input-group';
                 }
 
                 if (fieldType.fieldtype == 'checkbox') {
@@ -295,6 +297,7 @@ class MODULESEDITOR {
                         checked = 'checked="checked"';
                     }
                     inputHTML = '<input type="checkbox" id="' + key + '" name="' + key + '" ' + checked + ' value="checked">';
+                    extraClass = 'input-group';
                 }
             }
 
@@ -302,7 +305,7 @@ class MODULESEDITOR {
                 <div class="form-group">\
                 <label for="' + key + '" class="control-label col-xs-4">' + fieldData.description + '</label>\
                     <div class="col-xs-8">\
-                        <div class="input-group">\
+                        <div class="'+ extraClass + '">\
                             ' + inputHTML + '\
                         </div>\
                         ' + helpText + '\

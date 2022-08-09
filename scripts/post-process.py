@@ -162,12 +162,8 @@ if __name__ == "__main__":
             s.log(1, "INFO: Ignorning module {0} as its disabled".format(s.step["module"]))
 
         if s.step['module'] in globals():
-            if watchdog:
-                keepNewline = True
-            else:
-                keepNewline = False
 
-            s.log(1, "INFO: Running Module {0}".format(s.step['module']), keepNewline)
+            s.log(1, "INFO: Running Module {0}".format(s.step['module']))
             startTime = datetime.now()
             result = globals()[s.step['module']](s.step['arguments'])
             endTime = datetime.now()
@@ -176,7 +172,7 @@ if __name__ == "__main__":
                 if elapsedTime > timeout:
                     s.log(0, 'ERROR: Will disable module {0} it took {1}ms max allowed is {2}s'.format(s.step['module'], elapsedTime, timeout))
                 else:
-                    s.log(1, ', ran ok in {0}s'.format(elapsedTime))
+                    s.log(1, 'INFO: Module {0} ran ok in {1}s'.format(s.step['module'], elapsedTime))
             
             if result == s.ABORT:
                 break

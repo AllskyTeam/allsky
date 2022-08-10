@@ -33,6 +33,10 @@ function DisplayCameraConfig(){
 				// Because we are passing the changes enclosed in single quotes below,
 				// we need to escape the single quotes, but I never figured out how to do that,
 				// so convert them to HTML codes instead.
+// TODO: Should pass hidden entry so "save" routine knows if empty entries are ok.
+// For settings that have a nullOK field, pass it.
+// Numbers would pass nullOK = 0.
+// All others would have nullOK = 1.
 				$isOLD = substr($key, 0, 4) === "OLD_";
 				if (! $isOLD) {
 					// Add the key/value pair to the array so we can see if it changed.
@@ -57,7 +61,7 @@ function DisplayCameraConfig(){
 							}
 						}
 						if ($checkchanges)
-							$changes .= "  '$originalName' '$label' '$oldValue' '$newValue'";
+							$changes .= "  '$originalName' '$label' '$newValue'";
 					}
 				}
 			}

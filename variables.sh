@@ -2,7 +2,7 @@
 
 # This file is source'd into other files to set some variables used by scripts.
 # This allows us to easily add and change directory names.
-# It should only be called after $ALLSKY_HOME is set.
+# It should only be called after ${ALLSKY_HOME} is set.
 
 if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	set -a	# automatically export all variables
@@ -41,25 +41,23 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 		exit 1
 	fi
 
-	# Allow variables to be overridden for testing or to use different locations.
-
 	# For temporary files or files that can be deleted at reboot.
-	ALLSKY_TMP="${ALLSKY_TMP:-${ALLSKY_HOME}/tmp}"
+	ALLSKY_TMP="${ALLSKY_HOME}/tmp"
 
 	# Central location for all AllSky configuration files.
-	ALLSKY_CONFIG="${ALLSKY_CONFIG:-${ALLSKY_HOME}/config}"
+	ALLSKY_CONFIG="${ALLSKY_HOME}/config"
 
 	# Central location for all master repository configuration files.
-	ALLSKY_REPO="${ALLSKY_REPO:-${ALLSKY_HOME}/config_repo}"
+	ALLSKY_REPO="${ALLSKY_HOME}/config_repo"
 
 	# Holds all the scripts.
-	ALLSKY_SCRIPTS="${ALLSKY_SCRIPTS:-${ALLSKY_HOME}/scripts}"
+	ALLSKY_SCRIPTS="${ALLSKY_HOME}/scripts"
 
 	# Holds all the images on a per-day basis.
-	ALLSKY_IMAGES="${ALLSKY_IMAGES:-${ALLSKY_HOME}/images}"
+	ALLSKY_IMAGES="${ALLSKY_HOME}/images"
 
 	# Holds all the notification images.
-	ALLSKY_NOTIFICATION_IMAGES="${ALLSKY_NOTIFICATION_IMAGES:-${ALLSKY_HOME}/notification_images}"
+	ALLSKY_NOTIFICATION_IMAGES="${ALLSKY_HOME}/notification_images"
 	# Holds log of notifications displayed during this session.
 	ALLSKY_NOTIFICATION_LOG="${ALLSKY_TMP}/notification_log.txt"
 
@@ -70,13 +68,13 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	ALLSKY_ABORTEDUPLOADS="${ALLSKY_TMP}/aborted_uploads.txt"
 
 	# Holds all the dark frames.
-	ALLSKY_DARKS="${ALLSKY_DARKS:-${ALLSKY_HOME}/darks}"
+	ALLSKY_DARKS="${ALLSKY_HOME}/darks"
 
 	# Location of WebUI.
-	ALLSKY_WEBUI=${ALLSKY_WEBUI:-${ALLSKY_HOME}/html}
+	ALLSKY_WEBUI="${ALLSKY_HOME}/html"
 
 	# Location of optional allsky-website package.
-	ALLSKY_WEBSITE=${ALLSKY_WEBSITE:-${ALLSKY_WEBUI}/allsky}
+	ALLSKY_WEBSITE="${ALLSKY_WEBUI}/allsky"
 	ALLSKY_WEBSITE_CONFIGURATION_NAME="configuration.json"
 
 	# Log the capture_${CAMERA_TYPE} programs write to.
@@ -93,10 +91,13 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# They are configuration files so go in ${ALLSKY_CONFIG) like all the other config files.
 	CC_FILE_NAME="cc"
 	CC_FILE_EXT="json"
+	CC_FILE="${ALLSKY_CONFIG}/${CC_FILE_NAME}.${CC_FILE_EXT}"
 	SETTINGS_FILE_NAME="settings"
 	SETTINGS_FILE_EXT="json"
+	SETTINGS_FILE="${ALLSKY_CONFIG}/${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
 	OPTIONS_FILE_NAME="options"
 	OPTIONS_FILE_EXT="json"
+	OPTIONS_FILE="${ALLSKY_CONFIG}/${OPTIONS_FILE_NAME}.${OPTIONS_FILE_EXT}"
 
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped

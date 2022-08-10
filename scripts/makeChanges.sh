@@ -9,10 +9,16 @@ if [ -z "${ALLSKY_HOME}" ] ; then
 fi
 # shellcheck disable=SC1090
 source "${ALLSKY_HOME}/variables.sh"
-# shellcheck disable=SC1090
-source "${ALLSKY_CONFIG}/config.sh"
-# shellcheck disable=SC1090
-source "${ALLSKY_CONFIG}/ftp-settings.sh"
+
+# This script may be called during installation BEFORE there is a settings file.
+# config.sh looks for the file and produces an error if it doesn't exist,
+# so only include these two files if there IS a settings file.
+if [[ -f ${SETTINGS_FILE} ]]; then
+	# shellcheck disable=SC1090
+	source "${ALLSKY_CONFIG}/config.sh"
+	# shellcheck disable=SC1090
+	source "${ALLSKY_CONFIG}/ftp-settings.sh"
+fi
 
 
 function usage_and_exit()
@@ -107,7 +113,6 @@ while [ $# -gt 0 ]; do
 			# If we can't set the new camera type, it's a major problem so exit right away.
 			# When we're changing cameraType we're not changing anything else.
 
-			CC_FILE="${ALLSKY_CONFIG}/${CC_FILE_NAME}.${CC_FILE_EXT}"
 			CC_FILE_OLD="${CC_FILE}-OLD"
 
 			if [ -f "${CC_FILE}" ]; then
@@ -178,15 +183,11 @@ while [ $# -gt 0 ]; do
 			# createAllskyOptions.php will use the cc file and the options template file
 			# to create an OPTIONS_FILE for this camera type/model.
 			# These variables don't include a directory since the directory is specified with "--dir" below.
-			CC_FILE="${CC_FILE_NAME}.${CC_FILE_EXT}"		# reset from full name above
-			OPTIONS_FILE="${OPTIONS_FILE_NAME}.${OPTIONS_FILE_EXT}"
-			SETTINGS_FILE="${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
 
 			# .php files don't return error codes so we check if it worked by
 			# looking for a string in its output.
 			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 				${FORCE} \
-				--dir "${ALLSKY_CONFIG}" \
 				--cc_file "${CC_FILE}" \
 				--options_file "${OPTIONS_FILE}" \
 				--settings_file "${SETTINGS_FILE}" \
@@ -197,6 +198,7 @@ while [ $# -gt 0 ]; do
 				if [ -n "${OTHER_OUTPUT}" ]; then
 					echo -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}' and '${SETTINGS_FILE}' files.${wNC}"
 					echo "${OTHER_OUTPUT}"
+					exit 1
 				fi
 			fi
 			# It's an error if XX_WORKED_XX is NOT in the output.
@@ -209,7 +211,7 @@ while [ $# -gt 0 ]; do
 			;;
 
 		filename)
-			WEBSITE_CONFIG+=("imageName" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=("config.imageName" "${NEW_VALUE}")
 			NEEDS_RESTART=true
 			;;
 		extratext)
@@ -232,7 +234,7 @@ while [ $# -gt 0 ]; do
 			if [[ (${SIGN} = "+" || ${SIGN} == "-") && (${LAST%[NSEW]} == "") ]]; then
 				echo -e "${wWARNING}WARNING: '${NEW_VALUE}' should contain EITHER a \"${SIGN}\" OR a \"${LAST}\", but not both; please change it.${wNC}"
 			else
-				WEBSITE_CONFIG+=("${KEY}" "${NEW_VALUE}")
+				WEBSITE_CONFIG+=(config."${KEY}" "${NEW_VALUE}")
 				RUN_POSTDATA=true
 			fi
 			NEEDS_RESTART=true
@@ -262,7 +264,7 @@ while [ $# -gt 0 ]; do
 			;;
 		location | owner | camera | lens | computer)
 			RUN_POSTTOMAP=true
-			WEBSITE_CONFIG+=("${KEY}" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=(config."${KEY}" "${NEW_VALUE}")
 			;;
 		websiteurl | imageurl)
 			RUN_POSTTOMAP=true

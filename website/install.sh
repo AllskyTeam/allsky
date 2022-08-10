@@ -180,16 +180,19 @@ update_website_configuration_file() {
 	# There are some settings we can't determine, like LENS.
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent \
 		--config "${CONFIG_FILE}" \
-		imageName "${IMAGE_NAME}" \
-		latitude "${LATITUDE}" \
-		longitude "${LONGITUDE}" \
-		auroraMap "${AURORAMAP}" \
-		computer "${COMPUTER}" \
-		camera "${CAMERA_TYPE}${CAMERA_MODEL}" \
-		XX_MINI_TIMELAPSE_XX "${MINI_TIMELAPSE}" \
-		XX_MINI_TIMELAPSE_URL_XX "${MINI_TIMELAPSE_URL}" \
-		AllskyVersion "${ALLSKY_VERSION}" \
-		onPi "${ON_PI}"
+		config.imageName "${IMAGE_NAME}" \
+		config.latitude "${LATITUDE}" \
+		config.longitude "${LONGITUDE}" \
+		config.auroraMap "${AURORAMAP}" \
+		config.computer "${COMPUTER}" \
+		config.camera "${CAMERA_TYPE}${CAMERA_MODEL}" \
+		homePage.onPi "${ON_PI}" \
+		AllskyVersion "${ALLSKY_VERSION}"
+
+	sed -i \
+		-e "s;XX_MINI_TIMELAPSE_XX;${MINI_TIMELAPSE};" \
+		-e "s;XX_MINI_TIMELAPSE_URL_XX;${MINI_TIMELAPSE_URL};" \
+		"${CONFIG_FILE}"
 }
 
 
@@ -512,3 +515,4 @@ else
 fi
 
 echo
+

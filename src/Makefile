@@ -216,6 +216,4 @@ endif # Correct directory structure check
 
 %:
 	@echo `date +%F\ %R:%S` nothing to do for $@
-
-json:json.cpp
-	$(CC) $@.cpp -o $@ $(CFLAGS)
+	

@@ -192,7 +192,7 @@ END_OF_USER_SETTINGS="true"		# During upgrades, stop looking for variables here.
 
 CAMERA_TYPE=""
 if [ "${CAMERA_TYPE}" = "" ]; then
-	echo "${RED}ERROR: Please set 'Camera Type' in the WebUI.${NC}"
+	echo -e "${RED}ERROR: Please set 'Camera Type' in the WebUI.${NC}"
 	sudo systemctl stop allsky
 	exit ${EXIT_ERROR_STOP}
 fi

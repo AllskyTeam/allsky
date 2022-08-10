@@ -204,8 +204,7 @@ else
 	CAPTURE_SAVE_DIR="${IMG_DIR}"
 fi
 
-SETTINGS_FILE=""		# Set during installation
-if [[ ! -f ${SETTINGS_FILE} ]]; then
+if [[ ! -f ${SETTINGS_FILE} ]]; then		# SETTINGS_FILE is defined in variables.sh
 	echo -e "${RED}${ME}: ERROR: Settings file '${SETTINGS_FILE}' not found!${NC}"
 	sudo systemctl stop allsky > /dev/null 2>&1
 	exit ${EXIT_ERROR_STOP}

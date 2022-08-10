@@ -41,6 +41,9 @@ FORCE_CREATING_SETTINGS_FILE=false		# should a default settings file be created?
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 chmod 755 "${ALLSKY_HOME}"	# Some versions of Linux default to 750 so web server can't read it
 
+# This file contains information the user needs to act upon after the reboot.
+NEW_INSTALLATION_FILE="${ALLSKY_CONFIG}/new_installation.txt"
+
 
 ####################### functions
 display_msg() {
@@ -157,7 +160,7 @@ save_camera_capabilities() {
 		MSG=""
 	fi
 
-	display_msg progress "Setting up WebUI options${MSG} for '${CAMERA_TYPE}' cameras."
+	display_msg progress "Setting up WebUI options${MSG} for ${CAMERA_TYPE} cameras."
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} --cameraTypeOnly \
 		"cameraType" "Camera Type" "${CAMERA_TYPE}"
 	RET=$?
@@ -189,15 +192,22 @@ do_sudoers()
 
 # Ask the user if they want to reboot
 ask_reboot() {
-	AT="http://${NEW_HOST_NAME}.local or http://$(hostname -I | sed -e 's/ .*$//')"
-	MSG="The Allsky Software is now installed. You must reboot the Raspberry Pi to finish the installation."
-	MSG="${MSG}\n\nAfter reboot you can connect to the WebUI at: ${AT}"
+	AT="     http://${NEW_HOST_NAME}.local"
+	AT="${AT}or"
+	AT="${AT}     http://$(hostname -I | sed -e 's/ .*$//')"
+	MSG="*** The Allsky Software is now installed. ***"
+	MSG="${MSG}\n\nYou must reboot the Raspberry Pi to finish the installation."
+	MSG="${MSG}\n\nAfter reboot you can connect to the WebUI at:\n"
+	MSG="${MSG}${AT}"
 	MSG="${MSG}\n\nReboot now?"
-	if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH} 3>&1 1>&2 2>&3); then 
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3; then 
 		sudo reboot now
 	else
-		display_msg warning "You will need to reboot the Pi before Allsky will work.\n"
-		exit 3
+		display_msg warning "You need to reboot the Pi before Allsky will work."
+		MSG="If you have not already rebooted your Pi, please do so now.\n"
+		MSG="You can connect to the WebUI at:\n"
+		MSG="${MSG}${AT}"
+		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 	fi
 }
 
@@ -233,7 +243,7 @@ check_swap() {
 		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 15 ${WT_WIDTH} \
 			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
 		if [[ ${SWAP_SIZE} != "0" ]]; then
-echo -e "\nTODO: Add/increase swap\n"
+echo -e "TODO: Add/increase swap\n"
 		fi
 	fi
 }
@@ -255,7 +265,7 @@ check_memory_filesystem() {
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
 	sleep 2		# time to read prior messages
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then 
-echo "TODO: make memory filesystem"
+echo -e "TODO: make memory filesystem\n"
 	fi
 }
 
@@ -328,10 +338,10 @@ fi
 # If there's a prior version of the software,
 # ask the user if they want to move stuff from there to the new directory.
 # Look for a directory inside the old one to make sure it's really an old allsky.
-if [ -d "${PRIOR_INSTALL_DIR}/images" ]; then
+if [ -d "${PRIOR_INSTALL_DIR}/src" ]; then
 	MSG="You appear to have a prior version of Allsky in ${PRIOR_INSTALL_DIR}."
 	MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
-	if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3); then 
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then 
 		if [ -f  "${PRIOR_INSTALL_DIR}/version" ]; then
 			PRIOR_ALLSKY="new"		# New style Allsky with CAMERA_TYPE set in config.sh
 		else
@@ -361,7 +371,7 @@ MSG="The next few steps can take a couple minutes."
 MSG="${MSG}\n\nOutput will only be displayed if there was a problem."
 whiptail --title "${TITLE}" --msgbox "${MSG}" 10 ${WT_WIDTH} 3>&1 1>&2 2>&3
 
-display_msg progress "Installing dependencies."
+display_msg progress "Installing dependencies.  May take a while..."
 TMP="/tmp/deps.install.tmp"
 #shellcheck disable=SC2024
 sudo make deps > ${TMP} 2>&1
@@ -371,7 +381,7 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-display_msg progress "Preparing Allsky commands."
+display_msg progress "Preparing Allsky commands.  May take a couple minutes."
 TMP="/tmp/all.install.tmp"
 #shellcheck disable=SC2024
 make all > ${TMP} 2>&1
@@ -418,6 +428,8 @@ sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
 
 ##### Restore prior files
 # If they have a prior version of Allsky they want files retored from, restore them.
+
+RESTORED_PRIOR_SETTINGS_FILE=false
 if [[ -n ${PRIOR_ALLSKY} ]]; then
 
 	if [ -f "${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh" ]; then
@@ -444,8 +456,10 @@ if [[ -n ${PRIOR_ALLSKY} ]]; then
 	else
 		# RASPAP_DIR set at top of script
 		if [ -d "${RASPAP_DIR}" ]; then
-			display_msg warning "\nThe '${RASPAP_DIR}' directory is no longer used."
-			display_msg info "When installation is done you may remove it.\n"
+			MSG="\nThe '${RASPAP_DIR}' directory is no longer used.\n"
+			MSG="${MSG}When installation is done you may remove it.\n"
+			display_msg info "${MSG}"
+			echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 		fi
 	fi
 	if [ -f "${RASPAP_DIR}/raspap.auth" ]; then
@@ -474,11 +488,13 @@ if [[ -n ${PRIOR_ALLSKY} ]]; then
 			fi
 		fi
 		if [[ ${OLD} == "true" ]]; then
-			display_msg warning "Your ${CONFIG_FILE} is an older version."
-			display_msg info "Your    version: ${PRIOR_CONFIG_VERSION}"
-			display_msg info "Current version: ${NEW_CONFIG_VERSION}"
-			display_msg info "\nPlease compare it to the new one in ${REPO_FILE}"
-			display_msg info "to see what fields have been added, changed, or removed.\n"
+			MSG="Your ${CONFIG_FILE} is an older version.\n"
+			MSG="${MSG}Your    version: ${PRIOR_CONFIG_VERSION}\n"
+			MSG="${MSG}Current version: ${NEW_CONFIG_VERSION}\n"
+			MSG="${MSG}\nPlease compare it to the new one in ${REPO_FILE}"
+			MSG="${MSG} to see what fields have been added, changed, or removed.\n"
+			display_msg warning "${MSG}"
+			echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 		fi
 	fi
 
@@ -494,9 +510,10 @@ if [[ -n ${PRIOR_ALLSKY} ]]; then
 			# This file is probably a link to a camera type/model-specific file,
 			# so copy it instead of moving it to not break the link.
 			cp "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
+			RESTORED_PRIOR_SETTINGS_FILE=true
 		fi
 	else
-		# settings file is one one in ${RASPAP_DIR}.
+		# settings file is old style in ${RASPAP_DIR}.
 		if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			CT="ZWO"
 		else
@@ -510,10 +527,10 @@ if [[ -n ${PRIOR_ALLSKY} ]]; then
 	fi
 	# Do NOT restores options.json - it will be recreated.
 
-	display_msg progress "Restoring settings from config.sh and ftp-settings.sh."
 	# This may miss really-old variables that no longer exist.
 
 	## TODO: automate this
+	# display_msg progress "Restoring settings from config.sh and ftp-settings.sh."
 	# ( source ${PRIOR_CONFIG_DIR}/ftp-settings.sh
 	#	for each variable:
 	#		/^variable=/ c;variable="$oldvalue";
@@ -527,6 +544,8 @@ if [[ -n ${PRIOR_ALLSKY} ]]; then
 	#	- handle renames
 	#	- handle variable that were moved to WebUI
 	#		> DAYTIME_CAPTURE
+	#
+	# display_msg info "\nIMPORTANT: check config/config.sh and config/ftp-settings.sh for correctness.\n"
 
 	MSG="You need to manually move the contents of"
 	MSG="${MSG}\n     ${PRIOR_CONFIG_DIR}/config.sh"
@@ -534,14 +553,14 @@ if [[ -n ${PRIOR_ALLSKY} ]]; then
 	MSG="${MSG}\n     ${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 	MSG="${MSG}\nto the new files in ${ALLSKY_CONFIG}."
 	MSG="${MSG}\n\nNOTE: some settings are no longer in config.sh and some changed names."
-	MSG="${MSG}\nDo NOT add the old settings back in."
+	MSG="${MSG}\nDo NOT add the old/deleted settings back in."
 	MSG="${MSG}${SETTINGS_MSG}" 
-	sleep 3			# Give user time to read above messages
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH} 3>&1 1>&2 2>&3
-	display_msg info "IMPORTANT: check config/config.sh and config/ftp-settings.sh for correctness.\n"
+	# Don't use whiptail so there's a record of what the user needs to do.
+	display_msg info "\n${MSG}.\n"
+	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 
 else
-	# No prior Allsky, so force creating a settings file.
+	# No prior Allsky so force creating a settings file.
 	FORCE_CREATING_SETTINGS_FILE=true
 fi
 
@@ -551,7 +570,9 @@ if [[ -z ${LOCALE} ]]; then
 	display_msg progress "Setting locale."
 	LOCALE="$(locale | grep LC_NUMERIC | sed -e 's;LC_NUMERIC=";;' -e 's;";;')"
 	if [[ -z ${LOCALE} ]]; then
-		display_msg warning "Unable to determine your locale.\nRun the 'locale' command and then update the WebUI."
+		MSG="Unable to determine your locale.\nRun the 'locale' command and then update the WebUI."
+		display_msg warning "${MSG}"
+		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 	else
 		SETTINGS_FILE="${ALLSKY_CONFIG}/${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
 		jq ".locale = \"${LOCALE}\"" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
@@ -589,7 +610,7 @@ MSG="${MSG}\nOutput will only be displayed if there was a problem."
 whiptail --title "${TITLE}" --msgbox "${MSG}" 10 ${WT_WIDTH} 3>&1 1>&2 2>&3
 
 #####
-display_msg progress "Installing the lighttpd web server."
+display_msg progress "Installing the lighttpd web server.  This may take a few seconds..."
 sudo systemctl stop hostapd 2> /dev/null
 sudo systemctl stop lighttpd 2> /dev/null
 TMP="/tmp/lighttpd.install.tmp"
@@ -684,11 +705,13 @@ if [ "${ALLSKY_WEBSITE_OLD}" != "" ]; then
 	fi
 	NEW_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/master/version")"
 	if [[ ${OLD_VERSION} < "${NEW_VERSION}" ]]; then
-		display_msg warning "There is a newer Allsky Website available; please upgrade to it."
-		display_msg info "Your    version: ${OLD_VERSION}"
-		display_msg info "Current version: ${NEW_VERSION}"
-		display_msg info "\nAFTER you reboot, you can upgrade the Allky Website by executing:"
-		display_msg info "     cd ~/allsky; website/install.sh\n"
+		MSG="There is a newer Allsky Website available; please upgrade to it.\n"
+		MSG="${MSG}Your    version: ${OLD_VERSION}\n"
+		MSG="${MSG}Current version: ${NEW_VERSION}\n"
+		MSG="${MSG}\nYou can upgrade the Allky Website by executing:\n"
+		MSG="${MSG}     cd ~/allsky; website/install.sh"
+		MSG="${MSG}"
+		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 	fi
 fi
 
@@ -698,10 +721,28 @@ if [ -d "${OLD_WEBUI_LOCATION}" ]; then
 	MSG="An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so you may remove it after intallation."
 	MSG="${MSG}\n\nWARNING: if you have any other web sites in that directory, they will no longer be accessible via the web server."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
+	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 fi
 
 
 ######## All done
 
+
+if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "false" ]]; then
+	MSG="NOTE: Default settings were created for your camera."
+	MSG="${MSG}\n\nHowever some entries were not set, like latitude, so you MUST"
+	MSG="${MSG} go to the 'Allsky Settings' page in the WebUI after rebooting"
+	MSG="${MSG} to make updates."
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+fi
+if [[ -n ${PRIOR_ALLSKY} ]]; then
+	MSG="When you are sure everything is working with this new release,"
+	MSG="${MSG} remove your old version in ${PRIOR_INSTALL_DIR} to save disk space."
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+fi
+
 ask_reboot
 
+exit 0

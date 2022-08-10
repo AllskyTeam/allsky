@@ -36,7 +36,7 @@ define('RASPI_TORPROXY_CONFIG', '/etc/tor/torrc');
 define('RASPI_OPENVPN_ENABLED', false);
 define('RASPI_TORPROXY_ENABLED', false);
 
-include_once(RASPI_CONFIG . '/raspap.php');
+include_once('includes/raspap.php');
 include_once('includes/dashboard.php');
 include_once('includes/dashboard_eth0.php');
 include_once('includes/liveview.php');

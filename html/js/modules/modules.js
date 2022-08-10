@@ -91,6 +91,11 @@ class MODULESEDITOR {
                             this.#configData.selected[key].enabled = state;
                         }
                     }
+                    for (let key in this.#configData.available) {
+                        if (this.#configData.available[key].module == module) {
+                            this.#configData.available[key].enabled = state;
+                        }
+                    }
 
                     $(document).trigger('module:dirty');
                 });
@@ -320,6 +325,40 @@ class MODULESEDITOR {
                     inputHTML = '<input type="checkbox" id="' + key + '" name="' + key + '" ' + checked + ' value="checked">';
                     extraClass = 'input-group';
                 }
+
+                if (fieldType.fieldtype == 'image') {
+                    inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" value="' + fieldValue + '">';
+                    extraClass = 'input-group';
+                    inputHTML = '\
+                        <div class="row">\
+                            <div class="col-xs-8">\
+                            ' + inputHTML + '\
+                            </div>\
+                            <div class="col-xs-4">\
+                                <button type="button" class="btn btn-default" id="open-image-manager">...</button>\
+                            </div>\
+                        </div>\
+                    ';
+
+                    $(document).on('click', '#open-image-manager', (event) => {                
+                        $('#module-image-manager').oeImageManager({
+                            thumbnailURL: 'includes/overlayutil.php?request=Images',
+                            usedImages: [],
+                            bind: '#' + key,
+                            allowDoubleClick: true
+                        });
+                        $('#module-file-manager-dialog').modal({
+                            keyboard: false
+                        });
+                    });
+                    $('#module-file-manager-dialog').on('hidden.bs.modal', () => {
+                        $('#module-image-manager').data('oeImageManager').destroy();
+                    });                    
+                    $(document).on('oe-imagemanager-add', (event, image) => {
+                        $('#module-file-manager-dialog').modal('hide')
+                    });
+                    
+                }
             }
 
             let fieldHTML = '\
@@ -383,6 +422,9 @@ class MODULESEDITOR {
                 }
             });
 
+            this.#saveFormData(this.#configData.selected, formValues, module);
+            this.#saveFormData(this.#configData.available, formValues, module);
+/*
             for (let key in this.#configData.selected) {
                 if (this.#configData.selected[key].module == module) {
                     for (let paramKey in this.#configData.selected[key].arguments) {
@@ -393,9 +435,23 @@ class MODULESEDITOR {
                     }
                 }
             }
+*/
             $('#module-settings-dialog').modal('hide');
             $(document).trigger('module:dirty');
         });
+    }
+
+    #saveFormData(type, formValues, module) {
+        for (let key in type) {
+            if (type[key].module == module) {
+                for (let paramKey in type[key].arguments) {
+                    if (formValues[paramKey] !== undefined) {
+                        let value = formValues[paramKey];
+                        type[key].arguments[paramKey] = value;
+                    }
+                }
+            }
+        }
     }
 
     #saveConfig() {

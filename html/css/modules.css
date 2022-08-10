@@ -74,3 +74,6 @@
       transform: scale(1); 
     }
   }
+  #module-file-manager-dialog {
+    z-index: 999999;
+  }

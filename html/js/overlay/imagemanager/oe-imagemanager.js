@@ -4,10 +4,10 @@
 
 
         var defaults = {
-
             thumbnailURL: '',
             usedImages: [],
-
+            bind: null,
+            allowDoubleClick: false,
             msgInUse: 'This image is in use and cannot be deleted',
             // if your plugin is event-driven, you may provide callback capabilities
             // for its events. execute these functions before or after events of your 
@@ -104,7 +104,12 @@
             $('#' + plugin.imageManagerId).on('click', '#' + plugin.addId, (event) => {
                 let selected = $('#' + plugin.imagesId + ' .oe-image-manager-image-selected');
                 let fileName = $(selected).data('filename');
-                $(document).trigger('oe-imagemanager-add', [fileName]);
+                if (plugin.settings.bind !== null) {
+                    $(plugin.settings.bind).val(fileName);
+                    $(document).trigger('oe-imagemanager-add', [fileName]);
+                } else {
+                    $(document).trigger('oe-imagemanager-add', [fileName]);
+                }
             });
             
 
@@ -182,6 +187,19 @@
                         updateToolbar();
                     }
                 });
+
+                if (plugin.settings.allowDoubleClick) {
+                    $('#' + plugin.imagesId).on('dblclick', '.oe-image-manager-image', (event) => {
+                        let imageName = $(event.currentTarget).data('filename');
+                        if (plugin.settings.bind !== null) {
+                            $(plugin.settings.bind).val(imageName);
+                            $(document).trigger('oe-imagemanager-add', [imageName]);
+                        } else {
+                            $(document).trigger('oe-imagemanager-add', [imageName]);
+                        }                        
+                    });
+                }
+
             }).fail((jqXHR, textStatus, errorThrown) => {
             });            
         }

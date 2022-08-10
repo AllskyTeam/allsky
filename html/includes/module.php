@@ -18,6 +18,12 @@ function DisplayModule() {
 <link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css' />
 <script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js"></script>
 
+<link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css" />
+<script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js"></script>
+
+<link href="/js/dropzone/dropzone.css" type="text/css" rel="stylesheet" />
+<script src="/js/dropzone/dropzone-min.js"></script>
+
 <div class="row">
     <div class="col-lg-12">
 		<div class="panel panel-primary">
@@ -139,6 +145,23 @@ function DisplayModule() {
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="module-editor-settings-dialog-save">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" role="dialog" id="module-file-manager-dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Image Manager</h4>
+            </div>
+            <div class="modal-body">
+                <div id="module-image-manager"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" id="module-file-manager-dialog-close" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

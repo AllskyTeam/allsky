@@ -590,9 +590,6 @@ restore_prior_files() {
 		display_msg progress "Restoring WebUI security settings."
 		mv "${RASPAP_DIR}/raspap.auth" "${ALLSKY_CONFIG}"
 	fi
-	if [ -f "${RASPAP_DIR}/raspap.php" ]; then
-		mv "${RASPAP_DIR}/raspap.php" "${ALLSKY_CONFIG}"
-	fi
 
 	if [ -f "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ]; then
 		display_msg progress "Restoring remote Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."

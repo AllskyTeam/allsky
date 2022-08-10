@@ -410,7 +410,7 @@ source "${ALLSKY_CONFIG}/config.sh"
 
 ##### Create ${ALLSKY_LOG}
 # Create the log file and make it readable/writable by the user; this aids in debugging.
-display_msg progress "Set permissions on Allsky log (${ALLSKY_LOG}).\n"
+display_msg progress "Set permissions on Allsky log (${ALLSKY_LOG})."
 sudo touch "${ALLSKY_LOG}"
 sudo chmod 664 "${ALLSKY_LOG}"
 sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
@@ -548,7 +548,7 @@ fi
 
 LOCALE="$(settings .locale)"
 if [[ -z ${LOCALE} ]]; then
-	display_msg progress "Setting locale.\n"
+	display_msg progress "Setting locale."
 	LOCALE="$(locale | grep LC_NUMERIC | sed -e 's;LC_NUMERIC=";;' -e 's;";;')"
 	if [[ -z ${LOCALE} ]]; then
 		display_msg warning "Unable to determine your locale.\nRun the 'locale' command and then update the WebUI."
@@ -568,7 +568,7 @@ check_memory_filesystem
 
 ### FUTURE: Prompt to install SSL certificate
 
-display_msg progress "Configure the WebUI.\n"
+display_msg progress "Configure the WebUI."
 CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
 NEW_HOST_NAME='allsky'
 

@@ -14,7 +14,7 @@ fi
 cd "${ALLSKY_HOME}"
 
 ERROR_MSG_PREFIX="*** ERROR ***\nAllsky Stopped!\n"
-SEE_LOG_MSG="See /var/log/allsky.log"
+SEE_LOG_MSG="See ${ALLSKY_LOG}"
 
 source "${ALLSKY_HOME}/variables.sh"
 if [ -z "${ALLSKY_CONFIG}" ]; then
@@ -24,6 +24,16 @@ fi
 source "${ALLSKY_CONFIG}/config.sh" || exit $?			# it displays any error message
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit $?		# it displays any error message
 
+# This file contains information the user needs to act upon after an installation.
+# If the file exists, display it and stop.
+NEW_INSTALLATION_FILE="${ALLSKY_CONFIG}/new_installation.txt"
+if [[ -f ${NEW_INSTALLATION_FILE} ]]; then
+	sudo truncate -s 0 "${ALLSKY_LOG}"
+	cat "${NEW_INSTALLATION_FILE}"
+	mv "${NEW_INSTALLATION_FILE}" "${ALLSKY_TMP}"
+	doExit ${EXIT_ERROR_STOP} "Error" "Allsky\nneeds configuration.\nSee\n${ALLSKY_LOG}"
+fi
+
 # COMPATIBILITY CHECKS
 # Check for a new variable in config.sh that wasn't in prior versions.
 # If not set to something (even "") then it wasn't found and force the user to upgrade config.sh
@@ -32,7 +42,7 @@ if [ ! -v WEBUI_DATA_FILES ]; then	# WEBUI_DATA_FILES added after version 0.8.3.
 	echo "Please move your current config.sh file to config.sh-OLD, then place the newest one"
 	echo "from https://github.com/thomasjacquin/allsky in ${ALLSKY_CONFIG} and"
 	echo "manually copy your data from the old file to the new one."
-	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_CONFIG})/config.sh\nis an old version.  See\n/var/log/allsky.log"
+	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_CONFIG})/config.sh\nis an old version.  See\n${ALLSKY_LOG}"
 
 fi
 USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
@@ -222,7 +232,7 @@ if [ "${RETCODE}" -eq ${EXIT_RESET_USB} ]; then
 	else
 		# TODO: use ASI_ERROR_TIMEOUT message
 		if [ ${ON_TTY} = "1" ]; then
-			echo "*** Non-recoverable ERROR found - see /var/log/allsky.log for details. ***"
+			echo "*** Non-recoverable ERROR found - see ${ALLSKY_LOG} for details. ***"
 		fi
 		doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}Too many\nASI_ERROR_TIMEOUT\nerrors received!\n${SEE_LOG_MSG}"
 	fi

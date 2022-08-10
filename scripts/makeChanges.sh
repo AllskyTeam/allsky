@@ -9,10 +9,17 @@ if [ -z "${ALLSKY_HOME}" ] ; then
 fi
 # shellcheck disable=SC1090
 source "${ALLSKY_HOME}/variables.sh"
-# shellcheck disable=SC1090
-source "${ALLSKY_CONFIG}/config.sh"
-# shellcheck disable=SC1090
-source "${ALLSKY_CONFIG}/ftp-settings.sh"
+
+# This script may be called during installation BEFORE there is a settings file.
+# config.sh looks for the file and produces an error if it doesn't exist,
+# so only include these two files if there IS a settings file.
+SETTINGS_FILE="${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
+if [[ -f ${ALLSKY_CONFIG}/${SETTINGS_FILE} ]]; then
+	# shellcheck disable=SC1090
+	source "${ALLSKY_CONFIG}/config.sh"
+	# shellcheck disable=SC1090
+	source "${ALLSKY_CONFIG}/ftp-settings.sh"
+fi
 
 
 function usage_and_exit()
@@ -180,7 +187,6 @@ while [ $# -gt 0 ]; do
 			# These variables don't include a directory since the directory is specified with "--dir" below.
 			CC_FILE="${CC_FILE_NAME}.${CC_FILE_EXT}"		# reset from full name above
 			OPTIONS_FILE="${OPTIONS_FILE_NAME}.${OPTIONS_FILE_EXT}"
-			SETTINGS_FILE="${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
 
 			# .php files don't return error codes so we check if it worked by
 			# looking for a string in its output.

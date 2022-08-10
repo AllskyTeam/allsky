@@ -23,7 +23,7 @@ ifeq ($(PKGBUILD),)
 endif
 
 
-CONFIGFILES := config.sh ftp-settings.sh raspap.php
+CONFIGFILES := config.sh ftp-settings.sh
 UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service
 
 %:

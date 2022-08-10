@@ -192,8 +192,8 @@ do_sudoers()
 
 # Ask the user if they want to reboot
 ask_reboot() {
-	AT="     http://${NEW_HOST_NAME}.local"
-	AT="${AT}or"
+	AT="     http://${NEW_HOST_NAME}.local\n"
+	AT="${AT}or"n
 	AT="${AT}     http://$(hostname -I | sed -e 's/ .*$//')"
 	MSG="*** The Allsky Software is now installed. ***"
 	MSG="${MSG}\n\nYou must reboot the Raspberry Pi to finish the installation."
@@ -312,7 +312,7 @@ if [[ ${UPDATE} == "true" ]]; then
 		display_msg error "ERROR: CAMERA_TYPE not set in config.sh."
 		exit 1
 	fi
-	save_camera_capabilities
+	save_camera_capabilities || exit 1
 
 	# Update the sudoers file if it's missing some entries.
 	# Look for the last entry added (should be the last entry in the file).
@@ -413,7 +413,7 @@ sed -i \
 # otherwise it will determine what capabilities the connected camera has,
 # then create an "options" file specific to that camera.
 # It will also create a default "settings" file.
-save_camera_capabilities
+save_camera_capabilities || exit 1
 
 # Code later needs "settings()" function.
 source "${ALLSKY_CONFIG}/config.sh"
@@ -421,7 +421,7 @@ source "${ALLSKY_CONFIG}/config.sh"
 ##### Create ${ALLSKY_LOG}
 # Create the log file and make it readable/writable by the user; this aids in debugging.
 display_msg progress "Set permissions on Allsky log (${ALLSKY_LOG})."
-sudo touch "${ALLSKY_LOG}"
+sudo truncate -s 0 "${ALLSKY_LOG}"
 sudo chmod 664 "${ALLSKY_LOG}"
 sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
 
@@ -574,7 +574,6 @@ if [[ -z ${LOCALE} ]]; then
 		display_msg warning "${MSG}"
 		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 	else
-		SETTINGS_FILE="${ALLSKY_CONFIG}/${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
 		jq ".locale = \"${LOCALE}\"" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
 	fi
 fi
@@ -739,7 +738,7 @@ if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "false" ]]; then
 	# This will be the first image they see.
 	"${ALLSKY_SCRIPTS}//generate_notification_images.sh" --directory "${ALLSKY_TMP}" "image" \
 			"yellow" "" 85 "" "" "" 10 "yellow" "jpg" "" \
-			"***\nUse the\n'Allsky Settings'\nlink in the WebUI\nto configure Allsky\n***"
+			"***\nUse the\n'Allsky Settings'\nlink in the WebUI\nto configure Allsky\n***" > /dev/null
 fi
 if [[ -n ${PRIOR_ALLSKY} ]]; then
 	MSG="When you are sure everything is working with this new release,"

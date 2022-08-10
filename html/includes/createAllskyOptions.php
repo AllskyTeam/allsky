@@ -204,7 +204,6 @@ $rest_index;
 $longopts = array(
 	"debug::",		// no arguments
 	"help::",		// no arguments
-	"dir:",
 	"cc_file:",
 	"options_file:",
 	"settings_file:",
@@ -214,7 +213,6 @@ $options = getopt("", $longopts, $rest_index);
 
 $debug = 0;			// Can be specified mutliple time
 $help = false;
-$directory = "";	// All the files will go in $directory.
 $cc_file = "";
 $options_file = "";
 $settings_file = "";
@@ -227,8 +225,6 @@ foreach ($options as $opt => $val) {
 		$debug++;
 	else if ($opt === "help")
 		$help = true;
-	else if ($opt === "dir")
-		$directory = $val;
 	else if ($opt === "cc_file")
 		$cc_file = $val;
 	else if ($opt === "options_file")
@@ -239,29 +235,24 @@ foreach ($options as $opt => $val) {
 		$force = true;
 }
 
-if ($help || $directory === "" || $cc_file === "" || $options_file === "") {
-	echo "\nUsage: " . basename($argv[0]) . " [--debug ...] [--help] [--settings_file file] --dir directory --cc_file file --options_file file\n";
-	echo "'directory' is where the files are\n\n";
+if ($help || $cc_file === "" || $options_file === "") {
+	echo "\nUsage: " . basename($argv[0]) . " [--debug ...] [--help] [--settings_file file] --cc_file file --options_file file\n";
 	exit;
 }
 
-$cc_file_full = "$directory/$cc_file";
-if (! file_exists($cc_file_full)) {
-	echo "ERROR: Camera capabilities file $cc_file_full does not exist!\n";
+if (! file_exists($cc_file)) {
+	echo "ERROR: Camera capabilities file $cc_file does not exist!\n";
 	echo "Run 'install.sh --update' to create it.\n";
 	exit;
 }
-$repo_file = ALLSKY_REPO . "/" . $options_file . ".repo";
+$repo_file = ALLSKY_REPO . "/" . basename($options_file) . ".repo";
 if (! file_exists($repo_file)) {
 	echo "ERROR: Template options file $repo_file does not exist!\n";
 	exit;
 }
 
-$options_file_full = "$directory/$options_file";
-$settings_file_full = "$directory/$settings_file";
-
 // Read $cc_file
-$cc_str = file_get_contents($cc_file_full, true);
+$cc_str = file_get_contents($cc_file, true);
 $cc_array = json_decode($cc_str, true);
 $cc_controls = $cc_array["controls"];
 $cameraType = $cc_array["cameraType"];
@@ -366,9 +357,9 @@ foreach ($repo_array as $repo) {
 $options_str .= "]\n\n";
 
 // Save the options file.
-$results = updateFile($options_file_full, $options_str, $options_file);
+$results = updateFile($options_file, $options_str, "options");
 if ($results != "") {
-	echo "ERROR: Unable to create $options_file_full.\n";
+	echo "ERROR: Unable to create $options_file.\n";
 	exit;
 }
 
@@ -379,21 +370,21 @@ if ($settings_file !== "") {
 
 	// If the file exists, it's a generic link to a camera-specific named file.
 	// Remove the link because it points to a prior camera.
-	if (file_exists($settings_file_full)) {
-		if ($debug > 0) echo "Removing $settings_file_full.\n";
-		if (! unlink($settings_file_full)) {
-			echo "ERROR: Unable to delete $settings_file_full.\n";
+	if (file_exists($settings_file)) {
+		if ($debug > 0) echo "Removing $settings_file.\n";
+		if (! unlink($settings_file)) {
+			echo "ERROR: Unable to delete $settings_file.\n";
 			exit;
 		}
 	}
 
 	// Determine the name of the camera type/model-specific file.
-	$pieces = explode(".", $settings_file);		// e.g., "settings.json"
-	$cameraSettingsFileName = $pieces[0];		// e.g., "settings"
-	$cameraSettingsFileExt = $pieces[1];		// e.g., "json"
+	$pieces = explode(".", basename($settings_file));		// e.g., "settings.json"
+	$FileName = $pieces[0];		// e.g., "settings"
+	$FileExt = $pieces[1];		// e.g., "json"
 	// e.g., "settings_ZWO_ASI123.json"
-	$cameraSettingsFile = $cameraSettingsFileName . "_$cameraType" . "_$cameraModel.$cameraSettingsFileExt";
-	$fullName = "$directory/$cameraSettingsFile";
+	$cameraSpecificSettingsFile = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
+	$fullName = dirname($settings_file) . "/$cameraSpecificSettingsFile";
 
 	// If there isn't a camera-specific file, create one.
 	if ($force || ! file_exists($fullName)) {
@@ -418,7 +409,7 @@ if ($settings_file !== "") {
 		$contents .= "}\n";
 
 		if ($debug > 0) echo "Creating settings file: $fullName.\n";
-		$results = updateFile($fullName, $contents, $cameraSettingsFile);
+		$results = updateFile($fullName, $contents, $cameraSpecificSettingsFile);
 		if ($results != "") {
 			echo "ERROR: Unable to create $fullName.\n";
 			exit;
@@ -431,9 +422,9 @@ if ($settings_file !== "") {
 		echo "Using existing $fullName.\n";
 	}
 
-	if ($debug > 0) echo "Linking $settings_file_full to $fullName.\n";
-	if (! link($fullName, $settings_file_full)) {
-		echo "ERROR: Unable to link $settings_file_full to $fullName.\n";
+	if ($debug > 0) echo "Linking $settings_file to $fullName.\n";
+	if (! link($fullName, $settings_file)) {
+		echo "ERROR: Unable to link $settings_file to $fullName.\n";
 		exit;
 	}
 }

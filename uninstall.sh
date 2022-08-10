@@ -2,10 +2,12 @@
 
 if [ -z "${ALLSKY_HOME}" ]
 then
-	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}"))"
+	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
+	export ALLSKY_HOME
 fi
 ME="$(basename "${BASH_ARGV0}")"
 
+#shellcheck disable=SC1090
 source "${ALLSKY_HOME}/variables.sh"
 
 INSTALL_DIR="allsky"

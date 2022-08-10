@@ -27,7 +27,7 @@ function usage_and_exit()
 	echo -e "${wERROR}"
 	echo "Usage: ${ME} [--debug] [--cameraTypeOnly] [--restarting] key label new_value [...]"
 	echo -e "${wNC}"
-	echo "There must be a multiple of 3 key/label/new_value arguments."
+	echo "There must be a multiple of 3 key/label/old_value/new_value arguments."
 	exit ${1}
 }
 
@@ -215,7 +215,7 @@ while [ $# -gt 0 ]; do
 			;;
 
 		filename)
-			WEBSITE_CONFIG+=("imageName" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=("config.imageName" "${NEW_VALUE}")
 			NEEDS_RESTART=true
 			;;
 		extratext)
@@ -238,7 +238,7 @@ while [ $# -gt 0 ]; do
 			if [[ (${SIGN} = "+" || ${SIGN} == "-") && (${LAST%[NSEW]} == "") ]]; then
 				echo -e "${wWARNING}WARNING: '${NEW_VALUE}' should contain EITHER a \"${SIGN}\" OR a \"${LAST}\", but not both; please change it.${wNC}"
 			else
-				WEBSITE_CONFIG+=("${KEY}" "${NEW_VALUE}")
+				WEBSITE_CONFIG+=(config."${KEY}" "${NEW_VALUE}")
 				RUN_POSTDATA=true
 			fi
 			NEEDS_RESTART=true
@@ -268,7 +268,7 @@ while [ $# -gt 0 ]; do
 			;;
 		location | owner | camera | lens | computer)
 			RUN_POSTTOMAP=true
-			WEBSITE_CONFIG+=("${KEY}" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=(config."${KEY}" "${NEW_VALUE}")
 			;;
 		websiteurl | imageurl)
 			RUN_POSTTOMAP=true

@@ -27,7 +27,7 @@ function usage_and_exit()
 	echo -e "${wERROR}"
 	echo "Usage: ${ME} [--debug] [--cameraTypeOnly] [--restarting] key label new_value [...]"
 	echo -e "${wNC}"
-	echo "There must be a multiple of 3 key/label/old_value/new_value arguments."
+	echo "There must be a multiple of 3 key/label/new_value arguments."
 	exit ${1}
 }
 

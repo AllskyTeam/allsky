@@ -735,6 +735,11 @@ if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "false" ]]; then
 	MSG="${MSG} to make updates."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+
+	# This will be the first image they see.
+	"${ALLSKY_SCRIPTS}//generate_notification_images.sh" --directory "${ALLSKY_TMP}" "image" \
+			"yellow" "" 85 "" "" "" 10 "yellow" "jpg" "" \
+			"***\nUse the\n'Allsky Settings'\nlink in the WebUI\nto configure Allsky\n***"
 fi
 if [[ -n ${PRIOR_ALLSKY} ]]; then
 	MSG="When you are sure everything is working with this new release,"

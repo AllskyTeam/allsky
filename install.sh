@@ -213,7 +213,7 @@ do_sudoers()
 # Ask the user if they want to reboot
 ask_reboot() {
 	AT="     http://${NEW_HOST_NAME}.local\n"
-	AT="${AT}or"n
+	AT="${AT}or\n"
 	AT="${AT}     http://$(hostname -I | sed -e 's/ .*$//')"
 	MSG="*** The Allsky Software is now installed. ***"
 	MSG="${MSG}\n\nYou must reboot the Raspberry Pi to finish the installation."

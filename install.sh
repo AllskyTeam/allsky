@@ -422,7 +422,7 @@ handle_prior_website() {
 	# Check if the prior website is outdated.
 	VERSION_FILE="${PRIOR_SITE}/version"
 	if [ -f "${VERSION_FILE}" ]; then
-		OLD_VERSION=$( < "${VERSION_FILE}/version" )
+		OLD_VERSION=$( < "${VERSION_FILE}" )
 	else
 		OLD_VERSION="** Unknown, but old **"
 	fi
@@ -434,7 +434,6 @@ handle_prior_website() {
 		MSG="${MSG}Current version: ${NEW_VERSION}\n"
 		MSG="${MSG}\nYou can upgrade the Allky Website by executing:\n"
 		MSG="${MSG}     cd ~/allsky; website/install.sh"
-		MSG="${MSG}"
 		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 	fi
 
@@ -677,7 +676,7 @@ restore_prior_files() {
 	MSG="${MSG}\nDo NOT add the old/deleted settings back in."
 	MSG="${MSG}${SETTINGS_MSG}" 
 	# Don't use whiptail so there's a record of what the user needs to do.
-	display_msg info "\n${MSG}.\n"
+	display_msg info "\n${MSG}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 }
 

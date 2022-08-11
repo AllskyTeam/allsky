@@ -1,34 +1,40 @@
 #!/bin/bash
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m' # No Color
+
+if [ -z "${ALLSKY_HOME}" ]
+then
+	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
+	export ALLSKY_HOME
+fi
+ME="$(basename "${BASH_ARGV0}")"
+
+#shellcheck disable=SC1090
+source "${ALLSKY_HOME}/variables.sh"
 
 INSTALL_DIR="allsky"
-DIR=$(basename "$PWD")
-if [ "$DIR" != "$INSTALL_DIR" ] ; then
-	(echo
-	 echo -e "${RED}**********"
-	 echo -e "Please run this script from the '$INSTALL_DIR' directory."
-	 echo -e "**********${NC}"
-	 echo) 1>&2
-	exit 1
-fi
+cd ~/${INSTALL_DIR}  || exit 1
 
-echo
-echo -e "${RED}This will remove all non-config, system files from your computer."
-echo
-echo "Note: This only removes files in their default location."
-echo
-read -p "ARE YOU SURE? [y/n] " ans_yn
-echo -en "${NC}"
-case "$ans_yn" in
-  [Yy]|[Yy][Ee][Ss])
+MSG="This will remove all non-config, system files from your computer.\n"
+MSG="${MSG}Note: This only removes files in their default location.\n"
+MSG="${MSG}\nContinue?"
+if whiptail --title "${TITLE}" --yesno "${MSG}" 10 60 3>&1 1>&2 2>&3; then 
     sudo make uninstall
-    echo -e "${RED}All non-config system files removed.${NC}"
-    echo "A few things of note:"
-    echo -e "  - To remove all traces of 'allsky' (${RED}This cannot be undone!${NC}), please run: 'cd; sudo rm -rf allsky'"
-    echo "  - If you wish to only remove config files, please run 'sudo make remove_configs'"
-    echo "  - If you wish to only remove compiled binaries, please run 'make clean'"
-    ;;
-  *) exit 3;;
-esac
+
+	echo
+    echo -e "${GREEN}All non-config system files removed.${NC}"
+	echo
+    echo -e "A few things of note:"
+    echo -e "  - To remove ALL traces of 'allsky' (${RED}This cannot be undone!${NC}), run:"
+# TODO: remove everything else, e.g., website if installed, lighttpd, ...
+	echo -e "     ${YELLOW}cd; sudo rm -rf allsky${NC}"
+	echo
+    echo -e "  - If you wish to only remove config files, run:"
+	echo -e "     ${YELLOW}sudo make remove_configs${NC}"
+	echo
+    echo -e "  - If you wish to only remove compiled binaries, run:"
+	echo -e "     ${YELLOW}make clean${NC}"
+	echo
+	exit 0
+else
+	echo -e "\n${YELLOW}Nothing removed.${NC}\n"
+	exit 3
+fi

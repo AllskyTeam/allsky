@@ -213,7 +213,7 @@ do_sudoers()
 # Ask the user if they want to reboot
 ask_reboot() {
 	AT="     http://${NEW_HOST_NAME}.local\n"
-	AT="${AT}or"n
+	AT="${AT}or\n"
 	AT="${AT}     http://$(hostname -I | sed -e 's/ .*$//')"
 	MSG="*** The Allsky Software is now installed. ***"
 	MSG="${MSG}\n\nYou must reboot the Raspberry Pi to finish the installation."
@@ -674,7 +674,7 @@ restore_prior_files() {
 	MSG="${MSG}\n\nNOTE: some settings are no longer in config.sh and some changed names."
 	MSG="${MSG}\nDo NOT add the old/deleted settings back in."
 	MSG="${MSG}${SETTINGS_MSG}" 
-	# Don't use whiptail so there's a record of what the user needs to do.
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	display_msg info "\n${MSG}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 }

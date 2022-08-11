@@ -1,13 +1,10 @@
-'''
-allsky_maskimage.py
+""" allsky_maskimage.py
 
 Part of allsky postprocess.py modules.
 https://github.com/thomasjacquin/allsky
 
-Applies a mask to a captured image. This is useful if the image circle is within the camera frame
-Expected parameters:
-None
-'''
+This module will apply a permenant mask to the captured image
+"""
 import allsky_shared as s
 import os
 import cv2
@@ -16,21 +13,30 @@ metaData = {
     "name": "Mask Image",
     "description": "Masks an Image",
     "arguments":{
-        "maskpath": ""
+        "mask": ""
     },
     "argumentdetails": {
-        "maskpath" : {
-            "required": "true",
+        "mask" : {
+            "required": "false",
             "description": "Mask Path",
-            "help": "The full path to the mask to use"
-        }
+            "help": "The name of the image mask",
+            "type": {
+                "fieldtype": "image"
+            }                
+        } 
     },
     "enabled": "false"            
 }
 
 
 def maskimage(params):
-    maskPath = params['maskpath']
+    """ Applies th emask to the captured image
+
+    Args:
+        params (array): Array of parameters, see abovge
+    """
+    mask = params['mask']
+    maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
     if maskPath is not None:
         maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
         if maskImage is not None:

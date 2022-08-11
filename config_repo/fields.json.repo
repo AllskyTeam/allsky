@@ -281,7 +281,7 @@
         },
         {
             "id": 31,
-            "name": "${CAMERA}",
+            "name": "${CAMERA_TYPE}",
             "description": "Camera",
             "format": "",
             "sample": "",

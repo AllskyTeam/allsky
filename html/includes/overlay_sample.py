@@ -93,9 +93,7 @@ class ALLSKYANNOTATESAMPLE:
         """ Attempts to find the all sky installation. The script will abort if this cannot be found """
         result = True
         try:
-            self._allSkyHomeDirectory = '/home/pi/allsky'
-
-            with open(self._allSkyHomeDirectory + "/config/config.sh") as stream: # dont hard code dir seps
+            with open(os.path.join(self._basePath,"config.sh")) as stream:
                 contents = stream.read().strip()
 
             var_declarations = re.findall(r"^[a-zA-Z0-9_]+=.*$", contents, flags=re.MULTILINE)
@@ -253,6 +251,9 @@ class ALLSKYANNOTATESAMPLE:
 
             if (field == '${STARCOUNT}'):
                 sample = str(random.randint(10, 352))
+
+            if (field == '${sEXPOSURE}'):
+                sample = "28.93 ms (0.03 sec)"
 
             if field in self._userData:
                 sample = self._userData[field]

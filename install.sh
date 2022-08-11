@@ -329,9 +329,8 @@ install_webserver() {
 	sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
 
 	sudo lighty-enable-mod fastcgi-php > /dev/null 2>&1
-	sudo systemctl force-reload lighttpd > /dev/null 2>&1
-	sudo systemctl start lighttpd
 	sudo rm -fr /var/log/lighttpd/*		# Start off with a clean log file.
+	sudo systemctl start lighttpd
 }
 
 # Prompt for a new hostname if needed

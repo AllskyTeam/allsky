@@ -184,7 +184,7 @@ class OEFIELDMANAGER {
     enableTestMode() {
         let loadingTimer = setTimeout(() => {
             $.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
-        }, 1500);
+        }, 500);
 
         $('#oe-test-mode').addClass('red pulse');
 

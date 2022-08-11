@@ -12,6 +12,7 @@ import requests
 import time
 import tempfile
 import shutil
+import random
 
 from suntime import Sun
 from math import radians
@@ -37,6 +38,7 @@ class ALLSKYANNOTATESAMPLE:
     _sampleData = {}
 
     _cameraConfig = None
+    _cameraConfigFile = None
     _observerLat = 0
     _observerLon = 0
 
@@ -48,6 +50,7 @@ class ALLSKYANNOTATESAMPLE:
     def __init__(self):
         self._basePath = sys.argv[2]
         self._allskyTmp = sys.argv[3]
+        self._cameraConfigFile = sys.argv[4]
 
         self._OVERLAYTMP = os.path.join(tempfile.gettempdir(), 'overlay')
         if not os.path.isdir(self._OVERLAYTMP):
@@ -100,12 +103,7 @@ class ALLSKYANNOTATESAMPLE:
             self._allSkyVariables = dict(reader)  
 
             try:
-                if self._allSkyVariables["CAMERA"] == "ZWO":
-                    camerSettingsFile = "/etc/raspap/settings_ZWO.json"
-                else:
-                    camerSettingsFile = "/etc/raspap/settings_RPiHQ.json"
-
-                allskySettingsFile = open(camerSettingsFile, 'r')
+                allskySettingsFile = open(self._cameraConfigFile, 'r')
                 self._cameraConfig = json.load(allskySettingsFile)
 
                 self._observerLat = self._cameraConfig["latitude"]
@@ -247,12 +245,14 @@ class ALLSKYANNOTATESAMPLE:
             if (field == '${MOON_SYMBOL}'):
                 sample = self._moonPhaseSymbol
 
-            if (field == '${CAMERA}'):
+            if (field == '${CAMERA_TYPE}'):
                 sample = 'ZWO'
 
             if (field == '${DAY_OR_NIGHT}'):
                 sample = 'NIGHT'
 
+            if (field == '${STARCOUNT}'):
+                sample = str(random.randint(10, 352))
 
             if field in self._userData:
                 sample = self._userData[field]

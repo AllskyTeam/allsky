@@ -217,9 +217,12 @@ class OVERLAYUTIL
     $config = $_POST["config"];
     $config = base64_encode($config);
 
+    $cam_type = getCameraType();
+    $settings_file = getSettingsFile($cam_type);
+
     $baseOverlayFolder = realpath(dirname(__FILE__));
 
-    $result = shell_exec($baseOverlayFolder . '/overlay_sample.py ' . $config . ' ' . $this->overlayPath . ' ' . $this->allskyTmp . ' 2>&1');
+    $result = shell_exec($baseOverlayFolder . '/overlay_sample.py ' . $config . ' ' . $this->overlayPath . ' ' . $this->allskyTmp . ' ' . $settings_file . ' 2>&1');
 
     $result = json_encode(json_decode($result));
 

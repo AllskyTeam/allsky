@@ -128,6 +128,33 @@ set_configuration_file_variables() {
 }
 
 
+##### # Check if this is an older configuration file.
+check_for_older_config_file() {
+	FILE="${1}"
+
+	OLD=false
+	PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${FILE}")"
+	if [[ ${PRIOR_CONFIG_VERSION} == "null" ]]; then
+		OLD=true
+	else
+		NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_FILE}")"
+		if [[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]]; then
+			OLD=true
+		fi
+	fi
+
+	if [[ ${OLD} == "true" ]]; then
+		display_msg warning "Your ${FILE} is an older version."
+		MSG="Your    version: ${PRIOR_CONFIG_VERSION}"
+		MSG="${MSG}\nCurrent version: ${NEW_CONFIG_VERSION}"
+		MSG="${MSG}\nPlease compare your file to the new one in"
+		MSG="${MSG}\n${REPO_FILE}"
+		MSG="${MSG}\nto see what fields have been added, changed, or removed.\n"
+		display_msg info "${MSG}"
+	fi
+}
+
+
 ##### Update the json configuration file, either for the local machine or a remote one.
 update_website_configuration_file() {
 	CONFIG_FILE="${1}"
@@ -220,26 +247,7 @@ modify_configuration_variables() {
 			fi
 
 			# Check if this is an older configuration file.
-			OLD=false
-			PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${CONFIG_FILE}")"
-			if [[ ${PRIOR_CONFIG_VERSION} == "null" ]]; then
-				OLD=true
-			else
-				NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_FILE}")"
-				if [[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]]; then
-					OLD=true
-				fi
-			fi
-			if [[ ${OLD} == "true" ]]; then
-				display_msg warning "Your ${CONFIG_FILE} is an older version."
-				MSG="Your    version: ${PRIOR_CONFIG_VERSION}"
-				MSG="${MSG}\nCurrent version: ${NEW_CONFIG_VERSION}"
-				MSG="${MSG}\nPlease compare your file to the new one in"
-				MSG="${MSG}\n${REPO_FILE}"
-				MSG="${MSG}\nto see what fields have been added, changed, or removed.\n"
-				display_msg info "${MSG}"
-			fi
-
+			check_for_older_config_file "${CONFIG_FILE}"
 		else
 			# Old-style Website - merge old config files into new one.
 
@@ -278,6 +286,9 @@ do_remote_website() {
 		# The user is upgrading a new-style website.
 		HAS_PRIOR_REMOTE_SERVER="true"
 		display_msg progress "\nYou can continue to configure your remote Allsky Website via the WebUI.\n"
+
+		# Check if this is an older configuration file.
+		check_for_older_config_file "${ALLSKY_CONFIG}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 	else
 		# Don't know if the user is upgrading and old-style remote website,
 		# or they don't even have a remote website.
@@ -487,9 +498,6 @@ else
 fi
 H="Welcome to the ${TITLE} ${U2}"
 display_header "${H}"
-
-# Get the version now so we can use it with remote installations.
-WEBSITE_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/${BRANCH}/version")"
 
 set_configuration_file_variables
 

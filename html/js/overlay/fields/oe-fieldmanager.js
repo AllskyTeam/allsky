@@ -184,7 +184,7 @@ class OEFIELDMANAGER {
     enableTestMode() {
         let loadingTimer = setTimeout(() => {
             $.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
-        }, 750);
+        }, 1000);
 
         $('#oe-test-mode').addClass('red pulse');
 
@@ -196,6 +196,7 @@ class OEFIELDMANAGER {
             cache: false,
             context: this
         }).done((data) => {
+            $.LoadingOverlay('hide');
             clearTimeout(loadingTimer);
             for (let key in data) {
                 let field = this.findField(key);

@@ -13,12 +13,14 @@ import os
 import json
 import cv2
 import numpy as np
+from scipy.spatial import distance as dist
 
 metaData = {
     "name": "AllSKY Meteor Detection",
-    "description": "Detects meteors in images",
+    "description": "EXPERIMENTAL: Detects meteors in images",
     "arguments":{
-        "mask": ""
+        "mask": "",
+        "annotate": "false"
     },
     "argumentdetails": {
         "mask" : {
@@ -28,7 +30,15 @@ metaData = {
             "type": {
                 "fieldtype": "image"
             }                
-        }        
+        },
+        "annotate" : {
+            "required": "true",
+            "description": "Annotate Meteors",
+            "help": "If selected the identified meteors in the image will be highlighted",
+            "type": {
+                "fieldtype": "checkbox"
+            }          
+        }                  
     },
     "enabled": "false"
 }
@@ -37,6 +47,7 @@ metaData = {
 
 def meteor(params):
     mask = params["mask"]
+    annotate = params["annotate"]    
     height, width = s.image.shape[:2]
 
     minimal_lenth=300
@@ -86,12 +97,15 @@ def meteor(params):
         dilation_mask = cv2.bitwise_and(dilation_mask,dilation_mask,mask = maskImage)
  
     lines = cv2.HoughLinesP(dilation_mask,3,np.pi/180,100,minimal_lenth,20)
-
-    if lines is not None:
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            cv2.line(s.image, (x1, y1), (x2, y2), (0, 255, 0), 5)
-        meteorCount = len(lines)
+    print("Meteors = " + str(len(lines)))
+    meteorCount = 0
+    for i in range(lines.shape[0]):
+      for x1,y1,x2,y2 in lines[i]:
+        if dist.euclidean((x1, y1), (x2, y2)) > 50:
+          meteorCount +=1
+          if annotate:
+            cv2.line(s.image,(x1,y1),(x2,y2),(0,255,0),10)
+    
         os.environ["AS_METEORCOUNT"] = str(meteorCount)
     else:
         os.environ["AS_METEORCOUNT"] = "0"

@@ -238,7 +238,7 @@ fi
 # Stretch the image if required, but only at night.
 if [ "${DAY_OR_NIGHT}" = "NIGHT" -a ${AUTO_STRETCH} = "true" ]; then
 	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${AUTO_STRETCH_AMOUNT}"
- 	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${AUTO_STRETCH_AMOUNT},${AUTO_STRETCH_MID_POINT}" "${CURRENT_IMAGE}"
+ 	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${AUTO_STRETCH_AMOUNT},${AUTO_STRETCH_MID_POINT}" "${IMAGE_TO_USE}"
 	if [ $? -ne 0 ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: AUTO_STRETCH failed; not saving${NC}"
 		exit 4
@@ -249,6 +249,9 @@ python ${ALLSKY_SCRIPTS}/post-process.py
 
 SAVED_FILE="${CURRENT_IMAGE}"				# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
+
+# If we're not creating mini timelapse, don't upload them.
+[ ${TIMELAPSE_MINI_IMAGES:-0} -eq 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"
 
 # If needed, save the current image in today's directory.
 if [[ "$(settings ".saveDaytimeImages")" = "1" || "${DAY_OR_NIGHT}" = "NIGHT" ]]; then

@@ -1,13 +1,10 @@
-'''
-allsky_meteor.py
+""" allsky_meteor.py
 
 Part of allsky postprocess.py modules.
 https://github.com/thomasjacquin/allsky
 
-
-Expected parameters:
-None
-'''
+This module will attempt to locate meteors in captured images
+"""
 import allsky_shared as s
 import os
 import json
@@ -17,9 +14,11 @@ from scipy.spatial import distance as dist
 
 metaData = {
     "name": "AllSKY Meteor Detection",
-    "description": "EXPERIMENTAL: Detects meteors in images",
+    "description": "Detects meteors in images",
+    "experimental": "true",
     "arguments":{
         "mask": "",
+        "length": "100",
         "annotate": "false"
     },
     "argumentdetails": {
@@ -31,6 +30,17 @@ metaData = {
                 "fieldtype": "image"
             }                
         },
+        "length" : {
+            "required": "true",
+            "description": "Minimum Length",
+            "help": "The minimum length of a detected meteor trail in pixels",
+            "type": {
+                "fieldtype": "spinner",
+                "min": 0,
+                "max": 500,
+                "step": 1
+            }          
+        },        
         "annotate" : {
             "required": "true",
             "description": "Annotate Meteors",
@@ -48,19 +58,14 @@ metaData = {
 def meteor(params):
     mask = params["mask"]
     annotate = params["annotate"]    
+    length = int(params["length"])
     height, width = s.image.shape[:2]
 
     minimal_lenth=300
 
-    #img_gray = cv2.cvtColor(s.image, cv2.COLOR_BGR2GRAY)
-
     if mask != "":
         maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
         maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
-        #if maskImage is not None:
-        #    img_gray = cv2.bitwise_and(s.image,s.image,mask = maskImage)
-        #else:
-        #    s.log(1,"ERROR: Unable to read the mask image {0}".format(maskPath))
 
     img_gray = cv2.cvtColor(s.image, cv2.COLOR_BGR2GRAY)
 
@@ -97,15 +102,17 @@ def meteor(params):
         dilation_mask = cv2.bitwise_and(dilation_mask,dilation_mask,mask = maskImage)
  
     lines = cv2.HoughLinesP(dilation_mask,3,np.pi/180,100,minimal_lenth,20)
-    print("Meteors = " + str(len(lines)))
+
     meteorCount = 0
-    for i in range(lines.shape[0]):
-      for x1,y1,x2,y2 in lines[i]:
-        if dist.euclidean((x1, y1), (x2, y2)) > 50:
-          meteorCount +=1
-          if annotate:
-            cv2.line(s.image,(x1,y1),(x2,y2),(0,255,0),10)
+    lineCount = 0
+    if lines is not None:
+        for i in range(lines.shape[0]):
+            for x1,y1,x2,y2 in lines[i]:
+                if dist.euclidean((x1, y1), (x2, y2)) > length:
+                    meteorCount += 1
+                    if annotate:
+                        cv2.line(s.image,(x1,y1),(x2,y2),(0,255,0),10)
+            lineCount += 1
     
-        os.environ["AS_METEORCOUNT"] = str(meteorCount)
-    else:
-        os.environ["AS_METEORCOUNT"] = "0"
+    os.environ["AS_METEORLINECOUNT"] = str(lineCount)    
+    os.environ["AS_METEORCOUNT"] = str(meteorCount)

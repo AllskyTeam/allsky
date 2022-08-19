@@ -114,6 +114,13 @@ if [[ "${PROTOCOL}" == "s3" ]] ; then
 	${AWS_CLI_DIR}/aws s3 cp "${FILE_TO_UPLOAD}" s3://${S3_BUCKET}${REMOTE_DIR} --acl ${S3_ACL} > "${LOG}"
 	RET=$?
 
+elif [[ ${PROTOCOL} == "gcs" ]] ; then
+	if [ "${SILENT}" = "false" ] && [ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
+		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to gcs ${GCS_BUCKET}/${REMOTE_DIR}"
+	fi
+	"${GCS_CLI_DIR}/gsutil" cp -a "${GCS_ACL}" "${FILE_TO_UPLOAD}" "gs://${GCS_BUCKET}${REMOTE_DIR}" > "${LOG}"
+	RET=$?
+
 elif [[ ${PROTOCOL} == "local" ]] ; then
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_DIR}/${DESTINATION_FILE}"

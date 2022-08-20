@@ -41,13 +41,19 @@ def maskimage(params):
     Args:
         params (array): Array of parameters, see abovge
     """
+    result = ""
     mask = params['mask']
     if (mask is not None) and (mask != ""):
         maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
         maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
         if maskImage is not None:
             s.image = cv2.bitwise_and(s.image,s.image,mask = maskImage)
+            result = "Mask {0} applied".format(maskPath)
         else:
             s.log(0,"ERROR: Unable to read the mask image {0}".format(maskPath))
+            result = "Mask {0} not found".format(maskPath)
     else:
         s.log(0,"ERROR: No mask defined")
+        result = "No mask defined"
+
+    return result

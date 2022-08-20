@@ -225,7 +225,7 @@ class ALLSKYOVERLAY:
                             value = valueData
                             expires = defaultExpiry
 
-                        os.environ['AS_' + name] = value
+                        os.environ['AS_' + name] = str(value)
                         self._saveExtraDataField(name, fileModifiedTime, expires, x, y, fill, font, fontsize, image, rotate, scale, opacity)
             else:
                 self._log(1, 'ERROR: Data File ' + dataFilename + ' not accessible - IGNORING')
@@ -236,7 +236,7 @@ class ALLSKYOVERLAY:
                     for line in file:
                         name, value = line.partition("=")[::2]
                         name = "AS_" + name
-                        os.environ[name] = value
+                        os.environ[name] = str(value)
                         self._saveExtraDataField(name, fileModifiedTime, defaultExpiry)
             else:
                 self._log(1, "ERROR: Data File " + dataFilename + " not accessible - IGNORING")

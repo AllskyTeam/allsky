@@ -124,6 +124,16 @@ class MODULESEDITOR {
                     ghostClass: 'ghost',
                     filter: '.filtered',
                     onMove: function (evt) {
+
+                        if (evt.related.classList.contains('filtered')) {
+                            if (evt.related.classList.contains('first') && !evt.willInsertAfter) { 
+                                return false;
+                            }
+                            if (evt.related.classList.contains('last') && evt.willInsertAfter) { 
+                                return false;
+                            }
+                        }
+
                         if (evt.dragged.classList.contains("locked")) {
                             return false;
                         }
@@ -150,6 +160,18 @@ class MODULESEDITOR {
                     ghostClass: 'ghost',
                     filter: '.filtered',
                     onMove: function (evt) {
+                        console.log(evt.related);
+                        console.log(evt.willInsertAfter);
+
+                        if (evt.related.classList.contains('filtered')) {
+                            if (evt.related.classList.contains('first') && !evt.willInsertAfter) { 
+                                return false;
+                            }
+                            if (evt.related.classList.contains('last') && evt.willInsertAfter) { 
+                                return false;
+                            }
+                        }
+
                         if (evt.dragged.classList.contains('locked')) {
                             return false;
                         }
@@ -244,7 +266,7 @@ class MODULESEDITOR {
         let locked = '';
         let enabledHTML = '';
         if (data.position !== undefined) {
-            locked = 'filtered locked';
+            locked = 'filtered locked ' + data.position;
         } else {
             let enabled = '';
             if (data.enabled !== undefined) {

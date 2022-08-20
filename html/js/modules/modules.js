@@ -2,8 +2,9 @@
 class MODULESEDITOR {
 
     #configData = null;
+    #moduleSettings = null;
     #dirty = false;
-    #configName = null;
+    #eventName = null;
     #settings = null;
     #first = true;
 
@@ -18,11 +19,6 @@ class MODULESEDITOR {
         $('#modules-selected').sortable('destroy');
         $('#modules-available').empty();
         $('#modules-selected').empty();
-
-        this.#dirty = false;
-        this.#updateToolbar();
-
-        this.#configName = $("#module-editor-config option").filter(":selected").val();
        
         $.ajax({
             url: 'includes/moduleutil.php?request=ModuleBaseData',
@@ -33,21 +29,36 @@ class MODULESEDITOR {
         }).done((result) => {
             this.#settings = result;
 
+            this.#dirty = false;
+            this.#updateToolbar();
+
+            $.moduleeditor = {
+                settings: this.#settings.settings
+            };
             if (this.#first) {
+                $('#module-editor-config').empty();
+                for (let event in this.#settings.settings.events) {
+                    $('#module-editor-config').append(new Option(this.#settings.settings.events[event], event));
+                }
+
                 if (this.#settings.tod !== undefined) {
-                    this.#configName = this.#settings.tod;
-                    $('#module-editor-config option[value="' + this.#configName + '"]').attr("selected", "selected"); 
+                    this.#eventName = this.#settings.tod;
+                    $('#module-editor-config option[value="' + this.#eventName + '"]').attr("selected", "selected");
+                    $('#module-editor-config').data("current", this.#eventName);
                 }
                 this.#first = false;
             }
+            this.#eventName = $("#module-editor-config option").filter(":selected").val();
+
             $.ajax({
-                url: 'includes/moduleutil.php?request=Modules&config=' + this.#configName,
+                url: 'includes/moduleutil.php?request=Modules&event=' + this.#eventName,
                 type: 'GET',
                 dataType: 'json',
                 cache: false,
                 context: this
             }).done((result) => {
                 this.#configData = result;
+
                 this.#addModules(this.#configData.available, '#modules-available')
                 this.#addModules(this.#configData.selected, '#modules-selected')
 
@@ -113,7 +124,7 @@ class MODULESEDITOR {
                     ghostClass: 'ghost',
                     filter: '.filtered',
                     onMove: function (evt) {
-                        if (evt.related.classList.contains("locked")) {
+                        if (evt.dragged.classList.contains("locked")) {
                             return false;
                         }
                     },
@@ -127,6 +138,7 @@ class MODULESEDITOR {
                                 settingsButton.prop('disabled', true);
                             }
                             enabledButton.prop('disabled', true);
+                            enabledButton.prop('checked', false);  
                             deleteButton.prop('disabled', false);
                         }
                     }
@@ -138,7 +150,7 @@ class MODULESEDITOR {
                     ghostClass: 'ghost',
                     filter: '.filtered',
                     onMove: function (evt) {
-                        if (evt.related.classList.contains('locked')) {
+                        if (evt.dragged.classList.contains('locked')) {
                             return false;
                         }
                     },
@@ -152,14 +164,18 @@ class MODULESEDITOR {
                                 settingsButton.prop('disabled', false);
                             }
                             enabledButton.prop('disabled', false);
+                            enabledButton.prop('checked', $.moduleeditor.settings.autoenable);                            
                             deleteButton.prop('disabled', true);                        
                         }
                     }
                 });
 
+                this.#updateModuleNotification();
+
                 $(document).on('module:dirty', () => {
                     this.#dirty = true;
                     this.#updateToolbar();
+                    this.#updateModuleNotification();
                 });
 
             });
@@ -169,6 +185,20 @@ class MODULESEDITOR {
 
     }
 
+    #updateModuleNotification() {
+        $('#modules-available-empty').empty();
+        let moduleKeys = $('#modules-available').sortable('toArray');
+        if (moduleKeys.length == 0) {
+            $('#modules-available-empty').append('<div class="module-empty">No Modules Available</div>');
+        }
+
+        $('#modules-selected-empty').empty();
+        moduleKeys = $('#modules-selected').sortable('toArray');
+        if (moduleKeys.length == 0) {
+            $('#modules-selected-empty').append('<div class="module-empty">No Modules Selected</div>');
+        }        
+    }
+
     #updateToolbar() {
         if (this.#dirty) {
             $('#module-editor-save').addClass('green pulse');
@@ -176,6 +206,12 @@ class MODULESEDITOR {
         } else {
             $('#module-editor-save').removeClass('green pulse');
             $('#module-editor-save').addClass('disabled');
+        }
+
+        if (this.#settings.settings.debugmode) {
+            $('#oe-toolbar-debug').removeClass('hidden');
+        } else {
+            $('#oe-toolbar-debug').addClass('hidden');
         }
     }
 
@@ -187,20 +223,21 @@ class MODULESEDITOR {
     #addModules(moduleData, element) {
         for (let key in moduleData) {
             let data = moduleData[key];
-            let template = this.#createModuleHTML(data, element);
+            let moduleKey = 'allsky' + key;
+            let template = this.#createModuleHTML(data, element, moduleKey);
             $(element).append(template);
         }
     }
 
-    #createModuleHTML(data, element) {
+    #createModuleHTML(data, element, moduleKey) {
         let settingsHtml = '';
-        if (data.arguments !== null) {
-            if (Object.entries(data.arguments).length != 0) {
+        if (data.metadata.arguments !== undefined) {
+            if (Object.entries(data.metadata.arguments).length != 0) {
                 let disabled = '';
                 if (element == '#modules-available') {
                     disabled = 'disabled="disabled"';
                 }
-                settingsHtml = '<button type="button" class="btn btn-primary module-settings-button" id="' + data.module + 'settings" data-module="' + data.module + '" ' + disabled + '>Settings</button>';
+                settingsHtml = '<button type="button" class="btn btn-primary module-settings-button" id="' + moduleKey + 'settings" data-module="' + data.module + '" ' + disabled + '>Settings</button>';
             }
         }
 
@@ -215,7 +252,7 @@ class MODULESEDITOR {
                     enabled = 'checked="checked"';
                 }
             }
-            enabledHTML = '<div class="pull-right module-enable">Enabled <input type="checkbox" ' + enabled + ' id="' + data.module + 'enabled" data-module="' + data.module + '"></div>';
+            enabledHTML = '<div class="pull-right module-enable">Enabled <input type="checkbox" ' + enabled + ' id="' + moduleKey + 'enabled" data-module="' + data.module + '"></div>';
         }
 
         let type = 'fa-wrench';
@@ -229,7 +266,7 @@ class MODULESEDITOR {
                 }
                 type = 'fa-user';
                 typeAlt = 'User Module';
-                deleteHtml = '<button type="button" class="btn btn-danger module-delete-button" id="' + data.module + 'delete" data-module="' + data.module + '" ' + disabled + '>Delete</button>';
+                deleteHtml = '<button type="button" class="btn btn-danger module-delete-button" id="' + moduleKey + 'delete" data-module="' + data.module + '" ' + disabled + '>Delete</button>';
             }
         }
 
@@ -238,11 +275,16 @@ class MODULESEDITOR {
             disabled = 'disabled="disabled"';
         }
 
+        let experimental = '';
+        if (data.metadata.experimental) {
+            experimental = '<span class="module-experimental">EXPERIMENTAL:</span> ';
+        } 
+
         let template = '\
-            <div id="' + data.module + '" data-id="' + data.module + '" class="list-group-item ' + locked + '"> \
+            <div id="' + moduleKey + '" data-id="' + data.module + '" class="list-group-item ' + locked + '"> \
                 <div class="panel panel-default"> \
-                    <div class="panel-heading"><i class="fa fa-bars fa-fw"></i>&nbsp;<i class="fa ' + type + ' fa-fw" title="' + typeAlt + '"></i> ' + data.name + ' ' + enabledHTML + '</div> \
-                    <div class="panel-body">' + data.description + ' <div class="pull-right">' + deleteHtml + ' ' + settingsHtml + '</div></div> \
+                    <div class="panel-heading"><i class="fa fa-bars fa-fw"></i>&nbsp;<i class="fa ' + type + ' fa-fw" title="' + typeAlt + '"></i> ' + data.metadata.name + ' ' + enabledHTML + '</div> \
+                    <div class="panel-body">' + experimental + data.metadata.description + ' <div class="pull-right">' + deleteHtml + ' ' + settingsHtml + '</div></div> \
                 </div> \
             </div>';
 
@@ -255,7 +297,10 @@ class MODULESEDITOR {
         for (let key in this.#configData.available) {
             let data = this.#configData.available[key];
             if (data.module === module) {
-                moduleData = data;
+                moduleData = {
+                    module: key,
+                    data: data
+                };
                 break;
             }
         }
@@ -264,7 +309,10 @@ class MODULESEDITOR {
             for (let key in this.#configData.selected) {
                 let data = this.#configData.selected[key];
                 if (data.module === module) {
-                    moduleData = data;
+                    moduleData = {
+                        module: key,
+                        data: data
+                    };
                     break;
                 }
             }
@@ -278,9 +326,10 @@ class MODULESEDITOR {
         target = $(target);
         let module = target.data('module');
         let moduleData = this.#findModuleData(module);
+        moduleData = moduleData.data;
 
         let fieldsHTML = '';
-        let args = moduleData.argumentdetails;
+        let args = moduleData.metadata.argumentdetails;
         for (let key in args) {
             let fieldData = args[key];
             let extraClass = 'input-group-allsky';
@@ -293,8 +342,8 @@ class MODULESEDITOR {
             }
 
             let fieldValue = '';
-            if (moduleData.arguments[key] !== undefined) {
-                fieldValue = moduleData.arguments[key];
+            if (moduleData.metadata.arguments[key] !== undefined) {
+                fieldValue = moduleData.metadata.arguments[key];
             }
 
             let inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" value="' + fieldValue + '">';
@@ -376,15 +425,20 @@ class MODULESEDITOR {
             fieldsHTML += fieldHTML;
         }
 
+        let experimental = '';
+        if (moduleData.metadata.experimental) {
+            experimental = '<div class="bg-danger module-experimental-warning" role="alert">This module is experimental. Please use with caution</div>';
+        }
         let dialogTemplate = '\
             <div class="modal" role="dialog" id="module-settings-dialog" data-module="' + module + '">\
                 <div class="modal-dialog modal-lg" role="document">\
                     <div class="modal-content">\
                         <div class="modal-header">\
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\
-                            <h4 class="modal-title">' + moduleData.name + ' Settings</h4>\
+                            <h4 class="modal-title">' + moduleData.metadata.name + ' Settings</h4>\
                         </div>\
                         <div class="modal-body">\
+                            ' + experimental + '\
                             <form id="module-editor-settings-form" class="form-horizontal">\
                             ' + fieldsHTML + '\
                             </form>\
@@ -444,10 +498,10 @@ class MODULESEDITOR {
     #saveFormData(type, formValues, module) {
         for (let key in type) {
             if (type[key].module == module) {
-                for (let paramKey in type[key].arguments) {
+                for (let paramKey in type[key].metadata.arguments) {
                     if (formValues[paramKey] !== undefined) {
                         let value = formValues[paramKey];
-                        type[key].arguments[paramKey] = value;
+                        type[key].metadata.arguments[paramKey] = value;
                     }
                 }
             }
@@ -456,11 +510,16 @@ class MODULESEDITOR {
 
     #saveConfig() {
         $.LoadingOverlay('show');
-        let newConfig = [];
+        let newConfig = {};
         let moduleKeys = $('#modules-selected').sortable('toArray');
         for (let key in moduleKeys) {
             let moduleData = this.#findModuleData(moduleKeys[key])
-            newConfig.push(moduleData);
+            let enabled =  $('#allsky' + moduleData.module + 'enabled').prop('checked');
+            if (enabled == undefined) {
+                enabled = true;
+            }
+            moduleData.data.enabled = enabled;
+            newConfig[moduleData.module] = moduleData.data
         }
 
         let jsonData = JSON.stringify(newConfig, null, 4);
@@ -469,7 +528,7 @@ class MODULESEDITOR {
             url: 'includes/moduleutil.php?request=Modules',
             type: 'POST',
             dataType: 'json',
-            data: { config: this.#configName, configData: jsonData },
+            data: { config: this.#eventName, configData: jsonData },
             cache: false,
             context: this
         }).done((result) => {
@@ -504,6 +563,53 @@ class MODULESEDITOR {
         });
     }
 
+    #showDebug() {
+        $.ajax({
+            url: 'includes/moduleutil.php?request=Modules&event=' + this.#eventName,
+            type: 'GET',
+            dataType: 'json',
+            cache: false,
+            context: this
+        }).done((result) => {
+            $('#module-editor-debug-dialog-content').empty();
+
+            let totalTime = 0;
+            let html = '';
+            html += '<div class="row">';                
+            html += '<div class="col-md-3"><strong>Module</strong></div>';
+            html += '<div class="col-md-2"><strong>Run Time (ms)</strong></div>';
+            html += '<div class="col-md-7"><strong>Result</strong></div>';
+            html += '</div>';
+
+            for (let key in result.selected) {
+                let data = result.selected[key];
+                let runTime = parseInt(data.lastexecutiontime,10);
+                totalTime += runTime;
+
+                html += '<div class="row">';                
+                html += '<div class="col-md-3">' + data.module + '</div>';
+                html += '<div class="col-md-2"><div class ="pull-right">' + runTime + '</div></div>';
+                html += '<div class="col-md-7">' + data.lastexecutionresult + '</div>';
+                html += '</div>';
+            }            
+
+            html += '<div class="row">';                
+            html += '<div class="col-md-12">&nbsp;</div>';
+            html += '</div>';
+
+            html += '<div class="row">';                
+            html += '<div class="col-md-3"><div class="pull-right"><strong>Total</strong></div></div>';
+            html += '<div class="col-md-2"><div class="pull-right"><strong>' + totalTime + '</strong></div></div>';
+            html += '<div class="col-md-7"><strong>' + totalTime/ 1000 + ' Seconds</strong></div>';
+            html += '</div>';
+
+            $('#module-editor-debug-dialog-content').append(html);
+
+            $('#module-editor-debug-dialog').modal('show');            
+        });
+
+    }
+
     run() {
 
         jQuery(window).bind('beforeunload', ()=> {
@@ -526,8 +632,12 @@ class MODULESEDITOR {
                 cache: false,
                 context: this
             }).done((result) => {
+                this.#moduleSettings = result;
                 $('#enablewatchdog').prop('checked', result.watchdog);
                 $('#watchdog-timeout').val(result.timeout);                
+                $('#showexperimental').prop('checked', result.showexperimental);
+                $('#autoenable').prop('checked', result.autoenable);
+                $('#debugmode').prop('checked', result.debugmode);
                 $('#module-editor-settings-dialog').modal('show');
             }).always(() => {
                 clearTimeout(loadingTimer);
@@ -540,23 +650,29 @@ class MODULESEDITOR {
             let loadingTimer = setTimeout(() => {
                 $.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
             }, 500)
-            let settings = {
-                watchdog: $('#enablewatchdog').prop('checked'),
-                timeout: $('#watchdog-timeout').val() | 0
-            };
+
+            this.#moduleSettings.watchdog = $('#enablewatchdog').prop('checked');
+            this.#moduleSettings.timeout = $('#watchdog-timeout').val() | 0;
+            this.#moduleSettings.showexperimental = $('#showexperimental').prop('checked');
+            this.#moduleSettings.autoenable = $('#autoenable').prop('checked');
+            this.#moduleSettings.debugmode = $('#debugmode').prop('checked');
+
+            this.#settings.settings = this.#moduleSettings;
+            $.moduleeditor.settings = this.#settings.settings;
+
+            this.#updateToolbar();
 
             $.ajax({
                 url: 'includes/moduleutil.php?request=ModulesSettings',
                 type: 'POST',
-                data: {settings: JSON.stringify(settings)},
+                data: {settings: JSON.stringify( this.#moduleSettings)},
                 cache: false
             }).done((result) => {
-                $('#enablewatchdog').prop('checked', result.watchdog);
-                $('#watchdog-timeout').val(result.timeout);                
                 $('#module-editor-settings-dialog').modal('hide');
             }).fail((result) => {
                 bootbox.alert('Failed to save the module settings configuration');
             }).always(() => {
+                this.#buildUI();
                 clearTimeout(loadingTimer);
                 $.LoadingOverlay('hide');
             });
@@ -568,8 +684,26 @@ class MODULESEDITOR {
             this.#saveConfig();
         });
 
-        $(document).on('change', '#module-editor-config', () => {
-            this.#buildUI();
+        $(document).on('click', '#module-toobar-debug-button', () => {
+            this.#showDebug()
+        });
+
+        $(document).on('change', '#module-editor-config', (e) => {
+            let val = $("#module-editor-config option").filter(":selected").val();
+            let oldVal = $("#module-editor-config").data("current");
+            let doIt = true
+            if (this.#dirty) {
+                if (!window.confirm('Are you sure. Changes to the current configuration will be lost')) {
+                    doIt = false;
+                }
+            }
+            if (doIt) {
+                $('#module-editor-config').data("current", val);
+                this.#buildUI();
+            } else {
+                $(e.target).val(oldVal);
+                return false;
+            }
         });
 
         $(document).on('click', '#module-editor-new', () => {

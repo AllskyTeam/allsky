@@ -16,11 +16,15 @@ import cv2
 
 metaData = {
     "name": "Loads the latest image",
-    "description": "Loads the last captured image"      
+    "description": "Loads the last captured image",
+    "events": [
+        "day",
+        "night"
+    ]   
 }
 
 def loadimage(params):
-    result = False
+    result = "Image {0} Loaded".format(s.CURRENTIMAGEPATH)
         
     try:
         s.image = cv2.imread(s.CURRENTIMAGEPATH)

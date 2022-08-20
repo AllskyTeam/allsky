@@ -12,9 +12,16 @@ import cv2
 metaData = {
     "name": "Mask Image",
     "description": "Masks an Image",
+    "events": [
+        "postcapture"
+    ],
+    "events": [
+        "day",
+        "night"
+    ],
     "arguments":{
         "mask": ""
-    },
+    },    
     "argumentdetails": {
         "mask" : {
             "required": "false",
@@ -24,8 +31,7 @@ metaData = {
                 "fieldtype": "image"
             }                
         } 
-    },
-    "enabled": "false"            
+    }         
 }
 
 
@@ -36,10 +42,12 @@ def maskimage(params):
         params (array): Array of parameters, see abovge
     """
     mask = params['mask']
-    maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
-    if maskPath is not None:
+    if (mask is not None) and (mask != ""):
+        maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
         maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
         if maskImage is not None:
             s.image = cv2.bitwise_and(s.image,s.image,mask = maskImage)
         else:
-            s.log(1,"ERROR: Unable to read the mask image {0}".format(maskPath))
+            s.log(0,"ERROR: Unable to read the mask image {0}".format(maskPath))
+    else:
+        s.log(0,"ERROR: No mask defined")

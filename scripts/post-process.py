@@ -32,9 +32,7 @@ import allsky_shared as s
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--image",  type=str, help="Image to proces ( Required for day or night ).")
-    parser.add_argument("-p", "--path",   type=str, help="Path to image directory to process ( Required for for endOfNight ).")
-    parser.add_argument("-t", "--tod",    type=str, choices = ['day','night','endOfNight'],  help="Time of day.  One of: day, night, or endOfNight.")
+    parser.add_argument("-e", "--event",  type=str, help="The event we are running modules for (defaults to postcapture.", default="postcapture", choices=["postcapture","daynight", "nightday", "endofnight"])
     s.args = parser.parse_args()
 
     watchdog = False
@@ -53,30 +51,18 @@ if __name__ == "__main__":
     except KeyError:
         s.LOGLEVEL = 0
 
-    if s.args.image:
-        if not os.path.exists(s.args.image):
-            s.log(0, "ERROR: image file specified ( {0} ) does not exist.".format(s.args.image), exitCode=1)
-        if not os.path.isfile(s.args.image):
-            s.log(0,"ERROR: image file specified ( {0} ) is not a file.".format(s.args.image), exitCode=1)
-
-        s.CURRENTIMAGEPATH = s.args.image
-    else:
+    if s.args.event == "postcapture":
         try:
             s.CURRENTIMAGEPATH = os.environ['CURRENT_IMAGE']
         except KeyError:
             s.log(0, "ERROR: no image file available in the environment", exitCode=1)
-
-    if s.args.path:
-        if not os.path.exists(s.args.path):
-            s.log(0, "ERROR: path specified ( {0} ) does not exist.".format(s.args.path), exitCode=1)
-        if not os.path.isdir(s.args.path):
-            s.log(0, "ERROR: path specified ( {0} ) does not exist.".format(s.args.path), exitCode=1)
-
-    if not s.args.tod:
-        try:
-            s.args.tod = os.environ["DAY_OR_NIGHT"].lower()
-        except:
-            s.log("ERROR: unable to determine if its day or night in the environment", exitCode=1)
+    else:
+        s.CURRENTIMAGEPATH  = None
+        
+    try:
+        s.args.tod = os.environ["DAY_OR_NIGHT"].lower()
+    except:
+        s.log("ERROR: unable to determine if its day or night in the environment", exitCode=1)
 
     try:
         s.args.config = os.environ["CAMERA_SETTINGS"]
@@ -134,16 +120,22 @@ if __name__ == "__main__":
     
     s.log(1, "INFO: Loading recipe...")
     try:
-        with open("{0}/postprocessing_{1}.json".format(s.args.allskyConfig, s.args.tod)) as recipe_file:
+        if s.args.event == "postcapture":
+            moduleConfig = "{0}/postprocessing_{1}.json".format(s.args.allskyConfig, s.args.tod)
+        else:
+            moduleConfig = "{0}/postprocessing_{1}.json".format(s.args.allskyConfig, s.args.event)
+            
+        with open(moduleConfig) as recipe_file:
             try:
                 s.recipe=json.load(recipe_file)
             except json.JSONDecodeError as err:
-                s.log(0, "ERROR: Error parsing {0}/postprocessing_{1}.json: {2}".format(s.conf['CONFIG_PATH'], s.args.tod, err), exitCode=1)
+                s.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)
     except:
-        s.log(0, "ERROR: Failed to open {0}/postprocessing_{1}.json".format(s.conf['CONFIG_PATH'], s.args.tod), exitCode=1)
+        s.log(0, "ERROR: Failed to open {0}".format(moduleConfig), exitCode=1)
     
+    results = {}
     for s.step in s.recipe:
-        if s.step["enabled"] and s.step["module"] not in globals():
+        if s.recipe[s.step]["enabled"] and s.recipe[s.step]["module"] not in globals():
             #try:
             #    '''
             #    This section expects module python to be present in /etc/allsky/modules/, or /home/pi/allsky/scripts/modules.
@@ -152,27 +144,56 @@ if __name__ == "__main__":
             #        from allsky_resize import resize
             #    and expects allsky_resize.py to be present in /etc/allsky/modules/ (this path has priority), or /home/pi/allsky/scripts/modules.
             #    '''
-            s.log(2, "INFO: Attempting to load allsky_{0}.py".format(s.step['module']))
-            _temp = importlib.import_module("allsky_{0}".format(s.step['module']))
-            globals()[s.step['module']] = getattr(_temp,s.step['module'])
+            moduleName = s.recipe[s.step]['module'].replace('.py','')
+            method = s.recipe[s.step]['module'].replace('.py','').replace('allsky_','')
+            s.log(2, "INFO: Attempting to load {0}".format(moduleName))
+            _temp = importlib.import_module(moduleName)
+            globals()[method] = getattr(_temp, method)
             #except Exception as e:
                 #s.log(0, "ERROR: Failed to import module allsky_{0}.py in one of ( {1} ). Ignoring Module.".format(s.step['module'], ", ".join(valid_module_paths)), exitCode=1)
                 #print(e)
         else:
-            s.log(1, "INFO: Ignorning module {0} as its disabled".format(s.step["module"]))
+            s.log(1, "INFO: Ignorning module {0} as its disabled".format(s.recipe[s.step]["module"]))
 
-        if s.step['module'] in globals():
-
-            s.log(1, "INFO: Running Module {0}".format(s.step['module']))
+        if s.recipe[s.step]["enabled"] and method in globals():
+            s.log(1, "INFO: Running Module {0}".format(s.recipe[s.step]['module']))
             startTime = datetime.now()
-            result = globals()[s.step['module']](s.step['arguments'])
+
+            if 'arguments' in s.recipe[s.step]['metadata']:
+                arguments = s.recipe[s.step]['metadata']['arguments']
+            else:
+                arguments = {}
+
+            result = globals()[method](arguments)
+
             endTime = datetime.now()
             elapsedTime = ((endTime - startTime).total_seconds())
             if watchdog:
                 if elapsedTime > timeout:
-                    s.log(0, 'ERROR: Will disable module {0} it took {1}ms max allowed is {2}s'.format(s.step['module'], elapsedTime, timeout))
+                    s.log(0, 'ERROR: Will disable module {0} it took {1}ms max allowed is {2}s'.format(s.recipe[s.step]['module'], elapsedTime, timeout))
                 else:
-                    s.log(1, 'INFO: Module {0} ran ok in {1}s'.format(s.step['module'], elapsedTime))
+                    s.log(1, 'INFO: Module {0} ran ok in {1}s'.format(s.recipe[s.step]['module'], elapsedTime))
             
+            results[s.step] = {}
+            results[s.step]["lastexecutiontime"] = str(elapsedTime * 1000)
+
             if result == s.ABORT:
                 break
+
+            results[s.step]["lastexecutionresult"] = result
+
+
+    with open(moduleConfig) as updatefile:
+        try:
+            config = json.load(updatefile)
+            for step in config:
+                if step in results:
+                    config[step]["lastexecutiontime"] = results[step]["lastexecutiontime"]
+                    config[step]["lastexecutionresult"] = results[step]["lastexecutionresult"]
+
+            updatefile.close()
+            with open(moduleConfig, "w") as updatefile:
+                json.dump(config, updatefile)
+                updatefile.close()
+        except json.JSONDecodeError as err:
+            s.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)

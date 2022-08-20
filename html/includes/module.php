@@ -56,6 +56,9 @@ function DisplayModule() {
                                     <div class="btn btn-lg navbar-btn glyphicon glyphicon-cog" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options">
                                     </div>
                                 </li>
+                                <li id="oe-toolbar-debug" class="hidden">
+                                    <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn glyphicon glyphicon-wrench" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"></div>
+                                </li>                                
                                 <li>
                                     <div class="btn btn-lg navbar-btn glyphicon glyphicon-question-sign" id="module-help" data-toggle="tooltip" data-container="body" data-placement="top" title="Help">
                                     </div>
@@ -67,11 +70,13 @@ function DisplayModule() {
                 <div class="row">
                     <div class="col-sm-5 col-md-5 col-lg-5 module-column">
                         <h4 class="text-center">Available Modules</h4>
+                        <div id="modules-available-empty"></div>
                         <div id="modules-available" class="list-group">
                         </div>
                     </div>
                     <div class="col-sm-5 col-md-5 col-lg-5 module-column">
                         <h4 class="text-center">Selected Modules</h4>
+                        <div id="modules-selected-empty"></div>
                         <div id="modules-selected" class="list-group">
                         </div>
                     </div>
@@ -139,7 +144,37 @@ function DisplayModule() {
                             </div>
                             <p class="help-block">The maximum time a module can run for, in milliseconds. After this amount of time it will be disabled</p>
                         </div>
-                    </div>                    
+                    </div>
+                    <div class="form-group">
+                        <label for="checkbox" class="control-label col-xs-4"></label> 
+                        <div class="col-xs-8">
+                            <label class="checkbox-inline">
+                            <input type="checkbox" name="autoenable" id="autoenable">
+                                Auto Enable
+                            </label>
+                            <p class="help-block">Auto enable modules when selected</p>
+                        </div>
+                    </div> 
+                    <div class="form-group">
+                        <label for="checkbox" class="control-label col-xs-4"></label> 
+                        <div class="col-xs-8">
+                            <label class="checkbox-inline">
+                            <input type="checkbox" name="showexperimental" id="showexperimental">
+                                Show Experimental
+                            </label>
+                            <p class="help-block">Show exterimental modules. NOTE: These may be unstable and cause issues</p>
+                        </div>
+                    </div>                                      
+                    <div class="form-group">
+                        <label for="checkbox" class="control-label col-xs-4"></label> 
+                        <div class="col-xs-8">
+                            <label class="checkbox-inline">
+                            <input type="checkbox" name="debugmode" id="debugmode">
+                                Debug Mode
+                            </label>
+                            <p class="help-block">Enable debug mode. An additional icon will appear inthe toolbar showing the last results of each running module</p>
+                        </div>
+                    </div>   
                 </form>                          
             </div>
             <div class="modal-footer">
@@ -149,6 +184,24 @@ function DisplayModule() {
         </div>
     </div>
 </div>
+
+<div class="modal" role="dialog" id="module-editor-debug-dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Debug Information</h4>
+            </div>
+            <div class="modal-body">
+                <div id="module-editor-debug-dialog-content"></div>   
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div class="modal" role="dialog" id="module-file-manager-dialog">
     <div class="modal-dialog modal-lg" role="document">

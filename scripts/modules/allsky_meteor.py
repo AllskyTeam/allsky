@@ -15,11 +15,17 @@ from scipy.spatial import distance as dist
 metaData = {
     "name": "AllSKY Meteor Detection",
     "description": "Detects meteors in images",
+    "events": [
+        "day",
+        "night"
+    ],
     "experimental": "true",
+    "module": "allsky_meteor",
     "arguments":{
         "mask": "",
         "length": "100",
-        "annotate": "false"
+        "annotate": "false",
+        "debug": "false"
     },
     "argumentdetails": {
         "mask" : {
@@ -48,36 +54,57 @@ metaData = {
             "type": {
                 "fieldtype": "checkbox"
             }          
-        }                  
-    },
-    "enabled": "false"
+        },
+        "debug" : {
+            "required": "false",
+            "description": "Enable debug mode",
+            "help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
+            "type": {
+                "fieldtype": "checkbox"
+            }          
+        }                          
+    }
 }
-
-
 
 def meteor(params):
     mask = params["mask"]
     annotate = params["annotate"]    
     length = int(params["length"])
+    debug = params["debug"]
+
+    maskImage = None
+    
+    if debug:
+        s.startModuleDebug(metaData["module"])
+
     height, width = s.image.shape[:2]
 
-    minimal_lenth=300
+    #minimal_lenth=300
 
     if mask != "":
         maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
         maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
+        if debug:
+            s.writeDebugImage(metaData["module"], "meteor-mask.png", maskImage)
 
     img_gray = cv2.cvtColor(s.image, cv2.COLOR_BGR2GRAY)
+    if debug:
+        s.writeDebugImage(metaData["module"], "greyscale-image.png", img_gray)
 
     img_gray_canny = cv2.Canny(img_gray.astype(np.uint8),100,200,apertureSize=3)
 
     img_gray_canny_crop = img_gray_canny
     img_gray_canny_crop = img_gray_canny_crop.astype(np.uint8)
 
+    if debug:
+        s.writeDebugImage(metaData["module"], "greyscale-canny.png", img_gray)
+
     kernel = np.ones((3,3), np.uint8)
     dilation = cv2.dilate(img_gray_canny_crop, kernel, iterations = 2)
-
     dilation = cv2.erode(dilation, kernel, iterations = 1)
+
+    if debug:
+        s.writeDebugImage(metaData["module"], "dilated-canny.png", img_gray)
 
     cloud_mask = np.zeros(dilation.shape,np.uint8)
     contour,hier = cv2.findContours(dilation,cv2.RETR_CCOMP,cv2.CHAIN_APPROX_SIMPLE)
@@ -91,6 +118,9 @@ def meteor(params):
     except:
         contour_able = 0
 
+    if debug:
+        s.writeDebugImage(metaData["module"], "cloud-mask.png", cloud_mask)
+
     if contour_able==1:
         kernel_dilate = np.ones((7,7), np.uint8)
         dilation_mask = dilation * cv2.dilate(cv2.bitwise_not(cloud_mask), kernel_dilate, iterations = 1)
@@ -101,7 +131,10 @@ def meteor(params):
     if maskImage is not None:
         dilation_mask = cv2.bitwise_and(dilation_mask,dilation_mask,mask = maskImage)
  
-    lines = cv2.HoughLinesP(dilation_mask,3,np.pi/180,100,minimal_lenth,20)
+        if debug:
+            s.writeDebugImage(metaData["module"], "dilation-mask.png", dilation_mask)
+
+    lines = cv2.HoughLinesP(dilation_mask,3,np.pi/180,100,length,20)
 
     meteorCount = 0
     lineCount = 0
@@ -116,3 +149,5 @@ def meteor(params):
     
     os.environ["AS_METEORLINECOUNT"] = str(lineCount)    
     os.environ["AS_METEORCOUNT"] = str(meteorCount)
+
+    return "{0} Meteors found, {1} Lines detected".format(meteorCount, lineCount)

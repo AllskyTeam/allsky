@@ -32,7 +32,11 @@ from pytz import timezone
 
 metaData = {
     "name": "Overlays data on the image",
-    "description": "Overlays data fileds on the image"      
+    "description": "Overlays data fileds on the image",
+    "events": [
+        "day",
+        "night"
+    ]
 }
 
 class ALLSKYOVERLAY:
@@ -1047,3 +1051,4 @@ class ALLSKYOVERLAY:
 def overlay(params):
     annotater = ALLSKYOVERLAY()
     annotater.annotate()
+    return "Overlay complete"

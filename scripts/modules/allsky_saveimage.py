@@ -16,7 +16,11 @@ import cv2
 
 metaData = {
     "name": "Saves the image",
-    "description": "Saves the image"      
+    "description": "Saves the image",
+    "events": [
+        "day",
+        "night"
+    ] 
 }
 
 def createThumbnail():
@@ -25,12 +29,17 @@ def createThumbnail():
     writeImage(s.thumbnail, s.thumbnailFile)
 
 def writeImage(image, path):
+    result = True
     try:
-        cv2.imwrite(path, image, params=None)
+        cv2.imwrite(path, image, [int(cv2.IMWRITE_PNG_COMPRESSION),9])
     except:
         s.log(0, "ERROR: Failed to save image {0}".format(path), exitCode=1)
+        result = False
+    
+    return result
 
 def saveimage(params):
+    result = "Image {0} Saved".format(s.CURRENTIMAGEPATH)    
     #if s.settings["takeDaytimeImages"] or s.tod == "night":
     #    if not os.path.exists(s.imageFolder):
     #        os.makedirs(s.imageFolder)
@@ -42,5 +51,8 @@ def saveimage(params):
 
     #writeImage(s.image, s.websiteImageFile)
     #writeImage(s.image, s.imageFile)
-    writeImage(s.image, s.CURRENTIMAGEPATH)
+    if not writeImage(s.image, s.CURRENTIMAGEPATH):
+        result = "Failed to save {0}".format(s.CURRENTIMAGEPATH) 
     #os.remove(s.CURRENTIMAGEPATH)
+
+    return result

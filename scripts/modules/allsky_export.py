@@ -14,6 +14,10 @@ import re
 metaData = {
     "name": "AllSKY Export",
     "description": "Exports AllSKY data to json",
+    "events": [
+        "day",
+        "night"
+    ],
     "arguments":{
         "filelocation": "${ALLSKY_TMP}/allskydata.json",
         "extradata": "CAMERA_TYPE,DAY_OR_NIGHT,CURRENT_IMAGE,FULL_FILENAME,ALLSKY_VERSION"
@@ -29,8 +33,7 @@ metaData = {
             "description": "Extra data to export",
             "help": "Comma seperated list of additional variables to export to json"
         }        
-    },
-    "enabled": "false"            
+    }          
 }
 
 def getSavePath(savePath):
@@ -107,3 +110,5 @@ def export(params):
             json.dump(jsonData, outfile)
 
         s.log(1, "INFO: Allsky data exported to {0}".format(savePath))
+
+        return "Allsky data exported to {0}".format(savePath)

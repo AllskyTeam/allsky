@@ -71,7 +71,7 @@ class MODULEUTIL
         }
     }
 
-    private function readModuleData($moduleDirectory, $type) {
+    private function readModuleData($moduleDirectory, $type, $event, $showexperimental) {
         $arrFiles = array();
         $handle = opendir($moduleDirectory);
  
@@ -105,11 +105,27 @@ class MODULEUTIL
                             }
                         }
 
-                        $arrFiles[$entry] = [
-                            'module' => $entry,
-                            'metadata' => json_decode($metaData),
-                            'type' => $type
-                        ];
+                        $decoded = json_decode($metaData);
+                        if (in_array($event, $decoded->events)) {
+                            if (isset($decoded->experimental)) {
+                                $experimental = strtolower($decoded->experimental) == "true"? true: false;
+                            } else {
+                                $experimental = false;
+                            }
+                            if (!$showexperimental && $experimental) {
+                                $addModule  = false;
+                            } else {
+                                $addModule = true;
+                            }
+                            if ($addModule) {
+                                $arrFiles[$entry] = [
+                                    'module' => $entry,
+                                    'metadata' => $decoded,
+                                    'type' => $type
+                                ];
+                                $arrFiles[$entry]['metadata']->experimental = $experimental;
+                            }
+                        }
                     }
                 }
             }
@@ -161,74 +177,101 @@ class MODULEUTIL
             $result['tod'] = '';
         }
 
+        $configFileName = ALLSKY_CONFIG . '/module-settings.json';
+        $rawConfigData = file_get_contents($configFileName);
+        $configData = json_decode($rawConfigData);
+
+        $result['settings'] = $configData;
         $formattedJSON = json_encode($result, JSON_PRETTY_PRINT);
         $this->sendResponse($formattedJSON);
     }
 
     public function getModules() {
-        $config = $_GET['config'];
-        $configFileName = ALLSKY_CONFIG . '/' . 'postprocessing_' . strtolower($config) . '.json';
+        $configFileName = ALLSKY_CONFIG . '/module-settings.json';
+        $rawConfigData = file_get_contents($configFileName);
+        $moduleConfig = json_decode($rawConfigData);
+
+        $showexperimental = false;
+        if (isset($moduleConfig->showexperimental) && $moduleConfig->showexperimental) {
+            $showexperimental = true;
+        }
+
+        $event = $_GET['event'];
+        $configFileName = ALLSKY_CONFIG . '/' . 'postprocessing_' . strtolower($event) . '.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
 
-        $coreModules = $this->readModuleData($this->allskyModules, "system");
-        $userModules = $this->readModuleData($this->userModules, "user");
+        $coreModules = $this->readModuleData($this->allskyModules, "system", $event, $showexperimental);
+        $userModules = $this->readModuleData($this->userModules, "user", $event, $showexperimental);
         $allModules = array_merge($coreModules, $userModules);
 
-        $availableModules = array();
-        foreach($configData as $configModule) {
-            foreach($allModules as $moduleName) {
-                $module = str_replace('allsky_', '', $moduleName);
-                $module = str_replace('.py', '', $module);
-                if ($configModule->module == $module['module']) {
-                    $configModule->name = $module['metadata']->name;
-                    $configModule->description = $module['metadata']->description;
-                    $configModule->argumentdetails = $module['metadata']->argumentdetails;
-                    $configModule->type = $module['type'];
-
-                    foreach($module['metadata']->arguments as $argument=>$value) {
-                        if(!isset($configModule->arguments->$argument)) {
-                            $configModule->arguments->{$argument} = $value;
-                        }
-                    }
-                    $found = true;
-                    break;                    
-                }
-            }
-        }
-
-        foreach($allModules as $moduleName) {
-            $module = str_replace('allsky_', '', $moduleName);
+        $availableResult = [];
+        foreach ($allModules as $moduleData) {
+            $module = str_replace('allsky_', '', $moduleData["module"]);
             $module = str_replace('.py', '', $module);
-            if ($module !== 'shared') {
-                $found = false;
-                foreach($configData as $configModule) {
-                    if ($configModule->module == $module['module']) {
-                        $found = true;
-                        break;
-                    }
-                }
-                if (!$found) {
-                    $obj = (object) [
-                        'name' => $module['metadata']->name,
-                        'module' => $module['module'],
-                        'type' => $module['type'],
-                        'description' => $module['metadata']->description,
-                        'arguments' => $module['metadata']->arguments,
-                        'argumentdetails' => $module['metadata']->argumentdetails,
-                        'enabled' => $module['metadata']->enabled,
-                    ];
-                    array_push($availableModules, $obj);                    
-                }
+            
+            if (!isset($configData->{$module})) {
+                $moduleData["enabled"] = false;
+                $availableResult[$module] = $moduleData;
             }
         }
+
+        $selectedResult = [];
+        foreach($configData as $selectedName=>$data) {
+            $moduleName = "allsky_" . $selectedName . ".py";
+            $moduleData = $allModules[$moduleName];
+
+            if (isset($data->metadata->arguments)) {
+                $moduleData["metadata"]->arguments = $data->metadata->arguments;
+            } else {
+                $moduleData["metadata"]->arguments = [];
+            }
+            if (isset($data->enabled)) {
+                $moduleData["enabled"] = $data->enabled;
+            } else {
+                $moduleData["enabled"] = false;
+            }
+            if ($selectedName == 'loadimage') {
+                $moduleData['position'] = 'first';
+            }
+            if ($selectedName == 'saveimage') {
+                $moduleData['position'] = 'last';
+            }
+
+            if (isset($data->lastexecutiontime)) {
+                $moduleData['lastexecutiontime'] = $data->lastexecutiontime;
+            } else {
+                $moduleData['lastexecutiontime'] = '0';                
+            }
+            if (isset($data->lastexecutionresult)) {
+                $moduleData['lastexecutionresult'] = $data->lastexecutionresult;
+            } else {
+                $moduleData['lastexecutionresult'] = '';                
+            }
+
+            if (isset($data->metadata->experimental)) {
+                $experimental = strtolower($data->metadata->experimental) == "true"? true: false;
+            } else {
+                $experimental = false;
+            }
+
+            if (!$showexperimental && $experimental) {
+                $addModule  = false;
+            } else {
+                $addModule = true;
+            }
+
+            if ($addModule) {
+                $selectedResult[$selectedName] = $moduleData;
+            }
+        };
 
         $result = [
-            'available' => $availableModules,
-            'selected'=> $configData
+            'available' => $availableResult,
+            'selected'=> $selectedResult
         ];
-        $result = json_encode($result);
-        $this->sendResponse($result);      
+        $result = json_encode($result, JSON_FORCE_OBJECT);     
+        $this->sendResponse($result);       
     }
 
     public function postModules() {

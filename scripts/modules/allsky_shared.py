@@ -13,6 +13,8 @@ import subprocess
 import string
 import pprint
 import json
+import cv2
+import shutil
 
 ABORT = True
 
@@ -21,6 +23,23 @@ LOGLEVEL = 0
 SETTINGS = {}
 CONFIG = {}
 UPLOAD = {}
+
+def startModuleDebug(module):
+    tmpDir = getEnvironmentVariable("ALLSKY_TMP")
+    moduleTmpDir = os.path.join(tmpDir, "debug", module)
+    try:
+        if os.path.exists(moduleTmpDir):
+            shutil.rmtree(moduleTmpDir)
+        os.makedirs(moduleTmpDir, exist_ok=True)
+        log(1,"INFO: Creating folder for debug {0}".format(moduleTmpDir))
+    except:
+        log(0,"ERROR: Unable to create {0}".format(moduleTmpDir))
+
+def writeDebugImage(module, fileName, image):
+    tmpDir = getEnvironmentVariable("ALLSKY_TMP")
+    moduleTmpFile = os.path.join(tmpDir, "debug", module, fileName)    
+    cv2.imwrite(moduleTmpFile, image, params=None)
+    log(1,"INFO: Wrote debug file {0}".format(fileName))    
 
 def setupForCommandLine():
     global ALLSKYPATH, LOGLEVEL

@@ -21,14 +21,20 @@ from skimage import measure
 metaData = {
     "name": "Star Count",
     "description": "Counts stars in an image",
-    "experimental": "true",    
+    "events": [
+        "day",
+        "night"
+    ],
+    "experimental": "true",
+    "module": "allsky_starcount",    
     "arguments":{
         "detectionThreshold": 0.55,
         "distanceThreshold": 20,
         "annotate": "false",
         "template1": 3,
         "template2": 5,
-        "mask": ""
+        "mask": "",
+        "debug": "false"
     },
     "argumentdetails": {
         "detectionThreshold" : {
@@ -90,9 +96,16 @@ metaData = {
             "type": {
                 "fieldtype": "checkbox"
             }          
-        }        
-    },
-    "enabled": "false"            
+        },
+        "debug" : {
+            "required": "false",
+            "description": "Enable debug mode",
+            "help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
+            "type": {
+                "fieldtype": "checkbox"
+            }          
+        }             
+    }          
 }
 
 def starcount(params):
@@ -104,22 +117,35 @@ def starcount(params):
     annotate = params["annotate"]
     starTemplate1Size = int(params["template1"])
     starTemplate2Size = int(params["template2"])
+    debug = params["debug"]
+
+    imageMask = None
+
+    if debug:
+        s.startModuleDebug(metaData["module"])
 
     if len(s.image.shape) == 2:
         gray_image = s.image
     else:
         gray_image = cv2.cvtColor(s.image, cv2.COLOR_BGR2GRAY)
     
+    if debug:
+        s.writeDebugImage(metaData["module"], "a-greyscale-image.png", gray_image)
+
     imageLoaded = True
     if mask != "":
         maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
         imageMask = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
-        if imageMask is not None:
-            if gray_image.shape == imageMask.shape:
-                gray_image = cv2.bitwise_and(src1=gray_image, src2=imageMask)
-            else:
-                s.log(0,"ERROR: Source image and mask dimensions do not match")
-                imageLoaded = False
+        if debug:
+            s.writeDebugImage(metaData["module"], "b-image-mask.png", imageMask)        
+        #if imageMask is not None:
+        #    if gray_image.shape == imageMask.shape:
+        #        gray_image = cv2.bitwise_and(src1=gray_image, src2=imageMask)
+        #        if debug:
+        #            s.writeDebugImage(metaData["module"], "masked-image.png", gray_image)                   
+        #    else:
+        #        s.log(0,"ERROR: Source image and mask dimensions do not match")
+        #        imageLoaded = False
 
     if imageLoaded:
         starTemplate = np.zeros([20, 20], dtype=np.uint8)
@@ -136,6 +162,9 @@ def starcount(params):
             ksize=(3, 3),
         )
 
+        if debug:
+            s.writeDebugImage(metaData["module"], "star-template-1.png", starTemplate)    
+
         starTemplates.append(starTemplate)
 
         starTemplate = np.zeros([20, 20], dtype=np.uint8)
@@ -151,6 +180,8 @@ def starcount(params):
             src=starTemplate,
             ksize=(5, 5),
         )
+        if debug:
+            s.writeDebugImage(metaData["module"], "star-template-2.png", starTemplate)        
         starTemplates.append(starTemplate)            
 
         contrast = 10
@@ -158,28 +189,28 @@ def starcount(params):
         Gamma = 127 * (1 - Alpha)
         gray_image = cv2.addWeighted(gray_image, Alpha, gray_image, 0, Gamma)
 
+        if debug:
+            s.writeDebugImage(metaData["module"], "c-image-contrast.png", gray_image)   
 
-        #gray_image = cv2.fastNlMeansDenoising(gray_image)
-
-
-
-
-
-
-
-
+        gray_image = cv2.fastNlMeansDenoising(gray_image)
+        if debug:
+            s.writeDebugImage(metaData["module"], "c1-image-denoised.png", gray_image)   
 
         # threshold the image to reveal light regions in the
         # blurred image
         ret, thresh = cv2.threshold(gray_image, 90, 255, cv2.THRESH_BINARY)
+
+        if debug:
+            s.writeDebugImage(metaData["module"], "d-image-threshold.png", thresh) 
 
         # perform a series of erosions and dilations to remove
         # any small blobs of noise from the thresholded image
         thresh = cv2.erode(thresh, None, iterations=3)
         thresh = cv2.dilate(thresh, None, iterations=5)
 
-        #if self._logLevel > 2:
-        #    self._saveImage(thresh, "-threshhold")
+        if debug:
+            s.writeDebugImage(metaData["module"], "e-image-erodeddilated.png", thresh) 
+
 
         # perform a connected component analysis on the thresholded
         # image, then initialize a mask to store only the "large"
@@ -207,36 +238,25 @@ def starcount(params):
 
         mask2 = cv2.bitwise_not(mask)
 
-        #if self._logLevel > 2:
-        #    self._saveImage(mask2, "-mask")
+        if debug:
+            s.writeDebugImage(metaData["module"], "f-image-bright-mask.png", mask2) 
 
         dst = cv2.addWeighted(gray_image, 0.7, mask, 0.3, 0)
-        
-        #if self._logLevel > 2:        
-        #    self._saveImage(dst, "-masked")
-
-        #if self._logLevel > 2:
-        #    cv2.imwrite("calc-mask.png", mask2, params=None)
         
         gray_image = cv2.bitwise_and(src1=gray_image, src2=mask2)  
 
 
+        if debug:
+            s.writeDebugImage(metaData["module"], "g-image-bright-masked.png", gray_image) 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        if imageMask is not None:
+            if gray_image.shape == imageMask.shape:
+                gray_image = cv2.bitwise_and(src1=gray_image, src2=imageMask)
+                if debug:
+                    s.writeDebugImage(metaData["module"], "h-masked-image.png", gray_image)                   
+            else:
+                s.log(0,"ERROR: Source image and mask dimensions do not match")
+                imageLoaded = False
 
         detectedImageClean = gray_image.copy()
         sourceImageCopy = gray_image.copy()
@@ -276,3 +296,5 @@ def starcount(params):
 
         starCount = len(templateStarList)
         os.environ["AS_STARCOUNT"] = str(starCount)
+
+        return "{0} Stars found".format(starCount)

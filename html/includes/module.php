@@ -4,7 +4,7 @@ function DisplayModule() {
 
 ?>
 
-<script src="/js/sortable/sortable.min.js"></script>
+<script src="/js/sortable/sortable.js"></script>
 <script src="/js/sortable/jquery-sortable.js"></script>
 
 <link rel='stylesheet' href='/css/modules.css' />
@@ -70,14 +70,16 @@ function DisplayModule() {
                 <div class="row">
                     <div class="col-sm-5 col-md-5 col-lg-5 module-column">
                         <h4 class="text-center">Available Modules</h4>
-                        <div id="modules-available-empty"></div>
-                        <div id="modules-available" class="list-group">
+                        <div class="module-container">
+                            <div id="modules-available" class="list-group"></div>
+                            <div id="modules-available-empty">No modules available</div>
                         </div>
                     </div>
                     <div class="col-sm-5 col-md-5 col-lg-5 module-column">
                         <h4 class="text-center">Selected Modules</h4>
-                        <div id="modules-selected-empty"></div>
-                        <div id="modules-selected" class="list-group">
+                        <div class="module-container">
+                            <div id="modules-selected" class="list-group"></div>
+                            <div id="modules-selected-empty">Drag modules here to enable them</div>
                         </div>
                     </div>
                 </div>

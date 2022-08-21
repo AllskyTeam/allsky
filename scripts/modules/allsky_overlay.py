@@ -32,7 +32,7 @@ from pytz import timezone
 
 metaData = {
     "name": "Overlays data on the image",
-    "description": "Overlays data fileds on the image",
+    "description": "Overlays data fields on the image",
     "events": [
         "day",
         "night"

@@ -122,7 +122,7 @@ class MODULESEDITOR {
                     group: 'list',
                     animation: 200,
                     ghostClass: 'ghost',
-                    filter: '.filtered',
+                    filter: '.filtered',                   
                     onMove: function (evt) {
 
                         if (evt.related.classList.contains('filtered')) {
@@ -140,6 +140,7 @@ class MODULESEDITOR {
                     },
                     onEnd: function (evt) {
                         $(document).trigger('module:dirty');
+
                         if ($(evt.to).is($('#modules-available'))) {
                             let settingsButton = $('#' + $(evt.item).attr("id") + 'settings');
                             let enabledButton = $('#' + $(evt.item).attr("id") + 'enabled');
@@ -160,8 +161,6 @@ class MODULESEDITOR {
                     ghostClass: 'ghost',
                     filter: '.filtered',
                     onMove: function (evt) {
-                        console.log(evt.related);
-                        console.log(evt.willInsertAfter);
 
                         if (evt.related.classList.contains('filtered')) {
                             if (evt.related.classList.contains('first') && !evt.willInsertAfter) { 
@@ -192,12 +191,9 @@ class MODULESEDITOR {
                     }
                 });
 
-                this.#updateModuleNotification();
-
                 $(document).on('module:dirty', () => {
                     this.#dirty = true;
                     this.#updateToolbar();
-                    this.#updateModuleNotification();
                 });
 
             });
@@ -205,20 +201,6 @@ class MODULESEDITOR {
             $.LoadingOverlay('hide');
         });
 
-    }
-
-    #updateModuleNotification() {
-        $('#modules-available-empty').empty();
-        let moduleKeys = $('#modules-available').sortable('toArray');
-        if (moduleKeys.length == 0) {
-            $('#modules-available-empty').append('<div class="module-empty">No Modules Available</div>');
-        }
-
-        $('#modules-selected-empty').empty();
-        moduleKeys = $('#modules-selected').sortable('toArray');
-        if (moduleKeys.length == 0) {
-            $('#modules-selected-empty').append('<div class="module-empty">No Modules Selected</div>');
-        }        
     }
 
     #updateToolbar() {

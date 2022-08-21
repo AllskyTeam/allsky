@@ -90,17 +90,21 @@
     color: #aa0000;
     text-align:center;
   }
-  .module-empty {
-    text-align: center;
-    padding: 21px 0px;
-    background: #f5f5f5;
-    border-radius: 10px;
-    margin-top: 50px;
-  }
-  .dark .module-empty {
-    text-align: center;
-    padding: 21px 0px;
-    background: #444;
-    border-radius: 10px;
-    margin-top: 50px;
-  }
+
+#modules-selected-empty, #modules-available-empty {
+  text-align: center;
+  border: 2px dashed;
+  max-width: 50%;
+  max-height: 90px;
+  margin-left: 25%;
+  margin-top: 30px;
+  padding: 30px;
+}
+
+.module-container {
+  display: grid;
+}
+
+#modules-selected, #modules-selected-empty, #modules-available, #modules-available-empty { 
+  grid-area: 1/1; 
+}

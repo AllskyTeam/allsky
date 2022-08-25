@@ -16,6 +16,8 @@
 	#		See the section for scp PROTOCOL below.
 	#  "S3"		Uploads to an Amazon Web Services (AWS) server.
 	#		See the "S3 PROTOCOL only" section below.
+	#  "gcs"	uploads to an Google Cloud Storage (GCS) bucket.
+	#		See the "GCS PROTOCOL only" section below.
 PROTOCOL=""
 
 
@@ -119,9 +121,27 @@ AWS_CLI_DIR="/home/pi/.local/bin"
 S3_BUCKET="allskybucket"
 
 	# S3_ACL is set to private by default.
-	# If you want to serve your uploaded files vis http(s), change S3_ACL to "public-read".  
+	# If you want to serve your uploaded files vis http(s), change S3_ACL to "public-read".
 	# You will need to ensure the S3 bucket policy is configured to allow public access to
 	# objects with a public-read ACL.
 	# You may need to set a CORS policy in S3 if the files are to be accessed by
 	# Javascript from a different domain.
 S3_ACL="private"
+
+############### GCS PROTOCOL only:
+	# You will need to install the gsutil command, which is part of the Google Cloud SDK.
+	# See installation instructions at https://cloud.google.com/storage/docs/gsutil_install
+	# NOTE: The gsutil command must be installed somewhere in the standard $PATH,
+	# usually in /usr/bin.
+	# Make sure you authenticate the cli tool with the correct user as well.
+
+	# Name of the GCS bucket where the files are uploaded.
+GCS_BUCKET="allskybucket"
+
+	# GCS_ACL applies an access control rules to the uploaded files.
+	# It is set to "private" by default.
+	# You can use any one of the predefined acl rules found at
+	# https://cloud.google.com/storage/docs/access-control/lists#predefined-acl
+	# To access files over https, you can set it to "publicRead".
+GCS_ACL="private"
+

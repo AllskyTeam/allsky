@@ -157,7 +157,7 @@ PROTOCOL="${PROTOCOL,,}"
 trap "" SIGTERM
 trap "" SIGHUP
 
-if [[ "${PROTOCOL}" == "s3" ]] ; then
+if [[ ${PROTOCOL} == "s3" ]] ; then
 	# xxxxxx How do you tell it the DESTINATION_FILE name ?
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
 		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to aws ${S3_BUCKET}/${REMOTE_DIR}"
@@ -172,12 +172,19 @@ elif [[ ${PROTOCOL} == "local" ]] ; then
 	cp "${FILE_TO_UPLOAD}" "${REMOTE_DIR}/${DESTINATION_FILE}"
 	RET=$?
 
-elif [[ "${PROTOCOL}" == "scp" ]] ; then
+elif [[ ${PROTOCOL} == "scp" ]] ; then
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
 		# shellcheck disable=SC2153
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_FILE}"
 	fi
 	scp -i "${SSH_KEY_FILE}" "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_FILE}"
+	RET=$?
+
+elif [[ ${PROTOCOL} == "gcs" ]] ; then
+	if [ "${SILENT}" = "false" ] && [ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
+		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to gcs ${GCS_BUCKET}/${REMOTE_DIR}"
+	fi
+	gsutil cp -a "${GCS_ACL}" "${FILE_TO_UPLOAD}" "gs://${GCS_BUCKET}${REMOTE_DIR}" > "${LOG}"
 	RET=$?
 
 else # sftp/ftp/ftps

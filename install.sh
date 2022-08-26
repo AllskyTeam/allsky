@@ -32,6 +32,7 @@ REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/allskyDefines.inc.repo"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 RASPAP_DIR="/etc/raspap"
 FORCE_CREATING_SETTINGS_FILE=false		# should a default settings file be created?
+RESTORED_PRIOR_SETTINGS_FILE=false
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 NEW_HOST_NAME='allsky'					# Suggested new host name
 
@@ -89,11 +90,13 @@ usage_and_exit()
 		C="${RED}"
 	fi
 	echo
-	echo -e "${C}Usage: ${ME} [--help] [--update]${NC}"
+	echo -e "${C}Usage: ${ME} [--help] [--update] [--function function]${NC}"
 	echo
 	echo "'--help' displays this message and exits."
 	echo
 	echo "'--update' should only be used when instructed to by an Allsky Website page."
+	echo
+	echo "'--function' executs the specified function and quits."
 	echo
 	exit ${RET}
 }
@@ -234,45 +237,55 @@ ask_reboot() {
 
 # Check for size of RAM+swap during installation (Issue # 969).
 check_swap() {
-	RAM_SIZE=0		# TODO: Get RAM size in GB
+	# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
+	RAM_SIZE=$(free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }')		# in MB
 	SUGGESTED_SWAP_SIZE=0
-	if [[ ${RAM_SIZE} -le 1 ]]; then
-		SUGGESTED_SWAP_SIZE=4
-	elif [[ ${RAM_SIZE} -le 2 ]]; then
-		SUGGESTED_SWAP_SIZE=2
-	elif [[ ${RAM_SIZE} -le 4 ]]; then
-		SUGGESTED_SWAP_SIZE=1
+# TODO: are these the correct numbers ??
+	if [[ ${RAM_SIZE} -le 1024 ]]; then
+		SUGGESTED_SWAP_SIZE=4096
+	elif [[ ${RAM_SIZE} -le 2048 ]]; then
+		SUGGESTED_SWAP_SIZE=2048
+	elif [[ ${RAM_SIZE} -le 4046 ]]; then
+		SUGGESTED_SWAP_SIZE=1025
+	else
+		SUGGESTED_SWAP_SIZE=0
 	fi
 
-	CURRENT_SWAP=0		# TODO: Determine current swap size, if any.
+	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
+	CURRENT_SWAP=$(free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }')		# in MB
+	CURRENT_SWAP=${CURRENT_SWAP:-0}
 	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} ]]; then
+		sleep 2		# time to read prior messages
 		if [[ ${CURRENT_SWAP} -eq 0 ]]; then
 			AMT="no"
 			M="added"
 		else
-			AMT="${CURRENT_SWAP} GB of"
+			AMT="${CURRENT_SWAP} MB of"
 			M="increased"
 		fi
-		MSG="Your Pi currently has ${AMT} swap space."
-		MSG="${MSG}\nBased on your memory size of ${RAM_SIZE} GB,"
-		MSG="${MSG}consider having ${SUGGESTED_SWAP_SIZE} GB of swap."
-		MSG="${MSG}\nHaving sufficient swap will decrease the chance of timelapse and other failures."
+		MSG="\nYour Pi currently has ${AMT} swap space."
+		MSG="${MSG}\nBased on your memory size of ${RAM_SIZE} MB,"
+		MSG="${MSG} we suggest ${SUGGESTED_SWAP_SIZE} MB of swap"
+		MSG="${MSG} to decrease the chance of timelapse and other failures."
 		MSG="${MSG}\n\nDo you want swap space ${M}?"
 		MSG="${MSG}\n\nIf you do NOT want to change anything, enter 0."
-		sleep 2		# time to read prior messages
-		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 15 ${WT_WIDTH} \
+		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 18 ${WT_WIDTH} \
 			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
-		if [[ ${SWAP_SIZE} == "0" ]]; then
+		if [[ ${SWAP_SIZE} == "" || ${SWAP_SIZE} == "0" ]]; then
 			if [[ ${CURRENT_SWAP} -eq 0 ]]; then
 				display_msg warning "With no swap space you run the risk of programs failing."	# so we have a log
 			else
 				display_msg info "Swap will remain at ${CURRENT_SWAP}."	# so we have a log
 			fi
 		else
-echo -e "TODO: Add/increase swap to ${SWAP_SIZE}\n"
+			sudo dphys-swapfile swapoff					# Stops the swap file
+			sudo sed -i "/CONF_SWAPSIZE/ c CONF_SWAPSIZE=${SWAP_SIZE}" /etc/dphys-swapfile
+			sudo dphys-swapfile setup  > /dev/null		# Sets up new swap file
+			sudo dphys-swapfile swapon					# Turns on new swap file
+			display_msg progress "Swap space set to ${SWAP_SIZE} MB."	# so we have a log
 		fi
 	else
-		display_msg progress "Size of current swap (${CURRENT_SWAP}) is sufficient."	# so we have a log
+		display_msg progress "Size of current swap (${CURRENT_SWAP} MB) is sufficient."	# so we have a log
 	fi
 }
 
@@ -491,7 +504,7 @@ check_if_prior_Allsky() {
 	fi
 }
 
-install_depenencies_etc() {
+install_dependencies_etc() {
 	# These commands produce a TON of output that's not needed unless there's a problem.
 	# They also take a little while, so hide the output and let the user know.
 	MSG="The next few steps can take a couple minutes."
@@ -715,6 +728,7 @@ do_update() {
 OK=true
 HELP=false
 UPDATE=false
+FUNCTION=""
 while [ $# -gt 0 ]; do
 	ARG="${1}"
 	case "${ARG}" in
@@ -723,6 +737,10 @@ while [ $# -gt 0 ]; do
 			;;
 		--update)
 			UPDATE=true
+			;;
+		--function)
+			FUNCTION="${2}"
+			shift
 			;;
 		*)
 			display_msg error "Unknown argument: '${ARG}'."
@@ -748,6 +766,17 @@ calc_wt_size
 ##### Handle updates
 [[ ${UPDATE} == "true" ]] && do_update
 
+##### Execute any specified function, then exit.
+if [[ ${FUNCTION} != "" ]]; then
+	if ! type ${FUNCTION} > /dev/null; then
+		display_msg error "Unknown function: '${FUNCTION}'."
+		exit 1
+	fi
+
+	${FUNCTION}
+	exit 0
+fi
+
 ##### Determine if there's a prior version
 check_if_prior_Allsky
 
@@ -755,11 +784,15 @@ check_if_prior_Allsky
 select_camera_type
 
 ##### Install dependencies, then compile and install Allsky software
-install_depenencies_etc || exit 1
+install_dependencies_etc || exit 1
 
 ##### Update config.sh
 # This must come BEFORE save_camera_capabilities, since it uses the camera type.
 update_config_sh
+
+##### Install web server
+# This must come BEFORE save_camera_capabilities, since it installs php.
+install_webserver
 
 ##### Create the camera type-model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
@@ -772,7 +805,6 @@ source "${ALLSKY_CONFIG}/config.sh" || exit 1
 create_allsky_log
 
 ##### Restore prior files if needed
-RESTORED_PRIOR_SETTINGS_FILE=false
 restore_prior_files
 
 ##### Set locale
@@ -786,9 +818,6 @@ check_memory_filesystem
 
 ##### Get the new host name
 prompt_for_hostname
-
-##### Install web server
-install_webserver
 
 ##### Handle avahi
 do_avahi

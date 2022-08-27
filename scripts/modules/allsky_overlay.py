@@ -268,7 +268,7 @@ class ALLSKYOVERLAY:
         result = True
 
         try:
-            camerSettingsFile = os.environ['CAMERA_SETTINGS']
+            camerSettingsFile = os.environ['SETTINGS_FILE']
 
             allskySettingsFile = open(camerSettingsFile, 'r')
             self._cameraConfig = json.load(allskySettingsFile)

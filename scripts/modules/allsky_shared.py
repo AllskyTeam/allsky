@@ -118,9 +118,9 @@ def readUploadConfig():
 def readSettings():
     global SETTINGS
 
-    CONFIG["CAMERA_SETTINGS"] = os.path.join(getEnvironmentVariable("ALLSKY_CONFIG"), "settings_" + CONFIG["CAMERA"] + ".json")
+    CONFIG["SETTINGS_FILE"] = os.path.join(getEnvironmentVariable("ALLSKY_CONFIG"), "settings_" + CONFIG["CAMERA"] + ".json")
 
-    with open(CONFIG["CAMERA_SETTINGS"], "r") as fp:
+    with open(CONFIG["SETTINGS_FILE"], "r") as fp:
         SETTINGS = json.load(fp)
 
     LOGLEVEL = int(getSetting("debuglevel"))

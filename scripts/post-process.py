@@ -65,7 +65,7 @@ if __name__ == "__main__":
         s.log("ERROR: unable to determine if its day or night in the environment", exitCode=1)
 
     try:
-        s.args.config = os.environ["CAMERA_SETTINGS"]
+        s.args.config = os.environ["SETTINGS_FILE"]
     except:
         s.log(0, "ERROR: no camera config file available in the environment", exitCode=1)
 
@@ -75,11 +75,11 @@ if __name__ == "__main__":
         s.log(0, "ERROR: no allsky config directory available in the environment", exitCode=1)
 
     try:
-        rawSettings = os.environ["CAMERA_SETTINGS"]
+        rawSettings = os.environ["SETTINGS_FILE"]
         with open(rawSettings, 'r') as settingsFile:
             s.settings = json.load(settingsFile)
     except (FileNotFoundError, KeyError):
-        s.log(0, "ERROR: $CAMERA_SETTINGS not found in environment variables - Aborting", exitCode=1)
+        s.log(0, "ERROR: $SETTINGS_FILE not found in environment variables - Aborting", exitCode=1)
 
     ## GENRIC FUNCTION TO SET VARS
     s.allskyTmp = os.environ["ALLSKY_TMP"]

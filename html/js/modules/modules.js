@@ -326,6 +326,8 @@ class MODULESEDITOR {
     }
 
     #createSettingsDialog(target) {
+        
+        let tabs = [];
 
         target = $(target);
         let module = target.data('module');
@@ -426,9 +428,49 @@ class MODULESEDITOR {
                 </div>\
             ';
 
+            let tab = 'home';
+            if (fieldData.tab !== undefined) {
+                tab = fieldData.tab
+            }
+            if (tabs[tab] === undefined) {
+                tabs[tab] = [];
+            }
+            tabs[tab].push(fieldHTML);
             fieldsHTML += fieldHTML;
         }
+        let moduleSettingsHtml = '';
+        let numberOfTabs = Object.keys(tabs).length;
+        if (numberOfTabs === 1) {
+            for (let tabName in tabs) {
+                for (let field in tabs[tabName]) {
+                    moduleSettingsHtml += tabs[tabName][field];
+                }
+            }
+        } else {
+            moduleSettingsHtml += '<div>';
+            moduleSettingsHtml += ' <ul class="nav nav-tabs" role="tablist">'
+            let active = 'active';
+            for (let tabName in tabs) {
+                let tabRef = moduleData.metadata.module + tabName;
+                moduleSettingsHtml += '<li role="presentation" class="' + active + '"><a href="#' + tabRef + '" role="tab" data-toggle="tab">' + tabName + '</a></li>';
+                active = '';
+            }
+            moduleSettingsHtml += ' </ul>'
 
+            moduleSettingsHtml += '<div class="tab-content">';
+            active = 'active';
+            for (let tabName in tabs) {
+                let fieldsHTML  = '';
+                for (let field in tabs[tabName]) {
+                    fieldsHTML += tabs[tabName][field];
+                }                
+                let tabRef = moduleData.metadata.module + tabName;
+                moduleSettingsHtml += '<div role="tabpanel" style="margin-top:10px" class="tab-pane ' + active + '" id="' + tabRef + '">' + fieldsHTML + '</div>';
+                active = '';
+            }
+            moduleSettingsHtml += '</div>';
+            moduleSettingsHtml += '</div>';
+        }
         let experimental = '';
         if (moduleData.metadata.experimental) {
             experimental = '<div class="bg-danger module-experimental-warning" role="alert">This module is experimental. Please use with caution</div>';
@@ -444,7 +486,7 @@ class MODULESEDITOR {
                         <div class="modal-body">\
                             ' + experimental + '\
                             <form id="module-editor-settings-form" class="form-horizontal">\
-                            ' + fieldsHTML + '\
+                            ' + moduleSettingsHtml + '\
                             </form>\
                         </div>\
                         <div class="modal-footer">\

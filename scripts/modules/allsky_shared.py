@@ -37,9 +37,11 @@ def startModuleDebug(module):
 
 def writeDebugImage(module, fileName, image):
     tmpDir = getEnvironmentVariable("ALLSKY_TMP")
-    moduleTmpFile = os.path.join(tmpDir, "debug", module, fileName)    
+    debugDir = os.path.join(tmpDir, "debug", module)
+    os.makedirs(debugDir, mode = 0o777, exist_ok = True)
+    moduleTmpFile = os.path.join(debugDir, fileName)    
     cv2.imwrite(moduleTmpFile, image, params=None)
-    log(1,"INFO: Wrote debug file {0}".format(fileName))    
+    log(1,"INFO: Wrote debug file {0}".format(moduleTmpFile))    
 
 def setupForCommandLine():
     global ALLSKYPATH, LOGLEVEL

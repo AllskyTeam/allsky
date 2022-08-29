@@ -1147,9 +1147,9 @@ void displaySettings(config cg)
 		printf("\n");
 	}
 	if (cg.ct == ctZWO) {
-		printf("   Gamma: %ld\n", cg.gamma);
-		printf("   Offset: %ld\n", cg.offset);
-		printf("   USB Speed: %ld, auto: %s\n", cg.asiBandwidth, yesNo(cg.asiAutoBandwidth));
+		if (cg.gamma != NOT_CHANGED) printf("   Gamma: %ld\n", cg.gamma);
+		if (cg.offset != NOT_CHANGED) printf("   Offset: %ld\n", cg.offset);
+		if (cg.asiBandwidth != NOT_CHANGED) printf("   USB Speed: %ld, auto: %s\n", cg.asiBandwidth, yesNo(cg.asiAutoBandwidth));
 	}
 	if (cg.ct == ctRPi) {
 		printf("   Saturation: %.1f\n", cg.saturation);

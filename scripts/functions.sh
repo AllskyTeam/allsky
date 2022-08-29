@@ -88,37 +88,55 @@ function determineCommandToUse()
 	return 0
 }
 
+
 # Display a message of various types in appropriate colors.
 # Used primarily in installation scripts.
 display_msg()
 {
+	if [[ $1 == "--log" ]]; then
+		LOG_IT_=true
+		shift
+	else
+		LOG_IT_=false
+	fi
+
+	LOG_TYPE=_"${1}"
+	MESSAGE_="${2}"
+	MSG_=""
 	if [[ $1 == "error" ]]; then
-		echo -e "\n${RED}*** ERROR: "
+		MSG_="\n${RED}*** ERROR: "
+		STARS_=true
 
 	elif [[ $1 == "warning" ]]; then
-		echo -e "\n${YELLOW}*** WARNING: "
+		MSG_="\n${YELLOW}*** WARNING: "
+		STARS_=true
 
 	elif [[ $1 == "progress" ]]; then
-		echo -e "${GREEN}* ${2}${NC}"
-		return
+		MSG_="${GREEN}* ${2}${NC}"
+		STARS_=false
 
 	elif [[ $1 == "info" ]]; then
-		echo -e "${YELLOW}${2}${NC}"
-		return
+		MSG_="${YELLOW}${2}${NC}"
+		STARS_=false
 
-	elif [[ $1 == "log" ]]; then
-		# Log messages to a file if it was specified.
-		if [[ -z ${DISPLAY_MSG_LOG} ]]; then
-			echo -e "${2}"
-		else
-			echo -e "${2}" | tee -a "${DISPLAY_MSG_LOG}"
-		fi
 		return
 
 	else
-		echo -e "${YELLOW}"
+		MSG_="${YELLOW}"
+		STARS_=false
 	fi
-	echo -e "**********"
-	echo -e "${2}"
-	echo -e "**********${NC}"
+
+	if [[ ${STARS} == "true" ]]; then
+		MSG_="${MSG_}**********"
+		MSG_="${MSG_}${2}"
+		MSG_="${MSG_}**********${NC}"
+	fi
+
+	# Log messages to a file if it was specified.
+	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
+	if [[ ${LOG_IT_} == "true" && -n ${DISPLAY_MSG_LOG} ]]; then
+		echo -e "${MSG_}" | tee -a "${DISPLAY_MSG_LOG}"
+	else
+		echo -e "${MSG_}"
+	fi
 }

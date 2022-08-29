@@ -284,10 +284,15 @@ class MODULESEDITOR {
             experimental = '<span class="module-experimental">EXPERIMENTAL:</span> ';
         } 
 
+        let version = this.#settings.version;
+        if (data.metadata.version !== undefined) {
+            version = data.metadata.version;
+        }
+        version = '<span><small>' + version + '</small><span>';
         let template = '\
             <div id="' + moduleKey + '" data-id="' + data.module + '" class="list-group-item ' + locked + '"> \
                 <div class="panel panel-default"> \
-                    <div class="panel-heading"><i class="fa fa-bars fa-fw"></i>&nbsp;<i class="fa ' + type + ' fa-fw" title="' + typeAlt + '"></i> ' + data.metadata.name + ' ' + enabledHTML + '</div> \
+                    <div class="panel-heading"><i class="fa fa-bars fa-fw"></i>&nbsp;<i class="fa ' + type + ' fa-fw" title="' + typeAlt + '"></i> ' + data.metadata.name + ' ' + version + ' ' + enabledHTML + '</div> \
                     <div class="panel-body">' + experimental + data.metadata.description + ' <div class="pull-right">' + deleteHtml + ' ' + settingsHtml + '</div></div> \
                 </div> \
             </div>';

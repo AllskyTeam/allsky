@@ -177,6 +177,8 @@ class MODULEUTIL
             $result['tod'] = '';
         }
 
+        $result['version'] = ALLSKY_VERSION;
+        
         $configFileName = ALLSKY_CONFIG . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);

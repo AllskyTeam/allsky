@@ -146,7 +146,8 @@ if __name__ == "__main__":
             #    '''
             moduleName = s.recipe[s.step]['module'].replace('.py','')
             method = s.recipe[s.step]['module'].replace('.py','').replace('allsky_','')
-            s.log(2, "INFO: Attempting to load {0}".format(moduleName))
+            s.log(1, "INFO: ----------------------- Running Module {0} -----------------------".format(s.recipe[s.step]['module']))
+            s.log(1, "INFO: Attempting to load {0}".format(moduleName))
             _temp = importlib.import_module(moduleName)
             globals()[method] = getattr(_temp, method)
             #except Exception as e:
@@ -156,7 +157,6 @@ if __name__ == "__main__":
             s.log(1, "INFO: Ignorning module {0} as its disabled".format(s.recipe[s.step]["module"]))
 
         if s.recipe[s.step]["enabled"] and method in globals():
-            s.log(1, "INFO: Running Module {0}".format(s.recipe[s.step]['module']))
             startTime = datetime.now()
 
             if 'arguments' in s.recipe[s.step]['metadata']:

@@ -186,22 +186,34 @@ while [ $# -gt 0 ]; do
 			# to create an OPTIONS_FILE for this camera type/model.
 			# These variables don't include a directory since the directory is specified with "--dir" below.
 
-			# .php files don't return error codes so we check if it worked by
-			# looking for a string in its output.
+			if [[ ${DEBUG} == "true" ]]; then
+				echo "Calling:" \
+					"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+					${FORCE} ${DEBUG_ARG} \
+					--cc_file "${CC_FILE}" \
+					--options_file "${OPTIONS_FILE}" \
+					--settings_file "${SETTINGS_FILE}"
+			fi
 			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 				${FORCE} ${DEBUG_ARG} \
 				--cc_file "${CC_FILE}" \
 				--options_file "${OPTIONS_FILE}" \
 				--settings_file "${SETTINGS_FILE}" \
 				2>&1)"
+
+			# .php files don't return error codes so we check if it worked by
+			# looking for a string in its output.
+
 			if [ -n "${R}" ]; then
-				# The user shouldn't see XX_WORKED_XX.
-				OTHER_OUTPUT="$(echo -e "${R}" | grep -v "XX_WORKED_XX")"
-				if [ -n "${OTHER_OUTPUT}" ]; then
+				if ! echo "${R}" | grep --quiet "XX_WORKED_XX"; then
 					echo -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}' and '${SETTINGS_FILE}' files.${wNC}"
-					echo "${OTHER_OUTPUT}"
+					echo "${R}"
 					exit 1
 				fi
+			else
+				# If there's no output, there won't be any special string...
+				echo -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}' and '${SETTINGS_FILE}' files - nothing returned.${wNC}"
+				exit 1
 			fi
 			OK=true
 			if [[ ! -f ${OPTIONS_FILE} ]]; then

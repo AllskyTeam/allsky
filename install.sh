@@ -6,7 +6,8 @@ then
 fi
 ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh"
+source "${ALLSKY_HOME}/variables.sh" || exit 1
+source "${ALLSKY_SCRIPTS}/functions.sh" || exit 1
 
 if [[ ${EUID} -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
@@ -30,14 +31,18 @@ ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
 REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
 REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/allskyDefines.inc.repo"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
-RASPAP_DIR="/etc/raspap"
+OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 FORCE_CREATING_SETTINGS_FILE=false		# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE=false
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 NEW_HOST_NAME='allsky'					# Suggested new host name
 
 # This file contains information the user needs to act upon after the reboot.
-NEW_INSTALLATION_FILE="${ALLSKY_CONFIG}/new_installation.txt"
+NEW_INSTALLATION_FILE="${ALLSKY_CONFIG}/installation_info.txt"
+# display_msg() will send "log" entries to this file.
+# DISPLAY_MSG_LOG is used in display_msg()
+# shellcheck disable=SC2034
+DISPLAY_MSG_LOG="${ALLSKY_CONFIG}/installation_log.txt"
 
 # Some versions of Linux default to 750 so web server can't read it
 chmod 755 "${ALLSKY_HOME}"
@@ -62,25 +67,6 @@ display_header() {
 }
 
 
-display_msg() {
-	if [[ $1 == "error" ]]; then
-		echo -e "\n${RED}*** ERROR: "
-	elif [[ $1 == "warning" ]]; then
-		echo -e "\n${YELLOW}*** WARNING: "
-	elif [[ $1 == "progress" ]]; then
-		echo -e "${GREEN}* ${2}${NC}"
-		return
-	elif [[ $1 == "info" ]]; then
-		echo -e "${YELLOW}${2}${NC}"
-		return
-	else
-		echo -e "${YELLOW}"
-	fi
-	echo -e "**********"
-	echo -e "${2}"
-	echo -e "**********${NC}"
-}
-
 usage_and_exit()
 {
 	RET=${1}
@@ -90,7 +76,7 @@ usage_and_exit()
 		C="${RED}"
 	fi
 	echo
-	echo -e "${C}Usage: ${ME} [--help] [--update] [--function function]${NC}"
+	echo -e "${C}Usage: ${ME} [--help] [--debug] [--update] [--function function]${NC}"
 	echo
 	echo "'--help' displays this message and exits."
 	echo
@@ -133,7 +119,7 @@ select_camera_type() {
 		display_msg warning "Camera selection required.  Please re-run the installation and select a camera to continue."
 		exit 1
 	fi
-	display_msg progress "Using ${CAMERA_TYPE} camera."	# so we have a log
+	display_msg log "Using ${CAMERA_TYPE} camera."
 }
 
 
@@ -273,19 +259,19 @@ check_swap() {
 			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
 		if [[ ${SWAP_SIZE} == "" || ${SWAP_SIZE} == "0" ]]; then
 			if [[ ${CURRENT_SWAP} -eq 0 ]]; then
-				display_msg warning "With no swap space you run the risk of programs failing."	# so we have a log
+				display_msg log "With no swap space you run the risk of programs failing."
 			else
-				display_msg info "Swap will remain at ${CURRENT_SWAP}."	# so we have a log
+				display_msg log "Swap will remain at ${CURRENT_SWAP}."
 			fi
 		else
 			sudo dphys-swapfile swapoff					# Stops the swap file
 			sudo sed -i "/CONF_SWAPSIZE/ c CONF_SWAPSIZE=${SWAP_SIZE}" /etc/dphys-swapfile
 			sudo dphys-swapfile setup  > /dev/null		# Sets up new swap file
 			sudo dphys-swapfile swapon					# Turns on new swap file
-			display_msg progress "Swap space set to ${SWAP_SIZE} MB."	# so we have a log
+			display_msg log "Swap space set to ${SWAP_SIZE} MB."
 		fi
 	else
-		display_msg progress "Size of current swap (${CURRENT_SWAP} MB) is sufficient."	# so we have a log
+		display_msg log "Size of current swap (${CURRENT_SWAP} MB) is sufficient."
 	fi
 }
 
@@ -294,11 +280,13 @@ check_swap() {
 # If so, umount it, then remount it.
 # If not, offer to make ${ALLSKY_TMP} a memory filesystem.
 check_memory_filesystem() {
-	IS_MEMORY=false
-# TODO: check if currently a memory filesystem
-	if [[ ${IS_MEMORY} == "true" ]]; then
-# TODO: unmount it, then remount it
-		display_msg progress "${ALLSKY_TMP} is currently in memory."	# so we have a log
+	# Check if currently a memory filesystem.
+	PRIOR_TMP="${PRIOR_INSTALL_DIR}/tmp"
+	if grep --quiet "${ALLSKY_TMP}" /etc/fstab; then
+		display_msg log "${ALLSKY_TMP} is currently in memory."
+		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently ${PRIOR_TMP}.
+		sudo umount "${PRIOR_TMP}"
+		sudo mount -a
 		return
 	fi
 
@@ -307,9 +295,11 @@ check_memory_filesystem() {
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
 	sleep 2		# time to read prior messages
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then 
-echo -e "TODO: make memory filesystem\n"
+		echo "tmpfs ${ALLSKY_TMP} tmpfs size=50M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${ALLSKY_GROUP}" | sudo tee -a /etc/fstab
+		sudo mount -a
+		display_msg log "${ALLSKY_TMP} will remain on disk."
 	else
-		display_msg info "${ALLSKY_TMP} will remain on disk."	# so we have a log
+		display_msg log "${ALLSKY_TMP} will remain on disk."
 	fi
 }
 
@@ -329,6 +319,7 @@ install_webserver() {
 		cat ${TMP}
 		exit 1
 	fi
+	[[ ${DEBUG} == "true" ]] && cat ${TMP}
 
 	REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
@@ -491,7 +482,7 @@ check_if_prior_Allsky() {
 			MSG="If you want your old images, darks, settings, etc."
 			MSG="${MSG} from the prior verion of Allsky, you'll need to manually move them to the new version."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
-			display_msg progress "Will NOT restore from prior version of Allsky."	# so we have a log
+			display_msg log "Will NOT restore from prior version of Allsky."
 		fi
 	else
 		MSG="No prior version of Allsky found."
@@ -520,6 +511,7 @@ install_dependencies_etc() {
 		cat ${TMP}
 		return 1
 	fi
+	[[ ${DEBUG} == "true" ]] && cat ${TMP}
 
 	display_msg progress "Preparing Allsky commands.  May take a couple minutes."
 	TMP="/tmp/all.install.tmp"
@@ -530,6 +522,7 @@ install_dependencies_etc() {
 		cat ${TMP}
 		return 1
 	fi
+	[[ ${DEBUG} == "true" ]] && cat ${TMP}
 
 	TMP="/tmp/install.install.tmp"
 	#shellcheck disable=SC2024
@@ -539,6 +532,7 @@ install_dependencies_etc() {
 		cat ${TMP}
 		return 1
 	fi
+	[[ ${DEBUG} == "true" ]] && cat ${TMP}
 
 	return 0
 }
@@ -587,19 +581,18 @@ restore_prior_files() {
 	# If the user has an older release, these files may be in /etc/raspap.
 	# Check for both.
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
-		RASPAP_DIR="${PRIOR_CONFIG_DIR}"
+		OLD_RASPAP_DIR="${PRIOR_CONFIG_DIR}"
 	else
-		# RASPAP_DIR set at top of script
-		if [ -d "${RASPAP_DIR}" ]; then
-			MSG="\nThe '${RASPAP_DIR}' directory is no longer used.\n"
+		if [ -d "${OLD_RASPAP_DIR}" ]; then
+			MSG="\nThe '${OLD_RASPAP_DIR}' directory is no longer used.\n"
 			MSG="${MSG}When installation is done you may remove it.\n"
 			display_msg info "${MSG}"
 			echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 		fi
 	fi
-	if [ -f "${RASPAP_DIR}/raspap.auth" ]; then
+	if [ -f "${OLD_RASPAP_DIR}/raspap.auth" ]; then
 		display_msg progress "Restoring WebUI security settings."
-		mv "${RASPAP_DIR}/raspap.auth" "${ALLSKY_CONFIG}"
+		mv "${OLD_RASPAP_DIR}/raspap.auth" "${ALLSKY_CONFIG}"
 	fi
 
 	if [ -f "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ]; then
@@ -645,13 +638,13 @@ restore_prior_files() {
 			RESTORED_PRIOR_SETTINGS_FILE=true
 		fi
 	else
-		# settings file is old style in ${RASPAP_DIR}.
+		# settings file is old style in ${OLD_RASPAP_DIR}.
 		if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			CT="ZWO"
 		else
 			CT="RPi"
 		fi
-		SETTINGS="${RASPAP_DIR}/settings_${CT}.json"
+		SETTINGS="${OLD_RASPAP_DIR}/settings_${CT}.json"
 		if [[ -f ${SETTINGS} ]]; then
 			SETTINGS_MSG="\n\nYou also need to transfer your old settings to the WebUI.\nUse ${SETTINGS} as a guide.\n"
 		fi
@@ -731,9 +724,14 @@ do_update() {
 
 ####################### main part of program
 
-# Check arguments
+##### Log files write to ${ALLSKY_CONFIG}, which doesn't exist yet, so create it.
+mkdir -p "${ALLSKY_CONFIG}"
+
+
+##### Check arguments
 OK=true
 HELP=false
+DEBUG=false
 UPDATE=false
 FUNCTION=""
 while [ $# -gt 0 ]; do
@@ -741,6 +739,9 @@ while [ $# -gt 0 ]; do
 	case "${ARG}" in
 		--help)
 			HELP=true
+			;;
+		--debug)
+			DEBUG=true
 			;;
 		--update)
 			UPDATE=true

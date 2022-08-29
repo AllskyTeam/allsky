@@ -38,7 +38,8 @@ function doExit()
 # Determine which to use.
 # On success, return 1 and the command to use.
 # On failure, return 0 and an error message.
-function determineCommandToUse() {
+function determineCommandToUse()
+{
 	USE_doExit="${1}"			# Call doExit() on error?
 	PREFIX="${2}"				# only used if calling doExit()
 
@@ -85,4 +86,39 @@ function determineCommandToUse() {
 
 	echo "${CMD}"
 	return 0
+}
+
+# Display a message of various types in appropriate colors.
+# Used primarily in installation scripts.
+display_msg()
+{
+	if [[ $1 == "error" ]]; then
+		echo -e "\n${RED}*** ERROR: "
+
+	elif [[ $1 == "warning" ]]; then
+		echo -e "\n${YELLOW}*** WARNING: "
+
+	elif [[ $1 == "progress" ]]; then
+		echo -e "${GREEN}* ${2}${NC}"
+		return
+
+	elif [[ $1 == "info" ]]; then
+		echo -e "${YELLOW}${2}${NC}"
+		return
+
+	elif [[ $1 == "log" ]]; then
+		# Log messages to a file if it was specified.
+		if [[ -z ${DISPLAY_MSG_LOG} ]]; then
+			echo -e "${2}"
+		else
+			echo -e "${2}" | tee -a "${DISPLAY_MSG_LOG}"
+		fi
+		return
+
+	else
+		echo -e "${YELLOW}"
+	fi
+	echo -e "**********"
+	echo -e "${2}"
+	echo -e "**********${NC}"
 }

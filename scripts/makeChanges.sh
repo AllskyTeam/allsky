@@ -96,7 +96,7 @@ while [ $# -gt 0 ]; do
 	LABEL="${2}"
 	NEW_VALUE="${3}"
 	if [ "${DEBUG}" = "true" ]; then
-		MSG="${KEY}: new [${NEW_VALUE}]"
+		MSG="New ${KEY} = [${NEW_VALUE}]"
 		if [[ ${ON_TTY} -eq 1 ]]; then
 			echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
 		else	# called from WebUI.
@@ -201,6 +201,17 @@ while [ $# -gt 0 ]; do
 					exit 1
 				fi
 			fi
+			OK=true
+			if [[ ! -f ${OPTIONS_FILE} ]]; then
+				echo -e "${wERROR}${ME}: ERROR Options file ${OPTIONS_FILE} not created.${wNC}"
+				OK=false
+			fi
+			if [[ ! -f ${SETTINGS_FILE} ]]; then
+				echo -e "${wERROR}${ME}: ERROR Settings file ${SETTINGS_FILE} not created.${wNC}"
+				OK=false
+			fi
+			[[ ${OK} == "false" ]] && exit 2
+
 			# It's an error if XX_WORKED_XX is NOT in the output.
 			echo -e "${R}" | grep --silent "XX_WORKED_XX" || exit 2
 
@@ -310,3 +321,4 @@ fi
 
 
 exit 0
+

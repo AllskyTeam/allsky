@@ -678,12 +678,10 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 #endif
 
 	fprintf(f, "\t\"supportedImageFormats\": [\n");
-
 	fprintf(f, "\t\t{ ");
 	fprintf(f, "\"value\" : %d, ", AUTO_IMAGE_TYPE);
 	fprintf(f, "\"label\" : \"%s\"", "auto");
 	fprintf(f, " },\n");
-
 	for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedVideoFormat); i++)
 	{
 		ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];
@@ -709,10 +707,9 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	}
 	fprintf(f, "\t],\n");;
 
-	fprintf(f, "\t\"controls\": [\n");
-
 	// Add some other things the camera supports, or the software supports for this camera.
 	// Adding it to the "controls" array makes the code that checks what's available easier.
+	fprintf(f, "\t\"controls\": [\n");
 
 	// sensor size was also saved above, but save here with min/max/default
 	fprintf(f, "\t\t{\n");
@@ -898,13 +895,7 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg, long width, long he
 	{
 		printf("  - Camera with cooling capabilities\n");
 	}
-	bool supportsTemperature;
-#ifdef IS_ZWO
-	supportsTemperature = true;
-#else
-	supportsTemperature = cameraInfo.SupportsTemperature;
-#endif
-	if (supportsTemperature)
+	if (cg.supportsTemperature)
 	{
 		ASI_BOOL a;
 #ifdef IS_ZWO
@@ -930,12 +921,8 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg, long width, long he
 		case ASI_AUTO_MAX_EXP:
 			// Keep track of the camera's max auto-exposure so we don't try to exceed it.
 			// MaxValue is in MS so convert to microseconds
-#ifdef HISTOGRAM
-			// If using histogram algorithm we use manual exposure so set this to a value that will never be exceeded.
-			cg.cameraMaxAutoExposure_us = cg.cameraMaxExposure_us == NOT_SET ? cg.cameraMaxExposure_us+1 : 9999999999999;
-#else
+			// If using histogram algorithm we use manual exposure so can use any max we want.
 			cg.cameraMaxAutoExposure_us = cc.MaxValue * US_IN_MS;
-#endif
 			break;
 		default:	// needed to keep compiler quiet
 			break;
@@ -1056,7 +1043,9 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->gainTransitionTimeImplemented = true;
 		cg->imagesSavedInBackground = true;
 	} else {	// RPi
-		cg->supportsTemperature = false;
+#ifdef IS_RPi
+		cg->supportsTemperature = ci.SupportsTemperature;	// this field only exists in RPi structure
+#endif
 		cg->supportsAggression = false;
 		cg->gainTransitionTimeImplemented = false;
 		cg->imagesSavedInBackground = false;

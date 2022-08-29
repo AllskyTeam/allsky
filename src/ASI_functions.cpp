@@ -678,12 +678,10 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 #endif
 
 	fprintf(f, "\t\"supportedImageFormats\": [\n");
-
 	fprintf(f, "\t\t{ ");
 	fprintf(f, "\"value\" : %d, ", AUTO_IMAGE_TYPE);
 	fprintf(f, "\"label\" : \"%s\"", "auto");
 	fprintf(f, " },\n");
-
 	for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedVideoFormat); i++)
 	{
 		ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];
@@ -709,10 +707,9 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	}
 	fprintf(f, "\t],\n");;
 
-	fprintf(f, "\t\"controls\": [\n");
-
 	// Add some other things the camera supports, or the software supports for this camera.
 	// Adding it to the "controls" array makes the code that checks what's available easier.
+	fprintf(f, "\t\"controls\": [\n");
 
 	// sensor size was also saved above, but save here with min/max/default
 	fprintf(f, "\t\t{\n");
@@ -898,13 +895,7 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg, long width, long he
 	{
 		printf("  - Camera with cooling capabilities\n");
 	}
-	bool supportsTemperature;
-#ifdef IS_ZWO
-	supportsTemperature = true;
-#else
-	supportsTemperature = cameraInfo.SupportsTemperature;
-#endif
-	if (supportsTemperature)
+	if (cg.supportsTemperature)
 	{
 		ASI_BOOL a;
 #ifdef IS_ZWO
@@ -930,12 +921,8 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg, long width, long he
 		case ASI_AUTO_MAX_EXP:
 			// Keep track of the camera's max auto-exposure so we don't try to exceed it.
 			// MaxValue is in MS so convert to microseconds
-#ifdef HISTOGRAM
-			// If using histogram algorithm we use manual exposure so set this to a value that will never be exceeded.
-			cg.cameraMaxAutoExposure_us = cg.cameraMaxExposure_us == NOT_SET ? cg.cameraMaxExposure_us+1 : 9999999999999;
-#else
+			// If using histogram algorithm we use manual exposure so can use any max we want.
 			cg.cameraMaxAutoExposure_us = cc.MaxValue * US_IN_MS;
-#endif
 			break;
 		default:	// needed to keep compiler quiet
 			break;
@@ -1056,7 +1043,9 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->gainTransitionTimeImplemented = true;
 		cg->imagesSavedInBackground = true;
 	} else {	// RPi
-		cg->supportsTemperature = false;
+#ifdef IS_RPi
+		cg->supportsTemperature = ci.SupportsTemperature;	// this field only exists in RPi structure
+#endif
 		cg->supportsAggression = false;
 		cg->gainTransitionTimeImplemented = false;
 		cg->imagesSavedInBackground = false;
@@ -1158,12 +1147,15 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	ret = getControlCapForControlType(cg->cameraNumber, ASI_FLIP, &cc);
 	if (ret == ASI_SUCCESS)
 	{
-		if (! validateLong(&cg->flip, cc.MinValue, cc.MaxValue, "Flip", false))
-			ok = false;
-	} else {
+		if (cg->flip == NOT_CHANGED)
+			cg->flip = cc.DefaultValue;
+		else
+			validateLong(&cg->flip, cc.MinValue, cc.MaxValue, "Flip", true);
+	} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 		Log(0, "ASI_FLIP failed with %s\n", getRetCode(ret));
 		ok = false;
 	}
+
 	// libcamera only supports 0 and 180 degree rotation
 	if (cg->rotation != 0)
 	{
@@ -1239,7 +1231,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			cg->nightBrightness = cc.DefaultValue;
 		else
 			validateLong(&cg->nightBrightness, cc.MinValue, cc.MaxValue, "Nighttime Brightness", true);
-	} else {
+	} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 		Log(0, "ASI_AUTO_TARGET_BRIGHTNESS failed with %s\n", getRetCode(ret));
 		ok = false;
 	}
@@ -1256,7 +1248,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			cg->nightGain = cc.DefaultValue;
 		else
 			validateFloat(&cg->nightGain, cc.MinValue, cc.MaxValue, "Nighttime Gain", true);
-	} else {
+	} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 		Log(0, "ASI_GAIN failed with %s\n", getRetCode(ret));
 		ok = false;
 	}
@@ -1272,7 +1264,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			cg->nightMaxAutoGain = cc.DefaultValue;
 		else
 			validateFloat(&cg->nightMaxAutoGain, cc.MinValue, cc.MaxValue, "Nighttime Max Auto-Gain", true);
-	} else {
+	} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 		Log(0, "ASI_AUTO_MAX_GAIN failed with %s\n", getRetCode(ret));
 		ok = false;
 	}
@@ -1290,7 +1282,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 				cg->nightWBR = cc.DefaultValue;
 			else
 				validateFloat(&cg->nightWBR, cc.MinValue, cc.MaxValue, "Nighttime Red Balance", true);
-		} else {
+		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 			Log(0, "ASI_WB_R failed with %s\n", getRetCode(ret));
 			ok = false;
 		}
@@ -1306,7 +1298,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 				cg->nightWBB = cc.DefaultValue;
 			else
 				validateFloat(&cg->nightWBB, cc.MinValue, cc.MaxValue, "Nighttime Blue Balance", true);
-		} else {
+		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 			Log(0, "ASI_WB_B failed with %s\n", getRetCode(ret));
 			ok = false;
 		}
@@ -1320,7 +1312,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 				cg->saturation = cc.DefaultValue;
 			else
 				validateFloat(&cg->saturation, cc.MinValue, cc.MaxValue, "Saturation", true);
-		} else {
+		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 			Log(0, "SATURATION failed with %s\n", getRetCode(ret));
 			ok = false;
 		}
@@ -1332,7 +1324,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 				cg->contrast = cc.DefaultValue;
 			else
 				validateFloat(&cg->contrast, cc.MinValue, cc.MaxValue, "Contrast", true);
-		} else {
+		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 			Log(0, "CONTRAST failed with %s\n", getRetCode(ret));
 			ok = false;
 		}
@@ -1344,14 +1336,12 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 				cg->sharpness = cc.DefaultValue;
 			else
 				validateFloat(&cg->sharpness, cc.MinValue, cc.MaxValue, "Sharpness", true);
-		} else {
+		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 			Log(0, "SHARPNESS failed with %s\n", getRetCode(ret));
 			ok = false;
 		}
 	}
-
-
-	if (cg->ct == ctZWO) {
+	else if (cg->ct == ctZWO) {
 		ret = getControlCapForControlType(cg->cameraNumber, ASI_GAMMA, &cc);
 		if (ret == ASI_SUCCESS)
 		{
@@ -1389,7 +1379,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 					cg->nightTargetTemp = cc.DefaultValue;
 				else
 					validateLong(&cg->nightTargetTemp, cc.MinValue, cc.MaxValue, "Nighttime Target Sensor Temperature", true);
-			} else {
+			} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 				Log(0, "ASI_TARGET_TEMP failed with %s\n", getRetCode(ret));
 				ok = false;
 			}
@@ -1402,7 +1392,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 				cg->asiBandwidth = cc.DefaultValue;
 			else
 				validateLong(&cg->asiBandwidth, cc.MinValue, cc.MaxValue, "USB Bandwidth", true);
-		} else {
+		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 			Log(0, "ASI_BANDWIDTHOVERLOAD failed with %s\n", getRetCode(ret));
 			ok = false;
 		}

@@ -85,7 +85,7 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 		ret = ASIGetControlCaps(camNum, i, &ControlCaps);
 		if (ret != ASI_SUCCESS)
 		{
-			Log(-1, "WARNING: ASIGetControlCaps() for control %d failed: %s\n", i, getRetCode(ret));
+			Log(-1, "WARNING: ASIGetControlCaps() for control %d failed: %s, camNum=%d, iNumOfCtrl=%d, control=%d\n", i, getRetCode(ret), camNum, iNumOfCtrl, (int) control);
 			return(ret);
 		}
 
@@ -884,10 +884,14 @@ int main(int argc, char *argv[])
 
 	// These configurations apply to both day and night.
 	// Other calls to setControl() are done after we know if we're in daytime or nighttime.
-	setControl(CG.cameraNumber, ASI_BANDWIDTHOVERLOAD, CG.asiBandwidth, CG.asiAutoBandwidth ? ASI_TRUE : ASI_FALSE);
-	setControl(CG.cameraNumber, ASI_GAMMA, CG.gamma, ASI_FALSE);
-	setControl(CG.cameraNumber, ASI_OFFSET, CG.offset, ASI_FALSE);
-	setControl(CG.cameraNumber, ASI_FLIP, CG.flip, ASI_FALSE);
+	if (CG.asiBandwidth != NOT_CHANGED)
+		setControl(CG.cameraNumber, ASI_BANDWIDTHOVERLOAD, CG.asiBandwidth, CG.asiAutoBandwidth ? ASI_TRUE : ASI_FALSE);
+	if (CG.gamma != NOT_CHANGED)
+		setControl(CG.cameraNumber, ASI_GAMMA, CG.gamma, ASI_FALSE);
+	if (CG.offset != NOT_CHANGED)
+		setControl(CG.cameraNumber, ASI_OFFSET, CG.offset, ASI_FALSE);
+	if (CG.flip != NOT_CHANGED)
+		setControl(CG.cameraNumber, ASI_FLIP, CG.flip, ASI_FALSE);
 
 	if (! bSaveRun && pthread_create(&hthdSave, 0, SaveImgThd, 0) == 0)
 	{

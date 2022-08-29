@@ -38,7 +38,8 @@ function doExit()
 # Determine which to use.
 # On success, return 1 and the command to use.
 # On failure, return 0 and an error message.
-function determineCommandToUse() {
+function determineCommandToUse()
+{
 	USE_doExit="${1}"			# Call doExit() on error?
 	PREFIX="${2}"				# only used if calling doExit()
 
@@ -85,4 +86,55 @@ function determineCommandToUse() {
 
 	echo "${CMD}"
 	return 0
+}
+
+
+# Display a message of various types in appropriate colors.
+# Used primarily in installation scripts.
+display_msg()
+{
+	if [[ $1 == "--log" ]]; then
+		LOG_IT_=true
+		shift
+	else
+		LOG_IT_=false
+	fi
+
+	LOG_TYPE_="${1}"
+	MESSAGE_="${2}"
+	MSG_=""
+	if [[ ${LOG_TYPE_} == "error" ]]; then
+		MSG_="\n${RED}*** ERROR: "
+		STARS_=true
+
+	elif [[ ${LOG_TYPE_} == "warning" ]]; then
+		MSG_="\n${YELLOW}*** WARNING: "
+		STARS_=true
+
+	elif [[ ${LOG_TYPE_} == "progress" ]]; then
+		MSG_="${GREEN}* ${MESSAGE_}${NC}"
+		STARS_=false
+
+	elif [[ ${LOG_TYPE_} == "info" ]]; then
+		MSG_="${YELLOW}${MESSAGE_}${NC}"
+		STARS_=false
+
+	else
+		MSG_="${YELLOW}"
+		STARS_=false
+	fi
+
+	if [[ ${STARS_} == "true" ]]; then
+		MSG_="${MSG_}**********"
+		MSG_="${MSG_}${MESSAGE_}"
+		MSG_="${MSG_}**********${NC}"
+	fi
+
+	# Log messages to a file if it was specified.
+	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
+	if [[ ${LOG_IT_} == "true" && -n ${DISPLAY_MSG_LOG} ]]; then
+		echo -e "${MSG_}" | tee -a "${DISPLAY_MSG_LOG}"
+	else
+		echo -e "${MSG_}"
+	fi
 }

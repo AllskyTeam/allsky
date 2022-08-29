@@ -90,9 +90,9 @@
 		"sidebar": [
 			{ "url": "videos",  "title": "Archived Timelapes",  "icon": "fa fa-2x fa-fw fa-play-circle" },
 			{ "XX_MINI_TIMELAPSE_XX": "XX_MINI_TIMELAPSE_URL_XX",  "title": "Mini-timelapse",  "icon": "fa fa-2x fa-fw icon-mini-timelapse" },
-			{ "url": "keograms",  "title": "Archived Keograms",  "icon": "fa fa-2x fa-w fa-barcode" },
-			{ "url": "startrails",  "title": "Archived Startrails",  "icon": "fa fa-2x fa-w fa-circle-notch" },
-			{ "variable": "imageName",  "title": "Full-sized image",  "icon": "fa fa-2x fa-w fa-expand-arrows-alt" },
+			{ "url": "keograms",  "title": "Archived Keograms",  "icon": "fa fa-2x fa-fw fa-barcode" },
+			{ "url": "startrails",  "title": "Archived Startrails",  "icon": "fa fa-2x fa-fw fa-circle-notch" },
+			{ "variable": "imageName",  "title": "Full-sized image",  "icon": "fa fa-2x fa-fw fa-expand-arrows-alt" },
 			{ "comment": "Add sidebar items above." }
 		],
 		"sidebarStyle": "",

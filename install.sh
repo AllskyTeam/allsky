@@ -661,9 +661,16 @@ restore_prior_files() {
 
 	# This may miss really-old variables that no longer exist.
 
+	if [ -f "${PRIOR_CONFIG_DIR}/ftp-settings.sh" ]; then
+		PRIOR_FTP="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
+	elif [ -f "${PRIOR_INSTALL_DIR}/scripts/ftp-settings.sh" ]; then
+		PRIOR_FTP="${PRIOR_INSTALL_DIR}/scripts/ftp-settings.sh"
+	else
+		PRIOR_FTP="ftp-settings.sh (in unknown location)"
+	fi
 	## TODO: automate this
 	# display_msg progress "Restoring settings from config.sh and ftp-settings.sh."
-	# ( source ${PRIOR_CONFIG_DIR}/ftp-settings.sh
+	# ( source ${PRIOR_FTP}
 	#	for each variable:
 	#		/^variable=/ c;variable="$oldvalue";
 	#	Deal with old names from version 0.8
@@ -682,7 +689,7 @@ restore_prior_files() {
 	MSG="You need to manually move the contents of"
 	MSG="${MSG}\n     ${PRIOR_CONFIG_DIR}/config.sh"
 	MSG="${MSG}\nand"
-	MSG="${MSG}\n     ${PRIOR_CONFIG_DIR}/ftp-settings.sh"
+	MSG="${MSG}\n     ${PRIOR_FTP}"
 	MSG="${MSG}\nto the new files in ${ALLSKY_CONFIG}."
 	MSG="${MSG}\n\nNOTE: some settings are no longer in config.sh and some changed names."
 	MSG="${MSG}\nDo NOT add the old/deleted settings back in."

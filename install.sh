@@ -119,7 +119,7 @@ select_camera_type() {
 		display_msg warning "Camera selection required.  Please re-run the installation and select a camera to continue."
 		exit 1
 	fi
-	display_msg log "Using ${CAMERA_TYPE} camera."
+	display_msg --log progress "Using ${CAMERA_TYPE} camera."
 }
 
 
@@ -259,19 +259,19 @@ check_swap() {
 			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
 		if [[ ${SWAP_SIZE} == "" || ${SWAP_SIZE} == "0" ]]; then
 			if [[ ${CURRENT_SWAP} -eq 0 ]]; then
-				display_msg log "With no swap space you run the risk of programs failing."
+				display_msg --log warning "With no swap space you run the risk of programs failing."
 			else
-				display_msg log "Swap will remain at ${CURRENT_SWAP}."
+				display_msg --log "Swap will remain at ${CURRENT_SWAP}."
 			fi
 		else
 			sudo dphys-swapfile swapoff					# Stops the swap file
 			sudo sed -i "/CONF_SWAPSIZE/ c CONF_SWAPSIZE=${SWAP_SIZE}" /etc/dphys-swapfile
 			sudo dphys-swapfile setup  > /dev/null		# Sets up new swap file
 			sudo dphys-swapfile swapon					# Turns on new swap file
-			display_msg log "Swap space set to ${SWAP_SIZE} MB."
+			display_msg --log progress "Swap space set to ${SWAP_SIZE} MB."
 		fi
 	else
-		display_msg log "Size of current swap (${CURRENT_SWAP} MB) is sufficient."
+		display_msg --log "Size of current swap (${CURRENT_SWAP} MB) is sufficient."
 	fi
 }
 
@@ -283,9 +283,10 @@ check_memory_filesystem() {
 	# Check if currently a memory filesystem.
 	PRIOR_TMP="${PRIOR_INSTALL_DIR}/tmp"
 	if grep --quiet "${ALLSKY_TMP}" /etc/fstab; then
-		display_msg log "${ALLSKY_TMP} is currently in memory."
+		display_msg --log "${ALLSKY_TMP} is currently in memory."
 		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently ${PRIOR_TMP}.
 		sudo umount "${PRIOR_TMP}"
+		mkdir "${ALLSKY_TMP}"
 		sudo mount -a
 		return
 	fi
@@ -296,10 +297,11 @@ check_memory_filesystem() {
 	sleep 2		# time to read prior messages
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then 
 		echo "tmpfs ${ALLSKY_TMP} tmpfs size=50M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${ALLSKY_GROUP}" | sudo tee -a /etc/fstab
+		mkdir "${ALLSKY_TMP}"
 		sudo mount -a
-		display_msg log "${ALLSKY_TMP} will remain on disk."
+		display_msg --log progress "${ALLSKY_TMP} is now in memory."
 	else
-		display_msg log "${ALLSKY_TMP} will remain on disk."
+		display_msg --log info "${ALLSKY_TMP} will remain on disk."
 	fi
 }
 
@@ -482,7 +484,7 @@ check_if_prior_Allsky() {
 			MSG="If you want your old images, darks, settings, etc."
 			MSG="${MSG} from the prior verion of Allsky, you'll need to manually move them to the new version."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
-			display_msg log "Will NOT restore from prior version of Allsky."
+			display_msg --log info "Will NOT restore from prior version of Allsky."
 		fi
 	else
 		MSG="No prior version of Allsky found."

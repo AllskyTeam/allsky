@@ -260,7 +260,7 @@ else
 		"camera": "${CAMERA}",
 		"lens": "${LENS}",
 		"computer": "${COMPUTER}",
-		"allskyVersion": "${ALLSKY_VERSION}"
+		"allskyversion": "${ALLSKY_VERSION}",
 		"machine_id": "${MACHINE_ID}"
 		}
 		EOF

@@ -40,6 +40,7 @@ NEW_HOST_NAME='allsky'					# Suggested new host name
 # This file contains information the user needs to act upon after the reboot.
 NEW_INSTALLATION_FILE="${ALLSKY_CONFIG}/installation_info.txt"
 # display_msg() will send "log" entries to this file.
+# shellcheck disable=SC2034		It's used in display_msg()
 DISPLAY_MSG_LOG="${ALLSKY_CONFIG}/installation_log.txt"
 
 # Some versions of Linux default to 750 so web server can't read it

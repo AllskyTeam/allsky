@@ -319,6 +319,7 @@ install_webserver() {
 		cat ${TMP}
 		exit 1
 	fi
+	[[ ${DEBUG} == "true" ]] && cat ${TMP}
 
 	REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
@@ -510,6 +511,7 @@ install_dependencies_etc() {
 		cat ${TMP}
 		return 1
 	fi
+	[[ ${DEBUG} == "true" ]] && cat ${TMP}
 
 	display_msg progress "Preparing Allsky commands.  May take a couple minutes."
 	TMP="/tmp/all.install.tmp"
@@ -520,6 +522,7 @@ install_dependencies_etc() {
 		cat ${TMP}
 		return 1
 	fi
+	[[ ${DEBUG} == "true" ]] && cat ${TMP}
 
 	TMP="/tmp/install.install.tmp"
 	#shellcheck disable=SC2024
@@ -529,6 +532,7 @@ install_dependencies_etc() {
 		cat ${TMP}
 		return 1
 	fi
+	[[ ${DEBUG} == "true" ]] && cat ${TMP}
 
 	return 0
 }

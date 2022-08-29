@@ -100,7 +100,7 @@ display_msg()
 		LOG_IT_=false
 	fi
 
-	LOG_TYPE=_"${1}"
+	LOG_TYPE_="${1}"
 	MESSAGE_="${2}"
 	MSG_=""
 	if [[ ${LOG_TYPE_} == "error" ]]; then

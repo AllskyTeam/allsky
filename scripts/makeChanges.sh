@@ -33,6 +33,7 @@ function usage_and_exit()
 # Check arguments
 OK=true
 DEBUG=false
+DEBUG_ARG=""
 HELP=false
 RESTARTING=false			# Will the caller restart Allsky?
 CAMERA_TYPE_ONLY=false		# Only update the cameraType ?
@@ -43,6 +44,7 @@ while [ $# -gt 0 ]; do
 	case "${ARG}" in
 		--debug)
 			DEBUG="true"
+			DEBUG_ARG="${ARG}"		# So we can pass to other scripts
 			;;
 		--help)
 			HELP="true"
@@ -187,7 +189,7 @@ while [ $# -gt 0 ]; do
 			# .php files don't return error codes so we check if it worked by
 			# looking for a string in its output.
 			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
-				${FORCE} \
+				${FORCE} ${DEBUG_ARG} \
 				--cc_file "${CC_FILE}" \
 				--options_file "${OPTIONS_FILE}" \
 				--settings_file "${SETTINGS_FILE}" \

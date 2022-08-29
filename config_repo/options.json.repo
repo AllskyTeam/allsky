@@ -272,7 +272,7 @@
 "maximum" : "brightness_max",
 "default" : "brightness_default",
 "description" : "Changes the amount of light in the image.<br>Higher values are brighter.",
-"label" : "Auto-Exposure Brightness",
+"label" : "Brightness",
 "type" : "number",
 "display" : "brightness_display",
 "advanced" : 0

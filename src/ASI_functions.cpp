@@ -1147,12 +1147,15 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	ret = getControlCapForControlType(cg->cameraNumber, ASI_FLIP, &cc);
 	if (ret == ASI_SUCCESS)
 	{
-		if (! validateLong(&cg->flip, cc.MinValue, cc.MaxValue, "Flip", false))
-			ok = false;
-	} else {
+		if (cg->flip == NOT_CHANGED)
+			cg->flip = cc.DefaultValue;
+		else
+			validateLong(&cg->flip, cc.MinValue, cc.MaxValue, "Flip", true);
+	} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 		Log(0, "ASI_FLIP failed with %s\n", getRetCode(ret));
 		ok = false;
 	}
+
 	// libcamera only supports 0 and 180 degree rotation
 	if (cg->rotation != 0)
 	{

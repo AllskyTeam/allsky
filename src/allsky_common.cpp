@@ -1157,7 +1157,7 @@ void displaySettings(config cg)
 		printf("   Sharpness: %.1f\n", cg.sharpness);
 		printf("   Rotation: %ld\n", cg.rotation);
 	}
-	printf("   Flip Image: %s (%ld)\n", getFlip(cg.flip), cg.flip);
+	if (cg.flip != NOT_CHANGED) printf("   Flip Image: %s (%ld)\n", getFlip(cg.flip), cg.flip);
 	printf("   Filename: %s  saved to %s\n", cg.fileName, cg.saveDir);
 	printf("   Latitude: %s, Longitude: %s\n", cg.latitude, cg.longitude);
 	printf("   Sun Elevation: %.2f\n", cg.angle);

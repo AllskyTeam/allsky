@@ -119,8 +119,6 @@ display_msg()
 		MSG_="${YELLOW}${MESSAGE_}${NC}"
 		STARS_=false
 
-		return
-
 	else
 		MSG_="${YELLOW}"
 		STARS_=false

@@ -103,20 +103,20 @@ display_msg()
 	LOG_TYPE=_"${1}"
 	MESSAGE_="${2}"
 	MSG_=""
-	if [[ $1 == "error" ]]; then
+	if [[ ${LOG_TYPE_} == "error" ]]; then
 		MSG_="\n${RED}*** ERROR: "
 		STARS_=true
 
-	elif [[ $1 == "warning" ]]; then
+	elif [[ ${LOG_TYPE_} == "warning" ]]; then
 		MSG_="\n${YELLOW}*** WARNING: "
 		STARS_=true
 
-	elif [[ $1 == "progress" ]]; then
-		MSG_="${GREEN}* ${2}${NC}"
+	elif [[ ${LOG_TYPE_} == "progress" ]]; then
+		MSG_="${GREEN}* ${MESSAGE_}${NC}"
 		STARS_=false
 
-	elif [[ $1 == "info" ]]; then
-		MSG_="${YELLOW}${2}${NC}"
+	elif [[ ${LOG_TYPE_} == "info" ]]; then
+		MSG_="${YELLOW}${MESSAGE_}${NC}"
 		STARS_=false
 
 		return
@@ -126,9 +126,9 @@ display_msg()
 		STARS_=false
 	fi
 
-	if [[ ${STARS} == "true" ]]; then
+	if [[ ${STARS_} == "true" ]]; then
 		MSG_="${MSG_}**********"
-		MSG_="${MSG_}${2}"
+		MSG_="${MSG_}${MESSAGE_}"
 		MSG_="${MSG_}**********${NC}"
 	fi
 

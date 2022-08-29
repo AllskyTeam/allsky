@@ -112,3 +112,5 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# shellcheck disable=SC1090
 	[ -f "${ALLSKY_CONFIG}/uservariables.sh" ] && source "${ALLSKY_CONFIG}/uservariables.sh"
 fi
+
+return 0

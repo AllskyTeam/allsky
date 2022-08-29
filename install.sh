@@ -277,27 +277,32 @@ check_swap() {
 
 
 # Check if prior ${ALLSKY_TMP} was a memory filesystem.
-# If so, umount it, then remount it.
-# If not, offer to make ${ALLSKY_TMP} a memory filesystem.
+# If not, offer to make it one.
 check_memory_filesystem() {
 	# Check if currently a memory filesystem.
-	PRIOR_TMP="${PRIOR_INSTALL_DIR}/tmp"
-	if grep --quiet "${ALLSKY_TMP}" /etc/fstab; then
-		display_msg --log "${ALLSKY_TMP} is currently in memory."
-		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently ${PRIOR_TMP}.
-		sudo umount "${PRIOR_TMP}"
-		mkdir "${ALLSKY_TMP}"
+	if grep --quiet "^tmp ${ALLSKY_TMP} tmp" /etc/fstab; then
+		display_msg --log info "${ALLSKY_TMP} is currently in memory."
+		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently in the PRIOR Allsky.
+		# Trying to unmount the old directory always gives an error that it's busy,
+		# so don't bother.  It'll be unmounted at the reboot.
+		# But make sure the new directory exists.
+		mkdir -p "${ALLSKY_TMP}"
 		sudo mount -a
 		return
 	fi
 
+	sleep 2		# time to read prior messages
+	SIZE=50
 	MSG="Making ${ALLSKY_TMP} reside in memory can drastically decrease the amount of writes to the SD card, increasing its life."
 	MSG="${MSG}\n\nDo you want to make it reside in memory?"
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
-	sleep 2		# time to read prior messages
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then 
-		echo "tmpfs ${ALLSKY_TMP} tmpfs size=50M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${ALLSKY_GROUP}" | sudo tee -a /etc/fstab
-		mkdir "${ALLSKY_TMP}"
+		echo "tmpfs ${ALLSKY_TMP} tmpfs size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${ALLSKY_GROUP}" | sudo tee -a /etc/fstab > /dev/null
+		if [[ -d ${ALLSKY_TMP} ]]; then
+			rm -f "${ALLSKY_TMP}"/*
+		else
+			mkdir "${ALLSKY_TMP}"
+		fi
 		sudo mount -a
 		display_msg --log progress "${ALLSKY_TMP} is now in memory."
 	else

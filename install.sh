@@ -280,7 +280,7 @@ check_swap() {
 # If not, offer to make it one.
 check_memory_filesystem() {
 	# Check if currently a memory filesystem.
-	if grep --quiet "^tmp ${ALLSKY_TMP} tmp" /etc/fstab; then
+	if grep --quiet "^tmpfs ${ALLSKY_TMP} tmpfs" /etc/fstab; then
 		display_msg --log info "${ALLSKY_TMP} is currently in memory."
 		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently in the PRIOR Allsky.
 		# Trying to unmount the old directory always gives an error that it's busy,
@@ -501,6 +501,9 @@ check_if_prior_Allsky() {
 			display_msg info "* Rename the directory with your prior version of Allsky to\n'${PRIOR_INSTALL_DIR}', then run the installation again.\n"
 			exit 0
 		fi
+
+		# No prior Allsky so force creating a settings file.
+		FORCE_CREATING_SETTINGS_FILE=true
 	fi
 }
 
@@ -566,8 +569,6 @@ create_allsky_log() {
 # If the user wanted to restore files from a prior version of Allsky, do that.
 restore_prior_files() {
 	if [[ -z ${PRIOR_ALLSKY} ]]; then
-		# No prior Allsky so force creating a settings file.
-		FORCE_CREATING_SETTINGS_FILE=true
 		return			# Nothing left to do in this function, so return
 	fi
 
@@ -760,7 +761,7 @@ while [ $# -gt 0 ]; do
 			;;
 		--debug)
 			DEBUG=true
-			DEBUG="${ARG}"		# we can pass this to other scripts
+			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			;;
 		--update)
 			UPDATE=true

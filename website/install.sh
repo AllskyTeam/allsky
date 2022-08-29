@@ -3,7 +3,8 @@
 if [ -z "${ALLSKY_HOME}" ] ; then
 	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
 fi
-source "${ALLSKY_HOME}/variables.sh"
+source "${ALLSKY_HOME}/variables.sh" || exit 1
+source "${ALLSKY_SCRIPTS}/functions.sh" || exit 1
 
 if [[ $EUID -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
@@ -39,25 +40,6 @@ display_header() {
 	echo
 }
 
-
-display_msg() {
-	if [[ $1 == "error" ]]; then
-		echo -e "\n${RED}*** ERROR: "
-	elif [[ $1 == "warning" ]]; then
-		echo -e "\n${YELLOW}*** WARNING: "
-	elif [[ $1 == "progress" ]]; then
-		echo -e "${GREEN}* ${2}${NC}"
-		return
-	elif [[ $1 == "info" ]]; then
-		echo -e "${YELLOW}${2}${NC}"
-		return
-	else
-		echo -e "${YELLOW}"
-	fi
-	echo -e "**********"
-	echo -e "${2}"
-	echo -e "**********${NC}"
-}
 
 usage_and_exit()
 {

@@ -204,7 +204,7 @@ function toggle_advanced()
       <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Configure Settings for <b><?php echo "$cameraType $cameraModel"; ?></b>&nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; <?php echo $settings_file ?></div>
         <!-- /.panel-heading -->
         <div class="panel-body" style="padding: 5px;">
-          <p><?php $status->showMessages(); ?></p>
+          <p id="messages"><?php $status->showMessages(); ?></p>
 
           <form method="POST" action="?page=camera_conf" name="conf_form">
 		<?php CSRFToken();
@@ -212,6 +212,7 @@ function toggle_advanced()
 		// Allow for "advanced" options that aren't displayed by default to avoid
 		// confusing novice users.
 		$numAdvanced = 0;
+		$numMissing = 0;
 		echo "<table border='0'>";
 			foreach($options_array as $option) {
 				// Should this setting be displayed?
@@ -242,6 +243,7 @@ function toggle_advanced()
 					$nullOKmsg = "";
 					// Numbers can never be mising; certain text can't either.
 					if ($value === "" && ($nullOK === 0 || $type == "number")) {
+						$numMissing++;
 						$nullOKbg = "background-color: red";
 						$nullOKmsg = "<span style='color: red'>This field cannot be empty.</span><br>";
 					}
@@ -356,6 +358,17 @@ function toggle_advanced()
 				echo "</tr>";
 			 }
 		echo "</table>";
+		if ($numMissing > 0) {
+			$msg = "ERROR: $numMissing required field" . ($numMissing === 1 ? " is" : "s are");
+			$msg .= " missing - see highlighted fields below.";
+			$status->addMessage($msg, 'danger');
+		?>
+			<script>
+				var messages = document.getElementById("messages");
+				messages.innerHTML= messages.innerHTML + '<?php $status->showMessages(); ?>';
+			</script>
+		<?php
+		}
 	?>
 
 	<div style="margin-top: 20px">

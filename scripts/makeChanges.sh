@@ -33,6 +33,7 @@ function usage_and_exit()
 # Check arguments
 OK=true
 DEBUG=false
+DEBUG_ARG=""
 HELP=false
 RESTARTING=false			# Will the caller restart Allsky?
 CAMERA_TYPE_ONLY=false		# Only update the cameraType ?
@@ -43,6 +44,7 @@ while [ $# -gt 0 ]; do
 	case "${ARG}" in
 		--debug)
 			DEBUG="true"
+			DEBUG_ARG="${ARG}"		# So we can pass to other scripts
 			;;
 		--help)
 			HELP="true"
@@ -96,7 +98,7 @@ while [ $# -gt 0 ]; do
 	LABEL="${2}"
 	NEW_VALUE="${3}"
 	if [ "${DEBUG}" = "true" ]; then
-		MSG="${KEY}: new [${NEW_VALUE}]"
+		MSG="New ${KEY} = [${NEW_VALUE}]"
 		if [[ ${ON_TTY} -eq 1 ]]; then
 			echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
 		else	# called from WebUI.
@@ -184,23 +186,46 @@ while [ $# -gt 0 ]; do
 			# to create an OPTIONS_FILE for this camera type/model.
 			# These variables don't include a directory since the directory is specified with "--dir" below.
 
-			# .php files don't return error codes so we check if it worked by
-			# looking for a string in its output.
+			if [[ ${DEBUG} == "true" ]]; then
+				echo "Calling:" \
+					"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+					${FORCE} ${DEBUG_ARG} \
+					--cc_file "${CC_FILE}" \
+					--options_file "${OPTIONS_FILE}" \
+					--settings_file "${SETTINGS_FILE}"
+			fi
 			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
-				${FORCE} \
+				${FORCE} ${DEBUG_ARG} \
 				--cc_file "${CC_FILE}" \
 				--options_file "${OPTIONS_FILE}" \
 				--settings_file "${SETTINGS_FILE}" \
 				2>&1)"
+
+			# .php files don't return error codes so we check if it worked by
+			# looking for a string in its output.
+
 			if [ -n "${R}" ]; then
-				# The user shouldn't see XX_WORKED_XX.
-				OTHER_OUTPUT="$(echo -e "${R}" | grep -v "XX_WORKED_XX")"
-				if [ -n "${OTHER_OUTPUT}" ]; then
+				if ! echo "${R}" | grep --quiet "XX_WORKED_XX"; then
 					echo -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}' and '${SETTINGS_FILE}' files.${wNC}"
-					echo "${OTHER_OUTPUT}"
+					echo "${R}"
 					exit 1
 				fi
+			else
+				# If there's no output, there won't be any special string...
+				echo -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}' and '${SETTINGS_FILE}' files - nothing returned.${wNC}"
+				exit 1
 			fi
+			OK=true
+			if [[ ! -f ${OPTIONS_FILE} ]]; then
+				echo -e "${wERROR}${ME}: ERROR Options file ${OPTIONS_FILE} not created.${wNC}"
+				OK=false
+			fi
+			if [[ ! -f ${SETTINGS_FILE} ]]; then
+				echo -e "${wERROR}${ME}: ERROR Settings file ${SETTINGS_FILE} not created.${wNC}"
+				OK=false
+			fi
+			[[ ${OK} == "false" ]] && exit 2
+
 			# It's an error if XX_WORKED_XX is NOT in the output.
 			echo -e "${R}" | grep --silent "XX_WORKED_XX" || exit 2
 
@@ -310,3 +335,4 @@ fi
 
 
 exit 0
+

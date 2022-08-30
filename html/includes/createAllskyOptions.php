@@ -305,30 +305,30 @@ foreach ($repo_array as $repo) {
 		break;		// hit the end
 	}
 
-	if ($debug > 0) echo "Processing setting [$name]: ";
+	if ($debug > 1) echo "Processing setting [$name]: ";
 
 	// Before adding the setting, make sure the "display field says we can.
 	// Typically the value will be 1 (can display) or a placeholder.
 	// It should normally not be missing, but check anyhow.
 	$display = getVariableOrDefault($repo, "display", null);
 	if ($display === null) {
-		if ($debug > 0) echo "display field=null\n";
+		if ($debug > 1) echo "display field=null\n";
 		continue;
 	}
 	if ($display !== 1) {
 		// should be a placeholder
 		$n = get_generic_name($name);
 		if ($display === $n . "_display") {
-			if ($debug > 0) echo "display=$display.";
+			if ($debug > 1) echo "display=$display.";
 			if (! get_control($cc_controls, $n, $min, $max, $default)) {
-				if ($debug > 0) echo "     <<<<< NOT SUPPORTED >>>>>\n";
+				if ($debug > 1) echo "     <<<<< NOT SUPPORTED >>>>>\n";
 				// Not an error - just means this isn't supported.
 				continue;
 			}
-			if ($debug > 0) echo "\n";
+			if ($debug > 1) echo "\n";
 			$repo["display"] = 1;	// a control exists for it, so display the setting.
 		}
-	} elseif ($debug > 0) {
+	} elseif ($debug > 1) {
 		echo "standard setting.\n";
 	}
 

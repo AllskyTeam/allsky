@@ -822,6 +822,14 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.mean_threshold);
 	fprintf(f, "\t\t},\n");
+
+	if (CG.ct == ctRPi && CG.isLibcamera) {
+		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "TuningFile");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "tuningfile");
+		fprintf(f, "\t\t\t\"DefaultValue\" : \"\"\n");
+		fprintf(f, "\t\t},\n");
+	}
 #endif
 
 	for (int i = 0; i < iNumOfCtrl; i++)

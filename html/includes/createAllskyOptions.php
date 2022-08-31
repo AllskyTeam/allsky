@@ -203,6 +203,7 @@ function add_options_field($field, $options, $setting) {
 $rest_index;
 $longopts = array(
 	"debug::",		// no arguments
+	"debug2::",		// no arguments
 	"help::",		// no arguments
 	"cc_file:",
 	"options_file:",
@@ -219,10 +220,12 @@ $settings_file = "";
 $force = false;		// force creation of settings file even if it already exists?
 
 foreach ($options as $opt => $val) {
-	if ($debug > 1) echo "Argument $opt = $val\n";
+	if ($debug > 0) echo "   Argument $opt = $val\n";
 
 	if ($opt === "debug")
 		$debug++;
+	else if ($opt === "debug2")
+		$debug = 2;
 	else if ($opt === "help")
 		$help = true;
 	else if ($opt === "cc_file")
@@ -233,10 +236,12 @@ foreach ($options as $opt => $val) {
 		$settings_file = $val;
 	else if ($opt === "force")
 		$force = true;
+	else
+		echo "WARNING: Ignoring unknown argument: $opt\n";
 }
 
 if ($help || $cc_file === "" || $options_file === "") {
-	echo "\nUsage: " . basename($argv[0]) . " [--debug ...] [--help] [--settings_file file] --cc_file file --options_file file\n";
+	echo "\nUsage: " . basename($argv[0]) . " [--debug] [--debug2] [--help] [--settings_file file] --cc_file file --options_file file\n";
 	exit;
 }
 

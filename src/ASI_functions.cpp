@@ -658,9 +658,10 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	if (cameraInfo.IsColorCam)
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
 	fprintf(f, "\t\"bitDepth\" : %d,\n", cameraInfo.BitDepth);
-#ifdef IS_RPi
-	fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", CG.cmdToUse);
+	if (CG.cmdToUse != NULL)
+		fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", CG.cmdToUse);
 
+#ifdef IS_RPi
 	fprintf(f, "\t\"supportedRotations\": [\n");
 	fprintf(f, "\t\t{ \"value\" : 0, \"label\" : \"None\" },\n");
 	if (CG.ct == ctRPi && CG.isLibcamera)
@@ -804,24 +805,32 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.videoOffBetweenImages ? 1 : 0);
 	fprintf(f, "\t\t},\n");
 #endif
-#ifdef IS_RPI
 
+#ifdef IS_RPi
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ModeMean");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "mean");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
-	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n",
+	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
 	fprintf(f, "\t\t\t\"DefaultValue\" : \"day: %.2f, night: %.2f\"\n",
-		CG.myModeMeanSetting.mean.dayMean, CG.myModeMeanSetting.mean.nightMean);
+		CG.myModeMeanSetting.dayMean, CG.myModeMeanSetting.nightMean);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "MeanThreshold");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "meanthreshold");
-	fprintf(f, "\t\t\t\"MinValue\" : .01,\n");
+	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.mean_threshold);
 	fprintf(f, "\t\t},\n");
+
+	if (CG.ct == ctRPi && CG.isLibcamera) {
+		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "TuningFile");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "TuningFile");
+		fprintf(f, "\t\t\t\"DefaultValue\" : \"\"\n");
+		fprintf(f, "\t\t},\n");
+	}
 #endif
 
 	for (int i = 0; i < iNumOfCtrl; i++)

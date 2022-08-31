@@ -283,6 +283,13 @@ while [ $# -gt 0 ]; do
 				fi
 			fi
 			;;
+		dayTuningFile | nightTuningFile)
+			if [[ -n "${NEW_VALUE}" && ! -f "${NEW_VALUE}" ]]; then
+				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
+			fi
+			RUN_POSTDATA=false
+			NEEDS_RESTART=false
+			;;
 		showonmap)
 			[ "${NEW_VALUE}" = "0" ] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP=true

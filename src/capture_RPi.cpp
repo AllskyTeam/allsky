@@ -84,9 +84,12 @@ int RPicapture(config cg, cv::Mat *image)
 	command += " --output '" + ss.str() + "'";
 	if (cg.isLibcamera)
 	{
-		// xxx TODO: does this do anything?
-		// command += " --tuning-file /usr/share/libcamera/ipa/raspberrypi/imx477.json";
-		command += "";	// xxxx
+		// libcamera tuning file
+		if (cg.currentTuningFile != NULL && strcmp(cg.currentTuningFile, "") != 0) {
+			ss.str("");
+			ss << cg.currentTuningFile;
+			command += " --tuning-file '" + ss.str() + "'";
+		}
 
 		if (strcmp(cg.imageExt, "png") == 0)
 			command += " --encoding png";
@@ -507,12 +510,8 @@ int main(int argc, char *argv[])
 			CG.currentSkipFrames = 0;
 			CG.currentAutoExposure = false;
 			CG.nightAutoExposure = false;
-			CG.currentAutoGain = false;
-			CG.currentGain = CG.nightGain;
-			CG.currentMaxAutoGain = CG.nightMaxAutoGain;		// not needed since we're not using auto gain, but set to be consistent
-			CG.currentDelay_ms = CG.nightDelay_ms;
-			CG.currentMaxAutoExposure_us = CG.currentExposure_us = CG.nightMaxAutoExposure_us;
-			CG.currentBin = CG.nightBin;
+			CG.currentExposure_us = CG.nightMaxAutoExposure_us;
+			CG.currentMaxAutoExposure_us = CG.nightMaxAutoExposure_us;
 			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
@@ -520,12 +519,18 @@ int main(int argc, char *argv[])
 				CG.currentWBR = CG.nightWBR;
 				CG.currentWBB = CG.nightWBB;
 			}
+			CG.currentDelay_ms = CG.nightDelay_ms;
+			CG.currentBin = CG.nightBin;
+			CG.currentGain = CG.nightGain;
+			CG.currentMaxAutoGain = CG.nightMaxAutoGain;		// not needed since we're not using auto gain, but set to be consistent
+			CG.currentAutoGain = false;
+			CG.myModeMeanSetting.currentMean = NOT_SET;
 			if (CG.isCooledCamera)
 			{
 				CG.currentEnableCooler = CG.nightEnableCooler;
 				CG.currentTargetTemp = CG.nightTargetTemp;
 			}
-			CG.myModeMeanSetting.currentMean = NOT_SET;
+			CG.currentTuningFile = CG.nightTuningFile;
 
  			Log(1, "Taking dark frames...\n");
 
@@ -557,13 +562,12 @@ int main(int argc, char *argv[])
 			{
 				Log(1, "==========\n=== Starting daytime capture ===\n==========\n");
 
-				// We only skip initial frames if we are starting in daytime and using auto-exposure.
 				if (numExposures == 0 && CG.dayAutoExposure)
 					CG.currentSkipFrames = CG.daySkipFrames;
-
+				// We only skip initial frames if we are starting in daytime and using auto-exposure.
+				CG.currentAutoExposure = CG.dayAutoExposure;
 				CG.currentExposure_us = CG.dayExposure_us;
 				CG.currentMaxAutoExposure_us = CG.dayMaxAutoExposure_us;
-				CG.currentAutoExposure = CG.dayAutoExposure;
 				CG.currentBrightness = CG.dayBrightness;
 				if (CG.isColorCamera)
 				{
@@ -582,6 +586,7 @@ int main(int argc, char *argv[])
 					CG.currentEnableCooler = CG.dayEnableCooler;
 					CG.currentTargetTemp = CG.dayTargetTemp;
 				}
+				CG.currentTuningFile = CG.dayTuningFile;
 			}
 		}
 
@@ -593,9 +598,9 @@ int main(int argc, char *argv[])
 			if (numExposures == 0 && CG.nightAutoExposure)
 				CG.currentSkipFrames = CG.nightSkipFrames;
 
-			// Setup the night time capture parameters
-			CG.currentExposure_us = CG.nightExposure_us;
 			CG.currentAutoExposure = CG.nightAutoExposure;
+			CG.currentExposure_us = CG.nightExposure_us;
+			CG.currentMaxAutoExposure_us = CG.nightMaxAutoExposure_us;
 			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
@@ -605,16 +610,16 @@ int main(int argc, char *argv[])
 			}
 			CG.currentDelay_ms = CG.nightDelay_ms;
 			CG.currentBin = CG.nightBin;
-			CG.currentMaxAutoExposure_us = CG.nightMaxAutoExposure_us;
 			CG.currentGain = CG.nightGain;
 			CG.currentMaxAutoGain = CG.nightMaxAutoGain;
 			CG.currentAutoGain = CG.nightAutoGain;
+			CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.nightMean;
 			if (CG.isCooledCamera)
 			{
 				CG.currentEnableCooler = CG.nightEnableCooler;
 				CG.currentTargetTemp = CG.nightTargetTemp;
 			}
-			CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.nightMean;
+			CG.currentTuningFile = CG.nightTuningFile;
 		}
 		// ========== Done with dark frame / day / night settings
 
@@ -830,3 +835,4 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 
 	closeUp(EXIT_OK);
 }
+

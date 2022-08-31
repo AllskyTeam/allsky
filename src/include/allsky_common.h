@@ -220,6 +220,8 @@ struct config {			// for configuration variables
 	double nightWBB						= NOT_CHANGED;
 	long dayTargetTemp					= NOT_CHANGED;		// Target temp when cooler is enabled
 	long nightTargetTemp				= NOT_CHANGED;
+	char const *dayTuningFile			= NULL;				// Camera tuning file, libcamera only
+	char const *nightTuningFile			= NULL;
 	double saturation					= NOT_CHANGED;
 	double contrast						= NOT_CHANGED;
 	double sharpness					= NOT_CHANGED;
@@ -271,6 +273,7 @@ struct config {			// for configuration variables
 	bool currentEnableCooler;
 	long currentTargetTemp;
 	int currentBitDepth;
+	char const *currentTuningFile;
 
 	// Last values - from image just taken.  Only for settings that can change image to image.
 	long lastExposure_us				= NOT_SET;

@@ -299,6 +299,7 @@ if [ "${IMG_UPLOAD}" = "true" ] || [ "${TIMELAPSE_MINI_UPLOAD_VIDEO}" = "true" ]
 fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
+RET=0
 if [ "${IMG_UPLOAD}" = "true" ] ; then
 	# First check if we should upload this image
 	if [ "${IMG_UPLOAD_FREQUENCY}" != "1" ]; then
@@ -346,12 +347,13 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 	fi
 
 	"${ALLSKY_SCRIPTS}/upload.sh" "${FILE_TO_UPLOAD}" "${IMAGE_DIR}" "${FULL_FILENAME}" "SaveImage" "${WEB_IMAGE_DIR}"
+	RET=$?
 
 	[ "${RESIZE_UPLOADS}" = "true" ] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
 fi
 
-# If needed, upload the mini timelapse
-if [ "${TIMELAPSE_MINI_UPLOAD_VIDEO}" = "true" ] ; then
+# If needed, upload the mini timelapse.  If upload.sh failed above, it will likely fail below.
+if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${RET} -eq 0 ]] ; then
 	MINI="mini-timelapse.mp4"
 	FILE_TO_UPLOAD="${ALLSKY_TMP}/${MINI}"
 

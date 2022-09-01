@@ -349,6 +349,7 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, flo
 	int d;
 
 	sprintf(sunwaitCommand, "sunwait poll exit angle %s %s %s > /dev/null", convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
+	Log(4, "Executing %s\n", sunwaitCommand);
 	d = system(sunwaitCommand);	// returns exit code 2 for DAY, 3 for night
 
 	if (WIFEXITED(d))
@@ -1945,6 +1946,7 @@ static bool validateLatLong(char const *l, char positive, char negative, char *s
 	float num = atof(l);
 	snprintf(savedLocation, maxSize-1, "%.5f%c", abs(num), num > 0 ? positive : negative);
 	l = savedLocation;
+	Log(4, "   new value = %s\n", savedLocation);
 	return(true);
 }
 
@@ -1953,7 +1955,10 @@ bool validateLatitudeLongitude(config *cg)
 	bool ret = true;
 	if (! validateLatLong(cg->latitude, 'N', 'S', strLatitude, sizeof(strLatitude), "Latitude"))
 		ret = false;
+	cg->latitude = strLatitude;
 	if (! validateLatLong(cg->longitude, 'E', 'W', strLongitude, sizeof(strLongitude), "Longitude"))
 		ret = false;
+	cg->longitude = strLongitude;
+
 	return(ret);
 }

@@ -1428,9 +1428,9 @@ int main(int argc, char *argv[])
 						if (priorMeanDiff > 0 && lastMeanDiff < 0)
 						{ 
 							Log(3, " >xxx lastMean was %d and went from %d above max of %d to %d below min",
-								priorMean, priorMeanDiff, maxAcceptableMean);
+								priorMean, priorMeanDiff, maxAcceptableMean, -lastMeanDiff);
 							Log(3, "  of %d, is now at %d; should NOT set temp min to currentExposure_us of %'ld\n",
-								-lastMeanDiff, minAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
+								minAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 						} 
 						else
 						{
@@ -1438,9 +1438,9 @@ int main(int argc, char *argv[])
 							{
 							// OK to set upper limit since we know it's too high.
 								Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max",
-									priorMean, -priorMeanDiff, minAcceptableMean);
+									priorMean, -priorMeanDiff, minAcceptableMean, lastMeanDiff);
 								Log(3, " of %d, is now at %d; OK to set temp max to currentExposure_us of %'ld\n",
-									lastMeanDiff, maxAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
+									maxAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 							}
 
 							if (CG.lastMean < minAcceptableMean)

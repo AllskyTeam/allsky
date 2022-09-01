@@ -172,7 +172,7 @@ elif [[ ${PROTOCOL} == "local" ]] ; then
 	cp "${FILE_TO_UPLOAD}" "${REMOTE_DIR}/${DESTINATION_FILE}"
 	RET=$?
 
-elif [[ ${PROTOCOL} == "scp" ]] ; then
+elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
 		# shellcheck disable=SC2153
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_FILE}"
@@ -194,16 +194,16 @@ else # sftp/ftp/ftps
 	TEMP_NAME="${FILE_TYPE}-${RANDOM}"
 
 	# If REMOTE_DIR isn't null (which it can be) and doesn't already have a trailing "/", append one.
-	[ "${REMOTE_DIR}" != "" -a "${REMOTE_DIR: -1:1}" != "/" ] && REMOTE_DIR="${REMOTE_DIR}/"
+	[[ ${REMOTE_DIR} != "" && ${REMOTE_DIR: -1:1} != "/" ]] && REMOTE_DIR="${REMOTE_DIR}/"
 
-	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
+	if [[ ${SILENT} = "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: FTP '${FILE_TO_UPLOAD}' to '${REMOTE_DIR}${DESTINATION_FILE}', TEMP_NAME=${TEMP_NAME}"
 	fi
 	# LFTP_CMDS needs to be unique per file type so we don't overwrite a different upload type.
 	LFTP_CMDS="${ALLSKY_TMP}/${FILE_TYPE}-lftp_cmds.txt"
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 	(
-		[ "${LFTP_COMMANDS}" != "" ] && echo ${LFTP_COMMANDS}
+		[[ -n ${LFTP_COMMANDS} ]] && echo ${LFTP_COMMANDS}
 		# xxx TODO: escape single quotes in REMOTE_PASSWORD so lftp doesn't fail - how?  With \ ?
 		P="${REMOTE_PASSWORD}"
 
@@ -211,15 +211,18 @@ else # sftp/ftp/ftps
 		echo set net:max-retries 2
 		echo set net:timeout 10
 
-		[ -n "${REMOTE_PORT}" ] && REMOTE_PORT="-p ${REMOTE_PORT}"
+		[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
 		# shellcheck disable=SC2153
 		echo "open --user '${REMOTE_USER}' --password '${P}' ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
-		if [ "${DEBUG}" = "true" ]; then
+		# lftp doesn't actually try to open the connection until the first command is executed.
+		echo "quote PWD || exit 99"
+
+		if [[ ${DEBUG} = "true" ]]; then
 			echo "quote PWD"
 			echo "ls"
 			echo "debug 5"
 		fi
-		if [ -n "${REMOTE_DIR}" ]; then
+		if [[ -n ${REMOTE_DIR} ]]; then
 			echo "cd '${REMOTE_DIR}' || (echo 'cd ${REMOTE_DIR} failed!'; exit 1) || exit 1"
 		fi
 
@@ -251,18 +254,24 @@ else # sftp/ftp/ftps
 	RET=$?
 	if [ ${RET} -ne 0 ] ; then
 		echo -en "${RED}"
-		echo "*** ${ME}: ERROR, RET=${RET}:"
-		echo "FILE_TO_UPLOAD='${FILE_TO_UPLOAD}'"
-		# shellcheck disable=SC2153
-		echo "REMOTE_HOST='${REMOTE_HOST}'"
-		echo "REMOTE_DIR='${REMOTE_DIR}'"
-		echo "TEMP_NAME='${TEMP_NAME}'"
-		echo "DESTINATION_FILE='${DESTINATION_FILE}'"
-		echo -en "${NC}"
-		echo
-		if [ -n "${OUTPUT}" ]; then
-			echo "${OUTPUT}" > "${LOG}"
-			cat "${LOG}" >&2
+		echo -n "*** ${ME}: ERROR"
+		if [ ${RET} -eq 99 ] ; then
+			# shellcheck disable=SC2153
+			echo ": unable to log in to '${REMOTE_HOST}', user ${REMOTE_USER}'."
+		else
+			echo ", RET=${RET}:"
+			echo "FILE_TO_UPLOAD='${FILE_TO_UPLOAD}'"
+			# shellcheck disable=SC2153
+			echo "REMOTE_HOST='${REMOTE_HOST}'"
+			echo "REMOTE_DIR='${REMOTE_DIR}'"
+			echo "TEMP_NAME='${TEMP_NAME}'"
+			echo "DESTINATION_FILE='${DESTINATION_FILE}'"
+			echo -en "${NC}"
+			echo
+			if [ -n "${OUTPUT}" ]; then
+				echo "${OUTPUT}" > "${LOG}"
+				cat "${LOG}" >&2
+			fi
 		fi
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"

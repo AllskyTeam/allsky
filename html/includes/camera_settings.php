@@ -352,7 +352,7 @@ function toggle_advanced()
 
 					echo "</td>";
 					if ($type == "widetext")
-						echo "</tr><tr class='rowSeparator'><td></td>";
+						echo "</tr><tr class='rowSeparator $advClass' style='$advStyle'><td></td>";
 					echo "<td>$nullOKmsg$description</td>";
 				}
 				echo "</tr>";

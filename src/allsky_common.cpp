@@ -1922,13 +1922,14 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 
 // validate and convert Latitude and Longitude to N, S, E, W versions.
 static char strLatitude[20], strLongitude[20];
-static bool validateLatLong(char const *l, char positive, char negative, char *savedLocation, char const *name)
+static bool validateLatLong(char const *l, char positive, char negative, char *savedLocation, int maxSize, char const *name)
 {
 	if (l == NULL || *l == '\0') {
 		Log(0, "*** ERROR: %s not specified!\n", name);
 		return(false);
 	}
 
+	Log(4, "validateLatLong(l=%s, positive=%c, negative=%c, savedLocation=%s, name=%s\n", l, positive,negative,savedLocation,name);
 	int len = strlen(l);
 	char direction = (char) toupper(l[len-1]);
 	if (direction == positive || direction == negative) {
@@ -1941,8 +1942,8 @@ static bool validateLatLong(char const *l, char positive, char negative, char *s
 	}
 
 	// Assume it's a number, so convert to a string;
-	int num = atoi(l);
-	snprintf(savedLocation, sizeof(savedLocation)-1, "%d%c", num, num > 0 ? positive : negative);
+	float num = atof(l);
+	snprintf(savedLocation, maxSize-1, "%.5f%c", abs(num), num > 0 ? positive : negative);
 	l = savedLocation;
 	return(true);
 }
@@ -1950,9 +1951,9 @@ static bool validateLatLong(char const *l, char positive, char negative, char *s
 bool validateLatitudeLongitude(config *cg)
 {
 	bool ret = true;
-	if (! validateLatLong(cg->latitude, 'N', 'S', strLatitude, "Latitude"))
+	if (! validateLatLong(cg->latitude, 'N', 'S', strLatitude, sizeof(strLatitude), "Latitude"))
 		ret = false;
-	if (! validateLatLong(cg->longitude, 'E', 'W', strLongitude, "Longitude"))
+	if (! validateLatLong(cg->longitude, 'E', 'W', strLongitude, sizeof(strLongitude), "Longitude"))
 		ret = false;
 	return(ret);
 }

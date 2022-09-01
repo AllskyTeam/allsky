@@ -215,7 +215,7 @@ else # sftp/ftp/ftps
 		# shellcheck disable=SC2153
 		echo "open --user '${REMOTE_USER}' --password '${P}' ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
 		# lftp doesn't actually try to open the connection until the first command is executed.
-		echo "quote PWD || exit 99"
+		echo "quote PWD > /dev/null || exit 99"
 
 		if [[ ${DEBUG} = "true" ]]; then
 			echo "quote PWD"

@@ -145,7 +145,7 @@ while [ "${CHECK}" = "true" ]; do
 		CHECK="false"		# Prior upload finished.
 	fi
 done
-echo $$ > "${PID_FILE}"
+echo $$ > "${PID_FILE}" || exit 1
 
 # Convert to lowercase so we don't care if user specified upper or lowercase.
 PROTOCOL="${PROTOCOL,,}"

@@ -58,7 +58,9 @@
 			}
 		},
 		"live": true,
-		"id": "starmap"
+		"id": "starmap",
+		"AllskyVersion" : "XX_ALLSKY_VERSION_XX",
+		"AllskyWebsiteVersion" : "XX_ALLSKY_WEBSITE_VERSION_XX"
 	},
 
 	"homePage": {
@@ -107,6 +109,5 @@
 			{ "comment": "Add popout items above." }
 		]
 	},
-	"AllskyVersion" : "XX_ALLSKY_VERSION_XX",
 	"ConfigVersion" : "1"
 }

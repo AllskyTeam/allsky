@@ -297,7 +297,7 @@ check_memory_filesystem() {
 	MSG="${MSG}\n\nDo you want to make it reside in memory?"
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then 
-		echo "tmpfs ${ALLSKY_TMP} tmpfs size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${ALLSKY_GROUP}" | sudo tee -a /etc/fstab > /dev/null
+		echo "tmpfs ${ALLSKY_TMP} tmpfs size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}" | sudo tee -a /etc/fstab > /dev/null
 		if [[ -d ${ALLSKY_TMP} ]]; then
 			rm -f "${ALLSKY_TMP}"/*
 		else
@@ -307,6 +307,9 @@ check_memory_filesystem() {
 		display_msg --log progress "${ALLSKY_TMP} is now in memory."
 	else
 		display_msg --log info "${ALLSKY_TMP} will remain on disk."
+		mkdir -p "${ALLSKY_TMP}"
+		chmod 775 "${ALLSKY_TMP}"
+		sudo chown ${ALLSKY_OWNER}:${WEBSERVER_GROUP} "${ALLSKY_TMP}"
 	fi
 }
 

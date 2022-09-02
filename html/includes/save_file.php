@@ -2,10 +2,8 @@
 
 include_once('functions.php');
 
-// TODO: when editor.php understands that what we return is a $status message,
-// change the "echo"s below to $status->AddMessage().
-
-// On error, return a string.
+// On success, return a string that starts with "S\t" (for Success).
+// On failure, return a string that starts with "E\t" (for Error).
 
 if (isset($_POST['content']))
 	$content = $_POST['content'];
@@ -16,7 +14,7 @@ $path = "";
 if (isset($_POST['path']))
 	$path = $_POST['path'];
 if ($path == "") {
-	echo "No file name specified to save!";
+	echo "E	No file name specified to save!";
 	exit;
 }
 
@@ -33,7 +31,7 @@ if (substr($path, 0, 7) === "current")
 else	// website
 	$file = str_replace('website', ALLSKY_WEBSITE, $path);
 if (! file_exists($file)) {
-	echo "File to save '$file' does not exist!";
+	echo "E	File to save '$file' does not exist!";
 	exit;
 }
 
@@ -51,14 +49,17 @@ if ($msg == "") {
 			$msg = "File saved but unable to send to remote host: $msg";
 		}
 	} else {
-		// $msg = "File saved";
-		exit;
+		$msg = "File saved";
 	}
 } else {
-	//header("HTTP/1.0 400 Bad Request");
 	$ok = false;
 	$msg = "Failed to save '$file': $msg";
 }
+
+if ($ok)
+	echo "S	";
+else
+	echo "E	";
 echo $msg;
 
 ?>

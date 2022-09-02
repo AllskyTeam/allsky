@@ -73,11 +73,6 @@ int RPicapture(config cg, cv::Mat *image)
 	Log(4, " > Kill command: %s\n", kcmd);
 	system(kcmd);						// Stop any currently running process
 
-	if (cg.isLibcamera)
-	{
-		// Tried putting this in putenv() but it didn't seem to work.
-		command = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL " + command;
-	}
 	stringstream ss;
 
 	ss << cg.fullFilename;
@@ -303,11 +298,17 @@ int RPicapture(config cg, cv::Mat *image)
 
 	// Define char variable
 	char cmd[command.length() + 1];
-
-	// Convert command to character variable
+	// Convert command to character variable.
+	// Log without the LIBCAMERA_LOG..., which just confuses users.
 	strcpy(cmd, command.c_str());
-
 	Log(2, "  > Capture command: %s\n", cmd);
+
+	if (cg.isLibcamera)
+	{
+		// Tried putting this in putenv() but it didn't seem to work.
+		command = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL " + command;
+		strcpy(cmd, command.c_str());
+	}
 
 	// Execute the command.
 	int ret = system(cmd);

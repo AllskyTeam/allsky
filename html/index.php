@@ -88,6 +88,8 @@ if ($useLogin) {
 	<style>
 		.x {line-height: 150%;}
 		@media (min-width: 992px) {.col-md-6 { width: 75%; }}
+		.version-title { display: inline-block; font-size: 90%; }
+		@media (max-width: 768px) {.version-title { font-size: 75%; }}
 	</style>
     <!-- MetisMenu CSS -->
     <link href="bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
@@ -176,6 +178,7 @@ if ($useLogin) {
             <a class="navbar-brand" href="index.php">
                 <img src="img/allsky-logo.png" title="Allsky logo">
                 <div class="navbar-title">AllSky Administration Panel</div>
+				<div class="version-title"><?php displayVersions(); ?></div>
             </a>
         </div>
         <!-- /.navbar-header -->
@@ -205,7 +208,7 @@ if ($useLogin) {
                     <li>
                         <a href="index.php?page=wpa_conf"><i class="fa fa-signal fa-fw"></i> Configure Wifi</a>
                     </li>
-                    <!-- <?php if (RASPI_OPENVPN_ENABLED) : ?>
+                    <?php if (RASPI_OPENVPN_ENABLED) : ?>
                         <li>
                             <a href="index.php?page=openvpn_conf"><i class="fa fa-lock fa-fw"></i> Configure OpenVPN</a>
                         </li>
@@ -215,7 +218,7 @@ if ($useLogin) {
                             <a href="index.php?page=torproxy_conf"><i class="fa fa-eye-slash fa-fw"></i> Configure TOR
                                 proxy</a>
                         </li>
-                    <?php endif; ?>-->
+                    <?php endif; ?>
                     <li>
                         <a href="index.php?page=auth_conf"><i class="fa fa-lock fa-fw"></i> Change Password</a>
                     </li>

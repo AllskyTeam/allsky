@@ -20,7 +20,6 @@ if [[ -f ${SETTINGS_FILE} ]]; then
 	source "${ALLSKY_CONFIG}/ftp-settings.sh"
 fi
 
-
 function usage_and_exit()
 {
 	echo -e "${wERROR}"
@@ -236,7 +235,7 @@ while [ $# -gt 0 ]; do
 			;;
 
 		filename)
-			WEBSITE_CONFIG+=("config.imageName" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
 			NEEDS_RESTART=true
 			;;
 		extratext)
@@ -259,7 +258,7 @@ while [ $# -gt 0 ]; do
 			if [[ (${SIGN} = "+" || ${SIGN} == "-") && (${LAST%[NSEW]} == "") ]]; then
 				echo -e "${wWARNING}WARNING: '${NEW_VALUE}' should contain EITHER a \"${SIGN}\" OR a \"${LAST}\", but not both; please change it.${wNC}"
 			else
-				WEBSITE_CONFIG+=(config."${KEY}" "${NEW_VALUE}")
+				WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 				RUN_POSTDATA=true
 			fi
 			NEEDS_RESTART=true
@@ -296,7 +295,7 @@ while [ $# -gt 0 ]; do
 			;;
 		location | owner | camera | lens | computer)
 			RUN_POSTTOMAP=true
-			WEBSITE_CONFIG+=(config."${KEY}" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
 		websiteurl | imageurl)
 			RUN_POSTTOMAP=true
@@ -320,18 +319,13 @@ if [[ ${RUN_POSTDATA} == "true" && ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
 	fi
 fi
 
-if [ "${DEBUG}" = "true" ]; then
-	D="--debug"
-else
-	D=""
-fi
 # shellcheck disable=SC2128
-if [[ ${WEBSITE_CONFIG} != "" && -d ${ALLSKY_WEBSITE} ]]; then
-	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${D} "${WEBSITE_CONFIG[@]}"
+if [[ ${WEBSITE_CONFIG} != "" && ( -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ) ]]; then
+	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} "${WEBSITE_CONFIG[@]}"
 fi	# else the Website isn't installed on the Pi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${D} ${POSTTOMAP_ACTION}
+	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
 fi
 
 if [[ ${RESTARTING} == "false" && ${NEEDS_RESTART} == "true" ]]; then

@@ -321,7 +321,7 @@ function toggle_advanced()
 						   	" style='padding: 6px 5px; $nullOKbg'>";
 					} else if ($type == "select"){
 						// text-align for <select> works on Firefox but not Chrome or Edge
-						echo "<select class='form-control boxShadow' name='$name'" .
+						echo "<select class='form-control boxShadow' name='$name' title='Select an item'" .
 						   	" style='width: 120px; margin-right: 20px; text-align: right; padding: 0px 3px 0px 0px;'>";
 						foreach($option['options'] as $opt){
 							$val = $opt['value'];

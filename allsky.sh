@@ -136,8 +136,10 @@ if [ -d "${ALLSKY_TMP}" ]; then
 	sudo chgrp www-data "${ALLSKY_ABORTEDUPLOADS}"
 	sudo chmod 664 "${ALLSKY_ABORTEDUPLOADS}"
 else
-	# Re-create in case it's on a memory filesystem that gets wiped out at reboot
+	# We should never get here since ${ALLSKY_TMP} is created during installation...
 	mkdir -p "${ALLSKY_TMP}"
+	chmod 775 "${ALLSKY_TMP}"
+	sudo chgrp www-data "${ALLSKY_TMP}"
 fi
 
 # Optionally display a notification image.

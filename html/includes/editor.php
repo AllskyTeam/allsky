@@ -38,10 +38,28 @@ function DisplayEditor()
 						dataType: 'text',
 						cache: false,
 						success: function(data){
-// TODO: assume "data" is a status message formatted in html, so add it.
-							if (data != "")
-								alert(data);
-							// else alert("File saved!");
+							// "data" is a string with a return code (ERROR or SUCCESS),
+							// then a tab, then a message.
+							var returnMsg = "";
+							var ok = true;
+							if (data == "") {
+								returnMsg = "No response from save_file.php";
+								ok = false;
+							} else {
+								returnMsg = data;
+								ok = returnMsg.substr(0,1) === "S" ? true : false;
+								returnMsg = returnMsg.substr(2);
+							}
+							var c = ok ? "success" : "danger";
+							var messages = document.getElementById("editor-messages");
+							if (messages === null) {
+								ok = false;
+								returnMsg = "No response from save_file.php";
+							}
+							var m = '<div class="alert alert-' + c + '">' + returnMsg;
+							m += '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">x</button>';
+							m += '</div>';
+							messages.innerHTML += m;
 						},
 						error: function(XMLHttpRequest, textStatus, errorThrown) {
 							alert("Unable to save '" + fileName + ": " + errorThrown);
@@ -87,7 +105,7 @@ function DisplayEditor()
 				<div class="panel-heading"><i class="fa fa-code fa-fw"></i> Script Editor</div>
 				<!-- /.panel-heading -->
 				<div class="panel-body">
-					<p><?php $status->showMessages(); ?></p>
+					<p id="editor-messages"><?php $status->showMessages(); ?></p>
 					<div id="editorContainer"></div>
 					<div style="margin-top: 15px;">
 				 <?php

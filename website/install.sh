@@ -17,6 +17,7 @@ ME="$(basename "${BASH_ARGV0}")"
 
 TITLE="Allsky Website Installer"
 ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
+ALLSKY_WEBSITE_VERSION="$( < "${ALLSKY_WEBSITE}/version" )"
 ALLSKY_OWNER=$(id --group --name)
 WEBSERVER_GROUP="www-data"
 REPO_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
@@ -191,16 +192,16 @@ update_website_configuration_file() {
 	fi
 
 	# There are some settings we can't determine, like LENS.
-	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent \
-		--config "${CONFIG_FILE}" \
-		config.imageName "${IMAGE_NAME}" \
-		config.latitude "${LATITUDE}" \
-		config.longitude "${LONGITUDE}" \
-		config.auroraMap "${AURORAMAP}" \
-		config.computer "${COMPUTER}" \
-		config.camera "${CAMERA_TYPE}${CAMERA_MODEL}" \
-		homePage.onPi "${ON_PI}" \
-		AllskyVersion "${ALLSKY_VERSION}"
+	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent --config "${CONFIG_FILE}" \
+		config.imageName		"imageName"		"${IMAGE_NAME}" \
+		config.latitude			"latitude"		"${LATITUDE}" \
+		config.longitude		"longitude"		"${LONGITUDE}" \
+		config.auroraMap		"auroraMap"		"${AURORAMAP}" \
+		config.computer			"computer"		"${COMPUTER}" \
+		config.camera			"camera"		"${CAMERA_TYPE}${CAMERA_MODEL}" \
+		config.AllskyVersion	"AllskyVersion"	"${ALLSKY_VERSION}" \
+		config.AllskyWebsiteVersion "AllskyWebsiteVersion" "${ALLSKY_WEBSITE_VERSION}" \
+		homePage.onPi			"onPi"			"${ON_PI}"
 
 	sed -i \
 		-e "s;XX_MINI_TIMELAPSE_XX;${MINI_TIMELAPSE};" \
@@ -542,3 +543,4 @@ if [[ ${HAS_NEW_CONFIGURATION_FILE} == "true" ]]; then
 fi
 
 echo
+

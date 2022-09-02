@@ -101,7 +101,7 @@ function DisplayEditor()
 							$scripts[0] = "endOfNight_additionalSteps.sh";
 						}
 				?>
-						<select class="form-control" id="script_path"
+						<select class="form-control" id="script_path" title="Pick a file"
 							style="display: inline-block; width: auto; margin-right: 15px; margin-bottom: 5px"
 						>
 							<option value="current/<?php echo $config_dir ?>/config.sh">config.sh</option>
@@ -113,16 +113,10 @@ function DisplayEditor()
 									echo "<option value='current/" . basename(ALLSKY_SCRIPTS) . "/$script'>$script</option>";
 								}
 							}
-							if (is_dir(ALLSKY_WEBSITE)) {
+							if (file_exists(ALLSKY_WEBSITE . "/configuration.json")) {
 								// The website is installed on this Pi.
-								// The physical path is ALLSKY_WEBSITE; the virtual pathe is "website".
-								if (file_exists(ALLSKY_WEBSITE . "/configuration.json"))
-									echo "<option value='website/configuration.json'>configuration.json (Allsky Website)</option>";
-// TODO: when the new version of the website is deployed, remove these files:
-								if (file_exists(ALLSKY_WEBSITE . "/config.js"))
-									echo "<option value='website/config.js'>config.js (Allsky Website)</option>";
-								if (file_exists(ALLSKY_WEBSITE . "/virtualsky.json"))
-									echo "<option value='website/virtualsky.json'>virtualsky.json (Allsky Website)</option>";
+								// The physical path is ALLSKY_WEBSITE; virtual path is "website".
+								echo "<option value='website/configuration.json'>configuration.json (Allsky Website)</option>";
 							}
 
 							if (file_exists(ALLSKY_CONFIG . "/configuration.json")) {

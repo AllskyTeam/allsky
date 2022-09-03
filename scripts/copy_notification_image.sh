@@ -151,7 +151,7 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 	if [ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]; then
 		echo -e "${ME}: Uploading $(basename "${NOTIFICATION_FILE}")"
 	fi
-	"${ALLSKY_SCRIPTS}/upload.sh" --wait --silent "${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage"
+	"${ALLSKY_SCRIPTS}/upload.sh" --wait --silent "${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage" "${WEB_IMAGE_DIR}"
 	RET=$?
 
 	# If we created a temporary copy, delete it.

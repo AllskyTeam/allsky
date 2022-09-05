@@ -492,14 +492,14 @@ set_configuration_file_variables
 #########    Local install
 
 
-##### Handle prior websites
-save_prior_website
-
-
 # Check if the user is updating an existing installation.
 # This really only applies if they manually update some files rather than the whole release,
 # and ideally would never happen.
 [ "${UPDATE}" = "true" ]  && do_update		# does not return
+
+
+##### Handle prior websites
+save_prior_website
 
 
 ##### Download Allsky Website files

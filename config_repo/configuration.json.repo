@@ -102,8 +102,8 @@
 				"style": ""
 			},
 			{
-				"display": "XX_MINI_TIMELAPSE_DISPLAY_XX",
-				"url": "mini-timelapse.mp4",
+				"display": false,
+				"url": "/current/tmp/mini-timelapse.mp4",
 				"title": "Mini-timelapse",
 				"icon": "fa fa-2x fa-fw icon-mini-timelapse",
 				"style": ""

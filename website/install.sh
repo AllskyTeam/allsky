@@ -51,7 +51,7 @@ usage_and_exit()
 		C="${RED}"
 	fi
 	echo
-	echo -e "${C}Usage: ${ME} [--help] [--remote] [--branch branch_name] [--update]${NC}"
+	echo -e "${C}Usage: ${ME} [--help] [--debug] [--remote] [--branch name] [--update] [--function name]${NC}"
 	echo
 	echo "'--help' displays this message and exits."
 	echo
@@ -60,9 +60,11 @@ usage_and_exit()
 	echo "   This will have no impact on a local Allsky Website, if installed."
 	echo
 	echo "The '--branch' option should only be used when instructed to by an Allsky developer."
-	echo "  'branch_name' is a valid branch at ${GITHUB_ROOT}/allsky-website."
+	echo "  'name' is a valid branch name at ${GITHUB_ROOT}/allsky-website."
 	echo
 	echo "'--update' should only be used when instructed to by an Allsky Website page."
+	echo
+	echo "'--function' executes the specified function and quits."
 	echo
 	exit ${RET}
 }
@@ -108,6 +110,9 @@ set_configuration_file_variables() {
 		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
 		ON_PI="true"
 	fi
+
+	CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+	WEB_CONFIG_FILE="${CONFIG_FILE}"	# default configuration file
 }
 
 
@@ -140,19 +145,32 @@ check_for_older_config_file() {
 
 ##### Update the json configuration file, either for the local machine or a remote one.
 update_website_configuration_file() {
-	CONFIG_FILE="${1}"
+	display_msg progress "Updating settings in ${WEB_CONFIG_FILE}."
 
-	display_msg progress "Updating settings in ${CONFIG_FILE}."
+	# Get the array index for the mini-timelapse.
+	INDEX=$(jq .homePage.sidebar "${WEB_CONFIG_FILE}" | \
+		gawk 'BEGIN { n = -1; } {
+			if ($1 == "{") {
+				n++;
+				next;
+			}
+			if ($0 ~ /Mini-timelapse/) {
+				printf("%d", n);
+				exit 0
+			}
+		}')
+	MINI_TLAPSE_DISPLAY="homePage.sidebar[${INDEX}].display"
+	MINI_TLAPSE_URL="homePage.sidebar[${INDEX}].url"
 
 	if [ "${TIMELAPSE_MINI_IMAGES:-0}" -eq 0 ]; then
-		MINI_TIMELAPSE="XX_MINI_TIMELAPSE_XX"
-		MINI_TIMELAPSE_URL="XX_MINI_TIMELAPSE_URL_XX"
+		MINI_TLAPSE_DISPLAY_VALUE="false"
+		MINI_TLAPSE_URL_VALUE=""
 	else
-		MINI_TIMELAPSE="url"
+		MINI_TLAPSE_DISPLAY_VALUE="true"
 		if [ "${REMOTE_WEBSITE}" = "true" ]; then
-			MINI_TIMELAPSE_URL="mini-timelapse.mp4"
+			MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
 		else
-			MINI_TIMELAPSE_URL="/${IMG_DIR}/mini-timelapse.mp4"
+			MINI_TLAPSE_URL_VALUE="/${IMG_DIR}/mini-timelapse.mp4"
 		fi
 	fi
 
@@ -192,7 +210,8 @@ update_website_configuration_file() {
 	fi
 
 	# There are some settings we can't determine, like LENS.
-	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent --config "${CONFIG_FILE}" \
+	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent ${DEBUG_ARG} \
+		--config "${WEB_CONFIG_FILE}" \
 		config.imageName		"imageName"		"${IMAGE_NAME}" \
 		config.latitude			"latitude"		"${LATITUDE}" \
 		config.longitude		"longitude"		"${LONGITUDE}" \
@@ -201,20 +220,15 @@ update_website_configuration_file() {
 		config.camera			"camera"		"${CAMERA_TYPE}${CAMERA_MODEL}" \
 		config.AllskyVersion	"AllskyVersion"	"${ALLSKY_VERSION}" \
 		config.AllskyWebsiteVersion "AllskyWebsiteVersion" "${ALLSKY_WEBSITE_VERSION}" \
-		homePage.onPi			"onPi"			"${ON_PI}"
-
-	sed -i \
-		-e "s;XX_MINI_TIMELAPSE_XX;${MINI_TIMELAPSE};" \
-		-e "s;"XX_MINI_TIMELAPSE_URL_XX;"${MINI_TIMELAPSE_URL};" \
-		"${CONFIG_FILE}"
+		homePage.onPi			"onPi"			"${ON_PI}" \
+		${MINI_TLAPSE_DISPLAY} "mini_display"	"${MINI_TLAPSE_DISPLAY_VALUE}" \
+		${MINI_TLAPSE_URL}		"mini_url"		"${MINI_TLAPSE_URL_VALUE}"
 }
 
 
 ##### If the user is updating the website, use the prior config file(s).
 HAS_NEW_CONFIGURATION_FILE=false
 modify_configuration_variables() {
-	CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-
 	if [ "${SAVED_OLD}" = "true" ]; then
 		if [ "${OLD_WEBSITE_TYPE}" = "new" ]; then
 			C="${PRIOR_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
@@ -250,7 +264,8 @@ modify_configuration_variables() {
 		# New website, so set up a default configuration file.
 		HAS_NEW_CONFIGURATION_FILE=true
 		cp "${REPO_FILE}" "${CONFIG_FILE}"
-		update_website_configuration_file "${CONFIG_FILE}"
+		WEB_CONFIG_FILE="${CONFIG_FILE}"
+		update_website_configuration_file
 		display_msg progress "Creating default '${ALLSKY_WEBSITE_CONFIGURATION_NAME}' file."
 	fi
 }
@@ -284,7 +299,8 @@ do_remote_website() {
 		if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 60 3>&1 1>&2 2>&3); then 
 			REMOTE_CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 			cp "${REPO_FILE}" "${REMOTE_CONFIG_FILE}"
-			update_website_configuration_file "${REMOTE_CONFIG_FILE}"
+			WEB_CONFIG_FILE="${REMOTE_CONFIG_FILE}"
+			update_website_configuration_file
 
 			MSG="\nTo edit the remote configuration file, go to the 'Editor' page in the WebUI\n"
 			MSG="${MSG}and select '${ALLSKY_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"
@@ -440,14 +456,21 @@ restore_prior_files() {
 # Check arguments
 OK="true"
 HELP="false"
+DEBUG=false
+DEBUG_ARG=""
 BRANCH="master"
 UPDATE="false"
+FUNCTION=""
 REMOTE_WEBSITE="false"
 while [ $# -gt 0 ]; do
 	ARG="${1}"
 	case "${ARG}" in
 		--help)
 			HELP="true"
+			;;
+		--debug)
+			DEBUG=true
+			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			;;
 		--branch)
 			BRANCH="${2}"
@@ -463,8 +486,12 @@ while [ $# -gt 0 ]; do
 		--update)
 			UPDATE="true"
 			;;
+		--function)
+			FUNCTION="${2}"
+			shift
+			;;
 		*)
-			echo -e "${RED}*** ERROR: Unknown argument: '${ARG}'${NC}"
+			display_msg error "Unknown argument: '${ARG}'."
 			OK="false"
 			;;
 	esac
@@ -496,6 +523,18 @@ set_configuration_file_variables
 # This really only applies if they manually update some files rather than the whole release,
 # and ideally would never happen.
 [ "${UPDATE}" = "true" ]  && do_update		# does not return
+
+
+##### Execute any specified function, then exit.
+if [[ ${FUNCTION} != "" ]]; then
+	if ! type ${FUNCTION} > /dev/null; then
+		display_msg error "Unknown function: '${FUNCTION}'."
+		exit 1
+	fi
+
+	${FUNCTION}
+	exit 0
+fi
 
 
 ##### Handle prior websites

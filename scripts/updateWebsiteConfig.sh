@@ -34,8 +34,8 @@ function usage_and_exit()
 	else
 		C="${wERROR}"
 	fi
-	echo -e "${C}Usage: ${ME} [--help] [--debug] [--silent] [--config file] key new_value [...]${wNC}" >&2
-	echo "There must be a multiple of 2 arguments." >&2
+	echo -e "${C}Usage: ${ME} [--help] [--debug] [--silent] [--config file] key label new_value [...]${wNC}" >&2
+	echo "There must be a multiple of 3 arguments." >&2
 	exit ${RET}
 }
 # Check arguments
@@ -78,7 +78,7 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 [[ $# -eq 0 ]] && usage_and_exit 1
-[[ $(($# % 2)) -ne 0 ]] && usage_and_exit 2
+[[ $(($# % 3)) -ne 0 ]] && usage_and_exit 2
 
 if [[ ${CONFIG_FILE} != "" ]]; then
 	if [[ ! -f "${CONFIG_FILE}" ]]; then
@@ -87,9 +87,9 @@ if [[ ${CONFIG_FILE} != "" ]]; then
 	fi
 else
 	# Look for the configuration file.
-	CONFIG_FILE="${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"	# local website
+	CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"	# local website
 	if [ ! -f "${CONFIG_FILE}" ]; then
-		CONFIG_FILE="${ALLSKY_CONFIG}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"	# remote website
+		CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"	# remote website
 		if [ ! -f "${CONFIG_FILE}" ]; then
 			# Can't find the configuration file on the Pi or for remote.
 			echo -e "${wWARNING}WARNING: No configuration file found.${wNC}" >&2
@@ -105,14 +105,15 @@ NUMRE="^[+-]?[0-9]+([.][0-9]+)?$"
 
 while [ $# -gt 0 ]; do
 	FIELD="${1}"
-	NEW_VALUE="${2}"
+	LABEL="${2}"
+	NEW_VALUE="${3}"
 	# Convert HTML code for apostrophy back to character.
 	apos="&#x27"
 	NEW_VALUE="${NEW_VALUE/${apos}/\'}"
 	NEW="${NEW_VALUE}"
 	NEW_VALUE="${NEW_VALUE//\"/\\\"}"	# Handle double quotes
 
-	[ "${DEBUG}" = "true" ] && echo -e "${wDEBUG}DEBUG: update '${FIELD}' to [${NEW_VALUE}].${wNC}"
+	[ "${DEBUG}" = "true" ] && echo -e "${wDEBUG}DEBUG: update '${LABEL}' to [${NEW_VALUE}].${wNC}"
 
 	# Only put quotes around ${NEW_VALUE} if it's a string,
 	# i.e., not a number or a special name.
@@ -122,9 +123,9 @@ while [ $# -gt 0 ]; do
 	fi
 	JQ_STRING+=( "| .${FIELD} = ${NEW_VALUE}" )
 
-	shift 2
+	shift 3
 
-	OUTPUT_MESSAGE="${OUTPUT_MESSAGE}'${FIELD}' updated to ${wBOLD}${NEW}${wNBOLD}."
+	OUTPUT_MESSAGE="${OUTPUT_MESSAGE}'${LABEL}' updated to ${wBOLD}${NEW}${wNBOLD}."
 	[ $# -gt 0 ] && OUTPUT_MESSAGE="${OUTPUT_MESSAGE}${wBR}"
 done
 

@@ -1,6 +1,5 @@
 {
 	"comment": "See https://github.com/thomasjacquin/allsky/wiki/allsky-website-Settings for a description of these settings.",
-
 	"config": {
 		"comment": "These settings impact what appears in the popout and the constellation overlay",
 		"imageName": "/current/tmp/image.jpg",
@@ -58,16 +57,15 @@
 			}
 		},
 		"live": true,
-		"id": "starmap"
+		"id": "starmap",
+		"AllskyVersion" : "XX_ALLSKY_VERSION_XX",
+		"AllskyWebsiteVersion" : "XX_ALLSKY_WEBSITE_VERSION_XX"
 	},
-
 	"homePage": {
 		"comment": "These settings impact the look and feel of the Website home page.",
 		"onPi": true,
 		"title": "XX_NEED_TO_UPDATE_XX",
 		"og_description": "XX_NEED_TO_UPDATE_XX",
-		"showOverlayIconComment": "Once you have modified the settings so the overlay fits, set 'showOverlayIcon' to true.",
-		"showOverlayIcon": false,
 		"backgroundImage": {
 			"url": "",
 			"style": ""
@@ -88,25 +86,147 @@
 		"og_image": "image.jpg",
 		"favicon": "allsky-favicon.png",
 		"sidebar": [
-			{ "url": "videos",  "title": "Archived Timelapes",  "icon": "fa fa-2x fa-fw fa-play-circle" },
-			{ "XX_MINI_TIMELAPSE_XX": "XX_MINI_TIMELAPSE_URL_XX",  "title": "Mini-timelapse",  "icon": "fa fa-2x fa-fw icon-mini-timelapse" },
-			{ "url": "keograms",  "title": "Archived Keograms",  "icon": "fa fa-2x fa-fw fa-barcode" },
-			{ "url": "startrails",  "title": "Archived Startrails",  "icon": "fa fa-2x fa-fw fa-circle-notch" },
-			{ "variable": "imageName",  "title": "Full-sized image",  "icon": "fa fa-2x fa-fw fa-expand-arrows-alt" },
-			{ "comment": "Add sidebar items above." }
+			{
+				"comment": "Once you have modified the settings so the overlay fits, set 'display' to true.",
+				"display": false,
+				"title": "Show constellation overlay",
+				"icon": "fa fa-2x fa-fw allsky-constellation",
+				"style": "",
+				"other": "id='overlayBtn' ng-click='toggleOverlay()' ng-class=\"{'active': showOverlay}\""
+			},
+			{
+				"display": true,
+				"url": "videos",
+				"title": "Archived Timelapes",
+				"icon": "fa fa-2x fa-fw fa-play-circle",
+				"style": ""
+			},
+			{
+				"display": false,
+				"url": "/current/tmp/mini-timelapse.mp4",
+				"title": "Mini-timelapse",
+				"icon": "fa fa-2x fa-fw icon-mini-timelapse",
+				"style": ""
+			},
+			{
+				"display": true,
+				"url": "keograms",
+				"title": "Archived Keograms",
+				"icon": "fa fa-2x fa-fw fa-barcode",
+				"style": ""
+			},
+			{
+				"display": true,
+				"url": "startrails",
+				"title": "Archived Startrails",
+				"icon": "fa fa-2x fa-fw fa-circle-notch",
+				"style": ""
+			},
+			{
+				"variable": "imageName",
+				"title": "Full-sized image",
+				"icon": "fa fa-2x fa-fw fa-expand-arrows-alt",
+				"style": ""
+			},
+			{
+				"display": true,
+				"title": "Display information about the camera and other settings",
+				"icon": "fa fa-2x fa-fw fa-info-circle",
+				"style": "",
+				"other": "ng-click='toggleInfo()' ng-class=\"{'active': showInfo}\""
+			},
+			{
+				"comment": "Add sidebar items above.",
+				"display": false
+			}
 		],
 		"sidebarStyle": "",
 		"popoutIcons": [
-			{ "label": "Location",  "icon": "fa fa-fw fa-map-marker-alt",  "variable": "location",  "value": "" },
-			{ "label": "Latitude",  "icon": "fa fa-fw fa-map-marker",  "variable": "s_latitude",  "value": "" },
-			{ "label": "Longitude",  "icon": "fa fa-fw fa-map-marker",  "variable": "s_longitude",  "value": "" },
-			{ "label": "Camera",  "icon": "fa fa-fw fa-camera-retro",  "variable": "camera",  "value": "" },
-			{ "label": "Lens",  "icon": "fa fa-fw fa-dot-circle",  "variable": "lens",  "value": "" },
-			{ "label": "Computer",  "icon": "fa fa-fw fa-microchip",  "variable": "computer",  "value": "" },
-			{ "label": "Owner",  "icon": "fa fa-fw fa-user",  "variable": "owner",  "value": "" },
-			{ "comment": "Add popout items above." }
+			{
+				"display": true,
+				"label": "Location",
+				"icon": "fa fa-fw fa-map-marker-alt",
+				"variable": "location",
+				"value": "",
+				"style": ""
+			},
+			{
+				"display": true,
+				"label": "Latitude",
+				"icon": "fa fa-fw fa-map-marker",
+				"variable": "s_latitude",
+				"value": "",
+				"style": ""
+			},
+			{
+				"display": true,
+				"label": "Longitude",
+				"icon": "fa fa-fw fa-map-marker",
+				"variable": "s_longitude",
+				"value": "",
+				"style": ""
+			},
+			{
+				"display": true,
+				"label": "Camera",
+				"icon": "fa fa-fw fa-camera-retro",
+				"variable": "camera",
+				"value": "",
+				"style": ""
+			},
+			{
+				"display": true,
+				"label": "Lens",
+				"icon": "fa fa-fw fa-dot-circle",
+				"variable": "lens",
+				"value": "",
+				"style": ""
+			},
+			{
+				"display": true,
+				"label": "Computer",
+				"icon": "fa fa-fw fa-microchip",
+				"variable": "computer",
+				"value": "",
+				"style": ""
+			},
+			{
+				"display": true,
+				"label": "Owner",
+				"icon": "fa fa-fw fa-user",
+				"variable": "owner",
+				"value": "",
+				"style": ""
+			},
+			{
+				"display": false,
+				"label": "Image Settings",
+				"icon": "fa fa-fw fa-cogs",
+				"variable": "",
+				"value": "<a href='viewSettings.php' target='_blank'>Click to view</a>",
+				"style": ""
+			},
+			{
+				"display": true,
+				"label": "Allsky Version",
+				"icon": "fa fa-fw fa-file-alt",
+				"variable": "AllskyVersion",
+				"value": "",
+				"style": ""
+			},
+			{
+				"display": true,
+				"label": "Website Version",
+				"icon": "fa fa-fw fa-file-alt",
+				"variable": "AllskyWebsiteVersion",
+				"value": "",
+				"style": ""
+			},
+			{
+				"comment": "Add popout items above.",
+				"display": false
+			}
 		]
 	},
-	"AllskyVersion" : "XX_ALLSKY_VERSION_XX",
 	"ConfigVersion" : "1"
 }

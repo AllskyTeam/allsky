@@ -297,7 +297,7 @@ check_memory_filesystem() {
 	MSG="${MSG}\n\nDo you want to make it reside in memory?"
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then 
-		echo "tmpfs ${ALLSKY_TMP} tmpfs size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${ALLSKY_GROUP}" | sudo tee -a /etc/fstab > /dev/null
+		echo "tmpfs ${ALLSKY_TMP} tmpfs size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}" | sudo tee -a /etc/fstab > /dev/null
 		if [[ -d ${ALLSKY_TMP} ]]; then
 			rm -f "${ALLSKY_TMP}"/*
 		else
@@ -307,6 +307,9 @@ check_memory_filesystem() {
 		display_msg --log progress "${ALLSKY_TMP} is now in memory."
 	else
 		display_msg --log info "${ALLSKY_TMP} will remain on disk."
+		mkdir -p "${ALLSKY_TMP}"
+		chmod 775 "${ALLSKY_TMP}"
+		sudo chown ${ALLSKY_OWNER}:${WEBSERVER_GROUP} "${ALLSKY_TMP}"
 	fi
 }
 
@@ -608,10 +611,10 @@ restore_prior_files() {
 
 	if [ -f "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ]; then
 		display_msg progress "Restoring remote Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
-		mv "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_CONFIG}"
+		mv "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
 		# Check if this is an older configuration file type.
-		CONFIG_FILE="${ALLSKY_CONFIG}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		OLD=false
 		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${CONFIG_FILE}")"
 		REPO_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"

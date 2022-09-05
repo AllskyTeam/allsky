@@ -349,6 +349,7 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, flo
 	int d;
 
 	sprintf(sunwaitCommand, "sunwait poll exit angle %s %s %s > /dev/null", convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
+	Log(4, "Executing %s\n", sunwaitCommand);
 	d = system(sunwaitCommand);	// returns exit code 2 for DAY, 3 for night
 
 	if (WIFEXITED(d))
@@ -942,6 +943,9 @@ void displayHelp(config cg)
 		printf(" -%-*s - 1 enables cooler (cooled cameras only) [%s].\n", n, "dayEnableCooler b", yesNo(cg.dayEnableCooler));
 		printf(" -%-*s - Target temperature in degrees C (cooled cameras only).\n", n, "dayTargetTemp n");
 	}
+	if (cg.ct == ctRPi && cg.isLibcamera) {
+		printf(" -%-*s - Name of the day camera tuning file to use [%s].\n", n, "dayTuningFile s", "none");
+	}
 
 	printf("\nNighttime settings:\n");
 	printf(" -%-*s - 1 enables nighttime auto-exposure [%s].\n", n, "nightautoexposure b", yesNo(cg.nightAutoExposure));
@@ -962,6 +966,9 @@ void displayHelp(config cg)
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - 1 enables cooler (cooled cameras only) [%s]\n", n, "nightEnableCooler b", yesNo(cg.nightEnableCooler));
 		printf(" -%-*s - Target temperature in degrees C (cooled cameras only).\n", n, "nightTargetTemp n");
+	}
+	if (cg.ct == ctRPi && cg.isLibcamera) {
+		printf(" -%-*s - Name of the night camera tuning file to use [%s].\n", n, "nightTuningFile s", "none");
 	}
 
 	printf("\nDay and nighttime settings:\n");
@@ -1174,7 +1181,10 @@ void displaySettings(config cg)
 	printf("   Taking Dark Frames: %s\n", yesNo(cg.takeDarkFrames));
 	printf("   Debug Level: %ld\n", cg.debugLevel);
 	printf("   On TTY: %s\n", yesNo(cg.tty));
-
+	if (cg.ct == ctRPi && cg.isLibcamera) {
+		printf("   Tuning File (day): %s\n", cg.dayTuningFile == NULL ? "[none]" : cg.dayTuningFile);
+		printf("   Tuning File (night): %s\n", cg.nightTuningFile == NULL ? "[none]" : cg.nightTuningFile);
+	}
 	printf("   Allsky version: %s\n", cg.version);
 	if (cg.ct == ctZWO) {
 		printf("   ZWO SDK version %s\n", cg.ASIversion);
@@ -1570,6 +1580,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->dayTargetTemp = atol(argv[++i]);
 		}
+		else if (strcmp(a, "daytuningfile") == 0)
+		{
+			cg->dayTuningFile = argv[++i];
+		}
 
 		// nighttime settings
 		else if (strcmp(a, "nightautoexposure") == 0)
@@ -1644,6 +1658,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "nighttargettemp") == 0)
 		{
 			cg->nightTargetTemp = atol(argv[++i]);
+		}
+		else if (strcmp(a, "nighttuningfile") == 0)
+		{
+			cg->nightTuningFile = argv[++i];
 		}
 
 		// daytime and nighttime settings
@@ -1905,13 +1923,14 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 
 // validate and convert Latitude and Longitude to N, S, E, W versions.
 static char strLatitude[20], strLongitude[20];
-static bool validateLatLong(char const *l, char positive, char negative, char *savedLocation, char const *name)
+static bool validateLatLong(char const *l, char positive, char negative, char *savedLocation, int maxSize, char const *name)
 {
 	if (l == NULL || *l == '\0') {
 		Log(0, "*** ERROR: %s not specified!\n", name);
 		return(false);
 	}
 
+	Log(4, "validateLatLong(l=%s, positive=%c, negative=%c, savedLocation=%s, name=%s\n", l, positive,negative,savedLocation,name);
 	int len = strlen(l);
 	char direction = (char) toupper(l[len-1]);
 	if (direction == positive || direction == negative) {
@@ -1924,18 +1943,22 @@ static bool validateLatLong(char const *l, char positive, char negative, char *s
 	}
 
 	// Assume it's a number, so convert to a string;
-	int num = atoi(l);
-	snprintf(savedLocation, sizeof(savedLocation)-1, "%d%c", num, num > 0 ? positive : negative);
+	float num = atof(l);
+	snprintf(savedLocation, maxSize-1, "%.5f%c", abs(num), num > 0 ? positive : negative);
 	l = savedLocation;
+	Log(4, "   new value = %s\n", savedLocation);
 	return(true);
 }
 
 bool validateLatitudeLongitude(config *cg)
 {
 	bool ret = true;
-	if (! validateLatLong(cg->latitude, 'N', 'S', strLatitude, "Latitude"))
+	if (! validateLatLong(cg->latitude, 'N', 'S', strLatitude, sizeof(strLatitude), "Latitude"))
 		ret = false;
-	if (! validateLatLong(cg->longitude, 'E', 'W', strLongitude, "Longitude"))
+	cg->latitude = strLatitude;
+	if (! validateLatLong(cg->longitude, 'E', 'W', strLongitude, sizeof(strLongitude), "Longitude"))
 		ret = false;
+	cg->longitude = strLongitude;
+
 	return(ret);
 }

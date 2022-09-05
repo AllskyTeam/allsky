@@ -125,9 +125,9 @@ display_msg()
 	fi
 
 	if [[ ${STARS_} == "true" ]]; then
-		MSG_="${MSG_}**********"
-		MSG_="${MSG_}${MESSAGE_}"
-		MSG_="${MSG_}**********${NC}"
+		MSG_="${MSG_}**********\n"
+		MSG_="${MSG_}${MESSAGE_}\n"
+		MSG_="${MSG_}**********${NC}\n"
 	fi
 
 	# Log messages to a file if it was specified.

@@ -456,7 +456,7 @@ restore_prior_files() {
 # Check arguments
 OK="true"
 HELP="false"
-DEBUG=false
+#DEBUG=false	# Not used yet
 DEBUG_ARG=""
 BRANCH="master"
 UPDATE="false"
@@ -469,7 +469,7 @@ while [ $# -gt 0 ]; do
 			HELP="true"
 			;;
 		--debug)
-			DEBUG=true
+			#DEBUG=true
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			;;
 		--branch)

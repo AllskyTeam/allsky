@@ -119,7 +119,7 @@
 				"display": true,
 				"url": "startrails",
 				"title": "Archived Startrails",
-				"icon": "fa fa-2x fa-fw fa-circle-notch",
+				"icon": "fa fa-2x fa-fw fa-star",
 				"style": ""
 			},
 			{

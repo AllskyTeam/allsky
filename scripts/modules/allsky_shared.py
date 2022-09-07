@@ -15,6 +15,7 @@ import pprint
 import json
 import cv2
 import shutil
+import re
 
 ABORT = True
 
@@ -24,6 +25,37 @@ SETTINGS = {}
 CONFIG = {}
 UPLOAD = {}
 
+def checkAndCreatePath(filePath):
+    path = os.path.dirname(filePath)
+    os.makedirs(path, mode = 0o777, exist_ok = True)
+
+def convertPath(path):
+    regex =  r"\$\{.*?\}"
+    matches = re.finditer(regex, path, re.MULTILINE | re.IGNORECASE)
+    for matchNum, match in enumerate(matches, start=1):
+        variable = match.group()
+        envVar = variable.replace("${", "")
+        envVar = envVar.replace("}", "")
+
+        value = None
+        if envVar == "CURRENT_IMAGE":
+            value = getEnvironmentVariable(envVar)
+            value = os.path.basename(value)
+        else:
+            if envVar in os.environ:
+                value = getEnvironmentVariable(envVar)
+            else:
+                envVar = "AS_" + envVar
+                value = getEnvironmentVariable(envVar)
+
+        if value is not None:
+            path = path.replace(variable, value)
+        else:
+            path = None
+            break
+
+    return path
+    
 def startModuleDebug(module):
     tmpDir = getEnvironmentVariable("ALLSKY_TMP")
     moduleTmpDir = os.path.join(tmpDir, "debug", module)

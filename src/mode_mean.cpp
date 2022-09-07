@@ -239,19 +239,29 @@ void aegGetNextExposureSettings(config * cg,
 
 	int ExposureChange;
 
+	double const multiplier1 = 1.5;			// xxxx was 2.0
+	double const multiplier2 = 1.25;
+	double meanDiff = abs(cg->lastMean - currentModeMeanSetting.meanValue);	// xxx was = mean_diff
+
 	// fast forward
-	if (fastforward || mean_diff > (currentModeMeanSetting.mean_threshold * 2.0)) {
+	if (fastforward || meanDiff > (currentModeMeanSetting.mean_threshold * multiplier1)) {
 		// We are fairly far off from desired mean so make a big change next time.
 		ExposureChange = std::max(1.0, currentModeMeanSetting.mean_p0 + (currentModeMeanSetting.mean_p1 * mean_diff) + pow(currentModeMeanSetting.mean_p2 * mean_diff, 2.0));
-		Log(3, "  > fast forward ExposureChange now %d (mean_diff=%1.3f > 2*threshold=%1.3f)\n",
-			ExposureChange, mean_diff, currentModeMeanSetting.mean_threshold*2.0);
+		Log(3, "  > fast forward ExposureChange now %d (meanDiff=%1.3f > %.2f*threshold=%1.3f)\n",
+			ExposureChange, meanDiff, multiplier1, currentModeMeanSetting.mean_threshold*multiplier1);
+	}
+	else if (meanDiff > (currentModeMeanSetting.mean_threshold * multiplier2)) {
+		// We are somewhat far off from desired mean so make a big change next time.
+		ExposureChange = std::max(1.0, currentModeMeanSetting.mean_p0 + (currentModeMeanSetting.mean_p1 * mean_diff) + (pow(currentModeMeanSetting.mean_p2 * mean_diff, 2.0) / 2.0));
+		Log(3, "  > medium forward ExposureChange now %d (meanDiff=%1.3f > %.2f*threshold=%1.3f)\n",
+			ExposureChange, meanDiff, multiplier2, currentModeMeanSetting.mean_threshold*multiplier2);
 	}
 	// slow forward
-	else if (mean_diff > currentModeMeanSetting.mean_threshold) {
+	else if (meanDiff > currentModeMeanSetting.mean_threshold) {
 		// We are fairly close to desired mean so make a small change next time.
 		ExposureChange = std::max(1.0, currentModeMeanSetting.mean_p0 + currentModeMeanSetting.mean_p1 * mean_diff);
-		Log(3, "  > slow forward ExposureChange now %d (mean_diff=%1.3f, threshold=%1.3f)\n",
-			ExposureChange, mean_diff, currentModeMeanSetting.mean_threshold);
+		Log(3, "  > slow forward ExposureChange now %d (meanDiff=%1.3f, %.2f*threshold=%1.3f)\n",
+			ExposureChange, meanDiff, multiplier2, currentModeMeanSetting.mean_threshold*multiplier2);
 	}
 	else {
 		// We are within the threshold

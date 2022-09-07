@@ -23,7 +23,7 @@ function usage_and_exit()
 {
 	RET_CODE=${1}
 	[ ${RET_CODE} -ne 0 ] && echo -en "${wERROR}"
-	echo -e "${BR}Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--endofnight]${BR}"
+	echo -e "${BR}Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight]${BR}"
 	echo "--help: Print this usage message and exit immediately."
 	echo "--whisper: Be quiet with non-error related output - only display results."
 	echo "--delete: Delete map data; all fields except machine_id are ignored."
@@ -93,6 +93,7 @@ DELETE=false
 UPLOAD=false
 WHISPER=false
 ENDOFNIGHT=false
+MACHINE_ID=""
 while [ $# -ne 0 ]; do
 	if [ "${1}" = "--help" ]; then
 		usage_and_exit 0;
@@ -107,6 +108,9 @@ while [ $# -ne 0 ]; do
 		WHISPER=true
 	elif [ "${1}" = "--endofnight" ]; then
 		ENDOFNIGHT=true
+	elif [ "${1}" = "--machineid" ]; then
+		MACHINE_ID="${2}"
+		shift
 	else
 		usage_and_exit 1;
 	fi
@@ -146,12 +150,14 @@ else
 fi
 
 
-MACHINE_ID="$(< /etc/machine-id)"
-if [ -z "${MACHINE_ID}" ]; then
-	E="ERROR: Unable to get 'machine_id': check /etc/machine-id."
-	echo -e "${ERROR_MSG_START}${E}${wNC}"
-	[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
-	exit 3
+if [[ -z ${MACHINE_ID} ]]; then
+	MACHINE_ID="$(< /etc/machine-id)"
+	if [ -z "${MACHINE_ID}" ]; then
+		E="ERROR: Unable to get 'machine_id': check /etc/machine-id."
+		echo -e "${ERROR_MSG_START}${E}${wNC}"
+		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
+		exit 3
+	fi
 fi
 
 if [ "${DELETE}" = "true" ]; then
@@ -260,7 +266,7 @@ else
 		"camera": "${CAMERA}",
 		"lens": "${LENS}",
 		"computer": "${COMPUTER}",
-		"allskyversion": "${ALLSKY_VERSION}",
+		"allsky_version": "${ALLSKY_VERSION}",
 		"machine_id": "${MACHINE_ID}"
 		}
 		EOF

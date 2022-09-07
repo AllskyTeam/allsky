@@ -158,8 +158,8 @@ save_camera_capabilities() {
 	sudo chgrp -R ${WEBSERVER_GROUP} "${ALLSKY_CONFIG}"
 	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 
-	# makeChanges.sh creates the camera type/model-specific 
-	# --cameraTypeOnly tells makeChanges.sh to only change the camera info and exit.
+	# Create the camera type/model-specific options file and optionally a default settings file.
+	# --cameraTypeOnly tells makeChanges.sh to only change the camera info, then exit.
 	# It displays any error messages.
 	if [[ ${FORCE_CREATING_SETTINGS_FILE} == "true" ]]; then
 		FORCE="--force"
@@ -170,7 +170,7 @@ save_camera_capabilities() {
 	fi
 
 	display_msg progress "Setting up WebUI options${MSG} for ${CAMERA_TYPE} cameras."
-	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} --cameraTypeOnly \
+	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} --cameraTypeOnly ${DEBUG_ARG} \
 		"cameraType" "Camera Type" "${CAMERA_TYPE}"
 	RET=$?
 
@@ -179,9 +179,9 @@ save_camera_capabilities() {
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
 			MSG="$MSG}After connecting your camera, run '${ME} --update'."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
-			display_msg error "No camera detected - installation aborted."
+			display_msg --log error "No camera detected - installation aborted."
 		else
-			display_msg error "Unable to save camera capabilities."
+			display_msg --log error "Unable to save camera capabilities."
 		fi
 		return 1
 	fi
@@ -280,7 +280,7 @@ check_swap() {
 # If not, offer to make it one.
 check_memory_filesystem() {
 	# Check if currently a memory filesystem.
-	if grep --quiet "^tmp ${ALLSKY_TMP} tmp" /etc/fstab; then
+	if grep --quiet "^tmpfs ${ALLSKY_TMP} tmpfs" /etc/fstab; then
 		display_msg --log info "${ALLSKY_TMP} is currently in memory."
 		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently in the PRIOR Allsky.
 		# Trying to unmount the old directory always gives an error that it's busy,
@@ -288,7 +288,7 @@ check_memory_filesystem() {
 		# But make sure the new directory exists.
 		mkdir -p "${ALLSKY_TMP}"
 		sudo mount -a
-		return
+		return 0
 	fi
 
 	sleep 2		# time to read prior messages
@@ -297,7 +297,7 @@ check_memory_filesystem() {
 	MSG="${MSG}\n\nDo you want to make it reside in memory?"
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then 
-		echo "tmpfs ${ALLSKY_TMP} tmpfs size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${ALLSKY_GROUP}" | sudo tee -a /etc/fstab > /dev/null
+		echo "tmpfs ${ALLSKY_TMP} tmpfs size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}" | sudo tee -a /etc/fstab > /dev/null
 		if [[ -d ${ALLSKY_TMP} ]]; then
 			rm -f "${ALLSKY_TMP}"/*
 		else
@@ -307,6 +307,9 @@ check_memory_filesystem() {
 		display_msg --log progress "${ALLSKY_TMP} is now in memory."
 	else
 		display_msg --log info "${ALLSKY_TMP} will remain on disk."
+		mkdir -p "${ALLSKY_TMP}"
+		chmod 775 "${ALLSKY_TMP}"
+		sudo chown ${ALLSKY_OWNER}:${WEBSERVER_GROUP} "${ALLSKY_TMP}"
 	fi
 }
 
@@ -456,6 +459,7 @@ handle_prior_website() {
 	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 }
 
+
 # If the locale isn't already set, set it if possible
 set_locale() {
 	LOCALE="$(settings .locale)"
@@ -471,6 +475,7 @@ set_locale() {
 		jq ".locale = \"${LOCALE}\"" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
 	fi
 }
+
 
 # If there's a prior version of the software,
 # ask the user if they want to move stuff from there to the new directory.
@@ -499,8 +504,12 @@ check_if_prior_Allsky() {
 			display_msg info "* Rename the directory with your prior version of Allsky to\n'${PRIOR_INSTALL_DIR}', then run the installation again.\n"
 			exit 0
 		fi
+
+		# No prior Allsky so force creating a settings file.
+		FORCE_CREATING_SETTINGS_FILE=true
 	fi
 }
+
 
 install_dependencies_etc() {
 	# These commands produce a TON of output that's not needed unless there's a problem.
@@ -563,9 +572,7 @@ create_allsky_log() {
 # If the user wanted to restore files from a prior version of Allsky, do that.
 restore_prior_files() {
 	if [[ -z ${PRIOR_ALLSKY} ]]; then
-		# No prior Allsky so force creating a settings file.
-		FORCE_CREATING_SETTINGS_FILE=true
-		return
+		return			# Nothing left to do in this function, so return
 	fi
 
 	if [ -f "${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh" ]; then
@@ -604,10 +611,10 @@ restore_prior_files() {
 
 	if [ -f "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ]; then
 		display_msg progress "Restoring remote Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
-		mv "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_CONFIG}"
+		mv "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
 		# Check if this is an older configuration file type.
-		CONFIG_FILE="${ALLSKY_CONFIG}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		OLD=false
 		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${CONFIG_FILE}")"
 		REPO_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
@@ -649,15 +656,17 @@ restore_prior_files() {
 		if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			CT="ZWO"
 		else
-			CT="RPi"
+			CT="RPiHQ"		# RPi cameras used to be called "RPiHQ".
 		fi
 		SETTINGS="${OLD_RASPAP_DIR}/settings_${CT}.json"
 		if [[ -f ${SETTINGS} ]]; then
 			SETTINGS_MSG="\n\nYou also need to transfer your old settings to the WebUI.\nUse ${SETTINGS} as a guide.\n"
 		fi
+
+		# If we ever automate migrating settings, this next statement should be deleted.
 		FORCE_CREATING_SETTINGS_FILE=true
 	fi
-	# Do NOT restores options.json - it will be recreated.
+	# Do NOT restore options.json - it will be recreated.
 
 	# This may miss really-old variables that no longer exist.
 
@@ -668,7 +677,11 @@ restore_prior_files() {
 	else
 		PRIOR_FTP="ftp-settings.sh (in unknown location)"
 	fi
-	## TODO: automate this
+	## TODO: Try to automate this.
+	# Unfortunately, it's not easy since the prior configuration files could be from
+	# any Allsky version, and the variables and their names changed and we don't have a
+	# mapping of old-to-new names.
+
 	# display_msg progress "Restoring settings from config.sh and ftp-settings.sh."
 	# ( source ${PRIOR_FTP}
 	#	for each variable:
@@ -698,6 +711,7 @@ restore_prior_files() {
 	display_msg info "\n${MSG}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 }
+
 
 # Update Allsky and exit.  It basically resets things.
 # This can be needed if the user hosed something up, or there was a problem somewhere.
@@ -739,6 +753,7 @@ mkdir -p "${ALLSKY_CONFIG}"
 OK=true
 HELP=false
 DEBUG=false
+DEBUG_ARG=""
 UPDATE=false
 FUNCTION=""
 while [ $# -gt 0 ]; do
@@ -749,6 +764,7 @@ while [ $# -gt 0 ]; do
 			;;
 		--debug)
 			DEBUG=true
+			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			;;
 		--update)
 			UPDATE=true
@@ -828,7 +844,7 @@ set_locale
 ##### Check for sufficient swap space
 check_swap
 
-##### Check if prior $ALLSKY_TMP was a memory filesystem
+##### Optionally make $ALLSKY_TMP a memory filesystem
 check_memory_filesystem
 
 ##### Get the new host name

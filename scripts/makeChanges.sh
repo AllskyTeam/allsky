@@ -20,7 +20,6 @@ if [[ -f ${SETTINGS_FILE} ]]; then
 	source "${ALLSKY_CONFIG}/ftp-settings.sh"
 fi
 
-
 function usage_and_exit()
 {
 	echo -e "${wERROR}"
@@ -33,6 +32,7 @@ function usage_and_exit()
 # Check arguments
 OK=true
 DEBUG=false
+DEBUG_ARG=""
 HELP=false
 RESTARTING=false			# Will the caller restart Allsky?
 CAMERA_TYPE_ONLY=false		# Only update the cameraType ?
@@ -43,6 +43,7 @@ while [ $# -gt 0 ]; do
 	case "${ARG}" in
 		--debug)
 			DEBUG="true"
+			DEBUG_ARG="${ARG}"		# So we can pass to other scripts
 			;;
 		--help)
 			HELP="true"
@@ -96,7 +97,7 @@ while [ $# -gt 0 ]; do
 	LABEL="${2}"
 	NEW_VALUE="${3}"
 	if [ "${DEBUG}" = "true" ]; then
-		MSG="${KEY}: new [${NEW_VALUE}]"
+		MSG="New ${KEY} = [${NEW_VALUE}]"
 		if [[ ${ON_TTY} -eq 1 ]]; then
 			echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
 		else	# called from WebUI.
@@ -184,23 +185,46 @@ while [ $# -gt 0 ]; do
 			# to create an OPTIONS_FILE for this camera type/model.
 			# These variables don't include a directory since the directory is specified with "--dir" below.
 
-			# .php files don't return error codes so we check if it worked by
-			# looking for a string in its output.
+			if [[ ${DEBUG} == "true" ]]; then
+				echo "Calling:" \
+					"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+					${FORCE} ${DEBUG_ARG} \
+					--cc_file "${CC_FILE}" \
+					--options_file "${OPTIONS_FILE}" \
+					--settings_file "${SETTINGS_FILE}"
+			fi
 			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
-				${FORCE} \
+				${FORCE} ${DEBUG_ARG} \
 				--cc_file "${CC_FILE}" \
 				--options_file "${OPTIONS_FILE}" \
 				--settings_file "${SETTINGS_FILE}" \
 				2>&1)"
+
+			# .php files don't return error codes so we check if it worked by
+			# looking for a string in its output.
+
 			if [ -n "${R}" ]; then
-				# The user shouldn't see XX_WORKED_XX.
-				OTHER_OUTPUT="$(echo -e "${R}" | grep -v "XX_WORKED_XX")"
-				if [ -n "${OTHER_OUTPUT}" ]; then
+				if ! echo "${R}" | grep --quiet "XX_WORKED_XX"; then
 					echo -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}' and '${SETTINGS_FILE}' files.${wNC}"
-					echo "${OTHER_OUTPUT}"
+					echo "${R}"
 					exit 1
 				fi
+			else
+				# If there's no output, there won't be any special string...
+				echo -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}' and '${SETTINGS_FILE}' files - nothing returned.${wNC}"
+				exit 1
 			fi
+			OK=true
+			if [[ ! -f ${OPTIONS_FILE} ]]; then
+				echo -e "${wERROR}${ME}: ERROR Options file ${OPTIONS_FILE} not created.${wNC}"
+				OK=false
+			fi
+			if [[ ! -f ${SETTINGS_FILE} ]]; then
+				echo -e "${wERROR}${ME}: ERROR Settings file ${SETTINGS_FILE} not created.${wNC}"
+				OK=false
+			fi
+			[[ ${OK} == "false" ]] && exit 2
+
 			# It's an error if XX_WORKED_XX is NOT in the output.
 			echo -e "${R}" | grep --silent "XX_WORKED_XX" || exit 2
 
@@ -211,7 +235,7 @@ while [ $# -gt 0 ]; do
 			;;
 
 		filename)
-			WEBSITE_CONFIG+=("config.imageName" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
 			NEEDS_RESTART=true
 			;;
 		extratext)
@@ -234,7 +258,7 @@ while [ $# -gt 0 ]; do
 			if [[ (${SIGN} = "+" || ${SIGN} == "-") && (${LAST%[NSEW]} == "") ]]; then
 				echo -e "${wWARNING}WARNING: '${NEW_VALUE}' should contain EITHER a \"${SIGN}\" OR a \"${LAST}\", but not both; please change it.${wNC}"
 			else
-				WEBSITE_CONFIG+=(config."${KEY}" "${NEW_VALUE}")
+				WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 				RUN_POSTDATA=true
 			fi
 			NEEDS_RESTART=true
@@ -258,13 +282,20 @@ while [ $# -gt 0 ]; do
 				fi
 			fi
 			;;
+		dayTuningFile | nightTuningFile)
+			if [[ -n "${NEW_VALUE}" && ! -f "${NEW_VALUE}" ]]; then
+				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
+			fi
+			RUN_POSTDATA=false
+			NEEDS_RESTART=false
+			;;
 		showonmap)
 			[ "${NEW_VALUE}" = "0" ] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP=true
 			;;
 		location | owner | camera | lens | computer)
 			RUN_POSTTOMAP=true
-			WEBSITE_CONFIG+=(config."${KEY}" "${NEW_VALUE}")
+			WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
 		websiteurl | imageurl)
 			RUN_POSTTOMAP=true
@@ -288,18 +319,13 @@ if [[ ${RUN_POSTDATA} == "true" && ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
 	fi
 fi
 
-if [ "${DEBUG}" = "true" ]; then
-	D="--debug"
-else
-	D=""
-fi
 # shellcheck disable=SC2128
-if [[ ${WEBSITE_CONFIG} != "" && -d ${ALLSKY_WEBSITE} ]]; then
-	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${D} "${WEBSITE_CONFIG[@]}"
+if [[ ${WEBSITE_CONFIG} != "" && ( -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ) ]]; then
+	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} "${WEBSITE_CONFIG[@]}"
 fi	# else the Website isn't installed on the Pi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${D} ${POSTTOMAP_ACTION}
+	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
 fi
 
 if [[ ${RESTARTING} == "false" && ${NEEDS_RESTART} == "true" ]]; then
@@ -310,3 +336,4 @@ fi
 
 
 exit 0
+

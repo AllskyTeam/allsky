@@ -2,10 +2,8 @@
 
 include_once('functions.php');
 
-// TODO: when editor.php understands that what we return is a $status message,
-// change the "echo"s below to $status->AddMessage().
-
-// On error, return a string.
+// On success, return a string that starts with "S\t" (for Success).
+// On failure, return a string that starts with "E\t" (for Error).
 
 if (isset($_POST['content']))
 	$content = $_POST['content'];
@@ -16,7 +14,7 @@ $path = "";
 if (isset($_POST['path']))
 	$path = $_POST['path'];
 if ($path == "") {
-	echo "No file name specified to save!";
+	echo "E	No file name specified to save!";
 	exit;
 }
 
@@ -33,7 +31,7 @@ if (substr($path, 0, 7) === "current")
 else	// website
 	$file = str_replace('website', ALLSKY_WEBSITE, $path);
 if (! file_exists($file)) {
-	echo "File to save '$file' does not exist!";
+	echo "E	File to save '$file' does not exist!";
 	exit;
 }
 
@@ -42,23 +40,29 @@ $msg = updateFile($file, $content, "save_file");
 if ($msg == "") {
 	if ($isRemote) {
 		$imageDir = get_variable(ALLSKY_CONFIG .'/config.sh', 'IMAGE_DIR=', '');
+		$remoteHost = get_variable(ALLSKY_CONFIG .'/ftp-settings.sh', 'REMOTE_HOST=', '');
 		$cmd = ALLSKY_SCRIPTS . "/upload.sh --silent '$file' '$imageDir' " . basename($file) . " 'remote_file'";
-		$msg = shell_exec("$cmd > /dev/null");	# Ignore non-error output from the command
-		if ($msg == "") {
-			$msg = "File saved and sent to remote host.";
+		exec("$cmd 2>&1", $output, $return_val);
+		if ($return_val == 0) {
+			$msg = "File saved and sent to $remoteHost.";
 		} else {
 			$ok = false;
-			$msg = "File saved but unable to send to remote host: $msg";
+			$msg = implode("\n", $output);
+			$msg = "File saved but unable to send to $remoteHost: <pre>$msg</pre>";
+			$msg .= "Executed $cmd";
 		}
 	} else {
-		// $msg = "File saved";
-		exit;
+		$msg = "File saved";
 	}
 } else {
-	//header("HTTP/1.0 400 Bad Request");
 	$ok = false;
 	$msg = "Failed to save '$file': $msg";
 }
+
+if ($ok)
+	echo "S	";
+else
+	echo "E	";
 echo $msg;
 
 ?>

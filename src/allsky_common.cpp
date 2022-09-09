@@ -1923,11 +1923,17 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 
 // validate and convert Latitude and Longitude to N, S, E, W versions.
 static char strLatitude[20], strLongitude[20];
-static bool validateLatLong(char const *l, char positive, char negative, char *savedLocation, int maxSize, char const *name)
+static char const *validateLatLong(
+		char const *l,
+		char positive,
+		char negative,
+		char *savedLocation,
+		int maxSize,
+		char const *name)
 {
 	if (l == NULL || *l == '\0') {
 		Log(0, "*** ERROR: %s not specified!\n", name);
-		return(false);
+		return(NULL);
 	}
 
 	Log(4, "validateLatLong(l=%s, positive=%c, negative=%c, savedLocation=%s, name=%s\n", l, positive,negative,savedLocation,name);
@@ -1937,9 +1943,9 @@ static bool validateLatLong(char const *l, char positive, char negative, char *s
 		if (l[0] == '+' || l[0] == '-') {
 			Log(0, "*** ERROR: %s cannot have BOTH + or - AND %c or %c.  You entered [%s].\n",
 				name, positive, negative, l);
-			return(false);
+			return(NULL);
 		}
-		return(true);
+		return(l);
 	}
 
 	// Assume it's a number, so convert to a string;
@@ -1947,18 +1953,18 @@ static bool validateLatLong(char const *l, char positive, char negative, char *s
 	snprintf(savedLocation, maxSize-1, "%.5f%c", abs(num), num > 0 ? positive : negative);
 	l = savedLocation;
 	Log(4, "   new value = %s\n", savedLocation);
-	return(true);
+	return(savedLocation);
 }
 
 bool validateLatitudeLongitude(config *cg)
 {
 	bool ret = true;
-	if (! validateLatLong(cg->latitude, 'N', 'S', strLatitude, sizeof(strLatitude), "Latitude"))
+	cg->latitude = validateLatLong(cg->latitude, 'N', 'S', strLatitude, sizeof(strLatitude), "Latitude");
+	if (cg->latitude == NULL)
 		ret = false;
-	cg->latitude = strLatitude;
-	if (! validateLatLong(cg->longitude, 'E', 'W', strLongitude, sizeof(strLongitude), "Longitude"))
+	cg->longitude = validateLatLong(cg->longitude, 'E', 'W', strLongitude, sizeof(strLongitude), "Longitude");
+	if (cg->longitude == NULL)
 		ret = false;
-	cg->longitude = strLongitude;
 
 	return(ret);
 }

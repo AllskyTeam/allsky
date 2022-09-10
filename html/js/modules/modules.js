@@ -395,12 +395,12 @@ class MODULESEDITOR {
                             ' + inputHTML + '\
                             </div>\
                             <div class="col-xs-4">\
-                                <button type="button" class="btn btn-default" id="open-image-manager">...</button>\
+                                <button type="button" class="btn btn-default" id="open-image-manager-' + key + '">...</button>\
                             </div>\
                         </div>\
                     ';
 
-                    $(document).on('click', '#open-image-manager', (event) => {                
+                    $(document).on('click', '#open-image-manager-' + key, (event) => {                
                         $('#module-image-manager').oeImageManager({
                             thumbnailURL: 'includes/overlayutil.php?request=Images',
                             usedImages: [],
@@ -418,6 +418,51 @@ class MODULESEDITOR {
                         $('#module-file-manager-dialog').modal('hide')
                     });
                     
+                }
+
+                if (fieldType.fieldtype == 'roi') {
+                    inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '">';
+                    extraClass = 'input-group';
+                    inputHTML = '\
+                        <div class="row">\
+                            <div class="col-xs-8">\
+                            ' + inputHTML + '\
+                            </div>\
+                            <div class="col-xs-4">\
+                                <button type="button" class="btn btn-default" id="open-roi-' + key + '" data-source="' + key + '">...</button>\
+                                <button type="button" class="btn btn-default" id="reset-roi-' + key + '" data-source="' + key + '"><span class="glyphicon glyphicon-repeat"></span></button>\
+                            </div>\
+                        </div>\
+                    ';
+
+                    $(document).on('click', '#reset-roi-' + key, (event) => {
+                        let el = $(event.target).data('source');
+                        $('#' + el).val('');
+                    });
+
+                    $(document).on('click', '#open-roi-' + key, (event) => {
+                        let el = $(event.target).data('source');
+                        let data = $('#' + el).val();
+                        let roi = null;
+                        
+                        if (data !== '') {
+                            roi = this.#parseROI(data);
+                        }
+
+                        let fallbackValue = $('#roifallback').val();
+                        if (fallbackValue === undefined) {
+                            fallbackValue = 5;
+                        }
+                        $.allskyROI({
+                            id: key,
+                            roi: roi,
+                            fallbackValue: fallbackValue,
+                            roiSelected: function(roi) {
+                                $('#' + key).val(roi.x1 + ',' + roi.y1 + ',' + roi.x2 + ',' + roi.y2)
+                            }
+                        });
+                    });
+
                 }
             }
 
@@ -544,6 +589,21 @@ class MODULESEDITOR {
             $('#module-settings-dialog').modal('hide');
             $(document).trigger('module:dirty');
         });
+    }
+
+    #parseROI(rawROI) {
+        let roi = null;
+        let parts = rawROI.split(',');
+
+        if (parts.length == 4) {
+            roi = {};
+            roi.x1 = parseInt(parts[0], 10);
+            roi.y1 = parseInt(parts[1], 10);
+            roi.x2 = parseInt(parts[2], 10);
+            roi.y2 = parseInt(parts[3], 10);
+        }
+
+        return roi;
     }
 
     #saveFormData(type, formValues, module) {

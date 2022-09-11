@@ -481,6 +481,7 @@ class MODULESEDITOR {
             let tab = 'home';
             if (fieldData.tab !== undefined) {
                 tab = fieldData.tab
+                tab = tab.replace(/\s+/g,'_');
             }
             if (tabs[tab] === undefined) {
                 tabs[tab] = [];
@@ -502,7 +503,7 @@ class MODULESEDITOR {
             let active = 'active';
             for (let tabName in tabs) {
                 let tabRef = moduleData.metadata.module + tabName;
-                moduleSettingsHtml += '<li role="presentation" class="' + active + '"><a href="#' + tabRef + '" role="tab" data-toggle="tab">' + tabName + '</a></li>';
+                moduleSettingsHtml += '<li role="presentation" class="' + active + '"><a href="#' + tabRef + '" role="tab" data-toggle="tab">' + tabName.replace(/\_/g,' ') + '</a></li>';
                 active = '';
             }
             moduleSettingsHtml += ' </ul>'

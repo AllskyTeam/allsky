@@ -7,6 +7,7 @@ import json
 import time
 import argparse,importlib,json,numpy, os
 from datetime import datetime, timedelta, date
+import kv_database
 
 '''
 NOTE: `valid_module_paths` must be an array, and the order specified dictates the order of search for a named module.
@@ -62,7 +63,11 @@ if __name__ == "__main__":
     try:
         s.args.tod = os.environ["DAY_OR_NIGHT"].lower()
     except:
-        s.log("ERROR: unable to determine if its day or night in the environment", exitCode=1)
+        if s.args.event == 'postcapture':
+            s.log(0, "ERROR: unable to determine if its day or night in the environment", exitCode=1)
+        else:
+            s.log(1, "INFO: Day or Night not available defaulting to day")
+            s.args.tod = 'day'
 
     try:
         s.args.config = os.environ["SETTINGS_FILE"]
@@ -95,17 +100,20 @@ if __name__ == "__main__":
     except:
         s.log(0, "ERROR: no allsky config directory available in the environment", exitCode=1)
 
+    s.TOD = s.args.tod
     date = datetime.now()
     if s.args.tod == "night":
         date = date + timedelta(hours=-12)
     dateString = date.strftime("%Y%m%d")
 
-    s.imageFileName = os.path.basename(s.CURRENTIMAGEPATH)
-    s.imageFolder = os.path.join(imagesRoot, dateString)
-    s.imageFile = os.path.join(s.imageFolder, s.imageFileName)
 
-    s.thumbnailFolder = os.path.join(s.imageFolder, "thumbnails")
-    s.thumbnailFile = os.path.join(s.thumbnailFolder, s.imageFileName)
+    if s.args.event != 'endofnight':
+        s.imageFileName = os.path.basename(s.CURRENTIMAGEPATH)
+        s.imageFolder = os.path.join(imagesRoot, dateString)
+        s.imageFile = os.path.join(s.imageFolder, s.imageFileName)
+
+        s.thumbnailFolder = os.path.join(s.imageFolder, "thumbnails")
+        s.thumbnailFile = os.path.join(s.thumbnailFolder, s.imageFileName)
 
 
     s.log(1, "INFO: Loading config...")
@@ -132,6 +140,8 @@ if __name__ == "__main__":
                 s.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)
     except:
         s.log(0, "ERROR: Failed to open {0}".format(moduleConfig), exitCode=1)
+
+    s.initDB()
     
     results = {}
     for s.step in s.recipe:

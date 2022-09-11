@@ -16,6 +16,7 @@ import json
 import cv2
 import shutil
 import re
+import sys
 
 ABORT = True
 
@@ -24,6 +25,8 @@ LOGLEVEL = 0
 SETTINGS = {}
 CONFIG = {}
 UPLOAD = {}
+TOD = ''
+DBDATA = {}
 
 def checkAndCreatePath(filePath):
     path = os.path.dirname(filePath)
@@ -220,3 +223,46 @@ def log(level, text, preventNewline = False, exitCode=None):
 
     if exitCode is not None:
         exit(exitCode)
+
+def initDB():
+    global DBDATA
+    tmpDir = getEnvironmentVariable('ALLSKY_TMP')
+    dbFile = os.path.join(tmpDir, 'allskydb.py')
+    if not os.path.isfile(dbFile):
+        file = open(dbFile, 'w+')
+        file.write('DataBase = {}')
+        file.close()
+ 
+    sys.path.insert(1, tmpDir)
+    database = __import__('allskydb')
+    DBDATA = database.DataBase
+
+def dbAdd(key, value):
+    global DBDATA
+    DBDATA[key] = value
+    writeDB()
+
+def dbUpdate(key, value):
+    global DBDATA    
+    DBDATA[key] = value
+    writeDB()
+
+def dbHasKey(key):
+    global DBDATA
+    return (key in DBDATA)
+
+def dbGet(key):
+    global DBDATA
+    if dbHasKey(key):
+        return DBDATA[key]
+    else:
+        return None
+
+def writeDB():
+    global DBDATA
+    tmpDir = getEnvironmentVariable('ALLSKY_TMP')
+    dbFile = os.path.join(tmpDir, 'allskydb.py')    
+    file = open(dbFile, 'w+')
+    file.write('DataBase = ')
+    file.write(str(DBDATA))
+    file.close()

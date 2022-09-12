@@ -875,7 +875,7 @@ install_overlay()
 
         echo -e "${GREEN}* Setting up modules${NC}"
         sudo mkdir -p /etc/allsky/modules
-        sudo chown -R www-data /etc/allsky
+        sudo chown -R ${ALLSKY_OWNER}:www-data /etc/allsky
         sudo chmod -R 774 /etc/allsky
 
         echo -e "${GREEN}* Fixing permissions${NC}"

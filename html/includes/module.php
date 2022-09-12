@@ -24,6 +24,9 @@ function DisplayModule() {
 <link href="/js/dropzone/dropzone.css" type="text/css" rel="stylesheet" />
 <script src="/js/dropzone/dropzone-min.js"></script>
 
+<script src="/js/jquery-roi/jquery-roi.js"></script>
+<script src="/js/konva/konva.min.js"></script>
+
 <div class="row">
     <div class="col-lg-12">
 		<div class="panel panel-primary">

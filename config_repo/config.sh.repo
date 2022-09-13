@@ -110,12 +110,15 @@ UPLOAD_VIDEO="false"
 TIMELAPSE_UPLOAD_THUMBNAIL="false"
 
 ### Mini timelapse
-# A "mini" timelapse is one that only includes the most recent images, is created often, and overwrites the prior mini video.
-# TIMELAPSE_MINI_IMAGES is the number of images you want in the mini timelapse.  0 disables mini timelapses.
+# A "mini" timelapse is one that only includes the most recent images,
+# is created often, and overwrites the prior mini video.
+# TIMELAPSE_MINI_IMAGES is the number of images you want in the mini timelapse.
+# 0 disables mini timelapses.
 TIMELAPSE_MINI_IMAGES=0
-# How often should the mini timelapse be made?
-# If you have a slow Pi or short delays between images, set this to a higher number (i.e., not as often).
-TIMELAPSE_MINI_FREQUENCY=3
+# After how many images should the mini timelapse be made?
+# If you have a slow Pi or short delays between images,
+# set this to a higher number (i.e., not as often).
+TIMELAPSE_MINI_FREQUENCY=5
 
 # The remaining TIMELAPSE_MINI variables serve the same function as the daily timelapse.
 TIMELAPSE_MINI_UPLOAD_VIDEO="true"
@@ -202,6 +205,12 @@ if [ "${IMG_DIR}" = "current/tmp" ]; then
 	CAPTURE_SAVE_DIR="${ALLSKY_TMP}"
 else
 	CAPTURE_SAVE_DIR="${IMG_DIR}"
+fi
+
+# Don't try to upload a mini timelapse if they aren't using them.
+if [[ ${TIMELAPSE_MINI_IMAGES} -le 0 ]]; then
+	TIMELAPSE_MINI_UPLOAD_VIDEO="false"
+	TIMELAPSE_MINI_UPLOAD_THUMBNAIL="false"
 fi
 
 if [[ ! -f ${SETTINGS_FILE} ]]; then		# SETTINGS_FILE is defined in variables.sh

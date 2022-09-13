@@ -248,9 +248,6 @@ fi
 SAVED_FILE="${CURRENT_IMAGE}"				# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 
-# If we're not creating mini timelapse, don't upload them.
-[ ${TIMELAPSE_MINI_IMAGES:-0} -eq 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"
-
 # If needed, save the current image in today's directory.
 if [[ "$(settings ".saveDaytimeImages")" = "1" || "${DAY_OR_NIGHT}" = "NIGHT" ]]; then
 	# Determine what directory is the final resting place.
@@ -279,14 +276,35 @@ if [[ "$(settings ".saveDaytimeImages")" = "1" || "${DAY_OR_NIGHT}" = "NIGHT" ]]
 
 	# The web server can't handle symbolic links so we need to make a copy of the file for
 	# it to use.
-
 	FINAL_FILE="${DATE_DIR}/${IMAGE_NAME}"
 	if cp "${CURRENT_IMAGE}" "${FINAL_FILE}" ; then
-		if [ ${TIMELAPSE_MINI_IMAGES:-0} -ne 0 ]; then
+
+		if [[ ${TIMELAPSE_MINI_IMAGES} -ne 0 && ${TIMELAPSE_MINI_FREQUENCY} -ne 1 ]]; then
+			FREQUENCY_FILE="${ALLSKY_TMP}/MINI_UPLOAD_FREQUENCY.txt"
+			typeset -i LEFT
+			if [ ! -f "${FREQUENCY_FILE}" ]; then
+				# The file may have been deleted, or the user may have just changed the frequency.
+				let LEFT=${TIMELAPSE_MINI_FREQUENCY}
+			else
+				let LEFT=$( < "${FREQUENCY_FILE}" )
+			fi
+			if [ ${LEFT} -le 1 ]; then
+				# create and upload this one and reset the counter
+				echo "${TIMELAPSE_MINI_FREQUENCY}" > "${FREQUENCY_FILE}"
+			else
+				# Not ready to upload yet, so decrement the counter
+				let LEFT=LEFT-1
+				echo "${LEFT}" > "${FREQUENCY_FILE}"
+				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
+				[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Not creating or uploading mini timelapse: ${LEFT} images(s) left."
+
+				TIMELAPSE_MINI_UPLOAD_VIDEO="false"
+			fi
+		fi
+
+		if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" ]]; then
 			"${ALLSKY_SCRIPTS}"/timelapse.sh -m ${TIMELAPSE_MINI_IMAGES} "${DATE_NAME}"
 			[ $? -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
-		else
-			TIMELAPSE_MINI_UPLOAD_VIDEO="false"	# not using mini-timelapse
 		fi
 	else
 		echo "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"
@@ -294,7 +312,7 @@ if [[ "$(settings ".saveDaytimeImages")" = "1" || "${DAY_OR_NIGHT}" = "NIGHT" ]]
 	fi
 fi
 
-if [ "${IMG_UPLOAD}" = "true" ] || [ "${TIMELAPSE_MINI_UPLOAD_VIDEO}" = "true" ]; then
+if [[ ${IMG_UPLOAD} = "true" || ${TIMELAPSE_MINI_UPLOAD_VIDEO} = "true" ]]; then
 	source "${ALLSKY_CONFIG}/ftp-settings.sh"
 fi
 
@@ -307,7 +325,6 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 		typeset -i LEFT
 		if [ ! -f "${FREQUENCY_FILE}" ]; then
 			# The file may have been deleted, or the user may have just changed the frequency.
-			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
 			let LEFT=${IMG_UPLOAD_FREQUENCY}
 		else
 			let LEFT=$( < "${FREQUENCY_FILE}" )
@@ -320,7 +337,7 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 			let LEFT=LEFT-1
 			echo "${LEFT}" > "${FREQUENCY_FILE}"
 			# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
-			[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ] && echo "${ME}: Not uploading: ${LEFT} images(s) left."
+			[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
 
 			# We didn't create ${WEBSITE_FILE} yet so do that now.
 			mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
@@ -359,18 +376,23 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${RET} -eq 0 ]] ; then
 
 	"${ALLSKY_SCRIPTS}/upload.sh" "${FILE_TO_UPLOAD}" "${IMAGE_DIR}" "${MINI}" "MiniTimelapse" "${WEB_IMAGE_DIR}"
 	RET=$?
-	if [ ${RET} -eq 0 ] && [ "${TIMELAPSE_MINI_UPLOAD_THUMBNAIL}" = "true" ]; then
+	if [[ ${RET} -eq 0 && ${TIMELAPSE_MINI_UPLOAD_THUMBNAIL} = "true" ]]; then
 		UPLOAD_THUMBNAIL_NAME="mini-timelapse.jpg"
 		UPLOAD_THUMBNAIL="${ALLSKY_TMP}/${UPLOAD_THUMBNAIL_NAME}"
 		# Create the thumbnail for the mini timelapse, then upload it.
 		rm -f "${UPLOAD_THUMBNAIL}"
 		ffmpeg -loglevel error -i "${FILE_TO_UPLOAD}" \
 			-filter:v scale="${THUMBNAIL_SIZE_X}:-1" -frames:v 1 "${UPLOAD_THUMBNAIL}"
-		if [ ! -f "${UPLOAD_THUMBNAIL}" ]; then
+		if [[ ! -f ${UPLOAD_THUMBNAIL} ]]; then
 			echo "${ME}Mini timelapse thumbnail not created!"
 		else
 			# Use --silent because we just displayed message(s) above for this image.
-			"${ALLSKY_SCRIPTS}/upload.sh" --silent "${UPLOAD_THUMBNAIL}" "${IMAGE_DIR}" "${UPLOAD_THUMBNAIL_NAME}" "MiniThumbnail" "${WEB_VIDEOS_DIR}/thumbnails"
+			"${ALLSKY_SCRIPTS}/upload.sh" --silent \
+				"${UPLOAD_THUMBNAIL}" \
+				"${IMAGE_DIR}" \
+				"${UPLOAD_THUMBNAIL_NAME}" \
+				"MiniThumbnail" \
+				"${WEB_VIDEOS_DIR}/thumbnails"
 		fi
 	fi
 fi

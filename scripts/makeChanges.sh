@@ -19,6 +19,8 @@ if [[ -f ${SETTINGS_FILE} ]]; then
 	# shellcheck disable=SC1090
 	source "${ALLSKY_CONFIG}/ftp-settings.sh"
 fi
+# shellcheck disable=SC1090
+source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
 
 function usage_and_exit()
 {
@@ -130,8 +132,6 @@ while [ $# -gt 0 ]; do
 			# The software for RPi cameras needs to know what command is being used to
 			# capture the images.
 			if [[ ${NEW_VALUE} == "RPi" ]]; then
-				# shellcheck disable=SC1090
-				source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
 				C="$(determineCommandToUse "false" "" )"
 				# shellcheck disable=SC2181
 				if [ $? -ne 0 ]; then
@@ -238,6 +238,7 @@ while [ $# -gt 0 ]; do
 			WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
 			NEEDS_RESTART=true
 			;;
+
 		extratext)
 			# It's possible the user will create/populate the file while Allsky is running,
 			# so it's not an error if the file doesn't exist or is empty.
@@ -250,6 +251,7 @@ while [ $# -gt 0 ]; do
 			fi
 			NEEDS_RESTART=true
 			;;
+
 		latitude | longitude)
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
 			NEW_VALUE="${NEW_VALUE^^[nsew]}"	# convert any character to uppercase for consistency
@@ -263,14 +265,17 @@ while [ $# -gt 0 ]; do
 			fi
 			NEEDS_RESTART=true
 			;;
+
 		angle)
 			RUN_POSTDATA=true
 			NEEDS_RESTART=true
 			;;
+
 		takeDaytimeImages)
 			RUN_POSTDATA=true
 			NEEDS_RESTART=true
 			;;
+
 		config)
 			if [ "${NEW_VALUE}" = "" ]; then
 				NEW_VALUE="[none]"
@@ -282,6 +287,7 @@ while [ $# -gt 0 ]; do
 				fi
 			fi
 			;;
+
 		dayTuningFile | nightTuningFile)
 			if [[ -n "${NEW_VALUE}" && ! -f "${NEW_VALUE}" ]]; then
 				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
@@ -289,24 +295,43 @@ while [ $# -gt 0 ]; do
 			RUN_POSTDATA=false
 			NEEDS_RESTART=true
 			;;
+
 		displaySettings)
 			RUN_POSTDATA=true
+			if [[ ${NEW_VALUE} -eq 0 ]]; then
+				NEW_VALUE=false
+			else
+				NEW_VALUE=true
+			fi
+			PARENT="homePage.popoutIcons"
+			FIELD="Image Settings"
+			INDEX=$(getJSONarrayIndex "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "${PARENT}" "${FIELD}")
+			if [[ ${INDEX} -ge 0 ]]; then
+				WEBSITE_CONFIG+=(${PARENT}[${INDEX}].display "${LABEL}" "${NEW_VALUE}")
+			else
+				echo -e "${wWARNING}WARNING: Unable to update ${wBOLD}${FIELD}${wNBOLD} in ${ALLSKY_WEBSITE_CONFIGURATION_FILE}; ignoring.${wNC}"
+			fi
 			;;
+
 		showonmap)
 			[ "${NEW_VALUE}" = "0" ] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP=true
 			;;
+
 		location | owner | camera | lens | computer)
 			RUN_POSTTOMAP=true
 			WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
+
 		websiteurl | imageurl)
 			RUN_POSTTOMAP=true
 			;;
 
+
 		*)
 			echo -e "${wWARNING}WARNING: Unknown label '${LABEL}', key='${KEY}'; ignoring.${wNC}"
 			;;
+
 		esac
 		shift 3
 done

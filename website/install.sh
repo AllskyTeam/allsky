@@ -166,7 +166,7 @@ update_website_configuration_file() {
 			fi
 		fi
 	else
-		echo -e "${wWARNING}WARNING: Unable to update ${wBOLD}${FIELD}${wNBOLD} in ${ALLSKY_WEBSITE_CONFIGURATION_FILE}; ignoring.${wNC}"
+		display_msg warning "Unable to update '${FIELD}' in ${ALLSKY_WEBSITE_CONFIGURATION_FILE}; ignoring."
 		# bogus settings that won't do anything
 		MINI_TLAPSE_DISPLAY="x"
 		MINI_TLAPSE_URL="x"

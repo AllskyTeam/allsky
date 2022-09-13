@@ -287,7 +287,10 @@ while [ $# -gt 0 ]; do
 				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
 			fi
 			RUN_POSTDATA=false
-			NEEDS_RESTART=false
+			NEEDS_RESTART=true
+			;;
+		displaySettings)
+			RUN_POSTDATA=true
 			;;
 		showonmap)
 			[ "${NEW_VALUE}" = "0" ] && POSTTOMAP_ACTION="--delete"
@@ -312,7 +315,7 @@ if [[ ${RUN_POSTDATA} == "true" && ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
 	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" >&2)" ; then
 		echo -en "${wOK}"
 		echo -e "Updated twilight data sent to your Allsky Website."
-		echo -e "${wBOLD}If you have the website open in a browser, please refresh the window.${wNBOLD}"
+		echo -e "${wBOLD}If you have the Allsky Website open in a browser, please refresh the window.${wNBOLD}"
 		echo -en "${wNC}"
 	else
 		echo -e "${wERROR}ERROR posting updated twilight data: ${RESULT}.${wNC}"

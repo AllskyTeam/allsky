@@ -18,9 +18,12 @@ ME="$(basename "${BASH_ARGV0}")"
 usage_and_exit() {
 	RET=$1
 	[ ${RET} -ne 0 ] && echo -en "${RED}"
-	echo -n "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] file_to_upload  directory  destination_file_name [file_type] [local_directory]"
+	echo "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] \\"
+	echo "               file_to_upload  directory  destination_file_name \\"
+	echo "               [file_type] [local_directory]"
 	[ ${RET} -ne 0 ] && echo -e "${NC}"
 
+	echo
 	echo "Where:"
 	echo "   '--help' displays this message and exits."
 	echo "   '--wait' waits for any upload of the same type to finish."
@@ -73,10 +76,10 @@ while [ $# -gt 0 ]; do
 	esac
 done
 [[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit ${RET}
-[ "${HELP}" = "true" ] && usage_and_exit 0
+[[ ${HELP} = "true" ]] && usage_and_exit 0
 
 FILE_TO_UPLOAD="${1}"
-if [ ! -f "${FILE_TO_UPLOAD}" ] ; then
+if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
 	echo -en "${RED}" >&2
 	echo -n "*** ${ME}: ERROR: File to upload '${FILE_TO_UPLOAD}' not found!" >&2
 	echo -e "${NC}" >&2

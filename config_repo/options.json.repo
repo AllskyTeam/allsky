@@ -1,28 +1,5 @@
 [
 {
-"name" : "cameraType",
-"default" : "",
-"description" : "The type of camera you are using.  'RPi' includes the HD and compatible cameras.<br>You <b>must</b> set and change the camera here, not in config.sh.",
-"label" : "Camera Type",
-"type" : "select",
-"options" : [
-	{"value" : "RPi", "label" : "RPi"},
-	{"value" : "ZWO", "label" : "ZWO ASI"}
-],
-"display" : 1,
-"checkchanges" : 1,
-"advanced" : 1
-},
-{
-"name" : "cameraModel",
-"default" : "",
-"description" : "The model of camera you are using.  Cannot be changed here.",
-"label" : "Camera Model",
-"type" : "readonly",
-"display" : 1,
-"advanced" : 1
-},
-{
 "name" : "daytimeSettingsHeader",
 "description" : "Daytime settings",
 "type" : "header",
@@ -642,7 +619,7 @@
 {
 "name" : "latitude",
 "default" : "",
-"description" : "Latitude of the camera. Needs a number (0 to 90) and direction (N or S), for example: 60.7N.",
+"description" : "Latitude of the camera. Can be a number (-90 to 90) or a positive number with direction (N or S), for example: 60.7N.",
 "label" : "Latitude",
 "type" : "text",
 "display" : 1,
@@ -653,7 +630,7 @@
 {
 "name" : "longitude",
 "default" : "",
-"description" : "Longitude of the camera. Needs a number (0 to 180) and direction (E or W), for example: 135.05W.",
+"description" : "Longitude of the camera. Can be a number (-180 to 180) or a positive number with a direction (E or W), for example: 135.05W.",
 "label" : "Longitude",
 "type" : "text",
 "display" : 1,
@@ -858,7 +835,7 @@
 {
 "name" : "showhistogrambox",
 "default" : 0,
-"description" : "Enable to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
+"description" : "Activate to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
 "label" : "Show Histogram Box",
 "type" : "checkbox",
 "display" : "showhistogrambox_display",
@@ -1029,6 +1006,16 @@
 "advanced" : 0
 },
 {
+"name" : "displaySettings",
+"default" : 0,
+"description" : "Activate to add a link to the Allsky Website to display the settings on this page.",
+"label" : "Display Settings",
+"type" : "checkbox",
+"display" : 1,
+"checkchanges" : 1,
+"advanced" : 0
+},
+{
 "name" : "showonmap",
 "default" : 0,
 "description" : "Activate to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank'><b>Allsky Map</b></a>.",
@@ -1109,7 +1096,36 @@
 "advanced" : 0
 },
 {
+"name" : "CameraHeading",
+"description" : "Camera Type",
+"type" : "header",
+"display" : 1,
+"advanced" : 1
+},
+{
+"name" : "cameraType",
+"default" : "",
+"description" : "The type of camera you are using.  'RPi' includes the HD and compatible cameras.<br>You <b>must</b> set and change the camera here, not in config.sh.",
+"label" : "Camera Type",
+"type" : "select",
+"options" : [
+	{"value" : "RPi", "label" : "RPi"},
+	{"value" : "ZWO", "label" : "ZWO ASI"}
+],
+"display" : 1,
+"checkchanges" : 1,
+"advanced" : 1
+},
+{
+"name" : "cameraModel",
+"default" : "",
+"description" : "The model of camera you are using.  Cannot be changed here.",
+"label" : "Camera Model",
+"type" : "readonly",
+"display" : 1,
+"advanced" : 1
+},
+{
 "name" : "XX_END_XX"
 }
 ]
-

@@ -180,7 +180,7 @@ body.dark {
 
 .alert {
 	padding: 3px;
-	margin-bottom: 2;
+	margin-bottom: 2px;
 }
 .alert-dismissable .close {
 	right: 0px;

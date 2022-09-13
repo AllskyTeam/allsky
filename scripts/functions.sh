@@ -148,7 +148,7 @@ function getJSONarrayIndex()
 	JSON_FILE="${1}"
 	PARENT="${2}"
 	FIELD="${3}"
-	echo $(jq .${PARENT} "${JSON_FILE}" | \
+	echo "$(jq .${PARENT} "${JSON_FILE}" | \
 		gawk 'BEGIN { n = -1; found = 0;} {
 			if ($1 == "{") {
 				n++;
@@ -159,5 +159,5 @@ function getJSONarrayIndex()
 				found = 1;
 				exit 0
 			}
-		} END {if (! found) print -1}')
+		} END {if (! found) print -1}')"
 }

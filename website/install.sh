@@ -148,30 +148,30 @@ update_website_configuration_file() {
 	display_msg progress "Updating settings in ${WEB_CONFIG_FILE}."
 
 	# Get the array index for the mini-timelapse.
-	INDEX=$(jq .homePage.sidebar "${WEB_CONFIG_FILE}" | \
-		gawk 'BEGIN { n = -1; } {
-			if ($1 == "{") {
-				n++;
-				next;
-			}
-			if ($0 ~ /Mini-timelapse/) {
-				printf("%d", n);
-				exit 0
-			}
-		}')
-	MINI_TLAPSE_DISPLAY="homePage.sidebar[${INDEX}].display"
-	MINI_TLAPSE_URL="homePage.sidebar[${INDEX}].url"
-
-	if [ "${TIMELAPSE_MINI_IMAGES:-0}" -eq 0 ]; then
-		MINI_TLAPSE_DISPLAY_VALUE="false"
-		MINI_TLAPSE_URL_VALUE=""
-	else
-		MINI_TLAPSE_DISPLAY_VALUE="true"
-		if [ "${REMOTE_WEBSITE}" = "true" ]; then
-			MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
+	PARENT="homePage.sidebar"
+	FIELD="Mini-timelapse"
+	INDEX=$(getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "${FIELD}")
+	if [[ ${INDEX} -ge 0 ]]; then
+		MINI_TLAPSE_DISPLAY="${PARENT}[${INDEX}].display"
+		MINI_TLAPSE_URL="${PARENT}[${INDEX}].url"
+		if [ "${TIMELAPSE_MINI_IMAGES:-0}" -eq 0 ]; then
+			MINI_TLAPSE_DISPLAY_VALUE="false"
+			MINI_TLAPSE_URL_VALUE=""
 		else
-			MINI_TLAPSE_URL_VALUE="/${IMG_DIR}/mini-timelapse.mp4"
+			MINI_TLAPSE_DISPLAY_VALUE="true"
+			if [ "${REMOTE_WEBSITE}" = "true" ]; then
+				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
+			else
+				MINI_TLAPSE_URL_VALUE="/${IMG_DIR}/mini-timelapse.mp4"
+			fi
 		fi
+	else
+		display_msg warning "Unable to update '${FIELD}' in ${ALLSKY_WEBSITE_CONFIGURATION_FILE}; ignoring."
+		# bogus settings that won't do anything
+		MINI_TLAPSE_DISPLAY="x"
+		MINI_TLAPSE_URL="x"
+		MINI_TLAPSE_DISPLAY_VALUE=""
+		MINI_TLAPSE_URL_VALUE=""
 	fi
 
 	# Latitude and longitude may or may not have N/S and E/W.

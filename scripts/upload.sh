@@ -18,9 +18,12 @@ ME="$(basename "${BASH_ARGV0}")"
 usage_and_exit() {
 	RET=$1
 	[ ${RET} -ne 0 ] && echo -en "${RED}"
-	echo -n "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] file_to_upload  directory  destination_file_name [file_type] [local_directory]"
+	echo "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] \\"
+	echo "               file_to_upload  directory  destination_file_name \\"
+	echo "               [file_type] [local_directory]"
 	[ ${RET} -ne 0 ] && echo -e "${NC}"
 
+	echo
 	echo "Where:"
 	echo "   '--help' displays this message and exits."
 	echo "   '--wait' waits for any upload of the same type to finish."
@@ -73,10 +76,10 @@ while [ $# -gt 0 ]; do
 	esac
 done
 [[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit ${RET}
-[ "${HELP}" = "true" ] && usage_and_exit 0
+[[ ${HELP} = "true" ]] && usage_and_exit 0
 
 FILE_TO_UPLOAD="${1}"
-if [ ! -f "${FILE_TO_UPLOAD}" ] ; then
+if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
 	echo -en "${RED}" >&2
 	echo -n "*** ${ME}: ERROR: File to upload '${FILE_TO_UPLOAD}' not found!" >&2
 	echo -e "${NC}" >&2
@@ -84,7 +87,8 @@ if [ ! -f "${FILE_TO_UPLOAD}" ] ; then
 fi
 
 REMOTE_DIR="${2}"
-DESTINATION_FILE="${3}"
+DESTINATION_NAME="${3}"
+[[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$(basename "${FILE_TO_UPLOAD}")"
 FILE_TYPE="${4:-x}"		# A unique identifier for this type of file
 COPY_TO="${5}"
 if [ "${COPY_TO}" != "" -a ! -d "${COPY_TO}" ] ; then
@@ -158,7 +162,7 @@ trap "" SIGTERM
 trap "" SIGHUP
 
 if [[ ${PROTOCOL} == "s3" ]] ; then
-	# xxxxxx How do you tell it the DESTINATION_FILE name ?
+	# xxxxxx How do you tell it the DESTINATION_NAME name ?
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
 		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to aws ${S3_BUCKET}/${REMOTE_DIR}"
 	fi
@@ -167,17 +171,17 @@ if [[ ${PROTOCOL} == "s3" ]] ; then
 
 elif [[ ${PROTOCOL} == "local" ]] ; then
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
-		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_DIR}/${DESTINATION_FILE}"
+		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_DIR}/${DESTINATION_NAME}"
 	fi
-	cp "${FILE_TO_UPLOAD}" "${REMOTE_DIR}/${DESTINATION_FILE}"
+	cp "${FILE_TO_UPLOAD}" "${REMOTE_DIR}/${DESTINATION_NAME}"
 	RET=$?
 
 elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
 		# shellcheck disable=SC2153
-		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_FILE}"
+		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
 	fi
-	scp -i "${SSH_KEY_FILE}" "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_FILE}"
+	scp -i "${SSH_KEY_FILE}" "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
 	RET=$?
 
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
@@ -197,7 +201,7 @@ else # sftp/ftp/ftps
 	[[ ${REMOTE_DIR} != "" && ${REMOTE_DIR: -1:1} != "/" ]] && REMOTE_DIR="${REMOTE_DIR}/"
 
 	if [[ ${SILENT} = "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: FTP '${FILE_TO_UPLOAD}' to '${REMOTE_DIR}${DESTINATION_FILE}', TEMP_NAME=${TEMP_NAME}"
+		echo "${ME}: FTP '${FILE_TO_UPLOAD}' to '${REMOTE_DIR}${DESTINATION_NAME}', TEMP_NAME=${TEMP_NAME}"
 	fi
 	# LFTP_CMDS needs to be unique per file type so we don't overwrite a different upload type.
 	LFTP_CMDS="${ALLSKY_TMP}/${FILE_TYPE}-lftp_cmds.txt"
@@ -231,19 +235,19 @@ else # sftp/ftp/ftps
 
 		echo "put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}' || (echo 'put of ${FILE_TO_UPLOAD} to ${TEMP_NAME} failed!'; rm -f '${TEMP_NAME}'; exit 1) || exit 2"
 
-		# Try to remove ${DESTINATION_FILE}, which may or may not exist.
+		# Try to remove ${DESTINATION_NAME}, which may or may not exist.
 		# If the "rm" fails, the file may be in use by the web server or another lftp,
 		# so wait a few seconds and try again, but without the "-f" option so we see any error msg.
-		echo "rm  -f '${DESTINATION_FILE}'"
-		echo "glob --exist '${DESTINATION_FILE}*'
-			&& (echo 'rm of ${DESTINATION_FILE} failed!  Trying again...';  (!sleep 3);  rm '${DESTINATION_FILE}' && echo 'WORKED' && exit 1)
+		echo "rm  -f '${DESTINATION_NAME}'"
+		echo "glob --exist '${DESTINATION_NAME}*'
+			&& (echo 'rm of ${DESTINATION_NAME} failed!  Trying again...';  (!sleep 3);  rm '${DESTINATION_NAME}' && echo 'WORKED' && exit 1)
 			&& (echo '2nd rm failed, quiting.'; rm -f '${TEMP_NAME}'; exit 1)
 			&& exit 3"
 
 		# If the first "mv" fails, wait, then try again.  If that works, exit 0.
 		# If the 2nd "mv" also fails exit 4.  Either way, display a 2nd message.
-		echo "mv '${TEMP_NAME}' '${DESTINATION_FILE}'
-			|| (echo 'mv of ${TEMP_NAME} to ${DESTINATION_FILE} failed!  Trying again...'; (!sleep 3); mv '${TEMP_NAME}' '${DESTINATION_FILE}' && echo 'WORKED' && exit 0)
+		echo "mv '${TEMP_NAME}' '${DESTINATION_NAME}'
+			|| (echo 'mv of ${TEMP_NAME} to ${DESTINATION_NAME} failed!  Trying again...'; (!sleep 3); mv '${TEMP_NAME}' '${DESTINATION_NAME}' && echo 'WORKED' && exit 0)
 			|| (echo '2nd mv failed, quitting.'; rm -f '${TEMP_NAME}'; exit 1) || exit 4"
 
 		echo exit 0
@@ -265,7 +269,7 @@ else # sftp/ftp/ftps
 			echo "REMOTE_HOST='${REMOTE_HOST}'"
 			echo "REMOTE_DIR='${REMOTE_DIR}'"
 			echo "TEMP_NAME='${TEMP_NAME}'"
-			echo "DESTINATION_FILE='${DESTINATION_FILE}'"
+			echo "DESTINATION_NAME='${DESTINATION_NAME}'"
 			echo -en "${NC}"
 			echo
 			if [ -n "${OUTPUT}" ]; then
@@ -289,9 +293,9 @@ fi
 if [ ${RET} -eq 0 -a "${COPY_TO}" != "" ]; then
 	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
 		# No need to specify the file being copied again since we did so above.
-		echo "${ME}: Also copying to ${COPY_TO}/${DESTINATION_FILE}"
+		echo "${ME}: Also copying to ${COPY_TO}/${DESTINATION_NAME}"
 	fi
-	cp "${FILE_TO_UPLOAD}" "${COPY_TO}/${DESTINATION_FILE}"
+	cp "${FILE_TO_UPLOAD}" "${COPY_TO}/${DESTINATION_NAME}"
 	RET=$?
 fi
 

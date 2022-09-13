@@ -63,28 +63,40 @@ OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
 	echo "}"
 ) > "${OUTPUT_FILE}"
 
-COPIED=false
-typeset -i RETCODE=0
 
-# Copy to local Allsky website if it exists.
-if [ -d "${ALLSKY_WEBSITE}" ]; then
-	cp "${OUTPUT_FILE}" "${ALLSKY_WEBSITE}"
-	((RETCODE=$?))
-	COPIED=true
-fi
+function upload_file()
+{
+	FILE_TO_UPLOAD="${1}"
 
-# Upload to remote website
-if [ -n "${REMOTE_HOST}" ]; then
-	"${ALLSKY_SCRIPTS}/upload.sh" --silent "${OUTPUT_FILE}" "${IMAGE_DIR}" "${FILE}" "PostData"
-	((RETCODE=RETCODE+$?))
-	COPIED=true
-fi
+	COPIED=false
+	typeset -i RETCODE=0
 
-if [ "${COPIED}" = "false" ]; then
-	echo "***"
-	echo -e "${RED}${ME}: WARNING: No local or remote website specified so '${FILE}' not copied anywhere.${NC}"
-	echo "***"
-	exit 1
-fi
+	# Copy to local Allsky website if it exists.
+	if [ -d "${ALLSKY_WEBSITE}" ]; then
+		cp "${FILE_TO_UPLOAD}" "${ALLSKY_WEBSITE}"
+		((RETCODE=$?))
+		COPIED=true
+	fi
 
-exit ${RETCODE}
+	# Upload to remote website
+	if [ -n "${REMOTE_HOST}" ]; then
+		"${ALLSKY_SCRIPTS}/upload.sh" --silent \
+			"${FILE_TO_UPLOAD}"
+			"${IMAGE_DIR}"
+			""
+			"PostData"
+		((RETCODE=RETCODE+$?))
+		COPIED=true
+	fi
+
+	if [ "${COPIED}" = "false" ]; then
+		echo "***"
+		echo -e "${RED}${ME}: WARNING: No local or remote website specified so '${FILE_TO_UPLOAD}' not copied anywhere.${NC}"
+		echo "***"
+		return 1
+	fi
+
+	return ${RETCODE}
+}
+
+upload_file "${OUTPUT_FILE}" && upload_file "${CAMERA_SETTINGS}"

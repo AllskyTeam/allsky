@@ -125,6 +125,7 @@ display_msg()
 	fi
 
 	if [[ ${STARS_} == "true" ]]; then
+		MSG_="${MSG_}\n"
 		MSG_="${MSG_}**********\n"
 		MSG_="${MSG_}${MESSAGE_}\n"
 		MSG_="${MSG_}**********${NC}\n"
@@ -137,4 +138,26 @@ display_msg()
 	else
 		echo -e "${MSG_}"
 	fi
+}
+
+
+# Seach for the specified field in the specified array, and return the index.
+# Return -1 on error.
+function getJSONarrayIndex()
+{
+	JSON_FILE="${1}"
+	PARENT="${2}"
+	FIELD="${3}"
+	echo $(jq .${PARENT} "${JSON_FILE}" | \
+		gawk 'BEGIN { n = -1; found = 0;} {
+			if ($1 == "{") {
+				n++;
+				next;
+			}
+			if ($0 ~ /'"${FIELD}"'/) {
+				printf("%d", n);
+				found = 1;
+				exit 0
+			}
+		} END {if (! found) print -1}')
 }

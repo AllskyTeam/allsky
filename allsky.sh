@@ -163,9 +163,6 @@ fi
 # This argument should come second so the capture program knows if it should display debug output.
 ARGUMENTS+=(-debuglevel ${ALLSKY_DEBUG_LEVEL})
 
-# This argument should come next so the capture program knows if it should use colors.
-ARGUMENTS+=(-tty ${ON_TTY})
-
 KEYS=( $(settings 'keys[]') )
 for KEY in ${KEYS[@]}
 do
@@ -190,6 +187,10 @@ if [ "${IMG_UPLOAD_FREQUENCY}" != "1" ]; then
 else
 	rm -f "${FREQUENCY_FILE}"
 fi
+
+# Ditto for timelapse mini files
+# saveImage.sh will create the frequency file as needed.
+rm -f "${ALLSKY_TMP}/MINI_UPLOAD_FREQUENCY.txt"
 
 if [ "$CAPTURE_EXTRA_PARAMETERS" != "" ]; then
 	ARGUMENTS+=(${CAPTURE_EXTRA_PARAMETERS})	# Any additional parameters

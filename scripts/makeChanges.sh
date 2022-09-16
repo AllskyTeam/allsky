@@ -254,11 +254,10 @@ while [ $# -gt 0 ]; do
 
 		latitude | longitude)
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
-			NEW_VALUE="${NEW_VALUE^^[nsew]}"	# convert any character to uppercase for consistency
-			SIGN="${NEW_VALUE:0:1}"				# First character, may be "-" or "+" or a number
-			LAST="${NEW_VALUE: -1}"				# May be N, S, E, or W, or a number
-			if [[ (${SIGN} = "+" || ${SIGN} == "-") && (${LAST%[NSEW]} == "") ]]; then
-				echo -e "${wWARNING}WARNING: '${NEW_VALUE}' should contain EITHER a \"${SIGN}\" OR a \"${LAST}\", but not both; please change it.${wNC}"
+			NEW_VALUE="$(convertLatLong "${NEW_VALUE}" "${KEY}")"
+			RET=$?
+			if [[ ${RET} -ne 0 ]]; then
+				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
 			else
 				WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 				RUN_POSTDATA=true
@@ -307,7 +306,7 @@ while [ $# -gt 0 ]; do
 			FIELD="Image Settings"
 			INDEX=$(getJSONarrayIndex "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "${PARENT}" "${FIELD}")
 			if [[ ${INDEX} -ge 0 ]]; then
-				WEBSITE_CONFIG+=(${PARENT}[${INDEX}].display "${LABEL}" "${NEW_VALUE}")
+				WEBSITE_CONFIG+=("${PARENT}[${INDEX}].display" "${LABEL}" "${NEW_VALUE}")
 			else
 				echo -e "${wWARNING}WARNING: Unable to update ${wBOLD}${FIELD}${wNBOLD} in ${ALLSKY_WEBSITE_CONFIGURATION_FILE}; ignoring.${wNC}"
 			fi

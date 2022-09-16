@@ -306,7 +306,7 @@ while [ $# -gt 0 ]; do
 			FIELD="Image Settings"
 			INDEX=$(getJSONarrayIndex "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "${PARENT}" "${FIELD}")
 			if [[ ${INDEX} -ge 0 ]]; then
-				WEBSITE_CONFIG+=(${PARENT}[${INDEX}].display "${LABEL}" "${NEW_VALUE}")
+				WEBSITE_CONFIG+=("${PARENT}[${INDEX}].display" "${LABEL}" "${NEW_VALUE}")
 			else
 				echo -e "${wWARNING}WARNING: Unable to update ${wBOLD}${FIELD}${wNBOLD} in ${ALLSKY_WEBSITE_CONFIGURATION_FILE}; ignoring.${wNC}"
 			fi

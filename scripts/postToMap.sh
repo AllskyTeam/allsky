@@ -18,6 +18,8 @@ fi
 source "${ALLSKY_HOME}/variables.sh"
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh"
+# shellcheck disable=SC1090
+source "${ALLSKY_SCRIPTS}/functions.sh"
 
 function usage_and_exit()
 {
@@ -160,6 +162,41 @@ if [[ -z ${MACHINE_ID} ]]; then
 	fi
 fi
 
+OK=true
+E=""
+LATITUDE="$(settings ".latitude")"
+if [ "${LATITUDE}" = "" ]; then
+	E="ERROR: 'Latitude' is required.${BR}${E}"
+	OK=false
+fi
+LONGITUDE="$(settings ".longitude")"
+if [ "${LONGITUDE}" = "" ]; then
+	E="ERROR: 'Longitude' is required.${BR}${E}"
+	OK=false
+fi
+[[ ${OK} == "false" ]] && echo -e "${ERROR_MSG_START}${E}${wNC}" && exit 1
+
+LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
+LATRET=$?
+LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
+LONGRET=$?
+OK=true
+if [[ ${LATRET} -ne 0 ]]; then
+	OK=false
+	echo -e "${RED}${ME}: ERROR: ${LATITUDE}"
+fi
+if [[ ${LONGRET} -ne 0 ]]; then
+	OK=false
+	echo -e "${RED}${ME}: ERROR: ${LONGITUDE}"
+fi
+[[ ${OK} == "false" ]] && exit 1
+
+if false; then
+	LA=${LATITUDE%.*}
+	LO=${LONGITUDE%.*}
+	MACHINE_ID="${LA:0:2}${LO:0:2}${MACHINE_ID:4}"
+fi
+
 if [ "${DELETE}" = "true" ]; then
 	generate_post_data()
 	{
@@ -174,8 +211,6 @@ if [ "${DELETE}" = "true" ]; then
 else
 	LOCATION="$(settings ".location")"
 	OWNER="$(settings ".owner")"
-	LATITUDE="$(settings ".latitude")"
-	LONGITUDE="$(settings ".longitude")"
 	WEBSITE_URL="$(settings ".websiteurl")"
 	IMAGE_URL="$(settings ".imageurl")"
 # TODO: CAMERA should be a combination of CAMERA_TYPE (which we have) and CAMERA_MODEL
@@ -187,14 +222,6 @@ else
 	E=""
 	W=""
 	# Check for required fields
-	if [ "${LATITUDE}" = "" ]; then
-		E="ERROR: 'Latitude' is required.${BR}${E}"
-		OK=false
-	fi
-	if [ "${LONGITUDE}" = "" ]; then
-		E="ERROR: 'Longitude' is required.${BR}${E}"
-		OK=false
-	fi
 	if [ "${CAMERA}" = "" ]; then
 		E="ERROR: 'Camera' is required.${BR}${E}"
 		OK=false
@@ -281,6 +308,20 @@ if [ "${UPLOAD}" = "false" ]; then
 	parity="$(( decimal % 2 ))"
 	(( $(date +%e) % 2 == parity )) && UPLOAD=true
 fi
+latitude="$(convertLatLong "$(settings ".latitude")" "latitude")"
+LATRET=$?
+longitude="$(convertLatLong "$(settings ".longitude")" "longitude")"
+LONGRET=$?
+OK=true
+if [[ ${LATRET} -ne 0 ]]; then
+	OK=false
+	echo -e "${RED}${ME}: ERROR: ${latitude}"
+fi
+if [[ ${LONGRET} -ne 0 ]]; then
+	OK=false
+	echo -e "${RED}${ME}: ERROR: ${longitude}"
+fi
+[[ ${OK} == "false" ]] && exit 1
 
 RETURN_CODE=0
 if [ "${UPLOAD}" = "true" ]; then

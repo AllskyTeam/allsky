@@ -19,20 +19,36 @@ source "${ALLSKY_HOME}/variables.sh"
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh"
 # shellcheck disable=SC1090
+source "${ALLSKY_SCRIPTS}/functions.sh"
+# shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
+latitude="$(convertLatLong "$(settings ".latitude")" "latitude")"
+LATRET=$?
+longitude="$(convertLatLong "$(settings ".longitude")" "longitude")"
+LONGRET=$?
+OK=true
+if [[ ${LATRET} -ne 0 ]]; then
+	OK=false
+	echo -e "${RED}${ME}: ERROR: ${latitude}"
+fi
+if [[ ${LONGRET} -ne 0 ]]; then
+	OK=false
+	echo -e "${RED}${ME}: ERROR: ${longitude}"
+fi
+[[ ${OK} == "false" ]] && exit 1
+
 angle="$(settings ".angle")"
-latlong="$(settings ".latitude,.longitude")"
 timezone="$(date "+%z")"
 
 # If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
 # If nighttime happens before noon, sunwait returns "--:-- (Polar night)"
-sunrise="$(sunwait list rise angle ${angle} ${latlong})"
+sunrise="$(sunwait list rise angle ${angle} ${latitude} ${longitude})"
 sunrise_hhmm="${sunrise:0:5}"
-sunset="$(sunwait list set angle ${angle} ${latlong})"
+sunset="$(sunwait list set angle ${angle} ${latitude} ${longitude})"
 sunset_hhmm="${sunset:0:5}"
 
-if [ "${sunrise_hhmm}" = "--:--" ] || [ "${sunset_hhmm}" = "--:--" ]; then
+if [[ ${sunrise_hhmm} == "--:--" || ${sunset_hhmm} = "--:--" ]]; then
 	# nighttime starts after midnight or before noon.
 	today="$(date --date='tomorrow' +%Y-%m-%d)"		# is actually tomorrow
 	# TODO What SHOULD *_hhmm be?
@@ -51,7 +67,7 @@ fi
 FILE="data.json"
 OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
 (
-	if [ "$(settings ".takeDaytimeImages")" = "1" ]; then
+	if [[ $(settings ".takeDaytimeImages") = "1" ]]; then
 		D="true"
 	else
 		D="false"
@@ -81,9 +97,9 @@ function upload_file()
 	# Upload to remote website
 	if [ -n "${REMOTE_HOST}" ]; then
 		"${ALLSKY_SCRIPTS}/upload.sh" --silent \
-			"${FILE_TO_UPLOAD}"
-			"${IMAGE_DIR}"
-			""
+			"${FILE_TO_UPLOAD}" \
+			"${IMAGE_DIR}" \
+			"" \
 			"PostData"
 		((RETCODE=RETCODE+$?))
 		COPIED=true

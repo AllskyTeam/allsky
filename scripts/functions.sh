@@ -91,7 +91,7 @@ function determineCommandToUse()
 
 # Display a message of various types in appropriate colors.
 # Used primarily in installation scripts.
-display_msg()
+function display_msg()
 {
 	if [[ $1 == "--log" ]]; then
 		LOG_IT_=true
@@ -160,4 +160,53 @@ function getJSONarrayIndex()
 				exit 0
 			}
 		} END {if (! found) print -1}'
+}
+
+
+
+# Convert a latitude or longitude to NSEW format.
+# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
+function convertLatLong()
+{
+	local LATLONG="${1}"
+	local TYPE="${2}"						# "latitude" or "longitude"
+	LATLONG="${LATLONG^^[nsew]}"			# convert any character to uppercase for consistency
+	local SIGN="${LATLONG:0:1}"				# First character, may be "-" or "+" or a number
+	local DIRECTION="${LATLONG: -1}"						# May be N, S, E, or W, or a number
+	[[ ${SIGN} != "+" && ${SIGN} != "-" ]] && SIGN=""		# No sign
+	[[ ${DIRECTION%[NSEW]} != "" ]] && DIRECTION="" 		# No N, S, E, or W
+
+	if [[ -z ${DIRECTION} ]]; then
+		# No direction
+		if [[ -z ${SIGN} ]]; then
+			# No sign either
+			echo "'${LATLONG}' should contain EITHER a '+' or '-', OR a 'N', 'S', 'E', or 'W'."
+			return 1
+		fi
+
+		# A number - convert to character
+		LATLONG="${LATLONG:1}"		# Skip over sign
+		if [[ ${SIGN} == "+" ]]; then
+			if [[ ${TYPE} == "latitude" ]]; then
+				echo "${LATLONG}N"
+			else
+				echo "${LATLONG}E"
+			fi
+		else
+			if [[ ${TYPE} == "latitude" ]]; then
+				echo "${LATLONG}S"
+			else
+				echo "${LATLONG}W"
+			fi
+		fi
+		return 0
+
+	elif [[ -n ${SIGN} && -n ${DIRECTION} ]]; then
+			echo "'${LATLONG}' should contain EITHER a '${SIGN}' OR a '${DIRECTION}', but not both."
+			return 1
+	else
+		# A character - return as is.
+		echo "${LATLONG}"
+		return 0
+	fi
 }

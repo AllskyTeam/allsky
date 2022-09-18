@@ -145,7 +145,7 @@ if __name__ == "__main__":
     results = {}
     for s.step in s.recipe:
         if s.recipe[s.step]["enabled"] and s.recipe[s.step]["module"] not in globals():
-            #try:
+            try:
             #    '''
             #    This section expects module python to be present in /etc/allsky/modules/, or /home/pi/allsky/scripts/modules.
             #    Module files should be named 'allsky_MODULE.py', where MODULE is the name of the module.
@@ -153,15 +153,14 @@ if __name__ == "__main__":
             #        from allsky_resize import resize
             #    and expects allsky_resize.py to be present in /etc/allsky/modules/ (this path has priority), or /home/pi/allsky/scripts/modules.
             #    '''
-            moduleName = s.recipe[s.step]['module'].replace('.py','')
-            method = s.recipe[s.step]['module'].replace('.py','').replace('allsky_','')
-            s.log(1, "INFO: ----------------------- Running Module {0} -----------------------".format(s.recipe[s.step]['module']))
-            s.log(1, "INFO: Attempting to load {0}".format(moduleName))
-            _temp = importlib.import_module(moduleName)
-            globals()[method] = getattr(_temp, method)
-            #except Exception as e:
-                #s.log(0, "ERROR: Failed to import module allsky_{0}.py in one of ( {1} ). Ignoring Module.".format(s.step['module'], ", ".join(valid_module_paths)), exitCode=1)
-                #print(e)
+                moduleName = s.recipe[s.step]['module'].replace('.py','')
+                method = s.recipe[s.step]['module'].replace('.py','').replace('allsky_','')
+                s.log(1, "INFO: ----------------------- Running Module {0} -----------------------".format(s.recipe[s.step]['module']))
+                s.log(1, "INFO: Attempting to load {0}".format(moduleName))
+                _temp = importlib.import_module(moduleName)
+                globals()[method] = getattr(_temp, method)
+            except Exception as e:
+                s.log(0, "ERROR: Failed to import module allsky_{0}.py in one of ( {1} ). Ignoring Module.".format(moduleName, e))
         else:
             s.log(1, "INFO: Ignorning module {0} as its disabled".format(s.recipe[s.step]["module"]))
 
@@ -173,7 +172,10 @@ if __name__ == "__main__":
             else:
                 arguments = {}
 
-            result = globals()[method](arguments)
+            try:
+                result = globals()[method](arguments)
+            except Exception as e:
+                s.log(0,"ERROR: {}".format(e))
 
             endTime = datetime.now()
             elapsedTime = ((endTime - startTime).total_seconds())

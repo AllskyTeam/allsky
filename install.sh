@@ -123,20 +123,10 @@ select_camera_type() {
 }
 
 
-# Save the camera capabilities and use them to set the WebUI min, max, and defaults.
-# This will error out and exit if no camera installed,
-# otherwise it will determine what capabilities the connected camera has,
-# then create an "options" file specific to that camera.
-# It will also create a default "settings" file.
-save_camera_capabilities() {
-	if [[ -z ${CAMERA_TYPE} ]]; then
-		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in save_camera_capabilities()."
-		return 1
-	fi
-
+# Create the file that defines the WebUI variables.
+create_webui_defines() {
 	display_msg progress "Modifying locations for WebUI."
 	FILE="${ALLSKY_WEBUI}/includes/allskyDefines.inc"
-
 	sed		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
 			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
@@ -151,6 +141,19 @@ save_camera_capabilities() {
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
+}
+
+
+# Save the camera capabilities and use them to set the WebUI min, max, and defaults.
+# This will error out and exit if no camera installed,
+# otherwise it will determine what capabilities the connected camera has,
+# then create an "options" file specific to that camera.
+# It will also create a default "settings" file.
+save_camera_capabilities() {
+	if [[ -z ${CAMERA_TYPE} ]]; then
+		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in save_camera_capabilities()."
+		return 1
+	fi
 
 	# The web server needs to be able to create and update file in ${ALLSKY_CONFIG}
 	chmod 775 "${ALLSKY_CONFIG}"
@@ -173,7 +176,6 @@ save_camera_capabilities() {
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} --cameraTypeOnly ${DEBUG_ARG} \
 		"cameraType" "Camera Type" "${CAMERA_TYPE}"
 	RET=$?
-
 	if [ ${RET} -ne 0 ]; then
 		if [ ${RET} -eq ${EXIT_NO_CAMERA} ]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
@@ -805,6 +807,7 @@ if [[ ${FUNCTION} != "" ]]; then
 	fi
 
 	${FUNCTION}
+	display_msg progress "\n${FUNCTION} completed.\n"
 	exit 0
 fi
 

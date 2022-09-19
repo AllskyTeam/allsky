@@ -83,9 +83,9 @@ while [ $# -gt 0 ]; do
 done
 
 source "${ALLSKY_SCRIPTS}/darkCapture.sh"		# does not return if in darkframe mode
-# xxxx TODO: Dark subtract long-exposure images, even if during daytime.
-# xxxx TODO: Need a config variable to specify the threshold to dark subtract.
-# xxxx TODO: Possibly also for stretching below.
+# TODO: Dark subtract long-exposure images, even if during daytime.
+# TODO: Need a config variable to specify the threshold to dark subtract.
+# TODO: Possibly also for stretching below.
 if [ "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 	source "${ALLSKY_SCRIPTS}/darkSubtract.sh"	# It will modify the image but not its name.
 fi
@@ -310,8 +310,10 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 		fi
 
 		if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" ]]; then
-			"${ALLSKY_SCRIPTS}"/timelapse.sh -m ${TIMELAPSE_MINI_IMAGES} "${DATE_NAME}"
-			[ $? -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
+			[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME}: creating mini-timelapse"
+			"${ALLSKY_SCRIPTS}"/timelapse.sh --mini-count ${TIMELAPSE_MINI_IMAGES} "${DATE_NAME}"
+			RET=$?
+			[ ${RET} -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
 		fi
 	else
 		echo "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"
@@ -326,12 +328,12 @@ fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
 RET=0
-if [ "${IMG_UPLOAD}" = "true" ] ; then
+if [[ ${IMG_UPLOAD} == "true" ]]; then
 	# First check if we should upload this image
-	if [ "${IMG_UPLOAD_FREQUENCY}" != "1" ]; then
+	if [[ ${IMG_UPLOAD_FREQUENCY} != "1" ]]; then
 		FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 		typeset -i LEFT
-		if [ ! -f "${FREQUENCY_FILE}" ]; then
+		if [[ ! -f ${FREQUENCY_FILE} ]]; then
 			# The file may have been deleted, or the user may have just changed the frequency.
 			let LEFT=${IMG_UPLOAD_FREQUENCY}
 		else
@@ -345,7 +347,7 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 			let LEFT=LEFT-1
 			echo "${LEFT}" > "${FREQUENCY_FILE}"
 			# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
-			[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
+			[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
 
 			# We didn't create ${WEBSITE_FILE} yet so do that now.
 			mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"

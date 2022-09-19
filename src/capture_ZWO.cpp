@@ -1428,19 +1428,19 @@ int main(int argc, char *argv[])
 						if (priorMeanDiff > 0 && lastMeanDiff < 0)
 						{ 
 							Log(3, " >xxx lastMean was %d and went from %d above max of %d to %d below min",
-								priorMean, priorMeanDiff, maxAcceptableMean);
+								priorMean, priorMeanDiff, maxAcceptableMean, -lastMeanDiff);
 							Log(3, "  of %d, is now at %d; should NOT set temp min to currentExposure_us of %'ld\n",
-								-lastMeanDiff, minAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
+								minAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 						} 
 						else
 						{
 							if (priorMeanDiff < 0 && lastMeanDiff > 0)
 							{
 							// OK to set upper limit since we know it's too high.
-								Log(3, " >xxx mean was %d and went from %d below min of %d to %d above max",
-									priorMean, -priorMeanDiff, minAcceptableMean);
-								Log(3, " of %d, is now at %d; OK to set temp max to currentExposure_us of %'ld\n",
-									lastMeanDiff, maxAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
+								Log(2, " >xxx mean was %d and went from %d below min of %d to %d above max",
+									priorMean, -priorMeanDiff, minAcceptableMean, lastMeanDiff);
+								Log(2, " of %d, is now at %d; OK to set temp max to currentExposure_us of %'ld\n",
+									maxAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 							}
 
 							if (CG.lastMean < minAcceptableMean)
@@ -1469,7 +1469,7 @@ int main(int argc, char *argv[])
 							break;
 						}
 
-						Log(3, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: lastMean (%d)\n",
+						Log(2, "  >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us: lastMean (%d)\n",
 							attempts, newExposure_us, tempMinExposure_us, tempMaxExposure_us, (int)CG.lastMean);
 
 						priorMean = CG.lastMean;
@@ -1504,19 +1504,19 @@ int main(int argc, char *argv[])
 					if (CG.lastMean >= minAcceptableMean && CG.lastMean <= maxAcceptableMean)
 					{
 						// +++ at end makes it easier to see in log file
-						Log(3, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n", minAcceptableMean, maxAcceptableMean, (int)CG.lastMean);
+						Log(2, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n", minAcceptableMean, maxAcceptableMean, (int)CG.lastMean);
 					}
 					else if (attempts > maxHistogramAttempts)
 					{
-						 Log(3, "  > max attempts reached - using exposure of %s us with mean %d\n", length_in_units(CG.currentExposure_us, true), CG.lastMean);
+						 Log(2, "  > max attempts reached - using exposure of %s us with mean %d\n", length_in_units(CG.currentExposure_us, true), CG.lastMean);
 					}
 					else if (attempts >= 1)
 					{
 						if (CG.currentExposure_us < CG.cameraMinExposure_us)
 						{
 							 // If we call length_in_units() twice in same command line they both return the last value.
-							Log(3, "  > Stopped trying: new exposure of %s ", length_in_units(CG.currentExposure_us, false));
-							Log(3, "would be over min of %s\n", length_in_units(CG.cameraMinExposure_us, false));
+							Log(2, "  > Stopped trying: new exposure of %s ", length_in_units(CG.currentExposure_us, false));
+							Log(2, "would be over min of %s\n", length_in_units(CG.cameraMinExposure_us, false));
 
 							long diff = (long)((float)CG.currentExposure_us * (1/(float)percentChange));
 							CG.currentExposure_us += diff;
@@ -1524,8 +1524,8 @@ int main(int argc, char *argv[])
 						}
 						else if (CG.currentExposure_us > CG.cameraMaxExposure_us)
 						{
-							Log(3, "  > Stopped trying: new exposure of %s ", length_in_units(CG.currentExposure_us, false));
-							Log(3, "would be over max of %s\n", length_in_units(CG.cameraMaxExposure_us, false));
+							Log(2, "  > Stopped trying: new exposure of %s ", length_in_units(CG.currentExposure_us, false));
+							Log(2, "would be over max of %s\n", length_in_units(CG.cameraMaxExposure_us, false));
 
 							long diff = (long)((float)CG.currentExposure_us * (1/(float)percentChange));
 							CG.currentExposure_us -= diff;
@@ -1533,7 +1533,7 @@ int main(int argc, char *argv[])
 						}
 						else if (CG.currentExposure_us == CG.cameraMinExposure_us)
 						{
-							Log(3, "  > Stopped trying: hit min exposure limit of %s, mean %d\n", length_in_units(CG.cameraMinExposure_us, false), (int)CG.lastMean);
+							Log(2, "  > Stopped trying: hit min exposure limit of %s, mean %d\n", length_in_units(CG.cameraMinExposure_us, false), (int)CG.lastMean);
 							// If currentExposure_us causes too low of a mean, increase exposure
 							// so on the next loop we'll adjust it.
 							if (CG.lastMean < minAcceptableMean)
@@ -1541,7 +1541,7 @@ int main(int argc, char *argv[])
 						}
 						else if (CG.currentExposure_us == CG.cameraMaxExposure_us)
 						{
-							Log(3, "  > Stopped trying: hit max exposure limit of %s, mean %d\n", length_in_units(CG.cameraMaxExposure_us, false), (int)CG.lastMean);
+							Log(2, "  > Stopped trying: hit max exposure limit of %s, mean %d\n", length_in_units(CG.cameraMaxExposure_us, false), (int)CG.lastMean);
 							// If currentExposure_us causes too high of a mean, decrease exposure
 							// so on the next loop we'll adjust it.
 							if (CG.lastMean > maxAcceptableMean)
@@ -1549,12 +1549,12 @@ int main(int argc, char *argv[])
 						}
 						else if (newExposure_us == CG.currentExposure_us)
 						{
-							Log(3, "  > Stopped trying: newExposure_us == currentExposure_us == %s\n",
+							Log(2, "  > Stopped trying: newExposure_us == currentExposure_us == %s\n",
 								length_in_units(CG.currentExposure_us, false));
 						}
 						else
 						{
-							Log(3, "  > Stopped trying, using exposure of %s us with mean %d, min=%d, max=%d\n",
+							Log(2, "  > Stopped trying, using exposure of %s us with mean %d, min=%d, max=%d\n",
 								length_in_units(CG.currentExposure_us, false), (int)CG.lastMean, minAcceptableMean, maxAcceptableMean);
 						}
 						 

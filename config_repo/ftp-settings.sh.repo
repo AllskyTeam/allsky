@@ -43,7 +43,7 @@ PROTOCOL=""
 # and set the corresponding WEB_*_DIR variables to directories on your Pi.
 # For example, for a timelapse, set VIDEOS_DIR to the name of the directory on the
 # remote web server, and set WEB_VIDEOS_DIR to the name of the directory on your Pi,
-# which will usually be in /var/www/html/allsky/videos.
+# which will usually be in /home/pi/allsky/html/allsky/videos.
 
 	# The remote directory where the current "image.jpg" file should be copied to.
 	# If you have the "allsky-website" package installed, leave it blank.
@@ -51,19 +51,19 @@ IMAGE_DIR=""
 WEB_IMAGE_DIR=""
 
 	# The remote directory where the timelapse video should be uploaded to.
-	# If you have the "allsky-website" package installed, use VIDEOS_DIR="/var/www/html/allsky/videos".
+	# If you have the "allsky-website" package installed, use VIDEOS_DIR="/home/pi/allsky/html/allsky/videos".
 VIDEOS_DIR=""
 VIDEOS_DESTINATION_NAME=""
 WEB_VIDEOS_DIR=""
 
 	# The remote directory where the keogram image should be copied to.
-	# If you have the "allsky-website" package installed, use KEOGRAM_DIR="/var/www/html/allsky/keograms".
+	# If you have the "allsky-website" package installed, use KEOGRAM_DIR="/home/pi/allsky/html/allsky/keograms".
 KEOGRAM_DIR=""
 KEOGRAM_DESTINATION_NAME=""
 WEB_KEOGRAM_DIR=""
 
 	# The remote directory where the startrails image should be copied to.
-	# If you have the "allsky-website" package installed, use STARTRAILS_DIR="/var/www/html/allsky/startrails".
+	# If you have the "allsky-website" package installed, use STARTRAILS_DIR="/home/pi/allsky/html/allsky/startrails".
 STARTRAILS_DIR=""
 STARTRAILS_DESTINATION_NAME=""
 WEB_STARTRAILS_DIR=""

@@ -14,6 +14,7 @@ ME="$(basename "${BASH_ARGV0}")"
 DEBUG="false"
 DO_HELP="false"
 MINI_COUNT=0
+MINI_SUBTRACT=0
 FORCE_MINI="false"
 CURRENT_IMAGE=""
 while [ $# -gt 0 ]; do
@@ -25,13 +26,13 @@ while [ $# -gt 0 ]; do
 				DEBUG="true"
 				;;
 			-m | --mini-count)
-				MINI_COUNT="${2}"		# create a "mini" timelapse of the ${MINI_COUNT} most recent images
-				shift
-				;;
-			-M | --force-mini-count)
+				# Create a "mini" timelapse of the ${MINI_COUNT} most recent images.
 				MINI_COUNT="${2}"
+				MINI_SUBTRACT="${3}"	# Subtract this many images from the list.
+				shift 2
+				;;
+			-f | --force)
 				FORCE_MINI="true"
-				shift
 				;;
 			-i | --image)
 				CURRENT_IMAGE="${2}"
@@ -54,7 +55,7 @@ usage_and_exit()
 	XD="/path/to/nonstandard/location/of/allsky_images"
 	TODAY="$(date +%Y%m%d)"
 	[ ${RET} -ne 0 ] && echo -en "${RED}"
-	echo -n "Usage: ${ME} [-d] [-h|--help] [-m|M number_images [-i image]] <DATE> [<IMAGE_DIR>]"
+	echo -n "Usage: ${ME} [-d] [-h|--help] [-m|M number_images subtracts [-i image] [-f]]  <DATE> [<IMAGE_DIR>]"
 	echo -e "${NC}"
 	echo "    example: ${ME} ${TODAY}"
 	echo "    or:      ${ME} ${TODAY} ${XD}"
@@ -71,8 +72,8 @@ usage_and_exit()
 	echo "eg. ${ALLSKY_IMAGES}/${TODAY}/allsky-${TODAY}.mp4"
 	echo "or  ${XD}/${TODAY}/allsky-${TODAY}.mp4"
 	echo
-	echo "[-m number_images] creates a mini-timelapse of the newest 'number_images' images."
-	echo "[-M number_images] forces creation of the mini-timelapse, typically for command-line use."
+	echo "[-m number_images subtracts] creates a mini-timelapse of the newest 'number_images' images and removes the oldest 'subtract' images."
+	echo "[-f] forces creation of the mini-timelapse, typically for command-line use."
 	echo "[-i image] is the full path to the current image."
 	echo -en "${NC}"
 	exit ${RET}
@@ -112,10 +113,9 @@ else
 fi
 
 TMP="${ALLSKY_TMP}/timelapseTMP.txt"
-# In MINI mode we'll be creating a lot of timelapse, so don't write to the TMP directory to save on writes.
 [ ${MINI_COUNT} -eq 0 ] && : > "${TMP}"
 
-if [ "${KEEP_SEQUENCE}" = "false" ] || [ ${NSEQ} -lt 100 ]; then
+if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
 
@@ -126,8 +126,8 @@ if [ "${KEEP_SEQUENCE}" = "false" ] || [ ${NSEQ} -lt 100 ]; then
 			exit 0		# Gets us out of this sub-shell
 		fi
 
-		if [[ ${FORCE_MINI} = "true" ]]; then
-			[ ${DEBUG} == "true" ] && echo "Forcing mini-timelapse" >&2
+		if [[ ${FORCE_MINI} == "true" ]]; then
+			[[ ${DEBUG} == "true" ]] && echo "Forcing mini-timelapse" >&2
 			FILES="$(ls -rt "${DATE_DIR}"/image-*.${EXTENSION} | tail -${MINI_COUNT})"
 			echo "${FILES}"
 
@@ -151,11 +151,11 @@ if [ "${KEEP_SEQUENCE}" = "false" ] || [ ${NSEQ} -lt 100 ]; then
 			# If the CURRENT_IMAGE isn't in the list, add it.
 			if [ ${NUM_IMAGES} -ge ${MINI_COUNT} ] ; then
 				echo "${FILES}"
-				x="$(tail -$((MINI_COUNT-1)) "${MINI_TIMELAPSE_FILES}")"
-				# Remove the oldest (i.e., first) image and append the CURRENT_IMAGE.
+				x="$(tail -$((MINI_COUNT-MINI_SUBTRACT)) "${MINI_TIMELAPSE_FILES}")"
+				# Remove the oldest image(s) and append the CURRENT_IMAGE.
 				echo -e "${x}\n${CURRENT_IMAGE}" > "${MINI_TIMELAPSE_FILES}"
 				if [[ ${DEBUG} == "true" ]]; then
-					echo -e "${YELLOW}Replacing oldest file in set and adding '${CURRENT_IMAGE}'.${NC}" >&2
+					echo -e "${YELLOW}Replacing oldest file(s) in set and adding '${CURRENT_IMAGE}'.${NC}" >&2
 				fi
 			else
 				grep --silent "${CURRENT_IMAGE}" "${MINI_TIMELAPSE_FILES}"

@@ -8,9 +8,9 @@
 # Exit with error message and a custom notification image.
 function doExit()
 {
-	EXITCODE=$1
-	TYPE=${2:-"Error"}
-	CUSTOM_MESSAGE="${3}"
+	local EXITCODE=$1
+	local TYPE=${2:-"Error"}
+	local CUSTOM_MESSAGE="${3}"
 
 	if [ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]; then
 		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
@@ -40,14 +40,14 @@ function doExit()
 # On failure, return 0 and an error message.
 function determineCommandToUse()
 {
-	USE_doExit="${1}"			# Call doExit() on error?
-	PREFIX="${2}"				# only used if calling doExit()
+	local USE_doExit="${1}"			# Call doExit() on error?
+	local PREFIX="${2}"				# only used if calling doExit()
 
 	# If libcamera is installed and works, use it.
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
 	# use raspistill.
 
-	CMD="libcamera-still"
+	local CMD="libcamera-still"
 	if command -v ${CMD} > /dev/null; then
 		# Found the command - see if it works.
 		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
@@ -93,50 +93,56 @@ function determineCommandToUse()
 # Used primarily in installation scripts.
 function display_msg()
 {
+	local LOG_IT
 	if [[ $1 == "--log" ]]; then
-		LOG_IT_=true
+		LOG_IT=true
 		shift
 	else
-		LOG_IT_=false
+		LOG_IT=false
 	fi
 
-	LOG_TYPE_="${1}"
-	MESSAGE_="${2}"
-	MSG_=""
-	if [[ ${LOG_TYPE_} == "error" ]]; then
-		MSG_="\n${RED}*** ERROR: "
-		STARS_=true
+	local LOG_TYPE="${1}"
+	local MESSAGE="${2}"
+	local MSG=""
+	local STARS
+	if [[ ${LOG_TYPE} == "error" ]]; then
+		MSG="\n${RED}*** ERROR: "
+		STARS=true
 
-	elif [[ ${LOG_TYPE_} == "warning" ]]; then
-		MSG_="\n${YELLOW}*** WARNING: "
-		STARS_=true
+	elif [[ ${LOG_TYPE} == "warning" ]]; then
+		MSG="\n${YELLOW}*** WARNING: "
+		STARS=true
 
-	elif [[ ${LOG_TYPE_} == "progress" ]]; then
-		MSG_="${GREEN}* ${MESSAGE_}${NC}"
-		STARS_=false
+	elif [[ ${LOG_TYPE} == "notice" ]]; then
+		MSG="${YELLOW}*** NOTICE: "
+		STARS=true
 
-	elif [[ ${LOG_TYPE_} == "info" ]]; then
-		MSG_="${YELLOW}${MESSAGE_}${NC}"
-		STARS_=false
+	elif [[ ${LOG_TYPE} == "progress" ]]; then
+		MSG="${GREEN}* ${MESSAGE}${NC}"
+		STARS=false
+
+	elif [[ ${LOG_TYPE} == "info" || ${LOG_TYPE} == "debug" ]]; then
+		MSG="${YELLOW}${MESSAGE}${NC}"
+		STARS=false
 
 	else
-		MSG_="${YELLOW}"
-		STARS_=false
+		MSG="${YELLOW}"
+		STARS=false
 	fi
 
-	if [[ ${STARS_} == "true" ]]; then
-		MSG_="${MSG_}\n"
-		MSG_="${MSG_}**********\n"
-		MSG_="${MSG_}${MESSAGE_}\n"
-		MSG_="${MSG_}**********${NC}\n"
+	if [[ ${STARS} == "true" ]]; then
+		MSG="${MSG}\n"
+		MSG="${MSG}**********\n"
+		MSG="${MSG}${MESSAGE}\n"
+		MSG="${MSG}**********${NC}\n"
 	fi
 
 	# Log messages to a file if it was specified.
 	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
-	if [[ ${LOG_IT_} == "true" && -n ${DISPLAY_MSG_LOG} ]]; then
-		echo -e "${MSG_}" | tee -a "${DISPLAY_MSG_LOG}"
+	if [[ ${LOG_IT} == "true" && -n ${DISPLAY_MSG_LOG} ]]; then
+		echo -e "${MSG}" | tee -a "${DISPLAY_MSG_LOG}"
 	else
-		echo -e "${MSG_}"
+		echo -e "${MSG}"
 	fi
 }
 
@@ -145,9 +151,9 @@ function display_msg()
 # Return -1 on error.
 function getJSONarrayIndex()
 {
-	JSON_FILE="${1}"
-	PARENT="${2}"
-	FIELD="${3}"
+	local JSON_FILE="${1}"
+	local PARENT="${2}"
+	local FIELD="${3}"
 	jq .${PARENT} "${JSON_FILE}" | \
 		gawk 'BEGIN { n = -1; found = 0;} {
 			if ($1 == "{") {

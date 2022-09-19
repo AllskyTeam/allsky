@@ -20,24 +20,22 @@ while [ $# -gt 0 ]; do
 	case "${1}" in
 			-h | --help)
 				DO_HELP="true"
-				shift
 				;;
 			-d | --debug)
 				DEBUG="true"
-				shift
 				;;
 			-m | --mini-count)
 				MINI_COUNT="${2}"		# create a "mini" timelapse of the ${MINI_COUNT} most recent images
-				shift 2
+				shift
 				;;
 			-M | --force-mini-count)
 				MINI_COUNT="${2}"
 				FORCE_MINI="true"
-				shift 2
+				shift
 				;;
 			-i | --image)
 				CURRENT_IMAGE="${2}"
-				shift 2
+				shift
 				;;
 			-*)
 				echo -e "${RED}Unknown argument '${1}' ignoring.${NC}" >&2
@@ -47,6 +45,7 @@ while [ $# -gt 0 ]; do
 				break
 				;;
 	esac
+	shift
 done
 
 usage_and_exit()
@@ -127,8 +126,8 @@ if [ "${KEEP_SEQUENCE}" = "false" ] || [ ${NSEQ} -lt 100 ]; then
 			exit 0		# Gets us out of this sub-shell
 		fi
 
-		if [ "${FORCE_MINI}" = "true" ]; then
-			[ ${DEBUG} = "true" ] && echo "Forcing mini-timelapse" >&2
+		if [[ ${FORCE_MINI} = "true" ]]; then
+			[ ${DEBUG} == "true" ] && echo "Forcing mini-timelapse" >&2
 			FILES="$(ls -rt "${DATE_DIR}"/image-*.${EXTENSION} | tail -${MINI_COUNT})"
 			echo "${FILES}"
 
@@ -155,7 +154,7 @@ if [ "${KEEP_SEQUENCE}" = "false" ] || [ ${NSEQ} -lt 100 ]; then
 				x="$(tail -$((MINI_COUNT-1)) "${MINI_TIMELAPSE_FILES}")"
 				# Remove the oldest (i.e., first) image and append the CURRENT_IMAGE.
 				echo -e "${x}\n${CURRENT_IMAGE}" > "${MINI_TIMELAPSE_FILES}"
-				if [ "${DEBUG}" = "true" ]; then
+				if [[ ${DEBUG} == "true" ]]; then
 					echo -e "${YELLOW}Replacing oldest file in set and adding '${CURRENT_IMAGE}'.${NC}" >&2
 				fi
 			else
@@ -166,20 +165,20 @@ if [ "${KEEP_SEQUENCE}" = "false" ] || [ ${NSEQ} -lt 100 ]; then
 					echo "${CURRENT_IMAGE}" >> "${MINI_TIMELAPSE_FILES}"
 					NUM_IMAGES=$((NUM_IMAGES+1))
 					if [ ${NUM_IMAGES} -ge ${MINI_COUNT} ] ; then
-						[ "${DEBUG}" = "true" ] && echo -e "${GREEN}Just reached enough images.${NC}" >&2
+						[[ ${DEBUG} == "true" ]] && echo -e "${GREEN}Just reached enough images.${NC}" >&2
 						OK="true"
 						cat "${MINI_TIMELAPSE_FILES}"
 					fi
-				elif [ "${DEBUG}" = "true" ]; then
+				elif [[ ${DEBUG} == "true" ]]; then
 					echo -e "${YELLOW}'${CURRENT_IMAGE}' already in set.${NC}" >&2
 				fi
-				if [ ${OK} = "false" ] && [ ${DEBUG} = "true" ]; then
+				if [[ ${OK} == "false" && ${DEBUG} == "true" ]]; then
 					echo -e "\n${YELLOW}Not creating mini-timelapse yet; only ${NUM_IMAGES} of ${MINI_COUNT} images ready.${NC}\n" >&2
 				fi
 			fi
 		else
 			# Create the file with the most recent image.
-			[ ${DEBUG} = "true" ] && echo "Creating ${MINI_TIMELAPSE_FILES}" >&2
+			[[ ${DEBUG} == "true" ]] && echo "Creating ${MINI_TIMELAPSE_FILES}" >&2
 			echo "${CURRENT_IMAGE}" > "${MINI_TIMELAPSE_FILES}"
 		fi
 	) | gawk -v MINI_COUNT=${MINI_COUNT} 'BEGIN { a=0; }
@@ -271,6 +270,6 @@ fi
 
 # timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
-[ ${DEBUG} = "true" ] && echo -e "${ME}${GREEN}Timelapse in ${OUTPUT_FILE}${NC}"
+[[ ${DEBUG} == "true" ]] && echo -e "${ME}${GREEN}Timelapse in ${OUTPUT_FILE}${NC}"
 
 exit 0

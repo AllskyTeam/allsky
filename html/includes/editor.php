@@ -131,15 +131,17 @@ function DisplayEditor()
 									echo "<option value='current/" . basename(ALLSKY_SCRIPTS) . "/$script'>$script</option>";
 								}
 							}
-							if (file_exists(ALLSKY_WEBSITE . "/configuration.json")) {
+							if (file_exists(ALLSKY_WEBSITE_LOCAL_CONFIG)) {
 								// The website is installed on this Pi.
 								// The physical path is ALLSKY_WEBSITE; virtual path is "website".
-								echo "<option value='website/configuration.json'>configuration.json (Allsky Website)</option>";
+								$N = ALLSKY_WEBSITE_LOCAL_CONFIG_NAME;
+								echo "<option value='website/$N'>$N.json (local Allsky Website)</option>";
 							}
 
-							if (file_exists(ALLSKY_CONFIG . "/configuration.json")) {
+							if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 								// The website is remote, but a copy of the config file is on the Pi.
-								echo "<option value='{REMOTE}current/$config_dir/configuration.json'>configuration.json (remote Allsky Website)</option>";
+								$N = ALLSKY_WEBSITE_REMOTE_CONFIG_NAME;
+								echo "<option value='{REMOTE}current/$config_dir/$N'>$N (remote Allsky Website)</option>";
 							}
 			   ?>
 						</select>

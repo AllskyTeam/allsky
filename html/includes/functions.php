@@ -8,7 +8,18 @@
 */
 
 // Sets all the define() variables.
-require 'allskyDefines.inc';
+$defs = 'allskyDefines.inc';
+if (! file_exists("includes/" . $defs) && ! file_exists($defs)) {
+	echo "<div style='font-size: 200%;'>";
+	echo "<p style='color: red'>";
+	echo "The installation of the WebUI is incomplete.<br>";
+	echo "Please run the following from the 'allsky' directory:";
+	echo "</p>";
+	echo "<code>   ./install.sh --function create_webui_defines</code>";
+	echo "</div>";
+	exit;
+}
+require $defs;
 
 $status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
@@ -654,17 +665,27 @@ function get_variable($file, $searchfor, $default)
 	// finalise the regular expression, matching the whole line
 	$pattern = "/^.*$pattern.*\$/m";
 
-	// search, and store all matching occurences in $matches, but only return the last one
+	// search, and store all matching occurences in $matches
 	$num_matches = preg_match_all($pattern, $contents, $matches);
 	if ($num_matches) {
 		$double_quote = '"';
 
 		// Format: [stuff]$searchfor=$value   or   [stuff]$searchfor="$value"
 		// Need to delete  [stuff]$searchfor=  and optional double quotes
-		$last = $matches[0][$num_matches - 1];	// get the last one
-		$last = explode( '=', $last)[1];	// get everything after equal sign
-		$last = str_replace($double_quote, "", $last);
-		return($last);
+		// If more than 1 match, get the last match that matches $searchfor EXACTLY.
+		if ($num_matches === 1) {
+			$match = $matches[0][$num_matches - 1];	// get the last one
+		} else {
+			for ($i=$num_matches-1; $i>=0; $i--) {
+				$match = $matches[0][$i];
+				if ($match === $searchfor) {
+					break;
+				}
+			}
+		}
+		$match = explode( '=', $match)[1];	// get everything after equal sign
+		$match = str_replace($double_quote, "", $match);
+		return($match);
 	} else {
    		return($default);
 	}

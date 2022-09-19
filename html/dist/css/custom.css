@@ -395,10 +395,8 @@ select {
 .dark .btn-black { border-color: #ffffff; }
 
 /* Error messages */
-.errorMsg {
-	color: red;
-	font-size: 125%;
-}
+.errorMsg, .errorMsgBig { color: red; font-size: 125%; }
+.errorMsgBig { font-size: 200%; }
 
 .thumb { width: 100px; margin: 0 1px 1px 0; }
 .left { float: left; }

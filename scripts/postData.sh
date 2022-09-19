@@ -83,6 +83,8 @@ OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
 function upload_file()
 {
 	FILE_TO_UPLOAD="${1}"
+	strFILE_TO_UPLOAD="${2}"
+	[[ ! -f ${FILE_TO_UPLOAD} ]] && echo -e "${RED}${ME}: ERROR: File to upload '${FILE_TO_UPLOAD}' (${strFILE_TO_UPLOAD}) not found.${NC}" && return 1
 
 	COPIED=false
 	typeset -i RETCODE=0
@@ -115,4 +117,4 @@ function upload_file()
 	return ${RETCODE}
 }
 
-upload_file "${OUTPUT_FILE}" && upload_file "${CAMERA_SETTINGS}"
+upload_file "${OUTPUT_FILE}" "output file" && upload_file "${SETTINGS_FILE}" "settings file"

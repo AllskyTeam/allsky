@@ -420,7 +420,7 @@ handle_prior_website() {
 		# Try to remove the new one - if it's not empty the remove will fail.
 		rmdir "${ALLSKY_WEBSITE}" 
 		if [ $? -ne 0 ]; then
-			display_msg error "* New website in '${ALLSKY_WEBSITE}' is not empty."
+			display_msg error "New website in '${ALLSKY_WEBSITE}' is not empty."
 			display_msg info "  Move the contents manually from '${ALLSKY_WEBSITE_OLD}',"
 			display_msg info "  and then remove the old location.\n"
 			OK=false
@@ -449,6 +449,7 @@ handle_prior_website() {
 		MSG="${MSG}Current version: ${NEW_VERSION}\n"
 		MSG="${MSG}\nYou can upgrade the Allky Website by executing:\n"
 		MSG="${MSG}     cd ~/allsky; website/install.sh"
+		display_msg notice "${MSG}"
 		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 	fi
 
@@ -458,6 +459,7 @@ handle_prior_website() {
 	MSG="An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so you may remove it after intallation."
 	MSG="${MSG}\n\nWARNING: if you have any other web sites in that directory, they will no longer be accessible via the web server."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
+	display_msg notice "${MSG}"
 	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 }
 
@@ -720,7 +722,7 @@ restore_prior_files() {
 do_update() {
 	source "${ALLSKY_CONFIG}/config.sh"		# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
-		display_msg error "ERROR: CAMERA_TYPE not set in config.sh."
+		display_msg error "CAMERA_TYPE not set in config.sh."
 		exit 1
 	fi
 	save_camera_capabilities || exit 1

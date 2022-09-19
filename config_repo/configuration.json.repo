@@ -91,8 +91,8 @@
 				"display": false,
 				"title": "Show constellation overlay",
 				"icon": "fa fa-2x fa-fw allsky-constellation",
-				"style": "",
-				"other": "id='overlayBtn' ng-click='toggleOverlay()' ng-class=\"{'active': showOverlay}\""
+				"other": "id='overlayBtn' ng-click='toggleOverlay()' ng-class=\"{'active': showOverlay}\"",
+				"style": ""
 			},
 			{
 				"display": true,
@@ -132,12 +132,12 @@
 				"display": true,
 				"title": "Display information about the camera and other settings",
 				"icon": "fa fa-2x fa-fw fa-info-circle",
-				"style": "",
-				"other": "ng-click='toggleInfo()' ng-class=\"{'active': showInfo}\""
+				"other": "ng-click='toggleInfo()' ng-class=\"{'active': showInfo}\"",
+				"style": ""
 			},
 			{
-				"comment": "Add sidebar items above.",
-				"display": false
+				"display": false,
+				"comment": "Add sidebar items above."
 			}
 		],
 		"sidebarStyle": "",

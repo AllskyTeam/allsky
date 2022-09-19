@@ -412,7 +412,6 @@ handle_prior_website() {
 	# Note: This MUST come before the old WebUI check below so we don't remove the prior website
 	# when we remove the prior WebUI.
 
-	display_msg progress "Moving prior Allsky Website from ${ALLSKY_WEBSITE_OLD} to new location."
 	OK=true
 	if [ -d "${ALLSKY_WEBSITE}" ]; then
 		# Hmmm.  There's an old webite AND a new one.
@@ -430,6 +429,7 @@ handle_prior_website() {
 		fi
 	fi
 	if [[ ${OK} = "true" ]]; then
+		display_msg progress "Moving prior Allsky Website from ${ALLSKY_WEBSITE_OLD} to new location."
 		sudo mv "${ALLSKY_WEBSITE_OLD}" "${ALLSKY_WEBSITE}"
 		PRIOR_SITE="${ALLSKY_WEBSITE}"
 	fi

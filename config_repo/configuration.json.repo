@@ -123,6 +123,7 @@
 				"style": ""
 			},
 			{
+				"display": true,
 				"variable": "imageName",
 				"title": "Full-sized image",
 				"icon": "fa fa-2x fa-fw fa-expand-arrows-alt",

@@ -15,6 +15,13 @@ source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 ME="$(basename "${BASH_ARGV0}")"
 
+LATITUDE="$(settings ".latitude")"
+LONGITUDE="$(settings ".longitude")"
+if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
+	display_msg error "Latitude and Longitude must be set in the WebUI before the Allsky Website\ncan be installed."
+	exit 1
+fi
+
 TITLE="Allsky Website Installer"
 ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
 ALLSKY_WEBSITE_VERSION="$( < "${ALLSKY_WEBSITE}/version" )"
@@ -138,7 +145,7 @@ check_for_older_config_file() {
 		MSG="${MSG}\nPlease compare your file to the new one in"
 		MSG="${MSG}\n${REPO_FILE}"
 		MSG="${MSG}\nto see what fields have been added, changed, or removed.\n"
-		display_msg info "${MSG}"
+		display_msg notice "${MSG}"
 	fi
 }
 
@@ -174,40 +181,24 @@ update_website_configuration_file() {
 		MINI_TLAPSE_URL_VALUE=""
 	fi
 
-	# Latitude and longitude may or may not have N/S and E/W.
-	# "N" is positive, "S" negative for LATITUDE.
-	# "E" is positive, "W" negative for LONGITUDE.
+	# Convert latitude and longitude to use N, S, E, W.
+	LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
+	LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
 
-	LATITUDE="$(settings ".latitude")"
-	DIRECTION=${LATITUDE:1,-1}			# last character
-	if [ "${DIRECTION}" = "S" ]; then
-		SIGN="-"
-	else
-		SIGN=""
-	fi
-	LATITUDE="${SIGN}${LATITUDE%${DIRECTION}}"
-	if [ "${DIRECTION}" = "S" ]; then
+	if [[ ${LATITUDE:1,-1} == "S" ]]; then			# last character
 		AURORAMAP="south"
 	else
 		AURORAMAP="north"
 	fi
 
-	LONGITUDE="$(settings ".longitude")"
-	DIRECTION=${LONGITUDE:1,-1}
-	if [ "${DIRECTION}" = "W" ]; then
-		SIGN="-"
-	else
-		SIGN=""
-	fi
-	LONGITUDE="${SIGN}${LONGITUDE%${DIRECTION}}"
-
-	COMPUTER="$(tail -1 /proc/cpuinfo | sed 's/.*: //')"
+	COMPUTER="$(sed --quiet -e 's/Raspberry //' -e '/^Model/ s/.*: // p' /proc/cpuinfo)"
 	CAMERA_MODEL="$(settings ".cameraModel")"
 	if [[ ${CAMERA_MODEL} == "null" ]]; then
 		CAMERA_MODEL=""
 	else
 		CAMERA_MODEL=" ${CAMERA_MODEL}"		# adds a space
 	fi
+	CAMERA="${CAMERA_TYPE}${CAMERA_MODEL}"
 
 	# There are some settings we can't determine, like LENS.
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent ${DEBUG_ARG} \
@@ -217,7 +208,7 @@ update_website_configuration_file() {
 		config.longitude		"longitude"		"${LONGITUDE}" \
 		config.auroraMap		"auroraMap"		"${AURORAMAP}" \
 		config.computer			"computer"		"${COMPUTER}" \
-		config.camera			"camera"		"${CAMERA_TYPE}${CAMERA_MODEL}" \
+		config.camera			"camera"		"${CAMERA}" \
 		config.AllskyVersion	"AllskyVersion"	"${ALLSKY_VERSION}" \
 		config.AllskyWebsiteVersion "AllskyWebsiteVersion" "${ALLSKY_WEBSITE_VERSION}" \
 		homePage.onPi			"onPi"			"${ON_PI}" \

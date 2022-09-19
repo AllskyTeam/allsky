@@ -309,7 +309,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 
 		if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" ]]; then
 			[[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]] && echo "${ME}: creating mini-timelapse"
-			"${ALLSKY_SCRIPTS}"/timelapse.sh --mini-count ${TIMELAPSE_MINI_IMAGES} "${DATE_NAME}"
+			"${ALLSKY_SCRIPTS}"/timelapse.sh --mini-count ${TIMELAPSE_MINI_IMAGES} ${TIMELAPSE_MINI_FREQUENCY} "${DATE_NAME}"
 			RET=$?
 			[ ${RET} -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
 		fi

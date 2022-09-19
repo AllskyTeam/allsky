@@ -252,6 +252,11 @@ WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websi
 
 # If needed, save the current image in today's directory.
 if [[ "$(settings ".saveDaytimeImages")" = "1" || "${DAY_OR_NIGHT}" = "NIGHT" ]]; then
+	SAVE_IMAGE="true"
+else
+	SAVE_IMAGE="false"
+fi
+if [[ ${SAVE_IMAGE} == "true" ]]; then
 	# Determine what directory is the final resting place.
 	if [ "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 		# The 12 hours ago option ensures that we're always using today's date
@@ -310,11 +315,12 @@ if [[ "$(settings ".saveDaytimeImages")" = "1" || "${DAY_OR_NIGHT}" = "NIGHT" ]]
 		fi
 	else
 		echo "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"
+		SAVE_IMAGE="false"
 		TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# so we can easily compare below
 	fi
 fi
 
-if [[ ${IMG_UPLOAD} = "true" || ${TIMELAPSE_MINI_UPLOAD_VIDEO} = "true" ]]; then
+if [[ ${IMG_UPLOAD} == "true" || (${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true") ]]; then
 	source "${ALLSKY_CONFIG}/ftp-settings.sh"
 fi
 
@@ -372,7 +378,7 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 fi
 
 # If needed, upload the mini timelapse.  If upload.sh failed above, it will likely fail below.
-if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${RET} -eq 0 ]] ; then
+if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${RET} -eq 0 ]] ; then
 	MINI="mini-timelapse.mp4"
 	FILE_TO_UPLOAD="${ALLSKY_TMP}/${MINI}"
 

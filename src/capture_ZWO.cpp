@@ -330,9 +330,12 @@ void flushBufferedImages(int cameraId, void *buf, size_t size)
 	for (numCleared = 0; numCleared < NUM_IMAGE_BUFFERS; numCleared++)
 	{
 		ASI_ERROR_CODE status = ASIGetVideoData(cameraId, (unsigned char *) buf, size, 1);
+/*xxxxx
 		if (status != ASI_SUCCESS)
 			break; // no more buffered frames
-		Log(3, "  > [Cleared buffer frame]\n");
+*/
+		if (status != ASI_ERROR_TIMEOUT)	// Most are ASI_ERROR_TIMEOUT, so don't show them
+			Log(3, "  > [Cleared buffer frame]: %s\n", getRetCode(status));
 	}
 }
 
@@ -1300,7 +1303,7 @@ int main(int argc, char *argv[])
 
 					int minAcceptableMean = MINMEAN;
 					int maxAcceptableMean = MAXMEAN;
-					int roundToMe = 5; // round exposures to this many microseconds
+//xxx					int roundToMe = 5; // round exposures to this many microseconds
 
 					long newExposure_us = 0;
 
@@ -1391,6 +1394,8 @@ int main(int argc, char *argv[])
 							adjustment < 0 ? minAcceptableMean : maxAcceptableMean);
 					}
 
+					int numPingPongs = 0;
+//x					long lastExposure_us = CG.currentExposure_us;
 					while ((CG.lastMean < minAcceptableMean || CG.lastMean > maxAcceptableMean) &&
 						    ++attempts <= maxHistogramAttempts && CG.currentExposure_us <= CG.cameraMaxExposure_us)
 					{
@@ -1427,21 +1432,26 @@ int main(int argc, char *argv[])
 
 						if (priorMeanDiff > 0 && lastMeanDiff < 0)
 						{ 
-							Log(3, " >xxx lastMean was %d and went from %d above max of %d to %d below min",
+							++numPingPongs;
+							Log(2, " >xxx lastMean was %d and went from %d above max of %d to %d below min",
 								priorMean, priorMeanDiff, maxAcceptableMean, -lastMeanDiff);
-							Log(3, "  of %d, is now at %d; should NOT set temp min to currentExposure_us of %'ld\n",
+							Log(2, "  of %d, is now at %d; should NOT set temp min to currentExposure_us of %'ld\n",
 								minAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 						} 
 						else
 						{
 							if (priorMeanDiff < 0 && lastMeanDiff > 0)
 							{
-							// OK to set upper limit since we know it's too high.
+								++numPingPongs;
 								Log(2, " >xxx mean was %d and went from %d below min of %d to %d above max",
 									priorMean, -priorMeanDiff, minAcceptableMean, lastMeanDiff);
 								Log(2, " of %d, is now at %d; OK to set temp max to currentExposure_us of %'ld\n",
 									maxAcceptableMean, (int)CG.lastMean, CG.currentExposure_us);
 							}
+							else
+							{
+								numPingPongs = 0;
+							} 
 
 							if (CG.lastMean < minAcceptableMean)
 							{
@@ -1453,7 +1463,17 @@ int main(int argc, char *argv[])
 							} 
 						} 
 
-						newExposure_us = roundTo(newExposure_us, roundToMe);
+						if (numPingPongs >= 3)
+						{
+printf(" > xxx newExposure_us=%s\n", length_in_units(newExposure_us, true));
+printf("       CG.lastExposure_us=%s\n", length_in_units(CG.lastExposure_us, true));
+							newExposure_us = (newExposure_us + CG.lastExposure_us) / 2;
+long n = newExposure_us;
+printf("       new newExposure_us=%s\n", length_in_units(n, true));
+							Log(3, " > Ping-Ponged %d times, setting exposure to mid-point of %s\n", numPingPongs, length_in_units(newExposure_us, true));
+						}
+
+//xxx						newExposure_us = roundTo(newExposure_us, roundToMe);
 						// Make sure newExposure_us is between min and max.
 						newExposure_us = std::max(tempMinExposure_us, newExposure_us);
 						newExposure_us = std::min(tempMaxExposure_us, newExposure_us);
@@ -1478,6 +1498,8 @@ int main(int argc, char *argv[])
 						asiRetCode = takeOneExposure(&CG, pRgb.data, histogram);
 						if (asiRetCode == ASI_SUCCESS)
 						{
+//x							lastExposure_us = CG.lastExposure_us;
+
 							if (CG.lastMean < minAcceptableMean)
 								lastMeanDiff = CG.lastMean - minAcceptableMean;
 							else if (CG.lastMean > maxAcceptableMean)
@@ -1508,7 +1530,7 @@ int main(int argc, char *argv[])
 					}
 					else if (attempts > maxHistogramAttempts)
 					{
-						 Log(2, "  > max attempts reached - using exposure of %s us with mean %d\n", length_in_units(CG.currentExposure_us, true), CG.lastMean);
+						 Log(2, "  > max attempts reached - using exposure of %s with mean %d\n", length_in_units(CG.currentExposure_us, true), (int)CG.lastMean);
 					}
 					else if (attempts >= 1)
 					{
@@ -1554,7 +1576,7 @@ int main(int argc, char *argv[])
 						}
 						else
 						{
-							Log(2, "  > Stopped trying, using exposure of %s us with mean %d, min=%d, max=%d\n",
+							Log(2, "  > Stopped trying, using exposure of %s with mean %d, min=%d, max=%d\n",
 								length_in_units(CG.currentExposure_us, false), (int)CG.lastMean, minAcceptableMean, maxAcceptableMean);
 						}
 						 

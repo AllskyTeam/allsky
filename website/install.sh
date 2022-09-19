@@ -30,7 +30,6 @@ fi
 
 TITLE="Allsky Website Installer"
 ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
-ALLSKY_WEBSITE_VERSION="$( < "${ALLSKY_WEBSITE}/version" )"
 ALLSKY_OWNER=$(id --group --name)
 WEBSERVER_GROUP="www-data"
 REPO_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
@@ -110,22 +109,19 @@ create_data_json_file() {
 
 
 ##### Set up the location where the website configuration file will go.
-CONFIG_FILE_DIRECTORY=""
+WEB_CONFIG_FILE=""
 IMAGE_NAME=""
 ON_PI=""
 set_configuration_file_variables() {
 	if [ "${REMOTE_WEBSITE}" = "true" ]; then
-		CONFIG_FILE_DIRECTORY=$"${ALLSKY_CONFIG}"
+		WEB_CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		IMAGE_NAME="image.jpg"
 		ON_PI="false"
 	else
-		CONFIG_FILE_DIRECTORY=$"${ALLSKY_WEBSITE}"
+		WEB_CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
 		ON_PI="true"
 	fi
-
-	CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-	WEB_CONFIG_FILE="${CONFIG_FILE}"	# default configuration file
 }
 
 
@@ -155,14 +151,17 @@ check_for_older_config_file() {
 }
 
 
-##### Update the json configuration file, either for the local machine or a remote one.
-update_website_configuration_file() {
-	display_msg progress "Updating settings in ${WEB_CONFIG_FILE}."
+##### Create the json configuration file, either for the local machine or a remote one.
+create_website_configuration_file() {
+	FILE_TO_CREATE="${1}"
+
+	display_msg progress "Creating default '${FILE_TO_CREATE}' file."
+	cp "${REPO_FILE}" "${FILE_TO_CREATE}" || exit 2
 
 	# Get the array index for the mini-timelapse.
 	PARENT="homePage.sidebar"
 	FIELD="Mini-timelapse"
-	INDEX=$(getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "${FIELD}")
+	INDEX=$(getJSONarrayIndex "${FILE_TO_CREATE}" "${PARENT}" "${FIELD}")
 	if [[ ${INDEX} -ge 0 ]]; then
 		MINI_TLAPSE_DISPLAY="${PARENT}[${INDEX}].display"
 		MINI_TLAPSE_URL="${PARENT}[${INDEX}].url"
@@ -208,7 +207,7 @@ update_website_configuration_file() {
 	# There are some settings we can't determine, like LENS.
 	[[ ${DEBUG} == "true" ]] && display_msg debug "Calling updateWebsiteConfig.sh"
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent ${DEBUG_ARG} \
-		--config "${WEB_CONFIG_FILE}" \
+		--config "${FILE_TO_CREATE}" \
 		config.imageName		"imageName"		"${IMAGE_NAME}" \
 		config.latitude			"latitude"		"${LATITUDE}" \
 		config.longitude		"longitude"		"${LONGITUDE}" \
@@ -226,6 +225,7 @@ update_website_configuration_file() {
 ##### If the user is updating the website, use the prior config file(s).
 HAS_NEW_CONFIGURATION_FILE=false
 modify_configuration_variables() {
+	[[ ${DEBUG} == "true" ]] && display_msg debug "modify_configuration_variables(): OLD_WEBSITE_TYPE = ${OLD_WEBSITE_TYPE}"
 	if [ "${SAVED_OLD}" = "true" ]; then
 		if [ "${OLD_WEBSITE_TYPE}" = "new" ]; then
 			C="${PRIOR_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
@@ -233,37 +233,42 @@ modify_configuration_variables() {
 				# This "shouldn't" happen with a new-style website, but in case it does...
 				display_msg warning "Prior new-style website in ${PRIOR_WEBSITE} had no '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
 				HAS_NEW_CONFIGURATION_FILE=true
-				cp "${REPO_FILE}" "${CONFIG_FILE}"
-				return
 			else
 				display_msg progress "Restoring prior '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
-				mv "${C}" "${CONFIG_FILE}"
-			fi
+				mv "${C}" "${WEB_CONFIG_FILE}"
+				if ! json_pp < "${WEB_CONFIG_FILE}" > /dev/null; then
+					display_msg warning "Configuration file '${WEB_CONFIG_FILE} is corrupted.\nFix, then re-run this installation."
+					exit 1
+				fi
 
-			# Check if this is an older configuration file.
-			check_for_older_config_file "${CONFIG_FILE}"
+				# Check if this is an older configuration file.
+				check_for_older_config_file "${WEB_CONFIG_FILE}"
+			fi
 		else
 			# Old-style Website - merge old config files into new one.
 
 # TODO: Merge ${ALLSKY_WEBSITE_OLD}/config.js and ${ALLSKY_WEBSITE_OLD}/virtualsky.json
-# into ${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.
-# display_msg progress "Merging contents of prior 'config.js' and 'virtualsky.json' files into '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
+# into ${ALLSKY_WEBSITE_CONFIGURATION_FILE}.
+# display_msg progress "Merging contents of prior 'config.js' and 'virtualsky.json' files into '${ALLSKY_WEBSITE_CONFIGURATION_FILE}'."
 
 			MSG="When installation is done you must copy the contents of the prior"
 			MSG="${MSG}\n   ${ALLSKY_WEBSITE_OLD}/config.js"
 			MSG="${MSG}\nand"
 			MSG="${MSG}\n   ${ALLSKY_WEBSITE_OLD}/virtualsky.json"
-			MSG="${MSG}\nfiles into '${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
+			MSG="${MSG}\nfiles into '${ALLSKY_WEBSITE_CONFIGURATION_FILE}'."
 			MSG="${MSG}\nCheck the Wiki for the meaning of the MANY new options."
 			display_msg notice "${MSG}"
+
+			HAS_NEW_CONFIGURATION_FILE=true
 		fi
 	else
 		# New website, so set up a default configuration file.
 		HAS_NEW_CONFIGURATION_FILE=true
-		cp "${REPO_FILE}" "${CONFIG_FILE}"
-		WEB_CONFIG_FILE="${CONFIG_FILE}"
-		update_website_configuration_file
-		display_msg progress "Creating default '${ALLSKY_WEBSITE_CONFIGURATION_NAME}' file."
+	fi
+
+	if [[ ${HAS_NEW_CONFIGURATION_FILE} == "true" ]]; then
+		# Create it
+		create_website_configuration_file "${WEB_CONFIG_FILE}"
 	fi
 }
 
@@ -294,16 +299,14 @@ do_remote_website() {
 		MSG="${MSG}\n** This is the recommended way of making changes to the configuration **."
 		MSG="${MSG}\n\nWould you like to do that?"
 		if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 60 3>&1 1>&2 2>&3); then 
-			REMOTE_CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-			cp "${REPO_FILE}" "${REMOTE_CONFIG_FILE}"
-			WEB_CONFIG_FILE="${REMOTE_CONFIG_FILE}"
-			update_website_configuration_file
+			create_website_configuration_file "${WEB_CONFIG_FILE}"
 
 			MSG="\nTo edit the remote configuration file, go to the 'Editor' page in the WebUI\n"
-			MSG="${MSG}and select '${ALLSKY_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"
+			MSG="${MSG}and select '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"
 			display_msg info "${MSG}"
 		else
 			MSG="You need to manually copy '${REPO_FILE}'"
+			# ALLSKY_WEBSITE_CONFIGURATION_NAME is what it's called on the remote server
 			MSG="${MSG}to your remote server and rename it to '${ALLSKY_WEBSITE_CONFIGURATION_NAME}',"
 			MSG="${MSG}then modify it."
 			display_msg warning "${MSG}"
@@ -370,9 +373,30 @@ save_prior_website() {
 	if [ -d "${ALLSKY_WEBSITE}" ]; then
 		ALLSKY_WEBSITE_OLD="${ALLSKY_WEBSITE}"
 		OLD_WEBSITE_TYPE="new"
+
+		# git will fail if the new directory already exists and has something in it,
+		# so rename it.
+		PRIOR_WEBSITE="${ALLSKY_WEBSITE_OLD}-OLD"
+		if [ -d "${PRIOR_WEBSITE}" ]; then
+			MSG="A saved copy of a prior Allsky Website already exists in"
+			MSG="${MSG}\n     ${PRIOR_WEBSITE}"
+			MSG="${MSG}\n\nCan only have one saved prior version at a time."
+			display_msg error "${MSG}"
+			display_msg info "\nRemove or rename that directory and run the installation again.\n"
+			exit 3
+		fi
+
+		display_msg progress "Moving prior ${OLD_WEBSITE_TYPE}-style website to '${PRIOR_WEBSITE}'."
+		mv "${ALLSKY_WEBSITE_OLD}" "${PRIOR_WEBSITE}"
+		if [ $? -ne 0 ]; then
+			display_msg error "Unable to move prior website."
+			exit 3
+		fi
 	elif [ -d "/var/www/html/allsky" ]; then
 		ALLSKY_WEBSITE_OLD="/var/www/html/allsky"
 		OLD_WEBSITE_TYPE="old"
+		PRIOR_WEBSITE="${ALLSKY_WEBSITE_OLD}"
+		# Leave the old-style website where it is since it will no longer be used.
 	else
 		# Is no prior website
 		ALLSKY_WEBSITE_OLD=""
@@ -380,23 +404,6 @@ save_prior_website() {
 		return
 	fi
 
-	# git will fail if the new directory already exists and has something in it
-	PRIOR_WEBSITE="${ALLSKY_WEBSITE}-OLD"
-	if [ -d "${PRIOR_WEBSITE}" ]; then
-		MSG="A saved copy of a prior Allsky Website already exists in"
-		MSG="${MSG}\n     ${PRIOR_WEBSITE}"
-		MSG="${MSG}\n\nCan only have one saved prior version at a time."
-		display_msg error "${MSG}"
-		display_msg info "\nRemove or rename that directory and run the installation again.\n"
-		exit 3
-	fi
-
-	display_msg progress "Moving prior ${OLD_WEBSITE_TYPE}-style website to '${PRIOR_WEBSITE}'."
-	mv "${ALLSKY_WEBSITE}" "${PRIOR_WEBSITE}"
-	if [ $? -ne 0 ]; then
-		display_msg error "Unable to move prior website."
-		exit 3
-	fi
 	SAVED_OLD=true
 }
 
@@ -436,16 +443,16 @@ restore_prior_files() {
 
 	if [ -d "${PRIOR_WEBSITE}/myImages" ]; then
 		display_msg progress "Restoring prior 'myImages' directory."
-		mv "${PRIOR_WEBSITE/myImages}"   .
+		mv "${PRIOR_WEBSITE}/myImages"   .
 	fi
 
-		A="analyticsTracking.js"
-		if [ -f "${PRIOR_WEBSITE}/${A}" ]; then
-			if ! cmp --silent "${PRIOR_WEBSITE}/${A}" "${A}" ; then
-				display_msg progress "Restoring prior '${A}'."
-				mv "${PRIOR_WEBSITE}/${A}" .
-			fi
+	A="analyticsTracking.js"
+	if [ -f "${PRIOR_WEBSITE}/${A}" ]; then
+		if ! cmp --silent "${PRIOR_WEBSITE}/${A}" "${A}" ; then
+			display_msg progress "Restoring prior '${A}'."
+			mv "${PRIOR_WEBSITE}/${A}" .
 		fi
+	fi
 }
 
 ####################### main part of program
@@ -497,13 +504,19 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
+if [[ -f ${ALLSKY_WEBSITE}/version ]]; then
+	ALLSKY_WEBSITE_VERSION="$( < "${ALLSKY_WEBSITE}/version" )"
+else
+	ALLSKY_WEBSITE_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/${BRANCH}/version")"
+fi
+
 ##### Display the welcome header
 if [[ ${REMOTE_WEBSITE} == "true" ]]; then
-	U2="for remote servers "
+	U2="for remote servers"
 else
 	U2=""
 fi
-H="Welcome to the ${TITLE} ${U2}"
+H="Welcome to the ${TITLE} version ${ALLSKY_WEBSITE_VERSION} ${U2}"
 display_header "${H}"
 
 set_configuration_file_variables

@@ -111,6 +111,10 @@ function display_msg()
 		MSG_="\n${YELLOW}*** WARNING: "
 		STARS_=true
 
+	elif [[ ${LOG_TYPE_} == "notice" ]]; then
+		MSG_="${YELLOW}*** NOTICE: "
+		STARS_=true
+
 	elif [[ ${LOG_TYPE_} == "progress" ]]; then
 		MSG_="${GREEN}* ${MESSAGE_}${NC}"
 		STARS_=false

@@ -159,7 +159,7 @@ if ($useLogin) {
     <link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
     <script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
     <script type="text/javascript" src="lib/codeMirror/shell.js"> </script>
-<?php if (file_exists(ALLSKY_WEBSITE . "/configuration.json") || file_exists(ALLSKY_CONFIG . "/configuration.json")) { ?>
+<?php if (file_exists(ALLSKY_WEBSITE_LOCAL_CONFIG) || file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) { ?>
     <script type="text/javascript" src="lib/codeMirror/javascript.js"> </script>
     <script type="text/javascript" src="lib/codeMirror/json.js"> </script>
 <?php } ?>

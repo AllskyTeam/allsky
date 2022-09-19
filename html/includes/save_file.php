@@ -39,20 +39,24 @@ $ok = true;
 $msg = updateFile($file, $content, "save_file");
 if ($msg == "") {
 	if ($isRemote) {
-		$imageDir = get_variable(ALLSKY_CONFIG .'/config.sh', 'IMAGE_DIR=', '');
-		$remoteHost = get_variable(ALLSKY_CONFIG .'/ftp-settings.sh', 'REMOTE_HOST=', '');
-		$cmd = ALLSKY_SCRIPTS . "/upload.sh --silent '$file' '$imageDir' " . basename($file) . " 'remote_file'";
+		$F = ALLSKY_CONFIG . '/ftp-settings.sh';
+		$remoteHost = get_variable($F, 'REMOTE_HOST=', '');
+		$imageDir = get_variable($F, 'IMAGE_DIR=', '');
+		// Remote files may have "remote_" prepended to their names; if so, set the remote
+		// name to NOT include that string.
+		$remoteName = str_replace("remote_", "", basename($file));
+		$cmd = ALLSKY_SCRIPTS . "/upload.sh --silent '$file' '$imageDir' '$remoteName' 'remote_file'";
 		exec("$cmd 2>&1", $output, $return_val);
 		if ($return_val == 0) {
-			$msg = "File saved and sent to $remoteHost.";
+			$msg = "$file saved and sent to $remoteHost as $remoteName.";
 		} else {
 			$ok = false;
 			$msg = implode("\n", $output);
-			$msg = "File saved but unable to send to $remoteHost: <pre>$msg</pre>";
+			$msg = "$file saved but unable to send to $remoteHost: <pre>$msg</pre>";
 			$msg .= "Executed $cmd";
 		}
 	} else {
-		$msg = "File saved";
+		$msg = "$file saved";
 	}
 } else {
 	$ok = false;

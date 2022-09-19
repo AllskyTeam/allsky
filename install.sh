@@ -214,7 +214,7 @@ ask_reboot() {
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3; then 
 		sudo reboot now
 	else
-		display_msg warning "You need to reboot the Pi before Allsky will work."
+		display_msg notice "You need to reboot the Pi before Allsky will work."
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
 		MSG="You can connect to the WebUI at:\n"
 		MSG="${MSG}${AT}"

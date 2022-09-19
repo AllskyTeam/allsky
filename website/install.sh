@@ -206,7 +206,7 @@ update_website_configuration_file() {
 	CAMERA="${CAMERA_TYPE}${CAMERA_MODEL}"
 
 	# There are some settings we can't determine, like LENS.
-	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}calling updateWebsiteConfig.sh${wNC}"
+	[[ ${DEBUG} == "true" ]] && display_msg debug "Calling updateWebsiteConfig.sh"
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent ${DEBUG_ARG} \
 		--config "${WEB_CONFIG_FILE}" \
 		config.imageName		"imageName"		"${IMAGE_NAME}" \

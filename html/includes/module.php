@@ -24,6 +24,7 @@ function DisplayModule() {
 <link href="/js/dropzone/dropzone.css" type="text/css" rel="stylesheet" />
 <script src="/js/dropzone/dropzone-min.js"></script>
 
+<script src="/js/jquery-gpio/jquery-gpio.js"></script>
 <script src="/js/jquery-roi/jquery-roi.js"></script>
 <script src="/js/konva/konva.min.js"></script>
 

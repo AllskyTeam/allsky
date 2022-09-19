@@ -462,8 +462,55 @@ class MODULESEDITOR {
                             }
                         });
                     });
-
                 }
+
+                if (fieldType.fieldtype == 'gpio') {
+                    inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '">';
+                    extraClass = 'input-group';
+                    inputHTML = '\
+                        <div class="row">\
+                            <div class="col-xs-8">\
+                            ' + inputHTML + '\
+                            </div>\
+                            <div class="col-xs-4">\
+                                <button type="button" class="btn btn-default" id="open-gpio-' + key + '" data-source="' + key + '">...</button>\
+                                <button type="button" class="btn btn-default" id="reset-gpio-' + key + '" data-source="' + key + '"><span class="glyphicon glyphicon-repeat"></span></button>\
+                            </div>\
+                        </div>\
+                    ';
+
+                    $(document).on('click', '#reset-gpio-' + key, (event) => {
+                        let el = $(event.target).data('source');
+                        $('#' + el).val('');
+                    });
+
+                    $(document).on('click', '#open-gpio-' + key, (event) => {
+                        let el = $(event.target).data('source');
+                        let data = $('#' + el).val();
+
+                        $.allskyGPIO({
+                            id: key,
+                            gpio: parseInt(data),
+                            gpioSelected: function(gpio) {
+                                $('#' + key).val(gpio)                                
+                            }
+                        });
+                    });                    
+                }
+
+                if (fieldType.fieldtype == 'select') {
+                    inputHTML = '<select name="' + key + '" id="' + key + '">';
+                    let values = fieldType.values.split(',');
+                    for (let value in values) {
+                        let optionValue = values[value];
+                        let selected = "";
+                        if (fieldValue == optionValue) {
+                            selected = ' selected="selected" ';
+                        }
+                        inputHTML += '<option value="' + optionValue + '"' + selected + '>' + optionValue + '</option>';
+                    }
+                    inputHTML += '</select>';
+                }                
             }
 
             let fieldHTML = '\

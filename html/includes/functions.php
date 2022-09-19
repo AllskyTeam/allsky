@@ -9,7 +9,7 @@
 
 // Sets all the define() variables.
 $defs = 'allskyDefines.inc';
-if (! file_exists("includes/" . $defs)) {
+if (! file_exists("includes/" . $defs) && ! file_exists($defs)) {
 	echo "<div style='font-size: 200%;'>";
 	echo "<p style='color: red'>";
 	echo "The installation of the WebUI is incomplete.<br>";

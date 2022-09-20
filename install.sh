@@ -729,6 +729,9 @@ do_update() {
 		display_msg error "CAMERA_TYPE not set in config.sh."
 		exit 1
 	fi
+
+	create_webui_defines
+
 	save_camera_capabilities || exit 1
 
 	# Update the sudoers file if it's missing some entries.
@@ -833,6 +836,9 @@ update_config_sh
 ##### Install web server
 # This must come BEFORE save_camera_capabilities, since it installs php.
 install_webserver
+
+##### Create the file that defines the WebUI variables.
+create_webui_defines
 
 ##### Create the camera type-model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.

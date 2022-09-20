@@ -734,11 +734,11 @@ do_update() {
 	# Update the sudoers file if it's missing some entries.
 	# Look for the last entry added (should be the last entry in the file).
 	# Don't simply copy the repo file to the final location in case the repo file isn't up to date.
-	grep --silent "truncate" "${FINAL_SUDOERS_FILE}"
+	grep --silent "/date" "${FINAL_SUDOERS_FILE}"
 	# shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then
 		display_msg progress "Updating sudoers list."
-		grep --silent "truncate" "${REPO_SUDOERS_FILE}"
+		grep --silent "/date" "${REPO_SUDOERS_FILE}"
 		# shellcheck disable=SC2181
 		if [ $? -ne 0 ]; then
 				display_msg error "Please get the newest '$(basename "${REPO_SUDOERS_FILE}")' file from Git and try again."

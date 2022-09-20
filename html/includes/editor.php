@@ -135,7 +135,7 @@ function DisplayEditor()
 								// The website is installed on this Pi.
 								// The physical path is ALLSKY_WEBSITE; virtual path is "website".
 								$N = ALLSKY_WEBSITE_LOCAL_CONFIG_NAME;
-								echo "<option value='website/$N'>$N.json (local Allsky Website)</option>";
+								echo "<option value='website/$N'>$N (local Allsky Website)</option>";
 							}
 
 							if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {

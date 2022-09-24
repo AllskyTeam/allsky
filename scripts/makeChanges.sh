@@ -134,8 +134,10 @@ while [ $# -gt 0 ]; do
 			if [[ ${NEW_VALUE} == "RPi" ]]; then
 				C="$(determineCommandToUse "false" "" )"
 				# shellcheck disable=SC2181
-				if [ $? -ne 0 ]; then
-					exit $?
+				RET=$?
+				if [ ${RET} -ne 0 ]; then
+					echo -e "${wERROR}${ME}: ERROR: unable to determine command to use, RET=${RET}, C=${C}.${wNC}."
+					exit ${RET}
 				fi
 				C="-cmd ${C}"
 			else

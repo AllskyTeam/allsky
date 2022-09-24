@@ -114,7 +114,7 @@ class ALLSKYOVERLAY:
     def _createTempDir(self, path):
         if not os.path.isdir(path):
             umask = os.umask(0o000)
-            os.mkdir(path, mode=0o777)
+            os.makedirs(path, mode=0o777)
             os.umask(umask)
 
     def _setDateandTime(self):

@@ -33,15 +33,27 @@ from pytz import timezone
 metaData = {
     "name": "Overlays data on the image",
     "description": "Overlays data fields on the image",
+    "module": "allsky_overlay",       
     "events": [
         "day",
         "night"
-    ]
+    ],
+    "arguments":{
+        "debug": "false"
+    },
+    "argumentdetails": {
+        "debug" : {
+            "required": "false",
+            "description": "Enable debug mode",
+            "help": "If selected all environment variables will be written to the overlaydebug.txt file in the AllSky tmp folder",
+            "type": {
+                "fieldtype": "checkbox"
+            }          
+        }
+    }         
 }
 
 class ALLSKYOVERLAY:
-    _verbose = 0
-    _imageFile = None
     _OVERLAYCONFIGFILE = 'overlay.json'
     _OVERLAYFIELDSFILE = 'fields.json'
     _OVERLAYTMPFOLDER = ''
@@ -49,7 +61,6 @@ class ALLSKYOVERLAY:
     _overlayConfigFile = None
     _overlayConfig = None
     _image = None
-    _kwargs = {}
     _fonts = {}
     _fields = {}
 
@@ -58,7 +69,6 @@ class ALLSKYOVERLAY:
     _startTime = 0
     _lastTimer = None
 
-    _cameraConfig = None
     _observerLat = 0
     _observerLon = 0
 
@@ -67,34 +77,39 @@ class ALLSKYOVERLAY:
     _sunFast = False
 
     _imageDate = None
+    _debug = False
 
-    def __init__(self):
-
-        self._verbose = s.LOGLEVEL
-        
-
+    def __init__(self, debug): 
         self._overlayConfigFile = os.path.join(os.environ['ALLSKY_CONFIG'], self._OVERLAYCONFIGFILE)  
-
         fieldsFile = os.path.join(os.environ['ALLSKY_CONFIG'], self._OVERLAYFIELDSFILE)
-      
         self._OVERLAYTMP = os.path.join(tempfile.gettempdir(), 'overlay')
         self._createTempDir(self._OVERLAYTMP)
-
         self._OVERLAYTLEFOLDER = os.path.join(self._OVERLAYTMP , 'tle')
         self._createTempDir(self._OVERLAYTLEFOLDER)
-
         file = open(fieldsFile)
         self._fields = json.load(file)
-
-        self._imageFile = os.environ['CURRENT_IMAGE']
-
-        #self._kwargs = kwargs
-        self._log(4, "INFO: Image file set to " + self._imageFile)
-        self._log(4, "INFO: Config file set to " + self._overlayConfigFile)
-
+        s.log(4, "INFO: Config file set to {}".format(self._overlayConfigFile))
         load = Loader(self._OVERLAYTMP, verbose=False)
         self._eph = load('de421.bsp')
         self._setDateandTime()
+        self._observerLat = s.getSetting('latitude') 
+        self._observerLon = s.getSetting('longitude')
+        self._debug = debug 
+
+    def _dumpDebugData(self):
+        debugFilePath = os.path.join(s.getEnvironmentVariable('ALLSKY_TMP'),'overlaydebug.txt')
+        env = {}
+        for var in os.environ:
+            varValue = os.environ[var]
+            var = var.ljust(50, ' ')
+            env[var] = varValue
+
+        with open(debugFilePath, 'w') as debugFile:
+            for var in sorted(env):
+                varValue = env[var]         
+                debugFile.write(var + varValue + os.linesep)
+
+        s.log(1, "INFO: Debug information written to {}".format(debugFilePath))
 
     def _createTempDir(self, path):
         if not os.path.isdir(path):
@@ -103,15 +118,15 @@ class ALLSKYOVERLAY:
             os.umask(umask)
 
     def _setDateandTime(self):
-        osDate = self._getEnvironmentVariable('AS_DATE', True)
-        osTime = self._getEnvironmentVariable('AS_TIME', True)
+        osDate = s.getEnvironmentVariable('AS_DATE', True)
+        osTime = s.getEnvironmentVariable('AS_TIME', True)
         if osDate.startswith('20'):
             self._imageDate = time.mktime(datetime.strptime(osDate + ' ' + osTime,"%Y%m%d %H%M%S").timetuple())
         else:
             self._imageDate = time.time()
     
     def _loadDataFile(self):
-        """ Loads any extra datya files found in the {ALLSKY_TMP}/extra folder. The data files can either be json or 
+        """ Loads any extra data files found in the {ALLSKY_TMP}/extra folder. The data files can either be json or 
             name pair values. 
             
             The json format allows for an expiry time for the variable. In the example below the rain value will expire
@@ -157,12 +172,8 @@ class ALLSKYOVERLAY:
         for (dirPath, dirNames, fileNames) in os.walk(extraFolder):
             for fileName in fileNames:
                 dataFilename = os.path.join(extraFolder, fileName)
-                self._log(4, "INFO: Loading Data File " + dataFilename)
+                s.log(4, "INFO: Loading Data File {}".format(dataFilename))
                 self._readData(dataFilename, defaultExpiry)
-
-        if self._kwargs is not None:
-            for (key, value) in self._kwargs.items():
-                os.environ['AS_' + key] = value
                       
         return result
 
@@ -170,7 +181,7 @@ class ALLSKYOVERLAY:
         fileExtension = pathlib.Path(dataFilename).suffix
         fileModifiedTime = int(os.path.getmtime(dataFilename))
         if fileExtension == '.json':
-            if self._isFileReadable(dataFilename):
+            if s.isFileReadable(dataFilename):
                 with open(dataFilename) as file:
                     self._data = json.load(file)
                     for (name, valueData) in self._data.items():
@@ -228,10 +239,10 @@ class ALLSKYOVERLAY:
                         os.environ['AS_' + name] = str(value)
                         self._saveExtraDataField(name, fileModifiedTime, expires, x, y, fill, font, fontsize, image, rotate, scale, opacity)
             else:
-                self._log(1, 'ERROR: Data File ' + dataFilename + ' not accessible - IGNORING')
+                s.log(0, 'ERROR: Data File {} is not accessible - IGNORING'.format(dataFilename))
                 result = False
         else:
-            if self._isFileReadable(dataFilename):
+            if s.isFileReadable(dataFilename):
                 with open(dataFilename) as file:
                     for line in file:
                         name, value = line.partition("=")[::2]
@@ -239,7 +250,7 @@ class ALLSKYOVERLAY:
                         os.environ[name] = str(value)
                         self._saveExtraDataField(name, fileModifiedTime, defaultExpiry)
             else:
-                self._log(1, "ERROR: Data File " + dataFilename + " not accessible - IGNORING")
+                s.log(0, "ERROR: Data File {} is not accessible - IGNORING".format(dataFilename))
                 result = False
 
         return result
@@ -261,70 +272,23 @@ class ALLSKYOVERLAY:
             'opacity': opacity
         }
         self._extraData[name] = _extraField
-        self._log(4,"INFO: Added extra data field " + name + ", expiry " + str(expires) + " seconds")
-
-    def _getCameraConfig(self):
-        """ Loads the camera latitude and longitude from the allsky configuration file """
-        result = True
-
-        try:
-            camerSettingsFile = os.environ['SETTINGS_FILE']
-
-            allskySettingsFile = open(camerSettingsFile, 'r')
-            self._cameraConfig = json.load(allskySettingsFile)
-
-            self._observerLat = self._cameraConfig['latitude']
-            self._observerLon = self._cameraConfig['longitude']
-
-        except FileNotFoundError:
-            self._log(1, "ERROR: Cannot find the allsky camera config")
-            result = False
-
-        return result
+        s.log(4,"INFO: Added extra data field {0}, expiry {1} seconds".format(name, expires))
 
     def _loadConfigFile(self):
         result = True
-        if self._isFileReadable(self._overlayConfigFile):
+        if s.isFileReadable(self._overlayConfigFile):
             with open(self._overlayConfigFile) as file:
                 self._overlayConfig = json.load(file)
         
             if len(self._overlayConfig["fields"]) == 0 and len(self._overlayConfig["images"]) == 0:
-                self._log(1, "WARNING: Config file (" + self._overlayConfigFile + ") is empty.")
+                s.log(1, "WARNING: Config file ({}) is empty.".format(self._overlayConfigFile))
                 result = True        
         else:
-            self._log(1, "ERROR: Config File not accessible " + self._overlayConfigFile)
+            s.log(0, "ERROR: Config File not accessible {}".format(self._overlayConfigFile))
             result = False
         
         return result
-
-    def _log(self, level, text, preventNewline = False):
-        """ Very simple method to log data if in verbose mode """
-        if self._verbose >= level:
-            if preventNewline:
-                print(text, end="")
-            else:
-                print(text)
         
-    def _isFileWriteable(self, fileName):
-        """ Check if a file exists and can be written to """
-        if os.path.exists(fileName):
-            if os.path.isfile(fileName):
-                return os.access(fileName, os.W_OK)
-            else:
-                return False 
-        else:
-            return False            
-
-    def _isFileReadable(self, fileName):
-        """ Check if a file is readable """
-        if os.path.exists(fileName):
-            if os.path.isfile(fileName):
-                return os.access(fileName, os.R_OK)
-            else:
-                return False 
-        else:
-            return False  
-
     def _loadImageFile(self):
         """ Loads the image file to annotate. If no image is specified on the command line
             then this method will attempt to use the image specified in the all sky camera
@@ -335,27 +299,13 @@ class ALLSKYOVERLAY:
         self._image = s.image
         return result
 
-        #if self._isFileReadable(self._imageFile):
-        #    pass
-        #    if self._isFileWriteable(self._imageFile):
-        #        self._image = cv2.imread(self._imageFile, cv2.IMREAD_COLOR)
-        #    else:
-        #        self._log(1, "ERROR: Cannot write to the image file " + self._imageFile)
-        #        result = False
-        #else:
-        #    self._log(1, "ERROR: Cannot read the image file " + self._imageFile)
-        #    result = False
-
-        #return result
-
     def _saveImagefile(self):
         """ Saves the final image """
         s.image = self._image
-        #cv2.imwrite(self._imageFile, self._image, params=None)
 
     def _timer(self, text, showIntermediate = True):
         """ Method to display the elapsed time between function calls and the total script execution time """
-        if self._verbose:
+        if s.LOGLEVEL:
             if self._lastTimer is None:
                 elapsedSinceLastTime = datetime.now() - self._startTime
             else:
@@ -366,9 +316,9 @@ class ALLSKYOVERLAY:
 
             elapsedTime = datetime.now() - self._startTime
             if showIntermediate: 
-                self._log(3, "INFO: " + text + " took " + lastText + " Seconds. Elapsed Time " + str(elapsedTime.total_seconds()) + " Seconds.")
+                s.log(3, "INFO: {0} took {1} Seconds. Elapsed Time {2} Seconds.".format(text, lastText, elapsedTime.total_seconds()))
             else:
-                self._log(3, "INFO: " + text + " Elapsed Time " + str(elapsedTime.total_seconds()) + " Seconds.")
+                s.log(3, "INFO: {0} Elapsed Time {1} Seconds.".format(text, elapsedTime.total_seconds()))
 
     def _getFont(self, font, fontSize):
 
@@ -384,7 +334,7 @@ class ALLSKYOVERLAY:
             'Comic Sans MS': {'fontpath': '/usr/share/fonts/truetype/msttcorefonts/comic.ttf'},
         }
 
-        self._log(4, "INFO: Loading Font " + font + " Size " + str(fontSize) + " pixels", True)
+        s.log(4, "INFO: Loading Font {0} Size {1} pixels".format(font, fontSize), True)
 
         fontPath = None
         if font in self._overlayConfig['fonts']:
@@ -397,7 +347,7 @@ class ALLSKYOVERLAY:
             if font in systemFontMap:
                 fontPath = systemFontMap[font]['fontpath']
             else:
-                self._log(1, ', ERROR: System Font could not be found in map')
+                s.log(1, ', ERROR: System Font could not be found in map')
   
         if fontPath is not None:
             if fontSize is None:
@@ -410,15 +360,15 @@ class ALLSKYOVERLAY:
 
             if fontKey in self._fonts:
                 font = self._fonts[fontKey]
-                self._log(4, ', Font Found In Cache')
+                s.log(4, ', Font Found In Cache')
             else :
                 try:
                     fontSize = int(fontSize)
                     self._fonts[fontKey] = ImageFont.truetype(fontPath, fontSize)
                     font = self._fonts[fontKey]
-                    self._log(4, ', Font loaded from disk')
+                    s.log(4, ', Font loaded from disk')
                 except OSError as err:
-                    self._log(1, ', ERROR: Font could not be loaded from disk (' + fontPath + ')')
+                    s.log(1, ', ERROR: Font could not be loaded from disk ({})'.format(fontPath))
                     font = None
         else:
             font = None
@@ -558,7 +508,7 @@ class ALLSKYOVERLAY:
         try:
             r,g,b = ImageColor.getcolor(value, "RGB")
         except:
-            self._log(1, "ERROR: The colour '" + value + "' for field '" + name + "' Is NOT valid - Defaulting to white")
+            s.log(0, "ERROR: The colour '{0}' for field '{1}' Is NOT valid - Defaulting to white".format(value, name))
             r = 255
             g = 255
             b = 255
@@ -619,7 +569,8 @@ class ALLSKYOVERLAY:
                     fileTimeHR = fileTime.strftime("%d.%m.%y %H:%M:%S")
                     nowTime = datetime.fromtimestamp(int(time.time()))
                     nowTimeHR = nowTime.strftime("%d.%m.%y %H:%M:%S")                    
-                    self._log(4, "INFO: data field " + placeHolder + " expired. File time " + fileTimeHR + ", now " + nowTimeHR + ". Expiry " + str(self._extraData[placeHolder.upper()]["expires"]) + " Seconds. Age " + str(age) + " Seconds")
+                    s.log(4, "INFO: data field {0} expired. File time {1}, now {2}. Expiry {3} Seconds. Age {4} Seconds"
+                        .format(placeHolder, fileTimeHR, nowTimeHR, self._extraData[placeHolder.upper()]["expires"], age))
                     valueOk = False
 
         if valueOk:
@@ -668,7 +619,7 @@ class ALLSKYOVERLAY:
                         value = 'Yes'
             else:
                 if variableType == 'Text':
-                    if value == '' or value == None:
+                    if value == '' or value is None:
                         if empty != '':
                             value = empty
 
@@ -698,7 +649,7 @@ class ALLSKYOVERLAY:
 
             imagePath = os.path.join(os.environ['ALLSKY_WEBUI'], "overlay", "images", imageName)
 
-            if self._isFileReadable(imagePath):
+            if s.isFileReadable(imagePath):
                 image = cv2.imread(imagePath, cv2.IMREAD_UNCHANGED)
 
             if image is not None:
@@ -712,12 +663,12 @@ class ALLSKYOVERLAY:
                         image = self._rotate_image(image, imageData["rotate"])
 
                 self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY)
-                self._log(3, "INFO: Adding image field " + imageName)
+                s.log(3, "INFO: Adding image field {}".format(imageName))
 
             else:
-                self._log(1, "ERROR: Cannot locate image " + imageName)
+                s.log(0, "ERROR: Cannot locate image {}".format(imageName))
         else:
-            self._log(1, "ERROR: Image not set so ignoring")
+            s.log(0, "ERROR: Image not set so ignoring")
 
     def _overlay_transparent(self, imageName, background, overlay, x, y):
 
@@ -752,7 +703,7 @@ class ALLSKYOVERLAY:
 
             background[y:y+h, x:x+w] = (1.0 - mask) * background[y:y+h, x:x+w] + mask * overlay_image
         else:
-            self._log(1, "ERROR: Adding image " + imageName + ". Its outside the bounds of the main image")
+            s.log(0, "ERROR: Adding image {}. Its outside the bounds of the main image".format(imageName))
         return background
 
     def _rotate_image(self, image, angle):
@@ -793,15 +744,15 @@ class ALLSKYOVERLAY:
             self._moonPhaseSymbol  = symbol
 
             os.environ['AS_MOON_AZIMUTH'] = self._moonAzimuth
-            self._log(4, 'INFO: Adding Moon Azimuth ' + str(self._moonAzimuth))
+            s.log(4, 'INFO: Adding Moon Azimuth {}'.format(self._moonAzimuth))
             os.environ['AS_MOON_ELEVATION'] = self._moonElevation
-            self._log(4, 'INFO: Adding Moon Elevation ' + str(self._moonElevation))
+            s.log(4, 'INFO: Adding Moon Elevation {}'.format(self._moonElevation))
             os.environ['AS_MOON_ILLUMINATION'] = self._moonIllumination
-            self._log(4, 'INFO: Adding Moon Illumination ' + str(self._moonIllumination))
+            s.log(4, 'INFO: Adding Moon Illumination {}'.format(self._moonIllumination))
             os.environ['AS_MOON_SYMBOL'] = self._moonPhaseSymbol
-            self._log(4, 'INFO: Adding Moon Symbol ' + str(self._moonPhaseSymbol))
+            s.log(4, 'INFO: Adding Moon Symbol {}'.format(self._moonPhaseSymbol))
         else:
-            self._log(4,'INFO: Moon not enabled')
+            s.log(4,'INFO: Moon not enabled')
         return True
 
     def _fileCreatedToday(self, fileName):
@@ -835,6 +786,7 @@ class ALLSKYOVERLAY:
                     file = open('/etc/timezone', 'r')
                     tz = file.readline()
                     tz = tz.strip()
+                    file.close()
 
                     # Figure out local midnight.
                     zone = timezone(tz)
@@ -878,9 +830,9 @@ class ALLSKYOVERLAY:
 
             for key, value in cacheData.items():
                 os.environ[key] = value
-                self._log(4, 'INFO: Adding ' + str(key) +  ' : ' + value)
+                s.log(4, 'INFO: Adding {0}:{1}'.format(key,value))
         else:
-            self._log(4,'INFO: Sun not enabled')
+            s.log(4,'INFO: Sun not enabled')
 
         return True
 
@@ -891,7 +843,7 @@ class ALLSKYOVERLAY:
 
     def _fetchTleFromCelestrak(self, noradCatId, verify=True):
 
-        self._log(4, 'INFO: Loading Satellite ' + noradCatId, True)
+        s.log(4, 'INFO: Loading Satellite {}'.format(noradCatId), True)
         tleFileName = os.path.join(self._OVERLAYTLEFOLDER , noradCatId + '.tle')
 
         self._createTempDir(self._OVERLAYTLEFOLDER)
@@ -919,14 +871,14 @@ class ALLSKYOVERLAY:
                 outfile.write(tle[2].strip() + os.linesep)
             os.umask(umask)
 
-            self._log(4, ' TLE file over 2 days old so downloaded')
+            s.log(4, ' TLE file over 2 days old so downloaded')
         else:
             tle = {}
             with open(tleFileName) as f:
                 tle[0] = f.readline()
                 tle[1] = f.readline()
                 tle[2] = f.readline()
-            self._log(4, ' TLE loaded from cache')
+            s.log(4, ' TLE loaded from cache')
 
         return tle[0].strip(), tle[1].strip(), tle[2].strip()
 
@@ -961,9 +913,9 @@ class ALLSKYOVERLAY:
                     else:
                         os.environ['AS_' + noradId + 'VISIBLE'] = 'No'
                 except LookupError:
-                    self._log(4,'ERROR: Norad ID ' + noradId + ' Not found')
+                    s.log(4,'ERROR: Norad ID ' + noradId + ' Not found')
         else:
-            self._log(4,'INFO: Satellites not enabled')
+            s.log(4,'INFO: Satellites not enabled')
 
         return True
 
@@ -1002,53 +954,41 @@ class ALLSKYOVERLAY:
                     os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE'] = 'No'
 
         else:
-            self._log(4,'INFO: Planets not enabled')
+            s.log(4,'INFO: Planets not enabled')
             
         return True
-
-    def _getEnvironmentVariable(self, name, fatal=False,error=''):
-        result = None
-
-        try:
-            result = os.environ[name]
-        except KeyError:
-            if fatal:
-                print("Sorry, environment variable ( {0} ) not found.".format(name))
-                exit(98)
-
-        return result
         
-
     def annotate(self):
         self._startTime = datetime.now()
-        if self._getCameraConfig():
-            self._timer("Loading Camera Config")
-            if self._loadConfigFile():
-                self._timer("Loading Config")
-                if self._initialiseMoon():
-                    self._timer("Initialising The Moon")
-                    if self._initialiseSun():
-                        self._timer("Initialising The Sun")
-                        if self._initSatellites():
-                            self._timer("Initialising The Satellites")
-                            if self._initPlanets():
-                                self._timer("Initialising The Planets")
-                                if self._loadImageFile():
-                                    self._timer("Loading Image")
-                                    if self._loadDataFile():
-                                        self._timer("Loading Extra Data")
-                                        self._addText()
-                                        self._timer("Adding Text Fields")
-                                        self._addImages()
-                                        self._timer("Adding Image Fields")
-                                        self._saveImagefile()
-                                        self._timer("Saving Final Image")
+        if self._loadConfigFile():
+            self._timer("Loading Config")
+            if self._initialiseMoon():
+                self._timer("Initialising The Moon")
+                if self._initialiseSun():
+                    self._timer("Initialising The Sun")
+                    if self._initSatellites():
+                        self._timer("Initialising The Satellites")
+                        if self._initPlanets():
+                            self._timer("Initialising The Planets")
+                            if self._loadImageFile():
+                                self._timer("Loading Image")
+                                if self._loadDataFile():
+                                    self._timer("Loading Extra Data")
+                                    self._addText()
+                                    self._timer("Adding Text Fields")
+                                    self._addImages()
+                                    self._timer("Adding Image Fields")
+                                    self._saveImagefile()
+                                    self._timer("Saving Final Image")
+                                    if self._debug:
+                                        self._timer("Writing debug data")
+                                        self._dumpDebugData()
                                 
 
         self._timer("Annotation Complete", False)
-       # print(os.environ)
 
 def overlay(params):
-    annotater = ALLSKYOVERLAY()
+    debug = params["debug"]
+    annotater = ALLSKYOVERLAY(debug)
     annotater.annotate()
     return "Overlay complete"

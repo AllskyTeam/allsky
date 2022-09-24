@@ -155,14 +155,25 @@ def readUploadConfig():
 def readSettings():
     global SETTINGS
 
-    CONFIG["SETTINGS_FILE"] = os.path.join(getEnvironmentVariable("ALLSKY_CONFIG"), "settings_" + CONFIG["CAMERA"] + ".json")
+    settingsFile = getEnvironmentVariable("SETTINGS_FILE")
+    if settingsFile is None:
+        camera = getEnvironmentVariable("CAMERA_TYPE")
+        if camera is None:
+            camera = CONFIG["CAMERA"]
 
-    with open(CONFIG["SETTINGS_FILE"], "r") as fp:
+        settingsFile = os.path.join(getEnvironmentVariable("ALLSKY_CONFIG"), "settings_" + camera + ".json")
+
+    with open(settingsFile, "r") as fp:
         SETTINGS = json.load(fp)
 
     LOGLEVEL = int(getSetting("debuglevel"))
 
 def getSetting(settingName):
+    global SETTINGS
+
+    if not SETTINGS:
+        readSettings()
+
     result = None
     try:
         result = SETTINGS[settingName]
@@ -266,3 +277,23 @@ def writeDB():
     file.write('DataBase = ')
     file.write(str(DBDATA))
     file.close()
+
+def isFileWriteable(fileName):
+    """ Check if a file exists and can be written to """
+    if os.path.exists(fileName):
+        if os.path.isfile(fileName):
+            return os.access(fileName, os.W_OK)
+        else:
+            return False 
+    else:
+        return False            
+
+def isFileReadable(fileName):
+    """ Check if a file is readable """
+    if os.path.exists(fileName):
+        if os.path.isfile(fileName):
+            return os.access(fileName, os.R_OK)
+        else:
+            return False 
+    else:
+        return False      

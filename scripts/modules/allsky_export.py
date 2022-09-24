@@ -14,6 +14,7 @@ import re
 metaData = {
     "name": "AllSKY Export",
     "description": "Exports AllSKY data to json",
+    "module": "allsky_export",       
     "events": [
         "day",
         "night"

@@ -1,5 +1,5 @@
 '''
-allsky_export.py
+allsky_saveintermediateimage.py
 
 Part of allsky postprocess.py modules.
 https://github.com/thomasjacquin/allsky
@@ -11,49 +11,64 @@ None
 '''
 import allsky_shared as s
 import os 
-import json
 import cv2
+import pathlib
 
 metaData = {
     "name": "Saves an intermediate image",
     "description": "Saves an intermediate image",
+    "module": "allsky_saveintermediateimage",       
     "events": [
         "day",
         "night"
     ],
     "arguments":{
-        "imagefolder": ""
+        "imagefolder": "${ALLSKY_IMAGES}/${DATE}-clean"
     },
     "argumentdetails": {
         "imagefolder" : {
             "required": "true",
             "description": "Image folder",
-            "help": "The folder to save the image in. The folder will be created if it does not exist"
+            "help": "The folder to save the image in. The folder will be created if it does not exist. You can use AllSky Variables in the path"
         }
     }      
 }
 
-def writeImage(image, path):
+def writeImage(image, path, quality):
+    fileExtension = pathlib.Path(path).suffix
+
     result = True
     try:
         s.checkAndCreatePath(path)
-        cv2.imwrite(path, image, [int(cv2.IMWRITE_PNG_COMPRESSION),9])
+
+        if fileExtension == ".jpg":
+            cv2.imwrite(path, image, [int(cv2.IMWRITE_JPEG_QUALITY), quality])
+        else:
+            cv2.imwrite(path, image, [int(cv2.IMWRITE_PNG_COMPRESSION), quality]) 
     except:
-        s.log(0, "ERROR: Failed to save image {0}".format(path), exitCode=1)
         result = False
     
     return result
 
 def saveintermediateimage(params):
-    path = params["imagefolder"]
-
-    path = s.convertPath(path)
-    if path is not None:
-        writeImage(s.image, path)
-        result = "Image {0} Saved".format(path)
-        s.log(1, "INFO: Image saved to {0}".format(path))
+    quality = s.getSetting("quality")
+    if quality is not None:
+        quality = int(quality)
+        path = params["imagefolder"]
+        path = s.convertPath(path)
+        if path is not None:
+            path = os.path.join(path, os.path.basename(s.CURRENTIMAGEPATH))
+            if not writeImage(s.image, path, quality):
+                result = "Failed to save {}".format(path) 
+                s.log(0, "ERROR: Failed to save image {}".format(path))
+            else:
+                result = "Image {} Saved".format(path)
+                s.log(1, "INFO: {}".format(result))
+        else:
+            result = "Invalid path {0}".format(params["imagefolder"])
+            s.log(0, "ERROR: {}".format(result))
     else:
-        s.log(1, "ERROR: Invalid path {0}".format(params["imagefolder"]))
-        result = "Image save failed"
+        result = "Cannot determine the image quality. Intermediate image NOT saved"
+        s.log(0, "ERROR: {}".format(result))
 
     return result

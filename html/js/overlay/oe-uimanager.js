@@ -742,6 +742,17 @@ class OEUIMANAGER {
 
         });
 
+        $(document).on('click', '#oe-font-dialog-upload-font', (event) => {
+            if (this.#fieldManager.dirty) {
+                if (window.confirm('This current configuration has been modified. If you continue any chnages will be lost. Would you like to continue?')) {
+                    this.uploadFont();
+                }
+            } else {
+                this.uploadFont();
+            }
+
+        });
+
         $(document).on('click', '#oe-upload-font', (event) => {
             $('#fontlisttable').DataTable().destroy();
             $('#fontlisttable').DataTable({
@@ -749,7 +760,8 @@ class OEUIMANAGER {
                 dom: '<"toolbar">frtip',
                 autoWidth: false,
                 pagingType: 'numbers',
-                paging: false,
+                paging: true,
+                pageLength: 20,
                 info: false,
                 searching: false,
                 order: [[0, 'asc']],
@@ -777,7 +789,7 @@ class OEUIMANAGER {
 
                             let buttons = '';
                             if (item.name !== 'moon_phases' && item.name !== defaultFont && !item.path.includes('msttcorefonts')) {
-                                buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="glyphicon glyphicon-remove"></i></button>';
+                                buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="glyphicon glyphicon-remove" data-fontname="' + item.name + '"></i></button>';
                                 buttons += '</div>';
                             }
                             return buttons;
@@ -989,6 +1001,59 @@ class OEUIMANAGER {
 
         // Applying the top margin on modal to align it vertically center
         modalDialog.css("margin-top", Math.max(0, ($(window).height() - modalDialog.height()) / 2));
+    }
+
+    uploadFont() {
+        $('#fontuploaddialog').modal({
+            keyboard: false,
+            width: 600
+        });
+
+        $('#fupForm').on('submit', (e) => {
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: 'includes/overlayutil.php?request=fonts',
+                data: new FormData(document.getElementById('fupForm')),
+                contentType: false,
+                dataType: 'json',
+                cache: false,
+                processData:false,
+                context: this,
+                beforeSend: function( xhr ) {
+                    $('.submitBtn').attr("disabled","disabled");
+                    $('#fupForm').css("opacity",".5");
+                }                
+            }).done( (fontData) => {
+                $('#fupForm').css('opacity','');
+                $('.submitBtn').removeAttr('disabled');
+                for (let i = 0; i < fontData.length; i++) {
+                    let fontFace = new FontFace(fontData[i].key, 'url(' + window.oedi.get('BASEDIR') + fontData[i].path + ')');
+                    fontFace.load();
+                    document.fonts.add(fontFace);
+                }
+
+                document.fonts.ready.then((font_face_set) => {
+                    this.setupFonts();
+                    $('#fontlisttable').DataTable().ajax.reload();
+                    let result = $.ajax({
+                        type: "GET",
+                        url: "includes/overlayutil.php?request=Config",
+                        data: "",
+                        dataType: 'json',
+                        cache: false,
+                        context: this
+                    }).done((data) => {
+                        this.#configManager.config = data;
+                    });
+                });                
+
+                $('#fontuploaddialog').modal('hide');                
+            }).fail( (jqXHR, textStatus, errorThrown) => {
+
+            });
+        });
+
     }
 
     installFont() {

@@ -320,8 +320,8 @@ function DisplayOverlay($image_name)
                             </table>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-add-font">Add
-                                Font</button>
+                            <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-add-font">Add Font</button>
+                            <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-upload-font">Upload Font</button>
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         </div>
                     </div>
@@ -654,6 +654,43 @@ function DisplayOverlay($image_name)
                     </div>
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->
+        </div>
+
+        <div class="modal" role="dialog" id="fontuploaddialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Upload Font</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div>
+                            <div>
+                                <p>NOTE: The zip file must contain ONLY font files. Fonts in directories within the zip file are NOT supported</p>
+                            </div>
+
+                            <form enctype="multipart/form-data" id="fupForm" >
+                                <div class="form-group">
+                                    <label for="fontuploadfile" class="control-label col-xs-2">File</label>
+                                    <div class="col-xs-6">
+                                        <div class="input-group">
+                                            <input type="file" class="form-control" id="fontuploadfile" name="fontuploadfile" required />
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-4">
+                                        <div class="input-group">
+                                        <input type="submit" name="submit" class="btn btn-danger submitBtn" value="SAVE"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <img id="oe-background-image" class="oe-background-image" src="<?php echo $image_name ?>" style="width:100%">

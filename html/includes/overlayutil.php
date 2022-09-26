@@ -300,7 +300,11 @@ class OVERLAYUTIL
             }
         } else {
             if (isset($_FILES['fontuploadfile'])) {
-                $downloadPath = $_FILES['fontuploadfile']['tmp_name'];
+                if (is_uploaded_file($_FILES['fontuploadfile']['tmp_name'])) {
+                    $downloadPath = $_FILES['fontuploadfile']['tmp_name'];
+                } else {
+                    die("Error");
+                }
             }
         }
 
@@ -317,6 +321,8 @@ class OVERLAYUTIL
                 $ext = strtolower(end(explode('.', $nameInArchive)));
 
                 $validExtenstions = array("ttf", "otf");
+                $validSignatures = array("00010000", "4F54544F");
+
                 if (in_array($ext, $validExtenstions)) {
                     $fp = $zipArchive->getStream($nameInArchive);
                     if (!$fp) {
@@ -331,36 +337,42 @@ class OVERLAYUTIL
 
                     $cleanFileName = basename(str_replace(' ', '', $nameInArchive));
                     $fileName = $saveFolder . $cleanFileName;
-                    $file = fopen($fileName, 'wb');
+                    $sig = substr($contents,0,4);
+                    $sig = bin2hex($sig);
+                    if (in_array($sig, $validSignatures)) {
+                        $file = fopen($fileName, 'wb');
 
-                    if ($file = fopen($fileName, 'wb')) {
-                        fwrite($file, $contents);
-                        fclose($file);
+                        if ($file = fopen($fileName, 'wb')) {
+                            fwrite($file, $contents);
+                            fclose($file);
 
-                        $configFileName = ALLSKY_CONFIG . '/overlay.json';
-                        $config = file_get_contents($configFileName);
-                        $config = json_decode($config);
+                            $configFileName = ALLSKY_CONFIG . '/overlay.json';
+                            $config = file_get_contents($configFileName);
+                            $config = json_decode($config);
 
-                        $fontPath = str_replace($baseOverlayFolder, "", $fileName);
-                        // TODO: Fix hard coded path
-                        $obj = (object) [
-                            'fontPath' => $fontPath,
-                        ];
+                            $fontPath = str_replace($baseOverlayFolder, "", $fileName);
+                            // TODO: Fix hard coded path
+                            $obj = (object) [
+                                'fontPath' => $fontPath,
+                            ];
 
-                        $key = strtolower(basename($fileName));
-                        $key = str_replace($validExtenstions, "", $key);
-                        $key = str_replace(".", "", $key);
-                        $config->fonts->$key = $obj;
-                        $formattedJSON = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                            $key = strtolower(basename($fileName));
+                            $key = str_replace($validExtenstions, "", $key);
+                            $key = str_replace(".", "", $key);
+                            $config->fonts->$key = $obj;
+                            $formattedJSON = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-                        file_put_contents($configFileName, $formattedJSON);
+                            file_put_contents($configFileName, $formattedJSON);
 
-                        $result[] = array(
-                            'key' => $key,
-                            'path' => $fontPath,
-                        );
+                            $result[] = array(
+                                'key' => $key,
+                                'path' => $fontPath,
+                            );
+                        } else {
+                            die('cant create file ' . $fileName);
+                        }
                     } else {
-                        die('cant create file ' . $fileName);
+                        $this->send500();
                     }
                 }
             }

@@ -665,28 +665,21 @@ function DisplayOverlay($image_name)
                     </div>
                     <div class="modal-body">
                         <div>
-                            <div>
-                                <p>NOTE: The zip file must contain ONLY font files. Fonts in directories within the zip file are NOT supported</p>
+                            <div class="alert alert-danger hidden" id="fontuploadalert">
+                                <strong>Error!</strong> Unable to upload the zip file. Invalid Signature for font file
                             </div>
-
-                            <form enctype="multipart/form-data" id="fupForm" >
+                            <form enctype="multipart/form-data" id="fontuploadform" >
                                 <div class="form-group">
                                     <label for="fontuploadfile" class="control-label col-xs-2">File</label>
-                                    <div class="col-xs-6">
-                                        <div class="input-group">
-                                            <input type="file" class="form-control" id="fontuploadfile" name="fontuploadfile" required />
-                                        </div>
-                                    </div>
-                                    <div class="col-xs-4">
-                                        <div class="input-group">
-                                        <input type="submit" name="submit" class="btn btn-danger submitBtn" value="SAVE"/>
-                                        </div>
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" id="fontuploadfile" name="fontuploadfile" required />
                                     </div>
                                 </div>
                             </form>
                         </div>
                     </div>
                     <div class="modal-footer">
+                        <button type="button" class="btn btn-primary disabled" name="fontuploadsubmit" id="fontuploadsubmit">Upload</button>
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     </div>
                 </div>

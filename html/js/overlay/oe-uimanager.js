@@ -997,36 +997,55 @@ class OEUIMANAGER {
      * far easier to see and use.
      */
     alignModal() {
-        let modalDialog = $(this).find(".modal-dialog");
+        //let modalDialog = $(this).find(".modal-dialog");
 
         // Applying the top margin on modal to align it vertically center
-        modalDialog.css("margin-top", Math.max(0, ($(window).height() - modalDialog.height()) / 2));
+        //modalDialog.css("margin-top", Math.max(0, ($(window).height() - modalDialog.height()) / 2));
     }
 
     uploadFont() {
+        $('#fontuploadfile').val('');
+        $('#fontuploadsubmit').addClass('disabled');
+        $('#fontuploadalert').addClass('hidden');
+
         $('#fontuploaddialog').modal({
             keyboard: false,
             width: 600
         });
 
-        $('#fupForm').on('submit', (e) => {
+        $('#fontuploadfile').change(function() {
+            $('#fontuploadalert').addClass('hidden');
+
+            var file = this.files[0];
+            var fileType = file.type;
+            var match = ['application/zip', 'application/zip-compressed', 'application/x-zip-compressed', 'application/x-zip'];
+            if(!((fileType == match[0]) || (fileType == match[1]) || (fileType == match[2]) || (fileType == match[3]) )){
+                alert('Sorry, only zip files are allowed.');
+                $('#fontuploadfile').val('');
+                $('#fontuploadsubmit').addClass('disabled');
+                return false;
+            }
+            $('#fontuploadsubmit').removeClass('disabled');
+        });
+
+        $('#fontuploadsubmit').on('click', (e) => {
             e.preventDefault();
             $.ajax({
                 type: 'POST',
                 url: 'includes/overlayutil.php?request=fonts',
-                data: new FormData(document.getElementById('fupForm')),
+                data: new FormData(document.getElementById('fontuploadform')),
                 contentType: false,
                 dataType: 'json',
                 cache: false,
                 processData:false,
                 context: this,
                 beforeSend: function( xhr ) {
-                    $('.submitBtn').attr("disabled","disabled");
-                    $('#fupForm').css("opacity",".5");
+                    $('.fontuploadsubmit').attr('disabled','disabled');
+                    $('#fontuploadform').css('opacity','.5');
                 }                
             }).done( (fontData) => {
-                $('#fupForm').css('opacity','');
-                $('.submitBtn').removeAttr('disabled');
+                $('#fontuploadform').css('opacity','');
+                $('.fontuploadsubmit').removeAttr('disabled');
                 for (let i = 0; i < fontData.length; i++) {
                     let fontFace = new FontFace(fontData[i].key, 'url(' + window.oedi.get('BASEDIR') + fontData[i].path + ')');
                     fontFace.load();
@@ -1049,8 +1068,10 @@ class OEUIMANAGER {
                 });                
 
                 $('#fontuploaddialog').modal('hide');                
-            }).fail( (jqXHR, textStatus, errorThrown) => {
-
+            }).fail( (jqXHR, error, errorThrown) => {
+                $('#fontuploadform').css('opacity','');
+                $('#fontuploadalert').removeClass('hidden');
+                $('#fontuploadsubmit').addClass('disabled');                
             });
         });
 

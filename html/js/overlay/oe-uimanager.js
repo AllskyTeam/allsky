@@ -1302,7 +1302,7 @@ class OEUIMANAGER {
                         context: this
                     }).done((result) => {
                         this.#fieldManager.switchFontUsed(fontName);
-                        this.#fieldManager.buildJSON();
+                        //this.#fieldManager.buildJSON();
                         this.#configManager.deleteValue('fonts.' + fontName);
                         $.ajax({
                             type: 'POST',

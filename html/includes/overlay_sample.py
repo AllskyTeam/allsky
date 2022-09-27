@@ -151,7 +151,7 @@ class ALLSKYANNOTATESAMPLE:
                             value = valueData
                             expires = defaultExpiry
 
-                        os.environ["AS_" + name] = value
+                        os.environ["AS_" + name] = str(value)
                         self._saveExtraDataField(name, fileModifiedTime, expires)
             else:
                 result = False
@@ -275,9 +275,10 @@ class ALLSKYANNOTATESAMPLE:
                     label = label.replace(field, sample)
                 elif  (fieldType["type"] == "Number"):
                     if fieldFormat is not None and fieldFormat != "":
-                        fieldFormat = fieldFormat.replace("%", "{:.") + "}"
-                        sample = float(sample)
-                        sample = fieldFormat.format(sample)
+                        if sample != "":
+                            fieldFormat = fieldFormat.replace("%", "{:.") + "}"
+                            sample = float(sample)
+                            sample = fieldFormat.format(sample)
                     label = label.replace(field, sample)
                 else:
                     label = label.replace(field, sample)

@@ -276,9 +276,12 @@ class ALLSKYANNOTATESAMPLE:
                 elif  (fieldType["type"] == "Number"):
                     if fieldFormat is not None and fieldFormat != "":
                         if sample != "":
-                            fieldFormat = fieldFormat.replace("%", "{:.") + "}"
-                            sample = float(sample)
-                            sample = fieldFormat.format(sample)
+                            try:
+                                fieldFormat = fieldFormat.replace("%", "{:.") + "}"
+                                sample = float(sample)
+                                sample = fieldFormat.format(sample)
+                            except ValueError:
+                                sample = "Error"
                     label = label.replace(field, sample)
                 else:
                     label = label.replace(field, sample)

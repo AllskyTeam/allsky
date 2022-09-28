@@ -571,7 +571,7 @@ class MODULESEDITOR {
         }
         let experimental = '';
         if (moduleData.metadata.experimental) {
-            experimental = '<div class="bg-danger module-experimental-warning" role="alert">This module is experimental. Please use with caution</div>';
+            experimental = '<span class="module-experimental module-experimental-header"> - Experimental. Please use with caution</span>';
         }
         let dialogTemplate = '\
             <div class="modal" role="dialog" id="module-settings-dialog" data-module="' + module + '">\
@@ -579,10 +579,9 @@ class MODULESEDITOR {
                     <div class="modal-content">\
                         <div class="modal-header">\
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\
-                            <h4 class="modal-title">' + moduleData.metadata.name + ' Settings</h4>\
+                            <h4 class="modal-title"><strong>' + moduleData.metadata.name + ' Settings</strong> ' + experimental + '</h4>\
                         </div>\
                         <div class="modal-body">\
-                            ' + experimental + '\
                             <form id="module-editor-settings-form" class="form-horizontal">\
                             ' + moduleSettingsHtml + '\
                             </form>\

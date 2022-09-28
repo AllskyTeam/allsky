@@ -91,6 +91,10 @@
     text-align:center;
   }
 
+  .module-experimental-header {
+    font-size: 0.8em;
+  }
+
 #modules-selected-empty, #modules-available-empty {
   text-align: center;
   border: 2px dashed;
@@ -111,4 +115,8 @@
 
 .module-container small {
   font-size: 70% !important;
+}
+
+#module-settings-dialog select {
+  padding: 5px;
 }

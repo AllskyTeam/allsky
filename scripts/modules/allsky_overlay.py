@@ -478,8 +478,8 @@ class ALLSKYOVERLAY:
                 totalVariablesReplaced += 1
 
             totalVariables += 1
-            
-        if totalVariables == 1 and totalVariablesReplaced == 0:
+
+        if totalVariables != totalVariablesReplaced:
             fieldLabel = None        
 
         if fieldLabel is not None:

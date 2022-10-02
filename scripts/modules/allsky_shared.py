@@ -67,9 +67,13 @@ def raining():
             rainFlag = False
 
     return raining, rainFlag
-        
+
+def checkAndCreateDirectory(filePath):
+    os.makedirs(filePath, mode = 0o777, exist_ok = True)
+
 def checkAndCreatePath(filePath):
     path = os.path.dirname(filePath)
+    print(path)
     os.makedirs(path, mode = 0o777, exist_ok = True)
 
 def convertPath(path):

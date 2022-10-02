@@ -1,9 +1,13 @@
 <?php
 
-include_once('../includes/functions.php');
-include_once(RASPI_CONFIG . '/raspap.php');
-include_once('../includes/authenticate.php');
- 
+include_once('functions.php');
+initialize_variables();		// sets some variables
+
+define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
+
+include_once('raspap.php');
+include_once('authenticate.php');
+
 class MODULEUTIL
 {
     private $request;

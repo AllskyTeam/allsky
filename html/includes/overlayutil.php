@@ -1,8 +1,12 @@
 <?php
 
-include_once '../includes/functions.php';
-include_once RASPI_CONFIG . '/raspap.php';
-include_once '../includes/authenticate.php';
+include_once('functions.php');
+initialize_variables();		// sets some variables
+
+define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
+
+include_once('raspap.php');
+include_once('authenticate.php');
 
 class OVERLAYUTIL
 {
@@ -318,7 +322,8 @@ class OVERLAYUTIL
                 $stat = $zipArchive->statIndex($i);
 
                 $nameInArchive = $stat['name'];
-                $ext = strtolower(end(explode('.', $nameInArchive)));
+                $fileInfo = explode('.', $nameInArchive);
+                $ext = strtolower(end($fileInfo));
 
                 $validExtenstions = array("ttf", "otf");
                 $validSignatures = array("00010000", "4F54544F");
@@ -389,7 +394,7 @@ class OVERLAYUTIL
         $fileName = $this->overlayPath . '/overlay.json';
         $config = json_decode(file_get_contents($fileName));
 
-        $fontPath = "/var/www/html/overlay/" . $config->fonts->{$fontName}->fontPath;
+        $fontPath = ALLSKY_WEBUI . "/overlay" . $config->fonts->{$fontName}->fontPath;
         unlink($fontPath);
         unset($config->fonts->{$fontName});
 

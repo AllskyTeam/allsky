@@ -50,7 +50,7 @@ def writeImage(image, path, quality):
     
     return result
 
-def saveintermediateimage(params):
+def saveintermediateimage(params, event):
     quality = s.getSetting("quality")
     if quality is not None:
         quality = int(quality)

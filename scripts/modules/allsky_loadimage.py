@@ -21,7 +21,7 @@ metaData = {
     ]   
 }
 
-def loadimage(params):
+def loadimage(params, event):
     result = "Image {0} Loaded".format(s.CURRENTIMAGEPATH)
         
     try:

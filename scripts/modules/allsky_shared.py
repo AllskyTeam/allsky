@@ -11,12 +11,12 @@ import pprint
 import shlex
 import subprocess
 import string
-import pprint
 import json
 import cv2
 import shutil
 import re
 import sys
+import time
 
 ABORT = True
 
@@ -28,6 +28,46 @@ UPLOAD = {}
 TOD = ''
 DBDATA = {}
 
+def shouldRun(module, period):
+    result = False
+    diff = 0
+
+    dbKey = module + "_lastrun"
+    lastRun = dbGet(dbKey)
+    if lastRun is not None:
+        now = int(time.time())
+        diff = now - int(lastRun)
+        if diff >= period:
+            result = True
+    else:
+        result = True
+
+    return result, diff
+
+def setLastRun(module):
+    dbKey = module + "_lastrun"
+    now = int(time.time())
+    dbUpdate(dbKey, now)
+
+def convertLatLon(input):
+    """ Converts the lat and lon from the all sky config to decimal notation i.e. 0.2E becomes -0.2"""
+    multiplier = 1 if input[-1] in ['N', 'E'] else -1
+    return multiplier * sum(float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
+
+def raining():
+    raining = "unknown"
+    rainFlag = False
+    if "AS_ALLSKYRAINFLAG" in os.environ:
+        rainingFlag = os.environ["AS_ALLSKYRAINFLAG"]
+        if rainingFlag == "True":
+            raining = "yes"
+            rainFlag = True
+        else:
+            raining = "no"
+            rainFlag = False
+
+    return raining, rainFlag
+        
 def checkAndCreatePath(filePath):
     path = os.path.dirname(filePath)
     os.makedirs(path, mode = 0o777, exist_ok = True)
@@ -220,7 +260,7 @@ def getEnvironmentVariable(name, fatal=False, error=''):
     except KeyError:
         if fatal:
             print("Sorry, environment variable ( {0} ) not found.".format(name))
-            exit(98)
+            sys.exit(98)
 
     return result
 
@@ -233,7 +273,7 @@ def log(level, text, preventNewline = False, exitCode=None):
             print(text)
 
     if exitCode is not None:
-        exit(exitCode)
+        sys.exit(exitCode)
 
 def initDB():
     global DBDATA

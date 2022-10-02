@@ -31,7 +31,7 @@ metaData = {
     }          
 }
 
-def script(params):
+def script(params, event):
     script = params["scriptlocation"]
 
     if os.path.isfile(script):

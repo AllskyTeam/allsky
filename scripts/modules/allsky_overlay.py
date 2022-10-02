@@ -609,19 +609,25 @@ class ALLSKYOVERLAY:
                 if variableType == 'Number':
                     if format is not None and format != "":
                         format = format.replace("%", "{:.") + "}"
-                        value = float(value)
-                        value = format.format(value)
+                        ''' We allow text to be substituded for numbers so if the conversion to a flot
+                        fails we will just return the value for the field.
+                        '''                    
+                        try:
+                            value = float(value)
+                            value = format.format(value)
+                        except ValueError:
+                            pass
 
                 if variableType == 'Bool':
                     if int(value) == 0:
                         value = 'No'
                     else:
                         value = 'Yes'
-            else:
-                if variableType == 'Text':
-                    if value == '' or value is None:
-                        if empty != '':
-                            value = empty
+
+            if variableType == 'Text':
+                if value == '' or value is None:
+                    if empty != '':
+                        value = empty
 
         return value ,x ,y, fill, font, fontsize, rotate, scale, opacity
 
@@ -987,7 +993,7 @@ class ALLSKYOVERLAY:
 
         self._timer("Annotation Complete", False)
 
-def overlay(params):
+def overlay(params, event):
     debug = params["debug"]
     annotater = ALLSKYOVERLAY(debug)
     annotater.annotate()

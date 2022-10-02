@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
-import os
 import sys
+import os
 import cv2
 import json
 import time
 import argparse,importlib,json,numpy, os
 from datetime import datetime, timedelta, date
+import signal
 
 '''
 NOTE: `valid_module_paths` must be an array, and the order specified dictates the order of search for a named module.
@@ -15,11 +16,21 @@ This permits the user to copy and modify a distributed module, or create an enti
 module, thus giving the user total control.
 '''
 
+def signalHandler(sig, frame):
+    if sig == signal.SIGTERM or sig == signal.SIGINT:
+        sys.exit(99)
+
+signal.signal(signal.SIGTERM, signalHandler)
+signal.signal(signal.SIGINT, signalHandler)
+signal.signal(signal.SIGUSR1, signalHandler)
+signal.signal(signal.SIGUSR2, signalHandler)
+
+
 try:
     allSkyHome = os.environ["ALLSKY_HOME"]
 except KeyError:
     print("ERROR: $ALLSKY_HOME not found in environment variables - Aborting")
-    exit(1)
+    sys.exit(1)
 
 allSkyModulesPath = os.path.join(allSkyHome, "scripts", "modules")
 valid_module_paths = ["/etc/allsky/modules", allSkyModulesPath]
@@ -32,7 +43,7 @@ import allsky_shared as s
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--event",  type=str, help="The event we are running modules for (defaults to postcapture.", default="postcapture", choices=["postcapture","daynight", "nightday", "endofnight"])
+    parser.add_argument("-e", "--event",  type=str, help="The event we are running modules for (defaults to postcapture).", default="postcapture", choices=["postcapture","daynight", "nightday", "endofnight", "periodic"])
     s.args = parser.parse_args()
 
     watchdog = False
@@ -49,7 +60,10 @@ if __name__ == "__main__":
     try:
         s.LOGLEVEL = int(os.environ["ALLSKY_DEBUG_LEVEL"])
     except KeyError:
-        s.LOGLEVEL = 0
+        if s.args.event == "periodic":
+            s.getSetting("debuglevel")
+        else:
+            s.LOGLEVEL = 0
 
     if s.args.event == "postcapture":
         try:
@@ -87,12 +101,12 @@ if __name__ == "__main__":
 
     ## GENRIC FUNCTION TO SET VARS
     s.allskyTmp = os.environ["ALLSKY_TMP"]
-    s.fullFilename = os.environ["FULL_FILENAME"]
-    s.createThumbnails = os.environ["IMG_CREATE_THUMBNAILS"]
-    s.thumbnailWidth = int(os.environ["THUMBNAIL_SIZE_X"])
-    s.thumbnailHeight = int(os.environ["THUMBNAIL_SIZE_Y"])
-
-    s.websiteImageFile = os.path.join(s.allskyTmp, s.fullFilename)
+    if s.args.event != 'periodic':
+        s.fullFilename = os.environ["FULL_FILENAME"]
+        s.createThumbnails = os.environ["IMG_CREATE_THUMBNAILS"]
+        s.thumbnailWidth = int(os.environ["THUMBNAIL_SIZE_X"])
+        s.thumbnailHeight = int(os.environ["THUMBNAIL_SIZE_Y"])
+        s.websiteImageFile = os.path.join(s.allskyTmp, s.fullFilename)
 
     try:
         imagesRoot = os.environ["ALLSKY_IMAGES"]
@@ -106,7 +120,7 @@ if __name__ == "__main__":
     dateString = date.strftime("%Y%m%d")
 
 
-    if s.args.event != 'endofnight':
+    if s.args.event != 'endofnight' and s.args.event != 'periodic':
         s.imageFileName = os.path.basename(s.CURRENTIMAGEPATH)
         s.imageFolder = os.path.join(imagesRoot, dateString)
         s.imageFile = os.path.join(s.imageFolder, s.imageFileName)
@@ -172,10 +186,10 @@ if __name__ == "__main__":
             else:
                 arguments = {}
 
-            try:
-                result = globals()[method](arguments)
-            except Exception as e:
-                s.log(0,"ERROR: {}".format(e))
+            #try:
+            result = globals()[method](arguments, s.args.event)
+            #except Exception as e:
+            #    s.log(0,"ERROR: {}".format(e))
 
             endTime = datetime.now()
             elapsedTime = ((endTime - startTime).total_seconds())
@@ -205,6 +219,5 @@ if __name__ == "__main__":
             updatefile.close()
             with open(moduleConfig, "w") as updatefile:
                 json.dump(config, updatefile)
-                updatefile.close()
         except json.JSONDecodeError as err:
             s.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)

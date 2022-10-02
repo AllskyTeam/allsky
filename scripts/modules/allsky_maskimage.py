@@ -13,9 +13,6 @@ metaData = {
     "name": "Mask Image",
     "description": "Masks an Image",
     "events": [
-        "postcapture"
-    ],
-    "events": [
         "day",
         "night"
     ],
@@ -35,7 +32,7 @@ metaData = {
 }
 
 
-def maskimage(params):
+def maskimage(params, event):
     """ Applies th emask to the captured image
 
     Args:

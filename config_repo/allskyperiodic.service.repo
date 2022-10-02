@@ -1,0 +1,15 @@
+[Unit]
+Description=AllSky Periodic Services (Modules)
+After=multi-user.target
+
+[Service]
+User=XX_ALLSKY_OWNER_XX
+ExecStart=XX_ALLSKY_HOME_XX/scripts/periodic.sh
+SyslogFacility=local6
+Restart=on-success
+RestartSec=5
+; exit status 100 and higher mean a fatal error the user needs to fix, so don't restart
+RestartPreventExitStatus=100 101
+
+[Install]
+WantedBy=multi-user.target

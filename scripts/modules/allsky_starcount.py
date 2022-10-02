@@ -129,47 +129,49 @@ def createStarTemplate(starSize, debug):
 
     return starTemplate
 
-def starcount(params):
-    detectionThreshold = float(params["detectionThreshold"])
-    distanceThreshold = int(params["distanceThreshold"])
-    mask = params["mask"]
-    annotate = params["annotate"]
-    starTemplate1Size = int(params["template1"])
-    debug = params["debug"]
-    debugimage = params["debugimage"]
+def starcount(params, event):
 
-    usingDebugImage = False
-    if debugimage != "":
-        image = cv2.imread(debugimage)
-        if image is None:
-            image = s.image
-            s.log(0, "WARNING: Debug image set to {0} but cannot be found, using latest allsky image".format(debugimage))
+    raining, rainFlag = s.raining()
+
+    if not rainFlag:
+        detectionThreshold = float(params["detectionThreshold"])
+        distanceThreshold = int(params["distanceThreshold"])
+        mask = params["mask"]
+        annotate = params["annotate"]
+        starTemplate1Size = int(params["template1"])
+        debug = params["debug"]
+        debugimage = params["debugimage"]
+
+        usingDebugImage = False
+        if debugimage != "":
+            image = cv2.imread(debugimage)
+            if image is None:
+                image = s.image
+                s.log(0, "WARNING: Debug image set to {0} but cannot be found, using latest allsky image".format(debugimage))
+            else:
+                usingDebugImage = True
+                s.log(0, "WARNING: Using debug image {0}".format(debugimage))
         else:
-            usingDebugImage = True
-            s.log(0, "WARNING: Using debug image {0}".format(debugimage))
-    else:
-        image = s.image
+            image = s.image
 
-    if debug:
-        s.startModuleDebug(metaData["module"])
-
-    if len(image) == 2:
-        gray_image = image
-    else:
-        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
-    if debug:
-        s.writeDebugImage(metaData["module"], "a-greyscale-image.png", gray_image)
-
-    imageMask = None
-    imageLoaded = True
-    if mask != "":
-        maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
-        imageMask = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
         if debug:
-            s.writeDebugImage(metaData["module"], "b-image-mask.png", imageMask) 
+            s.startModuleDebug(metaData["module"])
 
-    if imageLoaded:
+        if len(image) == 2:
+            gray_image = image
+        else:
+            gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        
+        if debug:
+            s.writeDebugImage(metaData["module"], "a-greyscale-image.png", gray_image)
+
+        imageMask = None
+        if mask != "":
+            maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
+            imageMask = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
+            if debug:
+                s.writeDebugImage(metaData["module"], "b-image-mask.png", imageMask) 
+
 
         starTemplate = createStarTemplate(starTemplate1Size, debug)
 
@@ -221,6 +223,10 @@ def starcount(params):
         starCount = len(starList)
         os.environ["AS_STARCOUNT"] = str(starCount)
 
-        s.log(1,"INFO: Total stars found {0}".format(starCount))
+        result = "Total stars found {0}".format(starCount)
+        s.log(1,"INFO: {0}".format(result))
+    else:
+        result = "Its raining so ignorning starcount"
+        s.log(1,"INFO: {0}".format(result))
 
-        return "{0} Stars found".format(starCount)
+    return "{}".format(result)

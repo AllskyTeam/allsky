@@ -75,7 +75,7 @@ def getSavePath(savePath):
 
     return savePath 
 
-def export(params):
+def export(params, event):
     """ Generates the json file and saves it 
 
     Args:

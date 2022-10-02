@@ -28,19 +28,14 @@ ALLSKY_OWNER=$(id --group --name)
 ALLSKY_GROUP=${ALLSKY_OWNER}
 WEBSERVER_GROUP="www-data"
 ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
+REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
+REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/allskyDefines.inc.repo"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 FORCE_CREATING_SETTINGS_FILE=false		# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE=false
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 NEW_HOST_NAME='allsky'					# Suggested new host name
-
-# Repo files
-REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
-REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/allskyDefines.inc.repo"
-REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
-REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
-REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 
 # This file contains information the user needs to act upon after the reboot.
 NEW_INSTALLATION_FILE="${ALLSKY_CONFIG}/installation_info.txt"
@@ -128,31 +123,6 @@ select_camera_type() {
 }
 
 
-# Create the file that defines the WebUI variables.
-create_webui_defines() {
-	display_msg progress "Modifying locations for WebUI."
-	FILE="${ALLSKY_WEBUI}/includes/allskyDefines.inc"
-	sed		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
-			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
-			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
-			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
-			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
-			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
-			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_NAME_XX;${ALLSKY_WEBSITE_CONFIGURATION_NAME};" \
-			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_NAME_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME};" \
-			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_XX;${ALLSKY_WEBSITE_CONFIGURATION_FILE};" \
-			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE};" \
-			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
-			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};" \
-			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};" \
-			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
-			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
-		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
-		chmod 644 "${FILE}"
-}
-
-
 # Save the camera capabilities and use them to set the WebUI min, max, and defaults.
 # This will error out and exit if no camera installed,
 # otherwise it will determine what capabilities the connected camera has,
@@ -163,6 +133,24 @@ save_camera_capabilities() {
 		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in save_camera_capabilities()."
 		return 1
 	fi
+
+	display_msg progress "Modifying locations for WebUI."
+	FILE="${ALLSKY_WEBUI}/includes/allskyDefines.inc"
+
+	sed		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
+			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
+			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
+			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
+			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
+			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
+			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};" \
+			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};" \
+			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
+			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
+		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
+		chmod 644 "${FILE}"
 
 	# The web server needs to be able to create and update file in ${ALLSKY_CONFIG}
 	chmod 775 "${ALLSKY_CONFIG}"
@@ -185,6 +173,7 @@ save_camera_capabilities() {
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} --cameraTypeOnly ${DEBUG_ARG} \
 		"cameraType" "Camera Type" "${CAMERA_TYPE}"
 	RET=$?
+
 	if [ ${RET} -ne 0 ]; then
 		if [ ${RET} -eq ${EXIT_NO_CAMERA} ]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
@@ -223,7 +212,7 @@ ask_reboot() {
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3; then 
 		sudo reboot now
 	else
-		display_msg notice "You need to reboot the Pi before Allsky will work."
+		display_msg warning "You need to reboot the Pi before Allsky will work."
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
 		MSG="You can connect to the WebUI at:\n"
 		MSG="${MSG}${AT}"
@@ -342,6 +331,7 @@ install_webserver() {
 	fi
 	[[ ${DEBUG} == "true" ]] && cat ${TMP}
 
+	REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
 	sed \
 		-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
@@ -384,6 +374,7 @@ do_avahi() {
 		# so need to configure file.
 		display_msg progress "Configuring avahi-daemon."
 
+		REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
 		sed "s/XX_HOST_NAME_XX/${NEW_HOST_NAME}/g" "${REPO_AVI_FILE}" > /tmp/x
 		sudo install -m 0644 /tmp/x "${FINAL_AVI_FILE}" && rm -f /tmp/x
 	fi
@@ -419,6 +410,7 @@ handle_prior_website() {
 	# Note: This MUST come before the old WebUI check below so we don't remove the prior website
 	# when we remove the prior WebUI.
 
+	display_msg progress "Moving prior Allsky Website from ${ALLSKY_WEBSITE_OLD} to new location."
 	OK=true
 	if [ -d "${ALLSKY_WEBSITE}" ]; then
 		# Hmmm.  There's an old webite AND a new one.
@@ -426,7 +418,7 @@ handle_prior_website() {
 		# Try to remove the new one - if it's not empty the remove will fail.
 		rmdir "${ALLSKY_WEBSITE}" 
 		if [ $? -ne 0 ]; then
-			display_msg error "New website in '${ALLSKY_WEBSITE}' is not empty."
+			display_msg error "* New website in '${ALLSKY_WEBSITE}' is not empty."
 			display_msg info "  Move the contents manually from '${ALLSKY_WEBSITE_OLD}',"
 			display_msg info "  and then remove the old location.\n"
 			OK=false
@@ -436,7 +428,6 @@ handle_prior_website() {
 		fi
 	fi
 	if [[ ${OK} = "true" ]]; then
-		display_msg progress "Moving prior Allsky Website from ${ALLSKY_WEBSITE_OLD} to new location."
 		sudo mv "${ALLSKY_WEBSITE_OLD}" "${ALLSKY_WEBSITE}"
 		PRIOR_SITE="${ALLSKY_WEBSITE}"
 	fi
@@ -456,7 +447,6 @@ handle_prior_website() {
 		MSG="${MSG}Current version: ${NEW_VERSION}\n"
 		MSG="${MSG}\nYou can upgrade the Allky Website by executing:\n"
 		MSG="${MSG}     cd ~/allsky; website/install.sh"
-		display_msg notice "${MSG}"
 		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 	fi
 
@@ -466,7 +456,6 @@ handle_prior_website() {
 	MSG="An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so you may remove it after intallation."
 	MSG="${MSG}\n\nWARNING: if you have any other web sites in that directory, they will no longer be accessible via the web server."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
-	display_msg notice "${MSG}"
 	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 }
 
@@ -620,34 +609,33 @@ restore_prior_files() {
 		mv "${OLD_RASPAP_DIR}/raspap.auth" "${ALLSKY_CONFIG}"
 	fi
 
-	# Restore any REMOTE Allsky Website configuration file.
-	if [ -f "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" ]; then
-		display_msg progress "Restoring remote Allsky Website ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}."
-		mv "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+	if [ -f "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ]; then
+		display_msg progress "Restoring remote Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
+		mv "${PRIOR_CONFIG_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
-		# Check if this is an older Allsky Website configuration file type.
+		# Check if this is an older configuration file type.
+		CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		OLD=false
-		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
+		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${CONFIG_FILE}")"
+		REPO_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 		if [[ ${PRIOR_CONFIG_VERSION} == "null" ]]; then
 			OLD=true		# Hmmm, it should have the version
 		else
-			NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
+			NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_FILE}")"
 			if [[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]]; then
 				OLD=true
 			fi
 		fi
 		if [[ ${OLD} == "true" ]]; then
-			MSG="Your ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} is an older version.\n"
+			MSG="Your ${CONFIG_FILE} is an older version.\n"
 			MSG="${MSG}Your    version: ${PRIOR_CONFIG_VERSION}\n"
 			MSG="${MSG}Current version: ${NEW_CONFIG_VERSION}\n"
-			MSG="${MSG}\nPlease compare it to the new one in ${REPO_WEBCONFIG_FILE}"
+			MSG="${MSG}\nPlease compare it to the new one in ${REPO_FILE}"
 			MSG="${MSG} to see what fields have been added, changed, or removed.\n"
 			display_msg warning "${MSG}"
 			echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 		fi
 	fi
-	# We don't check for old LOCAL Allsky Website configuration files.
-	# That's done when they install the Allsky Website.
 
 	if [ -f "${PRIOR_CONFIG_DIR}/uservariables.sh" ]; then
 		display_msg progress "Restoring uservariables.sh."
@@ -730,22 +718,19 @@ restore_prior_files() {
 do_update() {
 	source "${ALLSKY_CONFIG}/config.sh"		# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
-		display_msg error "CAMERA_TYPE not set in config.sh."
+		display_msg error "ERROR: CAMERA_TYPE not set in config.sh."
 		exit 1
 	fi
-
-	create_webui_defines
-
 	save_camera_capabilities || exit 1
 
 	# Update the sudoers file if it's missing some entries.
 	# Look for the last entry added (should be the last entry in the file).
 	# Don't simply copy the repo file to the final location in case the repo file isn't up to date.
-	grep --silent "/date" "${FINAL_SUDOERS_FILE}"
+	grep --silent "truncate" "${FINAL_SUDOERS_FILE}"
 	# shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then
 		display_msg progress "Updating sudoers list."
-		grep --silent "/date" "${REPO_SUDOERS_FILE}"
+		grep --silent "truncate" "${REPO_SUDOERS_FILE}"
 		# shellcheck disable=SC2181
 		if [ $? -ne 0 ]; then
 				display_msg error "Please get the newest '$(basename "${REPO_SUDOERS_FILE}")' file from Git and try again."
@@ -820,7 +805,6 @@ if [[ ${FUNCTION} != "" ]]; then
 	fi
 
 	${FUNCTION}
-	display_msg progress "\n${FUNCTION} completed.\n"
 	exit 0
 fi
 
@@ -840,9 +824,6 @@ update_config_sh
 ##### Install web server
 # This must come BEFORE save_camera_capabilities, since it installs php.
 install_webserver
-
-##### Create the file that defines the WebUI variables.
-create_webui_defines
 
 ##### Create the camera type-model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
@@ -899,13 +880,13 @@ install_overlay()
 
         echo -e "${GREEN}* Fixing permissions${NC}"
 
-        sudo chown www-data "${ALLSKY_CONFIG}"/fields.json
-        sudo chown www-data "${ALLSKY_CONFIG}"/module-settings.json
-        sudo chown www-data "${ALLSKY_CONFIG}"/postprocessing_day.json
-        sudo chown www-data "${ALLSKY_CONFIG}"/postprocessing_night.json
-        sudo chown www-data "${ALLSKY_CONFIG}"/autoexposure.json
-        sudo chown www-data "${ALLSKY_CONFIG}"/overlay.json
-        sudo chown -R www-data "${ALLSKY_WEBUI}"/overlay
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/fields.json
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/module-settings.json
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_day.json
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_night.json
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/autoexposure.json
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/overlay.json
+        sudo chown -R ${ALLSKY_OWNER}:www-data "${ALLSKY_WEBUI}"/overlay
 
 }
 

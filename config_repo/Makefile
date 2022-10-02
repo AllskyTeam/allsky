@@ -114,6 +114,10 @@ install: createDirs $(CONFIGFILES)
 	@install -m 0644 allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/
 	@rm -f allsky.service
 	@if [ -e /lib/systemd/system/allsky.service ]; then rm -f /lib/systemd/system/allsky.service; fi
+	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" -e "s|XX_ALLSKY_HOME_XX|$(PDIR)|" allskyperiodic.service.repo > allskyperiodic.service
+	@install -m 0644 allskyperiodic.service $(DESTDIR)$(sysconfdir)/systemd/system/
+	@rm -f allskyperiodic.service
+	@if [ -e /lib/systemd/system/allskyperiodic.service ]; then rm -f /lib/systemd/system/allskyperiodic.service; fi
 	@systemctl daemon-reload
 	@systemctl enable allsky
 	@echo `date +%F\ %R:%S` Setting up home environment variable...

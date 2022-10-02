@@ -884,10 +884,13 @@ install_overlay()
         sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/module-settings.json
         sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_day.json
         sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_night.json
+		sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_daynight.json 
+		sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_nightday.json 
+		sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_endofnight.json 
+		sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_periodic.json		
         sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/autoexposure.json
         sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/overlay.json
         sudo chown -R ${ALLSKY_OWNER}:www-data "${ALLSKY_WEBUI}"/overlay
-
 }
 
 install_overlay

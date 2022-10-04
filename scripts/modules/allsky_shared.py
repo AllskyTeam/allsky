@@ -54,6 +54,22 @@ def convertLatLon(input):
     multiplier = 1 if input[-1] in ['N', 'E'] else -1
     return multiplier * sum(float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
 
+def skyClear():
+    skyState = "unknown"
+    skyStateFlag = True
+    if "AS_SKYSTATE" in os.environ:
+        if os.environ["AS_SKYSTATE"] == "Clear":
+            skyState = "clear"
+            skyStateFlag = True
+        else:
+            skyState = "not clear"
+            skyStateFlag = False
+
+    return skyState, skyStateFlag
+
+    
+    pass
+
 def raining():
     raining = "unknown"
     rainFlag = False

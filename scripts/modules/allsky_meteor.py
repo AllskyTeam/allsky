@@ -174,10 +174,11 @@ def meteor(params, event):
             s.log(1,"INFO: {}".format(result))
         else:
             result = "Sky is not clear so ignoring meteor detection"
-            s.log(1,"INFO: {0}".format(result))     
+            s.log(1,"INFO: {0}".format(result))
+            os.environ["AS_METEORCOUNT"] = "Disabled"            
     else:
         result = "Its raining so ignorning meteor detection"
         s.log(1,"INFO: {0}".format(result))
-       
+        os.environ["AS_METEORCOUNT"] = "Disabled"
 
     return result

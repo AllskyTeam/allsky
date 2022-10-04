@@ -244,8 +244,10 @@ def starcount(params, event):
         else:
             result = "Sky is not clear so ignoring starcount"
             s.log(1,"INFO: {0}".format(result))                 
+            os.environ["AS_STARCOUNT"] = "Disabled"
     else:
         result = "Its raining so ignorning starcount"
         s.log(1,"INFO: {0}".format(result))
+        os.environ["AS_STARCOUNT"] = "Disabled"
 
     return "{}".format(result)

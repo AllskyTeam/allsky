@@ -429,7 +429,7 @@ class ALLSKYOVERLAY:
         if "fill" in fieldData:
             fieldColour = fieldData["fill"]
         else:
-            fieldColour = "white" 
+            fieldColour = self._overlayConfig["settings"]["defaultfontcolour"]
 
         r, g, b = self._convertColour(name, fieldColour)
 

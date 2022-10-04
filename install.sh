@@ -867,7 +867,7 @@ install_overlay()
         echo -e "${GREEN}* Installing PHP Modules${NC}"
         sudo apt-get install -y php-zip
 
-        echo -e "${GREEN}* Installing Python dependencies${NC}"
+        echo -e "${GREEN}* Installing Python dependencies. This will take a LONG time${NC}"
         pip3 install --no-warn-script-location -r requirements.txt 2>&1 > dependencies.log
         sudo apt-get -y install libatlas-base-dev 2>&1 >> dependencies.log
         echo -e "${GREEN}* Installing Trutype fonts - This will take a while please be patient${NC}"
@@ -891,6 +891,9 @@ install_overlay()
         sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/autoexposure.json
         sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/overlay.json
         sudo chown -R ${ALLSKY_OWNER}:www-data "${ALLSKY_WEBUI}"/overlay
+
+		sudo chmod -R 770 "${ALLSKY_WEBUI}"/overlay
+
 }
 
 install_overlay

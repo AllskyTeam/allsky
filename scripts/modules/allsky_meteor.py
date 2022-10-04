@@ -85,9 +85,11 @@ def meteor(params, event):
 
         if mask != "":
             maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
+            s.log(1,f"INFO: Loading mask {maskPath}")
             maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
-            if debug:
-                s.writeDebugImage(metaData["module"], "meteor-mask.png", maskImage)
+            if maskImage is not None:
+                if debug:
+                    s.writeDebugImage(metaData["module"], "meteor-mask.png", maskImage)
 
         img_gray = cv2.cvtColor(s.image, cv2.COLOR_BGR2GRAY)
         if debug:

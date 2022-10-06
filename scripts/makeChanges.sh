@@ -298,14 +298,13 @@ while [ $# -gt 0 ]; do
 			;;
 
 		displaySettings)
-			RUN_POSTDATA=true
 			if [[ ${NEW_VALUE} -eq 0 ]]; then
 				NEW_VALUE=false
 			else
 				NEW_VALUE=true
 			fi
 			PARENT="homePage.popoutIcons"
-			FIELD="Image Settings"
+			FIELD="Allsky Settings"
 			INDEX=$(getJSONarrayIndex "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "${PARENT}" "${FIELD}")
 			if [[ ${INDEX} -ge 0 ]]; then
 				WEBSITE_CONFIG+=("${PARENT}[${INDEX}].display" "${LABEL}" "${NEW_VALUE}")

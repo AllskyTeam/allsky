@@ -85,7 +85,7 @@
 		"og_url": "http://www.thomasjacquin/allsky/",
 		"og_image": "image.jpg",
 		"favicon": "allsky-favicon.png",
-		"sidebar": [
+		"leftSidebar": [
 			{
 				"comment": "Once you have modified the settings so the overlay fits, set 'display' to true.",
 				"display": false,
@@ -138,10 +138,10 @@
 			},
 			{
 				"display": false,
-				"comment": "Add sidebar items above."
+				"comment": "Add leftSidebar items above."
 			}
 		],
-		"sidebarStyle": "",
+		"leftSidebarStyle": "",
 		"popoutIcons": [
 			{
 				"display": true,

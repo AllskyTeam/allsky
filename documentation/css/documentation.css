@@ -176,12 +176,20 @@ blockquote {
 	font-weight: 600
 }
 .markdown-body table th,.markdown-body table td {
-	padding: 6px 13px;
+	padding: 3px 8px;
 	border: 1px solid var(--color-border-default)
 }
 .markdown-body table tr {
 	background-color: var(--color-canvas-default);
 	border-top: 1px solid var(--color-border-muted)
+}
+.markdown-body table thead tr {
+	background-color: var(--color-checks-header-label-text);
+}
+.markdown-body table tr.note {
+	/* Doesn't work with nth-chile(2n) below: background-color: var(--color-accent-subtle); */
+	color: var(--color-accent-emphasis);
+	font-size: 110%;
 }
 .markdown-body table tr:nth-child(2n) {
 	background-color: var(--color-canvas-subtle)
@@ -587,8 +595,8 @@ b, strong {
 }
 
 .px-3 {
-	padding-right: 16px !important;
-	padding-left: 16px !important;
+	padding-right: 8px !important;
+	padding-left: 8px !important;
 }
 .mt-4 {
 	margin-top: 24px !important;
@@ -599,14 +607,21 @@ b, strong {
 	margin-left: auto;
 }
 
-table thead tr {
-	background-color: silver;
-}
-
 a {
 	color: var(--color-accent-fg);
 	text-decoration: none;
 }
 a {
 	background-color: transparent;
+}
+
+.cameraDependent {
+	color: var(--color-danger-fg);
+	font-weight: bold;
+}
+.WebUISetting {	/* Matches what's in the WebUI */
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	color: #333;
+	font-weight: bold;
+	font-size: 95%;
 }

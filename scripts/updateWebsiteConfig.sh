@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Update the specified Allsky Website configuration file.
+# If no file is specified, use the local one if it exists, else use the remote one.
 
 ME="$(basename "${BASH_ARGV0}")"
 
@@ -34,7 +35,7 @@ function usage_and_exit()
 	else
 		C="${wERROR}"
 	fi
-	echo -e "${C}Usage: ${ME} [--help] [--debug] [--silent] [--config file] key label new_value [...]${wNC}" >&2
+	echo -e "${C}Usage: ${ME} [--help] [--debug] [--verbosity silent|summary|verbose] [--config file] key label new_value [...]${wNC}" >&2
 	echo "There must be a multiple of 3 arguments." >&2
 	exit ${RET}
 }
@@ -42,7 +43,7 @@ function usage_and_exit()
 OK="true"
 HELP="false"
 DEBUG="false"
-SILENT="false"
+VERBOSITY="summary"
 CONFIG_FILE=""
 while [ $# -gt 0 ]; do
 	ARG="${1}"
@@ -53,8 +54,9 @@ while [ $# -gt 0 ]; do
 		--debug)
 			DEBUG="true"
 			;;
-		--silent)
-			SILENT="true"
+		--verbosity)
+			VERBOSITY="${2}"
+			shift
 			;;
 		--config)
 			CONFIG_FILE="${2}"
@@ -81,20 +83,24 @@ done
 [[ $(($# % 3)) -ne 0 ]] && usage_and_exit 2
 
 if [[ ${CONFIG_FILE} != "" ]]; then
-	if [[ ! -f "${CONFIG_FILE}" ]]; then
+	if [[ ! -f ${CONFIG_FILE} ]]; then
 		echo -e "${wERROR}ERROR: Configuration file not found: '${CONFIG_FILE}'.${wNC}" >&2
 		exit 1
 	fi
+	LorR=""
 else
 	# Look for the configuration file.
 	CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"	# local website
-	if [ ! -f "${CONFIG_FILE}" ]; then
+	if [[ -f ${CONFIG_FILE} ]]; then
+		LorR="Local "
+	else
 		CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"	# remote website
 		if [ ! -f "${CONFIG_FILE}" ]; then
 			# Can't find the configuration file on the Pi or for remote.
 			echo -e "${wWARNING}WARNING: No configuration file found.${wNC}" >&2
 			exit 99
 		fi
+		LorR="Remote "
 	fi
 fi
 
@@ -138,7 +144,11 @@ else
 	# shellcheck disable=SC2124
 	S="${JQ_STRING[@]}"
 	if OUTPUT="$(jq "${S}" "${CONFIG_FILE}" 2>&1 > /tmp/x && mv /tmp/x "${CONFIG_FILE}")"; then
-		[ "${SILENT}" = "false" ] && echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
+		if [[ ${VERBOSITY} == "verbose" ]]; then
+			echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
+		elif [[ ${VERBOSITY} == "summary" ]]; then
+			echo -e "${wOK}${LorR}Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME} UPDATED${wNC}"
+		fi		# nothing if "silent"
 	else
 		echo -e "${wERROR}ERROR: unable to update data in '${CONFIG_FILE}':${wNC}" >&2
 		echo "   ${OUTPUT}" >&2

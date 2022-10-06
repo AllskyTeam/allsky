@@ -375,7 +375,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 
 <p align="center">
 <a href="https://www.thomasjacquin.com/allsky-map/">
-<img src="http://www.thomasjacquin.com/allsky-map/screenshots/allsky-map-with-pins.jpg" title="Allsky map example - click to see real map" width="75%">
+<img src="documentation/allskyMap/allsky-map-with-pins.png" title="Allsky map example - click to see real map">
 </a>
 </p>
 
@@ -390,23 +390,25 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 	* Allsky package:
 		* The `CAMERA` variable in `config/config.sh` was removed; to update the camera type, use the new **Camera Type** setting in the WebUI. This is an advanced setting so you need to click the "Show Advanced Options" button to view it.
 		* "Mini" timelapse videos can be created that contain a user-configurable number of the most recent images.  This allows you to continually see the recent sky conditions.
-		* Latitude and longitude can now be specified as either a decimal number (e.g., -105.21) or with N, S, E, W (e.g., 105.21W).
-		* Sanity checking is done on many settings.  For example, URLs in Allsky Map data must be reachable from the Internet, and crop areas must fit within the image.
-		* The delay between RPi images has been shortened.
+		* Installation improvements:
+			* If there is not enough swap space configured you are prompted to add more.  Doing this decreases the chance of timelapse creation problems.
+			* If `allsky/tmp` is not a memory-resident filesystem you are prompted to make it one.  This SIGNIFICANTLY decreases the number of writes to the SD card, prolonging its life.			
+			* If a `~/allsky-OLD` directory is found it's assumed to be a prior release of Allsky and you'll be prompted to have its images, darks, and other items moved to the new release.  This is the suggested way to upgrade a current Allsky release.
+		* Latitude and longitude can now be specified as either a decimal number (e.g., `-105.21`) or with N, S, E, W (e.g., `105.21W`).
 		* The Secure CP (`scp`) and Google Cloud Service (`gcs`) protocols are now supported for file uploads.
 		* New ftp-settings.sh variables:
 			* `REMOTE_PORT`: specifies a non-default FTP port.
 			* `SSH_KEY_FILE`: path to a SSH private key. When `scp` is used for uploads, this identify file will be used to establish the secure connection.
-		* Installation improvements:
-			* If there is not enough swap space configured you are prompted to add more.  Doing this decreases the chance of timelapse creation problems.
-			* If `allsky/tmp` is not a memory-resident filesystem you are prompted to make it one.  This SIGNIFICANTLY decreases the number of writes to the SD card, prolonging its life.			
-			* If an `~/allsky-OLD` directory is found it's assumed to be a prior release of Allsky and you'll be prompted to have its images, darks, and most configuration items moved to the new release.
-		* Several variables in the `config/config.sh` file were removed and others renamed.
+		* Sanity checking is done on many settings.  For example, URLs in Allsky Map data must be reachable from the Internet, and crop areas must fit within the image.
+		* The Wiki now consists primarily of files in the `~/allsky/documentation` directory, which means you can access all the documentation by going to `http://allsky/documentation`.
+		* The delay between RPi images has been shortened.
+		* Several variables in the `config/config.sh` file were removed and others renamed - see the WebUI section below.
 		* Several additional troubleshooting files are written to ~/allsky/tmp.
-		* Many minor enhancements were made.
+		* AUTO_STRETCH now works.
+		* Many minor enhancements and bug fixes were made.
 
 	* WebUI:
-		* The WebUI is now installed as part of the Allsky installation into `~/allsky/html`. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
+		* The WebUI is now installed in `~/allsky/html`as part of the Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed.
 		* New links on the left side:
 			* **Overlay Editor** allows you to drag and drop what text and images you want overlayed on the images.  This is a **significant** improvement over the old mechanism and lets you vary the font size, color, rotation, etc. for everything you add.  You can use variables in the text which get replaced at run-time, e.g., the time.
 			* **Module Editor** allows you to specify what actions should take place after an image has been saved, for example, add an overlay or count the number of stars.  Users can add (and hopefully share) their own modules.
@@ -418,53 +420,62 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Max Auto-Gain** for day and night.  When using auto-gain, gain values will not exceed this value.
 			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
 			* **Frames to Skip** for day and night determine how many initial auto-exposure frames to ignore when starting Allsky, while the auto-exposure algorithm homes in on the correct exposure.  These frames are often over or under exposed so not worth saving anyhow.
-			* **Consistent Delays** determines whether or not the time between the start of exposures will be consistent (current behavior) or not.  When enabled, the time between images is the maximum exposure plus the delay you set.
+			* **Consistent Delays** determines whether or not the time between the start of exposures will be consistent (current behavior) or not.  When enabled, the time between images is the maximum exposure time plus the delay you set.
 			* **External Overlays** determines if the text overlay (exposure, time, etc.) should be done in the capture program or by an external program that has **significanly** more capabilities (see below).  **NOTE**: the default will change to the external program in a future release, and after that the "internal" overlay will be removed.
 			* **Cooling** and **Target Temp.** (ZWO only) now have separate settings for day and night.
 			* **Aggression** (ZWO only) determines how much of a calculated exposure change should be applied.  This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
 			* **Gamma** (ZWO only) changes the contrast of an image.  It is only supported by a few cameras; for those that don't, the `AUTO_STRETCH` setting can produce a similar effect.
-			* **Offset** (ZWO only) adds about 1/10th the specified amount to each pixel, thereby brightening the whole image.  Setting this too high causes the image to turn gray.
+			* **Offset** (ZWO only) adds about 1/10th the specified amount to each pixel's brightness, thereby brightening the whole image.  Setting this too high causes the image to turn gray.
 			* **Contrast** and **Sharpness** (RPi only).
 			* **Mean Target** (RPi only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto-exposure mode and works best if auto-gain is also enabled.
 			* **Mean Threshold** (RPi only).  This specifies how close the actual mean brightness must be to the **Mean Target**.  For example, if **Mean Target** is 0.5 and **Mean Threshold** is 0.1, the actual mean can vary between 0.4 and 0.6 (0.5 +/- 0.1).			
-			* The **Focus Metric** setting is now available for ZWO cameras.
+			* The **Focus Metric** setting is now available for ZWO cameras.  Higher numbers indicate better focus.  Use only when conditions are NOT changing.
 			* **Require WebUI Login** specifies whether or not the WebUI should require you to login.  Only set this to "No" if your Pi is on a local network and you trust everyone on the network.  **Do NOT disable it if your Pi is accessible via the Internet!**
-			* **Configuration File** specifies a configuration file containing command-line options that's passed to the capture_* programs. In the future this will allow allsky to simply re-read the settings rather than re-starting when you change settings in the WebUI.
+			* **Configuration File** specifies a configuration file containing command-line options that's passed to the capture_* programs.
 		* **NOTE**: the following settings moved from config.sh to the WebUI, and are "advanced" options so you'll need to click the "Show Advanced Options" button to see them:
-			* "DAYTIME_CAPTURE" in config.sh is now **Take Daytime Images** in the WebUI.
+			* "DAYTIME_CAPTURE" from config.sh is now **Take Daytime Images** in the WebUI.
 			* "DAYTIME_SAVE" is **Save Daytime Images**.
 			* "DARK_CAPTURE" is **Take Dark Frames**.
 			* 'DARK_FRAME_SUBTRACTION" is **Use Dark Frames**.
 		* **Debug Level** is more consistent:
-			* 0: errors only
-			* 1: level 0 plus warnings and messages about taking and saving pictures
-			* 2: level 1 plus details on images captured, sleep messages and the like
+			* 0: errors only.
+			* 1: level 0 plus warnings and messages about taking and saving pictures.  This is the default.
+			* 2: level 1 plus details on images captured, sleep messages and the like.
 			* 3: level 2 plus time to save image, details on exposure settings and capture retries.
-			* 4: lots of gory details for developers only
-			* the default is 1
+			* 4: lots of gory details for developers only.
 		* Some error messages that appear in the `/var/log/allsky.log` file also appear in the WebUI so you don't miss them.
 		* Buttons in the "Dark" mode are now darker.
 		* Many minor enhancements were made.
 
 	* Allsky Website:
 		* The Allsky Website is now installed in `~/allsky/html/allsky`.
-		* If an older version of the Website is found during installation you'll be prompted to have its images and settings moved to the new location.
+		* If an older version of the Website is found during website installation you'll be prompted to have its images and settings moved to the new location.
 		* The home page can be customized:
-			* You can specify the order and contents of the icons on the left side.  **NOTE**: The constellation overlay icon (Casseopeia icon) only appears after you've set the overlay to match your stars.
-			* If you are creating mini-timelapse videos when you install the Website an icon for the current file will appear on the left side.  You can also manually show/hide the icon.
-			* You can specify the order and contents of the popout that appears when clicking on the camera icon.  For example, you could add a link to local weather or to pictures of your allsky camera.
+			* You can specify the order, contents, look, and style of the icons on the left side.  You can also hide an icon or display a new one.
+			* You can specify the order, contents, and style of the popout that appears on the right side.  For example, you can add a link to pictures of your allsky camera.
 			* You can set a background image.
-			* You can add a link to a personal website at the top of the page.
+			* You can add a link to a personal website.  This link appears at the top of the page.
 			* You can add a border around the image to have it stand out on the page.
 			* You can hide the "Make Your Own" link on the bottom right of the page.
-		* There's a new icon on the left to display the image full-size.
+			* You can change the icon that appears at on the browser's tab.
+			* See the documentation for other customizations you can make.
+		* Left sidebar:
+			* The constellation overlay icon (Casseopeia icon) is hidden by default and should only be displayed after you've set the overlay to match your stars.
+			* If you are creating mini-timelapse videos, when you install the Website an icon for the current video will appear on the left side.  You can also manually show/hide the icon.
+			* There's a new icon to display the image full-size.
+			* The startrails and information icons were updated.
+		* Popout on right side:
+			* A link to your **Image Settings** can optionally be displayed via the **Display Settings** option in the WebUI.
+			* The version of Allsky and the Allsky Website are displayed.
 		* Configuration file changes:
-			* The two configuration files (`config.js` and `virtualsky.json`) are replaced by `configuration.json`.
+			* The two prior configuration files (`config.js` and `virtualsky.json`) are replaced by `configuration.json`.
 			* There are several new settings, including the ability to specify the opacity of the overlay.		
 			* The `overlaySize` setting, which defined both the width and the height of the constellation overlay, was split into `overlayWidth` and `overlayHeight`.  Having separate width and height can be helpful when trying to get the overlay to line up with the actual stars.
-			* The WebUI **Editor** page should be used to edit the Allsky Website's configuration file if the Website is installed on your Pi **and/or** on a remote server.  This is the preferred way to edit the configuration file, since the editor performs basic syntax checking.  For a remote server, a master copy of its `configuration.json` is kept on the Pi and automatically uploaded to the server after every change.  To do this, execute `cd ~/allsky; website/install.sh --remote` after you have FTP working to the server. The drop-down list on the **Editor** page will have `configuration.json (remote Allsky Website)` to distinguish it from a local Website's file.
+			* The WebUI **Editor** page should be used to edit the Allsky Website's configuration file since it performs various checks before updating the configuration.
+			* The **Editor** page should also be used to edit a REMOTE Allsky Website's configuration file for the same reason.  A master copy of the remote server's `configuration.json` is kept on the Pi and automatically re-uploaded to the server after every change.  After copying the Allsky Website files to your remote server and you have FTP working to it from the Pi, execute `cd ~/allsky; website/install.sh --remote` on the Pi. This will create a default configuration file with some of the WebUI settings (e.g., latitude, camera, owner, etc.) and upload it to the remote server.  The drop-down list on the **Editor** page will now have `configuration.json (remote Allsky Website)` to distinguish it from a local Website's file.
 		* Timelapse video thumbnails can be created on the Pi and uploaded to a remote server.  This resolves issues with remote servers that don't support creating thumbnails.  See the `TIMELAPSE_UPLOAD_THUMBNAIL` setting.
-		* Resizing the home page with the constellation overlay showing works better.  Known bug: If you start out with a small window and turn the overlay on, it will not be the correct size until you resize the page.
+		* Resizing the home page with the constellation overlay showing works better.
+
 
 * version **v2022.03.01**:
 	* Switched to date-based release names.

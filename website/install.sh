@@ -195,7 +195,7 @@ create_website_configuration_file() {
 		AURORAMAP="north"
 	fi
 
-	COMPUTER="$(sed --quiet -e 's/Raspberry //' -e '/^Model/ s/.*: // p' /proc/cpuinfo)"
+	COMPUTER="$(sed --quiet -e 's/Raspberry Pi/RPi/' -e '/^Model/ s/.*: // p' /proc/cpuinfo)"
 	CAMERA_MODEL="$(settings ".cameraModel")"
 	if [[ ${CAMERA_MODEL} == "null" ]]; then
 		CAMERA_MODEL=""
@@ -206,7 +206,7 @@ create_website_configuration_file() {
 
 	# There are some settings we can't determine, like LENS.
 	[[ ${DEBUG} == "true" ]] && display_msg debug "Calling updateWebsiteConfig.sh"
-	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --silent ${DEBUG_ARG} \
+	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
 		--config "${FILE_TO_CREATE}" \
 		config.imageName		"imageName"		"${IMAGE_NAME}" \
 		config.latitude			"latitude"		"${LATITUDE}" \

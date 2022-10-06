@@ -1,1 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Documentation for Allsky">
+	<script src="/documentation/documentation.js" type="application/javascript"></script>
+	<link href="/documentation/css/light.css" rel="stylesheet">
+	<link href="/documentation/css/documentation.css" rel="stylesheet">
+	<link href="/documentation/documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>AllSky Settings</title>
+</head>
+<body>
+<div class="d-flex flex-column flex-md-row gh-header">
+	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Allsky Settings</h1>
+</div>
 
+<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
+<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
+
+
+<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
+	<div w3-include-html="sidebar.html" id="sidebar"></div>
+</div>
+
+
+<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+Once you've installed the "allsky" package there are a few configuration files you must modify.
+
+<br>
+<h3>Camera settings</h3>
+<details><summary>Click here</summary>
+<br>
+
+<b>IMPORTANT NOTE FOR PEOPLE WITH AN RPiHQ CAMERA ON THE "BULLSEYE" OPERATING SYSTEM</b>
+<br>
+Several settings have different ranges on Bullseye versus Buster, so you'll need to update them.
+For example, <span class="WebUISetting">Brightness</span> in Buster ranged from 0 (black) to 100 (white).
+In Bullseye it's -100 to 100.
+<hr>
+<p>
+The exact list of settings available depends on the camera model you are using;
+settings specific to a camera <b>type</b> are listed as such.
+The WebUI displays the minimum, maximum, and default values where appropriate,
+and only displays settings that the camera supports, like cooler temperature for cooled cameras.
+</p>
+
+<blockquote>
+Defaults for settings marked with <span class="cameraDependent">* CD</span>
+are Camera Dependent and are displayed in the WebUI.
+</blockquote>
+
+<table role="table">
+<thead>
+<tr><th>WebUI Setting</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr class="note"><td colspan="3" align="center"><b>Daytime settings</b></td></tr>
+<tr><td class="WebUISetting">Daytime Capture</td> <td>Yes</td>
+	<td>Enable to <b>capture</b> images during the day.</td></tr>
+<tr><td class="WebUISetting">Daytime Save</td> <td>No</td>
+	<td>Enable to <b>save</b> images during the day (they are always saved at night).
+	Only applies if <span class="WebUISetting">Daytime Capture</span> is enabled.
+	</td></tr>
+<tr><td class="WebUISetting">Auto-Exposure</td> <td>Yes</td>
+	<td>Turns on/off Auto-Exposure, which delivers properly exposed images even if
+	the overall brightness of the sky changes (cloud cover, sun, etc.).</td></tr>
+<tr><td class="WebUISetting">Max Auto-Exposure</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>The maximum exposure in milliseconds when using Auto-Exposure.
+	Ignored if <span class="WebUISetting">Auto-Exposure</span> is off.</td></tr>
+<tr><td class="WebUISetting">Manual Exposure</td> <td>0.5</td>
+	<td>Manual exposure time in milliseconds.
+	If <span class="WebUISetting">Auto-Exposure</span> is on this value is used as a starting exposure.</td></tr>
+<tr><td class="WebUISetting">Mean Target</td> <td>0.5</td>
+	<td>(RPiHQ only) The target mean brightness level when <span class="WebUISetting">Auto-Exposure</span> is on.
+	Ranges from 0.0 (pure black) to 1.0 (pure white).
+	Best used when <span class="WebUISetting">Auto-Exposure</span> and <span class="WebUISetting">Auto-Gain</span> are on.</td></tr>
+<tr><td class="WebUISetting">Brightness</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>This setting changes the amount of light in images.</td></tr>
+<tr><td class="WebUISetting">Delay</td> <td>5000</td>
+	<td>Time in milliseconds to wait between 2 frames.</td></tr>
+<tr><td class="WebUISetting">Auto-Gain</td> <td>No</td>
+	<td>Should auto-gain be on?
+	<span class="WebUISetting">Auto-Gain</span> delivers properly exposed images even if the overall brightness of the sky changes.
+	With RPiHQ cameras, this should typically be turned on.
+	With ZWO cameras you'll probably want this off and use the lowest gain possible since daytime images are typically bright and don't need any gain.</td></tr>
+<tr><td class="WebUISetting">Max Auto-Gain</td>
+	<td><span class="cameraDependent">* CD</span></td> <td>Maximum gain when using <span class="WebUISetting">Auto-Gain</span>.
+	</td></tr>
+	Ignored if <span class="WebUISetting">Auto-Gain</span> is off.</td></tr>
+	</td></tr>
+<tr><td class="WebUISetting">Gain</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>Gain is similar to ISO on regular cameras. When <span class="WebUISetting">Auto-Gain</span> is on,
+	this value is used as a starting gain.
+	When <span class="WebUISetting">Auto-Gain</span> is off,
+	increasing this produces brighter images, but with more noise.</td></tr>
+<tr><td class="WebUISetting">Binning</td> <td>1x1</td>
+	<td>Bin 2x2 collects the light from 4 pixels to form one larger pixel on the image.
+	Bin 3x3 uses 9 pixels, etc.
+	Increasing the bin results in smaller, lower-resolution images and reduces the need for long exposure.
+	Look up your camera specifications to know what values are supported.
+	<br>This variable is usually only changed during the day for testing.
+	<br>Note: on CCD camera, binning normally produces brighter images.
+	CMOS camera may, or may not produce brighter images, depending on the camera model.
+	</td></tr>
+<tr><td class="WebUISetting">Frames To Skip</td> <td>5</td>
+	<td>When starting Allsky during the day, skip <i>up to</i> this many images
+	while the auto-exposure software gets to the correct exposure.
+	<br>Only applies if daytime <span class="WebUISetting">Auto-Exposure</span> is enabled.
+	</td></tr>
+
+<tr class="note"><td colspan="3" align="center"><b>Nighttime settings</b></td></tr>
+
+<tr><td class="WebUISetting">Auto-Exposure</td> <td>Yes</td>
+	<td>Same as the daytime setting.</td></tr>
+<tr><td class="WebUISetting">Max Auto-Exposure</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>Same as the daytime setting.
+	When <span class="WebUISetting">Auto-Exposure</span> is on,
+	this value will be used as the delay between frames.</td></tr>
+<tr><td class="WebUISetting">Manual Exposure</td> <td>10000</td>
+	<td>Same as the daytime setting.</td></tr>
+<tr><td class="WebUISetting">Mean Target</td> <td>0.2</td>
+	<td>(RPiHQ only) Same as the daytime setting.</td></tr>
+<tr><td class="WebUISetting">Brightness</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>Same as the daytime setting.</td></tr>
+<tr><td class="WebUISetting">Delay</td> <td>10</td>
+	<td>Same as the daytime setting.</td></tr>
+<tr><td class="WebUISetting">Auto-Gain</td> <td>No</td>
+	<td>Same as the daytime setting.
+	With ZWO cameras <b>avoid using <span class="WebUISetting">Auto-Exposure</span> and
+	<span class="WebUISetting">Auto-Gain</span> together</b>
+	as it can produce unpredictable results.</td></tr>
+<tr><td class="WebUISetting">Max Auto-Gain</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>Same as the daytime setting.</td></tr>
+<tr><td class="WebUISetting">Gain</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>Same as the daytime setting.</td></tr>
+<tr><td class="WebUISetting">Binning</td> <td>1x1</td>
+	<td>Same as the daytime setting, but for nighttime.</td></tr>
+<tr><td class="WebUISetting">Frames To Skip</td> <td>5</td>
+	<td>When starting Allsky at night, skip <i>up to</i> this many images
+	while the auto-exposure software gets to the correct exposure.
+	<br>Only applies if nighttime <span class="WebUISetting">Auto-Exposure</span> is enabled.
+	</td></tr>
+
+<tr class="note"><td colspan="3" align="center"><b>Both daytime and nighttime settings</b></td></tr>
+
+<!-- THIS MAY CHANGE IN THE FUTURE. THE RPiHQ width AND height BEHAVIOR HAS ONLY BEEN TESTED WITH LIBCAMERA.
+a "digital zoom" whereby the specified portion of the camera's sensor is used when taking a picture,
+but the picture is then expanded so <b>the final picture resolution is the same as the camera's resolution</b>.
+0 turns off digital zoom and uses the sensor's maximum width.
+Look up your camera specifications to know what values are supported.
+If you want the final image to contain only a portion of what strikes the sensor, use the <code>CROP</code> setting in the <code>config/config.sh</code> file instead.
+-->
+<tr><td class="WebUISetting">Configuration File</td> <td></td>
+	<td>Configuration file to use for settings.  Not currently used.</td></tr>
+<tr><td class="WebUISetting">Offset</td> <td>0</td>
+	<td>(ZWO only) Adds about 1/10 the specified value to every pixel, which brightens the whole image.</td></tr>
+<tr><td class="WebUISetting">Aggression</td> <td>Yes</td>
+	<td>(ZWO only) Specifies how much of a calculated exposure change should be made
+	during auto-exposure. Lower numbers smooth out brightness changes but take longer to
+	react to changes.</td></tr>
+<tr><td class="WebUISetting">Gain Transition Time</td> <td>15</td>
+	<td>(ZWO only) Number of <b>minutes</b> over which to increase or decrease
+	the gain when going from day-to-night or night-to-day images.
+	This helps smooth brightness differences.
+	Only works if nighttime <span class="WebUISetting">Auto-Gain</span> is off.
+	0 disables transitions.</td></tr>
+<tr><td class="WebUISetting">Image Width</td> <td>0</td>
+	<td><code>0</code> uses the sensor's full width in pixels.
+	Otherwise, with <b>ZWO</b> cameras the <code>Width</code> and <code>Height</code>
+	variables set a crop area around the center of the sensor,
+	the same as the <code>CROP</code> setting in <code>config/config.sh</code>.
+	With <b>RPiHQ</b> cameras these variables decrease resolution of the full-sensor image,
+	then increases the resolution, thereby negating the changes.
+	<b>There is no reason to set the <code>Width</code> and <code>Weight</code> with RPiHQ cameras.</b></td></tr>
+<tr><td class="WebUISetting">Image Height</td> <td>0</td>
+	<td> Same as </code>Width</code> but for the sensor's height.</td></tr>
+<tr><td class="WebUISetting">Image Type</td> <td>auto</td>
+	<td>Image format: <b>auto</b>:
+	automatically picks the best type of image based on the camera.
+	If you have a color camera it will use RGB24; mono cameras use RAW16 if the output file is a .png,
+	otherwise RAW8 is used.
+	<b>RAW8</b>: 8-bit mono. <b>RGB24</b>: color (red, green, blue), 8 bits per channel.
+	<b>RAW16</b>: 16-bit mono. bits.</td></tr>
+<tr><td class="WebUISetting">Saturation</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>(RPiHQ only). Sets saturation from black and white to extra saturated.</td></tr>
+<tr><td class="WebUISetting class="WebUISetting"">Gamma</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>(ZWO only) This setting increases or decreases contrast between dark and bright areas.</td></tr>
+<tr><td class="WebUISetting">Auto White Balance</td> <td>No</td>
+	<td>Sets auto white balance.
+	When used, "Red balance" and "Blue balance" are used as starting points.</td></tr>
+<tr><td class="WebUISetting">Red Balance</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>The intensity of the red component of the image.</td></tr>
+<tr><td class="WebUISetting">Blue Balance</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>The intensity of the blue component of the image.</td></tr>
+<tr><td class="WebUISetting">Quality</td> <td>95</td>
+	<td>For JPG images, this specifies the quality - 0 (low quality) to 100 (high quality).
+	Larger numbers produce higher-quality, but larger, images.
+	For PNG, this is the amount of compression - 0 for no compression (but quicker to save)
+	to 9 for highest compression (but slowest to save).
+	If you use very short delays between pictures you may want to play with these numbers to ensure the quickest delay possible.</td></tr>
+<tr><td class="WebUISetting">Auto USB Bandwidth</td> <td>Yes</td>
+	<td>(ZWO only) Automatically sets the <span class="WebUISetting">USB bandwidth</span>.</td></tr>
+<tr><td class="WebUISetting">USB Bandwidth</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>(ZWO only) How much of the USB bandwidth to use.</td></tr>
+<tr><td class="WebUISetting">Filename</td> <td>image.jpg</td>
+	<td>The name of the image file. Supported extensions are <b>JPG</b> and <b>PNG</b>.
+	If you have the Allsky Website installed, changing this value will also update the website's configuration file.</td></tr>
+<tr><td class="WebUISetting">Rotation</td> <td>None</td>
+	<td>(RPiHQ only) How to rotate the image.
+	On the <b>Bullseye</b> operating system images can only be rotated 180 degrees.</td></tr>
+<tr><td class="WebUISetting">Flip</td> <td>No flip</td>
+	<td>How to flip the image (No flip, Horizontal, Vertical, or Both).</td></tr>
+<tr><td class="WebUISetting">Notification Images</td> <td>Yes</td>
+	<td>Displays notification images, e.g., "Camera off during day" if daytime images are not being taken.</td></tr>
+<tr><td class="WebUISetting">Consistent Delays Between Images</td> <td>Yes</td>
+	<td>Activate to force the time between the start of exposures to be a consistent length
+	(<span class="WebUISetting">Max Auto-Exposure + Delay</span>).</td></tr>
+<tr><td class="WebUISetting">Latitude</td> <td></td>
+	<td>Latitude of the camera. Must include <b>N</b> for North or <b>S</b> for South.
+	If you have the Allsky Website installed,
+	changing this value will also update the website's configuration file.</td></tr>
+<tr><td class="WebUISetting">Longitude</td> <td></td>
+	<td>longitude of the camera. <b>E</b> for East or <b>W</b> for West.
+	If you have the Allsky Website installed, changing this value will also update the
+	website's configuration file.</td></tr>
+<tr><td class="WebUISetting">Angle</td> <td>-6</td>
+	<td>Altitude of the Sun above or below the horizon at which capture should start/stop.
+	Can be negative (Sun below horizon) or positive (Sun above horizon).
+	<br>&nbsp; &nbsp; 0=Sunset, -6=Civil twilight, -12=Nautical twilight, -18=Astronomical twilight
+	<br>See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Angle-and-sunrise---sunset)
+	for a description of Angle.
+	If you have the Allsky Website installed, changing this value will also update the
+	website's configuration file.</td></tr>
+<tr><td class="WebUISetting">Take Dark Frames</td> <td>No</td>
+	<td>Activate to enable dark frame capture. In this mode, overlays are hidden.
+	Don't forget to cover the lens first!</td></tr>
+<tr><td class="WebUISetting">Use Dark Frames</td> <td>No</td>
+	<td>Enable hot pixels subtraction at night?</td></tr>
+<tr><td class="WebUISetting">Locale</td> <td>en_US.UTF-8</td>
+	<td>Your locale, used to determine what the thousands and decimal separators are.
+	Type <code>locale</code> at a command prompt to see your choices (use the LC_NUMERIC entry).</td></tr>
+<tr><td class="WebUISetting">Histogram Box</td> <td>500 500 50 50</td>
+	<td>(ZWO only) X and Y size of histogram box in pixels and the middle point of the box in percent.</td></tr>
+<tr><td class="WebUISetting">Debug Level</td> <td>0</td>
+	<td>Determines the amount of output in the log file (usually <code>/var/log/allsky.log</code>
+	Log entries can also be viewed with <code>journalctl -u allsky</code>).</td></tr>
+<tr><td class="WebUISetting">Version 0.8 Exposure</td> <td>Yes</td>
+	<td>(ZWO only) Determines if the new version 0.8 exposure method is used (video capture stops between images).
+	This decreases the sensor temperature between 5 - 15 degrees Celsius.
+	If you see ASI_ERROR_TIMEOUTs in the log file, try turning this off.
+	See <a href="https://github.com/thomasjacquin/allsky/issues/417">Issue 417</a>.</td></tr>
+<tr><td class="WebUISetting">Require WebUI Login</td> <td>Yes</td>
+	<td>Determins if you need to login to the WebUI.
+	<b>If you Pi is accessible on the Internet, do NOT disable this!!</b></td></tr>
+<tr><td class="WebUISetting">Always Show Advanced</td> <td>No</td>
+	<td>Activate to always show the advanced options,
+	which are typically not used very often, so are hidden.</td></tr>
+
+<tr class="note"><td colspan="3" align="center"><b>Image overlay settings</b>
+<br><span style="color: initial">See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Overlays-Explained) for details on the image overlay.</span>
+</td></tr>
+<tr><td class="WebUISetting">External Overlay</td> <td>No</td>
+	<td>Activate to have image overlays added by the new, enhanced external program.
+	<br><b>When active, the overlay settings below do NOT apply</b>.
+	<br>This option will be turned on by default in the next Allsky release,
+	and the internal overlay capability, as well as this "Image overlay settings" section of the WebUI
+	will be removed.
+	</td></tr>
+<tr><td class="WebUISetting">Show Time</td> <td>Yes</td>
+	<td>Display the time the picture was taken in the overlay?</td></tr>
+<tr><td class="WebUISetting">Time Format</td> <td>%Y%m%d %H:%M:%S</td>
+	<td>Determines the format of the displayed time.
+	Run <code>man 3 strftime</code> to see the options.</td></tr>
+<tr><td class="WebUISetting">Show Temperature</td> <td>Yes</td>
+	<td>(ZWO only) Display the camera sensor temperature in the overlay?</td></tr>
+<tr><td class="WebUISetting">Temperature Units</td> <td>Celsius</td>
+	<td>Determines what unit(s) the temperature will be displayed in (Celsius, Fahrenheit, or Both).</td></tr>
+<tr><td class="WebUISetting">Show Exposure</td> <td>Yes</td>
+	<td>Display the exposure time in the overlay? If <span class="WebUISetting">Auto-Exposure</span> is enabled,
+	"(auto)" will appear after the exposure.</td></tr>
+<tr><td class="WebUISetting">Show Gain</td> <td>Yes</td>
+	<td>Display the gain in the overlay? If <span class="WebUISetting">Auto-Gain</span> is enabled,
+	"(auto)" will appear after the gain.</td></tr>
+<tr><td class="WebUISetting">Show Brightness</td> <td>No</td>
+	<td>Display the brightness level in the overlay?</td></tr>
+<tr><td class="WebUISetting">Show USB</td> <td>No</td>
+	<td>(ZWO only) Display the USB Bandwidth in the overlay? This is primarily for debugging.</td></tr>
+<tr><td class="WebUISetting">Show Mean Brightness</td> <td>No</td>
+	<td>Display the mean (average) brightness in the overlay?
+	This value is used to determine the correct auto-exposure and auto-gain levels.</td></tr>
+<tr><td class="WebUISetting">Show Histogram Box</td> <td>No</td>
+	<td>(ZWO only) Show the histogram box on the image?</td></tr>
+<tr><td class="WebUISetting">Show Focus Metric</td> <td>No</td>
+	<td>(RPiHQ only) Display a focus metric in the overlay to help you focus the camera?</td></tr>
+<tr><td class="WebUISetting">Text Overlay</td> <td></td>
+	<td>Text overlay that appears below the time, in the same font.</td></tr>
+<tr><td class="WebUISetting">Extra Text File</td> <td></td>
+	<td>The FULL path to a text file which will be displayed under other information.
+	The file can contain multiple lines which will be displayed underneath each other.</td></tr>
+<tr><td class="WebUISetting">Max Age Of Extra</td> <td>0</td>
+	<td>If using the extra text file then it must be updated within this number of seconds,
+	if not it will not be displayed. Set to 0 to ignore this check and always display it.</td></tr>
+<tr><td class="WebUISetting">Line Height</td> <td>30</td>
+	<td>The line height of the text displayed in the image.
+	If you change the font size then adjust this value if required.</td></tr>
+<tr><td class="WebUISetting">Text X</td> <td>15</td>
+	<td>Start of text from the left side, in pixels.</td></tr>
+<tr><td class="WebUISetting">Text Y</td> <td>35</td>
+	<td>tart of text from the top, in pixels.</td></tr>
+<tr><td class="WebUISetting">Font Name</td> <td>Simplex</td>
+	<td>Font type for the overlay.</td></tr>
+<tr><td class="WebUISetting">Font Color</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>Font color in Blue, Green, and Red (BGR). NOTE: When using RAW 16 only the first two values are used,
+	 i.e., 255 128 0.</td></tr>
+<tr><td class="WebUISetting">Small Font Color</td> <td><span class="cameraDependent">* CD</span></td>
+	<td>Small font color in BGR. NOTE: When using RAW 16 only the first two values are used,
+	 i.e., 255 128 0.</td></tr>
+<tr><td class="WebUISetting">Font Smoothness</td> <td>Antialiased</td>
+	<td>Controls the smoothness of the fonts.</td></tr>
+<tr><td class="WebUISetting">Font Size</td> <td>7</td>
+	<td>Font size.
+	This is impacted by the sensor size so you'll need to experiment with this.</td></tr>
+<tr><td class="WebUISetting">Font Weight</td> <td>1</td>
+	<td>Font line thickness.</td></tr>
+<tr><td class="WebUISetting">Use Outline Font</td> <td>No</td>
+	<td>Should an outline to the text overlay be added to improve contrast?</td></tr>
+
+<tr class="note"><td colspan="3" align="center"><b>Allsky Map and Website Setting</b></td></tr>
+
+<tr><td class="WebUISetting">Cooling</td> <td>No</td>
+	<td>(ZWO only) Turn on camera cooling for cameras that support it?</td></tr>
+<tr><td class="WebUISetting">Target Temp.</td> <td>0</td>
+	<td>(ZWO only) Sensor's target temperature <i>when cooler is enabled</i>. In degrees Celsius.</td></tr>
+</tbody>
+</table>
+
+<b>Allsky Map Settings</b> are described in the next section.
+
+<hr>
+</details>
+
+
+
+<br>
+<h3>Allsky Map and Website Settings</h3>
+<details><summary>Click here</summary>
+<br>
+
+If you want your allsky camera's location to display on the
+<a href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>,
+the information in the table below will be sent to the map server.
+This data is sent every other morning to ensure it's fresh.
+The server automatically removes old data.
+Note that only a limited number of updates per day are allowed to catch bogus updates.
+
+<table role="table">
+<thead>
+<tr><th>WebUI Setting</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td class="WebUISetting">Display Settings</td> <td>No</td>
+	<td>People sometimes ask others what settings they are using.
+	Activate this setting to add a link to your Allsky Website's popout that displays the
+	settings in the WebUI's "Allsky Settings" page.
+	<br>Only works if you are running the Allsky Website on the Pi or a remote server.</td></tr>
+<tr><td class="WebUISetting">Show on Map</td> <td>No</td>
+	<td>Activate to have your camera appear on the
+	<a href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>.
+	<br><b>If off, the following settings are ignored.</b></td></tr>
+<tr><td class="WebUISetting">Website URL</td> <td></td>
+	<td>Your website's URL, for example: https://www.thomasjacquin.com/allsky.
+	If your camera is not accessible on the Internet or you do not want the
+	map page to link to your website, leave this field blank.
+	If a <span class="WebUISetting">Website URL</span> is specified,
+	the <span class="WebUISetting">Image URL</span> must also be specified, and vice versa.</td></tr>
+<tr><td class="WebUISetting">Image URL</td> <td></td>
+	<td>The URL to your allsky image, for example: https://wwww.thomasjacquin.com/allsky/image.jpg.
+	Right-click on the image and select <i>Copy Image Address</i> to determine what to
+	put in this field.
+	<br>
+	If you have the Allsky Website installed <b>on your Pi</b> and are using its image,
+	you may need to set this field to "&lt;Pi name&gt;/current/tmp/image.jpg" or
+	whatever's in the <code>imageName</code> field of your website's <code>configuration.js</code> file.
+	Be careful of using "http" versus "https", and after enabling
+	<span class="WebUISetting">Show On Map</span>, look at the map to ensure you can see your image.
+	If your camera is not accessible on the Internet or you do not want the image
+	to appear on the map page, leave this field empty.
+	However, one of the main purposes of the map is to show pictures from cameras around the world,
+	so adding your URL is <b>strongly</b> encouraged.</td></tr>
+<tr><td class="WebUISetting">Location</td> <td></td>
+	<td>The location of your camera.
+	You can put any level of detail you want,
+	but there's no need to enter the country since it will be obvious by looking at the map.</td></tr>
+<tr><td class="WebUISetting">Owner</td> <td></td>
+	<td>The owner of the camera - your name, an association name, an observatory, etc.</td></tr>
+<tr><td>Camera</td> <td></td>
+	<td>The model of your camera, for example: ASI 224MC or RPiHQ.
+	This field is required and a default value is set during Allsky installation.</td></tr>
+<tr><td>Lens</td> <td></td>
+	<td>The lens you're using on your camera, for example: Arecont 1.55.</td></tr>
+<tr><td>Computer</td> <td></td>
+	<td>The computer inside your allsky enclosure, for example: Raspberry Pi 3.
+	This field is required and a default value is set during Allsky installation.</td></tr>
+<tr><td>Latitude &amp; longitude</td>
+	<td></td> <td>These are described in the previous section and are
+	required for your camera to appear on the global allsky map.
+	Their actual values are not displayed on the map, but users can zoom in to see exactly where the camera is.
+	If that bothers you, change their values slightly, but beware that the latitude and longitude
+	are also used to determine when your daytime and nighttime are so changing their
+	values too much can impact your daytime/nighttime settings.</td></tr>
+
+<tr class="note"><td colspan="3" align="center"><b>Camera Type</b></td></tr>
+<tr><td class="WebUISetting">Camera Type</td> <td></td>
+	<td>The type of camera you are using: ZWO or RPi (which includes the HD and compatible models).
+	<br>This is initially set during Allsky installation.
+	</td></tr>
+<tr><td class="WebUISetting">Camera Model</td> <td></td>
+	<td>This read-only field displays the model of camera you are using.
+	It is determined automatically based on what camera is connected to your Pi.
+	<br>If more than one camera of the specified type is connected, the first one is used.</td></tr>
+
+</tbody>
+</table>
+
+<br>
+<blockquote>
+If you have the Allsky Website installed on your Pi, changing the
+<span class="WebUISetting">Location</span>, <span class="WebUISetting">Owner</span>,
+<span class="WebUISetting">Camera</span>, <span class="WebUISetting">Lens</span>,
+<span class="WebUISetting">Computer</span>, <span class="WebUISetting">Latitude</span>,
+<span class="WebUISetting">Longitude</span>, or <span class="WebUISetting">Angle</span>
+fields will also up update the website's configuration file.
+</blockquote>
+
+<hr>
+</details>
+
+
+<br>
+<h3>Software settings</h3>
+<details><summary>Click here</summary>
+<br>
+
+The <code>config/config.sh</code> file lets you configure the overall behavior of the software.
+Options include dark frame subtraction, keogram and timelapse creation, and upload to a web host.
+Note that with the WebUI, you can edit the file via the "Editor" link on the left side of the page.
+
+<table role="table">
+<thead>
+<tr><th>Configuration</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>CAMERA</td> <td></td>
+	<td>Choose between ZWO and RPiHQ.
+	You MUST set this prior to using AllSky; if not, you'll receive an error message.</td></tr>
+<tr><td>IMG_UPLOAD</td> <td>false</td>
+	<td>Upload the current image to a server (website, blog, host, etc.)?</td></tr>
+<tr><td>IMG_DIR</td> <td>current/tmp</td>
+	<td>Location of the image the website will use.
+	"current" is an alias for <code>/home/pi/allsky</code>.</td></tr>
+<tr><td>IMG_RESIZE</td> <td>false</td>
+	<td>Resize images before cropping, stretching, and saving.
+	Adjust width and height according to your own sensor ratio.</td></tr>
+<tr><td>IMG_HEIGHT</td> <td>2028</td>
+	<td>The height of the resized image.</td></tr>
+<tr><td>IMG_WIDTH</td> <td>1520</td>
+	<td>The width of the resized image.</td></tr>
+<tr><td>CROP_IMAGE</td> <td>false</td>
+	<td>Crop images before stretching and saving.
+	This is often used to remove most of the dark areas when using a fisheye lens.
+	Note the image is cropped from the center so you will need to experiment with the correct settings.
+	Cropped images on the left or top will likely need the "textx" and/or "texty" settings changed.</td></tr>
+<tr><td>CROP_WIDTH</td> <td>640</td>
+	<td>The width of the resulting image.</td></tr>
+<tr><td>CROP_HEIGHT</td> <td>480</td>
+	<td>The height of the resulting image.</td></tr>
+<tr><td>CROP_OFFSET_X</td> <td>0</td>
+	<td>The x offset to use when cropping. To move the crop rectangle left, use a negative CROP_OFFSET_X.</td></tr>
+<tr><td>CROP_OFFSET_Y</td> <td>0</td>
+	<td>The y offset to use when cropping. To move the crop rectangle up, use a negative CROP_OFFSET_Y.</td></tr>
+<tr><td>AUTO_STRETCH</td> <td>false</td>
+	<td>Stretch the image? This increases the contrast without saturating highlights or shadows.</td></tr>
+<tr><td>AUTO_STRETCH_AMOUNT</td> <td>10</td>
+	<td>How much to increase the contrast. 0 is none, 3 is typical and 20 is a lot.</td></tr>
+<tr><td>AUTO_STRETCH_MID_POINT</td> <td>10%</td>
+	<td>Where the maximum change 'slope' in contrast should fall in the image
+	(0 is white; 50% is middle-gray; 100% is black).</td></tr>
+<tr><td>RESIZE_UPLOADS</td> <td>false</td>
+	<td>Resize uploaded pictures?</td></tr>
+<tr><td>RESIZE_UPLOADS_SIZE</td> <td>962x720</td>
+	<td>Sets the width x height of resized images being uploaded.</td></tr>
+<tr><td>REMOVE_BAD_IMAGES</td> <td>true</td>
+	<td>Remove corrupt or too bright/too dark images and their thumbnails before generating keograms and startrails?
+	<b>We suggest always leaving this turned on</b>;
+	if images are being removed that you don't want, change the THRESHOLDs below.</td></tr>
+<tr><td>REMOVE_BAD_IMAGES_THRESHOLD_LOW</td> <td>1</td>
+	<td>Images whose mean brightness is below this percent will be removed.
+	Set to 0 to disable this check.</td></tr>
+<tr><td>REMOVE_BAD_IMAGES_THRESHOLD_HIGH</td> <td>90</td>
+	<td>Images whose mean brightness is above this percent will be removed (max: 100).
+	Set to 0 to disable this check.</td></tr>
+<tr><td>TIMELAPSE</td> <td>true</td>
+	<td>Build a timelapse video at the end of the night?</td></tr>
+<tr><td>TIMELAPSEWIDTH</td> <td>0</td>
+	<td>Overwrite the width of the generated timelapse; must be divisible by 2.</td></tr>
+<tr><td>TIMELAPSEHEIGHT</td> <td>0</td>
+	<td>Overwrite the height of the generated timelapse; must be divisible by 2.</td></tr>
+<tr><td>TIMELAPSE_BITRATE</td> <td>2000k</td>
+	<td>Bitrate the timelapse video will be created with.
+	Higher values produce better quality video but larger files. Make sure to include the trailing "k".</td></tr>
+<tr><td>FPS</td> <td>25</td>
+	<td>The timelapse video frame rate (Frames Per Second).</td></tr>
+<tr><td>VCODEC</td> <td>libx264</td>
+	<td>Encoder used to create the timelapse video.</td></tr>
+<tr><td>FFLOG</td> <td>warning</td>
+	<td>Level of debugging information output when creating a timelapse. Set to "info" for more output.</td></tr>
+<tr><td>KEEP_SEQUENCE</td> <td>false</td>
+	<td>Keep the sequence of symbolic links created when creating a timelapse?</td></tr>
+<tr><td>TIMELAPSE_PARAMETERS</td> <td></td>
+	<td>Any additional timelapse parameters. Run <code>ffmpeg -?</code> to see the options.</td></tr>
+<tr><td>UPLOAD_VIDEO</td> <td>false</td>
+	<td>Upload the timelapse video to a server?</td></tr>
+<tr><td>KEOGRAM</td> <td>true</td>
+	<td>Build a keogram at the end of the night?</td></tr>
+<tr><td>KEOGRAM_EXTRA_PARAMETERS</td> <td>various</td>
+	<td>Additional keogram parameters. Execute <code>~/allsky/keogram --help</code> for a list.</td></tr>
+<tr><td>UPLOAD_KEOGRAM</td> <td>false</td>
+	<td>Upload the keogram image to your server?</td></tr>
+<tr><td>STARTRAILS</td> <td>true</td>
+	<td>Stack images to create a startrail at the end of the night?</td></tr>
+<tr><td>BRIGHTNESS_THRESHOLD</td> <td>0.1</td>
+	<td>Brightness level above which images are discarded (moon, head lights, aurora, etc.).</td></tr>
+<tr><td>UPLOAD_STARTRAILS</td> <td>false</td>
+	<td>Upload the startrails image to your server?</td></tr>
+<tr><td>THUMBNAIL_SIZE_X</td> <td>100</td>
+	<td>Sets the width of thumbnails.</td></tr>
+<tr><td>THUMBNAIL_SIZE_Y</td> <td>75</td>
+	<td>Sets the height of thumbnails.</td></tr>
+<tr><td>AUTO_DELETE</td> <td>true</td>
+	<td>Enables automatic deletion of old images and videos.</td></tr>
+<tr><td>DAYS_TO_KEEP</td> <td>14</td>
+	<td>Number of days' data to keep before starting deleting. If blank (""), then all days' data is kept.</td></tr>
+<tr><td>WEB_DAYS_TO_KEEP</td> <td>28</td>
+	<td>Number of days' of web data to keep before starting deleting.
+	If blank (""), then all days' web data is kept.</td></tr>
+<tr><td>POST_END_OF_NIGHT_DATA</td> <td>false</td>
+	<td>Send data to your server at the end of each night?</td></tr>
+<tr><td>WEBUI_DATA_FILES</td> <td></td>
+	<td>One or more colon-separated full path names to text files that contain user-supplied
+	data to display on the WebUI's "System" page.
+	See the <a href="#WEBUI_DATA_FILES">WEBUI_DATA_FILES section</a> for more information and an example of this setting.</td></tr>
+<tr><td>UHUBCTL_PATH</td> <td></td>
+	<td>If you have the "uhubctl" command installed enter its path name.
+	<code>uhubctl</code> resets the USB bus an can sometimes eliminate ASI_ERROR_TIMEOUTs.</td></tr>
+<tr><td>UHUBCTL_PORT</td> <td>2</td>
+	<td>Enter the USB port the camera is on. Port 1 is USB 2.0 and port 2 is USB 3.0.</td></tr>
+<tr><td>CAMERA_SETTINGS_DIR</td> <td>Either <code>/home/pi/allsky/config</code> or <code>/etc/raspap</code></td>
+	<td>Do not change this line.</td></tr>
+<tr><td>CAMERA_SETTINGS</td> <td>n/a</td>
+	<td>Do not change this line.</td></tr>
+<tr><td>ALLSKY_DEBUG_LEVEL</td> <td>n/a</td>
+	<td>Do not change this line.</td></tr>
+</tbody>
+</table>
+
+<hr>
+</details>
+
+
+<br>
+<h3>Upload settings</h3>
+<details><summary>Click here</summary>
+<br>
+
+In order to upload files to your website (on the Pi or a remote site), you'll need to edit connection details in <code>config/ftp-settings.sh</code>.
+Edit this file via the "Editor" link on the left side of the WebUI web page.
+
+<table role="table">
+<thead>
+<tr><th>Configuration</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>PROTOCOL</td> <td></td>
+	<td>How the file should be uploaded.
+	Choose between <code>ftp</code>, <code>sftp</code>, <code>S3</code>,
+	<code>scp</code>, or <code>local</code>.</td></tr>
+<tr><td>IMAGE_DIR</td> <td></td>
+	<td>The remote directory where the current "image.jpg" file should go.
+	NOTE: You must create these directories on the remote host.</td></tr>
+<tr><td>VIDEOS_DIR</td> <td></td>
+	<td>The remote directory where the timelapse video should go.</td></tr>
+<tr><td>VIDEOS_DESTINATION_NAME</td>
+	<td></td> <td>Remote name of the timelapse video file. If not specified it's the same as on the Pi.</td></tr>
+<tr><td>WEB_VIDEOS_DIR</td> <td></td>
+	<td>Location on the Pi to copy the timelapse video to, <i>in addition to</i> uploading it.</td></tr>
+<tr><td>KEOGRAM_DIR</td> <td></td>
+	<td>The remote directory where the keogram image should go.</td></tr>
+<tr><td>KEOGRAM_DESTINATION_NAME</td> <td></td>
+	<td>Remote name of the keogram image file. If not specified it's the same as on the Pi.</td></tr>
+<tr><td>WEB_KEOGRAM_DIR</td> <td></td>
+	<td>Location on the Pi to copy the keogram file to, <i>in addition to</i> uploading it.</td></tr>
+<tr><td>STARTRAILS_DIR</td> <td></td>
+	<td>The remote directory where the startrails image should go.</td></tr>
+<tr><td>STARTRAILS_DESTINATION_NAME</td> <td></td>
+	<td>Remote name of the startrails file. If not specified it's the same as on the Pi.</td></tr>
+<tr><td>WEB_STARTRAILS_DIR</td> <td></td>
+	<td>Location on the Pi to copy the startrails file to, <i>in addition to</i> uploading it.</td></tr>
+<tr><td>REMOTE_HOST</td> <td></td>
+	<td>Your remote host server or IP.</td></tr>
+<tr><td>REMOTE_USER</td> <td></td>
+	<td>Your remote user name.</td></tr>
+<tr><td>REMOTE_PASSWORD</td> <td></td>
+	<td>Your ftp / sftp password.</td></tr>
+<tr><td>REMOTE_PORT</td> <td></td>
+	<td>An optional port number for <code>lftp</code>. Is rarely needed.</td></tr>
+<tr><td>LFTP_COMMANDS</td> <td></td>
+	<td>Any additional commands needed by <code>lftp</code>.</td></tr>
+</tbody>
+</table>
+
+If you have the Allsky Website on your Pi, set these variables:
+<ul>
+<li><code>PROTOCOL="local"</code>
+<li><code>IMAGE_DIR=""</code>
+<li><code>VIDEOS_DIR="/home/pi/allsky/html/allsky/videos"</code>
+<li><code>KEOGRAM_DIR="/home/pi/allsky/html/allsky/keograms"</code>
+<li><code>STARTRAILS_DIR="/home/pi/allsky/html/allsky/startrails"</code>
+</ul>
+
+&nbsp;
+If you are using SSH Key with Amazon's Lightsail,
+copy the <code>ssh-key.pem.pem</code> file to your Pi, for example, in <code>~</code>,
+then execute <code>chmod 400 ~/ssh-key.pem</code> and set these variables:
+<ul>
+<li><code>PROTOCOL="sftp"</code>
+<li><code>REMOTE_HOST="remote host name"</code>
+<li><code>REMOTE_USER="remote user name"</code>
+<li><code>REMOTE_PASSWORD="n/a"</code>
+<li><code>LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"</code>
+</ul>
+
+<hr>
+</details>
+
+<br>
+<h3>WEBUI_DATA_FILES configuration setting</h3>
+<details><summary>Click here</summary>
+<br>
+
+The <code>WEBUI_DATA_FILES</code> setting in <code>~/allsky/config/config.sh</code>
+allows you to specify a list of file names that contain information and buttons to add to the WebUI "System" page.
+The data can be anything you want, but often contains weather and/or fan data.
+
+<blockquote>You need to provide script(s) to create file(s) in the format specified below.</blockquote>
+This tutorial assumes you are familiar with writing scripts;
+if so, the changes needed to implement WEBUI_DATA_FILES are very easy, despite the length of this tutorial.
+
+<p>
+Each file listed in the <code>WEBUI_DATA_FILES</code> variable contains one or more lines.
+Blank lines and lines that begin with "#" are ignored.
+The remaining lines must contain the fields listed in the tables below,
+separated by tabs. Each of these lines has its own entry on the "System" page.
+</p>
+
+<p>
+There are three types of lines in a data file.
+The first word of a line determines what type of line it is:
+<ol>
+<li>"data" lines specify basic, two-column information that goes before the first progress bar. These lines are good when the data has no associated status, for example, a simple on/off value, like: "Dew heater: &nbsp; &nbsp; on".
+<li>"progress" lines display as progress bars like the CPU temperature bar on the "System" page.
+Your bars go after the last system-supplied progress bar and are good when the data has an associated status, for example, when the CPU is too hot its bar turns red.
+<li>"button" lines add a button to the page under the last system-supplied button, and are used to initiate an action like turning a dew heater on.
+</ol>
+</p>
+
+The fields for each line type are described in the tables below.
+<br>The first column lists the purpose of the field.
+<br>The second column lists the type of data the field contains.
+<br>The third column describes the field.
+<br>The fourth column states whether or not the field <i>typically</i> changes when the data is updated.
+
+<table role="table">
+<thead>
+<tr><th>"data" Fields</th> <th>Field Type</th>
+	<th>Description</th><th>Typically Changes</th></tr>
+</thead>
+<tbody>
+<tr><td><b>type</b></td> <td>text</td>
+	<td>Must be <b>data</b>. Defines the line type.</td> <td>Never.</td></tr>
+<tr><td><b>timeout</b></td> <td>integer</td>
+	<td>Number of seconds after the data file was created that the data should expire.
+	<b>0</b> disables the check. Expired data is displayed in red with "(EXPIRED)" appended to the label.</td> <td>No.</td></tr>
+<tr><td><b>label</b></td> <td>text</td>
+	<td>The name for this data, for example: "Ambient temperature".</td> <td>No.</td></tr>
+<tr><td><b>data</b></td> <td>text</td>
+	<td>The actual data - what should appear in the second column on the web page.
+	For example, for "20 C".</td>
+	<td>Yes - every time new data is written to the file.</td></tr>
+</tbody>
+</table>
+
+&nbsp;
+
+<table role="table">
+<thead>
+<tr><th>"progress" Fields</th> <th>Field Type</th>
+	<th>Description</th> <th>Typically Changes</th></tr>
+</thead>
+<tbody>
+<tr><td><b>type</b></td> <td>text</td>
+	<td>Must be <b>progress</b>.</td> <td>Never.</td></tr>
+<tr><td><b>timeout</b></td> <td>integer</td>
+	<td>Number of seconds after the data file was created that the data should expire.
+	<b>0</b> disables the check. Expired data is displayed in red with "(EXPIRED)" appended to the label.</td> <td>No.</td></tr>
+<tr><td><b>label</b></td> <td>text</td>
+	<td>The name for this data, for example: "Dew point".</td> <td>No.</td></tr>
+<tr><td><b>data</b></td> <td>text</td>
+	<td>The actual data to appear in the progress bar.
+	Typically a number followed by an optional unit specifier, for example, "20 C" for temperature, but could be any text.</td> <td>Yes - every time new data is written to the file.</td></tr>
+<tr><td><b>minimum value</b></td> <td>integer</td>
+	<td>The minimum possible value of <b>current value</b>; often 0, but for a temperature will usually be negative.</td> <td>No.</td></tr>
+<tr><td><b>current value</b></td> <td>integer</td>
+	<td>The current value of the data.
+	This determines how wide the progress bar is.
+	Will typically be the same as <b>data</b> without the unit specifier, for example, "20".
+	This value should be between <b>minimum value</b> and <b>maximum value</b> inclusive.</td> <td>Yes - every time new data is written to the file.</td></tr>
+<tr><td><b>maximum value</b></td> <td>integer</td>
+	<td>The maximum possible value of <b>current value</b>; often 100, especially for percents.
+	For a temperature, use the highest value you expect the temperature to be.</td> <td>No.</td></tr>
+<tr><td><b>danger</b></td> <td>integer</td>
+	<td>A <b>current value</b> greater than or equal to the <b>danger</b> value causes the progress bar to turn red.</td> <td>No.</td></tr>
+<tr><td><b>warning</b></td> <td>integer</td>
+	<td>A <b>current value</b> greater than or equal to the <b>warning</b> value and less than the <b>danger</b> value causes the progress bar to turn amber. The progress bar will be green for any value less than <b>warning</b>.</td> <td>No.</td></tr>
+</tbody>
+</table>
+
+&nbsp;
+
+<table role="table">
+<thead>
+<tr><th>"button" Fields</th> <th>Field Type</th>
+	<th>Description</th> <th>Typically Changes</th></tr>
+</thead>
+<tbody>
+<tr><td><b>type</b></td> <td>text</td>
+	<td>Must be <b>button</b>.</td> <td>Never.</td></tr>
+<tr><td><b>message</b></td> <td>text</td>
+	<td>An optional status message that should appear near the top of the page after the
+	button is pressed and the button command was successful.
+	For example, "Dew heater turned on".
+	If not successful an error message is displayed containing any output from the command.
+	Use "-" to indicate no message should be displayed on success
+	(error messages will still be displayed).</td> <td>No.</td></tr>
+<tr><td><b>command</b></td> <td>text</td>
+	<td>The program that should be executed when the button is pressed.
+	For example, "/home/pi/turn_on_dew_heater.sh". If needed you can prepend "sudo" to the command.</td> <td>No.</td></tr>
+<tr><td><b>button color</b></td> <td>text</td>
+	<td>The button's color.
+	Choices are: red, green, blue, yellow, cyan, white, and black.
+	If you want a different color add it to the end of <code>/var/www/html/dist/css/custom.css</code>.</td> <td>No.</td></tr>
+<tr><td><b>FA icon</b></td> <td>text</td>
+	<td>The Fonts Awesome (FA) icon on the button.
+	For example, the right-facing triangle on the "Start allsky" button has an FA icon of "play".
+	If you don't want an icon on the button, enter "-".</td> <td>No.</td></tr>
+<tr><td><b>button label</b></td> <td>text</td>
+	<td>What should appear on the button face, for example, "Enable dew heater".</td> <td>No.</td></tr>
+</tbody>
+</table>
+
+<hr>
+
+<h3>Example</h3>
+Let's assume you have a weather station that provides the ambient temperature, humidity, and dew point, and the dome over your camera has a dew heater.
+
+You wrote a script called <code>/home/pi/weather/getWeatherData.sh</code>
+that polls the weather station and writes the ambient temperature, humidity,
+and dew point to a file called <code>/home/pi/weather/weatherdata.txt</code> every minute.
+You must manually turn the dew heater on and off via a Python script called
+<code>/home/pi/dewheater/toggleDewHeater.py</code>.
+The <code>toggleDewHeater.ph</code> command toggles the status of the dew heater and writes the
+new status (either "on" or "off") to <code>/home/pi/dewheater/status.txt</code> whenever you call the program.
+
+<p>
+To get all this working, follow the steps below:
+</p>
+
+<h4>Determine what data you want to display.</h4>
+You want to display the temperature, humidity, dew point, and dew heater status.
+You will use both the humidity and dew point numbers to determine if you should turn the dew heater on or off via a toggle button you will add to the web page.
+You want the ambient temperature in Celsius and Fahrenheit.
+<p>
+You will add the following to the WebUI's "System" page:
+<ul>
+<li>temperature
+<li>humidity
+<li>dew point
+<li>dew heater status
+<li>a button to toggle the dew heater on/off
+</ul>
+</p>
+
+<h4>Determine what you want to call the items</h4>
+This is pretty easy.
+You will set the <b>label</b> fields for the temperature, humidity, dew point, and dew heater status to "Ambient temperature", "Humidity", "Dew point", and "Dew heater status" respectively.
+The dew heater toggle button will have a <b>button label</b> of "Toggle dew heater".
+
+<h3>Determine how you want the data displayed</h3>
+The temperature is just a number with no "good" or "bad" value so you will display it as "data".
+<p>
+Although the dew point is also just a number, you want to highlight it when it's getting close to the ambient temperature so you'll know it's possible for dew to form.
+Hence, you'll display it as a "progress" bar.
+</p>
+<p>
+If the humidity gets too high you want to call attention to it, so you'll display it as a "progress" bar.
+</p>
+<p>
+The dew heater toggle switch will be a "button".
+</p>
+
+<h4>Determine expiration timeout</h4>
+If the weather data gets too old it may fool you into turning the dew heater off when it should remain on, so you want its data to expire.
+Your weather station provides new data every minute.
+If it misses a minute or two you don't want the data on the "System" page to turn red, so you will set the temperature and dew point <b>timeout</b> fields to 300 (5 minutes).
+Just for fun you will set the humidity <b>timeout</b> value to 600 (10 minutes).
+
+<p>
+The dew heater status information doesn't change unless you manually turn it on or off, so you don't want it's status to expire, hence will use 0 for its <b>timeout</b> value.
+</p>
+
+<p>
+Timeout values don't apply to buttons.
+</p>
+
+<h4>For "progress" bars, determine the "danger" and "warning" cutoffs and "minimum value" and "maximum value"</h4>
+You've noticed that when the humidity gets above 90% you get dew on the inside of the dome,
+so you will set the dew heater <b>danger</b> value to 85.
+You aren't sure what to use for the <b>warning</b> value so you'll initially set it to 75,
+and will adjust it later if needed.
+By definition humidity ranges from 0% to 100% so use 0 and 100 for its
+<b>minimum value</b> and <b>maximum value</b> respectively.
+
+<p>
+The cutoffs for the dew point will vary based on the temperature so will require some logic in
+<code>getWeatherData.sh</code>.
+Let's say you decide to set the dew point <b>danger</b> cutoff to be 90% <i>of the ambient temperature</i>,
+and the <b>warning</b> cutoff to be 80%.
+This means if the ambient temperature is 20 C, the dew point <b>danger</b> cutoff would be
+18 C (20 * 0.9) and the <b>warning</b> cutoff would be 16 C (20 * 0.8).
+You aren't interested in dew point values significantly less than the ambient temperature since
+the chance of dew in those cases is almost zero, so you'll set the dew point <b>minimum value</b>
+to the ambient temperature minus 5 degrees.
+Likewise, you aren't interested in dew point values significantly greater than the
+ambient temperature since it's almost certain there will be dew, so you'll set the <b>maximum value</b>
+to the dew point <b>danger</b> value plus 3 degrees.
+This in effect sets the left side of the progress bar to be (ambient - 5) and the
+right side of the bar to be (<b>danger</b> + 3).
+<br>[This may be confusing now, but will clear up when you see what it
+looks like and play around with different values.]
+</p>
+
+<p>
+The other items are of type "data" and "button" so this step doesn't apply to them.
+</p>
+
+<h4>Determine what button(s) should look like</h4>
+You like green so will make the dew heater toggle button green by specifying its <b>button color</b> as "green".
+<p>
+You want an icon on the button since the other buttons have icons,
+so you go to the <a href="https://fontawesome.com/v4/icons/">Font Awesome</a>
+web page to look for an icon (Allsky uses Font Awesome version 4.7).
+You pick the "random" icon so will set the button's <b>FA icon</b> field to "random".
+</p>
+
+<a name="#WEBUI_DATA_FILES">
+<h4>Modify the <code>WEBUI_DATA_FILES</code> variable</h4>
+You need to enter the names of your files in the <code>WEBUI_DATA_FILES</code>
+variable of the <code>config/config.sh</code> file,
+but how many files should you have?
+You could put everything in one file but you have two scripts that create files
+and would need to coordinate between them so they don't overwrite each other.
+You decide on three data files - one with the weather data, one with the dew heater status,
+and one with the dew heater button information.
+You could have put the button information in the first or second file,
+but to simplify the <code>toggleDewHeater.ph</code>
+script you put it in a 3rd file that will never change.
+You call the 3rd file <code>/home/pi/dewheater/button.txt</code>.
+<p>
+This is what you use:
+<code>
+WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt:/home/pi/dewheater/button.txt
+</code>
+</p>
+<blockquote>The file names must be full path names and must be separated by colons (":").</blockquote>
+
+The "data", "progress", and "button" lines in the first file will come first on the "System" page; those in the second file will come second on the "System" page, etc.
+You can change the order items appear on the "System" page by changing the order of files in the <code>WEBUI_DATA_FILES</code> variable.
+
+<h4>Create/modify scripts to update the data file(s)</h4>
+The <code>getWeatherData.sh</code> script needs to write the three weather "data" lines to <code>/home/pi/weather/weatherdata.txt</code>.
+It helps if you have the script create header lines in the output file so you remember what field is what.
+
+<p>
+The program's logic would be:
+<ol>
+<li>Get the data from the hardware.
+<li>Optionally write the "data" header line to <code>/home/pi/weather/weatherdata.txt</code>.
+<li>Calculate the Fahrenheit ambient temperature based on the Celsius value returned by the hardware.
+<li>Append the Ambient temperature "data" line to the file.
+<li>Optionally append the "progress" header line to the file.
+<li>Calculate new <b>danger</b>, <b>warning</b>, <b>minimum value</b>,
+	and <b>maximum value</b> numbers for the Dew point based on the ambient temperature.
+<li>Append the Dew point "progress" line to the file.
+<li>Append the Humidity "progress" line to the file.
+<li>Wait for the next update from the hardware, then go back to step 1.
+</ol>
+</p>
+
+Using the decisions you made above, the <code>/home/pi/weather/weatherdata.txt</code> would look like the following, assuming the temperature was 20 C, the dew point was 17 C, and the humidity was 87%.
+<code>
+# Type	  Timeout  Label                 Data
+data	  300      Ambient temperature	20 C (68 F)
+
+# Type	  Timeout  Label                 Data    Min   Current  Max  Danger  Warning
+progress  300      Dew point             17 C    12    17       21   18      16
+progress  600      Humidity              87%     0     87       100  85      75
+</code>
+Note all fields are separated by <b>tabs</b>.
+The header lines (which are ignored since they begin with "#") can be in any format,
+so to make it easier to make sure you have the correct fields you added multiple
+spaces between their columns to line them up with the data fields below.
+
+<p>
+The <code>toggleDewHeater.py</code> program needs to write the "data" line for the dew heater
+status to <code>/home/pi/dewheater/status.txt</code> every time it is executed.
+Its logic is:
+<ol>
+<li>Get the dew heater status from the hardware.
+<li>Toggle the status.
+<li>Optionally write the "data" header line to <code>/home/pi/dewheater/status.txt</code>.
+<li>Append the new dew heater status "data" line to the file.
+<li>Output "Dew heater turned on" or "Dew heater turned off".
+<li>Exit.
+</ol>
+</p>
+
+The <code>/home/pi/dewheater/status.txt</code> file will look like the following after clicking the button,
+assuming the dew heater is currently off.
+
+<code>
+# Type	  Timeout  Label                 Data
+data	  0        Dew heater status     on
+</code>
+
+Since the toggle button won't change, create the <code>/home/pi/dewheater/button.txt</code> file manually:
+<code>
+# Type    message  command                                 Color   FA icon  Button  Label
+button    -        /home/pi/dewheater/toggleDewHeater.py   green   random	Toggle  dew heater
+</code>
+Notice the <b>message</b> field is "-" which means there's no message to display on success.
+This is because the <code>toggleDewHeater.py</code> command outputs "Dew heater turned on"
+or "Dew heater turned off", and that output is displayed as a message.
+Remember that if <code>toggleDewHeater.py</code> exits with a failure (i.e., a non-0 exit code)
+any error message it outputs will be displayed as an error message on the web page so you
+should make sure those error messages are useful.
+
+<p>
+When you press the "Toggle dew heater" button or call <code>toggleDewHeater.py</code> from the command line,
+it will update the <code>/home/pi/dewheater/status.txt</code> file by changing the "off" to "on" or vice versa.
+The rest of the file remains the same.
+</p>
+
+<blockquote>Commands listed in a button's <b>command</b> field must be executable by the
+web server running as group <b>www-data</b>, and must be in a directory that web server has permissions to get to.
+<code>chmod g+x /home/pi/dewheater/toggleDewHeater.py</code> will fix permissions on the command.
+</blockquote>
+
+<h4>Test, test, test. Then test some more.</h4>
+To get a feel for what things look like and how the above actually works,
+copy/paste the above file examples to <code>/home/pi/weather/weatherdata.txt</code>,
+<code>/home/pi/dewheater/status.txt</code>,
+and <code>/home/pi/dewheater/button.txt</code> files on your Pi.
+Then add
+<code>
+WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
+</code>
+to <code>allsky/config/config.sh</code>.
+Now, go to the "System" page in the WebUI and in addition to the normal information you should see the items you added.
+Refreshing the screen won't change those items since the data files are not being updated yet.
+
+<p>
+Clicking the "Toggle dew heater" button should display a red message at the top of the web page that says "'/home/pi/dewheater/toggleDewHeater.py' failed: sh: 1: /home/pi/dewheater/toggleDewHeater.py: not found".
+That's the output when the web page tried to execute '/home/pi/dewheater/toggleDewHeater.py' which doesn't exist.
+</p>
+
+<p>
+Try making changes to the three files you created.
+For example, change the <b>command</b> for the button to "echo Hello, world!".
+When you next click on the button you should see a green message at the top saying "Hello, world!".
+Now change it to "echo Hello, world!; exit 1".
+What happens now?
+</p>
+
+After you understand what's happening and why, start modifying your script(s) to put your own data into the required format.
+
+<h4>Tips</h4>
+To see what the button colors look like, add the following lines to <code>/home/pi/dewheater/button.txt</code>:
+<code>
+button	-	/home/pi/dewheater/toggleDewHeater.py	red     random	red
+button	-	/home/pi/dewheater/toggleDewHeater.py	green   random	green
+button	-	/home/pi/dewheater/toggleDewHeater.py	blue    random	blue
+button	-	/home/pi/dewheater/toggleDewHeater.py	yellow  random	yellow
+button	-	/home/pi/dewheater/toggleDewHeater.py	cyan    random	cyan
+button	-	/home/pi/dewheater/toggleDewHeater.py	white   random	white
+button	-	/home/pi/dewheater/toggleDewHeater.py	black   random	black
+</code>
+
+<h4>Troubleshooting</h4>
+If you get a message about the first field needing to be "data", "progress",
+or "button" but those words ARE at the beginning of a line,
+the fields probably aren't separated by tabs.
+If you get a message saying you don't have the correct number of fields, count them to verify,
+and make sure the fields are separated by tabs, not spaces.
+
+<hr>
+</details>
+
+
+<br>
+<h3>[MORE TO COME ...]</h3>
+<details><summary>Click here</summary>
+<br>
+
+These color balances work for some people on Buster (raspistill):
+<ul>
+<li>RPiHQ Red: 3.24, Blue: 1.47
+<li>RPiHQ no AWB, Red: 2.8, Blue: 2.2, Saturation: 40
+</ul>
+
+Luc Bodson uses these with RPiHQ and libcamera:
+<ul>
+<li>IR filter in place: Saturation: 1.4, AWB, Red: 3.47, Blue: 1.6
+<li>IR filter removed: Saturation: 0.5, no AWB, Red: 1.0, Blue 1.6
+</ul>
+
+</details>
+
+</div><!-- markdown-body --></div><!-- Layout-main ... -->
+</div><!-- Layout -->
+</div><!-- xcontainer-x1 ... -->
+</body>
+</html>
+<script> includeHTML(); </script>

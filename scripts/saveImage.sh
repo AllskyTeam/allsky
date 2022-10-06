@@ -258,7 +258,7 @@ else
 fi
 if [[ ${SAVE_IMAGE} == "true" ]]; then
 	# Determine what directory is the final resting place.
-	if [ "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
+	if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then
 		# The 12 hours ago option ensures that we're always using today's date
 		# even at high latitudes where civil twilight can start after midnight.
 		DATE_NAME="$(date -d '12 hours ago' +'%Y%m%d')"
@@ -269,7 +269,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 	DATE_DIR="${ALLSKY_IMAGES}/${DATE_NAME}"
 	mkdir -p "${DATE_DIR}"
 
-	if [ "${IMG_CREATE_THUMBNAILS}" = "true" ]; then
+	if [[ ${IMG_CREATE_THUMBNAILS} == "true" ]]; then
 		THUMBNAILS_DIR="${DATE_DIR}/thumbnails"
 		mkdir -p ${THUMBNAILS_DIR}
 		# Create a thumbnail of the image for faster load in the WebUI.
@@ -289,13 +289,13 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 		if [[ ${TIMELAPSE_MINI_IMAGES} -ne 0 && ${TIMELAPSE_MINI_FREQUENCY} -ne 1 ]]; then
 			FREQUENCY_FILE="${ALLSKY_TMP}/MINI_UPLOAD_FREQUENCY.txt"
 			typeset -i LEFT
-			if [ ! -f "${FREQUENCY_FILE}" ]; then
+			if [[ ! -f ${FREQUENCY_FILE} ]]; then
 				# The file may have been deleted, or the user may have just changed the frequency.
 				let LEFT=${TIMELAPSE_MINI_FREQUENCY}
 			else
 				let LEFT=$( < "${FREQUENCY_FILE}" )
 			fi
-			if [ ${LEFT} -le 1 ]; then
+			if [[ ${LEFT} -le 1 ]]; then
 				# create and upload this one and reset the counter
 				echo "${TIMELAPSE_MINI_FREQUENCY}" > "${FREQUENCY_FILE}"
 			else
@@ -303,7 +303,9 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				let LEFT=LEFT-1
 				echo "${LEFT}" > "${FREQUENCY_FILE}"
 				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
-				[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Not creating or uploading mini timelapse: ${LEFT} images(s) left."
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+					echo "${ME}: Not creating or uploading mini timelapse: ${LEFT} images(s) left."
+				fi
 
 				TIMELAPSE_MINI_UPLOAD_VIDEO="false"
 			fi
@@ -358,7 +360,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 
 	# We no longer use the "permanent" image name; instead, use the one the user specified
 	# in the config file (${FULL_FILENAME}).
-	if [ "${RESIZE_UPLOADS}" = "true" ] ; then
+	if [[ ${RESIZE_UPLOADS} == "true" ]]; then
 		# Need a copy of the image since we are going to resize it.
 		# Put the copy in ${WORKING_DIR}.
 		FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
@@ -386,7 +388,7 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${R
 
 	"${ALLSKY_SCRIPTS}/upload.sh" "${FILE_TO_UPLOAD}" "${IMAGE_DIR}" "${MINI}" "MiniTimelapse" "${WEB_IMAGE_DIR}"
 	RET=$?
-	if [[ ${RET} -eq 0 && ${TIMELAPSE_MINI_UPLOAD_THUMBNAIL} = "true" ]]; then
+	if [[ ${RET} -eq 0 && ${TIMELAPSE_MINI_UPLOAD_THUMBNAIL} == "true" ]]; then
 		UPLOAD_THUMBNAIL_NAME="mini-timelapse.jpg"
 		UPLOAD_THUMBNAIL="${ALLSKY_TMP}/${UPLOAD_THUMBNAIL_NAME}"
 		# Create the thumbnail for the mini timelapse, then upload it.

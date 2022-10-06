@@ -31,11 +31,11 @@ export DAY_OR_NIGHT="${1}"
 # Export so other scripts can use it.
 export CURRENT_IMAGE="${2}"
 shift 2
-if [ ! -f "${CURRENT_IMAGE}" ] ; then
+if [[ ! -f ${CURRENT_IMAGE} ]] ; then
 	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE}' not found; ignoring${NC}"
 	exit 2
 fi
-if [ ! -s "${CURRENT_IMAGE}" ] ; then
+if [[ ! -s ${CURRENT_IMAGE} ]] ; then
 	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE}' is empty; ignoring${NC}"
 	exit 2
 fi
@@ -46,7 +46,7 @@ IMAGE_NAME=$(basename "${CURRENT_IMAGE}")	# just the file name
 WORKING_DIR=$(dirname "${CURRENT_IMAGE}")	# the directory the image is currently in
 
 # Optional full check for bad images.
-if [ "${REMOVE_BAD_IMAGES}" = "true" ]; then
+if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
 	# If the return code is 99, the file was bad and deleted so don't continue.
 	"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
 	# removeBadImages.sh displayed error message and deleted the file.
@@ -55,14 +55,14 @@ fi
 
 # If we didn't execute removeBadImages.sh do a quick sanity check on the image.
 # OR, if we did execute removeBaImages.sh but we're cropping the image, get the image resolution.
-if [ "${REMOVE_BAD_IMAGES}" != "true" ] || [ "${CROP_IMAGE}" = "true" ] ; then
+if [[ ${REMOVE_BAD_IMAGES} != "true" || ${CROP_IMAGE} == "true" ]]; then
 	x=$(identify "${CURRENT_IMAGE}" 2>/dev/null)
 	if [ $? -ne 0 ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving.${NC}"
 		exit 3
 	fi
 
-	if [ "${CROP_IMAGE}" = "true" ] ; then
+	if [[ ${CROP_IMAGE} == "true" ]]; then
 		# Typical output
 		# image-20220228094835.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
 			RESOLUTION=$(echo "${x}" | awk '{ print $3 }')
@@ -86,7 +86,7 @@ source "${ALLSKY_SCRIPTS}/darkCapture.sh"		# does not return if in darkframe mod
 # TODO: Dark subtract long-exposure images, even if during daytime.
 # TODO: Need a config variable to specify the threshold to dark subtract.
 # TODO: Possibly also for stretching below.
-if [ "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
+if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then
 	source "${ALLSKY_SCRIPTS}/darkSubtract.sh"	# It will modify the image but not its name.
 fi
 
@@ -108,7 +108,7 @@ function display_error_and_exit()	# error message, notification string
 }
 
 # Resize the image if required
-if [ "${IMG_RESIZE}" = "true" ] ; then
+if [[ ${IMG_RESIZE} == "true" ]] ; then
 	# Make sure we were given numbers.
 	ERROR_MSG=""
 	if [[ "${IMG_WIDTH}" != +([+0-9]) ]]; then		# no negative numbers allowed
@@ -117,12 +117,12 @@ if [ "${IMG_RESIZE}" = "true" ] ; then
 	if [[ "${IMG_WIDTH}" != +([+0-9]) ]]; then
 		ERROR_MSG="${ERROR_MSG}\n*** IMG_HEIGHT (${IMG_HEIGHT}) must be a number."
 	fi
-	if [ -n "${ERROR_MSG}" ]; then
+	if [[ -n ${ERROR_MSG} ]]; then
 		echo -e "${RED}*** ${ME}: ERROR: Image resize number(s) invalid.${NC}"
 		display_error_and_exit "${ERROR_MSG}" "IMG_RESIZE"
 	fi
 
-	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
+	[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
 	convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}"
 	if [ $? -ne 0 ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed; not saving${NC}"
@@ -131,9 +131,9 @@ if [ "${IMG_RESIZE}" = "true" ] ; then
 fi
 
 # Crop the image if required
-if [ "${CROP_IMAGE}" = "true" ] ; then
+if [[ ${CROP_IMAGE} == "true" ]]; then
 	# If the image was just resized, the resolution changed, so reset the variables.
-	if [ "${IMG_RESIZE}" = "true" ] ; then
+	if [[ ${IMG_RESIZE} == "true" ]]; then
 		RESOLUTION_X=${IMG_WIDTH}
 		RESOLUTION_Y=${IMG_HEIGHT}
 	fi
@@ -147,10 +147,10 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 		VAR_VALUE="${2}"
 		W_or_H="${3}"
 		RESOLUTION="${4}"
-		if [[ "${VAR_VALUE}" != +([0-9]) ]] || [ ${VAR_VALUE} -le 0 ]; then
+		if [[ ${VAR_VALUE} != +([0-9]) || ${VAR_VALUE} -le 0 ]]; then
 			ERROR_MSG="${ERROR_MSG}\n*** ${VAR_NAME} (${VAR_VALUE}) must be a positive number."
 			return 1
-		elif [ ${VAR_VALUE} -gt ${RESOLUTION} ]; then
+		elif [[ ${VAR_VALUE} -gt ${RESOLUTION} ]]; then
 			ERROR_MSG="${ERROR_MSG}\n*** ${VAR_NAME} (${VAR_VALUE}) larger than image ${W_or_H}  (${RESOLUTION})."
 			return 1
 		fi
@@ -158,13 +158,13 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 	}
 	# shellcheck disable=SC2153
 	if check_value "CROP_WIDTH" "${CROP_WIDTH}" "width" "${RESOLUTION_X}"; then
-		if [ $(( CROP_WIDTH % 2 )) = 1 ]; then
+		if [[ $(( CROP_WIDTH % 2 )) -eq 1 ]]; then
 			ERROR_MSG="${ERROR_MSG}\n*** CROP_WIDTH (${CROP_WIDTH}) must be an even number."
 		fi
 	fi
 	# shellcheck disable=SC2153
 	if check_value "CROP_HEIGHT" "${CROP_HEIGHT}" "height" "${RESOLUTION_Y}"; then
-		if [ $(( CROP_HEIGHT % 2 )) = 1 ]; then
+		if [[ $(( CROP_HEIGHT % 2 )) -eq 1 ]]; then
 			ERROR_MSG="${ERROR_MSG}\n*** CROP_HEIGHT (${CROP_HEIGHT}) must be an even number."
 		fi
 	fi
@@ -176,7 +176,7 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 	fi
 
 	# Now for more intensive checks.
-	if [ -z "${ERROR_MSG}" ]; then
+	if [[ -z ${ERROR_MSG} ]]; then
 		typeset -i SENSOR_CENTER_X=$(( RESOLUTION_X / 2 ))
 		typeset -i SENSOR_CENTER_Y=$(( RESOLUTION_Y / 2 ))
 		typeset -i CROP_CENTER_ON_SENSOR_X=$(( SENSOR_CENTER_X + CROP_OFFSET_X ))
@@ -211,7 +211,7 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 		echo "SENSOR WIDTH=${RESOLUTION_X}, SENSOR HEIGHT=${RESOLUTION_Y}"
 		echo "SENSOR_CENTER_: X=${SENSOR_CENTER_X}, Y=${SENSOR_CENTER_Y}"
 		echo "CROP_WIDTH=${CROP_WIDTH}, CROP_HEIGHT=${CROP_HEIGHT}"
-		if [ -n "${HALF_CROP_WIDTH}" ]; then
+		if [[ -n ${HALF_CROP_WIDTH} ]]; then
 			# These are set if the overall crop size is ok.
 			echo "CROP_OFFSET_:  X=${CROP_OFFSET_X}, Y=${CROP_OFFSET_Y}"
 			echo "HALF_CROP_:    WIDTH=${HALF_CROP_WIDTH}, HEIGHT=${HALF_CROP_HEIGHT}"
@@ -220,8 +220,8 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 		fi
 	fi
 
-	if [ -z "${ERROR_MSG}" ]; then
-		if [ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ]; then
+	if [[ -z ${ERROR_MSG} ]]; then
+		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 			echo -e "${RED}*** ${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}.${NC}"
 		fi
 		convert "${CURRENT_IMAGE}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${CURRENT_IMAGE}"
@@ -236,8 +236,10 @@ if [ "${CROP_IMAGE}" = "true" ] ; then
 fi
 
 # Stretch the image if required, but only at night.
-if [ "${DAY_OR_NIGHT}" = "NIGHT" -a ${AUTO_STRETCH} = "true" ]; then
-	[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${AUTO_STRETCH_AMOUNT}"
+if [[ ${DAY_OR_NIGHT} == "NIGHT" && ${AUTO_STRETCH} == "true" ]]; then
+	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${AUTO_STRETCH_AMOUNT}"
+	fi
  	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${AUTO_STRETCH_AMOUNT},${AUTO_STRETCH_MID_POINT}" "${IMAGE_TO_USE}"
 	if [ $? -ne 0 ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: AUTO_STRETCH failed; not saving${NC}"

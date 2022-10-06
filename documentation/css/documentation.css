@@ -54,6 +54,9 @@ body {
 	background-color: var(--color-border-default);
 	border: 0;
 }
+blockquote {
+    margin: 0;
+}
 .markdown-body blockquote {
 	padding: 0 1em;
 	color: var(--color-fg-muted);

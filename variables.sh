@@ -70,6 +70,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Holds all the dark frames.
 	ALLSKY_DARKS="${ALLSKY_HOME}/darks"
 
+	# Holds all the Allsky documentation.
+	ALLSKY_DOCUMENTATION="${ALLSKY_HOME}/documentation"
+
 	# Location of WebUI.
 	ALLSKY_WEBUI="${ALLSKY_HOME}/html"
 

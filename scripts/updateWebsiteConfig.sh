@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Update the specified Allsky Website configuration file.
+# If no file is specified, use the local one if it exists, else use the remote one.
 
 ME="$(basename "${BASH_ARGV0}")"
 

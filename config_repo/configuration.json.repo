@@ -201,7 +201,7 @@
 			},
 			{
 				"display": false,
-				"label": "Image Settings",
+				"label": "Allsky Settings",
 				"icon": "fa fa-fw fa-cogs",
 				"variable": "",
 				"value": "<a href='viewSettings.php' target='_blank'>Click to view</a>",

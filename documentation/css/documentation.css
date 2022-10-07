@@ -186,10 +186,19 @@ blockquote {
 .markdown-body table thead tr {
 	background-color: var(--color-checks-header-label-text);
 }
-.markdown-body table tr.note {
-	/* Doesn't work with nth-chile(2n) below: background-color: var(--color-accent-subtle); */
+.markdown-body table td.note {
+	background-color: var(--color-accent-subtle);
 	color: var(--color-accent-emphasis);
-	font-size: 110%;
+	font-size: 120%;
+	font-weight: bold;
+	text-align: center;
+}
+.markdown-body table td.note p {
+	color: initial;
+	font-size: 80%;
+	font-weight: normal;
+	margin-top: 5px;
+	margin-bottom: 5px;
 }
 .markdown-body table tr:nth-child(2n) {
 	background-color: var(--color-canvas-subtle)
@@ -624,4 +633,9 @@ a {
 	color: #333;
 	font-weight: bold;
 	font-size: 95%;
+}
+.shSetting { /* Matches what's in the WebUI's "Editor" page for *.sh files. */
+	color: #fd971f;
+	font-family: monospace;
+	font-weight: bold;
 }

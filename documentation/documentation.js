@@ -1,18 +1,33 @@
-var onPi = true;
+// This file resides on the Allsky Github page with a copy on a person's Pi.
+
+// "onPi" and branch are updated during installation.
+var onPi = false;
+var branch = "dev";
+
+var preURL;			// What gets prepended to the desired URL.
+var attributeName;
+
+if (onPi) {
+	// "/documentation" is a web alias to ~/allsky/documentation
+	preURL = "/documentation/";
+	attributeName = "Pi";
+} else {
+	// To make the URLs shorter, they are only relative to the "documentation" directory.
+	var dir = "https://github.com/thomasjacquin/allsky/tree/" + branch + "/documentation/";
+	preURL = "https://htmlpreview.github.io/?" + dir;
+	attributeName = "href";
+}
+
 
 // Go to the specified URL, either on GitHub or the Pi.
 function u(id) {
-	var me, url;
-	me = document.querySelector("#" + id);
+	var me = document.querySelector("#" + id);
 	if (! me) return false;
 
-	if (! onPi) {
-		url = "https://github.com/thomasjacquin/allsky/wiki/" + me.getAttribute("href");
-	} else {
-		url = "/documentation/" + me.getAttribute("Pi");
-	}
-
-	if (url) window.location.href = url;
+	var url = me.getAttribute(attributeName);
+	if (! url) return false;
+	
+	window.location.href = preURL + url;
 
 	return false;	// shouldn't get here...
 }
@@ -39,8 +54,7 @@ function includeHTML() {
 					includeHTML();
 				}
 			}
-			if (onPi) file = "/documentation/" + file;
-			xhttp.open("GET", file, true);
+			xhttp.open("GET", preURL + file, true);
 			xhttp.send();
 			/* Exit the function: */
 			return;

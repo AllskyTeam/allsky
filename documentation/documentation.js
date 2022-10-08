@@ -106,8 +106,13 @@ function includeHTML(calledBefore) {
 
 			if (onPi)
 				file = preURL + file;
-// else
+else {
+var d = elmnt.getAttribute("d");
+if (d) {
+	file = d + file;
+}
 // 	file = Pi_preURL.substr + file;
+}
 			console.log("GET " + file);
 			xhttp.open("GET", file, true);
 			xhttp.send();

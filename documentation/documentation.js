@@ -65,7 +65,7 @@ console.log("   " + attribute + " = " + url);
 						// Need to skip the string.
 						elmnt[attribute] = elmnt[attribute].substr(Pi_preURL_length);
 					}
-					elmnt[attribute] = preURL + elmnt[attribute];
+//xxx					elmnt[attribute] = preURL + elmnt[attribute];
 				}
 if (elmntBefore != elmnt[attribute])
 	console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);

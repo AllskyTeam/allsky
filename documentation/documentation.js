@@ -1,7 +1,7 @@
 // This file resides on the Allsky Github page with a copy on a person's Pi.
 
 // "onPi" and branch are updated during installation.
-var onPi = true;		// TODO: determine automatically
+var onPi = false;		// TODO: determine automatically
 var branch = "dev";
 
 var preURL;			// What gets prepended to the desired URL.

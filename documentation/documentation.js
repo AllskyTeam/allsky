@@ -26,8 +26,10 @@ function u(id) {
 
 	var url = me.getAttribute(attributeName);
 	if (! url) return false;
-	
-	window.location.href = preURL + url;
+
+	console.log("going to " + url);
+	url = preURL + url;
+	window.location.href = url;
 
 	return false;	// shouldn't get here...
 }
@@ -55,6 +57,7 @@ function includeHTML() {
 				}
 			}
 			if (onPi) file = preURL + file;
+			console.log("GET " + file);
 			xhttp.open("GET", file, true);
 			xhttp.send();
 			/* Exit the function: */

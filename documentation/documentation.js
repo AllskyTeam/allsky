@@ -24,10 +24,11 @@ if (location.hostname == git_hostname) {
 
 var convertURL_called = false;
 
+var xxShowAll = true;
 // Convert URL for all tags with "allsky" attribute
 function convertURL() {
 	if (convertURL_called) return;
-	convertURL_called = true;
+//x	convertURL_called = true;
 
 	var i, elmnt, allsky, url, attribute;
 
@@ -39,10 +40,12 @@ var numAllsky = 1;
 			Search for elements with "allsky" attribute which means
 			the file is in allsky's "documentation" directory.
 		*/
+url = elmnt.getAttribute("href");
+if (url) console.log(i + ": href=" + url);
 		allsky = elmnt.getAttribute("allsky");
 		if (allsky) {
 numAllsky++;
-if (numAllsky == 8) {
+if (numAllsky == 8 || xxShowAll) {
 console.log("ALLSKY " + numAllsky);
 }
 			attribute = "href";
@@ -52,10 +55,9 @@ console.log("ALLSKY " + numAllsky);
 				url = elmnt.getAttribute(attribute);
 			}
 			if (url) {
-if (numAllsky == 8) {
+if (numAllsky == 8 || xxShowAll) {
 var elmntInitial = elmnt[attribute];
 console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
-// console.log("   specified: " + url);
 }
 
 				// See if the url starts with pi_preURL.
@@ -75,7 +77,7 @@ console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
 					}
 //x					elmnt[attribute] = preURL + elmnt[attribute];
 //x					elmnt[attribute] = git_preURL + elmntInitial;
-if (numAllsky == 8) {
+if (numAllsky == 8 || xxShowAll) {
 console.log("elmntInitial=" + elmntInitial);
 console.log("preURL=" + preURL);
 console.log("url=" + url);
@@ -83,7 +85,7 @@ console.log("git_preURL=" + git_preURL);
 }
 					elmnt[attribute] = preURL + url;
 				}
-if (numAllsky == 8) {
+if (numAllsky == 8 || xxShowAll) {
 if (elmntInitial != elmnt[attribute])
 	console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);
 }
@@ -92,8 +94,14 @@ if (elmntInitial != elmnt[attribute])
 	}
 }
 
+function includeHTML() {
+	convertURL();
+	console.log("=== calling do_includeHTML()");
+	do_includeHTML();
+}
+
 // Include a file (e.g., header, footer, sidebar) in a page using Javascript.
-function includeHTML(calledBefore) {
+function do_includeHTML() {
 	var i, elmnt, file, xhttp;
 
 	/* Loop through a collection of all HTML elements: */
@@ -117,7 +125,7 @@ function includeHTML(calledBefore) {
 						any other original entries.
 					 */
 					elmnt.removeAttribute("w3-include-html");
-					includeHTML();
+					do_includeHTML();
 					if (! convertURL_called) convertURL();
 				}
 			}

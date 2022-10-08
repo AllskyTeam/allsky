@@ -10,11 +10,12 @@ var Pi_preURL_length = Pi_preURL.length;
 
 // console.log("hostname=" + location.hostname);
 var git_hostname = "htmlpreview.github.io";
+var git_preURL = "https://" + git_hostname + "/?";
 if (location.hostname == git_hostname) {
 	onPi = false;
 	// To make the URLs shorter, they are only relative to the "documentation" directory.
 	var dir = "https://github.com/thomasjacquin/allsky/blob/" + branch + Pi_preURL;
-	preURL = "https://" + git_hostname + "/?" + dir;
+	preURL = git_preURL + dir;
 } else {
 	onPi = true;
 	// "/documentation" is a web alias to ~/allsky/documentation
@@ -67,7 +68,7 @@ console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
 						elmnt[attribute] = elmnt[attribute].substr(Pi_preURL_length);
 					}
 //x					elmnt[attribute] = preURL + elmnt[attribute];
-					elmnt[attribute] = preURL + elmntInitial;
+					elmnt[attribute] = git_preURL + elmntInitial;
 				}
 if (elmntInitial != elmnt[attribute])
 	console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);

@@ -42,13 +42,14 @@ function convertURL() {
 console.log("ALLSKY");
 			attribute = "href";
 			url = elmnt.getAttribute(attribute);
-			if (! url)
+			if (! url) {
 				attribute = "src";
 				url = elmnt.getAttribute(attribute);
+			}
 			if (url) {
 var elmntBefore = elmnt[attribute];
 console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntBefore);
-// console.log("   " + attribute + " = " + url);
+console.log("   specified: " + url);
 
 				// See if the url starts with pi_preURL.
 				// If it does and we're on a Pi, then

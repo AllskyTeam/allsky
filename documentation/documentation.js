@@ -1,23 +1,25 @@
-console.log("host=" + location.hostname);
 // This file resides on the Allsky Github page with a copy on a person's Pi.
 
-// "onPi" and branch are updated during installation.
-var onPi = false;		// TODO: determine automatically
+// branch is updated during installation.
 var branch = "dev";
 
+var onPi;
 var preURL;			// What gets prepended to the desired URL.
 var Pi_preURL = "/documentation/";
 var Pi_preURL_length = Pi_preURL.length;
 
-if (onPi) {
-	// "/documentation" is a web alias to ~/allsky/documentation
-	preURL = Pi_preURL;
-} else {
+console.log("hostname=" + location.hostname);
+var git_hostname = "htmlpreview.github.io";
+if (location.hostname == git_hostname) {
+	onPi = false;
 	// To make the URLs shorter, they are only relative to the "documentation" directory.
 	var dir = "https://github.com/thomasjacquin/allsky/blob/" + branch + Pi_preURL;
-	preURL = "https://htmlpreview.github.io/?" + dir;
+	preURL = "https://" + git_hostname + "/?" + dir;
+} else {
+	onPi = true;
+	// "/documentation" is a web alias to ~/allsky/documentation
+	preURL = Pi_preURL;
 }
-
 
 var convertURL_called = false;
 
@@ -44,7 +46,8 @@ console.log("ALLSKY");
 				attribute = "src";
 				url = elmnt.getAttribute(attribute);
 			if (url) {
-console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);
+var elmntBefore = elmnt[attribute];
+console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntBefore);
 console.log("   " + attribute + " = " + url);
 
 				// See if the url starts with pi_preURL.
@@ -64,7 +67,8 @@ console.log("   " + attribute + " = " + url);
 					}
 					elmnt[attribute] = preURL + elmnt[attribute];
 				}
-console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);
+if (elmntBefore != elmnt[attribute])
+	console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);
 			}
 		}
 	}

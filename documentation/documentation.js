@@ -1,3 +1,4 @@
+console.log("host=" + location.hostname);
 // This file resides on the Allsky Github page with a copy on a person's Pi.
 
 // "onPi" and branch are updated during installation.
@@ -53,7 +54,6 @@ console.log("   " + attribute + " = " + url);
 					if (! isDoc) {
 						// Prepend to the URL.
 						elmnt[attribute] = Pi_preURL + url;
-console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);
 					}
 					// else nothing to do since the string is already there.
 
@@ -64,6 +64,7 @@ console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute])
 					}
 					elmnt[attribute] = preURL + elmnt[attribute];
 				}
+console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);
 			}
 		}
 	}

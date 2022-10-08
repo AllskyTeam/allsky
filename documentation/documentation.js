@@ -74,12 +74,13 @@ console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
 						elmnt[attribute] = elmnt[attribute].substr(Pi_preURL_length);
 					}
 //x					elmnt[attribute] = preURL + elmnt[attribute];
+//x					elmnt[attribute] = git_preURL + elmntInitial;
 if (numAllsky == 8) {
 console.log("url=" + url);
 console.log("elmntInitial=" + elmntInitial);
 console.log("git_preURL=" + git_preURL);
 }
-					elmnt[attribute] = git_preURL + elmntInitial;
+					elmnt[attribute] = git_preURL + url;
 				}
 if (numAllsky == 8) {
 if (elmntInitial != elmnt[attribute])

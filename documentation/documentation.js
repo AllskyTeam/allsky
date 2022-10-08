@@ -106,8 +106,8 @@ function includeHTML(calledBefore) {
 
 			if (onPi)
 				file = preURL + file;
-else
-	file = Pi_preURL.substr(1) + file;
+// else
+// 	file = Pi_preURL.substr + file;
 			console.log("GET " + file);
 			xhttp.open("GET", file, true);
 			xhttp.send();

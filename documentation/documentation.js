@@ -18,22 +18,8 @@ if (onPi) {
 }
 
 
-// Go to the specified URL, either on GitHub or the Pi.
-function u(id) {
-return true;
-	var me = document.querySelector("#" + id);
-	if (! me) return false;
-
-	var url = me.getAttribute("href");
-	if (! url) return false;
-
-	url = preURL + url;
-	window.location.href = url;
-
-	return false;	// shouldn't get here...
-}
-
 var convertURL_called = false;
+
 // Convert URL for all tags with "allsky" attribute
 function convertURL() {
 	if (convertURL_called) return;
@@ -110,7 +96,9 @@ function includeHTML(calledBefore) {
 					if (! convertURL_called) convertURL();
 				}
 			}
-			if (onPi) file = preURL + file;
+
+			// xxxxxxxxxxx if (onPi) file = preURL + file;
+			file = preURL + file;
 			console.log("GET " + file);
 			xhttp.open("GET", file, true);
 			xhttp.send();

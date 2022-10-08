@@ -76,8 +76,9 @@ console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
 //x					elmnt[attribute] = preURL + elmnt[attribute];
 //x					elmnt[attribute] = git_preURL + elmntInitial;
 if (numAllsky == 8) {
-console.log("url=" + url);
 console.log("elmntInitial=" + elmntInitial);
+console.log("preURL=" + preURL);
+console.log("url=" + url);
 console.log("git_preURL=" + git_preURL);
 }
 					elmnt[attribute] = preURL + url;

@@ -11,10 +11,12 @@ var Pi_preURL_length = Pi_preURL.length;
 // console.log("hostname=" + location.hostname);
 var git_hostname = "htmlpreview.github.io";
 var git_preURL = "https://" + git_hostname + "/?";
+var git_raw = "https://raw.githubusercontent.com/thomasjacquin/allsky/blob/";
 if (location.hostname == git_hostname) {
 	onPi = false;
-	// To make the URLs shorter, they are only relative to the "documentation" directory.
-	var dir = "https://github.com/thomasjacquin/allsky/blob/" + branch + Pi_preURL;
+	// To make the URLs shorter in the .html files,
+	// they are relative to the "documentation" directory.
+	var dir = git_raw + branch + Pi_preURL;
 	preURL = git_preURL + dir;
 } else {
 	onPi = true;
@@ -61,8 +63,8 @@ console.log("ALLSKY " + numAllsky);
 				url = elmnt.getAttribute(attribute);
 			}
 			if (url) {
-if (f >= 0 || xxShowAll) {
 var elmntInitial = elmnt[attribute];
+if (f >= 0 || xxShowAll) {
 console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
 }
 
@@ -87,25 +89,18 @@ console.log("preURL=" + preURL);
 console.log("url=" + url);
 console.log("git_preURL=" + git_preURL);
 }
-					elmnt[attribute] = preURL + url;
+					// Only prepend if not already there.
+					if (elmnt[attribute].search(git_preURL) < 0)
+						elmnt[attribute] = preURL + url;
 				}
-if (f >= 0 || xxShowAll) {
-if (elmntInitial != elmnt[attribute])
-	console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);
-}
 			}
 		}
 	}
 }
 
-function includeHTML() {
-//x	convertURL();
-	console.log("=== calling do_includeHTML()");
-	do_includeHTML();
-}
 
 // Include a file (e.g., header, footer, sidebar) in a page using Javascript.
-function do_includeHTML() {
+function includeHTML() {
 	var i, elmnt, file, xhttp;
 
 	/* Loop through a collection of all HTML elements: */
@@ -129,7 +124,7 @@ function do_includeHTML() {
 						any other original entries.
 					 */
 					elmnt.removeAttribute("w3-include-html");
-					do_includeHTML();
+					includeHTML();
 					if (! convertURL_called) convertURL();
 				}
 			}

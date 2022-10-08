@@ -10,7 +10,8 @@ var attributeName;
 if (onPi) {
 	// "/documentation" is a web alias to ~/allsky/documentation
 	preURL = "/documentation/";
-	attributeName = "Pi";
+	// xxxxxxxxxxx attributeName = "Pi";
+	attributeName = "href";
 } else {
 	// To make the URLs shorter, they are only relative to the "documentation" directory.
 	var dir = "https://github.com/thomasjacquin/allsky/blob/" + branch + "/documentation/";

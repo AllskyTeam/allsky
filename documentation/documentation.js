@@ -24,11 +24,11 @@ if (location.hostname == git_hostname) {
 
 var convertURL_called = false;
 
-var xxShowAll = true;
+var xxShowAll = false;
 // Convert URL for all tags with "allsky" attribute
 function convertURL() {
 	if (convertURL_called) return;
-//x	convertURL_called = true;
+	convertURL_called = true;
 
 	var i, elmnt, allsky, url, attribute;
 
@@ -41,11 +41,17 @@ var numAllsky = 1;
 			the file is in allsky's "documentation" directory.
 		*/
 url = elmnt.getAttribute("href");
-if (url) console.log(i + ": href=" + url);
+//if (url) console.log(i + ": href=" + url);
+var f;
+if (url) {
+	f = url.search("settings/allsky.html");
+	if (f >= 0) console.log("======= FOUND ", elmnt.outerHTML);
+}
+
 		allsky = elmnt.getAttribute("allsky");
 		if (allsky) {
 numAllsky++;
-if (numAllsky == 8 || xxShowAll) {
+if (f >= 0 || xxShowAll) {
 console.log("ALLSKY " + numAllsky);
 }
 			attribute = "href";
@@ -55,7 +61,7 @@ console.log("ALLSKY " + numAllsky);
 				url = elmnt.getAttribute(attribute);
 			}
 			if (url) {
-if (numAllsky == 8 || xxShowAll) {
+if (f >= 0 || xxShowAll) {
 var elmntInitial = elmnt[attribute];
 console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
 }
@@ -75,20 +81,15 @@ console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
 						// Need to skip the string.
 						elmnt[attribute] = elmnt[attribute].substr(Pi_preURL_length);
 					}
-//x					elmnt[attribute] = preURL + elmnt[attribute];
-//x					elmnt[attribute] = git_preURL + elmntInitial;
-if (numAllsky == 8 || xxShowAll) {
+if (f >= 0 || xxShowAll) {
 console.log("elmntInitial=" + elmntInitial);
 console.log("preURL=" + preURL);
 console.log("url=" + url);
 console.log("git_preURL=" + git_preURL);
 }
 					elmnt[attribute] = preURL + url;
-
-// To keep it from being processed twice
-elmnt.removeAttribute("allsky");
 				}
-if (numAllsky == 8 || xxShowAll) {
+if (f >= 0 || xxShowAll) {
 if (elmntInitial != elmnt[attribute])
 	console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);
 }
@@ -98,7 +99,7 @@ if (elmntInitial != elmnt[attribute])
 }
 
 function includeHTML() {
-	convertURL();
+//x	convertURL();
 	console.log("=== calling do_includeHTML()");
 	do_includeHTML();
 }

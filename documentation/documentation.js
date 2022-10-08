@@ -66,7 +66,7 @@ console.log("   specified: " + url);
 						// Need to skip the string.
 						elmnt[attribute] = elmnt[attribute].substr(Pi_preURL_length);
 					}
-//xxx					elmnt[attribute] = preURL + elmnt[attribute];
+					elmnt[attribute] = preURL + elmnt[attribute];
 				}
 if (elmntBefore != elmnt[attribute])
 	console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);
@@ -105,14 +105,14 @@ function includeHTML(calledBefore) {
 				}
 			}
 
-			if (onPi)
+			if (onPi) {
 				file = preURL + file;
-else {
-var d = elmnt.getAttribute("d");
-if (d) {
-	file = d + file;
-}
-// 	file = Pi_preURL.substr + file;
+			} else {
+				var d = elmnt.getAttribute("d");
+				if (d) {
+					file = d + file;
+				}
+// 	file = preURL + file;
 }
 			console.log("GET " + file);
 			xhttp.open("GET", file, true);

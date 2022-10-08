@@ -12,6 +12,7 @@ var Pi_preURL_length = Pi_preURL.length;
 var git_hostname = "htmlpreview.github.io";
 var git_preURL = "https://" + git_hostname + "/?";
 var git_raw = "https://raw.githubusercontent.com/thomasjacquin/allsky/blob/";
+
 if (location.hostname == git_hostname) {
 	onPi = false;
 	// To make the URLs shorter in the .html files,
@@ -26,36 +27,24 @@ if (location.hostname == git_hostname) {
 
 var convertURL_called = false;
 
-var xxShowAll = false;
 // Convert URL for all tags with "allsky" attribute
 function convertURL() {
 	if (convertURL_called) return;
+	// TODO: should we only be called once?
+	// What if includeHTML() found multiple files and they all had "allsky" links?
 	convertURL_called = true;
 
 	var i, elmnt, allsky, url, attribute;
 
 	allTags = document.getElementsByTagName("*");
-var numAllsky = 1;
 	for (i = 0; i < allTags.length; i++) {
 		elmnt = allTags[i];
 		/*
 			Search for elements with "allsky" attribute which means
 			the file is in allsky's "documentation" directory.
 		*/
-url = elmnt.getAttribute("href");
-//if (url) console.log(i + ": href=" + url);
-var f;
-if (url) {
-	f = url.search("settings/allsky.html");
-	if (f >= 0) console.log("======= FOUND ", elmnt.outerHTML);
-}
-
 		allsky = elmnt.getAttribute("allsky");
 		if (allsky) {
-numAllsky++;
-if (f >= 0 || xxShowAll) {
-console.log("ALLSKY " + numAllsky);
-}
 			attribute = "href";
 			url = elmnt.getAttribute(attribute);
 			if (! url) {
@@ -63,13 +52,7 @@ console.log("ALLSKY " + numAllsky);
 				url = elmnt.getAttribute(attribute);
 			}
 			if (url) {
-var elmntInitial = elmnt[attribute];
-if (f >= 0 || xxShowAll) {
-console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
-}
-
-				// See if the url starts with pi_preURL.
-				// If it does and we're on a Pi, then
+				// See if the url starts with pi_preURL; if so, we're on a Pi.
 				var isDoc = url.substr(0, Pi_preURL_length) == Pi_preURL ? true : false;
 				if (onPi) {
 					if (! isDoc) {
@@ -80,19 +63,13 @@ console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
 
 				} else {
 					if (isDoc) {
-						// Need to skip the string.
+						// Need to skip the Pi string.
 						elmnt[attribute] = elmnt[attribute].substr(Pi_preURL_length);
 					}
-if (f >= 0 || xxShowAll) {
-console.log("elmntInitial=" + elmntInitial);
-console.log("preURL=" + preURL);
-console.log("url=" + url);
-console.log("git_preURL=" + git_preURL);
-}
-					// Only prepend if not already there.
-					if (elmnt[attribute].search(git_preURL) < 0)
-						elmnt[attribute] = preURL + url;
 				}
+				// Only prepend if not already there.
+				if (elmnt[attribute].search(git_preURL) < 0)
+					elmnt[attribute] = preURL + url;
 			}
 		}
 	}
@@ -110,7 +87,7 @@ function includeHTML() {
 		/*search for elements with a certain atrribute:*/
 		file = elmnt.getAttribute("w3-include-html");
 		if (file) {
-			/* Make an HTTP request using the attribute value as the file name: */
+			/* Make an HTTP request using the attribute value as the file name */
 			xhttp = new XMLHttpRequest();
 			xhttp.onreadystatechange = function() {
 				if (this.readyState == 4) {
@@ -132,13 +109,12 @@ function includeHTML() {
 			if (onPi) {
 				file = preURL + file;
 			} else {
+				// On Git, we need to use "../" for subdirectories when in them.
 				var d = elmnt.getAttribute("d");
-				if (d) {
+				if (d)
 					file = d + file;
-				}
-// 	file = preURL + file;
-}
-			console.log("GET " + file);
+			}
+console.log("GET " + file);
 			xhttp.open("GET", file, true);
 			xhttp.send();
 

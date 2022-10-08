@@ -15,7 +15,8 @@ if (onPi) {
 	// To make the URLs shorter, they are only relative to the "documentation" directory.
 	var dir = "https://github.com/thomasjacquin/allsky/blob/" + branch + "/documentation/";
 	preURL = "https://htmlpreview.github.io/?" + dir;
-	attributeName = "href";
+	// xxxxxxxxxxxxxxxxxx attributeName = "href";
+	attributeName = "Pi";
 }
 
 
@@ -27,7 +28,6 @@ function u(id) {
 	var url = me.getAttribute(attributeName);
 	if (! url) return false;
 
-	console.log("going to " + url);
 	url = preURL + url;
 	window.location.href = url;
 

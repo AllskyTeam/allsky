@@ -32,6 +32,7 @@ function convertURL() {
 	var i, elmnt, allsky, url, attribute;
 
 	allTags = document.getElementsByTagName("*");
+var numAllsky = 1;
 	for (i = 0; i < allTags.length; i++) {
 		elmnt = allTags[i];
 		/*
@@ -40,7 +41,10 @@ function convertURL() {
 		*/
 		allsky = elmnt.getAttribute("allsky");
 		if (allsky) {
-console.log("ALLSKY");
+numAllsky++;
+if (numAllsky == 8) {
+console.log("ALLSKY " + numAllsky);
+}
 			attribute = "href";
 			url = elmnt.getAttribute(attribute);
 			if (! url) {
@@ -48,9 +52,11 @@ console.log("ALLSKY");
 				url = elmnt.getAttribute(attribute);
 			}
 			if (url) {
+if (numAllsky == 8) {
 var elmntInitial = elmnt[attribute];
 console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
 // console.log("   specified: " + url);
+}
 
 				// See if the url starts with pi_preURL.
 				// If it does and we're on a Pi, then
@@ -68,10 +74,17 @@ console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
 						elmnt[attribute] = elmnt[attribute].substr(Pi_preURL_length);
 					}
 //x					elmnt[attribute] = preURL + elmnt[attribute];
+if (numAllsky == 8) {
+console.log("url=" + url);
+console.log("elmntInitial=" + elmntInitial);
+console.log("git_preURL=" + git_preURL);
+}
 					elmnt[attribute] = git_preURL + elmntInitial;
 				}
+if (numAllsky == 8) {
 if (elmntInitial != elmnt[attribute])
 	console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);
+}
 			}
 		}
 	}

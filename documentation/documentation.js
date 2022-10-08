@@ -8,7 +8,7 @@ var preURL;			// What gets prepended to the desired URL.
 var Pi_preURL = "/documentation/";
 var Pi_preURL_length = Pi_preURL.length;
 
-console.log("hostname=" + location.hostname);
+// console.log("hostname=" + location.hostname);
 var git_hostname = "htmlpreview.github.io";
 if (location.hostname == git_hostname) {
 	onPi = false;
@@ -48,7 +48,7 @@ console.log("ALLSKY");
 			if (url) {
 var elmntBefore = elmnt[attribute];
 console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntBefore);
-console.log("   " + attribute + " = " + url);
+// console.log("   " + attribute + " = " + url);
 
 				// See if the url starts with pi_preURL.
 				// If it does and we're on a Pi, then
@@ -102,8 +102,7 @@ function includeHTML(calledBefore) {
 				}
 			}
 
-			// xxxxxxxxxxx if (onPi) file = preURL + file;
-			file = preURL + file;
+			if (onPi) file = preURL + file;
 			console.log("GET " + file);
 			xhttp.open("GET", file, true);
 			xhttp.send();

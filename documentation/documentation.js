@@ -47,9 +47,9 @@ console.log("ALLSKY");
 				url = elmnt.getAttribute(attribute);
 			}
 			if (url) {
-var elmntBefore = elmnt[attribute];
-console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntBefore);
-console.log("   specified: " + url);
+var elmntInitial = elmnt[attribute];
+console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmntInitial);
+// console.log("   specified: " + url);
 
 				// See if the url starts with pi_preURL.
 				// If it does and we're on a Pi, then
@@ -66,9 +66,10 @@ console.log("   specified: " + url);
 						// Need to skip the string.
 						elmnt[attribute] = elmnt[attribute].substr(Pi_preURL_length);
 					}
-					elmnt[attribute] = preURL + elmnt[attribute];
+//x					elmnt[attribute] = preURL + elmnt[attribute];
+					elmnt[attribute] = preURL + elmntInitial;
 				}
-if (elmntBefore != elmnt[attribute])
+if (elmntInitial != elmnt[attribute])
 	console.log("   " + elmnt.localName + "[" + attribute + "]=" + elmnt[attribute]);
 			}
 		}

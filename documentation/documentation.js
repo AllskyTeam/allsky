@@ -84,6 +84,9 @@ console.log("url=" + url);
 console.log("git_preURL=" + git_preURL);
 }
 					elmnt[attribute] = preURL + url;
+
+// To keep it from being processed twice
+elmnt.removeAttribute("allsky");
 				}
 if (numAllsky == 8 || xxShowAll) {
 if (elmntInitial != elmnt[attribute])

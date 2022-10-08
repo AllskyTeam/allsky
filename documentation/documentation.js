@@ -80,7 +80,7 @@ console.log("url=" + url);
 console.log("elmntInitial=" + elmntInitial);
 console.log("git_preURL=" + git_preURL);
 }
-					elmnt[attribute] = git_preURL + url;
+					elmnt[attribute] = preURL + url;
 				}
 if (numAllsky == 8) {
 if (elmntInitial != elmnt[attribute])

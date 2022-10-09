@@ -45,7 +45,7 @@ include_once('includes/admin.php');
 include_once('includes/dhcp.php');
 include_once('includes/hostapd.php');
 include_once('includes/system.php');
-include_once('includes/configure_client.php');
+include_once('includes/configureWiFi.php');
 include_once('includes/allskySettings.php');
 include_once('includes/days.php');
 include_once('includes/images.php');
@@ -201,7 +201,7 @@ if ($useLogin) {
                         <a href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>
                     </li>
 					<li>
-                        <a href="index.php?page=LAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>LAN</b> Dashboard</a>
+                        <a href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
                     </li>
                     <li>
                         <a href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Dashboard</a>

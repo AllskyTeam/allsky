@@ -4,7 +4,7 @@
 *
 *
 */
-function DisplayDashboard($interface) {
+function DisplayDashboard_WLAN($interface) {
 
 	$status = new StatusMessages();
 	$notSetMsg = "[not set]";

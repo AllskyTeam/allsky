@@ -46,7 +46,7 @@ include_once('includes/dhcp.php');
 include_once('includes/hostapd.php');
 include_once('includes/system.php');
 include_once('includes/configure_client.php');
-include_once('includes/camera_settings.php');
+include_once('includes/allskySettings.php');
 include_once('includes/days.php');
 include_once('includes/images.php');
 include_once('includes/editor.php');

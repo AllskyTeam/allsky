@@ -4,13 +4,10 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-
 	<script src="../documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
-
-	<meta name="description" content="Documentation for Allsky">
 	<title>AllSky Settings</title>
 </head>
 <body>
@@ -21,11 +18,9 @@
 <div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
 <div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
 
-
 <div data-view-component="true" class="Layout-sidebar wiki-rightbar">
 	<div w3-include-html="sidebar.html" d="../" id="sidebar"></div>
 </div>
-
 
 <div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
 Once you've installed the "allsky" package there are many configuration variables you must modify, in a few different locations.
@@ -36,8 +31,9 @@ since the WebUI performs error checking and other tasks.
 <br>
 <h3>WebUI "Allsky Settings" Page</h3>
 <details><summary>Click here</summary>
-<br>
+<p>
 This section lists the settings that are updated in the WebUI's <b>Allsky Settings</b> page.
+</p>
 
 <blockquote>
 <b>RPi camera users, please note</b>
@@ -560,7 +556,6 @@ fields will also up update the website's configuration file.
 <br>
 <h3>WebUI "Editor" Page</h3>
 <details><summary>Click here</summary>
-<br>
 <p>
 This section lists the settings that are updated in the WebUI's <b>Editor</b> page.
 This includes the <code>config.sh</code> and <code>ftp-settings.sh</code> files.
@@ -892,7 +887,7 @@ Number values do not need to be quoted but strings should be quoted.
 </tbody>
 </table>
 
-
+<br>
 <p>
 In order to upload files to your Allsky Website (on the Pi or a remote site),
 you need to edit connection details in <code>config/ftp-settings.sh</code>.
@@ -1006,7 +1001,7 @@ Directories on the Pi are created during Allsky Website installation.
 
 <tr><td class="note" colspan="3">S3 Settings</td></tr>
 <tr><td></td><td colspan="2">
-	You will need to install the AWS CLI:
+	You need to install the AWS Command-Line Interface (CLI):
 	<ul>
 	<li><code>sudo apt-get install python3-pip</code>
 	<li><code>pip3 install awscli --upgrade --user</code>
@@ -1050,6 +1045,7 @@ Directories on the Pi are created during Allsky Website installation.
 </tbody>
 </table>
 
+<br>
 If you have the Allsky Website <b>only</b> on your Pi, set these variables:
 <ul>
 <li><code>PROTOCOL="local"</code>
@@ -1059,6 +1055,7 @@ If you have the Allsky Website <b>only</b> on your Pi, set these variables:
 <li><code>STARTRAILS_DIR="/home/pi/allsky/html/allsky/startrails"</code>
 </ul>
 
+<br>
 If you are using SSH Key with Amazon's Lightsail,
 copy the <code>ssh-key.pem.pem</code> file to your Pi, for example, in <code>~</code>,
 then execute <code>chmod 400 ~/ssh-key.pem</code> and set these variables:
@@ -1077,13 +1074,15 @@ then execute <code>chmod 400 ~/ssh-key.pem</code> and set these variables:
 <br>
 <h3>WEBUI_DATA_FILES configuration setting</h3>
 <details><summary>Click here</summary>
-<br>
 
+<p>
 The <code>WEBUI_DATA_FILES</code> setting in <code>~/allsky/config/config.sh</code>
 allows you to specify a list of file names that contain information and buttons to add to the WebUI "System" page.
 The data can be anything you want, but often contains weather and/or fan data.
-
-<blockquote>You need to provide script(s) to create file(s) in the format specified below.</blockquote>
+</p>
+<blockquote>
+You need to provide script(s) to create file(s) in the format specified below.
+</blockquote>
 This tutorial assumes you are familiar with writing scripts;
 if so, the changes needed to implement WEBUI_DATA_FILES are very easy, despite the length of this tutorial.
 
@@ -1098,18 +1097,24 @@ separated by tabs. Each of these lines has its own entry on the "System" page.
 There are three types of lines in a data file.
 The first word of a line determines what type of line it is:
 <ol>
-<li>"data" lines specify basic, two-column information that goes before the first progress bar. These lines are good when the data has no associated status, for example, a simple on/off value, like: "Dew heater: &nbsp; &nbsp; on".
+<li>"data" lines specify basic, two-column information that goes before the first progress bar.
+	These lines are good when the data has no associated status, for example,
+	a simple on/off value, like: "Dew heater: &nbsp; &nbsp; on".
 <li>"progress" lines display as progress bars like the CPU temperature bar on the "System" page.
-Your bars go after the last system-supplied progress bar and are good when the data has an associated status, for example, when the CPU is too hot its bar turns red.
-<li>"button" lines add a button to the page under the last system-supplied button, and are used to initiate an action like turning a dew heater on.
+	Your bars go after the last system-supplied progress bar and are good when
+	the data has an associated status, for example, when the CPU is too hot its bar turns red.
+<li>"button" lines add a button to the page under the last system-supplied button,
+	and are used to initiate an action like turning a dew heater on.
 </ol>
 </p>
 
 The fields for each line type are described in the tables below.
-<br>The first column lists the purpose of the field.
-<br>The second column lists the type of data the field contains.
-<br>The third column describes the field.
-<br>The fourth column states whether or not the field <i>typically</i> changes when the data is updated.
+<ol>
+<li>The first column lists the purpose of the field.
+<li>The second column lists the type of data the field contains.
+<li>The third column describes the field.
+<li>The fourth column states whether or not the field <i>typically</i> changes when the data is updated.
+</ol>
 
 <table role="table">
 <thead>

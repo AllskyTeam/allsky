@@ -207,7 +207,7 @@ if ($useLogin) {
                         <a href="index.php?page=wlan0_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Connection Status</a>
                     </li>
                     <li>
-                        <a href="index.php?page=wpa_conf"><i class="fa fa-signal fa-fw"></i> Configure Wifi</a>
+                        <a href="index.php?page=wpa_conf"><i class="fa fa-wifi fa-fw"></i> Configure Wifi</a>
                     </li>
                     <?php if (RASPI_OPENVPN_ENABLED) : ?>
                         <li>

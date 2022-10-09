@@ -43,7 +43,7 @@ body {
 .markdown-body .anchor:focus {
 	outline: none
 }
-.markdown-body p, .markdown-body blockquote, .markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body pre, .markdown-body details {
+.markdown-body blockquote, .markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body pre, .markdown-body details {
 	margin-top: 0;
 	margin-bottom: 16px;
 }
@@ -60,7 +60,7 @@ blockquote {
 .markdown-body blockquote {
 	padding: 0 1em;
 	color: var(--color-fg-muted);
-	border-left: .25em solid var(--color-border-default);
+	border-left: .25em solid var(--color-attention-emphasis);
 }
 .markdown-body blockquote>:first-child {
 	margin-top: 0;
@@ -435,10 +435,6 @@ blockquote {
 }
 .markdown-body ul, .markdown-body ol {
 	padding-left: 2em;
-}
-.markdown-body p, .markdown-body blockquote, .markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body pre, .markdown-body details {
-	margin-top: 0;
-	margin-bottom: 16px;
 }
 .markdown-body h1 tt, .markdown-body h1 code, .markdown-body h2 tt, .markdown-body h2 code, .markdown-body h3 tt, .markdown-body h3 code, .markdown-body h4 tt, .markdown-body h4 code, .markdown-body h5 tt, .markdown-body h5 code, .markdown-body h6 tt, .markdown-body h6 code {
 	padding: 0 .2em;

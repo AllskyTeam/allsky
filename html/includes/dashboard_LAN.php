@@ -4,7 +4,7 @@
 *
 *
 */
-function DisplayDashboard_eth0($interface) {
+function DisplayDashboard_LAN($interface) {
 	// Unlike with WLAN where when it's UP it's also RUNNING,
 	// with the LAN, the port can be up but nothing connected, i.e., not "RUNNING".
 
@@ -22,7 +22,7 @@ function DisplayDashboard_eth0($interface) {
   <div class="row">
       <div class="col-lg-12">
           <div class="panel panel-primary">
-            <div class="panel-heading"><i class="fa fa-tachometer-alt fa-fw"></i> LAN Dashboard</div>
+            <div class="panel-heading"><i class="fa fa-network-wired fa-fw"></i> LAN Dashboard</div>
               <div class="panel-body">
                 <p><?php $status->showMessages(); ?></p>
                   <div class="row">

@@ -33,7 +33,7 @@ function DisplayAuthConfig($username, $password){
   <div class="row">
     <div class="col-lg-12">
       <div class="panel panel-primary">
-        <div class="panel-heading"><i class="fa fa-lock fa-fw"></i>Configure Auth</div>
+        <div class="panel-heading"><i class="fa fa-lock fa-fw"></i> Change Password</div>
         <div class="panel-body">
           <p><?php $status->showMessages(); ?></p>
           <form role="form" action="?page=auth_conf" method="POST">

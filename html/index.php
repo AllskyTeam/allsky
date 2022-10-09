@@ -37,16 +37,16 @@ define('RASPI_OPENVPN_ENABLED', false);
 define('RASPI_TORPROXY_ENABLED', false);
 
 include_once('includes/raspap.php');
-include_once('includes/dashboard.php');
-include_once('includes/dashboard_eth0.php');
+include_once('includes/dashboard_WLAN.php');
+include_once('includes/dashboard_LAN.php');
 include_once('includes/liveview.php');
 include_once('includes/authenticate.php');
 include_once('includes/admin.php');
 include_once('includes/dhcp.php');
 include_once('includes/hostapd.php');
 include_once('includes/system.php');
-include_once('includes/configure_client.php');
-include_once('includes/camera_settings.php');
+include_once('includes/configureWiFi.php');
+include_once('includes/allskySettings.php');
 include_once('includes/days.php');
 include_once('includes/images.php');
 include_once('includes/editor.php');
@@ -201,13 +201,13 @@ if ($useLogin) {
                         <a href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>
                     </li>
 					<li>
-                        <a href="index.php?page=eth0_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>LAN</b> Connection Status</a>
+                        <a href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
                     </li>
                     <li>
-                        <a href="index.php?page=wlan0_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Connection Status</a>
+                        <a href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Dashboard</a>
                     </li>
                     <li>
-                        <a href="index.php?page=wpa_conf"><i class="fa fa-signal fa-fw"></i> Configure Wifi</a>
+                        <a href="index.php?page=wpa_conf"><i class="fa fa-wifi fa-fw"></i> Configure Wifi</a>
                     </li>
                     <?php if (RASPI_OPENVPN_ENABLED) : ?>
                         <li>
@@ -261,11 +261,11 @@ if ($useLogin) {
                     case "live_view":
                         DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);
                         break;
-                    case "wlan0_info":
-                        DisplayDashboard("wlan0");
+                    case "WLAN_info":
+                        DisplayDashboard_WLAN("wlan0");
                         break;
-                    case "eth0_info":
-                        DisplayDashboard_eth0("eth0");
+                    case "LAN_info":
+                        DisplayDashboard_LAN("eth0");
                         break;
                     case "camera_conf":
                         DisplayCameraConfig();

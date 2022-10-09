@@ -4,7 +4,7 @@
 *
 *
 */
-function DisplayDashboard_eth0($interface) {
+function DisplayDashboard_LAN($interface) {
 	// Unlike with WLAN where when it's UP it's also RUNNING,
 	// with the LAN, the port can be up but nothing connected, i.e., not "RUNNING".
 

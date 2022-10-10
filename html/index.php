@@ -88,7 +88,6 @@ if ($useLogin) {
 	<style>
 		.x {line-height: 150%;}
 		.close {line-height: 85%;}
-		@media (min-width: 992px) {.col-md-6 { width: 75%; }}
 		.version-title { display: inline-block; font-size: 90%; }
 		@media (max-width: 768px) {.version-title { font-size: 75%; }}
 	</style>
@@ -253,6 +252,7 @@ if ($useLogin) {
 
 				if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+					echo "<div class='row'>";
 					echo "<div class='system-message'>";
 						echo "<div class='title'>System Messages</div>";
 						foreach ($contents_array as $line) {
@@ -266,6 +266,7 @@ if ($useLogin) {
 							echo "<input type='submit' class='btn btn-primary' value='Clear all messages' />";
 							echo "</form>";
 						echo "</div>";
+					echo "</div>";
 					echo "</div>";
 				}
 

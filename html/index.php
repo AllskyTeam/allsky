@@ -90,7 +90,6 @@ if ($useLogin) {
 	<style>
 		.x {line-height: 150%;}
 		.close {line-height: 85%;}
-		@media (min-width: 992px) {.col-md-6 { width: 75%; }}
 		.version-title { display: inline-block; font-size: 90%; }
 		@media (max-width: 768px) {.version-title { font-size: 75%; }}
 	</style>
@@ -249,7 +248,7 @@ if ($useLogin) {
                 <?php
 				$status = new StatusMessages();
 				if (isset($_GET['clear'])) {
-					exec("sudo truncate -s 0 " . ALLSKY_MESSAGES . " 2>&1", $result, $retcode);
+					exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
 					if ($retcode === 0) {
 						// Reload the page, but without 'clear' so we don't get into a loop.
 						echo "<script>document.location.href=document.location.href.replace('&clear=true', '');</script>";
@@ -260,11 +259,22 @@ if ($useLogin) {
 					}
 				} else if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-					foreach ($contents_array as $line) {
-						$status->addMessage($line, 'danger', false);	// warning, danger, success
-					}
-					$status->showMessages();
-					echo "<form action='?page=$page&clear=true' method='POST'><input type='submit' class='btn btn-danger' value='Clear all messages' /></form>";
+					echo "<div class='row'>";
+					echo "<div class='system-message'>";
+						echo "<div class='title'>System Messages</div>";
+						foreach ($contents_array as $line) {
+							// The first part is the class, the second is the message
+							$l = explode("\t", $line);
+							$status->addMessage($l[1], $l[0], false);
+						}
+						$status->showMessages();
+						echo "<div class='message-button'>";
+							echo "<form action='?page=$page&clear=true' method='POST'>";
+							echo "<input type='submit' class='btn btn-primary' value='Clear all messages' />";
+							echo "</form>";
+						echo "</div>";
+					echo "</div>";
+					echo "</div>";
 				}
 
                 switch ($page) {

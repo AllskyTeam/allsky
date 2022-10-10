@@ -20,9 +20,9 @@ fi
 
 # The classes are all lower case, so convert.
 TYPE="${1,,}"
-if [[ ${TYPE} == "error" ]];
+if [[ ${TYPE} == "error" ]]; then
 	$TYPE="danger"
-elif [[ ${TYPE} == "debug" ]];
+elif [[ ${TYPE} == "debug" ]]; then
 	$TYPE="warning"
 fi
 MESSAGE="${2}"

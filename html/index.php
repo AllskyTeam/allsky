@@ -233,6 +233,9 @@ if ($useLogin) {
                         <a href="index.php?page=system_info"><i class="fa fa-cube fa-fw"></i> System</a>
                     </li>
                     <li>
+                        <a href="/documentation" target="_blank" title="Opens in new window"><i class="fa fa-book fa-fw"></i> Allsky Documentation <i class="fa fa-external-link-alt fa-fw"></i></a>
+                    </li>			
+                    <li>
                         <span onclick="switchTheme()"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
                     </li>
 

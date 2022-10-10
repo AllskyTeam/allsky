@@ -13,16 +13,21 @@ if [ -z "${ALLSKY_HOME}" ]; then
 fi
 cd "${ALLSKY_HOME}"
 
-ERROR_MSG_PREFIX="*** ERROR ***\nAllsky Stopped!\n"
-SEE_LOG_MSG="See ${ALLSKY_LOG}"
+NOT_STARTED_MSG="Unable to start Allsky!"
+STOPPED_MSG="Allsky Stopped!"
+ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 
 source "${ALLSKY_HOME}/variables.sh"
 if [ -z "${ALLSKY_CONFIG}" ]; then
-	echo -e "${RED}*** FATAL ERROR: variables not set, can't continue!${NC}"
-	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_HOME})/variables.sh\nis corrupted!"
+	MSG="FATAL ERROR: unable to source variables.sh."
+	echo -e "${RED}*** ${MSG}${NC}"
+	doExit ${EXIT_ERROR_STOP} "Error" \
+		"${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_HOME})/variables.sh\nis corrupted." \
+		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 source "${ALLSKY_CONFIG}/config.sh" || exit $?			# it displays any error message
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit $?		# it displays any error message
+SEE_LOG_MSG="See ${ALLSKY_LOG}"
 
 # This file contains information the user needs to act upon after an installation.
 # If the file exists, display it and stop.
@@ -32,26 +37,33 @@ if [[ -f ${INSTALLATION_INFO} ]]; then
 	cat "${INSTALLATION_INFO}"
 	mv "${INSTALLATION_INFO}" "${ALLSKY_TMP}"	# in case the user wants to look at it later
 	# shellcheck disable=SC2154
-	"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "Allsky needs to be configured before it's used. See ${ALLSKY_LOG}."
-	doExit ${EXIT_ERROR_STOP} "Warning" "Allsky\nneeds configuration.\nSee\n${ALLSKY_LOG}"
+	doExit ${EXIT_ERROR_STOP} "Warning" \
+		"Allsky\nneeds configuration.\nSee\n${ALLSKY_LOG}" \
+		"Allsky needs to be configured before it's used.<br>${SEE_LOG_MSG}."
 fi
 
 # COMPATIBILITY CHECKS
 # Check for a new variable in config.sh that wasn't in prior versions.
 # If not set to something (even "") then it wasn't found and force the user to upgrade config.sh
 if [ ! -v WEBUI_DATA_FILES ]; then	# WEBUI_DATA_FILES added after version 0.8.3.
-	echo -e "${RED}*** FATAL ERROR: old version of ${ALLSKY_CONFIG}/config.sh detected.${NC}"
+	MSG="FATAL ERROR: old version of ${ALLSKY_CONFIG}/config.sh detected."
+	echo -e "${RED}*** ${MSG}${ALLSKY_CONFIG}/config.sh detected.${NC}"
 	echo "Please move your current config.sh file to config.sh-OLD, then place the newest one"
 	echo "from https://github.com/thomasjacquin/allsky in ${ALLSKY_CONFIG} and"
 	echo "manually copy your data from the old file to the new one."
-	doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_CONFIG})/config.sh\nis an old version.  See\n${ALLSKY_LOG}"
+	doExit ${EXIT_ERROR_STOP} "Error" \
+		"${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_CONFIG})/config.sh\nis an old version.  See\n${ALLSKY_LOG}" \
+		"${NOT_STARTED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
 
 fi
 USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
 
 if [ -z "${CAMERA_TYPE}" ]; then
-	echo -e "${RED}*** FATAL ERROR: 'Camera Type' not set in WebUI, can't continue!${NC}"
-	doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nCamera Type\nnot specified the WebUI."
+	MSG="FATAL ERROR: 'Camera Type' not set in WebUI."
+	echo -e "${RED}*** ${MSG}${NC}"
+	doExit ${EXIT_NO_CAMERA} "Error" \
+		"${ERROR_MSG_PREFIX}\nCamera Type\nnot specified the WebUI."
+		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 
 # Make sure we are not already running.
@@ -73,9 +85,12 @@ elif [ "${CAMERA_TYPE}" = "ZWO" ]; then
 		fi
 		COUNT=${COUNT:-0}
 		if [ ${COUNT} -eq 2 ]; then
-			echo -e "${RED}*** FATAL ERROR: Too many consecutive USB bus resets done (${COUNT})! Stopping." >&2
+			MSG="FATAL ERROR: Too many consecutive USB bus resets done (${COUNT})."
+			echo -e "${RED}*** ${MSG} Stopping." >&2
 			rm -f "${RESETTING_USB_LOG}"
-			doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}"
+			doExit ${EXIT_ERROR_STOP} "Error" \
+				"${ERROR_MSG_PREFIX}\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}" \
+				"${NOT_STARTED_MSG}<br>${MSG}"
 		fi
 
 		if [ "${ON_TTY}" = "1" ]; then
@@ -104,7 +119,8 @@ elif [ "${CAMERA_TYPE}" = "ZWO" ]; then
 			reset_usb "looking for a\nZWO camera"		# reset_usb exits if too many tries
 			exit 0	# exit with 0 so the service is restarted
 		else
-			echo -en "${RED}*** FATAL ERROR: ZWO Camera not found" >&2
+			MSG="FATAL ERROR: ZWO Camera not found"
+			echo -en "${RED}*** ${MSG}" >&2
 			if [[ $ZWOdev == "" ]]; then
 				echo " and no USB entry either.${NC}" >&2
 				USB_MSG=""
@@ -115,15 +131,20 @@ elif [ "${CAMERA_TYPE}" = "ZWO" ]; then
 
 			echo "  If you have the 'uhubctl' command installed, add it to config.sh." >&2
 			echo "  In the meantime, try running it to reset the USB bus." >&2
-			doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nNo ZWO camera\nfound!${USB_MSG}"
+			doExit ${EXIT_NO_CAMERA} "Error" \
+				"${ERROR_MSG_PREFIX}\nNo ZWO camera\nfound!${USB_MSG}" \
+				"${NOT_STARTED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
 		fi
 	fi
 
 	rm -f "${RESETTING_USB_LOG}"	# We found the camera so don't need to reset.
 
 else
-	echo -e "${RED}FATAL ERROR: Unknown Camera Type: ${CAMERA_TYPE}!  Stopping.${NC}" >&2
-	doExit ${EXIT_NO_CAMERA} "Error" "${ERROR_MSG_PREFIX}\nUnknown Camera\nType: ${CAMERA_TYPE}"
+	MSG="FATAL ERROR: Unknown Camera Type: ${CAMERA_TYPE}."
+	echo -e "${RED}${MSG}  Stopping.${NC}" >&2
+	doExit ${EXIT_NO_CAMERA} "Error" \
+		"${ERROR_MSG_PREFIX}\nUnknown Camera\nType: ${CAMERA_TYPE}" \
+		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 
 echo "CAMERA_TYPE: ${CAMERA_TYPE}"
@@ -231,15 +252,16 @@ if [ "${RETCODE}" -eq ${EXIT_RESET_USB} ]; then
 			NOTIFICATION_TYPE="NotRunning"
 		fi
 		if [ "${USE_NOTIFICATION_IMAGES}" = "1" ]; then
-			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${NOTIFICATION_TYPE}" 2>&1
+			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${NOTIFICATION_TYPE}"
 		fi
 		doExit 0 ""		# use 0 so the service is restarted
 	else
 		# TODO: use ASI_ERROR_TIMEOUT message
-		if [ ${ON_TTY} = "1" ]; then
-			echo "*** Non-recoverable ERROR found - see ${ALLSKY_LOG} for details. ***"
-		fi
-		doExit ${EXIT_ERROR_STOP} "Error" "${ERROR_MSG_PREFIX}Too many\nASI_ERROR_TIMEOUT\nerrors received!\n${SEE_LOG_MSG}"
+		MSG="Non-recoverable ERROR found"
+		[ ${ON_TTY} = "1" ] && echo "*** ${MSG} - ${SEE_LOG_MSG}. ***"
+		doExit ${EXIT_ERROR_STOP} "Error" \
+			"${ERROR_MSG_PREFIX}Too many\nASI_ERROR_TIMEOUT\nerrors received!\n${SEE_LOG_MSG}" \
+			"${STOPPED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
 	fi
 fi
 

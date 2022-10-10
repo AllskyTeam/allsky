@@ -30,10 +30,10 @@ INSTALLATION_INFO="${ALLSKY_CONFIG}/installation_info.txt"
 if [[ -f ${INSTALLATION_INFO} ]]; then
 	sudo truncate -s 0 "${ALLSKY_LOG}"
 	cat "${INSTALLATION_INFO}"
-	mv "${INSTALLATION_INFO}" "${ALLSKY_TMP}"
+	mv "${INSTALLATION_INFO}" "${ALLSKY_TMP}"	# in case the user wants to look at it later
 	# shellcheck disable=SC2154
-	"${ALLSKY_SCRIPTS}/addMessage.sh" "WARNING" "NOTICE: Allsky needs to be configured before it's used.${wBR}See ${ALLSKY_LOG}."
-	doExit ${EXIT_ERROR_STOP} "Error" "Allsky\nneeds configuration.\nSee\n${ALLSKY_LOG}"
+	"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "Allsky needs to be configured before it's used. See ${ALLSKY_LOG}."
+	doExit ${EXIT_ERROR_STOP} "Warning" "Allsky\nneeds configuration.\nSee\n${ALLSKY_LOG}"
 fi
 
 # COMPATIBILITY CHECKS

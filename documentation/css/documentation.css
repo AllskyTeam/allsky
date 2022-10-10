@@ -59,7 +59,8 @@ blockquote {
 }
 .markdown-body blockquote {
 	padding: 0 1em;
-	color: var(--color-fg-muted);
+	color: var(--color-attention-fg);
+	background-color: var(--color-attention-verysubtle);
 	border-left: .25em solid var(--color-attention-emphasis);
 }
 .markdown-body blockquote>:first-child {

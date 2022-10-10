@@ -253,12 +253,20 @@ if ($useLogin) {
 
 				if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-					foreach ($contents_array as $line) {
-						// Let invoker set the colors (pass 'none').
-						$status->addMessage($line, 'none', false);
-					}
-					$status->showMessages();
-					echo "<form action='?page=$page&clear=true' method='POST'><input type='submit' class='btn btn-primary' value='Clear all messages' /></form>";
+					echo "<div class='system-message'>";
+						echo "<div class='title'>System Messages</div>";
+						foreach ($contents_array as $line) {
+							// The first part is the class, the second is the message
+							$l = explode("\t", $line);
+							$status->addMessage($l[1], $l[0], false);
+						}
+						$status->showMessages();
+						echo "<div class='message-button'>";
+							echo "<form action='?page=$page&clear=true' method='POST'>";
+							echo "<input type='submit' class='btn btn-primary' value='Clear all messages' />";
+							echo "</form>";
+						echo "</div>";
+					echo "</div>";
 				}
 
                 switch ($page) {

@@ -244,13 +244,15 @@ if ($useLogin) {
 				$status = new StatusMessages();
 				if (isset($_GET['clear'])) {
 					exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
-					if ($retcode !== 0) {
+					if ($retcode === 0) {
+						// Reload the page, but without 'clear' so we don't get into a loop.
+						echo "<script>document.location.href=document.location.href.replace('&clear=true', '');</script>";
+						exit;
+					} else {
 						$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
 						$status->showMessages();
 					}
-				}
-
-				if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
+				} else if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 					echo "<div class='row'>";
 					echo "<div class='system-message'>";

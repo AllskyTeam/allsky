@@ -10,25 +10,44 @@ function doExit()
 {
 	local EXITCODE=$1
 	local TYPE=${2:-"Error"}
-	local CUSTOM_MESSAGE="${3}"
+	local CUSTOM_MESSAGE="${3}"		# optional
+	local WEBUI_MESSAGE="${4}"		# optional
 
+	case "${TYPE}" in
+		Warning)
+			COLOR="yellow"
+			;;
+		Error)
+			COLOR="red"
+			;;
+		NotRunning|*)
+			COLOR="yellow"
+			;;
+	esac
 	if [ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]; then
 		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
 		# even if the user has them turned off.
-		if [ -n "${CUSTOM_MESSAGE}" ]; then
+		if [[ -n ${CUSTOM_MESSAGE} ]]; then
 			# Create a custom error message.
 			# If we error out before config.sh is sourced in, $FILENAME and $EXTENSION won't be
 			# set so guess at what they are.
-			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${FILENAME:-"image"}" \
-				"red" "" "85" "" "" \
-				"" "10" "red" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
+			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
+				"${FILENAME:-"image"}" \
+				"${COLOR}" "" "85" "" "" \
+				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
 		else
 			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "${TYPE}" 2>&1
 		fi
 		# Don't let the service restart us because we'll likely get the same error again.
 		echo "     ***** AllSky Stopped *****"
-		sudo systemctl stop allsky
 	fi
+
+	if [[ -n ${WEBUI_MESSAGE} ]]; then
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
+	fi
+
+	[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ] && sudo systemctl stop allsky
+
 	exit ${EXITCODE}
 }
 

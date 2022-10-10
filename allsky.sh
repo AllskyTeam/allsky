@@ -62,7 +62,7 @@ if [ -z "${CAMERA_TYPE}" ]; then
 	MSG="FATAL ERROR: 'Camera Type' not set in WebUI."
 	echo -e "${RED}*** ${MSG}${NC}"
 	doExit ${EXIT_NO_CAMERA} "Error" \
-		"${ERROR_MSG_PREFIX}\nCamera Type\nnot specified the WebUI."
+		"${ERROR_MSG_PREFIX}\nCamera Type\nnot specified\nin the WebUI." \
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 

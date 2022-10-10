@@ -1,7 +1,7 @@
 <?php
 
 /**
- * AllSky Administration Panel
+ * AllSky Web User Interface (WebUI)
  *
  * Enables use of simple web interface rather than SSH to control a ZWO camera on the Raspberry Pi.
  * Uses code from RaspAP by Lawrence Yau <sirlagz@gmail.com> and Bill Zimmerman <billzimmerman@gmail.com>
@@ -178,7 +178,7 @@ if ($useLogin) {
             </button>
             <a class="navbar-brand" href="index.php">
                 <img src="img/allsky-logo.png" title="Allsky logo">
-                <div class="navbar-title">AllSky Administration Panel</div>
+                <div class="navbar-title">AllSky Web User Interface (WebUI)</div>
 				<div class="version-title"><?php displayVersions(); ?></div>
             </a>
         </div>
@@ -244,7 +244,7 @@ if ($useLogin) {
                 <?php
 				$status = new StatusMessages();
 				if (isset($_GET['clear'])) {
-					exec("sudo truncate -s 0 " . ALLSKY_MESSAGES . " 2>&1", $result, $retcode);
+					exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
 					if ($retcode !== 0) {
 						$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
 						$status->showMessages();

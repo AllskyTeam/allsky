@@ -1,4 +1,4 @@
-[data-color-mode=light][data-light-theme=dark],[data-color-mode=dark][data-dark-theme=dark] {
+:root,[data-color-mode=light][data-light-theme=dark],[data-color-mode=dark][data-dark-theme=dark] {
     --color-canvas-default-transparent: rgba(13,17,23,0);
     --color-page-header-bg: #0d1117;
     --color-marketing-icon-primary: #79c0ff;
@@ -308,6 +308,7 @@
     --color-attention-emphasis: #9e6a03;
     --color-attention-muted: rgba(187,128,9,0.4);
     --color-attention-subtle: rgba(187,128,9,0.15);
+    --color-attention-verysubtle: rgba(187,128,9,0.1);
     --color-severe-fg: #db6d28;
     --color-severe-emphasis: #bd561d;
     --color-severe-muted: rgba(219,109,40,0.4);
@@ -745,6 +746,7 @@
         --color-attention-emphasis: #9e6a03;
         --color-attention-muted: rgba(187,128,9,0.4);
         --color-attention-subtle: rgba(187,128,9,0.15);
+    	--color-attention-verysubtle: rgba(187,128,9,0.1);
         --color-severe-fg: #db6d28;
         --color-severe-emphasis: #bd561d;
         --color-severe-muted: rgba(219,109,40,0.4);
@@ -1183,6 +1185,7 @@
         --color-attention-emphasis: #9e6a03;
         --color-attention-muted: rgba(187,128,9,0.4);
         --color-attention-subtle: rgba(187,128,9,0.15);
+    	--color-attention-verysubtle: rgba(187,128,9,0.1);
         --color-severe-fg: #db6d28;
         --color-severe-emphasis: #bd561d;
         --color-severe-muted: rgba(219,109,40,0.4);

@@ -191,19 +191,25 @@ body.dark {
 	background-color: #d9edf7;
 	border-color: #92b5bd;
 }
-.dark .alert-message {
+.dark .alert-message, .dark .alert-info {
 	color: #23485a;
 	border-color: #99ccdd;
     background-color: #8b989f;
 }
 .dark .alert-success {
-	color: #55aa55;
-	border-color: #707a6a;
-    background-color: #171717;
+	color: #95bb85;
+	border-color: #8f9d84;
+    background-color: #044a05;
 }
 .dark .alert-warning {
-    border-color: #333333;
-    background-color: #c0bba0;
+	color: #c0bba0;
+	border-color: #c0bba0;
+    background-color: #8a6b3b;
+}
+.dark .alert-danger {
+	color: #f1b1b1;
+	border-color: #f1b1b1;
+    background-color: #a94442;
 }
 
 .dark .form-control,
@@ -394,3 +400,20 @@ select {
 
 .thumb { width: 100px; margin: 0 1px 1px 0; }
 .left { float: left; }
+
+.system-message {
+	border: 1px solid #6b6b6b;
+	padding: 5px;
+}
+.system-message .title {
+	font-weight: bold;
+	font-size: 120%;
+	margin: 3px 0 5px 0;
+	text-align: center;
+}
+.system-message .message-button {
+	margin-top: 10px;
+	margin-bottom: 5px;
+	display: flex;
+	justify-content: center;
+}

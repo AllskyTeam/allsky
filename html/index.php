@@ -173,13 +173,12 @@ if ($useLogin) {
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="index.php">
+            <a class="navbar-brand valign-center" href="index.php">
                 <img src="img/allsky-logo.png" title="Allsky logo">
                 <div class="navbar-title">Web User Interface (WebUI)</div>
 				<div class="version-title"><?php displayVersions(); ?></div>
             </a>
-        </div>
-        <!-- /.navbar-header -->
+        </div> <!-- /.navbar-header -->
 
         <!-- Navigation -->
         <div class="navbar-default sidebar" role="navigation">

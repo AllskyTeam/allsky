@@ -416,51 +416,50 @@ function DisplaySystem()
 					<p><?php $status->showMessages(); ?></p>
 
 					<div class="row">
-						<div xxxclass="col-md-6">
-							<div class="panel panel-default">
-								<div class="panel-body">
-									<h4>System Information</h4>
-									<table>
-									<!-- <colgroup> doesn't seem to support "width", so set on 1st line -->
-									<tr class="x"><td style="padding-right: 90px;">Hostname</td><td><?php echo $hostname ?></td></tr>
-									<tr class="x"><td>Pi Revision</td><td><?php echo RPiVersion() ?></td></tr>
-									<tr class="x"><td>Uptime</td><td><?php echo $uptime ?></td></tr>
-									<?php if ($dp === -1) $x = "<span class='errorMsg'>ERROR: unable to read '$top_dir' to get data.</span>";
-										  else $x = "$dt ($df free)";
-									?>
-									<tr class="x"><td>SD Card</td><td><?php echo "$x" ?></td></tr>
-									<?php // Optional user-specified data.
+						<div class="panel panel-default">
+							<div class="panel-body">
+								<h4>System Information</h4>
+								<table>
+								<!-- <colgroup> doesn't seem to support "width", so set on 1st line -->
+								<tr class="x"><td style="padding-right: 90px;">Hostname</td><td><?php echo $hostname ?></td></tr>
+								<tr class="x"><td>Pi Revision</td><td><?php echo RPiVersion() ?></td></tr>
+								<tr class="x"><td>Uptime</td><td><?php echo $uptime ?></td></tr>
+								<?php if ($dp === -1) $x = "<span class='errorMsg'>ERROR: unable to read '$top_dir' to get data.</span>";
+									  else $x = "$dt ($df free)";
+								?>
+								<tr class="x"><td>SD Card</td><td><?php echo "$x" ?></td></tr>
+								<?php // Optional user-specified data.
+									for ($i=0; $i < $user_data_files_count; $i++) {
+										displayUserData($user_data_files[$i], "data");
+									}
+								?>
+								<tr><td colspan="2" style="height: 5px"></td></tr>
+								<!-- Treat Throttle Status like a full-width progress bar -->
+								<?php displayProgress("", "Throttle Status", $throttle, 0, 100, 100, -1, -1, $throttle_status); ?>
+								<tr><td colspan="2" style="height: 5px"></td></tr>
+								<?php displayProgress("", "Memory Used", "$memused%", 0, $memused, 100, 90, 75, ""); ?>
+								<tr><td colspan="2" style="height: 5px"></td></tr>
+								<?php displayProgress("", "CPU Load", "$cpuload%", 0, $cpuload, 100, 90, 75, ""); ?>
+								<tr><td colspan="2" style="height: 5px"></td></tr>
+								<?php displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status); ?>
+								<tr><td colspan="2" style="height: 5px"></td></tr>
+								<?php 
+									if ($dp === -1) {
+										echo "<tr><td>Disk Usage</td><td><span class='errorMsg'>ERROR: unable to read '$top_dir' to get disk usage.</span></td></tr>";
+									} else {
+										displayProgress("", "Disk Usage", "$dp%", 0, $dp, 100, 90, 70, "");
+										// Optional user-specified data.
 										for ($i=0; $i < $user_data_files_count; $i++) {
-											displayUserData($user_data_files[$i], "data");
+											displayUserData($user_data_files[$i], "progress");
 										}
-									?>
-									<tr><td colspan="2" style="height: 5px"></td></tr>
-									<!-- Treat Throttle Status like a full-width progress bar -->
-									<?php displayProgress("", "Throttle Status", $throttle, 0, 100, 100, -1, -1, $throttle_status); ?>
-									<tr><td colspan="2" style="height: 5px"></td></tr>
-									<?php displayProgress("", "Memory Used", "$memused%", 0, $memused, 100, 90, 75, ""); ?>
-									<tr><td colspan="2" style="height: 5px"></td></tr>
-									<?php displayProgress("", "CPU Load", "$cpuload%", 0, $cpuload, 100, 90, 75, ""); ?>
-									<tr><td colspan="2" style="height: 5px"></td></tr>
-									<?php displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status); ?>
-									<tr><td colspan="2" style="height: 5px"></td></tr>
-									<?php 
-										if ($dp === -1) {
-											echo "<tr><td>Disk Usage</td><td><span class='errorMsg'>ERROR: unable to read '$top_dir' to get disk usage.</span></td></tr>";
-										} else {
-											displayProgress("", "Disk Usage", "$dp%", 0, $dp, 100, 90, 70, "");
-											// Optional user-specified data.
-											for ($i=0; $i < $user_data_files_count; $i++) {
-												displayUserData($user_data_files[$i], "progress");
-											}
-										}
-									?>
-									</table>
-								</div><!-- /.panel-body -->
-							</div><!-- /.panel-default -->
-						</div><!-- /.col-md-6 -->
+									}
+								?>
+								</table>
+							</div><!-- /.panel-body -->
+						</div><!-- /.panel-default -->
 					</div><!-- /.row -->
 
+					<div class="row">
 					<form action="?page=system_info" method="POST">
 					<div style="margin-bottom: 15px">
 						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)"><i class="fa fa-sync-alt"></i> Refresh</button>
@@ -479,6 +478,7 @@ function DisplaySystem()
 						}
 					?>
 					</form>
+					</div><!-- /.row -->
 
 				</div><!-- /.panel-body -->
 			</div><!-- /.panel-primary -->

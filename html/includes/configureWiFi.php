@@ -162,11 +162,11 @@ function DisplayWPAConfig(){
 	<div class="row"><!-- don't indent all <div> - there are too many of them -->
 	<div class="col-lg-12">
 		<div class="panel panel-primary">
-		<div class="panel-heading"><i class="fa fa-signal fa-fw"></i> Configure client</div>
+		<div class="panel-heading"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</div>
 		<!-- /.panel-heading -->
 		<div class="panel-body">
 			<p><?php $status->showMessages(); ?></p>
-			<h4>Client settings</h4>
+			<h4>Wi-Fi SSIDs</h4>
 
 			<form method="POST" action="?page=wpa_conf" name="wpa_conf_form">
 			<?php CSRFToken() ?>
@@ -211,11 +211,11 @@ function DisplayWPAConfig(){
 				<td>
 					<div class="btn-group btn-block">
 					<?php if ($network['configured']) { ?>
-					<input type="submit" class="col-md-6 btn btn-warning" value="Update" id="update<?php echo $index ?>" name="update<?php echo $index ?>"<?php echo ($network['protocol'] === 'Open' ? ' disabled' : '')?> />
+					<input type="submit" class="btn btn-warning" value="Update" id="update<?php echo $index ?>" name="update<?php echo $index ?>"<?php echo ($network['protocol'] === 'Open' ? ' disabled' : '')?> />
 					<?php } else { ?>
-					<input type="submit" class="col-md-6 btn btn-info" value="Add" id="update<?php echo $index ?>" name="update<?php echo $index ?>" <?php echo ($network['protocol'] === 'Open' ? '' : ' disabled')?> />
+					<input type="submit" class="btn btn-info" value="Add" id="update<?php echo $index ?>" name="update<?php echo $index ?>" <?php echo ($network['protocol'] === 'Open' ? '' : ' disabled')?> />
 					<?php } ?>
-					<input type="submit" class="col-md-6 btn btn-danger" value="Delete" name="delete<?php echo $index ?>"<?php echo ($network['configured'] ? '' : ' disabled')?> />
+					<input type="submit" class="btn btn-danger" value="Delete" name="delete<?php echo $index ?>"<?php echo ($network['configured'] ? '' : ' disabled')?> />
 					</div>
 				</td>
 				</tr>

@@ -199,10 +199,9 @@ function toggle_advanced()
 }
 </script>
   <div class="row">
-    <div class="col-lg-12" style="padding: 0px 5px;">
+    <div class="col-lg-12">
       <div class="panel panel-primary">
-      <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Configure Settings for <b><?php echo "$cameraType $cameraModel"; ?></b>&nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; <?php echo $settings_file ?></div>
-        <!-- /.panel-heading -->
+      <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Allsky Settings for <b><?php echo "$cameraType $cameraModel"; ?></b>&nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; <?php echo $settings_file ?></div>
         <div class="panel-body" style="padding: 5px;">
           <p id="messages"><?php $status->showMessages(); ?></p>
 

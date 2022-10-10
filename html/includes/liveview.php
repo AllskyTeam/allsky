@@ -22,7 +22,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe
 
 	<div class="row">
 		<div class="panel panel-primary">
-			<div class="panel-heading"><i class="fa fa-code fa-eye"></i> Liveview</div>
+			<div class="panel-heading"><i class="fa fa-code fa-eye"></i> Live View</div>
 			<div class="panel-body">
 				<p><?php $status->showMessages(); ?></p>
 				<div id="live_container" style="background-color: black; margin-bottom: 15px;">

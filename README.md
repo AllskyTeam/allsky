@@ -31,7 +31,7 @@ In order to get the camera working properly you will need the following hardware
 
 &nbsp;
 <!-- =============================================================================== --> 
-### Software Installation - 1st time only
+### Software Installation
 <details><summary>Click here</summary>
 
 &nbsp;  
@@ -41,18 +41,25 @@ You will need to install the Raspbian Operating System on your Raspberry Pi. Fol
 
 Make sure you have a working Internet connection by setting it through [the terminal window](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md).
 
-1. Start by installing git if not already there.  Open the terminal window (or SSH into your Pi) and type the following:
+1. Start by installing git if not already on your Pi.  Open the terminal window (or SSH into your Pi) and type the following:
     ```shell
     sudo apt-get install git
     ```
 
-2. Now fetch the code from this GitHub page:
+2. If you have a prior version of Allsky and want to use its images, darks, and configuration settings:
+	```shell
+	cd
+	mv allsky allsky-OLD
+	```
+	The installation will look for `allsky-OLD` and transfer files from it to the new location.
+
+3. Now fetch the code from GitHub:
     ```shell
     cd
     git clone --recursive https://github.com/thomasjacquin/allsky.git
     ```
 
-3. Then navigate to the new allsky directory and run the installation script:
+4. Then navigate to the new allsky directory and run the installation script:
     ```shell
     cd allsky
     ./install.sh
@@ -65,23 +72,6 @@ There are many configuration variables that need to be set as described on the [
 ---
 </details>
 
-
-
-&nbsp;
-<!-- =============================================================================== --> 
-### Updating the software
-<details><summary>Click here</summary>
-	
-&nbsp;  
-> **NOTE**: When upgrading from a release **prior to** 0.8.3 you **MUST** follow the steps [here](https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions).
-
-&nbsp;  
-See this [Wiki page](https://github.com/thomasjacquin/allsky/wiki/How-to-update-the-software) if you are upgrading from a release _after_ 0.8.3.
-
-Note that in version 0.8.3 the default image created and uploaded is called **image.jpg**.  The prior "image-resize.jpg" and "liveview-image.jpg" files are no longer created. Keep that in mind if you copy the image to a remote web server - it will need to know about the new name.
-
----
-</details>
 
 
 &nbsp;

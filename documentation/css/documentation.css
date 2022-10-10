@@ -43,7 +43,7 @@ body {
 .markdown-body .anchor:focus {
 	outline: none
 }
-.markdown-body p, .markdown-body blockquote, .markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body pre, .markdown-body details {
+.markdown-body blockquote, .markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body details {
 	margin-top: 0;
 	margin-bottom: 16px;
 }
@@ -59,8 +59,9 @@ blockquote {
 }
 .markdown-body blockquote {
 	padding: 0 1em;
-	color: var(--color-fg-muted);
-	border-left: .25em solid var(--color-border-default);
+	color: var(--color-attention-fg);
+	background-color: var(--color-attention-verysubtle);
+	border-left: .25em solid var(--color-attention-emphasis);
 }
 .markdown-body blockquote>:first-child {
 	margin-top: 0;
@@ -69,7 +70,7 @@ blockquote {
 	margin-bottom: 0;
 }
 .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
-	margin-top: 20px;
+	margin-top: 30px;
 	margin-bottom: 5px;
 	font-weight: 600;
 	line-height: 1.25;
@@ -145,14 +146,17 @@ blockquote {
 	margin-top: 0;
 	margin-bottom: 0
 }
+.markdown-body li {
+	margin-top: .4em;
+}
 .markdown-body li>p {
-	margin-top: 16px
+	margin-top: 16px;
 }
 .markdown-body li+li {
-	margin-top: .25em
+	margin-top: .7em;
 }
 .markdown-body dl {
-	padding: 0
+	padding: 0;
 }
 .markdown-body dl dt {
 	padding: 0;
@@ -186,10 +190,19 @@ blockquote {
 .markdown-body table thead tr {
 	background-color: var(--color-checks-header-label-text);
 }
-.markdown-body table tr.note {
-	/* Doesn't work with nth-chile(2n) below: background-color: var(--color-accent-subtle); */
+.markdown-body table td.note {
+	background-color: var(--color-accent-subtle);
 	color: var(--color-accent-emphasis);
-	font-size: 110%;
+	font-size: 120%;
+	font-weight: bold;
+	text-align: center;
+}
+.markdown-body table td.note p {
+	color: initial;
+	font-size: 80%;
+	font-weight: normal;
+	margin-top: 5px;
+	margin-bottom: 5px;
 }
 .markdown-body table tr:nth-child(2n) {
 	background-color: var(--color-canvas-subtle)
@@ -318,19 +331,23 @@ blockquote {
 	border: 0
 }
 .markdown-body .highlight {
-	margin-bottom: 16px
+	margin-top: 8px;
+	margin-bottom: 6px;
 }
 .markdown-body .highlight pre {
 	margin-bottom: 0;
 	word-break: normal
 }
-.markdown-body .highlight pre,.markdown-body pre {
-	padding: 16px;
+.markdown-body .highlight pre, .markdown-body pre {
+	margin-top: 6px;
+	margin-bottom: 8px;
+	padding: 10px;
 	overflow: auto;
 	font-size: 85%;
 	line-height: 1.45;
 	background-color: var(--color-canvas-subtle);
-	border-radius: 6px
+	border-radius: 6px;
+	border: 1px solid var(--color-border-muted);
 }
 .markdown-body pre code, .markdown-body pre tt {
 	display: inline;
@@ -406,17 +423,6 @@ blockquote {
 	background-color: var(--color-neutral-muted);
 	border-radius: 6px;
 }
-.markdown-body .highlight pre, .markdown-body pre {
-	padding: 16px;
-	overflow: auto;
-	font-size: 85%;
-	line-height: 1.45;
-	background-color: var(--color-canvas-subtle);
-	border-radius: 6px;
-}
-.markdown-body pre {
-	word-wrap: normal;
-}
 .markdown-body code, .markdown-body tt {
 	padding: .2em .4em;
 	margin: 0;
@@ -426,10 +432,6 @@ blockquote {
 }
 .markdown-body ul, .markdown-body ol {
 	padding-left: 2em;
-}
-.markdown-body p, .markdown-body blockquote, .markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body pre, .markdown-body details {
-	margin-top: 0;
-	margin-bottom: 16px;
 }
 .markdown-body h1 tt, .markdown-body h1 code, .markdown-body h2 tt, .markdown-body h2 code, .markdown-body h3 tt, .markdown-body h3 code, .markdown-body h4 tt, .markdown-body h4 code, .markdown-body h5 tt, .markdown-body h5 code, .markdown-body h6 tt, .markdown-body h6 code {
 	padding: 0 .2em;
@@ -441,14 +443,14 @@ blockquote {
 .mb-4 {
 	margin-bottom: 24px !important;
 }
-.gh-header {
-	background-color: var(--color-canvas-default);
-}
 .d-flex {
 	display: flex !important;
 }
 .flex-column {
 	flex-direction: column !important;
+}
+.gh-header {
+	background-color: var(--color-canvas-default);
 }
 .gh-header-title {
 	margin-right: 150px;
@@ -456,7 +458,8 @@ blockquote {
 	font-weight: 400;
 	line-height: 1.125;
 	word-wrap: break-word;
-	border-bottom: 1px solid var(--color-border-default);
+	border-bottom: 1px solid var(--color-accent-muted);
+	color: var(--color-accent-emphasis);
 }
 .mb-2 {
 	margin-bottom: 8px !important;
@@ -624,4 +627,19 @@ a {
 	color: #333;
 	font-weight: bold;
 	font-size: 95%;
+}
+.shSetting { /* Matches what's in the WebUI's "Editor" page for *.sh files. */
+	color: #fd971f;
+	font-family: monospace;
+	font-weight: bold;
+}
+/* Shell syntax */
+.pl-c {
+	color: var(--color-prettylights-syntax-comment);
+}
+.overflow-auto {
+	overflow: auto !important;
+}
+.position-relative {
+	position: relative !important;
 }

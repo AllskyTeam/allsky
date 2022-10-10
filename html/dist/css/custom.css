@@ -218,19 +218,15 @@ body.dark {
 .dark .progress {
     background-color: #171717;
 }
-
 .dark .progress-bar {
     color: #ccc;
 }
-
 .dark .progress-bar-success {
     background-color: #276b27;
 }
-
 .dark .progress-bar-info {
     background-color: #2a5f6f;
 }
-
 .dark .progress-bar-warning {
     background-color: #a7742d;
 }
@@ -263,7 +259,6 @@ body.dark {
 }
 
 .dark .btn-success {
-	background-color: #55aa55;
 	background-color: #338833;
     color: #229922;
     color: #00cc00;
@@ -273,7 +268,6 @@ body.dark {
     border-color: #1475a7;
     background-color: #1d5a79;
 }
-
 .dark .btn-warning {
 	color: #b8b8b8;
     background-color: #a7742d;

@@ -27,6 +27,4 @@ elif [[ ${TYPE} == "debug" ]]; then
 fi
 MESSAGE="${2}"
 
-(
-	echo -e "<span class='alert-${TYPE}'>${MESSAGE}</span>"
-) >> "${ALLSKY_MESSAGES}"
+echo -e "${TYPE}\t${MESSAGE}"  >>  "${ALLSKY_MESSAGES}"

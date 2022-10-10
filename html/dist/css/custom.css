@@ -402,7 +402,7 @@ select {
 .left { float: left; }
 
 .system-message {
-	border: 1px solid #6b6b6b;
+	border: 3px solid red;
 	padding: 5px;
 }
 .system-message .title {
@@ -416,4 +416,10 @@ select {
 	margin-bottom: 5px;
 	display: flex;
 	justify-content: center;
+}
+.row .row .col-lg-12 {
+	padding: 0px 0px;
+}
+.panel-body .row {
+	margin: 0;
 }

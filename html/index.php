@@ -87,7 +87,6 @@ if ($useLogin) {
 	<!-- Make messages look nicer, and align the "x" with the message. -->
 	<style>
 		.x {line-height: 150%;}
-		.close {line-height: 85%;}
 	</style>
     <!-- MetisMenu CSS -->
     <link href="bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">

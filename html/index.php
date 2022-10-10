@@ -88,8 +88,6 @@ if ($useLogin) {
 	<style>
 		.x {line-height: 150%;}
 		.close {line-height: 85%;}
-		.version-title { display: inline-block; font-size: 90%; }
-		@media (max-width: 768px) {.version-title { font-size: 75%; }}
 	</style>
     <!-- MetisMenu CSS -->
     <link href="bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
@@ -177,7 +175,7 @@ if ($useLogin) {
             </button>
             <a class="navbar-brand" href="index.php">
                 <img src="img/allsky-logo.png" title="Allsky logo">
-                <div class="navbar-title">AllSky Web User Interface (WebUI)</div>
+                <div class="navbar-title">Web User Interface (WebUI)</div>
 				<div class="version-title"><?php displayVersions(); ?></div>
             </a>
         </div>

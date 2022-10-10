@@ -6,14 +6,35 @@
 	margin-right: 5px;
 }
 
-.navbar-brand {
-	padding-top: 12px;
+.valign-center {
+	display: flex;
+	align-items: center;
 }
-
+.navbar-header, .navbar-brand {
+	height: 100%;
+}
 .navbar-brand img { 
     height: 50px;
     display:inline-block;
-    margin-right: 20px;
+    margin-right: 15px;
+}
+.version-title {
+	margin-left: 40px;
+	display: inline-block;
+	font-size: 80%;
+	opacity: 0.7;
+}
+@media (max-width: 450px) {.version-title { font-size: 75%; }}
+@media (max-width: 400px) {.version-title { font-size: 65%; }}
+@media (min-width: 640px) {	/* was 768px when lines below didn't exist */
+	.sidebar { width: 200px; }
+	.navbar-title { display: inline-block; }
+	.navbar-toggle { display: none; }
+	#page-wrapper { margin-left: 200px; padding: 0 30px; }
+	.navbar-collapse { display: block; visibility: visible; }
+}
+@media (max-width: 639px) {	/* was 768px when lines below didn't exist */
+	#page-wrapper .row { margin: 0 -7px; }
 }
 
 .right-panel .panel:first-of-type {
@@ -182,9 +203,23 @@ body.dark {
 	padding: 3px;
 	margin-bottom: 2px;
 }
+.close {
+	opacity: 1.0;
+}
+.alert td {
+	padding: 0 10px 0 3px;
+}
+table .alert-dismissable button {
+	font-size: 175%;
+}
+table .alert-dismissable {
+	text-align: center;
+	padding-right: 4px;
+}
 .alert-dismissable .close {
 	right: 0px;
 	opacity: .6;
+	top: -1px;
 }
 .alert-message {
 	color: #31708f;
@@ -285,7 +320,7 @@ body.dark {
     border-color: #cc7b09;
 }
 
-@media screen and (max-width: 767px) {
+@media screen and (max-width: 639px) {	/* was 767 */
     .dark .table-responsive {
         border-color: transparent;
     }

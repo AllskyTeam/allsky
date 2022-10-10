@@ -26,11 +26,12 @@ source "${ALLSKY_SCRIPTS}/functions.sh" || exit $?		# it displays any error mess
 
 # This file contains information the user needs to act upon after an installation.
 # If the file exists, display it and stop.
-NEW_INSTALLATION_FILE="${ALLSKY_CONFIG}/new_installation.txt"
-if [[ -f ${NEW_INSTALLATION_FILE} ]]; then
+INSTALLATION_INFO="${ALLSKY_CONFIG}/installation_info.txt"
+if [[ -f ${INSTALLATION_INFO} ]]; then
 	sudo truncate -s 0 "${ALLSKY_LOG}"
-	cat "${NEW_INSTALLATION_FILE}"
-	mv "${NEW_INSTALLATION_FILE}" "${ALLSKY_TMP}"
+	cat "${INSTALLATION_INFO}"
+	mv "${INSTALLATION_INFO}" "${ALLSKY_TMP}"
+	echo -e "${wWARNING}Allsky needs to be configured before it's used.${wBR}See ${ALLSKY_LOG}.${wNC}" >> "${ALLSKY_MESSAGES}"
 	doExit ${EXIT_ERROR_STOP} "Error" "Allsky\nneeds configuration.\nSee\n${ALLSKY_LOG}"
 fi
 

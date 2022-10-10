@@ -31,7 +31,8 @@ if [[ -f ${INSTALLATION_INFO} ]]; then
 	sudo truncate -s 0 "${ALLSKY_LOG}"
 	cat "${INSTALLATION_INFO}"
 	mv "${INSTALLATION_INFO}" "${ALLSKY_TMP}"
-	echo -e "${wWARNING}Allsky needs to be configured before it's used.${wBR}See ${ALLSKY_LOG}.${wNC}" >> "${ALLSKY_MESSAGES}"
+	# shellcheck disable=SC2154
+	"${ALLSKY_SCRIPTS}/addMessage.sh" "WARNING" "NOTICE: Allsky needs to be configured before it's used.${wBR}See ${ALLSKY_LOG}."
 	doExit ${EXIT_ERROR_STOP} "Error" "Allsky\nneeds configuration.\nSee\n${ALLSKY_LOG}"
 fi
 

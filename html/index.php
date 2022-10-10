@@ -250,7 +250,11 @@ if ($useLogin) {
 				$status = new StatusMessages();
 				if (isset($_GET['clear'])) {
 					exec("sudo truncate -s 0 " . ALLSKY_MESSAGES . " 2>&1", $result, $retcode);
-					if ($retcode !== 0) {
+					if ($retcode === 0) {
+						// Reload the page, but without 'clear' so we don't get into a loop.
+						echo "<script>document.location.href=document.location.href.replace('&clear=true', '');</script>";
+						exit;
+					} else {
 						$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
 						$status->showMessages();
 					}

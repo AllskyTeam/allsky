@@ -157,7 +157,7 @@ if [[ -z ${MACHINE_ID} ]]; then
 	if [ -z "${MACHINE_ID}" ]; then
 		E="ERROR: Unable to get 'machine_id': check /etc/machine-id."
 		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
+		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
 		exit 3
 	fi
 fi
@@ -265,11 +265,11 @@ else
 
 	if [ "${W}" != "" ]; then
 		echo -e "${WARNING_MSG_START}${W%%${BR}}${NC}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wWARNING}${ME}: ${W%%${BR}}${wNC}" >> "${ALLSKY_MESSAGES}"
+		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W%%${BR}}"
 	fi
 	if [ "${OK}" = "false" ]; then
 		echo -e "${ERROR_MSG_START}${M%%${BR}}${NC}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${M%%${BR}}${wNC}" >> "${ALLSKY_MESSAGES}"
+		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${M%%${BR}}"
 		exit 2
 	fi
 
@@ -342,7 +342,7 @@ if [ "${UPLOAD}" = "true" ]; then
 	if [ ${RETURN_CODE} -ne 0 ]; then
 		E="ERROR while uploading map data with curl: ${RETURN}."
 		echo -e "${ERROR_MSG_START}${E}${RETURN}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
+		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
 		exit ${RETURN_CODE}
 	fi
 
@@ -370,25 +370,25 @@ if [ "${UPLOAD}" = "true" ]; then
 	elif [ -z "${RET}" ]; then
 		E="ERROR: Unknown reply from server: ${RETURN}."
 		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
+		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
 		RETURN_CODE=2
 
 	elif [ "${RET:0:6}" = "ERROR " ]; then
 		E="ERROR returned while uploading map data: ${RET:6}."
 		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
+		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
 		RETURN_CODE=2
 
 	elif [ "${RET:0:15}" = "ALREADY UPDATED" ]; then
 		MAX_UPDATES=${RET:17}
 		W="NOTICE: You have already updated your map data the maximum times per day (${MAX_UPDATES}).  Try again tomorrow."
 		echo -e "${WARNING_MSG_START}${W}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wWARNING}${ME}: ${W}${wNC}" >> "${ALLSKY_MESSAGES}"
+		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W}"
 
 	else
 		E="ERROR returned while uploading map data: ${RET}."
 		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && echo -e "${wERROR}${ME}: ${E}${wNC}" >> "${ALLSKY_MESSAGES}"
+		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
 		RETURN_CODE=2
 	fi
 

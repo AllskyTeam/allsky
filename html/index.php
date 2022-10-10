@@ -89,7 +89,6 @@ if ($useLogin) {
 	<!-- Make messages look nicer, and align the "x" with the message. -->
 	<style>
 		.x {line-height: 150%;}
-		.close {line-height: 85%;}
 		.version-title { display: inline-block; font-size: 90%; }
 		@media (max-width: 768px) {.version-title { font-size: 75%; }}
 	</style>

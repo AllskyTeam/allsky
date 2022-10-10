@@ -1,7 +1,7 @@
 <?php
 
 /**
- * AllSky Administration Panel
+ * AllSky Web User Interface (WebUI)
  *
  * Enables use of simple web interface rather than SSH to control a ZWO camera on the Raspberry Pi.
  * Uses code from RaspAP by Lawrence Yau <sirlagz@gmail.com> and Bill Zimmerman <billzimmerman@gmail.com>
@@ -37,16 +37,16 @@ define('RASPI_OPENVPN_ENABLED', false);
 define('RASPI_TORPROXY_ENABLED', false);
 
 include_once('includes/raspap.php');
-include_once('includes/dashboard.php');
-include_once('includes/dashboard_eth0.php');
+include_once('includes/dashboard_WLAN.php');
+include_once('includes/dashboard_LAN.php');
 include_once('includes/liveview.php');
 include_once('includes/authenticate.php');
 include_once('includes/admin.php');
 include_once('includes/dhcp.php');
 include_once('includes/hostapd.php');
 include_once('includes/system.php');
-include_once('includes/configure_client.php');
-include_once('includes/camera_settings.php');
+include_once('includes/configureWiFi.php');
+include_once('includes/allskySettings.php');
 include_once('includes/days.php');
 include_once('includes/images.php');
 include_once('includes/editor.php');
@@ -89,8 +89,6 @@ if ($useLogin) {
 	<!-- Make messages look nicer, and align the "x" with the message. -->
 	<style>
 		.x {line-height: 150%;}
-		.version-title { display: inline-block; font-size: 90%; }
-		@media (max-width: 768px) {.version-title { font-size: 75%; }}
 	</style>
     <!-- MetisMenu CSS -->
     <link href="bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
@@ -176,13 +174,12 @@ if ($useLogin) {
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="index.php">
+            <a class="navbar-brand valign-center" href="index.php">
                 <img src="img/allsky-logo.png" title="Allsky logo">
-                <div class="navbar-title">AllSky Administration Panel</div>
+                <div class="navbar-title">Web User Interface (WebUI)</div>
 				<div class="version-title"><?php displayVersions(); ?></div>
             </a>
-        </div>
-        <!-- /.navbar-header -->
+        </div> <!-- /.navbar-header -->
 
         <!-- Navigation -->
         <div class="navbar-default sidebar" role="navigation">
@@ -205,15 +202,15 @@ if ($useLogin) {
                     </li>
                     <li>
                         <a href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Editor</a>
-                    </li>
-	            <li>
-                        <a href="index.php?page=eth0_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>LAN</b> Connection Status</a>
-                    </li>
-                    <li>
-                        <a href="index.php?page=wlan0_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Connection Status</a>
+                    </li>					
+					<li>
+                        <a href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
                     </li>
                     <li>
-                        <a href="index.php?page=wpa_conf"><i class="fa fa-signal fa-fw"></i> Configure Wifi</a>
+                        <a href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="index.php?page=wpa_conf"><i class="fa fa-wifi fa-fw"></i> Configure Wifi</a>
                     </li>
                     <?php if (RASPI_OPENVPN_ENABLED) : ?>
                         <li>
@@ -234,7 +231,7 @@ if ($useLogin) {
                     </li>
                     <li>
                         <a href="/documentation" target="_blank" title="Opens in new window"><i class="fa fa-book fa-fw"></i> Allsky Documentation <i class="fa fa-external-link-alt fa-fw"></i></a>
-                    </li>			
+                    </li>
                     <li>
                         <span onclick="switchTheme()"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
                     </li>
@@ -283,11 +280,11 @@ if ($useLogin) {
                     case "live_view":
                         DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);
                         break;
-                    case "wlan0_info":
-                        DisplayDashboard("wlan0");
+                    case "WLAN_info":
+                        DisplayDashboard_WLAN("wlan0");
                         break;
-                    case "eth0_info":
-                        DisplayDashboard_eth0("eth0");
+                    case "LAN_info":
+                        DisplayDashboard_LAN("eth0");
                         break;
                     case "camera_conf":
                         DisplayCameraConfig();
@@ -327,7 +324,7 @@ if ($useLogin) {
                         break;
                     case "module":
                         DisplayModule();
-                        break;
+                        break;						
                     default:
                         DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);
                 }

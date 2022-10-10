@@ -254,10 +254,11 @@ if ($useLogin) {
 				if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 					foreach ($contents_array as $line) {
-						$status->addMessage($line, 'danger', false);	// warning, danger, success
+						// Let invoker set the colors (pass 'none').
+						$status->addMessage($line, 'none', false);
 					}
 					$status->showMessages();
-					echo "<form action='?page=$page&clear=true' method='POST'><input type='submit' class='btn btn-danger' value='Clear all messages' /></form>";
+					echo "<form action='?page=$page&clear=true' method='POST'><input type='submit' class='btn btn-primary' value='Clear all messages' /></form>";
 				}
 
                 switch ($page) {

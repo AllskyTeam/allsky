@@ -21,9 +21,9 @@ fi
 # The classes are all lower case, so convert.
 TYPE="${1,,}"
 if [[ ${TYPE} == "error" ]]; then
-	$TYPE="danger"
+	TYPE="danger"
 elif [[ ${TYPE} == "debug" ]]; then
-	$TYPE="warning"
+	TYPE="warning"
 fi
 MESSAGE="${2}"
 

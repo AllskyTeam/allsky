@@ -258,9 +258,7 @@ if ($useLogin) {
 						$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
 						$status->showMessages();
 					}
-				}
-
-				if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
+				} else if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 					foreach ($contents_array as $line) {
 						$status->addMessage($line, 'danger', false);	// warning, danger, success

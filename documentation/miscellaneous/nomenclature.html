@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 
+	<script src="../documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Nomenclature</title>
+</head>
+<body>
+<div class="d-flex flex-column flex-md-row gh-header">
+	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Nomenclature</h1>
+</div>
+
+<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
+<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
+
+<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
+	<div w3-include-html="sidebar.html" d="../" id="sidebar"></div>
+</div>
+
+<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+<h1>Allsky Suite</h1>
+The AllSky suite of software consists of two GitHub packages:
+<ol>
+<li><a href="https://github.com/thomasjacquin/allsky"><code>allsky</code></a>
+is the main program that captures and saves images.
+This also includes the Web User Interface (<b>WebUI</b>)
+used to administer AllSky and parts of your Pi.
+In addition to taking pictures, you can also:
+<ul>
+	<li>Display the most recent image.
+	<li>View all saved prior images, timelapse, keograms, and startrails.
+	<li>Configure Allsky settings via a web form and a built-in color editor.
+	<li>See the status of the LAN and WLAN (Wireless LAN).
+	<li>Configure Wi-Fi.
+	<li>Change the Allsky administrative login name and password.
+	<li>View information about the Pi such as amount of free disk space, CPU temperature, etc.
+	<li>Optionally view user-generated data such as ambient temperature or fan speed.
+	<li>View Allsky Documentation, of which this page is part of.
+</ul>
+
+<li><a href="https://github.com/thomasjacquin/allsky-website"><code>allsky-website</code></a>
+is an optional simple web interface that displays:
+<ul>
+	<li>The most recent image.
+	<li>An optional constellation overlay on the image.
+	<li>Saved startrails, keograms, and/or timelapse videos.
+	<li>Optionally the most recent "mini" timelapse video.
+	<li>Information about your camera (location, owner, Pi version, camera type, etc.).
+	<li>Optional information about your settings.
+</ul>
+It can run on your Pi and/or one or more remote computers.
+</ol>
+<hr>
+
+<h1>Terms</h1>
+<ul>
+<li>When a Wiki page says "AllSky Software" or just "software" it is referring to one of the packages above.
+<li>The <code>allsky-website</code> package is usually referred to as the
+<b>Allsky Website</b> or just the <b>Website</b>.
+<li>You will see the <code>config.sh</code> or <code>config/config.sh</code>
+file mentioned in a lot of places.
+The full name of this file is <code>~/allsky/config/config.sh</code>.
+It holds a lot of the Allsky settings and should be edited via the <b>Editor</b> link in the WebUI.
+<li>The <code>config/ftp-settings.sh</code> file holds the upload-related settings and
+should also be edited using the <b>Editor</b> link.
+</ul>
+<hr>
+
+<h1>Starting and stopping AllSky</h1>
+Allsky should start automatically after your Pi reboots,
+and will continue running until you stop or restart it.
+
+<ul>
+<li>To start AllSky: <code>systemctl start allsky</code>
+<li>To stop AllSky: <code>systemctl stop allsky</code>
+<li>To restart Allsky: <code>systemctl restart allsky</code>
+</ul>
+<p>The <b>Allsky Website</b> normally does not need to be started or stopped,
+but if you need to do so, it's the <code>lighttpd</code> service.
+
+
+</div><!-- markdown-body --></div><!-- Layout-main ... -->
+</div><!-- Layout -->
+</div><!-- xcontainer-x1 ... -->
+</body>
+</html>
+<script> includeHTML(); </script>

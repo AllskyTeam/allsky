@@ -45,7 +45,7 @@ def addImageRecord(connection, cursor):
     imagePath = s.getEnvironmentVariable("CURRENT_IMAGE")
     imageFileName = os.path.basename(imagePath)
 
-    folder = s.getEnvironmentVariable("AS_DATE")
+    folder = s.getEnvironmentVariable("DATE_NAME")
 
     exposure = int(s.getEnvironmentVariable("AS_EXPOSURE_US"))
 

@@ -445,6 +445,8 @@ class IMAGEDATA {
       context: this
     }).done((result) => {
 
+      $('#id-charts-wrapper').removeClass('hidden');
+
       if (!result.saverunning) {
         $('#id-warnings-nomodule').removeClass('hidden');
         $('#id-warnings-day').addClass('hidden');
@@ -488,6 +490,8 @@ class IMAGEDATA {
       //$('#id-historic-date').val('20221011');
       this.refreshCharts();
 
+    }).fail(function( jqXHR, textStatus, errorThrown ) {
+      $('#id-charts-nodb').removeClass('hidden');
     });
 
   }

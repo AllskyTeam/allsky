@@ -10,6 +10,6 @@
     margin-top: 50px;
 }
 
-#daywarning {
+#daywarning, #nodbwarning {
     text-align: center;
 }

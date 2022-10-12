@@ -16,7 +16,7 @@ class DATAUTIL
     private $overlayPath;
     private $allskyTmp;
 
-    private $database = 'test.db';
+    private $database = 'allsky.db';
 
     public function __construct()
     {
@@ -26,7 +26,7 @@ class DATAUTIL
 
     public function run()
     {
-        //$this->checkXHRRequest();
+        $this->checkXHRRequest();
         $this->sanitizeRequest();
         $this->runRequest();
     }
@@ -78,54 +78,75 @@ class DATAUTIL
         }
     }
 
-    public function getStartup() {
-        $cam_type = getCameraType();
-        $settings_file = getSettingsFile($cam_type);
-        $camera_settings_str = file_get_contents($settings_file, true);
-        $camera_settings_array = json_decode($camera_settings_str, true);
-        $angle = $camera_settings_array['angle'];
-        $lat = $camera_settings_array['latitude'];
-        $lon = $camera_settings_array['longitude'];
+    private function haveDatabase() {
+        $result = true;
 
-        $tod = 'Unknown';
-        exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
-        if ($retval == 2) {
-            $tod = 'day';
-        } else if ($retval == 3) {
-            $tod = 'night';
+        try {
+            $db = new SQLite3(ALLSKY_HOME . '/' . $this->database);
+            $db->close();
+        } catch (Exception $ex) {
+            $result = false;
         }
 
-        $overlaySettings = ALLSKY_CONFIG . '/postprocessing_night.json';
-        $overlayStr = file_get_contents($overlaySettings, true);
-        $overlaySettings = json_decode($overlayStr, true);
+        return $result;
+    }
 
-        $saveDetailsRunning = false;
-        foreach ($overlaySettings as $key=>$module) {
-            if (isset($module['module'])) {
-                if ($module['module'] == 'allsky_savedetails.py') {
-                    if ($module['enabled']) {
-                        $saveDetailsRunning = true;
+    public function getStartup() {
+
+        $haveDatabase = $this->haveDatabase();
+
+        if ($haveDatabase) {
+            $cam_type = getCameraType();
+            $settings_file = getSettingsFile($cam_type);
+            $camera_settings_str = file_get_contents($settings_file, true);
+            $camera_settings_array = json_decode($camera_settings_str, true);
+            $angle = $camera_settings_array['angle'];
+            $lat = $camera_settings_array['latitude'];
+            $lon = $camera_settings_array['longitude'];
+
+            $tod = 'Unknown';
+            exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+            if ($retval == 2) {
+                $tod = 'day';
+            } else if ($retval == 3) {
+                $tod = 'night';
+            }
+
+            $overlaySettings = ALLSKY_CONFIG . '/postprocessing_night.json';
+            $overlayStr = file_get_contents($overlaySettings, true);
+            $overlaySettings = json_decode($overlayStr, true);
+
+            $saveDetailsRunning = false;
+            foreach ($overlaySettings as $key=>$module) {
+                if (isset($module['module'])) {
+                    if ($module['module'] == 'allsky_savedetails.py') {
+                        if ($module['enabled']) {
+                            $saveDetailsRunning = true;
+                        }
                     }
                 }
             }
-        }
 
-        $db = new SQLite3(ALLSKY_HOME . '/' . $this->database);
-        $res = $db->query('SELECT DISTINCT(folder) FROM images');
-        $days = [];
-        while ($row = $res->fetchArray()) {
-            $days[ $row['folder']] = [
-                'text' => ''
+            $db = new SQLite3(ALLSKY_HOME . '/' . $this->database);
+            $res = $db->query('SELECT DISTINCT(folder) FROM images');
+            $days = [];
+            while ($row = $res->fetchArray()) {
+                $days[ $row['folder']] = [
+                    'text' => ''
+                ];
+            }   
+
+            $result = [
+                'tod' => $tod,
+                'saverunning' => $saveDetailsRunning,
+                'folders' => $days
             ];
-        }   
 
-        $result = [
-            'tod' => $tod,
-            'saverunning' => $saveDetailsRunning,
-            'folders' => $days
-        ];
-
-        $this->sendResponse(json_encode($result));
+            $this->sendResponse(json_encode($result));
+        } else {
+            die('jkljlk');
+            $this->send404();
+        }
     }
     
     public function getLiveData() {
@@ -192,6 +213,7 @@ class DATAUTIL
             $data['images'][] = 'images/' . $row['folder'] . '/' . $row['filename'];
             $data['thumbnails'][] = 'images/' . $row['folder'] . '/thumbnails/' . $row['filename'];
         }
+
         $hours = [];
         $skyState = [];
         $percentage = [];

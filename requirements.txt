@@ -6,4 +6,5 @@ pytz
 suntime
 scipy
 scikit-image
+paho-mqtt
 numpy>=1.23.3

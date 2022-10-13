@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# This script is a hook to run additional operations at the end of the day,
+# such as creating a timelapse of daytime images.
+
+# To use this script, first copy it to
+# $ALLSKY_HOME/scripts/endOfDay_additionalSteps.sh, and then edit the copy.
+# This will prevent your changes from being lost in future upgrades.
+
+# Include "${ME}" in any output so it's easier to find in the log file, for debugging.
+ME="$(basename "$BASH_ARGV0")"

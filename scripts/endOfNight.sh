@@ -3,7 +3,7 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
-if [ -z "${ALLSKY_HOME}" ] ; then
+if [[ -z ${ALLSKY_HOME} ]]; then
 	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
@@ -15,7 +15,7 @@ source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
 if [ $# -eq 1 ] ; then
-	if [ "${1}" = "-h" -o "${1}" = "--help" ] ; then
+	if [[ ${1} = "-h" || ${1} = "--help" ]]; then
 		echo -e "Usage: ${ME} [YYYYmmdd]"
 		exit 0
 	else
@@ -26,7 +26,7 @@ else
 fi
 
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
-if [ ! -d "${DATE_DIR}" ] ; then
+if [[ ! -d ${DATE_DIR} ]]; then
 	echo -e "${ME}: ${RED}ERROR: '${DATE_DIR}' not found!${NC}"
 	exit 2
 fi

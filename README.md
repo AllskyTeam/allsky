@@ -384,6 +384,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* If there is not enough swap space configured you are prompted to add more.  Doing this decreases the chance of timelapse creation problems.
 			* If `allsky/tmp` is not a memory-resident filesystem you are prompted to make it one.  This SIGNIFICANTLY decreases the number of writes to the SD card, prolonging its life.			
 			* If a `~/allsky-OLD` directory is found it's assumed to be a prior release of Allsky and you'll be prompted to have its images, darks, and other items moved to the new release.  This is the suggested way to upgrade a current Allsky release.
+		* An `endOfDay_additionalSteps.sh` script can now be run after the transition from daytime to nighttime.  This can be used, for example, to create a timelapse of daytime images.
 		* Latitude and longitude can now be specified as either a decimal number (e.g., `-105.21`) or with N, S, E, W (e.g., `105.21W`).
 		* The Secure CP (`scp`) and Google Cloud Service (`gcs`) protocols are now supported for file uploads.
 		* New ftp-settings.sh variables:

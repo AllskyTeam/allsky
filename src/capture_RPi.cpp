@@ -335,7 +335,7 @@ int main(int argc, char *argv[])
 	char bufTime[128]			= { 0 };
 	char bufTemp[1024]			= { 0 };
 	char const *bayer[]			= { "RG", "BG", "GR", "GB" };
-	bool endOfNight				= false;
+	bool justTransitioned		= false;
 	ASI_ERROR_CODE asiRetCode;		// used for return code from ASI functions.
 
 	// We need to know its value before setting other variables.
@@ -542,12 +542,13 @@ int main(int argc, char *argv[])
 
 		else if (dayOrNight == "DAY")
 		{
-			if (endOfNight == true)		// Execute end of night script
+			if (justTransitioned == true)
 			{
+				// Just transitioned from night to day, so execute end of night script
 				Log(1, "Processing end of night data\n");
 				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/endOfNight.sh &", CG.allskyHome);
 				system(bufTemp);
-				endOfNight = false;
+				justTransitioned = false;
 				displayedNoDaytimeMsg = false;
 			}
 
@@ -593,6 +594,15 @@ int main(int argc, char *argv[])
 
 		else	// NIGHT
 		{
+			if (justTransitioned == true)
+			{
+				// Just transitioned from day to night, so execute end of day script
+				Log(1, "Processing end of day data\n");
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/endOfDay.sh &", CG.allskyHome);
+				system(bufTemp);
+				justTransitioned = false;
+			}
+
 			Log(1, "==========\n=== Starting nighttime capture ===\n==========\n");
 
 			// We only skip initial frames if we are starting in nighttime and using auto-exposure.
@@ -827,11 +837,8 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			dayOrNight = calculateDayOrNight(CG.latitude, CG.longitude, CG.angle);
 		}
 
-		if (lastDayOrNight == "NIGHT")
-		{
-			// Flag end of night processing is needed
-			endOfNight = true;
-		}
+		if (lastDayOrNight != dayOrNight)
+			justTransitioned = true;
 	}
 
 	closeUp(EXIT_OK);

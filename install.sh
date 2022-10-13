@@ -591,6 +591,11 @@ restore_prior_files() {
 		mv "${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
 	fi
 
+	if [ -f "${PRIOR_INSTALL_DIR}/scripts/endOfDay_additionalSteps.sh" ]; then
+		display_msg progress "Restoring endOfDay_additionalSteps.sh."
+		mv "${PRIOR_INSTALL_DIR}/scripts/endOfDay_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
+	fi
+
 	if [ -d "${PRIOR_INSTALL_DIR}/images" ]; then
 		display_msg progress "Restoring images."
 		mv "${PRIOR_INSTALL_DIR}/images" "${ALLSKY_HOME}"

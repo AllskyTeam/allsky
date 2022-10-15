@@ -178,6 +178,7 @@ class ALLSKYOVERLAY:
         return result
 
     def _readData(self, dataFilename, defaultExpiry):
+        result = False
         fileExtension = pathlib.Path(dataFilename).suffix
         fileModifiedTime = int(os.path.getmtime(dataFilename))
         if fileExtension == '.json':
@@ -247,6 +248,7 @@ class ALLSKYOVERLAY:
                     for line in file:
                         name, value = line.partition("=")[::2]
                         name = "AS_" + name
+                        value = value.strip()
                         os.environ[name] = str(value)
                         self._saveExtraDataField(name, fileModifiedTime, defaultExpiry)
             else:

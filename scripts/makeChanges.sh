@@ -93,12 +93,13 @@ RUN_POSTDATA=false
 RUN_POSTTOMAP=false
 POSTTOMAP_ACTION=""
 WEBSITE_CONFIG=()
+SHOW_POSTDATA_MESSAGE=true
 
 while [ $# -gt 0 ]; do
 	KEY="${1}"
 	LABEL="${2}"
 	NEW_VALUE="${3}"
-	if [ "${DEBUG}" = "true" ]; then
+	if [[ ${DEBUG} == "true" ]]; then
 		MSG="New ${KEY} = [${NEW_VALUE}]"
 		if [[ ${ON_TTY} -eq 1 ]]; then
 			echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
@@ -114,14 +115,14 @@ while [ $# -gt 0 ]; do
 
 		cameraType)
 			# If we can't set the new camera type, it's a major problem so exit right away.
-			# When we're changing cameraType we're not changing anything else.
+			# NOTE: when we're changing cameraType we're not changing anything else.
 
 			CC_FILE_OLD="${CC_FILE}-OLD"
 
 			if [ -f "${CC_FILE}" ]; then
 				# Save the current file just in case creating a new one fails.
 				# It's a link so copy it to a temp name, then remove the old name.
-				[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}DEBUG: saving '${CC_FILE}' to '${CC_FILE_OLD}'${wNC}"
+				[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Saving '${CC_FILE}' to '${CC_FILE_OLD}'${wNC}"
 				cp "${CC_FILE}" "${CC_FILE_OLD}"
 				rm -f "${CC_FILE}"
 			fi
@@ -143,7 +144,7 @@ while [ $# -gt 0 ]; do
 			else
 				C=""
 			fi
-			[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}DEBUG: Calling capture_${NEW_VALUE} ${C} -cc_file '${CC_FILE}'${wNC}"
+			[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Calling capture_${NEW_VALUE} ${C} -cc_file '${CC_FILE}'${wNC}"
 			"${ALLSKY_HOME}/capture_${NEW_VALUE}" ${C} -debuglevel 3 -cc_file "${CC_FILE}"
 			RET=$?
 			if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
@@ -188,12 +189,12 @@ while [ $# -gt 0 ]; do
 			# These variables don't include a directory since the directory is specified with "--dir" below.
 
 			if [[ ${DEBUG} == "true" ]]; then
-				echo "Calling:" \
+				echo -e "${wDEBUG}Calling:" \
 					"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 					${FORCE} ${DEBUG_ARG} \
 					--cc_file "${CC_FILE}" \
 					--options_file "${OPTIONS_FILE}" \
-					--settings_file "${SETTINGS_FILE}"
+					--settings_file "${SETTINGS_FILE}${wNC}"
 			fi
 			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 				${FORCE} ${DEBUG_ARG} \
@@ -233,6 +234,8 @@ while [ $# -gt 0 ]; do
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			[[ ${CAMERA_TYPE_ONLY} == "true" ]] && exit 0
 
+			RUN_POSTDATA=true			# sends settings file if there's a website
+			SHOW_POSTDATA_MESSAGE=false	# user doesn't need to see this output
 			NEEDS_RESTART=true
 			;;
 
@@ -293,7 +296,6 @@ while [ $# -gt 0 ]; do
 			if [[ -n "${NEW_VALUE}" && ! -f "${NEW_VALUE}" ]]; then
 				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
 			fi
-			RUN_POSTDATA=false
 			NEEDS_RESTART=true
 			;;
 
@@ -336,23 +338,36 @@ while [ $# -gt 0 ]; do
 		shift 3
 done
 
-if [[ ${RUN_POSTDATA} == "true" && ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
+# Is there a local or remote website?
+# For remote, check if a remote server is specified, not for the remote config file,
+# since there could, in theory, be a remote config file but no server specified to send it to.
+if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || ( ${PROTOCOL} != "" && ${PROTOCOL} != "local" ) ]]; then
+	HAS_WEBSITE=true
+else
+	HAS_WEBSITE=false
+fi
+if [[ ${RUN_POSTDATA} == "true" && ${HAS_WEBSITE} == "true" ]]; then
+	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postData.sh${NC}"
 	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" >&2)" ; then
-		echo -en "${wOK}"
-		echo -e "Updated twilight data sent to your Allsky Website."
-		echo -e "${wBOLD}If you have the Allsky Website open in a browser, please refresh the window.${wNBOLD}"
-		echo -en "${wNC}"
+		if [[ ${SHOW_POSTDATA_MESSAGE} == "true" ]]; then
+			echo -en "${wOK}"
+			echo -e "Updated twilight data sent to your Allsky Website."
+			echo -e "${wBOLD}If you have the Allsky Website open in a browser, please refresh the window.${wNBOLD}"
+			echo -en "${wNC}"
+		fi
 	else
 		echo -e "${wERROR}ERROR posting updated twilight data: ${RESULT}.${wNC}"
 	fi
 fi
 
 # shellcheck disable=SC2128
-if [[ ${WEBSITE_CONFIG} != "" && ( -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ) ]]; then
+if [[ ${WEBSITE_CONFIG} != "" && ${HAS_WEBSITE} == "true" ]]; then
+	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing updateWebsiteConfig.sh${NC}"
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} "${WEBSITE_CONFIG[@]}"
-fi	# else the Website isn't installed on the Pi
+fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
+	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
 fi
 

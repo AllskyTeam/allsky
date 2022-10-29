@@ -2,6 +2,7 @@
 
 # This script uploads a file to a website to tell the website when the user has defined
 # "sunrise" and "sunset".  Use the angle set by the user.
+# A copy of the settings file is also uploaded.
 
 # Allow this script to be executed manually or by sudo, which requires several variables to be set.
 if [ -z "${ALLSKY_HOME}" ] ; then
@@ -22,6 +23,22 @@ source "${ALLSKY_CONFIG}/config.sh"
 source "${ALLSKY_SCRIPTS}/functions.sh"
 # shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
+
+# Make sure a local or remote Allsky Website exists.
+if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
+	HAS_LOCAL_WEBSITE=true
+else
+	HAS_LOCAL_WEBSITE=false
+fi
+if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
+	HAS_REMOTE_WEBSITE=true
+else
+	HAS_REMOTE_WEBSITE=false
+fi
+if [[ ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} && ${HAS_REMOTE_WEBSITE} == "false" ]]; then
+	echo -e "${YELLOW}${ME}: WARNING: No local or remote website found.${NC}"
+	exit 0		# It's not an error
+fi
 
 latitude="$(convertLatLong "$(settings ".latitude")" "latitude")"
 LATRET=$?
@@ -86,32 +103,23 @@ function upload_file()
 	strFILE_TO_UPLOAD="${2}"
 	[[ ! -f ${FILE_TO_UPLOAD} ]] && echo -e "${RED}${ME}: ERROR: File to upload '${FILE_TO_UPLOAD}' (${strFILE_TO_UPLOAD}) not found.${NC}" && return 1
 
-	COPIED=false
 	typeset -i RETCODE=0
 
 	# Copy to local Allsky website if it exists.
-	if [ -d "${ALLSKY_WEBSITE}" ]; then
+	if [[ ${HAS_LOCAL_WEBSITE} == "true" ]]; then
 		cp "${FILE_TO_UPLOAD}" "${ALLSKY_WEBSITE}"
 		((RETCODE=$?))
-		COPIED=true
 	fi
 
-	# Upload to remote website
-	if [ -n "${REMOTE_HOST}" ]; then
+	# Upload to remote website if there is one.
+	# Assume if PROTOCOL is set, there's a remote website.
+	if [[ ${HAS_REMOTE_WEBSITE} == "true" ]]; then
 		"${ALLSKY_SCRIPTS}/upload.sh" --silent \
 			"${FILE_TO_UPLOAD}" \
 			"${IMAGE_DIR}" \
 			"" \
 			"PostData"
 		((RETCODE=RETCODE+$?))
-		COPIED=true
-	fi
-
-	if [ "${COPIED}" = "false" ]; then
-		echo "***"
-		echo -e "${RED}${ME}: WARNING: No local or remote website specified so '${FILE_TO_UPLOAD}' not copied anywhere.${NC}"
-		echo "***"
-		return 1
 	fi
 
 	return ${RETCODE}

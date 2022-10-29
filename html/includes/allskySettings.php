@@ -110,11 +110,11 @@ function DisplayCameraConfig(){
 				}
 
 				if ($doingRestart) {
-					$msg .= " and service restarted.";
+					$msg .= " and Allsky restarted.";
 					// runCommand displays $msg.
 					runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
 				} else {
-					$msg .= " and service NOT restarted.";
+					$msg .= " but Allsky NOT restarted.";
 					$status->addMessage($msg, 'info');
 				}
 
@@ -292,9 +292,16 @@ function toggle_advanced()
 					echo "<label style='padding-right: 3px;'>$label</label>";
 					echo "</td>";
 
-					if ($type == "widetext") $span="colspan='2'";
-					else $span="";
-					echo "<td $span style='padding: 5px 0px;'>";
+					if ($type == "widetext") {
+						$span="colspan='2'";
+						$style="padding: 5px 3px 7px 8px;";
+					} else {
+						$span="";
+						// Less on top side to even out with drop-shadow on bottom.
+						// Ditto for left side with shadow on right.
+						$style="padding: 5px 5px 7px 8px;";
+					}
+					echo "<td $span valign='middle' style='$style' align='center'>";
 					// The popup gets in the way of seeing the value a little.
 					// May want to consider having a symbol next to the field
 					// that has the popup.
@@ -311,17 +318,16 @@ function toggle_advanced()
 							if ($type == "number") $type = "text";
 							$t = $type;
 						}
-						echo "<input $readonly class='form-control boxShadow' type='$t'" .
+						echo "<input $readonly class='form-control boxShadow settingInput' type='$t'" .
 							" name='$name' value='$value'" .
-							" style='padding: 0px 3px 0px 0px; text-align: right; width: 120px; $nullOKbg'>";
+							" style='padding: 0px 3px 0px 0px; text-align: right; $nullOKbg'>";
 					} else if ($type == "widetext"){
 						echo "<input class='form-control boxShadow' type='text'" .
 							" name='$name' value='$value'" .
 						   	" style='padding: 6px 5px; $nullOKbg'>";
 					} else if ($type == "select"){
-						// text-align for <select> works on Firefox but not Chrome or Edge
-						echo "<select class='form-control boxShadow' name='$name' title='Select an item'" .
-						   	" style='width: 120px; margin-right: 20px; text-align: right; padding: 0px 3px 0px 0px;'>";
+						echo "<select class='form-control boxShadow settingInput' name='$name' title='Select an item'" .
+						   	" style='text-align: right; padding: 0px 3px 0px 0px;'>";
 						foreach($option['options'] as $opt){
 							$val = $opt['value'];
 							$lab = $opt['label'];
@@ -333,7 +339,7 @@ function toggle_advanced()
 						}
 						echo "</select>";
 					} else if ($type == "checkbox"){
-						echo "<div class='switch-field boxShadow' style='margin-bottom: -3px; border-radius: 4px;'>";
+						echo "<div class='switch-field boxShadow settingInput' style='margin-bottom: -3px; border-radius: 4px;'>";
 							echo "<input id='switch_no_".$name."' class='form-control' type='radio' ".
 								"name='$name' value='0' ".
 								($value == 0 ? " checked " : "").  ">";
@@ -352,7 +358,7 @@ function toggle_advanced()
 					echo "</td>";
 					if ($type == "widetext")
 						echo "</tr><tr class='rowSeparator $advClass' style='$advStyle'><td></td>";
-					echo "<td>$nullOKmsg$description</td>";
+					echo "<td style='padding-left: 10px;'>$nullOKmsg$description</td>";
 				}
 				echo "</tr>";
 			 }

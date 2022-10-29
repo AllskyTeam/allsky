@@ -46,7 +46,7 @@ if ($msg == "") {
 		// name to NOT include that string.
 		$remoteName = str_replace("remote_", "", basename($file));
 		$cmd = ALLSKY_SCRIPTS . "/upload.sh --silent '$file' '$imageDir' '$remoteName' 'remote_file'";
-		exec("$cmd 2>&1", $output, $return_val);
+		exec("sudo -u " . ALLSKY_OWNER . " $cmd 2>&1", $output, $return_val);
 		if ($return_val == 0) {
 			$msg = "$file saved and sent to $remoteHost as $remoteName.";
 		} else {

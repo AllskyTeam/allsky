@@ -204,7 +204,9 @@ else # sftp/ftp/ftps
 		echo "${ME}: FTP '${FILE_TO_UPLOAD}' to '${REMOTE_DIR}${DESTINATION_NAME}', TEMP_NAME=${TEMP_NAME}"
 	fi
 	# LFTP_CMDS needs to be unique per file type so we don't overwrite a different upload type.
-	LFTP_CMDS="${ALLSKY_TMP}/${FILE_TYPE}-lftp_cmds.txt"
+	DIR="${ALLSKY_TMP}/lftp_cmds"
+	[[ ! -d ${DIR} ]] && mkdir "${DIR}"
+	LFTP_CMDS="${DIR}/${FILE_TYPE}.txt"
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 	(
 		[[ -n ${LFTP_COMMANDS} ]] && echo ${LFTP_COMMANDS}

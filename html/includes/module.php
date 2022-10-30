@@ -31,7 +31,7 @@ function DisplayModule() {
 <div class="row">
     <div class="col-lg-12">
 		<div class="panel panel-primary">
-			<div class="panel-heading"><i class="fa fa-bars fa-fw"></i> Module Editor</div>
+			<div class="panel-heading"><i class="fa fa-bars fa-fw"></i> Module Manager</div>
             <div class="panel-body">
                 <nav class="navbar navbar-default">
                     <div class="container-fluid">
@@ -64,8 +64,7 @@ function DisplayModule() {
                                     <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn glyphicon glyphicon-wrench" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"></div>
                                 </li>                                
                                 <li>
-                                    <div class="btn btn-lg navbar-btn glyphicon glyphicon-question-sign" id="module-help" data-toggle="tooltip" data-container="body" data-placement="top" title="Help">
-                                    </div>
+                                    <div class="btn btn-lg navbar-btn glyphicon glyphicon-repeat" id="module-editor-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset Config to default"></div>
                                 </li>
                             </ul>                            
                         </div>
@@ -90,10 +89,6 @@ function DisplayModule() {
             </div>
 		</div>
 	</div>
-</div>
-
-<div id="app-module-helpdialog"  title="Help">
-    <div id="app-module-helptext"></div>
 </div>
 
 <div class="modal" role="dialog" id="module-upload-dialog">

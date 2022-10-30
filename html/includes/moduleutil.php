@@ -207,6 +207,12 @@ class MODULEUTIL
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
 
+        $corrupted = false;
+        if ($configData == null) {
+            $corrupted = true;
+            $configData = array();
+        }
+
         $coreModules = $this->readModuleData($this->allskyModules, "system", $event, $showexperimental);
         $userModules = $this->readModuleData($this->userModules, "user", $event, $showexperimental);
         $allModules = array_merge($coreModules, $userModules);
@@ -274,7 +280,8 @@ class MODULEUTIL
 
         $result = [
             'available' => $availableResult,
-            'selected'=> $selectedResult
+            'selected'=> $selectedResult,
+            'corrupted' => $corrupted
         ];
         $result = json_encode($result, JSON_FORCE_OBJECT);     
         $this->sendResponse($result);       
@@ -340,6 +347,18 @@ class MODULEUTIL
             }
         }
         $this->send500('Unable to locate module in zip file');
+    }
+
+    public function getReset() {
+        $flow = $_GET['flow'];
+
+        
+        $sourceConfigFileName = ALLSKY_REPO . '/' . 'postprocessing_' . strtolower($flow) . '.json.repo';
+        $rawConfigData = file_get_contents($sourceConfigFileName);
+        $configFileName = ALLSKY_CONFIG . '/' . 'postprocessing_' . strtolower($flow) . '.json';
+        file_put_contents($configFileName, $rawConfigData);
+
+        $this->sendResponse();
     }
 }
 

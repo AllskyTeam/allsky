@@ -62,16 +62,10 @@ class MODULESEDITOR {
                 this.#addModules(this.#configData.available, '#modules-available')
                 this.#addModules(this.#configData.selected, '#modules-selected')
 
-                $(document).on('click', '#module-help', (event) => {
-                    $('#app-module-helpdialog').dialog({
-                        width: 1024,
-                        height: 800,
-                        open: function (event, ui) {
-                            $('#app-module-helptext').load('/help/modules/modules.html?dt' + (new Date()).valueOf(), function () {
-                            });
-                        }
-                    });
-                });                
+                if (result.corrupted) {
+                    bootbox.alert('The Flow configuration is corrupted. Please use the reset Flow button to revert the flow to the installation default');
+                }
+                this.#updateToolbar();
 
                 $(document).on('click', '.module-delete-button', (event) => {
                     if (this.#dirty) {
@@ -210,6 +204,14 @@ class MODULESEDITOR {
         } else {
             $('#module-editor-save').removeClass('green pulse');
             $('#module-editor-save').addClass('disabled');
+        }
+
+        if (this.#configData !== null) {
+            if (this.#configData.corrupted) {
+                $('#module-editor-reset').addClass('green pulse');
+            } else {
+                $('#module-editor-reset').removeClass('green pulse');
+            }
         }
 
         if (this.#settings.settings.debugmode) {
@@ -769,6 +771,19 @@ class MODULESEDITOR {
     }
 
     run() {
+
+        $(document).on('click', '#module-editor-reset', (event) => {
+            if (window.confirm('Are you sure you wish to reset this Flow. This process CANNOT be undone?')) {
+                $.ajax({
+                    url: 'includes/moduleutil.php?request=Reset&flow=' + this.#eventName,
+                    type: 'GET',
+                    cache: false,
+                    context: this
+                }).done((result) => {
+                    this.#buildUI();
+                });
+            }
+        });      
 
         jQuery(window).bind('beforeunload', ()=> {
             if (this.#dirty) {

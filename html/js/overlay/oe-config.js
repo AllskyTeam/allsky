@@ -4,6 +4,7 @@ class OECONFIG {
     #config = {};
     #appConfig = {};
     #dataFields = {};
+    #overlayDataFields = {};
     #BASEDIR = 'annotater/';
 
     constructor() {
@@ -49,6 +50,15 @@ class OECONFIG {
                     cache: false
                 });
                 this.#dataFields = result;
+
+                result = await $.ajax({
+                    type: "GET",
+                    url: "includes/overlayutil.php?request=OverlayData",
+                    data: "",
+                    dataType: 'json',
+                    cache: false
+                });
+                this.#overlayDataFields = result;
 
                 this.#appConfig = await $.ajax({
                     type: "GET",
@@ -132,6 +142,10 @@ class OECONFIG {
         this.#appConfig.backgroundopacity = parseInt(opacity);
     }
 
+    get allDataFields() {
+        return this.#overlayDataFields.data;
+    }
+
     get dataFields() {
         return this.#dataFields.data;
     }
@@ -184,6 +198,18 @@ class OECONFIG {
             this.#dataFields.data = this.#dataFields.data .filter(function(element){ 
                 return element.id != id; 
             });
+        }
+        return result;
+    }
+
+    findAllFieldsById(id) {
+        let result = null;
+
+        for(let i = 0; i < this.#overlayDataFields.data.length; i++) {
+            if (this.#overlayDataFields.data[i].id == id) {
+                result = this.#overlayDataFields.data[i];
+                break;
+            }
         }
         return result;
     }

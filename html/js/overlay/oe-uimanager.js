@@ -22,6 +22,9 @@ class OEUIMANAGER {
     #debugMode = false;
     #imageCache = null;
 
+    #fieldTable = null;
+    #allFieldTable = null;
+
     constructor() {
         this.#configManager = window.oedi.get('config');
         this.#fieldManager = window.oedi.get('fieldmanager');
@@ -305,16 +308,15 @@ class OEUIMANAGER {
 
         $(document).on('click', '#oe-item-list', (event) => {
 
-            $('#itemlisttable').DataTable({
-                //ajax: 'includes/overlayutil.php?request=Data',
+            this.#fieldTable = $('#itemlisttable').DataTable({
                 data: this.#configManager.dataFields,
-                //dom: '<"toolbar">frtip',
                 autoWidth: false,
-                pagingType: 'numbers',
+                pagingType: 'simple_numbers',
                 paging: true,
                 info: true,
                 searching: true,
-                pageLength: this.#configManager.addListPageSize,
+                pageLength: parseInt(this.#configManager.addListPageSize),
+                lengthMenu: [ [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, -1], [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 'All']],
                 order: [[0, 'asc']],
                 columns: [
                     {
@@ -366,6 +368,110 @@ class OEUIMANAGER {
                 }
             });
 
+            if (this.#configManager.allDataFields != undefined) {
+                $('#oe-item-list-dialog-all-table').show();
+                $('#oe-item-list-dialog-all-error').hide();
+                this.#allFieldTable = $('#allitemlisttable').DataTable({
+                    data: this.#configManager.allDataFields,
+                    autoWidth: false,
+                    pagingType: 'simple_numbers',
+                    paging: true,
+                    info: true,
+                    searching: true,
+                    pageLength: parseInt(this.#configManager.addListPageSize),
+                    lengthMenu: [ [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, -1], [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 'All']],
+                    order: [[0, 'asc']],
+                    columns: [
+                        {
+                            data: 'id',
+                            width: '0px',
+                            visible: false
+                        }, {
+                            data: 'name',
+                            width: '350px'
+                        }, {
+                            data: 'value',
+                            width: '200px',
+                            render: function (item, type, row, meta) {
+                                if ( type !== 'display' ) {
+                                    return item;
+                                }
+                                if ( typeof item !== 'number' && typeof item !== 'string' ) {
+                                    return item;
+                                }
+                                item = item.toString();
+                                if ( item.length <= 30 ) {
+                                    return item;
+                                }
+                                
+                                let shortened = item.substr(0, 20-1);
+
+                                let escaped = item
+                                    .replace( /&/g, '&amp;' )
+                                    .replace( /</g, '&lt;' )
+                                    .replace( />/g, '&gt;' )
+                                    .replace( /"/g, '&quot;' );
+
+                                return '<span class="ellipsis" title="'+escaped+'">'+shortened+'&#8230;</span>';
+                            }                        
+                        }, {
+                            data: null,
+                            width: '100px',
+                            render: function (item, type, row, meta) {
+
+                                let config = window.oedi.get('config');
+                                let fields = config.dataFields;
+                                let check = '${' + item.name.replace('AS_', '') + '}'
+                                let found = false;
+                                for (let key in fields) {
+                                    if (fields[key].name == check) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+
+
+                                let tableData = $('#itemlisttable').DataTable().data();
+                                for (let key in tableData) {
+                                    if (tableData[key].name == check) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+
+                                let disabled = '';
+                                let dataId = 'data-id="' + item.id + '"';
+                                if (found) {
+                                    disabled = 'disabled="disabled"';
+                                    dataId = '';
+                                }
+                                let buttons = '<div class="btn-group"> <button ' + disabled + ' type="button" class="btn btn-primary btn-xs oe-all-list-add" ' + dataId + '>';
+                                buttons += '<i class="glyphicon glyphicon-plus oe-all-list-add" ' + dataId + '></i></button>';
+                                buttons += '</div>';
+                                
+                                return buttons;
+                            }
+                        }
+
+                    ],
+                    fnDrawCallback: function (oSettings) {
+                        if (oSettings._iDisplayLength >= oSettings.aoData.length) {
+                            $(oSettings.nTableWrapper).find('.dataTables_paginate').hide();
+                            $(oSettings.nTableWrapper).children('div').first().hide();
+                            $(oSettings.nTableWrapper).children('div').last().hide();
+                        } else {
+                            $(oSettings.nTableWrapper).find('.dataTables_paginate').show();
+                            $(oSettings.nTableWrapper).children('div').first().show();
+                            $(oSettings.nTableWrapper).children('div').last().show();
+                        }
+                    }
+                });
+            } else {
+                $('#oe-item-list-dialog-all-table').hide();
+                $('#oe-item-list-dialog-all-error').show();
+            }
+
+
             $('#oe-item-list-dialog-close').html('Close');
             $('#oe-item-list-dialog-save').addClass('hidden');
             $('#oe-item-list-dialog').modal({
@@ -374,6 +480,7 @@ class OEUIMANAGER {
             })
             $('#oe-item-list-dialog').on('hidden.bs.modal', function () {
                 $('#itemlisttable').DataTable().destroy();
+                $('#allitemlisttable').DataTable().destroy();
             });
         });
 
@@ -391,12 +498,44 @@ class OEUIMANAGER {
                     $('#itemlisttable').DataTable().clear();
                     $('#itemlisttable').DataTable().rows.add(this.#configManager.dataFields);
                     $('#itemlisttable').DataTable().draw();
+                    if (this.#configManager.allDataFields != undefined) {
+                        $('#allitemlisttable').DataTable().rows().invalidate().draw('page');
+                    }
 
                     $('#oe-item-list-edit-dialog').modal('hide');
                     $('#oe-item-list-dialog-close').html('Cancel');
                     $('#oe-item-list-dialog-save').removeClass('hidden');
                 }
             }
+        });
+
+        $(document).on('click', '.oe-all-list-add', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            let fieldId = $(event.target).data('id');
+            let field = this.#configManager.findAllFieldsById(fieldId);
+            let fieldName = '${' + field.name + '}';
+            $('#oe-item-list-edit-dialog-id').val('');
+            $('#oe-item-list-edit-dialog-name').val(fieldName.replace('AS_', ''));
+            $('#oe-item-list-edit-dialog-description').val('');
+            $('#oe-item-list-edit-dialog-format').val('');
+            $('#oe-item-list-edit-dialog-sample').val('');
+            $('#oe-item-list-edit-dialog-type option[value=Text]').attr('selected', 'selected');
+            $('#oe-item-list-edit-dialog-source option[value=User').attr('selected', 'selected');
+
+            $('#oe-item-list-edit-dialog-name').closest('.form-group').removeClass('has-error');
+            $('#oe-item-list-edit-dialog-description').closest('.form-group').removeClass('has-error');
+
+            $('#oe-item-list-edit-dialog-name').prop('disabled', false);
+            $('#oe-item-list-edit-dialog-type').prop('disabled', false);
+
+            $('#oe-variable-edit-fash').hide();
+
+            $('#oe-variable-edit-title').html('Add Variable');
+            $('#oe-item-list-edit-dialog').modal({
+                keyboard: false
+            });
+
         });
 
         $(document).on('click', '.oe-list-add', (event) => {
@@ -546,6 +685,9 @@ class OEUIMANAGER {
                 $('#itemlisttable').DataTable().clear();
                 $('#itemlisttable').DataTable().rows.add(this.#configManager.dataFields);
                 $('#itemlisttable').DataTable().draw();
+                if (this.#configManager.allDataFields != undefined) {
+                    $('#allitemlisttable').DataTable().rows().invalidate().draw('page');
+                }
                 $('#oe-item-list-edit-dialog').modal('hide');
                 $('#oe-item-list-dialog-close').html('Cancel');
                 $('#oe-item-list-dialog-save').removeClass('hidden');

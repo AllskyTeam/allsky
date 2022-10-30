@@ -150,3 +150,11 @@
       transform: scale(0); 
     }
   }
+
+  #oe-item-list-dialog-allsky, #oe-item-list-dialog-all {
+    padding-top: 20px;
+  }
+
+  .datatable td {
+    overflow: hidden;
+  }

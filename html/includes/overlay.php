@@ -201,19 +201,46 @@ function DisplayOverlay($image_name)
                             <h4 class="modal-title">Available Variables</h4>
                         </div>
                         <div class="modal-body">
-                            <table id="itemlisttable" class="display compact" style="width:98%">
-                                <thead>
-                                    <tr>
-                                        <th>id</th>
-                                        <th>Variable Name</th>
-                                        <th>Description</th>
-                                        <th>Format</th>
-                                        <th>Type</th>
-                                        <th>Source</th>
-                                        <th>&nbsp;</th>
-                                    </tr>
-                                </thead>
-                            </table>
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li role="presentation" class="active"><a href="#oe-item-list-dialog-allsky" role="tab" data-toggle="tab">AllSky Variables</a></li>
+                                <li role="presentation"><a href="#oe-item-list-dialog-all" aria-controls="profile" role="tab" data-toggle="tab">All Variables</a></li>
+                            </ul>
+
+                            <div class="tab-content">
+                                <div role="tabpanel" class="tab-pane active" id="oe-item-list-dialog-allsky">
+                                    <table id="itemlisttable" class="display compact" style="width:98%">
+                                        <thead>
+                                            <tr>
+                                                <th>id</th>
+                                                <th>Variable Name</th>
+                                                <th>Description</th>
+                                                <th>Format</th>
+                                                <th>Type</th>
+                                                <th>Source</th>
+                                                <th>&nbsp;</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                                <div role="tabpanel" class="tab-pane" id="oe-item-list-dialog-all">
+                                    <div id="oe-item-list-dialog-all-table">
+                                        <table id="allitemlisttable" class="display compact" style="width:98%">
+                                            <thead>
+                                                <tr>
+                                                    <th>id</th>
+                                                    <th>Name</th>
+                                                    <th>Value</th>
+                                                    <th>&nbsp;</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                    <div id="oe-item-list-dialog-all-error">
+                                        <h1>Data Unavailable</h1>
+                                        <p>To display data here please ensure that the Overlay module is enabled and that the 'Enable debug mode' option is enabled within it.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary pull-left" id="oe-field-dialog-add-field">Add Variable</button>

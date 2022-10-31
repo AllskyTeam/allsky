@@ -24,24 +24,17 @@
 	font-size: 80%;
 	opacity: 0.7;
 }
-
 @media (max-width: 450px) {.version-title { font-size: 75%; }}
 @media (max-width: 400px) {.version-title { font-size: 65%; }}
-@media (min-width: 796px) {	/* was 768px */
+@media (min-width: 660px) {	/* was 768px when lines below didn't exist */
 	.sidebar { width: 210px; }
 	.navbar-title { display: inline-block; }
+	.navbar-toggle { display: none; }
 	#page-wrapper { margin-left: 210px; padding: 0 30px; }
 	.navbar-collapse { display: block; visibility: visible; }
 }
-@media (max-width: 795px) {
-	.navbar-header { float: none; }
-	.navbar-title { display: none; }
-	.navbar-toggle { display: block; }
-	#page-wrapper { margin: 0; }
-	.navbar-collapse { display: none; }
-}
-@media (max-width: 815px) {
-	#page-wrapper { padding: 0px 20px; }
+@media (max-width: 659px) {	/* was 768px when lines below didn't exist */
+	#page-wrapper .row { margin: 0 -7px; }
 }
 
 .right-panel .panel:first-of-type {
@@ -77,20 +70,20 @@
     border-color: #cc7b09;
 }
 
-/* Input field in Allsky Settings page */
-.settingInput {
-	width: 120px;
-}
-
-.switch-title {
-  margin-bottom: 6px;
+.info-item {
+	width: 140px;
+	float: left;
 }
 
 .switch-field {
   font-family: "Lucida Grande", Tahoma, Verdana, sans-serif;
-  margin: 3px 2px -15px 0;
+  margin: 3px 20px -15px 0;
   display: inline-block;
   overflow: hidden;
+}
+
+.switch-title {
+  margin-bottom: 6px;
 }
 
 .switch-field input {
@@ -104,6 +97,9 @@
 
 .switch-field label {
   float: left;
+}
+
+.switch-field label {
   display: inline-block;
   width: 60px;
   background-color: #e4e4e4;
@@ -324,7 +320,7 @@ table .alert-dismissable {
     border-color: #cc7b09;
 }
 
-@media screen and (max-width: 795px) {	/* was 767 */
+@media screen and (max-width: 659px) {	/* was 767 */
     .dark .table-responsive {
         border-color: transparent;
     }
@@ -339,7 +335,7 @@ table .alert-dismissable {
 
     .switch-field {
         display: block;
-        /* height: 40px; /* was 50 */
+        height: 50px;
     }
 	
     form thead {
@@ -360,10 +356,9 @@ table .alert-dismissable {
 }
 
 .boxShadow {
-	-webkit-box-shadow: 2px 3px rgb(0,0,0,15%);
-	box-shadow: 2px 3px rgb(0,0,0,15%);
+	-webkit-box-shadow: 2px 3px rgb(0,0,0,10%);
+	box-shadow: 2px 3px rgb(0,0,0,10%);
 }
-
 /* "advanced" options are highlighted */
 .advanced {
     background-color: #FFFCC0;
@@ -371,7 +366,6 @@ table .alert-dismissable {
 .dark .advanced {
     background-color: #565643;
 }
-
 /* separate table rows */
 .rowSeparator {
 	border-bottom: 1px solid #d3d3d3;
@@ -463,4 +457,22 @@ select {
 }
 .panel-body .row {
 	margin: 0;
+}
+
+.dark .pagination>li>a, .pagination>li>span {
+    background-color: #ddd;
+}
+
+.dark .pagination>.active>a, .dark .pagination>.active>a:focus, .dark .pagination>.active>a:hover, .dark .pagination>.active>span, .dark .pagination>.active>span:focus, .dark .pagination>.active>span:hover {
+    z-index: 2;
+    color: #fff;
+    cursor: default;
+    background-color: #337ab7;
+    border-color: #337ab7;
+}
+
+.dark .btn-default {
+    color: #333;
+    background-color: #ddd;
+    border-color: #ccc;
 }

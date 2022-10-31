@@ -158,3 +158,11 @@
   .datatable td {
     overflow: hidden;
   }
+
+  div.dataTables_wrapper div.dataTables_paginate {
+    padding-top: 10px;
+  }
+
+  table.dataTable td {
+    padding-top: 2px;
+  }

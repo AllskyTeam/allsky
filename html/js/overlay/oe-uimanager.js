@@ -325,7 +325,7 @@ class OEUIMANAGER {
                         visible: false
                     }, {
                         data: 'name',
-                        width: '150px'
+                        width: '265px'
                     }, {
                         data: 'description',
                         width: '200px'
@@ -334,9 +334,6 @@ class OEUIMANAGER {
                         width: '100px'
                     }, {
                         data: 'type',
-                        width: '60px'
-                    }, {
-                        data: 'source',
                         width: '60px'
                     }, {
                         data: null,
@@ -901,7 +898,7 @@ class OEUIMANAGER {
                 ajax: 'includes/overlayutil.php?request=Fonts',
                 dom: '<"toolbar">frtip',
                 autoWidth: false,
-                pagingType: 'numbers',
+                pagingType: 'simple_numbers',
                 paging: true,
                 pageLength: 20,
                 info: false,

@@ -216,7 +216,6 @@ function DisplayOverlay($image_name)
                                                 <th>Description</th>
                                                 <th>Format</th>
                                                 <th>Type</th>
-                                                <th>Source</th>
                                                 <th>&nbsp;</th>
                                             </tr>
                                         </thead>

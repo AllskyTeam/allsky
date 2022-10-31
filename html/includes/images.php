@@ -35,8 +35,9 @@ $( document ).ready(function() {
 			return image.src.replace('/thumbnails', '');
 		},
 		<?php
-			// if there are a lot of images it takes forever to display the navbar.
-			if ($num > $nav_images_max) echo "navbar: 0,";
+			// If there are a lot of images it takes forever to display the navbar.
+			// With the newer viewer this doesn't seem to be a problem.
+			// if ($num > $nav_images_max) echo "navbar: false,";
 		?>
 		transition: false
 	});

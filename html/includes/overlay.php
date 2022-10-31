@@ -441,7 +441,7 @@ function DisplayOverlay($image_name)
                                                 Rotation</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultimagerotation" name="defaultimagerotation" type="text" class="form-control">
+                                                    <input id="defaultimagerotation" name="defaultimagerotation" type="number" min="0" max="359" step="1" class="form-control">
                                                 </div>
                                             </div>
                                         </div>

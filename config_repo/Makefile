@@ -106,6 +106,7 @@ install: createDirs $(CONFIGFILES)
 	@install -D -m 0644 allsky.logrotate.repo $(DESTDIR)$(sysconfdir)/logrotate.d/allsky
 	@install -D -m 0644 allsky.rsyslog.repo $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf
 	@udevadm control -R
+	@udevadm trigger
 	@echo `date +%F\ %R:%S` Setting allsky to auto start...
 	@if [ -e /etc/xdg/lxsession/LXDE-pi/autostart ]; then \
 	  sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart; fi

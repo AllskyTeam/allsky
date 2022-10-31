@@ -35,13 +35,14 @@ $( document ).ready(function() {
 			return image.src.replace('/thumbnails', '');
 		},
 		<?php
-			// if there are a lot of images it takes forever to display the navbar.
-			if ($num > $nav_images_max) echo "navbar: 0,";
+			// If there are a lot of images it takes forever to display the navbar.
+			// With the newer viewer this doesn't seem to be a problem.
+			// if ($num > $nav_images_max) echo "navbar: false,";
 		?>
 		transition: false
 	});
 	$('.thumb').each(function(){		
-		this.title = this.title + "\n" + getTimeStamp(this.src) + "\n" + "Click for full resolution image.";
+		this.title += "\n" + getTimeStamp(this.src) + "\n" + "Click for full resolution image.";
 	});
 });
 
@@ -59,32 +60,28 @@ function getTimeStamp(url)
 	return date.toDateString() + " @ " + hour + ":"+minute + ":"+seconds;
 }
 </script>
-
+<h2><?php echo $chosen_day ?></h2>
+<div class='row'>
+	<div id='images'>
 <?php
-echo "<h2>$chosen_day</h2>
-  <div class='row'>";
-
-echo "<div id='images'>";
-if ($num == 0) {
-	echo "<span class='alert-warning'>There are no images for this day.</span>";
-	echo "<br>Check <b>$dir</b>";
-} else {
-	foreach ($images as $image) {
-		echo "<div class='left'>";
-		if(file_exists("$dir/thumbnails/$image"))
-			// "/images" is an alias for ALLSKY_IMAGES in lighttpd
-			$t = "/thumbnails";
-		else
-			$t = "";
-		echo "<a href='images/$chosen_day/$image'>";
-		echo "<img src='/images/$chosen_day$t/$image' title='$image' class='thumb'/>";
-		echo "</a>";
-		echo "</div>";
+	if ($num == 0) {
+		echo "<span class='alert-warning'>There are no images for this day.</span>";
+		echo "<br>Check <b>$dir</b>";
+	} else {
+		foreach ($images as $image) {
+			echo "\t\t<div class='left'>";
+			if(file_exists("$dir/thumbnails/$image"))
+				// "/images" is an alias for ALLSKY_IMAGES in lighttpd
+				$t = "/thumbnails";
+			else
+				$t = "";
+			echo "<img src='/images/$chosen_day$t/$image' title='$image' class='thumb'/>";
+			echo "</div>\n";
+		}
 	}
-}
 ?>
 	</div>
-  </div>
+</div>
 <?php 
 }
 ?>

@@ -117,11 +117,6 @@ function DisplayOverlay($image_name)
                                                 <div class="btn btn-lg navbar-btn glyphicon glyphicon-cog" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options">
                                                 </div>
                                             </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-question-sign" id="oe-help" data-toggle="tooltip" data-container="body" data-placement="top" title="Help">
-                                                </div>
-                                            </li>
-
                                         </ul>
                                     </div>
                                 </div>
@@ -183,14 +178,6 @@ function DisplayOverlay($image_name)
 
             <div id="imagedialog" title="Image Properties">
                 <div id="imagepropgrid"></div>
-            </div>
-
-            <div id="helpdialog" title="Help">
-                <div id="helptext"></div>
-            </div>
-
-            <div id="oe-app-helpdialog" title="Overlay Editor Help">
-                <div id="oeapphelptext"></div>
             </div>
 
             <div class="modal" role="dialog" id="oe-item-list-dialog">

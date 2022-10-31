@@ -959,17 +959,6 @@ class OEUIMANAGER {
             this.setZoom(event.target.id);
         });
 
-        $(document).on('click', '#oe-help', (event) => {
-            $('#oe-app-helpdialog').dialog({
-                width: 1024,
-                height: 800,
-                open: function (event, ui) {
-                    $('#oeapphelptext').load('overlay/help/app.html?dt=' + (new Date()).valueOf(), function () {
-                    });
-                }
-            });
-        });
-
         $(document).on('click', '#oe-show-image-manager', (event) => {
 
             let usedImages = [];
@@ -1481,18 +1470,7 @@ class OEUIMANAGER {
 
         var textConfig = {
             label: { group: 'Label', name: 'Item', type: 'text' },
-            format: {
-                group: 'Label', name: 'Format', type: 'text', helpcallback: function (name) {
-                    $('#helpdialog').dialog({
-                        width: 800,
-                        height: 600,
-                        open: function (event, ui) {
-                            $('#helptext').load('overlay/help/format.html?dt=' + (new Date()).valueOf(), function () {
-                            });
-                        }
-                    });
-                }
-            },
+            format: { group: 'Label', name: 'Format', type: 'text'},
             sample: { group: 'Label', name: 'Sample', type: 'text' },
             empty: { group: 'Label', name: 'Empty Value', type: 'text' },
 
@@ -1544,11 +1522,6 @@ class OEUIMANAGER {
             beforeClose: function (event, ui) {
                 let uiManager = window.oedi.get('uimanager');
                 uiManager.selected = null;
-                if ($('#helpdialog').hasClass('ui-dialog-content')) {
-                    if ($('#helpdialog').dialog('isOpen')) {
-                        $('#helpdialog').dialog('destroy');
-                    }
-                }
                 uiManager.setFieldOpacity(false);
             }
         });

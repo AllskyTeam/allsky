@@ -70,13 +70,15 @@ function DisplayModule() {
                         </div>
                     </div>
                 </nav>
-                <div class="row">
+                <div class="row module-lists">
                     <div class="col-sm-5 col-md-5 col-lg-5 module-column">
                         <h4 class="text-center">Available Modules</h4>
                         <div class="module-container">
                             <div id="modules-available" class="list-group"></div>
                             <div id="modules-available-empty">No modules available</div>
                         </div>
+                    </div>
+                    <div class="col-sm-1 col-md-1 col-lg-1">
                     </div>
                     <div class="col-sm-5 col-md-5 col-lg-5 module-column">
                         <h4 class="text-center">Selected Modules</h4>

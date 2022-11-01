@@ -10,7 +10,7 @@
 .list-group-item {
   border-radius: 10px !important;
   margin-bottom: 10px !important;
-  background: #e4e4e4;  
+  background: #d0d0d0;  
 }
 .dark .list-group-item {
     background: #444 !important;
@@ -107,6 +107,12 @@
 
 .module-container {
   display: grid;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+}
+
+.dark .module-container {
+  background-color: #202020;
 }
 
 #modules-selected, #modules-selected-empty, #modules-available, #modules-available-empty { 
@@ -119,4 +125,17 @@
 
 #module-settings-dialog select {
   padding: 5px;
+}
+
+.list-group .panel-heading {
+  background-color: #e0e0e0;
+}
+
+.module-lists h4 {
+  padding: 10px 0px;
+  background-color: #f0f0f0;
+}
+
+.dark .module-lists h4 {
+  background-color: #202020;
 }

@@ -144,16 +144,25 @@ blockquote {
 }
 .markdown-body ul ul,.markdown-body ul ol,.markdown-body ol ol,.markdown-body ol ul {
 	margin-top: 0;
-	margin-bottom: 0
+	margin-bottom: 0;
+	padding-top: 0 !important;
 }
 .markdown-body li {
-	margin-top: .4em;
+	margin-top: 0.25em;
 }
 .markdown-body li>p {
 	margin-top: 16px;
 }
+/* too much of a gap
 .markdown-body li+li {
 	margin-top: .7em;
+}
+*/
+.markdown-body ul:first-child, .markdown-body ol:first-child {
+	padding-top: 2em;
+}
+.markdown-body ul:last-child, .markdown-body ol:last-child {
+	padding-bottom: 0.75em;
 }
 .markdown-body dl {
 	padding: 0;
@@ -430,9 +439,6 @@ blockquote {
 	background-color: var(--color-neutral-muted);
 	border-radius: 6px;
 }
-.markdown-body ul, .markdown-body ol {
-	padding-left: 2em;
-}
 .markdown-body h1 tt, .markdown-body h1 code, .markdown-body h2 tt, .markdown-body h2 code, .markdown-body h3 tt, .markdown-body h3 code, .markdown-body h4 tt, .markdown-body h4 code, .markdown-body h5 tt, .markdown-body h5 code, .markdown-body h6 tt, .markdown-body h6 code {
 	padding: 0 .2em;
 	font-size: inherit;
@@ -507,6 +513,7 @@ article, aside, details, figcaption, figure, footer, header, main, menu, nav, se
 }
 details summary {
 	cursor: pointer;
+	color: var(--color-accent-fg);
 }
 summary {
 	display: list-item;

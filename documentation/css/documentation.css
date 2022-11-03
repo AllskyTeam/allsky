@@ -533,6 +533,16 @@ b, strong {
 	font-weight: 600;
 }
 
+/* Minimize the size of the sidebar */
+.wiki-custom-sidebar {
+	padding: 0 !important;
+}
+.wiki-custom-sidebar ol:first-child,
+.wiki-custom-sidebar ol:last-child {
+	padding-top: 10px;
+	padding-bottom: 0;
+}
+
 .Layout {
 	display: grid;
 	--Layout-sidebar-width: 220px;

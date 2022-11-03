@@ -1,7 +1,3 @@
-// https://htmlpreview.github.io/?https://raw.githubusercontent.com/thomasjacquin/allsky/blob/dev/documentation/basics/index.html
-// https://raw.githubusercontent.com/thomasjacquin/allsky/dev/documentation/images/Desktop.png
-
-
 // This file resides on the Allsky Github page with a copy on a person's Pi.
 
 // branch is updated during installation.
@@ -23,13 +19,12 @@ var preURL_href, preURL_src;			// What gets prepended to the desired URL.
 var git_preURL_href = "https://" + git_hostname + "/?";
 var git_raw = "https://raw.githubusercontent.com/thomasjacquin/allsky/";
 
-if (location.hostname == git_hostname || 1) {
+if (location.hostname == git_hostname) {
 	onGitHub = true;
 
 	// On GitHub, the URLs for anchors (href=) and images (src=) are different.
 	// anchors need get_preURL_href prepended to them.
 	// image URLs and files that are included don't need get_preURL_href.
-//x	preURL_href = git_preURL_href + git_raw + "blob/" + branch;
 	preURL_href = git_preURL_href + git_raw + branch;
 	preURL_src = git_raw + branch;
 } else {
@@ -73,33 +68,32 @@ var show_href=true;
 			if (url) {
 				preURL = preURL_src;
 			} else {
-				attribute = "unknown attribute";
-				console.log("xxxx unkown attribute for " + elmnt);
+				console.log("---- Did not find 'href' or 'src' for " + elmnt);
 				continue;
 			}
 		}
 
+			var dir = "";
 if (show_href || attribute !== "href") {
-console.log("======= ELMNT=", elmnt);
 if (attribute === "href") { show_href = false; }
+		// Get the directory of the current page.
 		console.log("Looking at " + attribute + "= " + url);
 }
-		// See if the url contains with documentation_URL.
-		var isDocumentation = (url.indexOf(documentation_URL) >= 0) ? true : false;
+		// See if the url starts with documentation_URL which is the root of the documentation.
+		var isDocumentation = (url.indexOf(documentation_URL) === 0) ? true : false;
 		if (! isDocumentation) {
-			// Need to prepend the documentation string.
-			url = documentation_URL + url;
-console.log("== After prepending documentatation_URL, url now = " + url);
+			// Need to prepend the documentation string followed by the current directory.
+			dir = document.URL.substr(0,document.URL.lastIndexOf('/'))
+			dir = dir.substr(dir.lastIndexOf('/')+1);
+			url = documentation_URL + dir + "/" + url;
 		}
 
 		if (onGitHub) {
 			// Only prepend if not already there.
 			if (url.indexOf(preURL) < 0)
-//console.log("== setting " + attribute + " " + elmnt[attribute] + " to preURL=" + preURL + " + url=" + url);
 				url = preURL + url;
-console.log("== After prepending preURL, url now = " + url);
 		}
-		// else on Pi and in documentation so do nothing to do since the URL is already correct.
+		// else on Pi so nothing to do since the URL is already correct.
 
 		elmnt[attribute] = url;
 	}

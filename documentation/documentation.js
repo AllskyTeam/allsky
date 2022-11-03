@@ -19,12 +19,12 @@ var documentation_URL_length = documentation_URL.length;
 var onGitHub;
 
 var git_hostname = "htmlpreview.github.io";
-var preURL, preURL_href, preURL_src;			// What gets prepended to the desired URL.
+var preURL_href, preURL_src;			// What gets prepended to the desired URL.
 
 var git_preURL_href = "https://" + git_hostname + "/?";
 var git_raw = "https://raw.githubusercontent.com/thomasjacquin/allsky/";
 
-if (location.hostname == git_hostname || 1) {
+if (location.hostname == git_hostname) {
 	onGitHub = true;
 
 	// On GitHub, the URLs for anchors (href=) and images (src=) are different.
@@ -40,29 +40,27 @@ if (location.hostname == git_hostname || 1) {
 var convertURL_called = false;
 
 // Convert URL for all tags with an "allsky=true" attribute.
+// The specified URL is assumed to be relative to the root of the documentation tree.
 function convertURL() {
 	if (convertURL_called) return;
 	// TODO: should we only be called once?
 	// What if includeHTML() found multiple files and they all had "allsky" links?
 	convertURL_called = true;
 
-	var i, elmnt, allsky, attribute;
-
 	allTags = document.getElementsByTagName("*");
-	for (i = 0; i < allTags.length; i++) {
-		elmnt = allTags[i];
+var show_href=true;
+	for (var i = 0; i < allTags.length; i++) {
+		var elmnt = allTags[i];
 		/*
 			Search for elements with "allsky" attribute which means
-			the file is in allsky's "documentation" directory.
+			we need to update the URL.
 		*/
 		if (! elmnt.getAttribute("allsky")) continue;	// "allsky" not defined - ignore tag
 
-		var isDocumentation = false;	// Is the URL in the Allsky documentation area?
 		var url = null;
-// Shouldn't all items where   "allsky=true" be in the Allsky documentation area?
-		attribute = "href";
+		var preURL;
+		var attribute = "href";
 		url = elmnt.getAttribute(attribute);
-console.log("======= ELMNT=", elmnt);
 		if (url) {
 			preURL = preURL_href;
 		} else {
@@ -75,28 +73,32 @@ console.log("======= ELMNT=", elmnt);
 				url = "?";
 			}
 		}
-		console.log("Looking at " + attribute + "=" + url + ", isDocumentation=" + isDocumentation);
+if (show_href || attribute !== "href") {
+console.log("======= ELMNT=", elmnt);
+if (attribute === "href") show_href = false;
+		console.log("Looking at " + attribute + "= " + url);
+}
 
-		if (url !== "?") {
-			// See if the url starts with pi_preURL.
-			isDocumentation = url.substr(0, documentation_URL_length) == documentation_URL ? true : false;
+		var isDocumentation = false;	// Is the URL in the Allsky documentation area?
+		if (url !== "?" && url !== "") {
+			// See if the url starts with documentation_URL.
+			isDocumentation = (url.substr(0, documentation_URL_length) == documentation_URL) ? true : false;
 			if (onGitHub) {
 				if (! isDocumentation) {
 					// Need to add the documentation string.
 					elmnt[attribute] += documentation_URL;
 				}
 
-//				if (attribute === "href") {
-					// Only prepend if not already there.
+				// Only prepend if not already there.
 var x = elmnt[attribute].search(git_preURL_href);
 console.log("x = " + x);
-//					if (elmnt[attribute].search(git_preURL_href) < 0)
-					if (elmnt[attribute].search(preURL) < 0)
+				if (elmnt[attribute].search(preURL) < 0)
 console.log("== setting " + attribute + " " + elmnt[attribute] + " to preURL=" + preURL + " + url=" + url);
-						elmnt[attribute] = preURL + url;
-//				}
+					elmnt[attribute] = preURL + url;
+			} else if (! isDocumentation) {
+				elmnt[attribute] = documentation_URL + url;
 			}
-			// else on Pi so nothing to do since the URL is already correct.
+			// else on Pi and in documenation so do nothing to do since the URL is already correct.
 
 		} else {
 			console.log("--- Unknown attribute for allsky, elmnt=", elmnt);
@@ -135,14 +137,9 @@ function includeHTML() {
 				}
 			}
 
-			if (! onGitHub) {
-				// On Git, we need to use "../" for subdirectories when in them.
-				var d = elmnt.getAttribute("d");
-				if (d)
-					file = d + file;
-			} else {
-				file = preURL_href + file;
-			}
+			if (onGitHub) {
+				file = preURL_href + "/" + file;
+			}  // else on Pi so nothing to do since the URL is already correct.
 console.log("GET " + file);
 			xhttp.open("GET", file, true);
 			xhttp.send();

@@ -82,12 +82,14 @@ console.log("Looking at " + attribute + "= " + url);
 			var dir = document.URL.substr(0,document.URL.lastIndexOf('/'))
 			var d = dir.lastIndexOf('/');
 			dir = dir.substr(d+1);
-console.log("===== d=" + d + ", dir=" + dir);
+console.log("===== dir=" + dir);
 
 			// Prepend the documentation string followed by the current directory
 			// if we're not already in the documentation directory.
 			if (dir !== documentation_URL) {
+console.log(">>> url before = " + url);
 				url = documentation_URL_full + dir + "/" + url;
+console.log(">>> url now = " + url);
 			}
 		}
 

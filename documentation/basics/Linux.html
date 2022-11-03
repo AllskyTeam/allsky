@@ -9,26 +9,28 @@
 	<link href="../css/light.css" rel="stylesheet">
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
-	<title>Linux and Pi Basics</title>
+	<title>Linux Basics</title>
 </head>
 <body>
 <div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Linux and Pi Basics</h1>
+	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Linux Basics</h1>
 </div>
 
 <div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
 <div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
 
 <div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="sidebar.html" d="../" id="sidebar"></div>
+	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 </div>
 
 <div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
 <h1>Overview</h1>
 <p>
-This page is for people will little or no Linux and Pi experience.
-While it won't make you a guru,
-it should give you enough information to install and use the Allsky software.
+This page is for people will little or no Linux experience.
+It won't make you a guru,
+but should give you enough information to install and use the Allsky software.
+If you are new to the Raspberry Pi you may want to view the
+<a allsky="true" href="Pi.html">Pi Basics</a>.
 </p>
 <p>
 To keep the other Allsky documentation pages a manageable length,
@@ -42,7 +44,7 @@ for example, <code>man date</code>.
 </p>
 
 <h2>Linux Desktop</h2>
-<details><summary>Click here</summary>
+<details><summary></summary>
 <p>
 Linux is similar in many ways to Windows and MacOS - they
 all have a Desktop as well as a command-line interface (also called a "terminal window").
@@ -56,11 +58,13 @@ Starting from the far left are 5 icons followed by a file explore window and
 a terminal window showing the output of the <code>date</code> command.
 At the bottom is the taskbar - very similar to Windows and MacOS.
 </p>
-<img allsky="true" title="Linux Desktop" alt="Desktop" src="/documentation/images/Desktop.png">
+<a href="Desktop.png" target="_blank">
+<img allsky="true" title="Linux Desktop - Click for full version" alt="Desktop" src="Desktop.png" loading="lazy">
+</a>
 </details>
 
 <h2>Terminal Window</h2>
-<details><summary>Click here</summary>
+<details><summary></summary>
 <p>
 A Terminal Window emulates the old ASCII-based character-only terminals.
 Notice the one above has no graphics - only characters.
@@ -97,7 +101,7 @@ and ignores any associated desktop icon that performs the same action.
 </details>
 
 <h2>Logging in</h2>
-<details><summary>Click here</summary>
+<details><summary></summary>
 <p>
 There are several ways you can login to a Pi.
 <ol>
@@ -120,7 +124,7 @@ were directly attached to the Pi.
 
 
 <h2>Executing commands</h2>
-<details><summary>Click here</summary>
+<details><summary></summary>
 <p>
 To execute a command you simply type it's name followed by any optional arguments:
 <pre>
@@ -173,7 +177,7 @@ echo "Hello    world!"
 </details>
 
 <h2>Moving around</h2>
-<details><summary>Click here</summary>
+<details><summary></summary>
 <p>
 Windows has multiple "drives", each with its own letter, e.g., C:, D:, etc., and each drive
 has a topmost, or "root" directory, called <code>\</code>, e.g., <code>C:\</code>.
@@ -215,14 +219,16 @@ pwd          <span class="pl-c"># displays the current or working directory - <u
 </details>
 
 <h2>Listing files and directories</h2>
-<details><summary>Click here</summary>
+<details><summary></summary>
 <p>
 To see the contents of a directory, type <code>ls</code> (<u>l</u>ist file<u>s</u>)
 (called <code>dir</code> in Windows).
 Like most commands, <code>ls</code> takes a bunch of arguments.
 A common one is <code>-l</code> which produces long (i.e., detailed) output.
 </p>
-<img allsky="true" title="ls output" alt="ls output" src="/documentation/images/ls.png">
+<a href="ls.png" target="_blank">
+<img allsky="true" title="ls output - Click for full version" alt="ls output" src="ls.png" loading="lazy">
+</a>
 <p>
 Note that the output is in color:
 <ul>
@@ -285,7 +291,9 @@ In the example above that all but one object is owned by the "pi" login
 and is in the "pi" group.
 This is what you'd expect since the "pi" login was used to install Allsky.
 Note, however, this entry:
-<img allsky="true" title="ls output" alt="ls output for config directory" src="/documentation/images/ls-config.png">
+<a href="ls-config.png" target="_blank">
+<img allsky="true" title="ls output" alt="ls output for config directory" src="ls-config.png" loading="lazy">
+</a>
 <br>
 It's in the "www-data" group, which is the group that the web server runs in.
 Because the web server (which is what runs the WebUI) creates configuration files in
@@ -294,7 +302,7 @@ that directory, it also has "rwx" group permissions.
 </details>
 
 <h2>Viewing / editing files</h2>
-<details><summary>Click here</summary>
+<details><summary></summary>
 <p>
 The <code>cat</code> (<u>cat</u>enate) command outputs the whole contents of a file
 as fast as it can.
@@ -322,7 +330,7 @@ or via the WebUI's "Editor" page for the <code>config.sh</code> and
 </details>
 
 <h2>Standard in, standard out</h2>
-<details><summary>Click here</summary>
+<details><summary></summary>
 <p>
 By default, commands that expect input read it from the keyboard
 (referred to as "standard input" or "stdin")
@@ -348,13 +356,15 @@ cat /tmp/x
 </details>
 
 <h2>Getting help</h2>
-<details><summary>Click here</summary>
+<details><summary></summary>
 <p>
 As stated previously, you can get information on all Linux commands via the
 <code>man</code> command.
 Most commands also take a <code>--help</code> option
 (including the Allsky commands that are desiged to optionally be run manually):
-<img allsky="true" title="date output" alt="date --help output" src="/documentation/images/date--help.png">
+<a href="date--help.png" target="_blank">
+<img allsky="true" title="date output - Click for full version" alt="date --help output" src="date--help.png" loading="lazy">
+</a>
 </p>
 </blockquote>
 </details>

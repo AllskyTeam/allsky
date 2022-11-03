@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<script src="../documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Installing and upgrading Allsky</title>
+</head>
+<body>
+<div class="d-flex flex-column flex-md-row gh-header">
+	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Installing and upgrading Allsky</h1>
+</div>
+
+<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
+<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
+
+<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
+	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+</div>
+
+<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+
+<h1>Upgrading Allsky</h1>
+If you have an <b>existing</b> version of Allsky, you have several options.
+Perform one of the steps below, then continue to the "Installing Allsky" section.
+<ol>
+<li>Upgrade the old version.
+	<pre>
+sudo systemctl stop allsky     <span class="pl-c"># Stop the Allsky service</span>
+cd
+mv allsky allsky-OLD</pre>
+
+<li>Save the old version but don't use it.
+	<br>
+	<pre>
+cd
+mv allsky allsky-SAVED</pre>
+	At some point you'll want to delete the SAVED version so it doesn't take disk space.
+
+<li>Delete the old version.  Only select this option if you're sure you don't want any saved
+	images, darks, and configuration settings.
+	If <code>allsky/tmp</code> is a memory-based filesystem you need to unmount it before
+	it can be removed:
+	<pre>
+sudo umount ~/allsky/tmp</pre>
+	Either way, execute:
+	<pre>
+sudo systemctl stop allsky     <span class="pl-c"># Stop the Allsky service</span>
+cd
+rm -fr allsky</pre>
+</ol>
+
+<h1>Installing Allsky</h1>
+The following commands will put the new release in <code>~/allsky</code>.
+Except for some system files, all Allsky-related files reside in this directory.
+If you later install the Allsky Website on the Pi, its files will also go in this directory.
+
+<pre>
+cd
+git clone --recursive https://github.com/thomasjacquin/allsky.git
+cd allsky
+./install.sh</pre>
+
+<p>
+During installation you'll be notified of any actions you need to take when the installation completes.
+If there are any such actions, the first time Allsky runs after the reboot it will stop and:
+<ul>
+<li>add those actions to the log file
+<li>display an image telling you to see the log file
+<li>display a message in the WebUI (which you should clear when done performing the actions)
+</ul>
+</p>
+
+<blockquote>
+If instructed to copy the contents of a prior configuration file to the new release,
+it's important to manually copy the <b>values</b> from the old file to the new file and <b>not</b> copy the entire file.
+</blockquote>
+
+<blockquote>
+The <code>config.sh</code>, <code>ftp-settings.sh</code>, and <code>configuration.json</code>
+(if the Allsky Website is installed) configuration files should be edited via the
+WebUI's <b>Editor</b> link since it performs sanity checks and behind-the-scenes actions during updates.
+</blockquote>
+
+</div><!-- markdown-body --></div><!-- Layout-main ... -->
+</div><!-- Layout -->
+</div><!-- xcontainer-x1 ... -->
+</body>
+</html>
+<script> includeHTML(); </script>

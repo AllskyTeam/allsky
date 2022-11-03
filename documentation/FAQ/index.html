@@ -2,19 +2,30 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width">
-	<meta name="description" content="FAQ for Allsky software">
-	<link rel="stylesheet" href="/css/documentation.css">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="../documentation.js" type="application/javascript"></script>
+    <link href="../css/light.css" rel="stylesheet">
+    <link href="../css/documentation.css" rel="stylesheet">
+    <link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Allsky FAQ</title>
 </head>
 <body>
+<div class="d-flex flex-column flex-md-row gh-header">
+	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Allsky FAQ</h1>
+</div>
 
-<div id="wiki-content" class="mt-4">
+<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
 <div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-<div data-view-component="true" class="Layout-sidebar">
-<div data-view-component="true" class="Layout-main">
-<div class="markdown-body">
 
+
+<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
+	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+</div>
+
+
+<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
 <h1>JUST STARTING THIS</h1>
 <p>
 Will add to this FAQ as time goes on...
@@ -49,10 +60,10 @@ If, however the message remains after several minutes follow the instructions
 You can also temporarily set <code>REMOVE_BAD_IMAGES="false"</code> in ~/allsky/config/config.sh
 to see what the incorrectly exposed images look like - this might give you an idea as to the problem.
 </p>
-</div><!-- markdown-body -->
-</div><!-- Layout-main -->
-</div><!-- Layout-sidebar -->
-</div><!-- data-view-component -->
-</div><!-- mt-4 -->
+
+</div><!-- markdown-body --></div><!-- Layout-main ... -->
+</div><!-- Layout -->
+</div><!-- xcontainer-x1 ... -->
 </body>
 </html>
+<script> includeHTML(); </script>

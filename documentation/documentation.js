@@ -10,7 +10,8 @@ var branch = "dev";
 
 // On GitHub, all URLs must have "/documentation/" in them - either because they were defined
 // that way in the html file, or we add them in this script.
-var documentation_URL = "/documentation/";
+var documentation_URL = "documentation";
+var documentation_URL_full = "/" + documentation_URL + "/";
 
 var onGitHub;
 
@@ -74,8 +75,8 @@ function convertURL() {
 		}
 
 console.log("Looking at " + attribute + "= " + url);
-		// See if the url starts with documentation_URL which is the root of the documentation.
-		var isDocumentation = (url.indexOf(documentation_URL) === 0) ? true : false;
+		// See if the url starts with documentation_URL_full which is the root of the documentation.
+		var isDocumentation = (url.indexOf(documentation_URL_full) === 0) ? true : false;
 		if (! isDocumentation) {
 			// Get the directory of the current page.
 			var dir = document.URL.substr(0,document.URL.lastIndexOf('/'))
@@ -83,8 +84,11 @@ console.log("Looking at " + attribute + "= " + url);
 			dir = dir.substr(d+1);
 console.log("===== d=" + d + ", dir=" + dir);
 
-			// Prepend the documentation string followed by the current directory.
-			url = documentation_URL + dir + "/" + url;
+			// Prepend the documentation string followed by the current directory
+			// if we're not already in the documentation directory.
+			if (dir !== documentation_URL) {
+				url = documentation_URL_full + dir + "/" + url;
+			}
 		}
 
 		// Only prepend on GitHub if not already there.

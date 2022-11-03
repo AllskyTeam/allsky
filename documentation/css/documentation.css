@@ -434,20 +434,6 @@ blockquote {
 .markdown-body .footnotes .data-footnote-backref g-emoji {
 	font-family: monospace
 }
-.markdown-body code, .markdown-body tt {
-	padding: .2em .4em;
-	margin: 0;
-	font-size: 85%;
-	background-color: var(--color-neutral-muted);
-	border-radius: 6px;
-}
-.markdown-body code, .markdown-body tt {
-	padding: .2em .4em;
-	margin: 0;
-	font-size: 85%;
-	background-color: var(--color-neutral-muted);
-	border-radius: 6px;
-}
 .markdown-body h1 tt, .markdown-body h1 code, .markdown-body h2 tt, .markdown-body h2 code, .markdown-body h3 tt, .markdown-body h3 code, .markdown-body h4 tt, .markdown-body h4 code, .markdown-body h5 tt, .markdown-body h5 code, .markdown-body h6 tt, .markdown-body h6 code {
 	padding: 0 .2em;
 	font-size: inherit;

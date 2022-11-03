@@ -5,7 +5,7 @@
 // This file resides on the Allsky Github page with a copy on a person's Pi.
 
 // branch is updated during installation.
-var branch = "dev";
+var branch = "moretesting";
 
 // On the Pi, URLs will either begin with "/documentation" (which is a web
 // alias to ~/allsky/documentation), or will be a relative path.
@@ -87,18 +87,18 @@ if (attribute === "href") show_href = false;
 				if (! isDocumentation) {
 					// Need to add the documentation string.
 					elmnt[attribute] += documentation_URL;
+console.log("== After adding documentatation_URL (" + documentation_URL + "), elmnt[" + attribute + "] now = " + elmnt[attribute]);
 				}
 
 				// Only prepend if not already there.
-var x = elmnt[attribute].search(git_preURL_href);
-console.log("x = " + x);
 				if (elmnt[attribute].search(preURL) < 0)
-console.log("== setting " + attribute + " " + elmnt[attribute] + " to preURL=" + preURL + " + url=" + url);
+//console.log("== setting " + attribute + " " + elmnt[attribute] + " to preURL=" + preURL + " + url=" + url);
 					elmnt[attribute] = preURL + url;
+console.log("== After adding preURL/URL (" + preURL + " / " + URL + "), elmnt[" + attribute + "] now = " + elmnt[attribute]);
 			} else if (! isDocumentation) {
 				elmnt[attribute] = documentation_URL + url;
 			}
-			// else on Pi and in documenation so do nothing to do since the URL is already correct.
+			// else on Pi and in documentation so do nothing to do since the URL is already correct.
 
 		} else {
 			console.log("--- Unknown attribute for allsky, elmnt=", elmnt);

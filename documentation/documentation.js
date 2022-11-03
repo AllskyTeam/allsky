@@ -1,4 +1,5 @@
-// This file resides on the Allsky Github page with a copy on a person's Pi.
+// Modify URLs on the GitHub server so we can view pages there OR on a Pi.
+// Also, allow files to be included since GitHub doesn't have php.
 
 // branch is updated during installation.
 var branch = "dev";
@@ -45,7 +46,6 @@ function convertURL() {
 	convertURL_called = true;
 
 	allTags = document.getElementsByTagName("*");
-var show_href=true;
 	for (var i = 0; i < allTags.length; i++) {
 		var elmnt = allTags[i];
 		/*
@@ -73,7 +73,7 @@ var show_href=true;
 			}
 		}
 
-		console.log("Looking at " + attribute + "= " + url);
+console.log("Looking at " + attribute + "= " + url);
 		// See if the url starts with documentation_URL which is the root of the documentation.
 		var isDocumentation = (url.indexOf(documentation_URL) === 0) ? true : false;
 		if (! isDocumentation) {
@@ -88,7 +88,7 @@ console.log("===== d=" + d + ", dir=" + dir);
 		}
 
 		// Only prepend on GitHub if not already there.
-		if (onGitHub && url.indexOf(preURL) < 0)
+		if (onGitHub && url.indexOf(preURL) < 0) {
 			url = preURL + url;
 		}
 		// else on Pi so nothing to do since the URL is already correct.

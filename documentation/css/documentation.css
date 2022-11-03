@@ -634,6 +634,16 @@ a {
 	background-color: transparent;
 }
 
+.sentToMapServer::before {
+	color: red;
+	font-weight: bold;
+	content: "*";
+}
+.autoSet::before {
+	color: red;
+	font-weight: bold;
+	content: "[AUTO]";
+}
 .cameraDependent {
 	color: var(--color-danger-fg);
 	font-weight: bold;
@@ -648,6 +658,14 @@ a {
 	color: #fd971f;
 	font-family: monospace;
 	font-weight: bold;
+}
+.editorVariable { /* Matches variables in the WebUI's "Editor" page */
+	color: #a6e22e;
+	background-color: black;
+}
+.editorString { /* Matches strings in the WebUI's "Editor" page */
+	color: #e6db74;
+	background-color: black;
 }
 /* Shell syntax */
 .pl-c {

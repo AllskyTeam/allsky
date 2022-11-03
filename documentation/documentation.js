@@ -87,7 +87,7 @@ if (attribute === "href") show_href = false;
 				if (! isDocumentation) {
 					// Need to add the documentation string.
 					elmnt[attribute] += documentation_URL;
-console.log("== After adding documenatation_URL (" + documenation_URL + "), elmnt[" + attribute + "] now = " + elmnt[attribute]);
+console.log("== After adding documentatation_URL (" + documentation_URL + "), elmnt[" + attribute + "] now = " + elmnt[attribute]);
 				}
 
 				// Only prepend if not already there.
@@ -98,7 +98,7 @@ console.log("== After adding preURL/URL (" + preURL + " / " + URL + "), elmnt[" 
 			} else if (! isDocumentation) {
 				elmnt[attribute] = documentation_URL + url;
 			}
-			// else on Pi and in documenation so do nothing to do since the URL is already correct.
+			// else on Pi and in documentation so do nothing to do since the URL is already correct.
 
 		} else {
 			console.log("--- Unknown attribute for allsky, elmnt=", elmnt);

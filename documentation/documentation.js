@@ -73,25 +73,23 @@ var show_href=true;
 			}
 		}
 
-			var dir = "";
-if (show_href || attribute !== "href") {
-if (attribute === "href") { show_href = false; }
-		// Get the directory of the current page.
 		console.log("Looking at " + attribute + "= " + url);
-}
 		// See if the url starts with documentation_URL which is the root of the documentation.
 		var isDocumentation = (url.indexOf(documentation_URL) === 0) ? true : false;
 		if (! isDocumentation) {
-			// Need to prepend the documentation string followed by the current directory.
-			dir = document.URL.substr(0,document.URL.lastIndexOf('/'))
-			dir = dir.substr(dir.lastIndexOf('/')+1);
+			// Get the directory of the current page.
+			var dir = document.URL.substr(0,document.URL.lastIndexOf('/'))
+			var d = dir.lastIndexOf('/');
+			dir = dir.substr(d+1);
+console.log("===== d=" + d + ", dir=" + dir);
+
+			// Prepend the documentation string followed by the current directory.
 			url = documentation_URL + dir + "/" + url;
 		}
 
-		if (onGitHub) {
-			// Only prepend if not already there.
-			if (url.indexOf(preURL) < 0)
-				url = preURL + url;
+		// Only prepend on GitHub if not already there.
+		if (onGitHub && url.indexOf(preURL) < 0)
+			url = preURL + url;
 		}
 		// else on Pi so nothing to do since the URL is already correct.
 

@@ -74,7 +74,6 @@ function convertURL() {
 			}
 		}
 
-console.log("Looking at " + attribute + "= " + url);
 		// See if the url starts with documentation_URL_full which is the root of the documentation.
 		var isDocumentation = (url.indexOf(documentation_URL_full) === 0) ? true : false;
 		if (! isDocumentation) {
@@ -82,14 +81,11 @@ console.log("Looking at " + attribute + "= " + url);
 			var dir = document.URL.substr(0,document.URL.lastIndexOf('/'))
 			var d = dir.lastIndexOf('/');
 			dir = dir.substr(d+1);
-console.log("===== dir=" + dir);
 
 			// Prepend the documentation string followed by the current directory
 			// if we're not already in the documentation directory.
 			if (dir !== documentation_URL) {
-console.log(">>> url before = " + url);
 				url = documentation_URL_full + dir + "/" + url;
-console.log(">>> url now = " + url);
 			} else if (url.substr(0,2) === "//") {
 				// Why does htmlpreview start the URL with "//" ?
 				url = "https:" + url;
@@ -142,7 +138,6 @@ function includeHTML() {
 				}
 				file = pre + file;
 			}  // else on Pi so nothing to do since the URL is already correct.
-console.log("GET " + file);
 			xhttp.open("GET", file, true);
 			xhttp.send();
 

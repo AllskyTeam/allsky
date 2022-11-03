@@ -90,6 +90,9 @@ console.log("===== dir=" + dir);
 console.log(">>> url before = " + url);
 				url = documentation_URL_full + dir + "/" + url;
 console.log(">>> url now = " + url);
+			} else if (url.substr(0,2) === "//") {
+				// Why does htmlpreview start the URL with "//" ?
+				url = "https:" + url;
 			}
 		}
 

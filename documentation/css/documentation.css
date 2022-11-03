@@ -515,6 +515,12 @@ details summary {
 	cursor: pointer;
 	color: var(--color-accent-fg);
 }
+details summary::before {
+	content: "More Details...";
+}
+details[open] summary::before {
+	content: "Hide Details...";
+}
 summary {
 	display: list-item;
 }

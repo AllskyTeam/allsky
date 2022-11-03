@@ -1,5 +1,5 @@
-https://htmlpreview.github.io/?https://raw.githubusercontent.com/thomasjacquin/allsky/blob/dev/documentation/basics/index.html
-https://raw.githubusercontent.com/thomasjacquin/allsky/dev/documentation/images/Desktop.png
+// https://htmlpreview.github.io/?https://raw.githubusercontent.com/thomasjacquin/allsky/blob/dev/documentation/basics/index.html
+// https://raw.githubusercontent.com/thomasjacquin/allsky/dev/documentation/images/Desktop.png
 
 
 // This file resides on the Allsky Github page with a copy on a person's Pi.

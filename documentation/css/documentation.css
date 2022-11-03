@@ -54,6 +54,12 @@ body {
 	background-color: var(--color-border-default);
 	border: 0;
 }
+.markdown-body hr.separator {
+	width: 90%;
+	margin-top: 24px;
+	margin-right: 5%;
+	margin-left: 5%;
+}
 blockquote {
     margin: 0;
 }
@@ -74,6 +80,14 @@ blockquote {
 	margin-bottom: 5px;
 	font-weight: 600;
 	line-height: 1.25;
+}
+.markdown-body h1:not(:first-child),
+.markdown-body h2:not(:first-child),
+.markdown-body h3:not(:first-child),
+.markdown-body h4:not(:first-child),
+.markdown-body h5:not(:first-child),
+.markdown-body h6:not(:first-child) {
+	padding-top: 20px;
 }
 .markdown-body h1 .octicon-link,.markdown-body h2 .octicon-link,.markdown-body h3 .octicon-link,.markdown-body h4 .octicon-link,.markdown-body h5 .octicon-link,.markdown-body h6 .octicon-link {
 	color: var(--color-fg-default);
@@ -153,11 +167,6 @@ blockquote {
 .markdown-body li>p {
 	margin-top: 16px;
 }
-/* too much of a gap
-.markdown-body li+li {
-	margin-top: .7em;
-}
-*/
 .markdown-body ul:first-child, .markdown-body ol:first-child {
 	padding-top: 2em;
 }
@@ -196,6 +205,9 @@ blockquote {
 	background-color: var(--color-canvas-default);
 	border-top: 1px solid var(--color-border-muted)
 }
+.markdown-body table tr:nth-child(2n) {
+	background-color: var(--color-canvas-subtle)
+}
 .markdown-body table thead tr {
 	background-color: var(--color-checks-header-label-text);
 }
@@ -212,9 +224,6 @@ blockquote {
 	font-weight: normal;
 	margin-top: 5px;
 	margin-bottom: 5px;
-}
-.markdown-body table tr:nth-child(2n) {
-	background-color: var(--color-canvas-subtle)
 }
 .markdown-body table img {
 	background-color: transparent
@@ -636,8 +645,6 @@ b, strong {
 a {
 	color: var(--color-accent-fg);
 	text-decoration: none;
-}
-a {
 	background-color: transparent;
 }
 

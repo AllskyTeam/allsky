@@ -5,7 +5,7 @@
 // This file resides on the Allsky Github page with a copy on a person's Pi.
 
 // branch is updated during installation.
-var branch = "moretesting";
+var branch = "moretesting2";
 
 // On the Pi, URLs will either begin with "/documentation" (which is a web
 // alias to ~/allsky/documentation), or will be a relative path.
@@ -138,7 +138,10 @@ function includeHTML() {
 			}
 
 			if (onGitHub) {
-				file = preURL_href + "/" + file;
+				var pre = preURL_href;
+				if (file.substr(0,1) !== "/")
+					pre += "/";
+				file = pre + file;
 			}  // else on Pi so nothing to do since the URL is already correct.
 console.log("GET " + file);
 			xhttp.open("GET", file, true);

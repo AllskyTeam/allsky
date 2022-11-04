@@ -659,13 +659,43 @@ a {
 	font-family: monospace;
 	font-weight: bold;
 }
-.editorVariable { /* Matches variables in the WebUI's "Editor" page */
-	color: #a6e22e;
-	background-color: black;
+.settings {
+	/* font-size: 14px; */ /* I think 16px of rest of page is better */
 }
-.editorString { /* Matches strings in the WebUI's "Editor" page */
+/* Colors that match entries in the WebUI's "Editor" page */
+.editorShell {
+	color: #fd971f;
+}
+.editorShellComment {
+	color: #75715e;
+}
+.editorSetting {
+	color: #a6e22e;
+}
+.editorString {
 	color: #e6db74;
+}
+.editorNum, .editorBool {
+	color: #ae81ff;
+}
+.editorSpecial {
+	color: white;
+}
+.editorBrackets {
+	color: #fd971f;
+}
+.editorShell,
+.editorShellComment,
+.editorSetting,
+.editorString,
+.editorNum,
+.editorBool,
+.editorSpecial,
+.editorBrackets {
+	font-family: monospace;
+	font-weight: bold;
 	background-color: black;
+	padding: 1px 2px;
 }
 /* Shell syntax */
 .pl-c {

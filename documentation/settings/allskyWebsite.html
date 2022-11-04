@@ -25,8 +25,9 @@
 
 <div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
 <p>
-The Allsky Website allows you to display your images on a website,
+The Allsky Website allows you to display your most recent captured image on a website,
 either on your Pi or on another machine.
+Saved timelapse videos, keograms, and startrails can also be viewed.
 It can optionally add an overlay of constellations and other objects,
 as well as optional Aurora data from NOAA.
 </p>
@@ -46,9 +47,9 @@ To configure the Website:
 <p>
 The Allsky Website configuration file has two sections:
 <ol>
-<li><span class="editorVariable">"config"</span> -
-	settings for the image and constellation overlay.
-<li><span class="editorVariable">"homePage"</span> -
+<li><span class="settings editorSetting">"config"</span> -
+	settings for the liveview image and constellation overlay.
+<li><span class="settings editorSetting">"homePage"</span> -
 	settings to change the look and feel
 	of the Website's home page including the icons on the left side and the
 	information popout on the right side.
@@ -59,13 +60,53 @@ Any setting whose default is <b>XX_need_to_update_XX</b> needs to be updated pri
 to using the Website.
 The latitude and longitude also need to be updated if not already updated.
 </p>
+<p>
+The sections below list all the settings, their default values, and an description.
+The same color scheme is used as what's in the WebUI's <code>Allsky Settings</code> page:
+<ul>
+<li>Setting names are <span class="settings editorSetting">like this</span>.
+	Names are enclosed in double quotes in the configuration file,
+	but quotes are omitted in the sections below for readability.
+<li>Shell variables (in *.sh files): <span class="settings editorShell">IMG_UPLOAD</span>.
+<li>Defaults value schemes vary based on the type of value:
+	<ul>
+	<li>Text (anything surrounded by quotes):
+		<span class="settings editorString">"sample text"</span>,
+		<span class="settings editorString">"123.4"</span>
+	<li>Numbers (when not quoted):
+		<span class="settings editorNum">1.234</span>,
+		<span class="settings editorNum">-21</span>,
+	<li>Booleans (when not quoted):
+		<span class="settings editorBool">true</span>,
+		<span class="settings editorBool">false</span>
+	</ul>
+<li>Special characters: <span class="settings editorSpecial">{ } : , =</span>
+<li>Brackets: <span class="settings editorBrackets">[ ]</span>
+<li>Linux Shell scripts (ending in ".sh"):
+	<ul>
+	<li>Comments: <span class="settings editorShellComment"># This is a shell comment</span>
+	<li>Many reserved words and common commands like "if" and "sudo" have special colors.
+	</ul>
+</ul>
+If you see different colors while editing a file,
+check for syntax errors:
+<ul>
+<li>missing quotes - JSON setting names and strings must be surrounded by double quotes
+<li>missing colons - one must separate each JSON setting name from its value
+<li>missing commas - they are needed after each value except the last one in a sub-section
+<li>extraneous spaces - in *.sh files, there should be no space between a variable name
+	and the "=".
+</ul>
+The WebUI editor accepts CTRL-Z to undo the last several actions.
+</p>
 
 
-<h3>"config" settings</h3>
+<h2>"config" settings</h2>
 <details><summary></summary>
 <p>
-Items preceded by <span class="sentToMapServer"></span> are sent to the map server
-if you camera is on the <a allsky="true" href="/documentation/allskyMap/index.html">Allsky map</a>.
+Values for setting names preceded by <span class="sentToMapServer"></span>
+are sent to the Allsky Map server if you camera is on the
+<a allsky="true" href="/documentation/allskyMap/index.html">Allsky Map</a>.
 </p>
 <p>
 Items marked with <span class="autoSet"></span> are automatically set during
@@ -75,7 +116,7 @@ It's important to update all your settings in the WebUI <b>before</b> installing
 Allsky Website so you only have to update them once.
 </blockquote>
 </p>
-<table>
+<table class="settings">
 <thead>
 <tr>
 	<th>Setting</th>
@@ -85,296 +126,307 @@ Allsky Website so you only have to update them once.
 </thead>
 <tbody>
 <tr>
-	<td>comment</td>
+	<td><span class="editorSetting">comment</span></td>
 	<td></td>
 	<td>This line is describes what this section is for and can be deleted if desired.</td>
 </tr>
 <tr>
-	<td>imageName</td>
-	<td>/current/tmp/image.jpg</td>
+	<td><span class="editorSetting">imageName</span></td>
+	<td><span class="editorString">/current/tmp/image.jpg</span></td>
 	<td>The image uploaded from your allsky camera.
-		<b>On a <u>remote</u> web server this should normally be
-		<span class="editorString">image.jpg</span></b>
+		On a <u>remote</u> web server this should normally be
+		<span class="editorString">image.jpg</span>.
 	</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> location</td>
+	<td><span class="sentToMapServer"><span> <span class="editorSetting">location</span></td>
 	<td><span class="autoSet"></span></td>
 	<td>The location of your camera.</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"></span> latitude</td>
+	<td><span class="sentToMapServer"></span> <span class="editorSetting">latitude</span></td>
 	<td><span class="autoSet"></span></td>
 	<td>Latitude of the camera as a decimal number (negative is Southern Equator)
 		or as an unsigned number with "N" or "S",
 		e.g., <span class="editorString">"41.79N"</span>
+		or <span class="editorNum">41.79"</span>
 	</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> longitude</td>
+	<td><span class="sentToMapServer"><span> <span class="editorSetting">longitude</span></td>
 	<td><span class="autoSet"></span></td>
 	<td>Longitude of the camera as a decimal number (negative is west of the prime meridian)
 		or as an unsigned number with "E" or "W",
-		e.g., <span class="editorString">"41.79W"</span>
+		e.g., <span class="editorString">"101.9W"</span>
+		or <span class="editorNum">-101.9"</span>
 	</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> camera</td>
+	<td><span class="sentToMapServer"><span> <span class="editorSetting">camera</span></td>
 	<td><span class="autoSet"></span></td>
-	<td>Your camera type and model.</td>
+	<td>The camera type and model.</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> lens</td>
+	<td><span class="sentToMapServer"><span> <span class="editorSetting">lens</span></td>
 	<td><span class="autoSet"></span></td>
-	<td>Your camera's lens, for example, brand, mm, etc.</td>
+	<td>Short description of the camera's lens, for example, its brand, mm, etc.</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> computer</td>
+	<td><span class="sentToMapServer"><span> <span class="editorSetting">computer</span></td>
 	<td><span class="autoSet"></span></td>
-	<td>Your Raspberry Pi model.</td>
+	<td>The Raspberry Pi model.</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> owner</td>
+	<td><span class="sentToMapServer"><span> <span class="editorSetting">owner</span></td>
 	<td><span class="autoSet"></span></td>
-	<td>The camera owner</td>
+	<td>The camera owner.</td>
 </tr>
 <tr>
-	<td>auroraForecast</td>
-	<td>false</td>
-	<td>Displays the 3-day aurora forecast in the top right corner when set to <code>true</code></td>
+	<td><span class="editorSetting">auroraForecast</span></td>
+	<td><span class="editorBool">false</span></td>
+	<td>Displays the 3-day aurora forecast in the top right corner when set to
+		<span class="editorBool">true</span>.
+	</td>
 </tr>
 <tr>
-	<td>auroraMap</td>
+	<td><span class="editorSetting">auroraMap</span></td>
 	<td><span class="autoSet"></span></td>
-	<td>Aurora oval map for the "north" or "south" hemisphere</td>
+	<td>Aurora oval map for the
+		<span class="editorString">north</span> or
+		<span class="editorString">south</span> hemisphere.
+	</td>
 </tr>
 <tr>
-	<td>intervalSeconds</td>
-	<td>5</td>
+	<td><span class="editorSetting">intervalSeconds</span></td>
+	<td><span class="editorNum">5</span></td>
 	<td>Number of seconds between checks for new image.
 		Can set to half the time between the start of one exposure and the start
 		of the next one if you want to decrease CPU usage of the browser.
 	</td>
 </tr>
 <tr>
-	<td>showOverlayAtStartup</td>
-	<td>false</td>
-	<td>Set to "true" to have the overlay displayed when the page is loaded.</td>
+	<td><span class="editorSetting">showOverlayAtStartup</span></td>
+	<td><span class="editorBool">false</span></td>
+	<td>Set to <span class="editorBool">true</span>
+		to have the overlay displayed when the page is loaded.
+	</td>
 </tr>
 <tr>
-	<td>overlayWidth</td>
-	<td>875</td>
+	<td><span class="editorSetting">overlayWidth</span></td>
+	<td><span class="editorNum">875</span></td>
 	<td>Width of the overlay in pixels.</td>
 </tr>
 <tr>
-	<td>overlayHeight</td>
-	<td>875</td>
+	<td><span class="editorSetting">overlayHeight</span></td>
+	<td><span class="editorNum">875</span></td>
 	<td>Height of the overlay in pixels.</td>
 </tr>
 <tr>
-	<td>overlayOffsetLeft</td>
-	<td>0</td>
+	<td><span class="editorSetting">overlayOffsetLeft</span></td>
+	<td><span class="editorNum">0</span></td>
 	<td>Horizontal adjustment of the overlay in pixels.
 		Use negative numbers to move left.
 	</td>
 </tr>
 <tr>
-	<td>overlayOffsetTop</td>
-	<td>0</td>
+	<td><span class="editorSetting">overlayOffsetTop</span></td>
+	<td><span class="editorNum">0</span></td>
 	<td>Vertical adjustment of the overlay in pixels.
 		Use negative numbers to move up.
 	</td>
 </tr>
 <tr>
-	<td>az</td>
-	<td>0</td>
+	<td><span class="editorSetting">az</span></td>
+	<td><span class="editorNum">0</span></td>
 	<td>(azimuth) Changes the rotation of the overlay.
 		0 is north up, 90 is north to the right, etc.
 	</td>
 </tr>
 <tr>
-	<td>imageHeight</td>
-	<td>720</td>
+	<td><span class="editorSetting">imageHeight</span></td>
+	<td><span class="editorNum">720</span></td>
 	<td>Height of the image in pixels.
 		The image width will be calculated automatically to keep the aspect ratio constant.
 	</td>
 </tr>
 <tr>
-	<td>opacity</td>
-	<td>0.5</td>
+	<td><span class="editorSetting">opacity</span></td>
+	<td><span class="editorNum">0.5</span></td>
 	<td>Opacity of the constellation overlay, from 0.0 (invisible) to 1.0 (full brightness).</td>
 </tr>
 <tr>
-	<td>objectsComment</td>
+	<td><span class="editorSetting">objectsComment</span></td>
 	<td></td>
-	<td>This line is FYI and can be deleted if desired.</td>
+	<td>This line is for your information and can be deleted if desired.</td>
 </tr>
 <tr>
-	<td>XXX_objects</td>
-	<td>virtualsky/messier.json</td>
-	<td>Name of one or more semi colon-separated file(s) that contains other objects to display.
-		<br>To use, remove the leading <span class="editorVariable">XXX_</span>.
+	<td><span class="editorSetting">XXX_objects</span></td>
+	<td><span class="editorString">virtualsky/messier.json</span></td>
+	<td>Name of one or more semi colon-separated files that contains other objects to display.
+		<br>To use, remove the leading <span class="editorSetting">XXX_</span>
+		from the setting name.
 	</td>
 </tr>
 <tr>
-	<td>meridian</td>
-	<td>false</td>
+	<td><span class="editorSetting">meridian</span></td>
+	<td><span class="editorBool">false</span></td>
 	<td>Displays the meridian line.</td>
 </tr>
 <tr>
-	<td>ecliptic</td>
-	<td>false</td>
+	<td><span class="editorSetting">ecliptic</span></td>
+	<td><span class="editorBool">false</span></td>
 	<td>Displays the ecliptic line.</td>
 </tr>
 <tr>
-	<td>fontsize</td>
-	<td>14px</td>
+	<td><span class="editorSetting">fontsize</span></td>
+	<td><span class="editorString">14px</span></td>
 	<td>Font size for constellation and star names.</td>
 </tr>
 <tr>
-	<td>cardinalpoints</td>
-	<td>true</td>
+	<td><span class="editorSetting">cardinalpoints</span></td>
+	<td><span class="editorBool">true</span></td>
 	<td>Display the cardinal points (N, S, E, W)?</td>
 </tr>
 <tr>
-	<td>cardinalpoints_fontsize</td>
-	<td>18px</td>
+	<td><span class="editorSetting">cardinalpoints_fontsize</span></td>
+	<td><span class="editorString">18px</span></td>
 	<td>Size of cardinal points.
 		If they are hard to see, increase the size.
 	</td>
 </tr>
 <tr>
-	<td>showstarlabels</td>
-	<td>true</td>
+	<td><span class="editorSetting">showstarlabels</span></td>
+	<td><span class="editorBool">true</span></td>
 	<td>Display the star names.</td>
 </tr>
 <tr>
-	<td>projection</td>
-	<td>fisheye</td>
+	<td><span class="editorSetting">projection</span></td>
+	<td><span class="editorString">fisheye</span></td>
 	<td>Leave at the default if your Allsky camera has a fisheye lens (most do).</td>
 </tr>
 <tr>
-	<td>constellations</td>
-	<td>true</td>
+	<td><span class="editorSetting">constellations</span></td>
+	<td><span class="editorBool">true</span></td>
 	<td>Show constellation lines?</td>
 </tr>
 <tr>
-	<td>constellationwidth</td>
-	<td>0.75</td>
+	<td><span class="editorSetting">constellationwidth</span></td>
+	<td><span class="editorNum">0.75</span></td>
 	<td>Width of lines making up constellations.</td>
 </tr>
 <tr>
-	<td>constellationlabels</td>
-	<td>false</td>
+	<td><span class="editorSetting">constellationlabels</span></td>
+	<td><span class="editorBool">false</span></td>
 	<td>Show the constellation names?</td>
 </tr>
 <tr>
-	<td>constellationboundaries</td>
-	<td>false</td>
+	<td><span class="editorSetting">constellationboundaries</span></td>
+	<td><span class="editorBool">false</span></td>
 	<td>Show the constellation boundaries?</td>
 </tr>
 <tr>
-	<td>constellationboundarieswidth</td>
-	<td>0.75</td>
+	<td><span class="editorSetting">constellationboundarieswidth</span></td>
+	<td><span class="editorNum">0.75</span></span></td>
 	<td>Width of constellation boundary lines.</td>
 </tr>
 <tr>
-	<td>gridlines_eq</td>
-	<td>true</td>
+	<td><span class="editorSetting">gridlines_eq</span></td>
+	<td><span class="editorBool">true</span></td>
 	<td>Show the RA/Dec grid lines?</td>
 </tr>
 <tr>
-	<td>gridlineswidth</td>
-	<td>0.75</td>
+	<td><span class="editorSetting">gridlineswidth</span></td>
+	<td><span class="editorNum">0.75</span></td>
 	<td>Width of RA/Dec grid lines.</td>
 </tr>
 <tr>
-	<td>showgalaxy</td>
-	<td>true</td>
+	<td><span class="editorSetting">showgalaxy</span></td>
+	<td><span class="editorBool">true</span></td>
 	<td>Show galaxies?</td>
 </tr>
 <tr>
-	<td>galaxywidth</td>
-	<td>0.75</td>
+	<td><span class="editorSetting">galaxywidth</span></td>
+	<td><span class="editorNum">0.75</span></td>
 	<td>Width of galaxy outline line.</td>
 </tr>
 <tr>
-	<td>mouse</td>
-	<td>false</td>
+	<td><span class="editorSetting">mouse</span></td>
+	<td><span class="editorBool">false</span></td>
 	<td>Allow the mouse to rotate the overlay?
 		Can be useful when trying to get the overlay to fit properly over your image.
 	</td>
 </tr>
 <tr>
-	<td>keyboard</td>
-	<td>true</td>
+	<td><span class="editorSetting">keyboard</span></td>
+	<td><span class="editorBool">true</span></td>
 	<td>Allow keyboard controls?
-		If set to "true", type "?" when over the image for a list of keyboard commands.
+		If set to <span class="editorBool">true</span>,
+		type "?" when over the image for a list of keyboard commands.
 	</td>
 </tr>
 <tr>
-	<td>showdate</td>
-	<td>false</td>
-	<td>Show the date and time?
+	<td><span class="editorSetting">showdate</span></td>
+	<td><span class="editorBool">false</span></td>
+	<td>Show the date and time in the overlay?
 		Not really needed if you add the date and time to your images.
 	</td>
 </tr>
 <tr>
-	<td>showposition</td>
-	<td>false</td>
+	<td><span class="editorSetting">showposition</span></td>
+	<td><span class="editorBool">false</span></td>
 	<td>Show/hide the latitude/longitude.
 		Not very useful since clicking on the information icon on the
 		left displays this information.
 	</td>
 </tr>
 <tr>
-	<td>sky_gradient</td>
-	<td>false</td>
+	<td><span class="editorSetting">sky_gradient</span></td>
+	<td><span class="editorBool">false</span></td>
 	<td>Should the sky lighten toward the horizon?</td>
 </tr>
 <tr>
-	<td>gradient</td>
-	<td>false</td>
+	<td><span class="editorSetting">gradient</span></td>
+	<td><span class="editorBool">false</span></td>
 	<td>Reduce the brightness of stars near the horizon?</td>
 </tr>
 <tr>
-	<td>transparent</td>
-	<td>true</td>
-	<td>Makes the sky background transparent.</td>
+	<td><span class="editorSetting">transparent</span></td>
+	<td><span class="editorBool">true</span></td>
+	<td>Make the sky background transparent?</td>
 </tr>
 <tr>
-	<td>lang</td>
-	<td>en</td>
+	<td><span class="editorSetting">lang</span></td>
+	<td><span class="editorString">en</span></td>
 	<td>Language the object names should be in.
 		Look in <code>~/allsky/html/allsky/virtualsky/lang</code> for available languages.
 	</td>
 </tr>
 <tr>
-	<td>colours</td>
+	<td><span class="editorSetting">colours</span></td>
 	<td></td>
 	<td>Allows you to override the default overlay colors in "normal" and "negative" mode.
-		To see an example, remove the leading <span class="editorVariable">XXX_</span>
+		To see an example, remove the leading <span class="editorSetting">XXX_</span>
 		from the samples.
 		<br><b>rgba()</b> takes 4 arguments: red, green, and blue values, plus opacity (0.0 - 1.0).
 	</td>
 </tr>
 <tr>
-	<td>live</td>
-	<td>true</td>
+	<td><span class="editorSetting">live</span></td>
+	<td><span class="editorBool">true</span></td>
 	<td>Update the display in real time?  Rarely changed.</td>
 </tr>
 <tr>
-	<td>id</td>
+	<td><span class="editorSetting">id</span></td>
 	<td></td>
 	<td><b>Do not change</b>.</td>
 </tr>
 <tr>
-	<td>AllskyVersion</td>
+	<td><span class="editorSetting">AllskyVersion</span></td>
 	<td></td>
 	<td><b>Do not change</b>.</td>
 </tr>
 <tr>
-	<td>AllskyWebsiteVersion</td>
+	<td><span class="editorSetting">AllskyWebsiteVersion</span></td>
 	<td></td>
 	<td><b>Do not change</b>.</td>
 </tr>
@@ -386,9 +438,9 @@ A complete list of virtual-sky based options is
 </details>
 
 
-<h3>"homePage" settings</h3>
+<h2>"homePage" settings</h2>
 <details><summary></summary>
-<table>
+<table class="settings">
 <thead>
 <tr>
 	<th>Setting</th>
@@ -398,19 +450,22 @@ A complete list of virtual-sky based options is
 </thead>
 <tbody>
 <tr>
-	<td>comment</td>
+	<td><span class="editorSetting">comment</span></td>
 	<td></td>
 	<td>This line is describes what this section is for and can be deleted if desired.</td>
 </tr>
 <tr>
-	<td>onPi</td>
-	<td>true (local)<br>false (remote)</td>
-	<td>Set automatically to indicate if the Website is running on a Pi or a remote server.
+	<td><span class="editorSetting">onPi</span></td>
+	<td><span class="editorBool">true</span> (local) or
+		<br><span class="editorBool">false</span> (remote)
+	</td>
+	<td>Automatically set to indicate if the Website is running locally on the Pi
+		or on a remote server.
 		Should normally not need to change.
 	</td>
 </tr>
 <tr>
-	<td>title</td>
+	<td><span class="editorSetting">title</span></td>
 	<td>XX_NEED_TO_UPDATE_XX</td>
 	<td>Text displayed next to the Allsky logo on the upper left.
 		Can be anything you want, but keep it short.
@@ -418,27 +473,27 @@ A complete list of virtual-sky based options is
 	</td>
 </tr>
 <tr>
-	<td>og_description</td>
+	<td><span class="editorSetting">og_description</span></td>
 	<td>XX_NEED_TO_UPDATE_XX</td>
 	<td>The description given to your Website if you drag/drop its icon to things like
-		social media sites.  Often the same as <span class="editorVariable">title</span>.
+		social media sites.  Often the same as <span class="editorSetting">title</span>.
 	</td>
 </tr>
 <tr>
-	<td>backgroundImage</td>
+	<td><span class="editorSetting">backgroundImage</span></td>
 	<td></td>
 	<td>Allows you to set an optional background image.
-		Set <span class="editorVariable">url</span>
+		Set <span class="editorSetting">url</span>
 		to the location of the image (a URL or file name).
-		Set <span class="editorVariable">style</span>
+		Set <span class="editorSetting">style</span>
 		to an optional CSS style, e.g.,
 		<span class="editorString">border: 1px solid red</span> will give a
 		1 pixel border around the image.
 	</td>
 </tr>
 <tr>
-	<td>loadingImage</td>
-	<td>loading.jpg</td>
+	<td><span class="editorSetting">loadingImage</span></td>
+	<td><span class="editorString">loading.jpg</span></td>
 	<td>The location of the "Loading ..." image that's displayed after you start the Website
 		and before the first captured image appears.
 		Can be a URL or a file name.
@@ -450,27 +505,28 @@ A complete list of virtual-sky based options is
 	</td>
 </tr>
 <tr>
-	<td>imageBorder</td>
-	<td>false</td>
+	<td><span class="editorSetting">imageBorder</span></td>
+	<td><span class="editorBool">false</span></td>
 	<td>Should a border be added to the image?
 		The border helps distinguish the image from the black background.
 	</td>
 </tr>
 <tr>
-	<td>includeGoogleAnalytics</td>
-	<td>false</td>
+	<td><span class="editorSetting">includeGoogleAnalytics</span></td>
+	<td><span class="editorBool">false</span></td>
 	<td>Should the <code>analyticsTracking.js</code> file be included?
-		If you don't know what this is, leave it "false".
-		<br>If you change the file it will be copied to newer release of the Allsky Website.
+		If you don't know what this is, leave it <span class="editorBool">false</span>.
+		<br>If you change the file it will be copied to newer releases of the Allsky Website
+		during upgrades.
 	</td>
 </tr>
 <tr>
-	<td>includeLinkToMakeOwn</td>
-	<td>true</td>
+	<td><span class="editorSetting">includeLinkToMakeOwn</span></td>
+	<td><span class="editorBool">true</span></td>
 	<td>Display the "Make your own" link at the bottom right of the home page?</td>
 </tr>
 <tr>
-	<td>personalLink</td>
+	<td><span class="editorSetting">personalLink</span></td>
 	<td></td>
 	<td>Allows you to add a link to a page at the top of the home page, for example:
 		<br>
@@ -478,37 +534,43 @@ A complete list of virtual-sky based options is
 		<a href="https://google.com" title="this is a title">here</a>
 		to go to my observatory page.</span>
 		<ul>
-		<li><b>prelink</b> - Text before the link ("Click").
-		<li><b>message</b> - What the link says ("here").
-		<li><b>url</b> - The location the user is taken to when clicking on the link ("https://google.com").
-		<li><b>title</b> - Text displayed when hovering over the link ("this is a title").
-		<li><b>style</b> - Optional CSS style of the link ("color: red;").
+		<li><span class="editorSetting">prelink</span> -
+			Text before the clickable link (e.g., "<span style="color: red">Click</span>").
+		<li><span class="editorSetting">message</span> -
+			What the clickable link says ("here").
+		<li><span class="editorSetting">url</span> -
+			The location the user is taken to when clicking on the link ("https://google.com").
+		<li><span class="editorSetting">title</span> -
+			Text displayed when hovering over the link ("this is a title").
+		<li><span class="editorSetting">style</span> -
+			Optional CSS style of the line (<span class="editorString">"color: red;"</span>).
 		</ul>
 	</td>
 </tr>
 <tr>
-	<td>og_type</td>
-	<td>website</td>
-	<td>Used by social media and other sites if you drag/drop your Website icon to them. Rarely changed.
+	<td><span class="editorSetting">og_type</span></td>
+	<td><span class="editorString">website</span></td>
+	<td>Used by social media and other sites if you drag/drop your Website icon to them.
+		Rarely changed.
 	</td>
 </tr>
 <tr>
-	<td>og_url</td>
+	<td><span class="editorSetting">og_url</span></td>
 	<td></td>
 	<td>Link to your Allsky Website page - used if you drag/drop your Website icon
 		to social media and other sites.
 	</td>
 </tr>
 <tr>
-	<td>og_image</td>
-	<td>image.jpg</td>
+	<td><span class="editorSetting">og_image</span></td>
+	<td><span class="editorString">image.jpg</span></td>
 	<td>Link to a picture to display as a thumbnail when dragging/dropping your Website icon
 		to social media and other sites.
 	</td>
 </tr>
 <tr>
-	<td>favicon</td>
-	<td>allsky-favicon.png</td>
+	<td><span class="editorSetting">favicon</span></td>
+	<td><span class="editorString">allsky-favicon.png</span></td>
 	<td>Location of the "favorite icon" which is displayed in the browser title bar.
 		<blockquote>
 		If this is a file on your Pi or remote server,
@@ -518,62 +580,75 @@ A complete list of virtual-sky based options is
 	</td>
 </tr>
 <tr>
-	<td>leftSidebar</td>
+	<td><span class="editorSetting">leftSidebar</span></td>
 	<td></td>
 	<td>Settings that modify the left sidebar's icons.
 		Each icon has the following settings:
 		<ul>
-		<li><b>display</b> - "true" to display the icon, "false" to hide it.
+		<li><span class="editorSetting">display</span> -
+			<span class="editorBool">true</span> to display the icon,
+			<span class="editorBool">false</span> to hide it.
 			<blockquote>
 			The overlay toggle icon's display setting is "false" by default.
 			If you plan to allow the overlay to be displayed,
 			modify its size and position so it mostly matches the sky,
 			then set this field to "true".
 			</blockquote>
-		<li><b>url</b> - The web page to display when the icon is clicked.
-		<li><b>title</b> - Text displayed when hovering over the icon.
-		<li><b>icon</b> - A list of
-			<a href="https://fontawesome.com/v5/search?o=r&m=free">Font Awesome</a>
-			classes that determine which icon is used.
-			Allsky uses Font Awesome version 5.15.4.
+		<li><span class="editorSetting">url</span> -
+			The web page to display when the icon is clicked.
+		<li><span class="editorSetting">title</span> -
+			Text displayed when hovering over the icon.
+		<li><span class="editorSetting">icon</span> -
+			A list of <a href="https://fontawesome.com/v5/search?o=r&m=free">Font Awesome</a>
+			version 5.14.5 classes that determine which icon is used.
 			Note that not all icons work.
-		<li><b>other</b> - Text to add to the link <b>in place of a url</b>.
+		<li><span class="editorSetting">other</span> -
+			Text to add to the link <b>in place of a url</b>.
 			Typically used to take an action, like display a popup, when the icon is clicked.
-		<li><b>style</b> - Optional CSS style, e.g., "color: red;" will turn the icon red.
+		<li><span class="editorSetting">style</span> -
+			Optional CSS style, e.g.,
+			<span class="editorString">"color: red;"</span> will turn the icon red.
 		</ul>
 		You can add, update, reorder, and delete icons.
 	</td>
 </tr>
 <tr>
-	<td>leftSidebarStyle</td>
+	<td><span class="editorSetting">leftSidebarStyle</span></td>
 	<td></td>
 	<td>CSS for the left sidebar itself, not the icons in it.
-		To change the sidebar yellow: "background-color: yellow;".
+		To change the sidebar yellow:
+			<span class="editorString">"background-color: yellow;"</span>.
 	</td>
 </tr>
 <tr>
-	<td>popoutIcons</td>
+	<td><span class="editorSetting">popoutIcons</span></td>
 	<td></td>
 	<td>Settings that modify the information that appears in the popout on the right side.
-		Each entry has contails an icon, name of the field, and the field's value,
+		Each entry contains an icon, name of the field, and the field's value,
 		and has the following settings:
 		<ul>
-		<li><b>display</b> - "true" to display the entry, "false" to hide it.
-		<li><b>label</b> - The name of the field for the entry.
-		<li><b>icon</b> - The same as with <span class="editorVariable">leftSidebar</span> above.
-		<li><b>variable</b> - A variable from the
-			<span class="editorVariable">config</span>
+		<li><span class="editorSetting">display</span> -
+			<span class="editorBool">true</span> to display the entry,
+			<span class="editorBool">false</span> to hide it.
+		<li><span class="editorSetting">label</span> -
+			The name of the field for the entry.
+		<li><span class="editorSetting">icon</span> -
+			The same as with <span class="editorSetting">leftSidebar</span> above.
+		<li><span class="editorSetting">variable</span> - A variable from the
+			<span class="editorSetting">config</span>
 			class whose value should be displayed.
-			For example, if you set the <span class="editorVariable">owner</span>
+			For example, if you set the <span class="editorSetting">owner</span>
 			to <span class="editorString">Eric</span>,
-			entering <span class="editorVariable">owner</span> for this setting will display
+			entering <span class="editorSetting">owner</span> for this setting will display
 			<span class="editorString">Eric</span>.
 			<br>Using variables means you only need to enter its value in one place.
-		<li><b>value</b> - The field's value, used <b>in place of a variable</b>.
+		<li><span class="editorSetting">value</span> -
+			The field's value, used <b>in place of a variable</b>.
 			Can be text or a url.
-			See the
-			<span class="editorVariable">Allsky Settings</span> entry for an example.
-		<li><b>style</b> - Optional CSS style, e.g., "color: red;" will turn the text red.
+			See the <span class="editorSetting">Allsky Settings</span> entry for an example.
+		<li><span class="editorSetting">style</span> -
+			Optional CSS style, e.g.,
+			<span class="editorString">"color: red;"</span> will turn the text red.
 		</ul>
 		You can add, update, reorder, and delete entries.
 	</td>

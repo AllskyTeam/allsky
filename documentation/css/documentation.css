@@ -711,3 +711,12 @@ a {
 .position-relative {
 	position: relative !important;
 }
+.minimalPadding {
+	padding-top: 3px !important;
+	padding-bottom: 3px !important;
+	margin-top: 0 !important;
+	margin-bottom: 0 !important;
+}
+.nowrap {
+	white-space: nowrap;
+}

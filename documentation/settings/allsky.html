@@ -8,6 +8,7 @@
 	<link href="../css/light.css" rel="stylesheet">
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 	<title>AllSky Settings</title>
 </head>
 <body>
@@ -19,41 +20,53 @@
 <div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
 
 <div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="/documentation/sidebar.html" d="../" id="sidebar"></div>
+	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 </div>
 
 <div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
-Once you've installed the "allsky" package there are many configuration variables you must modify, in a few different locations.
-<br>
-All settings should be changed via the WebUI rather than manually editing files
-since the WebUI performs error checking and other tasks.
+Once you've installed Allsky there are many settings you must modify.
+These settings <b>must</b> be changed via the WebUI rather than manually editing files
+since the WebUI performs error checking and updates other files as appropriate.
+<p>
+There WebUI contains many pages; the two used to changes settings are
+the <b>Allsky Settings</b> and <b>Editor</b> pages,
+and are described below.
 
-<br>
-<h3>WebUI "Allsky Settings" Page</h3>
+<h2><i class="fa fa-camera fa-fw"></i> "Allsky Settings" Page</h2>
 <details><summary></summary>
 <p>
 This section lists the settings that are updated in the WebUI's <b>Allsky Settings</b> page.
+A (partial) typical page is below.
+The entries highlighted in yellow are Advanced entries that aren't changed very often;
+to see them, click on the <b>Show advanced options...</b> button on the bottom of the page.
 </p>
+<img allsky="true" src="AllskySettingsPage.png" title="Typical Allsky Settings page" alt="AllskySettings" border="1" loading="lazy">
 
+<p>
 <blockquote>
 <b>RPi camera users, please note</b>
 that several settings have different ranges on Bullseye versus Buster,
-so you'll need to update them when upgrading to Buullseye.
+so you'll need to update them when upgrading to Bullseye.
 For example, <span class="WebUISetting">Brightness</span> in Buster ranged from
 0 (black) to 100 (white), whereas in Bullseye it's -100 to 100.
 </blockquote>
+</p>
 <p>
-The exact list of settings available depends on the camera model you are using;
-settings specific to a camera <b>type</b> are indicated as such.
-The WebUI displays the minimum, maximum, and default values where appropriate,
+The exact list of settings available depends on your camera model;
+settings specific to a camera <b>type</b> (e.g., RPi or ZWO) are indicated as such.
+Where appropriate, the WebUI displays the minimum, maximum, and default values when
+you hover over a value,
 and only displays settings the camera supports, like cooler temperature for cooled cameras.
 </p>
-
-<blockquote>
-Defaults for settings marked with <span class="cameraDependent">CD</span>
-are <span class="cameraDependent">C</span>amera
-<span class="cameraDependent">D</span>ependent and are displayed in the WebUI.
-</blockquote>
+<p>
+Legend:
+<ul>
+<li>Defaults for settings marked with <span class="cameraDependent">CD</span>
+	are <span class="cameraDependent">C</span>amera
+	<span class="cameraDependent">D</span>ependent and are displayed in the WebUI.
+<li>When changed, settings with "(AW)" after them are uploaded to your Allsky Website(s).
+</ul>
+</p>
 
 <table role="table">
 <thead>
@@ -65,7 +78,7 @@ are <span class="cameraDependent">C</span>amera
 <tr><td class="WebUISetting">Daytime Capture</td> <td>Yes</td>
 	<td>Enable to <b>capture</b> images during the day.</td>
 </tr>
-<tr><td class="WebUISetting">Daytime Save</td> <td>No</td>
+<tr><td class="WebUISetting">Daytime Save (WS)</td> <td>No</td>
 	<td>Enable to <b>save</b> images during the day (they are always saved at night).
 	Only applies if <span class="WebUISetting">Daytime Capture</span> is enabled.
 	</td>
@@ -120,13 +133,15 @@ are <span class="cameraDependent">C</span>amera
 	Increasing the bin results in smaller, lower-resolution images and reduces the need for long exposure.
 	Look up your camera specifications to know what values are supported.
 	<br>This variable is usually only changed during the day for testing.
-	<br>Note: on CCD camera, binning normally produces brighter images.
+	<blockquote>On CCD camera, binning normally produces brighter images.
 	CMOS camera may, or may not produce brighter images, depending on the camera model.
+	</blockquote>
 	</td>
 </tr>
 <tr><td class="WebUISetting">Auto White Balance</td> <td>No</td>
 	<td>Sets daytime auto white balance.
-	When used, "Red balance" and "Blue balance" are used as starting points.</td>
+	When used, <span class="WebUISetting">Red balance</span> and
+	<span class="WebUISetting">Blue balance</span> are used as starting points.</td>
 </tr>
 <tr><td class="WebUISetting">Red Balance</td> <td><span class="cameraDependent">CD</span></td>
 	<td>The intensity of the red component of the image.</td>
@@ -235,7 +250,7 @@ If you want the final image to contain only a portion of what strikes the sensor
 	Images that are too sharp look unnatural.</td>
 </tr>
 <tr><td class="WebUISetting class="WebUISetting"">Gamma</td> <td><span class="cameraDependent">CD</span></td>
-	<td>(ZWO only) This setting increases or decreases contrast between dark and bright areas.</td>
+	<td>(ZWO only) Increases or decreases contrast between dark and bright areas.</td>
 </tr>
 <tr><td class="WebUISetting">Offset</td> <td>0</td>
 	<td>(ZWO only) Adds about 1/10 the specified value to every pixel,
@@ -276,7 +291,7 @@ If you want the final image to contain only a portion of what strikes the sensor
 </tr>
 <tr><td class="WebUISetting">Quality</td> <td>95</td>
 	<td>For JPG images, this specifies the quality - 0 (low quality) to 100 (high quality).
-	Larger numbers produce higher-quality, but larger, images.
+	Larger numbers produce higher-quality, but larger, files.
 	For PNG, this is the amount of compression - 0 for no compression (but quicker to save)
 	to 9 for highest compression (but slowest to save).
 	If you use very short delays between pictures you may want to play with these
@@ -292,9 +307,8 @@ If you want the final image to contain only a portion of what strikes the sensor
 <tr><td class="WebUISetting">USB Bandwidth</td> <td><span class="cameraDependent">CD</span></td>
 	<td>(ZWO only) How much of the USB bandwidth to use.</td>
 </tr>
-<tr><td class="WebUISetting">Filename</td> <td>image.jpg</td>
-	<td>The name of the image file. Supported extensions are <b>JPG</b> and <b>PNG</b>.
-	If you have the Allsky Website installed, changing this value will also update the website's configuration file.</td>
+<tr><td class="WebUISetting">Filename (WS)</td> <td>image.jpg</td>
+	<td>The name of the image file. Supported extensions are <b>jpg</b> and <b>png</b>.</td>
 </tr>
 <tr><td class="WebUISetting">Rotation</td> <td>None</td>
 	<td>(RPi on Bullseye only) How to rotate the image.
@@ -310,32 +324,42 @@ If you want the final image to contain only a portion of what strikes the sensor
 	<td>Activate to force the time between the start of exposures to be a consistent length
 	(<span class="WebUISetting">Max Auto-Exposure + Delay</span>).</td>
 </tr>
-<tr><td class="WebUISetting">Latitude</td> <td></td>
-	<td>Latitude of the camera. Must include <b>N</b> for North or <b>S</b> for South.
-	If you have the Allsky Website installed,
-	changing this value will also update the website's configuration file.</td>
+<tr><td class="WebUISetting">Latitude (WS)</td> <td></td>
+	<td>Latitude of the camera.
+	Formats include: 123.4N, 123.4S, 123.4, or -123.4.
+	Southern hemisphere is negative.
+	</td>
 </tr>
-<tr><td class="WebUISetting">Longitude</td> <td></td>
-	<td>longitude of the camera. <b>E</b> for East or <b>W</b> for West.
-	If you have the Allsky Website installed, changing this value will also update the
-	website's configuration file.</td>
+<tr><td class="WebUISetting">Longitude (WS)</td> <td></td>
+	<td>longitude of the camera.
+	Formats include: 123.4E, 123.4W, 123.4, or -123.4.
+	West is negative.
+	</td>
 </tr>
-<tr><td class="WebUISetting">Angle</td> <td>-6</td>
+<tr><td class="WebUISetting">Angle (WS)</td> <td>-6</td>
 	<td>Altitude of the Sun above or below the horizon at which capture should start/stop.
 	Can be negative (Sun below horizon) or positive (Sun above horizon).
-	<br>&nbsp; &nbsp; 0=Sunset, -6=Civil twilight, -12=Nautical twilight, -18=Astronomical twilight
-	<br>See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Angle-and-sunrise---sunset)
-	for a description of Angle.
-	If you have the Allsky Website installed, changing this value will also update the
-	website's configuration file.</td>
+	<ul class="minimalPadding">
+	<li><code>0</code> = Sunset
+	<li><code>-6</code> = Civil twilight
+	<li><code>-12</code> = Nautical twilight
+	<li><code>-18</code> = Astronomical twilight
+	</ul>
+	<a allsky="true" href="/documentation/explanations/angleSunriseSunset.html">Click here</a>
+	for a description of <span class="WebUISetting">Angle</span>.
+	</td>
 </tr>
 <tr><td class="WebUISetting">Take Dark Frames</td> <td>No</td>
-	<td>Activate to enable dark frame capture. In this mode, overlays are hidden.
-	Don't forget to cover the lens first!</td>
+	<td>Activate to take dark frames which are use to decrease noise in images.
+	<br>
+	See <a allsky="true" href="/documentation/explanations/darkFrames.html">this page</a>
+	for an in-depth explanation of dark frames, including how to take and use them.
+	</td>
 </tr>
 <tr><td class="WebUISetting">Use Dark Frames</td> <td>No</td>
-	<td>Activate to enable hot pixels subtraction at night.
-	<br>Requires that you first took dark frames.
+	<td>Activate to enable dark frame subtraction at night.
+	<br>Requires that you first took dark frames using the
+	<span class="WebUISetting">Take Dark Frames</span> setting.
 	</td>
 </tr>
 <tr><td class="WebUISetting">Locale</td> <td>en_US.UTF-8</td>
@@ -358,7 +382,7 @@ If you want the final image to contain only a portion of what strikes the sensor
 	See <a href="https://github.com/thomasjacquin/allsky/issues/417">Issue 417</a>.</td>
 </tr>
 <tr><td class="WebUISetting">Require WebUI Login</td> <td>Yes</td>
-	<td>Determins if you need to login to the WebUI.
+	<td>Determines if you need to log into the WebUI.
 	<b>If you Pi is accessible on the Internet, do NOT disable this!!</b></td>
 </tr>
 <tr><td class="WebUISetting">Always Show Advanced</td> <td>No</td>
@@ -367,15 +391,23 @@ If you want the final image to contain only a portion of what strikes the sensor
 </tr>
 
 <tr><td class="note" colspan="3">Image overlay settings
-	<p>See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Overlays-Explained)
-	for details on the image overlay.</p>
+	<p>See the
+	<a allsky="true" href="/documentation/explanations/imageOverlays.html">image overlay</a>
+	page for details on the image overlay.
+	<br><b>Note, the <u>image overlay</u> is what's embedded in every image;
+	the <u>constellation overlay</u> is what's optionally overlayed
+	on top of images in the Allsky Website.</b>
+	This page only deals with the <u>image overlay</u>.
+	</p>
 </td></tr>
 <tr><td class="WebUISetting">External Overlay</td> <td>No</td>
-	<td>Activate to have image overlays added by the new, enhanced external program.
+	<td>Activate to have image overlays added by the new, enhanced external "module" program.
 	<br><b>When active, the overlay settings below do NOT apply</b>.
-	<br>This option will be turned on by default in the next Allsky release,
+	<blockquote>
+	This setting will be turned on by default in the next Allsky release,
 	and the internal overlay capability, as well as this "Image overlay settings"
 	section of the WebUI will be removed.
+	</blockquote>
 	</td>
 </tr>
 <tr><td class="WebUISetting">Show Time</td> <td>Yes</td>
@@ -419,12 +451,14 @@ If you want the final image to contain only a portion of what strikes the sensor
 	<td>Text overlay that appears below the time, in the same font.</td>
 </tr>
 <tr><td class="WebUISetting">Extra Text File</td> <td></td>
-	<td>The FULL path to a text file which will be displayed under other information.
+	<td>The full path name to a text file which will be displayed under other information.
 	The file can contain multiple lines which will be displayed underneath each other.</td>
 </tr>
 <tr><td class="WebUISetting">Max Age Of Extra</td> <td>0</td>
-	<td>If using the extra text file then it must be updated within this number of seconds,
-	if not it will not be displayed. Set to 0 to ignore this check and always display it.</td>
+	<td>If you specified an <span class="WebUISetting">Extra Text File</span>
+	then it must be updated within this number of seconds;
+	if not it will not be displayed.
+	Set to <code>0</code> to ignore this check and always display it.</td>
 </tr>
 <tr><td class="WebUISetting">Line Height</td> <td>30</td>
 	<td>The line height of the text displayed in the image.
@@ -502,28 +536,31 @@ If you want the final image to contain only a portion of what strikes the sensor
 	to appear on the map page, leave this field empty.
 	However, one of the main purposes of the map is to show pictures from cameras around the world,
 	so adding your URL is <b>strongly</b> encouraged.</td></tr>
-<tr><td class="WebUISetting">Location</td> <td></td>
+<tr><td class="WebUISetting">Location (WS)</td> <td></td>
 	<td>The location of your camera.
 	You can put any level of detail you want,
 	but there's no need to enter the country since it will be obvious by looking at the map.</td></tr>
-<tr><td class="WebUISetting">Owner</td> <td></td>
+<tr><td class="WebUISetting">Owner (WS)</td> <td></td>
 	<td>The owner of the camera - your name, an association name, an observatory, etc.</td></tr>
-<tr><td class="WebUISetting">Camera</td> <td></td>
+<tr><td class="WebUISetting">Camera (WS)</td> <td></td>
 	<td>The type and model of your camera, for example: <b>ZWO ASI224MC</b> or <b>RPi HQ</b>.
 	This field is required and a default value is set during Allsky installation.</td></tr>
-<tr><td class="WebUISetting">Lens</td> <td></td>
+<tr><td class="WebUISetting">Lens (WS)</td> <td></td>
 	<td>The lens you're using on your camera, for example: <b>Arecont 1.55</b>.</td></tr>
-<tr><td class="WebUISetting">Computer</td> <td></td>
+<tr><td class="WebUISetting">Computer (WS)</td> <td></td>
 	<td>The computer inside your allsky enclosure, for example: Raspberry Pi 3.
 	This field is required and a default value is set during Allsky installation.</td></tr>
-<tr><td class="WebUISetting">Latitude &amp; longitude</td>
+<tr><td class="WebUISetting">Latitude &amp; longitude (WS)</td>
 	<td></td> <td>These are described above and are
-	required for your camera to appear on the global allsky map.
-	Their actual values are not displayed on the map,
+	required for your camera to appear on the Allsky Map.
+	<blockquote>
+	The actual values are not displayed on the map,
 	but users can zoom in to see exactly where the camera is.
-	If that bothers you, change their values slightly, but beware that the latitude and longitude
+	If that bothers you, change their values slightly, but beware that these settings
 	are also used to determine when your daytime and nighttime are so changing their
-	values too much can impact your daytime/nighttime settings.</td></tr>
+	values too much can impact your daytime/nighttime settings.
+	</blockquote>
+	</td></tr>
 
 <tr><td class="note" colspan="3">Camera Type</td></tr>
 
@@ -538,33 +575,37 @@ If you want the final image to contain only a portion of what strikes the sensor
 
 </tbody>
 </table>
-
-<br>
-<blockquote>
-If you have the Allsky Website installed on your Pi, changing the
-<span class="WebUISetting">Location</span>, <span class="WebUISetting">Owner</span>,
-<span class="WebUISetting">Camera</span>, <span class="WebUISetting">Lens</span>,
-<span class="WebUISetting">Computer</span>, <span class="WebUISetting">Latitude</span>,
-<span class="WebUISetting">Longitude</span>, or <span class="WebUISetting">Angle</span>
-fields will also up update the website's configuration file.
-</blockquote>
-
-<hr>
+<hr class="separator">
 </details>
 
 
-<br>
-<h3>WebUI "Editor" Page</h3>
+<h2><i class="fa fa-code fa-fw"></i> "Editor" Page</h2>
 <details><summary></summary>
 <p>
 This section lists the settings that are updated in the WebUI's <b>Editor</b> page.
-This includes the <code>config.sh</code> and <code>ftp-settings.sh</code> files.
+A typical page is below:
+</p>
+<img allsky="true" src="EditorPage.png" title="Typical Editor page" alt="Editor" border="1" loading="lazy">
+<p>
+Files that can be edited include <code>config.sh</code>, <code>ftp-settings.sh</code>,
+and if you have the Allsky Website installed, a local and/or remote
+<code>configuration.json</code> file.
+Further, if you have a <code>endOfNight_additionalSteps.sh</code> file,
+it can also be edited.
 </p>
 <p>
-The <code>~/allsky/config/config.sh</code> file lets you configure the
-overall behavior of the software.
-Many of the settings are booleans and take either <code>true</code> or <code>false</code>.
-Number values do not need to be quoted but strings should be quoted.
+This section describes the settings in the
+<code>config.sh</code> and
+<code>ftp-settings.sh</code> files;
+settings in the <code>configuration.json</code> files are described in the
+<a allsky="true" href="allskyWebsite.html">Allsky Website Settings</a> page.
+</p>
+<p>
+Information on the color scheme used by the Editor is
+<a allsky="true" href="EditorColors.html" target="_blank" title="Opens in new tab">here <i class="fa fa-external-link-alt fa-fw"></i></a>.
+</p>
+<p>
+<code>config.sh</code> lets you configure the overall behavior of Allsky.
 </p>
 
 <table role="table">
@@ -848,8 +889,8 @@ Number values do not need to be quoted but strings should be quoted.
 	<td>Sets the height of thumbnails.
 	<br>These numbers determine the size of the thumbnails in <code>~/allsky/images</code>
 	as well as any thumbnails created by the Allsky Website.
-	<br>Although changing these will change the size of the thumbnails,
-	no testing has been done to see if there are negative side effects.
+	<blockquote>Although changing these will change the size of the thumbnails,
+	no testing has been done to see if there are negative side effects.</blockquote>
 	</td>
 </tr>
 
@@ -860,7 +901,7 @@ Number values do not need to be quoted but strings should be quoted.
 <tr><td class="shSetting">WEB_DAYS_TO_KEEP</td> <td>28</td>
 	<td>Number of days' of web data to keep before starting deleting.
 	Set to blank ("") to keep ALL days' web data.
-	<br>Note: This only applies to Allsky Websites that are on the Pi.
+	<blockquote>This only applies to Allsky Websites on the Pi.</blockquote>
 	</td>
 </tr>
 <tr><td class="shSetting">POST_END_OF_NIGHT_DATA</td> <td>false</td>
@@ -870,7 +911,7 @@ Number values do not need to be quoted but strings should be quoted.
 </tr>
 <tr><td class="shSetting">WEBUI_DATA_FILES</td> <td></td>
 	<td>One or more colon-separated full path names to text files that contain user-supplied
-	data to display on the WebUI's "System" page.
+	data to display on the WebUI's <b>System</b> page.
 	See the <a href="#WEBUI_DATA_FILES">WEBUI_DATA_FILES section</a> for more
 	information and an example of this setting.</td>
 </tr>
@@ -889,15 +930,14 @@ Number values do not need to be quoted but strings should be quoted.
 
 <br>
 <p>
-In order to upload files to your Allsky Website (on the Pi or a remote site),
-you need to edit connection details in <code>config/ftp-settings.sh</code>.
-Edit this file via the "Editor" link on the left side of the WebUI web page.
+In order to upload files to your Allsky Website (on the Pi and/or a remote server),
+connection details must be specified in <code>ftp-settings.sh</code>.
 </p>
 
 <p>
 The <span class="shSetting">WEB_*_DIR</span>
  variables below are optionally used to copy a file to an Allsky Website on the Pi
-<i>in addition to</i> being uploaded to a remote Allsky Website.
+<b>AND</b> upload it to a remote Allsky Website.
 </p>
 <p>
 In the table below, "remote" refers to a location that's not on the Pi
@@ -905,7 +945,7 @@ In the table below, "remote" refers to a location that's not on the Pi
 and "local" refers to an Allsky Website on the Pi.
 </p>
 
-<blockquote>YOU must create the remote directories.
+<blockquote><b>YOU</b> must create the remote directories.
 Directories on the Pi are created during Allsky Website installation.
 </blockquote>
 
@@ -917,7 +957,7 @@ Directories on the Pi are created during Allsky Website installation.
 <tbody>
 <tr><td class="shSetting">PROTOCOL</td> <td></td>
 	<td>How the file should be uploaded:
-	<ul>
+	<ul class="minimalPadding">
 	<li><code>local</code> - copies the file to the local Allsky Website.
 	<li><code>ftp</code> - uses File Transfer Protocol (FTP) to upload to a remote server.
 	<li><code>ftps</code> - uses secure File Transfer Protocol (FTPs) to upload to a remote server.
@@ -1002,7 +1042,7 @@ Directories on the Pi are created during Allsky Website installation.
 <tr><td class="note" colspan="3">S3 Settings</td></tr>
 <tr><td></td><td colspan="2">
 	You need to install the AWS Command-Line Interface (CLI):
-	<ul>
+	<ul class="minimalPadding">
 	<li><code>sudo apt-get install python3-pip</code>
 	<li><code>pip3 install awscli --upgrade --user</code>
 	<li><code>export PATH=/home/pi/.local/bin:$PATH</code>
@@ -1047,92 +1087,110 @@ Directories on the Pi are created during Allsky Website installation.
 
 <br>
 If you have the Allsky Website <b>only</b> on your Pi, set these variables:
-<ul>
-<li><code>PROTOCOL="local"</code>
-<li><code>IMAGE_DIR=""</code>
-<li><code>VIDEOS_DIR="/home/pi/allsky/html/allsky/videos"</code>
-<li><code>KEOGRAM_DIR="/home/pi/allsky/html/allsky/keograms"</code>
-<li><code>STARTRAILS_DIR="/home/pi/allsky/html/allsky/startrails"</code>
-</ul>
+<pre>
+PROTOCOL="local"
+IMAGE_DIR=""
+VIDEOS_DIR="/home/pi/allsky/html/allsky/videos"
+KEOGRAM_DIR="/home/pi/allsky/html/allsky/keograms"
+STARTRAILS_DIR="/home/pi/allsky/html/allsky/startrails"
+</pre>
 
 <br>
 If you are using SSH Key with Amazon's Lightsail,
 copy the <code>ssh-key.pem.pem</code> file to your Pi, for example, in <code>~</code>,
 then execute <code>chmod 400 ~/ssh-key.pem</code> and set these variables:
-<ul>
-<li><code>PROTOCOL="sftp"</code>
-<li><code>REMOTE_HOST="remote host name"</code>
-<li><code>REMOTE_USER="remote user name"</code>
-<li><code>REMOTE_PASSWORD="n/a"</code>
-<li><code>LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"</code>
-</ul>
+<pre>
+PROTOCOL="sftp"
+REMOTE_HOST="remote host name"
+REMOTE_USER="remote user name"
+REMOTE_PASSWORD="n/a"
+LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"
+</pre>
 
-<hr>
+<hr class="separator">
 </details>
 
 
-<br>
-<h3>WEBUI_DATA_FILES configuration setting</h3>
+<h2>WEBUI_DATA_FILES configuration setting</h2>
 <details><summary></summary>
 
 <p>
-The <code>WEBUI_DATA_FILES</code> setting in <code>~/allsky/config/config.sh</code>
-allows you to specify a list of file names that contain information and buttons to add to the WebUI "System" page.
+The <span class="WebUISetting">WEBUI_DATA_FILES</span> setting in <code>config.sh</code>
+allows you to specify a list of file names that contain information and buttons to add to the WebUI <b>System</b> page.
 The data can be anything you want, but often contains weather and/or fan data.
 </p>
 <blockquote>
-You need to provide script(s) to create file(s) in the format specified below.
+<b>You</b> need to provide script(s) to create file(s) in the format specified below.
 </blockquote>
 This tutorial assumes you are familiar with writing scripts;
 if so, the changes needed to implement WEBUI_DATA_FILES are very easy, despite the length of this tutorial.
 
 <p>
-Each file listed in the <code>WEBUI_DATA_FILES</code> variable contains one or more lines.
-Blank lines and lines that begin with "#" are ignored.
+Each file listed in the <span class="WebUISetting">WEBUI_DATA_FILES</span>
+variable contains one or more lines.
+Blank lines and lines that begin with <code>#</code> are ignored.
 The remaining lines must contain the fields listed in the tables below,
-separated by tabs. Each of these lines has its own entry on the "System" page.
+separated by <b>tabs</b>.
+Each of these lines has its own entry on the <b>System</b> page.
 </p>
 
 <p>
 There are three types of lines in a data file.
 The first word of a line determines what type of line it is:
 <ol>
-<li>"data" lines specify basic, two-column information that goes before the first progress bar.
+<li><b>data</b> lines specify basic, two-column information that goes before the first progress bar.
 	These lines are good when the data has no associated status, for example,
-	a simple on/off value, like: "Dew heater: &nbsp; &nbsp; on".
-<li>"progress" lines display as progress bars like the CPU temperature bar on the "System" page.
+	a simple on/off value, like:
+	<br><code>Dew heater: &nbsp; &nbsp; on</code>.
+<li><b>progress</b> lines display as progress bars like the CPU temperature bar
+	on the <b>System</b> page.
 	Your bars go after the last system-supplied progress bar and are good when
 	the data has an associated status, for example, when the CPU is too hot its bar turns red.
-<li>"button" lines add a button to the page under the last system-supplied button,
+<li><b>button</b> lines add a button to the page under the last system-supplied button,
 	and are used to initiate an action like turning a dew heater on.
 </ol>
 </p>
 
 The fields for each line type are described in the tables below.
 <ol>
-<li>The first column lists the purpose of the field.
+<li>The first table column lists the purpose of the field.
 <li>The second column lists the type of data the field contains.
 <li>The third column describes the field.
-<li>The fourth column states whether or not the field <i>typically</i> changes when the data is updated.
+<li>The fourth column states whether or not the field <i>typically</i>
+changes when the data is updated.
 </ol>
 
 <table role="table">
 <thead>
-<tr><th>"data" Fields</th> <th>Field Type</th>
-	<th>Description</th><th>Typically Changes</th></tr>
+<tr><th>"data" Fields</th>
+	<th>Field Type</th>
+	<th>Description</th>
+	<th>Typically Changes</th></tr>
 </thead>
 <tbody>
-<tr><td><b>type</b></td> <td>text</td>
-	<td>Must be <b>data</b>. Defines the line type.</td> <td>Never.</td></tr>
-<tr><td><b>timeout</b></td> <td>integer</td>
+<tr><td><b>type</b></td>
+	<td>text</td>
+	<td>Must be <b>data</b>. Defines the line type.</td>
+	<td>Never.</td>
+</tr>
+<tr><td><b>timeout</b></td>
+	<td>integer</td>
 	<td>Number of seconds after the data file was created that the data should expire.
-	<b>0</b> disables the check. Expired data is displayed in red with "(EXPIRED)" appended to the label.</td> <td>No.</td></tr>
-<tr><td><b>label</b></td> <td>text</td>
-	<td>The name for this data, for example: "Ambient temperature".</td> <td>No.</td></tr>
-<tr><td><b>data</b></td> <td>text</td>
+	<code>0</code> disables the check.
+	Expired data is displayed in red with "(EXPIRED)" appended to the label.</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>label</b></td>
+	<td>text</td>
+	<td>The name for this data, for example: <code>Ambient temperature</code>.</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>data</b></td>
+	<td>text</td>
 	<td>The actual data - what should appear in the second column on the web page.
 	For example, for "20 C".</td>
-	<td>Yes - every time new data is written to the file.</td></tr>
+	<td>Yes - every time new data is written to the file.</td>
+</tr>
 </tbody>
 </table>
 
@@ -1140,34 +1198,77 @@ The fields for each line type are described in the tables below.
 
 <table role="table">
 <thead>
-<tr><th>"progress" Fields</th> <th>Field Type</th>
-	<th>Description</th> <th>Typically Changes</th></tr>
+<tr><th>"progress" Fields</th>
+	<th>Field Type</th>
+	<th>Description</th>
+	<th>Typically Changes</th></tr>
 </thead>
 <tbody>
-<tr><td><b>type</b></td> <td>text</td>
-	<td>Must be <b>progress</b>.</td> <td>Never.</td></tr>
-<tr><td><b>timeout</b></td> <td>integer</td>
+<tr><td><b>type</b></td>
+	<td>text</td>
+	<td>Must be <b>progress</b>.</td>
+	<td>Never.</td>
+</tr>
+<tr><td><b>timeout</b></td>
+	<td>integer</td>
 	<td>Number of seconds after the data file was created that the data should expire.
-	<b>0</b> disables the check. Expired data is displayed in red with "(EXPIRED)" appended to the label.</td> <td>No.</td></tr>
-<tr><td><b>label</b></td> <td>text</td>
-	<td>The name for this data, for example: "Dew point".</td> <td>No.</td></tr>
-<tr><td><b>data</b></td> <td>text</td>
+		<code>0</code> disables the check. Expired data is displayed in red with
+		"(EXPIRED)" appended to the label.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>label</b></td>
+	<td>text</td>
+	<td>The name for this data, for example: "Dew point".</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>data</b></td>
+	<td>text</td>
 	<td>The actual data to appear in the progress bar.
-	Typically a number followed by an optional unit specifier, for example, "20 C" for temperature, but could be any text.</td> <td>Yes - every time new data is written to the file.</td></tr>
-<tr><td><b>minimum value</b></td> <td>integer</td>
-	<td>The minimum possible value of <b>current value</b>; often 0, but for a temperature will usually be negative.</td> <td>No.</td></tr>
-<tr><td><b>current value</b></td> <td>integer</td>
+		Typically a number followed by an optional unit specifier,
+		for example, "20 C" for temperature, but could be any text.
+	</td>
+	<td>Yes - every time new data is written to the file.</td>
+</tr>
+<tr><td><b>minimum value</b></td>
+	<td>integer</td>
+	<td>The minimum possible value of <b>current value</b>; often <code>0</code>,
+		but for a temperature will usually be negative.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>current value</b></td>
+	<td>integer</td>
 	<td>The current value of the data.
-	This determines how wide the progress bar is.
-	Will typically be the same as <b>data</b> without the unit specifier, for example, "20".
-	This value should be between <b>minimum value</b> and <b>maximum value</b> inclusive.</td> <td>Yes - every time new data is written to the file.</td></tr>
-<tr><td><b>maximum value</b></td> <td>integer</td>
-	<td>The maximum possible value of <b>current value</b>; often 100, especially for percents.
-	For a temperature, use the highest value you expect the temperature to be.</td> <td>No.</td></tr>
-<tr><td><b>danger</b></td> <td>integer</td>
-	<td>A <b>current value</b> greater than or equal to the <b>danger</b> value causes the progress bar to turn red.</td> <td>No.</td></tr>
-<tr><td><b>warning</b></td> <td>integer</td>
-	<td>A <b>current value</b> greater than or equal to the <b>warning</b> value and less than the <b>danger</b> value causes the progress bar to turn amber. The progress bar will be green for any value less than <b>warning</b>.</td> <td>No.</td></tr>
+		This determines how wide the progress bar is.
+		Will typically be the same as <b>data</b> without the unit specifier, for example, "20".
+		This value should be between <b>minimum value</b> and <b>maximum value</b> inclusive.
+	</td>
+	<td>Yes - every time new data is written to the file.</td>
+</tr>
+<tr><td><b>maximum value</b></td>
+	<td>integer</td>
+	<td>The maximum possible value of <b>current value</b>; often <code>100</code>,
+		especially for percents.
+		For a temperature, use the highest value you expect the temperature to be.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>danger</b></td>
+	<td>integer</td>
+	<td>A <b>current value</b> greater than or equal to the <b>danger</b>
+		value causes the progress bar to turn red.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>warning</b></td>
+	<td>integer</td>
+	<td>A <b>current value</b> greater than or equal to the <b>warning</b>
+		value and less than the <b>danger</b> value causes the progress bar to turn amber.
+		The progress bar will be green for any value less than <b>warning</b>.
+	</td>
+	<td>No.</td>
+</tr>
 </tbody>
 </table>
 
@@ -1175,36 +1276,62 @@ The fields for each line type are described in the tables below.
 
 <table role="table">
 <thead>
-<tr><th>"button" Fields</th> <th>Field Type</th>
-	<th>Description</th> <th>Typically Changes</th></tr>
+<tr><th>"button" Fields</th>
+	<th>Field Type</th>
+	<th>Description</th>
+	<th>Typically Changes</th>
+</tr>
 </thead>
 <tbody>
-<tr><td><b>type</b></td> <td>text</td>
-	<td>Must be <b>button</b>.</td> <td>Never.</td></tr>
-<tr><td><b>message</b></td> <td>text</td>
+<tr><td><b>type</b></td>
+	<td>text</td>
+	<td>Must be <b>button</b>.</td>
+	<td>Never.</td>
+</tr>
+<tr><td><b>message</b></td>
+	<td>text</td>
 	<td>An optional status message that should appear near the top of the page after the
-	button is pressed and the button command was successful.
-	For example, "Dew heater turned on".
-	If not successful an error message is displayed containing any output from the command.
-	Use "-" to indicate no message should be displayed on success
-	(error messages will still be displayed).</td> <td>No.</td></tr>
-<tr><td><b>command</b></td> <td>text</td>
+		button is pressed and the button command was successful.
+		For example, "Dew heater turned on".
+		If not successful an error message is displayed containing any output from the command.
+		Use <code>-</code> to indicate no message should be displayed on success
+		(error messages will still be displayed).
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>command</b></td>
+	<td>text</td>
 	<td>The program that should be executed when the button is pressed.
-	For example, "/home/pi/turn_on_dew_heater.sh". If needed you can prepend "sudo" to the command.</td> <td>No.</td></tr>
-<tr><td><b>button color</b></td> <td>text</td>
+		For example, <code>/home/pi/turn_on_dew_heater.sh</code>.
+		If needed you can prepend <code>sudo<code> to the command.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>button color</b></td>
+	<td>text</td>
 	<td>The button's color.
-	Choices are: red, green, blue, yellow, cyan, white, and black.
-	If you want a different color add it to the end of <code>/var/www/html/dist/css/custom.css</code>.</td> <td>No.</td></tr>
-<tr><td><b>FA icon</b></td> <td>text</td>
+		Choices are: red, green, blue, yellow, cyan, white, and black.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>FA icon</b></td>
+	<td>text</td>
 	<td>The Fonts Awesome (FA) icon on the button.
-	For example, the right-facing triangle on the "Start allsky" button has an FA icon of "play".
-	If you don't want an icon on the button, enter "-".</td> <td>No.</td></tr>
-<tr><td><b>button label</b></td> <td>text</td>
-	<td>What should appear on the button face, for example, "Enable dew heater".</td> <td>No.</td></tr>
+		For example, the right-facing triangle on the "Start allsky" button has an
+		FA icon of "play".
+		If you don't want an icon on the button, enter <code>-</code>.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>button label</b></td>
+	<td>text</td>
+	<td>What should appear on the button face, for example, "Enable dew heater".</td>
+	<td>No.</td>
+</tr>
 </tbody>
 </table>
 
-<hr>
+<hr class="separator">
 
 <h3>Example</h3>
 Let's assume you have a weather station that provides the ambient temperature, humidity, and dew point, and the dome over your camera has a dew heater.
@@ -1226,7 +1353,7 @@ You want to display the temperature, humidity, dew point, and dew heater status.
 You will use both the humidity and dew point numbers to determine if you should turn the dew heater on or off via a toggle button you will add to the web page.
 You want the ambient temperature in Celsius and Fahrenheit.
 <p>
-You will add the following to the WebUI's "System" page:
+You will add the following to the WebUI's <b>System</b> page:
 <ul>
 <li>temperature
 <li>humidity
@@ -1257,7 +1384,7 @@ The dew heater toggle switch will be a "button".
 <h4>Determine expiration timeout</h4>
 If the weather data gets too old it may fool you into turning the dew heater off when it should remain on, so you want its data to expire.
 Your weather station provides new data every minute.
-If it misses a minute or two you don't want the data on the "System" page to turn red, so you will set the temperature and dew point <b>timeout</b> fields to 300 (5 minutes).
+If it misses a minute or two you don't want the data on the <b>System</b> page to turn red, so you will set the temperature and dew point <b>timeout</b> fields to 300 (5 minutes).
 Just for fun you will set the humidity <b>timeout</b> value to 600 (10 minutes).
 
 <p>
@@ -1305,13 +1432,13 @@ You like green so will make the dew heater toggle button green by specifying its
 You want an icon on the button since the other buttons have icons,
 so you go to the <a href="https://fontawesome.com/v4/icons/">Font Awesome</a>
 web page to look for an icon (Allsky uses Font Awesome version 4.7).
-You pick the "random" icon so will set the button's <b>FA icon</b> field to "random".
+You pick the "random" icon so will set the button's <b>FA icon</b> field to <code>random</code>.
 </p>
 
 <a name="WEBUI_DATA_FILES">
 <h4>Modify the <code>WEBUI_DATA_FILES</code> variable</h4>
-You need to enter the names of your files in the <code>WEBUI_DATA_FILES</code>
-variable of the <code>config/config.sh</code> file,
+You need to enter the names of your files in the
+<span class="WebUISetting">WEBUI_DATA_FILES</span> variable of the <code>config.sh</code> file,
 but how many files should you have?
 You could put everything in one file but you have two scripts that create files
 and would need to coordinate between them so they don't overwrite each other.
@@ -1329,8 +1456,10 @@ WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
 </p>
 <blockquote>The file names must be full path names and must be separated by colons (":").</blockquote>
 
-The "data", "progress", and "button" lines in the first file will come first on the "System" page; those in the second file will come second on the "System" page, etc.
-You can change the order items appear on the "System" page by changing the order of files in the <code>WEBUI_DATA_FILES</code> variable.
+The "data", "progress", and "button" lines in the first file will come first on the <b>System</b> page;
+those in the second file will come second on the <b>System</b> page, etc.
+You can change the order items appear on the <b>System</b> page by changing the order of files in the
+<span class="WebUISetting">WEBUI_DATA_FILES</span> variable.
 
 <h4>Create/modify scripts to update the data file(s)</h4>
 The <code>getWeatherData.sh</code> script needs to write the three weather "data" lines to <code>/home/pi/weather/weatherdata.txt</code>.
@@ -1420,8 +1549,8 @@ Then add
 <code>
 WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
 </code>
-to <code>allsky/config/config.sh</code>.
-Now, go to the "System" page in the WebUI and in addition to the normal information you should see the items you added.
+to <code>config.sh</code> via the WebUI's <b>Editor</b> page.
+Now, go to the <b>System</b> page in the WebUI and in addition to the normal information you should see the items you added.
 Refreshing the screen won't change those items since the data files are not being updated yet.
 
 <p>
@@ -1441,7 +1570,7 @@ After you understand what's happening and why, start modifying your script(s) to
 
 <h4>Tips</h4>
 To see what the button colors look like, add the following lines to <code>/home/pi/dewheater/button.txt</code>:
-<code>
+<pre>
 button	-	/home/pi/dewheater/toggleDewHeater.py	red     random	red
 button	-	/home/pi/dewheater/toggleDewHeater.py	green   random	green
 button	-	/home/pi/dewheater/toggleDewHeater.py	blue    random	blue
@@ -1449,7 +1578,7 @@ button	-	/home/pi/dewheater/toggleDewHeater.py	yellow  random	yellow
 button	-	/home/pi/dewheater/toggleDewHeater.py	cyan    random	cyan
 button	-	/home/pi/dewheater/toggleDewHeater.py	white   random	white
 button	-	/home/pi/dewheater/toggleDewHeater.py	black   random	black
-</code>
+</pre>
 
 <h4>Troubleshooting</h4>
 If you get a message about the first field needing to be "data", "progress",
@@ -1458,12 +1587,11 @@ the fields probably aren't separated by tabs.
 If you get a message saying you don't have the correct number of fields, count them to verify,
 and make sure the fields are separated by tabs, not spaces.
 
-<hr>
+<hr class="separator">
 </details>
 
 
-<br>
-<h3>[MORE TO COME ...]</h3>
+<h2>[MORE TO COME ...]</h2>
 <details><summary></summary>
 <br>
 

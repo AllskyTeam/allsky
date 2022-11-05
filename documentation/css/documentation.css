@@ -59,6 +59,7 @@ body {
 	margin-top: 24px;
 	margin-right: 5%;
 	margin-left: 5%;
+	background-color: blue;
 }
 blockquote {
     margin: 0;
@@ -668,6 +669,7 @@ a {
 }
 .editorShellComment {
 	color: #75715e;
+	color: #a5a18e;	/* Editor comments are hard to see so lighten some */
 }
 .editorSetting {
 	color: #a6e22e;
@@ -678,10 +680,13 @@ a {
 .editorNum, .editorBool {
 	color: #ae81ff;
 }
+.editorSign {
+	color: white;
+}
 .editorSpecial {
 	color: white;
 }
-.editorBrackets {
+.editorBracketsJSON {
 	color: #fd971f;
 }
 .editorShell,
@@ -689,12 +694,12 @@ a {
 .editorSetting,
 .editorString,
 .editorNum,
+.editorSign,
 .editorBool,
 .editorSpecial,
-.editorBrackets {
+.editorBracketsJSON {
 	font-family: monospace;
-	font-weight: bold;
-	background-color: black;
+	background-color: #272822;
 	padding: 1px 2px;
 }
 /* Shell syntax */
@@ -706,4 +711,13 @@ a {
 }
 .position-relative {
 	position: relative !important;
+}
+.minimalPadding {
+	padding-top: 3px !important;
+	padding-bottom: 3px !important;
+	margin-top: 0 !important;
+	margin-bottom: 0 !important;
+}
+.nowrap {
+	white-space: nowrap;
 }

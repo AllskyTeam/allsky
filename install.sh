@@ -390,7 +390,21 @@ do_avahi() {
 }
 
 # Set permissions on various web-related items.
-set_web_permissions() {
+set_permissions() {
+	# Make sure the currently running user has can write to the webserver root
+	# and can run sudo on anything.
+	G="$(groups "${ALLSKY_OWNER}")"
+	if ! echo "${G}" | grep --silent " sudo"; then
+		display_msg progress "Adding ${ALLSKY_OWNER} to sudo group."
+		### TODO:  Hmmm.  We need to run "sudo" to add to the group,
+		### but we don't have "sudo" permissions yet...
+		### sudo addgroup "${ALLSKY_OWNER}" "sudo"
+	fi
+	if ! echo "${G}" | grep --silent " ${WEBSERVER_GROUP}"; then
+		display_msg progress "Adding ${ALLSKY_OWNER} to ${WEBSERVER_GROUP} group."
+		sudo addgroup "${ALLSKY_OWNER}" "${WEBSERVER_GROUP}"
+	fi
+
 	display_msg progress "Adding permissions for the webserver."
 	# Remove any old entries; we now use /etc/sudoers.d/allsky instead of /etc/sudoers.
 	sudo sed -i -e "/allsky/d" -e "/${WEBSERVER_GROUP}/d" /etc/sudoers
@@ -878,7 +892,7 @@ prompt_for_hostname
 do_avahi
 
 ##### Set permissions
-set_web_permissions
+set_permissions
 
 ##### Check for, and handle any prior Allsky Website
 handle_prior_website

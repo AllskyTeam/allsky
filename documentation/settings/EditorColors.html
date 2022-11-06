@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<script src="../documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<style>
+		a.img img {
+			max-width: 60%; 
+			height: auto;
+		}
+		img {
+			margin-left: 20px;
+			width: 641px;
+			height: 738px;
+		}
+	</style>
+	<title>WebUI Editor Colors</title>
+</head>
+<body>
+<div class="d-flex flex-column flex-md-row gh-header">
+	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">WebUI Editor Colors</h1>
+</div>
+<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
+<!-- Don't include the sidebar or class="Layout-main" or class="Layout ..." -->
+<div class="markdown-body" id="mainContents">
+
+<p>
+The WebUI's <b>Editor</b> page allows editing Allsky configuration files.
+Items in the editor window are color-coded depending on what they are.
+</p>
+<blockquote>
+HINT: The Editor accepts CTRL-Z to undo actions.
+</blockquote>
+<p>
+A typical view of a shell file being edited is below, followed by a typical JSON file.
+A description of the color scheme comes last.
+</p>
+
+<h3>Shell (.sh) Files</h3>
+<br>
+<a allsky="true" class="img" href="EditorPage-sh.png" target="_blank">
+<img allsky="true" src="EditorPage-sh.png" title="Editing .sh file - click to show full version" alt=".sh file" loading="lazy" width="25%">
+</a>
+
+<h3>JSON (.json) Files</h3>
+<br>
+<a allsky="true" class="img" href="EditorPage-json.png">
+<img allsky="true" src="EditorPage-json.png" title="Editing .json file - click to show full version" alt=".json file" loading="lazy">
+</a>
+
+<h3>Color Scheme</h3>
+<ul>
+<li>Setting <b>names</b> look different depending on the file type:
+	<ul>
+	<li>In <code>.sh</code> files the names look <span class="editorShell">LIKE_THIS</span>.
+		By convention shell setting names (called shell "variables") are all uppercase
+		and multi-word names are separated by an underscore ("_"),
+		although there are some variables that don't follow that convention.
+	<li>In <code>.json</code> files they look <span class="editorSetting">likeThis</span>.
+		By convention if the name includes multiple words,
+		the first letter of the first word is lowercase and subsequent word's first characters
+		are Upper case.
+		Settings names in the file MUST be enclosed in double quotes,
+		but quotes are omitted in the Allsky documentation for readability.
+	</ul>
+<li>Settings <b>value</b> colors are the same in both file types but
+	vary based on the type of value:
+	<ul>
+	<li><b>Text</b> (anything surrounded by quotes):
+		<span class="editorString">"sample text"</span>,
+		<span class="editorString">"123.4"</span>.
+		Note that a number surrounded by quotes is actually a string, e.g., "123.4".
+		Numbers-as-strings may work in some cases,
+		but when entering a number it's safest to NOT use quotes.
+	<li><b>Numbers</b> (when not quoted):
+		<span class="editorNum">1.234</span>,
+		<span class="editorSign">-</span><span class="editorNum">21</span>,
+	<li><b>Booleans</b> (when not quoted):
+		<span class="editorBool">true</span>,
+		<span class="editorBool">false</span>.
+		Note that in shell files these values are usually quoted,
+		which means they are strings, not booleans.
+		The shell has no boolean type, unlike JSON and many newer programming languages which do.
+	</ul>
+<li>Special characters: <span class="editorSpecial">{ } : , =</span>
+<li>JSON brackets: <span class="editorBracketsJSON">[ ]</span>
+<li>Shell comments: <span class="editorShellComment"># This is a shell comment</span>
+<li>Many reserved words and common commands in shell scripts
+	like "if" and "sudo" have special colors.
+</ul>
+
+<h3>Debugging</h3>
+If you see different colors while editing a file, check for syntax errors:
+<ul>
+<li>Missing commas - in JSON files they are needed after each value
+	except the last one in a sub-section.
+	<br>Missing commas is the most common syntax error.
+<li>Missing quotes - JSON setting names and string values must be surrounded by double quotes,
+	as should Shell strings that contain a space, tab, or special character.
+<li>Missing colons - one must separate each JSON setting name from its value.
+	There can be 0 or more spaces before and/or after the colon.
+<li>Extraneous spaces - in Shell files there should be no space between a variable name
+	and the "=".
+</ul>
+</p>
+
+</div><!-- markdown-body --></div><!-- Layout-main ... -->
+</div><!-- xcontainer-x1 ... -->
+</body>
+</html>
+<script> includeHTML(); </script>

@@ -76,25 +76,29 @@ function convertURL() {
 
 		// See if the url starts with documentation_URL_full which is the root of the documentation.
 		var isDocumentation = (url.indexOf(documentation_URL_full) === 0) ? true : false;
+// if (! isDocumentation) console.log("isDoc=" + isDocumentation + ", url=" + url);
 		if (! isDocumentation) {
 			// Get the directory of the current page.
 			var dir = document.URL.substr(0,document.URL.lastIndexOf('/'))
 			var d = dir.lastIndexOf('/');
 			dir = dir.substr(d+1);
+// console.log("== dir=" + dir);
 
 			// Prepend the documentation string followed by the current directory
 			// if we're not already in the documentation directory.
-			if (dir !== documentation_URL) {
-				url = documentation_URL_full + dir + "/" + url;
-			} else if (url.substr(0,2) === "//") {
+			if (url.substr(0,2) === "//") {
 				// Why does htmlpreview start the URL with "//" ?
 				url = "https:" + url;
+			} else if (dir !== documentation_URL) {
+				url = documentation_URL_full + dir + "/" + url;
 			}
+// console.log("== new url=" + url);
 		}
 
 		// Only prepend on GitHub if not already there.
 		if (onGitHub && url.indexOf(preURL) < 0) {
 			url = preURL + url;
+// console.log("== new url after adding preURL=" + url);
 		}
 		// else on Pi so nothing to do since the URL is already correct.
 

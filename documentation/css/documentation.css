@@ -59,6 +59,7 @@ body {
 	margin-top: 24px;
 	margin-right: 5%;
 	margin-left: 5%;
+	background-color: blue;
 }
 blockquote {
     margin: 0;
@@ -634,6 +635,16 @@ a {
 	background-color: transparent;
 }
 
+.sentToMapServer::before {
+	color: red;
+	font-weight: bold;
+	content: "*";
+}
+.autoSet::before {
+	color: red;
+	font-weight: bold;
+	content: "[AUTO]";
+}
 .cameraDependent {
 	color: var(--color-danger-fg);
 	font-weight: bold;
@@ -649,6 +660,48 @@ a {
 	font-family: monospace;
 	font-weight: bold;
 }
+.settings {
+	/* font-size: 14px; */ /* I think 16px of rest of page is better */
+}
+/* Colors that match entries in the WebUI's "Editor" page */
+.editorShell {
+	color: #fd971f;
+}
+.editorShellComment {
+	color: #75715e;
+	color: #a5a18e;	/* Editor comments are hard to see so lighten some */
+}
+.editorSetting {
+	color: #a6e22e;
+}
+.editorString {
+	color: #e6db74;
+}
+.editorNum, .editorBool {
+	color: #ae81ff;
+}
+.editorSign {
+	color: white;
+}
+.editorSpecial {
+	color: white;
+}
+.editorBracketsJSON {
+	color: #fd971f;
+}
+.editorShell,
+.editorShellComment,
+.editorSetting,
+.editorString,
+.editorNum,
+.editorSign,
+.editorBool,
+.editorSpecial,
+.editorBracketsJSON {
+	font-family: monospace;
+	background-color: #272822;
+	padding: 1px 2px;
+}
 /* Shell syntax */
 .pl-c {
 	color: var(--color-prettylights-syntax-comment);
@@ -658,4 +711,13 @@ a {
 }
 .position-relative {
 	position: relative !important;
+}
+.minimalPadding {
+	padding-top: 3px !important;
+	padding-bottom: 3px !important;
+	margin-top: 0 !important;
+	margin-bottom: 0 !important;
+}
+.nowrap {
+	white-space: nowrap;
 }

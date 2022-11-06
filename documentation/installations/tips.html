@@ -1,1 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<script src="../documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Installation Tips</title>
+</head>
+<body>
+<div class="d-flex flex-column flex-md-row gh-header">
+	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Installation Tips</h1>
+</div>
+
+<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
+<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
+
+<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
+	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+</div>
+
+<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+
+<h3>Raspberry Pi host names</h3>
+<details><summary></summary>
+<p>
+The default host name when running Allsky is <b>allsky</b>.
+If that's not the name of your Pi,
+the installation script will prompt to change the name.
+If you have more than one Pi on the same network they must all have unique names.
+</p>
+<p>
+For example, if you have a test Pi you may want to call it <code>allsky-test</code>.
+</p>
+<hr class="separator">
+</details>
+
+<h3>Install the AllSky software in a different location</h3>
+<details><summary></summary>
+<p>
+By default, the Allsky software is installed in a directory called <b>allsky</b> within
+<code>/home/pi</code>.
+The name <b>allsky</b> should not be changed, but you can install Allsky in a different location,
+for example, in <code>/home/xyz</code> by doing the following before installing the software:
+<pre>
+sudo mkdir /home/xyz         <span class="pl-c"># if not already there</span>
+sudo chown pi:pi /home/xyz
+cd /home/xyz
+</pre>
+Then run the <a allsky="true" href="installing.html">normal installation</a>.
+Allsky will be installed in <code>/home/xyz/allsky</code>.
+<hr class="separator">
+</details>
+
+
+<h3>Install the Allsky Website on a <u>remote</u> machine</h3>
+<details><summary></summary>
+<p>
+Many people have their Pi behind a firewall where it's not accessible on the Internet,
+so they install the Allsky Website on a different
+machine that <b>is</b> accessible on the Internet.
+</p>
+<p>
+The instructions below assume Allsky is installed and working on your Pi.
+</p>
+<p>
+To install the Allsky Website on a remote machine, do the following:
+<ol>
+<li>On the web server:
+	<ul>
+	<li>Create an <code>allsky</code> directory to hold the Allsky Website.
+		<br>
+		<blockquote>
+		Keep track of where on your server you created
+		<code>allsky</code> - you will need that information later
+		when you tell Allsky where to upload the images.
+		For example, when you FTP to the server, are you in the root directory ("/") or further down?
+		It is <b>very</b> important that you get this correct.
+		</blockquote>
+	</ul>
+<li>Go to the <a href="https://github.com/thomasjacquin/allsky-website">allsky-website GitHub page</a>.
+<li>Click the <img allsky="true" src="Code.png" alt="Code" style="margin-bottom: -2px;"> button,
+	download the "allsky-website-master" zip file, and
+	Unzip it to a location on your PC.
+<li>Copy the <b>contents</b> of the <code>allsky-website-master</code> directory
+	(but not the directory itself) on your PC to the <code>allsky</code>
+	directory on your web server.
+	<blockquote>
+	Do not configure the Website yet - you'll do that below.
+	</blockquote>
+<li>On the Pi:
+	<ul>
+	<li>Update the <code>config/config.sh</code> file:
+		<ul>
+		<li>Set <code>IMG_UPLOAD="true"</code> to have Allsky upload each image.
+		<li>Optionally set <code>RESIZE_UPLOADS="true"</code>
+			and specify the size in the <code>RESIZE_UPLOADS_SIZE</code> variable.
+			This will resize the uploaded images (but not the ones on the Pi)
+			and is useful if your network connection is slow or your camera has a large sensor, i.e.,
+			much bigger that will fit on a typical monitor.
+		<li>Optionally set <code>UPLOAD_VIDEO="true"</code>
+			to have Allsky upload the timelapse videos every morning.
+		<li>If you are creating mini timelapse videos,
+			optionally set <code>TIMELAPSE_MINI_UPLOAD_VIDEO="true"</code>
+			to have Allsky upload those videos every morning.
+		<li>Optionally set <code>UPLOAD_KEOGRAM="true"</code>
+			to have Allsky upload the keogram files every morning.
+		<li>Optionally set <code>UPLOAD_STARTRAILS="true"</code> to have Allsky upload the startrails files every morning.
+		</ul>
+	<li>Update <code>config/ftp-settings.sh</code> (modify these instructions if not using FTP):
+		<ul>
+		<li>Enter the <code>REMOTE_HOST</code> (i.e., web server) name.
+		<li>Enter the <code>REMOTE_USER</code> and <code>REMOTE_PASSWORD</code>.
+		<li>Enter the directory name for the images, e.g.,  <code>IMAGE_DIR="/allsky"</code>.
+		<li>If you are uploading them, enter the directories for startrails
+			(usually "/allsky/startrails"), and keograms (usually "/allsky/keograms").
+		</ul>
+	<li>Make sure the Pi can upload a file.
+		<blockquote>
+		If it fails, view the Wiki page on
+		<a allsky="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting uploads</a>.
+		Do NOT continue with the next step until you can upload a file to the web server.
+		</blockquote>
+	<li>Run <code>~/allsky/website/install.sh --remote</code>.
+		This will create and upload a default configuration file to your server,
+		leaving the master copy on the Pi.
+	<li>Configure your Website:
+		<blockquote>
+		Whenever you want to update the remote Website's configuration you'll
+		use the WebUI on your Pi (follow the first two steps below).
+		Do NOT edit the configuration file directly on the remote server.
+		</blockquote>
+		<ul>
+		<li>In the WebUI, click on the <code>Editor</code> link.
+		<li>In the drop-down at the bottom of the page, select
+			<b>remote_configuration.json (remote Allsky Website)</b>
+		<li>See <a allsky="true" href="/documentation/settings/allskyWebsite.html">this page</a>
+		for details on the Website settings.
+		Ignore the <b>NOTE</b> since this is a remote Allsky Website.
+		</ul>
+	</ul>
+<li>Your remote server is now ready.
+<li>Give your family and friends the URL to your Allsky Website so they can enjoy your pictures!
+</ol>
+
+<blockquote>
+The web server needs to support the following:
+<ul>
+<li>PHP.
+<li>The <code>imagecreatefromjpeg</code> function in PHP to create thumbnails
+	of the startrails and keogram files.
+	If that function does not exist (which is rare),
+	you'll see a thumbnail that says "No thumbnail".
+	Everything else will still work.
+<li>The <code>ffmpeg</code> command and <code>exec</code> function in PHP
+	to create thumbnails of the timelapse videos.
+	Note that many hosting solutions don't support this, but you can always ask them to support it.
+	If <code>ffmpeg</code> or <code>exec</code> do not work,
+	set <code>TIMELAPSE_UPLOAD_THUMBNAIL="true"</code>
+	(and <code>TIMELAPSE_MINI_UPLOAD_THUMBNAIL="true"</code> if you are creating mini timelapses)
+	Failure to set those variables will result in "No thumbnail" messages when
+	viewing videos.
+	Everything else will still work.
+</ul>
+</blockquote>
+</details>
+
+</div><!-- markdown-body --></div><!-- Layout-main ... -->
+</div><!-- Layout -->
+</div><!-- xcontainer-x1 ... -->
+</body>
+</html>
+<script> includeHTML(); </script>
 

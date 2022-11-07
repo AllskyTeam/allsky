@@ -24,17 +24,24 @@
 	font-size: 80%;
 	opacity: 0.7;
 }
+
 @media (max-width: 450px) {.version-title { font-size: 75%; }}
 @media (max-width: 400px) {.version-title { font-size: 65%; }}
-@media (min-width: 660px) {	/* was 768px when lines below didn't exist */
+@media (min-width: 796px) {	/* was 768px */
 	.sidebar { width: 210px; }
 	.navbar-title { display: inline-block; }
-	.navbar-toggle { display: none; }
 	#page-wrapper { margin-left: 210px; padding: 0 30px; }
 	.navbar-collapse { display: block; visibility: visible; }
 }
-@media (max-width: 659px) {	/* was 768px when lines below didn't exist */
-	#page-wrapper .row { margin: 0 -7px; }
+@media (max-width: 795px) {
+	.navbar-header { float: none; }
+	.navbar-title { display: none; }
+	.navbar-toggle { display: block; }
+	#page-wrapper { margin: 0; }
+	.navbar-collapse { display: none; }
+}
+@media (max-width: 815px) {
+	#page-wrapper { padding: 0px 20px; }
 }
 
 .right-panel .panel:first-of-type {
@@ -54,36 +61,22 @@
 	background-color: #f2f1f0;
 }
 
-.btn-primary.btn-outline {
-	color: white;
-    border-color: #198bc6;
-    background-color: #198bc6;
-}
 
-.btn-primary:hover {
-	background-color: #2e6582;
-	border-color: #198bc6;
-}
 
-.btn-warning {
-    background-color: #e48d12;
-    border-color: #cc7b09;
-}
-
-.info-item {
-	width: 140px;
-	float: left;
-}
-
-.switch-field {
-  font-family: "Lucida Grande", Tahoma, Verdana, sans-serif;
-  margin: 3px 20px -15px 0;
-  display: inline-block;
-  overflow: hidden;
+/* Input field in Allsky Settings page */
+.settingInput {
+	width: 120px;
 }
 
 .switch-title {
   margin-bottom: 6px;
+}
+
+.switch-field {
+  font-family: "Lucida Grande", Tahoma, Verdana, sans-serif;
+  margin: 3px 2px -15px 0;
+  display: inline-block;
+  overflow: hidden;
 }
 
 .switch-field input {
@@ -97,9 +90,6 @@
 
 .switch-field label {
   float: left;
-}
-
-.switch-field label {
   display: inline-block;
   width: 60px;
   background-color: #e4e4e4;
@@ -200,11 +190,13 @@ body.dark {
 }
 
 .alert {
-	padding: 3px;
-	margin-bottom: 2px;
+	padding: 5px;
+	margin-bottom: 3px;
 }
-.close {
-	opacity: 1.0;
+button.close {
+	opacity: 0.8;
+	color: inherit;
+	margin-top: -2px;
 }
 .alert td {
 	padding: 0 10px 0 3px;
@@ -299,28 +291,90 @@ table .alert-dismissable {
     color: #171717;
 }
 
-.dark .btn-success {
-	background-color: #338833;
-    color: #229922;
-    color: #00cc00;
+/* Buttons */
+.btn-primary {
+	border: 2px solid #00527c;
+}
+.btn-primary:hover {
+	color: black;
+	background-color: #73baf7;
 }
 .dark .btn-primary {
-	color: #b8b8b8;
+	color: #bfbfbf;
     border-color: #1475a7;
     background-color: #1d5a79;
 }
-.dark .btn-warning {
-	color: #b8b8b8;
-    background-color: #a7742d;
-    border-color: #cc7b09;
+
+.btn-success {
+    border: 2px solid #3e743e;
 }
-.dark .btn-danger {
-	color: #b8b8b8;
-    background-color: #8d3431;
-    border-color: #cc7b09;
+.btn-success:hover {
+	color: black;
+	background-color: #6cd76c;
+}
+.dark .btn-success {
+	color: #bfbfbf;
+    border-color: #5ea853;
+	background-color: #338833;
 }
 
-@media screen and (max-width: 659px) {	/* was 767 */
+.btn-warning {
+    border: 2px solid #ac5b09;
+    background-color: #e48d12;
+}
+.btn-warning:hover {
+	color: black;
+    background-color: #ffa019;
+}
+.dark .btn-warning {
+	color: #bfbfbf;
+    background-color: #c46d0d;
+    border-color: #e48d2d;
+}
+
+.btn-danger {
+	color: white;
+    border: 2px solid #bf0b06;
+	background-color: #f13636;
+}
+.btn-danger:hover  {
+	color: black;
+	background-color: #f96f6f;
+}
+.dark .btn-danger {
+	color: #bfbfbf;
+    background-color: #8d3431;
+    border-color: #ad5451;
+}
+
+.btn-advanced {
+    border: 2px solid #c9c46a;
+}
+.btn-advanced:hover {
+	color: black;
+    background-color: #e3e3a3;
+}
+.advanced, .btn-advanced { /* "advanced" options are highlighted in same color as button */
+    background-color: #fffcc0;
+}
+.dark .advanced, .dark .btn-advanced {
+	color: #bfbfbf;
+	border-color: #bdb173;
+    background-color: #837a2f;
+}
+
+.dark .btn-primary:hover,
+.dark .btn-success:hover,
+.dark .btn-warning:hover,
+.dark .btn-danger:hover,
+.dark .btn-advanced:hover
+{
+	color: #efefef;
+	border-color: #d6d6d6;
+}
+
+
+@media screen and (max-width: 795px) {	/* was 767 */
     .dark .table-responsive {
         border-color: transparent;
     }
@@ -335,7 +389,7 @@ table .alert-dismissable {
 
     .switch-field {
         display: block;
-        height: 50px;
+        /* height: 40px; /* was 50 */
     }
 	
     form thead {
@@ -356,16 +410,10 @@ table .alert-dismissable {
 }
 
 .boxShadow {
-	-webkit-box-shadow: 2px 3px rgb(0,0,0,10%);
-	box-shadow: 2px 3px rgb(0,0,0,10%);
+	-webkit-box-shadow: 2px 3px rgb(0,0,0,15%);
+	box-shadow: 2px 3px rgb(0,0,0,15%);
 }
-/* "advanced" options are highlighted */
-.advanced {
-    background-color: #FFFCC0;
-}
-.dark .advanced {
-    background-color: #565643;
-}
+
 /* separate table rows */
 .rowSeparator {
 	border-bottom: 1px solid #d3d3d3;
@@ -390,12 +438,6 @@ select {
 	background-color: #e4e4e4;
 	color: #555555;
 }
-
-
-.btn-primary:hover { color: black; }
-.btn-success:hover { color: black; }
-.btn-warning:hover { color: black; }
-.btn-danger:hover  { color: black; }
 
 /* Colors for user-supplied buttons.
  * In dark theme the border colors become darker.

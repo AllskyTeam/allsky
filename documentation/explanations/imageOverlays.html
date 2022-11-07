@@ -1,1 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<script src="../documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Image Overlays</title>
+</head>
+<body>
+<div class="d-flex flex-column flex-md-row gh-header">
+	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Image Overlays</h1>
+</div>
+<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
+<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
+<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
+	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+</div>
+<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+
+<h2>What is an "Image Overlay"?</h2>
+<p>
+An image overlay is information that is added to each image.
+This often includes the time the image was taken, the sensor temperature, and other information.
+It can also include any other text or images you want.
+</p>
+<p>
+There are two ways to add an overlay.
+You choose the method via the <span class="WebUISetting">Overlay Method</span> setting
+in the WebUIs <b>Allsky Settings</b> page.
+<ol>
+	<li>The <b>legacy</b> method is what's been in Allsky since the beginning.
+		It's described below.
+	<li>The newer <b>module</b> method has many new features and is significantly more flexible.
+		For example, you can add an overlay ONLY to the live image but not to saved images.
+		You can also easily add images and text using a drag-and-drop method.
+		See the <a allsky="true" href="/documentation/overlays/overlays.html">module method</a>
+		for details.
+</ol>
+<blockquote>
+The <b>module</b> method will be the default in the next version of Allsky,
+and will be the ONLY method in the version after that.
+</blockquote>
+</p>
+<p>
+With the <b>legacy</b> method you can add text to an image automatically or manually,
+or add images manually.
+</p>
+
+<br><h3>Automatically add text</h3>
+<details><summary></summary>
+<p>
+In the <b>Allsky Settings</b> page of the WebUI under the <b>Image overlay settings</b> section,
+look for the "Show" settings, like <span class="WebUISetting">Show Exposure</span>.
+Turning any of these settings on will cause that information to be added to the overlay.
+You can also add your own single line of text by entering it into the
+<span class="WebUISetting">Text Overlay</span> field.
+This line is added after the optional time and before the "Show" data fields.
+</p>
+
+<p>
+Allsky can also add text from a file you create using the
+<span class="WebUISetting">Extra Text File</span> and
+<span class="WebUISetting">Max Age Of Extra</span> (Text File) settings.
+AllSky reads the
+<span class="WebUISetting">Extra Text File</span> file and overlays the contents onto your images.
+The file can have multiple lines.
+The <span class="WebUISetting">Max Age Of Extra</span>
+setting determines how old in seconds the file can be before it is no longer used.
+Set it to <code>0</code> to always display the information.
+This file is often used to add text that is updated regularly, for example, weather information.
+See the <a href="#extraTextFileExample">Extra Text File example</a> below for an example
+of how to use this file.
+<br>
+When considering what to include in the file,
+remember the size of your image - do you care if the text covers the image, for example?
+The contents of the text file will go below the optional time, sensor temperature,
+and other information.
+</p>
+
+<p>
+You can format the text that's displayed.
+The optional time and <span class="WebUISetting">Text Overlay</span>
+line are formatted using the <span class="WebUISetting">Font Color</span> and other settings;
+the remaining text is formatted with the
+<span class="WebUISetting">Small Font Color</span> setting.
+The small font's size is 80% of the size of the large fonts.
+You'll want to play around with these values to get the best results based on your sensor size,
+cropping, resizing, etc.
+
+<blockquote>
+Many people have lines that are either too close together or too far apart, and look unsightly.
+The spacing between text lines can be adjusted via the
+<span class="WebUISetting">Line Height</span> setting.
+</blockquote>
+</p>
+
+<br><h3 id="extraTextFileExample">Extra Text File example</h3>
+<p>
+Let's say you want to display the humidity on each image.
+The camera doesn't report this information and Allsky doesn't know it,
+so you'll need to provide that information to Allsky so it can add it to the images.
+This requires hardware that reports the humidity,
+and some software to read the humidity from the hardware and save it to a file.
+You need to provide the hardware and software;
+how they work are outside the scope of this documenation
+since that varies drastically depending on what you have.
+Assume you have a script that writes the word "humidity" followed by the humidity
+and a percent sign to a file called <code>/home/pi/allsky/humidity.txt</code>
+every 10 minutes (for example, <b>Humidity: 21%</b>).
+In order to display the humidity on the images, enter <code>/home/pi/allsky/humidity.txt</code>
+into the <b>Extra Text File</b> field and click on the
+<img allsky="true" src="/documentation/images/saveChangesButton.png" class="buttonImg" title="Save Changes button" alt="Save Changes">
+button.
+The next picture will show the humidity in the small font color you specified.
+</p>
+
+<p>
+Now, let's say the script that saves the humidity stops working - the
+<code>/home/pi/allsky/humidity.txt</code> file will still have
+<b>Humidity: 21%</b> forever and that's what your pictures will show.
+You may not notice for several days.
+As a failsafe, you could set the
+<span class="WebUISetting">Max Age Of Extra</span> field to <b>1800</b> seconds (30 minutes).
+Before Allsky saves every picture it checks the age of the file,
+and if it's LESS than the
+<span class="WebUISetting">Max Age Of Extra</span> seconds old it will add the contents of the file to the image.
+If the file is MORE than
+<span class="WebUISetting">Max Age Of Extra</span> seconds old it will ignore the file.
+If your software starts running again, the next picture will automatically
+have the humidity because Allsky checks the age of the file before every picture.
+Why 30 minutes in this example?
+Clearly you can set it to anything,
+but 30 allows for a couple humidity measurements to be missed before it stops
+displaying the humidity.
+For humidity it probably doesn't matter,
+but for something like wind speed you may want to save it every minute and have a
+<span class="WebUISetting">Max Age Of Extra</span> of 180 seconds (3 minutes), for example.
+</p>
+<p>
+If you want to stop using the
+<span class="WebUISetting">Extra Text File</span>
+simply erase what's in the field in the WebUI.  At that point it won't matter what's in the
+<span class="WebUISetting">Max Age Of Extra</span>
+field since that field only applies if you are using a extra text file.
+</p>
+<hr class="separator">
+</details>
+
+
+<br><h3>Manually add text and/or images (advanced)</h3>
+<details><summary></summary>
+<blockquote>
+The <b>module</b> method of adding text and/or images anywhere on the image
+is <b>much</b> easier than what's described in this section.
+</blockquote>
+<p>
+The sky's the limit in terms of what text and images you can manually add to an Allsky image.
+The <code>convert</code> command is a great way to add these.
+Below are <i>some</i> of the options, but execute <code>convert --help</code> to see all of them.
+<a href="https://legacy.imagemagick.org/Usage/annotating/">This page</a> has some good examples
+and <a href="https://imagemagick.org/script/convert.php">this page</a> and
+<a href="https://imagemagick.org/script/command-line-options.php">this page</a>
+are great resources for options.
+</p>
+
+<blockquote>
+If you create a script to add something to an image,
+there is no way using the <b>legacy</b> overlay method
+to have that script automatically called after an image is written to disk.
+The <b>module</b> method allows that, however.
+</blockquote>
+<p>
+When specifying the starting location of the text or image,
+remember that 0,0 is the upper left pixel of the AllSky image.
+</p>
+
+In general, the <code>convert</code> command takes an input image,
+a set of operations to perform, and an output image.
+The simple example below writes "Hello World!" in white, 60-pixel helvetica font,
+starting 0 pixels from the left and 300 pixels from the top of the
+image called "input_image.png" and writes it to "output_image.png".
+<pre>
+convert -font helvetica -fill white -pointsize 60 \
+     -draw "text 0,300 'Hello World!'" input_image.png output_image.png
+</pre>
+
+<p>
+Some options you may find useful:
+</p>
+<table>
+<thead>
+	<tr> <th>Option</th> <th>Description</th> </tr>
+</thead>
+<tbody>
+<tr>
+	<td>-draw</td>
+	<td>Allows adding text and all sorts of shapes to an image.
+		See <a href="https://imagemagick.org/script/command-line-options.php#draw">this page</a>.
+	</td>
+</tr><tr>
+	<td>-weight &lt;font weight&gt;</td>
+	<td>See <a href="https://imagemagick.org/script/command-line-options.php#weight">this page</a>
+		for a list of possible weights, such as <b>bold</b>.
+	</td>
+</tr><tr>
+	<td>-fill &lt;color&gt;</td>
+	<td>text color</td>
+</tr><tr>
+	<td>-stroke &lt;color&gt;</td>
+	<td>text stroke (i.e., outline) color</td>
+</tr><tr>
+	<td>-strokewidth &lt;number&gt;</td>
+	<td>width of -stroke in pixels</td>
+</tr><tr>
+	<td>-pointsize &lt;number&gt;</td>
+	<td>size of text in pixels</td>
+</tr><tr>
+	<td>-gravity &lt;north/south/east/west/center/northeast&gt;</td>
+	<td>Specifies where the text should be placed.
+		It's needed if specifying and exact text position
+		for example, using "0,300" in the sample command above).
+	</td>
+</tr><tr>
+	<td>-font &lt;name&gt;</td>
+	<td>Name of the font to use, for example "helvetica", "arial", etc.</td>
+</tr><tr>
+	<td>-rectangle &lt;width,height,x,y&gt;</td>
+	<td>Creates a rectangle and is usually used with "-fill &lt;color&gt;" before it.</td>
+</tr>
+</tbody>
+</table>
+
+Notes:
+<ul>
+	<li>&lt;color&gt; can be a word like "white" or a hex value without opacity like "#ff44aa"
+		or with opacity like "#ff44aa88"
+		(where "88" is the opacity - "00" is transparent, "ff" is opaque).
+</ul>
+
+</details>
+
+
+
+</div><!-- markdown-body --></div><!-- Layout-main ... -->
+</div><!-- Layout -->
+</div><!-- xcontainer-x1 ... -->
+</body>
+</html>
+<script> includeHTML(); </script>
 

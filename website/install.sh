@@ -155,7 +155,7 @@ check_for_older_config_file() {
 create_website_configuration_file() {
 
 	# If creating for a remote server and there's a local configuration file, use it as the basis.
-	if [[ ${REMOTE_WEBSITE} == "true" && -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE}]]; then
+	if [[ ${REMOTE_WEBSITE} == "true" && -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
 		display_msg progress "Creating default '${WEB_CONFIG_FILE}' file based on the local file."
 		cp "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "${WEB_CONFIG_FILE}" || exit 2
 

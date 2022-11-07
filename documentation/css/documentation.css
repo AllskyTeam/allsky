@@ -44,7 +44,7 @@ body {
 	outline: none
 }
 .markdown-body blockquote, .markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body details {
-	margin-top: 0;
+	margin-top: 5px;
 	margin-bottom: 16px;
 }
 .markdown-body hr {
@@ -160,11 +160,8 @@ blockquote {
 .markdown-body ul:last-child, .markdown-body ol:last-child {
 	padding-bottom: 0.75em;
 }
-.markdown-body .minimalPadding li:first-child {
-	margin-top: 0;
-}
-.markdown-body .minimalPadding li:not(first-child) {
-	margin-top: 1em;
+.markdown-body .minimalPadding li {
+	margin-top: 0.2em;
 }
 .markdown-body dl {
 	padding: 0;

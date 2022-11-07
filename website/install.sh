@@ -418,7 +418,7 @@ restore_prior_files() {
 		mv "${PRIOR_WEBSITE}/videos/thumbnails"   videos
 	fi
 	count=$(ls -1 "${PRIOR_WEBSITE}"/videos/allsky-* 2>/dev/null  | wc -l)
-	if [[ ${count} >= 1 ]]; then
+	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior videos."
 		mv "${PRIOR_WEBSITE}"/videos/allsky-*   videos
 	fi
@@ -427,7 +427,7 @@ restore_prior_files() {
 		mv "${PRIOR_WEBSITE}/keograms/thumbnails"   keograms
 	fi
 	count=$(ls -1 "${PRIOR_WEBSITE}"/keograms/keogram-* 2>/dev/null | wc -l)
-	if [[ ${count} >= 1 ]]; then
+	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior keograms."
 		mv "${PRIOR_WEBSITE}"/keograms/keogram-*   keograms
 	fi
@@ -436,7 +436,7 @@ restore_prior_files() {
 		mv "${PRIOR_WEBSITE}/startrails/thumbnails"   startrails
 	fi
 	count=$(ls -1 "${PRIOR_WEBSITE}"/startrails/startrails-* 2>/dev/null | wc -l)
-	if [[ ${count} >= 1 ]]; then
+	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior startrails."
 		mv "${PRIOR_WEBSITE}"/startrails/startrails-*   startrails
 	fi
@@ -466,7 +466,7 @@ BRANCH="master"
 UPDATE="false"
 FUNCTION=""
 REMOTE_WEBSITE="false"
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG}" in
 		--help)

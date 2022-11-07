@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Installing and upgrading Allsky Website</title>
+</head>
+<body>
+<div class="d-flex flex-column flex-md-row gh-header">
+	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Installing and upgrading Allsky Website</h1>
+</div>
+<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
+<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
+<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
+	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+</div>
+<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+
+<p>
+This page describes how to install and upgrade the Allsky Website.
+It can be installed on your Pi, on a remote server, or on both.
+When installing on both, install on your Pi first and make sure everything works,
+then install on a remote server.
+<blockquote>
+Several of the Allsky settings are used by the Allsky Website so
+the Website shouldn't be installed until you have Allsky configured and running the way you want it.
+</blockquote>
+</p>
+
+<br>
+<h2>Install on a Pi</h2>
+<details><summary></summary>
+
+<h3>Pre installation</h3>
+<p>
+If you have an <b>existing</b> version of the Allsky Website on your Pi,
+perform one of the steps below, then continue to the <a href="#Installation">installation</a> section.
+</p>
+<p>
+The location of the prior website depends upon its version.
+In both cases the directory name is <code>allsky</code>.
+The parent directory is:
+<ol>
+<li>Version v2022.03.01+ or before: <code>/var/www/html</code>
+<li>Newer versions: <code>~/allsky/html</code>
+</ol>
+</p>
+
+Choices:
+<ol class="minimalPadding">
+<li>Upgrade the old version.
+	Allsky Website installation checks for an old version and if found,
+	prompts if you want to upgrade it.
+	There is nothing special you need to do.
+
+<li>Save the old version but don't use it.
+	<br>
+	<pre>
+cd <i>old_version_parent_directory</i>
+mv allsky allsky-SAVED</pre>
+	At some point you'll want to delete the SAVED version so it doesn't take disk space.
+
+<li>Delete the old version.  Only select this option if you're sure you don't want any saved
+	images, videos, keograms, startrails, or settings file(s).
+<pre>
+cd <i>old_version_parent_directory</i>
+rm -fr allsky</pre>
+</ol>
+
+
+<br><h3 id="Installation">Installation</h3>
+<p>
+The following commands install the Website into the <code>~/allsky/html/allsky</code> directory:
+</p>
+
+<pre>
+cd ~/allsky
+website/install.sh</pre>
+
+<p>
+The installation won't prompt for anything, and will display minimal output.
+</p>
+
+<br><h3>Post installation</h3>
+<p>
+After installation you'll need to change some
+<a allsky="true" href="/documentation/settings/allsky.html">Allsky Settings</a>
+so Allsky uploads the timelapse, keograms, and/or startrails files to the website
+(and knows where to upload them),
+and change some
+<a allsky="true" href="/documentation/settings/allskyWebsite.html">Allsky Website Settings</a>
+so the
+<blockquote>
+If your prior version of the Allsky Website was in <code>/var/www/html/allsky</code>
+note that there is only one configuration file in the new Website (<code>configuration.json</code>)
+that replaces the two older files.
+</blockquote>
+</p>
+
+<hr class="separator">
+</details>
+
+
+<br><h2>Install on a remote server</h2>
+<details><summary></summary>
+<p>
+Many people have their Pi behind a firewall where it's not accessible on the Internet,
+so they install the Allsky Website on a different
+machine that <b>is</b> accessible on the Internet.
+</p>
+<p>
+In order to install the Allsky Website on a remote server,
+Allsky needs to be installed and working on your Pi.
+To install the Allsky Website on a remote machine, do the following:
+<ol>
+<li>On the remote server:
+	<ul class="minimalPadding">
+	<li>Create an <code>allsky</code> directory to hold the Allsky Website.
+		<br>
+		<blockquote>
+		Keep track of where on your server you created
+		<code>allsky</code> - you will need that information later
+		when you tell Allsky where to upload the images.
+		For example, when you FTP to the server,
+		are you in the root directory ("/") or further down?
+		It is <b>very</b> important that you get this correct.
+		</blockquote>
+	</ul>
+<li>Go to the <a href="https://github.com/thomasjacquin/allsky-website">allsky-website GitHub page</a>.
+<li>Click the <img allsky="true" src="Code.png" alt="Code" style="margin-bottom: -2px;"> button,
+	download the "allsky-website-master" zip file and
+	unzip it to a location on your PC, Pi, or Mac.
+<li>Upload the <b>contents</b> of the <code>allsky-website-master</code> directory
+	(but not the directory itself) from your PC, Pi, or Mac to the <code>allsky</code>
+	directory on your web server.
+	<blockquote>
+	Do not configure the Website yet - you'll do that below.
+	</blockquote>
+<li>Update the <code>config.sh</code> and <code>ftp-settings.sh</code> files
+	via the WebUI's <b>Editor</b> page so Allsky knows which file(s)
+	to upload to the remote server and where to upload them to.
+<li>On the Pi:
+	<ul class="minimalPadding">
+	<li>Make sure the Pi can upload a file.
+		See the
+		<a allsky="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting uploads</a>
+		page on how to do a test upload and debug any problems.
+		<blockquote>
+		If the upload fails,
+		do NOT continue with the next step until you can upload a file to the remote server.
+		</blockquote>
+	<li>Run <code>~/allsky/website/install.sh --remote</code>.
+		This will create and upload a default configuration file to your server,
+		leaving the master copy on the Pi.
+	<li>Configure the remote Website:
+		<ul class="minimalPadding">
+			<li>In the WebUI, click on the <code>Editor</code> link.
+			<li>In the drop-down at the bottom of the page, select
+				<code>remote_configuration.json (remote Allsky Website)</code>
+			<li>See
+				<a allsky="true" href="/documentation/settings/allskyWebsite.html">this page</a>
+				for details on the Website settings.
+		</ul>
+		<blockquote>
+		If you also have an Allsky Website on your Pi,
+		the remote configuration file will be identical to the local one with the
+		exception of the <span class="editorSetting">imageName</span> and
+		<span class="editorSetting">onPi</span> settings.
+		If you want the remote configuration to differ from the local one
+		(for example, you want a background image or link to a personal page on the remote Website),
+		edit the remote configuration file.
+		<br><br>
+		Whenever you want to update the remote Website's configuration your <b>must</b>
+		edit it via WebUI (follow the first two steps above).
+		Do NOT edit the configuration file directly on the remote server.
+		</blockquote>
+	</ul>
+<li>Your remote server is now ready.
+<li>Give your family and friends the URL to your Allsky Website so they can enjoy your pictures!
+</ol>
+
+<p>
+The web server needs to support the following:
+<ul class="minimalPadding">
+	<li>PHP.
+	<li>The <code>imagecreatefromjpeg</code> function in PHP to create thumbnails
+		of the startrails and keogram files.
+		If that function does not exist (which is rare),
+		you'll see a thumbnail that says "No thumbnail".
+		Everything else will still work.
+	<li>The <code>ffmpeg</code> command and <code>exec</code> function in PHP
+		to create thumbnails of the timelapse videos.
+		<blockquote>
+		Note that many hosting solutions don't support this, but you can always ask them to support it.
+		If <code>ffmpeg</code> or <code>exec</code> do not work,
+		set <code>TIMELAPSE_UPLOAD_THUMBNAIL="true"</code>
+		(and <code>TIMELAPSE_MINI_UPLOAD_THUMBNAIL="true"</code> if you are creating mini timelapses)
+		Failure to set those variables will result in "No thumbnail" messages when
+		viewing videos.
+		</blockquote>
+		Everything else will still work.
+</ul>
+</p>
+</details>
+
+</div><!-- markdown-body --></div><!-- Layout-main ... -->
+</div><!-- Layout -->
+</div><!-- xcontainer-x1 ... -->
+</body>
+</html>
+<script> includeHTML(); </script>

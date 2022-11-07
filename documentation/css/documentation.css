@@ -44,7 +44,7 @@ body {
 	outline: none
 }
 .markdown-body blockquote, .markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body details {
-	margin-top: 0;
+	margin-top: 5px;
 	margin-bottom: 16px;
 }
 .markdown-body hr {
@@ -75,20 +75,6 @@ blockquote {
 }
 .markdown-body blockquote>:last-child {
 	margin-bottom: 0;
-}
-.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
-	margin-top: 30px;
-	margin-bottom: 5px;
-	font-weight: 600;
-	line-height: 1.25;
-}
-.markdown-body h1:not(:first-child),
-.markdown-body h2:not(:first-child),
-.markdown-body h3:not(:first-child),
-.markdown-body h4:not(:first-child),
-.markdown-body h5:not(:first-child),
-.markdown-body h6:not(:first-child) {
-	padding-top: 20px;
 }
 .markdown-body h1 .octicon-link,.markdown-body h2 .octicon-link,.markdown-body h3 .octicon-link,.markdown-body h4 .octicon-link,.markdown-body h5 .octicon-link,.markdown-body h6 .octicon-link {
 	color: var(--color-fg-default);
@@ -174,6 +160,9 @@ blockquote {
 .markdown-body ul:last-child, .markdown-body ol:last-child {
 	padding-bottom: 0.75em;
 }
+.markdown-body .minimalPadding li {
+	margin-top: 0.2em;
+}
 .markdown-body dl {
 	padding: 0;
 }
@@ -187,6 +176,26 @@ blockquote {
 .markdown-body dl dd {
 	padding: 0 16px;
 	margin-bottom: 16px
+}
+.markdown-body h1:not(:first-child),
+.markdown-body h2:not(:first-child),
+.markdown-body h3:not(:first-child),
+.markdown-body h4:not(:first-child),
+.markdown-body h5:not(:first-child),
+.markdown-body h6:not(:first-child) {
+	margin-top: 20px;
+}
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+	margin-top: 20px;
+	margin-bottom: 10px;
+	line-height: 1.25;
+	background-color: var(--color-accent-muted);
+	padding: 3px 0 3px 5px;
+}
+.markdown-body h3 {
+	background-color: var(--color-accent-subtle);
 }
 .markdown-body table {
 	display: block;
@@ -320,7 +329,7 @@ blockquote {
 	text-align: right
 }
 .markdown-body code,.markdown-body tt {
-	padding: .2em .4em;
+	padding: 0 .4em;
 	margin: 0;
 	font-size: 85%;
 	background-color: var(--color-neutral-muted);

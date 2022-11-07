@@ -739,9 +739,13 @@
 {
 "name" : "externalOverlay",
 "default" : 0,
-"description" : "Activate to have image overlays done by the enhanced external program.<br><b>When active, the overlay settings below do NOT apply.</b>",
-"label" : "External Overlay",
-"type" : "checkbox",
+"description" : "Choose how to have image overlays done.<br><b>module</b> has more features and is very flexible.<br><b>When set to <span style='font-weight: normal'>module</span>, the overlay settings below do NOT apply.</b>",
+"label" : "Overlay Method",
+"type" : "select",
+"options" : [
+	{"value" : 0, "label" : "legacy"},
+	{"value" : 1, "label" : "module"}
+],
 "display" : 1,
 "advanced" : 0
 },

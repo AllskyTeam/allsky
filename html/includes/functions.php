@@ -349,7 +349,7 @@ function DisplayOpenVPNConfig() {
 						</div>
 					</div>
             	</div>
-				<input type="submit" class="btn btn-outline btn-primary" name="SaveOpenVPNSettings" value="Save settings" />
+				<input type="submit" class="btn btn-primary" name="SaveOpenVPNSettings" value="Save settings" />
 				<?php
 				if($hostapdstatus[0] == 0) {
 					echo '<input type="submit" class="btn btn-success" name="StartOpenVPN" value="Start OpenVPN" />';
@@ -490,7 +490,7 @@ function DisplayTorProxyConfig(){
 					</div>
             	</div>
 		
-				<input type="submit" class="btn btn-outline btn-primary" name="SaveTORProxySettings" value="Save settings" />
+				<input type="submit" class="btn btn-primary" name="SaveTORProxySettings" value="Save settings" />
 				<?php 
 				if( $torproxystatus[0] == 0 ) {
 					echo '<input type="submit" class="btn btn-success" name="StartTOR" value="Start TOR" />';

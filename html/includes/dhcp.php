@@ -155,7 +155,7 @@ function DisplayDHCPConfig() {
       </div>
     </div>
 
-    <input type="submit" class="btn btn-outline btn-primary" value="Save settings" name="savedhcpdsettings" />
+    <input type="submit" class="btn btn-primary" value="Save settings" name="savedhcpdsettings" />
     <?php
 
     if ( $dnsmasq_state ) {
@@ -217,4 +217,3 @@ function DisplayDHCPConfig() {
 }
 
 ?>
-

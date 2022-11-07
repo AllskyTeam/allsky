@@ -101,7 +101,7 @@ create_data_json_file() {
 	if [[ $? -ne 0 || ! -f ${ALLSKY_WEBSITE}/data.json ]]; then
 		MSG="Unable to create new 'data.json' file:"
 		MSG="${MSG}\n${OUTPUT}"
-		MSG="${MSG}\nMake sure 'REMOTE_HOST' is set to a valid server in 'config/ftp-settings.sh',"
+		MSG="${MSG}\nMake sure 'REMOTE_HOST' is set to a valid server in 'ftp-settings.sh',"
 		MSG="${MSG}\nor to '', then run ${ALLSKY_SCRIPTS}/postData.sh to create a 'data.json' file."
 		display_msg error "${MSG}"
 	fi
@@ -153,15 +153,32 @@ check_for_older_config_file() {
 
 ##### Create the json configuration file, either for the local machine or a remote one.
 create_website_configuration_file() {
-	FILE_TO_CREATE="${1}"
 
-	display_msg progress "Creating default '${FILE_TO_CREATE}' file."
-	cp "${REPO_FILE}" "${FILE_TO_CREATE}" || exit 2
+	# If creating for a remote server and there's a local configuration file, use it as the basis.
+	if [[ ${REMOTE_WEBSITE} == "true" && -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE}]]; then
+		display_msg progress "Creating default '${WEB_CONFIG_FILE}' file based on the local file."
+		cp "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "${WEB_CONFIG_FILE}" || exit 2
+
+		# There are only a couple things to update
+		[[ ${DEBUG} == "true" ]] && display_msg debug "Calling updateWebsiteConfig.sh"
+		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
+			--config "${WEB_CONFIG_FILE}" \
+			config.imageName		"imageName"		"${IMAGE_NAME}" \
+			homePage.onPi			"onPi"			"${ON_PI}"
+
+		MSG="If you want different settings on the remote Website than what's on the local Website,"
+		MSG="${MSG}\nedit the remote settings in the WebUI."
+		display_msg notice "${MSG}"
+		return 0
+	fi
+
+	display_msg progress "Creating default '${WEB_CONFIG_FILE}' file."
+	cp "${REPO_FILE}" "${WEB_CONFIG_FILE}" || exit 2
 
 	# Get the array index for the mini-timelapse.
 	PARENT="homePage.sidebar"
 	FIELD="Mini-timelapse"
-	INDEX=$(getJSONarrayIndex "${FILE_TO_CREATE}" "${PARENT}" "${FIELD}")
+	INDEX=$(getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "${FIELD}")
 	if [[ ${INDEX} -ge 0 ]]; then
 		MINI_TLAPSE_DISPLAY="${PARENT}[${INDEX}].display"
 		MINI_TLAPSE_URL="${PARENT}[${INDEX}].url"
@@ -207,7 +224,7 @@ create_website_configuration_file() {
 	# There are some settings we can't determine, like LENS.
 	[[ ${DEBUG} == "true" ]] && display_msg debug "Calling updateWebsiteConfig.sh"
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
-		--config "${FILE_TO_CREATE}" \
+		--config "${WEB_CONFIG_FILE}" \
 		config.imageName		"imageName"		"${IMAGE_NAME}" \
 		config.latitude			"latitude"		"${LATITUDE}" \
 		config.longitude		"longitude"		"${LONGITUDE}" \
@@ -270,27 +287,27 @@ modify_configuration_variables() {
 
 	if [[ ${HAS_NEW_CONFIGURATION_FILE} == "true" ]]; then
 		# Create it
-		create_website_configuration_file "${WEB_CONFIG_FILE}"
+		create_website_configuration_file
 	fi
 }
 
 ##### Help with a remote website installation, then exit
 do_remote_website() {
 	if [[ ${REMOTE_HOST} == "" ]]; then
-		MSG="The 'REMOTE_HOST' must be set in 'config/ftp-settings.sh'\n"
+		MSG="The 'REMOTE_HOST' must be set in 'ftp-settings.sh'\n"
 		MSG="${MSG}in order to do a remote website installation.\n"
 		MSG="${MSG}Please set it, the password, and other information, then re-run this installation."
 		display_msg error "${MSG}"
 		exit 1
 	fi
 
-	if [[ -f ${ALLSKY_CONFIG}/${ALLSKY_WEBSITE_CONFIGURATION_NAME} ]]; then
-		# The user is upgrading a new-style website.
+	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
+		# The user is upgrading a new-style remote Website.
 		HAS_PRIOR_REMOTE_SERVER="true"
 		display_msg progress "\nYou can continue to configure your remote Allsky Website via the WebUI.\n"
 
 		# Check if this is an older configuration file.
-		check_for_older_config_file "${ALLSKY_CONFIG}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		check_for_older_config_file "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 	else
 		# Don't know if the user is upgrading and old-style remote website,
 		# or they don't even have a remote website.
@@ -301,7 +318,7 @@ do_remote_website() {
 		MSG="${MSG}\n** This is the recommended way of making changes to the configuration **."
 		MSG="${MSG}\n\nWould you like to do that?"
 		if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 60 3>&1 1>&2 2>&3); then 
-			create_website_configuration_file "${WEB_CONFIG_FILE}"
+			create_website_configuration_file
 
 			MSG="\nTo edit the remote configuration file, go to the 'Editor' page in the WebUI\n"
 			MSG="${MSG}and select '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"

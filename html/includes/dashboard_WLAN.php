@@ -112,7 +112,7 @@ function DisplayDashboard_WLAN($interface) {
 								echo "<input type='submit' class='btn btn-warning' value='Stop $interface' name='turn_down' />";
 							}
 							?>
-							<input type="button" class="btn btn-outline btn-primary" value="Refresh" onclick="document.location.reload(true)" />
+							<input type="button" class="btn btn-primary" value="Refresh" onclick="document.location.reload(true)" />
 						</form>
 					</div>
 				</div>

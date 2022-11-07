@@ -61,21 +61,7 @@
 	background-color: #f2f1f0;
 }
 
-.btn-primary.btn-outline {
-	color: white;
-    border-color: #198bc6;
-    background-color: #198bc6;
-}
 
-.btn-primary:hover {
-	background-color: #2e6582;
-	border-color: #198bc6;
-}
-
-.btn-warning {
-    background-color: #e48d12;
-    border-color: #cc7b09;
-}
 
 /* Input field in Allsky Settings page */
 .settingInput {
@@ -305,26 +291,88 @@ table .alert-dismissable {
     color: #171717;
 }
 
-.dark .btn-success {
-	background-color: #338833;
-    color: #229922;
-    color: #00cc00;
+/* Buttons */
+.btn-primary {
+	border: 2px solid #00527c;
+}
+.btn-primary:hover {
+	color: black;
+	background-color: #73baf7;
 }
 .dark .btn-primary {
-	color: #b8b8b8;
+	color: #bfbfbf;
     border-color: #1475a7;
     background-color: #1d5a79;
 }
+
+.btn-success {
+    border: 2px solid #3e743e;
+}
+.btn-success:hover {
+	color: black;
+	background-color: #6cd76c;
+}
+.dark .btn-success {
+	color: #bfbfbf;
+    border-color: #5ea853;
+	background-color: #338833;
+}
+
+.btn-warning {
+    border: 2px solid #ac5b09;
+    background-color: #e48d12;
+}
+.btn-warning:hover {
+	color: black;
+    background-color: #ffa019;
+}
 .dark .btn-warning {
-	color: #b8b8b8;
-    background-color: #a7742d;
-    border-color: #cc7b09;
+	color: #bfbfbf;
+    background-color: #c46d0d;
+    border-color: #e48d2d;
+}
+
+.btn-danger {
+	color: white;
+    border: 2px solid #bf0b06;
+	background-color: #f13636;
+}
+.btn-danger:hover  {
+	color: black;
+	background-color: #f96f6f;
 }
 .dark .btn-danger {
-	color: #b8b8b8;
+	color: #bfbfbf;
     background-color: #8d3431;
-    border-color: #cc7b09;
+    border-color: #ad5451;
 }
+
+.btn-advanced {
+    border: 2px solid #c9c46a;
+}
+.btn-advanced:hover {
+	color: black;
+    background-color: #e3e3a3;
+}
+.advanced, .btn-advanced { /* "advanced" options are highlighted in same color as button */
+    background-color: #fffcc0;
+}
+.dark .advanced, .dark .btn-advanced {
+	color: #bfbfbf;
+	border-color: #bdb173;
+    background-color: #837a2f;
+}
+
+.dark .btn-primary:hover,
+.dark .btn-success:hover,
+.dark .btn-warning:hover,
+.dark .btn-danger:hover,
+.dark .btn-advanced:hover
+{
+	color: #efefef;
+	border-color: #d6d6d6;
+}
+
 
 @media screen and (max-width: 795px) {	/* was 767 */
     .dark .table-responsive {
@@ -366,14 +414,6 @@ table .alert-dismissable {
 	box-shadow: 2px 3px rgb(0,0,0,15%);
 }
 
-/* "advanced" options are highlighted */
-.advanced {
-    background-color: #FFFCC0;
-}
-.dark .advanced {
-    background-color: #565643;
-}
-
 /* separate table rows */
 .rowSeparator {
 	border-bottom: 1px solid #d3d3d3;
@@ -398,12 +438,6 @@ select {
 	background-color: #e4e4e4;
 	color: #555555;
 }
-
-
-.btn-primary:hover { color: black; }
-.btn-success:hover { color: black; }
-.btn-warning:hover { color: black; }
-.btn-danger:hover  { color: black; }
 
 /* Colors for user-supplied buttons.
  * In dark theme the border colors become darker.

@@ -401,7 +401,7 @@ function DisplayHostAPDConfig(){
                 </div>
               </div><!-- /.panel-body -->
             </div><!-- /.panel-primary -->
-            <input type="submit" class="btn btn-outline btn-primary" name="SaveHostAPDSettings" value="Save settings" />
+            <input type="submit" class="btn btn-primary" name="SaveHostAPDSettings" value="Save settings" />
             <?php
               if($hostapdstatus[0] == 0) {
                 echo '<input type="submit" class="btn btn-success" name="StartHotspot" value="Start hotspot" />';

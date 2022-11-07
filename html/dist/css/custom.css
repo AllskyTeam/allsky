@@ -204,11 +204,13 @@ body.dark {
 }
 
 .alert {
-	padding: 3px;
-	margin-bottom: 2px;
+	padding: 5px;
+	margin-bottom: 3px;
 }
-.close {
-	opacity: 1.0;
+button.close {
+	opacity: 0.8;
+	color: inherit;
+	margin-top: -2px;
 }
 .alert td {
 	padding: 0 10px 0 3px;

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../documentation.js" type="application/javascript"></script>
+    <link href="../css/light.css" rel="stylesheet">
+    <link href="../css/documentation.css" rel="stylesheet">
+    <link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+    <title>AllSky Modules Settings</title>
+</head>
+
+<body>
+    <div class="d-flex flex-column flex-md-row gh-header">
+        <h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">AllSky Modules</h1>
+    </div>
+
+    <div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
+        <div data-view-component="true"
+            class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
+
+            <div data-view-component="true" class="Layout-sidebar wiki-rightbar">
+                <div w3-include-html="sidebar.html" d="../" id="sidebar"></div>
+            </div>
+
+            <div data-view-component="true" class="Layout-main">
+                <div class="markdown-body" id="mainContents">
+
+                    <h3>What are modules?</h3>
+                    <p>Modules provide functionality that can be used to enhance the images created by AllSky, modules can also provide functionality that does not affect the images but more on that later. The Module Manager allows you to control which modules are run and when they are run. </p>
+                    <p>There are two types of modules</p>
+                    <ul>
+                        <li><strong>System Modules</strong> - These are developed and maintained by the AllSky team. These modules are installed with the main AllSky installer</li>
+                        <li><strong>User Modules</strong> - These are developed and maintained by people outside of the AllSky development team. These modules are installed via a seperate installer, See LINK. These modules can be deleted if no longer required</li>
+                    </ul>
+                    
+                    <blockquote>
+                        <strong>User Modules</strong> User modules must only be installed from the official AllSky repositories. Installing modules from other source could be dangerous and is not encouraged.
+                    </blockquote>
+
+                    <blockquote>
+                        <strong>Experimental Modules</strong> When installed some modules will display a warning that they are experimental. Before using any of these modules you should ensure that you are proficient in analysing Linux Logs files. They should be considered unstable and as such may 'break' your AllSky installation. In the Module Manager settings you can enable/disable experimental modules
+                    </blockquote>
+
+                    <blockquote>
+                        <strong>Hardware Dependent Modules</strong> Some modules are designed to operate with external hardware, typically connected to the Pi's GPIO pins. Before attempting to use any of these modules you should ensure you have an understanding of interfacing hardware to the PI's GPIO
+                    </blockquote>
+
+                    <p>Please don't be discouraged by the above warnings. The module system provides a very flexible system allowing you to customise the AllSky software to your requirements without having to change any code</p>
+
+                    <h3>Module Flows</h3>
+                    <p>Modules run in several places, for each of them you can define which modules run and the order they are run in. The two areas the modules run in are;</p>
+                    <ul>
+                        <li><strong>Via the capture process</strong></li>
+                        <ul>
+                            <li><strong>Day</strong> - These are run after every day time image is captured</li>
+                            <li><strong>Night</strong> - These are run after every night time image is captured</li>
+                            <li><strong>End Of Night</strong> - These are run at the end of the night</li>
+                        </ul>
+                        <li><strong>Via a CRON system</strong> - These are run periodically, each modules defines the frequency with which it runs</li>
+                    </ul>
+                    <p>The diagram below shows each stage of the capture process and how modules fit into it.</p>
+
+                    <img src="Flows.png" width="50%" />
+
+                    <h3>The 'Module Manager'</h3>
+                    <p>The Module Manager is the main interface for managing all of the available modules and in which flows they are used. </p>
+                    <img src="Module Manager.png" width="75%" />
+
+                    <table role="table">
+                        <thead>
+                            <tr>
+                                <th>Annotation</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <p></p>
+                        <tbody>                        
+                            <tr>
+                                <td class="WebUISetting">1 - Save</td> 
+                                <td>This will be enabled when any changes have been made</td>
+                            </tr>
+                            <tr>
+                                <td class="WebUISetting">2 - Upload</td> 
+                                <td>This will allow you to upload a zip file containing a new or updated module. Please see the section on adding and updating modules for more details on how to use this feature </td>
+                            </tr>
+                            <tr>
+                                <td class="WebUISetting">3 - Flow</td> 
+                                <td>The flow you wish to manage. If you have un saved changes from the current flow you will be prompted to save them before switching</td>
+                            </tr>
+                            <tr>
+                                <td class="WebUISetting">3 - Flow</td> 
+                                <td>The flow you wish to manage. If you have un saved changes from the current flow you will be prompted to save them before switching</td>
+                            </tr>
+                            <tr>
+                                <td class="WebUISetting">4 - Settings</td> 
+                                <td>Displays the settings dialog for the Module Manager</td>
+                            </tr>
+                            <tr>
+                                <td class="WebUISetting">5 - Debug</td> 
+                                <td>Displays the debug data for modules. This icon is only visible if its been enabled in the settings</td>
+                            </tr>
+                            <tr>
+                                <td class="WebUISetting">6 - Available</td> 
+                                <td>These are the available modules for the selected Flow</td>
+                            </tr>
+                            <tr>
+                                <td class="WebUISetting">7 - Enabled</td> 
+                                <td>These are the modules to be run in the selected Flow. <strong>They will only be run if the enabled checkbox is selected</strong><p>Modules displayed in red are fixed and cannot be moved</p></td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    
+                    <h4>Selecting a flow</h4>
+                    <p>From the drop down list select the flow that you wish to amend. If there are unsaved changes for the current flow then you will be prompted to save them before switching to a new flow.</p>
+
+                    <h4>Enabling a module</h4>
+                    <p>To enable a module drag it from the Available column to the Enabled column. The module will becoma active after the flow has been saved.</p>
+                    <p>Most modules will require some configuration. Modules can only be configured after they have been moved to the Enabled column, clicking the settings button will display any configuration options for the module</p>
+                    <p><strong>Don't</strong> forget to ensure the enabled checkbox is selected otherwise the module will not run. You can set modules to be automatically enabled when dragging them to the enabled column by setting the appropriate options in the module editor settings</p>
+                    
+                    <h4>Disabling a Module</h4>
+                    <p>There are two ways to disable a module</p>
+                    <ul>
+                        <li>Drag the module to the Available column - This will disbale the module and lose any settings for it</li>
+                        <li>Uncheck the enable checkbox - This will diable the module but retain any settings. This is the preferred method if you just wish to temporarily disable a module</li>
+                    </ul>
+
+                    <h4>Setting the Module execution order</h4>
+                    <p>The modules will be run in the order they appear in the Enabled column. To change the order simply drag the modules up or down the list.</p>
+                    <p>It is <strong>not</strong> possible to move any modules displayed in red</p>
+
+                    <h3>Modules</h3>
+                    <h4>Core Modules</h4>
+                    <p>The Core Modules are installed along with the main AllSky installer. The available modules are</p>
+
+                    <table role="table">
+                        <thead>
+                            <tr>
+                                <th width="18%">Module</th>
+                                <th width="20%">Available In</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>                        
+                            <tr>
+                                <td class="WebUISetting">Load Image</td>
+                                <td>
+                                    <ul>
+                                        <li>Daytime Capture</li>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>Loads the last image taken by AllSky. This is always the first module that is run during the daytime and nighttime capture to ensure that the image is available to all subsequent modules</td>
+                            </tr>
+                            <tr>
+                                <td class="WebUISetting">Save Image</td>
+                                <td>
+                                    <ul>
+                                        <li>Daytime Capture</li>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>Saves the final image after all of the modules have run. This is always the last module that is run during the daytime and nighttime capture</td>
+                            </tr>
+                            <tr>
+                                <td class="WebUISetting">Save intermediate Image</td>
+                                <td>
+                                    <ul>
+                                        <li>Daytime Capture</li>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>This module saves a copy of the image to the specified folder. This is useful to save a copy of the image at a certain point in the flow for later processing. For example if you wish to create a timelapse without any of the overlay information on it simply add this module before the overlay module. <strong>Note:</strong> You will have to write any scripts to process these images</td>
+                            </tr>
+                            <tr>
+                                <td class="WebUISetting">Mask Image</td>
+                                <td>
+                                    <ul>
+                                        <li>Daytime Capture</li>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>This applies a mask to the image. This can be useful if there are artefacts outside of the image circle that you wish to remove. Create a mask with white in the areas you wish to keep and black in the areas you wish to be black, see the section on creating and using masks</td>
+                            </tr>
+                            <tr>
+                                <td class="WebUISetting">Clear Sky</td>
+                                <td>
+                                    <ul>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>This attempts to work out if the sky is clear. It does this by counting the stars in a Region of Interest (ROI) and if this is above a threshold the sky is assumed to be clear. The modules settings allow you to specify the ROI on the image and the parameters for detecting stars. If required the current calculated sky state can be sent to an MQTT broker. Certain other modules can also use the results of this module. For example the Star Count module can be set to only run if the sky is clear, as determined by this module. It is recommended to run this module early in the flow, generally after the mask module</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><img src="module-clearksy-settings-home.png" /></td>
+                                <td>
+                                    <ul>
+                                        <li><strong>Region Of Interest</strong> - The region (ROI) of the image to use for clear sky detection</li>
+                                        <li><strong>Fallback %</strong> - If no ROI is specified then this % around the center of the image will be used</li>
+                                        <li><strong>Clear Sky</strong> - The sky will be assumed clear if more than this number of stars are found within the ROI</li>
+                                        <li><strong>Detection Threshold</strong> - Lowering this value will detect more stars, possibly false positives. Increasing it will detect less stars</li>
+                                        <li><strong>Distance Threshold</strong> - Any stars fond within this number of pixels of another star will only count as a single star. Reducing this value will increase the number of detcted stars but also increase the number of false positives found</li>
+                                        <li><strong>Star Template Size</strong> - The size of a 'standard' star. reducing this value will detect more stars and folse positives</li>
+                                        <li><strong>Mask Path</strong> - The mask that is applied ot the image before any star detction. This is useful to exclude areas of the image that you do not want examined for stars.</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><img src="module-clearksy-settings-debug.png" /></td>
+                                <td>
+                                    <p>These options are for debugging and should not be used for normal operation</p>
+                                    <ul>
+                                        <li><strong>Annotate Stars</strong> - Draws a circle around each detected star. This is useful when tuning the detection values</li>
+                                        <li><strong>Enable Debug Mode</strong> - When selected an image is saved into the allsky/tmp/debug folder after each stage of the detection process. </li>
+                                        <li><strong>Debug Image</strong> - If an image is specified then this is used rather than the last image taken by AllSky. This is useful for configuring the star detection during the day by using a previosuly captured image</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><img src="module-clearksy-settings-mqtt.png" /></td>
+                                <td>
+                                    <p>This is an advanced option and requires a MQTT broker. The setup and operation of a broker is beyond the scope of this document</p>
+                                    <ul>
+                                        <li><strong>Enable MQTT</strong> - Select this option to enable publishing to the MQTT Broker</li>
+                                        <li><strong>MQTT Broker Address</strong> - The FQDN or IP address of the broker</li>
+                                        <li><strong>MQTT Broker Address</strong> - The port number of the Broker</li>
+                                        <li><strong>MQTT Username</strong> - The username to login to the Broker</li>
+                                        <li><strong>MQTT Password</strong> - The password to login to the Broker</li>
+                                        <li><strong>MQTT Topic</strong> - The topic to post the Sky State to</li>
+                                    </ul>
+                                </td>
+                            </tr>
+
+
+                            <tr> 
+                                <td class="WebUISetting">Star Count</td>
+                                <td>
+                                    <ul>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>This counts stars in the captures AllSky Image</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><img src="module-starcount-settings-home.png" /></td>
+                                <td>
+                                    <ul>
+                                        <li><strong>Detection Threshold</strong> - Lowering this value will detect more stars, possibly false positives. Increasing it will detect less stars</li>
+                                        <li><strong>Distance Threshold</strong> - Any stars fond within this number of pixels of another star will only count as a single star. Reducing this value will increase the number of detcted stars but also increase the number of false positives found</li>
+                                        <li><strong>Star Template Size</strong> - The size of a 'standard' star. reducing this value will detect more stars and folse positives</li>
+                                        <li><strong>Mask Path</strong> - The mask that is applied ot the image before any star detction. This is useful to exclude areas of the image that you do not want examined for stars.</li>
+                                        <li><strong>Use Clear Sky</strong> - If the 'Clear Sky' module is running then its results will be used to determine if stars should be counted. If the sky is not clear then no attempt will be made to count stars</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><img src="module-starcount-settings-debug.png" /></td>
+                                <td>
+                                    <p>These options are for debugging and should not be used for normal operation</p>
+                                    <ul>
+                                        <li><strong>Annotate Stars</strong> - Draws a circle around each detected star. This is useful when tuning the detection values</li>
+                                        <li><strong>Enable Debug Mode</strong> - When selected an image is saved into the allsky/tmp/debug folder after each stage of the detection process. </li>
+                                        <li><strong>Debug Image</strong> - If an image is specified then this is used rather than the last image taken by AllSky. This is useful for configuring the star detection during the day by using a previosuly captured image</li>
+                                    </ul>
+                                </td>
+                            </tr>
+
+                            <tr> 
+                                <td class="WebUISetting">Meteor Detection</td>
+                                <td>
+                                    <ul>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>This attempts to detect any meteors in the image. The detection method looks for hard edged in the images and thus is susceptible to false positives if the image is not masked </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><img src="module-meteor-settings-home.png" /></td>
+                                <td>
+                                    <ul>
+                                        <li><strong>Mask Path</strong> - The mask that is applied ot the image before any meteor detction. This is useful to exclude areas of the image that you do not want examined for stars.</li>
+                                        <li><strong>Minimum</strong> - Any streakes longer than this number of pixels will be considered a meteor</li>
+                                        <li><strong>Use Clear Sky</strong> - If the 'Clear Sky' module is running then its results will be used to determine if meteors should be detected. If the sky is not clear then no meteor detection will be attempted</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><img src="module-meteor-settings-debug.png" /></td>
+                                <td>
+                                    <p>These options are for debugging and should not be used for normal operation</p>                                    
+                                    <ul>
+                                        <li><strong>Annotate Meteors</strong> - Any detected meteors will be highlighted in the image</li>
+                                        <li><strong>Enable Debug Mode</strong> - When selected an image is saved into the allsky/tmp/debug folder after each stage of the detection process. </li>
+                                    </ul>
+                                </td>
+                            </tr>
+
+                            <tr> 
+                                <td class="WebUISetting">Export</td>
+                                <td>
+                                    <ul>
+                                        <li>Daytime Capture</li>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>Exports all internal AllSky variables to a json file. By default all environment variables prefixed with AS_ are exported but via the module options other AllSky avriables can also be made available. This can be used by external programs</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><img src="module-export-settings-home.png" /></td>
+                                <td>                             
+                                    <ul>
+                                        <li><strong>File Location</strong> - The location to save the file. Certain AllSky variables can be used to construct the path. See the variables section for more details</li>
+                                        <li><strong>Extra Data To Export</strong> - A comma seperated list of additional variables to save</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            
+                            <tr> 
+                                <td class="WebUISetting">Overlay</td>
+                                <td>
+                                    <ul>
+                                        <li>Daytime Capture</li>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>Overlays data on the captured image. This module applies the fields defined in the 'Overlay Editor'. A full description of the editor is available in this documentation so is not covered here.</td>
+                            </tr>                            
+
+                            <tr> 
+                                <td class="WebUISetting">Script</td>
+                                <td>
+                                    <ul>
+                                        <li>Daytime Capture</li>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>This allows a script to be run. This should only be used by users that understand how script are developer/run on Linux. <strong>Extreme</strong> care must be taken when using this module is it could cause the main AllSky software to stop operating</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><img src="module-script-settings-home.png" /></td>
+                                <td>                             
+                                    <ul>
+                                        <li><strong>File Location</strong> - The script to execute. The module will check to ensure it exists and is executable before any attempt is made to run it</li>
+                                    </ul>
+                                </td>
+                            </tr>
+
+                            <tr> 
+                                <td class="WebUISetting">Save Details</td>
+                                <td>
+                                    <ul>
+                                        <li>Daytime Capture</li>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>TBC if we are going to use it</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+
+                    <h4>User Modules</h4>
+                    <p>The User Modules are installed from a seperate GitHub repository and not included with the main AllSky installation</p>
+
+                    <table role="table">
+                        <thead>
+                            <tr>
+                                <th width="18%">Module</th>
+                                <th width="20%">Available In</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="WebUISetting">Cloud Cover</td>
+                                <td>
+                                    <ul>
+                                        <li>Nighttime Capture</li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    <p><strong>This is an advanced module and requires external hardware for its operation</strong></p>
+                                    <p>This module use an <a href="https://www.sparkfun.com/datasheets/Sensors/Temperature/MLX90614_rev001.pdf" target="_blank">MLX90614</a> to determine the cloud cover. The MLX90614 is a non contact Infra Red thermometer. It is used to measure the temperature of the sky and compare it to the ambient temperature. Gnerally the difference between the Sky temperature and ambient can be used to determine the amount of cloud. The exact theory for the calculatios is beyond the scope of this documentation</p>
+                                    <p>One of the big issues with using any for of sky temperature measurement is the sensor and water/snow ! If the sensor gets wet/covered then the readings will be useless. The best way to mounts the sensor is in a protective enclosure with the sensor mounted at 90 degress to the sky and some form of reflective device used to reflect the sky at the sensor</p>
+                                    <p>Two different methods are available for determining the cloud cover</p>
+                                    <ul>
+                                        <li><strong>Simple</strong> - The difference between Sky and ambient temperature is used to determine the cloud cover.</li>
+                                        <li><strong>Advanced</strong> - Uses a polynomial model to correct the sky temperature reading.</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><img src="module-cloudcover-settings-sensor.png" /></td>
+                                <td>
+                                    <ul>
+                                        <li><strong>i2C Address</strong> - The default i2C address for the MLX90614 is 0x5A. If you need a different address specify it here in Hex</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><img src="module-cloudcover-settings-settings.png" /></td>
+                                <td>
+                                    <ul>
+                                        <li><strong>Clear Below</strong> - Below this Sky temparture it is assumed to be clear</li>
+                                        <li><strong>Cloudy Above</strong> - Above this Sky temparture it is assumed to be cloudy</li>
+                                    </ul>
+                                    <p>Between the two above temperatures the sky is assumed to be aprtially cloudy</p>
+                                </td>
+                            </tr>                            
+                            <tr>
+                                <td colspan="2"><img src="module-cloudcover-settings-advanced.png" /></td>
+                                <td>
+                                    <ul>
+                                        <li><strong>Use Sdvanced Mode</strong> - If enabled the polynomial model will be used</li>
+                                        <li><strong>k1</strong> - TBC</li>
+                                        <li><strong>k2</strong> - TBC</li>
+                                        <li><strong>k3</strong> - TBC</li>
+                                        <li><strong>k4</strong> - TBC</li>
+                                        <li><strong>k5</strong> - TBC</li>
+                                        <li><strong>k6</strong> - TBC</li>
+                                        <li><strong>k7</strong> - TBC</li>
+                                    </ul>
+                                </td>
+                            </tr> 
+
+                        </tbody>
+                    </table>
+
+ 
+                        ○ User Modules
+                            § Cloud Cover
+                            § Dew Heater
+                            § Discord
+                            § GPIO
+                            § Influxdb
+                            § Open Weather Map
+                            § Rain
+                            § SQM
+                    <h3>Creating and using Masks</h3>
+                    <h3>GPIO</h3>
+                    <h3>AllSky Variables</h3>
+                    <h3>Module Performance</h3>
+                    <h3>Debugging Modules</h3>
+                        ○ The log level
+                        ○ Main log file
+                        ○ Periodic log file
+                    <h3>Developing Customer Modules</h3>
+                        ○ Anatomy of a module
+                        ○ Boilerplate example
+                        ○ Dependencies
+                        ○ Built in helpers
+                            § ROI
+                            § GPIO
+                            § List
+                            § Image
+                            § Select
+                            Checkbox
+
+                </div><!-- markdown-body -->
+            </div><!-- Layout-main ... -->
+        </div><!-- Layout -->
+    </div><!-- xcontainer-x1 ... -->
+</body>
+
+</html>
+<script> includeHTML(); </script>

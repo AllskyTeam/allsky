@@ -730,3 +730,93 @@ a {
 .nowrap {
 	white-space: nowrap;
 }
+
+
+
+/**
+* Start AG changes
+**/
+.markdown-body>div, .markdown-body>div div {
+	margin-left: 20px !important;
+}
+
+.markdown-body table.module-settings, .markdown-body table.module-settings td {
+	border: none !important;
+}
+
+table.module-settings > tbody > tr > td:nth-of-type(1) {
+	width: 40%;
+}
+
+table.module-info > tbody > tr > td:nth-of-type(1) {
+	width: 20%;
+}
+
+table.three-col, table.two-col {
+	width: 100% !important;
+}
+table.three-col, table.three-col td, table.two-col, table.two-col td {
+	border: none !important;
+}
+
+table.two-col > tbody > tr > td {
+	width: 40%;
+}
+
+table.three-col > tbody > tr > td {
+	width: 33%;
+}
+
+.img50 {
+	width: 50%;
+}
+.img75 {
+	width: 75%;
+}
+
+.code {
+	font-family: 'Courier New', monospace;
+	font-size: 11px
+}
+
+.markdown-body div.json {
+	margin-left: 0px !important;
+}
+
+.json {
+	font-family: 'Courier New', monospace;
+	font-size: 12px;
+	padding: 10px 40px 10px 0px;
+	font-weight: bolder;
+	line-height: 1.2em;
+	width: 100%;
+}
+
+.json .header {
+	font-weight: bolder;
+}
+.json .indent1 {
+	margin-left: 40px !important;
+}
+.json .indent2 {
+	margin-left: 60px !important;
+}
+.json .indent3 {
+	margin-left: 80px !important;
+}
+
+table.vtop td {
+	vertical-align: top;
+}
+
+table.vtop td ul {
+	padding-top: 0px !important;
+}
+
+table.vtop td p:first-child  {
+	margin-top: 0px !important;
+}
+
+/**
+* End AG changes
+**/

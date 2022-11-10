@@ -243,7 +243,7 @@ class MODULESEDITOR {
                 if (element == '#modules-available') {
                     disabled = 'disabled="disabled"';
                 }
-                settingsHtml = '<button type="button" class="btn btn-primary module-settings-button" id="' + moduleKey + 'settings" data-module="' + data.module + '" ' + disabled + '>Settings</button>';
+                settingsHtml = '<button type="button" class="btn btn-sm btn-primary module-settings-button" id="' + moduleKey + 'settings" data-module="' + data.module + '" ' + disabled + '>Settings</button>';
             }
         }
 
@@ -258,7 +258,7 @@ class MODULESEDITOR {
                     enabled = 'checked="checked"';
                 }
             }
-            enabledHTML = '<div class="pull-right module-enable">Enabled <input type="checkbox" ' + enabled + ' id="' + moduleKey + 'enabled" data-module="' + data.module + '"></div>';
+            enabledHTML = '<div class="pull-right module-enable"><span class="module-enable-text">Enabled</span> <input type="checkbox" ' + enabled + ' id="' + moduleKey + 'enabled" data-module="' + data.module + '"></div>';
         }
 
         let type = 'fa-wrench';
@@ -272,7 +272,7 @@ class MODULESEDITOR {
                 }
                 type = 'fa-user';
                 typeAlt = 'User Module';
-                deleteHtml = '<button type="button" class="btn btn-danger module-delete-button" id="' + moduleKey + 'delete" data-module="' + data.module + '" ' + disabled + '>Delete</button>';
+                deleteHtml = '<button type="button" class="btn btn-sm btn-danger module-delete-button" id="' + moduleKey + 'delete" data-module="' + data.module + '" ' + disabled + '>Delete</button>';
             }
         }
 
@@ -290,7 +290,7 @@ class MODULESEDITOR {
         if (data.metadata.version !== undefined) {
             version = data.metadata.version;
         }
-        version = '<span><small>' + version + '</small><span>';
+        version = '<span><small class="module-version">' + version + '</small><span>';
         let template = '\
             <div id="' + moduleKey + '" data-id="' + data.module + '" class="list-group-item ' + locked + '"> \
                 <div class="panel panel-default"> \

@@ -34,6 +34,11 @@
   #modules-selected-empty:after, #modules-available-empty:after {
     content:''; 
   }
+
+  #modules-selected-empty, #modules-available-empty {
+    margin-top: 15px !important;
+    margin-bottom: 15px !important;
+  }
 }
 
 .list-group-item {

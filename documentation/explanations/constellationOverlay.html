@@ -1,1 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Constellation Overlay</title>
+</head>
+<body>
+<div class="d-flex flex-column flex-md-row gh-header">
+	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Constellation Overlay</h1>
+</div>
+<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
+<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
+<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
+	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+</div>
+<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+
+<p>
+The Allsky Website allows an overlay to appear on the image which can contain constellations,
+stars, objects, and other items.
+You can view the overlay by clicking on the icon of Cassiopeia on the left side of the Website page.
+This overlay is called the "constellation overlay" and should not be confused with
+images overlays which are text and images that are embedded in captures images.
+</p>
+
+<h2>Adjusting image size</h2>
+<p>
+The default maximum size of the image that's displayed on the website is 960 x 720 pixels.
+If your monitor is very small or can support a larger resolution,
+you may wish to change the default size by doing the following:
+<ul>
+	<li>In the WebUI's <b>Editor</b> page, edit the
+		<span class="editorSetting">imageHeight</span> setting in the
+		<code>configuration.json</code> file.
+	<li>Refresh your browser.
+	<li>If you set
+		<span class="editorShell">RESIZE_UPLOADS</span><span class="editorSpecial">=</span><span class="editorString">"true"</span>
+		in <code>config.sh</code> that size should be the same or greater than the size of the
+		<span class="editorSetting">imageHeight</span> value.
+</ul>
+
+<br><h2>Aligning the overlay</h2>
+<blockquote>
+Getting the overlay placed over the sky image in the correct size and orientation
+is a trial-and-error effort that takes time.
+</blockquote>
+<p>
+You'll be editing the <code>configuration.json</code> file below
+using the WebUI's <b>Editor</b> page.
+</p>
+<ul class="minimalPadding">
+	<li>Change the
+		<span class="editorSetting">width</span> and
+		<span class="editorSetting">height</span> settings.
+		These should be roughly the size of the circular portion of the image your lens produces,
+		not the whole image.
+		At night it can be difficult to determine where the border of the lens image is,
+		so this step may be easier during the day.
+	<li>Tweak <span class="editorSetting">imageHeight</span> if needed.
+		If it's not large enough, the overlay will be cut off at the bottom.
+	<li>Center the overlay by changing
+		<span class="editorSetting">overlayOffsetLeft</span> and
+		<span class="editorSetting">overlayOffsetTop</span>.
+	<li>Make the overlay the correct size:
+	<ul>
+		<li><span style="color: red">THE FOLLOWING HASN'T BEEN TESTED YET:</span>
+		<li>Determine the center of the lens image (not the center of the sensor).
+		<li>Remember where the center is - possibly measure it
+			from the top and side of your monitor.
+		<li>Set <span class="editorSetting">keyboard</span>
+			to <span class="editorBool">true</span>.
+		<li>Refresh your browser and display the overlay.
+		<li>With the mouse over the overlay, press <code>z</code> to toggle the
+			gridlines so you can easily see where the center of the overlay is.
+		<li>Modify
+			<span class="editorSetting">overlayOffsetLeft</span> and
+			<span class="editorSetting">overlayOffsetTop</span>
+			to get center of the overlay to match the center of the lens image.
+		<li>Modify
+			<span class="editorSetting">overlayWidth</span> and
+			<span class="editorSetting">overlayHeight</span>
+			so the overlay is the correct size.
+			You may need to re-center the overlay as you do this.
+	</ul>
+	<li>Rotate the overlay to match the stars.
+	Increasing the <span class="editorSetting">az</span> setting rotates the overlay clockwise.
+</ul>
+
+<h3>Tips</h3>
+<ul>
+	<li>Set the <span class="editorSetting">opacity</span> to 1.0 (pure white)
+		to make it easier to see the overlay.
+	<li>Optionally set <span class="editorSetting">showOverlayAtStartup</span> to
+		<span class="editorBool">true</span>
+		to eliminate the need to manually display the overlay every time
+		you refresh the browser.
+	<li>Set
+		<span class="editorSetting">constellationlabels</span>,
+		<span class="editorSetting">showgalaxy</span>,
+		and <span class="editorSetting">gridlines_eq</span>
+		to <span class="editorBool">false</span>
+		so it's easier to compare the overlay with the actual sky.
+		Keeping <span class="editorSetting">constellations</span>
+		on can help identify stars, though.
+	<li>Setting <span class="editorSetting">mouse</span> can be useful to allow you
+		to rotate the sky overlay with the mouse.
+		This will give an indication if the overlay size and position are correct,
+		and you just need to modify <span class="editorSetting">az</span>.
+	<li>Have multiple windows open:
+		<ol>
+			<li>One editing <code>configuration.json</code>.
+			<li>A big one that shows the full image and overlay.
+		</ol>
+</ul>
+
+
+</div><!-- markdown-body --></div><!-- Layout-main ... -->
+</div><!-- Layout -->
+</div><!-- xcontainer-x1 ... -->
+</body>
+</html>
+<script> includeHTML(); </script>
 

@@ -14,8 +14,8 @@ metaData = {
     "module": "allsky_cleanup",
     "experimental": "false",            
     "events": [
-        "endofnight",
-        "night"
+        "nightday",
+        "daynight"
     ]         
 }
 

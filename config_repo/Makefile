@@ -23,7 +23,7 @@ ifeq ($(PKGBUILD),)
 endif
 
 
-CONFIGFILES := config.sh ftp-settings.sh fields.json oe-config.json overlay.json autoexposure.json module-settings.json postprocessing_day.json postprocessing_night.json postprocessing_daynight.json postprocessing_nightday.json postprocessing_endofnight.json postprocessing_periodic.json templateSM.jpg
+CONFIGFILES := config.sh ftp-settings.sh fields.json oe-config.json overlay.json autoexposure.json module-settings.json postprocessing_day.json postprocessing_night.json postprocessing_daynight.json postprocessing_nightday.json postprocessing_periodic.json templateSM.jpg
 UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/allskyperiodic.service
 
 %:
@@ -106,7 +106,6 @@ install: createDirs $(CONFIGFILES)
 	@install -D -m 0644 allsky.logrotate.repo $(DESTDIR)$(sysconfdir)/logrotate.d/allsky
 	@install -D -m 0644 allsky.rsyslog.repo $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf
 	@udevadm control -R
-	@udevadm trigger
 	@echo `date +%F\ %R:%S` Setting allsky to auto start...
 	@if [ -e /etc/xdg/lxsession/LXDE-pi/autostart ]; then \
 	  sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart; fi

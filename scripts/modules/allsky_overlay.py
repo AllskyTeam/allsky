@@ -996,7 +996,14 @@ class ALLSKYOVERLAY:
         self._timer("Annotation Complete", False)
 
 def overlay(params, event):
-    debug = params["debug"]
-    annotater = ALLSKYOVERLAY(debug)
-    annotater.annotate()
-    return "Overlay complete"
+    enabled = int(s.getEnvironmentVariable("AS_eOVERLAY"))
+    if enabled == 1:
+        debug = params["debug"]
+        annotater = ALLSKYOVERLAY(debug)
+        annotater.annotate()
+        result = "Overlay Complete"
+    else:
+        result = "External Overlay Disabled"
+        
+    s.log(1,"INFO: {0}".format(result))        
+    return result

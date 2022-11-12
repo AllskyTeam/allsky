@@ -104,7 +104,7 @@ if __name__ == "__main__":
     watchdog = False
     timeout = 0
     try:
-        configFile = os.path.join(os.environ['ALLSKY_CONFIG'], 'module-settingshared.json')
+        configFile = os.path.join(os.environ['ALLSKY_CONFIG'], 'module-settings.json')
         with open(configFile, 'r') as module_Settings_file:
             module_settings = json.load(module_Settings_file)
             watchdog = module_settings['watchdog']
@@ -176,15 +176,17 @@ if __name__ == "__main__":
                 shared.log(0,"ERROR: {}".format(e))
 
             endTime = datetime.now()
-            elapsedTime = ((endTime - startTime).total_seconds())
+            elapsedTime = ((endTime - startTime).total_seconds()) * 1000
+
+            results[shared.step] = {}
             if watchdog:
                 if elapsedTime > timeout:
-                    shared.log(0, 'ERROR: Will disable module {0} it took {1}ms max allowed is {2}s'.format(shared.flow[shared.step]['module'], elapsedTime, timeout))
+                    shared.log(0, 'ERROR: Module {0} will be disabled, it took {1}ms max allowed is {2}s'.format(shared.flow[shared.step]['module'], elapsedTime, timeout))
+                    results[shared.step]["disable"] = True
                 else:
                     shared.log(1, 'INFO: Module {0} ran ok in {1}s'.format(shared.flow[shared.step]['module'], elapsedTime))
-            
-            results[shared.step] = {}
-            results[shared.step]["lastexecutiontime"] = str(elapsedTime * 1000)
+                    
+            results[shared.step]["lastexecutiontime"] = str(elapsedTime) 
 
             if result == shared.ABORT:
                 break
@@ -199,6 +201,8 @@ if __name__ == "__main__":
                 if step in results:
                     config[step]["lastexecutiontime"] = results[step]["lastexecutiontime"]
                     config[step]["lastexecutionresult"] = results[step]["lastexecutionresult"]
+                    if "disable" in results[step]:
+                        config[step]["enabled"] = False
 
             updatefile.close()
             with open(moduleConfig, "w") as updatefile:

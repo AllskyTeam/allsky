@@ -112,4 +112,6 @@ if [[ ${SHOW_ON_MAP} == "1" ]]; then
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight
 fi
 
+python ${ALLSKY_SCRIPTS}/flow-runner.py -e nightday
+
 exit 0

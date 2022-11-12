@@ -897,7 +897,7 @@ set_permissions
 ##### Check for, and handle any prior Allsky Website
 handle_prior_website
 
-######## TEMP functiont to install the overlay and modules system
+######## TEMP function to install the overlay and modules system
 install_overlay()
 {
 

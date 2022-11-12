@@ -33,7 +33,7 @@
             "fontsize": 24
         },
         {
-            "label": "Temperature: ${TEMPERATURE}",
+            "label": "Sensor: ${TEMPERATURE}",
             "x": 10,
             "y": 110,
             "id": "oe-field-4",

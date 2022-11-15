@@ -736,6 +736,9 @@ a {
 /**
 * Start AG changes
 **/
+h4 {
+	font-size: 1.3em !important;
+}
 .markdown-body>div, .markdown-body>div div {
 	margin-left: 20px !important;
 }
@@ -817,6 +820,11 @@ table.vtop td p:first-child  {
 	margin-top: 0px !important;
 }
 
+.center-image {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;	
+}
 /**
 * End AG changes
 **/

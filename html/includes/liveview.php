@@ -10,7 +10,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe
 
 	if ($darkframe === '1') {
 		$status->addMessage('Currently capturing dark frames. You can turn this off on the camera settings page.');
-	} else {
+	} else if ($daydelay != -1) {
 		$status->addMessage("Daytime images updated every " . number_format($daydelay) . " seconds, nighttime every " . number_format($nightdelay) ." seconds", "message", true);
 	}
   ?>
@@ -22,7 +22,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe
 
 	<div class="row">
 		<div class="panel panel-primary">
-			<div class="panel-heading"><i class="fa fa-code fa-eye"></i> Live View</div>
+			<div class="panel-heading"><i class="fa fa-code fa-eye"></i> Liveview</div>
 			<div class="panel-body">
 				<p><?php $status->showMessages(); ?></p>
 				<div id="live_container" style="background-color: black; margin-bottom: 15px;">

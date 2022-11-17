@@ -9,17 +9,17 @@
 
 // Sets all the define() variables.
 $defs = 'allskyDefines.inc';
-if ((include $defs) == false) {
+if (! file_exists("includes/" . $defs) && ! file_exists($defs)) {
 	echo "<div style='font-size: 200%;'>";
 	echo "<p style='color: red'>";
 	echo "The installation of the WebUI is incomplete.<br>";
-	echo "File '$defs' not found.<br>";
 	echo "Please run the following from the 'allsky' directory:";
 	echo "</p>";
 	echo "<code>   ./install.sh --function create_webui_defines</code>";
 	echo "</div>";
 	exit;
 }
+require $defs;
 
 $status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
@@ -45,44 +45,50 @@ function initialize_variables() {
 		exit;
 	}
 
-	$camera_settings_str = file_get_contents($settings_file, true);
-	$camera_settings_array = json_decode($camera_settings_str, true);
+	$settings_str = file_get_contents($settings_file, true);
+	$settings_array = json_decode($settings_str, true);
 	// $img_dir is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
-	$image_name = $img_dir . "/" . $camera_settings_array['filename'];
-	$darkframe = $camera_settings_array['takeDarkFrames'];
-	$useLogin = getVariableOrDefault($camera_settings_array, 'useLogin', true);
-	$temptype = getVariableOrDefault($camera_settings_array, 'temptype', "C");
+	$image_name = $img_dir . "/" . $settings_array['filename'];
+	$darkframe = $settings_array['takeDarkFrames'];
+	$useLogin = getVariableOrDefault($settings_array, 'useLogin', true);
+	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 
 
 	////////////////// Determine delay between refreshes of the image.
-	$consistentDelays = $camera_settings_array["consistentDelays"] == 1 ? true : false;
-	$daydelay = $camera_settings_array["daydelay"] +
-		($consistentDelays == 1 ? $camera_settings_array["daymaxautoexposure"] : $camera_settings_array["dayexposure"]);
-	$nightdelay = $camera_settings_array["nightdelay"] +
-		($consistentDelays == 1 ? $camera_settings_array["nightmaxautoexposure"] : $camera_settings_array["nightexposure"]);
+	$consistentDelays = $settings_array["consistentDelays"] == 1 ? true : false;
+	$daydelay = $settings_array["daydelay"] +
+		($consistentDelays ? $settings_array["daymaxautoexposure"] : $settings_array["dayexposure"]);
+	$nightdelay = $settings_array["nightdelay"] +
+		($consistentDelays ? $settings_array["nightmaxautoexposure"] : $settings_array["nightexposure"]);
 
-	// Determine if it's day or night so we know which delay to use.
-	$angle = $camera_settings_array['angle'];
-	$lat = $camera_settings_array['latitude'];
-	$lon = $camera_settings_array['longitude'];
-	exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
-	if ($retval == 2) {
-		$delay = $daydelay;
-	} else if ($retval == 3) {
-		$delay = $nightdelay;
+	$showDelay = getVariableOrDefault($settings_array, 'showDelay', true);
+	if ($showDelay) {
+		// Determine if it's day or night so we know which delay to use.
+		$angle = $settings_array['angle'];
+		$lat = $settings_array['latitude'];
+		$lon = $settings_array['longitude'];
+		exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+		if ($retval == 2) {
+			$delay = $daydelay;
+		} else if ($retval == 3) {
+			$delay = $nightdelay;
+		} else {
+			echo "<p class='errorMsg'>ERROR: 'sunwait' returned exit code $retval so we don't know if it's day or night.</p>";
+			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
+		}
+
+		// Convert to seconds for display.
+		$daydelay /= 1000;
+		$nightdelay /= 1000;
 	} else {
-		echo "<p class='errorMsg'>ERROR: 'sunwait' returned exit code $retval so we don't know if it's day or night.</p>";
+		// Not showing delay so just use average
 		$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
+		$daydelay = -1;		// signifies it's not being used
 	}
-
 	// Divide by 2 to lessen the delay between a new picture and when we check.
 	$delay /= 2;
-
-	// Convert to seconds for display.
-	$daydelay /= 1000;
-	$nightdelay /= 1000;
 }
 
 /**
@@ -349,7 +355,7 @@ function DisplayOpenVPNConfig() {
 						</div>
 					</div>
             	</div>
-				<input type="submit" class="btn btn-primary" name="SaveOpenVPNSettings" value="Save settings" />
+				<input type="submit" class="btn btn-outline btn-primary" name="SaveOpenVPNSettings" value="Save settings" />
 				<?php
 				if($hostapdstatus[0] == 0) {
 					echo '<input type="submit" class="btn btn-success" name="StartOpenVPN" value="Start OpenVPN" />';
@@ -490,7 +496,7 @@ function DisplayTorProxyConfig(){
 					</div>
             	</div>
 		
-				<input type="submit" class="btn btn-primary" name="SaveTORProxySettings" value="Save settings" />
+				<input type="submit" class="btn btn-outline btn-primary" name="SaveTORProxySettings" value="Save settings" />
 				<?php 
 				if( $torproxystatus[0] == 0 ) {
 					echo '<input type="submit" class="btn btn-success" name="StartTOR" value="Start TOR" />';
@@ -861,11 +867,11 @@ function getVariableOrDefault($a, $v, $d) {
 
 // Display the Allsky and Allsky Website version (if it's installed).
 function displayVersions() {
-	echo "Allsky Version: " . ALLSKY_VERSION;
+	echo "&nbsp; Version: " . ALLSKY_VERSION;
 	$websiteFile = ALLSKY_WEBSITE . "/version";
 	if (file_exists($websiteFile)) {
 		$websiteVersion = file_get_contents($websiteFile);
-		echo "<br>Website Version: $websiteVersion";
+		echo ", &nbsp; Website: $websiteVersion";
 	}
 }
 

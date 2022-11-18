@@ -7,7 +7,6 @@ fi
 ME="$(basename "${BASH_ARGV0}")"
 
 source "${ALLSKY_HOME}/variables.sh" || exit 1
-source "${ALLSKY_CONFIG}/config.sh" || exit 1
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit 1
 
 if [[ ${EUID} -eq 0 ]]; then

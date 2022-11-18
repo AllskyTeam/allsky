@@ -222,7 +222,7 @@ fi
 # Simple way to get a setting that hides the details.
 function settings()
 {
-	j="$(jq -r "${1}" "${SETTINGS_FILE}")" && echo "${j}" && return
+	j="$(jq -r "${1}" "${2:-${SETTINGS_FILE}}")" && echo "${j}" && return
 	echo "${ME}: running as $(id --user --name), unable to get json value for '${1}';" >&2
 	ls -l "${SETTINGS_FILE}" >&2
 }

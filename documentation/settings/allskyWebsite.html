@@ -4,13 +4,11 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-
 	<script src="../documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
 	<title>Allsky Website Settings</title>
 </head>
 <body>
@@ -29,7 +27,7 @@ The Allsky Website allows you to display your most recent captured image on a we
 either on your Pi or on another machine.
 Saved timelapse videos, keograms, and startrails can also be viewed.
 It can optionally add an overlay of constellations and other objects,
-as well as optional Aurora data from NOAA.
+as well as optional Aurora data.
 </p>
 <p>
 To configure the Website:
@@ -38,8 +36,8 @@ To configure the Website:
 <li>In the drop-down at the bottom of the page, select
 	one of the following, depending on which Website you want to configure:
 	<ul>
-	<li><b>configuration.json (local Allsky Website)</b> or
-	<li><b>remote_configuration.json (remote Allsky Website)</b>
+	<li><code>configuration.json (local Allsky Website)</code> or
+	<li><code>remote_configuration.json (remote Allsky Website)</code>
 		(only if you have a remote Website)
 	</ul>
 </ul>
@@ -67,15 +65,16 @@ Information on the color scheme used by the Editor is
 </p>
 
 
-<h2>"config" settings</h2>
+<br><h2>"config" settings</h2>
 <details><summary></summary>
-<p>
+<br>
 Legend:
-<ul>
-<li>Values for setting names preceded by <span class="sentToMapServer"></span>
+<ul class="minimalPadding">
+<li>Values for setting names with <span class="sentToMapServer"></span> after them
 	are sent to the <a allsky="true" href="/documentation/allskyMap/index.html">Allsky Map</a>
 	server if you camera is on the map.
-<li>Setting names with "(vs)" after them impact the virtual sky overlay.
+<li>Setting names with <span class="vsOverlay"></span>
+	after them impact the virtual sky overlay.
 	A complete list of virtual-sky based options is
 	<a href="https://slowe.github.io/VirtualSky/#options">here</a>.
 <li>Values marked with <span class="autoSet"></span> are automatically set during
@@ -85,8 +84,8 @@ Legend:
 It's important to update your settings in the WebUI <b>before</b> installing the
 Allsky Website so you only have to update them once.
 </blockquote>
-</p>
-<table class="settings">
+
+<br><table class="settings">
 <thead>
 <tr>
 	<th>Setting</th>
@@ -109,12 +108,16 @@ Allsky Website so you only have to update them once.
 	</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> <span class="editorSetting">location</span></td>
+	<td><span class="editorSetting">location</span>
+		<span class="sentToMapServer"><span>
+	</td>
 	<td><span class="autoSet"></span></td>
 	<td>The location of your camera.</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"></span> <span class="editorSetting">latitude</span> (vs)</td>
+	<td><span class="editorSetting">latitude</span>
+		<span class="sentToMapServer"><span> <span class="vsOverlay"></span>
+	</td>
 	<td><span class="autoSet"></span></td>
 	<td>Latitude of the camera as a decimal number (negative is Southern hemisphere)
 		or as an unsigned number with "N" or "S",
@@ -123,7 +126,9 @@ Allsky Website so you only have to update them once.
 	</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> <span class="editorSetting">longitude</span> (vs)</td>
+	<td><span class="editorSetting">longitude</span>
+		<span class="sentToMapServer"><span> <span class="vsOverlay"></span>
+	</td>
 	<td><span class="autoSet"></span></td>
 	<td>Longitude of the camera as a decimal number (negative is west of the prime meridian)
 		or as an unsigned number with "E" or "W",
@@ -132,22 +137,30 @@ Allsky Website so you only have to update them once.
 	</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> <span class="editorSetting">camera</span></td>
+	<td><span class="editorSetting">camera</span>
+		<span class="sentToMapServer"><span>
+	</td>
 	<td><span class="autoSet"></span></td>
 	<td>The camera type and model.</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> <span class="editorSetting">lens</span></td>
+	<td><span class="editorSetting">lens</span>
+		<span class="sentToMapServer"><span>
+	</td>
 	<td><span class="autoSet"></span></td>
 	<td>Short description of the camera's lens, for example, its brand, mm, etc.</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> <span class="editorSetting">computer</span></td>
+	<td><span class="editorSetting">computer</span>
+		<span class="sentToMapServer"><span>
+	</td>
 	<td><span class="autoSet"></span></td>
 	<td>The Raspberry Pi model.</td>
 </tr>
 <tr>
-	<td><span class="sentToMapServer"><span> <span class="editorSetting">owner</span></td>
+	<td><span class="editorSetting">owner</span>
+		<span class="sentToMapServer"><span>
+	</td>
 	<td><span class="autoSet"></span></td>
 	<td>The camera owner.</td>
 </tr>
@@ -182,45 +195,45 @@ Allsky Website so you only have to update them once.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">overlayWidth</span> (vs)</td>
+	<td><span class="editorSetting">overlayWidth</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">875</span></td>
 	<td>Width of the overlay in pixels.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">overlayHeight</span> (vs)</td>
+	<td><span class="editorSetting">overlayHeight</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">875</span></td>
 	<td>Height of the overlay in pixels.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">overlayOffsetLeft</span> (vs)</td>
+	<td><span class="editorSetting">overlayOffsetLeft</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0</span></td>
 	<td>Horizontal adjustment of the overlay in pixels.
 		Use negative numbers to move left.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">overlayOffsetTop</span> (vs)</td>
+	<td><span class="editorSetting">overlayOffsetTop</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0</span></td>
 	<td>Vertical adjustment of the overlay in pixels.
 		Use negative numbers to move up.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">az</span> (vs)</td>
+	<td><span class="editorSetting">az</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0</span></td>
 	<td>(azimuth) Changes the rotation of the overlay.
 		0 is north up, 90 is north to the right, etc.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">imageHeight</span> (vs)</td>
+	<td><span class="editorSetting">imageHeight</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">720</span></td>
 	<td>Height of the image in pixels.
 		The image width will be calculated automatically to keep the aspect ratio constant.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">opacity</span> (vs)</td>
+	<td><span class="editorSetting">opacity</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0.5</span></td>
 	<td>Opacity of the constellation overlay, from 0.0 (invisible) to 1.0 (full brightness).</td>
 </tr>
@@ -230,7 +243,7 @@ Allsky Website so you only have to update them once.
 	<td>This line is for your information and can be deleted if desired.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">XXX_objects</span> (vs)</td>
+	<td><span class="editorSetting">XXX_objects</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorString">virtualsky/messier.json</span></td>
 	<td>Name of one or more semi colon-separated files that contains other objects to display.
 		<br>To use, remove the leading <span class="editorSetting">XXX_</span>
@@ -238,27 +251,27 @@ Allsky Website so you only have to update them once.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">meridian</span> (vs)</td>
+	<td><span class="editorSetting">meridian</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
 	<td>Displays the meridian line.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">ecliptic</span> (vs)</td>
+	<td><span class="editorSetting">ecliptic</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
 	<td>Displays the ecliptic line.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">fontsize</span> (vs)</td>
+	<td><span class="editorSetting">fontsize</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorString">14px</span></td>
 	<td>Font size for constellation and star names.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">cardinalpoints</span> (vs)</td>
+	<td><span class="editorSetting">cardinalpoints</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">true</span></td>
 	<td>Display the cardinal points (N, S, E, W)?</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">cardinalpoints_fontsize</span> (vs)</td>
+	<td><span class="editorSetting">cardinalpoints_fontsize</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorString">18px</span></td>
 	<td>Size of cardinal points.
 		If they are hard to see, increase the size or change their color
@@ -266,69 +279,69 @@ Allsky Website so you only have to update them once.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">showstarlabels</span> (vs)</td>
+	<td><span class="editorSetting">showstarlabels</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">true</span></td>
 	<td>Display the star names.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">projection</span> (vs)</td>
+	<td><span class="editorSetting">projection</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorString">fisheye</span></td>
 	<td>Leave at the default if your Allsky camera has a fisheye lens (most do).</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">constellations</span> (vs)</td>
+	<td><span class="editorSetting">constellations</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">true</span></td>
 	<td>Show constellation lines?</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">constellationwidth</span> (vs)</td>
+	<td><span class="editorSetting">constellationwidth</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0.75</span></td>
 	<td>Width of lines making up constellations.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">constellationlabels</span> (vs)</td>
+	<td><span class="editorSetting">constellationlabels</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
 	<td>Show the constellation names?</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">constellationboundaries</span> (vs)</td>
+	<td><span class="editorSetting">constellationboundaries</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
 	<td>Show the constellation boundaries?</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">constellationboundarieswidth</span> (vs)</td>
+	<td><span class="editorSetting">constellationboundarieswidth</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0.75</span></span></td>
 	<td>Width of constellation boundary lines.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">gridlines_eq</span> (vs)</td>
+	<td><span class="editorSetting">gridlines_eq</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">true</span></td>
 	<td>Show the RA/Dec grid lines?</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">gridlineswidth</span> (vs)</td>
+	<td><span class="editorSetting">gridlineswidth</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0.75</span></td>
 	<td>Width of RA/Dec grid lines.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">showgalaxy</span> (vs)</td>
+	<td><span class="editorSetting">showgalaxy</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">true</span></td>
 	<td>Show galaxies?</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">galaxywidth</span> (vs)</td>
+	<td><span class="editorSetting">galaxywidth</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0.75</span></td>
 	<td>Width of galaxy outline line.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">mouse</span> (vs)</td>
+	<td><span class="editorSetting">mouse</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
 	<td>Allow the mouse to rotate the overlay?
 		Can be useful when trying to get the overlay to fit properly over your image.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">keyboard</span> (vs)</td>
+	<td><span class="editorSetting">keyboard</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">true</span></td>
 	<td>Allow keyboard controls?
 		If set to <span class="editorBool">true</span>,
@@ -336,14 +349,14 @@ Allsky Website so you only have to update them once.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">showdate</span> (vs)</td>
+	<td><span class="editorSetting">showdate</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
 	<td>Show the date and time in the overlay?
 		Not really needed if you add the date and time to your images.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">showposition</span> (vs)</td>
+	<td><span class="editorSetting">showposition</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
 	<td>Show/hide the latitude/longitude.
 		Not very useful since clicking on the information icon on the
@@ -351,29 +364,29 @@ Allsky Website so you only have to update them once.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">sky_gradient</span> (vs)</td>
+	<td><span class="editorSetting">sky_gradient</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
 	<td>Should the sky lighten toward the horizon?</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">gradient</span> (vs)</td>
+	<td><span class="editorSetting">gradient</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
 	<td>Reduce the brightness of stars near the horizon?</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">transparent</span> (vs)</td>
+	<td><span class="editorSetting">transparent</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">true</span></td>
 	<td>Make the sky background transparent?</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">lang</span> (vs)</td>
+	<td><span class="editorSetting">lang</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorString">en</span></td>
 	<td>Language the object names should be in.
 		Look in <code>~/allsky/html/allsky/virtualsky/lang</code> for available languages.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">colours</span> (vs)</td>
+	<td><span class="editorSetting">colours</span> <span class="vsOverlay"></span></td>
 	<td></td>
 	<td>Allows you to override the default overlay colors in "normal" and "negative" mode.
 		To see an example, remove the leading <span class="editorSetting">XXX_</span>
@@ -382,7 +395,7 @@ Allsky Website so you only have to update them once.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">live</span> (vs)</td>
+	<td><span class="editorSetting">live</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">true</span></td>
 	<td>Update the display in real time?  Rarely changed.</td>
 </tr>
@@ -407,8 +420,9 @@ Allsky Website so you only have to update them once.
 </details>
 
 
-<h2>"homePage" settings</h2>
+<br><h2>"homePage" settings</h2>
 <details><summary></summary>
+<br>
 <table class="settings">
 <thead>
 <tr>
@@ -473,7 +487,7 @@ Allsky Website so you only have to update them once.
 		<blockquote>
 		If this is a file on your Pi or remote server,
 		it's suggested to put it in the Website's <code>myImages</code> directory which is
-		backed up and restored when upgrading Allsky Website.
+		backed up and restored when upgrading the Allsky Website.
 		</blockquote>
 	</td>
 </tr>
@@ -549,7 +563,7 @@ Allsky Website so you only have to update them once.
 		<blockquote>
 		If this is a file on your Pi or remote server,
 		it's suggested to put it in the <code>myImages</code> directory which is
-		backed up and restored when upgrading Allsky Website.
+		backed up and restored when upgrading the Allsky Website.
 		</blockquote>
 	</td>
 </tr>

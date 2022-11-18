@@ -9,17 +9,17 @@
 
 // Sets all the define() variables.
 $defs = 'allskyDefines.inc';
-if (! file_exists("includes/" . $defs) && ! file_exists($defs)) {
+if ((include $defs) == false) {
 	echo "<div style='font-size: 200%;'>";
 	echo "<p style='color: red'>";
 	echo "The installation of the WebUI is incomplete.<br>";
+	echo "File '$defs' not found.<br>";
 	echo "Please run the following from the 'allsky' directory:";
 	echo "</p>";
 	echo "<code>   ./install.sh --function create_webui_defines</code>";
 	echo "</div>";
 	exit;
 }
-require $defs;
 
 $status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
@@ -358,9 +358,9 @@ function DisplayOpenVPNConfig() {
 				<input type="submit" class="btn btn-outline btn-primary" name="SaveOpenVPNSettings" value="Save settings" />
 				<?php
 				if($hostapdstatus[0] == 0) {
-					echo '<input type="submit" class="btn btn-success" name="StartOpenVPN" value="Start OpenVPN" />';
+					echo '<input type="submit" class="btn btn-outline btn-success" name="StartOpenVPN" value="Start OpenVPN" />';
 				} else {
-					echo '<input type="submit" class="btn btn-warning" name="StopOpenVPN" value="Stop OpenVPN" />';
+					echo '<input type="submit" class="btn btn-outline btn-warning" name="StopOpenVPN" value="Stop OpenVPN" />';
 				}
 				?>
 				</form>

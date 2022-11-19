@@ -466,7 +466,7 @@ blockquote {
 .gh-header-title {
 	margin-right: 150px;
 	margin-bottom: 20px;
-	font-weight: 400;
+	font-weight: bold;
 	line-height: 1.125;
 	word-wrap: break-word;
 	border-bottom: 1px solid var(--color-accent-muted);
@@ -520,11 +520,11 @@ details summary {
 	cursor: pointer;
 	color: var(--color-accent-fg);
 }
-details summary::before {
-	content: "More Details...";
-}
-details[open] summary::before {
+details[open]:not([sub]) summary::before, details[sub][open] summary::before {
 	content: "Hide Details...";
+}
+details summary::before, details[sub]:not([open]) summary::before {
+	content: "More Details...";
 }
 summary {
 	display: list-item;
@@ -645,9 +645,12 @@ a {
 }
 
 .sentToMapServer::before {
-	color: red;
-	font-weight: bold;
-	content: "*";
+	color: gray;
+	content: "(map)";
+}
+.vsOverlay::before {
+	color: gray;
+	content: "(vs)";
 }
 .autoSet::before {
 	color: red;
@@ -688,6 +691,7 @@ a {
 }
 .editorNum, .editorBool {
 	color: #ae81ff;
+	color: #deb1ff;	/* Editor versions are hard to see so lighten some */
 }
 .editorSign {
 	color: white;

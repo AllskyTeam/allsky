@@ -4,7 +4,6 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-
 	<script src="../documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
 	<link href="../css/documentation.css" rel="stylesheet">
@@ -54,13 +53,13 @@ A description of the color scheme comes last.
 <img allsky="true" src="EditorPage-json.png" title="Editing .json file - click to show full version" alt=".json file" loading="lazy">
 </a>
 
-<h3>Color Scheme</h3>
+<br><h3>Color Scheme</h3>
 <ul>
 <li>Setting <b>names</b> look different depending on the file type:
 	<ul>
 	<li>In <code>.sh</code> files the names look <span class="editorShell">LIKE_THIS</span>.
 		By convention shell setting names (called shell "variables") are all uppercase
-		and multi-word names are separated by an underscore ("_"),
+		and multi-word names are separated by an underscore (<code>_</code>),
 		although there are some variables that don't follow that convention.
 	<li>In <code>.json</code> files they look <span class="editorSetting">likeThis</span>.
 		By convention if the name includes multiple words,
@@ -95,18 +94,25 @@ A description of the color scheme comes last.
 	like "if" and "sudo" have special colors.
 </ul>
 
-<h3>Debugging</h3>
+<br><h3>Debugging</h3>
 If you see different colors while editing a file, check for syntax errors:
 <ul>
-<li>Missing commas - in JSON files they are needed after each value
-	except the last one in a sub-section.
-	<br>Missing commas is the most common syntax error.
-<li>Missing quotes - JSON setting names and string values must be surrounded by double quotes,
-	as should Shell strings that contain a space, tab, or special character.
-<li>Missing colons - one must separate each JSON setting name from its value.
-	There can be 0 or more spaces before and/or after the colon.
-<li>Extraneous spaces - in Shell files there should be no space between a variable name
-	and the "=".
+<li>JSON files
+	<ul>
+	<li>Missing commas are needed after each value except the last one in a sub-section.
+		This is the most common syntax error.
+	<li>Missing quotes - setting names and string values must be surrounded by double quotes.
+	<li>Missing colons - one must separate each setting name from its value.
+		There can be 0 or more spaces before and/or after the colon.
+	</ul>
+<li>Shell files
+	<ul>
+	<li>Missing quotes - strings that contain a space, tab, or special character
+		must be surrounded by quotes.
+	<li>Extraneous spaces - there should be no space between a variable name
+		and the <span class="editorSpecial">=</span>
+		and between the and the <span class="editorSpecial">=</span> and the value.
+	</ul>
 </ul>
 </p>
 

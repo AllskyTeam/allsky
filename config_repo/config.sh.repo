@@ -8,6 +8,9 @@
 # Set to "true" to upload the current image to your website.
 IMG_UPLOAD="false"
 
+# Upload the image file as "image-YYYYMMDDHHMMSS.jpg" (true) or "image.jpg" (false).
+IMG_UPLOAD_ORIGINAL_NAME="false"
+
 # If IMG_UPLOAD is "true", upload images every IMG_UPLOAD_FREQUENCY frames, e.g., every 5 frames.
 # 1 uploades every frame.
 IMG_UPLOAD_FREQUENCY=1

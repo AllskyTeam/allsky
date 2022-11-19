@@ -734,3 +734,8 @@ a {
 .nowrap {
 	white-space: nowrap;
 }
+.buttonIcon {	/* button icons from WebUI - shrink in documentation */
+	width: 90px;
+	height: auto;
+	margin-bottom: -2px;	/* so it looks like it lines up with the text around it */
+}

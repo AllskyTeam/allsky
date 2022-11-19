@@ -13,6 +13,9 @@
 .navbar-header, .navbar-brand {
 	height: 100%;
 }
+.navbar-header .navbar-brand {
+    padding-left: 5px;
+}
 .navbar-brand img { 
     height: 50px;
     display:inline-block;
@@ -479,7 +482,7 @@ select {
 .dark .btn-black { border-color: #ffffff; }
 
 /* Error messages */
-.errorMsg, .errorMsgBig { color: red; font-size: 125%; }
+.errorMsg, .errorMsgBig { color: red; }
 .errorMsgBig { font-size: 200%; }
 
 .thumb { width: 100px; margin: 0 1px 1px 0; }

@@ -645,9 +645,12 @@ a {
 }
 
 .sentToMapServer::before {
-	color: red;
-	font-weight: bold;
-	content: "*";
+	color: gray;
+	content: "(map)";
+}
+.vsOverlay::before {
+	color: gray;
+	content: "(vs)";
 }
 .autoSet::before {
 	color: red;

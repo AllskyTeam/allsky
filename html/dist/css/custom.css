@@ -13,6 +13,9 @@
 .navbar-header, .navbar-brand {
 	height: 100%;
 }
+.navbar-header .navbar-brand {
+    padding-left: 5px;
+}
 .navbar-brand img { 
     height: 50px;
     display:inline-block;
@@ -23,6 +26,9 @@
 	display: inline-block;
 	font-size: 80%;
 	opacity: 0.7;
+}
+.version-title-color {
+	color: #777;
 }
 
 @media (max-width: 450px) {.version-title { font-size: 75%; }}
@@ -39,10 +45,14 @@
 	.navbar-toggle { display: block; }
 	#page-wrapper { margin: 0; }
 	.navbar-collapse { display: none; }
+	.navbar-brand { float: none; }
+	.version-title { margin-left: 0; }
 }
+/* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 @media (max-width: 815px) {
 	#page-wrapper { padding: 0px 20px; }
 }
+*/
 
 .right-panel .panel:first-of-type {
     margin: 20px 0;
@@ -472,7 +482,7 @@ select {
 .dark .btn-black { border-color: #ffffff; }
 
 /* Error messages */
-.errorMsg, .errorMsgBig { color: red; font-size: 125%; }
+.errorMsg, .errorMsgBig { color: red; }
 .errorMsgBig { font-size: 200%; }
 
 .thumb { width: 100px; margin: 0 1px 1px 0; }
@@ -499,4 +509,7 @@ select {
 }
 .panel-body .row {
 	margin: 0;
+}
+.nowrap {
+	white-space: nowrap;
 }

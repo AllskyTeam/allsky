@@ -421,13 +421,13 @@ function DisplaySystem()
 								<h4>System Information</h4>
 								<table>
 								<!-- <colgroup> doesn't seem to support "width", so set on 1st line -->
-								<tr class="x"><td style="padding-right: 90px;">Hostname</td><td><?php echo $hostname ?></td></tr>
-								<tr class="x"><td>Pi Revision</td><td><?php echo RPiVersion() ?></td></tr>
-								<tr class="x"><td>Uptime</td><td><?php echo $uptime ?></td></tr>
+								<tr><td style="padding-right: 90px;">Hostname</td><td><?php echo $hostname ?></td></tr>
+								<tr><td>Pi Revision</td><td><?php echo RPiVersion() ?></td></tr>
+								<tr><td>Uptime</td><td><?php echo $uptime ?></td></tr>
 								<?php if ($dp === -1) $x = "<span class='errorMsg'>ERROR: unable to read '$top_dir' to get data.</span>";
 									  else $x = "$dt ($df free)";
 								?>
-								<tr class="x"><td>SD Card</td><td><?php echo "$x" ?></td></tr>
+								<tr ><td>SD Card</td><td><?php echo "$x" ?></td></tr>
 								<?php // Optional user-specified data.
 									for ($i=0; $i < $user_data_files_count; $i++) {
 										displayUserData($user_data_files[$i], "data");

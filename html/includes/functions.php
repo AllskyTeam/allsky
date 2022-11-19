@@ -864,15 +864,4 @@ function getVariableOrDefault($a, $v, $d) {
 	return $d;
 }
 
-
-// Display the Allsky and Allsky Website version (if it's installed).
-function displayVersions() {
-	echo "&nbsp; Version: " . ALLSKY_VERSION;
-	$websiteFile = ALLSKY_WEBSITE . "/version";
-	if (file_exists($websiteFile)) {
-		$websiteVersion = file_get_contents($websiteFile);
-		echo ", &nbsp; Website: $websiteVersion";
-	}
-}
-
 ?>

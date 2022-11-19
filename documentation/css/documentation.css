@@ -691,6 +691,7 @@ a {
 }
 .editorNum, .editorBool {
 	color: #ae81ff;
+	color: #deb1ff;	/* Editor versions are hard to see so lighten some */
 }
 .editorSign {
 	color: white;

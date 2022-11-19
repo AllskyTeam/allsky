@@ -466,7 +466,7 @@ blockquote {
 .gh-header-title {
 	margin-right: 150px;
 	margin-bottom: 20px;
-	font-weight: 400;
+	font-weight: bold;
 	line-height: 1.125;
 	word-wrap: break-word;
 	border-bottom: 1px solid var(--color-accent-muted);

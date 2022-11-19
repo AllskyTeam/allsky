@@ -69,6 +69,22 @@ if ($useLogin) {
 	$csrf_token = $_SESSION['csrf_token'];
 }
 
+// Get the version of the Allsky Website on the Pi, if it exists.
+// TODO: if a remote website exists, get it's version as well.
+$websiteFile = ALLSKY_WEBSITE . "/version";
+if (file_exists($websiteFile)) {
+	$localWebsiteVersion = file_get_contents($websiteFile);
+} else {
+	$localWebsiteVersion = "";
+}
+// Ditto for a remote website
+$remoteWebsiteVersion = "";
+if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
+	$a_str = file_get_contents(ALLSKY_WEBSITE_REMOTE_CONFIG, true);
+	$a_array = json_decode($a_str, true);
+	$config = getVariableOrDefault($a_array, 'config', '');
+	$remoteWebsiteVersion = getVariableOrDefault($config, 'AllskyWebsiteVersionz', '<span class="errorMsg">[unknown]</span>');
+}
 ?>
 
 <!DOCTYPE html>
@@ -84,10 +100,7 @@ if ($useLogin) {
 
 	<!-- Bootstrap Core CSS -->
 	<link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-	<!-- Make messages look nicer, and align the "x" with the message. -->
-	<style>
-		.x {line-height: 150%;}
-	</style>
+
 	<!-- MetisMenu CSS -->
 	<link href="bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
 
@@ -98,7 +111,9 @@ if ($useLogin) {
 	<link href="dist/css/sb-admin-2.css" rel="stylesheet">
 
 	<!-- Morris Charts CSS -->
+<!--
 	<link href="bower_components/morrisjs/morris.css" rel="stylesheet">
+-->
 
 	<!-- Font Awesome -->
 	<script defer src="js/all.min.js"></script>
@@ -155,7 +170,7 @@ if ($useLogin) {
 	<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
 	<script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
 	<script type="text/javascript" src="lib/codeMirror/shell.js"> </script>
-<?php if (file_exists(ALLSKY_WEBSITE_LOCAL_CONFIG) || file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) { ?>
+<?php if ($localWebsiteVersion !== "" || $remoteWebsiteVersion !== "") { ?>
 	<script type="text/javascript" src="lib/codeMirror/javascript.js"> </script>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
 <?php } ?>
@@ -172,11 +187,28 @@ if ($useLogin) {
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand valign-center" href="index.php">
-				<img src="img/allsky-logo.png" title="Allsky logo">
-				<div class="navbar-title">Web User Interface (WebUI)</div>
-				<div class="version-title"><?php displayVersions(); ?></div>
-			</a>
+			<div class="navbar-brand valign-center">
+				<a class="navbar-brand valign-center" href="index.php">
+					<img src="img/allsky-logo.png" title="Allsky logo">
+					<div class="navbar-title">Web User Interface (WebUI)</div>
+				</a>
+				<div class="version-title version-title-color">
+					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
+					&nbsp; &nbsp;
+<?php if ($localWebsiteVersion !== "") {
+					echo "<span class='nowrap'>";
+					echo "<a class='version-title-color' href='allsky/index.php' target='_blank' title='Click to go to local Website'>";
+					echo "Local Website: $localWebsiteVersion";
+					echo "</a></span>";
+} ?>
+					&nbsp; &nbsp;
+<?php if ($remoteWebsiteVersion !== "") {
+					echo "<span class='nowrap'>";
+					// TODO: if we knew the URL we could link to it
+					echo "Remote Website: $remoteWebsiteVersion";
+					echo "</span>";
+} ?>
+				</div>
 		</div> <!-- /.navbar-header -->
 
 		<!-- Navigation -->

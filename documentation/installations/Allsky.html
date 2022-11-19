@@ -22,6 +22,10 @@
 <div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
 
 <p>This page describes how to install and upgrade Allsky.
+<br>
+After Allsky is running and you've configured it to your satisfaction,
+you may want to install the Allsky Website on the Pi or on a remote server.
+See the <a allsky="true" href="AllskyWebsite.html">Allsky Website Installation</a> page for details.
 </p>
 
 <h2>Install AllSky in a different location (advanced)</h2>
@@ -33,11 +37,12 @@ All the documentation assumes it's installed in the default location,
 so it may be more difficult to troubleshoot if it's elsewhere.
 </blockquote>
 <p>
-By default, Allsky is installed in a sub-directory called <b>allsky</b> within
-<code>/home/pi</code>.
+By default, Allsky is installed as the login "pi" in <code>/home/pi/allsky</code>.
 The name <b>allsky</b> should not be changed,
-but you can install Allsky in a different sub-directory,
-for example, in <code>/home/mylogin</code> by doing the following before installing Allsky:
+but you can install Allsky in a different sub-directory
+(which usually means it'll run as a different login).
+For example to install in <code>/home/mylogin</code> and run as the "mylogin" user,
+do the following before installing Allsky:
 <pre>
 sudo mkdir /home/mylogin      <span class="pl-c"># if not already there</span>
 sudo addgroup mylogin sudo    <span class="pl-c"># allows Allsky to execute system commands</span>
@@ -57,9 +62,10 @@ perform one of the steps below, then continue to the <a href="#Installation">ins
 <ol class="minimalPadding">
 	<li>Upgrade the old version.
 	<pre>
-sudo systemctl stop allsky     <span class="pl-c"># Stop the Allsky service</span>
+sudo systemctl stop allsky   <span class="pl-c"># Stop the Allsky service</span>
 cd
-mv allsky allsky-OLD</pre>
+mv allsky allsky-OLD         <span class="pl-c"># The installation looks for this directory</span>
+</pre>
 
 	<li>Save the old version but don't use it.
 	<br>
@@ -80,7 +86,7 @@ sudo systemctl stop allsky     <span class="pl-c"># Stop the Allsky service</spa
 cd
 rm -fr allsky</pre>
 </ol>
-<br> <hr class="separator"> <br>
+<hr class="separator">
 </details>
 
 
@@ -150,17 +156,6 @@ The <code>config.sh</code> and <code>ftp-settings.sh</code> configuration files 
 WebUI's <b>Editor</b> link since it performs sanity checks and behind-the-scenes
 actions during updates.
 </blockquote>
-<hr class="separator">
-</details>
-
-
-<br><h2>Allsky Website installation</h2>
-<details><summary></summary>
-<p>
-After Allsky is running and you've configured it to your satisfaction,
-you may want to install the Allsky Website on the Pi or on a remote server.
-See the <a allsky="true" href="AllskyWebsite.html">Allsky Website Installation</a> page for details.
-</p>
 </details>
 
 

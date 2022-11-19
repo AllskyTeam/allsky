@@ -4,7 +4,6 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-
 	<script src="../documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
 	<link href="../css/documentation.css" rel="stylesheet">
@@ -15,15 +14,13 @@
 <div class="d-flex flex-column flex-md-row gh-header">
 	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Linux Basics</h1>
 </div>
-
 <div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
 <div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-
 <div data-view-component="true" class="Layout-sidebar wiki-rightbar">
 	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 </div>
-
 <div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+
 <h1>Overview</h1>
 <p>
 This page is for people will little or no Linux experience.
@@ -103,7 +100,7 @@ and ignores any associated desktop icon that performs the same action.
 <h2>Logging in</h2>
 <details><summary></summary>
 <p>
-There are several ways you can login to a Pi.
+There are several ways you can log into a Pi.
 <ol>
 <li>
 <b>On the console</b>, with a keyboard, mouse, and monitor plugged directly into the Pi.
@@ -132,14 +129,13 @@ date
 sudo systemctl start allsky
 </pre>
 In this example, <code>date</code> and <code>sudo</code> are the names of commands.
-<code>date</code> has no arguments (although it accepts them) and <code>sudo</code> has 3.
+<code>date</code> has no arguments and <code>sudo</code> has 3 arguments.
 <h3>Permissions</h3>
 Just like in other operating systems, files and commands have permissions that determines who
 can view, edit, and execute them.
 By default, when you login to the Pi, you are running as the "pi" login,
 which has limited permissions, e.g., it generally can't update system files.
 In Linux, the "root" login ("admin" in Windows) can do anything.
-, hence the <u>su</u>do, and is called "admin" in Windows).
 <br>
 In the example above, the <code>date</code> command can be executed by anyone but
 the <code>systemctl</code> command can only be executed by the "root" login.
@@ -147,7 +143,7 @@ The <code>sudo</code> command runs its first argument (<code>systemctl</code>) a
 and passes the last 2 arguments to <code>systemctl</code>.
 </p>
 <blockquote>
-An interesting fact - "root" is also called "<u>s</u>uper <u>u</u>ser",
+An interesting fact - the "root" login is also called "<u>s</u>uper <u>u</u>ser",
 hence <code><u>su</u>do</code> - "super user do".
 </blockquote>
 If an argument contains a space or other "special characters", it must be quoted,
@@ -176,7 +172,7 @@ echo "Hello    world!"
 </p>
 </details>
 
-<h2>Moving around</h2>
+<h2>Moving around the filesystem</h2>
 <details><summary></summary>
 <p>
 Windows has multiple "drives", each with its own letter, e.g., C:, D:, etc., and each drive
@@ -187,19 +183,17 @@ for example:
 <pre>
 /home/pi/allsky
 </pre>
-The above strings is called a "path name" since it names the path to a directory,
+The above string is called a "path name" since it names the path to a file or directory,
 in this case, the "allsky" directory.
 <ul>
-<li>
-<code>/</code> is the root directory.
-<li>
-"home" is a directory under the root directory, and contains home directories for
-all the users on your Pi (on most machines, just the "pi" login).
-<li>
-"pi" is a directory of the "home" directory that contains all the "pi"
-login's files and directories and is called pi's HOME directory.
-<li>
-"allsky" is the name of a directory that contains most of the Allsky files, images, etc.
+<li>The first <code>/</code> is the root directory.
+<li><code>home</code> is a directory under the root directory, and contains home directories for
+	all the users on your Pi (on most machines, just the "pi" login).
+<li>The second and third <code>/</code> characters separate directories.
+<li><code>pi</code> is a sub-directory in the <code>home</code> directory that contains all the "pi"
+	login's files and directories and is called pi's HOME directory.
+<li><code>allsky</code> is the name of a directory that contains most of the Allsky files,
+	images, etc.
 </ul>
 <p>
 To move from one location to another, use the <code>cd</code>
@@ -281,7 +275,7 @@ The detailed view includes the following seven columns of data:
 <li>Name of the <b>owner</b> of the file.
 <li>Name of the <b>group</b> the file is in.
 <li><b>Size</b> in bytes of the file.
-	Directories are usually a multiple of the filesystem block size, which is 4096.
+	Directories are usually a multiple of 4096.
 <li><b>Date</b> the file was last modified.
 <li><b>Name</b> of the file.
 </ol>
@@ -311,7 +305,7 @@ In that case, use <code>more</code> which will display the file one page at a ti
 Pressing the space bar will move to the next page.
 If you only want to see the beginning or end of a file,
 use <code>head</code> or <code>tail</code>.
-They default to around 10 lines but if you want more or less add an argument such as:
+They default to displaying 10 lines but if you want more or less add an argument such as:
 <pre>
 head -20 <i>some_file</i>
 </pre>
@@ -348,7 +342,7 @@ cat &lt; /tmp/x
 </p>
 <blockquote>
 Many commands, including <code>cat</code> also accept a filename as an argument,
-and process that file, so the follow are functionally the same:
+and process that file, so these are functionally the same:
 <pre>
 cat &lt; /tmp/x
 cat /tmp/x

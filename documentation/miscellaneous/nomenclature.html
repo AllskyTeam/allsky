@@ -4,7 +4,6 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-
 	<script src="../documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
 	<link href="../css/documentation.css" rel="stylesheet">
@@ -15,15 +14,13 @@
 <div class="d-flex flex-column flex-md-row gh-header">
 	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Nomenclature</h1>
 </div>
-
 <div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
 <div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-
 <div data-view-component="true" class="Layout-sidebar wiki-rightbar">
 	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 </div>
-
 <div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+
 <h1>Allsky Suite</h1>
 The AllSky suite of software consists of two GitHub packages:
 <ol>
@@ -33,12 +30,12 @@ This also includes the Web User Interface (<b>WebUI</b>)
 used to administer AllSky and parts of your Pi.
 In addition to taking pictures, you can also:
 <ul>
-	<li>Display the most recent image.
+	<li>Display the most recent image, called a <b>Liveview</b>.
 	<li>View all saved prior images, timelapse, keograms, and startrails.
 	<li>Configure Allsky settings via a web form and a built-in color text editor.
 	<li>See the status of the LAN and WLAN (Wireless LAN).
 	<li>Configure Wi-Fi.
-	<li>Change the Allsky administrative login name and password.
+	<li>Change the WebUI login name and password.
 	<li>View information about the Pi such as amount of free disk space, CPU temperature, etc.
 	<li>Optionally view user-generated data such as ambient temperature or fan speed.
 	<li>View Allsky Documentation, of which this page is part of.
@@ -62,15 +59,14 @@ The <b>Allsky Website</b> can run on your Pi and/or one or more remote computers
 
 <h1>Terms</h1>
 <ul>
-<li>When a page says "AllSky Software" or just "software" it is referring to one of the packages above.
+<li>When a page says "AllSky Software" or just "software" it's referring to
+	the main Allsky software that's running on your Pi from the <code>~/allsky</code> directory.
 <li>The <code>allsky-website</code> package is usually referred to as the
-<b>Allsky Website</b> or just the <b>Website</b>.
-<li>You will see the <code>config.sh</code> or <code>config/config.sh</code>
-file mentioned in a lot of places.
-The full name of this file is <code>~/allsky/config/config.sh</code>.
-It holds a lot of the Allsky settings and should be edited via the <b>Editor</b> link in the WebUI.
-<li>The <code>config/ftp-settings.sh</code> file holds the upload-related settings and
-should also be edited using the <b>Editor</b> link.
+<b>Allsky Website</b> or just the <b>Website</b> (with a capital W).
+<li>The <code>config.sh</code> file holds a lot of the Allsky settings
+and must be edited via the <b>Editor</b> link in the WebUI, NOT by manually editting it.
+<li>The <code>ftp-settings.sh</code> file holds the upload-related settings and
+must also be edited using the <b>Editor</b> page.
 </ul>
 <hr>
 
@@ -84,7 +80,8 @@ and will continue running until you stop or restart it.
 <li>To restart Allsky: <code>systemctl restart allsky</code>
 </ul>
 <p>The <b>Allsky Website</b> normally does not need to be started or stopped,
-but if you need to do so, it's the <code>lighttpd</code> service.
+but if you need to do so, it's the <code>lighttpd</code> service,
+for example: <code>systemctl start lighttpd</code>.
 
 
 </div><!-- markdown-body --></div><!-- Layout-main ... -->

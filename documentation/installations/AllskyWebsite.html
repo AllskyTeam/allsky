@@ -25,7 +25,7 @@
 This page describes how to install and upgrade the Allsky Website.
 It can be installed on your Pi, on a remote server, or on both.
 When installing on both, install on your Pi first and make sure everything works,
-then install on a remote server.
+then install on the remote server.
 <blockquote>
 Several of the Allsky settings are used by the Allsky Website so
 the Website shouldn't be installed until you have Allsky configured and running the way you want it.
@@ -39,33 +39,37 @@ the Website shouldn't be installed until you have Allsky configured and running 
 <h3>Pre installation</h3>
 <p>
 If you have an <b>existing</b> version of the Allsky Website on your Pi,
-perform one of the steps below, then continue to the <a href="#Installation">installation</a> section.
+you can have it upgraded.
+If you do NOT have a prior version of the Website on your Pi,
+skip to the <a href="#Installation">installation</a> section.
 </p>
 <p>
 The location of the prior website depends upon its version.
 In both cases the directory name is <code>allsky</code>.
 The parent directory is:
-<ol>
-<li>Version v2022.03.01+ or before: <code>/var/www/html</code>
-<li>Newer versions: <code>~/allsky/html</code>
-</ol>
+<ul>
+	<li>Website version v2022.03.01+ or before: <code>/var/www/html</code>
+	<li>Newer versions: <code>~/allsky/html</code>
+</ul>
 </p>
 
-Choices:
-<ol class="minimalPadding">
-<li>Upgrade the old version.
+Perform one of the steps below,
+then continue to the <a href="#Installation">installation</a> section:
+<ol>
+<li><b>Upgrade the old version.</b>
 	Allsky Website installation checks for an old version and if found,
 	prompts if you want to upgrade it.
 	There is nothing special you need to do.
 
-<li>Save the old version but don't use it.
+<li><b>Save the old version but don't use it.</b>
 	<br>
 	<pre>
 cd <i>old_version_parent_directory</i>
 mv allsky allsky-SAVED</pre>
 	At some point you'll want to delete the SAVED version so it doesn't take disk space.
 
-<li>Delete the old version.  Only select this option if you're sure you don't want any saved
+<li><b>Delete the old version.</b>
+	Only select this option if you're sure you don't want any saved
 	images, videos, keograms, startrails, or settings file(s).
 <pre>
 cd <i>old_version_parent_directory</i>
@@ -75,7 +79,7 @@ rm -fr allsky</pre>
 
 <br><h3 id="Installation">Installation</h3>
 <p>
-The following commands install the Website into the <code>~/allsky/html/allsky</code> directory:
+Run the following to install the Website:
 </p>
 
 <pre>
@@ -94,7 +98,7 @@ so Allsky uploads the timelapse, keograms, and/or startrails files to the websit
 (and knows where to upload them),
 and change some
 <a allsky="true" href="/documentation/settings/allskyWebsite.html">Allsky Website Settings</a>
-so the
+so the Website looks and behaves like you want it to.
 <blockquote>
 If your prior version of the Allsky Website was in <code>/var/www/html/allsky</code>
 note that there is only one configuration file in the new Website (<code>configuration.json</code>)
@@ -116,7 +120,7 @@ machine that <b>is</b> accessible on the Internet.
 <p>
 In order to install the Allsky Website on a remote server,
 Allsky needs to be installed and working on your Pi.
-To install the Allsky Website on a remote machine, do the following:
+You can then install the Allsky Website on a remote machine by doing the following:
 <ol>
 <li>On the remote server:
 	<ul class="minimalPadding">
@@ -161,7 +165,7 @@ To install the Allsky Website on a remote machine, do the following:
 		<ul class="minimalPadding">
 			<li>In the WebUI, click on the <code>Editor</code> link.
 			<li>In the drop-down at the bottom of the page, select
-				<code>remote_configuration.json (remote Allsky Website)</code>
+				<br><code>remote_configuration.json (remote Allsky Website)</code>
 			<li>See
 				<a allsky="true" href="/documentation/settings/allskyWebsite.html">this page</a>
 				for details on the Website settings.
@@ -184,7 +188,8 @@ To install the Allsky Website on a remote machine, do the following:
 <li>Give your family and friends the URL to your Allsky Website so they can enjoy your pictures!
 </ol>
 
-<p>
+
+<h3>Remote Website Requirements</h3>
 The web server needs to support the following:
 <ul class="minimalPadding">
 	<li>PHP.
@@ -199,13 +204,13 @@ The web server needs to support the following:
 		Note that many hosting solutions don't support this, but you can always ask them to support it.
 		If <code>ffmpeg</code> or <code>exec</code> do not work,
 		set <code>TIMELAPSE_UPLOAD_THUMBNAIL="true"</code>
-		(and <code>TIMELAPSE_MINI_UPLOAD_THUMBNAIL="true"</code> if you are creating mini timelapses)
+		(and <code>TIMELAPSE_MINI_UPLOAD_THUMBNAIL="true"</code>
+		if you are creating mini timelapses) in <code>config.sh</code>.
 		Failure to set those variables will result in "No thumbnail" messages when
 		viewing videos.
 		</blockquote>
 		Everything else will still work.
 </ul>
-</p>
 </details>
 
 </div><!-- markdown-body --></div><!-- Layout-main ... -->

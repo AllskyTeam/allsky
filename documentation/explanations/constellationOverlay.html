@@ -22,22 +22,51 @@
 <div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
 
 <p>
-The Allsky Website allows an overlay to appear on the image which can contain constellations,
+The Allsky Website allows an overlay to appear over the image which can contain constellations,
 stars, objects, and other items.
-You can view the overlay by clicking on the icon of Cassiopeia on the left side of the Website page.
 This overlay is called the "constellation overlay" and should not be confused with
-images overlays which are text and images that are embedded in captures images.
+"image overlays" which contain text and other items that are embedded in captured images.
+You can view the constellation overlay by clicking on the
+constellation icon on the left side of the Website page (the icon looks like Cassiopeia).
+<blockquote>
+By default the constellation overlay icon doesn't appear since many people never align
+their overlay with the stars in their image,
+thereby making their overlay useless and misleading to others who might click on it.
+<br>
+You should only make the icon appear if you are going to follow the instructions
+below to align the overlay.
+</blockquote>
+</p>
+To make the overlay icon appear:
+<ul class="minimalPadding">
+	<li>In the WebUI, click on the <b>Editor</b> link.
+	<li>On the drop-down at the bottom of the page,
+		click on the <code>configuration.json</code> file for your local or remote Website.
+	<li>In the <span class="editorSetting">homePage</span> section of the file,
+		go to the <span class="editorSetting">leftSidebar</span> setting.
+	<li>The first group of sub-settings should be for the constellation overlay.
+	<li>Set the <span class="editorSetting">display</span> setting to
+		<span class="editorBool">true</span>.
+	<li>Save the file.
+	<li>Refresh your browser.
+</ul>
+<p>
+For more information on this, and other Website settings,
+visit the <a allsky="true" href="/documentation/settings/Website.html">Allsky Website Settings</a>
+page.
 </p>
 
-<h2>Adjusting image size</h2>
+<br><h2>Adjusting image size</h2>
 <p>
-The default maximum size of the image that's displayed on the website is 960 x 720 pixels.
+The default maximum size of the image that's displayed on the Website is
+960 pixels wide by 720 pixels high.
 If your monitor is very small or can support a larger resolution,
 you may wish to change the default size by doing the following:
 <ul>
 	<li>In the WebUI's <b>Editor</b> page, edit the
 		<span class="editorSetting">imageHeight</span> setting in the
 		<code>configuration.json</code> file.
+		The image's width will be automatically determined.
 	<li>Refresh your browser.
 	<li>If you set
 		<span class="editorShell">RESIZE_UPLOADS</span><span class="editorSpecial">=</span><span class="editorString">"true"</span>
@@ -46,12 +75,22 @@ you may wish to change the default size by doing the following:
 </ul>
 
 <br><h2>Aligning the overlay</h2>
+<p>
 <blockquote>
-Getting the overlay placed over the sky image in the correct size and orientation
+Getting the overlay placed over the sky image correctly
 is a trial-and-error effort that takes time.
 </blockquote>
+Most allsky cameras produce rectangular pictures,
+but the portion of the picture with your allsky image is often round,
+surrounded by black.
+Further, the round portion may not be centered exactly in the picture,
+although it's usually close.
+<br>
+When aligning the overlay keep in mind the difference between the rectangular,
+full-size picture and the (usually) round portion of that picture that contains the allsky image.
+</p>
 <p>
-You'll be editing the <code>configuration.json</code> file below
+In the steps below you'll be editing the <code>configuration.json</code> file
 using the WebUI's <b>Editor</b> page.
 </p>
 <ul class="minimalPadding">
@@ -70,7 +109,7 @@ using the WebUI's <b>Editor</b> page.
 	<li>Make the overlay the correct size:
 	<ul>
 		<li><span style="color: red">THE FOLLOWING HASN'T BEEN TESTED YET:</span>
-		<li>Determine the center of the lens image (not the center of the sensor).
+		<li>Determine the center of the lens image (not the center of the whole image).
 		<li>Remember where the center is - possibly measure it
 			from the top and side of your monitor.
 		<li>Set <span class="editorSetting">keyboard</span>
@@ -92,9 +131,14 @@ using the WebUI's <b>Editor</b> page.
 	Increasing the <span class="editorSetting">az</span> setting rotates the overlay clockwise.
 </ul>
 
-<h3>Tips</h3>
+<br><h3>Tips</h3>
+<p>
+The following items can be done while aligning the overlay,
+and undone when finished.
+</p>
 <ul>
-	<li>Set the <span class="editorSetting">opacity</span> to 1.0 (pure white)
+	<li>Set the <span class="editorSetting">opacity</span> to
+		<span class="editorNum">1.0</span> (pure white)
 		to make it easier to see the overlay.
 	<li>Optionally set <span class="editorSetting">showOverlayAtStartup</span> to
 		<span class="editorBool">true</span>

@@ -98,6 +98,12 @@ calc_wt_size() {
 }
 
 
+# Stop Allsky.  If it's not running, nothing happens.
+stop_allsky() {
+	sudo systemctl stop allsky 2> /dev/null
+}
+
+
 # Prompt the user to select their camera type, if we can't determine it automatically.
 # If they have a prior installation of Allsky that uses CAMERA_TYPE in config.sh,
 # we can use its value and not prompt.
@@ -836,6 +842,9 @@ display_header "${H}"
 
 ##### Calculate whiptail sizes
 calc_wt_size
+
+##### Stop Allsky
+stop_allsky
 
 ##### Handle updates
 [[ ${UPDATE} == "true" ]] && do_update

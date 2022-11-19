@@ -69,6 +69,8 @@ blockquote {
 	color: var(--color-attention-fg);
 	background-color: var(--color-attention-verysubtle);
 	border-left: .25em solid var(--color-attention-emphasis);
+	max-width: max-content;
+	margin: 10px 0px 10px 0px;
 }
 .markdown-body blockquote>:first-child {
 	margin-top: 0;
@@ -198,9 +200,7 @@ blockquote {
 	background-color: var(--color-accent-subtle);
 }
 .markdown-body table {
-	display: block;
 	width: 100%;
-	width: max-content;
 	max-width: 100%;
 	overflow: auto
 }
@@ -209,7 +209,8 @@ blockquote {
 }
 .markdown-body table th,.markdown-body table td {
 	padding: 3px 8px;
-	border: 1px solid var(--color-border-default)
+	border: 1px solid var(--color-border-default);
+	vertical-align: top;
 }
 .markdown-body table tr {
 	background-color: var(--color-canvas-default);

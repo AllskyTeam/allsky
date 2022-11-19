@@ -24,6 +24,9 @@
 	font-size: 80%;
 	opacity: 0.7;
 }
+.version-title-color {
+	color: #777;
+}
 
 @media (max-width: 450px) {.version-title { font-size: 75%; }}
 @media (max-width: 400px) {.version-title { font-size: 65%; }}
@@ -39,10 +42,14 @@
 	.navbar-toggle { display: block; }
 	#page-wrapper { margin: 0; }
 	.navbar-collapse { display: none; }
+	.navbar-brand { float: none; }
+	.version-title { margin-left: 0; }
 }
+/* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 @media (max-width: 815px) {
 	#page-wrapper { padding: 0px 20px; }
 }
+*/
 
 .right-panel .panel:first-of-type {
     margin: 20px 0;

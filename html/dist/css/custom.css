@@ -507,3 +507,6 @@ select {
 .panel-body .row {
 	margin: 0;
 }
+.nowrap {
+	white-space: nowrap;
+}

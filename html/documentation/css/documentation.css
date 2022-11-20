@@ -47,6 +47,10 @@ body {
 	margin-top: 5px;
 	margin-bottom: 16px;
 }
+.markdown-body blockquote {
+	font-size: inherit;
+}
+
 .markdown-body hr {
 	height: .25em;
 	padding: 0;
@@ -474,6 +478,7 @@ blockquote {
 	font-weight: bold;
 	line-height: 1.125;
 	word-wrap: break-word;
+	padding-bottom: 5px;
 	border-bottom: 1px solid var(--color-accent-muted);
 	color: var(--color-accent-emphasis);
 }
@@ -583,6 +588,10 @@ b, strong {
 	grid-template-columns: minmax(0, calc(100% - var(--Layout-sidebar-width) - var(--Layout-gutter))) 0 auto;
 }
 
+.navbar-header h1 {
+	margin-bottom: 0 !important;
+}
+
 @media (min-width: 544px) {
   .Layout {
 	--Layout-sidebar-width: 220px;
@@ -599,7 +608,6 @@ b, strong {
 		xxxxxgrid-row: 2/span 2;
 	}
 	.navbar-header { float: none; }
-	xxxxxxxxxxxxxxxxxx.navbar-default { background-color: transparent; }
 	.navbar-collapse { display: none; }
 	.navbar-toggle { display: block; margin-top: 15px; }
 	.Layout.Layout--flowRow-until-md .Layout-sidebar,

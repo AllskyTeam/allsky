@@ -27,8 +27,8 @@ if (location.hostname == git_hostname) {
 	// On GitHub, the URLs for anchors (href=) and images (src=) are different.
 	// anchors need get_preURL_href prepended to them.
 	// image URLs and files that are included don't need get_preURL_href.
-	preURL_href = git_preURL_href + git_raw + branch;
-	preURL_src = git_raw + branch;
+	preURL_href = git_preURL_href + git_raw + branch + "/html";
+	preURL_src = git_raw + branch + "/html";
 } else {
 	onGitHub = false;		// on a Pi
 	preURL_href = "";

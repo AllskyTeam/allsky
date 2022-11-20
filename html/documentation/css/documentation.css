@@ -47,6 +47,10 @@ body {
 	margin-top: 5px;
 	margin-bottom: 16px;
 }
+.markdown-body blockquote {
+	font-size: inherit;
+}
+
 .markdown-body hr {
 	height: .25em;
 	padding: 0;
@@ -196,8 +200,12 @@ blockquote {
 	background-color: var(--color-accent-muted);
 	padding: 3px 0 3px 5px;
 }
+.markdown-body h2,
 .markdown-body h3 {
 	background-color: var(--color-accent-subtle);
+}
+.markdown-body h3 {
+	opacity: 0.8;
 }
 .markdown-body table {
 	width: 100%;
@@ -470,6 +478,7 @@ blockquote {
 	font-weight: bold;
 	line-height: 1.125;
 	word-wrap: break-word;
+	padding-bottom: 5px;
 	border-bottom: 1px solid var(--color-accent-muted);
 	color: var(--color-accent-emphasis);
 }
@@ -579,25 +588,38 @@ b, strong {
 	grid-template-columns: minmax(0, calc(100% - var(--Layout-sidebar-width) - var(--Layout-gutter))) 0 auto;
 }
 
+.navbar-header h1 {
+	margin-bottom: 0 !important;
+}
+
 @media (min-width: 544px) {
   .Layout {
 	--Layout-sidebar-width: 220px;
   }
 }
 @media (max-width: calc(767.98px)) {
-  .Layout.Layout--flowRow-until-md {
-	grid-auto-flow: row;
-	grid-template-columns: 1fr !important;
-  }
-  .Layout.Layout--flowRow-until-md.Layout--sidebarPosition-flowRow-end .Layout-sidebar {
-	grid-row: 2/span 2;
-  }
-  .Layout.Layout--flowRow-until-md .Layout-sidebar, .Layout.Layout--flowRow-until-md .Layout-divider, .Layout.Layout--flowRow-until-md .Layout-main {
-	width: 100% !important;
-	grid-column: 1 !important;
-  }
+	.Layout.Layout--flowRow-until-md {
+		grid-auto-flow: row;
+		grid-template-columns: 1fr !important;
+	}
+	.Layout.Layout--flowRow-until-md.Layout--sidebarPosition-flowRow-end .Layout-sidebar {
+		display: none;
+/* XXX */
+		xxxxxgrid-row: 2/span 2;
+	}
+	.navbar-header { float: none; }
+	.navbar-collapse { display: none; }
+	.navbar-toggle { display: block; margin-top: 15px; }
+	.Layout.Layout--flowRow-until-md .Layout-sidebar,
+	.Layout.Layout--flowRow-until-md .Layout-divider,
+	.Layout.Layout--flowRow-until-md .Layout-main {
+		width: 100% !important;
+		grid-column: 1 !important;
+	}
 }
 @media (min-width: 768px) {
+/* XXX */
+  .navbar-collapse { display: block; visibility: visible; }
   .px-md-4 {
 	padding-right: 24px !important;
 	padding-left: 24px !important;
@@ -605,7 +627,7 @@ b, strong {
   .Layout {
 	--Layout-sidebar-width: 256px;
   }
-  .flex-md-row {
+  .xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxflex-md-row {
 	flex-direction: row !important;
   }
   .mr-md-2 {

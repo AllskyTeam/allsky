@@ -239,6 +239,7 @@ function convertLatLong()
 # Get the sunrise and sunset times.
 get_sunrise_sunset()
 {
+	#shellcheck disable=SC1090
 	source ~/allsky/variables.sh
 	ANGLE="$(jq -r ".angle" ${SETTINGS_FILE})"
 	LATITUDE="$(jq -r ".latitude" ${SETTINGS_FILE})"

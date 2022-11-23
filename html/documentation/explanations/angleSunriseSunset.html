@@ -21,7 +21,8 @@
 <div class="px-3 Layout-main markdown-body" id="mainContents">
 
 
-<h2>What does the "Angle" setting do?  How is it related to sunrise and sunset?</h2>
+<h2>What does the <span class="WebUISetting">Angle</span> setting do?
+How is it related to sunrise and sunset?</h2>
 <p>
 Your actual sunrise and sunset times are dependent on the day of the year and your
 latitude and longitude, and define what most people call <b>daytime</b> and <b>nighttime</b>.
@@ -30,36 +31,38 @@ different times so it uses different times for daytime and nighttime.
 </p>
 <p>
 Allsky defines <b>daytime</b> as your sunrise time <b>plus</b> an offset you define,
-called the <b>Angle</b>.
-The Angle is a positive or negative number that indicates the number of degrees
+called the <span class="WebUISetting">Angle</span>
+which you set in the <b>Allsky Settings</b> page of the WebUI.
+The <span class="WebUISetting">Angle</span> is a positive or negative number
+that indicates the number of degrees
 above (positive) or below (negative) the horizon the Sun is when daytime starts.
-Daytime ends at sunset <b>minus</b> the Angle.
+Daytime ends at sunset <b>minus</b> the <span class="WebUISetting">Angle</span>.
 The term "daytime ends" is identical to "nighttime begins" since there
 is no gap between daytime and nighttime.
 </p>
 <p>
 As an example, assume the Sun rises at 7:00 AM and sets at 18:00 (6:00 PM).
-Using an Angle of <code>0</code> degrees,
+Using an <span class="WebUISetting">Angle</span> of <span class="WebUIValue">0</span> degrees,
 Allsky's daytime starts at 7:00 and nighttime starts at 18:00.
 <blockquote>
 The Sun moves at 15 degrees per hour, so 6 degrees is 24 minutes
 (6 degrees / 15 degrees * 60 minutes).
-<br>Remember: daytime ADDs the Angle and nighttime SUBTRACTs it.
+<br>Remember: daytime ADDs the <span class="WebUISetting">Angle</span> and nighttime SUBTRACTs it.
 </blockquote>
-With an Angle of <code>6</code> degrees,
+With an <span class="WebUISetting">Angle</span> of <span class="WebUIValue">6</span> degrees,
 Allsky's daytime starts at 7:24 and nighttime at 16:36
 (a total of 48 minutes less daytime).
-An Angle of <code>-6</code> degrees would give 6:36 and 18:24
+An <span class="WebUISetting">Angle</span> of <span class="WebUIValue">-6</span> degrees would give 6:36 and 18:24
 (48 minutes more daytime).
-The Angle effectively determines the length of daytime - the
-larger the Angle the shorter the daytime.
+The <span class="WebUISetting">Angle</span> effectively determines the length of daytime - the
+larger the <span class="WebUISetting">Angle</span> the shorter the daytime.
 </p>
 <p>
 Why is this important?
 Allsky uses it's calculated daytime to begin using your daytime settings like daytime exposure,
 delay, etc.
 If you told Allsky to not take pictures during the day,
-it will use the Angle you've defined to determine its daytime,
+it will use the <span class="WebUISetting">Angle</span> you've defined to determine its daytime,
 and stop taking pictures what that time is reached.
 Likewise, Allsky uses the start of nighttime to know when to begin using your nighttime settings.
 </p>
@@ -68,7 +71,7 @@ Astrophotographers rarely start taking pictures at sunset since it's still too l
 Instead, they start taking pictures when it's much darker, often one of the following times:
 <ul>
 <li><b>Civil Twilight</b> goes from sunset to when the Sun is 6 degrees below the horizon
-	(i.e., Angle of <code>-6</code>),
+	(i.e., <span class="WebUISetting">Angle</span> of <span class="WebUIValue">-6</span>),
 	and ends when the Sun is coming up and is 6 degrees below the horizon.
 	It is still fairly light at Civil Twilight.
 <li><b>Nautical twilight</b> uses 12 degrees for the cutoff point,
@@ -77,15 +80,18 @@ Instead, they start taking pictures when it's much darker, often one of the foll
 </ul>
 </p>
 <p>
-Many people use an Angle of <code>-6</code> for their allsky camera but it's
+Many people use an <span class="WebUISetting">Angle</span>
+of <span class="WebUIValue">-6</span> for their allsky camera but it's
 up to you to determine where the daytime versus nighttime boundary should be.
 <blockquote>
 Startrails, keograms, and timelapse videos are created at the end of nighttime,
-so your Angle value will determine how dark or light the beginning of the timelapse video is.
+so your <span class="WebUISetting">Angle</span>
+value will determine how dark or light the beginning of the timelapse video is.
 </blockquote>
 </p>
 <p>
-To determine Allsky's daytime and nighttime based on your Angle, execute:
+To determine Allsky's daytime and nighttime based on your <span class="WebUISetting">Angle</span>,
+execute:
 <pre>
 (source ~/allsky/scripts/functions.sh; get_sunrise_sunset)
 </pre>

@@ -6,21 +6,20 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script src="../documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "Allsky Website Settings";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 	<title>Allsky Website Settings</title>
 </head>
 <body>
-<div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Allsky Website Settings</h1>
-</div>
-<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
-<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-</div>
-<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
 <p>
 The Allsky Website allows you to display your most recent captured image on a website,
@@ -382,7 +381,8 @@ Allsky Website so you only have to update them once.
 	<td><span class="editorSetting">lang</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorString">en</span></td>
 	<td>Language the object names should be in.
-		Look in <code>~/allsky/html/allsky/virtualsky/lang</code> for available languages.
+		Look in <span class="fileName">~/allsky/html/allsky/virtualsky/lang</span>
+		for available languages.
 	</td>
 </tr>
 <tr>
@@ -486,8 +486,8 @@ Allsky Website so you only have to update them once.
 		Can be a URL or a file name.
 		<blockquote>
 		If this is a file on your Pi or remote server,
-		it's suggested to put it in the Website's <code>myImages</code> directory which is
-		backed up and restored when upgrading the Allsky Website.
+		it's suggested to put it in the Website's <span class="fileName">myImages</span>
+		directory which is backed up and restored when upgrading the Allsky Website.
 		</blockquote>
 	</td>
 </tr>
@@ -501,7 +501,7 @@ Allsky Website so you only have to update them once.
 <tr>
 	<td><span class="editorSetting">includeGoogleAnalytics</span></td>
 	<td><span class="editorBool">false</span></td>
-	<td>Should the <code>analyticsTracking.js</code> file be included?
+	<td>Should the <span class="fileName">analyticsTracking.js</span> file be included?
 		If you don't know what this is, leave it <span class="editorBool">false</span>.
 		<br>If you change the file it will be copied to newer releases of the Allsky Website
 		during upgrades.
@@ -562,7 +562,7 @@ Allsky Website so you only have to update them once.
 	<td>Location of the "favorite icon" which is displayed in the browser title bar.
 		<blockquote>
 		If this is a file on your Pi or remote server,
-		it's suggested to put it in the <code>myImages</code> directory which is
+		it's suggested to put it in the <span class="fileName">myImages</span> directory which is
 		backed up and restored when upgrading the Allsky Website.
 		</blockquote>
 	</td>
@@ -647,9 +647,8 @@ Allsky Website so you only have to update them once.
 </tbody>
 </table>
 
-</div><!-- markdown-body --></div><!-- Layout-main ... -->
 </div><!-- Layout -->
-</div><!-- xcontainer-x1 ... -->
+</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

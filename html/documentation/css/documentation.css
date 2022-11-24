@@ -531,7 +531,6 @@ b, strong {
 	grid-gap: var(--Layout-gutter);
 }
 .Layout.Layout--sidebarPosition-end .Layout-sidebar {
-	grid-column: 2/span 2;
 	grid-column: 2;		/* this is the 2nd column of 2 */
 	margin-right: var(--main-body-padding);
 }
@@ -620,6 +619,16 @@ a, .sidebar ul li a {
 	font-weight: bold;
 	font-size: 95%;
 }
+.WebUIValue {
+	padding: 0 3px 0 3px;
+	font-size: 14px;
+	font-family: "Helvetica Neue", Helvetica, Arial;
+	font-family: inherit;
+	color: #555;
+	border: 1px solid #ccc;
+	background-color: #e4e4e4;
+	border-radius: 4px;
+}
 .shSetting { /* Matches what's in the WebUI's "Editor" page for *.sh files. */
 	color: #fd971f;
 	font-family: monospace;
@@ -704,7 +713,7 @@ a, .sidebar ul li a {
 	color: var(--color-accent-emphasis);
 	padding: 5px 0px 5px 0px;
 }
-.fileName {	/* Currently the same as <code>, but need to change */
+.fileName {
 	padding: 0 .4em;
 	margin: 0;
 	font-size: 90%;

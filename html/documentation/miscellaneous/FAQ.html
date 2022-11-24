@@ -4,40 +4,36 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-
     <script src="../documentation.js" type="application/javascript"></script>
     <link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "Allsky FAQ";} </style>
     <link href="../css/documentation.css" rel="stylesheet">
     <link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Allsky FAQ</title>
 </head>
 <body>
-<div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Allsky FAQ</h1>
-</div>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
-<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
-<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-
-
-<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-</div>
-
-
-<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
 <h1>JUST STARTING THIS</h1>
 <p>
 Will add to this FAQ as time goes on...
 </p>
-<h2>The <code>/var/log/allsky.log</code> file is gone?  How do I get it back?</h2>
+<h2>The <span class="fileName">/var/log/allsky.log</span> file is gone?  How do I get it back?</h2>
 <p>
 <ul>
 <li>Try restarting the software: <code>sudo systemctl restart allsky</code>.
-<li>If that doesn't help, restart the software that controls the log files: <code>sudo systemctl restart syslog</code>.
+<li>If that doesn't help, restart the software that controls the log files:
+	<code>sudo systemctl restart syslog</code>.
 <li>If that doesn't help, reboot the Pi.
-<li>If that doesn't help, wait until tomorrow - sometimes the log file mysteriously reappears after midnight.
-Note this is NOT an Allsky problem since it also happens with other services.
+<li>If that doesn't help, wait until tomorrow - sometimes the log file
+	mysteriously reappears after midnight.
+	Note this is NOT an Allsky problem since it also happens with other services.
 </ul>
 </p>
 
@@ -57,13 +53,14 @@ If, however the message remains after several minutes follow the instructions
 <a href="https://github.com/thomasjacquin/allsky/wiki/Reporting-Issues">here</a> and submit the log file.
 </p>
 <p>
-You can also temporarily set <code>REMOVE_BAD_IMAGES="false"</code> in ~/allsky/config/config.sh
-to see what the incorrectly exposed images look like - this might give you an idea as to the problem.
+You can also temporarily set <span class="shSetting">REMOVE_BAD_IMAGES</span to "false" in
+<span class="fileName">~/allsky/config/config.sh</span>
+to see what the incorrectly exposed images look like - this
+might give you an idea as to the problem.
 </p>
 
-</div><!-- markdown-body --></div><!-- Layout-main ... -->
 </div><!-- Layout -->
-</div><!-- xcontainer-x1 ... -->
+</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

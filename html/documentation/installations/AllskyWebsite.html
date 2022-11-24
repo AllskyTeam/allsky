@@ -6,20 +6,19 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script src="../documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "Installing and upgrading Allsky Website";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Installing and upgrading Allsky Website</title>
 </head>
 <body>
-<div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Installing and upgrading Allsky Website</h1>
-</div>
-<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
-<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-</div>
-<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
 <p>
 This page describes how to install and upgrade the Allsky Website.
@@ -45,11 +44,11 @@ skip to the <a href="#Installation">installation</a> section.
 </p>
 <p>
 The location of the prior website depends upon its version.
-In both cases the directory name is <code>allsky</code>.
+In both cases the directory name is <span class="fileName">allsky</span>.
 The parent directory is:
 <ul>
-	<li>Website version v2022.03.01+ or before: <code>/var/www/html</code>
-	<li>Newer versions: <code>~/allsky/html</code>
+	<li>Website version v2022.03.01+ or before: <span class="fileName">/var/www/html</span>
+	<li>Newer versions: <span class="fileName">~/allsky/html</span>
 </ul>
 </p>
 
@@ -100,8 +99,10 @@ and change some
 <a allsky="true" href="/documentation/settings/allskyWebsite.html">Allsky Website Settings</a>
 so the Website looks and behaves like you want it to.
 <blockquote>
-If your prior version of the Allsky Website was in <code>/var/www/html/allsky</code>
-note that there is only one configuration file in the new Website (<code>configuration.json</code>)
+If your prior version of the Allsky Website was in
+<span class="fileName">/var/www/html/allsky</span>
+note that there is only one configuration file in the new Website
+(<span class="fileName">configuration.json</span>)
 that replaces the two older files.
 </blockquote>
 </p>
@@ -124,11 +125,11 @@ You can then install the Allsky Website on a remote machine by doing the followi
 <ol>
 <li>On the remote server:
 	<ul class="minimalPadding">
-	<li>Create an <code>allsky</code> directory to hold the Allsky Website.
+	<li>Create an <span class="fileName">allsky</span> directory to hold the Allsky Website.
 		<br>
 		<blockquote>
 		Keep track of where on your server you created
-		<code>allsky</code> - you will need that information later
+		<span class="fileName">allsky</span> - you will need that information later
 		when you tell Allsky where to upload the images.
 		For example, when you FTP to the server,
 		are you in the root directory ("/") or further down?
@@ -136,16 +137,17 @@ You can then install the Allsky Website on a remote machine by doing the followi
 		</blockquote>
 	</ul>
 <li>Go to the <a href="https://github.com/thomasjacquin/allsky-website">allsky-website GitHub page</a>.
-<li>Click the <img allsky="true" src="Code.png" alt="Code" style="margin-bottom: -2px;"> button,
-	download the "allsky-website-master" zip file and
+<li>Click the <img allsky="true" src="Code.png" alt="Code" class="buttonIcon" loading="lazy">
+	button, download the <span class="fileName">allsky-website-master</span> zip file and
 	unzip it to a location on your PC, Pi, or Mac.
-<li>Upload the <b>contents</b> of the <code>allsky-website-master</code> directory
-	(but not the directory itself) from your PC, Pi, or Mac to the <code>allsky</code>
-	directory on your web server.
+<li>Upload the <b>contents</b> of the <span class="fileName">allsky-website-master</span> directory
+	(but not the directory itself) from your PC, Pi, or Mac to the
+	<span class="fileName">allsky</span> directory on your web server.
 	<blockquote>
 	Do not configure the Website yet - you'll do that below.
 	</blockquote>
-<li>Update the <code>config.sh</code> and <code>ftp-settings.sh</code> files
+<li>Update the <span class="fileName">config.sh</span> and
+	<span class="fileName">ftp-settings.sh</span> files
 	via the WebUI's <b>Editor</b> page so Allsky knows which file(s)
 	to upload to the remote server and where to upload them to.
 <li>On the Pi:
@@ -203,9 +205,9 @@ The web server needs to support the following:
 		<blockquote>
 		Note that many hosting solutions don't support this, but you can always ask them to support it.
 		If <code>ffmpeg</code> or <code>exec</code> do not work,
-		set <code>TIMELAPSE_UPLOAD_THUMBNAIL="true"</code>
-		(and <code>TIMELAPSE_MINI_UPLOAD_THUMBNAIL="true"</code>
-		if you are creating mini timelapses) in <code>config.sh</code>.
+		set <span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span> to "true"
+		(and <span class="shSetting">TIMELAPSE_MINI_UPLOAD_THUMBNAIL</span> to "true"
+		if you are creating mini timelapses) in <span class="fileName">config.sh</span>.
 		Failure to set those variables will result in "No thumbnail" messages when
 		viewing videos.
 		</blockquote>
@@ -213,9 +215,8 @@ The web server needs to support the following:
 </ul>
 </details>
 
-</div><!-- markdown-body --></div><!-- Layout-main ... -->
 </div><!-- Layout -->
-</div><!-- xcontainer-x1 ... -->
+</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

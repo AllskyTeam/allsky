@@ -6,20 +6,19 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script src="../documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "Image Overlays";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Image Overlays</title>
 </head>
 <body>
-<div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Image Overlays</h1>
-</div>
-<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
-<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-</div>
-<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
 <h2>What is an "Image Overlay"?</h2>
 <p>
@@ -70,7 +69,7 @@ AllSky reads the
 The file can have multiple lines.
 The <span class="WebUISetting">Max Age Of Extra</span>
 setting determines how old in seconds the file can be before it is no longer used.
-Set it to <code>0</code> to always display the information.
+Set it to <span class=WebUIValue">0</span> to always display the information.
 This file is often used to add text that is updated regularly, for example, weather information.
 See the <a href="#extraTextFileExample">Extra Text File example</a> below for an example
 of how to use this file.
@@ -109,9 +108,10 @@ You need to provide the hardware and software;
 how they work are outside the scope of this documenation
 since that varies drastically depending on what you have.
 Assume you have a script that writes the word "humidity" followed by the humidity
-and a percent sign to a file called <code>/home/pi/allsky/humidity.txt</code>
+and a percent sign to a file called <span class="fileName">/home/pi/allsky/humidity.txt</span>
 every 10 minutes (for example, <b>Humidity: 21%</b>).
-In order to display the humidity on the images, enter <code>/home/pi/allsky/humidity.txt</code>
+In order to display the humidity on the images,
+enter <span class="fileName">/home/pi/allsky/humidity.txt</span>
 into the <b>Extra Text File</b> field and click on the
 <img allsky="true" src="/documentation/images/saveChangesButton.png" class="buttonImg" title="Save Changes button" alt="Save Changes">
 button.
@@ -120,7 +120,7 @@ The next picture will show the humidity in the small font color you specified.
 
 <p>
 Now, let's say the script that saves the humidity stops working - the
-<code>/home/pi/allsky/humidity.txt</code> file will still have
+<span class="fileName">/home/pi/allsky/humidity.txt</span> file will still have
 <b>Humidity: 21%</b> forever and that's what your pictures will show.
 You may not notice for several days.
 As a failsafe, you could set the
@@ -243,11 +243,8 @@ Notes:
 
 </details>
 
-
-
-</div><!-- markdown-body --></div><!-- Layout-main ... -->
 </div><!-- Layout -->
-</div><!-- xcontainer-x1 ... -->
+</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

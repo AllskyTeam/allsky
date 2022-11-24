@@ -6,20 +6,19 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script src="../documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "Nomenclature";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Nomenclature</title>
 </head>
 <body>
-<div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Nomenclature</h1>
-</div>
-<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
-<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-</div>
-<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
 <h1>Allsky Suite</h1>
 The AllSky suite of software consists of two GitHub packages:
@@ -60,12 +59,13 @@ The <b>Allsky Website</b> can run on your Pi and/or one or more remote computers
 <h1>Terms</h1>
 <ul>
 <li>When a page says "AllSky Software" or just "software" it's referring to
-	the main Allsky software that's running on your Pi from the <code>~/allsky</code> directory.
+	the main Allsky software that's running on your Pi from the
+	<span class="fileName">~/allsky</span> directory.
 <li>The <code>allsky-website</code> package is usually referred to as the
 <b>Allsky Website</b> or just the <b>Website</b> (with a capital W).
-<li>The <code>config.sh</code> file holds a lot of the Allsky settings
+<li>The <span class="fileName">config.sh</span> file holds a lot of the Allsky settings
 and must be edited via the <b>Editor</b> link in the WebUI, NOT by manually editting it.
-<li>The <code>ftp-settings.sh</code> file holds the upload-related settings and
+<li>The <span class="fileName">ftp-settings.sh</span> file holds the upload-related settings and
 must also be edited using the <b>Editor</b> page.
 </ul>
 <hr>
@@ -84,9 +84,8 @@ but if you need to do so, it's the <code>lighttpd</code> service,
 for example: <code>systemctl start lighttpd</code>.
 
 
-</div><!-- markdown-body --></div><!-- Layout-main ... -->
 </div><!-- Layout -->
-</div><!-- xcontainer-x1 ... -->
+</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

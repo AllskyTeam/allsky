@@ -6,20 +6,19 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script src="../documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "Installing and upgrading Allsky";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Installing and upgrading Allsky</title>
 </head>
 <body>
-<div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Installing and upgrading Allsky</h1>
-</div>
-<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
-<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-</div>
-<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
 <p>This page describes how to install and upgrade Allsky.
 <br>
@@ -27,6 +26,15 @@ After Allsky is running and you've configured it to your satisfaction,
 you may want to install the Allsky Website on the Pi or on a remote server.
 See the <a allsky="true" href="AllskyWebsite.html">Allsky Website Installation</a> page for details.
 </p>
+<blockquote>
+This release has many updates so we suggest before installing it
+you install a new <a href="https://www.raspberrypi.com/software/">Raspberry Pi OS</a>
+on your Pi, preferable the Bullseye operating system.
+This will require saving any files, images, etc. to a USB drive, PC, Mac, or another device,
+then installing Allsky, then restoring your files.
+<br>
+The process is much simplier if you have a spare SDcard you can install the new version to.
+</blockquote>
 
 <h2>Install AllSky in a different location (advanced)</h2>
 <details><summary></summary>
@@ -37,12 +45,12 @@ All the documentation assumes it's installed in the default location,
 so it may be more difficult to troubleshoot if it's elsewhere.
 </blockquote>
 <p>
-By default, Allsky is installed as the login "pi" in <code>/home/pi/allsky</code>.
+By default, Allsky is installed as the login "pi" in <span class="fileName">/home/pi/allsky</span>.
 The name <b>allsky</b> should not be changed,
 but you can install Allsky in a different sub-directory
 (which usually means it'll run as a different login).
-For example to install in <code>/home/mylogin</code> and run as the "mylogin" user,
-do the following before installing Allsky:
+For example to install in <span class="fileName">/home/mylogin</span>
+and run as the "mylogin" user, do the following before installing Allsky:
 <pre>
 sudo mkdir /home/mylogin      <span class="pl-c"># if not already there</span>
 sudo addgroup mylogin sudo    <span class="pl-c"># allows Allsky to execute system commands</span>
@@ -76,8 +84,8 @@ mv allsky allsky-SAVED</pre>
 
 	<li>Delete the old version.  Only select this option if you're sure you don't want any saved
 	images, darks, and configuration settings.
-	If <code>allsky/tmp</code> is a memory-based filesystem you need to unmount it before
-	it can be removed:
+	If <span class="fileName">allsky/tmp</span>
+	is a memory-based filesystem you need to unmount it before it can be removed:
 	<pre>
 sudo umount ~/allsky/tmp</pre>
 	Either way, execute:
@@ -93,7 +101,7 @@ rm -fr allsky</pre>
 <br><h2 id="Installation">Installation</h2>
 <details><summary></summary>
 <p>
-The following commands will put the new release of Allsky in <code>~/allsky</code>.
+The following commands will put the new release of Allsky in <span class="fileName">~/allsky</span>.
 Except for some system files, all Allsky-related files reside in this directory.
 If you later install the Allsky Website on the Pi, its files will also go in this directory.
 </p>
@@ -111,11 +119,11 @@ These prompts include:
 <ul>
 	<li>New host name, if not the default of <b>allsky</b>.
 		If you have more than one Pi on the same network they must all have unique names.
-		For example, if you have a test Pi you may want to call it <code>allsky-test</code>.
+		For example, if you have a test Pi you may want to call it <span class="fileName">allsky-test</span>.
 	<li>Adding swap space if needed.
 		Swap space effectively increases the amount of memory your Pi has.
 		Insufficient swap space is one of the leading causes of timelapse video creations problems.
-	<li>Putting the <code>~/allsky/tmp</code> directory in memory instead of on the disk.
+	<li>Putting the <span class="fileName">~/allsky/tmp</span> directory in memory instead of on the disk.
 		This directory holds temporary Allsky files and is where most Allsky files are written to.
 		Putting the directory in memory <b>significantly</b> reduces the number of writes
 		to the SD card, which increases its life.
@@ -151,7 +159,8 @@ After the reboot, enter the WebUI and configure the
 <a allsky="true" href="/documentation/settings/allsky.html">Allsky settings</a>.
 
 <blockquote>
-The <code>config.sh</code> and <code>ftp-settings.sh</code> configuration files should
+The <span class="fileName">config.sh</span> and
+<span class="fileName">ftp-settings.sh</span> configuration files should
 <b>only</b> be edited via the
 WebUI's <b>Editor</b> link since it performs sanity checks and behind-the-scenes
 actions during updates.
@@ -159,9 +168,8 @@ actions during updates.
 </details>
 
 
-</div><!-- markdown-body --></div><!-- Layout-main ... -->
 </div><!-- Layout -->
-</div><!-- xcontainer-x1 ... -->
+</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

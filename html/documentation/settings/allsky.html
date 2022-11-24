@@ -6,21 +6,20 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script src="../documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "Allsky Settings";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 	<title>AllSky Settings</title>
 </head>
 <body>
-<div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Allsky Settings</h1>
-</div>
-<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
-<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-</div>
-<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
 Once you've installed Allsky there are many settings you must modify.
 These settings <b>must</b> be changed via the WebUI rather than manually editing files
@@ -234,7 +233,9 @@ a "digital zoom" whereby the specified portion of the camera's sensor is used wh
 but the picture is then expanded so <b>the final picture resolution is the same as the camera's resolution</b>.
 0 turns off digital zoom and uses the sensor's maximum width.
 Look up your camera specifications to know what values are supported.
-If you want the final image to contain only a portion of what strikes the sensor, use the <code>CROP</code> setting in the <code>config.sh</code> file instead.
+If you want the final image to contain only a portion of what strikes the sensor,
+use the <span class="shSetting">CROP</span> setting in the
+<span class="fileName">config.sh</span> file instead.
 -->
 <tr><td class="WebUISetting">Configuration File</td> <td>[none]</td>
 	<td>Configuration file to use for settings.  Not currently used.</td>
@@ -270,16 +271,18 @@ If you want the final image to contain only a portion of what strikes the sensor
 </tr>
 <tr><td class="WebUISetting">Image Width</td> <td>0</td>
 	<td><code>0</code> uses the sensor's full width in pixels.
-	Otherwise, with <b>ZWO</b> cameras the <code>Image Width</code> and <code>Image Height</code>
+	Otherwise, with <b>ZWO</b> cameras the
+	<span class="WebUISetting">Image Width</span> and <span class="WebUISetting">Image Height</span>
 	variables set a crop area around the center of the sensor,
-	the same as the <code>CROP</code> setting in <code>config.sh</code>.
+	the same as the <span class="shSetting">CROP</span> setting in
+	<span class="fileName">config.sh</span>.
 	With <b>RPi</b> cameras these variables decrease resolution of the full-sensor image,
 	then increases the resolution, thereby negating the changes.
-	<b>There is no reason to set the <code>Width</code> and
-	<code>Weight</code> with RPi cameras.</b></td>
+	<b>There is no reason to set the <span class="WebUISetting">Width</span> and
+	<span class="WebUISetting">Weight</span> with RPi cameras.</b></td>
 </tr>
 <tr><td class="WebUISetting">Image Height</td> <td>0</td>
-	<td> Same as </code>Width</code> but for the sensor's height.</td>
+	<td> Same as </span class="WebUISetting">Width</span> but for the sensor's height.</td>
 </tr>
 <tr><td class="WebUISetting">Image Type</td> <td>auto</td>
 	<td>Image format: <b>auto</b>:
@@ -540,9 +543,9 @@ If you want the final image to contain only a portion of what strikes the sensor
 	<br>
 	If you have the Allsky Website installed <b>on your Pi</b> and are using its image,
 	you may need to set this field to
-	<br><code>&lt;Pi name&gt;/current/tmp/image.jpg</code> or
-	whatever's in the <code>imageName</code> field of your website's
-	<code>configuration.js</code> file.
+	<br><span class="fileName">&lt;Pi name&gt;/current/tmp/image.jpg</span> or
+	whatever's in the <span class="editorSetting">imageName</span> field of your website's
+	<span class="fileName">configuration.js</span> file.
 	Be careful of using "http" versus "https", and after enabling
 	<span class="WebUISetting">Show On Map</span>, look at the map to ensure you can see your image.
 	If your camera is not accessible on the Internet or you do not want the image
@@ -600,17 +603,18 @@ A typical page is below:
 </p>
 <img allsky="true" src="EditorPage.png" title="Typical Editor page" alt="Editor" border="1" loading="lazy">
 <p>
-Files that can be edited include <code>config.sh</code>, <code>ftp-settings.sh</code>,
+Files that can be edited include <span class="fileName">config.sh</span>,
+<span class="fileName">ftp-settings.sh</span>,
 and if you have the Allsky Website installed, a local and/or remote
-<code>configuration.json</code> file.
-Further, if you have a <code>endOfNight_additionalSteps.sh</code> file,
+<span class="fileName">configuration.json</span> file.
+Further, if you have a <span class="fileName">endOfNight_additionalSteps.sh</span> file,
 it can also be edited.
 </p>
 <p>
 The tables below describe the settings in the
-<code>config.sh</code> and
-<code>ftp-settings.sh</code> files;
-settings in the <code>configuration.json</code> files are described in the
+<span class="fileName">config.sh</span> and
+<span class="fileName">ftp-settings.sh</span> files;
+settings in the <span class="fileName">configuration.json</span> files are described in the
 <a allsky="true" href="allskyWebsite.html">Allsky Website Settings</a> page.
 </p>
 <p>
@@ -619,12 +623,12 @@ Information on the color scheme used by the Editor is
 </p>
 
 <h3>config.sh settings</h3>
-<code>config.sh</code> lets you configure the overall behavior of Allsky.
+<span class="fileName">config.sh</span> lets you configure the overall behavior of Allsky.
 <details sub><summary></summary>
 
 <table role="table">
 <thead>
-<tr><th colspan="3"><code>config.sh</code></th></tr>
+<tr><th colspan="3"><span class="fileName">config.sh</span></th></tr>
 <tr><th>Setting</th><th>Default</th><th>Description</th></tr>
 </thead>
 <tbody>
@@ -637,8 +641,8 @@ Information on the color scheme used by the Editor is
 	</td>
 </tr>
 <tr><td class="shSetting">IMG_UPLOAD_ORIGINAL_NAME</td> <td>false</td>
-	<td>Should the name of the uploaded image be <code>image.jpg</code> (if false)
-	or <code>image-YYYYMMDDHHMMSS.jpg</code> (if true)?
+	<td>Should the name of the uploaded image be <span class="fileName">image.jpg</span> (if false)
+	or <span class="fileName">image-YYYYMMDDHHMMSS.jpg</span> (if true)?
 	<br>This is rarely used and is ignored if you don't have an Allsky Website or
 	<span class="shSetting">IMG_UPLOAD</span> is false.
 	</td>
@@ -651,7 +655,7 @@ Information on the color scheme used by the Editor is
 </tr>
 <tr><td class="shSetting">IMG_DIR</td> <td>current/tmp</td>
 	<td>Location of the image the website will use.
-	"current" is an alias for <code>/home/pi/allsky</code>.
+	"current" is an alias for <span class="fileName">/home/pi/allsky</span>.
 	<br><b>Only change this if you know what you are doing.</b>
 	<br>Ignored if you don't have an Allsky Website.
 	</td>
@@ -727,7 +731,7 @@ Information on the color scheme used by the Editor is
 	</td>
 </tr>
 <tr><td class="shSetting">IMG_CREATE_THUMBNAILS</td> <td>true</td>
-	<td>Create thumbnails of the images and save in <code>~/allsky/images</code>?
+	<td>Create thumbnails of the images and save in <span class="fileName">~/allsky/images</span>?
 	If you never look at them via the WebUI's "Images" page,
 	consider changing this to "false".
 	</td>
@@ -910,7 +914,8 @@ Information on the color scheme used by the Editor is
 </tr>
 <tr><td class="shSetting">THUMBNAIL_SIZE_Y</td> <td>75</td>
 	<td>Sets the height of thumbnails.
-	<br>These numbers determine the size of the thumbnails in <code>~/allsky/images</code>
+	<br>These numbers determine the size of the thumbnails in
+	<span class="fileName">~/allsky/images</span>
 	as well as any thumbnails created by the Allsky Website.
 	<blockquote>Although changing these will change the size of the thumbnails,
 	no testing has been done to see if there are negative side effects.</blockquote>
@@ -956,7 +961,7 @@ Information on the color scheme used by the Editor is
 <h3>ftp-settings.sh settings</h3>
 <p>
 In order to upload files to your Allsky Website (on the Pi and/or a remote server),
-connection details must be specified in <code>ftp-settings.sh</code>.
+connection details must be specified in <span class="fileName">ftp-settings.sh</span>.
 </p>
 
 <details sub><summary></summary>
@@ -977,7 +982,7 @@ Directories on the Pi are created during Allsky Website installation.
 
 <table role="table">
 <thead>
-<tr><th colspan="3"><code>ftp-settings.sh</code></th></tr>
+<tr><th colspan="3"><span class="fileName">ftp-settings.sh</span></th></tr>
 <tr><th>Configuration</th><th>Default</th><th>Description</th></tr>
 </thead>
 <tbody>
@@ -1123,7 +1128,8 @@ STARTRAILS_DIR="/home/pi/allsky/html/allsky/startrails"
 
 <br>
 If you are using SSH Key with Amazon's Lightsail,
-copy the <code>ssh-key.pem.pem</code> file to your Pi, for example, in <code>~</code>,
+copy the <span class="fileName">ssh-key.pem.pem</span> file to your Pi,
+for example, in <span class="fileName">~</span>,
 then execute <code>chmod 400 ~/ssh-key.pem</code> and set these variables:
 <pre>
 PROTOCOL="sftp"
@@ -1141,7 +1147,8 @@ LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"
 <details><summary></summary>
 
 <p>
-The <span class="WebUISetting">WEBUI_DATA_FILES</span> setting in <code>config.sh</code>
+The <span class="WebUISetting">WEBUI_DATA_FILES</span> setting in
+<span class="fileName">config.sh</span>
 allows you to specify a list of file names that contain information and buttons to add to the WebUI <b>System</b> page.
 The data can be anything you want, but often contains weather and/or fan data.
 </p>
@@ -1328,7 +1335,7 @@ changes when the data is updated.
 <tr><td><b>command</b></td>
 	<td>text</td>
 	<td>The program that should be executed when the button is pressed.
-		For example, <code>/home/pi/turn_on_dew_heater.sh</code>.
+		For example, <span class="fileName">/home/pi/turn_on_dew_heater.sh</span>.
 		If needed you can prepend <code>sudo<code> to the command.
 	</td>
 	<td>No.</td>
@@ -1362,13 +1369,16 @@ changes when the data is updated.
 <h3>Example</h3>
 Let's assume you have a weather station that provides the ambient temperature, humidity, and dew point, and the dome over your camera has a dew heater.
 
-You wrote a script called <code>/home/pi/weather/getWeatherData.sh</code>
+You wrote a script called <span class="fileName">/home/pi/weather/getWeatherData.sh</span>
 that polls the weather station and writes the ambient temperature, humidity,
-and dew point to a file called <code>/home/pi/weather/weatherdata.txt</code> every minute.
+and dew point to a file called <span class="fileName">/home/pi/weather/weatherdata.txt</span>
+every minute.
 You must manually turn the dew heater on and off via a Python script called
-<code>/home/pi/dewheater/toggleDewHeater.py</code>.
-The <code>toggleDewHeater.ph</code> command toggles the status of the dew heater and writes the
-new status (either "on" or "off") to <code>/home/pi/dewheater/status.txt</code> whenever you call the program.
+<span class="fileName">/home/pi/dewheater/toggleDewHeater.py</span>.
+The <span class="fileName">toggleDewHeater.ph</span>
+command toggles the status of the dew heater and writes the
+new status (either "on" or "off") to
+<span class="fileName">/home/pi/dewheater/status.txt</span> whenever you call the program.
 
 <p>
 To get all this working, follow the steps below:
@@ -1431,7 +1441,7 @@ By definition humidity ranges from 0% to 100% so use 0 and 100 for its
 
 <p>
 The cutoffs for the dew point will vary based on the temperature so will require some logic in
-<code>getWeatherData.sh</code>.
+<span class="fileName">getWeatherData.sh</span>.
 Let's say you decide to set the dew point <b>danger</b> cutoff to be 90% <i>of the ambient temperature</i>,
 and the <b>warning</b> cutoff to be 80%.
 This means if the ambient temperature is 20 C, the dew point <b>danger</b> cutoff would be
@@ -1464,16 +1474,17 @@ You pick the "random" icon so will set the button's <b>FA icon</b> field to <cod
 <a name="WEBUI_DATA_FILES">
 <h4>Modify the <code>WEBUI_DATA_FILES</code> variable</h4>
 You need to enter the names of your files in the
-<span class="WebUISetting">WEBUI_DATA_FILES</span> variable of the <code>config.sh</code> file,
+<span class="WebUISetting">WEBUI_DATA_FILES</span> variable of the
+<span class="fileName">config.sh</span> file,
 but how many files should you have?
 You could put everything in one file but you have two scripts that create files
 and would need to coordinate between them so they don't overwrite each other.
 You decide on three data files - one with the weather data, one with the dew heater status,
 and one with the dew heater button information.
 You could have put the button information in the first or second file,
-but to simplify the <code>toggleDewHeater.ph</code>
+but to simplify the <span class="fileName">toggleDewHeater.ph</span>
 script you put it in a 3rd file that will never change.
-You call the 3rd file <code>/home/pi/dewheater/button.txt</code>.
+You call the 3rd file <span class="fileName">/home/pi/dewheater/button.txt</span>.
 <p>
 This is what you use:
 <code>
@@ -1488,14 +1499,17 @@ You can change the order items appear on the <b>System</b> page by changing the 
 <span class="WebUISetting">WEBUI_DATA_FILES</span> variable.
 
 <h4>Create/modify scripts to update the data file(s)</h4>
-The <code>getWeatherData.sh</code> script needs to write the three weather "data" lines to <code>/home/pi/weather/weatherdata.txt</code>.
+The <span class="fileName">getWeatherData.sh</span>
+script needs to write the three weather "data" lines to
+<span class="fileName">/home/pi/weather/weatherdata.txt</span>.
 It helps if you have the script create header lines in the output file so you remember what field is what.
 
 <p>
 The program's logic would be:
 <ol>
 <li>Get the data from the hardware.
-<li>Optionally write the "data" header line to <code>/home/pi/weather/weatherdata.txt</code>.
+<li>Optionally write the "data" header line to
+<span class="fileName">/home/pi/weather/weatherdata.txt</span>.
 <li>Calculate the Fahrenheit ambient temperature based on the Celsius value returned by the hardware.
 <li>Append the Ambient temperature "data" line to the file.
 <li>Optionally append the "progress" header line to the file.
@@ -1507,7 +1521,9 @@ The program's logic would be:
 </ol>
 </p>
 
-Using the decisions you made above, the <code>/home/pi/weather/weatherdata.txt</code> would look like the following, assuming the temperature was 20 C, the dew point was 17 C, and the humidity was 87%.
+Using the decisions you made above,
+the <span class="fileName">/home/pi/weather/weatherdata.txt</span> would look like the following,
+assuming the temperature was 20 C, the dew point was 17 C, and the humidity was 87%.
 <code>
 # Type	  Timeout  Label                 Data
 data	  300      Ambient temperature	20 C (68 F)
@@ -1522,20 +1538,23 @@ so to make it easier to make sure you have the correct fields you added multiple
 spaces between their columns to line them up with the data fields below.
 
 <p>
-The <code>toggleDewHeater.py</code> program needs to write the "data" line for the dew heater
-status to <code>/home/pi/dewheater/status.txt</code> every time it is executed.
+The <span class="fileName">toggleDewHeater.py</span> program needs to write
+the "data" line for the dew heater
+status to <span class="fileName">/home/pi/dewheater/status.txt</span> every time it is executed.
 Its logic is:
 <ol>
 <li>Get the dew heater status from the hardware.
 <li>Toggle the status.
-<li>Optionally write the "data" header line to <code>/home/pi/dewheater/status.txt</code>.
+<li>Optionally write the "data" header line to
+<span class="fileName">/home/pi/dewheater/status.txt</span>.
 <li>Append the new dew heater status "data" line to the file.
 <li>Output "Dew heater turned on" or "Dew heater turned off".
 <li>Exit.
 </ol>
 </p>
 
-The <code>/home/pi/dewheater/status.txt</code> file will look like the following after clicking the button,
+The <span class="fileName">/home/pi/dewheater/status.txt</span>
+file will look like the following after clicking the button,
 assuming the dew heater is currently off.
 
 <code>
@@ -1543,39 +1562,46 @@ assuming the dew heater is currently off.
 data	  0        Dew heater status     on
 </code>
 
-Since the toggle button won't change, create the <code>/home/pi/dewheater/button.txt</code> file manually:
+Since the toggle button won't change, create the
+<span class="fileName">/home/pi/dewheater/button.txt</span> file manually:
 <code>
 # Type    message  command                                 Color   FA icon  Button  Label
 button    -        /home/pi/dewheater/toggleDewHeater.py   green   random	Toggle  dew heater
 </code>
 Notice the <b>message</b> field is "-" which means there's no message to display on success.
-This is because the <code>toggleDewHeater.py</code> command outputs "Dew heater turned on"
+This is because the <span class="fileName">toggleDewHeater.py</span>
+command outputs "Dew heater turned on"
 or "Dew heater turned off", and that output is displayed as a message.
-Remember that if <code>toggleDewHeater.py</code> exits with a failure (i.e., a non-0 exit code)
+Remember that if <span class="fileName">toggleDewHeater.py</span> exits with a failure
+(i.e., a non-0 exit code)
 any error message it outputs will be displayed as an error message on the web page so you
 should make sure those error messages are useful.
 
 <p>
-When you press the "Toggle dew heater" button or call <code>toggleDewHeater.py</code> from the command line,
-it will update the <code>/home/pi/dewheater/status.txt</code> file by changing the "off" to "on" or vice versa.
+When you press the "Toggle dew heater" button or call
+<span class="fileName">toggleDewHeater.py</span> from the command line,
+it will update the <span class="fileName">/home/pi/dewheater/status.txt</span>
+file by changing the "off" to "on" or vice versa.
 The rest of the file remains the same.
 </p>
 
 <blockquote>Commands listed in a button's <b>command</b> field must be executable by the
 web server running as group <b>www-data</b>, and must be in a directory that web server has permissions to get to.
-<code>chmod g+x /home/pi/dewheater/toggleDewHeater.py</code> will fix permissions on the command.
+<span class="fileName">chmod g+x /home/pi/dewheater/toggleDewHeater.py</span>
+will fix permissions on the command.
 </blockquote>
 
 <h4>Test, test, test. Then test some more.</h4>
 To get a feel for what things look like and how the above actually works,
-copy/paste the above file examples to <code>/home/pi/weather/weatherdata.txt</code>,
-<code>/home/pi/dewheater/status.txt</code>,
-and <code>/home/pi/dewheater/button.txt</code> files on your Pi.
+copy/paste the above file examples to
+<span class="fileName">/home/pi/weather/weatherdata.txt</span>,
+<span class="fileName">/home/pi/dewheater/status.txt</span>,
+and <span class="fileName">/home/pi/dewheater/button.txt</span> files on your Pi.
 Then add
 <code>
 WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
 </code>
-to <code>config.sh</code> via the WebUI's <b>Editor</b> page.
+to <span class="fileName">config.sh</span> via the WebUI's <b>Editor</b> page.
 Now, go to the <b>System</b> page in the WebUI and in addition to the normal information you should see the items you added.
 Refreshing the screen won't change those items since the data files are not being updated yet.
 
@@ -1595,7 +1621,8 @@ What happens now?
 After you understand what's happening and why, start modifying your script(s) to put your own data into the required format.
 
 <h4>Tips</h4>
-To see what the button colors look like, add the following lines to <code>/home/pi/dewheater/button.txt</code>:
+To see what the button colors look like, add the following lines to
+<span class="fileName">/home/pi/dewheater/button.txt</span>:
 <pre>
 button	-	/home/pi/dewheater/toggleDewHeater.py	red     random	red
 button	-	/home/pi/dewheater/toggleDewHeater.py	green   random	green
@@ -1635,9 +1662,8 @@ Luc Bodson uses these with RPi HQ and libcamera:
 
 </details>
 
-</div><!-- markdown-body --></div><!-- Layout-main ... -->
 </div><!-- Layout -->
-</div><!-- xcontainer-x1 ... -->
+</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

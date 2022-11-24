@@ -12,7 +12,7 @@
 	<style>#pageTitle::before { content: "Allsky Settings";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+	<script src="../js/all.min.js" type="application/javascript"></script>
 	<title>AllSky Settings</title>
 </head>
 <body>
@@ -506,7 +506,7 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>Should an outline to the text overlay be added to improve contrast?</td>
 </tr>
 
-<tr><td class="note" colspan="3">Allsky Map and Website Setting
+<tr id="AllskyMapSettings"><td class="note" colspan="3">Allsky Map and Website Setting
 	<p>
 	If you want your allsky camera's location to display on the
 	<a href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>,
@@ -591,7 +591,6 @@ use the <span class="shSetting">CROP</span> setting in the
 
 </tbody>
 </table>
-<hr class="separator">
 </details>
 
 
@@ -1114,7 +1113,6 @@ Directories on the Pi are created during Allsky Website installation.
 </tr>
 </tbody>
 </table>
-</details>
 
 <br>
 If you have the Allsky Website <b>only</b> on your Pi, set these variables:
@@ -1138,8 +1136,7 @@ REMOTE_USER="remote user name"
 REMOTE_PASSWORD="n/a"
 LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"
 </pre>
-
-<hr class="separator">
+</details>
 </details>
 
 
@@ -1364,7 +1361,6 @@ changes when the data is updated.
 </tbody>
 </table>
 
-<hr class="separator">
 
 <h3>Example</h3>
 Let's assume you have a weather station that provides the ambient temperature, humidity, and dew point, and the dome over your camera has a dew heater.
@@ -1640,7 +1636,6 @@ the fields probably aren't separated by tabs.
 If you get a message saying you don't have the correct number of fields, count them to verify,
 and make sure the fields are separated by tabs, not spaces.
 
-<hr class="separator">
 </details>
 
 

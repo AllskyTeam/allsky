@@ -43,7 +43,6 @@ preURL_include = preURL_src;
 // Convert URL for all tags with an "allsky=true" attribute.
 // The specified URL will never be a full URL, i.e., it'll start with "/" or a dir/file.
 function convertURL() {
-
 	allTags = document.getElementsByTagName("*");
 	for (var i = 0; i < allTags.length; i++) {
 		var elmnt = allTags[i];
@@ -52,7 +51,7 @@ function convertURL() {
 			we need to update the URL.
 		*/
 		if (! elmnt.getAttribute("allsky")) continue;	// "allsky" not defined - ignore tag
-		elmnt.removeAttribute("allsky");	// so it doesn't get processed more than once
+//		elmnt.removeAttribute("allsky");	// so it doesn't get processed more than once
 
 		var url = null;
 		var preURL;
@@ -109,8 +108,8 @@ function convertURL() {
 // Include a file (e.g., header, footer, sidebar) in a page using Javascript.
 function includeHTML(numCalls) {
 	var t = typeof(numCalls)
-	if (t == undefined) numCalls = 1;
-	if (debug) console.log("t=" + t);
+	if (t == "undefined") numCalls = 1;
+	if (debug) console.log("t=" + t + ", numCalls=" + numCalls);
 
 	/* Search all HTML elements looking for ones that specify a file should be included. */
 	allTags = document.getElementsByTagName("*");
@@ -133,7 +132,6 @@ function includeHTML(numCalls) {
 						any other original entries.
 					 */
 					elmnt.removeAttribute("w3-include-html");
-	
 					includeHTML(numCalls + 1);
 				}
 			}
@@ -153,7 +151,7 @@ function includeHTML(numCalls) {
 		}
 	}
 
-	// Only call convertURL() once, at the end of the initial call to includeHTML().
-	if (numCalls == 1)
-		convertURL();
+	// We only get here after a call to includeHTML() doesn't find any more files to include.
+if (debug) console.log("AT END numCalls=" + numCalls);
+	convertURL();
 }

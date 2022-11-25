@@ -197,18 +197,10 @@ p {
 	padding: 0 16px;
 	margin-bottom: 16px
 }
-.markdown-body h1:not(:first-child),
-.markdown-body h2:not(:first-child),
-.markdown-body h3:not(:first-child),
-.markdown-body h4:not(:first-child),
-.markdown-body h5:not(:first-child),
-.markdown-body h6:not(:first-child) {
-	margin-top: 20px;
-}
 .markdown-body h1,
 .markdown-body h2,
 .markdown-body h3 {
-	margin-top: 20px;
+	margin-top: 1.5em;
 	margin-bottom: 10px;
 	line-height: 1.25;
 	background-color: var(--color-accent-muted);
@@ -352,11 +344,12 @@ p {
 	text-align: right
 }
 .markdown-body code,.markdown-body tt {
-	padding: 0 .4em;
+	padding: 0 .2em 0 .4em;
 	margin: 0;
 	font-size: 85%;
 	color: inherit;
 	background-color: var(--color-neutral-muted);
+	border: 1px solid var(--color-border-muted);
 	border-radius: 6px;
 }
 .markdown-body code br,.markdown-body tt br {
@@ -724,11 +717,18 @@ a, .sidebar ul li a {
 	padding: 5px 0px 5px 0px;
 }
 .fileName {
-	padding: 0 .4em;
+	padding: 0 .2em;
 	margin: 0;
 	font-size: 90%;
 	color: inherit;
-	background-color: var(--color-neutral-muted);
-	background-color: var(--color-neutral-subtle);
 	border-radius: 6px;
+	background-color: var(--color-attention-verysubtle);
+	border: 1px solid var(--color-attention-muted);
+}
+.WebUIWebPage {
+	padding: 0 .2em;
+	color: #4b4a4b;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	background-color: #f8f8f8;
+	border-bottom: 1px solid #e7e7e7;
 }

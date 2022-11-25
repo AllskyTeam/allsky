@@ -1,6 +1,8 @@
 // Modify URLs on the GitHub server so we can view pages there OR on a Pi.
 // Also, allow files to be included since GitHub doesn't have php.
 
+var debug = true;
+
 // branch is updated during installation.
 var branch = "dev";
 
@@ -21,6 +23,7 @@ var preURL_href, preURL_src;			// What gets prepended to the desired URL.
 var git_preURL_href = "https://" + git_hostname + "/?";
 var git_raw = "https://raw.githubusercontent.com/thomasjacquin/allsky/";
 
+if (debug) console.log("location.hostname=" + location.hostname + ", git_hostname=" + git_hostname);
 if (location.hostname == git_hostname) {
 	onGitHub = true;
 
@@ -34,6 +37,7 @@ if (location.hostname == git_hostname) {
 	preURL_href = "";
 	preURL_src = "";
 }
+if (debug) console.log("preURL_href=" + preURL_href + ", preURL_src=" + preURL_src);
 preURL_include = preURL_src;
 
 var convertURL_called = false;
@@ -98,7 +102,7 @@ function convertURL() {
 		// Only prepend on GitHub if not already there.
 		if (onGitHub && url.indexOf(preURL) < 0) {
 			url = preURL + url;
-// console.log("== new url after adding preURL=" + url);
+			if (debug) console.log("== new url after adding preURL=" + url);
 		}
 		// else on Pi so nothing to do since the URL is already correct.
 

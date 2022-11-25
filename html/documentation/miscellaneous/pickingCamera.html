@@ -1,1 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "Picking an allsky camera";} </style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Picking a camera</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
+<p>
+Your budget will often be the driving factor when picking an allsky camera.
+The Raspberry Pi HQ (RPi HQ) camera is relatively inexpensive and produces good images
+but can only be used with a Pi.
+Many people choose ZWO cameras because they are familiar with them or they
+have a spare one lying around, and they may use their allsky camera for astrophotography as well.
+</p>
+Some things to consider:
+<ul>
+<li>If you need to buy a camera and will only use it as an allsky camera,
+	the RPi HQ camera is hard to beat.
+<li>ZWO's ASI120MM (1280x960 resolution) is inexpensive but
+	a lot of people complain about its noise and hot pixels.
+	The color version is significantly less sensitive.
+	We recommend staying away from this camera.
+<li>The choice of mono versus color is a personal one.
+	Mono cameras are usually more sensitive so require shorter exposures or less gain,
+	but many people prefer color for its more "natural" look, especially during the day.
+<li>Larger sensors (for example the ASI178MC @ 3096x2080) require more memory
+	to produce timelapses, so you may need to follow the suggestions at
+	<a allsky="true" href="/documentation/troubleshooting/timelapse.html">this page</a>.
+<li>For allsky use, an extremely high resolution usually isn't needed since the lens and
+	dome will cause some amount of distortion that will negate the benefits of high resolution.
+<li>Newer sensors tend to produce less noise, but not always.
+<li>Increasing sensor temperature will always increase noise and hot pixels,
+	sometimes to the point of making the image unusable.
+<li>Different cameras have different dynamic ranges
+	(the difference between the brightest and darkest parts).
+	Increasing a camera's gain will produce brighter, noisier images with less dynamic range.
+	Consult the camera specs to learn more about the trade-off between gain and dynamic range,
+	eg. <a href="https://astronomy-imaging-camera.com/product/asi482mc">ASI482MC</a>,
+	<a href="https://astronomy-imaging-camera.com/product/asi290mm">ASI290MM</a>
+	<a href="https://astronomy-imaging-camera.com/product/asi120mc">ASI120MC</a>,
+	<a href="https://astronomy-imaging-camera.com/product/asi178mc">ASI178MC</a>.
+<li>ZWO cameras usually have a 60 second auto-exposure limit.
+	That may not matter much in practice since shots longer than that will usually
+	produce noticeable star trailing.
+<li>The "T7C" camera is an OEM version of the ASI120MC-mini.
+	We <a allsky="true" href="/documentation/troubleshooting/T7cameras.html">do not recommend</a>
+	it.
+</ul>
+
+</div><!-- Layout -->
+</div><!-- px-3 ... -->
+</body>
+</html>
+<script> includeHTML(); </script>

@@ -45,9 +45,9 @@ var convertURL_called = false;
 // Convert URL for all tags with an "allsky=true" attribute.
 // The specified URL will never be a full URL, i.e., it'll start with "/" or a dir/file.
 function convertURL() {
-	if (convertURL_called) return;
 	// TODO: should we only be called once?
 	// What if includeHTML() found multiple files and they all had "allsky" links?
+	//if (convertURL_called) return;
 	convertURL_called = true;
 
 	allTags = document.getElementsByTagName("*");
@@ -58,6 +58,7 @@ function convertURL() {
 			we need to update the URL.
 		*/
 		if (! elmnt.getAttribute("allsky")) continue;	// "allsky" not defined - ignore tag
+		elmnt.removeAttribute("allsky");	// so it doesn't get processed more than once
 
 		var url = null;
 		var preURL;
@@ -135,7 +136,7 @@ function includeHTML() {
 					 */
 					elmnt.removeAttribute("w3-include-html");
 					includeHTML();
-					if (! convertURL_called) convertURL();
+					convertURL();
 				}
 			}
 

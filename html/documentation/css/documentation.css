@@ -696,13 +696,23 @@ a, .sidebar ul li a {
 .nowrap {
 	white-space: nowrap;
 }
-.buttonIcon {	/* button icons from WebUI - shrink in documentation */
+.buttonIcon, .buttonIconLarge {	/* button icons from WebUI - shrink in documentation */
 	width: 90px;
 	height: auto;
 	margin-bottom: -2px;	/* so it looks like it lines up with the text around it */
 }
-.imgBorder {	/* put a border around an image */
+.buttonIconLarge {
+	width: 120px;
+}
+.imgCenter {
+	margin: 10px auto 10px auto;
+	display: block;
+}
+.imgBorder {	/* put a border around a light image */
 	border: 1px solid var(--color-border-muted);
+}
+.imgBorderDark {	/* put a border around a darker image */
+	border: 1px solid black;
 }
 .toc {
 	text-align: center;

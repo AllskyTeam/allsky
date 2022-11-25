@@ -40,15 +40,9 @@ if (location.hostname == git_hostname) {
 if (debug) console.log("preURL_href=" + preURL_href + ", preURL_src=" + preURL_src);
 preURL_include = preURL_src;
 
-var convertURL_called = false;
-
 // Convert URL for all tags with an "allsky=true" attribute.
 // The specified URL will never be a full URL, i.e., it'll start with "/" or a dir/file.
 function convertURL() {
-	// TODO: should we only be called once?
-	// What if includeHTML() found multiple files and they all had "allsky" links?
-	//if (convertURL_called) return;
-	convertURL_called = true;
 
 	allTags = document.getElementsByTagName("*");
 	for (var i = 0; i < allTags.length; i++) {
@@ -113,7 +107,11 @@ function convertURL() {
 
 
 // Include a file (e.g., header, footer, sidebar) in a page using Javascript.
-function includeHTML() {
+function includeHTML(numCalls) {
+	var t = typeof(numCalls)
+	if (t == undefined) numCalls = 1;
+	if (debug) console.log("t=" + t);
+
 	/* Search all HTML elements looking for ones that specify a file should be included. */
 	allTags = document.getElementsByTagName("*");
 	for (var i = 0; i < allTags.length; i++) {
@@ -135,8 +133,8 @@ function includeHTML() {
 						any other original entries.
 					 */
 					elmnt.removeAttribute("w3-include-html");
-					includeHTML();
-					convertURL();
+	
+					includeHTML(numCalls + 1);
 				}
 			}
 
@@ -154,4 +152,8 @@ function includeHTML() {
 			return;
 		}
 	}
+
+	// Only call convertURL() once, at the end of the initial call to includeHTML().
+	if (numCalls == 1)
+		convertURL();
 }

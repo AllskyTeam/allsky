@@ -23,7 +23,7 @@ while [ $# -gt 0 ]; do
 				DO_HELP="true"
 				;;
 			-d | --debug)
-				let DEBUG=DEBUG+1
+				((DEBUG=DEBUG+1))
 				;;
 			-m | --mini-count)
 				# Create a "mini" timelapse of the ${MINI_COUNT} most recent images.

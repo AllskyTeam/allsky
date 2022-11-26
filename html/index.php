@@ -83,7 +83,7 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 	$a_str = file_get_contents(ALLSKY_WEBSITE_REMOTE_CONFIG, true);
 	$a_array = json_decode($a_str, true);
 	$config = getVariableOrDefault($a_array, 'config', '');
-	$remoteWebsiteVersion = getVariableOrDefault($config, 'AllskyWebsiteVersionz', '<span class="errorMsg">[unknown]</span>');
+	$remoteWebsiteVersion = getVariableOrDefault($config, 'AllskyWebsiteVersion', '<span class="errorMsg">[unknown]</span>');
 }
 ?>
 

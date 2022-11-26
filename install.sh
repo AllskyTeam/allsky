@@ -44,10 +44,12 @@ REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 
 # This file contains information the user needs to act upon after the reboot.
 NEW_INSTALLATION_FILE="${ALLSKY_CONFIG}/installation_info.txt"
+rm -f "${NEW_INSTALLATION_FILE}"
 # display_msg() will send "log" entries to this file.
 # DISPLAY_MSG_LOG is used in display_msg()
 # shellcheck disable=SC2034
 DISPLAY_MSG_LOG="${ALLSKY_CONFIG}/installation_log.txt"
+rm -f "${DISPLAY_MSG_LOG}"
 
 # Some versions of Linux default to 750 so web server can't read it
 chmod 755 "${ALLSKY_HOME}"
@@ -113,7 +115,9 @@ select_camera_type() {
 		# New style Allsky with CAMERA_TYPE in config.sh
 		OLD_CONFIG="${PRIOR_INSTALL_DIR}/config/config.sh"
 		if [ -f "${OLD_CONFIG}" ]; then
-			CAMERA_TYPE=$(source "${OLD_CONFIG}" >/dev/null 2>&1; echo "${CAMERA_TYPE}")
+			# We can't "source" the config file because the new settings file doesn't exist,
+			# so the "source" will fail.
+			CAMERA_TYPE="$(grep "^CAMERA_TYPE=" "${OLD_CONFIG}" | sed -e "s/CAMERA_TYPE=//" -e 's/"//g')"
 			[[ ${CAMERA_TYPE} != "" ]] && return
 		fi
 	fi
@@ -239,11 +243,19 @@ ask_reboot() {
 
 
 # Check for size of RAM+swap during installation (Issue # 969).
+recheck_swap() {
+	check_swap "prompt"
+}
 check_swap() {
+	if [[ ${1} == "prompt" ]]; then
+		PROMPT="true"
+	else
+		PROMPT="false"
+	fi
+
 	# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
 	RAM_SIZE=$(free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }')		# in MB
-	SUGGESTED_SWAP_SIZE=0
-# TODO: are these the correct numbers ??
+# TODO: are these the best numbers ??
 	if [[ ${RAM_SIZE} -le 1024 ]]; then
 		SUGGESTED_SWAP_SIZE=4096
 	elif [[ ${RAM_SIZE} -le 2048 ]]; then
@@ -257,8 +269,8 @@ check_swap() {
 	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
 	CURRENT_SWAP=$(free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }')		# in MB
 	CURRENT_SWAP=${CURRENT_SWAP:-0}
-	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} ]]; then
-		sleep 2		# time to read prior messages
+	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
+		[[ ${FUNCTION} == "" ]] && sleep 2		# time to read prior messages
 		if [[ ${CURRENT_SWAP} -eq 0 ]]; then
 			AMT="no"
 			M="added"
@@ -268,17 +280,23 @@ check_swap() {
 		fi
 		MSG="\nYour Pi currently has ${AMT} swap space."
 		MSG="${MSG}\nBased on your memory size of ${RAM_SIZE} MB,"
-		MSG="${MSG} we suggest ${SUGGESTED_SWAP_SIZE} MB of swap"
-		MSG="${MSG} to decrease the chance of timelapse and other failures."
-		MSG="${MSG}\n\nDo you want swap space ${M}?"
-		MSG="${MSG}\n\nIf you do NOT want to change anything, enter 0."
+		if [[ ${CURRENT_SWAP} -ge ${SUGGESTED_SWAP_SIZE} ]]; then
+			SUGGESTED_SWAP_SIZE=${CURRENT_SWAP}
+			MSG="${MSG} there is no need to change anything, but you can if you would like."
+		else
+			MSG="${MSG} we suggest ${SUGGESTED_SWAP_SIZE} MB of swap"
+			MSG="${MSG} to decrease the chance of timelapse and other failures."
+			MSG="${MSG}\n\nDo you want swap space ${M}?"
+			MSG="${MSG}\n\nYou may change the amount of swap by changing the number below."
+		fi
+
 		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 18 ${WT_WIDTH} \
 			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
 		if [[ ${SWAP_SIZE} == "" || ${SWAP_SIZE} == "0" ]]; then
-			if [[ ${CURRENT_SWAP} -eq 0 ]]; then
+			if [[ ${CURRENT_SWAP} -eq 0 && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
 				display_msg --log warning "With no swap space you run the risk of programs failing."
 			else
-				display_msg --log "Swap will remain at ${CURRENT_SWAP}."
+				display_msg --log info "Swap will remain at ${CURRENT_SWAP}."
 			fi
 		else
 			sudo dphys-swapfile swapoff					# Stops the swap file
@@ -288,7 +306,7 @@ check_swap() {
 			display_msg --log progress "Swap space set to ${SWAP_SIZE} MB."
 		fi
 	else
-		display_msg --log "Size of current swap (${CURRENT_SWAP} MB) is sufficient."
+		display_msg --log info "Size of current swap (${CURRENT_SWAP} MB) is sufficient."
 	fi
 }
 
@@ -300,9 +318,10 @@ check_memory_filesystem() {
 	if grep --quiet "^tmpfs ${ALLSKY_TMP} tmpfs" /etc/fstab; then
 		display_msg --log info "${ALLSKY_TMP} is currently in memory."
 		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently in the PRIOR Allsky.
-		# Trying to unmount the old directory always gives an error that it's busy,
-		# so don't bother.  It'll be unmounted at the reboot.
+		# Try to unmount it, but that often gives an error that it's busy.
+		# It'll be unmounted at the reboot.
 		# But make sure the new directory exists.
+		sudo umount "${PRIOR_INSTALL_DIR}/tmp"
 		mkdir -p "${ALLSKY_TMP}"
 		sudo mount -a
 		return 0
@@ -481,7 +500,16 @@ handle_prior_website() {
 	fi
 
 	# Check if a WebUI exists in the old location.
-	[ ! -d "${OLD_WEBUI_LOCATION}" ] && return
+	[[ ! -d ${OLD_WEBUI_LOCATION} ]] && return
+
+	if [[ ! -d ${OLD_WEBUI_LOCATION}/includes ]]; then
+		MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists but it doesn't contain a valid WebUI."
+		MSG="\nPlease check it out after installation."
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
+		display_msg notice "${MSG}"
+		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+		return
+	fi
 
 	MSG="An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so you may remove it after intallation."
 	MSG="${MSG}\n\nWARNING: if you have any other web sites in that directory, they will no longer be accessible via the web server."
@@ -716,13 +744,16 @@ restore_prior_files() {
 
 	# This may miss really-old variables that no longer exist.
 
+	FOUND="true"
 	if [ -f "${PRIOR_CONFIG_DIR}/ftp-settings.sh" ]; then
 		PRIOR_FTP="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 	elif [ -f "${PRIOR_INSTALL_DIR}/scripts/ftp-settings.sh" ]; then
 		PRIOR_FTP="${PRIOR_INSTALL_DIR}/scripts/ftp-settings.sh"
 	else
 		PRIOR_FTP="ftp-settings.sh (in unknown location)"
+		FOUND="false"
 	fi
+
 	## TODO: Try to automate this.
 	# Unfortunately, it's not easy since the prior configuration files could be from
 	# any Allsky version, and the variables and their names changed and we don't have a
@@ -745,17 +776,32 @@ restore_prior_files() {
 	#
 	# display_msg info "\nIMPORTANT: check config/config.sh and config/ftp-settings.sh for correctness.\n"
 
-	MSG="You need to manually move the contents of"
-	MSG="${MSG}\n     ${PRIOR_CONFIG_DIR}/config.sh"
-	MSG="${MSG}\nand"
-	MSG="${MSG}\n     ${PRIOR_FTP}"
-	MSG="${MSG}\nto the new files in ${ALLSKY_CONFIG}."
-	MSG="${MSG}\n\nNOTE: some settings are no longer in config.sh and some changed names."
-	MSG="${MSG}\nDo NOT add the old/deleted settings back in."
+	if [[ ${PRIOR_ALLSKY} == "new" && ${FOUND} == "true" ]]; then
+		MSG="Your config.sh and ftp-settings.sh files should be very similar to the"
+		MSG="${MSG}\nnew ones, other than your changes."
+		MSG="${MSG}\nThere may be an easy way to update the new configuration files."
+		MSG="${MSG}\nAfter installation, see ${NEW_INSTALLATION_FILE} for details."
+
+		MSG2="You can compare the old and new configuration files with the following commands,"
+		MSG2="${MSG2}\nand if the only differences are your changes, you can simply copy the old files to the new location:"
+		MSG2="${MSG2}\n\ndiff ${PRIOR_FTP} ${ALLSKY_CONFIG}"
+		MSG2="${MSG2}\n\nand"
+		MSG2="${MSG2}\n\ndiff ${PRIOR_CONFIG_DIR}/config.sh ${ALLSKY_CONFIG}"
+	else
+		MSG="You need to manually move the contents of"
+		MSG="${MSG}\n     ${PRIOR_CONFIG_DIR}/config.sh"
+		MSG="${MSG}\nand"
+		MSG="${MSG}\n     ${PRIOR_FTP}"
+		MSG="${MSG}\n\nto the new files in ${ALLSKY_CONFIG}."
+		MSG="${MSG}\n\nNOTE: some settings are no longer in config.sh and some changed names."
+		MSG="${MSG}\nDo NOT add the old/deleted settings back in."
+		MSG2=""
+	fi
 	MSG="${MSG}${SETTINGS_MSG}" 
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	display_msg info "\n${MSG}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+	[[ ${MSG2} != "" ]] && echo -e "\n\n==========\n${MSG2}" >> "${NEW_INSTALLATION_FILE}"
 }
 
 
@@ -833,12 +879,14 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
 ##### Display the welcome header
-if [[ ${UPDATE} == "true" ]]; then
-	H="Updating Allsky"
-else
-	H="Welcome to the ${TITLE}"
+if [[ ${FUNCTION} == "" ]]; then
+	if [[ ${UPDATE} == "true" ]]; then
+		H="Updating Allsky"
+	else
+		H="Welcome to the ${TITLE}"
+	fi
+	display_header "${H}"
 fi
-display_header "${H}"
 
 ##### Calculate whiptail sizes
 calc_wt_size
@@ -857,8 +905,7 @@ if [[ ${FUNCTION} != "" ]]; then
 	fi
 
 	${FUNCTION}
-	display_msg progress "\n${FUNCTION} completed.\n"
-	exit 0
+	exit $?
 fi
 
 ##### Determine if there's a prior version
@@ -922,23 +969,24 @@ handle_prior_website
 
 if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "false" ]]; then
 	MSG="NOTE: Default settings were created for your camera."
-	MSG="${MSG}\n\nHowever some entries were not set, like latitude, so you MUST"
+	MSG="${MSG}\n\nHowever some entries may not have been set, like latitude, so you MUST"
 	MSG="${MSG} go to the 'Allsky Settings' page in the WebUI after rebooting"
 	MSG="${MSG} to make updates."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
-
-	# This will be the first image they see.
-	"${ALLSKY_SCRIPTS}//generate_notification_images.sh" --directory "${ALLSKY_TMP}" "image" \
-			"yellow" "" 85 "" "" "" 10 "yellow" "jpg" "" \
-			"***\nUse the\n'Allsky Settings'\nlink in the WebUI\nto configure Allsky\n***" > /dev/null
 fi
+
 if [[ -n ${PRIOR_ALLSKY} ]]; then
 	MSG="When you are sure everything is working with this new release,"
 	MSG="${MSG} remove your old version in ${PRIOR_INSTALL_DIR} to save disk space."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 fi
+
+# This will be the first image they see.
+"${ALLSKY_SCRIPTS}//generate_notification_images.sh" --directory "${ALLSKY_TMP}" "image" \
+	"yellow" "" 85 "" "" "" 10 "yellow" "jpg" "" \
+	"***\nUse the\n'Allsky Settings'\nlink in the WebUI\nto configure Allsky\n***" > /dev/null
 
 ask_reboot
 

@@ -93,47 +93,42 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="">
+	<meta name="description" content="Web User Interface (WebUI) for Allsky">
 	<meta name="author" content="Thomas Jacquin">
 
 	<title>AllSky WebUI</title>
 
 	<!-- Bootstrap Core CSS -->
-	<link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 
 	<!-- MetisMenu CSS -->
-	<link href="bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
+	<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
 
 	<!-- Timeline CSS -->
-	<link href="dist/css/timeline.css" rel="stylesheet">
+	<link href="documentation/css/timeline.css" rel="stylesheet">
 
 	<!-- Custom CSS -->
-	<link href="dist/css/sb-admin-2.css" rel="stylesheet">
-
-	<!-- Morris Charts CSS -->
-<!--
-	<link href="bower_components/morrisjs/morris.css" rel="stylesheet">
--->
+	<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
 
 	<!-- Font Awesome -->
-	<script defer src="js/all.min.js"></script>
+	<script defer src="documentation/js/all.min.js"></script>
 
 	<!-- Custom CSS -->
-	<link href="dist/css/custom.css" rel="stylesheet">
+	<link href="documentation/css/custom.css" rel="stylesheet">
 
-	<link rel="shortcut icon" type="image/png" href="img/allsky-favicon.png">
+	<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
 
 	<!-- RaspAP JavaScript -->
-	<script src="dist/js/functions.js"></script>
+	<script src="documentation/js/functions.js"></script>
 
 	<!-- jQuery -->
-	<script src="bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
 
 	<!-- Bootstrap Core JavaScript -->
-	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<script src="documentation/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
 	<!-- Metis Menu Plugin JavaScript -->
-	<script src="bower_components/metisMenu/dist/metisMenu.min.js"></script>
+	<script src="documentation/bower_components/metisMenu/dist/metisMenu.min.js"></script>
 
 	<script src="js/bigscreen.min.js"></script>
 
@@ -163,7 +158,7 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 	</script>
 
 	<!-- Custom Theme JavaScript -->
-	<script src="dist/js/sb-admin-2.js"></script>
+	<script src="documentation/js/sb-admin-2.js"></script>
 
 	<!-- Code Mirror editor -->
 	<link rel="stylesheet" href="lib/codeMirror/codemirror.css">
@@ -189,7 +184,7 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 			</button>
 			<div class="navbar-brand valign-center">
 				<a class="navbar-brand valign-center" href="index.php">
-					<img src="img/allsky-logo.png" title="Allsky logo">
+					<img src="documentation/img/allsky-logo.png" title="Allsky logo">
 					<div class="navbar-title">Web User Interface (WebUI)</div>
 				</a>
 				<div class="version-title version-title-color">

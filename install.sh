@@ -23,6 +23,8 @@ cd ~/${INSTALL_DIR}  || exit 1
 # they should have manually renamed "allsky" to "allsky-OLD" prior to running this script.
 PRIOR_INSTALL_DIR="$(dirname ${PWD})/${INSTALL_DIR}-OLD"
 
+OLD_WEBUI_LOCATION="/var/www/html"		# location of old-style WebUI
+
 TITLE="Allsky Installer"
 ALLSKY_OWNER=$(id --group --name)
 ALLSKY_GROUP=${ALLSKY_OWNER}
@@ -442,14 +444,35 @@ set_permissions() {
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
 }
 
+# Check if there's a WebUI in the old-style location,
+# or if the directory exists but there doesn't appear to be a WebUI in it.
+check_old_WebUI_location() {
+	[[ ! -d ${OLD_WEBUI_LOCATION} ]] && return
+
+	if [[ ! -d ${OLD_WEBUI_LOCATION}/includes ]]; then
+		MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists but it doesn't contain a valid WebUI."
+		MSG="${MSG}\nPlease check it out after installation."
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
+		display_msg notice "${MSG}"
+		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+		return
+	fi
+
+	MSG="An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so you may remove it after intallation."
+	MSG="${MSG}\n\nWARNING: if you have any other web sites in that directory, they will no longer be accessible via the web server."
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
+	display_msg notice "${MSG}"
+	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+}
+
 handle_prior_website() {
-	OLD_WEBUI_LOCATION="/var/www/html"
 	OLD_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
 	if [ -d "${OLD_WEBSITE}" ]; then
 		ALLSKY_WEBSITE_OLD="${OLD_WEBSITE}"
 	elif [ -d "${PRIOR_INSTALL_DIR}/html/allsky" ]; then
 		ALLSKY_WEBSITE_OLD="${PRIOR_INSTALL_DIR}/html/allsky"
 	else
+		check_old_WebUI_location
 		return
 	fi
 
@@ -499,23 +522,7 @@ handle_prior_website() {
 		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
 	fi
 
-	# Check if a WebUI exists in the old location.
-	[[ ! -d ${OLD_WEBUI_LOCATION} ]] && return
-
-	if [[ ! -d ${OLD_WEBUI_LOCATION}/includes ]]; then
-		MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists but it doesn't contain a valid WebUI."
-		MSG="\nPlease check it out after installation."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
-		display_msg notice "${MSG}"
-		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
-		return
-	fi
-
-	MSG="An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so you may remove it after intallation."
-	MSG="${MSG}\n\nWARNING: if you have any other web sites in that directory, they will no longer be accessible via the web server."
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
-	display_msg notice "${MSG}"
-	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+	check_old_WebUI_location
 }
 
 

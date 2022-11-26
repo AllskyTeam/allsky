@@ -616,6 +616,7 @@ a, .sidebar ul li a {
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	color: #333;
+	color:#00009b;
 	font-weight: bold;
 	font-size: 95%;
 }

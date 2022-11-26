@@ -312,10 +312,24 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 		fi
 
 		if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" ]]; then
-			[[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]] && echo "${ME}: creating mini-timelapse"
-			"${ALLSKY_SCRIPTS}"/timelapse.sh --mini-count ${TIMELAPSE_MINI_IMAGES} ${TIMELAPSE_MINI_FREQUENCY} "${DATE_NAME}"
+			if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+				# timelapse.sh produces a lot of debug output
+				D="--debug --debug"
+			elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+					echo "${ME}: creating mini-timelapse"
+				D="--debug"
+			else
+				D=""
+			fi
+			"${ALLSKY_SCRIPTS}"/timelapse.sh ${D} --mini-count ${TIMELAPSE_MINI_IMAGES} ${TIMELAPSE_MINI_FREQUENCY} "${DATE_NAME}"
 			RET=$?
 			[ ${RET} -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
+			if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+				echo "${ME}: mini-timelapse creation returned with RET=${RET}"
+				if [ ${RET} -ne 0 ]; then
+					echo "  >>  TIMELAPSE_MINI_IMAGES=${TIMELAPSE_MINI_IMAGES}, TIMELAPSE_MINI_FREQUENCY=${TIMELAPSE_MINI_FREQUENCY}, DATE_NAME=${DATE_NAME}"
+				fi
+			fi
 		fi
 	else
 		echo "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"

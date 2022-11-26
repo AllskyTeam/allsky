@@ -176,7 +176,7 @@ create_website_configuration_file() {
 	cp "${REPO_FILE}" "${WEB_CONFIG_FILE}" || exit 2
 
 	# Get the array index for the mini-timelapse.
-	PARENT="homePage.sidebar"
+	PARENT="homePage.leftSidebar"
 	FIELD="Mini-timelapse"
 	INDEX=$(getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "${FIELD}")
 	if [[ ${INDEX} -ge 0 ]]; then

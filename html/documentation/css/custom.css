@@ -513,3 +513,19 @@ select {
 .nowrap {
 	white-space: nowrap;
 }
+.WebUISetting {	/* Matches what's in the WebUI */
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	color: #333;
+	font-weight: bold;
+	font-size: 95%;
+}
+.WebUIValue {
+	padding: 0 3px 0 3px;
+	font-size: 14px;
+	font-family: "Helvetica Neue", Helvetica, Arial;
+	font-family: inherit;
+	color: #555;
+	border: 1px solid #ccc;
+	background-color: #e4e4e4;
+	border-radius: 4px;
+}

@@ -11,7 +11,7 @@ source "${ALLSKY_CONFIG}/config.sh"
 
 ME="$(basename "${BASH_ARGV0}")"
 
-DEBUG="false"
+DEBUG=0
 DO_HELP="false"
 MINI_COUNT=0
 MINI_SUBTRACT=0
@@ -23,7 +23,7 @@ while [ $# -gt 0 ]; do
 				DO_HELP="true"
 				;;
 			-d | --debug)
-				DEBUG="true"
+				let DEBUG=DEBUG+1
 				;;
 			-m | --mini-count)
 				# Create a "mini" timelapse of the ${MINI_COUNT} most recent images.
@@ -39,7 +39,7 @@ while [ $# -gt 0 ]; do
 				shift
 				;;
 			-*)
-				echo -e "${RED}Unknown argument '${1}' ignoring.${NC}" >&2
+				echo -e "${RED}${ME}: Unknown argument '${1}' ignoring.${NC}" >&2
 				DO_HELP="true"
 				;;
 			*)
@@ -55,7 +55,7 @@ usage_and_exit()
 	XD="/path/to/nonstandard/location/of/allsky_images"
 	TODAY="$(date +%Y%m%d)"
 	[ ${RET} -ne 0 ] && echo -en "${RED}"
-	echo -n "Usage: ${ME} [-d] [-h|--help] [-m|M number_images subtracts [-i image] [-f]]  <DATE> [<IMAGE_DIR>]"
+	echo -n "Usage: ${ME} [-d] [-h|--help] [-m|--mini-count number_images subtracts [-i image] [-f]]  <DATE> [<IMAGE_DIR>]"
 	echo -e "${NC}"
 	echo "    example: ${ME} ${TODAY}"
 	echo "    or:      ${ME} ${TODAY} ${XD}"
@@ -119,6 +119,10 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
 
+##### xxxxxx TODO: redo the MINI code - get rid of CURRENT_IMAGE since it assumes one at a time.
+##### Don't even need MINI_TIMELAPSE_FILES="${ALLSKY_TMP}/mini-timelapse_files.txt" or MINI_SUBTRACT.
+##### Just call timelapse.sh --mini-count 15, and let it do a tail -f.  It can warn if less than MINI_COUNT files
+##### were found.
 	# capture the "ln" commands in case the user needs to debug
 	(
 		if [ ${MINI_COUNT} -eq 0 ]; then
@@ -127,22 +131,23 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 		fi
 
 		if [[ ${FORCE_MINI} == "true" ]]; then
-			[[ ${DEBUG} == "true" ]] && echo "Forcing mini-timelapse" >&2
+			[[ ${DEBUG} -gt 0 ]] && echo "${ME} Forcing mini-timelapse" >&2
 			FILES="$(ls -rt "${DATE_DIR}"/image-*.${EXTENSION} | tail -${MINI_COUNT})"
 			echo "${FILES}"
 
 			# Let the user know if there aren't as many images as desired.
 			NUM_IMAGES=$(echo "${FILES}" | wc -l)
-			[ ${NUM_IMAGES} -lt ${MINI_COUNT} ] && echo "INFO: Only ${NUM_IMAGES} are being used." >&2
+			[ ${NUM_IMAGES} -lt ${MINI_COUNT} ] && echo "${ME} INFO: Only ${NUM_IMAGES} are being used." >&2
 
 			exit 0		# Gets us out of this sub-shell
 		fi
 
-		if [ "${CURRENT_IMAGE}" = "" ]; then
+#xxxxx TODO: don't need CURRENT_IMAGE
+		if [[ ${CURRENT_IMAGE} == "" ]]; then
 			# This can be slow if there are a lot of images.  Hopefully CURRENT_IMAGE is passed in.
 			CURRENT_IMAGE="$(ls -rt "${DATE_DIR}"/image-*.${EXTENSION} | tail -1)"
 		fi
-
+#xxxx TODO: don't need MINI_TIMELAPSE_FILES, OR, have saveImage.sh populate it so timelapse.sh only reads it to create a timelapse, and doesn't care anything about counts.
 		MINI_TIMELAPSE_FILES="${ALLSKY_TMP}/mini-timelapse_files.txt"
 		if [ -f "${MINI_TIMELAPSE_FILES}" ]; then
 			# If we haven't gotten to the minimum number of images, don't create the mini timelapse.
@@ -150,12 +155,12 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 			NUM_IMAGES=$(echo "${FILES}" | wc -l)
 			# If the CURRENT_IMAGE isn't in the list, add it.
 			if [ ${NUM_IMAGES} -ge ${MINI_COUNT} ] ; then
-				echo "${FILES}"
+				echo "${FILES}"		# passed to gawk
 				x="$(tail -$((MINI_COUNT-MINI_SUBTRACT)) "${MINI_TIMELAPSE_FILES}")"
 				# Remove the oldest image(s) and append the CURRENT_IMAGE.
 				echo -e "${x}\n${CURRENT_IMAGE}" > "${MINI_TIMELAPSE_FILES}"
-				if [[ ${DEBUG} == "true" ]]; then
-					echo -e "${YELLOW}Replacing oldest file(s) in set and adding '${CURRENT_IMAGE}'.${NC}" >&2
+				if [[ ${DEBUG} -gt 1 ]]; then
+					echo -e "${YELLOW}${ME} Replacing oldest file(s) in set and adding '${CURRENT_IMAGE}'.${NC}" >&2
 				fi
 			else
 				grep --silent "${CURRENT_IMAGE}" "${MINI_TIMELAPSE_FILES}"
@@ -165,20 +170,21 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 					echo "${CURRENT_IMAGE}" >> "${MINI_TIMELAPSE_FILES}"
 					NUM_IMAGES=$((NUM_IMAGES+1))
 					if [ ${NUM_IMAGES} -ge ${MINI_COUNT} ] ; then
-						[[ ${DEBUG} == "true" ]] && echo -e "${GREEN}Just reached enough images.${NC}" >&2
+						[[ ${DEBUG} -gt 1 ]] && echo -e "${GREEN}${ME} Just reached enough images.${NC}" >&2
 						OK="true"
-						cat "${MINI_TIMELAPSE_FILES}"
+						cat "${MINI_TIMELAPSE_FILES}"		# passed to gawk
 					fi
-				elif [[ ${DEBUG} == "true" ]]; then
-					echo -e "${YELLOW}'${CURRENT_IMAGE}' already in set.${NC}" >&2
+				elif [[ ${DEBUG} -gt 1 ]]; then
+					echo -e "${YELLOW}${ME} '${CURRENT_IMAGE}' already in set.${NC}" >&2
 				fi
-				if [[ ${OK} == "false" && ${DEBUG} == "true" ]]; then
-					echo -e "\n${YELLOW}Not creating mini-timelapse yet; only ${NUM_IMAGES} of ${MINI_COUNT} images ready.${NC}\n" >&2
+				if [[ ${OK} == "false" && ${DEBUG} -gt 0 ]]; then
+					echo -e "\n${YELLOW}${ME} Not creating mini-timelapse yet; only ${NUM_IMAGES} of ${MINI_COUNT} images ready.${NC}\n" >&2
+					# Do not pass anything to gawk
 				fi
 			fi
 		else
 			# Create the file with the most recent image.
-			[[ ${DEBUG} == "true" ]] && echo "Creating ${MINI_TIMELAPSE_FILES}" >&2
+			[[ ${DEBUG} -gt 0 ]] && echo "${ME} Creating ${MINI_TIMELAPSE_FILES}" >&2
 			echo "${CURRENT_IMAGE}" > "${MINI_TIMELAPSE_FILES}"
 		fi
 	) | gawk -v MINI_COUNT=${MINI_COUNT} 'BEGIN { a=0; }
@@ -194,7 +200,7 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 				printf("Processed %d images\n", a) > "'${TMP}'";
 				printf("exit 0");
 			} else {		# either a == 0 or in MINI mode
-				printf("exit 2");		# error - no images found
+				printf("exit 2");		# no, or not enough, images found
 			}
 
 		}' \
@@ -270,6 +276,6 @@ fi
 
 # timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
-[[ ${DEBUG} == "true" ]] && echo -e "${ME}${GREEN}Timelapse in ${OUTPUT_FILE}${NC}"
+[[ ${DEBUG} -gt 1 ]] && echo -e "${ME}${GREEN}Timelapse in ${OUTPUT_FILE}${NC}"
 
 exit 0

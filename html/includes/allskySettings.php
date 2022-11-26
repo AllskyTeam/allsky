@@ -289,7 +289,7 @@ function toggle_advanced()
 					if ($type == "widetext") $span="rowspan='2'";
 					else $span="";
 					echo "<td $span valign='middle' style='padding: 2px 0px'>";
-					echo "<label style='padding-right: 3px;'>$label</label>";
+					echo "<label class='WebUISetting' style='padding-right: 3px;'>$label</label>";
 					echo "</td>";
 
 					if ($type == "widetext") {

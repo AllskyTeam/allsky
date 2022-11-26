@@ -512,8 +512,12 @@ select {
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	color: #333;
+	color:#00009b;
 	font-weight: bold;
 	font-size: 95%;
+}
+.dark .WebUISetting {
+	color: #333;
 }
 .WebUIValue {
 	padding: 0 3px 0 3px;

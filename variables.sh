@@ -70,9 +70,6 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Holds all the dark frames.
 	ALLSKY_DARKS="${ALLSKY_HOME}/darks"
 
-	# Holds all the Allsky documentation.
-	ALLSKY_DOCUMENTATION="${ALLSKY_HOME}/documentation"
-
 	# Location of WebUI.
 	ALLSKY_WEBUI="${ALLSKY_HOME}/html"
 
@@ -82,6 +79,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME="remote_${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 	ALLSKY_WEBSITE_CONFIGURATION_FILE="${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 	ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE="${ALLSKY_CONFIG}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
+
+	# Holds all the Allsky documentation.
+	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/documentation"
 
 	# Log the capture_${CAMERA_TYPE} programs write to.
 	ALLSKY_LOG="/var/log/allsky.log"

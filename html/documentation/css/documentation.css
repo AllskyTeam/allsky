@@ -107,14 +107,14 @@ p {
 }
 .markdown-body h2 {
 	padding-bottom: .3em;
-	font-size: 1.5em;
+	font-size: 1.75em;
 	border-bottom: 1px solid var(--color-border-muted);
 }
 .markdown-body h3 {
-	font-size: 1.25em;
+	font-size: 1.5em;
 }
 .markdown-body h4 {
-	font-size: 1em;
+	font-size: 1.25em;
 }
 .markdown-body h5 {
 	font-size: .875em
@@ -197,18 +197,11 @@ p {
 	padding: 0 16px;
 	margin-bottom: 16px
 }
-.markdown-body h1:not(:first-child),
-.markdown-body h2:not(:first-child),
-.markdown-body h3:not(:first-child),
-.markdown-body h4:not(:first-child),
-.markdown-body h5:not(:first-child),
-.markdown-body h6:not(:first-child) {
-	margin-top: 20px;
-}
 .markdown-body h1,
 .markdown-body h2,
-.markdown-body h3 {
-	margin-top: 20px;
+.markdown-body h3,
+.markdown-body h4 {
+	margin-top: 1.5em;
 	margin-bottom: 10px;
 	line-height: 1.25;
 	background-color: var(--color-accent-muted);
@@ -218,9 +211,15 @@ p {
 .markdown-body h3 {
 	background-color: var(--color-accent-subtle);
 }
-.markdown-body h3 {
+.markdown-body h3 {	/* TODO: want a lighter shade of blue than h2/h3, but there isn't one defined in light.css */
 	opacity: 0.8;
 }
+.markdown-body h4 {
+	background-color: transparent;
+	padding-left: 0;
+	text-decoration: underline;
+}
+
 .markdown-body table {
 	width: 100%;
 	max-width: 100%;
@@ -352,11 +351,12 @@ p {
 	text-align: right
 }
 .markdown-body code,.markdown-body tt {
-	padding: 0 .4em;
+	padding: 0 .2em 0 .4em;
 	margin: 0;
 	font-size: 85%;
 	color: inherit;
 	background-color: var(--color-neutral-muted);
+	border: 1px solid var(--color-border-muted);
 	border-radius: 6px;
 }
 .markdown-body code br,.markdown-body tt br {
@@ -696,13 +696,23 @@ a, .sidebar ul li a {
 .nowrap {
 	white-space: nowrap;
 }
-.buttonIcon {	/* button icons from WebUI - shrink in documentation */
+.buttonIcon, .buttonIconLarge {	/* button icons from WebUI - shrink in documentation */
 	width: 90px;
 	height: auto;
 	margin-bottom: -2px;	/* so it looks like it lines up with the text around it */
 }
-.imgBorder {	/* put a border around an image */
+.buttonIconLarge {
+	width: 120px;
+}
+.imgCenter {
+	margin: 10px auto 10px auto;
+	display: block;
+}
+.imgBorder {	/* put a border around a light image */
 	border: 1px solid var(--color-border-muted);
+}
+.imgBorderDark {	/* put a border around a darker image */
+	border: 1px solid black;
 }
 .toc {
 	text-align: center;
@@ -714,11 +724,18 @@ a, .sidebar ul li a {
 	padding: 5px 0px 5px 0px;
 }
 .fileName {
-	padding: 0 .4em;
+	padding: 0 .2em;
 	margin: 0;
 	font-size: 90%;
 	color: inherit;
-	background-color: var(--color-neutral-muted);
-	background-color: var(--color-neutral-subtle);
 	border-radius: 6px;
+	background-color: var(--color-attention-verysubtle);
+	border: 1px solid var(--color-attention-muted);
+}
+.WebUIWebPage {
+	padding: 0 .2em;
+	color: #4b4a4b;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	background-color: #f8f8f8;
+	border-bottom: 1px solid #e7e7e7;
 }

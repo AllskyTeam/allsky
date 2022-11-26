@@ -20,7 +20,7 @@
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 <div class="px-3 Layout-main markdown-body" id="mainContents">
 
-<h1>Allsky Suite</h1>
+<h2>Allsky Suite</h2>
 The AllSky suite of software consists of two GitHub packages:
 <ol>
 <li><a href="https://github.com/thomasjacquin/allsky"><code>allsky</code></a>
@@ -54,9 +54,8 @@ is an optional simple web interface that displays:
 The <b>Allsky Website</b> can run on your Pi and/or one or more remote computers.
 </p>
 </ol>
-<hr>
 
-<h1>Terms</h1>
+<h2>Terms</h2>
 <ul>
 <li>When a page says "AllSky Software" or just "software" it's referring to
 	the main Allsky software that's running on your Pi from the
@@ -64,13 +63,29 @@ The <b>Allsky Website</b> can run on your Pi and/or one or more remote computers
 <li>The <code>allsky-website</code> package is usually referred to as the
 <b>Allsky Website</b> or just the <b>Website</b> (with a capital W).
 <li>The <span class="fileName">config.sh</span> file holds a lot of the Allsky settings
-and must be edited via the <b>Editor</b> link in the WebUI, NOT by manually editting it.
+and must be edited via the <span class="WebUIWebPage">Editor</span> link in the WebUI,
+NOT by manually editting it.
 <li>The <span class="fileName">ftp-settings.sh</span> file holds the upload-related settings and
-must also be edited using the <b>Editor</b> page.
+must also be edited using the <span class="WebUIWebPage">Editor</span> page.
 </ul>
-<hr>
 
-<h1>Starting and stopping AllSky</h1>
+
+<h2>Documentation Conventions</h2>
+Commands that are to be executed look like this: <code>systemctl start allsky</code>.
+When multiple commands are to be executed they are usually displayed like this:
+<pre>
+systemctl start allsky
+date
+</pre>
+
+File names are shown as: <span class="fileName">config.sh</span>.
+<br>
+Menu items on the WebUI are shown as: <span class="WebUIWebPage">Editor</span>.
+<br>
+Settings in the WebUI appear as: <span class="WebUISetting">Debug Level</span>.
+
+
+<h2>Starting and stopping AllSky</h2>
 Allsky should start automatically after your Pi reboots,
 and will continue running until you stop or restart it.
 

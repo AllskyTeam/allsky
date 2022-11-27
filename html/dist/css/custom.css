@@ -40,7 +40,6 @@
 	.navbar-collapse { display: block; visibility: visible; }
 }
 @media (max-width: 795px) {
-	.navbar-default.sidebar { width: 100%; margin: 0px 0px 20px 0px; }
 	.navbar-header { float: none; }
 	.navbar-title { display: none; }
 	.navbar-toggle { display: block; }
@@ -49,6 +48,11 @@
 	.navbar-brand { float: none; }
 	.version-title { margin-left: 0; }
 }
+/* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+@media (max-width: 815px) {
+	#page-wrapper { padding: 0px 20px; }
+}
+*/
 
 .right-panel .panel:first-of-type {
     margin: 20px 0;
@@ -508,24 +512,4 @@ select {
 }
 .nowrap {
 	white-space: nowrap;
-}
-.WebUISetting {	/* Matches what's in the WebUI */
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	color: #333;
-	color:#00009b;
-	font-weight: bold;
-	font-size: 95%;
-}
-.dark .WebUISetting {
-	color: #333;
-}
-.WebUIValue {
-	padding: 0 3px 0 3px;
-	font-size: 14px;
-	font-family: "Helvetica Neue", Helvetica, Arial;
-	font-family: inherit;
-	color: #555;
-	border: 1px solid #ccc;
-	background-color: #e4e4e4;
-	border-radius: 4px;
 }

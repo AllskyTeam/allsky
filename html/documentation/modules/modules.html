@@ -30,8 +30,6 @@
             <div data-view-component="true" class="Layout-main">
                 <div class="markdown-body taligntop" id="mainContents">
 
-
-
                     <h2>What are modules?</h2>
                     <div>
                         <p>Modules provide functionality that can be used to enhance the images created by AllSky,
@@ -85,14 +83,14 @@
                                         <li><strong>Day Flow</strong> - These are run after every day time image is
                                             captured
                                         </li>
-                                        <li><strong>Night to Day Transition Flow</strong> - These are run when Allsky
-                                            switches from Night to Daytime capturing
+                                        <li><strong>Day to Night Transition Flow</strong> - These are run when Allsky
+                                            switches from Daytime to Nighttime capturing
                                         </li>
                                         <li><strong>Night Flow</strong> - These are run after every night time image is
                                             captured
                                         </li>
-                                        <li><strong>Day to Night Transition Flow</strong> - These are run when Allsky
-                                            switches from Daytime to Nighttime capturing
+                                        <li><strong>Night to Day Transition Flow</strong> - These are run when Allsky
+                                            switches from Night to Daytime capturing
                                         </li>
                                     </ul>
                                 </li>
@@ -256,9 +254,7 @@
                                             </ul>
                                         </td>
                                         <td>
-                                            <p>Loads the last image taken by AllSky. This is always the first module
-                                                that is run during the daytime and nighttime capture to ensure that
-                                                the image is available to all subsequent modules</p>
+                                            <p>Loads the last image taken by AllSky. This is always the first module that is run during the daytime and nighttime capture to ensure that the image is available to all subsequent modules</p>
                                             <p>This module is enabled in the day and nighttime flows by default so
                                                 there is no need to install it</p>
                                             <blockquote>Since this module must always run first it is not possible
@@ -268,6 +264,7 @@
                                     </tr>
                                 </tbody>
                             </table>
+                            <hr class="separator">
 
                             <h4>Save Image</h4>
                             <table class="module-info vtop">
@@ -298,6 +295,7 @@
                                     </tr>
                                 </tbody>
                             </table>
+                            <hr class="separator">
 
                             <h4>Mask Image</h4>
                             <table class="module-info vtop">
@@ -319,13 +317,13 @@
                                             <p>This applies a mask to the image. This can be useful if there are
                                                 artefacts outside of the image circle that you wish to remove.
                                                 Create a mask with white in the areas you wish to keep and black in
-                                                the areas you wish to be black, see the section on creating and
-                                                using masks</p>
+                                                the areas you wish to be black, see the section on <a href="#masks">creating and
+                                                using masks</a></p>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-
+                            <hr class="separator">
 
                             <h4>Clear Sky</h4>
                             <table class="module-info vtop">
@@ -434,7 +432,7 @@
                                     </td>
                                 </tr>
                             </table>
-
+                            <hr class="separator">
 
                             <h4>Star Count</h4>
                             <table class="module-info vtop">
@@ -516,6 +514,7 @@
                                     </td>
                                 </tr>
                             </table>
+                            <hr class="separator">
 
                             <h4>Meteor Detection</h4>
                             <table class="module-info vtop">
@@ -584,6 +583,7 @@
                                     </td>
                                 </tr>
                             </table>
+                            <hr class="separator">
 
                             <h4>Export</h4>
                             <table class="module-info vtop">
@@ -625,6 +625,7 @@
                                     </td>
                                 </tr>
                             </table>
+                            <hr class="separator">
 
                             <h4>Overlay</h4>
                             <table class="module-info vtop">
@@ -653,6 +654,7 @@
                                     </tr>
                                 </tbody>
                             </table>
+                            <hr class="separator">
 
                             <h4>Script</h4>
                             <table class="module-info vtop">
@@ -693,6 +695,7 @@
                                     </td>
                                 </tr>
                             </table>
+                            <hr class="separator">
 
                             <h4>Save Image Data</h4>
                             <table class="module-info vtop">
@@ -868,6 +871,7 @@
                                     </td>
                                 </tr>
                             </table>
+                            <hr class="separator">
 
                             <h4>Dew Heater</h4>
                             <table class="module-info vtop">
@@ -990,7 +994,7 @@
                                     </td>
                                 </tr>
                             </table>
-
+                            <hr class="separator">
 
                             <h4>GPIO</h4>
                             <table class="module-info vtop">
@@ -1031,6 +1035,7 @@
                                     </td>
                                 </tr>
                             </table>
+                            <hr class="separator">
 
                             <h4>Discord</h4>
                             <table class="module-info vtop">
@@ -1178,6 +1183,7 @@
                                     </td>
                                 </tr>
                             </table>
+                            <hr class="separator">
 
                             <h4>Rain</h4>
                             <table class="module-info vtop">
@@ -1244,6 +1250,7 @@
                                     </td>
                                 </tr>
                             </table>
+                            <hr class="separator">
 
                             <h4>Open Weather Map</h4>
                             <table class="module-info vtop">
@@ -1326,7 +1333,7 @@
                     </div>
 
 
-                    <h2>Creating and using Masks</h2>
+                    <h2 id="masks">Creating and using Masks</h2>
                     <div>
                         <p>Several of the modules make use of masks. Masks are used to 'hide' areas of the image to
                             prevent them creating issues in the modules. For example the star detection module can use a

@@ -743,6 +743,34 @@ a {
 .imgBorder {	/* put a border around an image */
 	border: 1px solid var(--color-border-muted);
 }
+.imgBorderDark {	/* put a border around a darker image */
+	border: 1px solid black;
+}
+.toc {
+	text-align: center;
+	font-size: 125%;
+	font-weight: bold;
+	border-bottom: 1px solid var(--color-accent-muted);
+	margin-bottom: 5px;
+	color: var(--color-accent-emphasis);
+	padding: 5px 0px 5px 0px;
+}
+.fileName {
+	padding: 0 .2em;
+	margin: 0;
+	font-size: 90%;
+	color: inherit;
+	border-radius: 6px;
+	background-color: var(--color-attention-verysubtle);
+	border: 1px solid var(--color-attention-muted);
+}
+.WebUIWebPage {
+	padding: 0 .2em;
+	color: #4b4a4b;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	background-color: #f8f8f8;
+	border-bottom: 1px solid #e7e7e7;
+}
 
 /**
 * Start AG changes

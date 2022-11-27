@@ -287,50 +287,65 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 	if cp "${CURRENT_IMAGE}" "${FINAL_FILE}" ; then
 
 		if [[ ${TIMELAPSE_MINI_IMAGES} -ne 0 && ${TIMELAPSE_MINI_FREQUENCY} -ne 1 ]]; then
-			FREQUENCY_FILE="${ALLSKY_TMP}/MINI_UPLOAD_FREQUENCY.txt"
-			typeset -i LEFT
-			if [[ ! -f ${FREQUENCY_FILE} ]]; then
+			# We are creating mini-timelapses; see if we should create one now.
+
+			MINI_TIMELAPSE_FILES="${ALLSKY_TMP}/mini-timelapse_files.txt"	 # List of files
+			if [[ ! -f ${MINI_TIMELAPSE_FILES} ]]; then
 				# The file may have been deleted, or the user may have just changed the frequency.
-				let LEFT=${TIMELAPSE_MINI_FREQUENCY}
+				echo "${FINAL_FILE}" > "${MINI_TIMELAPSE_FILES}"
+				LEFT=$((TIMELAPSE_MINI_IMAGES-1))
+				NUM_IMAGES=1
 			else
-				let LEFT=$( < "${FREQUENCY_FILE}" )
+				grep --silent "${FINAL_FILE}" "${MINI_TIMELAPSE_FILES}"
+				RET=$?
+				if [ ${RET} -ne 0 ]; then
+					echo "${FINAL_FILE}" >> "${MINI_TIMELAPSE_FILES}"
+				elif [[ ${DEBUG} -ge 2 ]]; then
+					# This shouldn't happen...
+					echo -e "${YELLOW}${ME} WARNING: '${FINAL_FILE}' already in set.${NC}" >&2
+				fi
+				NUM_IMAGES=$(wc -l < "${MINI_TIMELAPSE_FILES}")
 			fi
-			if [[ ${LEFT} -le 1 ]]; then
-				# create and upload this one and reset the counter
-				echo "${TIMELAPSE_MINI_FREQUENCY}" > "${FREQUENCY_FILE}"
-			else
-				# Not ready to upload yet, so decrement the counter
-				let LEFT=LEFT-1
-				echo "${LEFT}" > "${FREQUENCY_FILE}"
+			[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo -e "NUM_IMAGES=${NUM_IMAGES}" >&2
+
+			if [[ ${NUM_IMAGES} -ge ${TIMELAPSE_MINI_IMAGES} ]]; then
+				# Create a timelapse
 				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+					# timelapse.sh produces a lot of debug output
+					D="--debug --debug"
+				elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+					D="--debug"
+				else
+					D=""
+				fi
+				"${ALLSKY_SCRIPTS}"/timelapse.sh ${D} --mini "${MINI_TIMELAPSE_FILES}" "${DATE_NAME}"
+				RET=$?
+				[ ${RET} -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+					if [ ${RET} -eq 0 ]; then
+						echo "${ME}: mini-timelapse created"
+					else
+						echo "${ME}: mini-timelapse creation returned with RET=${RET}"
+					fi
+				fi
+
+				# Remove the oldest files
+				KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
+				x="$(tail -${KEEP} "${MINI_TIMELAPSE_FILES}")"
+				echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
+				if [[ ${DEBUG} -ge 2 ]]; then
+					echo -e "${YELLOW}${ME} Replaced ${MINI_SUBTRACT} oldest file(s) in set and adding '${FINAL_FILE}'.${NC}" >&2
+				fi
+			else
+				# Not ready to create yet
 				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 					echo "${ME}: Not creating or uploading mini timelapse: ${LEFT} images(s) left."
 				fi
-
 				TIMELAPSE_MINI_UPLOAD_VIDEO="false"
 			fi
 		fi
 
-		if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" ]]; then
-			if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
-				# timelapse.sh produces a lot of debug output
-				D="--debug --debug"
-			elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
-					echo "${ME}: creating mini-timelapse"
-				D="--debug"
-			else
-				D=""
-			fi
-			"${ALLSKY_SCRIPTS}"/timelapse.sh ${D} --mini-count ${TIMELAPSE_MINI_IMAGES} ${TIMELAPSE_MINI_FREQUENCY} "${DATE_NAME}"
-			RET=$?
-			[ ${RET} -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
-			if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
-				echo "${ME}: mini-timelapse creation returned with RET=${RET}"
-				if [ ${RET} -ne 0 ]; then
-					echo "  >>  TIMELAPSE_MINI_IMAGES=${TIMELAPSE_MINI_IMAGES}, TIMELAPSE_MINI_FREQUENCY=${TIMELAPSE_MINI_FREQUENCY}, DATE_NAME=${DATE_NAME}"
-				fi
-			fi
-		fi
 	else
 		echo "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"
 		SAVE_IMAGE="false"

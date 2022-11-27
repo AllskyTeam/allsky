@@ -140,14 +140,17 @@ are shared by many people.
 There are three main certificate-related error messages you'll see.
 </p>
 <ol>
-<li><b>Host key verification failed</b>: on the Pi, ssh to your remote server:
+<li><b>Host key verification failed</b>
+	<br>
+	On the Pi, <code>ssh</code> to your remote server:
 	<code>ssh -p 22 username@host</code>
 	(replacing "username" and "host" with the appropriate values).
 	The host will display a message and prompt for "yes" or "no".
 	Enter "yes".
 	This only needs to be done once for a given host.
 	<br>The remote server now knows about the Pi.
-<li><b>Certificate verification: certificate common name doesn't match requested host name "xyz.com"</b>:
+<li><b>Certificate verification: certificate common name doesn't match requested host name "xyz.com"</b>
+	<br>
 	There are two ways to fix this:
 	<ol>
 	<li>Create a file called <span class="fileName">~/.lftprc</span> and add
@@ -159,13 +162,18 @@ There are three main certificate-related error messages you'll see.
      	If you expect to execute <code>lftp</code> manually the first method is better,
 		otherwise use the second method so all your configuration changes are in one place.
 	</ol>
-<li><b>Certificate verification: Not trusted</b>:
+<li><b>Certificate verification: Not trusted</b>
+	<br>
 	Add <code>set ssl:verify-certificate no</code> to
 	<span class="shSetting">LFTP_COMMANDS</span> or the
 	<span class="fileName">~/.lftprc</span> file as above.
 </ol>
-If your Pi's IP address changed you may need to remove the previous key from your
+If your Pi's IP address changed, or the IP address remained but the
+machine using the addressed changed, you probably need to remove the previous key from your
 <span class="fileName">~/.ssh/known_hosts</span> file.
+If the file has only one entry, simply remove it.
+If the file has multiple entries, make a backup of the file,
+then delete one entry at a time until you find the "bad" one.
 </details>
 
 

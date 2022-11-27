@@ -1116,11 +1116,11 @@ void displaySettings(config cg)
 		if (cg.nightAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
-	if (cg.myModeMeanSetting.dayMean > 0.0)
+	if (cg.supportsMyModeMean)
 		printf("   Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
-	if (cg.myModeMeanSetting.nightMean > 0.0)
+	if (cg.supportsMyModeMean)
 		printf("   Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
-	if (cg.myModeMeanSetting.dayMean > 0.0 || cg.myModeMeanSetting.dayMean > 0.0)
+	if (cg.supportsMyModeMean)
 	{
 		printf("      Threshold: %1.3f\n", cg.myModeMeanSetting.mean_threshold);
 		printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
@@ -1888,6 +1888,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 
 		// Arguments that may be passed to us but we don't use.
 		else if (
+			strcmp(a, "displaysettings") == 0 ||
 			strcmp(a, "showonmap") == 0 ||
 			strcmp(a, "websiteurl") == 0 ||
 			strcmp(a, "imageurl") == 0 ||

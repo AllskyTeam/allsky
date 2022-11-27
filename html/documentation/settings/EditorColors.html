@@ -4,8 +4,12 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<script src="../documentation.js" type="application/javascript"></script>
+	<script src="../js/documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "WebUI Editor Colors";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<style>
@@ -22,12 +26,9 @@
 	<title>WebUI Editor Colors</title>
 </head>
 <body>
-<div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">WebUI Editor Colors</h1>
-</div>
-<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
-<!-- Don't include the sidebar or class="Layout-main" or class="Layout ..." -->
-<div class="markdown-body" id="mainContents">
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
 <p>
 The WebUI's <b>Editor</b> page allows editing Allsky configuration files.
@@ -57,11 +58,13 @@ A description of the color scheme comes last.
 <ul>
 <li>Setting <b>names</b> look different depending on the file type:
 	<ul>
-	<li>In <code>.sh</code> files the names look <span class="editorShell">LIKE_THIS</span>.
+	<li>In <span class="fileName">.sh</span> files the names look
+		<span class="editorShell">LIKE_THIS</span>.
 		By convention shell setting names (called shell "variables") are all uppercase
 		and multi-word names are separated by an underscore (<code>_</code>),
 		although there are some variables that don't follow that convention.
-	<li>In <code>.json</code> files they look <span class="editorSetting">likeThis</span>.
+	<li>In <span class="fileName">.json</span> files they look
+		<span class="editorSetting">likeThis</span>.
 		By convention if the name includes multiple words,
 		the first letter of the first word is lowercase and subsequent word's first characters
 		are Upper case.
@@ -116,8 +119,8 @@ If you see different colors while editing a file, check for syntax errors:
 </ul>
 </p>
 
-</div><!-- markdown-body --></div><!-- Layout-main ... -->
-</div><!-- xcontainer-x1 ... -->
+</div><!-- Layout -->
+</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

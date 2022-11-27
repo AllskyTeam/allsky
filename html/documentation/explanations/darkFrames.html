@@ -4,22 +4,21 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<script src="../documentation.js" type="application/javascript"></script>
+	<script src="../js/documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "Dark Frames Explained";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Dark Frames</title>
 </head>
 <body>
-<div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Dark Frames Explained</h1>
-</div>
-<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
-<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-</div>
-<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
 <p>
 All cameras produce noise which can be one or more of the following:
@@ -103,13 +102,14 @@ There are two steps that you'll want to execute one after the other with no time
 	<li>In the WebUI open the <b>Camera Settings</b> page and set
 		<span class="WebUISetting">Take Dark Frames</span> to <b>Yes</b>.
 	<li>Click on the
-		<img allsky="true" src="/documentation/images/saveChangesButton.png" class="buttonIcon" title="Save Changes">
+		<img allsky="true" src="/documentation/img/saveChangesButton.png" class="buttonIcon" title="Save Changes">
 		button.
 		This restarts Allsky with the new settings.
-	<li>Dark frames are created in the <code>~/allsky/darks</code> directory.
+	<li>Dark frames are created in the <span class="fileName">~/allsky/darks</span> directory.
 		A new dark is created every time the sensor temperature changes by 1 degree C.
-	<li>If there are no dark frames in the <code>~/allsky/darks</code>
-		folder something went wrong so check the <code>/var/log/allsky.log</code> file.
+	<li>If there are no dark frames in the <span class="fileName">~/allsky/darks</span>
+		folder something went wrong so check the
+		<span class="fileName">/var/log/allsky.log</span> file.
 	<li>After you are done (possibly in the morning), stop Allsky:
 		<code>systemctl stop allsky</code>.
 	<li>Remove the cover from the lens/dome.
@@ -123,7 +123,7 @@ There are two steps that you'll want to execute one after the other with no time
 		<li><span class="WebUISetting">Use Dark Frames</span> to <b>Yes</b>
 		</ul>
 	<li>Click on the
-		<img allsky="true" src="/documentation/images/saveChangesButton.png" class="buttonIcon" title="Save Changes">
+		<img allsky="true" src="/documentation/img/saveChangesButton.png" class="buttonIcon" title="Save Changes">
 		button.
 		This will restart Allsky taking light frames, and subtract dark frames at night.
 	<li>You will get an error message if there aren't any dark frames.
@@ -146,13 +146,16 @@ If you think you'll go back to the original settings,
 save the old darks instead of discarding them.
 </blockquote>
 
-When a dark image is taken a file called <code>dark.jpg</code> (or <code>dark.png</code>)
-is saved in <code>~/allsky/tmp</code>,
-then moved to <code>~/allsky/darks</code>
-with a name like "XX.jpg", where "XX" is the temperature, for example, <code>21.jpg</code>.
+When a dark image is taken a file called <span class="fileName">dark.jpg</span>
+(or <span class="fileName">dark.png</span>)
+is saved in <span class="fileName">~/allsky/tmp</span>,
+then moved to <span class="fileName">~/allsky/darks</span>
+with a name like "XX.jpg", where "XX" is the temperature, for example,
+<span class="fileName">21.jpg</span>.
 </p>
 <p>
-When darks are being <b>subtracted</b>, the software looks in <code>~/allsky/darks</code>
+When darks are being <b>subtracted</b>, the software looks in
+<span class="fileName">~/allsky/darks</span>
 for the dark frame that is closest to the current sensor temperature.
 For example, if the current temperature is 21 and you have 3 darks,
 17.jpg, 20.jpg, and 23.jpg, the software will pick 20.jpg because it's only
@@ -166,9 +169,9 @@ the closest dark frame will give the best results.
 </p>
 </details>
 
-</div><!-- markdown-body --></div><!-- Layout-main ... -->
 </div><!-- Layout -->
-</div><!-- xcontainer-x1 ... -->
+</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>
+

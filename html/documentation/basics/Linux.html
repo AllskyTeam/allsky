@@ -4,22 +4,21 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<script src="../documentation.js" type="application/javascript"></script>
+	<script src="../js/documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "Linux Basics";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Linux Basics</title>
 </head>
 <body>
-<div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Linux Basics</h1>
-</div>
-<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
-<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-</div>
-<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
 <h1>Overview</h1>
 <p>
@@ -72,7 +71,7 @@ Linus has multiple interpreters, called "shells".
 When UNIX was first invented in the late 1960s, the only shell available was <code>sh</code>.
 Since then, many other shells have been created; the one Allsky uses is <code>bash</code>
 since it has many useful features not in <code>sh</code>.
-You'll notice the commands in the <code>allsky/scripts</code> directory have an
+You'll notice the commands in the <span class="fileName">allsky/scripts</span> directory have an
 extension of <code>.sh</code> which signifies they are shell scripts.
 Unlike in Windows, Linux commands don't actually need an extension,
 but all the Allsky text-based commands have extensions so it's obvious what type of file it is.
@@ -176,24 +175,27 @@ echo "Hello    world!"
 <details><summary></summary>
 <p>
 Windows has multiple "drives", each with its own letter, e.g., C:, D:, etc., and each drive
-has a topmost, or "root" directory, called <code>\</code>, e.g., <code>C:\</code>.
-Linux does not use drive letters but has a single "root" directory, called <code>/</code>.
-Note that the characters <code>\</code> and <code>/</code> also separate directories,
+has a topmost, or "root" directory, called <span class="fileName">\</span>,
+e.g., <span class="fileName">C:\</span>.
+Linux does not use drive letters but has a single "root" directory,
+called <span class="fileName">/</span>.
+Note that the characters <span class="fileName">\</span> and
+<span class="fileName">/</span> also separate directories,
 for example:
-<pre>
-/home/pi/allsky
-</pre>
+<span class="fileName">/home/pi/allsky</span>
+<br>
 The above string is called a "path name" since it names the path to a file or directory,
 in this case, the "allsky" directory.
 <ul>
-<li>The first <code>/</code> is the root directory.
-<li><code>home</code> is a directory under the root directory, and contains home directories for
+<li>The first <span class="fileName">/</span> is the root directory.
+<li><span class="fileName">home</span> is a directory under the root directory, and contains home directories for
 	all the users on your Pi (on most machines, just the "pi" login).
-<li>The second and third <code>/</code> characters separate directories.
-<li><code>pi</code> is a sub-directory in the <code>home</code> directory that contains all the "pi"
+<li>The second and third <span class="fileName">/</span> characters separate directories.
+<li><span class="fileName">pi</span> is a sub-directory in the
+<span class="fileName">home</span> directory that contains all the "pi"
 	login's files and directories and is called pi's HOME directory.
-<li><code>allsky</code> is the name of a directory that contains most of the Allsky files,
-	images, etc.
+<li><span class="fileName">allsky</span> is the name of a directory that contains
+most of the Allsky files, images, etc.
 </ul>
 <p>
 To move from one location to another, use the <code>cd</code>
@@ -318,8 +320,9 @@ Before using it you'll probably want to view its manual page.
 <blockquote>
 The Allsky configuration files should ONLY be edited via the WebUI - either
 via the "Allsky Settings" page for the main "settings" file,
-or via the WebUI's "Editor" page for the <code>config.sh</code> and
-<code>ftp-settings.js</code> files, and the Allsky Website's <code>configuration.json</code> file.
+or via the WebUI's "Editor" page for the <span class="fileName">config.sh</span> and
+<span class="fileName">ftp-settings.js</span> files,
+and the Allsky Website's <span class="fileName">configuration.json</span> file.
 </blockquote>
 </details>
 
@@ -363,9 +366,8 @@ Most commands also take a <code>--help</code> option
 </blockquote>
 </details>
 
-</div><!-- markdown-body --></div><!-- Layout-main ... -->
 </div><!-- Layout -->
-</div><!-- xcontainer-x1 ... -->
+</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

@@ -437,6 +437,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* 4: lots of gory details for developers only.
 		* Some error messages that appear in the `/var/log/allsky.log` file also appear in the WebUI so you don't miss them.
 		* Buttons in the "Dark" mode are now darker.
+		* The Allsky and Allsky Website versions are displayed at the top of the page.  A future version of Allsky will notify you if something needs updating.
 		* Many minor enhancements were made.
 
 	* Allsky Website:

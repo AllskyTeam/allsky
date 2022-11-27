@@ -144,6 +144,7 @@ struct config {			// for configuration variables
 	bool isCooledCamera					= false;		// Does the camera have a cooler?
 	bool supportsTemperature			= false;		// Does the camera have a temp sensor?
 	bool supportsAggression				= false;		// currently ZWO only
+	bool supportsMyModeMean				= false;
 	bool gainTransitionTimeImplemented	= false;		// currently ZWO only
 	bool imagesSavedInBackground		= false;		// are images save in background?
 

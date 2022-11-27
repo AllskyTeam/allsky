@@ -4,22 +4,21 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<script src="../documentation.js" type="application/javascript"></script>
+	<script src="../js/documentation.js" type="application/javascript"></script>
 	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>#pageTitle::before { content: "Constellation Overlay";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Constellation Overlay</title>
 </head>
 <body>
-<div class="d-flex flex-column flex-md-row gh-header">
-	<h1 class="flex-auto min-width-0 mb-2 mb-md-0 mr-0 mr-md-2 gh-header-title" id="onPage">Constellation Overlay</h1>
-</div>
-<div class="xcontainer-xl px-3 px-md-4 px-lg-5 mt-4">
-<div data-view-component="true" class="Layout Layout--flowRow-until-md Layout--sidebarPosition-end Layout--sidebarPosition-flowRow-end">
-<div data-view-component="true" class="Layout-sidebar wiki-rightbar">
-	<div w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-</div>
-<div data-view-component="true" class="Layout-main"><div class="markdown-body" id="mainContents">
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="px-3 Layout-main markdown-body" id="mainContents">
 
 <p>
 The Allsky Website allows an overlay to appear over the image which can contain constellations,
@@ -41,7 +40,7 @@ To make the overlay icon appear:
 <ul class="minimalPadding">
 	<li>In the WebUI, click on the <b>Editor</b> link.
 	<li>On the drop-down at the bottom of the page,
-		click on the <code>configuration.json</code> file for your local or remote Website.
+		click on the <span class="fileName">configuration.json</span> file for your local or remote Website.
 	<li>In the <span class="editorSetting">homePage</span> section of the file,
 		go to the <span class="editorSetting">leftSidebar</span> setting.
 	<li>The first group of sub-settings should be for the constellation overlay.
@@ -65,12 +64,12 @@ you may wish to change the default size by doing the following:
 <ul>
 	<li>In the WebUI's <b>Editor</b> page, edit the
 		<span class="editorSetting">imageHeight</span> setting in the
-		<code>configuration.json</code> file.
+		<span class="fileName">configuration.json</span> file.
 		The image's width will be automatically determined.
 	<li>Refresh your browser.
 	<li>If you set
 		<span class="editorShell">RESIZE_UPLOADS</span><span class="editorSpecial">=</span><span class="editorString">"true"</span>
-		in <code>config.sh</code> that size should be the same or greater than the size of the
+		in <span class="fileName">config.sh</span> that size should be the same or greater than the size of the
 		<span class="editorSetting">imageHeight</span> value.
 </ul>
 
@@ -90,7 +89,7 @@ When aligning the overlay keep in mind the difference between the rectangular,
 full-size picture and the (usually) round portion of that picture that contains the allsky image.
 </p>
 <p>
-In the steps below you'll be editing the <code>configuration.json</code> file
+In the steps below you'll be editing the <span class="fileName">configuration.json</span> file
 using the WebUI's <b>Editor</b> page.
 </p>
 <ul class="minimalPadding">
@@ -158,15 +157,14 @@ and undone when finished.
 		and you just need to modify <span class="editorSetting">az</span>.
 	<li>Have multiple windows open:
 		<ol>
-			<li>One editing <code>configuration.json</code>.
+			<li>One editing <span class="fileName">configuration.json</span>.
 			<li>A big one that shows the full image and overlay.
 		</ol>
 </ul>
 
 
-</div><!-- markdown-body --></div><!-- Layout-main ... -->
 </div><!-- Layout -->
-</div><!-- xcontainer-x1 ... -->
+</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

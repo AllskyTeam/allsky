@@ -72,6 +72,22 @@ if ($useLogin) {
 	$csrf_token = $_SESSION['csrf_token'];
 }
 
+// Get the version of the Allsky Website on the Pi, if it exists.
+// TODO: if a remote website exists, get it's version as well.
+$websiteFile = ALLSKY_WEBSITE . "/version";
+if (file_exists($websiteFile)) {
+	$localWebsiteVersion = file_get_contents($websiteFile);
+} else {
+	$localWebsiteVersion = "";
+}
+// Ditto for a remote website
+$remoteWebsiteVersion = "";
+if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
+	$a_str = file_get_contents(ALLSKY_WEBSITE_REMOTE_CONFIG, true);
+	$a_array = json_decode($a_str, true);
+	$config = getVariableOrDefault($a_array, 'config', '');
+	$remoteWebsiteVersion = getVariableOrDefault($config, 'AllskyWebsiteVersion', '<span class="errorMsg">[unknown]</span>');
+}
 ?>
 
 <!DOCTYPE html>
@@ -80,48 +96,42 @@ if ($useLogin) {
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="">
+	<meta name="description" content="Web User Interface (WebUI) for Allsky">
 	<meta name="author" content="Thomas Jacquin">
 
 	<title>AllSky WebUI</title>
 
 	<!-- Bootstrap Core CSS -->
-	<link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-	<!-- Make messages look nicer, and align the "x" with the message. -->
-	<style>
-		.x {line-height: 150%;}
-	</style>
+	<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
 	<!-- MetisMenu CSS -->
-	<link href="bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
+	<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
 
 	<!-- Timeline CSS -->
-	<link href="dist/css/timeline.css" rel="stylesheet">
+	<link href="documentation/css/timeline.css" rel="stylesheet">
 
 	<!-- Custom CSS -->
-	<link href="dist/css/sb-admin-2.css" rel="stylesheet">
-
-	<!-- Morris Charts CSS -->
-	<link href="bower_components/morrisjs/morris.css" rel="stylesheet">
+	<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
 
 	<!-- Font Awesome -->
-	<script defer src="js/all.min.js"></script>
+	<script defer src="documentation/js/all.min.js"></script>
 
 	<!-- Custom CSS -->
-	<link href="dist/css/custom.css" rel="stylesheet">
+	<link href="documentation/css/custom.css" rel="stylesheet">
 
-	<link rel="shortcut icon" type="image/png" href="img/allsky-favicon.png">
+	<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
 
 	<!-- RaspAP JavaScript -->
-	<script src="dist/js/functions.js"></script>
+	<script src="documentation/js/functions.js"></script>
 
 	<!-- jQuery -->
-	<script src="bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
 
 	<!-- Bootstrap Core JavaScript -->
-	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<script src="documentation/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
 	<!-- Metis Menu Plugin JavaScript -->
-	<script src="bower_components/metisMenu/dist/metisMenu.min.js"></script>
+	<script src="documentation/bower_components/metisMenu/dist/metisMenu.min.js"></script>
 
 	<script src="js/bigscreen.min.js"></script>
 
@@ -151,15 +161,14 @@ if ($useLogin) {
 	</script>
 
 	<!-- Custom Theme JavaScript -->
-	<script src="dist/js/sb-admin-2.js"></script>
+	<script src="documentation/js/sb-admin-2.js"></script>
 
 	<!-- Code Mirror editor -->
 	<link rel="stylesheet" href="lib/codeMirror/codemirror.css">
 	<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
 	<script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
 	<script type="text/javascript" src="lib/codeMirror/shell.js"> </script>
-<?php if (file_exists(ALLSKY_WEBSITE_LOCAL_CONFIG) || file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) { ?>
-	<script type="text/javascript" src="lib/codeMirror/javascript.js"> </script>
+<?php if ($localWebsiteVersion !== "" || $remoteWebsiteVersion !== "") { ?>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
 <?php } ?>
 </head>
@@ -175,11 +184,28 @@ if ($useLogin) {
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand valign-center" href="index.php">
-				<img src="img/allsky-logo.png" title="Allsky logo">
-				<div class="navbar-title">Web User Interface (WebUI)</div>
-				<div class="version-title"><?php displayVersions(); ?></div>
-			</a>
+			<div class="navbar-brand valign-center">
+				<a class="navbar-brand valign-center" href="index.php">
+					<img src="documentation/img/allsky-logo.png" title="Allsky logo">
+					<div class="navbar-title">Web User Interface (WebUI)</div>
+				</a>
+				<div class="version-title version-title-color">
+					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
+					&nbsp; &nbsp;
+<?php if ($localWebsiteVersion !== "") {
+					echo "<span class='nowrap'>";
+					echo "<a class='version-title-color' href='allsky/index.php' target='_blank' title='Click to go to local Website'>";
+					echo "Local Website: $localWebsiteVersion";
+					echo "</a></span>";
+} ?>
+					&nbsp; &nbsp;
+<?php if ($remoteWebsiteVersion !== "") {
+					echo "<span class='nowrap'>";
+					// TODO: if we knew the URL we could link to it
+					echo "Remote Website: $remoteWebsiteVersion";
+					echo "</span>";
+} ?>
+				</div>
 		</div> <!-- /.navbar-header -->
 
 		<!-- Navigation -->

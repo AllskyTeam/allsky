@@ -363,7 +363,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 
 	// This debug message isn't typcally needed since we already displayed a message about
 	// starting a new exposure, and below we display the result when the exposure is done.
-	Log(4, "  > %s to %s\n",
+	Log(4, "    > %s to %s\n",
 		wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Exposure set",
 		length_in_units(cg->currentExposure_us, true));
 
@@ -554,6 +554,7 @@ bool resetGainTransitionVariables(config cg)
 		if (gainTransitionImages * perImageAdjustGain < totalAdjustGain)
 			gainTransitionImages++;		// this one will get the remaining amount
 	}
+	Log(4, " totalAdjustGain=%d, gainTransitionImages=%d\n", totalAdjustGain, gainTransitionImages);
 
 	return(true);
 }
@@ -583,6 +584,7 @@ int determineGainChange(config cg)
 		// then DECREASE by totalAdjustGain each exposure.
 		// This assumes night gain is > day gain.
 		amt = totalAdjustGain - (perImageAdjustGain * numGainChanges);
+Log(4, ">> DAY: amt=%d, totalAdjustGain=%d, perImageAdjustGain=%d, numGainChanges=%d\n", amt, totalAdjustGain, perImageAdjustGain, numGainChanges);
 		if (amt < 0)
 		{
 			amt = 0;
@@ -602,8 +604,8 @@ int determineGainChange(config cg)
 		}
 	}
 
-	Log(4, "  xxxx Adjusting %s gain by %d on next picture to %d; will be gain change # %d of %d.\n",
-		dayOrNight.c_str(), amt, amt+cg.currentGain, numGainChanges, gainTransitionImages);
+	Log(4, "Adjusting %s gain by %d on next picture to %d (currentGain=%2f); will be gain change # %d of %d.\n",
+		dayOrNight.c_str(), amt, amt+(int)cg.currentGain, cg.currentGain, numGainChanges, gainTransitionImages);
 	return(amt);
 }
 
@@ -1042,10 +1044,16 @@ int main(int argc, char *argv[])
 					double newGain = pow(10, CG.dayGain / 10.0 / 20.0);
 					Log(4, "Using the last night exposure (%s),", length_in_units(CG.currentExposure_us, true));
 					CG.currentExposure_us = (CG.currentExposure_us * oldGain) / newGain;
-					Log(4," old (%'f) and new (%'f) Gain to calculate new exposure of %s\n", oldGain, newGain, length_in_units(CG.currentExposure_us, true));
+					Log(4," old (%'2f) and new (%'2f) Gain to calculate new exposure of %s\n", oldGain, newGain, length_in_units(CG.currentExposure_us, true));
 				}
 
 				CG.currentMaxAutoExposure_us = CG.dayMaxAutoExposure_us;
+				Log(4, "currentMaxAutoExposure_us set to daytime value of %s.\n", length_in_units(CG.currentMaxAutoExposure_us, true));
+				if (CG.currentExposure_us > CG.currentMaxAutoExposure_us) {
+					Log(3, "Decreasing currentExposure_us from %s", length_in_units(CG.currentExposure_us, true));
+					Log(3, "to %s\n", length_in_units(CG.currentMaxAutoExposure_us, true));
+					CG.currentExposure_us = CG.currentMaxAutoExposure_us;
+				}
 #ifdef USE_HISTOGRAM
 				// Don't use camera auto-exposure since we mimic it ourselves.
 				if (CG.dayAutoExposure)
@@ -1150,7 +1158,7 @@ int main(int argc, char *argv[])
 			}
 			CG.HB.useHistogram = false;		// only used during day
 		}
-		// ========== Done with dark fram / day / night settings
+		// ========== Done with dark frams / day / night settings
 
 
 		if (CG.myModeMeanSetting.currentMean > 0.0)
@@ -1198,7 +1206,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		setControl(CG.cameraNumber, ASI_GAIN, CG.currentGain + gainChange, CG.currentAutoGain ? ASI_TRUE : ASI_FALSE);
+		setControl(CG.cameraNumber, ASI_GAIN, (long)CG.currentGain + gainChange, CG.currentAutoGain ? ASI_TRUE : ASI_FALSE);
 		if (CG.currentAutoGain)
 			setControl(CG.cameraNumber, ASI_AUTO_MAX_GAIN, CG.currentMaxAutoGain, ASI_FALSE);
 
@@ -1423,7 +1431,14 @@ int main(int argc, char *argv[])
 
 						// if lastMean/acceptable is 9/90, it's 1/10th of the way there, so multiple exposure by 90/9 (10).
 						// ZWO cameras don't appear to be linear so increase the multiplier amount some.
-						float multiply = ((double)acceptable / CG.lastMean) * multiplier;
+						float multiply;
+						if (CG.lastMean == 0) {
+							// TODO: is this correct?
+							multiply = ((double)acceptable) * multiplier;
+						} else {
+							multiply = ((double)acceptable / CG.lastMean) * multiplier;
+						}
+// Log(4, "multiply=%f, acceptable=%d, lastMean=%f, multiplier=%f\n", multiply, acceptable, CG.lastMean, multiplier);
 						long exposureDiff_us = (CG.lastExposure_us * multiply) - CG.lastExposure_us;
 
 						// Adjust by aggression setting.
@@ -1437,8 +1452,13 @@ int main(int argc, char *argv[])
 							}
 						}
 						newExposure_us = CG.lastExposure_us + exposureDiff_us;
-						Log(4, "=== next exposure changing by %'ld us to %'ld (multiply by %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, lastMean=%d]\n",
-							exposureDiff_us, newExposure_us, multiply, CG.lastExposure_us, acceptableType, acceptable, (int)CG.lastMean);
+						if (newExposure_us > CG.currentMaxAutoExposure_us) {
+							Log(4, "  > === Calculated newExposure_us (%'ld) > currentMaxAutoExposure_us (%'ld); setting to max\n", newExposure_us, CG.currentMaxAutoExposure_us);
+							newExposure_us = CG.currentMaxAutoExposure_us;
+						} else {
+							Log(4, "    > Next exposure changing by %'ld us to %'ld (multiply by %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, lastMean=%d]\n",
+								exposureDiff_us, newExposure_us, multiply, CG.lastExposure_us, acceptableType, acceptable, (int)CG.lastMean);
+						}
 
 						if (priorMeanDiff > 0 && lastMeanDiff < 0)
 						{ 

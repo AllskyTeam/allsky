@@ -115,7 +115,6 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 			exit 0		# Gets us out of this sub-shell
 		fi
 
-		MINI_TIMELAPSE_FILES="${ALLSKY_TMP}/mini-timelapse_files.txt"
 		if [ -f "${MINI_FILE}" ]; then
 			cat "${MINI_FILE}"
 		else

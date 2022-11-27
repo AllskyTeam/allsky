@@ -4,6 +4,8 @@ function DisplayModule() {
 
 ?>
 
+<script src="/documentation/js/all.min.js" type="application/javascript"></script>
+
 <script src="/js/sortable/sortable.js"></script>
 <script src="/js/sortable/jquery-sortable.js"></script>
 
@@ -38,10 +40,10 @@ function DisplayModule() {
                         <div class="collapse navbar-collapse" id="oe-autoexposure-navbar">
                             <ul class="nav navbar-nav">
                                 <li>
-                                    <div class="btn btn-lg navbar-btn glyphicon glyphicon-floppy-disk" id="module-editor-save" data-toggle="tooltip" data-placement="top" data-container="body" title="Save The Module Configuration"></div>
+                                    <div class="btn btn-lg navbar-btn" id="module-editor-save" data-toggle="tooltip" data-placement="top" data-container="body" title="Save The Module Configuration"><i class="fa-solid fa-floppy-disk fa-lg"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn glyphicon glyphicon-align-justify" id="module-editor-new" data-toggle="tooltip" data-placement="top" data-container="body" title="Add A New Module"></div>
+                                    <div class="btn btn-lg navbar-btn" id="module-editor-new" data-toggle="tooltip" data-placement="top" data-container="body" title="Add A New Module"><i class="fa-solid fa-upload fa-lg"></i></div>
                                 </li>
                                 <li class="btn-lg">
                                     <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
@@ -57,14 +59,14 @@ function DisplayModule() {
                             </ul>
                             <ul class="nav navbar-nav navbar-right">
                                 <li>
-                                    <div class="btn btn-lg navbar-btn glyphicon glyphicon-cog" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options">
+                                    <div class="btn btn-lg navbar-btn" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options"><i class="fa-solid fa-gear fa-lg"></i>
                                     </div>
                                 </li>
                                 <li id="oe-toolbar-debug" class="hidden">
-                                    <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn glyphicon glyphicon-wrench" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"></div>
+                                    <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug fa-lg"></i></div>
                                 </li>                                
                                 <li>
-                                    <div class="btn btn-lg navbar-btn glyphicon glyphicon-repeat" id="module-editor-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset Config to default"></div>
+                                    <div class="btn btn-lg navbar-btn" id="module-editor-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset Config to default"><i class="fa-solid fa-rotate-right fa-lg"></i></div>
                                 </li>
                             </ul>                            
                         </div>

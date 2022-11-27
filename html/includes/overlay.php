@@ -69,52 +69,54 @@ function DisplayOverlay($image_name)
                                         <ul class="nav navbar-nav">
                                             <li>
                                                 <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Current Configuration">
-                                                    <div class="btn btn-lg navbar-btn glyphicon glyphicon-floppy-disk disabled" id="oe-save"></div>
+                                                    <div class="btn btn-lg navbar-btn disabled" id="oe-save"><i class="fa-solid fa-floppy-disk fa-lg"></i></div>
                                                 </div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-font" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"></div>
+                                                <div class="btn btn-lg navbar-btn" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"><i class="fa-solid fa-font fa-lg"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-picture" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Image Field"></div>
+                                                <div class="btn btn-lg navbar-btn" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Image Field"><i class="fa-regular fa-image fa-lg"></i></div>
                                             </li>
                                             <li>
                                                 <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Field">
-                                                    <div class="btn btn-lg navbar-btn glyphicon glyphicon-remove disabled" id="oe-delete"></div>
+                                                    <div class="btn btn-lg navbar-btn disabled" id="oe-delete"><i class="fa-solid fa-xmark fa-lg"></i></div>
                                                 </div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-list" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Available Variables"></div>
+                                                <div class="btn btn-lg navbar-btn" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Available Variables"><i class="fa-regular fa-rectangle-list fa-lg"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-check" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"></div>
+                                                <div class="btn btn-lg navbar-btn" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check fa-lg"></i></div>
                                             </li>
 
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-zoom-in oe-zoom" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom in"></div>
+                                                <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom in"><i class="fa-solid fa-magnifying-glass-plus fa-lg"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-zoom-out oe-zoom" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"></div>
+                                                <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus fa-lg"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-resize-full oe-zoom" id="oe-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"></div>
+                                                <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center fa-lg"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-resize-small oe-zoom" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"></div>
+                                                <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center fa-lg"></i></div>
                                             </li>
                                         </ul>
                                         <ul class="nav navbar-nav navbar-right">
                                             <li id="oe-toolbar-debug" class="hidden">
-                                                <div id="oe-toobar-debug-button" class="btn btn-lg navbar-btn glyphicon glyphicon-wrench" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"></div>
+                                                <div id="oe-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug fa-lg"></i></div>
                                             </li>
                                             <li>
-                                                <div id="oe-upload-font" class="btn btn-lg navbar-btn glyphicon glyphicon-import" data-toggle="tooltip" data-container="body" data-placement="top" title="Font Manager"></div>
+                                                <div id="oe-upload-font" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Font Manager">
+                                                    <i class="fa-solid fa-download fa-lg"></i>
+                                                </div>
                                             </li>
                                             <li>
-                                                <div id="oe-show-image-manager" class="btn btn-lg navbar-btn glyphicon glyphicon-upload" data-toggle="tooltip" data-container="body" data-placement="top" title="Image Manager"></div>
+                                                <div id="oe-show-image-manager" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Image Manager"><i class="fa-regular fa-images fa-lg"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-cog" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options">
+                                                <div class="btn btn-lg navbar-btn" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options"><i class="fa-solid fa-gear fa-lg"></i>
                                                 </div>
                                             </li>
                                         </ul>
@@ -133,27 +135,25 @@ function DisplayOverlay($image_name)
                                     <div class="collapse navbar-collapse" id="oe-autoexposure-navbar">
                                         <ul class="nav navbar-nav">
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-floppy-disk" id="oe-savemask" data-toggle="tooltip" data-placement="top" data-container="body" title="Save The AutoExposure Mask"></div>
+                                                <div class="btn btn-lg navbar-btn glyphicon" id="oe-savemask" data-toggle="tooltip" data-placement="top" data-container="body" title="Save The AutoExposure Mask"><i class="fa-solid fa-floppy-disk fa-lg"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-refresh" id="oe-autoexposure-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset The AutoExposure Mask"></div>
+                                                <div class="btn btn-lg navbar-btn" id="oe-autoexposure-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset The AutoExposure Mask"><i class="fa-solid fa-rotate-right fa-lg"></i></div>
                                             </li>
 
 
 
-
-
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-zoom-in oe-autoexposure-zoom" id="oe-autoexposure-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom in"></div>
+                                                <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom in"><i class="fa-solid fa-magnifying-glass-plus fa-lg"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-zoom-out oe-autoexposure-zoom" id="oe-autoexposure-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"></div>
+                                                <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus fa-lg"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-resize-full oe-autoexposure-zoom" id="oe-autoexposure-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"></div>
+                                                <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center fa-lg"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-resize-small oe-autoexposure-zoom" id="oe-autoexposure-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"></div>
+                                                <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center fa-lg"></i></div>
                                             </li>
 
 

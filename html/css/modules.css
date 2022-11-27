@@ -41,6 +41,10 @@
   }
 }
 
+.list-group .panel-heading {
+  background-color: #e0e0e0;
+}
+
 .list-group-item {
   border-radius: 10px !important;
   margin-bottom: 10px !important;
@@ -70,6 +74,11 @@
     background-color: #500000 !important;
     color: #888888 !important;
 } 
+.dark .panel-heading, .dark .panel-footer {
+  color: #888888;
+  border-color: #333333;
+  background-color: #171717;
+}
 
 .dark .modal-content {
     background-color: #222222 !important;
@@ -160,10 +169,6 @@
 
 #module-settings-dialog select {
   padding: 5px;
-}
-
-.list-group .panel-heading {
-  background-color: #e0e0e0;
 }
 
 .module-lists h4 {

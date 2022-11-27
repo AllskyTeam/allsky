@@ -50,12 +50,12 @@
                             <ul class="nav navbar-nav">\
                                 <li>\
                                     <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Add selected image">\
-                                        <div class="btn btn-lg navbar-btn glyphicon glyphicon-picture disabled" id="' + plugin.addId + '"></div>\
+                                        <div class="btn btn-lg navbar-btn disabled" id="' + plugin.addId + '"><i class="fa-solid fa-image"></i></div>\
                                     </div>\
                                 </li>\
                                 <li> \
                                     <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Image">\
-                                        <div class="btn btn-lg navbar-btn glyphicon glyphicon-remove disabled" id="' + plugin.deleteId + '"></div>\
+                                        <div class="btn btn-lg navbar-btn disabled" id="' + plugin.deleteId + '"><i class="fa-solid fa-trash"></i></div>\
                                     </div>\
                                 </li>\
                             </ul>\

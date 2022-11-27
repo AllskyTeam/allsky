@@ -340,11 +340,11 @@ class OEUIMANAGER {
                         width: '100px',
                         render: function (item, type, row, meta) {
                             let buttons = '<div class="btn-group"> <button type="button" class="btn btn-primary btn-xs oe-list-add" data-id="' + item.id + '">';
-                            buttons += '<i class="glyphicon glyphicon-plus oe-list-add" data-id="' + item.id + '"></i></button>';
+                            buttons += '<i class="fa-solid fa-plus oe-list-add" data-id="' + item.id + '"></i></button>';
                             buttons += '<button style="margin-left:5px;" type="button" class="btn btn-warning btn-xs oe-list-edit" data-id="' + item.id + '">';
-                            buttons += '<i class="glyphicon glyphicon-pencil oe-list-edit" data-id="' + item.id + '"></i></button>';
+                            buttons += '<i class="fa-solid fa-pen-to-square oe-list-edit" data-id="' + item.id + '"></i></button>';
                             if (item.source == 'User') {
-                                buttons += '<button style="margin-left:5px;" type="button" class="btn btn-danger btn-xs oe-list-delete" data-id="' + item.id + '"><i class="glyphicon glyphicon-remove oe-list-delete" data-id="' + item.id + '"></i></button>';
+                                buttons += '<button style="margin-left:5px;" type="button" class="btn btn-danger btn-xs oe-list-delete" data-id="' + item.id + '"><i class="fa-solid fa-trash oe-list-delete" data-id="' + item.id + '"></i></button>';
                             }
                             buttons += '</div>';
                             return buttons;
@@ -443,7 +443,7 @@ class OEUIMANAGER {
                                     dataId = '';
                                 }
                                 let buttons = '<div class="btn-group"> <button ' + disabled + ' type="button" class="btn btn-primary btn-xs oe-all-list-add" ' + dataId + '>';
-                                buttons += '<i class="glyphicon glyphicon-plus oe-all-list-add" ' + dataId + '></i></button>';
+                                buttons += '<i class="fa-solid fa-plus oe-all-list-add" ' + dataId + '></i></button>';
                                 buttons += '</div>';
                                 
                                 return buttons;
@@ -485,7 +485,7 @@ class OEUIMANAGER {
 
             event.preventDefault();
             event.stopPropagation();
-            let fieldId = $(event.target).data('id');
+            let fieldId = $(event.currentTarget).data('id');
 
             let field = this.#configManager.findFieldById(fieldId);
 
@@ -509,7 +509,7 @@ class OEUIMANAGER {
         $(document).on('click', '.oe-all-list-add', (event) => {
             event.preventDefault();
             event.stopPropagation();
-            let fieldId = $(event.target).data('id');
+            let fieldId = $(event.currentTarget).data('id');
             let field = this.#configManager.findAllFieldsById(fieldId);
             let fieldName = '${' + field.name + '}';
             $('#oe-item-list-edit-dialog-id').val('');
@@ -539,7 +539,7 @@ class OEUIMANAGER {
 
             event.preventDefault();
             event.stopPropagation();
-            let fieldId = $(event.target).data('id');
+            let fieldId = $(event.currentTarget).data('id');
 
             let field = this.#configManager.findFieldById(fieldId);
 
@@ -596,7 +596,7 @@ class OEUIMANAGER {
             event.preventDefault();
             event.stopPropagation();
 
-            let fieldId = $(event.target).data('id');
+            let fieldId = $(event.currentTarget).data('id');
             let field = this.#configManager.findFieldById(fieldId);
 
             if (field !== 'undefined') {
@@ -928,7 +928,7 @@ class OEUIMANAGER {
 
                             let buttons = '';
                             if (item.name !== 'moon_phases' && item.name !== defaultFont && !item.path.includes('msttcorefonts')) {
-                                buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="glyphicon glyphicon-remove" data-fontname="' + item.name + '"></i></button>';
+                                buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="fa-solid fa-trash"></i></button>';
                                 buttons += '</div>';
                             }
                             return buttons;
@@ -947,7 +947,7 @@ class OEUIMANAGER {
         $(document).on('click', '.oe-list-font-delete', (event) => {
             event.stopPropagation();
             if (window.confirm('Are you sure you wish to delete this font? If the font is in use then all fields will be set to the default font.')) {
-                let fontName = $(event.target).data('fontname');
+                let fontName = $(event.currentTarget).data('fontname');
                 if (fontName !== 'undefined') {
                     let uiManager = window.oedi.get('uimanager');
                     uiManager.deleteFont(fontName);

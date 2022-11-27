@@ -529,22 +529,3 @@ select {
 	background-color: #e4e4e4;
 	border-radius: 4px;
 }
-
-
-.dark .pagination>li>a, .pagination>li>span {
-    background-color: #ddd;
-}
-
-.dark .pagination>.active>a, .dark .pagination>.active>a:focus, .dark .pagination>.active>a:hover, .dark .pagination>.active>span, .dark .pagination>.active>span:focus, .dark .pagination>.active>span:hover {
-    z-index: 2;
-    color: #fff;
-    cursor: default;
-    background-color: #337ab7;
-    border-color: #337ab7;
-}
-
-.dark .btn-default {
-    color: #333;
-    background-color: #ddd;
-    border-color: #ccc;
-}

@@ -1,3 +1,8 @@
+:root {
+	--main-body-padding: 12px;
+	--Layout-sidebar-width: 250px;
+}
+
 body {
 	font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
 	font-size: 14px;
@@ -43,10 +48,14 @@ body {
 .markdown-body .anchor:focus {
 	outline: none
 }
-.markdown-body blockquote, .markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body details {
+.markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body details {
 	margin-top: 5px;
 	margin-bottom: 16px;
 }
+p {
+	margin: 16px 0px 16px 0px;
+}
+
 .markdown-body hr {
 	height: .25em;
 	padding: 0;
@@ -61,14 +70,12 @@ body {
 	margin-left: 5%;
 	background-color: blue;
 }
-blockquote {
-    margin: 0;
-}
 .markdown-body blockquote {
-	padding: 0 1em;
+	font-size: inherit;
+	padding: 0.5em 0.75em 0.5em 0.75em;
 	color: var(--color-attention-fg);
 	background-color: var(--color-attention-verysubtle);
-	border-left: .25em solid var(--color-attention-emphasis);
+	border-left: 0.5em solid var(--color-attention-emphasis);
 	max-width: max-content;
 	margin: 10px 0px 10px 0px;
 }
@@ -100,14 +107,14 @@ blockquote {
 }
 .markdown-body h2 {
 	padding-bottom: .3em;
-	font-size: 1.5em;
+	font-size: 1.75em;
 	border-bottom: 1px solid var(--color-border-muted);
 }
 .markdown-body h3 {
-	font-size: 1.25em;
+	font-size: 1.5em;
 }
 .markdown-body h4 {
-	font-size: 1em;
+	font-size: 1.25em;
 }
 .markdown-body h5 {
 	font-size: .875em
@@ -153,13 +160,24 @@ blockquote {
 .markdown-body li {
 	margin-top: 0.25em;
 }
+.sidebar .sidebar-nav.navbar-collapse {
+	padding-left: 5px;
+	padding-right: 5px;
+}
+.sidebar .sidebar-nav.navbar-collapse ol,
+.sidebar .sidebar-nav.navbar-collapse ul {
+	padding-left: 30px;
+}
+.markdown-body .sidebar li {
+	margin-top: 0.15em;
+}
 .markdown-body li>p {
 	margin-top: 16px;
 }
-.markdown-body ul:first-child, .markdown-body ol:first-child {
+.markdown-body not(.sidebar) ul:first-child, .markdown-body ol:first-child {
 	padding-top: 2em;
 }
-.markdown-body ul:last-child, .markdown-body ol:last-child {
+.markdown-body not(.sidebar) ul:last-child, .markdown-body not(.sidebar) ol:last-child {
 	padding-bottom: 0.75em;
 }
 .markdown-body .minimalPadding li {
@@ -179,26 +197,29 @@ blockquote {
 	padding: 0 16px;
 	margin-bottom: 16px
 }
-.markdown-body h1:not(:first-child),
-.markdown-body h2:not(:first-child),
-.markdown-body h3:not(:first-child),
-.markdown-body h4:not(:first-child),
-.markdown-body h5:not(:first-child),
-.markdown-body h6:not(:first-child) {
-	margin-top: 20px;
-}
 .markdown-body h1,
 .markdown-body h2,
-.markdown-body h3 {
-	margin-top: 20px;
+.markdown-body h3,
+.markdown-body h4 {
+	margin-top: 1.5em;
 	margin-bottom: 10px;
 	line-height: 1.25;
 	background-color: var(--color-accent-muted);
 	padding: 3px 0 3px 5px;
 }
+.markdown-body h2,
 .markdown-body h3 {
 	background-color: var(--color-accent-subtle);
 }
+.markdown-body h3 {	/* TODO: want a lighter shade of blue than h2/h3, but there isn't one defined in light.css */
+	opacity: 0.8;
+}
+.markdown-body h4 {
+	background-color: transparent;
+	padding-left: 0;
+	text-decoration: underline;
+}
+
 .markdown-body table {
 	width: 100%;
 	max-width: 100%;
@@ -330,26 +351,30 @@ blockquote {
 	text-align: right
 }
 .markdown-body code,.markdown-body tt {
-	padding: 0 .4em;
+	padding: 0 .2em 0 .4em;
 	margin: 0;
 	font-size: 85%;
+	color: inherit;
 	background-color: var(--color-neutral-muted);
-	border-radius: 6px
+	border: 1px solid var(--color-border-muted);
+	border-radius: 6px;
 }
 .markdown-body code br,.markdown-body tt br {
-	display: none
+	display: none;
 }
 .markdown-body del code {
-	text-decoration: inherit
+	text-decoration: inherit;
 }
 .markdown-body samp {
-	font-size: 85%
+	font-size: 85%;
 }
 .markdown-body pre {
-	word-wrap: normal
+	word-wrap: normal;
+	margin-left: 10px;
+	margin-right: 10px;
 }
 .markdown-body pre code {
-	font-size: 100%
+	font-size: 100%;
 }
 .markdown-body pre>code {
 	padding: 0;
@@ -357,7 +382,7 @@ blockquote {
 	word-break: normal;
 	white-space: pre;
 	background: transparent;
-	border: 0
+	border: 0;
 }
 .markdown-body .highlight {
 	margin-top: 8px;
@@ -455,55 +480,15 @@ blockquote {
 .mb-4 {
 	margin-bottom: 24px !important;
 }
-.d-flex {
-	display: flex !important;
-}
-.flex-column {
-	flex-direction: column !important;
-}
-.gh-header {
-	background-color: var(--color-canvas-default);
-}
 .gh-header-title {
-	margin-right: 150px;
-	margin-bottom: 20px;
 	font-weight: bold;
 	line-height: 1.125;
 	word-wrap: break-word;
-	border-bottom: 1px solid var(--color-accent-muted);
+	padding-left: var(--main-body-padding);
+	padding-bottom: 5px;
+	margin-bottom: 0;
+	border-bottom: 1px solid var(--color-accent-emphasis);
 	color: var(--color-accent-emphasis);
-}
-.mb-2 {
-	margin-bottom: 8px !important;
-}
-.mr-0 {
-	margin-right: 0 !important;
-}
-.min-width-0 {
-	min-width: 0 !important;
-}
-.flex-auto {
-	flex: auto !important;
-}
-
-.Box {
-	background-color: var(--color-canvas-default);
-	background-color: var(--color-canvas-subtle);
-	border-color: var(--color-border-default);
-	border-style: solid;
-	border-width: 1px;
-	border-radius: 6px;
-}
-.Box--condensed {
-	line-height: 1.25;
-}
-.Box--condensed .Box-body {
-	padding: 8px 16px;
-}
-.Box-body:last-of-type {
-	margin-bottom: -1px;
-	border-bottom-right-radius: 6px;
-	border-bottom-left-radius: 6px;
 }
 
 ::marker {
@@ -532,103 +517,66 @@ summary {
 }
 code, pre, samp, tt {
 	font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
-	font-size: 1em;
 	font-size: 12px;
 }
 b, strong {
 	font-weight: 600;
 }
 
-/* Minimize the size of the sidebar */
-.wiki-custom-sidebar {
-	padding: 0 !important;
-}
-.wiki-custom-sidebar ol:first-child,
-.wiki-custom-sidebar ol:last-child {
-	padding-top: 10px;
-	padding-bottom: 0;
-}
-
 .Layout {
 	display: grid;
-	--Layout-sidebar-width: 220px;
-	--Layout-gutter: 16px;
+	grid-template-columns: 1fr var(--Layout-sidebar-width);
+	--Layout-gutter: 10px;
 	grid-auto-flow: column;
-	grid-template-columns: auto 0 minmax(0, calc(100% - var(--Layout-sidebar-width) - var(--Layout-gutter)));
 	grid-gap: var(--Layout-gutter);
 }
-.Layout-sidebar {
-	width: var(--Layout-sidebar-width);
+.Layout.Layout--sidebarPosition-end .Layout-sidebar {
+	grid-column: 2;		/* this is the 2nd column of 2 */
+	margin-right: var(--main-body-padding);
 }
-.Layout .Layout-sidebar {
+.Layout.Layout--sidebarPosition-end .Layout-main {
 	grid-column: 1;
 }
 .Layout-main {
 	min-width: 0;
 }
-.Layout .Layout-main {
-	grid-column: 2/span 2;
+
+.navbar-header {
+	float: none;
 }
-.Layout.Layout--sidebarPosition-end .Layout-sidebar {
-	grid-column: 2/span 2;
-}
-.Layout.Layout--sidebarPosition-end .Layout-main {
-	grid-column: 1;
-}
-.Layout.Layout--sidebarPosition-end {
-	grid-template-columns: minmax(0, calc(100% - var(--Layout-sidebar-width) - var(--Layout-gutter))) 0 auto;
+.sidebar-nav.navbar-collapse {
+	font-size: 12px;
+	border: 1px solid var(--color-accent-muted);
+	border-radius: 6px;
 }
 
-@media (min-width: 544px) {
-  .Layout {
-	--Layout-sidebar-width: 220px;
-  }
-}
-@media (max-width: calc(767.98px)) {
-  .Layout.Layout--flowRow-until-md {
-	grid-auto-flow: row;
-	grid-template-columns: 1fr !important;
-  }
-  .Layout.Layout--flowRow-until-md.Layout--sidebarPosition-flowRow-end .Layout-sidebar {
-	grid-row: 2/span 2;
-  }
-  .Layout.Layout--flowRow-until-md .Layout-sidebar, .Layout.Layout--flowRow-until-md .Layout-divider, .Layout.Layout--flowRow-until-md .Layout-main {
-	width: 100% !important;
-	grid-column: 1 !important;
-  }
-}
-@media (min-width: 768px) {
-  .px-md-4 {
-	padding-right: 24px !important;
-	padding-left: 24px !important;
-  }
-  .Layout {
-	--Layout-sidebar-width: 256px;
-  }
-  .flex-md-row {
-	flex-direction: row !important;
-  }
-  .mr-md-2 {
-	margin-right: 8px !important;
-  }
-  .mb-md-0 {
+.markdown-body .navbar-header h1 {
 	margin-bottom: 0 !important;
-  }
 }
-@media (min-width: 1012px) {
-  .px-lg-5 {
-	padding-right: 32px !important;
-	padding-left: 32px !important;
-  }
-  .Layout {
-	--Layout-gutter: 24px;
-	--Layout-sidebar-width: 296px;
-  }
+
+@media (max-width: 1000px) {
+	.sidebar .sidebar-nav.navbar-collapse {
+		margin-left: var(--main-body-padding);
+	}
+	.Layout { display: block;  }
+	.navbar-collapse { display: none; }
+	.navbar-collapse.collapse:not(.in) { display: none !important; }
+	.navbar-toggle { display: block; margin-top: 16px; }
+	.navbar-default.sidebar {
+		width: 100%;
+		margin: 0px 0px 20px 0px;
+	}
+	.Layout.Layout--flowRow-until-md .Layout-sidebar,
+	.Layout.Layout--flowRow-until-md .Layout-divider,
+	.Layout.Layout--flowRow-until-md .Layout-main {
+		width: 100% !important;
+		grid-column: 1 !important;
+	}
 }
 
 .px-3 {
-	padding-right: 8px !important;
-	padding-left: 8px !important;
+	padding-right: 10px !important;
+	padding-left: var(--main-body-padding) !important;
 }
 .mt-4 {
 	margin-top: 24px !important;
@@ -639,7 +587,10 @@ b, strong {
 	margin-left: auto;
 }
 
-a {
+.sidebar ul li {
+	border-bottom: 0;
+}
+a, .sidebar ul li a {
 	color: var(--color-accent-fg);
 	text-decoration: none;
 	background-color: transparent;
@@ -665,8 +616,19 @@ a {
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	color: #333;
+	color:#00009b;
 	font-weight: bold;
 	font-size: 95%;
+}
+.WebUIValue {
+	padding: 0 3px 0 3px;
+	font-size: 14px;
+	font-family: "Helvetica Neue", Helvetica, Arial;
+	font-family: inherit;
+	color: #555;
+	border: 1px solid #ccc;
+	background-color: #e4e4e4;
+	border-radius: 4px;
 }
 .shSetting { /* Matches what's in the WebUI's "Editor" page for *.sh files. */
 	color: #fd971f;
@@ -735,12 +697,19 @@ a {
 .nowrap {
 	white-space: nowrap;
 }
-.buttonIcon {	/* button icons from WebUI - shrink in documentation */
+.buttonIcon, .buttonIconLarge {	/* button icons from WebUI - shrink in documentation */
 	width: 90px;
 	height: auto;
 	margin-bottom: -2px;	/* so it looks like it lines up with the text around it */
 }
-.imgBorder {	/* put a border around an image */
+.buttonIconLarge {
+	width: 120px;
+}
+.imgCenter {
+	margin: 10px auto 10px auto;
+	display: block;
+}
+.imgBorder {	/* put a border around a light image */
 	border: 1px solid var(--color-border-muted);
 }
 .imgBorderDark {	/* put a border around a darker image */
@@ -771,99 +740,3 @@ a {
 	background-color: #f8f8f8;
 	border-bottom: 1px solid #e7e7e7;
 }
-
-/**
-* Start AG changes
-**/
-h4 {
-	font-size: 1.3em !important;
-}
-.markdown-body>div, .markdown-body>div div {
-	margin-left: 20px !important;
-}
-
-.markdown-body table.module-settings, .markdown-body table.module-settings td {
-	border: none !important;
-}
-
-table.module-settings > tbody > tr > td:nth-of-type(1) {
-	width: 40%;
-}
-
-table.module-info > tbody > tr > td:nth-of-type(1) {
-	width: 20%;
-}
-
-table.three-col, table.two-col {
-	width: 100% !important;
-}
-table.three-col, table.three-col td, table.two-col, table.two-col td {
-	border: none !important;
-}
-
-table.two-col > tbody > tr > td {
-	width: 40%;
-}
-
-table.three-col > tbody > tr > td {
-	width: 33%;
-}
-
-.img50 {
-	width: 50%;
-}
-.img75 {
-	width: 75%;
-}
-
-.code {
-	font-family: 'Courier New', monospace;
-	font-size: 11px
-}
-
-.markdown-body div.json {
-	margin-left: 0px !important;
-}
-
-.json {
-	font-family: 'Courier New', monospace;
-	font-size: 12px;
-	padding: 10px 40px 10px 0px;
-	font-weight: bolder;
-	line-height: 1.2em;
-	width: 100%;
-}
-
-.json .header {
-	font-weight: bolder;
-}
-.json .indent1 {
-	margin-left: 40px !important;
-}
-.json .indent2 {
-	margin-left: 60px !important;
-}
-.json .indent3 {
-	margin-left: 80px !important;
-}
-
-table.vtop td {
-	vertical-align: top;
-}
-
-table.vtop td ul {
-	padding-top: 0px !important;
-}
-
-table.vtop td p:first-child  {
-	margin-top: 0px !important;
-}
-
-.center-image {
-	display: block;
-	margin-left: auto;
-	margin-right: auto;	
-}
-/**
-* End AG changes
-**

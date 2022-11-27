@@ -113,7 +113,7 @@ class OEEXPOSURE {
         });
 
         $(document).on('click', '.oe-autoexposure-zoom', (event) => {
-            this.setZoom(event.target.id);
+            this.setZoom(event.currentTarget.id);
         });
 
         $.ajax({

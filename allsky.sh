@@ -211,10 +211,6 @@ else
 	rm -f "${FREQUENCY_FILE}"
 fi
 
-# Ditto for timelapse mini files
-# saveImage.sh will create the frequency file as needed.
-rm -f "${ALLSKY_TMP}/MINI_UPLOAD_FREQUENCY.txt"
-
 if [ "$CAPTURE_EXTRA_PARAMETERS" != "" ]; then
 	ARGUMENTS+=(${CAPTURE_EXTRA_PARAMETERS})	# Any additional parameters
 fi

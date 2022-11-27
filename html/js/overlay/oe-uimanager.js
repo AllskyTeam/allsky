@@ -956,7 +956,7 @@ class OEUIMANAGER {
         });
 
         $(document).on('click', '.oe-zoom', (event) => {
-            this.setZoom(event.target.id);
+            this.setZoom(event.currentTarget.id);
         });
 
         $(document).on('click', '#oe-show-image-manager', (event) => {

@@ -19,7 +19,7 @@
 		"overlayOffsetLeft": 0,
 		"overlayOffsetTop": 0,
 		"az": 0,
-		"imageHeight": 720,
+		"imageWidth": 900,
 		"opacity": 0.5,
 		"objectsComment": "If you want the Messier objects on the overlay, remove the 'XXX_' below.",
 		"XXX_objects": "virtualsky/messier.json",

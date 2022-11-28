@@ -447,6 +447,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* You can specify the order, contents, look, and style of the icons on the left side.  You can also hide an icon or display a new one.
 			* You can specify the order, contents, and style of the popout that appears on the right side.  For example, you can add a link to pictures of your allsky camera.
 			* You can set a background image.
+			* You can easily change the maximum width of the image.
 			* You can add a link to a personal website.  This link appears at the top of the page.
 			* You can add a border around the image to have it stand out on the page.
 			* You can hide the "Make Your Own" link on the bottom right of the page.

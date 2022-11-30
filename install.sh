@@ -165,6 +165,13 @@ create_webui_defines() {
 }
 
 
+# Recreate the options file.
+# This can be used after installation if the options file get hosed.
+recreate_options_file() {
+	CAMERA_TYPE="$(grep "^CAMERA_TYPE=" "${ALLSKY_CONFIG}/config.sh" | sed -e "s/CAMERA_TYPE=//" -e 's/"//g')"
+	save_camera_capabilities "true"
+}
+
 # Save the camera capabilities and use them to set the WebUI min, max, and defaults.
 # This will error out and exit if no camera installed,
 # otherwise it will determine what capabilities the connected camera has,
@@ -175,6 +182,8 @@ save_camera_capabilities() {
 		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in save_camera_capabilities()."
 		return 1
 	fi
+
+	OPTIONSFILEONLY="${1}"
 
 	# The web server needs to be able to create and update file in ${ALLSKY_CONFIG}
 	chmod 775 "${ALLSKY_CONFIG}"
@@ -193,8 +202,13 @@ save_camera_capabilities() {
 		MSG=""
 	fi
 
-	display_msg progress "Setting up WebUI options${MSG} for ${CAMERA_TYPE} cameras."
-	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} --cameraTypeOnly ${DEBUG_ARG} \
+	if [[ ${OPTIONSFILEONLY} == "true" ]]; then
+		OPTIONSONLY="--optionsOnly"
+	else
+		OPTIONSONLY=""
+		display_msg progress "Setting up WebUI options${MSG} for ${CAMERA_TYPE} cameras."
+	fi
+	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly ${DEBUG_ARG} \
 		"cameraType" "Camera Type" "${CAMERA_TYPE}"
 	RET=$?
 	if [ ${RET} -ne 0 ]; then
@@ -203,7 +217,7 @@ save_camera_capabilities() {
 			MSG="$MSG}After connecting your camera, run '${ME} --update'."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
 			display_msg --log error "No camera detected - installation aborted."
-		else
+		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
 			display_msg --log error "Unable to save camera capabilities."
 		fi
 		return 1
@@ -823,7 +837,7 @@ do_update() {
 
 	create_webui_defines
 
-	save_camera_capabilities || exit 1
+	save_camera_capabilities "false" || exit 1
 
 	# Update the sudoers file if it's missing some entries.
 	# Look for the last entry added (should be the last entry in the file).
@@ -902,7 +916,7 @@ calc_wt_size
 stop_allsky
 
 ##### Handle updates
-[[ ${UPDATE} == "true" ]] && do_update
+[[ ${UPDATE} == "true" ]] && do_update		# does not return
 
 ##### Execute any specified function, then exit.
 if [[ ${FUNCTION} != "" ]]; then
@@ -937,7 +951,7 @@ create_webui_defines
 
 ##### Create the camera type-model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
-save_camera_capabilities || exit 1
+save_camera_capabilities "false" || exit 1
 
 # Code later needs "settings()" function.
 source "${ALLSKY_CONFIG}/config.sh" || exit 1
@@ -954,7 +968,7 @@ set_locale
 ##### Check for sufficient swap space
 check_swap
 
-##### Optionally make $ALLSKY_TMP a memory filesystem
+##### Optionally make ${ALLSKY_TMP} a memory filesystem
 check_memory_filesystem
 
 ##### Get the new host name

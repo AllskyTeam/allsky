@@ -818,26 +818,42 @@ function runCommand($cmd, $message, $messageColor)
 // Return any error message.
 function updateFile($file, $contents, $fileName) {
 	if (@file_put_contents($file, $contents) == false) {
-		// Assumed it failed due to lack of permissions.
+		$e = error_get_last()['message'];
+		$err = "Failed to save settings: $e";
+		echo "<script>console.log('Unable to update $file 1st time: $e');</script>\n";
 
-		// Save a temporary copy of the file in a place the webserver can write to,
-		// then use sudo to "mv" the file to the final place.
-		$tempFile = "/tmp/$fileName-temp.txt";
+		// Assumed it failed due to lack of permissions,
+		// usually because the file isn't grouped to the web server group.
+		// Set the permissions and try again.
 
-		if (file_put_contents($tempFile, $contents) == false) {
-			$err = "Failed to save settings: " . error_get_last()['message'];
-		} else {
-			// shell_exec() doesn't return anything unless there is an error.
-			$ret = shell_exec("x=\$(sudo mv '$tempFile' '$file' 2>&1) || echo 'Unable to mv [$tempFile] to [$file]': \${x}");
-			if ($ret == "") {
-				shell_exec("sudo chown " . ALLSKY_OWNER . ":" . ALLSKY_GROUP . " '$file'; sudo chmod 644 '$file'");
-				$err = "";
-			} else {
-				$err = "Failed to rename $fileName file: $ret.";
-			}
+		// shell_exec() doesn't return anything unless there is an error.
+		$err = str_replace("\n", "", shell_exec("x=\$(sudo chgrp " . WEBSERVER_GROUP . " '$file' 2>&1 && sudo chmod g+w '$file') || echo \${x}"));
+		if ($err != "") {
+			return "Unable to update settings: $err";
 		}
 
-		return $err;
+		if (@file_put_contents($file, $contents) == false) {
+			$e = error_get_last()['message'];
+			$err = "Failed to save settings: $e";
+			echo "<script>console.log('Unable to update file for 2nd time: $e');</script>\n";
+			$x = str_replace("\n", "", shell_exec("ls -l '$file'"));
+			echo "<script>console.log('ls -l returned: $x');</script>\n";
+
+			// Save a temporary copy of the file in a place the webserver can write to,
+			// then use sudo to "cp" the file to the final place.
+			// Use "cp" instead of "mv" because the destination file may be a hard link
+			// and we need to keep the link.
+			$tempFile = "/tmp/$fileName-temp.txt";
+
+			if (@file_put_contents($tempFile, $contents) == false) {
+				$err = "Failed to create temporary file: " . error_get_last()['message'];
+				return $err;
+			}
+
+			$err = str_replace("\n", "", shell_exec("x=\$(sudo cp '$tempFile' '$file' 2>&1) || echo 'Unable to copy [$tempFile] to [$file]': \${x}"));
+			echo "<script>console.log('cp returned: [$err]');</script>\n";
+			return $err;
+		}
 	}
 	return "";
 }

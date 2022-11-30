@@ -26,8 +26,8 @@ How is it related to sunrise and sunset?</h2>
 <p>
 Your actual sunrise and sunset times are dependent on the day of the year and your
 latitude and longitude, and define what most people call <b>daytime</b> and <b>nighttime</b>.
-You can fool Allsky into thinking the sunrise and sunset are at
-different times so it uses different times for daytime and nighttime.
+You can tell Allsky when to start using daytime and nighttime settings,
+which may be different than actual daytime and nighttime.
 </p>
 <p>
 Allsky defines <b>daytime</b> as your sunrise time <b>plus</b> an offset you define,
@@ -38,7 +38,7 @@ that indicates the number of degrees
 above (positive) or below (negative) the horizon the Sun is when daytime starts.
 Daytime ends at sunset <b>minus</b> the <span class="WebUISetting">Angle</span>.
 The term "daytime ends" is identical to "nighttime begins" since there
-is no gap between daytime and nighttime.
+is no gap between daytime and nighttime from Allsky's perspective.
 </p>
 <p>
 As an example, assume the Sun rises at 7:00 AM and sets at 18:00 (6:00 PM).
@@ -57,14 +57,13 @@ An <span class="WebUISetting">Angle</span> of <span class="WebUIValue">-6</span>
 The <span class="WebUISetting">Angle</span> effectively determines the length of daytime - the
 larger the <span class="WebUISetting">Angle</span> the shorter the daytime.
 </p>
+
+<h4>Why is Angle important?</h4>
 <p>
-Why is this important?
-Allsky uses it's calculated daytime to begin using your daytime settings like daytime exposure,
-delay, etc.
-If you told Allsky to not take pictures during the day,
-it will use the <span class="WebUISetting">Angle</span> you've defined to determine its daytime,
-and stop taking pictures what that time is reached.
-Likewise, Allsky uses the start of nighttime to know when to begin using your nighttime settings.
+Allsky uses your <span class="WebUISetting">Angle</span>
+to calculate when to begin using your daytime settings like daytime exposure,
+whether or not to take daytime pictures, etc.,
+and when to begin using your nighttime settings.
 </p>
 <p>
 Astrophotographers rarely start taking pictures at sunset since it's still too light.
@@ -89,11 +88,20 @@ so your <span class="WebUISetting">Angle</span>
 value will determine how dark or light the beginning of the timelapse video is.
 </blockquote>
 </p>
+
 <p>
 To determine Allsky's daytime and nighttime based on your <span class="WebUISetting">Angle</span>,
 execute:
 <pre>
 (source ~/allsky/scripts/functions.sh; get_sunrise_sunset)
+</pre>
+</p>
+<p>
+It will show you the daytime and nighttime for an
+angle of 0 degrees as well as your <span class="WebUISetting">Angle</span>.
+You can also specify any angle you want, for example:
+<pre>
+(source ~/allsky/scripts/functions.sh; get_sunrise_sunset -7.2)
 </pre>
 </p>
 

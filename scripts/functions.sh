@@ -237,15 +237,24 @@ function convertLatLong()
 }
 
 # Get the sunrise and sunset times.
+# The angle can optionally be passed in.
 get_sunrise_sunset()
 {
+	ANGLE="${1}"
 	#shellcheck disable=SC1090
-	source ~/allsky/variables.sh
-	ANGLE="$(jq -r ".angle" ${SETTINGS_FILE})"
-	LATITUDE="$(jq -r ".latitude" ${SETTINGS_FILE})"
+	source "${ALLSKY_HOME}/variables.sh" || return 1
+	#shellcheck disable=SC1090
+	source "${ALLSKY_CONFIG}/config.sh" || return 1
+	[[ -z ${ANGLE} ]] && ANGLE="$(settings ".angle")"
+	LATITUDE="$(settings ".latitude")"
 		LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
-	LONGITUDE="$(jq -r ".longitude" ${SETTINGS_FILE})"
+	LONGITUDE="$(settings ".longitude")"
 		LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
-	echo "Rise   Set"
-	sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}"
+
+	echo "Rise    Set     Angle"
+	X="$(sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}")"
+	# Replace comma by a couple spaces so the output looks nicer.
+	echo "${X/,/  }    0"
+	X="$(sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}")"
+	echo "${X/,/  }   ${ANGLE}"
 }

@@ -30,6 +30,8 @@ if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
 else
 	HAS_LOCAL_WEBSITE=false
 fi
+
+# Assume if PROTOCOL is set, there's a remote website.
 if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
 	HAS_REMOTE_WEBSITE=true
 else
@@ -40,61 +42,69 @@ if [[ ${HAS_LOCAL_WEBSITE} == "false" && ${HAS_REMOTE_WEBSITE} == "false" ]]; th
 	exit 0		# It's not an error
 fi
 
-latitude="$(convertLatLong "$(settings ".latitude")" "latitude")"
-LATRET=$?
-longitude="$(convertLatLong "$(settings ".longitude")" "longitude")"
-LONGRET=$?
-OK=true
-if [[ ${LATRET} -ne 0 ]]; then
-	OK=false
-	echo -e "${RED}${ME}: ERROR: ${latitude}"
-fi
-if [[ ${LONGRET} -ne 0 ]]; then
-	OK=false
-	echo -e "${RED}${ME}: ERROR: ${longitude}"
-fi
-[[ ${OK} == "false" ]] && exit 1
-
-angle="$(settings ".angle")"
-timezone="$(date "+%z")"
-
-# If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
-# If nighttime happens before noon, sunwait returns "--:-- (Polar night)"
-sunrise="$(sunwait list rise angle ${angle} ${latitude} ${longitude})"
-sunrise_hhmm="${sunrise:0:5}"
-sunset="$(sunwait list set angle ${angle} ${latitude} ${longitude})"
-sunset_hhmm="${sunset:0:5}"
-
-if [[ ${sunrise_hhmm} == "--:--" || ${sunset_hhmm} = "--:--" ]]; then
-	# nighttime starts after midnight or before noon.
-	today="$(date --date='tomorrow' +%Y-%m-%d)"		# is actually tomorrow
-	# TODO What SHOULD *_hhmm be?
-	sunrise_hhmm="00:00"
-	sunset_hhmm="00:00"
-
-	echo "***"
-	echo -e "${RED}${ME}: WARNING: angle ${angle} caused sunwait to return"
-	echo -e "sunrise='${sunrise}' and sunset='${sunset}'.${NC}"
-	echo "Using tomorrow at '${sunrise_hhmm}' instead."
-	echo "***"
+if [[ ${1} == "--settingsOnly" ]]; then
+	SETTINGS_ONLY=true
 else
-	today="$(date +%Y-%m-%d)"
+	SETTINGS_ONLY=false
 fi
 
-FILE="data.json"
-OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
-(
-	if [[ $(settings ".takeDaytimeImages") = "1" ]]; then
-		D="true"
-	else
-		D="false"
+if [[ ${SETTINGS_ONLY} == "false" ]]; then
+	latitude="$(convertLatLong "$(settings ".latitude")" "latitude")"
+	LATRET=$?
+	longitude="$(convertLatLong "$(settings ".longitude")" "longitude")"
+	LONGRET=$?
+	OK=true
+	if [[ ${LATRET} -ne 0 ]]; then
+		OK=false
+		echo -e "${RED}${ME}: ERROR: ${latitude}"
 	fi
-	echo "{"
-	echo "\"sunrise\": \"${today}T${sunrise_hhmm}:00.000${timezone}\","
-	echo "\"sunset\": \"${today}T${sunset_hhmm}:00.000${timezone}\","
-	echo "\"streamDaytime\": \"${D}\""
-	echo "}"
-) > "${OUTPUT_FILE}"
+	if [[ ${LONGRET} -ne 0 ]]; then
+		OK=false
+		echo -e "${RED}${ME}: ERROR: ${longitude}"
+	fi
+	[[ ${OK} == "false" ]] && exit 1
+
+	angle="$(settings ".angle")"
+	timezone="$(date "+%z")"
+
+	# If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
+	# If nighttime happens before noon, sunwait returns "--:-- (Polar night)"
+	sunrise="$(sunwait list rise angle ${angle} ${latitude} ${longitude})"
+	sunrise_hhmm="${sunrise:0:5}"
+	sunset="$(sunwait list set angle ${angle} ${latitude} ${longitude})"
+	sunset_hhmm="${sunset:0:5}"
+
+	if [[ ${sunrise_hhmm} == "--:--" || ${sunset_hhmm} = "--:--" ]]; then
+		# nighttime starts after midnight or before noon.
+		today="$(date --date='tomorrow' +%Y-%m-%d)"		# is actually tomorrow
+		# TODO What SHOULD *_hhmm be?
+		sunrise_hhmm="00:00"
+		sunset_hhmm="00:00"
+
+		echo "***"
+		echo -e "${RED}${ME}: WARNING: angle ${angle} caused sunwait to return"
+		echo -e "sunrise='${sunrise}' and sunset='${sunset}'.${NC}"
+		echo "Using tomorrow at '${sunrise_hhmm}' instead."
+		echo "***"
+	else
+		today="$(date +%Y-%m-%d)"
+	fi
+
+	FILE="data.json"
+	OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
+	(
+		if [[ $(settings ".takeDaytimeImages") = "1" ]]; then
+			D="true"
+		else
+			D="false"
+		fi
+		echo "{"
+		echo "\"sunrise\": \"${today}T${sunrise_hhmm}:00.000${timezone}\","
+		echo "\"sunset\": \"${today}T${sunset_hhmm}:00.000${timezone}\","
+		echo "\"streamDaytime\": \"${D}\""
+		echo "}"
+	) > "${OUTPUT_FILE}"
+fi
 
 
 function upload_file()
@@ -115,7 +125,6 @@ function upload_file()
 	fi
 
 	# Upload to remote website if there is one.
-	# Assume if PROTOCOL is set, there's a remote website.
 	if [[ ${HAS_REMOTE_WEBSITE} == "true" ]]; then
 		"${ALLSKY_SCRIPTS}/upload.sh" --silent \
 			"${FILE_TO_UPLOAD}" \
@@ -128,4 +137,12 @@ function upload_file()
 	return ${RETCODE}
 }
 
-upload_file "${OUTPUT_FILE}" "output file" && upload_file "${SETTINGS_FILE}" "settings file"
+upload_file "${SETTINGS_FILE}" "settings file"
+# shellcheck disable=SC2181
+RET=$?
+if [[ ${RET} -ne 0 && ${SETTINGS_ONLY} == "false" ]]; then
+	upload_file "${OUTPUT_FILE}" "output file"
+	# shellcheck disable=SC2181
+	RET=$?
+fi
+exit ${RET}

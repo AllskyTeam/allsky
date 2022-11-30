@@ -860,8 +860,18 @@ function getOptionsFile() {
 // If so, return it; if not, return default value;
 // This is used to make the code easier to read.
 function getVariableOrDefault($a, $v, $d) {
-	if (isset($a[$v])) return $a[$v];
-	return $d;
+	if (isset($a[$v])) {
+		$value = $a[$v];
+		if (gettype($value) === "boolean" && $value == "") return 0;
+		if (is_string($value) and $value === '' and $d !=='') return $d;
+		if (is_null($value) and !is_null($d)) return $d;
+		return $value;
+	} else if (gettype($d) === "boolean" && $d == "") {
+		return 0;;
+	}
+
+	return($d);
 }
+
 
 ?>

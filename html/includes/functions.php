@@ -87,8 +87,8 @@ function initialize_variables() {
 		$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 		$daydelay = -1;		// signifies it's not being used
 	}
-	// Divide by 2 to lessen the delay between a new picture and when we check.
-	$delay /= 2;
+	// Lessen the delay between a new picture and when we check.
+	$delay /= 4;
 }
 
 /**

@@ -295,9 +295,6 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 				}
 
 				switch ($page) {
-					case "live_view":
-						DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);
-						break;
 					case "WLAN_info":
 						DisplayDashboard_WLAN("wlan0");
 						break;
@@ -337,6 +334,7 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					case "editor":
 						DisplayEditor();
 						break;
+					case "live_view":
 					default:
 						DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);
 				}

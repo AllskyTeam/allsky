@@ -77,7 +77,7 @@ p {
 	background-color: var(--color-attention-verysubtle);
 	border-left: 0.5em solid var(--color-attention-emphasis);
 	max-width: max-content;
-	margin: 10px 0px 10px 0px;
+	margin: 1.2em 0;
 }
 .markdown-body blockquote>:first-child {
 	margin-top: 0;

@@ -35,7 +35,7 @@ if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
 else
 	HAS_REMOTE_WEBSITE=false
 fi
-if [[ ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} && ${HAS_REMOTE_WEBSITE} == "false" ]]; then
+if [[ ${HAS_LOCAL_WEBSITE} == "false" && ${HAS_REMOTE_WEBSITE} == "false" ]]; then
 	echo -e "${YELLOW}${ME}: WARNING: No local or remote website found.${NC}"
 	exit 0		# It's not an error
 fi
@@ -101,9 +101,12 @@ function upload_file()
 {
 	FILE_TO_UPLOAD="${1}"
 	strFILE_TO_UPLOAD="${2}"
-	[[ ! -f ${FILE_TO_UPLOAD} ]] && echo -e "${RED}${ME}: ERROR: File to upload '${FILE_TO_UPLOAD}' (${strFILE_TO_UPLOAD}) not found.${NC}" && return 1
+	if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
+		echo -e "${RED}${ME}: ERROR: File to upload '${FILE_TO_UPLOAD}' (${strFILE_TO_UPLOAD}) not found.${NC}"
+		return 1
+	fi
 
-	typeset -i RETCODE=0
+	RETCODE=0
 
 	# Copy to local Allsky website if it exists.
 	if [[ ${HAS_LOCAL_WEBSITE} == "true" ]]; then

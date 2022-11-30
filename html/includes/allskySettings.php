@@ -1,7 +1,7 @@
 <?php
 include_once( 'includes/status_messages.php' );
 
-function DisplayCameraConfig(){
+function DisplayAllskyConfig(){
 	$cameraTypeName = "cameraType";		// json setting name
 	$cameraModelName = "cameraModel";	// json setting name
 
@@ -205,7 +205,7 @@ function toggle_advanced()
         <div class="panel-body" style="padding: 5px;">
           <p id="messages"><?php $status->showMessages(); ?></p>
 
-          <form method="POST" action="?page=camera_conf" name="conf_form">
+          <form method="POST" action="?page=allsky_conf" name="conf_form">
 		<?php CSRFToken();
 
 		// Allow for "advanced" options that aren't displayed by default to avoid

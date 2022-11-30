@@ -3,7 +3,7 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
-if [ -z "${ALLSKY_HOME}" ] ; then
+if [[ -z ${ALLSKY_HOME} ]]; then
 	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
@@ -25,9 +25,10 @@ source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
 function usage_and_exit()
 {
 	echo -e "${wERROR}"
-	echo "Usage: ${ME} [--debug] [--cameraTypeOnly] [--restarting] key label new_value [...]"
+	echo "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--restarting] key label new_value [...]"
 	echo -e "${wNC}"
-	echo "There must be a multiple of 3 key/label/old_value/new_value arguments."
+	echo "There must be a multiple of 3 key/label/old_value/new_value arguments"
+	echo "unless the --optionsOnly argument is given."
 	exit ${1}
 }
 
@@ -36,28 +37,33 @@ OK=true
 DEBUG=false
 DEBUG_ARG=""
 HELP=false
+OPTIONS_FILE_ONLY=false
 RESTARTING=false			# Will the caller restart Allsky?
 CAMERA_TYPE_ONLY=false		# Only update the cameraType ?
 FORCE=""					# Passed to createAllskyOptions.php
 
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG}" in
 		--debug)
-			DEBUG="true"
+			DEBUG=true
 			DEBUG_ARG="${ARG}"		# So we can pass to other scripts
 			;;
 		--help)
-			HELP="true"
+			HELP=true
+			;;
+		--optionsOnly)
+			OPTIONS_FILE_ONLY=true
+			SETTINGS_FILE=""
 			;;
 		--cameraTypeOnly)
-			CAMERA_TYPE_ONLY="true"
+			CAMERA_TYPE_ONLY=true
 			;;
 		--force)
 			FORCE="${ARG}"
 			;;
 		--restarting)
-			RESTARTING="true"
+			RESTARTING=true
 			;;
 		-*)
 			echo -e "${wERROR}ERROR: Unknown argument: '${ARG}'${wNC}"
@@ -72,8 +78,10 @@ done
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
-[[ $# -eq 0 ]] && usage_and_exit 1
-[ $(($# % 3)) -ne 0 ] && usage_and_exit 2
+if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
+	[[ $# -eq 0 ]] && usage_and_exit 1
+	[[ $(($# % 3)) -ne 0 ]] && usage_and_exit 2
+fi
 
 
 # This output may go to a web page, so use "w" colors.
@@ -89,13 +97,13 @@ wNC="${wNC}"
 # Does the change need Allsky to be restarted in order to take affect?
 NEEDS_RESTART=false
 
-RUN_POSTDATA=false
 RUN_POSTTOMAP=false
 POSTTOMAP_ACTION=""
 WEBSITE_CONFIG=()
 SHOW_POSTDATA_MESSAGE=true
+TWILIGHT_DATA_CHANGED=false
 
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
 	KEY="${1}"
 	LABEL="${2}"
 	NEW_VALUE="${3}"
@@ -114,75 +122,76 @@ while [ $# -gt 0 ]; do
 	case "${KEY}" in
 
 		cameraType)
-			# If we can't set the new camera type, it's a major problem so exit right away.
-			# NOTE: when we're changing cameraType we're not changing anything else.
+			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
-			CC_FILE_OLD="${CC_FILE}-OLD"
+				# If we can't set the new camera type, it's a major problem so exit right away.
+				# NOTE: when we're changing cameraType we're not changing anything else.
 
-			if [ -f "${CC_FILE}" ]; then
-				# Save the current file just in case creating a new one fails.
-				# It's a link so copy it to a temp name, then remove the old name.
-				[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Saving '${CC_FILE}' to '${CC_FILE_OLD}'${wNC}"
-				cp "${CC_FILE}" "${CC_FILE_OLD}"
-				rm -f "${CC_FILE}"
-			fi
+				CC_FILE_OLD="${CC_FILE}-OLD"
 
-			# Create the camera capabilities file for the new camera type.
-			# Debug level 3 to give the user more info on error.
-
-			# The software for RPi cameras needs to know what command is being used to
-			# capture the images.
-			if [[ ${NEW_VALUE} == "RPi" ]]; then
-				C="$(determineCommandToUse "false" "" )"
-				# shellcheck disable=SC2181
-				RET=$?
-				if [ ${RET} -ne 0 ]; then
-					echo -e "${wERROR}${ME}: ERROR: unable to determine command to use, RET=${RET}, C=${C}.${wNC}."
-					exit ${RET}
+				if [[ -f ${CC_FILE} ]]; then
+					# Save the current file just in case creating a new one fails.
+					# It's a link so copy it to a temp name, then remove the old name.
+					[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Saving '${CC_FILE}' to '${CC_FILE_OLD}'${wNC}"
+					cp "${CC_FILE}" "${CC_FILE_OLD}"
+					rm -f "${CC_FILE}"
 				fi
-				C="-cmd ${C}"
-			else
-				C=""
+
+				# Create the camera capabilities file for the new camera type.
+				# Debug level 3 to give the user more info on error.
+
+				# The software for RPi cameras needs to know what command is being used to
+				# capture the images.
+				if [[ ${NEW_VALUE} == "RPi" ]]; then
+					C="$(determineCommandToUse "false" "" )"
+					# shellcheck disable=SC2181
+					RET=$?
+					if [[ ${RET} -ne 0 ]]; then
+						echo -e "${wERROR}${ME}: ERROR: unable to determine command to use, RET=${RET}, C=${C}.${wNC}."
+						exit ${RET}
+					fi
+					C="-cmd ${C}"
+				else
+					C=""
+				fi
+				[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Calling capture_${NEW_VALUE} ${C} -cc_file '${CC_FILE}'${wNC}"
+				"${ALLSKY_HOME}/capture_${NEW_VALUE}" ${C} -debuglevel 3 -cc_file "${CC_FILE}"
+				RET=$?
+				if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
+					echo -e "${wERROR}ERROR: Unable to create cc file '${CC_FILE}'.${wNC}"
+
+					# Restore prior cc file if there was one.
+					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
+					exit ${RET}		# the actual exit code is important
+				fi
+
+				# Create a link to a file that contains the camera type and model in the name.
+				CAMERA_TYPE="${NEW_VALUE}"		# already know it
+				CAMERA_MODEL="$(jq .cameraModel "${CC_FILE}" | sed 's/"//g')"
+				if [[ -z ${CAMERA_MODEL} ]]; then
+					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
+					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
+					exit 1
+				fi
+
+				# ${CC_FILE} is a generic name defined in config.sh.
+				# ${SPECIFIC_NAME} is specific to the camera type/model.
+				# It isn't really needed except debugging.
+				SPECIFIC_NAME="${ALLSKY_CONFIG}/${CC_FILE_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_FILE_EXT}"
+
+				# Any old and new camera capabilities file should be the same unless Allsky
+				# adds or changes capabilities, so delete the old one just in case.
+				ln --force "${CC_FILE}" "${SPECIFIC_NAME}"
+
+				if ! sed -i -e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${NEW_VALUE}\"/" "${ALLSKY_CONFIG}/config.sh"; then
+					echo -e "${wERROR}ERROR updating ${wBOLD}${LABEL}${wNBOLD}.${wNC}"
+					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
+					exit 1
+				fi
+
+				# The old file is no longer needed.
+				rm -f "${CC_FILE_OLD}"
 			fi
-			[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Calling capture_${NEW_VALUE} ${C} -cc_file '${CC_FILE}'${wNC}"
-			"${ALLSKY_HOME}/capture_${NEW_VALUE}" ${C} -debuglevel 3 -cc_file "${CC_FILE}"
-			RET=$?
-			if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
-				echo -e "${wERROR}ERROR: Unable to create cc file '${CC_FILE}'.${wNC}"
-
-				# Restore prior cc file if there was one.
-				[ -f "${CC_FILE_OLD}" ] && mv "${CC_FILE_OLD}" "${CC_FILE}"
-				exit ${RET}		# the actual exit code is important
-			fi
-
-			# Create a link to a file that contains the camera type and model in the name.
-			CAMERA_TYPE="${NEW_VALUE}"		# already know it
-			CAMERA_MODEL="$(jq .cameraModel "${CC_FILE}" | sed 's;";;g')"
-			if [[ -z ${CAMERA_MODEL} ]]; then
-				echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
-				[ -f "${CC_FILE_OLD}" ] && mv "${CC_FILE_OLD}" "${CC_FILE}"
-				exit 1
-			fi
-
-			# ${CC_FILE} is a generic name defined in config.sh.
-			# ${SPECIFIC_NAME} is specific to the camera type/model.
-			# It isn't really needed except debugging.
-			SPECIFIC_NAME="${ALLSKY_CONFIG}/${CC_FILE_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_FILE_EXT}"
-
-			# Any old and new camera capabilities file should be the same unless Allsky
-			# adds or changes capabilities, so delete the old one just in case.
-			ln --force "${CC_FILE}" "${SPECIFIC_NAME}"
-
-			sed -i -e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${NEW_VALUE}\"/" "${ALLSKY_CONFIG}/config.sh"
-			# shellcheck disable=SC2181
-			if [ $? -ne 0 ]; then
-				echo -e "${wERROR}ERROR updating ${wBOLD}${LABEL}${wNBOLD}.${wNC}"
-				[ -f "${CC_FILE_OLD}" ] && mv "${CC_FILE_OLD}" "${CC_FILE}"
-				exit 1
-			fi
-
-			# The old file is no longer needed.
-			rm -f "${CC_FILE_OLD}"
 
 			# createAllskyOptions.php will use the cc file and the options template file
 			# to create an OPTIONS_FILE for this camera type/model.
@@ -206,23 +215,36 @@ while [ $# -gt 0 ]; do
 			# .php files don't return error codes so we check if it worked by
 			# looking for a string in its output.
 
-			if [ -n "${R}" ]; then
+			if [[ -n ${R} ]]; then
 				if ! echo "${R}" | grep --quiet "XX_WORKED_XX"; then
-					echo -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}' and '${SETTINGS_FILE}' files.${wNC}"
+					echo -n -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}'"
+					if [[ ${OPTIONS_FILE_ONLY} == "true" ]]; then
+						echo -e "file.${wNC}"
+					else
+						echo -e " and '${SETTINGS_FILE}' files.${wNC}"
+					fi
 					echo "${R}"
 					exit 1
 				fi
 			else
-				# If there's no output, there won't be any special string...
-				echo -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}' and '${SETTINGS_FILE}' files - nothing returned.${wNC}"
+				# If there's no output, there won't be any special string
+				# so assume the file(s) didn't get created.
+				# We don't simply fall through to the code after the "else" so we can
+				# output a more specific error message for debugging purposes.
+				echo -n -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}'"
+				if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
+					echo " and '${SETTINGS_FILE}' files"
+				fi
+				echo -e " - nothing returned.${wNC}"
 				exit 1
 			fi
+
 			OK=true
 			if [[ ! -f ${OPTIONS_FILE} ]]; then
 				echo -e "${wERROR}${ME}: ERROR Options file ${OPTIONS_FILE} not created.${wNC}"
 				OK=false
 			fi
-			if [[ ! -f ${SETTINGS_FILE} ]]; then
+			if [[ ! -f ${SETTINGS_FILE} && ${OPTIONS_FILE_ONLY} == "false" ]]; then
 				echo -e "${wERROR}${ME}: ERROR Settings file ${SETTINGS_FILE} not created.${wNC}"
 				OK=false
 			fi
@@ -234,7 +256,6 @@ while [ $# -gt 0 ]; do
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			[[ ${CAMERA_TYPE_ONLY} == "true" ]] && exit 0
 
-			RUN_POSTDATA=true			# sends settings file if there's a website
 			SHOW_POSTDATA_MESSAGE=false	# user doesn't need to see this output
 			NEEDS_RESTART=true
 			;;
@@ -247,10 +268,10 @@ while [ $# -gt 0 ]; do
 		extratext)
 			# It's possible the user will create/populate the file while Allsky is running,
 			# so it's not an error if the file doesn't exist or is empty.
-			if [ -n "${NEW_VALUE}" ]; then
-				if [ ! -f "${NEW_VALUE}" ]; then
+			if [[ -n ${NEW_VALUE} ]]; then
+				if [[ ! -f ${NEW_VALUE} ]]; then
 					echo -e "${wWARNING}WARNING: '${NEW_VALUE}' does not exist; please change it.${wNC}"
-				elif [ ! -s "${NEW_VALUE}" ]; then
+				elif [[ ! -s ${NEW_VALUE} ]]; then
 					echo -e "${wWARNING}WARNING: '${NEW_VALUE}' is empty; please change it.${wNC}"
 				fi
 			fi
@@ -259,41 +280,39 @@ while [ $# -gt 0 ]; do
 
 		latitude | longitude)
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
-			NEW_VALUE="$(convertLatLong "${NEW_VALUE}" "${KEY}")"
-			RET=$?
-			if [[ ${RET} -ne 0 ]]; then
-				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
-			else
+			if NEW_VALUE="$(convertLatLong "${NEW_VALUE}" "${KEY}")" ; then
 				WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
-				RUN_POSTDATA=true
+			else
+				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
 			fi
 			NEEDS_RESTART=true
+			TWILIGHT_DATA_CHANGED=true
 			;;
 
 		angle)
-			RUN_POSTDATA=true
 			NEEDS_RESTART=true
+			TWILIGHT_DATA_CHANGED=true
 			;;
 
 		takeDaytimeImages)
-			RUN_POSTDATA=true
 			NEEDS_RESTART=true
+			TWILIGHT_DATA_CHANGED=true
 			;;
 
 		config)
-			if [ "${NEW_VALUE}" = "" ]; then
+			if [[ ${NEW_VALUE} == "" ]]; then
 				NEW_VALUE="[none]"
-			elif [ "${NEW_VALUE}" != "[none]" ]; then
-				if [ ! -f "${NEW_VALUE}" ]; then
+			elif [[ ${NEW_VALUE} != "[none]" ]]; then
+				if [[ ! -f ${NEW_VALUE} ]]; then
 					echo -e "${wWARNING}WARNING: Configuration File '${NEW_VALUE}' does not exist; please change it.${wNC}"
-				elif [ ! -s "${NEW_VALUE}" ]; then
+				elif [[ ! -s ${NEW_VALUE} ]]; then
 					echo -e "${wWARNING}WARNING: Configuration File '${NEW_VALUE}' is empty; please change it.${wNC}"
 				fi
 			fi
 			;;
 
 		dayTuningFile | nightTuningFile)
-			if [[ -n "${NEW_VALUE}" && ! -f "${NEW_VALUE}" ]]; then
+			if [[ -n ${NEW_VALUE} && ! -f ${NEW_VALUE} ]]; then
 				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
 			fi
 			NEEDS_RESTART=true
@@ -316,7 +335,7 @@ while [ $# -gt 0 ]; do
 			;;
 
 		showonmap)
-			[ "${NEW_VALUE}" = "0" ] && POSTTOMAP_ACTION="--delete"
+			[[ ${NEW_VALUE} -eq 0 ]] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP=true
 			;;
 
@@ -343,21 +362,31 @@ done
 # since there could, in theory, be a remote config file but no server specified to send it to.
 if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || ( ${PROTOCOL} != "" && ${PROTOCOL} != "local" ) ]]; then
 	HAS_WEBSITE=true
-else
-	HAS_WEBSITE=false
-fi
-if [[ ${RUN_POSTDATA} == "true" && ${HAS_WEBSITE} == "true" ]]; then
+
+	# Anytime a setting in settings.json changed we want to
+	# send an updated file to any Allsky Website(s).
 	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postData.sh${NC}"
-	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" >&2)" ; then
+	if [[ ${TWILIGHT_DATA_CHANGED} == "true" ]]; then
+		x=""
+	else
+		x="--settingsOnly"
+	fi
+
+	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" ${x} >&2)" ; then
 		if [[ ${SHOW_POSTDATA_MESSAGE} == "true" ]]; then
-			echo -en "${wOK}"
-			echo -e "Updated twilight data sent to your Allsky Website."
-			echo -e "${wBOLD}If you have the Allsky Website open in a browser, please refresh the window.${wNBOLD}"
-			echo -en "${wNC}"
+			if [[ ${TWILIGHT_DATA_CHANGED} == "true" ]]; then
+				echo -en "${wOK}"
+				echo -e "Updated twilight data sent to your Allsky Website."
+				echo -e "${wBOLD}If you have the Allsky Website open in a browser, please refresh the window.${wNBOLD}"
+				echo -en "${wNC}"
+			fi
+			# Users don't need to know that the settings file was sent.
 		fi
 	else
 		echo -e "${wERROR}ERROR posting updated twilight data: ${RESULT}.${wNC}"
 	fi
+else
+	HAS_WEBSITE=false
 fi
 
 # shellcheck disable=SC2128
@@ -379,4 +408,3 @@ fi
 
 
 exit 0
-

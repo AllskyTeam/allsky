@@ -3,7 +3,9 @@
 if [[ -z ${ALLSKY_HOME} ]] ; then
 	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
 fi
+# shellcheck disable=SC1090,SC1091
 source "${ALLSKY_HOME}/variables.sh" || exit 1
+# shellcheck disable=SC1090,SC1091
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit 1
 
 if [[ $EUID -eq 0 ]]; then
@@ -17,7 +19,9 @@ if ! json_pp < "${SETTINGS_FILE}" > /dev/null; then
 	exit 1
 fi
 
+# shellcheck disable=SC1090,SC1091
 source "${ALLSKY_CONFIG}/config.sh" || exit 1
+# shellcheck disable=SC1090,SC1091
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 ME="$(basename "${BASH_ARGV0}")"
 

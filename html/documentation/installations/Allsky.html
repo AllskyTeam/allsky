@@ -30,16 +30,18 @@ See the <a allsky="true" href="AllskyWebsite.html">Allsky Website Installation</
 </p>
 <blockquote>
 This release of Allsky has many updates so we suggest
-you <b>install a new <a href="https://www.raspberrypi.com/software/">Raspberry Pi OS</a>
-on your Pi</b>, preferable Bullseye,
+you <b>install the newest <a href="https://www.raspberrypi.com/software/">Raspberry Pi OS</a>
+(Bullseye) on your Pi</b>,
 before installing this release of Allsky.
-You'll need to save any files, images, etc. to a USB drive, PC, Mac, or another device,
-then installing the new Pi OS, then restoring your files, then installing Allsky.
+You'll first need to save any files, images, etc. to a USB drive, PC, Mac, or another device,
+then install the new Pi operating system (OS), and then restore your files before installing Allsky.
 During installation of the new Pi OS, if asked for the name of a user account to create,
-enter `pi`.
+enter <code>pi</code>.
 <br>
 The process is much simplier if you have a spare SD card you can install the new
-Pi OS version to.
+Pi OS version on, and have an SD card-to-USB adapter so you can plug the old SD card into
+the Pi after the new OS is installed.
+Copying your old files is then a breeze.
 </blockquote>
 
 <h2>Install AllSky in a different location (advanced)</h2>
@@ -52,10 +54,10 @@ so it may be more difficult to troubleshoot if it's elsewhere.
 </blockquote>
 <p>
 By default, Allsky is installed as the login "pi" in <span class="fileName">/home/pi/allsky</span>.
-The name <b>allsky</b> should not be changed,
-but you can install Allsky in a different sub-directory
+The name <b>allsky</b> can not be changed,
+but you can install Allsky in a different directory
 (which usually means it'll run as a different login).
-For example to install in <span class="fileName">/home/mylogin</span>
+For example, to install in <span class="fileName">/home/mylogin</span>
 and run as the "mylogin" user, do the following before installing Allsky:
 <pre>
 sudo mkdir /home/mylogin      <span class="pl-c"># if not already there</span>
@@ -71,7 +73,8 @@ After the above, continue with the steps below.
 <details><summary></summary>
 <p>
 If you have an <b>existing</b> version of Allsky,
-perform one of the steps below, then continue to the <a href="#Installation">installation</a> section.
+perform one of the steps below, then continue to the
+<a href="#Installation">installation</a> section.
 </p>
 <ol class="minimalPadding">
 	<li>Upgrade the old version.
@@ -106,6 +109,12 @@ rm -fr allsky</pre>
 
 <br><h2 id="Installation">Installation</h2>
 <details><summary></summary>
+<blockquote>
+Unlike prior versions of AllSky this version requires that the camera be
+connected prior to starting the installation process.
+During installation, the camera model will be automatically determined
+and the appropriate minimum, maximum, and default settings populated in the WebUI.
+</blockquote>
 <p>
 The following commands will put the new release of Allsky in <span class="fileName">~/allsky</span>.
 Except for some system files, all Allsky-related files reside in this directory.

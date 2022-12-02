@@ -42,165 +42,25 @@ jobs:
                 #SC2034: ON_TTY appears unused. Verify use (or export if used externally).
                 shellcheck $i -e SC2034 
                 ;;
-              ./gui/install.sh)
-                #SC2155: Declare and assign separately to avoid masking return values.
-                #SC2046: Quote this to prevent word splitting.
-                #SC2086: Double quote to prevent globbing and word splitting.
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2164: Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
-                #SC2002: Useless cat. Consider 'cmd < file | ..' or 'cmd file | ..' instead.
-                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
-                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
-                #SC2006: Use $(...) notation instead of legacy backticked `...`.
-                shellcheck $i -e SC2155 -e SC2046 -e SC2086 -e SC1090 -e SC2164 -e SC2002 -e SC2166 -e SC2181 -e SC2006
-                ;;
-              ./website/install.sh)
-                #SC2155: Declare and assign separately to avoid masking return values.
-                #SC2046: Quote this to prevent word splitting.
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2164: Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
-                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
-                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
-                #SC2012: Use find instead of ls to better handle non-alphanumeric filenames.
-                #SC2086: Double quote to prevent globbing and word splitting.
-                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2164 -e SC2166 -e SC2181 -e SC2012 -e SC2086
-                ;;
-              ./install.sh)
-                #SC2155: Declare and assign separately to avoid masking return values.
-                #SC2046: Quote this to prevent word splitting.
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2004: $/${} is unnecessary on arithmetic variables.
-                #SC2086: Double quote to prevent globbing and word splitting.
-                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
-                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2004 -e SC2086 -e SC2181
-                ;;
-              ./allsky.sh)
-                #SC2155: Declare and assign separately to avoid masking return values.
-                #SC2046: Quote this to prevent word splitting.
-                #SC2164: Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2230: which is non-standard. Use builtin 'command -v' instead.
-                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
-                #SC2086: Double quote to prevent globbing and word splitting.
+
+                ###### Do not ignore these
                 #SC2206: Quote to prevent word splitting/globbing, or split robustly with mapfile or read -a.
                 #SC2207: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
-                #SC2068: Double quote array expansions to avoid re-splitting elements.
-                #SC2006: Use $(...) notation instead of legacy backticked `...`.
-                #SC2166: Prefer [ p ] && [ q ] as [ p -a q ] is not well defined.
-                shellcheck $i -e SC2155 -e SC2046 -e SC2164 -e SC1090 -e SC2230 -e SC2181 -e SC2086 -e SC2206 -e SC2207 -e SC2068 -e SC2006 -e SC2166
-                ;;
-              ./uninstall.sh)
-                #SC2034: GREEN appears unused. Verify use (or export if used externally).
-                #SC2162: read without -r will mangle backslashes.
-                shellcheck $i -e SC2034 -e SC2162
-                ;;
-              ./scripts/generate_notification_images.sh)
-                #SC2155: Declare and assign separately to avoid masking return values.
                 #SC2046: Quote this to prevent word splitting.
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
                 #SC2086: Double quote to prevent globbing and word splitting.
-                #SC2230: which is non-standard. Use builtin 'command -v' instead.
-                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
-                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
-                #SC2016: Expressions don't expand in single quotes, use double quotes for that.
-                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2086 -e SC2230 -e SC2181 -e SC2166 -e SC2016
-                ;;
-              ./scripts/postData.sh)
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2086: Double quote to prevent globbing and word splitting.
-                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
-                #SC2154: sunriset_hhmm is referenced but not assigned (did you mean 'sunrise_hhmm'?).
-                #SC1083: This { is literal. Check expression (missing ;/\n?) or quote it.
-                #SC2219: Instead of 'let expr', prefer (( expr )) .
-                shellcheck $i -e SC1090 -e SC2086 -e SC2166 -e SC2154 -e SC1083 -e SC2219
-                ;;
-              ./scripts/endOfNight.sh)
-                #SC2155: Declare and assign separately to avoid masking return values.
-                #SC2046: Quote this to prevent word splitting.
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
-                #SC2086: Double quote to prevent globbing and word splitting.
-                #SC2044: For loops over find output are fragile. Use find -exec or a while read loop.
-                #SC2004: $/${} is unnecessary on arithmetic variables.
-                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2166 -e SC2086 -e SC2044 -e SC2004
-                ;;
-              ./scripts/generateForDay.sh)
-                #SC2155: Declare and assign separately to avoid masking return values.
-                #SC2046: Quote this to prevent word splitting.
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2086: Double quote to prevent globbing and word splitting.
-                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
-                #SC2219: Instead of 'let expr', prefer (( expr )) .
-                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
-                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2086 -e SC2166 -e SC2219 -e SC2181
-                ;;
-              ./scripts/allsky_mfs.sh)
-                #SC2086: Double quote to prevent globbing and word splitting.
-                shellcheck $i -e SC2086
-                ;;
-              ./scripts/saveImage.sh)
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2086: Double quote to prevent globbing and word splitting.
-                #SC2166: Prefer [ p ] && [ q ] as [ p -a q ] is not well defined.
-                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
-                #SC2166: Prefer [ p ] && [ q ] as [ p -a q ] is not well defined.
-                #SC2219: Instead of 'let expr', prefer (( expr )) .
-                shellcheck $i -e SC1090 -e SC2086 -e SC2166 -e SC2181 -e SC2166 -e SC2219
-                ;;
-              ./scripts/copy_notification_image.sh)
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
-                #SC2166: Prefer [ p ] && [ q ] as [ p -a q ] is not well defined.
-                #SC2086: Double quote to prevent globbing and word splitting.
-                shellcheck $i -e SC1090 -e SC2181 -e SC2166 -e SC2086
-                ;;
-              ./scripts/uploadForDay.sh)
-                #SC2155: Declare and assign separately to avoid masking return values.
-                #SC2046: Quote this to prevent word splitting.
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                shellcheck $i -e SC2155 -e SC2046 -e SC1090
-                ;;
-              ./scripts/upload.sh)
-                #SC2155: Declare and assign separately to avoid masking return values.
-                #SC2046: Quote this to prevent word splitting.
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2166: Prefer [ p ] && [ q ] as [ p -a q ] is not well defined.
-                #SC2086: Double quote to prevent globbing and word splitting.
-                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2166 -e SC2086
-                ;;
-              ./scripts/darkSubtract.sh)
-                #SC2086: Double quote to prevent globbing and word splitting.
-                #SC2219: Instead of 'let expr', prefer (( expr )) .
-                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
-                shellcheck $i -e SC2086 -e SC2219 -e SC2181
-                ;;
-              ./scripts/removeBadImages.sh)
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2086: Double quote to prevent globbing and word splitting.
-                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
-                #SC2164: Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
-                #SC2188: This redirection doesn't have a command. Move to its command (or use 'true' as no-op).
-                #SC2196: egrep is non-standard and deprecated. Use grep -E instead.
-                #SC2219: Instead of 'let expr', prefer (( expr )) .
-                shellcheck $i -e SC1090 -e SC2086 -e SC2166 -e SC2164 -e SC2188 -e SC2196 -e SC2219
-                ;;
-              ./scripts/timelapse.sh)
-                #SC2155: Declare and assign separately to avoid masking return values.
-                #SC2046: Quote this to prevent word splitting.
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC2166: Prefer [ p ] || [ q ] as [ p -o q ] is not well defined.
                 #SC2012: Use find instead of ls to better handle non-alphanumeric filenames.
-                #SC2188: This redirection doesn't have a command. Move to its command (or use 'true' as no-op).
-                #SC2086: Double quote to prevent globbing and word splitting.
-                shellcheck $i -e SC2155 -e SC2046 -e SC1090 -e SC2166 -e SC2012 -e SC2188 -e SC2086
-                ;;
-              ./scripts/darkCapture.sh)
-                #SC2086: Double quote to prevent globbing and word splitting.
-                shellcheck $i -e SC2086
-                ;;
+                #SC2016: Expressions don't expand in single quotes, use double quotes for that.
+                #SC2044: For loops over find output are fragile. Use find -exec or a while read loop.
+                #SC2196: egrep is non-standard and deprecated. Use grep -E instead.
+
               *)
-                #SC2086: Double quote to prevent globbing and word splitting.
-                shellcheck $i -e SC2086
+                #SC1090: Can't follow non-constant source. Use a directive to specify location.
+                #SC1091: Similar to SC1090
+                #SC2004: $/${} is unnecessary on arithmetic variables.
+                #SC2155: Declare and assign separately to avoid masking return values.
+                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
+                #SC2188: This redirection doesn't have a command. Move to its command (or use 'true' as no-op).
+                shellcheck $i -e SC1090 -e SC1091 -e SC2004 -e SC2155 -e SC2181 -e SC2188
                 ;;
             esac
             if [ $? -ne 0 ]; then
@@ -221,4 +81,3 @@ jobs:
       - name: make all
         run: |
           sudo make all
-

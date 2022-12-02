@@ -3,7 +3,9 @@
 if [[ -z ${ALLSKY_HOME} ]] ; then
 	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
 fi
+# shellcheck disable=SC1090,SC1091
 source "${ALLSKY_HOME}/variables.sh" || exit 1
+# shellcheck disable=SC1090,SC1091
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit 1
 
 if [[ $EUID -eq 0 ]]; then
@@ -17,7 +19,9 @@ if ! json_pp < "${SETTINGS_FILE}" > /dev/null; then
 	exit 1
 fi
 
+# shellcheck disable=SC1090,SC1091
 source "${ALLSKY_CONFIG}/config.sh" || exit 1
+# shellcheck disable=SC1090,SC1091
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 ME="$(basename "${BASH_ARGV0}")"
 
@@ -167,7 +171,7 @@ create_website_configuration_file() {
 			homePage.onPi			"onPi"			"${ON_PI}"
 
 		MSG="If you want different settings on the remote Website than what's on the local Website,"
-		MSG="${MSG}\nedit the remote settings in the WebUI."
+		MSG="${MSG}\nedit the remote settings in the WebUI's 'Editor' page."
 		display_msg notice "${MSG}"
 		return 0
 	fi
@@ -390,6 +394,7 @@ save_prior_website() {
 	SAVED_OLD=false
 
 	if [[ -d ${ALLSKY_WEBSITE} ]]; then
+		# Has a older version of the new-style website.
 		PRIOR_WEBSITE="${ALLSKY_WEBSITE}-OLD"
 		PRIOR_WEBSITE_TYPE="new"
 
@@ -404,18 +409,19 @@ save_prior_website() {
 			exit 3
 		fi
 
-		display_msg progress "Moving prior ${PRIOR_WEBSITE_TYPE}-style website to '${PRIOR_WEBSITE}'."
+		display_msg progress "Moving prior website to '${PRIOR_WEBSITE}'."
 		mv "${ALLSKY_WEBSITE}" "${PRIOR_WEBSITE}"
 		if [[ $? -ne 0 ]]; then
 			display_msg error "Unable to move prior website."
 			exit 3
 		fi
 	elif [[ -d /var/www/html/allsky ]]; then
+		# Has an old-style website.
 		PRIOR_WEBSITE="/var/www/html/allsky"
 		PRIOR_WEBSITE_TYPE="old"
 		# Leave the old-style website where it is since it will no longer be used.
 	else
-		# Is no prior website
+		# No prior website
 		PRIOR_WEBSITE=""
 		PRIOR_WEBSITE_TYPE=""
 		return
@@ -426,48 +432,50 @@ save_prior_website() {
 
 ##### Restore prior files.
 restore_prior_files() {
-	[[ ${SAVED_OLD} != "true" ]] && return
+	[[ ${SAVED_OLD} == "false" ]] && return
 
 	# Each directory will have zero or more images.
 	# Make sure we do NOT mv any .php files.
 
-	if [[ -d ${PRIOR_WEBSITE}/videos/thumbnails ]]; then
-		mv "${PRIOR_WEBSITE}/videos/thumbnails"   videos
-	fi
+	D="${PRIOR_WEBSITE}/videos/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   videos
 	count=$(ls -1 "${PRIOR_WEBSITE}"/videos/allsky-* 2>/dev/null  | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior videos."
 		mv "${PRIOR_WEBSITE}"/videos/allsky-*   videos
 	fi
 
-	if [[ -d ${PRIOR_WEBSITE}/keograms/thumbnails ]]; then
-		mv "${PRIOR_WEBSITE}/keograms/thumbnails"   keograms
-	fi
+	D="${PRIOR_WEBSITE}/keograms/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   keograms
 	count=$(ls -1 "${PRIOR_WEBSITE}"/keograms/keogram-* 2>/dev/null | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior keograms."
 		mv "${PRIOR_WEBSITE}"/keograms/keogram-*   keograms
 	fi
 
-	if [[ -d ${PRIOR_WEBSITE}/startrails/thumbnails ]]; then
-		mv "${PRIOR_WEBSITE}/startrails/thumbnails"   startrails
-	fi
+	D="${PRIOR_WEBSITE}/startrails/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   startrails
 	count=$(ls -1 "${PRIOR_WEBSITE}"/startrails/startrails-* 2>/dev/null | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior startrails."
 		mv "${PRIOR_WEBSITE}"/startrails/startrails-*   startrails
 	fi
 
-	if [[ -d ${PRIOR_WEBSITE}/myImages ]]; then
-		display_msg progress "Restoring prior 'myImages' directory."
-		mv "${PRIOR_WEBSITE}/myImages"   .
+	D="${PRIOR_WEBSITE}/myImages"
+	if [[ -d ${D} ]]; then
+		count=$(find "${D}" | wc -l)
+		if [[ ${count} -gt 1 ]]; then
+			display_msg progress "Restoring prior 'myImages' directory."
+			mv "${D}"   .
+		fi
 	fi
 
 	A="analyticsTracking.js"
-	if [[ -f ${PRIOR_WEBSITE}/${A} ]]; then
-		if ! cmp --silent "${PRIOR_WEBSITE}/${A}" "${A}" ; then
+	D="${PRIOR_WEBSITE}/${A}"
+	if [[ -f ${D} ]]; then
+		if ! cmp --silent "${D}" "${A}" ; then
 			display_msg progress "Restoring prior '${A}'."
-			mv "${PRIOR_WEBSITE}/${A}" .
+			mv "${D}" .
 		fi
 	fi
 }
@@ -564,7 +572,7 @@ if [[ ${FUNCTION} != "" ]]; then
 fi
 
 
-##### Handle prior websites
+##### Handle prior website, if any
 save_prior_website
 
 
@@ -579,7 +587,7 @@ create_data_json_file
 restore_prior_files
 
 # Create any directories not created above.
-mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails
+mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails myImages
 
 # The webserver needs to be able to update the configuration file and create thumbnails.
 display_msg progress "Setting ownership and permissions."
@@ -603,10 +611,11 @@ fi
 if [[ ${HAS_NEW_CONFIGURATION_FILE} == "true" ]]; then
 	MSG="\nBefore using the website you must edit its configuration by clicking on"
 	MSG="${MSG}\nthe 'Editor' link in the WebUI, then select the"
-	MSG="${MSG}\n    ${ALLSKY_WEBSITE_CONFIGURATION_NAME} (Allsky Website)"
-	MSG="${MSG}\nentry.  See ${GITHUB_ROOT}/allsky/wiki/allsky-website-Settings for more information.\n"
+	MSG="${MSG}\n    ${ALLSKY_WEBSITE_CONFIGURATION_NAME} (local Allsky Website)"
+	MSG="${MSG}\nentry.  See the 'Installation --> Allsky Website' documentation"
+	MSG="${MSG}\npage for more information.\n"
 	display_msg info "${MSG}"
 fi
 
 echo
-
+exit 0

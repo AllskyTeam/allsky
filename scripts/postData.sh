@@ -140,9 +140,10 @@ function upload_file()
 upload_file "${SETTINGS_FILE}" "settings file"
 # shellcheck disable=SC2181
 RET=$?
-if [[ ${RET} -ne 0 && ${SETTINGS_ONLY} == "false" ]]; then
+if [[ ${RET} -eq 0 && ${SETTINGS_ONLY} == "false" ]]; then
 	upload_file "${OUTPUT_FILE}" "output file"
 	# shellcheck disable=SC2181
 	RET=$?
 fi
 exit ${RET}
+

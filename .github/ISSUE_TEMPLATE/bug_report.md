@@ -13,22 +13,21 @@ If so, please add a Discussion item by clicking on the Discussions link above;  
 
 
 
-
 <!-- =========================================================== -->
-## Look in the Wiki before submitting an Issue
+&nbsp; 
+## Look in the Wiki before submitting this Issue
 The Wiki has lots of information including troubleshooting tips for the vast majority of known issues.
 
 
-
-<!-- ========================================================================  -->
-<!-- ============= Delete this line and everything above it before submitting this Issue =============== -->
+<!-- ========================================================================  --> &nbsp; 
+<!-- ============= ***** Delete this line and everything above it before submitting this Issue ***** =============== -->
 
 
 
 <!-- ==================== Section 1 ==================== -->
 ### Environment
 
-* Camera:  ZWO (including model)  or  RPi
+* Camera:  ZWO  or  RPi - include the model
 * OS: Buster or Bullseye
 * Allsky version:
      * The newest software includes a file called  ~/allsky/version
@@ -37,8 +36,7 @@ The Wiki has lots of information including troubleshooting tips for the vast maj
 
 
 <!-- ==================== Section 2 ==================== -->
-<!-- Leave the next line but delete the remaining lines in this section after you've entered your information. -->
-
+<!-- ***** Leave the next line but delete the remaining lines in Section 2 after you've entered your information. ***** -->
 ### Bug Description
 
 * Include a clear and concise description of what the bug is.
@@ -46,16 +44,17 @@ The Wiki has lots of information including troubleshooting tips for the vast maj
 * Did anything change?  Any settings?  Most issues occur after a change was made.
 * Please include the exact messages or a screenshot.
 * If this is a configuration-related issue (or you are not sure), attach these files, appending ".txt" to their names first:
-  * Allsky or WebUI problems:
+  * Allsky problems:
     * ~/allsky/config/config.sh
-    * /etc/raspap/settings_ZWO.json  or  /etc/raspap/settings_RPiHQ.json, depending on the camera type you have.
-    * ~/allsky/config/ftp-settings.sh (upload-related problems)
+    * ~/allsky/config/settings.json
+    * ~/allsky/config/ftp-settings.sh (only for upload-related problems)
   * Allsky Website problems:
-    * /var/www/html/allsky/config.js (Allsky Website problems)
+    * ~/allsky/html/allsky/configuration.json (local Website)
+    * ~/allsky/config/remote_configuration.json (remote Website)
 
 
 If you have program output or multi-line messages to include,
-add it like this so it formats correctly:
+add it like this so it formats correctly (note the lines with tildas):
 
 ~~~
 output/message line 1
@@ -64,8 +63,7 @@ output/message line 2
 
 
 <!-- ==================== Section 3 ==================== -->
-<!-- Leave the next line but delete the remaining lines in this section after you've attached any files. -->
-
+<!-- ***** Leave the next line but delete the remaining lines in Section 3 after you've attached any files. ***** -->
 ### Log / configuration files
 
 Follow the instructions for Reporting Issues in the Wiki, then ATTACH a copy of the file(s) above.

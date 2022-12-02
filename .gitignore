@@ -1,18 +1,6 @@
 images/*
-config.sh
 darks/*
-liveview*
-image.jpg
-image-resize.jpg
-image-processed.jpg
-temperature.txt
-data.json
-log.txt
-settings.json
-scripts/ftp-settings.sh
 scripts/endOfNight_additionalSteps.sh
-settings_RPiHQ.json
-settings_ZWO.json
 
 # development artifacts
 src/*.a
@@ -23,7 +11,7 @@ gmon.out
 .*.sw[pomnq]
 
 # generated binaries
-capture
+capture_ZWO
 capture_RPiHQ
 keogram
 startrails

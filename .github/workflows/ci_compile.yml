@@ -42,7 +42,8 @@ jobs:
                 #SC2034: ON_TTY appears unused. Verify use (or export if used externally).
                 shellcheck $i -e SC2034 
                 ;;
-			  do_not_ignore)
+
+                ###### Do not ignore these
                 #SC2206: Quote to prevent word splitting/globbing, or split robustly with mapfile or read -a.
                 #SC2207: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
                 #SC2046: Quote this to prevent word splitting.
@@ -51,10 +52,8 @@ jobs:
                 #SC2016: Expressions don't expand in single quotes, use double quotes for that.
                 #SC2044: For loops over find output are fragile. Use find -exec or a while read loop.
                 #SC2196: egrep is non-standard and deprecated. Use grep -E instead.
-				shellcheck $i -e SC2206
-				;;
 
-			  *)
+              *)
                 #SC1090: Can't follow non-constant source. Use a directive to specify location.
                 #SC1091: Similar to SC1090
                 #SC2004: $/${} is unnecessary on arithmetic variables.
@@ -82,5 +81,3 @@ jobs:
       - name: make all
         run: |
           sudo make all
-
-

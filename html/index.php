@@ -50,8 +50,6 @@ include_once('includes/allskySettings.php');
 include_once('includes/days.php');
 include_once('includes/images.php');
 include_once('includes/editor.php');
-include_once('includes/overlay.php');
-include_once('includes/module.php');
 
 $output = $return = 0;
 if (isset($_GET['page']))
@@ -223,12 +221,6 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					<li>
 						<a href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>
 					</li>
-                    <li>
-                        <a href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i> Overlay Editor</a>
-                    </li>
-                    <li>
-                        <a href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Editor</a>
-                    </li>					
 					<li>
 						<a href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
 					</li>
@@ -342,12 +334,6 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					case "editor":
 						DisplayEditor();
 						break;
-                    case "overlay":
-                        DisplayOverlay("$image_name");
-                        break;
-                    case "module":
-                        DisplayModule();
-                        break;						
 					case "live_view":
 					default:
 						DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);

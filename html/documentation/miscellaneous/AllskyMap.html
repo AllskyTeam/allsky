@@ -21,8 +21,9 @@
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="Layout Layout-main markdown-body" id="mainContents">
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
 
 <h2>Overview</h2>
 <p>
@@ -64,12 +65,13 @@ page for a description of each map-related setting in the WebUI.
 </p>
 
 
-<br><h2>My website isn't available on the Internet</h2>
+<h2>My website isn't available on the Internet</h2>
 You can still have a pin of your camera's location appear on the map - just
 leave the <span class="WebUISetting">Website URL</span> and
 <span class="WebUISetting">Image URL</span> fields blank.
 
 </div><!-- Layout-main -->
+</div><!-- Layout -->
 </body>
 </html>
 <script> includeHTML(); </script>

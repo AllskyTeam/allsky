@@ -19,6 +19,8 @@ body {
 	font-size: 16px;
 	line-height: 1.5;
 	word-wrap: break-word;
+	padding-right: 10px !important;
+	padding-left: var(--main-body-padding) !important;
 }
 .markdown-body::before {
 	display: table;
@@ -48,14 +50,17 @@ body {
 .markdown-body .anchor:focus {
 	outline: none
 }
-.markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body details {
+.markdown-body ul,
+.markdown-body ol,
+.markdown-body dl,
+.markdown-body table,
+.markdown-body details {
 	margin-top: 5px;
 	margin-bottom: 16px;
 }
-p {
+.markdown-body p {
 	margin: 16px 0px 16px 0px;
 }
-
 .markdown-body hr {
 	height: .25em;
 	padding: 0;
@@ -70,6 +75,7 @@ p {
 	margin-left: 5%;
 	background-color: blue;
 }
+
 .markdown-body blockquote {
 	font-size: inherit;
 	padding: 0.5em 0.75em 0.5em 0.75em;
@@ -77,7 +83,7 @@ p {
 	background-color: var(--color-attention-verysubtle);
 	border-left: 0.5em solid var(--color-attention-emphasis);
 	max-width: max-content;
-	margin: 1.2em 0;
+	margin: 10px 0px 10px 0px;
 }
 .markdown-body blockquote>:first-child {
 	margin-top: 0;
@@ -85,18 +91,40 @@ p {
 .markdown-body blockquote>:last-child {
 	margin-bottom: 0;
 }
-.markdown-body h1 .octicon-link,.markdown-body h2 .octicon-link,.markdown-body h3 .octicon-link,.markdown-body h4 .octicon-link,.markdown-body h5 .octicon-link,.markdown-body h6 .octicon-link {
+.markdown-body blockquote.warning {
+	color: var(--color-danger-fg);
+	background-color: var(--color-danger-subtle);
+	border-left: 0.75em solid var(--color-danger-emphasis);
+}
+
+.markdown-body h1 .octicon-link,
+.markdown-body h2 .octicon-link,
+.markdown-body h3 .octicon-link,
+.markdown-body h4 .octicon-link,
+.markdown-body h5 .octicon-link {
 	color: var(--color-fg-default);
 	vertical-align: middle;
 	visibility: hidden
 }
-.markdown-body h1:hover .anchor,.markdown-body h2:hover .anchor,.markdown-body h3:hover .anchor,.markdown-body h4:hover .anchor,.markdown-body h5:hover .anchor,.markdown-body h6:hover .anchor {
+.markdown-body h1:hover .anchor,
+.markdown-body h2:hover .anchor,
+.markdown-body h3:hover .anchor,
+.markdown-body h4:hover .anchor,
+.markdown-body h5:hover .anchor {
 	text-decoration: none
 }
-.markdown-body h1:hover .anchor .octicon-link,.markdown-body h2:hover .anchor .octicon-link,.markdown-body h3:hover .anchor .octicon-link,.markdown-body h4:hover .anchor .octicon-link,.markdown-body h5:hover .anchor .octicon-link,.markdown-body h6:hover .anchor .octicon-link {
+.markdown-body h1:hover .anchor .octicon-link,
+.markdown-body h2:hover .anchor .octicon-link,
+.markdown-body h3:hover .anchor .octicon-link,
+.markdown-body h4:hover .anchor .octicon-link,
+.markdown-body h5:hover .anchor .octicon-link {
 	visibility: visible
 }
-.markdown-body h1 tt,.markdown-body h1 code,.markdown-body h2 tt,.markdown-body h2 code,.markdown-body h3 tt,.markdown-body h3 code,.markdown-body h4 tt,.markdown-body h4 code,.markdown-body h5 tt,.markdown-body h5 code,.markdown-body h6 tt,.markdown-body h6 code {
+.markdown-body h1 tt, .markdown-body h1 code,
+.markdown-body h2 tt, .markdown-body h2 code,
+.markdown-body h3 tt, .markdown-body h3 code,
+.markdown-body h4 tt, .markdown-body h4 code,
+.markdown-body h5 tt, .markdown-body h5 code {
 	padding: 0 .2em;
 	font-size: inherit
 }
@@ -119,24 +147,30 @@ p {
 .markdown-body h5 {
 	font-size: .875em
 }
-.markdown-body h6 {
-	font-size: .85em;
-	color: var(--color-fg-muted)
-}
-.markdown-body summary h1,.markdown-body summary h2,.markdown-body summary h3,.markdown-body summary h4,.markdown-body summary h5,.markdown-body summary h6 {
+.markdown-body summary h1,
+.markdown-body summary h2,
+.markdown-body summary h3,
+.markdown-body summary h4,
+.markdown-body summary h5 {
 	display: inline-block
 }
-.markdown-body summary h1 .anchor,.markdown-body summary h2 .anchor,.markdown-body summary h3 .anchor,.markdown-body summary h4 .anchor,.markdown-body summary h5 .anchor,.markdown-body summary h6 .anchor {
+.markdown-body summary h1 .anchor,
+.markdown-body summary h2 .anchor,
+.markdown-body summary h3 .anchor,
+.markdown-body summary h4 .anchor,
+.markdown-body summary h5 .anchor {
 	margin-left: -40px
 }
-.markdown-body summary h1,.markdown-body summary h2 {
+.markdown-body summary h1,
+.markdown-body summary h2 {
 	padding-bottom: 0;
 	border-bottom: 0
 }
 .markdown-body ul,.markdown-body ol {
 	padding-left: 2em
 }
-.markdown-body ul.no-list,.markdown-body ol.no-list {
+.markdown-body ul.no-list,
+.markdown-body ol.no-list {
 	padding: 0;
 	list-style-type: none
 }
@@ -152,32 +186,46 @@ p {
 .markdown-body div>ol:not([type]) {
 	list-style-type: decimal
 }
-.markdown-body ul ul,.markdown-body ul ol,.markdown-body ol ol,.markdown-body ol ul {
+.markdown-body ul ul,
+.markdown-body ul ol,
+.markdown-body ol ol,
+.markdown-body ol ul {
 	margin-top: 0;
 	margin-bottom: 0;
 	padding-top: 0 !important;
 }
 .markdown-body li {
-	margin-top: 0.25em;
+	margin-top: 0.5em;
 }
-.sidebar .sidebar-nav.navbar-collapse {
+#sidebar .Sidebar {
 	padding-left: 5px;
 	padding-right: 5px;
+	font-size: 12px;
+	border: 1px solid var(--color-accent-muted);
+	border-radius: 6px;
 }
-.sidebar .sidebar-nav.navbar-collapse ol,
-.sidebar .sidebar-nav.navbar-collapse ul {
+#sidebar .Sidebar ol,
+#sidebar .Sidebar ul {
 	padding-left: 30px;
 }
-.markdown-body .sidebar li {
-	margin-top: 0.15em;
+#sidebar .Sidebar ul li {
+	border-bottom: 0;
+}
+.markdown-body a,
+#sidebar .Sidebar ul li a {
+	color: var(--color-accent-fg);
+	text-decoration: none;
+	background-color: transparent;
 }
 .markdown-body li>p {
 	margin-top: 16px;
 }
-.markdown-body not(.sidebar) ul:first-child, .markdown-body ol:first-child {
+.markdown-body not(.sidebar) ul:first-child,
+.markdown-body ol:first-child {
 	padding-top: 2em;
 }
-.markdown-body not(.sidebar) ul:last-child, .markdown-body not(.sidebar) ol:last-child {
+.markdown-body not(.sidebar) ul:last-child,
+.markdown-body not(.sidebar) ol:last-child {
 	padding-bottom: 0.75em;
 }
 .markdown-body .minimalPadding li {
@@ -211,7 +259,8 @@ p {
 .markdown-body h3 {
 	background-color: var(--color-accent-subtle);
 }
-.markdown-body h3 {	/* TODO: want a lighter shade of blue than h2/h3, but there isn't one defined in light.css */
+/* TODO: want a lighter shade of blue than h2/h3, but there isn't one defined in light.css */
+.markdown-body h3 {
 	opacity: 0.8;
 }
 .markdown-body h4 {
@@ -392,7 +441,8 @@ p {
 	margin-bottom: 0;
 	word-break: normal
 }
-.markdown-body .highlight pre, .markdown-body pre {
+.markdown-body .highlight pre,
+.markdown-body pre {
 	margin-top: 6px;
 	margin-bottom: 8px;
 	padding: 10px;
@@ -403,7 +453,8 @@ p {
 	border-radius: 6px;
 	border: 1px solid var(--color-border-muted);
 }
-.markdown-body pre code, .markdown-body pre tt {
+.markdown-body pre code,
+.markdown-body pre tt {
 	display: inline;
 	max-width: auto;
 	padding: 0;
@@ -414,7 +465,8 @@ p {
 	background-color: transparent;
 	border: 0
 }
-.markdown-body .csv-data td,.markdown-body .csv-data th {
+.markdown-body .csv-data td,
+.markdown-body .csv-data th {
 	padding: 5px;
 	overflow: hidden;
 	font-size: 12px;
@@ -470,11 +522,8 @@ p {
 .markdown-body .footnotes .data-footnote-backref g-emoji {
 	font-family: monospace
 }
-.markdown-body h1 tt, .markdown-body h1 code, .markdown-body h2 tt, .markdown-body h2 code, .markdown-body h3 tt, .markdown-body h3 code, .markdown-body h4 tt, .markdown-body h4 code, .markdown-body h5 tt, .markdown-body h5 code, .markdown-body h6 tt, .markdown-body h6 code {
-	padding: 0 .2em;
-	font-size: inherit;
-}
-.wiki-footer .markdown-body, .wiki-rightbar .markdown-body {
+.wiki-footer .markdown-body,
+.wiki-rightbar .markdown-body {
 	font-size: 12px;
 }
 .mb-4 {
@@ -509,7 +558,8 @@ details summary {
 details[open]:not([sub]) summary::before, details[sub][open] summary::before {
 	content: "Hide Details...";
 }
-details summary::before, details[sub]:not([open]) summary::before {
+details summary::before,
+details[sub]:not([open]) summary::before {
 	content: "More Details...";
 }
 summary {
@@ -529,71 +579,33 @@ b, strong {
 	--Layout-gutter: 10px;
 	grid-auto-flow: column;
 	grid-gap: var(--Layout-gutter);
+	margin-top: 24px !important;
 }
-.Layout.Layout--sidebarPosition-end .Layout-sidebar {
-	grid-column: 2;		/* this is the 2nd column of 2 */
-	margin-right: var(--main-body-padding);
-}
-.Layout.Layout--sidebarPosition-end .Layout-main {
+.Layout .Layout-main {
 	grid-column: 1;
-}
-.Layout-main {
 	min-width: 0;
+}
+.Layout .Layout-sidebar {
+	grid-column: 2;
+}
+@media (min-width: calc(1000.01px)) {
+	.Layout .Layout-sidebar {
+		margin-right: var(--main-body-padding);
+	}
+}
+
+@media (max-width: 1000px) {
+	#sidebar .Sidebar {
+		margin: 0 var(--main-body-padding) var(--main-body-padding) var(--main-body-padding);
+	}
+	.Layout { display: block; }
+	.navbar-collapse { display: none; }
+	.navbar-collapse.collapse:not(.in) { display: none !important; }
+	.navbar-toggle { display: block; margin-top: 16px; }
 }
 
 .navbar-header {
 	float: none;
-}
-.sidebar-nav.navbar-collapse {
-	font-size: 12px;
-	border: 1px solid var(--color-accent-muted);
-	border-radius: 6px;
-}
-
-.markdown-body .navbar-header h1 {
-	margin-bottom: 0 !important;
-}
-
-@media (max-width: 1000px) {
-	.sidebar .sidebar-nav.navbar-collapse {
-		margin-left: var(--main-body-padding);
-	}
-	.Layout { display: block;  }
-	.navbar-collapse { display: none; }
-	.navbar-collapse.collapse:not(.in) { display: none !important; }
-	.navbar-toggle { display: block; margin-top: 16px; }
-	.navbar-default.sidebar {
-		width: 100%;
-		margin: 0px 0px 20px 0px;
-	}
-	.Layout.Layout--flowRow-until-md .Layout-sidebar,
-	.Layout.Layout--flowRow-until-md .Layout-divider,
-	.Layout.Layout--flowRow-until-md .Layout-main {
-		width: 100% !important;
-		grid-column: 1 !important;
-	}
-}
-
-.px-3 {
-	padding-right: 10px !important;
-	padding-left: var(--main-body-padding) !important;
-}
-.mt-4 {
-	margin-top: 24px !important;
-}
-.container-xl {
-	max-width: 1280px;
-	margin-right: auto;
-	margin-left: auto;
-}
-
-.sidebar ul li {
-	border-bottom: 0;
-}
-a, .sidebar ul li a {
-	color: var(--color-accent-fg);
-	text-decoration: none;
-	background-color: transparent;
 }
 
 .sentToMapServer::before {
@@ -613,6 +625,13 @@ a, .sidebar ul li a {
 	color: var(--color-danger-fg);
 	font-weight: bold;
 }
+.WebUIWebPage {	/* link on the WebUI to one of its pages */
+	padding: 0 .2em;
+	color: #4b4a4b;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	background-color: #f8f8f8;
+	border-bottom: 1px solid #e7e7e7;
+}
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	color: #333;
@@ -630,21 +649,19 @@ a, .sidebar ul li a {
 	background-color: #e4e4e4;
 	border-radius: 4px;
 }
-.shSetting { /* Matches what's in the WebUI's "Editor" page for *.sh files. */
+.shSetting {	/* Matches what's in the WebUI's "Editor" page for *.sh files. */
 	color: #fd971f;
 	font-family: monospace;
 	font-weight: bold;
 }
 .settings {
-	/* font-size: 14px; */ /* I think 16px of rest of page is better */
 }
-/* Colors that match entries in the WebUI's "Editor" page */
 .editorShell {
-	color: #fd971f;
+	color: #fd971f;		/* Colors that match entries in the WebUI's "Editor" page */
 }
+.shellComment,
 .editorShellComment {
-	color: #75715e;
-	color: #a5a18e;	/* Editor comments are hard to see so lighten some */
+	color: #a5a18e;		/* Editor comments are hard to see so lighten some */
 }
 .editorSetting {
 	color: #a6e22e;
@@ -652,9 +669,9 @@ a, .sidebar ul li a {
 .editorString {
 	color: #e6db74;
 }
-.editorNum, .editorBool {
-	color: #ae81ff;
-	color: #deb1ff;	/* Editor versions are hard to see so lighten some */
+.editorNum,
+.editorBool {
+	color: #deb1ff;		/* Editor versions are hard to see so lighten some */
 }
 .editorSign {
 	color: white;
@@ -697,7 +714,8 @@ a, .sidebar ul li a {
 .nowrap {
 	white-space: nowrap;
 }
-.buttonIcon, .buttonIconLarge {	/* button icons from WebUI - shrink in documentation */
+.buttonIcon,
+.buttonIconLarge {	/* button icons from WebUI - shrink in documentation */
 	width: 90px;
 	height: auto;
 	margin-bottom: -2px;	/* so it looks like it lines up with the text around it */
@@ -709,7 +727,7 @@ a, .sidebar ul li a {
 	margin: 10px auto 10px auto;
 	display: block;
 }
-.imgBorder {	/* put a border around a light image */
+.imgBorder {		/* put a border around a light image */
 	border: 1px solid var(--color-border-muted);
 }
 .imgBorderDark {	/* put a border around a darker image */
@@ -732,11 +750,4 @@ a, .sidebar ul li a {
 	border-radius: 6px;
 	background-color: var(--color-attention-verysubtle);
 	border: 1px solid var(--color-attention-muted);
-}
-.WebUIWebPage {
-	padding: 0 .2em;
-	color: #4b4a4b;
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	background-color: #f8f8f8;
-	border-bottom: 1px solid #e7e7e7;
 }

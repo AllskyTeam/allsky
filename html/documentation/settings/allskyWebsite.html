@@ -9,7 +9,11 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Allsky Website Settings";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Allsky Website Settings";
+		} 
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<script src="../js/all.min.js"></script>
@@ -17,9 +21,9 @@
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <p>
 The Allsky Website allows you to display your most recent captured image on a website,
@@ -64,7 +68,7 @@ Information on the color scheme used by the Editor is
 </p>
 
 
-<br><h2>"config" settings</h2>
+<h2>"config" settings</h2>
 <details><summary></summary>
 <br>
 Legend:
@@ -420,7 +424,7 @@ Allsky Website so you only have to update them once.
 </details>
 
 
-<br><h2>"homePage" settings</h2>
+<h2>"homePage" settings</h2>
 <details><summary></summary>
 <br>
 <table class="settings">
@@ -647,8 +651,8 @@ Allsky Website so you only have to update them once.
 </tbody>
 </table>
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

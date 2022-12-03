@@ -37,13 +37,21 @@ function DisplayModule() {
             <div class="panel-body">
                 <nav class="navbar navbar-default">
                     <div class="container-fluid">
-                        <div class="collapse navbar-collapse" id="oe-autoexposure-navbar">
+                        <div class="navbar-header">
+                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-module-editor-navbar">
+                                <span class="sr-only">Toggle navigation</span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>                                            
+                            </button>
+                        </div>                        
+                        <div class="collapse navbar-collapse" id="oe-module-editor-navbar">
                             <ul class="nav navbar-nav">
                                 <li>
-                                    <div class="btn btn-lg navbar-btn" id="module-editor-save" data-toggle="tooltip" data-placement="top" data-container="body" title="Save The Module Configuration"><i class="fa-solid fa-floppy-disk fa-lg"></i></div>
+                                    <div class="btn btn-lg navbar-btn" id="module-editor-save" data-toggle="tooltip" data-placement="top" data-container="body" title="Save The Module Configuration"><i class="fa-solid fa-floppy-disk"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn" id="module-editor-new" data-toggle="tooltip" data-placement="top" data-container="body" title="Add A New Module"><i class="fa-solid fa-upload fa-lg"></i></div>
+                                    <div class="btn btn-lg navbar-btn" id="module-editor-new" data-toggle="tooltip" data-placement="top" data-container="body" title="Add A New Module"><i class="fa-solid fa-upload"></i></div>
                                 </li>
                                 <li class="btn-lg">
                                     <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
@@ -59,14 +67,14 @@ function DisplayModule() {
                             </ul>
                             <ul class="nav navbar-nav navbar-right">
                                 <li>
-                                    <div class="btn btn-lg navbar-btn" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options"><i class="fa-solid fa-gear fa-lg"></i>
+                                    <div class="btn btn-lg navbar-btn" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options"><i class="fa-solid fa-gear"></i>
                                     </div>
                                 </li>
                                 <li id="oe-toolbar-debug" class="hidden">
-                                    <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug fa-lg"></i></div>
+                                    <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
                                 </li>                                
                                 <li>
-                                    <div class="btn btn-lg navbar-btn" id="module-editor-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset Config to default"><i class="fa-solid fa-rotate-right fa-lg"></i></div>
+                                    <div class="btn btn-lg navbar-btn" id="module-editor-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset Config to default"><i class="fa-solid fa-rotate-right"></i></div>
                                 </li>
                             </ul>                            
                         </div>

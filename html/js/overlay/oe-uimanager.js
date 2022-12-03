@@ -25,15 +25,11 @@ class OEUIMANAGER {
     #fieldTable = null;
     #allFieldTable = null;
 
-    constructor() {
+    constructor(imageObj) {
         this.#configManager = window.oedi.get('config');
         this.#fieldManager = window.oedi.get('fieldmanager');
 
         Konva.pixelRatio = 1;
-
-        var imageObj = new Image();
-        imageObj.src = $('#oe-background-image').attr('src');
-
 
         this.#backgroundImage = new Konva.Image({
             x: 0,

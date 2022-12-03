@@ -2,7 +2,7 @@
 class OVERLAYEDITOR {
     #container = "";
 
-    constructor(container) {
+    constructor(container, image) {
         this.#container = container;
 
         this.#addDiContainer();
@@ -11,7 +11,7 @@ class OVERLAYEDITOR {
         window.oedi.add('config', config);
         let fieldManager = new OEFIELDMANAGER();
         window.oedi.add('fieldmanager', fieldManager);
-        let uiManager = new OEUIMANAGER();
+        let uiManager = new OEUIMANAGER(image);
         window.oedi.add('uimanager', uiManager);
         window.oedi.add('BASEDIR', 'overlay/');    
         window.oedi.add('IMAGEDIR', 'overlay/images/');       

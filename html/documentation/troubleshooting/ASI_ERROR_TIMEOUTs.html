@@ -9,16 +9,20 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Troubleshooting ASI_ERROR_TIMEOUT";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Troubleshooting ASI_ERROR_TIMEOUT";
+		} 
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>ASI_ERROR_TIMEOUT Troubleshooting</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <p>
 If images are not being taken with your ZWO camera and you see many
@@ -91,7 +95,7 @@ If you are seeing lots of ASI_ERROR_TIMEOUT messages
 	Wiki page to report the problem.
 </ol>
 
-<br><h3>IGNORE THESE NOTES FOR NOW:</h3>
+<h3>IGNORE THESE NOTES FOR NOW:</h3>
 <p>
 Try adding <code>swiotlb=131072</code> to end of the line in
 <span class="fileName">/boot/cmdline.txt</span>, then reboot.  
@@ -115,8 +119,9 @@ The extra log entries may offer some insight into causes of the exposure failure
 </p>
 
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>
+

@@ -9,16 +9,20 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Exposure, Gain, Brightness, Saturation";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Exposure, Gain, Brightness, Saturation"
+		}
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Exposure, Gain, et. al.</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <p>
 There are several settings that determine what an image looks like - how bright it is,
@@ -42,7 +46,7 @@ In Allsky you can set the <span class="WebUISetting">Brightness</span>
 to change what settings the auto-exposure algorithm uses.
 </p>
 
-<br><h2>Image Color</h2>
+<h2>Image Color</h2>
 <p>
 If your sky looks green instead of blue, your <b>color balance</b> is off.
 This is also called <b>white balance</b> because it can be easier to
@@ -64,7 +68,7 @@ You can change the <span class="WebUISetting">Auto White Balance</span> and red 
 separately for daytime and nighttime.
 </p>
 
-<br><h2>Saturation (RPiHQ cameras only)</h2>
+<h2>Saturation (RPiHQ cameras only)</h2>
 Saturation determines how vivid the colors are,
 from black and white to very vivid (usually to the point where the colors look unnatural).
 To change saturation, use the <span class="WebUISetting">Saturation</span> setting in the WebUI.
@@ -73,8 +77,9 @@ If you want a black and white image, set the <span class="WebUISetting">Saturati
 to its lowest value.
 
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>
+

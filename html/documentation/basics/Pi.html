@@ -9,16 +9,20 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Pi Basics";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Pi Basics";
+		}
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Pi Basics</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <h1>Overview</h1>
 <p>
@@ -77,8 +81,8 @@ They also have a special port to plug the RPi High Definition (HD) camera into.
 If you have any suggestions on what should be added here,
 please add a <a href="https://github.com/thomasjacquin/allsky/discussions">Discussion</a> item.
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

@@ -9,16 +9,20 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Image Overlays";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Image Overlays";
+		} 
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Image Overlays</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <h2>What is an "Image Overlay"?</h2>
 <p>
@@ -49,7 +53,7 @@ With the <b>legacy</b> method you can add text to an image automatically or manu
 or add images manually.
 </p>
 
-<br><h3>Automatically add text</h3>
+<h3>Automatically add text</h3>
 <details><summary></summary>
 <p>
 In the <b>Allsky Settings</b> page of the WebUI under the <b>Image overlay settings</b> section,
@@ -97,7 +101,7 @@ The spacing between text lines can be adjusted via the
 </blockquote>
 </p>
 
-<br><h3 id="extraTextFileExample">Extra Text File example</h3>
+<h3 id="extraTextFileExample">Extra Text File example</h3>
 <p>
 Let's say you want to display the humidity on each image.
 The camera doesn't report this information and Allsky doesn't know it,
@@ -151,7 +155,7 @@ field since that field only applies if you are using a extra text file.
 </details>
 
 
-<br><h3>Manually add text and/or images (advanced)</h3>
+<h3>Manually add text and/or images (advanced)</h3>
 <details><summary></summary>
 <blockquote>
 The <b>overlay</b> method of adding text and/or images anywhere on the image
@@ -240,11 +244,10 @@ Notes:
 		or with opacity like "#ff44aa88"
 		(where "88" is the opacity - "00" is transparent, "ff" is opaque).
 </ul>
-
 </details>
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

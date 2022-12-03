@@ -9,16 +9,20 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Installing and upgrading Allsky Website";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Installing and upgrading Allsky Website";
+		} 
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Installing and upgrading Allsky Website</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <p>
 This page describes how to install and upgrade the Allsky Website.
@@ -96,7 +100,7 @@ The installation won't prompt for anything, and will display minimal output.
 
 
 
-<br><h2>Install on a remote server</h2>
+<h2>Install on a remote server</h2>
 <details><summary></summary>
 <p>
 Many people have their Pi behind a firewall where it's not accessible on the Internet,
@@ -178,7 +182,7 @@ You can then install the Website on a remote machine by doing the following:
 </ol>
 
 
-<br><h3>Remote Website Requirements</h3>
+<h3>Remote Website Requirements</h3>
 The remote server needs to support the following:
 <ul class="minimalPadding">
 	<li>PHP version 7 or 8.
@@ -203,7 +207,7 @@ The remote server needs to support the following:
 </details>
 
 
-<br><h2>Post installation - local and remote</h2>
+<h2>Post installation - local and remote</h2>
 <p>
 After installation of the Website you'll need to change some
 <a allsky="true" href="/documentation/settings/allsky.html">Allsky Settings</a>
@@ -231,8 +235,8 @@ both accessible via the WebUI's <span class="WebUIWebPage">Editor</span> page.
 
 </details>
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

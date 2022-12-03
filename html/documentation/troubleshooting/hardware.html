@@ -9,16 +9,20 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Troubleshooting Hardware Issues";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Troubleshooting Hardware Issues";
+		} 
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Hardware Troublehooting</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <p>
 Problems with your Raspberry Pi are not an issue with the AllSky software,
@@ -46,7 +50,7 @@ After the resize, you should have all your space reporting correctly.
 </details>
 
 
-<br><h2>Pi 3B+ doesn't run the latest AllSky Software</h2>
+<h2>Pi 3B+ doesn't run the latest AllSky Software</h2>
 <details><summary></summary>
 <p>
 If your Pi either hangs while booting with a camera connected or it gives
@@ -62,7 +66,7 @@ sudo rpi-update
 </details>
 
 
-<br><h2>Lenses</h2>
+<h2>Lenses</h2>
 <details><summary></summary>
 <p>
 Lenses need to be matched to your camera and your environment.
@@ -76,7 +80,7 @@ or <a href="https://stellarium.org/">Stellarium</a> to simulate the field of vie
 </details>
 
 
-<br><h2>Moisture on dome</h2>
+<h2>Moisture on dome</h2>
 <details><summary></summary>
 <p>
 If you are getting moisture on the inside of your allsky dome, consider adding a heater.
@@ -90,8 +94,9 @@ and out via another.
 </details>
 
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>
+

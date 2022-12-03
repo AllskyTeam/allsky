@@ -35,7 +35,8 @@ In order to get the camera working properly you will need the following hardware
 <details><summary>Click here</summary>
 
 &nbsp;  
-PatriotAstro has a [great video](https://www.youtube.com/watch?v=7TGpGz5SeVI) that describes the Allsky software including installation.  **We highly suggest viewing it before installing the software.**
+PatriotAstro created a [video](https://www.youtube.com/watch?v=j9xHsST2EeY) describing the installation steps below. Feel free to check it out.
+Another [video](https://www.youtube.com/watch?v=y6EFfLo4XxE) covers the installation on a Raspberry Pi Zero with both ZWO and RPiHQ cameras.
 
 You will need to install the Raspbian Operating System on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
 

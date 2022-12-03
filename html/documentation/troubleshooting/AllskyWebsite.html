@@ -9,7 +9,11 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Troubleshooting the Allsky Website";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Troubleshooting the Allsky Website";
+		} 
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<script src="../js/all.min.js" type="application/javascript"></script>
@@ -17,9 +21,9 @@
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <p>
 This page lists various issues you may have with the Allsky Website and how to solve them.
@@ -41,7 +45,7 @@ If you are seeing the message above when you go to the Allsky Website, do the fo
 	<span class="fileName">ftp-settings.sh</span>.
 </ul>
 
-<br><h2>ERROR: 'sunset' not defined in 'data.json' ...</h2>
+<h2>ERROR: 'sunset' not defined in 'data.json' ...</h2>
 <p>
 Follow the instructions in the error message.
 If this message continues to appear,
@@ -49,7 +53,7 @@ open a new <a href="https://github.com/thomasjacquin/allsky/issues">Issue</a>.
 </p>
 
 
-<br><h2>After changing the <span class="WebUISetting">Filename</span> in the WebUI you no longer see images on the Website</h2>
+<h2>After changing the <span class="WebUISetting">Filename</span> in the WebUI you no longer see images on the Website</h2>
 <p>
 If you used the WebUI to change the
 <span class="WebUISetting">Filename</span> setting or its extension
@@ -68,7 +72,7 @@ are only propogated to the local Website.
 </p>
 
 
-<br><h2>Can't access the Website from a browser</h2>
+<h2>Can't access the Website from a browser</h2>
 <p>
 If nothing appears when you go to the Website it's usually a settings issue.
 If the Website is on your Pi, look in
@@ -86,7 +90,7 @@ for example <code>http://allsky/allsky</code>, then try using the Pi's IP addres
 for example <code>http://192.168.0.21/allsky</code>.
 </p>
 
-<br><h2>Archived video files have no thumbnail</h2>
+<h2>Archived video files have no thumbnail</h2>
 <p>
 If you click on the
 <i class="fa fa-2x fa-fw fa-play-circle"></i> "Archived Timelapses" icon on the left side of the
@@ -110,8 +114,9 @@ If you are uploading mini-timelapse, do the same with the
 </p>
 </div>
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>
+

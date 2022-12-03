@@ -581,15 +581,15 @@ b, strong {
 	grid-gap: var(--Layout-gutter);
 	margin-top: 24px !important;
 }
-.Layout.Layout-main {
+.Layout .Layout-main {
 	grid-column: 1;
 	min-width: 0;
 }
-.Layout.Layout-sidebar {
+.Layout .Layout-sidebar {
 	grid-column: 2;
 }
 @media (min-width: calc(1000.01px)) {
-	.Layout.Layout-sidebar {
+	.Layout .Layout-sidebar {
 		margin-right: var(--main-body-padding);
 	}
 }

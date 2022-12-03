@@ -247,6 +247,17 @@ if [[ ${DAY_OR_NIGHT} == "NIGHT" && ${AUTO_STRETCH} == "true" ]]; then
 	fi
 fi
 
+if [ "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
+	# The 12 hours ago option ensures that we're always using today's date
+	# even at high latitudes where civil twilight can start after midnight.
+	export DATE_NAME="$(date -d '12 hours ago' +'%Y%m%d')"
+else
+	# During the daytime we alway save the file in today's directory.
+	export DATE_NAME="$(date +'%Y%m%d')"
+fi
+
+python ${ALLSKY_SCRIPTS}/flow-runner.py
+
 SAVED_FILE="${CURRENT_IMAGE}"				# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 

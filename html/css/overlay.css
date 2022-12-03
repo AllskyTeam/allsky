@@ -1,0 +1,177 @@
+.oe-flash {
+    padding: 10px;
+}
+
+.oe-help {
+    padding: 5px;
+}
+.oe-help dt {
+    margin-bottom: 5px;
+}
+.oe-help dd {
+    margin-bottom: 3px;
+}
+
+
+#oe-background-image {
+    display: none;
+}
+
+#overlay_container, #mask_container {
+    overflow: hidden;
+}
+
+#helpdialog #helptext {
+    margin: 5px;
+}
+
+#helpdialog #helptext h2 {
+    border-bottom: 1px solid white;
+}
+
+#helpdialog #helptext table {
+    margin-top: 10px;
+}
+
+#oe-editor-stage, #oe-exposure-stage { 
+    width:100%; 
+    height:100%; 
+    top:0px; 
+    left:0px;
+}
+
+.oe-editor.panel-body {
+    padding: 0px !important;
+}
+
+.oe-maskeditor.panel-body {
+    padding: 0px !important;
+}
+
+.dark .modal-content {
+    background-color: #222222 !important;
+    color: #888888 !important;    
+}
+
+.dark .modal-header {
+    border-bottom: 1px solid black !important;
+}
+
+.dark .modal-footer {
+    border-top: 1px solid black !important;
+}
+
+#oeeditor .navbar {
+    margin-bottom: 0px !important;
+    height: auto !important;
+}
+
+.navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:focus, .navbar-default .navbar-nav>.active>a:hover {
+    background: none !important;
+}
+
+.test {
+    background: none !important;
+}
+
+.ui-dialog { 
+    z-index: 1000 !important ;
+}
+
+.ui-dialog-titlebar-close1 {
+    display: none !important;
+}
+
+.ui-dialog .ui-dialog-content {
+    padding: 0px !important;
+}
+
+.ui-corner-all, .ui-corner-bottom, .ui-corner-right, .ui-corner-br {
+    border-bottom-right-radius: 0px !important;
+}
+.ui-corner-all, .ui-corner-bottom, .ui-corner-left, .ui-corner-bl {
+    border-bottom-left-radius: 0px !important;
+}
+.ui-corner-all, .ui-corner-top, .ui-corner-right, .ui-corner-tr {
+    border-top-right-radius: 0px !important;
+}
+.ui-corner-all, .ui-corner-top, .ui-corner-left, .ui-corner-tl {
+    border-top-left-radius: 0px !important;
+}
+
+.pgTable {
+    border: none !important;
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+.pgGroupRow {
+    background-color: #272727 !important;
+}
+
+
+.tooltip-wrapper {
+    display: inline-block; /* display: block works as well */
+  }
+  
+  .tooltip-wrapper .btn[disabled] {
+    /* don't let button block mouse events from reaching wrapper */
+    pointer-events: none;
+  }
+  
+  .tooltip-wrapper.disabled {
+    /* OPTIONAL pointer-events setting above blocks cursor setting, so set it here */
+    cursor: not-allowed;
+  }
+
+  .green {
+    color: green;
+  }
+
+  .red {
+    color: red;
+  }
+
+  .pulse {
+    animation: pulse 1s infinite ease-out;
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(0);
+    }
+    50% {
+      transform: scale(1.75);
+    }
+    70% {
+      transform: scale(0.65); 
+    }
+    100% {
+      transform: scale(0); 
+    }
+  }
+
+  #oe-item-list-dialog-allsky, #oe-item-list-dialog-all {
+    padding-top: 20px;
+  }
+
+  .datatable td {
+    overflow: hidden;
+  }
+
+  div.dataTables_wrapper div.dataTables_paginate {
+    padding-top: 10px;
+  }
+
+  table.dataTable td {
+    padding-top: 2px;
+  }
+
+  .sp-replacer {
+    height: 2.5rem !important;
+    width: 4rem !important;
+  }
+
+  .sp-dd {
+    padding: 3px 2px !important;
+  }

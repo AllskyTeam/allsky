@@ -1,1 +1,2 @@
-local5.*		/var/log/allsky.log
+local5.*    /var/log/allsky.log
+local6.*    /var/log/allskyperiodic.log

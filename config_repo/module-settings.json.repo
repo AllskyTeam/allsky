@@ -1,0 +1,14 @@
+{
+    "watchdog": true,
+    "timeout": 10000,
+    "showexperimental": true,
+    "autoenable": true,
+    "debugmode": true,
+    "events": {
+        "day": "Daytime Capture",
+        "night": "Nightime Capture",
+        "daynight": "Day to Night Transition",
+        "nightday": "Night to Day Transition",
+        "periodic": "Periodic jobs"
+    }
+}

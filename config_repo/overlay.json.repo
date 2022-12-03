@@ -1,0 +1,68 @@
+{
+    "fields": [
+        {
+            "label": "${DATE}",
+            "x": 10,
+            "y": 0,
+            "fontsize": 40,
+            "format": "%d-%m-%Y",
+            "id": "oe-field-0",
+            "fill": "#f44336"
+        },
+        {
+            "label": "${TIME}",
+            "x": 230,
+            "y": 0,
+            "fontsize": 40,
+            "format": "%H:%M:%S",
+            "id": "oe-field-1",
+            "fill": "#f44336"
+        },
+        {
+            "label": "Exposure: ${sEXPOSURE}",
+            "x": 10,
+            "y": 50,
+            "id": "oe-field-2",
+            "fontsize": 24
+        },
+        {
+            "label": "Gain: ${GAIN}",
+            "x": 10,
+            "y": 80,
+            "id": "oe-field-3",
+            "fontsize": 24
+        },
+        {
+            "label": "Sensor: ${TEMPERATURE}",
+            "x": 10,
+            "y": 110,
+            "id": "oe-field-4",
+            "sample": "32C",
+            "fontsize": 24
+        }
+    ],
+    "images": [],
+    "settings": {
+        "defaultdatafileexpiry": "550",
+        "defaultincludeplanets": false,
+        "defaultincludesun": false,
+        "defaultincludemoon": false,
+        "defaultimagetopacity": 0.63,
+        "defaultimagerotation": 0,
+        "defaulttextrotation": 0,
+        "defaultfontopacity": 1,
+        "defaultfontcolour": "white",
+        "defaultfont": "Arial",
+        "defaultfontsize": 52,
+        "defaultimagescale": 1,
+        "defaultnoradids": ""
+    },
+    "fonts": {
+        "moon_phases": {
+            "fontPath": "fonts\/moon_phases.ttf",
+            "fonttcolour": "red",
+            "backgroundcolor": "white",
+            "fontopacity": 0.5
+        }
+    }
+}

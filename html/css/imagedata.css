@@ -1,0 +1,15 @@
+.nav>li>a {
+    padding: 5px 10px;
+}
+
+#id-warnings-nomodule, #id-warnings-day, #id-warnings-nodata {
+    margin-top: 50px;
+}
+
+#id-live-charts, #id-historic-charts {
+    margin-top: 50px;
+}
+
+#daywarning, #nodbwarning {
+    text-align: center;
+}

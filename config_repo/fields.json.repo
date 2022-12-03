@@ -1,0 +1,373 @@
+{
+    "data": [
+        {
+            "id": 0,
+            "name": "${DATE}",
+            "description": "Date Image Taken",
+            "format": "%d-%m-%Y",
+            "sample": "DATE",
+            "type": "Date",
+            "source": "System"
+        },
+        {
+            "id": 1,
+            "name": "${TIME}",
+            "description": "Time Image Taken",
+            "format": "%H:%M:%S",
+            "sample": "TIME",
+            "type": "Time",
+            "source": "System"
+        },
+        {
+            "id": 2,
+            "name": "${TEMPERATURE}",
+            "description": "Sensor Temp (If Available)",
+            "format": "",
+            "sample": "32C",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 3,
+            "name": "${AUTOEXPOSURE}",
+            "description": "Auto Exposure",
+            "format": "",
+            "sample": "",
+            "type": "Bool",
+            "source": "System"
+        },
+        {
+            "id": 4,
+            "name": "${EXPOSURE_US}",
+            "description": "Frame Exposure Duration",
+            "format": "",
+            "sample": "10000",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 5,
+            "name": "${sAUTOEXPOSURE}",
+            "description": "Frame Exposure auto flag",
+            "format": "",
+            "sample": "(auto)",
+            "type": "Text",
+            "source": "System"
+        },
+        {
+            "id": 6,
+            "name": "${sEXPOSURE}",
+            "description": "Frame Exposure auto String",
+            "format": "",
+            "sample": "32.00 ms (0.03 sec)",
+            "type": "Text",
+            "source": "System"
+        },
+        {
+            "id": 7,
+            "name": "${AUTOGAIN}",
+            "description": "Auto Gain",
+            "format": "",
+            "sample": "",
+            "type": "Bool",
+            "source": "System"
+        },
+        {
+            "id": 8,
+            "name": "${GAIN}",
+            "description": "Camera Gain",
+            "format": "",
+            "sample": "180",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 9,
+            "name": "${sAUTOGAIN}",
+            "description": "Camera Gain auto flag",
+            "format": "",
+            "sample": "(Auto)",
+            "type": "Text",
+            "source": "System"
+        },
+        {
+            "id": 10,
+            "name": "${BRIGHTNESS}",
+            "description": "Brightness",
+            "format": "",
+            "sample": "50",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 11,
+            "name": "${MEAN}",
+            "description": "Mean Brightness",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 12,
+            "name": "${AUTOWB}",
+            "description": "Auto White Balance",
+            "format": "",
+            "sample": "",
+            "type": "Bool",
+            "source": "System"
+        },
+        {
+            "id": 13,
+            "name": "${sAUTOAWB}",
+            "description": "Auto White Balance String",
+            "format": "",
+            "sample": "",
+            "type": "Bool",
+            "source": "System"
+        },        
+        {
+            "id": 14,
+            "name": "${WBR}",
+            "description": "White Balance RED",
+            "format": "",
+            "sample": "3.47",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 15,
+            "name": "${WBB}",
+            "description": "White Balance",
+            "format": "",
+            "sample": "1.00",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 16,
+            "name": "${FLIP}",
+            "description": "Flip",
+            "format": "",
+            "sample": "",
+            "type": "Text",
+            "source": "System"
+        },
+        {
+            "id": 17,
+            "name": "${BIN}",
+            "description": "Binning",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 18,
+            "name": "${BIT_DEPTH}",
+            "description": "Bit Depth",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 19,
+            "name": "${FOCUS}",
+            "description": "Focus",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 20,
+            "name": "${25544ALT}",
+            "description": "ISS Altitude",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 21,
+            "name": "${25544AZ}",
+            "description": "ISS Azimuth",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 22,
+            "name": "${25544VISIBLE}",
+            "description": "ISS Visible",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 23,
+            "name": "${MOON_ELEVATION}",
+            "description": "Moon Altitude",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 24,
+            "name": "${MOON_AZIMUTH}",
+            "description": "Moon Azimuth",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 25,
+            "name": "${MOON_ILLUMINATION}",
+            "description": "Moon Illumination",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 26,
+            "name": "${MOON_SYMBOL}",
+            "description": "Moon Font Symbol",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 27,
+            "name": "${NAUTICALTWILIGHTSTARTS}",
+            "description": "Nautical Twilight Start",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+        {
+            "id": 28,
+            "name": "${CIVILTWILIGHTSTARTS}",
+            "description": "Civil Twilight Start",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+        {
+            "id": 29,
+            "name": "${DAYSTARTS}",
+            "description": "Day Start",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+        {
+            "id": 30,
+            "name": "${CIVILTWILIGHTENDS}",
+            "description": "Civil Twilight Ends",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+        {
+            "id": 31,
+            "name": "${NAUTICALTWILIGHTENDS}",
+            "description": "Nautical Twilight Ends",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+        {
+            "id": 32,
+            "name": "${ASTRONOMICALTWILIGHTENDS}",
+            "description": "Astronmical Twilight Ends",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+        {
+            "id": 33,
+            "name": "${CAMERA_TYPE}",
+            "description": "Camera",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+        {
+            "id": 34,
+            "name": "${AUTOUSB}",
+            "description": "AUTOUSB ZWO Only",
+            "format": "",
+            "sample": "",
+            "type": "Bool",
+            "source": "System"
+        },
+        {
+            "id": 35,
+            "name": "${USB}",
+            "description": "USB ZWO Only",
+            "format": "",
+            "sample": "",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 36,
+            "name": "${CAPTURE}",
+            "description": "capture",
+            "format": "",
+            "sample": "",
+            "type": "Text",
+            "source": "User"
+        },
+        {
+            "id": 37,
+            "name": "${DARKFRAME}",
+            "description": "Taking Dark Frames",
+            "format": "",
+            "sample": "",
+            "type": "Text",
+            "source": "System"
+        },
+        {
+            "id": 38,
+            "name": "${eOVERLAY}",
+            "description": "External Overlay",
+            "format": "",
+            "sample": "",
+            "type": "Text",
+            "source": "System"
+        },
+        {
+            "id": 39,
+            "name": "${DAY_OR_NIGHT}",
+            "description": "Day/Night string",
+            "format": "",
+            "sample": "Day",
+            "type": "Text",
+            "source": "System"
+        },
+        {
+            "id": 40,
+            "name": "${ALLSKY_VERSION}",
+            "description": "Allsky version string",
+            "format": "",
+            "sample": "v2022.MM.DD_tbd",
+            "type": "Text",
+            "source": "System"
+        }         
+    ]
+}

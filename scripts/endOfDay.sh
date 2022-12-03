@@ -35,4 +35,6 @@ fi
 cmd="${ALLSKY_SCRIPTS}/endOfDay_additionalSteps.sh"
 test -x "${cmd}" && "${cmd}"
 
+python ${ALLSKY_SCRIPTS}/flow-runner.py -e daynight
+
 exit 0

@@ -989,7 +989,44 @@ set_permissions
 ##### Check for, and handle any prior Allsky Website
 handle_prior_website
 
+######## TEMP function to install the overlay and modules system
+install_overlay()
+{
 
+        echo -e "${GREEN}* Installing PHP Modules${NC}"
+        sudo apt-get install -y php-zip
+        sudo apt-get install -y php-sqlite3
+
+        echo -e "${GREEN}* Installing Python dependencies. This will take a LONG time${NC}"
+        pip3 install --no-warn-script-location -r requirements.txt 2>&1 > dependencies.log
+        sudo apt-get -y install libatlas-base-dev 2>&1 >> dependencies.log
+        echo -e "${GREEN}* Installing Trutype fonts - This will take a while please be patient${NC}"
+        sudo apt-get -y install msttcorefonts 2>&1 >> dependencies.log
+
+        echo -e "${GREEN}* Setting up modules${NC}"
+        sudo mkdir -p /etc/allsky/modules
+        sudo chown -R ${ALLSKY_OWNER}:www-data /etc/allsky
+        sudo chmod -R 774 /etc/allsky
+
+        echo -e "${GREEN}* Fixing permissions${NC}"
+
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/fields.json
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/module-settings.json
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_day.json
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_night.json
+	sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_daynight.json 
+	sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_nightday.json 
+	sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/postprocessing_periodic.json		
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/autoexposure.json
+        sudo chown ${ALLSKY_OWNER}:www-data "${ALLSKY_CONFIG}"/overlay.json
+        sudo chown -R ${ALLSKY_OWNER}:www-data "${ALLSKY_WEBUI}"/overlay
+
+	sudo chmod -R 770 "${ALLSKY_WEBUI}"/overlay
+
+}
+
+
+install_overlay
 
 ######## All done
 

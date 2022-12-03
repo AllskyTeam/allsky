@@ -1,0 +1,95 @@
+{
+    "loadimage": {
+        "module": "allsky_loadimage.py",
+        "metadata": {
+            "name": "Loads the latest image",
+            "description": "Loads the last captured image",
+            "module": "allsky_loadimage",
+            "events": {
+                "0": "day",
+                "1": "night"
+            },
+            "experimental": false,
+            "arguments": {}
+        },
+        "type": "system",
+        "enabled": true,
+        "position": "first"
+    },
+    "export": {
+        "module": "allsky_export.py",
+        "metadata": {
+            "name": "AllSKY Export",
+            "description": "Exports AllSKY data to json",
+            "module": "allsky_export",
+            "events": {
+                "0": "day",
+                "1": "night"
+            },
+            "arguments": {
+                "filelocation": "${ALLSKY_TMP}/allskydata.json",
+                "extradata": "CAMERA_TYPE,DAY_OR_NIGHT,CURRENT_IMAGE,FULL_FILENAME,ALLSKY_VERSION"
+            },
+            "argumentdetails": {
+                "filelocation": {
+                    "required": "true",
+                    "description": "File Location",
+                    "help": "The location to save the json date"
+                },
+                "extradata": {
+                    "required": "false",
+                    "description": "Extra data to export",
+                    "help": "Comma seperated list of additional variables to export to json"
+                }
+            },
+            "experimental": false
+        },
+        "type": "system",
+        "enabled": true
+    },
+    "overlay": {
+        "module": "allsky_overlay.py",
+        "metadata": {
+            "name": "Overlays data on the image",
+            "description": "Overlays data fields on the image",
+            "module": "allsky_overlay",
+            "events": {
+                "0": "day",
+                "1": "night"
+            },
+            "arguments": {
+                "debug": "false"
+            },
+            "argumentdetails": {
+                "debug": {
+                    "required": "false",
+                    "description": "Enable debug mode",
+                    "help": "If selected all environment variables will be written to the overlaydebug.txt file in the AllSky tmp folder",
+                    "type": {
+                        "fieldtype": "checkbox"
+                    }
+                }
+            },
+            "experimental": false
+        },
+        "type": "system",
+        "enabled": true
+    },
+    "saveimage": {
+        "module": "allsky_saveimage.py",
+        "metadata": {
+            "name": "Saves the image",
+            "description": "Saves the image",
+            "module": "allsky_saveimage",
+            "events": {
+                "0": "day",
+                "1": "night"
+            },
+            "experimental": false,
+            "arguments": {}
+        },
+        "type": "system",
+        "enabled": true,
+        "position": "last"
+    }
+}

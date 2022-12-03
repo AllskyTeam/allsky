@@ -9,16 +9,20 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Dark Frames Explained";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Dark Frames Explained";
+		} 
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Dark Frames</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <p>
 All cameras produce noise which can be one or more of the following:
@@ -55,7 +59,7 @@ but they will in a future release of Allsky when running on the Bullseye or newe
 </blockquote>
 
 
-<br><h2>When should I take dark frames?</h2>
+<h2>When should I take dark frames?</h2>
 <details><summary></summary>
 <p>
 You can take dark frames anytime - the software will use your night settings
@@ -89,7 +93,7 @@ A 2 or 3 degree spread is usually fine, e.g., 21, 24, 27 degrees C.
 </details>
 
 
-<br><h2>How do I take and use darks?</h2>
+<h2>How do I take and use darks?</h2>
 <details><summary></summary>
 <p>
 There are two steps that you'll want to execute one after the other with no time inbetween.
@@ -131,7 +135,7 @@ There are two steps that you'll want to execute one after the other with no time
 </ol>
 </details>
 
-<br><h2>How does the software handle darks?</h2>
+<h2>How does the software handle darks?</h2>
 <details><summary></summary>
 <p>
 When you are <b>taking</b> dark frames, the software will turn off auto-exposure,
@@ -169,8 +173,8 @@ the closest dark frame will give the best results.
 </p>
 </details>
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

@@ -24,7 +24,7 @@ if ($num > 0) asort($images);
 
 ?>
 
-<link  href="css/viewer.min.css" rel="stylesheet">
+<link  href="documentation/css/viewer.min.css" rel="stylesheet">
 <script src="js/viewer.min.js"></script>
 <script src="js/jquery-viewer.min.js"></script>
 

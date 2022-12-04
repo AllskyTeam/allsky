@@ -526,3 +526,19 @@ select {
 	background-color: #e4e4e4;
 	border-radius: 4px;
 }
+
+.viewer-toolbar {
+	background-color: black !important;
+}
+.viewer-navbar {
+	background-color: black !important;
+}
+.viewer-list>li {
+	border: 2px solid white !important;
+	margin-left: 4px !important;
+	width: fit-content !important;
+}
+.viewer-close:before {
+	font-size: 4em !important;
+	background-image: none !important;
+}

@@ -181,23 +181,26 @@ class OVERLAYUTIL
     public function getOverlayData() {
         $result = [];
         $fileName = ALLSKY_HOME . '/tmp/overlaydebug.txt';
-        $fields = file($fileName);
 
-        if ($fields !== false) {
-            $fieldData = [];
-            $count = 0;
-            foreach ($fields as $field) {
-                $fieldSplit = explode(" ", $field, 2);
-                $obj = (object) [
-                    'id' => $count,
-                    'name' => $fieldSplit[0],
-                    'value' => trim($fieldSplit[1])
-                ];
-                $fieldData[] = $obj;
-                $count++;
+        if (file_exists($fileName)) {
+            $fields = file($fileName);
+
+            if ($fields !== false) {
+                $fieldData = [];
+                $count = 0;
+                foreach ($fields as $field) {
+                    $fieldSplit = explode(" ", $field, 2);
+                    $obj = (object) [
+                        'id' => $count,
+                        'name' => $fieldSplit[0],
+                        'value' => trim($fieldSplit[1])
+                    ];
+                    $fieldData[] = $obj;
+                    $count++;
+                }
+
+                $result['data'] = $fieldData;
             }
-
-            $result['data'] = $fieldData;
         }
         $data = json_encode($result, JSON_PRETTY_PRINT);
         $this->sendResponse($data);

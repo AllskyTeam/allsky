@@ -899,7 +899,7 @@ install_overlay()
 
 		echo -e "${GREEN}* Fixing permissions${NC}"
 
-		sudo chown ${ALLSKY_OWNER}:${WEBSERVER_GROUP} \
+		sudo chown -R ${ALLSKY_OWNER}:${WEBSERVER_GROUP} \
 			"${ALLSKY_CONFIG}"/fields.json \
 			"${ALLSKY_CONFIG}"/module-settings.json \
 			"${ALLSKY_CONFIG}"/postprocessing_day.json \

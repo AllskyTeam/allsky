@@ -46,9 +46,28 @@ function DisplayEditor()
 								returnMsg = "No response from save_file.php";
 								ok = false;
 							} else {
-								returnMsg = data;
-								ok = returnMsg.substr(0,1) === "S" ? true : false;
-								returnMsg = returnMsg.substr(2);
+								returnArray = data.split("\n");
+								if (returnArray.length == 1) {
+									returnMsg = data;
+								} else {
+									// Check every line in the output.
+									// output any lines not beginnning with "S " or "E ",
+									// they are probably debug lines.
+									for (var i=0; i < returnArray.length; i++) {
+										var line = returnArray[i];
+										returnStatus = line.substr(0,2);
+										if (returnStatus === "S\t") {
+											ok = true;
+											returnMsg += line.substr(2);
+										} else if (returnStatus === "E\t") {
+											ok = false;
+											returnMsg += line.substr(2);
+										} else {
+											// Assume it's a debug statement.
+											console.log(line);
+										}
+									}
+								}
 							}
 							var c = ok ? "success" : "danger";
 							var messages = document.getElementById("editor-messages");

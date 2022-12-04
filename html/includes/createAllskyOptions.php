@@ -364,7 +364,7 @@ foreach ($repo_array as $repo) {
 $options_str .= "]\n\n";
 
 // Save the options file.
-$results = updateFile($options_file, $options_str, "options");
+$results = updateFile($options_file, $options_str, "options", true);
 if ($results != "") {
 	echo "ERROR: Unable to create $options_file.\n";
 	exit;
@@ -416,7 +416,7 @@ if ($settings_file !== "") {
 		$contents .= "}\n";
 
 		if ($debug > 0) echo "Creating settings file: $fullName.\n";
-		$results = updateFile($fullName, $contents, $cameraSpecificSettingsFile);
+		$results = updateFile($fullName, $contents, $cameraSpecificSettingsFile, true);
 		if ($results != "") {
 			echo "ERROR: Unable to create $fullName.\n";
 			exit;

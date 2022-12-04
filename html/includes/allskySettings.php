@@ -78,7 +78,7 @@ function DisplayAllskyConfig(){
 				} else {
 					$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
 					// updateFile() only returns error messages.
-					$msg = updateFile($settings_file, $content, "settings");
+					$msg = updateFile($settings_file, $content, "settings", true);
 					if ($msg === "")
 						$msg = "Settings saved";
 					else
@@ -141,7 +141,7 @@ function DisplayAllskyConfig(){
 				if ($value !== null) $settings[$key] = $value;
 			}
 			$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK);
-			$msg = updateFile($settings_file, $content, "settings");
+			$msg = updateFile($settings_file, $content, "settings", true);
 			if ($msg === "")
 				$status->addMessage("Settings reset to default", 'info');
 			else

@@ -9,16 +9,20 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Miscellaneous Tips";} </style>
+	<style>
+		#pageTitle::before { 
+			content: "Miscellaneous Tips";
+		} 
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Tips</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <blockquote>
 This page contains miscellaneous tips that don't neatly fall into one of the other pages.
@@ -60,7 +64,7 @@ cd ~/allsky
 It's suggested you accept the defaults.
 </details>
 
-<br><h2>Focusing the camera</h2>
+<h2>Focusing the camera</h2>
 <details><summary></summary>
 <p>
 Try get your camera at least roughly focused during the day.
@@ -80,7 +84,7 @@ setting since it's no longer needed.
 </details>
 
 
-<br><h2>Pro-tip: install <code>gh</code> on your Pi so you can easily collaborate using Github Gists</h2>
+<h2>Pro-tip: install <code>gh</code> on your Pi so you can easily collaborate using Github Gists</h2>
 <details><summary></summary>
 <p>
 Click <a href="https://cli.github.com/">here</a>
@@ -101,8 +105,9 @@ gh gist create < log.txt
 </details>
 
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>
+

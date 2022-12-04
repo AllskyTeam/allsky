@@ -9,7 +9,11 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Allsky Settings";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Allsky Settings";
+		} 
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<script src="../js/all.min.js" type="application/javascript"></script>
@@ -17,9 +21,9 @@
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 Once you've installed Allsky there are many settings you must modify.
 These settings <b>must</b> be changed via the WebUI rather than manually editing files
@@ -594,7 +598,7 @@ use the <span class="shSetting">CROP</span> setting in the
 </details>
 
 
-<br><h2><i class="fa fa-code fa-fw"></i> "Editor" Page</h2>
+<h2><i class="fa fa-code fa-fw"></i> "Editor" Page</h2>
 <details><summary></summary>
 <p>
 This section lists the settings that are updated in the WebUI's <b>Editor</b> page.
@@ -1140,7 +1144,7 @@ LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"
 </details>
 
 
-<br><h2>WEBUI_DATA_FILES tutorial</h2>
+<h2>WEBUI_DATA_FILES tutorial</h2>
 <details><summary></summary>
 
 <p>
@@ -1639,7 +1643,7 @@ and make sure the fields are separated by tabs, not spaces.
 </details>
 
 
-<br><h2>[MORE TO COME ...]</h2>
+<h2>[MORE TO COME ...]</h2>
 <details><summary></summary>
 <br>
 
@@ -1654,11 +1658,10 @@ Luc Bodson uses these with RPi HQ and libcamera:
 <li>IR filter in place: Saturation: 1.4, AWB, Red: 3.47, Blue: 1.6
 <li>IR filter removed: Saturation: 0.5, no AWB, Red: 1.0, Blue 1.6
 </ul>
-
 </details>
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

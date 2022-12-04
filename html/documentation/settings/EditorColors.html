@@ -9,10 +9,12 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "WebUI Editor Colors";} </style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<style>
+		#pageTitle::before {
+			content: "WebUI Editor Colors";
+		} 
 		a.img img {
 			max-width: 60%; 
 			height: auto;
@@ -27,8 +29,9 @@
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout"><!-- don't include sidebar -->
+<div class="Layout-main markdown-body" id="mainContents">
+
 
 <p>
 The WebUI's <b>Editor</b> page allows editing Allsky configuration files.
@@ -54,7 +57,7 @@ A description of the color scheme comes last.
 <img allsky="true" src="EditorPage-json.png" title="Editing .json file - click to show full version" alt=".json file" loading="lazy">
 </a>
 
-<br><h3>Color Scheme</h3>
+<h3>Color Scheme</h3>
 <ul>
 <li>Setting <b>names</b> look different depending on the file type:
 	<ul>
@@ -97,7 +100,7 @@ A description of the color scheme comes last.
 	like "if" and "sudo" have special colors.
 </ul>
 
-<br><h3>Debugging</h3>
+<h3>Debugging</h3>
 If you see different colors while editing a file, check for syntax errors:
 <ul>
 <li>JSON files
@@ -119,8 +122,8 @@ If you see different colors while editing a file, check for syntax errors:
 </ul>
 </p>
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

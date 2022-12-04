@@ -9,16 +9,20 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Installing and upgrading Allsky";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Installing and upgrading Allsky";
+		} 
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Installing and upgrading Allsky</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <p>
 This page describes how to install and upgrade Allsky.
@@ -65,11 +69,10 @@ sudo addgroup mylogin sudo    <span class="pl-c"># allows Allsky to execute syst
 cd /home/mylogin
 </pre>
 After the above, continue with the steps below.
-<hr class="separator">
 </details>
 
 
-<br><h2>Pre installation</h2>
+<h2>Pre installation</h2>
 <details><summary></summary>
 <p>
 If you have an <b>existing</b> version of Allsky,
@@ -103,11 +106,10 @@ sudo systemctl stop allsky     <span class="pl-c"># Stop the Allsky service</spa
 cd
 rm -fr allsky</pre>
 </ol>
-<hr class="separator">
 </details>
 
 
-<br><h2 id="Installation">Installation</h2>
+<h2 id="Installation">Installation</h2>
 <details><summary></summary>
 <blockquote>
 Unlike prior versions of AllSky this version requires that the camera be
@@ -155,11 +157,10 @@ If there are any such actions, the first time Allsky runs after the reboot it wi
 	<li>display a message in the WebUI (which you should clear when done performing the actions)
 </ul>
 </p>
-<hr class="separator">
 </details>
 
 
-<br><h2>Post installation</h2>
+<h2>Post installation</h2>
 <details><summary></summary>
 <p>
 After installation, perform any actions the installation script identified, then reboot.
@@ -173,7 +174,7 @@ from the old file to the new file and <b>not</b> copy the entire file.
 After the reboot, enter the WebUI and configure the
 <a allsky="true" href="/documentation/settings/allsky.html">Allsky settings</a>.
 
-<blockquote>
+<blockquote class="warning">
 The <span class="fileName">config.sh</span> and
 <span class="fileName">ftp-settings.sh</span> configuration files should
 <b>only</b> be edited via the
@@ -183,8 +184,8 @@ actions during updates.
 </details>
 
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>

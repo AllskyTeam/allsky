@@ -9,16 +9,20 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Cleaning up a Website";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Cleaning up a Website";
+		} 
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Cleaning a Website</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <h2>How to clean up old Allsky files from a Website on your Pi</h2>
 <p>
@@ -29,7 +33,7 @@ using the WebUI to edit the
 Older files will be removed every morning.
 </p>
 
-<br><h2>How to clean up old Allsky files from a remote Website</h2>
+<h2>How to clean up old Allsky files from a remote Website</h2>
 <p>
 <blockquote>
 The following instructions assume your startrails, keograms,
@@ -57,8 +61,9 @@ assumed you know how to perform the steps.
 </ul>
 
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>
+

@@ -9,7 +9,11 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<style>#pageTitle::before { content: "Allsky Map";} </style>
+	<style>
+		#pageTitle::before {
+			content: "Allsky Map";
+		}
+	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<script src="../js/all.min.js" type="application/javascript"></script>
@@ -17,9 +21,9 @@
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-<div class="Layout Layout--sidebarPosition-end mt-4">
+<div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-<div class="px-3 Layout-main markdown-body" id="mainContents">
+<div class="Layout-main markdown-body" id="mainContents">
 
 <h2>Overview</h2>
 <p>
@@ -61,13 +65,14 @@ page for a description of each map-related setting in the WebUI.
 </p>
 
 
-<br><h2>My website isn't available on the Internet</h2>
+<h2>My website isn't available on the Internet</h2>
 You can still have a pin of your camera's location appear on the map - just
 leave the <span class="WebUISetting">Website URL</span> and
 <span class="WebUISetting">Image URL</span> fields blank.
 
+</div><!-- Layout-main -->
 </div><!-- Layout -->
-</div><!-- px-3 ... -->
 </body>
 </html>
 <script> includeHTML(); </script>
+

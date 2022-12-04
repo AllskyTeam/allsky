@@ -14,7 +14,7 @@ function DisplayAuthConfig($username, $password){
           $status->addMessage('Username must not be empty', 'danger');
         } else {
           $contents = $new_username.PHP_EOL . password_hash($_POST['newpass'], PASSWORD_BCRYPT).PHP_EOL;
-          $ret = updateFile(RASPI_ADMIN_DETAILS, $contents, "admin password file");
+          $ret = updateFile(RASPI_ADMIN_DETAILS, $contents, "admin password file", true);
           if ($ret === "") {
             $username = $new_username;
             $status->addMessage('Admin password updated');

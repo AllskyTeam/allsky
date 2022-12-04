@@ -394,6 +394,8 @@ install_webserver() {
 	sudo lighty-enable-mod fastcgi-php > /dev/null 2>&1
 	sudo rm -fr /var/log/lighttpd/*		# Start off with a clean log file.
 	sudo systemctl start lighttpd
+	
+	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 }
 
 # Prompt for a new hostname if needed

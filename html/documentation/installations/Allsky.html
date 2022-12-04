@@ -128,7 +128,28 @@ cd
 git clone --recursive https://github.com/thomasjacquin/allsky.git
 cd allsky
 ./install.sh</pre>
-
+<p>
+The <code>git clone</code> will take a couple minutes and should produce output similar to
+what's below.
+The new <span class="fileName">allsky</span> directory is approximately 150 MB after download.
+<pre>
+Cloning into 'allsky'...
+remote: Enumerating objects: 16464, done.
+remote: Counting objects: 100% (494/494), done.
+remote: Compressing objects: 100% (395/395), done.
+remote: Total 16464 (delta 275), reused 220 (delta 96), pack-reused 15970
+Receiving objects: 100% (16464/16464), 94.03 MiB | 1.13 MiB/s, done.
+Resolving deltas: 100% (9845/9845), done.
+Submodule 'src/sunwait-src' (https://github.com/risacher/sunwait) registered for path 'src/sunwait-src'
+Cloning into '/home/pi/allsky/src/sunwait-src'...
+remote: Enumerating objects: 130, done.        
+remote: Counting objects: 100% (82/82), done.        
+remote: Compressing objects: 100% (37/37), done.        
+remote: Total 130 (delta 60), reused 53 (delta 45), pack-reused 48        
+Receiving objects: 100% (130/130), 125.99 KiB | 848.00 KiB/s, done.
+Resolving deltas: 100% (72/72), done.
+Submodule path 'src/sunwait-src': checked out '102cb417ecbb7a3757ba9ee4b94d6db3225124c4'
+</pre>
 <p>
 The installation prompts for several items that allow it to configure the Pi so
 Allsky runs most efficiently given your Pi's configuration.
@@ -156,6 +177,11 @@ If there are any such actions, the first time Allsky runs after the reboot it wi
 	<li>display an image telling you to see the log file
 	<li>display a message in the WebUI (which you should clear when done performing the actions)
 </ul>
+</p>
+<p>
+<blockquote>
+Parts of the installation take a few minutes - that's normal.
+</blockquote>
 </p>
 </details>
 

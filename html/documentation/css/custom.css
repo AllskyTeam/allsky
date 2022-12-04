@@ -108,11 +108,6 @@
   border: 1px solid rgba(0, 0, 0, 0.2);
   -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
-  -webkit-transition: all 0.1s ease-in-out;
-  -moz-transition:    all 0.1s ease-in-out;
-  -ms-transition:     all 0.1s ease-in-out;
-  -o-transition:      all 0.1s ease-in-out;
-  transition:         all 0.1s ease-in-out;
 }
 
 .switch-field label:hover {
@@ -517,7 +512,7 @@ select {
 	font-size: 95%;
 }
 .dark .WebUISetting {
-	color: #333;
+	color: #68a0ff;
 }
 .WebUIValue {
 	padding: 0 3px 0 3px;

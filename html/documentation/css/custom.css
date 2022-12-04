@@ -477,6 +477,8 @@ select {
 .errorMsgBig { font-size: 200%; }
 
 .thumb { width: 100px; margin: 0 1px 1px 0; }
+.thumbBorder { border: 1px solid transparent; }
+.dark .thumbBorder { border: 1px solid gray; }
 .left { float: left; }
 
 .system-message {

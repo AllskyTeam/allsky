@@ -36,7 +36,7 @@ if (! file_exists($file)) {
 }
 
 $ok = true;
-$msg = updateFile($file, $content, "save_file");
+$msg = updateFile($file, $content, "save_file", false);
 if ($msg == "") {
 	if ($isRemote) {
 		$F = ALLSKY_CONFIG . '/ftp-settings.sh';

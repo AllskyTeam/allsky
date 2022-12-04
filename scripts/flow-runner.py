@@ -181,10 +181,10 @@ if __name__ == "__main__":
             results[shared.step] = {}
             if watchdog:
                 if elapsedTime > timeout:
-                    shared.log(0, 'ERROR: Module {0} will be disabled, it took {1}ms max allowed is {2}s'.format(shared.flow[shared.step]['module'], elapsedTime, timeout))
+                    shared.log(0, 'ERROR: Module {0} will be disabled, it took {1}ms max allowed is {2}ms'.format(shared.flow[shared.step]['module'], elapsedTime, timeout))
                     results[shared.step]["disable"] = True
                 else:
-                    shared.log(1, 'INFO: Module {0} ran ok in {1}s'.format(shared.flow[shared.step]['module'], elapsedTime))
+                    shared.log(1, 'INFO: Module {0} ran ok in {1}ms'.format(shared.flow[shared.step]['module'], elapsedTime))
                     
             results[shared.step]["lastexecutiontime"] = str(elapsedTime) 
 

@@ -173,6 +173,7 @@ create_webui_defines() {
 recreate_options_file() {
 	CAMERA_TYPE="$(grep "^CAMERA_TYPE=" "${ALLSKY_CONFIG}/config.sh" | sed -e "s/CAMERA_TYPE=//" -e 's/"//g')"
 	save_camera_capabilities "true"
+	set_webserver_permissions
 }
 
 # Save the camera capabilities and use them to set the WebUI min, max, and defaults.
@@ -187,12 +188,6 @@ save_camera_capabilities() {
 	fi
 
 	OPTIONSFILEONLY="${1}"
-
-	# The web server needs to be able to create and update file in ${ALLSKY_CONFIG}
-	chmod 775 "${ALLSKY_CONFIG}"
-	chmod 664 "${ALLSKY_CONFIG}"/*
-	sudo chgrp -R ${WEBSERVER_GROUP} "${ALLSKY_CONFIG}"
-	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 
 	# Create the camera type/model-specific options file and optionally a default settings file.
 	# --cameraTypeOnly tells makeChanges.sh to only change the camera info, then exit.
@@ -459,6 +454,21 @@ set_permissions() {
 	# We don't know what permissions may have been on the old website, so use "sudo".
 	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
+}
+
+# Set permissions of files/directories that need to be writeable by the web server
+set_webserver_permissions() {
+	# The web server needs to be able to create and update file in ${ALLSKY_CONFIG}
+	chmod 775 "${ALLSKY_CONFIG}"
+	chmod 664 "${ALLSKY_CONFIG}"/*
+	sudo chgrp -R ${WEBSERVER_GROUP} "${ALLSKY_CONFIG}"
+
+	# These are actually Allsky Website files, but in case we restored the old website,
+	# set their permissions.
+	chgrp -f ${WEBSERVER_GROUP} "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	chmod -f 664 ${WEBSERVER_GROUP} "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+
+	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 }
 
 # Check if there's a WebUI in the old-style location,
@@ -843,6 +853,7 @@ do_update() {
 	create_webui_defines
 
 	save_camera_capabilities "false" || exit 1
+	set_webserver_permissions
 
 	# Update the sudoers file if it's missing some entries.
 	# Look for the last entry added (should be the last entry in the file).
@@ -1026,8 +1037,13 @@ set_permissions
 ##### Check for, and handle any prior Allsky Website
 handle_prior_website
 
-######## install the overlay and modules system
+##### install the overlay and modules system
 install_overlay
+
+##### Set permissions that web server needs.
+##### Want this at the end so we make sure we get all files.
+set_webserver_permissions
+
 
 ######## All done
 

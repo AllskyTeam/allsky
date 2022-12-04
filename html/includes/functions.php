@@ -816,11 +816,19 @@ function runCommand($cmd, $message, $messageColor)
 // Update a file.
 // Files should be writable by the web server, but if they aren't, use a temporary file.
 // Return any error message.
-function updateFile($file, $contents, $fileName) {
+function updateFile($file, $contents, $fileName, $toConsole) {
 	if (@file_put_contents($file, $contents) == false) {
 		$e = error_get_last()['message'];
-		$err = "Failed to save settings: $e";
-		echo "<script>console.log('Unable to update $file 1st time: $e');</script>\n";
+
+		// $toConsole tells us whether or not to use console.log() or just echo.
+		if ($toConsole) {
+			$cl1 = "<script>console.log('";
+			$cl2 = "');</script>";
+		} else {
+			$cl1 = "";
+			$cl2 = "";
+		}
+		echo $cl1 . "Unable to update $file 1st time: $e$cl2\n";
 
 		// Assumed it failed due to lack of permissions,
 		// usually because the file isn't grouped to the web server group.
@@ -835,9 +843,9 @@ function updateFile($file, $contents, $fileName) {
 		if (@file_put_contents($file, $contents) == false) {
 			$e = error_get_last()['message'];
 			$err = "Failed to save settings: $e";
-			echo "<script>console.log('Unable to update file for 2nd time: $e');</script>\n";
+			echo $cl1 . "Unable to update file for 2nd time: $e$cl2";
 			$x = str_replace("\n", "", shell_exec("ls -l '$file'"));
-			echo "<script>console.log('ls -l returned: $x');</script>\n";
+			echo $cl1 . "ls -l returned: $x$cl2";
 
 			// Save a temporary copy of the file in a place the webserver can write to,
 			// then use sudo to "cp" the file to the final place.
@@ -851,7 +859,7 @@ function updateFile($file, $contents, $fileName) {
 			}
 
 			$err = str_replace("\n", "", shell_exec("x=\$(sudo cp '$tempFile' '$file' 2>&1) || echo 'Unable to copy [$tempFile] to [$file]': \${x}"));
-			echo "<script>console.log('cp returned: [$err]');</script>\n";
+			echo $cl1 . "cp returned: [$err]$cl2";
 			return $err;
 		}
 	}

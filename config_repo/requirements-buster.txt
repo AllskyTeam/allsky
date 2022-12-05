@@ -1,0 +1,10 @@
+opencv_python==4.5.3.56
+Pillow>=9
+pyephem
+skyfield
+pytz
+suntime
+scipy==1.5
+scikit-image
+paho-mqtt
+numpy>=1.21

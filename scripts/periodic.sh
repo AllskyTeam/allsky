@@ -15,6 +15,6 @@ cd "${ALLSKY_SCRIPTS}" || exit 1
 
 while :
 do
-    "${ALLSKY_HOME}/post-process.py" --event periodic
-    sleep 5
+    "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
+    sleep 30
 done

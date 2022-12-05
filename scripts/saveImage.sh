@@ -256,7 +256,7 @@ else
 	export DATE_NAME="$(date +'%Y%m%d')"
 fi
 
-python ${ALLSKY_SCRIPTS}/flow-runner.py
+${ALLSKY_SCRIPTS}/flow-runner.py
 
 SAVED_FILE="${CURRENT_IMAGE}"				# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for

@@ -883,12 +883,12 @@ install_overlay()
 		sudo apt-get install -y php-zip
 		sudo apt-get install -y php-sqlite3
 
-		echo -e "${GREEN}* Installing Python dependencies. This will take a LONG time${NC}"
-		# shellcheck disable=SC2069
 		OS=$(grep CODENAME /etc/os-release | cut -d= -f2)
 		if [ "${OS}" == "buster" ]; then
+			echo -e "${GREEN}* Installing Python dependencies for Buster. This will take a LONG time${NC}"
 			pip3 install --no-warn-script-location -r requirements-buster.txt > dependencies.log 2>&1
 		else
+			echo -e "${GREEN}* Installing Python dependencies. This will take a LONG time${NC}"
 			pip3 install --no-warn-script-location -r requirements.txt > dependencies.log 2>&1
 		fi		
 		# shellcheck disable=SC2069,SC2024

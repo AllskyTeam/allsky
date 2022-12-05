@@ -883,6 +883,8 @@ install_overlay()
 		sudo apt-get install -y php-zip
 		sudo apt-get install -y php-sqlite3
 
+		sudo apt install python3-pip
+
 		# shellcheck disable=SC2069,SC2024
 		sudo apt-get -y install libatlas-base-dev 2>&1 >> dependencies.log
 

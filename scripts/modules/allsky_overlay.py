@@ -626,7 +626,7 @@ class ALLSKYOVERLAY:
                     else:
                         value = 'Yes'
 
-            if variableType == 'Text':
+            if variableType == 'Text' or variableType == 'Number':
                 if value == '' or value is None:
                     if empty != '':
                         value = empty

@@ -656,9 +656,14 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 
 /**
 *
-* Get a variable from a file and return its value; if not there, return the default.
-* NOTE: The variable's value is anything after the equal sign, so there shouldn't be a comment on the line.
-* NOTE: There may be something before $searchfor, e.g., "export X=1", where "X" is $searchfor.
+* Get the last occurence of a variable from a file and return its value; if not there,
+* return the default.
+* NOTE: The variable's value is anything after the equal sign,
+* so there shouldn't be a comment on the line,
+* however, there can be optional spaces or tabs before the string.
+*
+* This function will go away once the config.sh and ftp-settings.sh files are merged
+* into the settings.json file.
 */
 function get_variable($file, $searchfor, $default)
 {
@@ -669,7 +674,7 @@ function get_variable($file, $searchfor, $default)
 	// escape special characters in the query
 	$pattern = preg_quote($searchfor, '/');
 	// finalise the regular expression, matching the whole line
-	$pattern = "/^.*$pattern.*\$/m";
+	$pattern = "/^[ 	]*$pattern.*\$/m";
 
 	// search, and store all matching occurences in $matches
 	$num_matches = preg_match_all($pattern, $contents, $matches);

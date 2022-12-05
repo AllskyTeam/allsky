@@ -207,11 +207,14 @@ else # sftp/ftp/ftps
 	DIR="${ALLSKY_TMP}/lftp_cmds"
 	[[ ! -d ${DIR} ]] && mkdir "${DIR}"
 	LFTP_CMDS="${DIR}/${FILE_TYPE}.txt"
+
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
+	# Send the password to lftp via the environment to avoid having to escape characters in it.
+	LFTP_PASSWORD="${REMOTE_PASSWORD}"
+	export LFTP_PASSWORD
+
 	(
 		[[ -n ${LFTP_COMMANDS} ]] && echo ${LFTP_COMMANDS}
-		# xxx TODO: escape single quotes in REMOTE_PASSWORD so lftp doesn't fail - how?  With \ ?
-		P="${REMOTE_PASSWORD}"
 
 		# Sometimes have problems with "max-reties 1", so make it 2
 		echo set net:max-retries 2
@@ -219,7 +222,7 @@ else # sftp/ftp/ftps
 
 		[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
 		# shellcheck disable=SC2153
-		echo "open --user '${REMOTE_USER}' --password '${P}' ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
+		echo "open --user '${REMOTE_USER}' --env-password ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
 		# lftp doesn't actually try to open the connection until the first command is executed.
 		echo "quote PWD > /dev/null || exit 99"
 

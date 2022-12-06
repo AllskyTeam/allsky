@@ -379,7 +379,7 @@ check_installation_success() {
 
 	if [ ${RET} -ne 0 ]; then
 		display_msg error "${MESSAGE}"
-		MSG="The full log file is in ${LOG}."
+		MSG="The full log file is in ${LOG}"
 		MSG="${MSG}\nThe end of the file is:"
 		display_msg info "${MSG}"
 		tail -5 "${LOG}"
@@ -920,17 +920,24 @@ install_overlay()
 		# Doing this all at once can run /tmp out of space, so do one at a time.
 		# This also allows us to display progress messages.
 
+		PIP3_BUILD="${ALLSKY_HOME}/pip3.build"
+		mkdir -p "${PIP3_BUILD}"
 		COUNT=0
+		local NUM=$(wc -l < "${ALLSKY_REPO}/requirements${R}.txt")
 		while read package
 		do
 			COUNT=$((COUNT+1))
 			echo "${package}" > /tmp/package
 			L="${TMP}.${COUNT}.log"
-			display_msg progress "   === Package [${package}]"
-			pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
+			display_msg progress "   === Package # ${COUNT} of ${NUM}: [${package}]"
+			pip3 install --no-warn-script-location --build "${PIP3_BUILD}" -r /tmp/package > "${L}" 2>&1
 			# These files are too big to display so pass in "false" instead of ${DEBUG}.
-			check_installation_success $? "Python dependency [${package}] failed" "${L}" false || exit 1
+			if ! check_installation_success $? "Python dependency [${package}] failed" "${L}" false ; then
+				rm -fr "${PIP3_BUILD}"
+				exit 1
+			fi
 		done < "${ALLSKY_REPO}/requirements${R}.txt"
+		rm -fr "${PIP3_BUILD}"
 
 		display_msg progress "Installing Trutype fonts."   "  This will take a while."
 		TMP="${INSTALL_LOGS_DIR}/msttcorefonts.log"

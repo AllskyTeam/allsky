@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Layout of ~/allsky directory";
+		}
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>~/allsky Layout</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+When you install Allsky it put its files and directories in the
+<span class="fileName">allsky</span> directory of the login you installed it with,
+typically <b>pi</b>.
+That directory is usually referred to as <span class="fileName">~/allsky</span>.
+</p>
+<p>
+Ever wonder what all the files and directories are in the
+<span class="fileName">~/allsky</span> directory?
+Read on.
+</p>
+<p>This is a typical view of the <span class="fileName">~/allsky</span> directory:
+<img allsky="true" src="allskyDirectory.png" loading="lazy" class="imgCenter imgBorder">
+</p>
+<p>
+Notice the colors?
+The <code>ls</code> (<u>l</u>ist file<u>s</u>) command displays executable programs in green,
+directories in blue, and "regular" files in black.
+</p>
+<p>
+Here's what's in the directory:
+<ul>
+	<li><span class="lsGreen">allsky.sh</span>
+		<br>
+		This is the program that's executed when you start Allsky.
+		It calls the appropriate program to take the picture (see the next bullet).
+
+	<li><span class="lsBlue">bin</span>
+		<br>
+		This holds all the binary files (files created by compiling source code),
+		for example <span class="lsGreen">capture_RPi</span> and
+		<span class="lsGreen">capture_ZWO</span>
+		are the programs that read your settings and take pictures,
+		storing them in the <span class="fileName">tmp</span> directory, described below.
+
+	<li><span class="lsBlue">config</span>
+		<br>
+		Contains all the configuration files.
+		<blockquote class="warning">
+		Unlike past releases, you should <strong>not</strong> edit the files
+		in this directory manually.
+		</blockquote>
+		<u>Some</u> of the files in this directory include:
+		<ul>
+			<li><span class="fileName">settings.json</span> is updated via the
+				<span class="WebUIWebPage">Allsky Settings</span> page in the WebUI
+				and contains the settings used to take images.
+			<li><span class="fileName">config.sh</span> and
+				<span class="fileName">ftp-settings.sh</span>
+				are editied via the <span class="WebUIWebPage">Editor</span>
+				page in the WebUI and contain other settings used by Allsky.
+				<blockquote>
+				The settings in these files will be moved to the
+				<span class="fileName">settings.json</span> file in a future release.
+				</blockquote>
+			<li><span class="fileName">cc.json</span> (<u>c</u>amera <u>c</u>apabilities) and
+				<span class="fileName">options.json</span> are created
+				as part of the installation based on what capabilities your camera has,
+				and determine what settings you see in the WebUI as well as their
+				minimum, maximum, and default values.
+				<br>
+				If you change cameras via the WebUI, these files are re-created.
+			<li>If you have a remote Allsky Website and configure it via the WebUI,
+				a <span class="fileName">remote_configuration.json</span> file will exist
+				that's uploaded to the remote server whenever you change it via
+				the WebUI's <span class="WebUIWebPage">Editor</span> page.
+			<li>Advanced users may have a <span class="fileName">uservariables.sh</span> file.
+			<li>The remaining files are updated when you make a change in the
+				Overlay or Module editors.
+		</ul>
+
+	<li><span class="lsBlue">config_repo</span>
+		<br>
+		This holds "templates" of the configuration files.
+		Copies of most of these files are updated and stored in the
+		<span class="lsBlue">config</span> directory during installation.
+
+	<li><span class="lsBlue">darks</span>
+		<br>
+		This holds optional <a href="darkFrames.html">dark frames</a>
+		which are used to decrease noise in nighttime pictures.
+
+	<li><span class="lsBlue">html</span>
+		<br>
+		All the WebUI files are here, and if you have the Allsky Website installed on your Pi,
+		its files are in <span class="lsBlue">html</span>/<span class="lsBlue">allsky</span>.
+		The WebUI doesn't have any configuration version,
+		but the Website has <span class="fileName">configuration.json</span>
+		which is updated via the WebUI's <span class="WebUIWebPage">Editor</span> page.
+		<br>
+		The Allsky Documentation is also in this directory.
+
+	<li><span class="lsBlue">images</span>
+		<br>
+		This holds all the daily images, keograms, startrails, and timelapse videos
+		for as long as you have specified in the
+		<span class="shSetting">DAYS_TO_KEEP</span> setting in
+		<span class="fileName">config.sh</span>.
+		<br>
+		Each day's files are stored in a directory called YYYYMMDD, for example, 20220710.
+
+	<li><span class="lsGreen">install.sh</span>
+		<br>
+		The installation script for Allsky.
+		Also used to upgrade from a prior release,
+		and to (re)run certain actions, such as setting the swap space.
+
+	<li><span class="lsBlack">LICENSE</span>
+		<br>
+		Holds the Allsky license.
+		People that plan to copy Allsky in part or in whole should be aware of the license.
+
+	<li><span class="lsBlack">Makefile</span>
+		<br>
+		This is used during installation to create directories and binary files
+		and perform other tasks.
+
+	<li><span class="lsBlue">notification_images</span>
+		<br>
+		Holds all the images such as "Allsky software is starting up".
+		There are both .jpg and .png files, depending on whether your image is called
+		<span class="fileName">image.jpg</span> or <span class="fileName">image.png</span>.
+
+	<li><span class="lsBlack">README.md</span>
+		<br>
+		A file containing information about Allsky.
+		You'll normally view the Allsky Documentation via the WebUI's
+		<span class="WebUIWebPage">Documentation</span> link instead of this file.
+
+	<li><span class="lsBlue">scripts</span>
+		<br>
+		Holds all the scripts (i.e., programs) used by Allsky while it's running.
+		The only ones you'd ever change are
+		<span class="fileName">endOfDay_additionalSteps.repo</span>
+		and/or <span class="fileName">endOfNight_additionalSteps.repo</span>.
+		See the documentation on how they are used.
+
+	<li><span class="lsBlue">src</span>
+		<br>
+		Holds the source code for the capture, keogram, startrails, and sunwait programs.
+
+	<li><span class="lsBlue">tmp</span>
+		<br>
+		Hold temporary files, including log files, used by Allsky while it's running.
+		The contents of this directory are usually cleaned out after a reboot.
+		<blockquote>
+		Other than the <span class="lsBlue">scripts</span> directory described above,
+		this is the only other directory that you may need to look in,
+		and that's typically only to troubleshoot a problem.
+		</blockquote>
+
+	<li><span class="lsGreen">uninstall.sh</span>
+		<br>
+		A VERY BASIC uninstallation script that hasn't been tested much.
+
+	<li><span class="lsBlack">variables.sh</span>
+		<br>
+		Defines a lot of variables used by other programs.
+		These variables define where various files and directories are.
+		Super advanced users who want to put items in different locations can
+		create a <span class="fileName">config/uservariables.sh</span> file
+		to define their own locations.
+		<br>
+		Note that although this has a <span class="fileName">.sh</span> extension which
+		indicates it's a shell script, it's colored in black which means it is NOT executable.
+		This script is only included in other scripts, never executed on its own.
+
+	<li><span class="lsBlack">version</span>
+		<br>
+		A file that holds the version of Allsky you're running.
+		The installation script (and eventually the WebUI) compare this version to
+		the one in GitHub to determine if an upgrade is available.
+
+	<li><span class="lsBlue">website</span>
+		<br>
+		This directory contains the <span class="fileName">install.sh</span>
+		script used to install the Allsky Website on your Pi or (to help with installing)
+		on a remote server.
+		See the
+		<a allsky="true" href="/documentation/installations/AllskyWebsite.html">Allsky Website Installation</a>
+		page for instructions on installing the Website.
+</ul>
+</p>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

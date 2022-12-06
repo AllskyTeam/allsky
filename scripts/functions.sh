@@ -122,6 +122,7 @@ function display_msg()
 
 	local LOG_TYPE="${1}"
 	local MESSAGE="${2}"
+	local MESSAGE2="${3}"		# optional 2nd message that's not in color
 	local MSG=""
 	local STARS
 	if [[ ${LOG_TYPE} == "error" ]]; then
@@ -159,10 +160,11 @@ function display_msg()
 	# Log messages to a file if it was specified.
 	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
 	if [[ ${LOG_IT} == "true" && -n ${DISPLAY_MSG_LOG} ]]; then
-		echo -e "${MSG}" | tee -a "${DISPLAY_MSG_LOG}"
+		echo -en "${MSG}" | tee -a "${DISPLAY_MSG_LOG}"
 	else
-		echo -e "${MSG}"
+		echo -en "${MSG}"
 	fi
+	echo -e "${MESSAGE2}"
 }
 
 

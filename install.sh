@@ -50,9 +50,8 @@ REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 # Needs to go somewhere that survives reboots but can be removed when done.
 INSTALL_LOGS_DIR="${ALLSKY_CONFIG}/installation_logs"
 
-# This file contains information the user needs to act upon after the reboot.
-NEW_INSTALLATION_FILE="${ALLSKY_CONFIG}/installation_info.txt"
-rm -f "${NEW_INSTALLATION_FILE}"		# shouldn't be there, but just in case
+# The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after the reboot.
+rm -f "${POST_INSTALLATION_ACTIONS}"		# shouldn't be there, but just in case
 
 # display_msg() will send "log" entries to this file.
 # DISPLAY_MSG_LOG is used in display_msg()
@@ -255,7 +254,7 @@ ask_reboot() {
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
 		MSG="You can connect to the WebUI at:\n"
 		MSG="${MSG}${AT}"
-		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 }
 
@@ -517,7 +516,7 @@ check_old_WebUI_location() {
 		MSG="${MSG}\nPlease check it out after installation."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
 		display_msg notice "${MSG}"
-		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 		return
 	fi
 
@@ -525,7 +524,7 @@ check_old_WebUI_location() {
 	MSG="${MSG}\n\nWARNING: if you have any other web sites in that directory, they will no longer be accessible via the web server."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
 	display_msg notice "${MSG}"
-	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 }
 
 handle_prior_website() {
@@ -581,7 +580,7 @@ handle_prior_website() {
 		MSG="${MSG}\nYou can upgrade the Allky Website by executing:\n"
 		MSG="${MSG}     cd ~/allsky; website/install.sh"
 		display_msg notice "${MSG}"
-		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 }
 
@@ -596,7 +595,7 @@ set_locale() {
 	if [[ -z ${LOCALE} ]]; then
 		MSG="Unable to determine your locale.\nRun the 'locale' command and then update the WebUI."
 		display_msg warning "${MSG}"
-		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	else
 		jq ".locale = \"${LOCALE}\"" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
 	fi
@@ -684,7 +683,7 @@ restore_prior_files() {
 		MSG="\nThe '${OLD_RASPAP_DIR}' directory is no longer used.\n"
 		MSG="${MSG}When installation is done you may remove it.\n"
 		display_msg info "${MSG}"
-		echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 
 	if [[ -z ${PRIOR_ALLSKY} ]]; then
@@ -748,7 +747,7 @@ restore_prior_files() {
 			MSG="${MSG}\nPlease compare it to the new one in ${REPO_WEBCONFIG_FILE}"
 			MSG="${MSG} to see what fields have been added, changed, or removed.\n"
 			display_msg warning "${MSG}"
-			echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+			echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 		fi
 	fi
 	# We don't check for old LOCAL Allsky Website configuration files.
@@ -832,7 +831,7 @@ restore_prior_files() {
 		MSG="Your config.sh and ftp-settings.sh files should be very similar to the"
 		MSG="${MSG}\nnew ones, other than your changes."
 		MSG="${MSG}\nThere may be an easy way to update the new configuration files."
-		MSG="${MSG}\nAfter installation, see ${NEW_INSTALLATION_FILE} for details."
+		MSG="${MSG}\nAfter installation, see ${POST_INSTALLATION_ACTIONS} for details."
 
 		MSG2="You can compare the old and new configuration files with the following commands,"
 		MSG2="${MSG2}\nand if the only differences are your changes, you can simply copy the old files to the new location:"
@@ -852,8 +851,8 @@ restore_prior_files() {
 	MSG="${MSG}${SETTINGS_MSG}"
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	display_msg info "\n${MSG}\n"
-	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
-	[[ ${MSG2} != "" ]] && echo -e "\n\n==========\n${MSG2}" >> "${NEW_INSTALLATION_FILE}"
+	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+	[[ ${MSG2} != "" ]] && echo -e "\n\n==========\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
 }
 
 
@@ -1121,14 +1120,14 @@ if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "false" ]]; then
 	MSG="${MSG} go to the 'Allsky Settings' page in the WebUI after rebooting"
 	MSG="${MSG} to make updates."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
-	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 fi
 
 if [[ -n ${PRIOR_ALLSKY} ]]; then
 	MSG="When you are sure everything is working with this new release,"
 	MSG="${MSG} remove your old version in ${PRIOR_INSTALL_DIR} to save disk space."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
-	echo -e "\n\n==========\n${MSG}" >> "${NEW_INSTALLATION_FILE}"
+	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 fi
 
 # This will be the first image they see.

@@ -18,7 +18,7 @@ STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 
 # shellcheck disable=SC1091
-source "${ALLSKY_HOME}/variables.sh"
+source "${ALLSKY_HOME}/variables.sh"	|| exit 1
 if [ -z "${ALLSKY_CONFIG}" ]; then
 	MSG="FATAL ERROR: unable to source variables.sh."
 	echo -e "${RED}*** ${MSG}${NC}"
@@ -34,11 +34,10 @@ SEE_LOG_MSG="See ${ALLSKY_LOG}"
 
 # This file contains information the user needs to act upon after an installation.
 # If the file exists, display it and stop.
-INSTALLATION_INFO="${ALLSKY_CONFIG}/installation_info.txt"
-if [[ -f ${INSTALLATION_INFO} ]]; then
+if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	sudo truncate -s 0 "${ALLSKY_LOG}"
-	cat "${INSTALLATION_INFO}"
-	mv "${INSTALLATION_INFO}" "${ALLSKY_TMP}"	# in case the user wants to look at it later
+	cat "${POST_INSTALLATION_ACTIONS}"
+	mv "${POST_INSTALLATION_ACTIONS}" "${ALLSKY_TMP}"	# in case the user wants to look at it later
 	# shellcheck disable=SC2154
 	doExit ${EXIT_ERROR_STOP} "Warning" \
 		"Allsky\nneeds configuration.\nSee\n${ALLSKY_LOG}" \

@@ -53,6 +53,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Holds all the scripts.
 	ALLSKY_SCRIPTS="${ALLSKY_HOME}/scripts"
 
+	# Holds all the binaries.
+	ALLSKY_BIN="${ALLSKY_HOME}/bin"
+
 	# Holds all the images on a per-day basis.
 	ALLSKY_IMAGES="${ALLSKY_HOME}/images"
 
@@ -63,6 +66,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	# Holds temporary messages to display in the WebUI.
 	ALLSKY_MESSAGES="${ALLSKY_TMP}/messages.txt"
+
+	# Holds information on what the user needs to do after an installation.
+	POST_INSTALLATION_ACTIONS="${ALLSKY_CONFIG}/post-installation_actions.txt"
 
 	# Holds temporary list of aborted uploads since another one was in progress
 	ALLSKY_ABORTEDUPLOADS="${ALLSKY_TMP}/aborted_uploads.txt"

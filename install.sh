@@ -474,7 +474,8 @@ set_permissions() {
 	sudo sed -i -e "/allsky/d" -e "/${WEBSERVER_GROUP}/d" /etc/sudoers
 	do_sudoers
 
-	# The web server needs to be able to create and update files in ${ALLSKY_CONFIG}
+	# The web server needs to be able to create and update many of the files in ${ALLSKY_CONFIG}.
+	# Not all, but go ahead and chgrp all of them so we don't miss any new ones.
 	find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 {} \;
 	find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 {} \;
 	sudo chgrp -R ${WEBSERVER_GROUP} "${ALLSKY_CONFIG}"
@@ -487,6 +488,7 @@ set_permissions() {
 	# This is actually an Allsky Website file, but in case we restored the old website,
 	# set its permissions.
 	chgrp -f ${WEBSERVER_GROUP} "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	sudo chgrp -R ${WEBSERVER_GROUP} "${ALLSKY_WEBUI}"/overlay
 
 	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 }
@@ -950,21 +952,6 @@ install_overlay()
 		sudo mkdir -p /etc/allsky/modules
 		sudo chown -R ${ALLSKY_OWNER}:${WEBSERVER_GROUP} /etc/allsky
 		sudo chmod -R 774 /etc/allsky
-
-		echo -e "${GREEN}* Fixing module permissions${NC}"
-
-		sudo chown -R ${ALLSKY_OWNER}:${WEBSERVER_GROUP} \
-			"${ALLSKY_CONFIG}"/fields.json \
-			"${ALLSKY_CONFIG}"/module-settings.json \
-			"${ALLSKY_CONFIG}"/postprocessing_day.json \
-			"${ALLSKY_CONFIG}"/postprocessing_night.json \
-			"${ALLSKY_CONFIG}"/postprocessing_daynight.json  \
-			"${ALLSKY_CONFIG}"/postprocessing_periodic.json \
-			"${ALLSKY_CONFIG}"/autoexposure.json \
-			"${ALLSKY_CONFIG}"/overlay.json \
-			"${ALLSKY_WEBUI}"/overlay
-
-		sudo chmod -R 770 "${ALLSKY_WEBUI}"/overlay
 }
 
 check_if_buster() {

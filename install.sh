@@ -475,8 +475,8 @@ set_permissions() {
 	do_sudoers
 
 	# The web server needs to be able to create and update files in ${ALLSKY_CONFIG}
-	find "${ALLSKY_CONIG}/" -type f -exec chmod 664 {} \;
-	find "${ALLSKY_CONIG}/" -type d -exec chmod 775 {} \;
+	find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 {} \;
+	find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 {} \;
 	sudo chgrp -R ${WEBSERVER_GROUP} "${ALLSKY_CONFIG}"
 
 	# The files should already be the correct permissions/owners, but just in case, set them.

@@ -751,3 +751,8 @@ b, strong {
 	background-color: var(--color-attention-verysubtle);
 	border: 1px solid var(--color-attention-muted);
 }
+
+/* "ls" colors in a terminal window */
+.lsGreen { color: #32ae25; font-weight: 600; }
+.lsBlue { color: #5a64e5; font-weight: 600; }
+.lsBlack { color: #1e1611; font-weight: 600; }

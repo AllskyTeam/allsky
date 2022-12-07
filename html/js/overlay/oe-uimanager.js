@@ -182,6 +182,7 @@ class OEUIMANAGER {
             }
 
             this.#transformer.resizeEnabled(false);
+            this.setTransformerState(shape);
 
             if (event.target.getClassName() === 'Image') {
                 this.#transformer.resizeEnabled(true);
@@ -237,18 +238,7 @@ class OEUIMANAGER {
         });
 
         this.#overlayLayer.on('dragmove ', (event) => {
-            let shape = event.target;
-
-            if (shape.getClassName() !== 'Transformer') {
-                if (this.#configManager.snapBackground) {
-                    let gridSizeX = this.#configManager.gridSize;
-                    let gridSizeY = this.#configManager.gridSize;
-                    this.#snapRectangle.position({
-                        x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
-                        y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
-                    });
-                }
-            }
+            this.moveField(event);
         });
 
         this.#overlayLayer.on('dragend', (event) => {
@@ -277,6 +267,10 @@ class OEUIMANAGER {
                 this.#snapRectangle.visible(false);
             }
             this.#movingField = null;
+        });
+
+        this.#transformer.on('transform ', (event) => {
+            this.moveField(event);
         });
 
         this.#transformer.on('transformend', (event) => {
@@ -748,7 +742,7 @@ class OEUIMANAGER {
             this.showPropertyEditor();
             this.updatePropertyEditor();
             this.updateToolbar();
-            this.#fieldManager.buildJSON();
+//            this.#fieldManager.buildJSON();
             if (this.testMode) {
                 this.enableTestMode();
             }
@@ -1015,6 +1009,69 @@ class OEUIMANAGER {
         this.drawGrid();
         this.updateBackgroundImage();
         this.updateToolbar();
+    }
+
+    moveField(event) {
+        let shape = event.target;
+
+        if (shape.getClassName() !== 'Transformer') {
+            if (this.#configManager.snapBackground) {
+                let gridSizeX = this.#configManager.gridSize;
+                let gridSizeY = this.#configManager.gridSize;
+
+                if (event.evt.shiftKey) {
+                    this.#transformer.rotationSnaps([0, 90, 180, 270]);
+                } else {
+                    this.#transformer.rotationSnaps([]);
+                }
+
+                this.#snapRectangle.rotation(shape.rotation());
+                this.#snapRectangle.position({
+                    x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
+                    y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
+                });
+            }
+
+            this.setTransformerState(shape);
+        }
+    }
+
+    setTransformerState(shape) {
+        if (this.#transformer.borderStroke() !== '#00a1ff') {
+            this.#transformer.borderStroke('#00a1ff');
+            this.#transformer.borderStrokeWidth(1);
+        }
+
+        if (shape.getClassName() == 'Image') {
+            let stageWidth = this.#oeEditorStage.width();
+            let stageHeight = this.#oeEditorStage.height();
+
+            let rect = shape.getClientRect();
+            let x = rect.x  / this.#oeEditorStage.scaleX();
+            let y = rect.y  / this.#oeEditorStage.scaleY();
+            let width = rect.width / this.#oeEditorStage.scaleX();
+            let height = rect.height / this.#oeEditorStage.scaleY();
+
+            let outOfBounds = false;
+            if (x < 0) {
+                outOfBounds = true;
+            }
+            if (y < 0) {
+                outOfBounds = true;
+            }
+
+            if ((x + width) > stageWidth) {
+                outOfBounds = true;
+            }
+            if ((y + height) > stageHeight) {
+                outOfBounds = true;
+            }
+
+            if (outOfBounds) {
+                this.#transformer.borderStrokeWidth(3);
+                this.#transformer.borderStroke('red');    
+            }
+        }
     }
 
     #saveConfig() {

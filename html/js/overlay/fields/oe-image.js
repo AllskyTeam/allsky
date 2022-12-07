@@ -37,26 +37,6 @@ class OEIMAGEFIELD extends OEFIELD {
   }
 
   createShape() {
-    /*  var imageObj = new Image();
-  
-      if (this.fieldData.image !== 'missing') {
-        imageObj.src = this.fieldData.src;
-  
-        const load = url => new Promise(resolve => {
-          imageObj.onload = () => resolve({ imageObj })
-          imageObj.src = url
-        });
-  
-        (async () => {
-          const { imageObj } = await load(this.fieldData.src);
-          this.shape.scaleX(this.fieldData.scale);
-          this.shape.scaleY(this.fieldData.scale);
-        })();
-      } else {
-        imageObj.src = OEIMAGEFIELD.MISSING;
-      }
-  */
-
     this.setImage(this.fieldData.image).then((imageObj) => {
       this.shape.image(imageObj);
       this.dirty = false;
@@ -77,32 +57,6 @@ class OEIMAGEFIELD extends OEFIELD {
 
   get image() {
     return this.fieldData.image;
-  }
-  set im2age(image) {
-    var imageObj = new Image();
-
-    if (image !== 'missing') {
-      this.fieldData.src = window.oedi.get('IMAGEDIR') + image;
-
-      imageObj.src = this.fieldData.src;
-
-      const load = url => new Promise(resolve => {
-        imageObj.onload = () => resolve({ imageObj })
-        imageObj.src = url
-      });
-
-      (async () => {
-        const { imageObj } = await load(this.fieldData.src);
-        this.shape.scaleX(this.fieldData.scale);
-        this.shape.scaleY(this.fieldData.scale);
-      })();
-    } else {
-      imageObj.src = OEIMAGEFIELD.MISSING;
-    }
-
-    this.shape.image(imageObj);
-    this.fieldData.image = image;
-    this.dirty = true;
   }
 
   setImage(imageName) {

@@ -154,7 +154,7 @@ function DisplayOverlay($image_name)
                                     <div class="collapse navbar-collapse" id="oe-autoexposure-navbar">
                                         <ul class="nav navbar-nav">
                                             <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon" id="oe-savemask" data-toggle="tooltip" data-placement="top" data-container="body" title="Save The AutoExposure Mask"><i class="fa-solid fa-floppy-disk"></i></div>
+                                                <div class="btn btn-lg navbar-btn glyphicon" id="oe-autoexposure-save" data-toggle="tooltip" data-placement="top" data-container="body" title="Save The AutoExposure Mask"><i class="fa-solid fa-floppy-disk"></i></div>
                                             </li>
                                             <li>
                                                 <div class="btn btn-lg navbar-btn" id="oe-autoexposure-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset The AutoExposure Mask"><i class="fa-solid fa-rotate-right"></i></div>

@@ -276,7 +276,10 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
 					if ($retcode === 0) {
 						// Reload the page, but without 'clear' so we don't get into a loop.
+						echo "<script>console.log('href=' + document.location.href);</script>";
+						echo "<script>console.log('updated href=' + document.location.href.replace('&clear=true', ''));</script>";
 						echo "<script>document.location.href=document.location.href.replace('&clear=true', '');</script>";
+						echo "<p>Refreshing the window</p>";
 						exit;
 					} else {
 						$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);

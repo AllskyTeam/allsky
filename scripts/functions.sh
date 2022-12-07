@@ -35,7 +35,7 @@ function doExit()
 				"${FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
 				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
-		else
+		elif [[ ${TYPE} != "no-image" ]]; then
 			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "${TYPE}" 2>&1
 		fi
 		# Don't let the service restart us because we'll likely get the same error again.

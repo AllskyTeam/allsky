@@ -13,16 +13,14 @@ fi
 ME="$(basename "${BASH_ARGV0}")"
 
 # shellcheck disable=SC1090
-source "${ALLSKY_HOME}/variables.sh"
-# shellcheck disable=SC2181
-[ $? -ne 0 ] && echo "${ME}: ERROR: unable to source variables.sh file!" && exit 1
+source "${ALLSKY_HOME}/variables.sh" || exit 1
 
 # shellcheck disable=SC1090
-source "${ALLSKY_CONFIG}/config.sh"
+source "${ALLSKY_CONFIG}/config.sh" || exit 1
 # shellcheck disable=SC1090
-source "${ALLSKY_SCRIPTS}/functions.sh"
+source "${ALLSKY_SCRIPTS}/functions.sh" || exit 1
 # shellcheck disable=SC1090
-source "${ALLSKY_CONFIG}/ftp-settings.sh"
+source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 1
 
 # Make sure a local or remote Allsky Website exists.
 if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
@@ -121,7 +119,11 @@ function upload_file()
 	# Copy to local Allsky website if it exists.
 	if [[ ${HAS_LOCAL_WEBSITE} == "true" ]]; then
 		cp "${FILE_TO_UPLOAD}" "${ALLSKY_WEBSITE}"
-		((RETCODE=$?))
+		R=$?
+		if [[ ${R} -ne 0 ]]; then
+			echo "${RED}${ME}: Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}'.${NC}"
+		fi
+		((RETCODE=${R}))
 	fi
 
 	# Upload to remote website if there is one.
@@ -131,7 +133,11 @@ function upload_file()
 			"${IMAGE_DIR}" \
 			"" \
 			"PostData"
-		((RETCODE=RETCODE+$?))
+		R=$?
+		if [[ ${R} -ne 0 ]]; then
+			echo "${RED}${ME}: Unable to upload '${FILE_TO_UPLOAD}'.${NC}"
+		fi
+		((RETCODE=RETCODE+${R}))
 	fi
 
 	return ${RETCODE}

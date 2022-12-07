@@ -155,7 +155,7 @@ while [[ $# -gt 0 ]]; do
 					C=""
 				fi
 				[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Calling capture_${NEW_VALUE} ${C} -cc_file '${CC_FILE}'${wNC}"
-				"${ALLSKY_HOME}/capture_${NEW_VALUE}" ${C} -debuglevel 3 -cc_file "${CC_FILE}"
+				"${ALLSKY_BIN}/capture_${NEW_VALUE}" ${C} -debuglevel 3 -cc_file "${CC_FILE}"
 				RET=$?
 				if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
 					echo -e "${wERROR}ERROR: Unable to create cc file '${CC_FILE}'.${wNC}"

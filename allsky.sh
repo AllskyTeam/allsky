@@ -9,9 +9,10 @@ EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 echo "     ***** Starting AllSky *****"
 
 if [[ -z ${ALLSKY_HOME} ]]; then
-	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}"))"
+	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
+	export ALLSKY_HOME
 fi
-cd "${ALLSKY_HOME}"
+cd "${ALLSKY_HOME}" || exit 1
 
 NOT_STARTED_MSG="Unable to start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
@@ -22,7 +23,7 @@ source "${ALLSKY_HOME}/variables.sh"	|| exit 1
 if [[ -z ${ALLSKY_CONFIG} ]]; then
 	MSG="FATAL ERROR: unable to source variables.sh."
 	echo -e "${RED}*** ${MSG}${NC}"
-	doExit ${EXIT_ERROR_STOP} "Error" \
+	doExit "${EXIT_ERROR_STOP}" "Error" \
 		"${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_HOME})/variables.sh\nis corrupted." \
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
@@ -39,7 +40,7 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	cat "${POST_INSTALLATION_ACTIONS}"
 	mv "${POST_INSTALLATION_ACTIONS}" "${ALLSKY_TMP}"	# in case the user wants to look at it later
 	# shellcheck disable=SC2154
-	doExit ${EXIT_ERROR_STOP} "Warning" \
+	doExit "${EXIT_ERROR_STOP}" "Warning" \
 		"Allsky\nneeds configuration.\nSee\n${ALLSKY_LOG}" \
 		"Allsky needs to be configured before it's used.<br>${SEE_LOG_MSG}."
 fi
@@ -53,7 +54,7 @@ if [[ ! -v WEBUI_DATA_FILES ]]; then	# WEBUI_DATA_FILES added after version 0.8.
 	echo "Please move your current config.sh file to config.sh-OLD, then place the newest one"
 	echo "from https://github.com/thomasjacquin/allsky in ${ALLSKY_CONFIG} and"
 	echo "manually copy your data from the old file to the new one."
-	doExit ${EXIT_ERROR_STOP} "Error" \
+	doExit "${EXIT_ERROR_STOP}" "Error" \
 		"${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_CONFIG})/config.sh\nis an old version.  See\n${ALLSKY_LOG}" \
 		"${NOT_STARTED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
 
@@ -63,7 +64,7 @@ USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
 if [[ -z ${CAMERA_TYPE} ]]; then
 	MSG="FATAL ERROR: 'Camera Type' not set in WebUI."
 	echo -e "${RED}*** ${MSG}${NC}"
-	doExit ${EXIT_NO_CAMERA} "Error" \
+	doExit "${EXIT_NO_CAMERA}" "Error" \
 		"${ERROR_MSG_PREFIX}\nCamera Type\nnot specified\nin the WebUI." \
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
@@ -90,7 +91,7 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			MSG="FATAL ERROR: Too many consecutive USB bus resets done (${COUNT})."
 			echo -e "${RED}*** ${MSG} Stopping." >&2
 			rm -f "${RESETTING_USB_LOG}"
-			doExit ${EXIT_ERROR_STOP} "Error" \
+			doExit "${EXIT_ERROR_STOP}" "Error" \
 				"${ERROR_MSG_PREFIX}\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}" \
 				"${NOT_STARTED_MSG}<br>${MSG}"
 		fi
@@ -133,7 +134,7 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 
 			echo "  If you have the 'uhubctl' command installed, add it to config.sh." >&2
 			echo "  In the meantime, try running it to reset the USB bus." >&2
-			doExit ${EXIT_NO_CAMERA} "Error" \
+			doExit "${EXIT_NO_CAMERA}" "Error" \
 				"${ERROR_MSG_PREFIX}\nNo ZWO camera\nfound!${USB_MSG}" \
 				"${NOT_STARTED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
 		fi
@@ -144,7 +145,7 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 else
 	MSG="FATAL ERROR: Unknown Camera Type: ${CAMERA_TYPE}."
 	echo -e "${RED}${MSG}  Stopping.${NC}" >&2
-	doExit ${EXIT_NO_CAMERA} "Error" \
+	doExit "${EXIT_NO_CAMERA}" "Error" \
 		"${ERROR_MSG_PREFIX}\nUnknown Camera\nType: ${CAMERA_TYPE}" \
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
@@ -228,7 +229,7 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 RETCODE=$?
 
 if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then
-	doExit ${EXIT_OK} ""
+	doExit "${EXIT_OK}" ""
 fi
 
 if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
@@ -257,7 +258,7 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 		# TODO: use ASI_ERROR_TIMEOUT message
 		MSG="Non-recoverable ERROR found"
 		[ ${ON_TTY} = "1" ] && echo "*** ${MSG} - ${SEE_LOG_MSG}. ***"
-		doExit ${EXIT_ERROR_STOP} "Error" \
+		doExit "${EXIT_ERROR_STOP}" "Error" \
 			"${ERROR_MSG_PREFIX}Too many\nASI_ERROR_TIMEOUT\nerrors received!\n${SEE_LOG_MSG}" \
 			"${STOPPED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
 	fi
@@ -272,13 +273,13 @@ if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 		echo "*** After fixing, restart the allsky service. ***"
 	fi
 	echo "***"
-	doExit ${EXIT_ERROR_STOP} "Error"	# Can't do a custom message since we don't know the problem
+	doExit "${EXIT_ERROR_STOP}" "Error"	# Can't do a custom message since we don't know the problem
 fi
 
 # Some other error
 if [[ ${USE_NOTIFICATION_IMAGES} == "1" ]]; then
 	# If started by the service, it will restart us once we exit.
-	doExit ${RETCODE} "NotRunning"
+	doExit "${RETCODE}" "NotRunning"
 else
-	doExit ${RETCODE} ""
+	doExit "${RETCODE}" ""
 fi

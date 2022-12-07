@@ -24,7 +24,7 @@ if [[ -z ${ALLSKY_CONFIG} ]]; then
 	MSG="FATAL ERROR: unable to source variables.sh."
 	echo -e "${RED}*** ${MSG}${NC}"
 	doExit "${EXIT_ERROR_STOP}" "Error" \
-		"${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_HOME})/variables.sh\nis corrupted." \
+		"${ERROR_MSG_PREFIX}\n$(basename "${ALLSKY_HOME}")/variables.sh\nis corrupted." \
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 # shellcheck disable=SC1091
@@ -53,7 +53,7 @@ if [[ ! -v WEBUI_DATA_FILES ]]; then	# WEBUI_DATA_FILES added after version 0.8.
 	echo "from https://github.com/thomasjacquin/allsky in ${ALLSKY_CONFIG} and"
 	echo "manually copy your data from the old file to the new one."
 	doExit "${EXIT_ERROR_STOP}" "Error" \
-		"${ERROR_MSG_PREFIX}\n$(basename ${ALLSKY_CONFIG})/config.sh\nis an old version.  See\n${ALLSKY_LOG}" \
+		"${ERROR_MSG_PREFIX}\n$(basename "${ALLSKY_CONFIG}")/config.sh\nis an old version.  See\n${ALLSKY_LOG}" \
 		"${NOT_STARTED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
 
 fi
@@ -114,7 +114,7 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 
 	# Use two commands to better aid debugging when camera isn't found.
 	ZWOdev=$(lsusb -d '03c3:' | awk '{ bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}')
-	ZWOIsPresent=$(lsusb -D ${ZWOdev} 2>/dev/null | grep -c 'iProduct .*ASI[0-9]')
+	ZWOIsPresent=$(lsusb -D "${ZWOdev}" 2>/dev/null | grep -c 'iProduct .*ASI[0-9]')
 	if [[ $ZWOIsPresent -eq 0 ]]; then
 		if [[ -n ${UHUBCTL_PATH} ]] ; then
 			reset_usb "looking for a\nZWO camera"		# reset_usb exits if too many tries
@@ -152,7 +152,7 @@ echo "CAMERA_TYPE: ${CAMERA_TYPE}"
 
 if [[ -d ${ALLSKY_TMP} ]]; then
 	# remove any lingering old image files.
-	rm -f "${ALLSKY_TMP}/${FILENAME}"-202*.${EXTENSION}	# "202" for 2020 and later
+	rm -f "${ALLSKY_TMP}/${FILENAME}"-202*."${EXTENSION}"	# "202" for 2020 and later
 
 	# Clear out this file and allow the web server to write to it.
 	# shellcheck disable=SC2188
@@ -179,19 +179,20 @@ ARGUMENTS=()
 
 if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	# This argument needs to come first since the capture code checks for it first.
-	ARGUMENTS+=(-cmd ${RPi_COMMAND_TO_USE})
+	ARGUMENTS+=(-cmd "${RPi_COMMAND_TO_USE}")
 fi
 
 [[ -s ${ALLSKY_HOME}/version ]] && ARGUMENTS+=(-version "$(< "${ALLSKY_HOME}/version")")
 
 # This argument should come second so the capture program knows if it should display debug output.
-ARGUMENTS+=(-debuglevel ${ALLSKY_DEBUG_LEVEL})
+ARGUMENTS+=(-debuglevel "${ALLSKY_DEBUG_LEVEL}")
 
+# shellcheck disable=SC2207
 KEYS=( $(settings 'keys[]') )
 for KEY in ${KEYS[@]}
 do
-	K="$(settings "."$KEY)"
-	ARGUMENTS+=(-$KEY "$K")
+	K="$(settings ".${KEY}")"
+	ARGUMENTS+=(-"${KEY}" "${K}")
 done
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
@@ -213,10 +214,10 @@ else
 fi
 
 if [[ $CAPTURE_EXTRA_PARAMETERS != "" ]]; then
-	ARGUMENTS+=(${CAPTURE_EXTRA_PARAMETERS})	# Any additional parameters
+	ARGUMENTS+=("${CAPTURE_EXTRA_PARAMETERS}")	# Any additional parameters
 fi
 
-echo "${ARGUMENTS[@]}" > ${ALLSKY_TMP}/capture_args.txt		# for debugging
+echo "${ARGUMENTS[@]}" > "${ALLSKY_TMP}/capture_args.txt"		# for debugging
 
 CAPTURE="capture_${CAMERA_TYPE}"
 

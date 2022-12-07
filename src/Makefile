@@ -161,10 +161,10 @@ startrails:startrails.cpp
 
 symlink: all
 	@echo `date +%F\ %R:%S` Symlinking binaries...
-	@ln -s $$PWD/capture_ZWO ../
-	@ln -s $$PWD/capture_RPi ../
-	@ln -s $$PWD/keogram ../
-	@ln -s $$PWD/startrails ../
+	@ln -s $$PWD/capture_ZWO ../bin/
+	@ln -s $$PWD/capture_RPi ../bin/
+	@ln -s $$PWD/keogram ../bin/
+	@ln -s $$PWD/startrails ../bin/
 
 .PHONY: symlink
 
@@ -182,10 +182,11 @@ install:
 	  install keogram $(DESTDIR)$(bindir); \
 	  install startrails $(DESTDIR)$(bindir); \
 	else \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_ZWO ../; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPi ../; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../; \
+	  [ ! -e ../bin ] && mkdir -p ../bin; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_ZWO ../bin/; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPi ../bin/; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../bin/; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../bin/; \
 	fi
 	@install sunwait $(DESTDIR)$(bindir)
 
@@ -198,18 +199,17 @@ uninstall:
 	  rm -f $(DESTDIR)$(bindir)/startrails; \
 	  rm -f $(DESTDIR)$(bindir)/sunwait; \
 	else \
-	  rm -f ../capture_ZWO; \
-	  rm -f ../capture_RPi; \
-	  rm -f ../keogram; \
-	  rm -f ../startrails; \
-	  rm -f $(DESTDIR)$(bindir)/startrails; \
+	  rm -f ../bin/capture_ZWO; \
+	  rm -f ../bin/capture_RPi; \
+	  rm -f ../bin/keogram; \
+	  rm -f ../bin/startrails; \
 	fi
 
 endif # sudo / root check
 .PHONY : install uninstall
 
 clean:
-	rm -f capture_ZWO capture_RPi startrails keogram *.o *.a
+	rm -f capture_ZWO capture_RPi startrails keogram sunwait *.o *.a
 .PHONY : clean
 
 endif # Correct directory structure check

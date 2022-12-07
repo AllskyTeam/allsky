@@ -257,7 +257,7 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 	else
 		# TODO: use ASI_ERROR_TIMEOUT message
 		MSG="Non-recoverable ERROR found"
-		[ ${ON_TTY} = "1" ] && echo "*** ${MSG} - ${SEE_LOG_MSG}. ***"
+		[[ ${ON_TTY} == "1" ]] && echo "*** ${MSG} - ${SEE_LOG_MSG}. ***"
 		doExit "${EXIT_ERROR_STOP}" "Error" \
 			"${ERROR_MSG_PREFIX}Too many\nASI_ERROR_TIMEOUT\nerrors received!\n${SEE_LOG_MSG}" \
 			"${STOPPED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."

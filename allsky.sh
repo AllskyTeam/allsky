@@ -36,13 +36,11 @@ SEE_LOG_MSG="See ${ALLSKY_LOG}"
 # This file contains information the user needs to act upon after an installation.
 # If the file exists, display it and stop.
 if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
-	sudo truncate -s 0 "${ALLSKY_LOG}"
-	cat "${POST_INSTALLATION_ACTIONS}"
 	mv "${POST_INSTALLATION_ACTIONS}" "${ALLSKY_TMP}"	# in case the user wants to look at it later
+	echo "${POST_INSTALLATION_ACTIONS} moved to ${ALLSKY_TMP}"
+	# There should already be a message so don't add another.
 	# shellcheck disable=SC2154
-	doExit "${EXIT_ERROR_STOP}" "Warning" \
-		"Allsky\nneeds configuration.\nSee\n${ALLSKY_LOG}" \
-		"Allsky needs to be configured before it's used.<br>${SEE_LOG_MSG}."
+	doExit "${EXIT_ERROR_STOP}" "" ""
 fi
 
 # COMPATIBILITY CHECKS
@@ -233,10 +231,11 @@ if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then
 fi
 
 if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
-	NOTIFICATION_TYPE="Restarting"
 	if [[ ${ON_TTY} == "1" ]]; then
 		echo "*** Can restart allsky now. ***"
 		NOTIFICATION_TYPE="NotRunning"
+	else
+		NOTIFICATION_TYPE="Restarting"
 	fi
 	doExit 0 "${NOTIFICATION_TYPE}"		# use 0 so the service is restarted
 fi
@@ -245,10 +244,11 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 	# Reset the USB bus if possible
 	if [[ ${UHUBCTL_PATH} != "" ]]; then
 		reset_usb " (ASI_ERROR_TIMEOUTs)"
-		NOTIFICATION_TYPE="Restarting"
 		if [[ ${ON_TTY} == "1" ]]; then
 			echo "*** USB bus was reset; You can restart allsky now. ***"
 			NOTIFICATION_TYPE="NotRunning"
+		else
+			NOTIFICATION_TYPE="Restarting"
 		fi
 		if [[ ${USE_NOTIFICATION_IMAGES} == "1" ]]; then
 			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${NOTIFICATION_TYPE}"

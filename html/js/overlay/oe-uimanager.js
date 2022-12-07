@@ -1032,7 +1032,9 @@ class OEUIMANAGER {
                 });
             }
 
-            this.setTransformerState(shape);
+            if (event.target.id() == this.#selected.id) {
+                this.setTransformerState(shape);
+            }
         }
     }
 

@@ -139,7 +139,7 @@ select_camera_type() {
 		3>&1 1>&2 2>&3)
 	if [ $? -ne 0 ]; then
 		display_msg warning "Camera selection required.  Please re-run the installation and select a camera to continue."
-		exit 1
+		exit 2
 	fi
 	display_msg --log progress "Using ${CAMERA_TYPE} camera."
 }
@@ -325,7 +325,7 @@ check_swap() {
 			display_msg --log progress "Swap space set to ${SWAP_SIZE} MB."
 		fi
 	else
-		display_msg --log info "Size of current swap (${CURRENT_SWAP} MB) is sufficient."
+		display_msg --log progress "Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."
 	fi
 }
 
@@ -335,7 +335,7 @@ check_swap() {
 check_memory_filesystem() {
 	# Check if currently a memory filesystem.
 	if grep --quiet "^tmpfs ${ALLSKY_TMP} tmpfs" /etc/fstab; then
-		display_msg --log info "${ALLSKY_TMP} is currently in memory."
+		display_msg --log progress "${ALLSKY_TMP} is currently in memory; no change needed."
 		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently in the PRIOR Allsky.
 		# Try to unmount it, but that often gives an error that it's busy,
 		# which isn't really a problem since it'll be unmounted at the reboot.
@@ -398,7 +398,7 @@ install_webserver() {
 	sudo systemctl stop lighttpd 2> /dev/null
 	TMP="${INSTALL_LOGS_DIR}/lighttpd.install.log"
 	(sudo apt-get update && sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon) > ${TMP} 2>&1
-	check_installation_success $? "lighttpd installation failed" "${TMP}" ${DEBUG} || exit 1
+	check_installation_success $? "lighttpd installation failed" "${TMP}" ${DEBUG} || exit_with_image 1
 
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
 	sed \
@@ -640,22 +640,22 @@ install_dependencies_etc() {
 	# These commands produce a TON of output that's not needed unless there's a problem.
 	# They also take a little while, so hide the output and let the user know.
 
-	display_msg progress "Installing dependencies."   "  This may take a while..."
+	display_msg progress "Installing dependencies."
 	TMP="${INSTALL_LOGS_DIR}/make_deps.log"
 	#shellcheck disable=SC2024
 	sudo make deps > ${TMP} 2>&1
-	check_installation_success $? "Dependency installation failed" "${TMP}" ${DEBUG} || exit 1
+	check_installation_success $? "Dependency installation failed" "${TMP}" ${DEBUG} || exit_with_image 1
 
 	display_msg progress "Preparing Allsky commands."
 	TMP="${INSTALL_LOGS_DIR}/make_all.log"
 	#shellcheck disable=SC2024
 	make all > ${TMP} 2>&1
-	check_installation_success $? "Compile failed" "${TMP}" ${DEBUG} || exit 1
+	check_installation_success $? "Compile failed" "${TMP}" ${DEBUG} || exit_with_image 1
 
 	TMP="${INSTALL_LOGS_DIR}/make_install.log"
 	#shellcheck disable=SC2024
 	sudo make install > ${TMP} 2>&1
-	check_installation_success $? "make install failed" "${TMP}" ${DEBUG} || exit 1
+	check_installation_success $? "make install failed" "${TMP}" ${DEBUG} || exit_with_image 1
 
 	return 0
 }
@@ -681,7 +681,8 @@ create_allsky_log() {
 restore_prior_files() {
 	if [[ -d ${OLD_RASPAP_DIR} ]]; then
 		MSG="\nThe '${OLD_RASPAP_DIR}' directory is no longer used.\n"
-		MSG="${MSG}When installation is done you may remove it.\n"
+		MSG="${MSG}When installation is done you may remove it by executing:\n"
+		MSG="${MSG}    sudo rm -fr ${OLD_RASPAP_DIR}\n"
 		display_msg info "${MSG}"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
@@ -900,14 +901,14 @@ install_overlay()
 			sudo apt-get install -y php-sqlite3 && \
 			sudo apt install -y python3-pip
 		) > "${TMP}" 2>&1
-		check_installation_success $? "PHP module installation failed" "${TMP}" ${DEBUG} || exit 1
+		check_installation_success $? "PHP module installation failed" "${TMP}" ${DEBUG} || exit_with_image 1
 
 		display_msg progress "Installing other PHP dependencies."
 		TMP="${INSTALL_LOGS_DIR}/libatlas.log"
 		# shellcheck disable=SC2069,SC2024
 		sudo apt-get -y install libatlas-base-dev 2>&1 > ${TMP}
 # TODO: or > then 2>&1 ???
-		check_installation_success $? "PHP dependencies failed" "${TMP}" ${DEBUG} || exit 1
+		check_installation_success $? "PHP dependencies failed" "${TMP}" ${DEBUG} || exit_with_image 1
 
 		if [[ ${OS} == "buster" ]]; then
 			M=" for Buster"
@@ -916,7 +917,7 @@ install_overlay()
 			M=""
 			R=""
 		fi
-		display_msg progress "Installing Python dependencies${M}."  "  This will take a LONG time."
+		display_msg progress "Installing Python dependencies${M}."  "  This may take a LONG time if the packages are not already installed."
 		TMP="${INSTALL_LOGS_DIR}/Python_dependencies"
 		# Doing this all at once can run /tmp out of space, so do one at a time.
 		# This also allows us to display progress messages.
@@ -935,17 +936,17 @@ install_overlay()
 			# These files are too big to display so pass in "false" instead of ${DEBUG}.
 			if ! check_installation_success $? "Python dependency [${package}] failed" "${L}" false ; then
 				rm -fr "${PIP3_BUILD}"
-				exit 1
+				exit_with_image 1
 			fi
 		done < "${ALLSKY_REPO}/requirements${R}.txt"
 		rm -fr "${PIP3_BUILD}"
 
-		display_msg progress "Installing Trutype fonts."   "  This will take a while."
+		display_msg progress "Installing Trutype fonts."
 		TMP="${INSTALL_LOGS_DIR}/msttcorefonts.log"
 		# shellcheck disable=SC2069,SC2024
 		sudo apt-get -y install msttcorefonts 2>&1 > "${TMP}"
 # TODO: or > then 2>&1 ???
-		check_installation_success $? "Trutype fonts failed" "${TMP}" ${DEBUG} || exit 1
+		check_installation_success $? "Trutype fonts failed" "${TMP}" ${DEBUG} || exit_with_image 1
 
 		display_msg progress "Setting up modules."
 		sudo mkdir -p /etc/allsky/modules
@@ -966,6 +967,42 @@ check_if_buster() {
 	fi
 }
 
+# Create and image the user will see when they go to the WebUI.
+create_image() {
+	local IMAGE_TYPE="${1}"
+
+	COLOR="yellow"
+	if [[ ${IMAGE_TYPE} == "installing" ]]; then
+		MESSAGE_="***\nAllsky installation\nin progress.\nDo NOT\nchange anything\n***"
+
+	elif [[ ${IMAGE_TYPE} == "configuration needed" ]]; then
+		MESSAGE_="***\nUse the\n'Allsky Settings'\nlink in the WebUI\nto configure Allsky\n***"
+
+		##### Add a message the user will see in the WebUI.
+		if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
+			cat "${POST_INSTALLATION_ACTIONS}" > "${ALLSKY_LOG}"
+			WEBUI_MESSAGE="Actions needed.  See ${ALLSKY_LOG}."
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "Warning" "${WEBUI_MESSAGE}"
+		fi
+
+	elif [[ ${IMAGE_TYPE} == "installation failed" ]]; then
+		MESSAGE_="***\nInstallation failed\n***"
+		COLOR="red"
+
+	else
+		MESSAGE_="***\nUnknown message requested\n***"
+	fi
+	"${ALLSKY_SCRIPTS}//generate_notification_images.sh" --directory "${ALLSKY_TMP}" "image" \
+		"${COLOR}" "" 85 "" "" "" 10 "${COLOR}" "jpg" "" \
+		"${MESSAGE_}" > /dev/null
+}
+
+# Installation failed.
+# Replace the "installing" messaged with a "failed" one.
+exit_with_image() {
+	create_image "installation failed"
+	exit ${1}
+}
 
 ####################### main part of program
 
@@ -1029,6 +1066,9 @@ stop_allsky
 ##### Handle updates
 [[ ${UPDATE} == "true" ]] && do_update		# does not return
 
+##### Create the "installation in progress" image.
+create_image "installing"
+
 ##### See if there's an old WebUI
 does_old_WebUI_locaion_exist
 
@@ -1061,14 +1101,16 @@ check_swap											# may prompt
 check_memory_filesystem								# may prompt
 
 
-MSG="The following steps can take about AN HOUR depending on the speed of your Pi."
+MSG="\nThe following steps can take about AN HOUR depending on the speed of your Pi"
+MSG="${MSG}\nand how many of the necessary dependencies are already installed."
 MSG="${MSG}\nYou will see progress messages throughout the process."
-MSG="${MSG}\nAt the end you will be prompted again for additional steps."
+MSG="${MSG}\nAt the end you will be prompted again for additional steps.\n"
 whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+display_msg info "${MSG}"
 
 
 ##### Install dependencies, then compile and install Allsky software
-install_dependencies_etc || exit 1
+install_dependencies_etc || exit_with_image 1
 
 ##### Update config.sh
 # This must come BEFORE save_camera_capabilities, since it uses the camera type.
@@ -1083,11 +1125,11 @@ create_webui_defines
 
 ##### Create the camera type-model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
-save_camera_capabilities "false" || exit 1			# prompts on error only
+save_camera_capabilities "false" || exit_with_image 1			# prompts on error only
 
 # Code later needs "settings()" function.
 # shellcheck disable=SC1090,SC1091
-source "${ALLSKY_CONFIG}/config.sh" || exit 1
+source "${ALLSKY_CONFIG}/config.sh" || exit_with_image 1
 
 ##### Create ${ALLSKY_LOG}
 create_allsky_log
@@ -1117,8 +1159,7 @@ check_old_WebUI_location							# prompt if prior old-style WebUI
 if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "false" ]]; then
 	MSG="NOTE: Default settings were created for your camera."
 	MSG="${MSG}\n\nHowever some entries may not have been set, like latitude, so you MUST"
-	MSG="${MSG} go to the 'Allsky Settings' page in the WebUI after rebooting"
-	MSG="${MSG} to make updates."
+	MSG="${MSG}\ngo to the 'Allsky Settings' page in the WebUI after rebooting to make updates."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 fi
@@ -1130,10 +1171,8 @@ if [[ -n ${PRIOR_ALLSKY} ]]; then
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 fi
 
-# This will be the first image they see.
-"${ALLSKY_SCRIPTS}//generate_notification_images.sh" --directory "${ALLSKY_TMP}" "image" \
-	"yellow" "" 85 "" "" "" 10 "yellow" "jpg" "" \
-	"***\nUse the\n'Allsky Settings'\nlink in the WebUI\nto configure Allsky\n***" > /dev/null
+##### Create the "needs configuration" image.
+create_image "configuration needed"
 
 ask_reboot			# prompts
 

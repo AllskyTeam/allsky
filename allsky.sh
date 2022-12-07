@@ -224,7 +224,7 @@ CAPTURE="capture_${CAMERA_TYPE}"
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 
 # Run the main program - this is the main attraction...
-"${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
+"${ALLSKY_BIN}/${CAPTURE}" "${ARGUMENTS[@]}"
 RETCODE=$?
 
 if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then

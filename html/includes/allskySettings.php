@@ -370,7 +370,9 @@ function toggle_advanced()
 		?>
 			<script>
 				var messages = document.getElementById("messages");
-				messages.innerHTML= messages.innerHTML + '<?php $status->showMessages(); ?>';
+				// Call showMessages() with the 2nd (escape) argument of true so it escapes single quotes.
+				// We then have to restore them so the html is correct.
+				messages.innerHTML += '<?php $status->showMessages(true, true); ?>'.replace(/&apos;/g, "'");
 			</script>
 		<?php
 		}

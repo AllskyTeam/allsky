@@ -38,9 +38,10 @@ SEE_LOG_MSG="See ${ALLSKY_LOG}"
 if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	mv "${POST_INSTALLATION_ACTIONS}" "${ALLSKY_TMP}"	# in case the user wants to look at it later
 	echo "${POST_INSTALLATION_ACTIONS} moved to ${ALLSKY_TMP}"
-	# There should already be a message so don't add another.
+	# There should already be a message so don't add another,
+	# and there's already an image, so don't overwrite it.
 	# shellcheck disable=SC2154
-	doExit "${EXIT_ERROR_STOP}" "" ""
+	doExit "${EXIT_ERROR_STOP}" "no-image" ""
 fi
 
 # COMPATIBILITY CHECKS

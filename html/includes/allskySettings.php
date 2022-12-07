@@ -201,7 +201,7 @@ function toggle_advanced()
   <div class="row">
     <div class="col-lg-12">
       <div class="panel panel-primary">
-      <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Allsky Settings for <b><?php echo "$cameraType $cameraModel"; ?></b>&nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; <?php echo $settings_file ?></div>
+      <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Allsky Settings for <b><?php echo "$cameraType $cameraModel"; ?></b></div>
         <div class="panel-body" style="padding: 5px;">
           <p id="messages"><?php $status->showMessages(); ?></p>
 
@@ -370,7 +370,9 @@ function toggle_advanced()
 		?>
 			<script>
 				var messages = document.getElementById("messages");
-				messages.innerHTML= messages.innerHTML + '<?php $status->showMessages(); ?>';
+				// Call showMessages() with the 2nd (escape) argument of true so it escapes single quotes.
+				// We then have to restore them so the html is correct.
+				messages.innerHTML += '<?php $status->showMessages(true, true); ?>'.replace(/&apos;/g, "'");
 			</script>
 		<?php
 		}

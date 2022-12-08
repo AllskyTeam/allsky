@@ -4,7 +4,8 @@ include_once( 'includes/status_messages.php' );
 function DisplayAllskyConfig(){
 	$cameraTypeName = "cameraType";		// json setting name
 	$cameraModelName = "cameraModel";	// json setting name
-	$lastChangedName = "lastChanged";	// json setting name
+	global $lastChangedName;			// json setting name
+	global $lastChanged;
 
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
@@ -12,6 +13,7 @@ function DisplayAllskyConfig(){
 	$options_str = file_get_contents($options_file, true);
 	$options_array = json_decode($options_str, true);
 
+	global $page;
 	global $status;
 	$status = new StatusMessages();
 
@@ -90,14 +92,15 @@ function DisplayAllskyConfig(){
 // It's probably more likely makeChange.sh would fail than updating the settings file,
 // so it should probably go first.
 			if ($ok) {
-				if ($somethingChanged) {
+				if ($somethingChanged || $lastChanged === null) {
 					if ($newCameraType !== "") {
 						$msg = "If you change <b>Camera Type</b> you cannot change anything else.  No changes made.";
 						$ok = false;
 					} else {
 						// Keep track of the last time the file changed.
 						// If we end up not updating the file this will be ignored.
-						$settings[$lastChangedName] = date('Y-m-d H:i:s');
+						$lastChanged = date('Y-m-d H:i:s');
+						$settings[$lastChangedName] = $lastChanged;
 						$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
 						// updateFile() only returns error messages.
 						$msg = updateFile($settings_file, $content, "settings", true);
@@ -137,13 +140,13 @@ function DisplayAllskyConfig(){
 					// runCommand displays $msg.
 					runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
 				} else {
-					$msg .= " but Allsky NOT restarted.";
+					$msg .= " and Allsky NOT restarted.";
 					$status->addMessage($msg, 'info');
 				}
 
 				// Want this as a separate message after the one above.
 				if ($newCameraType !== "") {
-					$msg = "Click on the <b>Allsky Settings</b> link on the left to fully refresh this window.";
+					$msg = "Click on the <b>Allsky Settings</b> link to fully refresh this window.";
 					$status->addMessage($msg, 'info');
 				}
 
@@ -185,6 +188,9 @@ function DisplayAllskyConfig(){
 	$cameraType = getVariableOrDefault($settings_array, $cameraTypeName, "");
 	$cameraModel = getVariableOrDefault($settings_array, $cameraModelName, "");
 	$initial_display = $settings_array['alwaysshowadvanced'] == 1 ? "table-row" : "none";
+
+	check_if_configured($page, "settings");
+
 ?>
 <script language="javascript">
 function toggle_advanced()
@@ -392,6 +398,7 @@ function toggle_advanced()
 				echo "</tr>";
 			 }
 		echo "</table>";
+
 		if ($numMissing > 0) {
 			$msg = "ERROR: $numMissing required field" . ($numMissing === 1 ? " is" : "s are");
 			$msg .= " missing - see highlighted fields below.";

@@ -24,8 +24,10 @@ if ((include $defs) == false) {
 $status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
 $temptype = null;
+$configured = false;
 function initialize_variables() {
-	global $image_name, $delay, $daydelay, $nightdelay, $darkframe, $useLogin, $temptype;
+	global $image_name, $delay, $daydelay, $nightdelay;
+	global $darkframe, $useLogin, $temptype, $configured;
 
 	// The Camera Type should be set during the installation, so this "should" never fail...
 	$cam_type = getCameraType();
@@ -47,6 +49,7 @@ function initialize_variables() {
 
 	$settings_str = file_get_contents($settings_file, true);
 	$settings_array = json_decode($settings_str, true);
+	$configured = getVariableOrDefault($settings_array, 'configured', false);
 	// $img_dir is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');

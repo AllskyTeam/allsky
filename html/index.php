@@ -14,6 +14,9 @@
  * @link       https://github.com/thomasjacquin/allsky-portal
  */
 
+// Globals
+$lastChangedName = "lastChanged";	// json setting name
+
 // functions.php sets a bunch of constants and variables.
 // It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');

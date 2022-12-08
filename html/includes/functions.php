@@ -27,7 +27,7 @@ $temptype = null;
 $lastChanged = null;
 function initialize_variables() {
 	global $image_name, $delay, $daydelay, $nightdelay;
-	global $darkframe, $useLogin, $temptype, $lastChanged;
+	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 
 	// The Camera Type should be set during the installation, so this "should" never fail...
 	$cam_type = getCameraType();
@@ -57,7 +57,8 @@ function initialize_variables() {
 	$darkframe = $settings_array['takeDarkFrames'];
 	$useLogin = getVariableOrDefault($settings_array, 'useLogin', true);
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
-	$lastChanged = getVariableOrDefault($settings_array, 'lastChanged', null);
+	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, null);
+
 
 	////////////////// Determine delay between refreshes of the image.
 	$consistentDelays = $settings_array["consistentDelays"] == 1 ? true : false;
@@ -94,6 +95,26 @@ function initialize_variables() {
 	$delay /= 4;
 }
 
+// Check if the settings have been configured.
+function check_if_configured($page, $calledFrom) {
+	global $lastChanged, $status;
+
+	// The conf page calls us if needed.
+	if ($calledFrom === "main" && $page === "allsky_conf")
+		return;
+
+	if ($lastChanged === null) {
+		// The settings aren't configured - probably right after an installation.
+		if ($page === "allsky_conf")
+			$m = "";
+		else
+			$m = "<br>Go to the 'Allsky Settings' page.";
+		$status->addMessage("You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button below.$m", 'danger', false);
+		echo "<div class='notConfigured'>";
+			$status->showMessages();
+		echo "</div>";
+	}
+}
 /**
 *
 * We need to make sure we're only trying to display and delete image directories, not ones like /etc.
@@ -842,7 +863,6 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 		// usually because the file isn't grouped to the web server group.
 		// Set the permissions and try again.
 
-		// shell_exec() doesn't return anything unless there is an error.
 		$err = str_replace("\n", "", shell_exec("x=\$(sudo chgrp " . WEBSERVER_GROUP . " '$file' 2>&1 && sudo chmod g+w '$file') || echo \${x}"));
 		if ($err != "") {
 			return "Unable to update settings: $err";
@@ -897,7 +917,9 @@ function getVariableOrDefault($a, $v, $d) {
 		if (gettype($value) === "boolean" && $value == "") return 0;
 		return $value;
 	} else if (gettype($d) === "boolean" && $d == "") {
-		return 0;;
+		return 0;
+	} else if (gettype($d) === "null") {
+		return null;
 	}
 
 	return($d);

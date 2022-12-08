@@ -481,6 +481,14 @@ select {
 .dark .thumbBorder { border: 1px solid gray; }
 .left { float: left; }
 
+.notConfigured {
+	border: 3px dashed red;
+	padding: 15px;
+	font-weight: bold;
+	font-size: 150%;
+	margin: 10px 0 0 0;
+	text-align: center;
+}
 .system-message {
 	border: 3px solid red;
 	padding: 5px;

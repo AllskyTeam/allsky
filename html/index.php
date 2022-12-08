@@ -14,6 +14,9 @@
  * @link       https://github.com/thomasjacquin/allsky-portal
  */
 
+// Globals
+$lastChangedName = "lastChanged";	// json setting name
+
 // functions.php sets a bunch of constants and variables.
 // It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
@@ -272,12 +275,14 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 			<div class="col-lg-12">
 				<?php
 				$status = new StatusMessages();
+
+				// Check if the settings are configured - if not, display a message.
+				check_if_configured($page, "main");
+
 				if (isset($_GET['clear'])) {
 					exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
 					if ($retcode === 0) {
 						// Reload the page, but without 'clear' so we don't get into a loop.
-						echo "<script>console.log('href=' + document.location.href);</script>";
-						echo "<script>console.log('updated href=' + document.location.href.replace('&clear=true', ''));</script>";
 						echo "<script>document.location.href=document.location.href.replace('&clear=true', '');</script>";
 						echo "<p>Refreshing the window</p>";
 						exit;

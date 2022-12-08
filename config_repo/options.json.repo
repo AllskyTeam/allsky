@@ -569,7 +569,6 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
-"nullOK" : 0,
 "advanced" : 1
 },
 {
@@ -625,7 +624,6 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
-"nullOK" : 0,
 "advanced" : 0
 },
 {
@@ -636,7 +634,6 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
-"nullOK" : 0,
 "advanced" : 0
 },
 {
@@ -674,7 +671,6 @@
 "label" : "Locale",
 "type" : "text",
 "display" : 1,
-"nullOK" : 0,
 "advanced" : 0
 },
 {
@@ -684,7 +680,6 @@
 "label" : "Histogram Box",
 "type" : "text",
 "display" : "histogrambox_display",
-"nullOK" : 0,
 "advanced" : 1
 },
 {
@@ -766,7 +761,6 @@
 "label" : "Time Format",
 "type" : "text",
 "display" : 1,
-"nullOK" : 0,
 "advanced" : 0
 },
 {
@@ -947,7 +941,6 @@
 "label" : "Font Color",
 "type" : "text",
 "display" : 1,
-"nullOK" : 0,
 "advanced" : 0
 },
 {
@@ -957,7 +950,6 @@
 "label" : "Small Font Color",
 "type" : "text",
 "display" : 1,
-"nullOK" : 0,
 "advanced" : 0
 },
 {

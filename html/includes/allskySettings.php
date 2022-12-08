@@ -4,6 +4,8 @@ include_once( 'includes/status_messages.php' );
 function DisplayAllskyConfig(){
 	$cameraTypeName = "cameraType";		// json setting name
 	$cameraModelName = "cameraModel";	// json setting name
+	global $lastChangedName;			// json setting name
+	global $lastChanged;
 
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
@@ -11,6 +13,7 @@ function DisplayAllskyConfig(){
 	$options_str = file_get_contents($options_file, true);
 	$options_array = json_decode($options_str, true);
 
+	global $page;
 	global $status;
 	$status = new StatusMessages();
 
@@ -21,9 +24,19 @@ function DisplayAllskyConfig(){
 		// camera's settings file, but using values from the OLD file.
 		if (CSRFValidate()) {
 			$settings = array();
+			$optional_array = array();
 			$changes = "";
 			$somethingChanged = false;
+			$numErrors = 0;
 			$newCameraType = "";
+			$ok = true;
+			$msg = "";
+
+			// Keep track of optional settings
+			foreach ($options_array as $option){
+				$n = $option['name'];
+				$optional_array[$n] = getVariableOrDefault($option, 'optional', false);
+			}
 
 	 		foreach ($_POST as $key => $value){
 				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart"]))
@@ -33,12 +46,18 @@ function DisplayAllskyConfig(){
 				// Because we are passing the changes enclosed in single quotes below,
 				// we need to escape the single quotes, but I never figured out how to do that,
 				// so convert them to HTML codes instead.
-// TODO: Should pass hidden entry so "save" routine knows if empty entries are ok.
-// For settings that have a nullOK field, pass it.
-// Numbers would pass nullOK = 0.
-// All others would have nullOK = 1.
 				$isOLD = substr($key, 0, 4) === "OLD_";
 				if (! $isOLD) {
+					// Check for empty non-optional settings.
+					foreach ($options_array as $option){
+						if ($option['name'] === $key) {
+							if ($value == "" && ! $optional_array[$key]) {
+								$numErrors++;
+								$ok = false;
+							}
+						}
+					}
+
 					// Add the key/value pair to the array so we can see if it changed.
 					$settings[$key] = str_replace("'", "&#x27", $value);
 
@@ -51,12 +70,15 @@ function DisplayAllskyConfig(){
 							$newCameraType = $newValue;
 						else
 							$somethingChanged = true;	// want to know about other changes
-						// echo "<br>$key: old [$oldValue] !== new [$newValue], originalName=$originalName";
+
 						$checkchanges = false;
 						foreach ($options_array as $option){
 							if ($option['name'] === $originalName) {
-								$checkchanges = getVariableOrDefault($option, 'checkchanges', false);
-								$label = getVariableOrDefault($option, 'label', "");
+								$optional = $optional_array[$originalName];
+								if ($newValue !== "" || $optional) {
+									$checkchanges = getVariableOrDefault($option, 'checkchanges', false);
+									$label = getVariableOrDefault($option, 'label', "");
+								}
 								break;
 							}
 						}
@@ -69,32 +91,36 @@ function DisplayAllskyConfig(){
 // TODO: should we update the settings file first, or run makeChanges.sh ?
 // It's probably more likely makeChange.sh would fail than updating the settings file,
 // so it should probably go first.
-			$msg = "";
-			$ok = true;
-			if ($somethingChanged) {
-				if ($newCameraType !== "") {
-					$msg = "If you change <b>Camera Type</b> you cannot change anything else.  No changes made.";
-					$ok = false;
-				} else {
-					$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
-					// updateFile() only returns error messages.
-					$msg = updateFile($settings_file, $content, "settings", true);
-					if ($msg === "")
-						$msg = "Settings saved";
-					else
+			if ($ok) {
+				if ($somethingChanged || $lastChanged === null) {
+					if ($newCameraType !== "") {
+						$msg = "If you change <b>Camera Type</b> you cannot change anything else.  No changes made.";
 						$ok = false;
+					} else {
+						// Keep track of the last time the file changed.
+						// If we end up not updating the file this will be ignored.
+						$lastChanged = date('Y-m-d H:i:s');
+						$settings[$lastChangedName] = $lastChanged;
+						$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+						// updateFile() only returns error messages.
+						$msg = updateFile($settings_file, $content, "settings", true);
+						if ($msg === "")
+							$msg = "Settings saved";
+						else
+							$ok = false;
+					}
+				} else if ($newCameraType !== "") {
+					$msg = "<b>Camera Type</b> changed to <b>$newCameraType</b>";
+				} else {
+					$msg = "No settings changed (file not updated)";
 				}
-			} else if ($newCameraType !== "") {
-				$msg = "<b>Camera Type</b> changed to <b>$newCameraType</b>";
-			} else {
-				$msg = "No settings changed (file not updated)";
 			}
 
-			if ($ok) {
-				// 'restart' is a checkbox: if check, it returns 'on', otherwise nothing.
-				$doingRestart = getVariableOrDefault($_POST, 'restart', false);
-				if ($doingRestart === "on") $doingRestart = true;
+			// 'restart' is a checkbox: if check, it returns 'on', otherwise nothing.
+			$doingRestart = getVariableOrDefault($_POST, 'restart', false);
+			if ($doingRestart === "on") $doingRestart = true;
 
+			if ($ok) {
 				if ($changes !== "") {
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
@@ -114,17 +140,22 @@ function DisplayAllskyConfig(){
 					// runCommand displays $msg.
 					runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
 				} else {
-					$msg .= " but Allsky NOT restarted.";
+					$msg .= " and Allsky NOT restarted.";
 					$status->addMessage($msg, 'info');
 				}
 
 				// Want this as a separate message after the one above.
 				if ($newCameraType !== "") {
-					$msg = "Click on the <b>Allsky Settings</b> link on the left to fully refresh this window.";
+					$msg = "Click on the <b>Allsky Settings</b> link to fully refresh this window.";
 					$status->addMessage($msg, 'info');
 				}
 
 			} else {	// not $ok
+				if ($doingRestart)
+					$msg = ", and Allsky NOT restarted.";
+				if ($numErrors > 0) {
+					$msg = "Settings NOT saved due to $numErrors errors$msg";
+				}
 				$status->addMessage($msg, 'danger');
 			}
 		} else {
@@ -152,11 +183,14 @@ function DisplayAllskyConfig(){
 	}
 
 	// Determine if the advanced settings should always be shown.
-	$camera_settings_str = file_get_contents($settings_file, true);
-	$camera_settings_array = json_decode($camera_settings_str, true);
-	$cameraType = getVariableOrDefault($camera_settings_array, $cameraTypeName, "");
-	$cameraModel = getVariableOrDefault($camera_settings_array, $cameraModelName, "");
-	$initial_display = $camera_settings_array['alwaysshowadvanced'] == 1 ? "table-row" : "none";
+	$settings_str = file_get_contents($settings_file, true);
+	$settings_array = json_decode($settings_str, true);
+	$cameraType = getVariableOrDefault($settings_array, $cameraTypeName, "");
+	$cameraModel = getVariableOrDefault($settings_array, $cameraModelName, "");
+	$initial_display = $settings_array['alwaysshowadvanced'] == 1 ? "table-row" : "none";
+
+	check_if_configured($page, "settings");
+
 ?>
 <script language="javascript">
 function toggle_advanced()
@@ -236,16 +270,17 @@ function toggle_advanced()
 				if ($type == "header") {
 					$value = "";
 				} else {
-					$value = getVariableOrDefault($camera_settings_array, $name, $default);
-					$nullOK = getVariableOrDefault($option, 'nullOK', true);
-					$nullOKbg = "";
-					$nullOKmsg = "";
-					// Numbers can never be mising; certain text can't either.
-					if ($value === "" && ($nullOK === 0 || $type == "number")) {
+					$value = getVariableOrDefault($settings_array, $name, $default);
+					$optional = getVariableOrDefault($option, 'optional', false);
+					if ($value === "" && ! $optional) {
 						$numMissing++;
-						$nullOKbg = "background-color: red";
-						$nullOKmsg = "<span style='color: red'>This field cannot be empty.</span><br>";
+						$optional_bg = "background-color: red";
+						$optional_msg = "<span style='color: red'>This field cannot be empty.</span><br>";
+					} else {
+						$optional_bg = "";
+						$optional_msg = "";
 					}
+
 					// Allow single quotes in values (for string values).
 					// &apos; isn't supported by all browsers so use &#x27.
 					$value = str_replace("'", "&#x27;", $value);
@@ -320,11 +355,11 @@ function toggle_advanced()
 						}
 						echo "<input $readonly class='form-control boxShadow settingInput' type='$t'" .
 							" name='$name' value='$value'" .
-							" style='padding: 0px 3px 0px 0px; text-align: right; $nullOKbg'>";
+							" style='padding: 0px 3px 0px 0px; text-align: right; $optional_bg'>";
 					} else if ($type == "widetext"){
 						echo "<input class='form-control boxShadow' type='text'" .
 							" name='$name' value='$value'" .
-						   	" style='padding: 6px 5px; $nullOKbg'>";
+						   	" style='padding: 6px 5px; $optional_bg'>";
 					} else if ($type == "select"){
 						echo "<select class='form-control boxShadow settingInput' name='$name' title='Select an item'" .
 						   	" style='text-align: right; padding: 0px 3px 0px 0px;'>";
@@ -358,11 +393,12 @@ function toggle_advanced()
 					echo "</td>";
 					if ($type == "widetext")
 						echo "</tr><tr class='rowSeparator $advClass' style='$advStyle'><td></td>";
-					echo "<td style='padding-left: 10px;'>$nullOKmsg$description</td>";
+					echo "<td style='padding-left: 10px;'>$optional_msg$description</td>";
 				}
 				echo "</tr>";
 			 }
 		echo "</table>";
+
 		if ($numMissing > 0) {
 			$msg = "ERROR: $numMissing required field" . ($numMissing === 1 ? " is" : "s are");
 			$msg .= " missing - see highlighted fields below.";

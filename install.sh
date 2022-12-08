@@ -814,6 +814,10 @@ restore_prior_files() {
 			# so copy it instead of moving it to not break the link.
 			cp "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
 			RESTORED_PRIOR_SETTINGS_FILE=true
+			# TODO: check if this is an older versions of the file,
+			# and if so, reset "lastChanged" to null.
+			# BUT, how do we determine if it's an old file,
+			# given that it's initially created at installation time?
 		fi
 		# else, what the heck?  Their prior version is "new" but they don't have a settings file?
 	else
@@ -826,13 +830,15 @@ restore_prior_files() {
 		SETTINGS="${OLD_RASPAP_DIR}/settings_${CT}.json"
 		if [[ -f ${SETTINGS} ]]; then
 			SETTINGS_MSG="\n\nYou also need to transfer your old settings to the WebUI.\nUse ${SETTINGS} as a guide.\n"
+
 			# Restore the latitude and longitude so Allsky can start after reboot.
 			LAT="$(settings .latitude "${SETTINGS}")"
 			LONG="$(settings .longitude "${SETTINGS}")"
-			"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} \
-				"config.latitude" "Latitude" "${LAT}" \
-				"config.longitude" "Longitude" "${LONG}"
+			ANGLE="$(settings .angle "${SETTINGS}")"
+			jq ".latitude=\"${LAT}\" | .longitude=\"${LONG}\" | .angle=\"${ANGLE}\"" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
 			display_msg --log progress "Prior latitude and longitude saved."
+			# It would be nice to transfer other settings, but a lot of setting names changed
+			# and it's not worth trying to look for all names.
 		fi
 
 		# If we ever automate migrating settings, this next statement should be deleted.
@@ -1018,6 +1024,13 @@ check_if_buster() {
 display_image() {
 	local IMAGE_NAME="${1}"
 
+	I="${ALLSKY_TMP}/image.jpg"
+
+	if [[ -z ${IMAGE_NAME} ]]; then		# No IMAGE_NAME means remove the image
+		rm -f "${I}"
+		return
+	fi
+
 	if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		##### Add a message the user will see in the WebUI.
 		cat "${POST_INSTALLATION_ACTIONS}" > "${ALLSKY_LOG}"
@@ -1027,7 +1040,7 @@ display_image() {
 
 	# ${ALLSKY_TMP} may not exist yet, i.e., at the beginning of installation.
 	mkdir -p "${ALLSKY_TMP}"
-	cp "${ALLSKY_NOTIFICATION_IMAGES}/${IMAGE_NAME}.jpg" "${ALLSKY_TMP}/image.jpg" 2> /dev/null
+	cp "${ALLSKY_NOTIFICATION_IMAGES}/${IMAGE_NAME}.jpg" "${I}" 2> /dev/null
 }
 
 # Installation failed.
@@ -1189,12 +1202,18 @@ check_old_WebUI_location							# prompt if prior old-style WebUI
 ######## All done
 
 
-if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "false" ]]; then
+if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" ]]; then
+	# If we restored a prior settings file, no configuration is needed
+	# so remove any existing file.
+	display_image ""
+else
 	MSG="NOTE: Default settings were created for your camera."
 	MSG="${MSG}\n\nHowever some entries may not have been set, like latitude, so you MUST"
 	MSG="${MSG}\ngo to the 'Allsky Settings' page in the WebUI after rebooting to make updates."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+
+	display_image "ConfigurationNeeded"
 fi
 
 if [[ -n ${PRIOR_ALLSKY} ]]; then
@@ -1203,9 +1222,6 @@ if [[ -n ${PRIOR_ALLSKY} ]]; then
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 fi
-
-##### Display an image in the WebUI
-display_image "ConfigurationNeeded"
 
 ask_reboot			# prompts
 

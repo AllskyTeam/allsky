@@ -272,6 +272,18 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 			<div class="col-lg-12">
 				<?php
 				$status = new StatusMessages();
+				if (! $configured) {
+					// The settings aren't configured - probably right after an installation.
+					if ($page === "allsky_conf")
+						$m = "";
+					else
+						$m = "<br>Go to the 'Allsky Settings' page.";
+					$status->addMessage("You must configure Allsky before using it.$m", 'danger', false);
+					echo "<div class='notConfigured'>";
+						$status->showMessages();
+					echo "</div>";
+				}
+
 				if (isset($_GET['clear'])) {
 					exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
 					if ($retcode === 0) {

@@ -37,7 +37,8 @@ OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 FORCE_CREATING_SETTINGS_FILE=false		# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE=false
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
-NEW_HOST_NAME='allsky'					# Suggested new host name
+SUGGESTED_NEW_HOST_NAME='allsky'		# Suggested new host name
+NEW_HOST_NAME=''						# User-specified host name
 
 # Repo files
 REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
@@ -330,43 +331,81 @@ check_swap() {
 }
 
 
+# Check if ${ALLSKY_TMP} exists, and if it does,
+# save any *.jpg files (which we probably created), then remove everything else,
+# then mount it.
+check_and_mount_tmp() {
+	TMP_DIR="/tmp/IMAGES"
+
+	if [[ -d "${ALLSKY_TMP}" ]]; then
+		IMAGES="$(find "${ALLSKY_TMP}" -name '*.jpg')"
+		if [[ -n ${IMAGES} ]]; then
+			mkdir "${TMP_DIR}"
+			# Need to allow for files with spaces in their names.
+			# TODO: there has to be a better way.
+			echo "${IMAGES}" | \
+				while read image
+				do
+					mv "${image}" "${TMP_DIR}"
+				done
+		fi
+		rm -f "${ALLSKY_TMP}"/*
+	else
+		mkdir "${ALLSKY_TMP}"
+	fi
+
+	# Now mount and restore any images that were there before
+	sudo mount -a
+	if [[ -d ${TMP_DIR} ]]; then
+		mv "${TMP_DIR}"/* "${ALLSKY_TMP}"
+		rmdir "${TMP_DIR}"
+	fi
+}
+
 # Check if prior ${ALLSKY_TMP} was a memory filesystem.
 # If not, offer to make it one.
-check_memory_filesystem() {
+check_tmp() {
+	INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
+
 	# Check if currently a memory filesystem.
-	if grep --quiet "^tmpfs ${ALLSKY_TMP} tmpfs" /etc/fstab; then
+	if grep --quiet "^${INITIAL_FSTAB_STRING}" /etc/fstab; then
 		display_msg --log progress "${ALLSKY_TMP} is currently in memory; no change needed."
-		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently in the PRIOR Allsky.
-		# Try to unmount it, but that often gives an error that it's busy,
+
+		# If there's a prior Allsky version and it's tmp directory is mounted,
+		# try to unmount it, but that often gives an error that it's busy,
 		# which isn't really a problem since it'll be unmounted at the reboot.
-		sudo umount -f "${PRIOR_INSTALL_DIR}/tmp" 2> /dev/null
+		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently in the PRIOR Allsky.
+		D="${PRIOR_INSTALL_DIR}/tmp"
+		if [[ -d "${D}" ]] && mount | grep --silent "${D}" ; then
+			# The Samba daemon is one known cause of "target busy".
+			sudo umount -f "${D}" 2> /dev/null ||
+				(
+					sudo systemctl restart smbd 2> /dev/null
+					sudo umount -f "${D}" 2> /dev/null
+				)
+		fi
 
-		# Make sure the new directory exists and is mounted.
-		mkdir -p "${ALLSKY_TMP}"
-		sudo mount -a
+		# If the new Allsky's ${ALLSKY_TMP} is already mounted, don't do anything.
+		# This would be the case during an upgrade.
+		if mount | grep --silent "${ALLSKY_TMP}" ; then
+			return 0
+		fi
 
+		check_and_mount_tmp		# works on new ${ALLSKY_TMP}
 		return 0
 	fi
 
-	sleep 2		# time to read prior messages
-	SIZE=50
+	SIZE=75		# MB - should be enough
 	MSG="Making ${ALLSKY_TMP} reside in memory can drastically decrease the amount of writes to the SD card, increasing its life."
 	MSG="${MSG}\n\nDo you want to make it reside in memory?"
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then
-		echo "tmpfs ${ALLSKY_TMP} tmpfs size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}" | sudo tee -a /etc/fstab > /dev/null
-		if [[ -d ${ALLSKY_TMP} ]]; then
-			rm -f "${ALLSKY_TMP}"/*
-		else
-			mkdir "${ALLSKY_TMP}"
-		fi
-		sudo mount -a
+		echo "${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}" | sudo tee -a /etc/fstab > /dev/null
+		check_and_mount_tmp
 		display_msg --log progress "${ALLSKY_TMP} is now in memory."
 	else
 		display_msg --log info "${ALLSKY_TMP} will remain on disk."
 		mkdir -p "${ALLSKY_TMP}"
-		chmod 775 "${ALLSKY_TMP}"
-		sudo chown ${ALLSKY_OWNER}:${WEBSERVER_GROUP} "${ALLSKY_TMP}"
 	fi
 }
 
@@ -393,7 +432,7 @@ check_installation_success() {
 
 # Install the web server.
 install_webserver() {
-	display_msg progress "Installing the lighttpd web server."
+	display_msg progress "Installing the web server."
 	sudo systemctl stop hostapd 2> /dev/null
 	sudo systemctl stop lighttpd 2> /dev/null
 	TMP="${INSTALL_LOGS_DIR}/lighttpd.install.log"
@@ -420,15 +459,20 @@ install_webserver() {
 # Prompt for a new hostname if needed,
 # and update all the files that contain the hostname.
 prompt_for_hostname() {
-	# If the Pi is already called ${NEW_HOST_NAME},
+	# If the Pi is already called ${SUGGESTED_NEW_HOST_NAME},
 	# then the user already updated the name, so don't prompt again.
 
 	CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
-	[[ ${CURRENT_HOSTNAME} == "${NEW_HOST_NAME}" ]] && return
+	[[ ${CURRENT_HOSTNAME} == "${SUGGESTED_NEW_HOST_NAME}" ]] && return
 
 	MSG="Please enter a hostname for your Pi."
+	MSG="${MSG}\n\nIf you have more than one Pi on your network they must all have unique names."
 	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 10 ${WT_WIDTH} \
-		"${NEW_HOST_NAME}" 3>&1 1>&2 2>&3)
+		"${SUGGESTED_NEW_HOST_NAME}" 3>&1 1>&2 2>&3)
+	if [ $? -ne 0 ]; then
+		display_msg warning "You must specify a host name.  Please re-run the installation and select one continue."
+		exit 2
+	fi
 
 	if [[ ${CURRENT_HOSTNAME} != "${NEW_HOST_NAME}" ]]; then
 		echo "${NEW_HOST_NAME}" | sudo tee /etc/hostname > /dev/null
@@ -439,8 +483,8 @@ prompt_for_hostname() {
 	FINAL_AVI_FILE="/etc/avahi/avahi-daemon.conf"
 	[[ -f ${FINAL_AVI_FILE} ]] && grep -i --quiet "host-name=${NEW_HOST_NAME}" "${FINAL_AVI_FILE}"
 	if [ $? -ne 0 ]; then
-		# New NEW_HOST_NAME not found in file, or file doesn't exist,
-		# so need to configure file.
+		# New NEW_HOST_NAME is not found in the file, or the file doesn't exist,
+		# so need to configure it.
 		display_msg progress "Configuring avahi-daemon."
 
 		sed "s/XX_HOST_NAME_XX/${NEW_HOST_NAME}/g" "${REPO_AVI_FILE}" > /tmp/x
@@ -483,6 +527,9 @@ set_permissions() {
 	# We don't know what permissions may have been on the old website, so use "sudo".
 	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
+
+	chmod 775 "${ALLSKY_TMP}"
+	sudo chgrp ${WEBSERVER_GROUP} "${ALLSKY_TMP}"
 
 	# This is actually an Allsky Website file, but in case we restored the old website,
 	# set its permissions.
@@ -910,6 +957,8 @@ install_overlay()
 # TODO: or > then 2>&1 ???
 		check_installation_success $? "PHP dependencies failed" "${TMP}" ${DEBUG} || exit_with_image 1
 
+		# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
+		# This also allows us to display progress messages.
 		if [[ ${OS} == "buster" ]]; then
 			M=" for Buster"
 			R="-buster"
@@ -917,11 +966,9 @@ install_overlay()
 			M=""
 			R=""
 		fi
-		display_msg progress "Installing Python dependencies${M}."  "  This may take a LONG time if the packages are not already installed."
+		MSG2="  This may take a LONG time if the packages are not already installed."
+		display_msg progress "Installing Python dependencies${M}."  "${MSG2}"
 		TMP="${INSTALL_LOGS_DIR}/Python_dependencies"
-		# Doing this all at once can run /tmp out of space, so do one at a time.
-		# This also allows us to display progress messages.
-
 		PIP3_BUILD="${ALLSKY_HOME}/pip3.build"
 		mkdir -p "${PIP3_BUILD}"
 		COUNT=0
@@ -967,40 +1014,26 @@ check_if_buster() {
 	fi
 }
 
-# Create and image the user will see when they go to the WebUI.
-create_image() {
-	local IMAGE_TYPE="${1}"
+# Display an image the user will see when they go to the WebUI.
+display_image() {
+	local IMAGE_NAME="${1}"
 
-	COLOR="yellow"
-	if [[ ${IMAGE_TYPE} == "installing" ]]; then
-		MESSAGE_="***\nAllsky installation\nin progress.\nDo NOT\nchange anything\n***"
-
-	elif [[ ${IMAGE_TYPE} == "configuration needed" ]]; then
-		MESSAGE_="***\nUse the\n'Allsky Settings'\nlink in the WebUI\nto configure Allsky\n***"
-
+	if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		##### Add a message the user will see in the WebUI.
-		if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
-			cat "${POST_INSTALLATION_ACTIONS}" > "${ALLSKY_LOG}"
-			WEBUI_MESSAGE="Actions needed.  See ${ALLSKY_LOG}."
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "Warning" "${WEBUI_MESSAGE}"
-		fi
-
-	elif [[ ${IMAGE_TYPE} == "installation failed" ]]; then
-		MESSAGE_="***\nInstallation failed\n***"
-		COLOR="red"
-
-	else
-		MESSAGE_="***\nUnknown message requested\n***"
+		cat "${POST_INSTALLATION_ACTIONS}" > "${ALLSKY_LOG}"
+		WEBUI_MESSAGE="Actions needed.  See ${ALLSKY_LOG}."
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "Warning" "${WEBUI_MESSAGE}"
 	fi
-	"${ALLSKY_SCRIPTS}//generate_notification_images.sh" --directory "${ALLSKY_TMP}" "image" \
-		"${COLOR}" "" 85 "" "" "" 10 "${COLOR}" "jpg" "" \
-		"${MESSAGE_}" > /dev/null
+
+	# ${ALLSKY_TMP} may not exist yet, i.e., at the beginning of installation.
+	mkdir -p "${ALLSKY_TMP}"
+	cp "${ALLSKY_NOTIFICATION_IMAGES}/${IMAGE_NAME}.jpg" "${ALLSKY_TMP}/image.jpg" 2> /dev/null
 }
 
 # Installation failed.
 # Replace the "installing" messaged with a "failed" one.
 exit_with_image() {
-	create_image "installation failed"
+	display_image "InstallationFailed"
 	exit ${1}
 }
 
@@ -1066,9 +1099,6 @@ stop_allsky
 ##### Handle updates
 [[ ${UPDATE} == "true" ]] && do_update		# does not return
 
-##### Create the "installation in progress" image.
-create_image "installing"
-
 ##### See if there's an old WebUI
 does_old_WebUI_locaion_exist
 
@@ -1083,22 +1113,25 @@ if [[ ${FUNCTION} != "" ]]; then
 	exit $?
 fi
 
+##### Display an image in the WebUI
+display_image "InstallationInProgress"
+
 # Do as much of the prompting up front, then do the long-running work, then prompt at the end.
 
 ##### Determine if there's a prior version
-check_if_prior_Allsky								# may prompt
+check_if_prior_Allsky
 
 ##### Determine the camera type
-select_camera_type									# may prompt
+select_camera_type
 
 ##### Get the new host name
-prompt_for_hostname									# prompts
+prompt_for_hostname
 
 ##### Check for sufficient swap space
-check_swap											# may prompt
+check_swap
 
 ##### Optionally make ${ALLSKY_TMP} a memory filesystem
-check_memory_filesystem								# may prompt
+check_tmp
 
 
 MSG="\nThe following steps can take about AN HOUR depending on the speed of your Pi"
@@ -1109,16 +1142,16 @@ whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
 display_msg info "${MSG}"
 
 
+##### Install web server
+# This must come BEFORE save_camera_capabilities, since it installs php.
+install_webserver
+
 ##### Install dependencies, then compile and install Allsky software
 install_dependencies_etc || exit_with_image 1
 
 ##### Update config.sh
 # This must come BEFORE save_camera_capabilities, since it uses the camera type.
 update_config_sh
-
-##### Install web server
-# This must come BEFORE save_camera_capabilities, since it installs php.
-install_webserver
 
 ##### Create the file that defines the WebUI variables.
 create_webui_defines
@@ -1171,8 +1204,8 @@ if [[ -n ${PRIOR_ALLSKY} ]]; then
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 fi
 
-##### Create the "needs configuration" image.
-create_image "configuration needed"
+##### Display an image in the WebUI
+display_image "ConfigurationNeeded"
 
 ask_reboot			# prompts
 

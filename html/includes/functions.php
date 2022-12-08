@@ -24,10 +24,10 @@ if ((include $defs) == false) {
 $status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
 $temptype = null;
-$lastChange = null;
+$lastChanged = null;
 function initialize_variables() {
 	global $image_name, $delay, $daydelay, $nightdelay;
-	global $darkframe, $useLogin, $temptype, $lastChange;
+	global $darkframe, $useLogin, $temptype, $lastChanged;
 
 	// The Camera Type should be set during the installation, so this "should" never fail...
 	$cam_type = getCameraType();
@@ -57,8 +57,7 @@ function initialize_variables() {
 	$darkframe = $settings_array['takeDarkFrames'];
 	$useLogin = getVariableOrDefault($settings_array, 'useLogin', true);
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
-	$lastChange = getVariableOrDefault($settings_array, 'lastChange', null);
-
+	$lastChanged = getVariableOrDefault($settings_array, 'lastChanged', null);
 
 	////////////////// Determine delay between refreshes of the image.
 	$consistentDelays = $settings_array["consistentDelays"] == 1 ? true : false;

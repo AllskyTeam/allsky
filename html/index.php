@@ -272,7 +272,7 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 			<div class="col-lg-12">
 				<?php
 				$status = new StatusMessages();
-				if ($lastChange === null) {
+				if ($lastChanged === null) {
 					// The settings aren't configured - probably right after an installation.
 					if ($page === "allsky_conf")
 						$m = "";

@@ -13,6 +13,10 @@ from math import sqrt
 import paho.mqtt.client as paho
 from paho import mqtt
 
+import locale
+
+locale.setlocale(locale.LC_ALL, '')
+
 metaData = {
     "name": "Clear Sky Alarm",
     "description": "Clear Sky Alarm",
@@ -192,20 +196,20 @@ def onPublish(client, userdata, mid, properties=None):
 def clearsky(params, event):
     #ONLY AT NIGHT !
 
-    detectionThreshold = float(params["detectionThreshold"])
-    distanceThreshold = int(params["distanceThreshold"])
+    detectionThreshold = s.float(params["detectionThreshold"])
+    distanceThreshold = s.int(params["distanceThreshold"])
     mask = params["mask"]
     annotate = params["annotate"]
-    starTemplate1Size = int(params["template1"])
+    starTemplate1Size = s.int(params["template1"])
     debug = params["debug"]
     debugimage = params["debugimage"]
-    clearvalue = int(params["clearvalue"])
+    clearvalue = s.int(params["clearvalue"])
     roi = params["roi"].replace(" ", "")
-    fallback = int(params["roifallback"])
+    fallback = s.int(params["roifallback"])
 
     mqttenable = params["mqttenable"]
     mqttbroker = params["mqttbroker"]
-    mqttport = int(params["mqttport"])
+    mqttport = s.int(params["mqttport"])
     mqttusername = params["mqttusername"]
     mqttpassword = params["mqttpassword"]        
     mqtttopic = params["mqtttopic"]
@@ -215,7 +219,7 @@ def clearsky(params, event):
     binning = s.getEnvironmentVariable("AS_BIN")
     if binning is None:
         binning = 1
-    binning = int(binning)
+    binning = s.int(binning)
 
     if debugimage != "":
         image = cv2.imread(debugimage)
@@ -244,20 +248,20 @@ def clearsky(params, event):
     imageHeight, imageWidth = grayImage.shape[:2]
     try:
         roiList = roi.split(",")
-        x1 = int(int(roiList[0]) / binning)
-        y1 = int(int(roiList[1]) / binning)
-        x2 = int(int(roiList[2]) / binning)
-        y2 = int(int(roiList[3]) / binning)
+        x1 = s.int(s.int(roiList[0]) / binning)
+        y1 = s.int(s.int(roiList[1]) / binning)
+        x2 = s.int(s.int(roiList[2]) / binning)
+        y2 = s.int(s.int(roiList[3]) / binning)
     except:
         if len(roi) > 0:
             s.log(0, "ERROR: ROI is invalid, falling back to {0}% of image".format(fallback))
         else:
             s.log(1, "INFO: ROI not set, falling back to {0}% of image".format(fallback))
         fallbackAdj = (100 / fallback)
-        x1 = int((imageWidth / 2) - (imageWidth / fallbackAdj))
-        y1 = int((imageHeight / 2) - (imageHeight / fallbackAdj))
-        x2 = int((imageWidth / 2) + (imageWidth / fallbackAdj))
-        y2 = int((imageHeight / 2) + (imageHeight / fallbackAdj))
+        x1 = s.int((imageWidth / 2) - (imageWidth / fallbackAdj))
+        y1 = s.int((imageHeight / 2) - (imageHeight / fallbackAdj))
+        x2 = s.int((imageWidth / 2) + (imageWidth / fallbackAdj))
+        y2 = s.int((imageHeight / 2) + (imageHeight / fallbackAdj))
 
     croppedImage = grayImage[y1:y2, x1:x2] 
 
@@ -268,11 +272,12 @@ def clearsky(params, event):
     if (starTemplateSize % 2) != 0:
         starTemplateSize += 1
 
-    starTemplate = np.zeros([starTemplateSize, starTemplateSize], dtype=np.uint8)
+    startTemplateAdj = 8
+    starTemplate = np.zeros([starTemplateSize+startTemplateAdj, starTemplateSize+startTemplateAdj], dtype=np.uint8)
     cv2.circle(
         img=starTemplate,
-        center=(int(starTemplateSize/2), int(starTemplateSize/2)),
-        radius=int(starTemplate1Size/2),
+        center=(int((starTemplateSize + startTemplateAdj)/2), int((starTemplateSize + startTemplateAdj)/2)),
+        radius=int(starTemplateSize/2),
         color=(255, 255, 255),
         thickness=cv2.FILLED,
     )
@@ -306,8 +311,8 @@ def clearsky(params, event):
             else:
                 starList.append(pt)
 
-        wOffset = int(templateWidth/2)
-        hOffset = int(templateHeight/2)
+        wOffset = s.int(templateWidth/2)
+        hOffset = s.int(templateHeight/2)
 
         if annotate:
             for star in starList:

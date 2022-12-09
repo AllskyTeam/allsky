@@ -180,7 +180,7 @@ class ALLSKYOVERLAY:
     def _readData(self, dataFilename, defaultExpiry):
         result = False
         fileExtension = pathlib.Path(dataFilename).suffix
-        fileModifiedTime = int(os.path.getmtime(dataFilename))
+        fileModifiedTime = s.int(os.path.getmtime(dataFilename))
         if fileExtension == '.json':
             if s.isFileReadable(dataFilename):
                 with open(dataFilename) as file:
@@ -262,7 +262,7 @@ class ALLSKYOVERLAY:
         _extraField = {
             'name': name,
             'datecreated': fieldDate,
-            'expires': int(expires),
+            'expires': s.int(expires),
             'x': x,
             'y': y,
             'fill': fill,
@@ -365,7 +365,7 @@ class ALLSKYOVERLAY:
                 s.log(4, ', Font Found In Cache')
             else :
                 try:
-                    fontSize = int(fontSize)
+                    fontSize = s.int(fontSize)
                     self._fonts[fontKey] = ImageFont.truetype(fontPath, fontSize)
                     font = self._fonts[fontKey]
                     s.log(4, ', Font loaded from disk')
@@ -426,8 +426,8 @@ class ALLSKYOVERLAY:
         else:
             empty = ''
 
-        fieldX = int(fieldData["x"])
-        fieldY = int(fieldData["y"])
+        fieldX = s.int(fieldData["x"])
+        fieldY = s.int(fieldData["y"])
         if "fill" in fieldData:
             fieldColour = fieldData["fill"]
         else:
@@ -528,7 +528,7 @@ class ALLSKYOVERLAY:
         mask = Image.new('L', (width, height), 0)
 
         # add text to mask
-        opacity = int(opacity*255)
+        opacity = s.int(opacity*255)
         draw = ImageDraw.Draw(mask)
         draw.text(xy, text, opacity, font)
         rotated_mask = mask.rotate(angle)
@@ -565,11 +565,11 @@ class ALLSKYOVERLAY:
             opacity = self._extraData[placeHolder.upper()]['opacity']
 
             if self._extraData[placeHolder.upper()]["expires"] != 0:
-                age = int(time.time()) - self._extraData[placeHolder.upper()]["datecreated"]
+                age = s.int(time.time()) - self._extraData[placeHolder.upper()]["datecreated"]
                 if age > self._extraData[placeHolder.upper()]["expires"]:
-                    fileTime = datetime.fromtimestamp(int(self._extraData[placeHolder.upper()]["datecreated"]))
+                    fileTime = datetime.fromtimestamp(s.int(self._extraData[placeHolder.upper()]["datecreated"]))
                     fileTimeHR = fileTime.strftime("%d.%m.%y %H:%M:%S")
-                    nowTime = datetime.fromtimestamp(int(time.time()))
+                    nowTime = datetime.fromtimestamp(s.int(time.time()))
                     nowTimeHR = nowTime.strftime("%d.%m.%y %H:%M:%S")                    
                     s.log(4, "INFO: data field {0} expired. File time {1}, now {2}. Expiry {3} Seconds. Age {4} Seconds"
                         .format(placeHolder, fileTimeHR, nowTimeHR, self._extraData[placeHolder.upper()]["expires"], age))
@@ -592,7 +592,7 @@ class ALLSKYOVERLAY:
 
             if fieldFound:
                 if envCheck == "AS_EXPOSURE_US":
-                    value = str(int(value) / 1000)
+                    value = str(s.int(value) / 1000)
                 
                 if variableType == 'Date':
                     timeStamp = datetime.fromtimestamp(self._imageDate)
@@ -615,13 +615,13 @@ class ALLSKYOVERLAY:
                         fails we will just return the value for the field.
                         '''                    
                         try:
-                            value = float(value)
+                            value = s.float(value)
                             value = format.format(value)
                         except ValueError:
                             pass
 
                 if variableType == 'Bool':
-                    if int(value) == 0:
+                    if s.int(value) == 0:
                         value = 'No'
                     else:
                         value = 'Yes'
@@ -663,7 +663,7 @@ class ALLSKYOVERLAY:
             if image is not None:
                 if "scale" in imageData:
                     if imageData["scale"] is not None:
-                        scale = float(imageData["scale"])
+                        scale = s.float(imageData["scale"])
                         image = cv2.resize(image, (0, 0), fx=scale, fy=scale)
 
                 if "rotate" in imageData:
@@ -716,7 +716,7 @@ class ALLSKYOVERLAY:
 
     def _rotate_image(self, image, angle):
         image_center = tuple(np.array(image.shape[1::-1]) / 2)
-        rot_mat = cv2.getRotationMatrix2D(image_center, -int(angle), 1.0)
+        rot_mat = cv2.getRotationMatrix2D(image_center, -s.int(angle), 1.0)
         result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
         return result
 
@@ -743,7 +743,7 @@ class ALLSKYOVERLAY:
             if symbol < 0.2 or symbol > 25.8 :  
                 symbol = '1'  # new moon  
             else:  
-                symbol = chr(ord('A')+int(symbol+0.5)-1) 
+                symbol = chr(ord('A')+s.int(symbol+0.5)-1) 
 
             azTemp = str(moon.az).split(":")
             self._moonAzimuth = azTemp[0] + u"\N{DEGREE SIGN}"
@@ -770,7 +770,7 @@ class ALLSKYOVERLAY:
         fileModifiedTime = ''
 
         if os.path.exists(fileName):
-            fileModifiedTime = int(os.path.getmtime(fileName))
+            fileModifiedTime = s.int(os.path.getmtime(fileName))
             m_ti = time.ctime(fileModifiedTime)
             fileDate = time.strptime(m_ti)  
             fileDate = time.strftime('%Y-%m-%d', fileDate)
@@ -847,7 +847,7 @@ class ALLSKYOVERLAY:
     def _convertLatLon(self, input):
         """ Converts the lat and lon from the all sky config to decimal notation i.e. 0.2E becomes -0.2"""
         multiplier = 1 if input[-1] in ['N', 'E'] else -1
-        return multiplier * sum(float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
+        return multiplier * sum(s.float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
 
     def _fetchTleFromCelestrak(self, noradCatId, verify=True):
 
@@ -952,7 +952,7 @@ class ALLSKYOVERLAY:
                 planet = self._eph[planetId]
                 astrometric = home.at(t).observe(planet)
                 alt, az, d = astrometric.apparent().altaz()
-                #print(planetId, alt, az)
+                #prs.int(planetId, alt, az)
                 os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'ALT'] = str(alt)
                 os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'AZ'] = str(az)
 
@@ -996,7 +996,7 @@ class ALLSKYOVERLAY:
         self._timer("Annotation Complete", False)
 
 def overlay(params, event):
-    enabled = int(s.getEnvironmentVariable("AS_eOVERLAY"))
+    enabled = s.int(s.getEnvironmentVariable("AS_eOVERLAY"))
     if enabled == 1:
         debug = params["debug"]
         annotater = ALLSKYOVERLAY(debug)

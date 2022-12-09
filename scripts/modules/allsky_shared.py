@@ -17,6 +17,9 @@ import shutil
 import re
 import sys
 import time
+import locale
+
+locale.setlocale(locale.LC_ALL, '')
 
 ABORT = True
 
@@ -349,6 +352,7 @@ def isFileWriteable(fileName):
         return False            
 
 def isFileReadable(fileName):
+    
     """ Check if a file is readable """
     if os.path.exists(fileName):
         if os.path.isfile(fileName):
@@ -356,4 +360,18 @@ def isFileReadable(fileName):
         else:
             return False 
     else:
-        return False      
+        return False     
+    
+def int(val):
+    if not isinstance(val, str):
+        val = locale.str(val)
+    val = locale.atoi(val)
+    
+    return val
+
+def float(val):
+    if not isinstance(val, str):
+        val = locale.str(val)
+    val = locale.atof(val)
+    
+    return val

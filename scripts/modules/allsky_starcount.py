@@ -122,8 +122,8 @@ def createStarTemplate(starSize, debug):
     starTemplate = np.zeros([starTemplateSize, starTemplateSize], dtype=np.uint8)
     cv2.circle(
         img=starTemplate,
-        center=(int(starTemplateSize/2), int(starTemplateSize/2)),
-        radius=int(starSize/2),
+        center=(s.int(starTemplateSize/2), s.int(starTemplateSize/2)),
+        radius=s.int(starSize/2),
         color=(255, 255, 255),
         thickness=cv2.FILLED,
     )
@@ -150,11 +150,11 @@ def starcount(params, event):
 
     if not rainFlag:
         if skyClear:        
-            detectionThreshold = float(params["detectionThreshold"])
-            distanceThreshold = int(params["distanceThreshold"])
+            detectionThreshold = s.float(params["detectionThreshold"])
+            distanceThreshold = s.int(params["distanceThreshold"])
             mask = params["mask"]
             annotate = params["annotate"]
-            starTemplate1Size = int(params["template1"])
+            starTemplate1Size = s.int(params["template1"])
             debug = params["debug"]
             debugimage = params["debugimage"]
 
@@ -222,8 +222,8 @@ def starcount(params, event):
                     else:
                         starList.append(pt)
 
-                wOffset = int(templateWidth/2)
-                hOffset = int(templateHeight/2)
+                wOffset = s.int(templateWidth/2)
+                hOffset = s.int(templateHeight/2)
 
                 if annotate:
                     for star in starList:

@@ -42,9 +42,9 @@ def writeImage(image, path, quality):
         s.checkAndCreatePath(path)
 
         if fileExtension == ".jpg":
-            cv2.imwrite(path, image, [int(cv2.IMWRITE_JPEG_QUALITY), quality])
+            cv2.imwrite(path, image, [s.int(cv2.IMWRITE_JPEG_QUALITY), quality])
         else:
-            cv2.imwrite(path, image, [int(cv2.IMWRITE_PNG_COMPRESSION), quality]) 
+            cv2.imwrite(path, image, [s.int(cv2.IMWRITE_PNG_COMPRESSION), quality]) 
     except:
         result = False
     
@@ -53,7 +53,7 @@ def writeImage(image, path, quality):
 def saveintermediateimage(params, event):
     quality = s.getSetting("quality")
     if quality is not None:
-        quality = int(quality)
+        quality = s.int(quality)
         path = params["imagefolder"]
         path = s.convertPath(path)
         if path is not None:

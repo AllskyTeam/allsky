@@ -90,7 +90,7 @@ def meteor(params, event):
         if skyClear:
             mask = params["mask"]
             annotate = params["annotate"]    
-            length = int(params["length"])
+            length = s.int(params["length"])
             debug = params["debug"]
 
             maskImage = None

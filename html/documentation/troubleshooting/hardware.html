@@ -50,6 +50,25 @@ After the resize, you should have all your space reporting correctly.
 </details>
 
 
+<h2>Pi keeps rebooting after a few minutes</h2>
+<details><summary></summary>
+<p>
+One user reported his Pi was stuck in a loop where it would continually reboot after a few minutes.
+He had removed power from his Pi while it was still running.
+He fixed the problem by shutting the system down as soon as it came up.
+</p>
+<blockquote>
+If you need to shut down your Pi do not simply unplug the power;
+instead, use the
+<img allsky="true" src="/documentation/img/shutdownPi.png" class="buttonIconLarge" title="Shutdown button" loading="lazy">
+button on the WebUI's <span class="WebUIPage">System</span> page or via the command prompt:
+<pre>
+sudo shutdown -r now
+</pre>
+</blockquote>
+</details>
+
+
 <h2>Pi 3B+ doesn't run the latest AllSky Software</h2>
 <details><summary></summary>
 <p>

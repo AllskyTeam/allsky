@@ -112,12 +112,16 @@ UPLOAD_VIDEO="false"
 # Not needed if the Allsky Website is on your Pi.
 TIMELAPSE_UPLOAD_THUMBNAIL="false"
 
-### Mini timelapse
+###### Mini timelapse
 # A "mini" timelapse is one that only includes the most recent images,
 # is created often, and overwrites the prior mini video.
 # TIMELAPSE_MINI_IMAGES is the number of images you want in the mini timelapse.
 # 0 disables mini timelapses.
 TIMELAPSE_MINI_IMAGES=0
+
+# Should a mini-timelapse be created even if ${TIMELAPSE_MINI_IMAGES} haven't been captured yet?
+TIMELAPSE_MINI_FORCE_CREATION="false"
+
 # After how many images should the mini timelapse be made?
 # If you have a slow Pi or short delays between images,
 # set this to a higher number (i.e., not as often).

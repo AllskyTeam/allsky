@@ -302,25 +302,37 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 
 			MINI_TIMELAPSE_FILES="${ALLSKY_TMP}/mini-timelapse_files.txt"	 # List of files
 			if [[ ! -f ${MINI_TIMELAPSE_FILES} ]]; then
-				# The file may have been deleted, or the user may have just changed the frequency.
+				# The file may have been deleted for an unknown reason.
 				echo "${FINAL_FILE}" > "${MINI_TIMELAPSE_FILES}"
-				LEFT=$((TIMELAPSE_MINI_IMAGES-1))
 				NUM_IMAGES=1
+				LEFT=$((TIMELAPSE_MINI_IMAGES - NUM_IMAGES))
 			else
 				grep --silent "${FINAL_FILE}" "${MINI_TIMELAPSE_FILES}"
 				RET=$?
 				if [ ${RET} -ne 0 ]; then
 					echo "${FINAL_FILE}" >> "${MINI_TIMELAPSE_FILES}"
-				elif [[ ${DEBUG} -ge 2 ]]; then
+				elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
 					# This shouldn't happen...
 					echo -e "${YELLOW}${ME} WARNING: '${FINAL_FILE}' already in set.${NC}" >&2
 				fi
 				NUM_IMAGES=$(wc -l < "${MINI_TIMELAPSE_FILES}")
+				LEFT=$((TIMELAPSE_MINI_IMAGES - NUM_IMAGES))
 			fi
 			[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo -e "NUM_IMAGES=${NUM_IMAGES}" >&2
 
-			if [[ ${NUM_IMAGES} -ge ${TIMELAPSE_MINI_IMAGES} ]]; then
-				# Create a timelapse
+			MOD=0
+			if [[ ${TIMELAPSE_MINI_FORCE_CREATION} == "true" ]]; then
+				# We only force creation every${TIMELAPSE_MINI_FREQUENCY} images,
+				# and only when we haven't reached ${TIMELAPSE_MINI_IMAGES} or we're close.
+				if [[ ${LEFT} -lt ${TIMELAPSE_MINI_FREQUENCY} ]]; then
+					TIMELAPSE_MINI_FORCE_CREATION="false"
+				else
+					MOD="$(echo "${NUM_IMAGES} % ${TIMELAPSE_MINI_FREQUENCY}" | bc)"
+					[[ ${MOD} -ne 0 ]] && TIMELAPSE_MINI_FORCE_CREATION="false"
+				fi
+			fi
+			if [[ ${TIMELAPSE_MINI_FORCE_CREATION} == "true" || ${LEFT} -le 0 ]]; then
+				# Create a mini-timelapse
 				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
 				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 					# timelapse.sh produces a lot of debug output
@@ -341,17 +353,24 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					fi
 				fi
 
-				# Remove the oldest files
-				KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
-				x="$(tail -${KEEP} "${MINI_TIMELAPSE_FILES}")"
-				echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
-				if [[ ${DEBUG} -ge 2 ]]; then
-					echo -e "${YELLOW}${ME} Replaced ${MINI_SUBTRACT} oldest file(s) in set and adding '${FINAL_FILE}'.${NC}" >&2
+				# Remove the oldest files, but not if we only created this mini-timelapse because of a force
+				if [[ ${MOD} -ne 0 || ${TIMELAPSE_MINI_FORCE_CREATION} == "false" ]]; then
+					KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
+					x="$(tail -${KEEP} "${MINI_TIMELAPSE_FILES}")"
+					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
+					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+						echo -e "${YELLOW}${ME} Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest file(s) and added current image.${NC}" >&2
+					fi
 				fi
 			else
 				# Not ready to create yet
 				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
-					echo "${ME}: Not creating or uploading mini timelapse: ${LEFT} images(s) left."
+					echo -n "${ME}: Not creating mini timelapse: "
+					if [[ ${MOD} -eq 0 ]]; then
+						echo "${LEFT} images(s) left."
+					else
+						echo "$((TIMELAPSE_MINI_FREQUENCY - MOD)) images(s) left in frequency."
+					fi
 				fi
 				TIMELAPSE_MINI_UPLOAD_VIDEO="false"
 			fi

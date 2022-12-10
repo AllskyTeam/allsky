@@ -280,7 +280,7 @@ struct config {			// for configuration variables
 	long lastExposure_us				= NOT_SET;
 	double lastGain						= NOT_SET;
 	double lastWBR, lastWBB				= NOT_SET;
-	long lastSensorTemp					= NOT_SET;
+	double lastSensorTemp				= NOT_SET;
 	long lastFocusMetric				= NOT_SET;
 	long lastAsiBandwidth				= NOT_SET;
 	double lastMean						= NOT_SET;

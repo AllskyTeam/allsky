@@ -143,6 +143,7 @@ struct config {			// for configuration variables
 	bool isColorCamera					= false;		// Is the camera color or mono?
 	bool isCooledCamera					= false;		// Does the camera have a cooler?
 	bool supportsTemperature			= false;		// Does the camera have a temp sensor?
+	double divideTemperatureBy			= NOT_SET;		// How much to divided the reported temp by
 	bool supportsAggression				= false;		// currently ZWO only
 	bool supportsMyModeMean				= false;
 	bool gainTransitionTimeImplemented	= false;		// currently ZWO only

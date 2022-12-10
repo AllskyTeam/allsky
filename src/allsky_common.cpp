@@ -234,7 +234,9 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	// The temperature passed to us is 10 times the actual temperature so we can deal with
 	// integers with 1 decimal place, which is all we care about.
 	if (cg.lastSensorTemp != -999) {
-		snprintf(tmp, s, " TEMPERATURE=%d", (int)round(cg.lastSensorTemp/10));
+		snprintf(tmp, s, " TEMPERATURE_C=%d", (int)round(cg.lastSensorTemp));
+		strcat(cmd, tmp);
+		snprintf(tmp, s, " TEMPERATURE_F=%d", (int)round((cg.lastSensorTemp * 1.8) +32));
 		strcat(cmd, tmp);
 	}
 
@@ -553,11 +555,11 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 		char C[20] = { 0 }, F[20] = { 0 };
 		if (strcmp(cg.tempType, "C") == 0 || strcmp(cg.tempType, "B") == 0)
 		{
-			sprintf(C, "  %.0fC", (float)cg.lastSensorTemp / 10);
+			sprintf(C, "  %.0fC", cg.lastSensorTemp);
 		}
 		if (strcmp(cg.tempType, "F") == 0 || strcmp(cg.tempType, "B") == 0)
 		{
-			sprintf(F, "  %.0fF", (((float)cg.lastSensorTemp / 10 * 1.8) + 32));
+			sprintf(F, "  %.0fF", ((cg.lastSensorTemp * 1.8) + 32));
 		}
 		sprintf(tmp, "Sensor: %s %s", C, F);
 		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),

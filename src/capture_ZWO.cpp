@@ -473,7 +473,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 			if (cg->currentAutoExposure) Log(3, "  Suggested next exposure: %s", length_in_units(suggestedNextExposure_us, true));
 			Log(2, "\n");
 
-			ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &cg->lastSensorTemp, &bAuto);
+			long temp;
+			ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &temp, &bAuto);
+			cg->lastSensorTemp = (long) ((double)temp / cg->divideTemperatureBy);
 			if (cg->isColorCamera)
 			{
 				ASIGetControlValue(cg->cameraNumber, ASI_WB_R, &l, &bAuto);

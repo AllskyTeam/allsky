@@ -63,7 +63,7 @@ typedef enum ASI_CONTROL_TYPE{ //Control type
 	ASI_EXPOSURE,
 	ASI_WB_R,
 	ASI_WB_B,
-	ASI_TEMPERATURE,				// returns 10*temperature
+	ASI_TEMPERATURE,
 	ASI_FLIP,
 	ASI_AUTO_MAX_GAIN,				// Max gain in auto-gain mode
 	ASI_AUTO_MAX_EXP,				// Max exposure in auto-exposure mode, in ms
@@ -913,7 +913,7 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg, long width, long he
 		double temp = 0.0;
 #endif
 		ASIGetControlValue(cameraInfo.CameraID, ASI_TEMPERATURE, &temp, &a);
-		printf("  - Sensor temperature: %0.2f C\n", (float)temp / 10.0);
+		printf("  - Sensor temperature: %0.1f C\n", (float)temp / cg.divideTemperatureBy);
 	}
 	printf("  - Bit depth: %d\n", cameraInfo.BitDepth);
 
@@ -1048,6 +1048,8 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 
 	if (cg->ct == ctZWO) {
 		cg->supportsTemperature = true;
+		// ZWO cameras return a long which is 10 times the actual temp.
+		cg->divideTemperatureBy = 10.0;
 		cg->supportsAggression = true;
 		cg->supportsMyModeMean = false;
 		cg->gainTransitionTimeImplemented = true;
@@ -1055,6 +1057,7 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 	} else {	// RPi
 #ifdef IS_RPi
 		cg->supportsTemperature = ci.SupportsTemperature;	// this field only exists in RPi structure
+		cg->divideTemperatureBy = 1.0;
 #endif
 		cg->supportsAggression = false;
 		cg->supportsMyModeMean = true;

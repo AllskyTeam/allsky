@@ -190,7 +190,7 @@ ARGUMENTS+=(-debuglevel "${ALLSKY_DEBUG_LEVEL}")
 
 # shellcheck disable=SC2207
 KEYS=( $(settings 'keys[]') )
-for KEY in ${KEYS[@]}
+for KEY in "${KEYS[@]}"
 do
 	K="$(settings ".${KEY}")"
 	ARGUMENTS+=(-"${KEY}" "${K}")

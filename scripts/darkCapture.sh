@@ -14,15 +14,15 @@ if [ ! -f "${CURRENT_IMAGE}" ]; then
 	exit 2
 fi
 
-# ${AS_TEMPERATURE} is passed to us by saveImage.sh, but may be null.
-# If ${AS_TEMPERATURE} is set, use it as the temperature, otherwise read the ${TEMPERATURE_FILE}.
+# ${AS_TEMPERATURE_C} is passed to us by saveImage.sh, but may be null.
+# If ${AS_TEMPERATURE_C} is set, use it as the temperature, otherwise read the ${TEMPERATURE_FILE}.
 # If the ${TEMPERATURE_FILE} file doesn't exist, set the temperature to "n/a".
-if [ "${AS_TEMPERATURE}" = "" ]; then
+if [ "${AS_TEMPERATURE_C}" = "" ]; then
 	TEMPERATURE_FILE="${ALLSKY_TMP}/temperature.txt"
 	if [ -s "${TEMPERATURE_FILE}" ]; then	# -s so we don't use an empty file
-		AS_TEMPERATURE=$( < ${TEMPERATURE_FILE})
+		AS_TEMPERATURE_C=$( < ${TEMPERATURE_FILE})
 	else
-		AS_TEMPERATURE="n/a"
+		AS_TEMPERATURE_C="n/a"
 	fi
 fi
 
@@ -34,10 +34,10 @@ if [ "$(settings ".takeDarkFrames")" = "1" ]; then
 	mkdir -p "${DARKS_DIR}"
 	# If the camera doesn't support temperature, we will keep overwriting the file until
 	# the user creates a temperature.txt file.
-	if [ "${AS_TEMPERATURE}" = "n/a" ]; then
+	if [ "${AS_TEMPERATURE_C}" = "n/a" ]; then
 		MOVE_TO_FILE="${DARKS_DIR}/$(basename "${CURRENT_IMAGE}")"
 	else
-		MOVE_TO_FILE="${DARKS_DIR}/${AS_TEMPERATURE}.${DARK_EXTENSION}"
+		MOVE_TO_FILE="${DARKS_DIR}/${AS_TEMPERATURE_C}.${DARK_EXTENSION}"
 	fi
 	mv "${CURRENT_IMAGE}" "${MOVE_TO_FILE}"
 

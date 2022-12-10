@@ -30,7 +30,7 @@ static char const *fontnames[]		= {		// Character representation of names for cl
 	"COMPLEX",				"TRIPLEX",				"COMPLEX_SMALL",
 	"SCRIPT_SIMPLEX",		"SCRIPT_COMPLEX" };
 
-//xxxxxxxxxxxxxx TODO: isDayOrNight dayOrNight;
+//xxxxxxxxxxxxx TODO: isDayOrNight dayOrNight;
 
 
 /**

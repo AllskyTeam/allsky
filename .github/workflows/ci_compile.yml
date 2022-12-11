@@ -27,53 +27,6 @@ jobs:
           uptime
 
       # Runs a set of commands using the runners shell
-      - name: check bash files
-        run: |
-          # check bash files (bash -n, shellcheck)
-          err=0
-          # We don't want to check files from 3-rd party software.
-          for i in $(find . -maxdepth 1 -name '*.sh'); do
-            echo "$i"
-            bash -n $i
-            if [ $? -ne 0 ]; then
-              err=$((err + 1))
-            fi
-            case $i in
-              ./XXXXvariables.sh)
-                #SC2034: ON_TTY appears unused. Verify use (or export if used externally).
-                shellcheck $i -e SC2034 
-                ;;
-
-                ###### Do not ignore these
-                #SC2206: Quote to prevent word splitting/globbing, or split robustly with mapfile or read -a.
-                #SC2207: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
-                #SC2046: Quote this to prevent word splitting.
-                #SC2086: Double quote to prevent globbing and word splitting.
-                #SC2012: Use find instead of ls to better handle non-alphanumeric filenames.
-                #SC2016: Expressions don't expand in single quotes, use double quotes for that.
-                #SC2044: For loops over find output are fragile. Use find -exec or a while read loop.
-                #SC2196: egrep is non-standard and deprecated. Use grep -E instead.
-
-              XXXX*)
-                #SC1090: Can't follow non-constant source. Use a directive to specify location.
-                #SC1091: Similar to SC1090
-                #SC2004: $/${} is unnecessary on arithmetic variables.
-                #SC2155: Declare and assign separately to avoid masking return values.
-                #SC2181: Check exit code directly with e.g. 'if mycmd;', not indirectly with $?.
-                #SC2188: This redirection doesn't have a command. Move to its command (or use 'true' as no-op).
-                shellcheck $i -e SC1090 -e SC1091 -e SC2004 -e SC2155 -e SC2181 -e SC2188
-                ;;
-            esac
-            if [ $? -ne 0 ]; then
-              err=$((err + 1))
-            fi
-          done
-          if [ $err -ne 0 ]; then
-            echo "bash or shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
-          fi
-          exit $err
-
-      # Runs a set of commands using the runners shell
       - name: make deps
         run: |
           sudo make deps

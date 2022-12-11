@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v2
 
       # Runs a set of commands using the runners shell
-      - name: some useful outputs
+      - name: some useful outputs fro ci_compile.yml
         run: |
           ls -la
           uptime
@@ -32,7 +32,7 @@ jobs:
           # check bash files (bash -n, shellcheck)
           err=0
           # We don't want to check files from 3-rd party software.
-          for i in $(find . -name '*.sh' -maxdepth 1); do
+          for i in $(find . -maxdepth 1 -name '*.sh'); do
             echo "$i"
             bash -n $i
             if [ $? -ne 0 ]; then

@@ -6,7 +6,9 @@ name: CI
 on: 
   push:
     paths:
-      - 'src/**'
+      - 'scripts/**'
+      - '**'
+      - 'website/**'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -31,7 +33,7 @@ jobs:
         run: |
           # check bash files (bash -n, shellcheck)
           err=0
-          for i in $(find . -name '*.sh'); do
+          for i in $(find . -name '*.sh' -depth 1); do
             echo "$i"
             bash -n $i
             if [ $? -ne 0 ]; then
@@ -53,7 +55,7 @@ jobs:
                 #SC2044: For loops over find output are fragile. Use find -exec or a while read loop.
                 #SC2196: egrep is non-standard and deprecated. Use grep -E instead.
 
-              *.sh)
+              ./*.sh)
                 #SC1090: Can't follow non-constant source. Use a directive to specify location.
                 #SC1091: Similar to SC1090
                 #SC2004: $/${} is unnecessary on arithmetic variables.
@@ -64,7 +66,7 @@ jobs:
                 #SC2024: similar to SC2069
                 shellcheck $i -e SC1090 -e SC1091 -e SC2004 -e SC2155 -e SC2181 -e SC2188 -e SC2024 -e SC2069
                 ;;
-              */*.sh)
+              ./*/*.sh)
                 shellcheck $i -e SC1090 -e SC1091 -e SC2004 -e SC2155 -e SC2181 -e SC2188 -e SC2024 -e SC2069
                 ;;
             esac
@@ -78,11 +80,11 @@ jobs:
           exit $err
 
       # Runs a set of commands using the runners shell
-      - name: make deps
-        run: |
-          sudo make deps
+#      - name: make deps
+#        run: |
+#          sudo make deps
 
       # Info: depends an step "make deps"
-      - name: make all
-        run: |
-          sudo make all
+ #     - name: make all
+ #       run: |
+ #         sudo make all

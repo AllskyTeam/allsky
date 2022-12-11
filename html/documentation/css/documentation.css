@@ -277,7 +277,8 @@ body {
 .markdown-body table th {
 	font-weight: 600
 }
-.markdown-body table th,.markdown-body table td {
+.markdown-body table th,
+.markdown-body table td {
 	padding: 3px 8px;
 	border: 1px solid var(--color-border-default);
 	vertical-align: top;
@@ -289,8 +290,17 @@ body {
 .markdown-body table tr:nth-child(2n) {
 	background-color: var(--color-canvas-subtle)
 }
+.markdown-body table thead tr:not(:first-child),
 .markdown-body table thead tr {
 	background-color: var(--color-checks-header-label-text);
+}
+.markdown-body table thead tr:not(:first-child) {
+	border-bottom: 2px solid var(--color-border-subtle);
+}
+.markdown-body .tableHeader {
+	font-size: 125%;
+	border-bottom: 2px solid var(--color-fg-muted);
+	text-align: center;
 }
 .markdown-body table td.note {
 	background-color: var(--color-accent-subtle);

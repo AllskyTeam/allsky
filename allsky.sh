@@ -32,6 +32,7 @@ source "${ALLSKY_CONFIG}/config.sh" || exit $?			# it displays any error message
 # shellcheck disable=SC1091
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit $?		# it displays any error message
 SEE_LOG_MSG="See ${ALLSKY_LOG}"
+ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
 
 # This file contains information the user needs to act upon after an installation.
 # If the file exists, display it and stop.
@@ -173,36 +174,33 @@ if [[ $USE_NOTIFICATION_IMAGES == "1" ]]; then
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
 fi
 
-# Building the arguments to pass to the capture binary.
-# Want to allow spaces in arguments so need to put quotes around them,
-# but in order for it to work need to make ARGUMENTS an array.
-ARGUMENTS=()
-
+: > "${ARGS_FILE}"
 if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	# This argument needs to come first since the capture code checks for it first.
-	ARGUMENTS+=(-cmd "${RPi_COMMAND_TO_USE}")
+	echo "-cmd=${RPi_COMMAND_TO_USE}" >> "${ARGS_FILE}"
 fi
 
-[[ -s ${ALLSKY_HOME}/version ]] && ARGUMENTS+=(-version "$(< "${ALLSKY_HOME}/version")")
-
 # This argument should come second so the capture program knows if it should display debug output.
-ARGUMENTS+=(-debuglevel "${ALLSKY_DEBUG_LEVEL}")
+echo "-debuglevel=${ALLSKY_DEBUG_LEVEL}" >> "${ARGS_FILE}"
+
+[[ -s ${ALLSKY_HOME}/version ]] && echo "-version=$(< "${ALLSKY_HOME}/version")" >> "${ARGS_FILE}"
 
 # shellcheck disable=SC2207
 KEYS=( $(settings 'keys[]') )
 for KEY in "${KEYS[@]}"
 do
 	K="$(settings ".${KEY}")"
-	ARGUMENTS+=(-"${KEY}" "${K}")
+	# We have to pass "-config ${ARGS_FILE}" on the command line.
+	[[ ${KEY} != "config" ]] && echo "-${KEY}=${K}" >> "${ARGS_FILE}"
 done
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
 if [[ $1 == "preview" ]] ; then
-	ARGUMENTS+=(-preview 1)
+	echo "-preview=1" >> "${ARGS_FILE}"
 fi
 
-ARGUMENTS+=(-save_dir "${CAPTURE_SAVE_DIR}")
+echo "-save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 # If the user wants images uploaded only every n times, save that number to a file.
@@ -215,17 +213,15 @@ else
 fi
 
 if [[ $CAPTURE_EXTRA_PARAMETERS != "" ]]; then
-	ARGUMENTS+=("${CAPTURE_EXTRA_PARAMETERS}")	# Any additional parameters
+	echo "${CAPTURE_EXTRA_PARAMETERS}" >> "${ARGS_FILE}"
 fi
-
-echo "${ARGUMENTS[@]}" > "${ALLSKY_TMP}/capture_args.txt"		# for debugging
 
 CAPTURE="capture_${CAMERA_TYPE}"
 
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 
 # Run the main program - this is the main attraction...
-"${ALLSKY_BIN}/${CAPTURE}" "${ARGUMENTS[@]}"
+"${ALLSKY_BIN}/${CAPTURE}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
 RETCODE=$?
 
 if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then

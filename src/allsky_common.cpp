@@ -898,7 +898,7 @@ void displayHeader(config cg)
 	printf(" -Daniel Johnsen\n");
 	printf(" -Robert Wagner\n");
 	printf(" -Michael J. Kidd - <linuxkidd@gmail.com>\n");
-	printf(" -Rob Musquetier\n");	
+	printf(" -Rob Musquetier\n");
 	if (cg.ct == ctZWO) {
 		printf(" -Yang and Sam from ZWO\n");
 		printf(" -Chris Kuethe\n");
@@ -1314,6 +1314,7 @@ char *getLine(char *buffer)
 				*ptr = '\0';
 				ptr++;
 			}
+			break;
 		}
 	}
 	nextLine = ptr;
@@ -1385,7 +1386,6 @@ static bool getConfigFileArguments(config *cg)
 	while ((line = getLine(buf)) != NULL)
 	{
 		lineNum++;
-//x printf("\tline # %d = %s\n", lineNum, line);
 		if (*line == '#' || *line == '\0')
 		{
 			continue;		// comment or blank line
@@ -1433,11 +1433,11 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 {
 	const char *b;
 	if (called_from_getConfigFileArguments)
-		b = "\t";
+		b = "    ";
 	else
 		b = "";
 
-	if (argc <= 1)		
+	if (argc <= 1)
 		return(true);
 
 	for (int i=1; i <= argc - 1; i++)

@@ -11,7 +11,7 @@
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "Picking an allsky camera";
+			content: "Picking an allsky camera and lens";
 		} 
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
@@ -24,6 +24,7 @@
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 <div class="Layout-main markdown-body" id="mainContents">
 
+<h2>Cameras</h2>
 <p>
 Your budget will often be the driving factor when picking an allsky camera.
 The Raspberry Pi HQ (RPi HQ) camera is relatively inexpensive and produces good images
@@ -66,6 +67,200 @@ Some things to consider:
 	it.
 </ul>
 
+
+<h2>Lenses</h2>
+<p>
+Although picking a camera is fairly easy since Allsky only supports ZWO and Rpi cameras,
+picking a lens is more difficult.
+The lens and camera sensor together determine what kind of image you'll see:
+<ul>
+	<li>a round image
+	<li>a round image with the top and bottom cut off
+	<li>a full rectangle image
+</ul>
+</p>
+<p>
+The lower the focal length of the lens the wider of a field of view (FOV) it produces.
+Most people like a wide or very wide FOV for an allsky camera, for example, 180 degrees,
+so they can image as much of the sky as possible.
+Lenses that produce very wide FOV are called <strong>fisheye</strong> lenses.
+</p>
+<p>
+Lenses are round so produce round images.
+<blockquote>
+If you want to see this for yourself,
+in a bright area take your lens and hold it a little above a flat surface.
+Move the lens up and down to produce an in-focus image.
+What shape is the image?
+How large is the image?
+</blockquote>
+Most cameras have rectangular sensors that are wider than taller.
+<ol>
+	<li>If the image created by the lens fits completely on the camera's sensor you'll see
+		a round image with black outside of it.
+	<li>If most, but not all of the lens' image fits on the sensor you'll see a round image
+		with the top and bottom cut off.
+	<li>If the lens' image fills the whole sensor you'll see what appears to be
+		a "normal" image with no black.
+	</ul>
+</ol>
+</p>
+<p>
+To determine which of the three above you'll get you need to know the physical size of the
+camera's sensor and the size of the image circle produced by the lens.
+The sensor size is easy to get - almost all web pages that mention the sensor
+list its size.
+Not all lens web pages list the image circle size though - in fact,
+one of the lenses below didn't list the image size.
+</p>
+<p>
+DISCLAIMER: this list is not meant to recommend anything;
+it's only for your information to illustrate a point.
+</p>
+<p>
+The tables below list some common allsky cameras and some lenses.
+Below the tables is an example of the results that different lenses on the same camera produce.
+</p>
+
+<table>
+<thead>
+	<tr>
+		<th colspan="5" class="tableHeader">Common allsky cameras</th>
+	</tr>
+	<tr>
+		<th>Camera</th>
+		<th>Sensor</th>
+		<th>Resolution (w x h)</th>
+		<th>Width</th>
+		<th>Height</th>
+	</tr>
+</thead>
+<tbody>
+	<tr>
+		<td>RPi HQ</td>
+		<td>Sony IMX477</td>
+		<td>4056 x 3040</td>
+		<td>6.3 mm</td>
+		<td>4.7 mm</td>
+	</tr>
+	<tr>
+		<td>ZWO ASI120</td>
+		<td>AR0130CS</td>
+		<td>1280 x 960</td>
+		<td>4.8 mm</td>
+		<td>3.6 mm</td>
+	</tr>
+	<tr>
+		<td>ZWO ASI178</td>
+		<td>Sony IMX178</td>
+		<td>3096 x 2080</td>
+		<td>7.4 mm</td>
+		<td>5.0 mm</td>
+	</tr>
+	<tr>
+		<td>ZWO ASI224</td>
+		<td>Sony IMX224</td>
+		<td>1403 x 976</td>
+		<td>4.9 mm</td>
+		<td>3.7 mm</td>
+	</tr>
+	<tr>
+		<td>ZWO ASI290</td>
+		<td>Sony IMX290</td>
+		<td>1936 x 1096</td>
+		<td>5.6 mm</td>
+		<td>3.2 mm</td>
+	</tr>
+</tbody>
+</table>
+
+<table>
+<thead>
+	<tr>
+		<th colspan="6" class="tableHeader">Example allsky lenses</th>
+	</tr>
+	<tr>
+		<th>Lens</th>
+		<th>Focal length</th>
+		<th>Image circle</th>
+		<th>Aperture</th>
+		<th>FOV</th>
+		<th>Resoution</th>
+	</tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a href="https://aico-lens.com/product/1-4mm-c-fisheye-lens-acf12fm014ircmm/">cnAICO ACF12FM014IRCMM</a></td>
+		<td>1.4 mm</td>
+		<td>4.59 mm</td>
+		<td>F 1.4</td>
+		<td>182 deg</td>
+		<td>5 Mpx</td>
+	</tr>
+	<tr>
+		<td><a href="https://aico-lens.com/product/1-55mm-cs-mount-fisheye-lens-acf12f0155irmm/">cnAICO ACF12F0155IRMM</a></td>
+		<td>1.5 mm</td>
+		<td>4.6 mm</td>
+		<td>F 2.0</td>
+		<td>185 deg</td>
+		<td>5 Mpx</td>
+	</tr>
+	<tr>
+		<td><a href="https://aico-lens.com/product/2-1mm-focal-length-wide-angle-fov-160-degree-cs-mount-cctv-lens-accf021163mp/">cnAICO ACCF021163MP</a></td>
+		<td>2.1 mm</td>
+		<td>?? </td>
+		<td>F 1.6</td>
+		<td>160 deg</td>
+		<td>3 Mpx</td>
+	</tr>
+	<tr>
+		<td><a href="https://aico-lens.com/product/2-5mm-8mp-cs-mount-fisheye-lens-actcs25ir8mpf/">cnAICO ACTCS25IR8MPF</a></td>
+		<td>2.5 mm</td>
+		<td>6.4 mm</td>
+		<td>F 1.6</td>
+		<td>190 deg</td>
+		<td>8 Mpx</td>
+	</tr>
+</tbody>
+</table>
+
+<p>
+As an example, let's use the common ZWO ASI178 camera with a couple different lenses.
+<ol>
+	<li>Lens ACF12F0155IRMM: 1.5 mm focal length.
+		<br>
+		The image circle of the lens (4.6 mm) is <strong>smaller</strong> than the height of the sensor (5.0 mm),
+		so you'll see the full circle image produced by the lens with a little bit of black above and below,
+		and a fair amount of black on the sides.
+		You may want to crop the sides of the image to remove some of the black
+		and save disk space.
+	<li>Lens ACTCS25IR8MPF: 2.5 mm focal length.
+		<br>
+		The image circle of the lens (6.4 mm) is <strong>larger</strong> than the height of the sensor (5.0 mm)
+		but smaller than the width of the sensor (7.4 mm),
+		so you'll see a circle with the top and bottom cut off a fair amount,
+		and some amount of black on the sides.
+</ol>
+</p>
+
+<p>
+As you can see, with the same camera you get quite different results depending on the lens used.
+In the examples above, if you used a camera with a much larger sensor you would see the full
+cicular image even with the 2.5 mm lens.
+On the other hand, if you used a much <strong>smaller</strong> sensor, like the ASI224,
+you would see a slightly cut-off circle with the 1.5 mm lens
+and would see a rectangular image with no black using the 2.5 mm lens.
+</p>
+<p>
+Also notice that the camera's <strong>resolution</strong> did not come into play.
+It only determines how much <em>detail</em> you can see,
+not how much of the image you can see.
+</p>
+<p>
+If you have a lot of trees or buildings blocking the horizon and you want to
+minimize how much of them you see,
+get a lens with a higher focal length and hence a narrower FOV.
+</p>
 </div><!-- Layout-main -->
 </div><!-- Layout -->
 </body>

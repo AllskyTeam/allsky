@@ -30,7 +30,7 @@ static char const *fontnames[]		= {		// Character representation of names for cl
 	"COMPLEX",				"TRIPLEX",				"COMPLEX_SMALL",
 	"SCRIPT_SIMPLEX",		"SCRIPT_COMPLEX" };
 
-//xxxxxxxxxxxxx TODO: isDayOrNight dayOrNight;
+//xxxxxxxxxxxxxx TODO: isDayOrNight dayOrNight;
 
 
 /**
@@ -1890,6 +1890,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 
 		// Arguments that may be passed to us but we don't use.
 		else if (
+			strcmp(a, "lastchanged") == 0 ||
 			strcmp(a, "displaysettings") == 0 ||
 			strcmp(a, "showonmap") == 0 ||
 			strcmp(a, "websiteurl") == 0 ||

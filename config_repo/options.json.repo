@@ -1111,7 +1111,7 @@
 {
 "name" : "cameraType",
 "default" : "",
-"description" : "The type of camera you are using.  <span class='WebUIValue'>RPi</span> includes the HD and compatible cameras.<br>You <b>must</b> set and change the camera here, not in config.sh.",
+"description" : "The type of camera you are using.  <span class='WebUIValue'>RPi</span> includes the HQ and compatible cameras.<br>You <b>must</b> set and change the camera here, not in config.sh.",
 "label" : "Camera Type",
 "type" : "select",
 "options" : [

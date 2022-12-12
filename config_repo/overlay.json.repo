@@ -2,43 +2,64 @@
     "fields": [
         {
             "label": "${DATE}",
-            "x": 10,
-            "y": 0,
-            "fontsize": 40,
+            "x": 124,
+            "y": 47,
+            "id": "oe-field-4",
             "format": "%d-%m-%Y",
-            "id": "oe-field-0",
-            "fill": "#f44336"
+            "strokewidth": 0,
+            "sample": "DATE",
+            "tlx": 19,
+            "tly": 20,
+            "font": "Arial",
+            "fontsize": 80,
+            "fill": "#ff0000"
         },
         {
             "label": "${TIME}",
-            "x": 230,
-            "y": 0,
-            "fontsize": 40,
+            "x": 579,
+            "y": 47,
+            "id": "oe-field-5",
             "format": "%H:%M:%S",
-            "id": "oe-field-1",
-            "fill": "#f44336"
+            "strokewidth": 0,
+            "sample": "TIME",
+            "tlx": 479,
+            "tly": 20,
+            "fontsize": 80,
+            "font": "Arial",
+            "fill": "#ff0000"
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 10,
-            "y": 50,
-            "id": "oe-field-2",
-            "fontsize": 24
+            "x": 348,
+            "y": 147,
+            "id": "oe-field-6",
+            "font": "Arial",
+            "fontsize": 68,
+            "strokewidth": 0,
+            "tlx": 19,
+            "tly": 120
         },
         {
             "label": "Gain: ${GAIN}",
-            "x": 10,
-            "y": 80,
-            "id": "oe-field-3",
-            "fontsize": 24
+            "x": 194,
+            "y": 227,
+            "id": "oe-field-7",
+            "font": "Arial",
+            "fontsize": 68,
+            "strokewidth": 0,
+            "tlx": 19,
+            "tly": 200
         },
         {
             "label": "Sensor: ${TEMPERATURE}",
-            "x": 10,
-            "y": 110,
-            "id": "oe-field-4",
-            "sample": "32C",
-            "fontsize": 24
+            "x": 359,
+            "y": 307,
+            "id": "oe-field-8",
+            "font": "Arial",
+            "fontsize": 68,
+            "strokewidth": 0,
+            "tlx": 19,
+            "tly": 280
         }
     ],
     "images": [],

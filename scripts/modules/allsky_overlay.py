@@ -412,7 +412,7 @@ class ALLSKYOVERLAY:
             fontSize = self._overlayConfig["settings"]["defaultfontsize"]
 
         if "rotate" in fieldData:
-            rotation = fieldData["rotate"]
+            rotation = int(fieldData["rotate"])
         else:
             rotation = 0
 
@@ -426,13 +426,33 @@ class ALLSKYOVERLAY:
         else:
             empty = ''
 
-        fieldX = s.int(fieldData["x"])
-        fieldY = s.int(fieldData["y"])
+        if "tlx" in fieldData:
+            fieldX = s.int(fieldData["tlx"])
+        else:
+            fieldX = s.int(fieldData["x"])
+
+        if "tly" in fieldData:
+            fieldY = s.int(fieldData["tly"])
+        else:
+            fieldY = s.int(fieldData["x"])
+
+            
         if "fill" in fieldData:
             fieldColour = fieldData["fill"]
         else:
             fieldColour = self._overlayConfig["settings"]["defaultfontcolour"]
 
+        if "strokewidth" in fieldData:
+            strokeWidth = fieldData["strokewidth"]
+        else:
+            strokeWidth = 0
+
+        if "stroke" in fieldData:
+            stroke = fieldData["stroke"]
+        else:
+            stroke = '#ffffff'
+                        
+        stroker, strokeg, strokeb = self._convertColour(name, stroke)
         r, g, b = self._convertColour(name, fieldColour)
 
         regex =  r"\$\{.*?\}"
@@ -490,15 +510,17 @@ class ALLSKYOVERLAY:
                 cv2.putText(self._image, fieldLabel, (fieldX,fieldY), cv2.FONT_HERSHEY_SIMPLEX, 1, (b,g,r), 1, cv2.LINE_AA)
             else:
                 fill = (b, g, r, 0)
-                
+                strokeFill = (strokeb, strokeg, stroker, 0)
+
                 if len(s.image.shape) == 2:
                     fill = 255
 
                 if rotation == 0 and opacity == 1:
                     draw = ImageDraw.Draw(pilImage)
-                    draw.text((fieldX, fieldY), fieldLabel, font = font, fill = fill)
+                    # TODO: Add stroke to text
+                    draw.text((fieldX, fieldY), fieldLabel, font = font, fill = fill, stroke_width=strokeWidth, stroke_fill=strokeFill)
                 else:
-                    pilImage = self._draw_rotated_text(pilImage,-rotation,(fieldX, fieldY), fieldLabel, fill = fill, font = font, opacity = opacity)
+                    pilImage = self._draw_rotated_text(pilImage,-rotation,(fieldX, fieldY), fieldLabel, fill = fieldColour, font = font, opacity = opacity, strokeWidth=strokeWidth, strokeFill=stroke)
 
             self._timer("Adding text field " + fieldLabel + ' (' + fieldData["label"] + ') ')
         else:
@@ -517,27 +539,41 @@ class ALLSKYOVERLAY:
 
         return r,g,b
 
-    def _draw_rotated_text(self, image, angle, xy, text, fill, font, opacity):
+    def get_text_dimensions(self, text_string, font):
+        ascent, descent = font.getmetrics()
 
-        # get the size of our image
-        width, height = image.size
-        max_dim = max(width, height)
+        text_width = font.getmask(text_string).getbbox()[2]
+        text_height = font.getmask(text_string).getbbox()[3] + descent
 
-        # build a transparency mask large enough to hold the text
-        mask_size = (max_dim, max_dim)
-        mask = Image.new('L', (width, height), 0)
+        return (text_width, text_height)
 
-        # add text to mask
-        opacity = s.int(opacity*255)
-        draw = ImageDraw.Draw(mask)
-        draw.text(xy, text, opacity, font)
-        rotated_mask = mask.rotate(angle)
-
-        # paste the appropriate color, with the text transparency mask
-        color_image = Image.new('RGBA', image.size, fill)
-        image.paste(color_image, rotated_mask)
+    def _convertRGBtoBGR(self, colour):
+        red = colour[1:3]
+        green = colour[3:5]
+        blue = colour[5:7]
         
+        colour = '#' + blue + green + red
+        
+        return colour
+                
+    def _draw_rotated_text(self, image, angle, xy, text, fill, font, opacity, strokeWidth, strokeFill):
+
+        fill = self._convertRGBtoBGR(fill)
+        strokeFill = self._convertRGBtoBGR(strokeFill)
+
+        # Generate transparent image of the same size as the input, and print
+        # the text there
+        im_txt = Image.new('RGBA', image.size, (0, 0, 0, 0))
+        draw = ImageDraw.Draw(im_txt)
+        draw.text(xy, text, fill=fill, embedded_color=False, font=font, stroke_width=strokeWidth, stroke_fill=strokeFill)
+
+        # Rotate text image w.r.t. the calculated rotation center
+        im_txt = im_txt.rotate(angle, center=xy)
+        
+        # Paste text image onto actual image
+        image.paste(im_txt, mask=im_txt)
         return image
+
 
     def _getValue(self, placeHolder, variableType, format=None, empty=''):
         value = None
@@ -660,7 +696,7 @@ class ALLSKYOVERLAY:
             if s.isFileReadable(imagePath):
                 image = cv2.imread(imagePath, cv2.IMREAD_UNCHANGED)
 
-            if image is not None:
+            if image is not None:               
                 if "scale" in imageData:
                     if imageData["scale"] is not None:
                         scale = s.float(imageData["scale"])
@@ -670,6 +706,12 @@ class ALLSKYOVERLAY:
                     if imageData["rotate"] is not None:
                         image = self._rotate_image(image, imageData["rotate"])
 
+                height = image.shape[0]
+                width = image.shape[1]
+
+                imageX = imageX - int(width / 2)
+                imageY = imageY - int(height / 2) 
+                
                 self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY)
                 s.log(3, "INFO: Adding image field {}".format(imageName))
 
@@ -716,7 +758,10 @@ class ALLSKYOVERLAY:
 
     def _rotate_image(self, image, angle):
         image_center = tuple(np.array(image.shape[1::-1]) / 2)
-        rot_mat = cv2.getRotationMatrix2D(image_center, -s.int(angle), 1.0)
+
+        image_center=tuple(np.array(image.shape[0:2])/2)
+
+        rot_mat = cv2.getRotationMatrix2D(image_center, -int(angle), 1.0)
         result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
         return result
 

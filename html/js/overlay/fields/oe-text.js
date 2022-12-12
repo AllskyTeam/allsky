@@ -6,6 +6,8 @@ class OETEXTFIELD extends OEFIELD {
   static DEFAULTFONT = 'default';
   static DEFAULTFONTSIZE = 32;
   static DEFAULTTEXTROTATION = 0;
+  static DEFAULTSTROKEWIDTH = 0;
+  static DEFAULTSTROKE = '';
 
   DEFAULTS = {
     'font': {
@@ -37,7 +39,17 @@ class OETEXTFIELD extends OEFIELD {
       'path': 'rotate',
       'defaultpath': 'settings.defaulttextrotation',
       'default': OETEXTFIELD.DEFAULTTEXTROTATION
-    }
+    },
+    'strokewidth': {
+      'path': 'strokewidth',
+      'defaultpath': '',
+      'default': OETEXTFIELD.DEFAULTSTROKEWIDTH
+    },
+    'stroke': {
+      'path': 'stroke',
+      'defaultpath': '',
+      'default': OETEXTFIELD.DEFAULTSTROKE
+    }    
   };
 
   constructor(fieldData, id) {
@@ -64,8 +76,12 @@ class OETEXTFIELD extends OEFIELD {
       draggable: true,
       fill: this.fieldData.fill,
       name: 'field',
+      strokeWidth: this.fieldData.strokewidth,
+      stroke: this.fieldData.stroke,
       perfectDrawEnabled: false
     });    
+    let size = this.shape.measureSize(this.fieldData.label);  
+    this.shape.offset({x:  size.width/2, y: size.height/2});    
   }
 
   get empty() {
@@ -95,7 +111,9 @@ class OETEXTFIELD extends OEFIELD {
     return this.shape.text();
   }
   setLabel(label) {
-    this.shape.text(label);   
+    this.shape.text(label);
+    let size = this.shape.measureSize(label);  
+    this.shape.offset({x:  size.width/2, y: size.height/2});
     this.dirty = true;
   }
 
@@ -125,4 +143,21 @@ class OETEXTFIELD extends OEFIELD {
     this.dirty = true;
   }
 
+  get strokewidth() {
+    return this.fieldData.strokewidth;
+  }
+  set strokewidth(strokeWidth) {
+    this.fieldData.strokewidth = parseInt(strokeWidth);
+    this.shape.strokeWidth(strokeWidth);    
+    this.dirty = true;
+  }
+
+  get stroke() {
+    return this.fieldData.stroke;
+  }
+  set stroke(stroke) {
+    this.fieldData.stroke = stroke;
+    this.shape.stroke(stroke);
+    this.dirty = true;
+  }  
 }

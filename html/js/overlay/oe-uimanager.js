@@ -237,6 +237,7 @@ class OEUIMANAGER {
                     width: shape.width(),
                     height: shape.height()
                 });
+                this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});                
                 this.#snapRectangle.scale({
                     x: this.#movingField.scale,
                     y: this.#movingField.scale
@@ -755,7 +756,6 @@ class OEUIMANAGER {
             this.showPropertyEditor();
             this.updatePropertyEditor();
             this.updateToolbar();
-//            this.#fieldManager.buildJSON();
             if (this.testMode) {
                 this.enableTestMode();
             }

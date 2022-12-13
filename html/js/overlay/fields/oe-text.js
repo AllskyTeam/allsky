@@ -81,7 +81,7 @@ class OETEXTFIELD extends OEFIELD {
       perfectDrawEnabled: false
     });    
     let size = this.shape.measureSize(this.fieldData.label);  
-    this.shape.offset({x:  size.width/2, y: size.height/2});    
+    this.shape.offset({x: size.width/2, y: size.height/2});    
   }
 
   get empty() {

@@ -23,7 +23,7 @@ ifeq ($(PKGBUILD),)
 endif
 
 
-CONFIGFILES := config.sh ftp-settings.sh fields.json oe-config.json overlay.json autoexposure.json module-settings.json postprocessing_day.json postprocessing_night.json postprocessing_daynight.json postprocessing_nightday.json postprocessing_periodic.json
+CONFIGFILES := config.sh ftp-settings.sh fields.json oe-config.json overlay.json overlay-zwo.json overlay-pi.json autoexposure.json module-settings.json postprocessing_day.json postprocessing_night.json postprocessing_daynight.json postprocessing_nightday.json postprocessing_periodic.json
 UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/allskyperiodic.service
 
 %:

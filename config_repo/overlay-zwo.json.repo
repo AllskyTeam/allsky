@@ -2,8 +2,8 @@
     "fields": [
         {
             "label": "${DATE}",
-            "x": 172,
-            "y": 40,
+            "x": 73,
+            "y": 14,
             "id": "oe-field-0",
             "format": "%d-%m-%Y",
             "strokewidth": 0,
@@ -16,8 +16,8 @@
         },
         {
             "label": "${TIME}",
-            "x": 324,
-            "y": 40,
+            "x": 230,
+            "y": 14,
             "id": "oe-field-1",
             "format": "%H:%M:%S",
             "strokewidth": 0,
@@ -30,8 +30,8 @@
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 430,
-            "y": 74,
+            "x": 188,
+            "y": 54,
             "id": "oe-field-2",
             "fontsize": 28,
             "strokewidth": 0,
@@ -40,8 +40,8 @@
         },
         {
             "label": "Gain: ${GAIN}",
-            "x": 235,
-            "y": 114,
+            "x": 108,
+            "y": 94,
             "id": "oe-field-3",
             "fontsize": 28,
             "strokewidth": 0,

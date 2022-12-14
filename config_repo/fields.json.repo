@@ -23,7 +23,7 @@
             "name": "${TEMPERATURE_C}",
             "description": "Sensor Temp in C (If Available)",
             "format": "",
-            "sample": "32C",
+            "sample": "32",
             "type": "Number",
             "source": "System"
         },
@@ -32,7 +32,7 @@
             "name": "${TEMPERATURE_F}",
             "description": "Sensor Temp in F (If Available)",
             "format": "",
-            "sample": "32C",
+            "sample": "32",
             "type": "Number",
             "source": "System"
         },

@@ -949,11 +949,7 @@ do_update() {
 install_overlay()
 {
 
-		if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
-			cp "${ALLSKY_CONFIG}/overlay-zwo.json" "${ALLSKY_CONFIG}/overlay.json"
-		else
-			cp "${ALLSKY_CONFIG}/overlay-pi.json" "${ALLSKY_CONFIG}/overlay.json"
-		fi
+		cp "${ALLSKY_CONFIG}/overlay-${CAMERA_TYPE}.json" "${ALLSKY_CONFIG}/overlay.json"
 
 		display_msg progress "Installing PHP Modules."
 		TMP="${INSTALL_LOGS_DIR}/PHP_modules.log"

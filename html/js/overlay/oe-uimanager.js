@@ -297,6 +297,9 @@ class OEUIMANAGER {
                 }
 
                 if (this.#selected.id === shape.id()) {
+                    let rotation = shape.rotation();
+                    rotation = rotation | 0;
+                    shape.rotation(rotation);
                     this.#selected.rotation = shape.rotation();
                     this.updatePropertyEditor();
                 }

@@ -1441,7 +1441,22 @@ class OEUIMANAGER {
 
     updatePropertyEditor() {
         if (this.#selected !== null) {
+
+            let textVisible = false;
+            if ($('#textdialog').closest('.ui-dialog').is(':visible')) {
+                textVisible = true;
+            }
+            let imageVisible = false;
+            if ($('#imagedialog').closest('.ui-dialog').is(':visible')) {
+                imageVisible = true;
+            }
+
             if (this.#selected instanceof OETEXTFIELD) {
+                if (imageVisible) {
+                    $('#imagepropgrid').jqPropertyGrid('Destroy');
+                    $('#imagedialog').dialog('close');
+                    this.#createTextPropertyEditor();
+                }
                 $('#textpropgrid').jqPropertyGrid('set', {
                     'label': this.#selected.label,
                     'format': this.#selected.format,
@@ -1458,6 +1473,11 @@ class OEUIMANAGER {
                     'stroke': this.#selected.stroke
                 });
             } else {
+                if (textVisible) {
+                    $('#textdialog').dialog('close');
+                    $('#textpropgrid').jqPropertyGrid('Destroy');
+                    this.#createImagePropertyEditor();                    
+                }
                 $('#imagepropgrid').jqPropertyGrid('set', {
                     'x': this.#selected.x,
                     'y': this.#selected.y,
@@ -1624,7 +1644,7 @@ class OEUIMANAGER {
             width: 350,
             beforeClose: function (event, ui) {
                 let uiManager = window.oedi.get('uimanager');
-                uiManager.selected = null;
+               // uiManager.selected = null;
                 uiManager.setFieldOpacity(false);
             }
         });
@@ -1698,7 +1718,7 @@ class OEUIMANAGER {
             closeOnEscape: false,
             beforeClose: function (event, ui) {
                 let uiManager = window.oedi.get('uimanager');
-                uiManager.selected = null;
+               // uiManager.selected = null;
             }
         });
     }

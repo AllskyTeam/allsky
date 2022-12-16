@@ -21,12 +21,6 @@ jobs:
       - uses: actions/checkout@v2
 
       # Runs a set of commands using the runners shell
-      - name: some useful outputs fro ci_compile.yml
-        run: |
-          ls -la
-          uptime
-
-      # Runs a set of commands using the runners shell
       - name: make deps
         run: |
           sudo make deps

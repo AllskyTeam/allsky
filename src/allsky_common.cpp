@@ -470,8 +470,9 @@ bool checkForValidExtension(config *cg)
 		cg->extensionType = isJPG;
 
 		compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
-		// want dark frames to be at highest quality
-		if (cg->takeDarkFrames) {
+		// Want dark frames to be at highest quality as well as images that will be passed
+		// to a module to be post-processed.
+		if (cg->takeDarkFrames || cg->overlay.overlayMethod == OVERLAY_METHOD_LEGACY) {
 			cg->quality = 100;
 		} else if (cg->quality == NOT_SET) {
 			cg->quality = cg->qualityJPG;
@@ -485,7 +486,7 @@ bool checkForValidExtension(config *cg)
 
 		compressionParameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
 		// png is lossless so "quality" is really just the amount of compression.
-		if (cg->takeDarkFrames) {
+		if (cg->takeDarkFrames || cg->overlay.overlayMethod == OVERLAY_METHOD_LEGACY) {
 			cg->quality = 9;
 		} else if (cg->quality == NOT_SET) {
 			cg->quality = cg->qualityPNG;

@@ -275,7 +275,7 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	snprintf(tmp, s, " DARKFRAME=%d", cg.takeDarkFrames ? 1 : 0);
 	strcat(cmd, tmp);
 
-	snprintf(tmp, s, " eOVERLAY=%d", cg.overlay.overlayMethod ? 1 : 0);
+	snprintf(tmp, s, " eOVERLAY=%d", cg.overlay.overlayMethod);
 	strcat(cmd, tmp);
 
 	if (cg.ct == ctZWO) {

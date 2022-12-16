@@ -94,6 +94,8 @@ struct overlay {
 	bool showUSB						= false;
 	int overlayMethod					= NOT_SET;
 };
+#define OVERLAY_METHOD_LEGACY			0
+#define OVERLAY_METHOD_MODULE			1
 
 // Histogram Box, ZWO only
 struct HB {

@@ -92,7 +92,7 @@ struct overlay {
 	bool showFocus						= false;
 	bool showHistogramBox				= false;
 	bool showUSB						= false;
-	bool externalOverlay				= false;
+	int overlayMethod					= NOT_SET;
 };
 
 // Histogram Box, ZWO only
@@ -332,3 +332,4 @@ void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
+

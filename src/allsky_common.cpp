@@ -172,7 +172,7 @@ std::string exec(const char *cmd)
 	return result;
 }
 
-char *getOverlayMethod(int m)
+std::string getOverlayMethod(int m)
 {
 	if (m == OVERLAY_METHOD_LEGACY)
 		return("legacy");
@@ -1031,7 +1031,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - Set to 1, 2, 3, or 4 for more debugging information [%ld].\n", n, "debuglevel n", cg.debugLevel);
 
 	printf("\nOverlay settings:\n");
-	printf(" -%-*s - Set to %d to use the new, enhanced 'module' overlay program [%s].\n", n, "overlayMethod n", OVERLAY_METHOD_MODULE, getOverlayMethod(cg.overlay.overlayMethod));
+	printf(" -%-*s - Set to %d to use the new, enhanced 'module' overlay program [%s].\n", n, "overlayMethod n", OVERLAY_METHOD_MODULE, getOverlayMethod(cg.overlay.overlayMethod).c_str());
 	printf(" -%-*s - Set to 1 to display the time [%s].\n", n, "showTime b", yesNo(cg.overlay.showTime));
 	printf(" -%-*s - Format the optional time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - 1 displays the exposure length [%s].\n", n, "showExposure b", yesNo(cg.overlay.showExposure));

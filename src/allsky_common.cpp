@@ -172,6 +172,16 @@ std::string exec(const char *cmd)
 	return result;
 }
 
+char *getOverlayMethod(int m)
+{
+	if (m == 0)
+		return("legacy");
+	else if (m == 1)
+		return("module");
+	else
+		return("unknown");
+}
+
 void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 {
 	// If the double variables are an integer value, pass an integer value.
@@ -265,7 +275,7 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	snprintf(tmp, s, " DARKFRAME=%d", cg.takeDarkFrames ? 1 : 0);
 	strcat(cmd, tmp);
 
-	snprintf(tmp, s, " eOVERLAY=%d", cg.overlay.externalOverlay ? 1 : 0);
+	snprintf(tmp, s, " eOVERLAY=%d", cg.overlay.overlayMethod ? 1 : 0);
 	strcat(cmd, tmp);
 
 	if (cg.ct == ctZWO) {
@@ -1020,8 +1030,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - Set to 1, 2, 3, or 4 for more debugging information [%ld].\n", n, "debuglevel n", cg.debugLevel);
 
 	printf("\nOverlay settings:\n");
-	printf(" -%-*s - Set to 1 to use the new, external overlay program [%s].\n", n, "externalOverlay b", yesNo(cg.overlay.externalOverlay));
-	printf("  %-*s   ** NOTE: The older, internal overlays will go away in the next release.\n", n, "");
+	printf(" -%-*s - Set to 1 to use the new, enhanced 'module' overlay program [%s].\n", n, "overlayMethod n", getOverlayMethod(cg.overlay.overlayMethod));
 	printf(" -%-*s - Set to 1 to display the time [%s].\n", n, "showTime b", yesNo(cg.overlay.showTime));
 	printf(" -%-*s - Format the optional time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - 1 displays the exposure length [%s].\n", n, "showExposure b", yesNo(cg.overlay.showExposure));
@@ -1793,7 +1802,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		// overlay settings
 		else if (strcmp(a, "externaloverlay") == 0)
 		{
-			cg->overlay.externalOverlay = getBoolean(argv[++i]);
+			cg->overlay.overlayMethod = atoi(argv[++i]);
 		}
 		else if (strcmp(a, "showtime") == 0)
 		{
@@ -1972,3 +1981,4 @@ bool validateLatitudeLongitude(config *cg)
 
 	return(ret);
 }
+

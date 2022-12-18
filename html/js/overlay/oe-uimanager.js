@@ -18,8 +18,7 @@ class OEUIMANAGER {
     #testMode = false;
     #backgroundImage = null;
     #stageScale = 0.6;
-    #stageMode = 'fit';
-    #debugMode = false;
+    #stageMode = 'fit';   
     #imageCache = null;
 
     #fieldTable = null;
@@ -77,6 +76,12 @@ class OEUIMANAGER {
             visible: false
         });
         this.#overlayLayer.add(this.#snapRectangle);
+
+        this.#oeEditorStage.on('mousemove', (e) => {
+            let mousePos = this.#oeEditorStage.getPointerPosition();
+            this.updateDebugWindowMousePos(mousePos.x, mousePos.y);
+            this.updateDebugWindow();
+        });
     }
 
     get selected() {
@@ -173,6 +178,7 @@ class OEUIMANAGER {
 
                 this.setFieldOpacity(false);
                 this.updateToolbar();
+                this.updateDebugWindow();
                 return;
             }
 
@@ -194,9 +200,12 @@ class OEUIMANAGER {
             this.setFieldOpacity(false);
             this.setFieldOpacity(true, shape.id());
 
+            this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});
+
             if (this.#transformer.nodes().length == 1) {
                 this.updatePropertyEditor();
             }
+            this.updateDebugWindow();
             this.updateToolbar();
         });
 
@@ -228,6 +237,7 @@ class OEUIMANAGER {
                     width: shape.width(),
                     height: shape.height()
                 });
+                this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});                
                 this.#snapRectangle.scale({
                     x: this.#movingField.scale,
                     y: this.#movingField.scale
@@ -246,9 +256,13 @@ class OEUIMANAGER {
 
             let gridSizeX = this.#configManager.gridSize;
             let gridSizeY = this.#configManager.gridSize;
+
+            let adjustedX = shape.x() - shape.offsetX();
+            let adjustedY = shape.y() - shape.offsetY();
+
             shape.position({
-                x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
-                y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
+                x: (Math.round(adjustedX / gridSizeX) * gridSizeX) + shape.offsetX() | 0,
+                y: (Math.round(adjustedY / gridSizeY) * gridSizeY) + shape.offsetY() | 0
             });
 
             if (this.#movingField !== null) {
@@ -283,6 +297,9 @@ class OEUIMANAGER {
                 }
 
                 if (this.#selected.id === shape.id()) {
+                    let rotation = shape.rotation();
+                    rotation = rotation | 0;
+                    shape.rotation(rotation);
                     this.#selected.rotation = shape.rotation();
                     this.updatePropertyEditor();
                 }
@@ -742,7 +759,6 @@ class OEUIMANAGER {
             this.showPropertyEditor();
             this.updatePropertyEditor();
             this.updateToolbar();
-//            this.#fieldManager.buildJSON();
             if (this.testMode) {
                 this.enableTestMode();
             }
@@ -800,9 +816,9 @@ class OEUIMANAGER {
             $('#oe-app-options-select-field-opacity').val(this.#configManager.selectFieldOpacity);
             $('#oe-app-options-mousewheel-zoom').prop('checked', this.#configManager.mouseWheelZoom);
             $('#oe-app-options-background-opacity').val(this.#configManager.backgroundImageOpacity);
-            $('#oe-app-options-debug').prop('checked', this.#debugMode);
-
-
+            $('#oe-app-options-debug').prop('checked', this.#configManager.debugMode);
+            $('#oe-app-options-position-debug').prop('checked', this.#configManager.positiondebugMode);
+            
             $('#optionsdialog').modal({
                 keyboard: false
             });
@@ -848,7 +864,10 @@ class OEUIMANAGER {
             this.#configManager.selectFieldOpacity = $('#oe-app-options-select-field-opacity').val() | 0;
             this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
             this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
-            this.#debugMode = $('#oe-app-options-debug').prop('checked');
+
+            this.#configManager.debugMode = $('#oe-app-options-debug').prop('checked');
+            this.#configManager.positiondebugMode = $('#oe-app-options-position-debug').prop('checked');
+
 
             this.drawGrid();
             this.updateBackgroundImage();
@@ -858,6 +877,7 @@ class OEUIMANAGER {
 
             $('#optionsdialog').modal('hide');
             this.updateToolbar();
+            this.setupDebug();
         });
 
         $(document).on('click', '#oe-font-dialog-add-font', (event) => {
@@ -1006,8 +1026,10 @@ class OEUIMANAGER {
 
         $('[data-toggle="tooltip"]').tooltip();
 
+        this.updateDebugWindow();
         this.drawGrid();
         this.updateBackgroundImage();
+        this.setupDebug();
         this.updateToolbar();
     }
 
@@ -1025,15 +1047,17 @@ class OEUIMANAGER {
                     this.#transformer.rotationSnaps([]);
                 }
 
-                this.#snapRectangle.rotation(shape.rotation());
+                this.#snapRectangle.rotation(shape.rotation());              
                 this.#snapRectangle.position({
-                    x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
-                    y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
+                    x: (Math.round(shape.x()  / gridSizeX) * gridSizeX) | 0,
+                    y: (Math.round(shape.y()  / gridSizeY) * gridSizeY) | 0
                 });
             }
 
-            if (event.target.id() == this.#selected.id) {
-                this.setTransformerState(shape);
+            if (this.#selected !== null) {
+                if (event.target.id() == this.#selected.id) {
+                    this.setTransformerState(shape);
+                }
             }
         }
     }
@@ -1168,10 +1192,20 @@ class OEUIMANAGER {
             $('#oe-save').removeClass('green pulse');
         }
 
-        if (this.#debugMode) {
+        if (this.#configManager.debugMode) {
             $('#oe-toolbar-debug').removeClass('hidden')
         } else {
             $('#oe-toolbar-debug').addClass('hidden')
+        }
+    }
+
+    setupDebug() {
+        if (this.#configManager.positiondebugMode) {
+            this.#createDebugWindow();
+        } else {
+            if ($('#debugdialog').hasClass('ui-dialog-content')) {
+                $('#debugdialog').dialog('destroy');
+            }
         }
     }
 
@@ -1407,7 +1441,22 @@ class OEUIMANAGER {
 
     updatePropertyEditor() {
         if (this.#selected !== null) {
+
+            let textVisible = false;
+            if ($('#textdialog').closest('.ui-dialog').is(':visible')) {
+                textVisible = true;
+            }
+            let imageVisible = false;
+            if ($('#imagedialog').closest('.ui-dialog').is(':visible')) {
+                imageVisible = true;
+            }
+
             if (this.#selected instanceof OETEXTFIELD) {
+                if (imageVisible) {
+                    $('#imagepropgrid').jqPropertyGrid('Destroy');
+                    $('#imagedialog').dialog('close');
+                    this.#createTextPropertyEditor();
+                }
                 $('#textpropgrid').jqPropertyGrid('set', {
                     'label': this.#selected.label,
                     'format': this.#selected.format,
@@ -1419,9 +1468,16 @@ class OEUIMANAGER {
                     'fontname': this.#selected.fontname,
                     'opacity': this.#selected.opacity,
                     'rotation': this.#selected.rotation,
-                    'fill': this.#selected.fill
+                    'fill': this.#selected.fill,
+                    'strokewidth': this.#selected.strokewidth,
+                    'stroke': this.#selected.stroke
                 });
             } else {
+                if (textVisible) {
+                    $('#textdialog').dialog('close');
+                    $('#textpropgrid').jqPropertyGrid('Destroy');
+                    this.#createImagePropertyEditor();                    
+                }
                 $('#imagepropgrid').jqPropertyGrid('set', {
                     'x': this.#selected.x,
                     'y': this.#selected.y,
@@ -1520,7 +1576,9 @@ class OEUIMANAGER {
             fontname: 'df',
             fontsize: 32,
             opacity: 1,
-            fill: '#ffffff'
+            fill: '#ffffff',
+            strokewidth: 0,
+            stroke: ''
         };
 
         var textConfig = {
@@ -1538,6 +1596,16 @@ class OEUIMANAGER {
             opacity: { group: 'Font', name: 'Opacity', type: 'number', options: { min: 0, max: 1, step: 0.1 } },
             fill: {
                 group: 'Font', name: 'Colour', type: 'color', options: {
+                    preferredFormat: 'hex',
+                    type: "color",
+                    showInput: true,
+                    showInitial: true,
+                    showAlpha: false
+                }
+            },
+            strokewidth: { group: 'Font', name: 'Stroke Size', type: 'number', options: { min: 0, max: 10, step: 1 } },
+            stroke: {
+                group: 'Font', name: 'Stroke Colour', type: 'color', options: {
                     preferredFormat: 'hex',
                     type: "color",
                     showInput: true,
@@ -1576,7 +1644,7 @@ class OEUIMANAGER {
             width: 350,
             beforeClose: function (event, ui) {
                 let uiManager = window.oedi.get('uimanager');
-                uiManager.selected = null;
+               // uiManager.selected = null;
                 uiManager.setFieldOpacity(false);
             }
         });
@@ -1650,7 +1718,7 @@ class OEUIMANAGER {
             closeOnEscape: false,
             beforeClose: function (event, ui) {
                 let uiManager = window.oedi.get('uimanager');
-                uiManager.selected = null;
+               // uiManager.selected = null;
             }
         });
     }
@@ -1663,5 +1731,115 @@ class OEUIMANAGER {
     disableTestMode() {
         this.testMode = false;
         this.#fieldManager.disableTestMode();
+    }
+
+    rotatePoint(pt, o, a){
+
+        var angle = a * (Math.PI/180);
+        var rotatedX = Math.cos(angle) * (pt.x - o.x) - Math.sin(angle) * (pt.y - o.y) + o.x;
+        var rotatedY = Math.sin(angle) * (pt.x - o.x) + Math.cos(angle) * (pt.y - o.y) + o.y;  
+      
+        return {x: rotatedX, y: rotatedY};
+    }
+
+    updateDebugWindow() {
+        if (this.#configManager.positiondebugMode) {
+            let field = this.#selected;
+            if (field === null) {
+                $('#debugpropgrid').jqPropertyGrid('set', {
+                    'type': 'N/A',
+                    'fieldId': 'N/A',
+                    'x': 'N/A',
+                    'y': 'N/A',
+                    'tlx': 'N/A',
+                    'tly': 'N/A',                                
+                    'offsetx': 'N/A',
+                    'offsety': 'N/A',                
+                    'width': 'N/A',
+                    'height': 'N/A',
+                });            
+            } else {
+                let scaleX = this.#oeEditorStage.scaleX();
+                let scaleY = this.#oeEditorStage.scaleY();              
+                let type = 'Text';
+                if (this.#selected instanceof OEIMAGEFIELD) {
+                    type = 'Image';
+                }
+                
+                let tlx = field.shape.x() - field.shape.offsetX();
+                let tly = field.shape.y() - field.shape.offsetY();
+                let tl = this.rotatePoint({x: tlx, y: tly}, {x: field.shape.x(), y: field.shape.y()}, field.shape.rotation());
+                $('#debugpropgrid').jqPropertyGrid('set', {
+                    'type': type,
+                    'fieldId': field.shape.id(),
+                    'x': 'sx: ' + (field.shape.x() | 0).toString() + ', ix: ' + ((field.shape.x() / scaleX) | 0).toString() ,
+                    'y': 'sy: ' + (field.shape.y() | 0).toString() + ', iy: ' + ((field.shape.y() / scaleY) | 0).toString() ,
+                    'tlx': (tl.x | 0).toString(),
+                    'tly': (tl.y | 0).toString(),
+                    'offsetx': (field.shape.offsetX() | 0).toString(),
+                    'offsety': (field.shape.offsetY() | 0).toString(),
+                    'width': 'sx: ' + (field.shape.width() | 0).toString() + ', ix: ' + ((field.shape.width() / scaleX) | 0).toString(),
+                    'height': 'sy: ' + (field.shape.height() | 0).toString() + ', iy: ' + ((field.shape.height() / scaleY) | 0).toString()
+                });
+            }
+        }
+    }
+
+    updateDebugWindowMousePos(x, y) {
+        if (this.#configManager.positiondebugMode) {        
+            let imageX = x  / this.#oeEditorStage.scaleX();
+            let imageY = y  / this.#oeEditorStage.scaleY();        
+            $('#debugpropgrid').jqPropertyGrid('set', {
+                'mouseScreenx': 'sx: ' + (x | 0).toString() + ', ix: ' + (imageX | 0).toString(),
+                'mouseScreeny': 'sy: ' + (y | 0).toString() + ', iy: ' + (imageY | 0).toString()
+            });
+        }
+    }
+
+    #createDebugWindow() {
+        let debugData = {
+            type: '',
+            fieldId: '',
+            x: 0,
+            y: 0,
+            tlx: 0,
+            tly: 0,
+            offsetx: 0,
+            offsety: 0,              
+            width: 0,
+            height: 0,
+            mouseScreenx: 0,
+            mouseScreeny: 0    
+        };
+
+        let debugConfig = {
+            type: { group: 'Field', name: 'Type', type: 'text', options: {} },
+            fieldId: { group: 'Field', name: 'Id', type: 'text', options: {} },
+
+            x: { group: 'Position', name: 'x', type: 'text' },
+            y: { group: 'Position', name: 'y', type: 'text' },
+            tlx: { group: 'Position', name: 'tlx', type: 'text' },
+            tly: { group: 'Position', name: 'tly', type: 'text' },                        
+            offsetx: { group: 'Position', name: 'offset x', type: 'text' },
+            offsety: { group: 'Position', name: 'offset y', type: 'text' },                
+            width: { group: 'Position', name: 'width', type: 'text' },
+            height: { group: 'Position', name: 'height', type: 'text' },
+
+            mouseScreenx: { group: 'Mouse', name: 'Screen x', type: 'text' },
+            mouseScreeny: { group: 'Mouse', name: 'Screen y', type: 'text' }
+           
+        }; 
+        
+        var options = {
+            meta: debugConfig,
+            prefix: 'debug',
+            helpHtml: '[?]'
+        };
+
+        $('#debugpropgrid').jqPropertyGrid(debugData, options);
+        $('#debugdialog').dialog({
+            resizable: false,
+            closeOnEscape: false,
+        });
     }
 }

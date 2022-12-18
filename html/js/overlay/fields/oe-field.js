@@ -80,6 +80,30 @@ class OEFIELD {
     return this.fieldData;
   }
 
+  rotatePoint(){
+
+    let tlx = this.shape.x() - this.shape.offsetX();
+    let tly = this.shape.y() - this.shape.offsetY();
+    let pt = {
+      x: tlx, 
+      y: tly
+    };
+
+    let o = {
+      x: this.shape.x(), 
+      y: this.shape.y()
+    };
+
+    let a = this.shape.rotation();
+
+    var angle = a * (Math.PI/180);
+    var rotatedX = Math.cos(angle) * (pt.x - o.x) - Math.sin(angle) * (pt.y - o.y) + o.x;
+    var rotatedY = Math.sin(angle) * (pt.x - o.x) + Math.cos(angle) * (pt.y - o.y) + o.y;  
+  
+    this.fieldData.tlx = rotatedX | 0;
+    this.fieldData.tly = rotatedY | 0;
+  }
+
   get sample() {
     return this.fieldData.sample;
   }
@@ -108,6 +132,7 @@ class OEFIELD {
   set x(x) {
     this.fieldData.x = x;
     this.shape.x(x);
+    this.rotatePoint()
     this.dirty = true;
   }
 
@@ -117,6 +142,7 @@ class OEFIELD {
   set y(y) {
     this.fieldData.y = y;
     this.shape.y(y);;
+    this.rotatePoint()
     this.dirty = true;
   }
 
@@ -126,6 +152,7 @@ class OEFIELD {
   set rotation(rotation) {
     this.fieldData.rotate = rotation;
     this.shape.rotation(rotation);
+    this.rotatePoint()
     this.dirty = true;
   }
 

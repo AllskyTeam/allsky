@@ -517,7 +517,6 @@ class ALLSKYOVERLAY:
 
                 if rotation == 0 and opacity == 1:
                     draw = ImageDraw.Draw(pilImage)
-                    # TODO: Add stroke to text
                     draw.text((fieldX, fieldY), fieldLabel, font = font, fill = fill, stroke_width=strokeWidth, stroke_fill=strokeFill)
                 else:
                     pilImage = self._draw_rotated_text(pilImage,-rotation,(fieldX, fieldY), fieldLabel, fill = fieldColour, font = font, opacity = opacity, strokeWidth=strokeWidth, strokeFill=stroke)
@@ -548,11 +547,8 @@ class ALLSKYOVERLAY:
         return (text_width, text_height)
 
     def _convertRGBtoBGR(self, colour):
-        red = colour[1:3]
-        green = colour[3:5]
-        blue = colour[5:7]
-        
-        colour = '#' + blue + green + red
+        r,g,b = ImageColor.getrgb(colour)
+        colour =  '#{:02x}{:02x}{:02x}'.format(b,g,r)
         
         return colour
                 
@@ -561,16 +557,12 @@ class ALLSKYOVERLAY:
         fill = self._convertRGBtoBGR(fill)
         strokeFill = self._convertRGBtoBGR(strokeFill)
 
-        # Generate transparent image of the same size as the input, and print
-        # the text there
         im_txt = Image.new('RGBA', image.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(im_txt)
         draw.text(xy, text, fill=fill, embedded_color=False, font=font, stroke_width=strokeWidth, stroke_fill=strokeFill)
 
-        # Rotate text image w.r.t. the calculated rotation center
         im_txt = im_txt.rotate(angle, center=xy)
         
-        # Paste text image onto actual image
         image.paste(im_txt, mask=im_txt)
         return image
 

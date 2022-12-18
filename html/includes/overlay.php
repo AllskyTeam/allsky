@@ -199,6 +199,10 @@ function DisplayOverlay($image_name)
                 <div id="imagepropgrid"></div>
             </div>
 
+            <div id="debugdialog" title="Debug Info">
+                <div id="debugpropgrid"></div>
+            </div>
+
             <div class="modal" role="dialog" id="oe-item-list-dialog">
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
@@ -524,7 +528,7 @@ function DisplayOverlay($image_name)
                                                 <div class="input-group">
                                                     <input id="defaultnoradids" name="defaultnoradids" type="text" class="form-control">
                                                 </div>
-                                                <p class="help-block">List of NORAD Id's to calculate satellite positions for. See the documentaiton for mroe details</p>
+                                                <p class="help-block">List of NORAD Id's to calculate satellite positions for, satellite Id's can be found on the <a href="https://celestrak.org/satcat/search.php" target="_blank">Celestrak</a> website. See the documentaiton for more details</p>
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -672,6 +676,14 @@ function DisplayOverlay($image_name)
                                                     </label>
                                                 </div>
                                             </div>
+                                            <div class="col-sm-offset-4 col-sm-8">
+                                                <div class="checkbox">
+                                                    <label>
+                                                        <input type="checkbox" id="oe-app-options-position-debug"> Enable Position Debug Mode
+                                                    </label>
+                                                </div>
+                                                <p class="help-block">The debug options should only be used when directed to by a member of the AllSky development team</p>
+                                            </div>                                            
                                         </div>                                        
                                     </form>
 

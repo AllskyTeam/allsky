@@ -38,8 +38,8 @@ def shouldRun(module, period):
     dbKey = module + "_lastrun"
     lastRun = dbGet(dbKey)
     if lastRun is not None:
-        now = int(time.time())
-        diff = now - int(lastRun)
+        now = time.time()
+        diff = now - lastRun
         if diff >= period:
             result = True
     else:
@@ -49,7 +49,7 @@ def shouldRun(module, period):
 
 def setLastRun(module):
     dbKey = module + "_lastrun"
-    now = int(time.time())
+    now = time.time()
     dbUpdate(dbKey, now)
 
 def convertLatLon(input):

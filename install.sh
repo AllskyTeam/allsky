@@ -534,6 +534,7 @@ set_permissions() {
 	# This is actually an Allsky Website file, but in case we restored the old website,
 	# set its permissions.
 	chgrp -f ${WEBSERVER_GROUP} "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	chmod -R 775 "${ALLSKY_WEBUI}"/overlay
 	sudo chgrp -R ${WEBSERVER_GROUP} "${ALLSKY_WEBUI}"/overlay
 
 	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
@@ -947,6 +948,9 @@ do_update() {
 # Install the overlay and modules system
 install_overlay()
 {
+
+		cp "${ALLSKY_CONFIG}/overlay-${CAMERA_TYPE}.json" "${ALLSKY_CONFIG}/overlay.json"
+
 		display_msg progress "Installing PHP Modules."
 		TMP="${INSTALL_LOGS_DIR}/PHP_modules.log"
 		(

@@ -51,7 +51,7 @@
             "tly": 200
         },
         {
-            "label": "Sensor: ${TEMPERATURE_C}",
+            "label": "Sensor: ${TEMPERATURE_C}C",
             "x": 359,
             "y": 307,
             "id": "oe-field-8",

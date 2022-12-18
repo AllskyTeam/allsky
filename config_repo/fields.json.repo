@@ -20,15 +20,24 @@
         },
         {
             "id": 2,
-            "name": "${TEMPERATURE}",
-            "description": "Sensor Temp (If Available)",
+            "name": "${TEMPERATURE_C}",
+            "description": "Sensor Temp in C (If Available)",
             "format": "",
-            "sample": "32C",
+            "sample": "32",
             "type": "Number",
             "source": "System"
         },
         {
             "id": 3,
+            "name": "${TEMPERATURE_F}",
+            "description": "Sensor Temp in F (If Available)",
+            "format": "",
+            "sample": "32",
+            "type": "Number",
+            "source": "System"
+        },
+        {
+            "id": 4,
             "name": "${AUTOEXPOSURE}",
             "description": "Auto Exposure",
             "format": "",
@@ -37,7 +46,7 @@
             "source": "System"
         },
         {
-            "id": 4,
+            "id": 5,
             "name": "${EXPOSURE_US}",
             "description": "Frame Exposure Duration",
             "format": "",
@@ -46,7 +55,7 @@
             "source": "System"
         },
         {
-            "id": 5,
+            "id": 6,
             "name": "${sAUTOEXPOSURE}",
             "description": "Frame Exposure auto flag",
             "format": "",
@@ -55,7 +64,7 @@
             "source": "System"
         },
         {
-            "id": 6,
+            "id": 7,
             "name": "${sEXPOSURE}",
             "description": "Frame Exposure auto String",
             "format": "",
@@ -64,7 +73,7 @@
             "source": "System"
         },
         {
-            "id": 7,
+            "id": 8,
             "name": "${AUTOGAIN}",
             "description": "Auto Gain",
             "format": "",
@@ -73,7 +82,7 @@
             "source": "System"
         },
         {
-            "id": 8,
+            "id": 9,
             "name": "${GAIN}",
             "description": "Camera Gain",
             "format": "",
@@ -82,7 +91,7 @@
             "source": "System"
         },
         {
-            "id": 9,
+            "id": 10,
             "name": "${sAUTOGAIN}",
             "description": "Camera Gain auto flag",
             "format": "",
@@ -91,7 +100,7 @@
             "source": "System"
         },
         {
-            "id": 10,
+            "id": 11,
             "name": "${BRIGHTNESS}",
             "description": "Brightness",
             "format": "",
@@ -100,7 +109,7 @@
             "source": "System"
         },
         {
-            "id": 11,
+            "id": 12,
             "name": "${MEAN}",
             "description": "Mean Brightness",
             "format": "",
@@ -109,7 +118,7 @@
             "source": "System"
         },
         {
-            "id": 12,
+            "id": 13,
             "name": "${AUTOWB}",
             "description": "Auto White Balance",
             "format": "",
@@ -118,7 +127,7 @@
             "source": "System"
         },
         {
-            "id": 13,
+            "id": 14,
             "name": "${sAUTOAWB}",
             "description": "Auto White Balance String",
             "format": "",
@@ -127,7 +136,7 @@
             "source": "System"
         },        
         {
-            "id": 14,
+            "id": 15,
             "name": "${WBR}",
             "description": "White Balance RED",
             "format": "",
@@ -136,7 +145,7 @@
             "source": "System"
         },
         {
-            "id": 15,
+            "id": 16,
             "name": "${WBB}",
             "description": "White Balance",
             "format": "",
@@ -145,7 +154,7 @@
             "source": "System"
         },
         {
-            "id": 16,
+            "id": 17,
             "name": "${FLIP}",
             "description": "Flip",
             "format": "",
@@ -154,7 +163,7 @@
             "source": "System"
         },
         {
-            "id": 17,
+            "id": 18,
             "name": "${BIN}",
             "description": "Binning",
             "format": "",
@@ -163,7 +172,7 @@
             "source": "System"
         },
         {
-            "id": 18,
+            "id": 19,
             "name": "${BIT_DEPTH}",
             "description": "Bit Depth",
             "format": "",
@@ -172,7 +181,7 @@
             "source": "System"
         },
         {
-            "id": 19,
+            "id": 20,
             "name": "${FOCUS}",
             "description": "Focus",
             "format": "",
@@ -181,7 +190,7 @@
             "source": "System"
         },
         {
-            "id": 20,
+            "id": 21,
             "name": "${25544ALT}",
             "description": "ISS Altitude",
             "format": "",
@@ -190,7 +199,7 @@
             "source": "System"
         },
         {
-            "id": 21,
+            "id": 22,
             "name": "${25544AZ}",
             "description": "ISS Azimuth",
             "format": "",
@@ -199,7 +208,7 @@
             "source": "System"
         },
         {
-            "id": 22,
+            "id": 23,
             "name": "${25544VISIBLE}",
             "description": "ISS Visible",
             "format": "",
@@ -208,7 +217,7 @@
             "source": "System"
         },
         {
-            "id": 23,
+            "id": 24,
             "name": "${MOON_ELEVATION}",
             "description": "Moon Altitude",
             "format": "",
@@ -217,7 +226,7 @@
             "source": "System"
         },
         {
-            "id": 24,
+            "id": 25,
             "name": "${MOON_AZIMUTH}",
             "description": "Moon Azimuth",
             "format": "",
@@ -226,7 +235,7 @@
             "source": "System"
         },
         {
-            "id": 25,
+            "id": 26,
             "name": "${MOON_ILLUMINATION}",
             "description": "Moon Illumination",
             "format": "",
@@ -235,7 +244,7 @@
             "source": "System"
         },
         {
-            "id": 26,
+            "id": 27,
             "name": "${MOON_SYMBOL}",
             "description": "Moon Font Symbol",
             "format": "",
@@ -244,7 +253,7 @@
             "source": "System"
         },
         {
-            "id": 27,
+            "id": 28,
             "name": "${NAUTICALTWILIGHTSTARTS}",
             "description": "Nautical Twilight Start",
             "format": "",
@@ -253,7 +262,7 @@
             "source": "System"
         },
         {
-            "id": 28,
+            "id": 29,
             "name": "${CIVILTWILIGHTSTARTS}",
             "description": "Civil Twilight Start",
             "format": "",
@@ -262,7 +271,7 @@
             "source": "System"
         },
         {
-            "id": 29,
+            "id": 30,
             "name": "${DAYSTARTS}",
             "description": "Day Start",
             "format": "",
@@ -271,7 +280,7 @@
             "source": "System"
         },
         {
-            "id": 30,
+            "id": 31,
             "name": "${CIVILTWILIGHTENDS}",
             "description": "Civil Twilight Ends",
             "format": "",
@@ -280,7 +289,7 @@
             "source": "System"
         },
         {
-            "id": 31,
+            "id": 32,
             "name": "${NAUTICALTWILIGHTENDS}",
             "description": "Nautical Twilight Ends",
             "format": "",
@@ -289,7 +298,7 @@
             "source": "System"
         },
         {
-            "id": 32,
+            "id": 33,
             "name": "${ASTRONOMICALTWILIGHTENDS}",
             "description": "Astronmical Twilight Ends",
             "format": "",
@@ -298,7 +307,7 @@
             "source": "System"
         },
         {
-            "id": 33,
+            "id": 34,
             "name": "${CAMERA_TYPE}",
             "description": "Camera",
             "format": "",
@@ -307,7 +316,7 @@
             "source": "System"
         },
         {
-            "id": 34,
+            "id": 35,
             "name": "${AUTOUSB}",
             "description": "AUTOUSB ZWO Only",
             "format": "",
@@ -316,7 +325,7 @@
             "source": "System"
         },
         {
-            "id": 35,
+            "id": 36,
             "name": "${USB}",
             "description": "USB ZWO Only",
             "format": "",
@@ -325,7 +334,7 @@
             "source": "System"
         },
         {
-            "id": 36,
+            "id": 37,
             "name": "${CAPTURE}",
             "description": "capture",
             "format": "",
@@ -334,7 +343,7 @@
             "source": "User"
         },
         {
-            "id": 37,
+            "id": 38,
             "name": "${DARKFRAME}",
             "description": "Taking Dark Frames",
             "format": "",
@@ -343,7 +352,7 @@
             "source": "System"
         },
         {
-            "id": 38,
+            "id": 39,
             "name": "${eOVERLAY}",
             "description": "External Overlay",
             "format": "",
@@ -352,7 +361,7 @@
             "source": "System"
         },
         {
-            "id": 39,
+            "id": 40,
             "name": "${DAY_OR_NIGHT}",
             "description": "Day/Night string",
             "format": "",
@@ -361,7 +370,7 @@
             "source": "System"
         },
         {
-            "id": 40,
+            "id": 41,
             "name": "${ALLSKY_VERSION}",
             "description": "Allsky version string",
             "format": "",

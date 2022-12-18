@@ -153,6 +153,20 @@ class OECONFIG {
         return this.#dataFields = dataFields;
     }
 
+    get debugMode() {
+        return this.#appConfig.debugMode;
+    }
+    set debugMode(state) {
+        this.#appConfig.debugMode = state;
+    }
+
+    get positiondebugMode() {
+        return this.#appConfig.positiondebugMode;
+    }
+    set positiondebugMode(state) {
+        this.#appConfig.positiondebugMode = state;
+    }
+
     saveFields() {
         try {
             $.ajax({

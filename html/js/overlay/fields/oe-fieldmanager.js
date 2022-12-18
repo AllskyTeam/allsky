@@ -89,6 +89,9 @@ class OEFIELDMANAGER {
                 break;
         }
 
+        // reset x and y for offset
+        newField.x = ((newField.shape.width() / 2) + 10) | 0;
+        newField.y = ((newField.shape.height() / 2) + 10) | 0;
         this.#fieldDeletedAddedDefaultsChanged = true;
         return newField.shape;
     }

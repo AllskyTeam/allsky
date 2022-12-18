@@ -37,10 +37,6 @@ class OEIMAGEFIELD extends OEFIELD {
   }
 
   createShape() {
-    this.setImage(this.fieldData.image).then((imageObj) => {
-      this.shape.image(imageObj);
-      this.dirty = false;
-    });
 
     this.shape = new Konva.Image({
       id: this.id,
@@ -53,6 +49,13 @@ class OEIMAGEFIELD extends OEFIELD {
       name: 'field',
       perfectDrawEnabled: false
     });
+
+    this.setImage(this.fieldData.image).then((imageObj) => {
+      this.shape.image(imageObj);      
+      this.dirty = false;
+    });
+
+
   }
 
   get image() {
@@ -65,8 +68,18 @@ class OEIMAGEFIELD extends OEFIELD {
       image.addEventListener('load', () => {
         if (this.shape !== null) {
           this.shape.image(image);
+
+          if (this.shape.x() == 0) {
+            this.shape.x(((this.shape.width() / 2) | 0) + 0);
+          }
+          if (this.shape.y() == 0) {
+            this.shape.y(((this.shape.height() / 2) | 0) + 0);
+          }
+
+          this.shape.offset({x:  this.shape.width()/2, y: this.shape.height()/2});
+
           this.shape.scaleX(this.fieldData.scale);
-          this.shape.scaleY(this.fieldData.scale);
+          this.shape.scaleY(this.fieldData.scale);          
           this.dirty = true;
         }
         this.fieldData.image = imageName;

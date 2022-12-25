@@ -139,7 +139,9 @@ class OETEXTFIELD extends OEFIELD {
   }
   set fontsize(fontsize) {
     this.fieldData.fontsize = parseInt(fontsize);
-    this.shape.fontSize(fontsize);    
+    this.shape.fontSize(fontsize);
+    let size = this.shape.measureSize(this.shape.text());      
+    this.shape.offset({x:  size.width/2, y: size.height/2});    
     this.dirty = true;
   }
 

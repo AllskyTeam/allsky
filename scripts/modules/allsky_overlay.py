@@ -180,7 +180,7 @@ class ALLSKYOVERLAY:
     def _readData(self, dataFilename, defaultExpiry):
         result = False
         fileExtension = pathlib.Path(dataFilename).suffix
-        fileModifiedTime = s.int(os.path.getmtime(dataFilename))
+        fileModifiedTime = int(os.path.getmtime(dataFilename))
         if fileExtension == '.json':
             if s.isFileReadable(dataFilename):
                 with open(dataFilename) as file:
@@ -517,7 +517,6 @@ class ALLSKYOVERLAY:
 
                 if rotation == 0 and opacity == 1:
                     draw = ImageDraw.Draw(pilImage)
-                    # TODO: Add stroke to text
                     draw.text((fieldX, fieldY), fieldLabel, font = font, fill = fill, stroke_width=strokeWidth, stroke_fill=strokeFill)
                 else:
                     pilImage = self._draw_rotated_text(pilImage,-rotation,(fieldX, fieldY), fieldLabel, fill = fieldColour, font = font, opacity = opacity, strokeWidth=strokeWidth, strokeFill=stroke)
@@ -548,11 +547,8 @@ class ALLSKYOVERLAY:
         return (text_width, text_height)
 
     def _convertRGBtoBGR(self, colour):
-        red = colour[1:3]
-        green = colour[3:5]
-        blue = colour[5:7]
-        
-        colour = '#' + blue + green + red
+        r,g,b = ImageColor.getrgb(colour)
+        colour =  '#{:02x}{:02x}{:02x}'.format(b,g,r)
         
         return colour
                 
@@ -561,16 +557,12 @@ class ALLSKYOVERLAY:
         fill = self._convertRGBtoBGR(fill)
         strokeFill = self._convertRGBtoBGR(strokeFill)
 
-        # Generate transparent image of the same size as the input, and print
-        # the text there
         im_txt = Image.new('RGBA', image.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(im_txt)
         draw.text(xy, text, fill=fill, embedded_color=False, font=font, stroke_width=strokeWidth, stroke_fill=strokeFill)
 
-        # Rotate text image w.r.t. the calculated rotation center
         im_txt = im_txt.rotate(angle, center=xy)
         
-        # Paste text image onto actual image
         image.paste(im_txt, mask=im_txt)
         return image
 
@@ -601,7 +593,7 @@ class ALLSKYOVERLAY:
             opacity = self._extraData[placeHolder.upper()]['opacity']
 
             if self._extraData[placeHolder.upper()]["expires"] != 0:
-                age = s.int(time.time()) - self._extraData[placeHolder.upper()]["datecreated"]
+                age = int(time.time()) - self._extraData[placeHolder.upper()]["datecreated"]
                 if age > self._extraData[placeHolder.upper()]["expires"]:
                     fileTime = datetime.fromtimestamp(s.int(self._extraData[placeHolder.upper()]["datecreated"]))
                     fileTimeHR = fileTime.strftime("%d.%m.%y %H:%M:%S")
@@ -788,7 +780,7 @@ class ALLSKYOVERLAY:
             if symbol < 0.2 or symbol > 25.8 :  
                 symbol = '1'  # new moon  
             else:  
-                symbol = chr(ord('A')+s.int(symbol+0.5)-1) 
+                symbol = chr(ord('A')+int(symbol+0.5)-1) 
 
             azTemp = str(moon.az).split(":")
             self._moonAzimuth = azTemp[0] + u"\N{DEGREE SIGN}"

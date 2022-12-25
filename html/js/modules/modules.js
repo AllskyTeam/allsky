@@ -59,11 +59,21 @@ class MODULESEDITOR {
             }).done((result) => {
                 this.#configData = result;
 
+                if (this.#configData.restore) {
+                    $('#module-editor-restore').show();
+                } else {
+                    $('#module-editor-restore').hide();
+                }
+
                 this.#addModules(this.#configData.available, '#modules-available')
                 this.#addModules(this.#configData.selected, '#modules-selected')
 
                 if (result.corrupted) {
-                    bootbox.alert('The Flow configuration is corrupted. Please use the reset Flow button to revert the flow to the installation default');
+                    let message = 'The Flow configuration is corrupted. Please use the reset Flow button to revert the flow to the installation default';
+                    if (this.#configData.restore) {
+                        message = 'The Flow configuration is corrupted. Please use the reset Flow button to revert the flow to the installation default or the Restore button to restore the last good configuration';
+                    }
+                    bootbox.alert(message);
                 }
                 this.#updateToolbar();
 
@@ -209,8 +219,12 @@ class MODULESEDITOR {
         if (this.#configData !== null) {
             if (this.#configData.corrupted) {
                 $('#module-editor-reset').addClass('green pulse');
+                if (this.#configData.restore) {
+                    $('#module-editor-restore').addClass('green pulse');
+                }
             } else {
                 $('#module-editor-reset').removeClass('green pulse');
+                $('#module-editor-restore').removeClass('green pulse');
             }
         }
 
@@ -771,6 +785,20 @@ class MODULESEDITOR {
     }
 
     run() {
+
+        $(document).on('click', '#module-editor-restore', (event) => {
+            if (window.confirm('Are you sure you wish to restore this Flow. The last saved configuration for this flow will be restored. This process CANNOT be undone?')) {
+                $.ajax({
+                    url: 'includes/moduleutil.php?request=Restore&flow=' + this.#eventName,
+                    type: 'GET',
+                    cache: false,
+                    context: this
+                }).done((result) => {
+                    this.#buildUI();
+                });
+            }
+        });      
+
 
         $(document).on('click', '#module-editor-reset', (event) => {
             if (window.confirm('Are you sure you wish to reset this Flow. This process CANNOT be undone?')) {

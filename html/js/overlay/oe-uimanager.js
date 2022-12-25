@@ -274,13 +274,13 @@ class OEUIMANAGER {
                 if (this.#selected.id === shape.id()) {
                     this.updatePropertyEditor();
                 }
-                this.updateToolbar();
             }
 
             if (this.#configManager.snapBackground) {
                 this.#snapRectangle.visible(false);
             }
             this.#movingField = null;
+            this.updateToolbar();
         });
 
         this.#transformer.on('transform ', (event) => {
@@ -303,6 +303,7 @@ class OEUIMANAGER {
                     this.#selected.rotation = shape.rotation();
                     this.updatePropertyEditor();
                 }
+                this.updateToolbar();
             }
 
         });

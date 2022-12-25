@@ -64,8 +64,7 @@ class MODULEUTIL
         die();
     }
 
-    private function runRequest()
-    {
+    private function runRequest() {
         $action = $this->method . $this->request;
 
         if (is_callable(array('MODULEUTIL', $action))) {
@@ -145,6 +144,15 @@ class MODULEUTIL
         $rawConfigData = file_get_contents($configFileName);
 
         $this->sendResponse($rawConfigData);
+    }
+
+    public function getRestore() {
+        $flow = $_GET['flow'];
+                
+        $configFileName = ALLSKY_CONFIG . '/' . 'postprocessing_' . strtolower($flow) . '.json';
+        $backupConfigFileName = $configFileName . '-last';
+        copy($backupConfigFileName, $configFileName);
+        $this->sendResponse();        
     }
 
     public function postModulesSettings() {
@@ -278,10 +286,15 @@ class MODULEUTIL
             }
         };
 
+        $restore = false;
+        if (file_exists($configFileName . '-last')) {
+            $restore = true;
+        }
         $result = [
             'available' => $availableResult,
             'selected'=> $selectedResult,
-            'corrupted' => $corrupted
+            'corrupted' => $corrupted,
+            'restore' => $restore
         ];
         $result = json_encode($result, JSON_FORCE_OBJECT);     
         $this->sendResponse($result);       
@@ -293,6 +306,7 @@ class MODULEUTIL
         $configFileName = ALLSKY_CONFIG . '/' . 'postprocessing_' . strtolower($config) . '.json';
 
         $result = file_put_contents($configFileName, $configData);
+        copy($configFileName, $configFileName . '-last');
         if ($result !== false) {
             $this->sendResponse();
         } else {
@@ -351,7 +365,6 @@ class MODULEUTIL
 
     public function getReset() {
         $flow = $_GET['flow'];
-
         
         $sourceConfigFileName = ALLSKY_REPO . '/' . 'postprocessing_' . strtolower($flow) . '.json.repo';
         $rawConfigData = file_get_contents($sourceConfigFileName);

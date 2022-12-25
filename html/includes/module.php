@@ -76,6 +76,9 @@ function DisplayModule() {
                                 <li>
                                     <div class="btn btn-lg navbar-btn" id="module-editor-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset Config to default"><i class="fa-solid fa-rotate-right"></i></div>
                                 </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn" id="module-editor-restore" data-toggle="tooltip" data-placement="top" data-container="body" title="Restore last good config"><i class="fa-solid fa-upload"></i></div>
+                                </li>
                             </ul>                            
                         </div>
                     </div>

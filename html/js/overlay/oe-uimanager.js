@@ -229,13 +229,13 @@ class OEUIMANAGER {
             if (this.#configManager.snapBackground) {
                 let gridSizeX = this.#configManager.gridSize * this.#oeEditorStage.scaleX();
                 let gridSizeY = this.#configManager.gridSize * this.#oeEditorStage.scaleY();
-                this.#snapRectangle.position({
-                    x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
-                    y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
-                });
                 this.#snapRectangle.size({
                     width: shape.width(),
                     height: shape.height()
+                });
+                this.#snapRectangle.position({
+                    x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
+                    y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
                 });
                 this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});                
                 this.#snapRectangle.scale({

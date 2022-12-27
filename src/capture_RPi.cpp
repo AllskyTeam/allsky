@@ -760,7 +760,8 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 						myRaspistillSetting.analoggain = CG.currentGain;
 					}
 
-					if (CG.currentSkipFrames == 0 && ! CG.overlay.externalOverlay && \
+					if (CG.currentSkipFrames == 0 &&
+						CG.overlay.overlayMethod == OVERLAY_METHOD_LEGACY &&
 						doOverlay(pRgb, CG, bufTime, 0) > 0)
 					{
 						// if we added anything to overlay, write the file out
@@ -843,4 +844,5 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 
 	closeUp(EXIT_OK);
 }
+
 

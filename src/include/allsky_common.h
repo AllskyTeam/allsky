@@ -92,8 +92,10 @@ struct overlay {
 	bool showFocus						= false;
 	bool showHistogramBox				= false;
 	bool showUSB						= false;
-	bool externalOverlay				= false;
+	int overlayMethod					= NOT_SET;
 };
+#define OVERLAY_METHOD_LEGACY			0
+#define OVERLAY_METHOD_MODULE			1
 
 // Histogram Box, ZWO only
 struct HB {
@@ -332,3 +334,4 @@ void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
+

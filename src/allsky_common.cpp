@@ -172,6 +172,16 @@ std::string exec(const char *cmd)
 	return result;
 }
 
+std::string getOverlayMethod(int m)
+{
+	if (m == OVERLAY_METHOD_LEGACY)
+		return("legacy");
+	else if (m == OVERLAY_METHOD_MODULE)
+		return("module");
+	else
+		return("unknown");
+}
+
 void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 {
 	// If the double variables are an integer value, pass an integer value.
@@ -265,7 +275,7 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	snprintf(tmp, s, " DARKFRAME=%d", cg.takeDarkFrames ? 1 : 0);
 	strcat(cmd, tmp);
 
-	snprintf(tmp, s, " eOVERLAY=%d", cg.overlay.externalOverlay ? 1 : 0);
+	snprintf(tmp, s, " eOVERLAY=%d", cg.overlay.overlayMethod);
 	strcat(cmd, tmp);
 
 	if (cg.ct == ctZWO) {
@@ -460,8 +470,9 @@ bool checkForValidExtension(config *cg)
 		cg->extensionType = isJPG;
 
 		compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
-		// want dark frames to be at highest quality
-		if (cg->takeDarkFrames) {
+		// Want dark frames to be at highest quality as well as images that will be passed
+		// to a module to be post-processed.
+		if (cg->takeDarkFrames || cg->overlay.overlayMethod == OVERLAY_METHOD_LEGACY) {
 			cg->quality = 100;
 		} else if (cg->quality == NOT_SET) {
 			cg->quality = cg->qualityJPG;
@@ -475,7 +486,7 @@ bool checkForValidExtension(config *cg)
 
 		compressionParameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
 		// png is lossless so "quality" is really just the amount of compression.
-		if (cg->takeDarkFrames) {
+		if (cg->takeDarkFrames || cg->overlay.overlayMethod == OVERLAY_METHOD_LEGACY) {
 			cg->quality = 9;
 		} else if (cg->quality == NOT_SET) {
 			cg->quality = cg->qualityPNG;
@@ -1020,8 +1031,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - Set to 1, 2, 3, or 4 for more debugging information [%ld].\n", n, "debuglevel n", cg.debugLevel);
 
 	printf("\nOverlay settings:\n");
-	printf(" -%-*s - Set to 1 to use the new, external overlay program [%s].\n", n, "externalOverlay b", yesNo(cg.overlay.externalOverlay));
-	printf("  %-*s   ** NOTE: The older, internal overlays will go away in the next release.\n", n, "");
+	printf(" -%-*s - Set to %d to use the new, enhanced 'module' overlay program [%s].\n", n, "overlayMethod n", OVERLAY_METHOD_MODULE, getOverlayMethod(cg.overlay.overlayMethod).c_str());
 	printf(" -%-*s - Set to 1 to display the time [%s].\n", n, "showTime b", yesNo(cg.overlay.showTime));
 	printf(" -%-*s - Format the optional time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - 1 displays the exposure length [%s].\n", n, "showExposure b", yesNo(cg.overlay.showExposure));
@@ -1793,7 +1803,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		// overlay settings
 		else if (strcmp(a, "externaloverlay") == 0)
 		{
-			cg->overlay.externalOverlay = getBoolean(argv[++i]);
+			cg->overlay.overlayMethod = atoi(argv[++i]);
 		}
 		else if (strcmp(a, "showtime") == 0)
 		{
@@ -1972,3 +1982,4 @@ bool validateLatitudeLongitude(config *cg)
 
 	return(ret);
 }
+

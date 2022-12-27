@@ -396,7 +396,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 		* The delay between RPi images has been shortened.
 		* Several variables in the `config/config.sh` file were removed and others renamed - see the WebUI section below.
 		* Several additional troubleshooting files are written to ~/allsky/tmp.
-		* AUTO_STRETCH now works.
+		* AUTO_STRETCH now works, and is documented with sample images.
 		* Images can now be uploaded using the full `image-YYYYMMDDHHMMSS.jpg` name instead of the shorter `image.jpg` name.  See the `IMG_UPLOAD_ORIGINAL_NAME` Allsky setting in the documentation.
 		* Many minor enhancements and bug fixes were made.
 

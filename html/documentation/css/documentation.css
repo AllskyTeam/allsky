@@ -68,12 +68,16 @@ body {
 	background-color: var(--color-border-default);
 	border: 0;
 }
+.markdown-body hr.separatorSmall,
 .markdown-body hr.separator {
 	width: 90%;
 	margin-top: 24px;
-	margin-right: 5%;
-	margin-left: 5%;
+	margin-right: auto;
+	margin-left: auto;
 	background-color: blue;
+}
+.markdown-body hr.separatorSmall {
+	width: 50%;
 }
 
 .markdown-body blockquote {

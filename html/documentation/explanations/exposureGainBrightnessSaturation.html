@@ -11,7 +11,7 @@
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "Exposure, Gain, Brightness, Saturation"
+			content: "Exposure, Gain, Brightness, Stretch, Saturation"
 		}
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
@@ -68,14 +68,87 @@ You can change the <span class="WebUISetting">Auto White Balance</span> and red 
 separately for daytime and nighttime.
 </p>
 
+
 <h2>Saturation (RPiHQ cameras only)</h2>
+<p>
 Saturation determines how vivid the colors are,
 from black and white to very vivid (usually to the point where the colors look unnatural).
 To change saturation, use the <span class="WebUISetting">Saturation</span> setting in the WebUI.
 The middle point is "normal" saturation, but you may like more or less.
 If you want a black and white image, set the <span class="WebUISetting">Saturation</span>
 to its lowest value.
+</p>
 
+
+<h2 id="stretch">Stretch</h2>
+<p>
+Stretching an image lightens the brightness level you specify without lightening other parts,
+and is good to bring out details in nighttime pictures.
+Stretching is enable via editing the <span class="fileName">config.sh</span> file
+in the WebUI.
+The settings are:
+<ul>
+<li><span class="editorSetting">AUTO_STRETCH</span>
+	(default: <span class="editorBool">false</span>)
+	<br>Set to <span class="editorBool">True</span> to enable stretching.
+<li><span class="editorSetting">AUTO_STRETCH_AMOUNT</span>
+	(default: <span class="editorNum">10</span>)
+	<br>The amount to lighten an image,
+	<span class="editorNum">0</span> is none,
+	<span class="editorNum">3</span> is typical,
+	and <span class="editorNum">20</span> is a lot.
+	Higher numbers lighten the image more.
+<li><span class="editorSetting">AUTO_STRETCH_MID_POINT</span>
+	(default: <span class="editorString">10%</span>)
+	<br>This specifies what parts of the image should be lightened:
+	<span class="editorString">0%</span> lightens black items,
+	<span class="editorString">50%</span> lightens middle-gray items, and
+	<span class="editorString">100%</span> lightens white items.
+</ul>
+You may find that you can decrease the gain, and hence the noise,
+by increasing the stretch.
+Experiment with the settings to get the results you want.
+</p>
+
+<h3>Sample Stretch Images</h3>
+
+<p>
+<span class="editorSetting">AUTO_STRETCH</span>="<span class="editorBool">False</span>"
+<details><summary></summary>
+<br><img class="imgCenter" loading="lazy" src="Stretch_0.png" width="50%">
+</p>
+</details>
+
+<br><p>
+<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>,
+<span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">10%</span>
+<details><summary></summary>
+Notice the dark parts of the image are much brighter,
+and the light stars are only a little brighter.
+<br><img class="imgCenter" loading="lazy" src="Stretch_10x10.png" width="50%">
+</details>
+
+<br><p>
+<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>,
+<span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">30%</span>
+<details><summary></summary>
+Notice a very slight overall increase in brightness,
+but a noticable increase in brightness of the stars.
+<br><img class="imgCenter" loading="lazy" src="Stretch_10x30.png" width="50%">
+</p>
+</details>
+
+<br><p>
+<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">20</span>,
+<span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">10%</span>
+<details><summary></summary>
+Compare this image to the
+<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>
+image;
+this one is even brighter.
+<br><img class="imgCenter" loading="lazy" src="Stretch_20x10.png" width="50%">
+</p>
+</details>
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

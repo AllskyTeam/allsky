@@ -807,7 +807,7 @@ class ALLSKYOVERLAY:
         fileModifiedTime = ''
 
         if os.path.exists(fileName):
-            fileModifiedTime = s.int(os.path.getmtime(fileName))
+            fileModifiedTime = int(os.path.getmtime(fileName))
             m_ti = time.ctime(fileModifiedTime)
             fileDate = time.strptime(m_ti)  
             fileDate = time.strftime('%Y-%m-%d', fileDate)

@@ -595,9 +595,9 @@ class ALLSKYOVERLAY:
             if self._extraData[placeHolder.upper()]["expires"] != 0:
                 age = int(time.time()) - self._extraData[placeHolder.upper()]["datecreated"]
                 if age > self._extraData[placeHolder.upper()]["expires"]:
-                    fileTime = datetime.fromtimestamp(s.int(self._extraData[placeHolder.upper()]["datecreated"]))
+                    fileTime = datetime.fromtimestamp(int(self._extraData[placeHolder.upper()]["datecreated"]))
                     fileTimeHR = fileTime.strftime("%d.%m.%y %H:%M:%S")
-                    nowTime = datetime.fromtimestamp(s.int(time.time()))
+                    nowTime = datetime.fromtimestamp(int(time.time()))
                     nowTimeHR = nowTime.strftime("%d.%m.%y %H:%M:%S")                    
                     s.log(4, "INFO: data field {0} expired. File time {1}, now {2}. Expiry {3} Seconds. Age {4} Seconds"
                         .format(placeHolder, fileTimeHR, nowTimeHR, self._extraData[placeHolder.upper()]["expires"], age))

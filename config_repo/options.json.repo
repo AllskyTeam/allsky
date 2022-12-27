@@ -733,7 +733,7 @@
 "advanced" : 0
 },
 {
-"name" : "externalOverlay",
+"name" : "overlayMethod",
 "default" : 0,
 "description" : "Choose how to have image overlays done.<br><span class='WebUIValue'>module</span> has more features and is very flexible.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
 "label" : "Overlay Method",

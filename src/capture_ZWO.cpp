@@ -1682,7 +1682,7 @@ printf("       new newExposure_us=%s\n", length_in_units(n, true));
 				// If takeDarkFrames is off, add overlay text to the image
 				if (! CG.takeDarkFrames)
 				{
-					if (! CG.overlay.externalOverlay)
+					if (CG.overlay.overlayMethod == OVERLAY_METHOD_LEGACY)
 					{
 						(void) doOverlay(pRgb, CG, bufTime, gainChange);
 

@@ -23,9 +23,9 @@
 
 <body>
     <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
-	<div class="Layout">
-		<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
-		<div class="Layout-main markdown-body" id="mainContents">
+    <div class="Layout">
+        <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+        <div class="Layout-main markdown-body" id="mainContents">
 
 
             <h2>What are modules?</h2>
@@ -116,45 +116,52 @@
                         <thead>
                             <tr>
                                 <th>Annotation</th>
+                                <th>Icon</th>
                                 <th>Description</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="WebUISetting">1 - Save</td>
+                                <td class="WebUISetting">Save</td>
+                                <td><i class="fa fa-save fa-lg"></i></td>
                                 <td>This will be enabled when any changes have been made</td>
                             </tr>
                             <tr>
-                                <td class="WebUISetting">2 - Upload</td>
+                                <td class="WebUISetting">Upload</td>
+                                <td><i class="fa-solid fa-upload"></i></td>
                                 <td>This will allow you to upload a zip file containing a new or updated module.
                                     Please see the section on adding and updating modules for more details on
                                     how to use this feature </td>
                             </tr>
                             <tr>
-                                <td class="WebUISetting">3 - Flow</td>
+                                <td class="WebUISetting">Flow</td>
+                                <td></td>
                                 <td>The flow you wish to manage. If you have un saved changes from the current
                                     flow you will be prompted to save them before switching</td>
                             </tr>
                             <tr>
-                                <td class="WebUISetting">4 - Settings</td>
+                                <td class="WebUISetting">Settings</td>
+                                <td><i class="fa-solid fa-gear"></i></td>
                                 <td>Displays the settings dialog for the Module Manager</td>
                             </tr>
                             <tr>
-                                <td class="WebUISetting">5 - Debug</td>
+                                <td class="WebUISetting">Debug</td>
+                                <td><i class="fa-solid fa-bug"></i></td>
                                 <td>Displays the debug data for modules. This icon is only visible if its been
                                     enabled in the settings</td>
                             </tr>
                             <tr>
-                                <td class="WebUISetting">6 - Available</td>
-                                <td>These are the available modules for the selected Flow</td>
+                                <td class="WebUISetting">Reset</td>
+                                <td><i class="fa-solid fa-rotate-right"></i></td>
+                                <td>Resets the selected flow to the installation default</td>
                             </tr>
                             <tr>
-                                <td class="WebUISetting">7 - Enabled</td>
-                                <td>These are the modules to be run in the selected Flow. <strong>They will only
-                                        be run if the enabled checkbox is selected</strong>
-                                    <p>Modules displayed in red are fixed and cannot be moved</p>
-                                </td>
+                                <td class="WebUISetting">Restore</td>
+                                <td><i class="fa-solid fa-upload"></i></td>
+                                <td>Restores the flow to the last backup. This option will only be visible if there is a
+                                    restore poitn available</td>
                             </tr>
+
 
                         </tbody>
                     </table>
@@ -1328,6 +1335,8 @@
                     prevent them creating issues in the modules. For example the star detection module can use a
                     mask to hide all areas of the image that may contain things that will confuse the star
                     detection typically local light pollution</p>
+                <blockquote>Masks must be created in image editing software such as Gimp or Photoshop. There are no
+                    tools available within AllSky to create masks</blockquote>
                 <details>
                     <summary></summary>
 
@@ -1358,6 +1367,37 @@
                             </td>
                         </tr>
                     </table>
+
+                    <p>Masks are also used to mask areas of the image for some modules, such as the star count. This is
+                        to prevent false positive. Consider the following example</p>
+                    <table class="module-settings vtop">
+                        <tr>
+                            <td>
+                                <p>Consider the following image which is a raw image from the camera. There is a lot of
+                                    non sky in the image, houses trees etc. These 'artifacts' can cause some detection
+                                    modules to get confused so by masking them they will not be included in any of the
+                                    calculations</p>
+                            </td>
+                            <td><img allsky="true" loading="lazy" src="mask-stars-raw.png" alt="Raw Mask Image" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <p>This mask was created in an external image editing program to mask out the areas of the image that are not sky</p>
+                                <blockquote>Since this mask is being used to mask specific areas of the image if the camera is moved then the mask may have to be recreated</blockquote>
+                            </td>
+                            <td><img allsky="true" loading="lazy" src="mask-stars-mask.png" alt="Mask" /></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <p>After the mask has been applied the resulting image will allow the various modules to process the image</p>
+                            </td>
+                            <td><img allsky="true" loading="lazy" src="mask-stars-result.png" alt="Masked Image" />
+                            </td>
+                        </tr>
+                    </table>
+
+
                     <blockquote>
                         <p>Some modules will apply the mask but it will not be used for the final image.
                             Examples of this are masks used to mask the image for star/meteor detection</p>

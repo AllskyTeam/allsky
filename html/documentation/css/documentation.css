@@ -668,8 +668,6 @@ b, strong {
 	font-family: monospace;
 	font-weight: bold;
 }
-.settings {
-}
 .editorShell {
 	color: #fd971f;		/* Colors that match entries in the WebUI's "Editor" page */
 }
@@ -696,6 +694,8 @@ b, strong {
 .editorBracketsJSON {
 	color: #fd971f;
 }
+
+.shSetting,
 .editorShell,
 .editorShellComment,
 .editorSetting,
@@ -708,6 +708,28 @@ b, strong {
 	font-family: monospace;
 	background-color: #272822;
 	padding: 1px 2px;
+}
+.dropdown {
+	font-family: monospace;
+	color: #707070;
+	background-color: #e4e4e4;
+	border-radius: 4px;
+	border: 1px solid #cecece;
+	padding: 1px 30px 1px 10px;
+}
+.dropdown::after {	/* Chevron */
+	border-style: solid;
+	border-color: black;
+	border-width: 0.12em 0.12em 0 0;
+	content: "";
+	display: inline-block;
+	width: 0.45em;
+	height: 0.45em;
+	position: relative;
+	left: 1.5em;
+	top: -0.1em;
+	transform: rotate(135deg);
+	vertical-align: middle;
 }
 /* Shell syntax */
 .pl-c {

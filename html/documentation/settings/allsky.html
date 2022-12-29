@@ -30,18 +30,20 @@ These settings <b>must</b> be changed via the WebUI rather than manually editing
 since the WebUI performs error checking and updates other files as appropriate.
 <p>
 There WebUI contains many pages; the two used to changes settings are
-the <b>Allsky Settings</b> and <b>Editor</b> pages,
+the <span class="WebUIWebPage">Allsky Settings</span> and
+<span class="WebUIWebPage">Editor</span> pages,
 and are described below.
 
-<h2><i class="fa fa-camera fa-fw"></i> "Allsky Settings" Page</h2>
+<h2><i class="fa fa-camera fa-fw"></i> <span class="WebUIWebPage">Allsky Settings</span> WebUI Page</h2>
 <details><summary></summary>
 <p>
-This section lists the settings that are updated in the WebUI's <b>Allsky Settings</b> page.
+This section lists the settings that are updated in the WebUI's
+<span class="WebUIWebPage">Allsky Settings</space> page.
 A (partial) typical page is below.
 The entries highlighted in yellow are Advanced entries that aren't changed very often;
 to see them, click on the <b>Show advanced options...</b> button on the bottom of the page.
 </p>
-<img allsky="true" src="AllskySettingsPage.png" title="Typical Allsky Settings page" alt="AllskySettings" border="1" loading="lazy">
+<img allsky="true" src="AllskySettingsPage.png" class="imgCenter" title="Typical Allsky Settings page" alt="AllskySettings" border="1" loading="lazy">
 
 <p>
 <blockquote>
@@ -135,7 +137,7 @@ Legend:
 	Bin 3x3 uses 9 pixels, etc.
 	Increasing the bin results in smaller, lower-resolution images and reduces the need for long exposure.
 	Look up your camera specifications to know what values are supported.
-	<br>This variable is usually only changed during the day for testing.
+	<br>This setting is usually only changed during the day for testing.
 	<blockquote>On CCD camera, binning normally produces brighter images.
 	CMOS camera may, or may not produce brighter images, depending on the camera model.
 	</blockquote>
@@ -277,10 +279,10 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td><code>0</code> uses the sensor's full width in pixels.
 	Otherwise, with <b>ZWO</b> cameras the
 	<span class="WebUISetting">Image Width</span> and <span class="WebUISetting">Image Height</span>
-	variables set a crop area around the center of the sensor,
+	settings set a crop area around the center of the sensor,
 	the same as the <span class="shSetting">CROP</span> setting in
 	<span class="fileName">config.sh</span>.
-	With <b>RPi</b> cameras these variables decrease resolution of the full-sensor image,
+	With <b>RPi</b> cameras these settings decrease resolution of the full-sensor image,
 	then increases the resolution, thereby negating the changes.
 	<b>There is no reason to set the <span class="WebUISetting">Width</span> and
 	<span class="WebUISetting">Weight</span> with RPi cameras.</b></td>
@@ -525,7 +527,7 @@ use the <span class="shSetting">CROP</span> setting in the
 <tr><td class="WebUISetting">Display Settings</td> <td>No</td>
 	<td>People sometimes ask others what settings they are using.
 	Enable this setting to add a link to your Allsky Website's popout that displays your
-	settings in the WebUI's "Allsky Settings" page.
+	settings in the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page.
 	<br>Only works if you are running the Allsky Website.</td></tr>
 <tr><td class="WebUISetting">Show on Map</td> <td>No</td>
 	<td>Enable to have your camera appear on the
@@ -598,26 +600,27 @@ use the <span class="shSetting">CROP</span> setting in the
 </details>
 
 
-<h2><i class="fa fa-code fa-fw"></i> "Editor" Page</h2>
+<h2><i class="fa fa-code fa-fw"></i> <span class="WebUIWebPage">Editor</span> WebUI Page</h2>
 <details><summary></summary>
 <p>
-This section lists the settings that are updated in the WebUI's <b>Editor</b> page.
+This section lists the settings that are updated in the WebUI's
+<span class="WebUIWebPage">Editor</span> page.
 A typical page is below:
 </p>
-<img allsky="true" src="EditorPage.png" title="Typical Editor page" alt="Editor" border="1" loading="lazy">
+<img allsky="true" src="EditorPage.png" class="imgBorder imgCenter" title="Typical Editor page" alt="Editor" border="1" loading="lazy">
 <p>
-Files that can be edited include <span class="fileName">config.sh</span>,
-<span class="fileName">ftp-settings.sh</span>,
+Files that can be edited include <span class="dropdown">config.sh</span>,
+<span class="dropdown">ftp-settings.sh</span>,
 and if you have the Allsky Website installed, a local and/or remote
-<span class="fileName">configuration.json</span> file.
-Further, if you have a <span class="fileName">endOfNight_additionalSteps.sh</span> file,
+<span class="dropdown">configuration.json</span> file.
+Further, if you have a <span class="dropdown">endOfNight_additionalSteps.sh</span> file,
 it can also be edited.
 </p>
 <p>
 The tables below describe the settings in the
-<span class="fileName">config.sh</span> and
-<span class="fileName">ftp-settings.sh</span> files;
-settings in the <span class="fileName">configuration.json</span> files are described in the
+<span class="dropdown">config.sh</span> and
+<span class="dropdown">ftp-settings.sh</span> files;
+settings in the <span class="dropdown">configuration.json</span> files are described in the
 <a allsky="true" href="allskyWebsite.html">Allsky Website Settings</a> page.
 </p>
 <p>
@@ -626,63 +629,67 @@ Information on the color scheme used by the Editor is
 </p>
 
 <h3>config.sh settings</h3>
-<span class="fileName">config.sh</span> lets you configure the overall behavior of Allsky.
+<p>
+These settings let you configure the overall behavior of Allsky,
+and are updated by clicking on the WebUI's 
+<span class="WebUIWebPage">Editor</span> page, then selecting
+<span class="dropdown">config.sh</span> in the drop-down list at the bottom of the page.
+</p>
 <details sub><summary></summary>
 
 <table role="table">
 <thead>
-<tr><th colspan="3"><span class="fileName">config.sh</span></th></tr>
 <tr><th>Setting</th><th>Default</th><th>Description</th></tr>
 </thead>
 <tbody>
 
 <tr><td class="note" colspan="3">image.jpg Settings</td></tr>
 
-<tr><td class="shSetting">IMG_UPLOAD</td> <td>false</td>
+<tr><td><span class="shSetting">IMG_UPLOAD</span></td> <td>false</td>
 	<td>Upload the current image to a local or remote Allsky Website?
 	<br>Ignored if you don't have an Allsky Website.
 	</td>
 </tr>
-<tr><td class="shSetting">IMG_UPLOAD_ORIGINAL_NAME</td> <td>false</td>
+<tr><td><span class="shSetting">IMG_UPLOAD_ORIGINAL_NAME</span></td> <td>false</td>
 	<td>Should the name of the uploaded image be <span class="fileName">image.jpg</span> (if false)
 	or <span class="fileName">image-YYYYMMDDHHMMSS.jpg</span> (if true)?
 	<br>This is rarely used and is ignored if you don't have an Allsky Website or
 	<span class="shSetting">IMG_UPLOAD</span> is false.
 	</td>
 </tr>
-<tr><td class="shSetting">IMG_UPLOAD_FREQUENCY</td> <td>1</td>
+<tr><td><span class="shSetting">IMG_UPLOAD_FREQUENCY</span></td> <td>1</td>
 	<td>How often should the current image be uploaded?
 	This is useful for slow or costly networks.
 	<br>This only applies if <span class="shSetting">IMG_UPLOAD</span> is "true".
 	</td>
 </tr>
-<tr><td class="shSetting">IMG_DIR</td> <td>current/tmp</td>
+<tr><td><span class="shSetting">IMG_DIR</span></td> <td>current/tmp</td>
 	<td>Location of the image the website will use.
 	"current" is an alias for <span class="fileName">/home/pi/allsky</span>.
 	<br><b>Only change this if you know what you are doing.</b>
 	<br>Ignored if you don't have an Allsky Website.
 	</td>
 </tr>
-<tr><td class="shSetting">IMG_RESIZE</td> <td>false</td>
+<tr><td><span class="shSetting">IMG_RESIZE</span></td> <td>false</td>
 	<td>Resize images before cropping and stretching?
 	Large sensor cameras like the RPi HQ may need to be resized (i.e., shrunken)
 	in order for timelapses to work.
 	<br>Typically you'll want the
-	<span class="shSetting">IMG_WIDTH</span>&nbsp;/&nbsp;<span class="shSetting">IMG_HEIGHT</span>
+	<span><span class="shSetting">IMG_WIDTH</span>&nbsp;/&nbsp;<span class="shSetting">IMG_HEIGHT</span>
 	ratio to be the same as the sensor's width / height ratio,
 	otherwise images will be distorted.</td>
 </tr>
-<tr><td class="shSetting">IMG_WIDTH</td> <td>1520</td>
+<tr><td><span class="shSetting">IMG_WIDTH</span></td> <td>1520</td>
 	<td>The width of the resized image.
 	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">IMG_HEIGHT</td> <td>2028</td>
+<tr><td><span class="shSetting">IMG_HEIGHT</span></td> <td>2028</td>
 	<td>The height of the resized image.
 	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">CROP_IMAGE</td> <td>false</td>
+<tr><td><span class="shSetting">CROP_IMAGE</span></td> <td>false</td>
 	<td>Crop images before stretching?
 	This is often used to remove most of the dark areas when using a fisheye lens.
 	The image is cropped from the center so you'll need to experiment with the correct settings.
@@ -690,25 +697,25 @@ Information on the color scheme used by the Editor is
 	<span class="WebUISetting">Text X</span> and/or <span class="WebUISetting">Text Y</span>
 	WebUI settings changed.</td>
 </tr>
-<tr><td class="shSetting">CROP_WIDTH</td> <td>640</td>
+<tr><td><span class="shSetting">CROP_WIDTH</span></td> <td>640</td>
 	<td>The width of the resulting image.
 	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">CROP_HEIGHT</td> <td>480</td>
+<tr><td><span class="shSetting">CROP_HEIGHT</span></td> <td>480</td>
 	<td>The height of the resulting image.
 	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">CROP_OFFSET_X</td> <td>0</td>
+<tr><td><span class="shSetting">CROP_OFFSET_X</span></td> <td>0</td>
 	<td>The X offset to use when cropping.
 	To move the crop rectangle left, use a negative number.</td>
 </tr>
-<tr><td class="shSetting">CROP_OFFSET_Y</td> <td>0</td>
+<tr><td><span class="shSetting">CROP_OFFSET_Y</span></td> <td>0</td>
 	<td>The Y offset to use when cropping.
 	To move the crop rectangle up, use a negative number.</td>
 </tr>
-<tr><td class="shSetting">AUTO_STRETCH</td> <td>false</td>
+<tr><td><span class="shSetting">AUTO_STRETCH</span></td> <td>false</td>
 	<td>Stretch the image?
 	This increases the contrast without saturating highlights or shadows.
 	<br>
@@ -716,15 +723,15 @@ Information on the color scheme used by the Editor is
 	for more information on stretching images.
 	</td>
 </tr>
-<tr><td class="shSetting">AUTO_STRETCH_AMOUNT</td> <td>10</td>
+<tr><td><span class="shSetting">AUTO_STRETCH_AMOUNT</span></td> <td>10</td>
 	<td>How much to increase the contrast. 0 is none, 3 is typical, and 20 is a lot.</td>
 </tr>
-<tr><td class="shSetting">AUTO_STRETCH_MID_POINT</td> <td>10%</td>
+<tr><td><span class="shSetting">AUTO_STRETCH_MID_POINT</span></td> <td>10%</td>
 	<td>Where the maximum change "slope" in contrast should fall in the image
 	(0% is white; 50% is middle-gray; 100% is black).</td>
 </tr>
 
-<tr><td class="shSetting">RESIZE_UPLOADS</td> <td>false</td>
+<tr><td><span class="shSetting">RESIZE_UPLOADS</span></td> <td>false</td>
 	<td>Resize uploaded pictures?
 	<br>You may want images on your Pi to have higher resolution than images
 	uploaded to an Allsky Website.
@@ -732,36 +739,36 @@ Information on the color scheme used by the Editor is
 	at full resolution, so huge images in some senses are a waste.
 	</td>
 </tr>
-<tr><td class="shSetting">RESIZE_UPLOADS_SIZE</td> <td>962x720</td>
+<tr><td><span class="shSetting">RESIZE_UPLOADS_SIZE</span></td> <td>962x720</td>
 	<td>Sets the width x height of resized images being uploaded.
 	<br>Must be even numbers. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">IMG_CREATE_THUMBNAILS</td> <td>true</td>
+<tr><td><span class="shSetting">IMG_CREATE_THUMBNAILS</span></td> <td>true</td>
 	<td>Create thumbnails of the images and save in <span class="fileName">~/allsky/images</span>?
-	If you never look at them via the WebUI's "Images" page,
+	If you never look at them via the WebUI's <span class="WebUIWebPage">Images<span> page,
 	consider changing this to "false".
 	</td>
 </tr>
-<tr><td class="shSetting">REMOVE_BAD_IMAGES</td> <td>true</td>
+<tr><td><span class="shSetting">REMOVE_BAD_IMAGES</span></td> <td>true</td>
 	<td>Remove corrupt or too bright/too dark images and their
 	thumbnails before generating keograms, startrails, and timelapse videos?
 	<br><b>We suggest always leaving this turned on</b>;
 	if images are being removed that you want to keep, change the THRESHOLDs below.</td>
 </tr>
-<tr><td class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_LOW</td> <td>1</td>
+<tr><td><span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_LOW</span></td> <td>1</td>
 	<td>Images whose mean brightness is below this percent will be removed.
 	Set to <code>0</code> to disable this check.
 	<br>Only applies if <span class="shSetting">REMOVE_BAD_IMAGES</span> is "true".
 	</td>
 </tr>
-<tr><td class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_HIGH</td> <td>90</td>
+<tr><td><span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_HIGH</span></td> <td>90</td>
 	<td>Images whose mean brightness is above this percent will be removed (max: 100).
 	Set to <code>0</code> to disable this check.
 	<br>Only applies if <span class="shSetting">REMOVE_BAD_IMAGES</span> is "true".
 	</td>
 </tr>
-<tr><td class="shSetting">CAPTURE_EXTRA_PARAMETERS</td> <td></td>
+<tr><td><span class="shSetting">CAPTURE_EXTRA_PARAMETERS</span></td> <td></td>
 	<td>Any additional capture parameters.
 	Rarely used.
 	<br>Run <code>~/allsky/capture_ZWO --help</code> or <code>~/allsky/capture_RPi --help</code>
@@ -771,29 +778,29 @@ Information on the color scheme used by the Editor is
 
 <tr><td class="note" colspan="3">Timelapse Settings</td></tr>
 
-<tr><td class="shSetting">TIMELAPSE</td> <td>true</td>
+<tr><td><span class="shSetting">TIMELAPSE</span></td> <td>true</td>
 	<td>Build a timelapse video at the end of the night?</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSEWIDTH</td> <td>0</td>
+<tr><td><span class="shSetting">TIMELAPSEWIDTH</span></td> <td>0</td>
 	<td>Override the width of the generated timelapse; must be an even number.
 	<br><code>0</code> uses the images's full size.
 	<br>Large sensor cameras like the RPi HQ often need the timelapse to be shrunk
 	in order for timelapses to work (or the individual images need to be shrunk).
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSEHEIGHT</td> <td>0</td>
+<tr><td><span class="shSetting">TIMELAPSEHEIGHT</span></td> <td>0</td>
 	<td>Override the height of the generated timelapse; must be an even number.
 	<br><code>0</code> uses the images's full size.
 	<br>If you change the width and height you'll probably want the resulting aspect ratio
 	to match the original images.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_BITRATE</td> <td>2000k</td>
+<tr><td><span class="shSetting">TIMELAPSE_BITRATE</span></td> <td>2000k</td>
 	<td>Bitrate the timelapse video will be created with.
 	Higher values produce better quality video but larger files.
 	<br>Be sure to include the trailing <code>k</code>.</td>
 </tr>
-<tr><td class="shSetting">FPS</td> <td>25</td>
+<tr><td><span class="shSetting">FPS</span></td> <td>25</td>
 	<td>The timelapse video
 	<span class="shSetting">F</span>rames
 	<span class="shSetting">P</span>er
@@ -801,32 +808,32 @@ Information on the color scheme used by the Editor is
 	<br>Higher numbers produce smoother, but shorter, videos.
 	</td>
 </tr>
-<tr><td class="shSetting">VCODEC</td> <td>libx264</td>
+<tr><td><span class="shSetting">VCODEC</span></td> <td>libx264</td>
 	<td>Encoder used to create the timelapse video.
 	Rarely changed.
 	</td>
 </tr>
-<tr><td class="shSetting">PIX_FMT</td> <td>yuv420p</td>
+<tr><td><span class="shSetting">PIX_FMT</span></td> <td>yuv420p</td>
 	<td>Pixel format.
 	<br>If you don't know what this is, don't change it.
 	</td>
 </tr>
-<tr><td class="shSetting">FFLOG</td> <td>warning</td>
+<tr><td><span class="shSetting">FFLOG</span></td> <td>warning</td>
 	<td>Level of debugging information output when creating a timelapse.
 	Set to <code>info</code> for more output.</td>
 </tr>
-<tr><td class="shSetting">KEEP_SEQUENCE</td> <td>false</td>
+<tr><td><span class="shSetting">KEEP_SEQUENCE</span></td> <td>false</td>
 	<td>Keep the sequence of symbolic links created when creating a timelapse?
 	<br>Primarily used when debugging.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_EXTRA_PARAMETERS</td> <td></td>
+<tr><td><span class="shSetting">TIMELAPSE_EXTRA_PARAMETERS</span></td> <td></td>
 	<td>Any additional timelapse parameters. Run <code>ffmpeg -?</code> to see the options.</td>
 </tr>
-<tr><td class="shSetting">UPLOAD_VIDEO</td> <td>false</td>
+<tr><td><span class="shSetting">UPLOAD_VIDEO</span></td> <td>false</td>
 	<td>Upload the timelapse video to your Allsky Website?</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</td> <td>false</td>
+<tr><td><span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span></td> <td>false</td>
 	<td>Upload the timelapse video's thumbnail to your Allsky Website?
 	Many remote servers don't support thumbnail creation so the thumbnail needs to be
 	created on the Pi and uploaded.
@@ -836,7 +843,7 @@ Information on the color scheme used by the Editor is
 
 <tr><td class="note" colspan="3">Mini Timelapse Settings</td></tr>
 
-<tr><td class="shSetting">TIMELAPSE_MINI_IMAGES</td> <td>0</td>
+<tr><td><span class="shSetting">TIMELAPSE_MINI_IMAGES</span></td> <td>0</td>
 	<td>A "mini" timelapse only includes the most recent images,
 	and is created often.
 	It's a good way to see "recent" activity.
@@ -847,7 +854,7 @@ Information on the color scheme used by the Editor is
 	<br>The following settings only apply if this settings is greater than 0.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_FORCE_CREATION</td> <td>true</td>
+<tr><td><span class="shSetting">TIMELAPSE_MINI_FORCE_CREATION</span></td> <td>true</td>
 	<td>Should a mini timelapse be created even if
 	<span class="shSetting">TIMELAPSE_MINI_IMAGES</span> images
 	haven't been taken yet?
@@ -855,7 +862,7 @@ Information on the color scheme used by the Editor is
 	should a mini timelapse still be created?
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_FREQUENCY</td> <td>5</td>
+<tr><td><span class="shSetting">TIMELAPSE_MINI_FREQUENCY</span></td> <td>5</td>
 	<td>After how many images should the mini timelapse be created?
 	Slower machines and machines with slow networks should use higher numbers.
 	3&nbsp;-&nbsp;5 works well on a Pi 4 with 4 GB memory.
@@ -865,31 +872,31 @@ Information on the color scheme used by the Editor is
 	For example, every 5 frames a new mini timelapse is created using the most recent 15 images.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_UPLOAD_VIDEO</td> <td>true</td>
+<tr><td><span class="shSetting">TIMELAPSE_MINI_UPLOAD_VIDEO</span></td> <td>true</td>
 	<td>Like <span class="shSetting">UPLOAD_VIDEO</span> but for mini timelapses.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_UPLOAD_THUMBNAIL</td> <td>true</td>
+<tr><td><span class="shSetting">TIMELAPSE_MINI_UPLOAD_THUMBNAIL</span></td> <td>true</td>
 	<td>Like <span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span> but for mini timelapses.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_FPS</td> <td>2</td>
+<tr><td><span class="shSetting">TIMELAPSE_MINI_FPS</span></td> <td>2</td>
 	<td>Like <span class="shSetting">FPS</span> but for mini timelapses.
 	<br>Since mini timelapses contain a very small number of images,
 	this setting should be small to avoid very short videos.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_BITRATE</td> <td>1000k</td>
+<tr><td><span class="shSetting">TIMELAPSE_MINI_BITRATE</span></td> <td>1000k</td>
 	<td>Like <span class="shSetting">TIMELAPSE_BITRATE</span> but for mini timelapses.
 	<br>This is normally smaller than a full timelapse to save on processing time.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_WIDTH</td> <td>1014</td>
+<tr><td><span class="shSetting">TIMELAPSE_MINI_WIDTH</span></td> <td>1014</td>
 	<td>Like <span class="shSetting">TIMELAPSEWIDTH</span> but for mini timelapses.
 	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_HEIGHT</td> <td>760</td>
+<tr><td><span class="shSetting">TIMELAPSE_MINI_HEIGHT</span></td> <td>760</td>
 	<td>Like <span class="shSetting">TIMELAPSEHEIGHT</span> but for mini timelapses.
 	<br>Must be an even number. The default is just an example.
 	</td>
@@ -897,37 +904,37 @@ Information on the color scheme used by the Editor is
 
 <tr><td class="note" colspan="3">Keogram Settings</td></tr>
 
-<tr><td class="shSetting">KEOGRAM</td> <td>true</td>
+<tr><td><span class="shSetting">KEOGRAM</span></td> <td>true</td>
 	<td>Build a keogram image at the end of the night?</td>
 </tr>
-<tr><td class="shSetting">KEOGRAM_EXTRA_PARAMETERS</td> <td>various</td>
+<tr><td><span class="shSetting">KEOGRAM_EXTRA_PARAMETERS</span></td> <td>various</td>
 	<td>Additional keogram parameters. Execute <code>~/allsky/keogram --help</code> for a list.</td>
 </tr>
-<tr><td class="shSetting">UPLOAD_KEOGRAM</td> <td>false</td>
+<tr><td><span class="shSetting">UPLOAD_KEOGRAM</span></td> <td>false</td>
 	<td>Upload the keogram image to your Allsky Website?</td>
 </tr>
 
 <tr><td class="note" colspan="3">Startrails Settings</td></tr>
 
-<tr><td class="shSetting">STARTRAILS</td> <td>true</td>
+<tr><td><span class="shSetting">STARTRAILS</span></td> <td>true</td>
 	<td>Build a startrail image at the end of the night?</td>
 </tr>
-<tr><td class="shSetting">BRIGHTNESS_THRESHOLD</td> <td>0.1</td>
+<tr><td><span class="shSetting">BRIGHTNESS_THRESHOLD</span></td> <td>0.1</td>
 	<td>Average brightness level above which images are discarded (moon, head lights, aurora, etc.).
 	If you are only getting very short trails, or none at all, adjust this number.
 	<br>Values are 0.0 (pure black, filters out nothing) to 1.0 (pure white, uses every image).
 	</td>
 </tr>
-<tr><td class="shSetting">UPLOAD_STARTRAILS</td> <td>false</td>
+<tr><td><span class="shSetting">UPLOAD_STARTRAILS</span></td> <td>false</td>
 	<td>Upload the startrails image to your Allsky Website?</td>
 </tr>
 
 <tr><td class="note" colspan="3">Other Settings</td></tr>
 
-<tr><td class="shSetting">THUMBNAIL_SIZE_X</td> <td>100</td>
+<tr><td><span class="shSetting">THUMBNAIL_SIZE_X</span></td> <td>100</td>
 	<td>Sets the width of thumbnails.</td>
 </tr>
-<tr><td class="shSetting">THUMBNAIL_SIZE_Y</td> <td>75</td>
+<tr><td><span class="shSetting">THUMBNAIL_SIZE_Y</span></td> <td>75</td>
 	<td>Sets the height of thumbnails.
 	<br>These numbers determine the size of the thumbnails in
 	<span class="fileName">~/allsky/images</span>
@@ -937,32 +944,32 @@ Information on the color scheme used by the Editor is
 	</td>
 </tr>
 
-<tr><td class="shSetting">DAYS_TO_KEEP</td> <td>14</td>
+<tr><td><span class="shSetting">DAYS_TO_KEEP</span></td> <td>14</td>
 	<td>Number of days' data to keep before starting deleting.
 	Set to blank ("") to keep ALL days' data.</td>
 </tr>
-<tr><td class="shSetting">WEB_DAYS_TO_KEEP</td> <td>28</td>
+<tr><td><span class="shSetting">WEB_DAYS_TO_KEEP</span></td> <td>28</td>
 	<td>Number of days' of web data to keep before starting deleting.
 	Set to blank ("") to keep ALL days' web data.
 	<blockquote>This only applies to Allsky Websites on the Pi.</blockquote>
 	</td>
 </tr>
-<tr><td class="shSetting">POST_END_OF_NIGHT_DATA</td> <td>false</td>
+<tr><td><span class="shSetting">POST_END_OF_NIGHT_DATA</span></td> <td>false</td>
 	<td>Send data to your Allsky Website at the end of each night?
 	Installing the Allsky Websit automatically sets this to "true".
 	</td>
 </tr>
-<tr><td class="shSetting">WEBUI_DATA_FILES</td> <td></td>
+<tr><td><span class="shSetting">WEBUI_DATA_FILES</span></td> <td></td>
 	<td>One or more colon-separated full path names to text files that contain user-supplied
-	data to display on the WebUI's <b>System</b> page.
+	data to display on the WebUI's <span class="WebUIWebPage">System</span> page.
 	See the <a href="#WEBUI_DATA_FILES">WEBUI_DATA_FILES section</a> for more
 	information and an example of this setting.</td>
 </tr>
-<tr><td class="shSetting">UHUBCTL_PATH</td> <td></td>
+<tr><td><span class="shSetting">UHUBCTL_PATH</span></td> <td></td>
 	<td>If you have the <code>uhubctl</code> command installed enter its path name.
 	<code>uhubctl</code> resets the USB bus and can sometimes eliminate ASI_ERROR_TIMEOUTs.</td>
 </tr>
-<tr><td class="shSetting">UHUBCTL_PORT</td> <td>2</td>
+<tr><td><span class="shSetting">UHUBCTL_PORT</span></td> <td>2</td>
 	<td>Enter the USB port the camera is on.
 	Port 1 is USB 2.0 and port 2 is USB 3.0 on a Pi 4.</td>
 </tr>
@@ -972,108 +979,139 @@ Information on the color scheme used by the Editor is
 </table>
 </details>
 
-<br>
+
 <h3>ftp-settings.sh settings</h3>
 <p>
 In order to upload files to your Allsky Website (on the Pi and/or a remote server),
-connection details must be specified in <span class="fileName">ftp-settings.sh</span>.
+connection details must be specified by clicking on the WebUI's 
+<span class="WebUIWebPage">Editor</span> page, then selecting
+<span class="dropdown">ftp-settings.sh</span> in the drop-down list at the bottom of the page.
 </p>
 
 <details sub><summary></summary>
 <p>
-The <span class="shSetting">WEB_*_DIR</span>
- variables below are optionally used to copy a file to an Allsky Website on the Pi
-<b>AND</b> upload it to a remote Allsky Website.
+Notes:
+<ul>
+<li>
+	In the text below, "local" refers to an Allsky Website that's on the Pi
+	and "remote" refers to an Allsky Website <b>not</b> on the Pi.
+	<blockquote class="warning">
+	Directories on the <strong>Pi</strong> are created during Allsky Website installation, but
+	<strong>YOU</strong> must create the <strong>remote</strong> directories.
+	</blockquote>
+<li>
+	The <span class="shSetting">WEB_*_DIR</span>
+	settings below (e.g., <span class="shSetting">WEB_IMAGE_DIR</span>)
+	are <strong>only</strong> used if you have an Allsky Website on the Pi
+	<strong>AND</strong> a remote Allsky Website, and you want files copied to both locations.
+	In this case, see the example at the end of the table for what settings to use.
+<li>
+	By default, the destination file name is the same as the file being uploaded.
+	The <span class="shSetting">*_DESTINATION_NAME</span> settings below are used
+	to specify a DIFFERENT destination name.
+	For example, if the file being uploaded is
+	<span class="fileName">allsky-20210710.mp4</span> you may want it
+	called <span class="fileName">allsky.mp4</span> on the remote web server
+	so the name is always the same.
+	In that case, set
+	<span class="shSetting">VIDEOS_DESTINATION_NAME</span><span class="editorSpecial">=</span><span class="editorString">"allsky.mp4"</span>
+	(don't forget the file name extension like .mp4, .jpg, etc.).
+	If you want the destination file name to be the <b>same</b> as what's being uploaded,
+	leave the <span class="shSetting">*_DESTINATION_NAME</span> blank.
+</ul>
 </p>
-<p>
-In the table below, "remote" refers to a location that's not on the Pi
-(which may be an Allsky Website or simply a directory on another server),
-and "local" refers to an Allsky Website on the Pi.
-</p>
-
-<blockquote><b>YOU</b> must create the remote directories.
-Directories on the Pi are created during Allsky Website installation.
-</blockquote>
+<br>
 
 <table role="table">
 <thead>
-<tr><th colspan="3"><span class="fileName">ftp-settings.sh</span></th></tr>
-<tr><th>Configuration</th><th>Default</th><th>Description</th></tr>
+<tr><th>Setting</th><th>Default</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td class="shSetting">PROTOCOL</td> <td></td>
+<tr><td><span class="shSetting">PROTOCOL</span></td> <td></td>
 	<td>How the file should be uploaded:
 	<ul class="minimalPadding">
-	<li><code>local</code> - copies the file to the local Allsky Website.
-	<li><code>ftp</code> - uses File Transfer Protocol (FTP) to upload to a remote server.
-	<li><code>ftps</code> - uses secure File Transfer Protocol (FTPs) to upload to a remote server.
-		<b>This is preferred over the insecure <code>ftp</code></b>.
-	<li><code>sftp</code> - uses SSH file transfer to upload to a remote server.
-	<li><code>scp</code> - uses secure cp (copy) to copy the file to a remote server.
-	<li><code>S3</code> - copies the file to an Amazon Web Services (AWS) server.
-	<li><code>gcs</code> - copies the file to a Google Cloud Storage (GCS) server.
+	<li><span class="editorString">local</span> -
+		copies the file to a local Allsky Website.
+	<li><span class="editorString">ftp</span> -
+		uses File Transfer Protocol (FTP) to upload to a remote server.
+	<li><span class="editorString">ftps</span> -
+		uses secure File Transfer Protocol (FTPs) to upload to a remote server.
+		<br><strong>This is preferred over the insecure
+		<span class="editorString">ftp</span></strong>.
+	<li><span class="editorString">sftp</span> -
+		uses SSH file transfer to upload to a remote server.
+	<li><span class="editorString">scp</span> -
+		uses secure cp (copy) to copy the file to a remote server.
+	<li><span class="editorString">S3</span> -
+		copies the file to an Amazon Web Services (AWS) server.
+	<li><span class="editorString">gcs</span> -
+		copies the file to a Google Cloud Storage (GCS) server.
 	</ul>
 	</td>
 </tr>
 
 <tr><td class="note" colspan="3">image.jpg Settings</td></tr>
-<tr><td class="shSetting">IMAGE_DIR</td> <td></td>
+<tr><td><span class="shSetting">IMAGE_DIR</span></td> <td></td>
 	<td>The remote directory where the current image should go.</td>
 </tr>
-<tr><td class="shSetting">WEB_IMAGE_DIR</td> <td></td>
+<tr><td><span class="shSetting">WEB_IMAGE_DIR</span></td> <td></td>
 	<td>The local directory where the current image should go.</td>
 </tr>
 
 <tr><td class="note" colspan="3">Timelapse Settings</td></tr>
-<tr><td class="shSetting">VIDEOS_DIR</td> <td></td>
+<tr><td><span class="shSetting">VIDEOS_DIR</span></td> <td></td>
 	<td>The remote directory where the timelapse video should go.</td>
 </tr>
-<tr><td class="shSetting">VIDEOS_DESTINATION_NAME</td> <td></td>
+<tr><td><span class="shSetting">VIDEOS_DESTINATION_NAME</span></td> <td></td>
 	<td>Remote name of the timelapse video file.
 	If not specified it's the same name as the file being uploaded.</td>
 </tr>
-<tr><td class="shSetting">WEB_VIDEOS_DIR</td> <td></td>
+<tr><td><span class="shSetting">WEB_VIDEOS_DIR</span></td> <td></td>
 	<td>Location on the Pi to copy the timelapse video to.</td>
 </tr>
 
 <tr><td class="note" colspan="3">Keogram Settings</td></tr>
-<tr><td class="shSetting">KEOGRAM_DIR</td> <td></td>
+<tr><td><span class="shSetting">KEOGRAM_DIR</span></td> <td></td>
 	<td>The remote directory where the keogram image should go.</td>
 </tr>
-<tr><td class="shSetting">KEOGRAM_DESTINATION_NAME</td> <td></td>
+<tr><td><span class="shSetting">KEOGRAM_DESTINATION_NAME</span></td> <td></td>
 	<td>Remote name of the keogram image file.
 	If not specified it's the same name as the file being uploaded.</td>
 </tr>
-<tr><td class="shSetting">WEB_KEOGRAM_DIR</td> <td></td>
+<tr><td><span class="shSetting">WEB_KEOGRAM_DIR</span></td> <td></td>
 	<td>Location on the Pi to copy the keogram file to.</td>
 </tr>
 
 <tr><td class="note" colspan="3">Startrails Settings</td></tr>
-<tr><td class="shSetting">STARTRAILS_DIR</td> <td></td>
+<tr><td><span class="shSetting">STARTRAILS_DIR</span></td> <td></td>
 	<td>The remote directory where the startrails image should go.</td>
 </tr>
-<tr><td class="shSetting">STARTRAILS_DESTINATION_NAME</td> <td></td>
+<tr><td><span class="shSetting">STARTRAILS_DESTINATION_NAME</span></td> <td></td>
 	<td>Remote name of the startrails file.
 	If not specified it's the same name as the file being uploaded.</td>
 </tr>
-<tr><td class="shSetting">WEB_STARTRAILS_DIR</td> <td></td>
+<tr><td><span class="shSetting">WEB_STARTRAILS_DIR</span></td> <td></td>
 	<td>Location on the Pi to copy the startrails file to.</td>
 </tr>
 
-<tr><td class="note" colspan="3">Other Settings</td></tr>
-<tr><td class="shSetting">REMOTE_HOST</td> <td></td>
-	<td>Remote server DNS name or IP address.</td>
+<tr><td class="note" colspan="3">ftp, ftps, sftp, and scp Settings</td></tr>
+<tr><td><span class="shSetting">REMOTE_HOST</span></td> <td></td>
+	<td>Remote server DNS name or IP address.
+	If you don't know it, ask your service provider.
+	</td>
 </tr>
-<tr><td class="shSetting">REMOTE_USER</td> <td></td>
+
+<tr><td class="note" colspan="3">ftp, ftps, and sftp Settings</td></tr>
+<tr><td><span class="shSetting">REMOTE_USER</span></td> <td></td>
 	<td>Your remote user name.</td>
 </tr>
-<tr><td class="shSetting">REMOTE_PASSWORD</td> <td></td>
+<tr><td><span class="shSetting">REMOTE_PASSWORD</span></td> <td></td>
 	<td>Your ftp / ftps / sftp password.</td>
 </tr>
-<tr><td class="shSetting">REMOTE_PORT</td> <td></td>
-	<td>An optional port number for <code>lftp</code>. Is rarely needed.</td>
+<tr><td><span class="shSetting">REMOTE_PORT</span></td> <td></td>
+	<td>An optional port number for <code>ftp</code> and <code>ftps</code>. Is rarely needed.</td>
 </tr>
-<tr><td class="shSetting">LFTP_COMMANDS</td> <td></td>
+<tr><td><span class="shSetting">LFTP_COMMANDS</span></td> <td></td>
 	<td>An optional colon-separated (;) list of commands needed by the <code>lftp</code> command.
 	See <a allsky="true" href="/documentation/troubleshooting/uploads.html">this page</a>
 	for example commands to enter into <span class="shSetting">LFTP_COMMANDS</span>.
@@ -1081,70 +1119,131 @@ Directories on the Pi are created during Allsky Website installation.
 </tr>
 
 <tr><td class="note" colspan="3">scp Settings</td></tr>
-<tr><td class="shSetting">SSH_KEY_FILE</td> <td></td>
-	<td>Path to the SSH key file</td>
+<tr><td><span class="shSetting">SSH_KEY_FILE</span></td> <td></td>
+	<td>Path to the SSH key file.
+	<br>
+	You need to set up SSH key authentication on your server.
+	First, generate an SSH key on your Pi:
+<pre>ssh-keygen -t rsa</pre>
+	When prompted, leave the default filename, and use an empty passphrase.
+	Then, copy the generated key to your server:
+<pre>ssh-copy-id remote_username@server_ip_address</pre>
+	The private SSH key will be stored in
+	<span class="fileName">~/.ssh</span> (default filename is <span class="fileName">id_rsa</span>)
+	</td>
 </tr>
 
 <tr><td class="note" colspan="3">S3 Settings</td></tr>
 <tr><td colspan="3">
 	You need to install the AWS Command-Line Interface (CLI):
-	<pre>
-	sudo apt-get install python3-pip
-	pip3 install awscli --upgrade --user
-	export PATH=/home/pi/.local/bin:$PATH
-	aws configure</pre>
+<pre>
+sudo apt-get install python3-pip
+pip3 install awscli --upgrade --user
+export PATH=/home/pi/.local/bin:$PATH
+aws configure
+</pre>
 	When prompted, enter a valid access key ID, Secret Access Key, and Default region name,
-	for example, (e.g. "us-west-2").  Set the Default output format to "json" when prompted.
+	for example, (e.g. "us-west-2").
+	Set the Default output format to "json" when prompted.
 	</td>
 </tr>
-<tr><td class="shSetting">AWS_CLI_DIR</td> <td>/home/pi/.local/bin</td>
+<tr><td><span class="shSetting">AWS_CLI_DIR</span></td>
+	<td><span class="editorString">/home/pi/.local/bin</span></td>
 	<td>Directory on the Pi where the AWS tools are installed.
-	<br>If you used a different PATH variable above, change this setting to match it.
+	<br>If you used a different PATH setting above, change this setting to match it.
 	</td>
 </tr>
-<tr><td class="shSetting">S3_BUCKET</td> <td>allskybucket</td>
+<tr><td><span class="shSetting">S3_BUCKET</span></td>
+	<td><span class="editorString">allskybucket</span></td>
 	<td>Name of S3 Bucket where the files will be uploaded
-	(must be in Default region specified above).</td>
+	(must be in Default region specified above).
+	You may want to turn off or limit bucket versioning to avoid consuming lots of
+	space with multiple versions of the "image.jpg" files.
+	</td>
 </tr>
-<tr><td class="shSetting">S3_ACL</td> <td>private</td>
-	<td>S3 Access Control List.
-	If you want to serve your uploaded files vis http(s), change this to "public-read".
+<tr><td><span class="shSetting">S3_ACL</span></td>
+	<td><span class="editorString">private</span></td>
+	<td>S3 Access Control List (ACL).
+	If you want to serve your uploaded files vis http(s),
+	change this to <span class="editorString">public-read</span>.
 	You will need to ensure the S3 bucket policy is configured to allow public access to
-	objects with a public-read ACL.
+	objects with a <span class="editorString">public-read</span> ACL.
 	<br>You may need to set a CORS policy in S3 if the files are to be accessed by
 	Javascript from a different domain.
 	</td>
 </tr>
 
 <tr><td class="note" colspan="3">GCS Settings</td></tr>
-<tr><td class="shSetting">GCS_BUCKET</td> <td>allskybucket</td>
+<tr><td colspan="3">
+	You need to install the <code>gsutil</code> command which is part of the Google Cloud SDK.
+	See installation instructions
+	<a href="https://cloud.google.com/storage/docs/gsutil_install">here</a>.
+	<br>
+	NOTE: The <code>gsutil</code> command must be installed somewhere in the standard $PATH,
+	usually in <span class="fileName">/usr/bin</span>.
+	Make sure you authenticate the cli tool with the correct user as well.
+<tr><td><span class="shSetting">GCS_BUCKET</span></td>
+	<td><span class="editorString">allskybucket</span></td>
 	<td>Name of S3 Bucket where the files will be uploaded.</td>
 </tr>
-<tr><td class="shSetting">GCS_ACL</td> <td>private</td>
+<tr><td><span class="shSetting">GCS_ACL</span></td>
+	<td><span class="editorString">private</span></td>
 	<td>GCS Access Control List.
-	You can use any one of the predefined acl rules found
+	You can use any one of the predefined ACL rules found
 	<a href="https://cloud.google.com/storage/docs/access-control/lists#predefined-acl">here</a>.
-	To access files over https, set this to "publicRead".
+	To access files over https, set this to <span class="editorString">publicRead</span>.
 	</td>
 </tr>
 </tbody>
 </table>
 
-<br>
-If you have the Allsky Website <b>only</b> on your Pi, set these variables:
+<h4>Settings for various combinations</h4>
+<ol>
+<li>If you have the Allsky Website <b>only</b> on your Pi, use these settings:
 <pre>
 PROTOCOL="local"
 IMAGE_DIR=""
-VIDEOS_DIR="/home/pi/allsky/html/allsky/videos"
-KEOGRAM_DIR="/home/pi/allsky/html/allsky/keograms"
-STARTRAILS_DIR="/home/pi/allsky/html/allsky/startrails"
+VIDEOS_DIR="${ALLSKY_WEBSITE}/videos"
+KEOGRAM_DIR="${ALLSKY_WEBSITE}/keograms"
+STARTRAILS_DIR="${ALLSKY_WEBSITE}/startrails"
 </pre>
 
-<br>
+<li>
+	If you have an Allsky Website <b>only</b> on a remote server, use these settings.
+	For the sake of this example, assume your top-level directory on the server is
+	<span class="fileName">/allsky</span>:
+<pre>
+PROTOCOL="sftp"		<span class="shellComment"># or another PROTOCOL</span>
+IMAGE_DIR="/allsky"
+VIDEOS_DIR="/allsky/videos"
+KEOGRAM_DIR="/allsky/keogram"
+STARTRAILS_DIR="/allsky/startrails"
+</pre>
+
+<li>
+	If you have an Allsky Website on your Pi <b>AND</b> on a remote server, use these settings.
+	For the sake of this example, assume your top-level directory on the server is
+	<span class="fileName">/allsky</span>:
+<pre>
+PROTOCOL="sftp"		<span class="shellComment"># or another PROTOCOL</span>
+IMAGE_DIR="/allsky"
+WEB_IMAGE_DIR=""
+VIDEOS_DIR="/allsky/videos"
+WEB_VIDEOS_DIR="${ALLSKY_WEBSITE}/videos"
+KEOGRAM_DIR="/allsky/keogram"
+WEB_KEOGRAM_DIR="${ALLSKY_WEBSITE}/keograms"
+STARTRAILS_DIR="/allsky/startrails"
+WEB_STARTRAILS_DIR="${ALLSKY_WEBSITE}/startrails"
+</pre>
+</ol>
+
+<h4>Amazon Lightsail</h4>
 If you are using SSH Key with Amazon's Lightsail,
-copy the <span class="fileName">ssh-key.pem.pem</span> file to your Pi,
+copy the <span class="fileName">ssh-key.pem</span> file to your Pi,
 for example, in <span class="fileName">~</span>,
-then execute <code>chmod 400 ~/ssh-key.pem</code> and set these variables:
+then execute
+<pre>chmod 400 ~/ssh-key.pem</pre>
+and set:
 <pre>
 PROTOCOL="sftp"
 REMOTE_HOST="remote host name"
@@ -1153,12 +1252,12 @@ REMOTE_PASSWORD="n/a"
 LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"
 </pre>
 </details>
+<br>
 </details>
 
 
 <h2>WEBUI_DATA_FILES tutorial</h2>
 <details><summary></summary>
-
 <p>
 The <span class="WebUISetting">WEBUI_DATA_FILES</span> setting in
 <span class="fileName">config.sh</span>
@@ -1173,7 +1272,7 @@ if so, the changes needed to implement WEBUI_DATA_FILES are very easy, despite t
 
 <p>
 Each file listed in the <span class="WebUISetting">WEBUI_DATA_FILES</span>
-variable contains one or more lines.
+setting contains one or more lines.
 Blank lines and lines that begin with <code>#</code> are ignored.
 The remaining lines must contain the fields listed in the tables below,
 separated by <b>tabs</b>.
@@ -1401,7 +1500,7 @@ You want to display the temperature, humidity, dew point, and dew heater status.
 You will use both the humidity and dew point numbers to determine if you should turn the dew heater on or off via a toggle button you will add to the web page.
 You want the ambient temperature in Celsius and Fahrenheit.
 <p>
-You will add the following to the WebUI's <b>System</b> page:
+You will add the following to the WebUI's <span class="WebUIWebPage">System</span> page:
 <ul>
 <li>temperature
 <li>humidity
@@ -1484,9 +1583,9 @@ You pick the "random" icon so will set the button's <b>FA icon</b> field to <cod
 </p>
 
 <a name="WEBUI_DATA_FILES">
-<h4>Modify the <code>WEBUI_DATA_FILES</code> variable</h4>
+<h4>Modify the <code>WEBUI_DATA_FILES</code> setting</h4>
 You need to enter the names of your files in the
-<span class="WebUISetting">WEBUI_DATA_FILES</span> variable of the
+<span class="WebUISetting">WEBUI_DATA_FILES</span> setting of the
 <span class="fileName">config.sh</span> file,
 but how many files should you have?
 You could put everything in one file but you have two scripts that create files
@@ -1508,7 +1607,7 @@ WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
 The "data", "progress", and "button" lines in the first file will come first on the <b>System</b> page;
 those in the second file will come second on the <b>System</b> page, etc.
 You can change the order items appear on the <b>System</b> page by changing the order of files in the
-<span class="WebUISetting">WEBUI_DATA_FILES</span> variable.
+<span class="WebUISetting">WEBUI_DATA_FILES</span> setting.
 
 <h4>Create/modify scripts to update the data file(s)</h4>
 The <span class="fileName">getWeatherData.sh</span>
@@ -1613,8 +1712,10 @@ Then add
 <code>
 WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
 </code>
-to <span class="fileName">config.sh</span> via the WebUI's <b>Editor</b> page.
-Now, go to the <b>System</b> page in the WebUI and in addition to the normal information you should see the items you added.
+to <span class="fileName">config.sh</span> via the WebUI's
+<span class="WebUIWebPage">Editor</span> page.
+Now, go to the <span class="WebUIWebPage">System</span> page in the WebUI
+and in addition to the normal information you should see the items you added.
 Refreshing the screen won't change those items since the data files are not being updated yet.
 
 <p>

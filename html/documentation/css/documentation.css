@@ -639,6 +639,10 @@ b, strong {
 	color: var(--color-danger-fg);
 	font-weight: bold;
 }
+.AW {
+	color: var(--color-danger-fg);
+	font-weight: bold;
+}
 .WebUIWebPage {	/* link on the WebUI to one of its pages */
 	padding: 0 .2em;
 	color: #4b4a4b;
@@ -668,8 +672,6 @@ b, strong {
 	font-family: monospace;
 	font-weight: bold;
 }
-.settings {
-}
 .editorShell {
 	color: #fd971f;		/* Colors that match entries in the WebUI's "Editor" page */
 }
@@ -696,6 +698,8 @@ b, strong {
 .editorBracketsJSON {
 	color: #fd971f;
 }
+
+.shSetting,
 .editorShell,
 .editorShellComment,
 .editorSetting,
@@ -708,6 +712,28 @@ b, strong {
 	font-family: monospace;
 	background-color: #272822;
 	padding: 1px 2px;
+}
+.dropdown {
+	font-family: monospace;
+	color: #707070;
+	background-color: #e4e4e4;
+	border-radius: 4px;
+	border: 1px solid #cecece;
+	padding: 1px 30px 1px 10px;
+}
+.dropdown::after {	/* Chevron */
+	border-style: solid;
+	border-color: black;
+	border-width: 0.12em 0.12em 0 0;
+	content: "";
+	display: inline-block;
+	width: 0.45em;
+	height: 0.45em;
+	position: relative;
+	left: 1.5em;
+	top: -0.1em;
+	transform: rotate(135deg);
+	vertical-align: middle;
 }
 /* Shell syntax */
 .pl-c {
@@ -770,3 +796,15 @@ b, strong {
 .lsGreen { color: #32ae25; font-weight: 600; }
 .lsBlue { color: #5a64e5; font-weight: 600; }
 .lsBlack { color: #1e1611; font-weight: 600; }
+
+.legend {
+	margin: 2em 2em;
+	padding-left: 10px;
+	border: 2px solid gray;
+	border-radius: 10px;
+	background-color: #fbfbfb;
+}
+.legendHeader {
+	font-size: 125%;
+	font-weight: bold;
+}

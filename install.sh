@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ -z "${ALLSKY_HOME}" ]
+if [[ -z ${ALLSKY_HOME} ]]
 then
-	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}"))"
+	export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 fi
 ME="$(basename "${BASH_ARGV0}")"
 
@@ -23,7 +23,7 @@ cd ~/${INSTALL_DIR}  || exit 1
 # Location of possible prior version of Allsky.
 # If the user wants items copied from there to the new version,
 # they should have manually renamed "allsky" to "allsky-OLD" prior to running this script.
-PRIOR_INSTALL_DIR="$(dirname ${PWD})/${INSTALL_DIR}-OLD"
+PRIOR_INSTALL_DIR="$(dirname "${PWD}")/${INSTALL_DIR}-OLD"
 
 OLD_WEBUI_LOCATION="/var/www/html"		# location of old-style WebUI
 
@@ -85,7 +85,7 @@ display_header() {
 usage_and_exit()
 {
 	RET=${1}
-	if [ ${RET} -eq 0 ]; then
+	if [[ ${RET} -eq 0 ]]; then
 		C="${YELLOW}"
 	else
 		C="${RED}"
@@ -99,12 +99,13 @@ usage_and_exit()
 	echo
 	echo "'--function' executs the specified function and quits."
 	echo
+	#shellcheck disable=SC2086
 	exit ${RET}
 }
 
 calc_wt_size() {
 	WT_WIDTH=$(tput cols)
-	[ "${WT_WIDTH}" -gt 80 ] && WT_WIDTH=80
+	[[ ${WT_WIDTH} -gt 80 ]] && WT_WIDTH=80
 }
 
 
@@ -138,7 +139,7 @@ select_camera_type() {
 		"ZWO"  "   ZWO ASI" \
 		"RPi"  "   Raspberry Pi HQ and compatible" \
 		3>&1 1>&2 2>&3)
-	if [ $? -ne 0 ]; then
+	if [[ $? -ne 0 ]]; then
 		display_msg warning "Camera selection required.  Please re-run the installation and select a camera to continue."
 		exit 2
 	fi
@@ -210,11 +211,13 @@ save_camera_capabilities() {
 		OPTIONSONLY=""
 		display_msg progress "Setting up WebUI options${MSG} for ${CAMERA_TYPE} cameras."
 	fi
+	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly ${DEBUG_ARG} \
 		"cameraType" "Camera Type" "${CAMERA_TYPE}"
 	RET=$?
-	if [ ${RET} -ne 0 ]; then
-		if [ ${RET} -eq ${EXIT_NO_CAMERA} ]; then
+	if [[ ${RET} -ne 0 ]]; then
+		#shellcheck disable=SC2086
+		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
 			MSG="$MSG}After connecting your camera, run '${ME} --update'."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
@@ -344,7 +347,7 @@ check_and_mount_tmp() {
 			# Need to allow for files with spaces in their names.
 			# TODO: there has to be a better way.
 			echo "${IMAGES}" | \
-				while read image
+				while read -r image
 				do
 					mv "${image}" "${TMP_DIR}"
 				done
@@ -415,7 +418,7 @@ check_installation_success() {
 	local LOG="${3}"
 	local D="${4}"
 
-	if [ ${RET} -ne 0 ]; then
+	if [[ ${RET} -ne 0 ]]; then
 		display_msg error "${MESSAGE}"
 		MSG="The full log file is in ${LOG}"
 		MSG="${MSG}\nThe end of the file is:"
@@ -424,7 +427,7 @@ check_installation_success() {
 
 		return 1
 	fi
-	[[ ${D} == "true" ]] && cat ${LOG}
+	[[ ${D} == "true" ]] && cat "${LOG}"
 
 	return 0
 }
@@ -436,8 +439,8 @@ install_webserver() {
 	sudo systemctl stop hostapd 2> /dev/null
 	sudo systemctl stop lighttpd 2> /dev/null
 	TMP="${INSTALL_LOGS_DIR}/lighttpd.install.log"
-	(sudo apt-get update && sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon) > ${TMP} 2>&1
-	check_installation_success $? "lighttpd installation failed" "${TMP}" ${DEBUG} || exit_with_image 1
+	(sudo apt-get update && sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon) > "${TMP}" 2>&1
+	check_installation_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
 	sed \
@@ -469,7 +472,7 @@ prompt_for_hostname() {
 	MSG="${MSG}\n\nIf you have more than one Pi on your network they must all have unique names."
 	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 10 ${WT_WIDTH} \
 		"${SUGGESTED_NEW_HOST_NAME}" 3>&1 1>&2 2>&3)
-	if [ $? -ne 0 ]; then
+	if [[ $? -ne 0 ]]; then
 		display_msg warning "You must specify a host name.  Please re-run the installation and select one continue."
 		exit 2
 	fi
@@ -482,7 +485,7 @@ prompt_for_hostname() {
 	# Set up the avahi daemon if needed.
 	FINAL_AVI_FILE="/etc/avahi/avahi-daemon.conf"
 	[[ -f ${FINAL_AVI_FILE} ]] && grep -i --quiet "host-name=${NEW_HOST_NAME}" "${FINAL_AVI_FILE}"
-	if [ $? -ne 0 ]; then
+	if [[ $? -ne 0 ]]; then
 		# New NEW_HOST_NAME is not found in the file, or the file doesn't exist,
 		# so need to configure it.
 		display_msg progress "Configuring avahi-daemon."
@@ -521,7 +524,7 @@ set_permissions() {
 	# Not all, but go ahead and chgrp all of them so we don't miss any new ones.
 	find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 {} \;
 	find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 {} \;
-	sudo chgrp -R ${WEBSERVER_GROUP} "${ALLSKY_CONFIG}"
+	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}"
 
 	# The files should already be the correct permissions/owners, but just in case, set them.
 	# We don't know what permissions may have been on the old website, so use "sudo".
@@ -529,13 +532,13 @@ set_permissions() {
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
 
 	chmod 775 "${ALLSKY_TMP}"
-	sudo chgrp ${WEBSERVER_GROUP} "${ALLSKY_TMP}"
+	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
 
 	# This is actually an Allsky Website file, but in case we restored the old website,
 	# set its permissions.
-	chgrp -f ${WEBSERVER_GROUP} "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-	chmod -R 775 "${ALLSKY_WEBUI}"/overlay
-	sudo chgrp -R ${WEBSERVER_GROUP} "${ALLSKY_WEBUI}"/overlay
+	chgrp -f "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	chmod -R 775 "${ALLSKY_WEBUI}/overlay"
+	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_WEBUI}/overlay"
 
 	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 }
@@ -577,9 +580,9 @@ check_old_WebUI_location() {
 
 handle_prior_website() {
 	OLD_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
-	if [ -d "${OLD_WEBSITE}" ]; then
+	if [[ -d ${OLD_WEBSITE} ]]; then
 		ALLSKY_WEBSITE_OLD="${OLD_WEBSITE}"						# old-style Website
-	elif [ -d "${PRIOR_INSTALL_DIR}/html/allsky" ]; then
+	elif [[ -d ${PRIOR_INSTALL_DIR}/html/allsky ]]; then
 		ALLSKY_WEBSITE_OLD="${PRIOR_INSTALL_DIR}/html/allsky"	# new-style Website
 	else
 		return													# no prior Website
@@ -596,7 +599,7 @@ handle_prior_website() {
 		# Allsky doesn't ship with the website directory, so not sure how one got there...
 		# Try to remove the new one - if it's not empty the remove will fail.
 		rmdir "${ALLSKY_WEBSITE}"
-		if [ $? -ne 0 ]; then
+		if [[ $? -ne 0 ]]; then
 			display_msg error "New website in '${ALLSKY_WEBSITE}' is not empty."
 			display_msg info "  Move the contents manually from '${ALLSKY_WEBSITE_OLD}',"
 			display_msg info "  and then remove the old location.\n"
@@ -614,7 +617,7 @@ handle_prior_website() {
 
 	# Check if the prior website is outdated.
 	VERSION_FILE="${PRIOR_SITE}/version"
-	if [ -f "${VERSION_FILE}" ]; then
+	if [[ -f ${VERSION_FILE} ]]; then
 		OLD_VERSION=$( < "${VERSION_FILE}" )
 	else
 		OLD_VERSION="** Unknown, but old **"
@@ -654,11 +657,11 @@ set_locale() {
 # ask the user if they want to move stuff from there to the new directory.
 # Look for a directory inside the old one to make sure it's really an old allsky.
 check_if_prior_Allsky() {
-	if [ -d "${PRIOR_INSTALL_DIR}/src" ]; then
+	if [[ -d ${PRIOR_INSTALL_DIR}/src ]]; then
 		MSG="You appear to have a prior version of Allsky in ${PRIOR_INSTALL_DIR}."
 		MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then
-			if [ -f  "${PRIOR_INSTALL_DIR}/version" ]; then
+			if [[ -f  ${PRIOR_INSTALL_DIR}/version ]]; then
 				PRIOR_ALLSKY="new"		# New style Allsky with CAMERA_TYPE set in config.sh
 			else
 				PRIOR_ALLSKY="old"		# Old style with CAMERA set in config.sh
@@ -691,19 +694,19 @@ install_dependencies_etc() {
 	display_msg progress "Installing dependencies."
 	TMP="${INSTALL_LOGS_DIR}/make_deps.log"
 	#shellcheck disable=SC2024
-	sudo make deps > ${TMP} 2>&1
-	check_installation_success $? "Dependency installation failed" "${TMP}" ${DEBUG} || exit_with_image 1
+	sudo make deps > "${TMP}" 2>&1
+	check_installation_success $? "Dependency installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	display_msg progress "Preparing Allsky commands."
 	TMP="${INSTALL_LOGS_DIR}/make_all.log"
 	#shellcheck disable=SC2024
-	make all > ${TMP} 2>&1
-	check_installation_success $? "Compile failed" "${TMP}" ${DEBUG} || exit_with_image 1
+	make all > "${TMP}" 2>&1
+	check_installation_success $? "Compile failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	TMP="${INSTALL_LOGS_DIR}/make_install.log"
 	#shellcheck disable=SC2024
-	sudo make install > ${TMP} 2>&1
-	check_installation_success $? "make install failed" "${TMP}" ${DEBUG} || exit_with_image 1
+	sudo make install > "${TMP}" 2>&1
+	check_installation_success $? "make install failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	return 0
 }
@@ -721,7 +724,7 @@ create_allsky_log() {
 	display_msg progress "Set permissions on Allsky log (${ALLSKY_LOG})."
 	sudo truncate -s 0 "${ALLSKY_LOG}"
 	sudo chmod 664 "${ALLSKY_LOG}"
-	sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
+	sudo chgrp "${ALLSKY_GROUP}" "${ALLSKY_LOG}"
 }
 
 
@@ -739,22 +742,22 @@ restore_prior_files() {
 		return			# Nothing left to do in this function, so return
 	fi
 
-	if [ -f "${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh" ]; then
+	if [[ -f ${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
 		display_msg progress "Restoring endOfNight_additionalSteps.sh."
 		mv "${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
 	fi
 
-	if [ -f "${PRIOR_INSTALL_DIR}/scripts/endOfDay_additionalSteps.sh" ]; then
+	if [[ -f ${PRIOR_INSTALL_DIR}/scripts/endOfDay_additionalSteps.sh ]]; then
 		display_msg progress "Restoring endOfDay_additionalSteps.sh."
 		mv "${PRIOR_INSTALL_DIR}/scripts/endOfDay_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
 	fi
 
-	if [ -d "${PRIOR_INSTALL_DIR}/images" ]; then
+	if [[ -d ${PRIOR_INSTALL_DIR}/images ]]; then
 		display_msg progress "Restoring images."
 		mv "${PRIOR_INSTALL_DIR}/images" "${ALLSKY_HOME}"
 	fi
 
-	if [ -d "${PRIOR_INSTALL_DIR}/darks" ]; then
+	if [[ -d ${PRIOR_INSTALL_DIR}/darks ]]; then
 		display_msg progress "Restoring darks."
 		mv "${PRIOR_INSTALL_DIR}/darks" "${ALLSKY_HOME}"
 	fi
@@ -768,13 +771,13 @@ restore_prior_files() {
 	else
 		D="${OLD_RASPAP_DIR}"
 	fi
-	if [ -f "${D}/raspap.auth" ]; then
+	if [[ -f ${D}/raspap.auth ]]; then
 		display_msg progress "Restoring WebUI security settings."
 		mv "${D}/raspap.auth" "${ALLSKY_CONFIG}"
 	fi
 
 	# Restore any REMOTE Allsky Website configuration file.
-	if [ -f "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" ]; then
+	if [[ -f ${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} ]]; then
 		display_msg progress "Restoring remote Allsky Website ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}."
 		mv "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
@@ -802,14 +805,14 @@ restore_prior_files() {
 	# We don't check for old LOCAL Allsky Website configuration files.
 	# That's done when they install the Allsky Website.
 
-	if [ -f "${PRIOR_CONFIG_DIR}/uservariables.sh" ]; then
+	if [[ -f ${PRIOR_CONFIG_DIR}/uservariables.sh ]]; then
 		display_msg progress "Restoring uservariables.sh."
 		mv "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
 	fi
 
 	SETTINGS_MSG=""
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
-		if [ -f "${PRIOR_CONFIG_DIR}/settings.json" ]; then
+		if [[ -f ${PRIOR_CONFIG_DIR}/settings.json ]]; then
 			display_msg progress "Restoring WebUI settings."
 			# This file is probably a link to a camera type/model-specific file,
 			# so copy it instead of moving it to not break the link.
@@ -850,9 +853,9 @@ restore_prior_files() {
 	# This may miss really-old variables that no longer exist.
 
 	FOUND="true"
-	if [ -f "${PRIOR_CONFIG_DIR}/ftp-settings.sh" ]; then
+	if [[ -f ${PRIOR_CONFIG_DIR}/ftp-settings.sh ]]; then
 		PRIOR_FTP="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
-	elif [ -f "${PRIOR_INSTALL_DIR}/scripts/ftp-settings.sh" ]; then
+	elif [[ -f ${PRIOR_INSTALL_DIR}/scripts/ftp-settings.sh ]]; then
 		PRIOR_FTP="${PRIOR_INSTALL_DIR}/scripts/ftp-settings.sh"
 	else
 		PRIOR_FTP="ftp-settings.sh (in unknown location)"
@@ -931,11 +934,11 @@ do_update() {
 	# Don't simply copy the repo file to the final location in case the repo file isn't up to date.
 	grep --silent "/date" "${FINAL_SUDOERS_FILE}"
 	# shellcheck disable=SC2181
-	if [ $? -ne 0 ]; then
+	if [[ $? -ne 0 ]]; then
 		display_msg progress "Updating sudoers list."
 		grep --silent "/date" "${REPO_SUDOERS_FILE}"
 		# shellcheck disable=SC2181
-		if [ $? -ne 0 ]; then
+		if [[ $? -ne 0 ]]; then
 				display_msg error "Please get the newest '$(basename "${REPO_SUDOERS_FILE}")' file from Git and try again."
 			exit 2
 		fi
@@ -958,14 +961,14 @@ install_overlay()
 			sudo apt-get install -y php-sqlite3 && \
 			sudo apt install -y python3-pip
 		) > "${TMP}" 2>&1
-		check_installation_success $? "PHP module installation failed" "${TMP}" ${DEBUG} || exit_with_image 1
+		check_installation_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 		display_msg progress "Installing other PHP dependencies."
 		TMP="${INSTALL_LOGS_DIR}/libatlas.log"
 		# shellcheck disable=SC2069,SC2024
-		sudo apt-get -y install libatlas-base-dev 2>&1 > ${TMP}
+		sudo apt-get -y install libatlas-base-dev 2>&1 > "${TMP}"
 # TODO: or > then 2>&1 ???
-		check_installation_success $? "PHP dependencies failed" "${TMP}" ${DEBUG} || exit_with_image 1
+		check_installation_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 		# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
 		# This also allows us to display progress messages.
@@ -983,7 +986,7 @@ install_overlay()
 		mkdir -p "${PIP3_BUILD}"
 		COUNT=0
 		local NUM=$(wc -l < "${ALLSKY_REPO}/requirements${R}.txt")
-		while read package
+		while read -r package
 		do
 			COUNT=$((COUNT+1))
 			echo "${package}" > /tmp/package
@@ -1003,11 +1006,11 @@ install_overlay()
 		# shellcheck disable=SC2069,SC2024
 		sudo apt-get -y install msttcorefonts 2>&1 > "${TMP}"
 # TODO: or > then 2>&1 ???
-		check_installation_success $? "Trutype fonts failed" "${TMP}" ${DEBUG} || exit_with_image 1
+		check_installation_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 		display_msg progress "Setting up modules."
 		sudo mkdir -p /etc/allsky/modules
-		sudo chown -R ${ALLSKY_OWNER}:${WEBSERVER_GROUP} /etc/allsky
+		sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" /etc/allsky
 		sudo chmod -R 774 /etc/allsky
 }
 
@@ -1036,7 +1039,7 @@ display_image() {
 	fi
 
 	if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${POST_INSTALLATION_ACTIONS} ]]; then
-		##### Add a message the user will see in the WebUI.
+		# Add a message the user will see in the WebUI.
 		cat "${POST_INSTALLATION_ACTIONS}" > "${ALLSKY_LOG}"
 		WEBUI_MESSAGE="Actions needed.  See ${ALLSKY_LOG}."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "Warning" "${WEBUI_MESSAGE}"
@@ -1051,6 +1054,7 @@ display_image() {
 # Replace the "installing" messaged with a "failed" one.
 exit_with_image() {
 	display_image "InstallationFailed"
+	#shellcheck disable=SC2086
 	exit ${1}
 }
 
@@ -1061,7 +1065,7 @@ mkdir -p "${ALLSKY_CONFIG}"
 rm -fr "${INSTALL_LOGS_DIR}"			# shouldn't be there, but just in case
 mkdir "${INSTALL_LOGS_DIR}"
 
-OS=$(grep CODENAME /etc/os-release | cut -d= -f2)	# usually buster or bullseye
+OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 
 ##### Check arguments
 OK=true
@@ -1121,7 +1125,7 @@ does_old_WebUI_locaion_exist
 
 ##### Execute any specified function, then exit.
 if [[ ${FUNCTION} != "" ]]; then
-	if ! type ${FUNCTION} > /dev/null; then
+	if ! type "${FUNCTION}" > /dev/null; then
 		display_msg error "Unknown function: '${FUNCTION}'."
 		exit 1
 	fi

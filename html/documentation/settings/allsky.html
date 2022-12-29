@@ -30,22 +30,26 @@ These settings <b>must</b> be changed via the WebUI rather than manually editing
 since the WebUI performs error checking and updates other files as appropriate.
 <p>
 There WebUI contains many pages; the two used to changes settings are
-the <b>Allsky Settings</b> and <b>Editor</b> pages,
+the <span class="WebUIWebPage">Allsky Settings</span> and
+<span class="WebUIWebPage">Editor</span> pages,
 and are described below.
 
-<h2><i class="fa fa-camera fa-fw"></i> "Allsky Settings" Page</h2>
+<h2><i class="fa fa-camera fa-fw"></i> <span class="WebUIWebPage">Allsky Settings</span> WebUI Page</h2>
 <details><summary></summary>
 <p>
-This section lists the settings that are updated in the WebUI's <b>Allsky Settings</b> page.
+This section lists the settings that are updated in the WebUI's
+<span class="WebUIWebPage">Allsky Settings</span> page.
 A (partial) typical page is below.
 The entries highlighted in yellow are Advanced entries that aren't changed very often;
-to see them, click on the <b>Show advanced options...</b> button on the bottom of the page.
+to see them, click on the
+<img allsky="true" src="/documentation/img/showAdvancedOptionsButton.png" class="buttonIconLarge" loading="lazy">
+button on the bottom of the page.
 </p>
-<img allsky="true" src="AllskySettingsPage.png" title="Typical Allsky Settings page" alt="AllskySettings" border="1" loading="lazy">
+<img allsky="true" src="AllskySettingsPage.png" class="imgBorder imgCenter" title="Typical Allsky Settings page" alt="AllskySettings" loading="lazy">
 
 <p>
 <blockquote>
-<b>RPi camera users, please note</b>
+<b>RPi camera users, note</b>
 that several settings have different ranges on Buster versus Bullseye,
 so you'll need to update them when upgrading to Bullseye.
 For example, <span class="WebUISetting">Brightness</span> in Buster ranged from
@@ -54,118 +58,148 @@ For example, <span class="WebUISetting">Brightness</span> in Buster ranged from
 </p>
 <p>
 The exact list of settings available depends on your camera model;
-settings specific to a camera <b>type</b> (e.g., RPi or ZWO) are indicated as such.
+settings specific to a camera <b>type</b> (e.g., RPi or ZWO)
+are indicated as such in the table below.
 Where appropriate, the WebUI displays the minimum, maximum, and default values when
 you hover over a value,
 and only displays settings the camera supports, like cooler temperature for cooled cameras.
 </p>
-<div style="border: 1px solid gray">
-Legend:
+<div class="legend">
+<span class="legendHeader">Legend:</span>
 <ul class="minimalPadding">
-<li>Defaults for settings marked with <span class="cameraDependent">CD</span>
-	are <span class="cameraDependent">C</span>amera
-	<span class="cameraDependent">D</span>ependent and are displayed in the WebUI.
-<li>When changed, settings with "(AW)" after them are uploaded to your Allsky Website(s).
+<li><span class="cameraDependent">CD</span>
+	indicates the setting's default is
+	<span class="cameraDependent">C</span>amera
+	<span class="cameraDependent">D</span>ependent
+	and is displayed in the WebUI.
+<li><span class="AW">AW</span>
+	indicates a setting who's value is uploaded to your
+	<span class="cameraDependent">A</span>llsky
+	<span class="cameraDependent">W</span>ebsite(s) when changed.
 </ul>
 </div>
-<br>
 
 <table role="table">
 <thead>
-<tr><th>WebUI Setting</th><th>Default</th><th>Description</th></tr>
+<tr>
+	<th>WebUI Setting</th>
+	<th>Default</th>
+	<th>Description</th>
+</tr>
 </thead>
 <tbody>
 <tr><td class="note" colspan="3">Daytime settings</td></tr>
 
-<tr><td class="WebUISetting">Daytime Capture</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Daytime Capture</span></td>
+	<td>Yes</td>
 	<td>Enable to <b>capture</b> images during the day.</td>
 </tr>
-<tr><td class="WebUISetting">Daytime Save (AW)</td> <td>No</td>
+<tr><td><span class="WebUISetting">Daytime Save</span> <span class="AW">AW</span></td>
+	<td>No</td>
 	<td>Enable to <b>save</b> images during the day (they are always saved at night).
 	Only applies if <span class="WebUISetting">Daytime Capture</span> is enabled.
 	</td>
 </tr>
-<tr><td class="WebUISetting">Auto-Exposure</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Auto-Exposure</span></td>
+	<td>Yes</td>
 	<td>Turns on/off Auto-Exposure, which delivers properly exposed images even if
 	the overall brightness of the sky changes due to cloud cover, sun, etc.</td>
 </tr>
-<tr><td class="WebUISetting">Max Auto-Exposure</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Max Auto-Exposure</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td>The maximum exposure in milliseconds when using 
 	<span class="WebUISetting">Auto-Exposure</span>.
 	When <span class="WebUISetting">Auto-Exposure</span> is on,
 	this value will be used as the delay between frames.
 	Ignored if <span class="WebUISetting">Auto-Exposure</span> is off.</td>
 </tr>
-<tr><td class="WebUISetting">Manual Exposure</td> <td>0.5</td>
+<tr><td><span class="WebUISetting">Manual Exposure</span></td>
+	<td>0.5</td>
 	<td>Manual exposure time in milliseconds.
-	If <span class="WebUISetting">Auto-Exposure</span> is on this value is used as a starting exposure.</td>
+	If <span class="WebUISetting">Auto-Exposure</span>
+	is on this value is used as a starting exposure.</td>
 </tr>
-<tr><td class="WebUISetting">Mean Target</td> <td>0.5</td>
+<tr><td><span class="WebUISetting">Mean Target</span></td>
+	<td>0.5</td>
 	<td>(RPi only) The target mean brightness level when
 	<span class="WebUISetting">Auto-Exposure</span> is on.
 	Ranges from 0.0 (pure black) to 1.0 (pure white).
 	Best used when both <span class="WebUISetting">Auto-Exposure</span> and
 	<span class="WebUISetting">Auto-Gain</span> are enabled.</td>
 </tr>
-<tr><td class="WebUISetting">Brightness</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Brightness</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td>This setting changes the amount of light in images.</td>
 </tr>
-<tr><td class="WebUISetting">Delay</td> <td>5000</td>
+<tr><td><span class="WebUISetting">Delay</span></td>
+	<td>5000</td>
 	<td>Time in milliseconds to wait between the end of one image and the start of the next.</td>
 </tr>
-<tr><td class="WebUISetting">Auto-Gain</td> <td>No</td>
+<tr><td><span class="WebUISetting">Auto-Gain</span></td>
+	<td>No</td>
 	<td>Turns on/off Auto-Gain which delivers properly exposed images even if
 	the overall brightness of the sky changes.
 	With RPi cameras, this should typically be turned on.
 	With ZWO cameras you'll probably want this off and use the lowest
 	gain possible since daytime images are bright and don't need any gain.</td>
 </tr>
-<tr><td class="WebUISetting">Max Auto-Gain</td>
-	<td><span class="cameraDependent">CD</span></td> <td>Maximum gain when using <span class="WebUISetting">Auto-Gain</span>.
+<tr><td><span class="WebUISetting">Max Auto-Gain</span></td>
+	<td><span class="cameraDependent">CD</span></td>
+	<td>Maximum gain when using <span class="WebUISetting">Auto-Gain</span>.
 	Ignored if <span class="WebUISetting">Auto-Gain</span> is off.</td>
 </tr>
-<tr><td class="WebUISetting">Gain</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Gain</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td>Gain is similar to ISO on regular cameras.
 	When <span class="WebUISetting">Auto-Gain</span> is on, this value is used as a starting gain.
 	When <span class="WebUISetting">Auto-Gain</span> is off,
 	increasing this produces brighter images, but with more noise.</td>
 </tr>
-<tr><td class="WebUISetting">Binning</td> <td>1x1</td>
+<tr><td><span class="WebUISetting">Binning</span></td>
+	<td>1x1</td>
 	<td>Bin 2x2 collects the light from 4 pixels to form one larger pixel on the image.
 	Bin 3x3 uses 9 pixels, etc.
-	Increasing the bin results in smaller, lower-resolution images and reduces the need for long exposure.
+	Increasing the bin results in smaller,
+	lower-resolution images and reduces the need for long exposure.
 	Look up your camera specifications to know what values are supported.
-	<br>This variable is usually only changed during the day for testing.
+	<br>This setting is usually only changed during the day for testing.
 	<blockquote>On CCD camera, binning normally produces brighter images.
 	CMOS camera may, or may not produce brighter images, depending on the camera model.
 	</blockquote>
 	</td>
 </tr>
-<tr><td class="WebUISetting">Auto White Balance</td> <td>No</td>
+<tr><td><span class="WebUISetting">Auto White Balance</span></td>
+	<td>No</td>
 	<td>Sets daytime auto white balance.
 	When used, <span class="WebUISetting">Red balance</span> and
 	<span class="WebUISetting">Blue balance</span> are used as starting points.</td>
 </tr>
-<tr><td class="WebUISetting">Red Balance</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Red Balance</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td>The intensity of the red component of the image.</td>
 </tr>
-<tr><td class="WebUISetting">Blue Balance</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Blue Balance</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td>The intensity of the blue component of the image.</td>
 </tr>
-<tr><td class="WebUISetting">Frames To Skip</td> <td>5</td>
+<tr><td><span class="WebUISetting">Frames To Skip</span></td>
+	<td>5</td>
 	<td>When starting Allsky during the day, skip <i>up to</i> this many images
 	while the auto-exposure software gets to the correct exposure.
 	<br>Only applies if daytime <span class="WebUISetting">Auto-Exposure</span> is enabled.
 	</td>
 </tr>
-<tr><td class="WebUISetting">Cooling</td> <td>No</td>
+<tr><td><span class="WebUISetting">Cooling</span></td>
+	<td>No</td>
 	<td>(ZWO only) Enable to use cooling on cameras that support it.</td>
 </tr>
-<tr><td class="WebUISetting">Target Temp.</td> <td>0</td>
+<tr><td><span class="WebUISetting">Target Temp.</span></td>
+	<td>0</td>
 	<td>(ZWO only) Sensor's target temperature <i>when cooler is enabled</i>.
 	In degrees Celsius.</td>
 </tr>
-<tr><td class="WebUISetting">Tuning File</td> <td>No</td>
+<tr><td><span class="WebUISetting">Tuning File</span></td>
+	<td>No</td>
 	<td>(RPi on Bullseye only) Name of the optional daytime tuning file.
 	See <a href='https://www.raspberrypi.com/documentation/accessories/camera.html'
 		target='_blank'>this documentation</a> for more information.
@@ -176,57 +210,74 @@ Legend:
 	<p>Unless otherwise specified, these setttings are the same as the daytime ones.</td>
 </tr>
 
-<tr><td class="WebUISetting">Auto-Exposure</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Auto-Exposure</span></td>
+	<td>Yes</td>
 	<td></td>
 </tr>
-<tr><td class="WebUISetting">Max Auto-Exposure</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Max Auto-Exposure</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td></td>
 </tr>
-<tr><td class="WebUISetting">Manual Exposure</td> <td>10000</td>
+<tr><td><span class="WebUISetting">Manual Exposure</span></td>
+	<td>10000</td>
 	<td></td>
 </tr>
-<tr><td class="WebUISetting">Mean Target</td> <td>0.2</td>
+<tr><td><span class="WebUISetting">Mean Target</span></td>
+	<td>0.2</td>
 	<td>(RPi only)</td>
 </tr>
-<tr><td class="WebUISetting">Brightness</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Brightness</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td></td>
 </tr>
-<tr><td class="WebUISetting">Delay</td> <td>10</td>
+<tr><td><span class="WebUISetting">Delay</span></td>
+	<td>10</td>
 	<td></td>
 </tr>
-<tr><td class="WebUISetting">Auto-Gain</td> <td>No</td>
+<tr><td><span class="WebUISetting">Auto-Gain</span></td>
+	<td>No</td>
 	<td>With ZWO cameras enabling <span class="WebUISetting">Auto-Exposure</span> and
 	<span class="WebUISetting">Auto-Gain</span> together
 	can produce unpredictable results so testing is needed.</td>
 </tr>
-<tr><td class="WebUISetting">Max Auto-Gain</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Max Auto-Gain</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td></td>
 </tr>
-<tr><td class="WebUISetting">Gain</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Gain</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td></td>
 </tr>
-<tr><td class="WebUISetting">Binning</td> <td>1x1</td>
+<tr><td><span class="WebUISetting">Binning</span></td>
+	<td>1x1</td>
 	<td></td>
 </tr>
-<tr><td class="WebUISetting">Auto White Balance</td> <td>No</td>
+<tr><td><span class="WebUISetting">Auto White Balance</span></td>
+	<td>No</td>
 	<td></td>
 </tr>
-<tr><td class="WebUISetting">Red Balance</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Red Balance</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td></td>
 </tr>
-<tr><td class="WebUISetting">Blue Balance</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Blue Balance</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td></td>
 </tr>
-<tr><td class="WebUISetting">Frames To Skip</td> <td>1</td>
+<tr><td><span class="WebUISetting">Frames To Skip</span></td>
+	<td>1</td>
 	<td>Only applies if nighttime <span class="WebUISetting">Auto-Exposure</span> is enabled.</td>
 </tr>
-<tr><td class="WebUISetting">Cooling</td> <td>No</td>
+<tr><td><span class="WebUISetting">Cooling</span></td>
+	<td>No</td>
 	<td>(ZWO only)</td>
 </tr>
-<tr><td class="WebUISetting">Target Temp.</td> <td>0</td>
+<tr><td><span class="WebUISetting">Target Temp.</span></td>
+	<td>0</td>
 	<td>(ZWO only)</td>
 </tr>
-<tr><td class="WebUISetting">Tuning File</td> <td>No</td>
+<tr><td><span class="WebUISetting">Tuning File</span></td>
+	<td>No</td>
 	<td>(RPi on Bullseye only)</td>
 </tr>
 
@@ -241,54 +292,65 @@ If you want the final image to contain only a portion of what strikes the sensor
 use the <span class="shSetting">CROP</span> setting in the
 <span class="fileName">config.sh</span> file instead.
 -->
-<tr><td class="WebUISetting">Configuration File</td> <td>[none]</td>
+<tr><td><span class="WebUISetting">Configuration File</span></td>
+	<td>[none]</td>
 	<td>Configuration file to use for settings.  Not currently used.</td>
 </tr>
-<tr><td class="WebUISetting">Saturation</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Saturation</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td>(RPi only) Sets saturation from black and white to extra saturated.</td>
 </tr>
-<tr><td class="WebUISetting">Contrast</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Contrast</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td>(RPi only) Changes the difference between blacks and whites in an image.</td>
 </tr>
-<tr><td class="WebUISetting">Sharpness</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">Sharpness</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td>(RPi only) Changes the sharpness of an imgage.
 	Images that are too sharp look unnatural.</td>
 </tr>
-<tr><td class="WebUISetting class="WebUISetting"">Gamma</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting class="WebUISetting"">Gamma</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td>(ZWO only) Increases or decreases contrast between dark and bright areas.</td>
 </tr>
-<tr><td class="WebUISetting">Offset</td> <td>0</td>
+<tr><td><span class="WebUISetting">Offset</span></td>
+	<td>0</td>
 	<td>(ZWO only) Adds about 1/10 the specified value to every pixel,
 	which brightens the whole image.</td>
 </tr>
-<tr><td class="WebUISetting">Aggression</td> <td>75%</td>
+<tr><td><span class="WebUISetting">Aggression</span></td>
+	<td>75%</td>
 	<td>(ZWO only) Specifies how much of a calculated exposure change should be made
 	during auto-exposure. Lower numbers smooth out brightness changes but take longer to
 	react to changes.</td>
 </tr>
-<tr><td class="WebUISetting">Gain Transition Time</td> <td>15</td>
+<tr><td><span class="WebUISetting">Gain Transition Time</span></td>
+	<td>15</td>
 	<td>(ZWO only) Number of <b>minutes</b> over which to increase or decrease
 	the gain when going from day-to-night or night-to-day images.
 	This helps smooth brightness differences.
 	Only works if nighttime <span class="WebUISetting">Auto-Gain</span> is off.
 	<code>0</code> disables transitions.</td>
 </tr>
-<tr><td class="WebUISetting">Image Width</td> <td>0</td>
+<tr><td><span class="WebUISetting">Image Width</span></td>
+	<td>0</td>
 	<td><code>0</code> uses the sensor's full width in pixels.
 	Otherwise, with <b>ZWO</b> cameras the
 	<span class="WebUISetting">Image Width</span> and <span class="WebUISetting">Image Height</span>
-	variables set a crop area around the center of the sensor,
+	settings set a crop area around the center of the sensor,
 	the same as the <span class="shSetting">CROP</span> setting in
 	<span class="fileName">config.sh</span>.
-	With <b>RPi</b> cameras these variables decrease resolution of the full-sensor image,
+	With <b>RPi</b> cameras these settings decrease resolution of the full-sensor image,
 	then increases the resolution, thereby negating the changes.
 	<b>There is no reason to set the <span class="WebUISetting">Width</span> and
 	<span class="WebUISetting">Weight</span> with RPi cameras.</b></td>
 </tr>
-<tr><td class="WebUISetting">Image Height</td> <td>0</td>
-	<td> Same as </span class="WebUISetting">Width</span> but for the sensor's height.</td>
+<tr><td><span class="WebUISetting">Image Height</span></td>
+	<td>0</td>
+	<td> Same as </span class="WebUISetting">Width</span></span> but for the sensor's height.</td>
 </tr>
-<tr><td class="WebUISetting">Image Type</td> <td>auto</td>
+<tr><td><span class="WebUISetting">Image Type</span></td>
+	<td>auto</td>
 	<td>Image format: <b>auto</b>:
 	automatically picks the best type of image based on the camera.
 	If you have a color camera it will use RGB24; mono cameras use RAW16 if the output file is a .png,
@@ -296,7 +358,8 @@ use the <span class="shSetting">CROP</span> setting in the
 	<b>RAW8</b>: 8-bit mono. <b>RGB24</b>: color (red, green, blue), 8 bits per channel.
 	<b>RAW16</b>: 16-bit mono.</td>
 </tr>
-<tr><td class="WebUISetting">Quality</td> <td>95</td>
+<tr><td><span class="WebUISetting">Quality</span></td>
+	<td>95</td>
 	<td>For JPG images, this specifies the quality - 0 (low quality) to 100 (high quality).
 	Larger numbers produce higher-quality, but larger, files.
 	For PNG, this is the amount of compression - 0 for no compression (but quicker to save)
@@ -304,46 +367,58 @@ use the <span class="shSetting">CROP</span> setting in the
 	If you use very short delays between pictures you may want to play with these
 	numbers to ensure the quickest delay possible.</td>
 </tr>
-<tr><td class="WebUISetting">Mean Threshold</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Mean Threshold</span></td>
+	<td>Yes</td>
 	<td>(RPi only) When using <span class="WebUISetting">Mean Target</span>,
 	this specifies how close the target brightness should be to the Target.</td>
 </tr>
-<tr><td class="WebUISetting">Auto USB Bandwidth</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Auto USB Bandwidth</span></td>
+	<td>Yes</td>
 	<td>(ZWO only) Automatically sets the <span class="WebUISetting">USB bandwidth</span>.</td>
 </tr>
-<tr><td class="WebUISetting">USB Bandwidth</td> <td><span class="cameraDependent">CD</span></td>
+<tr><td><span class="WebUISetting">USB Bandwidth</span></td>
+	<td><span class="cameraDependent">CD</span></td>
 	<td>(ZWO only) How much of the USB bandwidth to use.</td>
 </tr>
-<tr><td class="WebUISetting">Filename (AW)</td> <td>image.jpg</td>
+<tr><td><span class="WebUISetting">Filename</span> <span class="AW">AW</span></td>
+	<td>image.jpg</td>
 	<td>The name of the image file. Supported extensions are <b>jpg</b> and <b>png</b>.</td>
 </tr>
-<tr><td class="WebUISetting">Rotation</td> <td>None</td>
+<tr><td><span class="WebUISetting">Rotation</span></td>
+	<td>None</td>
 	<td>(RPi on Bullseye only) How to rotate the image.
 	On <b>Bullseye</b> images can only be rotated 180 degrees.</td>
 </tr>
-<tr><td class="WebUISetting">Flip</td> <td>No flip</td>
+<tr><td><span class="WebUISetting">Flip</span></td>
+	<td>No flip</td>
 	<td>How to flip the image (No flip, Horizontal, Vertical, or Both).</td>
 </tr>
-<tr><td class="WebUISetting">Notification Images</td> <td>Yes</td>
-	<td>Displays notification images, e.g., "Camera off during day" if daytime images are not being taken.</td>
+<tr><td><span class="WebUISetting">Notification Images</span></td>
+	<td>Yes</td>
+	<td>Displays notification images, e.g., "Camera off during day" if
+	daytime images are not being taken.</td>
 </tr>
-<tr><td class="WebUISetting">Consistent Delays Between Images</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Consistent Delays Between Images</span></td>
+	<td>Yes</td>
 	<td>Enable to force the time between the start of exposures to be a consistent length
 	(<span class="WebUISetting">Max Auto-Exposure + Delay</span>).</td>
 </tr>
-<tr><td class="WebUISetting">Latitude (AW)</td> <td></td>
+<tr><td><span class="WebUISetting">Latitude</span> <span class="AW">AW</span></td>
+	<td></td>
 	<td>Latitude of the camera.
 	Formats include: 123.4N, 123.4S, 123.4, or -123.4.
 	Southern hemisphere is negative.
 	</td>
 </tr>
-<tr><td class="WebUISetting">Longitude (AW)</td> <td></td>
+<tr><td><span class="WebUISetting">Longitude</span> <span class="AW">AW</span></td>
+	<td></td>
 	<td>Longitude of the camera.
 	Formats include: 123.4E, 123.4W, 123.4, or -123.4.
 	West is negative.
 	</td>
 </tr>
-<tr><td class="WebUISetting">Angle (AW)</td> <td>-6</td>
+<tr><td><span class="WebUISetting">Angle</span> <span class="AW">AW</span></td>
+	<td>-6</td>
 	<td>Altitude of the Sun above or below the horizon at which daytime and nighttime switch.
 	Can be negative (Sun below horizon) or positive (Sun above horizon).
 	<ul class="minimalPadding">
@@ -356,24 +431,28 @@ use the <span class="shSetting">CROP</span> setting in the
 	for a more detailed description of <span class="WebUISetting">Angle</span>.
 	</td>
 </tr>
-<tr><td class="WebUISetting">Take Dark Frames</td> <td>No</td>
+<tr><td><span class="WebUISetting">Take Dark Frames</span></td>
+	<td>No</td>
 	<td>Enable to take dark frames which are use to decrease noise in images.
 	<br>
 	See <a allsky="true" href="/documentation/explanations/darkFrames.html">this page</a>
 	for an in-depth explanation of dark frames, including how to take and use them.
 	</td>
 </tr>
-<tr><td class="WebUISetting">Use Dark Frames</td> <td>No</td>
+<tr><td><span class="WebUISetting">Use Dark Frames</span></td>
+	<td>No</td>
 	<td>Enable to perform dark frame subtraction at night.
 	<br>Requires that you first took dark frames using the
 	<span class="WebUISetting">Take Dark Frames</span> setting.
 	</td>
 </tr>
-<tr><td class="WebUISetting">Locale</td> <td>en_US.UTF-8</td>
+<tr><td><span class="WebUISetting">Locale</span></td>
+	<td>en_US.UTF-8</td>
 	<td>Your locale, used to determine what the thousands and decimal separators are.
 	Type <code>locale</code> at a command prompt to see your choices (use the LC_NUMERIC entry).</td>
 </tr>
-<tr><td class="WebUISetting">Histogram Box</td> <td>500 500 50 50</td>
+<tr><td><span class="WebUISetting">Histogram Box</span></td>
+	<td>500 500 50 50</td>
 	<td>(ZWO only) X and Y size of histogram box in pixels and the middle point of
 	the box in percent.
 	This box is used to determine the average brightness of the image for auto-exposure
@@ -381,23 +460,27 @@ use the <span class="shSetting">CROP</span> setting in the
 	If the Sun goes through the center of your image you may want to move the box.
 	</td>
 </tr>
-<tr><td class="WebUISetting">Debug Level</td> <td>0</td>
+<tr><td><span class="WebUISetting">Debug Level</span></td>
+	<td>0</td>
 	<td>Determines the amount of output in the log file.
 	Log entries can also be viewed with <code>journalctl -u allsky</code>.
 	<br><code>0</code> outputs error messages only.
 	</td>
 </tr>
-<tr><td class="WebUISetting">Version 0.8 Exposure</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Version 0.8 Exposure</span></td>
+	<td>Yes</td>
 	<td>(ZWO only) Determines if the new version 0.8 exposure method is used (video capture stops between images).
 	This decreases the sensor temperature between 5 - 15 degrees Celsius.
 	If you see ASI_ERROR_TIMEOUTs in the log file, try turning this off.
 	See <a href="https://github.com/thomasjacquin/allsky/issues/417">Issue 417</a>.</td>
 </tr>
-<tr><td class="WebUISetting">Require WebUI Login</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Require WebUI Login</span></td>
+	<td>Yes</td>
 	<td>Determines if you need to log into the WebUI.
 	<b>If you Pi is accessible on the Internet, do NOT disable this!!</b></td>
 </tr>
-<tr><td class="WebUISetting">Always Show Advanced</td> <td>No</td>
+<tr><td><span class="WebUISetting">Always Show Advanced</span></td>
+	<td>No</td>
 	<td>Enable to always show the advanced options,
 	which are typically not used very often, so are hidden.</td>
 </tr>
@@ -412,7 +495,8 @@ use the <span class="shSetting">CROP</span> setting in the
 	This page only deals with the <u>image overlay</u>.
 	</p>
 </td></tr>
-<tr><td class="WebUISetting">External Overlay</td> <td>No</td>
+<tr><td><span class="WebUISetting">External Overlay</span></td>
+	<td>No</td>
 	<td>Enable to have image overlays added by the new, enhanced external
 	<a allsky="true" href="/documentation/overlays/overlays.html">overlay</a> program.
 	<br><b>When enabled, the overlay settings below do NOT apply</b>.
@@ -423,90 +507,114 @@ use the <span class="shSetting">CROP</span> setting in the
 	</blockquote>
 	</td>
 </tr>
-<tr><td class="WebUISetting">Show Time</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Show Time</span></td>
+	<td>Yes</td>
 	<td>Display the time the picture was taken in the overlay?</td>
 </tr>
-<tr><td class="WebUISetting">Time Format</td> <td>%Y%m%d %H:%M:%S</td>
+<tr><td><span class="WebUISetting">Time Format</span></td>
+	<td>%Y%m%d %H:%M:%S</td>
 	<td>Determines the format of the displayed time.
 	Run <code>man 3 strftime</code> to see the options.</td>
 </tr>
-<tr><td class="WebUISetting">Show Temperature</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Show Temperature</span></td>
+	<td>Yes</td>
 	<td>(ZWO only) Display the camera sensor temperature in the overlay?</td>
 </tr>
-<tr><td class="WebUISetting">Temperature Units</td> <td>Celsius</td>
+<tr><td><span class="WebUISetting">Temperature Units</span></td>
+	<td>Celsius</td>
 	<td>Determines what unit(s) the temperature will be displayed in (Celsius, Fahrenheit, or Both).</td>
 </tr>
-<tr><td class="WebUISetting">Show Exposure</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Show Exposure</span></td>
+	<td>Yes</td>
 	<td>Display the exposure time in the overlay? If <span class="WebUISetting">Auto-Exposure</span> is enabled,
 	"(auto)" will appear after the exposure.</td>
 </tr>
-<tr><td class="WebUISetting">Show Gain</td> <td>Yes</td>
+<tr><td><span class="WebUISetting">Show Gain</span></td>
+	<td>Yes</td>
 	<td>Display the gain in the overlay? If <span class="WebUISetting">Auto-Gain</span> is enabled,
 	"(auto)" will appear after the gain.</td>
 </tr>
-<tr><td class="WebUISetting">Show Brightness</td> <td>No</td>
+<tr><td><span class="WebUISetting">Show Brightness</span></td>
+	<td>No</td>
 	<td>Display the brightness level in the overlay?</td>
 </tr>
-<tr><td class="WebUISetting">Show USB</td> <td>No</td>
+<tr><td><span class="WebUISetting">Show USB</span></td>
+	<td>No</td>
 	<td>(ZWO only) Display the USB Bandwidth in the overlay? This is primarily for debugging.</td>
 </tr>
-<tr><td class="WebUISetting">Show Mean Brightness</td> <td>No</td>
+<tr><td><span class="WebUISetting">Show Mean Brightness</span></td>
+	<td>No</td>
 	<td>Display the mean (average) brightness in the overlay?
 	This value is used to determine the correct auto-exposure and auto-gain levels.</td>
 </tr>
-<tr><td class="WebUISetting">Show Histogram Box</td> <td>No</td>
+<tr><td><span class="WebUISetting">Show Histogram Box</span></td>
+	<td>No</td>
 	<td>(ZWO only) Show the histogram box on the image?</td>
 </tr>
-<tr><td class="WebUISetting">Show Focus Metric</td> <td>No</td>
+<tr><td><span class="WebUISetting">Show Focus Metric</span></td>
+	<td>No</td>
 	<td>Display a focus metric in the overlay to help you focus the camera?
 		Higher numbers are better, but only use when the brightness isn't changing.
 	</td>
 </tr>
-<tr><td class="WebUISetting">Text Overlay</td> <td></td>
+<tr><td><span class="WebUISetting">Text Overlay</span></td>
+	<td></td>
 	<td>Text overlay that appears below the time, in the same font.</td>
 </tr>
-<tr><td class="WebUISetting">Extra Text File</td> <td></td>
+<tr><td><span class="WebUISetting">Extra Text File</span></td>
+	<td></td>
 	<td>The full path name to a text file which will be displayed under other information.
 	The file can contain multiple lines which will be displayed underneath each other.</td>
 </tr>
-<tr><td class="WebUISetting">Max Age Of Extra</td> <td>0</td>
+<tr><td><span class="WebUISetting">Max Age Of Extra</span></td>
+	<td>0</td>
 	<td>If you specified an <span class="WebUISetting">Extra Text File</span>
 	then it must be updated within this number of seconds;
 	if not it's contents will not be displayed.
 	Set to <code>0</code> to ignore this check and always display the contents of the file.</td>
 </tr>
-<tr><td class="WebUISetting">Line Height</td> <td>30</td>
+<tr><td><span class="WebUISetting">Line Height</span></td>
+	<td>30</td>
 	<td>The line height of the text displayed in the image.
 	If you change the font size then adjust this value if required.</td>
 </tr>
-<tr><td class="WebUISetting">Text X</td> <td>15</td>
+<tr><td><span class="WebUISetting">Text X</span></td>
+	<td>15</td>
 	<td>Start of text from the left side, in pixels.</td>
 </tr>
-<tr><td class="WebUISetting">Text Y</td> <td>35</td>
+<tr><td><span class="WebUISetting">Text Y</span></td>
+	<td>35</td>
 	<td>Start of text from the top, in pixels.</td>
 </tr>
-<tr><td class="WebUISetting">Font Name</td> <td>Simplex</td>
+<tr><td><span class="WebUISetting">Font Name</span></td>
+	<td>Simplex</td>
 	<td>Font type for the overlay.</td>
 </tr>
-<tr><td class="WebUISetting">Font Color</td> <td>255 0 0</td>
+<tr><td><span class="WebUISetting">Font Color</span></td>
+	<td>255 0 0</td>
 	<td>Font color in Blue, Green, and Red (BGR).
 	NOTE: When using RAW 16 only the first two values are used, i.e., 255 128 0.</td>
 </tr>
-<tr><td class="WebUISetting">Small Font Color</td> <td>0 0 255</td>
+<tr><td><span class="WebUISetting">Small Font Color</span></td>
+	<td>0 0 255</td>
 	<td>Small font color in BGR.
 	NOTE: When using RAW 16 only the first two values are used, i.e., 255 128 0.</td>
 </tr>
-<tr><td class="WebUISetting">Font Smoothness</td> <td>Antialiased</td>
+<tr><td><span class="WebUISetting">Font Smoothness</span></td>
+	<td>Antialiased</td>
 	<td>Controls the smoothness of the fonts.</td>
 </tr>
-<tr><td class="WebUISetting">Font Size</td> <td>7</td>
+<tr><td><span class="WebUISetting">Font Size</span></td>
+	<td>7</td>
 	<td>Font size.
 	This is impacted by the sensor size so you'll need to experiment with this.</td>
 </tr>
-<tr><td class="WebUISetting">Font Weight</td> <td>1</td>
+<tr><td><span class="WebUISetting">Font Weight</span></td>
+	<td>1</td>
 	<td>Font line thickness.</td>
 </tr>
-<tr><td class="WebUISetting">Use Outline Font</td> <td>No</td>
+<tr><td><span class="WebUISetting">Use Outline Font</span></td>
+	<td>No</td>
 	<td>Should an outline to the text overlay be added to improve contrast?</td>
 </tr>
 
@@ -522,16 +630,19 @@ use the <span class="shSetting">CROP</span> setting in the
 	</td>
 </tr>
 
-<tr><td class="WebUISetting">Display Settings</td> <td>No</td>
+<tr><td><span class="WebUISetting">Display Settings</span></td>
+	<td>No</td>
 	<td>People sometimes ask others what settings they are using.
 	Enable this setting to add a link to your Allsky Website's popout that displays your
-	settings in the WebUI's "Allsky Settings" page.
+	settings in the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page.
 	<br>Only works if you are running the Allsky Website.</td></tr>
-<tr><td class="WebUISetting">Show on Map</td> <td>No</td>
+<tr><td><span class="WebUISetting">Show on Map</span></td>
+	<td>No</td>
 	<td>Enable to have your camera appear on the
 	<a href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>.
 	<br><b>If off, the following settings are ignored.</b></td></tr>
-<tr><td class="WebUISetting">Website URL</td> <td></td>
+<tr><td><span class="WebUISetting">Website URL</span></td>
+	<td></td>
 	<td>Your website's URL, for example: https://www.thomasjacquin.com/allsky.
 	If your camera is not accessible on the Internet or you do not want the
 	map page to link to your website, leave this field blank.
@@ -540,7 +651,8 @@ use the <span class="shSetting">CROP</span> setting in the
 	the <span class="WebUISetting">Image URL</span> must also be specified, and vice versa.
 	</blockquote>
 	</td></tr>
-<tr><td class="WebUISetting">Image URL</td> <td></td>
+<tr><td><span class="WebUISetting">Image URL</span></td>
+	<td></td>
 	<td>The URL to your allsky image, for example: https://wwww.thomasjacquin.com/allsky/image.jpg.
 	Right-click on the image and select <i>Copy Image Address</i> to determine what to
 	put in this field.
@@ -556,22 +668,28 @@ use the <span class="shSetting">CROP</span> setting in the
 	to appear on the map page, leave this field empty.
 	However, one of the main purposes of the map is to show pictures from cameras around the world,
 	so adding your image URL is <b>strongly</b> encouraged.</td></tr>
-<tr><td class="WebUISetting">Location (AW)</td> <td></td>
+<tr><td><span class="WebUISetting">Location</span> <span class="AW">AW</span></td>
+	<td></td>
 	<td>The location of your camera.
 	You can put any level of detail you want,
 	but there's no need to enter the country since it will be obvious by looking at the map.</td></tr>
-<tr><td class="WebUISetting">Owner (AW)</td> <td></td>
+<tr><td><span class="WebUISetting">Owner</span> <span class="AW">AW</span></td>
+	<td></td>
 	<td>The owner of the camera - your name, an association name, an observatory, etc.</td></tr>
-<tr><td class="WebUISetting">Camera (AW)</td> <td></td>
+<tr><td><span class="WebUISetting">Camera</span> <span class="AW">AW</span></td>
+	<td></td>
 	<td>The type and model of your camera, for example: <b>ZWO ASI224MC</b> or <b>RPi HQ</b>.
 	This field is required and a default value is set during Allsky installation.</td></tr>
-<tr><td class="WebUISetting">Lens (AW)</td> <td></td>
+<tr><td><span class="WebUISetting">Lens</span> <span class="AW">AW</span></td>
+	<td></td>
 	<td>The lens you're using on your camera, for example: <b>Arecont 1.55</b>.</td></tr>
-<tr><td class="WebUISetting">Computer (AW)</td> <td></td>
+<tr><td><span class="WebUISetting">Computer</span> <span class="AW">AW</span></td>
+	<td></td>
 	<td>The computer runni g your allsky camera, for example: <b>Raspberry Pi 3</b>.
 	This field is required and a default value is set during Allsky installation.</td></tr>
-<tr><td class="WebUISetting">Latitude &amp; longitude (AW)</td>
-	<td></td> <td>These are described above and are
+<tr><td><span class="WebUISetting">Latitude &amp; longitude</span> <span class="AW">AW</span></td>
+	<td></td>
+	<td>These are described above and are
 	required for your camera to appear on the Allsky Map.
 	<blockquote>
 	The actual values are not displayed on the map,
@@ -584,11 +702,13 @@ use the <span class="shSetting">CROP</span> setting in the
 
 <tr><td class="note" colspan="3">Camera Type</td></tr>
 
-<tr><td class="WebUISetting">Camera Type</td> <td></td>
+<tr><td><span class="WebUISetting">Camera Type</span></td>
+	<td></td>
 	<td>The type of camera you are using: ZWO or RPi (which includes the HD and compatible models).
 	<br>This is initially set during Allsky installation.
 	</td></tr>
-<tr><td class="WebUISetting">Camera Model</td> <td></td>
+<tr><td><span class="WebUISetting">Camera Model</span></td>
+	<td></td>
 	<td>This read-only field displays the model of camera you are using.
 	It is determined automatically based on what camera is connected to your Pi.
 	<br>If more than one camera of the specified type is connected, the first one is used.</td></tr>
@@ -598,26 +718,27 @@ use the <span class="shSetting">CROP</span> setting in the
 </details>
 
 
-<h2><i class="fa fa-code fa-fw"></i> "Editor" Page</h2>
+<h2><i class="fa fa-code fa-fw"></i> <span class="WebUIWebPage">Editor</span> WebUI Page</h2>
 <details><summary></summary>
 <p>
-This section lists the settings that are updated in the WebUI's <b>Editor</b> page.
+This section lists the settings that are updated in the WebUI's
+<span class="WebUIWebPage">Editor</span> page.
 A typical page is below:
 </p>
-<img allsky="true" src="EditorPage.png" title="Typical Editor page" alt="Editor" border="1" loading="lazy">
+<img allsky="true" src="EditorPage.png" class="imgBorder imgCenter" title="Typical Editor page" alt="Editor" loading="lazy">
 <p>
-Files that can be edited include <span class="fileName">config.sh</span>,
-<span class="fileName">ftp-settings.sh</span>,
+Files that can be edited include <span class="dropdown">config.sh</span>,
+<span class="dropdown">ftp-settings.sh</span>,
 and if you have the Allsky Website installed, a local and/or remote
-<span class="fileName">configuration.json</span> file.
-Further, if you have a <span class="fileName">endOfNight_additionalSteps.sh</span> file,
+<span class="dropdown">configuration.json</span> file.
+Further, if you have a <span class="dropdown">endOfNight_additionalSteps.sh</span> file,
 it can also be edited.
 </p>
 <p>
 The tables below describe the settings in the
-<span class="fileName">config.sh</span> and
-<span class="fileName">ftp-settings.sh</span> files;
-settings in the <span class="fileName">configuration.json</span> files are described in the
+<span class="dropdown">config.sh</span> and
+<span class="dropdown">ftp-settings.sh</span> files;
+settings in the <span class="dropdown">configuration.json</span> files are described in the
 <a allsky="true" href="allskyWebsite.html">Allsky Website Settings</a> page.
 </p>
 <p>
@@ -626,44 +747,49 @@ Information on the color scheme used by the Editor is
 </p>
 
 <h3>config.sh settings</h3>
-<span class="fileName">config.sh</span> lets you configure the overall behavior of Allsky.
+<p>
+These settings let you configure the overall behavior of Allsky,
+and are updated by clicking on the WebUI's 
+<span class="WebUIWebPage">Editor</span> page, then selecting
+<span class="dropdown">config.sh</span> in the drop-down list at the bottom of the page.
+</p>
 <details sub><summary></summary>
 
 <table role="table">
 <thead>
-<tr><th colspan="3"><span class="fileName">config.sh</span></th></tr>
-<tr><th>Setting</th><th>Default</th><th>Description</th></tr>
+<tr>
+	<th>Setting</th>
+	<th>Default</th>
+	<th>Description</th>
+</tr>
 </thead>
 <tbody>
 
 <tr><td class="note" colspan="3">image.jpg Settings</td></tr>
 
-<tr><td class="shSetting">IMG_UPLOAD</td> <td>false</td>
+<tr><td><span class="shSetting">IMG_UPLOAD</span></td>
+	<td>false</td>
 	<td>Upload the current image to a local or remote Allsky Website?
 	<br>Ignored if you don't have an Allsky Website.
 	</td>
 </tr>
-<tr><td class="shSetting">IMG_UPLOAD_ORIGINAL_NAME</td> <td>false</td>
+<tr><td><span class="shSetting">IMG_UPLOAD_ORIGINAL_NAME</span></td>
+	<td>false</td>
 	<td>Should the name of the uploaded image be <span class="fileName">image.jpg</span> (if false)
 	or <span class="fileName">image-YYYYMMDDHHMMSS.jpg</span> (if true)?
 	<br>This is rarely used and is ignored if you don't have an Allsky Website or
 	<span class="shSetting">IMG_UPLOAD</span> is false.
 	</td>
 </tr>
-<tr><td class="shSetting">IMG_UPLOAD_FREQUENCY</td> <td>1</td>
+<tr><td><span class="shSetting">IMG_UPLOAD_FREQUENCY</span></td>
+	<td>1</td>
 	<td>How often should the current image be uploaded?
 	This is useful for slow or costly networks.
 	<br>This only applies if <span class="shSetting">IMG_UPLOAD</span> is "true".
 	</td>
 </tr>
-<tr><td class="shSetting">IMG_DIR</td> <td>current/tmp</td>
-	<td>Location of the image the website will use.
-	"current" is an alias for <span class="fileName">/home/pi/allsky</span>.
-	<br><b>Only change this if you know what you are doing.</b>
-	<br>Ignored if you don't have an Allsky Website.
-	</td>
-</tr>
-<tr><td class="shSetting">IMG_RESIZE</td> <td>false</td>
+<tr><td><span class="shSetting">IMG_RESIZE</span></td>
+	<td>false</td>
 	<td>Resize images before cropping and stretching?
 	Large sensor cameras like the RPi HQ may need to be resized (i.e., shrunken)
 	in order for timelapses to work.
@@ -672,43 +798,51 @@ Information on the color scheme used by the Editor is
 	ratio to be the same as the sensor's width / height ratio,
 	otherwise images will be distorted.</td>
 </tr>
-<tr><td class="shSetting">IMG_WIDTH</td> <td>1520</td>
+<tr><td><span class="shSetting">IMG_WIDTH</span></td>
+	<td>1520</td>
 	<td>The width of the resized image.
 	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">IMG_HEIGHT</td> <td>2028</td>
+<tr><td><span class="shSetting">IMG_HEIGHT</span></td>
+	<td>2028</td>
 	<td>The height of the resized image.
 	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">CROP_IMAGE</td> <td>false</td>
+<tr><td><span class="shSetting">CROP_IMAGE</span></td>
+	<td>false</td>
 	<td>Crop images before stretching?
-	This is often used to remove most of the dark areas when using a fisheye lens.
+	This is often used to remove the dark areas around an image when using a fisheye lens.
 	The image is cropped from the center so you'll need to experiment with the correct settings.
 	Cropped images on the left or top will likely need the
 	<span class="WebUISetting">Text X</span> and/or <span class="WebUISetting">Text Y</span>
 	WebUI settings changed.</td>
 </tr>
-<tr><td class="shSetting">CROP_WIDTH</td> <td>640</td>
+<tr><td><span class="shSetting">CROP_WIDTH</span></td>
+	<td>640</td>
 	<td>The width of the resulting image.
 	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">CROP_HEIGHT</td> <td>480</td>
+<tr><td><span class="shSetting">CROP_HEIGHT</span></td>
+	<td>480</td>
 	<td>The height of the resulting image.
 	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">CROP_OFFSET_X</td> <td>0</td>
+<tr><td><span class="shSetting">CROP_OFFSET_X</span></td>
+	<td>0</td>
 	<td>The X offset to use when cropping.
 	To move the crop rectangle left, use a negative number.</td>
 </tr>
-<tr><td class="shSetting">CROP_OFFSET_Y</td> <td>0</td>
+<tr><td><span class="shSetting">CROP_OFFSET_Y</span></td>
+	<td>0</td>
 	<td>The Y offset to use when cropping.
 	To move the crop rectangle up, use a negative number.</td>
 </tr>
-<tr><td class="shSetting">AUTO_STRETCH</td> <td>false</td>
+<tr><td><span class="shSetting">AUTO_STRETCH</span></td>
+	<td>false</td>
 	<td>Stretch the image?
 	This increases the contrast without saturating highlights or shadows.
 	<br>
@@ -716,15 +850,18 @@ Information on the color scheme used by the Editor is
 	for more information on stretching images.
 	</td>
 </tr>
-<tr><td class="shSetting">AUTO_STRETCH_AMOUNT</td> <td>10</td>
+<tr><td><span class="shSetting">AUTO_STRETCH_AMOUNT</span></td>
+	<td>10</td>
 	<td>How much to increase the contrast. 0 is none, 3 is typical, and 20 is a lot.</td>
 </tr>
-<tr><td class="shSetting">AUTO_STRETCH_MID_POINT</td> <td>10%</td>
+<tr><td><span class="shSetting">AUTO_STRETCH_MID_POINT</span></td>
+	<td>10%</td>
 	<td>Where the maximum change "slope" in contrast should fall in the image
 	(0% is white; 50% is middle-gray; 100% is black).</td>
 </tr>
 
-<tr><td class="shSetting">RESIZE_UPLOADS</td> <td>false</td>
+<tr><td><span class="shSetting">RESIZE_UPLOADS</span></td>
+	<td>false</td>
 	<td>Resize uploaded pictures?
 	<br>You may want images on your Pi to have higher resolution than images
 	uploaded to an Allsky Website.
@@ -732,68 +869,87 @@ Information on the color scheme used by the Editor is
 	at full resolution, so huge images in some senses are a waste.
 	</td>
 </tr>
-<tr><td class="shSetting">RESIZE_UPLOADS_SIZE</td> <td>962x720</td>
-	<td>Sets the width x height of resized images being uploaded.
-	<br>Must be even numbers. The default is just an example.
+<tr><td><span class="shSetting">RESIZE_UPLOADS_WIDTH</span></td>
+	<td>962</td>
+	<td>Sets the width of resized images being uploaded.
+	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">IMG_CREATE_THUMBNAILS</td> <td>true</td>
+<tr><td><span class="shSetting">RESIZE_UPLOADS_HEIGHT</span></td>
+	<td>720</td>
+	<td>Sets the height of resized images being uploaded.
+	<br>Must be an even number. The default is just an example.
+	</td>
+</tr>
+<tr><td><span class="shSetting">IMG_CREATE_THUMBNAILS</span></td>
+	<td>true</td>
 	<td>Create thumbnails of the images and save in <span class="fileName">~/allsky/images</span>?
-	If you never look at them via the WebUI's "Images" page,
+	If you never look at them via the WebUI's <span class="WebUIWebPage">Images<span> page,
 	consider changing this to "false".
 	</td>
 </tr>
-<tr><td class="shSetting">REMOVE_BAD_IMAGES</td> <td>true</td>
+<tr><td><span class="shSetting">REMOVE_BAD_IMAGES</span></td>
+	<td>true</td>
 	<td>Remove corrupt or too bright/too dark images and their
 	thumbnails before generating keograms, startrails, and timelapse videos?
 	<br><b>We suggest always leaving this turned on</b>;
-	if images are being removed that you want to keep, change the THRESHOLDs below.</td>
+	if images are being removed that you want to keep, change the
+	<span class="shSetting">*_THRESHOLD_*<span> values below.</td>
 </tr>
-<tr><td class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_LOW</td> <td>1</td>
+<tr><td><span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_LOW</span></td>
+	<td>1</td>
 	<td>Images whose mean brightness is below this percent will be removed.
 	Set to <code>0</code> to disable this check.
 	<br>Only applies if <span class="shSetting">REMOVE_BAD_IMAGES</span> is "true".
 	</td>
 </tr>
-<tr><td class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_HIGH</td> <td>90</td>
+<tr><td><span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_HIGH</span></td>
+	<td>90</td>
 	<td>Images whose mean brightness is above this percent will be removed (max: 100).
 	Set to <code>0</code> to disable this check.
 	<br>Only applies if <span class="shSetting">REMOVE_BAD_IMAGES</span> is "true".
 	</td>
 </tr>
-<tr><td class="shSetting">CAPTURE_EXTRA_PARAMETERS</td> <td></td>
+<tr><td><span class="shSetting">CAPTURE_EXTRA_PARAMETERS</span></td>
+	<td></td>
 	<td>Any additional capture parameters.
 	Rarely used.
-	<br>Run <code>~/allsky/capture_ZWO --help</code> or <code>~/allsky/capture_RPi --help</code>
+	<br>Run <code>~/allsky/bin/capture_ZWO --help</code> or
+	<code>~/allsky/bin/capture_RPi --help</code>
 	for a list of options.
 	</td>
 </tr>
 
 <tr><td class="note" colspan="3">Timelapse Settings</td></tr>
 
-<tr><td class="shSetting">TIMELAPSE</td> <td>true</td>
+<tr><td><span class="shSetting">TIMELAPSE</span></td>
+	<td>true</td>
 	<td>Build a timelapse video at the end of the night?</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSEWIDTH</td> <td>0</td>
-	<td>Override the width of the generated timelapse; must be an even number.
+<tr><td><span class="shSetting">TIMELAPSEWIDTH</span></td>
+	<td>0</td>
+	<td>Changes the width of the generated timelapse; must be an even number.
 	<br><code>0</code> uses the images's full size.
 	<br>Large sensor cameras like the RPi HQ often need the timelapse to be shrunk
 	in order for timelapses to work (or the individual images need to be shrunk).
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSEHEIGHT</td> <td>0</td>
-	<td>Override the height of the generated timelapse; must be an even number.
+<tr><td><span class="shSetting">TIMELAPSEHEIGHT</span></td>
+	<td>0</td>
+	<td>Changes the height of the generated timelapse; must be an even number.
 	<br><code>0</code> uses the images's full size.
 	<br>If you change the width and height you'll probably want the resulting aspect ratio
 	to match the original images.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_BITRATE</td> <td>2000k</td>
+<tr><td><span class="shSetting">TIMELAPSE_BITRATE</span></td>
+	<td>2000k</td>
 	<td>Bitrate the timelapse video will be created with.
 	Higher values produce better quality video but larger files.
 	<br>Be sure to include the trailing <code>k</code>.</td>
 </tr>
-<tr><td class="shSetting">FPS</td> <td>25</td>
+<tr><td><span class="shSetting">FPS</span></td>
+	<td>25</td>
 	<td>The timelapse video
 	<span class="shSetting">F</span>rames
 	<span class="shSetting">P</span>er
@@ -801,32 +957,45 @@ Information on the color scheme used by the Editor is
 	<br>Higher numbers produce smoother, but shorter, videos.
 	</td>
 </tr>
-<tr><td class="shSetting">VCODEC</td> <td>libx264</td>
+<tr><td><span class="shSetting">VCODEC</span></td>
+	<td>libx264</td>
 	<td>Encoder used to create the timelapse video.
 	Rarely changed.
 	</td>
 </tr>
-<tr><td class="shSetting">PIX_FMT</td> <td>yuv420p</td>
+<tr><td><span class="shSetting">PIX_FMT</span></td>
+	<td>yuv420p</td>
 	<td>Pixel format.
 	<br>If you don't know what this is, don't change it.
 	</td>
 </tr>
-<tr><td class="shSetting">FFLOG</td> <td>warning</td>
+<tr><td><span class="shSetting">FFLOG</span></td>
+	<td>warning</td>
 	<td>Level of debugging information output when creating a timelapse.
-	Set to <code>info</code> for more output.</td>
+	Set to <code>info</code> for more output.
+	Primarily used for debugging or when tuning the algorithm.
+	</td>
 </tr>
-<tr><td class="shSetting">KEEP_SEQUENCE</td> <td>false</td>
+<tr><td><span class="shSetting">KEEP_SEQUENCE</span></td>
+	<td>false</td>
 	<td>Keep the sequence of symbolic links created when creating a timelapse?
 	<br>Primarily used when debugging.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_EXTRA_PARAMETERS</td> <td></td>
+<tr><td><span class="shSetting">TIMELAPSE_EXTRA_PARAMETERS</span></td>
+	<td></td>
 	<td>Any additional timelapse parameters. Run <code>ffmpeg -?</code> to see the options.</td>
 </tr>
-<tr><td class="shSetting">UPLOAD_VIDEO</td> <td>false</td>
-	<td>Upload the timelapse video to your Allsky Website?</td>
+<tr><td><span class="shSetting">UPLOAD_VIDEO</span></td>
+	<td>false</td>
+	<td>Upload the timelapse video to your Allsky Website?
+	If not set, the timelapse videos can still be viewed via the
+	<span class="WebUIWebPage">Images</span> link on the WebUI.
+	<br>Ignored if you you do not have an Allsky Website.
+	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</td> <td>false</td>
+<tr><td><span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span></td>
+	<td>false</td>
 	<td>Upload the timelapse video's thumbnail to your Allsky Website?
 	Many remote servers don't support thumbnail creation so the thumbnail needs to be
 	created on the Pi and uploaded.
@@ -834,100 +1003,122 @@ Information on the color scheme used by the Editor is
 	</td>
 </tr>
 
-<tr><td class="note" colspan="3">Mini Timelapse Settings</td></tr>
+<tr><td class="note" colspan="3">Mini-Timelapse Settings</td></tr>
 
-<tr><td class="shSetting">TIMELAPSE_MINI_IMAGES</td> <td>0</td>
-	<td>A "mini" timelapse only includes the most recent images,
-	and is created often.
+<tr><td><span class="shSetting">TIMELAPSE_MINI_IMAGES</span></td>
+	<td>0</td>
+	<td>A "mini-timelapse" only includes the most recent images and is created often.
 	It's a good way to see "recent" activity.
-	This setting determines the number of images in the mini timelapse.
+	This setting determines the number of images in the mini-timelapse.
 	Keep in mind the more images you have the longer it'll take to create the video.
-	10&nbsp;-&nbsp;15 is a good starting point.
-	<br><b>Note that each mini timelapse overwrites the prior one.</b>
+	30 is a good starting point.
+	<br><b>Note that each mini-timelapse overwrites the prior one.</b>
 	<br>The following settings only apply if this settings is greater than 0.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_FORCE_CREATION</td> <td>true</td>
-	<td>Should a mini timelapse be created even if
+<tr><td><span class="shSetting">TIMELAPSE_MINI_FORCE_CREATION</span></td>
+	<td>true</td>
+	<td>Should a mini-timelapse be created even if
 	<span class="shSetting">TIMELAPSE_MINI_IMAGES</span> images
 	haven't been taken yet?
-	For example, you want 15 images in each mini timlapse but only 5 have been taken;
-	should a mini timelapse still be created?
+	For example, you want 15 images in each mini-timelapse but only 5 have been taken;
+	should a mini-timelapse still be created?
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_FREQUENCY</td> <td>5</td>
-	<td>After how many images should the mini timelapse be created?
+<tr><td><span class="shSetting">TIMELAPSE_MINI_FREQUENCY</span></td>
+	<td>5</td>
+	<td>After how many images should the mini-timelapse be created?
 	Slower machines and machines with slow networks should use higher numbers.
 	3&nbsp;-&nbsp;5 works well on a Pi 4 with 4 GB memory.
 	<br>Every <span class="shSetting">TIMELAPSE_MINI_FREQUENCY</span> images a new
-	mini timelapse is created using the last
+	mini-timelapse is created using the last
 	<span class="shSetting">TIMELAPSE_MINI_IMAGES</span> images.
-	For example, every 5 frames a new mini timelapse is created using the most recent 15 images.
+	For example, every 5 frames a new mini-timelapse is created using the most recent 15 images.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_UPLOAD_VIDEO</td> <td>true</td>
-	<td>Like <span class="shSetting">UPLOAD_VIDEO</span> but for mini timelapses.
+<tr><td><span class="shSetting">TIMELAPSE_MINI_UPLOAD_VIDEO</span></td>
+	<td>true</td>
+	<td>Like <span class="shSetting">UPLOAD_VIDEO</span> but for mini-timelapses.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_UPLOAD_THUMBNAIL</td> <td>true</td>
-	<td>Like <span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span> but for mini timelapses.
+<tr><td><span class="shSetting">TIMELAPSE_MINI_UPLOAD_THUMBNAIL</span></td>
+	<td>true</td>
+	<td>Like <span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span> but for mini-timelapses.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_FPS</td> <td>2</td>
-	<td>Like <span class="shSetting">FPS</span> but for mini timelapses.
-	<br>Since mini timelapses contain a very small number of images,
+<tr><td><span class="shSetting">TIMELAPSE_MINI_FPS</span></td>
+	<td>5</td>
+	<td>Like <span class="shSetting">FPS</span> but for mini-timelapses.
+	<br>Since mini-timelapses contain a very small number of images,
 	this setting should be small to avoid very short videos.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_BITRATE</td> <td>1000k</td>
-	<td>Like <span class="shSetting">TIMELAPSE_BITRATE</span> but for mini timelapses.
+<tr><td><span class="shSetting">TIMELAPSE_MINI_BITRATE</span></td>
+	<td>1000k</td>
+	<td>Like <span class="shSetting">TIMELAPSE_BITRATE</span> but for mini-timelapses.
 	<br>This is normally smaller than a full timelapse to save on processing time.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_WIDTH</td> <td>1014</td>
-	<td>Like <span class="shSetting">TIMELAPSEWIDTH</span> but for mini timelapses.
+<tr><td><span class="shSetting">TIMELAPSE_MINI_WIDTH</span></td>
+	<td>1014</td>
+	<td>Like <span class="shSetting">TIMELAPSEWIDTH</span> but for mini-timelapses.
 	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
-<tr><td class="shSetting">TIMELAPSE_MINI_HEIGHT</td> <td>760</td>
-	<td>Like <span class="shSetting">TIMELAPSEHEIGHT</span> but for mini timelapses.
+<tr><td><span class="shSetting">TIMELAPSE_MINI_HEIGHT</span></td>
+	<td>760</td>
+	<td>Like <span class="shSetting">TIMELAPSEHEIGHT</span> but for mini-timelapses.
 	<br>Must be an even number. The default is just an example.
 	</td>
 </tr>
 
 <tr><td class="note" colspan="3">Keogram Settings</td></tr>
 
-<tr><td class="shSetting">KEOGRAM</td> <td>true</td>
+<tr><td><span class="shSetting">KEOGRAM</span></td>
+	<td>true</td>
 	<td>Build a keogram image at the end of the night?</td>
 </tr>
-<tr><td class="shSetting">KEOGRAM_EXTRA_PARAMETERS</td> <td>various</td>
-	<td>Additional keogram parameters. Execute <code>~/allsky/keogram --help</code> for a list.</td>
+<tr><td><span class="shSetting">KEOGRAM_EXTRA_PARAMETERS</span></td>
+	<td>various</td>
+	<td>Additional keogram parameters.
+	Execute <code>~/allsky/bin/keogram --help</code> for a list of options.</td>
 </tr>
-<tr><td class="shSetting">UPLOAD_KEOGRAM</td> <td>false</td>
+<tr><td><span class="shSetting">UPLOAD_KEOGRAM</span></td>
+	<td>false</td>
 	<td>Upload the keogram image to your Allsky Website?</td>
 </tr>
 
 <tr><td class="note" colspan="3">Startrails Settings</td></tr>
 
-<tr><td class="shSetting">STARTRAILS</td> <td>true</td>
+<tr><td><span class="shSetting">STARTRAILS</span></td>
+	<td>true</td>
 	<td>Build a startrail image at the end of the night?</td>
 </tr>
-<tr><td class="shSetting">BRIGHTNESS_THRESHOLD</td> <td>0.1</td>
+<tr><td><span class="shSetting">BRIGHTNESS_THRESHOLD</span></td>
+	<td>0.1</td>
 	<td>Average brightness level above which images are discarded (moon, head lights, aurora, etc.).
 	If you are only getting very short trails, or none at all, adjust this number.
 	<br>Values are 0.0 (pure black, filters out nothing) to 1.0 (pure white, uses every image).
 	</td>
 </tr>
-<tr><td class="shSetting">UPLOAD_STARTRAILS</td> <td>false</td>
+<tr><td><span class="shSetting">STARTRAILS_EXTRA_PARAMETERS</span></td>
+	<td></td>
+	<td>Additional startrails parameters.
+	Execute <code>~/allsky/bin/startrails --help</code> for a list of options.</td>
+</tr>
+<tr><td><span class="shSetting">UPLOAD_STARTRAILS</span></td>
+	<td>false</td>
 	<td>Upload the startrails image to your Allsky Website?</td>
 </tr>
 
 <tr><td class="note" colspan="3">Other Settings</td></tr>
 
-<tr><td class="shSetting">THUMBNAIL_SIZE_X</td> <td>100</td>
+<tr><td><span class="shSetting">THUMBNAIL_SIZE_X</span></td>
+	<td>100</td>
 	<td>Sets the width of thumbnails.</td>
 </tr>
-<tr><td class="shSetting">THUMBNAIL_SIZE_Y</td> <td>75</td>
+<tr><td><span class="shSetting">THUMBNAIL_SIZE_Y</span></td>
+	<td>75</td>
 	<td>Sets the height of thumbnails.
 	<br>These numbers determine the size of the thumbnails in
 	<span class="fileName">~/allsky/images</span>
@@ -937,34 +1128,50 @@ Information on the color scheme used by the Editor is
 	</td>
 </tr>
 
-<tr><td class="shSetting">DAYS_TO_KEEP</td> <td>14</td>
-	<td>Number of days' data to keep before starting deleting.
-	Set to blank ("") to keep ALL days' data.</td>
+<tr><td><span class="shSetting">DAYS_TO_KEEP</span></td>
+	<td>14</td>
+	<td>Number of days of images and videos in
+	<span class="fileName">~/allsky/images</span> to keep.
+	Any directory older than this many days will be deleted at each end of night.
+	Set to blank ("") to keep ALL days' data;
+	you will need to manually manage disk space.</td>
 </tr>
-<tr><td class="shSetting">WEB_DAYS_TO_KEEP</td> <td>28</td>
-	<td>Number of days' of web data to keep before starting deleting.
-	Set to blank ("") to keep ALL days' web data.
+<tr><td><span class="shSetting">WEB_DAYS_TO_KEEP</span></td>
+	<td>28</td>
+	<td>Number of days of web data to keep in
+	<span class="fileName">~/allsky/html/allsky</span>.
+	Any image, video, or thumbnail older than this many days will be deleted at each end of night.
+	Set to blank ("") to keep ALL days' web data;
+	you will need to manually manage disk space.
 	<blockquote>This only applies to Allsky Websites on the Pi.</blockquote>
 	</td>
 </tr>
-<tr><td class="shSetting">POST_END_OF_NIGHT_DATA</td> <td>false</td>
-	<td>Send data to your Allsky Website at the end of each night?
-	Installing the Allsky Websit automatically sets this to "true".
+<tr><td><span class="shSetting">POST_END_OF_NIGHT_DATA</span></td>
+	<td>false</td>
+	<td>Send data to your Allsky Website(s) at the end of each night?
+	Installing an Allsky Website (local or remote) automatically sets this to "true"
+	so you shouldn't need to manually set this.
 	</td>
 </tr>
-<tr><td class="shSetting">WEBUI_DATA_FILES</td> <td></td>
+<tr><td><span class="shSetting">WEBUI_DATA_FILES</span></td>
+	<td></td>
 	<td>One or more colon-separated full path names to text files that contain user-supplied
-	data to display on the WebUI's <b>System</b> page.
+	data to display on the WebUI's <span class="WebUIWebPage">System</span> page.
 	See the <a href="#WEBUI_DATA_FILES">WEBUI_DATA_FILES section</a> for more
 	information and an example of this setting.</td>
 </tr>
-<tr><td class="shSetting">UHUBCTL_PATH</td> <td></td>
+<tr><td><span class="shSetting">UHUBCTL_PATH</span></td>
+	<td></td>
 	<td>If you have the <code>uhubctl</code> command installed enter its path name.
-	<code>uhubctl</code> resets the USB bus and can sometimes eliminate ASI_ERROR_TIMEOUTs.</td>
+	<code>uhubctl</code> resets the USB bus and can sometimes eliminate ASI_ERROR_TIMEOUTs
+	and/or "find" a camera that isn't showing up.
+	</td>
 </tr>
-<tr><td class="shSetting">UHUBCTL_PORT</td> <td>2</td>
+<tr><td><span class="shSetting">UHUBCTL_PORT</span></td>
+	<td>2</td>
 	<td>Enter the USB port the camera is on.
-	Port 1 is USB 2.0 and port 2 is USB 3.0 on a Pi 4.</td>
+	Port 1 is USB 2.0 and port 2 is USB 3.0 on a Pi 4.
+	<br>Ignored if <span class="shSetting">UHUBCTL_PATH</span> is not set.</td>
 </tr>
 
 <tr><td class="note" colspan="3">Do not change anything lower in the file</td></tr>
@@ -972,108 +1179,139 @@ Information on the color scheme used by the Editor is
 </table>
 </details>
 
-<br>
+
 <h3>ftp-settings.sh settings</h3>
 <p>
 In order to upload files to your Allsky Website (on the Pi and/or a remote server),
-connection details must be specified in <span class="fileName">ftp-settings.sh</span>.
+connection details must be specified by clicking on the WebUI's 
+<span class="WebUIWebPage">Editor</span> page, then selecting
+<span class="dropdown">ftp-settings.sh</span> in the drop-down list at the bottom of the page.
 </p>
 
 <details sub><summary></summary>
 <p>
-The <span class="shSetting">WEB_*_DIR</span>
- variables below are optionally used to copy a file to an Allsky Website on the Pi
-<b>AND</b> upload it to a remote Allsky Website.
+Notes:
+<ul>
+<li>
+	In the text below, "local" refers to an Allsky Website that's on the Pi
+	and "remote" refers to an Allsky Website <b>not</b> on the Pi.
+	<blockquote class="warning">
+	Directories on the <strong>Pi</strong> are created during Allsky Website installation, but
+	<strong>YOU</strong> must create the <strong>remote</strong> directories.
+	</blockquote>
+<li>
+	The <span class="shSetting">WEB_*_DIR</span>
+	settings below (e.g., <span class="shSetting">WEB_IMAGE_DIR</span>)
+	are <strong>only</strong> used if you have an Allsky Website on the Pi
+	<strong>AND</strong> a remote Allsky Website, and you want files copied to both locations.
+	In this case, see the example at the end of the table for what settings to use.
+<li>
+	By default, the destination file name is the same as the file being uploaded.
+	The <span class="shSetting">*_DESTINATION_NAME</span> settings below are used
+	to specify a DIFFERENT destination name.
+	For example, if the file being uploaded is
+	<span class="fileName">allsky-20210710.mp4</span> you may want it
+	called <span class="fileName">allsky.mp4</span> on the remote web server
+	so the name is always the same.
+	In that case, set
+	<span class="shSetting">VIDEOS_DESTINATION_NAME</span><span class="editorSpecial">=</span><span class="editorString">"allsky.mp4"</span>
+	(don't forget the file name extension like .mp4, .jpg, etc.).
+	If you want the destination file name to be the <b>same</b> as what's being uploaded,
+	leave the <span class="shSetting">*_DESTINATION_NAME</span> blank.
+</ul>
 </p>
-<p>
-In the table below, "remote" refers to a location that's not on the Pi
-(which may be an Allsky Website or simply a directory on another server),
-and "local" refers to an Allsky Website on the Pi.
-</p>
-
-<blockquote><b>YOU</b> must create the remote directories.
-Directories on the Pi are created during Allsky Website installation.
-</blockquote>
+<br>
 
 <table role="table">
 <thead>
-<tr><th colspan="3"><span class="fileName">ftp-settings.sh</span></th></tr>
-<tr><th>Configuration</th><th>Default</th><th>Description</th></tr>
+<tr><th>Setting</th><th>Default</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td class="shSetting">PROTOCOL</td> <td></td>
+<tr><td><span class="shSetting">PROTOCOL</span></td> <td></td>
 	<td>How the file should be uploaded:
 	<ul class="minimalPadding">
-	<li><code>local</code> - copies the file to the local Allsky Website.
-	<li><code>ftp</code> - uses File Transfer Protocol (FTP) to upload to a remote server.
-	<li><code>ftps</code> - uses secure File Transfer Protocol (FTPs) to upload to a remote server.
-		<b>This is preferred over the insecure <code>ftp</code></b>.
-	<li><code>sftp</code> - uses SSH file transfer to upload to a remote server.
-	<li><code>scp</code> - uses secure cp (copy) to copy the file to a remote server.
-	<li><code>S3</code> - copies the file to an Amazon Web Services (AWS) server.
-	<li><code>gcs</code> - copies the file to a Google Cloud Storage (GCS) server.
+	<li><span class="editorString">local</span> -
+		copies the file to a local Allsky Website.
+	<li><span class="editorString">ftp</span> -
+		uses File Transfer Protocol (FTP) to upload to a remote server.
+	<li><span class="editorString">ftps</span> -
+		uses secure File Transfer Protocol (FTPs) to upload to a remote server.
+		<br><strong>This is preferred over the insecure
+		<span class="editorString">ftp</span></strong>.
+	<li><span class="editorString">sftp</span> -
+		uses SSH file transfer to upload to a remote server.
+	<li><span class="editorString">scp</span> -
+		uses secure cp (copy) to copy the file to a remote server.
+	<li><span class="editorString">S3</span> -
+		copies the file to an Amazon Web Services (AWS) server.
+	<li><span class="editorString">gcs</span> -
+		copies the file to a Google Cloud Storage (GCS) server.
 	</ul>
 	</td>
 </tr>
 
 <tr><td class="note" colspan="3">image.jpg Settings</td></tr>
-<tr><td class="shSetting">IMAGE_DIR</td> <td></td>
+<tr><td><span class="shSetting">IMAGE_DIR</span></td> <td></td>
 	<td>The remote directory where the current image should go.</td>
 </tr>
-<tr><td class="shSetting">WEB_IMAGE_DIR</td> <td></td>
+<tr><td><span class="shSetting">WEB_IMAGE_DIR</span></td> <td></td>
 	<td>The local directory where the current image should go.</td>
 </tr>
 
 <tr><td class="note" colspan="3">Timelapse Settings</td></tr>
-<tr><td class="shSetting">VIDEOS_DIR</td> <td></td>
+<tr><td><span class="shSetting">VIDEOS_DIR</span></td> <td></td>
 	<td>The remote directory where the timelapse video should go.</td>
 </tr>
-<tr><td class="shSetting">VIDEOS_DESTINATION_NAME</td> <td></td>
+<tr><td><span class="shSetting">VIDEOS_DESTINATION_NAME</span></td> <td></td>
 	<td>Remote name of the timelapse video file.
 	If not specified it's the same name as the file being uploaded.</td>
 </tr>
-<tr><td class="shSetting">WEB_VIDEOS_DIR</td> <td></td>
+<tr><td><span class="shSetting">WEB_VIDEOS_DIR</span></td> <td></td>
 	<td>Location on the Pi to copy the timelapse video to.</td>
 </tr>
 
 <tr><td class="note" colspan="3">Keogram Settings</td></tr>
-<tr><td class="shSetting">KEOGRAM_DIR</td> <td></td>
+<tr><td><span class="shSetting">KEOGRAM_DIR</span></td> <td></td>
 	<td>The remote directory where the keogram image should go.</td>
 </tr>
-<tr><td class="shSetting">KEOGRAM_DESTINATION_NAME</td> <td></td>
+<tr><td><span class="shSetting">KEOGRAM_DESTINATION_NAME</span></td> <td></td>
 	<td>Remote name of the keogram image file.
 	If not specified it's the same name as the file being uploaded.</td>
 </tr>
-<tr><td class="shSetting">WEB_KEOGRAM_DIR</td> <td></td>
+<tr><td><span class="shSetting">WEB_KEOGRAM_DIR</span></td> <td></td>
 	<td>Location on the Pi to copy the keogram file to.</td>
 </tr>
 
 <tr><td class="note" colspan="3">Startrails Settings</td></tr>
-<tr><td class="shSetting">STARTRAILS_DIR</td> <td></td>
+<tr><td><span class="shSetting">STARTRAILS_DIR</span></td> <td></td>
 	<td>The remote directory where the startrails image should go.</td>
 </tr>
-<tr><td class="shSetting">STARTRAILS_DESTINATION_NAME</td> <td></td>
+<tr><td><span class="shSetting">STARTRAILS_DESTINATION_NAME</span></td> <td></td>
 	<td>Remote name of the startrails file.
 	If not specified it's the same name as the file being uploaded.</td>
 </tr>
-<tr><td class="shSetting">WEB_STARTRAILS_DIR</td> <td></td>
+<tr><td><span class="shSetting">WEB_STARTRAILS_DIR</span></td> <td></td>
 	<td>Location on the Pi to copy the startrails file to.</td>
 </tr>
 
-<tr><td class="note" colspan="3">Other Settings</td></tr>
-<tr><td class="shSetting">REMOTE_HOST</td> <td></td>
-	<td>Remote server DNS name or IP address.</td>
+<tr><td class="note" colspan="3">ftp, ftps, sftp, and scp Settings</td></tr>
+<tr><td><span class="shSetting">REMOTE_HOST</span></td> <td></td>
+	<td>Remote server DNS name or IP address.
+	If you don't know it, ask your service provider.
+	</td>
 </tr>
-<tr><td class="shSetting">REMOTE_USER</td> <td></td>
+
+<tr><td class="note" colspan="3">ftp, ftps, and sftp Settings</td></tr>
+<tr><td><span class="shSetting">REMOTE_USER</span></td> <td></td>
 	<td>Your remote user name.</td>
 </tr>
-<tr><td class="shSetting">REMOTE_PASSWORD</td> <td></td>
+<tr><td><span class="shSetting">REMOTE_PASSWORD</span></td> <td></td>
 	<td>Your ftp / ftps / sftp password.</td>
 </tr>
-<tr><td class="shSetting">REMOTE_PORT</td> <td></td>
-	<td>An optional port number for <code>lftp</code>. Is rarely needed.</td>
+<tr><td><span class="shSetting">REMOTE_PORT</span></td> <td></td>
+	<td>An optional port number for <code>ftp</code> and <code>ftps</code>. Is rarely needed.</td>
 </tr>
-<tr><td class="shSetting">LFTP_COMMANDS</td> <td></td>
+<tr><td><span class="shSetting">LFTP_COMMANDS</span></td> <td></td>
 	<td>An optional colon-separated (;) list of commands needed by the <code>lftp</code> command.
 	See <a allsky="true" href="/documentation/troubleshooting/uploads.html">this page</a>
 	for example commands to enter into <span class="shSetting">LFTP_COMMANDS</span>.
@@ -1081,70 +1319,131 @@ Directories on the Pi are created during Allsky Website installation.
 </tr>
 
 <tr><td class="note" colspan="3">scp Settings</td></tr>
-<tr><td class="shSetting">SSH_KEY_FILE</td> <td></td>
-	<td>Path to the SSH key file</td>
+<tr><td><span class="shSetting">SSH_KEY_FILE</span></td> <td></td>
+	<td>Path to the SSH key file.
+	<br>
+	You need to set up SSH key authentication on your server.
+	First, generate an SSH key on your Pi:
+<pre>ssh-keygen -t rsa</pre>
+	When prompted, leave the default filename, and use an empty passphrase.
+	Then, copy the generated key to your server:
+<pre>ssh-copy-id remote_username@server_ip_address</pre>
+	The private SSH key will be stored in
+	<span class="fileName">~/.ssh</span> (default filename is <span class="fileName">id_rsa</span>)
+	</td>
 </tr>
 
 <tr><td class="note" colspan="3">S3 Settings</td></tr>
 <tr><td colspan="3">
 	You need to install the AWS Command-Line Interface (CLI):
-	<pre>
-	sudo apt-get install python3-pip
-	pip3 install awscli --upgrade --user
-	export PATH=/home/pi/.local/bin:$PATH
-	aws configure</pre>
+<pre>
+sudo apt-get install python3-pip
+pip3 install awscli --upgrade --user
+export PATH=/home/pi/.local/bin:$PATH
+aws configure
+</pre>
 	When prompted, enter a valid access key ID, Secret Access Key, and Default region name,
-	for example, (e.g. "us-west-2").  Set the Default output format to "json" when prompted.
+	for example, (e.g. "us-west-2").
+	Set the Default output format to "json" when prompted.
 	</td>
 </tr>
-<tr><td class="shSetting">AWS_CLI_DIR</td> <td>/home/pi/.local/bin</td>
+<tr><td><span class="shSetting">AWS_CLI_DIR</span></td>
+	<td><span class="editorString">/home/pi/.local/bin</span></td>
 	<td>Directory on the Pi where the AWS tools are installed.
-	<br>If you used a different PATH variable above, change this setting to match it.
+	<br>If you used a different PATH setting above, change this setting to match it.
 	</td>
 </tr>
-<tr><td class="shSetting">S3_BUCKET</td> <td>allskybucket</td>
+<tr><td><span class="shSetting">S3_BUCKET</span></td>
+	<td><span class="editorString">allskybucket</span></td>
 	<td>Name of S3 Bucket where the files will be uploaded
-	(must be in Default region specified above).</td>
+	(must be in Default region specified above).
+	You may want to turn off or limit bucket versioning to avoid consuming lots of
+	space with multiple versions of the "image.jpg" files.
+	</td>
 </tr>
-<tr><td class="shSetting">S3_ACL</td> <td>private</td>
-	<td>S3 Access Control List.
-	If you want to serve your uploaded files vis http(s), change this to "public-read".
+<tr><td><span class="shSetting">S3_ACL</span></td>
+	<td><span class="editorString">private</span></td>
+	<td>S3 Access Control List (ACL).
+	If you want to serve your uploaded files vis http(s),
+	change this to <span class="editorString">public-read</span>.
 	You will need to ensure the S3 bucket policy is configured to allow public access to
-	objects with a public-read ACL.
+	objects with a <span class="editorString">public-read</span> ACL.
 	<br>You may need to set a CORS policy in S3 if the files are to be accessed by
 	Javascript from a different domain.
 	</td>
 </tr>
 
 <tr><td class="note" colspan="3">GCS Settings</td></tr>
-<tr><td class="shSetting">GCS_BUCKET</td> <td>allskybucket</td>
+<tr><td colspan="3">
+	You need to install the <code>gsutil</code> command which is part of the Google Cloud SDK.
+	See installation instructions
+	<a href="https://cloud.google.com/storage/docs/gsutil_install">here</a>.
+	<br>
+	NOTE: The <code>gsutil</code> command must be installed somewhere in the standard $PATH,
+	usually in <span class="fileName">/usr/bin</span>.
+	Make sure you authenticate the cli tool with the correct user as well.
+<tr><td><span class="shSetting">GCS_BUCKET</span></td>
+	<td><span class="editorString">allskybucket</span></td>
 	<td>Name of S3 Bucket where the files will be uploaded.</td>
 </tr>
-<tr><td class="shSetting">GCS_ACL</td> <td>private</td>
+<tr><td><span class="shSetting">GCS_ACL</span></td>
+	<td><span class="editorString">private</span></td>
 	<td>GCS Access Control List.
-	You can use any one of the predefined acl rules found
+	You can use any one of the predefined ACL rules found
 	<a href="https://cloud.google.com/storage/docs/access-control/lists#predefined-acl">here</a>.
-	To access files over https, set this to "publicRead".
+	To access files over https, set this to <span class="editorString">publicRead</span>.
 	</td>
 </tr>
 </tbody>
 </table>
 
-<br>
-If you have the Allsky Website <b>only</b> on your Pi, set these variables:
+<h4>Settings for various combinations</h4>
+<ol>
+<li>If you have the Allsky Website <b>only</b> on your Pi, use these settings:
 <pre>
 PROTOCOL="local"
 IMAGE_DIR=""
-VIDEOS_DIR="/home/pi/allsky/html/allsky/videos"
-KEOGRAM_DIR="/home/pi/allsky/html/allsky/keograms"
-STARTRAILS_DIR="/home/pi/allsky/html/allsky/startrails"
+VIDEOS_DIR="${ALLSKY_WEBSITE}/videos"
+KEOGRAM_DIR="${ALLSKY_WEBSITE}/keograms"
+STARTRAILS_DIR="${ALLSKY_WEBSITE}/startrails"
 </pre>
 
-<br>
+<li>
+	If you have an Allsky Website <b>only</b> on a remote server, use these settings.
+	For the sake of this example, assume your top-level directory on the server is
+	<span class="fileName">/allsky</span>:
+<pre>
+PROTOCOL="sftp"		<span class="shellComment"># or another PROTOCOL</span>
+IMAGE_DIR="/allsky"
+VIDEOS_DIR="/allsky/videos"
+KEOGRAM_DIR="/allsky/keogram"
+STARTRAILS_DIR="/allsky/startrails"
+</pre>
+
+<li>
+	If you have an Allsky Website on your Pi <b>AND</b> on a remote server, use these settings.
+	For the sake of this example, assume your top-level directory on the server is
+	<span class="fileName">/allsky</span>:
+<pre>
+PROTOCOL="sftp"		<span class="shellComment"># or another PROTOCOL</span>
+IMAGE_DIR="/allsky"
+WEB_IMAGE_DIR=""
+VIDEOS_DIR="/allsky/videos"
+WEB_VIDEOS_DIR="${ALLSKY_WEBSITE}/videos"
+KEOGRAM_DIR="/allsky/keogram"
+WEB_KEOGRAM_DIR="${ALLSKY_WEBSITE}/keograms"
+STARTRAILS_DIR="/allsky/startrails"
+WEB_STARTRAILS_DIR="${ALLSKY_WEBSITE}/startrails"
+</pre>
+</ol>
+
+<h4>Amazon Lightsail</h4>
 If you are using SSH Key with Amazon's Lightsail,
-copy the <span class="fileName">ssh-key.pem.pem</span> file to your Pi,
+copy the <span class="fileName">ssh-key.pem</span> file to your Pi,
 for example, in <span class="fileName">~</span>,
-then execute <code>chmod 400 ~/ssh-key.pem</code> and set these variables:
+then execute
+<pre>chmod 400 ~/ssh-key.pem</pre>
+and set:
 <pre>
 PROTOCOL="sftp"
 REMOTE_HOST="remote host name"
@@ -1153,12 +1452,12 @@ REMOTE_PASSWORD="n/a"
 LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"
 </pre>
 </details>
+<br>
 </details>
 
 
 <h2>WEBUI_DATA_FILES tutorial</h2>
 <details><summary></summary>
-
 <p>
 The <span class="WebUISetting">WEBUI_DATA_FILES</span> setting in
 <span class="fileName">config.sh</span>
@@ -1173,7 +1472,7 @@ if so, the changes needed to implement WEBUI_DATA_FILES are very easy, despite t
 
 <p>
 Each file listed in the <span class="WebUISetting">WEBUI_DATA_FILES</span>
-variable contains one or more lines.
+setting contains one or more lines.
 Blank lines and lines that begin with <code>#</code> are ignored.
 The remaining lines must contain the fields listed in the tables below,
 separated by <b>tabs</b>.
@@ -1401,7 +1700,7 @@ You want to display the temperature, humidity, dew point, and dew heater status.
 You will use both the humidity and dew point numbers to determine if you should turn the dew heater on or off via a toggle button you will add to the web page.
 You want the ambient temperature in Celsius and Fahrenheit.
 <p>
-You will add the following to the WebUI's <b>System</b> page:
+You will add the following to the WebUI's <span class="WebUIWebPage">System</span> page:
 <ul>
 <li>temperature
 <li>humidity
@@ -1484,9 +1783,9 @@ You pick the "random" icon so will set the button's <b>FA icon</b> field to <cod
 </p>
 
 <a name="WEBUI_DATA_FILES">
-<h4>Modify the <code>WEBUI_DATA_FILES</code> variable</h4>
+<h4>Modify the <code>WEBUI_DATA_FILES</code> setting</h4>
 You need to enter the names of your files in the
-<span class="WebUISetting">WEBUI_DATA_FILES</span> variable of the
+<span class="WebUISetting">WEBUI_DATA_FILES</span> setting of the
 <span class="fileName">config.sh</span> file,
 but how many files should you have?
 You could put everything in one file but you have two scripts that create files
@@ -1508,7 +1807,7 @@ WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
 The "data", "progress", and "button" lines in the first file will come first on the <b>System</b> page;
 those in the second file will come second on the <b>System</b> page, etc.
 You can change the order items appear on the <b>System</b> page by changing the order of files in the
-<span class="WebUISetting">WEBUI_DATA_FILES</span> variable.
+<span class="WebUISetting">WEBUI_DATA_FILES</span> setting.
 
 <h4>Create/modify scripts to update the data file(s)</h4>
 The <span class="fileName">getWeatherData.sh</span>
@@ -1613,8 +1912,10 @@ Then add
 <code>
 WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
 </code>
-to <span class="fileName">config.sh</span> via the WebUI's <b>Editor</b> page.
-Now, go to the <b>System</b> page in the WebUI and in addition to the normal information you should see the items you added.
+to <span class="fileName">config.sh</span> via the WebUI's
+<span class="WebUIWebPage">Editor</span> page.
+Now, go to the <span class="WebUIWebPage">System</span> page in the WebUI
+and in addition to the normal information you should see the items you added.
 Refreshing the screen won't change those items since the data files are not being updated yet.
 
 <p>

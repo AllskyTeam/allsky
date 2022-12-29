@@ -1801,7 +1801,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 
 		// overlay settings
-		else if (strcmp(a, "externaloverlay") == 0)
+		else if (strcmp(a, "overlaymethod") == 0)
 		{
 			cg->overlay.overlayMethod = atoi(argv[++i]);
 		}

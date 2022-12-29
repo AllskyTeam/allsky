@@ -314,7 +314,7 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>(ZWO only) Increases or decreases contrast between dark and bright areas.</td>
 </tr>
 <tr><td><span class="WebUISetting">Offset</span></td>
-	<td>0</td>
+	<td>0</td>install.sh
 	<td>(ZWO only) Adds about 1/10 the specified value to every pixel,
 	which brightens the whole image.</td>
 </tr>
@@ -323,18 +323,18 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>(ZWO only) Specifies how much of a calculated exposure change should be made
 	during auto-exposure. Lower numbers smooth out brightness changes but take longer to
 	react to changes.</td>
-</tr>
+</tr>install.sh
 <tr><td><span class="WebUISetting">Gain Transition Time</span></td>
 	<td>15</td>
 	<td>(ZWO only) Number of <b>minutes</b> over which to increase or decrease
 	the gain when going from day-to-night or night-to-day images.
 	This helps smooth brightness differences.
 	Only works if nighttime <span class="WebUISetting">Auto-Gain</span> is off.
-	<code>0</code> disables transitions.</td>
+	<span class="WebUIValue">0</span> disables transitions.</td>
 </tr>
 <tr><td><span class="WebUISetting">Image Width</span></td>
 	<td>0</td>
-	<td><code>0</code> uses the sensor's full width in pixels.
+	<td><span class="WebUIValue">0</span> uses the sensor's full width in pixels.
 	Otherwise, with <b>ZWO</b> cameras the
 	<span class="WebUISetting">Image Width</span> and <span class="WebUISetting">Image Height</span>
 	settings set a crop area around the center of the sensor,
@@ -422,10 +422,10 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>Altitude of the Sun above or below the horizon at which daytime and nighttime switch.
 	Can be negative (Sun below horizon) or positive (Sun above horizon).
 	<ul class="minimalPadding">
-	<li><code>0</code> = Sunset
-	<li><code>-6</code> = Civil twilight
-	<li><code>-12</code> = Nautical twilight
-	<li><code>-18</code> = Astronomical twilight
+	<li><span class="WebUIValue">0</span> = Sunset
+	<li><span class="WebUIValue">-6</span> = Civil twilight
+	<li><span class="WebUIValue">-12</span> = Nautical twilight
+	<li><span class="WebUIValue">-18</span> = Astronomical twilight
 	</ul>
 	<a allsky="true" href="/documentation/explanations/angleSunriseSunset.html">Click here</a>
 	for a more detailed description of <span class="WebUISetting">Angle</span>.
@@ -464,7 +464,7 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>0</td>
 	<td>Determines the amount of output in the log file.
 	Log entries can also be viewed with <code>journalctl -u allsky</code>.
-	<br><code>0</code> outputs error messages only.
+	<br><span class="WebUIValue">0</span> outputs error messages only.
 	</td>
 </tr>
 <tr><td><span class="WebUISetting">Version 0.8 Exposure</span></td>
@@ -495,15 +495,16 @@ use the <span class="shSetting">CROP</span> setting in the
 	This page only deals with the <u>image overlay</u>.
 	</p>
 </td></tr>
-<tr><td><span class="WebUISetting">External Overlay</span></td>
-	<td>No</td>
-	<td>Enable to have image overlays added by the new, enhanced external
+<tr><td><span class="WebUISetting">Overlay Method</span></td>
+	<td>legacy</td>
+	<td>Set to <span class="WebUIValue">module</span>
+	to have image overlays added by the new, enhanced
 	<a allsky="true" href="/documentation/overlays/overlays.html">overlay</a> program.
-	<br><b>When enabled, the overlay settings below do NOT apply</b>.
+	<br><b>In this mode, the overlay settings below do NOT apply</b>.
 	<blockquote>
 	This setting will be turned on by default in the next Allsky release,
-	and the internal overlay capability, as well as this "Image overlay settings"
-	section of the WebUI will be removed.
+	and in the release after that the legacy mode as well as this "Image overlay settings"
+	section will be removed.
 	</blockquote>
 	</td>
 </tr>
@@ -571,7 +572,7 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>If you specified an <span class="WebUISetting">Extra Text File</span>
 	then it must be updated within this number of seconds;
 	if not it's contents will not be displayed.
-	Set to <code>0</code> to ignore this check and always display the contents of the file.</td>
+	Set to <span class="WebUIValue">0</span> to ignore this check and always display the contents of the file.</td>
 </tr>
 <tr><td><span class="WebUISetting">Line Height</span></td>
 	<td>30</td>
@@ -659,7 +660,7 @@ use the <span class="shSetting">CROP</span> setting in the
 	<br>
 	If you have the Allsky Website installed <b>on your Pi</b> and are using its image,
 	you may need to set this field to
-	<br><span class="fileName">&lt;Pi name&gt;/current/tmp/image.jpg</span> or
+	<span class="fileName">&lt;Pi name&gt;/current/tmp/image.jpg</span> or
 	whatever's in the <span class="editorSetting">imageName</span> field of your website's
 	<span class="fileName">configuration.js</span> file.
 	Be careful of using "http" versus "https", and after enabling
@@ -694,9 +695,7 @@ use the <span class="shSetting">CROP</span> setting in the
 	<blockquote>
 	The actual values are not displayed on the map,
 	but users can zoom in to see exactly where the camera is.
-	If that bothers you, change their values slightly, but beware that these settings
-	are also used to determine when your daytime and nighttime are so changing their
-	values too much can impact your daytime/nighttime settings.
+	If that bothers you, change their values slightly.
 	</blockquote>
 	</td></tr>
 
@@ -704,7 +703,7 @@ use the <span class="shSetting">CROP</span> setting in the
 
 <tr><td><span class="WebUISetting">Camera Type</span></td>
 	<td></td>
-	<td>The type of camera you are using: ZWO or RPi (which includes the HD and compatible models).
+	<td>The type of camera you are using: ZWO or RPi (which includes the HQ and compatible models).
 	<br>This is initially set during Allsky installation.
 	</td></tr>
 <tr><td><span class="WebUISetting">Camera Model</span></td>
@@ -1461,22 +1460,25 @@ LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"
 <p>
 The <span class="WebUISetting">WEBUI_DATA_FILES</span> setting in
 <span class="fileName">config.sh</span>
-allows you to specify a list of file names that contain information and buttons to add to the WebUI <b>System</b> page.
+allows you to specify a list of file names that contain information and buttons
+to add to the WebUI's
+<span class="WebUIWebPage">System</span> page.
 The data can be anything you want, but often contains weather and/or fan data.
 </p>
 <blockquote>
 <b>You</b> need to provide script(s) to create file(s) in the format specified below.
 </blockquote>
 This tutorial assumes you are familiar with writing scripts;
-if so, the changes needed to implement WEBUI_DATA_FILES are very easy, despite the length of this tutorial.
+if so, the changes needed to implement <span class="WebUISetting">WEBUI_DATA_FILES</span>
+are very easy, despite the length of this tutorial.
 
 <p>
 Each file listed in the <span class="WebUISetting">WEBUI_DATA_FILES</span>
 setting contains one or more lines.
 Blank lines and lines that begin with <code>#</code> are ignored.
 The remaining lines must contain the fields listed in the tables below,
-separated by <b>tabs</b>.
-Each of these lines has its own entry on the <b>System</b> page.
+separated by <strong>tabs</strong>.
+Each of these lines has its own entry on the <span class="WebUIWebPage">System</span> page.
 </p>
 
 <p>
@@ -1488,7 +1490,7 @@ The first word of a line determines what type of line it is:
 	a simple on/off value, like:
 	<br><code>Dew heater: &nbsp; &nbsp; on</code>.
 <li><b>progress</b> lines display as progress bars like the CPU temperature bar
-	on the <b>System</b> page.
+	on the <span class="WebUIWebPage">System</span> page.
 	Your bars go after the last system-supplied progress bar and are good when
 	the data has an associated status, for example, when the CPU is too hot its bar turns red.
 <li><b>button</b> lines add a button to the page under the last system-supplied button,
@@ -1701,12 +1703,12 @@ You will use both the humidity and dew point numbers to determine if you should 
 You want the ambient temperature in Celsius and Fahrenheit.
 <p>
 You will add the following to the WebUI's <span class="WebUIWebPage">System</span> page:
-<ul>
-<li>temperature
-<li>humidity
-<li>dew point
-<li>dew heater status
-<li>a button to toggle the dew heater on/off
+<ul class="minimalPadding">
+	<li>temperature
+	<li>humidity
+	<li>dew point
+	<li>dew heater status
+	<li>a button to toggle the dew heater on/off
 </ul>
 </p>
 
@@ -1715,7 +1717,7 @@ This is pretty easy.
 You will set the <b>label</b> fields for the temperature, humidity, dew point, and dew heater status to "Ambient temperature", "Humidity", "Dew point", and "Dew heater status" respectively.
 The dew heater toggle button will have a <b>button label</b> of "Toggle dew heater".
 
-<h3>Determine how you want the data displayed</h3>
+<h4>Determine how you want the data displayed</h4>
 The temperature is just a number with no "good" or "bad" value so you will display it as "data".
 <p>
 Although the dew point is also just a number, you want to highlight it when it's getting close to the ambient temperature so you'll know it's possible for dew to form.
@@ -1731,7 +1733,9 @@ The dew heater toggle switch will be a "button".
 <h4>Determine expiration timeout</h4>
 If the weather data gets too old it may fool you into turning the dew heater off when it should remain on, so you want its data to expire.
 Your weather station provides new data every minute.
-If it misses a minute or two you don't want the data on the <b>System</b> page to turn red, so you will set the temperature and dew point <b>timeout</b> fields to 300 (5 minutes).
+If it misses a minute or two you don't want the data on the
+<span class="WebUIWebPage">System</span> page to turn red,
+so you will set the temperature and dew point <b>timeout</b> fields to 300 (5 minutes).
 Just for fun you will set the humidity <b>timeout</b> value to 600 (10 minutes).
 
 <p>
@@ -1783,7 +1787,7 @@ You pick the "random" icon so will set the button's <b>FA icon</b> field to <cod
 </p>
 
 <a name="WEBUI_DATA_FILES">
-<h4>Modify the <code>WEBUI_DATA_FILES</code> setting</h4>
+<h4>Modify the <span class="WebUISetting">WEBUI_DATA_FILES</span> setting</h4>
 You need to enter the names of your files in the
 <span class="WebUISetting">WEBUI_DATA_FILES</span> setting of the
 <span class="fileName">config.sh</span> file,
@@ -1798,15 +1802,18 @@ script you put it in a 3rd file that will never change.
 You call the 3rd file <span class="fileName">/home/pi/dewheater/button.txt</span>.
 <p>
 This is what you use:
-<code>
-WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt:/home/pi/dewheater/button.txt
-</code>
+<pre>
+WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt:/home/pi/dewheater/button.txt"
+</pre>
 </p>
-<blockquote>The file names must be full path names and must be separated by colons (":").</blockquote>
+<blockquote>
+The file names must be full path names and must be separated by colons (":").
+</blockquote>
 
-The "data", "progress", and "button" lines in the first file will come first on the <b>System</b> page;
-those in the second file will come second on the <b>System</b> page, etc.
-You can change the order items appear on the <b>System</b> page by changing the order of files in the
+The "data", "progress", and "button" lines in the first file will come first on the
+<span class="WebUIWebPage">System</span> page;
+those in the second file will come second, etc.
+You can change the order items appear by changing the order of files in the
 <span class="WebUISetting">WEBUI_DATA_FILES</span> setting.
 
 <h4>Create/modify scripts to update the data file(s)</h4>
@@ -1818,31 +1825,32 @@ It helps if you have the script create header lines in the output file so you re
 <p>
 The program's logic would be:
 <ol>
-<li>Get the data from the hardware.
-<li>Optionally write the "data" header line to
-<span class="fileName">/home/pi/weather/weatherdata.txt</span>.
-<li>Calculate the Fahrenheit ambient temperature based on the Celsius value returned by the hardware.
-<li>Append the Ambient temperature "data" line to the file.
-<li>Optionally append the "progress" header line to the file.
-<li>Calculate new <b>danger</b>, <b>warning</b>, <b>minimum value</b>,
-	and <b>maximum value</b> numbers for the Dew point based on the ambient temperature.
-<li>Append the Dew point "progress" line to the file.
-<li>Append the Humidity "progress" line to the file.
-<li>Wait for the next update from the hardware, then go back to step 1.
+	<li>Get the data from the hardware.
+	<li>Optionally write the "data" header line to
+		<span class="fileName">/home/pi/weather/weatherdata.txt</span>.
+	<li>Calculate the Fahrenheit ambient temperature based on the Celsius
+		value returned by the hardware.
+	<li>Append the Ambient temperature "data" line to the file.
+	<li>Optionally append the "progress" header line to the file.
+	<li>Calculate new <b>danger</b>, <b>warning</b>, <b>minimum value</b>,
+		and <b>maximum value</b> numbers for the Dew point based on the ambient temperature.
+	<li>Append the Dew point "progress" line to the file.
+	<li>Append the Humidity "progress" line to the file.
+	<li>Wait for the next update from the hardware, then go back to step 1.
 </ol>
 </p>
 
 Using the decisions you made above,
 the <span class="fileName">/home/pi/weather/weatherdata.txt</span> would look like the following,
 assuming the temperature was 20 C, the dew point was 17 C, and the humidity was 87%.
-<code>
+<pre>
 # Type	  Timeout  Label                 Data
 data	  300      Ambient temperature	20 C (68 F)
 
 # Type	  Timeout  Label                 Data    Min   Current  Max  Danger  Warning
 progress  300      Dew point             17 C    12    17       21   18      16
 progress  600      Humidity              87%     0     87       100  85      75
-</code>
+</pre>
 Note all fields are separated by <b>tabs</b>.
 The header lines (which are ignored since they begin with "#") can be in any format,
 so to make it easier to make sure you have the correct fields you added multiple
@@ -1854,13 +1862,13 @@ the "data" line for the dew heater
 status to <span class="fileName">/home/pi/dewheater/status.txt</span> every time it is executed.
 Its logic is:
 <ol>
-<li>Get the dew heater status from the hardware.
-<li>Toggle the status.
-<li>Optionally write the "data" header line to
-<span class="fileName">/home/pi/dewheater/status.txt</span>.
-<li>Append the new dew heater status "data" line to the file.
-<li>Output "Dew heater turned on" or "Dew heater turned off".
-<li>Exit.
+	<li>Get the dew heater status from the hardware.
+	<li>Toggle the status.
+	<li>Optionally write the "data" header line to
+		<span class="fileName">/home/pi/dewheater/status.txt</span>.
+	<li>Append the new dew heater status "data" line to the file.
+	<li>Output "Dew heater turned on" or "Dew heater turned off".
+	<li>Exit.
 </ol>
 </p>
 
@@ -1868,17 +1876,17 @@ The <span class="fileName">/home/pi/dewheater/status.txt</span>
 file will look like the following after clicking the button,
 assuming the dew heater is currently off.
 
-<code>
+<pre>
 # Type	  Timeout  Label                 Data
 data	  0        Dew heater status     on
-</code>
+</pre>
 
 Since the toggle button won't change, create the
 <span class="fileName">/home/pi/dewheater/button.txt</span> file manually:
-<code>
+<pre>
 # Type    message  command                                 Color   FA icon  Button  Label
-button    -        /home/pi/dewheater/toggleDewHeater.py   green   random	Toggle  dew heater
-</code>
+button    -        /home/pi/dewheater/toggleDewHeater.py   green   random   Toggle  dew heater
+</pre>
 Notice the <b>message</b> field is "-" which means there's no message to display on success.
 This is because the <span class="fileName">toggleDewHeater.py</span>
 command outputs "Dew heater turned on"
@@ -1897,7 +1905,9 @@ The rest of the file remains the same.
 </p>
 
 <blockquote>Commands listed in a button's <b>command</b> field must be executable by the
-web server running as group <b>www-data</b>, and must be in a directory that web server has permissions to get to.
+web server running as group <b>www-data</b>,
+and must be in a directory that web server has permissions to get to.
+<br>
 <span class="fileName">chmod g+x /home/pi/dewheater/toggleDewHeater.py</span>
 will fix permissions on the command.
 </blockquote>
@@ -1909,9 +1919,9 @@ copy/paste the above file examples to
 <span class="fileName">/home/pi/dewheater/status.txt</span>,
 and <span class="fileName">/home/pi/dewheater/button.txt</span> files on your Pi.
 Then add
-<code>
+<pre>
 WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
-</code>
+</pre>
 to <span class="fileName">config.sh</span> via the WebUI's
 <span class="WebUIWebPage">Editor</span> page.
 Now, go to the <span class="WebUIWebPage">System</span> page in the WebUI

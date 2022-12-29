@@ -202,6 +202,7 @@
 "type" : "widetext",
 "display" : "TuningFile_display",
 "checkchanges" : 1,
+"optional" : 1,
 "advanced" : 1
 },
 {
@@ -388,6 +389,7 @@
 "type" : "widetext",
 "display" : "TuningFile_display",
 "checkchanges" : 1,
+"optional" : 1,
 "advanced" : 1
 },
 {

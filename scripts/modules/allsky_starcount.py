@@ -88,7 +88,7 @@ metaData = {
             }          
         },              
         "annotate" : {
-            "required": "true",
+            "required": "false",
             "description": "Annotate Stars",
             "help": "If selected the identified stars in the image will be highlighted",
             "tab": "Debug",

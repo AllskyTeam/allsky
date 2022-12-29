@@ -21,7 +21,7 @@ metaData = {
     },    
     "argumentdetails": {
         "mask" : {
-            "required": "false",
+            "required": "true",
             "description": "Mask Path",
             "help": "The name of the image mask",
             "type": {

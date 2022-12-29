@@ -39,7 +39,7 @@ metaData = {
         "night"
     ],
     "arguments":{
-        "debug": "false"
+        "debug": "true"
     },
     "argumentdetails": {
         "debug" : {

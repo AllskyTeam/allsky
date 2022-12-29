@@ -639,6 +639,10 @@ b, strong {
 	color: var(--color-danger-fg);
 	font-weight: bold;
 }
+.AW {
+	color: var(--color-danger-fg);
+	font-weight: bold;
+}
 .WebUIWebPage {	/* link on the WebUI to one of its pages */
 	padding: 0 .2em;
 	color: #4b4a4b;
@@ -792,3 +796,15 @@ b, strong {
 .lsGreen { color: #32ae25; font-weight: 600; }
 .lsBlue { color: #5a64e5; font-weight: 600; }
 .lsBlack { color: #1e1611; font-weight: 600; }
+
+.legend {
+	margin: 2em 2em;
+	padding-left: 10px;
+	border: 2px solid gray;
+	border-radius: 10px;
+	background-color: #fbfbfb;
+}
+.legendHeader {
+	font-size: 125%;
+	font-weight: bold;
+}

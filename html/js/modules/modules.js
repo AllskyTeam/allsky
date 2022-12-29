@@ -68,6 +68,14 @@ class MODULESEDITOR {
                 this.#addModules(this.#configData.available, '#modules-available')
                 this.#addModules(this.#configData.selected, '#modules-selected')
 
+                $(document).on('click', '.moduleenabler', (event) =>{
+                    let element = $(event.currentTarget);
+                    let checked = $(element).prop('checked');
+                    let moduleName = $(element).data('module');
+                    let module = this.#findModuleData(moduleName);
+                    module.data.enabled = checked;
+                });
+
                 if (result.corrupted) {
                     let message = 'The Flow configuration is corrupted. Please use the reset Flow button to revert the flow to the installation default';
                     if (this.#configData.restore) {
@@ -179,7 +187,7 @@ class MODULESEDITOR {
                             return false;
                         }
                     },
-                    onEnd: function (evt) {
+                    onEnd: (evt) => {
                         if ($(evt.to).is($('#modules-selected'))) {
                             $(document).trigger('module:dirty');
                             let settingsButton = $('#' + $(evt.item).attr("id") + 'settings');
@@ -190,7 +198,13 @@ class MODULESEDITOR {
                             }
                             enabledButton.prop('disabled', false);
                             enabledButton.prop('checked', $.moduleeditor.settings.autoenable);                            
-                            deleteButton.prop('disabled', true);                        
+                            deleteButton.prop('disabled', true);   
+
+                            let element = $(evt.item).find('.moduleenabler')
+                            let checked = $(element).prop('checked');
+                            let moduleName = $(element).data('module');
+                            let module = this.#findModuleData(moduleName);
+                            module.data.enabled = checked;
                         }
                     }
                 });
@@ -272,7 +286,7 @@ class MODULESEDITOR {
                     enabled = 'checked="checked"';
                 }
             }
-            enabledHTML = '<div class="pull-right module-enable"><span class="module-enable-text">Enabled</span> <input type="checkbox" ' + enabled + ' id="' + moduleKey + 'enabled" data-module="' + data.module + '"></div>';
+            enabledHTML = '<div class="pull-right module-enable"><span class="module-enable-text">Enabled</span> <input type="checkbox" class="moduleenabler" ' + enabled + ' id="' + moduleKey + 'enabled" data-module="' + data.module + '"></div>';
         }
 
         let type = 'fa-wrench';
@@ -361,6 +375,14 @@ class MODULESEDITOR {
             let fieldData = args[key];
             let extraClass = 'input-group-allsky';
 
+            let required = '';
+            if (fieldData.required !== undefined) {
+                if (fieldData.required == 'true') {
+                    required = ' required ';
+                }
+            }
+
+            let fieldDescription = ' data-description="' + fieldData.description + '" ';
             let helpText = '';
             if (fieldData.help !== undefined) {
                 if (fieldData.help !== '') {
@@ -373,7 +395,7 @@ class MODULESEDITOR {
                 fieldValue = moduleData.metadata.arguments[key];
             }
 
-            let inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" value="' + fieldValue + '">';
+            let inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" value="' + fieldValue + '"' + required + fieldDescription + '>';
             if (fieldData.type !== undefined) {
                 let fieldType = fieldData.type;
                 if (fieldType.fieldtype == 'spinner') {
@@ -389,21 +411,21 @@ class MODULESEDITOR {
                     if (fieldType.step !== undefined) {
                         step = 'step="' + fieldType.step + '"';
                     }
-                    inputHTML = '<input id="' + key + '" name="' + key + '" type="number" ' + min + ' ' + max + ' ' + step + ' class="form-control" value="' + fieldValue + '">'
+                    inputHTML = '<input id="' + key + '" name="' + key + '" type="number" ' + min + ' ' + max + ' ' + step + ' class="form-control" value="' + fieldValue + '"' + required + fieldDescription + '>'
                     extraClass = 'input-group';
                 }
 
                 if (fieldType.fieldtype == 'checkbox') {
                     let checked = '';
-                    if (fieldValue == true) {
+                    if (this.#convertBool(fieldValue) == true) {
                         checked = 'checked="checked"';
                     }
-                    inputHTML = '<input type="checkbox" id="' + key + '" name="' + key + '" ' + checked + ' value="checked">';
+                    inputHTML = '<input type="checkbox" id="' + key + '" name="' + key + '" ' + checked + ' value="checked"' + required + fieldDescription + '>';
                     extraClass = 'input-group';
                 }
 
                 if (fieldType.fieldtype == 'image') {
-                    inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" value="' + fieldValue + '">';
+                    inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" value="' + fieldValue + '"' + required + fieldDescription + '>';
                     extraClass = 'input-group';
                     inputHTML = '\
                         <div class="row">\
@@ -437,7 +459,7 @@ class MODULESEDITOR {
                 }
 
                 if (fieldType.fieldtype == 'roi') {
-                    inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '">';
+                    inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '"' + required + fieldDescription + '>';
                     extraClass = 'input-group';
                     inputHTML = '\
                         <div class="row">\
@@ -446,18 +468,18 @@ class MODULESEDITOR {
                             </div>\
                             <div class="col-xs-4">\
                                 <button type="button" class="btn btn-default" id="open-roi-' + key + '" data-source="' + key + '">...</button>\
-                                <button type="button" class="btn btn-default" id="reset-roi-' + key + '" data-source="' + key + '"><span class="glyphicon glyphicon-repeat"></span></button>\
+                                <button type="button" class="btn btn-default" id="reset-roi-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
                             </div>\
                         </div>\
                     ';
 
                     $(document).on('click', '#reset-roi-' + key, (event) => {
-                        let el = $(event.target).data('source');
+                        let el = $(event.currentTarget).data('source');
                         $('#' + el).val('');
                     });
 
                     $(document).on('click', '#open-roi-' + key, (event) => {
-                        let el = $(event.target).data('source');
+                        let el = $(event.currentTarget).data('source');
                         let data = $('#' + el).val();
                         let roi = null;
                         
@@ -481,7 +503,7 @@ class MODULESEDITOR {
                 }
 
                 if (fieldType.fieldtype == 'gpio') {
-                    inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '">';
+                    inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '"' + required + fieldDescription + '>';
                     extraClass = 'input-group';
                     inputHTML = '\
                         <div class="row">\
@@ -515,7 +537,7 @@ class MODULESEDITOR {
                 }
 
                 if (fieldType.fieldtype == 'select') {
-                    inputHTML = '<select name="' + key + '" id="' + key + '">';
+                    inputHTML = '<select name="' + key + '" id="' + key + '"' + required + fieldDescription + '>';
                     let values = fieldType.values.split(',');
                     for (let value in values) {
                         let optionValue = values[value];
@@ -616,42 +638,124 @@ class MODULESEDITOR {
 
         $('.modal').on('shown.bs.modal', this.alignModal);
 
+        $('#module-settings-dialog').on('hidden.bs.modal', function () {
+            $(document).off('click', '#module-settings-dialog-save');
+        });
+
         $(window).on('resize', (event) => {
             $('.modal:visible').each(this.alignModal);
         });
 
         $(document).on('click', '#module-settings-dialog-save', () => {
-            let module = $('#module-settings-dialog').data('module');
-            let formValues = {};
-            $('#module-editor-settings-form :input').each(function() {
-                if (this.type == 'checkbox') {
-                    if ($(this).prop('checked')) {
-                        formValues[$(this).attr('name')] = true;
-                    } else {
-                        formValues[$(this).attr('name')] = false;
-                    }
-                } else {
-                    formValues[$(this).attr('name')] = $(this).val();
-                }
-            });
+            let formErrors = this.#validateFormData();
 
-            this.#saveFormData(this.#configData.selected, formValues, module);
-            this.#saveFormData(this.#configData.available, formValues, module);
-/*
-            for (let key in this.#configData.selected) {
-                if (this.#configData.selected[key].module == module) {
-                    for (let paramKey in this.#configData.selected[key].arguments) {
-                        if (formValues[paramKey] !== undefined) {
-                            let value = formValues[paramKey];
-                            this.#configData.selected[key].arguments[paramKey] = value;
+            if (formErrors.length > 0) {
+                let html = '<h4>Please correct the following errors before proceeding</h4>';
+                html += '<ul>';
+                formErrors.forEach(function(value, index) {
+                    html += '<li>' + value + '</li>';
+                });
+                html += '</ul>';
+
+
+                bootbox.dialog({
+                    message: html,
+                    title: '<h4><i class="fa-solid fa-2xl fa-triangle-exclamation"></i> Module Error(s)</h4>',
+                    buttons: {
+                        main: {
+                            label: 'Close',
+                            className: 'btn-primary'
+                        }
+                    },
+                    className: 'module-error-dialog'
+                });
+
+            } else {
+                let module = $('#module-settings-dialog').data('module');
+                let formValues = {};
+                $('#module-editor-settings-form :input:not([type=button])').each(function() {
+                    if (this.type == 'checkbox') {
+                        if ($(this).prop('checked')) {
+                            formValues[$(this).attr('name')] = true;
+                        } else {
+                            formValues[$(this).attr('name')] = false;
+                        }
+                    } else {
+                        formValues[$(this).attr('name')] = $(this).val();
+                    }
+                });
+
+                this.#saveFormData(this.#configData.selected, formValues, module);
+                this.#saveFormData(this.#configData.available, formValues, module);
+
+                $('#module-settings-dialog').modal('hide');
+                $(document).trigger('module:dirty');
+            }
+        });
+    }
+
+    #convertBool(value) {
+        let result = false;
+        if (typeof value === 'boolean') {
+            result = value;
+        } else {
+            if (typeof value === 'string') {
+                value = value.toLowerCase();
+                if (value === 'true') {
+                    result = true;
+                }
+            }
+        }
+        return result;
+    }
+
+    #validateFormData() {
+        let errors = [];
+        $('#module-editor-settings-form :input:not([type=button])').each(function() {
+            let required = $(this).attr('required');
+            if (required !== undefined && required === 'required') {
+                let value = $(this).val();
+                if (value === '') {
+                    let error =  $(this).data('description') + ' is required';
+                    errors.push(error)
+                }
+            }
+        });
+        return errors;
+    }
+
+    #validateModuleData() {
+        let errors = [];
+        let moduleKeys = $('#modules-selected').sortable('toArray');
+        for (let moduleKey in moduleKeys) {
+            let moduleData = this.#findModuleData(moduleKeys[moduleKey]);
+            if (moduleData.data.enabled) {
+                if (moduleData.data.metadata.argumentdetails !== undefined) {
+                    for (let key in moduleData.data.metadata.argumentdetails) {
+                        let data = moduleData.data.metadata.argumentdetails[key];
+                        if (data.required !== undefined) {
+                            if (data.required == 'true') {
+                                if (moduleData.data.metadata.arguments[key] !== undefined) {
+                                    if (moduleData.data.metadata.arguments[key] == '') {
+                                        let moduleName = moduleData.module;
+                                        if (errors[moduleName] === undefined) {
+                                            errors[moduleName] = {
+                                                'module': moduleName,
+                                                'description': moduleData.data.metadata.name,
+                                                'errors': []
+                                            };
+                                        }
+                                        let errorMessage = data.description + ' is a required field';
+                                        errors[moduleName].errors.push(errorMessage)
+                                    }
+                            } 
+                            }
                         }
                     }
                 }
             }
-*/
-            $('#module-settings-dialog').modal('hide');
-            $(document).trigger('module:dirty');
-        });
+        }
+        return errors;
     }
 
     #parseROI(rawROI) {
@@ -683,37 +787,68 @@ class MODULESEDITOR {
     }
 
     #saveConfig() {
-        $.LoadingOverlay('show');
-        let newConfig = {};
-        let moduleKeys = $('#modules-selected').sortable('toArray');
-        for (let key in moduleKeys) {
-            let moduleData = this.#findModuleData(moduleKeys[key])
-            let enabled =  $('#allsky' + moduleData.module + 'enabled').prop('checked');
-            if (enabled == undefined) {
-                enabled = true;
+        let errors = this.#validateModuleData();
+        if (Object.keys(errors).length > 0) {
+
+            let html = '<h4>Please correct the following errors before proceeding</h4>';
+            html += '<ul>';
+            for (let module in errors) {
+                html += '<li> Module - ' + errors[module].description;
+                html += '<ul>';
+                for (let error in errors[module].errors) {
+                    html += '<li>' + errors[module].errors[error] + '</li>';
+                }
+                html += '</ul>';
+                html += '</li>';
+            };
+            html += '</ul>';
+
+
+            bootbox.dialog({
+                message: html,
+                title: '<h4><i class="fa-solid fa-2xl fa-triangle-exclamation"></i> Module Error(s)</h4>',
+                buttons: {
+                    main: {
+                        label: 'Close',
+                        className: 'btn-primary'
+                    }
+                },
+                className: 'module-error-dialog'
+            });
+
+        } else {
+            $.LoadingOverlay('show');
+            let newConfig = {};
+            let moduleKeys = $('#modules-selected').sortable('toArray');
+            for (let key in moduleKeys) {
+                let moduleData = this.#findModuleData(moduleKeys[key])
+                let enabled =  $('#allsky' + moduleData.module + 'enabled').prop('checked');
+                if (enabled == undefined) {
+                    enabled = true;
+                }
+                moduleData.data.enabled = enabled;
+                newConfig[moduleData.module] = moduleData.data
             }
-            moduleData.data.enabled = enabled;
-            newConfig[moduleData.module] = moduleData.data
+
+            let jsonData = JSON.stringify(newConfig, null, 4);
+
+            $.ajax({
+                url: 'includes/moduleutil.php?request=Modules',
+                type: 'POST',
+                dataType: 'json',
+                data: { config: this.#eventName, configData: jsonData },
+                cache: false,
+                context: this
+            }).done((result) => {
+
+
+            }).always(() => {
+                $.LoadingOverlay('hide');
+            });
+
+            this.#dirty = false;
+            this.#updateToolbar();
         }
-
-        let jsonData = JSON.stringify(newConfig, null, 4);
-
-        $.ajax({
-            url: 'includes/moduleutil.php?request=Modules',
-            type: 'POST',
-            dataType: 'json',
-            data: { config: this.#eventName, configData: jsonData },
-            cache: false,
-            context: this
-        }).done((result) => {
-
-
-        }).always(() => {
-            $.LoadingOverlay('hide');
-        });
-
-        this.#dirty = false;
-        this.#updateToolbar();
     }
 
     #uploadFile(form) {

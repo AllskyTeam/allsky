@@ -32,7 +32,7 @@ metaData = {
         "mask" : {
             "required": "false",
             "description": "Mask Path",
-            "help": "The name of the image mask. THis mask is applied when detecting meteors bit not visible in the final image",
+            "help": "The name of the image mask. This mask is applied when detecting meteors bit not visible in the final image",
             "type": {
                 "fieldtype": "image"
             }                
@@ -57,7 +57,7 @@ metaData = {
             }          
         },            
         "annotate" : {
-            "required": "true",
+            "required": "false",
             "description": "Annotate Meteors",
             "help": "If selected the identified meteors in the image will be highlighted",
             "tab": "Debug",            

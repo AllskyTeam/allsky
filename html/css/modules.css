@@ -179,3 +179,7 @@
 .dark .module-lists h4 {
   background-color: #202020;
 }
+
+.module-error-dialog > .modal-dialog {
+  width:50% !important;
+}

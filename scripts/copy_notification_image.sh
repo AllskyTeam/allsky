@@ -2,9 +2,9 @@
 
 ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh"
-source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_CONFIG}/ftp-settings.sh"
+source "${ALLSKY_HOME}/variables.sh" || exit 1
+source "${ALLSKY_CONFIG}/config.sh" || exit 1
+source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 1
 
 function usage_and_exit
 {
@@ -134,7 +134,7 @@ if [ "${IMG_UPLOAD}" = "true" ] ; then
 		# Don't overwrite FINAL_IMAGE since the web server(s) may be looking at it.
 		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"
 		cp "${FINAL_IMAGE}" "${TEMP_FILE}"		# create temporary copy to resize
-		convert "${TEMP_FILE}" -resize "${RESIZE_UPLOADS_SIZE}" -gravity East -chop 2x0 "${TEMP_FILE}"
+		convert "${TEMP_FILE}" -resize "${RESIZE_UPLOADS_WIDTH}x${RESIZE_UPLOADS_HEIGHT}" -gravity East -chop 2x0 "${TEMP_FILE}"
 		if [ $? -ne 0 ] ; then
 			echo -e "${RED}*** ${ME}: ERROR: RESIZE_UPLOADS failed${NC}"
 			# Leave temporary file for possible debugging.

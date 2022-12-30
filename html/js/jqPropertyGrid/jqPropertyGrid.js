@@ -332,7 +332,7 @@
 			}
 
 			if (changedCallback) {
-				$(el).on('change', '#' + elemId, function changed(e) {
+				$(el).on('input', '#' + elemId, function changed(e) {
 					changedCallback(this, name, $('#' + elemId).val());
 					e.preventDefault();
 					e.stopPropagation();

@@ -209,7 +209,7 @@ class OEUIMANAGER {
             this.updateToolbar();
         });
 
-        this.#overlayLayer.on('dblclick ', (event) => {
+        this.#overlayLayer.on('dblclick dbltap', (event) => {
             let shape = event.target;
 
             if (this.#transformer.nodes().length == 1) {
@@ -1188,9 +1188,11 @@ class OEUIMANAGER {
         if (this.#fieldManager.dirty) {
             $('#oe-save').removeClass('disabled');
             $('#oe-save').addClass('green pulse');
+            $('#oe-overlay-editor-tab').html('Overlay Editor - Modified');
         } else {
             $('#oe-save').addClass('disabled');
             $('#oe-save').removeClass('green pulse');
+            $('#oe-overlay-editor-tab').html('Overlay Editor');
         }
 
         if (this.#configManager.debugMode) {

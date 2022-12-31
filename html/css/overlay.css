@@ -175,3 +175,9 @@
   .sp-dd {
     padding: 3px 2px !important;
   }
+
+  .oe-overlay-editor-tab-modified:after {
+    content: " - Modified";
+    color: red;
+    font-weight: 700;
+  }

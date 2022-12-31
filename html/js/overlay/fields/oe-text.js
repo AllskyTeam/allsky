@@ -89,6 +89,7 @@ class OETEXTFIELD extends OEFIELD {
   }
   set empty(empty) {
     this.fieldData.empty = empty;
+    this.dirty = true;
   }
 
   get sample() {
@@ -96,6 +97,7 @@ class OETEXTFIELD extends OEFIELD {
   }
   set sample(sample) {
     this.fieldData.sample = sample;
+    this.dirty = true;
   }
 
   get label() {

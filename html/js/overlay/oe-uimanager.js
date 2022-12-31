@@ -122,6 +122,14 @@ class OEUIMANAGER {
             this.#resizeWindow();
         });
 
+        jQuery(window).bind('beforeunload', ()=> {
+            if (this.#fieldManager.dirty) {
+                return ' ';
+            } else {
+                return undefined;
+            }
+        });
+
         this.#oeEditorStage.on('dragmove', (event) => {
 
             let stage = event.target;
@@ -1188,11 +1196,11 @@ class OEUIMANAGER {
         if (this.#fieldManager.dirty) {
             $('#oe-save').removeClass('disabled');
             $('#oe-save').addClass('green pulse');
-            $('#oe-overlay-editor-tab').html('Overlay Editor - Modified');
+            $('#oe-overlay-editor-tab').addClass('oe-overlay-editor-tab-modified');            
         } else {
             $('#oe-save').addClass('disabled');
             $('#oe-save').removeClass('green pulse');
-            $('#oe-overlay-editor-tab').html('Overlay Editor');
+            $('#oe-overlay-editor-tab').removeClass('oe-overlay-editor-tab-modified');
         }
 
         if (this.#configManager.debugMode) {

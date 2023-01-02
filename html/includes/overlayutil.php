@@ -190,10 +190,13 @@ class OVERLAYUTIL
                 $count = 0;
                 foreach ($fields as $field) {
                     $fieldSplit = explode(" ", $field, 2);
+                    $value = trim($fieldSplit[1]);
+                    $value = iconv("UTF-8","ISO-8859-1//IGNORE",$value);
+                    $value = iconv("ISO-8859-1","UTF-8",$value);
                     $obj = (object) [
                         'id' => $count,
                         'name' => $fieldSplit[0],
-                        'value' => trim($fieldSplit[1])
+                        'value' => $value
                     ];
                     $fieldData[] = $obj;
                     $count++;
@@ -247,8 +250,37 @@ class OVERLAYUTIL
 
     public function postSample()
     {
+        $exampleData = $this->processDebugData();
         $config = $_POST["config"];
+
+        $jsonData = json_decode($config);
+        $regEx = '/\$\{.*?\}/m';
+        $result = array();
+        foreach ($jsonData->fields as $field) {
+            $label = $field->label;
+            preg_match_all($regEx, $label, $matches, PREG_SET_ORDER, 0);
+            if (!empty($matches)) {
+                foreach ($matches as $match) {
+                    $fieldRaw = $match[0];
+                    $fieldKey = str_replace(array("\${","}"), "", $fieldRaw);
+                    if (array_key_exists($fieldKey, $exampleData)) {
+                        $label = str_replace($fieldRaw, $exampleData[$fieldKey], $label);
+                    } else {
+                        if (array_key_exists("AS_" . $fieldKey, $exampleData)) {
+                            $label = str_replace($fieldRaw, $exampleData["AS_" . $fieldKey], $label);
+                        } else {
+                            $label = str_replace($fieldRaw, "??", $label);
+                        }
+                    }
+                }
+            }
+            $result[$field->id] = $label;
+        }
+        $result = json_encode($result);
+        $this->sendResponse($result);
+        die();
         $config = base64_encode($config);
+
 
         $cam_type = getCameraType();
         $settings_file = getSettingsFile($cam_type);
@@ -261,6 +293,23 @@ class OVERLAYUTIL
 
         $this->sendResponse($result);
     }
+
+
+    private function processDebugData() {
+        $file = ALLSKY_HOME . "/tmp/overlaydebug.txt";
+
+        $exampleData = array();
+        $rawData = file($file, FILE_IGNORE_NEW_LINES);
+        foreach($rawData  as $line) {
+            $firstSpace = strpos($line, " ");
+            $var = substr($line, 0, $firstSpace);
+            $value = ltrim(substr($line, $firstSpace));
+            $line = str_replace("  ", "", $line);
+            $exampleData[$var] = $value;
+        }
+        return $exampleData;
+    }
+
 
     public function getFonts()
     {

@@ -39,7 +39,7 @@ metaData = {
         "night"
     ],
     "arguments":{
-        "debug": "true"
+        "debug": "True"
     },
     "argumentdetails": {
         "debug" : {
@@ -247,6 +247,8 @@ class ALLSKYOVERLAY:
                 with open(dataFilename) as file:
                     for line in file:
                         name, value = line.partition("=")[::2]
+                        name = name.rstrip()
+                        value = value.lstrip()
                         name = "AS_" + name
                         value = value.strip()
                         os.environ[name] = str(value)

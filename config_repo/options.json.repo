@@ -1009,7 +1009,7 @@
 {
 "name" : "displaySettings",
 "default" : 0,
-"description" : "Activate to add a link to the Allsky Website to display the settings on this page.",
+"description" : "Activate to add a link to the Allsky Website to display the settings on this page.<br><b>Only applies if you have a local or remote Allsky Website.",
 "label" : "Display Settings",
 "type" : "checkbox",
 "display" : 1,

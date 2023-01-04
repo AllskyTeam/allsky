@@ -72,7 +72,7 @@ FPS=25
 VCODEC="libx264"
 
 # Pixel format.
-PIX_FMT="-yuv420p"
+PIX_FMT="yuv420p"
 
 # Amount of information displayed while creating a timelapse video.
 FFLOG="warning"

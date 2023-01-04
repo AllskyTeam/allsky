@@ -100,8 +100,31 @@ NEEDS_RESTART=false
 RUN_POSTTOMAP=false
 POSTTOMAP_ACTION=""
 WEBSITE_CONFIG=()
+WEB_CONFIG_FILE=""
+HAS_WEBSITE_RET=""
 SHOW_POSTDATA_MESSAGE=true
 TWILIGHT_DATA_CHANGED=false
+
+# Several of the fields are in the Allsky Website configuration file,
+# so check if the IS a file before trying to update it.
+# Return 0 on found and 1 on not found.
+function check_website()
+{
+	[[ ${HAS_WEBSITE_RET} != "" ]] && return ${HAS_WEBSITE_RET}		# already checked
+
+	WEB_CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	[[ -f ${WEB_CONFIG_FILE} ]] && HAS_WEBSITE_RET=0 && return ${HAS_WEBSITE_RET}
+
+	WEB_CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+	if [[ -f ${WEB_CONFIG_FILE} ]]; then
+		HAS_WEBSITE_RET=0
+	else
+		echo -e "${wWARNING}WARNING: No local or remote Allsky Website found.${wNC}"
+		WEB_CONFIG_FILE=""
+		HAS_WEBSITE_RET=1
+	fi
+	return ${HAS_WEBSITE_RET}
+}
 
 while [[ $# -gt 0 ]]; do
 	KEY="${1}"
@@ -132,21 +155,17 @@ while [[ $# -gt 0 ]]; do
 				if [[ -f ${CC_FILE} ]]; then
 					# Save the current file just in case creating a new one fails.
 					# It's a link so copy it to a temp name, then remove the old name.
-					[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Saving '${CC_FILE}' to '${CC_FILE_OLD}'${wNC}"
 					cp "${CC_FILE}" "${CC_FILE_OLD}"
 					rm -f "${CC_FILE}"
 				fi
 
 				# Create the camera capabilities file for the new camera type.
-				# Debug level 3 to give the user more info on error.
+				# Use Debug Level 3 to give the user more info on error.
 
 				# The software for RPi cameras needs to know what command is being used to
 				# capture the images.
 				if [[ ${NEW_VALUE} == "RPi" ]]; then
-					C="$(determineCommandToUse "false" "" )"
-					# shellcheck disable=SC2181
-					RET=$?
-					if [[ ${RET} -ne 0 ]]; then
+					if ! C="$(determineCommandToUse "false" "" )" ; then
 						echo -e "${wERROR}${ME}: ERROR: unable to determine command to use, RET=${RET}, C=${C}.${wNC}."
 						exit ${RET}
 					fi
@@ -261,7 +280,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		filename)
-			WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
+			check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
 			NEEDS_RESTART=true
 			;;
 
@@ -281,7 +300,7 @@ while [[ $# -gt 0 ]]; do
 		latitude | longitude)
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
 			if NEW_VALUE="$(convertLatLong "${NEW_VALUE}" "${KEY}")" ; then
-				WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
+				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			else
 				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
 			fi
@@ -324,13 +343,16 @@ while [[ $# -gt 0 ]]; do
 			else
 				NEW_VALUE=true
 			fi
-			PARENT="homePage.popoutIcons"
-			FIELD="Allsky Settings"
-			INDEX=$(getJSONarrayIndex "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "${PARENT}" "${FIELD}")
-			if [[ ${INDEX} -ge 0 ]]; then
-				WEBSITE_CONFIG+=("${PARENT}[${INDEX}].display" "${LABEL}" "${NEW_VALUE}")
+			if check_website; then
+				PARENT="homePage.popoutIcons"
+				INDEX=$(getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "Allsky Settings")
+				if [[ ${INDEX} -ge 0 ]]; then
+					WEBSITE_CONFIG+=("${PARENT}[${INDEX}].display" "${LABEL}" "${NEW_VALUE}")
+				else
+					echo -e "${wWARNING}WARNING: Unable to update ${wBOLD}${LABEL}${wNBOLD} in ${WEB_CONFIG_FILE}; ignoring.${wNC}"
+				fi
 			else
-				echo -e "${wWARNING}WARNING: Unable to update ${wBOLD}${FIELD}${wNBOLD} in ${ALLSKY_WEBSITE_CONFIGURATION_FILE}; ignoring.${wNC}"
+				echo -e "${wWARNING}Change to ${wBOLD}${LABEL}${wNBOLD} not relevant.${wNC}"
 			fi
 			;;
 
@@ -341,7 +363,7 @@ while [[ $# -gt 0 ]]; do
 
 		location | owner | camera | lens | computer)
 			RUN_POSTTOMAP=true
-			WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
+			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
 
 		websiteurl | imageurl)
@@ -357,12 +379,7 @@ while [[ $# -gt 0 ]]; do
 		shift 3
 done
 
-# Is there a local or remote website?
-# For remote, check if a remote server is specified, not for the remote config file,
-# since there could, in theory, be a remote config file but no server specified to send it to.
-if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || ( ${PROTOCOL} != "" && ${PROTOCOL} != "local" ) ]]; then
-	HAS_WEBSITE=true
-
+if check_website ; then
 	# Anytime a setting in settings.json changed we want to
 	# send an updated file to any Allsky Website(s).
 	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postData.sh${NC}"
@@ -385,12 +402,9 @@ if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || ( ${PROTOCOL} != "" && ${PROTOC
 	else
 		echo -e "${wERROR}ERROR posting updated twilight data: ${RESULT}.${wNC}"
 	fi
-else
-	HAS_WEBSITE=false
 fi
 
-# shellcheck disable=SC2128
-if [[ ${WEBSITE_CONFIG} != "" && ${HAS_WEBSITE} == "true" ]]; then
+if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing updateWebsiteConfig.sh${NC}"
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} "${WEBSITE_CONFIG[@]}"
 fi
@@ -408,3 +422,4 @@ fi
 
 
 exit 0
+

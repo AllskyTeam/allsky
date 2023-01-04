@@ -235,10 +235,15 @@ else # sftp/ftp/ftps
 			echo "cd '${REMOTE_DIR}' || (echo 'cd ${REMOTE_DIR} failed!'; exit 1) || exit 1"
 		fi
 
-		# unlikely, but just in case it's already there
-		echo "glob --exist '${TEMP_NAME}*' && rm '${TEMP_NAME}'"
 
-		echo "put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}' || (echo 'put of ${FILE_TO_UPLOAD} to ${TEMP_NAME} failed!'; rm -f '${TEMP_NAME}'; exit 1) || exit 2"
+		# Unlikely, but just in case it's already there.
+		# Need the "*" after the file name otherwise glob always succeeds.
+		echo "glob --exist '${TEMP_NAME}*' && echo '${TEMP_NAME} exists; removing...' && rm '${TEMP_NAME}'"
+
+		echo "put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}'
+			|| (echo 'put of ${FILE_TO_UPLOAD} to ${TEMP_NAME} failed!  Trying again...'; (!sleep 3);  put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}' && echo 'WORKED' && exit 0)
+			|| (echo '2nd put failed again, quitting'; exit 1)
+			|| exit 2"
 
 		# Try to remove ${DESTINATION_NAME}, which may or may not exist.
 		# If the "rm" fails, the file may be in use by the web server or another lftp,
@@ -253,7 +258,8 @@ else # sftp/ftp/ftps
 		# If the 2nd "mv" also fails exit 4.  Either way, display a 2nd message.
 		echo "mv '${TEMP_NAME}' '${DESTINATION_NAME}'
 			|| (echo 'mv of ${TEMP_NAME} to ${DESTINATION_NAME} failed!  Trying again...'; (!sleep 3); mv '${TEMP_NAME}' '${DESTINATION_NAME}' && echo 'WORKED' && exit 0)
-			|| (echo '2nd mv failed, quitting.'; rm -f '${TEMP_NAME}'; exit 1) || exit 4"
+			|| (echo '2nd mv failed, quitting.'; rm -f '${TEMP_NAME}'; exit 1)
+			|| exit 4"
 
 		echo exit 0
 	) > "${LFTP_CMDS}"
@@ -289,7 +295,7 @@ else # sftp/ftp/ftps
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
 		if [ -n "${OUTPUT}" ]; then
-			echo -e "lftp OUTPUT from '${FILE_TO_UPLOAD}:\n   ${OUTPUT}\n"
+			echo -e "lftp OUTPUT from '${FILE_TO_UPLOAD}':\n   ${OUTPUT}\n"
 		fi
 	fi
 fi

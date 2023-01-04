@@ -95,6 +95,7 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Root of GitHub locations - repository, and contents of a file.
 	GITHUB_ROOT="https://github.com/thomasjacquin"
 	GITHUB_RAW_ROOT="https://raw.githubusercontent.com/thomasjacquin"
+	GITHUB_MAIN_BRANCH="master"
 
 	# NAMEs of some configuration files:
 	#	Camera Capabilities - specific to a camera type and model (cc.json)

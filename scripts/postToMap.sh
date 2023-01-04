@@ -46,6 +46,7 @@ function get_domain()
 	URL="${1}"
 	D="${URL/*\/\//}"	# Remove everything up to and including "//"
 	D="${D/[:\/]*/}"	# Remove from ":" or "/" to end
+	D="${D/www./}"		# Remove optional "www."
 	echo "${D}"
 }
 
@@ -267,8 +268,8 @@ else
 		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W%%${BR}}"
 	fi
 	if [ "${OK}" = "false" ]; then
-		echo -e "${ERROR_MSG_START}${M%%${BR}}${NC}"
-		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${M%%${BR}}"
+		echo -e "${ERROR_MSG_START}${E%%${BR}}${NC}"
+		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E%%${BR}}"
 		exit 2
 	fi
 

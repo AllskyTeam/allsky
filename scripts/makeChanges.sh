@@ -352,7 +352,7 @@ while [[ $# -gt 0 ]]; do
 					echo -e "${wWARNING}WARNING: Unable to update ${wBOLD}${LABEL}${wNBOLD} in ${WEB_CONFIG_FILE}; ignoring.${wNC}"
 				fi
 			else
-				echo -e "${wWARNING}<br>Change to ${wBOLD}${LABEL}${wNBOLD} not relevant.${wNC}"
+				echo -e "${wWARNING}Change to ${wBOLD}${LABEL}${wNBOLD} not relevant.${wNC}"
 			fi
 			;;
 

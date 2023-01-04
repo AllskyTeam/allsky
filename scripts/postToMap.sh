@@ -46,6 +46,7 @@ function get_domain()
 	URL="${1}"
 	D="${URL/*\/\//}"	# Remove everything up to and including "//"
 	D="${D/[:\/]*/}"	# Remove from ":" or "/" to end
+	D="${D/www./}"		# Remove optional "www."
 	echo "${D}"
 }
 

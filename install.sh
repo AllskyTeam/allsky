@@ -39,6 +39,7 @@ RESTORED_PRIOR_SETTINGS_FILE=false
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 SUGGESTED_NEW_HOST_NAME='allsky'		# Suggested new host name
 NEW_HOST_NAME=''						# User-specified host name
+BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
 
 # Repo files
 REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
@@ -112,6 +113,22 @@ calc_wt_size() {
 # Stop Allsky.  If it's not running, nothing happens.
 stop_allsky() {
 	sudo systemctl stop allsky 2> /dev/null
+}
+
+
+# Get the branch of the new release; if not GITHUB_MAIN_BRANCH, save it.
+get_branch() {
+	local FILE="${ALLSKY_HOME}/.git/config"
+	if [[ -f ${FILE} ]]; then
+		B="$(sed -E --silent -e '/^\[branch "/s/(^\[branch ")(.*)("])/\2/p' "${FILE}")"
+		if [[ -n ${B} && ${B} != "${GITHUB_MAIN_BRANCH}" ]]; then
+			BRANCH="${B}"
+			echo -n "${BRANCH}" > "${ALLSKY_HOME}/branch"
+			display_msg info "Using '${BRANCH}' branch."
+		fi
+	else
+		display_msg warning "${FILE} not found; assuming ${GITHUB_MAIN_BRANCH} branch"
+	fi
 }
 
 
@@ -1117,6 +1134,9 @@ calc_wt_size
 ##### Stop Allsky
 stop_allsky
 
+##### Get branch
+get_branch
+
 ##### Handle updates
 [[ ${UPDATE} == "true" ]] && do_update		# does not return
 
@@ -1133,6 +1153,7 @@ if [[ ${FUNCTION} != "" ]]; then
 	${FUNCTION}
 	exit $?
 fi
+
 
 ##### Display an image in the WebUI
 display_image "InstallationInProgress"

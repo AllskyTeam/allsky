@@ -240,7 +240,7 @@ function convertLatLong()
 
 # Get the sunrise and sunset times.
 # The angle can optionally be passed in.
-get_sunrise_sunset()
+function get_sunrise_sunset()
 {
 	ANGLE="${1}"
 	#shellcheck disable=SC1090
@@ -259,4 +259,54 @@ get_sunrise_sunset()
 	echo "${X/,/  }    0"
 	X="$(sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}")"
 	echo "${X/,/  }   ${ANGLE}"
+}
+
+# Determine if there's a newer version of a file in the specified branch.
+# If so, download it to the specified location/name.
+function checkAndGetNewerFile()
+{
+	if [[ ${1} == "--branch" ]]; then
+		local BRANCH="${2}"
+		shift 2
+	else
+		local BRANCH="${GITHUB_MAIN_BRANCH}"
+	fi
+	local CURRENT_FILE="${1}"
+	local GIT_FILE="${GITHUB_RAW_ROOT}/allsky/${BRANCH}/${2}"
+	local DOWNLOADED_FILE="${3}"
+	# Download the file and put in DOWNLOADED_FILE
+	X="$(curl --show-error --silent "${GIT_FILE}")"
+	RET=$?
+	if [[ ${RET} -eq 0 && ${X} != "404: Not Found" ]]; then
+		# We really just check if the files are different.
+		echo "${X}" > "${DOWNLOADED_FILE}"
+		DOWNLOADED_CHECKSUM="$(sum "${DOWNLOADED_FILE}")"
+		MY_CHECKSUM="$(sum "${CURRENT_FILE}")"
+		if [[ ${MY_CHECKSUM} == "${DOWNLOADED_CHECKSUM}" ]]; then
+			rm -f "${DOWNLOADED_FILE}"
+			return 0
+		else
+			echo -n ""
+			chmod 775 "${DOWNLOADED_FILE}"
+			return 1
+		fi
+	else
+		echo "ERROR: '${GIT_FILE} not found!"
+		return 2
+	fi
+}
+
+# Determine what GitHub branch is being run.
+# The branch name is in the "version" file:
+#	<VERSION> [BRANCH: <BRANCH>]
+function getBranch()
+{
+	local BRANCH=""
+	[[ -f ${ALLSKY_HOME}/branch ]] && BRANCH="$(< "${ALLSKY_HOME}/branch")"
+	if [[ -n ${BRANCH} ]]; then
+		echo -n "${BRANCH}"
+	else
+		echo -n "${GITHUB_MAIN_BRANCH}"
+	fi
+	return 0
 }

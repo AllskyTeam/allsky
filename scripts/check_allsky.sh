@@ -36,24 +36,27 @@ source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
 
 
+if true; then ######################################## set to "false" when testing version is newer
+CURRENT_SCRIPT="${ALLSKY_SCRIPTS}/${ME}"
 if [[ -n ${NEWER} ]]; then
 	# This is a newer version
-echo "XXXXXXXXXX this is a newer version, BASH_ARGV0=[${BASH_ARGV0}]"
+	echo "Newer version [${BASH_ARGV0}] is replacing [${CURRENT_SCRIPT}]."
+	echo XXXX cp "${BASH_ARGV0}" "${CURRENT_SCRIPT}"
 
 else
 	# See if there's a newer version of this script; if so, download it and execute it.
 	BRANCH="$(getBranch)" || exit 2
-	CURRENT_FILE="${ALLSKY_SCRIPTS}/${ME}"
-	FILE_TO_CHECK="$(basename "${CURRENT_FILE}")"
-	NEWER_FILE="/tmp/${ME}"
-	checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_FILE}" "${FILE_TO_CHECK}" "${NEWER_FILE}"
+	FILE_TO_CHECK="$(basename "${ALLSKY_SCRIPTS}")/${ME}"
+	NEWER_SCRIPT="/tmp/${ME}"
+	checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${FILE_TO_CHECK}" "${NEWER_SCRIPT}"
 	RET=$?
 	[[ ${RET} -eq 2 ]] && exit 2
 	if [[ ${RET} -eq 1 ]]; then
-: ##########
- exec "${NEWER_FILE}" --newer
+		exec "${NEWER_SCRIPT}" --newer
+		# Does not return
 	fi
 fi
+fi #####################################################
 
 NUM_INFOS=0
 NUM_WARNINGS=0
@@ -272,8 +275,58 @@ do
 	fi
 done
 
+NUM_UPLOADS=0
+if has_website ; then
+	if [[ ${IMG_UPLOAD} == "false" ]]; then
+		heading "Warnings"
+		echo "You have an Allsky Website but no images are being uploaded to it (IMG_UPLOAD=false)."
+	else
+		NUM_UPLOADS=$((NUM_UPLOADS + 1))
+	fi
+	if [[ ${TIMELAPSE} == "true" && ${UPLOAD_VIDEO} == "false" ]]; then
+		heading "Warnings"
+		echo "You have an Allsky Website and timelapse videos are being created (TIMELAPSE=true),"
+		echo "but they are not being uploaded (UPLOAD_VIDEO=false)."
+	else
+		NUM_UPLOADS=$((NUM_UPLOADS + 1))
+	fi
+	if [[ ${KEOGRAM} == "true" && ${UPLOAD_KEOGRAM} == "false" ]]; then
+		heading "Warnings"
+		echo "You have an Allsky Website and keograms are being created (KEOGRAM=true),"
+		echo "but they are not being uploaded (UPLOAD_KEOGRAM=false)."
+	else
+		NUM_UPLOADS=$((NUM_UPLOADS + 1))
+	fi
+	if [[ ${STARTRAILS} == "true" && ${UPLOAD_STARTRAILS} == "false" ]]; then
+		heading "Warnings"
+		echo "You have an Allsky Website and startrails are being created (STARTRAILS=true),"
+		echo "but they are not being uploaded (UPLOAD_STARTRAILS=false)."
+	else
+		NUM_UPLOADS=$((NUM_UPLOADS + 1))
+	fi
+fi
+
+
 # ================= Check for error items.
 #	These are wrong and will likely keep Allsky from running.
+
+if [[ ${CAMERA_TYPE} != "ZWO" && ${CAMERA_TYPE} != "RPi" ]]; then
+	heading "Errors"
+	echo "INTERNAL ERROR: CAMERA_TYPE (${CAMERA_TYPE}) not valid."
+fi
+
+# Make sure these booleans have boolean values, or are blank.
+for i in IMG_UPLOAD IMG_UPLOAD_ORIGINAL_NAME IMG_RESIZE CROP_IMAGE AUTO_STRETCH \
+	RESIZE_UPLOADS IMG_CREATE_THUMBNAILS REMOVE_BAD_IMAGES TIMELAPSE UPLOAD_VIDEO \
+	TIMELAPSE_UPLOAD_THUMBNAIL TIMELAPSE_MINI_FORCE_CREATION TIMELAPSE_MINI_UPLOAD_VIDEO \
+	TIMELAPSE_MINI_UPLOAD_THUMBNAIL KEOGRAM UPLOAD_KEOGRAM \
+	STARTRAILS UPLOAD_STARTRAILS POST_END_OF_NIGHT_DATA
+do
+	if [[ -n ${!i} && ${!i,,} != "true" && ${!i,,} != "false" ]]; then
+		heading "Errors"
+		echo "${i} must be either 'true' or 'false'."
+	fi
+done
 
 ANGLE="$(settings ".angle")"
 LATITUDE="$(settings ".latitude")"
@@ -308,13 +361,134 @@ USING_DARKS="$(settings .useDarkFrames)"
 if [[ ${USING_DARKS} = "1" ]]; then
 	NUM_DARKS=$(find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
 	if [[ ${NUM_DARKS} -eq 0 ]]; then
-		heading "Information"
+		heading "Errors"
 		echo -n "'Use Dark Frames' is set but there are no darks "
 		if [[ -d ${ALLSKY_DARKS} ]]; then
 			echo "in '${ALLSKY_DARKS}'."
 		else
 			echo "with extension of '${EXTENSION}'."
 		fi
+	fi
+fi
+
+if has_website && [[ ${NUM_UPLOADS} -eq 0 ]]; then
+	heading "Errors"
+	echo "You have an Allsky Website but nothing is being uploaded to it."
+fi
+
+if ! is_number "${IMG_UPLOAD_FREQUENCY}" || [[ ${IMG_UPLOAD_FREQUENCY} -le 0 ]]; then
+	heading "Errors"
+	echo "IMG_UPLOAD_FREQUENCY (${IMG_UPLOAD_FREQUENCY}) must be 1 or greater."
+fi
+
+if [[ ${AUTO_STRETCH} == "true" ]]; then
+	if ! is_number "${AUTO_STRETCH_AMOUNT}" || \
+			[[ ${AUTO_STRETCH_AMOUNT} -le 0 ]] || \
+			[[ ${AUTO_STRETCH_AMOUNT} -gt 100 ]] ; then
+		heading "Errors"
+		echo "AUTO_STRETCH_AMOUNT (${AUTO_STRETCH_AMOUNT}) must be 1 - 100."
+	fi
+	if ! echo "${AUTO_STRETCH_MID_POINT}" | grep --silent "%" ; then
+		heading "Errors"
+		echo "AUTO_STRETCH_MID_POINT (${AUTO_STRETCH_MID_POINT}) must be an integer percent,"
+		echo "for example:  10%."
+	fi
+fi
+
+if ! is_number "${BRIGHTNESS_THRESHOLD}" || \
+		! echo "${BRIGHTNESS_THRESHOLD}" | \
+		awk '{if ($1 < 0.0 || $1 > 1.0) exit 1; exit 0; }' ; then
+	heading "Errors"
+	echo "BRIGHTNESS_THRESHOLD (${BRIGHTNESS_THRESHOLD}) must be 0.0 - 1.0"
+fi
+
+if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
+	if ! is_number "${REMOVE_BAD_IMAGES_THRESHOLD_LOW}" || \
+		! echo "${REMOVE_BAD_IMAGES_THRESHOLD_LOW}" | \
+		awk '{if ($1 < 0.0) exit 1; exit 0; }' ; then
+		heading "Errors"
+		echo "REMOVE_BAD_IMAGES_THRESHOLD_LOW (${REMOVE_BAD_IMAGES_THRESHOLD_LOW}) must be 0 - 100.0,"
+		echo "although it's normally around 0.5.  0 disables the low threshold check."
+	fi
+	if ! is_number "${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}" || \
+		! echo "${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}" | \
+		awk '{if ($1 < 0.0) exit 1; exit 0; }' ; then
+		heading "Errors"
+		echo "REMOVE_BAD_IMAGES_THRESHOLD_HIGH (${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}) must be 0 - 100.0,"
+		echo "although it's normally around 90.  0 disables the high threshold check."
+	fi
+fi
+
+HAS_PIXEL_ERROR="false"
+if [[ ${IMG_RESIZE} == "true" ]]; then
+	if ! X="$(checkPixelValue "IMG_WIDTH" "${IMG_WIDTH}" "width" "${SENSOR_WIDTH}")" ; then
+		heading "Errors"
+		echo -e "${X}"
+		HAS_PIXEL_ERROR="true"
+	fi
+	if ! X="$(checkPixelValue "IMG_HEIGHT" "${IMG_HEIGHT}" "height" "${SENSOR_HEIGHT}")" ; then
+		heading "Errors"
+		echo -e "${X}"
+		HAS_PIXEL_ERROR="true"
+	fi
+fi
+
+if [[ ${CROP_IMAGE} == "true" ]]; then
+	if ! X="$(checkPixelValue "CROP_WIDTH" "${CROP_WIDTH}" "width" "${SENSOR_WIDTH}")" ; then
+		heading "Errors"
+		echo -e "${X}"
+		HAS_PIXEL_ERROR="true"
+	fi
+	if ! X="$(checkPixelValue "CROP_HEIGHT" "${CROP_HEIGHT}" "height" "${SENSOR_HEIGHT}")" ; then
+		heading "Errors"
+		echo -e "${X}"
+		HAS_PIXEL_ERROR="true"
+	fi
+	# "any" means it can be any number, positive or negative.
+	if ! X="$(checkPixelValue "CROP_OFFSET_X" "${CROP_OFFSET_X}" "width" "${SENSOR_WIDTH}" "any")" ; then
+		heading "Errors"
+		echo -e "${X}"
+		HAS_PIXEL_ERROR="true"
+	fi
+	if ! X="$(checkPixelValue "CROP_OFFSET_Y" "${CROP_OFFSET_Y}" "height" "${SENSOR_HEIGHT}" "any")" ; then
+		heading "Errors"
+		echo -e "${X}"
+		HAS_PIXEL_ERROR="true"
+	fi
+
+	# Do more intensive checks but only if there weren't IMG_RESIZE errors since we
+	# we can't use IMG_WIDTH or IMG_HEIGHT.
+	if [[ ${HAS_PIXEL_ERROR} == "false" ]]; then
+		if [[ ${IMG_RESIZE} == "true" ]]; then
+			MAX_X=${IMG_WIDTH}
+			MAX_Y=${IMG_HEIGHT}
+		else
+			MAX_X=${SENSOR_WIDTH}
+			MAX_Y=${SENSOR_HEIGHT}
+		fi
+		if ! X="$(checkCropValues "${CROP_WIDTH}" "${CROP_HEIGHT}" \
+				"${CROP_OFFSET_X}" "${CROP_OFFSET_Y}" \
+				"${MAX_X}" "${MAX_Y}")" ; then
+			heading "Errors"
+			echo -e "${X}"
+		fi
+	fi
+fi
+
+if [[ ${RESIZE_UPLOADS} == "true" ]]; then
+	if ! is_number "${RESIZE_UPLOADS_WIDTH}" || \
+		! echo "${RESIZE_UPLOADS_WIDTH}" | \
+		awk '{if ($1 < 0 || $1 % 2 != 0) exit 1; exit 0; }' ; then
+		heading "Errors"
+		echo "RESIZE_UPLOADS_WIDTH (${RESIZE_UPLOADS_WIDTH}) must be a positive, even number."
+		echo "It is typically less than the sensor width of ${SENSOR_WIDTH}."
+	fi
+	if ! is_number "${RESIZE_UPLOADS_HEIGHT}" || \
+		! echo "${RESIZE_UPLOADS_HEIGHT}" | \
+		awk '{if ($1 < 0 || $1 % 2 != 0) exit 1; exit 0; }' ; then
+		heading "Errors"
+		echo "RESIZE_UPLOADS_HEIGHT (${RESIZE_UPLOADS_HEIGHT}) must be a positive, even number."
+		echo "It is typically less than the sensor height of ${SENSOR_HEIGHT}."
 	fi
 fi
 

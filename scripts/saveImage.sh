@@ -6,8 +6,8 @@ ME="$(basename "${BASH_ARGV0}")"
 
 [ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME} $*"
 
-source "${ALLSKY_HOME}/variables.sh"
-source "${ALLSKY_CONFIG}/config.sh"
+source "${ALLSKY_HOME}/variables.sh" || exit 99
+source "${ALLSKY_CONFIG}/config.sh" || exit 99
 
 usage_and_exit()
 {
@@ -63,12 +63,12 @@ if [[ ${REMOVE_BAD_IMAGES} != "true" || ${CROP_IMAGE} == "true" ]]; then
 	fi
 
 	if [[ ${CROP_IMAGE} == "true" ]]; then
-		# Typical output
-		# image-20220228094835.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
-			RESOLUTION=$(echo "${x}" | awk '{ print $3 }')
-			# These are the resolution of the image (which may have been binned), not the sensor.
-			typeset -i RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
-			typeset -i RESOLUTION_Y=${RESOLUTION##*x}	# everything after the "x"
+		# Typical output:
+			# image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
+		RESOLUTION=$(echo "${x}" | awk '{ print $3 }')
+		# These are the resolution of the image (which may have been binned), not the sensor.
+		RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
+		RESOLUTION_Y=${RESOLUTION##*x}	# everything after  the "x"
 	fi
 fi
 
@@ -76,7 +76,7 @@ fi
 # Normally at least the exposure will be passed and the sensor temp if known.
 while [ $# -gt 0 ]; do
 	VARIABLE="AS_${1%=*}"		# everything before the "="
-	VALUE="${1##*=}"			# everything after the "="
+	VALUE="${1##*=}"			# everything after  the "="
 	shift
 	# Export the variable so other scripts we call can use it.
 	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
@@ -96,7 +96,12 @@ function display_error_and_exit()	# error message, notification string
 {
 	ERROR_MESSAGE="${1}"
 	NOTIFICATION_STRING="${2}"
-	echo -e "${RED}${ERROR_MESSAGE}${NC}"
+	echo -en "${RED}"
+	echo -e "${ERROR_MESSAGE}" | while read -r MSG
+		do
+			[[ -n ${MSG} ]] && echo -e "    * ${MSG}"
+		done
+	echo -e "${NC}"
 	# Create a custom error message.
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 15 "custom" \
 		"red" "" "85" "" "" "" "10" "red" "${EXTENSION}" "" \
@@ -112,10 +117,10 @@ if [[ ${IMG_RESIZE} == "true" ]] ; then
 	# Make sure we were given numbers.
 	ERROR_MSG=""
 	if [[ "${IMG_WIDTH}" != +([+0-9]) ]]; then		# no negative numbers allowed
-		ERROR_MSG="${ERROR_MSG}\n*** IMG_WIDTH (${IMG_WIDTH}) must be a number."
+		ERROR_MSG="${ERROR_MSG}\nIMG_WIDTH (${IMG_WIDTH}) must be a number."
 	fi
 	if [[ "${IMG_WIDTH}" != +([+0-9]) ]]; then
-		ERROR_MSG="${ERROR_MSG}\n*** IMG_HEIGHT (${IMG_HEIGHT}) must be a number."
+		ERROR_MSG="${ERROR_MSG}\nIMG_HEIGHT (${IMG_HEIGHT}) must be a number."
 	fi
 	if [[ -n ${ERROR_MSG} ]]; then
 		echo -e "${RED}*** ${ME}: ERROR: Image resize number(s) invalid.${NC}"
@@ -138,86 +143,30 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 		RESOLUTION_Y=${IMG_HEIGHT}
 	fi
 
+	source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
+
 	# Do some sanity checks on the CROP_* variables.
-	# The crop rectangle needs to fit within the image, be an even number, and be greater than 0.
 	ERROR_MSG=""
-	function check_value()	# variable name, variable value, width_or_height, resolution
-	{
-		VAR_NAME="${1}"
-		VAR_VALUE="${2}"
-		W_or_H="${3}"
-		RESOLUTION="${4}"
-		if [[ ${VAR_VALUE} != +([0-9]) || ${VAR_VALUE} -le 0 ]]; then
-			ERROR_MSG="${ERROR_MSG}\n*** ${VAR_NAME} (${VAR_VALUE}) must be a positive number."
-			return 1
-		elif [[ ${VAR_VALUE} -gt ${RESOLUTION} ]]; then
-			ERROR_MSG="${ERROR_MSG}\n*** ${VAR_NAME} (${VAR_VALUE}) larger than image ${W_or_H}  (${RESOLUTION})."
-			return 1
-		fi
-		return 0
-	}
 	# shellcheck disable=SC2153
-	if check_value "CROP_WIDTH" "${CROP_WIDTH}" "width" "${RESOLUTION_X}"; then
-		if [[ $(( CROP_WIDTH % 2 )) -eq 1 ]]; then
-			ERROR_MSG="${ERROR_MSG}\n*** CROP_WIDTH (${CROP_WIDTH}) must be an even number."
-		fi
+	if ! E="$(checkPixelValue "CROP_WIDTH" "${CROP_WIDTH}" "width" "${RESOLUTION_X}")" ; then
+		ERROR_MSG="${ERROR_MSG}\n${E}"
 	fi
 	# shellcheck disable=SC2153
-	if check_value "CROP_HEIGHT" "${CROP_HEIGHT}" "height" "${RESOLUTION_Y}"; then
-		if [[ $(( CROP_HEIGHT % 2 )) -eq 1 ]]; then
-			ERROR_MSG="${ERROR_MSG}\n*** CROP_HEIGHT (${CROP_HEIGHT}) must be an even number."
-		fi
+	if ! E="$(checkPixelValue "CROP_HEIGHT" "${CROP_HEIGHT}" "height" "${RESOLUTION_Y}")"; then
+		ERROR_MSG="${ERROR_MSG}\n${E}"
 	fi
-	if [[ "${CROP_OFFSET_X}" != +([-+0-9]) ]]; then
-		ERROR_MSG="${ERROR_MSG}\n*** CROP_OFFSET_X (${CROP_OFFSET_X}) must be a number."
+	if ! E="$(checkPixelValue "CROP_OFFSET_X" "${CROP_OFFSET_X}" "width" "${RESOLUTION_X}" "any")" ; then
+		ERROR_MSG="${ERROR_MSG}\n${E}"
 	fi
-	if [[ "${CROP_OFFSET_Y}" != +([-+0-9]) ]]; then
-		ERROR_MSG="${ERROR_MSG}\n*** CROP_OFFSET_Y (${CROP_OFFSET_Y}) must be a number."
+	if ! X="$(checkPixelValue "CROP_OFFSET_Y" "${CROP_OFFSET_Y}" "height" "${RESOLUTION_Y}" "any")" ; then
+		ERROR_MSG="${ERROR_MSG}\n${E}"
 	fi
 
 	# Now for more intensive checks.
 	if [[ -z ${ERROR_MSG} ]]; then
-		typeset -i SENSOR_CENTER_X=$(( RESOLUTION_X / 2 ))
-		typeset -i SENSOR_CENTER_Y=$(( RESOLUTION_Y / 2 ))
-		typeset -i CROP_CENTER_ON_SENSOR_X=$(( SENSOR_CENTER_X + CROP_OFFSET_X ))
-		# There appears to be a bug in "convert" with "-gravity Center"; the Y offset is applied
-		# to the TOP of the image, not the CENTER.  The X offset is correctly applied to the image CENTER.
-		# Should the division round up or down or truncate (current method)?
-		typeset -i CROP_CENTER_ON_SENSOR_Y=$(( SENSOR_CENTER_Y + (CROP_OFFSET_Y / 2) ))
-		typeset -i HALF_CROP_WIDTH=$(( CROP_WIDTH / 2 ))
-		typeset -i HALF_CROP_HEIGHT=$(( CROP_HEIGHT / 2 ))
-
-		typeset -i CROP_TOP=$(( CROP_CENTER_ON_SENSOR_Y - HALF_CROP_HEIGHT ))
-		typeset -i CROP_BOTTOM=$(( CROP_CENTER_ON_SENSOR_Y + HALF_CROP_HEIGHT ))
-		typeset -i CROP_LEFT=$(( CROP_CENTER_ON_SENSOR_X - HALF_CROP_WIDTH ))
-		typeset -i CROP_RIGHT=$(( CROP_CENTER_ON_SENSOR_X + HALF_CROP_WIDTH ))
-
-
-		if [ ${CROP_TOP} -lt 0 ]; then
-			ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the top of the image by ${CROP_TOP#-} pixel(s)."
-		fi
-		if [ ${CROP_BOTTOM} -gt ${RESOLUTION_Y} ]; then
-			ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the bottom of the image - ${CROP_BOTTOM} is greater than image height (${RESOLUTION_Y})."
-		fi
-		if [ ${CROP_LEFT} -lt 0 ]; then
-			ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the left of the image - ${CROP_LEFT} is less than 0."
-		fi
-		if [ ${CROP_RIGHT} -gt ${RESOLUTION_X} ]; then
-			ERROR_MSG="${ERROR_MSG}\n*** CROP rectangle goes off the right of the image - ${CROP_RIGHT} is greater than image width (${RESOLUTION_X})."
-		fi
-	fi
-
-	if false; then		# for debugging - remove after we're 110% sure these crop checks work
-		echo "SENSOR WIDTH=${RESOLUTION_X}, SENSOR HEIGHT=${RESOLUTION_Y}"
-		echo "SENSOR_CENTER_: X=${SENSOR_CENTER_X}, Y=${SENSOR_CENTER_Y}"
-		echo "CROP_WIDTH=${CROP_WIDTH}, CROP_HEIGHT=${CROP_HEIGHT}"
-		if [[ -n ${HALF_CROP_WIDTH} ]]; then
-			# These are set if the overall crop size is ok.
-			echo "CROP_OFFSET_:  X=${CROP_OFFSET_X}, Y=${CROP_OFFSET_Y}"
-			echo "HALF_CROP_:    WIDTH=${HALF_CROP_WIDTH}, HEIGHT=${HALF_CROP_HEIGHT}"
-			echo "CROP_:         LEFT=${CROP_LEFT},  RIGHT=${CROP_RIGHT}"
-			echo "CROP_:         TOP=${CROP_TOP},  BOTTOM=${CROP_BOTTOM}"
-		fi
+		ERROR_MSG="$(checkCropValues "${CROP_WIDTH}" "${CROP_HEIGHT}" \
+			"${CROP_OFFSET_X}" "${CROP_OFFSET_Y}" \
+			"${RESOLUTION_X}" "${RESOLUTION_Y}")"
 	fi
 
 	if [[ -z ${ERROR_MSG} ]]; then
@@ -230,7 +179,7 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 			exit 4
 		fi
 	else
-		echo -e "${RED}*** ${ME}: ERROR: Crop number(s) invalid.${NC}"
+		echo -e "${RED}*** ${ME}: ERROR: Crop number(s) invalid; not cropping image.${NC}"
 		display_error_and_exit "${ERROR_MSG}" "CROP"
 	fi
 fi
@@ -258,7 +207,7 @@ fi
 
 ${ALLSKY_SCRIPTS}/flow-runner.py
 
-SAVED_FILE="${CURRENT_IMAGE}"				# The name of the file saved from the camera.
+SAVED_FILE="${CURRENT_IMAGE}"						# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 
 # If needed, save the current image in today's directory.
@@ -393,19 +342,18 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 	# First check if we should upload this image
 	if [[ ${IMG_UPLOAD_FREQUENCY} != "1" ]]; then
 		FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
-		typeset -i LEFT
 		if [[ ! -f ${FREQUENCY_FILE} ]]; then
 			# The file may have been deleted, or the user may have just changed the frequency.
-			let LEFT=${IMG_UPLOAD_FREQUENCY}
+			LEFT=${IMG_UPLOAD_FREQUENCY}
 		else
-			let LEFT=$( < "${FREQUENCY_FILE}" )
+			LEFT=$( < "${FREQUENCY_FILE}" )
 		fi
 		if [ ${LEFT} -le 1 ]; then
 			# upload this one and reset the counter
 			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
 		else
 			# Not ready to upload yet, so decrement the counter
-			let LEFT=LEFT-1
+			LEFT=$((LEFT - 1))
 			echo "${LEFT}" > "${FREQUENCY_FILE}"
 			# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
 			[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."

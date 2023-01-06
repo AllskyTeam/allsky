@@ -46,6 +46,7 @@ function get_domain()
 	URL="${1}"
 	D="${URL/*\/\//}"	# Remove everything up to and including "//"
 	D="${D/[:\/]*/}"	# Remove from ":" or "/" to end
+	D="${D/www./}"		# Remove optional "www."
 	echo "${D}"
 }
 
@@ -213,7 +214,6 @@ else
 	OWNER="$(settings ".owner")"
 	WEBSITE_URL="$(settings ".websiteurl")"
 	IMAGE_URL="$(settings ".imageurl")"
-# TODO: CAMERA should be a combination of CAMERA_TYPE (which we have) and CAMERA_MODEL
 	CAMERA="$(settings ".camera")"
 	LENS="$(settings ".lens")"
 	COMPUTER="$(settings ".computer")"
@@ -268,15 +268,15 @@ else
 		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W%%${BR}}"
 	fi
 	if [ "${OK}" = "false" ]; then
-		echo -e "${ERROR_MSG_START}${M%%${BR}}${NC}"
-		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${M%%${BR}}"
+		echo -e "${ERROR_MSG_START}${E%%${BR}}${NC}"
+		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E%%${BR}}"
 		exit 2
 	fi
 
 	if [ -f "${ALLSKY_HOME}/version" ]; then
 		ALLSKY_VERSION="$(< "${ALLSKY_HOME}/version")"
 	else
-		ALLSKY_VERSION="$(grep "Allsky Camera Software" /var/log/allsky.log | tail -1 | sed -e 's/.*Software //' -e 's/ .*//')"
+		ALLSKY_VERSION="$(grep "Allsky Camera Software" "${ALLSKY_LOG}" | tail -1 | sed -e 's/.*Software //' -e 's/ .*//')"
 		[ -z "${ALLSKY_VERSION}" ] && ALLSKY_VERSION="unknown"
 	fi
 

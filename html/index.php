@@ -16,6 +16,7 @@
 
 // Globals
 $lastChangedName = "lastChanged";	// json setting name
+$formReadonly = false;				// The WebUI isn't readonly
 
 // functions.php sets a bunch of constants and variables.
 // It needs to be at the top of this file since code below uses the items it sets.

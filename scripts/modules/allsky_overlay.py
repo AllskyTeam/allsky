@@ -568,7 +568,6 @@ class ALLSKYOVERLAY:
         image.paste(im_txt, mask=im_txt)
         return image
 
-
     def _getValue(self, placeHolder, variableType, format=None, empty=''):
         value = None
         valueOk = True
@@ -985,16 +984,20 @@ class ALLSKYOVERLAY:
             t = ts.now()
             earth = self._eph['earth']
 
-            home = earth + wgs84.latlon(self._convertLatLon(self._observerLat) * N, self._convertLatLon(self._observerLon) * W)
+            home = earth + wgs84.latlon(self._convertLatLon(self._observerLat), self._convertLatLon(self._observerLon))
 
             for planetId in planets:
                 planet = self._eph[planetId]
                 astrometric = home.at(t).observe(planet)
                 alt, az, d = astrometric.apparent().altaz()
+                ra, dec, distance = astrometric.radec()
                 #prs.int(planetId, alt, az)
                 os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'ALT'] = str(alt)
                 os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'AZ'] = str(az)
 
+                os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'RA'] = str(ra)
+                os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'DEC'] = str(dec)
+                
                 if alt.degrees > 5:
                     os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE'] = 'Yes'
                 else:

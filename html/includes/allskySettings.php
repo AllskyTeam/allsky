@@ -246,9 +246,14 @@ function toggle_advanced()
   <div class="row">
 	<div class="col-lg-12">
 		<div class="panel panel-primary">
-<?php if ($formReadonly !== "readonly") { ?>
-		<div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Allsky Settings for <b><?php echo "$cameraType $cameraModel"; ?></b></div>
-<?php } ?>
+<?php
+	if ($formReadonly == "readonly") {
+		$x = "(READ ONLY) &nbsp; &nbsp; ";
+	} else {
+		$x = "<i class='fa fa-camera fa-fw'></i>";
+	}
+?>
+		<div class="panel-heading"><?php echo $x; ?> Allsky Settings for <b><?php echo "$cameraType $cameraModel"; ?></b></div>
 
 		<div class="panel-body" style="padding: 5px;">
 <?php if ($formReadonly != "readonly")

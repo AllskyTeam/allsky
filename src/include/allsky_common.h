@@ -182,7 +182,7 @@ struct config {			// for configuration variables
 	long nightSkipFrames				= 1;
 	bool dayEnableCooler				= false;			// Enable the cooler?
 	bool nightEnableCooler				= false;
-	long aggression						= 75;
+	long aggression						= 85;
 	long gainTransitionTime				= 5;
 	long width							= 0;				// use full sensor width
 	long height							= 0;				// use full sensor height
@@ -334,4 +334,3 @@ void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
-

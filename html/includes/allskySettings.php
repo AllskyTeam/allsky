@@ -1,11 +1,16 @@
 <?php
-include_once( 'includes/status_messages.php' );
+if ($formReadonly != "readonly") {
+	include_once( 'includes/status_messages.php' );
+}
 
 function DisplayAllskyConfig(){
+	global $formReadonly;
+
 	$cameraTypeName = "cameraType";		// json setting name
 	$cameraModelName = "cameraModel";	// json setting name
 	global $lastChangedName;			// json setting name
 	global $lastChanged;
+	global $page;
 
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
@@ -13,9 +18,10 @@ function DisplayAllskyConfig(){
 	$options_str = file_get_contents($options_file, true);
 	$options_array = json_decode($options_str, true);
 
-	global $page;
-	global $status;
-	$status = new StatusMessages();
+	if ($formReadonly != "readonly") {
+		global $status;
+		$status = new StatusMessages();
+	}
 
 	if (isset($_POST['save_settings'])) {
 		// If the user changed the camera type and anything else,
@@ -191,6 +197,8 @@ function DisplayAllskyConfig(){
 
 	check_if_configured($page, "settings");
 
+if ($formReadonly != "readonly") {
+	$settingsDescription = "";
 ?>
 <script language="javascript">
 function toggle_advanced()
@@ -231,13 +239,26 @@ function toggle_advanced()
 		s.display = newMode;
 	}
 }
+<?php
+}
+?>
 </script>
   <div class="row">
-    <div class="col-lg-12">
-      <div class="panel panel-primary">
-      <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Allsky Settings for <b><?php echo "$cameraType $cameraModel"; ?></b></div>
-        <div class="panel-body" style="padding: 5px;">
-          <p id="messages"><?php $status->showMessages(); ?></p>
+	<div class="col-lg-12">
+		<div class="panel panel-primary">
+<?php
+	if ($formReadonly == "readonly") {
+		$x = "(READ ONLY) &nbsp; &nbsp; ";
+	} else {
+		$x = "<i class='fa fa-camera fa-fw'></i>";
+	}
+?>
+		<div class="panel-heading"><?php echo $x; ?> Allsky Settings for <b><?php echo "$cameraType $cameraModel"; ?></b></div>
+
+		<div class="panel-body" style="padding: 5px;">
+<?php if ($formReadonly != "readonly")
+			echo "<p id='messages'>" . $status->showMessages() . "</p>";
+?>
 
           <form method="POST" action="?page=allsky_conf" name="conf_form">
 		<?php CSRFToken();
@@ -246,6 +267,11 @@ function toggle_advanced()
 		// confusing novice users.
 		$numAdvanced = 0;
 		$numMissing = 0;
+		if ($formReadonly == "readonly") {
+			$readonlyForm = "readonly disabled";	// covers both bases
+		} else {
+			$readonlyForm = "";
+		}
 		echo "<table border='0'>";
 			foreach($options_array as $option) {
 				// Should this setting be displayed?
@@ -354,15 +380,15 @@ function toggle_advanced()
 							$t = $type;
 						}
 						echo "<input $readonly class='form-control boxShadow settingInput' type='$t'" .
-							" name='$name' value='$value'" .
+							" $readonlyForm name='$name' value='$value'" .
 							" style='padding: 0px 3px 0px 0px; text-align: right; $optional_bg'>";
 					} else if ($type == "widetext"){
 						echo "<input class='form-control boxShadow' type='text'" .
-							" name='$name' value='$value'" .
+							" $readonlyForm name='$name' value='$value'" .
 						   	" style='padding: 6px 5px; $optional_bg'>";
 					} else if ($type == "select"){
 						echo "<select class='form-control boxShadow settingInput' name='$name' title='Select an item'" .
-						   	" style='text-align: right; padding: 0px 3px 0px 0px;'>";
+						   	" $readonlyForm style='text-align: right; padding: 0px 3px 0px 0px;'>";
 						foreach($option['options'] as $opt){
 							$val = $opt['value'];
 							$lab = $opt['label'];
@@ -376,11 +402,11 @@ function toggle_advanced()
 					} else if ($type == "checkbox"){
 						echo "<div class='switch-field boxShadow settingInput' style='margin-bottom: -3px; border-radius: 4px;'>";
 							echo "<input id='switch_no_".$name."' class='form-control' type='radio' ".
-								"name='$name' value='0' ".
+								"$readonlyForm name='$name' value='0' ".
 								($value == 0 ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_no_".$name."'>No</label>";
 							echo "<input id='switch_yes_".$name."' class='form-control' type='radio' ".
-								"name='$name' value='1' ".
+								"$readonlyForm name='$name' value='1' ".
 								($value == 1 ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_yes_".$name."'>Yes</label>";
 						echo "</div>";
@@ -388,7 +414,8 @@ function toggle_advanced()
 					echo "</span>";
 
 					// Track current values so we can determine what changed.
-					echo "<input type='hidden' name='OLD_$name' value='$value'>";
+					if ($formReadonly != "readonly")
+						echo "<input type='hidden' name='OLD_$name' value='$value'>";
 
 					echo "</td>";
 					if ($type == "widetext")
@@ -399,7 +426,7 @@ function toggle_advanced()
 			 }
 		echo "</table>";
 
-		if ($numMissing > 0) {
+		if ($numMissing > 0 && $formReadonly != "readonly") {
 			$msg = "ERROR: $numMissing required field" . ($numMissing === 1 ? " is" : "s are");
 			$msg .= " missing - see highlighted fields below.";
 			$status->addMessage($msg, 'danger');
@@ -412,14 +439,15 @@ function toggle_advanced()
 			</script>
 		<?php
 		}
-	?>
 
+if ($formReadonly != "readonly") { ?>
 	<div style="margin-top: 20px">
 		<input type="submit" class="btn btn-primary" name="save_settings" value="Save changes">
 		<input type="submit" class="btn btn-warning" name="reset_settings" value="Reset to default values" onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
 		<button type="button" class="btn advanced btn-advanced" id="advButton" onclick="toggle_advanced();"><?php if ($initial_display == "none") echo "Show advanced options"; else echo "Hide advanced options"; ?></button>
 		<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;"><br><input type="checkbox" name="restart" checked> Restart Allsky after saving changes?<br><br>&nbsp;</div>
 	</div>
+<?php } ?>
 	</form>
 </div><!-- ./ Panel body -->
 </div><!-- /.panel-primary -->

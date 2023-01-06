@@ -20,9 +20,9 @@ if ! json_pp < "${SETTINGS_FILE}" > /dev/null; then
 fi
 
 # shellcheck disable=SC1090,SC1091
-source "${ALLSKY_CONFIG}/config.sh" || exit 1
+source "${ALLSKY_CONFIG}/config.sh" || exit 99
 # shellcheck disable=SC1090,SC1091
-source "${ALLSKY_CONFIG}/ftp-settings.sh"
+source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
 ME="$(basename "${BASH_ARGV0}")"
 
 LATITUDE="$(settings ".latitude")"
@@ -587,7 +587,7 @@ create_data_json_file
 restore_prior_files
 
 # Create any directories not created above.
-mkdir -p startrails/thumbnails keograms/thumbnails videos/thumbnails myImages
+mkdir -p viewSettings startrails/thumbnails keograms/thumbnails videos/thumbnails myImages
 
 # The webserver needs to be able to update the configuration file and create thumbnails.
 display_msg progress "Setting ownership and permissions."

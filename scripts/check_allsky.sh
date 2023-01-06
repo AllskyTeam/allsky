@@ -40,8 +40,9 @@ if true; then ######################################## set to "false" when testi
 CURRENT_SCRIPT="${ALLSKY_SCRIPTS}/${ME}"
 if [[ -n ${NEWER} ]]; then
 	# This is a newer version
-	echo "Newer version [${BASH_ARGV0}] is replacing [${CURRENT_SCRIPT}]."
+	echo "[${CURRENT_SCRIPT}] being replaced by newer version from GitHub."
 	echo XXXX cp "${BASH_ARGV0}" "${CURRENT_SCRIPT}"
+	chmod 775 "${CURRENT_SCRIPT}"
 
 else
 	# See if there's a newer version of this script; if so, download it and execute it.
@@ -476,18 +477,14 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 fi
 
 if [[ ${RESIZE_UPLOADS} == "true" ]]; then
-	if ! is_number "${RESIZE_UPLOADS_WIDTH}" || \
-		! echo "${RESIZE_UPLOADS_WIDTH}" | \
-		awk '{if ($1 < 0 || $1 % 2 != 0) exit 1; exit 0; }' ; then
+	if ! X="$(checkPixelValue "RESIZE_UPLOADS_WIDTH" "${RESIZE_UPLOADS_WIDTH}" "width" "${SENSOR_WIDTH}")" ; then
 		heading "Errors"
-		echo "RESIZE_UPLOADS_WIDTH (${RESIZE_UPLOADS_WIDTH}) must be a positive, even number."
+		echo -e "${X}"
 		echo "It is typically less than the sensor width of ${SENSOR_WIDTH}."
 	fi
-	if ! is_number "${RESIZE_UPLOADS_HEIGHT}" || \
-		! echo "${RESIZE_UPLOADS_HEIGHT}" | \
-		awk '{if ($1 < 0 || $1 % 2 != 0) exit 1; exit 0; }' ; then
+	if ! X="$(checkPixelValue "RESIZE_UPLOADS_HEIGHT" "${RESIZE_UPLOADS_HEIGHT}" "height" "${SENSOR_HEIGHT}")" ; then
 		heading "Errors"
-		echo "RESIZE_UPLOADS_HEIGHT (${RESIZE_UPLOADS_HEIGHT}) must be a positive, even number."
+		echo -e "${X}"
 		echo "It is typically less than the sensor height of ${SENSOR_HEIGHT}."
 	fi
 fi

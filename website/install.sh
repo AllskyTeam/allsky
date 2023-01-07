@@ -100,8 +100,9 @@ create_data_json_file() {
 		sed -i 's/^POST_END_OF_NIGHT_DATA.*/POST_END_OF_NIGHT_DATA="true"/' "${ALLSKY_CONFIG}/config.sh"
 	fi
 
-	# Create the file.  postData.sh copies it to ${ALLSKY_WEBSITE}.
-	OUTPUT="$(${ALLSKY_SCRIPTS}/postData.sh 2>&1)"
+	# Copy the file to ${ALLSKY_WEBSITE}.
+	# This also copies the settings file and a few others needed to display settings.
+	OUTPUT="$(${ALLSKY_SCRIPTS}/postData.sh --allFiles 2>&1)"
 	if [[ $? -ne 0 || ! -f ${ALLSKY_WEBSITE}/data.json ]]; then
 		MSG="Unable to create new 'data.json' file:"
 		MSG="${MSG}\n${OUTPUT}"
@@ -587,7 +588,11 @@ create_data_json_file
 restore_prior_files
 
 # Create any directories not created above.
-mkdir -p viewSettings startrails/thumbnails keograms/thumbnails videos/thumbnails myImages
+mkdir -p "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY}" \
+	startrails/thumbnails \
+	keograms/thumbnails \
+	videos/thumbnails \
+	myImages
 
 # The webserver needs to be able to update the configuration file and create thumbnails.
 display_msg progress "Setting ownership and permissions."

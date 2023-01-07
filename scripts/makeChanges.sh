@@ -104,6 +104,7 @@ WEB_CONFIG_FILE=""
 HAS_WEBSITE_RET=""
 SHOW_POSTDATA_MESSAGE=true
 TWILIGHT_DATA_CHANGED=false
+CAMERA_TYPE_CHANGED=false
 
 # Several of the fields are in the Allsky Website configuration file,
 # so check if the IS a file before trying to update it.
@@ -276,6 +277,7 @@ while [[ $# -gt 0 ]]; do
 			[[ ${CAMERA_TYPE_ONLY} == "true" ]] && exit 0
 
 			SHOW_POSTDATA_MESSAGE=false	# user doesn't need to see this output
+			CAMERA_TYPE_CHANGED=true
 			NEEDS_RESTART=true
 			;;
 
@@ -383,11 +385,9 @@ if check_website ; then
 	# Anytime a setting in settings.json changed we want to
 	# send an updated file to any Allsky Website(s).
 	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postData.sh${NC}"
-	if [[ ${TWILIGHT_DATA_CHANGED} == "true" ]]; then
-		x=""
-	else
-		x="--settingsOnly"
-	fi
+	x=""
+	[[ ${TWILIGHT_DATA_CHANGED} == "false" ]] && x="${x} --settingsOnly"
+	[[ ${CAMERA_TYPE_CHANGED} == "false" ]] && x="${x} --allFiles"
 
 	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" ${x} >&2)" ; then
 		if [[ ${SHOW_POSTDATA_MESSAGE} == "true" ]]; then
@@ -397,7 +397,7 @@ if check_website ; then
 				echo -e "${wBOLD}If you have the Allsky Website open in a browser, please refresh the window.${wNBOLD}"
 				echo -en "${wNC}"
 			fi
-			# Users don't need to know that the settings file was sent.
+			# Users don't need to know that the settings file and possibly others were sent.
 		fi
 	else
 		echo -e "${wERROR}ERROR posting updated twilight data: ${RESULT}.${wNC}"

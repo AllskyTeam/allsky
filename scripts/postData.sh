@@ -5,7 +5,7 @@
 # A copy of the settings file is also uploaded.
 
 # Allow this script to be executed manually or by sudo, which requires several variables to be set.
-if [ -z "${ALLSKY_HOME}" ] ; then
+if [[ -z ${ALLSKY_HOME} ]]; then
 	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
@@ -30,7 +30,7 @@ else
 fi
 
 # Assume if PROTOCOL is set, there's a remote website.
-if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
+if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} && -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
 	HAS_REMOTE_WEBSITE=true
 else
 	HAS_REMOTE_WEBSITE=false
@@ -40,11 +40,53 @@ if [[ ${HAS_LOCAL_WEBSITE} == "false" && ${HAS_REMOTE_WEBSITE} == "false" ]]; th
 	exit 0		# It's not an error
 fi
 
-if [[ ${1} == "--settingsOnly" ]]; then
-	SETTINGS_ONLY=true
-else
-	SETTINGS_ONLY=false
-fi
+usage_and_exit()
+{
+	retcode=${1}
+	echo
+	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
+	echo "Usage: ${ME} [--help] [--debug] [--settingsOnly] [--allfiles]"
+	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
+	echo "    where:"
+	echo "      '--allfiles' causes all 'view settings' files to be uploaded"
+	exit ${retcode}
+}
+
+HELP="false"
+DEBUG="false"
+SETTINGS_ONLY="false"
+ALL_FILES="false"
+RET=0
+while [ $# -gt 0 ]; do
+	case "${1}" in
+		--debug)
+			DEBUG="true"
+			shift
+			;;
+		--help)
+			HELP="true"
+			shift
+			;;
+		--allFiles)
+			ALL_FILES="true"
+			shift
+			;;
+		--settinsOnly)
+			SETTINGS_ONLY="true"
+			shift
+			;;
+		-*)
+			echo -e "${RED}Unknown argument '${1}'.${NC}" >&2
+			shift
+			RET=1
+			;;
+		*)
+			break		# done with arguments
+			;;
+	esac
+done
+[[ ${RET} -ne 0 ]] && usage_and_exit ${RET}
+[[ ${HELP} = "true" ]] && usage_and_exit 0
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	latitude="$(convertLatLong "$(settings ".latitude")" "latitude")"
@@ -107,35 +149,48 @@ fi
 
 function upload_file()
 {
-	FILE_TO_UPLOAD="${1}"
-	strFILE_TO_UPLOAD="${2}"
+	local FILE_TO_UPLOAD="${1}"
+	local strFILE_TO_UPLOAD="${2}"
+	local DIRECTORY="${3}"		# Directory to put file in
 	if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
 		echo -e "${RED}${ME}: ERROR: File to upload '${FILE_TO_UPLOAD}' (${strFILE_TO_UPLOAD}) not found.${NC}"
 		return 1
 	fi
 
-	RETCODE=0
+	local RETCODE=0
 
 	# Copy to local Allsky website if it exists.
 	if [[ ${HAS_LOCAL_WEBSITE} == "true" ]]; then
-		cp "${FILE_TO_UPLOAD}" "${ALLSKY_WEBSITE}"
+		# If ${DIRECTORY} isn't "" and doesn't start with "/", add one.
+		local S="${DIRECTORY:0:1}"
+		if [[ -n ${S} && ${S} != "/" ]]; then
+			S="/"
+		else
+			S=""
+		fi
+		TO="${ALLSKY_WEBSITE}${S}${DIRECTORY}"
+		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}cp '${FILE_TO_UPLOAD}' '${TO}'${wNC}"
+
+		cp "${FILE_TO_UPLOAD}" "${TO}"
 		R=$?
 		if [[ ${R} -ne 0 ]]; then
-			echo "${RED}${ME}: Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}'.${NC}"
+			echo -e "${RED}${ME}: Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}'.${NC}"
 		fi
 		((RETCODE=${R}))
 	fi
 
 	# Upload to remote website if there is one.
 	if [[ ${HAS_REMOTE_WEBSITE} == "true" ]]; then
+		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to ${DIRECTORY:-root}${wNC}"
+
 		"${ALLSKY_SCRIPTS}/upload.sh" --silent \
 			"${FILE_TO_UPLOAD}" \
-			"${IMAGE_DIR}" \
+			"${DIRECTORY}" \
 			"" \
 			"PostData"
 		R=$?
 		if [[ ${R} -ne 0 ]]; then
-			echo "${RED}${ME}: Unable to upload '${FILE_TO_UPLOAD}'.${NC}"
+			echo -e "${RED}${ME}: Unable to upload '${FILE_TO_UPLOAD}'.${NC}"
 		fi
 		((RETCODE=RETCODE+${R}))
 	fi
@@ -143,11 +198,20 @@ function upload_file()
 	return ${RETCODE}
 }
 
-upload_file "${SETTINGS_FILE}" "settings file"
+# These files go in ${VIEW_DIR} so the user can display their settings.
+# This directory is in the root of the Allsky Website.
+VIEW_DIR="viewSettings"
+upload_file "${SETTINGS_FILE}" "settings file" "${VIEW_DIR}"
+if [[ ${ALL_FILES} == "true" ]]; then
+	upload_file "${OPTIONS_FILE}" "options file" "${VIEW_DIR}"
+	upload_file "${ALLSKY_WEBUI}/includes/allskySettings.php" "allskySettings file" "${VIEW_DIR}"
+	upload_file "${ALLSKY_DOCUMENTATION}/css/custom.css" "custom file" "${VIEW_DIR}"
+fi
+
 # shellcheck disable=SC2181
 RET=$?
 if [[ ${RET} -eq 0 && ${SETTINGS_ONLY} == "false" ]]; then
-	upload_file "${OUTPUT_FILE}" "output file"
+	upload_file "${OUTPUT_FILE}" "output file" "${IMAGE_DIR}"
 	# shellcheck disable=SC2181
 	RET=$?
 fi

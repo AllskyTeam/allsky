@@ -844,7 +844,7 @@ class ALLSKYOVERLAY:
                     ts = load.timescale()
                     t0 = ts.from_datetime(midnight)
                     t1 = ts.from_datetime(next_midnight)
-                    bluffton = wgs84.latlon(lat * N, lon * E)
+                    bluffton = wgs84.latlon(lat, lon)
                     f = almanac.dark_twilight_day(self._eph, bluffton)
                     times, events = almanac.find_discrete(t0, t1, f)
 

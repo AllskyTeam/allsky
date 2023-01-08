@@ -245,6 +245,27 @@ def getSetting(settingName):
     
     return result
 
+def writeSettings():
+    global SETTINGS
+        
+    settingsFile = getEnvironmentVariable("SETTINGS_FILE")
+    if settingsFile is None:
+        camera = getEnvironmentVariable("CAMERA_TYPE")
+        if camera is None:
+            camera = CONFIG["CAMERA"]
+
+        settingsFile = os.path.join(getEnvironmentVariable("ALLSKY_CONFIG"), "settings_" + camera + ".json")
+           
+    with open(settingsFile, "w") as fp:
+        json.dump(SETTINGS, fp)                            
+
+def updateSetting(values):
+    readSettings()
+    for value in values:
+        SETTINGS.update(value)
+    
+    writeSettings()
+
 def getConfig(settingName):
     result = None
     try:
@@ -375,3 +396,13 @@ def float(val):
     val = locale.atof(val)
     
     return val
+
+def saveExtraData(fileName, extraData):
+    allskyPath = getEnvironmentVariable("ALLSKY_HOME")
+    if allskyPath is not None:
+        extraDataPath = os.path.join(allskyPath, "tmp", "extra")
+        checkAndCreateDirectory(extraDataPath)
+        extraDataFilename = os.path.join(extraDataPath, fileName)
+        with open(extraDataFilename, "w") as file:
+            formattedJSON = json.dumps(extraData, indent=4)
+            file.write(formattedJSON)

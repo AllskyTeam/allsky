@@ -512,7 +512,7 @@ class MODULESEDITOR {
                             </div>\
                             <div class="col-xs-4">\
                                 <button type="button" class="btn btn-default" id="open-gpio-' + key + '" data-source="' + key + '">...</button>\
-                                <button type="button" class="btn btn-default" id="reset-gpio-' + key + '" data-source="' + key + '"><span class="glyphicon glyphicon-repeat"></span></button>\
+                                <button type="button" class="btn btn-default" id="reset-gpio-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
                             </div>\
                         </div>\
                     ';

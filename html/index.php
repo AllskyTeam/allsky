@@ -176,7 +176,6 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 <?php } ?>
 </head>
 <body>
-
 <div id="wrapper">
 	<!-- Navigation -->
 	<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
@@ -211,7 +210,7 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 				</div>
 		</div> <!-- /.navbar-header -->
 
-		<!-- Navigation -->
+		<!-- Navigation.  Add "id" to any page that needs to be refreshed. -->
 		<div class="navbar-default sidebar" role="navigation">
 			<div class="sidebar-nav navbar-collapse">
 				<ul class="nav" id="side-menu">
@@ -219,13 +218,13 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 						<a href="index.php?page=live_view"><i class="fa fa-eye fa-fw"></i> Live View</a>
 					</li>
 					<li>
-						<a href="index.php?page=list_days"><i class="fa fa-image fa-fw"></i> Images</a>
+						<a id="list_days" href="index.php?page=list_days"><i class="fa fa-image fa-fw"></i> Images</a>
 					</li>
 					<li>
-						<a href="index.php?page=allsky_conf"><i class="fa fa-camera fa-fw"></i> Allsky Settings</a>
+						<a id="configuration" href="index.php?page=configuration"><i class="fa fa-camera fa-fw"></i> Allsky Settings</a>
 					</li>
 					<li>
-						<a href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>
+						<a id="editor" href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>
 					</li>
 					<li>
 						<a href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i> Overlay Editor</a>
@@ -234,13 +233,13 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 						<a href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Editor</a>
 					</li>						
 					<li>
-						<a href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
+						<a id="LAN" href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
 					</li>
 					<li>
-						<a href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Dashboard</a>
+						<a id="WLAN" href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Dashboard</a>
 					</li>
 					<li>
-						<a href="index.php?page=wpa_conf"><i class="fa fa-wifi fa-fw"></i> Configure Wifi</a>
+						<a id="wifi" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> Configure Wifi</a>
 					</li>
 					<?php if (RASPI_OPENVPN_ENABLED) : ?>
 						<li>
@@ -249,15 +248,14 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					<?php endif; ?>
 					<?php if (RASPI_TORPROXY_ENABLED) : ?>
 						<li>
-							<a href="index.php?page=torproxy_conf"><i class="fa fa-eye-slash fa-fw"></i> Configure TOR
-								proxy</a>
+							<a href="index.php?page=torproxy_conf"><i class="fa fa-eye-slash fa-fw"></i> Configure TOR proxy</a>
 						</li>
 					<?php endif; ?>
 					<li>
 						<a href="index.php?page=auth_conf"><i class="fa fa-lock fa-fw"></i> Change Password</a>
 					</li>
 					<li>
-						<a href="index.php?page=system_info"><i class="fa fa-cube fa-fw"></i> System</a>
+						<a id="system" href="index.php?page=system"><i class="fa fa-cube fa-fw"></i> System</a>
 					</li>
 					<li>
 						<a href="/documentation" target="_blank" title="Opens in new window"><i class="fa fa-book fa-fw"></i> Allsky Documentation <i class="fa fa-external-link-alt fa-fw"></i></a>
@@ -318,16 +316,16 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					case "LAN_info":
 						DisplayDashboard_LAN("eth0");
 						break;
-					case "allsky_conf":
+					case "configuration":
 						DisplayAllskyConfig();
 						break;
-					case "wpa_conf":
+					case "wifi":
 						DisplayWPAConfig();
 						break;
 					case "auth_conf":
 						DisplayAuthConfig($config['admin_user'], $config['admin_pass']);
 						break;
-					case "system_info":
+					case "system":
 						DisplaySystem();
 						break;
 					case "list_days":
@@ -351,12 +349,13 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					case "editor":
 						DisplayEditor();
 						break;
-                    			case "overlay":
-                        			DisplayOverlay("$image_name");
-                        			break;
-                    			case "module":
-                        			DisplayModule();
-                        			break;						
+					case "overlay":
+						DisplayOverlay("$image_name");
+						break;
+					case "module":
+						DisplayModule();
+						break;						
+
 					case "live_view":
 					default:
 						DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);
@@ -386,6 +385,20 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 				console.log("Not Supported");
 			}
 		});
+
+	// Add timestamps to href's that need it.
+	function addTimestamp(id) {
+		var x = document.getElementById(id);
+		if (! x) console.log("No id for " + id);
+		else x.href += "&_ts=" + new Date().getTime();
+	}
+	addTimestamp("list_days");
+	addTimestamp("configuration");
+	addTimestamp("editor");
+	addTimestamp("LAN");
+	addTimestamp("WLAN");
+	addTimestamp("wifi");
+	addTimestamp("system");
 </script>
 
 </body>

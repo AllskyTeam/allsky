@@ -18,6 +18,7 @@ import re
 import sys
 import time
 import locale
+import board
 
 locale.setlocale(locale.LC_ALL, '')
 
@@ -406,3 +407,126 @@ def saveExtraData(fileName, extraData):
         with open(extraDataFilename, "w") as file:
             formattedJSON = json.dumps(extraData, indent=4)
             file.write(formattedJSON)
+
+def deleteExtraData(fileName):
+    allskyPath = getEnvironmentVariable("ALLSKY_HOME")
+    if allskyPath is not None:
+        extraDataPath = os.path.join(allskyPath, "tmp", "extra")
+        extraDataFilename = os.path.join(extraDataPath, fileName)
+        if os.path.exists(extraDataFilename):
+            if isFileWriteable(extraDataFilename):
+                os.remove(extraDataFilename)
+            
+def getGPIOPin(pin):
+    result = None
+    if pin == 0:
+        result = board.D0
+
+    if pin == 1:
+        result = board.D1
+
+    if pin == 2:
+        result = board.D2
+
+    #SDA = pin.SDA
+    
+    if pin == 3:
+        result = board.D3
+
+    #SCL = pin.SCL
+
+    if pin == 4:
+        result = board.D4
+
+    if pin == 5:
+        result = board.D5
+
+    if pin == 6:
+        result = board.D6
+
+    if pin == 7:
+        result = board.D7
+
+    #CE1 = pin.D7
+
+    if pin == 8:
+        result = board.D8
+    
+    #CE0 = pin.D8
+    
+    if pin == 9:
+        result = board.D9
+
+    #MISO = pin.D9
+
+    if pin == 10:
+        result = board.D10
+
+    #MOSI = pin.D10
+    
+    if pin == 11:
+        result = board.D11
+    
+    #SCLK = pin.D11
+    #SCK = pin.D11
+
+    if pin == 12:
+        result = board.D12
+
+    if pin == 13:
+        result = board.D13
+    
+    if pin == 14:
+        result = board.D14
+
+    #TXD = pin.D14
+    
+    if pin == 15:
+        result = board.D15
+    
+    #RXD = pin.D15
+
+    if pin == 16:
+        result = board.D16
+
+    if pin == 17:
+        result = board.D17
+
+    if pin == 18:
+        result = board.D18
+
+    if pin == 19:
+        result = board.D19
+
+    #MISO_1 = pin.D19
+    
+    if pin == 20:
+        result = board.D20
+    
+    #MOSI_1 = pin.D20
+    
+    if pin == 21:
+        result = board.D21
+    
+    #SCLK_1 = pin.D21
+    #SCK_1 = pin.D21
+    
+    if pin == 22:
+        result = board.D22
+
+    if pin == 23:
+        result = board.D23
+
+    if pin == 24:
+        result = board.D24
+
+    if pin == 25:
+        result = board.D25
+
+    if pin == 26:
+        result = board.D26
+
+    if pin == 27:
+        result = board.D27
+    
+    return result

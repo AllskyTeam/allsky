@@ -8,3 +8,6 @@ scipy
 scikit-image
 paho-mqtt
 numpy>=1.23.3
+photutils
+astropy
+Adafruit-Blinka

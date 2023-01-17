@@ -181,3 +181,7 @@
     color: red;
     font-weight: 700;
   }
+
+  .dark #oe-debug-dialog-form textarea {
+    color: black;
+  }

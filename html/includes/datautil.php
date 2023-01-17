@@ -21,7 +21,7 @@ class DATAUTIL
     public function __construct()
     {
         $this->overlayPath = ALLSKY_CONFIG;
-        $this->allskyTmp = ALLSKY_HOME . '/tmp';
+        $this->allskyTmp = ALLSKY_TMP;
     }
 
     public function run()

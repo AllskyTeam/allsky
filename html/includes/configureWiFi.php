@@ -168,9 +168,9 @@ function DisplayWPAConfig(){
 			<p><?php $status->showMessages(); ?></p>
 			<h4>Wi-Fi SSIDs</h4>
 
-			<form method="POST" action="?page=wpa_conf" name="wpa_conf_form">
+			<form method="POST" action="?page=wifi" name="wpa_conf_form">
 			<?php CSRFToken() ?>
-			<input type="hidden" name="client_settings" ?>
+			<input type="hidden" name="client_settings">
 			<table class="table table-responsive table-striped">
 				<tr>
 				<th></th>

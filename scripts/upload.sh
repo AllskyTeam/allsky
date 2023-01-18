@@ -223,8 +223,10 @@ else # sftp/ftp/ftps
 		[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
 		# shellcheck disable=SC2153
 		echo "open --user '${REMOTE_USER}' --env-password ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
-		# lftp doesn't actually try to open the connection until the first command is executed.
-		echo "quote PWD > /dev/null || exit 99"
+		# lftp doesn't actually try to open the connection until the first command is executed,
+		# and if it fails the error message isn't always clear.
+		# So, do a simple command first so we get a better error message.
+		echo "quote PWD > /dev/null || cd . || exit 99"
 
 		if [[ ${DEBUG} = "true" ]]; then
 			echo "quote PWD"

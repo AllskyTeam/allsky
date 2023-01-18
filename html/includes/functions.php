@@ -100,12 +100,12 @@ function check_if_configured($page, $calledFrom) {
 	global $lastChanged, $status;
 
 	// The conf page calls us if needed.
-	if ($calledFrom === "main" && $page === "allsky_conf")
+	if ($calledFrom === "main" && $page === "configuration")
 		return;
 
 	if ($lastChanged === null) {
 		// The settings aren't configured - probably right after an installation.
-		if ($page === "allsky_conf")
+		if ($page === "configuration")
 			$m = "";
 		else
 			$m = "<br>Go to the 'Allsky Settings' page.";

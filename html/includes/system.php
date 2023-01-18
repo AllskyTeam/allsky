@@ -249,7 +249,7 @@ function displayUserData($file, $displayType)
  */
 function DisplaySystem()
 {
-	global $status, $temptype;
+	global $status, $temptype, $page;
 	$status = new StatusMessages();
 
 	$top_dir = dirname(ALLSKY_WEBSITE, 1);
@@ -460,7 +460,7 @@ function DisplaySystem()
 					</div><!-- /.row -->
 
 					<div class="row">
-					<form action="?page=system_info" method="POST">
+					<form action="?page=<?php echo $page ?>" method="POST">
 					<div style="margin-bottom: 15px">
 						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)"><i class="fa fa-sync-alt"></i> Refresh</button>
 					</div>

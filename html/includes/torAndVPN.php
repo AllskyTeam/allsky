@@ -358,7 +358,4 @@ function SaveTORAndVPNConfig(){
 	}
 }
 
-DisplayOpenVPNConfig();
-DisplayTorProxyConfig();
-SaveTORAndVPNConfig();
 ?>

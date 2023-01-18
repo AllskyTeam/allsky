@@ -71,7 +71,7 @@ while [ $# -gt 0 ]; do
 			ALL_FILES="true"
 			shift
 			;;
-		--settinsOnly)
+		--settingsOnly)
 			SETTINGS_ONLY="true"
 			shift
 			;;
@@ -158,16 +158,18 @@ function upload_file()
 	fi
 
 	local RETCODE=0
+	local S="${DIRECTORY:0:1}"
 
 	# Copy to local Allsky website if it exists.
 	if [[ ${HAS_LOCAL_WEBSITE} == "true" ]]; then
+
 		# If ${DIRECTORY} isn't "" and doesn't start with "/", add one.
-		local S="${DIRECTORY:0:1}"
 		if [[ -n ${S} && ${S} != "/" ]]; then
 			S="/"
 		else
 			S=""
 		fi
+
 		TO="${ALLSKY_WEBSITE}${S}${DIRECTORY}"
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}cp '${FILE_TO_UPLOAD}' '${TO}'${wNC}"
 
@@ -176,16 +178,26 @@ function upload_file()
 		if [[ ${R} -ne 0 ]]; then
 			echo -e "${RED}${ME}: Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}'.${NC}"
 		fi
-		((RETCODE=${R}))
+		((RETCODE=RETCODE+${R}))
 	fi
 
 	# Upload to remote website if there is one.
 	if [[ ${HAS_REMOTE_WEBSITE} == "true" ]]; then
-		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to ${DIRECTORY:-root}${wNC}"
+
+		# Need a "/" to separate when both variables exist.
+		if [[ -n ${IMAGE_DIR} ]]; then
+			[[ -n ${S} && ${S} != "/" ]] && S="/"
+		else
+			S=""
+		fi
+
+		# Copy relative to ${IMAGE_DIR}
+		TO="${IMAGE_DIR}${S}${DIRECTORY}"
+		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to ${TO:-root}${wNC}"
 
 		"${ALLSKY_SCRIPTS}/upload.sh" --silent \
 			"${FILE_TO_UPLOAD}" \
-			"${DIRECTORY}" \
+			"${TO}" \
 			"" \
 			"PostData"
 		R=$?
@@ -211,7 +223,7 @@ fi
 # shellcheck disable=SC2181
 RET=$?
 if [[ ${RET} -eq 0 && ${SETTINGS_ONLY} == "false" ]]; then
-	upload_file "${OUTPUT_FILE}" "output file" "${IMAGE_DIR}"
+	upload_file "${OUTPUT_FILE}" "output file" ""		# Goes in top-level directory
 	# shellcheck disable=SC2181
 	RET=$?
 fi

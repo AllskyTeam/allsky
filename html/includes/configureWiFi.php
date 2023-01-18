@@ -170,6 +170,7 @@ function DisplayWPAConfig(){
 			<h4>Wi-Fi SSIDs</h4>
 
 			<form method="POST" action="?page=<?php echo $page ?>" name="wpa_conf_form">
+
 			<?php CSRFToken() ?>
 			<input type="hidden" name="client_settings">
 			<table class="table table-responsive table-striped">

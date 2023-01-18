@@ -260,7 +260,8 @@ function toggle_advanced()
 			echo "<p id='messages'>" . $status->showMessages() . "</p>";
 ?>
 
-          <form method="POST" action="?page=<?php echo $page ?>" name="conf_form">
+    <form method="POST" action="?page=<?php echo $page ?>" name="conf_form">
+
 		<?php CSRFToken();
 
 		// Allow for "advanced" options that aren't displayed by default to avoid

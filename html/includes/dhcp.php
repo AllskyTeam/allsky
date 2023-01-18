@@ -8,6 +8,7 @@ include_once( 'includes/status_messages.php' );
 *
 */
 function DisplayDHCPConfig() {
+  global $page;
 
   $status = new StatusMessages();
   if( isset( $_POST['savedhcpdsettings'] ) ) {
@@ -110,7 +111,7 @@ function DisplayDHCPConfig() {
         <div class="tab-content">
     <div class="tab-pane fade in active" id="server-settings">
     <h4>DHCP server settings</h4>
-    <form method="POST" action="?page=dhcpd_conf">
+    <form method="POST" action="?page=<?php echo $page ?>">
     <?php CSRFToken() ?>
     <div class="row">
       <div class="form-group col-md-4">

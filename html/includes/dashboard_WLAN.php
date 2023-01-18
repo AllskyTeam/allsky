@@ -5,6 +5,7 @@
 *
 */
 function DisplayDashboard_WLAN($interface) {
+	global $page;
 
 	$status = new StatusMessages();
 	$notSetMsg = "[not set]";
@@ -105,7 +106,7 @@ function DisplayDashboard_WLAN($interface) {
 
 				<div class="col-lg-12">
 					<div class="row">
-						<form action="?page=<?php echo $interface ?>" method="POST">
+						<form action="?page=<?php echo $page ?>" method="POST">
 							<?php if ( !$interface_up ) {
 								echo "<input type='submit' class='btn btn-success' value='Start $interface' name='turn_up' />";
 							} else {

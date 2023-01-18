@@ -1,6 +1,8 @@
 <?php
 
 function delete_directory($directory_name) {
+	global $page;
+
 	// First make sure this is a valid directory.
 	if (! is_valid_directory($directory_name)) {
 		return "Invalid directory name.";
@@ -61,7 +63,7 @@ function ListDays(){
 	<div class="panel-heading"><i class="fa fa-image fa-fw" style="margin-right: 10px"></i>Images</div>
 	<div class="panel-body">
 	<div class="row">
-	<form action="?page=list_days" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL images for that day?');">
+	<form action="?page=<?php echo $page ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL images for that day?');">
 	<table style='margin-top: 15px; text-align:center'>
 	  <thead>
 			<tr style="border-bottom: 1px solid #888">

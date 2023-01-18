@@ -32,13 +32,22 @@ define('RASPI_HOSTAPD_CONFIG', '/etc/hostapd/hostapd.conf');
 define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf');
 define('RASPI_HOSTAPD_CTRL_INTERFACE', '/var/run/hostapd');
 define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');
-define('RASPI_OPENVPN_CLIENT_CONFIG', '/etc/openvpn/client.conf');
-define('RASPI_OPENVPN_SERVER_CONFIG', '/etc/openvpn/server.conf');
-define('RASPI_TORPROXY_CONFIG', '/etc/tor/torrc');
 
 // Optional services, set to true to enable.
 define('RASPI_OPENVPN_ENABLED', false);
 define('RASPI_TORPROXY_ENABLED', false);
+
+if (RASPI_OPENVPN_ENABLED) {
+	define('RASPI_OPENVPN_CLIENT_CONFIG', '/etc/openvpn/client.conf');
+	define('RASPI_OPENVPN_SERVER_CONFIG', '/etc/openvpn/server.conf');
+} else {
+	function DisplayOpenVPNConfig() {}
+}
+if (RASPI_TORPROXY_ENABLED) {
+	define('RASPI_TORPROXY_CONFIG', '/etc/tor/torrc');
+} else {
+	function DisplayTorProxyConfig() {}
+}
 
 include_once('includes/raspap.php');
 include_once('includes/dashboard_WLAN.php');
@@ -56,6 +65,11 @@ include_once('includes/images.php');
 include_once('includes/editor.php');
 include_once('includes/overlay.php');
 include_once('includes/module.php');
+if (RASPI_OPENVPN_ENABLED || RASPI_TORPROXY_ENABLED) {
+	include_once('includes/torAndVPN.php');
+} else {
+	function SaveTORAndVPNConfig() {}
+}
 
 $output = $return = 0;
 if (isset($_GET['page']))
@@ -321,6 +335,15 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 						break;
 					case "wifi":
 						DisplayWPAConfig();
+						break;
+					case "openvpn_conf":
+						DisplayOpenVPNConfig();
+						break;
+					case "torproxy_conf":
+						DisplayTorProxyConfig();
+						break;
+					case "save_hostapd_conf":
+						SaveTORAndVPNConfig();
 						break;
 					case "auth_conf":
 						DisplayAuthConfig($config['admin_user'], $config['admin_pass']);

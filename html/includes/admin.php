@@ -3,6 +3,7 @@
 include_once( 'includes/status_messages.php' );
 
 function DisplayAuthConfig($username, $password){
+  global $page;
   $status = new StatusMessages();
   if (isset($_POST['UpdateAdminPassword'])) {
     if (CSRFValidate()) {
@@ -36,7 +37,7 @@ function DisplayAuthConfig($username, $password){
         <div class="panel-heading"><i class="fa fa-lock fa-fw"></i> Change Password</div>
         <div class="panel-body">
           <p><?php $status->showMessages(); ?></p>
-          <form role="form" action="?page=auth_conf" method="POST">
+          <form role="form" action="?page=<?php echo $page ?>" method="POST">
             <?php CSRFToken() ?>
             <div class="row">
               <div class="form-group col-md-4">

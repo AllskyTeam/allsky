@@ -5,6 +5,8 @@
 *
 */
 function DisplayDashboard_LAN($interface) {
+	global $page;
+
 	// Unlike with WLAN where when it's UP it's also RUNNING,
 	// with the LAN, the port can be up but nothing connected, i.e., not "RUNNING".
 
@@ -45,7 +47,7 @@ function DisplayDashboard_LAN($interface) {
 
 			<div class="col-lg-12">
 				<div class="row">
-				<form action="?page=<?php echo $interface ?>_info" method="POST">
+				<form action="?page=<?php echo $page ?>" method="POST">
 <?php
 					if ( ! $interface_up ) {
 						echo "<input type='submit' class='btn btn-success' value='Start $interface' name='turn_up' />";

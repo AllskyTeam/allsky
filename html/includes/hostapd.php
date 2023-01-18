@@ -7,7 +7,7 @@ include_once( 'includes/status_messages.php' );
 *
 */
 function DisplayHostAPDConfig(){
-
+  global $page;
   $status = new StatusMessages();
 
   $arrConfig = array();
@@ -68,7 +68,7 @@ function DisplayHostAPDConfig(){
         <!-- /.panel-heading -->
         <div class="panel-body">
 	  <p><?php $status->showMessages(); ?></p>
-          <form role="form" action="?page=hostapd_conf" method="POST">
+          <form role="form" action="?page=<?php echo $page ?>" method="POST">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs">
               <li class="active"><a href="#basic" data-toggle="tab">Basic</a></li>

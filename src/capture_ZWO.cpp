@@ -1593,9 +1593,9 @@ printf("       new newExposure_us=%s\n", length_in_units(n, true));
 							if (CG.lastMean < minAcceptableMean)
 								CG.currentExposure_us++;
 						}
-						else if (CG.currentExposure_us == CG.cameraMaxExposure_us)
+						else if (CG.currentExposure_us == CG.currentMaxAutoExposure_us)
 						{
-							Log(2, "  > Stopped trying: hit max exposure limit of %s, mean %d\n", length_in_units(CG.cameraMaxExposure_us, false), (int)CG.lastMean);
+							Log(2, "  > Stopped trying: hit max exposure limit of %s, mean %d\n", length_in_units(CG.currentMaxAutoExposure_us, false), (int)CG.lastMean);
 							// If currentExposure_us causes too high of a mean, decrease exposure
 							// so on the next loop we'll adjust it.
 							if (CG.lastMean > maxAcceptableMean)

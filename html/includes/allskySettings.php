@@ -150,12 +150,6 @@ function DisplayAllskyConfig(){
 					$status->addMessage($msg, 'info');
 				}
 
-				// Want this as a separate message after the one above.
-				if ($newCameraType !== "") {
-					$msg = "Click on the <b>Allsky Settings</b> link to fully refresh this window.";
-					$status->addMessage($msg, 'info');
-				}
-
 			} else {	// not $ok
 				if ($doingRestart)
 					$msg = ", and Allsky NOT restarted.";
@@ -260,8 +254,7 @@ function toggle_advanced()
 			echo "<p id='messages'>" . $status->showMessages() . "</p>";
 ?>
 
-    <form method="POST" action="?page=<?php echo $page ?>" name="conf_form">
-
+		<form method="POST" action="?page=<?php $t=time(); echo "$page&_Ts=$t";  ?>" name="conf_form">
 		<?php CSRFToken();
 
 		// Allow for "advanced" options that aren't displayed by default to avoid

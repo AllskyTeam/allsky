@@ -683,7 +683,6 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	}
 	fprintf(f, "\t],\n");;
 
-	fprintf(f, "\t\"autoFocus\" : %s,\n", cameraInfo.SupportsAutoFocus ? "true" : "false");
 	fprintf(f, "\t\"colorCamera\" : %s,\n", cameraInfo.IsColorCam ? "true" : "false");
 	if (cameraInfo.IsColorCam)
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
@@ -692,6 +691,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", CG.cmdToUse);
 
 #ifdef IS_RPi
+	fprintf(f, "\t\"autoFocus\" : %s,\n", cameraInfo.SupportsAutoFocus ? "true" : "false");
 	fprintf(f, "\t\"supportedRotations\": [\n");
 	fprintf(f, "\t\t{ \"value\" : 0, \"label\" : \"None\" },\n");
 	if (CG.ct == ctRPi && CG.isLibcamera)
@@ -946,6 +946,9 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg, long width, long he
 		printf("  - Sensor temperature: %0.1f C\n", (float)temp / cg.divideTemperatureBy);
 	}
 	printf("  - Bit depth: %d\n", cameraInfo.BitDepth);
+#ifdef IS_RPi
+	printf("  - Auto focus supported: %s\n", yesNo(cameraInfo.SupportsAutoFocus));
+#endif
 
 	// Get a few values from the camera that we need elsewhere.
 	ASI_CONTROL_CAPS cc;

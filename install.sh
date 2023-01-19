@@ -171,6 +171,7 @@ create_webui_defines() {
 	sed		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
 			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};" \
 			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
 			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
 			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
@@ -1255,3 +1256,4 @@ fi
 ask_reboot			# prompts
 
 exit 0
+

@@ -148,6 +148,7 @@ struct config {			// for configuration variables
 	double divideTemperatureBy			= NOT_SET;		// How much to divided the reported temp by
 	bool supportsAggression				= false;		// currently ZWO only
 	bool supportsMyModeMean				= false;
+	bool supportsAutoFocus				= false;
 	bool gainTransitionTimeImplemented	= false;		// currently ZWO only
 	bool imagesSavedInBackground		= false;		// are images save in background?
 

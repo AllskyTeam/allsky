@@ -54,6 +54,7 @@ typedef struct ASI_CAMERA_INFO
 	ASI_BOOL IsCoolerCam;
 	int BitDepth;
 	ASI_BOOL SupportsTemperature;
+	ASI_BOOL SupportsAutoFocus;	// RPi only
 } ASI_CAMERA_INFO;
 
 
@@ -120,18 +121,25 @@ typedef ASI_ID ASI_SN;
 
 ASI_CAMERA_INFO ASICameraInfoArray[] =
 {
+	// It's only possible to have 1 RPi camera connected at a time, so the CameraID will always be 0.
+
 	// Module (sensor), Name, CameraID, MaxHeight, MaxWidth, IsColorCam, BayerPattern, SupportedBins,
-	//	SupportedVideoFormat, PixelSize, IsCoolerCam, BitDepth, SupportsTemperature
+	//	SupportedVideoFormat, PixelSize, IsCoolerCam, BitDepth, SupportsTemperature, SupportAutoFocus
 	{ "imx477", "RPi HQ", 0, 3040, 4056, ASI_TRUE, BAYER_RG, {1, 2, 0},
 		// Need ASI_IMG_END so we know where the end of the list is.
-		{ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE, 12, ASI_FALSE},
+		{ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE, 12, ASI_FALSE, ASI_FALSE},
+
+	{ "imx708_wide", "RPi Module 3", 0, 4608, 2592, ASI_TRUE, BAYER_RG, {1, 2, 0},
+		// Need ASI_IMG_END so we know where the end of the list is.
+		{ASI_IMG_RGB24, ASI_IMG_END}, 1.40, ASI_FALSE, 10, ASI_FALSE, ASI_TRUE},
 
 	// xxxxx TODO: check on 1.55 and other settings
 	{ "arducam_64mp", "ARDUCAM 64 MB", 0, 6944, 9248, ASI_TRUE, BAYER_GR, {1, 2, 0},
-		{ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE, 12, ASI_FALSE},
+		{ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE, 12, ASI_FALSE, ASI_FALSE},
 
 	// FUTURE CAMERAS GO HERE...
 };
+#define ASICameraInfoArraySIZE	(sizeof(ASICameraInfoArray) / sizeof(ASICameraInfoArray[0]))
 
 
 // The number and order of these need to match what's in the ControlCapsArray.
@@ -167,7 +175,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	// 99 == don't know
 
 	// Name, Description, MaxValue, MinValue, DefaultValue, CurrentValue, IsAutoSupported, IsWritable, ControlType
-	{ // libcamera
+	{ // imx477, libcamera
 		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
 		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
@@ -184,8 +192,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	},
-
-	{ // raspistill.  Minimum width and height are 64.
+	{ // imx477, raspistill.  Minimum width and height are 64.
 		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
 		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
@@ -201,7 +208,29 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "Sharpness", "Sharpness", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
-	}
+	},
+
+	{ // imx708_wide, libcamera
+		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Temperature", "Sensor Temperature", 80, -20, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
+		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
+		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
+		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
+		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+		{ "Saturation", "Saturation", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Sharpness", "Sharpness", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+
+		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
+	},
+	{ // imx708_wide, raspistill.  Not supported.
+		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
+	},
+
 	// TODO: add 2 entries for arducam_64mp (2nd entry can be empty since it's not supported on raspistill
 };
 
@@ -285,12 +314,12 @@ ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCamera
 			// Found the camera; double check that the sensor is the same.
 			// Unfortunately we don't have anything else to check, like serial number.
 			// I suppose we could also check the Modes are the same, but it's not worth it.
-			for (int i=0; i<numCameras; i++)
+			for (unsigned int i=0; i < ASICameraInfoArraySIZE; i++)
 			{
 				if (strcmp(sensor, ASICameraInfoArray[i].Module) == 0)
 				{
 					found = true;
-					actualIndex = i;
+					actualIndex = (int) i;
 					break;
 				}
 			}
@@ -662,6 +691,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\"acquisitionCommand\" : \"%s\",\n", CG.cmdToUse);
 
 #ifdef IS_RPi
+	fprintf(f, "\t\"autoFocus\" : %s,\n", cameraInfo.SupportsAutoFocus ? "true" : "false");
 	fprintf(f, "\t\"supportedRotations\": [\n");
 	fprintf(f, "\t\t{ \"value\" : 0, \"label\" : \"None\" },\n");
 	if (CG.ct == ctRPi && CG.isLibcamera)
@@ -916,6 +946,9 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg, long width, long he
 		printf("  - Sensor temperature: %0.1f C\n", (float)temp / cg.divideTemperatureBy);
 	}
 	printf("  - Bit depth: %d\n", cameraInfo.BitDepth);
+#ifdef IS_RPi
+	printf("  - Auto focus supported: %s\n", yesNo(cameraInfo.SupportsAutoFocus));
+#endif
 
 	// Get a few values from the camera that we need elsewhere.
 	ASI_CONTROL_CAPS cc;
@@ -1058,6 +1091,7 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 #ifdef IS_RPi
 		cg->supportsTemperature = ci.SupportsTemperature;	// this field only exists in RPi structure
 		cg->divideTemperatureBy = 1.0;
+		cg->supportsAutoFocus = ci.SupportsAutoFocus;	// this field only exists in RPi structure
 #endif
 		cg->supportsAggression = false;
 		cg->supportsMyModeMean = true;

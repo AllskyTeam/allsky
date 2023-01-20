@@ -121,11 +121,22 @@ function is_number()
 # Return 0 if a local or remote website is detected.
 function has_website()
 {
+	local RET=1
 	if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		return 0
-	else
-		return 1
+		# Also return string stating if it's local or remote website.
+		local WHERE=""
+		[[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]] && WHERE="local"
+		if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
+			if [[ -n ${WHERE} ]]; then
+				WHERE="${WHERE} and remote"
+			else
+				WHERE="remote"
+			fi
+		fi
+		echo "${WHERE}"
+		RET=0
 	fi
+	return ${RET}
 }
 
 
@@ -239,13 +250,13 @@ elif [[ ${BRIGHTNESS_THRESHOLD} == "1.0" ]]; then
 	echo "BRIGHTNESS_THRESHOLD is 1.0 which means ALL images will be used when creating startrails."
 fi
 
-if [[ ${POST_END_OF_NIGHT_DATA} == "true" && ! has_website ]]; then
+if [[ ${POST_END_OF_NIGHT_DATA} == "true" ]] && ! WHERE="$(has_website)" ; then
 	heading "Warnings"
 	echo "POST_END_OF_NIGHT_DATA is 'true' but no Allsky Website found."
 	echo "POST_END_OF_NIGHT_DATA should be set to 'false'."
-elif [[ ${POST_END_OF_NIGHT_DATA} == "false" && has_website ]]; then
+elif [[ ${POST_END_OF_NIGHT_DATA} == "false" ]] && WHERE="$(has_website)" ; then
 	heading "Warnings"
-	echo "POST_END_OF_NIGHT_DATA is 'false' but an Allsky Website was found."
+	echo "POST_END_OF_NIGHT_DATA is 'false' but a ${WHERE} Allsky Website was found."
 	echo "POST_END_OF_NIGHT_DATA should be set to 'true'."
 fi
 
@@ -338,7 +349,7 @@ do
 done
 
 NUM_UPLOADS=0
-if has_website ; then
+if WHERE="$(has_website)" ; then
 	if [[ ${IMG_UPLOAD} == "false" ]]; then
 		heading "Warnings"
 		echo "You have an Allsky Website but no images are being uploaded to it (IMG_UPLOAD=false)."
@@ -433,9 +444,9 @@ if [[ ${USING_DARKS} = "1" ]]; then
 	fi
 fi
 
-if has_website && [[ ${NUM_UPLOADS} -eq 0 ]]; then
+if WHERE="$(has_website)" && [[ ${NUM_UPLOADS} -eq 0 ]]; then
 	heading "Errors"
-	echo "You have an Allsky Website but nothing is being uploaded to it."
+	echo "You have a ${WHERE} Allsky Website but nothing is being uploaded to it."
 fi
 
 if ! is_number "${IMG_UPLOAD_FREQUENCY}" || [[ ${IMG_UPLOAD_FREQUENCY} -le 0 ]]; then

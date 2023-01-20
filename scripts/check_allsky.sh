@@ -129,6 +129,15 @@ function has_website()
 }
 
 
+function check_exists() {
+	local VALUE="${!1}"
+	if [[ -n ${VALUE} && ! -e ${VALUE} ]]; then
+		heading "Warnings"
+		echo "${1} is set to '${VALUE}' but it does not exist."
+	fi
+}
+
+
 # ================= Check for informational items.
 #	There is nothing wrong with these, it's just that they typically don't exist.
 
@@ -252,11 +261,66 @@ if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
 fi
 
 case "${PROTOCOL,,}" in
-	"" | local | ftp | ftps | sftp | scp | s3 | gcs)
+	"" | local)
 		;;
+
+	ftp | ftps | sftp)
+		for i in REMOTE_HOST REMOTE_USER REMOTE_PASSWORD
+		do
+			if [[ -z ${!i} ]]; then
+				heading "Warnings"
+				echo "PROTOCOL (${PROTOCOL}) set but not '${i}'."
+				echo "Uploads will not work."
+			fi
+		done
+		;;
+
+	scp)
+		if [[ -z ${SSH_KEY_FILE} ]]; then
+			heading "Warnings"
+			echo "PROTOCOL (${PROTOCOL}) set but not 'SSH_KEY_FILE'."
+			echo "Uploads will not work."
+		elif [[ ! -e ${SSH_KEY_FILE} ]]; then
+			heading "Warnings"
+			echo "PROTOCOL (${PROTOCOL}) set but 'SSH_KEY_FILE' (${SSH_KEY_FILE}) does not exist."
+			echo "Uploads will not work."
+		fi
+		;;
+
+	s3)
+		if [[ -z ${AWS_CLI_DIR} ]]; then
+			heading "Warnings"
+			echo "PROTOCOL (${PROTOCOL}) set but not 'AWS_CLI_DIR'."
+			echo "Uploads will not work."
+		elif [[ ! -e ${AWS_CLI_DIR} ]]; then
+			heading "Warnings"
+			echo "PROTOCOL (${PROTOCOL}) set but 'AWS_CLI_DIR' (${AWS_CLI_DIR}) does not exist."
+			echo "Uploads will not work."
+		fi
+		for i in S3_BUCKET S3_ACL
+		do
+			if [[ -z ${!i} ]]; then
+				heading "Warnings"
+				echo "PROTOCOL (${PROTOCOL}) set but not '${i}'."
+				echo "Uploads will not work."
+			fi
+		done
+		;;
+
+	gcs)
+		for i in GCS_BUCKET GCS_ACL
+		do
+			if [[ -z ${!i} ]]; then
+				heading "Warnings"
+				echo "PROTOCOL (${PROTOCOL}) set but not '${i}'."
+				echo "Uploads will not work."
+			fi
+		done
+		;;
+
 	*)
 		heading "Warnings"
-		echo "PROTOCOL (${PROTOCOL}) not blank or one of: local, ftp, ftps, sftp, scp, s3, gcs)".
+		echo "PROTOCOL (${PROTOCOL}) not blank or one of: local, ftp, ftps, sftp, scp, s3, gcs."
 		echo "Uploads will not work until this is corrected."
 		;;
 esac
@@ -267,13 +331,10 @@ if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
 		echo "Uploads will not work until this is corrected."
 fi
 
-for i in WEB_IMAGE_DIR WEB_VIDEOS_DIR WEB_KEOGRAM_DIR WEB_STARTRAILS_DIR SSH_KEY_FILE AWS_CLI_DIR UHUBCTL_PATH
+# If these variables are set, the corresponding directory should exist.
+for i in WEB_IMAGE_DIR WEB_VIDEOS_DIR WEB_KEOGRAM_DIR WEB_STARTRAILS_DIR UHUBCTL_PATH
 do
-	VALUE="${!i}"
-	if [[ -n ${VALUE} && ! -e ${VALUE} ]]; then
-		heading "Warnings"
-		echo "${i} is set to '${VALUE}' but it does not exist."
-	fi
+	check_exists "${i}"
 done
 
 NUM_UPLOADS=0

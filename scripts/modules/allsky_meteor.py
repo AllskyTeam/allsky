@@ -16,7 +16,6 @@ metaData = {
     "name": "AllSKY Meteor Detection",
     "description": "Detects meteors in images",  
     "events": [
-        "day",
         "night"
     ],
     "experimental": "true",

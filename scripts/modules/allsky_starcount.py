@@ -22,7 +22,6 @@ metaData = {
     "name": "Star Count",
     "description": "Counts stars in an image",
     "events": [
-        "day",
         "night"
     ],
     "experimental": "true",

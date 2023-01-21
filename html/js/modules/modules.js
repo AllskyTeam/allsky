@@ -969,11 +969,15 @@ class MODULESEDITOR {
                 context: this
             }).done((result) => {
                 this.#moduleSettings = result;
+                if (result.periodictimer == undefined) {
+                    result.periodictimer = 5;
+                }
                 $('#enablewatchdog').prop('checked', result.watchdog);
                 $('#watchdog-timeout').val(result.timeout);                
                 $('#showexperimental').prop('checked', result.showexperimental);
                 $('#autoenable').prop('checked', result.autoenable);
                 $('#debugmode').prop('checked', result.debugmode);
+                $('#periodic-timer').val(result.periodictimer);                  
                 $('#module-editor-settings-dialog').modal('show');
             }).always(() => {
                 clearTimeout(loadingTimer);
@@ -992,6 +996,8 @@ class MODULESEDITOR {
             this.#moduleSettings.showexperimental = $('#showexperimental').prop('checked');
             this.#moduleSettings.autoenable = $('#autoenable').prop('checked');
             this.#moduleSettings.debugmode = $('#debugmode').prop('checked');
+
+            this.#moduleSettings.periodictimer = $('#periodic-timer').val() | 0;
 
             this.#settings.settings = this.#moduleSettings;
             $.moduleeditor.settings = this.#settings.settings;

@@ -16,5 +16,11 @@ cd "${ALLSKY_SCRIPTS}" || exit 1
 while :
 do
     "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
-    sleep 30
+    DELAY=$(jq ".periodictimer" "${ALLSKY_HOME}/config/module-settings.json")
+
+    if [[ !($DELAY =~ ^[0-9]+$) ]]; then
+        DELAY=5
+    fi
+    echo "INFO: Sleeping for $DELAY seconds"
+    sleep $DELAY
 done

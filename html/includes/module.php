@@ -188,7 +188,16 @@ function DisplayModule() {
                             </label>
                             <p class="help-block">Enable debug mode. An additional icon will appear inthe toolbar showing the last results of each running module</p>
                         </div>
-                    </div>   
+                    </div>
+                    <div class="form-group">
+                        <label for="watchdog-timeout" class="col-sm-4 control-label">Periodic Timer</label>
+                        <div class="col-sm-8">
+                            <div class="input-group">
+                                <input id="periodic-timer" name="periodic-timer" type="number" min="0" max="3600" step="1" class="form-control">
+                            </div>
+                            <p class="help-block">The delay between running periodic modules in seconds</p>
+                        </div>
+                    </div>                     
                 </form>                          
             </div>
             <div class="modal-footer">

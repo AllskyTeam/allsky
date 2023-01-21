@@ -10,5 +10,6 @@
         "daynight": "Day to Night Transition",
         "nightday": "Night to Day Transition",
         "periodic": "Periodic jobs"
-    }
+    },
+    "periodictimer": 5
 }

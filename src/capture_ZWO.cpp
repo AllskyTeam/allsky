@@ -1687,7 +1687,7 @@ printf("       new newExposure_us=%s\n", length_in_units(n, true));
 						(void) doOverlay(pRgb, CG, bufTime, gainChange);
 
 #ifdef USE_HISTOGRAM
-						if (CG.overlay.showHistogramBox && CG.HB.useHistogram)
+						if (CG.overlay.showHistogramBox)
 						{
 							// Draw a rectangle where the histogram box is.
 							// Put a black and white line one next to each other so they

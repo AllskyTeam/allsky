@@ -243,7 +243,9 @@ class ALLSKYOVERLAY:
                             value = valueData
                             expires = defaultExpiry
 
-                        os.environ['AS_' + name] = str(value)
+                        if name[0:3] != 'AS_':
+                            name = 'AS_{}'.format(name)
+                        os.environ[name] = str(value)
                         self._saveExtraDataField(name, fileModifiedTime, expires, x, y, fill, font, fontsize, image, rotate, scale, opacity)
             else:
                 s.log(0, 'ERROR: Data File {} is not accessible - IGNORING'.format(dataFilename))
@@ -1051,7 +1053,6 @@ class ALLSKYOVERLAY:
                                     if self._debug:
                                         self._timer("Writing debug data")
                                         self._dumpDebugData()
-                                
 
         self._timer("Annotation Complete", False)
 

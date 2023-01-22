@@ -149,7 +149,10 @@ def meteor(params, event):
                 dilation_mask = dilation
 
             if maskImage is not None:
-                dilation_mask = cv2.bitwise_and(dilation_mask,dilation_mask,mask = maskImage)
+                try:
+                    dilation_mask = cv2.bitwise_and(dilation_mask,dilation_mask,mask = maskImage)
+                except Exception as ex:
+                    s.log(0,"ERROR: There is a problem with the meteor mask. Please check the masks dimensions and colour depth")
         
                 if debug:
                     s.writeDebugImage(metaData["module"], "dilation-mask.png", dilation_mask)

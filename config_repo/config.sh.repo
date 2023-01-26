@@ -87,7 +87,7 @@ TIMELAPSE_EXTRA_PARAMETERS=""
 UPLOAD_VIDEO="false"
 
 # Set to "true" to upload the timelapse video's thumbnail to your website at the end of each night.
-TIMELAPSE_UPLOAD_THUMBNAIL="false"
+TIMELAPSE_UPLOAD_THUMBNAIL="true"
 
 ###### Mini-timelapse
 # The number of images you want in the mini-timelapse.  0 disables mini-timelapse creation.

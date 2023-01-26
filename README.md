@@ -379,7 +379,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 <!-- some of the changes haven't been made as of June 3, 2022, but should be for the next release -->
 * version **v2022.MM.DD**: 
 	* Allsky package:
-		* The `CAMERA` variable in `config/config.sh` was removed; to update the camera type, use the new **Camera Type** setting in the WebUI. This is an advanced setting so you need to click the "Show Advanced Options" button to view it.
+		* The `CAMERA` variable in `config.sh` was removed; to update the camera type, use the new **Camera Type** setting in the WebUI. This is an advanced setting so you need to click the "Show Advanced Options" button to view it.
 		* "Mini" timelapse videos can be created that contain a user-configurable number of the most recent images.  This allows you to continually see the recent sky conditions.
 		* Installation improvements:
 			* If there is not enough swap space configured you are prompted to add more.  Doing this decreases the chance of timelapse creation problems.
@@ -394,7 +394,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 		* Sanity checking is done on many settings.  For example, URLs in Allsky Map data must be reachable from the Internet, and crop areas must fit within the image.
 		* The Wiki now points to files in the GitHub `documentation` directory.  A copy of that directory is also on the Pi in `~/allsky/documentation` so you can access the documentation via the Documentation link in the WebUI.
 		* The delay between RPi images has been shortened.
-		* Several variables in the `config/config.sh` file were removed and others renamed - see the WebUI section below.
+		* Several variables in the `config.sh` file were removed and others renamed - see the WebUI section below.
 		* Several additional troubleshooting files are written to ~/allsky/tmp.
 		* AUTO_STRETCH now works, and is documented with sample images.
 		* Images can now be uploaded using the full `image-YYYYMMDDHHMMSS.jpg` name instead of the shorter `image.jpg` name.  See the `IMG_UPLOAD_ORIGINAL_NAME` Allsky setting in the documentation.
@@ -409,7 +409,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 		* Minimum, maximum, and default values are now correct for all camera models.
 		* Fields with missing data are shown in red with a message saying the data is missing.  For example, **Latitude** is a required field.
 		* New settings on the **Allsky Settings** page:
-			* **Camera Type** is either ZWO or RPi.  This replaces the `CAMERA` variable in the `config/config.sh` file.
+			* **Camera Type** is either ZWO or RPi.  This replaces the `CAMERA` variable in the `config.sh` file.
 			* **Max Auto-Exposure** for day and night.  When using auto-exposure, exposure times will not exceed this value.
 			* **Max Auto-Gain** for day and night.  When using auto-gain, gain values will not exceed this value.
 			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
@@ -468,7 +468,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* The `overlaySize` setting, which defined both the width and the height of the constellation overlay, was split into `overlayWidth` and `overlayHeight`.  Having separate values can be helpful when trying to get the overlay to line up with the actual stars.
 			* The WebUI **Editor** page must be used to edit the Allsky Website's configuration file since it performs various checks before updating the configuration.
 			* The **Editor** page should also be used to edit a REMOTE Allsky Website's configuration file for the same reason.  A master copy of the remote server's `configuration.json` is kept on the Pi and automatically re-uploaded to the server after every change.  See the Allsky Website Installation documentation for details.  After you do this, the drop-down list on the **Editor** page will now have `configuration.json (remote Allsky Website)` to distinguish it from a local Website's file.
-		* Timelapse video thumbnails can be created on the Pi and uploaded to a remote server.  This resolves issues with remote servers that don't support creating thumbnails.  See the `TIMELAPSE_UPLOAD_THUMBNAIL` setting.
+		* Timelapse video thumbnails are now created by default on the Pi and uploaded to a remote server.  This resolves issues with remote servers that don't support creating thumbnails.  See the `TIMELAPSE_UPLOAD_THUMBNAIL` setting.
 		* Resizing the home page with the constellation overlay showing works better (but still needs work).
 
 

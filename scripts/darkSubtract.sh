@@ -54,7 +54,7 @@ if [[ $(settings ".useDarkFrames") -eq 1 ]]; then
 				# Get name of file (which is the temp) without extension
 				DARK_TEMPERATURE=${file%.*}
 				if [[ ${DARK_TEMPERATURE} -gt ${AS_TEMPERATURE_C} ]]; then
-					let OVERDIFF=${DARK_TEMPERATURE}-${AS_TEMPERATURE_C}
+					OVERDIFF=((DARK_TEMPERATURE - AS_TEMPERATURE_C))
 					if [[ ${OVERDIFF} -lt ${DIFF} ]]; then
 						CLOSEST_TEMPERATURE=${DARK_TEMPERATURE}
 					fi

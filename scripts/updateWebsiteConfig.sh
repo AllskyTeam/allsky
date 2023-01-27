@@ -6,13 +6,11 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
-if [ -z "${ALLSKY_HOME}" ] ; then
+if [[ -z ${ALLSKY_HOME} ]]; then
 	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
-# shellcheck disable=SC1090
 source "${ALLSKY_HOME}/variables.sh"
-# shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh"
 
 # This output may go to a web page, so use "w" colors.
@@ -30,13 +28,14 @@ wBR="${wBR}"
 function usage_and_exit()
 {
 	RET=${1}
-	if [ ${RET} -eq 0 ]; then
+	if [[ ${RET} -eq 0 ]]; then
 		C="${wYELLOW}"
 	else
 		C="${wERROR}"
 	fi
 	echo -e "${C}Usage: ${ME} [--help] [--debug] [--verbosity silent|summary|verbose] [--config file] key label new_value [...]${wNC}" >&2
 	echo "There must be a multiple of 3 arguments." >&2
+	# shellcheck disable=SC2086
 	exit ${RET}
 }
 # Check arguments
@@ -45,7 +44,7 @@ HELP="false"
 DEBUG="false"
 VERBOSITY="summary"
 CONFIG_FILE=""
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG}" in
 		--help)
@@ -109,7 +108,7 @@ JQ_STRING=(.comment = .comment)
 OUTPUT_MESSAGE=""
 NUMRE="^[+-]?[0-9]+([.][0-9]+)?$"
 
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
 	FIELD="${1}"
 	LABEL="${2}"
 	NEW_VALUE="${3}"
@@ -119,7 +118,7 @@ while [ $# -gt 0 ]; do
 	NEW="${NEW_VALUE}"
 	NEW_VALUE="${NEW_VALUE//\"/\\\"}"	# Handle double quotes
 
-	[ "${DEBUG}" = "true" ] && echo -e "${wDEBUG}DEBUG: update '${LABEL}' to [${NEW_VALUE}].${wNC}"
+	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}DEBUG: update '${LABEL}' to [${NEW_VALUE}].${wNC}"
 
 	# Only put quotes around ${NEW_VALUE} if it's a string,
 	# i.e., not a number or a special name.

@@ -112,7 +112,7 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 	(
 		if [[ ${DO_MINI} == "false" ]]; then
 			# Doing daily, full timelapse
-			ls -rt "${DATE_DIR}"/*.${EXTENSION}
+			ls -rt "${DATE_DIR}"/*."${EXTENSION}"
 			exit 0		# Gets us out of this sub-shell
 		fi
 
@@ -125,14 +125,14 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 	) | gawk -v DO_MINI=${DO_MINI} 'BEGIN { a=0; }
 		{
 			a++;
-			printf "ln -s %s '${SEQUENCE_DIR}'/%04d.'${EXTENSION}'\n", $0, a;
+			printf "ln -s %s '"${SEQUENCE_DIR}"'/%04d.'"${EXTENSION}"'\n", $0, a;
 		}
 		END {
 			# If we are in "mini" mode, tell bash to exit 1 so we do not have to create a temporary file.
 			if (a > 0 && DO_MINI == "true") {
 				printf("exit 1");		# avoids creating ${TMP} for MINI timelapse
 			} else if (a > 0) {
-				printf("Processed %d images\n", a) > "'${TMP}'";
+				printf("Processed %d images\n", a) > "'"${TMP}"'";
 				printf("exit 0");
 			} else {		# either a == 0 or in MINI mode
 				printf("exit 2");		# no, or not enough, images found
@@ -175,13 +175,14 @@ else
 		SCALE="-filter:v scale=${TIMELAPSE_MINI_WIDTH}:${TIMELAPSE_MINI_HEIGHT}"
 	fi
 fi
+# shellcheck disable=SC2086
 X="$(ffmpeg -y -f image2 \
-	-loglevel ${FFLOG} \
-	-r ${FPS} \
+	-loglevel "${FFLOG}" \
+	-r "${FPS}" \
 	-i "${SEQUENCE_DIR}/%04d.${EXTENSION}" \
-	-vcodec ${VCODEC} \
-	-b:v ${TIMELAPSE_BITRATE} \
-	-pix_fmt ${PIX_FMT} \
+	-vcodec "${VCODEC}" \
+	-b:v "${TIMELAPSE_BITRATE}" \
+	-pix_fmt "${PIX_FMT}" \
 	-movflags +faststart \
 	$SCALE \
 	${TIMELAPSE_EXTRA_PARAMETERS} \

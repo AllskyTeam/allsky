@@ -12,15 +12,10 @@ fi
 
 ME="$(basename "${BASH_ARGV0}")"
 
-# shellcheck disable=SC1090
-source "${ALLSKY_HOME}/variables.sh" || exit 1
-
-# shellcheck disable=SC1090
-source "${ALLSKY_CONFIG}/config.sh" || exit 1
-# shellcheck disable=SC1090
-source "${ALLSKY_SCRIPTS}/functions.sh" || exit 1
-# shellcheck disable=SC1090
-source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 1
+source "${ALLSKY_HOME}/variables.sh" || exit 99
+source "${ALLSKY_CONFIG}/config.sh" || exit 99
+source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
+source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
 
 # Make sure a local or remote Allsky Website exists.
 if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
@@ -29,8 +24,8 @@ else
 	HAS_LOCAL_WEBSITE=false
 fi
 
-# Assume if PROTOCOL is set, there's a remote website.
-if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} && -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
+# The remote config file must exist, plus a way to upload it (i.e., PROTOCOL is set).
+if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" && -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 	HAS_REMOTE_WEBSITE=true
 else
 	HAS_REMOTE_WEBSITE=false
@@ -114,7 +109,7 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	sunset="$(sunwait list set angle ${angle} ${latitude} ${longitude})"
 	sunset_hhmm="${sunset:0:5}"
 
-	if [[ ${sunrise_hhmm} == "--:--" || ${sunset_hhmm} = "--:--" ]]; then
+	if [[ ${sunrise_hhmm} == "--:--" || ${sunset_hhmm} == "--:--" ]]; then
 		# nighttime starts after midnight or before noon.
 		today="$(date --date='tomorrow' +%Y-%m-%d)"		# is actually tomorrow
 		# TODO What SHOULD *_hhmm be?
@@ -133,7 +128,7 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	FILE="data.json"
 	OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
 	(
-		if [[ $(settings ".takeDaytimeImages") = "1" ]]; then
+		if [[ $(settings ".takeDaytimeImages") -eq 1 ]]; then
 			D="true"
 		else
 			D="false"
@@ -178,7 +173,7 @@ function upload_file()
 		if [[ ${R} -ne 0 ]]; then
 			echo -e "${RED}${ME}: Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}'.${NC}"
 		fi
-		((RETCODE=RETCODE+${R}))
+		((RETCODE=RETCODE + R))
 	fi
 
 	# Upload to remote website if there is one.
@@ -204,7 +199,7 @@ function upload_file()
 		if [[ ${R} -ne 0 ]]; then
 			echo -e "${RED}${ME}: Unable to upload '${FILE_TO_UPLOAD}'.${NC}"
 		fi
-		((RETCODE=RETCODE+${R}))
+		((RETCODE=RETCODE + R))
 	fi
 
 	return ${RETCODE}
@@ -220,11 +215,8 @@ if [[ ${ALL_FILES} == "true" ]]; then
 	upload_file "${ALLSKY_DOCUMENTATION}/css/custom.css" "custom file" "${VIEW_DIR}"
 fi
 
-# shellcheck disable=SC2181
-RET=$?
 if [[ ${RET} -eq 0 && ${SETTINGS_ONLY} == "false" ]]; then
 	upload_file "${OUTPUT_FILE}" "output file" ""		# Goes in top-level directory
-	# shellcheck disable=SC2181
 	RET=$?
 fi
 exit ${RET}

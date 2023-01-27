@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-if [ -z "${ALLSKY_HOME}" ] ; then
+if [[ -z ${ALLSKY_HOME} ]]; then
 	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
 
-source "${ALLSKY_HOME}/variables.sh"
-source "${ALLSKY_CONFIG}/config.sh"
+source "${ALLSKY_HOME}/variables.sh" || exit 99
+source "${ALLSKY_CONFIG}/config.sh" || exit 99
 
 ME="$(basename "${BASH_ARGV0}")"
 
@@ -15,7 +15,7 @@ DEBUG=0
 DO_HELP="false"
 DO_MINI="false"
 MINI_FILE=""
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
 	case "${1}" in
 			-h | --help)
 				DO_HELP="true"
@@ -44,7 +44,7 @@ usage_and_exit()
 	RET=$1
 	XD="/path/to/nonstandard/location/of/allsky_images"
 	TODAY="$(date +%Y%m%d)"
-	[ ${RET} -ne 0 ] && echo -en "${RED}"
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo -n "Usage: ${ME} [--debug] [--help] [--mini mini_file]  <DATE> [<IMAGE_DIR>]"
 	echo -e "${NC}"
 	echo "    example: ${ME} ${TODAY}"
@@ -64,13 +64,14 @@ usage_and_exit()
 	echo
 	echo "[--mini mini_file] creates a mini-timelapse using the images listed in 'mini-file'."
 	echo -en "${NC}"
+	# shellcheck disable=SC2086
 	exit ${RET}
 }
 [[ $# -eq 0 ||  $# -gt 2 ]] && usage_and_exit 1
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 
 # If we're on a tty that means we're being manually run so don't display ${ME}.
-if [ "${ON_TTY}" = "1" ]; then
+if [[ ${ON_TTY} -eq 1 ]]; then
 	   ME=""
 else
 	   ME="${ME}:"
@@ -81,12 +82,12 @@ fi
 # Allow timelapses of pictures not in the standard $ALLSKY_IMAGES directory.
 # If $2 is passed, it's the top folder, otherwise use the one in $ALLSKY_IMAGES.
 DATE="${1}"
-if [ "${2}" = "" ] ; then
+if [[ -z ${2} ]]; then
 	DATE_DIR="${ALLSKY_IMAGES}/${DATE}"	# Need full pathname for links
 else
 	DATE_DIR="${2}/${DATE}"
 fi
-if [ ! -d "${DATE_DIR}" ]; then
+if [[ ! -d ${DATE_DIR} ]]; then
 	echo -e "${RED}*** ${ME} ERROR: '${DATE_DIR}' does not exist!${NC}"
 	exit 2
 fi
@@ -94,7 +95,7 @@ fi
 # To save on writes to SD card for people who have $ALLSKY_TMP as a memory filesystem,
 # put the sequence files there.
 SEQUENCE_DIR="${ALLSKY_TMP}/sequence-${DATE}"
-if [ -d "${SEQUENCE_DIR}" ]; then
+if [[ -d ${SEQUENCE_DIR} ]]; then
 	NSEQ=$(find "${SEQUENCE_DIR}/*" 2>/dev/null | wc -l)	# left over from last time
 else
 	NSEQ=0
@@ -115,7 +116,7 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 			exit 0		# Gets us out of this sub-shell
 		fi
 
-		if [ -f "${MINI_FILE}" ]; then
+		if [[ -f ${MINI_FILE} ]]; then
 			cat "${MINI_FILE}"
 		else
 			echo "${ME} WARNING: No '${MINI_FILE}' file" >&2
@@ -145,7 +146,7 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 	# If bash exited with 1 we're in MINI mode; we exit 1 in MINI mode to avoid
 	# If bash exited with 2 no images were found.
 	# In MINI mode that's ok (but exit with 1 so the invoker knows we didn't create a timelapse).
-	if [ ${RET} -eq 2 ]; then
+	if [[ ${RET} -eq 2 ]]; then
 		if [[ ${DO_MINI} == "false" ]]; then
 			echo -e "${RED}*** ${ME} ERROR: No images found!${NC}"
 			rm -fr "${SEQUENCE_DIR}"
@@ -163,14 +164,14 @@ SCALE=""
 # set FFLOG=info in config.sh if you want to see what's going on for debugging.
 if [[ ${DO_MINI} == "false" ]]; then
 	OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
-	if [ "${TIMELAPSEWIDTH}" != 0 ]; then
+	if [[ ${TIMELAPSEWIDTH} != "0" ]]; then
 		SCALE="-filter:v scale=${TIMELAPSEWIDTH}:${TIMELAPSEHEIGHT}"
 	fi
 else
 	OUTPUT_FILE="${ALLSKY_TMP}/mini-timelapse.mp4"
 	FPS="${TIMELAPSE_MINI_FPS}"
 	TIMELAPSE_BITRATE="${TIMELAPSE_MINI_BITRATE}"
-	if [ "${TIMELAPSE_MINI_WIDTH}" != 0 ]; then
+	if [[ ${TIMELAPSE_MINI_WIDTH} != "0" ]]; then
 		SCALE="-filter:v scale=${TIMELAPSE_MINI_WIDTH}:${TIMELAPSE_MINI_HEIGHT}"
 	fi
 fi
@@ -191,7 +192,7 @@ RET=$?
 X="$(echo "${X}" | grep -v "deprecated pixel format used")"
 [ "${X}" != "" ] && echo "${X}" >> "${TMP}"		# a warning/error message
 
-if [ ${RET} -ne -0 ]; then
+if [[ ${RET} -ne -0 ]]; then
 	echo -e "\n${RED}*** $ME: ERROR: ffmpeg failed."
 	echo "Error log is in '${TMP}'."
 	echo
@@ -200,9 +201,11 @@ if [ ${RET} -ne -0 ]; then
 	rm -f "${OUTPUT_FILE}"	# don't leave around to confuse user
 	exit 1
 fi
-[[ ${FFLOG} == "info" && ${DO_MINI} == "false"  ]] && cat "${TMP}"	 # if the user wants output, give it to them
 
-if [ "${KEEP_SEQUENCE}" = "false" ] ; then
+# if the user wants output, give it to them
+[[ ${FFLOG} == "info" && ${DO_MINI} == "false"  ]] && cat "${TMP}"
+
+if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 	rm -rf "${SEQUENCE_DIR}"
 else
 	echo -e "${ME} ${GREEN}Keeping sequence${NC}"

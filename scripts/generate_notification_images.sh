@@ -113,7 +113,7 @@ fi
 # If the arguments were specified on the command line, use them instead of the list below.
 if [[ $# -eq 12 ]]; then
 	if [[ -z ${1} || -z ${12} ]]; then
-		echo -e "${RED}${ME}: ERROR: Basename ($1) and message ($12) must be specified.${NC}" >&2
+		echo -e "${RED}${ME}: ERROR: Basename (${1}) and message (${12}) must be specified.${NC}" >&2
 		usage_and_exit 1
 	fi
 	make_image "${@}"

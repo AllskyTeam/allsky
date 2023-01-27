@@ -62,11 +62,11 @@ fi
 # test the timelapse creation, which sometimes has issues.
 if [[ ${TIMELAPSE} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Timelapse"
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -t ${DATE}
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -t "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Timelapse complete"
 	if [[ ${UPLOAD_VIDEO} == "true" && ${RET} = 0 ]] ; then
-		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -t ${DATE}
+		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -t "${DATE}"
 	fi
 fi
 
@@ -79,7 +79,7 @@ test -x "${cmd}" && "${cmd}"
 if [[ -n ${DAYS_TO_KEEP} ]]; then
 	del=$(date --date="${DAYS_TO_KEEP} days ago" +%Y%m%d)
 	# "2*" for years >= 2000
-	find "${ALLSKY_IMAGES}/" -type d -name "2*" | while read i
+	find "${ALLSKY_IMAGES}/" -type d -name "2*" | while read -r i
 	do
 		((del > $(basename "${i}"))) && echo "${ME}: Deleting old directory ${i}" && rm -rf "${i}"
 	done
@@ -95,7 +95,7 @@ if [[ -n ${WEB_DAYS_TO_KEEP} ]]; then
 		(
 			cd "${ALLSKY_WEBSITE}" || exit 1
 			# "*-202*" for years >= 2020
-			find startrails keograms videos -type f -name "*-202*" | while read i
+			find startrails keograms videos -type f -name "*-202*" | while read -r i
 			do
 				# Remove everything but the date
 				DATE="${i##*-}"

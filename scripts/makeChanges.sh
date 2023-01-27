@@ -7,19 +7,15 @@ if [[ -z ${ALLSKY_HOME} ]]; then
 	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
-# shellcheck disable=SC1090
-source "${ALLSKY_HOME}/variables.sh"
+source "${ALLSKY_HOME}/variables.sh" || exit 99
 
 # This script may be called during installation BEFORE there is a settings file.
 # config.sh looks for the file and produces an error if it doesn't exist,
 # so only include these two files if there IS a settings file.
 if [[ -f ${SETTINGS_FILE} ]]; then
-	# shellcheck disable=SC1090
-	source "${ALLSKY_CONFIG}/config.sh"
-	# shellcheck disable=SC1090
-	source "${ALLSKY_CONFIG}/ftp-settings.sh"
+	source "${ALLSKY_CONFIG}/config.sh" || exit 99
+	source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
 fi
-# shellcheck disable=SC1090
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
 
 function usage_and_exit()
@@ -29,41 +25,42 @@ function usage_and_exit()
 	echo -e "${wNC}"
 	echo "There must be a multiple of 3 key/label/old_value/new_value arguments"
 	echo "unless the --optionsOnly argument is given."
+	# shellcheck disable=SC2086
 	exit ${1}
 }
 
 # Check arguments
-OK=true
-DEBUG=false
+OK="true"
+DEBUG="false"
 DEBUG_ARG=""
-HELP=false
-OPTIONS_FILE_ONLY=false
-RESTARTING=false			# Will the caller restart Allsky?
-CAMERA_TYPE_ONLY=false		# Only update the cameraType ?
+HELP="false"
+OPTIONS_FILE_ONLY="false"
+RESTARTING="false"			# Will the caller restart Allsky?
+CAMERA_TYPE_ONLY="false"		# Only update the cameraType ?
 FORCE=""					# Passed to createAllskyOptions.php
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG}" in
 		--debug)
-			DEBUG=true
+			DEBUG="true"
 			DEBUG_ARG="${ARG}"		# So we can pass to other scripts
 			;;
 		--help)
-			HELP=true
+			HELP="true"
 			;;
 		--optionsOnly)
-			OPTIONS_FILE_ONLY=true
+			OPTIONS_FILE_ONLY="true"
 			SETTINGS_FILE=""
 			;;
 		--cameraTypeOnly)
-			CAMERA_TYPE_ONLY=true
+			CAMERA_TYPE_ONLY="true"
 			;;
 		--force)
 			FORCE="${ARG}"
 			;;
 		--restarting)
-			RESTARTING=true
+			RESTARTING="true"
 			;;
 		-*)
 			echo -e "${wERROR}ERROR: Unknown argument: '${ARG}'${wNC}"
@@ -95,25 +92,27 @@ wNBOLD="${wNBOLD}"
 wNC="${wNC}"
 
 # Does the change need Allsky to be restarted in order to take affect?
-NEEDS_RESTART=false
+NEEDS_RESTART="false"
 
-RUN_POSTTOMAP=false
+RUN_POSTTOMAP="false"
 POSTTOMAP_ACTION=""
 WEBSITE_CONFIG=()
 WEB_CONFIG_FILE=""
 HAS_WEBSITE_RET=""
-SHOW_POSTDATA_MESSAGE=true
-TWILIGHT_DATA_CHANGED=false
-CAMERA_TYPE_CHANGED=false
+SHOW_POSTDATA_MESSAGE="true"
+TWILIGHT_DATA_CHANGED="false"
+CAMERA_TYPE_CHANGED="false"
 
 # Several of the fields are in the Allsky Website configuration file,
 # so check if the IS a file before trying to update it.
 # Return 0 on found and 1 on not found.
 function check_website()
 {
+	# shellcheck disable=SC2086
 	[[ ${HAS_WEBSITE_RET} != "" ]] && return ${HAS_WEBSITE_RET}		# already checked
 
 	WEB_CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	# shellcheck disable=SC2086
 	[[ -f ${WEB_CONFIG_FILE} ]] && HAS_WEBSITE_RET=0 && return ${HAS_WEBSITE_RET}
 
 	WEB_CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
@@ -124,6 +123,7 @@ function check_website()
 		WEB_CONFIG_FILE=""
 		HAS_WEBSITE_RET=1
 	fi
+	# shellcheck disable=SC2086
 	return ${HAS_WEBSITE_RET}
 }
 
@@ -168,6 +168,7 @@ while [[ $# -gt 0 ]]; do
 				if [[ ${NEW_VALUE} == "RPi" ]]; then
 					if ! C="$(determineCommandToUse "false" "" )" ; then
 						echo -e "${wERROR}${ME}: ERROR: unable to determine command to use, RET=${RET}, C=${C}.${wNC}."
+						# shellcheck disable=SC2086
 						exit ${RET}
 					fi
 					C="-cmd ${C}"
@@ -175,6 +176,7 @@ while [[ $# -gt 0 ]]; do
 					C=""
 				fi
 				[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Calling capture_${NEW_VALUE} ${C} -cc_file '${CC_FILE}'${wNC}"
+				# shellcheck disable=SC2086
 				"${ALLSKY_BIN}/capture_${NEW_VALUE}" ${C} -debuglevel 3 -cc_file "${CC_FILE}"
 				RET=$?
 				if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
@@ -182,6 +184,7 @@ while [[ $# -gt 0 ]]; do
 
 					# Restore prior cc file if there was one.
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
+					# shellcheck disable=SC2086
 					exit ${RET}		# the actual exit code is important
 				fi
 
@@ -218,6 +221,7 @@ while [[ $# -gt 0 ]]; do
 			# These variables don't include a directory since the directory is specified with "--dir" below.
 
 			if [[ ${DEBUG} == "true" ]]; then
+				# shellcheck disable=SC2086
 				echo -e "${wDEBUG}Calling:" \
 					"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 					${FORCE} ${DEBUG_ARG} \
@@ -259,14 +263,14 @@ while [[ $# -gt 0 ]]; do
 				exit 1
 			fi
 
-			OK=true
+			OK="true"
 			if [[ ! -f ${OPTIONS_FILE} ]]; then
 				echo -e "${wERROR}${ME}: ERROR Options file ${OPTIONS_FILE} not created.${wNC}"
-				OK=false
+				OK="false"
 			fi
 			if [[ ! -f ${SETTINGS_FILE} && ${OPTIONS_FILE_ONLY} == "false" ]]; then
 				echo -e "${wERROR}${ME}: ERROR Settings file ${SETTINGS_FILE} not created.${wNC}"
-				OK=false
+				OK="false"
 			fi
 			[[ ${OK} == "false" ]] && exit 2
 
@@ -276,14 +280,14 @@ while [[ $# -gt 0 ]]; do
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			[[ ${CAMERA_TYPE_ONLY} == "true" ]] && exit 0
 
-			SHOW_POSTDATA_MESSAGE=false	# user doesn't need to see this output
-			CAMERA_TYPE_CHANGED=true
-			NEEDS_RESTART=true
+			SHOW_POSTDATA_MESSAGE="false"	# user doesn't need to see this output
+			CAMERA_TYPE_CHANGED="true"
+			NEEDS_RESTART="true"
 			;;
 
 		filename)
 			check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
-			NEEDS_RESTART=true
+			NEEDS_RESTART="true"
 			;;
 
 		extratext)
@@ -296,7 +300,7 @@ while [[ $# -gt 0 ]]; do
 					echo -e "${wWARNING}WARNING: '${NEW_VALUE}' is empty; please change it.${wNC}"
 				fi
 			fi
-			NEEDS_RESTART=true
+			NEEDS_RESTART="true"
 			;;
 
 		latitude | longitude)
@@ -306,18 +310,18 @@ while [[ $# -gt 0 ]]; do
 			else
 				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
 			fi
-			NEEDS_RESTART=true
-			TWILIGHT_DATA_CHANGED=true
+			NEEDS_RESTART="true"
+			TWILIGHT_DATA_CHANGED="true"
 			;;
 
 		angle)
-			NEEDS_RESTART=true
-			TWILIGHT_DATA_CHANGED=true
+			NEEDS_RESTART="true"
+			TWILIGHT_DATA_CHANGED="true"
 			;;
 
 		takeDaytimeImages)
-			NEEDS_RESTART=true
-			TWILIGHT_DATA_CHANGED=true
+			NEEDS_RESTART="true"
+			TWILIGHT_DATA_CHANGED="true"
 			;;
 
 		config)
@@ -336,14 +340,14 @@ while [[ $# -gt 0 ]]; do
 			if [[ -n ${NEW_VALUE} && ! -f ${NEW_VALUE} ]]; then
 				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
 			fi
-			NEEDS_RESTART=true
+			NEEDS_RESTART="true"
 			;;
 
 		displaySettings)
 			if [[ ${NEW_VALUE} -eq 0 ]]; then
-				NEW_VALUE=false
+				NEW_VALUE="false"
 			else
-				NEW_VALUE=true
+				NEW_VALUE="true"
 			fi
 			if check_website; then
 				PARENT="homePage.popoutIcons"
@@ -360,16 +364,16 @@ while [[ $# -gt 0 ]]; do
 
 		showonmap)
 			[[ ${NEW_VALUE} -eq 0 ]] && POSTTOMAP_ACTION="--delete"
-			RUN_POSTTOMAP=true
+			RUN_POSTTOMAP="true"
 			;;
 
 		location | owner | camera | lens | computer)
-			RUN_POSTTOMAP=true
+			RUN_POSTTOMAP="true"
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
 
 		websiteurl | imageurl)
-			RUN_POSTTOMAP=true
+			RUN_POSTTOMAP="true"
 			;;
 
 
@@ -389,6 +393,7 @@ if check_website ; then
 	[[ ${TWILIGHT_DATA_CHANGED} == "false" ]] && x="${x} --settingsOnly"
 	[[ ${CAMERA_TYPE_CHANGED} == "false" ]] && x="${x} --allFiles"
 
+	# shellcheck disable=SC2086
 	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" ${x} >&2)" ; then
 		if [[ ${SHOW_POSTDATA_MESSAGE} == "true" ]]; then
 			if [[ ${TWILIGHT_DATA_CHANGED} == "true" ]]; then
@@ -404,13 +409,16 @@ if check_website ; then
 	fi
 fi
 
+# shellcheck disable=SC2128
 if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing updateWebsiteConfig.sh${NC}"
+	# shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} "${WEBSITE_CONFIG[@]}"
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
+	# shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
 fi
 
@@ -422,4 +430,3 @@ fi
 
 
 exit 0
-

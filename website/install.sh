@@ -306,6 +306,8 @@ do_remote_website() {
 		exit 1
 	fi
 
+	create_data_json_file
+
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# The user is upgrading a new-style remote Website.
 		HAS_PRIOR_REMOTE_SERVER="true"

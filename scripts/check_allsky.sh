@@ -12,7 +12,6 @@ if [[ -z ${ALLSKY_HOME} ]]; then
 	export ALLSKY_HOME
 fi
 
-# shellcheck disable=SC1090
 source "${ALLSKY_HOME}/variables.sh" || exit 99
 
 if [[ ${1} == "--newer" ]]; then
@@ -28,11 +27,8 @@ if [[ $# -ne 0 ]]; then
 	exit 1
 fi
 
-# shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh" || exit 99
-# shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
-# shellcheck disable=SC1090
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
 
 
@@ -108,7 +104,7 @@ function is_number()
 	local VALUE="${1}"
 	[[ -z ${VALUE} ]] && return 1
 	shopt -s extglob
-	NON_NUMERIC="${VALUE/?([-+])*([0-9])?(.)*([0-9])/}"
+	local NON_NUMERIC="${VALUE/?([-+])*([0-9])?(.)*([0-9])/}"
 	if [[ -z ${NON_NUMERIC} ]]; then
 		# Nothing but +, -, 0-9, .
 		return 0
@@ -154,7 +150,7 @@ function check_exists() {
 
 
 TAKING_DARKS="$(settings .takeDarkFrames)"
-if [[ ${TAKING_DARKS} = "1" ]]; then
+if [[ ${TAKING_DARKS} -eq 1 ]]; then
 	heading "Information"
 	echo "'Take Dark Frames' is set."
 	echo "Unset if you no longer wish to take dark frames."
@@ -337,9 +333,9 @@ case "${PROTOCOL,,}" in
 esac
 
 if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
-		heading "Warnings"
-		echo "REMOTE_PORT (${REMOTE_PORT}) must be a number."
-		echo "Uploads will not work until this is corrected."
+	heading "Warnings"
+	echo "REMOTE_PORT (${REMOTE_PORT}) must be a number."
+	echo "Uploads will not work until this is corrected."
 fi
 
 # If these variables are set, the corresponding directory should exist.
@@ -404,6 +400,7 @@ done
 ANGLE="$(settings ".angle")"
 LATITUDE="$(settings ".latitude")"
 LONGITUDE="$(settings ".longitude")"
+# shellcheck disable=SC2034
 LOCALE="$(settings ".locale")"
 for i in ANGLE LATITUDE LONGITUDE LOCALE
 do
@@ -426,12 +423,12 @@ fi
 if [[ -n ${LONGITUDE} ]]; then
 	if ! LONG="$(convertLatLong "${LONGITUDE}" "longitude" 2>&1)" ; then
 		heading "Errors"
-		echo -e "${lONG}"
+		echo -e "${LONG}"
 	fi
 fi
 
 USING_DARKS="$(settings .useDarkFrames)"
-if [[ ${USING_DARKS} = "1" ]]; then
+if [[ ${USING_DARKS} -eq 1 ]]; then
 	NUM_DARKS=$(find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
 	if [[ ${NUM_DARKS} -eq 0 ]]; then
 		heading "Errors"

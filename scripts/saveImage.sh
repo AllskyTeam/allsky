@@ -413,12 +413,17 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${R
 			echo "${ME}Mini timelapse thumbnail not created!"
 		else
 			# Use --silent because we just displayed message(s) above for this image.
+			if [[ -n ${WEB_VIDEOS_DIR} ]]; then
+				x="${WEB_VIDEOS_DIR}/thumbnails"
+			else
+				x=""
+			fi
 			"${ALLSKY_SCRIPTS}/upload.sh" --silent \
 				"${UPLOAD_THUMBNAIL}" \
 				"${IMAGE_DIR}" \
 				"${UPLOAD_THUMBNAIL_NAME}" \
 				"MiniThumbnail" \
-				"${WEB_VIDEOS_DIR}/thumbnails"
+				"${x}"
 		fi
 	fi
 fi

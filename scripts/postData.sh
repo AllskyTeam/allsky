@@ -16,6 +16,8 @@ source "${ALLSKY_HOME}/variables.sh" || exit 99
 source "${ALLSKY_CONFIG}/config.sh" || exit 99
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
 source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
+wDEBUG="${wDEBUG}"
+wNC="${wNC}"
 
 # Make sure a local or remote Allsky Website exists.
 if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
@@ -44,6 +46,7 @@ usage_and_exit()
 	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--allfiles' causes all 'view settings' files to be uploaded"
+	# shellcheck disable=SC2086
 	exit ${retcode}
 }
 
@@ -52,7 +55,7 @@ DEBUG="false"
 SETTINGS_ONLY="false"
 ALL_FILES="false"
 RET=0
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
 	case "${1}" in
 		--debug)
 			DEBUG="true"
@@ -104,9 +107,9 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 
 	# If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
 	# If nighttime happens before noon, sunwait returns "--:-- (Polar night)"
-	sunrise="$(sunwait list rise angle ${angle} ${latitude} ${longitude})"
+	sunrise="$(sunwait list rise angle "${angle}" "${latitude}" "${longitude}")"
 	sunrise_hhmm="${sunrise:0:5}"
-	sunset="$(sunwait list set angle ${angle} ${latitude} ${longitude})"
+	sunset="$(sunwait list set angle "${angle}" "${latitude}" "${longitude}")"
 	sunset_hhmm="${sunset:0:5}"
 
 	if [[ ${sunrise_hhmm} == "--:--" || ${sunset_hhmm} == "--:--" ]]; then
@@ -173,7 +176,7 @@ function upload_file()
 		if [[ ${R} -ne 0 ]]; then
 			echo -e "${RED}${ME}: Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}'.${NC}"
 		fi
-		((RETCODE=RETCODE + R))
+		RETCODE=$((RETCODE + R))
 	fi
 
 	# Upload to remote website if there is one.
@@ -199,9 +202,10 @@ function upload_file()
 		if [[ ${R} -ne 0 ]]; then
 			echo -e "${RED}${ME}: Unable to upload '${FILE_TO_UPLOAD}'.${NC}"
 		fi
-		((RETCODE=RETCODE + R))
+		RETCODE=$((RETCODE + R))
 	fi
 
+	# shellcheck disable=SC2086
 	return ${RETCODE}
 }
 
@@ -219,5 +223,6 @@ if [[ ${RET} -eq 0 && ${SETTINGS_ONLY} == "false" ]]; then
 	upload_file "${OUTPUT_FILE}" "output file" ""		# Goes in top-level directory
 	RET=$?
 fi
+# shellcheck disable=SC2086
 exit ${RET}
 

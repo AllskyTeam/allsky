@@ -7,14 +7,11 @@ if [[ -z ${ALLSKY_HOME} ]]; then
 	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
-# shellcheck disable=SC1090
 source "${ALLSKY_HOME}/variables.sh"
-# shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh"
-# shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
-if [ $# -eq 1 ] ; then
+if [[ $# -eq 1 ]]; then
 	if [[ ${1} = "-h" || ${1} = "--help" ]]; then
 		echo -e "Usage: ${ME} [YYYYmmdd]"
 		exit 0
@@ -33,8 +30,8 @@ fi
 
 # Run custom script at the end of a day.
 cmd="${ALLSKY_SCRIPTS}/endOfDay_additionalSteps.sh"
-test -x "${cmd}" && "${cmd}"
+[[ -x ${cmd} ]] && "${cmd}"
 
-${ALLSKY_SCRIPTS}/flow-runner.py -e daynight
+"${ALLSKY_SCRIPTS}/flow-runner.py" -e daynight
 
 exit 0

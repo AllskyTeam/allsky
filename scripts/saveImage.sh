@@ -4,7 +4,7 @@
 
 ME="$(basename "${BASH_ARGV0}")"
 
-[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME} $*"
+[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME} $*"
 
 source "${ALLSKY_HOME}/variables.sh" || exit 99
 source "${ALLSKY_CONFIG}/config.sh" || exit 99
@@ -12,15 +12,16 @@ source "${ALLSKY_CONFIG}/config.sh" || exit 99
 usage_and_exit()
 {
 	retcode=${1}
-	[ ${retcode} -ne 0 ] && echo -ne "${RED}"
+	[[ ${retcode} -ne 0 ]] && echo -ne "${RED}"
 	echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_filename  [variable=value [...]]"
-	[ ${retcode} -ne 0 ] && echo -e "${NC}"
+	[[ ${retcode} -ne 0 ]] && echo -e "${NC}"
+	# shellcheck disable=SC2086
 	exit ${retcode}
 }
-[ $# -lt 2 ] && usage_and_exit 1
+[[ $# -lt 2 ]] && usage_and_exit 1
 # Export so other scripts can use it.
 export DAY_OR_NIGHT="${1}"
-[ "${DAY_OR_NIGHT}" != "DAY" -a "${DAY_OR_NIGHT}" != "NIGHT"  ] && usage_and_exit 1
+[[ ${DAY_OR_NIGHT} != "DAY" && ${DAY_OR_NIGHT} != "NIGHT" ]] && usage_and_exit 1
 
 # ${CURRENT_IMAGE} is the full path to a uniquely-named file created by the capture program.
 # The file name is its final name in the ${ALLSKY_IMAGES}/<date> directory.
@@ -50,14 +51,14 @@ if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
 	# If the return code is 99, the file was bad and deleted so don't continue.
 	"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
 	# removeBadImages.sh displayed error message and deleted the file.
-	[ $? -eq 99 ] && exit 99
+	[[ $? -eq 99 ]] && exit 99
 fi
 
 # If we didn't execute removeBadImages.sh do a quick sanity check on the image.
 # OR, if we did execute removeBaImages.sh but we're cropping the image, get the image resolution.
 if [[ ${REMOVE_BAD_IMAGES} != "true" || ${CROP_IMAGE} == "true" ]]; then
 	x=$(identify "${CURRENT_IMAGE}" 2>/dev/null)
-	if [ $? -ne 0 ] ; then
+	if [[ $? -ne 0 ]]; then
 		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving.${NC}"
 		exit 3
 	fi
@@ -74,11 +75,12 @@ fi
 
 # Get passed-in variables.
 # Normally at least the exposure will be passed and the sensor temp if known.
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
 	VARIABLE="AS_${1%=*}"		# everything before the "="
 	VALUE="${1##*=}"			# everything after  the "="
 	shift
 	# Export the variable so other scripts we call can use it.
+	# shellcheck disable=SC2086
 	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
 done
 
@@ -109,6 +111,7 @@ function display_error_and_exit()	# error message, notification string
 
 	# Don't let the service restart us because we will get the same error again.
 	sudo systemctl stop allsky
+	# shellcheck disable=SC2086
 	exit ${EXIT_ERROR_STOP}
 }
 
@@ -116,10 +119,10 @@ function display_error_and_exit()	# error message, notification string
 if [[ ${IMG_RESIZE} == "true" ]] ; then
 	# Make sure we were given numbers.
 	ERROR_MSG=""
-	if [[ "${IMG_WIDTH}" != +([+0-9]) ]]; then		# no negative numbers allowed
+	if [[ ${IMG_WIDTH} != +([+0-9]) ]]; then		# no negative numbers allowed
 		ERROR_MSG="${ERROR_MSG}\nIMG_WIDTH (${IMG_WIDTH}) must be a number."
 	fi
-	if [[ "${IMG_WIDTH}" != +([+0-9]) ]]; then
+	if [[ ${IMG_WIDTH} != +([+0-9]) ]]; then
 		ERROR_MSG="${ERROR_MSG}\nIMG_HEIGHT (${IMG_HEIGHT}) must be a number."
 	fi
 	if [[ -n ${ERROR_MSG} ]]; then
@@ -128,8 +131,7 @@ if [[ ${IMG_RESIZE} == "true" ]] ; then
 	fi
 
 	[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
-	convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}"
-	if [ $? -ne 0 ] ; then
+	if ! convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}" ; then
 		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed; not saving${NC}"
 		exit 4
 	fi
@@ -158,7 +160,7 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 	if ! E="$(checkPixelValue "CROP_OFFSET_X" "${CROP_OFFSET_X}" "width" "${RESOLUTION_X}" "any")" ; then
 		ERROR_MSG="${ERROR_MSG}\n${E}"
 	fi
-	if ! X="$(checkPixelValue "CROP_OFFSET_Y" "${CROP_OFFSET_Y}" "height" "${RESOLUTION_Y}" "any")" ; then
+	if ! E="$(checkPixelValue "CROP_OFFSET_Y" "${CROP_OFFSET_Y}" "height" "${RESOLUTION_Y}" "any")" ; then
 		ERROR_MSG="${ERROR_MSG}\n${E}"
 	fi
 
@@ -205,13 +207,13 @@ else
 	export DATE_NAME="$(date +'%Y%m%d')"
 fi
 
-${ALLSKY_SCRIPTS}/flow-runner.py
+"${ALLSKY_SCRIPTS}/flow-runner.py"
 
 SAVED_FILE="${CURRENT_IMAGE}"						# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 
 # If needed, save the current image in today's directory.
-if [[ "$(settings ".saveDaytimeImages")" = "1" || "${DAY_OR_NIGHT}" = "NIGHT" ]]; then
+if [[ $(settings ".saveDaytimeImages") -eq 1 || ${DAY_OR_NIGHT} == "NIGHT" ]]; then
 	SAVE_IMAGE="true"
 else
 	SAVE_IMAGE="false"
@@ -231,7 +233,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 
 	if [[ ${IMG_CREATE_THUMBNAILS} == "true" ]]; then
 		THUMBNAILS_DIR="${DATE_DIR}/thumbnails"
-		mkdir -p ${THUMBNAILS_DIR}
+		mkdir -p "${THUMBNAILS_DIR}"
 		# Create a thumbnail of the image for faster load in the WebUI.
 		# If we resized above, this will be a resize of a resize,
 		# but for thumbnails that should be ok.
@@ -256,9 +258,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				NUM_IMAGES=1
 				LEFT=$((TIMELAPSE_MINI_IMAGES - NUM_IMAGES))
 			else
-				grep --silent "${FINAL_FILE}" "${MINI_TIMELAPSE_FILES}"
-				RET=$?
-				if [ ${RET} -ne 0 ]; then
+				if ! grep --silent "${FINAL_FILE}" "${MINI_TIMELAPSE_FILES}" ; then
 					echo "${FINAL_FILE}" >> "${MINI_TIMELAPSE_FILES}"
 				elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
 					# This shouldn't happen...
@@ -291,11 +291,12 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				else
 					D=""
 				fi
+				# shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}"/timelapse.sh ${D} --mini "${MINI_TIMELAPSE_FILES}" "${DATE_NAME}"
 				RET=$?
-				[ ${RET} -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
+				[[ ${RET} -ne 0 ]] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
 				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
-					if [ ${RET} -eq 0 ]; then
+					if [[ ${RET} -eq 0 ]]; then
 						echo "${ME}: mini-timelapse created"
 					else
 						echo "${ME}: mini-timelapse creation returned with RET=${RET}"
@@ -348,7 +349,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 		else
 			LEFT=$( < "${FREQUENCY_FILE}" )
 		fi
-		if [ ${LEFT} -le 1 ]; then
+		if [[ ${LEFT} -le 1 ]]; then
 			# upload this one and reset the counter
 			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
 		else
@@ -373,8 +374,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 		FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
 		S="${RESIZE_UPLOADS_WIDTH}x${RESIZE_UPLOADS_HEIGHT}"
 		[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
-		convert "${CURRENT_IMAGE}" -resize "${S}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}"
-		if [ $? -ne 0 ] ; then
+		if ! convert "${CURRENT_IMAGE}" -resize "${S}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: RESIZE_UPLOADS failed; continuing with larger image.${NC}"
 			# We don't know the state of $FILE_TO_UPLOAD so use the larger file.
 			FILE_TO_UPLOAD="${CURRENT_IMAGE}"
@@ -392,7 +392,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 	"${ALLSKY_SCRIPTS}/upload.sh" "${FILE_TO_UPLOAD}" "${IMAGE_DIR}" "${DESTINATION_NAME}" "SaveImage" "${WEB_IMAGE_DIR}"
 	RET=$?
 
-	[ "${RESIZE_UPLOADS}" = "true" ] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
+	[[ ${RESIZE_UPLOADS} == "true" ]] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
 fi
 
 # If needed, upload the mini timelapse.  If upload.sh failed above, it will likely fail below.

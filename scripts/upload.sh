@@ -4,24 +4,24 @@
 # This is a separate script so it can also be used manually to test uploads.
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-if [ -z "${ALLSKY_HOME}" ] ; then
+if [[ -z ${ALLSKY_HOME} ]]; then
 	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
 
-source "${ALLSKY_HOME}/variables.sh"
-source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_CONFIG}/ftp-settings.sh"
+source "${ALLSKY_HOME}/variables.sh" || exit 99
+source "${ALLSKY_CONFIG}/config.sh" || exit 99
+source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
 
 ME="$(basename "${BASH_ARGV0}")"
 
 usage_and_exit() {
 	RET=$1
-	[ ${RET} -ne 0 ] && echo -en "${RED}"
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] \\"
 	echo "               file_to_upload  directory  destination_file_name \\"
 	echo "               [file_type] [local_directory]"
-	[ ${RET} -ne 0 ] && echo -e "${NC}"
+	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 
 	echo
 	echo "Where:"
@@ -37,6 +37,7 @@ usage_and_exit() {
 	echo
 	echo "For example: ${ME}  keogram-20210710.jpg  /keograms  keogram.jpg"
 
+	# shellcheck disable=SC2086
 	exit ${RET}
 }
 
@@ -47,7 +48,7 @@ WAIT="false"
 SILENT="false"
 DEBUG="false"
 RET=0
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
 	case "${1}" in
 		--help)
 			HELP="true"
@@ -91,7 +92,7 @@ DESTINATION_NAME="${3}"
 [[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$(basename "${FILE_TO_UPLOAD}")"
 FILE_TYPE="${4:-x}"		# A unique identifier for this type of file
 COPY_TO="${5}"
-if [ "${COPY_TO}" != "" -a ! -d "${COPY_TO}" ] ; then
+if [[ -n ${COPY_TO} && ! -d ${COPY_TO} ]]; then
 	echo -en "${RED}" >&2
 	echo -n "*** ${ME}: ERROR: '${COPY_TO}' directory not found!" >&2
 	echo -e "${NC}" >&2
@@ -113,16 +114,14 @@ LOG="${ALLSKY_TMP}/upload_log.txt"
 PID_FILE="${ALLSKY_TMP}/${FILE_TYPE}-pid.txt"
 CHECK="true"
 NUM_CHECKS=0
-while [ "${CHECK}" = "true" ]; do
-	if [ -f "${PID_FILE}" ]; then
+while [[ ${CHECK} == "true" ]]; do
+	if [[ -f ${PID_FILE} ]]; then
 		PID=$(< "${PID_FILE}")
 		# shellcheck disable=SC2009
-		ps -f -p${PID} | grep --silent "${ME}"
-		# shellcheck disable=SC2181
-		if [ $? -eq 0 ]; then
-			if [ "${WAIT}" = "true" ]; then
+		if ps -f "-p${PID}" | grep --silent "${ME}" ; then
+			if [[ ${WAIT} == "true" ]]; then
 				((NUM_CHECKS=NUM_CHECKS+1))
-				if [ $NUM_CHECKS -gt 10 ]; then
+				if [[ $NUM_CHECKS -gt 10 ]]; then
 					echo -en "${YELLOW}" >&2
 					echo "*** ${ME}: WARNING: Another '${FILE_TYPE}' upload is still in progress so" >&2
 					echo "this upload is being aborted." >&2
@@ -136,7 +135,7 @@ while [ "${CHECK}" = "true" ]; do
 				echo "*** ${ME}: WARNING: Another upload of type '${FILE_TYPE}' is in progress." >&2
 				echo -n "This new upload is being aborted. If this happens often, check your network" >&2
 				echo -n " and delay settings." >&2
-				ps -fp ${PID}
+				ps -fp "${PID}"
 				echo -e "${NC}" >&2
 				# Keep track of aborts so user can be notified
 				echo -e "$(date)\t${FILE_TYPE}\t${FILE_TO_UPLOAD}" >> "${ALLSKY_ABORTEDUPLOADS}"
@@ -163,21 +162,21 @@ trap "" SIGHUP
 
 if [[ ${PROTOCOL} == "s3" ]] ; then
 	# xxxxxx How do you tell it the DESTINATION_NAME name ?
-	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
+	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to aws ${S3_BUCKET}/${REMOTE_DIR}"
 	fi
-	${AWS_CLI_DIR}/aws s3 cp "${FILE_TO_UPLOAD}" s3://${S3_BUCKET}${REMOTE_DIR} --acl ${S3_ACL} > "${LOG}"
+	"${AWS_CLI_DIR}/aws" s3 cp "${FILE_TO_UPLOAD}" "s3://${S3_BUCKET}${REMOTE_DIR}" --acl "${S3_ACL}" > "${LOG}"
 	RET=$?
 
 elif [[ ${PROTOCOL} == "local" ]] ; then
-	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
+	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_DIR}/${DESTINATION_NAME}"
 	fi
 	cp "${FILE_TO_UPLOAD}" "${REMOTE_DIR}/${DESTINATION_NAME}"
 	RET=$?
 
 elif [[ "${PROTOCOL}" == "scp" ]] ; then
-	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
+	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		# shellcheck disable=SC2153
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
 	fi
@@ -185,7 +184,7 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	RET=$?
 
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
-	if [ "${SILENT}" = "false" ] && [ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
+	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to gcs ${GCS_BUCKET}/${REMOTE_DIR}"
 	fi
 	gsutil cp -a "${GCS_ACL}" "${FILE_TO_UPLOAD}" "gs://${GCS_BUCKET}${REMOTE_DIR}" > "${LOG}"
@@ -198,9 +197,9 @@ else # sftp/ftp/ftps
 	TEMP_NAME="${FILE_TYPE}-${RANDOM}"
 
 	# If REMOTE_DIR isn't null (which it can be) and doesn't already have a trailing "/", append one.
-	[[ ${REMOTE_DIR} != "" && ${REMOTE_DIR: -1:1} != "/" ]] && REMOTE_DIR="${REMOTE_DIR}/"
+	[[ -n ${REMOTE_DIR} && ${REMOTE_DIR: -1:1} != "/" ]] && REMOTE_DIR="${REMOTE_DIR}/"
 
-	if [[ ${SILENT} = "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: FTP '${FILE_TO_UPLOAD}' to '${REMOTE_DIR}${DESTINATION_NAME}', TEMP_NAME=${TEMP_NAME}"
 	fi
 	# LFTP_CMDS needs to be unique per file type so we don't overwrite a different upload type.
@@ -214,7 +213,7 @@ else # sftp/ftp/ftps
 	export LFTP_PASSWORD
 
 	(
-		[[ -n ${LFTP_COMMANDS} ]] && echo ${LFTP_COMMANDS}
+		[[ -n ${LFTP_COMMANDS} ]] && echo "${LFTP_COMMANDS}"
 
 		# Sometimes have problems with "max-reties 1", so make it 2
 		echo set net:max-retries 2
@@ -228,15 +227,18 @@ else # sftp/ftp/ftps
 		# So, do a simple command first so we get a better error message.
 		echo "quote PWD > /dev/null || cd . || exit 99"
 
-		if [[ ${DEBUG} = "true" ]]; then
+		if [[ ${DEBUG} == "true" ]]; then
 			echo "quote PWD"
 			echo "ls"
 			echo "debug 5"
 		fi
 		if [[ -n ${REMOTE_DIR} ]]; then
 			echo "cd '${REMOTE_DIR}' || (echo 'cd ${REMOTE_DIR} failed!'; exit 1) || exit 1"
+			if [[ ${DEBUG} == "true" ]]; then
+				echo "echo 'In REMOTE_DIR=${REMOTE_DIR}:'"
+				echo "ls"
+			fi
 		fi
-
 
 		# Unlikely, but just in case it's already there.
 		# Need the "*" after the file name otherwise glob always succeeds.
@@ -269,10 +271,10 @@ else # sftp/ftp/ftps
 	# To save a write to the SD card, only save output to ${LOG} on error.
 	OUTPUT="$(lftp -f "${LFTP_CMDS}" 2>&1)"
 	RET=$?
-	if [ ${RET} -ne 0 ] ; then
+	if [[ ${RET} -ne 0 ]]; then
 		echo -en "${RED}"
 		echo -n "*** ${ME}: ERROR"
-		if [ ${RET} -eq 99 ] ; then
+		if [[ ${RET} -eq 99 ]]; then
 			# shellcheck disable=SC2153
 			echo ": unable to log in to '${REMOTE_HOST}', user ${REMOTE_USER}'."
 		else
@@ -285,7 +287,7 @@ else # sftp/ftp/ftps
 			echo "DESTINATION_NAME='${DESTINATION_NAME}'"
 			echo -en "${NC}"
 			echo
-			if [ -n "${OUTPUT}" ]; then
+			if [[ -n ${OUTPUT} ]]; then
 				echo "${OUTPUT}" > "${LOG}"
 				cat "${LOG}" >&2
 			fi
@@ -293,18 +295,18 @@ else # sftp/ftp/ftps
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
 	else
-		if [ "${SILENT}" = "false" ] && [ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ] && [ "${ON_TTY}" -eq 0 ]; then
+		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 && ${ON_TTY} -eq 0 ]]; then
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
-		if [ -n "${OUTPUT}" ]; then
-			echo -e "lftp OUTPUT from '${FILE_TO_UPLOAD}':\n   ${OUTPUT}\n"
+		if [[ -n ${OUTPUT} ]]; then
+			echo -e "lftp OUTPUT from '${FILE_TO_UPLOAD}:\n   ${OUTPUT}\n"
 		fi
 	fi
 fi
 
 # If a local directory was also specified, copy the file there.
-if [ ${RET} -eq 0 -a "${COPY_TO}" != "" ]; then
-	if [ "${SILENT}" = "false" -a "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]; then
+if [[ ${RET} -eq 0 && -n ${COPY_TO} ]]; then
+	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		# No need to specify the file being copied again since we did so above.
 		echo "${ME}: Also copying to ${COPY_TO}/${DESTINATION_NAME}"
 	fi
@@ -314,4 +316,5 @@ fi
 
 rm -f "${PID_FILE}"
 
+# shellcheck disable=SC2086
 exit ${RET}

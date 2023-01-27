@@ -24,7 +24,7 @@ function doExit()
 			COLOR="yellow"
 			;;
 	esac
-	if [ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]; then
+	if [[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
 		# even if the user has them turned off.
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
@@ -46,8 +46,9 @@ function doExit()
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
 	fi
 
-	[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ] && sudo systemctl stop allsky
+	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && sudo systemctl stop allsky
 
+	# shellcheck disable=SC2086
 	exit ${EXITCODE}
 }
 
@@ -73,14 +74,14 @@ function determineCommandToUse()
 		RET=$?
 	fi
 
-	if [ ${RET} -ne 0 ]; then
+	if [[ ${RET} -ne 0 ]]; then
 		# Didn't find libcamera-still, or it didn't work.
 
 		CMD="raspistill"
 		if ! command -v "${CMD}" > /dev/null; then
 			echo -e "${RED}*** ERROR: Can't determine what command to use for RPi camera.${NC}"
 			if [[ ${USE_doExit} == "true" ]]; then
-				doExit ${EXIT_ERROR_STOP} "Error" "${PREFIX}\nRPi camera command\nnot found!."
+				doExit "${EXIT_ERROR_STOP}" "Error" "${PREFIX}\nRPi camera command\nnot found!."
 			fi
 
 			return 1
@@ -94,10 +95,10 @@ function determineCommandToUse()
 		RET=$?
 	fi
 
-	if [ ${RET} -ne 0 ]; then
+	if [[ ${RET} -ne 0 ]]; then
 		echo -e "${RED}*** ERROR: RPi camera not found.  Make sure it's enabled.${NC}"
 		if [[ ${USE_doExit} == "true" ]]; then
-			doExit ${EXIT_NO_CAMERA} "Error" "${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
+			doExit "${EXIT_NO_CAMERA}" "Error" "${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
 		fi
 
 		return 1
@@ -175,7 +176,7 @@ function getJSONarrayIndex()
 	local JSON_FILE="${1}"
 	local PARENT="${2}"
 	local FIELD="${3}"
-	jq .${PARENT} "${JSON_FILE}" | \
+	jq ".${PARENT}" "${JSON_FILE}" | \
 		gawk 'BEGIN { n = -1; found = 0;} {
 			if ($1 == "{") {
 				n++;
@@ -243,9 +244,7 @@ function convertLatLong()
 function get_sunrise_sunset()
 {
 	ANGLE="${1}"
-	#shellcheck disable=SC1090
 	source "${ALLSKY_HOME}/variables.sh" || return 1
-	#shellcheck disable=SC1090
 	source "${ALLSKY_CONFIG}/config.sh" || return 1
 	[[ -z ${ANGLE} ]] && ANGLE="$(settings ".angle")"
 	LATITUDE="$(settings ".latitude")"
@@ -260,7 +259,6 @@ function get_sunrise_sunset()
 	X="$(sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}")"
 	echo "${X/,/  }   ${ANGLE}"
 }
-
 # Determine if there's a newer version of a file in the specified branch.
 # If so, download it to the specified location/name.
 function checkAndGetNewerFile()
@@ -366,16 +364,16 @@ function checkCropValues()
 	local CROP_RIGHT=$(( CROP_CENTER_ON_SENSOR_X + HALF_CROP_WIDTH ))
 
 	local ERR=""
-	if [ ${CROP_TOP} -lt 0 ]; then
+	if [[ ${CROP_TOP} -lt 0 ]]; then
 		ERR="${ERR}\nCROP rectangle goes off the top of the image by ${CROP_TOP#-} pixel(s)."
 	fi
-	if [ ${CROP_BOTTOM} -gt ${MAX_RESOLUTION_Y} ]; then
+	if [[ ${CROP_BOTTOM} -gt ${MAX_RESOLUTION_Y} ]]; then
 		ERR="${ERR}\nCROP rectangle goes off the bottom of the image: ${CROP_BOTTOM} is greater than image height (${MAX_RESOLUTION_Y})."
 	fi
-	if [ ${CROP_LEFT} -lt 0 ]; then
+	if [[ ${CROP_LEFT} -lt 0 ]]; then
 		ERR="${ERR}\nCROP rectangle goes off the left of the image: ${CROP_LEFT} is less than 0."
 	fi
-	if [ ${CROP_RIGHT} -gt ${MAX_RESOLUTION_X} ]; then
+	if [[ ${CROP_RIGHT} -gt ${MAX_RESOLUTION_X} ]]; then
 		ERR="${ERR}\nCROP rectangle goes off the right of the image: ${CROP_RIGHT} is greater than image width (${MAX_RESOLUTION_X})."
 	fi
 

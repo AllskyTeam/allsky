@@ -22,14 +22,14 @@ else
 	MSG2="created"
 fi
 
-source "${ALLSKY_HOME}/variables.sh" || exit 1
-source "${ALLSKY_CONFIG}/config.sh" || exit 1
+source "${ALLSKY_HOME}/variables.sh" || exit 99
+source "${ALLSKY_CONFIG}/config.sh" || exit 99
 if [[ ${TYPE} == "UPLOAD" ]]; then
-	source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 1
+	source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
 fi
 
 # If we're on a tty we are being invoked manually so no need to display ${ME} in error messages.
-if [[ ${ON_TTY} == "1" ]]; then
+if [[ ${ON_TTY} -eq 1 ]]; then
 	ME=""
 else
 	ME="${ME_USAGE}: "	# include trailing space
@@ -40,7 +40,7 @@ usage_and_exit()
 	retcode=${1}
 	echo
 	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME_USAGE} [--silent] [-k] [-s] [-t] DATE"
+	echo "Usage: ${ME_USAGE} [--help] [--silent] [-k] [-s] [-t] DATE"
 	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      'DATE' is the day in '${ALLSKY_IMAGES}' to process"
@@ -48,6 +48,7 @@ usage_and_exit()
 	echo "      's' is to ${MSG1} a startrail"
 	echo "      't' is to ${MSG1} a timelapse"
 	echo "    If you don't specify k, s, or t, all three will be ${MSG2}."
+	# shellcheck disable=SC2086
 	exit ${retcode}
 }
 
@@ -61,7 +62,7 @@ else
 	UPLOAD_SILENT="--silent"
 fi
 
-[[ ${1} == "-h" || ${1} == "--help" ]] && usage_and_exit 0
+[[ ${1} == "--help" ]] && usage_and_exit 0
 [[ $# -eq 0 ]] && usage_and_exit 1
 
 if [[ $# -eq 1 ]]; then
@@ -120,6 +121,7 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		# instead of:
 		#	command arg1 arg2 ...
 
+		# shellcheck disable=SC2086
 		echo ${CMD} | bash
 		RET=$?
 		if [[ ${RET} -ne 0 ]]; then
@@ -186,7 +188,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 	else
 		upload "Keogram" "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" "${KEOGRAM_DESTINATION_NAME}" "${WEB_KEOGRAM_DIR}"
 	fi
-	[[ $? -ne 0 ]] && let EXIT_CODE=${EXIT_CODE}+1
+	[[ $? -ne 0 ]] && EXIT_CODE=$((EXIT_CODE + 1))
 fi
 
 if [[ ${DO_STARTRAILS} == "true" ]]; then
@@ -198,7 +200,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 	else
 		upload "Startrails" "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" "${STARTRAILS_DESTINATION_NAME}" "${WEB_STARTRAILS_DIR}"
 	fi
-	[[ $? -ne 0 ]] && let EXIT_CODE=${EXIT_CODE}+1
+	[[ $? -ne 0 ]] && EXIT_CODE=$((EXIT_CODE + 1))
 fi
 
 if [[ ${DO_TIMELAPSE} == "true" ]]; then
@@ -224,7 +226,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" "${UPLOAD_THUMBNAIL_NAME}" "" "${WEB_VIDEOS_DIR}/thumbnails"
 		fi
 	fi
-	[[ $RET -ne 0 ]] && let EXIT_CODE=${EXIT_CODE}+1
+	[[ $RET -ne 0 ]] && EXIT_CODE=$((EXIT_CODE + 1))
 fi
 
 

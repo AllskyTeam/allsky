@@ -57,7 +57,8 @@ jobs:
                 #SC2188: This redirection doesn't have a command. Move to its command (or use 'true' as no-op).
                 #SC2069: Something about the order of >&2 and > xxx
                 #SC2024: similar to SC2069
-                shellcheck $i -e SC1090 -e SC1091 -e SC2004 -e SC2155 -e SC2181 -e SC2188 -e SC2024 -e SC2069
+                #SC2269: This variable is assigned to itself
+                shellcheck $i -e SC1090 -e SC1091 -e SC2004 -e SC2155 -e SC2181 -e SC2188 -e SC2024 -e SC2069 -e SC2269
                 ;;
             esac
             if [ $? -ne 0 ]; then

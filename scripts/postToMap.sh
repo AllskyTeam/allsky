@@ -3,7 +3,7 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
-if [ -z "${ALLSKY_HOME}" ] ; then
+if [[ -z ${ALLSKY_HOME} ]]; then
 	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
@@ -14,17 +14,14 @@ fi
 # The script can be called manually, via endOfNight.sh, or via the WebUI.
 
 # Disabling shellcheck to force CI to compile - May need to find a better way to deal with this
-# shellcheck disable=SC1090
 source "${ALLSKY_HOME}/variables.sh"
-# shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh"
-# shellcheck disable=SC1090
 source "${ALLSKY_SCRIPTS}/functions.sh"
 
 function usage_and_exit()
 {
 	RET_CODE=${1}
-	[ ${RET_CODE} -ne 0 ] && echo -en "${wERROR}"
+	[[ ${RET_CODE} -ne 0 ]] && echo -en "${wERROR}"
 	echo -e "${BR}Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight]${BR}"
 	echo "--help: Print this usage message and exit immediately."
 	echo "--whisper: Be quiet with non-error related output - only display results."
@@ -32,7 +29,8 @@ function usage_and_exit()
 	echo "--force: Force updates, even if not scheduled automatically for today."
 	echo "--debug: Output debugging statements."
 	echo "--endofnight: Indicates how ${ME} was invoked."
-	[ ${RET_CODE} -ne 0 ] && echo -e "${wNC}"
+	[[ ${RET_CODE} -ne 0 ]] && echo -e "${wNC}"
+	# shellcheck disable=SC2086
 	exit ${RET_CODE}
 }
 
@@ -61,27 +59,27 @@ function check_URL()
 	D="$(get_domain "${URL}")"
 	if [[ "${D:0:7}" = "192.168" || "${D:0:4}" = "10.0" || "${D:0:6}" = "172.16" || "${D:0:9}" = "169.254.0" || "${D:0:6}" = "198.18" || "${D:0:10}" = "198.51.100"  || "${D:0:9}" = "203.0.113" || "${D:0:3}" = "240" ]]; then
 		E="ERROR: '${URL}' is not reachable from the Internet.${BR}${E}"
-	elif [ "${URL:0:5}" != "http:" ] && [ "${URL:0:6}" != "https:" ]; then
+	elif [[ ${URL:0:5} != "http:" && ${URL:0:6} != "https:" ]]; then
 		E="ERROR: 'Website URL' must begin with 'http:' or 'https:'.${BR}${E}"
 	else
 		# Make sure it's a valid URL
 		CONTENT="$(curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1)"
 		RET=$?
-		if [ ${RET} -eq 6 ]; then
+		if [[ ${RET} -eq 6 ]]; then
 			E="ERROR: '${URL}' not found - check spelling.${BR}${E}"
-		elif [ ${RET} -eq 28 ]; then
+		elif [[ ${RET} -eq 28 ]]; then
 			E="ERROR: Could not connect to '${URL}' after ${TIMEOUT} seconds.${BR}${E}"
-		elif [ ${RET} -ne 0 ]; then
+		elif [[ ${RET} -ne 0 ]]; then
 				E="ERROR: '${URL}' cannot be reached (${CONTENT}).${BR}${E}"
 		else
-			if [ "${URL_TYPE}" = "websiteurl" ]; then
+			if [[ ${URL_TYPE} == "websiteurl" ]]; then
 				TYPE="$(echo "${CONTENT}" | grep -i "Content-Type: text")"
 				T="web site"
 			else
 				TYPE="$(echo "${CONTENT}" | grep -i "Content-Type: image")"
 				T="image"
 			fi
-			if [ -z "${TYPE}" ]; then
+			if [[ -z ${TYPE} ]]; then
 				E="ERROR: ${FIELD_NAME} '${URL}' does not appear to be a valid ${T}.${BR}${E}"
 			else
 				return 0
@@ -97,26 +95,35 @@ UPLOAD=false
 WHISPER=false
 ENDOFNIGHT=false
 MACHINE_ID=""
-while [ $# -ne 0 ]; do
-	if [ "${1}" = "--help" ]; then
-		usage_and_exit 0;
-	elif [ "${1}" = "--delete" ]; then
-		DELETE=true
-		UPLOAD=true		# always upload DELETEs
-	elif [ "${1}" = "--debug" ]; then
-		DEBUG=true
-	elif [ "${1}" = "--force" ]; then
-		UPLOAD=true
-	elif [ "${1}" = "--whisper" ]; then
-		WHISPER=true
-	elif [ "${1}" = "--endofnight" ]; then
-		ENDOFNIGHT=true
-	elif [ "${1}" = "--machineid" ]; then
-		MACHINE_ID="${2}"
-		shift
-	else
-		usage_and_exit 1;
-	fi
+while [[ $# -ne 0 ]]; do
+	case "${1}" in
+		--help)
+			usage_and_exit 0;
+			;;
+		--delete)
+			DELETE=true
+			UPLOAD=true		# always upload DELETEs
+			;;
+		--debug)
+			DEBUG=true
+			;;
+		--force)
+			UPLOAD=true
+			;;
+		--whisper)
+			WHISPER=true
+			;;
+		--endofnight)
+			ENDOFNIGHT=true
+			;;
+		--machineid)
+			MACHINE_ID="${2}"
+			shift
+			;;
+		*)
+			usage_and_exit 1;
+			;;
+	esac
 	shift
 done
 
@@ -142,7 +149,7 @@ if [[ ${ENDOFNIGHT} = "true" ]]; then
 	wNC=""
 fi
 
-if [ "${WHISPER}" = "true" ];then
+if [[ ${WHISPER} == "true" ]]; then
 	MSG_START=""
 	ERROR_MSG_START="${wERROR}"
 	WARNING_MSG_START="${wWARNING}"
@@ -155,10 +162,10 @@ fi
 
 if [[ -z ${MACHINE_ID} ]]; then
 	MACHINE_ID="$(< /etc/machine-id)"
-	if [ -z "${MACHINE_ID}" ]; then
+	if [[ -z ${MACHINE_ID} ]]; then
 		E="ERROR: Unable to get 'machine_id': check /etc/machine-id."
 		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
 		exit 3
 	fi
 fi
@@ -166,12 +173,12 @@ fi
 OK=true
 E=""
 LATITUDE="$(settings ".latitude")"
-if [ "${LATITUDE}" = "" ]; then
+if [[ ${LATITUDE} == "" ]]; then
 	E="ERROR: 'Latitude' is required.${BR}${E}"
 	OK=false
 fi
 LONGITUDE="$(settings ".longitude")"
-if [ "${LONGITUDE}" = "" ]; then
+if [[ ${LONGITUDE} == "" ]]; then
 	E="ERROR: 'Longitude' is required.${BR}${E}"
 	OK=false
 fi
@@ -198,7 +205,7 @@ if false; then
 	MACHINE_ID="${LA:0:2}${LO:0:2}${MACHINE_ID:4}"
 fi
 
-if [ "${DELETE}" = "true" ]; then
+if [[ ${DELETE} == "true" ]]; then
 	generate_post_data()
 	{
 		cat <<-EOF
@@ -222,62 +229,62 @@ else
 	E=""
 	W=""
 	# Check for required fields
-	if [ "${CAMERA}" = "" ]; then
+	if [[ ${CAMERA} == "" ]]; then
 		E="ERROR: 'Camera' is required.${BR}${E}"
 		OK=false
 	fi
-	if [ "${COMPUTER}" = "" ]; then
+	if [[ ${COMPUTER} == "" ]]; then
 		E="ERROR: 'Computer' is required.${BR}${E}"
 		OK=false
 	fi
 
 	# Check for optional, but suggested fields
-	if [ "${LOCATION}" = "" ]; then
+	if [[ ${LOCATION} == "" ]]; then
 		W="WARNING: 'Location' not set; continuing.${BR}${W}"
 	fi
-	if [ "${OWNER}" = "" ]; then
+	if [[ ${OWNER} == "" ]]; then
 		W="WARNING: 'Owner' not set; continuing.${BR}${W}"
 	fi
-	if [ "${LENS}" = "" ]; then
+	if [[ ${LENS} == "" ]]; then
 		W="WARNING: 'Lens' not set; continuing.${BR}${W}"
 	fi
 
 	# website_url and image_url are optional
 
-	if [[ -n "${WEBSITE_URL}" && -z "${IMAGE_URL}" ]] || [[ -z "${WEBSITE_URL}" && -n "${IMAGE_URL}" ]]; then
+	if [[ (-n ${WEBSITE_URL} && -z ${IMAGE_URL}) || (-z ${WEBSITE_URL} && -n ${IMAGE_URL}) ]]; then
 		E="ERROR: If you specify the Website URL or Image URL, you must specify both URLs.${BR}${E}"
 		OK=false
-	elif [ -n "${WEBSITE_URL}" ]; then		# they specified both
+	elif [[ -n ${WEBSITE_URL} ]]; then		# they specified both
 		# The domain names (or IP addresses) must be the same.
 		Wurl="$(get_domain "${WEBSITE_URL}")"
 		Iurl="$(get_domain "${IMAGE_URL}")"
-		if [ "${Wurl}" != "${Iurl}" ]; then
+		if [[ ${Wurl} != "${Iurl}" ]]; then
 			E="ERROR: The Website and Image URLs must have the same domain name or IP address.${BR}${E}"
 			OK=false
 		fi
-		if [ -n "${WEBSITE_URL}" ]; then
+		if [[ -n ${WEBSITE_URL} ]]; then
 			check_URL "${WEBSITE_URL}" websiteurl "Website URL" || OK=false
 		fi
-		if [ -n "${IMAGE_URL}" ]; then
+		if [[ -n ${IMAGE_URL} ]]; then
 			check_URL "${IMAGE_URL}" imageurl "Image URL" || OK=false
 		fi
 	fi
 
-	if [ "${W}" != "" ]; then
-		echo -e "${WARNING_MSG_START}${W%%${BR}}${NC}"
-		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W%%${BR}}"
+	if [[ ${W} != "" ]]; then
+		echo -e "${WARNING_MSG_START}${W%%"${BR}"}${NC}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W%%"${BR}"}"
 	fi
-	if [ "${OK}" = "false" ]; then
-		echo -e "${ERROR_MSG_START}${E%%${BR}}${NC}"
-		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E%%${BR}}"
+	if [[ ${OK} == "false" ]]; then
+		echo -e "${ERROR_MSG_START}${E%%"${BR}"}${NC}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E%%"${BR}"}"
 		exit 2
 	fi
 
-	if [ -f "${ALLSKY_HOME}/version" ]; then
+	if [[ -f ${ALLSKY_HOME}/version ]]; then
 		ALLSKY_VERSION="$(< "${ALLSKY_HOME}/version")"
 	else
 		ALLSKY_VERSION="$(grep "Allsky Camera Software" "${ALLSKY_LOG}" | tail -1 | sed -e 's/.*Software //' -e 's/ .*//')"
-		[ -z "${ALLSKY_VERSION}" ] && ALLSKY_VERSION="unknown"
+		[[ -z ${ALLSKY_VERSION} ]] && ALLSKY_VERSION="unknown"
 	fi
 
 	generate_post_data()
@@ -300,7 +307,7 @@ else
 	}
 fi
 
-if [ "${UPLOAD}" = "false" ]; then
+if [[ ${UPLOAD} == "false" ]]; then
 	# Only upload every other day to save on server bandwidth.
 	# Extract last character of machine ID and find its parity
 	digit="${MACHINE_ID: -1}"
@@ -324,41 +331,41 @@ fi
 [[ ${OK} == "false" ]] && exit 1
 
 RETURN_CODE=0
-if [ "${UPLOAD}" = "true" ]; then
-	if [ "${DELETE}" = "true" ]; then
-		[ "${WHISPER}" = "false" ] && echo "${ME}: Deleting map data."
-	elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]; then
-		[ "${WHISPER}" = "false" ] && echo "${ME}: Uploading map data."
+if [[ ${UPLOAD} == "true" ]]; then
+	if [[ ${DELETE} == "true" ]]; then
+		[[ ${WHISPER} == "false" ]] && echo "${ME}: Deleting map data."
+	elif [[ ${ON_TTY} -eq 1 || ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+		[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading map data."
 	fi
 	# shellcheck disable=SC2089
 	CMD="curl --silent -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
 	CMD="${CMD} --data '$(generate_post_data)' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
-	[ "${DEBUG}" = "true" ] && echo -e "\n${wDEBUG}Executing:\n${CMD}${wNC}\n"
-	# shellcheck disable=SC2090
+	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Executing:\n${CMD}${wNC}\n"
+	# shellcheck disable=SC2090,SC2086
 	RETURN="$(echo ${CMD} | bash)"
 	RETURN_CODE=$?
-	[ "${DEBUG}" = "true" ] && echo -e "\n${wDEBUG}Returned:\n${RETURN}${wNC}.\n"
-	if [ ${RETURN_CODE} -ne 0 ]; then
+	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Returned:\n${RETURN}${wNC}.\n"
+	if [[ ${RETURN_CODE} -ne 0 ]]; then
 		E="ERROR while uploading map data with curl: ${RETURN}."
 		echo -e "${ERROR_MSG_START}${E}${RETURN}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
 		exit ${RETURN_CODE}
 	fi
 
 	# Get the return string from the server.  It's the last line of output.
 	RET="$(echo "${RETURN}" | tail -1)"
-	if [ "${RET}" = "INSERTED" ] || [ "${RET}" = "DELETED" ]; then
+	if [[ ${RET} == "INSERTED" || ${RET} == "DELETED" ]]; then
 		echo -e "${wOK}${MSG_START}Map data ${RET}.${wNC}"
 
-	elif [ "${RET:0:7}" = "UPDATED" ]; then
+	elif [[ ${RET:0:7} == "UPDATED" ]]; then
 		echo -en "${wOK}${MSG_START}Map data UPDATED.${wNC}"
 		NUMBERS=${RET:8}	# num_updates max
-		if [ -n "${NUMBERS}" ]; then
+		if [[ -n ${NUMBERS} ]]; then
 			NUM_UPDATES=${NUMBERS% *}
 			MAX_UPDATES=${NUMBERS##* }
 			NUM_LEFT=$((MAX_UPDATES - NUM_UPDATES))
-			if [ ${NUM_LEFT} -eq 0 ]; then
+			if [[ ${NUM_LEFT} -eq 0 ]]; then
 				echo "  This is your last update allowed today."
 			else
 				echo "  You can make ${NUM_LEFT} more today."
@@ -367,32 +374,32 @@ if [ "${UPLOAD}" = "true" ]; then
 			echo	# terminating newline
 		fi
 
-	elif [ -z "${RET}" ]; then
+	elif [[ -z ${RET} ]]; then
 		E="ERROR: Unknown reply from server: ${RETURN}."
 		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
 		RETURN_CODE=2
 
-	elif [ "${RET:0:6}" = "ERROR " ]; then
+	elif [[ ${RET:0:6} == "ERROR " ]]; then
 		E="ERROR returned while uploading map data: ${RET:6}."
 		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
 		RETURN_CODE=2
 
-	elif [ "${RET:0:15}" = "ALREADY UPDATED" ]; then
+	elif [[ ${RET:0:15} == "ALREADY UPDATED" ]]; then
 		MAX_UPDATES=${RET:17}
 		W="NOTICE: You have already updated your map data the maximum times per day (${MAX_UPDATES}).  Try again tomorrow."
 		echo -e "${WARNING_MSG_START}${W}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W}"
 
 	else
 		E="ERROR returned while uploading map data: ${RET}."
 		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[ "${ENDOFNIGHT}" = "true" ] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
 		RETURN_CODE=2
 	fi
 
-elif [ ${ON_TTY} -eq 1 ] || [ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]; then
+elif [[ ${ON_TTY} -eq 1 || ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
 fi
 

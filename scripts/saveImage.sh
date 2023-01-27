@@ -12,7 +12,7 @@ source "${ALLSKY_CONFIG}/config.sh" || exit 99
 usage_and_exit()
 {
 	retcode=${1}
-	[ ${retcode} -ne 0 ] && echo -ne "${RED}"
+	[[ ${retcode} -ne 0 ]] && echo -ne "${RED}"
 	echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_filename  [variable=value [...]]"
 	[[ ${retcode} -ne 0 ]] && echo -e "${NC}"
 	# shellcheck disable=SC2086
@@ -349,7 +349,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 		else
 			LEFT=$( < "${FREQUENCY_FILE}" )
 		fi
-		if [ ${LEFT} -le 1 ]; then
+		if [[ ${LEFT} -le 1 ]]; then
 			# upload this one and reset the counter
 			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
 		else

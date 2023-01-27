@@ -75,11 +75,11 @@ fi
 
 set +a		# turn off auto-export since $IMAGE_FILES might be huge and produce errors
 
-cd "${DATE}"
+cd "${DATE}" || exit 99
 if [[ -n ${FILE} ]]; then
 	IMAGE_FILES="${FILE}"
 else
-	IMAGE_FILES="$( find . -maxdepth 1 -type f -iname "${FILENAME}"-\*.${EXTENSION} )"
+	IMAGE_FILES="$( find . -maxdepth 1 -type f -iname "${FILENAME}"-\*."${EXTENSION}" )"
 fi
 ERROR_WORDS="Huffman|Bogus|Corrupt|Invalid|Trunc|Missing|insufficient image data|no decode delegate|no images defined"
 
@@ -91,10 +91,10 @@ if [[ -n ${FILE} ]]; then		# looking at one file
 	OUTPUT=""
 else							# looking at a directory
 	OUTPUT="${ALLSKY_TMP}/removeBadImages.log"
-	> ${OUTPUT}
+	> "${OUTPUT}"
 fi
 
-typeset -i num_bad=0
+num_bad=0
 # If the low threshold is 0 it's disabled.
 # If the high one is 0 or 100 (nothing can be brighter than 100) it's disabled.
 if [[ ${REMOVE_BAD_IMAGES_THRESHOLD_HIGH} -gt 100 || ${REMOVE_BAD_IMAGES_THRESHOLD_HIGH} -eq 0 ]]; then
@@ -128,7 +128,7 @@ for f in ${IMAGE_FILES} ; do
 		elif [[ -z ${MEAN} ]]; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
 			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' returned nothing; leaving file.${NC}"
-		elif echo "${MEAN}" | egrep -q "${ERROR_WORDS}"; then
+		elif echo "${MEAN}" | grep -E -q "${ERROR_WORDS}"; then
 			# At least one error word was found in the output.
 			# Get rid of unnecessary error text, and only look at first line of error message.
 			BAD="'${f}' (corrupt file: $(echo "${MEAN}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;' -e q))"
@@ -170,7 +170,7 @@ for f in ${IMAGE_FILES} ; do
 			echo "${r} ${BAD}" >> "${OUTPUT}"
 		fi
 		[[ ${DEBUG} == "false" ]] && rm -f "${f}" "thumbnails/${f}"
-		let num_bad=num_bad+1
+		num_bad=$((num_bad + 1))
 	fi
 done
 

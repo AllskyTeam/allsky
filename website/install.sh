@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${ALLSKY_HOME} ]] ; then
-	export ALLSKY_HOME=$(realpath $(dirname "${BASH_ARGV0}")/..)
+	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}")/..)"
 fi
 # shellcheck disable=SC1090,SC1091
 source "${ALLSKY_HOME}/variables.sh" || exit 1
@@ -82,6 +82,7 @@ usage_and_exit()
 	echo
 	echo "'--function' executes the specified function and quits."
 	echo
+	# shellcheck disable=SC2086
 	exit ${RET}
 }
 
@@ -94,7 +95,7 @@ modify_locations() {
 
 
 ##### Create and upload a new data.json file.
-create_data_json_file() {
+upload_data_json_file() {
 	if [[ ${POST_END_OF_NIGHT_DATA} != "true" ]]; then
 		display_msg progress "Enabling POST_END_OF_NIGHT_DATA."
 		sed -i 's/^POST_END_OF_NIGHT_DATA.*/POST_END_OF_NIGHT_DATA="true"/' "${ALLSKY_CONFIG}/config.sh"
@@ -102,7 +103,7 @@ create_data_json_file() {
 
 	# Copy the file to ${ALLSKY_WEBSITE}.
 	# This also copies the settings file and a few others needed to display settings.
-	OUTPUT="$(${ALLSKY_SCRIPTS}/postData.sh --allFiles 2>&1)"
+	OUTPUT="$("${ALLSKY_SCRIPTS}/postData.sh" --allFiles 2>&1)"
 	if [[ $? -ne 0 || ! -f ${ALLSKY_WEBSITE}/data.json ]]; then
 		MSG="Unable to create new 'data.json' file:"
 		MSG="${MSG}\n${OUTPUT}"
@@ -166,6 +167,7 @@ create_website_configuration_file() {
 
 		# There are only a couple things to update
 		[[ ${DEBUG} == "true" ]] && display_msg debug "Calling updateWebsiteConfig.sh"
+		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
 			--config "${WEB_CONFIG_FILE}" \
 			config.imageName		"imageName"		"${IMAGE_NAME}" \
@@ -228,6 +230,7 @@ create_website_configuration_file() {
 
 	# There are some settings we can't determine, like LENS.
 	[[ ${DEBUG} == "true" ]] && display_msg debug "Calling updateWebsiteConfig.sh"
+	# shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
 		--config "${WEB_CONFIG_FILE}" \
 		config.imageName		"imageName"		"${IMAGE_NAME}" \
@@ -298,15 +301,44 @@ modify_configuration_variables() {
 
 ##### Help with a remote website installation, then exit
 do_remote_website() {
+	OK="true"
 	if [[ ${REMOTE_HOST} == "" ]]; then
 		MSG="The 'REMOTE_HOST' must be set in 'ftp-settings.sh'\n"
 		MSG="${MSG}in order to do a remote website installation.\n"
 		MSG="${MSG}Please set it, the password, and other information, then re-run this installation."
 		display_msg error "${MSG}"
-		exit 1
+		OK="false"
 	fi
 
-	create_data_json_file
+	WEBURL="$(settings ".websiteurl")"
+	if [[ -z ${WEBURL} || ${WEBURL} == "null" ]]; then
+		MSG="The 'Website URL' setting must be defined in the WebUI\n"
+		MSG="${MSG}in order to do a remote website installation.\n"
+		MSG="${MSG}Please set it then re-run this installation."
+		display_msg error "${MSG}"
+		OK="false"
+	fi
+
+	[[ ${OK} == "false" ]] && exit 1
+
+	# TODO: do a git clone into a temp directory, then copy all the files up.
+
+	# Tell the remote server to check the sanity of the website.
+	[[ ${WEBURL: -1} != "/" ]] && WEBURL="${WEBURL}/"
+	if [[ ${DEBUG} == "true" ]]; then
+		D="&debug"
+	else
+		D=""
+	fi
+	X="$(curl "${WEBURL}?x=check${D}")"
+	if ! echo "${X}" | grep --silent "^SUCCESS$" ; then
+		MSG="Sanity check of remote Website (${WEBURL}) failed."
+		MSG="${MSG}\nYou will need to manually fix."
+		display_msg warning "${MSG}"
+		display_msg info "${X}"
+	fi
+
+	upload_data_json_file
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# The user is upgrading a new-style remote Website.
@@ -362,7 +394,7 @@ do_update() {
 	fi
 
 	modify_locations
-	create_data_json_file
+	upload_data_json_file
 
 	display_msg progress "\nUpdate complete!\n"
 	exit 0
@@ -381,7 +413,8 @@ download_Allsky_Website() {
 
 	display_msg progress "Downloading Allsky Website files${B} into ${ALLSKY_WEBSITE}."
 	TMP="/tmp/git.install.tmp"
-	git clone ${BRANCH} ${GITHUB_ROOT}/allsky-website.git "${ALLSKY_WEBSITE}" > ${TMP} 2>&1
+	# shellcheck disable=SC2086
+	git clone ${BRANCH} "${GITHUB_ROOT}/allsky-website.git" "${ALLSKY_WEBSITE}" > ${TMP} 2>&1
 	if [[ $? -ne 0 ]]; then
 		display_msg error "Unable to get Allsky Website files from git."
 		cat ${TMP}
@@ -442,6 +475,7 @@ restore_prior_files() {
 
 	D="${PRIOR_WEBSITE}/videos/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   videos
+	# shellcheck disable=SC2012
 	count=$(ls -1 "${PRIOR_WEBSITE}"/videos/allsky-* 2>/dev/null  | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior videos."
@@ -450,6 +484,7 @@ restore_prior_files() {
 
 	D="${PRIOR_WEBSITE}/keograms/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   keograms
+	# shellcheck disable=SC2012
 	count=$(ls -1 "${PRIOR_WEBSITE}"/keograms/keogram-* 2>/dev/null | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior keograms."
@@ -458,6 +493,7 @@ restore_prior_files() {
 
 	D="${PRIOR_WEBSITE}/startrails/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   startrails
+	# shellcheck disable=SC2012
 	count=$(ls -1 "${PRIOR_WEBSITE}"/startrails/startrails-* 2>/dev/null | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior startrails."
@@ -565,7 +601,7 @@ set_configuration_file_variables
 
 ##### Execute any specified function, then exit.
 if [[ ${FUNCTION} != "" ]]; then
-	if ! type ${FUNCTION} > /dev/null; then
+	if ! type "${FUNCTION}" > /dev/null; then
 		display_msg error "Unknown function: '${FUNCTION}'."
 		exit 1
 	fi
@@ -586,7 +622,7 @@ cd "${ALLSKY_WEBSITE}" || exit 1
 
 modify_locations
 modify_configuration_variables
-create_data_json_file
+upload_data_json_file
 restore_prior_files
 
 # Create any directories not created above.

@@ -7,15 +7,12 @@ if [[ -z ${ALLSKY_HOME} ]]; then
 	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 	export ALLSKY_HOME
 fi
-# shellcheck disable=SC1090
 source "${ALLSKY_HOME}/variables.sh"
-# shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/config.sh"
-# shellcheck disable=SC1090
 source "${ALLSKY_CONFIG}/ftp-settings.sh"
 
-if [ $# -eq 1 ] ; then
-	if [[ ${1} = "-h" || ${1} = "--help" ]]; then
+if [[ $# -eq 1 ]]; then
+	if [[ ${1} = "--help" ]]; then
 		echo -e "Usage: ${ME} [YYYYmmdd]"
 		exit 0
 	else
@@ -40,11 +37,11 @@ fi
 # Generate keogram from collected images
 if [[ ${KEOGRAM} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Keogram"
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -k ${DATE}
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -k "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Keogram complete"
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RET} = 0 ]] ; then
-		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -k ${DATE}
+		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -k "${DATE}"
 	fi
 fi
 
@@ -52,11 +49,11 @@ fi
 # Threshold set to 0.1 by default in config.sh to avoid stacking over-exposed images.
 if [[ ${STARTRAILS} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Startrails"
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -s ${DATE}
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -s "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Startrails complete"
 	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RET} = 0 ]] ; then
-		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -s ${DATE}
+		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -s "${DATE}"
 	fi
 fi
 
@@ -79,39 +76,43 @@ cmd="${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh"
 test -x "${cmd}" && "${cmd}"
 
 # Automatically delete old images and videos
-if [ -n "${DAYS_TO_KEEP}" ]; then
+if [[ -n ${DAYS_TO_KEEP} ]]; then
 	del=$(date --date="${DAYS_TO_KEEP} days ago" +%Y%m%d)
-	for i in $(find "${ALLSKY_IMAGES}/" -type d -name "2*"); do	# "2*" for years >= 2000
-		((${del} > $(basename ${i}))) && echo "${ME}: Deleting old directory ${i}" && rm -rf ${i}
+	# "2*" for years >= 2000
+	find "${ALLSKY_IMAGES}/" -type d -name "2*" | while read i
+	do
+		((del > $(basename "${i}"))) && echo "${ME}: Deleting old directory ${i}" && rm -rf "${i}"
 	done
 fi
 
 # Automatically delete old website images and videos
-if [ -n "${WEB_DAYS_TO_KEEP}" ]; then
-	if [ ! -d "${ALLSKY_WEBSITE}" ]; then
+if [[ -n ${WEB_DAYS_TO_KEEP} ]]; then
+	if [[ ! -d ${ALLSKY_WEBSITE} ]]; then
 		echo -e "${ME}: ${YELLOW}WARNING: 'WEB_DAYS_TO_KEEP' set but no website found in '${ALLSKY_WEBSITE}!${NC}"
 		echo -e 'Set WEB_DAYS_TO_KEEP to ""'
 	else
 		del=$(date --date="${WEB_DAYS_TO_KEEP} days ago" +%Y%m%d)
 		(
 			cd "${ALLSKY_WEBSITE}" || exit 1
-			for i in $(find startrails keograms videos -type f -name "*-202*"); do	# "*-202*" for years >= 2020
+			# "*-202*" for years >= 2020
+			find startrails keograms videos -type f -name "*-202*" | while read i
+			do
 				# Remove everything but the date
 				DATE="${i##*-}"
 				DATE="${DATE%.*}"
 				# Thumbnails will typically be owned and grouped to www-data so use "rm -f".
-				((${del} > ${DATE})) && echo "${ME}: Deleting old website file ${i}" && rm -f ${i}
+				((del > DATE)) && echo "${ME}: Deleting old website file ${i}" && rm -f "${i}"
 			done
 		)
 	fi
 fi
 
 SHOW_ON_MAP=$(settings ".showonmap")
-if [[ ${SHOW_ON_MAP} == "1" ]]; then
+if [[ ${SHOW_ON_MAP} -eq 1 ]]; then
 	echo -e "${ME}: ===== Posting camera details to allsky map"
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight
 fi
 
-${ALLSKY_SCRIPTS}/flow-runner.py -e nightday
+"${ALLSKY_SCRIPTS}/flow-runner.py" -e nightday
 
 exit 0

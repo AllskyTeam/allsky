@@ -5,7 +5,7 @@
 ME2="$(basename "${BASH_SOURCE[0]}")"
 
 # Make sure the input file exists; if not, something major is wrong so exit.
-if [[ ${CURRENT_IMAGE} == "" ]]; then
+if [[ -z ${CURRENT_IMAGE} ]]; then
 	echo "*** ${ME2}: ERROR: 'CURRENT_IMAGE' not set; aborting."
 	exit 1
 fi
@@ -17,10 +17,10 @@ fi
 # ${AS_TEMPERATURE_C} is passed to us by saveImage.sh, but may be null.
 # If ${AS_TEMPERATURE_C} is set, use it as the temperature, otherwise read the ${TEMPERATURE_FILE}.
 # If the ${TEMPERATURE_FILE} file doesn't exist, set the temperature to "n/a".
-if [[ ${AS_TEMPERATURE_C} == "" ]]; then
+if [[ -z ${AS_TEMPERATURE_C} ]]; then
 	TEMPERATURE_FILE="${ALLSKY_TMP}/temperature.txt"
 	if [[ -s ${TEMPERATURE_FILE} ]]; then	# -s so we don't use an empty file
-		AS_TEMPERATURE_C=$( < ${TEMPERATURE_FILE})
+		AS_TEMPERATURE_C=$( < "${TEMPERATURE_FILE}")
 	else
 		AS_TEMPERATURE_C="n/a"
 	fi
@@ -55,7 +55,7 @@ if [[ $(settings ".takeDarkFrames") -eq 1 ]]; then
 		# $DARK_EXTENSION.  If we start saving darks as .png files the extensions will be
 		# different and we'll need to run "convert" to make the dark a .jpg file to
 		# be displayed on the web.
-		cp "${MOVE_TO_FILE}" "$(dirname ${CURRENT_IMAGE})/${FULL_FILENAME}"
+		cp "${MOVE_TO_FILE}" "$(dirname "${CURRENT_IMAGE}")/${FULL_FILENAME}"
 	fi
 
 	exit 0	# exit so the calling script exits and doesn't try to process the file.

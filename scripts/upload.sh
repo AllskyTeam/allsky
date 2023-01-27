@@ -117,6 +117,7 @@ NUM_CHECKS=0
 while [[ ${CHECK} == "true" ]]; do
 	if [[ -f ${PID_FILE} ]]; then
 		PID=$(< "${PID_FILE}")
+		# shellcheck disable=SC2009
 		if ps -f "-p${PID}" | grep --silent "${ME}" ; then
 			if [[ ${WAIT} == "true" ]]; then
 				((NUM_CHECKS=NUM_CHECKS+1))

@@ -10,13 +10,13 @@ function usage_and_exit
 {
 	RET=${1}
 	(
-		[ ${RET} -ne 0 ] && echo -en "${RED}"
+		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 		echo -e "\nUsage: ${ME} [--help] [--expires seconds] notification_type [custom_args]\n"
 		echo "'--expires seconds' specifies how many seconds before the notification expires."
 		echo "If 'notification_type' is 'custom' then a custom message is created and 'custom_args'"
 		echo "must be given to specify arguments for the message:"
 		echo "  TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message'"
-		[ ${RET} -ne 0 ] && echo -e "${NC}"
+		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	) >&2
 	# shellcheck disable=SC2086
 	exit $RET
@@ -110,7 +110,7 @@ if [[ $(settings ".takeDaytimeImages") == "1" && $(settings ".saveDaytimeImages"
 	# Use today's folder if it exists, otherwise yesterday's
 	[[ ! -d ${DATE_DIR} ]] && DATE_DIR="${ALLSKY_IMAGES}/$(date -d '12 hours ago' +'%Y%m%d')"
 	THUMBNAILS_DIR="${DATE_DIR}/thumbnails"
-	mkdir -p ${THUMBNAILS_DIR}
+	mkdir -p "${THUMBNAILS_DIR}"
 	THUMB="${THUMBNAILS_DIR}/${FILENAME}-$(date +'%Y%m%d%H%M%S').${EXTENSION}"
 
 	convert "${CURRENT_IMAGE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}"

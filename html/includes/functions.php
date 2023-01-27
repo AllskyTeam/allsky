@@ -25,9 +25,11 @@ $status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
 $temptype = null;
 $lastChanged = null;
+$websiteURL = null;
 function initialize_variables() {
 	global $image_name, $delay, $daydelay, $nightdelay;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
+	global $websiteURL;
 
 	// The Camera Type should be set during the installation, so this "should" never fail...
 	$cam_type = getCameraType();
@@ -58,6 +60,7 @@ function initialize_variables() {
 	$useLogin = getVariableOrDefault($settings_array, 'useLogin', true);
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, null);
+	$websiteURL = getVariableOrDefault($settings_array, 'websiteurl', "");
 
 
 	////////////////// Determine delay between refreshes of the image.

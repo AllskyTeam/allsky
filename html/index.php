@@ -90,14 +90,13 @@ if ($useLogin) {
 }
 
 // Get the version of the Allsky Website on the Pi, if it exists.
-// TODO: if a remote website exists, get it's version as well.
 $websiteFile = ALLSKY_WEBSITE . "/version";
 if (file_exists($websiteFile)) {
 	$localWebsiteVersion = file_get_contents($websiteFile);
 } else {
 	$localWebsiteVersion = "";
 }
-// Ditto for a remote website
+// Ditto for a remote Allsky Website.
 $remoteWebsiteVersion = "";
 if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 	$a_str = file_get_contents(ALLSKY_WEBSITE_REMOTE_CONFIG, true);
@@ -212,14 +211,14 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					echo "<span class='nowrap'>";
 					echo "<a class='version-title-color' href='allsky/index.php' target='_blank' title='Click to go to local Website'>";
 					echo "Local Website: $localWebsiteVersion";
-					echo "</a></span>";
+					echo "</a><i class='fa fa-external-link-alt fa-fw'></i></span>";
 } ?>
 					&nbsp; &nbsp;
 <?php if ($remoteWebsiteVersion !== "") {
 					echo "<span class='nowrap'>";
-					// TODO: if we knew the URL we could link to it
+					echo "<a class='version-title-color' href='$websiteURL' target='_blank' title='Click to go to remote Website'>";
 					echo "Remote Website: $remoteWebsiteVersion";
-					echo "</span>";
+					echo "</a><i class='fa fa-external-link-alt fa-fw'></i></span>";
 } ?>
 				</div>
 		</div> <!-- /.navbar-header -->

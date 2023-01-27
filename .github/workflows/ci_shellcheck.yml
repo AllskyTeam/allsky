@@ -30,6 +30,7 @@ jobs:
             echo "$i"
             bash -n $i
             if [ $? -ne 0 ]; then
+              echo "bash found problem with $i"
               err=$((err + 1))
             fi
             case $i in
@@ -62,6 +63,7 @@ jobs:
                 ;;
             esac
             if [ $? -ne 0 ]; then
+              echo "shellcheck found problem(s) with $i"
               err=$((err + 1))
             fi
           done

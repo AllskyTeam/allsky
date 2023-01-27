@@ -21,7 +21,7 @@ source "${ALLSKY_SCRIPTS}/functions.sh"
 function usage_and_exit()
 {
 	RET_CODE=${1}
-	[ ${RET_CODE} -ne 0 ] && echo -en "${wERROR}"
+	[[ ${RET_CODE} -ne 0 ]] && echo -en "${wERROR}"
 	echo -e "${BR}Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight]${BR}"
 	echo "--help: Print this usage message and exit immediately."
 	echo "--whisper: Be quiet with non-error related output - only display results."
@@ -29,7 +29,8 @@ function usage_and_exit()
 	echo "--force: Force updates, even if not scheduled automatically for today."
 	echo "--debug: Output debugging statements."
 	echo "--endofnight: Indicates how ${ME} was invoked."
-	[ ${RET_CODE} -ne 0 ] && echo -e "${wNC}"
+	[[ ${RET_CODE} -ne 0 ]] && echo -e "${wNC}"
+	# shellcheck disable=SC2086
 	exit ${RET_CODE}
 }
 
@@ -270,12 +271,12 @@ else
 	fi
 
 	if [[ ${W} != "" ]]; then
-		echo -e "${WARNING_MSG_START}${W%%${BR}}${NC}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W%%${BR}}"
+		echo -e "${WARNING_MSG_START}${W%%"${BR}"}${NC}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W%%"${BR}"}"
 	fi
 	if [[ ${OK} == "false" ]]; then
-		echo -e "${ERROR_MSG_START}${E%%${BR}}${NC}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E%%${BR}}"
+		echo -e "${ERROR_MSG_START}${E%%"${BR}"}${NC}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E%%"${BR}"}"
 		exit 2
 	fi
 
@@ -341,7 +342,7 @@ if [[ ${UPLOAD} == "true" ]]; then
 	# shellcheck disable=SC2089
 	CMD="${CMD} --data '$(generate_post_data)' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Executing:\n${CMD}${wNC}\n"
-	# shellcheck disable=SC2090
+	# shellcheck disable=SC2090,SC2086
 	RETURN="$(echo ${CMD} | bash)"
 	RETURN_CODE=$?
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Returned:\n${RETURN}${wNC}.\n"

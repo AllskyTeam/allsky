@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${ALLSKY_HOME} ]] ; then
-	export ALLSKY_HOME="$(realpath $(dirname "${BASH_ARGV0}")/..)"
+	export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")"/..)"
 fi
 # shellcheck disable=SC1090,SC1091
 source "${ALLSKY_HOME}/variables.sh" || exit 1
@@ -219,7 +219,8 @@ create_website_configuration_file() {
 		AURORAMAP="north"
 	fi
 
-	COMPUTER="$(sed --quiet -e 's/Raspberry Pi/RPi/' -e '/^Model/ s/.*: // p' /proc/cpuinfo)"
+	LOCATION="$(settings ".location")"
+	OWNER="$(settings ".owner")"
 	CAMERA_MODEL="$(settings ".cameraModel")"
 	if [[ ${CAMERA_MODEL} == "null" ]]; then
 		CAMERA_MODEL=""
@@ -227,23 +228,28 @@ create_website_configuration_file() {
 		CAMERA_MODEL=" ${CAMERA_MODEL}"		# adds a space
 	fi
 	CAMERA="${CAMERA_TYPE}${CAMERA_MODEL}"
+	LENS="$(settings ".lens")"
+	COMPUTER="$(sed --quiet -e 's/Raspberry Pi/RPi/' -e '/^Model/ s/.*: // p' /proc/cpuinfo)"
 
 	# There are some settings we can't determine, like LENS.
 	[[ ${DEBUG} == "true" ]] && display_msg debug "Calling updateWebsiteConfig.sh"
 	# shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
 		--config "${WEB_CONFIG_FILE}" \
-		config.imageName		"imageName"		"${IMAGE_NAME}" \
-		config.latitude			"latitude"		"${LATITUDE}" \
-		config.longitude		"longitude"		"${LONGITUDE}" \
-		config.auroraMap		"auroraMap"		"${AURORAMAP}" \
-		config.computer			"computer"		"${COMPUTER}" \
-		config.camera			"camera"		"${CAMERA}" \
-		config.AllskyVersion	"AllskyVersion"	"${ALLSKY_VERSION}" \
-		config.AllskyWebsiteVersion "AllskyWebsiteVersion" "${ALLSKY_WEBSITE_VERSION}" \
-		homePage.onPi			"onPi"			"${ON_PI}" \
-		${MINI_TLAPSE_DISPLAY} "mini_display"	"${MINI_TLAPSE_DISPLAY_VALUE}" \
-		${MINI_TLAPSE_URL}		"mini_url"		"${MINI_TLAPSE_URL_VALUE}"
+		config.imageName			"imageName"			"${IMAGE_NAME}" \
+		config.latitude				"latitude"			"${LATITUDE}" \
+		config.longitude			"longitude"			"${LONGITUDE}" \
+		config.auroraMap			"auroraMap"			"${AURORAMAP}" \
+		config.location				"location"			"${LOCATION}" \
+		config.owner				"owner" 			"${OWNER}" \
+		config.camera				"camera"			"${CAMERA}" \
+		config.lens					"lens"				"${LENS}" \
+		config.computer				"computer"			"${COMPUTER}" \
+		config.AllskyVersion		"AllskyVersion"		"${ALLSKY_VERSION}" \
+		config.AllskyWebsiteVersion	"AllskyWebsiteVersion" "${ALLSKY_WEBSITE_VERSION}" \
+		homePage.onPi				"onPi"				"${ON_PI}" \
+		${MINI_TLAPSE_DISPLAY}		"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
+		${MINI_TLAPSE_URL}			"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
 }
 
 

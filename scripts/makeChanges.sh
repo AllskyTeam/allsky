@@ -229,6 +229,7 @@ while [[ $# -gt 0 ]]; do
 					--options_file "${OPTIONS_FILE}" \
 					--settings_file "${SETTINGS_FILE}${wNC}"
 			fi
+			# shellcheck disable=SC2086
 			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 				${FORCE} ${DEBUG_ARG} \
 				--cc_file "${CC_FILE}" \

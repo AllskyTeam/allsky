@@ -216,7 +216,7 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					&nbsp; &nbsp;
 <?php if ($remoteWebsiteVersion !== "") {
 					echo "<span class='nowrap'>";
-					echo "<a class='version-title-color' href='$websiteURL' target='_blank' title='Click to go to remote Website'>";
+					echo "<a class='version-title-color' href='$websiteurl' target='_blank' title='Click to go to remote Website'>";
 					echo "Remote Website: $remoteWebsiteVersion";
 					echo " <i class='fa fa-external-link-alt fa-fw'></i></span></a>";
 } ?>

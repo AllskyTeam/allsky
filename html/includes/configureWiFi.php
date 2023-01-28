@@ -14,6 +14,7 @@ function DisplayWPAConfig(){
 	$network = null;
 	$ssid = null;
 
+	// Process the already-configured networks.
 	foreach($known_return as $line) {
 		if (preg_match('/network\s*=/', $line)) {
 			$network = array('visible' => false, 'configured' => true, 'connected' => false);
@@ -70,14 +71,15 @@ function DisplayWPAConfig(){
 			foreach($tmp_networks as $ssid => $network) {
 				if ($network['protocol'] === 'Open') {
 					fwrite($wpa_file, "network={".PHP_EOL);
-					fwrite($wpa_file, "\tssid=\"".$ssid."\"".PHP_EOL);
+					fwrite($wpa_file, "\tssid=\"$ssid\"".PHP_EOL);
 					fwrite($wpa_file, "\tkey_mgmt=NONE".PHP_EOL);
 					fwrite($wpa_file, "}".PHP_EOL);
 				} else {
-					if (strlen($network['passphrase']) >=8 && strlen($network['passphrase']) <= 63) {
+					$passphrase = $network['passphrase'];
+					if (strlen($passphrase) >=8 && strlen($passphrase) <= 63) {
 						unset($wpa_passphrase);
 						unset($line);
-						exec( 'wpa_passphrase '.escapeshellarg($ssid). ' ' . escapeshellarg($network['passphrase']),$wpa_passphrase );
+						exec( 'wpa_passphrase '.escapeshellarg($ssid). ' ' . escapeshellarg($passphrase),$wpa_passphrase );
 						foreach($wpa_passphrase as $line) {
 							fwrite($wpa_file, $line.PHP_EOL);
 						}
@@ -96,7 +98,7 @@ function DisplayWPAConfig(){
 						$status->addMessage('Wifi settings updated successfully', 'success');
 						$networks = $tmp_networks;
 					} else {
-						$status->addMessage('Wifi settings updated but cannot restart (cannon execute "wpa_cli reconfigure")', 'danger');
+						$status->addMessage('Wifi settings updated but cannot restart (cannot execute "wpa_cli reconfigure")', 'danger');
 					}
 				} else {
 					$status->addMessage('Wifi settings failed to be updated', 'danger');
@@ -107,43 +109,57 @@ function DisplayWPAConfig(){
 		}
 	}
 
+	// Scan for all networks.
 	exec( 'sudo wpa_cli scan' );
 	sleep(3);
 	exec( 'sudo wpa_cli scan_results',$scan_return );
-//echo "<br>scan_return before=<pre>"; echo print_r($scan_return) . "</pre>";
 	for( $shift = 0; $shift < 2; $shift++ ) {
 		array_shift($scan_return);
 	}
 	// display output
 	$have_multiple = false;
-	$note = " <span style='color: red; font-weight: bold'>*</span>";
+	static $note = " <span style='color: red; font-weight: bold'>*</span>";
+	// $networks contains the prior-configured SSID(s).
+	// New SSIDs are added to $networks.
 	$num_networks = 0;
 	if (! isset($networks)) $networks = [];	// eliminates warning messages in log file
+
+	// Walk through each scanned SSID.
 	foreach( $scan_return as $network ) {
 		$arrNetwork = preg_split("/[\t]+/",$network);
 		// fields: bssid,   frequency, signal level, flags,    ssid 
 		// fields:          channel                  protocol  ssid
 		// fields: 0        1          2             3         4
 		if (isset($arrNetwork[4])) {
+			$channel = ConvertToChannel($arrNetwork[1]);
 			$ssid = $arrNetwork[4];
 			if (substr($ssid, 0, 4) == "\\x00") $ssid = "Unknown (\\x00)";
 			if (array_key_exists($ssid, $networks)) {
+				// Already configured SSID.
 				$is_new = false;
 				$networks[$ssid]['visible'] = true;
+
 				// Some SSIDs may be on multiple channels in multiple bands
 				if (! isset($networks[$ssid]['channel'])) {
-					$networks[$ssid]['channel'] = ConvertToChannel($arrNetwork[1]);
+					// This is the SSID that's in use.
+// echo "<br>Existing SSD $ssid, in use";
+					$networks[$ssid]['channel'] = $channel;
+					$networks[$ssid]['times'] = 1;
 				} else {
 					$have_multiple = true;
-					$networks[$ssid]['channel'] = $networks[$ssid]['channel'] . $note;
+					// $networks[$ssid]['channel'] .= "<br>$channel";
+					$networks[$ssid]['times']++;
+// echo "<br>Existing SSD $ssid, Occurence: " . $networks[$ssid]['times'] . ", channel=$channel";
 				}
-				// TODO What if the security has changed?
 			} else {
+				// New SSID
+// echo "<br>New SSID $ssid, channel=$channel";
 				$num_networks += 1;
 				$networks[$ssid] = array(
 					'configured' => false,
 					'protocol' => ConvertToSecurity($arrNetwork[3]),
-					'channel' => ConvertToChannel($arrNetwork[1]),
+					'channel' => $channel,
+					'times' => 1,
 					'passphrase' => '',
 					'visible' => true,
 					'connected' => false
@@ -170,10 +186,10 @@ function DisplayWPAConfig(){
 			<h4>Wi-Fi SSIDs</h4>
 
 			<form method="POST" action="?page=<?php echo $page ?>" name="wpa_conf_form">
-
 			<?php CSRFToken() ?>
 			<input type="hidden" name="client_settings">
 			<table class="table table-responsive table-striped">
+				<thead>
 				<tr>
 				<th></th>
 				<th>SSID</th>
@@ -182,56 +198,82 @@ function DisplayWPAConfig(){
 				<th>Passphrase</th>
 				<th></th>
 				</tr>
-			<?php $index = 0; ?>
-			<?php if ($num_networks > 0) { foreach ($networks as $ssid => $network) { ?>
-				<tr>
-				<td>
-					<?php if ($network['configured']) { ?>
-					<i class="fa fa-check-circle fa-fw" title="configured"></i>
-					<?php } ?>
-					<?php if ($network['connected']) { ?>
-					<i class="fa fa-exchange-alt fa-fw" title="connected"></i>
-					<?php } ?>
-				</td>
-				<td>
-					<input type="hidden" name="ssid<?php echo $index ?>" value="<?php echo htmlentities($ssid) ?>" />
-					<?php echo $ssid ?>
-				</td>
-				<td>
-				<?php if ($network['visible']) { ?>
-				<?php echo $network['channel'] ?>
-				<?php } else { ?>
-				<span class="label label-warning">X</span>
-				<?php } ?>
-				</td>
-				<td><input type="hidden" name="protocol<?php echo $index ?>" value="<?php echo $network['protocol'] ?>" /><?php echo $network['protocol'] ?></td>
-				<?php if ($network['protocol'] === 'Open') { ?>
-				<td><input type="hidden" name="passphrase<?php echo $index ?>" value="" />---</td>
-				<?php } else { ?>
-				<td><input type="password" class="form-control" name="passphrase<?php echo $index ?>" value="<?php echo $network['passphrase'] ?>" onKeyUp="CheckPSK(this, 'update<?php echo $index?>')" />
-				<?php } ?>
-				<td>
-					<div class="btn-group btn-block">
-					<?php if ($network['configured']) { ?>
-					<input type="submit" class="btn btn-warning" value="Update" id="update<?php echo $index ?>" name="update<?php echo $index ?>"<?php echo ($network['protocol'] === 'Open' ? ' disabled' : '')?> />
-					<?php } else { ?>
-					<input type="submit" class="btn btn-info" value="Add" id="update<?php echo $index ?>" name="update<?php echo $index ?>" <?php echo ($network['protocol'] === 'Open' ? '' : ' disabled')?> />
-					<?php } ?>
-					<input type="submit" class="btn btn-danger" value="Delete" name="delete<?php echo $index ?>"<?php echo ($network['configured'] ? '' : ' disabled')?> />
-					</div>
-				</td>
-				</tr>
-				<?php $index += 1; ?>
-			<?php } } else { echo "<p style='font-size: 150%; color: red;'>No networks found</p>"; } ?>
+				</thead>
+				<tbody>
+			<?php $index = 0;
+			if ($num_networks == 0) {
+				echo "<p style='font-size: 150%; color: red;'>No networks found</p>";
+			} else foreach ($networks as $ssid => $network) {
+					$configured = getVariableOrDefault($network, 'configured', false);
+					$connected = getVariableOrDefault($network, 'connected', false);
+					$visible = getVariableOrDefault($network, 'visible', false);
+					$channel = getVariableOrDefault($network, 'channel', "");
+					$times = getVariableOrDefault($network, 'times', 1);
+					$protocol = getVariableOrDefault($network, 'protocol', "");
+					$passphrase = getVariableOrDefault($network, 'passphrase', "");
+					// If the passphrase is long, shorten it so it doesn't take up too much space.
+					if (strlen($passphrase) > 10) $passphrase = substr($passphrase, 1, 10);
+
+					echo "<tr>";
+
+					echo "<td>";
+					if ($configured)
+						echo '<i class="fa fa-check-circle fa-fw" title="configured"></i>';
+					if ($connected)
+						echo '<i class="fa fa-exchange-alt fa-fw" title="connected"></i>';
+					echo "</td>";
+
+					echo "<td>";
+					echo "<input type='hidden' name='ssid$index' value='" . htmlentities($ssid) . "' />";
+					echo $ssid;
+					echo "</td>";
+
+					echo "<td>";
+					if ($visible) {
+						echo $channel;
+						if ($times > 1) echo "<br>$note $times times";
+					} else {
+						echo '<span class="label label-warning">X</span>';
+					}
+					echo "</td>";
+
+					echo "<td><input type='hidden' name='protocol$index' value='$protocol' />$protocol</td>";
+
+					if ($protocol === 'Open')
+						echo "<td><input type='hidden' name='passphrase$index' value='' />---</td>";
+					else
+						echo "<td><input type='password' class='form-control' style='width: 7em; font-size: 80%; padding-left: 2px; padding-right: 2px;' name='passphrase$index' value='$passphrase' onKeyUp='CheckPSK(this, " . '"' . "update$index" . '"' .")'></td>";
+					echo "<td>";
+					echo '<div class="btn-group btn-block">';
+					echo '<span style="white-space: nowrap">';
+					$buttonStyle = "style='padding-left: 3px; padding-right: 3px; width: 4em;'";
+					if ($configured) {
+						echo "<input type='submit' class='btn btn-warning' $buttonStyle value='Update' id='update$index' name='update$index'";
+						echo ($protocol === 'Open') ? ' disabled' : '' . "/>";
+					} else {
+						echo "<input type='submit' class='btn btn-info' $buttonStyle value='Add' id='update$index' name='update$index'";
+						echo ($protocol === 'Open') ? ' disabled' : '' . "/>";
+					}
+					echo "<input type='submit' class='btn btn-danger' $buttonStyle value='Delete' name='delete$index'";
+					echo $configured ? '' : ' disabled' . " />";
+					echo "</span>";
+					echo "</div>";
+					echo "</td>";
+					echo "</tr>\n";
+					$index += 1;
+			}
+		?>
+			</tbody>
 			</table>
 			</form>
 		</div><!-- ./ Panel body -->
 		<div class="panel-footer">
 			<?php if ($have_multiple)
-			echo "$note SSID is in multiple channels and/or bands; only the first is listed above.";
-			echo "<br>";
+				echo "$note SSID is in multiple channels and/or bands; only the first is listed above.<br>";
 			?>
-			<strong>Note,</strong> WEP access points appear as 'Open'. The Allsky portal does not currently support connecting to WEP.
+			<strong>Note,</strong>
+			WEP access points appear as 'Open'.
+			Allsky does not currently support connecting to WEP.
 		</div>
 		</div><!-- /.panel-primary -->
 	</div><!-- /.col-lg-12 -->

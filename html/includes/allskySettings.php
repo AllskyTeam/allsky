@@ -146,7 +146,7 @@ function DisplayAllskyConfig(){
 					// runCommand displays $msg.
 					runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
 				} else {
-					$msg .= " and Allsky NOT restarted.";
+					$msg .= " but Allsky NOT restarted.";
 					$status->addMessage($msg, 'info');
 				}
 

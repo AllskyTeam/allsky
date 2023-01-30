@@ -102,6 +102,7 @@ HAS_WEBSITE_RET=""
 SHOW_POSTDATA_MESSAGE="true"
 TWILIGHT_DATA_CHANGED="false"
 CAMERA_TYPE_CHANGED="false"
+GOT_WARNING="false"
 
 # Several of the fields are in the Allsky Website configuration file,
 # so check if the IS a file before trying to update it.
@@ -119,7 +120,6 @@ function check_website()
 	if [[ -f ${WEB_CONFIG_FILE} ]]; then
 		HAS_WEBSITE_RET=0
 	else
-		echo -e "${wWARNING}WARNING: No local or remote Allsky Website found.${wNC}"
 		WEB_CONFIG_FILE=""
 		HAS_WEBSITE_RET=1
 	fi
@@ -279,7 +279,13 @@ while [[ $# -gt 0 ]]; do
 			echo -e "${R}" | grep --silent "XX_WORKED_XX" || exit 2
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
-			[[ ${CAMERA_TYPE_ONLY} == "true" ]] && exit 0
+			if [[ ${CAMERA_TYPE_ONLY} == "true" ]]; then
+				if [[ ${GOT_WARNING} == "true" ]]; then
+					exit 255
+				else
+					exit 0
+				fi
+			fi
 
 			SHOW_POSTDATA_MESSAGE="false"	# user doesn't need to see this output
 			CAMERA_TYPE_CHANGED="true"
@@ -359,7 +365,11 @@ while [[ $# -gt 0 ]]; do
 					echo -e "${wWARNING}WARNING: Unable to update ${wBOLD}${LABEL}${wNBOLD} in ${WEB_CONFIG_FILE}; ignoring.${wNC}"
 				fi
 			else
-				echo -e "${wWARNING}Change to ${wBOLD}${LABEL}${wNBOLD} not relevant.${wNC}"
+				echo -en "${wWARNING}"
+				echo -en "Change to ${wBOLD}${LABEL}${wNBOLD} not relevant - "
+				echo -en "No local or remote Allsky Website found."
+				echo -e "${wNC}"
+				GOT_WARNING="true"
 			fi
 			;;
 
@@ -430,4 +440,8 @@ if [[ ${RESTARTING} == "false" && ${NEEDS_RESTART} == "true" ]]; then
 fi
 
 
-exit 0
+if [[ ${GOT_WARNING} == "true" ]]; then
+	exit 255
+else
+	exit 0
+fi

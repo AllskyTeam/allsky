@@ -160,11 +160,10 @@ CAMERA_TYPE=""
 select_camera_type() {
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 		# New style Allsky with CAMERA_TYPE in config.sh
-		OLD_CONFIG="${PRIOR_CONFIG_DIR}/config.sh"
-		if [[ -f ${OLD_CONFIG} ]]; then
+		if [[ -f ${PRIOR_CONFIG_FILE} ]]; then
 			# We can't "source" the config file because the new settings file doesn't exist,
 			# so the "source" will fail.
-			CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${OLD_CONFIG}")"
+			CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
 			[[ ${CAMERA_TYPE} != "" ]] && return
 		fi
 	fi
@@ -924,7 +923,7 @@ restore_prior_files() {
 	PRIOR_FTP_SH_VERSION=""
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then
 		# Allsky version 0.8 and newer
-		PRIOR_FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${PRIOR_FTP}")"
+		PRIOR_FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}")"
 		FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh")"
 	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
 		# A much older version of Allsky
@@ -939,7 +938,7 @@ restore_prior_files() {
 	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
 		RESTORED_PRIOR_FTP_SH="true"
 		display_msg progress "Restoring prior 'ftp-settings.sh' file."
-		cp "${PRIOR_FTP}" "${ALLSKY_CONFIG}"
+		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}"
 	else
 		RESTORED_PRIOR_FTP_SH="false"
 	fi

@@ -294,7 +294,6 @@ class OVERLAYUTIL
         $this->sendResponse($result);
     }
 
-
     private function processDebugData() {
         $file = ALLSKY_HOME . "/tmp/overlaydebug.txt";
 
@@ -487,8 +486,8 @@ class OVERLAYUTIL
     public function postImages()
     {
         $result = false;
-        $imageFolder = realpath(dirname(__FILE__) . '/..') . '/overlay/images/';
-        $thumbnailFolder = realpath(dirname(__FILE__) . '/..') . '/overlay/imagethumbnails/';
+        $imageFolder = ALLSKY_CONFIG . '/overlay/images/';
+        $thumbnailFolder = ALLSKY_CONFIG . '/overlay/imagethumbnails/';
 
         if (!empty($_FILES)) {
             $tempFile = $_FILES['file']['tmp_name'];
@@ -512,7 +511,7 @@ class OVERLAYUTIL
 
         $baseThumbnailURL = '//' . $_SERVER['SERVER_NAME'] . '/overlay/imagethumbnails';
 
-        $imageThumbnailFolder = realpath(dirname(__FILE__) . '/..') . "/overlay/imagethumbnails";
+        $imageThumbnailFolder = ALLSKY_CONFIG . "/overlay/imagethumbnails";
 
         $files = array();
         $fh = opendir($imageThumbnailFolder);
@@ -537,8 +536,8 @@ class OVERLAYUTIL
     {
         $imageName = strtolower($_GET['imageName']);
 
-        $imageThumbnailFolder = realpath(dirname(__FILE__) . '/..') . "/overlay/imagethumbnails/";
-        $imageFolder = realpath(dirname(__FILE__) . '/..') . "/overlay/images/";
+        $imageThumbnailFolder = ALLSKY_CONFIG . "/overlay/imagethumbnails/";
+        $imageFolder = ALLSKY_CONFIG . "/overlay/images/";
 
         $imagePath = $imageFolder . $imageName;
         $thumbnailPath = $imageThumbnailFolder . $imageName;

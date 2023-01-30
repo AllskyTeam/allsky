@@ -89,6 +89,10 @@ remove_configs:
 createDirs:
 	@echo `date +%F\ %R:%S` Creating directory structures...
 	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi
+	@if [ ! -e ../config/overlay ]; then mkdir -p ../config/overlay; chown $(SUDO_USER):www-data ../config/overlay; fi
+	@if [ ! -e ../config/overlay/fonts ]; then mkdir -p ../config/overlay/fonts; chown $(SUDO_USER):www-data ../config/overlay/fonts; fi
+	@if [ ! -e ../config/overlay/images ]; then mkdir -p ../config/overlay/images; chown $(SUDO_USER):www-data ../config/overlay/images; fi
+	@if [ ! -e ../config/overlay/imagethumbnails ]; then mkdir -p ../config/overlay/imagethumbnails; chown $(SUDO_USER):www-data ../config/overlay/imagethumbnails; fi
 
 .PHONY : createDirs
 
@@ -124,6 +128,7 @@ install: createDirs $(CONFIGFILES)
 	@systemctl enable allskyperiodic
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
 	@echo "export ALLSKY_HOME=$(PDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
+	@cp moon_phases.ttf ../config/overlay/fonts/; chown $(SUDO_USER):www-data ../config/overlay/fonts/moon_phases.ttf ;
 .PHONY : install
 endif # Package build check
 endif # Root check

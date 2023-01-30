@@ -6,10 +6,8 @@ then
 fi
 ME="$(basename "${BASH_ARGV0}")"
 
-# shellcheck disable=SC1090,SC1091
-source "${ALLSKY_HOME}/variables.sh" || exit 1
-# shellcheck disable=SC1090,SC1091
-source "${ALLSKY_SCRIPTS}/functions.sh" || exit 1
+source "${ALLSKY_HOME}/variables.sh" 	|| exit 99
+source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
 
 if [[ ${EUID} -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
@@ -886,7 +884,6 @@ restore_prior_files() {
 	# mapping of old-to-new names.
 
 	# display_msg progress "Restoring settings from config.sh and ftp-settings.sh."
-	# shellcheck disable=SC1090,SC1091
 	# ( source ${PRIOR_FTP}
 	#	for each variable:
 	#		/^variable=/ c;variable="$oldvalue";
@@ -935,7 +932,6 @@ restore_prior_files() {
 # Update Allsky and exit.  It basically resets things.
 # This can be needed if the user hosed something up, or there was a problem somewhere.
 do_update() {
-	# shellcheck disable=SC1090,SC1091
 	source "${ALLSKY_CONFIG}/config.sh"		# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg error "CAMERA_TYPE not set in config.sh."
@@ -1204,7 +1200,6 @@ create_webui_defines
 save_camera_capabilities "false" || exit_with_image 1			# prompts on error only
 
 # Code later needs "settings()" function.
-# shellcheck disable=SC1090,SC1091
 source "${ALLSKY_CONFIG}/config.sh" || exit_with_image 1
 
 ##### Create ${ALLSKY_LOG}
@@ -1256,4 +1251,3 @@ fi
 ask_reboot			# prompts
 
 exit 0
-

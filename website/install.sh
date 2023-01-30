@@ -118,6 +118,7 @@ upload_data_json_file() {
 
 	# Copy the file to ${ALLSKY_WEBSITE}.
 	# This also copies the settings file and a few others needed to display settings.
+	display_msg progress "Uploading twlight data and initial files."
 	OUTPUT="$("${ALLSKY_SCRIPTS}/postData.sh" --allFiles 2>&1)"
 	if [[ $? -ne 0 || ! -f ${ALLSKY_WEBSITE}/data.json ]]; then
 		MSG="Unable to create new 'data.json' file:"
@@ -270,28 +271,28 @@ create_website_configuration_file() {
 
 
 ##### If the user is updating the website, use the prior config file(s).
-HAS_NEW_CONFIGURATION_FILE="false"
+NEEDS_NEW_CONFIGURATION_FILE="false"
 modify_configuration_variables() {
 	if [[ ${DEBUG} == "true" ]];then
 		display_msg debug "modify_configuration_variables(): PRIOR_WEBSITE_TYPE = ${PRIOR_WEBSITE_TYPE}"
 	fi
 	if [[ ${SAVED_OLD} == "true" ]]; then
 		if [[ ${PRIOR_WEBSITE_TYPE} == "new" ]]; then
-			C="${PRIOR_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+			local C="${PRIOR_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 			if [[ -f ${C} ]]; then
 				display_msg progress "Restoring prior '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
 				if ! json_pp < "${C}" > /dev/null; then
 					display_msg warning "Configuration file '${C} is corrupted.\nFix, then re-run this installation."
 					exit 1
 				fi
-				mv "${C}" "${WEB_CONFIG_FILE}"
+				cp "${C}" "${WEB_CONFIG_FILE}"
 
 				# Check if this is an older configuration file.
 				check_for_older_config_file "${WEB_CONFIG_FILE}"
 			else
 				# This "shouldn't" happen with a new-style website, but in case it does...
 				display_msg warning "Prior website in ${PRIOR_WEBSITE} had no '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
-				HAS_NEW_CONFIGURATION_FILE="true"
+				NEEDS_NEW_CONFIGURATION_FILE="true"
 			fi
 		else
 			# Old-style Website - merge old config files into new one.
@@ -308,14 +309,14 @@ modify_configuration_variables() {
 			MSG="${MSG}\nCheck the Allsky documentation for the meaning of the MANY new options."
 			display_msg notice "${MSG}"
 
-			HAS_NEW_CONFIGURATION_FILE="true"
+			NEEDS_NEW_CONFIGURATION_FILE="true"
 		fi
 	else
 		# New website, so set up a default configuration file.
-		HAS_NEW_CONFIGURATION_FILE="true"
+		NEEDS_NEW_CONFIGURATION_FILE="true"
 	fi
 
-	if [[ ${HAS_NEW_CONFIGURATION_FILE} == "true" ]]; then
+	if [[ ${NEEDS_NEW_CONFIGURATION_FILE} == "true" ]]; then
 		# Create it
 		create_website_configuration_file
 	fi
@@ -351,9 +352,13 @@ do_remote_website() {
 		OK="false"
 	fi
 
-	TEST_FILE="/tmp/Allsky_upload_test.txt"
+	TEST_FILE_NAME="Allsky_upload_test.txt"
+	TEST_FILE="/tmp/${TEST_FILE_NAME}"
+	MSG="Testing upload."
+	MSG="${MSG}\nWhen done you can remove '${TEST_FILE_NAME}' from your remote server."
+	display_msg progress "${MSG}"
 	echo "This is a test file and can be removed." > "${TEST_FILE}"
-	RET="$("${ALLSKY_SCRIPTS}/upload.sh" "${TEST_FILE}" "${IMAGE_DIR}" "$(basename "${TEST_FILE}")")"
+	RET="$("${ALLSKY_SCRIPTS}/upload.sh" "${TEST_FILE}" "${IMAGE_DIR}" "${TEST_FILE_NAME}" "UploadTest")"
 	if [[ $? -eq 0 ]]; then
 		rm -f "${TEST_FILE}"
 	else
@@ -363,6 +368,7 @@ do_remote_website() {
 		OK="false"
 	fi
 
+	display_msg progress "Setting up some remote files."
 	WEBURL="$(settings ".websiteurl")"
 	if [[ -z ${WEBURL} || ${WEBURL} == "null" ]]; then
 		MSG="The 'Website URL' setting must be defined in the WebUI\n"
@@ -396,7 +402,7 @@ do_remote_website() {
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# The user is upgrading a new-style remote Website.
 		HAS_PRIOR_REMOTE_SERVER="true"
-		display_msg progress "\nYou can continue to configure your remote Allsky Website via the WebUI.\n"
+		display_msg progress "You can continue to configure your remote Allsky Website via the WebUI.\n"
 
 		# Check if this is an older configuration file.
 		check_for_older_config_file "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
@@ -691,7 +697,7 @@ if [[ ${SAVED_OLD} == "true" ]]; then
 	display_msg info "${MSG}"
 fi
 
-if [[ ${HAS_NEW_CONFIGURATION_FILE} == "true" ]]; then
+if [[ ${NEEDS_NEW_CONFIGURATION_FILE} == "true" ]]; then
 	MSG="\nBefore using the website you must edit its configuration by clicking on"
 	MSG="${MSG}\nthe 'Editor' link in the WebUI, then select the"
 	MSG="${MSG}\n    ${ALLSKY_WEBSITE_CONFIGURATION_NAME} (local Allsky Website)"

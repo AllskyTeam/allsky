@@ -75,3 +75,6 @@ GCS_BUCKET="allskybucket"
 	# GCS Access Control List (ACL).
 GCS_ACL="private"
 
+
+#### DO NOT CHANGE THE NEXT LINE
+FTP_SH_VERSION=1

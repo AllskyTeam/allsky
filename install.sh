@@ -274,7 +274,7 @@ ask_reboot() {
 	else
 		display_msg notice "You need to reboot the Pi before Allsky will work."
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
-		MSG="You can connect to the WebUI at:\n"
+		MSG="${MSG}You can connect to the WebUI at:\n"
 		MSG="${MSG}${AT}"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
@@ -928,7 +928,7 @@ restore_prior_files() {
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	display_msg info "\n${MSG}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
-	[[ ${MSG2} != "" ]] && echo -e "\n\n==========\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
+	[[ ${MSG2} != "" ]] && echo -e "\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
 }
 
 
@@ -1058,7 +1058,7 @@ display_image() {
 
 	if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		# Add a message the user will see in the WebUI.
-		cat "${POST_INSTALLATION_ACTIONS}" > "${ALLSKY_LOG}"
+		cat "${POST_INSTALLATION_ACTIONS}" >> "${ALLSKY_LOG}"
 		WEBUI_MESSAGE="Actions needed.  See ${ALLSKY_LOG}."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "Warning" "${WEBUI_MESSAGE}"
 	fi

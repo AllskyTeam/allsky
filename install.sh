@@ -70,6 +70,7 @@ chmod 755 "${ALLSKY_HOME}"
 
 ####################### functions
 
+####
 # Display a header surrounded by stars.
 display_header() {
 	HEADER="${1}"
@@ -87,6 +88,7 @@ display_header() {
 }
 
 
+####
 usage_and_exit()
 {
 	RET=${1}
@@ -110,12 +112,15 @@ usage_and_exit()
 	exit ${RET}
 }
 
+
+####
 calc_wt_size() {
 	WT_WIDTH=$(tput cols)
 	[[ ${WT_WIDTH} -gt 80 ]] && WT_WIDTH=80
 }
 
 
+####
 # Get a shell variable's value.  Assume it starts the line.
 # This function is useful when we can't "source" the file.
 get_variable() {
@@ -131,12 +136,15 @@ get_variable() {
 	return 0
 }
 
+
+####
 # Stop Allsky.  If it's not running, nothing happens.
 stop_allsky() {
 	sudo systemctl stop allsky 2> /dev/null
 }
 
 
+####
 # Get the branch of the new release; if not GITHUB_MAIN_BRANCH, save it.
 get_branch() {
 	local FILE="${ALLSKY_HOME}/.git/config"
@@ -153,6 +161,7 @@ get_branch() {
 }
 
 
+####
 # Prompt the user to select their camera type, if we can't determine it automatically.
 # If they have a prior installation of Allsky that uses CAMERA_TYPE in config.sh,
 # we can use its value and not prompt.
@@ -184,6 +193,7 @@ select_camera_type() {
 }
 
 
+####
 # Create the file that defines the WebUI variables.
 create_webui_defines() {
 	display_msg progress "Modifying locations for WebUI."
@@ -211,6 +221,7 @@ create_webui_defines() {
 }
 
 
+####
 # Recreate the options file.
 # This can be used after installation if the options file get hosed.
 recreate_options_file() {
@@ -219,6 +230,8 @@ recreate_options_file() {
 	set_webserver_permissions
 }
 
+
+####
 # Save the camera capabilities and use them to set the WebUI min, max, and defaults.
 # This will error out and exit if no camera installed,
 # otherwise it will determine what capabilities the connected camera has,
@@ -270,7 +283,7 @@ save_camera_capabilities() {
 }
 
 
-
+####
 # Update the sudoers file so the web server can execute certain commands with sudo.
 do_sudoers()
 {
@@ -279,6 +292,8 @@ do_sudoers()
 	sudo install -m 0644 /tmp/x "${FINAL_SUDOERS_FILE}" && rm -f /tmp/x
 }
 
+
+####
 # Ask the user if they want to reboot
 WILL_REBOOT="false"
 ask_reboot() {
@@ -305,6 +320,7 @@ do_reboot() {
 }
 
 
+####
 # Check for size of RAM+swap during installation (Issue # 969).
 # recheck_swap is used to check swap after the installation,
 # and is referenced in the Allsky Documentation.
@@ -376,6 +392,7 @@ check_swap() {
 }
 
 
+####
 # Check if ${ALLSKY_TMP} exists, and if it does,
 # save any *.jpg files (which we probably created), then remove everything else,
 # then mount it.
@@ -408,6 +425,8 @@ check_and_mount_tmp() {
 	fi
 }
 
+
+####
 # Check if prior ${ALLSKY_TMP} was a memory filesystem.
 # If not, offer to make it one.
 check_tmp() {
@@ -456,6 +475,8 @@ check_tmp() {
 	fi
 }
 
+
+####
 check_installation_success() {
 	local RET=${1}
 	local MESSAGE="${2}"
@@ -477,6 +498,7 @@ check_installation_success() {
 }
 
 
+####
 # Install the web server.
 install_webserver() {
 	display_msg progress "Installing the web server."
@@ -503,6 +525,8 @@ install_webserver() {
 	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 }
 
+
+####
 # Prompt for a new hostname if needed,
 # and update all the files that contain the hostname.
 prompt_for_hostname() {
@@ -540,7 +564,7 @@ prompt_for_hostname() {
 }
 
 
-
+####
 # Set permissions on various web-related items.
 set_permissions() {
 	display_msg progress "Setting permissions on web-related files."
@@ -588,6 +612,7 @@ set_permissions() {
 }
 
 
+####
 # Check if there's a WebUI in the old-style location,
 # or if the directory exists but there doesn't appear to be a WebUI in it.
 # The installation (sometimes?) creates the directory.
@@ -622,6 +647,8 @@ check_old_WebUI_location() {
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 }
 
+
+####
 handle_prior_website() {
 	OLD_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
 	if [[ -d ${OLD_WEBSITE} ]]; then
@@ -680,6 +707,7 @@ handle_prior_website() {
 }
 
 
+####
 # If the locale isn't already set, set it if possible
 set_locale() {
 	LOCALE="$(settings .locale)"
@@ -698,6 +726,7 @@ set_locale() {
 }
 
 
+####
 # If there's a prior version of the software,
 # ask the user if they want to move stuff from there to the new directory.
 # Look for a directory inside the old one to make sure it's really an old allsky.
@@ -732,6 +761,7 @@ check_if_prior_Allsky() {
 }
 
 
+####
 install_dependencies_etc() {
 	# These commands produce a TON of output that's not needed unless there's a problem.
 	# They also take a little while, so hide the output and let the user know.
@@ -756,6 +786,8 @@ install_dependencies_etc() {
 	return 0
 }
 
+
+####
 # Update config.sh
 update_config_sh() {
 	sed -i \
@@ -764,6 +796,8 @@ update_config_sh() {
 		"${ALLSKY_CONFIG}/config.sh"
 }
 
+
+####
 # Create the log file and make it readable/writable by the user; this aids in debugging.
 create_allsky_log() {
 	display_msg progress "Set permissions on Allsky log (${ALLSKY_LOG})."
@@ -773,6 +807,7 @@ create_allsky_log() {
 }
 
 
+####
 # If the user wanted to restore files from a prior version of Allsky, do that.
 restore_prior_files() {
 	if [[ -d ${OLD_RASPAP_DIR} ]]; then
@@ -1016,6 +1051,7 @@ restore_prior_files() {
 }
 
 
+####
 # Update Allsky and exit.  It basically resets things.
 # This can be needed if the user hosed something up, or there was a problem somewhere.
 do_update() {
@@ -1049,70 +1085,72 @@ do_update() {
 	exit 0
 }
 
+
+####
 # Install the overlay and modules system
 install_overlay()
 {
+	cp "${ALLSKY_CONFIG}/overlay-${CAMERA_TYPE}.json" "${ALLSKY_CONFIG}/overlay.json"
 
-		cp "${ALLSKY_CONFIG}/overlay-${CAMERA_TYPE}.json" "${ALLSKY_CONFIG}/overlay.json"
+	display_msg progress "Installing PHP Modules."
+	TMP="${INSTALL_LOGS_DIR}/PHP_modules.log"
+	(
+		sudo apt-get install -y php-zip && \
+		sudo apt-get install -y php-sqlite3 && \
+		sudo apt install -y python3-pip
+	) > "${TMP}" 2>&1
+	check_installation_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
-		display_msg progress "Installing PHP Modules."
-		TMP="${INSTALL_LOGS_DIR}/PHP_modules.log"
-		(
-			sudo apt-get install -y php-zip && \
-			sudo apt-get install -y php-sqlite3 && \
-			sudo apt install -y python3-pip
-		) > "${TMP}" 2>&1
-		check_installation_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
+	display_msg progress "Installing other PHP dependencies."
+	TMP="${INSTALL_LOGS_DIR}/libatlas.log"
+	sudo apt-get -y install libatlas-base-dev > "${TMP}" 2>&1
+	check_installation_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
-		display_msg progress "Installing other PHP dependencies."
-		TMP="${INSTALL_LOGS_DIR}/libatlas.log"
-		# shellcheck disable=SC2069,SC2024
-		sudo apt-get -y install libatlas-base-dev > "${TMP}" 2>&1
-		check_installation_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}" || exit_with_image 1
-
-		# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
-		# This also allows us to display progress messages.
-		if [[ ${OS} == "buster" ]]; then
-			M=" for Buster"
-			R="-buster"
-		else
-			M=""
-			R=""
+	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
+	# This also allows us to display progress messages.
+	if [[ ${OS} == "buster" ]]; then
+		M=" for Buster"
+		R="-buster"
+	else
+		M=""
+		R=""
+	fi
+	MSG2="\n\tThis may take a LONG time if the packages are not already installed."
+	display_msg progress "Installing Python dependencies${M}."  "${MSG2}"
+	TMP="${INSTALL_LOGS_DIR}/Python_dependencies"
+	PIP3_BUILD="${ALLSKY_HOME}/pip3.build"
+	mkdir -p "${PIP3_BUILD}"
+	COUNT=0
+	local NUM=$(wc -l < "${ALLSKY_REPO}/requirements${R}.txt")
+	while read -r package
+	do
+		((COUNT++))
+		echo "${package}" > /tmp/package
+		L="${TMP}.${COUNT}.log"
+		display_msg progress "   === Package # ${COUNT} of ${NUM}: [${package}]"
+		pip3 install --no-warn-script-location --build "${PIP3_BUILD}" -r /tmp/package > "${L}" 2>&1
+		# These files are too big to display so pass in "0" instead of ${DEBUG}.
+		if ! check_installation_success $? "Python dependency [${package}] failed" "${L}" 0 ; then
+			rm -fr "${PIP3_BUILD}"
+			exit_with_image 1
 		fi
-		MSG2="\n\tThis may take a LONG time if the packages are not already installed."
-		display_msg progress "Installing Python dependencies${M}."  "${MSG2}"
-		TMP="${INSTALL_LOGS_DIR}/Python_dependencies"
-		PIP3_BUILD="${ALLSKY_HOME}/pip3.build"
-		mkdir -p "${PIP3_BUILD}"
-		COUNT=0
-		local NUM=$(wc -l < "${ALLSKY_REPO}/requirements${R}.txt")
-		while read -r package
-		do
-			COUNT=$((COUNT+1))
-			echo "${package}" > /tmp/package
-			L="${TMP}.${COUNT}.log"
-			display_msg progress "   === Package # ${COUNT} of ${NUM}: [${package}]"
-			pip3 install --no-warn-script-location --build "${PIP3_BUILD}" -r /tmp/package > "${L}" 2>&1
-			# These files are too big to display so pass in "0" instead of ${DEBUG}.
-			if ! check_installation_success $? "Python dependency [${package}] failed" "${L}" 0 ; then
-				rm -fr "${PIP3_BUILD}"
-				exit_with_image 1
-			fi
-		done < "${ALLSKY_REPO}/requirements${R}.txt"
-		rm -fr "${PIP3_BUILD}"
+	done < "${ALLSKY_REPO}/requirements${R}.txt"
+	rm -fr "${PIP3_BUILD}"
 
-		display_msg progress "Installing Trutype fonts."
-		TMP="${INSTALL_LOGS_DIR}/msttcorefonts.log"
-		# shellcheck disable=SC2069,SC2024
-		sudo apt-get -y install msttcorefonts > "${TMP}" 2>&1
-		check_installation_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
+	display_msg progress "Installing Trutype fonts."
+	TMP="${INSTALL_LOGS_DIR}/msttcorefonts.log"
+	sudo apt-get -y install msttcorefonts > "${TMP}" 2>&1
+	check_installation_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
-		display_msg progress "Setting up modules."
-		sudo mkdir -p /etc/allsky/modules
-		sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" /etc/allsky
-		sudo chmod -R 774 /etc/allsky
+	display_msg progress "Setting up modules."
+	MODULE_LOCATION="/etc/allsky"
+	sudo mkdir -p "${MODULE_LOCATION}/modules"
+	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${MODULE_LOCATION}"
+	sudo chmod -R 774 "${MODULE_LOCATION}"
 }
 
+
+####
 check_if_buster() {
 	if [[ ${OS} == "buster" ]]; then
 		MSG="This release runs best on the newer Bullseye operating system"
@@ -1126,6 +1164,8 @@ check_if_buster() {
 	fi
 }
 
+
+####
 # Display an image the user will see when they go to the WebUI.
 display_image() {
 	local IMAGE_NAME="${1}"
@@ -1149,6 +1189,8 @@ display_image() {
 	cp "${ALLSKY_NOTIFICATION_IMAGES}/${IMAGE_NAME}.jpg" "${I}" 2> /dev/null
 }
 
+
+####
 # Installation failed.
 # Replace the "installing" messaged with a "failed" one.
 exit_with_image() {
@@ -1157,6 +1199,8 @@ exit_with_image() {
 	exit ${1}
 }
 
+
+####
 check_restored_settings() {
 	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" && \
 	  	${RESTORED_PRIOR_CONFIG_SH} == "true" && \
@@ -1191,8 +1235,9 @@ check_restored_settings() {
 	display_image "ConfigurationNeeded"
 }
 
-remind_old_version() {
 
+####
+remind_old_version() {
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		MSG="When you are sure everything is working with this new release,"
 		MSG="${MSG} remove your old version in ${PRIOR_ALLSKY_DIR} to save disk space."

@@ -24,6 +24,7 @@ function delete_directory($directory_name) {
 }
 
 function ListDays(){
+	global $page;
 	$days = array();
 
 	if (isset($_POST['delete_directory'])) {

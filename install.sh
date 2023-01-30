@@ -32,8 +32,8 @@ WEBSERVER_GROUP="www-data"
 ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
-FORCE_CREATING_SETTINGS_FILE=false		# should a default settings file be created?
-RESTORED_PRIOR_SETTINGS_FILE=false
+FORCE_CREATING_SETTINGS_FILE="false"	# should a default settings file be created?
+RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 SUGGESTED_NEW_HOST_NAME='allsky'		# Suggested new host name
 NEW_HOST_NAME=''						# User-specified host name
@@ -564,9 +564,9 @@ set_permissions() {
 # or if the directory exists but there doesn't appear to be a WebUI in it.
 # The installation (sometimes?) creates the directory.
 
-OLD_WEBUI_LOCATION_EXISTS_AT_START=false
+OLD_WEBUI_LOCATION_EXISTS_AT_START="false"
 does_old_WebUI_locaion_exist() {
-	[[ -d ${OLD_WEBUI_LOCATION} ]] && OLD_WEBUI_LOCATION_EXISTS_AT_START=true
+	[[ -d ${OLD_WEBUI_LOCATION} ]] && OLD_WEBUI_LOCATION_EXISTS_AT_START="true"
 }
 
 check_old_WebUI_location() {
@@ -609,7 +609,7 @@ handle_prior_website() {
 	# Note: This MUST come before the old WebUI check below so we don't remove the prior website
 	# when we remove the prior WebUI.
 
-	OK=true
+	OK="true"
 	if [[ -d ${ALLSKY_WEBSITE} ]]; then
 		# Hmmm.  There's an old webite AND a new one.
 		# Allsky doesn't ship with the website directory, so not sure how one got there...
@@ -619,7 +619,7 @@ handle_prior_website() {
 			display_msg error "New website in '${ALLSKY_WEBSITE}' is not empty."
 			display_msg info "  Move the contents manually from '${ALLSKY_WEBSITE_OLD}',"
 			display_msg info "  and then remove the old location.\n"
-			OK=false
+			OK="false"
 
 			# Move failed, but still check if prior website is outdated.
 			PRIOR_SITE="${ALLSKY_WEBSITE_OLD}"
@@ -698,7 +698,7 @@ check_if_prior_Allsky() {
 		fi
 
 		# No prior Allsky so force creating a settings file.
-		FORCE_CREATING_SETTINGS_FILE=true
+		FORCE_CREATING_SETTINGS_FILE="true"
 	fi
 }
 
@@ -798,14 +798,14 @@ restore_prior_files() {
 		mv "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
 		# Check if this is an older Allsky Website configuration file type.
-		OLD=false
+		OLD="false"
 		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
 		if [[ ${PRIOR_CONFIG_VERSION} == "null" ]]; then
-			OLD=true		# Hmmm, it should have the version
+			OLD="true"		# Hmmm, it should have the version
 		else
 			NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
 			if [[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]]; then
-				OLD=true
+				OLD="true"
 			fi
 		fi
 		if [[ ${OLD} == "true" ]]; then
@@ -833,7 +833,7 @@ restore_prior_files() {
 			# This file is probably a link to a camera type/model-specific file,
 			# so copy it instead of moving it to not break the link.
 			cp "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
-			RESTORED_PRIOR_SETTINGS_FILE=true
+			RESTORED_PRIOR_SETTINGS_FILE="true"
 			# TODO: check if this is an older versions of the file,
 			# and if so, reset "lastChanged" to null.
 			# BUT, how do we determine if it's an old file,
@@ -862,7 +862,7 @@ restore_prior_files() {
 		fi
 
 		# If we ever automate migrating settings, this next statement should be deleted.
-		FORCE_CREATING_SETTINGS_FILE=true
+		FORCE_CREATING_SETTINGS_FILE="true"
 	fi
 	# Do NOT restore options.json - it will be recreated.
 
@@ -1082,24 +1082,24 @@ mkdir "${INSTALL_LOGS_DIR}"
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 
 ##### Check arguments
-OK=true
-HELP=false
-DEBUG=false
+OK="true"
+HELP="false"
+DEBUG="false"
 DEBUG_ARG=""
-UPDATE=false
+UPDATE="false"
 FUNCTION=""
 while [ $# -gt 0 ]; do
 	ARG="${1}"
 	case "${ARG}" in
 		--help)
-			HELP=true
+			HELP="true"
 			;;
 		--debug)
-			DEBUG=true
+			DEBUG="true"
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			;;
 		--update)
-			UPDATE=true
+			UPDATE="true"
 			;;
 		--function)
 			FUNCTION="${2}"

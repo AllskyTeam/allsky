@@ -6,7 +6,7 @@ then
 fi
 ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh" 	|| exit 99
+source "${ALLSKY_HOME}/variables.sh"	|| exit 99
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
 
 if [[ ${EUID} -eq 0 ]]; then
@@ -35,7 +35,7 @@ OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 FORCE_CREATING_SETTINGS_FILE="false"	# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
-SUGGESTED_NEW_HOST_NAME='allsky'		# Suggested new host name
+SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=''						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
 
@@ -51,7 +51,9 @@ REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 INSTALL_LOGS_DIR="${ALLSKY_CONFIG}/installation_logs"
 
 # The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after the reboot.
-rm -f "${POST_INSTALLATION_ACTIONS}"		# shouldn't be there, but just in case
+rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
+
+rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 
 # display_msg() will send "log" entries to this file.
 # DISPLAY_MSG_LOG is used in display_msg()
@@ -96,7 +98,7 @@ usage_and_exit()
 	echo
 	echo "'--update' should only be used when instructed to by an Allsky Website page."
 	echo
-	echo "'--function' executs the specified function and quits."
+	echo "'--function' executes the specified function and quits."
 	echo
 	#shellcheck disable=SC2086
 	exit ${RET}
@@ -354,10 +356,11 @@ check_swap() {
 # save any *.jpg files (which we probably created), then remove everything else,
 # then mount it.
 check_and_mount_tmp() {
-	TMP_DIR="/tmp/IMAGES"
+	local TMP_DIR="/tmp/IMAGES"
 
 	if [[ -d "${ALLSKY_TMP}" ]]; then
-		IMAGES="$(find "${ALLSKY_TMP}" -name '*.jpg')"
+		local IMAGES="$(find "${ALLSKY_TMP}" -name '*.jpg')"
+		[[ ${DEBUG} -gt 0 ]] && display_msg debug "Existing IMAGES=${IMAGES}"
 		if [[ -n ${IMAGES} ]]; then
 			mkdir "${TMP_DIR}"
 			# Need to allow for files with spaces in their names.
@@ -407,6 +410,7 @@ check_tmp() {
 		# If the new Allsky's ${ALLSKY_TMP} is already mounted, don't do anything.
 		# This would be the case during an upgrade.
 		if mount | grep --silent "${ALLSKY_TMP}" ; then
+			[[ ${DEBUG} -gt 0 ]] && display_msg debug "${ALLSKY_TMP} already mounted"
 			return 0
 		fi
 
@@ -657,6 +661,7 @@ set_locale() {
 	LOCALE="$(settings .locale)"
 	[[ -n ${LOCALE} ]] && return		# already set up
 
+# TODO: prompt for locale so we don't get the default.
 	display_msg progress "Setting locale."
 	LOCALE="$(locale | grep LC_NUMERIC | sed -e 's;LC_NUMERIC=";;' -e 's;";;')"
 	if [[ -z ${LOCALE} ]]; then
@@ -834,7 +839,8 @@ restore_prior_files() {
 			# so copy it instead of moving it to not break the link.
 			cp "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
 			RESTORED_PRIOR_SETTINGS_FILE="true"
-			# TODO: check if this is an older versions of the file,
+
+			# TODO: check if this is an older version of the file,
 			# and if so, reset "lastChanged" to null.
 			# BUT, how do we determine if it's an old file,
 			# given that it's initially created at installation time?
@@ -859,14 +865,13 @@ restore_prior_files() {
 			display_msg --log progress "Prior latitude and longitude saved."
 			# It would be nice to transfer other settings, but a lot of setting names changed
 			# and it's not worth trying to look for all names.
+			# TODO: transfer "easy" ones
 		fi
 
 		# If we ever automate migrating settings, this next statement should be deleted.
 		FORCE_CREATING_SETTINGS_FILE="true"
 	fi
 	# Do NOT restore options.json - it will be recreated.
-
-	# This may miss really-old variables that no longer exist.
 
 	FOUND="true"
 	if [[ -f ${PRIOR_CONFIG_DIR}/ftp-settings.sh ]]; then
@@ -897,6 +902,7 @@ restore_prior_files() {
 	#	- handle renames
 	#	- handle variable that were moved to WebUI
 	#		> DAYTIME_CAPTURE
+	#		> others
 	#
 	# display_msg info "\nIMPORTANT: check config/config.sh and config/ftp-settings.sh for correctness.\n"
 
@@ -917,7 +923,7 @@ restore_prior_files() {
 		MSG="${MSG}\nand"
 		MSG="${MSG}\n     ${PRIOR_FTP}"
 		MSG="${MSG}\n\nto the new files in ${ALLSKY_CONFIG}."
-		MSG="${MSG}\n\nNOTE: some settings are no longer in config.sh and some changed names."
+		MSG="${MSG}\n\nNOTE: some settings are no longer in the new files and some changed names."
 		MSG="${MSG}\nDo NOT add the old/deleted settings back in."
 		MSG2=""
 	fi
@@ -932,7 +938,7 @@ restore_prior_files() {
 # Update Allsky and exit.  It basically resets things.
 # This can be needed if the user hosed something up, or there was a problem somewhere.
 do_update() {
-	source "${ALLSKY_CONFIG}/config.sh"		# Get current CAMERA_TYPE
+	source "${ALLSKY_CONFIG}/config.sh"	|| exit 99	# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg error "CAMERA_TYPE not set in config.sh."
 		exit 1
@@ -993,7 +999,7 @@ install_overlay()
 			M=""
 			R=""
 		fi
-		MSG2="  This may take a LONG time if the packages are not already installed."
+		MSG2="\n\tThis may take a LONG time if the packages are not already installed."
 		display_msg progress "Installing Python dependencies${M}."  "${MSG2}"
 		TMP="${INSTALL_LOGS_DIR}/Python_dependencies"
 		PIP3_BUILD="${ALLSKY_HOME}/pip3.build"

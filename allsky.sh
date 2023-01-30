@@ -18,8 +18,7 @@ NOT_STARTED_MSG="Unable to start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 
-# shellcheck disable=SC1091
-source "${ALLSKY_HOME}/variables.sh"	|| exit 1
+source "${ALLSKY_HOME}/variables.sh"	|| exit 99
 if [[ -z ${ALLSKY_CONFIG} ]]; then
 	MSG="FATAL ERROR: unable to source variables.sh."
 	echo -e "${RED}*** ${MSG}${NC}"
@@ -27,9 +26,7 @@ if [[ -z ${ALLSKY_CONFIG} ]]; then
 		"${ERROR_MSG_PREFIX}\n$(basename "${ALLSKY_HOME}")/variables.sh\nis corrupted." \
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
-# shellcheck disable=SC1091
-source "${ALLSKY_CONFIG}/config.sh" || exit $?			# it displays any error message
-# shellcheck disable=SC1091
+source "${ALLSKY_CONFIG}/config.sh"		|| exit $?		# it displays any error message
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit $?		# it displays any error message
 SEE_LOG_MSG="See ${ALLSKY_LOG}"
 ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"

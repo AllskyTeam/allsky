@@ -21,7 +21,7 @@ cd ~/${INSTALL_DIR}  || exit 1
 # Location of possible prior version of Allsky.
 # If the user wants items copied from there to the new version,
 # they should have manually renamed "allsky" to "allsky-OLD" prior to running this script.
-PRIOR_INSTALL_DIR="$(dirname "${PWD}")/${INSTALL_DIR}-OLD"
+PRIOR_ALLSKY_DIR="$(dirname "${PWD}")/${INSTALL_DIR}-OLD"
 
 OLD_WEBUI_LOCATION="/var/www/html"		# location of old-style WebUI
 
@@ -137,7 +137,7 @@ CAMERA_TYPE=""
 select_camera_type() {
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 		# New style Allsky with CAMERA_TYPE in config.sh
-		OLD_CONFIG="${PRIOR_INSTALL_DIR}/config/config.sh"
+		OLD_CONFIG="${PRIOR_ALLSKY_DIR}/config/config.sh"
 		if [[ -f ${OLD_CONFIG} ]]; then
 			# We can't "source" the config file because the new settings file doesn't exist,
 			# so the "source" will fail.
@@ -394,7 +394,7 @@ check_tmp() {
 		# try to unmount it, but that often gives an error that it's busy,
 		# which isn't really a problem since it'll be unmounted at the reboot.
 		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently in the PRIOR Allsky.
-		D="${PRIOR_INSTALL_DIR}/tmp"
+		D="${PRIOR_ALLSKY_DIR}/tmp"
 		if [[ -d "${D}" ]] && mount | grep --silent "${D}" ; then
 			# The Samba daemon is one known cause of "target busy".
 			sudo umount -f "${D}" 2> /dev/null ||
@@ -598,8 +598,8 @@ handle_prior_website() {
 	OLD_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
 	if [[ -d ${OLD_WEBSITE} ]]; then
 		ALLSKY_WEBSITE_OLD="${OLD_WEBSITE}"						# old-style Website
-	elif [[ -d ${PRIOR_INSTALL_DIR}/html/allsky ]]; then
-		ALLSKY_WEBSITE_OLD="${PRIOR_INSTALL_DIR}/html/allsky"	# new-style Website
+	elif [[ -d ${PRIOR_ALLSKY_DIR}/html/allsky ]]; then
+		ALLSKY_WEBSITE_OLD="${PRIOR_ALLSKY_DIR}/html/allsky"	# new-style Website
 	else
 		return													# no prior Website
 	fi
@@ -673,11 +673,11 @@ set_locale() {
 # ask the user if they want to move stuff from there to the new directory.
 # Look for a directory inside the old one to make sure it's really an old allsky.
 check_if_prior_Allsky() {
-	if [[ -d ${PRIOR_INSTALL_DIR}/src ]]; then
-		MSG="You appear to have a prior version of Allsky in ${PRIOR_INSTALL_DIR}."
+	if [[ -d ${PRIOR_ALLSKY_DIR}/src ]]; then
+		MSG="You appear to have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
 		MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then
-			if [[ -f  ${PRIOR_INSTALL_DIR}/version ]]; then
+			if [[ -f  ${PRIOR_ALLSKY_DIR}/version ]]; then
 				PRIOR_ALLSKY="new"		# New style Allsky with CAMERA_TYPE set in config.sh
 			else
 				PRIOR_ALLSKY="old"		# Old style with CAMERA set in config.sh
@@ -690,10 +690,10 @@ check_if_prior_Allsky() {
 		fi
 	else
 		MSG="No prior version of Allsky found."
-		MSG="${MSG}\n\nIf you DO have a prior version and you want images, darks, and certain settings moved from the prior version to the new one, rename the prior version to ${PRIOR_INSTALL_DIR} before running this installation."
+		MSG="${MSG}\n\nIf you DO have a prior version and you want images, darks, and certain settings moved from the prior version to the new one, rename the prior version to ${PRIOR_ALLSKY_DIR} before running this installation."
 		MSG="${MSG}\n\nDo you want to continue?"
 		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH} 3>&1 1>&2 2>&3; then
-			display_msg info "Rename the directory with your prior version of Allsky to\n'${PRIOR_INSTALL_DIR}', then run the installation again.\n"
+			display_msg info "Rename the directory with your prior version of Allsky to\n'${PRIOR_ALLSKY_DIR}', then run the installation again.\n"
 			exit 0
 		fi
 
@@ -758,27 +758,27 @@ restore_prior_files() {
 		return			# Nothing left to do in this function, so return
 	fi
 
-	if [[ -f ${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
+	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
 		display_msg progress "Restoring endOfNight_additionalSteps.sh."
-		mv "${PRIOR_INSTALL_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
+		mv "${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
 	fi
 
-	if [[ -f ${PRIOR_INSTALL_DIR}/scripts/endOfDay_additionalSteps.sh ]]; then
+	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfDay_additionalSteps.sh ]]; then
 		display_msg progress "Restoring endOfDay_additionalSteps.sh."
-		mv "${PRIOR_INSTALL_DIR}/scripts/endOfDay_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
+		mv "${PRIOR_ALLSKY_DIR}/scripts/endOfDay_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
 	fi
 
-	if [[ -d ${PRIOR_INSTALL_DIR}/images ]]; then
+	if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then
 		display_msg progress "Restoring images."
-		mv "${PRIOR_INSTALL_DIR}/images" "${ALLSKY_HOME}"
+		mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
 	fi
 
-	if [[ -d ${PRIOR_INSTALL_DIR}/darks ]]; then
+	if [[ -d ${PRIOR_ALLSKY_DIR}/darks ]]; then
 		display_msg progress "Restoring darks."
-		mv "${PRIOR_INSTALL_DIR}/darks" "${ALLSKY_HOME}"
+		mv "${PRIOR_ALLSKY_DIR}/darks" "${ALLSKY_HOME}"
 	fi
 
-	PRIOR_CONFIG_DIR="${PRIOR_INSTALL_DIR}/config"
+	PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
 
 	# If the user has an older release, these files may be in /etc/raspap.
 	# Check for both.
@@ -871,8 +871,8 @@ restore_prior_files() {
 	FOUND="true"
 	if [[ -f ${PRIOR_CONFIG_DIR}/ftp-settings.sh ]]; then
 		PRIOR_FTP="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
-	elif [[ -f ${PRIOR_INSTALL_DIR}/scripts/ftp-settings.sh ]]; then
-		PRIOR_FTP="${PRIOR_INSTALL_DIR}/scripts/ftp-settings.sh"
+	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
+		PRIOR_FTP="${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh"
 	else
 		PRIOR_FTP="ftp-settings.sh (in unknown location)"
 		FOUND="false"
@@ -1243,7 +1243,7 @@ fi
 
 if [[ -n ${PRIOR_ALLSKY} ]]; then
 	MSG="When you are sure everything is working with this new release,"
-	MSG="${MSG} remove your old version in ${PRIOR_INSTALL_DIR} to save disk space."
+	MSG="${MSG} remove your old version in ${PRIOR_ALLSKY_DIR} to save disk space."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 fi

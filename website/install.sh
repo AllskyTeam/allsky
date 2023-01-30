@@ -182,7 +182,6 @@ create_website_configuration_file() {
 		cp "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "${WEB_CONFIG_FILE}" || exit 2
 
 		# There are only a few things to update.
-
 		[[ ${DEBUG} == "true" ]] && display_msg debug "Calling updateWebsiteConfig.sh"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
@@ -324,12 +323,43 @@ modify_configuration_variables() {
 
 ##### Help with a remote website installation, then exit
 do_remote_website() {
+	MSG="Setting up a remote Allsky Website requires that you first:"
+	MSG="${MSG}\n  1. Upload the Allsky Website files to your remote server."
+	MSG="${MSG}\n  2. Update 'ftp-settings.sh' using the WebUI's 'Editor' page"
+	MSG="${MSG}\n     to point to the remote server."
+	MSG="${MSG}\n  3. Set the 'Website URL' in the WebUI's 'Allsky Settings' page"
+	MSG="${MSG}\n     even if you are not displaying your Website on the Allsky Map."
+	MSG="${MSG}\n\nHave you already done these steps?"
+	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 80 3>&1 1>&2 2>&3; then 
+		MSG="You need to manually copy the Allsky Website files to your remote server."
+		MSG="${MSG}\nYou can do that by executing:"
+		MSG="${MSG}\n   cd /tmp"
+		MSG="${MSG}\n   git clone ${GITHUB_ROOT}/allsky-website.git allsky"
+		MSG="${MSG}\nThen upload the 'allsky' directory and all it's contents to the root of your server."
+		MSG="${MSG}\n\nOnce you have finished that, re-run this installation."
+		display_msg warning "${MSG}"
+		exit 1
+	fi
+
+	# Make sure they REALLY did the above.
 	OK="true"
 	if [[ ${REMOTE_HOST} == "" ]]; then
 		MSG="The 'REMOTE_HOST' must be set in 'ftp-settings.sh'\n"
 		MSG="${MSG}in order to do a remote website installation.\n"
 		MSG="${MSG}Please set it, the password, and other information, then re-run this installation."
 		display_msg error "${MSG}"
+		OK="false"
+	fi
+
+	TEST_FILE="/tmp/Allsky_upload_test.txt"
+	echo "This is a test file and can be removed." > "${TEST_FILE}"
+	RET="$("${ALLSKY_SCRIPTS}/upload.sh" "${TEST_FILE}" "${IMAGE_DIR}" "$(basename "${TEST_FILE}")")"
+	if [[ $? -eq 0 ]]; then
+		rm -f "${TEST_FILE}"
+	else
+		MSG="Unable to upload a test file.\n"
+		display_msg error "${MSG}"
+		display_msg info "${RET}"
 		OK="false"
 	fi
 
@@ -353,12 +383,12 @@ do_remote_website() {
 	else
 		D=""
 	fi
-	X="$(curl "${WEBURL}?x=check${D}")"
+	X="$(curl --show-error --silent "${WEBURL}?check=1${D}")"
 	if ! echo "${X}" | grep --silent "^SUCCESS$" ; then
 		MSG="Sanity check of remote Website (${WEBURL}) failed."
 		MSG="${MSG}\nYou will need to manually fix."
 		display_msg warning "${MSG}"
-		display_msg info "${X}"
+		echo -e "${X}"
 	fi
 
 	upload_data_json_file

@@ -400,7 +400,6 @@ do_remote_website() {
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# The user is upgrading a new-style remote Website.
-		HAS_PRIOR_REMOTE_SERVER="true"
 		display_msg progress "You should continue to configure your remote Allsky Website via the WebUI.\n"
 
 		# Check if this is an older configuration file.
@@ -409,7 +408,6 @@ do_remote_website() {
 		# Don't know if the user is upgrading an old-style remote website,
 		# or they don't even have a remote website.
 
-		HAS_PRIOR_REMOTE_SERVER="false"
 		MSG="You can keep a copy of your remote website's configuration file on your Pi"
 		MSG="${MSG}\nso you can easily edit it in the WebUI and have it automatically uploaded."
 		MSG="${MSG}\n** This is the recommended way of making changes to the configuration **."

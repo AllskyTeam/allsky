@@ -1067,8 +1067,7 @@ install_overlay()
 		display_msg progress "Installing other PHP dependencies."
 		TMP="${INSTALL_LOGS_DIR}/libatlas.log"
 		# shellcheck disable=SC2069,SC2024
-		sudo apt-get -y install libatlas-base-dev 2>&1 > "${TMP}"
-# TODO: or > then 2>&1 ???
+		sudo apt-get -y install libatlas-base-dev > "${TMP}" 2>&1
 		check_installation_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 		# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
@@ -1105,8 +1104,7 @@ install_overlay()
 		display_msg progress "Installing Trutype fonts."
 		TMP="${INSTALL_LOGS_DIR}/msttcorefonts.log"
 		# shellcheck disable=SC2069,SC2024
-		sudo apt-get -y install msttcorefonts 2>&1 > "${TMP}"
-# TODO: or > then 2>&1 ???
+		sudo apt-get -y install msttcorefonts > "${TMP}" 2>&1
 		check_installation_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 		display_msg progress "Setting up modules."

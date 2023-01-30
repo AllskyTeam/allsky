@@ -606,8 +606,11 @@ set_permissions() {
 	# This is actually an Allsky Website file, but in case we restored the old website,
 	# set its permissions.
 	chgrp -f "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-	chmod -R 775 "${ALLSKY_WEBUI}/overlay"
-	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_WEBUI}/overlay"
+	chmod -R 775 "${ALLSKY_CONFIG}/overlay"
+	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}/overlay"
+
+	sudo find "${ALLSKY_CONFIG}/overlay/" -type f -exec chmod 644 {} \;
+	sudo find "${ALLSKY_CONFIG}/overlay/" -type d -exec chmod 755 {} \;
 
 	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 }

@@ -354,9 +354,8 @@ do_remote_website() {
 
 	TEST_FILE_NAME="Allsky_upload_test.txt"
 	TEST_FILE="/tmp/${TEST_FILE_NAME}"
-	MSG="Testing upload."
-	MSG="${MSG}\nWhen done you can remove '${TEST_FILE_NAME}' from your remote server."
-	display_msg progress "${MSG}"
+	display_msg progress "Testing upload."
+	display_msg info "When done you can remove '${TEST_FILE_NAME}' from your remote server."
 	echo "This is a test file and can be removed." > "${TEST_FILE}"
 	RET="$("${ALLSKY_SCRIPTS}/upload.sh" "${TEST_FILE}" "${IMAGE_DIR}" "${TEST_FILE_NAME}" "UploadTest")"
 	if [[ $? -eq 0 ]]; then
@@ -402,12 +401,12 @@ do_remote_website() {
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# The user is upgrading a new-style remote Website.
 		HAS_PRIOR_REMOTE_SERVER="true"
-		display_msg progress "You can continue to configure your remote Allsky Website via the WebUI.\n"
+		display_msg progress "You should continue to configure your remote Allsky Website via the WebUI.\n"
 
 		# Check if this is an older configuration file.
 		check_for_older_config_file "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 	else
-		# Don't know if the user is upgrading and old-style remote website,
+		# Don't know if the user is upgrading an old-style remote website,
 		# or they don't even have a remote website.
 
 		HAS_PRIOR_REMOTE_SERVER="false"
@@ -523,8 +522,7 @@ restore_prior_files() {
 
 	D="${PRIOR_WEBSITE}/videos/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   videos
-	# shellcheck disable=SC2012
-	count=$(ls -1 "${PRIOR_WEBSITE}"/videos/allsky-* 2>/dev/null  | wc -l)
+	count=$(find "${PRIOR_WEBSITE}/videos" -maxdepth 1 -name 'allsky-*' | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior videos."
 		mv "${PRIOR_WEBSITE}"/videos/allsky-*   videos
@@ -532,8 +530,7 @@ restore_prior_files() {
 
 	D="${PRIOR_WEBSITE}/keograms/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   keograms
-	# shellcheck disable=SC2012
-	count=$(ls -1 "${PRIOR_WEBSITE}"/keograms/keogram-* 2>/dev/null | wc -l)
+	count=$(find "${PRIOR_WEBSITE}/keograms" -maxdepth 1 -name 'keogram-*' | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior keograms."
 		mv "${PRIOR_WEBSITE}"/keograms/keogram-*   keograms
@@ -541,8 +538,7 @@ restore_prior_files() {
 
 	D="${PRIOR_WEBSITE}/startrails/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   startrails
-	# shellcheck disable=SC2012
-	count=$(ls -1 "${PRIOR_WEBSITE}"/startrails/startrails-* 2>/dev/null | wc -l)
+	count=$(find "${PRIOR_WEBSITE}/startrails" -maxdepth 1 -name 'startrails-*' | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior startrails."
 		mv "${PRIOR_WEBSITE}"/startrails/startrails-*   startrails

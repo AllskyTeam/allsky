@@ -165,6 +165,11 @@ else
 	sudo chgrp www-data "${ALLSKY_TMP}"
 fi
 
+# Create tmp/extra directory.
+if [[ ! -d "${ALLSKY_TMP}/extra" ]]; then
+  mkdir "${ALLSKY_TMP}/extra";
+fi
+
 # Optionally display a notification image.
 if [[ $USE_NOTIFICATION_IMAGES == "1" ]]; then
 	# Can do this in the background to speed up startup

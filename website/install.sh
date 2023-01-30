@@ -4,7 +4,7 @@ if [[ -z ${ALLSKY_HOME} ]] ; then
 	export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")"/..)"
 fi
 source "${ALLSKY_HOME}/variables.sh"	|| exit 99
-source "${ALLSKY_SCRIPTS}/functions.sh" || exit 1
+source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
 
 if [[ $EUID -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
@@ -83,6 +83,25 @@ usage_and_exit()
 }
 
 
+##### Make sure the new version is at least as new as the current version,
+##### i.e., we aren't installing an old version.
+check_versions() {
+	# Get the NEW version
+	ALLSKY_WEBSITE_NEW_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/${BRANCH}/version")"
+
+	if [[ -f ${ALLSKY_WEBSITE}/version ]]; then
+		local ALLSKY_WEBSITE_CURRENT_VERSION="$( < "${ALLSKY_WEBSITE}/version")"
+		if [[ ${ALLSKY_WEBSITE_NEW_VERSION} < "${ALLSKY_WEBSITE_CURRENT_VERSION}" ]]; then
+			MSG="You are trying to install an older version of the Allsky Website!\n"
+			MSG="${MSG}New     version: ${ALLSKY_WEBSITE_NEW_VERSION}\n"
+			MSG="${MSG}Current version: ${ALLSKY_WEBSITE_CURRENT_VERSION}\n"
+			display_msg error "${MSG}"
+			exit 1
+		fi
+	fi
+}
+
+
 ##### Modify placeholders.
 modify_locations() {
 	display_msg progress "Modifying locations in web files."
@@ -115,6 +134,7 @@ WEB_CONFIG_FILE=""
 IMAGE_NAME=""
 ON_PI=""
 set_configuration_file_variables() {
+	display_msg progress "Setting Website variables"
 	if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 		WEB_CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		IMAGE_NAME="${FULL_FILENAME}"
@@ -161,7 +181,8 @@ create_website_configuration_file() {
 		display_msg progress "Creating default '${WEB_CONFIG_FILE}' file based on the local file."
 		cp "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "${WEB_CONFIG_FILE}" || exit 2
 
-		# There are only a couple things to update
+		# There are only a few things to update.
+
 		[[ ${DEBUG} == "true" ]] && display_msg debug "Calling updateWebsiteConfig.sh"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
@@ -242,7 +263,7 @@ create_website_configuration_file() {
 		config.lens					"lens"				"${LENS}" \
 		config.computer				"computer"			"${COMPUTER}" \
 		config.AllskyVersion		"AllskyVersion"		"${ALLSKY_VERSION}" \
-		config.AllskyWebsiteVersion	"AllskyWebsiteVersion" "${ALLSKY_WEBSITE_VERSION}" \
+		config.AllskyWebsiteVersion	"AllskyWebsiteVersion" "${ALLSKY_WEBSITE_NEW_VERSION}" \
 		homePage.onPi				"onPi"				"${ON_PI}" \
 		${MINI_TLAPSE_DISPLAY}		"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
 		${MINI_TLAPSE_URL}			"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
@@ -285,7 +306,7 @@ modify_configuration_variables() {
 			MSG="${MSG}\nand"
 			MSG="${MSG}\n   ${PRIOR_WEBSITE}/virtualsky.json"
 			MSG="${MSG}\nfiles into '${ALLSKY_WEBSITE_CONFIGURATION_FILE}'."
-			MSG="${MSG}\nCheck the Wiki for the meaning of the MANY new options."
+			MSG="${MSG}\nCheck the Allsky documentation for the meaning of the MANY new options."
 			display_msg notice "${MSG}"
 
 			HAS_NEW_CONFIGURATION_FILE="true"
@@ -528,7 +549,7 @@ OK="true"
 HELP="false"
 DEBUG="false"
 DEBUG_ARG=""
-BRANCH="master"
+BRANCH="${GITHUB_MAIN_BRANCH}"
 UPDATE="false"
 FUNCTION=""
 REMOTE_WEBSITE="false"
@@ -570,11 +591,9 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-if [[ -f ${ALLSKY_WEBSITE}/version ]]; then
-	ALLSKY_WEBSITE_VERSION="$( < "${ALLSKY_WEBSITE}/version" )"
-else
-	ALLSKY_WEBSITE_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/${BRANCH}/version")"
-fi
+##### Make sure the new version really is new
+check_versions
+
 
 ##### Display the welcome header
 if [[ ${REMOTE_WEBSITE} == "true" ]]; then
@@ -582,7 +601,7 @@ if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 else
 	U2=""
 fi
-H="Welcome to the ${TITLE} version ${ALLSKY_WEBSITE_VERSION} ${U2}"
+H="Welcome to the ${TITLE} for version ${ALLSKY_WEBSITE_NEW_VERSION} ${U2}"
 display_header "${H}"
 
 set_configuration_file_variables

@@ -1,17 +1,16 @@
 #!/bin/bash
 
-if [[ -z ${ALLSKY_HOME} ]]
-then
+if [[ -z ${ALLSKY_HOME} ]]; then
 	export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 fi
 ME="$(basename "${BASH_ARGV0}")"
 
 source "${ALLSKY_HOME}/variables.sh"	|| exit 99
-source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
+source "${ALLSKY_SCRIPTS}/functions.sh"	|| exit 99
 
 if [[ ${EUID} -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
-   exit 1
+	exit 1
 fi
 
 # This script assumes the user already did the "git clone" into the "allsky" directory.
@@ -22,6 +21,9 @@ cd ~/${INSTALL_DIR}  || exit 1
 # If the user wants items copied from there to the new version,
 # they should have manually renamed "allsky" to "allsky-OLD" prior to running this script.
 PRIOR_ALLSKY_DIR="$(dirname "${PWD}")/${INSTALL_DIR}-OLD"
+PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
+PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
+PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# may change depending on old version
 
 OLD_WEBUI_LOCATION="/var/www/html"		# location of old-style WebUI
 
@@ -34,6 +36,8 @@ FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 FORCE_CREATING_SETTINGS_FILE="false"	# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE="false"
+RESTORED_PRIOR_CONFIG_SH="false"		# prior config.sh restored?
+RESTORED_PRIOR_FTP_SH="false"			# prior ftp-settings.sh restored?
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=''						# User-specified host name
@@ -98,7 +102,7 @@ usage_and_exit()
 	echo
 	echo "'--debug' displays debugging information. Can be called multiple times to increase level."
 	echo
-	echo "'--update' should only be used when instructed to by an Allsky Website page."
+	echo "'--update' should only be used when instructed to by the Allsky Website."
 	echo
 	echo "'--function' executes the specified function and quits."
 	echo
@@ -141,7 +145,7 @@ CAMERA_TYPE=""
 select_camera_type() {
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 		# New style Allsky with CAMERA_TYPE in config.sh
-		OLD_CONFIG="${PRIOR_ALLSKY_DIR}/config/config.sh"
+		OLD_CONFIG="${PRIOR_CONFIG_FILE}"
 		if [[ -f ${OLD_CONFIG} ]]; then
 			# We can't "source" the config file because the new settings file doesn't exist,
 			# so the "source" will fail.
@@ -785,7 +789,15 @@ restore_prior_files() {
 		mv "${PRIOR_ALLSKY_DIR}/darks" "${ALLSKY_HOME}"
 	fi
 
-	PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
+	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
+		display_msg progress "Restoring modules."
+		mv "${PRIOR_CONFIG_DIR}/modules" "${ALLSKY_CONFIG}"
+	fi
+
+	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
+		display_msg progress "Restoring overlays."
+		mv "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
+	fi
 
 	# If the user has an older release, these files may be in /etc/raspap.
 	# Check for both.
@@ -906,7 +918,7 @@ restore_prior_files() {
 	#		> DAYTIME_CAPTURE
 	#		> others
 	#
-	# display_msg info "\nIMPORTANT: check config/config.sh and config/ftp-settings.sh for correctness.\n"
+	# display_msg info "\nIMPORTANT: check config.sh and ftp-settings.sh for correctness.\n"
 
 	if [[ ${PRIOR_ALLSKY} == "new" && ${FOUND} == "true" ]]; then
 		MSG="Your config.sh and ftp-settings.sh files should be very similar to the"
@@ -918,10 +930,10 @@ restore_prior_files() {
 		MSG2="${MSG2}\nand if the only differences are your changes, you can simply copy the old files to the new location:"
 		MSG2="${MSG2}\n\ndiff ${PRIOR_FTP} ${ALLSKY_CONFIG}"
 		MSG2="${MSG2}\n\nand"
-		MSG2="${MSG2}\n\ndiff ${PRIOR_CONFIG_DIR}/config.sh ${ALLSKY_CONFIG}"
+		MSG2="${MSG2}\n\ndiff ${PRIOR_CONFIG_FILE} ${ALLSKY_CONFIG}"
 	else
 		MSG="You need to manually move the contents of"
-		MSG="${MSG}\n     ${PRIOR_CONFIG_DIR}/config.sh"
+		MSG="${MSG}\n     ${PRIOR_CONFIG_FILE}"
 		MSG="${MSG}\nand"
 		MSG="${MSG}\n     ${PRIOR_FTP}"
 		MSG="${MSG}\n\nto the new files in ${ALLSKY_CONFIG}."
@@ -1181,7 +1193,7 @@ check_swap
 check_tmp
 
 
-MSG="\nThe following steps can take about AN HOUR depending on the speed of your Pi"
+MSG="\nThe following steps can take about an HOUR depending on the speed of your Pi"
 MSG="${MSG}\nand how many of the necessary dependencies are already installed."
 MSG="${MSG}\nYou will see progress messages throughout the process."
 MSG="${MSG}\nAt the end you will be prompted again for additional steps.\n"

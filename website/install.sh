@@ -3,9 +3,7 @@
 if [[ -z ${ALLSKY_HOME} ]] ; then
 	export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")"/..)"
 fi
-# shellcheck disable=SC1090,SC1091
-source "${ALLSKY_HOME}/variables.sh" || exit 1
-# shellcheck disable=SC1090,SC1091
+source "${ALLSKY_HOME}/variables.sh"	|| exit 99
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit 1
 
 if [[ $EUID -eq 0 ]]; then
@@ -19,10 +17,8 @@ if ! json_pp < "${SETTINGS_FILE}" > /dev/null; then
 	exit 1
 fi
 
-# shellcheck disable=SC1090,SC1091
-source "${ALLSKY_CONFIG}/config.sh" || exit 99
-# shellcheck disable=SC1090,SC1091
-source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
+source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
 ME="$(basename "${BASH_ARGV0}")"
 
 LATITUDE="$(settings ".latitude")"
@@ -135,14 +131,14 @@ set_configuration_file_variables() {
 check_for_older_config_file() {
 	FILE="${1}"
 
-	OLD=false
+	OLD="false"
 	PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${FILE}")"
 	if [[ ${PRIOR_CONFIG_VERSION} == "null" ]]; then
 		PRIOR_CONFIG_VERSION="** Unknown **"
-		OLD=true
+		OLD="true"
 	else
 		NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_FILE}")"
-		[[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]] && OLD=true
+		[[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]] && OLD="true"
 	fi
 
 	if [[ ${OLD} == "true" ]]; then
@@ -254,7 +250,7 @@ create_website_configuration_file() {
 
 
 ##### If the user is updating the website, use the prior config file(s).
-HAS_NEW_CONFIGURATION_FILE=false
+HAS_NEW_CONFIGURATION_FILE="false"
 modify_configuration_variables() {
 	if [[ ${DEBUG} == "true" ]];then
 		display_msg debug "modify_configuration_variables(): PRIOR_WEBSITE_TYPE = ${PRIOR_WEBSITE_TYPE}"
@@ -275,7 +271,7 @@ modify_configuration_variables() {
 			else
 				# This "shouldn't" happen with a new-style website, but in case it does...
 				display_msg warning "Prior website in ${PRIOR_WEBSITE} had no '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
-				HAS_NEW_CONFIGURATION_FILE=true
+				HAS_NEW_CONFIGURATION_FILE="true"
 			fi
 		else
 			# Old-style Website - merge old config files into new one.
@@ -292,11 +288,11 @@ modify_configuration_variables() {
 			MSG="${MSG}\nCheck the Wiki for the meaning of the MANY new options."
 			display_msg notice "${MSG}"
 
-			HAS_NEW_CONFIGURATION_FILE=true
+			HAS_NEW_CONFIGURATION_FILE="true"
 		fi
 	else
 		# New website, so set up a default configuration file.
-		HAS_NEW_CONFIGURATION_FILE=true
+		HAS_NEW_CONFIGURATION_FILE="true"
 	fi
 
 	if [[ ${HAS_NEW_CONFIGURATION_FILE} == "true" ]]; then
@@ -433,7 +429,7 @@ download_Allsky_Website() {
 ##### See if they are upgrading the website, and if so, if the prior website was an "old" one.
 # "old" means in the old location and with the old configuration files.
 save_prior_website() {
-	SAVED_OLD=false
+	SAVED_OLD="false"
 
 	if [[ -d ${ALLSKY_WEBSITE} ]]; then
 		# Has a older version of the new-style website.
@@ -469,7 +465,7 @@ save_prior_website() {
 		return
 	fi
 
-	SAVED_OLD=true
+	SAVED_OLD="true"
 }
 
 ##### Restore prior files.
@@ -530,7 +526,7 @@ restore_prior_files() {
 # Check arguments
 OK="true"
 HELP="false"
-DEBUG=false
+DEBUG="false"
 DEBUG_ARG=""
 BRANCH="master"
 UPDATE="false"
@@ -543,7 +539,7 @@ while [[ $# -gt 0 ]]; do
 			HELP="true"
 			;;
 		--debug)
-			DEBUG=true
+			DEBUG="true"
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			;;
 		--branch)

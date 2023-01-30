@@ -92,9 +92,11 @@ usage_and_exit()
 		C="${RED}"
 	fi
 	echo
-	echo -e "${C}Usage: ${ME} [--help] [--debug] [--update] [--function function]${NC}"
+	echo -e "${C}Usage: ${ME} [--help] [--debug [...]] [--update] [--function function]${NC}"
 	echo
 	echo "'--help' displays this message and exits."
+	echo
+	echo "'--debug' displays debugging information. Can be called multiple times to increase level."
 	echo
 	echo "'--update' should only be used when instructed to by an Allsky Website page."
 	echo
@@ -436,7 +438,7 @@ check_installation_success() {
 	local RET=${1}
 	local MESSAGE="${2}"
 	local LOG="${3}"
-	local D="${4}"
+	local D=${4}
 
 	if [[ ${RET} -ne 0 ]]; then
 		display_msg error "${MESSAGE}"
@@ -447,7 +449,7 @@ check_installation_success() {
 
 		return 1
 	fi
-	[[ ${D} == "true" ]] && cat "${LOG}"
+	[[ ${D} -gt 1 ]] && cat "${LOG}"
 
 	return 0
 }
@@ -1013,8 +1015,8 @@ install_overlay()
 			L="${TMP}.${COUNT}.log"
 			display_msg progress "   === Package # ${COUNT} of ${NUM}: [${package}]"
 			pip3 install --no-warn-script-location --build "${PIP3_BUILD}" -r /tmp/package > "${L}" 2>&1
-			# These files are too big to display so pass in "false" instead of ${DEBUG}.
-			if ! check_installation_success $? "Python dependency [${package}] failed" "${L}" false ; then
+			# These files are too big to display so pass in "0" instead of ${DEBUG}.
+			if ! check_installation_success $? "Python dependency [${package}] failed" "${L}" 0 ; then
 				rm -fr "${PIP3_BUILD}"
 				exit_with_image 1
 			fi
@@ -1090,7 +1092,7 @@ OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 ##### Check arguments
 OK="true"
 HELP="false"
-DEBUG="false"
+DEBUG=0
 DEBUG_ARG=""
 UPDATE="false"
 FUNCTION=""
@@ -1101,7 +1103,7 @@ while [ $# -gt 0 ]; do
 			HELP="true"
 			;;
 		--debug)
-			DEBUG="true"
+			((DEBUG++))
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			;;
 		--update)

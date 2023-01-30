@@ -424,17 +424,7 @@ do_remote_website() {
 		fi
 	fi
 
-	display_msg progress "** The Pi portion of the Remote Allsky Website Installation is complete."
-	if [[ ${HAS_PRIOR_REMOTE_SERVER} == "true" ]]; then
-		display_msg info "Please manually update all the files"
-		display_msg info "on your remote server the same way you installed them orginally."
-	else
-		display_msg info "Please manually install all the files"
-		display_msg info "on your remote server from ${GITHUB_ROOT}/allsky-website.git."
-### TODO: Can we tell the user how?
-### Is it possible to ask them if they want this script to download the files to the Pi
-### and then ftp the whole directory structure?   Wouldn't that be cool?
-	fi
+	display_msg progress "The Pi portion of the Remote Allsky Website Installation is complete."
 
 	exit 0
 }
@@ -456,21 +446,20 @@ do_update() {
 
 ##### Download the Allsky Website files and exit on error.
 download_Allsky_Website() {
-	if [[ ${BRANCH} == "" ]]; then
-		BRANCH="master"
-		B=""
-	else
+	local B=""
+	local BRANCH_ARG=""
+	if [[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
 		B=" from branch ${BRANCH}"
+		BRANCH_ARG="-b ${BRANCH}"
 	fi
-	BRANCH="-b ${BRANCH}"
 
 	display_msg progress "Downloading Allsky Website files${B} into ${ALLSKY_WEBSITE}."
 	TMP="/tmp/git.install.tmp"
 	# shellcheck disable=SC2086
-	git clone ${BRANCH} "${GITHUB_ROOT}/allsky-website.git" "${ALLSKY_WEBSITE}" > ${TMP} 2>&1
+	git clone ${BRANCH_ARG} "${GITHUB_ROOT}/allsky-website.git" "${ALLSKY_WEBSITE}" > "${TMP}" 2>&1
 	if [[ $? -ne 0 ]]; then
 		display_msg error "Unable to get Allsky Website files from git."
-		cat ${TMP}
+		cat "${TMP}"
 		exit 4
 	fi
 }
@@ -669,7 +658,7 @@ save_prior_website
 ##### Download Allsky Website files
 download_Allsky_Website
 
-cd "${ALLSKY_WEBSITE}" || exit 1
+cd "${ALLSKY_WEBSITE}" || exit 99
 
 modify_locations
 modify_configuration_variables

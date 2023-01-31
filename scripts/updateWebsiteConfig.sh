@@ -33,7 +33,7 @@ function usage_and_exit()
 	else
 		C="${wERROR}"
 	fi
-	echo -e "${C}Usage: ${ME} [--help] [--debug] [--verbosity silent|summary|verbose] [--config file] key label new_value [...]${wNC}" >&2
+	echo -e "${C}Usage: ${ME} [--help] [--debug] [--verbosity silent|summary|verbose] [--local | --remote | --config file] key label new_value [...]${wNC}" >&2
 	echo "There must be a multiple of 3 arguments." >&2
 	# shellcheck disable=SC2086
 	exit ${RET}
@@ -56,6 +56,12 @@ while [[ $# -gt 0 ]]; do
 		--verbosity)
 			VERBOSITY="${2}"
 			shift
+			;;
+		--local)
+			CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"	# local website
+			;;
+		--remote)
+			CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"	# remote website
 			;;
 		--config)
 			CONFIG_FILE="${2}"

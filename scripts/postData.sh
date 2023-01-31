@@ -5,37 +5,35 @@
 # A copy of the settings file is also uploaded.
 
 # Allow this script to be executed manually or by sudo, which requires several variables to be set.
-if [[ -z ${ALLSKY_HOME} ]]; then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-	export ALLSKY_HOME
-fi
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 
 ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh" || exit 99
-source "${ALLSKY_CONFIG}/config.sh" || exit 99
-source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
-source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
+source "${ALLSKY_HOME}/variables.sh"		|| exit 99
+source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit 99
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
 wDEBUG="${wDEBUG}"
 wNC="${wNC}"
 
+WEBSITES="$(whatWebsites)"
 # Make sure a local or remote Allsky Website exists.
-if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
-	HAS_LOCAL_WEBSITE=true
-else
-	HAS_LOCAL_WEBSITE=false
-fi
-
-# The remote config file must exist, plus a way to upload it (i.e., PROTOCOL is set).
-if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" && -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-	HAS_REMOTE_WEBSITE=true
-else
-	HAS_REMOTE_WEBSITE=false
-fi
-if [[ ${HAS_LOCAL_WEBSITE} == "false" && ${HAS_REMOTE_WEBSITE} == "false" ]]; then
+if [[ ${WEBSITES} == "none" ]]; then
 	echo -e "${YELLOW}${ME}: WARNING: No local or remote website found.${NC}"
 	exit 0		# It's not an error
 fi
+
+if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
+	HAS_LOCAL_WEBSITE="true"
+else
+	HAS_LOCAL_WEBSITE="false"
+fi
+if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
+	HAS_REMOTE_WEBSITE="true"
+else
+	HAS_REMOTE_WEBSITE="false"
+fi
+
 
 usage_and_exit()
 {
@@ -56,7 +54,8 @@ SETTINGS_ONLY="false"
 ALL_FILES="false"
 RET=0
 while [[ $# -gt 0 ]]; do
-	case "${1}" in
+	ARG="${1}"
+	case "${ARG,,}" in		# lower case
 		--debug)
 			DEBUG="true"
 			shift
@@ -65,16 +64,16 @@ while [[ $# -gt 0 ]]; do
 			HELP="true"
 			shift
 			;;
-		--allFiles)
+		--allfiles)
 			ALL_FILES="true"
 			shift
 			;;
-		--settingsOnly)
+		--settingsonly)
 			SETTINGS_ONLY="true"
 			shift
 			;;
 		-*)
-			echo -e "${RED}Unknown argument '${1}'.${NC}" >&2
+			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
 			shift
 			RET=1
 			;;
@@ -87,17 +86,13 @@ done
 [[ ${HELP} = "true" ]] && usage_and_exit 0
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
-	latitude="$(convertLatLong "$(settings ".latitude")" "latitude")"
-	LATRET=$?
-	longitude="$(convertLatLong "$(settings ".longitude")" "longitude")"
-	LONGRET=$?
-	OK=true
-	if [[ ${LATRET} -ne 0 ]]; then
-		OK=false
+	OK="true"
+	if ! latitude="$(convertLatLong "$(settings ".latitude")" "latitude")" ; then
+		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${latitude}"
 	fi
-	if [[ ${LONGRET} -ne 0 ]]; then
-		OK=false
+	if ! longitude="$(convertLatLong "$(settings ".longitude")" "longitude")" ; then
+		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${longitude}"
 	fi
 	[[ ${OK} == "false" ]] && exit 1

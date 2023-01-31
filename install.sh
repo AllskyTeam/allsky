@@ -121,23 +121,6 @@ calc_wt_size() {
 
 
 ####
-# Get a shell variable's value.  Assume it starts the line.
-# This function is useful when we can't "source" the file.
-get_variable() {
-	local VARIABLE="${1}"
-	local FILE="${2}"
-	local LINE=""
-	if ! LINE="$(grep "^${VARIABLE}=" "${FILE}")" ; then
-		return 1
-	fi
-
-	echo "${LINE}" | sed -e "s/^${VARIABLE}=//" -e 's/"//g'
-	#shellcheck disable=SC2086
-	return 0
-}
-
-
-####
 # Stop Allsky.  If it's not running, nothing happens.
 stop_allsky() {
 	sudo systemctl stop allsky 2> /dev/null
@@ -173,7 +156,7 @@ select_camera_type() {
 			# We can't "source" the config file because the new settings file doesn't exist,
 			# so the "source" will fail.
 			CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
-			[[ ${CAMERA_TYPE} != "" ]] && return
+			[[ -n ${CAMERA_TYPE} ]] && return
 		fi
 	fi
 	# If they have the "old" style Allsky, don't bother trying to map the old $CAMERA
@@ -351,7 +334,7 @@ check_swap() {
 	CURRENT_SWAP=$(free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }')		# in MB
 	CURRENT_SWAP=${CURRENT_SWAP:-0}
 	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
-		[[ ${FUNCTION} == "" ]] && sleep 2		# time to read prior messages
+		[[ -z ${FUNCTION} ]] && sleep 2		# time to read prior messages
 		if [[ ${CURRENT_SWAP} -eq 0 ]]; then
 			AMT="no"
 			M="added"
@@ -373,7 +356,7 @@ check_swap() {
 
 		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 18 ${WT_WIDTH} \
 			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
-		if [[ ${SWAP_SIZE} == "" || ${SWAP_SIZE} == "0" ]]; then
+		if [[ -z ${SWAP_SIZE} || ${SWAP_SIZE} == "0" ]]; then
 			if [[ ${CURRENT_SWAP} -eq 0 && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
 				display_msg --log warning "With no swap space you run the risk of programs failing."
 			else
@@ -1051,7 +1034,7 @@ restore_prior_files() {
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3
 	display_msg info "\n${MSG}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
-	[[ ${MSG2} != "" ]] && echo -e "\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
+	[[ -n ${MSG2} ]] && echo -e "\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
 }
 
 
@@ -1296,7 +1279,7 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
 ##### Display the welcome header
-if [[ ${FUNCTION} == "" ]]; then
+if [[ -z ${FUNCTION} ]]; then
 	if [[ ${UPDATE} == "true" ]]; then
 		H="Updating Allsky"
 	else
@@ -1321,7 +1304,7 @@ get_branch
 does_old_WebUI_locaion_exist
 
 ##### Execute any specified function, then exit.
-if [[ ${FUNCTION} != "" ]]; then
+if [[ -n ${FUNCTION} ]]; then
 	if ! type "${FUNCTION}" > /dev/null; then
 		display_msg error "Unknown function: '${FUNCTION}'."
 		exit 1

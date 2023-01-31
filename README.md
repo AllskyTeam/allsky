@@ -11,19 +11,19 @@ This is the source code for the Allsky Camera project described [on Instructable
 
 <!-- =============================================================================== --> 
 ### Requirements
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
 In order to get the camera working properly you will need the following hardware:
 
- * A camera (Raspberry Pi HQ or ZWO ASI)
+ * A camera (Raspberry Pi HQ, Module 3 or newer, or ZWO ASI)
 	- The ZWO ASI 120-series cameras are not recommended due to somewhat poor quality.
  * A Raspberry Pi (2, 3, 4 or Zero).
 	- The Pi Zero, with its limited memory, is not recommended unless cost is a major concern.
 
 **NOTE:** Owners of USB2.0 cameras such as ASI120MC and ASI120MM may need to do a [firmware upgrade](https://astronomy-imaging-camera.com/software-drivers).
 
-**NOTE:** The T7 / T7C cameras, e.g., from Datyson or other sellers, are not officially supported but persistent users may get them to work by following [these instructions](https://github.com/thomasjacquin/allsky/wiki/Troubleshoot-T7-Cameras).
+**NOTE:** The T7 / T7C cameras from Datyson or other sellers are not officially supported but persistent users may get them to work by following the "Troubleshooting -> T7 cameras" documentation page.
 
 ---
 </details>
@@ -32,15 +32,15 @@ In order to get the camera working properly you will need the following hardware
 &nbsp;
 <!-- =============================================================================== --> 
 ### Software Installation
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
 PatriotAstro created a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) describing the installation steps below.
 **We highly suggest viewing it before installing the software.**
 
-You will need to install the Raspberry Pi Operating System on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
+You will need to install the Raspberry Pi Operating System on your Raspberry Pi. Follow [these instructions](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
 
-Make sure you have a working Internet connection by setting it through [the terminal window](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md).
+Make sure your Pi has a working Internet connection by setting it through [the terminal window](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md).
 
 1. Start by installing git if not already on your Pi.  Open the terminal window (or SSH into your Pi) and type the following:
     ```shell
@@ -52,7 +52,6 @@ Make sure you have a working Internet connection by setting it through [the term
 	cd
 	mv allsky allsky-OLD
 	```
-	The installation will look for `allsky-OLD` and transfer files from it to the new location.
 
 3. Now fetch the code from GitHub:
     ```shell
@@ -66,7 +65,9 @@ Make sure you have a working Internet connection by setting it through [the term
     ./install.sh
     ```
 
-There are many configuration variables that need to be set as described on the [allsky Settings](https://github.com/thomasjacquin/allsky/wiki/allsky-Settings) page.
+More detailed instructions can be found in the "Installing / Upgrading" pages of the Allsky documentation viewable via the WebUI.
+
+There are many configuration variables that need to be set as described in the "Setting -> Allsky" documentation page.
 	
 > NOTE: Starting with this release, the WebUI is included in the main Allsky package.
 
@@ -78,7 +79,7 @@ There are many configuration variables that need to be set as described on the [
 &nbsp;
 <!-- =============================================================================== --> 
 ### Usage
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 ### Autostart
 
@@ -123,7 +124,7 @@ If you are using a desktop environment (Pixel, Mate, LXDE, etc) or using remote 
 &nbsp;
 <!-- =============================================================================== --> 
 ### Web User Interface (WebUI)
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
 <p align="center"><img src="http://www.thomasjacquin.com/allsky-portal/screenshots/camera-settings.jpg" width="75%"></p>
@@ -182,7 +183,7 @@ Here are some screenshots:
 &nbsp;
 <!-- =============================================================================== --> 
 ### Allsky Website - `allsky-website` package
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
 You can display your files on a website, either on the Pi or on another machine.
@@ -217,7 +218,7 @@ Once you've installed the website look at the descriptions of the settings on th
 &nbsp;
 <!-- =============================================================================== --> 
 ### Dark frame subtraction
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
 Dark frame subtraction removes hot pixels from images. It does this by taking images at different temperatures with a cover on your camera lens and subtracting those images from all images taken throughout the night.
@@ -231,7 +232,7 @@ See [this Wiki page](https://github.com/thomasjacquin/allsky/wiki/Dark-Frames-Ex
 &nbsp;
 <!-- =============================================================================== --> 
 ### Timelapse
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
 By default, a timelapse video is generated at the end of nighttime from all of the images captured in the last 24 hours.
@@ -257,7 +258,7 @@ scripts/generateForDay.sh -t 20220710
 &nbsp;
 <!-- =============================================================================== --> 
 ### Keograms
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/keogram-annotated.jpg)
@@ -280,7 +281,7 @@ scripts/generateForDay.sh -k 20220710
 &nbsp;
 <!-- =============================================================================== --> 
 ### Startrails
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
 ![](http://www.thomasjacquin.com/allsky-portal/screenshots/startrail.jpg)
@@ -302,7 +303,7 @@ scripts/generateForDay.sh -s 20220710
 &nbsp;
 <!-- =============================================================================== --> 
 ### Automatic deletion of old data
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
 You can specify how many days worth of images to keep in order to keep the Raspberry Pi SD card from filling up. To change the default number of days, change the number below in `allsky/config/config.sh`:
@@ -323,7 +324,7 @@ In both cases, set to `""` to keep all days' data, but be careful that your SD c
 &nbsp;
 <!-- =============================================================================== --> 
 ### Logging information
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
 When using Allsky, information is written to a log file. In case the program stopped, crashed, or behaved in an abnormal way, take a look at:
@@ -340,7 +341,7 @@ There are other temporary log files in `allsky/tmp` that are used for debugging.
 &nbsp;
 <!-- =============================================================================== --> 
 ### Information for advanced users
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
 Experienced users may want to add some additional processing steps at the end of nighttime.
@@ -373,31 +374,33 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 
 <!-- =============================================================================== --> 
 ### Release changes
-<details><summary>Click here</summary>
+<details><summary>More Details...</summary>
 
 &nbsp;  
-<!-- some of the changes haven't been made as of June 3, 2022, but should be for the next release -->
-* version **v2022.MM.DD**: 
+* version **v2023.MM.DD**: 
 	* Allsky package:
-		* The `CAMERA` variable in `config.sh` was removed; to update the camera type, use the new **Camera Type** setting in the WebUI. This is an advanced setting so you need to click the "Show Advanced Options" button to view it.
+		* New camera support: All ZWO cameras as of January, 2023.  RPi Module 3 camera.
 		* "Mini" timelapse videos can be created that contain a user-configurable number of the most recent images.  This allows you to continually see the recent sky conditions.
 		* Installation improvements:
 			* If there is not enough swap space configured you are prompted to add more.  Doing this decreases the chance of timelapse creation problems.
 			* If `allsky/tmp` is not a memory-resident filesystem you are prompted to make it one.  This SIGNIFICANTLY decreases the number of writes to the SD card, prolonging its life.			
 			* If a `~/allsky-OLD` directory is found it's assumed to be a prior release of Allsky and you'll be prompted to have its images, darks, and other items moved to the new release.  This is the suggested way to upgrade a current Allsky release.
-		* An `endOfDay_additionalSteps.sh` script can now be run after the transition from daytime to nighttime.  This can be used, for example, to create a timelapse of daytime images.
+		* `scripts/check_allsky.sh` was added to perform basic sanity checking of your Allsky installation.
 		* Latitude and longitude can now be specified as either a decimal number (e.g., `-105.21`) or with N, S, E, W (e.g., `105.21W`).
+		* Removed settings from `config.sh`:
+			* `CAMERA`: To update the camera type, use the new **Camera Type** setting in the WebUI. This is an advanced setting so you need to click the "Show Advanced Options" button to view it.
+			* `POST_END_OF_NIGHT_DATA` is no longer needed since Allsky automatically determines if you have a local Allsky Website, a remote one, or both.
 		* The Secure CP (`scp`) and Google Cloud Service (`gcs`) protocols are now supported for file uploads.
 		* New ftp-settings.sh variables:
 			* `REMOTE_PORT`: specifies a non-default FTP port.
 			* `SSH_KEY_FILE`: path to a SSH private key. When `scp` is used for uploads, this identify file will be used to establish the secure connection.
 		* Sanity checking is done on many settings.  For example, URLs in Allsky Map data must be reachable from the Internet, and crop areas must fit within the image.
-		* The Wiki now points to files in the GitHub `documentation` directory.  A copy of that directory is also on the Pi in `~/allsky/documentation` so you can access the documentation via the Documentation link in the WebUI.
-		* The delay between RPi images has been shortened.
+		* The Wiki now points to files in the GitHub `documentation` directory.  A copy of that directory is also on the Pi and accessible via the Documentation link in the WebUI.
 		* Several variables in the `config.sh` file were removed and others renamed - see the WebUI section below.
-		* Several additional troubleshooting files are written to ~/allsky/tmp.
 		* AUTO_STRETCH now works, and is documented with sample images.
 		* Images can now be uploaded using the full `image-YYYYMMDDHHMMSS.jpg` name instead of the shorter `image.jpg` name.  See the `IMG_UPLOAD_ORIGINAL_NAME` Allsky setting in the documentation.
+		* Several additional troubleshooting files are written to ~/allsky/tmp.
+		* An `endOfDay_additionalSteps.sh` script can now be run after the transition from daytime to nighttime.  This can be used, for example, to create a timelapse of daytime images.
 		* Many minor enhancements and bug fixes were made.
 
 	* WebUI:
@@ -575,9 +578,9 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 ---
 </details>
 
+&nbsp;
 <!-- =============================================================================== --> 
 ### Donation
 If you found this project useful, here's a link to send Thomas a cup of coffee :)
 
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
-

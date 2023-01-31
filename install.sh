@@ -592,9 +592,6 @@ set_permissions() {
 	chmod -R 775 "${ALLSKY_CONFIG}/overlay"
 	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}/overlay"
 
-	sudo find "${ALLSKY_CONFIG}/overlay/" -type f -exec chmod 644 {} \;
-	sudo find "${ALLSKY_CONFIG}/overlay/" -type d -exec chmod 755 {} \;
-
 	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 }
 

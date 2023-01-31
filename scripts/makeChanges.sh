@@ -3,20 +3,18 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
-if [[ -z ${ALLSKY_HOME} ]]; then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-	export ALLSKY_HOME
-fi
-source "${ALLSKY_HOME}/variables.sh" || exit 99
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
+
+source "${ALLSKY_HOME}/variables.sh"			|| exit 99
 
 # This script may be called during installation BEFORE there is a settings file.
 # config.sh looks for the file and produces an error if it doesn't exist,
 # so only include these two files if there IS a settings file.
 if [[ -f ${SETTINGS_FILE} ]]; then
-	source "${ALLSKY_CONFIG}/config.sh" || exit 99
-	source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
+	source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
+	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
 fi
-source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
+source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit 99
 
 function usage_and_exit()
 {
@@ -36,11 +34,11 @@ DEBUG_ARG=""
 HELP="false"
 OPTIONS_FILE_ONLY="false"
 RESTARTING="false"			# Will the caller restart Allsky?
-CAMERA_TYPE_ONLY="false"		# Only update the cameraType ?
+CAMERA_TYPE_ONLY="false"	# Only update the cameraType ?
 FORCE=""					# Passed to createAllskyOptions.php
 
 while [[ $# -gt 0 ]]; do
-	ARG="${1}"
+	ARG="${1,,}"					# convert to lowercase
 	case "${ARG}" in
 		--debug)
 			DEBUG="true"
@@ -49,11 +47,11 @@ while [[ $# -gt 0 ]]; do
 		--help)
 			HELP="true"
 			;;
-		--optionsOnly)
+		--optionsonly)
 			OPTIONS_FILE_ONLY="true"
 			SETTINGS_FILE=""
 			;;
-		--cameraTypeOnly)
+		--cameratypeonly)
 			CAMERA_TYPE_ONLY="true"
 			;;
 		--force)
@@ -99,6 +97,7 @@ POSTTOMAP_ACTION=""
 WEBSITE_CONFIG=()
 WEB_CONFIG_FILE=""
 HAS_WEBSITE_RET=""
+WEBSITES=""		# local, remote, both, none
 SHOW_POSTDATA_MESSAGE="true"
 TWILIGHT_DATA_CHANGED="false"
 CAMERA_TYPE_CHANGED="false"
@@ -107,17 +106,17 @@ GOT_WARNING="false"
 # Several of the fields are in the Allsky Website configuration file,
 # so check if the IS a file before trying to update it.
 # Return 0 on found and 1 on not found.
+# The first time we're called, set ${WEBSITES}
 function check_website()
 {
-	# shellcheck disable=SC2086
-	[[ ${HAS_WEBSITE_RET} != "" ]] && return ${HAS_WEBSITE_RET}		# already checked
+	[[ -n ${HAS_WEBSITE_RET} ]] && return ${HAS_WEBSITE_RET}		# already checked
 
-	WEB_CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-	# shellcheck disable=SC2086
-	[[ -f ${WEB_CONFIG_FILE} ]] && HAS_WEBSITE_RET=0 && return ${HAS_WEBSITE_RET}
-
-	WEB_CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-	if [[ -f ${WEB_CONFIG_FILE} ]]; then
+	WEBSITES="$(whatWebsites)"
+	if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
+		WEB_CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		HAS_WEBSITE_RET=0
+	elif [[ ${WEBSITES} == "remote" ]]; then
+		WEB_CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		HAS_WEBSITE_RET=0
 	else
 		WEB_CONFIG_FILE=""
@@ -126,6 +125,7 @@ function check_website()
 	# shellcheck disable=SC2086
 	return ${HAS_WEBSITE_RET}
 }
+check_website		# invoke to set variables
 
 while [[ $# -gt 0 ]]; do
 	KEY="${1}"
@@ -133,19 +133,18 @@ while [[ $# -gt 0 ]]; do
 	NEW_VALUE="${3}"
 	if [[ ${DEBUG} == "true" ]]; then
 		MSG="New ${KEY} = [${NEW_VALUE}]"
-		if [[ ${ON_TTY} -eq 1 ]]; then
-			echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
-		else	# called from WebUI.
-			echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
+		echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
+		if [[ ${ON_TTY} -eq 0 ]]; then
+			# called from WebUI.
 			echo -e "<script>console.log('${MSG}');</script>"
 		fi
 	fi
 
 	# Unfortunately, the Allsky configuration file was already updated,
 	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
-	case "${KEY}" in
+	case "${KEY,,}" in		# convert to lowercase
 
-		cameraType)
+		cameratype)
 			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
 				# If we can't set the new camera type, it's a major problem so exit right away.
@@ -175,7 +174,10 @@ while [[ $# -gt 0 ]]; do
 				else
 					C=""
 				fi
-				[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Calling capture_${NEW_VALUE} ${C} -cc_file '${CC_FILE}'${wNC}"
+				if [[ ${DEBUG} == "true" ]]; then
+					echo -e "${wDEBUG}Calling capture_${NEW_VALUE} ${C} -cc_file '${CC_FILE}'${wNC}"
+				fi
+
 				# shellcheck disable=SC2086
 				"${ALLSKY_BIN}/capture_${NEW_VALUE}" ${C} -debuglevel 3 -cc_file "${CC_FILE}"
 				RET=$?
@@ -326,7 +328,7 @@ while [[ $# -gt 0 ]]; do
 			TWILIGHT_DATA_CHANGED="true"
 			;;
 
-		takeDaytimeImages)
+		takedaytimeimages)
 			NEEDS_RESTART="true"
 			TWILIGHT_DATA_CHANGED="true"
 			;;
@@ -343,20 +345,22 @@ while [[ $# -gt 0 ]]; do
 			fi
 			;;
 
-		dayTuningFile | nightTuningFile)
+		daytuningfile | nighttuningfile)
 			if [[ -n ${NEW_VALUE} && ! -f ${NEW_VALUE} ]]; then
 				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
 			fi
 			NEEDS_RESTART="true"
 			;;
 
-		displaySettings)
+		displaysettings)
 			if [[ ${NEW_VALUE} -eq 0 ]]; then
 				NEW_VALUE="false"
 			else
 				NEW_VALUE="true"
 			fi
 			if check_website; then
+				# If there are two Websites, this gets the index in the first one.
+				# Let's hope it's the same index in the second one...
 				PARENT="homePage.popoutIcons"
 				INDEX=$(getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "Allsky Settings")
 				if [[ ${INDEX} -ge 0 ]]; then
@@ -398,11 +402,11 @@ done
 
 if check_website ; then
 	# Anytime a setting in settings.json changed we want to
-	# send an updated file to any Allsky Website(s).
+	# send an updated file to all Allsky Website(s).
 	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postData.sh${NC}"
 	x=""
 	[[ ${TWILIGHT_DATA_CHANGED} == "false" ]] && x="${x} --settingsOnly"
-	[[ ${CAMERA_TYPE_CHANGED} == "false" ]] && x="${x} --allFiles"
+	[[ ${CAMERA_TYPE_CHANGED}   == "false" ]] && x="${x} --allFiles"
 
 	# shellcheck disable=SC2086
 	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" ${x} >&2)" ; then
@@ -422,9 +426,37 @@ fi
 
 # shellcheck disable=SC2128
 if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
-	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing updateWebsiteConfig.sh${NC}"
-	# shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} "${WEBSITE_CONFIG[@]}"
+	# Update the local and/or Website remote config file
+	if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
+		if [[ ${DEBUG} == "true" ]]; then
+			echo -e "${wDEBUG}Executing updateWebsiteConfig.sh local${NC}"
+		fi
+		# shellcheck disable=SC2086
+		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --local "${WEBSITE_CONFIG[@]}"
+	fi
+	if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
+		if [[ ${DEBUG} == "true" ]]; then
+			echo -e "${wDEBUG}Executing updateWebsiteConfig.sh remote${NC}"
+		fi
+		# shellcheck disable=SC2086
+		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --remote "${WEBSITE_CONFIG[@]}"
+
+		FILE_TO_UPLOAD="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+		TO="${IMAGE_DIR}"
+		if [[ ${DEBUG} == "true" ]]; then
+			echo -e "${wDEBUG}Uploading '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}' to ${TO:-root}${wNC}"
+		fi
+
+		"${ALLSKY_SCRIPTS}/upload.sh" --silent \
+			"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" \
+			"${TO}" \
+			"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
+			"RemoteWebsite"
+		R=$?
+		if [[ ${R} -ne 0 ]]; then
+			echo -e "${RED}${ME}: Unable to upload '${FILE_TO_UPLOAD}'.${NC}"
+		fi
+	fi
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
@@ -445,3 +477,4 @@ if [[ ${GOT_WARNING} == "true" ]]; then
 else
 	exit 0
 fi
+

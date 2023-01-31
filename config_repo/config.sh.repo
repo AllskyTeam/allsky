@@ -148,9 +148,6 @@ DAYS_TO_KEEP=14
 # Same as DAYS_TO_KEEP, but for the Allsky Website, if installed.
 WEB_DAYS_TO_KEEP=""
 
-# Set to "true" to upload data to your server at the end of each night.
-POST_END_OF_NIGHT_DATA="false"
-
 # See the documentation for a description of this setting.
 WEBUI_DATA_FILES=""
 

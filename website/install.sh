@@ -111,11 +111,6 @@ modify_locations() {
 
 ##### Create and upload a new data.json file.
 upload_data_json_file() {
-	if [[ ${POST_END_OF_NIGHT_DATA} != "true" ]]; then
-		display_msg progress "Enabling POST_END_OF_NIGHT_DATA."
-		sed -i 's/^POST_END_OF_NIGHT_DATA.*/POST_END_OF_NIGHT_DATA="true"/' "${ALLSKY_CONFIG}/config.sh"
-	fi
-
 	# Copy the file to ${ALLSKY_WEBSITE}.
 	# This also copies the settings file and a few others needed to display settings.
 	display_msg progress "Uploading twlight data and initial files."

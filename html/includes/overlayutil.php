@@ -389,7 +389,7 @@ class OVERLAYUTIL
         }
 
         if ($proceed) {
-            $baseOverlayFolder = realpath(dirname(__FILE__) . '/..') . "/overlay/";
+            $baseOverlayFolder = ALLSKY_CONFIG . "/overlay/";
             $saveFolder = $baseOverlayFolder . "/fonts/";          
             $result = array();
             $zipArchive = new ZipArchive();
@@ -470,7 +470,7 @@ class OVERLAYUTIL
         $fileName = $this->overlayPath . '/overlay.json';
         $config = json_decode(file_get_contents($fileName));
 
-        $fontPath = ALLSKY_WEBUI . "/overlay" . $config->fonts->{$fontName}->fontPath;
+        $fontPath = ALLSKY_CONFIG . "/overlay" . $config->fonts->{$fontName}->fontPath;
         unlink($fontPath);
         unset($config->fonts->{$fontName});
 

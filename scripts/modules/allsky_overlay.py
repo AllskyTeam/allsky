@@ -354,7 +354,7 @@ class ALLSKYOVERLAY:
             fontConfigPath = fontData['fontPath']
             if fontConfigPath.startswith('/'):
                 fontConfigPath = fontConfigPath[1:]
-            fontPath = os.path.join(os.environ['ALLSKY_WEBUI'], 'overlay', fontConfigPath) 
+            fontPath = os.path.join(os.environ['ALLSKY_CONFIG'], 'overlay', fontConfigPath) 
         else:
             if font in systemFontMap:
                 fontPath = systemFontMap[font]['fontpath']

@@ -5,6 +5,7 @@
 # and config.sh.
 
 
+#####
 # Exit with error message and a custom notification image.
 function doExit()
 {
@@ -53,6 +54,7 @@ function doExit()
 }
 
 
+#####
 # RPi cameras can use either "raspistill" on Buster or "libcamera-still" on Bullseye
 # to actually take pictures.
 # Determine which to use.
@@ -109,6 +111,7 @@ function determineCommandToUse()
 }
 
 
+#####
 # Display a message of various types in appropriate colors.
 # Used primarily in installation scripts.
 function display_msg()
@@ -169,6 +172,7 @@ function display_msg()
 }
 
 
+#####
 # Seach for the specified field in the specified array, and return the index.
 # Return -1 on error.
 function getJSONarrayIndex()
@@ -191,7 +195,7 @@ function getJSONarrayIndex()
 }
 
 
-
+#####
 # Convert a latitude or longitude to NSEW format.
 # Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
 function convertLatLong()
@@ -239,26 +243,109 @@ function convertLatLong()
 	fi
 }
 
+
+#####
 # Get the sunrise and sunset times.
 # The angle can optionally be passed in.
 function get_sunrise_sunset()
 {
-	ANGLE="${1}"
-	source "${ALLSKY_HOME}/variables.sh" || return 1
-	source "${ALLSKY_CONFIG}/config.sh" || return 1
+	local ANGLE="${1}"
+	source "${ALLSKY_HOME}/variables.sh"	|| return 1
+	source "${ALLSKY_CONFIG}/config.sh"		|| return 1
 	[[ -z ${ANGLE} ]] && ANGLE="$(settings ".angle")"
-	LATITUDE="$(settings ".latitude")"
+	local LATITUDE="$(settings ".latitude")"
 		LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
-	LONGITUDE="$(settings ".longitude")"
+	local LONGITUDE="$(settings ".longitude")"
 		LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
 
 	echo "Rise    Set     Angle"
-	X="$(sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}")"
+	local X="$(sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}")"
 	# Replace comma by a couple spaces so the output looks nicer.
 	echo "${X/,/  }    0"
 	X="$(sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}")"
 	echo "${X/,/  }   ${ANGLE}"
 }
+
+
+#####
+# Get a shell variable's value.  The variable can have optional spaces and tabs before it.
+# This function is useful when we can't "source" the file.
+get_variable() {
+	local VARIABLE="${1}"
+	local FILE="${2}"
+	local LINE=""
+	local SEARCH_STRING="^[ 	]*${VARIABLE}="
+	if ! LINE="$(grep -E "${SEARCH_STRING}" "${FILE}")" ; then
+		return 1
+	fi
+
+	echo "${LINE}" | sed -e "s/${SEARCH_STRING}//" -e 's/"//g'
+	return 0
+}
+
+
+#####
+# Return which Allsky Websites exist - local, remote, both, none
+function whatWebsites()
+{
+	source "${ALLSKY_HOME}/variables.sh"	|| return 1
+
+	local HAS_LOCAL="false"
+	local HAS_REMOTE="false"
+
+	# Determine local Website - this is easy.
+	[[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]] && HAS_LOCAL="true"
+
+	# Determine remote Website - this is more involved.
+	# Not only must the file exist, but there also has to be a way to upload to it.
+	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
+		local PROTOCOL="$(get_variable "PROTOCOL" "${ALLSKY_CONFIG}/ftp-settings.sh")"
+		PROTOCOL=${PROTOCOL,,}
+		if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
+			local X
+			case "${PROTOCOL}" in
+				"" | local)
+					;;
+
+				ftp | ftps | sftp | scp)		# These require R
+					X="$(get_variable "REMOTE_HOST" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
+					[[ -n ${X} ]] && HAS_REMOTE="true"
+					;;
+
+				s3)
+					X="$(get_variable "AWS_CLI_DIR" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
+					[[ -n ${X} ]] && HAS_REMOTE="true"
+					;;
+
+				gcs)
+					X="$(get_variable "GCS_BUCKET" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
+					[[ -n ${X} ]] && HAS_REMOTE="true"
+					;;
+
+				*)
+					echo "ERROR: Unknown PROTOCOL: '${PROTOCOL}'" >&2
+					;;
+			esac
+		fi
+	fi
+
+	if [[ ${HAS_LOCAL} == "true" ]]; then
+		if [[ ${HAS_REMOTE} == "true" ]]; then
+			echo "both"
+		else
+			echo "local"
+		fi
+	elif [[ ${HAS_REMOTE} == "true" ]]; then
+		echo "remote"
+	else
+		echo "none"
+	fi
+
+	return 0
+}
+
+
+#####
 # Determine if there's a newer version of a file in the specified branch.
 # If so, download it to the specified location/name.
 function checkAndGetNewerFile()
@@ -294,6 +381,8 @@ function checkAndGetNewerFile()
 	fi
 }
 
+
+#####
 # Determine what GitHub branch is being run.
 # The branch name is in the "version" file:
 #	<VERSION> [BRANCH: <BRANCH>]
@@ -310,6 +399,7 @@ function getBranch()
 }
 
 
+#####
 # Check for valid pixel values.
 function checkPixelValue()	# variable name, variable value, width_or_height, resolution, min
 {
@@ -336,6 +426,8 @@ function checkPixelValue()	# variable name, variable value, width_or_height, res
 	return 0
 }
 
+
+#####
 # The crop rectangle needs to fit within the image, be an even number, and be greater than 0.
 # x, y, offset_x, offset_y, max_resolution_x, max_resolution_y
 function checkCropValues()

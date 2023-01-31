@@ -3,13 +3,12 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
-if [[ -z ${ALLSKY_HOME} ]]; then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-	export ALLSKY_HOME
-fi
-source "${ALLSKY_HOME}/variables.sh"
-source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_CONFIG}/ftp-settings.sh"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
+
+source "${ALLSKY_HOME}/variables.sh"		|| exit 99
+source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit 99
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
 
 if [[ $# -eq 1 ]]; then
 	if [[ ${1} = "--help" ]]; then
@@ -29,7 +28,8 @@ if [[ ! -d ${DATE_DIR} ]]; then
 fi
 
 # Post end of night data. This includes next twilight time
-if [[ ${POST_END_OF_NIGHT_DATA} == "true" ]]; then
+WEBSITES="$(whatWebsites)"
+if [[ ${WEBSITES} != "none" ]]; then
 	echo -e "${ME}: ===== Posting twilight data"
 	"${ALLSKY_SCRIPTS}/postData.sh"
 fi

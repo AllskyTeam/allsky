@@ -109,6 +109,7 @@ GOT_WARNING="false"
 # The first time we're called, set ${WEBSITES}
 function check_website()
 {
+	# shellcheck disable=SC2086
 	[[ -n ${HAS_WEBSITE_RET} ]] && return ${HAS_WEBSITE_RET}		# already checked
 
 	WEBSITES="$(whatWebsites)"

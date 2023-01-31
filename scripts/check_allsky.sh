@@ -7,10 +7,7 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
-if [[ -z ${ALLSKY_HOME} ]]; then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-	export ALLSKY_HOME
-fi
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 
 source "${ALLSKY_HOME}/variables.sh" || exit 99
 
@@ -23,13 +20,13 @@ fi
 if [[ $# -ne 0 ]]; then
 	# Don't show the "--newer" option since users should never use it.
 	# shellcheck disable=SC2154
-	echo -e "${wERROR}Usage: ${ME}${wNC}" >&2
+	echo -e "${wERROR}Usage: ${ME} [--debug] ${wNC}" >&2
 	exit 1
 fi
 
-source "${ALLSKY_CONFIG}/config.sh" || exit 99
-source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
-source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
+source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit 99
 
 
 if true; then ######################################## set to "false" when testing version is newer
@@ -115,24 +112,32 @@ function is_number()
 }
 
 # Return 0 if a local or remote website is detected.
+WEBSITE_TYPE=""
 function has_website()
 {
-	local RET=1
-	if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		# Also return string stating if it's local or remote website.
-		local WHERE=""
-		[[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]] && WHERE="local"
-		if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-			if [[ -n ${WHERE} ]]; then
-				WHERE="${WHERE} and remote"
-			else
-				WHERE="remote"
-			fi
-		fi
-		echo "${WHERE}"
+	if [[ -n ${WEBSITE_TYPE} ]]; then
+		[[ ${WEBSITE_TYPE} == "none" ]] && return 1
+		echo "${WEBSITE_TYPE}"
 		RET=0
 	fi
-	return ${RET}
+
+	WEBSITES="$(whatWebsites)"
+	if [[ ${WEBSITES} == "none" ]]; then
+		return 1
+	fi
+
+	# Also return string stating if it's local or remote website.
+	[[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]] && WEBSITE_TYPE="local"
+	if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
+		if [[ -n ${WEBSITE_TYPE} ]]; then
+			WEBSITE_TYPE="${WEBSITE_TYPE} and remote"
+		else
+			WEBSITE_TYPE="remote"
+		fi
+	fi
+	echo "${WEBSITE_TYPE}"
+
+	return 0
 }
 
 
@@ -244,16 +249,6 @@ if [[ ${BRIGHTNESS_THRESHOLD} == "0.0" ]]; then
 elif [[ ${BRIGHTNESS_THRESHOLD} == "1.0" ]]; then
 	heading "Warnings"
 	echo "BRIGHTNESS_THRESHOLD is 1.0 which means ALL images will be used when creating startrails."
-fi
-
-if [[ ${POST_END_OF_NIGHT_DATA} == "true" ]] && ! WHERE="$(has_website)" ; then
-	heading "Warnings"
-	echo "POST_END_OF_NIGHT_DATA is 'true' but no Allsky Website found."
-	echo "POST_END_OF_NIGHT_DATA should be set to 'false'."
-elif [[ ${POST_END_OF_NIGHT_DATA} == "false" ]] && WHERE="$(has_website)" ; then
-	heading "Warnings"
-	echo "POST_END_OF_NIGHT_DATA is 'false' but a ${WHERE} Allsky Website was found."
-	echo "POST_END_OF_NIGHT_DATA should be set to 'true'."
 fi
 
 if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} && (${PROTOCOL} == "" || ${PROTOCOL} == "local") ]]; then

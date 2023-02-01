@@ -199,6 +199,8 @@ create_webui_defines() {
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
+			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};" \
+			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
 }

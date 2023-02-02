@@ -1076,7 +1076,7 @@ do_update() {
 # Install the overlay and modules system
 install_overlay()
 {
-	cp "${ALLSKY_CONFIG}/overlay-${CAMERA_TYPE}.json" "${ALLSKY_CONFIG}/overlay.json"
+	cp "${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json" "${ALLSKY_OVERLAY}/config/overlay.json"
 
 	display_msg progress "Installing PHP Modules."
 	TMP="${INSTALL_LOGS_DIR}/PHP_modules.log"

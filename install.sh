@@ -501,7 +501,7 @@ install_webserver() {
 		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
 		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
 		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
-		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \		
+		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
 		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
 			"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
 	sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x

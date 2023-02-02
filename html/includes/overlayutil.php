@@ -429,7 +429,7 @@ class OVERLAYUTIL
                             $config = file_get_contents($configFileName);
                             $config = json_decode($config);
 
-                            $fontPath = str_replace($baseOverlayFolder, "", $fileName);
+                            $fontPath = str_replace($this->overlayPath, "", $fileName);
                             // TODO: Fix hard coded path
                             $obj = (object) [
                                 'fontPath' => $fontPath,

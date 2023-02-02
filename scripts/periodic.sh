@@ -1,7 +1,8 @@
 #!/bin/bash
 
-if [ -z "${ALLSKY_HOME}" ]; then
-	export ALLSKY_HOME="$(realpath $(dirname $(dirname "${BASH_ARGV0}")))"
+if [ -z "${ALLSKY_HOME}" ] ; then
+	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
+	export ALLSKY_HOME
 fi
 
 # shellcheck disable=SC1090,SC1091
@@ -18,9 +19,9 @@ do
     "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
     DELAY=$(jq ".periodictimer" "${ALLSKY_MODULES}/module-settings.json")
 
-    if [[ !($DELAY =~ ^[0-9]+$) ]]; then
+    if [[ ! ($DELAY =~ ^[0-9]+$) ]]; then
         DELAY=5
     fi
     echo "INFO: Sleeping for $DELAY seconds"
-    sleep $DELAY
+    sleep "$DELAY"
 done

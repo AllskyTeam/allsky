@@ -199,6 +199,8 @@ create_webui_defines() {
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
+			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};" \
+			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
 }
@@ -498,6 +500,7 @@ install_webserver() {
 		-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
 		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
 		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
+		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
 			"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
 	sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
 
@@ -588,8 +591,8 @@ set_permissions() {
 	# This is actually an Allsky Website file, but in case we restored the old website,
 	# set its permissions.
 	chgrp -f "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-	chmod -R 775 "${ALLSKY_WEBUI}/overlay"
-	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_WEBUI}/overlay"
+	chmod -R 775 "${ALLSKY_CONFIG}/overlay"
+	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}/overlay"
 
 	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 }
@@ -1073,7 +1076,7 @@ do_update() {
 # Install the overlay and modules system
 install_overlay()
 {
-	cp "${ALLSKY_CONFIG}/overlay-${CAMERA_TYPE}.json" "${ALLSKY_CONFIG}/overlay.json"
+	cp "${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json" "${ALLSKY_OVERLAY}/config/overlay.json"
 
 	display_msg progress "Installing PHP Modules."
 	TMP="${INSTALL_LOGS_DIR}/PHP_modules.log"

@@ -18,7 +18,7 @@ class OVERLAYUTIL
 
     public function __construct()
     {
-        $this->overlayPath = ALLSKY_CONFIG;
+        $this->overlayPath = ALLSKY_OVERLAY;
         $this->allskyTmp = ALLSKY_HOME . '/tmp';
     }
 
@@ -126,14 +126,14 @@ class OVERLAYUTIL
 
     public function getConfig()
     {
-        $fileName = $this->overlayPath . '/overlay.json';
+        $fileName = $this->overlayPath . '/config/overlay.json';
         $config = file_get_contents($fileName);
         $this->sendResponse($config);
     }
 
     public function postConfig()
     {
-        $fileName = $this->overlayPath . '/overlay.json';
+        $fileName = $this->overlayPath . '/config/overlay.json';
         $config = $_POST["config"];
         // TODO: VALIDATE JSON
         $formattedJSON = json_encode(json_decode($config), JSON_PRETTY_PRINT);
@@ -143,7 +143,7 @@ class OVERLAYUTIL
 
     public function getAppConfig()
     {
-        $fileName = $this->overlayPath . '/oe-config.json';
+        $fileName = $this->overlayPath . '/config/oe-config.json';
         $config = file_get_contents($fileName);
         if ($config === false) {
             $config = '{
@@ -163,7 +163,7 @@ class OVERLAYUTIL
 
     public function postAppConfig()
     {
-        $fileName = $this->overlayPath . '/oe-config.json';
+        $fileName = $this->overlayPath . '/config/oe-config.json';
         $settings = $_POST["settings"];
         $formattedJSON = json_encode(json_decode($settings), JSON_PRETTY_PRINT);
 
@@ -173,7 +173,7 @@ class OVERLAYUTIL
 
     public function getData()
     {
-        $fileName = $this->overlayPath . '/fields.json';
+        $fileName = $this->overlayPath . '/config/fields.json';
         $fields = file_get_contents($fileName);
         $this->sendResponse($fields);
     }
@@ -211,7 +211,7 @@ class OVERLAYUTIL
 
     public function postData()
     {
-        $fileName = $this->overlayPath . '/fields.json';
+        $fileName = $this->overlayPath . '/config/fields.json';
         $fields = $_POST["data"];
         $formattedJSON = json_encode(json_decode($fields), JSON_PRETTY_PRINT);
 
@@ -221,7 +221,7 @@ class OVERLAYUTIL
 
     public function getAutoExposure()
     {
-        $data = file_get_contents($this->overlayPath . "/autoexposure.json");
+        $data = file_get_contents($this->overlayPath . "/config/autoexposure.json");
         $this->sendResponse($data);
     }
 
@@ -231,7 +231,7 @@ class OVERLAYUTIL
         $data = json_decode($data);
         if ($data !== null) {
             $data = json_encode($data, JSON_PRETTY_PRINT);
-            file_put_contents($this->overlayPath . "/autoexposure.json", $data);
+            file_put_contents($this->overlayPath . "/config/autoexposure.json", $data);
             $data = json_decode($data);
 
             $image = imagecreate($data->stagewidth, $data->stageheight);
@@ -294,7 +294,6 @@ class OVERLAYUTIL
         $this->sendResponse($result);
     }
 
-
     private function processDebugData() {
         $file = ALLSKY_HOME . "/tmp/overlaydebug.txt";
 
@@ -310,10 +309,9 @@ class OVERLAYUTIL
         return $exampleData;
     }
 
-
     public function getFonts()
     {
-        $fileName = $this->overlayPath . '/overlay.json';
+        $fileName = $this->overlayPath . '/config/overlay.json';
         $config = file_get_contents($fileName);
         $config = json_decode($config);
 
@@ -390,8 +388,7 @@ class OVERLAYUTIL
         }
 
         if ($proceed) {
-            $baseOverlayFolder = realpath(dirname(__FILE__) . '/..') . "/overlay/";
-            $saveFolder = $baseOverlayFolder . "/fonts/";          
+            $saveFolder = $this->overlayPath . "/fonts/";          
             $result = array();
             $zipArchive = new ZipArchive();
             $zipArchive->open($downloadPath);
@@ -428,11 +425,11 @@ class OVERLAYUTIL
                             fwrite($file, $contents);
                             fclose($file);
 
-                            $configFileName = ALLSKY_CONFIG . '/overlay.json';
+                            $configFileName = $this->overlayPath . '/config/overlay.json';
                             $config = file_get_contents($configFileName);
                             $config = json_decode($config);
 
-                            $fontPath = str_replace($baseOverlayFolder, "", $fileName);
+                            $fontPath = str_replace($this->overlayPath, "", $fileName);
                             // TODO: Fix hard coded path
                             $obj = (object) [
                                 'fontPath' => $fontPath,
@@ -471,7 +468,7 @@ class OVERLAYUTIL
         $fileName = $this->overlayPath . '/overlay.json';
         $config = json_decode(file_get_contents($fileName));
 
-        $fontPath = ALLSKY_WEBUI . "/overlay" . $config->fonts->{$fontName}->fontPath;
+        $fontPath = $this->overlayPath . "/" . $config->fonts->{$fontName}->fontPath;
         unlink($fontPath);
         unset($config->fonts->{$fontName});
 
@@ -487,8 +484,8 @@ class OVERLAYUTIL
     public function postImages()
     {
         $result = false;
-        $imageFolder = realpath(dirname(__FILE__) . '/..') . '/overlay/images/';
-        $thumbnailFolder = realpath(dirname(__FILE__) . '/..') . '/overlay/imagethumbnails/';
+        $imageFolder = $this->overlayPath . '/images/';
+        $thumbnailFolder = $this->overlayPath . '/imagethumbnails/';
 
         if (!empty($_FILES)) {
             $tempFile = $_FILES['file']['tmp_name'];
@@ -512,7 +509,7 @@ class OVERLAYUTIL
 
         $baseThumbnailURL = '//' . $_SERVER['SERVER_NAME'] . '/overlay/imagethumbnails';
 
-        $imageThumbnailFolder = realpath(dirname(__FILE__) . '/..') . "/overlay/imagethumbnails";
+        $imageThumbnailFolder = $this->overlayPath . "/imagethumbnails";
 
         $files = array();
         $fh = opendir($imageThumbnailFolder);
@@ -537,8 +534,8 @@ class OVERLAYUTIL
     {
         $imageName = strtolower($_GET['imageName']);
 
-        $imageThumbnailFolder = realpath(dirname(__FILE__) . '/..') . "/overlay/imagethumbnails/";
-        $imageFolder = realpath(dirname(__FILE__) . '/..') . "/overlay/images/";
+        $imageThumbnailFolder = $this->overlayPath . "/imagethumbnails/";
+        $imageFolder = $this->overlayPath . "/images/";
 
         $imagePath = $imageFolder . $imageName;
         $thumbnailPath = $imageThumbnailFolder . $imageName;

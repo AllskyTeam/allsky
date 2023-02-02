@@ -104,7 +104,7 @@ if __name__ == "__main__":
     watchdog = False
     timeout = 0
     try:
-        configFile = os.path.join(os.environ['ALLSKY_CONFIG'], 'module-settings.json')
+        configFile = os.path.join(os.environ['ALLSKY_MODULES'], 'module-settings.json')
         with open(configFile, 'r') as module_Settings_file:
             module_settings = json.load(module_Settings_file)
             watchdog = module_settings['watchdog']
@@ -113,7 +113,7 @@ if __name__ == "__main__":
         watchdog = False
 
     try:
-        shared.args.allskyConfig = os.environ["ALLSKY_CONFIG"]
+        shared.args.allskyConfig = os.environ["ALLSKY_MODULES"]
     except:
         shared.log(0, "ERROR: no allsky config directory available in the environment", exitCode=1)
 

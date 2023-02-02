@@ -79,6 +79,12 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Location of WebUI.
 	ALLSKY_WEBUI="${ALLSKY_HOME}/html"
 
+	# Base location of the overlay config/data
+	ALLSKY_OVERLAY=${ALLSKY_CONFIG}/overlay
+
+	# Base location of the module config
+	ALLSKY_MODULES=${ALLSKY_CONFIG}/modules
+
 	# Location of optional allsky-website package.
 	ALLSKY_WEBSITE="${ALLSKY_WEBUI}/allsky"
 	ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME="viewSettings"

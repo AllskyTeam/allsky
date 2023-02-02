@@ -140,7 +140,7 @@ class MODULEUTIL
     }
 
     public function getModulesSettings() {
-        $configFileName = ALLSKY_CONFIG . '/module-settings.json';
+        $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
 
         $this->sendResponse($rawConfigData);
@@ -149,14 +149,14 @@ class MODULEUTIL
     public function getRestore() {
         $flow = $_GET['flow'];
                 
-        $configFileName = ALLSKY_CONFIG . '/' . 'postprocessing_' . strtolower($flow) . '.json';
+        $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';
         $backupConfigFileName = $configFileName . '-last';
         copy($backupConfigFileName, $configFileName);
         $this->sendResponse();        
     }
 
     public function postModulesSettings() {
-        $configFileName = ALLSKY_CONFIG . '/module-settings.json';        
+        $configFileName = ALLSKY_MODULES . '/module-settings.json';        
         $settings = $_POST['settings'];
         $formattedJSON = json_encode(json_decode($settings), JSON_PRETTY_PRINT);
 
@@ -191,7 +191,7 @@ class MODULEUTIL
 
         $result['version'] = ALLSKY_VERSION;
         
-        $configFileName = ALLSKY_CONFIG . '/module-settings.json';
+        $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
 
@@ -201,7 +201,7 @@ class MODULEUTIL
     }
 
     public function getModules() {
-        $configFileName = ALLSKY_CONFIG . '/module-settings.json';
+        $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $moduleConfig = json_decode($rawConfigData);
 
@@ -211,7 +211,7 @@ class MODULEUTIL
         }
 
         $event = $_GET['event'];
-        $configFileName = ALLSKY_CONFIG . '/' . 'postprocessing_' . strtolower($event) . '.json';
+        $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
 
@@ -303,7 +303,7 @@ class MODULEUTIL
     public function postModules() {
         $config = $_POST['config'];
         $configData = $_POST['configData'];
-        $configFileName = ALLSKY_CONFIG . '/' . 'postprocessing_' . strtolower($config) . '.json';
+        $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($config) . '.json';
 
         $result = file_put_contents($configFileName, $configData);
         copy($configFileName, $configFileName . '-last');
@@ -368,7 +368,7 @@ class MODULEUTIL
         
         $sourceConfigFileName = ALLSKY_REPO . '/' . 'postprocessing_' . strtolower($flow) . '.json.repo';
         $rawConfigData = file_get_contents($sourceConfigFileName);
-        $configFileName = ALLSKY_CONFIG . '/' . 'postprocessing_' . strtolower($flow) . '.json';
+        $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';
         file_put_contents($configFileName, $rawConfigData);
 
         $this->sendResponse();

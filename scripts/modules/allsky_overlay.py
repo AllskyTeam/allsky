@@ -81,8 +81,8 @@ class ALLSKYOVERLAY:
     _enableSkyfield = True
 
     def __init__(self, debug): 
-        self._overlayConfigFile = os.path.join(os.environ['ALLSKY_CONFIG'], self._OVERLAYCONFIGFILE)  
-        fieldsFile = os.path.join(os.environ['ALLSKY_CONFIG'], self._OVERLAYFIELDSFILE)
+        self._overlayConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYCONFIGFILE)  
+        fieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYFIELDSFILE)
         self._OVERLAYTMP = os.path.join(tempfile.gettempdir(), 'overlay')
         self._createTempDir(self._OVERLAYTMP)
         self._OVERLAYTLEFOLDER = os.path.join(self._OVERLAYTMP , 'tle')
@@ -202,6 +202,8 @@ class ALLSKYOVERLAY:
                         rotate = None
                         scale = None
                         opacity = None
+                        stroke = None
+                        strokewidth = None
                         if type(valueData) is dict:
                             if 'value' in valueData:
                                 value = valueData['value']
@@ -238,7 +240,13 @@ class ALLSKYOVERLAY:
                                 scale = valueData['scale']
 
                             if 'opacity' in valueData:
-                                opacity = valueData['opacity']                                
+                                opacity = valueData['opacity']
+
+                            if 'stroke' in valueData:
+                                stroke = valueData['stroke']   
+                                
+                            if 'strokewidth' in valueData:
+                                strokewidth = valueData['strokewidth']                                                                                               
                         else:
                             value = valueData
                             expires = defaultExpiry
@@ -246,7 +254,7 @@ class ALLSKYOVERLAY:
                         if name[0:3] != 'AS_':
                             name = 'AS_{}'.format(name)
                         os.environ[name] = str(value)
-                        self._saveExtraDataField(name, fileModifiedTime, expires, x, y, fill, font, fontsize, image, rotate, scale, opacity)
+                        self._saveExtraDataField(name, fileModifiedTime, expires, x, y, fill, font, fontsize, image, rotate, scale, opacity, stroke, strokewidth)
             else:
                 s.log(0, 'ERROR: Data File {} is not accessible - IGNORING'.format(dataFilename))
                 result = False
@@ -267,7 +275,7 @@ class ALLSKYOVERLAY:
 
         return result
 
-    def _saveExtraDataField(self, name, fieldDate, expires, x=None, y=None, fill=None, font=None, fontsize=None, image=None, rotate=None, scale=None, opacity=None):
+    def _saveExtraDataField(self, name, fieldDate, expires, x=None, y=None, fill=None, font=None, fontsize=None, image=None, rotate=None, scale=None, opacity=None, stroke=None, strokewidth=None):
         name = name.upper()
         _extraField = {
             'name': name,
@@ -281,7 +289,9 @@ class ALLSKYOVERLAY:
             'image': image,
             'rotate': rotate,
             'scale': scale,
-            'opacity': opacity
+            'opacity': opacity,
+            'stroke': stroke,
+            'strokewidth': strokewidth
         }
         self._extraData[name] = _extraField
         s.log(4,"INFO: Added extra data field {0}, expiry {1} seconds".format(name, expires))
@@ -354,7 +364,7 @@ class ALLSKYOVERLAY:
             fontConfigPath = fontData['fontPath']
             if fontConfigPath.startswith('/'):
                 fontConfigPath = fontConfigPath[1:]
-            fontPath = os.path.join(os.environ['ALLSKY_WEBUI'], 'overlay', fontConfigPath) 
+            fontPath = os.path.join(os.environ['ALLSKY_CONFIG'], 'overlay', fontConfigPath) 
         else:
             if font in systemFontMap:
                 fontPath = systemFontMap[font]['fontpath']
@@ -453,7 +463,7 @@ class ALLSKYOVERLAY:
             fieldColour = self._overlayConfig["settings"]["defaultfontcolour"]
 
         if "strokewidth" in fieldData:
-            strokeWidth = fieldData["strokewidth"]
+            strokeWidth = int(fieldData["strokewidth"])
         else:
             strokeWidth = 0
 
@@ -482,7 +492,15 @@ class ALLSKYOVERLAY:
                 except IndexError:
                     fieldFormat = ''
 
-            fieldValue, overrideX, overrideY, overrideFill, overrideFont, overrideFontSize, overrideRotate, overrideScale, overrideOpacity = self._getValue(variable, variableType, fieldFormat, empty)
+            fieldValue, overrideX, overrideY, overrideFill, overrideFont, overrideFontSize, overrideRotate, overrideScale, overrideOpacity, overrideStroke, overrideStrokewidth = self._getValue(variable, variableType, fieldFormat, empty)
+            
+            if overrideStroke is not None:
+                stroke = overrideStroke
+                stroker, strokeg, strokeb = self._convertColour(name, stroke)
+            
+            if overrideStrokewidth is not None:
+                strokeWidth = int(overrideStrokewidth)
+                
             if overrideX is not None:
                 fieldX = overrideX
 
@@ -586,30 +604,34 @@ class ALLSKYOVERLAY:
         fontsize = None
         rotate = None
         scale = None
-        opacity = None        
+        opacity = None
+        stroke = None
+        strokewidth = None
         placeHolder = placeHolder.replace("${", "")
         placeHolder = placeHolder.replace("}", "")
         envCheck = "AS_" + placeHolder
-
-        if placeHolder.upper() in self._extraData:
-            x = self._extraData[placeHolder.upper()]['x']
-            y = self._extraData[placeHolder.upper()]['y']
-            fill = self._extraData[placeHolder.upper()]['fill']
-            font = self._extraData[placeHolder.upper()]['font']
-            fontsize = self._extraData[placeHolder.upper()]['fontsize']
-            rotate = self._extraData[placeHolder.upper()]['rotate']
-            scale = self._extraData[placeHolder.upper()]['scale']
-            opacity = self._extraData[placeHolder.upper()]['opacity']
-
-            if self._extraData[placeHolder.upper()]["expires"] != 0:
-                age = int(time.time()) - self._extraData[placeHolder.upper()]["datecreated"]
-                if age > self._extraData[placeHolder.upper()]["expires"]:
-                    fileTime = datetime.fromtimestamp(int(self._extraData[placeHolder.upper()]["datecreated"]))
+        
+        if envCheck in self._extraData:
+            x = self._extraData[envCheck]['x']
+            y = self._extraData[envCheck]['y']
+            fill = self._extraData[envCheck]['fill']
+            font = self._extraData[envCheck]['font']
+            fontsize = self._extraData[envCheck]['fontsize']
+            rotate = self._extraData[envCheck]['rotate']
+            scale = self._extraData[envCheck]['scale']
+            opacity = self._extraData[envCheck]['opacity']
+            stroke = self._extraData[envCheck]['stroke']
+            strokewidth = self._extraData[envCheck]['strokewidth']
+                                    
+            if self._extraData[envCheck]["expires"] != 0:
+                age = int(time.time()) - self._extraData[envCheck]["datecreated"]
+                if age > self._extraData[envCheck]["expires"]:
+                    fileTime = datetime.fromtimestamp(int(self._extraData[envCheck]["datecreated"]))
                     fileTimeHR = fileTime.strftime("%d.%m.%y %H:%M:%S")
                     nowTime = datetime.fromtimestamp(int(time.time()))
                     nowTimeHR = nowTime.strftime("%d.%m.%y %H:%M:%S")                    
                     s.log(4, "INFO: data field {0} expired. File time {1}, now {2}. Expiry {3} Seconds. Age {4} Seconds"
-                        .format(placeHolder, fileTimeHR, nowTimeHR, self._extraData[placeHolder.upper()]["expires"], age))
+                        .format(placeHolder, fileTimeHR, nowTimeHR, self._extraData[envCheck]["expires"], age))
                     valueOk = False
 
         if valueOk:
@@ -668,7 +690,7 @@ class ALLSKYOVERLAY:
                     if empty != '':
                         value = empty
 
-        return value ,x ,y, fill, font, fontsize, rotate, scale, opacity
+        return value ,x ,y, fill, font, fontsize, rotate, scale, opacity, stroke, strokewidth
 
     def _addImages(self):
         for index, imageData in enumerate(self._overlayConfig["images"]):
@@ -692,7 +714,7 @@ class ALLSKYOVERLAY:
             imageY = imageData["y"]
             image = None
 
-            imagePath = os.path.join(os.environ['ALLSKY_WEBUI'], "overlay", "images", imageName)
+            imagePath = os.path.join(os.environ['ALLSKY_CONFIG'], "overlay", "images", imageName)
 
             if s.isFileReadable(imagePath):
                 image = cv2.imread(imagePath, cv2.IMREAD_UNCHANGED)

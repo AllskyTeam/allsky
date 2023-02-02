@@ -32,6 +32,11 @@ alias.url		    = ("/current/" => "XX_ALLSKY_HOME_XX/")
 alias.url		    += ("/images/" => "XX_ALLSKY_IMAGES_XX/")
 alias.url		    += ("/website/" => "XX_ALLSKY_WEBSITE_XX/")
 alias.url		    += ("/documentation" => "XX_ALLSKY_DOCUMENTATION_XX/")
+alias.url		    += ("/overlay" => "XX_ALLSKY_CONFIG_XX/overlay/")
+
+$HTTP["url"] =~ "^/overlay/config/" {
+     url.access-deny = ("")
+}
 
 # strict parsing and normalization of URL for consistency and security
 # https://redmine.lighttpd.net/projects/lighttpd/wiki/Server_http-parseoptsDetails

@@ -7,7 +7,7 @@ suntime
 scipy
 scikit-image
 paho-mqtt
-numpy>=1.23.3
+numpy>=1.21
 photutils
 astropy
 Adafruit-Blinka

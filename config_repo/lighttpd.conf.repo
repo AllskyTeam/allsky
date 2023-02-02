@@ -32,7 +32,7 @@ alias.url		    = ("/current/" => "XX_ALLSKY_HOME_XX/")
 alias.url		    += ("/images/" => "XX_ALLSKY_IMAGES_XX/")
 alias.url		    += ("/website/" => "XX_ALLSKY_WEBSITE_XX/")
 alias.url		    += ("/documentation" => "XX_ALLSKY_DOCUMENTATION_XX/")
-alias.url		    += ("/overlay" => "XX_ALLSKY_OVERLAY_XX/overlay/")
+alias.url		    += ("/overlay" => "XX_ALLSKY_OVERLAY_XX/")
 
 $HTTP["url"] =~ "^/overlay/config/" {
      url.access-deny = ("")

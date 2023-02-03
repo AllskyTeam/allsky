@@ -814,3 +814,14 @@ b, strong {
 	font-size: 125%;
 	font-weight: bold;
 }
+
+.modulecode {
+	background-color: white;
+}
+.modulecode tt {
+	border: none !important;
+	background-color: white;	
+}
+.modulecode .red {
+	color: red;
+}

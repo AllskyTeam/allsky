@@ -1324,6 +1324,121 @@
                         </tr>
                     </table>
 
+                    <h4>GPS</h4>
+                    <table class="module-info vtop">
+                        <thead>
+                            <tr>
+                                <th>Flows Available In</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <ul>
+                                        <li>Periodic</li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    <p>This module was developed for those that use their AllSky cameras in mobile
+                                        locations. It was developed to allow the Pi's location and clock to be set from
+                                        the GPS data</p>
+                                    <p>This module requires a gps connected to the pi that can be managed by gpsd</p>
+                                    <blockquote><strong>NOTE:</strong> The HDMI and Wifi on the Pi 4 is VERY noise and
+                                        will interfere with most GPS modules. To get around this problem please ensure
+                                        that the GPS receiver and antenna is mounted at least three feet away from the
+                                        Pi.</blockquote>
+                                    <h4>Time synchronisation</h4>
+                                    <p>Even if you set the time sync options in the GPS module the time will only be
+                                        synchronised if the pi is NOT having its time updated from the internet.</p>
+                                    <p>To test if the time is currently being synchronised fom the internet enter the following command</p>
+                                    <div><tt>timedatectl status</tt></div>
+                                    <p>Output similar to the following will be produced</p>
+
+                                    <div class="modulecode">
+                                        <div><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Local
+                                                time: Fri 2023-02-03 23:18:36 GMT</tt></div>
+                                        <div><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Universal
+                                                time: Fri 2023-02-03 23:18:36 UTC</tt></div>
+                                        <div><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RTC
+                                                time: n/a</tt></div>
+                                        <div><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Time
+                                                zone: Europe/London (GMT, +0000)</tt></div>
+                                        <div><tt>System clock synchronized: <span class="red">no</span></tt></div>
+                                        <div><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NTP
+                                                service: <span class="red">inactive</span></tt></div>
+                                        <div><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RTC in
+                                                local TZ: <span class="red">no</span></tt></div>
+                                    </div>
+
+                                    <p>Note that the 'System clock synchronized' value is 'no'. With this value 'no' the GPS module will be allowed to set the time</p>
+                                    <p>Several environment variables are created that can be used in the overlay manager
+                                    </p>
+                                    <ul>
+                                        <li><strong>PIGPSFIX</strong> - A text string, either 'Yes' or 'No' indicating
+                                            if the GPS has a fix</li>
+                                        <li><strong>PIGPSUTC</strong> - The UTC time from the GPS</li>
+                                        <li><strong>PIGPSLOCAL</strong> - The local time from the GPS</li>
+                                        <li><strong>PIGPSOFFSET</strong> - The time offset from UTC in hours</li>
+                                        <li><strong>PIGPSLAT</strong> - The GPS latitude in Degrees, Minutes and Seconds
+                                        </li>
+                                        <li><strong>PIGPSLON</strong> - The GPS longitude in Degrees, Minutes and
+                                            Seconds</li>
+                                        <li><strong>PIGPSLATDEC</strong> - The GPS latitude in decimal degrees, Minutes
+                                            and Seconds</li>
+                                        <li><strong>PIGPSLONDEC</strong> - The GPS longitude in decimal degrees, Minutes
+                                            and Seconds</li>
+                                        <li><strong>PIGPSFIXDISC</strong> - The lat/lon discrepancy string, if there is
+                                            a decrepancy found</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="module-settings vtop">
+                        <tr>
+                            <td><img allsky="true" loading="lazy" src="module-gps-home.png" alt="GPS Settings" /></td>
+                            <td>
+                                <ul>
+                                    <li><strong>LAT/LON Warning</strong> - If enabled a warning will be generated, both
+                                        in the log files and as an allsky variable if the GPS position does not match
+                                        the All Sky settings. The comparison is done to 2 decimal places to allow for
+                                        GPS fluctuation</li>
+                                    <li><strong>Set LAT/LON</strong> - If enabled the lat/lon in the AllSky settings
+                                        will get set from the GPS</li>
+                                    <li><strong>Set Time</strong> - If enabled the tim eon the Pi will be set from the
+                                        GPS</li>
+                                    <li><strong>Set Every</strong> - If the 'Set Time' option is enabled the time on the
+                                        Pi will be set every this number of seconds</li>
+                                    <li><strong>Extra Data Filename</strong> - The name of the file to create the GPS
+                                        data in for the overlay manager. Normally you will nto need to change this</li>
+                                    <li><strong>Discrepancy Warning</strong> - if the 'LAt/Lon Warning' is enabled and a
+                                        discrepancy is found this text will be set in the variable for the overlay
+                                        manager</li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><img allsky="true" loading="lazy" src="module-gps-obfuscate.png"
+                                    alt="GPS Obfuscation Settings" /></td>
+                            <td>
+                                <ul>
+                                    <li><strong>Obfuscate Position</strong> - If enabled the values below will be used
+                                        to modify the GPS position. This is designed to allow you to display the GPS
+                                        position on an overlay without giving away your exact position</li>
+                                    <li><strong>Latitude Metres</strong> - The number of metres to offset the latitude
+                                        by, can be a psotive or negative number</li>
+                                    <li><strong>Longitude Metres</strong> - The number of metres to offset the longitude
+                                        by, can be a psotive or negative number</li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><img allsky="true" loading="lazy" src="gps.png" alt="GPS connection" /></td>
+                            <td>
+                            </td>
+                        </tr>
+                    </table>
                 </details>
 
             </div>
@@ -1383,14 +1498,17 @@
                         </tr>
                         <tr>
                             <td>
-                                <p>This mask was created in an external image editing program to mask out the areas of the image that are not sky</p>
-                                <blockquote>Since this mask is being used to mask specific areas of the image if the camera is moved then the mask may have to be recreated</blockquote>
+                                <p>This mask was created in an external image editing program to mask out the areas of
+                                    the image that are not sky</p>
+                                <blockquote>Since this mask is being used to mask specific areas of the image if the
+                                    camera is moved then the mask may have to be recreated</blockquote>
                             </td>
                             <td><img allsky="true" loading="lazy" src="mask-stars-mask.png" alt="Mask" /></td>
                         </tr>
                         <tr>
                             <td>
-                                <p>After the mask has been applied the resulting image will allow the various modules to process the image</p>
+                                <p>After the mask has been applied the resulting image will allow the various modules to
+                                    process the image</p>
                             </td>
                             <td><img allsky="true" loading="lazy" src="mask-stars-result.png" alt="Masked Image" />
                             </td>

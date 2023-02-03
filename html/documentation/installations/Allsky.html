@@ -180,7 +180,9 @@ If there are any such actions, the first time Allsky runs after the reboot it wi
 </p>
 <p>
 <blockquote>
-Parts of the installation take a few minutes - that's normal.
+Parts of the installation take up to an hour, depending on how many package
+you already have installed and the speed of your Pi.
+Subsequent installations of Allsky will be significantly faster.
 </blockquote>
 </p>
 </details>
@@ -189,7 +191,7 @@ Parts of the installation take a few minutes - that's normal.
 <h2>Post installation</h2>
 <details><summary></summary>
 <p>
-After installation, perform any actions the installation script identified, then reboot.
+After installation, reboot then perform any actions the installation script identified.
 </p>
 <blockquote>
 If instructed to copy the contents of a prior configuration file to the new release,
@@ -197,7 +199,32 @@ it's important to manually copy the <b>values</b>
 from the old file to the new file and <b>not</b> copy the entire file.
 </blockquote>
 
-After the reboot, enter the WebUI and configure the
+After the reboot, do the following:
+<ol>
+	<li>Bring up the WebUI by entering
+		<code>allsky.local</code> or
+		<code>allsky.localhost</code> in a web browser.
+	<li>Go to the <span class="WebUIWebPage">Allsky Settings</span> page.
+	<li>Optionally click the
+		<img allsky="true" loading="lazy" class="buttonIconLarge" src="/documentation/img/showAdvancedOptionsButton.png">
+		button to show the advanced options.
+	<li>Make any necessary changes.
+	<li>Click on the
+		<img allsky="true" loading="lazy" class="buttonIcon" src="/documentation/img/saveChangesButton.png">
+		button.
+		Allsky will (re)start.
+	<li>If instructed to update the <span class="fileName">config.sh</span>
+		and/or the <span class="fileName">ftp-settings.sh</span> files:
+		<ol>
+			<li>Go to the <span class="WebUIWebPage">Editor</span> page.
+			<li>Select the appropriate file in the drop down list.
+			<li>Edit the file.
+				Do NOT simply copy a previous version.
+			<li>Click the green "Save Changes" button.
+				Allsky will not restart but the changes will take effect when the next
+				image is taken.
+		</ol>
+</ol>
 <a allsky="true" href="/documentation/settings/allsky.html">Allsky settings</a>.
 
 <blockquote class="warning">

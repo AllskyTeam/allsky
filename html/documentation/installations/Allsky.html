@@ -58,7 +58,7 @@ so it may be more difficult to troubleshoot if it's elsewhere.
 </blockquote>
 <p>
 By default, Allsky is installed as the login "pi" in <span class="fileName">/home/pi/allsky</span>.
-The name <b>allsky</b> can not be changed,
+The name <span class="fileName">allsky</span> can not be changed,
 but you can install Allsky in a different directory
 (which usually means it'll run as a different login).
 For example, to install in <span class="fileName">/home/mylogin</span>
@@ -72,40 +72,57 @@ After the above, continue with the steps below.
 </details>
 
 
-<h2>Pre installation</h2>
+<h2>If a version of Allsky already exists</h2>
 <details><summary></summary>
 <p>
 If you have an <b>existing</b> version of Allsky,
-perform one of the steps below, then continue to the
-<a href="#Installation">installation</a> section.
-</p>
-<ol class="minimalPadding">
-	<li>Upgrade the old version.
-	<pre>
-sudo systemctl stop allsky   <span class="pl-c"># Stop the Allsky service</span>
+stop it
+<pre>
+sudo systemctl stop allsky
 cd
-mv allsky allsky-OLD         <span class="pl-c"># The installation looks for this directory</span>
 </pre>
 
-	<li>Save the old version but don't use it.
+then perform one of the steps below:
+</p>
+<ol class="minimalPadding">
+	<li>To <b>upgrade</b> the old version:
+	<pre>mv allsky allsky-OLD         <span class="pl-c"># The installation looks for this directory</span></pre>
+
+	<li>To <b>save</b> the old version but not use it:
 	<br>
-	<pre>
-cd
-mv allsky allsky-SAVED</pre>
+	<pre>mv allsky allsky-SAVED</pre>
 	At some point you'll want to delete the SAVED version so it doesn't take disk space.
 
-	<li>Delete the old version.  Only select this option if you're sure you don't want any saved
-	images, darks, and configuration settings.
-	If <span class="fileName">allsky/tmp</span>
-	is a memory-based filesystem you need to unmount it before it can be removed:
-	<pre>
-sudo umount ~/allsky/tmp</pre>
+	<li>To <b>delete</b> the old version.
+		Only select this option if you're sure you don't want any saved
+		images, darks, and configuration settings.
 	Either way, execute:
-	<pre>
-sudo systemctl stop allsky     <span class="pl-c"># Stop the Allsky service</span>
-cd
-rm -fr allsky</pre>
+	<pre>rm -fr allsky</pre>
 </ol>
+<p>
+Continue to the <a href="#PreInstallation">Pre installation</a> section.
+</p>
+</details>
+
+
+<h2 id=PreInstallation>Pre installation</h2>
+<details><summary></summary>
+<p>
+Prior to installing Allsky, there are a few things you need to do.
+These only need to be done once.
+<ol>
+	<li>If this is a new Pi, you'll need to install the Raspberry Pi Operating System (OS) on it.
+		Follow
+		<a href="https://www.raspberrypi.org/documentation/installation/installing-images/">these instructions</a>
+		for information on how to do it.  Be sure to install the newest OS.
+	<li>Make sure your Pi has a
+		<a href="https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md">working Internet connection</a>.
+		If you have a choice between a wired LAN and wireless WLAN connection,
+		choose the wired connect - they are faster and more reliable.
+		If you use Power over Ethernet (PoE), you can run a single cable to your Pi.
+	<li>Install <code>git</code> if not already installed (you only need to do this once):
+		<pre>sudo apt-get install git</pre>
+</p>
 </details>
 
 
@@ -202,9 +219,15 @@ from the old file to the new file and <b>not</b> copy the entire file.
 After the reboot, do the following:
 <ol>
 	<li>Bring up the WebUI by entering
-		<code>allsky.local</code> or
-		<code>allsky.localhost</code> in a web browser.
-	<li>Go to the <span class="WebUIWebPage">Allsky Settings</span> page.
+		<code>http://allsky.local</code> or
+		<code>http://allsky.localhost</code> in a web browser.
+		The default username is <strong>admin</strong> and the default password is <strong>secret</strong>.
+		<blockquote>
+		If your website is publically viewable you should change the username and password via the
+		<span class="WebUILink">Change Password</span> link on the WebUI.
+		</blockquote>
+
+	<li>Go to the <span class="WebUILink">Allsky Settings</span> page.
 	<li>Optionally click the
 		<img allsky="true" loading="lazy" class="buttonIconLarge" src="/documentation/img/showAdvancedOptionsButton.png">
 		button to show the advanced options.
@@ -216,7 +239,7 @@ After the reboot, do the following:
 	<li>If instructed to update the <span class="fileName">config.sh</span>
 		and/or the <span class="fileName">ftp-settings.sh</span> files:
 		<ol>
-			<li>Go to the <span class="WebUIWebPage">Editor</span> page.
+			<li>Go to the <span class="WebUILink">Editor</span> page.
 			<li>Select the appropriate file in the drop down list.
 			<li>Edit the file.
 				Do NOT simply copy a previous version.
@@ -225,7 +248,6 @@ After the reboot, do the following:
 				image is taken.
 		</ol>
 </ol>
-<a allsky="true" href="/documentation/settings/allsky.html">Allsky settings</a>.
 
 <blockquote class="warning">
 The <span class="fileName">config.sh</span> and
@@ -234,6 +256,57 @@ The <span class="fileName">config.sh</span> and
 WebUI's <b>Editor</b> link since it performs sanity checks and behind-the-scenes
 actions during updates.
 </blockquote>
+</details>
+
+
+<h2>Starting and stopping Allsky</h2>
+<details><summary></summary>
+<p>
+The AllSky software starts automatically when the Raspberry Pi boots up.
+To enable or disable this behavior, use these commands:
+<pre>
+sudo systemctl enable allsky     <span class="shellComment"># starts the software when the Pi boots up</span>
+sudo systemctl disable allsky    <span class="shellComment"># does NOT automatically start the software</span>
+</pre>
+
+When you want to manually start, stop, or restart the software, or obtain status, use one of these commands:
+<pre>
+sudo systemctl start allsky
+sudo systemctl stop allsky
+sudo systemctl restart allsky
+sudo systemctl status allsky
+</pre>
+</p>
+<p>
+<blockquote>
+Tip: Add lines like the following to <span class="fileName">~/.bashrc</span> to save typing:
+<pre>
+alias start='sudo systemctl start allsky'
+</pre>
+You will then only need to type <code>start</code> to start Allsky.
+Do this for <b>stop</b> and <b>reload</b> as well.
+</blockquote>
+</p>
+
+<p>
+Starting the program from the terminal is a great way to track down issues as
+it provides debug information to the terminal window.
+To start the program manually, run:
+<pre>
+sudo systemctl stop allsky
+cd ~/allsky
+./allsky.sh
+</pre>
+</p>
+<p>
+If you are using a desktop environment (Pixel, Mate, LXDE, etc.) or using remote desktop or VNC,
+you can add the <code>preview</code> argument to show the images the program is
+currently saving in a separate window.
+<pre>
+./allsky.sh preview
+</pre>
+</p>
+
 </details>
 
 

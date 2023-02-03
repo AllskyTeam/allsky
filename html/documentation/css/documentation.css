@@ -825,3 +825,16 @@ b, strong {
 .modulecode .red {
 	color: red;
 }
+
+.json {
+	font-family: monospace, monospace;
+}
+.json .indent1 {
+	margin-left: 0px;
+}
+.json .indent2 {
+	margin-left: 10px;
+}
+.json .indent3 {
+	margin-left: 20px;
+}

@@ -204,9 +204,14 @@ body {
 #sidebar .Sidebar {
 	padding-left: 5px;
 	padding-right: 5px;
+	border-radius: 6px;
+}
+#sidebar .Sidebar, .SidebarEntry {
 	font-size: 12px;
 	border: 1px solid var(--color-accent-muted);
-	border-radius: 6px;
+}
+.SidebarEntry {
+	color: #337ab7;
 }
 #sidebar .Sidebar ol,
 #sidebar .Sidebar ul {
@@ -643,7 +648,8 @@ b, strong {
 	color: var(--color-danger-fg);
 	font-weight: bold;
 }
-.WebUIWebPage {	/* link on the WebUI to one of its pages */
+.WebUIWebPage, /* old name */
+.WebUILink {	/* link on the WebUI to one of its pages */
 	padding: 0 .2em;
 	color: #4b4a4b;
 	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;

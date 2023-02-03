@@ -137,7 +137,12 @@ If you are seeing lots of <b>ASI_ERROR_TIMEOUT</b> messages
 	Wiki page to report the problem.
 </ol>
 
-<h3>IGNORE THESE NOTES FOR NOW:</h3>
+<h3>Advanced steps</h3>
+<p>
+The steps listed below haven't been fully tested and we suggest
+entering a new <a href="https://github.com/thomasjacquin/allsky/discussions">Discussions</a>
+item before trying them.
+</p>
 <p>
 Try adding <code>swiotlb=131072</code> to end of the line in
 <span class="fileName">/boot/cmdline.txt</span>, then reboot.  
@@ -157,7 +162,7 @@ Enable <code>DebugPrint</code> in <span class="fileName">~/.ZWO/ASIconfig.xml</s
 by changing the <code>00</code> to <code>01</code>, then restart Allsky.
 A LOT of lines will be added to <span class="fileName">/var/log/allsky.log</span>,
 so be sure to set it back to <code>00</code> when done testing.
-The extra log entries may offer some insight into causes of the exposure failures.
+The extra log entries <em>may</em> offer some insight into causes of the exposure failures.
 </p>
 </details>
 
@@ -241,4 +246,3 @@ Raspberry Pi - do not set this unless absolutely necessary
 </body>
 </html>
 <script> includeHTML(); </script>
-

@@ -117,7 +117,19 @@ PC, phone, tablet, or almost any other device.
 When using the VNC client, you see your Pi desktop and interact with it as if you
 were directly attached to the Pi.
 <li>
-<b>ssh</b> (<u>s</u>ecure <u>sh</u>ell) - <span style="color: red">NEED INFO</span>
+<b>SSH</b> (<u>s</u>ecure <u>sh</u>ell) is used to log into the Pi from a remote devices,
+usually a PC or Mac but could be a tablet or phone.
+SSH needs to be enabled on the Pi - the easiest way is when using the
+"Raspberry Pi Imager" to create the intial Raspberry Pi OS.
+Once SSH is enabled, do the following to use it:
+<ol>
+	<li>On the remote device, open a terminal window
+		(<code>cmd</code> on Windows or <code>terminal</code> on Mac)
+	<li>Type <code>ssh pi@allsky.local</code>.
+	<li>Enter the password when prompted.
+	<li>You can now enter Linux commands.
+</ol>
+<br><span style="color: red">NEED MORE INFO</span>
 </ol>
 </p>
 </details>
@@ -380,6 +392,8 @@ As stated previously, you can get information on all Linux commands via the
 <code>man</code> command.
 Most commands also take a <code>--help</code> option
 (including the Allsky commands that are desiged to optionally be run manually):
+</p>
+<p>
 <a href="date--help.png" target="_blank">
 <img allsky="true" title="date output - Click for full version" alt="date --help output" src="date--help.png" loading="lazy">
 </a>

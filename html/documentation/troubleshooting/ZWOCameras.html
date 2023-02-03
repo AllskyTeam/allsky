@@ -11,12 +11,12 @@
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "Troubleshooting ASI_ERROR_TIMEOUT";
+			content: "Troubleshooting ZWO Cameras";
 		} 
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
-	<title>ASI_ERROR_TIMEOUT Troubleshooting</title>
+	<title>ZWO Camera Troubleshooting</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
@@ -24,12 +24,54 @@
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 <div class="Layout-main markdown-body" id="mainContents">
 
+<h2>ZWO camera not found</h2>
+<details><summary></summary>
+<p>
+If you have a fairly new ZWO camera model,
+the ZWO software that's included with Allsky may not yet support it.
+To see which cameras are supported, execute:
+<pre>
+strings ~/allsky/src/lib/armv7/libASICamera2.a  | \
+	grep "_SetResolutionEv$" | \
+	sed -e 's/^.*CameraS//' -e 's/17Cam//' -e 's/_SetResolutionEv//' | \
+	sort -u \
+&gt; /tmp/ZWOcameras.txt
+</pre>
+With a text editor, open <span class="fileName">/tmp/ZWOcameras.txt</span>
+and search for your camera.
+The file is about 1000 lines and is sorted.
+If your don't find your camera, execute:
+<pre>
+grep "ZWO SDK" /var/log/allsky.log"
+</pre>
+and include the results in a new
+<a href="https://github.com/thomasjacquin/allsky/issues">Issue</a>,
+as well as your camera model.
+</p>
+<p>
+Other things to check:
+<ul>
+<li>Is the camera plugged in to a USB port?
+	Try plugging it into a different port.
+<li>Is the camera plugged in to a USB hub?
+	Make sure the hub is plugged into the Pi.
+	Try plugging the hub into a different port on the Pi.
+	Temporarily bypass the hub.
+<li>If you have access to another Pi, or a PC,
+	plug the camera into it to see if it works.
+</ul>
+</p>
+</details>
+
+
+<h2>ASI_ERROR_TIMEOUT Errors</h2>
+<details><summary></summary>
 <p>
 If images are not being taken with your ZWO camera and you see many
-<b>ASI_ERROR_TIMEOUT</b> messages in the <span class="fileName">/var/log/allsky.log</span> file,
+<b>ASI_ERROR_TIMEOUT</b> messages in <span class="fileName">/var/log/allsky.log</span>,
 try the steps below.
 The exact reason for these messages is unclear,
-although it's often due to incorrect USB settings or excessive voltage drop going
+although it's often due to USB settings or an excessive voltage drop going
 to the Pi or the camera.
 Long or thin wires can cause a voltage drop big enough that the camera has problems
 producing an image.
@@ -40,7 +82,7 @@ even when other operations succeed.
 This condition may persist through a restart of Allsky.
 </p>
 <p>
-If you are seeing lots of ASI_ERROR_TIMEOUT messages
+If you are seeing lots of <b>ASI_ERROR_TIMEOUT</b> messages
 (an occasional one can be ignored) try the following, in this order:
 <ol>
 <li>If you have easy access to your Pi:
@@ -95,7 +137,12 @@ If you are seeing lots of ASI_ERROR_TIMEOUT messages
 	Wiki page to report the problem.
 </ol>
 
-<h3>IGNORE THESE NOTES FOR NOW:</h3>
+<h3>Advanced steps</h3>
+<p>
+The steps listed below haven't been fully tested and we suggest
+entering a new <a href="https://github.com/thomasjacquin/allsky/discussions">Discussions</a>
+item before trying them.
+</p>
 <p>
 Try adding <code>swiotlb=131072</code> to end of the line in
 <span class="fileName">/boot/cmdline.txt</span>, then reboot.  
@@ -115,8 +162,83 @@ Enable <code>DebugPrint</code> in <span class="fileName">~/.ZWO/ASIconfig.xml</s
 by changing the <code>00</code> to <code>01</code>, then restart Allsky.
 A LOT of lines will be added to <span class="fileName">/var/log/allsky.log</span>,
 so be sure to set it back to <code>00</code> when done testing.
-The extra log entries may offer some insight into causes of the exposure failures.
+The extra log entries <em>may</em> offer some insight into causes of the exposure failures.
 </p>
+</details>
+
+
+
+<h2>USB 2.0 Cameras, e.g., ASI120</h2>
+<details><summary></summary>
+<p>
+Owners of USB2.0 cameras such as the ASI120 may need to do a
+<a href="https://astronomy-imaging-camera.com/software-drivers">firmware upgrade</a>.
+</p>
+</details>
+
+
+<h2>T7 Cameras</h2>
+<details><summary></summary>
+<p>
+The T7 / T7C cameras from Datyson and other sellers are an OEM version of the ZWO ASI120 and
+<b>isn't officially supported in Allsky</b>
+because it does not work out of the box.
+If you do decide to try this camera, you do so at your own risk.
+</p>
+<p>
+We do not know if the camera has a fail-safe boot loader that will prevent
+the camera from being bricked if a firmware update fails.
+ZWO states that updating the firmware may result in reduced camera performance.
+As with all firmware updates,
+this may damage your camera. Once again, use this camera at your own risk.
+</p>
+<p>
+The stock firmware uses invalid 1024-byte packets, rather than 512-byte.
+Plugging in this camera will result in kernel logs similar to this:
+<pre>
+usb 3-2: new high-speed USB device number 62 using xhci_hcd
+usb 3-2: config 1 interface 0 altsetting 0 bulk endpoint 0x82 has invalid maxpacket 1024
+usb 3-2: New USB device found, idVendor=03c3, idProduct=120b, bcdDevice= 0.00
+usb 3-2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+usb 3-2: Product: ASI120MC
+usb 3-2: Manufacturer: ZWOptical company  
+usb 3-2: SerialNumber: 00000
+</pre>
+</p>
+<p>
+You should now be experiencing some feelings of regret for buying this camera.
+Any attempt to actually use the camera will fail,
+likely producing kernel messages similar to:
+<pre>
+usb 3-2: reset high-speed USB device number 62 using xhci_hcd
+usb usb3-port2: disabled by hub (EMI?), re-enabling...
+</pre>
+</p>
+<p>
+While we cannot help with the buyer's remorse, the USB errors can be remedied using
+<a href="https://astronomy-imaging-camera.com/software-drivers">ZWO's compatible firmware</a>.
+Without this firmware the camera will not work on Linux. Unfortunately,
+the firmware updater must be run from Windows in order to update USB 2 cameras.
+ZWO support confirms that it does not work on MacOS or Linux.
+Additionally, the firmware update requires you to install a specific version of MSVCRT,
+and also the ZWO driver package (this is not obvious on the firmware page).
+</p>
+<p>
+If you do not have Windows, you can get a legitimate developer VM image from
+Microsoft which may work well enough to re-flash the camera.
+Use your favorite search engine to find a "Microsoft windows developer vm image".
+Then look for instructions on enabling "USB pass-through" for your virtualization platform.
+Note that USB pass-through to VMs has been the source of issues in many different projects,
+e.g., anything that does DSP, timing-critical operations, or device reprogramming.
+</p>
+<p>
+It may be necessary to append <code>program_usb_boot_mode=0</code> to
+<span class="fileName">/boot/config.txt</span> to make this camera work.
+As this changes some one-time-programmable EPROM - permanently altering your
+Raspberry Pi - do not set this unless absolutely necessary
+(and we don't know why it would be necessary).
+</p>
+</details>
 
 
 </div><!-- Layout-main -->
@@ -124,4 +246,3 @@ The extra log entries may offer some insight into causes of the exposure failure
 </body>
 </html>
 <script> includeHTML(); </script>
-

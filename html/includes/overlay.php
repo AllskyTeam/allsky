@@ -56,9 +56,8 @@ function DisplayOverlay($image_name)
                 <div>
 
                     <ul class="nav nav-tabs" role="tablist">
-                        <li role="presentation" class="active"><a href="#oe-editor-tab" aria-controls="oe-editor-tab" role="tab" data-toggle="tab">Overlay Editor</a></li>
-                        <li role="presentation"><a href="#oe-exposure-tab" aria-controls="oe-exposure-tab" role="tab" data-toggle="tab">Auto
-                                Exposure Mask</a></li>
+                        <li role="presentation" class="active"><a href="#oe-editor-tab" aria-controls="oe-editor-tab" role="tab" data-toggle="tab" id="oe-overlay-editor-tab">Overlay Editor</a></li>
+                        <!-- <li role="presentation"><a href="#oe-exposure-tab" aria-controls="oe-exposure-tab" role="tab" data-toggle="tab">Auto Exposure Mask</a></li> -->
                     </ul>
 
                     <div class="tab-content">
@@ -138,6 +137,7 @@ function DisplayOverlay($image_name)
                                 </div>
                             </div>
                         </div>
+                        <!--
                         <div role="tabpanel" class="tab-pane" id="oe-exposure-tab">
                             <nav class="navbar navbar-default">
                                 <div class="container-fluid">
@@ -187,6 +187,7 @@ function DisplayOverlay($image_name)
                                 </div>
                             </div>
                         </div>
+                        -->
                     </div>
                 </div>
             </div>
@@ -741,8 +742,8 @@ function DisplayOverlay($image_name)
                 var overlayEditor = new OVERLAYEDITOR($("#overlay_container"), this);
                 overlayEditor.buildUI();
 
-                var exposureEditor = new OEEXPOSURE();
-                exposureEditor.start();
+                //var exposureEditor = new OEEXPOSURE();
+                //exposureEditor.start();
             };
         </script>
 

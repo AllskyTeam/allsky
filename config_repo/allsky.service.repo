@@ -1,6 +1,6 @@
 [Unit]
 Description=All Sky Camera
-After=multi-user.target
+After=network.target
 
 [Service]
 User=pi

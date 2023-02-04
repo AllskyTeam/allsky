@@ -148,7 +148,7 @@ def setupForCommandLine():
     try:
         ALLSKYPATH = os.environ["ALLSKY_HOME"]
     except KeyError:
-        ALLSKYPATH = "/homepi/allsky"
+        ALLSKYPATH = "/home/pi/allsky"
 
     command = shlex.split("bash -c 'source " + ALLSKYPATH + "/variables.sh && env'")
     proc = subprocess.Popen(command, stdout = subprocess.PIPE)
@@ -328,11 +328,15 @@ def initDB():
         file = open(dbFile, 'w+')
         file.write('DataBase = {}')
         file.close()
- 
-    sys.path.insert(1, tmpDir)
-    database = __import__('allskydb')
-    DBDATA = database.DataBase
-
+    
+    try:
+        sys.path.insert(1, tmpDir)
+        database = __import__('allskydb')
+        DBDATA = database.DataBase
+    except:
+        DBDATA = {}
+        log(0, "ERROR: Allsy database corrupted - Resetting")
+    
 def dbAdd(key, value):
     global DBDATA
     DBDATA[key] = value

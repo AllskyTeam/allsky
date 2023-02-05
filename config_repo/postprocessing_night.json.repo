@@ -58,7 +58,9 @@
                 "1": "night"
             },
             "arguments": {
-                "debug": "false"
+                "debug": "true",
+                "suntimeformat": "",
+                "nonighttext": ""    
             },
             "argumentdetails": {
                 "debug": {
@@ -68,7 +70,19 @@
                     "type": {
                         "fieldtype": "checkbox"
                     }
-                }
+                },
+                "suntimeformat" : {
+                    "required": "false",
+                    "tab": "Sun",
+                    "description": "Date Time format",
+                    "help": "Overrides the default date and time format for the Sun. If this option is not set then the default AllSky 'Time Format' will be used"
+                },
+                "nonighttext" : {
+                    "required": "false",
+                    "tab": "Sun",
+                    "description": "No Night Time text",
+                    "help": "The text to replace the times for 'night' and 'night end' where there is no astronomical darkness"
+                } 
             },
             "experimental": false
         },

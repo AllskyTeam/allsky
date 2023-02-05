@@ -60,7 +60,7 @@
             "arguments": {
                 "debug": "true",
                 "suntimeformat": "",
-                "nonighttext": "                
+                "nonighttext": ""
             },
             "argumentdetails": {
                 "debug": {

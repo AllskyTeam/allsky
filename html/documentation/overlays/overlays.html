@@ -1218,8 +1218,11 @@
             <details>
                 <summary></summary>
                 <h3>The Sun</h3>
-                <p>For the Sun various timings are generated for sunrise/set etc. The following variables are
-                    available, they are available in the Variable Manager</p>
+                <blockquote>The Sun must be enabled in the overlay manager settings before any variables are created</blockquote>
+                <p>For the Sun various timings are generated for sunrise/set etc.</p>
+                <p>The Sun times furing daytime capture are for the current day. During nighttime capture they are for the period the night time capture is in progress i.e. prior to midnight the sunset times are for the current day and the sun rise for the next day. After midnight the sunset times are for the previous day and the sunrise times for the current day</p>
+                <p>There are times when there is no Astronomical darkness. In these cases SUN_NIGHT and SUN_NIGHTEND will be set to the value defined in the overlay modules settings, in the module manager</p>
+                <p>The following variables are available, they are available in the Variable Manager</p>
                 <table>
                     <thead>
                         <tr>
@@ -1230,29 +1233,66 @@
 
                     <tbody>
                         <tr>
-                            <td>${ASTRONOMICALTWILIGHTSTARTS}</td>
-                            <td>Start of Astronomical twilight</td>
+                            <td>${SUN_AZIMUTH}</td>
+                            <td>The Azimuth of the Sun with respect to the AllSky camera location</td>
                         </tr>
                         <tr>
-                            <td>${CIVILTWILIGHTSTARTS}</td>
-                            <td>Start of Civilian twilight</td>
+                            <td>${SUN_ELEVATION}</td>
+                            <td>The Elevation of the Sun with respect to the AllSky camera location</td>
+                        </tr>                        
+                        <tr>
+                            <td>${SUN_DARKEST}</td>
+                            <td>Darkest moment of the night, sun is in the lowest position</td>
                         </tr>
                         <tr>
-                            <td>${CIVILTWILIGHTENDS}</td>
+                            <td>${SUN_NIGHTEND}</td>
+                            <td>Morning astronomical twilight start</td>
+                        </tr>
+                        <tr>
+                            <td>${SUN_NAUTICALDAWN}</td>
                             <td>End of Civilian twilight</td>
                         </tr>
                         <tr>
-                            <td>${NAUTICALTWILIGHTENDS}</td>
-                            <td>End of Nautical twilight</td>
+                            <td>${SUN_DAWN}</td>
+                            <td>Morning nautical twilight ends, morning civil twilight starts</td>
                         </tr>
                         <tr>
-                            <td>${ASTRONOMICALTWILIGHTENDS}</td>
-                            <td>End of Astronomical twilight</td>
+                            <td>${SUN_SUNRISE}</td>
+                            <td>Top edge of the sun appears on the horizon</td>
                         </tr>
+                        <tr>
+                            <td>${SUN_SUNRISEEND}</td>
+                            <td>Sunrise ends (bottom edge of the sun touches the horizon)</td>
+                        </tr>
+                        <tr>
+                            <td>${SUN_NOON}</td>
+                            <td>Solar noon (sun is in the highest position)</td>
+                        </tr>
+                        <tr>
+                            <td>${SUN_SUNSETSTART}</td>
+                            <td>Sunset starts (bottom edge of the sun touches the horizon)</td>
+                        </tr>
+                        <tr>
+                            <td>${SUN_SUNSET}</td>
+                            <td>Sunset (sun disappears below the horizon, evening civil twilight starts)</td>
+                        </tr>
+                        <tr>
+                            <td>${SUN_DUSK}</td>
+                            <td>Dusk (evening nautical twilight starts)</td>
+                        </tr>
+                        <tr>
+                            <td>${SUN_NAUTICALDUSK}</td>
+                            <td>Nautical dusk (evening astronomical twilight starts)</td>
+                        </tr>
+                        <tr>
+                            <td>${SUN_NIGHT}</td>
+                            <td>night starts (dark enough for astronomical observations)</td>
+                        </tr>                                                                                                                                                                         
                     </tbody>
                 </table>
 
                 <h3>The Moon</h3>
+                <blockquote>The Moon must be enabled in the overlay manager settings before any variables are created</blockquote>                
                 <p>The following variables are available for the Moon</p>
                 <table>
                     <thead>
@@ -1288,6 +1328,7 @@
                 </table>
 
                 <h3>The Planets</h3>
+                <blockquote>The Planets must be enabled in the overlay manager settings before any variables are created</blockquote>
                 <p>The following variables are available for the Planets if enabled in the Overlay Manager
                     settings</p>
                 <table>

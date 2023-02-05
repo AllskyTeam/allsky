@@ -10,4 +10,5 @@ paho-mqtt
 numpy>=1.21
 photutils
 astropy
+suncalc
 Adafruit-Blinka

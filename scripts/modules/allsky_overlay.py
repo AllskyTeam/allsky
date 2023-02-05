@@ -956,7 +956,11 @@ class ALLSKYOVERLAY:
                 os.environ["SUN_NIGHT"] = self._nonighttext
             os.environ["SUN_AZIMUTH"] = str(int(sunAzimuth))
             os.environ["SUN_ELEVATION"] = str(int(sunElevation))
-                
+            
+            s.log(4, "INFO: Added Sun data")
+        else:
+            s.log(4,'INFO: Sun not enabled')
+            
         return True
             
     def _initialiseSunOld(self):

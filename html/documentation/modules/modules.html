@@ -223,7 +223,13 @@
                                         <li><strong>Debug Mode</strong> - When enabled a debug option is
                                             available in the toolbar which will show the results and execution
                                             time for each module</li>
+                                        <li><strong>Periodic Timer</strong> - How frequently, in seconds, the periodic
+                                            flow is run</li>
                                     </ul>
+                                    <blockquote>On occasion you may find that a module has been deactivated. THis can be
+                                        caused by the module taking longer than the 'Module Max Time' if the watchdog is
+                                        enabled. To prevent this happening you can either up the time value or disable
+                                        the watchdog all together</blockquote>
                                 </td>
                             </tr>
                         </table>
@@ -1351,7 +1357,8 @@
                                     <h4>Time synchronisation</h4>
                                     <p>Even if you set the time sync options in the GPS module the time will only be
                                         synchronised if the pi is NOT having its time updated from the internet.</p>
-                                    <p>To test if the time is currently being synchronised fom the internet enter the following command</p>
+                                    <p>To test if the time is currently being synchronised fom the internet enter the
+                                        following command</p>
                                     <div><tt>timedatectl status</tt></div>
                                     <p>Output similar to the following will be produced</p>
 
@@ -1371,7 +1378,8 @@
                                                 local TZ: <span class="red">no</span></tt></div>
                                     </div>
 
-                                    <p>Note that the 'System clock synchronized' value is 'no'. With this value 'no' the GPS module will be allowed to set the time</p>
+                                    <p>Note that the 'System clock synchronized' value is 'no'. With this value 'no' the
+                                        GPS module will be allowed to set the time</p>
                                     <p>Several environment variables are created that can be used in the overlay manager
                                     </p>
                                     <ul>
@@ -1719,6 +1727,38 @@
                         that ships with the OS. Generally that may mean reinstalling your AllSky installation to
                         get the latest version of python. Running multiple versions of python is beyond the
                         scope of this documentation </p>
+                    <h3>Contributing a module</h3>
+                    <p>There is a central GitHub repository that you can contribute your modules to. You do not have to
+                        do this but over time we wouls like to build this into a comprehensive library of available
+                        modules.</p>
+                    <p>If you wish to contribute your module then please follow these instructions</p>
+                    <p>
+                    <ul>
+                        <li>Create a fork of the User Modules repository <a
+                                href="https://github.com/Alex-developer/allsky-modules"
+                                target="_blank">https://github.com/Alex-developer/allsky-modules</a></li>
+                        <li>Create a new branch in your forked repository, call the branch the name of your module</li>
+                        <li>Develop your module and commit it to the branch</li>
+                        <li>Create a pull request into the main repo from your branch</li>
+                        <li>The module will be checked and if all is ok will be merged into the main repository</li>
+                        <li>If you need to make changes to the module after its been merged then refork the main repo
+                            create a branch from the master branch named as your module then commit ad PR to main master
+                        </li>
+                    </ul>
+                    </p>
+                    <p>The structure of a module is important so please use the following folder/file structure</p>
+                    <p><strong>allsky_MODULENAME</strong></p>
+                    <p>-- <strong>allsky_MODULENAME.py</strong> <span>The main modules code</span></p>
+                    <p>-- <strong>requirements.txt</strong> <span>Any python packages required by the plugin, will be
+                            installed with pip3. If you do not need any additional packages do not include this
+                            file</span></p>
+                    <p>-- <strong>packages.txt</strong> <span>Any aditional libraries required by the module, will be
+                            installed using apt. If you do not need any additional packages do not include this
+                            file</span></p>
+                    <p>-- <strong>README.md</strong> <span>Markdown file with any special instructions required for the
+                            module. If there are none do not include this file</span></p>
+                    <blockquote>When specifying python libraries DO NOT include numpy in ANY requirements.txt file as
+                        changing the version could cause issues with AllSky</blockquote>
                     <h3>Anatomy Of A Module</h3>
                     <p>A module consists of two key parts</p>
                     <ul>
@@ -2064,11 +2104,23 @@
                         </tr>
                         <tr>
                             <td>isFileWriteable(fileName)</td>
-                            <td> Determines of the file is writeable</td>
+                            <td>Determines of the file is writeable</td>
                         </tr>
                         <tr>
                             <td>isFileReadable(fileName)</td>
-                            <td> Determines of the file is readable</td>
+                            <td>Determines of the file is readable</td>
+                        </tr>
+                        <tr>
+                            <td>saveExtraData(fileName, extraData)</td>
+                            <td>Saves the extraData in fileName.</td>
+                        </tr>
+                        <tr>
+                            <td>deleteExtraData(fileName)</td>
+                            <td>Deletes the extra data fileName.</td>
+                        </tr>
+                        <tr>
+                            <td>getGPIOPin(pin)</td>
+                            <td>Returns the board.Pin from the passed in pin (int)</td>
                         </tr>
                     </table>
                 </details>

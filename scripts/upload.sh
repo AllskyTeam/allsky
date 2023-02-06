@@ -117,10 +117,12 @@ NUM_CHECKS=0
 while [[ ${CHECK} == "true" ]]; do
 	if [[ -f ${PID_FILE} ]]; then
 		PID=$(< "${PID_FILE}")
+		[[ ${DEBUG} == "true" ]] && echo "Checking if PID ${PID} is still active..."
 		# shellcheck disable=SC2009
 		if ps -f "-p${PID}" | grep --silent "${ME}" ; then
+			[[ ${DEBUG} == "true" ]] && echo "    ... it is"
 			if [[ ${WAIT} == "true" ]]; then
-				((NUM_CHECKS=NUM_CHECKS+1))
+				((NUM_CHECKS++))
 				if [[ $NUM_CHECKS -gt 10 ]]; then
 					echo -en "${YELLOW}" >&2
 					echo "*** ${ME}: WARNING: Another '${FILE_TYPE}' upload is still in progress so" >&2
@@ -128,7 +130,7 @@ while [[ ${CHECK} == "true" ]]; do
 					echo "Made ${NUM_CHECKS} attempts at waiting." >&2
 					echo -e "${NC}" >&2
 				else
-					sleep 5
+					sleep 5s
 				fi
 			else
 				echo -en "${YELLOW}" >&2
@@ -142,6 +144,7 @@ while [[ ${CHECK} == "true" ]]; do
 				exit 99
 			fi
 		else
+			[[ ${DEBUG} == "true" ]] && echo "    ... it's not"
 			CHECK="false"	# Not sure why the PID file existed if the process didn't exist...
 		fi
 	else
@@ -216,6 +219,7 @@ else # sftp/ftp/ftps
 		[[ -n ${LFTP_COMMANDS} ]] && echo "${LFTP_COMMANDS}"
 
 		# Sometimes have problems with "max-reties 1", so make it 2
+		echo set dns:fatal-timeout 10
 		echo set net:max-retries 2
 		echo set net:timeout 10
 

@@ -50,6 +50,7 @@ usage_and_exit()
 
 HELP="false"
 DEBUG="false"
+DEBUG_ARG=""
 SETTINGS_ONLY="false"
 ALL_FILES="false"
 RET=0
@@ -58,6 +59,7 @@ while [[ $# -gt 0 ]]; do
 	case "${ARG,,}" in		# lower case
 		--debug)
 			DEBUG="true"
+			DEBUG_ARG="--debug"
 			shift
 			;;
 		--help)
@@ -188,7 +190,7 @@ function upload_file()
 		TO="${IMAGE_DIR}${S}${DIRECTORY}"
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to ${TO:-root}${wNC}"
 
-		"${ALLSKY_SCRIPTS}/upload.sh" --silent \
+		"${ALLSKY_SCRIPTS}/upload.sh" --silent ${DEBUG_ARG} \
 			"${FILE_TO_UPLOAD}" \
 			"${TO}" \
 			"" \

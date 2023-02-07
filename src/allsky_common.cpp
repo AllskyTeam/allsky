@@ -1799,6 +1799,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->videoOffBetweenImages = getBoolean(argv[++i]);
 		}
+		else if (strcmp(a, "extra") == 0)
+		{
+			cg->extraArgs = argv[++i];
+		}
 
 		// overlay settings
 		else if (strcmp(a, "overlaymethod") == 0)

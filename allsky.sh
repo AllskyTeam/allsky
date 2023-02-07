@@ -215,7 +215,7 @@ else
 fi
 
 if [[ -n $CAPTURE_EXTRA_PARAMETERS ]]; then
-	echo "-extra ${CAPTURE_EXTRA_PARAMETERS}" >> "${ARGS_FILE}"
+	echo "-extra=${CAPTURE_EXTRA_PARAMETERS}" >> "${ARGS_FILE}"
 fi
 
 CAPTURE="capture_${CAMERA_TYPE}"

@@ -136,7 +136,6 @@ struct config {			// for configuration variables
 	int cameraNumber					= 0;			// 0 to number-of-cameras-attached minus 1
 	cameraType ct						= ctRPi;
 	char const *cm						= "";
-	bool goodLastExposure				= false;		// Was the last image propery exposed?
 
 	// Settings can be in the config file and/or command-line.
 	char allskyHome[100]				= { 0 };
@@ -172,6 +171,7 @@ struct config {			// for configuration variables
 	bool daytimeCapture					= false;		// Capture images during daytime?
 	bool daytimeSave					= false;		// Save images during daytime?
 	char const *timeFormat				= "%Y%m%d %H:%M:%S";
+	char const *extraArgs				= "";			// Optional extra arguments passed on
 
 	// To make the code cleaner, comments are only given for daytime variables.
 
@@ -288,6 +288,7 @@ struct config {			// for configuration variables
 	long lastFocusMetric				= NOT_SET;
 	long lastAsiBandwidth				= NOT_SET;
 	double lastMean						= NOT_SET;
+	bool goodLastExposure				= false;		// Was the last image propery exposed?
 };
 
 // Global variables and functions.

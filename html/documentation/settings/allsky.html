@@ -914,11 +914,10 @@ and are updated by clicking on the WebUI's
 </tr>
 <tr><td><span class="shSetting">CAPTURE_EXTRA_PARAMETERS</span></td>
 	<td></td>
-	<td>Any additional capture parameters.
-	Rarely used.
-	<br>Run <code>~/allsky/bin/capture_ZWO --help</code> or
-	<code>~/allsky/bin/capture_RPi --help</code>
-	for a list of options.
+	<td>Pass additional capture parameters to the image capture program.
+	Primarily used to pass parameters that Allsky doesn't use to the <code>libcamera</code>
+	command when using RPi cameras, e.g., auto-focus related parameters.
+	<br>Not currently used with ZWO cameras.
 	</td>
 </tr>
 

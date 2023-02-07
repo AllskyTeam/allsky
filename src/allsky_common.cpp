@@ -931,7 +931,7 @@ void displayHelp(config cg)
 	printf("     'b' is a boolean (0 or 1), 'n' is a number, 's' is a string\n");
 	printf("     %'d ms (milli-seconds) = 1 second.  %'d us (micro-seconds) = 1 second.\n", 1000, 1000000);
 	printf("     See the Allsky WebUI for camera-dependent defaults.\n");
-	printf("     Non camera-depenent defaults are in [brackets].\n");
+	printf("     Non camera-dependent defaults are in [brackets].\n");
 
 	printf(" -%-*s - Optional configuration file to use instead of, or in addition to,\n", n, "config s");
 	printf("  %-*s   command-line arguments.  The file is read when seen on the command line [none].\n", n, "");
@@ -1028,6 +1028,9 @@ void displayHelp(config cg)
 		printf(" -%-*s - USB bandwidth percent.\n", n, "usb n");
 		printf(" -%-*s - Determines if version 0.8 exposure method should be used [%s].\n", n, "newexposure b", yesNo(cg.videoOffBetweenImages));
 	}
+	if (cg.ct == ctRPi) {
+		printf(" -%-*s - Extra arguments pass to image capture program [%s].\n", n, "extra s", cg.extraArgs);
+	}
 	printf(" -%-*s - Set to 1, 2, 3, or 4 for more debugging information [%ld].\n", n, "debuglevel n", cg.debugLevel);
 
 	printf("\nOverlay settings:\n");
@@ -1098,6 +1101,16 @@ char *LorF(double num, char const *L, char const *F)
 	return(n[o]);
 }
 
+// Return the string if it exists, or "[none]"
+char const *stringORnone(char const *s)
+{
+	if (s == NULL || *s == '\0')
+		return("[none]");
+	else
+		return(s);
+}
+
+
 // Display settings.
 void displaySettings(config cg)
 {
@@ -1108,7 +1121,7 @@ void displaySettings(config cg)
 		printf("   Command: %s\n", cg.cmdToUse);
 	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
 	printf("   Resolution (before any binning): %ldx%ld\n", cg.width, cg.height);
-	printf("   Configuration file: %s\n", cg.configFile[0] == '\0' ? "none" : cg.configFile);
+	printf("   Configuration file: %s\n", stringORnone(cg.configFile));
 	printf("   Quality: %ld\n", cg.quality);
 	printf("   Daytime capture: %s\n", yesNo(cg.daytimeCapture));
 
@@ -1177,9 +1190,12 @@ void displaySettings(config cg)
 		printf("   Rotation: %ld\n", cg.rotation);
 	}
 	if (cg.flip != NOT_CHANGED) printf("   Flip Image: %s (%ld)\n", getFlip(cg.flip), cg.flip);
-	printf("   Filename: %s  saved to %s\n", cg.fileName, cg.saveDir);
-	printf("   Latitude: %s, Longitude: %s\n", cg.latitude, cg.longitude);
+	printf("   Filename: %s  saved to %s\n", stringORnone(cg.fileName), stringORnone(cg.saveDir));
+	printf("   Latitude: %s, Longitude: %s\n", stringORnone(cg.latitude), stringORnone(cg.longitude));
 	printf("   Sun Elevation: %.2f\n", cg.angle);
+	if (cg.ct == ctRPi) {
+		printf("   Extra arguments: %s\n", stringORnone(cg.extraArgs));
+	}
 	printf("   Locale: %s\n", cg.locale);
 	printf("   Notification Images: %s\n", yesNo(cg.notificationImages));
 	if (cg.ct == ctZWO) {
@@ -1194,17 +1210,17 @@ void displaySettings(config cg)
 	printf("   Debug Level: %ld\n", cg.debugLevel);
 	printf("   On TTY: %s\n", yesNo(cg.tty));
 	if (cg.ct == ctRPi && cg.isLibcamera) {
-		printf("   Tuning File (day): %s\n", cg.dayTuningFile == NULL ? "[none]" : cg.dayTuningFile);
-		printf("   Tuning File (night): %s\n", cg.nightTuningFile == NULL ? "[none]" : cg.nightTuningFile);
+		printf("   Tuning File (day): %s\n", stringORnone(cg.dayTuningFile));
+		printf("   Tuning File (night): %s\n", stringORnone(cg.nightTuningFile));
 	}
-	printf("   Allsky version: %s\n", cg.version);
+	printf("   Allsky version: %s\n", stringORnone(cg.version));
 	if (cg.ct == ctZWO) {
-		printf("   ZWO SDK version %s\n", cg.ASIversion);
+		printf("   ZWO SDK version %s\n", stringORnone(cg.ASIversion));
 	}
 
 	printf("   Overlay settings:\n");
-	printf("      Text Overlay: %s\n", cg.overlay.ImgText[0] == '\0' ? "[none]" : cg.overlay.ImgText);
-	printf("      Text Extra File: %s, Age: %ld seconds\n", cg.overlay.ImgExtraText[0] == '\0' ? "[none]" : cg.overlay.ImgExtraText, cg.overlay.extraFileAge);
+	printf("      Text Overlay: %s\n", stringORnone(cg.overlay.ImgText));
+	printf("      Text Extra File: %s, Age: %ld seconds\n", stringORnone(cg.overlay.ImgExtraText), cg.overlay.extraFileAge);
 	printf("      Text Line Height %ldpx\n", cg.overlay.iTextLineHeight);
 	printf("      Text Position: %ldpx from left, %ldpx from top\n", cg.overlay.iTextX, cg.overlay.iTextY);
 	printf("      Font Name: %s (%ld)\n", fontnames[cg.overlay.fontnumber], cg.overlay.fontnumber);
@@ -1215,10 +1231,10 @@ void displaySettings(config cg)
 	printf("      Font Line Width: %ld\n", cg.overlay.linewidth);
 	printf("      Outline Font : %s\n", yesNo(cg.overlay.outlinefont));
 
-	printf("      Show Time: %s (format: %s)\n", yesNo(cg.overlay.showTime), cg.timeFormat);
+	printf("      Show Time: %s (format: %s)\n", yesNo(cg.overlay.showTime), stringORnone(cg.timeFormat));
 	printf("      Show Exposure: %s\n", yesNo(cg.overlay.showExposure));
 	if (cg.supportsTemperature)
-		printf("      Show Temperature: %s, type: %s\n", yesNo(cg.overlay.showTemp), cg.tempType);
+		printf("      Show Temperature: %s, type: %s\n", yesNo(cg.overlay.showTemp), stringORnone(cg.tempType));
 	printf("      Show Gain: %s\n", yesNo(cg.overlay.showGain));
 	printf("      Show Brightness: %s\n", yesNo(cg.overlay.showBrightness));
 	printf("      Show Target Mean Brightness: %s\n", yesNo(cg.overlay.showMean));

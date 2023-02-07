@@ -77,6 +77,15 @@ int RPicapture(config cg, cv::Mat *image)
 
 	ss << cg.fullFilename;
 	command += " --output '" + ss.str() + "'";
+
+	if (*cg.extraArgs)
+	{
+		// add the extra arguments as is; do not parse them
+		ss.str("");
+		ss << cg.extraArgs;
+		command += " " + ss.str();
+	}
+
 	if (cg.isLibcamera)
 	{
 		// libcamera tuning file

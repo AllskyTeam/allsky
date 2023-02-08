@@ -811,12 +811,12 @@ restore_prior_files() {
 
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
 		display_msg progress "Restoring endOfNight_additionalSteps.sh."
-		mv "${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
+		cp -a "${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
 	fi
 
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfDay_additionalSteps.sh ]]; then
 		display_msg progress "Restoring endOfDay_additionalSteps.sh."
-		mv "${PRIOR_ALLSKY_DIR}/scripts/endOfDay_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
+		cp -a "${PRIOR_ALLSKY_DIR}/scripts/endOfDay_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
 	fi
 
 	if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then
@@ -848,13 +848,13 @@ restore_prior_files() {
 	fi
 	if [[ -f ${D}/raspap.auth ]]; then
 		display_msg progress "Restoring WebUI security settings."
-		mv "${D}/raspap.auth" "${ALLSKY_CONFIG}"
+		cp -a "${D}/raspap.auth" "${ALLSKY_CONFIG}"
 	fi
 
 	# Restore any REMOTE Allsky Website configuration file.
 	if [[ -f ${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} ]]; then
 		display_msg progress "Restoring remote Allsky Website ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}."
-		mv "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+		cp -a "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
 		# Check if this is an older Allsky Website configuration file type.
 		OLD="false"
@@ -882,7 +882,7 @@ restore_prior_files() {
 
 	if [[ -f ${PRIOR_CONFIG_DIR}/uservariables.sh ]]; then
 		display_msg progress "Restoring uservariables.sh."
-		mv "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
+		cp -a "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
 	fi
 
 	SETTINGS_MSG=""
@@ -891,7 +891,7 @@ restore_prior_files() {
 			display_msg progress "Restoring WebUI settings."
 			# This file is probably a link to a camera type/model-specific file,
 			# so copy it instead of moving it to not break the link.
-			cp "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
+			cp -a "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
 			RESTORED_PRIOR_SETTINGS_FILE="true"
 
 			# TODO: check if this is an older version of the file,

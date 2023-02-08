@@ -934,6 +934,11 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 
 #ifdef IS_RPi
 	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ExtraArguments");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraArgs");
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ModeMean");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "mean");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
@@ -1547,3 +1552,4 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 
 	return(ok);
 }
+

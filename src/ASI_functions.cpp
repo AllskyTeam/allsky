@@ -1154,7 +1154,7 @@ static bool checkBin(long b, ASI_CAMERA_INFO ci, char const *field)
 			break;
 	}
 	if (! ok)
-		Log(0, "*** ERROR: %s bin of %ldx%ld not supported by camera %s, sensor %s.\n", field, b, b, ci.Name, ci.Module);
+		Log(0, "*** ERROR: %s bin of %ldx%ld not supported by camera %s.\n", field, b, b, ci.Name);
 
 	return(ok);
 }
@@ -1547,4 +1547,3 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 
 	return(ok);
 }
-

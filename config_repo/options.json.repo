@@ -411,6 +411,16 @@
 "advanced" : 1
 },
 {
+"name" : "extraArgs",
+"default" : "",
+"description" : "Optional extra arguments to pass to the capture program that Allsky doesn't support.",
+"label" : "Extra Arguments",
+"type" : "widetext",
+"display" : "extraArgs_display",
+"optional" : 1,
+"advanced" : 1
+},
+{
 "name" : "saturation",
 "minimum" : "saturation_min",
 "maximum" : "saturation_max",
@@ -674,15 +684,6 @@
 "type" : "text",
 "display" : 1,
 "advanced" : 0
-},
-{
-"name" : "extraArgs",
-"default" : "",
-"description" : "Any extra arguments to pass to the capture program that Allsky doesn't support.",
-"label" : "Extra Arguments",
-"type" : "text",
-"display" : "extraArgs_display",
-"advanced" : 1
 },
 {
 "name" : "histogrambox",

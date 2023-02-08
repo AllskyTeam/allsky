@@ -384,7 +384,7 @@
 {
 "name" : "nightTuningFile",
 "default" : "",
-"description" : "Name of the night camera tuning file to use. Omit this option to preserve the default behavior of libcamera.<br>Please read this <b><a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer'>documentation</a></b> or this <b><a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer'>document</a></b> if using a Raspberry camera with libcamera. For other Raspberry cameras read the camera manual for more information.",
+"description" : "Name of the night camera tuning file to use.",
 "label" : "Tuning File",
 "type" : "widetext",
 "display" : "TuningFile_display",
@@ -674,6 +674,15 @@
 "type" : "text",
 "display" : 1,
 "advanced" : 0
+},
+{
+"name" : "extraArgs",
+"default" : "",
+"description" : "Any extra arguments to pass to the capture program that Allsky doesn't support.",
+"label" : "Extra Arguments",
+"type" : "text",
+"display" : "extraargs_display",
+"advanced" : 1
 },
 {
 "name" : "histogrambox",
@@ -1137,4 +1146,3 @@
 "name" : "XX_END_XX"
 }
 ]
-

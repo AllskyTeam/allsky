@@ -831,12 +831,12 @@ restore_prior_files() {
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg progress "Restoring modules."
-		mv "${PRIOR_CONFIG_DIR}/modules" "${ALLSKY_CONFIG}"
+		cp -ar "${PRIOR_CONFIG_DIR}/modules" "${ALLSKY_CONFIG}"
 	fi
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg progress "Restoring overlays."
-		mv "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
+		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 	fi
 
 	# If the user has an older release, these files may be in /etc/raspap.

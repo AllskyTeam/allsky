@@ -214,9 +214,8 @@ else
 	rm -f "${FREQUENCY_FILE}"
 fi
 
-if [[ -n $CAPTURE_EXTRA_PARAMETERS ]]; then
-	echo "-extra=${CAPTURE_EXTRA_PARAMETERS}" >> "${ARGS_FILE}"
-fi
+EXTRA_ARGS="$(settings ".extraArgs")"
+[[ -n ${EXTRA_ARGS} ]] && echo "-extra=${EXTRA_ARGS}" >> "${ARGS_FILE}"
 
 CAPTURE="capture_${CAMERA_TYPE}"
 

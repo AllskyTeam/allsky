@@ -50,9 +50,6 @@ REMOVE_BAD_IMAGES="true"
 REMOVE_BAD_IMAGES_THRESHOLD_LOW=1
 REMOVE_BAD_IMAGES_THRESHOLD_HIGH=90
 
-# Additional capture parameters.
-CAPTURE_EXTRA_PARAMETERS=""
-
 
 ########## Timelapse
 # Set to "true" to generate a timelapse video at the end of each night.

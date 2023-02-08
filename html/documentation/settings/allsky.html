@@ -296,6 +296,15 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>[none]</td>
 	<td>Configuration file to use for settings.  Not currently used.</td>
 </tr>
+<tr><td><span class="WebUISetting">Extra Parameters</span></td>
+	<td></td>
+	<td>(RPi only) Any additional parameters to send to the
+		<code>libcamera-still</code> image capture program.
+		It supports a lot of settings that Allsky doesn't (e.g., auto-focus options),
+		and this field allows you to enter those settings.
+		<br>
+	</td>
+</tr>
 <tr><td><span class="WebUISetting">Saturation</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>(RPi only) Sets saturation from black and white to extra saturated.</td>
@@ -910,14 +919,6 @@ and are updated by clicking on the WebUI's
 	<td>Images whose mean brightness is above this percent will be removed (max: 100).
 	Set to <code>0</code> to disable this check.
 	<br>Only applies if <span class="shSetting">REMOVE_BAD_IMAGES</span> is "true".
-	</td>
-</tr>
-<tr><td><span class="shSetting">CAPTURE_EXTRA_PARAMETERS</span></td>
-	<td></td>
-	<td>Pass additional capture parameters to the image capture program.
-	Primarily used to pass parameters that Allsky doesn't use to the <code>libcamera</code>
-	command when using RPi cameras, e.g., auto-focus related parameters.
-	<br>Not currently used with ZWO cameras.
 	</td>
 </tr>
 

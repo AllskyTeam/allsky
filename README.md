@@ -232,13 +232,13 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 &nbsp;  
 * version **v2023.MM.DD**: 
 	* Allsky package:
-		* New camera support: All ZWO cameras as of January, 2023.  RPi HQ and Module 3 cameras.
+		* New camera support: All ZWO cameras as of January, 2023.  RPi HQ and Module 3 cameras as well as ArduCam 16 MP and 64 MP cameras.
 		* "Mini" timelapse videos can be created that contain a user-configurable number of the most recent images.  This allows you to continually see the recent sky conditions.
 		* Installation improvements:
 			* If there is not enough swap space configured you are prompted to add more.  Doing this decreases the chance of timelapse creation problems.
 			* If `allsky/tmp` is not a memory-resident filesystem you are prompted to make it one.  This SIGNIFICANTLY decreases the number of writes to the SD card, prolonging its life.			
 			* If a `~/allsky-OLD` directory is found it's assumed to be a prior release of Allsky and you'll be prompted to have its images, darks, and other items moved to the new release.
-		* `scripts/check_allsky.sh` was added to perform basic sanity checking of your Allsky installation.  Run it after you're done configuring Allsky.
+		* `scripts/check_allsky.sh` added to perform basic sanity checking of your Allsky installation.  Run it after you're done configuring Allsky.
 		* Latitude and longitude can now be specified as either a decimal number (e.g., `-105.21`) or with N, S, E, W (e.g., `105.21W`).
 		* Removed settings from `config.sh`:
 			* `CAMERA`: To update the camera type, use the new **Camera Type** setting in the WebUI. This is an advanced setting so you need to click the "Show Advanced Options" button to view it.
@@ -247,7 +247,6 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* `REMOTE_PORT`: specifies a non-default FTP port.
 			* `SSH_KEY_FILE`: path to a SSH private key. When `scp` is used for uploads, this identify file will be used to establish the secure connection.
 			* The Secure CP (`scp`) and Google Cloud Service (`gcs`) protocols are now supported for file uploads.
-		* Sanity checking is done on many settings.  For example, URLs in Allsky Map data must be reachable from the Internet, and crop areas must fit within the image.
 		* The Wiki now points to files in the GitHub `documentation` directory.  A copy of that directory is also on the Pi and accessible via the Documentation link in the WebUI.
 		* AUTO_STRETCH now works, and is documented with sample images.
 		* Images can now be uploaded using the full `image-YYYYMMDDHHMMSS.jpg` name instead of the shorter `image.jpg` name.  See the `IMG_UPLOAD_ORIGINAL_NAME` Allsky setting in the documentation.
@@ -264,7 +263,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 		* Minimum, maximum, and default values are now correct for all camera models.
 		* Fields with missing data are shown in red with a message saying the data is missing.  For example, **Latitude** is a required field.
 		* New settings on the **Allsky Settings** page:
-			* **Camera Type** is either ZWO or RPi.  This replaces the `CAMERA` variable in the `config.sh` file.
+			* **Camera Type** is either ZWO or RPi.  This replaces the `CAMERA` variable in the `config.sh` file and also allows you to switch between cameras connected to the Pi.  For example, if you have both an RPi and ZWO camera attached, you can switch between them using this setting.
 			* **Max Auto-Exposure** for day and night.  When using auto-exposure, exposure times will not exceed this value.
 			* **Max Auto-Gain** for day and night.  When using auto-gain, gain values will not exceed this value.
 			* **Auto White Balance**, **Red Balance**, and **Blue Balance** are now available for day and night.
@@ -276,6 +275,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* **Gamma** (ZWO only) changes the contrast of an image.  It is only supported by a few cameras; for those that don't, the `AUTO_STRETCH` setting can produce a similar effect.
 			* **Offset** (ZWO only) adds about 1/10th the specified amount to each pixel's brightness, thereby brightening the whole image.  Setting this too high causes the image to turn gray.
 			* **Contrast** and **Sharpness** (RPi only).
+			* **Extra Parameters** (RPi only) replaces the `CAPTURE_EXTRA_PARAMETERS` variable in the `config.sh` file, and allows you to pass parameters to the `libcamera-still` image capture program that Allsky doesn't natively support, such as auto-focus options.
 			* **Mean Target** (RPi only) for day and night.  This specifies the mean target brightness (0.0 (pure black) to 1.0 (pure white)) when in auto-exposure mode and works best if auto-gain is also enabled.
 			* **Mean Threshold** (RPi only).  This specifies how close the actual mean brightness must be to the **Mean Target**.  For example, if **Mean Target** is 0.5 and **Mean Threshold** is 0.1, the actual mean can vary between 0.4 and 0.6 (0.5 +/- 0.1).			
 			* The **Focus Metric** setting is now available for ZWO cameras.  Higher numbers indicate better focus.  Use only when conditions are NOT changing.

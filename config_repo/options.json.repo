@@ -681,7 +681,7 @@
 "description" : "Any extra arguments to pass to the capture program that Allsky doesn't support.",
 "label" : "Extra Arguments",
 "type" : "text",
-"display" : "extraargs_display",
+"display" : "extraArgs_display",
 "advanced" : 1
 },
 {
@@ -1146,3 +1146,4 @@
 "name" : "XX_END_XX"
 }
 ]
+

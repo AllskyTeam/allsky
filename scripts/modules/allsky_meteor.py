@@ -101,7 +101,7 @@ def meteor(params, event):
 
             if mask != "":
                 maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
-                s.log(1,f"INFO: Loading mask {maskPath}")
+                s.log(4,f"INFO: Loading mask {maskPath}")
                 maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
                 if maskImage is not None:
                     if debug:
@@ -173,14 +173,14 @@ def meteor(params, event):
             os.environ["AS_METEORLINECOUNT"] = str(lineCount)    
             os.environ["AS_METEORCOUNT"] = str(meteorCount)
             result = "{0} Meteors found, {1} Lines detected".format(meteorCount, lineCount)
-            s.log(1,"INFO: {}".format(result))
+            s.log(4,"INFO: {}".format(result))
         else:
             result = "Sky is not clear so ignoring meteor detection"
-            s.log(1,"INFO: {0}".format(result))
+            s.log(4,"INFO: {0}".format(result))
             os.environ["AS_METEORCOUNT"] = "Disabled"            
     else:
         result = "Its raining so ignorning meteor detection"
-        s.log(1,"INFO: {0}".format(result))
+        s.log(4,"INFO: {0}".format(result))
         os.environ["AS_METEORCOUNT"] = "Disabled"
 
     return result

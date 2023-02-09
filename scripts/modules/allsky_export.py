@@ -110,6 +110,6 @@ def export(params, event):
         with open(savePath, "w") as outfile:
             json.dump(jsonData, outfile)
 
-        s.log(1, "INFO: Allsky data exported to {0}".format(savePath))
+        s.log(4, "INFO: Allsky data exported to {0}".format(savePath))
 
         return "Allsky data exported to {0}".format(savePath)

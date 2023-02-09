@@ -162,10 +162,10 @@ def starcount(params, event):
                 image = cv2.imread(debugimage)
                 if image is None:
                     image = s.image
-                    s.log(0, "WARNING: Debug image set to {0} but cannot be found, using latest allsky image".format(debugimage))
+                    s.log(4, "WARNING: Debug image set to {0} but cannot be found, using latest allsky image".format(debugimage))
                 else:
                     usingDebugImage = True
-                    s.log(0, "WARNING: Using debug image {0}".format(debugimage))
+                    s.log(4, "WARNING: Using debug image {0}".format(debugimage))
             else:
                 image = s.image
 
@@ -239,14 +239,14 @@ def starcount(params, event):
             os.environ["AS_STARCOUNT"] = str(starCount)
 
             result = "Total stars found {0}".format(starCount)
-            s.log(1,"INFO: {0}".format(result))
+            s.log(4,"INFO: {0}".format(result))
         else:
             result = "Sky is not clear so ignoring starcount"
-            s.log(1,"INFO: {0}".format(result))                 
+            s.log(4,"INFO: {0}".format(result))                 
             os.environ["AS_STARCOUNT"] = "Disabled"
     else:
         result = "Its raining so ignorning starcount"
-        s.log(1,"INFO: {0}".format(result))
+        s.log(4,"INFO: {0}".format(result))
         os.environ["AS_STARCOUNT"] = "Disabled"
 
     return "{}".format(result)

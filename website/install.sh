@@ -109,11 +109,9 @@ modify_locations() {
 }
 
 
-##### Create and upload a new data.json file.
+##### Create and upload a new data.json file and files needed to display settings.
 upload_data_json_file() {
-	# Copy the file to ${ALLSKY_WEBSITE}.
-	# This also copies the settings file and a few others needed to display settings.
-	display_msg progress "Uploading twlight data and initial files."
+	display_msg progress "Uploading initial files to remote Website."
 	OUTPUT="$("${ALLSKY_SCRIPTS}/postData.sh" --allFiles 2>&1)"
 	if [[ $? -ne 0 || ! -f ${ALLSKY_WEBSITE}/data.json ]]; then
 		MSG="Unable to create new 'data.json' file:"
@@ -323,9 +321,10 @@ do_remote_website() {
 	MSG="${MSG}\n  1. Upload the Allsky Website files to your remote server."
 	MSG="${MSG}\n  2. Update 'ftp-settings.sh' using the WebUI's 'Editor' page"
 	MSG="${MSG}\n     to point to the remote server."
-	MSG="${MSG}\n  3. Set the 'Website URL' in the WebUI's 'Allsky Settings' page"
+	MSG="${MSG}\n  3. Enter the URL of the remote Website into the 'Website URL'"
+	MSG="${MSG}\n     field in the WebUI's 'Allsky Settings' page,"
 	MSG="${MSG}\n     even if you are not displaying your Website on the Allsky Map."
-	MSG="${MSG}\n\nHave you already done these steps?"
+	MSG="${MSG}\n\nHave you completed these steps?"
 	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 80 3>&1 1>&2 2>&3; then 
 		MSG="You need to manually copy the Allsky Website files to your remote server."
 		MSG="${MSG}\nYou can do that by executing:"
@@ -338,18 +337,27 @@ do_remote_website() {
 	fi
 
 	# Make sure they REALLY did the above.
+# TODO: not all protocols require REMOTE_HOST
 	OK="true"
-	if [[ ${REMOTE_HOST} == "" ]]; then
+	if [[ -z ${REMOTE_HOST} ]]; then
 		MSG="The 'REMOTE_HOST' must be set in 'ftp-settings.sh'\n"
-		MSG="${MSG}in order to do a remote website installation.\n"
+		MSG="${MSG}in order to do a remote Website installation.\n"
 		MSG="${MSG}Please set it, the password, and other information, then re-run this installation."
+		display_msg error "${MSG}"
+		OK="false"
+	fi
+	WEBURL="$(settings ".websiteurl")"
+	if [[ -z ${WEBURL} || ${WEBURL} == "null" ]]; then
+		MSG="The 'Website URL' setting must be defined in the WebUI\n"
+		MSG="${MSG}in order to do a remote Website installation.\n"
+		MSG="${MSG}Please set it then re-run this installation."
 		display_msg error "${MSG}"
 		OK="false"
 	fi
 
 	TEST_FILE_NAME="Allsky_upload_test.txt"
 	TEST_FILE="/tmp/${TEST_FILE_NAME}"
-	display_msg progress "Testing upload."
+	display_msg progress "Testing upload to remote Website."
 	display_msg info "When done you can remove '${TEST_FILE_NAME}' from your remote server."
 	echo "This is a test file and can be removed." > "${TEST_FILE}"
 	RET="$("${ALLSKY_SCRIPTS}/upload.sh" "${TEST_FILE}" "${IMAGE_DIR}" "${TEST_FILE_NAME}" "UploadTest")"
@@ -362,21 +370,13 @@ do_remote_website() {
 		OK="false"
 	fi
 
-	display_msg progress "Setting up some remote files."
-	WEBURL="$(settings ".websiteurl")"
-	if [[ -z ${WEBURL} || ${WEBURL} == "null" ]]; then
-		MSG="The 'Website URL' setting must be defined in the WebUI\n"
-		MSG="${MSG}in order to do a remote website installation.\n"
-		MSG="${MSG}Please set it then re-run this installation."
-		display_msg error "${MSG}"
-		OK="false"
-	fi
-
 	[[ ${OK} == "false" ]] && exit 1
 
-	# TODO: do a git clone into a temp directory, then copy all the files up.
+	# TODO: AUTOMATE: do a git clone into a temp directory, then copy all the files up.
+	# TODO: Will also need to change the messages above.
 
-	# Tell the remote server to check the sanity of the website.
+	# Tell the remote server to check the sanity of the Website.
+	# This also creates some necessary directories.
 	[[ ${WEBURL: -1} != "/" ]] && WEBURL="${WEBURL}/"
 	if [[ ${DEBUG} == "true" ]]; then
 		D="&debug"
@@ -397,13 +397,13 @@ do_remote_website() {
 		# The user is upgrading a new-style remote Website.
 		display_msg progress "You should continue to configure your remote Allsky Website via the WebUI.\n"
 
-		# Check if this is an older configuration file.
+		# Check if this is an older configuration file version.
 		check_for_older_config_file "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 	else
 		# Don't know if the user is upgrading an old-style remote website,
 		# or they don't even have a remote website.
 
-		MSG="You can keep a copy of your remote website's configuration file on your Pi"
+		MSG="You can keep a copy of your remote Website's configuration file on your Pi"
 		MSG="${MSG}\nso you can easily edit it in the WebUI and have it automatically uploaded."
 		MSG="${MSG}\n** This is the recommended way of making changes to the configuration **."
 		MSG="${MSG}\n\nWould you like to do that?"

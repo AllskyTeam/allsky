@@ -35,6 +35,6 @@ def loadimage(params, event):
     if result == s.ABORT:
         s.log(0,"ERROR: Cannot load {0}...".format(s.CURRENTIMAGEPATH), exitCode=1)
     else:
-        s.log(1, "INFO: {}".format(result))
+        s.log(4, "INFO: {}".format(result))
 
     return result        

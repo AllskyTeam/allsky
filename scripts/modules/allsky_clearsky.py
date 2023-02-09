@@ -191,7 +191,7 @@ metaData = {
 }
 
 def onPublish(client, userdata, mid, properties=None):
-    s.log(1,"INFO: Sky state published to MQTT Broker mid {0}".format(mid))    
+    s.log(4,"INFO: Sky state published to MQTT Broker mid {0}".format(mid))    
 
 def clearsky(params, event):
     #ONLY AT NIGHT !
@@ -256,7 +256,7 @@ def clearsky(params, event):
         if len(roi) > 0:
             s.log(0, "ERROR: ROI is invalid, falling back to {0}% of image".format(fallback))
         else:
-            s.log(1, "INFO: ROI not set, falling back to {0}% of image".format(fallback))
+            s.log(4, "INFO: ROI not set, falling back to {0}% of image".format(fallback))
         fallbackAdj = (100 / fallback)
         x1 = s.int((imageWidth / 2) - (imageWidth / fallbackAdj))
         y1 = s.int((imageHeight / 2) - (imageHeight / fallbackAdj))
@@ -291,7 +291,7 @@ def clearsky(params, event):
         templateFileName = "startemplate-{0}.png".format(starTemplate1Size)
         s.writeDebugImage(metaData["module"], templateFileName, starTemplate)
 
-    s.log(1,"INFO: Created star template. Radius - {0}".format(starTemplate1Size))
+    s.log(4,"INFO: Created star template. Radius - {0}".format(starTemplate1Size))
 
     starList = list()
     templateWidth, templateHeight = starTemplate.shape[::-1]
@@ -324,14 +324,14 @@ def clearsky(params, event):
     starCount = len(starList)
 
     if starCount >= clearvalue:
-        s.log(1,"INFO: Sky is clear. {0} Stars found, clear limit is {1}".format(starCount, clearvalue))
+        s.log(4,"INFO: Sky is clear. {0} Stars found, clear limit is {1}".format(starCount, clearvalue))
         skyState = "Clear"
     else:
-        s.log(1,"INFO: Sky is NOT clear. {0} Stars found, clear limit is {1}".format(starCount, clearvalue))
+        s.log(4,"INFO: Sky is NOT clear. {0} Stars found, clear limit is {1}".format(starCount, clearvalue))
         skyState = "NOT Clear"
 
     if mqttenable:
-        s.log(1,"INFO: Sending sky state {0} to MQTT Broker {1} using topic {2}".format(skyState, mqttbroker, mqtttopic))
+        s.log(4,"INFO: Sending sky state {0} to MQTT Broker {1} using topic {2}".format(skyState, mqttbroker, mqtttopic))
         client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
         client.on_publish = onPublish
         client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
@@ -339,7 +339,7 @@ def clearsky(params, event):
         client.connect(mqttbroker, mqttport)
         result = client.publish(mqtttopic, skyState)
     else:
-        s.log(1,"INFO: MQTT disabled")
+        s.log(4,"INFO: MQTT disabled")
 
     os.environ["AS_SKYSTATE"] = skyState
     os.environ["AS_SKYSTATESTARS"] = str(starCount)

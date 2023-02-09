@@ -130,7 +130,7 @@ def startModuleDebug(module):
         if os.path.exists(moduleTmpDir):
             shutil.rmtree(moduleTmpDir)
         os.makedirs(moduleTmpDir, exist_ok=True)
-        log(1,"INFO: Creating folder for debug {0}".format(moduleTmpDir))
+        log(4,"INFO: Creating folder for debug {0}".format(moduleTmpDir))
     except:
         log(0,"ERROR: Unable to create {0}".format(moduleTmpDir))
 
@@ -140,7 +140,7 @@ def writeDebugImage(module, fileName, image):
     os.makedirs(debugDir, mode = 0o777, exist_ok = True)
     moduleTmpFile = os.path.join(debugDir, fileName)    
     cv2.imwrite(moduleTmpFile, image, params=None)
-    log(1,"INFO: Wrote debug file {0}".format(moduleTmpFile))    
+    log(4,"INFO: Wrote debug file {0}".format(moduleTmpFile))    
 
 def setupForCommandLine():
     global ALLSKYPATH, LOGLEVEL

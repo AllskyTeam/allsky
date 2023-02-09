@@ -139,7 +139,7 @@ class ALLSKYOVERLAY:
                 varValue = env[var]         
                 debugFile.write(var + varValue + os.linesep)
 
-        s.log(1, "INFO: Debug information written to {}".format(debugFilePath))
+        s.log(4, "INFO: Debug information written to {}".format(debugFilePath))
 
     def _createTempDir(self, path):
         if not os.path.isdir(path):
@@ -362,9 +362,9 @@ class ALLSKYOVERLAY:
 
             elapsedTime = datetime.now() - self._startTime
             if showIntermediate: 
-                s.log(3, "INFO: {0} took {1} Seconds. Elapsed Time {2} Seconds.".format(text, lastText, elapsedTime.total_seconds()))
+                s.log(4, "INFO: {0} took {1} Seconds. Elapsed Time {2} Seconds.".format(text, lastText, elapsedTime.total_seconds()))
             else:
-                s.log(3, "INFO: {0} Elapsed Time {1} Seconds.".format(text, elapsedTime.total_seconds()))
+                s.log(4, "INFO: {0} Elapsed Time {1} Seconds.".format(text, elapsedTime.total_seconds()))
 
     def _getFont(self, font, fontSize):
 
@@ -760,7 +760,7 @@ class ALLSKYOVERLAY:
                 imageY = imageY - int(height / 2) 
                 
                 self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY)
-                s.log(3, "INFO: Adding image field {}".format(imageName))
+                s.log(4, "INFO: Adding image field {}".format(imageName))
 
             else:
                 s.log(0, "ERROR: Cannot locate image {}".format(imageName))
@@ -1202,5 +1202,5 @@ def overlay(params, event):
     else:
         result = "External Overlay Disabled"
         
-    s.log(1,"INFO: {0}".format(result))        
+    s.log(4,"INFO: {0}".format(result))        
     return result

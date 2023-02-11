@@ -1447,6 +1447,101 @@
                             </td>
                         </tr>
                     </table>
+
+                    <h4>PI Status</h4>   
+                    <table class="module-info vtop">
+                        <thead>
+                            <tr>
+                                <th>Flows Available In</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <ul>
+                                        <li>Periodic</li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    <p>This module reads information about the Pi and makes it availbale for use in the overlay manager</p>
+
+                                    <p>Several environment variables are created that can be used in the overlay manager
+                                    </p>
+                                    <ul>
+                                        <li><strong>DISKSIZE</strong> - The size of the main disk in the Pi</li>
+                                        <li><strong>DISKUSAGE</strong> - Amount of space used on the disk</li>
+                                        <li><strong>DISKFREE</strong> - Amount of free space on the disk</li>
+                                        <li><strong>CPUTEMP</strong> - CPU temp in C/F Only available if the Allsky temp settings is Celcius or Fahrenheit</li>
+                                        <li><strong>CPUTEMP_C</strong> - CPU temp in C Only available if the Allsky temp settings is set to Celcius</li>
+                                        <li><strong>CPUTEMP_F</strong> - CPU temp in F Only available if the Allsky temp settings is set to Fahrenheit</li>
+                                        <li><strong>THROTTLEDBINARY</strong> - Output of vcgencmd get_throttled</li>
+                                        <li><strong>TSTAT{X}</strong> - Throttled bits, see table below</li>
+                                        <li><strong>TSTATSUMARYTEXT</strong> - Textual summary of all of the tstats bits</li>
+                                    </ul>
+                                    <blockquote>Several other variables are also available, These are mainly related to clock frequencies and voltages</blockquote>
+                                    <h4>Tstat bits</h4>
+                                    <p>These values are text and either 'true' or 'false'</p>
+                                    <table style="width: 50%">
+                                        <tr>
+                                            <th>Variable</th>
+                                            <th>Meaning</th>
+                                        </tr>
+                                        <tr>
+                                            <td>TSTAT0</td>
+                                            <td>Under-voltage detected</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TSTAT1</td>
+                                            <td>Arm frequency capped</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TSTAT2</td>
+                                            <td>Currently throttled</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TSTAT2</td>
+                                            <td>Currently throttled</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TSTAT3</td>
+                                            <td>Soft temperature limit active</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TSTAT16</td>
+                                            <td>Under-voltage has occurred</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TSTAT17</td>
+                                            <td>Arm frequency capping has occurred</td>
+                                        </tr>                                                                                
+                                        <tr>
+                                            <td>TSTAT18</td>
+                                            <td>Throttling has occurred</td>
+                                        </tr>   
+                                        <tr>
+                                            <td>TSTAT19</td>
+                                            <td>Soft temperature limit has occurre</td>
+                                        </tr>   
+                                    </table>
+
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="module-settings vtop">
+                        <tr>
+                            <td><img allsky="true" loading="lazy" src="module-pi-status.png" alt="PI Status Settings" /></td>
+                            <td>
+                                <ul>
+                                    <li><strong>Read Every</strong> - Reads the pi status every this number of seconds</li>
+                                </ul>
+                            </td>
+                        </tr>
+
+                    </table>                    
+                    
+
                 </details>
 
             </div>

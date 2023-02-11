@@ -258,7 +258,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 		* The WebUI is now installed in `~/allsky/html`as part of the Allsky installation. The [allsky-portal](https://github.com/thomasjacquin/allsky-portal) repository will be removed as it is outdated and no longer needed.
 		* New links on the left side:
 			* **Overlay Editor** allows you to drag and drop what text and images you want overlayed on the images.  This is a **significant** improvement over the old mechanism and lets you vary the font size, color, rotation, etc. for everything you add.  You can use variables in the text which get replaced at run-time, e.g., the time.
-			* **Module Editor** allows you to specify what actions should take place after an image has been saved, for example, add an overlay or count the number of stars.  Users can add (and hopefully share) their own modules.
+			* **Module Editor** allows you to specify what actions should take place after an image has been saved during daytime/nightime capture and periodically. For example during capture you can add an overlay or count the number of stars, periodically you can control a dew heater. Users can develop (and hopefully share) their own modules. Full documentation on howto develop modules is included in the documentation.
 			* **Allsky Documentation** accesses the documentation on your Pi.
 		* Minimum, maximum, and default values are now correct for all camera models.
 		* Fields with missing data are shown in red with a message saying the data is missing.  For example, **Latitude** is a required field.

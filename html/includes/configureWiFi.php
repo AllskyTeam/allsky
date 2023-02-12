@@ -50,8 +50,11 @@ function DisplayWPAConfig(){
 	if ( isset($_POST['client_settings']) && CSRFValidate() ) {
 		$tmp_networks = $networks;
 		if ($wpa_file = fopen('/tmp/wifidata', 'w')) {
+			// Re-create whole configuration file - don't try to only update the changed SSID.
 			fwrite($wpa_file, 'ctrl_interface=DIR=' . RASPI_WPA_CTRL_INTERFACE . ' GROUP=netdev' . PHP_EOL);
 			fwrite($wpa_file, 'update_config=1' . PHP_EOL);
+
+// echo "<br>POST=<pre>"; print_r($_POST); echo "</pre>";
 
 			foreach(array_keys($_POST) as $post) {
 				if (preg_match('/delete(\d+)/', $post, $post_match)) {
@@ -59,11 +62,14 @@ function DisplayWPAConfig(){
 				} elseif (preg_match('/update(\d+)/', $post, $post_match)) {
 					// NB, at the moment, the value of protocol from the form may
 					// contain HTML line breaks
-					$tmp_networks[$_POST['ssid' . $post_match[1]]] = array(
-					'protocol' => ( $_POST['protocol' . $post_match[1]] === 'Open' ? 'Open' : 'WPA' ),
-					'passphrase' => $_POST['passphrase' . $post_match[1]],
-					'configured' => true
-					);
+					$num = $post_match[1];
+					$s = $_POST["ssid$num"];
+					$tmp_networks[$s] = array(
+						'protocol' => ( $_POST["protocol$num"] === 'Open' ? 'Open' : 'WPA' ),
+						'passphrase' => $_POST["passphrase$num"],
+						'configured' => true
+						);
+// echo "<br>tmp_networks[$s]=<pre>"; print_r($tmp_networks[$s]); echo "</pre>";
 				}
 			}
 
@@ -76,19 +82,22 @@ function DisplayWPAConfig(){
 					fwrite($wpa_file, "}".PHP_EOL);
 				} else {
 					$passphrase = $network['passphrase'];
-					if (strlen($passphrase) >=8 && strlen($passphrase) <= 63) {
+					$len = strlen($passphrase);
+					if ($len >=8 && $len <= 63) {
 						unset($wpa_passphrase);
 						unset($line);
-						exec( 'wpa_passphrase '.escapeshellarg($ssid). ' ' . escapeshellarg($passphrase),$wpa_passphrase );
+						$cmd = 'wpa_passphrase '. escapeshellarg($ssid) . ' ' . escapeshellarg($passphrase);
+						exec($cmd, $wpa_passphrase );
 						foreach($wpa_passphrase as $line) {
 							fwrite($wpa_file, $line.PHP_EOL);
 						}
 					} else {
-						$status->addMessage('WPA passphrase must be between 8 and 63 characters', 'danger');
+						$status->addMessage("WPA passphrase for $ssid must be between 8 and 63 characters (it is $len)", "danger");
 						$ok = false;
 					}
 				}
 			}
+			fclose($wpa_file);
 
 			if ($ok) {
 				system( 'sudo cp /tmp/wifidata ' . RASPI_WPA_SUPPLICANT_CONFIG, $returnval );
@@ -112,8 +121,9 @@ function DisplayWPAConfig(){
 	// Scan for all networks.
 	exec( 'sudo wpa_cli scan' );
 	sleep(3);
-	exec( 'sudo wpa_cli scan_results',$scan_return );
+	exec( 'sudo wpa_cli scan_results', $scan_return );
 	for( $shift = 0; $shift < 2; $shift++ ) {
+		// Skip first two header lines
 		array_shift($scan_return);
 	}
 	// display output
@@ -153,7 +163,6 @@ function DisplayWPAConfig(){
 				}
 			} else {
 				// New SSID
-// echo "<br>New SSID $ssid, channel=$channel";
 				$num_networks += 1;
 				$networks[$ssid] = array(
 					'configured' => false,
@@ -200,6 +209,7 @@ function DisplayWPAConfig(){
 				</tr>
 				</thead>
 				<tbody>
+
 			<?php $index = 0;
 			if ($num_networks == 0) {
 				echo "<p style='font-size: 150%; color: red;'>No networks found</p>";
@@ -211,52 +221,55 @@ function DisplayWPAConfig(){
 					$times = getVariableOrDefault($network, 'times', 1);
 					$protocol = getVariableOrDefault($network, 'protocol', "");
 					$passphrase = getVariableOrDefault($network, 'passphrase', "");
+					$fullPassphrase = $passphrase;
 					// If the passphrase is long, shorten it so it doesn't take up too much space.
-					if (strlen($passphrase) > 10) $passphrase = substr($passphrase, 1, 10);
+					if (strlen($passphrase) > 10) $passphrase = substr($passphrase, 0, 10);
 
 					echo "<tr>";
 
-					echo "<td>";
+					echo "\n\t<td>";
 					if ($configured)
 						echo '<i class="fa fa-check-circle fa-fw" title="configured"></i>';
 					if ($connected)
 						echo '<i class="fa fa-exchange-alt fa-fw" title="connected"></i>';
 					echo "</td>";
 
-					echo "<td>";
+					echo "\n\t<td>";
 					echo "<input type='hidden' name='ssid$index' value='" . htmlentities($ssid) . "' />";
 					echo $ssid;
 					echo "</td>";
 
-					echo "<td>";
+					echo "\n\t<td>";
 					if ($visible) {
 						echo $channel;
 						if ($times > 1) echo "<br>$note $times times";
 					} else {
-						echo '<span class="label label-warning">X</span>';
+						echo '<span class="label label-warning" title="SSID not visible">X</span>';
 					}
 					echo "</td>";
 
-					echo "<td><input type='hidden' name='protocol$index' value='$protocol' />$protocol</td>";
+					echo "\n\t<td><input type='hidden' name='protocol$index' value='$protocol' />$protocol</td>";
 
 					if ($protocol === 'Open')
-						echo "<td><input type='hidden' name='passphrase$index' value='' />---</td>";
+						echo "\n\t<td><input type='hidden' name='passphrase$index' value='' />---</td>";
 					else
-						echo "<td><input type='password' class='form-control' style='width: 7em; font-size: 80%; padding-left: 2px; padding-right: 2px;' name='passphrase$index' value='$passphrase' onKeyUp='CheckPSK(this, " . '"' . "update$index" . '"' .")'></td>";
-					echo "<td>";
-					echo '<div class="btn-group btn-block">';
-					echo '<span style="white-space: nowrap">';
-					$buttonStyle = "style='padding-left: 3px; padding-right: 3px; width: 4em;'";
+						echo "\n\t<td><input type='password' class='form-control' style='width: 7em; font-size: 80%; padding-left: 2px; padding-right: 2px;' name='passphrase$index' title='$fullPassphrase' value='$passphrase' onKeyUp='CheckPSK(this, " . '"' . "update$index" . '"' .")'></td>";
+					echo "\n\t<td>";
+					echo '<div class="btn-group btn-block nowrap">';
+					$buttonStyle = "style='padding-left: 3px; padding-right: 3px; width: 4em; pointer-events: auto;'";
+					$d = ($protocol === 'Open') ? ' disabled title="Cannot add Open SSIDs" ' : '';
+					$d="";		// TODO: Any reason NOT to allow adding Open SSIDs ?
 					if ($configured) {
-						echo "<input type='submit' class='btn btn-warning' $buttonStyle value='Update' id='update$index' name='update$index'";
-						echo ($protocol === 'Open') ? ' disabled' : '' . "/>";
+						echo "<input type='submit' class='btn btn-warning' $buttonStyle value='Update' ";
+						if ($protocol === 'Open')
+							echo "disabled title='Cannot update Open SSIDs' />";
+						else
+							echo "id='update$index' name='update$index' $d />";
 					} else {
-						echo "<input type='submit' class='btn btn-info' $buttonStyle value='Add' id='update$index' name='update$index'";
-						echo ($protocol === 'Open') ? ' disabled' : '' . "/>";
+						echo "<input type='submit' class='btn btn-info' $buttonStyle value='Add' id='update$index' name='update$index' $d />";
 					}
-					echo "<input type='submit' class='btn btn-danger' $buttonStyle value='Delete' name='delete$index'";
-					echo $configured ? '' : ' disabled' . " />";
-					echo "</span>";
+					$d = $configured ? '' : ' disabled title="SSID not configured"';
+					echo "<input type='submit' class='btn btn-danger' $buttonStyle value='Delete' name='delete$index' $d />";
 					echo "</div>";
 					echo "</td>";
 					echo "</tr>\n";

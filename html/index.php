@@ -310,7 +310,11 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 						foreach ($contents_array as $line) {
 							// The first part is the class, the second is the message
 							$l = explode("\t", $line);
-							$status->addMessage($l[1], $l[0], false);
+							if (isset($l[1]))
+								$level = $l[1];
+							else
+								$level = "error";	// badly formed message
+							$status->addMessage($level, $l[0], false);
 						}
 						$status->showMessages();
 						echo "<div class='message-button'>";
@@ -425,4 +429,3 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 
 </body>
 </html>
-

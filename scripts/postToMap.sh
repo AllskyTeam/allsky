@@ -3,20 +3,16 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 # Allow this script to be executed manually, which requires several variables to be set.
-if [[ -z ${ALLSKY_HOME} ]]; then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-	export ALLSKY_HOME
-fi
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 
 # This script uploads various information relative to the camera setup to the allsky map.
 # https://www.thomasjacquin.com/allsky-map/
 # Information is gathered automatically from the settings file.
 # The script can be called manually, via endOfNight.sh, or via the WebUI.
 
-# Disabling shellcheck to force CI to compile - May need to find a better way to deal with this
-source "${ALLSKY_HOME}/variables.sh"
-source "${ALLSKY_CONFIG}/config.sh"
-source "${ALLSKY_SCRIPTS}/functions.sh"
+source "${ALLSKY_HOME}/variables.sh"		|| exit 99
+source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit 99
 
 function usage_and_exit()
 {
@@ -57,7 +53,7 @@ function check_URL()
 	FIELD_NAME="${3}"
 
 	D="$(get_domain "${URL}")"
-	if [[ "${D:0:7}" = "192.168" || "${D:0:4}" = "10.0" || "${D:0:6}" = "172.16" || "${D:0:9}" = "169.254.0" || "${D:0:6}" = "198.18" || "${D:0:10}" = "198.51.100"  || "${D:0:9}" = "203.0.113" || "${D:0:3}" = "240" ]]; then
+	if [[ "${D:0:7}" == "192.168" || "${D:0:4}" == "10.0" || "${D:0:6}" == "172.16" || "${D:0:9}" == "169.254.0" || "${D:0:6}" == "198.18" || "${D:0:10}" == "198.51.100"  || "${D:0:9}" == "203.0.113" || "${D:0:3}" == "240" ]]; then
 		E="ERROR: '${URL}' is not reachable from the Internet.${BR}${E}"
 	elif [[ ${URL:0:5} != "http:" && ${URL:0:6} != "https:" ]]; then
 		E="ERROR: 'Website URL' must begin with 'http:' or 'https:'.${BR}${E}"
@@ -66,7 +62,7 @@ function check_URL()
 		CONTENT="$(curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1)"
 		RET=$?
 		if [[ ${RET} -eq 6 ]]; then
-			E="ERROR: '${URL}' not found - check spelling.${BR}${E}"
+			E="ERROR: '${URL}' not found - check spelling and network connectivity.${BR}${E}"
 		elif [[ ${RET} -eq 28 ]]; then
 			E="ERROR: Could not connect to '${URL}' after ${TIMEOUT} seconds.${BR}${E}"
 		elif [[ ${RET} -ne 0 ]]; then
@@ -89,11 +85,11 @@ function check_URL()
 	return 1
 }
 
-DEBUG=false
-DELETE=false
-UPLOAD=false
-WHISPER=false
-ENDOFNIGHT=false
+DEBUG="false"
+DELETE="false"
+UPLOAD="false"
+WHISPER="false"
+ENDOFNIGHT="false"
 MACHINE_ID=""
 while [[ $# -ne 0 ]]; do
 	case "${1}" in
@@ -101,20 +97,20 @@ while [[ $# -ne 0 ]]; do
 			usage_and_exit 0;
 			;;
 		--delete)
-			DELETE=true
-			UPLOAD=true		# always upload DELETEs
+			DELETE="true"
+			UPLOAD="true"		# always upload DELETEs
 			;;
 		--debug)
-			DEBUG=true
+			DEBUG="true"
 			;;
 		--force)
-			UPLOAD=true
+			UPLOAD="true"
 			;;
 		--whisper)
-			WHISPER=true
+			WHISPER="true"
 			;;
 		--endofnight)
-			ENDOFNIGHT=true
+			ENDOFNIGHT="true"
 			;;
 		--machineid)
 			MACHINE_ID="${2}"
@@ -129,7 +125,7 @@ done
 
 
 # If not on a tty, then we're either called from the endOfNight.sh script (plain text), or the WebUI (html).
-if [[ ${ON_TTY} -eq 0 && ${ENDOFNIGHT} = "false" ]]; then
+if [[ ${ON_TTY} -eq 0 && ${ENDOFNIGHT} == "false" ]]; then
 	BR="<br>"		# Line break
 else
 	BR="\n"
@@ -142,7 +138,7 @@ wERROR="${wERROR}"
 wDEBUG="${wDEBUG}"
 wNC="${wNC}"
 
-if [[ ${ENDOFNIGHT} = "true" ]]; then
+if [[ ${ENDOFNIGHT} == "true" ]]; then
 	# All stdout/stderr output goes to the log file so don't include colors.
 	wERROR=""
 	wWARNING=""
@@ -170,17 +166,17 @@ if [[ -z ${MACHINE_ID} ]]; then
 	fi
 fi
 
-OK=true
+OK="true"
 E=""
 LATITUDE="$(settings ".latitude")"
 if [[ ${LATITUDE} == "" ]]; then
 	E="ERROR: 'Latitude' is required.${BR}${E}"
-	OK=false
+	OK="false"
 fi
 LONGITUDE="$(settings ".longitude")"
 if [[ ${LONGITUDE} == "" ]]; then
 	E="ERROR: 'Longitude' is required.${BR}${E}"
-	OK=false
+	OK="false"
 fi
 [[ ${OK} == "false" ]] && echo -e "${ERROR_MSG_START}${E}${wNC}" && exit 1
 
@@ -188,13 +184,13 @@ LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
 LATRET=$?
 LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
 LONGRET=$?
-OK=true
+OK="true"
 if [[ ${LATRET} -ne 0 ]]; then
-	OK=false
+	OK="false"
 	echo -e "${RED}${ME}: ERROR: ${LATITUDE}"
 fi
 if [[ ${LONGRET} -ne 0 ]]; then
-	OK=false
+	OK="false"
 	echo -e "${RED}${ME}: ERROR: ${LONGITUDE}"
 fi
 [[ ${OK} == "false" ]] && exit 1
@@ -225,17 +221,17 @@ else
 	LENS="$(settings ".lens")"
 	COMPUTER="$(settings ".computer")"
 
-	OK=true
+	OK="true"
 	E=""
 	W=""
 	# Check for required fields
 	if [[ ${CAMERA} == "" ]]; then
 		E="ERROR: 'Camera' is required.${BR}${E}"
-		OK=false
+		OK="false"
 	fi
 	if [[ ${COMPUTER} == "" ]]; then
 		E="ERROR: 'Computer' is required.${BR}${E}"
-		OK=false
+		OK="false"
 	fi
 
 	# Check for optional, but suggested fields
@@ -253,24 +249,24 @@ else
 
 	if [[ (-n ${WEBSITE_URL} && -z ${IMAGE_URL}) || (-z ${WEBSITE_URL} && -n ${IMAGE_URL}) ]]; then
 		E="ERROR: If you specify the Website URL or Image URL, you must specify both URLs.${BR}${E}"
-		OK=false
+		OK="false"
 	elif [[ -n ${WEBSITE_URL} ]]; then		# they specified both
 		# The domain names (or IP addresses) must be the same.
 		Wurl="$(get_domain "${WEBSITE_URL}")"
 		Iurl="$(get_domain "${IMAGE_URL}")"
 		if [[ ${Wurl} != "${Iurl}" ]]; then
 			E="ERROR: The Website and Image URLs must have the same domain name or IP address.${BR}${E}"
-			OK=false
+			OK="false"
 		fi
 		if [[ -n ${WEBSITE_URL} ]]; then
-			check_URL "${WEBSITE_URL}" websiteurl "Website URL" || OK=false
+			check_URL "${WEBSITE_URL}" websiteurl "Website URL" || OK="false"
 		fi
 		if [[ -n ${IMAGE_URL} ]]; then
-			check_URL "${IMAGE_URL}" imageurl "Image URL" || OK=false
+			check_URL "${IMAGE_URL}" imageurl "Image URL" || OK="false"
 		fi
 	fi
 
-	if [[ ${W} != "" ]]; then
+	if [[ -n ${W} ]]; then
 		echo -e "${WARNING_MSG_START}${W%%"${BR}"}${NC}"
 		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W%%"${BR}"}"
 	fi
@@ -313,19 +309,19 @@ if [[ ${UPLOAD} == "false" ]]; then
 	digit="${MACHINE_ID: -1}"
 	decimal=$(( 16#$digit ))
 	parity="$(( decimal % 2 ))"
-	(( $(date +%e) % 2 == parity )) && UPLOAD=true
+	(( $(date +%e) % 2 == parity )) && UPLOAD="true"
 fi
 latitude="$(convertLatLong "$(settings ".latitude")" "latitude")"
 LATRET=$?
 longitude="$(convertLatLong "$(settings ".longitude")" "longitude")"
 LONGRET=$?
-OK=true
+OK="true"
 if [[ ${LATRET} -ne 0 ]]; then
-	OK=false
+	OK="false"
 	echo -e "${RED}${ME}: ERROR: ${latitude}"
 fi
 if [[ ${LONGRET} -ne 0 ]]; then
-	OK=false
+	OK="false"
 	echo -e "${RED}${ME}: ERROR: ${longitude}"
 fi
 [[ ${OK} == "false" ]] && exit 1

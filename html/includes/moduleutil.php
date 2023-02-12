@@ -139,6 +139,19 @@ class MODULEUTIL
         return $arrFiles;
     }
 
+    private function startsWith ($string, $startString) {
+        $len = strlen($startString);
+        return (substr($string, 0, $len) === $startString);
+    }
+
+    private function endsWith($string, $endString) {
+        $len = strlen($endString);
+        if ($len == 0) {
+            return true;
+        }
+        return (substr($string, -$len) === $endString);
+    }
+
     public function getModulesSettings() {
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
@@ -315,10 +328,15 @@ class MODULEUTIL
     }
 
     public function deleteModules() {
+        $result = False;
         $module = $_GET['module'];
 
-        $targetPath = $this->userModules . '/allsky_' . $module . '.py' ;
-        $result = unlink($targetPath);
+        if ($this->startswith($module, "allsky_") && $this->endswith($module, ".py")) {
+            $targetPath = $this->userModules . '/' . $module;
+            if (file_exists($targetPath)) {
+                $result = unlink($targetPath);
+            }
+        }
 
         if ($result) {
             $this->sendResponse();

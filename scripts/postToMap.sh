@@ -54,19 +54,19 @@ function check_URL()
 
 	D="$(get_domain "${URL}")"
 	if [[ "${D:0:7}" == "192.168" || "${D:0:4}" == "10.0" || "${D:0:6}" == "172.16" || "${D:0:9}" == "169.254.0" || "${D:0:6}" == "198.18" || "${D:0:10}" == "198.51.100"  || "${D:0:9}" == "203.0.113" || "${D:0:3}" == "240" ]]; then
-		E="ERROR: '${URL}' is not reachable from the Internet.${BR}${E}"
+		E="ERROR: ${FIELD_NAME} '${URL}' is not reachable from the Internet.${BR}${E}"
 	elif [[ ${URL:0:5} != "http:" && ${URL:0:6} != "https:" ]]; then
-		E="ERROR: 'Website URL' must begin with 'http:' or 'https:'.${BR}${E}"
+		E="ERROR: ${FIELD_NAME} '${URL}' must begin with 'http:' or 'https:'.${BR}${E}"
 	else
 		# Make sure it's a valid URL
 		CONTENT="$(curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1)"
 		RET=$?
 		if [[ ${RET} -eq 6 ]]; then
-			E="ERROR: '${URL}' not found - check spelling and network connectivity.${BR}${E}"
+			E="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}${E}"
 		elif [[ ${RET} -eq 28 ]]; then
-			E="ERROR: Could not connect to '${URL}' after ${TIMEOUT} seconds.${BR}${E}"
+			E="ERROR: Could not connect to ${FIELD_NAME} '${URL}' after ${TIMEOUT} seconds.${BR}${E}"
 		elif [[ ${RET} -ne 0 ]]; then
-				E="ERROR: '${URL}' cannot be reached (${CONTENT}).${BR}${E}"
+				E="ERROR: ${FIELD_NAME} '${URL}' cannot be reached (${CONTENT}).${BR}${E}"
 		else
 			if [[ ${URL_TYPE} == "websiteurl" ]]; then
 				TYPE="$(echo "${CONTENT}" | grep -i "Content-Type: text")"
@@ -268,11 +268,22 @@ else
 
 	if [[ -n ${W} ]]; then
 		echo -e "${WARNING_MSG_START}${W%%"${BR}"}${NC}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W%%"${BR}"}"
+		# Want each message to have its own addMessage.sh entry.
+		if [[ ${ENDOFNIGHT} == "true" ]]; then
+			echo "${W}" | while read -r w
+			do
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${w}"
+			done
+		fi
 	fi
 	if [[ ${OK} == "false" ]]; then
 		echo -e "${ERROR_MSG_START}${E%%"${BR}"}${NC}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E%%"${BR}"}"
+		if [[ ${ENDOFNIGHT} == "true" ]]; then
+			echo "${E}" | while read -r e
+			do
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${e}"
+			done
+		fi
 		exit 2
 	fi
 

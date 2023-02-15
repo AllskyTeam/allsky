@@ -759,7 +759,7 @@ class ALLSKYOVERLAY:
                 imageX = imageX - int(width / 2)
                 imageY = imageY - int(height / 2) 
                 
-                self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY)
+                self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY, imageData)
                 s.log(4, "INFO: Adding image field {}".format(imageName))
 
             else:
@@ -767,7 +767,7 @@ class ALLSKYOVERLAY:
         else:
             s.log(0, "ERROR: Image not set so ignoring")
 
-    def _overlay_transparent(self, imageName, background, overlay, x, y):
+    def _overlay_transparent(self, imageName, background, overlay, x, y, imageData):
 
         if (overlay.shape[0] + y < background.shape[0]) and (overlay.shape[1] + x < background.shape[1]):
             background_width = background.shape[1]
@@ -797,6 +797,17 @@ class ALLSKYOVERLAY:
 
             overlay_image = overlay[..., :3]
             mask = overlay[..., 3:] / 255.0
+            
+            opacityMultiplier = 1
+            if "opacity" in imageData:
+                try:
+                    opacity = imageData["opacity"]
+                    opacityMultiplier = float(opacity)
+                except:
+                    pass
+            
+            if opacityMultiplier != 1:
+                mask = mask * opacityMultiplier
 
             background[y:y+h, x:x+w] = (1.0 - mask) * background[y:y+h, x:x+w] + mask * overlay_image
         else:

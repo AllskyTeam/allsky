@@ -41,11 +41,24 @@ def maskimage(params, event):
     result = ""
     mask = params['mask']
     if (mask is not None) and (mask != ""):
-        maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
+        maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY"),"images",mask)
         maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
         if maskImage is not None:
-            s.image = cv2.bitwise_and(s.image,s.image,mask = maskImage)
-            result = "Mask {0} applied".format(maskPath)
+            maskChannels = maskImage.shape[-1] if maskImage.ndim == 3 else 1
+            imageChannels = s.image.shape[-1] if s.image.ndim == 3 else 1
+            
+            maskHeight = maskImage.shape[0]
+            maskWidth = maskImage.shape[1]
+            imageHeight = s.image.shape[0]
+            imageWidth = s.image.shape[1]
+            
+            if (maskWidth == imageWidth) and (maskHeight == imageHeight):            
+                s.image = cv2.bitwise_and(s.image,s.image,mask = maskImage)
+                result = "Mask {0} applied".format(maskPath)
+                s.log(4,f"INFO: {result}")
+            else:
+                result = f"Mask {mask} is the incorrct size {maskWidth}x{maskHeight} Main image is {imageWidth}x{imageHeight}"
+                s.log(0,f"ERROR: {result}")
         else:
             s.log(0,"ERROR: Unable to read the mask image {0}".format(maskPath))
             result = "Mask {0} not found".format(maskPath)

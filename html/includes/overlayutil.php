@@ -298,13 +298,15 @@ class OVERLAYUTIL
         $file = ALLSKY_HOME . "/tmp/overlaydebug.txt";
 
         $exampleData = array();
-        $rawData = file($file, FILE_IGNORE_NEW_LINES);
-        foreach($rawData  as $line) {
-            $firstSpace = strpos($line, " ");
-            $var = substr($line, 0, $firstSpace);
-            $value = ltrim(substr($line, $firstSpace));
-            $line = str_replace("  ", "", $line);
-            $exampleData[$var] = $value;
+        if (is_readable($file)) {
+            $rawData = file($file, FILE_IGNORE_NEW_LINES);
+            foreach($rawData  as $line) {
+                $firstSpace = strpos($line, " ");
+                $var = substr($line, 0, $firstSpace);
+                $value = ltrim(substr($line, $firstSpace));
+                $line = str_replace("  ", "", $line);
+                $exampleData[$var] = $value;
+            }
         }
         return $exampleData;
     }

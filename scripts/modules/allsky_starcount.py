@@ -182,7 +182,7 @@ def starcount(params, event):
 
             imageMask = None
             if mask != "":
-                maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_HOME"),"html","overlay","images",mask)
+                maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY"),"images",mask)
                 imageMask = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
                 if debug:
                     s.writeDebugImage(metaData["module"], "b-image-mask.png", imageMask) 

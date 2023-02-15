@@ -738,7 +738,7 @@ class ALLSKYOVERLAY:
             imageY = imageData["y"]
             image = None
 
-            imagePath = os.path.join(os.environ['ALLSKY_CONFIG'], "overlay", "images", imageName)
+            imagePath = os.path.join(os.environ['ALLSKY_OVERLAY'], "images", imageName)
 
             if s.isFileReadable(imagePath):
                 image = cv2.imread(imagePath, cv2.IMREAD_UNCHANGED)

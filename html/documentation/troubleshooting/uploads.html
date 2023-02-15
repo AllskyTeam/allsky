@@ -214,16 +214,20 @@ It will also display the directory name it's in as well as the contents of that 
 this can help you determine if your path names are correct or not.
 </p>
 <p>
-A file called <span class="fileName">~/allsky/tmp/x-lftp_cmds.txt</span>
+A file called <span class="fileName">~/allsky/tmp/lftp_cmds/x.txt</span>
 will be created that contains the <code>lftp</code> commands used to upload
 <span class="fileName">/tmp/test.txt</span>.
-Look in that file to make sure the username, password, and other information are correct.
+Look in that file to make sure the username and other information is correct.
 If not, fix them in <span class="fileName">ftp-settings.sh</span>.
 </p>
 <p>
-To see lftp messages line-by-line, enter <code>lftp</code> followed by the
-<b>enter</b> key, then copy each line from the <span class="fileName">lftp_cmds.txt</span>
-file and paste into the terminal window.
+To see lftp messages line-by-line, do the following:
+<pre>
+export LFTP_PASSWORD=<i>your_REMOTE_PASSWORD</i>
+lftp
+</pre>
+then copy each line, one at a time, from the <span class="fileName">x.txt</span>
+file and paste it into the terminal window.
 </p>
 </details>
 
@@ -233,4 +237,3 @@ file and paste into the terminal window.
 </body>
 </html>
 <script> includeHTML(); </script>
-

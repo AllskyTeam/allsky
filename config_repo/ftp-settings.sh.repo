@@ -37,6 +37,9 @@ WEB_STARTRAILS_DIR=""
 	# Name of the remote server.
 REMOTE_HOST=""
 
+	# Optionally enter the port required by your server.
+REMOTE_PORT=""
+
 
 ############### ftp, ftps, and sftp PROTOCOLS only:
 	# The username of the login on the remote server.
@@ -44,9 +47,6 @@ REMOTE_USER=""
 
 	# The password of the login on your FTP server.  Does not apply to PROTOCOL=scp.
 REMOTE_PASSWORD=""
-
-	# Optionally enter the port required by your FTP server.
-REMOTE_PORT=""
 
 	# If you need special commands executed when connecting to the FTP server enter them here.
 LFTP_COMMANDS=""

@@ -183,7 +183,9 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 		# shellcheck disable=SC2153
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
 	fi
-	scp -i "${SSH_KEY_FILE}" "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
+	[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-P ${REMOTE_PORT}"
+	# shellcheck disable=SC2153
+	scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
 	RET=$?
 
 elif [[ ${PROTOCOL} == "gcs" ]] ; then

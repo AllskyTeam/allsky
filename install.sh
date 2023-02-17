@@ -1130,7 +1130,7 @@ install_overlay()
 	check_installation_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	display_msg progress "Setting up modules."
-	MODULE_LOCATION="/etc/allsky"
+	MODULE_LOCATION="/opt/allsky"
 	sudo mkdir -p "${MODULE_LOCATION}/modules"
 	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${MODULE_LOCATION}"
 	sudo chmod -R 774 "${MODULE_LOCATION}"

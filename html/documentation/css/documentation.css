@@ -850,6 +850,18 @@ b, strong {
 	font-weight: bold;
 	color: green;			/* TODO: decide what attributes to use */
 }
+.moduleToolbarIconNumber {
+	background-color: white;
+	color: black;
+	border: 2px solid red;
+	padding: 2px 6px 2px 6px;
+}
+.moduleToolbar {
+	background-color: #272727;
+	color: #888;
+	font-weight: bold;
+}
 .overlayIcon {
 	vertical-align: middle !important;
+	text-align: center;
 }

@@ -808,6 +808,7 @@ void sig(int i)
 {
 	if (i == SIGHUP)
 	{
+		// TODO: Restart rather than exit
 		Log(4, "Got signal to restart.\n");
 	}
 	else
@@ -2007,3 +2008,4 @@ bool validateLatitudeLongitude(config *cg)
 
 	return(ret);
 }
+

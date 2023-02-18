@@ -598,17 +598,19 @@ class ALLSKYOVERLAY:
 
         return (text_width, text_height)
 
-    def _convertRGBtoBGR(self, colour):
+    def _convertRGBtoBGR(self, colour, opacity):
         r,g,b = ImageColor.getrgb(colour)
-        colour =  '#{:02x}{:02x}{:02x}'.format(b,g,r)
+        #colour =  '#{:02x}{:02x}{:02x}'.format(b,g,r)
         
+        opacity = int((255/100) * (opacity*100))
+        colour = (b,g,r,opacity)
         return colour
                 
     def _draw_rotated_text(self, image, angle, xy, text, fill, font, opacity, strokeWidth, strokeFill):
 
-        fill = self._convertRGBtoBGR(fill)
-        strokeFill = self._convertRGBtoBGR(strokeFill)
-
+        fill = self._convertRGBtoBGR(fill, opacity)
+        strokeFill = self._convertRGBtoBGR(strokeFill,1)
+        
         im_txt = Image.new('RGBA', image.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(im_txt)
         draw.text(xy, text, fill=fill, embedded_color=False, font=font, stroke_width=strokeWidth, stroke_fill=strokeFill)

@@ -24,8 +24,6 @@ endif
 
 
 CONFIGFILES := config.sh ftp-settings.sh 
-OVERLAYCONFIG := fields.json oe-config.json overlay.json overlay-ZWO.json overlay-RPi.json autoexposure.json
-MODULECONFIG := module-settings.json postprocessing_day.json postprocessing_night.json postprocessing_daynight.json postprocessing_nightday.json postprocessing_periodic.json
 UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/allskyperiodic.service
 
 %:
@@ -91,34 +89,8 @@ remove_configs:
 createDirs:
 	@echo `date +%F\ %R:%S` Creating directory structures...
 	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi
-	@if [ ! -e ../config/modules ]; then mkdir -p ../config/modules; chown $(SUDO_USER):www-data ../config/modules; fi
-	@if [ ! -e ../config/overlay ]; then mkdir -p ../config/overlay; chown $(SUDO_USER):www-data ../config/overlay; fi
-	@if [ ! -e ../config/overlay/config ]; then mkdir -p ../config/overlay/config; chown $(SUDO_USER):www-data ../config/overlay/config; fi
-	@if [ ! -e ../config/overlay/fonts ]; then mkdir -p ../config/overlay/fonts; chown $(SUDO_USER):www-data ../config/overlay/fonts; fi
-	@if [ ! -e ../config/overlay/images ]; then mkdir -p ../config/overlay/images; chown $(SUDO_USER):www-data ../config/overlay/images; fi
-	@if [ ! -e ../config/overlay/imagethumbnails ]; then mkdir -p ../config/overlay/imagethumbnails; chown $(SUDO_USER):www-data ../config/overlay/imagethumbnails; fi
-
-
-.PHONY : setupModuleDirs
-
-$(MODULECONFIG):
-	@if [ ! -e ../config/modules/$@ ]; then \
-	  echo `date +%F\ %R:%S` Copying default $@; \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.repo ../config/modules/$@; \
-	fi
-.PHONY : $(MODULECONFIG)
-
-.PHONY : setupOverlayDirs
-
-$(OVERLAYCONFIG):
-	@if [ ! -e ../config/overlay/config/$@ ]; then \
-	  echo `date +%F\ %R:%S` Copying default $@; \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.repo ../config/overlay/config/$@; \
-	fi
-.PHONY : $(OVERLAYCONFIG)
 
 .PHONY : createDirs
-
 $(CONFIGFILES):
 	@if [ ! -e ../config/$@ ]; then \
 	  echo `date +%F\ %R:%S` Copying default $@; \
@@ -126,7 +98,7 @@ $(CONFIGFILES):
 	fi
 .PHONY : $(CONFIGFILES)
 
-install: createDirs $(CONFIGFILES) setupOverlayDirs $(OVERLAYCONFIG) setupModuleDirs $(MODULECONFIG)
+install: createDirs $(CONFIGFILES)
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...
@@ -151,7 +123,8 @@ install: createDirs $(CONFIGFILES) setupOverlayDirs $(OVERLAYCONFIG) setupModule
 	@systemctl enable allskyperiodic
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
 	@echo "export ALLSKY_HOME=$(PDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
-	@cp moon_phases.ttf ../config/overlay/fonts/; chown $(SUDO_USER):www-data ../config/overlay/fonts/moon_phases.ttf ;
+	@cp -ar overlay ../config; chown -R $(SUDO_USER):www-data ../config/overlay ;
+	@cp -ar modules ../config; chown -R $(SUDO_USER):www-data ../config/modules ;
 .PHONY : install
 endif # Package build check
 endif # Root check

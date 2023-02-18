@@ -1,4 +1,4 @@
-opencv_python==4.5.3.56
+opencv_python>=4.5.3.56
 Pillow
 pyephem
 skyfield

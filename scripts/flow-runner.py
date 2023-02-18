@@ -31,7 +31,7 @@ except KeyError:
     sys.exit(1)
 
 allSkyModulesPath = os.path.join(allSkyHome, "scripts", "modules")
-valid_module_paths = ["/etc/allsky/modules", allSkyModulesPath]
+valid_module_paths = ["/opt/allsky/modules", allSkyModulesPath]
 
 for vmp in valid_module_paths:
     sys.path.append(os.path.abspath(vmp))
@@ -170,10 +170,10 @@ if __name__ == "__main__":
                 arguments = shared.flow[shared.step]['metadata']['arguments']
                 
 
-            try:
-                result = globals()[method](arguments, shared.args.event)
-            except Exception as e:
-                shared.log(0,"ERROR: {}".format(e))
+            #try:
+            result = globals()[method](arguments, shared.args.event)
+            #except Exception as e:
+            #    shared.log(0,"ERROR: {}".format(e))
 
             endTime = datetime.now()
             elapsedTime = ((endTime - startTime).total_seconds()) * 1000

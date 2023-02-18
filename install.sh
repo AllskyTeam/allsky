@@ -786,11 +786,13 @@ update_config_sh() {
 
 ####
 # Create the log file and make it readable/writable by the user; this aids in debugging.
-create_allsky_log() {
-	display_msg progress "Set permissions on Allsky log (${ALLSKY_LOG})."
-	sudo truncate -s 0 "${ALLSKY_LOG}"
-	sudo chmod 664 "${ALLSKY_LOG}"
-	sudo chgrp "${ALLSKY_GROUP}" "${ALLSKY_LOG}"
+create_allsky_logs() {
+	display_msg progress "Set permissions on logs ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
+	sudo truncate -s 0 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
+	sudo chmod 664 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
+	sudo chgrp "${ALLSKY_GROUP}" "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
+
+	sudo systemctl restart rsyslog		# so logs go to the files above
 }
 
 
@@ -1365,8 +1367,8 @@ save_camera_capabilities "false" || exit_with_image 1			# prompts on error only
 # Code later needs "settings()" function.
 source "${ALLSKY_CONFIG}/config.sh" || exit_with_image 1
 
-##### Create ${ALLSKY_LOG}
-create_allsky_log
+##### Create the Allsky log files
+create_allsky_logs
 
 ##### Set locale
 set_locale

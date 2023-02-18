@@ -1,18 +1,15 @@
 #!/bin/bash
 
-if [ -z "${ALLSKY_HOME}" ] ; then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-	export ALLSKY_HOME
-fi
+[[ -z "${ALLSKY_HOME}" ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 
 # shellcheck disable=SC1090,SC1091
-source "${ALLSKY_HOME}/variables.sh" || exit 1
+source "${ALLSKY_HOME}/variables.sh"		|| exit 99
 # shellcheck disable=SC1090,SC1091
-source "${ALLSKY_HOME}/config/config.sh"
+source "${ALLSKY_HOME}/config/config.sh"	|| exit 99
 
 trap "exit" SIGTERM SIGINT
 
-cd "${ALLSKY_SCRIPTS}" || exit 1
+cd "${ALLSKY_SCRIPTS}" || exit 99
 
 while :
 do
@@ -22,6 +19,8 @@ do
     if [[ ! ($DELAY =~ ^[0-9]+$) ]]; then
         DELAY=5
     fi
-    echo "INFO: Sleeping for $DELAY seconds"
+    if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+		echo "INFO: Sleeping for $DELAY seconds"
+	fi
     sleep "$DELAY"
 done

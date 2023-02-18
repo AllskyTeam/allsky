@@ -68,16 +68,21 @@ body {
 	background-color: var(--color-border-default);
 	border: 0;
 }
+.markdown-body hr.separatorMinor,
 .markdown-body hr.separatorSmall,
 .markdown-body hr.separator {
 	width: 90%;
-	margin-top: 24px;
+	margin-top: 35px;
 	margin-right: auto;
 	margin-left: auto;
-	background-color: blue;
+	background-color: var(--color-accent-emphasis);
 }
+.markdown-body hr.separatorMinor,
 .markdown-body hr.separatorSmall {
 	width: 50%;
+}
+.markdown-body hr.separatorMinor {
+	background-color: var(--color-accent-muted);
 }
 
 .markdown-body blockquote {
@@ -98,7 +103,7 @@ body {
 .markdown-body blockquote.warning {
 	color: var(--color-danger-fg);
 	background-color: var(--color-danger-subtle);
-	border-left: 0.75em solid var(--color-danger-emphasis);
+	border-left: 1.0em solid var(--color-danger-emphasis);
 }
 
 .markdown-body h1 .octicon-link,
@@ -303,6 +308,13 @@ body {
 }
 .markdown-body table tr:nth-child(2n) {
 	background-color: var(--color-canvas-subtle)
+}
+.markdown-body table tr .noBackground {
+	background-color: transparent;
+}
+.markdown-body table th .noBorder,
+.markdown-body table td .noBorder {
+	border: 0;
 }
 .markdown-body table thead tr:not(:first-child),
 .markdown-body table thead tr {

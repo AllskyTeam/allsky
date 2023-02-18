@@ -18,7 +18,7 @@ class MODULEUTIL
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
-        $this->userModules = '/etc/allsky/modules';
+        $this->userModules = '/opt/allsky/modules';
     }
 
     public function run()

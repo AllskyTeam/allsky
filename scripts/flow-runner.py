@@ -17,7 +17,10 @@ module, thus giving the user total control.
 
 def signalHandler(sig, frame):
     if sig == signal.SIGTERM or sig == signal.SIGINT:
-        sys.exit(99)
+        try:
+            sys.exit(99)
+        except:
+            pass
 
 signal.signal(signal.SIGTERM, signalHandler)
 signal.signal(signal.SIGINT, signalHandler)

@@ -1122,7 +1122,7 @@ void displaySettings(config cg)
 	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
 	printf("   Resolution (before any binning): %ldx%ld\n", cg.width, cg.height);
 	printf("   Configuration file: %s\n", stringORnone(cg.configFile));
-	printf("   Quality: %ld\n", cg.quality);
+	printf("   Quality: %ld\n", cg.userQuality);
 	printf("   Daytime capture: %s\n", yesNo(cg.daytimeCapture));
 
 	printf("   Exposure (day):   %s, Auto: %s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
@@ -1740,7 +1740,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "quality") == 0)
 		{
-			cg->quality = atol(argv[++i]);
+			cg->userQuality = cg->quality = atol(argv[++i]);
 		}
 		else if (strcmp(a, "meanthreshold") == 0)
 		{

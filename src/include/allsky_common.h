@@ -194,6 +194,7 @@ struct config {			// for configuration variables
 	long qualityJPG						= 95;
 	long qualityPNG						= 3;
 	long quality						= qualityJPG;
+	long userQuality					= qualityJPG;		// quality entered by user
 
 	// Camera-dependent settings.  Numeric values will be checked for validity.
 	bool dayAutoExposure				= true;				// Use auto-exposure?

@@ -97,8 +97,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Holds all the Allsky documentation.
 	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/documentation"
 
-	# Log the capture_${CAMERA_TYPE} programs write to.
+	# Log files for main Allsky and modules
 	ALLSKY_LOG="/var/log/allsky.log"
+	ALLSKY_PERIODIC_LOG="/var/log/allskyperiodic.log"
 
 	# Root of GitHub locations - repository, and contents of a file.
 	GITHUB_ROOT="https://github.com/thomasjacquin"

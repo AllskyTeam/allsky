@@ -209,7 +209,7 @@
 							<tbody>
 								<tr>
 									<td><code>${DATE}</code></td>
-									<td>20221024</td>
+									<td>20230228</td>
 									<td>The date the image was taken.</td>
 								</tr>
 								<tr>
@@ -220,38 +220,47 @@
 								<tr>
 									<td><code>${GAIN}</code></td>
 									<td>4.692540</td>
-									<td>The gain used for the image.</td>
+									<td>The gain used for the image.
+										If auto-gain was disabled, this value will be what you set in
+										the <span class="WebUISetting">Gain</span> setting in the WebUI,
+										otherwise it's the value the auto-gain algorithm used.</td>
 								</tr>
 								<tr>
 									<td><code>${AUTOGAIN}</code></td>
 									<td>1</td>
-									<td>1 if auto-gain was enabled, 0 if disabled.</td>
+									<td>1 if auto-gain was enabled, 0 if disabled.
+										Taken from the <span class="WebUISetting">Auto-Gain</span> WebUI setting.</td>
 								</tr>
 								<tr>
 									<td><code>${sAUTOGAIN}</code></td>
 									<td>(auto)</td>
 									<td>A string containing either <strong>(auto)</strong> if auto-gain was
 										enabled, or blank.  Useful to put after the gain, e.g.,
-										<code>Gain: ${GAIN} ${sAUTOGAIN}</code>.</td>
+										<code class="nowrap">Gain: ${GAIN} ${sAUTOGAIN}</code>.</td>
 								</tr>
 								<tr>
 									<td><code>${EXPOSURE_US}</code></td>
 									<td>90000000</td>
-									<td>The exposure of the image in micro seconds.</td>
+									<td>The exposure of the image in micro seconds.
+										If auto-exposure was disabled, this value will be what you set in
+										the <span class="WebUISetting">Manual Exposure</span> setting in the WebUI,
+										otherwise it's the value the auto-exposure algorithm used.</td>
 								</tr>
 								<tr>
 									<td><code>${sEXPOSURE}</code></td>
-									<td>90.0 sec</td>
+									<td>218 ms (0.2 sec)</td>
 									<td>The exposure of the image in a human readable format.
 										The format changes depending on the exposure time,
-										for example, very short exposures may be <code>218.48 ms</code>
-										whereas a long exposure may be <code>45.3 sec</code>.
+										for example, very short exposures may be
+										<code class="nowrap">218.48 ms (0.2 sec)</code>
+										whereas a long exposure may be <code class="nowrap">45.3 sec</code>.
 									</td>
 								</tr>
 								<tr>
 									<td><code>${AUTOEXPOSURE}</code></td>
 									<td>1</td>
-									<td>1 if auto-exposure was enabled, 0 if auto-exposure was disabled.</td>
+									<td>1 if auto-exposure was enabled, 0 if auto-exposure was disabled.
+										Taken from the <span class="WebUISetting">Auto-Exposure</span> WebUI setting.</td>
 								</tr>
 								<tr>
 									<td><code>${sAUTOEXPOSURE}</code></td>
@@ -260,12 +269,12 @@
 										similar to <code>${sAUTOGAIN}</code>.</td>
 								</tr>
 								<tr>
-									<td><code>${TEMPERATURE}</code></td>
+									<td><code>${TEMPERATURE_C}</code> and <code>${TEMPERATURE_F}</code></td>
 									<td>36</td>
 									<td>The temperature of the camera sensor, if available.
 										This does NOT include the <code>C</code> or <code>F</code> for
 										centigrade or fahrenheit so you'll need to add them yourself, e.g.,
-										<br><code>Sensor Temp: ${TEMPERATURE} C</code>.</td>
+										<code class="nowrap">Sensor Temp: ${TEMPERATURE_C} C</code>.</td>
 								</tr>
 								<tr>
 									<td><code>${MEAN}</code></td>
@@ -289,26 +298,25 @@
 					<h3>Module variables</h3>
 					<p>Any module can create variables for use in the <span class="moduleName">Overlay Module</span>.
 						For this reason it is important that the <span class="moduleName">Overlay Module</span>
-						runs as late as possible within the module flow.</p>
-						Module variables are used the same way system variables are.
-					</p>
-					<details sub>
-						<summary></summary>
-						<p>As an example, the <span class="moduleName">Star Count Module</span> creates a
-							variabled called <code>${STARCOUNT}</code> and passes it to the next module.</p>
-						<p>Please refer to the documentation on each module for any variables that it makes available.</p>
-					</details>
+						runs as late as possible within the module flow.
+						As an example, the <span class="moduleName">Star Count Module</span> creates a
+						variabled called <code>${STARCOUNT}</code> and passes it to the next module.</p>
+					<p>Please refer to the documentation on each module for any variables that it makes available.</p>
 
-					<h3>Extra data variables</h3>
-					<p>Allsky was always able to add additional information to captured images but in a limited way.
-						The <span class="managerName">Overlay Manager</span> provides a much more sophisticated method for
-						making this data available.</p>
+					<h3>Extra Data variables</h3>
+					<p>The legacy overlay method can add "extra data" to captured images but in a limited way
+						via its single <span class="WebUISetting">Extra Text File</span> setting.
+						The module method provides a more sophisticated method for making even more data available.</p>
 					<details sub>
 						<summary></summary>
 						<blockquote>This is an advanced topic and as such you will need to have an understanding
-							of the Linux file system and how to manage files within it.</blockquote>
-						<p>All extra data now resides in the <span class="fileName">~/allsky/tmp/extra</span> directory
-							which the <span class="managerName">Overlay Manager</span> will use to create variables.</p>
+							of the Linux file system and how to manage files within it.
+							The <a allsky="true" href="/documentation/basics/Linux.html">Linux Basics page</a>
+							should provide the Linux understanding you need.
+						</blockquote>
+						<p>You can have multiple "Extra Text Files" which reside in
+							<span class="fileName">~/allsky/tmp/extra</span> and are used
+							to create variables which can then be added to the overlay.</p>
 						<p>Let's assume you want to add weather data to your images. You first need to create
 							or obtain a program that gathers that data and writes it to a file. How you obtain
 							that file is outside the scope of this documentation, but the program needs to write
@@ -324,11 +332,11 @@
 
 						<h4>Text Files</h4>
 						<p>Text files must end with a <span class="fileName">.txt</span> extension.
-							The format is a simple name=value structure as shown below:</p>
+							The format is a simple <strong>name=value</strong> structure as shown below:</p>
 						<table class="module-settings">
 							<thead>
 								<tr>
-									<th width="400">File Contents</th>
+									<th width="300">File Contents</th>
 									<th>Allsky Result</th>
 								</tr>
 							</thead>
@@ -336,10 +344,13 @@
 								<tr>
 									<td valign="top">
 										<div class="code">
-											AGTEMP=14.0C<br>
-											AGHUMIDITY=90.1%<br>
-											AGHEATERCURRENT=215<br>
-											AGSTAT=Night<br>
+											<table><tbody>
+											<tr class="noBackground noBorder"><td class="noBorder">&nbsp;</td></tr>
+											<tr class="noBackground noBorder"><td class="noBorder">AGTEMP=14.0C</td></tr>
+											<tr class="noBackground noBorder"><td class="noBorder">AGHUMIDITY=90.1%</td></tr>
+											<tr class="noBackground noBorder"><td class="noBorder">AGHEATERCURRENT=215</td></tr>
+											<tr class="noBackground noBorder"><td class="noBorder">AGSTAT=Night</td></tr>
+											</tbody></table>
 										</div>
 									</td>
 									<td>
@@ -377,23 +388,29 @@
 							fails or is not running. To allow Allsky to detect this you can tell Allsky
 							to ignore the files in the <span class="fileName">extra</span>
 							directory when they are over a certain age.
-							For <span class="fileName">.txt</span> files this value is specified in the
-							<span class="managerName">Overlay Manager</span> settings dialog.</p>
+							For <span class="fileName">.txt</span> files there is a single value which is specified in the
+							<span class="managerName">Overlay Manager</span> settings dialog.
+							See the next section for how to specify the value for
+							<span class="fileName">.json</span> files.</p>
 
 						<h4>JSON Files</h4>
-						<p>json files are more complex in their structure but provide a lot more flexibility
+						<p><span class="fileName">.json</span> files are more complex in their structure
+							but provide a lot more flexibility
 							for you to add your own variables and even control the attributes of a field.</p>
 						<table class="three-col">
 							<thead>
 								<tr>
-									<td>This json will produce exactly the same variables as the txt file
-										described above. The data will expire as defined in the
+									<td>This <span class="fileName">.json</span> file will produce exactly the same
+										variables as the <span class="fileName">.txt</span> file described above.
+										The data will expire as defined in the
 										<span class="managerName">Overlay Manager</span> settings dialog.</td>
-									<td>This json includes expiry times for some of the elements. In this case
+									<td>This <span class="fileName">.json</span> file
+										includes expiry times (in seconds) for some of the elements. In this case
 										the expiry time for the relevant elements will be used and the
 										<span class="managerName">Overlay Manager</span>
 										dialog expiry setting for the remaining variables.</td>
-									<td>This json, which has been truncated for brevity, includes all of the
+									<td>This <span class="fileName">.json</span> file,
+										which has been truncated for brevity, includes all of the
 										attributes that a field can set. It also adds an image.</td>
 								</tr>
 							</thead>
@@ -461,9 +478,6 @@
 										<div class="indent2">"AGHUMIDITY": {</div>
 										<div class="indent3">"value": "90.1%",</div>
 										<div class="indent2">},</div>
-										<div class="indent2">"AGCLOUD": {</div>
-										<div class="indent3">"value": "11%",</div>
-										<div class="indent2">},</div>
 										<div class="indent2">"AGSCOPE": {</div>
 										<div class="indent3">"image": "crosshair.png",</div>
 										<div class="indent3">"x": 300,</div>
@@ -484,7 +498,8 @@
 													within a field.</li>
 												<li>Images can by dynamically added to the captured image. So if you
 													wanted to control when an image is added or not added,
-													simply add it to, or remove it from, the json file.</li>
+													the program that creates the file can
+													simply add the image's json code, or not add it, to the .json file.</li>
 											</ul>
 										</blockquote>
 								</td>
@@ -492,17 +507,18 @@
 
 						</table>
 
-						<p>The txt/json files must be created by some application outside of Allsky and there
-							are a few things that must be considered when creating the files:</p>
+						<p>The "extra" files must be created by an application you provide and there
+							are a few things that must be considered when creating these files:</p>
 						<ul>
-							<li><strong>Variable Name</strong> - Since you could end up conflicting with the names
-								of Allsky system variables its best to prefix your own variables. This will help
-								prevent any clashes. In the examples above the variables are prefixed with
-								<code>AG</code>.
+							<li><strong>Variable Names</strong> - Since you could end up conflicting with the names
+								of Allsky system variables it's best to prefix your own variables.
+								In the examples above the variables are prefixed with <code>AG</code>
+								(the initials of the person who created the program, but you can use anything).
 							</li>
 							<li><strong>Permissions</strong> - You must ensure that the files created in the
 								<span class="fileName">extra</span> directory can be read by Allsky.
 								It is up to the application creating them to ensure the permissions are correct.
+								Using <code class="nowrap">chmod 664</code> should suffice.
 								The <span class="managerName">Overlay Manager</span> will silently ignore any
 								files it cannot read.</li>
 						</ul>

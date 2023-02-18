@@ -4,14 +4,11 @@
 # This is a separate script so it can also be used manually to test uploads.
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-if [[ -z ${ALLSKY_HOME} ]]; then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-	export ALLSKY_HOME
-fi
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 
-source "${ALLSKY_HOME}/variables.sh" || exit 99
-source "${ALLSKY_CONFIG}/config.sh" || exit 99
-source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
+source "${ALLSKY_HOME}/variables.sh"		|| exit 99
+source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
 
 ME="$(basename "${BASH_ARGV0}")"
 
@@ -25,24 +22,23 @@ usage_and_exit() {
 
 	echo
 	echo "Where:"
-	echo "   '--help' displays this message and exits."
-	echo "   '--wait' waits for any upload of the same type to finish."
-	echo "   '--silent' doesn't display any status messages."
-	echo "   'file_to_upload' is the path name of the file you want to upload."
+	echo "   '--help'    displays this message and exits."
+	echo "   '--wait'    waits for any upload of the same type to finish."
+	echo "   '--silent'  doesn't display any status messages."
+	echo "   'file_to_upload' is the path name of the file to upload."
 	echo "   'directory' is the directory ON THE SERVER the file should be uploaded to."
 	echo "   'destination_file_name' is the name the file should be called ON THE SERVER."
 	echo "   'file_type' is an optional, temporary name to use when uploading the file."
 	echo "   'local_directory' is the name of an optional local directory the file should be"
-	echo "        copied to in addition to being uploaded."
+	echo "        copied to IN ADDITION TO being uploaded to a remote server."
 	echo
-	echo "For example: ${ME}  keogram-20210710.jpg  /keograms  keogram.jpg"
+	echo "For example: ${ME}  keogram-20230710.jpg  /keograms  keogram.jpg"
 
 	# shellcheck disable=SC2086
 	exit ${RET}
 }
 
 
-	# When run manually, the file_type (arg $4) normally won't be given.
 HELP="false"
 WAIT="false"
 SILENT="false"
@@ -77,7 +73,7 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 [[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit ${RET}
-[[ ${HELP} = "true" ]] && usage_and_exit 0
+[[ ${HELP} == "true" ]] && usage_and_exit 0
 
 FILE_TO_UPLOAD="${1}"
 if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
@@ -90,6 +86,7 @@ fi
 REMOTE_DIR="${2}"
 DESTINATION_NAME="${3}"
 [[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$(basename "${FILE_TO_UPLOAD}")"
+# When run manually, the FILE_TYPE normally won't be given.
 FILE_TYPE="${4:-x}"		# A unique identifier for this type of file
 COPY_TO="${5}"
 if [[ -n ${COPY_TO} && ! -d ${COPY_TO} ]]; then
@@ -106,7 +103,8 @@ fi
 #		another process. (image.jpg)
 # Slow uplinks also cause problems with web servers that read the file as it's being uploaded.
 
-LOG="${ALLSKY_TMP}/upload_log.txt"
+# To save a write to the SD card, only save output to ${LOG} on error.
+LOG="${ALLSKY_TMP}/upload_errors.txt"
 
 # Make sure only one upload of this file type happens at once.
 # Multiple concurrent uploads (which can happen if the system and/or network is slow can
@@ -168,15 +166,17 @@ if [[ ${PROTOCOL} == "s3" ]] ; then
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to aws ${S3_BUCKET}/${REMOTE_DIR}"
 	fi
-	"${AWS_CLI_DIR}/aws" s3 cp "${FILE_TO_UPLOAD}" "s3://${S3_BUCKET}${REMOTE_DIR}" --acl "${S3_ACL}" > "${LOG}"
+	OUTPUT="$("${AWS_CLI_DIR}/aws" s3 cp "${FILE_TO_UPLOAD}" "s3://${S3_BUCKET}${REMOTE_DIR}" --acl "${S3_ACL}" 2>&1)"
 	RET=$?
+
 
 elif [[ ${PROTOCOL} == "local" ]] ; then
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_DIR}/${DESTINATION_NAME}"
 	fi
-	cp "${FILE_TO_UPLOAD}" "${REMOTE_DIR}/${DESTINATION_NAME}"
+	OUTPUT="$(cp "${FILE_TO_UPLOAD}" "${REMOTE_DIR}/${DESTINATION_NAME}" 2>&1)"
 	RET=$?
+
 
 elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
@@ -185,15 +185,17 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	fi
 	[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-P ${REMOTE_PORT}"
 	# shellcheck disable=SC2086
-	scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
+	OUTPUT="$(scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}" 2>&1)"
 	RET=$?
+
 
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to gcs ${GCS_BUCKET}/${REMOTE_DIR}"
 	fi
-	gsutil cp -a "${GCS_ACL}" "${FILE_TO_UPLOAD}" "gs://${GCS_BUCKET}${REMOTE_DIR}" > "${LOG}"
+	OUTPUT="$(gsutil cp -a "${GCS_ACL}" "${FILE_TO_UPLOAD}" "gs://${GCS_BUCKET}${REMOTE_DIR}" 2>&1)"
 	RET=$?
+
 
 else # sftp/ftp/ftps
 	# People sometimes have problems with ftp not working,
@@ -213,9 +215,18 @@ else # sftp/ftp/ftps
 	LFTP_CMDS="${DIR}/${FILE_TYPE}.txt"
 
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
-	# Send the password to lftp via the environment to avoid having to escape characters in it.
-	LFTP_PASSWORD="${REMOTE_PASSWORD}"
-	export LFTP_PASSWORD
+
+	# The export LFTP_PASSWORD has to be OUTSIDE the ( ) below.
+	if [[ ${DEBUG} == "true" ]]; then
+		# In debug mode, include the password on the command line so it's easier
+		# for the user to run "lftp -f ${LFT_CMDS}"
+		PW="--password '${REMOTE_PASSWORD}'"
+	else
+		# Send the password to lftp via the environment to avoid having
+		# to escape characters in it.
+		export LFTP_PASSWORD="${REMOTE_PASSWORD}"
+		PW="--env-password"
+	fi
 
 	(
 		[[ -n ${LFTP_COMMANDS} ]] && echo "${LFTP_COMMANDS}"
@@ -226,12 +237,14 @@ else # sftp/ftp/ftps
 		echo set net:timeout 10
 
 		[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
-		# shellcheck disable=SC2153
-		echo "open --user '${REMOTE_USER}' --env-password ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
+
+		# shellcheck disable=SC2153,SC2086
+		echo "open --user '${REMOTE_USER}' ${PW} ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
+
 		# lftp doesn't actually try to open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.
 		# So, do a simple command first so we get a better error message.
-		echo "quote PWD > /dev/null || cd . || exit 99"
+		echo "quote PWD > /dev/null || cd . || exit 99"		# PWD not supported by all servers
 
 		if [[ ${DEBUG} == "true" ]]; then
 			echo "quote PWD"
@@ -274,7 +287,6 @@ else # sftp/ftp/ftps
 		echo exit 0
 	) > "${LFTP_CMDS}"
 
-	# To save a write to the SD card, only save output to ${LOG} on error.
 	OUTPUT="$(lftp -f "${LFTP_CMDS}" 2>&1)"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
@@ -282,21 +294,23 @@ else # sftp/ftp/ftps
 		echo -n "*** ${ME}: ERROR"
 		if [[ ${RET} -eq 99 ]]; then
 			# shellcheck disable=SC2153
-			echo ": unable to log in to '${REMOTE_HOST}', user ${REMOTE_USER}'."
+			OUTPUT="$(
+				echo "Unable to log in to '${REMOTE_HOST}', user ${REMOTE_USER}'."
+				echo -e "${OUTPUT}"
+			)"
 		else
-			echo ", RET=${RET}:"
-			echo "FILE_TO_UPLOAD='${FILE_TO_UPLOAD}'"
-			# shellcheck disable=SC2153
-			echo "REMOTE_HOST='${REMOTE_HOST}'"
-			echo "REMOTE_DIR='${REMOTE_DIR}'"
-			echo "TEMP_NAME='${TEMP_NAME}'"
-			echo "DESTINATION_NAME='${DESTINATION_NAME}'"
-			echo -en "${NC}"
-			echo
-			if [[ -n ${OUTPUT} ]]; then
-				echo "${OUTPUT}" > "${LOG}"
-				cat "${LOG}" >&2
-			fi
+			OUTPUT="$(
+				echo ", RET=${RET}:"
+				echo "FILE_TO_UPLOAD='${FILE_TO_UPLOAD}'"
+				# shellcheck disable=SC2153
+				echo "REMOTE_HOST='${REMOTE_HOST}'"
+				echo "REMOTE_DIR='${REMOTE_DIR}'"
+				echo "TEMP_NAME='${TEMP_NAME}'"
+				echo "DESTINATION_NAME='${DESTINATION_NAME}'"
+				echo -en "${NC}"
+				echo
+				echo -e "${OUTPUT}"
+			)"
 		fi
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
@@ -304,10 +318,13 @@ else # sftp/ftp/ftps
 		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 && ${ON_TTY} -eq 0 ]]; then
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
-		if [[ -n ${OUTPUT} ]]; then
-			echo -e "lftp OUTPUT from '${FILE_TO_UPLOAD}:\n   ${OUTPUT}\n"
-		fi
 	fi
+fi
+
+# Output any error messages
+if [[ -n ${OUTPUT} ]]; then
+	echo -e "Upload output from '${FILE_TO_UPLOAD}:\n   ${OUTPUT}\n" >&2
+	echo -e "${OUTPUT}" > "${LOG}"
 fi
 
 # If a local directory was also specified, copy the file there.

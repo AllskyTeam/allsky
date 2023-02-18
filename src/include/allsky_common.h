@@ -323,7 +323,6 @@ bool getBoolean(const char *);
 double get_focus_metric(cv::Mat);
 char const *getFlip(int);
 void closeUp(int);
-void sig(int);
 void IntHandle(int);
 int stopVideoCapture(int);
 bool validateLong(long *, long, long, char const *, bool);

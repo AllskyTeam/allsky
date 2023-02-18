@@ -804,24 +804,24 @@ void closeUp(int e)
 }
 
 // Handle signals
-void sig(int i)
-{
-	if (i == SIGHUP)
-	{
-		// TODO: Restart rather than exit
-		Log(4, "Got signal to restart.\n");
-	}
-	else
-	{
-		Log(0, "Got unknown signal %d in sig().\n", i);
-	}
-	gotSignal = true;
-	closeUp(EXIT_RESTARTING);
-}
 void IntHandle(int i)
 {
 	gotSignal = true;
-	closeUp(EXIT_OK);
+	if (i == SIGHUP)
+	{
+		// TODO: Re-read configuration instead of restarting.
+		Log(4, "Got SIGHUP to restart.\n");
+		closeUp(EXIT_RESTARTING);
+	}
+	else if (i == SIGINT || i == SIGTERM)
+	{
+		closeUp(EXIT_OK);
+	}
+	else
+	{
+		Log(0, "Got unknown signal %d.\n", i);
+		closeUp(i);
+	}
 }
 
 

@@ -1117,7 +1117,7 @@ void displaySettings(config cg)
 	printf("%s", c(KGRN));
 	printf("\nSettings:\n");
 
-	if (cg.ct == ctRPi)
+	if (cg.cmdToUse != NULL)
 		printf("   Command: %s\n", cg.cmdToUse);
 	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
 	printf("   Resolution (before any binning): %ldx%ld\n", cg.width, cg.height);

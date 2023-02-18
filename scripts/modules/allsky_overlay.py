@@ -1205,8 +1205,12 @@ def overlay(params, event):
     enabled = s.int(s.getEnvironmentVariable("AS_eOVERLAY"))
     if enabled == 1:
         debug = params["debug"]
-        suntimeformat = params["suntimeformat"]
-        nonighttext = params["nonighttext"]        
+        suntimeformat = ""
+        nonighttext = ""
+        if "suntimeformat" in params:
+            suntimeformat = params["suntimeformat"]
+        if "nonighttext" in params:            
+            nonighttext = params["nonighttext"]        
         annotater = ALLSKYOVERLAY(debug, suntimeformat, nonighttext)
         annotater.annotate()
         result = "Overlay Complete"

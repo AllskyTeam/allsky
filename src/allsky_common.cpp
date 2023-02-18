@@ -472,7 +472,7 @@ bool checkForValidExtension(config *cg)
 		compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
 		// Want dark frames to be at highest quality as well as images that will be passed
 		// to a module to be post-processed.
-		if (cg->takeDarkFrames || cg->overlay.overlayMethod == OVERLAY_METHOD_LEGACY) {
+		if (cg->takeDarkFrames || cg->overlay.overlayMethod == OVERLAY_METHOD_MODULE) {
 			cg->quality = 100;
 		} else if (cg->quality == NOT_SET) {
 			cg->quality = cg->qualityJPG;
@@ -486,7 +486,7 @@ bool checkForValidExtension(config *cg)
 
 		compressionParameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
 		// png is lossless so "quality" is really just the amount of compression.
-		if (cg->takeDarkFrames || cg->overlay.overlayMethod == OVERLAY_METHOD_LEGACY) {
+		if (cg->takeDarkFrames || cg->overlay.overlayMethod == OVERLAY_METHOD_MODULE) {
 			cg->quality = 9;
 		} else if (cg->quality == NOT_SET) {
 			cg->quality = cg->qualityPNG;
@@ -1029,12 +1029,12 @@ void displayHelp(config cg)
 		printf(" -%-*s - Determines if version 0.8 exposure method should be used [%s].\n", n, "newexposure b", yesNo(cg.videoOffBetweenImages));
 	}
 	if (cg.ct == ctRPi) {
-		printf(" -%-*s - Extra arguments pass to image capture program [%s].\n", n, "extra s", cg.extraArgs);
+		printf(" -%-*s - Extra arguments pass to image capture program [%s].\n", n, "extraArgs s", cg.extraArgs);
 	}
 	printf(" -%-*s - Set to 1, 2, 3, or 4 for more debugging information [%ld].\n", n, "debuglevel n", cg.debugLevel);
 
 	printf("\nOverlay settings:\n");
-	printf(" -%-*s - Set to %d to use the new, enhanced 'module' overlay program [%s].\n", n, "overlayMethod n", OVERLAY_METHOD_MODULE, getOverlayMethod(cg.overlay.overlayMethod).c_str());
+	printf(" -%-*s - Set to %d to use the new, enhanced 'module' overlay program [%s].\n", n, "overlayMethod n", OVERLAY_METHOD_LEGACY, getOverlayMethod(cg.overlay.overlayMethod).c_str());
 	printf(" -%-*s - Set to 1 to display the time [%s].\n", n, "showTime b", yesNo(cg.overlay.showTime));
 	printf(" -%-*s - Format the optional time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - 1 displays the exposure length [%s].\n", n, "showExposure b", yesNo(cg.overlay.showExposure));
@@ -1218,29 +1218,34 @@ void displaySettings(config cg)
 		printf("   ZWO SDK version %s\n", stringORnone(cg.ASIversion));
 	}
 
-	printf("   Overlay settings:\n");
-	printf("      Text Overlay: %s\n", stringORnone(cg.overlay.ImgText));
-	printf("      Text Extra File: %s, Age: %ld seconds\n", stringORnone(cg.overlay.ImgExtraText), cg.overlay.extraFileAge);
-	printf("      Text Line Height %ldpx\n", cg.overlay.iTextLineHeight);
-	printf("      Text Position: %ldpx from left, %ldpx from top\n", cg.overlay.iTextX, cg.overlay.iTextY);
-	printf("      Font Name: %s (%ld)\n", fontnames[cg.overlay.fontnumber], cg.overlay.fontnumber);
-	printf("      Font Color: %d, %d, %d\n", cg.overlay.fontcolor[0], cg.overlay.fontcolor[1], cg.overlay.fontcolor[2]);
-	printf("      Small Font Color: %d, %d, %d\n", cg.overlay.smallFontcolor[0], cg.overlay.smallFontcolor[1], cg.overlay.smallFontcolor[2]);
-	printf("      Font Line Type: %d\n", cg.overlay.linetype[cg.overlay.linenumber]);
-	printf("      Font Size: %1.1f\n", cg.overlay.fontsize);
-	printf("      Font Line Width: %ld\n", cg.overlay.linewidth);
-	printf("      Outline Font : %s\n", yesNo(cg.overlay.outlinefont));
+	printf("   Overlay method: %s\n", getOverlayMethod(cg.overlay.overlayMethod).c_str());
+	if (cg.overlay.overlayMethod == OVERLAY_METHOD_LEGACY) {
+		printf("   Overlay settings:\n");
+		printf("      Text Overlay: %s\n", stringORnone(cg.overlay.ImgText));
+		printf("      Text Extra File: %s, Age: %ld seconds\n", stringORnone(cg.overlay.ImgExtraText), cg.overlay.extraFileAge);
+		printf("      Text Line Height %ldpx\n", cg.overlay.iTextLineHeight);
+		printf("      Text Position: %ldpx from left, %ldpx from top\n", cg.overlay.iTextX, cg.overlay.iTextY);
+		printf("      Font Name: %s (%ld)\n", fontnames[cg.overlay.fontnumber], cg.overlay.fontnumber);
+		printf("      Font Color: %d, %d, %d\n", cg.overlay.fontcolor[0], cg.overlay.fontcolor[1], cg.overlay.fontcolor[2]);
+		printf("      Small Font Color: %d, %d, %d\n", cg.overlay.smallFontcolor[0], cg.overlay.smallFontcolor[1], cg.overlay.smallFontcolor[2]);
+		printf("      Font Line Type: %d\n", cg.overlay.linetype[cg.overlay.linenumber]);
+		printf("      Font Size: %1.1f\n", cg.overlay.fontsize);
+		printf("      Font Line Width: %ld\n", cg.overlay.linewidth);
+		printf("      Outline Font : %s\n", yesNo(cg.overlay.outlinefont));
 
-	printf("      Show Time: %s (format: %s)\n", yesNo(cg.overlay.showTime), stringORnone(cg.timeFormat));
-	printf("      Show Exposure: %s\n", yesNo(cg.overlay.showExposure));
-	if (cg.supportsTemperature)
-		printf("      Show Temperature: %s, type: %s\n", yesNo(cg.overlay.showTemp), stringORnone(cg.tempType));
-	printf("      Show Gain: %s\n", yesNo(cg.overlay.showGain));
-	printf("      Show Brightness: %s\n", yesNo(cg.overlay.showBrightness));
-	printf("      Show Target Mean Brightness: %s\n", yesNo(cg.overlay.showMean));
-	printf("      Show Focus Metric: %s\n", yesNo(cg.overlay.showFocus));
-	if (cg.ct == ctZWO) {
-		printf("      Show Histogram Box: %s\n", yesNo(cg.overlay.showHistogramBox));
+		printf("      Show Time: %s (format: %s)\n", yesNo(cg.overlay.showTime), stringORnone(cg.timeFormat));
+		printf("      Show Exposure: %s\n", yesNo(cg.overlay.showExposure));
+		if (cg.supportsTemperature)
+			printf("      Show Temperature: %s, type: %s\n", yesNo(cg.overlay.showTemp), stringORnone(cg.tempType));
+		printf("      Show Gain: %s\n", yesNo(cg.overlay.showGain));
+		printf("      Show Brightness: %s\n", yesNo(cg.overlay.showBrightness));
+		printf("      Show Target Mean Brightness: %s\n", yesNo(cg.overlay.showMean));
+		printf("      Show Focus Metric: %s\n", yesNo(cg.overlay.showFocus));
+		if (cg.ct == ctZWO) {
+			printf("      Show Histogram Box: %s\n", yesNo(cg.overlay.showHistogramBox));
+		}
+	} else if (cg.supportsTemperature) {
+		printf("      Temperature type: %s\n", stringORnone(cg.tempType));
 	}
 	printf("%s", c(KNRM));
 }
@@ -1815,7 +1820,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->videoOffBetweenImages = getBoolean(argv[++i]);
 		}
-		else if (strcmp(a, "extra") == 0)
+		else if (strcmp(a, "extraargs") == 0)
 		{
 			cg->extraArgs = argv[++i];
 		}
@@ -2002,4 +2007,3 @@ bool validateLatitudeLongitude(config *cg)
 
 	return(ret);
 }
-

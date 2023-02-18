@@ -237,9 +237,6 @@ body {
 .markdown-body not(.sidebar) ol:last-child {
 	padding-bottom: 0.75em;
 }
-.markdown-body .minimalPadding li {
-	margin-top: 0.2em;
-}
 .markdown-body dl {
 	padding: 0;
 }
@@ -268,9 +265,17 @@ body {
 .markdown-body h3 {
 	background-color: var(--color-accent-subtle);
 }
-/* TODO: want a lighter shade of blue than h2/h3, but there isn't one defined in light.css */
+.markdown-body h1 {
+	border: 1px solid var(--color-accent-emphasis);
+}
+.markdown-body h2 {
+	border: 1px solid var(--color-accent-muted);
+}
+/* TODO: want a lighter shade of blue than h2, but there isn't one defined in light.css */
 .markdown-body h3 {
-	opacity: 0.8;
+	opacity: 0.7;
+	margin-right: 5em;
+	border: 2px solid var(--color-accent-muted);
 }
 .markdown-body h4 {
 	background-color: transparent;
@@ -574,11 +579,12 @@ details summary {
 	cursor: pointer;
 	color: var(--color-accent-fg);
 }
-details[open]:not([sub]) summary::before, details[sub][open] summary::before {
+details[open]:not([sub]) summary::before,
+details[open][sub] summary::before {
 	content: "Hide Details...";
 }
 details summary::before,
-details[sub]:not([open]) summary::before {
+details:not([open])[sub] summary::before {
 	content: "More Details...";
 }
 summary {
@@ -751,11 +757,8 @@ b, strong {
 .position-relative {
 	position: relative !important;
 }
-.minimalPadding {
-	padding-top: 3px !important;
-	padding-bottom: 3px !important;
-	margin-top: 0 !important;
-	margin-bottom: 0 !important;
+.markdown-body .minimalPadding li {
+	margin-top: 0;
 }
 .nowrap {
 	white-space: nowrap;
@@ -837,4 +840,28 @@ b, strong {
 }
 .json .indent3 {
 	margin-left: 20px;
+}
+
+.moduleName {
+	font-weight: bold;
+	color: purple;			/* TODO: decide what attributes to use */
+}
+.managerName {
+	font-weight: bold;
+	color: green;			/* TODO: decide what attributes to use */
+}
+.moduleToolbarIconNumber {
+	background-color: white;
+	color: black;
+	border: 2px solid red;
+	padding: 2px 6px 2px 6px;
+}
+.moduleToolbar {
+	background-color: #272727;
+	color: #888;
+	font-weight: bold;
+}
+.overlayIcon {
+	vertical-align: middle !important;
+	text-align: center;
 }

@@ -4,7 +4,7 @@ After=multi-user.target
 
 [Service]
 User=XX_ALLSKY_OWNER_XX
-ExecStart=XX_ALLSKY_HOME_XX/scripts/periodic.sh
+ExecStart=XX_ALLSKY_SCRIPTS_XX/periodic.sh
 SyslogIdentifier=allskperiodic
 Restart=on-success
 RestartSec=5

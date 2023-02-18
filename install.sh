@@ -523,6 +523,12 @@ prompt_for_hostname() {
 	CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
 	[[ ${CURRENT_HOSTNAME} == "${SUGGESTED_NEW_HOST_NAME}" ]] && return
 
+	# If we're upgrading, use the current name.
+	if [[ -n ${PRIOR_ALLSKY} ]]; then
+		display_msg --log progress "Using current hostname of ${CURRENT_HOSTNAME}."
+		return
+	fi
+
 	MSG="Please enter a hostname for your Pi."
 	MSG="${MSG}\n\nIf you have more than one Pi on your network they must all have unique names."
 	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 10 ${WT_WIDTH} \

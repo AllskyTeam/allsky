@@ -218,7 +218,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			function make_thumbnail()
 			{
 				local SEC="${1}"
-				ffmpeg -loglevel error -ss 00:00:${SEC} -i "${UPLOAD_FILE}" \
+				ffmpeg -loglevel error -ss "00:00:${SEC}" -i "${UPLOAD_FILE}" \
 					-filter:v scale="${THUMBNAIL_SIZE_X}:-1" -frames:v 1 "${UPLOAD_THUMBNAIL}"
 			}
 			# Want the thumbnail to be near the start of the video, but not the first frame

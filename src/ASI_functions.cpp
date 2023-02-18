@@ -1232,13 +1232,16 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 
 	signal(SIGINT, IntHandle);
 	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
-	signal(SIGHUP, sig);		// xxxxxxxxxx TODO: Set up to re-read settings (we currently just restart).
+	signal(SIGHUP, IntHandle);		// SIGHUP means restart.
 
 	return(ok);
 }
 
 // If a value is currently NOT_CHANGED, the user didn't specify so use the default.
 // Validate the command-line settings.
+// For cameras that use an external application to take pictures,
+// set any default values specified by the user to IS_DEFAULT so we don't pass the
+// value to the external program.
 bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 {
 	ASI_ERROR_CODE ret;
@@ -1552,4 +1555,3 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 
 	return(ok);
 }
-

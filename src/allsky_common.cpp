@@ -1029,7 +1029,7 @@ void displayHelp(config cg)
 		printf(" -%-*s - Determines if version 0.8 exposure method should be used [%s].\n", n, "newexposure b", yesNo(cg.videoOffBetweenImages));
 	}
 	if (cg.ct == ctRPi) {
-		printf(" -%-*s - Extra arguments pass to image capture program [%s].\n", n, "extra s", cg.extraArgs);
+		printf(" -%-*s - Extra arguments pass to image capture program [%s].\n", n, "extraArgs s", cg.extraArgs);
 	}
 	printf(" -%-*s - Set to 1, 2, 3, or 4 for more debugging information [%ld].\n", n, "debuglevel n", cg.debugLevel);
 
@@ -1815,7 +1815,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->videoOffBetweenImages = getBoolean(argv[++i]);
 		}
-		else if (strcmp(a, "extra") == 0)
+		else if (strcmp(a, "extraargs") == 0)
 		{
 			cg->extraArgs = argv[++i];
 		}

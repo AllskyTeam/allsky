@@ -91,7 +91,7 @@
 				</li>
 			</ul>
 
-			<h3>How overlays work</h3>
+			<h4>How overlays work</h4>
 			<p>
 			<blockquote>The <span class="managerName">Overlay Manager</span> is what you use to define what information
 				you want on the captured images and where it should go.
@@ -283,7 +283,7 @@
 								</tr>
 							</tbody>
 						</table>
-						<hr class="separator">
+						<hr class="separatorMinor">
 					</details>
 
 					<h3>Module variables</h3>
@@ -297,7 +297,6 @@
 						<p>As an example, the <span class="moduleName">Star Count Module</span> creates a
 							variabled called <code>${STARCOUNT}</code> and passes it to the next module.</p>
 						<p>Please refer to the documentation on each module for any variables that it makes available.</p>
-						<hr class="separator">
 					</details>
 
 					<h3>Extra data variables</h3>
@@ -507,9 +506,8 @@
 								The <span class="managerName">Overlay Manager</span> will silently ignore any
 								files it cannot read.</li>
 						</ul>
-						<hr class="separator">
 					</details>
-
+					<hr class="separatorSmall">
 				</details>
 			</div>
 
@@ -687,7 +685,7 @@
 							</tr>
 						</tbody>
 					</table>
-					<hr class="separator">
+					<hr class="separatorSmall">
 				</details>
 			</div>
 
@@ -695,6 +693,8 @@
 			<h2>Using The Overlay Manager</h2>
 			<p>The following sub-sections detail the basic operation of the
 				<span class="managerName">Overlay Manager</span> and how to manage fields and their contents.</p>
+			<details sub>
+				<summary></summary>
 			<div>
 				<h3 id="fontManager">The Font Manager</h3>
 				<p>The <span class="managerName">Font Manager</span> supports all mainstream browser fonts
@@ -759,7 +759,7 @@
 					<blockquote>When installing fonts if any issues arise the
 						<span class="managerName">Font Manager</span> will display a notice
 						indicating why the font(s) could not be installed.</blockquote>
-					<hr class="separator">
+					<hr class="separatorMinor">
 				</details>
 
 				<h3 id="imageManager">The Image Manager</h3>
@@ -799,7 +799,7 @@
 							</tr>
 						</tbody>
 					</table>
-					<hr class="separator">
+					<hr class="separatorMinor">
 				</details>
 
 				<h3>Adding fields to the overlay</h3>
@@ -839,7 +839,7 @@
 							uploaded via the <span class="managerName">Image Manager</span> as described above.
 						</li>
 					</ol>
-					<hr class="separator">
+					<hr class="separatorMinor">
 				</details>
 
 				<h3 id="propertyEditors">The property editors</h3>
@@ -923,7 +923,7 @@
 							</tr>
 						</tbody>
 					</table>
-					<hr class="separator">
+					<hr class="separatorMinor">
 				</details>
 
 				<h3>Variable Manager</h3>
@@ -1048,7 +1048,6 @@
 					<p>Date, Time and Number fields can be formatted to alter their appearance. Each
 						variable type has a different set of codes for formatting. The codes are loosely
 						based on Python.</p>
-
 					<h5>Formatting Numbers</h5>
 					<table>
 						<thead>
@@ -1229,14 +1228,17 @@
 							</tr>
 						</tbody>
 					</table>
-					<hr class="separator">
 				</details>
 
 			</div>
+			<hr class="separator">
+			</details>
 
 			<h2 id="overlayManagerSettings">Overlay Manager Settings</h2>
 			<p>The <span class="managerName">Overlay Manager</span> has a settings dialog that can be used to manage
 				settings for both the current overlay and the <span class="managerName">Overlay Manager</span> itself.</p>
+			<details sub>
+				<summary></summary>
 			<div>
 
 				<h3>Layout Defaults tab</h3>
@@ -1287,7 +1289,7 @@
 						are not causing an issue with the capture process. Details of how to use the
 						<span class="managerName">Module Manager</span> debug option are covered in the <a allsky="true"
 							href="/documentation/modules/modules.html">Module Manager</a> section.</blockquote>
-					<hr class="separator">
+					<hr class="separatorMinor">
 				</details>
 
 				<h3>Editor Defaults tab</h3>
@@ -1335,8 +1337,9 @@
 						</tbody>
 					</table>
 				</details>
-				<hr class="separator">
+				<hr class="separatorSmall">
 			</div>
+			</details>
 
 			<h2 id="satelliteData">Satellites / Sun / Moon / Planets</h2>
 			<p>The <span class="managerName">Overlay Manager</span> can generate data for celestial bodies.
@@ -1678,8 +1681,8 @@
 						</tr>
 					</tbody>
 				</table>
-				<hr class="separator">
 			</details>
+			<br><hr class="separator">
 			</details>
 
 			<!-- ================================================= -->

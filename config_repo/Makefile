@@ -7,7 +7,8 @@ bindir = ${exec_prefix}/bin
 libexecdir = ${exec_prefix}/libexec/allsky
 sharedir = ${exec_prefix}/share/allsky
 
-PDIR = $(shell dirname "$$PWD")
+HOMEDIR = $(shell dirname "$$PWD")
+SCRIPTSDIR = ${HOMEDIR}/scripts
 
 .DEFAULT_GOAL := all
 
@@ -110,11 +111,11 @@ install: createDirs $(CONFIGFILES)
 	@if [ -e /etc/xdg/lxsession/LXDE-pi/autostart ]; then \
 	  sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart; fi
 	@# Don't use the /lib/systemd/system directory
-	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" -e "s|XX_ALLSKY_HOME_XX|$(PDIR)|" allsky.service.repo > allsky.service
+	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" -e "s|XX_ALLSKY_HOME_XX|$(HOMEDIR)|" -e "s/XX_ALLSKY_SCRIPTS_XX|$(SCRIPTSDIR)" allsky.service.repo > allsky.service
 	@install -m 0644 allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/
 	@rm -f allsky.service
 	@if [ -e /lib/systemd/system/allsky.service ]; then rm -f /lib/systemd/system/allsky.service; fi
-	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" -e "s|XX_ALLSKY_HOME_XX|$(PDIR)|" allskyperiodic.service.repo > allskyperiodic.service
+	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" -e "s|XX_ALLSKY_SCRIPTS_XX|$(SCRIPTSDIR)|" allskyperiodic.service.repo > allskyperiodic.service
 	@install -m 0644 allskyperiodic.service $(DESTDIR)$(sysconfdir)/systemd/system/
 	@rm -f allskyperiodic.service
 	@if [ -e /lib/systemd/system/allskyperiodic.service ]; then rm -f /lib/systemd/system/allskyperiodic.service; fi
@@ -122,7 +123,7 @@ install: createDirs $(CONFIGFILES)
 	@systemctl enable allsky
 	@systemctl enable allskyperiodic
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
-	@echo "export ALLSKY_HOME=$(PDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
+	@echo "export ALLSKY_HOME=$(HOMEDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
 	@cp -ar overlay ../config; chown -R $(SUDO_USER):www-data ../config/overlay ;
 	@cp -ar modules ../config; chown -R $(SUDO_USER):www-data ../config/modules ;
 .PHONY : install

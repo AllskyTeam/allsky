@@ -1,110 +1,110 @@
 #!/bin/bash
 
-# This script allows users to manually generate or upload keograms,startrails, and timelapses.
-
-ME_USAGE="$(basename "${BASH_ARGV0}")"
+# This script allows users to manually generate or upload keograms, startrails, and timelapses.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-if [[ -z ${ALLSKY_HOME} ]]; then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-	export ALLSKY_HOME
-fi
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
+ME="$(basename "${BASH_ARGV0}")"
 
-# If the first argument is "--upload" then we upload files, otherwise we create them.
-if [[ ${1} == "--upload" ]]; then
+source "${ALLSKY_HOME}/variables.sh"	|| exit 99
+source "${ALLSKY_CONFIG}/config.sh"		|| exit 99
+
+DO_HELP="false"
+DEBUG_ARG=""
+TYPE="GENERATE"
+MSG1="create"
+MSG2="created"
+SILENT="false"
+UPLOAD_SILENT="--silent"
+GOT=0
+DO_KEOGRAM="false"
+DO_STARTRAILS="false"
+DO_TIMELAPSE="false"
+
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG}" in
+			--help)
+				DO_HELP="true"
+				;;
+			--debug)
+				DEBUG_ARG="${ARG}"
+				;;
+			--silent)
+				SILENT="true"
+				UPLOAD_SILENT=""	# since WE aren't outputing a message, upload.sh should.
+				;;
+			--upload)
+				TYPE="UPLOAD"
+				MSG1="upload"
+				MSG2="uploaded"
+				# On uploads, we should let upload.sh output messages since it has more details.
+				UPLOAD_SILENT=""
+				;;
+			-k | --keogram)
+				DO_KEOGRAM="true"
+				GOT=$((GOT + 1))
+				;;
+			-s | --startrails)
+				DO_STARTRAILS="true"
+				GOT=$((GOT + 1))
+				;;
+			-t | --timelapse)
+				DO_TIMELAPSE="true"
+				GOT=$((GOT + 1))
+				;;
+
+			-*)
+				echo -e "${RED}${ME}: Unknown argument '${ARG}' ignoring.${NC}" >&2
+				DO_HELP="true"
+				;;
+			*)
+				break
+				;;
+	esac
 	shift
-	TYPE="UPLOAD"
-	MSG1="upload"
-	MSG2="uploaded"
-else
-	TYPE="GENERATE"
-	MSG1="create"
-	MSG2="created"
-fi
-
-source "${ALLSKY_HOME}/variables.sh" || exit 99
-source "${ALLSKY_CONFIG}/config.sh" || exit 99
-if [[ ${TYPE} == "UPLOAD" ]]; then
-	source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
-fi
-
-# If we're on a tty we are being invoked manually so no need to display ${ME} in error messages.
-if [[ ${ON_TTY} -eq 1 ]]; then
-	ME=""
-else
-	ME="${ME_USAGE}: "	# include trailing space
-fi
+done
 
 usage_and_exit()
 {
 	retcode=${1}
 	echo
 	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME_USAGE} [--help] [--silent] [-k] [-s] [-t] DATE"
+	echo "Usage: ${ME} [--help] [--silent] [--debug] [--upload] [-k] [-s] [-t] DATE"
 	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
-	echo "      'DATE' is the day in '${ALLSKY_IMAGES}' to process"
-	echo "      'k' is to ${MSG1} a keogram"
-	echo "      's' is to ${MSG1} a startrail"
-	echo "      't' is to ${MSG1} a timelapse"
+	echo "      '--help' displays this message and exits."
+	echo "      '--debug' runs upload.sh in debug mode."
+	echo "      '--upload' uploads previously-created files instead of creating them."
+	echo "      'DATE' is the day in '${ALLSKY_IMAGES}' to process."
+	echo "      '-k' will ${MSG1} a keogram."
+	echo "      '-s' will ${MSG1} a startrail."
+	echo "      '-t' will ${MSG1} a timelapse."
 	echo "    If you don't specify k, s, or t, all three will be ${MSG2}."
 	# shellcheck disable=SC2086
 	exit ${retcode}
 }
 
-if [[ ${1} == "--silent" || ${TYPE} == "UPLOAD" ]]; then
-	# On uploads, we should let upload.sh output messages since it has more details.
-	SILENT="true"
-	UPLOAD_SILENT=""	# since we aren't outputing message, upload.sh should
-	[[ ${1} == "--silent" ]] && shift
-else
-	SILENT="false"
-	UPLOAD_SILENT="--silent"
-fi
-
-[[ ${1} == "--help" ]] && usage_and_exit 0
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ $# -eq 0 ]] && usage_and_exit 1
 
-if [[ $# -eq 1 ]]; then
-	# If the first character is "-" it's an argument, not a date.
-	[[ ${1:0:1} == "-" ]] && usage_and_exit 1
-
-	DATE="${1}"
-	DO_KEOGRAM="true"
-	DO_STARTRAILS="true"
-	DO_TIMELAPSE="true"
-else
-	DO_KEOGRAM="false"
-	DO_STARTRAILS="false"
-	DO_TIMELAPSE="false"
-	while [[ $# -gt 1 ]]
-	do
-		if [[ ${1} == "-k" ]]; then
-			DO_KEOGRAM="true"
-		elif [[ ${1} == "-s" ]]; then
-			DO_STARTRAILS="true"
-		elif [[ ${1} == "-t" ]]; then
-			DO_TIMELAPSE="true"
-		elif [[ ${1:0:1} == "-" ]]; then
-			echo -e "${YELLOW}${ME}Unknown image type: '${1}'; ignoring.${NC}"
-		fi
-		shift
-	done
-	DATE="${1}"
+if [[ ${TYPE} == "UPLOAD" ]]; then
+	source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 99
 fi
 
-DATE="${DATE:-${1}}"
-if [[ ${DATE} == "" ]]; then
-	echo -e "${RED}${ME}ERROR: No date specified!${NC}"
-	usage_and_exit 1
-fi
+DATE="${1}"
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
 if [[ ! -d ${DATE_DIR} ]]; then
-	echo -e "${RED}${ME}ERROR: '${DATE_DIR}' not found!${NC}"
+	echo -e "${RED}${ME}: ERROR: '${DATE_DIR}' not found!${NC}"
 	exit 2
 fi
 
-#### echo -e "K=${DO_KEOGRAM}, S=${DO_STARTRAILS}, T=${DO_TIMELAPSE}\nDATE_DIR=${DATE_DIR}"; exit
+if [[ ${GOT} -eq 0 ]]; then
+	DO_KEOGRAM="true"
+	DO_STARTRAILS="true"
+	DO_TIMELAPSE="true"
+fi
+# echo -e "k=${DO_KEOGRAM}, s=${DO_STARTRAILS}, t=${DO_TIMELAPSE}\nDATE_DIR=${DATE_DIR}"; exit 0
 
 if [[ ${TYPE} == "GENERATE" ]]; then
 	generate()
@@ -125,9 +125,9 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		echo ${CMD} | bash
 		RET=$?
 		if [[ ${RET} -ne 0 ]]; then
-			echo -e "${RED}${ME}Command Failed: ${CMD}${NC}"
+			echo -e "${RED}${ME}: Command Failed: ${CMD}${NC}"
 		elif [[ ${SILENT} == "false" ]]; then
-			echo "===== Completed ${GENERATING_WHAT}"
+			echo -e "\tDone"
 		fi
 
 		return ${RET}
@@ -142,19 +142,18 @@ else
 		DESTINATION_NAME="${4}"
 		OVERRIDE_DESTINATION_NAME="${5}"	# optional
 		WEB_DIRECTORY="${6}"				# optional
-		if [[ -s ${UPLOAD_FILE} ]]; then
+		if [[ -f ${UPLOAD_FILE} ]]; then
 			# If the user specified a different name for the destination file, use it.
 			if [[ ${OVERRIDE_DESTINATION_NAME} != "" ]]; then
 				DESTINATION_NAME="${OVERRIDE_DESTINATION_NAME}"
 			fi
-			[[ ${SILENT} == "false" ]] && echo "===== Uploading ${FILE_TYPE}"
-			"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} "${UPLOAD_FILE}" "${DIRECTORY}" "${DESTINATION_NAME}" "${FILE_TYPE}" "${WEB_DIRECTORY}"
-			RET=$?
-			[[ ${RET} -eq 0 && ${SILENT} == "false" ]] && echo "${DESTINATION_NAME} uploaded"
-			return ${RET}
+			[[ ${SILENT} == "false" ]] && echo "===== Uploading '${UPLOAD_FILE}'"
+			# shellcheck disable=SC2086
+			"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "${UPLOAD_FILE}" "${DIRECTORY}" "${DESTINATION_NAME}" "${FILE_TYPE}" "${WEB_DIRECTORY}"
+			return $?
 		else
 			echo -en "${YELLOW}"
-			echo -n "WARNING: ${FILE_TYPE} file '${UPLOAD_FILE}' not found; skipping."
+			echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping."
 			echo -e "${NC}"
 			return 1
 		fi
@@ -215,9 +214,21 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 		generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 		RET=$?
 		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" ]]; then
-			ffmpeg -loglevel error -ss 00:00:05 -i "${UPLOAD_FILE}" \
-				-filter:v scale="${THUMBNAIL_SIZE_X}:-1" -frames:v 1 "${UPLOAD_THUMBNAIL}"
-			[[ ! -f ${UPLOAD_THUMBNAIL} ]] && echo "${ME} video thumbnail not created!"
+			rm -f "${UPLOAD_THUMBNAIL}"
+			function make_thumbnail()
+			{
+				local SEC="${1}"
+				ffmpeg -loglevel error -ss 00:00:${SEC} -i "${UPLOAD_FILE}" \
+					-filter:v scale="${THUMBNAIL_SIZE_X}:-1" -frames:v 1 "${UPLOAD_THUMBNAIL}"
+			}
+			# Want the thumbnail to be near the start of the video, but not the first frame
+			# since that can be a lousy frame.
+			# If the video is less than 5 seconds, make_thumbnail won't work, so try again.
+			make_thumbnail 5
+			[[ ! -f ${UPLOAD_THUMBNAIL} ]] && make_thumbnail 0
+			if [[ ! -f ${UPLOAD_THUMBNAIL} ]]; then
+				echo -e "${RED}${ME}: ERROR: video thumbnail not created!${NC}"
+			fi
 		fi
 	else
 		upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
@@ -236,7 +247,8 @@ if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${EXIT_CODE} -eq 0 ]]; th
 	[[ ${DO_STARTRAILS} == "true" ]] && ARGS="${ARGS} -s"
 	[[ ${DO_TIMELAPSE} == "true" ]] && ARGS="${ARGS} -t"
 	echo -e "\n================"
-	echo "If you want to upload the file(s) you just created, execute 'uploadForDay.sh ${ARGS} ${DATE}'"
+	echo "If you want to upload the file(s) you just created,"
+	echo -e "\texecute '${ME} --upload ${ARGS} ${DATE}'"
 	echo "================"
 fi
 

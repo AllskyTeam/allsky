@@ -225,6 +225,7 @@ int RPicapture(config cg, cv::Mat *image)
 		command += " --analoggain " + ss.str();
 	}
 
+/* TODO: what exif fields should we use?
 	if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) {
 		stringstream strExposureTime;
 		stringstream strReinforcement;
@@ -233,6 +234,7 @@ int RPicapture(config cg, cv::Mat *image)
 
 		command += " --exif IFD0.Artist=li_" + strExposureTime.str() + "_" + strReinforcement.str();
 	}
+*/
 
 	// libcamera: if the red and blue numbers are given it turns off AWB.
 	// Check if R and B component are given
@@ -280,7 +282,8 @@ int RPicapture(config cg, cv::Mat *image)
 	if (cg.currentBrightness != IS_DEFAULT) {
 		ss.str("");
 		if (cg.isLibcamera)
-			ss << (float) cg.currentBrightness / 100;	// User enters -100 to 100.  Convert to -1.0 to 1.0.
+			// User enters -100 to 100.  Convert to -1.0 to 1.0.
+			ss << (float) cg.currentBrightness / 100;
 		else
 			ss << cg.currentBrightness;
 		command += " --brightness " + ss.str();
@@ -360,8 +363,8 @@ int main(int argc, char *argv[])
 	int retCode;
 	cv::Mat pRgb;							// the image
 
-	//-------------------------------------------------------------------------------------------------------
-	//-------------------------------------------------------------------------------------------------------
+	//---------------------------------------------------------------------------------------------
+	//---------------------------------------------------------------------------------------------
 	setlinebuf(stdout);		// Line buffer output so entries appear in the log immediately.
 
 	CG.ct = ctRPi;
@@ -853,5 +856,3 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 
 	closeUp(EXIT_OK);
 }
-
-

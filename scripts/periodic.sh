@@ -7,7 +7,7 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit 99
 # shellcheck disable=SC1090,SC1091
 source "${ALLSKY_HOME}/config/config.sh"	|| exit 99
 
-trap "exit" SIGTERM SIGINT
+trap "exit 0" SIGTERM SIGINT
 
 cd "${ALLSKY_SCRIPTS}" || exit 99
 

@@ -867,7 +867,8 @@
 							(<i class="fa fa-regular fa-rectangle-list fa-lg"></i>)
 							to display the <strong>Variable Manager</strong> editor
 							and navigate to the variable you require.
-							Click the <span class="btn dark btn-primary btn-xs oe-list-add"><i class="fa-solid fa-plus oe-list-add"></i></span> button
+							Click the <span class="btn dark btn-primary btn-xs oe-list-add">
+							<i class="fa-solid fa-plus oe-list-add"></i></span> button
 							to add the variable to the overlay.
 							The field will start off with just the variable you selected;
 							you can add text or other variables to the field later.
@@ -998,10 +999,11 @@
 						manager comes preinstalled with a set of system variables that
 						can be modified but not deleted.
 						You can also add your own variables to the manager; typically
-						these will come from modules or extra data.</p>
+						these will come from modules or extra data files.</p>
 					<p>The manager consists of two tabs.
-						The first, 'Allsky Variables' is the library
-						of available variables and the second, 'All Variables' is a list of all variables.</p>
+						The first, <strong>Allsky Variables</strong> is the library
+						of available variables and the second,
+						<strong>All Variables</strong> is a list of all variables.</p>
 
 					<h4>Allsky Variables tab</h4>
 					<table class="two-col vtop">
@@ -1012,22 +1014,21 @@
 										loading="lazy" />
 								</td>
 								<td>
-									<p>The 'Allsky Variables' tab shows all variables <em>available to use</em> on
+									<p>This tab shows all variables <em>available to use</em> on
 										overlays. Three icons are available for each variable.</p>
 									<ul>
-										<li>The <img allsky="true" src="variable-manager-add-field.png" alt="Add variable"
-												loading="lazy" />
-											button adds the field to the overlay.
+										<li>The <span class="btn dark btn-primary btn-xs oe-list-add">
+											<i class="fa-solid fa-plus oe-list-add"></i></span> icon
+											adds the variable in a new field to the overlay.
 											The <strong>Text Properties</strong>
 											editor will also be displayed and populated with the relevant
 											data for the variable.</li>
-										<li>The <img allsky="true" src="variable-manager-edit-field.png" alt="Edit variable"
-												loading="lazy" />
-											button allows you to
-											edit the field. If the variable is a system variable then only
+										<li>Click the <span class="btn dark btn-warning btn-xs oe-list-edit">
+											<i class="fa fa-pen-to-square oe-list-edit"></i></span> icon
+											to edit the field. If the variable is a system variable then only
 											certain fields can be changed.</li>
-										<li>The <img allsky="true" src="variable-manager-delete-field.png"
-												alt="Delete variable" loading="lazy" /> button
+										<li>The <span class="btn dark btn-danger btn-xs oe-list-delete">
+											<i class="fa fa-trash oe-list-delete"></i></span> icon
 											deletes a variable. You can only delete variables that you added.</li>
 									</ul>
 									<p>The 'Add Variable' button allows you to add your own
@@ -1053,9 +1054,9 @@
 										data. This tab lists every variable that Allsky can see and the last value it
 										had. This list provides a faster way to add variables.</p>
 									<ul>
-										<li>Clicking the <img allsky="true" src="variable-manager-add-field.png" alt="Add variable"
-												loading="lazy" />
-											button adds the field to the 'Allsky Variables' tab making it
+										<li>Clicking the <span class="btn dark btn-primary btn-xs oe-list-add">
+											<i class="fa-solid fa-plus oe-list-add"></i></span> icon
+											adds the field to the 'Allsky Variables' tab making it
 											available for use on overlays.</li>
 									</ul>
 									<blockquote>If the add button is disabled then the variable is already
@@ -1069,6 +1070,16 @@
 					</table>
 
 					<h4>The Add/Edit Variable dialog box</h4>
+					<p>Clicking on the
+						<span class="btn btn-primary btn-small">Add Variable</span> button
+						or the
+						<span class="btn dark btn-warning btn-xs oe-list-edit">
+						<i class="fa fa-pen-to-square oe-list-edit"></i></span>
+						icon brings up a dialog box to add or edit a variable.
+						It's the same dialog box in either case, just with a different title.
+						Editing a System Variable will display a message stating that in the dialog box
+						as shown in the image below.
+						</p>
 					<table class="two-col vtop">
 						<tbody>
 							<tr>
@@ -1078,13 +1089,13 @@
 								</td>
 								<td>
 									<ul>
-										<li><strong>Variable Name</strong> - The name of the
-											variable. This follows the standard method for formatting
-											variables. For system variables this cannot be changed.</li>
+										<li><strong>Variable Name</strong> - The name of the variable
+											enclosed within <code><strong>${}</strong></code>.
+											For system variables the name cannot be changed.</li>
 										<li><strong>Description</strong> - An optional description of the
 											variable. This is only for reference and is displayed in the
 											<span class="managerName">Variable Manager</span>.</li>
-										<li><strong>Format</strong> - This is the
+										<li><strong>Format</strong> - This is the optional
 											<a href="#formattingVariables">formatting</a> used to
 											display the variable.</li>
 										<li><strong>Sample Data</strong> - Sample data that is used when displaying

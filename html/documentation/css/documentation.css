@@ -887,3 +887,7 @@ b, strong {
 	vertical-align: middle;
 	text-align: center;
 }
+.btn-small {
+	padding: 3px 6px;
+	font-size: 12px;
+}

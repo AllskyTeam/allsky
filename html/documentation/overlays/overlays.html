@@ -135,7 +135,7 @@
 			</ol>
 
 			<h2>Allsky Fields and Variables</h2>
-			<p>The heart of the <span class="managerName">Overlay Manager</span> is fields.
+			<p>The heart of the <span class="managerName">Overlay Manager</span> is <strong>fields</strong>.
 				There are two types of fields:
 				<ol class="minimalPadding">
 					<li><strong>Text</strong> fields consist of text and/or system and module variables.
@@ -534,10 +534,15 @@
 					contains the latest image captured in the background.</p>
 				<details sub>
 					<summary></summary>
-					<p>There are various settings to control
-						how visible the image is. A grid is also overlayed on the working area by default to allow easier
-						placement of fields, and there are various settings to control how the grid is displayed.</p>
+					<p><blockquote>
+						New fields are initially added to the upper left corner of the overlay but can be
+						moved anywhere you want - just drag and drop!
+						<p>If you added a field by mistake, click on the <i class="fa fa-times fa-lg"></i>
+							icon before doing anything else.</p>
+					</blockquote></p>
+					<div>
 					<img allsky="true" src="overlay-window.png" alt="The Main Overlay Window" loading="lazy" class="imgCenter" />
+					</div>
 					<table>
 						<thead>
 							<tr>
@@ -552,9 +557,13 @@
 									<span class="moduleToolbarIconNumber">1</span>
 									<span class="moduleToolbar">Save The Current Configuration</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-save fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-floppy-disk fa-lg"></i></td>
 								<td>
-									<p>This is enabled when any changes have been made that require saving.</p>
+									<p>This is enabled and turns <span style="color: green; font-weight: bold">green</span>
+										when any changes have been made that require saving.
+										The word "Modified" is also appended to the tab label,
+										i.e., <span class="nowrap">"Overlay Editor - Modified"</span>.
+										</p>
 									<blockquote>This icon is only enabled when <em>leaving</em> certain fields.
 										For example if you change a field label you must click out of the field
 										before this icon will be enabled.</blockquote>
@@ -567,8 +576,11 @@
 								</td>
 								<td class="overlayIcon"><i class="fa fa-font fa-lg"></i></td>
 								<td>
-									<p>Click to add a new text field or label. When adding
-										a field you must manually enter the correct field label.</p>
+									<p>Click to add a new field with text and/or variables to the overlay.
+										<!-- WHAT DOES THIS MEAN:
+										When adding a field you must manually enter the correct field label.
+										-->
+										</p>
 								</td>
 							</tr>
 							<tr>
@@ -576,7 +588,7 @@
 									<span class="moduleToolbarIconNumber">3</span>
 									<span class="moduleToolbar">Add New Image Field</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-image fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-regular fa-image fa-lg"></i></td>
 								<td>
 									<p>Click to add an image to the overlay. The image must have
 										previously been uploaded using the
@@ -588,22 +600,24 @@
 									<span class="moduleToolbarIconNumber">4</span>
 									<span class="moduleToolbar">Delete The Selected Field</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-times fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-xmark fa-lg"></i></td>
 								<td>
 									<p>Click to delete the selected field.
-										The "del" or "delete" keys on the keyboard can also be used.</p>
-										The button is only enable when a field is selected.
+										The "del" or "delete" keys on the keyboard can also be used.
+										The icon is only enable turns
+										<span style="color: green; font-weight: bold">green</span>
+										when a field is selected.</p>
 								</td>
 							</tr>
 							<tr>
 								<td class="moduleAnnotation">
 									<span class="moduleToolbarIconNumber">5</span>
-									<span class="moduleToolbar">Display Available Variables</span>
+									<span class="moduleToolbar">Variable Manager</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-list fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-regular fa-rectangle-list fa-lg"></i></td>
 								<td>
 									<p>Click to add a <em>pre-defined</em> field from the
-										<strong>Available Variables</strong> editor.</p>
+										<span class="managerName">Variable Manager</span>.</p>
 								</td>
 							</tr>
 							<tr>
@@ -623,7 +637,7 @@
 									<span class="moduleToolbarIconNumber">7</span>
 									<span class="moduleToolbar">Zoom in</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-search-plus fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-magnifying-glass-plus fa-lg"></i></td>
 								<td>
 									<p>Click to zoom in on the image.</p>
 								</td>
@@ -633,7 +647,7 @@
 									<span class="moduleToolbarIconNumber">8</span>
 									<span class="moduleToolbar">Zoom Out</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-search-minus fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-magnifying-glass-minus fa-lg"></i></td>
 								<td>
 									<p>Click to zoom out of the image.</p>
 								</td>
@@ -643,7 +657,7 @@
 									<span class="moduleToolbarIconNumber">9</span>
 									<span class="moduleToolbar">View Full Size</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-compress-alt fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-solid fa-up-right-and-down-left-from-center fa-lg"></i></td>
 								<td>
 									<p>Click to zoom to the full size of the image.</p>
 								</td>
@@ -653,11 +667,12 @@
 									<span class="moduleToolbarIconNumber">10</span>
 									<span class="moduleToolbar">Fit to Window</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-expand-alt fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-solid fa-down-left-and-up-right-to-center fa-lg"></i></td>
 								<td>
 									<p>Click to zoom to fit the image on the screen.</p>
 								</td>
 							</tr>
+<!-- TODO: add "fa-solid fa-bug"  for "Debug Info" ??? -->
 							<tr>
 								<td class="moduleAnnotation">
 									<span class="moduleToolbarIconNumber">11</span>
@@ -674,7 +689,7 @@
 									<span class="moduleToolbarIconNumber">12</span>
 									<span class="moduleToolbar">Image Manager</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-arrow-alt-circle-up fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-regular fa-images fa-lg"></i></td>
 								<td>
 									<p>Displays the <span class="managerName">Image Manager</span>.
 									See the <a href="#imageManager">Image Manager</a> section for more details.</p>
@@ -685,7 +700,7 @@
 									<span class="moduleToolbarIconNumber">13</span>
 									<span class="moduleToolbar">Layout and App Options</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-cog fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-solid fa-gear fa-lg"></i></td>
 								<td>
 									<p>Displays the <span class="managerName">Overlay Manager</span> settings dialog
 										which allows you to change settings of the manager itself.
@@ -717,12 +732,12 @@
 
 
 			<h2>Using The Overlay Manager</h2>
-			<p>The following sub-sections detail the basic operation of the
+			<p>This sub-section details the basic operation of the
 				<span class="managerName">Overlay Manager</span> and how to manage fields and their contents.</p>
 			<details sub>
 				<summary></summary>
 			<div>
-				<h3 id="fontManager">The Font Manager</h3>
+				<h3 id="fontManager">The Font Manager &nbsp; <i class="fa fa-solid fa-download fa-lg"></i></h3>
 				<p>The <span class="managerName">Font Manager</span> supports all mainstream browser fonts
 					and allows you to upload any TrueType font for use on overlays.</p>
 				<details sub>
@@ -738,7 +753,7 @@
 									<ul>
 										<li><span class="moduleToolbarIconNumber">1</span>
 											<strong>Installed Fonts</strong> - Lists all the fonts
-											installed that can be used.</li>
+											that can be used.</li>
 										<li><span class="moduleToolbarIconNumber">2</span>
 											<strong>Delete Button</strong> - Deletes a previously-installed font.
 											<blockquote>It is not possible to delete a System Font.</blockquote>
@@ -748,11 +763,11 @@
 											</blockquote>
 										</li>
 										<li><span class="moduleToolbarIconNumber">3</span>
-											<strong>Add from daFont.com</strong> - Allows you to add a
+											<strong>Add from daFont.com</strong> - Adds a
 											font from daFont.com by entering a URL.
 											See <a href="#dafont">below</a>.</li>
 										<li><span class="moduleToolbarIconNumber">4</span>
-											<strong>Upload from zip file</strong> - Allows you to upload a
+											<strong>Upload from zip file</strong> - Uploads a
 											zip file to install fonts.
 											See <a href="#zip">below</a>.</li>
 									</ul>
@@ -763,32 +778,29 @@
 					<p>To use a font it must be installed in the <span class="managerName">Font Manager</span>
 						and there are two ways to do this, as described next.</p>
 					<ol>
-						<li><h4 id="dafont">Install from daFont.com</h4>
-							<p>In a separate browser window, navigate to the font page on
-								<a href="http://daFont.com" target="_blank">http://daFont.com</a>
-								that you wish to install, for example
-								https://www.dafont.com/led-sled.font.  Copy the font URL to the clipboard.
-								In the <span class="managerName">Font Manager</span> click the <strong>Add Font</strong>
-								button and enter the font URL.
-								The font will be installed and the installed fonts list refreshed.</p>
+						<li><h4 id="dafont">Add font from daFont.com</h4>
+							In a separate browser window, navigate to the font page on
+							<a href="http://daFont.com" target="_blank">http://daFont.com</a>
+							that you wish to install, for example
+							https://www.dafont.com/led-sled.font.  Copy the font URL to the clipboard.
+							Click the <strong>Add Font</strong> button and enter the font URL.
+							The font will be installed and the installed fonts list refreshed.
 							</li>
-						<li><h4 id="zip">Installation via a zip file</h4></li>
-							<p>First ensure that the font(s) you wish to installed are contained within a zip file.
-								You can create the zip file yourself or download from a place like
-								<a href="https://fonts.google.com" target="_blank">https://fonts.google.com/</a>.</p>
-							<p>In the <span class="managerName">Font Manager</span> click the <strong>Upload Font</strong>
-								button and browse to the zip file.
+						<li><h4 id="zip">Upload font via a zip file</h4></li>
+							First ensure that the font(s) you wish to installed are contained within a zip file.
+							You can create the zip file yourself or download from a place like
+							<a href="https://fonts.google.com" target="_blank">https://fonts.google.com/</a>.
+							<p>Click the <strong>Upload Font</strong> button and browse to the zip file.
 								The fonts will be extracted from the zip file and installed.</p>
 							</li>
 					</ol>
-
 					<blockquote>When installing fonts if any issues arise the
 						<span class="managerName">Font Manager</span> will display a notice
 						indicating why the font(s) could not be installed.</blockquote>
 					<hr class="separatorMinor">
 				</details>
 
-				<h3 id="imageManager">The Image Manager</h3>
+				<h3 id="imageManager">The Image Manager &nbsp; <i class="fa fa-arrow-alt-circle-up fa-lg"></i></h3>
 				<p>The <span class="managerName">Image Manager</span> allows you to upload images for use on overlays.
 				</p>
 				<details sub>
@@ -833,7 +845,7 @@
 				<details sub>
 					<summary></summary>
 					<ol>
-						<li>Manually add a new text field.
+						<li>Add a <em>new</em> text field.
 							<br>
 							Click the <strong>Add New Text Field</strong> icon
 							(<i class="fa fa-font fa-lg"></i>) on the toolbar to display the
@@ -844,17 +856,18 @@
 							The <a href="#propertyEditors">property editors</a> are
 							described in detail later in this document.
 						</li>
-						<li>Add fields via the <strong>Available Variables</strong> editor.
+						<li>Add a <em>pre-defined</em> variable in a new field.
 							<br>
-							Click the <strong>Available Variables</strong> icon
-							(<i class="fa fa-list fa-lg"></i>) on the toolbar to display the
-							and navigate to the variable you require. Click the plus symbol to add the
-							variable to the overlay. The field will start off with just the variable you selected;
+							Click the <span class="managerName">Variable Manager</span> icon
+							(<i class="fa fa-rectangle-list fa-lg"></i>) to display the <strong>Variable Manager</strong> editor.
+							and navigate to the <em>pre-defined</em> variable you require.
+							Click the plus symbol to add the variable to the overlay.
+							The field will start off with just the variable you selected;
 							you can add text or other variables to the field later.
 							Initially the field will be positioned at the top left but
 							can be dragged to wherever you want and its properties changed.
 						</li>
-						<li>Add an image field.
+						<li>Add a <em>pre-defined</em> image in a new field.
 							<br>
 							Click the <strong>Add New Image Field</strong> icon
 							(<i class="fa fa-image fa-lg"></i>)

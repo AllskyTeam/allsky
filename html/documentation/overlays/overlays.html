@@ -586,12 +586,12 @@
 							<tr>
 								<td class="moduleAnnotation">
 									<span class="moduleToolbarIconNumber">3</span>
-									<span class="moduleToolbar">Add New Image Field</span>
+									<span class="moduleToolbar">Add Image</span>
 								</td>
 								<td class="overlayIcon"><i class="fa fa-regular fa-image fa-lg"></i></td>
 								<td>
-									<p>Click to add an image to the overlay. The image must have
-										previously been uploaded using the
+									<p>Click to add an existing image to the overlay.
+										The image must have previously been uploaded using the
 										<span class="managerName">Image Manager</span>.</p>
 								</td>
 							</tr>
@@ -737,9 +737,9 @@
 			<details sub>
 				<summary></summary>
 			<div>
-				<h3 id="fontManager">The Font Manager &nbsp; <i class="fa fa-solid fa-download fa-lg"></i></h3>
+				<h3 id="fontManager">The Font Manager &nbsp; <i class="fa fa-solid fa-download"></i></h3>
 				<p>The <span class="managerName">Font Manager</span> supports all mainstream browser fonts
-					and allows you to upload any TrueType font for use on overlays.</p>
+					and allows you to upload any TrueType font for use in text fields.</p>
 				<details sub>
 					<summary></summary>
 
@@ -752,8 +752,9 @@
 								<td valign="top">
 									<ul>
 										<li><span class="moduleToolbarIconNumber">1</span>
-											<strong>Installed Fonts</strong> - Lists all the fonts
-											that can be used.</li>
+											<strong>Installed Fonts</strong> - Lists all the fonts that can be used.
+											System Fonts are marked as such in the <strong>Path</strong> column.
+											</li>
 										<li><span class="moduleToolbarIconNumber">2</span>
 											<strong>Delete Button</strong> - Deletes a previously-installed font.
 											<blockquote>It is not possible to delete a System Font.</blockquote>
@@ -763,12 +764,12 @@
 											</blockquote>
 										</li>
 										<li><span class="moduleToolbarIconNumber">3</span>
-											<strong>Add from daFont.com</strong> - Adds a
-											font from daFont.com by entering a URL.
+											<span class="btn btn-primary btn-small">Add Font</span> button
+											adds a font from daFont.com by entering a URL.
 											See <a href="#dafont">below</a>.</li>
 										<li><span class="moduleToolbarIconNumber">4</span>
-											<strong>Upload from zip file</strong> - Uploads a
-											zip file to install fonts.
+											<span class="btn btn-primary btn-small">Upload Font</span> button
+											uploads a zip file to install fonts.
 											See <a href="#zip">below</a>.</li>
 									</ul>
 								</td>
@@ -778,20 +779,23 @@
 					<p>To use a font it must be installed in the <span class="managerName">Font Manager</span>
 						and there are two ways to do this, as described next.</p>
 					<ol>
-						<li><h4 id="dafont">Add font from daFont.com</h4>
+						<li id="dafont"><strong>Add font from daFont.com</strong>
+							<br>
 							In a separate browser window, navigate to the font page on
 							<a href="http://daFont.com" target="_blank">http://daFont.com</a>
 							that you wish to install, for example
 							https://www.dafont.com/led-sled.font.  Copy the font URL to the clipboard.
-							Click the <strong>Add Font</strong> button and enter the font URL.
+							Click the <span class="btn btn-primary btn-small">Add Font</span> button and enter the font URL.
 							The font will be installed and the installed fonts list refreshed.
 							</li>
-						<li><h4 id="zip">Upload font via a zip file</h4></li>
+						<li id="zip"><strong>Upload font via a zip file</strong>
+							<br>
 							First ensure that the font(s) you wish to installed are contained within a zip file.
 							You can create the zip file yourself or download from a place like
 							<a href="https://fonts.google.com" target="_blank">https://fonts.google.com/</a>.
-							<p>Click the <strong>Upload Font</strong> button and browse to the zip file.
-								The fonts will be extracted from the zip file and installed.</p>
+							Click the <span class="btn btn-primary btn-small">Upload Font</span>
+							button and browse to the zip file.
+							The fonts will be extracted from the zip file and installed.</p>
 							</li>
 					</ol>
 					<blockquote>When installing fonts if any issues arise the
@@ -800,8 +804,9 @@
 					<hr class="separatorMinor">
 				</details>
 
-				<h3 id="imageManager">The Image Manager &nbsp; <i class="fa fa-arrow-alt-circle-up fa-lg"></i></h3>
+				<h3 id="imageManager">The Image Manager &nbsp; <i class="fa fa-regular fa-images"></i></h3>
 				<p>The <span class="managerName">Image Manager</span> allows you to upload images for use on overlays.
+					Allsky comes with several basic images.
 				</p>
 				<details sub>
 					<summary></summary>
@@ -814,11 +819,13 @@
 								<td valign="top">
 									<ul>
 										<li><span class="moduleToolbarIconNumber">1</span>
+											&nbsp; <i class="fa fa-solid fa-image fa-lg"></i> &nbsp;
 											<strong>Add selected image</strong> - Adds the selected image to the
-											overlay. The selected image is outlined in
-											<span style="color: red">red</span>.</li>
+											overlay. The selected image has a
+											<span style="border: 2px solid red;">red</span> border.</li>
 										<li><span class="moduleToolbarIconNumber">2</span>
-											<strong>Delete selected image</strong> - Deletes the selected image
+											&nbsp; <i class="fa fa-solid fa-trash fa-lg"></i> &nbsp;
+											<strong>Delete The Selected Image</strong> - Deletes the selected image
 											from the overlay.
 											<blockquote>When deleting an image it will also be deleted from the
 												Pi. If you want the image to remain on the Pi, select it in the
@@ -826,7 +833,7 @@
 											</blockquote>
 										</li>
 										<li><span class="moduleToolbarIconNumber">3</span>
-										<strong>Uploaded Images</strong> - Previously uploaded images
+										<strong>Uploaded Images Area</strong> - Previously uploaded images
 											that can be selected.
 											Not all images need to be used on the overlay.</li>
 										<li><span class="moduleToolbarIconNumber">4</span>
@@ -845,60 +852,63 @@
 				<details sub>
 					<summary></summary>
 					<ol>
-						<li>Add a <em>new</em> text field.
+						<li><strong>Add a <em>new</em> text field</strong>
 							<br>
 							Click the <strong>Add New Text Field</strong> icon
 							(<i class="fa fa-font fa-lg"></i>) on the toolbar to display the
 							<strong>Text Properties</strong> editor.
-							Enter some text and/or variables in the <strong>Item</strong> field of the editor.
-							The new field will initially be positioned in the top left of the captured image but
-							can be dragged to wherever you want and its properties set in the editor.
-							The <a href="#propertyEditors">property editors</a> are
-							described in detail later in this document.
+							Enter some text and/or variables in the <strong>Item</strong> field of the editor,
+							and set its properties as desired.
+							The <a href="#propertyEditors">property editors</a> are described below.
 						</li>
-						<li>Add a <em>pre-defined</em> variable in a new field.
+						<li><strong>Add a <em>pre-defined</em> variable in a new field</strong>
 							<br>
 							Click the <span class="managerName">Variable Manager</span> icon
-							(<i class="fa fa-rectangle-list fa-lg"></i>) to display the <strong>Variable Manager</strong> editor.
-							and navigate to the <em>pre-defined</em> variable you require.
-							Click the plus symbol to add the variable to the overlay.
+							(<i class="fa fa-regular fa-rectangle-list fa-lg"></i>)
+							to display the <strong>Variable Manager</strong> editor
+							and navigate to the variable you require.
+							Click the <span class="btn dark btn-primary btn-xs oe-list-add"><i class="fa-solid fa-plus oe-list-add"></i></span> button
+							to add the variable to the overlay.
 							The field will start off with just the variable you selected;
 							you can add text or other variables to the field later.
-							Initially the field will be positioned at the top left but
-							can be dragged to wherever you want and its properties changed.
+							See the <a href="#variableManager">Variable Manager</a> section for information on
+							other items in this dialog box.
 						</li>
-						<li>Add a <em>pre-defined</em> image in a new field.
+						<li><strong>Add a <em>pre-defined</em> image in a new field</strong>
 							<br>
-							Click the <strong>Add New Image Field</strong> icon
-							(<i class="fa fa-image fa-lg"></i>)
+							Click the <strong>Add Image</strong> icon
+							(<i class="fa fa-regular fa-image fa-lg"></i>)
 							to display the <strong>Image Properties</strong> editor.
 							Select the image you want from the drop
 							down and then move it to the overlay, resizing and rotating as required.
 							The image must have first been
 							uploaded via the <span class="managerName">Image Manager</span> as described above.
+							The <a href="#propertyEditors">property editors</a> are described below.
 						</li>
 					</ol>
+<!-- TODO: HOW DOES THE "Add Variable" BUTTON DIFFER FROM THE PLUS BUTTONS? -->
 					<hr class="separatorMinor">
 				</details>
 
 				<h3 id="propertyEditors">The property editors</h3>
-				<p>The property editors allow setting of the various elements of text and image fields.</p>
+				<p>The property editors allow modifying properties of text and image fields.</p>
 				<details sub>
 					<summary></summary>
-					<h4>Text Property Editor</h4>
+					<h4>Text Properties Editor</h4>
 					<table class="module-settings">
 						<tbody>
 							<tr>
-								<td><img allsky="true" src="text-property-editor.png" alt="Text Property Editor"
+								<td><img allsky="true" src="text-property-editor.png" alt="Text Properties Editor"
 										loading="lazy" /></td>
 								<td>
+									The properties in this editor are:
 									<ul>
 										<li><strong>Item</strong> - The text for the field, including any
 											variables.</li>
 										<li><strong>Format</strong> - Certain field types allow for
 											formatting, including dates, times, and numbers.
-											Details of the formats that can be entered is covered under
-											the formatting text section.</li>
+											Details of the formats that can be entered are covered in the
+											<a href=#formattingVariables">formatting text section</a>.</li>
 										<li><strong>Sample</strong> - A value that is displayed when the
 											'Display Sample Data' icon
 											(<i class="fa fa-regular fa-square-check fa-lg"></i>)
@@ -909,14 +919,18 @@
 											attribute can be used to set a value for the variable when it is empty.</li>
 										<li><strong>X</strong> - The 'x' position of the field in pixels from the left
 											of the image. If setting manually you need to take into account the
-											width of the field so it doesn't go off the right side.</li>
+											width of the field and the resolution of the image
+											so it doesn't go off the right side.</li>
 										<li><strong>Y</strong> - The 'y' position of the field in pixels from the top
 											of the image. If setting manually you need to take into account the
-											height of the field so it doesn't go off the bottom of the captured image.</li>
-										<li><strong>Rotation</strong> - The rotation of the text in degrees.</li>
+											height of the field and the resolution of the image
+											so it doesn't go off the bottom of the captured image.</li>
+										<li><strong>Rotation</strong> - The rotation of the text in degrees,
+											from 0 to 360.  Increasing numbers rotate the field clock wise.</li>
 										<li><strong>Name</strong> - The font to use for the field.</li>
 										<li><strong>Size</strong> - The font size.</li>
-										<li><strong>Opacity</strong> - The font opacity.</li>
+										<li><strong>Opacity</strong> - The font opacity,
+											from 0 (transparent) to 1 (opaque).</li>
 										<li><strong>Colour</strong> - The font colour.</li>
 										<li><strong>Stroke Size</strong> - The size in pixels for applying a stroke
 											to the field. A stroke can be useful to distinguish the text
@@ -925,22 +939,24 @@
 										<li><strong>Stroke Colour</strong> - The stroke colour to use for the font.</li>
 									</ul>
 									<blockquote>When using the 'Extra Data' files in json format all of the
-										attributes can be overridden in the json file allowing for external
-										control of how fields appear.
-										For example, you may want the CPU temperature to turn red if it gets too hot.
+										attributes can be overridden in the <span class="fileName">.json</span>
+										file allowing for external control of how fields appear.
+										For example, you may want the CPU temperature to turn
+										<span style="color: red; font-weight: bold">red</span> if it gets too hot.
 									</blockquote>
 								</td>
 							</tr>
 						</tbody>
 					</table>
 
-					<h4>Image Property Editor</h4>
+					<h4>Image Properties Editor</h4>
 					<table class="module-settings">
 						<tbody>
 							<tr>
-								<td><img allsky="true" src="image-property-editor.png" alt="Text Property Editor"
+								<td><img allsky="true" src="image-property-editor.png" alt="Image Properties Editor"
 										loading="lazy" /></td>
 								<td>
+									The properties in this editor are:
 									<ul>
 										<li><strong>Image</strong> - Select the image to add from the
 											dropdown. Images will only appear in the drop down after they have been
@@ -948,15 +964,20 @@
 										<li><strong>X</strong> - The 'x' position of the field in pixels from the left
 											of the captured image.
 											If setting manually you need to take into account the
-											width of the image so it doesn't go off the right side.</li>
+											width of the image and resolution of the captured image
+											so it doesn't go off the right side.</li>
 										<li><strong>Y</strong> - The 'y' position of the field in pixels from the top
 											of the captured image.
 											If setting manually you need to take into account the
-											height of the image so it doesn't go off the bottom of the captured image.</li>
+											height of the image and resolution of the captured image
+											so it doesn't go off the bottom of the captured image.</li>
 											</li>
-										<li><strong>Rotation</strong> - The rotation of the image in degrees.</li>
-										<li><strong>Opacity</strong> - The image opacity.</li>
-										<li><strong>Scale</strong> - Allows the image to be scaled and resized.</li>
+										<li><strong>Rotation</strong> - The rotation of the image in degrees,
+											from 0 to 360.  Increasing numbers rotate the image clock wise.</li>
+										<li><strong>Opacity</strong> - The image opacity,
+											from 0 (transparent) to 1 (opaque).</li>
+										<li><strong>Scale</strong> - Allows the image to be scaled and resized,
+											from 0 (image hidden) to 10 times the native resolution).</li>
 									</ul>
 								</td>
 							</tr>
@@ -965,7 +986,7 @@
 					<hr class="separatorMinor">
 				</details>
 
-				<h3>Variable Manager</h3>
+				<h3 id="variableManager">Variable Manager</h3>
 				<p>The <span class="managerName">Variable Manager</span> provides a mechanism for storing variables
 					and text to create
 					fields. Allsky ships with a default set of variables but this can be amended as required.</p>
@@ -981,6 +1002,7 @@
 					<p>The manager consists of two tabs.
 						The first, 'Allsky Variables' is the library
 						of available variables and the second, 'All Variables' is a list of all variables.</p>
+
 					<h4>Allsky Variables tab</h4>
 					<table class="two-col vtop">
 						<tbody>
@@ -995,9 +1017,8 @@
 									<ul>
 										<li>The <img allsky="true" src="variable-manager-add-field.png" alt="Add variable"
 												loading="lazy" />
-											button adds the field to
-											the overlay. It will initially be added at the top left allowing
-											you to drag it to where ever required. The <strong>Text Properties</strong>
+											button adds the field to the overlay.
+											The <strong>Text Properties</strong>
 											editor will also be displayed and populated with the relevant
 											data for the variable.</li>
 										<li>The <img allsky="true" src="variable-manager-edit-field.png" alt="Edit variable"
@@ -1037,7 +1058,7 @@
 											button adds the field to the 'Allsky Variables' tab making it
 											available for use on overlays.</li>
 									</ul>
-									<blockquote>If the add button is disabled then it means that the variable is alread
+									<blockquote>If the add button is disabled then the variable is already
 										in the 'Allsky Variables' list.</blockquote>
 									<blockquote><strong>IMPORTANT:</strong> This list is only populated if the debug
 										mode is enabled for the <span class="moduleName">Overlay Module</span>
@@ -1084,8 +1105,8 @@
 					</table>
 
 					<h4 id="formattingVariables">Formatting Variables</h4>
-					<p>Date, Time and Number fields can be formatted to alter their appearance. Each
-						variable type has a different set of codes for formatting. The codes are loosely
+					<p>Date, Time, and Number fields can be formatted to alter their appearance.
+						Each field type has a different set of codes for formatting. The codes are loosely
 						based on Python.</p>
 					<h5>Formatting Numbers</h5>
 					<table>
@@ -1366,8 +1387,8 @@
 										<li><strong>Background Image Opacity</strong> - When opacity of the
 											image being overlayed. Lower this if the image is bright to make
 											it easier to see the fields.</li>
-										<li><strong>Enable Debug Mode</strong> - Displays an additional toolbar
-											button with access to debug information.
+										<li><strong>Enable Debug Mode</strong> - Displays an additional toolbar button
+											(<i class="fa-solid fa-bug"></i>) with access to debug information.
 <!-- TODO: There are no details below:     See below for more details. -->
 											</li>
 									</ul>

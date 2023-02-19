@@ -602,7 +602,7 @@ class ALLSKYOVERLAY:
         r,g,b = ImageColor.getrgb(colour)
         #colour =  '#{:02x}{:02x}{:02x}'.format(b,g,r)
         
-        opacity = int((255/100) * (opacity*100))
+        opacity = int((255/100) * (float(opacity)*100))
         colour = (b,g,r,opacity)
         return colour
                 

@@ -185,3 +185,7 @@
   .dark #oe-debug-dialog-form textarea {
     color: black;
   }
+
+  .modal-dialog {
+    width: 770px !important;
+  }

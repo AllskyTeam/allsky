@@ -827,6 +827,15 @@ class OEUIMANAGER {
             $('#oe-app-options-background-opacity').val(this.#configManager.backgroundImageOpacity);
             $('#oe-app-options-debug').prop('checked', this.#configManager.debugMode);
             $('#oe-app-options-position-debug').prop('checked', this.#configManager.positiondebugMode);
+            $('#oe-app-options-grid-colour').val(this.#configManager.gridColour);
+
+            $('#oe-app-options-grid-colour').spectrum({
+                type: 'color',
+                showInput: true,
+                showInitial: true,
+                showAlpha: false,
+                preferredFormat: 'hex'
+            });            
             
             $('#optionsdialog').modal({
                 keyboard: false
@@ -867,6 +876,7 @@ class OEUIMANAGER {
             this.#configManager.gridVisible = $('#oe-app-options-show-grid').prop('checked');
             this.#configManager.gridSize = $("#oe-app-options-grid-size option").filter(":selected").val();
             this.#configManager.gridOpacity = $('#oe-app-options-grid-opacity').val() | 0;
+            this.#configManager.gridColour = $('#oe-app-options-grid-colour').val();
             this.#configManager.snapBackground = $('#oe-app-options-snap-background').prop('checked');
             this.#configManager.addListPageSize = $("#oe-app-options-add-list-size option").filter(":selected").val();
             this.#configManager.addFieldOpacity = $('#oe-app-options-add-field-opacity').val() | 0;
@@ -1373,10 +1383,24 @@ class OEUIMANAGER {
         }
     }
 
+    convertColour(colour, opacity) {
+        if (colour.charAt(0) == "#"){
+            colour = colour.substring(1,7);
+        }
+
+        let red = parseInt(colour.substring(0,2) ,16);
+        let green = parseInt(colour.substring(2,4) ,16);
+        let blue = parseInt(colour.substring(4,6) ,16)
+        opacity = opacity / 100;
+
+        return 'rgba(' + red.toString() + ',' + green.toString() + ',' + blue.toString() + ',' + opacity.toString() + ')';
+    }
+
     drawGrid() {
         this.#gridLayer.destroyChildren();
         if (this.#configManager.gridVisible) {
             if (this.#configManager.gridSize > 0) {
+                let gridColour = this.convertColour(this.#configManager.gridColour, this.#configManager.gridOpacity)
                 let stepSize = this.#configManager.gridSize;
 
                 let xSize = this.#oeEditorStage.width(),
@@ -1389,7 +1413,8 @@ class OEUIMANAGER {
                         new Konva.Line({
                             x: i * stepSize,
                             points: [0, 0, 0, ySize],
-                            stroke: 'rgba(255, 255, 255, ' + (this.#configManager.gridOpacity / 100).toString() + ')',
+                            //stroke: 'rgba(255, 255, 255, ' + (this.#configManager.gridOpacity / 100).toString() + ')',
+                            stroke: gridColour,
                             strokeWidth: 1,
                         })
                     );
@@ -1400,7 +1425,8 @@ class OEUIMANAGER {
                         new Konva.Line({
                             y: i * stepSize,
                             points: [0, 0, xSize, 0],
-                            stroke: 'rgba(255, 255, 255, ' + (this.#configManager.gridOpacity / 100).toString() + ')',
+                            //stroke: 'rgba(255, 255, 255, ' + (this.#configManager.gridOpacity / 100).toString() + ')',
+                            stroke: gridColour,
                             strokeWidth: 1,
                         })
                     );

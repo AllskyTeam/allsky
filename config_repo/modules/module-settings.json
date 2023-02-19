@@ -1,7 +1,7 @@
 {
     "watchdog": true,
-    "timeout": 10000,
-    "showexperimental": true,
+    "timeout": 30,
+    "showexperimental": false,
     "autoenable": true,
     "debugmode": true,
     "events": {
@@ -11,5 +11,5 @@
         "nightday": "Night to Day Transition",
         "periodic": "Periodic jobs"
     },
-    "periodictimer": 5
+    "periodictimer": 60
 }

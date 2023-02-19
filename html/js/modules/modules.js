@@ -15,6 +15,8 @@ class MODULESEDITOR {
     #buildUI() {
         $.LoadingOverlay('show');
 
+        $('[data-toggle="tooltip"]').tooltip();
+
         $('#modules-available').sortable('destroy');
         $('#modules-selected').sortable('destroy');
         $('#modules-available').empty();
@@ -289,8 +291,6 @@ class MODULESEDITOR {
             enabledHTML = '<div class="pull-right module-enable"><span class="module-enable-text">Enabled</span> <input type="checkbox" class="moduleenabler" ' + enabled + ' id="' + moduleKey + 'enabled" data-module="' + data.module + '"></div>';
         }
 
-        let type = 'fa-wrench';
-        let typeAlt = 'System Module';
         let deleteHtml = '';
         if (data.type !== undefined) {
             if (data.type == 'user') {
@@ -298,8 +298,6 @@ class MODULESEDITOR {
                 if (element == '#modules-selected') {
                     disabled = 'disabled="disabled"';
                 }
-                type = 'fa-user';
-                typeAlt = 'User Module';
                 deleteHtml = '<button type="button" class="btn btn-sm btn-danger module-delete-button" id="' + moduleKey + 'delete" data-module="' + data.module + '" ' + disabled + '>Delete</button>';
             }
         }
@@ -322,7 +320,7 @@ class MODULESEDITOR {
         let template = '\
             <div id="' + moduleKey + '" data-id="' + data.module + '" class="list-group-item ' + locked + '"> \
                 <div class="panel panel-default"> \
-                    <div class="panel-heading"><i class="fa fa-bars fa-fw"></i>&nbsp;<i class="fa ' + type + ' fa-fw" title="' + typeAlt + '"></i> ' + data.metadata.name + ' ' + version + ' ' + enabledHTML + '</div> \
+                    <div class="panel-heading"> ' + data.metadata.name + ' ' + version + ' ' + enabledHTML + '</div> \
                     <div class="panel-body">' + experimental + data.metadata.description + ' <div class="pull-right">' + deleteHtml + ' ' + settingsHtml + '</div></div> \
                 </div> \
             </div>';
@@ -886,18 +884,18 @@ class MODULESEDITOR {
             let html = '';
             html += '<div class="row">';                
             html += '<div class="col-md-3"><strong>Module</strong></div>';
-            html += '<div class="col-md-2"><strong>Run Time (ms)</strong></div>';
+            html += '<div class="col-md-2"><strong>Run Time (s)</strong></div>';
             html += '<div class="col-md-7"><strong>Result</strong></div>';
             html += '</div>';
 
             for (let key in result.selected) {
                 let data = result.selected[key];
-                let runTime = parseInt(data.lastexecutiontime,10);
+                let runTime = parseFloat(data.lastexecutiontime);
                 totalTime += runTime;
 
                 html += '<div class="row">';                
                 html += '<div class="col-md-3">' + data.module + '</div>';
-                html += '<div class="col-md-2"><div class ="pull-right">' + runTime + '</div></div>';
+                html += '<div class="col-md-2"><div class ="pull-right">' + runTime.toFixed(2) + '</div></div>';
                 html += '<div class="col-md-7">' + data.lastexecutionresult + '</div>';
                 html += '</div>';
             }            
@@ -908,8 +906,8 @@ class MODULESEDITOR {
 
             html += '<div class="row">';                
             html += '<div class="col-md-3"><div class="pull-right"><strong>Total</strong></div></div>';
-            html += '<div class="col-md-2"><div class="pull-right"><strong>' + totalTime + '</strong></div></div>';
-            html += '<div class="col-md-7"><strong>' + totalTime/ 1000 + ' Seconds</strong></div>';
+            html += '<div class="col-md-2"><div class="pull-right"><strong>' + totalTime.toFixed(2) + '</strong></div></div>';
+            html += '<div class="col-md-7"></div>';
             html += '</div>';
 
             $('#module-editor-debug-dialog-content').append(html);

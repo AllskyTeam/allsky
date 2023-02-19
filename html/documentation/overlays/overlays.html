@@ -59,11 +59,11 @@
 				Some of the key features of the include:
 			</p>
 			<ul>
-				<li><span class="managerName">Overlay Manager</span> - The main application for managing overlays:
+				<li><strong>Overlay Editor</strong> - The web page for managing overlays:
 					<ul class="minimalPadding">
 						<li><strong>Drag and Drop interface</strong> - Fields can be dragged around the screen
 							to position them.</li>
-						<li><strong>Customisable Interface</strong> - The <span class="managerName">Overlay Manager</span>
+						<li><strong>Customisable Interface</strong> - The <strong>Overlay Editor</strong>
 							user interface can be highly customised to your requirements.</li>
 						<li><span class="managerName">Font Manager</span> - You can upload any TrueType font and use
 							it in the overlays, or use any font already on your Pi.</li>
@@ -91,15 +91,15 @@
 				</li>
 			</ul>
 
-			<h3>How overlays work</h3>
+			<h4>How overlays work</h4>
 			<p>
-			<blockquote>The <span class="managerName">Overlay Manager</span> is what you use to define what information
+			<blockquote>The <strong>Overlay Editor</strong> is what you use to define what information
 				you want on the captured images and where it should go.
 				Once you have specified that information, you won't use the manager again until
 				you want to change something.
 				<br>
 				The <span class="moduleName">Overlay Module</span> is invoked every time an image is captured and places
-				the information you specified in the <span class="managerName">Overlay Manager</span> onto the images.
+				the information you specified in the <strong>Overlay Editor</strong> onto the images.
 				This module is one of
 				<a allsky="true" href="/documentation/modules/modules.html">several modules</a> that
 				can be invoked after every image is captured.
@@ -111,9 +111,9 @@
 				then selecting <span class="WebUIValue">overlay</span> in the
 				<span class="WebUISetting">Image Overlay</span> setting.
 				This disables all the remaining settings in the <strong>Image overlay settings</strong> section
-				(you will specify those items in the <span class="managerName">Overlay Manager</span>).
+				(you will specify those items in the <strong>Overlay Editor</strong>).
 			</p>
-			<p>In the <span class="managerName">Overlay Manager</span> you specify what information you want to go where,
+			<p>In the <strong>Overlay Editor</strong> you specify what information you want to go where,
 				and what it should look like.
 				For example, you want the date and time the image was taken to be in blue, 12 point font
 				in the upper left of the image and a compass rotated 20 degrees so it's pointing north
@@ -125,8 +125,8 @@
 				about the image to the <span class="moduleName">Overlay Module</span>.
 				Examples include the time the image was taken, the exposure length,
 				and the sensor temperature.
-				This information is put into <strong>system variables</strong> that can be used
-				per you configuration in the <span class="managerName">Overlay Manager</span>, which then:
+				This information is put into <strong>System Variables</strong> that can be used
+				per you configuration in the <strong>Overlay Editor</strong>, which then:
 			</p>
 			<ol class="minimalPadding">
 				<li>Replaces the system variables with their values and adds them to the captured image.</li>
@@ -135,7 +135,7 @@
 			</ol>
 
 			<h2>Allsky Fields and Variables</h2>
-			<p>The heart of the <span class="managerName">Overlay Manager</span> is fields.
+			<p>The heart of the <strong>Overlay Editor</strong> is <strong>fields</strong>.
 				There are two types of fields:
 				<ol class="minimalPadding">
 					<li><strong>Text</strong> fields consist of text and/or system and module variables.
@@ -209,7 +209,7 @@
 							<tbody>
 								<tr>
 									<td><code>${DATE}</code></td>
-									<td>20221024</td>
+									<td>20230228</td>
 									<td>The date the image was taken.</td>
 								</tr>
 								<tr>
@@ -220,38 +220,47 @@
 								<tr>
 									<td><code>${GAIN}</code></td>
 									<td>4.692540</td>
-									<td>The gain used for the image.</td>
+									<td>The gain used for the image.
+										If auto-gain was disabled, this value will be what you set in
+										the <span class="WebUISetting">Gain</span> setting in the WebUI,
+										otherwise it's the value the auto-gain algorithm used.</td>
 								</tr>
 								<tr>
 									<td><code>${AUTOGAIN}</code></td>
 									<td>1</td>
-									<td>1 if auto-gain was enabled, 0 if disabled.</td>
+									<td>1 if auto-gain was enabled, 0 if disabled.
+										Taken from the <span class="WebUISetting">Auto-Gain</span> WebUI setting.</td>
 								</tr>
 								<tr>
 									<td><code>${sAUTOGAIN}</code></td>
 									<td>(auto)</td>
 									<td>A string containing either <strong>(auto)</strong> if auto-gain was
 										enabled, or blank.  Useful to put after the gain, e.g.,
-										<code>Gain: ${GAIN} ${sAUTOGAIN}</code>.</td>
+										<code class="nowrap">Gain: ${GAIN} ${sAUTOGAIN}</code>.</td>
 								</tr>
 								<tr>
 									<td><code>${EXPOSURE_US}</code></td>
 									<td>90000000</td>
-									<td>The exposure of the image in micro seconds.</td>
+									<td>The exposure of the image in micro seconds.
+										If auto-exposure was disabled, this value will be what you set in
+										the <span class="WebUISetting">Manual Exposure</span> setting in the WebUI,
+										otherwise it's the value the auto-exposure algorithm used.</td>
 								</tr>
 								<tr>
 									<td><code>${sEXPOSURE}</code></td>
-									<td>90.0 sec</td>
+									<td>218 ms (0.2 sec)</td>
 									<td>The exposure of the image in a human readable format.
 										The format changes depending on the exposure time,
-										for example, very short exposures may be <code>218.48 ms</code>
-										whereas a long exposure may be <code>45.3 sec</code>.
+										for example, very short exposures may be
+										<code class="nowrap">218.48 ms (0.2 sec)</code>
+										whereas a long exposure may be <code class="nowrap">45.3 sec</code>.
 									</td>
 								</tr>
 								<tr>
 									<td><code>${AUTOEXPOSURE}</code></td>
 									<td>1</td>
-									<td>1 if auto-exposure was enabled, 0 if auto-exposure was disabled.</td>
+									<td>1 if auto-exposure was enabled, 0 if auto-exposure was disabled.
+										Taken from the <span class="WebUISetting">Auto-Exposure</span> WebUI setting.</td>
 								</tr>
 								<tr>
 									<td><code>${sAUTOEXPOSURE}</code></td>
@@ -260,12 +269,12 @@
 										similar to <code>${sAUTOGAIN}</code>.</td>
 								</tr>
 								<tr>
-									<td><code>${TEMPERATURE}</code></td>
+									<td><code>${TEMPERATURE_C}</code> and <code>${TEMPERATURE_F}</code></td>
 									<td>36</td>
 									<td>The temperature of the camera sensor, if available.
 										This does NOT include the <code>C</code> or <code>F</code> for
 										centigrade or fahrenheit so you'll need to add them yourself, e.g.,
-										<br><code>Sensor Temp: ${TEMPERATURE} C</code>.</td>
+										<code class="nowrap">Sensor Temp: ${TEMPERATURE_C} C</code>.</td>
 								</tr>
 								<tr>
 									<td><code>${MEAN}</code></td>
@@ -283,33 +292,31 @@
 								</tr>
 							</tbody>
 						</table>
-						<hr class="separator">
+						<hr class="separatorMinor">
 					</details>
 
 					<h3>Module variables</h3>
 					<p>Any module can create variables for use in the <span class="moduleName">Overlay Module</span>.
 						For this reason it is important that the <span class="moduleName">Overlay Module</span>
-						runs as late as possible within the module flow.</p>
-						Module variables are used the same way system variables are.
-					</p>
-					<details sub>
-						<summary></summary>
-						<p>As an example, the <span class="moduleName">Star Count Module</span> creates a
-							variabled called <code>${STARCOUNT}</code> and passes it to the next module.</p>
-						<p>Please refer to the documentation on each module for any variables that it makes available.</p>
-						<hr class="separator">
-					</details>
+						runs as late as possible within the module flow.
+						As an example, the <span class="moduleName">Star Count Module</span> creates a
+						variabled called <code>${STARCOUNT}</code> and passes it to the next module.</p>
+					<p>Please refer to the documentation on each module for any variables that it makes available.</p>
 
-					<h3>Extra data variables</h3>
-					<p>Allsky was always able to add additional information to captured images but in a limited way.
-						The <span class="managerName">Overlay Manager</span> provides a much more sophisticated method for
-						making this data available.</p>
+					<h3>Extra Data variables</h3>
+					<p>The legacy overlay method can add "extra data" to captured images but in a limited way
+						via its single <span class="WebUISetting">Extra Text File</span> setting.
+						The module method provides a more sophisticated method for making even more data available.</p>
 					<details sub>
 						<summary></summary>
 						<blockquote>This is an advanced topic and as such you will need to have an understanding
-							of the Linux file system and how to manage files within it.</blockquote>
-						<p>All extra data now resides in the <span class="fileName">~/allsky/tmp/extra</span> directory
-							which the <span class="managerName">Overlay Manager</span> will use to create variables.</p>
+							of the Linux file system and how to manage files within it.
+							The <a allsky="true" href="/documentation/basics/Linux.html">Linux Basics page</a>
+							should provide the Linux understanding you need.
+						</blockquote>
+						<p>You can have multiple "Extra Text Files" which reside in
+							<span class="fileName">~/allsky/tmp/extra</span> and are used
+							to create variables which can then be added to the overlay.</p>
 						<p>Let's assume you want to add weather data to your images. You first need to create
 							or obtain a program that gathers that data and writes it to a file. How you obtain
 							that file is outside the scope of this documentation, but the program needs to write
@@ -325,11 +332,11 @@
 
 						<h4>Text Files</h4>
 						<p>Text files must end with a <span class="fileName">.txt</span> extension.
-							The format is a simple name=value structure as shown below:</p>
+							The format is a simple <strong>name=value</strong> structure as shown below:</p>
 						<table class="module-settings">
 							<thead>
 								<tr>
-									<th width="400">File Contents</th>
+									<th width="300">File Contents</th>
 									<th>Allsky Result</th>
 								</tr>
 							</thead>
@@ -337,10 +344,13 @@
 								<tr>
 									<td valign="top">
 										<div class="code">
-											AGTEMP=14.0C<br>
-											AGHUMIDITY=90.1%<br>
-											AGHEATERCURRENT=215<br>
-											AGSTAT=Night<br>
+											<table><tbody>
+											<tr class="noBackground noBorder"><td class="noBorder">&nbsp;</td></tr>
+											<tr class="noBackground noBorder"><td class="noBorder">AGTEMP=14.0C</td></tr>
+											<tr class="noBackground noBorder"><td class="noBorder">AGHUMIDITY=90.1%</td></tr>
+											<tr class="noBackground noBorder"><td class="noBorder">AGHEATERCURRENT=215</td></tr>
+											<tr class="noBackground noBorder"><td class="noBorder">AGSTAT=Night</td></tr>
+											</tbody></table>
 										</div>
 									</td>
 									<td>
@@ -378,23 +388,29 @@
 							fails or is not running. To allow Allsky to detect this you can tell Allsky
 							to ignore the files in the <span class="fileName">extra</span>
 							directory when they are over a certain age.
-							For <span class="fileName">.txt</span> files this value is specified in the
-							<span class="managerName">Overlay Manager</span> settings dialog.</p>
+							For <span class="fileName">.txt</span> files there is a single value which is specified
+							in the <strong>Overlay Editor</strong> settings dialog box.
+							See the next section for how to specify the value for
+							<span class="fileName">.json</span> files.</p>
 
 						<h4>JSON Files</h4>
-						<p>json files are more complex in their structure but provide a lot more flexibility
+						<p><span class="fileName">.json</span> files are more complex in their structure
+							but provide a lot more flexibility
 							for you to add your own variables and even control the attributes of a field.</p>
 						<table class="three-col">
 							<thead>
 								<tr>
-									<td>This json will produce exactly the same variables as the txt file
-										described above. The data will expire as defined in the
-										<span class="managerName">Overlay Manager</span> settings dialog.</td>
-									<td>This json includes expiry times for some of the elements. In this case
+									<td>This <span class="fileName">.json</span> file will produce exactly the same
+										variables as the <span class="fileName">.txt</span> file described above.
+										The data will expire as defined in the
+										<strong>Overlay Editor</strong> settings dialog.</td>
+									<td>This <span class="fileName">.json</span> file
+										includes expiry times (in seconds) for some of the elements. In this case
 										the expiry time for the relevant elements will be used and the
-										<span class="managerName">Overlay Manager</span>
+										<strong>Overlay Editor</strong>
 										dialog expiry setting for the remaining variables.</td>
-									<td>This json, which has been truncated for brevity, includes all of the
+									<td>This <span class="fileName">.json</span> file,
+										which has been truncated for brevity, includes all of the
 										attributes that a field can set. It also adds an image.</td>
 								</tr>
 							</thead>
@@ -462,9 +478,6 @@
 										<div class="indent2">"AGHUMIDITY": {</div>
 										<div class="indent3">"value": "90.1%",</div>
 										<div class="indent2">},</div>
-										<div class="indent2">"AGCLOUD": {</div>
-										<div class="indent3">"value": "11%",</div>
-										<div class="indent2">},</div>
 										<div class="indent2">"AGSCOPE": {</div>
 										<div class="indent3">"image": "crosshair.png",</div>
 										<div class="indent3">"x": 300,</div>
@@ -485,7 +498,8 @@
 													within a field.</li>
 												<li>Images can by dynamically added to the captured image. So if you
 													wanted to control when an image is added or not added,
-													simply add it to, or remove it from, the json file.</li>
+													the program that creates the file can
+													simply add the image's json code, or not add it, to the .json file.</li>
 											</ul>
 										</blockquote>
 								</td>
@@ -493,38 +507,42 @@
 
 						</table>
 
-						<p>The txt/json files must be created by some application outside of Allsky and there
-							are a few things that must be considered when creating the files:</p>
+						<p>The "extra" files must be created by an application you provide and there
+							are a few things that must be considered when creating these files:</p>
 						<ul>
-							<li><strong>Variable Name</strong> - Since you could end up conflicting with the names
-								of Allsky system variables its best to prefix your own variables. This will help
-								prevent any clashes. In the examples above the variables are prefixed with
-								<code>AG</code>.
+							<li><strong>Variable Names</strong> - Since you could end up conflicting with the names
+								of Allsky system variables it's best to prefix your own variables.
+								In the examples above the variables are prefixed with <code>AG</code>
+								(the initials of the person who created the program, but you can use anything).
 							</li>
 							<li><strong>Permissions</strong> - You must ensure that the files created in the
 								<span class="fileName">extra</span> directory can be read by Allsky.
 								It is up to the application creating them to ensure the permissions are correct.
-								The <span class="managerName">Overlay Manager</span> will silently ignore any
+								Using <code class="nowrap">chmod 664</code> should suffice.
+								The <span class="moduleName">Overlay Module</span> will silently ignore any
 								files it cannot read.</li>
 						</ul>
-						<hr class="separator">
 					</details>
-
+					<hr class="separatorSmall">
 				</details>
 			</div>
 
-			<h2>The Main Overlay Manager User Interface</h2>
+			<h2>The Main Overlay Editor User Interface</h2>
 			<div>
-				<p>The <span class="managerName">Overlay Manager</span> consists of two key areas:
+				<p>The <strong>Overlay Editor</strong> consists of two key areas:
 					the <strong>toolbar</strong> and <strong>working area</strong>.  The working area
 					contains the latest image captured in the background.</p>
 				<details sub>
 					<summary></summary>
-					<p>There are various settings to control
-						how visible the image is. A grid is also overlayed on the working area by default to allow easier
-						placement of fields, and there are various settings to control how the grid is displayed.
-					</p>
+					<p><blockquote>
+						New fields are initially added to the upper left corner of the overlay but can be
+						moved anywhere you want - just drag and drop!
+						<p>If you added a field by mistake, click on the <i class="fa fa-times fa-lg"></i>
+							icon before doing anything else.</p>
+					</blockquote></p>
+					<div>
 					<img allsky="true" src="overlay-window.png" alt="The Main Overlay Window" loading="lazy" class="imgCenter" />
+					</div>
 					<table>
 						<thead>
 							<tr>
@@ -535,63 +553,77 @@
 						</thead>
 						<tbody>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">1</span> - Save</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">1</span>
+									<span class="moduleToolbar">Save The Current Configuration</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-save fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-floppy-disk fa-lg"></i></td>
 								<td>
-									<p>This is enabled when any changes have been made that require saving.
-									</p>
+									<p>This is enabled and turns <span style="color: green; font-weight: bold">green</span>
+										when any changes have been made that require saving.
+										The word "Modified" is also appended to the tab label,
+										i.e., <span class="nowrap">"Overlay Editor - Modified"</span>.
+										</p>
 									<blockquote>This icon is only enabled when <em>leaving</em> certain fields.
 										For example if you change a field label you must click out of the field
 										before this icon will be enabled.</blockquote>
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">2</span> - Add New Text Field</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">2</span>
+									<span class="moduleToolbar">Add New Text Field</span>
 								</td>
 								<td class="overlayIcon"><i class="fa fa-font fa-lg"></i></td>
 								<td>
-									<p>Click to add a new text field or label. When adding
-										a field you must manually enter the correct field label.</p>
+									<p>Click to add a new field with text and/or variables to the overlay.
+										<!-- WHAT DOES THIS MEAN:
+										When adding a field you must manually enter the correct field label.
+										-->
+										</p>
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">3</span> - Add New Image Field</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">3</span>
+									<span class="moduleToolbar">Add Existing Image</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-image fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-regular fa-image fa-lg"></i></td>
 								<td>
-									<p>Click to add an image to the overlay. The image must have
-										previously been uploaded using the
+									<p>Click to add an existing image to the overlay.
+										The image must have previously been uploaded using the
 										<span class="managerName">Image Manager</span>.</p>
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">4</span> - Delete the selected field</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">4</span>
+									<span class="moduleToolbar">Delete The Selected Field</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-times fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-xmark fa-lg"></i></td>
 								<td>
 									<p>Click to delete the selected field.
-										The "del" or "delete" keys on the keyboard can also be used.</p>
-										The button is only enable when a field is selected.
+										The "del" or "delete" keys on the keyboard can also be used.
+										The icon is only enable turns
+										<span style="color: green; font-weight: bold">green</span>
+										when a field is selected.</p>
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">5</span> - Add a field</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">5</span>
+									<span class="moduleToolbar">Variable Manager</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-list fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-regular fa-rectangle-list fa-lg"></i></td>
 								<td>
 									<p>Click to add a <em>pre-defined</em> field from the
-										<strong>Available Variables</strong> editor.</p>
+										<span class="managerName">Variable Manager</span>.</p>
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">6</span> - Test fields</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">6</span>
+									<span class="moduleToolbar">Display Sample Data</span>
 								</td>
 								<td class="overlayIcon"><i class="fa fa-regular fa-square-check fa-lg"></i></td>
 								<td>
@@ -601,44 +633,50 @@
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">7</span> - Zoom In</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">7</span>
+									<span class="moduleToolbar">Zoom in</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-search-plus fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-magnifying-glass-plus fa-lg"></i></td>
 								<td>
 									<p>Click to zoom in on the image.</p>
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">8</span> - Zoom Out</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">8</span>
+									<span class="moduleToolbar">Zoom Out</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-search-minus fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-magnifying-glass-minus fa-lg"></i></td>
 								<td>
 									<p>Click to zoom out of the image.</p>
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">9</span> - Full Size</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">9</span>
+									<span class="moduleToolbar">View Full Size</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-compress-alt fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-solid fa-up-right-and-down-left-from-center fa-lg"></i></td>
 								<td>
 									<p>Click to zoom to the full size of the image.</p>
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">10</span> - Fit To Screen</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">10</span>
+									<span class="moduleToolbar">Fit to Window</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-expand-alt fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-solid fa-down-left-and-up-right-to-center fa-lg"></i></td>
 								<td>
 									<p>Click to zoom to fit the image on the screen.</p>
 								</td>
 							</tr>
+<!-- TODO: add "fa-solid fa-bug"  for "Debug Info" ??? -->
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">11</span> - Display Font Manager</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">11</span>
+									<span class="moduleToolbar">Font Manager</span>
 								</td>
 								<td class="overlayIcon"><i class="fa fa-solid fa-download fa-lg"></i></td>
 								<td>
@@ -647,36 +685,37 @@
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">12</span> - Display Image Manager</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">12</span>
+									<span class="moduleToolbar">Image Manager</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-arrow-alt-circle-up fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-regular fa-images fa-lg"></i></td>
 								<td>
 									<p>Displays the <span class="managerName">Image Manager</span>.
 									See the <a href="#imageManager">Image Manager</a> section for more details.</p>
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">13</span> - Display Settings</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">13</span>
+									<span class="moduleToolbar">Layout and App Options</span>
 								</td>
-								<td class="overlayIcon"><i class="fa fa-cog fa-lg"></i></td>
+								<td class="overlayIcon"><i class="fa fa-solid fa-gear fa-lg"></i></td>
 								<td>
-									<p>Displays the <span class="managerName">Overlay Manager</span> settings dialog
+									<p>Displays the <strong>Overlay Editor</strong> settings dialog
 										which allows you to change settings of the manager itself.
-										See the <a href="#overlayManagerSettings">Overlay Manager Settings</a>
-										section for more details.
-									</p>
+										See the <a href="#overlayEditorSettings">Overlay Editor Settings</a>
+										section for more details.</p>
 								</td>
 							</tr>
 							<tr>
-								<td>
-									<p class="moduleToolbar"><span class="moduleToolbarIconNumber">14</span> - Working Area</p>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">14</span>
+									<span class="moduleToolbar">Working Area</span>
 								</td>
 								<td></td>
 								<td>
-									<p>The main working area. The image here is the last one captured by Allsky
-									</p>
+									<p>The main working area. The image here is the last one captured by Allsky</p>
 									<blockquote>It's best to create overlays when Allsky is running
 										since you will have access to the latest image. Whilst there is nothing
 										stopping you creating overlays when Allsky is not running bear in
@@ -687,18 +726,20 @@
 							</tr>
 						</tbody>
 					</table>
-					<hr class="separator">
+					<hr class="separatorSmall">
 				</details>
 			</div>
 
 
-			<h2>Using The Overlay Manager</h2>
-			<p>The following sub-sections detail the basic operation of the
-				<span class="managerName">Overlay Manager</span> and how to manage fields and their contents.</p>
+			<h2>Using The Overlay Editor</h2>
+			<p>This sub-section details the basic operation of the
+				<strong>Overlay Editor</strong> and how to manage fields and their contents.</p>
+			<details sub>
+				<summary></summary>
 			<div>
-				<h3 id="fontManager">The Font Manager</h3>
+				<h3 id="fontManager">The Font Manager &nbsp; <i class="fa fa-solid fa-download"></i></h3>
 				<p>The <span class="managerName">Font Manager</span> supports all mainstream browser fonts
-					and allows you to upload any TrueType font for use on overlays.</p>
+					and allows you to upload any TrueType font for use in text fields.</p>
 				<details sub>
 					<summary></summary>
 
@@ -711,8 +752,9 @@
 								<td valign="top">
 									<ul>
 										<li><span class="moduleToolbarIconNumber">1</span>
-											<strong>Installed Fonts</strong> - Lists all the fonts
-											installed that can be used.</li>
+											<strong>Installed Fonts</strong> - Lists all the fonts that can be used.
+											System Fonts are marked as such in the <strong>Path</strong> column.
+											</li>
 										<li><span class="moduleToolbarIconNumber">2</span>
 											<strong>Delete Button</strong> - Deletes a previously-installed font.
 											<blockquote>It is not possible to delete a System Font.</blockquote>
@@ -722,12 +764,12 @@
 											</blockquote>
 										</li>
 										<li><span class="moduleToolbarIconNumber">3</span>
-											<strong>Add from daFont.com</strong> - Allows you to add a
-											font from daFont.com by entering a URL.
+											<span class="btn btn-primary btn-small">Add Font</span> button
+											adds a font from daFont.com by entering a URL.
 											See <a href="#dafont">below</a>.</li>
 										<li><span class="moduleToolbarIconNumber">4</span>
-											<strong>Upload from zip file</strong> - Allows you to upload a
-											zip file to install fonts.
+											<span class="btn btn-primary btn-small">Upload Font</span> button
+											uploads a zip file to install fonts.
 											See <a href="#zip">below</a>.</li>
 									</ul>
 								</td>
@@ -737,33 +779,34 @@
 					<p>To use a font it must be installed in the <span class="managerName">Font Manager</span>
 						and there are two ways to do this, as described next.</p>
 					<ol>
-						<li><h4 id="dafont">Install from daFont.com</h4>
-							<p>In a separate browser window, navigate to the font page on
-								<a href="http://daFont.com" target="_blank">http://daFont.com</a>
-								that you wish to install, for example
-								https://www.dafont.com/led-sled.font.  Copy the font URL to the clipboard.
-								In the <span class="managerName">Font Manager</span> click the <strong>Add Font</strong>
-								button and enter the font URL.
-								The font will be installed and the installed fonts list refreshed.</p>
+						<li id="dafont"><strong>Add font from daFont.com</strong>
+							<br>
+							In a separate browser window, navigate to the font page on
+							<a href="http://daFont.com" target="_blank">http://daFont.com</a>
+							that you wish to install, for example
+							https://www.dafont.com/led-sled.font.  Copy the font URL to the clipboard.
+							Click the <span class="btn btn-primary btn-small">Add Font</span> button and enter the font URL.
+							The font will be installed and the installed fonts list refreshed.
 							</li>
-						<li><h4 id="zip">Installation via a zip file</h4></li>
-							<p>First ensure that the font(s) you wish to installed are contained within a zip file.
-								You can create the zip file yourself or download from a place like
-								<a href="https://fonts.google.com" target="_blank">https://fonts.google.com/</a>.</p>
-							<p>In the <span class="managerName">Font Manager</span> click the <strong>Upload Font</strong>
-								button and browse to the zip file.
-								The fonts will be extracted from the zip file and installed.</p>
+						<li id="zip"><strong>Upload font via a zip file</strong>
+							<br>
+							First ensure that the font(s) you wish to installed are contained within a zip file.
+							You can create the zip file yourself or download from a place like
+							<a href="https://fonts.google.com" target="_blank">https://fonts.google.com/</a>.
+							Click the <span class="btn btn-primary btn-small">Upload Font</span>
+							button and browse to the zip file.
+							The fonts will be extracted from the zip file and installed.</p>
 							</li>
 					</ol>
-
 					<blockquote>When installing fonts if any issues arise the
 						<span class="managerName">Font Manager</span> will display a notice
 						indicating why the font(s) could not be installed.</blockquote>
-					<hr class="separator">
+					<hr class="separatorMinor">
 				</details>
 
-				<h3 id="imageManager">The Image Manager</h3>
+				<h3 id="imageManager">The Image Manager &nbsp; <i class="fa fa-regular fa-images"></i></h3>
 				<p>The <span class="managerName">Image Manager</span> allows you to upload images for use on overlays.
+					Allsky comes with several basic images.
 				</p>
 				<details sub>
 					<summary></summary>
@@ -776,19 +819,21 @@
 								<td valign="top">
 									<ul>
 										<li><span class="moduleToolbarIconNumber">1</span>
+											&nbsp; <i class="fa fa-solid fa-image fa-lg"></i> &nbsp;
 											<strong>Add selected image</strong> - Adds the selected image to the
-											overlay. The selected image is outlined in
-											<span style="color: red">red</span>.</li>
+											overlay. The selected image has a
+											<span style="border: 2px solid red;">red</span> border.</li>
 										<li><span class="moduleToolbarIconNumber">2</span>
-											<strong>Delete selected image</strong> - Deletes the selected image
+											&nbsp; <i class="fa fa-solid fa-trash fa-lg"></i> &nbsp;
+											<strong>Delete The Selected Image</strong> - Deletes the selected image
 											from the overlay.
-											<blockquote>When deleting an image it will also be deleted from the
-												Pi. If you want the image to remain on the Pi, select it in the
-												<span class="managerName">Overlay Manager</span> and delete it.
+											<blockquote>When deleting an image it will also be deleted from the Pi.
+												If you want the image to remain on the Pi, select it in the
+												<strong>Overlay Editor</strong> and delete it.
 											</blockquote>
 										</li>
 										<li><span class="moduleToolbarIconNumber">3</span>
-										<strong>Uploaded Images</strong> - Previously uploaded images
+										<strong>Uploaded Images Area</strong> - Previously uploaded images
 											that can be selected.
 											Not all images need to be used on the overlay.</li>
 										<li><span class="moduleToolbarIconNumber">4</span>
@@ -799,7 +844,7 @@
 							</tr>
 						</tbody>
 					</table>
-					<hr class="separator">
+					<hr class="separatorMinor">
 				</details>
 
 				<h3>Adding fields to the overlay</h3>
@@ -807,61 +852,66 @@
 				<details sub>
 					<summary></summary>
 					<ol>
-						<li>Manually add a new text field.
+						<li><strong>Add a <em>new</em> text field</strong>
 							<br>
 							Click the <strong>Add New Text Field</strong> icon
 							(<i class="fa fa-font fa-lg"></i>) on the toolbar to display the
 							<strong>Text Properties</strong> editor.
-							Enter some text and/or variables in the <strong>Item</strong> field of the editor.
-							The new field will initially be positioned in the top left of the captured image but
-							can be dragged to wherever you want and its properties set in the editor.
-							The <a href="#propertyEditors">property editors</a> are
-							described in detail later in this document.
+							Enter some text and/or variables in the <strong>Item</strong> field of the editor,
+							and set its properties as desired.
+							The <a href="#propertyEditors">property editors</a> are described below.
 						</li>
-						<li>Add fields via the <strong>Available Variables</strong> editor.
+						<li><strong>Add a <em>pre-defined</em> variable in a new field</strong>
 							<br>
-							Click the <strong>Available Variables</strong> icon
-							(<i class="fa fa-list fa-lg"></i>) on the toolbar to display the
-							and navigate to the variable you require. Click the plus symbol to add the
-							variable to the overlay. The field will start off with just the variable you selected;
+							Click the <span class="managerName">Variable Manager</span> icon
+							(<i class="fa fa-regular fa-rectangle-list fa-lg"></i>)
+							to display the <strong>Variable Manager</strong> editor
+							and navigate to the variable you require.
+							Click the <span class="btn dark btn-primary btn-xs oe-list-add">
+							<i class="fa-solid fa-plus oe-list-add"></i></span> button
+							to add the variable to the overlay.
+							The field will start off with just the variable you selected;
 							you can add text or other variables to the field later.
-							Initially the field will be positioned at the top left but
-							can be dragged to wherever you want and its properties changed.
+							See the <a href="#variableManager">Variable Manager</a> section for information on
+							other items in this dialog box.
 						</li>
-						<li>Add an image field.
+						<li><strong>Add a <em>pre-defined</em> image in a new field</strong>
 							<br>
-							Click the <strong>Add New Image Field</strong> icon
-							(<i class="fa fa-image fa-lg"></i>)
+							Click the <strong>Add Existing Image</strong> icon
+							(<i class="fa fa-regular fa-image fa-lg"></i>)
 							to display the <strong>Image Properties</strong> editor.
 							Select the image you want from the drop
 							down and then move it to the overlay, resizing and rotating as required.
 							The image must have first been
 							uploaded via the <span class="managerName">Image Manager</span> as described above.
+							The <a href="#propertyEditors">property editors</a> are described below.
 						</li>
 					</ol>
-					<hr class="separator">
+<!-- TODO: HOW DOES THE "Add Variable" BUTTON DIFFER FROM THE PLUS BUTTONS? -->
+					<hr class="separatorMinor">
 				</details>
 
 				<h3 id="propertyEditors">The property editors</h3>
-				<p>The property editors allow setting of the various elements of text and image fields.</p>
+				<p>The property editors allow modifying properties of text and image fields.</p>
 				<details sub>
 					<summary></summary>
-					<h4>Text Property Editor</h4>
+					<h4>Text Properties Editor</h4>
 					<table class="module-settings">
 						<tbody>
 							<tr>
-								<td><img allsky="true" src="text-property-editor.png" alt="Text Property Editor"
+								<td><img allsky="true" src="text-property-editor.png" alt="Text Properties Editor"
 										loading="lazy" /></td>
 								<td>
+									The properties in this editor are:
 									<ul>
 										<li><strong>Item</strong> - The text for the field, including any
 											variables.</li>
 										<li><strong>Format</strong> - Certain field types allow for
 											formatting, including dates, times, and numbers.
-											Details of the formats that can be entered is covered under
-											the formatting text section.</li>
+											Details of the formats that can be entered are covered in the
+											<a href=#formattingVariables">formatting text section</a>.</li>
 										<li><strong>Sample</strong> - A value that is displayed when the
-											'Test fields' icon
+											'Display Sample Data' icon
 											(<i class="fa fa-regular fa-square-check fa-lg"></i>)
 											is selected. This field is useful if the
 											variables in the field do not have inbuilt sample values.</li>
@@ -870,14 +920,18 @@
 											attribute can be used to set a value for the variable when it is empty.</li>
 										<li><strong>X</strong> - The 'x' position of the field in pixels from the left
 											of the image. If setting manually you need to take into account the
-											width of the field so it doesn't go off the right side.</li>
+											width of the field and the resolution of the image
+											so it doesn't go off the right side.</li>
 										<li><strong>Y</strong> - The 'y' position of the field in pixels from the top
 											of the image. If setting manually you need to take into account the
-											height of the field so it doesn't go off the bottom of the captured image.</li>
-										<li><strong>Rotation</strong> - The rotation of the text in degrees.</li>
+											height of the field and the resolution of the image
+											so it doesn't go off the bottom of the captured image.</li>
+										<li><strong>Rotation</strong> - The rotation of the text in degrees,
+											from 0 to 360.  Increasing numbers rotate the field clock wise.</li>
 										<li><strong>Name</strong> - The font to use for the field.</li>
 										<li><strong>Size</strong> - The font size.</li>
-										<li><strong>Opacity</strong> - The font opacity.</li>
+										<li><strong>Opacity</strong> - The font opacity,
+											from 0 (transparent) to 1 (opaque).</li>
 										<li><strong>Colour</strong> - The font colour.</li>
 										<li><strong>Stroke Size</strong> - The size in pixels for applying a stroke
 											to the field. A stroke can be useful to distinguish the text
@@ -886,22 +940,24 @@
 										<li><strong>Stroke Colour</strong> - The stroke colour to use for the font.</li>
 									</ul>
 									<blockquote>When using the 'Extra Data' files in json format all of the
-										attributes can be overridden in the json file allowing for external
-										control of how fields appear.
-										For example, you may want the CPU temperature to turn red if it gets too hot.
+										attributes can be overridden in the <span class="fileName">.json</span>
+										file allowing for external control of how fields appear.
+										For example, you may want the CPU temperature to turn
+										<span style="color: red; font-weight: bold">red</span> if it gets too hot.
 									</blockquote>
 								</td>
 							</tr>
 						</tbody>
 					</table>
 
-					<h4>Image Property Editor</h4>
+					<h4>Image Properties Editor</h4>
 					<table class="module-settings">
 						<tbody>
 							<tr>
-								<td><img allsky="true" src="image-property-editor.png" alt="Text Property Editor"
+								<td><img allsky="true" src="image-property-editor.png" alt="Image Properties Editor"
 										loading="lazy" /></td>
 								<td>
+									The properties in this editor are:
 									<ul>
 										<li><strong>Image</strong> - Select the image to add from the
 											dropdown. Images will only appear in the drop down after they have been
@@ -909,24 +965,29 @@
 										<li><strong>X</strong> - The 'x' position of the field in pixels from the left
 											of the captured image.
 											If setting manually you need to take into account the
-											width of the image so it doesn't go off the right side.</li>
+											width of the image and resolution of the captured image
+											so it doesn't go off the right side.</li>
 										<li><strong>Y</strong> - The 'y' position of the field in pixels from the top
 											of the captured image.
 											If setting manually you need to take into account the
-											height of the image so it doesn't go off the bottom of the captured image.</li>
+											height of the image and resolution of the captured image
+											so it doesn't go off the bottom of the captured image.</li>
 											</li>
-										<li><strong>Rotation</strong> - The rotation of the image in degrees.</li>
-										<li><strong>Opacity</strong> - The image opacity.</li>
-										<li><strong>Scale</strong> - Allows the image to be scaled and resized.</li>
+										<li><strong>Rotation</strong> - The rotation of the image in degrees,
+											from 0 to 360.  Increasing numbers rotate the image clock wise.</li>
+										<li><strong>Opacity</strong> - The image opacity,
+											from 0 (transparent) to 1 (opaque).</li>
+										<li><strong>Scale</strong> - Allows the image to be scaled and resized,
+											from 0 (image hidden) to 10 times the native resolution).</li>
 									</ul>
 								</td>
 							</tr>
 						</tbody>
 					</table>
-					<hr class="separator">
+					<hr class="separatorMinor">
 				</details>
 
-				<h3>Variable Manager</h3>
+				<h3 id="variableManager">Variable Manager</h3>
 				<p>The <span class="managerName">Variable Manager</span> provides a mechanism for storing variables
 					and text to create
 					fields. Allsky ships with a default set of variables but this can be amended as required.</p>
@@ -938,10 +999,12 @@
 						manager comes preinstalled with a set of system variables that
 						can be modified but not deleted.
 						You can also add your own variables to the manager; typically
-						these will come from modules or extra data.</p>
+						these will come from modules or extra data files.</p>
 					<p>The manager consists of two tabs.
-						The first, 'Allsky Variables' is the library
-						of available variables and the second, 'All Variables' is a list of all variables.</p>
+						The first, <strong>Allsky Variables</strong> is the library
+						of available variables and the second,
+						<strong>All Variables</strong> is a list of all variables.</p>
+
 					<h4>Allsky Variables tab</h4>
 					<table class="two-col vtop">
 						<tbody>
@@ -951,23 +1014,21 @@
 										loading="lazy" />
 								</td>
 								<td>
-									<p>The 'Allsky Variables' tab shows all variables <em>available to use</em> on
+									<p>This tab shows all variables <em>available to use</em> on
 										overlays. Three icons are available for each variable.</p>
 									<ul>
-										<li>The <img allsky="true" src="variable-manager-add-field.png" alt="Add variable"
-												loading="lazy" />
-											button adds the field to
-											the overlay. It will initially be added at the top left allowing
-											you to drag it to where ever required. The <strong>Text Properties</strong>
+										<li>The <span class="btn dark btn-primary btn-xs oe-list-add">
+											<i class="fa-solid fa-plus oe-list-add"></i></span> icon
+											adds the variable in a new field to the overlay.
+											The <strong>Text Properties</strong>
 											editor will also be displayed and populated with the relevant
 											data for the variable.</li>
-										<li>The <img allsky="true" src="variable-manager-edit-field.png" alt="Edit variable"
-												loading="lazy" />
-											button allows you to
-											edit the field. If the variable is a system variable then only
+										<li>Click the <span class="btn dark btn-warning btn-xs oe-list-edit">
+											<i class="fa fa-pen-to-square oe-list-edit"></i></span> icon
+											to edit the field. If the variable is a system variable then only
 											certain fields can be changed.</li>
-										<li>The <img allsky="true" src="variable-manager-delete-field.png"
-												alt="Delete variable" loading="lazy" /> button
+										<li>The <span class="btn dark btn-danger btn-xs oe-list-delete">
+											<i class="fa fa-trash oe-list-delete"></i></span> icon
 											deletes a variable. You can only delete variables that you added.</li>
 									</ul>
 									<p>The 'Add Variable' button allows you to add your own
@@ -993,22 +1054,32 @@
 										data. This tab lists every variable that Allsky can see and the last value it
 										had. This list provides a faster way to add variables.</p>
 									<ul>
-										<li>Clicking the <img allsky="true" src="variable-manager-add-field.png" alt="Add variable"
-												loading="lazy" />
-											button adds the field to the 'Allsky Variables' tab making it
+										<li>Clicking the <span class="btn dark btn-primary btn-xs oe-list-add">
+											<i class="fa-solid fa-plus oe-list-add"></i></span> icon
+											adds the field to the 'Allsky Variables' tab making it
 											available for use on overlays.</li>
 									</ul>
-									<blockquote>If the add button is disabled then it means that the variable is alread
+									<blockquote>If the add button is disabled then the variable is already
 										in the 'Allsky Variables' list.</blockquote>
 									<blockquote><strong>IMPORTANT:</strong> This list is only populated if the debug
 										mode is enabled for the <span class="moduleName">Overlay Module</span>
-										in the <span class="managerName">Module Manager</span>.</blockquote>
+										in the <strong>Module Editor</strong>.</blockquote>
 								</td>
 							</tr>
 						</tbody>
 					</table>
 
 					<h4>The Add/Edit Variable dialog box</h4>
+					<p>Clicking on the
+						<span class="btn btn-primary btn-small">Add Variable</span> button
+						or the
+						<span class="btn dark btn-warning btn-xs oe-list-edit">
+						<i class="fa fa-pen-to-square oe-list-edit"></i></span>
+						icon brings up a dialog box to add or edit a variable.
+						It's the same dialog box in either case, just with a different title.
+						Editing a System Variable will display a message stating that in the dialog box
+						as shown in the image below.
+						</p>
 					<table class="two-col vtop">
 						<tbody>
 							<tr>
@@ -1018,17 +1089,17 @@
 								</td>
 								<td>
 									<ul>
-										<li><strong>Variable Name</strong> - The name of the
-											variable. This follows the standard method for formatting
-											variables. For system variables this cannot be changed.</li>
+										<li><strong>Variable Name</strong> - The name of the variable
+											enclosed within <code><strong>${}</strong></code>.
+											For system variables the name cannot be changed.</li>
 										<li><strong>Description</strong> - An optional description of the
 											variable. This is only for reference and is displayed in the
 											<span class="managerName">Variable Manager</span>.</li>
-										<li><strong>Format</strong> - This is the
+										<li><strong>Format</strong> - This is the optional
 											<a href="#formattingVariables">formatting</a> used to
 											display the variable.</li>
 										<li><strong>Sample Data</strong> - Sample data that is used when displaying
-											sample data in the <span class="managerName">Overlay Manager</span>.</li>
+											sample data in the <strong>Overlay Editor</strong>.</li>
 										<li><strong>Type</strong> - Each variable has a <em>type</em> that
 											is used to determine what formatting to use. The variable types are:
 											<ul class="minimalPadding">
@@ -1043,13 +1114,16 @@
 							</tr>
 						</tbody>
 					</table>
+					<hr class="separatorMinor">
+					</details>
 
-					<h4 id="formattingVariables">Formatting Variables</h4>
-					<p>Date, Time and Number fields can be formatted to alter their appearance. Each
-						variable type has a different set of codes for formatting. The codes are loosely
+					<h3 id="formattingVariables">Formatting Variables</h3>
+					<p>Date, Time, and Number fields can be formatted to alter their appearance.
+						Each field type has a different set of codes for formatting. The codes are loosely
 						based on Python.</p>
-
-					<h5>Formatting Numbers</h5>
+					<details sub>
+					<summary></summary>
+					<h4>Number formats</h4>
 					<table>
 						<thead>
 							<tr>
@@ -1072,7 +1146,7 @@
 						</tbody>
 					</table>
 
-					<h5>Date and Time formats</h5>
+					<h4>Date and Time formats</h4>
 					<table>
 						<thead>
 							<tr>
@@ -1229,18 +1303,22 @@
 							</tr>
 						</tbody>
 					</table>
-					<hr class="separator">
-				</details>
+					</details>
 
 			</div>
+			<hr class="separator">
+			</details>
 
-			<h2 id="overlayManagerSettings">Overlay Manager Settings</h2>
-			<p>The <span class="managerName">Overlay Manager</span> has a settings dialog that can be used to manage
-				settings for both the current overlay and the <span class="managerName">Overlay Manager</span> itself.</p>
+			<h2 id="overlayEditorSettings">Overlay Editor Settings &nbsp; <i class="fa fa-solid fa-gear"></i></h2>
+			<p>Clicking on the <strong>Layout and App Options</strong> icon in the toolbar brings up the
+				<strong>Overlay Editor Options</strong>
+				dialog box to manage settings for overlays and the <strong>Overlay Editor</strong> itself.
+				The dialog box has two tabs, as detailed below.</p>
+			<details sub>
+				<summary></summary>
 			<div>
-
-				<h3>Layout Defaults tab</h3>
-				<p>The 'Layout Defaults' are settings that apply to the current layout.</p>
+				<h3 id="layoutDefaultsTab">Layout Defaults tab</h3>
+				<p>These settings apply to overlay layouts.</p>
 				<details sub>
 					<summary></summary>
 					<table class="two-col">
@@ -1252,26 +1330,31 @@
 								</td>
 								<td>
 									<ul style="padding-top: 0px">
-										<li><strong>Default Image Opacity</strong> - When adding a new image
-											this will be set as the default opacity.</li>
-										<li><strong>Default Image Rotation</strong> - When adding a new image
-											this will be set as the default rotation.</li>
-										<li><strong>Default Font</strong> - When adding a new variable this will
-											be used as the default font.</li>
-										<li><strong>Default Font Size</strong> - When adding a new variable this
-											will be used as the default font size.</li>
-										<li><strong>Default Font Opacity</strong> - When adding a new variable
-											this will be used as the default font opacity.</li>
-										<li><strong>Default Font Colour</strong> - When adding a new variable
-											this will be used as the default font colour.</li>
-										<li><strong>Default Text Rotation</strong> - When adding a new variable
-											this will be used as the default text rotation.</li>
-										<li><strong>Default Extra Data Expiry</strong> - For extra data files
-											that do not specify an expiry time this default will be used.</li>
-										<li><strong>Norad ID's</strong> - List of NORAD ID's for generating
+										<li><strong>Default Image Opacity</strong>
+											- The default opacity for new images.</li>
+										<li><strong>Default Image Rotation</strong>
+											- The default rotation for new images.</li>
+										<li><strong>Default Font</strong>
+											- The default font for new text fields.</li>
+										<li><strong>Default Font Size</strong>
+											- The default font size for new text fields.</li>
+										<li><strong>Default Font Opacity</strong>
+											- The default font opacity for new text fields.</li>
+										<li><strong>Default Font Colour</strong>
+											- The default font color for new text fields.</li>
+										<li><strong>Default Text Rotation</strong>
+											- The default rotation for new text fields.</li>
+										<li><strong>Default Extra Data Expiry</strong>
+											- The default expiration time in seconds for extra data files
+											that do not specify an expiry time.
+											This applies to all variables in <span class="fileName">.txt</span> files
+											and entries in <span class="filename">.json</span> files that
+											don't have an <span class="json">expires</span> attribute.</li>
+										<li><strong>Norad ID's</strong>
+											- A comma-separated list of NORAD IDs for generating
 											<a href="#satelliteData">satellite data</a>.</li>
 										<li><strong>Include Planets</strong> - When enabled, data for the
-											Planets's position will be generated as variables.</li>
+											planets' positions will be generated as variables.</li>
 										<li><strong>Include Sun</strong> - When enabled, data for the Sun's
 											position will be generated as variables.</li>
 										<li><strong>Include Moon</strong> - When enabled, data for the Moon's
@@ -1281,17 +1364,18 @@
 							</tr>
 						</tbody>
 					</table>
-					<blockquote>The Satellite and Planet options can be CPU intensive and are disabled by
-						default. When enabling these please use the <span class="moduleName">Module Manager's</span>
+					<blockquote>The Norad satellite and Planet options can be CPU intensive and are disabled by
+						default. When enabling these please use the <strong>Module Editor's</strong>
 						debug option to ensure these settings
-						are not causing an issue with the capture process. Details of how to use the
-						<span class="managerName">Module Manager</span> debug option are covered in the <a allsky="true"
-							href="/documentation/modules/modules.html">Module Manager</a> section.</blockquote>
-					<hr class="separator">
+						are not causing an issue with the performance of the image capture process.
+						Details of how to use the
+						<strong>Module Editor's</strong> debug option are covered in the <a allsky="true"
+							href="/documentation/modules/modules.html">Module Editor</a> page.</blockquote>
+					<hr class="separatorMinor">
 				</details>
 
-				<h3>Editor Defaults tab</h3>
-				<p>'Editor Defaults' are default settings that apply to the <strong>Overlay Editor</strong>.</p>
+				<h3>Editor Settings tab</h3>
+				<p>The editor settings apply to the <strong>Overlay Editor</strong>.</p>
 				<details sub>
 					<summary></summary>
 					<table class="two-col">
@@ -1303,61 +1387,89 @@
 								</td>
 								<td>
 									<ul style="padding-top: 0px">
-										<li><strong>Display Grid</strong> - Displays the grid for easier
-											alignment of fields on the overlay.</li>
-										<li><strong>Grid Size</strong> - The size of the grid in pixels.
-											This grid is used to 'snap' fields making their placement easier.</li>
-										<li><strong>Grid Opacity</strong> - The grid opacity, reduce this
-											for finer grids to make them more visible.</li>
-										<li><strong>Show Snap Rectangle</strong> - When moving a field a
-											rectangle will be displayed showing where the field will snap to
+										<li><strong>Show Grid</strong> - When enabled, displays a grid for easier
+											alignment of fields on the overlay.
+											The grid is used to 'snap' fields making their placement easier.</li>
+										<li><strong>Grid Size</strong> - The size of the grid in pixels.</li>
+										<li><strong>Grid Opacity</strong> - The grid opacity; reduce this
+											for finer grids (i.e., smaller grid sizes) to make them more visible.
+											Values range from 0 (transparent/invisible) to 100 (white).</li>
+										<li><strong>Show Snap Rectangle</strong> - When enabled, moving a field
+											will cause a rectangle to be displayed showing where the field will snap to
 											if dropped.</li>
 										<li><strong>Add List Page Size</strong> - The number of variables to
 											show per page in the <span class="managerName">Variable Manager</span>.</li>
 										<li><strong>Add Field Opacity</strong> - When adding a new field all
 											other fields will be set to this opacity to make the new field
-											easier to see and place.</li>
-										<li><strong>Select Field Opacity</strong> - When selecting a field
-											all other fields will be set to this opacity to make the new field easier
-											to see and place.</li>
-										<li><strong>Zoom With Mouse Wheel</strong> - When enabled scrolling the
+											easier to see.
+											Values range from 0 (transparent/invisible) to
+											100 (each field's full brightness).</li>
+										<li><strong>Select Field Opacity</strong> - When selecting a field all other
+											fields will be set to this opacity to make the new field easier to see.
+											Values range from 0 (transparent/invisible) to
+											100 (each field's full brightness).</li>
+										<li><strong>Zoom with Mouse Wheel</strong> - When enabled, scrolling the
 											mouse wheel will zoom the overlay.</li>
-										<li><strong>Background Image Opacity</strong> - When opacity of the
-											image being overlayed. Lower this if the image is bright to make
-											it easier to see the fields.</li>
-										<li><strong>Enable Debug Mode</strong> - Displays an additional toolbar
-											button with access to debug information.
+										<li><strong>Background Image Opacity</strong> - Opacity of the
+											image being overlayed, i.e., the captured image.
+											Lower this if the captured image is bright to make
+											it easier to see the overlay fields.
+											Values range from 0 (black background) to
+											100 (full brightness of captured image).</li>
+										<li><strong>Enable Debug Mode</strong> - When enabled, displays the
+											<i class="fa-solid fa-bug"></i> icon which is
+											used to access debug information.
+											This should only be used if directed to by an Allsky developer.
 <!-- TODO: There are no details below:     See below for more details. -->
+											</li>
+										<li><strong>Enable Position Debug Mode</strong> - 
+<!-- TODO: What's this do ? -->
+											This should only be used if directed to by an Allsky developer.
 											</li>
 									</ul>
 								</td>
 							</tr>
 						</tbody>
 					</table>
-				</details>
-				<hr class="separator">
-			</div>
 
-			<h2 id="satelliteData">Satellites / Sun / Moon / Planets</h2>
-			<p>The <span class="managerName">Overlay Manager</span> can generate data for celestial bodies.
-				Normally these are
-				disabled unless the relevant options are selected in the <span class="managerName">Overlay Manager</span>
-				settings. All calculations are based upon the latitude and longitude in the WebUI.</p>
+					<p><blockquote>When changing the opacity settings you may need to click somewhere in the overlay
+						in order for the opacity change to take affect.
+					</blockquote></p>
+
+				</details>
+				<hr class="separatorSmall">
+			</div>
+			</details>
+
+			<h2 id="satelliteData">Sun / Moon / Planets / Satellites</h2>
+			<p>The <span class="moduleName">Overlay Module</span> can generate data for celestial bodies.
+				All calculations are based upon the
+				<span class="WebUISetting">Latitude</span> and
+				<span class="WebUISetting">Longitude</span> in the WebUI.</p>
+			<p><blockquote>
+				Because creating this data is CPU intensive, it is only created
+				if the associated options are selected in the
+				<a href="#layoutDefaultsTab">Layout Defaults tab</a> of the
+				<strong>Overlay Editor</strong> settings.
+			</blockquote></p>
 			<details sub>
 				<summary></summary>
 				<h3>The Sun</h3>
-				<blockquote>The Sun must be enabled in the <span class="managerName">Overlay Manager</span>
-					settings before any variables are created.</blockquote>
-				<p>For the Sun various timings are generated for sunrise/sunset etc.</p>
-				<p>The Sun times furing daytime capture are for the current day.
-					During nighttime capture they are for the period the night time capture is in progress,
-					i.e. prior to midnight the sunset times are for the current day and the sun rise for the next day.
-					After midnight the sunset times are for the previous day and the sunrise times for the current day.</p>
+				<p>Various timings are generated for sunrise/sunset etc.
+					All Sun times during <em>daytime</em> capture are for the current day.
+					During <em>nighttime</em> capture:
+					<ul class="minimalPadding">
+						<li>Prior to midnight sunset times are for the current day
+							and sunrise times are for the next day.</li>
+						<li>After midnight sunset times are for the previous day
+							and sunrise times are for the current day.</li>
+					</ul>
+				</p>
 				<p>There are times when there is no Astronomical darkness.
-					In these cases <code>SUN_NIGHT</code> and <code>SUN_NIGHTEND</code>
-					will be set to the value defined in the
+					In these cases <code>${SUN_NIGHT}</code> and <code>${SUN_NIGHTEND}</code>
+					are set to the value defined in the
 					<span class="moduleName">Overlay Module</span> settings,
-					in the <span class="managerName">Module Manager</span>.</p>
+					in the <strong>Module Editor</strong>.</p>
 				<p>The following Sun-related variables are available in the
 					<span class="managerName">Variable Manager</span>:</p>
 				<table>
@@ -1383,7 +1495,7 @@
 						</tr>
 						<tr>
 							<td>${SUN_NIGHTEND}</td>
-							<td>Morning astronomical twilight start.</td>
+							<td>Morning astronomical twilight starts.</td>
 						</tr>
 						<tr>
 							<td>${SUN_NAUTICALDAWN}</td>
@@ -1429,9 +1541,8 @@
 				</table>
 
 				<h3>The Moon</h3>
-				<blockquote>The Moon must be enabled in the <span class="managerName">Overlay Manager</span>
-					settings before any variables are created.</blockquote>
-				<p>The following Moon-related variables are available:</p>
+				<p>The following Moon-related variables are available in the
+					<span class="managerName">Variable Manager</span>:</p>
 				<table>
 					<thead>
 						<tr>
@@ -1459,15 +1570,15 @@
 						<tr>
 							<td>${MOON_SYMBOL}</td>
 							<td></td>
-							<td>Using this variable and the Moon Font will display the current phase of the Moon.</td>
+							<td>Using this variable in the "moon_phases" font will display a symbol of
+								the current phase of the Moon.</td>
 						</tr>
 					</tbody>
 				</table>
 
 				<h3>The planets</h3>
-				<blockquote>The planets must be enabled in the <span class="managerName">Overlay Manager</span>
-					settings before any variables are created.</blockquote>
-				<p>The following planet-related variables are available:</p>
+				<p>The following planet-related variables are available in the
+					<span class="managerName">Variable Manager</span>:</p>
 				<table>
 					<thead>
 						<tr>
@@ -1480,12 +1591,12 @@
 						<tr>
 							<td>${MERCURYALT}</td>
 							<td>-27deg 06' 55.2"</td>
-							<td>The Altitude of Mercury in Degrees.</td>
+							<td>The altitude of Mercury in degrees.</td>
 						</tr>
 						<tr>
 							<td>${MERCURYAZ}</td>
 							<td>292deg 07' 41.6"</td>
-							<td>The Azimuth of Mercury.</td>
+							<td>The azimuth of Mercury.</td>
 						</tr>
 						<tr>
 							<td>${MERCURYVISIBLE}</td>
@@ -1496,12 +1607,12 @@
 						<tr>
 							<td>${VENUSALT}</td>
 							<td>-25deg 03' 52.8"</td>
-							<td>The Altitude of Venus in Degrees.</td>
+							<td>The altitude of Venus in degrees.</td>
 						</tr>
 						<tr>
 							<td>${VENUSAZ}</td>
 							<td>282deg 23' 21.9"</td>
-							<td>The Azimuth of Venus.</td>
+							<td>The azimuth of Venus.</td>
 						</tr>
 						<tr>
 							<td>${VENUSVISIBLE}</td>
@@ -1512,12 +1623,12 @@
 						<tr>
 							<td>${MARSALT}</td>
 							<td>03deg 56' 06.7"</td>
-							<td>The Altitude of Mars in Degrees.</td>
+							<td>The altitude of Mars in degrees.</td>
 						</tr>
 						<tr>
 							<td>${MARSAZ}</td>
 							<td>55deg 12' 53.7"</td>
-							<td>The Azimuth of Mars.</td>
+							<td>The azimuth of Mars.</td>
 						</tr>
 						<tr>
 							<td>${MARSVISIBLE}</td>
@@ -1528,7 +1639,7 @@
 						<tr>
 							<td>${JUPITERALT}</td>
 							<td>29deg 49' 30.9"</td>
-							<td>The Altitude of Jupiter in Degrees.</td>
+							<td>The altitude of Jupiter in degrees.</td>
 						</tr>
 						<tr>
 							<td>${JUPITERAZ}</td>
@@ -1544,7 +1655,7 @@
 						<tr>
 							<td>${SATURNALT}</td>
 							<td>20deg 50' 21.6"</td>
-							<td>The Altitude of Saturn in Degrees.</td>
+							<td>The altitude of Saturn in degrees.</td>
 						</tr>
 						<tr>
 							<td>${SATURNAZ}</td>
@@ -1560,12 +1671,12 @@
 						<tr>
 							<td>${URANUSALT}</td>
 							<td>21deg 21' 51.3"</td>
-							<td>The Altitude of Uranus in Degrees.</td>
+							<td>The altitude of Uranus in degrees.</td>
 						</tr>
 						<tr>
 							<td>${URANUSAZ}</td>
 							<td>90deg 10' 23.5"</td>
-							<td>The Azimuth of Uranus.</td>
+							<td>The azimuth of Uranus.</td>
 						</tr>
 						<tr>
 							<td>${URANUSVISIBLE}</td>
@@ -1576,12 +1687,12 @@
 						<tr>
 							<td>${NEPTUNEALT}</td>
 							<td>29deg 43' 44.2"</td>
-							<td>The Altitude of Neptune in Degrees.</td>
+							<td>The altitude of Neptune in degrees.</td>
 						</tr>
 						<tr>
 							<td>${NEPTUNEAZ}</td>
 							<td>150deg 24' 55.8"</td>
-							<td>The Azimuth of Neptune.</td>
+							<td>The azimuth of Neptune.</td>
 						</tr>
 						<tr>
 							<td>${NEPTUNEVISIBLE}</td>
@@ -1592,12 +1703,12 @@
 						<tr>
 							<td>${PLUTOALT}</td>
 							<td>10deg 07' 14.9"</td>
-							<td>The Altitude of Pluto in Degrees.</td>
+							<td>The altitude of Pluto in degrees.</td>
 						</tr>
 						<tr>
 							<td>${PLUTOAZ}</td>
 							<td>207deg 49' 18.1"</td>
-							<td>The Azimuth of Pluto.</td>
+							<td>The azimuth of Pluto.</td>
 						</tr>
 						<tr>
 							<td>${PLUTOVISIBLE}</td>
@@ -1609,13 +1720,11 @@
 				</table>
 
 				<h3>Satellites</h3>
-				<p>The <span class="managerName">Overlay Manager</span> can generate position elements for satellites.
-					To enable this enter a comma separated list of NORAD IDs in the
-					<span class="managerName">Overlay Manager's</span> settings.</p>
+				<p>The <span class="moduleName">Overlay Module</span> can generate position elements for satellites.
+					To enable this enter a comma-separated list of NORAD IDs in the
+					<strong>Overlay Editor's</strong> "Norad IDs" setting.</p>
 				<p>To find NORAD IDs browse to the <a href="https://celestrak.org/satcat/search.php" />Celestrak</a>
-					website and search for the desired object.
-					Then enter the IDs as a comma-separated list in the <span class="managerName">Overlay Manager's</span>
-					settings.</p>
+					website and search for the desired objects.</p>
 
 				<table class="two-col">
 					<tbody>
@@ -1625,7 +1734,7 @@
 									loading="lazy" />
 							</td>
 							<td>
-								<p>In this example we have entered two Norad IDs:</p>
+								<p>This example has two Norad IDs:</p>
 								<ul class="minimalPadding">
 									<li><strong>25544</strong> - The International Space Station.</li>
 									<li><strong>20580</strong> - The Hubble Space telescope.</li>
@@ -1634,7 +1743,9 @@
 						</tr>
 					</tbody>
 				</table>
-				<p>This will generate the following variables that can be used in overlays.</p>
+				<p>This will generate the following variables that can be used in overlays.
+					Other NORAD IDs would produce similar variables starting with IDs.
+				</p>
 				<table>
 					<thead>
 						<tr>
@@ -1678,8 +1789,8 @@
 						</tr>
 					</tbody>
 				</table>
-				<hr class="separator">
 			</details>
+			<br><hr class="separator">
 			</details>
 
 			<!-- ================================================= -->

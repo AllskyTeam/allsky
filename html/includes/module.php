@@ -58,11 +58,13 @@ function DisplayModule() {
                                 <li class="btn-lg">
                                     <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
                                         <div class="form-group">
-                                            <select class="form-control navbar-form" id="module-editor-config" name="module-editor-config" width="200px">
-                                                <option value="day">Daytime Configuration</option>
-                                                <option value="night">Nighttime Configuration</option>
-                                                <!-- <option value="endofnight">End Of Day Configuration</option> -->
-                                            </select>
+                                            <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Sselect the Flow to manage">
+                                                <select class="form-control navbar-form" id="module-editor-config" name="module-editor-config" width="200px">
+                                                    <option value="day">Daytime Configuration</option>
+                                                    <option value="night">Nighttime Configuration</option>
+                                                    <!-- <option value="endofnight">End Of Day Configuration</option> -->
+                                                </select>
+                                            </div>
                                         </div>
                                     </form>
                                 </li>

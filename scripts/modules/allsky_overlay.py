@@ -41,19 +41,10 @@ metaData = {
         "night"
     ],
     "arguments":{
-        "debug": "True",
         "suntimeformat": "",
         "nonighttext": ""
     },
     "argumentdetails": {
-        "debug" : {
-            "required": "false",
-            "description": "Enable debug mode",
-            "help": "If selected all environment variables will be written to the overlaydebug.txt file in the AllSky tmp folder",
-            "type": {
-                "fieldtype": "checkbox"
-            }          
-        },
         "suntimeformat" : {
             "required": "false",
             "tab": "Sun",
@@ -98,7 +89,7 @@ class ALLSKYOVERLAY:
     _suntimeformat = ""
     _nonighttext = ""
     
-    def __init__(self, debug, suntimeformat, nonighttext): 
+    def __init__(self, suntimeformat, nonighttext): 
         self._overlayConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYCONFIGFILE)  
         fieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYFIELDSFILE)
         self._OVERLAYTMP = os.path.join(tempfile.gettempdir(), 'overlay')
@@ -118,7 +109,7 @@ class ALLSKYOVERLAY:
         self._setDateandTime()
         self._observerLat = s.getSetting('latitude') 
         self._observerLon = s.getSetting('longitude')
-        self._debug = debug
+        self._debug = True
         
         self._nonighttext = nonighttext
         if len(suntimeformat.replace(" ", "")) > 0:
@@ -1206,14 +1197,13 @@ class ALLSKYOVERLAY:
 def overlay(params, event):
     enabled = s.int(s.getEnvironmentVariable("AS_eOVERLAY"))
     if enabled == 1:
-        debug = params["debug"]
         suntimeformat = ""
         nonighttext = ""
         if "suntimeformat" in params:
             suntimeformat = params["suntimeformat"]
         if "nonighttext" in params:            
             nonighttext = params["nonighttext"]        
-        annotater = ALLSKYOVERLAY(debug, suntimeformat, nonighttext)
+        annotater = ALLSKYOVERLAY(suntimeformat, nonighttext)
         annotater.annotate()
         result = "Overlay Complete"
     else:

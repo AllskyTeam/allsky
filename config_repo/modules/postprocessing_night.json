@@ -28,19 +28,10 @@
                 "1": "night"
             },
             "arguments": {
-                "debug": "true",
                 "suntimeformat": "",
                 "nonighttext": ""    
             },
             "argumentdetails": {
-                "debug": {
-                    "required": "false",
-                    "description": "Enable debug mode",
-                    "help": "If selected all environment variables will be written to the overlaydebug.txt file in the AllSky tmp folder",
-                    "type": {
-                        "fieldtype": "checkbox"
-                    }
-                },
                 "suntimeformat" : {
                     "required": "false",
                     "tab": "Sun",

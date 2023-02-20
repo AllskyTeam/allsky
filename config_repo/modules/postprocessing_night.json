@@ -4,6 +4,7 @@
         "metadata": {
             "name": "Loads the latest image",
             "description": "Loads the last captured image",
+            "ignorewatchdog": "True",
             "module": "allsky_loadimage",
             "events": {
                 "0": "day",
@@ -63,6 +64,7 @@
         "metadata": {
             "name": "Saves the image",
             "description": "Saves the image",
+            "ignorewatchdog": "True",
             "module": "allsky_saveimage",
             "events": {
                 "0": "day",

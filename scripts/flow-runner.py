@@ -181,13 +181,26 @@ if __name__ == "__main__":
             endTime = datetime.now()
             elapsedTime = (((endTime - startTime).total_seconds()) * 1000) / 1000
 
+            ignoreWatchdog = False
+            if shared.step in ['loadimage','saveimage']:
+                 ignoreWatchdog = True
+            else:
+                if 'ignorewatchdog' in shared.flow[shared.step]['metadata']:
+                    if shared.flow[shared.step]['metadata']['ignorewatchdog']:
+                        ignoreWatchdog = True
+                    
             results[shared.step] = {}
-            if watchdog:
-                if elapsedTime > timeout:
-                    shared.log(0, 'ERROR: Module {0} will be disabled, it took {1:.2f}s max allowed is {2}s'.format(shared.flow[shared.step]['module'], elapsedTime, timeout))
-                    results[shared.step]["disable"] = True
+            if not ignoreWatchdog:
+                if watchdog:
+                    if elapsedTime > timeout:
+                        shared.log(0, 'ERROR: Module {0} will be disabled, it took {1:.2f}s max allowed is {2}s'.format(shared.flow[shared.step]['module'], elapsedTime, timeout))
+                        results[shared.step]["disable"] = True
+                    else:
+                        shared.log(3, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
                 else:
                     shared.log(3, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
+            else:
+                shared.log(3, f'INFO: Ignoring watchdog for module {shared.step}')             
                     
             results[shared.step]["lastexecutiontime"] = str(elapsedTime) 
 

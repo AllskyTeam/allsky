@@ -16,7 +16,8 @@ import pathlib
 metaData = {
     "name": "Saves the image",
     "description": "Saves the image",
-    "module": "allsky_saveimage",    
+    "module": "allsky_saveimage",
+    "ignorewatchdog": "True",     
     "events": [
         "day",
         "night"

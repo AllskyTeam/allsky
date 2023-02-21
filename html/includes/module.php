@@ -33,7 +33,7 @@ function DisplayModule() {
 <div class="row">
     <div class="col-lg-12">
 		<div class="panel panel-primary">
-			<div class="panel-heading"><i class="fa fa-bars fa-fw"></i> Module Editor</div>
+			<div class="panel-heading"><i class="fa fa-bars fa-fw"></i> Module Manager</div>
             <div class="panel-body">
                 <nav class="navbar navbar-default">
                     <div class="container-fluid">

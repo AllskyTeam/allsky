@@ -243,7 +243,7 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 						<a href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i> Overlay Editor</a>
 					</li>
 					<li>
-						<a href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Editor</a>
+						<a href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Manager</a>
 					</li>						
 					<li>
 						<a id="LAN" href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>

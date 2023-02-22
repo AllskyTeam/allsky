@@ -41,12 +41,12 @@ void Log(int required_level, const char *fmt, ...)
 {
 	if ((int)abs(CG.debugLevel) >= required_level) {
 		char msg[512];
-		snprintf(msg, sizeof(msg), "%s", fmt);
 		va_list va;
 		va_start(va, fmt);
-		vfprintf(stdout, msg, va);
+		vsnprintf(msg, sizeof(msg)-1, fmt, va);
+		printf("%s", msg);
 
-		if (CG.debugLevel <= 0)
+		if (required_level <= 0)
 		{
 			char const *severity;
 			if (strcasestr(msg, "warning") != NULL)
@@ -56,8 +56,13 @@ void Log(int required_level, const char *fmt, ...)
 			else
 				severity = "info";
 
-			char command[1024];
+			char *p = &msg[strlen(msg) - 1];
+			if (*p == '\n')
+			{
+				*p = '\0';
+			}
 
+			char command[1024];
 			snprintf(command, sizeof(command)-1, "%sscripts/addMessage.sh %s '%s'", CG.allskyHome, severity, msg);
 			Log(4, "Executing %s\n", command);
 			(void) system(command);

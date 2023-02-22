@@ -755,6 +755,7 @@
 	{"value" : 1, "label" : "module"}
 ],
 "display" : 1,
+"checkchanges" : 1,
 "advanced" : 0
 },
 {

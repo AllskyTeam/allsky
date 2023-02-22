@@ -261,6 +261,10 @@ struct config {			// for configuration variables
 	struct HB HB;							// Histogram Box, ZWO only
 
 	// Default values used in multiple places, so get just once.
+	// Only include variables that we pass to the capture routine/program.
+	int defaultFlip						= NOT_SET;
+	int defaultRotation					= NOT_SET;
+	int	defaultBin						= NOT_SET;
 	double defaultGain					= NOT_SET;
 	double defaultWBR					= NOT_SET;
 	double defaultWBB					= NOT_SET;
@@ -343,4 +347,3 @@ void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
-

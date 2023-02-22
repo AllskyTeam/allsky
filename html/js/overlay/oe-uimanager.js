@@ -24,6 +24,9 @@ class OEUIMANAGER {
     #fieldTable = null;
     #allFieldTable = null;
 
+    #debugMode = false;
+    #debugPosMode = false;
+
     constructor(imageObj) {
 
         this.#configManager = window.oedi.get('config');
@@ -83,6 +86,30 @@ class OEUIMANAGER {
             this.updateDebugWindowMousePos(mousePos.x, mousePos.y);
             this.updateDebugWindow();
         });
+
+        let params = this.getQueryParams(window.location.href);
+
+        if (params.hasOwnProperty('debug')) {
+            if (params.debug == 'true') {
+                this.#debugMode = true;
+            }
+        }
+
+        if (params.hasOwnProperty('debugpos')) {
+            if (params.debugpos == 'true') {
+                this.#debugPosMode = true;
+            }
+        }        
+    }
+
+    getQueryParams(url) {
+        const paramArr = url.slice(url.indexOf('?') + 1).split('&');
+        const params = {};
+        paramArr.map(param => {
+            const [key, val] = param.split('=');
+            params[key] = decodeURIComponent(val);
+        })
+        return params;
     }
 
     get selected() {
@@ -826,8 +853,6 @@ class OEUIMANAGER {
             $('#oe-app-options-select-field-opacity').val(this.#configManager.selectFieldOpacity);
             $('#oe-app-options-mousewheel-zoom').prop('checked', this.#configManager.mouseWheelZoom);
             $('#oe-app-options-background-opacity').val(this.#configManager.backgroundImageOpacity);
-            $('#oe-app-options-debug').prop('checked', this.#configManager.debugMode);
-            $('#oe-app-options-position-debug').prop('checked', this.#configManager.positiondebugMode);
             $('#oe-app-options-grid-colour').val(this.#configManager.gridColour);
 
             $('#oe-app-options-grid-colour').spectrum({
@@ -884,10 +909,6 @@ class OEUIMANAGER {
             this.#configManager.selectFieldOpacity = $('#oe-app-options-select-field-opacity').val() | 0;
             this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
             this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
-
-            this.#configManager.debugMode = $('#oe-app-options-debug').prop('checked');
-            this.#configManager.positiondebugMode = $('#oe-app-options-position-debug').prop('checked');
-
 
             this.drawGrid();
             this.updateBackgroundImage();
@@ -1214,7 +1235,7 @@ class OEUIMANAGER {
             $('#oe-overlay-editor-tab').removeClass('oe-overlay-editor-tab-modified');
         }
 
-        if (this.#configManager.debugMode) {
+        if (this.#debugMode) {
             $('#oe-toolbar-debug').removeClass('hidden')
         } else {
             $('#oe-toolbar-debug').addClass('hidden')
@@ -1222,7 +1243,7 @@ class OEUIMANAGER {
     }
 
     setupDebug() {
-        if (this.#configManager.positiondebugMode) {
+        if (this.#debugPosMode) {
             this.#createDebugWindow();
         } else {
             if ($('#debugdialog').hasClass('ui-dialog-content')) {
@@ -1789,7 +1810,7 @@ class OEUIMANAGER {
     }
 
     updateDebugWindow() {
-        if (this.#configManager.positiondebugMode) {
+        if (this.#debugPosMode) {
             let field = this.#selected;
             if (field === null) {
                 $('#debugpropgrid').jqPropertyGrid('set', {
@@ -1832,7 +1853,7 @@ class OEUIMANAGER {
     }
 
     updateDebugWindowMousePos(x, y) {
-        if (this.#configManager.positiondebugMode) {        
+        if (this.#debugPosMode) {        
             let imageX = x  / this.#oeEditorStage.scaleX();
             let imageY = y  / this.#oeEditorStage.scaleY();        
             $('#debugpropgrid').jqPropertyGrid('set', {

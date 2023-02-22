@@ -676,24 +676,7 @@ function DisplayOverlay($image_name)
                                                 </div>
                                                 <p class="help-block">0 = Lowest, 100 = Brightest</p>
                                             </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <div class="col-sm-offset-4 col-sm-8">
-                                                <div class="checkbox">
-                                                    <label>
-                                                        <input type="checkbox" id="oe-app-options-debug"> Enable Debug Mode
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-offset-4 col-sm-8">
-                                                <div class="checkbox">
-                                                    <label>
-                                                        <input type="checkbox" id="oe-app-options-position-debug"> Enable Position Debug Mode
-                                                    </label>
-                                                </div>
-                                                <p class="help-block">The debug options should only be used when directed to by a member of the AllSky development team</p>
-                                            </div>                                            
-                                        </div>                                        
+                                        </div>                                       
                                     </form>
 
                                 </div>

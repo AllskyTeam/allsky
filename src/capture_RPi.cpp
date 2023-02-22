@@ -45,6 +45,8 @@ bool bMain					= true;
 bool bDisplay				= false;
 std::string dayOrNight;
 int numErrors				= 0;					// Number of errors in a row
+int maxErrors				= 5;					// Max number of errors in a row before we exit
+
 bool gotSignal				= false;				// did we get a SIGINT (from keyboard), or SIGTERM/SIGHUP (from service)?
 int iNumOfCtrl				= NOT_SET;				// Number of camera control capabilities
 pthread_t threadDisplay		= 0;					// Not used by Rpi;
@@ -381,8 +383,7 @@ int main(int argc, char *argv[])
 		displayHeader(CG);
 	}
 
-	if (setlocale(LC_NUMERIC, CG.locale) == NULL && ! CG.saveCC)
-		Log(-1, "*** WARNING: Could not set locale to %s ***\n", CG.locale);
+	doLocale(CG);
 
 	if (CG.help)
 	{
@@ -506,9 +507,6 @@ int main(int argc, char *argv[])
 	int originalLinewidth	= CG.overlay.linewidth;
 	// Have we displayed "not taking picture during day" message, if applicable?
 	bool displayedNoDaytimeMsg = false;
-
-	if (CG.tty)
-		Log(0, "*** Press Ctrl+C to stop ***\n\n");
 
 	// Start taking pictures
 
@@ -733,6 +731,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			if (retCode == 0)
 			{
 				numExposures++;
+				numErrors = 0;
 
 				// We currently have no way to get the actual white balance values,
 				// so use what the user requested.
@@ -762,7 +761,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 
 						if (CG.lastMean == -1)
 						{
-							numErrors++;
 							Log(-1, "ERROR: aegCalcMean() returned mean of -1.\n");
 							Log(2, "  > Sleeping from failed exposure: %.1f seconds\n", (float)CG.currentDelay_ms / MS_IN_SEC);
 							usleep(CG.currentDelay_ms * US_IN_MS);
@@ -825,7 +823,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			{
 				numErrors++;
 				int r = retCode >> 8;
-				Log(0, " >>> ERROR: Unable to take picture, return code=%d, r=%d\n", retCode, r);
+				Log(1, " >>> WARNING: Unable to take picture, return code=%d, r=%d\n", retCode, r);
 				if (WIFSIGNALED(r)) r = WTERMSIG(r);
 				{
 					// Got a signal.  See if it's one we care about.
@@ -842,6 +840,13 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 						Log(3, "xxxx Got signal %d in capture_RPi.cpp\n", r);
 					}
 				}
+
+				if (numErrors >= maxErrors)
+				{
+					Log(0, "*** ERROR: maximumm number of consecutive errors of %d reached; capture program stopped.\n", maxErrors);
+					closeUp(EXIT_ERROR_STOP);
+				}
+	
 				// Don't wait the full amount on error.
 				long timeToSleep = (float)CG.currentDelay_ms * .25;
 				Log(2, "  > Sleeping from failed exposure: %.1f seconds\n", (float)timeToSleep / MS_IN_SEC);

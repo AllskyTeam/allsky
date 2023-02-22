@@ -32,6 +32,10 @@ from skyfield.api import N, S, E, W
 from skyfield import almanac
 from pytz import timezone
 
+import locale
+
+locale.setlocale(locale.LC_ALL, '')
+
 metaData = {
     "name": "Overlays data on the image",
     "description": "Overlays data fields on the image",
@@ -431,7 +435,11 @@ class ALLSKYOVERLAY:
 
         if "format" in fieldData:
             format = fieldData['format']
-            formatArray = format.split(',')
+            if format.startswith('%'):
+                formatArray = format.split(',')
+            else:
+                regex = r"\{(.*?)\}"
+                formatArray = re.findall(regex, format)
         else:
             format = None
             formatArray = {}
@@ -539,7 +547,7 @@ class ALLSKYOVERLAY:
                 opacity = overrideOpacity
 
             if fieldValue is not None:
-                fieldLabel = fieldLabel.replace(variable, fieldValue)
+                fieldLabel = fieldLabel.replace(variable, str(fieldValue))
                 totalVariablesReplaced += 1
 
             totalVariables += 1
@@ -557,7 +565,7 @@ class ALLSKYOVERLAY:
 
                 if len(s.image.shape) == 2:
                     fill = 255
-
+                print(fieldX, fieldY, fill)
                 if rotation == 0 and opacity == 1:
                     draw = ImageDraw.Draw(pilImage)
                     draw.text((fieldX, fieldY), fieldLabel, font = font, fill = fill, stroke_width=strokeWidth, stroke_fill=strokeFill)
@@ -667,8 +675,8 @@ class ALLSKYOVERLAY:
                         fieldFound = True
 
             if fieldFound:
-                if envCheck == "AS_EXPOSURE_US":
-                    value = str(s.int(value) / 1000)
+                #if envCheck == "AS_EXPOSURE_US":
+                #    value = str(s.int(value) / 1000)
                 
                 if variableType == 'Date':
                     timeStamp = datetime.fromtimestamp(self._imageDate)
@@ -686,15 +694,15 @@ class ALLSKYOVERLAY:
 
                 if variableType == 'Number':
                     if format is not None and format != "":
-                        format = format.replace("%", "{:.") + "}"
-                        ''' We allow text to be substituded for numbers so if the conversion to a flot
-                        fails we will just return the value for the field.
-                        '''                    
+                        format = "{" + format + "}"                 
                         try:
-                            value = s.float(value)
-                            value = format.format(value)
-                        except ValueError:
-                            pass
+                            try:
+                                convertValue = int(value)
+                            except ValueError:
+                                convertValue = float(value)
+                            value = format.format(convertValue)
+                        except ValueError as err:
+                            s.log(0, f"ERROR: Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
 
                 if variableType == 'Bool':
                     if s.int(value) == 0:

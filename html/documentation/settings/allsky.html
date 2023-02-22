@@ -323,7 +323,7 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>(ZWO only) Increases or decreases contrast between dark and bright areas.</td>
 </tr>
 <tr><td><span class="WebUISetting">Offset</span></td>
-	<td>0</td>install.sh
+	<td>0</td>
 	<td>(ZWO only) Adds about 1/10 the specified value to every pixel,
 	which brightens the whole image.</td>
 </tr>
@@ -332,7 +332,7 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>(ZWO only) Specifies how much of a calculated exposure change should be made
 	during auto-exposure. Lower numbers smooth out brightness changes but take longer to
 	react to changes.</td>
-</tr>install.sh
+</tr>
 <tr><td><span class="WebUISetting">Gain Transition Time</span></td>
 	<td>15</td>
 	<td>(ZWO only) Number of <b>minutes</b> over which to increase or decrease
@@ -518,6 +518,11 @@ use the <span class="shSetting">CROP</span> setting in the
 	and in the release after that the legacy mode as well as this "Image overlay settings"
 	section will be removed.
 	</blockquote>
+	<p>
+	When setting to <span class="WebUIValue">module</span>, don't forget to enable the
+	daytime and/or nighttime <span class="moduleName">Overlay Modules</span> in the
+	<span class="managerName">Overlay Manager</span>.
+	</p>
 	</td>
 </tr>
 <tr><td><span class="WebUISetting">Show Time</span></td>
@@ -744,6 +749,15 @@ and if you have the Allsky Website installed, a local and/or remote
 <span class="dropdown">configuration.json</span> file.
 Further, if you have a <span class="dropdown">endOfNight_additionalSteps.sh</span> file,
 it can also be edited.
+<blockquote>
+The <span class="dropdown">endOfNight_additionalSteps.sh</span> file will no longer
+be supported in the next version of Allsky.
+If you use this file, please move your code to the <strong>Script</strong> module
+in the <strong>Night to Day Transition Flow</strong>,
+then remove this file.
+See the <a allsky="true" href="/documentation/modules/modules.html">Module</a>
+documentation for more details.
+</blockquote>
 </p>
 <p>
 The tables below describe the settings in the

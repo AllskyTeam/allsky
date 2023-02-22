@@ -40,15 +40,32 @@ static char const *fontnames[]		= {		// Character representation of names for cl
 void Log(int required_level, const char *fmt, ...)
 {
 	if ((int)abs(CG.debugLevel) >= required_level) {
-		char msg[8192];
-		snprintf(msg, sizeof(msg), "%s", fmt);
+		char msg[512];
 		va_list va;
 		va_start(va, fmt);
-		vfprintf(stdout, msg, va);
+		vsnprintf(msg, sizeof(msg)-1, fmt, va);
+		printf("%s", msg);
 
-		if (CG.debugLevel <= 0)
+		if (required_level <= 0)
 		{
-// xxxx TODO: write to message file
+			char const *severity;
+			if (strcasestr(msg, "warning") != NULL)
+				severity = "warning";
+			else if (strcasestr(msg, "error") != NULL)
+				severity = "error";
+			else
+				severity = "info";
+
+			char *p = &msg[strlen(msg) - 1];
+			if (*p == '\n')
+			{
+				*p = '\0';
+			}
+
+			char command[1024];
+			snprintf(command, sizeof(command)-1, "%sscripts/addMessage.sh %s '%s'", CG.allskyHome, severity, msg);
+			Log(4, "Executing %s\n", command);
+			(void) system(command);
 		}
 
 		va_end(va);
@@ -243,7 +260,7 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	// Since negative temperatures are valid, check against an impossible temperature.
 	// The temperature passed to us is 10 times the actual temperature so we can deal with
 	// integers with 1 decimal place, which is all we care about.
-	if (cg.lastSensorTemp != -999) {
+	if (cg.supportsTemperature && cg.lastSensorTemp != NOT_SET) {
 		snprintf(tmp, s, " TEMPERATURE_C=%d", (int)round(cg.lastSensorTemp));
 		strcat(cmd, tmp);
 		snprintf(tmp, s, " TEMPERATURE_F=%d", (int)round((cg.lastSensorTemp * 1.8) +32));
@@ -804,23 +821,24 @@ void closeUp(int e)
 }
 
 // Handle signals
-void sig(int i)
-{
-	if (i == SIGHUP)
-	{
-		Log(4, "Got signal to restart.\n");
-	}
-	else
-	{
-		Log(0, "Got unknown signal %d in sig().\n", i);
-	}
-	gotSignal = true;
-	closeUp(EXIT_RESTARTING);
-}
 void IntHandle(int i)
 {
 	gotSignal = true;
-	closeUp(EXIT_OK);
+	if (i == SIGHUP)
+	{
+		// TODO: Re-read configuration instead of restarting.
+		Log(4, "Got SIGHUP to restart.\n");
+		closeUp(EXIT_RESTARTING);
+	}
+	else if (i == SIGINT || i == SIGTERM)
+	{
+		closeUp(EXIT_OK);
+	}
+	else
+	{
+		Log(0, "Got unknown signal %d.\n", i);
+		closeUp(i);
+	}
 }
 
 
@@ -1117,7 +1135,7 @@ void displaySettings(config cg)
 	printf("%s", c(KGRN));
 	printf("\nSettings:\n");
 
-	if (cg.ct == ctRPi)
+	if (cg.cmdToUse != NULL)
 		printf("   Command: %s\n", cg.cmdToUse);
 	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
 	printf("   Resolution (before any binning): %ldx%ld\n", cg.width, cg.height);
@@ -1261,8 +1279,7 @@ bool daytimeSleep(bool displayedMsg, config cg)
 			sleep(5);		// In case another notification image is being upload, give it time to finish.
 			(void) displayNotificationImage("--expires 0 CameraOffDuringDay &");
 		}
-		Log(1, "It's daytime... we're not saving images.\n%s",
-			cg.tty ? "*** Press Ctrl+C to stop ***\n" : "");
+		Log(1, "It's daytime... we're not saving images.\n");
 		displayedMsg = true;
 
 		// sleep until around nighttime, then wake up and sleep more if needed.
@@ -1359,14 +1376,12 @@ static bool getConfigFileArguments(config *cg)
 {
 	if (called_from_getConfigFileArguments)
 	{
-		Log(1, "*** WARNING: Configuration file calls itself; ignoring!\n");
-// TODO: write to messages file
+		Log(-1, "*** WARNING: Configuration file calls itself; ignoring!\n");
 		return true;
 	}
 
 	if (cg->configFile[0] == '\0') {
 		Log(0, "*** ERROR: Unable to read configuration file: no file specified!\n");
-// TODO: write to messages file
 		return false;
 	}
 
@@ -1377,7 +1392,6 @@ static bool getConfigFileArguments(config *cg)
 	{
 		int e = errno;
 		Log(0, "*** ERROR: Could not open configuration file '%s': %s!", cg->configFile, strerror(e));
-// TODO: write to messages file
 		return false;
 	}
 	struct stat statbuf;
@@ -1385,7 +1399,6 @@ static bool getConfigFileArguments(config *cg)
 	{
 		int e = errno;
 		Log(0, "*** ERROR: Could not fstat() configuration file '%s': %s!", cg->configFile, strerror(e));
-// TODO: write to messages file
 		return false;
 	}
 	// + 1 for trailing NULL
@@ -1393,14 +1406,12 @@ static bool getConfigFileArguments(config *cg)
 	{
 		int e = errno;
 		Log(0, "*** ERROR: Could not malloc() configuration file '%s': %s!", cg->configFile, strerror(e));
-// TODO: write to messages file
 		return false;
 	}
 	if (read(fd, buf, statbuf.st_size) != statbuf.st_size)
 	{
 		int e = errno;
 		Log(0, "*** ERROR: Could not read() configuration file '%s': %s!", cg->configFile, strerror(e));
-// TODO: write to messages file
 		return false;
 	}
 	buf[statbuf.st_size] = '\0';
@@ -1424,9 +1435,8 @@ static bool getConfigFileArguments(config *cg)
 
 		if (*line == '=')		// still at start of line
 		{
-			Log(1, "*** WARNING: Line %d in configuration file '%s' has nothing before '='!\n", lineNum, cg->configFile);
+			Log(-1, "*** WARNING: Line %d in configuration file '%s' has nothing before '='!\n", lineNum, cg->configFile);
 			continue;
-// TODO: write to messages file
 		}
 
 		// Find a "setting=value" pair or just "setting"
@@ -1447,8 +1457,7 @@ static bool getConfigFileArguments(config *cg)
 
 	if (argc == 1)
 	{
-		Log(1, "*** WARNING: configuration file '%s' has no valid entries!\n", cg->configFile);
-// TODO: write to messages file
+		Log(-1, "*** WARNING: configuration file '%s' has no valid entries!\n", cg->configFile);
 	}
 
 	// Let's hope the config file doesn't call itself!
@@ -1947,14 +1956,14 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 
 		else
-			Log(1, "*** WARNING: Unknown argument: [%s].  Ignored.\n", a);
+			Log(-1, "*** WARNING: Unknown argument: [%s].  Ignored.\n", a);
 	}
 
 
 	// if cg_CC_saveFile is set, we'll output some info and exit, and won't take any images.
 	if (cg->saveDir == NULL && cg->CC_saveFile == NULL) {
 		cg->saveDir = cg->allskyHome;
-		Log(1, "*** WARNING: No directory to save Images was specified. Using: [%s]\n", cg->saveDir);
+		Log(-1, "*** WARNING: No directory to save Images was specified. Using: [%s]\n", cg->saveDir);
 	}
 
 	return(true);
@@ -1975,7 +1984,7 @@ static char const *validateLatLong(
 		return(NULL);
 	}
 
-	Log(4, "validateLatLong(l=%s, positive=%c, negative=%c, savedLocation=%s, name=%s\n", l, positive,negative,savedLocation,name);
+	Log(4, "validateLatLong(l=%s, positive=%c, negative=%c, savedLocation=%s, name=%s)\n", l, positive,negative,savedLocation,name);
 	int len = strlen(l);
 	char direction = (char) toupper(l[len-1]);
 	if (direction == positive || direction == negative) {
@@ -2006,4 +2015,11 @@ bool validateLatitudeLongitude(config *cg)
 		ret = false;
 
 	return(ret);
+}
+
+// Set the locale
+void doLocale(config cg)
+{
+	if (setlocale(LC_NUMERIC, cg.locale) == NULL && ! cg.saveCC)
+		Log(-1, "*** WARNING: Could not set locale to %s ***\n", cg.locale);
 }

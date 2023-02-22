@@ -45,6 +45,8 @@ bool bMain					= true;
 bool bDisplay				= false;
 std::string dayOrNight;
 int numErrors				= 0;					// Number of errors in a row
+int maxErrors				= 5;					// Max number of errors in a row before we exit
+
 bool gotSignal				= false;				// did we get a SIGINT (from keyboard), or SIGTERM/SIGHUP (from service)?
 int iNumOfCtrl				= NOT_SET;				// Number of camera control capabilities
 pthread_t threadDisplay		= 0;					// Not used by Rpi;
@@ -218,7 +220,7 @@ int RPicapture(config cg, cv::Mat *image)
 			command += " --analoggain 1";	// 1 makes it autogain
 		}
 	}
-	else if (cg.currentGain != IS_DEFAULT)	// Is manual gain
+	else if (cg.currentGain != cg.defaultGain)	// Is manual gain
 	{
 		ss.str("");
 		ss << cg.currentGain;
@@ -243,43 +245,45 @@ int RPicapture(config cg, cv::Mat *image)
 		ss << cg.currentWBR << "," << cg.currentWBB;
 		if (! cg.isLibcamera)
 			command += " --awb off";
-		if (cg.currentWBR != IS_DEFAULT and cg.currentWBB != IS_DEFAULT)
+		if (cg.currentWBR != cg.defaultWBR || cg.currentWBB != cg.defaultWBB)
 			command += " --awbgains " + ss.str();
 	}
 	else {		// Use automatic white balance
 		command += " --awb auto";
 	}
 
-	if (cg.rotation != 0) {
+	if (cg.rotation != cg.defaultRotation) {
 		ss.str("");
 		ss << cg.rotation;
 		command += " --rotation " + ss.str();
 	}
 
-	if (cg.flip == 1 || cg.flip == 3)
-		command += " --hflip";		// horizontal flip
-	if (cg.flip == 2 || cg.flip == 3)
-		command += " --vflip";		// vertical flip
+	if (cg.flip != cg.defaultFlip) {
+		if (cg.flip == 1 || cg.flip == 3)
+			command += " --hflip";		// horizontal flip
+		if (cg.flip == 2 || cg.flip == 3)
+			command += " --vflip";		// vertical flip
+	}
 
-	if (cg.saturation != IS_DEFAULT) {
+	if (cg.saturation != cg.defaultSaturation) {
 		ss.str("");
 		ss << cg.saturation;
 		command += " --saturation "+ ss.str();
 	}
 
-	if (cg.contrast != IS_DEFAULT) {
+	if (cg.contrast != cg.defaultContrast) {
 		ss.str("");
 		ss << cg.contrast;
 		command += " --contrast "+ ss.str();
 	}
 
-	if (cg.sharpness != IS_DEFAULT) {
+	if (cg.sharpness != cg.defaultSharpness) {
 		ss.str("");
 		ss << cg.sharpness;
 		command += " --sharpness "+ ss.str();
 	}
 
-	if (cg.currentBrightness != IS_DEFAULT) {
+	if (cg.currentBrightness != cg.defaultBrightness) {
 		ss.str("");
 		if (cg.isLibcamera)
 			// User enters -100 to 100.  Convert to -1.0 to 1.0.
@@ -289,11 +293,18 @@ int RPicapture(config cg, cv::Mat *image)
 		command += " --brightness " + ss.str();
 	}
 
-	if (cg.quality != IS_DEFAULT) {
+	if (cg.quality != cg.defaultQuality) {
 		ss.str("");
 		ss << cg.quality;
 		command += " --quality " + ss.str();
 	}
+
+	// Define char variable
+	char cmd[command.length() + 1];
+	// Convert command to character variable.
+	// Log without the LIBCAMERA_LOG..., which just confuses users.
+	strcpy(cmd, command.c_str());
+	Log(2, "  > Capture command: %s\n", cmd);
 
 	if (cg.isLibcamera)
 	{
@@ -307,13 +318,6 @@ int RPicapture(config cg, cv::Mat *image)
 			command += " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
 		}
 	}
-
-	// Define char variable
-	char cmd[command.length() + 1];
-	// Convert command to character variable.
-	// Log without the LIBCAMERA_LOG..., which just confuses users.
-	strcpy(cmd, command.c_str());
-	Log(2, "  > Capture command: %s\n", cmd);
 
 	if (cg.isLibcamera)
 	{
@@ -335,8 +339,8 @@ int RPicapture(config cg, cv::Mat *image)
 }
 
 
-//-------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
 
 int main(int argc, char *argv[])
 {
@@ -379,8 +383,7 @@ int main(int argc, char *argv[])
 		displayHeader(CG);
 	}
 
-	if (setlocale(LC_NUMERIC, CG.locale) == NULL && ! CG.saveCC)
-		Log(-1, "*** WARNING: Could not set locale to %s ***\n", CG.locale);
+	doLocale(CG);
 
 	if (CG.help)
 	{
@@ -504,9 +507,6 @@ int main(int argc, char *argv[])
 	int originalLinewidth	= CG.overlay.linewidth;
 	// Have we displayed "not taking picture during day" message, if applicable?
 	bool displayedNoDaytimeMsg = false;
-
-	if (CG.tty)
-		Log(0, "*** Press Ctrl+C to stop ***\n\n");
 
 	// Start taking pictures
 
@@ -731,6 +731,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			if (retCode == 0)
 			{
 				numExposures++;
+				numErrors = 0;
 
 				// We currently have no way to get the actual white balance values,
 				// so use what the user requested.
@@ -760,7 +761,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 
 						if (CG.lastMean == -1)
 						{
-							numErrors++;
 							Log(-1, "ERROR: aegCalcMean() returned mean of -1.\n");
 							Log(2, "  > Sleeping from failed exposure: %.1f seconds\n", (float)CG.currentDelay_ms / MS_IN_SEC);
 							usleep(CG.currentDelay_ms * US_IN_MS);
@@ -823,7 +823,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			{
 				numErrors++;
 				int r = retCode >> 8;
-				Log(0, " >>> ERROR: Unable to take picture, return code=%d, r=%d\n", retCode, r);
+				Log(1, " >>> WARNING: Unable to take picture, return code=%d, r=%d\n", retCode, r);
 				if (WIFSIGNALED(r)) r = WTERMSIG(r);
 				{
 					// Got a signal.  See if it's one we care about.
@@ -840,6 +840,13 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 						Log(3, "xxxx Got signal %d in capture_RPi.cpp\n", r);
 					}
 				}
+
+				if (numErrors >= maxErrors)
+				{
+					Log(0, "*** ERROR: maximumm number of consecutive errors of %d reached; capture program stopped.\n", maxErrors);
+					closeUp(EXIT_ERROR_STOP);
+				}
+	
 				// Don't wait the full amount on error.
 				long timeToSleep = (float)CG.currentDelay_ms * .25;
 				Log(2, "  > Sleeping from failed exposure: %.1f seconds\n", (float)timeToSleep / MS_IN_SEC);

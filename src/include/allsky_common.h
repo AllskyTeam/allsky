@@ -261,7 +261,18 @@ struct config {			// for configuration variables
 	struct HB HB;							// Histogram Box, ZWO only
 
 	// Default values used in multiple places, so get just once.
+	// Only include variables that we pass to the capture routine/program.
+	int defaultFlip						= NOT_SET;
+	int defaultRotation					= NOT_SET;
+	int	defaultBin						= NOT_SET;
+	double defaultGain					= NOT_SET;
+	double defaultWBR					= NOT_SET;
+	double defaultWBB					= NOT_SET;
+	double defaultSaturation			= NOT_SET;
+	double defaultContrast				= NOT_SET;
+	double defaultSharpness				= NOT_SET;
 	long defaultBrightness				= NOT_SET;
+	int defaultQuality					= NOT_SET;
 
 	// Current values - may vary between day and night
 	bool currentAutoExposure;
@@ -323,7 +334,6 @@ bool getBoolean(const char *);
 double get_focus_metric(cv::Mat);
 char const *getFlip(int);
 void closeUp(int);
-void sig(int);
 void IntHandle(int);
 int stopVideoCapture(int);
 bool validateLong(long *, long, long, char const *, bool);
@@ -337,3 +347,4 @@ void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
+void doLocale(config);

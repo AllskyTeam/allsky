@@ -247,11 +247,11 @@ while [[ $# -gt 0 ]]; do
 				if ! echo "${R}" | grep --quiet "XX_WORKED_XX"; then
 					echo -n -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}'"
 					if [[ ${OPTIONS_FILE_ONLY} == "true" ]]; then
-						echo -e "file.${wNC}"
+						echo -e "file."
 					else
-						echo -e " and '${SETTINGS_FILE}' files.${wNC}"
+						echo -e " and '${SETTINGS_FILE}' files."
 					fi
-					echo "${R}"
+					echo "${wNC}${R}"
 					exit 1
 				fi
 			else
@@ -392,6 +392,18 @@ while [[ $# -gt 0 ]]; do
 			RUN_POSTTOMAP="true"
 			;;
 
+		overlaymethod)
+			if [[ ${NEW_VALUE} -eq 1 ]]; then		# 1 == "overlay" method
+				echo -en "${wWARNING}"
+				echo -en "NOTE: You need to enable the ${wBOLD}Overlay Module${wNBOLD} in the"
+				echo -en " ${wBOLD}Daytime Capture${wNBOLD} and/or"
+				echo -en " ${wBOLD}Nighttime Capture${wNBOLD} flows of the"
+				echo -en " ${wBOLD}Module Manager${wNBOLD}"
+				echo -en " for the '${LABEL}' to take effect."
+				echo -e "${wNC}"
+			fi
+			;;
+
 
 		*)
 			echo -e "${wWARNING}WARNING: Unknown label '${LABEL}', key='${KEY}'; ignoring.${wNC}"
@@ -478,4 +490,3 @@ if [[ ${GOT_WARNING} == "true" ]]; then
 else
 	exit 0
 fi
-

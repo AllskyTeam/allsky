@@ -308,13 +308,22 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					echo "<div class='system-message'>";
 						echo "<div class='title'>System Messages</div>";
 						foreach ($contents_array as $line) {
-							// The first part is the class, the second is the message
-							$l = explode("\t", $line);
-							if (isset($l[1]))
-								$level = $l[1];
-							else
+							// Format: level (i.e., CSS class), date, count, message
+							$message_array = explode("\t", $line);
+							if (isset($message_array[3])) {
+								$level = $message_array[0];
+								$date = $message_array[1];
+								$count = $message_array[2];
+								$message = $message_array[3];
+								if ($count == 1)
+									$message .= " &nbsp; ($date)";
+								else
+									$message .= " &nbsp; ($count occurrences, last on $date)";
+							} else {
 								$level = "error";	// badly formed message
-							$status->addMessage($level, $l[0], false);
+								$message = "INTERNAL ERROR: Poorly formatted message: $line";
+							}
+							$status->addMessage($message, $level, false);
 						}
 						$status->showMessages();
 						echo "<div class='message-button'>";

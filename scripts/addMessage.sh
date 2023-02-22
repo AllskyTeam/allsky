@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Add a message to the WebUI message box.
+# Add a message to the WebUI message box, including the time and a count.
+# If the message is already there, just update the time and count.
 
 ME="$(basename "${BASH_ARGV0}")"
 
@@ -15,7 +16,8 @@ if [ $# -ne 2 ]; then
 	exit 1
 fi
 
-# The classes are all lower case, so convert.
+# The CSS classes are all lower case, so convert.
+# Our "error" and "debug" message types have a different CSS class name, so map them.
 TYPE="${1,,}"
 if [[ ${TYPE} == "error" ]]; then
 	TYPE="danger"
@@ -23,5 +25,16 @@ elif [[ ${TYPE} == "debug" ]]; then
 	TYPE="warning"
 fi
 MESSAGE="${2}"
+DATE="$(date)"
 
-echo -e "${TYPE}\t${MESSAGE}"  >>  "${ALLSKY_MESSAGES}"
+# The file is tab-separated: type date count message
+TAB="$(echo -e "\t")"
+if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$(grep "${TAB}${MESSAGE}$" "${ALLSKY_MESSAGES}")" ; then
+	PRIOR_COUNT=$(echo -e "${M}" | cut -f3 -d"${TAB}")
+	COUNT=$((PRIOR_COUNT + 1))
+	sed -i -e "/${TAB}${MESSAGE}$/d"  "${ALLSKY_MESSAGES}"
+else
+	COUNT=1
+fi
+
+echo -e "${TYPE}${TAB}${DATE}${TAB}${COUNT}${TAB}${MESSAGE}"  >>  "${ALLSKY_MESSAGES}"

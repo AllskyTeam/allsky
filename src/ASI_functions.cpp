@@ -1232,13 +1232,16 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 
 	signal(SIGINT, IntHandle);
 	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
-	signal(SIGHUP, sig);		// xxxxxxxxxx TODO: Set up to re-read settings (we currently just restart).
+	signal(SIGHUP, IntHandle);		// SIGHUP means restart.
 
 	return(ok);
 }
 
 // If a value is currently NOT_CHANGED, the user didn't specify so use the default.
 // Validate the command-line settings.
+// For cameras that use an external application to take pictures,
+// set any default values specified by the user to IS_DEFAULT so we don't pass the
+// value to the external program.
 bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 {
 	ASI_ERROR_CODE ret;
@@ -1299,6 +1302,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	ret = getControlCapForControlType(cg->cameraNumber, ASI_FLIP, &cc);
 	if (ret == ASI_SUCCESS)
 	{
+		cg->defaultFlip = cc.DefaultValue;
 		if (cg->flip == NOT_CHANGED)
 			cg->flip = cc.DefaultValue;
 		else
@@ -1309,6 +1313,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	}
 
 	// libcamera only supports 0 and 180 degree rotation
+	cg->defaultRotation = 0;
 	if (cg->rotation != 0)
 	{
 		if (cg->ct == ctRPi && cg->isLibcamera)
@@ -1349,10 +1354,11 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	}
 
 	validateLong(&cg->debugLevel, 0, 4, "Debug Level", true);
+
+	// Overlay-related arguments
 	validateLong(&cg->overlay.extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);
 	validateLong(&cg->overlay.fontnumber, 0, 8-1, "Font Name", true);
 	validateLong(&cg->overlay.linenumber, 0, sizeof(cg->overlay.linetype)-1, "Font Smoothness", true);
-
 	if (cg->overlay.fc != NULL && sscanf(cg->overlay.fc, "%d %d %d",
 			&cg->overlay.fontcolor[0], &cg->overlay.fontcolor[1], &cg->overlay.fontcolor[2]) != 3)
 		Log(-1, "%s*** WARNING: Not enough font color parameters: '%s'%s\n", c(KRED), cg->overlay.fc, c(KNRM));
@@ -1360,6 +1366,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			&cg->overlay.smallFontcolor[0], &cg->overlay.smallFontcolor[1], &cg->overlay.smallFontcolor[2]) != 3)
 		Log(-1, "%s*** WARNING: Not enough small font color parameters: '%s'%s\n", c(KRED), cg->overlay.sfc, c(KNRM));
 
+	cg->defaultBin = 1;
 	if (! checkBin(cg->dayBin, ci, "Daytime Binning"))
 		ok = false;
 	if (! checkBin(cg->nightBin, ci, "Nighttime Binning"))
@@ -1391,6 +1398,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	ret = getControlCapForControlType(cg->cameraNumber, ASI_GAIN, &cc);
 	if (ret == ASI_SUCCESS)
 	{
+		cg->defaultGain = cc.DefaultValue;
 		cg->cameraMinGain = cc.MinValue;		// used elsewhere
 		if (cg->dayGain == NOT_CHANGED)
 			cg->dayGain = cc.DefaultValue;
@@ -1425,6 +1433,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		ret = getControlCapForControlType(cg->cameraNumber, ASI_WB_R, &cc);
 		if (ret == ASI_SUCCESS)
 		{
+			cg->defaultWBR = cc.DefaultValue;
 			if (cg->dayWBR == NOT_CHANGED)
 				cg->dayWBR = cc.DefaultValue;
 			else
@@ -1441,6 +1450,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		ret = getControlCapForControlType(cg->cameraNumber, ASI_WB_B, &cc);
 		if (ret == ASI_SUCCESS)
 		{
+			cg->defaultWBB = cc.DefaultValue;
 			if (cg->dayWBB == NOT_CHANGED)
 				cg->dayWBB = cc.DefaultValue;
 			else
@@ -1460,6 +1470,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		ret = getControlCapForControlType(cg->cameraNumber, SATURATION, &cc);
 		if (ret == ASI_SUCCESS)
 		{
+			cg->defaultSaturation = cc.DefaultValue;
 			if (cg->saturation == NOT_CHANGED)
 				cg->saturation = cc.DefaultValue;
 			else
@@ -1472,6 +1483,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		ret = getControlCapForControlType(cg->cameraNumber, CONTRAST, &cc);
 		if (ret == ASI_SUCCESS)
 		{
+			cg->defaultContrast = cc.DefaultValue;
 			if (cg->contrast == NOT_CHANGED)
 				cg->contrast = cc.DefaultValue;
 			else
@@ -1484,6 +1496,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		ret = getControlCapForControlType(cg->cameraNumber, SHARPNESS, &cc);
 		if (ret == ASI_SUCCESS)
 		{
+			cg->defaultSharpness = cc.DefaultValue;
 			if (cg->sharpness == NOT_CHANGED)
 				cg->sharpness = cc.DefaultValue;
 			else

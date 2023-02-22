@@ -243,7 +243,7 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	// Since negative temperatures are valid, check against an impossible temperature.
 	// The temperature passed to us is 10 times the actual temperature so we can deal with
 	// integers with 1 decimal place, which is all we care about.
-	if (cg.lastSensorTemp != -999) {
+	if (cg.supportsTemperature && cg.lastSensorTemp != NOT_SET) {
 		snprintf(tmp, s, " TEMPERATURE_C=%d", (int)round(cg.lastSensorTemp));
 		strcat(cmd, tmp);
 		snprintf(tmp, s, " TEMPERATURE_F=%d", (int)round((cg.lastSensorTemp * 1.8) +32));
@@ -804,23 +804,24 @@ void closeUp(int e)
 }
 
 // Handle signals
-void sig(int i)
-{
-	if (i == SIGHUP)
-	{
-		Log(4, "Got signal to restart.\n");
-	}
-	else
-	{
-		Log(0, "Got unknown signal %d in sig().\n", i);
-	}
-	gotSignal = true;
-	closeUp(EXIT_RESTARTING);
-}
 void IntHandle(int i)
 {
 	gotSignal = true;
-	closeUp(EXIT_OK);
+	if (i == SIGHUP)
+	{
+		// TODO: Re-read configuration instead of restarting.
+		Log(4, "Got SIGHUP to restart.\n");
+		closeUp(EXIT_RESTARTING);
+	}
+	else if (i == SIGINT || i == SIGTERM)
+	{
+		closeUp(EXIT_OK);
+	}
+	else
+	{
+		Log(0, "Got unknown signal %d.\n", i);
+		closeUp(i);
+	}
 }
 
 
@@ -1117,7 +1118,7 @@ void displaySettings(config cg)
 	printf("%s", c(KGRN));
 	printf("\nSettings:\n");
 
-	if (cg.ct == ctRPi)
+	if (cg.cmdToUse != NULL)
 		printf("   Command: %s\n", cg.cmdToUse);
 	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
 	printf("   Resolution (before any binning): %ldx%ld\n", cg.width, cg.height);
@@ -1975,7 +1976,7 @@ static char const *validateLatLong(
 		return(NULL);
 	}
 
-	Log(4, "validateLatLong(l=%s, positive=%c, negative=%c, savedLocation=%s, name=%s\n", l, positive,negative,savedLocation,name);
+	Log(4, "validateLatLong(l=%s, positive=%c, negative=%c, savedLocation=%s, name=%s)\n", l, positive,negative,savedLocation,name);
 	int len = strlen(l);
 	char direction = (char) toupper(l[len-1]);
 	if (direction == positive || direction == negative) {

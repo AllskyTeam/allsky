@@ -193,13 +193,15 @@ class OVERLAYUTIL
                     $value = trim($fieldSplit[1]);
                     $value = iconv("UTF-8","ISO-8859-1//IGNORE",$value);
                     $value = iconv("ISO-8859-1","UTF-8",$value);
-                    $obj = (object) [
-                        'id' => $count,
-                        'name' => $fieldSplit[0],
-                        'value' => $value
-                    ];
-                    $fieldData[] = $obj;
-                    $count++;
+                    if (substr($fieldSplit[0],0,3) == "AS_") {
+                        $obj = (object) [
+                            'id' => $count,
+                            'name' => $fieldSplit[0],
+                            'value' => $value
+                        ];
+                        $fieldData[] = $obj;
+                        $count++;
+                    }
                 }
 
                 $result['data'] = $fieldData;

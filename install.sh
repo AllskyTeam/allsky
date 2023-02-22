@@ -820,11 +820,14 @@ restore_prior_files() {
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
 		display_msg progress "Restoring endOfNight_additionalSteps.sh."
 		cp -a "${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
-	fi
 
-	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfDay_additionalSteps.sh ]]; then
-		display_msg progress "Restoring endOfDay_additionalSteps.sh."
-		cp -a "${PRIOR_ALLSKY_DIR}/scripts/endOfDay_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
+		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file will be removed"
+		MSG="${MSG}\nin the next version of Allsky.  You appear to be using this file,"
+		MSG="${MSG}\nso please move your code to the 'Script' module in"
+		MSG="${MSG}\nthe 'Night to Day Transition Flow' of the Module Manager."
+		MSG="${MSG}\nSee the 'Explanations --> Module' documentation for more details."
+		display_msg info "\n${MSG}\n"
+		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 
 	if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then

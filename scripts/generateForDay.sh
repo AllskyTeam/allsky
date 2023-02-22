@@ -20,6 +20,8 @@ GOT=0
 DO_KEOGRAM="false"
 DO_STARTRAILS="false"
 DO_TIMELAPSE="false"
+THUMBNAIL_ONLY="false"
+THUMBNAIL_ONLY_ARG=""
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -33,6 +35,10 @@ while [[ $# -gt 0 ]]; do
 			--silent)
 				SILENT="true"
 				UPLOAD_SILENT=""	# since WE aren't outputing a message, upload.sh should.
+				;;
+			--thumbnail-only)
+				THUMBNAIL_ONLY="true"
+				THUMBNAIL_ONLY_ARG="${ARG}"
 				;;
 			--upload)
 				TYPE="UPLOAD"
@@ -70,12 +76,13 @@ usage_and_exit()
 	retcode=${1}
 	echo
 	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] [--silent] [--debug] [--upload] [-k] [-s] [-t] DATE"
+	echo "Usage: ${ME} [--help] [--silent] [--debug] [--upload] [--thumbnail-only] [-k] [-s] [-t] DATE"
 	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--help' displays this message and exits."
 	echo "      '--debug' runs upload.sh in debug mode."
 	echo "      '--upload' uploads previously-created files instead of creating them."
+	echo "      '--thumbnail-only' creates or uploads video thumbnails only."
 	echo "      'DATE' is the day in '${ALLSKY_IMAGES}' to process."
 	echo "      '-k' will ${MSG1} a keogram."
 	echo "      '-s' will ${MSG1} a startrail."
@@ -210,9 +217,18 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	UPLOAD_FILE="${DATE_DIR}/${VIDEOS_FILE}"
 	UPLOAD_THUMBNAIL="${DATE_DIR}/${THUMBNAIL_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		CMD="'${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE}"
-		generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
-		RET=$?
+		if [[ ${THUMBNAIL_ONLY} == "true" ]]; then
+			if [[ -f ${UPLOAD_FILE} ]]; then
+				RET=0
+			else
+				echo -e "${RED}${ME}: ERROR: video file '${UPLOAD_FILE}' not found!\nCannot create thumbnail.${NC}"
+				RET=1
+			fi
+		else
+			CMD="'${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE}"
+			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
+			RET=$?
+		fi
 		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" ]]; then
 			rm -f "${UPLOAD_THUMBNAIL}"
 			function make_thumbnail()
@@ -231,8 +247,12 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			fi
 		fi
 	else
-		upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
-		RET=$?
+		if [[ ${THUMBNAIL_ONLY} == "true" ]]; then
+			RET=0
+		else
+			upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
+			RET=$?
+		fi
 		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -f ${UPLOAD_THUMBNAIL} ]]; then
 			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" "${UPLOAD_THUMBNAIL_NAME}" "" "${WEB_VIDEOS_DIR}/thumbnails"
 		fi
@@ -242,7 +262,7 @@ fi
 
 
 if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${EXIT_CODE} -eq 0 ]]; then
-	ARGS=""
+	ARGS="${THUMBNAIL_ONLY_ARG}"
 	[[ ${DO_KEOGRAM} == "true" ]] && ARGS="${ARGS} -k"
 	[[ ${DO_STARTRAILS} == "true" ]] && ARGS="${ARGS} -s"
 	[[ ${DO_TIMELAPSE} == "true" ]] && ARGS="${ARGS} -t"

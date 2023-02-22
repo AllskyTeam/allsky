@@ -250,16 +250,18 @@ int RPicapture(config cg, cv::Mat *image)
 		command += " --awb auto";
 	}
 
-	if (cg.rotation != 0) {
+	if (cg.rotation != cg.defaultRotation) {
 		ss.str("");
 		ss << cg.rotation;
 		command += " --rotation " + ss.str();
 	}
 
-	if (cg.flip == 1 || cg.flip == 3)
-		command += " --hflip";		// horizontal flip
-	if (cg.flip == 2 || cg.flip == 3)
-		command += " --vflip";		// vertical flip
+	if (cg.flip != cg.defaultFlip) {
+		if (cg.flip == 1 || cg.flip == 3)
+			command += " --hflip";		// horizontal flip
+		if (cg.flip == 2 || cg.flip == 3)
+			command += " --vflip";		// vertical flip
+	}
 
 	if (cg.saturation != cg.defaultSaturation) {
 		ss.str("");

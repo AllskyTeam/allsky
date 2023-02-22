@@ -150,7 +150,7 @@ function upload_file()
 	local strFILE_TO_UPLOAD="${2}"
 	local DIRECTORY="${3}"		# Directory to put file in
 	if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
-		MSG="File to upload '${FILE_TO_UPLOAD}' (${strFILE_TO_UPLOAD}) not found.${NC}"
+		MSG="File to upload '${FILE_TO_UPLOAD}' (${strFILE_TO_UPLOAD}) not found."
 		echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
 		return 1

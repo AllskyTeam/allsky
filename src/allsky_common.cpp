@@ -40,7 +40,7 @@ static char const *fontnames[]		= {		// Character representation of names for cl
 void Log(int required_level, const char *fmt, ...)
 {
 	if ((int)abs(CG.debugLevel) >= required_level) {
-		char msg[8192];
+		char msg[512];
 		snprintf(msg, sizeof(msg), "%s", fmt);
 		va_list va;
 		va_start(va, fmt);
@@ -48,7 +48,19 @@ void Log(int required_level, const char *fmt, ...)
 
 		if (CG.debugLevel <= 0)
 		{
-// xxxx TODO: write to message file
+			char const *severity;
+			if (strstr(msg, "WARNING") == 0)
+				severity = "warning";
+			else if (strstr(msg, "ERROR") == 0)
+				severity = "error";
+			else
+				severity = "info";
+
+			char command[1024];
+
+			snprintf(command, sizeof(command), "%s '%s'", severity, msg);
+			Log(4, "Executing %s\n", command);
+			(void) system(command);
 		}
 
 		va_end(va);
@@ -2007,4 +2019,11 @@ bool validateLatitudeLongitude(config *cg)
 		ret = false;
 
 	return(ret);
+}
+
+// Set the locale
+void doLocale(config cg)
+{
+	if (setlocale(LC_NUMERIC, cg.locale) == NULL && ! cg.saveCC)
+		Log(-1, "*** WARNING: Could not set locale to %s ***\n", cg.locale);
 }

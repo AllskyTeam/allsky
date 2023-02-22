@@ -25,6 +25,7 @@ class OEUIMANAGER {
     #allFieldTable = null;
 
     constructor(imageObj) {
+
         this.#configManager = window.oedi.get('config');
         this.#fieldManager = window.oedi.get('fieldmanager');
 
@@ -489,7 +490,7 @@ class OEUIMANAGER {
             $('#oe-item-list-dialog-save').addClass('hidden');
             $('#oe-item-list-dialog').modal({
                 keyboard: false,
-                width: 600
+                width: 800
             })
             $('#oe-item-list-dialog').on('hidden.bs.modal', function () {
                 $('#itemlisttable').DataTable().destroy();
@@ -1499,8 +1500,8 @@ class OEUIMANAGER {
                     'format': this.#selected.format,
                     'sample': this.#selected.sample,
                     'empty': this.#selected.empty,
-                    'x': this.#selected.x,
-                    'y': this.#selected.y,
+                    'x': this.#selected.calcX,
+                    'y': this.#selected.calcY,
                     'fontsize': this.#selected.fontsize,
                     'fontname': this.#selected.fontname,
                     'opacity': this.#selected.opacity,
@@ -1657,8 +1658,16 @@ class OEUIMANAGER {
             let field = uiManager.selected;
 
             // TODO: Check setter actually exists
-
-            field[name] = value;
+            
+            if (name == 'x' || name == 'y') {
+                if (name == 'x') {
+                    field.x = value + field.shape.offsetX()
+                } else {
+                    field.y = value + field.shape.offsetY()
+                }
+            } else {
+                field[name] = value;
+            }
 
             // If we are in test mode then re enable it after the field has ben updated
             if (uiManager.testMode) {

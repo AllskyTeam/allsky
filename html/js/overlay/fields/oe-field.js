@@ -126,6 +126,13 @@ class OEFIELD {
     return this.getValue('position');
   }
 
+  get calcX() {
+    return this.fieldData.x -  this.shape.offsetX();
+  }
+  get calcY() {
+    return this.fieldData.y -  this.shape.offsetY();
+  }
+
   get x() {
     return this.fieldData.x;
   }

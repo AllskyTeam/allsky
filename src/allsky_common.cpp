@@ -40,7 +40,7 @@ static char const *fontnames[]		= {		// Character representation of names for cl
 void Log(int required_level, const char *fmt, ...)
 {
 	if ((int)abs(CG.debugLevel) >= required_level) {
-		char msg[8192];
+		char msg[512];
 		snprintf(msg, sizeof(msg), "%s", fmt);
 		va_list va;
 		va_start(va, fmt);
@@ -48,7 +48,19 @@ void Log(int required_level, const char *fmt, ...)
 
 		if (CG.debugLevel <= 0)
 		{
-// xxxx TODO: write to message file
+			char const *severity;
+			if (strcasestr(msg, "warning") != NULL)
+				severity = "warning";
+			else if (strcasestr(msg, "error") != NULL)
+				severity = "error";
+			else
+				severity = "info";
+
+			char command[1024];
+
+			snprintf(command, sizeof(command)-1, "%sscripts/addMessage.sh %s '%s'", CG.allskyHome, severity, msg);
+			Log(4, "Executing %s\n", command);
+			(void) system(command);
 		}
 
 		va_end(va);
@@ -1262,8 +1274,7 @@ bool daytimeSleep(bool displayedMsg, config cg)
 			sleep(5);		// In case another notification image is being upload, give it time to finish.
 			(void) displayNotificationImage("--expires 0 CameraOffDuringDay &");
 		}
-		Log(1, "It's daytime... we're not saving images.\n%s",
-			cg.tty ? "*** Press Ctrl+C to stop ***\n" : "");
+		Log(1, "It's daytime... we're not saving images.\n");
 		displayedMsg = true;
 
 		// sleep until around nighttime, then wake up and sleep more if needed.
@@ -1360,14 +1371,12 @@ static bool getConfigFileArguments(config *cg)
 {
 	if (called_from_getConfigFileArguments)
 	{
-		Log(1, "*** WARNING: Configuration file calls itself; ignoring!\n");
-// TODO: write to messages file
+		Log(-1, "*** WARNING: Configuration file calls itself; ignoring!\n");
 		return true;
 	}
 
 	if (cg->configFile[0] == '\0') {
 		Log(0, "*** ERROR: Unable to read configuration file: no file specified!\n");
-// TODO: write to messages file
 		return false;
 	}
 
@@ -1378,7 +1387,6 @@ static bool getConfigFileArguments(config *cg)
 	{
 		int e = errno;
 		Log(0, "*** ERROR: Could not open configuration file '%s': %s!", cg->configFile, strerror(e));
-// TODO: write to messages file
 		return false;
 	}
 	struct stat statbuf;
@@ -1386,7 +1394,6 @@ static bool getConfigFileArguments(config *cg)
 	{
 		int e = errno;
 		Log(0, "*** ERROR: Could not fstat() configuration file '%s': %s!", cg->configFile, strerror(e));
-// TODO: write to messages file
 		return false;
 	}
 	// + 1 for trailing NULL
@@ -1394,14 +1401,12 @@ static bool getConfigFileArguments(config *cg)
 	{
 		int e = errno;
 		Log(0, "*** ERROR: Could not malloc() configuration file '%s': %s!", cg->configFile, strerror(e));
-// TODO: write to messages file
 		return false;
 	}
 	if (read(fd, buf, statbuf.st_size) != statbuf.st_size)
 	{
 		int e = errno;
 		Log(0, "*** ERROR: Could not read() configuration file '%s': %s!", cg->configFile, strerror(e));
-// TODO: write to messages file
 		return false;
 	}
 	buf[statbuf.st_size] = '\0';
@@ -1425,9 +1430,8 @@ static bool getConfigFileArguments(config *cg)
 
 		if (*line == '=')		// still at start of line
 		{
-			Log(1, "*** WARNING: Line %d in configuration file '%s' has nothing before '='!\n", lineNum, cg->configFile);
+			Log(-1, "*** WARNING: Line %d in configuration file '%s' has nothing before '='!\n", lineNum, cg->configFile);
 			continue;
-// TODO: write to messages file
 		}
 
 		// Find a "setting=value" pair or just "setting"
@@ -1448,8 +1452,7 @@ static bool getConfigFileArguments(config *cg)
 
 	if (argc == 1)
 	{
-		Log(1, "*** WARNING: configuration file '%s' has no valid entries!\n", cg->configFile);
-// TODO: write to messages file
+		Log(-1, "*** WARNING: configuration file '%s' has no valid entries!\n", cg->configFile);
 	}
 
 	// Let's hope the config file doesn't call itself!
@@ -1948,14 +1951,14 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 
 		else
-			Log(1, "*** WARNING: Unknown argument: [%s].  Ignored.\n", a);
+			Log(-1, "*** WARNING: Unknown argument: [%s].  Ignored.\n", a);
 	}
 
 
 	// if cg_CC_saveFile is set, we'll output some info and exit, and won't take any images.
 	if (cg->saveDir == NULL && cg->CC_saveFile == NULL) {
 		cg->saveDir = cg->allskyHome;
-		Log(1, "*** WARNING: No directory to save Images was specified. Using: [%s]\n", cg->saveDir);
+		Log(-1, "*** WARNING: No directory to save Images was specified. Using: [%s]\n", cg->saveDir);
 	}
 
 	return(true);
@@ -2007,4 +2010,11 @@ bool validateLatitudeLongitude(config *cg)
 		ret = false;
 
 	return(ret);
+}
+
+// Set the locale
+void doLocale(config cg)
+{
+	if (setlocale(LC_NUMERIC, cg.locale) == NULL && ! cg.saveCC)
+		Log(-1, "*** WARNING: Could not set locale to %s ***\n", cg.locale);
 }

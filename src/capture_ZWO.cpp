@@ -621,7 +621,7 @@ bool checkMaxErrors(int *e, int maxErrors)
 	if (numErrors >= maxErrors)
 	{
 		*e = EXIT_RESET_USB;		// exit code. Need to reset USB bus
-		Log(0, "*** ERROR: Maximum number of consecutive errors of %d reached; exiting...\n", maxErrors);
+		Log(0, "*** ERROR: Maximum number of consecutive errors of %d reached; capture program exited.\n", maxErrors);
 		return(false);	// gets us out of inner and outer loop
 	}
 	return(true);
@@ -685,8 +685,7 @@ int main(int argc, char *argv[])
 		displayHeader(CG);
 	}
 
-	if (setlocale(LC_NUMERIC, CG.locale) == NULL && ! CG.saveCC)
-		Log(-1, "*** WARNING: Could not set locale to %s ***\n", CG.locale);
+	doLocale(CG);
 
 	if (CG.help)
 	{
@@ -934,9 +933,6 @@ int main(int argc, char *argv[])
 	if (CG.overlay.ImgExtraText[0] != '\0' && CG.overlay.extraFileAge > 0) {
 		Log(4, "Extra Text File Age Disabled So Displaying Anyway\n");
 	}
-
-	if (CG.tty)
-		Log(0, "*** Press Ctrl+C to stop ***\n\n");
 
 	// Start taking pictures
 
@@ -1782,4 +1778,3 @@ printf("       new newExposure_us=%s\n", length_in_units(n, true));
 
 	closeUp(EXIT_OK);
 }
-

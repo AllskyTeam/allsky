@@ -347,3 +347,4 @@ void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
+void doLocale(config);

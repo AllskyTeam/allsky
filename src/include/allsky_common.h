@@ -268,7 +268,7 @@ struct config {			// for configuration variables
 	double defaultContrast				= NOT_SET;
 	double defaultSharpness				= NOT_SET;
 	long defaultBrightness				= NOT_SET;
-	int defaultQuality;					= NOT_SET;
+	int defaultQuality					= NOT_SET;
 
 	// Current values - may vary between day and night
 	bool currentAutoExposure;

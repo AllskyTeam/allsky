@@ -218,7 +218,7 @@ int RPicapture(config cg, cv::Mat *image)
 			command += " --analoggain 1";	// 1 makes it autogain
 		}
 	}
-	else if (cg.currentGain != IS_DEFAULT)	// Is manual gain
+	else if (cg.currentGain != cg.defaultGain)	// Is manual gain
 	{
 		ss.str("");
 		ss << cg.currentGain;
@@ -243,7 +243,7 @@ int RPicapture(config cg, cv::Mat *image)
 		ss << cg.currentWBR << "," << cg.currentWBB;
 		if (! cg.isLibcamera)
 			command += " --awb off";
-		if (cg.currentWBR != IS_DEFAULT and cg.currentWBB != IS_DEFAULT)
+		if (cg.currentWBR != cg.defaultWBR || cg.currentWBB != cg.defaultWBB)
 			command += " --awbgains " + ss.str();
 	}
 	else {		// Use automatic white balance
@@ -261,25 +261,25 @@ int RPicapture(config cg, cv::Mat *image)
 	if (cg.flip == 2 || cg.flip == 3)
 		command += " --vflip";		// vertical flip
 
-	if (cg.saturation != IS_DEFAULT) {
+	if (cg.saturation != cg.defaultSaturation) {
 		ss.str("");
 		ss << cg.saturation;
 		command += " --saturation "+ ss.str();
 	}
 
-	if (cg.contrast != IS_DEFAULT) {
+	if (cg.contrast != cg.defaultContrast) {
 		ss.str("");
 		ss << cg.contrast;
 		command += " --contrast "+ ss.str();
 	}
 
-	if (cg.sharpness != IS_DEFAULT) {
+	if (cg.sharpness != cg.defaultSharpness) {
 		ss.str("");
 		ss << cg.sharpness;
 		command += " --sharpness "+ ss.str();
 	}
 
-	if (cg.currentBrightness != IS_DEFAULT) {
+	if (cg.currentBrightness != cg.defaultBrightness) {
 		ss.str("");
 		if (cg.isLibcamera)
 			// User enters -100 to 100.  Convert to -1.0 to 1.0.
@@ -289,11 +289,18 @@ int RPicapture(config cg, cv::Mat *image)
 		command += " --brightness " + ss.str();
 	}
 
-	if (cg.quality != IS_DEFAULT) {
+	if (cg.quality != cg.defaultQuality) {
 		ss.str("");
 		ss << cg.quality;
 		command += " --quality " + ss.str();
 	}
+
+	// Define char variable
+	char cmd[command.length() + 1];
+	// Convert command to character variable.
+	// Log without the LIBCAMERA_LOG..., which just confuses users.
+	strcpy(cmd, command.c_str());
+	Log(2, "  > Capture command: %s\n", cmd);
 
 	if (cg.isLibcamera)
 	{
@@ -307,13 +314,6 @@ int RPicapture(config cg, cv::Mat *image)
 			command += " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
 		}
 	}
-
-	// Define char variable
-	char cmd[command.length() + 1];
-	// Convert command to character variable.
-	// Log without the LIBCAMERA_LOG..., which just confuses users.
-	strcpy(cmd, command.c_str());
-	Log(2, "  > Capture command: %s\n", cmd);
 
 	if (cg.isLibcamera)
 	{
@@ -335,8 +335,8 @@ int RPicapture(config cg, cv::Mat *image)
 }
 
 
-//-------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
 
 int main(int argc, char *argv[])
 {

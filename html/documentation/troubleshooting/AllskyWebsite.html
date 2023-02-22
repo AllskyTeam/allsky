@@ -31,19 +31,22 @@ This page lists various issues you may have with the Allsky Website and how to s
 
 <h2>WARNING: sunset is XX days old. Check Allsky log file if 'postData.sh' has been running...</h2>
 <p>
-At the end of every night, if the <span clas="shSetting">POST_END_OF_NIGHT</span> setting
-is <span class="editorBool">true</span> then Allsky calls <code>postData.sh</code>
-to upload a small file called
-<span class="fileName">data.json</span> to your Allsky Website that contains the sunrise, sunset,
-and other information needed by the Website.
+If you have a local or remote Allsky Website, at the end of every night
+Allsky calls <code>postData.sh</code> to upload a small file called
+<span class="fileName">data.json</span> to the Website(s).
+This file contains the sunset time and other information needed by the Website.
 </p>
-If you are seeing the message above when you go to the Allsky Website, do the following:
-<ul>
-<li>Make sure <span class="shSetting">POST_END_OF_NIGHT</span> is "true".
-<li>Make sure Allsky can upload files to your remote web server in the directory specified by the
-	<span class="shSetting">IMAGE_DIR</span> variable in
-	<span class="fileName">ftp-settings.sh</span>.
-</ul>
+If you are seeing the message above when you go to the Allsky Website in a browser,
+try running the command manually:
+<pre>cd ~/allsky/scripts
+./postData.sh</pre>
+
+There will be no output on success.
+If you see an error message and it's not obvious what it means, run:
+<pre>./postData.sh --debug</pre>
+which will produce many lines of debugging output which may help you determine
+where the problem is.
+At a minimum, it will provide something to attach to any trouble ticket you enter.
 
 <h2>ERROR: 'sunset' not defined in 'data.json' ...</h2>
 <p>
@@ -55,20 +58,18 @@ open a new <a href="https://github.com/thomasjacquin/allsky/issues">Issue</a>.
 
 <h2>After changing the <span class="WebUISetting">Filename</span> in the WebUI you no longer see images on the Website</h2>
 <p>
-If you used the WebUI to change the
-<span class="WebUISetting">Filename</span> setting or its extension
+If you changed the <span class="WebUISetting">Filename</span> setting or its extension
 (for example, from <span class="fileName">image.jpg</span>
 to <span class="fileName">myimage.jpg</span>
 or from <span class="fileName">image.jpg</span> to <span class="fileName">image.png</span>)
-the update should automatically be sent to your Website.
-If that didn't happen, you must update the <span class="editorSetting">fileName</span> value in
+in the WebUI, this change should automatically be sent to your Website(s).
+If that didn't happen, you must manually update the
+<span class="editorSetting">fileName</span> value in
 the <span class="fileName">configuration.json</span> file (local and/or remote)
-via the WebUI's <b>Editor</b> page.
-<blockquote>
-If you have both a local and remote Allsky Website,
-updates made in the WebUI to settings that are shared with an Allsky Website
-are only propogated to the local Website.
-</blockquote>
+via the WebUI's <span class="WebUILink">Editor</span> page.
+If that solved your problem, please
+open an <a href="https://github.com/thomasjacquin/allsky/issues">Issue</a> per
+<a allsky="true" href="/documentation/troubleshooting/reportingIssues.html">these instructions</a>.
 </p>
 
 
@@ -81,8 +82,9 @@ If the Website is remote, ask your hosting provider if you can have access to th
 log file.
 <br>
 In both cases, you can also look at the <span class="fileName">configuration.json</span>
-file in the WebUI's <b>Editor</b> page to see if the
+file in the WebUI's <span class="WebUILink">Editor</span> page to see if the
 <a allsky="true" href="/documentation/settings/EditorColors.html">editor's colors are off</a>.
+If so, that indicates a syntax error in the file that needs to be fixed.
 </p>
 <p>
 If you are using the Pi's hostname in the URL,
@@ -93,7 +95,7 @@ for example <code>http://192.168.0.21/allsky</code>.
 <h2>Archived video files have no thumbnail</h2>
 <p>
 If you click on the
-<i class="fa fa-2x fa-fw fa-play-circle"></i> "Archived Timelapses" icon on the left side of the
+<i class="fa fa-lg fa-fw fa-play-circle"></i> "Archived Timelapses" icon on the left side of the
 Website and one or more videos say "No Thumbnail", see below.
 </p>
 <div style="margin-left: 5em">
@@ -104,13 +106,24 @@ Look in <span class="fileName">/var/log/lighttpd/error.log</span> for clues to t
 
 <h3>On a remote server</h3>
 <p>
-For security reasons, many hosting solutions disable commands needed to create thumbnails.
+For security reasons, many hosting solutions disable the commands needed to create
+video thumbnails.
 </p>
 <p>
 To overcome this problem, edit the <span class="fileName">config.sh</span> file via the WebUI
 and set <span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span> to "true".
-If you are uploading mini-timelapse, do the same with the
-<span class="shSetting">TIMELAPSE_MINI_UPLOAD_THUMBNAIL</span> setting.
+If you are uploading mini-timelapse, also set
+<span class="shSetting">TIMELAPSE_MINI_UPLOAD_THUMBNAIL</span> to "true".
+<blockquote>
+Making this change will only create thumbnails for all <em>future</em> videos.
+To create the currently missing thumbnails, do the following for each missing date,
+replacing <code>YYYYMMDD</code> with the date in <span class="fileName">~/allsky/images</span>
+<pre>
+cd ~/allsky/scripts
+./generateForDay --thumbnail-only --upload -t YYYYMMDD
+</pre>
+This will upload the thumbnail for the specified date.
+</blockquote>
 </p>
 </div>
 
@@ -119,4 +132,3 @@ If you are uploading mini-timelapse, do the same with the
 </body>
 </html>
 <script> includeHTML(); </script>
-

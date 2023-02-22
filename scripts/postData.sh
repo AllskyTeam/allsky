@@ -92,10 +92,12 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	if ! latitude="$(convertLatLong "$(settings ".latitude")" "latitude")" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${latitude}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${latitude}"
 	fi
 	if ! longitude="$(convertLatLong "$(settings ".longitude")" "longitude")" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${longitude}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${longitude}"
 	fi
 	[[ ${OK} == "false" ]] && exit 1
 
@@ -148,7 +150,9 @@ function upload_file()
 	local strFILE_TO_UPLOAD="${2}"
 	local DIRECTORY="${3}"		# Directory to put file in
 	if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
-		echo -e "${RED}${ME}: ERROR: File to upload '${FILE_TO_UPLOAD}' (${strFILE_TO_UPLOAD}) not found.${NC}"
+		MSG="File to upload '${FILE_TO_UPLOAD}' (${strFILE_TO_UPLOAD}) not found."
+		echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
 		return 1
 	fi
 
@@ -171,7 +175,9 @@ function upload_file()
 		cp "${FILE_TO_UPLOAD}" "${TO}"
 		R=$?
 		if [[ ${R} -ne 0 ]]; then
-			echo -e "${RED}${ME}: Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}'.${NC}"
+			MSG="Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}'"
+			echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
 		fi
 		RETCODE=$((RETCODE + R))
 	fi
@@ -197,7 +203,9 @@ function upload_file()
 			"PostData"
 		R=$?
 		if [[ ${R} -ne 0 ]]; then
-			echo -e "${RED}${ME}: Unable to upload '${FILE_TO_UPLOAD}'.${NC}"
+			MSG="Unable to upload '${FILE_TO_UPLOAD}'"
+			echo -e "${RED}${ME}: ${MSG}.${NC}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
 		fi
 		RETCODE=$((RETCODE + R))
 	fi
@@ -222,4 +230,3 @@ if [[ ${RET} -eq 0 && ${SETTINGS_ONLY} == "false" ]]; then
 fi
 # shellcheck disable=SC2086
 exit ${RET}
-

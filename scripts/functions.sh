@@ -212,7 +212,7 @@ function convertLatLong()
 		# No direction
 		if [[ -z ${SIGN} ]]; then
 			# No sign either
-			echo "'${LATLONG}' should contain EITHER a '+' or '-', OR a 'N', 'S', 'E', or 'W'."
+			echo "'${TYPE}' should contain EITHER a '+' or '-', OR a 'N', 'S', 'E', or 'W'."
 			return 1
 		fi
 
@@ -234,7 +234,7 @@ function convertLatLong()
 		return 0
 
 	elif [[ -n ${SIGN} && -n ${DIRECTION} ]]; then
-			echo "'${LATLONG}' should contain EITHER a '${SIGN}' OR a '${DIRECTION}', but not both."
+			echo "'${TYPE}' should contain EITHER a '${SIGN}' OR a '${DIRECTION}', but not both."
 			return 1
 	else
 		# A character - return as is.

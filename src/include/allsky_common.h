@@ -261,7 +261,14 @@ struct config {			// for configuration variables
 	struct HB HB;							// Histogram Box, ZWO only
 
 	// Default values used in multiple places, so get just once.
+	double defaultGain					= NOT_SET;
+	double defaultWBR					= NOT_SET;
+	double defaultWBB					= NOT_SET;
+	double defaultSaturation			= NOT_SET;
+	double defaultContrast				= NOT_SET;
+	double defaultSharpness				= NOT_SET;
 	long defaultBrightness				= NOT_SET;
+	int defaultQuality;					= NOT_SET;
 
 	// Current values - may vary between day and night
 	bool currentAutoExposure;
@@ -336,3 +343,4 @@ void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
+

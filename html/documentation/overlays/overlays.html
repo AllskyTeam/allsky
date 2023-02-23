@@ -59,11 +59,11 @@
 				Some of the key features of the include:
 			</p>
 			<ul>
-				<li><strong>Overlay Editor</strong> - The web page for managing overlays:
+				<li><span class="editorName">Overlay Editor</span> - The web page for managing overlays:
 					<ul class="minimalPadding">
 						<li><strong>Drag and Drop interface</strong> - Fields can be dragged around the screen
 							to position them.</li>
-						<li><strong>Customisable Interface</strong> - The <strong>Overlay Editor</strong>
+						<li><strong>Customisable Interface</strong> - The <span class="editorName">Overlay Editor</span>
 							user interface can be highly customised to your requirements.</li>
 						<li><span class="managerName">Font Manager</span> - You can upload any TrueType font and use
 							it in the overlays, or use any font already on your Pi.</li>
@@ -93,13 +93,13 @@
 
 			<h4>How overlays work</h4>
 			<p>
-			<blockquote>The <strong>Overlay Editor</strong> is what you use to define what information
+			<blockquote>The <span class="editorName">Overlay Editor</span> is what you use to define what information
 				you want on the captured images and where it should go.
 				Once you have specified that information, you won't use the manager again until
 				you want to change something.
 				<br>
 				The <span class="moduleName">Overlay Module</span> is invoked every time an image is captured and places
-				the information you specified in the <strong>Overlay Editor</strong> onto the images.
+				the information you specified in the <span class="editorName">Overlay Editor</span> onto the images.
 				This module is one of
 				<a allsky="true" href="/documentation/modules/modules.html">several modules</a> that
 				can be invoked after every image is captured.
@@ -111,9 +111,9 @@
 				then selecting <span class="WebUIValue">overlay</span> in the
 				<span class="WebUISetting">Image Overlay</span> setting.
 				This disables all the remaining settings in the <strong>Image overlay settings</strong> section
-				(you will specify those items in the <strong>Overlay Editor</strong>).
+				(you will specify those items in the <span class="editorName">Overlay Editor</span>).
 			</p>
-			<p>In the <strong>Overlay Editor</strong> you specify what information you want to go where,
+			<p>In the <span class="editorName">Overlay Editor</span> you specify what information you want to go where,
 				and what it should look like.
 				For example, you want the date and time the image was taken to be in blue, 12 point font
 				in the upper left of the image and a compass rotated 20 degrees so it's pointing north
@@ -126,7 +126,7 @@
 				Examples include the time the image was taken, the exposure length,
 				and the sensor temperature.
 				This information is put into <strong>System Variables</strong> that can be used
-				per you configuration in the <strong>Overlay Editor</strong>, which then:
+				per you configuration in the <span class="editorName">Overlay Editor</span>, which then:
 			</p>
 			<ol class="minimalPadding">
 				<li>Replaces the system variables with their values and adds them to the captured image.</li>
@@ -135,7 +135,8 @@
 			</ol>
 
 			<h2>Allsky Fields and Variables</h2>
-			<p>The heart of the <strong>Overlay Editor</strong> is <strong>fields</strong>.
+			<p>The heart of the <span class="editorName">Overlay Editor</span> is
+				<strong>fields</strong>.
 				There are two types of fields:
 				<ol class="minimalPadding">
 					<li><strong>Text</strong> fields consist of text and/or system and module variables.
@@ -389,7 +390,7 @@
 							to ignore the files in the <span class="fileName">extra</span>
 							directory when they are over a certain age.
 							For <span class="fileName">.txt</span> files there is a single value which is specified
-							in the <strong>Overlay Editor</strong> settings dialog box.
+							in the <span class="editorName">Overlay Editor</s ntrong> settings dialog box.
 							See the next section for how to specify the value for
 							<span class="fileName">.json</span> files.</p>
 
@@ -403,11 +404,11 @@
 									<td>This <span class="fileName">.json</span> file will produce exactly the same
 										variables as the <span class="fileName">.txt</span> file described above.
 										The data will expire as defined in the
-										<strong>Overlay Editor</strong> settings dialog.</td>
+										<span class="editorName">Overlay Editor</sntrong> settings dialog.</td>
 									<td>This <span class="fileName">.json</span> file
 										includes expiry times (in seconds) for some of the elements. In this case
 										the expiry time for the relevant elements will be used and the
-										<strong>Overlay Editor</strong>
+										<span class="editorName">Overlay Editor</sntrong>
 										dialog expiry setting for the remaining variables.</td>
 									<td>This <span class="fileName">.json</span> file,
 										which has been truncated for brevity, includes all of the
@@ -529,7 +530,7 @@
 
 			<h2>The Main Overlay Editor User Interface</h2>
 			<div>
-				<p>The <strong>Overlay Editor</strong> consists of two key areas:
+				<p>The <span class="editorName">Overlay Editor</sntrong> consists of two key areas:
 					the <strong>toolbar</strong> and <strong>working area</strong>.  The working area
 					contains the latest image captured in the background.</p>
 				<details sub>
@@ -702,7 +703,7 @@
 								</td>
 								<td class="overlayIcon"><i class="fa fa-solid fa-gear fa-lg"></i></td>
 								<td>
-									<p>Displays the <strong>Overlay Editor</strong> settings dialog
+									<p>Displays the <span class="editorName">Overlay Editor</span> settings dialog
 										which allows you to change settings of the manager itself.
 										See the <a href="#overlayEditorSettings">Overlay Editor Settings</a>
 										section for more details.</p>
@@ -733,7 +734,7 @@
 
 			<h2>Using The Overlay Editor</h2>
 			<p>This sub-section details the basic operation of the
-				<strong>Overlay Editor</strong> and how to manage fields and their contents.</p>
+				<span class="editorName">Overlay Editor</span> and how to manage fields and their contents.</p>
 			<details sub>
 				<summary></summary>
 			<div>
@@ -829,7 +830,7 @@
 											from the overlay.
 											<blockquote>When deleting an image it will also be deleted from the Pi.
 												If you want the image to remain on the Pi, select it in the
-												<strong>Overlay Editor</strong> and delete it.
+												<span class="editorName">Overlay Editor</span> and delete it.
 											</blockquote>
 										</li>
 										<li><span class="moduleToolbarIconNumber">3</span>
@@ -856,7 +857,7 @@
 							<br>
 							Click the <strong>Add New Text Field</strong> icon
 							(<i class="fa fa-font fa-lg"></i>) on the toolbar to display the
-							<strong>Text Properties</strong> editor.
+							<span class="editorName">Text Properties Editor</span>.
 							Enter some text and/or variables in the <strong>Item</strong> field of the editor,
 							and set its properties as desired.
 							The <a href="#propertyEditors">property editors</a> are described below.
@@ -865,7 +866,7 @@
 							<br>
 							Click the <span class="managerName">Variable Manager</span> icon
 							(<i class="fa fa-regular fa-rectangle-list fa-lg"></i>)
-							to display the <strong>Variable Manager</strong> editor
+							to display the <strong>Available Variables</strong> list
 							and navigate to the variable you require.
 							Click the <span class="btn dark btn-primary btn-xs oe-list-add">
 							<i class="fa-solid fa-plus oe-list-add"></i></span> button
@@ -879,7 +880,7 @@
 							<br>
 							Click the <strong>Add Existing Image</strong> icon
 							(<i class="fa fa-regular fa-image fa-lg"></i>)
-							to display the <strong>Image Properties</strong> editor.
+							to display the <strong>Image Properties</strong> dialog box.
 							Select the image you want from the drop
 							down and then move it to the overlay, resizing and rotating as required.
 							The image must have first been
@@ -1020,8 +1021,8 @@
 										<li>The <span class="btn dark btn-primary btn-xs oe-list-add">
 											<i class="fa-solid fa-plus oe-list-add"></i></span> icon
 											adds the variable in a new field to the overlay.
-											The <strong>Text Properties</strong>
-											editor will also be displayed and populated with the relevant
+											The <strong>Text Properties</strong> dialog box
+											will also be displayed and populated with the relevant
 											data for the variable.</li>
 										<li>Click the <span class="btn dark btn-warning btn-xs oe-list-edit">
 											<i class="fa fa-pen-to-square oe-list-edit"></i></span> icon
@@ -1063,7 +1064,7 @@
 										in the 'Allsky Variables' list.</blockquote>
 									<blockquote><strong>IMPORTANT:</strong> This list is only populated if the debug
 										mode is enabled for the <span class="moduleName">Overlay Module</span>
-										in the <strong>Module Editor</strong>.</blockquote>
+										in the <span class="managerName">Module Manager</span>.</blockquote>
 								</td>
 							</tr>
 						</tbody>
@@ -1099,7 +1100,7 @@
 											<a href="#formattingVariables">formatting</a> used to
 											display the variable.</li>
 										<li><strong>Sample Data</strong> - Sample data that is used when displaying
-											sample data in the <strong>Overlay Editor</strong>.</li>
+											sample data in the <span class="editorName">Overlay Editor</span>.</li>
 										<li><strong>Type</strong> - Each variable has a <em>type</em> that
 											is used to determine what formatting to use. The variable types are:
 											<ul class="minimalPadding">
@@ -1311,8 +1312,9 @@
 
 			<h2 id="overlayEditorSettings">Overlay Editor Settings &nbsp; <i class="fa fa-solid fa-gear"></i></h2>
 			<p>Clicking on the <strong>Layout and App Options</strong> icon in the toolbar brings up the
-				<strong>Overlay Editor Options</strong>
-				dialog box to manage settings for overlays and the <strong>Overlay Editor</strong> itself.
+				<span class="editorName">Overlay Editor Options</span>
+				dialog box to manage settings for overlays and the
+				<span class="editorName">Overlay Editor</span> itself.
 				The dialog box has two tabs, as detailed below.</p>
 			<details sub>
 				<summary></summary>
@@ -1370,12 +1372,12 @@
 						are not causing an issue with the performance of the image capture process.
 						Details of how to use the
 						<strong>Module Editor's</strong> debug option are covered in the <a allsky="true"
-							href="/documentation/modules/modules.html">Module Editor</a> page.</blockquote>
+							href="/documentation/modules/modules.html">Module Manager</a> page.</blockquote>
 					<hr class="separatorMinor">
 				</details>
 
 				<h3>Editor Settings tab</h3>
-				<p>The editor settings apply to the <strong>Overlay Editor</strong>.</p>
+				<p>The editor settings apply to the <span class="editorName">Overlay Editor</span>.</p>
 				<details sub>
 					<summary></summary>
 					<table class="two-col">
@@ -1450,7 +1452,7 @@
 				Because creating this data is CPU intensive, it is only created
 				if the associated options are selected in the
 				<a href="#layoutDefaultsTab">Layout Defaults tab</a> of the
-				<strong>Overlay Editor</strong> settings.
+				<span class="editorName">Overlay Editor</span> settings.
 			</blockquote></p>
 			<details sub>
 				<summary></summary>
@@ -1469,7 +1471,7 @@
 					In these cases <code>${SUN_NIGHT}</code> and <code>${SUN_NIGHTEND}</code>
 					are set to the value defined in the
 					<span class="moduleName">Overlay Module</span> settings,
-					in the <strong>Module Editor</strong>.</p>
+					in the <span class="managerName">Module Manager</span>.</p>
 				<p>The following Sun-related variables are available in the
 					<span class="managerName">Variable Manager</span>:</p>
 				<table>
@@ -1722,7 +1724,7 @@
 				<h3>Satellites</h3>
 				<p>The <span class="moduleName">Overlay Module</span> can generate position elements for satellites.
 					To enable this enter a comma-separated list of NORAD IDs in the
-					<strong>Overlay Editor's</strong> "Norad IDs" setting.</p>
+					<span class="editorName">Overlay Editor's</span> "Norad IDs" setting.</p>
 				<p>To find NORAD IDs browse to the <a href="https://celestrak.org/satcat/search.php" />Celestrak</a>
 					website and search for the desired objects.</p>
 

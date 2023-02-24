@@ -113,9 +113,13 @@ class OETEXTFIELD extends OEFIELD {
     return this.shape.text();
   }
   setLabel(label) {
+
+    let currentXoffset = this.shape.offsetX();
+    let currentX = this.shape.x();
+    let currentY = this.shape.y();
     this.shape.text(label);
     let size = this.shape.measureSize(label);  
-    this.shape.offset({x:  size.width/2, y: size.height/2});
+    //this.shape.offset({x: size.width/2, y: size.height/2});
     this.dirty = true;
   }
 

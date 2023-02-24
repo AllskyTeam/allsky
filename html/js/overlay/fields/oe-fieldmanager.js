@@ -193,8 +193,9 @@ class OEFIELDMANAGER {
 
         $.ajax({
             type: "POST",
-            url: "includes/overlayutil.php?request=Sample",
-            data: { config: JSON.stringify(this.#config.config) },
+            //url: "includes/overlayutil.php?request=Sample",
+            url: "cgi-bin/format.py",
+            data: { config: JSON.stringify(this.#config.config), fields: JSON.stringify(this.#config.dataFields) },
             dataType: 'json',
             cache: false,
             context: this
@@ -209,10 +210,13 @@ class OEFIELDMANAGER {
             }
         }).fail((jqXHR, textStatus, errorThrown) => {
             // TODO
+            let i = 56;
         }).always(() => {
             clearTimeout(loadingTimer);
             $.LoadingOverlay('hide');
         });
+
+
 
     }
 

@@ -146,6 +146,10 @@ while [[ $# -gt 0 ]]; do
 	case "${KEY,,}" in		# convert to lowercase
 
 		cameratype)
+			# This requires Allsky to be stopped so we don't
+			# try to call the capture program while it's already running.
+			sudo systemctl stop allsky
+
 			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
 				# If we can't set the new camera type, it's a major problem so exit right away.
@@ -395,7 +399,7 @@ while [[ $# -gt 0 ]]; do
 		overlaymethod)
 			if [[ ${NEW_VALUE} -eq 1 ]]; then		# 1 == "overlay" method
 				echo -en "${wWARNING}"
-				echo -en "NOTE: You need to enable the ${wBOLD}Overlay Module${wNBOLD} in the"
+				echo -en "NOTE: You must enable the ${wBOLD}Overlay Module${wNBOLD} in the"
 				echo -en " ${wBOLD}Daytime Capture${wNBOLD} and/or"
 				echo -en " ${wBOLD}Nighttime Capture${wNBOLD} flows of the"
 				echo -en " ${wBOLD}Module Manager${wNBOLD}"
@@ -490,3 +494,4 @@ if [[ ${GOT_WARNING} == "true" ]]; then
 else
 	exit 0
 fi
+

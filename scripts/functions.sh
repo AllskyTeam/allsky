@@ -74,6 +74,12 @@ function determineCommandToUse()
 		# Found the command - see if it works.
 		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
+		if [[ ${RET} -eq 137 ]]; then
+			# If another libcamera-still is running the one we execute will hang for
+			# about a minute then be killed with RET=137.
+			# If that happens, assume libcamera-still is the command to use.
+			RET=0
+		fi
 	fi
 
 	if [[ ${RET} -ne 0 ]]; then

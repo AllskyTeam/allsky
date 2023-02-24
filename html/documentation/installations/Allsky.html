@@ -263,7 +263,7 @@ actions during updates.
 <h2>Starting and stopping Allsky</h2>
 <details><summary></summary>
 <p>
-The AllSky software starts automatically when the Raspberry Pi boots up.
+AllSky starts automatically when the Raspberry Pi boots up.
 To enable or disable this behavior, use these commands:
 <pre>
 sudo systemctl enable allsky     <span class="shellComment"># starts the software when the Pi boots up</span>
@@ -307,7 +307,12 @@ currently saving in a separate window.
 ./allsky.sh preview
 </pre>
 </p>
-
+<p>
+<blockquote>
+The <b>Allsky Website</b> normally does not need to be started or stopped,
+but if you need to do so run <code>systemctl start lighttpd</code>.
+</blockquote>
+</p>
 </details>
 
 

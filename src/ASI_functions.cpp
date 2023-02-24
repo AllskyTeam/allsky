@@ -1217,16 +1217,17 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 	{
 		cg->cameraMinExposure_us = cc.MinValue;
 		cg->cameraMaxExposure_us = cc.MaxValue;
+
+		ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_MAX_EXP, &cc);
+		if (ret == ASI_SUCCESS)
+		{
+			cg->cameraMaxAutoExposure_us = cc.MaxValue * US_IN_MS;
+		} else {
+			Log(0, "ASI_AUTO_MAX_EXP failed with %s\n", getRetCode(ret));
+			ok = false;
+	}
 	} else {
 		Log(0, "ASI_EXPOSURE failed with %s\n", getRetCode(ret));
-		ok = false;
-	}
-	ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_MAX_EXP, &cc);
-	if (ret == ASI_SUCCESS)
-	{
-		cg->cameraMaxAutoExposure_us = cc.MaxValue * US_IN_MS;
-	} else {
-		Log(0, "ASI_AUTO_MAX_EXP failed with %s\n", getRetCode(ret));
 		ok = false;
 	}
 
@@ -1565,4 +1566,3 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 
 	return(ok);
 }
-

@@ -52,7 +52,8 @@
                     <strong>Experimental Modules</strong> When installed some modules will display a warning
                     that they are experimental. Before using any of these modules you should ensure that you are
                     proficient in analysing Linux Logs files. They should be considered unstable and as such may
-                    'break' your AllSky installation. In the Module Manager settings you can enable/disable
+                    'break' your AllSky installation. In the
+					<span class="managerName">Module Manager</span> settings you can enable/disable
                     experimental modules
                 </blockquote>
 
@@ -106,7 +107,7 @@
 
             <h2>The 'Module Manager'</h2>
             <div>
-                <p>The Module Manager is the main interface for managing all of the available modules and in
+                <p>The <span class="managerName">Module Manager</span> is the main interface for managing all of the available modules and in
                     which flows they are used. </p>
                 <details>
                     <summary></summary>
@@ -142,7 +143,7 @@
                             <tr>
                                 <td class="WebUISetting">Settings</td>
                                 <td><i class="fa-solid fa-gear"></i></td>
-                                <td>Displays the settings dialog for the Module Manager</td>
+                                <td>Displays the settings dialog for the <span class="managerName">Module Manager</span></td>
                             </tr>
                             <tr>
                                 <td class="WebUISetting">Debug</td>
@@ -1678,9 +1679,9 @@
                         next image is captured. If the module flow takes too long multiple save image process
                         will be running, this will start to cause performance issues on the PI</p>
                     <p>The best way to ensure this does not happen is to make sure that the module watchdog is
-                        enabled in the Module Manager Settings</p>
+                        enabled in the <span class="managerName">Module Manager</span> Settings</p>
                     <blockquote><strong>TIP</strong> - When installing a new module ensure debug mode is enabled
-                        in the Module Manager Settings and monitor how long the new module is taking and what
+                        in the <span class="managerName">Module Manager Settings and monitor how long the new module is taking and what
                         effect its having on the overall flow time</blockquote>
                     <h3>The Module Manager Debug Window</h3>
                     <table class="module-settings vtop">
@@ -1877,7 +1878,7 @@
                             manager needs to run the module. This includes basic information about the module
                             and the configuration options it requires</li>
                         <li><strong>The module entry point</strong> - The main function that is called by the
-                            Module Manager</li>
+                            <span class="managerName">Module Manager</span></li>
                     </ul>
                     <p>Every module MUST import the allsky_shared module. This module is used to pass data from
                         the flow processor to each module</p>

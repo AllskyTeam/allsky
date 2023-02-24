@@ -207,7 +207,7 @@ else
 fi
 
 EXTRA_ARGS="$(settings ".extraArgs")"
-[[ -n ${EXTRA_ARGS} ]] && echo "-extra=${EXTRA_ARGS}" >> "${ARGS_FILE}"
+[[ -n ${EXTRA_ARGS} ]] && echo "-extraArgs=${EXTRA_ARGS}" >> "${ARGS_FILE}"
 
 CAPTURE="capture_${CAMERA_TYPE}"
 
@@ -245,6 +245,7 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 		fi
 		doExit 0 ""		# use 0 so the service is restarted
 	else
+		# TODO: use ASI_ERROR_TIMEOUT message
 		MSG="Non-recoverable ERROR found"
 		[[ ${ON_TTY} -eq 1 ]] && echo "*** ${MSG} - ${SEE_LOG_MSG}. ***"
 		doExit "${EXIT_ERROR_STOP}" "Error" \

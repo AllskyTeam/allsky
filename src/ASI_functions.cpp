@@ -145,7 +145,7 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 		10, ASI_FALSE, ASI_TRUE},
 
 	{ "arducam_64mp", 0, "ArduCam 64 MP", 0, 6944, 9152, ASI_TRUE,
-		BAYER_GR, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 0.8, ASI_FALSE,
+		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 0.8, ASI_FALSE,
 		10, ASI_FALSE, ASI_TRUE},
 
 	// FUTURE CAMERAS GO HERE...
@@ -1217,16 +1217,17 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 	{
 		cg->cameraMinExposure_us = cc.MinValue;
 		cg->cameraMaxExposure_us = cc.MaxValue;
+
+		ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_MAX_EXP, &cc);
+		if (ret == ASI_SUCCESS)
+		{
+			cg->cameraMaxAutoExposure_us = cc.MaxValue * US_IN_MS;
+		} else {
+			Log(0, "ASI_AUTO_MAX_EXP failed with %s\n", getRetCode(ret));
+			ok = false;
+	}
 	} else {
 		Log(0, "ASI_EXPOSURE failed with %s\n", getRetCode(ret));
-		ok = false;
-	}
-	ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_MAX_EXP, &cc);
-	if (ret == ASI_SUCCESS)
-	{
-		cg->cameraMaxAutoExposure_us = cc.MaxValue * US_IN_MS;
-	} else {
-		Log(0, "ASI_AUTO_MAX_EXP failed with %s\n", getRetCode(ret));
 		ok = false;
 	}
 
@@ -1565,4 +1566,3 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 
 	return(ok);
 }
-

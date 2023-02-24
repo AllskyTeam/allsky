@@ -49,17 +49,6 @@
             "strokewidth": 0,
             "tlx": 19,
             "tly": 200
-        },
-        {
-            "label": "Sensor: ${TEMPERATURE_C}C",
-            "x": 510,
-            "y": 334,
-            "id": "oe-field-8",
-            "font": "Arial",
-            "fontsize": 68,
-            "strokewidth": 0,
-            "tlx": 19,
-            "tly": 280
         }
     ],
     "images": [],

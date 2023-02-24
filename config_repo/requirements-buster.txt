@@ -12,3 +12,4 @@ photutils
 astropy
 suncalc
 Adafruit-Blinka
+vcgencmd

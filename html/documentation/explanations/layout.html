@@ -51,6 +51,12 @@ Here's what's in the directory:
 		This is the program that's executed when you start Allsky.
 		It calls the appropriate program to take the picture (see the next bullet).
 
+	<li><span class="lsBlue">assets</span>
+		<br>
+		Contains files used by the developers in creating Allsky
+		as well as images used by the <span class="fileName">README.md</span> file.
+		You can ignore this directory.
+
 	<li><span class="lsBlue">bin</span>
 		<br>
 		This holds all the binary files (files created by compiling source code),
@@ -63,8 +69,8 @@ Here's what's in the directory:
 		<br>
 		Contains all the configuration files.
 		<blockquote class="warning">
-		Unlike past releases, you should <strong>not</strong> edit the files
-		in this directory manually.
+		Unlike past releases, you should <strong>not</strong> manually edit the files
+		in this directory.
 		</blockquote>
 		<u>Some</u> of the files in this directory include:
 		<ul>
@@ -79,20 +85,22 @@ Here's what's in the directory:
 				The settings in these files will be moved to the
 				<span class="fileName">settings.json</span> file in a future release.
 				</blockquote>
+			<li>The <span class="fileName">modules</span> and
+				<span class="fileName">overlay</span> directories contain the configuration
+				files for the <span class="managerName">Module Manager</span> and
+				<span class="editorName">Overlay Editor</span>, respectively.
 			<li><span class="fileName">cc.json</span> (<u>c</u>amera <u>c</u>apabilities) and
 				<span class="fileName">options.json</span> are created
 				as part of the installation based on what capabilities your camera has,
 				and determine what settings you see in the WebUI as well as their
 				minimum, maximum, and default values.
-				<br>
 				If you change cameras via the WebUI, these files are re-created.
-			<li>If you have a remote Allsky Website and configure it via the WebUI,
+			<li>If you have a remote Allsky Website and configure it via the WebUI
+				(as you should),
 				a <span class="fileName">remote_configuration.json</span> file will exist
 				that's uploaded to the remote server whenever you change it via
 				the WebUI's <span class="WebUIWebPage">Editor</span> page.
 			<li>Advanced users may have a <span class="fileName">uservariables.sh</span> file.
-			<li>The remaining files are updated when you make a change in the
-				Overlay or Module editors.
 		</ul>
 
 	<li><span class="lsBlue">config_repo</span>
@@ -110,7 +118,7 @@ Here's what's in the directory:
 		<br>
 		All the WebUI files are here, and if you have the Allsky Website installed on your Pi,
 		its files are in <span class="lsBlue">html</span>/<span class="lsBlue">allsky</span>.
-		The WebUI doesn't have any configuration version,
+		The WebUI itself doesn't have a configuration file,
 		but the Website has <span class="fileName">configuration.json</span>
 		which is updated via the WebUI's <span class="WebUIWebPage">Editor</span> page.
 		<br>
@@ -123,7 +131,8 @@ Here's what's in the directory:
 		<span class="shSetting">DAYS_TO_KEEP</span> setting in
 		<span class="fileName">config.sh</span>.
 		<br>
-		Each day's files are stored in a directory called YYYYMMDD, for example, 20220710.
+		Each day's files are stored in a directory called YYYYMMDD, for example,
+		<span class="fileName">20230710</span>.
 
 	<li><span class="lsGreen">install.sh</span>
 		<br>
@@ -156,8 +165,12 @@ Here's what's in the directory:
 	<li><span class="lsBlue">scripts</span>
 		<br>
 		Holds all the scripts (i.e., programs) used by Allsky while it's running.
-		The only one you might ever change is
-		<span class="fileName">endOfNight_additionalSteps.repo</span>
+		Several scripts can be manually executed for debugging purposes,
+		per the documentation.
+		For example running <code>upload.sh</code> manually can help debug upload problems.
+		<br>
+		The only script you might ever change is
+		<span class="fileName">endOfNight_additionalSteps.sh</span>
 		(and it will be removed in the next release).
 		See the documentation on how that script is used.
 
@@ -167,13 +180,18 @@ Here's what's in the directory:
 
 	<li><span class="lsBlue">tmp</span>
 		<br>
-		Hold temporary files, including log files, used by Allsky while it's running.
+		Hold temporary files, including most log files, used by Allsky while it's running.
 		The contents of this directory are usually cleaned out after a reboot.
 		<blockquote>
 		Other than the <span class="lsBlue">scripts</span> directory described above,
 		this is the only other directory that you may need to look in,
 		and that's typically only to troubleshoot a problem.
 		</blockquote>
+
+	<li><span class="lsGreen">upgrade.sh</span>
+		<br>
+		A VERY BASIC upgrade script reserved for future use.
+		<strong>Do not use</strong> - it's for developer testing only.
 
 	<li><span class="lsGreen">uninstall.sh</span>
 		<br>

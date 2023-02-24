@@ -22,7 +22,7 @@ You will need the following hardware:
 &nbsp;  
 > **NOTES:**
 >	- The ZWO ASI120-series cameras are not recommended due to somewhat poor quality. See the "[Troubleshooting --> ZWO Cameras](https://github.com/thomasjacquin/allsky/wiki) documentation for notes on the ASI120-series and T7 / T7C cameras.
->	- The Pi Zero, with its limited memory and CPU power, is not recommended unless cost is a major concern.
+>	- The Pi Zero and Pi Zero W, with their limited memory and very limited CPU power (single CPU core), are not recommended unless cost is a major concern.
 >	- We have not found any "Pi-compatible" boards that are actually compatible, so buyer beware.
 ---
 

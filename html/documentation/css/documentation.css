@@ -854,6 +854,9 @@ b, strong {
 	margin-left: 20px;
 }
 
+.editorName {
+	font-weight: bold;		/* TODO: decide what attributes to use */
+}
 .moduleName {
 	font-weight: bold;
 	color: purple;			/* TODO: decide what attributes to use */

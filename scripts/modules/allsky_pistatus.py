@@ -18,7 +18,7 @@ metaData = {
     "events": [
         "periodic"
     ],
-    "experimental": "true",    
+    "experimental": "false",    
     "arguments":{
         "period": 60
     },

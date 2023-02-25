@@ -13,6 +13,9 @@ dir-listing.activate = "enable"
 setenv.add-response-header += ( "X-Content-Type-Options" => "nosniff" )
 
 server.modules += ( "mod_cgi" )
+server.modules += ( "mod_setenv" )
+
+setenv.add-environment = ( "LANG" => env.LANG)
 
 $HTTP["url"] =~ "^/cgi-bin/" {
 #       cgi.assign = ( "" => "" )

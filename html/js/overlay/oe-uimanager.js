@@ -1495,7 +1495,10 @@ class OEUIMANAGER {
                 $('#imagedialog').dialog('close');
             }
         }
-
+        if ($("#formatdialog").hasClass('ui-dialog-content')) {
+            $('#formatdialog').dialog('close');
+        }
+        
     }
 
     updatePropertyEditor() {
@@ -1642,7 +1645,10 @@ class OEUIMANAGER {
 
         var textConfig = {
             label: { group: 'Label', name: 'Item', type: 'text' },
-            format: { group: 'Label', name: 'Format', type: 'text'},
+            format: { group: 'Label', name: 'Format', type: 'text', helpcallback: function (name) {
+                let uiManager = window.oedi.get('uimanager'); 
+                uiManager.#createFormatHelpWindow();
+            }},
             sample: { group: 'Label', name: 'Sample', type: 'text' },
             empty: { group: 'Label', name: 'Empty Value', type: 'text' },
 
@@ -1908,5 +1914,88 @@ class OEUIMANAGER {
             resizable: false,
             closeOnEscape: false,
         });
+    }
+
+    #createFormatHelpWindow() {
+        $('#formatlisttable').DataTable().destroy();
+        $(document).off('click', '.oe-format-replace');
+        $(document).off('click', '.oe-format-add');
+        $('#formatlisttable').DataTable({
+            ajax: {
+                url: "includes/overlayutil.php?request=Formats",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+            },
+            pagingType: 'simple_numbers',
+            paging: true,
+            info: true,
+            autoWidth: false,
+            aaSorting: [],
+            searchPanes: {
+                controls: false              
+            },
+            dom: 'Plfrtip',                        
+            columns: [
+                { 
+                    data: 'format',
+                    width: '100px'
+                },
+                { 
+                    data: 'description',
+                    width: '500px'
+                },
+                { 
+                    data: 'example',
+                    width: '200px'
+                },
+                { 
+                    data: 'type',
+                    width: '0px',
+                    visible: false
+                },
+                {
+                    data: null,
+                    width: '50px',
+                    render: function (item, type, row, meta) {
+                        let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-primary btn-xs oe-format-replace" data-format="' + item.format + '"><i class="fa-solid fa-right-to-bracket"></i></button>';
+                        let buttonAdd = '<button type="button" title="Add to format" class="btn btn-primary btn-xs oe-format-add" data-format="' + item.format + '"><i class="fa-solid fa-plus"></i></button>';
+                        
+                        let buttons = '<div class="btn-group">' + buttonReplace + buttonAdd + '</div>';                        
+                        return buttons;
+                    }
+                }                
+            ]
+        });
+      
+        $('#formatdialog').dialog({
+            resizable: false,
+            closeOnEscape: false,
+            width: 800
+        });
+        
+        $(document).on('click', '.oe-format-replace', (event) => {
+            let uiManager = window.oedi.get('uimanager');          
+            let format = $(event.currentTarget).data('format');
+            uiManager.updateFormat(format, 'replace');
+        });
+
+        $(document).on('click', '.oe-format-add', (event) => {
+            let uiManager = window.oedi.get('uimanager');
+            let format = $(event.currentTarget).data('format');
+            uiManager.updateFormat(format, 'add');
+        })
+    }
+
+    updateFormat(format, type) {
+        let uiManager = window.oedi.get('uimanager');
+        let field = uiManager.selected;
+
+        if (type == 'replace') {
+            field.format = format;
+        } else {
+            field.format = field.format + format;
+        }
+
+        uiManager.updatePropertyEditor();
     }
 }

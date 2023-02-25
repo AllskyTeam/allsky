@@ -137,17 +137,17 @@
   }
 
   @keyframes pulse {
-    0% {
-      transform: scale(0);
+    25% {
+      transform: scale(1.25);
     }
     50% {
-      transform: scale(1.75);
+      transform: scale(1.50); 
     }
-    70% {
-      transform: scale(0.65); 
+    75% {
+      transform: scale(1.25);
     }
     100% {
-      transform: scale(0); 
+      transform: scale(1); 
     }
   }
 
@@ -188,4 +188,47 @@
 
   .modal-dialog {
     width: 770px !important;
+  }
+
+  .dtsp-panesContainer, .dtsp-collapseAll {
+    background-color: black !important;
+  }
+
+  .dtsp-collapseAll, .dtsp-clearAll, .dtsp-showAll  {
+    background-color: #121212 !important;
+  } 
+
+  .dtsp-name, .dtb-popover-close {
+    color: black !important;
+    text-transform: capitalize;
+  }
+
+  #formatlisttable_filter, .dtsp-searchCont {
+    display: none !important;
+  }
+  div.dtsp-topRow {
+    height: 0px !important;
+    min-height: 0px !important;
+  }
+
+  div.dtsp-searchPane div.dataTables_scrollBody {
+    height: 60px !important;
+  }
+  div.dtsp-searchPane div.dtsp-topRow {
+    margin: 0px !important;
+  }
+
+  .dtsp-searchPane .odd, .dtsp-searchPane .even {
+    background: #bbb !important;
+  }
+
+  .dataTables_length {
+    display: none;
+  }
+  #formatdialog {
+    margin: 5px;
+  }
+
+  .oe-format-replace {
+    margin-right: 5px;
   }

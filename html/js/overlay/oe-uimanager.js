@@ -1997,5 +1997,9 @@ class OEUIMANAGER {
         }
 
         uiManager.updatePropertyEditor();
+        if ($('#oe-test-mode').hasClass('pulse')) {
+            let fieldManager = window.oedi.get('fieldmanager');
+            fieldManager.enableTestMode();
+        }
     }
 }

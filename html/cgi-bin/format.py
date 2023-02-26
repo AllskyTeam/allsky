@@ -144,8 +144,8 @@ class ALLSKYFORMAT:
         print("Content-type: text/html\n")
         print(json.dumps(result, indent = 4))
 
-#try:        
-sampleEngine = ALLSKYFORMAT()
-sampleEngine.createSampleData()
-#except Exception as e:
-#    print(e)
+try:        
+    sampleEngine = ALLSKYFORMAT()
+    sampleEngine.createSampleData()
+except Exception as e:
+    print(e)

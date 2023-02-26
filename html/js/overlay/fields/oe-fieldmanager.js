@@ -184,7 +184,25 @@ class OEFIELDMANAGER {
         config.setValue('images', images);
     }
 
+    buildTestJSON() {
+        let fields = [];
+        let fieldJson = {};
+
+        for (let [fieldName, field] of this.#fields.entries()) {
+            fieldJson = field.getJSON();
+
+            if (field instanceof OETEXTFIELD) {
+                fields.push(fieldJson);
+            }
+        }
+
+        return fields
+    }
+
     enableTestMode() {
+        let config ={
+            fields: this.buildTestJSON()
+        };
         let loadingTimer = setTimeout(() => {
             $.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
         }, 1000);
@@ -195,7 +213,7 @@ class OEFIELDMANAGER {
             type: "POST",
             //url: "includes/overlayutil.php?request=Sample",
             url: "cgi-bin/format.py",
-            data: { config: JSON.stringify(this.#config.config), fields: JSON.stringify(this.#config.dataFields) },
+            data: { config: JSON.stringify(config), fields: JSON.stringify(this.#config.dataFields) },
             dataType: 'json',
             cache: false,
             context: this

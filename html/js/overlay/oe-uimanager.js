@@ -601,7 +601,7 @@ class OEUIMANAGER {
             this.showPropertyEditor();
             this.updatePropertyEditor();
             this.updateToolbar();
-            this.#fieldManager.buildJSON();
+            //this.#fieldManager.buildJSON();
             if (this.testMode) {
                 this.enableTestMode();
             }

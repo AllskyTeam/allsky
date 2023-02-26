@@ -24,8 +24,6 @@ function DisplayOverlay($image_name)
     <script src="/js/bootbox/bootbox.all.js"></script>
     <script src="/js/bootbox/bootbox.locales.min.js"></script>
 
-    <link href="/css/overlay.css" rel="stylesheet">
-
     <link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css' />
     <script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js"></script>
 
@@ -46,6 +44,8 @@ function DisplayOverlay($image_name)
     <script src="/js/dropzone/dropzone-min.js"></script>
 
     <script src="/js/konva/konva.min.js"></script>
+
+    <link href="/css/overlay.css" rel="stylesheet">
 
     <div id="oeeditor">
         <div class="row">
@@ -202,6 +202,20 @@ function DisplayOverlay($image_name)
 
             <div id="debugdialog" title="Debug Info">
                 <div id="debugpropgrid"></div>
+            </div>
+
+            <div id="formatdialog" title="Format Help">
+                <table id="formatlisttable" class="display compact" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Format</th>
+                            <th>Description</th>
+                            <th>Sample</th>
+                            <th>Type</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                </table>                
             </div>
 
             <div class="modal" role="dialog" id="oe-item-list-dialog">

@@ -24,7 +24,7 @@ class OVERLAYUTIL
 
     public function run()
     {
-        $this->checkXHRRequest();
+        //$this->checkXHRRequest();
         $this->sanitizeRequest();
         $this->runRequest();
     }
@@ -68,7 +68,6 @@ class OVERLAYUTIL
     private function runRequest()
     {
         $action = $this->method . $this->request;
-
         if (is_callable(array('OVERLAYUTIL', $action))) {
             call_user_func(array($this, $action));
         } else {
@@ -553,6 +552,13 @@ class OVERLAYUTIL
         }
 
     }
+
+    public function getFormats()
+    {
+        $data = file_get_contents($this->overlayPath . "/config/formats.json");
+        $this->sendResponse($data);
+    }
+
 }
 
 $overlayUtil = new OVERLAYUTIL();

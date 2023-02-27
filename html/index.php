@@ -314,7 +314,7 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 								$level = $message_array[0];
 								$date = $message_array[1];
 								$count = $message_array[2];
-								$message = $message_array[3];
+								$message = "<strong>" . $message_array[3] . "</strong>";
 								if ($count == 1)
 									$message .= " &nbsp; ($date)";
 								else

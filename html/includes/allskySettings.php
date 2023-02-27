@@ -11,6 +11,7 @@ function DisplayAllskyConfig(){
 	global $lastChangedName;			// json setting name
 	global $lastChanged;
 	global $page;
+	global $ME;
 
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
@@ -254,7 +255,9 @@ function toggle_advanced()
 			echo "<p id='messages'>" . $status->showMessages() . "</p>";
 ?>
 
-		<form method="POST" action="?page=<?php $t=time(); echo "$page&_Ts=$t";  ?>" name="conf_form">
+		<form method="POST" action="<?php echo $ME; ?>" name="conf_form">
+		<input type="hidden" name="page" value="<?php echo "$page"; ?>">
+		<input type="hidden" name="_ts" value="<?php echo time(); ?>">
 		<?php CSRFToken();
 
 		// Allow for "advanced" options that aren't displayed by default to avoid

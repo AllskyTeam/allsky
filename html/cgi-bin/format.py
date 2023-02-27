@@ -65,7 +65,7 @@ class ALLSKYFORMAT:
         if variableType == 'Date':
             timeStamp = datetime.fromtimestamp(time.time())
             if format is None:
-                value = timeStamp.strftime('%Y-%m-%d %H:%M:%S')
+                value = timeStamp.strftime('%Y-%m-%d')
             else:
                 value = timeStamp.strftime(format)
 

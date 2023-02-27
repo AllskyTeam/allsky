@@ -1,8 +1,6 @@
 #!/bin/bash
 
-if [[ -z ${ALLSKY_HOME} ]]; then
-	export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
-fi
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 ME="$(basename "${BASH_ARGV0}")"
 
 source "${ALLSKY_HOME}/variables.sh"	|| exit 99
@@ -28,7 +26,7 @@ PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# may change depending on o
 OLD_WEBUI_LOCATION="/var/www/html"		# location of old-style WebUI
 
 TITLE="Allsky Installer"
-ALLSKY_OWNER=$(id --group --name)
+ALLSKY_OWNER=$(id --group --name)		# The login installing Allsky
 ALLSKY_GROUP=${ALLSKY_OWNER}
 WEBSERVER_GROUP="www-data"
 ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
@@ -40,7 +38,7 @@ RESTORED_PRIOR_CONFIG_SH="false"		# prior config.sh restored?
 RESTORED_PRIOR_FTP_SH="false"			# prior ftp-settings.sh restored?
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
-NEW_HOST_NAME=''						# User-specified host name
+NEW_HOST_NAME=""						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
 
 # Repo files
@@ -72,9 +70,10 @@ chmod 755 "${ALLSKY_HOME}"
 
 ####
 # Display a header surrounded by stars.
-display_header() {
+display_header()
+{
 	HEADER="${1}"
-	((LEN=${#HEADER} + 8))		# 8 for leading and trailing "*** "
+	LEN=$((${#HEADER} + 8))		# 8 for leading and trailing "*** "
 	STARS=""
 	while [[ ${LEN} -gt 0 ]]; do
 		STARS="${STARS}*"
@@ -114,7 +113,8 @@ usage_and_exit()
 
 
 ####
-calc_wt_size() {
+calc_wt_size()
+{
 	WT_WIDTH=$(tput cols)
 	[[ ${WT_WIDTH} -gt 80 ]] && WT_WIDTH=80
 }
@@ -122,14 +122,16 @@ calc_wt_size() {
 
 ####
 # Stop Allsky.  If it's not running, nothing happens.
-stop_allsky() {
+stop_allsky()
+{
 	sudo systemctl stop allsky 2> /dev/null
 }
 
 
 ####
 # Get the branch of the new release; if not GITHUB_MAIN_BRANCH, save it.
-get_branch() {
+get_branch()
+{
 	local FILE="${ALLSKY_HOME}/.git/config"
 	if [[ -f ${FILE} ]]; then
 		B="$(sed -E --silent -e '/^\[branch "/s/(^\[branch ")(.*)("])/\2/p' "${FILE}")"
@@ -146,10 +148,11 @@ get_branch() {
 
 ####
 # Prompt the user to select their camera type, if we can't determine it automatically.
-# If they have a prior installation of Allsky that uses CAMERA_TYPE in config.sh,
+# If they have a prior installation of Allsky that uses either CAMERA or CAMERA_TYPE in config.sh,
 # we can use its value and not prompt.
 CAMERA_TYPE=""
-select_camera_type() {
+select_camera_type()
+{
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 		# New style Allsky with CAMERA_TYPE in config.sh
 		if [[ -f ${PRIOR_CONFIG_FILE} ]]; then
@@ -159,14 +162,12 @@ select_camera_type() {
 			[[ -n ${CAMERA_TYPE} ]] && return
 		fi
 	fi
-	# If they have the "old" style Allsky, don't bother trying to map the old $CAMERA
-	# to the new $CAMERA_TYPE.
 
 	# "2" is the number of menu items.
 	MSG="\nSelect your camera type:\n"
 	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "${MSG}" 15 ${WT_WIDTH} 2 \
 		"ZWO"  "   ZWO ASI" \
-		"RPi"  "   Raspberry Pi HQ and compatible" \
+		"RPi"  "   Raspberry Pi HQ, Module 3, and compatible" \
 		3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 ]]; then
 		display_msg warning "Camera selection required.  Please re-run the installation and select a camera to continue."
@@ -178,7 +179,8 @@ select_camera_type() {
 
 ####
 # Create the file that defines the WebUI variables.
-create_webui_defines() {
+create_webui_defines()
+{
 	display_msg progress "Modifying locations for WebUI."
 	FILE="${ALLSKY_WEBUI}/includes/allskyDefines.inc"
 	sed		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
@@ -209,8 +211,9 @@ create_webui_defines() {
 ####
 # Recreate the options file.
 # This can be used after installation if the options file get hosed.
-recreate_options_file() {
-	CAMERA_TYPE="$(grep "^CAMERA_TYPE=" "${ALLSKY_CONFIG}/config.sh" | sed -e "s/CAMERA_TYPE=//" -e 's/"//g')"
+recreate_options_file()
+{
+	CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${ALLSKY_CONFIG}/config.sh")"
 	save_camera_capabilities "true"
 	set_webserver_permissions
 }
@@ -222,7 +225,8 @@ recreate_options_file() {
 # otherwise it will determine what capabilities the connected camera has,
 # then create an "options" file specific to that camera.
 # It will also create a default "settings" file.
-save_camera_capabilities() {
+save_camera_capabilities()
+{
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg error "INTERNAL ERROR: CAMERA_TYPE not set in save_camera_capabilities()."
 		return 1
@@ -246,6 +250,11 @@ save_camera_capabilities() {
 	else
 		OPTIONSONLY=""
 		display_msg progress "Setting up WebUI options${MSG} for ${CAMERA_TYPE} cameras."
+	fi
+
+	if [[ ${DEBUG} -gt 0 ]]; then
+		display_msg debug "Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
+		display_msg debug "\t${DEBUG_ARG} 'cameraType' 'Camera Type' '${CAMERA_TYPE}'"
 	fi
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly ${DEBUG_ARG} \
@@ -281,7 +290,8 @@ do_sudoers()
 ####
 # Ask the user if they want to reboot
 WILL_REBOOT="false"
-ask_reboot() {
+ask_reboot()
+{
 	AT="     http://${NEW_HOST_NAME}.local\n"
 	AT="${AT}or\n"
 	AT="${AT}     http://$(hostname -I | sed -e 's/ .*$//')"
@@ -300,7 +310,8 @@ ask_reboot() {
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 }
-do_reboot() {
+do_reboot()
+{
 	sudo reboot now
 }
 
@@ -309,10 +320,12 @@ do_reboot() {
 # Check for size of RAM+swap during installation (Issue # 969).
 # recheck_swap is used to check swap after the installation,
 # and is referenced in the Allsky Documentation.
-recheck_swap() {
+recheck_swap()
+{
 	check_swap "prompt"
 }
-check_swap() {
+check_swap()
+{
 	if [[ ${1} == "prompt" ]]; then
 		PROMPT="true"
 	else
@@ -321,7 +334,6 @@ check_swap() {
 
 	# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
 	RAM_SIZE=$(free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }')		# in MB
-# TODO: are these the best numbers ??
 	if [[ ${RAM_SIZE} -le 1024 ]]; then
 		SUGGESTED_SWAP_SIZE=4096
 	elif [[ ${RAM_SIZE} -le 2048 ]]; then
@@ -381,7 +393,8 @@ check_swap() {
 # Check if ${ALLSKY_TMP} exists, and if it does,
 # save any *.jpg files (which we probably created), then remove everything else,
 # then mount it.
-check_and_mount_tmp() {
+check_and_mount_tmp()
+{
 	local TMP_DIR="/tmp/IMAGES"
 
 	if [[ -d "${ALLSKY_TMP}" ]]; then
@@ -414,7 +427,8 @@ check_and_mount_tmp() {
 ####
 # Check if prior ${ALLSKY_TMP} was a memory filesystem.
 # If not, offer to make it one.
-check_tmp() {
+check_tmp()
+{
 	INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
 
 	# Check if currently a memory filesystem.
@@ -425,7 +439,7 @@ check_tmp() {
 		# try to unmount it, but that often gives an error that it's busy,
 		# which isn't really a problem since it'll be unmounted at the reboot.
 		# /etc/fstab has ${ALLSKY_TMP} but the mount point is currently in the PRIOR Allsky.
-		D="${PRIOR_ALLSKY_DIR}/tmp"
+		local D="${PRIOR_ALLSKY_DIR}/tmp"
 		if [[ -d "${D}" ]] && mount | grep --silent "${D}" ; then
 			# The Samba daemon is one known cause of "target busy".
 			sudo umount -f "${D}" 2> /dev/null ||
@@ -462,7 +476,8 @@ check_tmp() {
 
 
 ####
-check_installation_success() {
+check_installation_success()
+{
 	local RET=${1}
 	local MESSAGE="${2}"
 	local LOG="${3}"
@@ -485,7 +500,8 @@ check_installation_success() {
 
 ####
 # Install the web server.
-install_webserver() {
+install_webserver()
+{
 	display_msg progress "Installing the web server."
 	sudo systemctl stop hostapd 2> /dev/null
 	sudo systemctl stop lighttpd 2> /dev/null
@@ -516,7 +532,8 @@ install_webserver() {
 ####
 # Prompt for a new hostname if needed,
 # and update all the files that contain the hostname.
-prompt_for_hostname() {
+prompt_for_hostname()
+{
 	# If the Pi is already called ${SUGGESTED_NEW_HOST_NAME},
 	# then the user already updated the name, so don't prompt again.
 
@@ -559,7 +576,8 @@ prompt_for_hostname() {
 
 ####
 # Set permissions on various web-related items.
-set_permissions() {
+set_permissions()
+{
 	display_msg progress "Setting permissions on web-related files."
 
 	# Make sure the currently running user has can write to the webserver root
@@ -611,11 +629,13 @@ set_permissions() {
 # The installation (sometimes?) creates the directory.
 
 OLD_WEBUI_LOCATION_EXISTS_AT_START="false"
-does_old_WebUI_locaion_exist() {
+does_old_WebUI_location_exist()
+{
 	[[ -d ${OLD_WEBUI_LOCATION} ]] && OLD_WEBUI_LOCATION_EXISTS_AT_START="true"
 }
 
-check_old_WebUI_location() {
+check_old_WebUI_location()
+{
 	[[ ! -d ${OLD_WEBUI_LOCATION} ]] && return
 
 	if [[ ${OLD_WEBUI_LOCATION_EXISTS_AT_START} == "false" ]]; then
@@ -642,7 +662,8 @@ check_old_WebUI_location() {
 
 
 ####
-handle_prior_website() {
+handle_prior_website()
+{
 	OLD_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
 	if [[ -d ${OLD_WEBSITE} ]]; then
 		ALLSKY_WEBSITE_OLD="${OLD_WEBSITE}"						# old-style Website
@@ -674,7 +695,7 @@ handle_prior_website() {
 		fi
 	fi
 	if [[ ${OK} = "true" ]]; then
-		display_msg progress "Moving prior Allsky Website from ${ALLSKY_WEBSITE_OLD} to new location."
+		display_msg progress "Restoring Allsky Website from ${ALLSKY_WEBSITE_OLD}."
 		sudo mv "${ALLSKY_WEBSITE_OLD}" "${ALLSKY_WEBSITE}"
 		PRIOR_SITE="${ALLSKY_WEBSITE}"
 	fi
@@ -702,7 +723,8 @@ handle_prior_website() {
 
 ####
 # If the locale isn't already set, set it if possible
-set_locale() {
+set_locale()
+{
 	LOCALE="$(settings .locale)"
 	[[ -n ${LOCALE} ]] && return		# already set up
 
@@ -723,7 +745,8 @@ set_locale() {
 # If there's a prior version of the software,
 # ask the user if they want to move stuff from there to the new directory.
 # Look for a directory inside the old one to make sure it's really an old allsky.
-check_if_prior_Allsky() {
+check_if_prior_Allsky()
+{
 	if [[ -d ${PRIOR_ALLSKY_DIR}/src ]]; then
 		MSG="You appear to have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
 		MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
@@ -734,8 +757,8 @@ check_if_prior_Allsky() {
 				PRIOR_ALLSKY="old"		# Old style with CAMERA set in config.sh
 			fi
 		else
-			MSG="If you want your old images, darks, settings, etc."
-			MSG="${MSG} from the prior verion of Allsky, you'll need to manually move them to the new version."
+			MSG="If you want your old images, darks, settings, etc. from the prior version"
+			MSG="${MSG} of Allsky, you'll need to manually move them to the new version."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
 			display_msg --log info "Will NOT restore from prior version of Allsky."
 		fi
@@ -755,7 +778,8 @@ check_if_prior_Allsky() {
 
 
 ####
-install_dependencies_etc() {
+install_dependencies_etc()
+{
 	# These commands produce a TON of output that's not needed unless there's a problem.
 	# They also take a little while, so hide the output and let the user know.
 
@@ -782,7 +806,8 @@ install_dependencies_etc() {
 
 ####
 # Update config.sh
-update_config_sh() {
+update_config_sh()
+{
 	sed -i \
 		-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
 		-e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${CAMERA_TYPE}\"/" \
@@ -792,7 +817,8 @@ update_config_sh() {
 
 ####
 # Create the log file and make it readable/writable by the user; this aids in debugging.
-create_allsky_logs() {
+create_allsky_logs()
+{
 	display_msg progress "Set permissions on logs ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
 	sudo truncate -s 0 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chmod 664 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
@@ -804,11 +830,12 @@ create_allsky_logs() {
 
 ####
 # If the user wanted to restore files from a prior version of Allsky, do that.
-restore_prior_files() {
+restore_prior_files()
+{
 	if [[ -d ${OLD_RASPAP_DIR} ]]; then
 		MSG="\nThe '${OLD_RASPAP_DIR}' directory is no longer used.\n"
 		MSG="${MSG}When installation is done you may remove it by executing:\n"
-		MSG="${MSG}    sudo rm -fr ${OLD_RASPAP_DIR}\n"
+		MSG="${MSG}    sudo rm -fr '${OLD_RASPAP_DIR}'\n"
 		display_msg info "${MSG}"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
@@ -850,8 +877,7 @@ restore_prior_files() {
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 	fi
 
-	# If the user has an older release, these files may be in /etc/raspap.
-	# Check for both.
+	# This file was in a different directory in older versions.
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
 	else
@@ -868,7 +894,7 @@ restore_prior_files() {
 		cp -a "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
 		# Check if this is an older Allsky Website configuration file type.
-		OLD="false"
+		local OLD="false"
 		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
 		if [[ ${PRIOR_CONFIG_VERSION} == "null" ]]; then
 			OLD="true"		# Hmmm, it should have the version
@@ -896,7 +922,7 @@ restore_prior_files() {
 		cp -a "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
 	fi
 
-	SETTINGS_MSG=""
+	local SETTINGS_MSG=""
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 		if [[ -f ${PRIOR_CONFIG_DIR}/settings.json ]]; then
 			display_msg progress "Restoring WebUI settings."
@@ -927,7 +953,7 @@ restore_prior_files() {
 			LONG="$(settings .longitude "${SETTINGS}")"
 			ANGLE="$(settings .angle "${SETTINGS}")"
 			jq ".latitude=\"${LAT}\" | .longitude=\"${LONG}\" | .angle=\"${ANGLE}\"" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
-			display_msg --log progress "Prior latitude and longitude saved."
+			display_msg --log progress "Prior latitude, longitude, and angle restored."
 			# It would be nice to transfer other settings, but a lot of setting names changed
 			# and it's not worth trying to look for all names.
 			# TODO: transfer "easy" ones
@@ -947,7 +973,7 @@ restore_prior_files() {
 	fi
 	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
 		RESTORED_PRIOR_CONFIG_SH="true"
-		display_msg progress "Restoring prior 'config.sh' file"
+		display_msg progress "Restoring prior 'config.sh' file."
 		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}"
 	else
 		RESTORED_PRIOR_CONFIG_SH="false"
@@ -984,6 +1010,8 @@ restore_prior_files() {
 	# Unfortunately, it's not easy since the prior configuration files could be from
 	# any Allsky version, and the variables and their names changed and we don't have a
 	# mapping of old-to-new names.
+
+	# However, we know the format of v2022.03.01 and newer
 
 	# display_msg progress "Restoring settings from 'config.sh'."
 	# similar for config.sh, but
@@ -1052,7 +1080,8 @@ restore_prior_files() {
 ####
 # Update Allsky and exit.  It basically resets things.
 # This can be needed if the user hosed something up, or there was a problem somewhere.
-do_update() {
+do_update()
+{
 	source "${ALLSKY_CONFIG}/config.sh" || exit 99		# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg error "CAMERA_TYPE not set in config.sh."
@@ -1149,7 +1178,8 @@ install_overlay()
 
 
 ####
-check_if_buster() {
+check_if_buster()
+{
 	if [[ ${OS} == "buster" ]]; then
 		MSG="This release runs best on the newer Bullseye operating system"
 		MSG="${MSG} that was released in November, 2021."
@@ -1165,7 +1195,8 @@ check_if_buster() {
 
 ####
 # Display an image the user will see when they go to the WebUI.
-display_image() {
+display_image()
+{
 	local IMAGE_NAME="${1}"
 
 	I="${ALLSKY_TMP}/image.jpg"
@@ -1191,7 +1222,8 @@ display_image() {
 ####
 # Installation failed.
 # Replace the "installing" messaged with a "failed" one.
-exit_with_image() {
+exit_with_image()
+{
 	display_image "InstallationFailed"
 	#shellcheck disable=SC2086
 	exit ${1}
@@ -1199,7 +1231,8 @@ exit_with_image() {
 
 
 ####
-check_restored_settings() {
+check_restored_settings()
+{
 	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" && \
 	  	${RESTORED_PRIOR_CONFIG_SH} == "true" && \
 	  	${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
@@ -1235,7 +1268,8 @@ check_restored_settings() {
 
 
 ####
-remind_old_version() {
+remind_old_version()
+{
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		MSG="When you are sure everything is working with this new release,"
 		MSG="${MSG} remove your old version in ${PRIOR_ALLSKY_DIR} to save disk space."
@@ -1312,7 +1346,7 @@ get_branch
 [[ ${UPDATE} == "true" ]] && do_update		# does not return
 
 ##### See if there's an old WebUI
-does_old_WebUI_locaion_exist
+does_old_WebUI_location_exist
 
 ##### Execute any specified function, then exit.
 if [[ -n ${FUNCTION} ]]; then
@@ -1398,7 +1432,7 @@ set_permissions
 check_old_WebUI_location							# prompt if prior old-style WebUI
 
 ##### See if we should reboot when installation is done.
-ask_reboot			# prompts
+ask_reboot											# prompts
 
 ##### Display any necessary messaged about restored / not restored settings
 check_restored_settings
@@ -1412,3 +1446,4 @@ remind_old_version
 [[ ${WILL_REBOOT} == "true" ]] && do_reboot	# does not return
 
 exit 0
+

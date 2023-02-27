@@ -832,6 +832,7 @@ void IntHandle(int i)
 	}
 	else if (i == SIGINT || i == SIGTERM)
 	{
+		Log(4, "Got %s to exit.\n", i == SIGINT ? "SIGINT" : "SIGTERM");
 		closeUp(EXIT_OK);
 	}
 	else

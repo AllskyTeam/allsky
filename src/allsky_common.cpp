@@ -2021,5 +2021,5 @@ bool validateLatitudeLongitude(config *cg)
 void doLocale(config cg)
 {
 	if (setlocale(LC_NUMERIC, cg.locale) == NULL && ! cg.saveCC)
-		Log(-1, "*** WARNING: Could not set locale to %s ***\n", cg.locale);
+		Log(-1, "*** WARNING: Could not set locale to %s\n", cg.locale);
 }

@@ -24,8 +24,6 @@ function DisplayOverlay($image_name)
     <script src="/js/bootbox/bootbox.all.js"></script>
     <script src="/js/bootbox/bootbox.locales.min.js"></script>
 
-    <link href="/css/overlay.css" rel="stylesheet">
-
     <link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css' />
     <script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js"></script>
 
@@ -46,6 +44,8 @@ function DisplayOverlay($image_name)
     <script src="/js/dropzone/dropzone-min.js"></script>
 
     <script src="/js/konva/konva.min.js"></script>
+
+    <link href="/css/overlay.css" rel="stylesheet">
 
     <div id="oeeditor">
         <div class="row">
@@ -84,7 +84,7 @@ function DisplayOverlay($image_name)
                                                 <div class="btn btn-lg navbar-btn" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"><i class="fa-solid fa-font"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Image Field"><i class="fa-regular fa-image"></i></div>
+                                                <div class="btn btn-lg navbar-btn" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Image Field"><i class="fa-regular fa-image"></i></div>
                                             </li>
                                             <li>
                                                 <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Field">
@@ -202,6 +202,20 @@ function DisplayOverlay($image_name)
 
             <div id="debugdialog" title="Debug Info">
                 <div id="debugpropgrid"></div>
+            </div>
+
+            <div id="formatdialog" title="Format Help">
+                <table id="formatlisttable" class="display compact" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Format</th>
+                            <th>Description</th>
+                            <th>Sample</th>
+                            <th>Type</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                </table>                
             </div>
 
             <div class="modal" role="dialog" id="oe-item-list-dialog">
@@ -593,13 +607,21 @@ function DisplayOverlay($image_name)
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label for="oe-app-options-grid-opacity" class="col-sm-4 control-label">Grid Opacity</label>
+                                            <label for="oe-app-options-grid-colour" class="control-label col-xs-4">Grid Colour</label>
+                                            <div class="col-sm-8">
+                                                <div class="input-group">
+                                                    <input id="oe-app-options-grid-colour" name="oe-app-options-grid-colour" type="input" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>                                        
+                                        <div class="form-group">
+                                            <label for="oe-app-options-grid-opacity" class="col-sm-4 control-label">Grid Brightness</label>
                                             <div class="col-sm-8">
                                                 <div class="input-group">
                                                     <input id="oe-app-options-grid-opacity" name="oe-app-options-grid-opacity" type="number" min="0" max="100" step="5" class="form-control">
 
                                                 </div>
-                                                <p class="help-block">0 = Black, 100 = White</p>
+                                                <p class="help-block">0 = Lowest, 100 = Brightest</p>
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -632,23 +654,23 @@ function DisplayOverlay($image_name)
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="oe-app-options-add-field-opacity" class="col-sm-4 control-label">Add Field Opacity</label>
+                                            <label for="oe-app-options-add-field-opacity" class="col-sm-4 control-label">Add Field Brightness</label>
                                             <div class="col-sm-8">
                                                 <div class="input-group">
                                                     <input id="oe-app-options-add-field-opacity" name="oe-app-options-add-field-opacity" type="number" min="0" max="100" step="5" class="form-control">
                                                 </div>
-                                                <p class="help-block">The opacity existing fields will be set to when adding a field. 0 = Black, 100 = White</p>
+                                                <p class="help-block">The brightness existing fields will be set to when adding a field. 0 = Lowest, 100 = Brightest</p>
                                             </div>
                                         </div>
 
 
                                         <div class="form-group">
-                                            <label for="oe-app-options-select-field-opacity" class="col-sm-4 control-label">Select Field Opacity</label>
+                                            <label for="oe-app-options-select-field-opacity" class="col-sm-4 control-label">Select Field Brightness</label>
                                             <div class="col-sm-8">
                                                 <div class="input-group">
                                                     <input id="oe-app-options-select-field-opacity" name="oe-app-options-select-field-opacity" type="number" min="0" max="100" step="5" class="form-control">
                                                 </div>
-                                                <p class="help-block">The opacity existing fields will be set to when selecting a field. 0 = Black, 100 = White</p>
+                                                <p class="help-block">The brightness existing fields will be set to when selecting a field. 0 = Lowest, 100 = Brightest</p>
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -661,31 +683,14 @@ function DisplayOverlay($image_name)
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label for="oe-app-options-background-opacity" class="col-sm-4 control-label">Background Image Opacity</label>
+                                            <label for="oe-app-options-background-opacity" class="col-sm-4 control-label">Background Image Brightness</label>
                                             <div class="col-sm-8">
                                                 <div class="input-group">
                                                     <input id="oe-app-options-background-opacity" name="oe-app-options-background-opacity" type="number" min="0" max="100" step="10" class="form-control">
                                                 </div>
-                                                <p class="help-block">0 = Black, 100 = White</p>
+                                                <p class="help-block">0 = Lowest, 100 = Brightest</p>
                                             </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <div class="col-sm-offset-4 col-sm-8">
-                                                <div class="checkbox">
-                                                    <label>
-                                                        <input type="checkbox" id="oe-app-options-debug"> Enable Debug Mode
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-offset-4 col-sm-8">
-                                                <div class="checkbox">
-                                                    <label>
-                                                        <input type="checkbox" id="oe-app-options-position-debug"> Enable Position Debug Mode
-                                                    </label>
-                                                </div>
-                                                <p class="help-block">The debug options should only be used when directed to by a member of the AllSky development team</p>
-                                            </div>                                            
-                                        </div>                                        
+                                        </div>                                       
                                     </form>
 
                                 </div>

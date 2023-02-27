@@ -93,6 +93,17 @@ class OECONFIG {
         this.#appConfig.gridSize = parseInt(size);
     }
 
+    get gridColour() {
+        let colour = '#ffffff'
+        if (this.#appConfig.hasOwnProperty('gridColour')) {
+            colour = this.#appConfig.gridColour;
+        }
+        return colour;
+    }
+    set gridColour(colour) {
+        this.#appConfig.gridColour = colour;
+    }
+
     get gridOpacity() {
         return this.#appConfig.gridOpacity;
     }
@@ -151,20 +162,6 @@ class OECONFIG {
     }
     set dataFields(dataFields) {
         return this.#dataFields = dataFields;
-    }
-
-    get debugMode() {
-        return this.#appConfig.debugMode;
-    }
-    set debugMode(state) {
-        this.#appConfig.debugMode = state;
-    }
-
-    get positiondebugMode() {
-        return this.#appConfig.positiondebugMode;
-    }
-    set positiondebugMode(state) {
-        this.#appConfig.positiondebugMode = state;
     }
 
     saveFields() {

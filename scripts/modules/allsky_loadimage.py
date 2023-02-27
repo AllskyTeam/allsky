@@ -14,7 +14,8 @@ import cv2
 metaData = {
     "name": "Loads the latest image",
     "description": "Loads the last captured image",
-    "module": "allsky_loadimage",    
+    "module": "allsky_loadimage",
+    "ignorewatchdog": "True", 
     "events": [
         "day",
         "night"

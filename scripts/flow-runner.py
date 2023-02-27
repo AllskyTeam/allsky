@@ -136,7 +136,7 @@ if __name__ == "__main__":
         shared.log(0, "ERROR: Failed to open {0}".format(shared.args.config), exitCode=1)
     
     flowName = shared.args.tod if shared.args.event == "postcapture" else shared.args.event
-    shared.log(4, "INFO: Running {0} flow...".format(flowName))
+    shared.log(1, "INFO: Running {0} flow...".format(flowName))
     try:
         moduleConfig = "{0}/postprocessing_{1}.json".format(shared.args.allskyConfig, flowName)
    
@@ -163,7 +163,7 @@ if __name__ == "__main__":
             except Exception as e:
                 shared.log(0, "ERROR: Failed to import module allsky_{0}.py in one of ( {1} ). Ignoring Module.".format(moduleName, e))
         else:
-            shared.log(3, "INFO: Ignorning module {0} as it's disabled".format(shared.flow[shared.step]["module"]))
+            shared.log(3, "INFO: Ignorning module {0} as its disabled".format(shared.flow[shared.step]["module"]))
 
         if shared.flow[shared.step]["enabled"] and method in globals():
             startTime = datetime.now()
@@ -173,21 +173,34 @@ if __name__ == "__main__":
                 arguments = shared.flow[shared.step]['metadata']['arguments']
                 
 
-            #try:
-            result = globals()[method](arguments, shared.args.event)
-            #except Exception as e:
-            #    shared.log(0,"ERROR: {}".format(e))
+            try:
+                result = globals()[method](arguments, shared.args.event)
+            except Exception as e:
+                shared.log(0,"ERROR: {}".format(e))
 
             endTime = datetime.now()
-            elapsedTime = ((endTime - startTime).total_seconds()) * 1000
+            elapsedTime = (((endTime - startTime).total_seconds()) * 1000) / 1000
 
+            ignoreWatchdog = False
+            if shared.step in ['loadimage','saveimage']:
+                 ignoreWatchdog = True
+            else:
+                if 'ignorewatchdog' in shared.flow[shared.step]['metadata']:
+                    if shared.flow[shared.step]['metadata']['ignorewatchdog']:
+                        ignoreWatchdog = True
+                    
             results[shared.step] = {}
-            if watchdog:
-                if elapsedTime > timeout:
-                    shared.log(0, 'ERROR: Module {0} will be disabled, it took {1}ms max allowed is {2}ms'.format(shared.flow[shared.step]['module'], elapsedTime, timeout))
-                    results[shared.step]["disable"] = True
+            if not ignoreWatchdog:
+                if watchdog:
+                    if elapsedTime > timeout:
+                        shared.log(0, 'ERROR: Module {0} will be disabled, it took {1:.2f}s max allowed is {2}s'.format(shared.flow[shared.step]['module'], elapsedTime, timeout))
+                        results[shared.step]["disable"] = True
+                    else:
+                        shared.log(3, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
                 else:
-                    shared.log(3, 'INFO: Module {0} ran ok in {1:.2f}ms'.format(shared.flow[shared.step]['module'], elapsedTime))
+                    shared.log(3, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
+            else:
+                shared.log(3, f'INFO: Ignoring watchdog for module {shared.step}')             
                     
             results[shared.step]["lastexecutiontime"] = str(elapsedTime) 
 
@@ -195,7 +208,7 @@ if __name__ == "__main__":
                 break
 
             results[shared.step]["lastexecutionresult"] = result
-    shared.log(4, "INFO: {0} flow Complete...".format(flowName))
+    shared.log(1, "INFO: {0} flow Complete...".format(flowName))
 
     with open(moduleConfig) as updatefile:
         try:

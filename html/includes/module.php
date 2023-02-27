@@ -48,7 +48,9 @@ function DisplayModule() {
                         <div class="collapse navbar-collapse" id="oe-module-editor-navbar">
                             <ul class="nav navbar-nav">
                                 <li>
-                                    <div class="btn btn-lg navbar-btn" id="module-editor-save" data-toggle="tooltip" data-placement="top" data-container="body" title="Save The Module Configuration"><i class="fa-solid fa-floppy-disk"></i></div>
+                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Module Configuration">
+                                        <div class="btn btn-lg navbar-btn" id="module-editor-save"><i class="fa-solid fa-floppy-disk"></i></div>
+                                    </div>
                                 </li>
                                 <li>
                                     <div class="btn btn-lg navbar-btn" id="module-editor-new" data-toggle="tooltip" data-placement="top" data-container="body" title="Add A New Module"><i class="fa-solid fa-upload"></i></div>
@@ -56,11 +58,13 @@ function DisplayModule() {
                                 <li class="btn-lg">
                                     <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
                                         <div class="form-group">
-                                            <select class="form-control navbar-form" id="module-editor-config" name="module-editor-config" width="200px">
-                                                <option value="day">Daytime Configuration</option>
-                                                <option value="night">Nighttime Configuration</option>
-                                                <!-- <option value="endofnight">End Of Day Configuration</option> -->
-                                            </select>
+                                            <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Sselect the Flow to manage">
+                                                <select class="form-control navbar-form" id="module-editor-config" name="module-editor-config" width="200px">
+                                                    <option value="day">Daytime Configuration</option>
+                                                    <option value="night">Nighttime Configuration</option>
+                                                    <!-- <option value="endofnight">End Of Day Configuration</option> -->
+                                                </select>
+                                            </div>
                                         </div>
                                     </form>
                                 </li>
@@ -154,9 +158,9 @@ function DisplayModule() {
                         <label for="watchdog-timeout" class="col-sm-4 control-label">Module Max Time</label>
                         <div class="col-sm-8">
                             <div class="input-group">
-                                <input id="watchdog-timeout" name="watchdog-timeout" type="number" min="0" max="10000" step="100" class="form-control">
+                                <input id="watchdog-timeout" name="watchdog-timeout" type="number" min="0" max="100" step="1" class="form-control">
                             </div>
-                            <p class="help-block">The maximum time a module can run for, in milliseconds. After this amount of time it will be disabled</p>
+                            <p class="help-block">The maximum time a module can run for, in seconds. After this amount of time it will be disabled</p>
                         </div>
                     </div>
                     <div class="form-group">
@@ -176,7 +180,7 @@ function DisplayModule() {
                             <input type="checkbox" name="showexperimental" id="showexperimental">
                                 Show Experimental
                             </label>
-                            <p class="help-block">Show exterimental modules. NOTE: These may be unstable and cause issues</p>
+                            <p class="help-block">Show experimental modules. NOTE: These may be unstable and cause issues</p>
                         </div>
                     </div>                                      
                     <div class="form-group">

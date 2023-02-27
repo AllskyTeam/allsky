@@ -2,8 +2,8 @@
     "fields": [
         {
             "label": "${DATE}",
-            "x": 124,
-            "y": 47,
+            "x": 172,
+            "y": 60,
             "id": "oe-field-4",
             "format": "%d-%m-%Y",
             "strokewidth": 0,
@@ -16,8 +16,8 @@
         },
         {
             "label": "${TIME}",
-            "x": 579,
-            "y": 47,
+            "x": 624,
+            "y": 60,
             "id": "oe-field-5",
             "format": "%H:%M:%S",
             "strokewidth": 0,
@@ -30,8 +30,8 @@
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 348,
-            "y": 147,
+            "x": 430,
+            "y": 154,
             "id": "oe-field-6",
             "font": "Arial",
             "fontsize": 68,
@@ -41,25 +41,14 @@
         },
         {
             "label": "Gain: ${GAIN}",
-            "x": 194,
-            "y": 227,
+            "x": 235,
+            "y": 234,
             "id": "oe-field-7",
             "font": "Arial",
             "fontsize": 68,
             "strokewidth": 0,
             "tlx": 19,
             "tly": 200
-        },
-        {
-            "label": "Sensor: ${TEMPERATURE_C}C",
-            "x": 359,
-            "y": 307,
-            "id": "oe-field-8",
-            "font": "Arial",
-            "fontsize": 68,
-            "strokewidth": 0,
-            "tlx": 19,
-            "tly": 280
         }
     ],
     "images": [],

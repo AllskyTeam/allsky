@@ -24,7 +24,7 @@ class OVERLAYUTIL
 
     public function run()
     {
-        $this->checkXHRRequest();
+        //$this->checkXHRRequest();
         $this->sanitizeRequest();
         $this->runRequest();
     }
@@ -68,7 +68,6 @@ class OVERLAYUTIL
     private function runRequest()
     {
         $action = $this->method . $this->request;
-
         if (is_callable(array('OVERLAYUTIL', $action))) {
             call_user_func(array($this, $action));
         } else {
@@ -193,13 +192,15 @@ class OVERLAYUTIL
                     $value = trim($fieldSplit[1]);
                     $value = iconv("UTF-8","ISO-8859-1//IGNORE",$value);
                     $value = iconv("ISO-8859-1","UTF-8",$value);
-                    $obj = (object) [
-                        'id' => $count,
-                        'name' => $fieldSplit[0],
-                        'value' => $value
-                    ];
-                    $fieldData[] = $obj;
-                    $count++;
+                    if (substr($fieldSplit[0],0,3) == "AS_") {
+                        $obj = (object) [
+                            'id' => $count,
+                            'name' => $fieldSplit[0],
+                            'value' => $value
+                        ];
+                        $fieldData[] = $obj;
+                        $count++;
+                    }
                 }
 
                 $result['data'] = $fieldData;
@@ -551,6 +552,13 @@ class OVERLAYUTIL
         }
 
     }
+
+    public function getFormats()
+    {
+        $data = file_get_contents($this->overlayPath . "/config/formats.json");
+        $this->sendResponse($data);
+    }
+
 }
 
 $overlayUtil = new OVERLAYUTIL();

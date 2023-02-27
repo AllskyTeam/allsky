@@ -12,6 +12,18 @@ server.tag                  = "Allsky"
 dir-listing.activate = "enable"
 setenv.add-response-header += ( "X-Content-Type-Options" => "nosniff" )
 
+server.modules += ( "mod_cgi" )
+server.modules += ( "mod_setenv" )
+
+setenv.add-environment = ( "LANG" => env.LANG)
+
+$HTTP["url"] =~ "^/cgi-bin/" {
+#       cgi.assign = ( "" => "" )
+        cgi.assign = ( ".py" => "/usr/bin/python3" )
+        alias.url += ( "/cgi-bin/" => "XX_ALLSKY_HOME_XX/html/cgi-bin/" )
+}
+
+
 $HTTP["url"] =~ "^/current|.json$" {
 	# Don't cache the "current" image since it is constantly changing.
 	# Also don't cache .json files since they are configuration files that can change.

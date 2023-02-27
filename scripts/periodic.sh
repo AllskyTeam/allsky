@@ -17,7 +17,7 @@ do
     DELAY=$(jq ".periodictimer" "${ALLSKY_MODULES}/module-settings.json")
 
     if [[ ! ($DELAY =~ ^[0-9]+$) ]]; then
-        DELAY=5
+        DELAY=60
     fi
     if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 		echo "INFO: Sleeping for $DELAY seconds"

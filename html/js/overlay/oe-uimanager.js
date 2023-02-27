@@ -24,7 +24,11 @@ class OEUIMANAGER {
     #fieldTable = null;
     #allFieldTable = null;
 
+    #debugMode = false;
+    #debugPosMode = false;
+
     constructor(imageObj) {
+
         this.#configManager = window.oedi.get('config');
         this.#fieldManager = window.oedi.get('fieldmanager');
 
@@ -82,6 +86,30 @@ class OEUIMANAGER {
             this.updateDebugWindowMousePos(mousePos.x, mousePos.y);
             this.updateDebugWindow();
         });
+
+        let params = this.getQueryParams(window.location.href);
+
+        if (params.hasOwnProperty('debug')) {
+            if (params.debug == 'true') {
+                this.#debugMode = true;
+            }
+        }
+
+        if (params.hasOwnProperty('debugpos')) {
+            if (params.debugpos == 'true') {
+                this.#debugPosMode = true;
+            }
+        }        
+    }
+
+    getQueryParams(url) {
+        const paramArr = url.slice(url.indexOf('?') + 1).split('&');
+        const params = {};
+        paramArr.map(param => {
+            const [key, val] = param.split('=');
+            params[key] = decodeURIComponent(val);
+        })
+        return params;
     }
 
     get selected() {
@@ -489,7 +517,7 @@ class OEUIMANAGER {
             $('#oe-item-list-dialog-save').addClass('hidden');
             $('#oe-item-list-dialog').modal({
                 keyboard: false,
-                width: 600
+                width: 800
             })
             $('#oe-item-list-dialog').on('hidden.bs.modal', function () {
                 $('#itemlisttable').DataTable().destroy();
@@ -573,7 +601,7 @@ class OEUIMANAGER {
             this.showPropertyEditor();
             this.updatePropertyEditor();
             this.updateToolbar();
-            this.#fieldManager.buildJSON();
+            //this.#fieldManager.buildJSON();
             if (this.testMode) {
                 this.enableTestMode();
             }
@@ -825,8 +853,15 @@ class OEUIMANAGER {
             $('#oe-app-options-select-field-opacity').val(this.#configManager.selectFieldOpacity);
             $('#oe-app-options-mousewheel-zoom').prop('checked', this.#configManager.mouseWheelZoom);
             $('#oe-app-options-background-opacity').val(this.#configManager.backgroundImageOpacity);
-            $('#oe-app-options-debug').prop('checked', this.#configManager.debugMode);
-            $('#oe-app-options-position-debug').prop('checked', this.#configManager.positiondebugMode);
+            $('#oe-app-options-grid-colour').val(this.#configManager.gridColour);
+
+            $('#oe-app-options-grid-colour').spectrum({
+                type: 'color',
+                showInput: true,
+                showInitial: true,
+                showAlpha: false,
+                preferredFormat: 'hex'
+            });            
             
             $('#optionsdialog').modal({
                 keyboard: false
@@ -867,16 +902,13 @@ class OEUIMANAGER {
             this.#configManager.gridVisible = $('#oe-app-options-show-grid').prop('checked');
             this.#configManager.gridSize = $("#oe-app-options-grid-size option").filter(":selected").val();
             this.#configManager.gridOpacity = $('#oe-app-options-grid-opacity').val() | 0;
+            this.#configManager.gridColour = $('#oe-app-options-grid-colour').val();
             this.#configManager.snapBackground = $('#oe-app-options-snap-background').prop('checked');
             this.#configManager.addListPageSize = $("#oe-app-options-add-list-size option").filter(":selected").val();
             this.#configManager.addFieldOpacity = $('#oe-app-options-add-field-opacity').val() | 0;
             this.#configManager.selectFieldOpacity = $('#oe-app-options-select-field-opacity').val() | 0;
             this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
             this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
-
-            this.#configManager.debugMode = $('#oe-app-options-debug').prop('checked');
-            this.#configManager.positiondebugMode = $('#oe-app-options-position-debug').prop('checked');
-
 
             this.drawGrid();
             this.updateBackgroundImage();
@@ -1203,7 +1235,7 @@ class OEUIMANAGER {
             $('#oe-overlay-editor-tab').removeClass('oe-overlay-editor-tab-modified');
         }
 
-        if (this.#configManager.debugMode) {
+        if (this.#debugMode) {
             $('#oe-toolbar-debug').removeClass('hidden')
         } else {
             $('#oe-toolbar-debug').addClass('hidden')
@@ -1211,7 +1243,7 @@ class OEUIMANAGER {
     }
 
     setupDebug() {
-        if (this.#configManager.positiondebugMode) {
+        if (this.#debugPosMode) {
             this.#createDebugWindow();
         } else {
             if ($('#debugdialog').hasClass('ui-dialog-content')) {
@@ -1373,10 +1405,24 @@ class OEUIMANAGER {
         }
     }
 
+    convertColour(colour, opacity) {
+        if (colour.charAt(0) == "#"){
+            colour = colour.substring(1,7);
+        }
+
+        let red = parseInt(colour.substring(0,2) ,16);
+        let green = parseInt(colour.substring(2,4) ,16);
+        let blue = parseInt(colour.substring(4,6) ,16)
+        opacity = opacity / 100;
+
+        return 'rgba(' + red.toString() + ',' + green.toString() + ',' + blue.toString() + ',' + opacity.toString() + ')';
+    }
+
     drawGrid() {
         this.#gridLayer.destroyChildren();
         if (this.#configManager.gridVisible) {
             if (this.#configManager.gridSize > 0) {
+                let gridColour = this.convertColour(this.#configManager.gridColour, this.#configManager.gridOpacity)
                 let stepSize = this.#configManager.gridSize;
 
                 let xSize = this.#oeEditorStage.width(),
@@ -1389,7 +1435,8 @@ class OEUIMANAGER {
                         new Konva.Line({
                             x: i * stepSize,
                             points: [0, 0, 0, ySize],
-                            stroke: 'rgba(255, 255, 255, ' + (this.#configManager.gridOpacity / 100).toString() + ')',
+                            //stroke: 'rgba(255, 255, 255, ' + (this.#configManager.gridOpacity / 100).toString() + ')',
+                            stroke: gridColour,
                             strokeWidth: 1,
                         })
                     );
@@ -1400,7 +1447,8 @@ class OEUIMANAGER {
                         new Konva.Line({
                             y: i * stepSize,
                             points: [0, 0, xSize, 0],
-                            stroke: 'rgba(255, 255, 255, ' + (this.#configManager.gridOpacity / 100).toString() + ')',
+                            //stroke: 'rgba(255, 255, 255, ' + (this.#configManager.gridOpacity / 100).toString() + ')',
+                            stroke: gridColour,
                             strokeWidth: 1,
                         })
                     );
@@ -1447,7 +1495,10 @@ class OEUIMANAGER {
                 $('#imagedialog').dialog('close');
             }
         }
-
+        if ($("#formatdialog").hasClass('ui-dialog-content')) {
+            $('#formatdialog').dialog('close');
+        }
+        
     }
 
     updatePropertyEditor() {
@@ -1473,8 +1524,8 @@ class OEUIMANAGER {
                     'format': this.#selected.format,
                     'sample': this.#selected.sample,
                     'empty': this.#selected.empty,
-                    'x': this.#selected.x,
-                    'y': this.#selected.y,
+                    'x': this.#selected.calcX,
+                    'y': this.#selected.calcY,
                     'fontsize': this.#selected.fontsize,
                     'fontname': this.#selected.fontname,
                     'opacity': this.#selected.opacity,
@@ -1594,7 +1645,10 @@ class OEUIMANAGER {
 
         var textConfig = {
             label: { group: 'Label', name: 'Item', type: 'text' },
-            format: { group: 'Label', name: 'Format', type: 'text'},
+            format: { group: 'Label', name: 'Format', type: 'text', helpcallback: function (name) {
+                let uiManager = window.oedi.get('uimanager'); 
+                uiManager.#createFormatHelpWindow();
+            }},
             sample: { group: 'Label', name: 'Sample', type: 'text' },
             empty: { group: 'Label', name: 'Empty Value', type: 'text' },
 
@@ -1631,8 +1685,16 @@ class OEUIMANAGER {
             let field = uiManager.selected;
 
             // TODO: Check setter actually exists
-
-            field[name] = value;
+            
+            if (name == 'x' || name == 'y') {
+                if (name == 'x') {
+                    field.x = value + field.shape.offsetX()
+                } else {
+                    field.y = value + field.shape.offsetY()
+                }
+            } else {
+                field[name] = value;
+            }
 
             // If we are in test mode then re enable it after the field has ben updated
             if (uiManager.testMode) {
@@ -1754,7 +1816,7 @@ class OEUIMANAGER {
     }
 
     updateDebugWindow() {
-        if (this.#configManager.positiondebugMode) {
+        if (this.#debugPosMode) {
             let field = this.#selected;
             if (field === null) {
                 $('#debugpropgrid').jqPropertyGrid('set', {
@@ -1797,7 +1859,7 @@ class OEUIMANAGER {
     }
 
     updateDebugWindowMousePos(x, y) {
-        if (this.#configManager.positiondebugMode) {        
+        if (this.#debugPosMode) {        
             let imageX = x  / this.#oeEditorStage.scaleX();
             let imageY = y  / this.#oeEditorStage.scaleY();        
             $('#debugpropgrid').jqPropertyGrid('set', {
@@ -1852,5 +1914,92 @@ class OEUIMANAGER {
             resizable: false,
             closeOnEscape: false,
         });
+    }
+
+    #createFormatHelpWindow() {
+        $('#formatlisttable').DataTable().destroy();
+        $(document).off('click', '.oe-format-replace');
+        $(document).off('click', '.oe-format-add');
+        $('#formatlisttable').DataTable({
+            ajax: {
+                url: "includes/overlayutil.php?request=Formats",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+            },
+            pagingType: 'simple_numbers',
+            paging: true,
+            info: true,
+            autoWidth: false,
+            aaSorting: [],
+            searchPanes: {
+                controls: false              
+            },
+            dom: 'Plfrtip',                        
+            columns: [
+                { 
+                    data: 'format',
+                    width: '100px'
+                },
+                { 
+                    data: 'description',
+                    width: '500px'
+                },
+                { 
+                    data: 'example',
+                    width: '200px'
+                },
+                { 
+                    data: 'type',
+                    width: '0px',
+                    visible: false
+                },
+                {
+                    data: null,
+                    width: '50px',
+                    render: function (item, type, row, meta) {
+                        let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-primary btn-xs oe-format-replace" data-format="' + item.format + '"><i class="fa-solid fa-right-to-bracket"></i></button>';
+                        let buttonAdd = '<button type="button" title="Add to format" class="btn btn-primary btn-xs oe-format-add" data-format="' + item.format + '"><i class="fa-solid fa-plus"></i></button>';
+                        
+                        let buttons = '<div class="btn-group">' + buttonReplace + buttonAdd + '</div>';                        
+                        return buttons;
+                    }
+                }                
+            ]
+        });
+      
+        $('#formatdialog').dialog({
+            resizable: false,
+            closeOnEscape: false,
+            width: 800
+        });
+        
+        $(document).on('click', '.oe-format-replace', (event) => {
+            let uiManager = window.oedi.get('uimanager');          
+            let format = $(event.currentTarget).data('format');
+            uiManager.updateFormat(format, 'replace');
+        });
+
+        $(document).on('click', '.oe-format-add', (event) => {
+            let uiManager = window.oedi.get('uimanager');
+            let format = $(event.currentTarget).data('format');
+            uiManager.updateFormat(format, 'add');
+        })
+    }
+
+    updateFormat(format, type) {
+        let uiManager = window.oedi.get('uimanager');
+        let field = uiManager.selected;
+
+        if (type == 'replace') {
+            field.format = format;
+        } else {
+            field.format = field.format + format;
+        }
+
+        uiManager.updatePropertyEditor();
+        if ($('#oe-test-mode').hasClass('pulse')) {
+            let fieldManager = window.oedi.get('fieldmanager');
+            fieldManager.enableTestMode();
+        }
     }
 }

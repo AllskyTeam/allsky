@@ -32,6 +32,10 @@ from skyfield.api import N, S, E, W
 from skyfield import almanac
 from pytz import timezone
 
+import locale
+
+locale.setlocale(locale.LC_ALL, '')
+
 metaData = {
     "name": "Overlays data on the image",
     "description": "Overlays data fields on the image",
@@ -41,19 +45,10 @@ metaData = {
         "night"
     ],
     "arguments":{
-        "debug": "True",
         "suntimeformat": "",
         "nonighttext": ""
     },
     "argumentdetails": {
-        "debug" : {
-            "required": "false",
-            "description": "Enable debug mode",
-            "help": "If selected all environment variables will be written to the overlaydebug.txt file in the AllSky tmp folder",
-            "type": {
-                "fieldtype": "checkbox"
-            }          
-        },
         "suntimeformat" : {
             "required": "false",
             "tab": "Sun",
@@ -98,7 +93,7 @@ class ALLSKYOVERLAY:
     _suntimeformat = ""
     _nonighttext = ""
     
-    def __init__(self, debug, suntimeformat, nonighttext): 
+    def __init__(self, suntimeformat, nonighttext): 
         self._overlayConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYCONFIGFILE)  
         fieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYFIELDSFILE)
         self._OVERLAYTMP = os.path.join(tempfile.gettempdir(), 'overlay')
@@ -118,7 +113,7 @@ class ALLSKYOVERLAY:
         self._setDateandTime()
         self._observerLat = s.getSetting('latitude') 
         self._observerLon = s.getSetting('longitude')
-        self._debug = debug
+        self._debug = True
         
         self._nonighttext = nonighttext
         if len(suntimeformat.replace(" ", "")) > 0:
@@ -440,7 +435,11 @@ class ALLSKYOVERLAY:
 
         if "format" in fieldData:
             format = fieldData['format']
-            formatArray = format.split(',')
+            if format.startswith('%'):
+                formatArray = format.split(',')
+            else:
+                regex = r"\{(.*?)\}"
+                formatArray = re.findall(regex, format)
         else:
             format = None
             formatArray = {}
@@ -548,7 +547,7 @@ class ALLSKYOVERLAY:
                 opacity = overrideOpacity
 
             if fieldValue is not None:
-                fieldLabel = fieldLabel.replace(variable, fieldValue)
+                fieldLabel = fieldLabel.replace(variable, str(fieldValue))
                 totalVariablesReplaced += 1
 
             totalVariables += 1
@@ -566,7 +565,7 @@ class ALLSKYOVERLAY:
 
                 if len(s.image.shape) == 2:
                     fill = 255
-
+                print(fieldX, fieldY, fill)
                 if rotation == 0 and opacity == 1:
                     draw = ImageDraw.Draw(pilImage)
                     draw.text((fieldX, fieldY), fieldLabel, font = font, fill = fill, stroke_width=strokeWidth, stroke_fill=strokeFill)
@@ -602,7 +601,7 @@ class ALLSKYOVERLAY:
         r,g,b = ImageColor.getrgb(colour)
         #colour =  '#{:02x}{:02x}{:02x}'.format(b,g,r)
         
-        opacity = int((255/100) * (opacity*100))
+        opacity = int((255/100) * (float(opacity)*100))
         colour = (b,g,r,opacity)
         return colour
                 
@@ -676,8 +675,8 @@ class ALLSKYOVERLAY:
                         fieldFound = True
 
             if fieldFound:
-                if envCheck == "AS_EXPOSURE_US":
-                    value = str(s.int(value) / 1000)
+                #if envCheck == "AS_EXPOSURE_US":
+                #    value = str(s.int(value) / 1000)
                 
                 if variableType == 'Date':
                     timeStamp = datetime.fromtimestamp(self._imageDate)
@@ -695,15 +694,15 @@ class ALLSKYOVERLAY:
 
                 if variableType == 'Number':
                     if format is not None and format != "":
-                        format = format.replace("%", "{:.") + "}"
-                        ''' We allow text to be substituded for numbers so if the conversion to a flot
-                        fails we will just return the value for the field.
-                        '''                    
+                        format = "{" + format + "}"                 
                         try:
-                            value = s.float(value)
-                            value = format.format(value)
-                        except ValueError:
-                            pass
+                            try:
+                                convertValue = int(value)
+                            except ValueError:
+                                convertValue = float(value)
+                            value = format.format(convertValue)
+                        except ValueError as err:
+                            s.log(0, f"ERROR: Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
 
                 if variableType == 'Bool':
                     if s.int(value) == 0:
@@ -1206,14 +1205,13 @@ class ALLSKYOVERLAY:
 def overlay(params, event):
     enabled = s.int(s.getEnvironmentVariable("AS_eOVERLAY"))
     if enabled == 1:
-        debug = params["debug"]
         suntimeformat = ""
         nonighttext = ""
         if "suntimeformat" in params:
             suntimeformat = params["suntimeformat"]
         if "nonighttext" in params:            
             nonighttext = params["nonighttext"]        
-        annotater = ALLSKYOVERLAY(debug, suntimeformat, nonighttext)
+        annotater = ALLSKYOVERLAY(suntimeformat, nonighttext)
         annotater.annotate()
         result = "Overlay Complete"
     else:

@@ -4,7 +4,10 @@ class StatusMessages {
 
 	public function addMessage($message, $level='success', $dismissable=true) {
 		$status = "<tr class='alert alert-$level'><td>$message</td>";
-		if ($dismissable) $status .= "<td class='alert-dismissable'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>x</button></td>";
+		if ($dismissable)
+			$status .= "<td class='alert-dismissable'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>x</button></td>";
+		else
+			$status .= "<td></td>";
 		$status .= "</tr>";
 
 		array_push($this->messages, $status);

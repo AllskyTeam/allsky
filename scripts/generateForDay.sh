@@ -254,7 +254,12 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			RET=$?
 		fi
 		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -f ${UPLOAD_THUMBNAIL} ]]; then
-			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" "${UPLOAD_THUMBNAIL_NAME}" "" "${WEB_VIDEOS_DIR}/thumbnails"
+			if [[ -n ${WEB_VIDEOS_DIR} ]]; then
+				W="${WEB_VIDEOS_DIR}/thumbnails"
+			else
+				W=""
+			fi
+			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" "${UPLOAD_THUMBNAIL_NAME}" "" "${W}"
 		fi
 	fi
 	[[ $RET -ne 0 ]] && EXIT_CODE=$((EXIT_CODE + 1))

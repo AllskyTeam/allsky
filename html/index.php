@@ -327,7 +327,8 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 						}
 						$status->showMessages();
 						echo "<div class='message-button'>";
-							echo "<form action='?page=$page&clear=true' method='POST'>";
+							$ts = time();
+							echo "<form action='?page=$page&clear=true&_ts=$ts' method='POST'>";
 							echo "<input type='submit' class='btn btn-primary' value='Clear all messages' />";
 							echo "</form>";
 						echo "</div>";

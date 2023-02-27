@@ -136,7 +136,7 @@ if __name__ == "__main__":
         shared.log(0, "ERROR: Failed to open {0}".format(shared.args.config), exitCode=1)
     
     flowName = shared.args.tod if shared.args.event == "postcapture" else shared.args.event
-    shared.log(1, "INFO: Running {0} flow...".format(flowName))
+    shared.log(4, "INFO: Running {0} flow...".format(flowName))
     try:
         moduleConfig = "{0}/postprocessing_{1}.json".format(shared.args.allskyConfig, flowName)
    
@@ -208,7 +208,7 @@ if __name__ == "__main__":
                 break
 
             results[shared.step]["lastexecutionresult"] = result
-    shared.log(1, "INFO: {0} flow Complete...".format(flowName))
+    shared.log(4, "INFO: {0} flow Complete...".format(flowName))
 
     with open(moduleConfig) as updatefile:
         try:

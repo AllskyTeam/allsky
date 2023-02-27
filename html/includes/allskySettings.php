@@ -247,7 +247,7 @@ function toggle_advanced()
 		$x = "<i class='fa fa-camera fa-fw'></i>";
 	}
 ?>
-		<div class="panel-heading"><?php echo $x; ?> Allsky Settings for <b><?php echo "$cameraType $cameraModel"; ?></b></div>
+		<div class="panel-heading"><?php echo $x; ?> Allsky Settings for &nbsp; <b><?php echo "$cameraType $cameraModel"; ?></b></div>
 
 		<div class="panel-body" style="padding: 5px;">
 <?php if ($formReadonly != "readonly")

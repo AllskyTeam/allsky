@@ -25,7 +25,7 @@ elif [[ ${TYPE} == "debug" ]]; then
 	TYPE="warning"
 fi
 MESSAGE="${2}"
-DATE="$(date)"
+DATE="$(date '+%B %d, %r')"
 
 # The file is tab-separated: type date count message
 TAB="$(echo -e "\t")"

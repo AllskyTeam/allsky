@@ -17,6 +17,7 @@
 // Globals
 $lastChangedName = "lastChanged";	// json setting name
 $formReadonly = false;				// The WebUI isn't readonly
+$ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 
 // functions.php sets a bunch of constants and variables.
 // It needs to be at the top of this file since code below uses the items it sets.
@@ -72,7 +73,9 @@ if (RASPI_OPENVPN_ENABLED || RASPI_TORPROXY_ENABLED) {
 }
 
 $output = $return = 0;
-if (isset($_GET['page']))
+if (isset($_POST['page']))
+	$page = $_POST['page'];
+else if (isset($_GET['page']))
 	$page = $_GET['page'];
 else
 	$page = "";
@@ -291,18 +294,26 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 				// Check if the settings are configured - if not, display a message.
 				check_if_configured($page, "main");
 
-				if (isset($_GET['clear'])) {
-					exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
-					if ($retcode === 0) {
-						// Reload the page, but without 'clear' so we don't get into a loop.
-						echo "<script>document.location.href=document.location.href.replace('&clear=true', '');</script>";
-						echo "<p>Refreshing the window</p>";
-						exit;
+				if (isset($_POST['clear'])) {
+					$t = filemtime(ALLSKY_MESSAGES);
+					$newT = getVariableOrDefault($_POST, "filetime", 0);
+// echo "<br>Comparing t=$t to newT=$newT";
+					if ($t == $newT) {
+						exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
+						if ($retcode !== 0) {
+							$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
+							$status->showMessages();
+						}
 					} else {
-						$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
-						$status->showMessages();
+						// If the messages changed after the user did a "clear",
+						// and then the user refreshed the browser,
+						// we'll have the old time in $filetime, but the timestamp of the file
+						// won't match so we'll get here, and then display the messages below.
+// TODO: Should we display this message?
+						$status->addMessage("System Messages changed", "info", false);
 					}
-				} else if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
+				}
+				if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 					echo "<div class='row'>";
 					echo "<div class='system-message'>";
@@ -314,7 +325,7 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 								$level = $message_array[0];
 								$date = $message_array[1];
 								$count = $message_array[2];
-								$message = $message_array[3];
+								$message = "<strong>" . $message_array[3] . "</strong>";
 								if ($count == 1)
 									$message .= " &nbsp; ($date)";
 								else
@@ -327,7 +338,13 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 						}
 						$status->showMessages();
 						echo "<div class='message-button'>";
-							echo "<form action='?page=$page&clear=true' method='POST'>";
+							$ts = time();
+							echo "<form action='$ME' method='POST'>";
+							echo "<input type='hidden' name='page' value='$page'>";
+							echo "<input type='hidden' name='clear' value='true'>";
+							echo "<input type='hidden' name='_ts' value='$ts'>";
+							$t = filemtime(ALLSKY_MESSAGES);
+							echo "<input type='hidden' name='filetime' value='$t'>";
 							echo "<input type='submit' class='btn btn-primary' value='Clear all messages' />";
 							echo "</form>";
 						echo "</div>";

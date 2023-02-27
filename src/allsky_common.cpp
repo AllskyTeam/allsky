@@ -832,6 +832,7 @@ void IntHandle(int i)
 	}
 	else if (i == SIGINT || i == SIGTERM)
 	{
+		Log(4, "Got %s to exit.\n", i == SIGINT ? "SIGINT" : "SIGTERM");
 		closeUp(EXIT_OK);
 	}
 	else
@@ -2021,5 +2022,5 @@ bool validateLatitudeLongitude(config *cg)
 void doLocale(config cg)
 {
 	if (setlocale(LC_NUMERIC, cg.locale) == NULL && ! cg.saveCC)
-		Log(-1, "*** WARNING: Could not set locale to %s ***\n", cg.locale);
+		Log(-1, "*** WARNING: Could not set locale to %s\n", cg.locale);
 }

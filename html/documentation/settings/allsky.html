@@ -459,9 +459,31 @@ use the <span class="shSetting">CROP</span> setting in the
 	</td>
 </tr>
 <tr><td><span class="WebUISetting">Locale</span></td>
-	<td>en_US.UTF-8</td>
-	<td>Your locale, used to determine what the thousands and decimal separators are.
-	Type <code>locale</code> at a command prompt to see your choices (use the LC_NUMERIC entry).</td>
+	<td></td>
+	<td>The locale is used to determine what the thousands and decimal separators are
+	as well as the language to use for many non-Allsky commands.
+	If you have never set the locale in Allsky,
+	the installation script will display a list of locales installed on your Pi,
+	highlighting the current one.
+	If it's the correct one, press the TAB key until the cursor is
+	over <code>&lt;Ok&gt;</code>, then press ENTER.
+	<p>
+	<blockquote>
+	The locale only needs to be set once and won't change unless you reinstall the Pi OS.
+	Changing the locale requires a reboot, which <strong>must</strong> be done
+	before continuing the installation.
+	</blockquote>
+	</p>
+	If the correct local isn't in the list it needs to be installed,
+	so <code>&lt;Cancel&gt;</code> out of the installation and run
+	<code>sudo raspi-config</code>, selecting <code>Localisation Options</code>,
+	followed by the <code>Locale</code> option.
+	You will be shown a drop-down list with hundreds of locales; when you find the correct
+	one for your language and country, press the SPACE bar,
+	then TAB to the <code>&lt;Ok&gt;</code> button.
+	It will take a few seconds for the locale to be installed;
+	when done, re-run the installation script selecting the locale you just installed.
+	</td>
 </tr>
 <tr><td><span class="WebUISetting">Histogram Box</span></td>
 	<td>500 500 50 50</td>
@@ -499,8 +521,8 @@ use the <span class="shSetting">CROP</span> setting in the
 
 <tr><td class="note" colspan="3">Image overlay settings
 	<p>See the
-	<a allsky="true" href="/documentation/explanations/imageOverlays.html">image overlay</a>
-	page for details on the image overlay.
+	<a allsky="true" href="/documentation/overlays/overlays.html">overlay page</a>
+	for details on the image overlay.
 	<br><b>Note, the <u>image overlay</u> is what's embedded in every image;
 	the <u>constellation overlay</u> is what's optionally overlayed
 	on top of images in the Allsky Website.</b>

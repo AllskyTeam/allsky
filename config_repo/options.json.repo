@@ -678,8 +678,8 @@
 },
 {
 "name" : "locale",
-"default" : "en_US.UTF-8",
-"description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type 'locale' at a command prompt to see your choices (use the LC_NUMERIC entry).",
+"default" : "",
+"description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type 'locale' at a command prompt to see your choices.",
 "label" : "Locale",
 "type" : "text",
 "display" : 1,
@@ -1148,4 +1148,3 @@
 "name" : "XX_END_XX"
 }
 ]
-

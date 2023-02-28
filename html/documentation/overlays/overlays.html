@@ -1218,9 +1218,15 @@
 											<p>The tables below show the more common formats that can be used. A more
 												detailed and upto date list can be found by clikcing on the help icon in
 												the Text Properties editor</p>
-											<p>The number formats are based upon the string formating options available in python. More details can be found <a href="https://learnpython.com/blog/python-string-formatting/" target="_blank">Here</a></p>
-											<p>Whilst the formats help is open it is still possibel to use the 'Show Sample' toolbar option. So after you have set a format clikcing the sample will show you the result.</p>
-											 <blockquote>NOTE: Whilst the overlay editor is displaying sample data changing the format field will update the sample.</blockquote>
+											<p>The number formats are based upon the string formating options available
+												in python. More details can be found <a
+													href="https://learnpython.com/blog/python-string-formatting/"
+													target="_blank">Here</a></p>
+											<p>Whilst the formats help is open it is still possibel to use the 'Show
+												Sample' toolbar option. So after you have set a format clikcing the
+												sample will show you the result.</p>
+											<blockquote>NOTE: Whilst the overlay editor is displaying sample data
+												changing the format field will update the sample.</blockquote>
 										</td>
 									</tr>
 								</tbody>
@@ -1234,26 +1240,35 @@
 												alt="Formats Help" loading="lazy" />
 										</td>
 										<td>
-											<p>Clicking the help icon will display the 'Format Help' window. This window can be moved around the screen as required. If you close the properties dialog then the formats window will automatically be hidden.</p>
-											
+											<p>Clicking the help icon will display the 'Format Help' window. This window
+												can be moved around the screen as required. If you close the properties
+												dialog then the formats window will automatically be hidden.</p>
+
 											<ul>
-												<li>1 - Selecting the options here will filter the available formats</li>
+												<li>1 - Selecting the options here will filter the available formats
+												</li>
 												<li>2 - These buttons are used to amend the variables format
 
 													<ul>
-														<li><strong><i class="fa-solid fa-right-to-bracket"></i></strong> This button will replace the format on the current field with the selected option. This is most useful when working with number formats</li>
-														<li><strong><i class="fa-solid fa-plus"></i></strong> This button will append the selected format to the format field. This is most useful when working with date formats</li>
+														<li><strong><i
+																	class="fa-solid fa-right-to-bracket"></i></strong>
+															This button will replace the format on the current field
+															with the selected option. This is most useful when working
+															with number formats</li>
+														<li><strong><i class="fa-solid fa-plus"></i></strong> This
+															button will append the selected format to the format field.
+															This is most useful when working with date formats</li>
 													</ul>
 												</li>
 											</ul>
-											
+
 
 										</td>
 									</tr>
 								</tbody>
 							</table>
 
-							
+
 
 
 							<h4>Number formats</h4>
@@ -1613,14 +1628,14 @@
 						All Sun times during <em>daytime</em> capture are for the current day.
 						During <em>nighttime</em> capture:
 					<ul class="minimalPadding">
-						<li>Prior to midnight sunset times are for the current day
-							and sunrise times are for the next day.</li>
-						<li>After midnight sunset times are for the previous day
-							and sunrise times are for the current day.</li>
+						<li>During daytime capture the sunrise and set times are for the current date.</li>
+						<li>During nighttime capture, before midnight, the sunset times are for the current date and the
+							sunrise for the next date. After midnight the sunset times are for the prior date and
+							sunrise for the current date.</li>
 					</ul>
 					</p>
 					<p>There are times when there is no Astronomical darkness.
-						In these cases <code>${SUN_NIGHT}</code> and <code>${SUN_NIGHTEND}</code>
+						In these cases <code>${SUN_NIGHTEND}</code> and <code>${SUN_NIGHT}</code>
 						are set to the value defined in the
 						<span class="moduleName">Overlay Module</span> settings,
 						in the <span class="managerName">Module Manager</span>.
@@ -1636,65 +1651,73 @@
 							</tr>
 						</thead>
 
+
 						<tbody>
 							<tr>
-								<td>${SUN_AZIMUTH}</td>
-								<td>The Azimuth of the Sun with respect to the Allsky camera location.</td>
-							</tr>
-							<tr>
-								<td>${SUN_ELEVATION}</td>
-								<td>The Elevation of the Sun with respect to the Allsky camera location.</td>
-							</tr>
-							<tr>
 								<td>${SUN_DARKEST}</td>
-								<td>Darkest moment of the night, Sun is in the lowest position.</td>
+								<td>The time the sky is at its darkest.</td>
 							</tr>
 							<tr>
 								<td>${SUN_NIGHTEND}</td>
-								<td>Morning astronomical twilight starts.</td>
+								<td>The date and time night ends.</td>
 							</tr>
 							<tr>
 								<td>${SUN_NAUTICALDAWN}</td>
-								<td>End of Civilian twilight.</td>
+								<td>The date and time of nautical dawn.</td>
 							</tr>
 							<tr>
 								<td>${SUN_DAWN}</td>
-								<td>Morning nautical twilight ends, morning civil twilight starts.</td>
+								<td>The date and time of dawn.</td>
 							</tr>
 							<tr>
 								<td>${SUN_SUNRISE}</td>
-								<td>Top edge of the sun appears on the horizon.</td>
+								<td>The date and time of sunrise.</td>
 							</tr>
 							<tr>
 								<td>${SUN_SUNRISEEND}</td>
-								<td>Sunrise ends (bottom edge of the Sun touches the horizon).</td>
+								<td>The date and time sunrise ends.</td>
 							</tr>
 							<tr>
 								<td>${SUN_NOON}</td>
-								<td>Solar noon (Sun is in the highest position).</td>
+								<td>The date and time of noon.</td>
 							</tr>
 							<tr>
 								<td>${SUN_SUNSETSTART}</td>
-								<td>Sunset starts (bottom edge of the Sun touches the horizon).</td>
+								<td>The date and time sunset starts.</td>
 							</tr>
 							<tr>
 								<td>${SUN_SUNSET}</td>
-								<td>Sunset (Sun disappears below the horizon, evening civil twilight starts).</td>
+								<td>The date and time sunset ends.</td>
 							</tr>
 							<tr>
 								<td>${SUN_DUSK}</td>
-								<td>Dusk (evening nautical twilight starts).</td>
+								<td>The date and time of dusk.</td>
 							</tr>
 							<tr>
 								<td>${SUN_NAUTICALDUSK}</td>
-								<td>Nautical dusk (evening astronomical twilight starts).</td>
+								<td>The date and time of nautical dusk.</td>
 							</tr>
 							<tr>
 								<td>${SUN_NIGHT}</td>
-								<td>Night starts (dark enough for astronomical observations).</td>
+								<td>The date and time of nighttime.</td>
+							</tr>
+							<tr>
+								<td>${SUN_AZIMUTH}</td>
+								<td>The Azimuth of the Sun.</td>
+							</tr>
+							<tr>
+								<td>${SUN_ELEVATION}</td>
+								<td>The Elevation of the Sun.</td>
 							</tr>
 						</tbody>
 					</table>
+					<blockquote>
+						<p>NOTE: The variables will ONLY be set if the sun is enabled in the overlay editor settings.</p>
+						<p>All times are formatted using the date and time format specified in the main allsky settings.
+							This format can be overriden in the overlay module settings in the module manager.</p>
+						<p>The text to display when there is no night time can also be set in the module manager module
+							settings</p>
+					</blockquote>
 
 					<h3>The Moon</h3>
 					<p>The following Moon-related variables are available in the

@@ -252,10 +252,11 @@
             "type": "Number",
             "source": "System"
         },
+
         {
             "id": 28,
-            "name": "${NAUTICALTWILIGHTSTARTS}",
-            "description": "Nautical Twilight Start",
+            "name": "${SUN_DARKEST}",
+            "description": "Darkest time",
             "format": "",
             "sample": "",
             "type": "text",
@@ -263,8 +264,8 @@
         },
         {
             "id": 29,
-            "name": "${CIVILTWILIGHTSTARTS}",
-            "description": "Civil Twilight Start",
+            "name": "${SUN_NIGHTEND}",
+            "description": "Nighttime ends",
             "format": "",
             "sample": "",
             "type": "text",
@@ -272,8 +273,8 @@
         },
         {
             "id": 30,
-            "name": "${DAYSTARTS}",
-            "description": "Day Start",
+            "name": "${SUN_NAUTICALDAWN}",
+            "description": "Nautical dawn",
             "format": "",
             "sample": "",
             "type": "text",
@@ -281,8 +282,8 @@
         },
         {
             "id": 31,
-            "name": "${CIVILTWILIGHTENDS}",
-            "description": "Civil Twilight Ends",
+            "name": "${SUN_DAWN}",
+            "description": "Dawn",
             "format": "",
             "sample": "",
             "type": "text",
@@ -290,24 +291,96 @@
         },
         {
             "id": 32,
-            "name": "${NAUTICALTWILIGHTENDS}",
-            "description": "Nautical Twilight Ends",
+            "name": "${SUN_SUNRISE}",
+            "description": "Sunrise",
             "format": "",
             "sample": "",
             "type": "text",
             "source": "System"
         },
-        {
+		{
             "id": 33,
-            "name": "${ASTRONOMICALTWILIGHTENDS}",
-            "description": "Astronmical Twilight Ends",
+            "name": "${SUN_SUNRISEEND}",
+            "description": "Sunrise ends",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+		{
+            "id": 34,
+            "name": "${SUN_NOON}",
+            "description": "Noon",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+		{
+            "id": 35,
+            "name": "${SUN_SUNSETSTART}",
+            "description": "Start of Sunset",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+		{
+            "id": 36,
+            "name": "${SUN_SUNSET}",
+            "description": "Sunset",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },		
+		{
+            "id": 37,
+            "name": "${SUN_DUSK}",
+            "description": "Dusk",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },		
+		{
+            "id": 38,
+            "name": "${SUN_NAUTICALDUSK}",
+            "description": "Nautical Dusk",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+		{
+            "id": 39,
+            "name": "${SUN_NIGHT}",
+            "description": "Night",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },
+		{
+            "id": 40,
+            "name": "${SUN_AZIMUTH}",
+            "description": "Sun Azimuth",
+            "format": "",
+            "sample": "",
+            "type": "text",
+            "source": "System"
+        },		
+		{
+            "id": 41,
+            "name": "${SUN_ELEVATION}",
+            "description": "Sun Elevation",
             "format": "",
             "sample": "",
             "type": "text",
             "source": "System"
         },
         {
-            "id": 34,
+            "id": 42,
             "name": "${CAMERA_TYPE}",
             "description": "Camera",
             "format": "",
@@ -316,7 +389,7 @@
             "source": "System"
         },
         {
-            "id": 35,
+            "id": 43,
             "name": "${AUTOUSB}",
             "description": "AUTOUSB ZWO Only",
             "format": "",
@@ -325,7 +398,7 @@
             "source": "System"
         },
         {
-            "id": 36,
+            "id": 44,
             "name": "${USB}",
             "description": "USB ZWO Only",
             "format": "",
@@ -334,7 +407,7 @@
             "source": "System"
         },
         {
-            "id": 37,
+            "id": 45,
             "name": "${CAPTURE}",
             "description": "capture",
             "format": "",
@@ -343,7 +416,7 @@
             "source": "System"
         },
         {
-            "id": 38,
+            "id": 46,
             "name": "${DARKFRAME}",
             "description": "Taking Dark Frames",
             "format": "",
@@ -352,7 +425,7 @@
             "source": "System"
         },
         {
-            "id": 39,
+            "id": 47,
             "name": "${eOVERLAY}",
             "description": "External Overlay",
             "format": "",
@@ -361,7 +434,7 @@
             "source": "System"
         },
         {
-            "id": 40,
+            "id": 48,
             "name": "${DAY_OR_NIGHT}",
             "description": "Day/Night string",
             "format": "",
@@ -370,7 +443,7 @@
             "source": "System"
         },
         {
-            "id": 41,
+            "id": 49,
             "name": "${ALLSKY_VERSION}",
             "description": "Allsky version string",
             "format": "",

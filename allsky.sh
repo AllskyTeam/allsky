@@ -179,6 +179,8 @@ if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	echo "-cmd=${RPi_COMMAND_TO_USE}" >> "${ARGS_FILE}"
 fi
 
+# This argument should come second so the capture program knows if it should display debug output.
+echo "-debuglevel=${ALLSKY_DEBUG_LEVEL}" >> "${ARGS_FILE}"
 echo "-version=$(< "${ALLSKY_HOME}/version")" >> "${ARGS_FILE}"
 
 # shellcheck disable=SC2207
@@ -186,8 +188,9 @@ KEYS=( $(settings 'keys[]') )
 for KEY in "${KEYS[@]}"
 do
 	K="$(settings ".${KEY}")"
-	# We have to pass "-config ${ARGS_FILE}" on the command line.
-	[[ ${KEY} != "config" ]] && echo "-${KEY}=${K}" >> "${ARGS_FILE}"
+	# We have to pass "-config ${ARGS_FILE}" on the command line,
+	# and debuglevel we did above.
+	[[ ${KEY} != "config" && ${KEY} != "debuglevel" ]] && echo "-${KEY}=${K}" >> "${ARGS_FILE}"
 done
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
@@ -205,9 +208,6 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -ne 1 ]]; then
 else
 	rm -f "${FREQUENCY_FILE}"
 fi
-
-EXTRA_ARGS="$(settings ".extraArgs")"
-[[ -n ${EXTRA_ARGS} ]] && echo "-extraArgs=${EXTRA_ARGS}" >> "${ARGS_FILE}"
 
 CAPTURE="capture_${CAMERA_TYPE}"
 

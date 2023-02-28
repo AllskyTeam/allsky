@@ -46,7 +46,8 @@ function DisplayAllskyConfig(){
 			}
 
 	 		foreach ($_POST as $key => $value){
-				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart"]))
+				// Anything that's sent "hidden" in a form that isnt' a settings needs to go here.
+				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts"]))
 					continue;
 
 				// We look into POST data to only select settings.

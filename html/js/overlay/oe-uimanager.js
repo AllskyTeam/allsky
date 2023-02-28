@@ -273,7 +273,9 @@ class OEUIMANAGER {
                     x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
                     y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
                 });
-                this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});                
+//                this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});                
+                this.#snapRectangle.offsetX(shape.offsetX());
+                this.#snapRectangle.offsetY(shape.offsetY());
                 this.#snapRectangle.scale({
                     x: this.#movingField.scale,
                     y: this.#movingField.scale
@@ -1693,7 +1695,14 @@ class OEUIMANAGER {
                     field.y = value + field.shape.offsetY()
                 }
             } else {
-                field[name] = value;
+                if (name == 'label') {
+                    let oldSize = field.shape.measureSize(field.label); 
+                    field[name] = value;
+                    let size = field.shape.measureSize(field.label); 
+                    field.x = x - (oldSize - size);
+                } else {
+                    field[name] = value;
+                }
             }
 
             // If we are in test mode then re enable it after the field has ben updated

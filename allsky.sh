@@ -42,20 +42,6 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	doExit "${EXIT_ERROR_STOP}" "no-image" "" "See ${ALLSKY_TMP}/${POST_INSTALLATION_ACTIONS}"
 fi
 
-# COMPATIBILITY CHECKS
-# Check for a new variable in config.sh that wasn't in prior versions.
-# If not set to something (even "") then it wasn't found and force the user to upgrade config.sh
-if [[ ! -v WEBUI_DATA_FILES ]]; then	# WEBUI_DATA_FILES added after version 0.8.3.
-	MSG="FATAL ERROR: old version of ${ALLSKY_CONFIG}/config.sh detected."
-	echo -e "${RED}*** ${MSG}${ALLSKY_CONFIG}/config.sh detected.${NC}"
-	echo "Please move your current config.sh file to config.sh-OLD, then place the newest one"
-	echo "from https://github.com/thomasjacquin/allsky in ${ALLSKY_CONFIG} and"
-	echo "manually copy your data from the old file to the new one."
-	doExit "${EXIT_ERROR_STOP}" "Error" \
-		"${ERROR_MSG_PREFIX}\n$(basename "${ALLSKY_CONFIG}")/config.sh\nis an old version.  See\n${ALLSKY_LOG}" \
-		"${NOT_STARTED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
-
-fi
 USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
 
 if [[ -z ${CAMERA_TYPE} ]]; then

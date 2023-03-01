@@ -34,9 +34,11 @@ FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 FORCE_CREATING_SETTINGS_FILE="false"	# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE="false"
+PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
 RESTORED_PRIOR_CONFIG_SH="false"		# prior config.sh restored?
 RESTORED_PRIOR_FTP_SH="false"			# prior ftp-settings.sh restored?
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
+PRIOR_ALLSKY_VERSION=""					# The version number of the prior version, if known
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=""						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
@@ -86,6 +88,40 @@ display_header()
 	echo
 }
 
+####
+# 
+do_initial_heading()
+{
+	if [[ ${UPDATE} == "true" ]]; then
+		display_header "Updating Allsky"
+		return
+	fi
+
+	MSG="Welcome to the ${TITLE}!\n"
+
+	if [[ -n ${PRIOR_ALLSKY} ]]; then
+		MSG="${MSG}\nYou will be asked if you want to use the images and darks (if any) from"
+		MSG="${MSG}\nfrom your prior version of Allsky."
+		if [[ ${PRIOR_ALLSKY} == "new" ]]; then
+			MSG="${MSG}\nIf so, we will use its settings as well."
+		else
+			MSG="${MSG}\nIf so, we will attempt to use its settings as well, but may not be"
+			MSG="${MSG}\nable to use ALL prior settings depending on how old your prior Allsky is."
+			MSG="${MSG}\nIn that case, you'll be prompted for required information such as"
+			MSG="${MSG}\nthe camera's latitude, logitude, and locale."
+		fi
+	else
+		MSG="${MSG}\nYou will be prompted for required information such as the type"
+		MSG="${MSG}\nof camera you have and the camera's latitude, logitude, and locale."
+	fi
+
+	MSG="${MSG}\n\nNOTE: your camera must be connected to the Pi before continuing."
+	MSG="${MSG}\n\nContinue?"
+	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+		exit 1
+	fi
+	display_header "Welcome to the ${TITLE}!"
+}
 
 ####
 usage_and_exit()
@@ -147,25 +183,71 @@ get_branch()
 
 
 ####
+# Map the new ${CAMERA_TYPE} setting to the old ${CAMERA} setting.
+CAMERA_TYPE_to_CAMERA()
+{
+	local CAMERA_TYPE="${1}"
+	if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
+		echo "ZWO"
+	elif [[ ${CAMERA_TYPE} == "RPi" ]]; then
+		echo "RPiHQ"		# RPi cameras used to be called "RPiHQ".
+	else
+		display_msg error "Unknown CAMERA_TYPE: '${CAMERA_TYPE}'"
+		exit 1
+	fi
+}
+####
+# Map the old ${CAMERA} setting to the new ${CAMERA_TYPE} setting.
+CAMERA_to_CAMERA_TYPE()
+{
+	local CAMERA="${1}"
+	if [[ ${CAMERA} == "ZWO" ]]; then
+		echo "ZWO"
+	elif [[ ${CAMERA} == "RPiHQ" ]]; then
+		echo "RPi"
+	else
+		display_msg error "Unknown CAMERA: '${CAMERA}'"
+		exit 1
+	fi
+}
+
+####
 # Prompt the user to select their camera type, if we can't determine it automatically.
 # If they have a prior installation of Allsky that uses either CAMERA or CAMERA_TYPE in config.sh,
 # we can use its value and not prompt.
 CAMERA_TYPE=""
 select_camera_type()
 {
-	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
-		# New style Allsky with CAMERA_TYPE in config.sh
-		if [[ -f ${PRIOR_CONFIG_FILE} ]]; then
-			# We can't "source" the config file because the new settings file doesn't exist,
-			# so the "source" will fail.
-			CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
-			[[ -n ${CAMERA_TYPE} ]] && return
-		fi
+	if [[ -f ${PRIOR_CONFIG_FILE} ]]; then
+		case "${PRIOR_ALLSKY_VERSION}" in
+			# New versions go here...
+# TODO: update version on next line:
+			"v2023.MM.DD_tbd")
+				# New style Allsky using ${CAMERA_TYPE}.
+				CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
+				# Don't bother with a message since this is a "similar" release.
+				[[ -n ${CAMERA_TYPE} ]] && return
+				;;
+
+			"v2022.03.01" | "old")
+				local CAMERA="$(get_variable "CAMERA" "${PRIOR_CONFIG_FILE}")"
+				if [[ -n ${CAMERA} ]]; then
+					CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
+					if [[ ${CAMERA} != "${CAMERA_TYPE}" ]]; then
+						NEW=" (now called ${CAMERA_TYPE})"
+					else
+						NEW=""
+					fi
+					display_msg --log progress "Using prior ${CAMERA} camera${NEW}."
+					return
+				fi
+				;;
+		esac
 	fi
 
 	# "2" is the number of menu items.
 	MSG="\nSelect your camera type:\n"
-	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "${MSG}" 15 ${WT_WIDTH} 2 \
+	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "${MSG}" 15 "${WT_WIDTH}" 2 \
 		"ZWO"  "   ZWO ASI" \
 		"RPi"  "   Raspberry Pi HQ, Module 3, and compatible" \
 		3>&1 1>&2 2>&3)
@@ -210,7 +292,7 @@ create_webui_defines()
 
 ####
 # Recreate the options file.
-# This can be used after installation if the options file get hosed.
+# This can be used after installation if the options file gets hosed.
 recreate_options_file()
 {
 	CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${ALLSKY_CONFIG}/config.sh")"
@@ -253,8 +335,9 @@ save_camera_capabilities()
 	fi
 
 	if [[ ${DEBUG} -gt 0 ]]; then
-		display_msg debug "Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
-		display_msg debug "\t${DEBUG_ARG} 'cameraType' 'Camera Type' '${CAMERA_TYPE}'"
+		MSG="Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
+		MSG="${MSG}  debug ${DEBUG_ARG} 'cameraType' 'Camera Type' '${CAMERA_TYPE}'"
+		display_msg debug "${MSG}"
 	fi
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly ${DEBUG_ARG} \
@@ -265,7 +348,7 @@ save_camera_capabilities()
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
 			MSG="$MSG}After connecting your camera, run '${ME} --update'."
-			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --log error "No camera detected - installation aborted."
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
 			display_msg --log error "Unable to save camera capabilities."
@@ -292,15 +375,28 @@ do_sudoers()
 WILL_REBOOT="false"
 ask_reboot()
 {
-	AT="     http://${NEW_HOST_NAME}.local\n"
+	local TYPE="${1}"
+
+	if [[ ${TYPE} == "locale" ]]; then
+		local MSG="A reboot is needed for the locale change to take effect."
+		MSG="${MSG}\nYou must reboot before continuing the installation."
+		MSG="${MSG}\n\nReboot now?"
+		if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
+			return 0
+		else
+			return 1
+		fi
+	fi
+
+	local AT="     http://${NEW_HOST_NAME}.local\n"
 	AT="${AT}or\n"
 	AT="${AT}     http://$(hostname -I | sed -e 's/ .*$//')"
-	MSG="*** Allsky installation is almost done. ***"
+	local MSG="*** Allsky installation is almost done. ***"
 	MSG="${MSG}\n\nYou must reboot the Raspberry Pi to finish the installation."
 	MSG="${MSG}\n\nAfter reboot you can connect to the WebUI at:\n"
 	MSG="${MSG}${AT}"
 	MSG="${MSG}\n\nReboot when installation is done?"
-	if whiptail --title "${TITLE}" --yesno "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3; then
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 		WILL_REBOOT="true"
 	else
 		display_msg notice "You need to reboot the Pi before Allsky will work."
@@ -368,7 +464,7 @@ check_swap()
 			MSG="${MSG}\n\nYou may change the amount of swap by changing the number below."
 		fi
 
-		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 18 ${WT_WIDTH} \
+		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 18 "${WT_WIDTH}" \
 			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
 		if [[ -z ${SWAP_SIZE} || ${SWAP_SIZE} == "0" ]]; then
 			if [[ ${CURRENT_SWAP} -eq 0 && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
@@ -464,7 +560,7 @@ check_tmp()
 	MSG="Making ${ALLSKY_TMP} reside in memory can drastically decrease the amount of writes to the SD card, increasing its life."
 	MSG="${MSG}\n\nDo you want to make it reside in memory?"
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
-	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 		echo "${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}" | sudo tee -a /etc/fstab > /dev/null
 		check_and_mount_tmp
 		display_msg --log progress "${ALLSKY_TMP} is now in memory."
@@ -548,10 +644,10 @@ prompt_for_hostname()
 
 	MSG="Please enter a hostname for your Pi."
 	MSG="${MSG}\n\nIf you have more than one Pi on your network they must all have unique names."
-	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 10 ${WT_WIDTH} \
+	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 10 "${WT_WIDTH}" \
 		"${SUGGESTED_NEW_HOST_NAME}" 3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 ]]; then
-		display_msg warning "You must specify a host name.  Please re-run the installation and select one continue."
+		display_msg warning "You must specify a host name.  Please re-run the installation and select one."
 		exit 2
 	fi
 
@@ -647,7 +743,7 @@ check_old_WebUI_location()
 	if [[ ! -d ${OLD_WEBUI_LOCATION}/includes ]]; then
 		MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists but it doesn't contain a valid WebUI."
 		MSG="${MSG}\nPlease check it out after installation."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
 		display_msg notice "${MSG}"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 		return
@@ -655,7 +751,7 @@ check_old_WebUI_location()
 
 	MSG="An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so you may remove it after intallation."
 	MSG="${MSG}\n\nWARNING: if you have any other web sites in that directory, they will no longer be accessible via the web server."
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
 	display_msg notice "${MSG}"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 }
@@ -722,21 +818,139 @@ handle_prior_website()
 
 
 ####
-# If the locale isn't already set, set it if possible
+# Get the locale, prompting if we can't determine it.
+LOCALE=""
+CURRENT_LOCALE=""
+get_locale()
+{
+	# A lot of people have the incorrect locale so prompt for the correct one.
+
+	# List of all installed locales
+	local INSTALLED_LOCALES="$( locale -a | grep "_" | sed 's/utf8/UTF-8/')"
+
+	# If the prior version of Allsky had a locale set but it's not
+	# an installed one, let th euser know.
+	# This can happen if they use the settings file from a different Pi or different OS.
+	local MSG2=""
+#XX TODO: PRIOR_SETTINGS_FILE is set
+	if [[ -n ${PRIOR_ALLSKY} && -n ${PRIOR_SETTINGS_FILE} ]]; then
+		local L="$(jq -r .locale "${PRIOR_SETTINGS_FILE}")"
+		if [[ ${L} != "" && ${L} != "null" ]]; then
+			local X="$(echo "${INSTALLED_LOCALES}" | grep "${L}z")"
+			if [[ -z ${X} ]]; then
+				MSG2="NOTE: Your prior locale (${L}) is not installed on this Pi."
+			fi
+		fi
+	fi
+
+	# Get current locale to use as the default.
+	# Ignore any line that doesn't have a value, and get rid of double quotes.
+	local TEMP_LOCALE="$(locale | grep -E "^LANG=|^LANGUAGE=|^LC_ALL=" | sed -e '/=$/d' -e 's/"//g')"
+	CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LANG=/ s/LANG=//p')"
+	if [[ -z ${CURRENT_LOCALE} ]];  then
+		CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LANGUAGE=/ s/LANGUAGE=//p')"
+		if [[ -z ${CURRENT_LOCALE} ]];  then
+			CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p')"
+		fi
+	fi
+
+	local D=""
+	if [[ -n ${CURRENT_LOCALE} && ${CURRENT_LOCALE} != "null" ]]; then
+		D="--default-item ${CURRENT_LOCALE}"
+	else
+		CURRENT_LOCALE=""
+	fi
+
+	MSG="\nSelect your locale; the default is highlighted in red."
+	MSG="${MSG}\nIf it's not in the list, press <Cancel>."
+	MSG="${MSG}\n\nIf you change the locale, the system will reboot and"
+	MSG="${MSG}\nyou will need to restart the installation."
+	[[ -n ${MSG2} ]] && MSG="${MSG}\n\n${MSG2}"
+
+# TODO: replace "." in printf() with something (I don't know what) to whiptail gets a null or
+# space for the 2nd arguments in the pair.
+	local LOCALES="$( echo "${INSTALLED_LOCALES}" | awk '{ printf("%s %s ", $1, ".") }' )"
+	#shellcheck disable=SC2086
+	LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 ${LOCALES} \
+		3>&1 1>&2 2>&3)
+	if [[ -z ${LOCALE} ]]; then
+		MSG="You need to set the locale before the installation can be run."
+		MSG="${MSG}\nIf your locale was not in the list, run 'raspi-config' to update the list,"
+		MSG="${MSG}\nthen rerun the installation."
+		display_msg info "${MSG}"
+		exit 0
+	fi
+}
+
+
+####
+# Set the locale
 set_locale()
 {
-	LOCALE="$(settings .locale)"
-	[[ -n ${LOCALE} ]] && return		# already set up
+	[[ -z ${LOCALE} ]] && get_locale
 
-# TODO: prompt for locale so we don't get the default.
-	display_msg progress "Setting locale."
-	LOCALE="$(locale | grep LC_NUMERIC | sed -e 's;LC_NUMERIC=";;' -e 's;";;')"
-	if [[ -z ${LOCALE} ]]; then
-		MSG="Unable to determine your locale.\nRun the 'locale' command and then update the WebUI."
-		display_msg warning "${MSG}"
-		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+	# ${LOCALE} and ${CURRENT_LOCALE} are set
+
+	if [[ ${CURRENT_LOCALE} == "${LOCALE}" ]]; then
+		display_msg progress "Keeping locale at '${LOCALE}'."
+		LOCALE=""		# causes set_locale not to do anything.
 	else
+		display_msg progress "Setting locale to '${LOCALE}'."
+		if [[ ! -f ${SETTINGS_FILE} ]]; then
+			# For testing, create a dummy settings file.
+			SETTINGS_FILE=/tmp/s
+			echo '{ "locale" : "aa_AA.UTF-8" }' > "${SETTINGS_FILE}"
+		fi
 		jq ".locale = \"${LOCALE}\"" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
+		# This updates /etc/default/locale
+		sudo update-locale LC_ALL="${LOCALE}" LANGUAGE="${LOCALE}" LANG="${LOCALE}"
+
+# XXXX TODO: not sure if these are needed
+		export LC_ALL="${LOCALE}"
+		export LANG="${LOCALE}"
+
+		ask_reboot "locale" && do_reboot		# do_reboot does not return
+		display_msg warning "You must reboot before continuing with the installation."
+		exit 0
+	fi
+}
+
+
+####
+# See if a prior Allsky exists; if so, set some variables.
+does_prior_Allsky_exist()
+{
+	PRIOR_ALLSKY=""
+	if [[ -d ${PRIOR_ALLSKY_DIR}/src ]]; then
+		if [[ -f  ${PRIOR_ALLSKY_DIR}/version ]]; then
+			PRIOR_ALLSKY_VERSION="$( < "${PRIOR_ALLSKY_DIR}/version" )"
+			case "${PRIOR_ALLSKY_VERSION}" in
+				"v2022.03.01")
+					# This is an old style Allsky with ${CAMERA} in config.sh and
+					# the first version with a "version" file.
+					# Fall through...
+					;;
+
+				*)
+					# New style Allsky with CAMERA_TYPE set in config.sh
+					PRIOR_ALLSKY="new"
+					PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
+					# This shouldn't happen, but just in case ...
+					[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
+					;;
+			esac
+		fi
+		if [[ -z ${PRIOR_ALLSKY} ]]; then
+			PRIOR_ALLSKY="old"
+			PRIOR_ALLSKY_VERSION="${PRIOR_ALLSKY_VERSION:-old}"
+			local CAMERA="$( CAMERA_TYPE_to_CAMERA "${CAMERA_TYPE}" )"
+			PRIOR_SETTINGS_FILE="${OLD_RASPAP_DIR}/settings_${CAMERA}.json"
+			[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
+		fi
+
+		return 0
+	else
+		return 1
 	fi
 }
 
@@ -745,35 +959,33 @@ set_locale()
 # If there's a prior version of the software,
 # ask the user if they want to move stuff from there to the new directory.
 # Look for a directory inside the old one to make sure it's really an old allsky.
-check_if_prior_Allsky()
+prompt_for_prior_Allsky()
 {
-	if [[ -d ${PRIOR_ALLSKY_DIR}/src ]]; then
-		MSG="You appear to have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
+	if [[ -n ${PRIOR_ALLSKY} ]]; then
+		MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
 		MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
-		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then
-			if [[ -f  ${PRIOR_ALLSKY_DIR}/version ]]; then
-				PRIOR_ALLSKY="new"		# New style Allsky with CAMERA_TYPE set in config.sh
-			else
-				PRIOR_ALLSKY="old"		# Old style with CAMERA set in config.sh
-			fi
+		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+			return 0
 		else
+			PRIOR_ALLSKY=""
+			PRIOR_ALLSKY_VERSION=""
 			MSG="If you want your old images, darks, settings, etc. from the prior version"
 			MSG="${MSG} of Allsky, you'll need to manually move them to the new version."
-			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --log info "Will NOT restore from prior version of Allsky."
 		fi
 	else
 		MSG="No prior version of Allsky found."
 		MSG="${MSG}\n\nIf you DO have a prior version and you want images, darks, and certain settings moved from the prior version to the new one, rename the prior version to ${PRIOR_ALLSKY_DIR} before running this installation."
 		MSG="${MSG}\n\nDo you want to continue?"
-		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH} 3>&1 1>&2 2>&3; then
+		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			display_msg info "Rename the directory with your prior version of Allsky to\n'${PRIOR_ALLSKY_DIR}', then run the installation again.\n"
 			exit 0
 		fi
-
-		# No prior Allsky so force creating a settings file.
-		FORCE_CREATING_SETTINGS_FILE="true"
 	fi
+
+	# No prior Allsky so force creating a default settings file.
+	FORCE_CREATING_SETTINGS_FILE="true"
 }
 
 
@@ -819,12 +1031,167 @@ update_config_sh()
 # Create the log file and make it readable/writable by the user; this aids in debugging.
 create_allsky_logs()
 {
-	display_msg progress "Set permissions on logs ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
+	display_msg progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
 	sudo truncate -s 0 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chmod 664 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chgrp "${ALLSKY_GROUP}" "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 
 	sudo systemctl restart rsyslog		# so logs go to the files above
+}
+
+
+####
+# Prompt for either latitude or longitude, and make sure it's a valid entry.
+prompt_for_lat_long()
+{
+	local TYPE="${1}"
+	local HUMAN_TYPE="${2}"
+	local ERROR_MSG=""
+	local VALUE=""
+
+	while :
+	do
+		local M="${ERROR_MSG}${MSG}"
+		VALUE=$(whiptail --title "${TITLE}" --inputbox "${M}" 18 "${WT_WIDTH}" "" 3>&1 1>&2 2>&3)
+		if [[ -z ${VALUE} ]]; then
+			# Let the user not enter anything.  A message is printed below.
+			break
+		else
+			if VALUE="$(convertLatLong "${VALUE}" "${TYPE}")" ; then
+				jq ".${TYPE}=\"${VALUE}\" "   "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
+				display_msg --log progress "${HUMAN_TYPE} set to ${VALUE}."
+				echo "${VALUE}"
+				break
+			else
+				ERROR_MSG="${VALUE}\n\n"
+			fi
+		fi
+	done
+}
+
+####
+# We can't automatically determine the latitude and longitude, so prompt for them.
+get_lat_long()
+{
+	display_msg progress "Prompting for Latitude and Longitude."
+
+	MSG="Enter your Latitude."
+	MSG="${MSG}\nIt can either have a plus or minus sign (e.g., -20.1)"
+	MSG="${MSG} or N or S (e.g., 20.1S)"
+	LATITUDE="$(prompt_for_lat_long "latitude" "Latitude")"
+
+	MSG="Enter your Longitude."
+	MSG="${MSG}\nIt can either have a plus or minus sign (e.g., -20.1)"
+	MSG="${MSG} or E or W (e.g., 20.1W)"
+	LONGITUDE="$(prompt_for_lat_long "longitude" "Longitude")"
+
+	if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
+		display_msg --log warning "Latitude and longitude need to be set in the WebUI before Allsky can start."
+	fi
+}
+
+
+####
+#
+# prior_version, current_version
+convert_settings()
+{
+cat > /dev/null <<EOF
+# ZWO:
+Z "autousb":"1",
+Z "usb":"80",
+Z "gaintransitiontime":"15",
+Z "gamma":"50",
+Z "showTemp":"1",
+Z "showHistogram":"0",
+Z "coolerEnabled":"0",
+Z "targetTemp":"0",
+Z "histogrambox":"500 500 50 50",
+Z "showhistogrambox":"0",
+Z "newexposure":"1",
+Z aggression
+Z dayskipframes
+Z nightskipframes
+
+
+R Z "dayautoexposure":"1",
+R   "daymaxexposure"
+R Z "dayexposure":".5",
+R   "daymean"
+R Z "daybrightness":"50",		R: brightness, daybrightness
+R Z "daydelay":"5000",
+R   "dayautogain",
+R   "daymaxgain"
+R   "daygain",
+R Z "daybin":"1",
+R Z "nightautoexposure":"1",
+R Z "nightmaxexposure":"20000",
+R   "nightmaxesposure"
+R Z "nightexposure":"10000",
+R   "nightmean"
+R Z "nightbrightness":"50",		R: brightness
+R Z "nightdelay":"10",
+R Z "nightautogain":"0",
+R Z "nightmaxgain":"200",
+R Z "nightgain":"50",
+R Z gaintransitiontime
+R Z "nightbin":"1",
+R Z "width":"0",
+R Z "height":"0",
+R Z "type":"99",
+R Z "autowhitebalance":"0",		|| awb
+R Z "wbr":"53",
+R Z "wbb":"90",
+R Z "quality":"95",
+R Z "filename":"image.jpg",
+R Z "flip":"0",
+R Z "showTime":"1",
+R Z "timeformat":"%Y%m%d %H:%M:%S",
+R Z "temptype":"C",
+R Z "showExposure":"1",
+R Z "showGain":"1",
+R Z "showBrightness":"0",
+R Z "text":"",
+R Z "extratext":"",
+R Z "extratextage":"600",
+R Z "textlineheight":"60",
+R Z "textx":"15",
+R Z "texty":"30",
+R Z "fontname":"0",
+R Z "fontcolor":"255 255 255",
+R Z "smallfontcolor":"0 0 255",
+R Z "fonttype":"0",
+R Z "fontsize":"7",
+R Z "fontline":"1",
+R Z "outlinefont":"0",
+R Z "notificationimages":"1",
+R Z "latitude":"60.7N",
+R Z "longitude":"135.05W",
+R Z "angle":"-6",
+R Z "darkframe":"0",
+R Z "locale":"en_US.UTF-8",
+R Z "debuglevel":"1",
+R Z "alwaysshowadvanced":"0",
+R Z "showonmap":"0",
+R Z "location":"",
+R Z "owner":"",
+R Z "websiteurl":"",
+R Z "imageurl":"",
+R Z "camera":"",
+R Z "lens":"",
+R Z "computer":""
+
+R "autofocus":"0",
+R "rotation":"0",
+R "showDetails":"1",
+R "background":"0",
+R "saturation":"0",
+R "showMean",
+R "mean-threshold"
+R "mean-p0"
+R "mean-p1"
+R "mean-p2"
+EOF
 }
 
 
@@ -841,6 +1208,7 @@ restore_prior_files()
 	fi
 
 	if [[ -z ${PRIOR_ALLSKY} ]]; then
+		get_lat_long
 		return			# Nothing left to do in this function, so return
 	fi
 
@@ -877,10 +1245,10 @@ restore_prior_files()
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 	fi
 
-	# This file was in a different directory in older versions.
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
 	else
+		# raspap.auth was in a different directory in older versions.
 		D="${OLD_RASPAP_DIR}"
 	fi
 	if [[ -f ${D}/raspap.auth ]]; then
@@ -898,6 +1266,7 @@ restore_prior_files()
 		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
 		if [[ ${PRIOR_CONFIG_VERSION} == "null" ]]; then
 			OLD="true"		# Hmmm, it should have the version
+			PRIOR_CONFIG_VERSION="** Unknown **"
 		else
 			NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
 			if [[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]]; then
@@ -935,32 +1304,44 @@ restore_prior_files()
 			# and if so, reset "lastChanged" to null.
 			# BUT, how do we determine if it's an old file,
 			# given that it's initially created at installation time?
+		else
+			# This should "never" happen.
+			# Their prior version is "new" but they don't have a settings file?
+			get_lat_long
 		fi
-		# else, what the heck?  Their prior version is "new" but they don't have a settings file?
 	else
 		# settings file is old style in ${OLD_RASPAP_DIR}.
-		if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
-			CT="ZWO"
+		if [[ -n ${PRIOR_SETTINGS_FILE} ]]; then
+
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+			# Transfer prior settings to the new file.
+			case "${PRIOR_ALLSKY_VERSION}" in
+				"v2022.03.01")
+					convert_settings "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
+					;;
+
+				*)
+					# Latitude and longitude are required and have no default,
+					# so try to restore them so Allsky can restart automatically.
+					# As far as I know, these names have never changed.
+					LAT="$(settings .latitude "${PRIOR_SETTINGS_FILE}")"
+					LONG="$(settings .longitude "${PRIOR_SETTINGS_FILE}")"
+					ANGLE="$(settings .angle "${PRIOR_SETTINGS_FILE}")"
+					jq ".latitude=\"${LAT}\" | .longitude=\"${LONG}\" | .angle=\"${ANGLE}\"" \
+						"${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
+					display_msg --log progress "Prior latitude, longitude, and angle restored."
+					SETTINGS_MSG="\n\nYou also need to transfer your old settings to the WebUI.\n"
+					;;
+
+			esac
 		else
-			CT="RPiHQ"		# RPi cameras used to be called "RPiHQ".
-		fi
-		SETTINGS="${OLD_RASPAP_DIR}/settings_${CT}.json"
-		if [[ -f ${SETTINGS} ]]; then
-			SETTINGS_MSG="\n\nYou also need to transfer your old settings to the WebUI.\nUse ${SETTINGS} as a guide.\n"
+			# This should "never" happen.
+			# They have a prior Allsky version but no "settings file?
+			get_lat_long
 
-			# Restore the latitude and longitude so Allsky can start after reboot.
-			LAT="$(settings .latitude "${SETTINGS}")"
-			LONG="$(settings .longitude "${SETTINGS}")"
-			ANGLE="$(settings .angle "${SETTINGS}")"
-			jq ".latitude=\"${LAT}\" | .longitude=\"${LONG}\" | .angle=\"${ANGLE}\"" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
-			display_msg --log progress "Prior latitude, longitude, and angle restored."
-			# It would be nice to transfer other settings, but a lot of setting names changed
-			# and it's not worth trying to look for all names.
-			# TODO: transfer "easy" ones
+			# If we ever automate migrating settings, this next statement should be deleted.
+			FORCE_CREATING_SETTINGS_FILE="true"
 		fi
-
-		# If we ever automate migrating settings, this next statement should be deleted.
-		FORCE_CREATING_SETTINGS_FILE="true"
 	fi
 	# Do NOT restore options.json - it will be recreated.
 
@@ -981,11 +1362,11 @@ restore_prior_files()
 
 	PRIOR_FTP_SH_VERSION=""
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then
-		# Allsky version 0.8 and newer
+		# Allsky v2022.03.01 and newer.  v2022.03.01 doesn't ahve FTP_SH_VERSION.
 		PRIOR_FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}")"
 		FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh")"
 	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
-		# A much older version of Allsky
+		# pre v2022.03.01
 		PRIOR_FTP_FILE="${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh"
 	else
 		display_msg error "Unable to find prior ftp-settings.sh"
@@ -1007,11 +1388,8 @@ restore_prior_files()
 	fi
 
 	## TODO: Try to automate this.
-	# Unfortunately, it's not easy since the prior configuration files could be from
-	# any Allsky version, and the variables and their names changed and we don't have a
-	# mapping of old-to-new names.
-
-	# However, we know the format of v2022.03.01 and newer
+	# We know the format of PRIOR_ALLSKY_VERSION == v2022.03.01 and know
+	# the format of CONFIG_FTP_VERSION and FTP_SH_VERSION files.
 
 	# display_msg progress "Restoring settings from 'config.sh'."
 	# similar for config.sh, but
@@ -1038,21 +1416,20 @@ restore_prior_files()
 	# fi
 	
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
-		# The prior versions should be similar to the new ones.
+		# The prior versions are similar to the new ones.
+# TODO: We can automate this since we know what changed in each version.
 		if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" ]]; then
-			MSG="Your prior 'config.sh' file should be very similar to the new one,"
+			MSG="Your prior 'config.sh' file is similar to the new one."
 		elif [[ ${RESTORED_PRIOR_FTP_SH} == "false" ]]; then
-			MSG="Your prior 'ftp-settings.sh' file should be very similar to the new one,"
+			MSG="Your prior 'ftp-settings.sh' file is similar to the new one."
 		else
-			MSG="Your 'config.sh' and 'ftp-settings.sh' files should be very similar to the new ones,"
+			MSG="Your 'config.sh' and 'ftp-settings.sh' files are similar to the new ones."
 		fi
-		MSG="${MSG}\nother than your changes and the VERSION at the bottom."
-		MSG="${MSG}\nThere may be an easy way to update the new configuration files."
 		MSG="${MSG}\nAfter installation, see ${POST_INSTALLATION_ACTIONS} for details."
 
 		MSG2="You can compare the old and new configuration files with the following commands,"
-		MSG2="${MSG2}\nand if the only differences are your changes, "
-		MSG2="${MSG2}you can simply copy the old files to the new location:"
+		MSG2="${MSG2}\nand apply your changes from the prior file to the new file."
+		MSG2="${MSG2}\nDo NOT simply copy the old files to the new location."
 		MSG2="${MSG2}\n\ndiff ${PRIOR_CONFIG_DIR}/config.sh ${ALLSKY_CONFIG}"
 		MSG2="${MSG2}\n\n   and"
 		MSG2="${MSG2}\n\ndiff ${PRIOR_FTP_FILE} ${ALLSKY_CONFIG}"
@@ -1070,7 +1447,7 @@ restore_prior_files()
 		MSG2=""
 	fi
 	MSG="${MSG}${SETTINGS_MSG}"
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	display_msg info "\n${MSG}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	[[ -n ${MSG2} ]] && echo -e "\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
@@ -1096,14 +1473,10 @@ do_update()
 	# Update the sudoers file if it's missing some entries.
 	# Look for the last entry added (should be the last entry in the file).
 	# Don't simply copy the repo file to the final location in case the repo file isn't up to date.
-	grep --silent "/date" "${FINAL_SUDOERS_FILE}"
-	# shellcheck disable=SC2181
-	if [[ $? -ne 0 ]]; then
+	if ! grep --silent "/date" "${FINAL_SUDOERS_FILE}" ; then
 		display_msg progress "Updating sudoers list."
-		grep --silent "/date" "${REPO_SUDOERS_FILE}"
-		# shellcheck disable=SC2181
-		if [[ $? -ne 0 ]]; then
-				display_msg error "Please get the newest '$(basename "${REPO_SUDOERS_FILE}")' file from Git and try again."
+		if ! grep --silent "/date" "${REPO_SUDOERS_FILE}" ; then
+			display_msg error "Please get the newest '$(basename "${REPO_SUDOERS_FILE}")' file from Git and try again."
 			exit 2
 		fi
 		do_sudoers
@@ -1186,7 +1559,7 @@ check_if_buster()
 		MSG="${MSG}\nYou are running the older Buster operating system and we"
 		MSG="${MSG} recommend doing a fresh install of Bullseye on a clean SD card."
 		MSG="${MSG}\n\nDo you want to continue anyhow?"
-		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3; then
+		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			exit 0
 		fi
 	fi
@@ -1248,10 +1621,9 @@ check_restored_settings()
 
 	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "false" ]]; then
 		MSG="Default settings were created for your ${CAMERA_TYPE} camera."
-		MSG="${MSG}\n\nHowever, some entries may not have been set, like latitude, so you MUST"
-		MSG="${MSG} go to the 'Allsky Settings' page in the WebUI after rebooting to make updates."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
-		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		MSG="${MSG}\n\nHowever, you must update them by going to the"
+		MSG="${MSG} 'Allsky Settings' page in the WebUI after rebooting."
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	fi
 	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" || \
 	  	${RESTORED_PRIOR_FTP_SH} == "false" ]]; then
@@ -1259,8 +1631,7 @@ check_restored_settings()
 		[[ ${RESTORED_PRIOR_CONFIG_SH} == "false" ]] && MSG="${MSG}\n   config.sh"
 		[[ ${RESTORED_PRIOR_FTP_SH}    == "false" ]] && MSG="${MSG}\n   ftp-settings.sh"
 		MSG="${MSG}\n\nHowever, you must update them by going to the 'Editor' page in the WebUI after rebooting."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
-		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	fi
 
 	display_image "ConfigurationNeeded"
@@ -1273,7 +1644,7 @@ remind_old_version()
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		MSG="When you are sure everything is working with this new release,"
 		MSG="${MSG} remove your old version in ${PRIOR_ALLSKY_DIR} to save disk space."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 }
@@ -1323,18 +1694,14 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-##### Display the welcome header
-if [[ -z ${FUNCTION} ]]; then
-	if [[ ${UPDATE} == "true" ]]; then
-		H="Updating Allsky"
-	else
-		H="Welcome to the ${TITLE}"
-	fi
-	display_header "${H}"
-fi
-
 ##### Calculate whiptail sizes
 calc_wt_size
+
+##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY
+does_prior_Allsky_exist
+
+##### Display the welcome header
+[[ -z ${FUNCTION} ]] && do_initial_heading
 
 ##### Stop Allsky
 stop_allsky
@@ -1365,8 +1732,11 @@ display_image "InstallationInProgress"
 
 # Do as much of the prompting up front, then do the long-running work, then prompt at the end.
 
-##### Determine if there's a prior version
-check_if_prior_Allsky
+##### Prompt to use prior Allsky
+prompt_for_prior_Allsky
+
+##### Get locale (prompt if needed).  May not return.
+get_locale
 
 ##### Determine the camera type
 select_camera_type
@@ -1385,7 +1755,7 @@ MSG="\nThe following steps can take about an HOUR depending on the speed of your
 MSG="${MSG}\nand how many of the necessary dependencies are already installed."
 MSG="${MSG}\nYou will see progress messages throughout the process."
 MSG="${MSG}\nAt the end you will be prompted again for additional steps.\n"
-whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 display_msg info "${MSG}"
 
 
@@ -1410,11 +1780,11 @@ save_camera_capabilities "false" || exit_with_image 1			# prompts on error only
 # Code later needs "settings()" function.
 source "${ALLSKY_CONFIG}/config.sh" || exit_with_image 1
 
-##### Create the Allsky log files
-create_allsky_logs
-
 ##### Set locale
 set_locale
+
+##### Create the Allsky log files
+create_allsky_logs
 
 ##### install the overlay and modules system
 install_overlay
@@ -1432,7 +1802,7 @@ set_permissions
 check_old_WebUI_location							# prompt if prior old-style WebUI
 
 ##### See if we should reboot when installation is done.
-ask_reboot											# prompts
+ask_reboot "full"											# prompts
 
 ##### Display any necessary messaged about restored / not restored settings
 check_restored_settings
@@ -1446,4 +1816,3 @@ remind_old_version
 [[ ${WILL_REBOOT} == "true" ]] && do_reboot	# does not return
 
 exit 0
-

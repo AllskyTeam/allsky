@@ -21,7 +21,7 @@ function doExit()
 		Error)
 			COLOR="red"
 			;;
-		NotRunning|*)
+		NotRunning | *)
 			COLOR="yellow"
 			;;
 	esac
@@ -44,6 +44,7 @@ function doExit()
 	fi
 
 	if [[ -n ${WEBUI_MESSAGE} ]]; then
+		[[ ${TYPE} = "no-image" ]] && TYPE="success"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
 	fi
 

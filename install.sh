@@ -886,6 +886,13 @@ get_locale()
 		MSG="${MSG}\nthen rerun the installation."
 		display_msg info "${MSG}"
 		exit 0
+	elif echo "${LOCALE} | grep --silent "Box options")" ; then
+		# Got a usage message from whiptail.
+		#shellcheck disable=SC2086
+		MSG="Got usage message from whiptail: LOCALES=" ${LOCALES}
+		MSG="${MSG}\nFix the problem and try the installation again."
+		display_msg error "${MSG}"
+		exit 1
 	fi
 }
 
@@ -1819,4 +1826,3 @@ remind_old_version
 [[ ${WILL_REBOOT} == "true" ]] && do_reboot	# does not return
 
 exit 0
-

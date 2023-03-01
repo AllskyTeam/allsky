@@ -13,12 +13,19 @@ class StatusMessages {
 		array_push($this->messages, $status);
 	}
 
+	// if $escape is true, escape single quotes.
 	public function showMessages($clear=true, $escape=false) {
+		if ($escape === true)
+			// We can't have any single quotes in the output.
+			$apos = "&apos;";
+		else
+			$apos = "'";
 		$count = 0;
-		echo "<table width='100%'>";
+		echo "<table width=$apos" . "100%$apos>";
 		foreach($this->messages as $message) {
 			if ($count++ >= 1) {
-				echo "<tr style='height: 5px'><td></td></tr>";		// space between messages
+				// space between messages
+				echo "<tr style=$apos" . "height: 5px$apos><td></td></tr>";
 			}
 			if ($escape === true)
 				$message = str_replace("'", "&apos;", $message);

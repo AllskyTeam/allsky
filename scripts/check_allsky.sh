@@ -34,7 +34,7 @@ CURRENT_SCRIPT="${ALLSKY_SCRIPTS}/${ME}"
 if [[ -n ${NEWER} ]]; then
 	# This is a newer version
 	echo "[${CURRENT_SCRIPT}] being replaced by newer version from GitHub."
-	echo XXXX cp "${BASH_ARGV0}" "${CURRENT_SCRIPT}"
+#xx	cp "${BASH_ARGV0}" "${CURRENT_SCRIPT}"
 	chmod 775 "${CURRENT_SCRIPT}"
 
 else
@@ -150,6 +150,7 @@ function check_exists() {
 }
 
 
+# ======================================================================
 # ================= Check for informational items.
 #	There is nothing wrong with these, it's just that they typically don't exist.
 
@@ -200,6 +201,8 @@ if [[ ${CROP_IMAGE} == "true" && ${SENSOR_WIDTH} == "${CROP_WIDTH}" && ${SENSOR_
 	echo "Check CROP_IMAGE, CROP_WIDTH (${CROP_WIDTH}), and CROP_HEIGHT (${CROP_HEIGHT})."
 fi
 
+
+# ======================================================================
 # ================= Check for warning items.
 #	These are wrong, but won't stop Allsky from running,
 #	but may break part of Allsky, e.g., uploads may not work.
@@ -262,27 +265,33 @@ if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
 	echo We HIGHLY recommend setting it to 'true' unless you are debugging issues.
 fi
 
-case "${PROTOCOL,,}" in
+function check_PROTOCOL()
+{
+	P="${1}"	# Protocol
+	V="${2}"	# Variable
+	if [[ -z ${!V} ]]; then
+		heading "Warnings"
+		echo "PROTOCOL (${P}) set but not '${V}'."
+		echo "Uploads will not work."
+		return 1
+	fi
+	return 0
+}
+
+PROTOCOL="${PROTOCOL,,}"
+case "${PROTOCOL}" in
 	"" | local)
 		;;
 
 	ftp | ftps | sftp)
-		for i in REMOTE_HOST REMOTE_USER REMOTE_PASSWORD
-		do
-			if [[ -z ${!i} ]]; then
-				heading "Warnings"
-				echo "PROTOCOL (${PROTOCOL}) set but not '${i}'."
-				echo "Uploads will not work."
-			fi
-		done
+		check_PROTOCOL "${PROTOCOL}" "REMOTE_HOST"
+		check_PROTOCOL "${PROTOCOL}" "REMOTE_USER"
+		check_PROTOCOL "${PROTOCOL}" "REMOTE_PASSWORD"
 		;;
 
 	scp)
-		if [[ -z ${SSH_KEY_FILE} ]]; then
-			heading "Warnings"
-			echo "PROTOCOL (${PROTOCOL}) set but not 'SSH_KEY_FILE'."
-			echo "Uploads will not work."
-		elif [[ ! -e ${SSH_KEY_FILE} ]]; then
+		check_PROTOCOL "${PROTOCOL}" "REMOTE_HOST"
+		if check_PROTOCOL "${PROTOCOL}" "SSH_KEY_FILE" && [[ ! -e ${SSH_KEY_FILE} ]]; then
 			heading "Warnings"
 			echo "PROTOCOL (${PROTOCOL}) set but 'SSH_KEY_FILE' (${SSH_KEY_FILE}) does not exist."
 			echo "Uploads will not work."
@@ -290,34 +299,18 @@ case "${PROTOCOL,,}" in
 		;;
 
 	s3)
-		if [[ -z ${AWS_CLI_DIR} ]]; then
-			heading "Warnings"
-			echo "PROTOCOL (${PROTOCOL}) set but not 'AWS_CLI_DIR'."
-			echo "Uploads will not work."
-		elif [[ ! -e ${AWS_CLI_DIR} ]]; then
+		if check_PROTOCOL "${PROTOCOL}" "AWS_CLI_DIR" && [[ ! -e ${AWS_CLI_DIR} ]]; then
 			heading "Warnings"
 			echo "PROTOCOL (${PROTOCOL}) set but 'AWS_CLI_DIR' (${AWS_CLI_DIR}) does not exist."
 			echo "Uploads will not work."
 		fi
-		for i in S3_BUCKET S3_ACL
-		do
-			if [[ -z ${!i} ]]; then
-				heading "Warnings"
-				echo "PROTOCOL (${PROTOCOL}) set but not '${i}'."
-				echo "Uploads will not work."
-			fi
-		done
+		check_PROTOCOL "${PROTOCOL}" "S3_BUCKET"
+		check_PROTOCOL "${PROTOCOL}" "S3_ACL"
 		;;
 
 	gcs)
-		for i in GCS_BUCKET GCS_ACL
-		do
-			if [[ -z ${!i} ]]; then
-				heading "Warnings"
-				echo "PROTOCOL (${PROTOCOL}) set but not '${i}'."
-				echo "Uploads will not work."
-			fi
-		done
+		check_PROTOCOL "${PROTOCOL}" "GCS_BUCKET"
+		check_PROTOCOL "${PROTOCOL}" "GCS_ACL"
 		;;
 
 	*)
@@ -333,11 +326,12 @@ if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
 	echo "Uploads will not work until this is corrected."
 fi
 
-# If these variables are set, the corresponding directory should exist.
-for i in WEB_IMAGE_DIR WEB_VIDEOS_DIR WEB_KEOGRAM_DIR WEB_STARTRAILS_DIR UHUBCTL_PATH
-do
-	check_exists "${i}"
-done
+# If these variables are set, their corresponding directory should exist.
+check_exists "WEB_IMAGE_DIR"
+check_exists "WEB_VIDEOS_DIR"
+check_exists "WEB_KEOGRAM_DIR"
+check_exists "WEB_STARTRAILS_DIR"
+check_exists "UHUBCTL_PATH"
 
 NUM_UPLOADS=0
 if WHERE="$(has_website)" ; then
@@ -371,6 +365,7 @@ if WHERE="$(has_website)" ; then
 fi
 
 
+# ======================================================================
 # ================= Check for error items.
 #	These are wrong and will likely keep Allsky from running.
 
@@ -484,6 +479,8 @@ if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
 	fi
 fi
 
+# If images are being resized or cropped,
+# make sure the new image is fully within the original image.
 HAS_PIXEL_ERROR="false"
 if [[ ${IMG_RESIZE} == "true" ]]; then
 	if ! X="$(checkPixelValue "IMG_WIDTH" "${IMG_WIDTH}" "width" "${SENSOR_WIDTH}")" ; then
@@ -554,6 +551,7 @@ if [[ ${RESIZE_UPLOADS} == "true" ]]; then
 fi
 
 
+# ======================================================================
 # ================= Summary
 RET=0
 if [[ $((NUM_INFOS + NUM_WARNINGS + NUM_ERRORS)) -eq 0 ]]; then

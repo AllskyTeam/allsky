@@ -20,7 +20,10 @@ import time
 import locale
 import board
 
-locale.setlocale(locale.LC_ALL, '')
+try:
+    locale.setlocale(locale.LC_ALL, '')
+except:
+    pass
 
 ABORT = True
 

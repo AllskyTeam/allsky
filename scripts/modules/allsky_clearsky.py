@@ -15,7 +15,10 @@ from paho import mqtt
 
 import locale
 
-locale.setlocale(locale.LC_ALL, '')
+try:
+    locale.setlocale(locale.LC_ALL, '')
+except:
+    pass
 
 metaData = {
     "name": "Clear Sky Alarm",

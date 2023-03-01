@@ -124,8 +124,6 @@ install: createDirs $(CONFIGFILES)
 	@systemctl enable allskyperiodic
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
 	@echo "export ALLSKY_HOME=$(HOMEDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
-	@cp -ar overlay ../config; chown -R $(SUDO_USER):www-data ../config/overlay ; chmod -R 775 ../config/overlay ;
-	@cp -ar modules ../config; chown -R $(SUDO_USER):www-data ../config/modules ; chmod -R 775 ../config/modules ;
 .PHONY : install
 endif # Package build check
 endif # Root check

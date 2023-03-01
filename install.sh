@@ -713,6 +713,12 @@ set_permissions()
 	# set its permissions.
 	chgrp -f "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 
+	chmod -R 775 "${ALLSKY_CONFIG}/overlay"
+	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}/overlay"
+
+	chmod -R 775 "${ALLSKY_CONFIG}/modules"
+	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}/modules"
+
 	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 }
 
@@ -1550,7 +1556,11 @@ install_overlay()
 	sudo apt-get -y install msttcorefonts > "${TMP}" 2>&1
 	check_installation_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
-	display_msg progress "Setting up modules."
+	display_msg progress "Setting up modules and overlays."
+
+	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_CONFIG}"
+	cp -ar "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
+
 	MODULE_LOCATION="/opt/allsky"
 	sudo mkdir -p "${MODULE_LOCATION}/modules"
 	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${MODULE_LOCATION}"

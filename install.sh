@@ -215,7 +215,7 @@ recreate_options_file()
 {
 	CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${ALLSKY_CONFIG}/config.sh")"
 	save_camera_capabilities "true"
-	set_webserver_permissions
+	set_permissions
 }
 
 

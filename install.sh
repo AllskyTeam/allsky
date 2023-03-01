@@ -1091,7 +1091,7 @@ do_update()
 	create_webui_defines
 
 	save_camera_capabilities "false" || exit 1
-	set_webserver_permissions
+	set_permissions
 
 	# Update the sudoers file if it's missing some entries.
 	# Look for the last entry added (should be the last entry in the file).

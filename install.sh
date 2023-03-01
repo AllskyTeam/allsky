@@ -117,7 +117,7 @@ do_initial_heading()
 
 	MSG="${MSG}\n\nNOTE: your camera must be connected to the Pi before continuing."
 	MSG="${MSG}\n\nContinue?"
-	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 ${WT_WIDTH}  3>&1 1>&2 2>&3; then
+	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 		exit 1
 	fi
 	display_header "Welcome to the ${TITLE}!"
@@ -247,7 +247,7 @@ select_camera_type()
 
 	# "2" is the number of menu items.
 	MSG="\nSelect your camera type:\n"
-	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "${MSG}" 15 ${WT_WIDTH} 2 \
+	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "${MSG}" 15 "${WT_WIDTH}" 2 \
 		"ZWO"  "   ZWO ASI" \
 		"RPi"  "   Raspberry Pi HQ, Module 3, and compatible" \
 		3>&1 1>&2 2>&3)
@@ -335,8 +335,9 @@ save_camera_capabilities()
 	fi
 
 	if [[ ${DEBUG} -gt 0 ]]; then
-		display_msg debug "Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
-		display_msg debug "\t${DEBUG_ARG} 'cameraType' 'Camera Type' '${CAMERA_TYPE}'"
+		MSG="Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
+		MSG="${MSG}  debug ${DEBUG_ARG} 'cameraType' 'Camera Type' '${CAMERA_TYPE}'"
+		display_msg debug "${MSG}"
 	fi
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly ${DEBUG_ARG} \
@@ -347,7 +348,7 @@ save_camera_capabilities()
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
 			MSG="$MSG}After connecting your camera, run '${ME} --update'."
-			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --log error "No camera detected - installation aborted."
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
 			display_msg --log error "Unable to save camera capabilities."
@@ -380,7 +381,7 @@ ask_reboot()
 		local MSG="A reboot is needed for the locale change to take effect."
 		MSG="${MSG}\nYou must reboot before continuing the installation."
 		MSG="${MSG}\n\nReboot now?"
-		if whiptail --title "${TITLE}" --yesno "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3; then
+		if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			return 0
 		else
 			return 1
@@ -395,7 +396,7 @@ ask_reboot()
 	MSG="${MSG}\n\nAfter reboot you can connect to the WebUI at:\n"
 	MSG="${MSG}${AT}"
 	MSG="${MSG}\n\nReboot when installation is done?"
-	if whiptail --title "${TITLE}" --yesno "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3; then
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 		WILL_REBOOT="true"
 	else
 		display_msg notice "You need to reboot the Pi before Allsky will work."
@@ -463,7 +464,7 @@ check_swap()
 			MSG="${MSG}\n\nYou may change the amount of swap by changing the number below."
 		fi
 
-		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 18 ${WT_WIDTH} \
+		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 18 "${WT_WIDTH}" \
 			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
 		if [[ -z ${SWAP_SIZE} || ${SWAP_SIZE} == "0" ]]; then
 			if [[ ${CURRENT_SWAP} -eq 0 && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
@@ -559,7 +560,7 @@ check_tmp()
 	MSG="Making ${ALLSKY_TMP} reside in memory can drastically decrease the amount of writes to the SD card, increasing its life."
 	MSG="${MSG}\n\nDo you want to make it reside in memory?"
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
-	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 		echo "${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}" | sudo tee -a /etc/fstab > /dev/null
 		check_and_mount_tmp
 		display_msg --log progress "${ALLSKY_TMP} is now in memory."
@@ -643,7 +644,7 @@ prompt_for_hostname()
 
 	MSG="Please enter a hostname for your Pi."
 	MSG="${MSG}\n\nIf you have more than one Pi on your network they must all have unique names."
-	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 10 ${WT_WIDTH} \
+	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 10 "${WT_WIDTH}" \
 		"${SUGGESTED_NEW_HOST_NAME}" 3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 ]]; then
 		display_msg warning "You must specify a host name.  Please re-run the installation and select one."
@@ -742,7 +743,7 @@ check_old_WebUI_location()
 	if [[ ! -d ${OLD_WEBUI_LOCATION}/includes ]]; then
 		MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists but it doesn't contain a valid WebUI."
 		MSG="${MSG}\nPlease check it out after installation."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
 		display_msg notice "${MSG}"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 		return
@@ -750,7 +751,7 @@ check_old_WebUI_location()
 
 	MSG="An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so you may remove it after intallation."
 	MSG="${MSG}\n\nWARNING: if you have any other web sites in that directory, they will no longer be accessible via the web server."
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 ${WT_WIDTH}   3>&1 1>&2 2>&3
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
 	display_msg notice "${MSG}"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 }
@@ -869,7 +870,8 @@ get_locale()
 # TODO: replace "." in printf() with something (I don't know what) to whiptail gets a null or
 # space for the 2nd arguments in the pair.
 	local LOCALES="$( echo "${INSTALLED_LOCALES}" | awk '{ printf("%s %s ", $1, ".") }' )"
-	LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 ${WT_WIDTH} 4 ${LOCALES} \
+	#shellcheck disable=SC2086
+	LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 ${LOCALES} \
 		3>&1 1>&2 2>&3)
 	if [[ -z ${LOCALE} ]]; then
 		MSG="You need to set the locale before the installation can be run."
@@ -962,21 +964,21 @@ prompt_for_prior_Allsky()
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
 		MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
-		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH}  3>&1 1>&2 2>&3; then
+		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			return 0
 		else
 			PRIOR_ALLSKY=""
 			PRIOR_ALLSKY_VERSION=""
 			MSG="If you want your old images, darks, settings, etc. from the prior version"
 			MSG="${MSG} of Allsky, you'll need to manually move them to the new version."
-			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --log info "Will NOT restore from prior version of Allsky."
 		fi
 	else
 		MSG="No prior version of Allsky found."
 		MSG="${MSG}\n\nIf you DO have a prior version and you want images, darks, and certain settings moved from the prior version to the new one, rename the prior version to ${PRIOR_ALLSKY_DIR} before running this installation."
 		MSG="${MSG}\n\nDo you want to continue?"
-		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 ${WT_WIDTH} 3>&1 1>&2 2>&3; then
+		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			display_msg info "Rename the directory with your prior version of Allsky to\n'${PRIOR_ALLSKY_DIR}', then run the installation again.\n"
 			exit 0
 		fi
@@ -1050,7 +1052,7 @@ prompt_for_lat_long()
 	while :
 	do
 		local M="${ERROR_MSG}${MSG}"
-		VALUE=$(whiptail --title "${TITLE}" --inputbox "${M}" 18 ${WT_WIDTH} "" 3>&1 1>&2 2>&3)
+		VALUE=$(whiptail --title "${TITLE}" --inputbox "${M}" 18 "${WT_WIDTH}" "" 3>&1 1>&2 2>&3)
 		if [[ -z ${VALUE} ]]; then
 			# Let the user not enter anything.  A message is printed below.
 			break
@@ -1445,7 +1447,7 @@ restore_prior_files()
 		MSG2=""
 	fi
 	MSG="${MSG}${SETTINGS_MSG}"
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	display_msg info "\n${MSG}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	[[ -n ${MSG2} ]] && echo -e "\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
@@ -1471,14 +1473,10 @@ do_update()
 	# Update the sudoers file if it's missing some entries.
 	# Look for the last entry added (should be the last entry in the file).
 	# Don't simply copy the repo file to the final location in case the repo file isn't up to date.
-	grep --silent "/date" "${FINAL_SUDOERS_FILE}"
-	# shellcheck disable=SC2181
-	if [[ $? -ne 0 ]]; then
+	if ! grep --silent "/date" "${FINAL_SUDOERS_FILE}" ; then
 		display_msg progress "Updating sudoers list."
-		grep --silent "/date" "${REPO_SUDOERS_FILE}"
-		# shellcheck disable=SC2181
-		if [[ $? -ne 0 ]]; then
-				display_msg error "Please get the newest '$(basename "${REPO_SUDOERS_FILE}")' file from Git and try again."
+		if ! grep --silent "/date" "${REPO_SUDOERS_FILE}" ; then
+			display_msg error "Please get the newest '$(basename "${REPO_SUDOERS_FILE}")' file from Git and try again."
 			exit 2
 		fi
 		do_sudoers
@@ -1561,7 +1559,7 @@ check_if_buster()
 		MSG="${MSG}\nYou are running the older Buster operating system and we"
 		MSG="${MSG} recommend doing a fresh install of Bullseye on a clean SD card."
 		MSG="${MSG}\n\nDo you want to continue anyhow?"
-		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 18 ${WT_WIDTH} 3>&1 1>&2 2>&3; then
+		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			exit 0
 		fi
 	fi
@@ -1623,10 +1621,9 @@ check_restored_settings()
 
 	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "false" ]]; then
 		MSG="Default settings were created for your ${CAMERA_TYPE} camera."
-		MSG="${MSG}\n\nHowever, some entries may not have been set, like latitude, so you MUST"
-		MSG="${MSG} go to the 'Allsky Settings' page in the WebUI after rebooting to make updates."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
-		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		MSG="${MSG}\n\nHowever, you must update them by going to the"
+		MSG="${MSG} 'Allsky Settings' page in the WebUI after rebooting."
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	fi
 	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" || \
 	  	${RESTORED_PRIOR_FTP_SH} == "false" ]]; then
@@ -1634,8 +1631,7 @@ check_restored_settings()
 		[[ ${RESTORED_PRIOR_CONFIG_SH} == "false" ]] && MSG="${MSG}\n   config.sh"
 		[[ ${RESTORED_PRIOR_FTP_SH}    == "false" ]] && MSG="${MSG}\n   ftp-settings.sh"
 		MSG="${MSG}\n\nHowever, you must update them by going to the 'Editor' page in the WebUI after rebooting."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
-		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	fi
 
 	display_image "ConfigurationNeeded"
@@ -1648,7 +1644,7 @@ remind_old_version()
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		MSG="When you are sure everything is working with this new release,"
 		MSG="${MSG} remove your old version in ${PRIOR_ALLSKY_DIR} to save disk space."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 }
@@ -1759,7 +1755,7 @@ MSG="\nThe following steps can take about an HOUR depending on the speed of your
 MSG="${MSG}\nand how many of the necessary dependencies are already installed."
 MSG="${MSG}\nYou will see progress messages throughout the process."
 MSG="${MSG}\nAt the end you will be prompted again for additional steps.\n"
-whiptail --title "${TITLE}" --msgbox "${MSG}" 12 ${WT_WIDTH} 3>&1 1>&2 2>&3
+whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 display_msg info "${MSG}"
 
 

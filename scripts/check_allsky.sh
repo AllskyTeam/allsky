@@ -28,29 +28,33 @@ source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
 source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit 99
 
+FORCE_CHECK="false"		# Set to "true" to ALWAYS do the version check
+BRANCH="$(getBranch)"
+# Unless forced to, only do the version check if we're on the main branch,
+# not on development branches, because when we're updating this script we
+# don't want to have the updates overwritten from an older version on GitHub.
+if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
+	CURRENT_SCRIPT="${ALLSKY_SCRIPTS}/${ME}"
+	if [[ -n ${NEWER} ]]; then
+		# This is a newer version
+		echo "[${CURRENT_SCRIPT}] being replaced by newer version from GitHub."
+		cp "${BASH_ARGV0}" "${CURRENT_SCRIPT}"
+		chmod 775 "${CURRENT_SCRIPT}"
 
-if true; then ######################################## set to "false" when testing version is newer
-CURRENT_SCRIPT="${ALLSKY_SCRIPTS}/${ME}"
-if [[ -n ${NEWER} ]]; then
-	# This is a newer version
-	echo "[${CURRENT_SCRIPT}] being replaced by newer version from GitHub."
-#xx	cp "${BASH_ARGV0}" "${CURRENT_SCRIPT}"
-	chmod 775 "${CURRENT_SCRIPT}"
-
-else
-	# See if there's a newer version of this script; if so, download it and execute it.
-	BRANCH="$(getBranch)" || exit 2
-	FILE_TO_CHECK="$(basename "${ALLSKY_SCRIPTS}")/${ME}"
-	NEWER_SCRIPT="/tmp/${ME}"
-	checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${FILE_TO_CHECK}" "${NEWER_SCRIPT}"
-	RET=$?
-	[[ ${RET} -eq 2 ]] && exit 2
-	if [[ ${RET} -eq 1 ]]; then
-		exec "${NEWER_SCRIPT}" --newer
-		# Does not return
+	else
+		# See if there's a newer version of this script; if so, download it and execute it.
+		BRANCH="$(getBranch)" || exit 2
+		FILE_TO_CHECK="$(basename "${ALLSKY_SCRIPTS}")/${ME}"
+		NEWER_SCRIPT="/tmp/${ME}"
+		checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${FILE_TO_CHECK}" "${NEWER_SCRIPT}"
+		RET=$?
+		[[ ${RET} -eq 2 ]] && exit 2
+		if [[ ${RET} -eq 1 ]]; then
+			exec "${NEWER_SCRIPT}" --newer
+			# Does not return
+		fi
 	fi
 fi
-fi #####################################################
 
 NUM_INFOS=0
 NUM_WARNINGS=0

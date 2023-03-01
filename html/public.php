@@ -4,6 +4,7 @@
 // including $image_name and $delay.
 // It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
+initialize_variables();		// sets some variables
 ?>
 
 <!DOCTYPE html>
@@ -25,7 +26,7 @@ include_once('includes/functions.php');
 	</div>
 </div>
 
-<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
 
 <script type="text/javascript">
 	function getImage(){

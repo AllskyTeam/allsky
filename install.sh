@@ -825,8 +825,11 @@ get_locale()
 {
 	# A lot of people have the incorrect locale so prompt for the correct one.
 
-	# List of all installed locales
-	local INSTALLED_LOCALES="$( locale -a | grep "_" | sed 's/utf8/UTF-8/')"
+	# List of all installed locales, ignoring any lines with ":" which
+	# are usually error messages.
+	local INSTALLED_LOCALES="$( locale -a 2>/dev/null | grep "_" | grep -v ":" | sed 's/utf8/UTF-8/')"
+	#shellcheck disable=SC2086
+	[[ ${DEBUG} -gt 1 ]] && echo "INSTALLED_LOCALES=" ${INSTALLED_LOCALES}
 
 	# If the prior version of Allsky had a locale set but it's not
 	# an installed one, let th euser know.
@@ -836,7 +839,7 @@ get_locale()
 	if [[ -n ${PRIOR_ALLSKY} && -n ${PRIOR_SETTINGS_FILE} ]]; then
 		local L="$(jq -r .locale "${PRIOR_SETTINGS_FILE}")"
 		if [[ ${L} != "" && ${L} != "null" ]]; then
-			local X="$(echo "${INSTALLED_LOCALES}" | grep "${L}z")"
+			local X="$(echo "${INSTALLED_LOCALES}" | grep "${L}")"
 			if [[ -z ${X} ]]; then
 				MSG2="NOTE: Your prior locale (${L}) is not installed on this Pi."
 			fi
@@ -853,6 +856,8 @@ get_locale()
 			CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p')"
 		fi
 	fi
+	#shellcheck disable=SC2086
+	[[ ${DEBUG} -gt 1 ]] && echo "TEMP_LOCALE=${TEMP_LOCALE}, CURRENT_LOCALE=${CURRENT_LOCALE}"
 
 	local D=""
 	if [[ -n ${CURRENT_LOCALE} && ${CURRENT_LOCALE} != "null" ]]; then
@@ -870,6 +875,8 @@ get_locale()
 # TODO: replace "." in printf() with something (I don't know what) to whiptail gets a null or
 # space for the 2nd arguments in the pair.
 	local LOCALES="$( echo "${INSTALLED_LOCALES}" | awk '{ printf("%s %s ", $1, ".") }' )"
+	[[ ${DEBUG} -gt 1 ]] && echo "LOCALES=${LOCALES}"
+
 	#shellcheck disable=SC2086
 	LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 ${LOCALES} \
 		3>&1 1>&2 2>&3)
@@ -892,7 +899,7 @@ set_locale()
 	# ${LOCALE} and ${CURRENT_LOCALE} are set
 
 	if [[ ${CURRENT_LOCALE} == "${LOCALE}" ]]; then
-		display_msg progress "Keeping locale at '${LOCALE}'."
+		display_msg progress "Keeping '${LOCALE}' locale."
 		LOCALE=""		# causes set_locale not to do anything.
 	else
 		display_msg progress "Setting locale to '${LOCALE}'."
@@ -904,10 +911,6 @@ set_locale()
 		jq ".locale = \"${LOCALE}\"" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
 		# This updates /etc/default/locale
 		sudo update-locale LC_ALL="${LOCALE}" LANGUAGE="${LOCALE}" LANG="${LOCALE}"
-
-# XXXX TODO: not sure if these are needed
-		export LC_ALL="${LOCALE}"
-		export LANG="${LOCALE}"
 
 		ask_reboot "locale" && do_reboot		# do_reboot does not return
 		display_msg warning "You must reboot before continuing with the installation."
@@ -1816,3 +1819,4 @@ remind_old_version
 [[ ${WILL_REBOOT} == "true" ]] && do_reboot	# does not return
 
 exit 0
+

@@ -2,7 +2,9 @@
 
 # Check the Allsky installation and settings for missing items,
 # inconsistent items, illegal items, etc.
+
 # TODO: With a heading, group by topic, e.g., all IMG_* together.
+# TODO: Right now the checks within each heading are in the order I thought of them!
 
 ME="$(basename "${BASH_ARGV0}")"
 
@@ -29,6 +31,7 @@ source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit 99
 
 FORCE_CHECK="false"		# Set to "true" to ALWAYS do the version check
+
 BRANCH="$(getBranch)"
 # Unless forced to, only do the version check if we're on the main branch,
 # not on development branches, because when we're updating this script we
@@ -88,14 +91,17 @@ function heading()
 			fi
 			;;
 		Summary)
-				DISPLAY_HEADER="true"
+			DISPLAY_HEADER="true"
+			;;
+		*)
+			echo "INTERNAL ERROR in heading(): Unknown HEADER '${HEADER}'."
 			;;
 	esac
 
 	if [[ ${DISPLAY_HEADER} == "true" ]]; then
 		echo -e "\n---------- ${HEADER}${SUB_HEADER} ----------\n"
 	else
-		echo "-----"
+		echo "-----"	# Separates lines within a header group
 	fi
 }
 
@@ -145,6 +151,22 @@ function has_website()
 }
 
 
+# The various upload protocols need different variables defined.
+# For the specified protocol, make sure the specified variable is defined.
+function check_PROTOCOL()
+{
+	P="${1}"	# Protocol
+	V="${2}"	# Variable
+	if [[ -z ${!V} ]]; then
+		heading "Warnings"
+		echo "PROTOCOL (${P}) set but not '${V}'."
+		echo "Uploads will not work."
+		return 1
+	fi
+	return 0
+}
+
+# Check that when a variable holds a location, the location exists.
 function check_exists() {
 	local VALUE="${!1}"
 	if [[ -n ${VALUE} && ! -e ${VALUE} ]]; then
@@ -153,13 +175,26 @@ function check_exists() {
 	fi
 }
 
+# Variables used below.
+TAKING_DARKS="$(settings .takeDarkFrames)"
+WIDTH="$(settings .width)"		# per the WebUI, usually 0
+HEIGHT="$(settings .height)"
+SENSOR_WIDTH="$(settings .sensorWidth "${CC_FILE}")"	# physical sensor size
+SENSOR_HEIGHT="$(settings .sensorHeight "${CC_FILE}")"
+TAKE="$(settings .takeDaytimeImages)"
+SAVE="$(settings .saveDaytimeImages)"
+ANGLE="$(settings .angle)"
+LATITUDE="$(settings .latitude)"
+LONGITUDE="$(settings .longitude)"
+# shellcheck disable=SC2034
+LOCALE="$(settings .locale)"
+USING_DARKS="$(settings .useDarkFrames)"
 
 # ======================================================================
 # ================= Check for informational items.
 #	There is nothing wrong with these, it's just that they typically don't exist.
 
-
-TAKING_DARKS="$(settings .takeDarkFrames)"
+# Is Allsky set up to take dark frames?  This isn't done often, so if it is, inform the user.
 if [[ ${TAKING_DARKS} -eq 1 ]]; then
 	heading "Information"
 	echo "'Take Dark Frames' is set."
@@ -192,8 +227,6 @@ if [[ ${WEB_DAYS_TO_KEEP} -eq 0 ]]; then
 	echo "you manually delete them."
 fi
 
-SENSOR_WIDTH="$(settings .sensorWidth "${CC_FILE}")"
-SENSOR_HEIGHT="$(settings .sensorHeight "${CC_FILE}")"
 if [[ ${IMG_RESIZE} == "true" && ${SENSOR_WIDTH} == "${IMG_WIDTH}" && ${SENSOR_HEIGHT} == "${IMG_HEIGHT}" ]]; then
 	heading "Information"
 	echo "Images will be resized to the same size as the sensor; this does nothing useful."
@@ -210,6 +243,67 @@ fi
 # ================= Check for warning items.
 #	These are wrong, but won't stop Allsky from running,
 #	but may break part of Allsky, e.g., uploads may not work.
+
+# TODO:
+#	If TIMELAPSE == true and (TIMELAPSEWIDTH * TIMELAPSEHEIGHT) -gt PIXEL_LIMIT
+#	IMG size (after width/height and IMG_RESIZE and CROP_IMAGE) is such that
+#	it likely will cause timelapse errors.
+
+# Check if timelapse size is "too big" and will likely cause an error.
+# This is normally only an issue with the libx264 video codec which has a dimension limit
+# that we put in PIXEL_LIMIT
+if [[ ${VCODEC} == "libx264" ]]; then
+	PIXEL_LIMIT=$((4096 * 2304))
+	function check_timelapse_size()
+	{
+		local TYPE="${1}"			# type of video
+		local V_WIDTH="${2}"		# video width
+		local W_WIDTH="${3}"		# width per the WebUI, adjusted for if it's 0
+		local V_HEIGHT="${4}"
+		local W_HEIGHT="${5}"
+
+		if [[ ${V_WIDTH} -eq 0 ]]; then
+			W="${W_WIDTH}"
+		else
+			W="${V_WIDTH}"
+		fi
+		if [[ ${V_HEIGHT} -eq 0 ]]; then
+			H="${W_HEIGHT}"
+		else
+			H="${V_HEIGHT}"
+		fi
+		TIMELAPSE_PIXELS=$(( W * H ))
+		if [[ ${TIMELAPSE_PIXELS} -gt ${PIXEL_LIMIT} ]]; then
+			heading "Warnings"
+			echo "The ${TYPE} width (${W}) and height (${H}) may cause errors while creating the video."
+			echo "Consider either decreasing the video size via TIMELAPSEWIDTH and TIMELAPSEHEIGHT"
+			echo "or decrease each captured image via the WebUI and/or IMG_RESIZE and/or CROP_IMAGE."
+		fi
+	}
+
+	# Determine the final image size.
+	# This is dependent on the
+	#	size per WebUI
+	#	IMG_RESIZE=true (IMG_WIDTH, IMG_HEIGHT)
+	#	CROP_IMAGE=true (CROP_WIDTH, CROP_HEIGHT)
+
+	if [[ ${WIDTH} -eq 0 ]]; then		# WIDTH is per the WebUI
+		W="${SENSOR_WIDTH}"
+	else
+		W="${WIDTH}"
+	fi
+	if [[ ${HEIGHT} -eq 0 ]]; then
+		H="${SENSOR_HEIGHT}"
+	else
+		H="${HEIGHT}"
+	fi
+	if [[ ${TIMELAPSE} == "true" ]]; then
+		check_timelapse_size "timelapse" "${TIMELAPSEWIDTH}" "${W}" "${TIMELAPSEHEIGHT}" "${H}"
+	fi
+	if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
+		check_timelapse_size "mini timelapse" "${TIMELAPSE_MINI_WIDTH}" "${W}" "${TIMELAPSE_MINI_HEIGHT}" "${H}"
+	fi
+fi
 
 if [[ ${TIMELAPSE} == "true" && ${UPLOAD_VIDEO} == "false" ]]; then
 	heading "Warnings"
@@ -243,19 +337,17 @@ if [[ ${RESIZE_UPLOADS} == "true" && ${IMG_UPLOAD} == "false" ]]; then
 	echo "RESIZE_UPLOADS is 'true' but you aren't uploading images (IMG_UPLOAD='false')."
 fi
 
-TAKE="$(settings .takeDaytimeImages)"
-SAVE="$(settings .saveDaytimeImages)"
-if [[ ${TAKE} == "0" && ${SAVE} == "1" ]]; then
+if [[ ${TAKE} -eq 0 && ${SAVE} -eq 1 ]]; then
 	heading "Warnings"
 	echo "'Daytime Capture' is off but 'Daytime Save' is on in the WebUI."
 fi
 
 if [[ ${BRIGHTNESS_THRESHOLD} == "0.0" ]]; then
 	heading "Warnings"
-	echo "BRIGHTNESS_THRESHOLD is 0.0 which means ALL images will be ignored when creating startrails."
+	echo "BRIGHTNESS_THRESHOLD is 0.0 which means ALL images will be IGNORED when creating startrails."
 elif [[ ${BRIGHTNESS_THRESHOLD} == "1.0" ]]; then
 	heading "Warnings"
-	echo "BRIGHTNESS_THRESHOLD is 1.0 which means ALL images will be used when creating startrails."
+	echo "BRIGHTNESS_THRESHOLD is 1.0 which means ALL images will be USED when creating startrails, even daytime images."
 fi
 
 if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} && (${PROTOCOL} == "" || ${PROTOCOL} == "local") ]]; then
@@ -269,22 +361,11 @@ if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
 	echo We HIGHLY recommend setting it to 'true' unless you are debugging issues.
 fi
 
-function check_PROTOCOL()
-{
-	P="${1}"	# Protocol
-	V="${2}"	# Variable
-	if [[ -z ${!V} ]]; then
-		heading "Warnings"
-		echo "PROTOCOL (${P}) set but not '${V}'."
-		echo "Uploads will not work."
-		return 1
-	fi
-	return 0
-}
 
 PROTOCOL="${PROTOCOL,,}"
 case "${PROTOCOL}" in
-	"" | local)
+
+	"" | local)		# Nothing needed for these
 		;;
 
 	ftp | ftps | sftp)
@@ -337,36 +418,29 @@ check_exists "WEB_KEOGRAM_DIR"
 check_exists "WEB_STARTRAILS_DIR"
 check_exists "UHUBCTL_PATH"
 
-NUM_UPLOADS=0
+# Check for Allsky Website-related anomolies.
 if WHERE="$(has_website)" ; then
 	if [[ ${IMG_UPLOAD} == "false" ]]; then
 		heading "Warnings"
 		echo "You have an Allsky Website but no images are being uploaded to it (IMG_UPLOAD=false)."
-	else
-		NUM_UPLOADS=$((NUM_UPLOADS + 1))
 	fi
 	if [[ ${TIMELAPSE} == "true" && ${UPLOAD_VIDEO} == "false" ]]; then
 		heading "Warnings"
 		echo "You have an Allsky Website and timelapse videos are being created (TIMELAPSE=true),"
 		echo "but they are not being uploaded (UPLOAD_VIDEO=false)."
-	else
-		NUM_UPLOADS=$((NUM_UPLOADS + 1))
 	fi
 	if [[ ${KEOGRAM} == "true" && ${UPLOAD_KEOGRAM} == "false" ]]; then
 		heading "Warnings"
 		echo "You have an Allsky Website and keograms are being created (KEOGRAM=true),"
 		echo "but they are not being uploaded (UPLOAD_KEOGRAM=false)."
-	else
-		NUM_UPLOADS=$((NUM_UPLOADS + 1))
 	fi
 	if [[ ${STARTRAILS} == "true" && ${UPLOAD_STARTRAILS} == "false" ]]; then
 		heading "Warnings"
 		echo "You have an Allsky Website and startrails are being created (STARTRAILS=true),"
 		echo "but they are not being uploaded (UPLOAD_STARTRAILS=false)."
-	else
-		NUM_UPLOADS=$((NUM_UPLOADS + 1))
 	fi
 fi
+
 
 
 # ======================================================================
@@ -391,11 +465,8 @@ do
 	fi
 done
 
-ANGLE="$(settings ".angle")"
-LATITUDE="$(settings ".latitude")"
-LONGITUDE="$(settings ".longitude")"
-# shellcheck disable=SC2034
-LOCALE="$(settings ".locale")"
+# Check that all required settings are set.
+# All others are optional.
 for i in ANGLE LATITUDE LONGITUDE LOCALE
 do
 	if [[ -z ${!i} || ${!i} == "null" ]]; then
@@ -404,6 +475,7 @@ do
 	fi
 done
 
+# Check that the required settings' values are valid.
 if [[ -n ${ANGLE} ]] && ! is_number "${ANGLE}" ; then
 	heading "Errors"
 	echo "ANGLE (${ANGLE}) must be a number."
@@ -411,7 +483,7 @@ fi
 if [[ -n ${LATITUDE} ]]; then
 	if ! LAT="$(convertLatLong "${LATITUDE}" "latitude" 2>&1)" ; then
 		heading "Errors"
-		echo -e "${LAT}"
+		echo -e "${LAT}"		# ${LAT} contains the error message
 	fi
 fi
 if [[ -n ${LONGITUDE} ]]; then
@@ -421,30 +493,26 @@ if [[ -n ${LONGITUDE} ]]; then
 	fi
 fi
 
-USING_DARKS="$(settings .useDarkFrames)"
+# Check dark frames
 if [[ ${USING_DARKS} -eq 1 ]]; then
-	NUM_DARKS=$(find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
-	if [[ ${NUM_DARKS} -eq 0 ]]; then
+	if [[ ! -d ${ALLSKY_DARKS} ]]; then
 		heading "Errors"
-		echo -n "'Use Dark Frames' is set but there are no darks "
-		if [[ -d ${ALLSKY_DARKS} ]]; then
-			echo "in '${ALLSKY_DARKS}'."
-		else
-			echo "with extension of '${EXTENSION}'."
+		echo "'Use Dark Frames' is set but the '${ALLSKY_DARKS}' directory does not exist."
+	else
+		NUM_DARKS=$(find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
+		if [[ ${NUM_DARKS} -eq 0 ]]; then
+			heading "Errors"
+			echo -n "'Use Dark Frames' is set but there are no darks"
+			echo " in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
 		fi
 	fi
 fi
 
-if WHERE="$(has_website)" && [[ ${NUM_UPLOADS} -eq 0 ]]; then
-	heading "Errors"
-	echo "You have a ${WHERE} Allsky Website but nothing is being uploaded to it."
-fi
-
+# Check for valid numbers.
 if ! is_number "${IMG_UPLOAD_FREQUENCY}" || [[ ${IMG_UPLOAD_FREQUENCY} -le 0 ]]; then
 	heading "Errors"
 	echo "IMG_UPLOAD_FREQUENCY (${IMG_UPLOAD_FREQUENCY}) must be 1 or greater."
 fi
-
 if [[ ${AUTO_STRETCH} == "true" ]]; then
 	if ! is_number "${AUTO_STRETCH_AMOUNT}" || \
 			[[ ${AUTO_STRETCH_AMOUNT} -le 0 ]] || \
@@ -458,14 +526,12 @@ if [[ ${AUTO_STRETCH} == "true" ]]; then
 		echo "for example:  10%."
 	fi
 fi
-
 if ! is_number "${BRIGHTNESS_THRESHOLD}" || \
 		! echo "${BRIGHTNESS_THRESHOLD}" | \
 		awk '{if ($1 < 0.0 || $1 > 1.0) exit 1; exit 0; }' ; then
 	heading "Errors"
 	echo "BRIGHTNESS_THRESHOLD (${BRIGHTNESS_THRESHOLD}) must be 0.0 - 1.0"
 fi
-
 if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
 	if ! is_number "${REMOVE_BAD_IMAGES_THRESHOLD_LOW}" || \
 		! echo "${REMOVE_BAD_IMAGES_THRESHOLD_LOW}" | \
@@ -484,7 +550,7 @@ if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
 fi
 
 # If images are being resized or cropped,
-# make sure the new image is fully within the original image.
+# make sure the resized/cropped image is fully within the sensor image.
 HAS_PIXEL_ERROR="false"
 if [[ ${IMG_RESIZE} == "true" ]]; then
 	if ! X="$(checkPixelValue "IMG_WIDTH" "${IMG_WIDTH}" "width" "${SENSOR_WIDTH}")" ; then

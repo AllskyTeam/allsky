@@ -34,7 +34,10 @@ from pytz import timezone
 
 import locale
 
-locale.setlocale(locale.LC_ALL, '')
+try:
+    locale.setlocale(locale.LC_ALL, '')
+except:
+    pass
 
 metaData = {
     "name": "Overlays data on the image",
@@ -565,7 +568,7 @@ class ALLSKYOVERLAY:
 
                 if len(s.image.shape) == 2:
                     fill = 255
-                print(fieldX, fieldY, fill)
+
                 if rotation == 0 and opacity == 1:
                     draw = ImageDraw.Draw(pilImage)
                     draw.text((fieldX, fieldY), fieldLabel, font = font, fill = fill, stroke_width=strokeWidth, stroke_fill=strokeFill)

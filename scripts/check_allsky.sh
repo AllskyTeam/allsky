@@ -419,7 +419,7 @@ check_exists "WEB_STARTRAILS_DIR"
 check_exists "UHUBCTL_PATH"
 
 # Check for Allsky Website-related anomolies.
-if WHERE="$(has_website)" ; then
+if has_website ; then
 	if [[ ${IMG_UPLOAD} == "false" ]]; then
 		heading "Warnings"
 		echo "You have an Allsky Website but no images are being uploaded to it (IMG_UPLOAD=false)."

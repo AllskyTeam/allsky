@@ -107,7 +107,7 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	NUM=0
 	while read -r DEV
 	do
-		if lsusb -D ${DEV} 2>/dev/null | grep --silent 'iProduct .*ASI[0-9]' ; then
+		if lsusb -D "${DEV}" 2>/dev/null | grep --silent 'iProduct .*ASI[0-9]' ; then
 			((NUM=NUM+1))
 		fi
 	done < "${TEMP}"

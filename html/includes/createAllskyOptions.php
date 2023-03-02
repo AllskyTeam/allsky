@@ -257,22 +257,20 @@ if (! file_exists($repo_file)) {
 }
 
 // Read $cc_file
-$cc_str = file_get_contents($cc_file, true);
-$cc_array = json_decode($cc_str, true);
+$errorMsg = "ERROR: Unable to process cc file '$cc_file'.";
+$cc_array = get_decoded_json_file($cc_file, true, $errorMsg);
+if ($cc_array === null) {
+	exit;
+}
 $cc_controls = $cc_array["controls"];
 $cameraType = $cc_array["cameraType"];
 $cameraModel = $cc_array["cameraModel"];
 if ($debug > 0) echo "cameraType=$cameraType, cameraModel=$cameraModel\n";
 
 // Read $repo_file
-$repo_str = file_get_contents($repo_file, true);
-if ($repo_str == "") {
-	echo "ERROR: Template options file $repo_file is empty!\n";
-	exit;
-}
-$repo_array = json_decode($repo_str, true);
+$errorMsg = "ERROR: Unable to process template options file '$repo_file'.";
+$repo_array = get_decoded_json_file($repo_file, true, $errorMsg);
 if ($repo_array === null) {
-	echo "ERROR: Cannot decode $repo_file!\n";
 	exit;
 }
 

@@ -634,7 +634,10 @@ prompt_for_hostname()
 	# then the user already updated the name, so don't prompt again.
 
 	CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
-	[[ ${CURRENT_HOSTNAME} == "${SUGGESTED_NEW_HOST_NAME}" ]] && return
+	if [[ ${CURRENT_HOSTNAME} == "${SUGGESTED_NEW_HOST_NAME}" ]]; then
+		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
+		return
+	fi
 
 	# If we're upgrading, use the current name.
 	if [[ -n ${PRIOR_ALLSKY} ]]; then

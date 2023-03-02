@@ -1942,6 +1942,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 
 		// Arguments that may be passed to us but we don't use.
 		else if (
+			strcmp(a, "xx_end_xx") == 0 ||
 			strcmp(a, "lastchanged") == 0 ||
 			strcmp(a, "displaysettings") == 0 ||
 			strcmp(a, "showonmap") == 0 ||

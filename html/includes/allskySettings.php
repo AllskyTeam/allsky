@@ -8,6 +8,10 @@ function DisplayAllskyConfig(){
 
 	$cameraTypeName = "cameraType";		// json setting name
 	$cameraModelName = "cameraModel";	// json setting name
+	$cameraNumberName = "cameraNumber";	// json setting name
+	$debugLevelName = "debuglevel";		// json setting name
+	$debugArg = "";
+
 	global $lastChangedName;			// json setting name
 	global $lastChanged;
 	global $page;
@@ -39,6 +43,8 @@ function DisplayAllskyConfig(){
 			$somethingChanged = false;
 			$numErrors = 0;
 			$newCameraType = "";
+			$newCameraModel = "";
+			$newCameraNumber = "";
 			$ok = true;
 			$msg = "";
 
@@ -49,7 +55,7 @@ function DisplayAllskyConfig(){
 			}
 
 	 		foreach ($_POST as $key => $value){
-				// Anything that's sent "hidden" in a form that isnt' a settings needs to go here.
+				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
 				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts"]))
 					continue;
 
@@ -58,27 +64,18 @@ function DisplayAllskyConfig(){
 				// we need to escape the single quotes, but I never figured out how to do that,
 				// so convert them to HTML codes instead.
 				$isOLD = substr($key, 0, 4) === "OLD_";
-				if (! $isOLD) {
-					// Check for empty non-optional settings.
-					foreach ($options_array as $option){
-						if ($option['name'] === $key) {
-							if ($value == "" && ! $optional_array[$key]) {
-								$numErrors++;
-								$ok = false;
-							}
-						}
-					}
-
-					// Add the key/value pair to the array so we can see if it changed.
-					$settings[$key] = str_replace("'", "&#x27", $value);
-
-				} else if ($isOLD) {
+				if ($isOLD) {
 					$originalName = substr($key, 4);		// everything after "OLD_"
 					$oldValue = str_replace("'", "&#x27", $value);
 					$newValue = getVariableOrDefault($settings, $originalName, "");
 					if ($oldValue !== $newValue) {
+if ($debugArg !== "") echo "<br>xxxxx  <b>$originalName</b> changed from '$oldValue' to '$newValue'";
 						if ($originalName === $cameraTypeName)
 							$newCameraType = $newValue;
+						elseif ($originalName === $cameraModelName)
+							$newCameraModel = $newValue;
+						elseif ($originalName === $cameraNumberName)
+							$newCameraNumber = $newValue;
 						else
 							$somethingChanged = true;	// want to know about other changes
 
@@ -96,16 +93,33 @@ function DisplayAllskyConfig(){
 						if ($checkchanges)
 							$changes .= "  '$originalName' '$label' '$newValue'";
 					}
+
+				} else {
+					// Check for empty non-optional settings.
+					foreach ($options_array as $option){
+						if ($option['name'] === $key) {
+							if ($value == "" && ! $optional_array[$key]) {
+								$numErrors++;
+								$ok = false;
+							}
+						}
+					}
+
+					// Add the key/value pair to the array so we can see if it changed.
+					$settings[$key] = str_replace("'", "&#x27", $value);
+
+					if ($key === $debugLevelName && $value >= 4) {
+						$debugArg = "--debug";
+					}
 				}
 			}
 
-// TODO: should we update the settings file first, or run makeChanges.sh ?
-// It's probably more likely makeChange.sh would fail than updating the settings file,
-// so it should probably go first.
+// TODO: makeChanges.sh should probably come first because if it fails, we don't want
+// to update the settings file.
 			if ($ok) {
 				if ($somethingChanged || $lastChanged === null) {
-					if ($newCameraType !== "") {
-						$msg = "If you change <b>Camera Type</b> you cannot change anything else.  No changes made.";
+					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
+						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>, or <b>Camera Number</b>  you cannot change anything else.  No changes made.";
 						$ok = false;
 					} else {
 						// Keep track of the last time the file changed.
@@ -120,10 +134,21 @@ function DisplayAllskyConfig(){
 						else
 							$ok = false;
 					}
-				} else if ($newCameraType !== "") {
-					$msg = "<b>Camera Type</b> changed to <b>$newCameraType</b>";
 				} else {
-					$msg = "No settings changed (file not updated)";
+					if ($newCameraType !== "") {
+						$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>";
+					}
+					if ($newCameraModel !== "") {
+						if ($msg !== "") $msg = "<br>$msg";
+						$msg .= "<b>Camera Model</b> changed to <b>$newCameraModel</b>";
+					}
+					if ($newCameraNumber !== "") {
+						if ($msg !== "") $msg = "<br>$msg";
+						$msg .= "<b>Camera Number</b> changed to <b>$newCameraNumber</b>";
+					}
+
+					if ($msg === "")
+						$msg = "No settings changed (file not updated)";
 				}
 			}
 
@@ -140,19 +165,21 @@ function DisplayAllskyConfig(){
 					else
 						$restarting = "";
 					$CMD = "sudo --user=" . ALLSKY_OWNER;
-					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $restarting $changes";
+					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $debugArg $restarting $changes";
 					# Let makeChanges.sh display any output
 					echo '<script>console.log("Running: ' . $CMD . '");</script>';
-					runCommand($CMD, "", "success");
+					$ok = runCommand($CMD, "Unable to make settings changes.", "success");
 				}
 
-				if ($doingRestart) {
-					$msg .= " and Allsky restarted.";
-					// runCommand displays $msg.
-					runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
-				} else {
-					$msg .= " but Allsky NOT restarted.";
-					$status->addMessage($msg, 'info');
+				if ($ok) {
+					if ($doingRestart) {
+						$msg .= " and Allsky restarted.";
+						// runCommand displays $msg.
+						runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
+					} else {
+						$msg .= " but Allsky NOT restarted.";
+						$status->addMessage($msg, 'info');
+					}
 				}
 
 			} else {	// not $ok

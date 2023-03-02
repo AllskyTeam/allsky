@@ -715,8 +715,12 @@ set_permissions()
 	# This is actually an Allsky Website file, but in case we restored the old website,
 	# set its permissions.
 	chgrp -f "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+
 	chmod -R 775 "${ALLSKY_CONFIG}/overlay"
 	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}/overlay"
+
+	chmod -R 775 "${ALLSKY_CONFIG}/modules"
+	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}/modules"
 
 	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"	# executable .php file
 }
@@ -1516,7 +1520,6 @@ do_update()
 # Install the overlay and modules system
 install_overlay()
 {
-	cp "${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json" "${ALLSKY_OVERLAY}/config/overlay.json"
 
 	display_msg progress "Installing PHP Modules."
 	TMP="${INSTALL_LOGS_DIR}/PHP_modules.log"
@@ -1568,7 +1571,13 @@ install_overlay()
 	sudo apt-get -y install msttcorefonts > "${TMP}" 2>&1
 	check_installation_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
-	display_msg progress "Setting up modules."
+	display_msg progress "Setting up modules and overlays."
+
+	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_CONFIG}"
+	cp -ar "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
+
+	cp "${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json" "${ALLSKY_OVERLAY}/config/overlay.json"
+
 	MODULE_LOCATION="/opt/allsky"
 	sudo mkdir -p "${MODULE_LOCATION}/modules"
 	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${MODULE_LOCATION}"

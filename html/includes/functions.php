@@ -21,6 +21,31 @@ if ((include $defs) == false) {
 	exit;
 }
 
+// Read and decode a json file, returning the decoded results or null.
+// On error, display the specified error message
+function get_decoded_json_file($file, $associative, $errorMsg) {
+	if (! file_exists($file)) {
+		echo "<div style='color: red; font-size: 200%;'>";
+		echo "$errorMsg:";
+		echo "<br>File '$file' missing!";
+		echo "</div>";
+		return null;
+	}
+	$str = file_get_contents($file, true);
+	$str_array = json_decode($str, $associative);
+	if ($str_array == null) {
+		echo "<div style='color: red; font-size: 200%;'>";
+		echo "$errorMsg:";
+		echo "<br>" . json_last_error_msg();
+		$cmd = "json_pp < $file 2>&1";
+		exec($cmd, $output);
+		echo "<br>" . implode("<br>", $output);
+		echo "</div>";
+		return null;
+	}
+	return $str_array;
+}
+
 $status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
 $temptype = null;
@@ -41,16 +66,11 @@ function initialize_variables() {
 	}
 
 	$settings_file = getSettingsFile();
-	if (! file_exists($settings_file)) {
-		echo "<div style='color: red; font-size: 200%;'>";
-		echo "ERROR: Unable to find camera settings file for camera of type '$cam_type'.";
-		echo "<br>File '$settings_file' missing!";
-		echo "</div>";
+	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
+	$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
+	if ($settings_array === null) {
 		exit;
 	}
-
-	$settings_str = file_get_contents($settings_file, true);
-	$settings_array = json_decode($settings_str, true);
 
 	// $img_dir is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.

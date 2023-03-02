@@ -39,7 +39,7 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	# There should already be a message so don't add another,
 	# and there's already an image, so don't overwrite it.
 	# shellcheck disable=SC2154
-	doExit "${EXIT_ERROR_STOP}" "no-image" "" "See ${ALLSKY_TMP}/${POST_INSTALLATION_ACTIONS}"
+	doExit "${EXIT_ERROR_STOP}" "no-image" "" "See ${ALLSKY_TMP}/$( basename "${POST_INSTALLATION_ACTIONS}")"
 fi
 
 USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")

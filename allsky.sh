@@ -97,21 +97,32 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 	}
 
-	# Use two commands to better aid debugging when camera isn't found.
 	ZWOdev=$(lsusb -d '03c3:' | awk '{ bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}')
-	ZWOIsPresent=$(lsusb -D "${ZWOdev}" 2>/dev/null | grep -c 'iProduct .*ASI[0-9]')
-	if [[ $ZWOIsPresent -eq 0 ]]; then
+	# We have to run "lsusb -D" once for each device returned by "lsusb -d", and can't
+	# use "echo x | while read" because variables set inside the "while" loop don't get exposed
+	# to the calling code, so use a temp file.
+
+	TEMP="${ALLSKY_TMP}/${CAMERA_TYPE}_cameras.txt"
+	echo "${ZWOdev}" > "${TEMP}"
+	NUM=0
+	while read -r DEV
+	do
+		if lsusb -D ${DEV} 2>/dev/null | grep --silent 'iProduct .*ASI[0-9]' ; then
+			((NUM=NUM+1))
+		fi
+	done < "${TEMP}"
+	if [[ ${NUM} -eq 0 ]]; then
 		if [[ -n ${UHUBCTL_PATH} ]] ; then
 			reset_usb "looking for a\nZWO camera"		# reset_usb exits if too many tries
 			exit 0	# exit with 0 so the service is restarted
 		else
 			MSG="FATAL ERROR: ZWO Camera not found"
 			echo -en "${RED}*** ${MSG}" >&2
-			if [[ $ZWOdev == "" ]]; then
+			if [[ ${ZWOdev} == "" ]]; then
 				echo " and no USB entry either.${NC}" >&2
 				USB_MSG=""
 			else
-				echo " but $ZWOdev found.${NC}" >&2
+				echo " but ${ZWOdev} found.${NC}" >&2
 				USB_MSG="\n${SEE_LOG_MSG}"
 			fi
 

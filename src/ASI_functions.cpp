@@ -936,7 +936,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "cameraNumber");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "cameraNumber");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "cameraNumber");
 	fprintf(f, "\t\t},\n");
 #endif
 

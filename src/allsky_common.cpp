@@ -1517,7 +1517,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->version = argv[++i];
 		}
-		else if (strcmp(a, "cameraid") == 0)
+		else if (strcmp(a, "cameranumber") == 0)
 		{
 			cg->cameraNumber = atoi(argv[++i]);
 		}

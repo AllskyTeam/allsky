@@ -1124,12 +1124,12 @@
 {
 "name" : "cameraType",
 "default" : "",
-"description" : "The type of camera you are using.  <span class='WebUIValue'>RPi</span> includes the HQ and compatible cameras.<br>You <b>must</b> set and change the camera here, not in config.sh.",
+"description" : "The type of camera you are using.  <span class='WebUIValue'>RPi</span> includes the HQ and compatible cameras.",
 "label" : "Camera Type",
 "type" : "select",
 "options" : [
 	{"value" : "RPi", "label" : "RPi"},
-	{"value" : "ZWO", "label" : "ZWO ASI"}
+	{"value" : "ZWO", "label" : "ZWO"}
 ],
 "display" : 1,
 "checkchanges" : 1,
@@ -1142,6 +1142,18 @@
 "label" : "Camera Model",
 "type" : "readonly",
 "display" : 1,
+"advanced" : 1
+},
+{
+"name" : "cameraNumber",
+"minimum" : 0,
+"maximum" : "none",
+"default" : 0,
+"description" : "If multiple cameras are connected to the Pi, this is the camera number (starts at 0).",
+"label" : "Camera Number",
+"type" : "number",
+"display" : "cameraNumber_display",
+"checkchanges" : 1,
 "advanced" : 1
 },
 {

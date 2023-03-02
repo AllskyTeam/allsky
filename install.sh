@@ -1520,7 +1520,6 @@ do_update()
 # Install the overlay and modules system
 install_overlay()
 {
-	cp "${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json" "${ALLSKY_OVERLAY}/config/overlay.json"
 
 	display_msg progress "Installing PHP Modules."
 	TMP="${INSTALL_LOGS_DIR}/PHP_modules.log"
@@ -1576,6 +1575,8 @@ install_overlay()
 
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_CONFIG}"
 	cp -ar "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
+
+	cp "${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json" "${ALLSKY_OVERLAY}/config/overlay.json"
 
 	MODULE_LOCATION="/opt/allsky"
 	sudo mkdir -p "${MODULE_LOCATION}/modules"

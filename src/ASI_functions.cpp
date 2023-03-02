@@ -542,8 +542,7 @@ int stopVideoCapture(int cameraID)
 
 int getCameraNumber()
 {
-	return(0);		// we only support 1 camera and it's index is 0
-	// TODO: Support:   -camera N
+	return(CG.cameraNumber);
 }
 
 ASI_ID cameraID;	// USB 3 cameras only
@@ -621,6 +620,7 @@ char *getRetCode(ASI_ERROR_CODE code)
 void processConnectedCameras()
 {
 	numCameras = ASIGetNumOfConnectedCameras();
+	CG.cameraNumber = getCameraNumber();
 	if (numCameras <= 0)
 	{
 		Log(0, "*** ERROR: No Connected Camera...\n");
@@ -633,7 +633,7 @@ void processConnectedCameras()
 		for (int i = 0; i < numCameras; i++)
 		{
 			ASIGetCameraProperty(&info, i);
-			printf("  - %d %s\n", i, info.Name);
+			printf("  - %d %s%s\n", i, info.Name, i == CG.cameraNumber ? " (selected)" : "");
 		}
 	}
 
@@ -644,8 +644,6 @@ void processConnectedCameras()
 	// To get around this, set numCameras to the size of the array.
 	numCameras = sizeof(ControlCapsArray) / sizeof(ControlCapsArray[0]);
 #endif
-
-	CG.cameraNumber = getCameraNumber();
 }
 
 
@@ -932,12 +930,12 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t},\n");
 #endif
 
-#ifdef IS_RPi
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ExtraArguments");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraArgs");
 	fprintf(f, "\t\t},\n");
 
+#ifdef IS_RPi
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ModeMean");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "mean");

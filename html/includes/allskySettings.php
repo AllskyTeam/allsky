@@ -16,8 +16,11 @@ function DisplayAllskyConfig(){
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
 
-	$options_str = file_get_contents($options_file, true);
-	$options_array = json_decode($options_str, true);
+	$errorMsg = "ERROR: Unable to process options file '$options_file'.";
+	$options_array = get_decoded_json_file($options_file, true, $errorMsg);
+	if ($options_array === null) {
+		exit;
+	}
 
 	if ($formReadonly != "readonly") {
 		global $status;
@@ -185,8 +188,11 @@ function DisplayAllskyConfig(){
 	}
 
 	// Determine if the advanced settings should always be shown.
-	$settings_str = file_get_contents($settings_file, true);
-	$settings_array = json_decode($settings_str, true);
+	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
+	$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
+	if ($settings_array === null) {
+		exit;
+	}
 	$cameraType = getVariableOrDefault($settings_array, $cameraTypeName, "");
 	$cameraModel = getVariableOrDefault($settings_array, $cameraModelName, "");
 	$initial_display = $settings_array['alwaysshowadvanced'] == 1 ? "table-row" : "none";

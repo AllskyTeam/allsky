@@ -634,7 +634,10 @@ prompt_for_hostname()
 	# then the user already updated the name, so don't prompt again.
 
 	CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
-	[[ ${CURRENT_HOSTNAME} == "${SUGGESTED_NEW_HOST_NAME}" ]] && return
+	if [[ ${CURRENT_HOSTNAME} == "${SUGGESTED_NEW_HOST_NAME}" ]]; then
+		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
+		return
+	fi
 
 	# If we're upgrading, use the current name.
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
@@ -744,9 +747,21 @@ check_old_WebUI_location()
 		return
 	fi
 
+	# The installation of the web server often creates a "index.lighttpd.html"
+	# file in /var/www/html.  It just says "No files yet...".
+	sudo rm -f "${OLD_WEBUI_LOCATION}/index.lighttpd.html"
+
 	if [[ ! -d ${OLD_WEBUI_LOCATION}/includes ]]; then
-		MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists but it doesn't contain a valid WebUI."
-		MSG="${MSG}\nPlease check it out after installation."
+		MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists"
+		COUNT=$(find "${OLD_WEBUI_LOCATION}" | wc -l)
+		if [[ ${COUNT} -eq 1 ]]; then
+			MSG="${MSG} and is empty."
+			MSG="${MSG}\nYou can safely delete it after installation:  sudo rmdir '${OLD_WEBUI_LOCATION}'"
+		else
+			MSG="${MSG} but doesn't contain a valid WebUI."
+			MSG="${MSG}\nPlease check it out after installation - if there's nothing you"
+			MSG="${MSG} want in it, remove it:  sudo rm -fr '${OLD_WEBUI_LOCATION}'"
+		fi
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
 		display_msg notice "${MSG}"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
@@ -890,12 +905,13 @@ get_locale()
 		MSG="${MSG}\nthen rerun the installation."
 		display_msg info "${MSG}"
 		exit 0
-	elif echo "${LOCALE} | grep --silent "Box options")" ; then
+	elif echo "${LOCALE}" | grep --silent "Box options" ; then
 		# Got a usage message from whiptail.
+		# Must be no space between the last double quote and ${LOCALES}.
 		#shellcheck disable=SC2086
-		MSG="Got usage message from whiptail: LOCALES=" ${LOCALES}
+		MSG="Got usage message from whiptail: D='${D}', LOCALES= "${LOCALES}
 		MSG="${MSG}\nFix the problem and try the installation again."
-		display_msg error "${MSG}"
+		display_msg --log error "${MSG}"
 		exit 1
 	fi
 }

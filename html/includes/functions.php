@@ -31,7 +31,16 @@ function get_decoded_json_file($file, $associative, $errorMsg) {
 		echo "</div>";
 		return null;
 	}
+
 	$str = file_get_contents($file, true);
+	if ($str === "") {
+		echo "<div style='color: red; font-size: 200%;'>";
+		echo "$errorMsg:";
+		echo "<br>File '$file' is empty!";
+		echo "</div>";
+		return null;
+	}
+
 	$str_array = json_decode($str, $associative);
 	if ($str_array == null) {
 		echo "<div style='color: red; font-size: 200%;'>";

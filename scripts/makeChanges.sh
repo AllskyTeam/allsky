@@ -128,6 +128,8 @@ function check_website()
 }
 check_website		# invoke to set variables
 
+CAMERA_NUMBER=""
+
 while [[ $# -gt 0 ]]; do
 	KEY="${1}"
 	LABEL="${2}"
@@ -144,6 +146,10 @@ while [[ $# -gt 0 ]]; do
 	# Unfortunately, the Allsky configuration file was already updated,
 	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
 	case "${KEY,,}" in		# convert to lowercase
+
+		cameranumber)
+			CAMERA_NUMBER=" -cameraNumber ${NEW_VALUE}"
+			;;
 
 		cameratype)
 			# This requires Allsky to be stopped so we don't
@@ -175,16 +181,16 @@ while [[ $# -gt 0 ]]; do
 						# shellcheck disable=SC2086
 						exit ${RET}
 					fi
-					C="-cmd ${C}"
+					C=" -cmd ${C}"
 				else
 					C=""
 				fi
 				if [[ ${DEBUG} == "true" ]]; then
-					echo -e "${wDEBUG}Calling capture_${NEW_VALUE} ${C} -cc_file '${CC_FILE}'${wNC}"
+					echo -e "${wDEBUG}Calling capture_${NEW_VALUE}${C}${CAMERA_NUMBER} -cc_file '${CC_FILE}'${wNC}"
 				fi
 
 				# shellcheck disable=SC2086
-				"${ALLSKY_BIN}/capture_${NEW_VALUE}" ${C} -debuglevel 3 -cc_file "${CC_FILE}"
+				"${ALLSKY_BIN}/capture_${NEW_VALUE}" ${C} ${CAMERA_NUMBER} -debuglevel 3 -cc_file "${CC_FILE}"
 				RET=$?
 				if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
 					echo -e "${wERROR}ERROR: Unable to create cc file '${CC_FILE}'.${wNC}"
@@ -494,4 +500,3 @@ if [[ ${GOT_WARNING} == "true" ]]; then
 else
 	exit 0
 fi
-

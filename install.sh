@@ -888,8 +888,9 @@ get_locale()
 		exit 0
 	elif echo "${LOCALE}" | grep --silent "Box options" ; then
 		# Got a usage message from whiptail.
+		# Must be no space between the last double quote and ${LOCALES}.
 		#shellcheck disable=SC2086
-		MSG="Got usage message from whiptail: D='${D}', LOCALES=" ${LOCALES}
+		MSG="Got usage message from whiptail: D='${D}', LOCALES= "${LOCALES}
 		MSG="${MSG}\nFix the problem and try the installation again."
 		display_msg --log error "${MSG}"
 		exit 1

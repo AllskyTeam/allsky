@@ -626,6 +626,11 @@ void processConnectedCameras()
 		Log(0, "*** ERROR: No Connected Camera...\n");
 		closeUp(EXIT_NO_CAMERA);		// If there are no cameras we can't do anything.
 	}
+	else if (CG.cameraNumber >= numCameras)
+	{
+		Log(0, "*** ERROR: Camera number %d not connected.  Highest number is %d.\n", CG.cameraNumber, numCameras-1);
+		closeUp(EXIT_NO_CAMERA);
+	}
 	else if (numCameras > 1)
 	{
 		ASI_CAMERA_INFO info;
@@ -928,14 +933,19 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "newexposure");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.videoOffBetweenImages ? 1 : 0);
 	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "cameraNumber");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "cameraNumber");
+	fprintf(f, "\t\t},\n");
 #endif
 
+#ifdef IS_RPi
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ExtraArguments");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraArgs");
 	fprintf(f, "\t\t},\n");
 
-#ifdef IS_RPi
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ModeMean");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "mean");

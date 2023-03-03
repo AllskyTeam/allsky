@@ -700,8 +700,8 @@ set_permissions()
 
 	# The web server needs to be able to create and update many of the files in ${ALLSKY_CONFIG}.
 	# Not all, but go ahead and chgrp all of them so we don't miss any new ones.
-	find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 {} \;
-	find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 {} \;
+	sudo find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 {} \;
+	sudo find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 {} \;
 	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}"
 
 	# The files should already be the correct permissions/owners, but just in case, set them.
@@ -846,7 +846,22 @@ get_locale()
 
 	# List of all installed locales, ignoring any lines with ":" which
 	# are usually error messages.
-	local INSTALLED_LOCALES="$( locale -a 2>/dev/null | grep "_" | grep -v ":" | sed 's/utf8/UTF-8/')"
+	local INSTALLED_LOCALES="$(locale -a 2>/dev/null | grep "_" | grep -v ":" | sed 's/utf8/UTF-8/')"
+	if [[ -z ${xINSTALLED_LOCALES} ]]; then
+		MSG="There are no locales on your system ('locale -a' didn't return valid locales)."
+		MSG="${MSG}\nYou need to install and set one before Allsky installation can run."
+		MSG="${MSG}\nTo install locales, run:"
+		MSG="${MSG}\n\tsudo raspi-config"
+		MSG="${MSG}\n\t\tPick 'Localisation Options'"
+		MSG="${MSG}\n\t\tPick 'Locale'"
+		MSG="${MSG}\n\t\tScroll down to the locale(s) you want to install, then press the SPACE key."
+		MSG="${MSG}\n\t\tWhen done, press the TAB key to select <Ok>, then press ENTER."
+		MSG="${MSG}\n\nIt will take a moment for the locale(s) to be installed."
+		MSG="${MSG}\n\nWhen that is completed, rerun the Allsky installation."
+		display_msg --log error "${MSG}"
+		exit 1
+	fi
+
 	#shellcheck disable=SC2086
 	[[ ${DEBUG} -gt 1 ]] && echo "INSTALLED_LOCALES=" ${INSTALLED_LOCALES}
 
@@ -900,7 +915,7 @@ get_locale()
 	LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 ${LOCALES} \
 		3>&1 1>&2 2>&3)
 	if [[ -z ${LOCALE} ]]; then
-		MSG="You need to set the locale before the installation can be run."
+		MSG="You need to set the locale before the installation can run."
 		MSG="${MSG}\nIf your locale was not in the list, run 'raspi-config' to update the list,"
 		MSG="${MSG}\nthen rerun the installation."
 		display_msg info "${MSG}"
@@ -909,7 +924,7 @@ get_locale()
 		# Got a usage message from whiptail.
 		# Must be no space between the last double quote and ${LOCALES}.
 		#shellcheck disable=SC2086
-		MSG="Got usage message from whiptail: D='${D}', LOCALES= "${LOCALES}
+		MSG="Got usage message from whiptail: D='${D}', LOCALES="${LOCALES}
 		MSG="${MSG}\nFix the problem and try the installation again."
 		display_msg --log error "${MSG}"
 		exit 1

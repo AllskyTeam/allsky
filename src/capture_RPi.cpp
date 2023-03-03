@@ -75,7 +75,7 @@ int RPicapture(config cg, cv::Mat *image)
 	Log(4, " > Kill command: %s\n", kcmd);
 	system(kcmd);						// Stop any currently running process
 
-	stringstream ss;
+	stringstream ss, ss2;
 
 	ss << cg.fullFilename;
 	command += " --output '" + ss.str() + "'";

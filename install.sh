@@ -700,8 +700,8 @@ set_permissions()
 
 	# The web server needs to be able to create and update many of the files in ${ALLSKY_CONFIG}.
 	# Not all, but go ahead and chgrp all of them so we don't miss any new ones.
-	find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 {} \;
-	find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 {} \;
+	sudo find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 {} \;
+	sudo find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 {} \;
 	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}"
 
 	# The files should already be the correct permissions/owners, but just in case, set them.

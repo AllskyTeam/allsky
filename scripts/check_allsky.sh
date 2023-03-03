@@ -3,7 +3,7 @@
 # Check the Allsky installation and settings for missing items,
 # inconsistent items, illegal items, etc.
 
-# TODO: With a heading, group by topic, e.g., all IMG_* together.
+# TODO: Within a heading, group by topic, e.g., all IMG_* together.
 # TODO: Right now the checks within each heading are in the order I thought of them!
 
 ME="$(basename "${BASH_ARGV0}")"
@@ -241,13 +241,9 @@ fi
 
 # ======================================================================
 # ================= Check for warning items.
-#	These are wrong, but won't stop Allsky from running,
-#	but may break part of Allsky, e.g., uploads may not work.
+#	These are wrong and won't stop Allsky from running, but
+#	may break part of Allsky, e.g., uploads may not work.
 
-# TODO:
-#	If TIMELAPSE == true and (TIMELAPSEWIDTH * TIMELAPSEHEIGHT) -gt PIXEL_LIMIT
-#	IMG size (after width/height and IMG_RESIZE and CROP_IMAGE) is such that
-#	it likely will cause timelapse errors.
 
 # Check if timelapse size is "too big" and will likely cause an error.
 # This is normally only an issue with the libx264 video codec which has a dimension limit
@@ -282,21 +278,31 @@ if [[ ${VCODEC} == "libx264" ]]; then
 	}
 
 	# Determine the final image size.
-	# This is dependent on the
-	#	size per WebUI
-	#	IMG_RESIZE=true (IMG_WIDTH, IMG_HEIGHT)
-	#	CROP_IMAGE=true (CROP_WIDTH, CROP_HEIGHT)
+	# This is dependent on the these, in this order:
+	#	if: CROP_IMAGE=true (CROP_WIDTH, CROP_HEIGHT) use it.
+	#		else if:  IMG_RESIZE=true (IMG_WIDTH, IMG_HEIGHT), use it
+	#			else if: size set in WebUI (width, height), use it
+	#				else use sensor size
 
-	if [[ ${WIDTH} -eq 0 ]]; then		# WIDTH is per the WebUI
-		W="${SENSOR_WIDTH}"
+	if [[ ${CROP_IMAGE} == "true" ]]; then
+		W="${CROP_WIDTH}"
+		H="${CROP_HEIGHT}"
+	elif [[ ${IMG_RESIZE} == "true" ]]; then
+		W="${IMG_WIDTH}"
+		H="${IMG_HEIGHT}"
 	else
-		W="${WIDTH}"
+		if [[ ${WIDTH} -gt 0 ]]; then
+			W="${WIDTH}"
+		else
+			W="${SENSOR_WIDTH}"
+		fi
+		if [[ ${HEIGHT} -gt 0 ]]; then
+			H="${HEIGHT}"
+		else
+			H="${SENSOR_HEIGHT}"
+		fi
 	fi
-	if [[ ${HEIGHT} -eq 0 ]]; then
-		H="${SENSOR_HEIGHT}"
-	else
-		H="${HEIGHT}"
-	fi
+
 	if [[ ${TIMELAPSE} == "true" ]]; then
 		check_timelapse_size "timelapse" "${TIMELAPSEWIDTH}" "${W}" "${TIMELAPSEHEIGHT}" "${H}"
 	fi

@@ -145,6 +145,7 @@ int RPicapture(config cg, cv::Mat *image)
 
 //xxxx not sure if this still applies for libcamera
 	// https://www.raspberrypi.com/documentation/accessories/camera.html#raspistill
+	// HQ camera:
 	// Mode		Size		Aspect Ratio	Frame rates		FOV		Binning/Scaling
 	// 0		automatic selection
 	// 1		2028x1080		169:90		0.1-50fps		Partial	2x2 binned
@@ -154,21 +155,34 @@ int RPicapture(config cg, cv::Mat *image)
 
 	if (cg.isLibcamera)
 	{
-		// xxxx TODO: don't hard code resolutions - use what's defined for camera.
+		// Ideally for bin 2 we'd use information from below,
+		// but that's pretty hard to do.
 		//	'SRGGB10_CSI2P' : 1332x990 
 		//	'SRGGB12_CSI2P' : 2028x1080 2028x1520 4056x3040 
 		//								bin 2x2   bin 1x1
 		if (cg.currentBin == 1)
-			command += " --width 4056 --height 3040";
+		{
+			ss << cg.width;
+			ss2 << cg.height;
+			command += " --width " + ss.str() + " --height " + ss2.str();
+		}
 		else if (cg.currentBin == 2)
-			command += " --width 2028 --height 1520";
+		{
+			ss << cg.width / 2;
+			ss2 << cg.height / 2;
+			command += " --width " + ss.str() + " --height " + ss2.str();
+		}
 	}
 	else
 	{
 		if (cg.currentBin == 1)
 			command += " --mode 3";
 		else if (cg.currentBin == 2)
-			command += " --mode 2 --width 2028 --height 1520";
+		{
+			ss << cg.width / 2;
+			ss2 << cg.height / 2;
+			command += " --mode 2 --width " + ss.str() + " --height " + ss2.str();
+		}
 	}
 
 	if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)

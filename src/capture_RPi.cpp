@@ -153,6 +153,8 @@ int RPicapture(config cg, cv::Mat *image)
 	// 3		4056x3040		4:3			0.005-10fps		Full	None		<<< bin==1
 	// 4		1332x990		74:55		50.1-120fps		Partial	2x2 binned	<<< else 
 
+	ss.str("");
+	ss2.str("");
 	if (cg.isLibcamera)
 	{
 		// Ideally for bin 2 we'd use information from below,

@@ -764,11 +764,11 @@ char const *getFlip(int f)
 }
 
 // Display a notification image.
-int displayNotificationImage(char const *arguments)
+int displayNotificationImage(char const *arg)
 {
 	char cmd[1024];
 
-	snprintf(cmd, sizeof(cmd)-1, "%sscripts/copy_notification_image.sh %s", CG.allskyHome, arguments);
+	snprintf(cmd, sizeof(cmd)-1, "%sscripts/copy_notification_image.sh %s", CG.allskyHome, arg);
 	Log(4, "Calling system(%s)\n", cmd);
 	return(system(cmd));
 }
@@ -804,12 +804,12 @@ void closeUp(int e)
 	if (CG.notificationImages) {
 		if (e == EXIT_RESTARTING)
 		{
-			(void) displayNotificationImage("--expires 15 Restarting");
+			(void) displayNotificationImage("--expires 15 Restarting &");
 			a = "Restarting";
 		}
 		else
 		{
-			(void) displayNotificationImage("--expires 2 NotRunning");
+			(void) displayNotificationImage("--expires 2 NotRunning &");
 		}
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
 		// before the one below. This is only so it looks nicer in the log file.
@@ -1281,13 +1281,14 @@ bool daytimeSleep(bool displayedMsg, config cg)
 	if (! displayedMsg)
 	{
 		if (cg.notificationImages) {
-			sleep(5);		// In case another notification image is being upload, give it time to finish.
+			// In case another notification image is being upload, give it time to finish.
+			sleep(5);
 			(void) displayNotificationImage("--expires 0 CameraOffDuringDay &");
 		}
 		Log(1, "It's daytime... we're not saving images.\n");
 		displayedMsg = true;
 
-		// sleep until around nighttime, then wake up and sleep more if needed.
+		// Sleep until a little before nighttime, then wake up and sleep more if needed.
 		int secsTillNight = calculateTimeToNightTime(cg.latitude, cg.longitude, cg.angle);
 		timeval t;
 		t = getTimeval();

@@ -1978,7 +1978,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 	}
 
 
-	// if cg_CC_saveFile is set, we'll output some info and exit, and won't take any images.
+	// Assume if cg->saveDir is NULL that we're not taking pictures and instead are
+	// producing Camera Capabilities info, in which case we need cg->CC_saveFile set so
+	// we know where to put the info.
+	// If we are in "help" mode then we won't take picture AND won't produce CC info.
 	if (cg->saveDir == NULL && cg->CC_saveFile == NULL && ! cg->help) {
 		cg->saveDir = cg->allskyHome;
 		Log(-1, "*** WARNING: No directory to save images was specified. Using: [%s]\n", cg->saveDir);

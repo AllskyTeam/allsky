@@ -152,6 +152,11 @@ class MODULEUTIL
         return (substr($string, -$len) === $endString);
     }
 
+    private function changeOwner($filename) {
+        $user = get_current_user();        
+        exec("sudo chown " . $user . " " . $filename);
+    }
+
     public function getModulesSettings() {
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
@@ -165,6 +170,7 @@ class MODULEUTIL
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';
         $backupConfigFileName = $configFileName . '-last';
         copy($backupConfigFileName, $configFileName);
+        $this->changeOwner($configFileName);
         $this->sendResponse();        
     }
 
@@ -319,7 +325,10 @@ class MODULEUTIL
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($config) . '.json';
 
         $result = file_put_contents($configFileName, $configData);
-        copy($configFileName, $configFileName . '-last');
+        $this->changeOwner($configFileName);
+        $backupFilename = $configFileName . '-last';
+        copy($configFileName, $backupFilename);
+        $this->changeOwner($backupFilename);
         if ($result !== false) {
             $this->sendResponse();
         } else {
@@ -384,10 +393,11 @@ class MODULEUTIL
     public function getReset() {
         $flow = $_GET['flow'];
         
-        $sourceConfigFileName = ALLSKY_REPO . '/' . 'postprocessing_' . strtolower($flow) . '.json.repo';
+        $sourceConfigFileName = ALLSKY_REPO . '/modules/postprocessing_' . strtolower($flow) . '.json';
         $rawConfigData = file_get_contents($sourceConfigFileName);
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';
         file_put_contents($configFileName, $rawConfigData);
+        $this->changeOwner($configFileName);
 
         $this->sendResponse();
     }

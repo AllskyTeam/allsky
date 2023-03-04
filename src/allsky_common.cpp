@@ -1169,7 +1169,7 @@ void displaySettings(config cg)
 		printf("   Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
 	if (cg.supportsMyModeMean)
 	{
-		printf("      Threshold: %1.3f\n", cg.myModeMeanSetting.mean_threshold);
+		printf("   Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
 		printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
 		printf("      p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
 		printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
@@ -1212,7 +1212,7 @@ void displaySettings(config cg)
 		printf("   Rotation: %ld\n", cg.rotation);
 	}
 	if (cg.flip != NOT_CHANGED) printf("   Flip Image: %s (%ld)\n", getFlip(cg.flip), cg.flip);
-	printf("   Filename: %s  saved to %s\n", stringORnone(cg.fileName), stringORnone(cg.saveDir));
+	printf("   Filename: %s saved to %s\n", stringORnone(cg.fileName), stringORnone(cg.saveDir));
 	printf("   Latitude: %s, Longitude: %s\n", stringORnone(cg.latitude), stringORnone(cg.longitude));
 	printf("   Sun Elevation: %.2f\n", cg.angle);
 	if (cg.ct == ctRPi) {
@@ -1234,10 +1234,6 @@ void displaySettings(config cg)
 	if (cg.ct == ctRPi && cg.isLibcamera) {
 		printf("   Tuning File (day): %s\n", stringORnone(cg.dayTuningFile));
 		printf("   Tuning File (night): %s\n", stringORnone(cg.nightTuningFile));
-	}
-	printf("   Allsky version: %s\n", stringORnone(cg.version));
-	if (cg.ct == ctZWO) {
-		printf("   ZWO SDK version %s\n", stringORnone(cg.ASIversion));
 	}
 
 	printf("   Overlay method: %s\n", getOverlayMethod(cg.overlay.overlayMethod).c_str());
@@ -1268,6 +1264,11 @@ void displaySettings(config cg)
 		}
 	} else if (cg.supportsTemperature) {
 		printf("      Temperature type: %s\n", stringORnone(cg.tempType));
+	}
+
+	printf("   Allsky version: %s\n", stringORnone(cg.version));
+	if (cg.ct == ctZWO) {
+		printf("   ZWO SDK version %s\n", stringORnone(cg.ASIversion));
 	}
 	printf("%s", c(KNRM));
 }

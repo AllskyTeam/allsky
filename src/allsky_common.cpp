@@ -823,14 +823,21 @@ void closeUp(int e)
 // Handle signals
 void IntHandle(int i)
 {
+	// We sometimes get the signal twice, so ignore 2nd time.
+	if (gotSignal) return;
+
 	gotSignal = true;
 	if (i == SIGHUP)
 	{
+		gotSignal = false;
+
 		// TODO: Re-read configuration instead of restarting.
 		Log(4, "Got SIGHUP to restart.\n");
 		closeUp(EXIT_RESTARTING);
+		/*NOTREACHED*/
 	}
-	else if (i == SIGINT || i == SIGTERM)
+
+	if (i == SIGINT || i == SIGTERM)
 	{
 		Log(4, "Got %s to exit.\n", i == SIGINT ? "SIGINT" : "SIGTERM");
 		closeUp(EXIT_OK);

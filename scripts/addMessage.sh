@@ -28,10 +28,12 @@ MESSAGE="${2}"
 DATE="$(date '+%B %d, %r')"
 
 # The file is tab-separated: type date count message
+COUNT=0
 TAB="$(echo -e "\t")"
 if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$(grep "${TAB}${MESSAGE}$" "${ALLSKY_MESSAGES}")" ; then
 	PRIOR_COUNT=$(echo -e "${M}" | cut -f3 -d"${TAB}")
-	COUNT=$((PRIOR_COUNT + 1))
+	# If this entry is corrupted don't try to update the counter.
+	[[ ${PRIOR_COUNT} != "" ]] && COUNT=$((PRIOR_COUNT + 1))
 	sed -i -e "/${TAB}${MESSAGE}$/d"  "${ALLSKY_MESSAGES}"
 else
 	COUNT=1

@@ -347,22 +347,23 @@ class ALLSKYOVERLAY:
         """ Saves the final image """
         s.image = self._image
 
-    def _timer(self, text, showIntermediate = True):
+    def _timer(self, text, showIntermediate = True, showMessage=True):
         """ Method to display the elapsed time between function calls and the total script execution time """
         if s.LOGLEVEL:
-            if self._lastTimer is None:
-                elapsedSinceLastTime = datetime.now() - self._startTime
-            else:
-                elapsedSinceLastTime = datetime.now() - self._lastTimer
-            
-            lastText = str(elapsedSinceLastTime.total_seconds())
-            self._lastTimer = datetime.now()
+            if showMessage:
+                if self._lastTimer is None:
+                    elapsedSinceLastTime = datetime.now() - self._startTime
+                else:
+                    elapsedSinceLastTime = datetime.now() - self._lastTimer
+                
+                lastText = str(elapsedSinceLastTime.total_seconds())
+                self._lastTimer = datetime.now()
 
-            elapsedTime = datetime.now() - self._startTime
-            if showIntermediate: 
-                s.log(4, "INFO: {0} took {1} Seconds. Elapsed Time {2} Seconds.".format(text, lastText, elapsedTime.total_seconds()))
-            else:
-                s.log(4, "INFO: {0} Elapsed Time {1} Seconds.".format(text, elapsedTime.total_seconds()))
+                elapsedTime = datetime.now() - self._startTime
+                if showIntermediate: 
+                    s.log(4, "INFO: {0} took {1} Seconds. Elapsed Time {2} Seconds.".format(text, lastText, elapsedTime.total_seconds()))
+                else:
+                    s.log(4, "INFO: {0} Elapsed Time {1} Seconds.".format(text, elapsedTime.total_seconds()))
 
     def _getFont(self, font, fontSize):
 
@@ -971,8 +972,6 @@ class ALLSKYOVERLAY:
                 os.environ["SUN_NIGHT"] = self._nonighttext
             os.environ["SUN_AZIMUTH"] = str(int(sunAzimuth))
             os.environ["SUN_ELEVATION"] = str(int(sunElevation))
-            
-            s.log(4, "INFO: Added Sun data")
         else:
             s.log(4,'INFO: Sun not enabled')
             
@@ -1182,13 +1181,20 @@ class ALLSKYOVERLAY:
         if self._loadConfigFile():
             self._timer("Loading Config")
             if self._initialiseMoon():
-                self._timer("Initialising The Moon")
+                moonEnabled = self._overlayConfig["settings"]["defaultincludemoon"]
+                self._timer("Initialising The Moon", showMessage=moonEnabled)
                 if self._initialiseSun():
-                    self._timer("Initialising The Sun")
+                    sunEnabled = self._overlayConfig['settings']['defaultincludesun']
+                    self._timer("Initialising The Sun", showMessage=sunEnabled)
                     if self._initSatellites():
-                        self._timer("Initialising The Satellites")
+                        satellites = self._overlayConfig["settings"]["defaultnoradids"]
+                        showInitMessage = True
+                        if satellites == '':
+                            showInitMessage = False
+                        self._timer("Initialising The Satellites", showMessage=showInitMessage)
                         if self._initPlanets():
-                            self._timer("Initialising The Planets")
+                            planetsEnabled = self._overlayConfig["settings"]["defaultincludeplanets"]
+                            self._timer("Initialising The Planets", showMessage=planetsEnabled)
                             if self._loadImageFile():
                                 self._timer("Loading Image")
                                 if self._loadDataFile():
@@ -1203,7 +1209,7 @@ class ALLSKYOVERLAY:
                                         self._timer("Writing debug data")
                                         self._dumpDebugData()
 
-        self._timer("Annotation Complete", False)
+        self._timer("Annotation Complete", showIntermediate=False)
 
 def overlay(params, event):
     enabled = s.int(s.getEnvironmentVariable("AS_eOVERLAY"))

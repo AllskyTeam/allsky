@@ -30,11 +30,18 @@ DATE="$(date '+%B %d, %r')"
 # The file is tab-separated: type date count message
 COUNT=0
 TAB="$(echo -e "\t")"
-if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$(grep "${TAB}${MESSAGE}$" "${ALLSKY_MESSAGES}")" ; then
-	PRIOR_COUNT=$(echo -e "${M}" | cut -f3 -d"${TAB}")
+
+# If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression, so escape it.
+ESCAPED_MESSAGE="$(echo "${MESSAGE}" | sed 's/*/\\*/g')"
+
+if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$(grep "${TAB}${ESCAPED_MESSAGE}$" "${ALLSKY_MESSAGES}")" ; then
+	# tail -1  in case file is corrupt and has more than one line we want.
+	PRIOR_COUNT=$(echo -e "${M}" | cut -f3 -d"${TAB}" | tail -1)
+
 	# If this entry is corrupted don't try to update the counter.
 	[[ ${PRIOR_COUNT} != "" ]] && COUNT=$((PRIOR_COUNT + 1))
-	sed -i -e "/${TAB}${MESSAGE}$/d"  "${ALLSKY_MESSAGES}"
+
+	sed -i -e "/${TAB}${ESCAPED_MESSAGE}$/d"  "${ALLSKY_MESSAGES}"
 else
 	COUNT=1
 fi

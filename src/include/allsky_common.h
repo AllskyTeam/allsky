@@ -133,7 +133,7 @@ struct config {			// for configuration variables
 	// passed around.
 
 	// Camera number, type and model
-	int cameraNumber					= NOT_SET;		// 0 to number-of-cameras-attached minus 1
+	int cameraNumber					= 0;			// 0 to number-of-cameras-attached minus 1
 	cameraType ct						= ctRPi;
 	char const *cm						= "";
 

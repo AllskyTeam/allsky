@@ -145,7 +145,6 @@ int RPicapture(config cg, cv::Mat *image)
 
 //xxxx not sure if this still applies for libcamera
 	// https://www.raspberrypi.com/documentation/accessories/camera.html#raspistill
-	// HQ camera:
 	// Mode		Size		Aspect Ratio	Frame rates		FOV		Binning/Scaling
 	// 0		automatic selection
 	// 1		2028x1080		169:90		0.1-50fps		Partial	2x2 binned
@@ -747,6 +746,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			if (retCode == 0)
 			{
 				numExposures++;
+Log(4, "xxx >>> Got here 1: numExposures=%d\n", numExposures);
 				numErrors = 0;
 
 				// We currently have no way to get the actual white balance values,
@@ -769,11 +769,14 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 						CG.lastGain = CG.currentGain;	// ZWO gain=0.1 dB , RPi gain=factor
 					}
 
+Log(4, "xxx >>> Got here 2: calculating mean=\n");
 					CG.lastMean = aegCalcMean(pRgb);
+Log(4, "xxx >>> Got here 3: mean=%f\n", CG.lastMean);
 					if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
 						// set myRaspistillSetting.shutter_us and myRaspistillSetting.analoggain
 						aegGetNextExposureSettings(&CG, myRaspistillSetting, myModeMeanSetting);
+Log(4, "xxx >>> Got here 4: called aegGetNextExposureSettings()\n");
 
 						if (CG.lastMean == -1)
 						{
@@ -792,10 +795,14 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 						CG.overlay.overlayMethod == OVERLAY_METHOD_LEGACY &&
 						doOverlay(pRgb, CG, bufTime, 0) > 0)
 					{
+Log(4, "xxx >>> Got here 5: Added overlay, saving %s\n", CG.fullFilename);
 						// if we added anything to overlay, write the file out
 						bool result = cv::imwrite(CG.fullFilename, pRgb, compressionParameters);
 						if (! result) fprintf(stderr, "*** ERROR: Unable to write to '%s'\n", CG.fullFilename);
 					}
+else {
+Log(4, "xxx >>> Got here 6: will use Overlay Module.\n");
+}
 				}
 
 				// We skip the initial frames to give auto-exposure time to
@@ -823,6 +830,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					snprintf(cmd, sizeof(cmd), "%sscripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
 
 					// TODO: in the future the calculation of mean should independent from modeMean. -1 means don't display.
+Log(4, "xxx >>> Got here 7: calling add_variables_to_command()\n");
 					add_variables_to_command(CG, cmd, exposureStartDateTime);
 					strcat(cmd, " &");
 					system(cmd);
@@ -833,6 +841,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					s = "auto";
 				else
 					s = "manual";
+Log(4, "xxx >>> Got here 8: doing %s pause between images\n", s.c_str());
 				delayBetweenImages(CG, myRaspistillSetting.shutter_us, s);
 			}
 			else
@@ -859,7 +868,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 
 				if (numErrors >= maxErrors)
 				{
-					Log(0, "*** ERROR: maximumm number of consecutive errors of %d reached; capture program stopped.\n", maxErrors);
+					Log(0, "*** ERROR: maximum number of consecutive errors of %d reached; capture program stopped.\n", maxErrors);
 					closeUp(EXIT_ERROR_STOP);
 				}
 	

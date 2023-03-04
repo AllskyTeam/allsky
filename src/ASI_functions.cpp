@@ -136,7 +136,7 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 
 	// There are many versions of the imx708 (_wide, _noir, _wide_noir, etc.)
 	// so just check for "imx708" (6 characters.
-	{ "imx708", 6, "RPi Module 3", 0, 4608, 2592, ASI_TRUE,
+	{ "imx708", 6, "RPi Module 3", 0, 2592, 4608, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.40, ASI_FALSE,
 		10, ASI_FALSE, ASI_TRUE},
 
@@ -542,8 +542,7 @@ int stopVideoCapture(int cameraID)
 
 int getCameraNumber()
 {
-	return(0);		// we only support 1 camera and it's index is 0
-	// TODO: Support:   -camera N
+	return(CG.cameraNumber);
 }
 
 ASI_ID cameraID;	// USB 3 cameras only
@@ -621,10 +620,16 @@ char *getRetCode(ASI_ERROR_CODE code)
 void processConnectedCameras()
 {
 	numCameras = ASIGetNumOfConnectedCameras();
+	CG.cameraNumber = getCameraNumber();
 	if (numCameras <= 0)
 	{
 		Log(0, "*** ERROR: No Connected Camera...\n");
 		closeUp(EXIT_NO_CAMERA);		// If there are no cameras we can't do anything.
+	}
+	else if (CG.cameraNumber >= numCameras)
+	{
+		Log(0, "*** ERROR: Camera number %d not connected.  Highest number is %d.\n", CG.cameraNumber, numCameras-1);
+		closeUp(EXIT_NO_CAMERA);
 	}
 	else if (numCameras > 1)
 	{
@@ -633,7 +638,7 @@ void processConnectedCameras()
 		for (int i = 0; i < numCameras; i++)
 		{
 			ASIGetCameraProperty(&info, i);
-			printf("  - %d %s\n", i, info.Name);
+			printf("  - %d %s%s\n", i, info.Name, i == CG.cameraNumber ? " (selected)" : "");
 		}
 	}
 
@@ -644,8 +649,6 @@ void processConnectedCameras()
 	// To get around this, set numCameras to the size of the array.
 	numCameras = sizeof(ControlCapsArray) / sizeof(ControlCapsArray[0]);
 #endif
-
-	CG.cameraNumber = getCameraNumber();
 }
 
 
@@ -929,6 +932,11 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "newexposure");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "newexposure");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.videoOffBetweenImages ? 1 : 0);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "cameraNumber");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "cameraNumber");
 	fprintf(f, "\t\t},\n");
 #endif
 

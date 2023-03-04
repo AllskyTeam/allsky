@@ -45,7 +45,7 @@ bool bMain					= true;
 bool bDisplay				= false;
 std::string dayOrNight;
 int numErrors				= 0;					// Number of errors in a row
-int maxErrors				= 5;					// Max number of errors in a row before we exit
+int maxErrors				= 2;					// Max number of errors in a row before we exit
 
 bool gotSignal				= false;				// did we get a SIGINT (from keyboard), or SIGTERM/SIGHUP (from service)?
 int iNumOfCtrl				= NOT_SET;				// Number of camera control capabilities
@@ -68,12 +68,15 @@ int RPicapture(config cg, cv::Mat *image)
 	// Define command line.
 	string command = cg.cmdToUse;
 
-	// Ensure no process is still running.
+	// Ensure no prior process is still running.
 	string kill = "pgrep '" + command + "' | xargs kill -9 2> /dev/null";
-	char kcmd[kill.length() + 1];		// Define char variable
-	strcpy(kcmd, kill.c_str());			// Convert command to character variable
-	Log(4, " > Kill command: %s\n", kcmd);
-	system(kcmd);						// Stop any currently running process
+	static bool showed_kill_command = false;
+	if (! showed_kill_command) {
+		// only show once - it never changes
+		showed_kill_command = true;
+		Log(4, " > Kill command: %s\n", kill.c_str());
+	}
+	system(kill.c_str());
 
 	stringstream ss, ss2;
 
@@ -143,9 +146,7 @@ int RPicapture(config cg, cv::Mat *image)
 		command += " --nopreview";
 	}
 
-//xxxx not sure if this still applies for libcamera
 	// https://www.raspberrypi.com/documentation/accessories/camera.html#raspistill
-	// HQ camera:
 	// Mode		Size		Aspect Ratio	Frame rates		FOV		Binning/Scaling
 	// 0		automatic selection
 	// 1		2028x1080		169:90		0.1-50fps		Partial	2x2 binned
@@ -153,6 +154,8 @@ int RPicapture(config cg, cv::Mat *image)
 	// 3		4056x3040		4:3			0.005-10fps		Full	None		<<< bin==1
 	// 4		1332x990		74:55		50.1-120fps		Partial	2x2 binned	<<< else 
 
+	ss.str("");
+	ss2.str("");
 	if (cg.isLibcamera)
 	{
 		// Ideally for bin 2 we'd use information from below,
@@ -209,10 +212,11 @@ int RPicapture(config cg, cv::Mat *image)
 	}
 	else if (cg.currentExposure_us)		// manual exposure
 	{
-		ss.str("");
-		ss << cg.currentExposure_us;
 		if (! cg.isLibcamera)
 			command += " --exposure off";
+
+		ss.str("");
+		ss << cg.currentExposure_us;
 		command += " --shutter " + ss.str();
 	}
 
@@ -254,16 +258,18 @@ int RPicapture(config cg, cv::Mat *image)
 
 	// libcamera: if the red and blue numbers are given it turns off AWB.
 	// Check if R and B component are given
-	if (! cg.currentAutoAWB) {
-		ss.str("");
-		ss << cg.currentWBR << "," << cg.currentWBB;
-		if (! cg.isLibcamera)
-			command += " --awb off";
-		if (cg.currentWBR != cg.defaultWBR || cg.currentWBB != cg.defaultWBB)
-			command += " --awbgains " + ss.str();
-	}
-	else {		// Use automatic white balance
+	if (cg.currentAutoAWB) {
 		command += " --awb auto";
+	}
+	else {
+		if (! cg.isLibcamera)
+			command += " --awb off";		// raspistill requires explicitly turning off
+
+		if (cg.currentWBR != cg.defaultWBR || cg.currentWBB != cg.defaultWBB) {
+			ss.str("");
+			ss << cg.currentWBR << "," << cg.currentWBB;
+			command += " --awbgains " + ss.str();
+		}
 	}
 
 	if (cg.rotation != cg.defaultRotation) {
@@ -313,31 +319,34 @@ int RPicapture(config cg, cv::Mat *image)
 		command += " --quality " + ss.str();
 	}
 
-	// Define char variable
-	char cmd[command.length() + 1];
-	// Convert command to character variable.
-	// Log without the LIBCAMERA_LOG..., which just confuses users.
-	strcpy(cmd, command.c_str());
-	Log(2, "  > Capture command: %s\n", cmd);
+	// Log the command we're going to run without the
+	//		LIBCAMERA_LOG...
+	// string and without any redirect of stdout or stderr.
+	// Those strings confuse some users.
 
+	// Tried putting this in putenv() but it didn't seem to work.
+	char const *s1 = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL ";
+
+	char const *s2 = "";
 	if (cg.isLibcamera)
 	{
 		if (cg.debugLevel >= 4)
-		{
-			command += " > /tmp/capture_RPi_debug.txt 2>&1";
-		}
+			s2 = " > /tmp/capture_RPi_debug.txt 2>&1";
 		else
-		{
-			// Hide verbose libcamera messages that are only needed when debugging.
-			command += " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
-		}
+			s2 = " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
 	}
+
+	// Create the command we'll actually run.
+	// It needs to include the current size plus future strings s1 and s2.
+	int size = command.length() + strlen(s1) + strlen(s2) + 10;		// +10 "just in case"
+	char cmd[size];
+	strncpy(cmd, command.c_str(), size-1);
+	Log(2, " > Running: %s\n", cmd);
 
 	if (cg.isLibcamera)
 	{
-		// Tried putting this in putenv() but it didn't seem to work.
-		command = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL " + command;
-		strcpy(cmd, command.c_str());
+		command = s1 + command + s2;
+		strncpy(cmd, command.c_str(), size-1);
 	}
 
 	// Execute the command.
@@ -348,6 +357,11 @@ int RPicapture(config cg, cv::Mat *image)
 		if (! image->data) {
 			Log(1, "WARNING: Error re-reading file '%s'; skipping further processing.\n", basename(cg.fullFilename));
 		}
+	}
+	else
+	{
+		Log(1, " >>> WARNING: Unable to take picture, return code=0x%0x (%d)\n", ret, ret >> 8);
+		Log(3, "     Executed: %s\n", cmd);
 	}
 	return(ret);
 }
@@ -800,7 +814,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				// lock in on a good exposure.  If it does that quickly, stop skipping images.
 				if (CG.goodLastExposure && CG.currentSkipFrames > 0)
 				{
-					Log(2, "Turning off Skip Frames\n");
+					Log(2, "  >>>> Turning off Skip Frames\n");
 					CG.currentSkipFrames = 0;
 				}
 
@@ -836,28 +850,29 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			else
 			{
 				numErrors++;
-				int r = retCode >> 8;
-				Log(1, " >>> WARNING: Unable to take picture, return code=%d, r=%d\n", retCode, r);
-				if (WIFSIGNALED(r)) r = WTERMSIG(r);
+				if (WIFSIGNALED(retCode))
 				{
 					// Got a signal.  See if it's one we care about.
+
+					int sigNum = WTERMSIG(retCode);
 					std::string z = "";
-					if (r == SIGINT) z = "SIGINT";
-					else if (r == SIGTERM) z = "SIGTERM";
-					else if (r == SIGHUP) z = "SIGHUP";
+					if (sigNum == SIGINT) z = "SIGINT";
+					else if (sigNum == SIGTERM) z = "SIGTERM";
+					else if (sigNum == SIGHUP) z = "SIGHUP";
 					if (z != "")
 					{
-						Log(3, "xxxx Got %s in %s\n", z.c_str(), CG.cmdToUse);
+						Log(3, "xxxx Got signal %s in %s\n", z.c_str(), CG.cmdToUse);
 					}
 					else
 					{
-						Log(3, "xxxx Got signal %d in capture_RPi.cpp\n", r);
+						Log(3, "xxxx Got signal %d in %s\n", sigNum, CG.cmdToUse);
 					}
 				}
 
 				if (numErrors >= maxErrors)
 				{
-					Log(0, "*** ERROR: maximumm number of consecutive errors of %d reached; capture program stopped.\n", maxErrors);
+					Log(0, "*** ERROR: maximum number of consecutive errors of %d reached; capture program stopped.\n", maxErrors);
+					Log(0, "Make sure cable between camera and Pi is all the way in.\n");
 					closeUp(EXIT_ERROR_STOP);
 				}
 	

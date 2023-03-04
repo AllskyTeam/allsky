@@ -90,9 +90,10 @@ class CONFIGMANAGER:
             modObject = self._loadModule(currentJson[module]["module"])
             currentJson[module]["metadata"] = getattr(modObject,"metaData")
             
-            for argument in oldJson[module]["metadata"]["arguments"]:
-                if argument in currentJson[module]["metadata"]["arguments"]:
-                    currentJson[module]["metadata"]["arguments"][argument] = oldJson[module]["metadata"]["arguments"][argument]
+            if "arguments" in oldJson[module]["metadata"]:
+                for argument in oldJson[module]["metadata"]["arguments"]:
+                    if argument in currentJson[module]["metadata"]["arguments"]:
+                        currentJson[module]["metadata"]["arguments"][argument] = oldJson[module]["metadata"]["arguments"][argument]
         
         return currentJson
     
@@ -102,7 +103,7 @@ class CONFIGMANAGER:
         
         oldJson = self._loadJsonFile(oldFilePath)
         currentJson = self._loadJsonFile(currentFilePath)
-            
+                        
         currentJson = self._copyModules(oldJson, currentJson)        
         currentJson = self._updateParams(oldJson, currentJson)        
 
@@ -111,7 +112,7 @@ class CONFIGMANAGER:
     def _mergeModuleSettings(self, file):
         oldFilePath = os.path.join(self._priorPath, "modules", file)
         currentFilePath = os.path.join(self._configPath, "modules", file)        
-    
+                
         oldSettings = self._loadJsonFile(oldFilePath)
         currentSettings = self._loadJsonFile(currentFilePath)
         

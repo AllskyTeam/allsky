@@ -764,11 +764,11 @@ char const *getFlip(int f)
 }
 
 // Display a notification image.
-int displayNotificationImage(char const *arguments)
+int displayNotificationImage(char const *arg)
 {
 	char cmd[1024];
 
-	snprintf(cmd, sizeof(cmd)-1, "%sscripts/copy_notification_image.sh %s", CG.allskyHome, arguments);
+	snprintf(cmd, sizeof(cmd)-1, "%sscripts/copy_notification_image.sh %s", CG.allskyHome, arg);
 	Log(4, "Calling system(%s)\n", cmd);
 	return(system(cmd));
 }
@@ -804,12 +804,12 @@ void closeUp(int e)
 	if (CG.notificationImages) {
 		if (e == EXIT_RESTARTING)
 		{
-			(void) displayNotificationImage("--expires 15 Restarting");
+			(void) displayNotificationImage("--expires 15 Restarting &");
 			a = "Restarting";
 		}
 		else
 		{
-			(void) displayNotificationImage("--expires 2 NotRunning");
+			(void) displayNotificationImage("--expires 2 NotRunning &");
 		}
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
 		// before the one below. This is only so it looks nicer in the log file.
@@ -823,14 +823,21 @@ void closeUp(int e)
 // Handle signals
 void IntHandle(int i)
 {
+	// We sometimes get the signal twice, so ignore 2nd time.
+	if (gotSignal) return;
+
 	gotSignal = true;
 	if (i == SIGHUP)
 	{
+		gotSignal = false;
+
 		// TODO: Re-read configuration instead of restarting.
 		Log(4, "Got SIGHUP to restart.\n");
 		closeUp(EXIT_RESTARTING);
+		/*NOTREACHED*/
 	}
-	else if (i == SIGINT || i == SIGTERM)
+
+	if (i == SIGINT || i == SIGTERM)
 	{
 		Log(4, "Got %s to exit.\n", i == SIGINT ? "SIGINT" : "SIGTERM");
 		closeUp(EXIT_OK);
@@ -1169,7 +1176,7 @@ void displaySettings(config cg)
 		printf("   Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
 	if (cg.supportsMyModeMean)
 	{
-		printf("      Threshold: %1.3f\n", cg.myModeMeanSetting.mean_threshold);
+		printf("   Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
 		printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
 		printf("      p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
 		printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
@@ -1212,7 +1219,7 @@ void displaySettings(config cg)
 		printf("   Rotation: %ld\n", cg.rotation);
 	}
 	if (cg.flip != NOT_CHANGED) printf("   Flip Image: %s (%ld)\n", getFlip(cg.flip), cg.flip);
-	printf("   Filename: %s  saved to %s\n", stringORnone(cg.fileName), stringORnone(cg.saveDir));
+	printf("   Filename: %s saved to %s\n", stringORnone(cg.fileName), stringORnone(cg.saveDir));
 	printf("   Latitude: %s, Longitude: %s\n", stringORnone(cg.latitude), stringORnone(cg.longitude));
 	printf("   Sun Elevation: %.2f\n", cg.angle);
 	if (cg.ct == ctRPi) {
@@ -1234,10 +1241,6 @@ void displaySettings(config cg)
 	if (cg.ct == ctRPi && cg.isLibcamera) {
 		printf("   Tuning File (day): %s\n", stringORnone(cg.dayTuningFile));
 		printf("   Tuning File (night): %s\n", stringORnone(cg.nightTuningFile));
-	}
-	printf("   Allsky version: %s\n", stringORnone(cg.version));
-	if (cg.ct == ctZWO) {
-		printf("   ZWO SDK version %s\n", stringORnone(cg.ASIversion));
 	}
 
 	printf("   Overlay method: %s\n", getOverlayMethod(cg.overlay.overlayMethod).c_str());
@@ -1269,6 +1272,11 @@ void displaySettings(config cg)
 	} else if (cg.supportsTemperature) {
 		printf("      Temperature type: %s\n", stringORnone(cg.tempType));
 	}
+
+	printf("   Allsky version: %s\n", stringORnone(cg.version));
+	if (cg.ct == ctZWO) {
+		printf("   ZWO SDK version %s\n", stringORnone(cg.ASIversion));
+	}
 	printf("%s", c(KNRM));
 }
 
@@ -1280,13 +1288,14 @@ bool daytimeSleep(bool displayedMsg, config cg)
 	if (! displayedMsg)
 	{
 		if (cg.notificationImages) {
-			sleep(5);		// In case another notification image is being upload, give it time to finish.
+			// In case another notification image is being upload, give it time to finish.
+			sleep(5);
 			(void) displayNotificationImage("--expires 0 CameraOffDuringDay &");
 		}
 		Log(1, "It's daytime... we're not saving images.\n");
 		displayedMsg = true;
 
-		// sleep until around nighttime, then wake up and sleep more if needed.
+		// Sleep until a little before nighttime, then wake up and sleep more if needed.
 		int secsTillNight = calculateTimeToNightTime(cg.latitude, cg.longitude, cg.angle);
 		timeval t;
 		t = getTimeval();

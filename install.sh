@@ -847,7 +847,7 @@ get_locale()
 	# List of all installed locales, ignoring any lines with ":" which
 	# are usually error messages.
 	local INSTALLED_LOCALES="$(locale -a 2>/dev/null | grep "_" | grep -v ":" | sed 's/utf8/UTF-8/')"
-	if [[ -z ${xINSTALLED_LOCALES} ]]; then
+	if [[ -z ${INSTALLED_LOCALES} ]]; then
 		MSG="There are no locales on your system ('locale -a' didn't return valid locales)."
 		MSG="${MSG}\nYou need to install and set one before Allsky installation can run."
 		MSG="${MSG}\nTo install locales, run:"

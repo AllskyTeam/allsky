@@ -32,7 +32,7 @@ COUNT=0
 TAB="$(echo -e "\t")"
 
 # If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression, so escape it.
-ESCAPED_MESSAGE="$(echo "${MESSAGE}" | sed 's/*/\\*/g')"
+ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
 
 if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$(grep "${TAB}${ESCAPED_MESSAGE}$" "${ALLSKY_MESSAGES}")" ; then
 	# tail -1  in case file is corrupt and has more than one line we want.

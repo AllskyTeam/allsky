@@ -1015,8 +1015,8 @@ void displayHelp(config cg)
 		printf(" -%-*s - Percent of exposure change to make, similar to PHD2 [%ld%%].\n", n, "aggression n", cg.aggression);
 		printf(" -%-*s - Seconds to transition gain from day-to-night or night-to-day.  0 disable it [%'ld].\n", n, "gaintransitiontime n", cg.gainTransitionTime);
 	}
-	printf(" -%-*s - Camera Maximum Width [%ld].\n", n, "width n", cg.width);
-	printf(" -%-*s - Camera Maximum Height [%ld].\n", n, "height n", cg.height);
+	printf(" -%-*s - Camera maximum width [%ld].\n", n, "width n", cg.width);
+	printf(" -%-*s - Camera maximum height [%ld].\n", n, "height n", cg.height);
 	printf(" -%-*s - Type of image: 99 = auto,  0 = RAW8,  1 = RGB24 [%ld].\n", n, "type n", cg.imageType);
 	if (cg.ct == ctZWO) {
 		printf(",  2 = RAW16,  3 = Y8");
@@ -1064,7 +1064,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - 1 displays the gain [%s].\n", n, "showGain b", yesNo(cg.overlay.showGain));
 	printf(" -%-*s - 1 displays the brightness [%s].\n", n, "showBrightness b", yesNo(cg.overlay.showBrightness));
 	printf(" -%-*s - 1 displays the mean brightness used in auto-exposure [%s].\n", n, "showMean b", yesNo(cg.overlay.showMean));
-	printf(" -%-*s - 1 displays a focus metric - the higher the number the better focus [%s].\n", n, "showFOcus b", yesNo(cg.overlay.showFocus));
+	printf(" -%-*s - 1 displays a focus metric - the higher the number the better focus [%s].\n", n, "showFocus b", yesNo(cg.overlay.showFocus));
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - 1 displays an outline of the histogram box.\n", n, "showhistogrambox b");
 		printf("  %-*s   Useful to determine what parameters to use with -histogrambox.\n", n, "");
@@ -1084,6 +1084,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - 1 enables outline font [%s].\n", n, "outlinefont b", yesNo(cg.overlay.outlinefont));
 
 	printf("\nMisc. settings:\n");
+	printf(" -%-*s - Camera number [%d].\n", n, "cameraID n", cg.cameraNumber);
 	printf(" -%-*s - Where to save 'filename' [%s].\n", n, "save_dir s", cg.saveDir);
 	printf(" -%-*s - 1 previews the captured images. Only works with a Desktop Environment [%s]\n", n, "preview", yesNo(cg.preview));
 	printf(" -%-*s - Outputs the camera's capabilities to the specified file and exists.\n", n, "cc_file s");
@@ -1136,6 +1137,8 @@ void displaySettings(config cg)
 	printf("%s", c(KGRN));
 	printf("\nSettings:\n");
 
+	if (cg.cameraNumber > 0)
+		printf("   Camera number: %d\n", cg.cameraNumber);
 	if (cg.cmdToUse != NULL)
 		printf("   Command: %s\n", cg.cmdToUse);
 	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
@@ -1513,6 +1516,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "version") == 0)
 		{
 			cg->version = argv[++i];
+		}
+		else if (strcmp(a, "cameranumber") == 0)
+		{
+			cg->cameraNumber = atoi(argv[++i]);
 		}
 		else if (strcmp(a, "save_dir") == 0)
 		{
@@ -1935,6 +1942,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 
 		// Arguments that may be passed to us but we don't use.
 		else if (
+			strcmp(a, "xx_end_xx") == 0 ||
 			strcmp(a, "lastchanged") == 0 ||
 			strcmp(a, "displaysettings") == 0 ||
 			strcmp(a, "showonmap") == 0 ||
@@ -1962,9 +1970,9 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 
 
 	// if cg_CC_saveFile is set, we'll output some info and exit, and won't take any images.
-	if (cg->saveDir == NULL && cg->CC_saveFile == NULL) {
+	if (cg->saveDir == NULL && cg->CC_saveFile == NULL & ! cg->help) {
 		cg->saveDir = cg->allskyHome;
-		Log(-1, "*** WARNING: No directory to save Images was specified. Using: [%s]\n", cg->saveDir);
+		Log(-1, "*** WARNING: No directory to save images was specified. Using: [%s]\n", cg->saveDir);
 	}
 
 	return(true);

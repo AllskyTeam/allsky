@@ -161,6 +161,7 @@ calc_wt_size()
 stop_allsky()
 {
 	sudo systemctl stop allsky 2> /dev/null
+	sudo systemctl stop allskyperiodic 2> /dev/null
 }
 
 

@@ -60,7 +60,6 @@ class CONFIGMANAGER:
     def _loadJsonFile(self, path):
         data = None
         
-        print(path)
         try:
             with open(path) as f:
                 data = json.load(f)

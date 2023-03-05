@@ -170,9 +170,9 @@ void *SaveImgThd(void *para)
 		bool result = false;
 		if (pRgb.data)
 		{
-			char cmd[1100+sizeof(CG.allskyHome)];
+			char cmd[1100+strlen(CG.allskyHome)];
 			Log(1, "  > Saving %s image '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
-			snprintf(cmd, sizeof(cmd), "%sscripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
+			snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
 			add_variables_to_command(CG, cmd, exposureStartDateTime);
 			strcat(cmd, " &");
 
@@ -632,9 +632,18 @@ bool checkMaxErrors(int *e, int maxErrors)
 
 int main(int argc, char *argv[])
 {
-	char * a = getenv("ALLSKY_HOME");		// This must come before anything else
-	if (a != NULL)
-		snprintf(CG.allskyHome, sizeof(CG.allskyHome)-1, "%s/", a);
+	CG.ME = argv[0];
+	
+	static char *a = getenv("ALLSKY_HOME");		// This must come before anything else
+	if (a == NULL)
+	{
+		Log(0, "%s: ERROR: ALLSKY_HOME not set!\n", CG.ME);
+		exit(EXIT_ERROR_STOP);
+	}
+	else
+	{
+		CG.allskyHome = a;
+	}
 
 	pthread_mutex_init(&mtxSaveImg, 0);
 	pthread_cond_init(&condStartSave, 0);
@@ -998,7 +1007,7 @@ int main(int argc, char *argv[])
 			{
 				// Just transitioned from night to day, so execute end of night script
 				Log(1, "Processing end of night data\n");
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/endOfNight.sh &", CG.allskyHome);
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfNight.sh &", CG.allskyHome);
 				system(bufTemp);
 				justTransitioned = false;
 				displayedNoDaytimeMsg = false;
@@ -1107,7 +1116,7 @@ int main(int argc, char *argv[])
 			{
 				// Just transitioned from day to night, so execute end of day script
 				Log(1, "Processing end of day data\n");
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%sscripts/endOfDay.sh &", CG.allskyHome);
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfDay.sh &", CG.allskyHome);
 				system(bufTemp);
 				justTransitioned = false;
 			}

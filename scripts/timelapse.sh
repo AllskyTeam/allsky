@@ -94,7 +94,7 @@ fi
 
 # To save on writes to SD card for people who have $ALLSKY_TMP as a memory filesystem,
 # put the sequence files there.
-SEQUENCE_DIR="${ALLSKY_TMP}/sequence-${DATE}"
+SEQUENCE_DIR="${ALLSKY_TMP}/sequence-${DATE}-$$"
 if [[ -d ${SEQUENCE_DIR} ]]; then
 	NSEQ=$(find "${SEQUENCE_DIR}/*" 2>/dev/null | wc -l)	# left over from last time
 else

@@ -298,8 +298,6 @@ int ASIGetNumOfConnectedCameras()
 	// CG.saveDir should be specified, but in case it isn't...
 	const char *dir = CG.saveDir;
 	if (dir == NULL)
-		dir = CG.saveDir;
-	if (dir == NULL)
 		dir = "/tmp";
 
 	// File to hold info on all the cameras.
@@ -1179,7 +1177,7 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 {
 	if (cg->saveDir == NULL) {
 		static char s[256];
-		snprintf(s, sizeof(s), "%s%s", cg->allskyHome, "tmp");
+		snprintf(s, sizeof(s), "%s/%s", cg->allskyHome, "tmp");
 		cg->saveDir = s;
 	}
 

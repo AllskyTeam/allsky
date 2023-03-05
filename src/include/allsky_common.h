@@ -134,6 +134,7 @@ struct config {			// for configuration variables
 	char const *ME						= "";			// name of program running
 
 	// Camera number, type and model
+	int numCameras						= 0;			// Number of cameras physically connected
 	int cameraNumber					= 0;			// 0 to number-of-cameras-attached minus 1
 	cameraType ct						= ctRPi;
 	char const *cm						= "";

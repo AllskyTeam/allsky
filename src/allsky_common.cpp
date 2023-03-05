@@ -63,7 +63,7 @@ void Log(int required_level, const char *fmt, ...)
 			}
 
 			char command[1024];
-			snprintf(command, sizeof(command)-1, "%sscripts/addMessage.sh %s '%s'", CG.allskyHome, severity, msg);
+			snprintf(command, sizeof(command)-1, "%s/scripts/addMessage.sh %s '%s'", CG.allskyHome, severity, msg);
 			Log(4, "Executing %s\n", command);
 			(void) system(command);
 		}
@@ -768,7 +768,7 @@ int displayNotificationImage(char const *arg)
 {
 	char cmd[1024];
 
-	snprintf(cmd, sizeof(cmd)-1, "%sscripts/copy_notification_image.sh %s", CG.allskyHome, arg);
+	snprintf(cmd, sizeof(cmd)-1, "%s/scripts/copy_notification_image.sh %s", CG.allskyHome, arg);
 	Log(4, "Calling system(%s)\n", cmd);
 	return(system(cmd));
 }
@@ -1978,7 +1978,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 	}
 
 
-	// if cg_CC_saveFile is set, we'll output some info and exit, and won't take any images.
+	// Assume if cg->saveDir is NULL that we're not taking pictures and instead are
+	// producing Camera Capabilities info, in which case we need cg->CC_saveFile set so
+	// we know where to put the info.
+	// If we are in "help" mode then we won't take picture AND won't produce CC info.
 	if (cg->saveDir == NULL && cg->CC_saveFile == NULL && ! cg->help) {
 		cg->saveDir = cg->allskyHome;
 		Log(-1, "*** WARNING: No directory to save images was specified. Using: [%s]\n", cg->saveDir);

@@ -131,14 +131,16 @@ struct myModeMeanSetting {
 struct config {			// for configuration variables
 	// Some of these variables aren't settings, but are temporary variables that need to be
 	// passed around.
+	char const *ME						= "";			// name of program running
 
 	// Camera number, type and model
+	int numCameras						= 0;			// Number of cameras physically connected
 	int cameraNumber					= 0;			// 0 to number-of-cameras-attached minus 1
 	cameraType ct						= ctRPi;
 	char const *cm						= "";
 
 	// Settings can be in the config file and/or command-line.
-	char allskyHome[100]				= { 0 };
+	char const *allskyHome				= "";			// full pathname to home of Allsky
 	char const *configFile				= "";
 
 	bool isColorCamera					= false;		// Is the camera color or mono?

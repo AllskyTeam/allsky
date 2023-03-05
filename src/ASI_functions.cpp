@@ -10,8 +10,6 @@
 // Forward definitions of variables in capture*.cpp.
 extern int iNumOfCtrl;
 
-static int numCameras = 0;		// used by several functions
-
 //-----------------------------------------------------------------------------------------
 // Info and routines for RPi only
 //-----------------------------------------------------------------------------------------
@@ -122,9 +120,7 @@ typedef ASI_ID ASI_SN;
 
 ASI_CAMERA_INFO ASICameraInfoArray[] =
 {
-	// It's only possible to have 1 RPi camera connected at a time, so the CameraID will always be 0.
-// TODO: Check if that's true.  Is it possible to attach an RPi camera other than using
-// the camera port?
+	// The CameraID will be updated for the cameras physically connected.
 
 	// Module (sensor), Module_len, Name, CameraID, MaxHeight, MaxWidth, IsColorCam,
 		// BayerPattern, SupportedBins, SupportedVideoFormat, PixelSize, IsCoolerCam,
@@ -150,6 +146,21 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 
 	// FUTURE CAMERAS GO HERE...
 };
+int const ASICameraInfoArraySize =  sizeof(ASICameraInfoArray) / sizeof(ASI_CAMERA_INFO);
+
+// This array will be populated with pointers to ASICameraInfoArray[] for the camera(s)
+// physically connected to the Pi.
+// This way, the "number of cameras" is the same as the size of valid entries in
+// RPiCameras[], and the pointer to the camera we're using will always be <= number of cameras.
+// For example, if a imx477 and imx519 are physicall connected,
+// RPiCameras[] will have two pointers into ASICameraInfoArray[]
+// and two pointers into those camera's ControlCapsArray[] entries.
+struct RPI_CAMERAS
+{
+	ASI_CAMERA_INFO *CameraInfo;
+	ASI_CONTROL_CAPS *ControlCaps;
+} RPiCameras[ASICameraInfoArraySize];
+
 
 // The number and order of these need to match what's in the ControlCapsArray.
 
@@ -298,8 +309,6 @@ int ASIGetNumOfConnectedCameras()
 	// CG.saveDir should be specified, but in case it isn't...
 	const char *dir = CG.saveDir;
 	if (dir == NULL)
-		dir = CG.saveDir;
-	if (dir == NULL)
 		dir = "/tmp";
 
 	// File to hold info on all the cameras.
@@ -342,7 +351,7 @@ int ASIGetNumOfConnectedCameras()
 // Get the cameraNumber for the camera we're using.
 int getCameraNumber()
 {
-	// Determine which camera sensor we have by reading the file created in ASIGetNumOfConnectedCameras().
+	// Determine which camera sensor(s) we have by reading the file created in ASIGetNumOfConnectedCameras().
 	if (camerasInfoFile[0] == '\0')
 	{
 		Log(0, "ERROR: camerasInfoFile not created!\n");
@@ -355,33 +364,59 @@ int getCameraNumber()
 		closeUp(EXIT_ERROR_STOP);
 	}
 
-	char line[128];
+	char line[256];
 	int num = NOT_SET;
-	char sensor[25], found_sensor[25] = { 0 };
+#define SENSOR_STRING_SIZE	25
+	char sensor[SENSOR_STRING_SIZE], found_sensor[SENSOR_STRING_SIZE] = { 0 };
 	bool found = false;
-	int actualIndex = NOT_SET;	// index into ASICameraInfoArray[]
+	int actualIndex;			// index into ASICameraInfoArray[]
+	int RPiCameraIndex = 0;		// index into RPiCameras[]
+
+	// For each camera found, update the next *RPiCameras[] entry to point to the
+	// camera's ASICameraInfoArray[] entry.
+	// Return the index into *RPiCameras[] of the attached camera we're using.
 	while (fgets(line, sizeof(line), f) != NULL)
 	{
 		if (sscanf(line, "%d : %s ", &num, sensor) == 2)
 		{
-			strcpy(found_sensor, sensor);
+			strncpy(found_sensor, sensor, SENSOR_STRING_SIZE);		// last sensor found
 
-			// Found the camera; double check that the sensor is the same.
+			// Found a camera; check all known cameras to make sure it's one we know about.
 			// Unfortunately we don't have anything else to check, like serial number.
 			// I suppose we could also check the Modes are the same, but it's not worth it.
-			for (int i=0; i < numCameras; i++)
+			bool foundThisSensor = false;
+			for (int i=0; i < ASICameraInfoArraySize; i++)
 			{
+				// This code tells us how much of the Module name to compare.
 				size_t len;
 				if (ASICameraInfoArray[i].Module_len > 0)
 					len = ASICameraInfoArray[i].Module_len;
 				else
 					len = sizeof(ASICameraInfoArray[i].Module);
+
+				// Now compare the attached sensor name with what's in our list.
 				if (strncmp(sensor, ASICameraInfoArray[i].Module, len) == 0)
 				{
+					// The sensor is in our list.
+					foundThisSensor = true;
 					found = true;
 					actualIndex = (int) i;
+
+					RPiCameras[RPiCameraIndex].CameraInfo = &ASICameraInfoArray[actualIndex];
+					// There are TWO entries in ControlCapsArray[] for every entry in ASICameraInfoArray[].
+					// The first of each pair is for libcamera, the second is for raspistill.
+					// We need to return the index into ControlCapsArray[].
+					Log(4, "Camera matched ASICameraInfoArray[%d] (RPiCameras[%d]): sensor %s,", actualIndex, RPiCameraIndex, sensor);
+					actualIndex = (actualIndex * 2) + (CG.isLibcamera ? 0 : 1);
+					RPiCameras[RPiCameraIndex].ControlCaps = &ControlCapsArray[actualIndex][0];
+					Log(4, " ControlCapsArray[%d].\n", actualIndex);
+					RPiCameraIndex++;
+
 					break;
 				}
+			}
+			if (! foundThisSensor) {
+				Log(1, "WARNING: Sensor '%s' connected to Pi but not known by Allsky\n", sensor);
 			}
 		}
 	}
@@ -392,28 +427,20 @@ int getCameraNumber()
 		closeUp(EXIT_ERROR_STOP);
 	}
 
-	// There are TWO entries in ControlCapsArray[] for every entry in ASICameraInfoArray[].
-	// The first of each pair is for libcamera, the second is for raspistill.
-	// We need to return the index into ControlCapsArray[].
-	Log(4, "Found camera match at ASICameraInfoArray[%d] for sensor %s.\n", actualIndex, sensor);
-	actualIndex = (actualIndex * 2) + (CG.isLibcamera ? 0 : 1);
-	Log(4, "   Using ControlCapsArray[%d].\n", actualIndex);
-	return(actualIndex);
+	// Caller will determine if this is out of range.
+	return(CG.cameraNumber);
 }
 
 // Put the properties for the specified camera into pASICameraInfo.
 ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCameraIndex)
 {
-	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
+	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
 	{
 		Log(0, "ERROR: ASIGetCameraProperty(), iCameraIndex (%d) bad.\n", iCameraIndex);
 		return(ASI_ERROR_INVALID_INDEX);
 	}
 
-	// iCameraIndex is the index into ControlCapsArray[] but we need the index
-	// into ASICameraInfoArray[] so "undo" what we did above.
-	iCameraIndex = (iCameraIndex - (CG.isLibcamera ? 0 : 1)) / 2;
-	*pASICameraInfo = ASICameraInfoArray[iCameraIndex];
+	*pASICameraInfo = *(RPiCameras[iCameraIndex].CameraInfo);
 	return(ASI_SUCCESS);
 }
 
@@ -421,16 +448,18 @@ ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCamera
 // Get the number of capabilities supported by this camera and put in piNumberOfControls.
 ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
 {
-	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
+	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
 	{
 		Log(0, "ERROR: ASIGetNumOfControls(), iCameraIndex (%d) bad.\n", iCameraIndex);
 		return(ASI_ERROR_INVALID_INDEX);
 	}
 
+	ASI_CONTROL_CAPS *p = RPiCameras[iCameraIndex].ControlCaps;
+
 	int num = 0;
 	for (int i=0; i < MAX_NUM_CONTROL_CAPS; i++)
 	{
-		if (ControlCapsArray[iCameraIndex][i].ControlType == CONTROL_TYPE_END)
+		if (p[i].ControlType == CONTROL_TYPE_END)
 			break;
 		num++;
 	}
@@ -443,17 +472,14 @@ ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
 // This is typically used in a loop over all the control capabilities.
 ASI_ERROR_CODE ASIGetControlCaps(int iCameraIndex, int iControlIndex, ASI_CONTROL_CAPS *pControlCaps)
 {
-	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
+	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
 
 	int numCaps = iNumOfCtrl != NOT_SET ? iNumOfCtrl : MAX_NUM_CONTROL_CAPS;
 	if (iControlIndex < 0 || iControlIndex > numCaps)
 		return(ASI_ERROR_INVALID_CONTROL_TYPE);
 
-	if (! CG.isLibcamera)
-		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
-
-	*pControlCaps = ControlCapsArray[iCameraIndex][iControlIndex];
+	*pControlCaps = RPiCameras[iCameraIndex].ControlCaps[iControlIndex];
 	return(ASI_SUCCESS);
 }
 
@@ -461,17 +487,16 @@ ASI_ERROR_CODE ASIGetControlCaps(int iCameraIndex, int iControlIndex, ASI_CONTRO
 // Get the specified control capability's data value and put in plValue.
 ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType, double *plValue, ASI_BOOL *pbAuto)
 {
-	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
+	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
 
-	if (! CG.isLibcamera)
-		iCameraIndex = (iCameraIndex * 2) + 1;		// raspistill is 2nd entry for each camera
 	int numCaps = iNumOfCtrl != NOT_SET ? iNumOfCtrl : MAX_NUM_CONTROL_CAPS;
+	ASI_CONTROL_CAPS *p = RPiCameras[iCameraIndex].ControlCaps;
 	for (int i=0; i < numCaps ; i++)
 	{
-		if (ControlType == ControlCapsArray[iCameraIndex][i].ControlType)
+		if (ControlType == p[i].ControlType)
 		{
-			*plValue = ControlCapsArray[iCameraIndex][i].CurrentValue;
+			*plValue = p[i].CurrentValue;
 			// It's too much of a hassle to determine if this control type was auto so just return "false".
 			// We'd need to see if the control type supports auto and if it was last set to auto (and
 			// we're not setting any control values).
@@ -490,7 +515,7 @@ int stopVideoCapture(int cameraID) { return(ASI_SUCCESS); }
 // Get the camera's serial number.  RPi cameras don't support serial numbers.
 ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
 {
-	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
+	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
 
 	return(ASI_ERROR_GENERAL_ERROR);		// Not supported on RPi cameras
@@ -619,43 +644,36 @@ char *getRetCode(ASI_ERROR_CODE code)
 // Get the number of cameras PHYSICALLY connected, making sure there's at least one.
 void processConnectedCameras()
 {
-	numCameras = ASIGetNumOfConnectedCameras();
-	CG.cameraNumber = getCameraNumber();
-	if (numCameras <= 0)
+	CG.numCameras = ASIGetNumOfConnectedCameras();
+	if (CG.numCameras <= 0)
 	{
 		Log(0, "*** ERROR: No Connected Camera...\n");
 		closeUp(EXIT_NO_CAMERA);		// If there are no cameras we can't do anything.
 	}
-	else if (CG.cameraNumber >= numCameras)
+
+	CG.cameraNumber = getCameraNumber();
+	if (CG.cameraNumber >= CG.numCameras)
 	{
-		Log(0, "*** ERROR: Camera number %d not connected.  Highest number is %d.\n", CG.cameraNumber, numCameras-1);
+		Log(0, "*** ERROR: Camera number %d not connected.  Highest number is %d.\n", CG.cameraNumber, CG.numCameras-1);
 		closeUp(EXIT_NO_CAMERA);
 	}
-	else if (numCameras > 1)
+	else if (CG.numCameras > 1)
 	{
 		ASI_CAMERA_INFO info;
 		printf("\nAttached Cameras:\n");
-		for (int i = 0; i < numCameras; i++)
+		for (int i = 0; i < CG.numCameras; i++)
 		{
 			ASIGetCameraProperty(&info, i);
 			printf("  - %d %s%s\n", i, info.Name, i == CG.cameraNumber ? " (selected)" : "");
 		}
 	}
-
-#ifdef IS_RPi
-	// ControlCapsArray[] contains an entry for all supported RPi cameras, but numCameras
-	// will normally be 1 which means we can never use anything but the first entry
-	// in ControlCapsArray[].
-	// To get around this, set numCameras to the size of the array.
-	numCameras = sizeof(ControlCapsArray) / sizeof(ControlCapsArray[0]);
-#endif
 }
 
 
 // Get the camera control with the specified control type.
 ASI_ERROR_CODE getControlCapForControlType(int iCameraIndex, ASI_CONTROL_TYPE ControlType, ASI_CONTROL_CAPS *pControlCap)
 {
-	if (iCameraIndex < 0 || iCameraIndex >= numCameras)
+	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
 
 	if (iNumOfCtrl == NOT_SET)
@@ -1179,7 +1197,7 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 {
 	if (cg->saveDir == NULL) {
 		static char s[256];
-		snprintf(s, sizeof(s), "%s%s", cg->allskyHome, "tmp");
+		snprintf(s, sizeof(s), "%s/%s", cg->allskyHome, "tmp");
 		cg->saveDir = s;
 	}
 

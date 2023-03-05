@@ -161,6 +161,7 @@ calc_wt_size()
 stop_allsky()
 {
 	sudo systemctl stop allsky 2> /dev/null
+	sudo systemctl stop allskyperiodic 2> /dev/null
 }
 
 
@@ -1282,7 +1283,7 @@ restore_prior_files()
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg progress "Restoring modules."
-		cp -ar "${PRIOR_CONFIG_DIR}/modules" "${ALLSKY_CONFIG}"
+		"${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}"
 	fi
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then

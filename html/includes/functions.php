@@ -556,7 +556,7 @@ function runCommand($cmd, $message, $messageColor)
 	} elseif ($return_val > 0) {
 		// Display a failure message, plus the caller's message, if any.
 		$msg = "'$cmd' failed";
-		if ($result != null) $msg .= ": " . implode("<br>", $result);
+		if ($result != null) $msg .= ":<br>" . implode("<br>", $result);
 		$status->addMessage($msg, "danger", true);
 		return false;
 	}

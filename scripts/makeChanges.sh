@@ -128,6 +128,8 @@ function check_website()
 }
 check_website		# invoke to set variables
 
+CAMERA_NUMBER=""
+
 while [[ $# -gt 0 ]]; do
 	KEY="${1}"
 	LABEL="${2}"
@@ -135,17 +137,32 @@ while [[ $# -gt 0 ]]; do
 	if [[ ${DEBUG} == "true" ]]; then
 		MSG="New ${KEY} = [${NEW_VALUE}]"
 		echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
-		if [[ ${ON_TTY} -eq 0 ]]; then
-			# called from WebUI.
+		if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
 			echo -e "<script>console.log('${MSG}');</script>"
 		fi
 	fi
 
 	# Unfortunately, the Allsky configuration file was already updated,
 	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
-	case "${KEY,,}" in		# convert to lowercase
+	
+	K="${KEY,,}"		# convert to lowercase
+	case "${K}" in
 
-		cameratype)
+		cameranumber | cameratype)
+
+			if [[ ${K} == "cameranumber" ]]; then
+				NEW_CAMERA_NUMBER="${NEW_VALUE}"
+				CAMERA_NUMBER=" -cameraNumber ${NEW_CAMERA_NUMBER}"
+				# Set NEW_VALUE to the current Camera Type
+				NEW_VALUE="$(jq -r .cameraType "${SETTINGS_FILE}")"
+				MSG="Re-creating files for cameraType ${NEW_VALUE}, cameraNumber ${NEW_CAMERA_NUMBER}"
+				if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
+					echo -e "<script>console.log('${MSG}');</script>"
+				elif [[ ${DEBUG} == "true" ]]; then
+					echo -e "${wDEBUG}${MSG}${wNC}"
+				fi
+			fi
+
 			# This requires Allsky to be stopped so we don't
 			# try to call the capture program while it's already running.
 			sudo systemctl stop allsky
@@ -175,16 +192,16 @@ while [[ $# -gt 0 ]]; do
 						# shellcheck disable=SC2086
 						exit ${RET}
 					fi
-					C="-cmd ${C}"
+					C=" -cmd ${C}"
 				else
 					C=""
 				fi
 				if [[ ${DEBUG} == "true" ]]; then
-					echo -e "${wDEBUG}Calling capture_${NEW_VALUE} ${C} -cc_file '${CC_FILE}'${wNC}"
+					echo -e "${wDEBUG}Calling capture_${NEW_VALUE}${C}${CAMERA_NUMBER} -cc_file '${CC_FILE}'${wNC}"
 				fi
 
 				# shellcheck disable=SC2086
-				"${ALLSKY_BIN}/capture_${NEW_VALUE}" ${C} -debuglevel 3 -cc_file "${CC_FILE}"
+				"${ALLSKY_BIN}/capture_${NEW_VALUE}" ${C} ${CAMERA_NUMBER} -debuglevel 3 -cc_file "${CC_FILE}"
 				RET=$?
 				if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
 					echo -e "${wERROR}ERROR: Unable to create cc file '${CC_FILE}'.${wNC}"
@@ -197,7 +214,7 @@ while [[ $# -gt 0 ]]; do
 
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
-				CAMERA_MODEL="$(jq .cameraModel "${CC_FILE}" | sed 's/"//g')"
+				CAMERA_MODEL="$(jq -r .cameraModel "${CC_FILE}")"
 				if [[ -z ${CAMERA_MODEL} ]]; then
 					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
@@ -243,32 +260,20 @@ while [[ $# -gt 0 ]]; do
 				--options_file "${OPTIONS_FILE}" \
 				--settings_file "${SETTINGS_FILE}" \
 				2>&1)"
+			RET=$?
 
-			# .php files don't return error codes so we check if it worked by
-			# looking for a string in its output.
-
-			if [[ -n ${R} ]]; then
-				if ! echo "${R}" | grep --quiet "XX_WORKED_XX"; then
-					echo -n -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}'"
-					if [[ ${OPTIONS_FILE_ONLY} == "true" ]]; then
-						echo -e "file."
-					else
-						echo -e " and '${SETTINGS_FILE}' files."
-					fi
-					echo "${wNC}${R}"
-					exit 1
-				fi
-			else
-				# If there's no output, there won't be any special string
-				# so assume the file(s) didn't get created.
-				# We don't simply fall through to the code after the "else" so we can
-				# output a more specific error message for debugging purposes.
+			if [[ ${RET} -ne 0 ]]; then
 				echo -n -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}'"
-				if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
-					echo " and '${SETTINGS_FILE}' files"
+				if [[ ${OPTIONS_FILE_ONLY} == "true" ]]; then
+					echo -e "file."
+				else
+					echo -e " and '${SETTINGS_FILE}' files."
 				fi
-				echo -e " - nothing returned.${wNC}"
+				echo -e "${wNC}, RET=${RET}:${R}"
 				exit 1
+			fi
+			if [[ ${DEBUG} == "true" && -n ${R} ]]; then
+				echo -e "${wDEBUG}${R}${wNC}"
 			fi
 
 			OK="true"
@@ -281,9 +286,6 @@ while [[ $# -gt 0 ]]; do
 				OK="false"
 			fi
 			[[ ${OK} == "false" ]] && exit 2
-
-			# It's an error if XX_WORKED_XX is NOT in the output.
-			echo -e "${R}" | grep --silent "XX_WORKED_XX" || exit 2
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			if [[ ${CAMERA_TYPE_ONLY} == "true" ]]; then
@@ -494,4 +496,3 @@ if [[ ${GOT_WARNING} == "true" ]]; then
 else
 	exit 0
 fi
-

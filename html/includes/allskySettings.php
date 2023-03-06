@@ -69,7 +69,7 @@ function DisplayAllskyConfig(){
 					$oldValue = str_replace("'", "&#x27", $value);
 					$newValue = getVariableOrDefault($settings, $originalName, "");
 					if ($oldValue !== $newValue) {
-if ($debugArg !== "") echo "<br>xxxxx  <b>$originalName</b> changed from '$oldValue' to '$newValue'";
+// if ($debugArg !== "") echo "<br>xxxxx  <b>$originalName</b> changed from '$oldValue' to '$newValue'";
 						if ($originalName === $cameraTypeName)
 							$newCameraType = $newValue;
 						elseif ($originalName === $cameraModelName)
@@ -168,7 +168,7 @@ if ($debugArg !== "") echo "<br>xxxxx  <b>$originalName</b> changed from '$oldVa
 					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $debugArg $restarting $changes";
 					# Let makeChanges.sh display any output
 					echo '<script>console.log("Running: ' . $CMD . '");</script>';
-					$ok = runCommand($CMD, "Unable to make settings changes.", "success");
+					$ok = runCommand($CMD, "", "success");
 				}
 
 				if ($ok) {

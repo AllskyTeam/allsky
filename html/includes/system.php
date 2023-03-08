@@ -403,10 +403,10 @@ function DisplaySystem()
 						$result = shell_exec("sudo /sbin/shutdown -h now");
 					}
 					if (isset($_POST['service_start'])) {
-						runCommand("sudo /bin/systemctl start allsky", "allsky service started", "success");
+						runCommand("sudo /bin/systemctl start allsky", "Allsky started", "success");
 					}
 					if (isset($_POST['service_stop'])) {
-						runCommand("sudo /bin/systemctl stop allsky", "allsky service stopped", "success");
+						runCommand("sudo /bin/systemctl stop allsky", "Allsky stopped", "success");
 					}
 					// Optional user-specified data.
 					for ($i=0; $i < $user_data_files_count; $i++) {
@@ -465,8 +465,8 @@ function DisplaySystem()
 						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)"><i class="fa fa-sync-alt"></i> Refresh</button>
 					</div>
 					<div style="margin-bottom: 15px">
-						<button type="submit" class="btn btn-success" name="service_start"/><i class="fa fa-play"></i> Start allsky</button>
-						<button type="submit" class="btn btn-danger" name="service_stop"/><i class="fa fa-stop"></i> Stop allsky</button>
+						<button type="submit" class="btn btn-success" name="service_start"/><i class="fa fa-play"></i> Start Allsky</button>
+						<button type="submit" class="btn btn-danger" name="service_stop"/><i class="fa fa-stop"></i> Stop Allsky</button>
 					</div>
 					<div style="margin-bottom: 15px">
 						<button type="submit" class="btn btn-warning" name="system_reboot"/><i class="fa fa-power-off"></i> Reboot Raspberry Pi</button>

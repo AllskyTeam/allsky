@@ -154,9 +154,11 @@ UHUBCTL_PORT=2
 
 
 # ================ DO NOT CHANGE ANYTHING BELOW THIS LINE ================
+ME2="$(basename "${BASH_SOURCE[0]}")"
+
 CAMERA_TYPE=""						# Updated during installation
 if [ "${CAMERA_TYPE}" = "" ]; then
-	echo -e "${RED}${ME}: ERROR: Please set 'Camera Type' in the WebUI.${NC}"
+	echo -e "${RED}${ME2}: ERROR: Please set 'Camera Type' in the WebUI.${NC}"
 	sudo systemctl stop allsky > /dev/null 2>&1
 	exit ${EXIT_ERROR_STOP}
 fi
@@ -170,8 +172,13 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -eq 0 ]]; then
 	TIMELAPSE_MINI_UPLOAD_THUMBNAIL="false"
 fi
 
-if [[ ! -f ${SETTINGS_FILE} ]]; then		# SETTINGS_FILE is defined in variables.sh
-	echo -e "${RED}${ME}: ERROR: Settings file '${SETTINGS_FILE}' not found!${NC}"
+if [[ -z ${SETTINGS_FILE} ]]; then		# SETTINGS_FILE is defined in variables.sh
+	echo -e "${RED}${ME2}: ERROR: SETTINGS_FILE variable not defined!${NC}"
+	echo -e "${RED}Make sure 'variables.sh' is source'd in!${NC}"
+	return 1
+fi
+if [[ ! -f ${SETTINGS_FILE} ]]; then
+	echo -e "${RED}${ME2}: ERROR: Settings file '${SETTINGS_FILE}' not found!${NC}"
 	sudo systemctl stop allsky > /dev/null 2>&1
 	exit ${EXIT_ERROR_STOP}
 fi
@@ -180,7 +187,7 @@ fi
 function settings()
 {
 	j="$(jq -r "${1}" "${2:-${SETTINGS_FILE}}")" && echo "${j}" && return
-	echo "${ME}: running as $(id --user --name), unable to get json value for '${1}';" >&2
+	echo "${ME2}: running as $(id --user --name), unable to get json value for '${1}';" >&2
 	ls -l "${SETTINGS_FILE}" >&2
 }
 
@@ -194,3 +201,4 @@ ALLSKY_DEBUG_LEVEL="$(settings '.debuglevel')"
 ALLSKY_VERSION="XX_ALLSKY_VERSION_XX"	# Updated during installation
 
 CONFIG_SH_VERSION=1
+return 0

@@ -2,8 +2,7 @@
 
 function DisplayOverlay($image_name)
 {
-
-
+	$displayMaskTab = false;		// Should the "Mask" tab appear?
 
 ?>
 
@@ -56,8 +55,11 @@ function DisplayOverlay($image_name)
                 <div>
 
                     <ul class="nav nav-tabs" role="tablist">
-                        <li role="presentation" class="active"><a href="#oe-editor-tab" aria-controls="oe-editor-tab" role="tab" data-toggle="tab" id="oe-overlay-editor-tab">Overlay Editor</a></li>
-                        <!-- <li role="presentation"><a href="#oe-exposure-tab" aria-controls="oe-exposure-tab" role="tab" data-toggle="tab">Auto Exposure Mask</a></li> -->
+                        <li role="presentation" class="active">
+							<a href="#oe-editor-tab" aria-controls="oe-editor-tab" role="tab" data-toggle="tab" id="oe-overlay-editor-tab">Overlay Editor</a></li>
+<?php if ($displayMaskTab) { ?>
+                        <li role="presentation"><a href="#oe-exposure-tab" aria-controls="oe-exposure-tab" role="tab" data-toggle="tab">Auto Exposure Mask</a></li>
+<?php } ?>
                     </ul>
 
                     <div class="tab-content">
@@ -84,7 +86,7 @@ function DisplayOverlay($image_name)
                                                 <div class="btn btn-lg navbar-btn" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"><i class="fa-solid fa-font"></i></div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Image Field"><i class="fa-regular fa-image"></i></div>
+                                                <div class="btn btn-lg navbar-btn" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Existing Image Field"><i class="fa-regular fa-image"></i></div>
                                             </li>
                                             <li>
                                                 <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Field">
@@ -99,7 +101,7 @@ function DisplayOverlay($image_name)
                                             </li>
 
                                             <li>
-                                                <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom in"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+                                                <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
                                             </li>
                                             <li>
                                                 <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
@@ -137,7 +139,7 @@ function DisplayOverlay($image_name)
                                 </div>
                             </div>
                         </div>
-                        <!--
+<?php if ($displayMaskTab) { ?>
                         <div role="tabpanel" class="tab-pane" id="oe-exposure-tab">
                             <nav class="navbar navbar-default">
                                 <div class="container-fluid">
@@ -163,7 +165,7 @@ function DisplayOverlay($image_name)
 
 
                                             <li>
-                                                <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom in"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+                                                <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
                                             </li>
                                             <li>
                                                 <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
@@ -187,7 +189,7 @@ function DisplayOverlay($image_name)
                                 </div>
                             </div>
                         </div>
-                        -->
+<?php } ?>
                     </div>
                 </div>
             </div>
@@ -747,8 +749,10 @@ function DisplayOverlay($image_name)
                 var overlayEditor = new OVERLAYEDITOR($("#overlay_container"), this);
                 overlayEditor.buildUI();
 
-                //var exposureEditor = new OEEXPOSURE();
-                //exposureEditor.start();
+<?php if ($displayMaskTab) { ?>
+                var exposureEditor = new OEEXPOSURE();
+                exposureEditor.start();
+<?php } ?>
             };
         </script>
 

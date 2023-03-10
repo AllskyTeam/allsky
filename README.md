@@ -178,7 +178,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 &nbsp;  
 * version **v2023.MM.DD**: 
 	* Core Allsky:
-		* New camera support: All ZWO cameras as of February, 2023.  RPi HQ and Module 3 cameras as well as ArduCam 16 MP and 64 MP cameras.
+		* New camera support: All ZWO cameras as of February, 2023.  RPi HQ and Module 3 cameras as well as ArduCam 16 MP and 64 MP cameras.  The RPi "Global Shutter Camera" is NOT supported - high speed shutters aren't useful for allsky images.
 		* "Mini" timelapse videos can be created that contain a user-configurable number of the most recent images.  This allows you to continually see the recent sky conditions.
 		* Installation improvements:
 			* If there is not enough swap space configured you are prompted to add more.  Doing this decreases the chance of timelapse creation problems.

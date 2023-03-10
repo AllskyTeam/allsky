@@ -69,7 +69,7 @@ int RPicapture(config cg, cv::Mat *image)
 	string command = cg.cmdToUse;
 
 	// Ensure no prior process is still running.
-	string kill = "pgrep '" + command + "' | xargs kill -9 2> /dev/null";
+	string kill = "pkill --signal SIGKILL '" + command + "' 2> /dev/null";
 	static bool showed_kill_command = false;
 	if (! showed_kill_command) {
 		// only show once - it never changes

@@ -41,6 +41,7 @@ class StatusMessages {
 	}
 
 	public function isMessage() {
+		$c = 0;
 		if (count($this->messages, $c) === 0)
 			return(false);
 		else

@@ -2,10 +2,6 @@
 
 include_once( 'includes/status_messages.php' );
 
-/**
-*
-*
-*/
 function DisplayHostAPDConfig(){
   global $page;
   $status = new StatusMessages();
@@ -67,7 +63,7 @@ function DisplayHostAPDConfig(){
         <div class="panel-heading"><i class="fa fa-dot-circle-o fa-fw"></i> Configure hotspot</div>
         <!-- /.panel-heading -->
         <div class="panel-body">
-	  <p><?php $status->showMessages(); ?></p>
+	  <?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>
           <form role="form" action="?page=<?php echo $page ?>" method="POST">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs">

@@ -129,6 +129,8 @@ class ALLSKYOVERLAY:
         env = {}
         for var in os.environ:
             varValue = os.environ[var]
+            varValue = varValue.replace('\n', '')
+            varValue = varValue.replace('\r', '')
             var = var.ljust(50, ' ')
             env[var] = varValue
 

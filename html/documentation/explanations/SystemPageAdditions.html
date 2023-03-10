@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "WEBUI_DATA_FILES";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
+	<title>WEBUI_DATA_FILES Tutorial</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+
+<p>
+You can add information and buttons to the WebUI's
+<span class="WebUIWebPage">System</span> page
+without having to change any Allsky files.
+The data can be anything you want, but often contains weather, dew heater, and/or fan data.
+</p>
+This page assumes you are familiar with writing scripts;
+if so, adding the information is straightforward
+if you follow the instructions on this page.
+
+<p>
+The image below shows the types of items that can be added:
+<ul class="minimalPadding">
+	<li>Simple data: "<strong>Allsky is the</strong> &nbsp; &nbsp;
+		<span style="color: red; font-weight: bold;">BEST!!!</span>"
+	<li>Progress bar: "Dew heater status"
+	<li>Buttons:  "Heater ON" and "Heater OFF".
+		Clicking these buttons perform an action that you define.
+</ul>
+<img allsky="true" src="systemAdditionsExample.png" class="imgCenter" loading="lazy">
+</p>
+
+<h2 id="Details">Details</h2>
+<p>
+The information to display on the <span class="WebUIWebPage">System</span> page
+is described in one or more "data files"
+which are listed in the <span class="shSetting">WEBUI_DATA_FILES</span> setting
+in <span class="fileName">config.sh</span>
+This section describes the format of those data files.
+<blockquote>
+<b>You</b> need to provide the script(s) to create the data files.
+</blockquote>
+</p>
+<details><summary></summary>
+<p>
+Each data file contains one or more lines.
+Blank lines and lines that begin with <code>#</code> are ignored.
+Each remaining line will display something on the
+<span class="WebUIWebPage">System</span> page
+and must contain the fields listed in the tables below, separated by <b>tabs</b>.
+</p>
+<p>
+As a very simple example, if you want to add the 2 buttons in the image above
+to turn your dew heater on and off you'd have a file called, for example,
+<span class="fileName">/home/pi/my_buttons.txt</span>.
+That file needs 2 lines describing the attributes for
+each button such as color and what it should say (e.g., "Heater ON").
+The exact contents of those lines are described below.
+The buttons appear on the <span class="WebUILink">System</span> page
+when you set <code>WEBUI_DATA_FILES="/home/pi/my_buttons.txt"</code>
+in <span class="fileName">config.sh</span>.
+</p>
+
+<p>
+There are three types of lines in a data file.
+The first word of a line determines what type of line it is:
+<ol>
+<li><span class="systemPageAdditionsLineType">data</span>
+	lines specify basic, two-column information that goes before the first progress bar.
+	These lines are good when the data has a single value like:
+	<br><code>Ambient temperature &nbsp; &nbsp; 20 C</code>
+<li><span class="systemPageAdditionsLineType">progress</span>
+	lines display as progress bars like the CPU Temperature bar in the image above.
+	Your bars go after the last system-supplied progress bar and are good when
+	the data has an associated status, for example, when the CPU is too hot its bar turns red.
+<li><span class="systemPageAdditionsLineType">button</span>
+	lines add a button to the page under the last system-supplied button,
+	and are used to initiate an action like turning a dew heater on.
+</ol>
+</p>
+
+<table role="table">
+<thead>
+<tr><th colspan="4" class="systemPageAdditionsLineTypeHeader">
+		<span class="systemPageAdditionsLineType">data</span> lines</th></tr>
+<tr><th>Fields</th>
+	<th>Description</th>
+	<th>Typically changes when data is updated?</th></tr>
+</thead>
+<tbody>
+<tr><td><b>type</b></td>
+	<td>Must be <code>data</code>. Defines the line type.</td>
+	<td>Never.</td>
+</tr>
+<tr><td><b>timeout</b></td>
+	<td>Number of seconds after the data file was created that the data should expire.
+		<code>0</code> disables the check.
+		Expired data has <span class="EXPIRED">(EXPIRED)</span>
+		appended to the label.</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>label</b></td>
+	<td>The name for this data, for example: <code>Ambient temperature</code>.</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>data</b></td>
+	<td>The actual data - what should appear in the second column on the web page.
+		For example, for <code>20 C</code>.</td>
+	<td>Yes - every time new data is written to the file.</td>
+</tr>
+</tbody>
+</table>
+
+&nbsp;
+
+<table role="table">
+<thead>
+<tr><th colspan="4" class="systemPageAdditionsLineTypeHeader">
+		<span class="systemPageAdditionsLineType">progress</span> lines</th></tr>
+<tr><th>Fields</th>
+	<th>Description</th>
+	<th>Typically Changes</th></tr>
+</thead>
+<tbody>
+<tr><td><b>type</b></td>
+	<td>Must be <code>progress</code>.</td>
+	<td>Never.</td>
+</tr>
+<tr><td><b>timeout</b></td>
+	<td>Number of seconds after the data file was created that the data should expire.
+		<code>0</code> disables the check. Expired data has
+		<span class="EXPIRED">(EXPIRED)</span> appended to the label.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>label</b></td>
+	<td>The name for this data, for example: <code>Dew point</code>.</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>data</b></td>
+	<td>The data to appear inside the progress bar.
+		Typically a number followed by an optional unit specifier,
+		for example, <code>20 C</code> for temperature, but could be any text.
+	</td>
+	<td>Yes - every time new data is written to the file.</td>
+</tr>
+<tr><td><b>minimum value</b></td>
+	<td>The minimum possible value of <b>current value</b>; often <code>0</code>,
+		but for a temperature will usually be negative.
+		<br>Must be a number.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>current value</b></td>
+	<td>The current value of the data.
+		This determines how wide the progress bar is.
+		Will typically be the same as <b>data</b> without the unit specifier,
+		for example, <code>20</code>.
+		This value should normally be between <b>minimum value</b>
+		and <b>maximum value</b> inclusive.
+		<br>Must be a number.
+	</td>
+	<td>Yes - every time new data is written to the file.</td>
+</tr>
+<tr><td><b>maximum value</b></td>
+	<td>The maximum possible value of <b>current value</b>; often <code>100</code>,
+		especially for percents.
+		For a temperature, use the highest value you expect the temperature to be.
+		<br>Must be a number.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>danger</b></td>
+	<td>A <b>current value</b> greater than or equal to the <b>danger</b>
+		value causes the progress bar to turn red.
+		<br>Must be a number.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>warning</b></td>
+	<td>A <b>current value</b> greater than or equal to the <b>warning</b>
+		value and less than the <b>danger</b> value causes the progress bar to turn amber.
+		The progress bar will be green for any value less than <b>warning</b>.
+		<br>Must be a number.
+	</td>
+	<td>No.</td>
+</tr>
+</tbody>
+</table>
+
+&nbsp;
+
+<table role="table">
+<thead>
+<tr><th colspan="4" class="systemPageAdditionsLineTypeHeader">
+		<span class="systemPageAdditionsLineType">button</span> lines</th></tr>
+<tr><th>Fields</th>
+	<th>Description</th>
+	<th>Typically Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr><td><b>type</b></td>
+	<td>Must be <code>button</code>.</td>
+	<td>Never.</td>
+</tr>
+<tr><td><b>message</b></td>
+	<td>An optional message that should appear at the top of the page after the
+		button is pressed, if the button command was successful.
+		For example, <code>Dew heater turned on</code>.
+		If the command was not successful an error message is
+		displayed containing any output from the command.
+		Use <code>-</code> (minus sign) to indicate no message should be displayed on success
+		(error messages will still be displayed).
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>command</b></td>
+	<td>The script that should be executed when the button is pressed.
+		For example, <span class="fileName">/home/pi/turn_on_dew_heater.sh</span>.
+		If needed you can prepend <code>sudo</code> to the command.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>button color</b></td>
+	<td>The button's color.
+		Choices are: red, green, blue, yellow, cyan, white, and black.
+		See the <a href="#Tips">Tips</a> section for information on button colors.
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>FA icon</b></td>
+	<td>The Fonts Awesome (FA) icon on the button.
+		For example, the right-facing triangle on the "Start Allsky" button has an
+		FA icon of "play".
+		If you don't want an icon on the button, enter <code>-</code> (minus sign).
+	</td>
+	<td>No.</td>
+</tr>
+<tr><td><b>button label</b></td>
+	<td>What should appear on the button face, for example, <code>Heater ON</code>.</td>
+	<td>No.</td>
+</tr>
+</tbody>
+</table>
+<hr class="separator">
+</details>
+
+<h2>Example</h2>
+<p>
+This section gives an example of adding items to the WebUI's
+<span class="WebUILink">System</span> page.
+The example assumes you have a weather station that provides
+the ambient temperature, humidity, and dew point.
+Further, your allsky camera has a dew heater that you want to automatically
+turn on and off depending on the weather.
+</p>
+<details><summary></summary>
+<p>
+You wrote a script called <span class="fileName">/home/pi/weather/getWeatherData.sh</span>
+that polls the weather station and writes the ambient temperature, humidity,
+and dew point to a data file called <span class="fileName">/home/pi/weather/weatherdata.txt</span>
+every minute.
+You must manually turn the dew heater on and off via a Python script called
+<span class="fileName">/home/pi/dewheater/toggleDewHeater.py</span>.
+This command toggles the status of the dew heater and writes the
+new status (either "on" or "off") to the data file
+<span class="fileName">/home/pi/dewheater/status.txt</span> whenever you call the script.
+</p>
+<p>
+To get this working, consider the following:
+</p>
+
+<h4>Determine what data you want to display</h4>
+You want to display the temperature, humidity, dew point, and dew heater status.
+You will use the humidity and dew point numbers to determine if you should turn the dew heater on or off via a toggle button you'll add to the web page.
+You want the ambient temperature in Celsius.
+<br><br>
+Here's what you'll add to the WebUI's <span class="WebUIWebPage">System</span> page:
+<ul class="minimalPadding">
+	<li>temperature
+	<li>humidity
+	<li>dew point
+	<li>dew heater status
+	<li>a button to toggle the dew heater on/off
+</ul>
+
+<h4>Determine what you want to call the items</h4>
+This is pretty easy.
+You will set the <b>label</b> fields as follows:
+<ul class="minimalPadding">
+	<li>temperature: <b>Ambient temperature</b>
+	<li>humidity: <b>Humidity</b>
+	<li>dew point: <b>Dew point</b>
+	<li>dew heater status: <b>Dew heater status</b>
+	<li>button: <b>Toggle dew heater</b>
+</ul>
+
+<h4>Determine how you want the data displayed</h4>
+The temperature is just a number with no "good" or "bad" value so it will be of type
+<span class="systemPageAdditionsLineType">data</span>.
+<p>
+Although the dew point is also just a number, you want to highlight it when it's
+getting close to the ambient temperature so you'll know it's possible for dew to form.
+Hence, it will be of type <span class="systemPageAdditionsLineType">progress</span>.
+</p>
+<p>
+If the humidity gets too high you want to call attention to it, so it will be of type
+<span class="systemPageAdditionsLineType">progress</span>.
+</p>
+<p>
+The dew heater toggle switch will be of type
+<span class="systemPageAdditionsLineType">button</span>.
+</p>
+
+<h4>Determine expiration timeout</h4>
+If the weather data gets too old it may fool you into turning the dew heater off when it should remain on, so you want its data to expire.
+Your weather station provides new data every minute.
+If it misses a minute or two you don't want the data on the
+<span class="WebUIWebPage">System</span> page to turn red,
+so you'll set the temperature and dew point <b>timeout</b> fields to
+<code>300</code> seconds (5 minutes).
+Just for fun you'll set the humidity <b>timeout</b> value to
+<code>600</code> seconds (10 minutes).
+
+<p>
+The dew heater status information doesn't change unless you manually turn it on or off,
+so you don't want it's status to expire, hence will use <code>0</code> for its <b>timeout</b> value.
+</p>
+
+<p>
+Timeout values don't apply to buttons.
+</p>
+
+<h4>Determine progress bar cutoff values</h4>
+You've noticed that when the humidity gets above 90% you get dew on the inside of the dome,
+so you'll set the dew heater <b>danger</b> value to <code>85</code>
+so it's bar turns red.
+You aren't sure what to use for the <b>warning</b>
+value so you'll initially set it to <code>75</code>,
+and will adjust it later if needed.
+By definition humidity ranges from 0% to 100% so use <code>0</code> and <code>100</code> for its
+<b>minimum value</b> and <b>maximum value</b> respectively.
+
+<p>
+<blockquote class="morePadding">The next paragraph is an advanced topic so feel free to skip it.</blockquote>
+The cutoffs for the dew point will vary based on the temperature so require some logic in
+<span class="fileName">getWeatherData.sh</span>.
+Let's say you decide to set the dew point <b>danger</b> cutoff to be 90% <i>of the ambient temperature</i>,
+and the <b>warning</b> cutoff to be 80%.
+This means if the ambient temperature is 20 C, the dew point <b>danger</b> cutoff would be
+18 C (20 * 0.9) and the <b>warning</b> cutoff would be 16 C (20 * 0.8).
+You aren't interested in dew point values significantly less than the ambient temperature since
+the chance of dew in those cases is almost zero, so you'll set the dew point <b>minimum value</b>
+to the ambient temperature minus 5 degrees.
+Likewise, you aren't interested in dew point values significantly greater than the
+ambient temperature since it's almost certain there will be dew, so you'll set the <b>maximum value</b>
+to the dew point <b>danger</b> value plus 3 degrees.
+This in effect sets the left side of the progress bar to be (ambient - 5) and the
+right side of the bar to be (<b>danger</b> + 3).
+<br>[This may be confusing now, but will clear up when you see what it
+looks like and play around with different values.]
+</p>
+
+<p>
+The other items are of type
+<span class="systemPageAdditionsLineType">data</span> and
+<span class="systemPageAdditionsLineType">button</span>
+so this step doesn't apply to them.
+</p>
+
+<h4>Determine what the buttons should look like</h4>
+You like green so will make the dew heater toggle button green by specifying its <b>button color</b> as <code>green</code>.
+<p>
+You want an icon on the button since the other buttons have icons,
+so you go to <a href="https://fontawesome.com/icons/" target="_blank">Font Awesome <i class="fa fa-external-link-alt fa-fw"></i></a>
+to look for an icon (Allsky uses Font Awesome version 6).
+You pick the "random" icon so set the button's <b>FA icon</b> field to <code>random</code>.
+</p>
+
+<h4 id="WEBUI_DATA_FILES">Specify the data files</h4>
+You need to enter the names of your data files (i.e., the files created by your scripts) in the
+<span class="shSetting">WEBUI_DATA_FILES</span> setting of the
+<span class="fileName">config.sh</span> file,
+but how many data files should you have?
+You could put everything in one file but you have two scripts that create data files
+and would need to coordinate between them so they don't overwrite each other.
+You decide on three data files containing:
+<ol class="minimalPadding">
+	<li>weather data
+	<li>dew heater status
+	<li>button information
+</ol>
+You could have put the button information in the first or second file,
+but to simplify the <span class="fileName">toggleDewHeater.py</span>
+script you put it in a 3rd file that will never change.
+You call the 3rd file <span class="fileName">/home/pi/dewheater/button.txt</span>.
+<p class="morePadding">
+This is what you use:
+<pre>
+WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt:/home/pi/dewheater/button.txt"
+</pre>
+</p>
+<blockquote>
+The file names must be full path names and must be separated by colons (":").
+</blockquote>
+<p class="morePadding">
+The <span class="systemPageAdditionsLineType">data</span>,
+<span class="systemPageAdditionsLineType">progress</span>, and
+<span class="systemPageAdditionsLineType">button</span>
+lines in the first data file will appear first on the
+<span class="WebUIWebPage">System</span> page;
+those in the second file will appear second, etc.
+You can change the order items appear by changing the order of data file names in the
+<span class="shSetting">WEBUI_DATA_FILES</span> setting.
+</p>
+
+<h4>Create/modify scripts to update the data file(s)</h4>
+The <span class="fileName">getWeatherData.sh</span>
+script needs to write the three weather
+<span class="systemPageAdditionsLineType">data</span> lines to
+<span class="fileName">/home/pi/weather/weatherdata.txt</span>.
+It helps if you have the script create header lines in the output
+file so you remember what field is what.
+The script's logic would be:
+<ol class="minimalPadding">
+	<li>Get the data from the hardware.
+	<li>Optionally write a
+		<span class="systemPageAdditionsLineType">data</span> header comment to
+		<span class="fileName">/home/pi/weather/weatherdata.txt</span>.
+		See line 1 below.
+	<li>Append the Ambient temperature
+		<span class="systemPageAdditionsLineType">data</span> line to the file (line 2).
+	<li>Optionally append a blank line for readability (line 3).
+	<li>Optionally append a
+		<span class="systemPageAdditionsLineType">progress</span> header comment to the file
+		(line 4).
+	<li>Calculate new <b>danger</b>, <b>warning</b>, <b>minimum value</b>,
+		and <b>maximum value</b> numbers for the Dew point based on the ambient temperature
+		(line 5).
+	<li>Append the Dew point
+		<span class="systemPageAdditionsLineType">progress</span> line (line 6).
+	<li>Append the Humidity
+		<span class="systemPageAdditionsLineType">progress</span> line (line 7).
+	<li>Wait for some period of time, then go back to step 1.
+</ol>
+<p>
+Using the decisions you made above,
+the <span class="fileName">/home/pi/weather/weatherdata.txt</span> would look like the following,
+assuming the temperature was 20 C, the dew point was 17 C, and the humidity was 87%.
+</p>
+<blockquote>
+The initial line numbers below are only for illustration purposes
+and should NOT appear in your file.
+</blockquote>
+<!-- use 8-character tabs -->
+<pre>
+1   # Type	Timeout	Label			Data
+2   data	300	Ambient temperature	20 C
+3   
+4   # Type	Timeout	Label			Data	Min	Current	Max	Danger	Warning
+5   progress	300	Dew point		17 C	12	17	21	18	16
+6   progress	600	Humidity		87%	0	87	100	85	75
+</pre>
+<p>
+Note all fields are separated by one or more <strong>tabs</strong>
+(multiple tabs in a row are counted as a single tab).
+The header lines (which are ignored since they begin with <code>#</code>) can be in any format,
+so to ensure you have the correct fields you lined the header fields up with the data fields below.
+</p>
+
+<p class="morePadding">
+The <span class="fileName">toggleDewHeater.py</span> script needs to write the
+<span class="systemPageAdditionsLineType">data</span> line for the dew heater
+status to <span class="fileName">/home/pi/dewheater/status.txt</span> every time it is executed.
+Its logic is:
+<ol class="minimalPadding">
+	<li>Get the dew heater status from the hardware.
+	<li>Toggle the status.
+	<li>Optionally write a
+		<span class="systemPageAdditionsLineType">data</span>
+		header comment line to
+		<span class="fileName">/home/pi/dewheater/status.txt</span>.
+	<li>Append the new dew heater status
+		<span class="systemPageAdditionsLineType">data</span>
+		line to the file.
+	<li>Output "Dew heater turned on" or "Dew heater turned off".
+	<li>Exit.
+</ol>
+</p>
+<p>
+The <span class="fileName">/home/pi/dewheater/status.txt</span>
+file will look like the following after clicking the button,
+assuming the dew heater is currently off.
+</p>
+<pre>
+# Type	  Timeout  Label                 Data
+data	  0        Dew heater status     on
+</pre>
+
+<p class="morePadding">
+Since the toggle button won't change, create the
+<span class="fileName">/home/pi/dewheater/button.txt</span> file manually:
+<pre>
+# Type    Message  Command                                 Color   FA icon  Button  Label
+button    -        /home/pi/dewheater/toggleDewHeater.py   green   random   Toggle  dew heater
+</pre>
+</p>
+<p>
+Notice the <b>Message</b> field is <code>-</code> which means there's no message to display on success.
+This is because the <span class="fileName">toggleDewHeater.py</span>
+command outputs "Dew heater turned on"
+or "Dew heater turned off", and that output is displayed as a message.
+Remember that if <span class="fileName">toggleDewHeater.py</span> exits with a failure
+(i.e., a non-0 exit code)
+any error message it outputs will be displayed as an error message on the web page so you
+should make sure those error messages are useful.
+</p>
+<p>
+When you press the "Toggle dew heater" button
+it will update the <span class="fileName">/home/pi/dewheater/status.txt</span>
+data file by changing the "off" to "on" or vice versa.
+The rest of the data file remains the same.
+</p>
+
+<blockquote>Commands listed in a button's <b>Command</b> field must be executable by the
+web server running as group <b>www-data</b>,
+and must be in a directory that the web server has permissions to get to.
+<br>
+<code>chmod g+x /home/pi/dewheater/toggleDewHeater.py</code>
+will fix permissions on the Command.
+<br><br>
+Files written from a button's <b>Command</b> must be writable by <b>www-data</b>.
+<br>
+<code>chgrp www-data /home/pi/dewheater/status.txt;
+chmod g+w /home/pi/dewheater/status.txt</code>
+will fix permissions on the file.
+</blockquote>
+
+<h4>Test, test, test. Then test some more.</h4>
+To get a feel for what things look like and how the above actually works,
+copy/paste the above file examples to
+<span class="fileName">/home/pi/weather/weatherdata.txt</span>,
+<span class="fileName">/home/pi/dewheater/status.txt</span>,
+and <span class="fileName">/home/pi/dewheater/button.txt</span> files on your Pi.
+Then add
+<p>
+<pre>
+WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
+</pre>
+</p>
+to <span class="fileName">config.sh</span> via the WebUI's
+<span class="WebUIWebPage">Editor</span> page.
+Now, go to the <span class="WebUIWebPage">System</span> page in the WebUI
+and in addition to the normal information you should see the items you added.
+Refreshing the screen won't change those items since the data files are not being updated yet.
+
+<p>
+Clicking the "Toggle dew heater" button should display a red message at the top of the web page that says "'/home/pi/dewheater/toggleDewHeater.py' failed: sh: 1: /home/pi/dewheater/toggleDewHeater.py: not found".
+That's the output when the web page tried to execute '/home/pi/dewheater/toggleDewHeater.py' which doesn't exist.
+</p>
+
+<p>
+Try making changes to the three files you created.
+For example, change the <b>command</b> for the button to <code>echo 'Hello, world!'</code>.
+When you next click on the button you should see a green message at the top saying "Hello, world!".
+Now change it to "echo 'Hello, world!' ; exit 1".
+What happens now?
+</p>
+
+After you understand what's happening and why,
+start modifying your script(s) to put your own data into the required format.
+<hr class="separator">
+</details>
+
+<h2 id="Tips">Tips</h2>
+<details><summary></summary>
+<p>
+<ul>
+	<li>Do not store your data files in the <span class="fileName">allsky</span> directory
+		since they won't be saved when upgrading Allsky.
+		It's suggested to create a directory one level above
+		<span class="fileName">allsky</span> and put all your files there.
+		The <span class="shSetting">WEBUI_DATA_FILES</span> setting WILL be
+		saved when upgrading Allsky.
+</ul>
+</p>
+
+<p>
+<ul>
+	<li>HTML and CSS code can be applied to message, label, and data fields
+		to add color, bolding, etc.
+		That's how "<strong>Allsky is the</strong> &nbsp; &nbsp;
+		<span style="color: red; font-weight: bold;">BEST!!!</span>" was formatted
+		in the image at the top of this page.
+</ul>
+</p>
+
+<p>
+<ul>
+	<li>To see what the button colors look like, add the following lines to
+	<span class="fileName">/home/pi/dewheater/button.txt</span>:
+<pre>
+button	-	/home/pi/dewheater/toggleDewHeater.py	red     random	red
+button	-	/home/pi/dewheater/toggleDewHeater.py	green   random	green
+button	-	/home/pi/dewheater/toggleDewHeater.py	blue    random	blue
+button	-	/home/pi/dewheater/toggleDewHeater.py	yellow  random	yellow
+button	-	/home/pi/dewheater/toggleDewHeater.py	cyan    random	cyan
+button	-	/home/pi/dewheater/toggleDewHeater.py	white   random	white
+button	-	/home/pi/dewheater/toggleDewHeater.py	black   random	black
+</pre>
+</ul>
+</p>
+
+<hr class="separator">
+</details>
+
+<h2>Troubleshooting</h2>
+<details><summary></summary>
+<p>
+Below are some warning messages you may receive and how to resolve them.
+</p>
+
+
+<h4>Wrong line type</h4>
+<img allsky="true" src="systemAdditionsErrorWrongType.png" class="imgCenter" loading="lazy">
+If you get this message but the first field IS one of those words,
+the fields probably aren't separated by tabs.
+In the example above, the <span class="systemPageAdditionsLineType">data</span>
+line type is misspelled.
+
+
+<h4>Incorrect number of fields</h4>
+<img allsky="true" src="systemAdditionsErrorNumFields.png" class="imgCenter" loading="lazy">
+Look in the tables in the <a href="#Details">Details</a> section to see how many fields
+each line type has as as well as what the fields are.
+Also make sure ALL fields are separated by tabs.
+In the example above, "Dew heater status" is the message, and the "Data" field is missing (e.g., "ON" or "OFF").
+
+
+<h4>No tabs found</h4>
+<img allsky="true" src="systemAdditionsErrorNoTabs.png" class="imgCenter" loading="lazy">
+Fields in the lines must be separated by one or more <b>tabs</b>.
+Although you can't tell from the message, the field in the file are separated by spaces.
+
+
+<h4>No permissions</h4>
+If your scripts require <code>sudo</code> you'll need to allow the web server to execute the scripts.
+To do so:
+<ol class="minimalPadding">
+	<li>Create a file called, for example, <span class="fileName">myCommands_sudo.txt</span>
+		in the same directory as your other files.
+	<li>For each script that needs <code>sudo</code> add a line like:
+		<pre>www-data ALL=(ALL) NOPASSWD:<em>full_path_name_to_script</em></pre>
+		replacing <em>full_path_name_to_script</em> with the name of the script.
+		The web server runs as the <strong>www-data</strong> user;
+		these lines allow the web server to use <code>sudo</code> to run your scripts.
+	<li>Run:
+		<code>sudo &nbsp;cp &nbsp;myCommands_sudo.txt &nbsp;/etc/sudoers.d</code>
+	<li>The file should normally be recognized immediately; if not,
+		a reboot may be necessary.
+</ol>
+</details>
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

@@ -894,3 +894,9 @@ b, strong {
 	padding: 3px 6px;
 	font-size: 12px;
 }
+
+.systemPageAdditionsLineType {
+	font-weight: bold;
+	font-family: monospace;
+	color: green;
+}

@@ -160,7 +160,7 @@ function DisplayEditor()
 							}
 			   ?>
 						</select>
-						<button type="submit" class="btn btn-success" style="margin-bottom:5px" id="save_file"/>
+						<button type="submit" class="btn btn-primary" style="margin-bottom:5px" id="save_file"/>
 							<i class="fa fa-save"></i> Save Changes</button>
 					</div>
 				</div>

@@ -1,9 +1,5 @@
 <?php
 
-/**
-*
-*
-*/
 function DisplayWPAConfig(){
 	global $page;
 	$status = new StatusMessages();
@@ -191,7 +187,7 @@ function DisplayWPAConfig(){
 		<div class="panel-heading"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</div>
 		<!-- /.panel-heading -->
 		<div class="panel-body">
-			<p><?php $status->showMessages(); ?></p>
+			<?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>
 			<h4>Wi-Fi SSIDs</h4>
 
 			<form method="POST" action="?page=<?php echo $page ?>" name="wpa_conf_form">

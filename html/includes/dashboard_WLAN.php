@@ -1,9 +1,5 @@
 <?php
 
-/**
-*
-*
-*/
 function DisplayDashboard_WLAN($interface) {
 	global $page;
 
@@ -60,7 +56,7 @@ function DisplayDashboard_WLAN($interface) {
 		<div class="panel panel-primary">
 			<div class="panel-heading"><i class="fa fa-tachometer-alt fa-fw"></i> WLAN Dashboard   </div>
 			<div class="panel-body">
-				<p><?php $status->showMessages(); ?></p>
+				<?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>
 				<div class="row">
 					<div class="panel panel-default">
 						<div class="panel-body">

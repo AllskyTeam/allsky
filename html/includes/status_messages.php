@@ -20,9 +20,12 @@ class StatusMessages {
 			$apos = "&apos;";
 		else
 			$apos = "'";
+
 		$count = 0;
-		echo "<table width=$apos" . "100%$apos>";
 		foreach($this->messages as $message) {
+			if ($count === 0)
+				echo "<table width=$apos" . "100%$apos>";
+
 			if ($count++ >= 1) {
 				// space between messages
 				echo "<tr style=$apos" . "height: 5px$apos><td></td></tr>";
@@ -31,8 +34,18 @@ class StatusMessages {
 				$message = str_replace("'", "&apos;", $message);
 			echo $message;
 		}
-		echo "</table>";
+
+		if ($count > 0) echo "</table>";
+
 		if ( $clear ) $this->messages = array();
+	}
+
+	public function isMessage() {
+		$c = 0;
+		if (count($this->messages, $c) === 0)
+			return(false);
+		else
+			return(true);
 	}
 }
 ?>

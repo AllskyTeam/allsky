@@ -478,6 +478,14 @@ select {
 /* Error messages */
 .errorMsg, .errorMsgBig { color: red; }
 .errorMsgBig { font-size: 200%; }
+.errorMsgBox { border: 2px solid red; padding-left: 5px; }
+
+.EXPIRED { color: red; font-weight: bold; }
+.systemPageAdditionsLineType {
+	font-weight: bold;
+	font-family: monospace;
+	color: green;
+}
 
 .thumb { width: 100px; margin: 0 1px 1px 0; }
 .thumbBorder { border: 1px solid transparent; }
@@ -550,4 +558,12 @@ select {
 .viewer-close:before {
 	font-size: 4em !important;
 	background-image: none !important;
+}
+
+.cursorPointer {
+    cursor: pointer;
+}
+.live_container {
+	background-color: black;
+	margin-bottom: 15px;
 }

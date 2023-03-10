@@ -706,7 +706,11 @@ class ALLSKYOVERLAY:
                                 convertValue = int(value)
                             except ValueError:
                                 convertValue = float(value)
-                            value = format.format(convertValue)
+                            try:
+                                value = format.format(convertValue)
+                            except Exception as err:
+                                s.log(0, f"ERROR: Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
+                                value = ''
                         except ValueError as err:
                             s.log(0, f"ERROR: Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
 

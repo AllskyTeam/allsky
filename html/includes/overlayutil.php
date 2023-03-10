@@ -189,17 +189,26 @@ class OVERLAYUTIL
                 $count = 0;
                 foreach ($fields as $field) {
                     $fieldSplit = explode(" ", $field, 2);
-                    $value = trim($fieldSplit[1]);
-                    $value = iconv("UTF-8","ISO-8859-1//IGNORE",$value);
-                    $value = iconv("ISO-8859-1","UTF-8",$value);
-                    if (substr($fieldSplit[0],0,3) == "AS_") {
-                        $obj = (object) [
-                            'id' => $count,
-                            'name' => $fieldSplit[0],
-                            'value' => $value
-                        ];
-                        $fieldData[] = $obj;
-                        $count++;
+                    // Fields that have \n in them will be split and
+                    // the line after \n may not have any spaces.
+                    // Silently ignore these lines since they aren't errors.
+
+                    // TODO: Whatever creates this file should handle fields with \n.
+                    // If the line(s) after the \n have spaces in them,
+                    // they will be treated as fields, which they aren't.
+                    if (count($fieldSplit) > 1) {
+                        $value = trim($fieldSplit[1]);
+                        $value = iconv("UTF-8","ISO-8859-1//IGNORE",$value);
+                        $value = iconv("ISO-8859-1","UTF-8",$value);
+                        if (substr($fieldSplit[0],0,3) == "AS_") {
+                            $obj = (object) [
+                                'id' => $count,
+                                'name' => $fieldSplit[0],
+                                'value' => $value
+                            ];
+                            $fieldData[] = $obj;
+                            $count++;
+                        }
                     }
                 }
 

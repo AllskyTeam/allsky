@@ -99,7 +99,7 @@ function DisplayDHCPConfig() {
             </div>
         <!-- /.panel-heading -->
         <div class="panel-body">
-        <p><?php $status->showMessages(); ?></p>
+		<?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>
         <!-- Nav tabs -->
             <ul class="nav nav-tabs">
                 <li class="active"><a href="#server-settings" data-toggle="tab">Server settings</a>

@@ -108,17 +108,21 @@ function dataExpired($file, $seconds)
 function checkNumFields($num_required, $num_have, $type, $line_num, $line, $file)
 {
 	if ($num_required !== $num_have) {
-		echo "<p class='errorMsg errorMsgBox'>WARNING: Line $line_num in data file '$file' is invalid:";
-		echo "<br>&nbsp; &nbsp; $line";
-		echo "<br>'$type' lines should have $num_required fields total but there were $num_have fields.";
+		echo "<p class='errorMsg errorMsgBox'>WARNING: Line $line_num in data file '<strong>$file</strong>' is invalid:";
+		echo "<br>&nbsp; &nbsp; <code>$line</code>";
+		echo "<br><br><span class='systemPageAdditionsLineType'>$type</span>";
+		echo " lines should have $num_required fields total but there were only $num_have fields.";
 		if ($num_have < $num_required) {
-			if ($num_have === 2)
+			if ($num_have === 2) {
 				// checkNumFields() is only called once we know the first field ($type),
 				// so we know there is at least one TAB on the line.
 				// If there are only 2 fields, that means everthing after $type is missing a tab.
-				echo "<br>There are NO tabs on the line after '$type' - all fields must be TAB-separated.";
-			else
+				echo "<br>There are NO tabs on the line after";
+				echo " <span class='systemPageAdditionsLineType>$type</span>";
+				echo " - all fields must be TAB-separated.";
+			} else {
 				echo "<br>Make sure all fields are TAB-separated.";
+			}
 		} else {
 			echo "<br>There are too many fields on the line.";
 		}
@@ -172,17 +176,22 @@ function displayUserData($file, $displayType)
 
 	if (! file_exists($file)) {
 		if ($num_calls === 1)
-			echo "<p class='errorMsg'>WARNING: data file '$file' does not exist.</p>";
-		return(false);
+			$eMsg = "<p class='errorMsg'>WARNING: data file '<strong>$file</strong>' does not exist.</p>";
+		else
+			$eMsg = "";
+		return($eMsg);
 	}
+
+	$eMsg = "";		// returned error message, if any
 	$handle = fopen($file, "r");
 	for ($i=1; ; $i++) {		// for each line in $file
 		$line = fgets($handle);
 		if (! $line)
-			break;
-		$line = trim($line);
+			break;				// EOF
+
 		// Skip blank and comment lines
-		if ($line === "" || substr($line, 0, 1) === "#") continue;
+		$line = trim($line);
+		if ($line === "" || $line === "\n" || substr($line, 0, 1) === "#") continue;
 
 		// Allow fields to be separated by multiple tabs to make them easier to read,
 		// so replace all multiple tabs with one tab.
@@ -191,22 +200,25 @@ function displayUserData($file, $displayType)
 		$data = explode($tab, $line);
 		$num = count($data);
 		if ($num === 0) {
-			return(false);
+			$eMsg = "<p class='errorMsg errorMsgBox'>WARNING: Line $i in '<strong>$file</strong>' contains only tab(s)!";
+			return($eMsg);
 		}
 
 		$type = $data[0];
 		if ($type !== "data" && $type !== "progress" && $type !== "button") {
 			if ($num_calls === 1) {
-				echo "<p class='errorMsg errorMsgBox'>WARNING: Line $i in '$file' is invalid:";
-				echo "<br>&nbsp; &nbsp; $line";
-				echo "<br>The first field should be <span class='systemPageAdditionsLineType'>data</span>,";
-				echo " <span class='systemPageAdditionsLineType'>progress</span>,";
-				echo " or <span class='systemPageAdditionsLineType'>button</span>.";
-				if (! strstr($type, " "))
-					echo "<br><br>Make sure the fields are TAB-separated.";
-				else
-					echo "<br><br>The fields don't appear to be TAB-separated.";
-				echo "</p>";
+				$eMsg .= "<p class='errorMsg errorMsgBox'>WARNING: Line $i in '<strong>$file</strong>' is invalid:";
+				$eMsg .= "<br>&nbsp; &nbsp; <code>$line</code>";
+				$eMsg .= "<br><br>";
+				if (strstr($line, $tab) === false) {
+					$eMsg .= "The fields are not TAB-separated.";
+				} else {
+					$eMsg .= "The first field is <span class='systemPageAdditionsLineType'>$type</span>";
+					$eMsg .= " but should be <span class='systemPageAdditionsLineType'>data</span>,";
+					$eMsg .= " <span class='systemPageAdditionsLineType'>progress</span>,";
+					$eMsg .= " or <span class='systemPageAdditionsLineType'>button</span>.";
+				}
+				$eMsg .= "</p>";
 			}
 		} else if ($type === "data" && $displayType === $type) {
 			if (checkNumFields(4, $num, $type, $i, $line, $file)) {
@@ -237,6 +249,7 @@ function displayUserData($file, $displayType)
 					$u = "user_$num_buttons";
 // TODO: does runCommand need to be run as ALLSKY_OWNER ?
 					if (isset($_POST[$u])) {
+						echo "<script>console.log('Running $action');</script>\n";
 						runCommand($action, $message, "success");
 					}
 				} else {	// "button-button"
@@ -248,7 +261,7 @@ function displayUserData($file, $displayType)
 	}
 	fclose($handle);
 	$num_buttons = 0;
-	return(true);
+	return($eMsg);
 }
 
 /**
@@ -416,17 +429,25 @@ function DisplaySystem()
 					if (isset($_POST['service_stop'])) {
 						runCommand("sudo /bin/systemctl stop allsky", "Allsky stopped", "success");
 					}
-					// Optional user-specified buttons.
+
+					$e = "";
+					// Execute optional user-specified button actions.
+					// This needs to be done here in case the command(s) return a status message
+					// which is displayed below.
 					for ($i=0; $i < $user_data_files_count; $i++) {
-						displayUserData($user_data_files[$i], "button-action");
+						$e .= displayUserData($user_data_files[$i], "button-action");
 					}
+
+					if ($status->isMessage()) 
+						echo "<P>" . $status->showMessages() . "</p>";
 					?>
-					<p><?php $status->showMessages(); ?></p>
 
 					<div class="row">
 						<div class="panel panel-default">
 							<div class="panel-body">
 								<h4>System Information</h4>
+								<?php if ($e !== "") echo "$e"; // display any error msg ?>
+
 								<table>
 								<!-- <colgroup> doesn't seem to support "width", so set on 1st line -->
 								<tr><td style="padding-right: 90px;">Hostname</td><td><?php echo $hostname ?></td></tr>
@@ -436,11 +457,15 @@ function DisplaySystem()
 									  else $x = "$dt ($df free)";
 								?>
 								<tr ><td>SD Card</td><td><?php echo "$x" ?></td></tr>
-								<?php // Optional user-specified data.
+								<?php
+									// Optional user-specified progress bars.
+									$e = "";
 									for ($i=0; $i < $user_data_files_count; $i++) {
-										displayUserData($user_data_files[$i], "data");
+										$e .= displayUserData($user_data_files[$i], "data");
 									}
+									if ($e !== "") echo "$e";
 								?>
+
 								<tr><td colspan="2" style="height: 5px"></td></tr>
 								<!-- Treat Throttle Status like a full-width progress bar -->
 								<?php displayProgress("", "Throttle Status", $throttle, 0, 100, 100, -1, -1, $throttle_status); ?>
@@ -453,14 +478,20 @@ function DisplaySystem()
 								<tr><td colspan="2" style="height: 5px"></td></tr>
 								<?php 
 									if ($dp === -1) {
-										echo "<tr><td>Disk Usage</td><td><span class='errorMsg'>ERROR: unable to read '$top_dir' to get disk usage.</span></td></tr>";
+										echo "<tr>";
+										echo "<td>Disk Usage</td>";
+										echo "<td><span class='errorMsg'>ERROR: unable to read '<strong>$top_dir</strong>' to get disk usage.</span></td>";
+										echo "</tr>";
 									} else {
 										displayProgress("", "Disk Usage", "$dp%", 0, $dp, 100, 90, 70, "");
-										// Optional user-specified progress bars.
-										for ($i=0; $i < $user_data_files_count; $i++) {
-											displayUserData($user_data_files[$i], "progress");
-										}
 									}
+
+									// Optional user-specified progress bars.
+									$e = "";
+									for ($i=0; $i < $user_data_files_count; $i++) {
+										$e .= displayUserData($user_data_files[$i], "progress");
+									}
+									if ($e !== "") echo "$e";
 								?>
 								</table>
 							</div><!-- /.panel-body -->
@@ -481,9 +512,11 @@ function DisplaySystem()
 						<button type="submit" class="btn btn-warning" name="system_shutdown"/><i class="fa fa-plug"></i> Shutdown Raspberry Pi</button>
 					</div>
 					<?php // Optional user-specified data.
+						$e = "";
 						for ($i=0; $i < $user_data_files_count; $i++) {
-							displayUserData($user_data_files[$i], "button-button");
+							$e .= displayUserData($user_data_files[$i], "button-button");
 						}
+						if ($e !== "") echo "$e";
 					?>
 					</form>
 					</div><!-- /.row -->

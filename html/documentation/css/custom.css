@@ -559,3 +559,11 @@ select {
 	font-size: 4em !important;
 	background-image: none !important;
 }
+
+.cursorPointer {
+    cursor: pointer;
+}
+.live_container {
+	background-color: black;
+	margin-bottom: 15px;
+}

@@ -92,7 +92,7 @@ function DisplayOverlay($image_name)
                                                 </div>
                                             </li>
                                             <li>
-                                                <div class="btn btn-lg navbar-btn" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Available Variables"><i class="fa-regular fa-rectangle-list"></i></div>
+                                                <div class="btn btn-lg navbar-btn" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
                                             </li>
                                             <li>
                                                 <div class="btn btn-lg navbar-btn" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check"></i></div>
@@ -223,7 +223,7 @@ function DisplayOverlay($image_name)
                     <div class="modal-content">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <h4 class="modal-title">Available Variables</h4>
+                            <h4 class="modal-title">Variable Manager</h4>
                         </div>
                         <div class="modal-body">
                             <ul class="nav nav-tabs" role="tablist">

@@ -15,7 +15,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe
 		$s =  number_format($daydelay);
 		$msg =  "Daytime images updated every $s seconds,";
 		$s =  number_format($nightdelay);
-		$msg .= " nighttime every %s seconds";
+		$msg .= " nighttime every $s seconds";
 		$status->addMessage("$msg", "message", true);
 	}
 ?>

@@ -220,7 +220,7 @@ body {
 }
 #sidebar .Sidebar ol,
 #sidebar .Sidebar ul {
-	padding-left: 30px;
+	padding-left: 20px;
 }
 #sidebar .Sidebar ul li {
 	border-bottom: 0;
@@ -772,6 +772,9 @@ b, strong {
 .markdown-body .minimalPadding li {
 	margin-top: 0;
 }
+.markdown-body .morePadding {
+	margin-top: 1.75em;
+}
 .nowrap {
 	white-space: nowrap;
 }
@@ -893,4 +896,19 @@ b, strong {
 .btn-small {
 	padding: 3px 6px;
 	font-size: 12px;
+}
+
+.markdown-body .systemPageAdditionsLineType {
+	font-weight: bold;
+	font-family: monospace;
+	font-size: 105%;
+	color: #00c900;
+}
+.markdown-body .systemPageAdditionsLineTypeHeader {
+	text-align: center;
+	border-bottom: 1px solid black;
+}
+.EXPIRED {
+	color: red;
+	font-weight: bold;
 }

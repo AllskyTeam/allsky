@@ -1,9 +1,5 @@
 <?php
 
-/**
-*
-*
-*/
 function DisplayDashboard_LAN($interface) {
 	global $page;
 
@@ -26,7 +22,7 @@ function DisplayDashboard_LAN($interface) {
 	<div class="panel panel-primary">
 		<div class="panel-heading"><i class="fa fa-network-wired fa-fw"></i> LAN Dashboard</div>
 		<div class="panel-body">
-			<p><?php $status->showMessages(); ?></p>
+			<?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>
 			<div class="row">
 				<div class="panel panel-default">
 					<div class="panel-body">

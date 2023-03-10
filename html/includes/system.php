@@ -108,7 +108,7 @@ function dataExpired($file, $seconds)
 function checkNumFields($num_required, $num_have, $type, $line_num, $line, $file)
 {
 	if ($num_required !== $num_have) {
-		echo "<p style='color: red; border: 1px solid red;'>WARNING: Line $line_num in data file '$file' is invalid:";
+		echo "<p class='errorMsg errorMsgBox'>WARNING: Line $line_num in data file '$file' is invalid:";
 		echo "<br>&nbsp; &nbsp; $line";
 		echo "<br>'$type' lines should have $num_required fields total but there were $num_have fields.";
 		if ($num_have < $num_required) {
@@ -172,7 +172,7 @@ function displayUserData($file, $displayType)
 
 	if (! file_exists($file)) {
 		if ($num_calls === 1)
-			echo "<p style='color: red'>WARNING: data file '$file' does not exist.</p>";
+			echo "<p class='errorMsg'>WARNING: data file '$file' does not exist.</p>";
 		return(false);
 	}
 	$handle = fopen($file, "r");
@@ -184,17 +184,24 @@ function displayUserData($file, $displayType)
 		// Skip blank and comment lines
 		if ($line === "" || substr($line, 0, 1) === "#") continue;
 
-		$data = explode('	', $line);		// tab-separated
+		// Allow fields to be separated by multiple tabs to make them easier to read,
+		// so replace all multiple tabs with one tab.
+		$tab = "	";	// contains a tab
+		$line = preg_replace("/[\t][\t]+/", $tab, $line);
+		$data = explode($tab, $line);
 		$num = count($data);
 		if ($num === 0) {
 			return(false);
 		}
+
 		$type = $data[0];
 		if ($type !== "data" && $type !== "progress" && $type !== "button") {
 			if ($num_calls === 1) {
-				echo "<p style='color: red; border: 1px solid red;'>WARNING: Line $i in '$file' is invalid:";
+				echo "<p class='errorMsg errorMsgBox'>WARNING: Line $i in '$file' is invalid:";
 				echo "<br>&nbsp; &nbsp; $line";
-				echo "<br>The first field should be 'data', 'progress', or 'button'.";
+				echo "<br>The first field should be <span class='systemPageAdditionsLineType'>data</span>,";
+				echo " <span class='systemPageAdditionsLineType'>progress</span>,";
+				echo " or <span class='systemPageAdditionsLineType'>button</span>.";
 				if (! strstr($type, " "))
 					echo "<br><br>Make sure the fields are TAB-separated.";
 				else
@@ -205,7 +212,7 @@ function displayUserData($file, $displayType)
 			if (checkNumFields(4, $num, $type, $i, $line, $file)) {
 				list($type, $timeout_s, $label, $data) = $data;
 				if (dataExpired($file, $timeout_s))
-					echo "<tr class='x' style='color: red; font-weight: bold;'><td>$label (EXPIRED)</td><td>$data</td></tr>\n";
+					echo "<tr class='x EXPIRED'><td>$label (EXPIRED)</td><td>$data</td></tr>\n";
 				else
 					echo "<tr class='x'><td>$label</td><td>$data</td></tr>\n";
 			}
@@ -214,7 +221,7 @@ function displayUserData($file, $displayType)
 				list($type, $timeout_s, $label, $data, $min, $current, $max, $danger, $warning) = $data;
 				if (dataExpired($file, $timeout_s)) {
 					$label = $label . " (EXPIRED)";
-					$x = "style='color: red; font-weight: bold;'";
+					$x = "class='EXPIRED'";
 				} else {
 					$x = "";
 				}
@@ -229,8 +236,9 @@ function displayUserData($file, $displayType)
 				if ($displayType === "button-action") {
 					$u = "user_$num_buttons";
 // TODO: does runCommand need to be run as ALLSKY_OWNER ?
-					if (isset($_POST[$u]))
+					if (isset($_POST[$u])) {
 						runCommand($action, $message, "success");
+					}
 				} else {	// "button-button"
 					if ($fa_icon !== "-") $fa_icon = "<i class='fa fa-$fa_icon'></i>";
 					echo "<button type='submit' class='btn btn-$btn_color' name='user_$num_buttons'/>$fa_icon $btn_label</button>\n";
@@ -358,7 +366,7 @@ function DisplaySystem()
 	// cpu load
 	$secs = 2; $q = '"';
 	$cpuload = exec("(grep -m 1 'cpu ' /proc/stat; sleep $secs; grep -m 1 'cpu ' /proc/stat) | awk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf($q%.0f$q, (($2+$4-u1) * 100 / (t-t1))); }'");
-	if ($cpuload < 0 || $cpuload > 100) echo "<p style='color: red; font-size: 125%;'>Invalid cpuload value: $cpuload</p>";
+	if ($cpuload < 0 || $cpuload > 100) echo "<p class='errorMsgBig'>Invalid cpuload value: $cpuload</p>";
 
 	// temperature
 	$temperature = round(exec("awk '{print $1/1000}' /sys/class/thermal/thermal_zone0/temp"), 2);
@@ -408,7 +416,7 @@ function DisplaySystem()
 					if (isset($_POST['service_stop'])) {
 						runCommand("sudo /bin/systemctl stop allsky", "Allsky stopped", "success");
 					}
-					// Optional user-specified data.
+					// Optional user-specified buttons.
 					for ($i=0; $i < $user_data_files_count; $i++) {
 						displayUserData($user_data_files[$i], "button-action");
 					}
@@ -448,7 +456,7 @@ function DisplaySystem()
 										echo "<tr><td>Disk Usage</td><td><span class='errorMsg'>ERROR: unable to read '$top_dir' to get disk usage.</span></td></tr>";
 									} else {
 										displayProgress("", "Disk Usage", "$dp%", 0, $dp, 100, 90, 70, "");
-										// Optional user-specified data.
+										// Optional user-specified progress bars.
 										for ($i=0; $i < $user_data_files_count; $i++) {
 											displayUserData($user_data_files[$i], "progress");
 										}

@@ -29,31 +29,29 @@ This page describes how to install and upgrade the Allsky Website.
 It can be installed on your Pi, on a remote server, or on both.
 When installing on both, install on your Pi first and make sure everything works,
 then install on the remote server.
-
-<blockquote>
+</p>
+<p>
 Make sure you have Allsky configured and working the way you want it
 since some of its settings are also used by the Website
 and you don't want to have to change them twice.
-</blockquote>
 </p>
 
 <h2>Install on a Pi</h2>
 <details><summary></summary>
 <p>
-If you have an <b>existing</b> version of the Allsky Website on your Pi,
+If you have an <b>existing</b> Allsky Website on your Pi,
 see the section below, otherwise
 skip to the <a href="#installation-local">Installing the Website</a> section.
 </p>
 
-<h4>Pre-installation for existing Websites</h4>
+<h4>Steps for existing Websites</h4>
 <p>
 The location of the prior website depends upon its version.
 In both cases the directory name is <span class="fileName">allsky</span>.
 The parent directory is:
-<ul>
-	<li>Website version v2022.03.01+ or before:
-		<span class="fileName">/var/www/html</span>
-	<li>Newer versions: <span class="fileName">~/allsky/html</span>
+<ul class="minimalPadding">
+	<li><span class="fileName">/var/www/html</span> for Website version <b>v2022.03.01+</b> or before.
+	<li><span class="fileName">~/allsky/html</span> for newer versions.
 </ul>
 </p>
 
@@ -65,7 +63,7 @@ then continue to the <a href="#installation-local">Installing the Website</a> se
 	<br>
 	The Website installation checks for an old version in the locations above,
 	and if found, prompts if you want to upgrade it.
-	There is nothing special you need to do.
+	You don't need to do anything special.
 
 <li><b>Save the old version but don't use it.</b>
 	<br>
@@ -77,7 +75,7 @@ mv allsky allsky-SAVED</pre>
 <li><b>Delete the old version.</b>
 	<br>
 	Only select this option if you're sure you don't want any saved
-	images, videos, keograms, startrails, or settings file(s).
+	images, videos, keograms, startrails, or settings files.
 <pre>
 cd <i>old_version_parent_directory</i>     <span class="shellComment"># One of the locations above</span>
 rm -fr allsky</pre>
@@ -96,6 +94,19 @@ website/install.sh</pre>
 <p>
 The installation won't prompt for anything, and will display minimal output.
 </p>
+
+<p>
+After installation do the following:
+<ul class="minimalPadding">
+	<li>Update the <span class="fileName">config.sh</span> file
+		via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows which files
+		to copy to the Website (e.g., startrails, timelapse, etc.).
+	<li>Update the <span class="fileName">ftp-settings.sh</span> file
+		via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows
+		where to copy the files to.
+</ul>
+
+<hr class="separator">
 </details>
 
 
@@ -103,27 +114,25 @@ The installation won't prompt for anything, and will display minimal output.
 <h2>Install on a remote server</h2>
 <details><summary></summary>
 <p>
-Many people have their Pi behind a firewall where it's not accessible on the Internet,
+Most people have their Pi behind a firewall where it's not accessible on the Internet,
 so they install the Allsky Website on a different
 machine that <u>is</u> accessible on the Internet.
+<blockquote>
+If you want to make your Pi available on the Internet, see
+<a href="https://medium.com/swlh/host-a-raspberry-pi-web-server-on-the-internet-89786287db77">these instructions</a>.
+<br>
+<strong>Be careful if you do this - if done incorrectly your Pi may be insecure.</strong>
+</blockquote>
 </p>
 <p>
-In order to install the Website on a remote server,
-Allsky must be installed and working on your Pi.
-You can then install the Website on a remote machine by doing the following:
+Prior to installing the Website on a remote server,
+make sure Allsky is working on your Pi, then do the following:
 <ol>
 <li>On the remote server:
 	<ul class="minimalPadding">
 	<li>Create an <span class="fileName">allsky</span> directory to hold the Website.
-		<br>
-		<blockquote>
-		Keep track of where on your server you created
-		<span class="fileName">allsky</span> - you will need that information later
-		when you tell Allsky where to upload the images.
-		For example, when you FTP to the server,
-		are you in the root directory ("/") or further down?
-		It is <b>very</b> important that you get this correct.
-		</blockquote>
+		<strong>Keep track of where on your server you created the directory</strong>
+		- you will need that information later when you tell Allsky where to upload the images.
 	</ul>
 <li>Go to the <a href="https://github.com/thomasjacquin/allsky-website">allsky-website GitHub page</a>.
 <li>Click the <img allsky="true" src="Code.png" alt="Code" class="buttonIcon" loading="lazy">
@@ -133,24 +142,21 @@ You can then install the Website on a remote machine by doing the following:
 	(but not the directory itself) to the
 	<span class="fileName">allsky</span> directory on the remote server.
 <li>Do <b>not</b> configure the Website yet - you'll do that below.
-<li>Update the <span class="fileName">config.sh</span> and
-	<span class="fileName">ftp-settings.sh</span> files
-	via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows which file(s)
-	to upload to the remote server and where to upload them.
 <li>On the Pi:
 	<ul class="minimalPadding">
-	<li>Make sure the Pi can upload a file.
-		See the
-		<a allsky="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting uploads</a>
-		page on how to do a test upload and debug any problems.
-		<blockquote>
-		If the test upload fails,
-		do NOT continue with the next step until you can upload a file.
-		</blockquote>
-	<li>Run <code>~/allsky/website/install.sh --remote</code>.
+	<li>Update the <span class="fileName">config.sh</span> file
+		via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows which files
+		to upload (e.g., startrails, timelapse, etc.).
+	<li>Update the <span class="fileName">ftp-settings.sh</span> file
+		via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows
+		where on the remote server to upload the files to.
+	<li>Run <code>cd ~/allsky;  website/install.sh --remote</code>.
 		This will upload a default configuration file to your server,
 		leaving the master copy on the Pi.
 		<ul>
+		<li>If the upload fails, see the
+			<a allsky="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting uploads</a>
+			page on how to debug the problem.
 		<li>If you also have an Allsky Website on your Pi,
 			the remote configuration file will be identical to the local one with the
 			exception of the <span class="editorSetting">imageName</span> and
@@ -158,8 +164,7 @@ You can then install the Website on a remote machine by doing the following:
 			which will be configured for a remote Website.
 			<br>
 			If you want the remote configuration to differ from the local one
-			(for example, you want a background image or link to
-			a personal page on the remote Website),
+			(for example, to add a background image to the remote Website),
 			edit the remote configuration file - see the next step.
 		</ul>
 	<li>Configure the remote Website:
@@ -171,21 +176,21 @@ You can then install the Website on a remote machine by doing the following:
 				<a allsky="true" href="/documentation/settings/allskyWebsite.html">this page</a>
 				for details on the Website settings.
 		</ul>
-		<blockquote>
-		Whenever you want to update the remote Website's configuration your <b>must</b>
-		edit it via WebUI (follow the first two steps above).
+		<blockquote class="warning">
+		Whenever you update the remote Website's configuration you <strong>must</strong>
+		do so via WebUI (follow the first two steps above).
 		Do NOT edit the configuration file directly on the remote server.
 		</blockquote>
 	</ul>
 <li>Your remote server is now ready.
-<li>Give your family and friends the URL to your Allsky Website so they can enjoy your pictures!
+<li>Give your family and friends the URL to your Allsky Website so they can enjoy your images!
 </ol>
 
 
 <h3>Remote Website Requirements</h3>
 The remote server needs to support the following:
 <ul class="minimalPadding">
-	<li>PHP version 7 or 8.
+	<li>PHP version 7 or newer.
 	<li>The <code>imagecreatefromjpeg</code> function in PHP to create thumbnails
 		of the startrails and keogram files.
 		If that function does not exist (which is rare),
@@ -194,31 +199,24 @@ The remote server needs to support the following:
 	<li>The <code>ffmpeg</code> command and <code>exec</code> function in PHP
 		to create thumbnails of the timelapse videos.
 		<blockquote>
-		Many hosting solutions don't support those commands for security reasons.
-		If <code>ffmpeg</code> or <code>exec</code> do not work,
-		set <span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span> to "true"
+		Most hosting solutions don't support those commands for security reasons.
+		In that case, set <span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span> to "true"
 		(and <span class="shSetting">TIMELAPSE_MINI_UPLOAD_THUMBNAIL</span> to "true"
 		if you are creating mini timelapses) in <span class="fileName">config.sh</span>.
 		Failure to set those variables will result in "No thumbnail" messages when
 		viewing videos.
-		</blockquote>
 		Everything else will still work.
+		</blockquote>
 </ul>
+<hr class="separator">
 </details>
 
 
 <h2>Post installation - local and remote</h2>
 <p>
-After installation of the Website you'll need to change some
-<a allsky="true" href="/documentation/settings/allsky.html">Allsky Settings</a>
-to specify what to upload to the Website, for example, timelapse videos,
-and where to upload them.
-See the "Editor Page" section of the link above.
-</p>
-<p>
-You'll also need to change some
+Change
 <a allsky="true" href="/documentation/settings/allskyWebsite.html">Allsky Website Settings</a>
-so the Website looks and behaves like you want it to.
+as desired so the Website looks and behaves like you want it to.
 Changes to both local Websites and remote Websites are both done via the WebUI.
 </p>
 
@@ -228,9 +226,13 @@ If your prior version of the Allsky Website was in
 note that there is only one configuration file in the new Website
 (<span class="fileName">configuration.json</span>)
 that replaces the two older files.
-<br>However, if you have both a local and a remote Website,
-they will each have their own configuration file,
-both accessible via the WebUI's <span class="WebUIWebPage">Editor</span> page.
+</blockquote>
+<blockquote>
+If you have both a local and a remote Website,
+they each have their own configuration file which is
+accessible via the WebUI's <span class="WebUIWebPage">Editor</span> page.
+They are NOT automatically kept in sync so if you change something, for example,
+the lens, you'll need to change it in both files.
 </blockquote>
 
 </details>

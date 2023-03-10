@@ -436,7 +436,7 @@ body {
 	text-align: right;
 }
 .markdown-body code,.markdown-body tt {
-	padding: 0 .2em 0 .4em;
+	padding: 0 .2em 0 .2em;
 	margin: 0;
 	font-size: 85%;
 	color: inherit;
@@ -772,6 +772,9 @@ b, strong {
 .markdown-body .minimalPadding li {
 	margin-top: 0;
 }
+.markdown-body .morePadding {
+	margin-top: 1.75em;
+}
 .nowrap {
 	white-space: nowrap;
 }
@@ -895,8 +898,17 @@ b, strong {
 	font-size: 12px;
 }
 
-.systemPageAdditionsLineType {
+.markdown-body .systemPageAdditionsLineType {
 	font-weight: bold;
 	font-family: monospace;
-	color: green;
+	font-size: 105%;
+	color: #00c900;
+}
+.markdown-body .systemPageAdditionsLineTypeHeader {
+	text-align: center;
+	border-bottom: 1px solid black;
+}
+.EXPIRED {
+	color: red;
+	font-weight: bold;
 }

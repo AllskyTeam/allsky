@@ -436,7 +436,7 @@ body {
 	text-align: right;
 }
 .markdown-body code,.markdown-body tt {
-	padding: 0 .2em 0 .4em;
+	padding: 0 .2em 0 .2em;
 	margin: 0;
 	font-size: 85%;
 	color: inherit;

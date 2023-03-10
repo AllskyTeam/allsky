@@ -218,7 +218,7 @@ $settings_file = "";
 $force = false;		// force creation of settings file even if it already exists?
 
 foreach ($options as $opt => $val) {
-	if ($debug > 0) echo "   Argument $opt = $val\n";
+	if ($debug > 1) echo "   Argument $opt = $val\n";
 
 	if ($opt === "debug")
 		$debug++;
@@ -388,6 +388,10 @@ if ($settings_file !== "") {
 	// e.g., "settings_ZWO_ASI123.json"
 	$cameraSpecificSettingsFile = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
 	$fullName = dirname($settings_file) . "/$cameraSpecificSettingsFile";
+	if ($debug > 0) {
+		$e =  file_exists($fullName) ? "yes" : "no";
+		echo "Camera-specific settings file exists ($e): $fullName.\n";
+	}
 
 	// If there isn't a camera-specific file, create one.
 	if ($force || ! file_exists($fullName)) {

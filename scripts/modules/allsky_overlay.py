@@ -1047,9 +1047,17 @@ class ALLSKYOVERLAY:
         return True
 
     def _convertLatLon(self, input):
-        """ Converts the lat and lon from the all sky config to decimal notation i.e. 0.2E becomes -0.2"""
-        multiplier = 1 if input[-1] in ['N', 'E'] else -1
-        return multiplier * sum(s.float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
+        """ lat and lon can either be a positive or negative float, or end with N, S, E,or W. """
+        """ If in  N, S, E, W format, 0.2E becomes -0.2 """
+        nsew = 1 if input[-1] in ['N', 'S', 'E', 'W'] else 0
+        if nsew:
+            multiplier = 1 if input[-1] in ['N', 'E'] else -1
+            ret = multiplier * sum(s.float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
+        else:
+            # TODO: do we just return the number?
+            ret = float(input)
+        # s.log(0, "XXXXXXX _convertLatLon() returning={}".format(ret))
+        return ret
 
     def _fetchTleFromCelestrak(self, noradCatId, verify=True):
 

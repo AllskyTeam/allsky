@@ -196,6 +196,8 @@ FULL_FILENAME="$(settings ".filename")"
 EXTENSION="${FULL_FILENAME##*.}"
 FILENAME="${FULL_FILENAME%.*}"
  
+CAMERA_MODEL="$(settings '.cameraModel')"
+
 # So scripts can conditionally output messages.
 ALLSKY_DEBUG_LEVEL="$(settings '.debuglevel')"
 ALLSKY_VERSION="XX_ALLSKY_VERSION_XX"	# Updated during installation

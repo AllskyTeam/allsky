@@ -1927,6 +1927,7 @@ class OEUIMANAGER {
 
     #createFormatHelpWindow() {
         $('#formatlisttable').DataTable().destroy();
+        $('#formatlisttable').removeClass('hidden');
         $(document).off('click', '.oe-format-replace');
         $(document).off('click', '.oe-format-add');
         $('#formatlisttable').DataTable({

@@ -46,12 +46,20 @@ function convertURL() {
 	allTags = document.getElementsByTagName("*");
 	for (var i = 0; i < allTags.length; i++) {
 		var elmnt = allTags[i];
+
+		if (elmnt.getAttribute("external")) {
+			elmnt.innerHTML += " <i class='fa fa-external-link-alt fa-fw'></i>";
+			if (debug) console.log("elmnt=", elmnt);
+
+			elmnt["target"] = "_blank";
+			elmnt["title"] = "Opens in new tab/window";
+		}
+
 		/*
 			Search for elements with an "allsky" attribute which means
 			we need to update the URL.
 		*/
 		if (! elmnt.getAttribute("allsky")) continue;	// "allsky" not defined - ignore tag
-//		elmnt.removeAttribute("allsky");	// so it doesn't get processed more than once
 
 		var url = null;
 		var preURL;

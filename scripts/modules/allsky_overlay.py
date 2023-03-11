@@ -48,10 +48,17 @@ metaData = {
         "night"
     ],
     "arguments":{
+        "formaterrortext": "??",
         "suntimeformat": "",
         "nonighttext": ""
     },
     "argumentdetails": {
+            "formaterrortext" : {
+            "required": "false",
+            "tab": "Overlays",
+            "description": "Format Error Text",
+            "help": "Value to place in a variable when the provided format is invalid. defaults to ??"
+        },
         "suntimeformat" : {
             "required": "false",
             "tab": "Sun",
@@ -95,8 +102,9 @@ class ALLSKYOVERLAY:
     _enableSkyfield = True
     _suntimeformat = ""
     _nonighttext = ""
+    _formaterrortext = ""
     
-    def __init__(self, suntimeformat, nonighttext): 
+    def __init__(self, suntimeformat, nonighttext, formaterrortext): 
         self._overlayConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYCONFIGFILE)  
         fieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYFIELDSFILE)
         self._OVERLAYTMP = os.path.join(tempfile.gettempdir(), 'overlay')
@@ -123,6 +131,8 @@ class ALLSKYOVERLAY:
             self._suntimeformat = suntimeformat
         else:
             self._suntimeformat = s.getSetting("timeformat")
+            
+        self._formaterrortext = formaterrortext;
 
     def _dumpDebugData(self):
         debugFilePath = os.path.join(s.getEnvironmentVariable('ALLSKY_TMP'),'overlaydebug.txt')
@@ -711,7 +721,7 @@ class ALLSKYOVERLAY:
                                 value = format.format(convertValue)
                             except Exception as err:
                                 s.log(0, f"ERROR: Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
-                                value = ''
+                                value = self._formaterrortext
                         except ValueError as err:
                             s.log(0, f"ERROR: Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
 
@@ -1231,11 +1241,14 @@ def overlay(params, event):
     if enabled == 1:
         suntimeformat = ""
         nonighttext = ""
+        formaterrortext = "??"
         if "suntimeformat" in params:
             suntimeformat = params["suntimeformat"]
         if "nonighttext" in params:            
-            nonighttext = params["nonighttext"]        
-        annotater = ALLSKYOVERLAY(suntimeformat, nonighttext)
+            nonighttext = params["nonighttext"]
+        if "formaterrortext" in params:            
+            formaterrortext = params["formaterrortext"]                    
+        annotater = ALLSKYOVERLAY(suntimeformat, nonighttext, formaterrortext)
         annotater.annotate()
         result = "Overlay Complete"
     else:

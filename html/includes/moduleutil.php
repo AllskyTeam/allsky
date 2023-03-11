@@ -261,6 +261,13 @@ class MODULEUTIL
             $moduleData = $allModules[$moduleName];
 
             if (isset($data->metadata->arguments)) {
+                if (isset($moduleData['metadata']->arguments)) {
+                    foreach ((array)$moduleData['metadata']->arguments as $argument=>$value) {
+                        if (!isset($data->metadata->arguments->$argument)){
+                            $data->metadata->arguments->$argument = $value;
+                        }
+                    }
+                }
                 $moduleData["metadata"]->arguments = $data->metadata->arguments;
             } else {
                 $moduleData["metadata"]->arguments = [];

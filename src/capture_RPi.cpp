@@ -45,7 +45,7 @@ bool bMain					= true;
 bool bDisplay				= false;
 std::string dayOrNight;
 int numErrors				= 0;					// Number of errors in a row
-int maxErrors				= 2;					// Max number of errors in a row before we exit
+int maxErrors				= 4;					// Max number of errors in a row before we exit
 
 bool gotSignal				= false;				// did we get a SIGINT (from keyboard), or SIGTERM/SIGHUP (from service)?
 int iNumOfCtrl				= NOT_SET;				// Number of camera control capabilities

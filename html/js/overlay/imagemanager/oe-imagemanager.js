@@ -49,7 +49,7 @@
                         <div class="collapse navbar-collapse" id="oe-main-navbar">\
                             <ul class="nav navbar-nav">\
                                 <li>\
-                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Add selected image">\
+                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Selected Image">\
                                         <div class="btn btn-lg navbar-btn disabled" id="' + plugin.addId + '"><i class="fa-solid fa-image"></i></div>\
                                     </div>\
                                 </li>\

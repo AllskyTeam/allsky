@@ -45,7 +45,7 @@ bool bMain					= true;
 bool bDisplay				= false;
 std::string dayOrNight;
 int numErrors				= 0;					// Number of errors in a row
-int maxErrors				= 2;					// Max number of errors in a row before we exit
+int maxErrors				= 4;					// Max number of errors in a row before we exit
 
 bool gotSignal				= false;				// did we get a SIGINT (from keyboard), or SIGTERM/SIGHUP (from service)?
 int iNumOfCtrl				= NOT_SET;				// Number of camera control capabilities
@@ -330,7 +330,7 @@ int RPicapture(config cg, cv::Mat *image)
 	char const *s2 = "";
 	if (cg.isLibcamera)
 	{
-		if (cg.debugLevel >= 4)
+		if (cg.debugLevel >= 3)
 			s2 = " > /tmp/capture_RPi_debug.txt 2>&1";
 		else
 			s2 = " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages

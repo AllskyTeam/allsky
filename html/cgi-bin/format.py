@@ -84,7 +84,10 @@ class ALLSKYFORMAT:
                         convertValue = int(fieldValue)
                     except ValueError:
                         convertValue = float(fieldValue)
-                    value = format.format(convertValue)
+                    try:
+                        value = format.format(convertValue)
+                    except Exception as err:
+                        value = "??"
                 except ValueError as err:
                     pass
 

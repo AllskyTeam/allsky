@@ -330,7 +330,7 @@ int RPicapture(config cg, cv::Mat *image)
 	char const *s2 = "";
 	if (cg.isLibcamera)
 	{
-		if (cg.debugLevel >= 4)
+		if (cg.debugLevel >= 3)
 			s2 = " > /tmp/capture_RPi_debug.txt 2>&1";
 		else
 			s2 = " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages

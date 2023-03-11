@@ -135,28 +135,35 @@ function display_msg()
 	local MESSAGE="${2}"
 	local MESSAGE2="${3}"		# optional 2nd message that's not in color
 	local MSG=""
+	local LOGMSG=""				# same as ${MSG} but no escape chars
 	local STARS
 	if [[ ${LOG_TYPE} == "error" ]]; then
-		MSG="\n${RED}*** ERROR: "
+		LOGMSG="*** ERROR: "
+		MSG="\n${RED}${LOGMSG}"
 		STARS=true
 
 	elif [[ ${LOG_TYPE} == "warning" ]]; then
-		MSG="\n${YELLOW}*** WARNING: "
+		LOGMSG="*** WARNING: "
+		MSG="\n${YELLOW}${LOGMSG}"
 		STARS=true
 
 	elif [[ ${LOG_TYPE} == "notice" ]]; then
-		MSG="${YELLOW}*** NOTICE: "
+		LOGMSG="*** NOTICE: "
+		MSG="\n${YELLOW}${LOGMSG}"
 		STARS=true
 
 	elif [[ ${LOG_TYPE} == "progress" ]]; then
-		MSG="${GREEN}* ${MESSAGE}${NC}"
+		LOGMSG="* ${MESSAGE}"
+		MSG="${GREEN}${LOGMSG}${NC}"
 		STARS=false
 
 	elif [[ ${LOG_TYPE} == "info" || ${LOG_TYPE} == "debug" ]]; then
-		MSG="${YELLOW}${MESSAGE}${NC}"
+		LOGMSG="${MESSAGE}"
+		MSG="${YELLOW}${LOGMSG}${NC}"
 		STARS=false
 
 	else
+		LOGMSG=""
 		MSG="${YELLOW}"
 		STARS=false
 	fi
@@ -166,16 +173,20 @@ function display_msg()
 		MSG="${MSG}**********\n"
 		MSG="${MSG}${MESSAGE}\n"
 		MSG="${MSG}**********${NC}\n"
+
+		LOGMSG="${LOGMSG}\n"
+		LOGMSG="${LOGMSG}**********\n"
+		LOGMSG="${LOGMSG}${MESSAGE}\n"
+		LOGMSG="${LOGMSG}**********\n"
 	fi
+
+	echo -e "${MSG}${MESSAGE2}"
 
 	# Log messages to a file if it was specified.
 	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
 	if [[ ${LOG_IT} == "true" && -n ${DISPLAY_MSG_LOG} ]]; then
-		echo -en "${MSG}" | tee -a "${DISPLAY_MSG_LOG}"
-	else
-		echo -en "${MSG}"
+		echo -e "${LOGMSG}${MESSAGE2}" >>  "${DISPLAY_MSG_LOG}"
 	fi
-	echo -e "${MESSAGE2}"
 }
 
 

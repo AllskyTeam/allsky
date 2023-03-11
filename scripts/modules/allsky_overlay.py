@@ -700,7 +700,8 @@ class ALLSKYOVERLAY:
 
                 if variableType == 'Number':
                     if format is not None and format != "":
-                        format = "{" + format + "}"                 
+                        format = "{" + format + "}"
+                        convertValue = 0
                         try:
                             try:
                                 convertValue = int(value)

@@ -1,10 +1,12 @@
 #!/bin/bash
 
+# Allow this script to be executed manually, which requires several variables to be set.
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh" || exit 1
-source "${ALLSKY_CONFIG}/config.sh" || exit 1
-source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit 1
+source "${ALLSKY_HOME}/variables.sh"		|| exit 99
+source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
 
 function usage_and_exit
 {
@@ -19,7 +21,7 @@ function usage_and_exit
 		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	) >&2
 	# shellcheck disable=SC2086
-	exit $RET
+	exit ${RET}
 }
 
 # TODO: use getopt
@@ -48,23 +50,26 @@ if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 
 	# Create a custom message.
 	# Extensions ($10) will normally be null since the invoker may not know what to use.
-	"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${NOTIFICATION_TYPE}" \
-		"${2}" "${3}" "${4}" "${5}" "${6}" \
-		"${7}" "${8}" "${9}" "${10:-${EXTENSION}}" "${11}" "${12}"
-	[[ $? -ne 0 ]] && exit 2
-	NOTIFICATION_FILE="${ALLSKY_TMP}/${NOTIFICATION_TYPE}.${EXTENSION}"
+	if ! "${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
+			--directory "${CAPTURE_SAVE_DIR}" "${NOTIFICATION_TYPE}" \
+			"${2}" "${3}" "${4}" "${5}" "${6}" \
+			"${7}" "${8}" "${9}" "${10:-${EXTENSION}}" "${11}" "${12}" ; then
+		exit 2			# it output error messages
+	fi
+	NOTIFICATION_FILE="${ALLSKYCAPTURE_SAVE_DIR}/${NOTIFICATION_TYPE}.${EXTENSION}"
 else
 	NOTIFICATION_FILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATION_TYPE}.${EXTENSION}"
 	if [[ ! -e ${NOTIFICATION_FILE} ]]; then
+		# TODO: Create a custom image?
 		echo -e "${RED}*** ${ME}: ERROR: File '${NOTIFICATION_FILE}' does not exist!${NC}" >&2
 		exit 2
 	fi
 fi
 
 # If a notification image was "recently" posted, don't post this one.
-# We'll look at the timestamp of $ALLSKY_NOTIFICATION_LOG (defined in variables.sh) and if it's
+# We'll look at the timestamp of ${ALLSKY_NOTIFICATION_LOG} (defined in variables.sh) and if it's
 # in the future we'll skip the current notification. When the file is updated below,
-# it's given a timestamp of NOW + $EXPIRES_IN_SECONDS.
+# it's given a timestamp of NOW + ${EXPIRES_IN_SECONDS}.
 # We will APPEND to the file so we have a record of all notifications since Allsky started.
 
 if [[ ${NOTIFICATION_TYPE} != "custom" && -f ${ALLSKY_NOTIFICATION_LOG} && ${EXPIRES_IN_SECONDS} -ne 0 ]]; then
@@ -88,44 +93,57 @@ if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 else
 	# Don't overwrite notification images so create a temporary copy and use that.
 	CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
-	cp "${NOTIFICATION_FILE}" "${CURRENT_IMAGE}"
+	if ! cp "${NOTIFICATION_FILE}" "${CURRENT_IMAGE}" ; then
+		echo -e "${RED}*** ${ME}: ERROR: Cannot copy to CURRENT_IMAGE '${NOTIFICATION_FILE}' to '${CURRENT_IMAGE}'${NC}"
+		exit 3
+	fi
 fi
 
 # Resize the image if required
 if [[ ${IMG_RESIZE} == "true" ]]; then
-	convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}"
-	if [[ $? -ne 0 ]]; then
+	if ! convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}" ; then
 		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed${NC}"
 		exit 3
 	fi
 fi
 
-# If daytime saving is desired, save the image in today's thumbnail directory if desired
+# If daytime saving is active, save the image in today's thumbnail directory
 # so the user can see when things changed.
 # Don't save in main image directory because we don't want the notification image in timelapses.
 # If at nighttime, save them in (possibly) yesterday's directory.
 # If during day, save in today's directory.
-if [[ $(settings ".takeDaytimeImages") == "1" && $(settings ".saveDaytimeImages") == "1" && ${IMG_CREATE_THUMBNAILS} == "true" ]]; then
+if [[ $(settings ".takeDaytimeImages") == "1" && \
+	  $(settings ".saveDaytimeImages") == "1" && \
+	  ${IMG_CREATE_THUMBNAILS} == "true" ]]; then
 	DATE_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
 	# Use today's folder if it exists, otherwise yesterday's
 	[[ ! -d ${DATE_DIR} ]] && DATE_DIR="${ALLSKY_IMAGES}/$(date -d '12 hours ago' +'%Y%m%d')"
 	THUMBNAILS_DIR="${DATE_DIR}/thumbnails"
-	mkdir -p "${THUMBNAILS_DIR}"
-	THUMB="${THUMBNAILS_DIR}/${FILENAME}-$(date +'%Y%m%d%H%M%S').${EXTENSION}"
+	# The thumbnail isn't critical so continue if we can't create it.
+	if ! mkdir -p "${THUMBNAILS_DIR}" ; then
+			echo -e "${YELLOW}*** ${ME}: WARNING: could not create '${THUMBNAILS_DIR}'; continuing.${NC}"
+	else
+		THUMB="${THUMBNAILS_DIR}/${FILENAME}-$(date +'%Y%m%d%H%M%S').${EXTENSION}"
 
-	convert "${CURRENT_IMAGE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}"
-	if [[ $? -ne 0 ]]; then
-		echo -e "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
+		if ! convert "${CURRENT_IMAGE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}" ; then
+			echo -e "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
+		fi
 	fi
 fi
 
-FINAL_IMAGE="${CAPTURE_SAVE_DIR}/${FULL_FILENAME}"	# final resting place - no more changes to it.
-mv -f "${CURRENT_IMAGE}" "${FINAL_IMAGE}"	# so web severs can see it.
+# ${FINAL_IMAGE} is the final resting place of the image, and no more changes will be made to it.
+# It's also the name of the image that web severs look for.
+# The "mv" may be a rename or an actual move.
+FINAL_IMAGE="${CAPTURE_SAVE_DIR}/${FULL_FILENAME}"
+if ! mv -f "${CURRENT_IMAGE}" "${FINAL_IMAGE}" ; then
+	echo -e "${RED}*** ${ME}: ERROR: Cannot mv to FINAL_IMAGE: '${FINAL_IMAGE}' to '${TEMP_FILE}'${NC}"
+	exit 4
+fi
 
 # Keep track of last notification type and time.
 # We don't use the type (at least not yet), but save it anyhow so we can manually look at
 # it for debugging purposes.
-EXPIRE_TIME=$(date -d "$EXPIRES_IN_SECONDS seconds" +'%Y-%m-%d %H:%M:%S')
+EXPIRE_TIME=$(date -d "${EXPIRES_IN_SECONDS} seconds" +'%Y-%m-%d %H:%M:%S')
 echo "${NOTIFICATION_TYPE},${EXPIRES_IN_SECONDS},${EXPIRE_TIME}" >> "${ALLSKY_NOTIFICATION_LOG}"
 touch --date="${EXPIRE_TIME}" "${ALLSKY_NOTIFICATION_LOG}"
 
@@ -134,12 +152,18 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 	if [[ ${RESIZE_UPLOADS} == "true" ]]; then
 		# Don't overwrite FINAL_IMAGE since the web server(s) may be looking at it.
 		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"
-		cp "${FINAL_IMAGE}" "${TEMP_FILE}"		# create temporary copy to resize
-		convert "${TEMP_FILE}" -resize "${RESIZE_UPLOADS_WIDTH}x${RESIZE_UPLOADS_HEIGHT}" -gravity East -chop 2x0 "${TEMP_FILE}"
-		if [[ $? -ne 0 ]]; then
-			echo -e "${RED}*** ${ME}: ERROR: RESIZE_UPLOADS failed${NC}"
-			# Leave temporary file for possible debugging.
-			exit 4
+
+		# create temporary copy to resize
+		if ! cp "${FINAL_IMAGE}" "${TEMP_FILE}" ; then
+			echo -e "${RED}*** ${ME}: ERROR: Cannot copy to TEMP_FILE: '${FINAL_IMAGE}' to '${TEMP_FILE}'${NC}"
+			exit 5
+		fi
+		if ! convert "${TEMP_FILE}" \
+				-resize "${RESIZE_UPLOADS_WIDTH}x${RESIZE_UPLOADS_HEIGHT}" \
+				-gravity East \
+				-chop 2x0 "${TEMP_FILE}" ; then
+			echo -e "${RED}*** ${ME}: ERROR: Unable to resize '${TEMP_FILE}' - file left for debugging.${NC}"
+			exit 6
 		fi
 		UPLOAD_FILE="${TEMP_FILE}"
 	else
@@ -147,12 +171,13 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 		TEMP_FILE=""
 	fi
 
-	# We're actually uploading $UPLOAD_FILE, but show $NOTIFICATION_FILE in the message since it's more descriptive.
+	# We're actually uploading ${UPLOAD_FILE}, but show ${NOTIFICATION_FILE} in the message since it's more descriptive.
 	# If an existing notification is being uploaded, wait for it to finish then upload this one.
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
 		echo -e "${ME}: Uploading $(basename "${NOTIFICATION_FILE}")"
 	fi
-	"${ALLSKY_SCRIPTS}/upload.sh" --wait --silent "${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage" "${WEB_IMAGE_DIR}"
+	"${ALLSKY_SCRIPTS}/upload.sh" --wait --silent \
+		"${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage" "${WEB_IMAGE_DIR}"
 	RET=$?
 
 	# If we created a temporary copy, delete it.

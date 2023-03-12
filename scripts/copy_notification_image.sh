@@ -15,8 +15,8 @@ function usage_and_exit
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 		echo -e "\nUsage: ${ME} [--help] [--expires seconds] notification_type [custom_args]\n"
 		echo "'--expires seconds' specifies how many seconds before the notification expires."
-		echo "If 'notification_type' is 'custom' then a custom message is created and 'custom_args'"
-		echo "must be given to specify arguments for the message:"
+		echo "If 'notification_type' is 'custom' then a custom message is created and"
+		echo "'custeom_args' must be given to specify arguments for the message:"
 		echo "  TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message'"
 		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	) >&2
@@ -24,20 +24,37 @@ function usage_and_exit
 	exit ${RET}
 }
 
-# TODO: use getopt
+OK="true"
+DO_HELP=""
+EXPIRES_IN_SECONDS="5"	# default
 
-[[ ${1} == "--help" ]] && usage_and_exit 0
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG}" in
+			--help)
+				DO_HELP="true"
+				;;
+			--expires)
+				# Optional argument specifying when the ALLSKY_NOTIFICATION_LOG should expire,
+				# i.e., the period of time in which no other notification images will be displayed.
+				# If it's 0, then force the use of this notification.
+				EXPIRES_IN_SECONDS="${2}"
+				shift 
+				;;
+			-*)
+				echo -e "${RED}${ME}: Unknown argument '${ARG}' ignoring.${NC}" >&2
+				OK="false"
+				;;
+			*)
+				break
+				;;
+	esac
+	shift
+done
 
-# Optional argument specifying when the ALLSKY_NOTIFICATION_LOG should expire,
-# i.e., the period of time in which no other notification images will be displayed.
-# If it's 0, then force the use of this notification.
-if [[ ${1} == "--expires" ]]; then
-	EXPIRES_IN_SECONDS="${2}"
-	[[ -z ${EXPIRES_IN_SECONDS} ]] && usage_and_exit 2
-	shift 2
-else
-	EXPIRES_IN_SECONDS="5"	# default
-fi
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
+[[ -z ${EXPIRES_IN_SECONDS} ]] && usage_and_exit 2
 
 NOTIFICATION_TYPE="${1}"	# filename, minus the extension, since the extension may vary
 [[ ${NOTIFICATION_TYPE} == "" ]] && usage_and_exit 1

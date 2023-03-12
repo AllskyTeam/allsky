@@ -1596,8 +1596,23 @@ install_overlay()
 
 	MODULE_LOCATION="/opt/allsky"
 	sudo mkdir -p "${MODULE_LOCATION}/modules"
+
+	# TODO: Remove in next release. Temporary fix to move modules and deal with pistatus and gps that have moved to core allsky
+	if [[ -d /etc/allsky/modules ]]; then
+		sudo cp -a /etc/allsky/modules "${MODULE_LOCATION}"
+		sudo rm -rf /etc/allsky
+	fi
+
+	if [[ -f "/opt/allsky/modules/allsky_pistatus.py" ]]; then
+    	sudo rm "/opt/allsky/modules/allsky_pistatus.py"
+	fi
+	if [[ -f "/opt/allsky/modules/allsky_script.py" ]]; then
+    	sudo rm "/opt/allsky/modules/allsky_script.py"
+	fi	
+	#TODO: End
+
 	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${MODULE_LOCATION}"
-	sudo chmod -R 774 "${MODULE_LOCATION}"
+	sudo chmod -R 774 "${MODULE_LOCATION}"			
 }
 
 

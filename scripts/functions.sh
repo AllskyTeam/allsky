@@ -230,7 +230,14 @@ function convertLatLong()
 		# No direction
 		if [[ -z ${SIGN} ]]; then
 			# No sign either
-			echo "'${TYPE}' should contain EITHER a '+' or '-', OR a 'N', 'S', 'E', or 'W'; you entered '${LATLONG}'."
+			EMSG="ERROR: '${TYPE}' should contain EITHER a '+' or '-', OR a"
+			if [[ ${TYPE} == "latitude" ]]; then
+				EMSG="${EMSG} 'N' or 'S'"
+			else
+				EMSG="${EMSG} 'E' or 'W'"
+			fi
+			EMSG="${EMSG}; you entered '${LATLONG}'."
+			echo -e "${EMSG}" >&2
 			return 1
 		fi
 
@@ -252,19 +259,19 @@ function convertLatLong()
 		return 0
 
 	elif [[ -n ${SIGN} ]]; then
-		echo "'${TYPE}' should contain EITHER a '${SIGN}' OR a '${DIRECTION}', but not both; you entered '${LATLONG}'."
+		echo "'${TYPE}' should contain EITHER a '${SIGN}' OR a '${DIRECTION}', but not both; you entered '${LATLONG}'." >&2
 		return 1
 
 	else
 		# There's a direction - make sure it's valid for the TYPE.
 		if [[ ${TYPE} == "latitude" ]]; then
 			if [[ ${DIRECTION} != "N" && ${DIRECTION} != "S" ]]; then
-				echo "'${TYPE}' should contain a 'N' or 'S' ; you entered '${LATLONG}'."
+				echo "'${TYPE}' should contain a 'N' or 'S' ; you entered '${LATLONG}'." >&2
 				return 1
 			fi
 		else
 			if [[ ${DIRECTION} != "E" && ${DIRECTION} != "W" ]]; then
-				echo "'${TYPE}' should contain an 'E' or 'W' ; you entered '${LATLONG}'."
+				echo "'${TYPE}' should contain an 'E' or 'W' ; you entered '${LATLONG}'." >&2
 				return 1
 			fi
 		fi
@@ -278,17 +285,22 @@ function convertLatLong()
 
 #####
 # Get the sunrise and sunset times.
-# The angle can optionally be passed in.
+# The angle, latitude, and/or longitude can optionally be passed in
+# to allow testing various configurations.
 function get_sunrise_sunset()
 {
 	local ANGLE="${1}"
+	local LATITUDE="${2}"
+	local LONGITUDE="${3}"
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
 	source "${ALLSKY_CONFIG}/config.sh"		|| return 1
+
 	[[ -z ${ANGLE} ]] && ANGLE="$(settings ".angle")"
-	local LATITUDE="$(settings ".latitude")"
-		LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
-	local LONGITUDE="$(settings ".longitude")"
-		LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
+	[[ -z ${LATITUDE} ]] && LATITUDE="$(settings ".latitude")"
+	[[ -z ${LONGITUDE} ]] && LONGITUDE="$(settings ".longitude")"
+
+	LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"		|| return 2
+	LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"	|| return 2
 
 	echo "Rise    Set     Angle"
 	local X="$(sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}")"
@@ -302,7 +314,7 @@ function get_sunrise_sunset()
 #####
 # Get a shell variable's value.  The variable can have optional spaces and tabs before it.
 # This function is useful when we can't "source" the file.
-get_variable() {
+function get_variable() {
 	local VARIABLE="${1}"
 	local FILE="${2}"
 	local LINE=""

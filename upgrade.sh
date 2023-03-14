@@ -57,7 +57,7 @@ usage_and_exit()
 ##### Check arguments
 OK="true"
 HELP="false"
-DEBUG=="false"
+DEBUG="false"
 DEBUG_ARG=""
 NEWER="false"
 FUNCTION=""
@@ -118,3 +118,7 @@ if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
 	fi
 fi
 
+# TODO: these are here to keep shellcheck quiet.
+DEBUG="${DEBUG}"
+DEBUG_ARG="${DEBUG_ARG}"
+FUNCTION="${FUNCTION}"

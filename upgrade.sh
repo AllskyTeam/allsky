@@ -106,9 +106,8 @@ if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
 	else
 		# See if there's a newer version of this script; if so, download it and execute it.
 		BRANCH="$(getBranch)" || exit 2
-		FILE_TO_CHECK="$(basename "${ALLSKY_SCRIPTS}")/${ME}"
 		NEWER_SCRIPT="/tmp/${ME}"
-		checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${FILE_TO_CHECK}" "${NEWER_SCRIPT}"
+		checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${ME}" "${NEWER_SCRIPT}"
 		RET=$?
 		[[ ${RET} -eq 2 ]] && exit 2
 		if [[ ${RET} -eq 1 ]]; then

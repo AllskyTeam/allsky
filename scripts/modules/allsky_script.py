@@ -17,7 +17,8 @@ metaData = {
         "night",
         "endofnight",
         "daynight",
-        "nightday"
+        "nightday",
+        "periodic"
     ],
     "arguments":{
         "scriptlocation": ""

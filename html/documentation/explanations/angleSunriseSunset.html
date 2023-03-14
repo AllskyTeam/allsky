@@ -11,12 +11,12 @@
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "Angle, Sunrise, Sunset";
+			content: "Angle, Sunrise, and Sunset";
 		} 
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
-	<title>Angle, Sunrise, Sunset</title>
+	<title>Angle, Sunrise, and Sunset</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
@@ -27,46 +27,59 @@
 <h2>What does the <span class="WebUISetting">Angle</span> setting do?
 How is it related to sunrise and sunset?</h2>
 <p>
-Your actual sunrise and sunset times are dependent on the day of the year and your
-latitude and longitude, and define what most people call <b>daytime</b> and <b>nighttime</b>.
-You can tell Allsky when to start using daytime and nighttime settings,
-which may be different than actual daytime and nighttime.
+The time the sun actually sets and rises at your location is
+dependent on the day of the year and your latitude and longitude,
+and defines what people call <strong>daytime</strong> and <strong>nighttime</strong>.
+
+Allsky also has a <strong>daytime</strong> and <strong>nighttime</strong>
+that determine when to use your daytime and nighttime settings,
+and those times can be changed as described below.
 </p>
 <p>
-Allsky defines <b>daytime</b> as your sunrise time <b>plus</b> an offset you define,
-called the <span class="WebUISetting">Angle</span>
-which you set in the <b>Allsky Settings</b> page of the WebUI.
-The <span class="WebUISetting">Angle</span> is a positive or negative number
-that indicates the number of degrees
-above (positive) or below (negative) the horizon the Sun is when daytime starts.
-Daytime ends at sunset <b>minus</b> the <span class="WebUISetting">Angle</span>.
-The term "daytime ends" is identical to "nighttime begins" since there
-is no gap between daytime and nighttime from Allsky's perspective.
+Allsky starts using your <strong>daytime</strong> settings
+at your actual sunrise time <strong>plus</strong> an offset you define,
+called the <span class="WebUISetting">Angle</span>.
+This is set in the <span class="WebUILink">Allsky Settings</span> page of the WebUI
+and is a positive or negative number that indicates the number of degrees
+<em>above</em> (positive) or <em>below</em> (negative) the horizon the Sun is when daytime starts.
+We refer to <em>Allsky's daytime</em> as the period when Allsky is using your daytime settings.
+</p>
+<p>
+Allsky starts using your <strong>nighttime</strong> settings
+at your actual sunset time <strong>minus</strong> the <span class="WebUISetting">Angle</span>.
+We refer to <em>Allsky's nighttime</em> as the period when Allsky is using your nighttime settings.
 </p>
 <p>
 As an example, assume the Sun rises at 7:00 AM and sets at 18:00 (6:00 PM).
 Using an <span class="WebUISetting">Angle</span> of <span class="WebUIValue">0</span> degrees,
-Allsky's daytime starts at 7:00 and nighttime starts at 18:00.
+Allsky's daytime starts at 7:00 and nighttime starts at 18:00,
+and that's when Allsky will start using your daytime and nightttime settings, respectively.
+</p>
+
 <blockquote>
-The Sun moves at 15 degrees per hour, so 6 degrees is 24 minutes
-(6 degrees / 15 degrees * 60 minutes).
-<br>Remember: daytime ADDs the <span class="WebUISetting">Angle</span> and nighttime SUBTRACTs it.
+The Sun moves at 15 degrees per hour, so 6 degrees
+is 24 minutes (6 degrees / 15 degrees * 60 minutes).
+<br>Remember: daytime ADDs the number of minutes represented by
+<span class="WebUISetting">Angle</span> and nighttime SUBTRACTs it.
+<br>Subtracting a <em>negative</em> number is the same as adding a <em>positive</em> number,
+so 100 MINUS -5 is the same as 100 PLUS 5.
 </blockquote>
-With an <span class="WebUISetting">Angle</span> of <span class="WebUIValue">6</span> degrees,
-Allsky's daytime starts at 7:24 and nighttime at 16:36
-(a total of 48 minutes less daytime).
-An <span class="WebUISetting">Angle</span> of <span class="WebUIValue">-6</span> degrees would give 6:36 and 18:24
-(48 minutes more daytime).
+
+<p>
+Using an <span class="WebUISetting">Angle</span> of <span class="WebUIValue">6</span> degrees,
+Allsky's daytime starts at 7:24 (7:00 PLUS 24 minutes)
+and nighttime at 17:36 (18:00 MINUS 24 minutes).
+An <span class="WebUISetting">Angle</span> of <span class="WebUIValue">-6</span>
+degrees would give 6:36 (7:00 PLUS -24 minutes)
+and 18:24 (18:00 MINUS -24 minutes).
 The <span class="WebUISetting">Angle</span> effectively determines the length of daytime - the
 larger the <span class="WebUISetting">Angle</span> the shorter the daytime.
 </p>
 
 <h4>Why is Angle important?</h4>
 <p>
-Allsky uses your <span class="WebUISetting">Angle</span>
-to calculate when to begin using your daytime settings like daytime exposure,
-whether or not to take daytime pictures, etc.,
-and when to begin using your nighttime settings.
+You tell Allsky when to start using your daytime settings and nighttime settings
+by adjusting your <span class="WebUISetting">Angle</span>.
 </p>
 <p>
 Astrophotographers rarely start taking pictures at sunset since it's still too light.
@@ -75,16 +88,19 @@ Instead, they start taking pictures when it's much darker, often one of the foll
 <li><b>Civil Twilight</b> goes from sunset to when the Sun is 6 degrees below the horizon
 	(i.e., <span class="WebUISetting">Angle</span> of <span class="WebUIValue">-6</span>),
 	and ends when the Sun is coming up and is 6 degrees below the horizon.
+	This is 24 minutes after sunset through 24 minutes before sunrise.
 	It is still fairly light at Civil Twilight.
 <li><b>Nautical twilight</b> uses 12 degrees for the cutoff point,
-	at which point it's pretty dark (ignoring light pollution and the Moon).
+	at which point it's pretty dark.
+	This is 48 minutes after sunset through 48 minutes before sunrise.
 <li><b>Astronomical Twilight</b> uses 18 degrees at which point it's as dark as it's going to get.
+	This is 1 hour, 12 minutes after sunset through 1 hour, 12 minutes before sunrise.
 </ul>
 </p>
 <p>
 Many people use an <span class="WebUISetting">Angle</span>
 of <span class="WebUIValue">-6</span> for their allsky camera but it's
-up to you to determine where the daytime versus nighttime boundary should be.
+up to you to determine where the daytime and nighttime transition points should be.
 <blockquote>
 Startrails, keograms, and timelapse videos are created at the end of nighttime,
 so your <span class="WebUISetting">Angle</span>
@@ -92,21 +108,54 @@ value will determine how dark or light the beginning of the timelapse video is.
 </blockquote>
 </p>
 
+
+<h3>Trying different values</h3>
 <p>
-To determine Allsky's daytime and nighttime based on your <span class="WebUISetting">Angle</span>,
-execute:
+To see today's daytime and nighttime based on your <span class="WebUISetting">Angle</span>,
+execute the following.
+It will show you the values for an
+angle of 0 degrees as well as for your <span class="WebUISetting">Angle</span>:
 <pre>
 (source ~/allsky/scripts/functions.sh; get_sunrise_sunset)
 </pre>
 </p>
 <p>
-It will show you the daytime and nighttime for an
-angle of 0 degrees as well as your <span class="WebUISetting">Angle</span>.
-You can also specify any angle you want, for example:
+If you specify a number to <code>get_sunrise_sunset</code> it will use that as an angle
+instead of your <span class="WebUISetting">Angle</span>.
+If you want daytime and nighttime to start at a certain time,
+call <code>get_sunrise_sunset</code> with different angles until you get the times you want:
 <pre>
-(source ~/allsky/scripts/functions.sh; get_sunrise_sunset -7.2)
+source ~/allsky/scripts/functions.sh
+get_sunrise_sunset -7.2
+get_sunrise_sunset -7.5
 </pre>
 </p>
+
+<h3>Advanced <code>get_sunrise_sunset</code> usage</h3>
+<p>
+<code>get_sunrise_sunset</code> takes up to three arguments, in this order:
+<ol class="minimalPadding">
+	<li><strong>angle</strong>: if <code>""</code> (an empty string) it will use
+		your <span class="WebUISetting">Angle</span>.
+	<li><strong>latitude</strong>: if <code>""</code> it will use
+		your <span class="WebUISetting">Latitude</span>.
+	<li><strong>longitude</strong>: if <code>""</code> it will use
+		your <span class="WebUISetting">Longitude</span>.
+</ol>
+If you skip an argument and specify one after it,
+you must replace the skipped argument(s) with <code>""</code>:
+</p>
+<pre>
+source ~/allsky/scripts/functions.sh
+get_sunrise_sunset "" 31.1             <span class="shComment"># latitude only</span>
+get_sunrise_sunset "" "" 88.2W         <span class="shComment"># longitude only</span>
+</pre>
+This can be useful for debugging purposes to determine what values to use
+to cause a day/night transition in a few minutes,
+rather than waiting for tomorrow morning.
+for debugging purposes
+
+<br><p></p>
 
 
 </div><!-- Layout-main -->

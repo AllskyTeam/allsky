@@ -32,10 +32,12 @@ Uploads can fail for many reasons.
 The most common ones are described below, as well as their fixes.
 </p>
 
-<h2>Uploads using FTP/SFTP fail</h2>
+
+<h2>Uploads using FTP/FTPS/SFTP fail</h2>
 <p>
-The most common causes of FTP/SFTP failures are:
+The most common causes of FTP/FTPS/SFTP failures are:
 </p>
+
 
 <h3>Incorrect settings</h3>
 <details><summary></summary>
@@ -138,14 +140,16 @@ are shared by many people.
 </details>
 
 
-<h3>Certificate errors</h3>
+<h3>Certificate-related errors</h3>
 <details><summary></summary>
 <p>
 There are three main certificate-related error messages you'll see.
 </p>
 <ol>
-<li><b>Host key verification failed</b>
+<li><b>Host key verification failed</b> &nbsp; OR
+	<br><b>The authenticity of host 'xxxxx' can't be established</b>
 	<br>
+	These errors typically occur when using the <code>sftp</code> PROTOCOL.
 	On the Pi, <code>ssh</code> to your remote server:
 	<code>ssh -p 22 username@host</code>
 	(replacing "username" and "host" with the appropriate values).
@@ -153,6 +157,7 @@ There are three main certificate-related error messages you'll see.
 	Enter "yes".
 	This only needs to be done once for a given host.
 	<br>The remote server now knows about the Pi.
+
 <li><b>Certificate verification: certificate common name doesn't match requested host name "xyz.com"</b>
 	<br>
 	There are two ways to fix this:
@@ -166,6 +171,7 @@ There are three main certificate-related error messages you'll see.
      	If you expect to execute <code>lftp</code> manually the first method is better,
 		otherwise use the second method so all your configuration changes are in one place.
 	</ol>
+
 <li><b>Certificate verification: Not trusted</b>
 	<br>
 	Add <code>set ssl:verify-certificate no</code> to

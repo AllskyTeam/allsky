@@ -27,6 +27,13 @@ if [[ ! -d ${DATE_DIR} ]]; then
 	exit 2
 fi
 
+# Decrease priority when running in background.
+if [[ ${ON_TTY} -eq 1 ]]; then
+	NICE=""
+else
+	NICE="nice 15"
+fi
+
 # Post end of night data. This includes next twilight time
 WEBSITES="$(whatWebsites)"
 if [[ ${WEBSITES} != "none" ]]; then
@@ -37,7 +44,7 @@ fi
 # Generate keogram from collected images
 if [[ ${KEOGRAM} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Keogram"
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -k "${DATE}"
+	${NICE} "${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -k "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Keogram complete"
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RET} = 0 ]] ; then
@@ -49,7 +56,7 @@ fi
 # Threshold set to 0.1 by default in config.sh to avoid stacking over-exposed images.
 if [[ ${STARTRAILS} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Startrails"
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -s "${DATE}"
+	${NICE} "${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -s "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Startrails complete"
 	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RET} = 0 ]] ; then
@@ -62,7 +69,7 @@ fi
 # test the timelapse creation, which sometimes has issues.
 if [[ ${TIMELAPSE} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Timelapse"
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -t "${DATE}"
+	${NICE} "${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -t "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Timelapse complete"
 	if [[ ${UPLOAD_VIDEO} == "true" && ${RET} = 0 ]] ; then
@@ -73,7 +80,7 @@ fi
 # Run custom script at the end of a night. This is run BEFORE the automatic deletion
 # just in case you need to do something with the files before they are removed
 cmd="${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh"
-test -x "${cmd}" && "${cmd}"
+[[ -x ${cmd} ]] && ${NICE} "${cmd}"
 
 # Automatically delete old images and videos
 if [[ -n ${DAYS_TO_KEEP} ]]; then
@@ -94,8 +101,8 @@ if [[ -n ${WEB_DAYS_TO_KEEP} ]]; then
 		del=$(date --date="${WEB_DAYS_TO_KEEP} days ago" +%Y%m%d)
 		(
 			cd "${ALLSKY_WEBSITE}" || exit 1
-			# "*-202*" for years >= 2020
-			find startrails keograms videos -type f -name "*-202*" | while read -r i
+			# "*-20*" for years >= 2000
+			find startrails keograms videos -type f -name "*-20*" | while read -r i
 			do
 				# Remove everything but the date
 				DATE="${i##*-}"
@@ -113,6 +120,6 @@ if [[ ${SHOW_ON_MAP} -eq 1 ]]; then
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight
 fi
 
-"${ALLSKY_SCRIPTS}/flow-runner.py" -e nightday
+${NICE} "${ALLSKY_SCRIPTS}/flow-runner.py" -e nightday
 
 exit 0

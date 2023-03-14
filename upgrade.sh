@@ -56,6 +56,7 @@ usage_and_exit()
 }
 
 ####################### main part of program
+#shellcheck disable=SC2124
 ALL_ARGS="$@"
 
 ##### Check arguments

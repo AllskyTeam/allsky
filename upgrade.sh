@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Upgrade an existing release of Allsky, version v2023.03.09_tbd or newer.
+# Upgrade an existing release of Allsky.
 # This includes upgrading code as well as configuration files.
 
 ############################
@@ -9,11 +9,16 @@
 # We did this so we could distribute a basic script with the new release,
 # but didn't have time to fully complete and test this script.
 ############################
+# TODO: Move variables and functions used by this script and install.sh into
+# scripts/installUpgradeFunctions.sh, including functions in functiton.sh that
+# are only used by upgrade.sh and install.sh.
+############################
+
 
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh" || exit 99
+source "${ALLSKY_HOME}/variables.sh"		|| exit 99
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit 99
 
 if [[ ${EUID} -eq 0 ]]; then
@@ -22,10 +27,7 @@ if [[ ${EUID} -eq 0 ]]; then
 fi
 
 INSTALL_DIR="allsky"
-cd ~/${INSTALL_DIR}  || exit 1
-
-source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
+cd ~/"${INSTALL_DIR}"  || exit 1
 
 
 ####
@@ -37,13 +39,15 @@ usage_and_exit()
 	else
 		C="${RED}"
 	fi
-	# Don't show "--newer" since users should never use that.
+	# Don't show "--newer" or --doUpgrade* since users should never use them.
 	echo
-	echo -e "${C}Usage: ${ME} [--help] [--debug [...]] [--function function]${NC}"
+	echo -e "${C}Usage: ${ME} [--help] [--debug] [--restore] [--function function]${NC}"
 	echo
 	echo "'--help' displays this message and exits."
 	echo
-	echo "'--debug' displays debugging information. Can be called multiple times to increase level."
+	echo "'--debug' displays debugging information."
+	echo
+	echo "'--restore' restores a previously upgraded Allsky.  Rarely needed."
 	echo
 	echo "'--function' executes the specified function and quits."
 	echo
@@ -52,7 +56,8 @@ usage_and_exit()
 }
 
 ####################### main part of program
-
+#shellcheck disable=SC2124
+ALL_ARGS="$@"
 
 ##### Check arguments
 OK="true"
@@ -60,6 +65,8 @@ HELP="false"
 DEBUG="false"
 DEBUG_ARG=""
 NEWER="false"
+ACTION="upgrade"
+WORD="Upgrade"
 FUNCTION=""
 while [ $# -gt 0 ]; do
 	ARG="${1}"
@@ -73,7 +80,10 @@ while [ $# -gt 0 ]; do
 			;;
 		--newer)
 			NEWER="true"
-			shift
+			;;
+		--restore)
+			ACTION="restore"
+			WORD="Restorer"
 			;;
 		--function)
 			FUNCTION="${2}"
@@ -89,8 +99,9 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" || $# -ne 0 ]] && usage_and_exit 1
 
-FORCE_CHECK="true"		# Set to "true" to ALWAYS do the version check
+[[ ${DEBUG} == "true" ]] && echo "Running: ${ME} ${ALL_ARGS}"
 
+FORCE_CHECK="true"		# Set to "true" to ALWAYS do the version check
 BRANCH="$(getBranch)"
 # Unless forced to, only do the version check if we're on the main branch,
 # not on development branches, because when we're updating this script we
@@ -106,13 +117,12 @@ if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
 	else
 		# See if there's a newer version of this script; if so, download it and execute it.
 		BRANCH="$(getBranch)" || exit 2
-		FILE_TO_CHECK="$(basename "${ALLSKY_SCRIPTS}")/${ME}"
 		NEWER_SCRIPT="/tmp/${ME}"
-		checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${FILE_TO_CHECK}" "${NEWER_SCRIPT}"
+		checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${ME}" "${NEWER_SCRIPT}"
 		RET=$?
 		[[ ${RET} -eq 2 ]] && exit 2
 		if [[ ${RET} -eq 1 ]]; then
-			exec "${NEWER_SCRIPT}" --newer "$@"
+			exec "${NEWER_SCRIPT}" --newer "${ALL_ARGS}"
 			# Does not return
 		fi
 	fi
@@ -122,3 +132,80 @@ fi
 DEBUG="${DEBUG}"
 DEBUG_ARG="${DEBUG_ARG}"
 FUNCTION="${FUNCTION}"
+WORD="${WORD}"
+
+source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
+
+
+if [[ ${ACTION} == "upgrade" ]]; then
+	:
+
+	# First part of upgrade, executed by user in ${ALLSKY_HOME}.
+
+	# Make sure we can upgrade:
+	#	If config/ does NOT exist, the user hasn't installed Allsky.
+	#		Tell the user.
+	#		Invoke install.sh, or exit ?????
+
+	# Ask user if they want to upgrade in place (i.e., overwrite code),
+	# or move current code to ${ALLSKY_HOME}-OLD.
+
+	# If move current code:
+	#	Check for prior Allsky versions:
+	#		If ${ALLSKY_HOME}-OLD exist:
+	#			If ${ALLSKY_HOME}-OLDEST exists
+	#				Let user know both old versions exist
+	#				Exit
+	#			Let the user know ${ALLSKY_HOME}-OLD exists as FYI:
+	#				echo "Saving prior version in ${ALLSKY_HOME}-OLDEST"
+	#			Move ${ALLSKY_HOME}-OLD to ${ALLSKY_HOME}-OLDEST
+	#	Stop allsky and allskyperiodic
+	#	Move ${ALLSKY_HOME} to ${ALLSKY_HOME}-OLD
+	#	cd
+	#	Git new code into ${ALLSKY_HOME}
+	#	cd ${ALLSKY_HOME}
+	#	Run: ./install.sh $DEBUG_ARG .... --doUpgrade
+	#		--doUpgrade tells it to use prior version without asking and to
+	#		not display header, change messages to say "upgrade", not "install", etc.
+	#	?? anything else?
+
+	# Else (upgrade in place)
+	#	Git new code into ${ALLSKY_HOME}-NEW
+	#	?? move ${ALLSKY_HOME}/upgrade.sh to ${ALLSKY_HOME}/upgrade-OLD.sh
+	#		exec ${ALLSKY_HOME}/upgrade-OLD.sh
+	#	Copy (don't move) everything from ${ALLSKY_HOME}-NEW to ${ALLSKY_HOME}
+	#	Run: install.sh ${ALL_ARGS} --doUpgradeInPlace
+	#		--doUpgradeInPlace tells it to use prior version without asking and to
+	#		not display header, change messages to say "upgrade", not "install", etc.
+	#		How is --doUpgradeInPlace different from --doUpgrade ??
+	#	?? anything else?
+
+elif [[ ${ACTION} == "restore" ]]; then
+	:
+
+	# If running in $ALLSKY_HOME		# us 1st time through
+	#	Make sure ${ALLSKY_HOME}-OLD exists
+	#		If not, warn user and exit:
+	#			"No prior version to restore from: ${ALLSKY_HOME}-OLD does not exist".
+	#	cp ${ME} /tmp
+	#	chmod 775 /tmp/${ME}
+	#	exec /tmp/${ME} --restore ${ALL_ARGS} $ALLSKY_HOME
+
+	# Else		# running from /tmp - do the actual work
+	#	Stop allsky and allskyperiodic
+	#	mv $ALLSKY_HOME} ${ALLSKY_HOME}-new_tmp
+	#	mv ${ALLSKY_HOME}-OLD $ALLSKY_HOME
+	#	move images from ${ALLSKY_HOME}-new_tmp to $ALLSKY_HOME
+	#	move darks from ${ALLSKY_HOME}-new_tmp to $ALLSKY_HOME
+	#	copy scripts/endOfNight_additionalSteps.sh from ${ALLSKY_HOME}-new_tmp to $ALLSKY_HOME
+
+	# Prompt the user if they want to:
+	#	restore their old "images" folder (if there's anything in it)
+	#	restore their old "darks" folder (if there's anything in it)
+	#	restore their old configuration settings
+	#		(config.sh, ftp-settings.sh, scripts/endOfNight_additionalSteps.sh)
+	#	upgrade their WebUI (if installed)
+	#	upgrade their Website (if installed)
+
+fi

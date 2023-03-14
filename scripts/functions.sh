@@ -302,12 +302,12 @@ function get_sunrise_sunset()
 	LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"		|| return 2
 	LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"	|| return 2
 
-	echo "Rise    Set     Angle"
+	echo "Daytime start    Nighttime end     Angle"
 	local X="$(sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}")"
-	# Replace comma by a couple spaces so the output looks nicer.
-	echo "${X/,/  }    0"
+	# Replace comma by several spaces so the output lines up.
+	echo "${X/,/           }               0"
 	X="$(sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}")"
-	echo "${X/,/  }   ${ANGLE}"
+	echo "${X/,/           }              ${ANGLE}"
 }
 
 

@@ -18,7 +18,10 @@ class ALLSKYFORMAT:
     
     def __init__(self):
         
-        locale.setlocale(locale.LC_ALL, "")
+        try:
+            locale.setlocale(locale.LC_ALL, "")
+        except:
+            pass
         
         formData = cgi.FieldStorage()
 

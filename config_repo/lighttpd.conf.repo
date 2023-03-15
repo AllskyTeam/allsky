@@ -1,4 +1,4 @@
-server.modules = ( "mod_expire", "mod_setenv", "mod_indexfile", "mod_access", "mod_alias", "mod_redirect",)
+server.modules = ( "mod_expire", "mod_setenv", "mod_indexfile", "mod_access", "mod_alias", "mod_redirect", "mod_cgi", )
 
 server.document-root        = "XX_ALLSKY_WEBUI_XX"
 server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
@@ -12,13 +12,14 @@ server.tag                  = "Allsky"
 dir-listing.activate = "enable"
 setenv.add-response-header += ( "X-Content-Type-Options" => "nosniff" )
 
-server.modules += ( "mod_cgi" )
-server.modules += ( "mod_setenv" )
-
 setenv.add-environment = ( "LANG" => env.LANG)
+alias.url		    = ("/current/" => "XX_ALLSKY_HOME_XX/")
+alias.url		    += ("/images/" => "XX_ALLSKY_IMAGES_XX/")
+alias.url		    += ("/website/" => "XX_ALLSKY_WEBSITE_XX/")
+alias.url		    += ("/documentation" => "XX_ALLSKY_DOCUMENTATION_XX/")
+alias.url		    += ("/overlay" => "XX_ALLSKY_OVERLAY_XX/")
 
 $HTTP["url"] =~ "^/cgi-bin/" {
-#       cgi.assign = ( "" => "" )
         cgi.assign = ( ".py" => "/usr/bin/python3" )
         alias.url += ( "/cgi-bin/" => "XX_ALLSKY_HOME_XX/html/cgi-bin/" )
 }
@@ -39,12 +40,6 @@ $HTTP["url"] =~ "^/current|.json$" {
 	# Cache pages
 	setenv.add-response-header += ( "Cache-Control" => "max-age=31536000, immutable" )
 }
-
-alias.url		    = ("/current/" => "XX_ALLSKY_HOME_XX/")
-alias.url		    += ("/images/" => "XX_ALLSKY_IMAGES_XX/")
-alias.url		    += ("/website/" => "XX_ALLSKY_WEBSITE_XX/")
-alias.url		    += ("/documentation" => "XX_ALLSKY_DOCUMENTATION_XX/")
-alias.url		    += ("/overlay" => "XX_ALLSKY_OVERLAY_XX/")
 
 $HTTP["url"] =~ "^/overlay/config/" {
      url.access-deny = ("")

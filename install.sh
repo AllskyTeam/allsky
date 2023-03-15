@@ -3,8 +3,8 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh"	|| exit 99
-source "${ALLSKY_SCRIPTS}/functions.sh"	|| exit 99
+source "${ALLSKY_HOME}/variables.sh"	|| exit 100
+source "${ALLSKY_SCRIPTS}/functions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
 if [[ ${EUID} -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
@@ -980,7 +980,7 @@ does_prior_Allsky_exist()
 				*)
 					# New style Allsky with CAMERA_TYPE set in config.sh
 					PRIOR_ALLSKY="new"
-					PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}.${SETTINGS_FILE_EXT}"
+					PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
 					# This shouldn't happen, but just in case ...
 					[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
 					;;
@@ -1505,7 +1505,7 @@ restore_prior_files()
 # This can be needed if the user hosed something up, or there was a problem somewhere.
 do_update()
 {
-	source "${ALLSKY_CONFIG}/config.sh" || exit 99		# Get current CAMERA_TYPE
+	source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}	# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg error "CAMERA_TYPE not set in config.sh."
 		exit 1

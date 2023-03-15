@@ -1,20 +1,23 @@
 #!/bin/bash
 
-ME="$(basename "${BASH_ARGV0}")"
-
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
+ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh"			|| exit 99
+#shellcheck disable=SC2086
+source "${ALLSKY_HOME}/variables.sh"			|| exit ${ALLSKY_ERROR_STOP}
 
 # This script may be called during installation BEFORE there is a settings file.
 # config.sh looks for the file and produces an error if it doesn't exist,
 # so only include these two files if there IS a settings file.
 if [[ -f ${SETTINGS_FILE} ]]; then
-	source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
-	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
+	#shellcheck disable=SC2086
+	source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
+	#shellcheck disable=SC2086
+	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
 fi
-source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit 99
+#shellcheck disable=SC2086
+source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit ${ALLSKY_ERROR_STOP}
 
 function usage_and_exit()
 {
@@ -224,7 +227,10 @@ while [[ $# -gt 0 ]]; do
 				# ${CC_FILE} is a generic name defined in config.sh.
 				# ${SPECIFIC_NAME} is specific to the camera type/model.
 				# It isn't really needed except debugging.
-				SPECIFIC_NAME="${ALLSKY_CONFIG}/${CC_FILE_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_FILE_EXT}"
+				local CC="$(basename "${CC_FILE}")"
+				local CC_EXT="${CC##*.}"			# after "."
+				local CC_NAME="${CC%.*}"			# before "."
+				SPECIFIC_NAME="${ALLSKY_CONFIG}/${CC_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_EXT}"
 
 				# Any old and new camera capabilities file should be the same unless Allsky
 				# adds or changes capabilities, so delete the old one just in case.

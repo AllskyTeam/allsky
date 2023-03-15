@@ -83,6 +83,9 @@ while [[ $# -gt 0 ]]; do
 	# shellcheck disable=SC2086
 	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
 done
+# Export other variables so user can use them in overlays
+export AS_CAMERA_TYPE="${CAMERA_TYPE}"
+export AS_CAMERA_MODEL="${CAMERA_MODEL}"
 
 source "${ALLSKY_SCRIPTS}/darkCapture.sh"		# does not return if in darkframe mode
 # TODO: Dark subtract long-exposure images, even if during daytime.

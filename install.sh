@@ -103,7 +103,7 @@ do_initial_heading()
 
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		MSG="${MSG}\nYou will be asked if you want to use the images and darks (if any) from"
-		MSG="${MSG}\nfrom your prior version of Allsky."
+		MSG="${MSG}\nyour prior version of Allsky."
 		if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 			MSG="${MSG}\nIf so, we will use its settings as well."
 		else
@@ -225,7 +225,7 @@ select_camera_type()
 		case "${PRIOR_ALLSKY_VERSION}" in
 			# New versions go here...
 # TODO: update version on next line:
-			"v2023.MM.DD_tbd")
+			"v2023.03.09_tbd")
 				# New style Allsky using ${CAMERA_TYPE}.
 				CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
 				# Don't bother with a message since this is a "similar" release.
@@ -982,7 +982,7 @@ does_prior_Allsky_exist()
 				*)
 					# New style Allsky with CAMERA_TYPE set in config.sh
 					PRIOR_ALLSKY="new"
-					PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
+					PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/$(basename "${SETTINGS_FILE}")"
 					# This shouldn't happen, but just in case ...
 					[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
 					;;

@@ -3,7 +3,8 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh"	|| exit 100
+#shellcheck disable=SC2086
+source "${ALLSKY_HOME}/variables.sh"	|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086
 source "${ALLSKY_SCRIPTS}/functions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 

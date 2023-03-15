@@ -36,9 +36,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	if [ "${ALLSKY_HOME}" = "" ] ; then	# This must come after setting colors above
 		echo -en "${RED}"
-		echo -n "${ME2}: ERROR: ALLSKY_HOME not set!  Exiting..."
+		echo -n "${ME2}: ERROR: ALLSKY_HOME not set!"
 		echo -e "${NC}"
-		exit 1
+		return 1
 	fi
 
 	# For temporary files or files that can be deleted at reboot.

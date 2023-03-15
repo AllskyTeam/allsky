@@ -1912,6 +1912,7 @@ create_webui_defines
 save_camera_capabilities "false" || exit_with_image 1			# prompts on error only
 
 # Code later needs "settings()" function.
+#shellcheck disable=SC2086
 source "${ALLSKY_CONFIG}/config.sh" || exit_with_image ${ALLSKY_ERROR_STOP}
 
 ##### Set locale

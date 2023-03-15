@@ -21,27 +21,27 @@
         {
             "id": 2,
             "name": "${TEMPERATURE_C}",
-            "description": "Sensor Temp in C (If Available)",
-            "format": "",
-            "sample": "32",
+            "description": "Sensor Temp in C",
+            "format": "{:.1f}",
+            "sample": "32.2",
             "type": "Number",
             "source": "System"
         },
         {
             "id": 3,
             "name": "${TEMPERATURE_F}",
-            "description": "Sensor Temp in F (If Available)",
-            "format": "",
-            "sample": "32",
+            "description": "Sensor Temp in F",
+            "format": "{:.1f}",
+            "sample": "32.2",
             "type": "Number",
             "source": "System"
         },
         {
             "id": 4,
             "name": "${AUTOEXPOSURE}",
-            "description": "Auto Exposure",
+            "description": "Auto Exposure Flag",
             "format": "",
-            "sample": "",
+            "sample": "Yes",
             "type": "Bool",
             "source": "System"
         },
@@ -49,7 +49,7 @@
             "id": 5,
             "name": "${EXPOSURE_US}",
             "description": "Frame Exposure Duration",
-            "format": "",
+            "format": "{:.n}",
             "sample": "10000",
             "type": "Number",
             "source": "System"
@@ -57,7 +57,7 @@
         {
             "id": 6,
             "name": "${sAUTOEXPOSURE}",
-            "description": "Frame Exposure auto flag",
+            "description": "Frame Exposure Auto String",
             "format": "",
             "sample": "(auto)",
             "type": "Text",
@@ -66,7 +66,7 @@
         {
             "id": 7,
             "name": "${sEXPOSURE}",
-            "description": "Frame Exposure auto String",
+            "description": "Frame Exposure Auto String",
             "format": "",
             "sample": "32.00 ms (0.03 sec)",
             "type": "Text",
@@ -75,16 +75,16 @@
         {
             "id": 8,
             "name": "${AUTOGAIN}",
-            "description": "Auto Gain",
+            "description": "Auto Gain Flag",
             "format": "",
-            "sample": "",
+            "sample": "Yes",
             "type": "Bool",
             "source": "System"
         },
         {
             "id": 9,
             "name": "${GAIN}",
-            "description": "Camera Gain",
+            "description": "Camera Gain Amount",
             "format": "",
             "sample": "180",
             "type": "Number",
@@ -93,16 +93,16 @@
         {
             "id": 10,
             "name": "${sAUTOGAIN}",
-            "description": "Camera Gain auto flag",
+            "description": "Camera Gain Auto String",
             "format": "",
-            "sample": "(Auto)",
+            "sample": "(auto)",
             "type": "Text",
             "source": "System"
         },
         {
             "id": 11,
             "name": "${BRIGHTNESS}",
-            "description": "Brightness",
+            "description": "Brightness Amount",
             "format": "",
             "sample": "50",
             "type": "Number",
@@ -111,7 +111,7 @@
         {
             "id": 12,
             "name": "${MEAN}",
-            "description": "Mean Brightness",
+            "description": "Mean Brightness Amount",
             "format": "",
             "sample": "",
             "type": "Number",
@@ -120,25 +120,25 @@
         {
             "id": 13,
             "name": "${AUTOWB}",
-            "description": "Auto White Balance",
+            "description": "Auto White Balance Flag",
             "format": "",
-            "sample": "",
+            "sample": "No",
             "type": "Bool",
             "source": "System"
         },
         {
             "id": 14,
             "name": "${sAUTOAWB}",
-            "description": "Auto White Balance String",
+            "description": "Auto White Balance Auto String",
             "format": "",
-            "sample": "",
-            "type": "Bool",
+            "sample": "(auto)",
+            "type": "Text",
             "source": "System"
-        },        
+        },
         {
             "id": 15,
             "name": "${WBR}",
-            "description": "White Balance RED",
+            "description": "White Balance RED Amount",
             "format": "",
             "sample": "3.47",
             "type": "Number",
@@ -147,7 +147,7 @@
         {
             "id": 16,
             "name": "${WBB}",
-            "description": "White Balance",
+            "description": "White Balance Blue Amount",
             "format": "",
             "sample": "1.00",
             "type": "Number",
@@ -158,7 +158,7 @@
             "name": "${FLIP}",
             "description": "Flip",
             "format": "",
-            "sample": "",
+            "sample": "none",
             "type": "Text",
             "source": "System"
         },
@@ -167,7 +167,7 @@
             "name": "${BIN}",
             "description": "Binning",
             "format": "",
-            "sample": "",
+            "sample": "1",
             "type": "Number",
             "source": "System"
         },
@@ -176,14 +176,14 @@
             "name": "${BIT_DEPTH}",
             "description": "Bit Depth",
             "format": "",
-            "sample": "",
+            "sample": "12",
             "type": "Number",
             "source": "System"
         },
         {
             "id": 20,
             "name": "${FOCUS}",
-            "description": "Focus",
+            "description": "Focus Metric",
             "format": "",
             "sample": "",
             "type": "Number",
@@ -194,8 +194,8 @@
             "name": "${25544ALT}",
             "description": "ISS Altitude",
             "format": "",
-            "sample": "",
-            "type": "Number",
+            "sample": "-25deg 49' 52.8\"",
+            "type": "Text",
             "source": "System"
         },
         {
@@ -203,17 +203,17 @@
             "name": "${25544AZ}",
             "description": "ISS Azimuth",
             "format": "",
-            "sample": "",
-            "type": "Number",
+            "sample": "83deg 11' 08.4\"",
+            "type": "Text",
             "source": "System"
         },
         {
             "id": 23,
             "name": "${25544VISIBLE}",
-            "description": "ISS Visible",
+            "description": "ISS Visible Flag",
             "format": "",
-            "sample": "",
-            "type": "Number",
+            "sample": "Yes",
+            "type": "Text",
             "source": "System"
         },
         {
@@ -221,8 +221,8 @@
             "name": "${MOON_ELEVATION}",
             "description": "Moon Altitude",
             "format": "",
-            "sample": "",
-            "type": "Number",
+            "sample": "11.69&deg;",
+            "type": "Text",
             "source": "System"
         },
         {
@@ -230,16 +230,16 @@
             "name": "${MOON_AZIMUTH}",
             "description": "Moon Azimuth",
             "format": "",
-            "sample": "",
-            "type": "Number",
+            "sample": "212&deg;",
+            "type": "Text",
             "source": "System"
         },
         {
             "id": 26,
             "name": "${MOON_ILLUMINATION}",
-            "description": "Moon Illumination",
-            "format": "",
-            "sample": "",
+            "description": "Moon Illumination Percent",
+            "format": "{:.1f}",
+            "sample": "85.3",
             "type": "Number",
             "source": "System"
         },
@@ -248,18 +248,17 @@
             "name": "${MOON_SYMBOL}",
             "description": "Moon Font Symbol",
             "format": "",
-            "sample": "",
-            "type": "Number",
+            "sample": "T",
+            "type": "Text",
             "source": "System"
         },
-
         {
             "id": 28,
             "name": "${SUN_DARKEST}",
             "description": "Darkest time",
             "format": "",
-            "sample": "",
-            "type": "text",
+            "sample": "2023-07-10 06:33:20",
+            "type": "Text",
             "source": "System"
         },
         {
@@ -267,8 +266,8 @@
             "name": "${SUN_NIGHTEND}",
             "description": "Nighttime ends",
             "format": "",
-            "sample": "",
-            "type": "text",
+            "sample": "2023-07-10 10:33:20",
+            "type": "Text",
             "source": "System"
         },
         {
@@ -277,7 +276,7 @@
             "description": "Nautical dawn",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
         },
         {
@@ -286,7 +285,7 @@
             "description": "Dawn",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
         },
         {
@@ -295,133 +294,133 @@
             "description": "Sunrise",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
         },
-		{
+        {
             "id": 33,
             "name": "${SUN_SUNRISEEND}",
             "description": "Sunrise ends",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
         },
-		{
+        {
             "id": 34,
             "name": "${SUN_NOON}",
             "description": "Noon",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
         },
-		{
+        {
             "id": 35,
             "name": "${SUN_SUNSETSTART}",
             "description": "Start of Sunset",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
         },
-		{
+        {
             "id": 36,
             "name": "${SUN_SUNSET}",
             "description": "Sunset",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
-        },		
-		{
+        },
+        {
             "id": 37,
             "name": "${SUN_DUSK}",
             "description": "Dusk",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
-        },		
-		{
+        },
+        {
             "id": 38,
             "name": "${SUN_NAUTICALDUSK}",
             "description": "Nautical Dusk",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
         },
-		{
+        {
             "id": 39,
             "name": "${SUN_NIGHT}",
             "description": "Night",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
         },
-		{
+        {
             "id": 40,
             "name": "${SUN_AZIMUTH}",
             "description": "Sun Azimuth",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
-        },		
-		{
+        },
+        {
             "id": 41,
             "name": "${SUN_ELEVATION}",
             "description": "Sun Elevation",
             "format": "",
             "sample": "",
-            "type": "text",
+            "type": "Text",
             "source": "System"
         },
         {
             "id": 42,
             "name": "${CAMERA_TYPE}",
-            "description": "Camera",
+            "description": "Camera Type",
             "format": "",
-            "sample": "",
-            "type": "text",
+            "sample": "RPi",
+            "type": "Text",
             "source": "System"
         },
         {
             "id": 43,
-            "name": "${AUTOUSB}",
-            "description": "AUTOUSB ZWO Only",
+            "name": "${CAMERA_MODEL}",
+            "description": "Camera Model",
             "format": "",
-            "sample": "",
-            "type": "Bool",
+            "sample": "HQ",
+            "type": "Text",
             "source": "System"
         },
         {
             "id": 44,
-            "name": "${USB}",
-            "description": "USB ZWO Only",
+            "name": "${AUTOUSB}",
+            "description": "AUTOUSB Flag (ZWO Only)",
             "format": "",
-            "sample": "",
-            "type": "Number",
+            "sample": "Yes",
+            "type": "Bool",
             "source": "System"
         },
         {
             "id": 45,
-            "name": "${CAPTURE}",
-            "description": "capture",
+            "name": "${USB}",
+            "description": "USB Bandwidth (ZWO Only)",
             "format": "",
-            "sample": "",
-            "type": "Text",
+            "sample": "55",
+            "type": "Number",
             "source": "System"
         },
         {
             "id": 46,
             "name": "${DARKFRAME}",
-            "description": "Taking Dark Frames",
+            "description": "Taking Dark Frames Flag",
             "format": "",
-            "sample": "",
-            "type": "Text",
+            "sample": "No",
+            "type": "Bool",
             "source": "System"
         },
         {
@@ -429,16 +428,16 @@
             "name": "${eOVERLAY}",
             "description": "External Overlay",
             "format": "",
-            "sample": "",
-            "type": "Text",
+            "sample": "1",
+            "type": "Number",
             "source": "System"
         },
         {
             "id": 48,
             "name": "${DAY_OR_NIGHT}",
-            "description": "Day/Night string",
+            "description": "Day\/Night string",
             "format": "",
-            "sample": "Day",
+            "sample": "DAY",
             "type": "Text",
             "source": "System"
         },
@@ -447,9 +446,10 @@
             "name": "${ALLSKY_VERSION}",
             "description": "Allsky version string",
             "format": "",
-            "sample": "v2022.MM.DD_tbd",
+            "sample": "v2023.03.09_tbd",
             "type": "Text",
             "source": "System"
-        }         
+        }
     ]
 }
+

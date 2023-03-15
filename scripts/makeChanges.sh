@@ -227,9 +227,9 @@ while [[ $# -gt 0 ]]; do
 				# ${CC_FILE} is a generic name defined in config.sh.
 				# ${SPECIFIC_NAME} is specific to the camera type/model.
 				# It isn't really needed except debugging.
-				local CC="$(basename "${CC_FILE}")"
-				local CC_EXT="${CC##*.}"			# after "."
-				local CC_NAME="${CC%.*}"			# before "."
+				CC="$(basename "${CC_FILE}")"
+				CC_EXT="${CC##*.}"			# after "."
+				CC_NAME="${CC%.*}"			# before "."
 				SPECIFIC_NAME="${ALLSKY_CONFIG}/${CC_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_EXT}"
 
 				# Any old and new camera capabilities file should be the same unless Allsky

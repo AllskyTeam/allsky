@@ -168,7 +168,7 @@ while [[ $# -gt 0 ]]; do
 
 			# This requires Allsky to be stopped so we don't
 			# try to call the capture program while it's already running.
-			sudo systemctl stop allsky
+			sudo systemctl stop allsky 2> /dev/null
 
 			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
@@ -218,7 +218,7 @@ while [[ $# -gt 0 ]]; do
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
 				CAMERA_MODEL="$(jq -r .cameraModel "${CC_FILE}")"
-				if [[ -z ${CAMERA_MODEL} ]]; then
+				if [[ -z ${CAMERA_MODEL} || ${CAMERA_MODEL} == "null" ]]; then
 					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
 					exit 1
@@ -255,9 +255,9 @@ while [[ $# -gt 0 ]]; do
 				echo -e "${wDEBUG}Calling:" \
 					"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 					${FORCE} ${DEBUG_ARG} \
-					--cc_file "${CC_FILE}" \
-					--options_file "${OPTIONS_FILE}" \
-					--settings_file "${SETTINGS_FILE}${wNC}"
+					\n\t--cc_file "${CC_FILE}" \
+					\n\t--options_file "${OPTIONS_FILE}" \
+					\n\t--settings_file "${SETTINGS_FILE}${wNC}"
 			fi
 			# shellcheck disable=SC2086
 			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \

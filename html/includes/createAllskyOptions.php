@@ -386,15 +386,15 @@ if ($settings_file !== "") {
 	$FileName = $pieces[0];		// e.g., "settings"
 	$FileExt = $pieces[1];		// e.g., "json"
 	// e.g., "settings_ZWO_ASI123.json"
-	$cameraSpecificSettingsFile = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
-	$fullName = dirname($settings_file) . "/$cameraSpecificSettingsFile";
+	$cameraSpecificSettingsName = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
+	$fullSpecificFile = dirname($settings_file) . "/$cameraSpecificSettingsName";
 	if ($debug > 0) {
-		$e =  file_exists($fullName) ? "yes" : "no";
-		echo "Camera-specific settings file exists ($e): $fullName.\n";
+		$e =  file_exists($fullSpecificFile) ? "yes" : "no";
+		echo "Camera-specific settings file exists ($e): $fullSpecificFile.\n";
 	}
 
 	// If there isn't a camera-specific file, create one.
-	if ($force || ! file_exists($fullName)) {
+	if ($force || ! file_exists($fullSpecificFile)) {
 		// For each item in the options file, write the name and default value.
 		$contents = "{\n";
 		foreach ($options_array as $option) {
@@ -415,10 +415,10 @@ if ($settings_file !== "") {
 		$contents .= "\t\"XX_END_XX\" : 1\n";
 		$contents .= "}\n";
 
-		if ($debug > 0) echo "Creating settings file: $fullName.\n";
-		$results = updateFile($fullName, $contents, $cameraSpecificSettingsFile, true);
+		if ($debug > 0) echo "Creating camera-specific settings file: $fullSpecificFile.\n";
+		$results = updateFile($fullSpecificFile, $contents, $cameraSpecificSettingsName, true);
 		if ($results != "") {
-			echo "ERROR: Unable to create $fullName.\n";
+			echo "ERROR: Unable to create $fullSpecificFile.\n";
 			exit(8);
 		}
 
@@ -426,12 +426,12 @@ if ($settings_file !== "") {
 		// There IS a camera-specific file for the new camera type so we
 		// don't need to do anything special.
 		// The generic name will be linked to the specific name below.
-		echo "Using existing $fullName.\n";
+		echo "Using existing $fullSpecificFile.\n";
 	}
 
-	if ($debug > 0) echo "Linking $settings_file to $fullName.\n";
-	if (! link($fullName, $settings_file)) {
-		echo "ERROR: Unable to link $settings_file to $fullName.\n";
+	if ($debug > 0) echo "Linking $fullSpecificFile to $settings_file.\n";
+	if (! link($fullSpecificFile, $settings_file)) {
+		echo "ERROR: Unable to link $fullSpecificFile to $settings_file.\n";
 		exit(9);
 	}
 }

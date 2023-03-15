@@ -256,88 +256,89 @@
             "id": 28,
             "name": "${SUN_DARKEST}",
             "description": "Darkest time",
-            "format": "",
-            "sample": "2023-07-10 06:33:20",
-            "type": "Text",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-11 00:02:50",
+            "type": "Date",
             "source": "System"
         },
         {
             "id": 29,
             "name": "${SUN_NIGHTEND}",
             "description": "Nighttime ends",
-            "format": "",
-            "sample": "2023-07-10 10:33:20",
-            "type": "Text",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-10 04:33:20",
+            "type": "Date",
             "source": "System"
         },
         {
             "id": 30,
             "name": "${SUN_NAUTICALDAWN}",
             "description": "Nautical dawn",
-            "format": "",
-            "sample": "",
-            "type": "Text",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-10 05:06:07",
+            "type": "Date",
             "source": "System"
         },
         {
             "id": 31,
             "name": "${SUN_DAWN}",
             "description": "Dawn",
-            "format": "",
-            "sample": "",
-            "type": "Text",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-10 05:38:27",
+            "type": "Date",
             "source": "System"
         },
         {
             "id": 32,
             "name": "${SUN_SUNRISE}",
             "description": "Sunrise",
-            "format": "",
-            "sample": "",
-            "type": "Text",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-10 06:06:11",
+            "type": "Date",
             "source": "System"
         },
         {
             "id": 33,
             "name": "${SUN_SUNRISEEND}",
             "description": "Sunrise ends",
-            "format": "",
-            "sample": "",
-            "type": "Text",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-10 06:09:02",
+            "type": "Date",
             "source": "System"
         },
         {
             "id": 34,
             "name": "${SUN_NOON}",
             "description": "Noon",
-            "format": "",
-            "sample": "",
-            "type": "Text",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-10 12:02:50",
+            "type": "Date",
             "source": "System"
         },
         {
             "id": 35,
             "name": "${SUN_SUNSETSTART}",
             "description": "Start of Sunset",
-            "format": "",
-            "sample": "",
-            "type": "Text",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-10 18:56:37",
+            "type": "Date",
             "source": "System"
         },
         {
             "id": 36,
             "name": "${SUN_SUNSET}",
             "description": "Sunset",
-            "format": "",
-            "sample": "",
-            "type": "Text",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-10 18:59:28",
+            "type": "Date",
             "source": "System"
         },
         {
             "id": 37,
             "name": "${SUN_DUSK}",
             "description": "Dusk",
-            "format": "",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-11 18:27:12",
             "sample": "",
             "type": "Text",
             "source": "System"
@@ -346,18 +347,18 @@
             "id": 38,
             "name": "${SUN_NAUTICALDUSK}",
             "description": "Nautical Dusk",
-            "format": "",
-            "sample": "",
-            "type": "Text",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-11 18:59:32",
+            "type": "Date",
             "source": "System"
         },
         {
             "id": 39,
             "name": "${SUN_NIGHT}",
             "description": "Night",
-            "format": "",
-            "sample": "",
-            "type": "Text",
+            "format": "%d-%m-%Y %H:%M:%S",
+            "sample": "2023-07-11 19:32:19",
+            "type": "Date",
             "source": "System"
         },
         {
@@ -452,4 +453,3 @@
         }
     ]
 }
-

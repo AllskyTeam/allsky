@@ -4,6 +4,7 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 source "${ALLSKY_HOME}/variables.sh"	|| exit 100
+#shellcheck disable=SC2086
 source "${ALLSKY_SCRIPTS}/functions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
 if [[ ${EUID} -eq 0 ]]; then
@@ -1505,6 +1506,7 @@ restore_prior_files()
 # This can be needed if the user hosed something up, or there was a problem somewhere.
 do_update()
 {
+	#shellcheck disable=SC2086
 	source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}	# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg error "CAMERA_TYPE not set in config.sh."

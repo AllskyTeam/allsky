@@ -648,6 +648,7 @@ class ALLSKYOVERLAY:
         opacity = None
         stroke = None
         strokewidth = None
+        rawFieldName = placeHolder
         placeHolder = placeHolder.replace("${", "")
         placeHolder = placeHolder.replace("}", "")
         envCheck = "AS_" + placeHolder
@@ -720,10 +721,10 @@ class ALLSKYOVERLAY:
                             try:
                                 value = format.format(convertValue)
                             except Exception as err:
-                                s.log(0, f"ERROR: Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
+                                s.log(0, f"ERROR: '{rawFieldName}' Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
                                 value = self._formaterrortext
                         except ValueError as err:
-                            s.log(0, f"ERROR: Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
+                            s.log(0, f"ERROR: '{rawFieldName}' Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
 
                 if variableType == 'Bool':
                     if s.int(value) == 0:
@@ -969,26 +970,26 @@ class ALLSKYOVERLAY:
                     night = todaySunData["night"]
             
             format = self._suntimeformat
-            os.environ["SUN_DARKEST"] = nadir.strftime(format)
+            os.environ["AS_SUN_DARKEST"] = nadir.strftime(format)
             if str(nightEnd) != "NaT":
-                os.environ["SUN_NIGHTEND"] = nightEnd.strftime(format)
+                os.environ["AS_SUN_NIGHTEND"] = nightEnd.strftime(format)
             else:
-                os.environ["SUN_NIGHTEND"] = self._nonighttext
-            os.environ["SUN_NAUTICALDAWN"] = nauticalDawn.strftime(format)
-            os.environ["SUN_DAWN"] = dawn.strftime(format)
-            os.environ["SUN_SUNRISE"] = sunRise.strftime(format)
-            os.environ["SUN_SUNRISEEND"] = sunriseEnd.strftime(format)
-            os.environ["SUN_NOON"] = solarNoon.strftime(format)
-            os.environ["SUN_SUNSETSTART"] = sunsetStart.strftime(format)
-            os.environ["SUN_SUNSET"] = sunSet.strftime(format)
-            os.environ["SUN_DUSK"] = dusk.strftime(format)
-            os.environ["SUN_NAUTICALDUSK"] = nauticalDusk.strftime(format)
+                os.environ["AS_SUN_NIGHTEND"] = self._nonighttext
+            os.environ["AS_SUN_NAUTICALDAWN"] = nauticalDawn.strftime(format)
+            os.environ["AS_SUN_DAWN"] = dawn.strftime(format)
+            os.environ["AS_SUN_SUNRISE"] = sunRise.strftime(format)
+            os.environ["AS_SUN_SUNRISEEND"] = sunriseEnd.strftime(format)
+            os.environ["AS_SUN_NOON"] = solarNoon.strftime(format)
+            os.environ["AS_SUN_SUNSETSTART"] = sunsetStart.strftime(format)
+            os.environ["AS_SUN_SUNSET"] = sunSet.strftime(format)
+            os.environ["AS_SUN_DUSK"] = dusk.strftime(format)
+            os.environ["AS_SUN_NAUTICALDUSK"] = nauticalDusk.strftime(format)
             if str(night) != "NaT":
-                os.environ["SUN_NIGHT"] = night.strftime(format)
+                os.environ["AS_SUN_NIGHT"] = night.strftime(format)
             else:
-                os.environ["SUN_NIGHT"] = self._nonighttext
-            os.environ["SUN_AZIMUTH"] = str(int(sunAzimuth))
-            os.environ["SUN_ELEVATION"] = str(int(sunElevation))
+                os.environ["AS_SUN_NIGHT"] = self._nonighttext
+            os.environ["AS_SUN_AZIMUTH"] = str(int(sunAzimuth))
+            os.environ["AS_SUN_ELEVATION"] = str(int(sunElevation))
         else:
             s.log(4,'INFO: Sun not enabled')
             

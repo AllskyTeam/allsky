@@ -34,6 +34,7 @@ WEBSERVER_GROUP="www-data"
 ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
+SETTINGS_FILE_NAME="$(basename "${SETTINGS_FILE}")"
 FORCE_CREATING_SETTINGS_FILE="false"	# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
@@ -946,7 +947,7 @@ set_locale()
 		display_msg progress "Setting locale to '${LOCALE}'."
 		if [[ ! -f ${SETTINGS_FILE} ]]; then
 			# For testing, create a dummy settings file.
-			SETTINGS_FILE=/tmp/s
+			SETTINGS_FILE="/tmp/s"
 			echo '{ "locale" : "aa_AA.UTF-8" }' > "${SETTINGS_FILE}"
 		fi
 		jq ".locale = \"${LOCALE}\"" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
@@ -978,7 +979,7 @@ does_prior_Allsky_exist()
 				*)
 					# New style Allsky with CAMERA_TYPE set in config.sh
 					PRIOR_ALLSKY="new"
-					PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/$(basename "${SETTINGS_FILE}")"
+					PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
 					# This shouldn't happen, but just in case ...
 					[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
 					;;
@@ -1337,11 +1338,11 @@ restore_prior_files()
 
 	local SETTINGS_MSG=""
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
-		if [[ -f ${PRIOR_CONFIG_DIR}/settings.json ]]; then
+		if [[ -f ${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME} ]]; then
 			display_msg progress "Restoring WebUI settings."
 			# This file is probably a link to a camera type/model-specific file,
 			# so copy it instead of moving it to not break the link.
-			cp -a "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
+			cp -a "${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}" "${SETTINGS_FILE}"
 			RESTORED_PRIOR_SETTINGS_FILE="true"
 
 			# TODO: check if this is an older version of the file,

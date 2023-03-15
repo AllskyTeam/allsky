@@ -307,10 +307,10 @@ recreate_options_file()
 
 ####
 # Save the camera capabilities and use them to set the WebUI min, max, and defaults.
-# This will error out and exit if no camera installed,
+# This will error out and exit if no camera is installed,
 # otherwise it will determine what capabilities the connected camera has,
 # then create an "options" file specific to that camera.
-# It will also create a default "settings" file.
+# It will also create a default camera-specific "settings" file if one doesn't exist.
 save_camera_capabilities()
 {
 	if [[ -z ${CAMERA_TYPE} ]]; then
@@ -318,7 +318,7 @@ save_camera_capabilities()
 		return 1
 	fi
 
-	OPTIONSFILEONLY="${1}"
+	OPTIONSFILEONLY="${1}"		# Set to "true" if we should ONLY create the options file.
 
 	# Create the camera type/model-specific options file and optionally a default settings file.
 	# --cameraTypeOnly tells makeChanges.sh to only change the camera info, then exit.
@@ -338,9 +338,12 @@ save_camera_capabilities()
 		display_msg progress "Setting up WebUI options${MSG} for ${CAMERA_TYPE} cameras."
 	fi
 
+	# Restore the prior settings file so it can be used by makeChanges.sh.
+	[[ ${PRIOR_ALLSKY} != "" ]] && restore_prior_settings_files
+
 	if [[ ${DEBUG} -gt 0 ]]; then
 		MSG="Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
-		MSG="${MSG}  debug ${DEBUG_ARG} 'cameraType' 'Camera Type' '${CAMERA_TYPE}'"
+		MSG="${MSG}  ${DEBUG_ARG} 'cameraType' 'Camera Type' '${CAMERA_TYPE}'"
 		display_msg debug "${MSG}"
 	fi
 	#shellcheck disable=SC2086
@@ -606,7 +609,10 @@ install_webserver()
 	sudo systemctl stop hostapd 2> /dev/null
 	sudo systemctl stop lighttpd 2> /dev/null
 	TMP="${INSTALL_LOGS_DIR}/lighttpd.install.log"
-	(sudo apt-get update && sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon) > "${TMP}" 2>&1
+	(
+		sudo apt-get update && \
+			sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
+	) > "${TMP}" 2>&1
 	check_installation_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
@@ -622,8 +628,14 @@ install_webserver()
 	sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
 
 	sudo lighty-enable-mod fastcgi-php > /dev/null 2>&1
-	sudo rm -fr /var/log/lighttpd/*		# Start off with a clean log file.
+
+	# Start off with a clean log file that the user can write to.
+	sudo rm -fr /var/log/lighttpd/*
 	sudo systemctl start lighttpd
+	local LIGHTTPD_LOG="/var/log/lighttpd/error.1"
+	sudo touch "${LIGHTTPD_LOG}"
+	sudo chmod 664 "${LIGHTTPD_LOG}"
+	sudo chgrp "${ALLSKY_GROUP}" "${LIGHTTPD_LOG}"
 }
 
 
@@ -643,6 +655,7 @@ prompt_for_hostname()
 
 	# If we're upgrading, use the current name.
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
+		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
 		display_msg --log progress "Using current hostname of ${CURRENT_HOSTNAME}."
 		return
 	fi
@@ -697,7 +710,9 @@ set_permissions()
 	fi
 
 	# Remove any old entries; we now use /etc/sudoers.d/allsky instead of /etc/sudoers.
+	# TODO: Can remove this in the next release
 	sudo sed -i -e "/allsky/d" -e "/${WEBSERVER_GROUP}/d" /etc/sudoers
+
 	do_sudoers
 
 	# The web server needs to be able to create and update many of the files in ${ALLSKY_CONFIG}.
@@ -709,6 +724,8 @@ set_permissions()
 	# The files should already be the correct permissions/owners, but just in case, set them.
 	# We don't know what permissions may have been on the old website, so use "sudo".
 	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
+	# These are the exceptions
+	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" "${ALLSKY_WEBUI}/includes/overlay_sample.py"
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
 
 	chmod 775 "${ALLSKY_TMP}"
@@ -717,12 +734,6 @@ set_permissions()
 	# This is actually an Allsky Website file, but in case we restored the old website,
 	# set its permissions.
 	chgrp -f "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-
-	chmod -R 775 "${ALLSKY_CONFIG}/overlay"
-	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}/overlay"
-
-	chmod -R 775 "${ALLSKY_CONFIG}/modules"
-	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}/modules"
 }
 
 
@@ -970,21 +981,24 @@ does_prior_Allsky_exist()
 		if [[ -f  ${PRIOR_ALLSKY_DIR}/version ]]; then
 			PRIOR_ALLSKY_VERSION="$( < "${PRIOR_ALLSKY_DIR}/version" )"
 			case "${PRIOR_ALLSKY_VERSION}" in
-				"v2022.03.01")
+				"v2022.03.01")		# First Allsky version with a version file
 					# This is an old style Allsky with ${CAMERA} in config.sh and
 					# the first version with a "version" file.
-					# Fall through...
+					# Don't do anything here; go to the "if" after the "esac".
 					;;
 
 				*)
-					# New style Allsky with CAMERA_TYPE set in config.sh
+					# Newer version.
+					# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file.
 					PRIOR_ALLSKY="new"
 					PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
+
 					# This shouldn't happen, but just in case ...
 					[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
 					;;
 			esac
 		fi
+
 		if [[ -z ${PRIOR_ALLSKY} ]]; then
 			PRIOR_ALLSKY="old"
 			PRIOR_ALLSKY_VERSION="${PRIOR_ALLSKY_VERSION:-old}"
@@ -1137,9 +1151,9 @@ get_lat_long()
 
 
 ####
-#
-# prior_version, current_version
-convert_settings()
+# Convert the prior settings file to a new one,
+# then link the new one to the camera-specific name.
+convert_settings()			# prior_version, prior_file, current_version
 {
 cat > /dev/null <<EOF
 # ZWO:
@@ -1241,6 +1255,109 @@ EOF
 
 
 ####
+# Restore the prior settings file(s) if the user wanted to use them.
+PRIOR_SETTINGS_RESTORED="false"
+restore_prior_settings_files()
+{
+	[[ ${PRIOR_SETTINGS_RESTORED} == "true" ]] && return
+	PRIOR_SETTINGS_RESTORED="true"
+
+	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
+		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
+
+			# The prior settings file should be a link to a camera-specific file,
+			# and there may be more than one camera-specific file if the user has
+			# more than one camera.
+			# Copy all the camera-specific settings files; don't copy the generic-named
+			# file since it will be recreated.
+
+			# Camera-specific settings file names are:
+			#	${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}
+			# where ${SETTINGS_FILE_NAME} == ${NAME}.${EXT}
+			# We don't know the ${CAMERA_MODEL} yet so use a regular expression.
+			local NAME="${SETTINGS_FILE_NAME%.*}"			# before "."
+			local EXT="${SETTINGS_FILE_NAME##*.}"			# after "."
+
+			FILES="$(find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}")"
+			if [[ -n ${FILES} ]]; then
+				RESTORED_PRIOR_SETTINGS_FILE="true"
+				echo "${FILES}" | while read -r F
+					do
+						display_msg progress "Restoring '$(basename "${F}")."
+						cp -a "${F}" "${ALLSKY_CONFIG}"
+					done
+			else
+				MSG="No prior camera-specific settings files found,"
+
+				# Try to create one based on ${PRIOR_SETTINGS_FILE}.
+				local CT="$(jq -r .cameraType "${PRIOR_SETTINGS_FILE}")"
+				if [[ ${CT} != "${CAMERA_TYPE}" ]]; then
+					MSG="${MSG}\nand unable to create one: new CAMERA_TYPE (${CAMERA_TYPE} different from prior type (${CT})."
+				else
+					local CM="$(jq -r .cameraModel "${PRIOR_SETTINGS_FILE}")"
+					local SPECIFIC="${NAME}_${CT}_${CM}.${EXT}"
+					cp -a "${PRIOR_SETTINGS_FILE}" "${ALLSKY_CONFIG}/${SPECIFIC}"
+					MSG="${MSG}\nbut was able to create '${SPECIFIC}'."
+				fi
+				display_msg --log warning "${MSG}"
+			fi
+
+
+			# TODO: check if this is an older version of the file,
+			# and if so, reset "lastChanged" to null.
+			# BUT, how do we determine if it's an old file,
+			# given that it's initially created at installation time?
+		else
+			# This should "never" happen.
+			# Their prior version is "new" but they don't have a settings file?
+			get_lat_long
+		fi
+	else
+		# settings file is old style in ${OLD_RASPAP_DIR}.
+		if [[ -n ${PRIOR_SETTINGS_FILE} ]]; then
+			# Transfer prior settings to the new file.
+			case "${PRIOR_ALLSKY_VERSION}" in
+				"v2022.03.01")
+					convert_settings "${PRIOR_ALLSKY_VERSION}" "${PRIOR_SETTINGS_FILE}" \
+							"${ALLSKY_VERSION}"
+					;;
+
+				*)	# This could be one of many old versions of Allsky,
+					# so don't try to copy all the settings since there have
+					# been many changes, additions, and deletions.
+
+					# As far as I know, latitude and longitude have never changed,
+					# and are required and have no default,
+					# so try to restore them so Allsky can restart automatically.
+					LAT="$(settings .latitude "${PRIOR_SETTINGS_FILE}")"
+					LONG="$(settings .longitude "${PRIOR_SETTINGS_FILE}")"
+					ANGLE="$(settings .angle "${PRIOR_SETTINGS_FILE}")"
+					jq ".latitude=\"${LAT}\" | .longitude=\"${LONG}\" | .angle=\"${ANGLE}\"" \
+						"${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
+					display_msg --log progress "Prior latitude, longitude, and angle restored."
+
+					MSG="You need to manually transfer your old settings to the WebUI.\n"
+					MSG="${MSG}\nNote that there have been many changes to the settings file"
+					MSG="${MSG} since you last installed Allsky, so it will likely be easiest"
+					MSG="${MSG} to re-enter everything via the WebUI's 'Allsky Settings' page."
+					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+					display_msg info "\n${MSG}\n"
+					echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+					;;
+
+			esac
+		else
+			# This should "never" happen.
+			# They have a prior Allsky version but no "settings file?
+			get_lat_long
+
+			# If we ever automate migrating settings, this next statement should be deleted.
+			FORCE_CREATING_SETTINGS_FILE="true"
+		fi
+	fi
+}
+
+####
 # If the user wanted to restore files from a prior version of Allsky, do that.
 restore_prior_files()
 {
@@ -1336,58 +1453,8 @@ restore_prior_files()
 		cp -a "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
 	fi
 
-	local SETTINGS_MSG=""
-	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
-		if [[ -f ${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME} ]]; then
-			display_msg progress "Restoring WebUI settings."
-			# This file is probably a link to a camera type/model-specific file,
-			# so copy it instead of moving it to not break the link.
-			cp -a "${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}" "${SETTINGS_FILE}"
-			RESTORED_PRIOR_SETTINGS_FILE="true"
+	restore_prior_settings_files
 
-			# TODO: check if this is an older version of the file,
-			# and if so, reset "lastChanged" to null.
-			# BUT, how do we determine if it's an old file,
-			# given that it's initially created at installation time?
-		else
-			# This should "never" happen.
-			# Their prior version is "new" but they don't have a settings file?
-			get_lat_long
-		fi
-	else
-		# settings file is old style in ${OLD_RASPAP_DIR}.
-		if [[ -n ${PRIOR_SETTINGS_FILE} ]]; then
-
-# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-			# Transfer prior settings to the new file.
-			case "${PRIOR_ALLSKY_VERSION}" in
-				"v2022.03.01")
-					convert_settings "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
-					;;
-
-				*)
-					# Latitude and longitude are required and have no default,
-					# so try to restore them so Allsky can restart automatically.
-					# As far as I know, these names have never changed.
-					LAT="$(settings .latitude "${PRIOR_SETTINGS_FILE}")"
-					LONG="$(settings .longitude "${PRIOR_SETTINGS_FILE}")"
-					ANGLE="$(settings .angle "${PRIOR_SETTINGS_FILE}")"
-					jq ".latitude=\"${LAT}\" | .longitude=\"${LONG}\" | .angle=\"${ANGLE}\"" \
-						"${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
-					display_msg --log progress "Prior latitude, longitude, and angle restored."
-					SETTINGS_MSG="\n\nYou also need to transfer your old settings to the WebUI.\n"
-					;;
-
-			esac
-		else
-			# This should "never" happen.
-			# They have a prior Allsky version but no "settings file?
-			get_lat_long
-
-			# If we ever automate migrating settings, this next statement should be deleted.
-			FORCE_CREATING_SETTINGS_FILE="true"
-		fi
-	fi
 	# Do NOT restore options.json - it will be recreated.
 
 	# See if the prior config.sh and ftp-setting.sh are the same version as
@@ -1491,7 +1558,7 @@ restore_prior_files()
 		MSG="${MSG}\nDo NOT add the old/deleted settings back in."
 		MSG2=""
 	fi
-	MSG="${MSG}${SETTINGS_MSG}"
+	MSG="${MSG}"
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	display_msg info "\n${MSG}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
@@ -1819,10 +1886,11 @@ check_tmp
 
 MSG="\nThe following steps can take about an HOUR depending on the speed of your Pi"
 MSG="${MSG}\nand how many of the necessary dependencies are already installed."
+display_msg info "${MSG}"
+
 MSG="${MSG}\nYou will see progress messages throughout the process."
 MSG="${MSG}\nAt the end you will be prompted again for additional steps.\n"
 whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-display_msg info "${MSG}"
 
 
 ##### Install web server
@@ -1844,7 +1912,7 @@ create_webui_defines
 save_camera_capabilities "false" || exit_with_image 1			# prompts on error only
 
 # Code later needs "settings()" function.
-source "${ALLSKY_CONFIG}/config.sh" || exit_with_image 1
+source "${ALLSKY_CONFIG}/config.sh" || exit_with_image ${ALLSKY_ERROR_STOP}
 
 ##### Set locale
 set_locale

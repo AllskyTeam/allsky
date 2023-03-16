@@ -180,20 +180,10 @@ if [[ ${LONGITUDE} == "" ]]; then
 fi
 [[ ${OK} == "false" ]] && echo -e "${ERROR_MSG_START}${E}${wNC}" && exit 1
 
-LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
-LATRET=$?
-LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
-LONGRET=$?
 OK="true"
-if [[ ${LATRET} -ne 0 ]]; then
-	OK="false"
-	echo -e "${RED}${ME}: ERROR: ${LATITUDE}"
-fi
-if [[ ${LONGRET} -ne 0 ]]; then
-	OK="false"
-	echo -e "${RED}${ME}: ERROR: ${LONGITUDE}"
-fi
-[[ ${OK} == "false" ]] && exit 1
+LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")" || OK="false"
+LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")" || OK="false"
+[[ ${OK} == "false" ]] && exit 1	# convertLatLong output error message
 
 if false; then
 	LA=${LATITUDE%.*}
@@ -290,23 +280,23 @@ else
 	if [[ -f ${ALLSKY_HOME}/version ]]; then
 		ALLSKY_VERSION="$(< "${ALLSKY_HOME}/version")"
 	else
-		ALLSKY_VERSION="$(grep "Allsky Camera Software" "${ALLSKY_LOG}" | tail -1 | sed -e 's/.*Software //' -e 's/ .*//')"
-		[[ -z ${ALLSKY_VERSION} ]] && ALLSKY_VERSION="unknown"
+		ALLSKY_VERSION="unknown"		# This really should be an error
 	fi
 
 	generate_post_data()
 	{
+		# Handle double quotes in fields that may have them.
 		cat <<-EOF
 		{
-		"location": "${LOCATION}",
-		"owner": "${OWNER}",
+		"location": "${LOCATION/\"/\\\"}",
+		"owner": "${OWNER/\"/\\\"}",
 		"latitude": "${LATITUDE}",
 		"longitude": "${LONGITUDE}",
 		"website_url": "${WEBSITE_URL}",
 		"image_url": "${IMAGE_URL}",
-		"camera": "${CAMERA}",
-		"lens": "${LENS}",
-		"computer": "${COMPUTER}",
+		"camera": "${CAMERA/\"/\\\"}",
+		"lens": "${LENS/\"/\\\"}",
+		"computer": "${COMPUTER/\"/\\\"}",
 		"allsky_version": "${ALLSKY_VERSION}",
 		"machine_id": "${MACHINE_ID}"
 		}
@@ -322,20 +312,6 @@ if [[ ${UPLOAD} == "false" ]]; then
 	parity="$(( decimal % 2 ))"
 	(( $(date +%e) % 2 == parity )) && UPLOAD="true"
 fi
-latitude="$(convertLatLong "$(settings ".latitude")" "latitude")"
-LATRET=$?
-longitude="$(convertLatLong "$(settings ".longitude")" "longitude")"
-LONGRET=$?
-OK="true"
-if [[ ${LATRET} -ne 0 ]]; then
-	OK="false"
-	echo -e "${RED}${ME}: ERROR: ${latitude}"
-fi
-if [[ ${LONGRET} -ne 0 ]]; then
-	OK="false"
-	echo -e "${RED}${ME}: ERROR: ${longitude}"
-fi
-[[ ${OK} == "false" ]] && exit 1
 
 RETURN_CODE=0
 if [[ ${UPLOAD} == "true" ]]; then

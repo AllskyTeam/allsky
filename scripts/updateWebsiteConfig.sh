@@ -141,21 +141,24 @@ while [[ $# -gt 0 ]]; do
 done
 
 
+# shellcheck disable=SC2124
+S="${JQ_STRING[@]}"
+
 if [[ ${DEBUG} == "true" ]]; then
-	echo -e "${wDEBUG}DEBUG: not running:"
-	# shellcheck disable=SC2145
-	echo -e "  jq '${JQ_STRING[@]}' ${CONFIG_FILE}${wNC}"
+	echo -en "${wDEBUG}"
+	echo -en "DEBUG: Executing:   jq '${S}' ${CONFIG_FILE}"
+	echo -e "${wNC}"
+fi
+
+if OUTPUT="$(jq "${S}" "${CONFIG_FILE}" 2>&1 > /tmp/x && mv /tmp/x "${CONFIG_FILE}")"; then
+	if [[ ${VERBOSITY} == "verbose" ]]; then
+		echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
+	elif [[ ${VERBOSITY} == "summary" ]]; then
+		echo -e "${wOK}${LorR}Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME} UPDATED${wNC}"
+	fi		# nothing if "silent"
+	exit 0
 else
-	# shellcheck disable=SC2124
-	S="${JQ_STRING[@]}"
-	if OUTPUT="$(jq "${S}" "${CONFIG_FILE}" 2>&1 > /tmp/x && mv /tmp/x "${CONFIG_FILE}")"; then
-		if [[ ${VERBOSITY} == "verbose" ]]; then
-			echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
-		elif [[ ${VERBOSITY} == "summary" ]]; then
-			echo -e "${wOK}${LorR}Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME} UPDATED${wNC}"
-		fi		# nothing if "silent"
-	else
-		echo -e "${wERROR}ERROR: unable to update data in '${CONFIG_FILE}':${wNC}" >&2
-		echo "   ${OUTPUT}" >&2
-	fi
+	echo -e "${wERROR}ERROR: unable to update data in '${CONFIG_FILE}':${wNC}" >&2
+	echo "   ${OUTPUT}" >&2
+	exit 1
 fi

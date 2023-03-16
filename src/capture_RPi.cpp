@@ -351,22 +351,23 @@ int RPicapture(config cg, cv::Mat *image)
 
 	// Execute the command.
 	int ret = system(cmd);
-	if (ret == 0)
+	if (WIFEXITED(ret))
 	{
-		*image = cv::imread(cg.fullFilename, cv::IMREAD_UNCHANGED);
-		if (! image->data) {
-			Log(1, "WARNING: Error re-reading file '%s'; skipping further processing.\n", basename(cg.fullFilename));
-		}
-	}
-	else
-	{
-		// don't display message if we got a signal - that's done elsewhere.
-		if (! WIFSIGNALED(ret))
+		ret = WEXITSTATUS(ret);
+		if (ret == 0)
 		{
-			Log(1, " >>> WARNING: Unable to take picture, return code=0x%0x (%d)\n", ret, ret >> 8);
-			Log(3, "     Executed: %s\n", cmd);
+			*image = cv::imread(cg.fullFilename, cv::IMREAD_UNCHANGED);
+			if (! image->data) {
+				Log(1, "WARNING: Error re-reading file '%s'; skipping further processing.\n", basename(cg.fullFilename));
+			}
 		}
 	}
+	else if (! WIFSIGNALED(ret))
+	{
+		Log(1, " >>> WARNING: Unable to take picture, return code=0x%0x (%d)\n", ret, ret >> 8);
+		Log(3, "     Executed: %s\n", cmd);
+	}	// don't display message if we got a signal - that's done elsewhere.
+
 	return(ret);
 }
 
@@ -600,7 +601,7 @@ int main(int argc, char *argv[])
 				// Just transitioned from night to day, so execute end of night script
 				Log(1, "Processing end of night data\n");
 				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfNight.sh &", CG.allskyHome);
-				// Not too useful to check return code for commands in the background
+				// Not too useful to check return code for commands run in the background.
 				system(bufTemp);
 				justTransitioned = false;
 				displayedNoDaytimeMsg = false;
@@ -653,7 +654,7 @@ int main(int argc, char *argv[])
 				// Just transitioned from day to night, so execute end of day script
 				Log(1, "Processing end of day data\n");
 				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfDay.sh &", CG.allskyHome);
-				// Not too useful to check return code for commands in the background
+				// Not too useful to check return code for commands run in the background.
 				system(bufTemp);
 				justTransitioned = false;
 			}
@@ -851,7 +852,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 
 					add_variables_to_command(CG, cmd, exposureStartDateTime);
 					strcat(cmd, " &");
-					// Not too useful to check return code for commands in the background
+					// Not too useful to check return code for commands run in the background.
 					system(cmd);
 				}
 
@@ -864,31 +865,17 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			}
 			else
 			{
-				numErrors++;
-				if (WIFSIGNALED(retCode))
+				// Unable to take picture.
+				// If we got a signal a message is output elsewhere.
+				if (! WIFSIGNALED(retCode))
 				{
-					// Got a signal.  See if it's one we care about.
-
-					int sigNum = WTERMSIG(retCode);
-					std::string z = "";
-					if (sigNum == SIGINT) z = "SIGINT";
-					else if (sigNum == SIGTERM) z = "SIGTERM";
-					else if (sigNum == SIGHUP) z = "SIGHUP";
-					if (z != "")
+					numErrors++;
+					if (numErrors >= maxErrors)
 					{
-						Log(3, "xxxx Got signal %s in %s\n", z.c_str(), CG.cmdToUse);
+						Log(0, "*** ERROR: maximum number of consecutive errors of %d reached; capture program stopped.\n", maxErrors);
+						Log(0, "Make sure cable between camera and Pi is all the way in.\n");
+						closeUp(EXIT_ERROR_STOP);
 					}
-					else
-					{
-						Log(3, "xxxx Got signal %d in %s\n", sigNum, CG.cmdToUse);
-					}
-				}
-
-				if (numErrors >= maxErrors)
-				{
-					Log(0, "*** ERROR: maximum number of consecutive errors of %d reached; capture program stopped.\n", maxErrors);
-					Log(0, "Make sure cable between camera and Pi is all the way in.\n");
-					closeUp(EXIT_ERROR_STOP);
 				}
 	
 				// Don't wait the full amount on error.

@@ -323,7 +323,7 @@ char *length_in_units(long us, bool multi)	// microseconds
 		{
 			snprintf(length, l, "%'ld us", us);
 		}
-		else if (abs_us_in_ms < 1.5)				// between 0.5 and 1.5 ms
+		else if (abs_us_in_ms < 1.5)				// between 0.5 ms and 1.5 ms
 		{
 			if (multi)
 				snprintf(length, l, "%'ld us (%.3f ms)", us, us_in_ms);
@@ -332,10 +332,13 @@ char *length_in_units(long us, bool multi)	// microseconds
 		}
 		else if (abs_us_in_ms < (0.5 * MS_IN_SEC))	// 1.5 ms to 0.5 sec
 		{
-			if (multi)
-				snprintf(length, l, "%'.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
-			else
+			// Don't display seconds if it'll look like (0.00 sec).
+			double s = (double)us / US_IN_SEC;
+			if (multi && s >= 0.005) {
+				snprintf(length, l, "%'.2f ms (%.2lf sec)", us_in_ms, s);
+			} else {
 				snprintf(length, l, "%'.2f ms", us_in_ms);
+			}
 		}
 		else if (abs_us_in_ms < (1.0 * MS_IN_SEC))	// between 0.5 sec and 1 sec
 		{

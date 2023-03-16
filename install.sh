@@ -631,11 +631,11 @@ install_webserver()
 
 	# Start off with a clean log file that the user can write to.
 	sudo rm -fr /var/log/lighttpd/*
-	sudo systemctl start lighttpd
-	local LIGHTTPD_LOG="/var/log/lighttpd/error.1"
+	local LIGHTTPD_LOG="/var/log/lighttpd/error.log"
 	sudo touch "${LIGHTTPD_LOG}"
 	sudo chmod 664 "${LIGHTTPD_LOG}"
 	sudo chgrp "${ALLSKY_GROUP}" "${LIGHTTPD_LOG}"
+	sudo systemctl start lighttpd
 }
 
 

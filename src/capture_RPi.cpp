@@ -600,6 +600,7 @@ int main(int argc, char *argv[])
 				// Just transitioned from night to day, so execute end of night script
 				Log(1, "Processing end of night data\n");
 				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfNight.sh &", CG.allskyHome);
+				// Not too useful to check return code for commands in the background
 				system(bufTemp);
 				justTransitioned = false;
 				displayedNoDaytimeMsg = false;
@@ -652,6 +653,7 @@ int main(int argc, char *argv[])
 				// Just transitioned from day to night, so execute end of day script
 				Log(1, "Processing end of day data\n");
 				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfDay.sh &", CG.allskyHome);
+				// Not too useful to check return code for commands in the background
 				system(bufTemp);
 				justTransitioned = false;
 			}
@@ -847,9 +849,9 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					Log(1, "  > Saving %s image '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
 					snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
 
-					// TODO: in the future the calculation of mean should independent from modeMean. -1 means don't display.
 					add_variables_to_command(CG, cmd, exposureStartDateTime);
 					strcat(cmd, " &");
+					// Not too useful to check return code for commands in the background
 					system(cmd);
 				}
 

@@ -696,19 +696,25 @@ set_permissions()
 
 	# Make sure the currently running user has can write to the webserver root
 	# and can run sudo on anything.
-	G="$(groups "${ALLSKY_OWNER}")"
-	if ! echo "${G}" | grep --silent " sudo"; then
-		display_msg progress "Adding ${ALLSKY_OWNER} to sudo group."
+	G="$(id "${ALLSKY_OWNER}")"
+
+	if ! echo "${G}" | grep --silent "(sudo)"; then
+		display_msg --log progress "Adding ${ALLSKY_OWNER} to sudo group."
 
 		### TODO:  Hmmm.  We need to run "sudo" to add to the group,
 		### but we don't have "sudo" permissions yet... so this will likely fail:
 
-		sudo addgroup "${ALLSKY_OWNER}" "sudo"
+		sudo addgroup --quiet "${ALLSKY_OWNER}" "sudo"
 	fi
 
-	if ! echo "${G}" | grep --silent " ${WEBSERVER_GROUP}"; then
-		display_msg progress "Adding ${ALLSKY_OWNER} to ${WEBSERVER_GROUP} group."
-		sudo addgroup "${ALLSKY_OWNER}" "${WEBSERVER_GROUP}"
+	if ! echo "${G}" | grep --silent "(${WEBSERVER_GROUP})"; then
+		display_msg --log progress "Adding ${ALLSKY_OWNER} to ${WEBSERVER_GROUP} group."
+		sudo addgroup --quiet "${ALLSKY_OWNER}" "${WEBSERVER_GROUP}"
+
+		# TODO: We had a case where the login shell wasn't in the group after "addgroup"
+		# until the user logged out and back in.
+		# And this was AFTER he ran install.sh and rebooted.
+		# Not sure what to do about this...
 	fi
 
 	# Remove any old entries; we now use /etc/sudoers.d/allsky instead of /etc/sudoers.

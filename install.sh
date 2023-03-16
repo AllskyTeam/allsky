@@ -701,11 +701,13 @@ set_permissions()
 		display_msg progress "Adding ${ALLSKY_OWNER} to sudo group."
 
 		### TODO:  Hmmm.  We need to run "sudo" to add to the group,
-		### but we don't have "sudo" permissions yet...
-		### sudo addgroup "${ALLSKY_OWNER}" "sudo"
+		### but we don't have "sudo" permissions yet... so this will likely fail:
+
+		sudo addgroup "${ALLSKY_OWNER}" "sudo"
 	fi
 
 	if ! echo "${G}" | grep --silent " ${WEBSERVER_GROUP}"; then
+		display_msg progress "Adding ${ALLSKY_OWNER} to ${WEBSERVER_GROUP} group."
 		sudo addgroup "${ALLSKY_OWNER}" "${WEBSERVER_GROUP}"
 	fi
 

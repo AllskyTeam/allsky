@@ -44,6 +44,7 @@ HELP="false"
 DEBUG="false"
 VERBOSITY="summary"
 CONFIG_FILE=""
+WEBSITE_TYPE="local and remote"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG}" in
@@ -59,9 +60,11 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--local)
 			CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"	# local website
+			WEBSITE_TYPE="Local "
 			;;
 		--remote)
 			CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"	# remote website
+			WEBSITE_TYPE="Remote "
 			;;
 		--config)
 			CONFIG_FILE="${2}"
@@ -92,7 +95,7 @@ if [[ ${CONFIG_FILE} != "" ]]; then
 		echo -e "${wERROR}ERROR: Configuration file not found: '${CONFIG_FILE}'.${wNC}" >&2
 		exit 1
 	fi
-	LorR=""
+	LorR="${WEBSITE_TYPE}"
 else
 	# Look for the configuration file.
 	CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"	# local website

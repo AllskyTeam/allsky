@@ -18,8 +18,10 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh"		|| exit 99
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit 99
+#shellcheck disable=SC2086 source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086 source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
 
 if [[ ${EUID} -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
@@ -144,8 +146,10 @@ DEBUG_ARG="${DEBUG_ARG}"
 FUNCTION="${FUNCTION}"
 WORD="${WORD}"
 
-source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
+#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
 
 if [[ ${ACTION} == "upgrade" ]]; then

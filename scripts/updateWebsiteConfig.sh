@@ -3,27 +3,14 @@
 # Update the specified Allsky Website configuration file.
 # If no file is specified, use the local one if it exists, else use the remote one.
 
+# Allow this script to be executed manually, which requires several variables to be set.
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-# Allow this script to be executed manually, which requires several variables to be set.
-if [[ -z ${ALLSKY_HOME} ]]; then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-	export ALLSKY_HOME
-fi
-source "${ALLSKY_HOME}/variables.sh"
-source "${ALLSKY_CONFIG}/config.sh"
-
-# This output may go to a web page, so use "w" colors.
-# shell check doesn't realize there were set in variables.sh so we have to reset them here.
-wOK="${wOK}"
-wWARNING="${wWARNING}"
-wERROR="${wERROR}"
-wDEBUG="${wDEBUG}"
-wYELLOW="${wYELLOW}"
-wNC="${wNC}"
-wBOLD="${wBOLD}"
-wNBOLD="${wNBOLD}"
-wBR="${wBR}"
+#shellcheck disable=SC2086 source-path=.
+source "${ALLSKY_HOME}/variables.sh"			|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"				|| exit ${ALLSKY_ERROR_STOP}
 
 function usage_and_exit()
 {

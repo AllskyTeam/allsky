@@ -122,22 +122,20 @@ sunwait: patchsunwait
 	@echo `date +%F\ %R:%S` Done.
 
 allsky_common.o: allsky_common.cpp include/allsky_common.h
+	@echo Building $@ ...
 	@$(CC) -c  allsky_common.cpp -o $@ $(CFLAGS) $(OPENCV)
 
 mode_mean.o: mode_mean.cpp include/mode_mean.h include/raspistill.h include/allsky_common.h
-	@echo `date +%F\ %R:%S` Building $@ ...
+	@echo Building $@ ...
 	@$(CC) -c  mode_mean.cpp -o $@ $(CFLAGS) $(OPENCV)
-	@echo `date +%F\ %R:%S` Done.
 
 capture_RPi.o: capture_RPi.cpp ASI_functions.cpp include/raspistill.h include/allsky_common.h
-	@echo `date +%F\ %R:%S` Building $@ ...
+	@echo Building $@ ...
 	@$(CC) -c  capture_RPi.cpp -o $@ $(CFLAGS) $(OPENCV)
-	@echo `date +%F\ %R:%S` Done.
 
 capture_ZWO.o: capture_ZWO.cpp ASI_functions.cpp include/allsky_common.h
-	@echo `date +%F\ %R:%S` Building $@ ...
+	@echo Building $@ ...
 	@$(CC) -c capture_ZWO.cpp -o $@ $(CFLAGS) $(OPENCV)
-	@echo `date +%F\ %R:%S` Done.
 
 capture_ZWO: capture_ZWO.o allsky_common.o
 	@echo `date +%F\ %R:%S` Building $@ program...

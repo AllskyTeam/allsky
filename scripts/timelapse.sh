@@ -1,24 +1,23 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-if [[ -z ${ALLSKY_HOME} ]]; then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-	export ALLSKY_HOME
-fi
-
-source "${ALLSKY_HOME}/variables.sh" || exit 99
-source "${ALLSKY_CONFIG}/config.sh" || exit 99
-
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
+#shellcheck disable=SC2086 source-path=.
+source "${ALLSKY_HOME}/variables.sh" || exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
+
+
 DEBUG=0
-DO_HELP="false"
+HELP="false"
 DO_MINI="false"
 MINI_FILE=""
 while [[ $# -gt 0 ]]; do
 	case "${1}" in
 			-h | --help)
-				DO_HELP="true"
+				HELP="true"
 				;;
 			-d | --debug)
 				((DEBUG=DEBUG+1))
@@ -30,7 +29,7 @@ while [[ $# -gt 0 ]]; do
 				;;
 			-*)
 				echo -e "${RED}${ME}: Unknown argument '${1}' ignoring.${NC}" >&2
-				DO_HELP="true"
+				HELP="true"
 				;;
 			*)
 				break
@@ -68,7 +67,7 @@ usage_and_exit()
 	exit ${RET}
 }
 [[ $# -eq 0 ||  $# -gt 2 ]] && usage_and_exit 1
-[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${HELP} == "true" ]] && usage_and_exit 0
 
 # If we're on a tty that means we're being manually run so don't display ${ME}.
 if [[ ${ON_TTY} -eq 1 ]]; then

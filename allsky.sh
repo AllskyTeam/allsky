@@ -18,16 +18,25 @@ NOT_STARTED_MSG="Unable to start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 
-source "${ALLSKY_HOME}/variables.sh"	|| exit 99
+#shellcheck disable=SC2086
+source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
 if [[ -z ${ALLSKY_CONFIG} ]]; then
-	MSG="FATAL ERROR: unable to source variables.sh."
+	MSG="FATAL ERROR: 'source variables.sh' did not work properly."
 	echo -e "${RED}*** ${MSG}${NC}"
 	doExit "${EXIT_ERROR_STOP}" "Error" \
 		"${ERROR_MSG_PREFIX}\n$(basename "${ALLSKY_HOME}")/variables.sh\nis corrupted." \
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
-source "${ALLSKY_CONFIG}/config.sh"		|| exit $?		# it displays any error message
-source "${ALLSKY_SCRIPTS}/functions.sh" || exit $?		# it displays any error message
+#shellcheck disable=SC2086
+source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086
+source "${ALLSKY_CONFIG}/config.sh"						|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086 source=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
+
+
 SEE_LOG_MSG="See ${ALLSKY_LOG}"
 ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
 
@@ -144,29 +153,27 @@ else
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 
-echo "CAMERA_TYPE: ${CAMERA_TYPE}"
-
+# Make directories that need to exist.
 if [[ -d ${ALLSKY_TMP} ]]; then
 	# remove any lingering old image files.
-	rm -f "${ALLSKY_TMP}/${FILENAME}"-202*."${EXTENSION}"	# "202" for 2020 and later
+	rm -f "${ALLSKY_TMP}/${FILENAME}"-20*."${EXTENSION}"	# "20" for 2000 and later
 else
-	# We should never get here since ${ALLSKY_TMP} is created during installation...
+	# We should never get here since ${ALLSKY_TMP} is created during installation,
+	# but "just in case"...
 	mkdir -p "${ALLSKY_TMP}"
 	chmod 775 "${ALLSKY_TMP}"
-	sudo chgrp www-data "${ALLSKY_TMP}"
+	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
 fi
+[[ ! -d "${ALLSKY_EXTRA}" ]] && mkdir "${ALLSKY_EXTRA}"
 
 # Clear out this file and allow the web server to write to it.
 : > "${ALLSKY_ABORTEDUPLOADS}"
-sudo chgrp www-data "${ALLSKY_ABORTEDUPLOADS}"
+sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ABORTEDUPLOADS}"
 sudo chmod 664 "${ALLSKY_ABORTEDUPLOADS}"
-
-# Create tmp/extra directory.
-[[ ! -d "${ALLSKY_TMP}/extra" ]] && mkdir "${ALLSKY_TMP}/extra"
 
 # Optionally display a notification image.
 if [[ $USE_NOTIFICATION_IMAGES -eq 1 ]]; then
-	# Can do this in the background to speed up startup
+	# Can do this in the background to speed up startup.
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
 fi
 
@@ -178,16 +185,18 @@ fi
 
 # This argument should come second so the capture program knows if it should display debug output.
 echo "-debuglevel=${ALLSKY_DEBUG_LEVEL}" >> "${ARGS_FILE}"
-echo "-version=$(< "${ALLSKY_HOME}/version")" >> "${ARGS_FILE}"
+echo "-version=$( get_version )" >> "${ARGS_FILE}"
 
 # shellcheck disable=SC2207
 KEYS=( $(settings 'keys[]') )
 for KEY in "${KEYS[@]}"
 do
 	K="$(settings ".${KEY}")"
-	# We have to pass "-config ${ARGS_FILE}" on the command line,
-	# and debuglevel we did above.
-	[[ ${KEY} != "config" && ${KEY} != "debuglevel" ]] && echo "-${KEY}=${K}" >> "${ARGS_FILE}"
+	# We must pass "-config ${ARGS_FILE}" on the command line,
+	# and debuglevel we did above, so don't do them again.
+	[[ ${KEY} == "config" && ${KEY} == "debuglevel" ]] && continue
+
+	echo "-${KEY}=${K}" >> "${ARGS_FILE}"
 done
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.

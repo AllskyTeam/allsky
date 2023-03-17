@@ -7,7 +7,7 @@ ME="$(basename "${BASH_ARGV0}")"
 source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source=scripts
+#shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
 if [[ $EUID -eq 0 ]]; then

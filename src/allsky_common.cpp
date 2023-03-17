@@ -2052,7 +2052,6 @@ void doLocale(config *cg)
 			static char locale[100];
 			strncpy(locale, cg->locale, sizeof(locale)-1);
 			cg->locale = locale;
-printf("xxxxxxxxxxx LC_NUMERIC = %s\n", cg->locale);
 		}
 	} else if (setlocale(LC_NUMERIC, cg->locale) == NULL && ! cg->saveCC) {
 		Log(-1, "*** WARNING: Could not set locale to %s.\n", cg->locale);

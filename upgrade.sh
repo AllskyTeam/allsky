@@ -106,7 +106,7 @@ done
 
 [[ ${DEBUG} == "true" ]] && echo "Running: ${ME} ${ALL_ARGS}"
 
-BRANCH="$(get_branch "${ALLSKY_BRANCH_FILE})"
+BRANCH="$( get_branch "${ALLSKY_BRANCH_FILE}" )"
 [[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 
 # Unless forced to, only do the version check if we're on the main branch,

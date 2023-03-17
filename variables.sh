@@ -79,14 +79,18 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Location of WebUI.
 	ALLSKY_WEBUI="${ALLSKY_HOME}/html"
 
-	# Base location of the overlay config/data
+	# Base location of the overlay and module configuration and data files.
 	ALLSKY_OVERLAY=${ALLSKY_CONFIG}/overlay
-
-	# Base location of the module config
 	ALLSKY_MODULES=${ALLSKY_CONFIG}/modules
+
+	# Verion file and option branch file.
+	ALLSKY_VERSION_FILE="${ALLSKY_HOME}/version"
+	ALLSKY_BRANCH_FILE="${ALLSKY_HOME}/branch"
 
 	# Location of optional allsky-website package.
 	ALLSKY_WEBSITE="${ALLSKY_WEBUI}/allsky"
+	ALLSKY_WEBSITE_VERSION_FILE="${ALLSKY_WEBSITE}/version"
+	ALLSKY_WEBSITE_BRANCH_FILE="${ALLSKY_WEBSITE}/branch"
 	ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME="viewSettings"
 	ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY="${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
 	ALLSKY_WEBSITE_CONFIGURATION_NAME="configuration.json"
@@ -101,10 +105,12 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	ALLSKY_LOG="/var/log/allsky.log"
 	ALLSKY_PERIODIC_LOG="/var/log/allskyperiodic.log"
 
-	# Root of GitHub locations - repository, and contents of a file.
+	# GitHub information - package names, repository, and contents of a file.
 	GITHUB_ROOT="https://github.com/thomasjacquin"
 	GITHUB_RAW_ROOT="https://raw.githubusercontent.com/thomasjacquin"
 	GITHUB_MAIN_BRANCH="master"
+	GITHUB_ALLSKY_PACKAGE="allsky"
+	GITHUB_WEBSITE_PACKAGE="allsky-website"
 
 	# NAMEs of some configuration files:
 	#	Camera Capabilities - specific to a camera type and model (cc.json)

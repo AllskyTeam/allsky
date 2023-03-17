@@ -39,7 +39,8 @@ usage_and_exit()
 	else
 		C="${RED}"
 	fi
-	# Don't show "--newer" or --doUpgrade* since users should never use them.
+	# Don't show "--newer" or --force-check options since users should never use them.
+	# TODO: Also don't show future --doUpgrade and --doUpgradeInPlace options.
 	echo
 	echo -e "${C}Usage: ${ME} [--help] [--debug] [--restore] [--function function]${NC}"
 	echo
@@ -68,6 +69,7 @@ NEWER="false"
 ACTION="upgrade"
 WORD="Upgrade"
 FUNCTION=""
+FORCE_CHECK="true"		# Set to "true" to ALWAYS do the version check
 while [ $# -gt 0 ]; do
 	ARG="${1}"
 	case "${ARG}" in
@@ -89,6 +91,9 @@ while [ $# -gt 0 ]; do
 			FUNCTION="${2}"
 			shift
 			;;
+		--force-check)
+			FORCE_CHECK="true"
+			;;
 		*)
 			display_msg error "Unknown argument: '${ARG}'."
 			OK="false"
@@ -101,8 +106,9 @@ done
 
 [[ ${DEBUG} == "true" ]] && echo "Running: ${ME} ${ALL_ARGS}"
 
-FORCE_CHECK="true"		# Set to "true" to ALWAYS do the version check
-BRANCH="$(getBranch)"
+BRANCH="$( get_branch "${ALLSKY_BRANCH_FILE}" )"
+[[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
+
 # Unless forced to, only do the version check if we're on the main branch,
 # not on development branches, because when we're updating this script we
 # don't want to have the updates overwritten from an older version on GitHub.

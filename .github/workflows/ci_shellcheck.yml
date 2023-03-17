@@ -59,7 +59,8 @@ jobs:
                 #SC2069: Something about the order of >&2 and > xxx
                 #SC2024: similar to SC2069
                 #SC2269: This variable is assigned to itself
-                shellcheck $i -e SC1090 -e SC1091 -e SC2004 -e SC2155 -e SC2181 -e SC2188 -e SC2024 -e SC2069 -e SC2269
+                ###shellcheck $i -e SC1090 -e SC1091 -e SC2004 -e SC2155 -e SC2181 -e SC2188 -e SC2024 -e SC2069 -e SC2269
+                shellcheck $i  -e SC2004 -e SC2155 -e SC2181 -e SC2188 -e SC2024 -e SC2069 -e SC2269
                 ;;
             esac
             if [ $? -ne 0 ]; then
@@ -71,13 +72,3 @@ jobs:
             echo "bash or shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
           fi
           exit $err
-
-      # Runs a set of commands using the runners shell
-#      - name: make deps
-#        run: |
-#         sudo make deps
-
-      # Info: depends an step "make deps"
-#      - name: make all
-#        run: |
-#          sudo make all

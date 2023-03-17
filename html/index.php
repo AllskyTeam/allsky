@@ -299,22 +299,26 @@ if (file_exists($f)) {
 				check_if_configured($page, "main");
 
 				if (isset($_POST['clear'])) {
-					$t = filemtime(ALLSKY_MESSAGES);
-					$newT = getVariableOrDefault($_POST, "filetime", 0);
+					$t = @filemtime(ALLSKY_MESSAGES);
+					// if it fails it's probably because something else deleted the file,
+					// in which case we don't care.
+					if ($t == true) {
+						$newT = getVariableOrDefault($_POST, "filetime", 0);
 // echo "<br>Comparing t=$t to newT=$newT";
-					if ($t == $newT) {
-						exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
-						if ($retcode !== 0) {
-							$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
-							$status->showMessages();
-						}
-					} else {
-						// If the messages changed after the user did a "clear",
-						// and then the user refreshed the browser,
-						// we'll have the old time in $filetime, but the timestamp of the file
-						// won't match so we'll get here, and then display the messages below.
+						if ($t == $newT) {
+							exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
+							if ($retcode !== 0) {
+								$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
+								$status->showMessages();
+							}
+						} else {
+							// If the messages changed after the user did a "clear",
+							// and then the user refreshed the browser,
+							// we'll have the old time in $filetime, but the timestamp of the file
+							// won't match so we'll get here, and then display the messages below.
 // TODO: Should we display this message?
-						$status->addMessage("System Messages changed", "info", false);
+							$status->addMessage("System Messages changed", "info", false);
+						}
 					}
 				}
 				if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {

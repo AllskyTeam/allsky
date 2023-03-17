@@ -2,8 +2,10 @@
 
 ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh" || exit 99
-source "${ALLSKY_CONFIG}/config.sh" || exit 99
+#shellcheck disable=SC2086 source-path=.
+source "${ALLSKY_HOME}/variables.sh" || exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
 
 usage()
 {

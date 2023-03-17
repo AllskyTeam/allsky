@@ -830,8 +830,15 @@ handle_prior_website()
 	local NEW_VERSION="$(get_Git_version "${OLD_WEBSITE_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
 	local B=""
 	if [[ ${OLD_WEBSITE_BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
-		local V2="$(get_Git_version "${GITHUB_MAIN_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
-		B=" in '$x' branch"
+		local GIT_VERSION="$(get_Git_version "${GITHUB_MAIN_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
+		if [[ ${DEBUG} -gt 0 ]]; then
+			echo "Branch ${OLD_WEBSITE_BRANCH} version=${NEW_VERSION}, Git version=${GIT_VERSION}."
+		fi
+		if [[ ${NEW_VERSION} > "${GIT_VERSION}" ]]; then
+			B=" in the '${OLD_WEBSITE_BRANCH}' branch"
+		else
+			B=" in the '${GITHUB_MAIN_BRANCH}' branch"
+		fi
 	fi
 
 	# Check if the prior website is outdated.

@@ -1,17 +1,13 @@
 #!/bin/bash
 
-if [ -z "${ALLSKY_HOME}" ]
-then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
-	export ALLSKY_HOME
-fi
+[[ -z "${ALLSKY_HOME}" ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 # ME="$(basename "${BASH_ARGV0}")"
 
-# shellcheck disable=SC1090,SC1091
-source "${ALLSKY_HOME}/variables.sh"
+#shellcheck disable=SC2086 source-path=.
+source "${ALLSKY_HOME}/variables.sh"			|| exit ${ALLSKY_ERROR_STOP}
 
-INSTALL_DIR="allsky"
-cd ~/${INSTALL_DIR}  || exit 1
+#shellcheck disable=SC2086
+cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
 
 MSG="This will remove all non-config, system files from your computer.\n"
 MSG="${MSG}Note: This only removes files in their default location.\n"

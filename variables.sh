@@ -5,7 +5,7 @@
 # This allows us to easily add and change directory names.
 # It should only be called after ${ALLSKY_HOME} is set.
 
-if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
+if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	set -a	# automatically export all variables
 
 	ALLSKY_VARIABLE_SET="true"	# so we only do the following once
@@ -35,12 +35,15 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 								wBR="<br>"
 	fi
 
-	if [ "${ALLSKY_HOME}" = "" ] ; then	# This must come after setting colors above
+	if [[ -z "${ALLSKY_HOME}" ]] ; then	# This must come after setting colors above
 		echo -en "${RED}"
 		echo -n "${ME2}: ERROR: ALLSKY_HOME not set!"
 		echo -e "${NC}"
 		return 1
 	fi
+
+	# Directory Allsky is installed in.
+	ALLSKY_INSTALL_DIR="$( basename "${ALLSKY_HOME}" )"
 
 	# For temporary files or files that can be deleted at reboot.
 	ALLSKY_TMP="${ALLSKY_HOME}/tmp"

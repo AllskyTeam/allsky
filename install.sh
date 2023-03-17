@@ -3,13 +3,13 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086
+#shellcheck disable=SC2086 source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086
+#shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit ${ALLSKY_ERROR_STOP}
 
 # This file defines functions plus sets many variables.
-#shellcheck disable=SC2086 source=scripts
+#shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
 if [[ ${EUID} -eq 0 ]]; then
@@ -17,14 +17,15 @@ if [[ ${EUID} -eq 0 ]]; then
 	exit 1
 fi
 
-# This script assumes the user already did the "git clone" into the "allsky" directory.
-INSTALL_DIR="allsky"
-cd ~/${INSTALL_DIR}  || exit 1
+# This script assumes the user already did the "git clone" into ${ALLSKY_HOME}.
+
+#shellcheck disable=SC2086
+cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
 
 # Location of possible prior version of Allsky.
 # If the user wants items copied from there to the new version,
 # they should have manually renamed "allsky" to "allsky-OLD" prior to running this script.
-PRIOR_ALLSKY_DIR="$(dirname "${PWD}")/${INSTALL_DIR}-OLD"
+PRIOR_ALLSKY_DIR="$(dirname "${PWD}")/${ALLSKY_INSTALL_DIR}-OLD"
 PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
 PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# may change depending on old version
@@ -115,6 +116,7 @@ usage_and_exit()
 	else
 		C="${RED}"
 	fi
+	# Don't show --testing option since users shouldn't use it.
 	echo
 	echo -e "${C}Usage: ${ME} [--help] [--debug [...]] [--update] [--function function]${NC}"
 	echo
@@ -203,7 +205,7 @@ select_camera_type()
 	if [[ -f ${PRIOR_CONFIG_FILE} ]]; then
 		case "${PRIOR_ALLSKY_VERSION}" in
 			# New versions go here...
-# TODO: update version on next line:
+# xxxxxxxxxxxxxx      TODO: update version on next line when we go live.
 			"v2023.03.09_tbd")
 				# New style Allsky using ${CAMERA_TYPE}.
 				CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
@@ -888,7 +890,6 @@ get_locale()
 	# an installed one, let th euser know.
 	# This can happen if they use the settings file from a different Pi or different OS.
 	local MSG2=""
-#XX TODO: PRIOR_SETTINGS_FILE is set
 	if [[ -n ${PRIOR_ALLSKY} && -n ${PRIOR_SETTINGS_FILE} ]]; then
 		local L="$(jq -r .locale "${PRIOR_SETTINGS_FILE}")"
 		if [[ ${L} != "" && ${L} != "null" ]]; then
@@ -925,7 +926,7 @@ get_locale()
 	MSG="${MSG}\nyou will need to restart the installation."
 	[[ -n ${MSG2} ]] && MSG="${MSG}\n\n${MSG2}"
 
-# TODO: replace "." in printf() with something (I don't know what) to whiptail gets a null or
+# TODO: replace "." in printf() with something (I don't know what) so whiptail gets a null or
 # space for the 2nd arguments in the pair.
 	local LOCALES="$( echo "${INSTALLED_LOCALES}" | awk '{ printf("%s %s ", $1, ".") }' )"
 	[[ ${DEBUG} -gt 1 ]] && echo "LOCALES=${LOCALES}"
@@ -1579,7 +1580,7 @@ restore_prior_files()
 # This can be needed if the user hosed something up, or there was a problem somewhere.
 do_update()
 {
-	#shellcheck disable=SC2086
+	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 	source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}	# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg error "CAMERA_TYPE not set in config.sh."
@@ -1783,7 +1784,7 @@ check_restored_settings()
 remind_old_version()
 {
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
-		MSG="When you are sure everything is working with this new release,"
+		MSG="When you are sure everything is working with the new Allsky release,"
 		MSG="${MSG} remove your old version in ${PRIOR_ALLSKY_DIR} to save disk space."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
@@ -1808,6 +1809,7 @@ DEBUG=0
 DEBUG_ARG=""
 UPDATE="false"
 FUNCTION=""
+TESTING="false"
 while [ $# -gt 0 ]; do
 	ARG="${1}"
 	case "${ARG}" in
@@ -1824,6 +1826,10 @@ while [ $# -gt 0 ]; do
 		--function)
 			FUNCTION="${2}"
 			shift
+			;;
+		--testing)
+			TESTING="true"			# developer testing - skip many steps 
+TESTING="${TESTING}" # TODO: keeps shellcheck quiet
 			;;
 		*)
 			display_msg error "Unknown argument: '${ARG}'."
@@ -1920,7 +1926,7 @@ create_webui_defines
 save_camera_capabilities "false" || exit_with_image 1			# prompts on error only
 
 # Code later needs "settings()" function.
-#shellcheck disable=SC2086
+#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh" || exit_with_image ${ALLSKY_ERROR_STOP}
 
 ##### Set locale

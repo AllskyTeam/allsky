@@ -1,18 +1,20 @@
 #!/bin/bash
 
-ME="$(basename "${BASH_ARGV0}")"
-
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
+ME="$(basename "${BASH_ARGV0}")"
 
 # This script uploads various information relative to the camera setup to the allsky map.
 # https://www.thomasjacquin.com/allsky-map/
 # Information is gathered automatically from the settings file.
 # The script can be called manually, via endOfNight.sh, or via the WebUI.
 
-source "${ALLSKY_HOME}/variables.sh"		|| exit 99
-source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit 99
+#shellcheck disable=SC2086 source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086 source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
 
 function usage_and_exit()
 {

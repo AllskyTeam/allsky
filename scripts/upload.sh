@@ -5,12 +5,15 @@
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-
-source "${ALLSKY_HOME}/variables.sh"		|| exit 99
-source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
-
 ME="$(basename "${BASH_ARGV0}")"
+
+#shellcheck disable=SC2086 source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
+
 
 usage_and_exit() {
 	RET=$1
@@ -139,7 +142,8 @@ while [[ ${CHECK} == "true" ]]; do
 				echo -e "${NC}" >&2
 				# Keep track of aborts so user can be notified
 				echo -e "$(date)\t${FILE_TYPE}\t${FILE_TO_UPLOAD}" >> "${ALLSKY_ABORTEDUPLOADS}"
-				exit 99
+				# shellcheck disable=SC2086
+				exit ${ALLSKY_ERROR_STOP}
 			fi
 		else
 			[[ ${DEBUG} == "true" ]] && echo "    ... it's not"
@@ -292,7 +296,7 @@ else # sftp/ftp/ftps
 	if [[ ${RET} -ne 0 ]]; then
 		echo -en "${RED}"
 		echo -n "*** ${ME}: ERROR"
-		if [[ ${RET} -eq 99 ]]; then
+		if [[ ${RET} -eq ${ALLSKY_ERROR_STOP} ]]; then
 			# shellcheck disable=SC2153
 			OUTPUT="$(
 				echo "Unable to log in to '${REMOTE_HOST}', user ${REMOTE_USER}'."

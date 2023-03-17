@@ -329,6 +329,7 @@ function DisplayOverlay($image_name)
                                                 <option value="Time">Time</option>
                                                 <option value="Number">Number</option>
                                                 <option value="Text">Text</option>
+                                                <option value="Bool">Bool</option>
                                             </select>
                                         </div>
                                     </div>

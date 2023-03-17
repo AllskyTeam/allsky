@@ -117,6 +117,7 @@ class ALLSKYANNOTATESAMPLE:
     def _loadDataFile(self):
         result = True
 
+        # TODO: XXXXXXXXXXXX don't hard code, use ${ALLSKY_EXTRA}
         allSkyTmp = '/home/pi/allsky/tmp'
         defaultExpiry = self._overlay["settings"]["defaultdatafileexpiry"]
         extraFolder = os.path.join(allSkyTmp, "extra")
@@ -282,6 +283,12 @@ class ALLSKYANNOTATESAMPLE:
                                 sample = fieldFormat.format(sample)
                             except ValueError:
                                 sample = "Error"
+                    label = label.replace(field, sample)
+                elif  (fieldType["type"] == "Bool"):
+                    if fieldFormat is not None and fieldFormat != "" and sample != "":
+                        if fieldFormat != '%yes' and fieldFormat != '%on' and fieldFormat != '%true' and fieldFormat != '%1':
+                            sample = "Error"
+                        # else:     TODO: format the sample ?.  When does this code get executed?
                     label = label.replace(field, sample)
                 else:
                     label = label.replace(field, sample)

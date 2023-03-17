@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034		# variable unused
 
 # This file is source'd into other files to set some variables used by scripts.
 # This allows us to easily add and change directory names.
@@ -132,7 +133,7 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.
-	# shellcheck disable=SC1091
+	# shellcheck disable=SC1090,SC1091
 	[[ -f ${ALLSKY_CONFIG}/uservariables.sh ]] && source "${ALLSKY_CONFIG}/uservariables.sh"
 fi
 

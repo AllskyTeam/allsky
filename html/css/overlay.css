@@ -212,7 +212,7 @@
   }
 
   div.dtsp-searchPane div.dataTables_scrollBody {
-    height: 60px !important;
+    height: 91px !important;	/* good for 3 lines */
   }
   div.dtsp-searchPane div.dtsp-topRow {
     margin: 0px !important;

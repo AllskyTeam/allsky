@@ -142,6 +142,7 @@ while [[ ${CHECK} == "true" ]]; do
 				echo -e "${NC}" >&2
 				# Keep track of aborts so user can be notified
 				echo -e "$(date)\t${FILE_TYPE}\t${FILE_TO_UPLOAD}" >> "${ALLSKY_ABORTEDUPLOADS}"
+				# shellcheck disable=SC2086
 				exit ${ALLSKY_ERROR_STOP}
 			fi
 		else

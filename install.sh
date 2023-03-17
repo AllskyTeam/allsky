@@ -151,6 +151,8 @@ get_this_branch()
 			BRANCH="${B}"
 			echo -n "${BRANCH}" > "${ALLSKY_BRANCH_FILE}"
 			display_msg info "Using '${BRANCH}' branch."
+		elif [[ ${DEBUG} -gt 0 ]]; then
+			display_msg info "Using the '${B}' branch."
 		fi
 	else
 		display_msg --log warning "${FILE} not found; assuming ${GITHUB_MAIN_BRANCH} branch."

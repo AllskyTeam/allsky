@@ -34,12 +34,9 @@ jobs:
               err=$((err + 1))
             fi
             case $i in
-              ./variables.sh)
-                #SC2034: ON_TTY appears unused. Verify use (or export if used externally).
-                shellcheck $i -e SC2034 
-                ;;
 
                 ###### Do not ignore these
+                #SC2034: ON_TTY appears unused. Verify use (or export if used externally).
                 #SC2206: Quote to prevent word splitting/globbing, or split robustly with mapfile or read -a.
                 #SC2207: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
                 #SC2046: Quote this to prevent word splitting.
@@ -59,8 +56,8 @@ jobs:
                 #SC2069: Something about the order of >&2 and > xxx
                 #SC2024: similar to SC2069
                 #SC2269: This variable is assigned to itself
-                ###shellcheck $i -e SC1090 -e SC1091 -e SC2004 -e SC2155 -e SC2181 -e SC2188 -e SC2024 -e SC2069 -e SC2269
-                shellcheck $i  -e SC2004 -e SC2155 -e SC2181 -e SC2188 -e SC2024 -e SC2069 -e SC2269
+                ###shellcheck -x -e SC1090 -e SC1091 -e SC2004 -e SC2155 -e SC2181 -e SC2188 -e SC2024 -e SC2069 -e SC2269 $i
+                shellcheck -x -e SC2004 -e SC2155 -e SC2181 -e SC2188 -e SC2024 -e SC2069 -e SC2269 $i
                 ;;
             esac
             if [ $? -ne 0 ]; then

@@ -651,7 +651,7 @@ class ALLSKYOVERLAY:
                             v = '1'
                         else:
                             s.log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field}.")
-                            v = value
+                            v = self._formaterrortext
         else:
             if format == '%yes':
                 v = 'No'
@@ -666,7 +666,7 @@ class ALLSKYOVERLAY:
                             v = '0'
                         else:
                             s.log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field}.")
-                            v = value
+                            v = self._formaterrortext
 
         return v
 

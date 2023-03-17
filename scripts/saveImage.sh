@@ -6,8 +6,10 @@ ME="$(basename "${BASH_ARGV0}")"
 
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME} $*"
 
-source "${ALLSKY_HOME}/variables.sh" || exit 99
-source "${ALLSKY_CONFIG}/config.sh" || exit 99
+#shellcheck disable=SC2086 source-path=.
+source "${ALLSKY_HOME}/variables.sh" || exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
 
 usage_and_exit()
 {
@@ -87,11 +89,13 @@ done
 export AS_CAMERA_TYPE="${CAMERA_TYPE}"
 export AS_CAMERA_MODEL="${CAMERA_MODEL}"
 
+#shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/darkCapture.sh"		# does not return if in darkframe mode
 # TODO: Dark subtract long-exposure images, even if during daytime.
 # TODO: Need a config variable to specify the threshold to dark subtract.
 # TODO: Possibly also for stretching below.
 if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then
+	#shellcheck source-path=scripts
 	source "${ALLSKY_SCRIPTS}/darkSubtract.sh"	# It will modify the image but not its name.
 fi
 
@@ -148,7 +152,8 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 		RESOLUTION_Y=${IMG_HEIGHT}
 	fi
 
-	source "${ALLSKY_SCRIPTS}/functions.sh" || exit 99
+	#shellcheck disable=SC2086 source-path=scripts
+	source "${ALLSKY_SCRIPTS}/functions.sh" || exit ${ALLSKY_ERROR_STOP}
 
 	# Do some sanity checks on the CROP_* variables.
 	ERROR_MSG=""
@@ -337,7 +342,8 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 fi
 
 if [[ ${IMG_UPLOAD} == "true" || (${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true") ]]; then
-	source "${ALLSKY_CONFIG}/ftp-settings.sh"
+	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
 fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it

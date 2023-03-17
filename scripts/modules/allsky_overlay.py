@@ -460,6 +460,17 @@ class ALLSKYOVERLAY:
             format = None
             formatArray = {}
 
+        if "empty" in fieldData:
+            empty = fieldData["empty"]
+            if empty.startswith('{'):
+                regex = r"\{(.*?)\}"
+                emptyArray = re.findall(regex, empty)
+            else:
+                emptyArray = empty.split(',')
+        else:
+            empty = None
+            emptyArray = {}
+
         if "font" in fieldData:
             fontName = fieldData["font"]
         else:
@@ -479,11 +490,6 @@ class ALLSKYOVERLAY:
             opacity = fieldData["opacity"]
         else:
             opacity = 1
-
-        if "empty" in fieldData:
-            empty = fieldData["empty"]
-        else:
-            empty = ''
 
         if "tlx" in fieldData:
             fieldX = s.int(fieldData["tlx"])
@@ -531,7 +537,14 @@ class ALLSKYOVERLAY:
                 except IndexError:
                     fieldFormat = ''
 
-            fieldValue, overrideX, overrideY, overrideFill, overrideFont, overrideFontSize, overrideRotate, overrideScale, overrideOpacity, overrideStroke, overrideStrokewidth = self._getValue(variable, variableType, fieldFormat, empty)
+            fieldEmpty = None
+            if empty is not None:
+                try:
+                    fieldEmpty = emptyArray[matchNum-1]
+                except IndexError:
+                    fieldEmpty = ''
+
+            fieldValue, overrideX, overrideY, overrideFill, overrideFont, overrideFontSize, overrideRotate, overrideScale, overrideOpacity, overrideStroke, overrideStrokewidth = self._getValue(variable, variableType, fieldFormat, fieldEmpty)
 
             if overrideStroke is not None:
                 stroke = overrideStroke
@@ -565,10 +578,13 @@ class ALLSKYOVERLAY:
             if fieldValue is not None:
                 fieldLabel = fieldLabel.replace(variable, str(fieldValue))
                 totalVariablesReplaced += 1
+            else:
+                fieldLabel = fieldLabel.replace(variable, '')
 
             totalVariables += 1
 
-        if totalVariables != totalVariablesReplaced:
+        # If there were variables and none matched, don't display the field.
+        if totalVariables != 0 and totalVariablesReplaced == 0:
             fieldLabel = None
 
         if fieldLabel is not None:
@@ -640,33 +656,27 @@ class ALLSKYOVERLAY:
         if value == 1 or value == '1':
             if format == '%yes':
                 v = 'Yes'
+            elif format == '%on':
+                v = 'On'
+            elif format == '%true':
+                v = 'True'
+            elif format == '%1':
+                v = '1'
             else:
-                if format == '%on':
-                    v = 'On'
-                else:
-                    if format == '%true':
-                        v = 'True'
-                    else:
-                        if format == '%1':
-                            v = '1'
-                        else:
-                            s.log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field}.")
-                            v = self._formaterrortext
+                s.log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field}.")
+                v = self._formaterrortext
+
+        elif format == '%yes':
+            v = 'No'
+        elif format == '%on':
+            v = 'Off'
+        elif format == '%true':
+            v = 'False'
+        elif format == '%1':
+            v = '0'
         else:
-            if format == '%yes':
-                v = 'No'
-            else:
-                if format == '%on':
-                    v = 'Off'
-                else:
-                    if format == '%true':
-                        v = 'False'
-                    else:
-                        if format == '%1':
-                            v = '0'
-                        else:
-                            s.log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field}.")
-                            v = self._formaterrortext
+            s.log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field}.")
+            v = self._formaterrortext
 
         return v
 
@@ -771,7 +781,7 @@ class ALLSKYOVERLAY:
 
             if variableType == 'Text' or variableType == 'Number':
                 if value == '' or value is None:
-                    if empty != '':
+                    if empty != '' and empty is not None:
                         value = empty
 
         return value ,x ,y, fill, font, fontsize, rotate, scale, opacity, stroke, strokewidth

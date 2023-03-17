@@ -278,6 +278,7 @@ if [[ ${IMG_RESIZE} == "true" && ${SENSOR_WIDTH} == "${IMG_WIDTH}" && ${SENSOR_H
 	echo "Images will be resized to the same size as the sensor; this does nothing useful."
 	echo "Check IMG_RESIZE, IMG_WIDTH (${IMG_WIDTH}), and IMG_HEIGHT (${IMG_HEIGHT})."
 fi
+#shellcheck disable=SC2153		# it thinks CROP_HEIGHT may be misspelled
 if [[ ${CROP_IMAGE} == "true" && ${SENSOR_WIDTH} == "${CROP_WIDTH}" && ${SENSOR_HEIGHT} == "${CROP_HEIGHT}" ]]; then
 	heading "Information"
 	echo "Images will be cropped to the same size as the sensor; this does nothing useful."

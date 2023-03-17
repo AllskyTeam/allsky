@@ -635,7 +635,7 @@ class ALLSKYOVERLAY:
         image.paste(im_txt, mask=im_txt)
         return image
 
-    def _doBoolFormat(self, value, format):
+    def _doBoolFormat(self, field, value, format):
         # allow formats:  %yes %on %true %1
         if value == 1 or value == '1':
             if format == '%yes':
@@ -650,6 +650,7 @@ class ALLSKYOVERLAY:
                         if format == '%1':
                             v = '1'
                         else:
+                            s.log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field}.")
                             v = value
         else:
             if format == '%yes':
@@ -664,6 +665,7 @@ class ALLSKYOVERLAY:
                         if format == '%1':
                             v = '0'
                         else:
+                            s.log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field}.")
                             v = value
 
         return v
@@ -765,7 +767,7 @@ class ALLSKYOVERLAY:
                 if variableType == 'Bool':
                     if format is None or format == '':
                         format = "%yes"
-                    value = self._doBoolFormat(value, format)
+                    value = self._doBoolFormat(rawFieldName, value, format)
 
             if variableType == 'Text' or variableType == 'Number':
                 if value == '' or value is None:

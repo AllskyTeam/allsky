@@ -6,33 +6,81 @@
 # TODO: Within a heading, group by topic, e.g., all IMG_* together.
 # TODO: Right now the checks within each heading are in the order I thought of them!
 
-ME="$(basename "${BASH_ARGV0}")"
-
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
+ME="$(basename "${BASH_ARGV0}")"
 
-source "${ALLSKY_HOME}/variables.sh" || exit 99
+#shellcheck disable=SC2086
+source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086
+source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit ${ALLSKY_ERROR_STOP}
+# This file defines functions plus sets many variables.
+#shellcheck disable=SC2086 source=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
-if [[ ${1} == "--newer" ]]; then
-	NEWER="true"
+usage_and_exit()
+{
+	RET=${1}
+	if [[ ${RET} == 0 ]]; then
+		C="${YELLOW}"
+	else
+		C="${RED}"
+	fi
+	# Don't show the "--newer", "--no-check", or "--force-check" options since users
+	# should never use them.
+	echo
+	echo -e "${C}Usage: ${ME} [--help] [--debug]${NC}"
+	echo
+	echo "'--help' displays this message and exits."
+	echo
+	# shellcheck disable=SC2086
+	exit ${RET}
+}
+
+# Check arguments
+OK="true"
+HELP="false"
+DEBUG="false"
+NEWER=""
+FORCE_CHECK="true"
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG}" in
+		--help)
+			HELP="true"
+			;;
+		--debug)
+			DEBUG="true"
+			;;
+		--newer)
+			NEWER="true"
+			;;
+		--no-check)
+			FORCE_CHECK="false"
+			;;
+		--force-check)
+			FORCE_CHECK="true"
+			;;
+		*)
+			display_msg error "Unknown argument: '${ARG}'."
+			OK="false"
+			;;
+	esac
 	shift
-else
-	NEWER=""
-fi
-if [[ $# -ne 0 ]]; then
-	# Don't show the "--newer" option since users should never use it.
-	# shellcheck disable=SC2154
-	echo -e "${wERROR}Usage: ${ME} [--debug] ${wNC}" >&2
-	exit 1
-fi
+done
+[[ ${HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
 
-source "${ALLSKY_CONFIG}/config.sh"			|| exit 99
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit 99
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit 99
+#shellcheck disable=SC2086
+source "${ALLSKY_CONFIG}/config.sh"	 					|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086
+source "${ALLSKY_CONFIG}/ftp-settings.sh" 				|| exit ${ALLSKY_ERROR_STOP}
 
-FORCE_CHECK="false"		# Set to "true" to ALWAYS do the version check
 
-BRANCH="$(getBranch)"
+BRANCH="$( get_branch "${ALLSKY_BRANCH_FILE}" )"
+[[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
+[[ ${DEBUG} == "true" ]] && echo "DEBUG: using '${BRANCH}' branch."
+
 # Unless forced to, only do the version check if we're on the main branch,
 # not on development branches, because when we're updating this script we
 # don't want to have the updates overwritten from an older version on GitHub.
@@ -46,7 +94,6 @@ if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
 
 	else
 		# See if there's a newer version of this script; if so, download it and execute it.
-		BRANCH="$(getBranch)" || exit 2
 		FILE_TO_CHECK="$(basename "${ALLSKY_SCRIPTS}")/${ME}"
 		NEWER_SCRIPT="/tmp/${ME}"
 		checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${FILE_TO_CHECK}" "${NEWER_SCRIPT}"

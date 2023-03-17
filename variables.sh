@@ -42,6 +42,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 		return 1
 	fi
 
+	# Directory Allsky is installed in.
+	ALLSKY_INSTALL_DIR="$( basename "${ALLSKY_HOME}" )"
+
 	# For temporary files or files that can be deleted at reboot.
 	ALLSKY_TMP="${ALLSKY_HOME}/tmp"
 

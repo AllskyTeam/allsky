@@ -7,7 +7,7 @@ import locale
 from datetime import datetime, timedelta, date
 
 class ALLSKYFORMAT:
-    
+
     _allSkyVariables = {}
 
     _config = ""
@@ -15,14 +15,14 @@ class ALLSKYFORMAT:
 
     _jsonConfig = {}
     _jsonFields = {}
-    
+
     def __init__(self):
-        
+
         try:
             locale.setlocale(locale.LC_ALL, "")
         except:
             pass
-        
+
         formData = cgi.FieldStorage()
 
         self._config = formData["config"].value
@@ -31,12 +31,12 @@ class ALLSKYFORMAT:
         self._jsonFields = json.loads(self._fields)
         self._getAllSkyVariables()
         pass
-    
+
     def _getAllSkyVariables(self):
         allskyVariables = {}
-        
+
         scriptName = f"html{os.environ['SCRIPT_NAME']}"
-        scriptFileName = os.environ["SCRIPT_FILENAME"]  
+        scriptFileName = os.environ["SCRIPT_FILENAME"]
         allSkyHome = scriptFileName.replace(scriptName, "")
         allSkyTmp = f"{allSkyHome}tmp"
         allSkyVariableFile = f"{allSkyTmp}/overlaydebug.txt"
@@ -61,10 +61,43 @@ class ALLSKYFORMAT:
                 break
 
         return result
-    
+
+    def _doBoolFormat(self, value, format):
+        # allow formats:  %yes %on %true %1
+        if value == 1 or value == '1':
+            if format == '%yes':
+                v = 'Yes'
+            else:
+                if format == '%on':
+                    v = 'On'
+                else:
+                    if format == '%true':
+                        v = 'True'
+                    else:
+                        if format == '%1':
+                            v = '1'
+                        else:
+                            v = '??'
+        else:
+            if format == '%yes':
+                v = 'No'
+            else:
+                if format == '%on':
+                    v = 'Off'
+                else:
+                    if format == '%true':
+                        v = 'False'
+                    else:
+                        if format == '%1':
+                            v = '0'
+                        else:
+                            v = '??'
+
+        return v
+
     def _getValue(self, format, fieldValue, variableType):
         value = fieldValue
-        
+
         if variableType == 'Date':
             timeStamp = datetime.fromtimestamp(time.time())
             if format is None:
@@ -81,7 +114,7 @@ class ALLSKYFORMAT:
 
         if variableType == 'Number':
             if format is not None and format != "":
-                format = "{" + format + "}"                 
+                format = "{" + format + "}"
                 try:
                     try:
                         convertValue = int(fieldValue)
@@ -95,13 +128,12 @@ class ALLSKYFORMAT:
                     pass
 
         if variableType == 'Bool':
-            if int(value) == 0:
-                fieldValue = 'No'
-            else:
-                fieldValue = 'Yes'
-                                         
+            if format is None or format == '':
+                format = "%yes"
+            value = self._doBoolFormat(value, format)
+
         return value
-    
+
     def createSampleData(self):
         result = {}
         for index,fieldData in enumerate(self._jsonConfig["fields"]):
@@ -120,7 +152,7 @@ class ALLSKYFORMAT:
                         labelVariant = f"AS_{label}"
                         if labelVariant in self._allSkyVariables:
                             fieldValue = self._allSkyVariables[labelVariant]
-                          
+
                     if fieldValue is not None:
                         if "format" in fieldData:
                             formats = fieldData["format"].strip()
@@ -131,26 +163,26 @@ class ALLSKYFORMAT:
                                 else:
                                     regex = r"\{(.*?)\}"
                                     formatArray = re.findall(regex, formats)
-                                
-                                if len(formatArray) > 0:                        
+
+                                if len(formatArray) > 0:
                                     if index < len(formatArray):
                                         variableType = self._getFieldType(fullLabel)
                                         format = formatArray[index]
                                         formattedValue = self._getValue(format, fieldValue, variableType)
                                         fieldLabel = fieldLabel.replace(fullLabel, str(formattedValue))
                                 else:
-                                    fieldLabel = fieldLabel.replace(fullLabel, str(fieldValue))                                    
+                                    fieldLabel = fieldLabel.replace(fullLabel, str(fieldValue))
                             else:
                                 fieldLabel = fieldLabel.replace(fullLabel, str(fieldValue))
                         else:
-                            fieldLabel = fieldLabel.replace(fullLabel, str(fieldValue))                            
- 
+                            fieldLabel = fieldLabel.replace(fullLabel, str(fieldValue))
+
             result[fieldData["id"]] = fieldLabel
-        
+
         print("Content-type: text/html\n")
         print(json.dumps(result, indent = 4))
 
-try:        
+try:
     sampleEngine = ALLSKYFORMAT()
     sampleEngine.createSampleData()
 except Exception as e:

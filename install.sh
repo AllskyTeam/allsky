@@ -147,15 +147,19 @@ get_this_branch()
 	local FILE="${ALLSKY_HOME}/.git/config"
 	if [[ -f ${FILE} ]]; then
 		local B="$(sed -E --silent -e '/^\[branch "/s/(^\[branch ")(.*)("])/\2/p' "${FILE}")"
-		if [[ -n ${B} && ${B} != "${GITHUB_MAIN_BRANCH}" ]]; then
-			BRANCH="${B}"
-			echo -n "${BRANCH}" > "${ALLSKY_BRANCH_FILE}"
-			display_msg info "Using '${BRANCH}' branch."
-		elif [[ ${DEBUG} -gt 0 ]]; then
-			display_msg info "Using the '${B}' branch."
+		if [[ -n ${B} ]]; then
+			if [[ ${B} != "${GITHUB_MAIN_BRANCH}" ]]; then
+				BRANCH="${B}"
+				echo -n "${BRANCH}" > "${ALLSKY_BRANCH_FILE}"
+				display_msg info "Using '${BRANCH}' branch."
+			elif [[ ${DEBUG} -gt 0 ]]; then
+				display_msg info "Using the '${B}' branch."
+			fi
+		else
+			display_msg --log warning "Unable to determine branch from '${FILE}'; assuming ${BRANCH}."
 		fi
 	else
-		display_msg --log warning "${FILE} not found; assuming ${GITHUB_MAIN_BRANCH} branch."
+		display_msg --log warning "${FILE} not found; assuming ${BRANCH} branch."
 	fi
 }
 

@@ -365,7 +365,7 @@ function toggle_advanced()
 						else $default = "Yes";
 					} elseif ($type == "select") {
 						foreach($option['options'] as $opt) {
-							$val = $opt['value'];
+							$val = getVariableOrDefault($opt, 'value', "?");
 							if ($val != $default) continue;
 							$default = $opt['label'];
 							break;
@@ -421,8 +421,8 @@ function toggle_advanced()
 						echo "<select class='form-control boxShadow settingInput' name='$name' title='Select an item'" .
 						   	" $readonlyForm style='text-align: right; padding: 0px 3px 0px 0px;'>";
 						foreach($option['options'] as $opt){
-							$val = $opt['value'];
-							$lab = $opt['label'];
+							$val = getVariableOrDefault($opt, 'value', "?");
+							$lab = getVariableOrDefault($opt, 'label', "?");
 							if ($value == $val){
 								echo "<option value='$val' selected>$lab</option>";
 							} else {

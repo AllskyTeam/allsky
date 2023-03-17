@@ -2042,13 +2042,19 @@ bool validateLatitudeLongitude(config *cg)
 }
 
 // Set the locale
-void doLocale(config cg)
+void doLocale(config *cg)
 {
-	if (cg.locale == NULL) {
-		cg.locale = setlocale(LC_NUMERIC, NULL);
-		if (cg.locale == NULL)
+	if (cg->locale == NULL) {
+		cg->locale = setlocale(LC_NUMERIC, NULL);
+		if (cg->locale == NULL) {
 			Log(-1, "*** WARNING: Could not get locale from Pi!\n");
-	} else if (setlocale(LC_NUMERIC, cg.locale) == NULL && ! cg.saveCC) {
-		Log(-1, "*** WARNING: Could not set locale to %s.\n", cg.locale);
+		} else {
+			static char locale[100];
+			strncpy(locale, cg->locale, sizeof(locale)-1);
+			cg->locale = locale;
+printf("xxxxxxxxxxx LC_NUMERIC = %s\n", cg->locale);
+		}
+	} else if (setlocale(LC_NUMERIC, cg->locale) == NULL && ! cg->saveCC) {
+		Log(-1, "*** WARNING: Could not set locale to %s.\n", cg->locale);
 	}
 }

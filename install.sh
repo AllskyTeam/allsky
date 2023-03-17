@@ -630,11 +630,13 @@ install_webserver()
 	sudo lighty-enable-mod fastcgi-php > /dev/null 2>&1
 
 	# Start off with a clean log file that the user can write to.
-	sudo rm -fr /var/log/lighttpd/*
-	local LIGHTTPD_LOG="/var/log/lighttpd/error.log"
+	local D="/var/log/lighttpd"
+	sudo chmod 755 "${D}"
+	sudo rm -fr "${D}"/*
+	local LIGHTTPD_LOG="${D}/error.log"
 	sudo touch "${LIGHTTPD_LOG}"
 	sudo chmod 664 "${LIGHTTPD_LOG}"
-	sudo chgrp "${ALLSKY_GROUP}" "${LIGHTTPD_LOG}"
+	sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG}"
 	sudo systemctl start lighttpd
 }
 

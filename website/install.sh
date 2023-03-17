@@ -7,6 +7,8 @@ ME="$(basename "${BASH_ARGV0}")"
 source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086
 source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit ${ALLSKY_ERROR_STOP}
+
+# This file defines functions plus sets many variables.
 #shellcheck disable=SC2086 source=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
@@ -34,29 +36,9 @@ if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
 fi
 
 TITLE="Allsky Website Installer"
-ALLSKY_VERSION="$(get_version "${ALLSKY_HOME}" )"
-ALLSKY_OWNER=$(id --group --name)
-WEBSERVER_GROUP="www-data"
-REPO_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 
 
 ####################### functions
-
-# Display a header surrounded by stars.
-display_header() {
-	HEADER="${1}"
-	((LEN=${#HEADER} + 8))		# 8 for leading and trailing "*** "
-	STARS=""
-	while [[ ${LEN} -gt 0 ]]; do
-		STARS="${STARS}*"
-		((LEN--))
-	done
-	echo
-	echo "${STARS}"
-	echo -e "*** ${HEADER} ***"
-	echo "${STARS}"
-	echo
-}
 
 
 usage_and_exit()
@@ -99,9 +81,9 @@ check_versions() {
 		# Should put in the configuration file.
 		ALLSKY_WEBSITE_NEW_VERSION="$(settings .config.AllskyWebsiteVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
 	else
-		if [[ -n ${PRIOR_WEBSITE} && -f ${ALLSKY_WEBSITE_BRANCH} ]]; then
-			BRANCH="$( < "${ALLSKY_WEBSITE_BRANCH}" )"
-			CHECK_BRANCH="true"
+		if [[ ${PRIOR_WEBSITE_TYPE} == "new" ]]; then
+			BRANCH="$(get_branch "${PRIOR_WEBSITE}")"
+			[[ -n ${BRANCH} ]] && CHECK_BRANCH="true"
 		fi
 	fi
 
@@ -125,7 +107,7 @@ check_versions() {
 		ALLSKY_WEBSITE_NEW_VERSION="$(get_Git_version "${BRANCH}" "allsky-website")"
 	fi
 	if [[ -n ${ALLSKY_WEBSITE_NEW_VERSION} ]]; then
-		local CURRENT_VERSION="$(get_version "${ALLSKY_WEBSITE_VERSION}" )"
+		local CURRENT_VERSION="$(get_version "${ALLSKY_WEBSITE_VERSION_FILE}" )"
 		if [[ -n ${CURRENT_VERSION} && ${ALLSKY_WEBSITE_NEW_VERSION} < "${CURRENT_VERSION}" ]]; then
 			MSG="You are trying to install an older version of the Allsky Website!\n"
 			MSG="${MSG}\nCurrent version: ${CURRENT_VERSION}"
@@ -195,7 +177,7 @@ check_for_older_config_file() {
 		PRIOR_CONFIG_VERSION="** Unknown **"
 		OLD="true"
 	else
-		NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_FILE}")"
+		NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
 		[[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]] && OLD="true"
 	fi
 
@@ -204,7 +186,7 @@ check_for_older_config_file() {
 		MSG="Your    version: ${PRIOR_CONFIG_VERSION}"
 		MSG="${MSG}\nCurrent version: ${NEW_CONFIG_VERSION}"
 		MSG="${MSG}\nPlease compare your file to the new one in"
-		MSG="${MSG}\n${REPO_FILE}"
+		MSG="${MSG}\n${REPO_WEBCONFIG_FILE}"
 		MSG="${MSG}\nto see what fields have been added, changed, or removed.\n"
 		display_msg notice "${MSG}"
 	fi
@@ -234,7 +216,7 @@ create_website_configuration_file() {
 	fi
 
 	display_msg progress "Creating default '${WEB_CONFIG_FILE}' file."
-	cp "${REPO_FILE}" "${WEB_CONFIG_FILE}" || exit 2
+	cp "${REPO_WEBCONFIG_FILE}" "${WEB_CONFIG_FILE}" || exit 2
 
 	# Get the array index for the mini-timelapse.
 	PARENT="homePage.leftSidebar"
@@ -458,7 +440,7 @@ do_remote_website() {
 			MSG="${MSG}and select '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"
 			display_msg info "${MSG}"
 		else
-			MSG="You need to manually copy '${REPO_FILE}'"
+			MSG="You need to manually copy '${REPO_WEBCONFIG_FILE}'"
 			# ALLSKY_WEBSITE_CONFIGURATION_NAME is what it's called on the remote server
 			MSG="${MSG}to your remote server and rename it to '${ALLSKY_WEBSITE_CONFIGURATION_NAME}',"
 			MSG="${MSG}then modify it."
@@ -470,6 +452,7 @@ do_remote_website() {
 
 	exit 0
 }
+
 
 ##### Handle an update to the website, then exit
 do_update() {
@@ -483,30 +466,6 @@ do_update() {
 
 	display_msg progress "\nUpdate complete!\n"
 	exit 0
-}
-
-
-##### Download the Allsky Website files.
-download_Allsky_Website() {
-	local B=""
-
-	# Only display if not the default.
-	if [[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
-		B=" from branch ${BRANCH}"
-	fi
-
-	display_msg progress "Downloading Allsky Website files${B} into ${ALLSKY_WEBSITE}."
-	TMP="/tmp/git.install.tmp"
-	# shellcheck disable=SC2086
-	git clone -b ${BRANCH} "${GITHUB_ROOT}/allsky-website.git" "${ALLSKY_WEBSITE}" > "${TMP}" 2>&1
-	if [[ $? -ne 0 ]]; then
-		display_msg error "Unable to get Allsky Website files from git."
-		cat "${TMP}"
-		exit 4
-	fi
-
-	# If running non-production branch, save the branch.
-	[[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]] && echo "${BRANCH}" > "${ALLSKY_WEBSITE_BRANCH}"
 }
 
 
@@ -530,9 +489,9 @@ does_prior_Allsky_Website_exist()
 			exit 3
 		fi
 
-	elif [[ -d /var/www/html/allsky ]]; then
+	elif [[ -d ${OLD_WEBUI_LOCATION}/allsky ]]; then
 		# Has an old-style website.
-		PRIOR_WEBSITE="/var/www/html/allsky"
+		PRIOR_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
 		PRIOR_WEBSITE_TYPE="old"
 
 	else
@@ -561,6 +520,30 @@ save_prior_website() {
 	else
 		SAVED_PRIOR="false"
 	fi
+}
+
+
+##### Download the Allsky Website files.
+download_Allsky_Website() {
+	local B=""
+
+	# Only display if not the default.
+	if [[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
+		B=" from branch ${BRANCH}"
+	fi
+
+	display_msg progress "Downloading Allsky Website files${B} into ${ALLSKY_WEBSITE}."
+	TMP="/tmp/git.install.tmp"
+	# shellcheck disable=SC2086
+	git clone -b ${BRANCH} "${GITHUB_ROOT}/allsky-website.git" "${ALLSKY_WEBSITE}" > "${TMP}" 2>&1
+	if [[ $? -ne 0 ]]; then
+		display_msg error "Unable to get Allsky Website files from git."
+		cat "${TMP}"
+		exit 4
+	fi
+
+	# If running non-production branch, save the branch.
+	[[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]] && echo "${BRANCH}" > "${ALLSKY_WEBSITE_BRANCH_FILE}"
 }
 
 

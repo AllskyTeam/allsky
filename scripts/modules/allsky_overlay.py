@@ -166,7 +166,7 @@ class ALLSKYOVERLAY:
             self._imageDate = time.time()
     
     def _loadDataFile(self):
-        """ Loads any extra data files found in the {ALLSKY_TMP}/extra folder. The data files can either be json or 
+        """ Loads any extra data files found in the {ALLSKY_EXTRA} folder. The data files can either be json or 
             name pair values. 
             
             The json format allows for an expiry time for the variable. In the example below the rain value will expire
@@ -175,7 +175,7 @@ class ALLSKYOVERLAY:
 
             {
                 "RAIN": {                       <-- The variable name (This is a text field)
-                    "value": "14mm",            <-- The valeu for the variable
+                    "value": "14",              <-- The value for the variable
                     "expires": 6000000,         <-- (Optional) The expiry time (seconds), will use the editor default if not defined
                     "x" : 800,                  <-- (optional) Override for the x coordinate of the field
                     "y" : 200,                  <-- (optional) Override for the y coordinate of the field
@@ -190,24 +190,24 @@ class ALLSKYOVERLAY:
                     "scale": 0.1,               <-- (Optional) value to scale the image by, this is 10% of the original size
                     "expires": 6000,            <-- (Optional) The expiry time (seconds), will use the editor default if not defined                    
                 },
-                "AMBIENT": "15c",               <-- This value will use the epiry time defined in the editor if oneis set
-                "CLOUD_COVER": "45%"
+                "AMBIENT": "15",               <-- This value will use the expiry time defined in the editor if one is set
+                "CLOUD_COVER": "45"
             }
 
             A name pair value file would look like
 
-            RAIN=14mm
-            AMBIENT=15c
-            CLOUD_COVER=45%
+            RAIN=14
+            AMBIENT=15
+            CLOUD_COVER=45
 
-            NOTE: For name pair values it is not possible to specify the expiry time by variable. The entire file will be
-            expired based upon the value set in the overlay editor
+            NOTE: For name pair values in .txt files it is not possible to specify the expiry time by variable.
+            The entire file will be expired based upon the value set in the overlay editor.
         """
         
         result = True
 
         defaultExpiry = self._overlayConfig["settings"]["defaultdatafileexpiry"]
-        extraFolder = os.path.join(os.environ['ALLSKY_TMP'], "extra")
+        extraFolder = os.environ['ALLSKY_EXTRA']
 
         for (dirPath, dirNames, fileNames) in os.walk(extraFolder):
             for fileName in fileNames:
@@ -635,6 +635,39 @@ class ALLSKYOVERLAY:
         image.paste(im_txt, mask=im_txt)
         return image
 
+    def _doBoolFormat(self, value, format):
+        # allow formats:  %yes %on %true %1
+        if value == 1 or value == '1':
+            if format == '%yes':
+                v = 'Yes'
+            else:
+                if format == '%on':
+                    v = 'On'
+                else:
+                    if format == '%true':
+                        v = 'True'
+                    else:
+                        if format == '%1':
+                            v = '1'
+                        else:
+                            v = value
+        else:
+            if format == '%yes':
+                v = 'No'
+            else:
+                if format == '%on':
+                    v = 'Off'
+                else:
+                    if format == '%true':
+                        v = 'False'
+                    else:
+                        if format == '%1':
+                            v = '0'
+                        else:
+                            v = value
+
+        return v
+
     def _getValue(self, placeHolder, variableType, format=None, empty=''):
         value = None
         valueOk = True
@@ -700,6 +733,7 @@ class ALLSKYOVERLAY:
                     if format is None:
                         value = timeStamp.strftime('%Y-%m-%d %H:%M:%S')
                     else:
+						# TODO: Check for bad format?
                         value = timeStamp.strftime(format)
 
                 if variableType == 'Time':
@@ -707,10 +741,12 @@ class ALLSKYOVERLAY:
                     if format is None:
                         value = time.strftime('%H:%M:%S', timeStamp)
                     else:
+						# TODO: Check for bad format?
                         value = time.strftime(format, timeStamp)
 
                 if variableType == 'Number':
                     if format is not None and format != "":
+                        f = format
                         format = "{" + format + "}"
                         convertValue = 0
                         try:
@@ -721,16 +757,15 @@ class ALLSKYOVERLAY:
                             try:
                                 value = format.format(convertValue)
                             except Exception as err:
-                                s.log(0, f"ERROR: '{rawFieldName}' Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
+                                s.log(0, f"ERROR: Cannot use format '{f}' on Number variables like {rawFieldName}.")
                                 value = self._formaterrortext
                         except ValueError as err:
-                            s.log(0, f"ERROR: '{rawFieldName}' Cannot use format {format} on value ({type(convertValue)}){convertValue} ({err})")
+                            s.log(0, f"ERROR: Cannot use format '{f}' on Number variables like {rawFieldName}.")
 
                 if variableType == 'Bool':
-                    if s.int(value) == 0:
-                        value = 'No'
-                    else:
-                        value = 'Yes'
+                    if format is None or format == '':
+                        format = "%yes"
+                    value = self._doBoolFormat(value, format)
 
             if variableType == 'Text' or variableType == 'Number':
                 if value == '' or value is None:
@@ -1070,9 +1105,7 @@ class ALLSKYOVERLAY:
             multiplier = 1 if input[-1] in ['N', 'E'] else -1
             ret = multiplier * sum(s.float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
         else:
-            # TODO: do we just return the number?
             ret = float(input)
-        # s.log(0, "XXXXXXX _convertLatLon() returning={}".format(ret))
         return ret
 
     def _fetchTleFromCelestrak(self, noradCatId, verify=True):

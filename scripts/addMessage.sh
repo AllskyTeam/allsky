@@ -3,15 +3,16 @@
 # Add a message to the WebUI message box, including the time and a count.
 # If the message is already there, just update the time and count.
 
-ME="$(basename "${BASH_ARGV0}")"
-
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-source "${ALLSKY_HOME}/variables.sh" || exit 99
+ME="$(basename "${BASH_ARGV0}")"
+
+#shellcheck disable=SC2086 source=variables.sh
+source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
 
 if [ $# -ne 2 ]; then
 	# shellcheck disable=SC2154
-	echo -e "${wERROR}Usage: ${ME} message_type message${wNC}" >&2
+	echo -e "${wERROR}Usage: ${ME}  message_type  message${wNC}" >&2
 	echo -e "\nWhere 'message_type' is one of 'error', 'warning', or 'debug'." >&2
 	exit 1
 fi
@@ -39,7 +40,7 @@ if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$(grep "${TAB}${ESCAPED_MESSAGE}$" "${ALLS
 	PRIOR_COUNT=$(echo -e "${M}" | cut -f3 -d"${TAB}" | tail -1)
 
 	# If this entry is corrupted don't try to update the counter.
-	[[ ${PRIOR_COUNT} != "" ]] && COUNT=$((PRIOR_COUNT + 1))
+	[[ ${PRIOR_COUNT} != "" ]] && ((COUNT = PRIOR_COUNT + 1))
 
 	sed -i -e "/${TAB}${ESCAPED_MESSAGE}$/d"  "${ALLSKY_MESSAGES}"
 else

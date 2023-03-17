@@ -545,6 +545,7 @@ class ALLSKYOVERLAY:
                     fieldEmpty = ''
 
             fieldValue, overrideX, overrideY, overrideFill, overrideFont, overrideFontSize, overrideRotate, overrideScale, overrideOpacity, overrideStroke, overrideStrokewidth = self._getValue(variable, variableType, fieldFormat, fieldEmpty)
+            # s.log(0, f"XXXXX: variable={variable}, fieldEmpty={fieldEmpty}, fieldValue={fieldValue}")
 
             if overrideStroke is not None:
                 stroke = overrideStroke
@@ -583,6 +584,7 @@ class ALLSKYOVERLAY:
 
             totalVariables += 1
 
+        # s.log(0, f"YYXXX: totalVariables={totalVariables}, totalVariablesReplaced={totalVariablesReplaced}, fieldLabel=[{fieldLabel}]")
         # If there were variables and none matched, don't display the field.
         if totalVariables != 0 and totalVariablesReplaced == 0:
             fieldLabel = None
@@ -783,8 +785,11 @@ class ALLSKYOVERLAY:
                 if value == '' or value is None:
                     if empty != '' and empty is not None:
                         value = empty
+            elif variableType is None or variableType == '':
+                value = '???'
+                s.log(0, f"ERROR: {rawFieldName} has no variable type; check 'fields.json'")
 
-        return value ,x ,y, fill, font, fontsize, rotate, scale, opacity, stroke, strokewidth
+        return value, x, y, fill, font, fontsize, rotate, scale, opacity, stroke, strokewidth
 
     def _addImages(self):
         for index, imageData in enumerate(self._overlayConfig["images"]):

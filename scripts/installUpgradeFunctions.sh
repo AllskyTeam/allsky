@@ -44,6 +44,7 @@ function get_Git_version() {
 # Get the version from a local file, if it exists.
 function get_version() {
 	local F="${1}"
+	[[ -z ${F} ]] && F="${ALLSKY_VERSION_FILE}"		# default
 	if [[ -f ${F} ]]; then
 		local VALUE="$( < "${F}" )"
 		echo -n "${VALUE}" | tr -d '\n\r'
@@ -54,8 +55,11 @@ function get_version() {
 #####
 # Get the branch from a local file, if it exists.
 function get_branch() {
+	local F="${1}"
+	[[ -z ${F} ]] && F="${ALLSKY_BRANCH_FILE}"		# default
+
 	# Branch file is same format as Version file.
-	echo -n "$(get_version "${1}")"
+	echo -n "$(get_version "${F}")"
 }
 
 #####

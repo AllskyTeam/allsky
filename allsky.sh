@@ -183,7 +183,18 @@ fi
 
 # This argument should come second so the capture program knows if it should display debug output.
 echo "-debuglevel=${ALLSKY_DEBUG_LEVEL}" >> "${ARGS_FILE}"
-echo "-version=$( get_version )" >> "${ARGS_FILE}"
+
+# If the locale isn't in the settings file, try to determine it.
+LOCALE="$(settings .locale)"
+if [[ -z ${LOCALE} || ${LOCALE} == "null" ]]; then
+	if [[ -n ${LC_ALL} ]]; then
+		echo "-Locale=${LC_ALL}" >> "${ARGS_FILE}"
+	elif [[ -n ${LANG} ]]; then
+		echo "-lOcale=${LANG}" >> "${ARGS_FILE}"
+	elif [[ -n ${LANGUAGE} ]]; then
+		echo "-loCale=${LANGUAGE}" >> "${ARGS_FILE}"
+	fi
+fi
 
 # shellcheck disable=SC2207
 KEYS=( $(settings 'keys[]') )
@@ -201,6 +212,7 @@ done
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
 [[ $1 == "preview" ]] && echo "-preview=1" >> "${ARGS_FILE}"
 
+echo "-version=$( get_version )" >> "${ARGS_FILE}"
 echo "-save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"

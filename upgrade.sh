@@ -39,7 +39,8 @@ usage_and_exit()
 	else
 		C="${RED}"
 	fi
-	# Don't show "--newer" or --force-check options since users should never use them.
+	# Don't show the "--newer", "--no-check", or "--force-check" options since users
+	# should never use them.
 	# TODO: Also don't show future --doUpgrade and --doUpgradeInPlace options.
 	echo
 	echo -e "${C}Usage: ${ME} [--help] [--debug] [--restore] [--function function]${NC}"
@@ -90,6 +91,9 @@ while [ $# -gt 0 ]; do
 		--function)
 			FUNCTION="${2}"
 			shift
+			;;
+		--no-check)
+			FORCE_CHECK="false"
 			;;
 		--force-check)
 			FORCE_CHECK="true"

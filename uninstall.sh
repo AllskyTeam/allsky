@@ -6,7 +6,8 @@
 #shellcheck disable=SC2086 source-path=.
 source "${ALLSKY_HOME}/variables.sh"			|| exit ${ALLSKY_ERROR_STOP}
 
-cd ~/${ALLSKY_INSTALL_DIR}  || exit 1
+#shellcheck disable=SC2086
+cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
 
 MSG="This will remove all non-config, system files from your computer.\n"
 MSG="${MSG}Note: This only removes files in their default location.\n"

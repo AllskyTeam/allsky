@@ -4,9 +4,13 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck disable=SC2086
-source "${ALLSKY_HOME}/variables.sh"	|| exit ${ALLSKY_ERROR_STOP}
+source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086
-source "${ALLSKY_SCRIPTS}/functions.sh"	|| exit ${ALLSKY_ERROR_STOP}
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit ${ALLSKY_ERROR_STOP}
+
+# This file defines functions plus sets many variables.
+#shellcheck disable=SC2086 source=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
 if [[ ${EUID} -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
@@ -25,13 +29,7 @@ PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
 PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# may change depending on old version
 
-OLD_WEBUI_LOCATION="/var/www/html"		# location of old-style WebUI
-
 TITLE="Allsky Installer"
-ALLSKY_OWNER=$(id --group --name)		# The login installing Allsky
-ALLSKY_GROUP=${ALLSKY_OWNER}
-WEBSERVER_GROUP="www-data"
-ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 SETTINGS_FILE_NAME="$(basename "${SETTINGS_FILE}")"
@@ -51,7 +49,6 @@ REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
 REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/allskyDefines.inc.repo"
 REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
-REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 
 # Directory for log files from installation.
 # Needs to go somewhere that survives reboots but can be removed when done.
@@ -73,23 +70,6 @@ chmod 755 "${ALLSKY_HOME}"
 
 ####################### functions
 
-####
-# Display a header surrounded by stars.
-display_header()
-{
-	HEADER="${1}"
-	LEN=$((${#HEADER} + 8))		# 8 for leading and trailing "*** "
-	STARS=""
-	while [[ ${LEN} -gt 0 ]]; do
-		STARS="${STARS}*"
-		((LEN--))
-	done
-	echo
-	echo "${STARS}"
-	echo -e "*** ${HEADER} ***"
-	echo "${STARS}"
-	echo
-}
 
 ####
 # 
@@ -152,14 +132,6 @@ usage_and_exit()
 
 
 ####
-calc_wt_size()
-{
-	WT_WIDTH=$(tput cols)
-	[[ ${WT_WIDTH} -gt 80 ]] && WT_WIDTH=80
-}
-
-
-####
 # Stop Allsky.  If it's not running, nothing happens.
 stop_allsky()
 {
@@ -169,19 +141,19 @@ stop_allsky()
 
 
 ####
-# Get the branch of the new release; if not GITHUB_MAIN_BRANCH, save it.
-get_branch()
+# Get the branch of the release we are installing; if not GITHUB_MAIN_BRANCH, save it.
+get_this_branch()
 {
 	local FILE="${ALLSKY_HOME}/.git/config"
 	if [[ -f ${FILE} ]]; then
-		B="$(sed -E --silent -e '/^\[branch "/s/(^\[branch ")(.*)("])/\2/p' "${FILE}")"
+		local B="$(sed -E --silent -e '/^\[branch "/s/(^\[branch ")(.*)("])/\2/p' "${FILE}")"
 		if [[ -n ${B} && ${B} != "${GITHUB_MAIN_BRANCH}" ]]; then
 			BRANCH="${B}"
-			echo -n "${BRANCH}" > "${ALLSKY_HOME}/branch"
+			echo -n "${BRANCH}" > "${ALLSKY_BRANCH_FILE}"
 			display_msg info "Using '${BRANCH}' branch."
 		fi
 	else
-		display_msg warning "${FILE} not found; assuming ${GITHUB_MAIN_BRANCH} branch"
+		display_msg --log warning "${FILE} not found; assuming ${GITHUB_MAIN_BRANCH} branch."
 	fi
 }
 
@@ -579,7 +551,7 @@ check_tmp()
 
 
 ####
-check_installation_success()
+check_success()
 {
 	local RET=${1}
 	local MESSAGE="${2}"
@@ -613,7 +585,7 @@ install_webserver()
 		sudo apt-get update && \
 			sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
 	) > "${TMP}" 2>&1
-	check_installation_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
+	check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
 	sed \
@@ -627,14 +599,17 @@ install_webserver()
 			"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
 	sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
 
+	# Ignore output since it may already be enabled.
 	sudo lighty-enable-mod fastcgi-php > /dev/null 2>&1
 
 	# Start off with a clean log file that the user can write to.
-	sudo rm -fr /var/log/lighttpd/*
-	local LIGHTTPD_LOG="/var/log/lighttpd/error.log"
+	local D="/var/log/lighttpd"
+	sudo chmod 755 "${D}"
+	sudo rm -fr "${D}"/*
+	local LIGHTTPD_LOG="${D}/error.log"
 	sudo touch "${LIGHTTPD_LOG}"
 	sudo chmod 664 "${LIGHTTPD_LOG}"
-	sudo chgrp "${ALLSKY_GROUP}" "${LIGHTTPD_LOG}"
+	sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG}"
 	sudo systemctl start lighttpd
 }
 
@@ -766,8 +741,8 @@ check_old_WebUI_location()
 		return
 	fi
 
-	# The installation of the web server often creates a "index.lighttpd.html"
-	# file in /var/www/html.  It just says "No files yet...".
+	# The installation of the web server often creates a file in
+	# ${OLD_WEBUI_LOCATION}.  It just says "No files yet...", so delete it.
 	sudo rm -f "${OLD_WEBUI_LOCATION}/index.lighttpd.html"
 
 	if [[ ! -d ${OLD_WEBUI_LOCATION}/includes ]]; then
@@ -798,13 +773,13 @@ check_old_WebUI_location()
 ####
 handle_prior_website()
 {
-	OLD_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
-	if [[ -d ${OLD_WEBSITE} ]]; then
-		ALLSKY_WEBSITE_OLD="${OLD_WEBSITE}"						# old-style Website
+	local OLD_STYLE_WEBSITE="${OLD_WEBSITE_LOCATION}"
+	if [[ -d ${OLD_STYLE_WEBSITE} ]]; then
+		local ALLSKY_WEBSITE_OLD="${OLD_STYLE_WEBSITE}"				# old-style Website
 	elif [[ -d ${PRIOR_ALLSKY_DIR}/html/allsky ]]; then
-		ALLSKY_WEBSITE_OLD="${PRIOR_ALLSKY_DIR}/html/allsky"	# new-style Website
+		local ALLSKY_WEBSITE_OLD="${PRIOR_ALLSKY_DIR}/html/allsky"	# new-style Website
 	else
-		return													# no prior Website
+		return														# no prior Website
 	fi
 
 	# Move any prior ALLSKY_WEBSITE to the new location.
@@ -812,43 +787,55 @@ handle_prior_website()
 	# Note: This MUST come before the old WebUI check below so we don't remove the prior website
 	# when we remove the prior WebUI.
 
-	OK="true"
+	local NO_NEW_WEBSITE_DIR="true"
+	local PRIOR_SITE=""
+	local VERSION_FILE=""
 	if [[ -d ${ALLSKY_WEBSITE} ]]; then
 		# Hmmm.  There's an old webite AND a new one.
 		# Allsky doesn't ship with the website directory, so not sure how one got there...
 		# Try to remove the new one - if it's not empty the remove will fail.
-		rmdir "${ALLSKY_WEBSITE}"
-		if [[ $? -ne 0 ]]; then
-			display_msg error "New website in '${ALLSKY_WEBSITE}' is not empty."
+		if ! rmdir "${ALLSKY_WEBSITE}" ; then
+			display_msg error "Website in '${ALLSKY_WEBSITE}' is not empty."
 			display_msg info "  Move the contents manually from '${ALLSKY_WEBSITE_OLD}',"
 			display_msg info "  and then remove the old location.\n"
-			OK="false"
+			NO_NEW_WEBSITE_DIR="false"
 
 			# Move failed, but still check if prior website is outdated.
 			PRIOR_SITE="${ALLSKY_WEBSITE_OLD}"
 		fi
 	fi
-	if [[ ${OK} = "true" ]]; then
+	if [[ ${NO_NEW_WEBSITE_DIR} == "true" ]]; then
 		display_msg progress "Restoring Allsky Website from ${ALLSKY_WEBSITE_OLD}."
 		sudo mv "${ALLSKY_WEBSITE_OLD}" "${ALLSKY_WEBSITE}"
 		PRIOR_SITE="${ALLSKY_WEBSITE}"
+		OLD_WEBSITE_BRANCH="$( get_branch "${ALLSKY_WEBSITE_BRANCH_FILE}" )"
+		VERSION_FILE="${ALLSKY_WEBSITE_VERSION_FILE}"
+	else
+		VERSION_FILE="${PRIOR_SITE}/version"
+		OLD_WEBSITE_BRANCH="$( get_branch "${PRIOR_SITE}/branch" )"
+	fi
+
+	OLD_VERSION="$( get_version "${VERSION_FILE}" )"
+	[[ -z ${OLD_VERSION} ]] && OLD_VERSION="** Unknown, but old **"
+
+	# If the old website was using a non-production branch,
+	# see if there's a newer version of the website with that branch OR
+	# a newer version with the production branch.  Use whichever is newer.
+	local NEW_VERSION="$(get_Git_version "${OLD_WEBSITE_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
+	local B=""
+	if [[ ${OLD_WEBSITE_BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
+		local V2="$(get_Git_version "${GITHUB_MAIN_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
+		B=" in '$x' branch"
 	fi
 
 	# Check if the prior website is outdated.
-	VERSION_FILE="${PRIOR_SITE}/version"
-	if [[ -f ${VERSION_FILE} ]]; then
-		OLD_VERSION=$( < "${VERSION_FILE}" )
-	else
-		OLD_VERSION="** Unknown, but old **"
-	fi
-	NEW_VERSION="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/allsky-website/master/version")"
-	RET=$?
-	if [[ ${RET} -eq 0 && ${OLD_VERSION} < "${NEW_VERSION}" ]]; then
-		MSG="There is a newer Allsky Website available; please upgrade to it.\n"
-		MSG="${MSG}Your    version: ${OLD_VERSION}\n"
-		MSG="${MSG}Current version: ${NEW_VERSION}\n"
-		MSG="${MSG}\nYou can upgrade the Allky Website by executing:\n"
-		MSG="${MSG}     cd ~/allsky; website/install.sh"
+	if [[ -n ${NEW_VERSION} && ${OLD_VERSION} < "${NEW_VERSION}" ]]; then
+		MSG="There is a newer Allsky Website available${B}; please upgrade to it."
+		MSG="${MSG}\nYour    version: ${OLD_VERSION}"
+		MSG="${MSG}\nCurrent version: ${NEW_VERSION}"
+		MSG="${MSG}\n\nYou can upgrade the Allky Website by executing:"
+		MSG="${MSG}\n     cd ~/allsky; website/install.sh"
+		MSG="${MSG}\nafter this installation finishes."
 		display_msg notice "${MSG}"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
@@ -1066,18 +1053,18 @@ install_dependencies_etc()
 	TMP="${INSTALL_LOGS_DIR}/make_deps.log"
 	#shellcheck disable=SC2024
 	sudo make deps > "${TMP}" 2>&1
-	check_installation_success $? "Dependency installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
+	check_success $? "Dependency installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	display_msg progress "Preparing Allsky commands."
 	TMP="${INSTALL_LOGS_DIR}/make_all.log"
 	#shellcheck disable=SC2024
 	make all > "${TMP}" 2>&1
-	check_installation_success $? "Compile failed" "${TMP}" "${DEBUG}" || exit_with_image 1
+	check_success $? "Compile failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	TMP="${INSTALL_LOGS_DIR}/make_install.log"
 	#shellcheck disable=SC2024
 	sudo make install > "${TMP}" 2>&1
-	check_installation_success $? "make install failed" "${TMP}" "${DEBUG}" || exit_with_image 1
+	check_success $? "make install failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	return 0
 }
@@ -1619,12 +1606,12 @@ install_overlay()
 		sudo apt-get install -y php-sqlite3 && \
 		sudo apt install -y python3-pip
 	) > "${TMP}" 2>&1
-	check_installation_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
+	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	display_msg progress "Installing other PHP dependencies."
 	TMP="${INSTALL_LOGS_DIR}/libatlas.log"
 	sudo apt-get -y install libatlas-base-dev > "${TMP}" 2>&1
-	check_installation_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}" || exit_with_image 1
+	check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
 	# This also allows us to display progress messages.
@@ -1650,7 +1637,7 @@ install_overlay()
 		display_msg progress "   === Package # ${COUNT} of ${NUM}: [${package}]"
 		pip3 install --no-warn-script-location --build "${PIP3_BUILD}" -r /tmp/package > "${L}" 2>&1
 		# These files are too big to display so pass in "0" instead of ${DEBUG}.
-		if ! check_installation_success $? "Python dependency [${package}] failed" "${L}" 0 ; then
+		if ! check_success $? "Python dependency [${package}] failed" "${L}" 0 ; then
 			rm -fr "${PIP3_BUILD}"
 			exit_with_image 1
 		fi
@@ -1660,7 +1647,7 @@ install_overlay()
 	display_msg progress "Installing Trutype fonts."
 	TMP="${INSTALL_LOGS_DIR}/msttcorefonts.log"
 	sudo apt-get -y install msttcorefonts > "${TMP}" 2>&1
-	check_installation_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
+	check_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	display_msg progress "Setting up modules and overlays."
 
@@ -1848,7 +1835,7 @@ does_prior_Allsky_exist
 stop_allsky
 
 ##### Get branch
-get_branch
+get_this_branch
 
 ##### Handle updates
 [[ ${UPDATE} == "true" ]] && do_update		# does not return

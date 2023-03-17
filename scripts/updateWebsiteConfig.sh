@@ -16,7 +16,7 @@ function usage_and_exit()
 {
 	RET=${1}
 	if [[ ${RET} -eq 0 ]]; then
-		C="${wYELLOW}"
+		C="${wWARNING}"
 	else
 		C="${wERROR}"
 	fi

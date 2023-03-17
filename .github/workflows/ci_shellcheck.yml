@@ -27,7 +27,7 @@ jobs:
           # check bash files (bash -n, shellchecki -x)
           err=0
           for i in $(find . -maxdepth 2 -name '*.sh'); do
-            echo "= $i"
+            echo "==================== $i"
             bash -n $i
             if [ $? -ne 0 ]; then
               echo "bash found problem with $i"
@@ -62,11 +62,12 @@ jobs:
                 ;;
             esac
             if [ ${this_err} -eq 1 ]; then
-              echo "shellcheck found problem(s) with $i"
               err=$((err + 1))
             fi
           done
           if [ $err -ne 0 ]; then
-            echo "bash or shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
+            echo
+            echo "bash and/or shellcheck found problems in scripts. Please fix it or add some excludes (-e SC....) here in this file."
+            echo
           fi
           exit $err

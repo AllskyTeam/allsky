@@ -252,7 +252,7 @@ struct config {			// for configuration variables
 	char const *longitude				= NULL;
 	float angle							= -6.0;
 	bool takeDarkFrames					= false;
-	char const *locale					= "en_US.UTF-8";
+	char const *locale					= NULL;
 	long debugLevel						= 1;
 	bool consistentDelays				= true;
 	bool videoOffBetweenImages			= true;

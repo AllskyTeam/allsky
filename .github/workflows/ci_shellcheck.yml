@@ -27,7 +27,7 @@ jobs:
           # check bash files (bash -n, shellchecki -x)
           err=0
           for i in $(find . -maxdepth 2 -name '*.sh'); do
-            echo "$i"
+            echo "= $i"
             bash -n $i
             if [ $? -ne 0 ]; then
               echo "bash found problem with $i"

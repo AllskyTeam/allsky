@@ -406,9 +406,8 @@ def float(val):
     return val
 
 def saveExtraData(fileName, extraData):
-    allskyPath = getEnvironmentVariable("ALLSKY_HOME")
-    if allskyPath is not None:
-        extraDataPath = os.path.join(allskyPath, "tmp", "extra")
+    extraDataPath = getEnvironmentVariable("ALLSKY_EXTRA")
+    if extraDataPath is not None:
         checkAndCreateDirectory(extraDataPath)
         extraDataFilename = os.path.join(extraDataPath, fileName)
         with open(extraDataFilename, "w") as file:
@@ -416,9 +415,8 @@ def saveExtraData(fileName, extraData):
             file.write(formattedJSON)
 
 def deleteExtraData(fileName):
-    allskyPath = getEnvironmentVariable("ALLSKY_HOME")
-    if allskyPath is not None:
-        extraDataPath = os.path.join(allskyPath, "tmp", "extra")
+    extraDataPath = getEnvironmentVariable("ALLSKY_EXTRA")
+    if allskyDataPath is not None:
         extraDataFilename = os.path.join(extraDataPath, fileName)
         if os.path.exists(extraDataFilename):
             if isFileWriteable(extraDataFilename):

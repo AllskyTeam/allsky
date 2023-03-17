@@ -1049,7 +1049,7 @@ void displayHelp(config cg)
 	printf("  %-*s   -6 = civil twilight   -12 = nautical twilight   -18 = astronomical twilight.\n", n, "");
 	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "takeDaytimeImages b", yesNo(cg.daytimeCapture));
 	printf(" -%-*s - 1 takes dark frames and disables the overlay [%s].\n", n, "takeDarkFrames b", yesNo(cg.takeDarkFrames));
-	printf(" -%-*s - Your locale - to determine thousands separator and decimal point [%s].\n", n, "locale s", cg.locale);
+	printf(" -%-*s - Your locale - to determine thousands separator and decimal point [%s].\n", n, "locale s", "locale on Pi");
 	printf("  %-*s   Type 'locale' at a command prompt to determine yours.\n", n, "");
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", n, "histogrambox n n n n", cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY, cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0);
@@ -2044,6 +2044,11 @@ bool validateLatitudeLongitude(config *cg)
 // Set the locale
 void doLocale(config cg)
 {
-	if (setlocale(LC_NUMERIC, cg.locale) == NULL && ! cg.saveCC)
-		Log(-1, "*** WARNING: Could not set locale to %s\n", cg.locale);
+	if (cg.locale == NULL) {
+		cg.locale = setlocale(LC_NUMERIC, NULL);
+		if (cg.locale == NULL)
+			Log(-1, "*** WARNING: Could not get locale from Pi!\n");
+	} else if (setlocale(LC_NUMERIC, cg.locale) == NULL && ! cg.saveCC) {
+		Log(-1, "*** WARNING: Could not set locale to %s.\n", cg.locale);
+	}
 }

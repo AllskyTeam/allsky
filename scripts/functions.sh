@@ -119,78 +119,6 @@ function determineCommandToUse()
 
 
 #####
-# Display a message of various types in appropriate colors.
-# Used primarily in installation scripts.
-function display_msg()
-{
-	local LOG_IT
-	if [[ $1 == "--log" ]]; then
-		LOG_IT=true
-		shift
-	else
-		LOG_IT=false
-	fi
-
-	local LOG_TYPE="${1}"
-	local MESSAGE="${2}"
-	local MESSAGE2="${3}"		# optional 2nd message that's not in color
-	local MSG=""
-	local LOGMSG=""				# same as ${MSG} but no escape chars
-	local STARS
-	if [[ ${LOG_TYPE} == "error" ]]; then
-		LOGMSG="*** ERROR: "
-		MSG="\n${RED}${LOGMSG}"
-		STARS=true
-
-	elif [[ ${LOG_TYPE} == "warning" ]]; then
-		LOGMSG="*** WARNING: "
-		MSG="\n${YELLOW}${LOGMSG}"
-		STARS=true
-
-	elif [[ ${LOG_TYPE} == "notice" ]]; then
-		LOGMSG="*** NOTICE: "
-		MSG="\n${YELLOW}${LOGMSG}"
-		STARS=true
-
-	elif [[ ${LOG_TYPE} == "progress" ]]; then
-		LOGMSG="* ${MESSAGE}"
-		MSG="${GREEN}${LOGMSG}${NC}"
-		STARS=false
-
-	elif [[ ${LOG_TYPE} == "info" || ${LOG_TYPE} == "debug" ]]; then
-		LOGMSG="${MESSAGE}"
-		MSG="${YELLOW}${LOGMSG}${NC}"
-		STARS=false
-
-	else
-		LOGMSG=""
-		MSG="${YELLOW}"
-		STARS=false
-	fi
-
-	if [[ ${STARS} == "true" ]]; then
-		MSG="${MSG}\n"
-		MSG="${MSG}**********\n"
-		MSG="${MSG}${MESSAGE}\n"
-		MSG="${MSG}**********${NC}\n"
-
-		LOGMSG="${LOGMSG}\n"
-		LOGMSG="${LOGMSG}**********\n"
-		LOGMSG="${LOGMSG}${MESSAGE}\n"
-		LOGMSG="${LOGMSG}**********\n"
-	fi
-
-	echo -e "${MSG}${MESSAGE2}"
-
-	# Log messages to a file if it was specified.
-	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
-	if [[ ${LOG_IT} == "true" && -n ${DISPLAY_MSG_LOG} ]]; then
-		echo -e "${LOGMSG}${MESSAGE2}" >>  "${DISPLAY_MSG_LOG}"
-	fi
-}
-
-
-#####
 # Seach for the specified field in the specified array, and return the index.
 # Return -1 on error.
 function getJSONarrayIndex()
@@ -292,7 +220,9 @@ function get_sunrise_sunset()
 	local ANGLE="${1}"
 	local LATITUDE="${2}"
 	local LONGITUDE="${3}"
+	#shellcheck disable=SC2086 source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
+	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 	source "${ALLSKY_CONFIG}/config.sh"		|| return 1
 
 	[[ -z ${ANGLE} ]] && ANGLE="$(settings ".angle")"
@@ -312,26 +242,10 @@ function get_sunrise_sunset()
 
 
 #####
-# Get a shell variable's value.  The variable can have optional spaces and tabs before it.
-# This function is useful when we can't "source" the file.
-function get_variable() {
-	local VARIABLE="${1}"
-	local FILE="${2}"
-	local LINE=""
-	local SEARCH_STRING="^[ 	]*${VARIABLE}="
-	if ! LINE="$(grep -E "${SEARCH_STRING}" "${FILE}")" ; then
-		return 1
-	fi
-
-	echo "${LINE}" | sed -e "s/${SEARCH_STRING}//" -e 's/"//g'
-	return 0
-}
-
-
-#####
 # Return which Allsky Websites exist - local, remote, both, none
 function whatWebsites()
 {
+	#shellcheck disable=SC2086 source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
 
 	local HAS_LOCAL="false"
@@ -423,23 +337,6 @@ function checkAndGetNewerFile()
 		echo "ERROR: '${GIT_FILE} not found!"
 		return 2
 	fi
-}
-
-
-#####
-# Determine what GitHub branch is being run.
-# The branch name is in the "version" file:
-#	<VERSION> [BRANCH: <BRANCH>]
-function getBranch()
-{
-	local BRANCH=""
-	[[ -f ${ALLSKY_HOME}/branch ]] && BRANCH="$(< "${ALLSKY_HOME}/branch")"
-	if [[ -n ${BRANCH} ]]; then
-		echo -n "${BRANCH}"
-	else
-		echo -n "${GITHUB_MAIN_BRANCH}"
-	fi
-	return 0
 }
 
 

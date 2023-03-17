@@ -18,7 +18,7 @@ NOT_STARTED_MSG="Unable to start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 
-#shellcheck disable=SC2086
+#shellcheck disable=SC2086 source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
 if [[ -z ${ALLSKY_CONFIG} ]]; then
 	MSG="FATAL ERROR: 'source variables.sh' did not work properly."
@@ -27,13 +27,11 @@ if [[ -z ${ALLSKY_CONFIG} ]]; then
 		"${ERROR_MSG_PREFIX}\n$(basename "${ALLSKY_HOME}")/variables.sh\nis corrupted." \
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
-#shellcheck disable=SC2086
-source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086
+#shellcheck disable=SC2086 source-path=config
 source "${ALLSKY_CONFIG}/config.sh"						|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086
+#shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source=scripts
+#shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
 

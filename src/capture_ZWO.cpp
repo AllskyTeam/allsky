@@ -694,7 +694,7 @@ int main(int argc, char *argv[])
 		displayHeader(CG);
 	}
 
-	doLocale(CG);
+	doLocale(&CG);
 
 	if (CG.help)
 	{

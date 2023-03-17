@@ -1123,8 +1123,8 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg, long width, long he
 			printf("  - %s:\n", cc.Name);
 			printf("    - Description = %s\n", cc.Description);
 			printf("    - MinValue = %s\n", LorF(cc.MinValue, "%'ld", "%'.3f"));
-			printf("    - MaxValue = %s\n", LorF(cc.MaxValue, "%ld", "%'.3f"));
-			printf("    - DefaultValue = %s\n", LorF(cc.DefaultValue, "%ld", "%'.3f"));
+			printf("    - MaxValue = %s\n", LorF(cc.MaxValue, "%'ld", "%'.3f"));
+			printf("    - DefaultValue = %s\n", LorF(cc.DefaultValue, "%'ld", "%'.3f"));
 			printf("    - IsAutoSupported = %d\n", cc.IsAutoSupported);
 			printf("    - IsWritable = %d\n", cc.IsWritable);
 			printf("    - ControlType = %d\n", cc.ControlType);

@@ -173,6 +173,30 @@
             "description": "Use locale thousands separator",
             "example": "800.000",
             "type": "number"
+        },
+        {
+            "format": "%yes",
+            "description": "Output Yes (if input is 1) or No",
+            "example": "Yes, No",
+            "type": "bool"
+        },
+        {
+            "format": "%on",
+            "description": "Output On (if input is 1) or Off",
+            "example": "On, Off",
+            "type": "bool"
+        },
+        {
+            "format": "%true",
+            "description": "Output True (if input is 1) of False",
+            "example": "True, False",
+            "type": "bool"
+        },
+        {
+            "format": "%1",
+            "description": "Output 1 (if input is 1) or 0",
+            "example": "1, 0",
+            "type": "bool"
         }
     ]
 }

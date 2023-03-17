@@ -17,7 +17,8 @@ OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"
 # Display a header surrounded by stars.
 display_header() {
 	local HEADER="${1}"
-	local LEN=((${#HEADER} + 8))		# 8 for leading and trailing "*** "
+	local LEN
+	((LEN = ${#HEADER} + 8))		# 8 for leading and trailing "*** "
 	local STARS=""
 	while [[ ${LEN} -gt 0 ]]; do
 		STARS="${STARS}*"

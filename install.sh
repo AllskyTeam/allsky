@@ -17,7 +17,8 @@ if [[ ${EUID} -eq 0 ]]; then
 	exit 1
 fi
 
-# This script assumes the user already did the "git clone" into the "allsky" directory.
+# This script assumes the user already did the "git clone" into ${ALLSKY_HOME}.
+
 #shellcheck disable=SC2086
 cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
 

@@ -79,6 +79,10 @@ else if (isset($_GET['page']))
 	$page = $_GET['page'];
 else
 	$page = "";
+if (isset($_GET['day']))
+	$day = " - " . $_GET['day'];
+else
+	$day = "";
 
 if ($useLogin) {
 	session_start();
@@ -122,7 +126,31 @@ if (file_exists($f)) {
 	<meta name="description" content="Web User Interface (WebUI) for Allsky">
 	<meta name="author" content="Thomas Jacquin">
 
-	<title>AllSky WebUI</title>
+<?php	// Give each page its own <title> so they are easy to distinguish in the browser.
+echo "<br>page=$page";
+	switch ($page) {
+		case "WLAN_info":			$Title = "WLAN Dashboard";		break;
+		case "LAN_info":			$Title = "LAN Dashboard";		break;
+		case "configuration":		$Title = "Allsky Settings";		break;
+		case "wifi":				$Title = "Configure Wi-Fi";		break;
+		case "openvpn_conf":		$Title = "Configure OpenVPN";	break;
+		case "torproxy_conf":		$Title = "Configure TOR proxy";	break;
+		case "save_hostapd_conf":	$Title = "Configure Hotspot";	break;
+		case "auth_conf":			$Title = "Change password";		break;
+		case "system":				$Title = "System";				break;
+		case "list_days":			$Title = "Images";				break;
+		case "list_images":			$Title = "Images$day";			break;
+		case "list_videos":			$Title = "Timelapse$day";		break;
+		case "list_keograms":		$Title = "Keogram$day";			break;
+		case "list_startrails":		$Title = "Startrails$day";		break;
+		case "editor":				$Title = "Editor";				break;
+		case "overlay":				$Title = "Overlay Editor";		break;
+		case "module":				$Title = "Module Manager";		break;
+		case "live_view":			$Title = "Liveview";			break;
+		default:					$Title = "Allsky WebUI";		break;
+	}
+?>
+	<title><?php echo $Title ?></title>
 
 	<!-- Bootstrap Core CSS -->
 	<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">

@@ -24,7 +24,6 @@ from math import degrees
 
 from datetime import date, datetime, timedelta
 
-from suntime import Sun
 from astral.sun import sun, azimuth, elevation, night
 from astral import LocationInfo
 

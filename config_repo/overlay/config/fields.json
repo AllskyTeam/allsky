@@ -294,7 +294,7 @@
             "description": "Dusk",
             "format": "%d-%m-%Y %H:%M:%S",
             "sample": "2023-07-11 18:27:12",
-            "type": "Text",
+            "type": "Date",
             "source": "System"
         },
         {

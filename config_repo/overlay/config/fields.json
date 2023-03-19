@@ -254,33 +254,6 @@
         },
         {
             "id": 28,
-            "name": "${SUN_DARKEST}",
-            "description": "Darkest time",
-            "format": "%d-%m-%Y %H:%M:%S",
-            "sample": "2023-07-11 00:02:50",
-            "type": "Date",
-            "source": "System"
-        },
-        {
-            "id": 29,
-            "name": "${SUN_NIGHTEND}",
-            "description": "Nighttime ends",
-            "format": "%d-%m-%Y %H:%M:%S",
-            "sample": "2023-07-10 04:33:20",
-            "type": "Date",
-            "source": "System"
-        },
-        {
-            "id": 30,
-            "name": "${SUN_NAUTICALDAWN}",
-            "description": "Nautical dawn",
-            "format": "%d-%m-%Y %H:%M:%S",
-            "sample": "2023-07-10 05:06:07",
-            "type": "Date",
-            "source": "System"
-        },
-        {
-            "id": 31,
             "name": "${SUN_DAWN}",
             "description": "Dawn",
             "format": "%d-%m-%Y %H:%M:%S",
@@ -289,7 +262,7 @@
             "source": "System"
         },
         {
-            "id": 32,
+            "id": 29,
             "name": "${SUN_SUNRISE}",
             "description": "Sunrise",
             "format": "%d-%m-%Y %H:%M:%S",
@@ -298,16 +271,7 @@
             "source": "System"
         },
         {
-            "id": 33,
-            "name": "${SUN_SUNRISEEND}",
-            "description": "Sunrise ends",
-            "format": "%d-%m-%Y %H:%M:%S",
-            "sample": "2023-07-10 06:09:02",
-            "type": "Date",
-            "source": "System"
-        },
-        {
-            "id": 34,
+            "id": 30,
             "name": "${SUN_NOON}",
             "description": "Noon",
             "format": "%d-%m-%Y %H:%M:%S",
@@ -316,16 +280,7 @@
             "source": "System"
         },
         {
-            "id": 35,
-            "name": "${SUN_SUNSETSTART}",
-            "description": "Start of Sunset",
-            "format": "%d-%m-%Y %H:%M:%S",
-            "sample": "2023-07-10 18:56:37",
-            "type": "Date",
-            "source": "System"
-        },
-        {
-            "id": 36,
+            "id": 31,
             "name": "${SUN_SUNSET}",
             "description": "Sunset",
             "format": "%d-%m-%Y %H:%M:%S",
@@ -334,35 +289,16 @@
             "source": "System"
         },
         {
-            "id": 37,
+            "id": 32,
             "name": "${SUN_DUSK}",
             "description": "Dusk",
             "format": "%d-%m-%Y %H:%M:%S",
             "sample": "2023-07-11 18:27:12",
-            "sample": "",
             "type": "Text",
             "source": "System"
         },
         {
-            "id": 38,
-            "name": "${SUN_NAUTICALDUSK}",
-            "description": "Nautical Dusk",
-            "format": "%d-%m-%Y %H:%M:%S",
-            "sample": "2023-07-11 18:59:32",
-            "type": "Date",
-            "source": "System"
-        },
-        {
-            "id": 39,
-            "name": "${SUN_NIGHT}",
-            "description": "Night",
-            "format": "%d-%m-%Y %H:%M:%S",
-            "sample": "2023-07-11 19:32:19",
-            "type": "Date",
-            "source": "System"
-        },
-        {
-            "id": 40,
+            "id": 33,
             "name": "${SUN_AZIMUTH}",
             "description": "Sun Azimuth",
             "format": "",
@@ -371,7 +307,7 @@
             "source": "System"
         },
         {
-            "id": 41,
+            "id": 34,
             "name": "${SUN_ELEVATION}",
             "description": "Sun Elevation",
             "format": "",
@@ -380,7 +316,7 @@
             "source": "System"
         },
         {
-            "id": 42,
+            "id": 35,
             "name": "${CAMERA_TYPE}",
             "description": "Camera Type",
             "format": "",
@@ -389,7 +325,7 @@
             "source": "System"
         },
         {
-            "id": 43,
+            "id": 36,
             "name": "${CAMERA_MODEL}",
             "description": "Camera Model",
             "format": "",
@@ -398,7 +334,7 @@
             "source": "System"
         },
         {
-            "id": 44,
+            "id": 37,
             "name": "${AUTOUSB}",
             "description": "AUTOUSB Flag (ZWO Only)",
             "format": "",
@@ -407,7 +343,7 @@
             "source": "System"
         },
         {
-            "id": 45,
+            "id": 38,
             "name": "${USB}",
             "description": "USB Bandwidth (ZWO Only)",
             "format": "",
@@ -416,7 +352,7 @@
             "source": "System"
         },
         {
-            "id": 46,
+            "id": 39,
             "name": "${DARKFRAME}",
             "description": "Taking Dark Frames Flag",
             "format": "",
@@ -425,7 +361,7 @@
             "source": "System"
         },
         {
-            "id": 47,
+            "id": 40,
             "name": "${eOVERLAY}",
             "description": "External Overlay",
             "format": "",
@@ -434,7 +370,7 @@
             "source": "System"
         },
         {
-            "id": 48,
+            "id": 41,
             "name": "${DAY_OR_NIGHT}",
             "description": "Day\/Night string",
             "format": "",
@@ -443,7 +379,7 @@
             "source": "System"
         },
         {
-            "id": 49,
+            "id": 42,
             "name": "${ALLSKY_VERSION}",
             "description": "Allsky version string",
             "format": "",

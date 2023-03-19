@@ -301,18 +301,18 @@
             "id": 33,
             "name": "${SUN_AZIMUTH}",
             "description": "Sun Azimuth",
-            "format": "",
+            "format": "{:.1f}",
             "sample": "",
-            "type": "Text",
+            "type": "Number",
             "source": "System"
         },
         {
             "id": 34,
             "name": "${SUN_ELEVATION}",
             "description": "Sun Elevation",
-            "format": "",
+            "format": "{:.1f}",
             "sample": "",
-            "type": "Text",
+            "type": "Number",
             "source": "System"
         },
         {

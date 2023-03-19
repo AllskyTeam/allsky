@@ -25,7 +25,8 @@ from math import degrees
 from datetime import date, datetime, timedelta
 
 from suntime import Sun
-from suncalc import get_position, get_times
+from astral.sun import sun, azimuth, elevation, night
+from astral import LocationInfo
 
 from skyfield.api import EarthSatellite, load, wgs84, Loader
 from skyfield.api import N, S, E, W
@@ -961,6 +962,25 @@ class ALLSKYOVERLAY:
 
         return result
 
+    def _getSunTimes(self, location, date):
+        sunData = sun(location.observer, date=date, tzinfo=location.timezone)
+        az = azimuth(location.observer, date)
+        el = elevation(location.observer, date)
+        sunData['azimuth'] = az
+        sunData['elevation'] = el
+        return sunData
+
+    def _getTimeZone(self):
+        try:
+            file = open('/etc/timezone', 'r')
+            tz = file.readline()
+            tz = tz.strip()
+            file.close()
+        except:
+            tz = "Europe/London"
+        
+        return tz, timezone(tz)
+
     def _initialiseSun(self):
         sunEnabled = self._overlayConfig['settings']['defaultincludesun']
         if sunEnabled:
@@ -968,80 +988,49 @@ class ALLSKYOVERLAY:
             lat = self._convertLatLon(self._observerLat)
             lon = self._convertLatLon(self._observerLon)
 
+            tzName, tz = self._getTimeZone()                
+            location = LocationInfo("Allsky", "", tzName, lat, lon)
+
             today = datetime.now()
-            todaySunData = get_times(today, lon, lat)
             tomorrow = today + timedelta(days = 1)
-            tomorrowSunData = get_times(tomorrow, lon, lat)
+            yesterday = today + timedelta(days = -1)
 
-            sunPos = get_position(today, lon, lat)
-            sunAzimuth = math.degrees(float(sunPos['azimuth'])) + 180
-            sunElevation = math.degrees(float(sunPos['altitude']))
-
+            yesterdaySunData = self._getSunTimes(location, yesterday)
+            todaySunData = self._getSunTimes(location, today)
+            tomorrowSunData = self._getSunTimes(location, tomorrow)
+                
             if s.TOD == 'day':
-                nadir = todaySunData["nadir"]
-                nightEnd = todaySunData["night_end"]
-                nauticalDawn = todaySunData["nautical_dawn"]
                 dawn = todaySunData["dawn"]
-                sunRise = todaySunData["sunrise"]
-                sunriseEnd = todaySunData["sunrise_end"]
-                solarNoon = todaySunData["solar_noon"]
-                sunsetStart = todaySunData["sunset_start"]
-                sunSet = todaySunData["sunset"]
+                sunrise = todaySunData["sunrise"]
+                noon = todaySunData["noon"]
+                sunset = todaySunData["sunset"]
                 dusk = todaySunData["dusk"]
-                nauticalDusk = todaySunData["nautical_dusk"]
-                night = todaySunData["night"]
             else:
-                now = datetime.now()
-                if now.hour > 0:
-                    yesterday = today + timedelta(days = -1)
-                    yesterdaySunData = get_times(yesterday, lon, lat)
-                    nadir = todaySunData["nadir"]
-                    nightEnd = todaySunData["night_end"]
-                    nauticalDawn = todaySunData["nautical_dawn"]
+                now = datetime.now(tz)
+                if now.hour > 0 and now < todaySunData["dawn"]:
                     dawn = todaySunData["dawn"]
-                    sunRise = todaySunData["sunrise"]
-                    sunriseEnd = todaySunData["sunrise_end"]
-                    solarNoon = todaySunData["solar_noon"]
-                    sunsetStart = yesterdaySunData["sunset_start"]
-                    sunSet = yesterdaySunData["sunset"]
+                    sunrise = todaySunData["sunrise"]
+                    noon = todaySunData["noon"]
+                    sunset = yesterdaySunData["sunset"]
                     dusk = yesterdaySunData["dusk"]
-                    nauticalDusk = yesterdaySunData["nautical_dusk"]
-                    night = yesterdaySunData["night"]
                 else:
-                    nadir = tomorrowSunData["nadir"]
-                    nightEnd = tomorrowSunData["night_end"]
-                    nauticalDawn = tomorrowSunData["nautical_dawn"]
                     dawn = tomorrowSunData["dawn"]
-                    sunRise = tomorrowSunData["sunrise"]
-                    sunriseEnd = tomorrowSunData["sunrise_end"]
-                    solarNoon = tomorrowSunData["solar_noon"]
-                    sunsetStart = todaySunData["sunset_start"]
-                    sunSet = todaySunData["sunset"]
+                    sunrise = tomorrowSunData["sunrise"]
+                    noon = tomorrowSunData["noon"]
+                    sunset = todaySunData["sunset"]
                     dusk = todaySunData["dusk"]
-                    nauticalDusk = todaySunData["nautical_dusk"]
-                    night = todaySunData["night"]
 
             format = self._suntimeformat
-            os.environ["AS_SUN_DARKEST"] = nadir.strftime(format)
-            if str(nightEnd) != "NaT":
-                os.environ["AS_SUN_NIGHTEND"] = nightEnd.strftime(format)
-            else:
-                os.environ["AS_SUN_NIGHTEND"] = self._nonighttext
-            os.environ["AS_SUN_NAUTICALDAWN"] = nauticalDawn.strftime(format)
             os.environ["AS_SUN_DAWN"] = dawn.strftime(format)
-            os.environ["AS_SUN_SUNRISE"] = sunRise.strftime(format)
-            os.environ["AS_SUN_SUNRISEEND"] = sunriseEnd.strftime(format)
-            os.environ["AS_SUN_NOON"] = solarNoon.strftime(format)
-            os.environ["AS_SUN_SUNSETSTART"] = sunsetStart.strftime(format)
-            os.environ["AS_SUN_SUNSET"] = sunSet.strftime(format)
+            os.environ["AS_SUN_SUNRISE"] = sunrise.strftime(format)
+            os.environ["AS_SUN_NOON"] = noon.strftime(format)
+            os.environ["AS_SUN_SUNSET"] = sunset.strftime(format)
             os.environ["AS_SUN_DUSK"] = dusk.strftime(format)
-            os.environ["AS_SUN_NAUTICALDUSK"] = nauticalDusk.strftime(format)
-            if str(night) != "NaT":
-                os.environ["AS_SUN_NIGHT"] = night.strftime(format)
-            else:
-                os.environ["AS_SUN_NIGHT"] = self._nonighttext
-            os.environ["AS_SUN_AZIMUTH"] = str(int(sunAzimuth))
-            os.environ["AS_SUN_ELEVATION"] = str(int(sunElevation))
+
+            os.environ["AS_SUN_AZIMUTH"] = str(int(todaySunData["azimuth"]))
+            os.environ["AS_SUN_ELEVATION"] = str(int(todaySunData["elevation"]))
+
+            s.log(4, f'INFO: Lat = {lat}, Lon = {lon}, tz = {tzName}, Sunrise = {sunrise}, Sunset = {sunset}')
         else:
             s.log(4,'INFO: Sun not enabled')
 

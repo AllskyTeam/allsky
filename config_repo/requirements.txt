@@ -2,8 +2,8 @@ opencv_python>=4.5.3.56
 Pillow
 pyephem
 skyfield
+astral
 pytz
-suntime
 scipy
 scikit-image
 paho-mqtt

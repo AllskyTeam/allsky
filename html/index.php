@@ -127,7 +127,6 @@ if (file_exists($f)) {
 	<meta name="author" content="Thomas Jacquin">
 
 <?php	// Give each page its own <title> so they are easy to distinguish in the browser.
-echo "<br>page=$page";
 	switch ($page) {
 		case "WLAN_info":			$Title = "WLAN Dashboard";		break;
 		case "LAN_info":			$Title = "LAN Dashboard";		break;

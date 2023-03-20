@@ -131,7 +131,14 @@ get_versions_and_branches()
 	fi
 
 	if [[ ${REMOTE_WEBSITE} == "true" ]]; then
-		NEW_WEBSITE_VERSION="${GITHUB_MAIN_BRANCH_NEW_VERSION}"
+		if [[ -n ${USER_SPECIFIED_BRANCH} && ${USER_SPECIFIED_BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
+			GITHUB_OTHER_BRANCH_NEW_VERSION="$(get_Git_version "${USER_SPECIFIED_BRANCH}" "allsky-website")"
+			if [[ -n ${GITHUB_OTHER_BRANCH_NEW_VERSION} ]]; then
+				NEW_WEBSITE_VERSION="${GITHUB_OTHER_BRANCH_NEW_VERSION}"
+			else
+				NEW_WEBSITE_VERSION="${GITHUB_MAIN_BRANCH_NEW_VERSION}"
+			fi
+		fi
 		PRIOR_WEBSITE_VERSION="$(settings .config.AllskyWebsiteVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
 
 		# TODO: Currently no way to determine the branch of a remote website.
@@ -316,7 +323,7 @@ IMAGE_NAME=""
 ON_PI=""
 
 set_configuration_file_variables() {
-	[[ -z ${FUNCTION} ]] && display_msg progress "Setting Website variables"
+	[[ -z ${FUNCTION} ]] && display_msg progress "Setting Website variables."
 	if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 		WEB_CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		IMAGE_NAME="${FULL_FILENAME}"
@@ -451,6 +458,18 @@ create_website_configuration_file() {
 }
 
 
+##### Update the Website version in the config file
+update_version_in_config_file()
+{
+	local CONFIG_FILE="${1}"
+	display_msg progress "Updating Website version in config file to ${NEW_WEBSITE_VERSION}"
+	# shellcheck disable=SC2086
+	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
+		--config "${CONFIG_FILE}" \
+		config.AllskyWebsiteVersion		"AllskyWebsiteVersion"		"${NEW_WEBSITE_VERSION}"
+}
+
+
 ##### If the user is updating the website, use the prior config file(s).
 NEEDS_NEW_CONFIGURATION_FILE="true"
 
@@ -468,7 +487,9 @@ modify_configuration_variables() {
 					display_msg warning "Configuration file '${C} is corrupted.\nFix, then re-run this installation."
 					exit 1
 				fi
-				cp "${C}" "${WEB_CONFIG_FILE}"
+				cp "${C}" "${WEB_CONFIG_FILE}" || exit 1
+
+				update_version_in_config_file "${WEB_CONFIG_FILE}"
 
 				# Check if this is an older configuration file.
 				check_for_older_config_file "${WEB_CONFIG_FILE}"
@@ -476,7 +497,8 @@ modify_configuration_variables() {
 				NEEDS_NEW_CONFIGURATION_FILE="false"
 			else
 				# This "shouldn't" happen with a new-style website, but in case it does...
-				display_msg warning "Prior website in ${PRIOR_WEBSITE} had no '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
+				MSG="Prior Website in ${PRIOR_WEBSITE} had no '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
+				display_msg warning "${MSG}"
 			fi
 		else
 			# Old-style Website.
@@ -560,6 +582,7 @@ do_remote_website() {
 
 	# Tell the remote server to check the sanity of the Website.
 	# This also creates some necessary directories.
+	display_msg progress "Sanity checking remote Website."
 	[[ ${WEBURL: -1} != "/" ]] && WEBURL="${WEBURL}/"
 	if [[ ${DEBUG} == "true" ]]; then
 		D="&debug"
@@ -578,7 +601,9 @@ do_remote_website() {
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# The user is upgrading a new-style remote Website.
-		display_msg progress "You should continue to configure your remote Allsky Website via the WebUI.\n"
+		display_msg progress "You should continue to configure your remote Allsky Website via the WebUI."
+
+		update_version_in_config_file "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
 		# Check if this is an older configuration file version.
 		check_for_older_config_file "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"

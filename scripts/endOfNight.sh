@@ -88,10 +88,13 @@ cmd="${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh"
 # Automatically delete old images and videos
 if [[ -n ${DAYS_TO_KEEP} ]]; then
 	del=$(date --date="${DAYS_TO_KEEP} days ago" +%Y%m%d)
-	# "2*" for years >= 2000
-	find "${ALLSKY_IMAGES}/" -type d -name "2*" | while read -r i
+	# "20*" for years >= 2000.   Format:  YYYYMMDD
+	#													YY  Y    Y   M    M   D      D
+	find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "20[2-9][0-9][01][0-9][0123][0-9]" | \
+		while read -r i
+
 	do
-		((del > $(basename "${i}"))) && echo "${ME}: Deleting old directory ${i}" && rm -rf "${i}"
+		(( del > $(basename "${i}") )) && echo "${ME}: Deleting old directory ${i}" && rm -rf "${i}"
 	done
 fi
 

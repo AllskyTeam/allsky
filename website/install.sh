@@ -605,7 +605,7 @@ do_remote_website() {
 		fi
 	fi
 
-	display_msg progress "The Pi portion of the Remote Allsky Website Installation is complete."
+	display_msg progress "The Pi portion of the Remote Allsky Website Installation is complete.\n"
 
 	exit 0
 }

@@ -10,7 +10,7 @@ source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
-if [[ $EUID -eq 0 ]]; then
+if [[ ${EUID} -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
 	exit 1
 fi
@@ -37,6 +37,51 @@ TITLE="Allsky Website Installer"
 
 
 ####################### functions
+
+####
+# 
+do_initial_heading()
+{
+	MSG="Welcome to the ${TITLE}!\n"
+
+if false ; then		# change if/when we have an initial message to display.
+	if [[ -n ${PRIOR_WEBSITE_TYPE} ]]; then
+		MSG="${MSG}\nYou will be asked if you want to use the startrails, keograms, and timelapse"
+		MSG="${MSG}\n(if any) from your prior version of the Allsky Website."
+		if [[ ${PRIOR_WEBSITE_TYPE} == "new" ]]; then
+			MSG="${MSG}\nIf so, we will use the prior settings as well."
+		else
+			MSG="${MSG}\nIf so, you will need to manually migrate the settings from the"
+			MSG="${MSG}\nprior website to the new one."
+		fi
+	else
+		MSG="${MSG}\nWhen installation is done you'll need to update the Allsky Website"
+		MSG="${MSG}\nsettings before using the Website."
+		MSG="${MSG}\nThe latitude and longitude and some Allsky Map-related settings (if any)"
+		MSG="${MSG}\nwill be set for you."
+	fi
+
+	MSG="${MSG}\n\nContinue?"
+	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+		exit 1
+	fi
+fi
+
+	##### Display the welcome header
+	local U2=""
+	local B=""
+	if [[ ${REMOTE_WEBSITE} == "true" ]]; then
+		U2=" for remote servers"
+	else
+		U2=""
+	fi
+	if [[ ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
+		B=""
+	else
+		B=" ${BRANCH}"
+	fi
+	display_header "Welcome to the ${TITLE} for${B} version ${NEW_WEBSITE_VERSION}${U2}"
+}
 
 
 usage_and_exit()
@@ -68,61 +113,179 @@ usage_and_exit()
 }
 
 
+##### Get the current and new versions, taking branches into account.
+# We haven't downloaded the new version yet so we need to get its version from Git.
+GOT_VERSIONS_AND_BRANCHES="false"
+get_versions_and_branches()
+{
+	GOT_VERSIONS_AND_BRANCHES="true"
+
+	# All new versions have a "versions" file.
+	# If the user specified a branch use that, otherwise see if they are running
+	# a non-production branch.
+
+	GITHUB_MAIN_BRANCH_NEW_VERSION="$(get_Git_version "${GITHUB_MAIN_BRANCH}" "allsky-website")"
+	if [[ -z ${GITHUB_MAIN_BRANCH_NEW_VERSION} ]]; then
+		display_msg warning "Unable to determine newest GitHub version."
+		GITHUB_MAIN_BRANCH_NEW_VERSION="Unknown"
+	fi
+
+	if [[ ${REMOTE_WEBSITE} == "true" ]]; then
+		NEW_WEBSITE_VERSION="${GITHUB_MAIN_BRANCH_NEW_VERSION}"
+		PRIOR_WEBSITE_VERSION="$(settings .config.AllskyWebsiteVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
+
+		# TODO: Currently no way to determine the branch of a remote website.
+		# Should put in the configuration file.
+		return
+	fi
+
+	if [[ ${PRIOR_WEBSITE_TYPE} == "new" ]]; then
+		PRIOR_WEBSITE_BRANCH="$(get_branch "${PRIOR_WEBSITE}/" )"
+	else
+		PRIOR_WEBSITE_BRANCH=""
+	fi
+
+	if [[ -n ${USER_SPECIFIED_BRANCH} ]]; then
+		BRANCH="${USER_SPECIFIED_BRANCH}"
+	else
+		# User didn't specify a branch (most common usage).
+		# See if the user is running a non-production branch.
+		# Older website types didn't have branches.
+		BRANCH="${PRIOR_WEBSITE_BRANCH:-${GITHUB_MAIN_BRANCH}}"
+	fi
+
+	if [[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
+		# See if the branch still exists in GitHub.
+		GITHUB_OTHER_BRANCH_NEW_VERSION="$(get_Git_version "${BRANCH}" "allsky-website")"
+		if [[ -z ${GITHUB_OTHER_BRANCH_NEW_VERSION} ]]; then
+			MSG="GitHub branch '${BRANCH}' no longer exists;"
+			MSG="${MSG} ; using '${GITHUB_MAIN_BRANCH}' branch instead."
+			display_msg info "${MSG}"
+
+			GITHUB_OTHER_BRANCH_NEW_VERSION=""
+			NEW_WEBSITE_BRANCH="${GITHUB_MAIN_BRANCH}"
+			NEW_WEBSITE_VERSION="${GITHUB_MAIN_BRANCH_NEW_VERSION}"
+		else
+			NEW_WEBSITE_VERSION="${GITHUB_OTHER_BRANCH_NEW_VERSION}"
+			NEW_WEBSITE_BRANCH="${BRANCH}"
+		fi
+	else
+		# Using default branch - most common usage.
+		GITHUB_OTHER_BRANCH_NEW_VERSION=""
+		NEW_WEBSITE_BRANCH="${GITHUB_MAIN_BRANCH}"
+		NEW_WEBSITE_VERSION="${GITHUB_MAIN_BRANCH_NEW_VERSION}"
+	fi
+
+	if [[ ${PRIOR_WEBSITE_TYPE} == "new" ]]; then
+		PRIOR_WEBSITE_VERSION="$(get_version "${PRIOR_WEBSITE}/" )"
+	else
+		PRIOR_WEBSITE_VERSION=""
+	fi
+
+	if [[ ${DEBUG} == "true" ]]; then
+		MSG=""
+		MSG="${MSG}\n\tCurrent version: ${PRIOR_WEBSITE_VERSION:-Unknown}"
+		MSG="${MSG}\n\tNew     version: ${NEW_WEBSITE_VERSION}"
+		if [[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
+			MSG="${MSG}\n\tCurrent branch : ${PRIOR_WEBSITE_BRANCH:-${GITHUB_MAIN_BRANCH}}"
+			MSG="${MSG}\n\tNew     branch : ${NEW_WEBSITE_BRANCH}"
+		fi
+		display_msg debug "${MSG}"
+	fi
+}
+
+
 ##### Make sure the new version is at least as new as the current version,
 ##### i.e., we aren't installing an old version.
 check_versions() {
-	ALLSKY_WEBSITE_NEW_VERSION=""
+	[[ ${GOT_VERSIONS_AND_BRANCHES} == "false" ]] && get_versions_and_branches
+
 	local CHECK_BRANCH="false"
 
-	if [[ ${REMOTE_WEBSITE} == "true" ]]; then
-		# TODO: Currently no way to determine the branch of a remote website.
-		# Should put in the configuration file.
-		ALLSKY_WEBSITE_NEW_VERSION="$(settings .config.AllskyWebsiteVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
-	else
-		if [[ ${PRIOR_WEBSITE_TYPE} == "new" ]]; then
-			BRANCH="$(get_branch "${PRIOR_WEBSITE}")"
-			[[ -n ${BRANCH} ]] && CHECK_BRANCH="true"
-		fi
+	if [[ ${REMOTE_WEBSITE} == "false" && ${PRIOR_WEBSITE_TYPE} == "new" && -n ${PRIOR_WEBSITE_BRANCH} ]]; then
+		CHECK_BRANCH="true"
 	fi
 
 	if [[ ${CHECK_BRANCH} == "true" ]]; then
+		[[ ${USER_SPECIFIED_BRANCH} == "${PRIOR_WEBSITE_BRANCH}" ]] && USER_SPECIFIED_BRANCH=""
+
 		# The user didn't specify a branch and there's a prior Website with a non-production
 		# branch, so ask if they want to use that branch.
-		ALLSKY_WEBSITE_NEW_VERSION="$(get_Git_version "${BRANCH}" "allsky-website")"
-		MSG="Your prior Allsky Website is running the '${BRANCH}' branch."
+		MSG="Your prior Allsky Website is running the '${PRIOR_WEBSITE_BRANCH}' branch."
 		MSG="${MSG}\n\nTypically you should stay with the same branch unless you"
-		MSG="${MSG} are upgrading to the newest production release."
-		MSG="${MSG}\n\nDo you want to continue using the '${BRANCH}' branch?"
-		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 80 3>&1 1>&2 2>&3; then
-			display_msg --log info "Remaining on '${BRANCH}' branch."
-		else
-			display_msg --log info "Upgrading to production '${GITHUB_MAIN_BRANCH}' branch."
-			BRANCH="$GITHUB_MAIN_BRANCH}"
-		fi
-	fi
-
-	if [[ -z ${ALLSKY_WEBSITE_NEW_VERSION} ]]; then
-		ALLSKY_WEBSITE_NEW_VERSION="$(get_Git_version "${BRANCH}" "allsky-website")"
-	fi
-	if [[ -n ${ALLSKY_WEBSITE_NEW_VERSION} ]]; then
-		local CURRENT_VERSION="$(get_version "${ALLSKY_WEBSITE_VERSION_FILE}" )"
-		if [[ -n ${CURRENT_VERSION} && ${ALLSKY_WEBSITE_NEW_VERSION} < "${CURRENT_VERSION}" ]]; then
-			MSG="You are trying to install an older version of the Allsky Website!\n"
-			MSG="${MSG}\nCurrent version: ${CURRENT_VERSION}"
-			MSG="${MSG}\nNew     version: ${ALLSKY_WEBSITE_NEW_VERSION}"
-			if [[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
-				MSG="${MSG}\nBranch:          ${BRANCH}"
+		MSG="${MSG} are upgrading to the newest production release or a different branch"
+		MSG="${MSG} for testing purposes."
+		if [[ -n ${USER_SPECIFIED_BRANCH} ]]; then
+			MSG="${MSG}\n\nYou requested upgrading to the '${USER_SPECIFIED_BRANCH}' branch."
+			MSG="${MSG}\n\nContinue with '${USER_SPECIFIED_BRANCH}'?"
+			if ! whiptail --title "${TITLE}" --yesno "${MSG}" 18 80 3>&1 1>&2 2>&3; then
+				MSG="\nInstallation aborted."
+				MSG="${MSG}\nNot continuing with ${USER_SPECIFIED_BRANCH} branch."
+				display_msg info "${MSG}"
+				exit 0
 			fi
-			MSG="${MSG}\n\nContinue?"
-			if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 15 80 3>&1 1>&2 2>&3; then
-				MSG="\nIf you are running a non-production branch,"
-				MSG="${MSG}\nre-run the installation adding '--branch BRANCH' to the command line,"
-				MSG="${MSG}\nwhere 'BRANCH' is the name of the branch.\n"
+			MSG="Upgrading to '${USER_SPECIFIED_BRANCH}' branch version ${NEW_WEBSITE_VERSION}"
+			display_msg --log info "${MSG}"
+
+		else
+			MSG="${MSG}\n\nContinue with the '${PRIOR_WEBSITE_BRANCH}' branch?"
+			if whiptail --title "${TITLE}" --yesno "${MSG}" 18 80 3>&1 1>&2 2>&3; then
+				display_msg --log info "Remaining on '${PRIOR_WEBSITE_BRANCH}' branch."
+			else
+				MSG="\nInstallation aborted."
+				MSG="${MSG}\nIf you want to upgrade to another branch, re-run the installation adding"
+				MSG="${MSG}\n\t--branch BRANCH"
+				MSG="${MSG}\nto the command line, where 'BRANCH' is the branch you want."
+				MSG="${MSG}\nThe default branch is '${GITHUB_MAIN_BRANCH}'.\n"
 				display_msg info "${MSG}"
 				exit 0
 			fi
 		fi
 	fi
+
+	if [[ -n ${NEW_WEBSITE_VERSION} && -n ${PRIOR_WEBSITE_VERSION} && \
+		     ${NEW_WEBSITE_VERSION}   <  "${PRIOR_WEBSITE_VERSION}" ]]; then
+		# Unless the version in GitHub is screwed up (i.e., newer one sorts after prior one),
+		# we should only get here if the user is r
+		MSG="WARNING: You are trying to install an older version of the Allsky Website!\n"
+
+		# If they are changing branches, display both.
+		local PB=""		# prior branch
+		local NB=""		# new branch
+		if [[ ${PRIOR_WEBSITE_BRANCH} != ${NEW_WEBSITE_BRANCH} ]]; then
+			PB="(${PRIOR_WEBSITE_BRANCH} branch)"
+			NB="(${NEW_WEBSITE_BRANCH} branch)"
+		fi
+		MSG="${MSG}\nCurrent version: ${PRIOR_WEBSITE_VERSION} ${PB}"
+		MSG="${MSG}\nNew     version: ${NEW_WEBSITE_VERSION} ${NB}"
+		MSG="${MSG}\n\nContinue?"
+		local B=""
+		[[ ${NEW_WEBSITE_BRANCH} != "${GITHUB_MAIN_BRANCH}" ]] && B="${NEW_WEBSITE_BRANCH} "
+		if whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 15 80 3>&1 1>&2 2>&3; then
+			display_msg --log info "Installing old ${B}version ${NEW_WEBSITE_VERSION}."
+		else
+			MSG="\nInstallation aborted."
+			MSG="${MSG}\nNOT installing old ${NEW_WEBSITE_BRANCH} version ${NEW_WEBSITE_VERSION}."
+			display_msg info "${MSG}"
+			exit 0
+		fi
+	fi
+}
+
+
+####
+##### Execute any specified function, then exit.
+do_function()
+{
+	local FUNCTION="${1}"
+	shift
+	if ! type "${FUNCTION}" > /dev/null; then
+		display_msg error "Unknown function: '${FUNCTION}'."
+		exit 1
+	fi
+
+	${FUNCTION} "$@"
+	exit $?
 }
 
 
@@ -151,8 +314,9 @@ upload_data_json_file() {
 WEB_CONFIG_FILE=""
 IMAGE_NAME=""
 ON_PI=""
+
 set_configuration_file_variables() {
-	display_msg progress "Setting Website variables"
+	[[ -z ${FUNCTION} ]] && display_msg progress "Setting Website variables"
 	if [[ ${REMOTE_WEBSITE} == "true" ]]; then
 		WEB_CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		IMAGE_NAME="${FULL_FILENAME}"
@@ -280,7 +444,7 @@ create_website_configuration_file() {
 		config.lens					"lens"				"${LENS}" \
 		config.computer				"computer"			"${COMPUTER}" \
 		config.AllskyVersion		"AllskyVersion"		"${ALLSKY_VERSION}" \
-		config.AllskyWebsiteVersion	"AllskyWebsiteVersion" "${ALLSKY_WEBSITE_NEW_VERSION}" \
+		config.AllskyWebsiteVersion	"AllskyWebsiteVersion" "${NEW_WEBSITE_VERSION}" \
 		homePage.onPi				"onPi"				"${ON_PI}" \
 		${MINI_TLAPSE_DISPLAY}		"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
 		${MINI_TLAPSE_URL}			"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
@@ -288,8 +452,10 @@ create_website_configuration_file() {
 
 
 ##### If the user is updating the website, use the prior config file(s).
-NEEDS_NEW_CONFIGURATION_FILE="false"
+NEEDS_NEW_CONFIGURATION_FILE="true"
+
 modify_configuration_variables() {
+
 	if [[ ${DEBUG} == "true" ]];then
 		display_msg debug "modify_configuration_variables(): PRIOR_WEBSITE_TYPE = ${PRIOR_WEBSITE_TYPE}"
 	fi
@@ -306,38 +472,31 @@ modify_configuration_variables() {
 
 				# Check if this is an older configuration file.
 				check_for_older_config_file "${WEB_CONFIG_FILE}"
+
+				NEEDS_NEW_CONFIGURATION_FILE="false"
 			else
 				# This "shouldn't" happen with a new-style website, but in case it does...
 				display_msg warning "Prior website in ${PRIOR_WEBSITE} had no '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
-				NEEDS_NEW_CONFIGURATION_FILE="true"
 			fi
 		else
-			# Old-style Website - merge old config files into new one.
+			# Old-style Website.
+			# It's not worth writing the difficult code to merge the old files into the new.
 
-# TODO: Merge ${PRIOR_WEBSITE}/config.js and ${PRIOR_WEBSITE}/virtualsky.json
-# into ${ALLSKY_WEBSITE_CONFIGURATION_FILE}.
-# display_msg progress "Merging contents of prior 'config.js' and 'virtualsky.json' files into '${ALLSKY_WEBSITE_CONFIGURATION_FILE}'."
-
-			MSG="When installation is done you must copy the contents of the prior"
+			MSG="When installation is done you must manually copy the contents of the prior"
 			MSG="${MSG}\n   ${PRIOR_WEBSITE}/config.js"
 			MSG="${MSG}\nand"
 			MSG="${MSG}\n   ${PRIOR_WEBSITE}/virtualsky.json"
 			MSG="${MSG}\nfiles into '${ALLSKY_WEBSITE_CONFIGURATION_FILE}'."
 			MSG="${MSG}\nCheck the Allsky documentation for the meaning of the MANY new options."
 			display_msg notice "${MSG}"
-
-			NEEDS_NEW_CONFIGURATION_FILE="true"
 		fi
-	else
-		# New website, so set up a default configuration file.
-		NEEDS_NEW_CONFIGURATION_FILE="true"
 	fi
 
 	if [[ ${NEEDS_NEW_CONFIGURATION_FILE} == "true" ]]; then
-		# Create it
 		create_website_configuration_file
 	fi
 }
+
 
 ##### Help with a remote website installation, then exit
 do_remote_website() {
@@ -473,22 +632,11 @@ does_prior_Allsky_Website_exist()
 {
 	if [[ -d ${ALLSKY_WEBSITE} ]]; then
 		# Has a older version of the new-style website.
-		PRIOR_WEBSITE="${ALLSKY_WEBSITE}-OLD"
+		PRIOR_WEBSITE="${ALLSKY_WEBSITE}"
 		PRIOR_WEBSITE_TYPE="new"
 
-		# git will fail if the new directory already exists and has something in it,
-		# so rename it.
-		if [[ -d ${PRIOR_WEBSITE} ]]; then
-			MSG="A saved copy of a prior Allsky Website already exists in"
-			MSG="${MSG}\n     ${PRIOR_WEBSITE}"
-			MSG="${MSG}\n\nCan only have one saved prior version at a time."
-			display_msg error "${MSG}"
-			display_msg info "\nRemove or rename that directory and run the installation again.\n"
-			exit 3
-		fi
-
 	elif [[ -d ${OLD_WEBUI_LOCATION}/allsky ]]; then
-		# Has an old-style website.
+		# Has an old-style website.  It is NOT moved.
 		PRIOR_WEBSITE="${OLD_WEBUI_LOCATION}/allsky"
 		PRIOR_WEBSITE_TYPE="old"
 
@@ -497,6 +645,25 @@ does_prior_Allsky_Website_exist()
 		PRIOR_WEBSITE=""
 		PRIOR_WEBSITE_TYPE=""
 	fi
+
+	if [[ -n ${PRIOR_WEBSITE} ]]; then
+		# Location we'll move the prior website to.
+		PRIOR_WEBSITE_OLD="${PRIOR_WEBSITE}-OLD"
+		if [[ ${PRIOR_WEBSITE_TYPE} == "new" ]]; then
+			# git will fail if the new directory already exists and has something in it,
+			# so rename it.
+			if [[ -d ${PRIOR_WEBSITE_OLD} ]]; then
+				MSG="A saved copy of a prior Allsky Website already exists in"
+				MSG="${MSG}\n     ${PRIOR_WEBSITE_OLD}"
+				MSG="${MSG}\n\nCan only have one saved prior version at a time."
+				display_msg error "${MSG}"
+				display_msg info "\nRemove or rename that directory and re-run the installation.\n"
+				exit 3
+			fi
+		fi
+	else
+		PRIOR_WEBSITE_OLD=""
+	fi
 }
 
 
@@ -504,11 +671,13 @@ does_prior_Allsky_Website_exist()
 # "old" means in the old location and with the old configuration files.
 save_prior_website() {
 	if [[ ${PRIOR_WEBSITE_TYPE} == "new" ]]; then
-		display_msg progress "Moving prior website to '${PRIOR_WEBSITE}'."
-		if ! mv "${ALLSKY_WEBSITE}" "${PRIOR_WEBSITE}" ; then
+		display_msg progress "Moving prior website to '${PRIOR_WEBSITE_OLD}'."
+		if ! mv "${ALLSKY_WEBSITE}" "${PRIOR_WEBSITE_OLD}" ; then
 			display_msg error "Unable to move prior website."
 			exit 3
 		fi
+		# Now that we've renamed the prior website, update ${PRIOR_WEBSITE}
+		PRIOR_WEBSITE="${PRIOR_WEBSITE_OLD}"
 		SAVED_PRIOR="true"
 
 	elif [[ ${PRIOR_WEBSITE_TYPE} == "old" ]]; then
@@ -553,27 +722,27 @@ restore_prior_files() {
 	# Make sure we do NOT mv any .php files.
 
 	D="${PRIOR_WEBSITE}/videos/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   videos
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/videos"
 	count=$(find "${PRIOR_WEBSITE}/videos" -maxdepth 1 -name 'allsky-*' | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior videos."
-		mv "${PRIOR_WEBSITE}"/videos/allsky-*   videos
+		mv "${PRIOR_WEBSITE}"/videos/allsky-*   "${ALLSKY_WEBSITE}/videos"
 	fi
 
 	D="${PRIOR_WEBSITE}/keograms/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   keograms
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/keograms"
 	count=$(find "${PRIOR_WEBSITE}/keograms" -maxdepth 1 -name 'keogram-*' | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior keograms."
-		mv "${PRIOR_WEBSITE}"/keograms/keogram-*   keograms
+		mv "${PRIOR_WEBSITE}"/keograms/keogram-*   "${ALLSKY_WEBSITE}/keograms"
 	fi
 
 	D="${PRIOR_WEBSITE}/startrails/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   startrails
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/startrails"
 	count=$(find "${PRIOR_WEBSITE}/startrails" -maxdepth 1 -name 'startrails-*' | wc -l)
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior startrails."
-		mv "${PRIOR_WEBSITE}"/startrails/startrails-*   startrails
+		mv "${PRIOR_WEBSITE}"/startrails/startrails-*   "${ALLSKY_WEBSITE}/startrails"
 	fi
 
 	D="${PRIOR_WEBSITE}/myImages"
@@ -581,7 +750,7 @@ restore_prior_files() {
 		count=$(find "${D}" | wc -l)
 		if [[ ${count} -gt 1 ]]; then
 			display_msg progress "Restoring prior 'myImages' directory."
-			mv "${D}"   .
+			mv "${D}"   "${ALLSKY_WEBSITE}"
 		fi
 	fi
 
@@ -590,10 +759,21 @@ restore_prior_files() {
 	if [[ -f ${D} ]]; then
 		if ! cmp --silent "${D}" "${A}" ; then
 			display_msg progress "Restoring prior '${A}'."
-			mv "${D}" .
+			mv "${D}" "${ALLSKY_WEBSITE}"
 		fi
 	fi
 }
+
+
+##### The webserver needs to be able to update the configuration file and create thumbnails.
+set_permissions()
+{
+	display_msg progress "Setting ownership and permissions."
+	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE}"
+	find "${ALLSKY_WEBSITE}/" -type f -exec chmod 664 {} \;
+	find "${ALLSKY_WEBSITE}/" -type d -exec chmod 775 {} \;
+}
+
 
 ####################### main part of program
 
@@ -602,7 +782,7 @@ OK="true"
 HELP="false"
 DEBUG="false"
 DEBUG_ARG=""
-BRANCH="${GITHUB_MAIN_BRANCH}"
+USER_SPECIFIED_BRANCH=""
 UPDATE="false"
 FUNCTION=""
 REMOTE_WEBSITE="false"
@@ -617,8 +797,8 @@ while [[ $# -gt 0 ]]; do
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			;;
 		--branch)
-			BRANCH="${2}"
-			if [[ ${BRANCH} == "" ]]; then
+			USER_SPECIFIED_BRANCH="${2}"
+			if [[ ${USER_SPECIFIED_BRANCH} == "" ]]; then
 				OK="false"
 			else
 				shift	# skip over BRANCH
@@ -644,40 +824,32 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-ALLSKY_WEBSITE_NEW_VERSION=""			# version we're upgrading to
+NEW_WEBSITE_VERSION=""			# version we're upgrading to
 
-
-##### See if there's a prior Website
+##### See if there's a prior Website and if so, set some variables.
 does_prior_Allsky_Website_exist
 
-##### Make sure the new version really is new.  Sets ${NEW_VERSION}"
+##### Get the current and new Website versions taking branch into account.
+get_versions_and_branches
+
+##### Display the welcome header.
+[[ -z ${FUNCTION} ]] && do_initial_heading
+
+##### Make sure the new version really is new.
 check_versions
 
-
-##### Display the welcome header
-if [[ ${REMOTE_WEBSITE} == "true" ]]; then
-	U2=" for remote servers"
-else
-	U2=""
-fi
-if [[ ${BRANCH} == "$GITHUB_MAIN_BRANCH}" ]]; then
-	B=""
-else
-	B=" ${BRANCH}"
-fi
-H="Welcome to the ${TITLE} for${B} version ${ALLSKY_WEBSITE_NEW_VERSION}${U2}"
-display_header "${H}"
-
-exit ############################################# xxxx
-
+##### Set some variables that are used by several functions.
 set_configuration_file_variables
 
+##### Executes the specified function, if any, and exits.
+[[ -n ${FUNCTION} ]] && do_function "${FUNCTION}"
 
 ##### Handle remote websites
 [[ ${REMOTE_WEBSITE} == "true" ]] && do_remote_website		# does not return
 
 
-#########    Local install
+
+########################    Everything else is for local install
 
 
 # Check if the user is updating an existing installation.
@@ -685,28 +857,11 @@ set_configuration_file_variables
 # and ideally would never happen.
 [ "${UPDATE}" = "true" ]  && do_update		# does not return
 
-
-##### Execute any specified function, then exit.
-if [[ ${FUNCTION} != "" ]]; then
-	if ! type "${FUNCTION}" > /dev/null; then
-		display_msg error "Unknown function: '${FUNCTION}'."
-		exit 1
-	fi
-
-	${FUNCTION}
-	exit 0
-fi
-
-
 ##### Handle prior website, if any
 save_prior_website
 
-
-##### Download Allsky Website files
+##### Download new Allsky Website files
 download_Allsky_Website
-
-#shellcheck disable=SC2086
-cd "${ALLSKY_WEBSITE}" || exit ${ALLSKY_ERROR_STOP}
 
 modify_locations
 modify_configuration_variables
@@ -715,16 +870,13 @@ restore_prior_files
 
 # Create any directories not created above.
 mkdir -p "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY}" \
-	startrails/thumbnails \
-	keograms/thumbnails \
-	videos/thumbnails \
-	myImages
+	"${ALLSKY_WEBSITE}/startrails/thumbnails" \
+	"${ALLSKY_WEBSITE}/keograms/thumbnails" \
+	"${ALLSKY_WEBSITE}/videos/thumbnails" \
+	"${ALLSKY_WEBSITE}/myImages"
 
-# The webserver needs to be able to update the configuration file and create thumbnails.
-display_msg progress "Setting ownership and permissions."
-sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" .
-find ./ -type f -exec chmod 644 {} \;
-find ./ -type d -exec chmod 775 {} \;
+##### Set permissions on files and directories
+set_permissions
 
 
 echo -en "${GREEN}"

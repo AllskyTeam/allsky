@@ -12,13 +12,13 @@
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "Allsky Modules";
+			content: "Modules";
 		}
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<script src="../js/all.min.js" type="application/javascript"></script>
-	<title>AllSky Modules</title>
+	<title>Modules</title>
 </head>
 
 <body>
@@ -28,46 +28,48 @@
 		<div class="Layout-main markdown-body" id="mainContents">
 
 
-			<h2>What are modules?</h2>
-			<div>
-				<p>Modules provide functionality that can be used to enhance the images created by AllSky,
-					modules can also provide functionality that does not affect the images but more on that
-					later. The Module Manager allows you to control which modules are run and when they are run.
-				</p>
-				<p>There are two types of modules</p>
-				<ul>
-					<li><strong>System Modules</strong> - These are developed and maintained by the AllSky team.
-						These modules are installed with the main AllSky installer</li>
-					<li><strong>User Modules</strong> - These are developed and maintained by people outside of
-						the AllSky development team. These modules are installed via a separate installer, See
-						LINK. These modules can be deleted if no longer required</li>
-				</ul>
+			<p><strong>Modules</strong> provide functionality that can be used to enhance
+				the images created by Allsky.
+				The <span class="managerName">Module Manager</span>
+				allows you to control which modules are run and when.
+			</p>
+			<p>There are two types of modules:</p>
+			<ol>
+				<li><strong>System Modules</strong> are developed and maintained by the Allsky team
+					and are installed with Allsky.</li>
+				<li><strong>User Modules</strong> are developed and maintained by people outside of
+					the Allsky development team.
+					These modules are installed via a separate installer and
+					can be deleted if no longer required.
+					<blockquote>
+						These modules must only be installed from the official Allsky repositories.
+						Installing from other source could be dangerous and is not encouraged.
+						<br>
+						The installer for User Modules will be documentated in the future.
+					</blockquote>
+					</li>
+			</ol>
 
-				<blockquote>
-					<strong>User Modules</strong> User modules must only be installed from the official AllSky
-					repositories. Installing modules from other source could be dangerous and is not encouraged.
-				</blockquote>
+			Warning:
+			<ul>
+				<li>Some modules will be shown as <strong>experimental</strong>.
+					Before using these modules you should ensure that you are proficient
+					in analysing Linux logs files.
+					Experimental modules can be unstable and as such may
+					'break' your Allsky installation.
+					In the <span class="managerName">Module Manager</span>
+					settings you can enable/disable showing experimental modules.</li>
+				<li>Some modules are designed to operate with external hardware,
+					typically connected to the Pi's GPIO pins.
+					Before attempting to use any of these modules you should ensure
+					you have an understanding of interfacing hardware to the PI's GPIO.
+			</ul>
 
-				<blockquote>
-					<strong>Experimental Modules</strong> When installed some modules will display a warning
-					that they are experimental. Before using any of these modules you should ensure that you are
-					proficient in analysing Linux Logs files. They should be considered unstable and as such may
-					'break' your AllSky installation. In the
-					<span class="managerName">Module Manager</span> settings you can enable/disable
-					experimental modules
-				</blockquote>
+			<p>Please don't be discouraged by the above warnings.
+				The module system provides a very flexible system allowing you to
+				customise the Allsky software to your requirements without having to
+				change any code.</p>
 
-				<blockquote>
-					<strong>Hardware Dependent Modules</strong> Some modules are designed to operate with
-					external hardware, typically connected to the Pi's GPIO pins. Before attempting to use any
-					of these modules you should ensure you have an understanding of interfacing hardware to the
-					PI's GPIO
-				</blockquote>
-
-				<p>Please don't be discouraged by the above warnings. The module system provides a very flexible
-					system allowing you to customise the AllSky software to your requirements without having to
-					change any code</p>
-			</div>
 
 			<h2>Module Flows</h2>
 			<div>
@@ -254,7 +256,7 @@
 				<h3>Core Modules</h3>
 				<details>
 					<summary></summary>
-					<p>The Core Modules are installed along with the main AllSky installer. The available
+					<p>The Core Modules are installed along with the main Allsky installer. The available
 						modules are</p>
 
 					<h4>Load Image</h4>
@@ -274,7 +276,7 @@
 									</ul>
 								</td>
 								<td>
-									<p>Loads the last image taken by AllSky. This is always the first module
+									<p>Loads the last image taken by Allsky. This is always the first module
 										that is run during the daytime and nighttime capture to ensure that
 										the image is available to all subsequent modules</p>
 									<p>This module is enabled in the day and nighttime flows by default so
@@ -419,7 +421,7 @@
 										process. </li>
 									<li><strong>Debug Image</strong> - If an image is specified then this is
 										used
-										rather than the last image taken by AllSky. This is useful for
+										rather than the last image taken by Allsky. This is useful for
 										configuring
 										the star detection during the day by using a previously captured
 										image</li>
@@ -470,7 +472,7 @@
 									</ul>
 								</td>
 								<td>
-									<p>This counts stars in the captures AllSky Image.</p>
+									<p>This counts stars in the captures Allsky Image.</p>
 									<p>Stars are counted by using a template that looks like a star and
 										attempts to locate anything in the image that looks like it. This
 										works well when the image is well exposed and masked to remove any
@@ -527,7 +529,7 @@
 										into the allsky/tmp/debug folder after each stage of the detection
 										process. </li>
 									<li><strong>Debug Image</strong> - If an image is specified then this is
-										used rather than the last image taken by AllSky. This is useful for
+										used rather than the last image taken by Allsky. This is useful for
 										configuring the star detection during the day by using a previosuly
 										captured image</li>
 								</ul>
@@ -620,9 +622,9 @@
 									</ul>
 								</td>
 								<td>
-									<p>Exports all internal AllSky variables to a json file. By default all
+									<p>Exports all internal Allsky variables to a json file. By default all
 										environment variables prefixed with AS_ are exported but via the
-										module options other AllSky variables can also be made available.
+										module options other Allsky variables can also be made available.
 										This can be used by external programs</p>
 								</td>
 							</tr>
@@ -635,7 +637,7 @@
 							<td>
 								<ul>
 									<li><strong>File Location</strong> - The location to save the file.
-										Certain AllSky variables can be used to construct the path. See the
+										Certain Allsky variables can be used to construct the path. See the
 										variables section for more details</li>
 									<li><strong>Extra Data To Export</strong> - A comma separated list of
 										additional variables to save</li>
@@ -692,7 +694,7 @@
 									<p>This allows a script to be run. This should only be used by users
 										that understand how script are developer/run on Linux.
 										<strong>Extreme</strong> care must be taken when using this module
-										is it could cause the main AllSky software to stop operating
+										is it could cause the main Allsky software to stop operating
 									</p>
 								</td>
 							</tr>
@@ -742,7 +744,7 @@
 				<details>
 					<summary></summary>
 					<p>The User Modules are installed from a separate GitHub repository and not included with
-						the mainAllSky installation</p>
+						the mainAllsky installation</p>
 
 					<h4>Cloud Cover</h4>
 					<table class="module-info vtop">
@@ -1284,7 +1286,7 @@
 											href="https://openweathermap.org/" target="_blank">openweathermap</a>
 										website. The location used
 										for the weather is the coordinates you have specified in the main
-										AllSky settings</p>
+										Allsky settings</p>
 									<blockquote>The free tier of the api is limited to 1,000 calls per day
 										so you will need to configure the settings appropriately. Reading
 										the data every 10 minutes is more than frequent enough and will
@@ -1355,7 +1357,7 @@
 									</ul>
 								</td>
 								<td>
-									<p>This module was developed for those that use their AllSky cameras in mobile
+									<p>This module was developed for those that use their Allsky cameras in mobile
 										locations. It was developed to allow the Pi's location and clock to be set from
 										the GPS data</p>
 									<p>This module requires a gps connected to the pi that can be managed by gpsd</p>
@@ -1421,7 +1423,7 @@
 										in the log files and as an allsky variable if the GPS position does not match
 										the All Sky settings. The comparison is done to 2 decimal places to allow for
 										GPS fluctuation</li>
-									<li><strong>Set LAT/LON</strong> - If enabled the lat/lon in the AllSky settings
+									<li><strong>Set LAT/LON</strong> - If enabled the lat/lon in the Allsky settings
 										will get set from the GPS</li>
 									<li><strong>Set Time</strong> - If enabled the tim eon the Pi will be set from the
 										GPS</li>
@@ -1571,7 +1573,7 @@
 					mask to hide all areas of the image that may contain things that will confuse the star
 					detection typically local light pollution</p>
 				<blockquote>Masks must be created in image editing software such as Gimp or Photoshop. There are no
-					tools available within AllSky to create masks</blockquote>
+					tools available within Allsky to create masks</blockquote>
 				<details>
 					<summary></summary>
 
@@ -1674,7 +1676,7 @@
 					the PI.</p>
 				<details>
 					<summary></summary>
-					<p>After AllSky has taken an image the save image process is run in background, including
+					<p>After Allsky has taken an image the save image process is run in background, including
 						running the relevant module flow. Its important that this process finishes before the
 						next image is captured. If the module flow takes too long multiple save image process
 						will be running, this will start to cause performance issues on the PI</p>
@@ -1697,13 +1699,13 @@
 							</td>
 						</tr>
 					</table>
-					<h3>The AllSky debug log</h3>
-					<p>The main AllSky debug log will contain information from the module processor. The amount
-						of information logged will depend upon the main AllSky debug level. When the debug level
+					<h3>The Allsky debug log</h3>
+					<p>The main Allsky debug log will contain information from the module processor. The amount
+						of information logged will depend upon the main Allsky debug level. When the debug level
 						is 0 only critical module errors will be logged. Any other log level will display
 						verbose information as shown below.</p>
 					<blockquote>Periodic module output is logged to the allskyperiodic.log log file. This file
-						will be in the same location as the main AllSky log file, typically /var/log
+						will be in the same location as the main Allsky log file, typically /var/log
 					</blockquote>
 					<div class="code">
 						Oct 23 21:08:15 allskytest allsky.sh[24948]: INFO: Loading config...<br>
@@ -1836,7 +1838,7 @@
 					<p>Modules are developed in <a href="https://www.python.org/" target="_blank">Python</a> and
 						should use the latest version available for the Pi. Its should be noted that whilst
 						multiple versions of Python can be installed on a Pi its best just to use the version
-						that ships with the OS. Generally that may mean reinstalling your AllSky installation to
+						that ships with the OS. Generally that may mean reinstalling your Allsky installation to
 						get the latest version of python. Running multiple versions of python is beyond the
 						scope of this documentation </p>
 					<h3>Contributing a module</h3>
@@ -1870,7 +1872,7 @@
 					<p>-- <strong>README.md</strong> <span>Markdown file with any special instructions required for the
 							module. If there are none do not include this file</span></p>
 					<blockquote>When specifying python libraries DO NOT include numpy in ANY requirements.txt file as
-						changing the version could cause issues with AllSky</blockquote>
+						changing the version could cause issues with Allsky</blockquote>
 					<h3>Anatomy Of A Module</h3>
 					<p>A module consists of two key parts</p>
 					<ul>
@@ -1920,7 +1922,7 @@
 							<td>String</td>
 							<td>No</td>
 							<td>The version of the module. If this field is not present then the version of the
-								main AllSky software will be used</td>
+								main Allsky software will be used</td>
 						</tr>
 						<tr>
 							<td>enabled</td>
@@ -2093,13 +2095,13 @@
 						</tr>
 					</table>
 
-					<h4>The AllSky Shared module</h4>
+					<h4>The Allsky Shared module</h4>
 					<p>To improve the performance of modules a common shared module is used. This shared module
 						allsky_shared contains both helper functions and data from the main capture process. The
 						module exists so that each individual module does not have to perform length taks like
 						loading an image</p>
 
-					<h5>AllSky Shared module data</h5>
+					<h5>Allsky Shared module data</h5>
 					<table>
 						<tr>
 							<th>Variable</th>
@@ -2136,7 +2138,7 @@
 						</tr>
 					</table>
 
-					<h5>AllSky Shared module helpers</h5>
+					<h5>Allsky Shared module helpers</h5>
 					<table class="vtop">
 						<tr>
 							<th>Function</th>
@@ -2147,7 +2149,7 @@
 							<td>Logs an entry to the allsky log file if the debug level is above 'level'. Errors
 								are always logged. When a module needs to write to a log it should use this
 								function rather than write to any log files directly. THis function will ensure
-								that the log message appears in the main AllSky log file</td>
+								that the log message appears in the main Allsky log file</td>
 						</tr>
 						<tr>
 							<td>getEnvironmentVariable(name, fatal=False, error='')</td>
@@ -2157,7 +2159,7 @@
 						<tr>
 							<td>var_dump(variable)</td>
 							<td>Pretty dump of a variable. This is handy for debugging modules. The output will
-								appear in the main AllSky log file.</td>
+								appear in the main Allsky log file.</td>
 						</tr>
 						<tr>
 							<td>getSetting(settingName)</td>
@@ -2175,7 +2177,7 @@
 						<tr>
 							<td>convertPath(path)</td>
 							<td>Replaces allsky variables in a string, this is useful if a module enters a
-								directory based upon any of the AllSky variables. So for example
+								directory based upon any of the Allsky variables. So for example
 								'${ALLSKY_TMP}/allskydata.json' will have the allsky tmp avriable replaced with
 								its real path. This function can be used to replace any of the allsky variables
 								in a string</td>
@@ -2246,3 +2248,4 @@
 
 </html>
 <script> includeHTML(); </script>
+

@@ -113,8 +113,13 @@ function display_msg()
 		MSG="${GREEN}${LOGMSG}${NC}"
 		STARS=false
 
-	elif [[ ${LOG_TYPE} == "info" || ${LOG_TYPE} == "debug" ]]; then
+	elif [[ ${LOG_TYPE} == "info" ]]; then
 		LOGMSG="${MESSAGE}"
+		MSG="${YELLOW}${LOGMSG}${NC}"
+		STARS=false
+
+	elif [[ ${LOG_TYPE} == "debug" ]]; then
+		LOGMSG="DEBUG: ${MESSAGE}"
 		MSG="${YELLOW}${LOGMSG}${NC}"
 		STARS=false
 

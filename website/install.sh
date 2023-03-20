@@ -259,7 +259,7 @@ check_versions() {
 		# If they are changing branches, display both.
 		local PB=""		# prior branch
 		local NB=""		# new branch
-		if [[ ${PRIOR_WEBSITE_BRANCH} != ${NEW_WEBSITE_BRANCH} ]]; then
+		if [[ ${PRIOR_WEBSITE_BRANCH} != "${NEW_WEBSITE_BRANCH}" ]]; then
 			PB="(${PRIOR_WEBSITE_BRANCH} branch)"
 			NB="(${NEW_WEBSITE_BRANCH} branch)"
 		fi

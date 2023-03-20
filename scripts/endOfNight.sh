@@ -34,7 +34,7 @@ fi
 if [[ ${ON_TTY} -eq 1 ]]; then
 	NICE=""
 else
-	NICE="nice 15"
+	NICE="nice -n 15"
 fi
 
 # Post end of night data. This includes next twilight time

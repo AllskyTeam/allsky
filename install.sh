@@ -25,7 +25,7 @@ cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
 # Location of possible prior version of Allsky.
 # If the user wants items copied from there to the new version,
 # they should have manually renamed "allsky" to "allsky-OLD" prior to running this script.
-PRIOR_ALLSKY_DIR="$(dirname "${PWD}")/${ALLSKY_INSTALL_DIR}-OLD"
+PRIOR_ALLSKY_DIR="$(dirname "${ALLSKY_HOME}")/${ALLSKY_INSTALL_DIR}-OLD"
 PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
 PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# may change depending on old version
@@ -163,6 +163,22 @@ get_this_branch()
 	else
 		display_msg --log warning "${FILE} not found; assuming ${BRANCH} branch."
 	fi
+}
+
+
+####
+##### Execute any specified function, then exit.
+do_function()
+{
+	local FUNCTION="${1}"
+	shift
+	if ! type "${FUNCTION}" > /dev/null; then
+		display_msg error "Unknown function: '${FUNCTION}'."
+		exit 1
+	fi
+
+	${FUNCTION} "$@"
+	exit $?
 }
 
 
@@ -610,7 +626,8 @@ install_webserver()
 	# Ignore output since it may already be enabled.
 	sudo lighty-enable-mod fastcgi-php > /dev/null 2>&1
 
-	# Start off with a clean log file that the user can write to.
+	# Remove any old log files.
+	# Start off with a 0-length log file the user can write to.
 	local D="/var/log/lighttpd"
 	sudo chmod 755 "${D}"
 	sudo rm -fr "${D}"/*
@@ -618,7 +635,10 @@ install_webserver()
 	sudo touch "${LIGHTTPD_LOG}"
 	sudo chmod 664 "${LIGHTTPD_LOG}"
 	sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG}"
+
 	sudo systemctl start lighttpd
+	# Starting it added an entry so truncate the file so it's 0-length
+	truncate -s 0 "${LIGHTTPD_LOG}"
 }
 
 
@@ -781,13 +801,20 @@ check_old_WebUI_location()
 ####
 handle_prior_website()
 {
-	local OLD_STYLE_WEBSITE="${OLD_WEBSITE_LOCATION}"
-	if [[ -d ${OLD_STYLE_WEBSITE} ]]; then
-		local ALLSKY_WEBSITE_OLD="${OLD_STYLE_WEBSITE}"				# old-style Website
+	local PRIOR_SITE=""
+	local PRIOR_STYLE=""
+
+	local OLD_WEBSITE="${OLD_WEBSITE_LOCATION}"
+	if [[ -d ${OLD_WEBSITE} ]]; then
+		PRIOR_SITE="${OLD_WEBSITE}"						# old-style Website
+		PRIOR_STYLE="old"
+
 	elif [[ -d ${PRIOR_ALLSKY_DIR}/html/allsky ]]; then
-		local ALLSKY_WEBSITE_OLD="${PRIOR_ALLSKY_DIR}/html/allsky"	# new-style Website
+		PRIOR_SITE="${PRIOR_ALLSKY_DIR}/html/allsky"	# new-style Website
+		PRIOR_STYLE="new"
+
 	else
-		return														# no prior Website
+		return											# no prior Website
 	fi
 
 	# Move any prior ALLSKY_WEBSITE to the new location.
@@ -795,64 +822,91 @@ handle_prior_website()
 	# Note: This MUST come before the old WebUI check below so we don't remove the prior website
 	# when we remove the prior WebUI.
 
-	local NO_NEW_WEBSITE_DIR="true"
-	local PRIOR_SITE=""
-	local VERSION_FILE=""
 	if [[ -d ${ALLSKY_WEBSITE} ]]; then
 		# Hmmm.  There's an old webite AND a new one.
 		# Allsky doesn't ship with the website directory, so not sure how one got there...
-		# Try to remove the new one - if it's not empty the remove will fail.
+		# Try to remove the new one - if it's not empty the remove will fail
+		# so rename it.
 		if ! rmdir "${ALLSKY_WEBSITE}" ; then
-			display_msg error "Website in '${ALLSKY_WEBSITE}' is not empty."
-			display_msg info "  Move the contents manually from '${ALLSKY_WEBSITE_OLD}',"
-			display_msg info "  and then remove the old location.\n"
-			NO_NEW_WEBSITE_DIR="false"
-
-			# Move failed, but still check if prior website is outdated.
-			PRIOR_SITE="${ALLSKY_WEBSITE_OLD}"
+			local UNKNOWN_WEBSITE="${ALLSKY_WEBSITE}-UNKNOWN-$$"
+			MSG="Unknown Website in '${ALLSKY_WEBSITE}' is not empty."
+			MSG="${MSG}\nRenaming to '${UNKNOWN_WEBSITE}'."
+			display_msg error "${MSG}"
+			if ! mv "${ALLSKY_WEBSITE}" "${UNKNOWN_WEBSITE}" ; then
+				display_msg error "Unable to move."
+			fi
 		fi
 	fi
-	if [[ ${NO_NEW_WEBSITE_DIR} == "true" ]]; then
-		display_msg progress "Restoring Allsky Website from ${ALLSKY_WEBSITE_OLD}."
-		sudo mv "${ALLSKY_WEBSITE_OLD}" "${ALLSKY_WEBSITE}"
-		PRIOR_SITE="${ALLSKY_WEBSITE}"
-		OLD_WEBSITE_BRANCH="$( get_branch "${ALLSKY_WEBSITE_BRANCH_FILE}" )"
-		VERSION_FILE="${ALLSKY_WEBSITE_VERSION_FILE}"
+
+	# Trailing "/" tells get_version and get_branch to fill in the file
+	# names given the directory we pass to them.
+
+	# If there's no prior website version, then there IS a newer version available.
+	# Set ${PV} to a string to display in messages, but we'll still use ${PRIOR_VERSION}
+	# to determine whether or not there's a newer version.  PRIOR_VERSION="" means there is.
+	local PRIOR_VERSION="$( get_version "${PRIOR_SITE}/" )"
+	local PV=""
+	if [[ -z ${PRIOR_VERSION} ]]; then
+		PV="** Unknown, but old **"
 	else
-		VERSION_FILE="${PRIOR_SITE}/version"
-		OLD_WEBSITE_BRANCH="$( get_branch "${PRIOR_SITE}/branch" )"
+		PV="${PRIOR_VERSION}"
 	fi
 
-	OLD_VERSION="$( get_version "${VERSION_FILE}" )"
-	[[ -z ${OLD_VERSION} ]] && OLD_VERSION="** Unknown, but old **"
+	local NEWEST_VERSION="$(get_Git_version "${GITHUB_MAIN_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
+	if [[ -z ${NEWEST_VERSION} ]]; then
+		display_msg warning "Unable to determine verson of GitHub branch '${GITHUB_MAIN_BRANCH}'."
+	fi
 
-	# If the old website was using a non-production branch,
-	# see if there's a newer version of the website with that branch OR
-	# a newer version with the production branch.  Use whichever is newer.
-	local NEW_VERSION="$(get_Git_version "${OLD_WEBSITE_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
 	local B=""
-	if [[ ${OLD_WEBSITE_BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
-		local GIT_VERSION="$(get_Git_version "${GITHUB_MAIN_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
-		if [[ ${DEBUG} -gt 0 ]]; then
-			echo "Branch ${OLD_WEBSITE_BRANCH} version=${NEW_VERSION}, Git version=${GIT_VERSION}."
-		fi
-		if [[ ${NEW_VERSION} > "${GIT_VERSION}" ]]; then
-			B=" in the '${OLD_WEBSITE_BRANCH}' branch"
-		else
-			B=" in the '${GITHUB_MAIN_BRANCH}' branch"
-		fi
-	fi
 
 	# Check if the prior website is outdated.
-	if [[ -n ${NEW_VERSION} && ${OLD_VERSION} < "${NEW_VERSION}" ]]; then
-		MSG="There is a newer Allsky Website available${B}; please upgrade to it."
-		MSG="${MSG}\nYour    version: ${OLD_VERSION}"
-		MSG="${MSG}\nCurrent version: ${NEW_VERSION}"
-		MSG="${MSG}\n\nYou can upgrade the Allky Website by executing:"
-		MSG="${MSG}\n     cd ~/allsky; website/install.sh"
-		MSG="${MSG}\nafter this installation finishes."
-		display_msg notice "${MSG}"
-		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+	# For new-style websites, only check the branch they are currently running.
+	# If a non-production branch is used the Website installer will check if there's
+	# a newer production branch.
+
+	if [[ ${PRIOR_STYLE} == "new" ]]; then
+
+		# get_branch returns "" the prior branch is ${GITHUB_MAIN_BRANCH}.
+		local PRIOR_BRANCH="$( get_branch "${PRIOR_SITE}/" )"
+
+		display_msg progress "Restoring Allsky Website from ${PRIOR_SITE}."
+		sudo mv "${PRIOR_SITE}" "${ALLSKY_WEBSITE}"
+
+		# We can only check versions if we obtained the new version.
+		[[ -z ${NEWEST_VERSION} ]] && return
+
+		# If the old Website was using a non-production branch,
+		# see if there's a newer version of the Website with that branch OR
+		# a newer version with the production branch.  Use whichever is newer.
+		if [[ -n ${PRIOR_BRANCH} && ${PRIOR_BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
+			NEWEST_VERSION="$(get_Git_version "${PRIOR_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
+			B=" in the '${PRIOR_BRANCH}' branch"
+
+			if [[ ${DEBUG} -gt 0 ]]; then
+				MSG="'${PRIOR_BRANCH}' branch: prior Website version=${PV},"
+				MSG="${MSG} Git version=${NEWEST_VERSION}."
+				display_msg debug "${MSG}"
+			fi
+		fi
+
+	elif [[ -z ${NEWEST_VERSION} ]]; then
+		return
+	fi
+
+	if [[ -n ${NEWEST_VERSION} ]]; then
+		if [[ ${DEBUG} -gt 0 ]]; then
+			display_msg debug "Comparing prior Website ${PV} to newest ${NEWEST_VERSION}${B}"
+		fi
+		if [[ -z ${PRIOR_VERSION} || ${PRIOR_VERSION} < "${NEWEST_VERSION}" ]]; then
+			MSG="There is a newer Allsky Website available${B}; please upgrade to it."
+			MSG="${MSG}\nYour    version: ${PV}"
+			MSG="${MSG}\nCurrent version: ${NEWEST_VERSION}"
+			MSG="${MSG}\n\nYou can upgrade by executing:"
+			MSG="${MSG}\n     cd ~/allsky; website/install.sh"
+			MSG="${MSG}\nafter this installation finishes."
+			display_msg notice "${MSG}"
+			echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		fi
 	fi
 }
 
@@ -1290,9 +1344,14 @@ restore_prior_settings_files()
 			FILES="$(find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}")"
 			if [[ -n ${FILES} ]]; then
 				RESTORED_PRIOR_SETTINGS_FILE="true"
+				FIRST_ONE="true"
 				echo "${FILES}" | while read -r F
 					do
-						display_msg progress "Restoring '$(basename "${F}")."
+						if [[ ${FIRST_ONE} == "true" ]]; then
+							display_msg progress "Restoring settings files:"
+							FIRST_ONE="false"
+						fi
+						display_msg progress "\t'$(basename "${F}")."
 						cp -a "${F}" "${ALLSKY_CONFIG}"
 					done
 			else
@@ -1862,17 +1921,8 @@ get_this_branch
 ##### See if there's an old WebUI
 does_old_WebUI_location_exist
 
-##### Execute any specified function, then exit.
-if [[ -n ${FUNCTION} ]]; then
-	if ! type "${FUNCTION}" > /dev/null; then
-		display_msg error "Unknown function: '${FUNCTION}'."
-		exit 1
-	fi
-
-	${FUNCTION}
-	exit $?
-fi
-
+##### Executes the specified function, if any, and exits.
+[[ -n ${FUNCTION} ]] && do_function "${FUNCTION}"
 
 ##### Display an image in the WebUI
 display_image "InstallationInProgress"

@@ -127,7 +127,6 @@ if (file_exists($f)) {
 	<meta name="author" content="Thomas Jacquin">
 
 <?php	// Give each page its own <title> so they are easy to distinguish in the browser.
-echo "<br>page=$page";
 	switch ($page) {
 		case "WLAN_info":			$Title = "WLAN Dashboard";		break;
 		case "LAN_info":			$Title = "LAN Dashboard";		break;
@@ -235,7 +234,7 @@ echo "<br>page=$page";
 				<span class="icon-bar"></span>
 			</button>
 			<div class="navbar-brand valign-center">
-				<a class="navbar-brand valign-center" href="index.php">
+				<a id="index" class="navbar-brand valign-center" href="index.php">
 					<img src="documentation/img/allsky-logo.png" title="Allsky logo">
 					<div class="navbar-title">Web User Interface (WebUI)</div>
 				</a>
@@ -263,7 +262,7 @@ echo "<br>page=$page";
 			<div class="sidebar-nav navbar-collapse">
 				<ul class="nav" id="side-menu">
 					<li>
-						<a href="index.php?page=live_view"><i class="fa fa-eye fa-fw"></i> Live View</a>
+						<a id="live_view" href="index.php?page=live_view"><i class="fa fa-eye fa-fw"></i> Live View</a>
 					</li>
 					<li>
 						<a id="list_days" href="index.php?page=list_days"><i class="fa fa-image fa-fw"></i> Images</a>
@@ -275,10 +274,10 @@ echo "<br>page=$page";
 						<a id="editor" href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>
 					</li>
 					<li>
-						<a href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i> Overlay Editor</a>
+						<a id="overlay" href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i> Overlay Editor</a>
 					</li>
 					<li>
-						<a href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Manager</a>
+						<a id="module" href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Manager</a>
 					</li>						
 					<li>
 						<a id="LAN" href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
@@ -291,16 +290,16 @@ echo "<br>page=$page";
 					</li>
 					<?php if (RASPI_OPENVPN_ENABLED) : ?>
 						<li>
-							<a href="index.php?page=openvpn_conf"><i class="fa fa-lock fa-fw"></i> Configure OpenVPN</a>
+							<a id="vpn" href="index.php?page=openvpn_conf"><i class="fa fa-lock fa-fw"></i> Configure OpenVPN</a>
 						</li>
 					<?php endif; ?>
 					<?php if (RASPI_TORPROXY_ENABLED) : ?>
 						<li>
-							<a href="index.php?page=torproxy_conf"><i class="fa fa-eye-slash fa-fw"></i> Configure TOR proxy</a>
+							<a id="tor" href="index.php?page=torproxy_conf"><i class="fa fa-eye-slash fa-fw"></i> Configure TOR proxy</a>
 						</li>
 					<?php endif; ?>
 					<li>
-						<a href="index.php?page=auth_conf"><i class="fa fa-lock fa-fw"></i> Change Password</a>
+						<a id="auth_conf" href="index.php?page=auth_conf"><i class="fa fa-lock fa-fw"></i> Change Password</a>
 					</li>
 					<li>
 						<a id="system" href="index.php?page=system"><i class="fa fa-cube fa-fw"></i> System</a>
@@ -480,6 +479,7 @@ echo "<br>page=$page";
 		if (! x) console.log("No id for " + id);
 		else x.href += "&_ts=" + new Date().getTime();
 	}
+	addTimestamp("live_view");
 	addTimestamp("list_days");
 	addTimestamp("configuration");
 	addTimestamp("editor");

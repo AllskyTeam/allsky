@@ -302,7 +302,7 @@ void aegGetNextExposureSettings(config * cg,
 			Log(4, "  > exposureLevel decreased by %d to %d\n", ExposureChange, currentModeMeanSetting.exposureLevel);
 		}
 		else {
-			Log(3, "    >>> Already at min gain (%1.3f) and min exposure (%'d us) - can't go any lower!\n",
+			Log(3, "    >>> Already at min gain (%1.3f) and min exposure (%s) - can't go any lower!\n",
 				currentModeMeanSetting.minGain, length_in_units(currentModeMeanSetting.minExposure_us, true));
 		}
 	}

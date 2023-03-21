@@ -36,15 +36,26 @@ calc_wt_size()
 function get_Git_version() {
 	local BRANCH="${1}"
 	local PACKAGE="${2}"
-	echo -n "$(curl --show-error --silent "${GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/version" | tr -d '\n\r')"
+	local VF="$( basename "${ALLSKY_VERSION_FILE}" )"
+	local V="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r')"
+	# "404" means the branch isn't found since all new branches have a version file.
+	[[ ${V} != "404: Not Found" ]] && echo -n "${V}"
 }
 
 
 #####
 # Get the version from a local file, if it exists.
+# For the version and branch, if the last character of the argument passed is a "/",
+# then append the file name fro ${ALLSKY_VERSION_FILE} or ${ALLSKY_BRANCH_FILE}.
+# We do this to limit the number of places that know the actual name of the files,
+# in case we every change their names.
 function get_version() {
 	local F="${1}"
-	[[ -z ${F} ]] && F="${ALLSKY_VERSION_FILE}"		# default
+	if [[ -z ${F} ]]; then
+		F="${ALLSKY_VERSION_FILE}"		# default
+	else
+		[[ ${F:1,-1} == "/" ]] && F="${F}$(basename "${ALLSKY_VERSION_FILE}")"
+	fi
 	if [[ -f ${F} ]]; then
 		local VALUE="$( < "${F}" )"
 		echo -n "${VALUE}" | tr -d '\n\r'
@@ -56,7 +67,11 @@ function get_version() {
 # Get the branch from a local file, if it exists.
 function get_branch() {
 	local F="${1}"
-	[[ -z ${F} ]] && F="${ALLSKY_BRANCH_FILE}"		# default
+	if [[ -z ${F} ]]; then
+		F="${ALLSKY_BRANCH_FILE}"		# default
+	else
+		[[ ${F:1,-1} == "/" ]] && F="${F}$(basename "${ALLSKY_BRANCH_FILE}")"
+	fi
 
 	# Branch file is same format as Version file.
 	echo -n "$(get_version "${F}")"
@@ -101,8 +116,14 @@ function display_msg()
 		MSG="${GREEN}${LOGMSG}${NC}"
 		STARS=false
 
-	elif [[ ${LOG_TYPE} == "info" || ${LOG_TYPE} == "debug" ]]; then
+	elif [[ ${LOG_TYPE} == "info" ]]; then
 		LOGMSG="${MESSAGE}"
+		MSG="${YELLOW}${LOGMSG}${NC}"
+		STARS=false
+
+	elif [[ ${LOG_TYPE} == "debug" ]]; then
+		# Indent so they align with text above
+		LOGMSG="  DEBUG: ${MESSAGE}"
 		MSG="${YELLOW}${LOGMSG}${NC}"
 		STARS=false
 
@@ -133,22 +154,6 @@ function display_msg()
 	fi
 }
 
-
-#####
-# Get a shell variable's value.  The variable can have optional spaces and tabs before it.
-# This function is useful when we can't "source" the file.
-function get_variable() {
-	local VARIABLE="${1}"
-	local FILE="${2}"
-	local LINE=""
-	local SEARCH_STRING="^[ 	]*${VARIABLE}="
-	if ! LINE="$(grep -E "${SEARCH_STRING}" "${FILE}")" ; then
-		return 1
-	fi
-
-	echo "${LINE}" | sed -e "s/${SEARCH_STRING}//" -e 's/"//g'
-	return 0
-}
 
 
 ######################################### variables

@@ -739,25 +739,36 @@ class ALLSKYOVERLAY:
                         fieldFound = True
 
             if fieldFound:
-                #if envCheck == "AS_EXPOSURE_US":
-                #    value = str(s.int(value) / 1000)
-
                 if variableType == 'Date':
-                    timeStamp = datetime.fromtimestamp(self._imageDate)
-                    if format is None:
-                        value = timeStamp.strftime('%Y-%m-%d %H:%M:%S')
+                    if envCheck == 'AS_DATE' or envCheck == 'DATE':
+                        timeStamp = datetime.fromtimestamp(self._imageDate)
+                        if format is None:
+                            value = timeStamp.strftime('%Y-%m-%d %H:%M:%S')
+                        else:
+                            try:
+                                value = timeStamp.strftime(format)
+                            except Exception:
+                                pass
                     else:
-						# TODO: Check for bad format?
-                        value = timeStamp.strftime(format)
-
+                        dateFormat = s.getSetting("timeformat")
+                        tempDate = datetime.strptime(value, dateFormat)
+                        if format is not None:
+                            try:
+                                value = tempDate.strftime(format)
+                            except Exception:
+                                pass
+                
                 if variableType == 'Time':
-                    timeStamp = time.localtime(self._imageDate)
-                    if format is None:
-                        value = time.strftime('%H:%M:%S', timeStamp)
+                    if envCheck == 'AS_TIME' or envCheck == 'TIME':
+                        timeStamp = time.localtime(self._imageDate)
+                        if format is None:
+                            value = time.strftime('%H:%M:%S', timeStamp)
+                        else:
+						    # TODO: Check for bad format?
+                            value = time.strftime(format, timeStamp)
                     else:
-						# TODO: Check for bad format?
-                        value = time.strftime(format, timeStamp)
-
+                        pass
+                    
                 if variableType == 'Number':
                     if format is not None and format != "":
                         f = format

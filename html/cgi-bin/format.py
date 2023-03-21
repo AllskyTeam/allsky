@@ -12,7 +12,8 @@ class ALLSKYFORMAT:
 
     _config = ""
     _fields = ""
-
+    _settings = None
+    
     _jsonConfig = {}
     _jsonFields = {}
 
@@ -95,22 +96,66 @@ class ALLSKYFORMAT:
 
         return v
 
-    def _getValue(self, format, fieldValue, variableType):
+    def _getEnvironmentVariable(self, name):
+        result = None
+
+        try:
+            result = os.environ[name]
+        except KeyError:
+            pass
+
+        return result
+
+    def _readSettings(self):
+
+        settingsFile = self._getEnvironmentVariable("SETTINGS_FILE")
+        if settingsFile is None:
+            settingsFile = os.path.join(self._getEnvironmentVariable("ALLSKY_HOME"),"config","settings.json")
+
+        with open(settingsFile, "r") as fp:
+            self._settings = json.load(fp)
+
+    def _getSetting(self, settingName):
+
+        if self._settings == None:
+            self._readSettings()
+
+        result = None
+        try:
+            result = self._settings[settingName]
+        except Exception:
+            pass
+        
+        return result
+
+    def _getValue(self, format, fieldValue, variableType, label):
         value = fieldValue
 
         if variableType == 'Date':
-            timeStamp = datetime.fromtimestamp(time.time())
-            if format is None:
-                value = timeStamp.strftime('%Y-%m-%d')
+            if label == 'DATE' or label == 'AS_DATE':
+                timeStamp = datetime.fromtimestamp(time.time())
+                if format is None:
+                    value = timeStamp.strftime('%Y-%m-%d')
+                else:
+                    value = timeStamp.strftime(format)
             else:
-                value = timeStamp.strftime(format)
-
+                dateFormat = self._getSetting("timeformat")
+                tempDate = datetime.strptime(value, dateFormat)
+                if format is not None:
+                    try:
+                        value = tempDate.strftime(format)
+                    except Exception:
+                        pass
+                
         if variableType == 'Time':
-            timeStamp = time.localtime(time.time())
-            if format is None:
-                value = time.strftime('%H:%M:%S', timeStamp)
+            if label == 'TIME' or label == 'AS_TIME':
+                timeStamp = time.localtime(time.time())
+                if format is None:
+                    value = time.strftime('%H:%M:%S', timeStamp)
+                else:
+                    value = time.strftime(format, timeStamp)
             else:
-                value = time.strftime(format, timeStamp)
+                value = fieldValue
 
         if variableType == 'Number':
             if format is not None and format != "":
@@ -168,7 +213,7 @@ class ALLSKYFORMAT:
                                     if index < len(formatArray):
                                         variableType = self._getFieldType(fullLabel)
                                         format = formatArray[index]
-                                        formattedValue = self._getValue(format, fieldValue, variableType)
+                                        formattedValue = self._getValue(format, fieldValue, variableType, label)
                                         fieldLabel = fieldLabel.replace(fullLabel, str(formattedValue))
                                 else:
                                     fieldLabel = fieldLabel.replace(fullLabel, str(fieldValue))

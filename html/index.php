@@ -149,7 +149,7 @@ if (file_exists($f)) {
 		default:					$Title = "Allsky WebUI";		break;
 	}
 ?>
-	<title><?php echo $Title ?></title>
+	<title><?php echo "$Title - WebUI"; ?></title>
 
 	<!-- Bootstrap Core CSS -->
 	<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">

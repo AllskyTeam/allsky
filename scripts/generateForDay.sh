@@ -18,6 +18,7 @@ MSG1="create"
 MSG2="created"
 SILENT="false"
 UPLOAD_SILENT="--silent"
+NICE=""
 GOT=0
 DO_KEOGRAM="false"
 DO_STARTRAILS="false"
@@ -38,6 +39,10 @@ while [[ $# -gt 0 ]]; do
 				SILENT="true"
 				UPLOAD_SILENT=""	# since WE aren't outputing a message, upload.sh should.
 				;;
+			--nice)
+				NICE="${2}"
+				shift
+				;;
 			--thumbnail-only)
 				THUMBNAIL_ONLY="true"
 				THUMBNAIL_ONLY_ARG="${ARG}"
@@ -51,15 +56,15 @@ while [[ $# -gt 0 ]]; do
 				;;
 			-k | --keogram)
 				DO_KEOGRAM="true"
-				GOT=$((GOT + 1))
+				((GOT++))
 				;;
 			-s | --startrails)
 				DO_STARTRAILS="true"
-				GOT=$((GOT + 1))
+				((GOT++))
 				;;
 			-t | --timelapse)
 				DO_TIMELAPSE="true"
-				GOT=$((GOT + 1))
+				((GOT++))
 				;;
 
 			-*)
@@ -78,11 +83,12 @@ usage_and_exit()
 	retcode=${1}
 	echo
 	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] [--silent] [--debug] [--upload] [--thumbnail-only] [-k] [-s] [-t] DATE"
+	echo "Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] [--thumbnail-only] [-k] [-s] [-t] DATE"
 	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--help' displays this message and exits."
 	echo "      '--debug' runs upload.sh in debug mode."
+	echo "      '--nice' runs with nice level n."
 	echo "      '--upload' uploads previously-created files instead of creating them."
 	echo "      '--thumbnail-only' creates or uploads video thumbnails only."
 	echo "      'DATE' is the day in '${ALLSKY_IMAGES}' to process."
@@ -125,14 +131,8 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		[[ ${SILENT} == "false" ]] && echo "===== Generating ${GENERATING_WHAT}"
 		[[ ${DIRECTORY} != "" ]] && mkdir -p "${DATE_DIR}/${DIRECTORY}"
 
-		# In order for the shell to treat the single quotes correctly, need to run in separate bash,
-		# otherwise it tries to execute something like:
-		#	'command' 'arg1' 'arg2' ...
-		# instead of:
-		#	command arg1 arg2 ...
-
 		# shellcheck disable=SC2086
-		echo ${CMD} | bash
+		eval ${CMD}
 		RET=$?
 		if [[ ${RET} -ne 0 ]]; then
 			echo -e "${RED}${ME}: Command Failed: ${CMD}${NC}"
@@ -170,7 +170,7 @@ else
 	}
 fi
 
-typeset -i EXIT_CODE=0
+EXIT_CODE=0
 
 if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
 	# Nasty JQ trick to compose a widthxheight string if both width and height
@@ -192,24 +192,34 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/keogram/${KEOGRAM_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		CMD="'${ALLSKY_BIN}/keogram' ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
+		if [[ -z "${NICE}" ]]; then
+			N=""
+		else
+			N="--nice-level ${NICE}"
+		fi
+		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
 	else
 		upload "Keogram" "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" "${KEOGRAM_DESTINATION_NAME}" "${WEB_KEOGRAM_DIR}"
 	fi
-	[[ $? -ne 0 ]] && EXIT_CODE=$((EXIT_CODE + 1))
+	[[ $? -ne 0 ]] && ((EXIT_CODE++))
 fi
 
 if [[ ${DO_STARTRAILS} == "true" ]]; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${DATE_DIR}/startrails/${STARTRAILS_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		CMD="'${ALLSKY_BIN}/startrails' ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' ${STARTRAILS_EXTRA_PARAMETERS}"
+		if [[ -z "${NICE}" ]]; then
+			N=""
+		else
+			N="--nice ${NICE}"
+		fi
+		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' ${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
 	else
 		upload "Startrails" "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" "${STARTRAILS_DESTINATION_NAME}" "${WEB_STARTRAILS_DIR}"
 	fi
-	[[ $? -ne 0 ]] && EXIT_CODE=$((EXIT_CODE + 1))
+	[[ $? -ne 0 ]] && ((EXIT_CODE++))
 fi
 
 if [[ ${DO_TIMELAPSE} == "true" ]]; then
@@ -228,7 +238,12 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 				RET=1
 			fi
 		else
-			CMD="'${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE}"
+			if [[ -z "${NICE}" ]]; then
+				N=""
+			else
+				N="nice -n ${NICE}"
+			fi
+			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE}"
 			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 			RET=$?
 		fi
@@ -265,7 +280,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" "${UPLOAD_THUMBNAIL_NAME}" "" "${W}"
 		fi
 	fi
-	[[ $RET -ne 0 ]] && EXIT_CODE=$((EXIT_CODE + 1))
+	[[ ${RET} -ne 0 ]] && ((EXIT_CODE++))
 fi
 
 

@@ -39,6 +39,7 @@ RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
 RESTORED_PRIOR_CONFIG_SH="false"		# prior config.sh restored?
 RESTORED_PRIOR_FTP_SH="false"			# prior ftp-settings.sh restored?
+ALLSKY_VERSION="$( get_version )"		# version we're installing
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 PRIOR_ALLSKY_VERSION=""					# The version number of the prior version, if known
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
@@ -143,7 +144,10 @@ stop_allsky()
 
 
 ####
-# Get the branch of the release we are installing; if not GITHUB_MAIN_BRANCH, save it.
+# Get the branch of the release we are installing;
+# if not GITHUB_MAIN_BRANCH, save the name of the branch.
+# There is no "branch" file in GitHub so we need to determine the branch
+# by looking in the .git/config file.
 get_this_branch()
 {
 	local FILE="${ALLSKY_HOME}/.git/config"
@@ -736,7 +740,8 @@ set_permissions()
 	# We don't know what permissions may have been on the old website, so use "sudo".
 	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
 	# These are the exceptions
-	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" "${ALLSKY_WEBUI}/includes/overlay_sample.py"
+	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+		      "${ALLSKY_WEBUI}/includes/overlay_sample.py"
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
 
 	chmod 775 "${ALLSKY_TMP}"
@@ -799,6 +804,8 @@ check_old_WebUI_location()
 
 
 ####
+# If a website exists, see if it's the newest version.  If not, let the user know.
+# If it's a new-style website, copy to the new Allsky release directory.
 handle_prior_website()
 {
 	local PRIOR_SITE=""

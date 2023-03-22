@@ -178,10 +178,33 @@
 							<li>Should be prefixed with a string that's unique to you like your initials,
 								to avoid conflicting with the names of Allsky system variables.
 								This prefix can be anything except <code>AS_</code> and <code>ALLSKY_</code>.
-							<li>By convention are UPPERCASE, but you can mix case.
+							<li>By convention are UPPERCASE, but you can mix case,
+								however, variable names are case-sensitive,
+								so <code>${DATE}</code> and <code>${Date}</code> are different variables.
 						</ul>
 						A <strong>variable</strong> is a variable <em>name</em> enclosed within
 						<code><strong>${}</strong></code>, for example, <code>${sEXPOSURE}</code>.
+						<blockquote>
+							If you see a variable displayed on the overlay as <code>???</code> it usually means
+							the variable is undefined - either it's not in the
+							<span class="managerName">Variable Manager</span> at all (could be a typo),
+							or is only in the <strong>All Variables</strong> tab.
+							The variable  needs to be defined and moved to the
+							<strong>Allsky Variables</strong> tab.
+							<br>Undefined variables will usually have a line in
+							<span class="fileName">/var/log/allsky.log</span> like:
+							<code class="noWrap">ERROR: ${T2} has no variable type; check 'fields.json'</code>.
+							<p>
+							If a variable is displayed as <code>??</code> it usually means
+							the variable's formatting is incorrect, for example,
+							you tried to display a number as a date.
+							Make sure the formatting is valid for the type of variable -
+							click on the <code>[?]</code> icon to see valid formats for each type of variable.
+							<br>Undefined variables will usually have a line in
+							<span class="fileName">/var/log/allsky.log</span> like:
+							<code class="noWrap">ERROR: Cannot use format '%a' on Number variables like ${GAIN}.</code>.
+							</ol>
+						</blockquote>
 					</p>
 
 					<p class="morePadding">Some example text fields are:</p>
@@ -822,7 +845,7 @@
 						</p>
 
 						<h4>Allsky Variables tab</h4>
-						<table border=1>
+						<table>
 							<tbody>
 								<tr>
 									<td align="center">
@@ -833,38 +856,36 @@
 								<tr>
 									<td>
 										<ul>
-											<li>Click the <span class="btn dark btn-primary btn-xs oe-list-add">
+											<li>The <span class="btn dark btn-primary btn-xs oe-list-add">
 													<i class="fa-solid fa-plus oe-list-add"></i></span> icon
-												to add the associated variable in a new text field to the overlay.
+												adds the associated variable in a new text field to the overlay.
 												The <strong>Text Properties</strong> dialog box
 												will also be displayed and populated with the relevant
 												data for the variable.</li>
-											<li>Click the <span class="btn dark btn-warning btn-xs oe-list-edit">
+											<li>The <span class="btn dark btn-warning btn-xs oe-list-edit">
 													<i class="fa fa-pen-to-square oe-list-edit"></i></span> icon
-												to edit the variable. If the variable is a system variable then only
+												edits the variable. If the variable is a system variable then only
 												certain fields can be changed.</li>
 											<li>The <span class="btn dark btn-danger btn-xs oe-list-delete">
 													<i class="fa fa-trash oe-list-delete"></i></span> icon
-												deletes a variable. You can only delete variables that you added.
+												deletes a variable.
+												You can only delete variables that you added;
+												there are none shown in the screenshot above.
 											</li>
 										</ul>
 
 										<p id="allskyVariablesButton" class="morePadding">
 											The <span class="btn btn-primary btn-small">Add Variable</span>
-											button allows you to add and define your own
-											variables in the "Add Variable" dialog box that pops up.
+											brings up the "Add Variable" dialog box that allows you to
+											add your own variable and set the variable's Type and other attributes.
 											<blockquote>
-												Don't forget that variables names have to be enclosed in
-												<code><strong>${}</strong></code>.
-											</blockquote>
-											<blockquote>
-												This button doe NOT actually add the variable to the overlay;
+												This button does NOT add the variable to the overlay;
 												instead, it just adds it to the end of the
 												<strong>Allsky Variables</strong> list so it can be added to the overlay.
 											</blockquote>
-											</p>
-										<p>The search option in the top right can be used to quickly search
-											for a variable by name.
+										</p>
+										<p class="morePadding">The search option in the top right can be used
+											to quickly search for a variable by name.
 											Searches are not case sensitive.</p>
 									</td>
 								</tr>
@@ -872,13 +893,15 @@
 						</table>
 
 						<br><h4>All Variables tab</h4>
-						<table class="two-col vtop">
+						<table>
 							<tbody>
 								<tr>
-									<td>
+									<td align="center">
 										<img allsky="true" src="variable-manager-all.png" alt="Variable Manager All"
 											loading="lazy" />
 									</td>
+								</tr>
+								<tr>
 									<td>
 										<p>This tab lists every variable that Allsky can see and the last value it had,
 											if any.
@@ -916,16 +939,17 @@
 								<i class="fa fa-pen-to-square oe-list-edit"></i></span>
 							icon above brings up a dialog box to add or edit a variable.
 							It's the same dialog box in either case, just with a different title.
-							Editing a System Variable will display a message stating that in the dialog box
-							as shown in the image below.
+							Editing a System Variable will display a message as shown in the image below.
 						</p>
-						<table class="two-col vtop">
+						<table>
 							<tbody>
 								<tr>
-									<td>
+									<td align="center">
 										<img allsky="true" src="variable-manager-edit.png" alt="Edit variable"
 											loading="lazy" />
 									</td>
+								</tr>
+								<tr>
 									<td>
 										<ul>
 											<li><strong>Variable Name</strong> - The name of the variable
@@ -938,7 +962,7 @@
 												This is only for reference and is displayed in the
 												<span class="managerName">Variable Manager</span>.
 											</li>
-											<li><strong>Format</strong> - This is the optional
+											<li><strong>Format</strong> - The optional
 												<a href="#formattingVariables">formatting</a> used to
 												display the variable.
 											</li>
@@ -949,10 +973,13 @@
 											<li><strong>Type</strong> - Each variable has a <em>type</em> that
 												is used to determine what formatting to use. The variable types are:
 												<ul class="minimalPadding">
-													<li><strong>Text</strong> - Any string of characters</li>
-													<li><strong>Number</strong> - A number with, or without a decimal point</li>
 													<li><strong>Date</strong> - A variable that holds a date</li>
 													<li><strong>Time</strong> - A variable that holds a time</li>
+													<li><strong>Number</strong> - A number with, or without a decimal point</li>
+													<li><strong>Text</strong> - Any string of characters</li>
+													<li><strong>Bool</strong> - A variable that holds a boolean value -
+														on/off, yes/no, true/false.
+														</li>
 												</ul>
 											</li>
 										</ul>
@@ -970,14 +997,16 @@
 						and allows you to upload any TrueType font for use in text fields.</p>
 					<details sub>
 						<summary></summary>
-						<table class="morePadding two-col">
+						<table class="morePadding">
 							<tbody>
 								<tr>
-									<td>
+									<td align="center">
 										<img allsky="true" src="font-manager.png" alt="Font Manager"
 											loading="lazy" />
 									</td>
-									<td valign="top">
+								</tr>
+								<tr>
+									<td>
 										<ul>
 											<li><span class="moduleToolbarIconNumber">1</span>
 												<strong>Installed Fonts</strong> - Lists all the fonts that can be
@@ -986,8 +1015,8 @@
 											</li>
 											<li><span class="moduleToolbarIconNumber">2</span>
 												<strong>Delete Button</strong> - Deletes a font.
-												<blockquote>It is not possible to delete a System Font
-												and they will not have a delete icon.
+												<blockquote>It is not possible to delete a System Font and they
+												will not have a delete icon as shown for the first several fonts above.
 												</blockquote>
 												<blockquote>If a font is in use when deleted then any
 													fields using the font will revert to the default font as
@@ -995,13 +1024,13 @@
 												</blockquote>
 											</li>
 											<li><span class="moduleToolbarIconNumber">3</span>
-												<span class="btn btn-primary btn-small">Add Font</span>
+												The <span class="btn btn-primary btn-small">Add Font</span>
 												button adds a font from
 												<a external="true" href="daFont.com">daFont.com</a> by entering a URL.
 												See <a href="#dafont">below</a>.
 											</li>
 											<li><span class="moduleToolbarIconNumber">4</span>
-												<span class="btn btn-primary btn-small">Upload Font</span> button
+												The <span class="btn btn-primary btn-small">Upload Font</span> button
 												uploads a zip file to install fonts.
 												See <a href="#zip">below</a>.
 											</li>
@@ -1011,9 +1040,9 @@
 							</tbody>
 						</table>
 
-						<p>To use a font it must first be installed in the
+						<p class="morePadding">To use a font it must first be installed in the
 							<span class="managerName">Font Manager</span>
-							and there are two ways to do this, as described next.</p>
+							and there are two ways to do this:</p>
 						<ol>
 							<li id="dafont"><strong>Add font from daFont.com</strong>
 								<br>
@@ -1024,7 +1053,8 @@
 								Copy the font URL to the clipboard.
 								Click the <span class="btn btn-primary btn-small">Add Font</span> button and enter
 								the font URL.
-								The font will be installed and the installed fonts list refreshed.
+								The font will be installed and the installed fonts list
+								<span class="moduleToolbarIconNumber">1</span> refreshed.
 							</li>
 							<li id="zip"><strong>Upload font via a zip file</strong>
 								<br>
@@ -1046,26 +1076,30 @@
 					</p>
 					<details sub>
 						<summary></summary>
-						<table class="morePadding two-col">
+						<table class="morePadding">
 							<tbody>
 								<tr>
-									<td>
+									<td align="center">
 										<img allsky="true" src="image-manager.png" alt="Image Manager"
 											loading="lazy" />
 									</td>
-									<td valign="top">
+								</tr>
+								<tr>
+									<td>
 										<ul>
 											<li><span class="moduleToolbarIconNumber">1</span>
 												&nbsp; <i class="fa fa-solid fa-image fa-lg"></i> &nbsp;
 												<strong>Add Selected Image</strong> - Adds the selected
 												image to the overlay. The selected image has a
-												<span style="border: 1px solid red;">red</span> border.
+												<span style="border: 1px solid red;">red</span> border
+												like the 3rd image above.
 											</li>
 											<li><span class="moduleToolbarIconNumber">2</span>
 												&nbsp; <i class="fa fa-solid fa-trash fa-lg"></i> &nbsp;
 												<strong>Delete The Selected Image</strong> - Deletes the selected
-												image
-												from the overlay.
+												image from the overlay.
+												Images that are grayed out like the 4th one above,
+												are in use in an overlay and cannot be deleted.
 												<blockquote>When deleting an image it will also be deleted
 													from the Pi.
 													If you want the image to remain on the Pi, select its field
@@ -1141,28 +1175,48 @@
 						<table class="module-settings">
 							<tbody>
 								<tr>
-									<td><img allsky="true" src="text-property-editor.png"
-											alt="Text Properties Editor" loading="lazy" /></td>
+									<td align="center">
+										<img allsky="true" src="text-property-editor.png"
+											alt="Text Properties Editor" loading="lazy" />
+									</td>
+								</tr>
+								<tr>
 									<td>
 										The properties in this editor are:
 										<ul>
 											<li><strong>Item</strong> - The text for the field, including any
 												variables.</li>
-											<li><strong>Format</strong> - Certain field types allow for
-												formatting, including dates, times, and numbers.
+											<li><strong>Format</strong> - Certain variable types allow for
+												formatting, including dates, times, numbers, and booleans.
 												Details of the formats that can be entered are covered in the
-												<a href=#formattingVariables">formatting text section</a>.
+												<a href=#formattingVariables">formatting text section</a>
+												and can also be viewed by clicking on the <code>[?]</code> icon.
 											</li>
 											<li><strong>Sample</strong> - A value that is displayed when the
 												"Display Sample Data" icon
 												(<i class="fa fa-regular fa-square-check fa-lg"></i>)
-												is selected. This field is useful if the
-												variables in the field do not have inbuilt sample values.</li>
-											<li><strong>Empty Value</strong> - Normally if there is no value for a
-												variable
-												nothing will be displayed for it on the overlay. This
-												attribute can be used to set a value for the variable when it is
-												empty.</li>
+												is selected. This property is useful if the
+												variables in the field do not have inbuilt sample values.
+												<br>If there are multiple variables in the field you can have
+												multiple Sample values by separating them by commas or enclosing
+												each Sample in <code>{ }</code>.
+												See the screenshot above for an example of separating by commas.
+												</li>
+											<li><strong>Empty Value</strong> - By default, if ALL the variables
+												in a field have no value then the the field is not displayed.
+												However, if this property has something in it then the whole field
+												is displayed with the empty variable(s) replaced by this property.
+												<br>If there are multiple variables in the field you can have
+												multiple Empty Values by separating them by commas or enclosing
+												each Empty Value in <code>{ }</code>.
+												See the screenshot above for an example of separating by braces.
+												<blockquote>
+													If a field doesn't appear on the overlay and you're not sure why,
+													look in <span class="fileName">/var/log/allsky.log</span> for
+													messages like
+													<code class="noWrap">Adding text field T1: ${T1} failed no variable data available</code>
+												</blockquote>
+												</li>
 											<li><strong>X</strong> - The 'x' position of the field in pixels from
 												the left
 												of the image. If setting manually you need to take into account the
@@ -1204,8 +1258,11 @@
 						<table class="module-settings">
 							<tbody>
 								<tr>
-									<td><img allsky="true" src="image-property-editor.png"
+									<td align="center">
+										<img allsky="true" src="image-property-editor.png"
 											alt="Image Properties Editor" loading="lazy" /></td>
+								</tr>
+								<tr>
 									<td>
 										The properties in this editor are:
 										<ul>
@@ -1231,7 +1288,10 @@
 											<li><strong>Opacity</strong> - The image opacity,
 												from 0 (transparent) to 1 (opaque).</li>
 											<li><strong>Scale</strong> - Allows the image to be scaled and resized,
-												from 0 (image hidden) to 10 times the native resolution).</li>
+												from 0 (image hidden) to 10 times the native resolution.
+												Images that are scaled a lot can look jagged and you may want to
+												consider getting a higher-resolution version.
+												</li>
 										</ul>
 									</td>
 								</tr>
@@ -1242,25 +1302,25 @@
 
 
 					<h3 id="formattingVariables">Formatting Variables</h3>
-					<p>Date, Time, and Number fields can be formatted to alter their appearance.
-						Each field type has a different set of codes for formatting. The codes are loosely
-						based on Python.</p>
+					<p>Date, Time, Number, and Boolean fields can be formatted to alter their appearance.
+						Each field type has a different set of codes for formatting.</p>
 					<details sub>
 						<summary></summary>
-
 						<table class="two-col morePadding">
 							<tbody>
 								<tr>
-									<td valign="top">
+									<td align="center">
 										<img allsky="true" src="image-property-editor-help.png"
 											alt="Properties Help" loading="lazy" />
 									</td>
+								</tr>
+								<tr>
 									<td>
 										<p>The tables below show the more common formats that can be used.
 											A more detailed and up-to-date list can be found by clicking
 											on the help icon (<code>[?]</code>) in the
 											<span class="editorName">Text Properties</span> dialog box
-											(see the screenshot below).
+											to view the window below.
 											After you have set a format click the "Display Sample Data" icon
 											on the toolbbar to show the formatted result.</p>
 										<blockquote>Whilst the <span class="editorName">Overlay Editor</span>
@@ -1277,10 +1337,12 @@
 						<table class="two-col morePadding">
 							<tbody>
 								<tr>
-									<td valign="top">
+									<td align="center">
 										<img allsky="true" src="image-property-editor-formats.png"
 											alt="Formats Help" loading="lazy" />
 									</td>
+								</tr>
+								<tr>
 									<td>
 										<p>Clicking the help icon shown above will display the "Format Help" window.
 											This window can be moved around the screen as required.
@@ -1314,45 +1376,46 @@
 						</table>
 
 
-						<h4>Number formats</h4>
+						<br><h4>Bool formats</h4>
 						<table>
 							<thead>
 								<tr>
-									<th>Directive</th>
-									<th>Meaning</th>
+									<th>Format</th>
+									<th>Description</th>
 									<th>Output Format</th>
 								</tr>
 							</thead>
 							<tbody>
 								<tr>
-									<td>{:.0f}</td>
-									<td>Formats a number to 0 decimal places</td>
-									<td>2</td>
+									<td>%yes</td>
+									<td>Outputs "Yes" if the variable is equal to 1, otherwise "No".</td>
+									<td>Yes</td>
 								</tr>
 								<tr>
-									<td>{:.0f}</td>
-									<td>Formats a number to 2 decimal places</td>
-									<td>2.00</td>
+									<td>%on</td>
+									<td>Outputs "On" if the variable is equal to 1, otherwise "Off".</td>
+									<td>Yes</td>
 								</tr>
 								<tr>
-									<td>{:,}</td>
-									<td>Use comma for thousands separator</td>
-									<td>86,000</td>
+									<td>%true</td>
+									<td>Outputs "True" if the variable is equal to 1, otherwise "False".</td>
+									<td>Yes</td>
 								</tr>
 								<tr>
-									<td>{:n}</td>
-									<td>Use locale for thousands separator</td>
-									<td>86.000</td>
+									<td>%1</td>
+									<td>Outputs "1" if the variable is equal to 1, otherwise "0".</td>
+									<td>Yes</td>
 								</tr>
 							</tbody>
 						</table>
+						<blockquote>Bool formats must be lowercase.</blockquote>
 
 						<br><h4>Date and Time formats</h4>
 						<table>
 							<thead>
 								<tr>
-									<th>Directive</th>
-									<th>Meaning</th>
+									<th>Format</th>
+									<th>Description</th>
 									<th>Output Format</th>
 								</tr>
 							</thead>
@@ -1504,8 +1567,43 @@
 								</tr>
 							</tbody>
 						</table>
-					</details>
 
+						<br><h4>Number formats</h4>
+						<table>
+							<thead>
+								<tr>
+									<th>Format</th>
+									<th>Description</th>
+									<th>Output Format</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>{:.0f}</td>
+									<td>Formats a number to 0 decimal places.</td>
+									<td>2</td>
+								</tr>
+								<tr>
+									<td>{:.1f}</td>
+									<td>Formats a number to 1 decimal places.
+										Other numbers can be used as well, such as 2, 3, ...
+									</td>
+									<td>2.0</td>
+								</tr>
+								<tr>
+									<td>{:,}</td>
+									<td>Use comma for thousands separator.</td>
+									<td>86,000</td>
+								</tr>
+								<tr>
+									<td>{:n}</td>
+									<td>Use locale for thousands separator.</td>
+									<td>86.000</td>
+								</tr>
+							</tbody>
+						</table>
+
+					</details>
 				</div>
 				<hr class="separator">
 			</details>
@@ -1524,13 +1622,15 @@
 					<p>These settings apply to overlay layouts.</p>
 					<details sub>
 						<summary></summary>
-						<table class="two-col morePadding">
+						<table class="morePadding">
 							<tbody>
 								<tr>
-									<td valign="top">
+									<td align="center">
 										<img allsky="true" src="overlay-settings-layout.png" alt="Layout Settings"
 											loading="lazy" />
 									</td>
+								</tr>
+								<tr>
 									<td>
 										<ul style="padding-top: 0px">
 											<li><strong>Default Image Opacity</strong>
@@ -1589,10 +1689,12 @@
 						<table class="two-col morePadding">
 							<tbody>
 								<tr>
-									<td valign="top">
+									<td align="center">
 										<img allsky="true" src="overlay-settings-editor.png" alt="Editor Settings"
 											loading="lazy" />
 									</td>
+								<tr>
+								<tr>
 									<td>
 										<ul style="padding-top: 0px">
 											<li><strong>Show Grid</strong> - When enabled, displays a grid for
@@ -1793,13 +1895,13 @@
 					<tbody>
 						<tr>
 							<td>${MOON_ELEVATION}</td>
-							<td>-24.65&deg;</td>
-							<td>Elevation of the Moon.</td>
+							<td>-24.65</td>
+							<td>Elevation of the Moon in degrees.</td>
 						</tr>
 						<tr>
 							<td>${MOON_AZIMUTH}</td>
-							<td>262&deg;</td>
-							<td>Azimuth of the Moon.</td>
+							<td>262</td>
+							<td>Azimuth of the Moon in degrees.</td>
 						</tr>
 						<tr>
 							<td>${MOON_ILLUMINATION}</td>
@@ -1975,10 +2077,12 @@
 				<table class="two-col">
 					<tbody>
 						<tr>
-							<td>
+							<td align="center">
 								<img allsky="true" src="satellite-options.png" alt="Satellite Settings"
 									loading="lazy" />
 							</td>
+						</tr>
+						<tr>
 							<td>
 								<p>This example has two Norad IDs:</p>
 								<ul class="minimalPadding">

@@ -38,13 +38,13 @@ if you follow the instructions on this page.
 
 <p>
 The image below shows the types of items that can be added:
-<ul class="minimalPadding">
-	<li>Simple data: "<strong>Allsky is the</strong> &nbsp; &nbsp;
+<ol class="minimalPadding">
+	<li><strong>Simple data</strong>: "<strong>Allsky is the</strong> &nbsp; &nbsp;
 		<span style="color: red; font-weight: bold;">BEST!!!</span>"
-	<li>Progress bar: "Dew heater status"
-	<li>Buttons:  "Heater ON" and "Heater OFF".
-		Clicking these buttons perform an action that you define.
-</ul>
+	<li><strong>Progress bar</strong>: "Dew heater status"
+	<li><strong>Buttons</strong>:  "Heater ON" and "Heater OFF".
+		Clicking a button performs an action that you define.
+</ol>
 <img allsky="true" src="systemAdditionsExample.png" class="imgCenter" loading="lazy">
 </p>
 
@@ -190,15 +190,19 @@ The first word of a line determines what type of line it is:
 </tr>
 <tr><td><b>danger</b></td>
 	<td>A <b>current value</b> greater than or equal to the <b>danger</b>
-		value causes the progress bar to turn red.
+		value causes the progress bar to turn
+		<span class="progress-bar-danger">red</span>.
 		<br>Must be a number.
 	</td>
 	<td>No.</td>
 </tr>
 <tr><td><b>warning</b></td>
 	<td>A <b>current value</b> greater than or equal to the <b>warning</b>
-		value and less than the <b>danger</b> value causes the progress bar to turn amber.
-		The progress bar will be green for any value less than <b>warning</b>.
+		value and less than the <b>danger</b> value causes the progress bar to turn
+		<span class="progress-bar-warning">amber</span>.
+		The progress bar will be
+		<span class="progress-bar-success">green</span>.
+		for any value less than <b>warning</b>.
 		<br>Must be a number.
 	</td>
 	<td>No.</td>
@@ -627,6 +631,7 @@ button	-	/home/pi/dewheater/toggleDewHeater.py	cyan    random	cyan
 button	-	/home/pi/dewheater/toggleDewHeater.py	white   random	white
 button	-	/home/pi/dewheater/toggleDewHeater.py	black   random	black
 </pre>
+	<img allsky="true" src="buttonColors.png" loading="lazy">
 </ul>
 </p>
 

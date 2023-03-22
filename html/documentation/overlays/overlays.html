@@ -154,11 +154,13 @@
 				There are two types of fields:
 			<ol>
 				<li><strong>Text</strong> fields consist of text and/or variables.
-					Variables are enclosed within <code><strong>${}</strong></code>
+					Variable names are enclosed within <code><strong>${}</strong></code>
 					and are replaced with their values before being added to the overlay.
 					An example text field is: <code class="nowrap">Exposure: ${sEXPOSURE}</code>,
 					which will add the word "Exposure: "
 					followed by the exposure time of the last image to the overlay.
+					<br>
+					See the <a href="#ValidVariableNames">Variable names</a> section for details on valid variable names.
 				<li><strong>Image</strong> fields contain pictures, graphics, or any image you want.
 					Common uses are logos, weather graphs, and compasses.
 			</ol>
@@ -166,7 +168,23 @@
 			<div>
 				<details>
 					<summary></summary>
-					<p>Some example fields and variables are:</p>
+					<p id="ValidVariableNames">
+						Variable names:
+						<ul class="minimalPadding">
+							<li>Must begin with a letter <code>a - z</code> or <code>A - Z</code>.
+							<li>The remaining characters may contain any number of letters, number <code>0 - 9</code>,
+								or the underscore character <code>_</code>.
+								Use names that make sense to you.
+							<li>Should be prefixed with a string that's unique to you like your initials,
+								to avoid conflicting with the names of Allsky system variables.
+								This prefix can be anything except <code>AS_</code> and <code>ALLSKY_</code>.
+							<li>By convention are UPPERCASE, but you can mix case.
+						</ul>
+						A <strong>variable</strong> is a variable <em>name</em> enclosed within
+						<code><strong>${}</strong></code>, for example, <code>${sEXPOSURE}</code>.
+					</p>
+
+					<p class="morePadding">Some example text fields are:</p>
 					<table>
 						<thead>
 							<tr>
@@ -178,42 +196,51 @@
 						<tbody>
 							<tr>
 								<td><code>${DATE}</code></td>
-								<td>24/10/22</td>
+								<td>24/10/2023</td>
 								<td>Displays the date from the DATE system variable.
-									The date can be formatted in a variety of ways,
-									see the section on formatting fields for details.</td>
+									The date can be <a href=#formattingVariables">formatted in a variety of ways</a>.
+									<br>This field contains only a variable.</td>
 							</tr>
 							<tr>
 								<td><code>Date: ${DATE}</code></td>
-								<td>Date: 24/10/22</td>
-								<td>Displays the text "Date: " then the date from the DATE system variable.
-									As above, the date can be formatted in a variety of ways.</td>
+								<td>Date: 24/10/2023</td>
+								<td>Displays the text "Date: " then the date the image was taken
+									from the DATE system variable.
+									As above, the date can be formatted in a variety of ways.
+									<br>This field contains text and a variable.</td>
 							</tr>
 							<tr>
 								<td><code class="nowrap">Date: ${DATE} ${TIME}</code></td>
-								<td>Date: 24/10/22 23:12:34</td>
-								<td>Displays the date from the DATE system variable and the time from the
-									TIME system variable.
-									Both variables can be formatted in a variety of ways.</td>
+								<td>Date: 24/10/2023 23:12:34</td>
+								<td>Displays the date and time the image was taken from the DATE and TIME system variables,
+									respectively.
+									Both variables can be formatted in a variety of ways.
+									<br>This field contains text and two variables.
+									You can have any number of variables you want.
+								</td>
 							</tr>
 							<tr>
-								<td><code>Exposure</code></td>
-								<td>Exposure</td>
-								<td>Simply displays the text "Exposure".</td>
+								<td><code class="nowrap">Date: DATE TIME</code></td>
+								<td>Date: DATE TIME</td>
+								<td>Because this field doesn't have any variables, it simply displays
+									"Date: DATE TIME".
+									<br>This field contains only text.</td>
+								</td>
 							</tr>
 						</tbody>
 					</table>
 
 					<p class="morePadding">Variables come from a variety of sources:</p>
 					<ol class="minimalPadding">
-						<li><strong>Allsky</strong> - The main Allsky application generates system variables.</li>
+						<li><strong>Allsky</strong> - The main Allsky application generates system variables.
+							Also called "system" variables because they are produced by the Allsky system.</li>
 						<li><strong>Modules</strong> - Any module can create variables.</li>
 						<li><strong>Extra Data</strong> - Typically created by an application external to Allsky.
 						</li>
 					</ol>
 
 					<h3>1. Allsky variables</h3>
-					<p>The table below shows the most commonly used system variables produced by Allsky;
+					<p>The table below shows the most commonly used Allsky variables;
 						a complete list can be found in the <span class="managerName">Variable Manager</span>.</p>
 					<details sub>
 						<summary></summary>
@@ -328,10 +355,10 @@
 						variable called <code>${STARCOUNT}</code> and passes it to the next module.</p>
 					<p>Please refer to the
 						<a allsky="true" external="true" href="/documentation/modules/modules.html">documentation on each module</a>
-						for the variables it makes available.
+						for the variables they makes available.
 					</p>
 
-					<h3>3. Extra Data variables</h3>
+					<h3>3. Extra Data variables - advanced topic</h3>
 					<p>Additional, i.e., "extra" data (text and images) can be added to overlays
 						by defining their attributes in "extra" files.
 					</p>
@@ -342,19 +369,21 @@
 							The <a allsky="true" external="true" href="/documentation/basics/Linux.html">Linux Basics</a>
 							page should provide the understanding you need.
 						</blockquote>
-						<p>You can have multiple "extra" files which reside in
-							<span class="fileName">~/allsky/tmp/extra</span> and are used
-							to create variables which can then be added to the overlay.
-						</p>
-						<p>As an example, assume you want to add weather data to your images. You first need to create
-							or obtain a program that gathers that data and writes it to a file. How you obtain
-							that file is outside the scope of this documentation, but the program needs to write
-							the data in a specific format in a file called
+						<p class="morePadding">As an example, assume you want to add weather data to your images.
+							You first need to create or obtain a program that gathers that data and writes it to a file.
+							How you obtain that file is outside the scope of this documentation,
+							but the program needs to write the data in a specific format in a file called
 							<span class="fileName">~/allsky/tmp/extra/xxxxx</span>
 							(replace the <span class="fileName">xxxxx</span> with an appropriate name).
-							This file can be either a simple <span class="fileName">.txt</span>
+						</p>
+						<p>
+							The "extra" file can be either a simple <span class="fileName">.txt</span>
 							file or preferably a <span class="fileName">.json</span>
 							file since it provides much more flexibility.
+							You can have multiple "extra" files (with different names);
+							this can be useful if you want to add different types of data to the overlay,
+							and each type has its own program to gather the data.
+							A typical example is weather data and dew heater status.
 						</p>
 						<blockquote class="warning morePadding">
 							The <span class="fileName">tmp/extra</span> directory will normally be re-created
@@ -368,70 +397,28 @@
 						<table class="module-settings">
 							<thead>
 								<tr>
-									<th width="300">File Contents</th>
-									<th>Allsky Result</th>
+									<th>Line in File</th>
+									<th>Resulting Variable</th>
 								</tr>
 							</thead>
 							<tbody>
 								<tr>
-									<td valign="top">
-										<div class="code">
-											<table>
-												<tbody>
-													<tr class="noBackground noBorder">
-														<td class="noBorder">&nbsp;</td>
-													</tr>
-													<tr class="noBackground noBorder">
-														<td class="noBorder">AGTEMP=14.3</td>
-													</tr>
-													<tr class="noBackground noBorder">
-														<td class="noBorder">AGHUMIDITY=90.1%</td>
-													</tr>
-													<tr class="noBackground noBorder">
-														<td class="noBorder">AGHEATERCURRENT=215</td>
-													</tr>
-													<tr class="noBackground noBorder">
-														<td class="noBorder">AGSTAT=Night</td>
-													</tr>
-												</tbody>
-											</table>
-										</div>
-									</td>
-									<td>
-										<table>
-											<thead>
-												<tr>
-													<th>Line in File</th>
-													<th>Resulting Variable</th>
-												</tr>
-											</thead>
-											<tbody>
-												<tr>
-													<td>AGTEMP=14.3</td>
-													<td><code>${AGTEMP}</code></td>
-												</tr>
-												<tr>
-													<td>AGHUMIDITY=90.1%</td>
-													<td><code>${AGHUMIDITY}</code></td>
-												</tr>
-												<tr>
-													<td>AGHEATERCURRENT=215</td>
-													<td><code>${AGHEATERCURRENT}</code></td>
-												</tr>
-												<tr>
-													<td>AGSTAT=Night</td>
-													<td><code>${AGSTAT}</code></td>
-												</tr>
-											</tbody>
-										</table>
-									</td>
+									<td>AG_TEMP=14.3</td>
+									<td><code>${AG_TEMP}</code></td>
+								</tr>
+								<tr>
+									<td>AG_LOCATION=South Pole</td>
+									<td><code>${AG_LOCATION}</code></td>
+								</tr>
+								<tr>
+									<td>AG_STAT=Night</td>
+									<td><code>${AG_STAT}</code></td>
 								</tr>
 							</tbody>
 						</table>
 						<p>The data in these files could become 'old' if the application creating them
-							fails or is not running. To have Allsky to detect this you can tell Allsky
-							to ignore the files in the <span class="fileName">tmp/extra</span>
-							directory when they are over a certain age.
+							fails or is not running. To have Allsky detect this you tell it
+							to ignore "extra" files when they are over a certain age.
 							For <span class="fileName">.txt</span> files there is a single value which is specified
 							in the <span class="editorName">Overlay Editor</span> settings dialog box.
 								See the next section for how to specify the expiration time for
@@ -449,11 +436,12 @@
 										The data will expire as defined in the
 										<span class="editorName">Overlay Editor</span> settings dialog box.
 									</td>
-									<td>This <span class="fileName">.json</span> file includes expiry
-										times (in seconds) for some of the elements.
-										In this case the expiry time for the relevant elements will be used
+									<td>This <span class="fileName">.json</span> file includes an expiry
+										time (in seconds) for the temperature, which changes often.
+										In this case the expiry time in the file will be used for the temperature
 										and the <span class="editorName">Overlay Editor</span>
 										dialog expiry setting for the remaining variables.
+										The location never changes so doesn't need an expiry time.
 									</td>
 									<td>This <span class="fileName">.json</span> file,
 										which has been truncated for brevity, includes all of the
@@ -465,19 +453,15 @@
 									<div class="json">
 										<div class="indent1">{</div>
 
-										<div class="indent2">"AGTEMP": {</div>
+										<div class="indent2">"AG_TEMP": {</div>
 										<div class="indent3">"value": "14.3"</div>
 										<div class="indent2">},</div>
 
-										<div class="indent2">"AGHUMIDITY": {</div>
-										<div class="indent3">"value": "90.1%",</div>
+										<div class="indent2">"AG_LOCATION": {</div>
+										<div class="indent3">"value": "South Pole",</div>
 										<div class="indent2">},</div>
 
-										<div class="indent2">"AGHEATERCURRENT": {</div>
-										<div class="indent3">"value": "215",</div>
-										<div class="indent2">},</div>
-
-										<div class="indent2">"AGSTAT": {</div>
+										<div class="indent2">"AG_STAT": {</div>
 										<div class="indent3">"value": "Night",</div>
 										<div class="indent2">},</div>
 
@@ -488,22 +472,18 @@
 									<div class="json">
 										<div class="indent1">{</div>
 
-										<div class="indent2">"AGTEMP": {</div>
+										<div class="indent2">"AG_TEMP": {</div>
 										<div class="indent3">"value": "14.3",</div>
 										<div class="indent3">"expires": 600</div>
 										<div class="indent2">},</div>
 
-										<div class="indent2">"AGHUMIDITY": {</div>
-										<div class="indent3">"value": "90.1%",</div>
-										<div class="indent3">"expires": 600</div>
+										<div class="indent2">"AG_LOCATION": {</div>
+										<div class="indent3">"value": "South Pole",</div>
 										<div class="indent2">},</div>
 
-										<div class="indent2">"AGHEATERCURRENT": {</div>
-										<div class="indent3">"value": "215",</div>
-										<div class="indent2">},</div>
-
-										<div class="indent2">"AGSTAT": {</div>
+										<div class="indent2">"AG_STAT": {</div>
 										<div class="indent3">"value": "Night",</div>
+										<div class="indent3">"expires": 600,</div>
 										<div class="indent2">},</div>
 
 										<div class="indent1">}</div>
@@ -512,7 +492,7 @@
 								<td valign="top">
 									<div class="json">
 										<div class="indent1">{</div>
-										<div class="indent2">"AGTEMP": {</div>
+										<div class="indent2">"AG_TEMP": {</div>
 										<div class="indent3">"value": "14.3",</div>
 										<div class="indent3">"format": "{:.0f}",</div>
 										<div class="indent3">"x": 800,</div>
@@ -524,7 +504,7 @@
 										<div class="indent3">"stroke": "#000000",</div>
 										<div class="indent3">"strokewidth": 1,</div>
 										<div class="indent2">},</div>
-										<div class="indent2">"AGSCOPE": {</div>
+										<div class="indent2">"AG_SCOPE": {</div>
 										<div class="indent3">"image": "crosshair.png",</div>
 										<div class="indent3">"x": 300,</div>
 										<div class="indent3">"y": 400,</div>
@@ -556,15 +536,26 @@
 						<p class="morePadding">The "extra" files must be created by an application you provide and there
 							are a few things to consider when creating these files:</p>
 						<ul>
-							<li><strong>Variable names</strong> - To avoid conflicting with the names
-								of Allsky system variables it's best to prefix your own variables.
-								The variables in the examples above are prefixed with <code>AG</code>
-								(the initials of the person who created the program, but you can use anything
-								except <code>AS_</code> and <code>ALLSKY_</code>).
+							<li><strong>Variable names</strong> must be prefixed
+								with a string that's unique to you, e.g., your initials,
+								to avoid conflicting with the names of Allsky variables.
+								The variables in the examples above are prefixed with <code>AG_</code>.
+								You can use anything except <code>AS_</code> and <code>ALLSKY_</code>.
 							</li>
-							<li><strong>Permissions</strong> - You must ensure that the files created in the
-								<span class="fileName">tmp/extra</span> directory can be read by the web server.
-								Using <code class="nowrap">chmod 664 <em>file ...</em></code> should suffice.
+							<li><strong>Variable values</strong> should generally not include units.
+								For example <code>${DOME_TEMPERATURE}</code> should be <code>20.72</code>,
+								not <code>20.72&deg; C</code> because <code>20.72</code> is a "Numeric"
+								variable that can be formated (e.g., to <code>20.7</code>) whereas
+								<code>20.72&deg; C</code> is a "Text" string that can't be formatted.
+								If you want <code>&deg; C</code> to appear on the overlay, add it in the field itself:
+								<br>
+								<code>Dome temperature: ${DOME_TEMPERATURE}&amp;deg; C</code>.
+								<br>Note that <code>&amp;deg;</code> add the degree symbol &deg;.
+							</li>
+							<li><strong>Permissions</strong> - You must ensure that the "extra" files
+								can be read by the web server.
+								Adding <code class="nowrap">chmod 644 <em>file ...</em></code> to the
+								programs that create the files should suffice.
 								The <span class="moduleName">Overlay Module</span> will silently ignore any
 								files it cannot read.
 							</li>
@@ -831,13 +822,15 @@
 						</p>
 
 						<h4>Allsky Variables tab</h4>
-						<table class="two-col vtop">
+						<table border=1>
 							<tbody>
 								<tr>
-									<td>
+									<td align="center">
 										<img allsky="true" src="variable-manager-p2.png" alt="Variable Manager"
 											loading="lazy" />
 									</td>
+								</tr>
+								<tr>
 									<td>
 										<ul>
 											<li>Click the <span class="btn dark btn-primary btn-xs oe-list-add">
@@ -856,7 +849,8 @@
 											</li>
 										</ul>
 
-										<p id="allskyVariablesButton" class="morePadding">The <span class="btn btn-primary btn-small">Add Variable</span>
+										<p id="allskyVariablesButton" class="morePadding">
+											The <span class="btn btn-primary btn-small">Add Variable</span>
 											button allows you to add and define your own
 											variables in the "Add Variable" dialog box that pops up.
 											<blockquote>
@@ -886,31 +880,41 @@
 											loading="lazy" />
 									</td>
 									<td>
-										<p>This tab lists every variable that Allsky can see and the last value it had.</p>
+										<p>This tab lists every variable that Allsky can see and the last value it had,
+											if any.
+											These variables only have a Name as well as possibly their last value.
+											They are not yet defined, i.e., they have no attributes like
+											data Type, Description, Format, or Sample Data.
+										</p>
 										<ul>
 											<li>Click the <span class="btn dark btn-primary btn-xs oe-list-add">
 													<i class="fa-solid fa-plus oe-list-add"></i></span> icon
-												to add the field to the <strong>Allsky Variables</strong> tab
-												making it available for use on overlays.</li>
+												to define the variable's attributes
+												and then add the variable to the <strong>Allsky Variables</strong> tab
+												making it available for use on overlays.
+												Note that doing this does not put the variable on the overlay -
+												it just makes it <em>available</em> to be put on the overlay.
+												</li>
 											<blockquote>If this button is disabled then the variable is already
 												in the <strong>Allsky Variables</strong> tab.</blockquote>
 										</ul>
 
-										<p class="morePadding">The <span class="btn btn-primary btn-small">Add Variable</span>
-											does the same thing as the same button in the
+										<p class="morePadding">
+											The <span class="btn btn-primary btn-small">Add Variable</span>
+											button does the same thing as the same button in the
 											<a href="#allskyVariablesButton"><strong>Allsky Variables</strong></a> tab.</p>
 									</td>
 								</tr>
 							</tbody>
 						</table>
 
-						<br><h4>The Add/Edit Variable dialog box</h4>
+						<br><h4>The "Add Variable" and "Edit Variable" dialog boxes</h4>
 						<p>Clicking on the
 							<span class="btn btn-primary btn-small">Add Variable</span> button
 							or the
 							<span class="btn dark btn-warning btn-xs oe-list-edit">
 								<i class="fa fa-pen-to-square oe-list-edit"></i></span>
-							icon brings up a dialog box to add or edit a variable.
+							icon above brings up a dialog box to add or edit a variable.
 							It's the same dialog box in either case, just with a different title.
 							Editing a System Variable will display a message stating that in the dialog box
 							as shown in the image below.
@@ -926,7 +930,10 @@
 										<ul>
 											<li><strong>Variable Name</strong> - The name of the variable
 												enclosed within <code><strong>${}</strong></code>.
-												For system variables the name cannot be changed.</li>
+												For system variables the name cannot be changed.
+												See the <a href="#ValidVariableNames">Variable names</a>
+												section for details on valid variable names.
+												</li>
 											<li><strong>Description</strong> - A description of the variable.
 												This is only for reference and is displayed in the
 												<span class="managerName">Variable Manager</span>.
@@ -953,6 +960,7 @@
 								</tr>
 							</tbody>
 						</table>
+
 						<hr class="separatorMinor">
 					</details>
 

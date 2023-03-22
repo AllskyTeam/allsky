@@ -34,7 +34,7 @@ fi
 if [[ ${ON_TTY} -eq 1 ]]; then
 	NICE=""
 else
-	NICE="nice -n 15"
+	NICE="--nice 15"
 fi
 
 # Post end of night data. This includes next twilight time
@@ -47,7 +47,7 @@ fi
 # Generate keogram from collected images
 if [[ ${KEOGRAM} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Keogram"
-	${NICE} "${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -k "${DATE}"
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE} --silent -k "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Keogram complete"
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RET} = 0 ]] ; then
@@ -59,7 +59,7 @@ fi
 # Threshold set to 0.1 by default in config.sh to avoid stacking over-exposed images.
 if [[ ${STARTRAILS} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Startrails"
-	${NICE} "${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -s "${DATE}"
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE} --silent -s "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Startrails complete"
 	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RET} = 0 ]] ; then
@@ -72,7 +72,7 @@ fi
 # test the timelapse creation, which sometimes has issues.
 if [[ ${TIMELAPSE} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Timelapse"
-	${NICE} "${ALLSKY_SCRIPTS}/generateForDay.sh" --silent -t "${DATE}"
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE} --silent -t "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Timelapse complete"
 	if [[ ${UPLOAD_VIDEO} == "true" && ${RET} = 0 ]] ; then
@@ -82,8 +82,9 @@ fi
 
 # Run custom script at the end of a night. This is run BEFORE the automatic deletion
 # just in case you need to do something with the files before they are removed
-cmd="${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh"
-[[ -x ${cmd} ]] && ${NICE} "${cmd}"
+# TODO: remove in next release.
+CMD="${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh"
+[[ -x ${CMD} ]] && "${CMD}"
 
 # Automatically delete old images and videos
 if [[ -n ${DAYS_TO_KEEP} ]]; then

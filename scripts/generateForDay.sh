@@ -295,4 +295,5 @@ if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${EXIT_CODE} -eq 0 ]]; th
 	echo "================"
 fi
 
+#shellcheck disable=SC2086
 exit ${EXIT_CODE}

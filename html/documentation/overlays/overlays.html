@@ -149,20 +149,31 @@
 			</details>
 
 
-			<h2>Allsky Fields and Variables</h2>
+			<h2>Fields and Variables</h2>
 			<p><strong>Fields</strong> are the heart of the <span class="editorName">Overlay Editor</span>.
-				There are two types of fields:
+				They are distinct items that are added to an overlay and
+				each field has its own properties like color, size, rotation, etc.
+				Most people have several fields on their overlays - date and time the image was taken,
+				the exposure length, etc.
+			</p>
+			<p><strong>Variables</strong> are parts of a field whose value is determined when an image
+				is saved.
+				A common variable is <code>${TIME}</code> which is replaced by the time the image was taken
+				and changes every image.
+				Some variables rarely or never change, for example <code>${CAMERA_MODEL}</code> displays the model
+				of the camera used to take the image, like "HQ" or "ASI290MM".
+				It only changes if you change cameras.
+				<br>
+				See the <a href="#ValidVariableNames">Variable names</a> section for details on variable names.
+			</p>
+			<p>There are two types of fields:
 			<ol>
-				<li><strong>Text</strong> fields consist of text and/or variables.
-					Variable names are enclosed within <code><strong>${}</strong></code>
-					and are replaced with their values before being added to the overlay.
-					An example text field is: <code class="nowrap">Exposure: ${sEXPOSURE}</code>,
-					which will add the word "Exposure: "
-					followed by the exposure time of the last image to the overlay.
-					<br>
-					See the <a href="#ValidVariableNames">Variable names</a> section for details on valid variable names.
-				<li><strong>Image</strong> fields contain pictures, graphics, or any image you want.
-					Common uses are logos, weather graphs, and compasses.
+				<li><strong>Text</strong> fields contain text and/or variables, for example,
+					<code class="noWrap">Exposure: ${sEXPOSURE}</code>,
+					which adds the word <code class="noWrap">Exposure: </code>
+					followed by the image's exposure time to the overlay.
+				<li><strong>Image</strong> fields contain pictures, graphics, or any image you want
+					and are often used are logos, weather graphs, and compasses.
 			</ol>
 			</p>
 			<div>
@@ -174,24 +185,31 @@
 							<li>Must begin with a letter <code>a - z</code> or <code>A - Z</code>.
 							<li>The remaining characters may contain any number of letters, number <code>0 - 9</code>,
 								or the underscore character <code>_</code>.
-								Use names that make sense to you.
 							<li>Should be prefixed with a string that's unique to you like your initials,
 								to avoid conflicting with the names of Allsky system variables.
 								This prefix can be anything except <code>AS_</code> and <code>ALLSKY_</code>.
+							<li>Should make sense to you.
+								You are more likely to remember what <code>${MY_AMBIENT_TEMP}</code>
+								means than <code>${MY_AT}</code>.
 							<li>By convention are UPPERCASE, but you can mix case,
 								however, variable names are case-sensitive,
-								so <code>${DATE}</code> and <code>${Date}</code> are different variables.
+								so <code>${MY_ABIENT_TEMP}</code> and <code>${MY_ABIENT_temp}</code>
+								are different variables.
 						</ul>
+					</p>
+					<p class="morePadding">
 						A <strong>variable</strong> is a variable <em>name</em> enclosed within
 						<code><strong>${}</strong></code>, for example, <code>${sEXPOSURE}</code>.
+					</p>
+					<p class="morePadding">
 						<blockquote>
 							If you see a variable displayed on the overlay as <code>???</code> it usually means
 							the variable is undefined - either it's not in the
 							<span class="managerName">Variable Manager</span> at all (could be a typo),
 							or is only in the <strong>All Variables</strong> tab.
-							The variable  needs to be defined and moved to the
+							The variable  needs to be defined and copied to the
 							<strong>Allsky Variables</strong> tab.
-							<br>Undefined variables will usually have a line in
+							<br>Undefined variables will have a line in
 							<span class="fileName">/var/log/allsky.log</span> like:
 							<code class="noWrap">ERROR: ${T2} has no variable type; check 'fields.json'</code>.
 							<p>
@@ -200,7 +218,7 @@
 							you tried to display a number as a date.
 							Make sure the formatting is valid for the type of variable -
 							click on the <code>[?]</code> icon to see valid formats for each type of variable.
-							<br>Undefined variables will usually have a line in
+							<br>Incorrectly formatted variables will have a line in
 							<span class="fileName">/var/log/allsky.log</span> like:
 							<code class="noWrap">ERROR: Cannot use format '%a' on Number variables like ${GAIN}.</code>.
 							</ol>
@@ -413,6 +431,7 @@
 							after every reboot so don't save anything there that needs to remain permanately.
 						</blockquote>
 
+
 						<h4>Text Files</h4>
 						<p>Text files must end with a <span class="fileName">.txt</span> extension.
 							The format is a simple <strong>name=value</strong> structure,
@@ -434,8 +453,8 @@
 									<td><code>${AG_LOCATION}</code></td>
 								</tr>
 								<tr>
-									<td>AG_STAT=Night</td>
-									<td><code>${AG_STAT}</code></td>
+									<td>AG_HUMIDITY=67.2</td>
+									<td><code>${AG_HUMIDITY}</code></td>
 								</tr>
 							</tbody>
 						</table>
@@ -446,6 +465,7 @@
 							in the <span class="editorName">Overlay Editor</span> settings dialog box.
 								See the next section for how to specify the expiration time for
 								<span class="fileName">.json</span> files.</p>
+
 
 						<h4>JSON Files</h4>
 						<p><span class="fileName">.json</span> files are more complex in their structure
@@ -460,11 +480,11 @@
 										<span class="editorName">Overlay Editor</span> settings dialog box.
 									</td>
 									<td>This <span class="fileName">.json</span> file includes an expiry
-										time (in seconds) for the temperature, which changes often.
-										In this case the expiry time in the file will be used for the temperature
-										and the <span class="editorName">Overlay Editor</span>
-										dialog expiry setting for the remaining variables.
-										The location never changes so doesn't need an expiry time.
+										time (in seconds) for the temperature and humidity, which change often,
+										so those times will be used.
+										The location doesn't specify an expiry time since the location never
+										changes, so the one in the <span class="editorName">Overlay Editor</span>
+										dialog expiry setting will be used.
 									</td>
 									<td>This <span class="fileName">.json</span> file,
 										which has been truncated for brevity, includes all of the
@@ -484,8 +504,8 @@
 										<div class="indent3">"value": "South Pole",</div>
 										<div class="indent2">},</div>
 
-										<div class="indent2">"AG_STAT": {</div>
-										<div class="indent3">"value": "Night",</div>
+										<div class="indent2">"AG_HUMIDITY": {</div>
+										<div class="indent3">"value": "67.2",</div>
 										<div class="indent2">},</div>
 
 										<div class="indent1">}</div>
@@ -504,13 +524,14 @@
 										<div class="indent3">"value": "South Pole",</div>
 										<div class="indent2">},</div>
 
-										<div class="indent2">"AG_STAT": {</div>
-										<div class="indent3">"value": "Night",</div>
+										<div class="indent2">"AG_HUMIDITY": {</div>
+										<div class="indent3">"value": "67.2",</div>
 										<div class="indent3">"expires": 600,</div>
 										<div class="indent2">},</div>
 
 										<div class="indent1">}</div>
 									</div>
+
 								</td>
 								<td valign="top">
 									<div class="json">
@@ -537,6 +558,33 @@
 										<div class="indent2">}</div>
 										<div class="indent1">}</div>
 									</div>
+								</td>
+							</tr>
+							<tr>
+								<td></td>
+								<td>
+									<blockquote class="morePadding">A note on the <strong>expires</strong> field:
+										<ul>
+											<li>Instead of specifying an expiry time on two variables and not
+												the third one as shown above,
+												you could instead specify a value for the third field and use the
+												<span class="editorName">Overlay Editor</span> default expiry setting
+												for the other two.
+												This works well if you only have one "extra" file.
+												</li>
+											<li>If you have multiple "extra" files it's probably best to specify
+												an expiry time for ALL fields in all files,
+												rather than using the
+												<span class="editorName">Overlay Editor</span> default expiry setting
+												for fields that don't explicity set one.
+												If a field shouldn't have an expiry time,
+												use <code class="noWrap">"expires": 0,</code>
+												which disables its expiry time.
+												</li>
+										</ul>
+									</blockquote>
+								</td>
+								<td>
 									<blockquote class="morePadding">This example demonstrates some important points:
 										<ul>
 											<li>The attributes of a variable can be used to control how the
@@ -553,7 +601,6 @@
 									</blockquote>
 								</td>
 							</tr>
-
 						</table>
 
 						<p class="morePadding">The "extra" files must be created by an application you provide and there

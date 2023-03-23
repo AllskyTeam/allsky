@@ -14,15 +14,26 @@ source "${ALLSKY_HOME}/variables.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
 readonly ALL_EXTS="jpg png"		# all the image filename extensions we support
 
+# Sometimes a notification image will accidently make its way into an "images/YYYYMMDD" directory
+# and then into a keogram and startrails.
+# To avoid this, create images that are not even numbers, which cameras produce.
+# The keogram and startrails program will ignore these images since they aren't "standard".
+DEFAULT_IMAGE_SIZE="959x719"
+
 function usage_and_exit()
 {
 	RET=${1}
 	(
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo -e "\nUsage: ${ME} [--help] [--directory dir] [type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']\n"
+		echo -e "\nUsage: ${ME} [--help] [--directory dir] [--size XxY]"
+		echo -e "\t[type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']\n"
 		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-		echo "When run with no arguments, all notification types are created with extensions: ${ALL_EXTS}."
-		echo "'--directory dir' creates the file(s) in that directory, otherwise in \${PWD}."
+		echo "When run with no arguments, all notification types are created with extensions: ${ALL_EXTS/ /, }."
+		echo "Arguments:"
+		echo "  '--help' displays this message and exits."
+		echo "  '--directory dir' creates the file(s) in that directory, otherwise in \${PWD}."
+		echo "  '--size XxY' creates images that are X by Y pixels.  Default: ${DEFAULT_IMAGE_SIZE} pixels."
+		echo
 	) >&2
 	# shellcheck disable=SC2086
 	exit ${RET}
@@ -32,6 +43,7 @@ function usage_and_exit()
 OK="true"
 HELP="false"
 DIRECTORY=""
+IMAGE_SIZE="${DEFAULT_IMAGE_SIZE}"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG}" in
@@ -44,6 +56,15 @@ while [[ $# -gt 0 ]]; do
 				echo -e "\n${RED}*** ${ME} ERROR: Directory '${DIRECTORY}' not found!\n${NC}" >&2
 				OK="false"
 			fi
+			shift
+			;;
+		--size)
+			IMAGE_SIZE="${2}"
+			X="${IMAGE_SIZE%x*}"
+			Y="${IMAGE_SIZE##*x}"
+			[[ $((X % 2)) -eq 0 ]] && ((X--))
+			[[ $((Y % 2)) -eq 0 ]] && ((Y--))
+			IMAGE_SIZE="${X}x${Y}"
 			shift
 			;;
 		*)
@@ -80,11 +101,7 @@ function make_image()
 	BORDER_WIDTH="${8:-0}"
 	BORDER_COLOR="${9:-"white"}"
 	EXTS="${10:-"${ALL_EXTS}"}"
-	# IM_SIZE is a hack to make these images more detectable. Typically camera images are
-	# at least an even number of pixels, and usually a multiple of 8 pixels.
-	# So just in case someone has a camera configured for 960x720 images, or
-	# is rescaling to 960x720... this will allow these notification images to be detected.
-	IM_SIZE="${11:-"959x719"}"
+	IM_SIZE="${11:-${IMAGE_SIZE}}"
 	MSG="${12}"
 
 	echo "${BASENAME}" | grep -qEi "[.](${ALL_EXTS/ /|})"
@@ -104,9 +121,14 @@ function make_image()
 		# Make highest quality for jpg and highest loss-less compression for png.
 		# jpg files at 95% produce somewhat bad artifacts.  Even 100% produces some artifacts.
 
+		if [[ ${EXT} == "jpg" ]]; then
+			Q=100
+		else
+			Q=9
+		fi
 		# shellcheck disable=SC2086
 		convert \
-			-quality 100 \
+			-quality "${Q}" \
 			-fill "${TEXTCOLOR}" \
 			-font "${FONT}" \
 			-pointsize "${FONT_SIZE}" \

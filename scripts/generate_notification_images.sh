@@ -10,11 +10,11 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"
+source "${ALLSKY_HOME}/variables.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
 readonly ALL_EXTS="jpg png"		# all the image filename extensions we support
 
-function usage_and_exit
+function usage_and_exit()
 {
 	RET=${1}
 	(
@@ -25,10 +25,50 @@ function usage_and_exit
 		echo "'--directory dir' creates the file(s) in that directory, otherwise in \${PWD}."
 	) >&2
 	# shellcheck disable=SC2086
-	exit $RET
+	exit ${RET}
 }
 
-function make_image() {
+# Check arguments
+OK="true"
+HELP="false"
+DIRECTORY=""
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG}" in
+		--help)
+			HELP="true"
+			;;
+		--directory)
+			DIRECTORY="${2}"
+			if [[ ! -d ${DIRECTORY} ]]; then
+				echo -e "\n${RED}*** ${ME} ERROR: Directory '${DIRECTORY}' not found!\n${NC}" >&2
+				OK="false"
+			fi
+			shift
+			;;
+		*)
+			display_msg error "Unknown argument: '${ARG}'."
+			OK="false"
+			;;
+	esac
+	shift
+done
+[[ ${HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
+MAX_ARGS=12
+if [[ $# -ne 0 && $# -ne ${MAX_ARGS} ]]; then
+	echo -e "${RED}${ME}: ERROR: Either specify ALL ${MAX_ARGS} arguments, or don't specify any.${NC}" >&2
+	echo "You specified $# arguments." >&2
+	usage_and_exit 1
+fi
+declare LAST_ARG="${MAX_ARGS}"
+if [[ $# -eq ${MAX_ARGS} && ( -z ${1} || -z ${LAST_ARG} ) ]]; then
+	echo -e "${RED}${ME}: ERROR: Basename (${1}) and message (${LAST_ARG}) must be specified.${NC}" >&2
+	usage_and_exit 1
+fi
+
+function make_image()
+{
 	BASENAME="$1"
 	TEXTCOLOR="${2:-"white"}"
 	FONT="${3:-"Helvetica-Bold"}"
@@ -93,28 +133,18 @@ if [[ $? -ne 0 ]]; then
 	exit 2
 fi
 
-# TODO: use getopt
-[[ ${1} == "--help" ]] && usage_and_exit 0
-
 # Optional argument specifying where to create the image(s).
 # If not specified, create in current directory.
-if [[ ${1} == "--directory" ]]; then
-	DIRECTORY="${2}"
-	[[ -z ${DIRECTORY} ]] && usage_and_exit 2
+if [[ -n ${DIRECTORY} ]]; then
 	if [[ ! -d ${DIRECTORY} ]]; then
 		echo -e "\n${RED}*** ${ME} ERROR: Directory '${DIRECTORY}' not found!\n${NC}" >&2
 		exit 2
 	fi
-	shift 2
 	cd "${DIRECTORY}" || exit 3
 fi
 
 # If the arguments were specified on the command line, use them instead of the list below.
-if [[ $# -eq 12 ]]; then
-	if [[ -z ${1} || -z ${12} ]]; then
-		echo -e "${RED}${ME}: ERROR: Basename (${1}) and message (${12}) must be specified.${NC}" >&2
-		usage_and_exit 1
-	fi
+if [[ $# -eq ${MAX_ARGS} ]]; then
 	make_image "${@}"
 
 elif [[ $# -eq 0 ]]; then
@@ -123,15 +153,11 @@ elif [[ $# -eq 0 ]]; then
 #                                 Color      Name               Size   Color     Width   Color      Width   Color                 Size
 #            ""                   "white"    "Helvetica-Bold"   128    "black"   2       "#404040"  0       "white"   ${ALL_EXTS} "959x719" ""
 #            +--------------------+----------+------------------+------+---------+-------+----------+-------+---------+-----------+---------+--------------------------------------
-  make_image NotRunning           ""         ""                 ""     ""        ""      ""         ""      ""        ""          ""        "AllSky\nis not running"
-  make_image DarkFrames           "green"    ""                 ""     "white"   ""      "black"    ""      ""        ""          ""        "Camera\nis taking\ndark frames"
-  make_image StartingUp           "green"    ""                 ""     ""        ""      ""         ""      ""        ""          ""        "AllSky\nis starting up"
-  make_image Restarting           "lime"     ""                 ""     ""        ""      ""         ""      ""        ""          ""        "AllSky\nis restarting"
-  make_image CameraOffDuringDay   "#ffff4a"  ""                 ""     ""        ""      ""         ""      ""        ""          ""        "Camera\nis off\nduring the day"
+  make_image NotRunning           "red"      ""                 ""     ""        ""      ""         ""      ""        ""          ""        "Allsky\nis not\nrunning"
+  make_image DarkFrames           "green"    ""                 ""     "white"    1      "black"    ""      ""        ""          ""        "Camera\nis taking\ndark frames"
+  make_image StartingUp           "lime"     ""                 150    ""        ""      ""         10      "lime"    ""          ""        "Allsky\nis starting\nup"
+  make_image Restarting           "lime"     ""                 ""     ""        ""      ""          7      "lime"    ""          ""        "Allsky\nis restarting"
+  make_image CameraOffDuringDay   "#ffff4a"  ""                 ""     ""        ""      "gray"      5      "yellow"  ""          ""        "Camera\nis off\nduring the day"
   make_image Error                "red"      ""                 80     ""        ""      ""         10      "red"     ""          ""        "ERROR\n\nSee\n/var/log/allsky.log\nfor details"
 
-else
-	echo -e "${RED}${ME}: ERROR: Either specify ALL arguments, or don't specify any.${NC}" >&2
-	echo "You specified $# arguments." >&2
-	usage_and_exit 1
 fi

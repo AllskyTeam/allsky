@@ -611,7 +611,7 @@ install_webserver()
 	TMP="${INSTALL_LOGS_DIR}/lighttpd.install.log"
 	(
 		sudo apt-get update && \
-			sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
+			sudo apt-get --assume-yes install lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
 	) > "${TMP}" 2>&1
 	check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
@@ -1682,16 +1682,12 @@ install_overlay()
 
 	display_msg progress "Installing PHP Modules."
 	TMP="${INSTALL_LOGS_DIR}/PHP_modules.log"
-	(
-		sudo apt-get install -y php-zip && \
-		sudo apt-get install -y php-sqlite3 && \
-		sudo apt install -y python3-pip
-	) > "${TMP}" 2>&1
+	sudo apt-get --assume-yes install php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
 	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	display_msg progress "Installing other PHP dependencies."
 	TMP="${INSTALL_LOGS_DIR}/libatlas.log"
-	sudo apt-get -y install libatlas-base-dev > "${TMP}" 2>&1
+	sudo apt-get --assume-yes install libatlas-base-dev > "${TMP}" 2>&1
 	check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
@@ -1727,7 +1723,7 @@ install_overlay()
 
 	display_msg progress "Installing Trutype fonts."
 	TMP="${INSTALL_LOGS_DIR}/msttcorefonts.log"
-	sudo apt-get -y install msttcorefonts > "${TMP}" 2>&1
+	sudo apt-get --assume-yes install msttcorefonts > "${TMP}" 2>&1
 	check_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	display_msg progress "Setting up modules and overlays."

@@ -987,13 +987,16 @@ get_locale()
 	MSG="${MSG}\nyou will need to restart the installation."
 	[[ -n ${MSG2} ]] && MSG="${MSG}\n\n${MSG2}"
 
-# TODO: replace "." in printf() with something (I don't know what) so whiptail gets a null or
-# space for the 2nd arguments in the pair.
-	local LOCALES="$( echo "${INSTALLED_LOCALES}" | awk '{ printf("%s %s ", $1, ".") }' )"
-	[[ ${DEBUG} -gt 1 ]] && echo "LOCALES=${LOCALES}"
+	# This puts in IL the necessary strings to have whiptail display what looks like
+	# a single column of selections.
+	local IL=()
+	for i in ${INSTALLED_LOCALES}
+	do
+		IL+=($i "")
+	done
 
 	#shellcheck disable=SC2086
-	LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 ${LOCALES} \
+	LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 "${IL[@]}" \
 		3>&1 1>&2 2>&3)
 	if [[ -z ${LOCALE} ]]; then
 		MSG="You need to set the locale before the installation can run."

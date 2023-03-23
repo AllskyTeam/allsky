@@ -1173,14 +1173,15 @@ create_allsky_logs()
 # Prompt for either latitude or longitude, and make sure it's a valid entry.
 prompt_for_lat_long()
 {
-	local TYPE="${1}"
-	local HUMAN_TYPE="${2}"
+	local PROMPT="${1}"
+	local TYPE="${2}"
+	local HUMAN_TYPE="${3}"
 	local ERROR_MSG=""
 	local VALUE=""
 
 	while :
 	do
-		local M="${ERROR_MSG}${MSG}"
+		local M="${ERROR_MSG}${PROMPT}"
 		VALUE=$(whiptail --title "${TITLE}" --inputbox "${M}" 18 "${WT_WIDTH}" "" 3>&1 1>&2 2>&3)
 		if [[ -z ${VALUE} ]]; then
 			# Let the user not enter anything.  A message is printed below.
@@ -1207,12 +1208,12 @@ get_lat_long()
 	MSG="Enter your Latitude."
 	MSG="${MSG}\nIt can either have a plus or minus sign (e.g., -20.1)"
 	MSG="${MSG} or N or S (e.g., 20.1S)"
-	LATITUDE="$(prompt_for_lat_long "latitude" "Latitude")"
+	LATITUDE="$(prompt_for_lat_long "${MSG}" "latitude" "Latitude")"
 
 	MSG="Enter your Longitude."
 	MSG="${MSG}\nIt can either have a plus or minus sign (e.g., -20.1)"
 	MSG="${MSG} or E or W (e.g., 20.1W)"
-	LONGITUDE="$(prompt_for_lat_long "longitude" "Longitude")"
+	LONGITUDE="$(prompt_for_lat_long "${MSG}" "longitude" "Longitude")"
 
 	if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
 		display_msg --log warning "Latitude and longitude need to be set in the WebUI before Allsky can start."

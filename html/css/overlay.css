@@ -1,3 +1,7 @@
+:root {
+	--dark-text: #aaaaaa;
+}
+
 .oe-flash {
     padding: 10px;
 }
@@ -50,7 +54,7 @@
 
 .dark .modal-content {
     background-color: #222222 !important;
-    color: #888888 !important;    
+    color: var(--dark-text) !important;    
 }
 
 .dark .modal-header {
@@ -112,31 +116,31 @@
 
 .tooltip-wrapper {
     display: inline-block; /* display: block works as well */
-  }
+}
   
-  .tooltip-wrapper .btn[disabled] {
+.tooltip-wrapper .btn[disabled] {
     /* don't let button block mouse events from reaching wrapper */
     pointer-events: none;
-  }
+}
   
-  .tooltip-wrapper.disabled {
+.tooltip-wrapper.disabled {
     /* OPTIONAL pointer-events setting above blocks cursor setting, so set it here */
     cursor: not-allowed;
-  }
+}
 
-  .green {
+.green {
     color: green;
-  }
+}
 
-  .red {
+.red {
     color: red;
-  }
+}
 
-  .pulse {
+.pulse {
     animation: pulse 1s infinite ease-out;
-  }
+}
 
-  @keyframes pulse {
+@keyframes pulse {
     25% {
       transform: scale(1.25);
     }
@@ -149,86 +153,86 @@
     100% {
       transform: scale(1); 
     }
-  }
+}
 
-  #oe-item-list-dialog-allsky, #oe-item-list-dialog-all {
+#oe-item-list-dialog-allsky, #oe-item-list-dialog-all {
     padding-top: 20px;
-  }
+}
 
-  .datatable td {
+.datatable td {
     overflow: hidden;
-  }
+}
 
-  div.dataTables_wrapper div.dataTables_paginate {
+div.dataTables_wrapper div.dataTables_paginate {
     padding-top: 10px;
-  }
+}
 
-  table.dataTable td {
+table.dataTable td {
     padding-top: 2px;
-  }
+}
 
-  .sp-replacer {
+.sp-replacer {
     height: 2.5rem !important;
     width: 4rem !important;
-  }
+}
 
-  .sp-dd {
+.sp-dd {
     padding: 3px 2px !important;
-  }
+}
 
-  .oe-overlay-editor-tab-modified:after {
+.oe-overlay-editor-tab-modified:after {
     content: " - Modified";
     color: red;
     font-weight: 700;
-  }
+}
 
-  .dark #oe-debug-dialog-form textarea {
+.dark #oe-debug-dialog-form textarea {
     color: black;
-  }
+}
 
-  .modal-dialog {
+.modal-dialog {
     width: 770px !important;
-  }
+}
 
-  .dtsp-panesContainer, .dtsp-collapseAll {
+.dtsp-panesContainer, .dtsp-collapseAll {
     background-color: black !important;
-  }
+}
 
-  .dtsp-collapseAll, .dtsp-clearAll, .dtsp-showAll  {
+.dtsp-collapseAll, .dtsp-clearAll, .dtsp-showAll  {
     background-color: #121212 !important;
-  } 
+} 
 
-  .dtsp-name, .dtb-popover-close {
+.dtsp-name, .dtb-popover-close {
     color: black !important;
     text-transform: capitalize;
-  }
+}
 
-  #formatlisttable_filter, .dtsp-searchCont {
+#formatlisttable_filter, .dtsp-searchCont {
     display: none !important;
-  }
-  div.dtsp-topRow {
+}
+div.dtsp-topRow {
     height: 0px !important;
     min-height: 0px !important;
-  }
+}
 
-  div.dtsp-searchPane div.dataTables_scrollBody {
-    height: 60px !important;
-  }
-  div.dtsp-searchPane div.dtsp-topRow {
+div.dtsp-searchPane div.dataTables_scrollBody {
+    height: 91px !important;	/* good for 3 lines */
+}
+div.dtsp-searchPane div.dtsp-topRow {
     margin: 0px !important;
-  }
+}
 
-  .dtsp-searchPane .odd, .dtsp-searchPane .even {
+.dtsp-searchPane .odd, .dtsp-searchPane .even {
     background: #bbb !important;
-  }
+}
 
-  .dataTables_length {
+.dataTables_length {
     display: none;
-  }
-  #formatdialog {
+}
+#formatdialog {
     margin: 5px;
-  }
+}
 
-  .oe-format-replace {
+.oe-format-replace {
     margin-right: 5px;
-  }
+}

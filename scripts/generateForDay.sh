@@ -179,9 +179,9 @@ if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
 	# a non-empty string (eg. IMGSIZE="1280x960") will be produced and later
 	# parts of this script so startrail and keogram generation can use it
 	# to reject incorrectly-sized images.
-	IMGSIZE=$(settings 'if .width? != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end' | tr -d '"')
+	IMGSIZE=$(settings 'if .width != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end')
 	if [[ ${IMGSIZE} != "" ]]; then
-		SIZE_FILTER="-s ${IMGSIZE}"
+		SIZE_FILTER="-s ${IMGSIZE//\"}"
 	else
 		SIZE_FILTER=""
 	fi

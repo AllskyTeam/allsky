@@ -992,7 +992,7 @@ get_locale()
 	local IL=()
 	for i in ${INSTALLED_LOCALES}
 	do
-		IL+=($i "")
+		IL+=("$i" "")
 	done
 
 	#shellcheck disable=SC2086
@@ -1006,9 +1006,9 @@ get_locale()
 		exit 0
 	elif echo "${LOCALE}" | grep --silent "Box options" ; then
 		# Got a usage message from whiptail.
-		# Must be no space between the last double quote and ${LOCALES}.
+		# Must be no space between the last double quote and ${INSTALLED_LOCALES}.
 		#shellcheck disable=SC2086
-		MSG="Got usage message from whiptail: D='${D}', LOCALES="${LOCALES}
+		MSG="Got usage message from whiptail: D='${D}', INSTALLED_LOCALES="${INSTALLED_LOCALES}
 		MSG="${MSG}\nFix the problem and try the installation again."
 		display_msg --log error "${MSG}"
 		exit 1

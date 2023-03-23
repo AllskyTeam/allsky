@@ -29,9 +29,10 @@
 
 
 			<p><strong>Modules</strong> provide functionality that can be used to enhance
-				the images created by Allsky.
-				The <span class="managerName">Module Manager</span>
-				allows you to control which modules are run and when.
+				images created by Allsky.
+				Different modules perform different tasks,
+				and the <span class="managerName">Module Manager</span>
+				allows you to control which modules run and when.
 			</p>
 			<p>There are two types of modules:</p>
 			<ol>
@@ -42,21 +43,21 @@
 					These modules are installed via a separate installer and
 					can be deleted if no longer required.
 					<blockquote>
-						These modules must only be installed from the official Allsky repositories.
+						User Modules must only be installed from the official Allsky repositories.
 						Installing from other source could be dangerous and is not encouraged.
 						<br>
-						The installer for User Modules will be documentated in the future.
+						The installer for User Modules will be documentated in the future
+						once User Modules are created.
 					</blockquote>
 					</li>
 			</ol>
 
 			Warning:
 			<ul>
-				<li>Some modules will be shown as <strong>experimental</strong>.
+				<li>Some modules are shown as <strong>experimental</strong>.
 					Before using these modules you should ensure that you are proficient
-					in analysing Linux logs files.
-					Experimental modules can be unstable and as such may
-					'break' your Allsky installation.
+					in analysing Linux log files.
+					Experimental modules can be unstable and as such may "break" Allsky.
 					In the <span class="managerName">Module Manager</span>
 					settings you can enable/disable showing experimental modules.</li>
 				<li>Some modules are designed to operate with external hardware,
@@ -68,41 +69,45 @@
 			<p>Please don't be discouraged by the above warnings.
 				The module system provides a very flexible system allowing you to
 				customise the Allsky software to your requirements without having to
-				change any code.</p>
+				change any Allsky code.</p>
 
 
 			<h2>Module Flows</h2>
 			<div>
-				<p>To enabled modules to make changes they are run within 'Flows'. For each of the Flows you can
-					define which modules run and the order in which they are run.</p>
+				<p>Modules are run within <strong>Flows</strong>
+					which determine when the modules are run.
+					Each flow can have a different list of modules that are run
+					and the order in which they are run.
+					The different flows are listed below.
+				</p>
 				<details>
 					<summary></summary>
-					<p>The two areas the modules run in are;</p>
-					<ul>
-						<li><strong>Via the capture process</strong>
-							<ul>
-								<li><strong>Day Flow</strong> - These are run after every day time image is
-									captured
-								</li>
-								<li><strong>Night to Day Transition Flow</strong> - These are run when Allsky
-									switches from Night to Daytime capturing
-								</li>
-								<li><strong>Night Flow</strong> - These are run after every night time image is
-									captured
-								</li>
-								<li><strong>Day to Night Transition Flow</strong> - These are run when Allsky
-									switches from Daytime to Nighttime capturing
-								</li>
-							</ul>
+					<p>The flows in which modules run are:</p>
+					<ul class="minimalPadding">
+						<li><strong>Daytime Capture</strong> - Modules in this flow
+							are run after every daytime image is captured and saved.
 						</li>
-						<li><strong>Via a CRON system</strong> - These are run periodically, each modules
-							defines
-							the frequency with which it runs</li>
+						<li><strong>Nighttime Capture</strong> - Modules in this flow
+							are run after every nighttime image is captured and saved.
+						</li>
+						<li><strong>Day to Night Transition</strong> - Modules in this flow
+							are run when Allsky switches from Daytime to Nighttime capturing per the
+							<span class="WebUISetting">latitude</span>,
+							<span class="WebUISetting">longitude</span>, and
+							<span class="WebUISetting">angle</span>
+							you've defined in the WebUI.
+						</li>
+						<li><strong>Night to Day Transition</strong> - Modules in this flow
+							are run when Allsky switches from Nighttime to Daytime capturing.
+						</li>
+						<li><strong>Periodic jobs</strong> - Modules in this flow
+							are run periodically and are not related to image capture.
+							Each module defines how often it runs.</li>
 					</ul>
 					<p>The diagram below shows each stage of the capture process and how modules fit into it.
 					</p>
 
-					<img allsky="true" loading="lazy" src="Flows.png" alt="Flows" class="center-image" />
+					<img allsky="true" loading="lazy" src="Flows.png" alt="Flows" class="imgCenter" />
 				</details>
 			</div>
 

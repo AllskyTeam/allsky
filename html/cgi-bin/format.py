@@ -128,24 +128,52 @@ class ALLSKYFORMAT:
         
         return result
 
+    def _isUnixTimestamp(self, value):
+        isUnixTimestamp = False
+        isFloat = False    
+        sanityCheckDate = time.mktime((date(2023, 1, 1)).timetuple())
+
+        try:
+            value = int(value)
+            isInt = True
+        except:
+            isInt = False
+            try:
+                value = float(value)
+                isFloat = True
+            except:
+                pass
+
+        if isInt or isFloat:
+            if value > sanityCheckDate:
+                try:
+                    temp = datetime.fromtimestamp(value)
+                    isUnixTimestamp = True
+                except:
+                    pass
+
+        return isUnixTimestamp, value
+
     def _getValue(self, format, fieldValue, variableType, label):
         value = fieldValue
 
         if variableType == 'Date':
+            internalFormat = self._getSetting('timeformat')
             if label == 'DATE' or label == 'AS_DATE':
                 timeStamp = datetime.fromtimestamp(time.time())
-                if format is None:
-                    value = timeStamp.strftime('%Y-%m-%d')
-                else:
-                    value = timeStamp.strftime(format)
+                value = timeStamp.strftime(internalFormat)
             else:
-                dateFormat = self._getSetting("timeformat")
-                tempDate = datetime.strptime(value, dateFormat)
-                if format is not None:
-                    try:
-                        value = tempDate.strftime(format)
-                    except Exception:
-                        pass
+                isUnixTimestamp, value = self._isUnixTimestamp(value)
+                if isUnixTimestamp:
+                    timeStamp = datetime.fromtimestamp(value)
+                    value = timeStamp.strftime(internalFormat)
+
+            tempDate = datetime.strptime(value, internalFormat)
+            if format is not None:
+                try:
+                    value = tempDate.strftime(format)
+                except Exception:
+                    pass            
                 
         if variableType == 'Time':
             if label == 'TIME' or label == 'AS_TIME':

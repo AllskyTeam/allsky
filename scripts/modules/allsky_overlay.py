@@ -58,18 +58,6 @@ metaData = {
             "tab": "Overlays",
             "description": "Format Error Text",
             "help": "Value to place in a variable when the provided format is invalid. defaults to ??"
-        },
-        "suntimeformat" : {
-            "required": "false",
-            "tab": "Sun",
-            "description": "Date Time format",
-            "help": "Overrides the default date and time format for the Sun. If this option is not set then the default AllSky 'Time Format' will be used"
-        },
-        "nonighttext" : {
-            "required": "false",
-            "tab": "Sun",
-            "description": "No Night Time text",
-            "help": "The text to replace the times for 'night' and 'night end' where there is no astronomical darkness"
         }
     }
 }
@@ -100,11 +88,9 @@ class ALLSKYOVERLAY:
     _imageDate = None
     _debug = False
     _enableSkyfield = True
-    _suntimeformat = ""
-    _nonighttext = ""
     _formaterrortext = ""
 
-    def __init__(self, suntimeformat, nonighttext, formaterrortext):
+    def __init__(self, formaterrortext):
         self._overlayConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYCONFIGFILE)
         fieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYFIELDSFILE)
         self._OVERLAYTMP = os.path.join(tempfile.gettempdir(), 'overlay')
@@ -125,12 +111,6 @@ class ALLSKYOVERLAY:
         self._observerLat = s.getSetting('latitude')
         self._observerLon = s.getSetting('longitude')
         self._debug = True
-
-        self._nonighttext = nonighttext
-        if len(suntimeformat.replace(" ", "")) > 0:
-            self._suntimeformat = suntimeformat
-        else:
-            self._suntimeformat = s.getSetting("timeformat")
 
         self._formaterrortext = formaterrortext;
 
@@ -682,6 +662,32 @@ class ALLSKYOVERLAY:
 
         return v
 
+    def _isUnixTimestamp(self, value):
+        isUnixTimestamp = False
+        isFloat = False    
+        sanityCheckDate = time.mktime((date(2023, 1, 1)).timetuple())
+
+        try:
+            value = int(value)
+            isInt = True
+        except:
+            isInt = False
+            try:
+                value = float(value)
+                isFloat = True
+            except:
+                pass
+
+        if isInt or isFloat:
+            if value > sanityCheckDate:
+                try:
+                    temp = datetime.fromtimestamp(value)
+                    isUnixTimestamp = True
+                except:
+                    pass
+
+        return isUnixTimestamp, value
+    
     def _getValue(self, placeHolder, variableType, format=None, empty=''):
         value = None
         valueOk = True
@@ -740,23 +746,22 @@ class ALLSKYOVERLAY:
 
             if fieldFound:
                 if variableType == 'Date':
-                    if envCheck == 'AS_DATE' or envCheck == 'DATE':
+                    internalFormat = s.getSetting('timeformat')
+                    if envCheck == 'DATE' or envCheck == 'AS_DATE':
                         timeStamp = datetime.fromtimestamp(self._imageDate)
-                        if format is None:
-                            value = timeStamp.strftime('%Y-%m-%d %H:%M:%S')
-                        else:
-                            try:
-                                value = timeStamp.strftime(format)
-                            except Exception:
-                                pass
+                        value = timeStamp.strftime(internalFormat)
                     else:
-                        dateFormat = s.getSetting("timeformat")
-                        tempDate = datetime.strptime(value, dateFormat)
-                        if format is not None:
-                            try:
-                                value = tempDate.strftime(format)
-                            except Exception:
-                                pass
+                        isUnixTimestamp, value = self._isUnixTimestamp(value)
+                        if isUnixTimestamp:
+                            timeStamp = datetime.fromtimestamp(value)
+                            value = timeStamp.strftime(internalFormat)
+
+                    tempDate = datetime.strptime(value, internalFormat)
+                    if format is not None:
+                        try:
+                            value = tempDate.strftime(format)
+                        except Exception:
+                            pass  
                 
                 if variableType == 'Time':
                     if envCheck == 'AS_TIME' or envCheck == 'TIME':
@@ -1030,7 +1035,7 @@ class ALLSKYOVERLAY:
                     sunset = todaySunData["sunset"]
                     dusk = todaySunData["dusk"]
 
-            format = self._suntimeformat
+            format = s.getSetting("timeformat")
             os.environ["AS_SUN_DAWN"] = dawn.strftime(format)
             os.environ["AS_SUN_SUNRISE"] = sunrise.strftime(format)
             os.environ["AS_SUN_NOON"] = noon.strftime(format)
@@ -1289,16 +1294,10 @@ class ALLSKYOVERLAY:
 def overlay(params, event):
     enabled = s.int(s.getEnvironmentVariable("AS_eOVERLAY"))
     if enabled == 1:
-        suntimeformat = ""
-        nonighttext = ""
         formaterrortext = "??"
-        if "suntimeformat" in params:
-            suntimeformat = params["suntimeformat"]
-        if "nonighttext" in params:
-            nonighttext = params["nonighttext"]
         if "formaterrortext" in params:
             formaterrortext = params["formaterrortext"]
-        annotater = ALLSKYOVERLAY(suntimeformat, nonighttext, formaterrortext)
+        annotater = ALLSKYOVERLAY(formaterrortext)
         annotater.annotate()
         result = "Overlay Complete"
     else:

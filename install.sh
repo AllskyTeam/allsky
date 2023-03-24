@@ -39,6 +39,7 @@ RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
 RESTORED_PRIOR_CONFIG_SH="false"		# prior config.sh restored?
 RESTORED_PRIOR_FTP_SH="false"			# prior ftp-settings.sh restored?
+ALLSKY_VERSION="$( get_version )"		# version we're installing
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 PRIOR_ALLSKY_VERSION=""					# The version number of the prior version, if known
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
@@ -143,7 +144,10 @@ stop_allsky()
 
 
 ####
-# Get the branch of the release we are installing; if not GITHUB_MAIN_BRANCH, save it.
+# Get the branch of the release we are installing;
+# if not GITHUB_MAIN_BRANCH, save the name of the branch.
+# There is no "branch" file in GitHub so we need to determine the branch
+# by looking in the .git/config file.
 get_this_branch()
 {
 	local FILE="${ALLSKY_HOME}/.git/config"
@@ -607,7 +611,7 @@ install_webserver()
 	TMP="${INSTALL_LOGS_DIR}/lighttpd.install.log"
 	(
 		sudo apt-get update && \
-			sudo apt-get install -y lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
+			sudo apt-get --assume-yes install lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
 	) > "${TMP}" 2>&1
 	check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
@@ -736,7 +740,8 @@ set_permissions()
 	# We don't know what permissions may have been on the old website, so use "sudo".
 	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
 	# These are the exceptions
-	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" "${ALLSKY_WEBUI}/includes/overlay_sample.py"
+	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+		      "${ALLSKY_WEBUI}/includes/overlay_sample.py"
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
 
 	chmod 775 "${ALLSKY_TMP}"
@@ -799,6 +804,8 @@ check_old_WebUI_location()
 
 
 ####
+# If a website exists, see if it's the newest version.  If not, let the user know.
+# If it's a new-style website, copy to the new Allsky release directory.
 handle_prior_website()
 {
 	local PRIOR_SITE=""
@@ -980,13 +987,16 @@ get_locale()
 	MSG="${MSG}\nyou will need to restart the installation."
 	[[ -n ${MSG2} ]] && MSG="${MSG}\n\n${MSG2}"
 
-# TODO: replace "." in printf() with something (I don't know what) so whiptail gets a null or
-# space for the 2nd arguments in the pair.
-	local LOCALES="$( echo "${INSTALLED_LOCALES}" | awk '{ printf("%s %s ", $1, ".") }' )"
-	[[ ${DEBUG} -gt 1 ]] && echo "LOCALES=${LOCALES}"
+	# This puts in IL the necessary strings to have whiptail display what looks like
+	# a single column of selections.
+	local IL=()
+	for i in ${INSTALLED_LOCALES}
+	do
+		IL+=("$i" "")
+	done
 
 	#shellcheck disable=SC2086
-	LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 ${LOCALES} \
+	LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 "${IL[@]}" \
 		3>&1 1>&2 2>&3)
 	if [[ -z ${LOCALE} ]]; then
 		MSG="You need to set the locale before the installation can run."
@@ -996,9 +1006,9 @@ get_locale()
 		exit 0
 	elif echo "${LOCALE}" | grep --silent "Box options" ; then
 		# Got a usage message from whiptail.
-		# Must be no space between the last double quote and ${LOCALES}.
+		# Must be no space between the last double quote and ${INSTALLED_LOCALES}.
 		#shellcheck disable=SC2086
-		MSG="Got usage message from whiptail: D='${D}', LOCALES="${LOCALES}
+		MSG="Got usage message from whiptail: D='${D}', INSTALLED_LOCALES="${INSTALLED_LOCALES}
 		MSG="${MSG}\nFix the problem and try the installation again."
 		display_msg --log error "${MSG}"
 		exit 1
@@ -1166,14 +1176,15 @@ create_allsky_logs()
 # Prompt for either latitude or longitude, and make sure it's a valid entry.
 prompt_for_lat_long()
 {
-	local TYPE="${1}"
-	local HUMAN_TYPE="${2}"
+	local PROMPT="${1}"
+	local TYPE="${2}"
+	local HUMAN_TYPE="${3}"
 	local ERROR_MSG=""
 	local VALUE=""
 
 	while :
 	do
-		local M="${ERROR_MSG}${MSG}"
+		local M="${ERROR_MSG}${PROMPT}"
 		VALUE=$(whiptail --title "${TITLE}" --inputbox "${M}" 18 "${WT_WIDTH}" "" 3>&1 1>&2 2>&3)
 		if [[ -z ${VALUE} ]]; then
 			# Let the user not enter anything.  A message is printed below.
@@ -1200,12 +1211,12 @@ get_lat_long()
 	MSG="Enter your Latitude."
 	MSG="${MSG}\nIt can either have a plus or minus sign (e.g., -20.1)"
 	MSG="${MSG} or N or S (e.g., 20.1S)"
-	LATITUDE="$(prompt_for_lat_long "latitude" "Latitude")"
+	LATITUDE="$(prompt_for_lat_long "${MSG}" "latitude" "Latitude")"
 
 	MSG="Enter your Longitude."
 	MSG="${MSG}\nIt can either have a plus or minus sign (e.g., -20.1)"
 	MSG="${MSG} or E or W (e.g., 20.1W)"
-	LONGITUDE="$(prompt_for_lat_long "longitude" "Longitude")"
+	LONGITUDE="$(prompt_for_lat_long "${MSG}" "longitude" "Longitude")"
 
 	if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
 		display_msg --log warning "Latitude and longitude need to be set in the WebUI before Allsky can start."
@@ -1674,16 +1685,12 @@ install_overlay()
 
 	display_msg progress "Installing PHP Modules."
 	TMP="${INSTALL_LOGS_DIR}/PHP_modules.log"
-	(
-		sudo apt-get install -y php-zip && \
-		sudo apt-get install -y php-sqlite3 && \
-		sudo apt install -y python3-pip
-	) > "${TMP}" 2>&1
+	sudo apt-get --assume-yes install php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
 	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	display_msg progress "Installing other PHP dependencies."
 	TMP="${INSTALL_LOGS_DIR}/libatlas.log"
-	sudo apt-get -y install libatlas-base-dev > "${TMP}" 2>&1
+	sudo apt-get --assume-yes install libatlas-base-dev > "${TMP}" 2>&1
 	check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
@@ -1719,7 +1726,7 @@ install_overlay()
 
 	display_msg progress "Installing Trutype fonts."
 	TMP="${INSTALL_LOGS_DIR}/msttcorefonts.log"
-	sudo apt-get -y install msttcorefonts > "${TMP}" 2>&1
+	sudo apt-get --assume-yes install msttcorefonts > "${TMP}" 2>&1
 	check_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	display_msg progress "Setting up modules and overlays."
@@ -1948,7 +1955,7 @@ check_swap
 check_tmp
 
 
-MSG="\nThe following steps can take about an HOUR depending on the speed of your Pi"
+MSG="\nThe following steps can take up to 1 - 2 HOURS depending on the speed of your Pi"
 MSG="${MSG}\nand how many of the necessary dependencies are already installed."
 display_msg info "${MSG}"
 

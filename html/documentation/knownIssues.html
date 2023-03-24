@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="js/documentation.js" type="application/javascript"></script>
+	<link href="css/light.css" rel="stylesheet">
+	<link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Known Issues and Limitations";
+		}
+		.ki, .lim	{ font-weight: bold; color: red; }
+		.wa			{ font-weight: bold; color: #cbab13; }
+		.fp			{ font-weight: bold; color: green; }
+	</style>
+	<link href="css/documentation.css" rel="stylesheet">
+	<link href="documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="js/all.min.js" type="application/javascript"></script>
+	<title>Known Issues and Limitations</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This page lists known issues and limitations with the current Allsky release.
+Workarounds and plans to address the items, if known, are also given.
+</p>
+<p>
+Some of items in the lists below are also in the
+<a external="true" href="https://github.com/thomasjacquin/allsky/projects?type=classic">
+list of <em>possible</em> changes to future Allsky versions</a>.
+</p>
+
+<h4>Image Capture</h4>
+<ul>
+	<li><span class="ki">Known Issue</span>:
+		The nighttime auto-exposure, auto-gain algorithm for ZWO cameras
+		can produce flickering, especially if the sky is partially cloudy.
+
+		<br><span class="wa">Workaround</span>:
+		No good one, but you can try decreasing the
+		<span class="WebUISetting">Aggression</span> setting in the WebUI
+		which can smooth out the brightness changes, but is slower to react to
+		true brightness changes.
+
+		<br><span class="fp">Future Plans</span>:
+		Port the RPi auto-exposure and auto-gain algorithm,
+		which works well, to ZWO cameras.
+
+	<li><span class="ki">Known Issue</span>:
+		Some ZWO cameras can produce <strong>ASI_ERROR_TIMEOUT</strong> messages
+		and fail to take pictures.
+
+		<br><span class="wa">Workaround</span>:
+		See <a allsky="true" href="/documentation/troubleshooting/image-flicker.html">this page</a>.
+
+		<br><span class="fp">Future Plans</span>:
+		We hope that when we port he RPi auto-exposure algorithm to ZWO it will fix this.
+
+	<li><span class="lim">Limitation</span>:
+		RPi cameras don't support sensor temperature.
+
+		<br><span class="wa">Workaround</span>: None.
+
+		<br><span class="fp">Future Plans</span>:
+		Will fix in the next release for users running the Bullseye operating system.
+		<blockquote>
+		The software Allsky uses to manage RPi cameras on the older Buster operating system
+		is no longer being improved.
+		All software updates for RPi cameras (like reading the sensor temperature)
+		is happening only on Bullseye so we suggest upgrading to that operating system.
+		</blockquote>
+
+	<li><span class="lim">Limitation</span>:
+		RPi cameras don't easily support dark frames.
+
+		<br><span class="wa">Workaround</span>:
+		If you are technically savy and want to use dark frames submit a new
+		<a external="true" href="https://github.com/thomasjacquin/allsky/discussions">Discussion</a>
+		asking the Allsky developers how to do it.
+
+		<br><span class="fp">Future Plans</span>:
+		Will fix in the next release for users running the Bullseye operating system.
+
+	<li><span class="ki">Known Issue</span>:
+		Multiple timelapse creations can occur simultaneously
+		- usually a full timelapse and "mini" timelapse,
+		or two "mini" timelapse.
+
+		<br><span class="wa">Workaround</span>:
+		Decrease the frequency of "mini" timelapse creation.
+
+		<br><span class="fp">Future Plans</span>:
+		Will only allow one timelapse creation at a time.
+
+<!--
+	<li><span class="ki">Known Issue</span>:
+
+		<br><span class="wa">Workaround</span>:
+
+		<br><span class="fp">Future Plans</span>:
+-->
+</ul>
+
+<h4>Overlays</h4>
+<ul>
+	<li><span class="ki">Known Issue</span>:
+		Fonts sometimes change to <strong>Glyphicons</strong>
+		This just a display problem in the Text Editor;
+		the actual font used is whatever you initially specified.
+		
+		<br><span class="wa">Workaround</span>: None
+
+		<br><span class="fp">Future Plans</span>: Will fix in next release.
+</ul>
+
+<h4>Modules</h4>
+<ul>
+	<li><span class="lim">Limitation</span>:
+		Modules can only run once per flow, e.g., once per image,
+		once per day/night transition, etc.
+
+		<br><span class="wa">Workaround</span>: None
+
+		<br><span class="fp">Future Plans</span>: Will change in next release.
+
+	<li><span class="ki">Known Issue</span>:
+		The <span class="moduleName">Overlay Module</span> may be
+		disabled the first time it runs.
+		This is due to the module having to download the JPL ephemeris data
+		which can take some time on a slow Internet connection. 
+
+		<br><span class="wa">Workaround</span>:
+		Re-enable it in the <span class="managerName">Module Manager</span>.
+
+		<br><span class="fp">Future Plans</span>:
+		Will fix in the next release.
+
+	<li><span class="ki">Known Issue</span>:
+		The "additional modules" have been installed but they don't all appear.
+
+		<br><span class="wa">Workaround</span>:
+		Ensure the "Show Experimental" setting is enabled in the
+		<span class="managerName">Module Manager's</span> settings.
+
+		<br><span class="fp">Future Plans</span>:
+		Will fix in the next release.
+</ul>
+
+
+<h4>Other</h4>
+<ul>
+	<li><span class="lim">Limitation</span>:
+		Can't specify how images are sorted in the WebUI's
+		<span class="WebUILink">Images</span> page
+		and in the Allsky Website.
+
+		<br><span class="wa">Workaround</span>: None
+
+		<br><span class="fp">Future Plans</span>:
+		Will add options to specify ascending (a-z) or descending (z-a) order.
+</ul>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

@@ -1990,7 +1990,7 @@ check_swap
 check_tmp
 
 
-MSG="\nThe following steps can take up to 1 - 2 HOURS depending on the speed of your Pi"
+MSG="\nThe following steps can take up to 1 - 3 HOURS depending on the speed of your Pi"
 MSG="${MSG}\nand how many of the necessary dependencies are already installed."
 display_msg info "${MSG}"
 

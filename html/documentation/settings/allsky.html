@@ -1171,15 +1171,15 @@ and are updated by clicking on the WebUI's
 	<td>Number of days of images and videos in
 	<span class="fileName">~/allsky/images</span> to keep.
 	Any directory older than this many days will be deleted at each end of night.
-	Set to blank ("") to keep ALL days' data;
+	Set to <code>0</code> to keep ALL days' data;
 	you will need to manually manage disk space.</td>
 </tr>
 <tr><td><span class="shSetting">WEB_DAYS_TO_KEEP</span></td>
-	<td>28</td>
+	<td>0</td>
 	<td>Number of days of web data to keep in
 	<span class="fileName">~/allsky/html/allsky</span>.
 	Any image, video, or thumbnail older than this many days will be deleted at each end of night.
-	Set to blank ("") to keep ALL days' web data;
+	<code>0</code> disables the check and keeps ALL days' web data;
 	you will need to manually manage disk space.
 	<blockquote>This only applies to Allsky Websites on the Pi.</blockquote>
 	</td>

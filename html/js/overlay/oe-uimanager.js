@@ -1948,11 +1948,11 @@ class OEUIMANAGER {
             columns: [
                 { 
                     data: 'format',
-                    width: '100px'
+                    width: '200px'
                 },
                 { 
                     data: 'description',
-                    width: '500px'
+                    width: '400px'
                 },
                 { 
                     data: 'example',
@@ -1980,7 +1980,7 @@ class OEUIMANAGER {
         $('#formatdialog').dialog({
             resizable: false,
             closeOnEscape: false,
-            width: 800
+            width: 900
         });
         
         $(document).on('click', '.oe-format-replace', (event) => {

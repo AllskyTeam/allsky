@@ -258,52 +258,6 @@ class OVERLAYUTIL
         }
     }
 
-    public function postSample()
-    {
-        $exampleData = $this->processDebugData();
-        $config = $_POST["config"];
-
-        $jsonData = json_decode($config);
-        $regEx = '/\$\{.*?\}/m';
-        $result = array();
-        foreach ($jsonData->fields as $field) {
-            $label = $field->label;
-            preg_match_all($regEx, $label, $matches, PREG_SET_ORDER, 0);
-            if (!empty($matches)) {
-                foreach ($matches as $match) {
-                    $fieldRaw = $match[0];
-                    $fieldKey = str_replace(array("\${","}"), "", $fieldRaw);
-                    if (array_key_exists($fieldKey, $exampleData)) {
-                        $label = str_replace($fieldRaw, $exampleData[$fieldKey], $label);
-                    } else {
-                        if (array_key_exists("AS_" . $fieldKey, $exampleData)) {
-                            $label = str_replace($fieldRaw, $exampleData["AS_" . $fieldKey], $label);
-                        } else {
-                            $label = str_replace($fieldRaw, "??", $label);
-                        }
-                    }
-                }
-            }
-            $result[$field->id] = $label;
-        }
-        $result = json_encode($result);
-        $this->sendResponse($result);
-        die();
-        $config = base64_encode($config);
-
-
-        $cam_type = getCameraType();
-        $settings_file = getSettingsFile($cam_type);
-
-        $baseOverlayFolder = realpath(dirname(__FILE__));
-
-        $result = shell_exec($baseOverlayFolder . '/overlay_sample.py ' . $config . ' ' . $this->overlayPath . ' ' . $this->allskyTmp . ' ' . $settings_file . ' 2>&1');
-
-        $result = json_encode(json_decode($result));
-
-        $this->sendResponse($result);
-    }
-
     private function processDebugData() {
         $file = ALLSKY_HOME . "/tmp/overlaydebug.txt";
 

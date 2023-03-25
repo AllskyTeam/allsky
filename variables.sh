@@ -45,6 +45,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Directory Allsky is installed in.
 	ALLSKY_INSTALL_DIR="$( basename "${ALLSKY_HOME}" )"
 
+	# Optional prior copy of Allsky.
+	PRIOR_ALLSKY_DIR="$(dirname "${ALLSKY_HOME}")/${ALLSKY_INSTALL_DIR}-OLD"
+
 	# For temporary files or files that can be deleted at reboot.
 	ALLSKY_TMP="${ALLSKY_HOME}/tmp"
 

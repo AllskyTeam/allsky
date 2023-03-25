@@ -136,7 +136,6 @@ usage_and_exit()
 stop_allsky()
 {
 	sudo systemctl stop allsky 2> /dev/null
-	sudo systemctl stop allskyperiodic 2> /dev/null
 }
 
 
@@ -1567,7 +1566,6 @@ restore_prior_files()
 			MSG="no version specified"
 		else
 			MSG="old version (${PRIOR_CONFIG_SH_VERSION})"
-		fi
 			MSG="Not restoring 'config.sh': ${MSG}."
 			display_msg "${LOG_TYPE}" info "${MSG}"
 		fi

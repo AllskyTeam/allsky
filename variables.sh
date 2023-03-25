@@ -89,7 +89,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Base location of the overlay and module configuration and data files.
 	ALLSKY_OVERLAY="${ALLSKY_CONFIG}/overlay"
 	ALLSKY_MODULES="${ALLSKY_CONFIG}/modules"
-	ALLSKY_EXTRA="${ALLSKY_TMP}/extra"
+	ALLSKY_EXTRA="${ALLSKY_OVERLAY}/extra"
 
 	# Verion file and option branch file.
 	ALLSKY_VERSION_FILE="${ALLSKY_HOME}/version"

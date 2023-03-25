@@ -33,8 +33,10 @@ fi
 # Decrease priority when running in background.
 if [[ ${ON_TTY} -eq 1 ]]; then
 	NICE=""
+	NICE_ARG=""
 else
-	NICE="--nice 15"
+	NICE="nice -n 15"
+	NICE_ARG="--nice 15"
 fi
 
 # Post end of night data. This includes next twilight time
@@ -48,7 +50,7 @@ fi
 if [[ ${KEOGRAM} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Keogram"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE} --silent -k "${DATE}"
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent -k "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Keogram complete"
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RET} = 0 ]] ; then
@@ -61,7 +63,7 @@ fi
 if [[ ${STARTRAILS} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Startrails"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE} --silent -s "${DATE}"
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent -s "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Startrails complete"
 	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RET} = 0 ]] ; then
@@ -75,7 +77,7 @@ fi
 if [[ ${TIMELAPSE} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Timelapse"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE} --silent -t "${DATE}"
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent -t "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Timelapse complete"
 	if [[ ${UPLOAD_VIDEO} == "true" && ${RET} = 0 ]] ; then

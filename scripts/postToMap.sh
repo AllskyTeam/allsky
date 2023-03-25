@@ -20,13 +20,16 @@ function usage_and_exit()
 {
 	RET_CODE=${1}
 	[[ ${RET_CODE} -ne 0 ]] && echo -en "${wERROR}"
-	echo -e "${BR}Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight]${BR}"
+	echo
+	echo -e "Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight]"
+	echo
 	echo "--help: Print this usage message and exit immediately."
 	echo "--whisper: Be quiet with non-error related output - only display results."
 	echo "--delete: Delete map data; all fields except machine_id are ignored."
 	echo "--force: Force updates, even if not scheduled automatically for today."
 	echo "--debug: Output debugging statements."
 	echo "--endofnight: Indicates how ${ME} was invoked."
+	echo
 	[[ ${RET_CODE} -ne 0 ]] && echo -e "${wNC}"
 	# shellcheck disable=SC2086
 	exit ${RET_CODE}
@@ -55,10 +58,19 @@ function check_URL()
 	FIELD_NAME="${3}"
 
 	D="$(get_domain "${URL}")"
-	if [[ "${D:0:7}" == "192.168" || "${D:0:4}" == "10.0" || "${D:0:6}" == "172.16" || "${D:0:9}" == "169.254.0" || "${D:0:6}" == "198.18" || "${D:0:10}" == "198.51.100"  || "${D:0:9}" == "203.0.113" || "${D:0:3}" == "240" ]]; then
+	if [[ "${D:0:7}"  == "192.168"		||
+		  "${D:0:4}"  == "10.0"			||
+		  "${D:0:6}"  == "172.16"		||
+		  "${D:0:9}"  == "169.254.0"	||
+		  "${D:0:6}"  == "198.18"		||
+		  "${D:0:10}" == "198.51.100"	||
+		  "${D:0:9}"  == "203.0.113"	||
+		  "${D:0:3}"  == "240" ]]; then
 		E="ERROR: ${FIELD_NAME} '${URL}' is not reachable from the Internet.${BR}${E}"
+
 	elif [[ ${URL:0:5} != "http:" && ${URL:0:6} != "https:" ]]; then
 		E="ERROR: ${FIELD_NAME} '${URL}' must begin with 'http:' or 'https:'.${BR}${E}"
+
 	else
 		# Make sure it's a valid URL
 		CONTENT="$(curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1)"
@@ -384,7 +396,7 @@ if [[ ${UPLOAD} == "true" ]]; then
 		RETURN_CODE=2
 	fi
 
-elif [[ ${ON_TTY} -eq 1 || ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+elif [[ ( ${ON_TTY} -eq 1 || ${ALLSKY_DEBUG_LEVEL} -ge 4) && ${ENDOFNIGHT} == "false"  ]]; then
 	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
 fi
 

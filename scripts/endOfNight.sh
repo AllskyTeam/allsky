@@ -16,6 +16,7 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
 if [[ $# -eq 1 ]]; then
 	if [[ ${1} = "--help" ]]; then
 		echo -e "Usage: ${ME} [YYYYmmdd]"
+		echo "If no date is specified, yesterday will be used"
 		exit 0
 	else
 		DATE="${1}"
@@ -92,7 +93,7 @@ CMD="${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh"
 [[ -x ${CMD} ]] && "${CMD}"
 
 # Automatically delete old images and videos
-if [[ -n ${DAYS_TO_KEEP} ]]; then
+if [[ -n ${DAYS_TO_KEEP} && ${DAYS_TO_KEEP} -gt 0 ]]; then
 	del=$(date --date="${DAYS_TO_KEEP} days ago" +%Y%m%d)
 	# "20*" for years >= 2000.   Format:  YYYYMMDD
 	#													YY  Y    Y   M    M   D      D
@@ -105,7 +106,7 @@ if [[ -n ${DAYS_TO_KEEP} ]]; then
 fi
 
 # Automatically delete old website images and videos
-if [[ -n ${WEB_DAYS_TO_KEEP} ]]; then
+if [[ -n ${WEB_DAYS_TO_KEEP} && ${WEB_DAYS_TO_KEEP} -gt 0 ]]; then
 	if [[ ! -d ${ALLSKY_WEBSITE} ]]; then
 		echo -e "${ME}: ${YELLOW}WARNING: 'WEB_DAYS_TO_KEEP' set but no website found in '${ALLSKY_WEBSITE}!${NC}"
 		echo -e 'Set WEB_DAYS_TO_KEEP to ""'

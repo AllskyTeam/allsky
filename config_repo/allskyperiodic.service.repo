@@ -1,6 +1,7 @@
 [Unit]
 Description=AllSky Periodic Services (Modules)
 After=multi-user.target
+PartOf=allsky.service
 
 [Service]
 User=XX_ALLSKY_OWNER_XX

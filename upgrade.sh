@@ -174,7 +174,7 @@ if [[ ${ACTION} == "upgrade" ]]; then
 	#			Let the user know ${ALLSKY_HOME}-OLD exists as FYI:
 	#				echo "Saving prior version in ${ALLSKY_HOME}-OLDEST"
 	#			Move ${ALLSKY_HOME}-OLD to ${ALLSKY_HOME}-OLDEST
-	#	Stop allsky and allskyperiodic
+	#	Stop allsky
 	#	Move ${ALLSKY_HOME} to ${ALLSKY_HOME}-OLD
 	#	cd
 	#	Git new code into ${ALLSKY_HOME}
@@ -207,7 +207,7 @@ elif [[ ${ACTION} == "restore" ]]; then
 	#	exec /tmp/${ME} --restore ${ALL_ARGS} $ALLSKY_HOME
 
 	# Else		# running from /tmp - do the actual work
-	#	Stop allsky and allskyperiodic
+	#	Stop allsky
 	#	mv $ALLSKY_HOME} ${ALLSKY_HOME}-new_tmp
 	#	mv ${ALLSKY_HOME}-OLD $ALLSKY_HOME
 	#	move images from ${ALLSKY_HOME}-new_tmp to $ALLSKY_HOME

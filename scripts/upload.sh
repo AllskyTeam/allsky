@@ -130,8 +130,7 @@ while  : ; do
 		break	# Not sure why the PID file existed if the process didn't exist.
 	fi
 
-	((NUM_CHECKS++))
-	if [[ $NUM_CHECKS -gt ${MAX_CHECKS} ]]; then
+	if [[ $NUM_CHECKS -eq ${MAX_CHECKS} ]]; then
 		echo -en "${YELLOW}" >&2
 		echo -n  "*** ${ME}: WARNING: Another '${FILE_TYPE}' upload is still in" >&2
 		echo     " progress so this new upload is being aborted." >&2
@@ -145,6 +144,7 @@ while  : ; do
 	else
 		sleep "${SLEEP_TIME}"
 	fi
+	((NUM_CHECKS++))
 done
 echo $$ > "${PID_FILE}" || exit 1
 

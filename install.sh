@@ -431,27 +431,34 @@ check_swap()
 		PROMPT="false"
 	fi
 
-	# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
-	RAM_SIZE=$(free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }')		# in MB
-	if [[ ${RAM_SIZE} -le 1024 ]]; then
-		SUGGESTED_SWAP_SIZE=4096
-	elif [[ ${RAM_SIZE} -le 2048 ]]; then
-		SUGGESTED_SWAP_SIZE=2048
-	elif [[ ${RAM_SIZE} -le 4046 ]]; then
-		SUGGESTED_SWAP_SIZE=1025
-	else
-		SUGGESTED_SWAP_SIZE=0
+	# This can return "total_mem is unknown" if the OS is REALLY old.
+	RAM_SIZE="$( vcgencmd get_config total_mem )"
+	if echo "${RAM_SIZE}" | grep --silent "unknown" ; then
+		# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
+		RAM_SIZE=$(free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }')		# in MB
 	fi
+	DESIRED_COMBINATION=$((1024 * 4))		# desired minimum memory + swap
+	SUGGESTED_SWAP_SIZE=0
+	for i in 512 1024 2048		# 4096 and above don't need any swap
+	do
+		if [[ ${RAM_SIZE} -le ${i} ]]; then
+			SUGGESTED_SWAP_SIZE=$((DESIRED_COMBINATION - i))
+			break
+		fi
+	done
 	if [[ ${DEBUG} -gt 0 ]]; then
 		display_msg debug "RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
 	fi
 
 	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
-	CURRENT_SWAP=$(free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }')		# in MB
+	CURRENT_SWAP=$(free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }')	# in MB
 	CURRENT_SWAP=${CURRENT_SWAP:-0}
 	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
-		[[ -z ${FUNCTION} ]] && sleep 2		# time to read prior messages
-		if [[ ${CURRENT_SWAP} -eq 0 ]]; then
+		local SWAP_CONFIG_FILE="/etc/dphys-swapfile"
+
+		[[ -z ${FUNCTION} ]] && sleep 2		# give user time to read prior messages
+		if [[ ${CURRENT_SWAP} -eq 1 ]]; then
+			CURRENT_SWAP=0
 			AMT="no"
 			M="added"
 		else
@@ -472,6 +479,10 @@ check_swap()
 
 		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 18 "${WT_WIDTH}" \
 			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
+		# If the suggested swap was 0 and the user added a number but didn't first delete the 0,
+		# do it now so we don't have numbers like "0256".
+		[[ ${SWAP_SIZE:0:1} == "0" ]] && SWAP_SIZE="${SWAP_SIZE:1}"
+
 		if [[ -z ${SWAP_SIZE} || ${SWAP_SIZE} == "0" ]]; then
 			if [[ ${CURRENT_SWAP} -eq 0 && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
 				display_msg --log warning "With no swap space you run the risk of programs failing."
@@ -479,11 +490,22 @@ check_swap()
 				display_msg --log info "Swap will remain at ${CURRENT_SWAP}."
 			fi
 		else
+			display_msg --log progress "Setting swap space set to ${SWAP_SIZE} MB."
 			sudo dphys-swapfile swapoff					# Stops the swap file
-			sudo sed -i "/CONF_SWAPSIZE/ c CONF_SWAPSIZE=${SWAP_SIZE}" /etc/dphys-swapfile
+			sudo sed -i "/CONF_SWAPSIZE/ c CONF_SWAPSIZE=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
+
+			CURRENT_MAX="$(get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}")"
+			# TODO: Can we determine the default max rather than hard-code it.
+			CURRENT_MAX="${CURRENT_MAX:-2048}"
+			if [[ ${CURRENT_MAX} -lt ${SWAP_SIZE} ]]; then
+				if [[ ${DEBUG} -gt 0 ]]; then
+					display_msg --log debug "Increasing max swap size to ${SWAP_SIZE} MB."
+				fi
+				sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
+			fi
+
 			sudo dphys-swapfile setup  > /dev/null		# Sets up new swap file
 			sudo dphys-swapfile swapon					# Turns on new swap file
-			display_msg --log progress "Swap space set to ${SWAP_SIZE} MB."
 		fi
 	else
 		display_msg --log progress "Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."

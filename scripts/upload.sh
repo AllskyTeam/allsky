@@ -132,14 +132,31 @@ while  : ; do
 
 	if [[ $NUM_CHECKS -eq ${MAX_CHECKS} ]]; then
 		echo -en "${YELLOW}" >&2
-		echo -n  "*** ${ME}: WARNING: Another '${FILE_TYPE}' upload is still in" >&2
-		echo     " progress so this new upload is being aborted." >&2
+		echo -n  "${ME}: WARNING: Another '${FILE_TYPE}' upload is in" >&2
+		echo     " progress so the new upload of $(basename "${FILE_TO_UPLOAD}") was aborted." >&2
 		echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
 		echo -n  " If this happens often, check your network and delay settings." >&2
 		echo -e  "${NC}" >&2
 		ps -fp "${PID}" >&2
-		# Keep track of aborts so user can be notified
+
+		# Keep track of aborts so user can be notified.
+		# If it's happening often let the user know.
 		echo -e "$(date)\t${FILE_TYPE}\t${FILE_TO_UPLOAD}" >> "${ALLSKY_ABORTEDUPLOADS}"
+		NUM=$( wc -l < "${ALLSKY_ABORTEDUPLOADS}" )
+		if [[ ${NUM} -eq 3 || ${NUM} -eq 10 ]]; then
+			MSG="${NUM} uploads have been aborted waiting for other uploads to finish."
+			MSG="${MSG}\nThis could be caused by a slow network or other network issues."
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
+			if [[ ${NUM} -eq 3 ]]; then
+				SEVERITY="info"
+			else
+				SEVERITY="warning"
+				MSG="If you have resolved the cause, reset the aborted counter:"
+				MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${ALLSKY_ABORTEDUPLOADS}'</code>"
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
+			fi
+		fi
+
 		exit 2
 	else
 		sleep "${SLEEP_TIME}"

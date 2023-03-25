@@ -443,6 +443,9 @@ check_swap()
 	else
 		SUGGESTED_SWAP_SIZE=0
 	fi
+	if [[ ${DEBUG} -gt 0 ]]; then
+		display_msg debug "RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
+	fi
 
 	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
 	CURRENT_SWAP=$(free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }')		# in MB
@@ -1466,6 +1469,11 @@ restore_prior_files()
 	if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then
 		display_msg progress "Restoring images."
 		mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
+	else
+		# This is probably very rare.
+		MSG="No prior 'images' directory so can't restore them."
+		display_msg info "${MSG}"
+		display_msg --logonly info "${MSG}"
 	fi
 
 	if [[ -d ${PRIOR_ALLSKY_DIR}/darks ]]; then
@@ -1476,11 +1484,15 @@ restore_prior_files()
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg progress "Restoring modules."
 		"${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}"
+	else
+		display_msg "${LOG_TYPE}" info "No prior 'modules' so can't restore."
 	fi
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg progress "Restoring overlays."
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
+	else
+		display_msg "${LOG_TYPE}" info "No prior 'overlay' so can't restore."
 	fi
 
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
@@ -1492,37 +1504,42 @@ restore_prior_files()
 	if [[ -f ${D}/raspap.auth ]]; then
 		display_msg progress "Restoring WebUI security settings."
 		cp -a "${D}/raspap.auth" "${ALLSKY_CONFIG}"
+	else
+		display_msg "${LOG_TYPE}" info "No prior 'WebUI security settings' so can't restore."
 	fi
 
 	# Restore any REMOTE Allsky Website configuration file.
 	if [[ -f ${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} ]]; then
-		display_msg progress "Restoring remote Allsky Website ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}."
-		cp -a "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+		MSG="Restoring remote Allsky Website ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}."
+		display_msg progress "${MSG}"
+		cp -a "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" \
+			"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
 		# Check if this is an older Allsky Website configuration file type.
 		local OLD="false"
+		NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
 		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
-		if [[ ${PRIOR_CONFIG_VERSION} == "null" ]]; then
+		if [[ ${PRIOR_CONFIG_VERSION} == "" || ${PRIOR_CONFIG_VERSION} == "null" ]]; then
 			OLD="true"		# Hmmm, it should have the version
 			PRIOR_CONFIG_VERSION="** Unknown **"
-		else
-			NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
-			if [[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]]; then
-				OLD="true"
-			fi
+		elif [[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]]; then
+			OLD="true"
 		fi
+
 		if [[ ${OLD} == "true" ]]; then
 			MSG="Your ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} is an older version.\n"
 			MSG="${MSG}Your    version: ${PRIOR_CONFIG_VERSION}\n"
 			MSG="${MSG}Current version: ${NEW_CONFIG_VERSION}\n"
 			MSG="${MSG}\nPlease compare it to the new one in ${REPO_WEBCONFIG_FILE}"
 			MSG="${MSG} to see what fields have been added, changed, or removed.\n"
-			display_msg warning "${MSG}"
+			display_msg --log warning "${MSG}"
 			echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 		fi
+	else
+		# We don't check for old LOCAL Allsky Website configuration files.
+		# That's done when they install the Allsky Website.
+		display_msg "${LOG_TYPE}" info "No prior remote Website configuration so can't restore."
 	fi
-	# We don't check for old LOCAL Allsky Website configuration files.
-	# That's done when they install the Allsky Website.
 
 	if [[ -f ${PRIOR_CONFIG_DIR}/uservariables.sh ]]; then
 		display_msg progress "Restoring uservariables.sh."
@@ -1546,9 +1563,16 @@ restore_prior_files()
 		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}"
 	else
 		RESTORED_PRIOR_CONFIG_SH="false"
+		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
+			MSG="no version specified"
+		else
+			MSG="old version (${PRIOR_CONFIG_SH_VERSION})"
+		fi
+			MSG="Not restoring 'config.sh': ${MSG}."
+			display_msg "${LOG_TYPE}" info "${MSG}"
+		fi
 	fi
 
-	PRIOR_FTP_SH_VERSION=""
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then
 		# Allsky v2022.03.01 and newer.  v2022.03.01 doesn't ahve FTP_SH_VERSION.
 		PRIOR_FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}")"
@@ -1556,9 +1580,13 @@ restore_prior_files()
 	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
 		# pre v2022.03.01
 		PRIOR_FTP_FILE="${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh"
+		PRIOR_FTP_SH_VERSION=""
+		FTP_SH_VERSION="old"
 	else
 		display_msg error "Unable to find prior ftp-settings.sh"
 		PRIOR_FTP_FILE=""
+		PRIOR_FTP_SH_VERSION=""
+		FTP_SH_VERSION="none"
 	fi
 	if [[ ${DEBUG} -gt 0 ]]; then
 		display_msg debug "FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
@@ -1569,6 +1597,12 @@ restore_prior_files()
 		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}"
 	else
 		RESTORED_PRIOR_FTP_SH="false"
+		if [[ ${FTP_SH_VERSION} == "old" ]]; then
+			MSG="old version."
+		else
+			MSG="no prior file."
+		fi
+		display_msg "${LOG_TYPE}" "Not restoring 'ftp-settings.sh': ${MSG}"
 	fi
 
 	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "true" && ${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
@@ -1869,6 +1903,12 @@ OK="true"
 HELP="false"
 DEBUG=0
 DEBUG_ARG=""
+LOG_TYPE="--logonly"	# by default we only log some messages but don't display
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
+display_msg info "\n**** xxxx DEBUG turned on during testing ***\n"
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
 UPDATE="false"
 FUNCTION=""
 TESTING="false"
@@ -1881,6 +1921,7 @@ while [ $# -gt 0 ]; do
 		--debug)
 			((DEBUG++))
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
+			LOG_TYPE="--log"
 			;;
 		--update)
 			UPDATE="true"

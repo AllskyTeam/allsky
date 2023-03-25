@@ -148,10 +148,9 @@ fi
 function upload_file()
 {
 	local FILE_TO_UPLOAD="${1}"
-	local strFILE_TO_UPLOAD="${2}"
-	local DIRECTORY="${3}"		# Directory to put file in
+	local DIRECTORY="${2}"		# Directory to put file in
 	if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
-		MSG="File to upload '${FILE_TO_UPLOAD}' (${strFILE_TO_UPLOAD}) not found."
+		MSG="File to upload '${FILE_TO_UPLOAD}' not found."
 		echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
 		return 1
@@ -160,7 +159,7 @@ function upload_file()
 	local RETCODE=0
 	local S="${DIRECTORY:0:1}"
 
-	# Copy to local Allsky website if it exists.
+	# Copy to local Allsky Website if it exists.
 	if [[ ${HAS_LOCAL_WEBSITE} == "true" ]]; then
 
 		# If ${DIRECTORY} isn't "" and doesn't start with "/", add one.
@@ -181,7 +180,7 @@ function upload_file()
 		fi
 	fi
 
-	# Upload to remote website if there is one.
+	# Upload to remote Website if there is one.
 	if [[ ${HAS_REMOTE_WEBSITE} == "true" ]]; then
 
 		# Need a "/" to separate when both variables exist.
@@ -215,17 +214,17 @@ function upload_file()
 # These files go in ${VIEW_DIR} so the user can display their settings.
 # This directory is in the root of the Allsky Website.
 # Assume if the first upload fails they all will, so exit.
-VIEW_DIR="viewSettings"
-upload_file "${SETTINGS_FILE}" "settings file" "${VIEW_DIR}" || exit $?
+VIEW_DIR="viewSettings"			# Name of remote directory
+upload_file "${SETTINGS_FILE}" "${VIEW_DIR}" || exit $?
 
 if [[ ${ALL_FILES} == "true" ]]; then
-	upload_file "${OPTIONS_FILE}" "options file" "${VIEW_DIR}"
-	upload_file "${ALLSKY_WEBUI}/includes/allskySettings.php" "allskySettings file" "${VIEW_DIR}"
-	upload_file "${ALLSKY_DOCUMENTATION}/css/custom.css" "custom file" "${VIEW_DIR}"
+	upload_file "${OPTIONS_FILE}" "${VIEW_DIR}"
+	upload_file "${ALLSKY_WEBUI}/includes/allskySettings.php" "${VIEW_DIR}"
+	upload_file "${ALLSKY_DOCUMENTATION}/css/custom.css" "${VIEW_DIR}"
 fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
-	upload_file "${OUTPUT_FILE}" "output file" ""		# Goes in top-level directory
+	upload_file "${OUTPUT_FILE}" ""		# Goes in top-level directory
 	# shellcheck disable=SC2086
 	exit $?
 fi

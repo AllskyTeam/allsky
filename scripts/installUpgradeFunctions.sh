@@ -82,12 +82,15 @@ function get_branch() {
 # Used primarily in installation scripts.
 function display_msg()
 {
-	local LOG_IT
+	local LOG_IT="false"
+	local LOG_ONLY="false"
 	if [[ $1 == "--log" ]]; then
-		LOG_IT=true
+		LOG_IT="true"
 		shift
-	else
-		LOG_IT=false
+	elif [[ $1 == "--logonly" ]]; then
+		LOG_IT="true"
+		LOG_ONLY="true"
+		shift
 	fi
 
 	local LOG_TYPE="${1}"
@@ -145,7 +148,7 @@ function display_msg()
 		LOGMSG="${LOGMSG}**********\n"
 	fi
 
-	echo -e "${MSG}${MESSAGE2}"
+	[[ ${LOG_ONLY} == "false" ]] && echo -e "${MSG}${MESSAGE2}"
 
 	# Log messages to a file if it was specified.
 	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.

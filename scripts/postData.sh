@@ -173,14 +173,12 @@ function upload_file()
 		TO="${ALLSKY_WEBSITE}${S}${DIRECTORY}"
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}cp '${FILE_TO_UPLOAD}' '${TO}'${wNC}"
 
-		cp "${FILE_TO_UPLOAD}" "${TO}"
-		R=$?
-		if [[ ${R} -ne 0 ]]; then
+		if ! cp "${FILE_TO_UPLOAD}" "${TO}" ; then
 			MSG="Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}'"
 			echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
+			RETCODE=1
 		fi
-		RETCODE=$((RETCODE + R))
 	fi
 
 	# Upload to remote website if there is one.
@@ -202,13 +200,12 @@ function upload_file()
 			"${TO}" \
 			"" \
 			"PostData"
-		R=$?
-		if [[ ${R} -ne 0 ]]; then
+		if [[ $? -ne 0 ]]; then
 			MSG="Unable to upload '${FILE_TO_UPLOAD}'"
 			echo -e "${RED}${ME}: ${MSG}.${NC}"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
+			RETCODE=1
 		fi
-		RETCODE=$((RETCODE + R))
 	fi
 
 	# shellcheck disable=SC2086
@@ -217,17 +214,20 @@ function upload_file()
 
 # These files go in ${VIEW_DIR} so the user can display their settings.
 # This directory is in the root of the Allsky Website.
+# Assume if the first upload fails they all will, so exit.
 VIEW_DIR="viewSettings"
-upload_file "${SETTINGS_FILE}" "settings file" "${VIEW_DIR}"
+upload_file "${SETTINGS_FILE}" "settings file" "${VIEW_DIR}" || exit $?
+
 if [[ ${ALL_FILES} == "true" ]]; then
 	upload_file "${OPTIONS_FILE}" "options file" "${VIEW_DIR}"
 	upload_file "${ALLSKY_WEBUI}/includes/allskySettings.php" "allskySettings file" "${VIEW_DIR}"
 	upload_file "${ALLSKY_DOCUMENTATION}/css/custom.css" "custom file" "${VIEW_DIR}"
 fi
 
-if [[ ${RET} -eq 0 && ${SETTINGS_ONLY} == "false" ]]; then
+if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	upload_file "${OUTPUT_FILE}" "output file" ""		# Goes in top-level directory
-	RET=$?
+	# shellcheck disable=SC2086
+	exit $?
 fi
-# shellcheck disable=SC2086
-exit ${RET}
+
+exit 0

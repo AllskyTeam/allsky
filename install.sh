@@ -22,10 +22,7 @@ fi
 #shellcheck disable=SC2086
 cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
 
-# Location of possible prior version of Allsky.
-# If the user wants items copied from there to the new version,
-# they should have manually renamed "allsky" to "allsky-OLD" prior to running this script.
-PRIOR_ALLSKY_DIR="$(dirname "${ALLSKY_HOME}")/${ALLSKY_INSTALL_DIR}-OLD"
+# PRIOR_ALL_DIR is passed to us and is the location of an optional prior copy of Allsky.
 PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
 PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# may change depending on old version
@@ -1853,7 +1850,6 @@ remind_old_version()
 		MSG="When you are sure everything is working with the new Allsky release,"
 		MSG="${MSG} remove your old version in ${PRIOR_ALLSKY_DIR} to save disk space."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 }
 

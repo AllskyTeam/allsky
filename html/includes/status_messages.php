@@ -32,7 +32,9 @@ class StatusMessages {
 			}
 			if ($escape === true)
 				$message = str_replace("'", "&apos;", $message);
-			echo $message;
+
+			// Replace newlines with HTML breaks.
+			echo str_replace("\n", "<br>", $message);
 		}
 
 		if ($count > 0) echo "</table>";

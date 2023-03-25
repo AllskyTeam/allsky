@@ -167,35 +167,6 @@ function is_number()
 	fi
 }
 
-# Return 0 if a local or remote website is detected.
-WEBSITE_TYPE=""
-function has_website()
-{
-	if [[ -n ${WEBSITE_TYPE} ]]; then
-		[[ ${WEBSITE_TYPE} == "none" ]] && return 1
-		echo "${WEBSITE_TYPE}"
-		RET=0
-	fi
-
-	WEBSITES="$(whatWebsites)"
-	if [[ ${WEBSITES} == "none" ]]; then
-		return 1
-	fi
-
-	# Also return string stating if it's local or remote website.
-	[[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]] && WEBSITE_TYPE="local"
-	if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
-		if [[ -n ${WEBSITE_TYPE} ]]; then
-			WEBSITE_TYPE="${WEBSITE_TYPE} and remote"
-		else
-			WEBSITE_TYPE="remote"
-		fi
-	fi
-	echo "${WEBSITE_TYPE}"
-
-	return 0
-}
-
 
 # The various upload protocols need different variables defined.
 # For the specified protocol, make sure the specified variable is defined.
@@ -235,6 +206,7 @@ LONGITUDE="$(settings .longitude)"
 # shellcheck disable=SC2034
 LOCALE="$(settings .locale)"
 USING_DARKS="$(settings .useDarkFrames)"
+WEBSITES="$(whatWebsites)"
 
 # ======================================================================
 # ================= Check for informational items.
@@ -256,21 +228,35 @@ fi
 
 if [[ ${THUMBNAIL_SIZE_X} -ne 100 || ${THUMBNAIL_SIZE_Y} -ne 75 ]]; then
 	heading "Information"
-	echo "You are using a non-standard thumbnail size (${THUMBNAIL_SIZE_X} x ${THUMBNAIL_SIZE_Y}) in config.sh."
-	echo "Please note non-standard sizes have not been thoroughly tested and"
-	echo "you will likely need to modify some code to get them working."
+	echo -n "You are using a non-standard thumbnail size"
+	echo " (${THUMBNAIL_SIZE_X} x ${THUMBNAIL_SIZE_Y}) in config.sh."
+	echo -e "\tPlease note non-standard sizes have not been thoroughly tested and"
+	echo -e "\tyou will likely need to modify some code to get them working."
 fi
 
+DAYS_TO_KEEP=${DAYS_TO_KEEP:-0}				# old versions allowed "" to disable
 if [[ ${DAYS_TO_KEEP} -eq 0 ]]; then
 	heading "Information"
-	echo "DAYS_TO_KEEP is 0 which means images and videos will be kept forever or until"
-	echo "you manually delete them."
+	echo "DAYS_TO_KEEP is 0 which means images and videos will be kept forever"
+	echo -e "\tor until you manually delete them."
 fi
 
+WEB_DAYS_TO_KEEP=${WEB_DAYS_TO_KEEP:-0}		# old versions allowed "" to disable
 if [[ ${WEB_DAYS_TO_KEEP} -eq 0 ]]; then
-	heading "Information"
-	echo "WEB_DAYS_TO_KEEP is 0 which means web images and videos will be kept forever or until"
-	echo "you manually delete them."
+	if [[ ${WEBSITES} == "both" || ${WEBSITES} == "remote" ]]; then
+		heading "Information"
+		echo "WEB_DAYS_TO_KEEP is 0 which means local web images and videos will be kept forever"
+		echo -e "\tor until you manually delete them."
+	fi
+else	# -gt 0
+	if [[ ${WEBSITES} == "none" || ${WEBSITES} == "remote" ]]; then
+		heading "Information"
+		echo "WEB_DAYS_TO_KEEP is set to ${WEB_DAYS_TO_KEEP} but there is no local Website."
+		echo -e "\tSet 'WEB_DAYS_TO_KEEP=0' in config.sh to keep this message from appearing."
+		if [[ ${WEBSITES} == "remote" ]]; then
+			echo -e "\tWEB_DAYS_TO_KEEP only works with LOCAL websites, not REMOTE."
+		fi
+	fi
 fi
 
 if [[ ${IMG_RESIZE} == "true" && ${SENSOR_WIDTH} == "${IMG_WIDTH}" && ${SENSOR_HEIGHT} == "${IMG_HEIGHT}" ]]; then
@@ -472,7 +458,7 @@ check_exists "WEB_STARTRAILS_DIR"
 check_exists "UHUBCTL_PATH"
 
 # Check for Allsky Website-related anomolies.
-if has_website > /dev/null ; then
+if [[ ${WEBSITES} != "none" ]]; then
 	if [[ ${IMG_UPLOAD} == "false" ]]; then
 		heading "Warnings"
 		echo "You have an Allsky Website but no images are being uploaded to it (IMG_UPLOAD=false)."

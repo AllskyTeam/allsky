@@ -312,11 +312,12 @@ modify_locations() {
 upload_data_json_file() {
 	display_msg progress "Uploading initial files to remote Website."
 	OUTPUT="$("${ALLSKY_SCRIPTS}/postData.sh" --allFiles 2>&1)"
-	if [[ $? -ne 0 || ! -f ${ALLSKY_WEBSITE}/data.json ]]; then
-		MSG="Unable to create new 'data.json' file:"
+	if [[ $? -ne 0 || ! -f ${ALLSKY_TMP}/data.json ]]; then
+		MSG="Unable to upload initial files:"
 		MSG="${MSG}\n${OUTPUT}"
 		MSG="${MSG}\nMake sure 'REMOTE_HOST' is set to a valid server in 'ftp-settings.sh',"
-		MSG="${MSG}\nor to '', then run ${ALLSKY_SCRIPTS}/postData.sh to create a 'data.json' file."
+		MSG="${MSG}\nor to '', then run:   ${ALLSKY_SCRIPTS}/postData.sh"
+		MSG="${MSG}\nto create and upload a 'data.json' file."
 		display_msg error "${MSG}"
 	fi
 }
@@ -525,28 +526,36 @@ modify_configuration_variables() {
 }
 
 
-##### Help with a remote website installation, then exit
-do_remote_website() {
-	MSG="Setting up a remote Allsky Website requires that you first:"
-	MSG="${MSG}\n  1. Upload the Allsky Website files to your remote server."
-	MSG="${MSG}\n  2. Update 'ftp-settings.sh' using the WebUI's 'Editor' page"
-	MSG="${MSG}\n     to point to the remote server."
-	MSG="${MSG}\n  3. Enter the URL of the remote Website into the 'Website URL'"
+##### Ask the user if their remote Website is ready for us.
+check_if_remote_website_ready()
+{
+	MSG="Setting up a remote Allsky Website requires that you first:\n"
+	MSG="${MSG}\n  1. Have Allsky configured and running the way you want it.\n"
+	MSG="${MSG}\n  2. Upload the Allsky Website files to your remote server.\n"
+	MSG="${MSG}\n  3. Update 'ftp-settings.sh' using the WebUI's 'Editor' page"
+	MSG="${MSG}\n     to point to the remote server.\n"
+	MSG="${MSG}\n  4. Enter the URL of the remote Website into the 'Website URL'"
 	MSG="${MSG}\n     field in the WebUI's 'Allsky Settings' page,"
 	MSG="${MSG}\n     even if you are not displaying your Website on the Allsky Map."
-	MSG="${MSG}\n\nHave you completed these steps?"
-	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 80 3>&1 1>&2 2>&3; then
-		MSG="You need to manually copy the Allsky Website files to your remote server."
+	MSG="${MSG}\n\n\nHave you completed these steps?"
+	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 22 80 3>&1 1>&2 2>&3; then
+		MSG="\nYou need to manually copy the Allsky Website files to your remote server."
 		MSG="${MSG}\nYou can do that by executing:"
 		MSG="${MSG}\n   cd /tmp"
 		MSG="${MSG}\n   git clone ${GITHUB_ROOT}/allsky-website.git allsky"
 		MSG="${MSG}\nThen upload the 'allsky' directory and all it's contents to the root of your server."
-		MSG="${MSG}\n\nOnce you have finished that, re-run this installation."
-		display_msg warning "${MSG}"
-		exit 1
+		MSG="${MSG}\n\nOnce you have finished that, re-run this installation.\n"
+		display_msg info "${MSG}"
+		return 1
+	else
+		return 0
 	fi
+}
 
-	# Make sure they REALLY did the above.
+##### Help with a remote Website installation, then exit
+do_remote_website() {
+	# Make sure things really are set up, despite what the user said.
+
 # TODO: not all protocols require REMOTE_HOST
 	OK="true"
 	if [[ -z ${REMOTE_HOST} ]]; then
@@ -565,20 +574,24 @@ do_remote_website() {
 		OK="false"
 	fi
 
+	[[ ${OK} == "false" ]] && exit 1
+
 	TEST_FILE_NAME="Allsky_upload_test.txt"
 	TEST_FILE="/tmp/${TEST_FILE_NAME}"
 	display_msg progress "Testing upload to remote Website."
-	display_msg info "When done you can remove '${TEST_FILE_NAME}' from your remote server."
+	display_msg info "  When done you can remove '${TEST_FILE_NAME}' from your remote server."
 	echo "This is a test file and can be removed." > "${TEST_FILE}"
-	RET="$("${ALLSKY_SCRIPTS}/upload.sh" "${TEST_FILE}" "${IMAGE_DIR}" "${TEST_FILE_NAME}" "UploadTest")"
-	if [[ $? -eq 0 ]]; then
-		rm -f "${TEST_FILE}"
-	else
+	if ! RET="$("${ALLSKY_SCRIPTS}/upload.sh" \
+			"${TEST_FILE}" \
+			"${IMAGE_DIR}" \
+			"${TEST_FILE_NAME}" \
+			"UploadTest")" ; then
 		MSG="Unable to upload a test file.\n"
 		display_msg error "${MSG}"
 		display_msg info "${RET}"
 		OK="false"
 	fi
+	rm -f "${TEST_FILE}"
 
 	[[ ${OK} == "false" ]] && exit 1
 
@@ -861,6 +874,9 @@ does_prior_Allsky_Website_exist
 
 ##### Get the current and new Website versions taking branch into account.
 get_versions_and_branches
+
+##### Make sure the remote site is ready for us.  If not ready, exit.
+[[ ${REMOTE_WEBSITE} == "true" ]] && check_if_remote_website_ready || exit 0
 
 ##### Display the welcome header.
 [[ -z ${FUNCTION} ]] && do_initial_heading

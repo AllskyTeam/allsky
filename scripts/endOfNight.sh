@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This script has two main purposes:
+#	1. Optionally create a keogram, startrails, and timelapse video for the specified day.
+#	2. Perform daily housekeeping not related to the specified day, like removing old files.
+
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
@@ -16,6 +20,7 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
 if [[ $# -eq 1 ]]; then
 	if [[ ${1} = "--help" ]]; then
 		echo -e "Usage: ${ME} [YYYYmmdd]"
+		echo "If no date is specified, yesterday will be used"
 		exit 0
 	else
 		DATE="${1}"
@@ -33,12 +38,15 @@ fi
 # Decrease priority when running in background.
 if [[ ${ON_TTY} -eq 1 ]]; then
 	NICE=""
+	NICE_ARG=""
 else
-	NICE="--nice 15"
+	NICE="nice -n 15"
+	NICE_ARG="--nice 15"
 fi
 
 # Post end of night data. This includes next twilight time
 WEBSITES="$(whatWebsites)"
+
 if [[ ${WEBSITES} != "none" ]]; then
 	echo -e "${ME}: ===== Posting twilight data"
 	"${ALLSKY_SCRIPTS}/postData.sh"
@@ -48,7 +56,7 @@ fi
 if [[ ${KEOGRAM} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Keogram"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE} --silent -k "${DATE}"
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent -k "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Keogram complete"
 	if [[ ${UPLOAD_KEOGRAM} == "true" && ${RET} = 0 ]] ; then
@@ -61,7 +69,7 @@ fi
 if [[ ${STARTRAILS} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Startrails"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE} --silent -s "${DATE}"
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent -s "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Startrails complete"
 	if [[ ${UPLOAD_STARTRAILS} == "true" && ${RET} = 0 ]] ; then
@@ -75,7 +83,7 @@ fi
 if [[ ${TIMELAPSE} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Timelapse"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE} --silent -t "${DATE}"
+	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent -t "${DATE}"
 	RET=$?
 	echo -e "${ME}: ===== Timelapse complete"
 	if [[ ${UPLOAD_VIDEO} == "true" && ${RET} = 0 ]] ; then
@@ -89,21 +97,30 @@ fi
 CMD="${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh"
 [[ -x ${CMD} ]] && "${CMD}"
 
-# Automatically delete old images and videos
-if [[ -n ${DAYS_TO_KEEP} ]]; then
+DAYS_TO_KEEP=${DAYS_TO_KEEP:-0}					# old versions allowed "" to disable
+WEB_DAYS_TO_KEEP=${WEB_DAYS_TO_KEEP:-0}			# old versions allowed "" to disable
+
+# Automatically delete old images and videos.
+if [[ ${DAYS_TO_KEEP} -gt 0 ]]; then
 	del=$(date --date="${DAYS_TO_KEEP} days ago" +%Y%m%d)
-	# "20*" for years >= 2000.   Format:  YYYYMMDD
-	#													YY  Y    Y   M    M   D      D
+	# "20" for years >= 2000.   Format:  YYYYMMDD
+	#                                                   YY  Y    Y   M    M   D      D
 	find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "20[2-9][0-9][01][0-9][0123][0-9]" | \
 		while read -r i
 
 	do
-		(( del > $(basename "${i}") )) && echo "${ME}: Deleting old directory ${i}" && rm -rf "${i}"
+		if (( del > $(basename "${i}") )); then
+			echo "${ME}: Deleting old directory ${i}"
+			rm -rf "${i}"
+		fi
 	done
 fi
 
-# Automatically delete old website images and videos
-if [[ -n ${WEB_DAYS_TO_KEEP} ]]; then
+# Automatically delete old LOCAL Website images and videos.
+
+# TODO: work on remote Websites
+
+if [[ ${WEB_DAYS_TO_KEEP} -gt 0 ]]; then
 	if [[ ! -d ${ALLSKY_WEBSITE} ]]; then
 		echo -e "${ME}: ${YELLOW}WARNING: 'WEB_DAYS_TO_KEEP' set but no website found in '${ALLSKY_WEBSITE}!${NC}"
 		echo -e 'Set WEB_DAYS_TO_KEEP to ""'
@@ -111,14 +128,28 @@ if [[ -n ${WEB_DAYS_TO_KEEP} ]]; then
 		del=$(date --date="${WEB_DAYS_TO_KEEP} days ago" +%Y%m%d)
 		(
 			cd "${ALLSKY_WEBSITE}" || exit 1
-			# "*-20*" for years >= 2000
-			find startrails keograms videos -type f -name "*-20*" | while read -r i
+			NUM_DELETED=0
+			# "*-20" for years >= 2000.   Format:  image_type-YYYYMMDD.${EXT}
+			# Examples: keogram-20230710.jpg keogram-20230710.png
+			#                                                YY  Y    Y   M    M   D      D
+			find startrails keograms videos -type f -name "*-20[2-9][0-9][01][0-9][0123][0-9].[a-zA-Z]*" | \
+				while read -r i
 			do
-				# Remove everything but the date
+				
+				# Remove everything but the date from the name of the file.
 				DATE="${i##*-}"
 				DATE="${DATE%.*}"
 				# Thumbnails will typically be owned and grouped to www-data so use "rm -f".
-				((del > DATE)) && echo "${ME}: Deleting old website file ${i}" && rm -f "${i}"
+				if ((del > DATE)) ; then
+					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+						((NUM_DELETED++))
+						if [[ ${NUM_DELETED} -eq 1 ]]; then
+							echo "${ME}: Deleting old Website files:"
+						fi
+						echo "    DELETED: ${i}"
+					fi
+					rm -f "${i}"
+				fi
 			done
 		)
 	fi

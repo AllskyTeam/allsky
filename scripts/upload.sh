@@ -113,45 +113,55 @@ LOG="${ALLSKY_TMP}/upload_errors.txt"
 # Multiple concurrent uploads (which can happen if the system and/or network is slow can
 # cause errors and files left on the server.
 PID_FILE="${ALLSKY_TMP}/${FILE_TYPE}-pid.txt"
-CHECK="true"
 NUM_CHECKS=0
-while [[ ${CHECK} == "true" ]]; do
-	if [[ -f ${PID_FILE} ]]; then
-		PID=$(< "${PID_FILE}")
-		[[ ${DEBUG} == "true" ]] && echo "Checking if PID ${PID} is still active..."
-		# shellcheck disable=SC2009
-		if ps -f "-p${PID}" | grep --silent "${ME}" ; then
-			[[ ${DEBUG} == "true" ]] && echo "    ... it is"
-			if [[ ${WAIT} == "true" ]]; then
-				((NUM_CHECKS++))
-				if [[ $NUM_CHECKS -gt 10 ]]; then
-					echo -en "${YELLOW}" >&2
-					echo "*** ${ME}: WARNING: Another '${FILE_TYPE}' upload is still in progress so" >&2
-					echo "this upload is being aborted." >&2
-					echo "Made ${NUM_CHECKS} attempts at waiting." >&2
-					echo -e "${NC}" >&2
-				else
-					sleep 5s
-				fi
-			else
-				echo -en "${YELLOW}" >&2
-				echo "*** ${ME}: WARNING: Another upload of type '${FILE_TYPE}' is in progress." >&2
-				echo -n "This new upload is being aborted. If this happens often, check your network" >&2
-				echo -n " and delay settings." >&2
-				ps -fp "${PID}"
-				echo -e "${NC}" >&2
-				# Keep track of aborts so user can be notified
-				echo -e "$(date)\t${FILE_TYPE}\t${FILE_TO_UPLOAD}" >> "${ALLSKY_ABORTEDUPLOADS}"
-				# shellcheck disable=SC2086
-				exit ${ALLSKY_ERROR_STOP}
-			fi
-		else
-			[[ ${DEBUG} == "true" ]] && echo "    ... it's not"
-			CHECK="false"	# Not sure why the PID file existed if the process didn't exist...
-		fi
-	else
-		CHECK="false"		# Prior upload finished.
+if [[ ${WAIT} == "true" ]]; then
+	MAX_CHECKS=10
+	SLEEP_TIME="5s"
+else
+	MAX_CHECKS=2
+	SLEEP_TIME="10s"
+fi
+while  : ; do
+	[[ ! -f ${PID_FILE} ]] && break
+
+	PID=$( < "${PID_FILE}" )
+	# shellcheck disable=SC2009
+	if ! ps -p "${PID}" | grep --silent "${ME}" ; then
+		break	# Not sure why the PID file existed if the process didn't exist.
 	fi
+
+	if [[ $NUM_CHECKS -eq ${MAX_CHECKS} ]]; then
+		echo -en "${YELLOW}" >&2
+		echo -n  "${ME}: WARNING: Another '${FILE_TYPE}' upload is in" >&2
+		echo     " progress so the new upload of $(basename "${FILE_TO_UPLOAD}") was aborted." >&2
+		echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
+		echo -n  " If this happens often, check your network and delay settings." >&2
+		echo -e  "${NC}" >&2
+		ps -fp "${PID}" >&2
+
+		# Keep track of aborts so user can be notified.
+		# If it's happening often let the user know.
+		echo -e "$(date)\t${FILE_TYPE}\t${FILE_TO_UPLOAD}" >> "${ALLSKY_ABORTEDUPLOADS}"
+		NUM=$( wc -l < "${ALLSKY_ABORTEDUPLOADS}" )
+		if [[ ${NUM} -eq 3 || ${NUM} -eq 10 ]]; then
+			MSG="${NUM} uploads have been aborted waiting for other uploads to finish."
+			MSG="${MSG}\nThis could be caused by a slow network or other network issues."
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
+			if [[ ${NUM} -eq 3 ]]; then
+				SEVERITY="info"
+			else
+				SEVERITY="warning"
+				MSG="If you have resolved the cause, reset the aborted counter:"
+				MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${ALLSKY_ABORTEDUPLOADS}'</code>"
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
+			fi
+		fi
+
+		exit 2
+	else
+		sleep "${SLEEP_TIME}"
+	fi
+	((NUM_CHECKS++))
 done
 echo $$ > "${PID_FILE}" || exit 1
 
@@ -294,17 +304,16 @@ else # sftp/ftp/ftps
 	OUTPUT="$(lftp -f "${LFTP_CMDS}" 2>&1)"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
-		echo -en "${RED}"
-		echo -n "*** ${ME}: ERROR"
+		HEADER="{RED}*** ${ME}: ERROR,"
 		if [[ ${RET} -eq ${ALLSKY_ERROR_STOP} ]]; then
 			# shellcheck disable=SC2153
 			OUTPUT="$(
-				echo "Unable to log in to '${REMOTE_HOST}', user ${REMOTE_USER}'."
+				echo "${HEADER} unable to log in to '${REMOTE_HOST}', user ${REMOTE_USER}'."
 				echo -e "${OUTPUT}"
 			)"
 		else
 			OUTPUT="$(
-				echo ", RET=${RET}:"
+				echo "${HEADER} RET=${RET}:"
 				echo "FILE_TO_UPLOAD='${FILE_TO_UPLOAD}'"
 				# shellcheck disable=SC2153
 				echo "REMOTE_HOST='${REMOTE_HOST}'"

@@ -1,6 +1,30 @@
 {
     "data": [
         {
+            "format": "%d-%m-%y",
+            "description": "Short date",
+            "example": "25-12-23",
+            "type": "date"
+        },
+        {
+            "format": "%d-%m-%y %H:%m",
+            "description": "Short date and time",
+            "example": "25-12-23 23:10",
+            "type": "date"
+        },        
+        {
+            "format": "%m-%d-%y",
+            "description": "Short US date",
+            "example": "12-25-23",
+            "type": "date"
+        },
+        {
+            "format": "%m-%d-%y %H:%m",
+            "description": "Short US date and time",
+            "example": "12-25-23 23:10",
+            "type": "date"
+        },        
+        {
             "format": "%a",
             "description": "Abbreviated weekday name.",
             "example": "Sun, Mon, ...",

@@ -47,4 +47,6 @@ else
 	COUNT=1
 fi
 
+# Convert newlines to HTML breaks.
+MESSAGE="${MESSAGE/\\n/<br>}"
 echo -e "${TYPE}${TAB}${DATE}${TAB}${COUNT}${TAB}${MESSAGE}"  >>  "${ALLSKY_MESSAGES}"

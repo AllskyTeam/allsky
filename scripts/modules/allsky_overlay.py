@@ -24,8 +24,8 @@ from math import degrees
 
 from datetime import date, datetime, timedelta
 
-from suntime import Sun
-from suncalc import get_position, get_times
+from astral.sun import sun, azimuth, elevation, night
+from astral import LocationInfo
 
 from skyfield.api import EarthSatellite, load, wgs84, Loader
 from skyfield.api import N, S, E, W
@@ -58,18 +58,6 @@ metaData = {
             "tab": "Overlays",
             "description": "Format Error Text",
             "help": "Value to place in a variable when the provided format is invalid. defaults to ??"
-        },
-        "suntimeformat" : {
-            "required": "false",
-            "tab": "Sun",
-            "description": "Date Time format",
-            "help": "Overrides the default date and time format for the Sun. If this option is not set then the default AllSky 'Time Format' will be used"
-        },
-        "nonighttext" : {
-            "required": "false",
-            "tab": "Sun",
-            "description": "No Night Time text",
-            "help": "The text to replace the times for 'night' and 'night end' where there is no astronomical darkness"
         }
     }
 }
@@ -100,11 +88,9 @@ class ALLSKYOVERLAY:
     _imageDate = None
     _debug = False
     _enableSkyfield = True
-    _suntimeformat = ""
-    _nonighttext = ""
     _formaterrortext = ""
 
-    def __init__(self, suntimeformat, nonighttext, formaterrortext):
+    def __init__(self, formaterrortext):
         self._overlayConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYCONFIGFILE)
         fieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYFIELDSFILE)
         self._OVERLAYTMP = os.path.join(tempfile.gettempdir(), 'overlay')
@@ -125,12 +111,6 @@ class ALLSKYOVERLAY:
         self._observerLat = s.getSetting('latitude')
         self._observerLon = s.getSetting('longitude')
         self._debug = True
-
-        self._nonighttext = nonighttext
-        if len(suntimeformat.replace(" ", "")) > 0:
-            self._suntimeformat = suntimeformat
-        else:
-            self._suntimeformat = s.getSetting("timeformat")
 
         self._formaterrortext = formaterrortext;
 
@@ -682,6 +662,32 @@ class ALLSKYOVERLAY:
 
         return v
 
+    def _isUnixTimestamp(self, value):
+        isUnixTimestamp = False
+        isFloat = False    
+        sanityCheckDate = time.mktime((date(2023, 1, 1)).timetuple())
+
+        try:
+            value = int(value)
+            isInt = True
+        except:
+            isInt = False
+            try:
+                value = float(value)
+                isFloat = True
+            except:
+                pass
+
+        if isInt or isFloat:
+            if value > sanityCheckDate:
+                try:
+                    temp = datetime.fromtimestamp(value)
+                    isUnixTimestamp = True
+                except:
+                    pass
+
+        return isUnixTimestamp, value
+    
     def _getValue(self, placeHolder, variableType, format=None, empty=''):
         value = None
         valueOk = True
@@ -739,25 +745,35 @@ class ALLSKYOVERLAY:
                         fieldFound = True
 
             if fieldFound:
-                #if envCheck == "AS_EXPOSURE_US":
-                #    value = str(s.int(value) / 1000)
-
                 if variableType == 'Date':
-                    timeStamp = datetime.fromtimestamp(self._imageDate)
-                    if format is None:
-                        value = timeStamp.strftime('%Y-%m-%d %H:%M:%S')
+                    internalFormat = s.getSetting('timeformat')
+                    if envCheck == 'DATE' or envCheck == 'AS_DATE':
+                        timeStamp = datetime.fromtimestamp(self._imageDate)
+                        value = timeStamp.strftime(internalFormat)
                     else:
-						# TODO: Check for bad format?
-                        value = timeStamp.strftime(format)
+                        isUnixTimestamp, value = self._isUnixTimestamp(value)
+                        if isUnixTimestamp:
+                            timeStamp = datetime.fromtimestamp(value)
+                            value = timeStamp.strftime(internalFormat)
 
+                    tempDate = datetime.strptime(value, internalFormat)
+                    if format is not None:
+                        try:
+                            value = tempDate.strftime(format)
+                        except Exception:
+                            pass  
+                
                 if variableType == 'Time':
-                    timeStamp = time.localtime(self._imageDate)
-                    if format is None:
-                        value = time.strftime('%H:%M:%S', timeStamp)
+                    if envCheck == 'AS_TIME' or envCheck == 'TIME':
+                        timeStamp = time.localtime(self._imageDate)
+                        if format is None:
+                            value = time.strftime('%H:%M:%S', timeStamp)
+                        else:
+						    # TODO: Check for bad format?
+                            value = time.strftime(format, timeStamp)
                     else:
-						# TODO: Check for bad format?
-                        value = time.strftime(format, timeStamp)
-
+                        pass
+                    
                 if variableType == 'Number':
                     if format is not None and format != "":
                         f = format
@@ -961,6 +977,25 @@ class ALLSKYOVERLAY:
 
         return result
 
+    def _getSunTimes(self, location, date):
+        sunData = sun(location.observer, date=date, tzinfo=location.timezone)
+        az = azimuth(location.observer, date)
+        el = elevation(location.observer, date)
+        sunData['azimuth'] = az
+        sunData['elevation'] = el
+        return sunData
+
+    def _getTimeZone(self):
+        try:
+            file = open('/etc/timezone', 'r')
+            tz = file.readline()
+            tz = tz.strip()
+            file.close()
+        except:
+            tz = "Europe/London"
+        
+        return tz, timezone(tz)
+
     def _initialiseSun(self):
         sunEnabled = self._overlayConfig['settings']['defaultincludesun']
         if sunEnabled:
@@ -968,80 +1003,49 @@ class ALLSKYOVERLAY:
             lat = self._convertLatLon(self._observerLat)
             lon = self._convertLatLon(self._observerLon)
 
+            tzName, tz = self._getTimeZone()                
+            location = LocationInfo("Allsky", "", tzName, lat, lon)
+
             today = datetime.now()
-            todaySunData = get_times(today, lon, lat)
             tomorrow = today + timedelta(days = 1)
-            tomorrowSunData = get_times(tomorrow, lon, lat)
+            yesterday = today + timedelta(days = -1)
 
-            sunPos = get_position(today, lon, lat)
-            sunAzimuth = math.degrees(float(sunPos['azimuth'])) + 180
-            sunElevation = math.degrees(float(sunPos['altitude']))
-
+            yesterdaySunData = self._getSunTimes(location, yesterday)
+            todaySunData = self._getSunTimes(location, today)
+            tomorrowSunData = self._getSunTimes(location, tomorrow)
+                
             if s.TOD == 'day':
-                nadir = todaySunData["nadir"]
-                nightEnd = todaySunData["night_end"]
-                nauticalDawn = todaySunData["nautical_dawn"]
                 dawn = todaySunData["dawn"]
-                sunRise = todaySunData["sunrise"]
-                sunriseEnd = todaySunData["sunrise_end"]
-                solarNoon = todaySunData["solar_noon"]
-                sunsetStart = todaySunData["sunset_start"]
-                sunSet = todaySunData["sunset"]
+                sunrise = todaySunData["sunrise"]
+                noon = todaySunData["noon"]
+                sunset = todaySunData["sunset"]
                 dusk = todaySunData["dusk"]
-                nauticalDusk = todaySunData["nautical_dusk"]
-                night = todaySunData["night"]
             else:
-                now = datetime.now()
-                if now.hour > 0:
-                    yesterday = today + timedelta(days = -1)
-                    yesterdaySunData = get_times(yesterday, lon, lat)
-                    nadir = todaySunData["nadir"]
-                    nightEnd = todaySunData["night_end"]
-                    nauticalDawn = todaySunData["nautical_dawn"]
+                now = datetime.now(tz)
+                if now.hour > 0 and now < todaySunData["dawn"]:
                     dawn = todaySunData["dawn"]
-                    sunRise = todaySunData["sunrise"]
-                    sunriseEnd = todaySunData["sunrise_end"]
-                    solarNoon = todaySunData["solar_noon"]
-                    sunsetStart = yesterdaySunData["sunset_start"]
-                    sunSet = yesterdaySunData["sunset"]
+                    sunrise = todaySunData["sunrise"]
+                    noon = todaySunData["noon"]
+                    sunset = yesterdaySunData["sunset"]
                     dusk = yesterdaySunData["dusk"]
-                    nauticalDusk = yesterdaySunData["nautical_dusk"]
-                    night = yesterdaySunData["night"]
                 else:
-                    nadir = tomorrowSunData["nadir"]
-                    nightEnd = tomorrowSunData["night_end"]
-                    nauticalDawn = tomorrowSunData["nautical_dawn"]
                     dawn = tomorrowSunData["dawn"]
-                    sunRise = tomorrowSunData["sunrise"]
-                    sunriseEnd = tomorrowSunData["sunrise_end"]
-                    solarNoon = tomorrowSunData["solar_noon"]
-                    sunsetStart = todaySunData["sunset_start"]
-                    sunSet = todaySunData["sunset"]
+                    sunrise = tomorrowSunData["sunrise"]
+                    noon = tomorrowSunData["noon"]
+                    sunset = todaySunData["sunset"]
                     dusk = todaySunData["dusk"]
-                    nauticalDusk = todaySunData["nautical_dusk"]
-                    night = todaySunData["night"]
 
-            format = self._suntimeformat
-            os.environ["AS_SUN_DARKEST"] = nadir.strftime(format)
-            if str(nightEnd) != "NaT":
-                os.environ["AS_SUN_NIGHTEND"] = nightEnd.strftime(format)
-            else:
-                os.environ["AS_SUN_NIGHTEND"] = self._nonighttext
-            os.environ["AS_SUN_NAUTICALDAWN"] = nauticalDawn.strftime(format)
+            format = s.getSetting("timeformat")
             os.environ["AS_SUN_DAWN"] = dawn.strftime(format)
-            os.environ["AS_SUN_SUNRISE"] = sunRise.strftime(format)
-            os.environ["AS_SUN_SUNRISEEND"] = sunriseEnd.strftime(format)
-            os.environ["AS_SUN_NOON"] = solarNoon.strftime(format)
-            os.environ["AS_SUN_SUNSETSTART"] = sunsetStart.strftime(format)
-            os.environ["AS_SUN_SUNSET"] = sunSet.strftime(format)
+            os.environ["AS_SUN_SUNRISE"] = sunrise.strftime(format)
+            os.environ["AS_SUN_NOON"] = noon.strftime(format)
+            os.environ["AS_SUN_SUNSET"] = sunset.strftime(format)
             os.environ["AS_SUN_DUSK"] = dusk.strftime(format)
-            os.environ["AS_SUN_NAUTICALDUSK"] = nauticalDusk.strftime(format)
-            if str(night) != "NaT":
-                os.environ["AS_SUN_NIGHT"] = night.strftime(format)
-            else:
-                os.environ["AS_SUN_NIGHT"] = self._nonighttext
-            os.environ["AS_SUN_AZIMUTH"] = str(int(sunAzimuth))
-            os.environ["AS_SUN_ELEVATION"] = str(int(sunElevation))
+
+            os.environ["AS_SUN_AZIMUTH"] = str(int(todaySunData["azimuth"]))
+            os.environ["AS_SUN_ELEVATION"] = str(int(todaySunData["elevation"]))
+
+            s.log(4, f'INFO: Lat = {lat}, Lon = {lon}, tz = {tzName}, Sunrise = {sunrise}, Sunset = {sunset}')
         else:
             s.log(4,'INFO: Sun not enabled')
 
@@ -1290,16 +1294,10 @@ class ALLSKYOVERLAY:
 def overlay(params, event):
     enabled = s.int(s.getEnvironmentVariable("AS_eOVERLAY"))
     if enabled == 1:
-        suntimeformat = ""
-        nonighttext = ""
         formaterrortext = "??"
-        if "suntimeformat" in params:
-            suntimeformat = params["suntimeformat"]
-        if "nonighttext" in params:
-            nonighttext = params["nonighttext"]
         if "formaterrortext" in params:
             formaterrortext = params["formaterrortext"]
-        annotater = ALLSKYOVERLAY(suntimeformat, nonighttext, formaterrortext)
+        annotater = ALLSKYOVERLAY(formaterrortext)
         annotater.annotate()
         result = "Overlay Complete"
     else:

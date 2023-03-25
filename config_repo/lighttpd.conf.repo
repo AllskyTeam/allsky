@@ -12,7 +12,12 @@ server.tag                  = "Allsky"
 dir-listing.activate = "enable"
 setenv.add-response-header += ( "X-Content-Type-Options" => "nosniff" )
 
-setenv.add-environment = ( "LANG" => env.LANG)
+
+setenv.add-environment = (
+  "LANG" => env.LANG,
+  "ALLSKY_HOME" => "XX_ALLSKY_HOME_XX/"
+)
+
 alias.url		    = ("/current/" => "XX_ALLSKY_HOME_XX/")
 alias.url		    += ("/images/" => "XX_ALLSKY_IMAGES_XX/")
 alias.url		    += ("/website/" => "XX_ALLSKY_WEBSITE_XX/")

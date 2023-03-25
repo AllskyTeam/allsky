@@ -428,9 +428,11 @@
 						</p>
 						<blockquote class="warning morePadding">
 							The <span class="fileName">tmp/extra</span> directory will normally be re-created
-							after every reboot so don't save anything there that needs to remain permanately.
+							after every reboot so don't save anything there that needs to remain permanently.
 						</blockquote>
 
+						<h4>Dates</h4>
+						<p>When adding dates to any extra data files please ensure that the date is formatted in the same format as the 'Time Format' setting in the main allsky settings</p>
 
 						<h4>Text Files</h4>
 						<p>Text files must end with a <span class="fileName">.txt</span> extension.
@@ -1834,14 +1836,6 @@
 						the sunrise times are for the current date.</li>
 				</ul>
 				</p>
-				<p>There are times when there is no Astronomical darkness.
-					In these cases <code>${SUN_NIGHTEND}</code> and <code>${SUN_NIGHT}</code>
-					are set to the value defined in the
-					<strong>No Night Time text</strong> field of the
-					<span class="moduleName">Overlay Module</span> settings
-					in the <span class="managerName">Module Manager</span>.
-					<br>See the screenshot below for this field.
-				</p>
 				<p>The following Sun-related variables are available in the
 					<span class="managerName">Variable Manager</span>:
 				</p>
@@ -1854,18 +1848,6 @@
 					</thead>
 					<tbody>
 						<tr>
-							<td>${SUN_DARKEST}</td>
-							<td>The time the sky is at its darkest.</td>
-						</tr>
-						<tr>
-							<td>${SUN_NIGHTEND}</td>
-							<td>The date and time night ends.</td>
-						</tr>
-						<tr>
-							<td>${SUN_NAUTICALDAWN}</td>
-							<td>The date and time of nautical dawn.</td>
-						</tr>
-						<tr>
 							<td>${SUN_DAWN}</td>
 							<td>The date and time of dawn.</td>
 						</tr>
@@ -1874,16 +1856,8 @@
 							<td>The date and time of sunrise.</td>
 						</tr>
 						<tr>
-							<td>${SUN_SUNRISEEND}</td>
-							<td>The date and time sunrise ends.</td>
-						</tr>
-						<tr>
 							<td>${SUN_NOON}</td>
 							<td>The date and time of noon.</td>
-						</tr>
-						<tr>
-							<td>${SUN_SUNSETSTART}</td>
-							<td>The date and time sunset starts.</td>
 						</tr>
 						<tr>
 							<td>${SUN_SUNSET}</td>
@@ -1892,14 +1866,6 @@
 						<tr>
 							<td>${SUN_DUSK}</td>
 							<td>The date and time of dusk.</td>
-						</tr>
-						<tr>
-							<td>${SUN_NAUTICALDUSK}</td>
-							<td>The date and time of nautical dusk.</td>
-						</tr>
-						<tr>
-							<td>${SUN_NIGHT}</td>
-							<td>The date and time of nighttime.</td>
 						</tr>
 						<tr>
 							<td>${SUN_AZIMUTH}</td>

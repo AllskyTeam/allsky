@@ -12,7 +12,8 @@ class ALLSKYFORMAT:
 
     _config = ""
     _fields = ""
-
+    _settings = None
+    
     _jsonConfig = {}
     _jsonFields = {}
 
@@ -95,22 +96,94 @@ class ALLSKYFORMAT:
 
         return v
 
-    def _getValue(self, format, fieldValue, variableType):
+    def _getEnvironmentVariable(self, name):
+        result = None
+
+        try:
+            result = os.environ[name]
+        except KeyError:
+            pass
+
+        return result
+
+    def _readSettings(self):
+
+        settingsFile = self._getEnvironmentVariable("SETTINGS_FILE")
+        if settingsFile is None:
+            settingsFile = os.path.join(self._getEnvironmentVariable("ALLSKY_HOME"),"config","settings.json")
+
+        with open(settingsFile, "r") as fp:
+            self._settings = json.load(fp)
+
+    def _getSetting(self, settingName):
+
+        if self._settings == None:
+            self._readSettings()
+
+        result = None
+        try:
+            result = self._settings[settingName]
+        except Exception:
+            pass
+        
+        return result
+
+    def _isUnixTimestamp(self, value):
+        isUnixTimestamp = False
+        isFloat = False    
+        sanityCheckDate = time.mktime((date(2023, 1, 1)).timetuple())
+
+        try:
+            value = int(value)
+            isInt = True
+        except:
+            isInt = False
+            try:
+                value = float(value)
+                isFloat = True
+            except:
+                pass
+
+        if isInt or isFloat:
+            if value > sanityCheckDate:
+                try:
+                    temp = datetime.fromtimestamp(value)
+                    isUnixTimestamp = True
+                except:
+                    pass
+
+        return isUnixTimestamp, value
+
+    def _getValue(self, format, fieldValue, variableType, label):
         value = fieldValue
 
         if variableType == 'Date':
-            timeStamp = datetime.fromtimestamp(time.time())
-            if format is None:
-                value = timeStamp.strftime('%Y-%m-%d')
+            internalFormat = self._getSetting('timeformat')
+            if label == 'DATE' or label == 'AS_DATE':
+                timeStamp = datetime.fromtimestamp(time.time())
+                value = timeStamp.strftime(internalFormat)
             else:
-                value = timeStamp.strftime(format)
+                isUnixTimestamp, value = self._isUnixTimestamp(value)
+                if isUnixTimestamp:
+                    timeStamp = datetime.fromtimestamp(value)
+                    value = timeStamp.strftime(internalFormat)
 
+            tempDate = datetime.strptime(value, internalFormat)
+            if format is not None:
+                try:
+                    value = tempDate.strftime(format)
+                except Exception:
+                    pass            
+                
         if variableType == 'Time':
-            timeStamp = time.localtime(time.time())
-            if format is None:
-                value = time.strftime('%H:%M:%S', timeStamp)
+            if label == 'TIME' or label == 'AS_TIME':
+                timeStamp = time.localtime(time.time())
+                if format is None:
+                    value = time.strftime('%H:%M:%S', timeStamp)
+                else:
+                    value = time.strftime(format, timeStamp)
             else:
-                value = time.strftime(format, timeStamp)
+                value = fieldValue
 
         if variableType == 'Number':
             if format is not None and format != "":
@@ -168,7 +241,7 @@ class ALLSKYFORMAT:
                                     if index < len(formatArray):
                                         variableType = self._getFieldType(fullLabel)
                                         format = formatArray[index]
-                                        formattedValue = self._getValue(format, fieldValue, variableType)
+                                        formattedValue = self._getValue(format, fieldValue, variableType, label)
                                         fieldLabel = fieldLabel.replace(fullLabel, str(formattedValue))
                                 else:
                                     fieldLabel = fieldLabel.replace(fullLabel, str(fieldValue))

@@ -1,17 +1,14 @@
 #!/bin/bash
 
-ME="$(basename "${BASH_ARGV0}")"
-
 # This EXIT code is also defined in variables.sh, but in case we can't open that file, we need it here.
 EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 
 # Make it easy to find the beginning of this run in the log file.
 echo "     ***** Starting AllSky *****"
 
-if [[ -z ${ALLSKY_HOME} ]]; then
-	ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
-	export ALLSKY_HOME
-fi
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
+ME="$(basename "${BASH_ARGV0}")"
+
 cd "${ALLSKY_HOME}" || exit 1
 
 NOT_STARTED_MSG="Unable to start Allsky!"
@@ -27,6 +24,7 @@ if [[ -z ${ALLSKY_CONFIG} ]]; then
 		"${ERROR_MSG_PREFIX}\n$(basename "${ALLSKY_HOME}")/variables.sh\nis corrupted." \
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
+
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh"						|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086 source-path=scripts
@@ -37,6 +35,14 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STO
 
 SEE_LOG_MSG="See ${ALLSKY_LOG}"
 ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
+
+# If a prior copy of Allsky exists, remind the user.
+if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
+	MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
+	MSG="${MSG}\nIf you are no longer using it, it can be removed to save disk space:"
+	MSG="${MSG}\n&nbsp; &nbsp;<code>rm -fr '${PRIOR_ALLSKY_DIR}'"
+	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
+fi
 
 # This file contains information the user needs to act upon after an installation.
 # If the file exists, display it and stop.
@@ -72,38 +78,40 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	{
 		REASON="${1}"		# why are we resetting the bus?
 		# Only reset a couple times, then exit with fatal error.
-		typeset -i COUNT
 		if [[ -f ${RESETTING_USB_LOG} ]]; then
-			COUNT=$(< "${RESETTING_USB_LOG}")
-		fi
-		COUNT=${COUNT:-0}
-		if [[ ${COUNT} -eq 2 ]]; then
-			MSG="FATAL ERROR: Too many consecutive USB bus resets done (${COUNT})."
-			echo -e "${RED}*** ${MSG} Stopping." >&2
-			rm -f "${RESETTING_USB_LOG}"
-			doExit "${EXIT_ERROR_STOP}" "Error" \
-				"${ERROR_MSG_PREFIX}\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}" \
-				"${NOT_STARTED_MSG}<br>${MSG}"
+			NUM_USB_RESETS=$( < "${RESETTING_USB_LOG}" )
+			if [[ ${NUM_USB_RESETS} -eq 2 ]]; then
+				MSG="FATAL ERROR: Too many consecutive USB bus resets done (${NUM_USB_RESETS})."
+				echo -e "${RED}*** ${MSG} Stopping." >&2
+				rm -f "${RESETTING_USB_LOG}"
+				doExit "${EXIT_ERROR_STOP}" "Error" \
+					"${ERROR_MSG_PREFIX}\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}" \
+					"${NOT_STARTED_MSG}<br>${MSG}"
+			fi
+		else
+			NUM_USB_RESETS=0
 		fi
 
+		MSG="${YELLOW}WARNING: Resetting USB ports ${REASON/\\n/ }"
 		if [[ ${ON_TTY} -eq 1 ]]; then
-			echo "${YELLOW}WARNING: Resetting USB ports ${REASON/\\n/ }; restart ${ME} when done.${NC}" >&2
+			echo "${MSG}; restart ${ME} when done.${NC}" >&2
 		else
-			echo "${YELLOW}WARNING: Resetting USB ports ${REASON/\\n/ }, then restarting.${NC}" >&2
+			echo "${MSG}, then restarting.${NC}" >&2
 			# The service will automatically restart this script.
 		fi
 
-		((COUNT=COUNT+1))
-		echo "${COUNT}" > "${RESETTING_USB_LOG}"
+		((NUM_USB_RESETS++))
+		echo "${NUM_USB_RESETS}" > "${RESETTING_USB_LOG}"
 
 		# Display a warning message
 		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${FILENAME}" \
 			"yellow" "" "85" "" "" \
-			"" "5" "yellow" "${EXTENSION}" "" "WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${COUNT}."
+			"" "5" "yellow" "${EXTENSION}" "" "WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
 		sudo "$UHUBCTL_PATH" -a cycle -l "$UHUBCTL_PORT"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 	}
 
+	# "03c3" is the USB ID for ZWO devices.
 	ZWOdev=$(lsusb -d '03c3:' | awk '{ bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}')
 	# We have to run "lsusb -D" once for each device returned by "lsusb -d", and can't
 	# use "echo x | while read" because variables set inside the "while" loop don't get exposed
@@ -114,10 +122,9 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	NUM=0
 	while read -r DEV
 	do
-		if lsusb -D "${DEV}" 2>/dev/null | grep --silent 'iProduct .*ASI[0-9]' ; then
-			((NUM=NUM+1))
-		fi
+		lsusb -D "${DEV}" 2>/dev/null | grep --silent 'iProduct .*ASI[0-9]' && ((NUM++))
 	done < "${TEMP}"
+
 	if [[ ${NUM} -eq 0 ]]; then
 		if [[ -n ${UHUBCTL_PATH} ]] ; then
 			reset_usb "looking for a\nZWO camera"		# reset_usb exits if too many tries
@@ -161,6 +168,9 @@ else
 	mkdir -p "${ALLSKY_TMP}"
 	chmod 775 "${ALLSKY_TMP}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
+	MSG="Had to create '${ALLSKY_TMP}'."
+	MSG="${MSG}\nIf this happens again, contact the Allsky developers."
+	"${ALLSKY_SCRIPTS}/addMessage.sh" warning "${ME}: ${MSG}"
 fi
 [[ ! -d "${ALLSKY_EXTRA}" ]] && mkdir "${ALLSKY_EXTRA}"
 

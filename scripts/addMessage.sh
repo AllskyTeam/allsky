@@ -35,6 +35,13 @@ DATE="$(date '+%B %d, %r')"
 COUNT=0
 TAB="$(echo -e "\t")"
 
+# Convert newlines to HTML breaks.
+MESSAGE="${MESSAGE//\\n/<br>}"
+# Messages may have "/" in them so we can't use that to search in sed,
+# so use "%" instead, but because it could be in a message (although unlikely),
+# convert all "%" to the ASCII code.
+MESSAGE="${MESSAGE//%/&#37;}"
+
 # If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression, so escape it.
 ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
 
@@ -45,11 +52,14 @@ if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$(grep "${TAB}${ESCAPED_MESSAGE}$" "${ALLS
 	# If this entry is corrupted don't try to update the counter.
 	[[ ${PRIOR_COUNT} != "" ]] && ((COUNT = PRIOR_COUNT + 1))
 
-	sed -i -e "/${TAB}${ESCAPED_MESSAGE}$/d"  "${ALLSKY_MESSAGES}"
+	# TODO: prior messages can have any character in them so what do we
+	# use to separate the sed components?
+	EXPRESSION="\%${TAB}${ESCAPED_MESSAGE}$%d"
+	if ! sed -i -e "${EXPRESSION}"  "${ALLSKY_MESSAGES}" ; then
+		echo "${ME}: Warning, sed -e '${EXPRESSION}' failed." >&2
+	fi
 else
 	COUNT=1
 fi
 
-# Convert newlines to HTML breaks.
-MESSAGE="${MESSAGE//\\n/<br>}"
 echo -e "${TYPE}${TAB}${DATE}${TAB}${COUNT}${TAB}${MESSAGE}"  >>  "${ALLSKY_MESSAGES}"

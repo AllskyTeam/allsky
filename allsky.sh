@@ -40,7 +40,7 @@ ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
 if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 	MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
 	MSG="${MSG}\nIf you are no longer using it, it can be removed to save disk space:"
-	MSG="${MSG}\n&nbsp; &nbsp;<code>rm -fr '${PRIOR_ALLSKY_DIR}'"
+	MSG="${MSG}\n&nbsp; &nbsp;<code>rm -fr '${PRIOR_ALLSKY_DIR}'</code>\n"
 	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 fi
 

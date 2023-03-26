@@ -20,7 +20,7 @@ while [[ $# -gt 0 ]]; do
 				HELP="true"
 				;;
 			-d | --debug)
-				((DEBUG=DEBUG+1))
+				((DEBUG++))
 				;;
 			-m | --mini)
 				DO_MINI="true"
@@ -69,15 +69,6 @@ usage_and_exit()
 [[ $# -eq 0 ||  $# -gt 2 ]] && usage_and_exit 1
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
-# If we're on a tty that means we're being manually run so don't display ${ME}.
-if [[ ${ON_TTY} -eq 1 ]]; then
-	   ME=""
-else
-	   ME="${ME}:"
-fi
-
-# XXXXXX TODO: if in MINI mode, only allow one process at a time.
-
 # Allow timelapses of pictures not in the standard $ALLSKY_IMAGES directory.
 # If $2 is passed, it's the top folder, otherwise use the one in $ALLSKY_IMAGES.
 DATE="${1}"
@@ -89,6 +80,62 @@ fi
 if [[ ! -d ${DATE_DIR} ]]; then
 	echo -e "${RED}*** ${ME} ERROR: '${DATE_DIR}' does not exist!${NC}"
 	exit 2
+fi
+
+if [[ ${DO_MINI} == "false" ]]; then
+	OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
+else
+	# In MINI mode, only allow one process at a time.
+	OUTPUT_FILE="${ALLSKY_TMP}/mini-timelapse.mp4"
+	PID_FILE="${ALLSKY_TMP}/timelapse-mini-pid.txt"
+	NUM_CHECKS=0
+	MAX_CHECKS=2
+	SLEEP_TIME="15s"
+
+	while  : ; do
+		[[ ! -f ${PID_FILE} ]] && break
+
+		PID=$( < "${PID_FILE}" )
+		# shellcheck disable=SC2009
+		if ! ps -fp "${PID}" | grep -E --silent "${ME}.*--mini" ; then
+			break	# Not sure why the PID file existed if the process didn't exist.
+		fi
+
+		if [[ $NUM_CHECKS -eq ${MAX_CHECKS} ]]; then
+			echo -en "${YELLOW}" >&2
+			echo -n  "${ME}: WARNING: Another mini timelapse creation is in progress" >&2
+			echo     " so this one was aborted." >&2
+			echo     "If this happens often, check your network and delay settings" >&2
+			echo -n  "as well as your TIMELAPSE_MINI_IMAGES and TIMELAPSE_MINI_FREQUENCY settings." >&2
+			echo -e  "${NC}" >&2
+			ps -fp "${PID}" >&2
+
+			# Keep track of aborts so user can be notified.
+			# If it's happening often let the user know.
+			echo -e "$(date)\t${OUTPUT_FILE}" >> "${ALLSKY_ABORTEDTIMELAPSE}"
+			NUM=$( wc -l < "${ALLSKY_ABORTEDTIMELAPSE}" )
+			if [[ ${NUM} -eq 3 || ${NUM} -eq 10 ]]; then
+				MSG="${NUM} mini timelapse creations have been aborted waiting for others to finish."
+				MSG="${MSG}\nThis could be caused by unreasonable"
+				MSG="${MSG} TIMELAPSE_MINI_IMAGES and TIMELAPSE_MINI_FREQUENCY settings."
+				if [[ ${NUM} -eq 3 ]]; then
+					SEVERITY="info"
+				else
+					SEVERITY="warning"
+					MSG="${MSG}\nOnce you have resolved the cause, reset the aborted counter:"
+					MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${ALLSKY_ABORTEDTIMELAPSE}'</code>"
+				fi
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
+			fi
+
+			exit 2
+		else
+			sleep "${SLEEP_TIME}"
+		fi
+		((NUM_CHECKS++))
+	done
+
+	echo $$ > "${PID_FILE}" || exit 1
 fi
 
 # To save on writes to SD card for people who have $ALLSKY_TMP as a memory filesystem,
@@ -161,18 +208,14 @@ SCALE=""
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
 # set FFLOG=info in config.sh if you want to see what's going on for debugging.
-if [[ ${DO_MINI} == "false" ]]; then
-	OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
-	if [[ ${TIMELAPSEWIDTH} != "0" ]]; then
-		SCALE="-filter:v scale=${TIMELAPSEWIDTH}:${TIMELAPSEHEIGHT}"
-	fi
-else
-	OUTPUT_FILE="${ALLSKY_TMP}/mini-timelapse.mp4"
+if [[ ${DO_MINI} == "true" ]]; then
 	FPS="${TIMELAPSE_MINI_FPS}"
 	TIMELAPSE_BITRATE="${TIMELAPSE_MINI_BITRATE}"
 	if [[ ${TIMELAPSE_MINI_WIDTH} != "0" ]]; then
 		SCALE="-filter:v scale=${TIMELAPSE_MINI_WIDTH}:${TIMELAPSE_MINI_HEIGHT}"
 	fi
+elif [[ ${TIMELAPSEWIDTH} != "0" ]]; then
+	SCALE="-filter:v scale=${TIMELAPSEWIDTH}:${TIMELAPSEHEIGHT}"
 fi
 # shellcheck disable=SC2086
 X="$(ffmpeg -y -f image2 \
@@ -213,6 +256,8 @@ fi
 
 # timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
-[[ ${DEBUG} -ge 2 ]] && echo -e "${ME}${GREEN}Timelapse in ${OUTPUT_FILE}${NC}"
+[[ ${DEBUG} -ge 2 ]] && echo -e "${ME}: ${GREEN}Timelapse in ${OUTPUT_FILE}${NC}"
+
+rm -f "${PID_FILE}"
 
 exit 0

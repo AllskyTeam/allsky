@@ -77,8 +77,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Holds information on what the user needs to do after an installation.
 	POST_INSTALLATION_ACTIONS="${ALLSKY_CONFIG}/post-installation_actions.txt"
 
-	# Holds temporary list of aborted uploads since another one was in progress
+	# Holds temporary list of aborted uploads and timelapse since another one was in progress
 	ALLSKY_ABORTEDUPLOADS="${ALLSKY_TMP}/aborted_uploads.txt"
+	ALLSKY_ABORTEDTIMELAPSE="${ALLSKY_TMP}/aborted_timelapse.txt"
 
 	# Holds all the dark frames.
 	ALLSKY_DARKS="${ALLSKY_HOME}/darks"

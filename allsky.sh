@@ -174,10 +174,11 @@ else
 fi
 [[ ! -d "${ALLSKY_EXTRA}" ]] && mkdir "${ALLSKY_EXTRA}"
 
-# Clear out this file and allow the web server to write to it.
+# Clear out these files and allow the web server to write to it.
 : > "${ALLSKY_ABORTEDUPLOADS}"
-sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ABORTEDUPLOADS}"
-sudo chmod 664 "${ALLSKY_ABORTEDUPLOADS}"
+: > "${ALLSKY_ABORTEDTIMELAPSE}"
+sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ABORTEDUPLOADS}" "${ALLSKY_ABORTEDTIMELAPSE}"
+sudo chmod 664 "${ALLSKY_ABORTEDUPLOADS}" "${ALLSKY_ABORTEDTIMELAPSE}"
 
 # Optionally display a notification image.
 if [[ $USE_NOTIFICATION_IMAGES -eq 1 ]]; then

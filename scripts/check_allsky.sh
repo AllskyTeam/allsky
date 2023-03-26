@@ -376,9 +376,9 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 	function get_exposure() {	# return the time spent on one image, prior to delay
 		TIME="${1}"
 		if [[ $(settings ".${TIME}autoexposure") ]]; then
-			echo "$(settings ".${TIME}maxautoexposure")"
+			$(settings ".${TIME}maxautoexposure")
 		else
-			echo "$(settings ".${TIME}exposure")"
+			$(settings ".${TIME}exposure")
 		fi
 	}
 
@@ -386,12 +386,12 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 	# Convert to seconds ( / 1000) to make logic easier.
 	MIN_DELAY=$(min .daydelay .nightdelay)
 	MIN_DELAY=$((MIN_DELAY / 1000))
-	CONSISTENT_DELAYS=$(settings .consistentDelays)
 # TODO: remove the commented out assigments after we know this works.
 #MIN_DELAY=1
 #TIMELAPSE_MINI_FREQUENCY=10
 
 # TODO: Hard-code the MIN_EXPOSURE below instead of these lines:
+#x	CONSISTENT_DELAYS=$(settings .consistentDelays)
 #x	if [[ ${CONSISTENT_DELAYS} -eq 1 ]]; then
 #x		MIN_EXPOSURE=$(min .daymaxautoexposure .nightmaxautoexposure)
 #x	else

@@ -1,65 +1,40 @@
 {
     "fields": [
         {
-            "label": "${DATE}",
-            "x": 124,
-            "y": 47,
-            "id": "oe-field-4",
-            "format": "%d-%m-%Y",
+            "label": "${DATE} ${TIME}",
+            "x": 118,
+            "y": 24,
+            "id": "oe-field-0",
+            "format": "%d-%m-%Y,%H:%M:%S",
             "strokewidth": 0,
-            "sample": "DATE",
-            "tlx": 19,
-            "tly": 20,
+            "sample": "DATE,TIME",
+            "tlx": 10,
+            "tly": 10,
             "font": "Arial",
             "fontsize": 80,
-            "fill": "#ff0000"
-        },
-        {
-            "label": "${TIME}",
-            "x": 579,
-            "y": 47,
-            "id": "oe-field-5",
-            "format": "%H:%M:%S",
-            "strokewidth": 0,
-            "sample": "TIME",
-            "tlx": 479,
-            "tly": 20,
-            "fontsize": 80,
-            "font": "Arial",
             "fill": "#ff0000"
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 348,
-            "y": 147,
-            "id": "oe-field-6",
+            "x": 179,
+            "y": 64,
+            "id": "oe-field-1",
             "font": "Arial",
             "fontsize": 68,
             "strokewidth": 0,
-            "tlx": 19,
-            "tly": 120
+            "tlx": 10,
+            "tly": 50
         },
         {
             "label": "Gain: ${GAIN}",
-            "x": 194,
-            "y": 227,
-            "id": "oe-field-7",
+            "x": 98,
+            "y": 99,
+            "id": "oe-field-2",
             "font": "Arial",
             "fontsize": 68,
             "strokewidth": 0,
-            "tlx": 19,
-            "tly": 200
-        },
-        {
-            "label": "Sensor: ${TEMPERATURE_C}",
-            "x": 359,
-            "y": 307,
-            "id": "oe-field-8",
-            "font": "Arial",
-            "fontsize": 68,
-            "strokewidth": 0,
-            "tlx": 19,
-            "tly": 280
+            "tlx": 10,
+            "tly": 90
         }
     ],
     "images": [],

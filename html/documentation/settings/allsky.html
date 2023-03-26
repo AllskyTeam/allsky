@@ -1072,6 +1072,19 @@ and are updated by clicking on the WebUI's
 	mini-timelapse is created using the last
 	<span class="shSetting">TIMELAPSE_MINI_IMAGES</span> images.
 	For example, every 5 frames a new mini-timelapse is created using the most recent 15 images.
+	<p>
+	<blockquote class="warning">
+	Be <strong>very</strong> careful when setting the 
+	<span class="shSetting">TIMELAPSE_MINI_IMAGES</span> and
+	<span class="shSetting">TIMELAPSE_MINI_FREQUENCY</span> settings.
+	If either or both numbers are too high,
+	or the daytime or nighttime <span class="WebUISetting">Delay</span> is too short,
+	there may not be enough time to finish one mini timelapse creation before
+	the next one starts.
+	If this happens the second one will be aborted and you'll see a System Message in the WebUI
+	(you may need to refresh your browser page).
+	</blockquote>
+	</p>
 	</td>
 </tr>
 <tr><td><span class="shSetting">TIMELAPSE_MINI_UPLOAD_VIDEO</span></td>

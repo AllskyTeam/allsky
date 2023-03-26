@@ -433,3 +433,12 @@ function get_variable() {
 	echo "${LINE}" | sed -e "s/${SEARCH_STRING}//" -e 's/"//g'
 	return 0
 }
+
+#####
+# Simple way to get a setting that hides the details.
+function settings()
+{
+	j="$(jq -r "${1}" "${2:-${SETTINGS_FILE}}")" && echo "${j}" && return
+	echo "${ME2}: running as $(id --user --name), unable to get json value for '${1}';" >&2
+	ls -l "${SETTINGS_FILE}" >&2
+}

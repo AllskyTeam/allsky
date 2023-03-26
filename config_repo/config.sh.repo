@@ -183,14 +183,6 @@ if [[ ! -f ${SETTINGS_FILE} ]]; then
 	exit ${EXIT_ERROR_STOP}
 fi
 
-# Simple way to get a setting that hides the details.
-function settings()
-{
-	j="$(jq -r "${1}" "${2:-${SETTINGS_FILE}}")" && echo "${j}" && return
-	echo "${ME2}: running as $(id --user --name), unable to get json value for '${1}';" >&2
-	ls -l "${SETTINGS_FILE}" >&2
-}
-
 # Get the name of the file the websites will look for, and split into name and extension.
 FULL_FILENAME="$(settings ".filename")"
 EXTENSION="${FULL_FILENAME##*.}"

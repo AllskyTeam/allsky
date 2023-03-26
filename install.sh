@@ -222,7 +222,7 @@ select_camera_type()
 		case "${PRIOR_ALLSKY_VERSION}" in
 			# New versions go here...
 # xxxxxxxxxxxxxx      TODO: update version on next line when we go live.
-			"v2023.03.09_tbd")
+			v2022.MM.DD_tbd | v2023.*)		# test versions
 				# New style Allsky using ${CAMERA_TYPE}.
 				CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
 				# Don't bother with a message since this is a "similar" release.
@@ -761,8 +761,7 @@ set_permissions()
 	# We don't know what permissions may have been on the old website, so use "sudo".
 	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
 	# These are the exceptions
-	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
-		      "${ALLSKY_WEBUI}/includes/overlay_sample.py"
+	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
 
 	chmod 775 "${ALLSKY_TMP}"
@@ -966,7 +965,7 @@ get_locale()
 	fi
 
 	#shellcheck disable=SC2086
-	[[ ${DEBUG} -gt 1 ]] && echo "INSTALLED_LOCALES=" ${INSTALLED_LOCALES}
+	[[ ${DEBUG} -gt 1 ]] && display_msg debug "INSTALLED_LOCALES=${INSTALLED_LOCALES}"
 
 	# If the prior version of Allsky had a locale set but it's not
 	# an installed one, let th euser know.
@@ -993,7 +992,9 @@ get_locale()
 		fi
 	fi
 	#shellcheck disable=SC2086
-	[[ ${DEBUG} -gt 1 ]] && echo "TEMP_LOCALE=${TEMP_LOCALE}, CURRENT_LOCALE=${CURRENT_LOCALE}"
+	if [[ ${DEBUG} -gt 1 ]]; then
+		display_msg debug "TEMP_LOCALE=${TEMP_LOCALE}, CURRENT_LOCALE=${CURRENT_LOCALE}"
+	fi
 
 	local D=""
 	if [[ -n ${CURRENT_LOCALE} && ${CURRENT_LOCALE} != "null" ]]; then
@@ -1072,8 +1073,8 @@ does_prior_Allsky_exist()
 {
 	PRIOR_ALLSKY=""
 	if [[ -d ${PRIOR_ALLSKY_DIR}/src ]]; then
-		if [[ -f  ${PRIOR_ALLSKY_DIR}/version ]]; then
-			PRIOR_ALLSKY_VERSION="$( < "${PRIOR_ALLSKY_DIR}/version" )"
+		PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"
+		if [[ -n  ${PRIOR_ALLSKY_VERSION} ]]; then
 			case "${PRIOR_ALLSKY_VERSION}" in
 				"v2022.03.01")		# First Allsky version with a version file
 					# This is an old style Allsky with ${CAMERA} in config.sh and
@@ -1118,6 +1119,8 @@ prompt_for_prior_Allsky()
 		MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
 		MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+			# Grab the CAMERA_TYPE
+			CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
 			return 0
 		else
 			PRIOR_ALLSKY=""
@@ -1173,9 +1176,10 @@ install_dependencies_etc()
 # Update config.sh
 update_config_sh()
 {
+	display_msg progress "Updating '${ALLSKY_CONFIG}/config.sh'"
 	sed -i \
-		-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
-		-e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${CAMERA_TYPE}\"/" \
+		-e "s;^ALLSKY_VERSION=.*$;ALLSKY_VERSION=\"${ALLSKY_VERSION}\";" \
+		-e "s;^CAMERA_TYPE=.*$;CAMERA_TYPE=\"${CAMERA_TYPE}\";" \
 		"${ALLSKY_CONFIG}/config.sh"
 }
 
@@ -1227,21 +1231,27 @@ prompt_for_lat_long()
 # We can't automatically determine the latitude and longitude, so prompt for them.
 get_lat_long()
 {
+	if [[ ! -f ${SETTINGS_FILE} ]]; then
+		display_msg error "INTERNAL ERROR: '${SETTINGS_FILE}' not found!"
+		return 1
+	fi
+
 	display_msg progress "Prompting for Latitude and Longitude."
 
 	MSG="Enter your Latitude."
 	MSG="${MSG}\nIt can either have a plus or minus sign (e.g., -20.1)"
-	MSG="${MSG} or N or S (e.g., 20.1S)"
+	MSG="${MSG}\nor N or S (e.g., 20.1S)"
 	LATITUDE="$(prompt_for_lat_long "${MSG}" "latitude" "Latitude")"
 
 	MSG="Enter your Longitude."
 	MSG="${MSG}\nIt can either have a plus or minus sign (e.g., -20.1)"
-	MSG="${MSG} or E or W (e.g., 20.1W)"
+	MSG="${MSG}\nor E or W (e.g., 20.1W)"
 	LONGITUDE="$(prompt_for_lat_long "${MSG}" "longitude" "Longitude")"
 
 	if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
 		display_msg --log warning "Latitude and longitude need to be set in the WebUI before Allsky can start."
 	fi
+	return 0
 }
 
 
@@ -1410,11 +1420,11 @@ restore_prior_settings_files()
 		else
 			# This should "never" happen.
 			# Their prior version is "new" but they don't have a settings file?
-			get_lat_long
+			display_msg error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
 		fi
 	else
 		# settings file is old style in ${OLD_RASPAP_DIR}.
-		if [[ -n ${PRIOR_SETTINGS_FILE} ]]; then
+		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
 			# Transfer prior settings to the new file.
 			case "${PRIOR_ALLSKY_VERSION}" in
 				"v2022.03.01")
@@ -1449,7 +1459,7 @@ restore_prior_settings_files()
 		else
 			# This should "never" happen.
 			# They have a prior Allsky version but no "settings file?
-			get_lat_long
+			display_msg error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
 
 			# If we ever automate migrating settings, this next statement should be deleted.
 			FORCE_CREATING_SETTINGS_FILE="true"
@@ -1493,7 +1503,7 @@ restore_prior_files()
 	else
 		# This is probably very rare.
 		MSG="No prior 'images' directory so can't restore them."
-		display_msg info "${MSG}"
+		display_msg progress "${MSG}"
 		display_msg --logonly info "${MSG}"
 	fi
 
@@ -1506,14 +1516,14 @@ restore_prior_files()
 		display_msg progress "Restoring modules."
 		"${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}"
 	else
-		display_msg "${LOG_TYPE}" info "No prior 'modules' so can't restore."
+		display_msg "${LOG_TYPE}" progress "No prior 'modules' so can't restore."
 	fi
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg progress "Restoring overlays."
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 	else
-		display_msg "${LOG_TYPE}" info "No prior 'overlay' so can't restore."
+		display_msg "${LOG_TYPE}" progress "No prior 'overlay' so can't restore."
 	fi
 
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
@@ -1526,7 +1536,7 @@ restore_prior_files()
 		display_msg progress "Restoring WebUI security settings."
 		cp -a "${D}/raspap.auth" "${ALLSKY_CONFIG}"
 	else
-		display_msg "${LOG_TYPE}" info "No prior 'WebUI security settings' so can't restore."
+		display_msg "${LOG_TYPE}" progress "No prior 'WebUI security settings' so can't restore."
 	fi
 
 	# Restore any REMOTE Allsky Website configuration file.
@@ -1573,28 +1583,32 @@ restore_prior_files()
 
 	# See if the prior config.sh and ftp-setting.sh are the same version as
 	# the new ones; if so, we can copy them to the new version.
+	# Currently what's in ${ALLSKY_CONFIG} are copies of the repo files.
 
+	CONFIG_SH_VERSION="$(get_variable "CONFIG_SH_VERSION" "${ALLSKY_CONFIG}/config.sh")"
 	PRIOR_CONFIG_SH_VERSION="$(get_variable "CONFIG_SH_VERSION" "${PRIOR_CONFIG_FILE}")"
 	if [[ ${DEBUG} -gt 0 ]]; then
 		display_msg debug "CONFIG_SH_VERSION=${CONFIG_SH_VERSION}, PRIOR=${PRIOR_CONFIG_SH_VERSION}"
 	fi
 	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
 		RESTORED_PRIOR_CONFIG_SH="true"
-		display_msg progress "Restoring prior 'config.sh' file."
+		display_msg progress "Restoring and updating prior 'config.sh' file."
 		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}"
 	else
 		RESTORED_PRIOR_CONFIG_SH="false"
 		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
 			MSG="no version specified"
 		else
+			# This is hopefully the last version with config.sh so don't
+			# bother writing a function to convert from the prior version to this.
 			MSG="old version (${PRIOR_CONFIG_SH_VERSION})"
-			MSG="Not restoring 'config.sh': ${MSG}."
-			display_msg "${LOG_TYPE}" info "${MSG}"
 		fi
+		MSG="Not restoring 'config.sh': ${MSG}."
+		display_msg "${LOG_TYPE}" info "${MSG}"
 	fi
 
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then
-		# Allsky v2022.03.01 and newer.  v2022.03.01 doesn't ahve FTP_SH_VERSION.
+		# Allsky v2022.03.01 and newer.  v2022.03.01 doesn't have FTP_SH_VERSION.
 		PRIOR_FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}")"
 		FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh")"
 	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
@@ -2026,11 +2040,8 @@ whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 install_webserver
 
 ##### Install dependencies, then compile and install Allsky software
+# This will create the "config" directory and put default files in it.
 install_dependencies_etc || exit_with_image 1
-
-##### Update config.sh
-# This must come BEFORE save_camera_capabilities, since it uses the camera type.
-update_config_sh
 
 ##### Create the file that defines the WebUI variables.
 create_webui_defines
@@ -2039,9 +2050,9 @@ create_webui_defines
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
 save_camera_capabilities "false" || exit_with_image 1			# prompts on error only
 
-# Code later needs "settings()" function.
+# Code later needs "settings()" function.  This is still the "repo" config.sh.
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh" || exit_with_image ${ALLSKY_ERROR_STOP}
+#####source "${ALLSKY_CONFIG}/config.sh" || exit_with_image ${ALLSKY_ERROR_STOP}
 
 ##### Set locale
 set_locale
@@ -2057,6 +2068,9 @@ handle_prior_website
 
 ##### Restore prior files if needed
 restore_prior_files									# prompts if prior Allsky exists
+
+##### Update config.sh
+update_config_sh
 
 ##### Set permissions.  Want this at the end so we make sure we get all files.
 set_permissions

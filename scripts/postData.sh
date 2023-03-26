@@ -10,12 +10,12 @@ ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck disable=SC2086 source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086 source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
 
 WEBSITES="$(whatWebsites)"
 # Make sure a local or remote Allsky Website exists.

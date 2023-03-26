@@ -13,7 +13,7 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
 if [ $# -ne 2 ]; then
 	# shellcheck disable=SC2154
 	echo -e "${wERROR}Usage: ${ME}  message_type  message${wNC}" >&2
-	echo -e "\nWhere 'message_type' is 'error', 'warning', 'info', or 'debug'." >&2
+	echo -e "\nWhere 'message_type' is 'success', 'warning', 'error', 'info', or 'debug'." >&2
 	exit 1
 fi
 
@@ -24,7 +24,7 @@ if [[ ${TYPE} == "error" ]]; then
 	TYPE="danger"
 elif [[ ${TYPE} == "debug" ]]; then
 	TYPE="warning"
-elif [[ ${TYPE} != "warning" && ${TYPE} != "info" ]]; then
+elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; then
 	echo -e "${wWARNING}Warning: unknown message type: '${TYPE}'. Using 'info'.${wNC}" >&2
 	TYPE="info"
 fi

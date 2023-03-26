@@ -8,6 +8,8 @@ ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck disable=SC2086 source-path=.
 source "${ALLSKY_HOME}/variables.sh" || exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086 source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
 
@@ -151,9 +153,6 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 		RESOLUTION_X=${IMG_WIDTH}
 		RESOLUTION_Y=${IMG_HEIGHT}
 	fi
-
-	#shellcheck disable=SC2086 source-path=scripts
-	source "${ALLSKY_SCRIPTS}/functions.sh" || exit ${ALLSKY_ERROR_STOP}
 
 	# Do some sanity checks on the CROP_* variables.
 	ERROR_MSG=""

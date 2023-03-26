@@ -146,15 +146,14 @@ while  : ; do
 		if [[ ${NUM} -eq 3 || ${NUM} -eq 10 ]]; then
 			MSG="${NUM} uploads have been aborted waiting for other uploads to finish."
 			MSG="${MSG}\nThis could be caused by a slow network or other network issues."
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
 			if [[ ${NUM} -eq 3 ]]; then
 				SEVERITY="info"
 			else
 				SEVERITY="warning"
-				MSG="If you have resolved the cause, reset the aborted counter:"
+				MSG="${MSG}\nOnce you have resolved the cause, reset the aborted counter:"
 				MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${ALLSKY_ABORTEDUPLOADS}'</code>"
-				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
 			fi
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
 		fi
 
 		exit 2

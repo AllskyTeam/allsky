@@ -483,9 +483,12 @@ if (file_exists($f)) {
 	addTimestamp("list_days");
 	addTimestamp("configuration");
 	addTimestamp("editor");
+	addTimestamp("overlay");
+	addTimestamp("module");
 	addTimestamp("LAN");
 	addTimestamp("WLAN");
 	addTimestamp("wifi");
+	addTimestamp("auth_conf");
 	addTimestamp("system");
 </script>
 

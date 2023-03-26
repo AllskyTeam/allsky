@@ -74,6 +74,7 @@ done
 source "${ALLSKY_CONFIG}/config.sh"	 					|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/ftp-settings.sh" 				|| exit ${ALLSKY_ERROR_STOP}
+PROTOCOL="${PROTOCOL,,}"	# set to lowercase to make comparing easier
 
 
 BRANCH="$( get_branch "${ALLSKY_BRANCH_FILE}" )"
@@ -344,6 +345,7 @@ if [[ ${VCODEC} == "libx264" ]]; then
 	fi
 fi
 
+##### Timelapse and mini timelapse
 if [[ ${TIMELAPSE} == "true" && ${UPLOAD_VIDEO} == "false" ]]; then
 	heading "Warnings"
 	echo "Timelapse videos are being created (TIMELAPSE='true') but not uploaded (UPLOAD_VIDEO='false')"
@@ -353,6 +355,92 @@ if [[ ${TIMELAPSE} == "false" && ${UPLOAD_VIDEO} == "true" ]]; then
 	echo "Timelapse videos are not being created (TIMELAPSE='false') but UPLOAD_VIDEO='true'"
 fi
 
+if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
+
+	# See if there's likely to be a problem with mini timelapse creations
+	# starting before the prior one finishes.
+	# This is dependent on:
+	#	1. Delay:		the delay between images: min(daytime_delay, nighttime_delay)
+	#	2. Frequency:	how often mini timelapse are created (i.e., after how many images)
+	# 	3. NumImages:	how many images are used (the more the longer processing takes)
+	# 	4. the speed of the Pi - this is the biggest unknown
+	function min() {		# return the min of two numbers
+		ONE=$(settings "${1}")
+		TWO=$(settings "${2}")
+		if [[ ${ONE} -lt ${TWO} ]]; then
+			echo "${ONE}"
+		else
+			echo "${TWO}"
+		fi
+	}
+	function get_exposure() {	# return the time spent on one image, prior to delay
+		TIME="${1}"
+		if [[ $(settings ".${TIME}autoexposure") ]]; then
+			echo "$(settings ".${TIME}maxautoexposure")"
+		else
+			echo "$(settings ".${TIME}exposure")"
+		fi
+	}
+
+	# Use min() for worst case.
+	# Convert to seconds ( / 1000) to make logic easier.
+	MIN_DELAY=$(min .daydelay .nightdelay)
+	MIN_DELAY=$((MIN_DELAY / 1000))
+	CONSISTENT_DELAYS=$(settings .consistentDelays)
+# TODO: remove the commented out assigments after we know this works.
+#MIN_DELAY=1
+#TIMELAPSE_MINI_FREQUENCY=10
+
+# TODO: Hard-code the MIN_EXPOSURE below instead of these lines:
+#x	if [[ ${CONSISTENT_DELAYS} -eq 1 ]]; then
+#x		MIN_EXPOSURE=$(min .daymaxautoexposure .nightmaxautoexposure)
+#x	else
+#x		MIN_EXPOSURE=$(min "$(get_exposure "day")" "$(get_exposure "night")")
+#x	fi
+#x	MIN_EXPOSURE=$((MIN_EXPOSURE / 1000))
+
+	# This is typically the max daytime exposure, which is shorter than nighttime.
+	# so use it.
+	MIN_EXPOSURE=0.25
+
+	# Minimum total time spent on each image
+	MIN_IMAGE_TIME=$(echo "${MIN_EXPOSURE} + ${MIN_DELAY}" | bc -l)
+
+	# Minimum total time between start of timelapse creations.
+	MIN_TIME_BETWEEN_TIMELAPSE=$(echo "scale=0; ${TIMELAPSE_MINI_FREQUENCY} * ${MIN_IMAGE_TIME}" | bc -l)
+	MIN_TIME_BETWEEN_TIMELAPSE=${MIN_TIME_BETWEEN_TIMELAPSE/.*/}
+
+#echo "CONSISTENT_DELAYS=$CONSISTENT_DELAYS"
+#echo "MIN_DELAY=$MIN_DELAY"
+#echo "MIN_EXPOSURE=$MIN_EXPOSURE"
+#echo "MIN_IMAGE_TIME=$MIN_IMAGE_TIME"
+#echo "MIN_TIME_BETWEEN_TIMELAPSE=$MIN_TIME_BETWEEN_TIMELAPSE"
+#TIMELAPSE_MINI_IMAGES=120
+#echo "TIMELAPSE_MINI_IMAGES=$TIMELAPSE_MINI_IMAGES"
+#echo "CAMERA_TYPE=$CAMERA_TYPE"
+
+	# On a Pi 4, creating a 50 image timelapse takes
+	#	- a few seconds on a small ZWO camera
+	#	- about a minute with an RPi HQ
+
+	if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
+		S=3
+	else
+		S=60
+	fi
+	EXPECTED_TIME=$(echo "scale=0; (${TIMELAPSE_MINI_IMAGES} / 50) * ${S}" | bc -l)
+#echo "EXPECTED_TIME=$EXPECTED_TIME"
+	if [[ ${EXPECTED_TIME} -gt ${MIN_TIME_BETWEEN_TIMELAPSE} ]]; then
+		heading "Warnings"
+		echo "Your mini timelapse settings may cause multiple timelapse to be created simultaneously."
+		echo "Consider increasing DELAY between pictures, increasing TIMELAPSE_MINI_FREQUENCY,"
+		echo "decrease TIMELAPSE_MINI_IMAGES, or a combination of those changes."
+		echo "Expected time to create a mini timelapse on a Pi 4 is ${EXPECTED_TIME} seconds"
+		echo "but with your settings one will be created as short as every ${MIN_TIME_BETWEEN_TIMELAPSE} seconds."
+	fi
+fi
+
+##### Keograms
 if [[ ${KEOGRAM} == "true" && ${UPLOAD_KEOGRAM} == "false" ]]; then
 	heading "Warnings"
 	echo "Keograms are being created (KEOGRAM='true') but not uploaded (UPLOAD_KEOGRAM='false')"
@@ -362,6 +450,7 @@ if [[ ${KEOGRAM} == "false" && ${UPLOAD_KEOGRAM} == "true" ]]; then
 	echo "Keograms are not being created (KEOGRAM='false') but UPLOAD_KEOGRAM='true'"
 fi
 
+##### Startrails
 if [[ ${STARTRAILS} == "true" && ${UPLOAD_STARTRAILS} == "false" ]]; then
 	heading "Warnings"
 	echo "Startrails are being created (STARTRAILS='true') but not uploaded (UPLOAD_STARTRAILS='false')"
@@ -370,6 +459,7 @@ if [[ ${STARTRAILS} == "false" && ${UPLOAD_STARTRAILS} == "true" ]]; then
 	heading "Warnings"
 	echo "Startrails are not being created (STARTRAILS='false') but UPLOAD_STARTRAILS='true'"
 fi
+
 
 if [[ ${RESIZE_UPLOADS} == "true" && ${IMG_UPLOAD} == "false" ]]; then
 	heading "Warnings"
@@ -401,9 +491,7 @@ if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
 fi
 
 
-PROTOCOL="${PROTOCOL,,}"
 case "${PROTOCOL}" in
-
 	"" | local)		# Nothing needed for these
 		;;
 

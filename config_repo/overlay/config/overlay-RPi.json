@@ -1,54 +1,51 @@
 {
     "fields": [
         {
-            "label": "${DATE}",
-            "x": 172,
-            "y": 60,
-            "id": "oe-field-4",
-            "format": "%d-%m-%Y",
+            "label": "${DATE} ${TIME}",
+            "x": 330,
+            "y": 50,
+            "id": "oe-field-0",
+            "format": "%d-%m-%Y,%H:%M:%S",
             "strokewidth": 0,
-            "sample": "DATE",
-            "tlx": 19,
-            "tly": 20,
+            "sample": "DATE,TIME",
+            "tlx": 10,
+            "tly": 10,
             "font": "Arial",
             "fontsize": 80,
-            "fill": "#ff0000"
-        },
-        {
-            "label": "${TIME}",
-            "x": 624,
-            "y": 60,
-            "id": "oe-field-5",
-            "format": "%H:%M:%S",
-            "strokewidth": 0,
-            "sample": "TIME",
-            "tlx": 479,
-            "tly": 20,
-            "fontsize": 80,
-            "font": "Arial",
             "fill": "#ff0000"
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 430,
-            "y": 154,
-            "id": "oe-field-6",
+            "x": 421,
+            "y": 124,
+            "id": "oe-field-1",
             "font": "Arial",
             "fontsize": 68,
             "strokewidth": 0,
-            "tlx": 19,
-            "tly": 120
+            "tlx": 10,
+            "tly": 90
         },
         {
             "label": "Gain: ${GAIN}",
-            "x": 235,
-            "y": 234,
-            "id": "oe-field-7",
+            "x": 226,
+            "y": 194,
+            "id": "oe-field-2",
             "font": "Arial",
             "fontsize": 68,
             "strokewidth": 0,
-            "tlx": 19,
-            "tly": 200
+            "tlx": 10,
+            "tly": 160
+        },
+        {
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
+            "x": 419,
+            "y": 3002,
+            "id": "oe-field-3",
+            "fontsize": 44,
+            "strokewidth": 0,
+            "sample": "RPi HQ",
+            "tlx": 10,
+            "tly": 2980
         }
     ],
     "images": [],

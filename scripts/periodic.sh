@@ -11,6 +11,7 @@ source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
 
 trap "exit 0" SIGTERM SIGINT
 
+#shellcheck disable=SC2086
 cd "${ALLSKY_SCRIPTS}" || exit ${ALLSKY_ERROR_STOP}
 
 while :

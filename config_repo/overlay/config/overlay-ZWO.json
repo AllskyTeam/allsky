@@ -34,11 +34,23 @@
             "tly": 70
         },
         {
-            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
-            "x": 158,
-            "y": 1078,
+            "label": "Sensor: ${TEMPERATURE_C} C",
+            "x": 215,
+            "y": 114,
             "id": "oe-field-3",
-            "fontsize": 16,
+            "format": "{:.1f}",
+            "fontsize": 28,
+            "strokewidth": 0,
+            "tlx": 9,
+            "tly": 100,
+            "sample": "20.1"
+        },
+        {
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
+            "x": 195,
+            "y": 1080,
+            "id": "oe-field-4",
+            "fontsize": 20,
             "strokewidth": 0,
             "sample": "ZWO ASI174MC",
             "tlx": 9,
@@ -70,4 +82,3 @@
         }
     }
 }
-

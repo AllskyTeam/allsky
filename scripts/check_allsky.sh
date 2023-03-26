@@ -376,9 +376,9 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 	function get_exposure() {	# return the time spent on one image, prior to delay
 		TIME="${1}"
 		if [[ $(settings ".${TIME}autoexposure") ]]; then
-			$(settings ".${TIME}maxautoexposure")
+			settings ".${TIME}maxautoexposure"
 		else
-			$(settings ".${TIME}exposure")
+			settings ".${TIME}exposure"
 		fi
 	}
 

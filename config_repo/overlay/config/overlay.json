@@ -1,40 +1,48 @@
 {
     "fields": [
         {
-            "label": "${DATE} ${TIME}",
-            "x": 118,
+            "label": "${DATE}  ${TIME}",
+            "x": 121,
             "y": 24,
             "id": "oe-field-0",
             "format": "%d-%m-%Y,%H:%M:%S",
             "strokewidth": 0,
             "sample": "DATE,TIME",
-            "tlx": 10,
+            "tlx": 9,
             "tly": 10,
-            "font": "Arial",
-            "fontsize": 80,
+            "fontsize": 28,
             "fill": "#ff0000"
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 179,
-            "y": 64,
+            "x": 178,
+            "y": 54,
             "id": "oe-field-1",
-            "font": "Arial",
-            "fontsize": 68,
+            "fontsize": 28,
             "strokewidth": 0,
-            "tlx": 10,
-            "tly": 50
+            "tlx": 9,
+            "tly": 40
         },
         {
             "label": "Gain: ${GAIN}",
             "x": 98,
-            "y": 99,
+            "y": 84,
             "id": "oe-field-2",
-            "font": "Arial",
-            "fontsize": 68,
+            "fontsize": 28,
             "strokewidth": 0,
-            "tlx": 10,
-            "tly": 90
+            "tlx": 9,
+            "tly": 70
+        },
+        {
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
+            "x": 158,
+            "y": 1078,
+            "id": "oe-field-3",
+            "fontsize": 16,
+            "strokewidth": 0,
+            "sample": "ZWO ASI174MC",
+            "tlx": 9,
+            "tly": 1070
         }
     ],
     "images": [],

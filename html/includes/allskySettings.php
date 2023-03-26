@@ -47,6 +47,7 @@ function DisplayAllskyConfig(){
 			$newCameraNumber = "";
 			$ok = true;
 			$msg = "";
+			$errorMsg = "";
 
 			// Keep track of optional settings
 			foreach ($options_array as $option){
@@ -56,7 +57,7 @@ function DisplayAllskyConfig(){
 
 	 		foreach ($_POST as $key => $value){
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
-				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts"]))
+				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", "XX_END_XX"]))
 					continue;
 
 				// We look into POST data to only select settings.
@@ -69,7 +70,6 @@ function DisplayAllskyConfig(){
 					$oldValue = str_replace("'", "&#x27", $value);
 					$newValue = getVariableOrDefault($settings, $originalName, "");
 					if ($oldValue !== $newValue) {
-// if ($debugArg !== "") echo "<br>xxxxx  <b>$originalName</b> changed from '$oldValue' to '$newValue'";
 						if ($originalName === $cameraTypeName)
 							$newCameraType = $newValue;
 						elseif ($originalName === $cameraModelName)
@@ -99,6 +99,10 @@ function DisplayAllskyConfig(){
 					foreach ($options_array as $option){
 						if ($option['name'] === $key) {
 							if ($value == "" && ! $optional_array[$key]) {
+								if ($errorMsg == "")
+									$errorMsg = "<strong>" . $option['label'] . "</strong> is empty";
+								else
+									$errorMsg .= ", <strong>" . $option['label'] . "</strong> is empty";
 								$numErrors++;
 								$ok = false;
 							}
@@ -119,7 +123,8 @@ function DisplayAllskyConfig(){
 			if ($ok) {
 				if ($somethingChanged || $lastChanged === null) {
 					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
-						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>, or <b>Camera Number</b>  you cannot change anything else.  No changes made.";
+						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
+						$msg .= " or <b>Camera Number</b>  you cannot change anything else.  No changes made.";
 						$ok = false;
 					} else {
 						// Keep track of the last time the file changed.
@@ -186,7 +191,7 @@ function DisplayAllskyConfig(){
 				if ($doingRestart)
 					$msg = ", and Allsky NOT restarted.";
 				if ($numErrors > 0) {
-					$msg = "Settings NOT saved due to $numErrors errors$msg";
+					$msg = "Settings NOT saved due to $numErrors errors: $errorMsg.";
 				}
 				$status->addMessage($msg, 'danger');
 			}
@@ -294,20 +299,42 @@ function toggle_advanced()
 		<input type="hidden" name="_ts" value="<?php echo time(); ?>">
 		<?php CSRFToken();
 
-		// Allow for "advanced" options that aren't displayed by default to avoid
-		// confusing novice users.
-		$numAdvanced = 0;
-		$numMissing = 0;
 		if ($formReadonly == "readonly") {
 			$readonlyForm = "readonly disabled";	// covers both bases
 		} else {
 			$readonlyForm = "";
 		}
+
+		// Allow for "advanced" options that aren't displayed by default to avoid
+		// confusing novice users.
+		$numAdvanced = 0;
+		$numMissing = 0;
+		$missingSettings = "";
 		echo "<table border='0'>";
 			foreach($options_array as $option) {
+				$name = $option['name'];
+
+				$type = getVariableOrDefault($option, 'type', "");	// should be a type
+				if ($type != "header") {
+					$default = getVariableOrDefault($option, 'default', "");
+					$default = str_replace("'", "&#x27;", $default);
+
+					// Allow single quotes in values (for string values).
+					// &apos; isn't supported by all browsers so use &#x27.
+					$value = getVariableOrDefault($settings_array, $name, $default);
+					$value = str_replace("'", "&#x27;", $value);
+				}
+
 				// Should this setting be displayed?
 				$display = getVariableOrDefault($option, 'display', true);
-				if (! $display) continue;
+				if (! $display && $type != "header") {
+					if ($formReadonly != "readonly") {
+						// Don't display it, but if it has a value, pass it on.
+						echo "\n\t<!-- NOT DISPLAYED -->";
+						echo "<input type='hidden' name='$name' value='$value'>";
+					}
+					continue;
+				}
 
 				$minimum = getVariableOrDefault($option, 'minimum', "");
 				$maximum = getVariableOrDefault($option, 'maximum', "");
@@ -321,27 +348,23 @@ function toggle_advanced()
 					$advStyle = "";
 				}
 				$label = getVariableOrDefault($option, 'label', "");
-				$name = $option['name'];
-				$default = getVariableOrDefault($option, 'default', "");
-				$type = getVariableOrDefault($option, 'type', "");	// should be a type
 				if ($type == "header") {
 					$value = "";
 				} else {
-					$value = getVariableOrDefault($settings_array, $name, $default);
 					$optional = getVariableOrDefault($option, 'optional', false);
 					if ($value === "" && ! $optional) {
 						$numMissing++;
+						if ($missingSettings == "") {
+							$missingSettings = "$label";
+						} else {
+							$missingSettings .= ", $label";
+						}
 						$optional_bg = "background-color: red";
 						$optional_msg = "<span style='color: red'>This field cannot be empty.</span><br>";
 					} else {
 						$optional_bg = "";
 						$optional_msg = "";
 					}
-
-					// Allow single quotes in values (for string values).
-					// &apos; isn't supported by all browsers so use &#x27.
-					$value = str_replace("'", "&#x27;", $value);
-					$default = str_replace("'", "&#x27;", $default);
 				}
 				$description = getVariableOrDefault($option, 'description', "");
 				// "widetext" should have the label spanning 2 rows,
@@ -380,7 +403,7 @@ function toggle_advanced()
 
 					if ($type == "widetext") $span="rowspan='2'";
 					else $span="";
-					echo "<td $span valign='middle' style='padding: 2px 0px'>";
+					echo "\n\t<td $span valign='middle' style='padding: 2px 0px'>";
 					echo "<label class='WebUISetting' style='padding-right: 3px;'>$label</label>";
 					echo "</td>";
 
@@ -393,7 +416,7 @@ function toggle_advanced()
 						// Ditto for left side with shadow on right.
 						$style="padding: 5px 5px 7px 8px;";
 					}
-					echo "<td $span valign='middle' style='$style' align='center'>";
+					echo "\n\t<td $span valign='middle' style='$style' align='center'>";
 					// The popup gets in the way of seeing the value a little.
 					// May want to consider having a symbol next to the field
 					// that has the popup.
@@ -410,15 +433,15 @@ function toggle_advanced()
 							if ($type == "number") $type = "text";
 							$t = $type;
 						}
-						echo "<input $readonly class='form-control boxShadow settingInput' type='$t'" .
+						echo "\n\t<input $readonly class='form-control boxShadow settingInput' type='$t'" .
 							" $readonlyForm name='$name' value='$value'" .
 							" style='padding: 0px 3px 0px 0px; text-align: right; $optional_bg'>";
 					} else if ($type == "widetext"){
-						echo "<input class='form-control boxShadow' type='text'" .
+						echo "\n\t<input class='form-control boxShadow' type='text'" .
 							" $readonlyForm name='$name' value='$value'" .
 						   	" style='padding: 6px 5px; $optional_bg'>";
 					} else if ($type == "select"){
-						echo "<select class='form-control boxShadow settingInput' name='$name' title='Select an item'" .
+						echo "\n\t<select class='form-control boxShadow settingInput' name='$name' title='Select an item'" .
 						   	" $readonlyForm style='text-align: right; padding: 0px 3px 0px 0px;'>";
 						foreach($option['options'] as $opt){
 							$val = getVariableOrDefault($opt, 'value', "?");
@@ -431,12 +454,12 @@ function toggle_advanced()
 						}
 						echo "</select>";
 					} else if ($type == "checkbox"){
-						echo "<div class='switch-field boxShadow settingInput' style='margin-bottom: -3px; border-radius: 4px;'>";
-							echo "<input id='switch_no_".$name."' class='form-control' type='radio' ".
+						echo "\n\t<div class='switch-field boxShadow settingInput' style='margin-bottom: -3px; border-radius: 4px;'>";
+							echo "\n\t<input id='switch_no_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='0' ".
 								($value == 0 ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_no_".$name."'>No</label>";
-							echo "<input id='switch_yes_".$name."' class='form-control' type='radio' ".
+							echo "\n\t<input id='switch_yes_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='1' ".
 								($value == 1 ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_yes_".$name."'>Yes</label>";
@@ -446,12 +469,12 @@ function toggle_advanced()
 
 					// Track current values so we can determine what changed.
 					if ($formReadonly != "readonly")
-						echo "<input type='hidden' name='OLD_$name' value='$value'>";
+						echo "\n\t<input type='hidden' name='OLD_$name' value='$value'>";
 
 					echo "</td>";
 					if ($type == "widetext")
 						echo "</tr><tr class='rowSeparator $advClass' style='$advStyle'><td></td>";
-					echo "<td style='padding-left: 10px;'>$optional_msg$description</td>";
+					echo "\n\t<td style='padding-left: 10px;'>$optional_msg$description</td>";
 				}
 				echo "</tr>";
 			 }
@@ -459,7 +482,7 @@ function toggle_advanced()
 
 		if ($numMissing > 0 && $formReadonly != "readonly") {
 			$msg = "ERROR: $numMissing required field" . ($numMissing === 1 ? " is" : "s are");
-			$msg .= " missing - see highlighted fields below.";
+			$msg .= " missing (<strong>$missingSettings</strong>) - see highlighted fields below.";
 			$status->addMessage($msg, 'danger');
 		?>
 			<script>

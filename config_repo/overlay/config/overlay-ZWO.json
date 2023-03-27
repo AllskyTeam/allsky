@@ -1,63 +1,60 @@
 {
     "fields": [
         {
-            "label": "${DATE}",
-            "x": 73,
-            "y": 14,
+            "label": "${DATE}  ${TIME}",
+            "x": 121,
+            "y": 24,
             "id": "oe-field-0",
-            "format": "%d-%m-%Y",
+            "format": "%d-%m-%Y,%H:%M:%S",
             "strokewidth": 0,
-            "sample": "DATE",
-            "tlx": 19,
-            "tly": 0,
+            "sample": "DATE,TIME",
+            "tlx": 9,
+            "tly": 10,
             "fontsize": 28,
-            "fill": "#ff0000",
-            "opacity": "1"
-        },
-        {
-            "label": "${TIME}",
-            "x": 230,
-            "y": 14,
-            "id": "oe-field-1",
-            "format": "%H:%M:%S",
-            "strokewidth": 0,
-            "sample": "TIME",
-            "tlx": 179,
-            "tly": 0,
-            "fontsize": 28,
-            "fill": "#ff0000",
-            "opacity": "1"
+            "fill": "#ff0000"
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 188,
+            "x": 178,
             "y": 54,
-            "id": "oe-field-2",
+            "id": "oe-field-1",
             "fontsize": 28,
             "strokewidth": 0,
-            "tlx": 19,
+            "tlx": 9,
             "tly": 40
         },
         {
             "label": "Gain: ${GAIN}",
-            "x": 108,
-            "y": 94,
-            "id": "oe-field-3",
+            "x": 98,
+            "y": 84,
+            "id": "oe-field-2",
             "fontsize": 28,
             "strokewidth": 0,
-            "tlx": 19,
-            "tly": 80
+            "tlx": 9,
+            "tly": 70
         },
         {
-            "label": "Sensor: ${TEMPERATURE_C}C",
-            "x": 222,
-            "y": 134,
-            "id": "oe-field-4",
+            "label": "Sensor: ${TEMPERATURE_C} C",
+            "x": 215,
+            "y": 114,
+            "id": "oe-field-3",
+            "format": "{:.1f}",
             "fontsize": 28,
             "strokewidth": 0,
-            "tlx": 19,
-            "tly": 120,
-            "sample": ""
+            "tlx": 9,
+            "tly": 100,
+            "sample": "20.1"
+        },
+        {
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
+            "x": 195,
+            "y": 1080,
+            "id": "oe-field-4",
+            "fontsize": 20,
+            "strokewidth": 0,
+            "sample": "ZWO ASI174MC",
+            "tlx": 9,
+            "tly": 1070
         }
     ],
     "images": [],

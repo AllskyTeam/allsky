@@ -329,7 +329,7 @@ if (file_exists($f)) {
 					$t = @filemtime(ALLSKY_MESSAGES);
 					// if it fails it's probably because something else deleted the file,
 					// in which case we don't care.
-					if ($t == true) {
+					if ($t != false) {
 						$newT = getVariableOrDefault($_POST, "filetime", 0);
 // echo "<br>Comparing t=$t to newT=$newT";
 						if ($t == $newT) {
@@ -343,8 +343,7 @@ if (file_exists($f)) {
 							// and then the user refreshed the browser,
 							// we'll have the old time in $filetime, but the timestamp of the file
 							// won't match so we'll get here, and then display the messages below.
-// TODO: Should we display this message?
-							$status->addMessage("System Messages changed", "info", false);
+							$status->addMessage("System Messages changed.  New content is:", "warning", false);
 						}
 					}
 				}
@@ -374,11 +373,10 @@ if (file_exists($f)) {
 						$status->showMessages();
 						echo "<div class='message-button'>";
 							$ts = time();
-							echo "<form action='$ME' method='POST'>";
+							echo "<form action='$ME?_ts=$ts' method='POST'>";
 							echo "<input type='hidden' name='page' value='$page'>";
 							echo "<input type='hidden' name='clear' value='true'>";
-							echo "<input type='hidden' name='_ts' value='$ts'>";
-							$t = filemtime(ALLSKY_MESSAGES);
+							$t = @filemtime(ALLSKY_MESSAGES);
 							echo "<input type='hidden' name='filetime' value='$t'>";
 							echo "<input type='submit' class='btn btn-primary' value='Clear all messages' />";
 							echo "</form>";
@@ -483,9 +481,12 @@ if (file_exists($f)) {
 	addTimestamp("list_days");
 	addTimestamp("configuration");
 	addTimestamp("editor");
+	addTimestamp("overlay");
+	addTimestamp("module");
 	addTimestamp("LAN");
 	addTimestamp("WLAN");
 	addTimestamp("wifi");
+	addTimestamp("auth_conf");
 	addTimestamp("system");
 </script>
 

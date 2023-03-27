@@ -65,6 +65,7 @@ metaData = {
 class ALLSKYOVERLAY:
     _OVERLAYCONFIGFILE = 'overlay.json'
     _OVERLAYFIELDSFILE = 'fields.json'
+    _OVERLAYUSERFIELDSFILE = 'userfields.json'
     _OVERLAYTMPFOLDER = ''
     _OVERLAYTLEFOLDER = None
     _overlayConfigFile = None
@@ -72,7 +73,9 @@ class ALLSKYOVERLAY:
     _image = None
     _fonts = {}
     _fields = {}
-
+    _systemfields = {}
+    _userfields = {}
+        
     _extraData = {}
 
     _startTime = 0
@@ -93,12 +96,19 @@ class ALLSKYOVERLAY:
     def __init__(self, formaterrortext):
         self._overlayConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYCONFIGFILE)
         fieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYFIELDSFILE)
+        userFieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYUSERFIELDSFILE)
         self._OVERLAYTMP = os.path.join(tempfile.gettempdir(), 'overlay')
         self._createTempDir(self._OVERLAYTMP)
         self._OVERLAYTLEFOLDER = os.path.join(self._OVERLAYTMP , 'tle')
         self._createTempDir(self._OVERLAYTLEFOLDER)
-        file = open(fieldsFile)
-        self._fields = json.load(file)
+        
+        with open(fieldsFile) as file:
+            self._systemfields = json.load(file)['data']
+        with open(userFieldsFile) as file:
+            self._userfields = json.load(file)['data']    
+
+        self._fields = self._systemfields + self._userfields
+
         s.log(4, "INFO: Config file set to {}".format(self._overlayConfigFile))
         self._enableSkyfield = True
         try:
@@ -420,7 +430,7 @@ class ALLSKYOVERLAY:
 
     def _getFieldType(self,name):
         result = None
-        for index,fieldData in enumerate(self._fields["data"]):
+        for index,fieldData in enumerate(self._fields):
             if fieldData["name"] == name:
                 result = fieldData["type"]
                 break

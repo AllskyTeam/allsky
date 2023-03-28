@@ -76,6 +76,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	# Holds information on what the user needs to do after an installation.
 	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/installation_logs"
+	INSTALL_SH_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh_log.txt"
 	POST_INSTALLATION_ACTIONS="${ALLSKY_INSTALLATION_LOGS}/post-installation_actions.txt"
 
 	# Holds temporary list of aborted uploads and timelapse since another one was in progress

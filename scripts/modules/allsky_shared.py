@@ -261,7 +261,7 @@ def writeSettings():
         settingsFile = os.path.join(getEnvironmentVariable("ALLSKY_CONFIG"), "settings_" + camera + ".json")
            
     with open(settingsFile, "w") as fp:
-        json.dump(SETTINGS, fp)                            
+        json.dump(SETTINGS, fp, indent=4)                            
 
 def updateSetting(values):
     readSettings()

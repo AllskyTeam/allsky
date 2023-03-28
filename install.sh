@@ -1856,8 +1856,7 @@ display_image()
 
 	if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		# Add a message the user will see in the WebUI.
-		cat "${POST_INSTALLATION_ACTIONS}" >> "${ALLSKY_LOG}"
-		WEBUI_MESSAGE="Actions needed.  See ${ALLSKY_LOG}."
+		WEBUI_MESSAGE="Actions needed.  See ${POST_INSTALLATION_ACTIONS}."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${WEBUI_MESSAGE}"
 	fi
 

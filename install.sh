@@ -1530,7 +1530,7 @@ restore_prior_files()
 	fi
 
 	# This is not in a "standard" directory so we need to determine where it was.
-	EXTRA="${PRIOR_ALLSKY}${ALLSKY_EXTRA//${ALLSKY_HOME}/}"
+	EXTRA="${PRIOR_ALLSKY_DIR}${ALLSKY_EXTRA//${ALLSKY_HOME}/}"
 	if [[ -d ${EXTRA} ]]; then
 		display_msg --log progress "Restoring 'extra' files."
 		cp -ar "${EXTRA}" "${ALLSKY_EXTRA}/.."
@@ -1819,8 +1819,8 @@ install_overlay()
 		sudo cp -a /etc/allsky/modules "${ALLSKY_MODULE_LOCATION}"
 		sudo rm -rf /etc/allsky
 	fi
-    sudo rm "${ALLSKY_MODULE_LOCATION}/modules/allsky_pistatus.py"
-   	sudo rm "${ALLSKY_MODULE_LOCATION}/modules/allsky_script.py"
+    sudo rm -f "${ALLSKY_MODULE_LOCATION}/modules/allsky_pistatus.py"
+   	sudo rm -f "${ALLSKY_MODULE_LOCATION}/modules/allsky_script.py"
 	#TODO: End
 }
 
@@ -1858,6 +1858,9 @@ display_image()
 		# Add a message the user will see in the WebUI.
 		WEBUI_MESSAGE="Actions needed.  See ${POST_INSTALLATION_ACTIONS}."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${WEBUI_MESSAGE}"
+
+		# This tells allsky.sh not to display a message about actions since we just did.
+		touch "${POST_INSTALLATION_ACTIONS}_initial_message"
 	fi
 
 	# ${ALLSKY_TMP} may not exist yet, i.e., at the beginning of installation.
@@ -1941,7 +1944,8 @@ DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
-if [[ ! -f told ]]; then
+T="${ALLSKY_HOME}/told"
+if [[ ! -f ${T} ]]; then
 	MSG="Testers, until we go-live with this release, debugging is automatically on"
 	MSG="${MSG} to aid in installation troubleshooting."
 	MSG="${MSG}\n\nPlease make sure you have Debug Level set to 4 in the WebUI during testing."
@@ -1957,11 +1961,11 @@ if [[ ! -f told ]]; then
 	MSG="${MSG}\n\nIf you agree, enter:    yes    then press Enter"
 	A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 || ${A} != "yes" ]]; then
-		display_msg --log info "\nYou need to TYPE 'yes' to continue the installation."
-		display_msg --log info "\nThis is to make sure you read it.\n"
+		display_msg info "\nYou need to TYPE 'yes' to continue the installation."
+		display_msg info "\nThis is to make sure you read it.\n"
 		exit 0
 	fi
-	touch told
+	touch "${T}"
 fi
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 

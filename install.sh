@@ -1645,6 +1645,7 @@ restore_prior_files()
 		# Allsky v2022.03.01 and newer.  v2022.03.01 doesn't have FTP_SH_VERSION.
 		PRIOR_FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}")"
 		FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh")"
+		FTP_SH_VERSION="${FTP_SH_VERSION:-unknown}"
 	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
 		# pre v2022.03.01
 		PRIOR_FTP_FILE="${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh"
@@ -1654,7 +1655,7 @@ restore_prior_files()
 		display_msg --log error "Unable to find prior ftp-settings.sh"
 		PRIOR_FTP_FILE=""
 		PRIOR_FTP_SH_VERSION=""
-		FTP_SH_VERSION="none"
+		FTP_SH_VERSION="no file"
 	fi
 	display_msg "${LOG_TYPE}" debug "FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
 	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
@@ -1664,11 +1665,15 @@ restore_prior_files()
 	else
 		RESTORED_PRIOR_FTP_SH="false"
 		if [[ ${FTP_SH_VERSION} == "old" ]]; then
-			MSG="old version."
-		else
+			MSG="old location so no FTP_SH_VERSION."
+		elif [[ ${FTP_SH_VERSION} == "unknown" ]]; then
+			MSG="unknown prior FTP_SH_VERSION."
+		elif [[ ${FTP_SH_VERSION} == "no file" ]]; then
 			MSG="no prior file."
+		else
+			MSG="unknown FTP_SH_VERSION: '${FTP_SH_VERSION}'."
 		fi
-		display_msg --log "Not restoring 'ftp-settings.sh': ${MSG}"
+		display_msg --log progress "Not restoring 'ftp-settings.sh': ${MSG}"
 	fi
 
 	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "true" && ${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
@@ -1706,23 +1711,25 @@ restore_prior_files()
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 		# The prior versions are similar to the new ones.
 # TODO: We can automate this since we know what changed in each version.
-		if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" ]]; then
-			MSG="Your prior 'config.sh' file is similar to the new one."
-		elif [[ ${RESTORED_PRIOR_FTP_SH} == "false" ]]; then
-			MSG="Your prior 'ftp-settings.sh' file is similar to the new one."
-		else
-			MSG="Your 'config.sh' and 'ftp-settings.sh' files are similar to the new ones."
+		M=""
+		# If it has a version number it's probably close to the current version.
+		if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" && -n ${PRIOR_CONFIG_SH_VERSION} ]]; then
+			MSG="${MSG}\nYour prior 'config.sh' file is similar to the new one."
+		fi
+		if [[ ${RESTORED_PRIOR_FTP_SH} == "false" && -n ${PRIOR_FTP_SH_VERSION} ]]; then
+			MSG="${MSG}\nYour prior 'ftp-settings.sh' file is similar to the new one."
 		fi
 		MSG="${MSG}\nAfter installation, see ${POST_INSTALLATION_ACTIONS} for details."
 
 		MSG2="You can compare the old and new configuration files with the following commands,"
 		MSG2="${MSG2}\nand apply your changes from the prior file to the new file."
-		MSG2="${MSG2}\nDo NOT simply copy the old files to the new location."
+		MSG2="${MSG2}\nDo NOT simply copy the old files to the new location because"
+		MSG2="${MSG2}\ntheir formats are different."
 		MSG2="${MSG2}\n\ndiff ${PRIOR_CONFIG_DIR}/config.sh ${ALLSKY_CONFIG}"
 		MSG2="${MSG2}\n\n   and"
 		MSG2="${MSG2}\n\ndiff ${PRIOR_FTP_FILE} ${ALLSKY_CONFIG}"
 	else
-		MSG="You need to manually move the contents of:"
+		MSG="You need to manually move the CONTENTS of:"
 		if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" ]]; then
 			MSG="${MSG}\n     ${PRIOR_CONFIG_DIR}/config.sh"
 		fi
@@ -1730,15 +1737,20 @@ restore_prior_files()
 			MSG="${MSG}\n     ${PRIOR_FTP_FILE}"
 		fi
 		MSG="${MSG}\n\nto the new files in ${ALLSKY_CONFIG}."
-		MSG="${MSG}\n\nNOTE: some settings are no longer in the new files and some changed names."
-		MSG="${MSG}\nDo NOT add the old/deleted settings back in."
+		MSG="${MSG}\n\nNOTE: some settings are no longer in the new files and some changed names"
+		MSG="${MSG}\nso NOT add the old/deleted settings back in or simply copy the files."
+		MSG="${MSG}\n*** This will take several minutes ***"
 		MSG2=""
 	fi
 	MSG="${MSG}"
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+
 	display_msg --log info "\n${MSG}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
-	[[ -n ${MSG2} ]] && echo -e "\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
+	if [[ -n ${MSG2} ]]; then
+		display_msg --log info "\n${MSG2}\n"
+		echo -e "\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
+	fi
 }
 
 

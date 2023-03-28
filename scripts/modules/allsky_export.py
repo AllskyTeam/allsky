@@ -108,7 +108,7 @@ def export(params, event):
                 s.log(0, "ERROR: Empty environment variable specified in the extradata field. Check commas!")
 
         with open(savePath, "w") as outfile:
-            json.dump(jsonData, outfile)
+            json.dump(jsonData, outfile, indent=4)
 
         s.log(4, "INFO: Allsky data exported to {0}".format(savePath))
 

@@ -172,7 +172,6 @@ else
 	MSG="${MSG}\nIf this happens again, contact the Allsky developers."
 	"${ALLSKY_SCRIPTS}/addMessage.sh" warning "${ME}: ${MSG}"
 fi
-[[ ! -d "${ALLSKY_EXTRA}" ]] && mkdir "${ALLSKY_EXTRA}"
 
 # Clear out these files and allow the web server to write to it.
 : > "${ALLSKY_ABORTEDUPLOADS}"

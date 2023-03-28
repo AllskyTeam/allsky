@@ -1478,10 +1478,13 @@ restore_prior_files()
 	fi
 
 	if [[ -z ${PRIOR_ALLSKY} ]]; then
-		get_lat_long
+		get_lat_long	# get them to put in new config file
+		mkdir -p "${ALLSKY_EXTRA}"		# default permissions is ok
+
 		return			# Nothing left to do in this function, so return
 	fi
 
+	# TODO: this script is going away in the next release.
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
 		display_msg --log progress "Restoring endOfNight_additionalSteps.sh."
 		cp -a "${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
@@ -1499,15 +1502,17 @@ restore_prior_files()
 		display_msg --log progress "Restoring images."
 		mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
 	else
-		# This is probably very rare.
+		# This is probably very rare so let the user know
 		MSG="No prior 'images' directory so can't restore them."
-		display_msg --log progress "${MSG}"
-		display_msg --logonly info "${MSG}"
+		MSG="${MSG}\nThis is unusual."
+		display_msg --log info "${MSG}"
 	fi
 
 	if [[ -d ${PRIOR_ALLSKY_DIR}/darks ]]; then
 		display_msg --log progress "Restoring darks."
 		mv "${PRIOR_ALLSKY_DIR}/darks" "${ALLSKY_HOME}"
+	else
+		display_msg "${LOG_TYPE}" progress "No prior 'darks' so can't restore."
 	fi
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
@@ -1522,6 +1527,15 @@ restore_prior_files()
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 	else
 		display_msg "${LOG_TYPE}" progress "No prior 'overlay' so can't restore."
+	fi
+
+	# This is not in a "standard" directory so we need to determine where it was.
+	EXTRA="${PRIOR_ALLSKY}${ALLSKY_EXTRA//${ALLSKY_HOME}/}"
+	if [[ -d ${EXTRA} ]]; then
+		display_msg --log progress "Restoring 'extra' files."
+		cp -ar "${EXTRA}" "${ALLSKY_EXTRA}/.."
+	else
+		display_msg "${LOG_TYPE}" progress "No prior 'extra' files so can't restore."
 	fi
 
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then

@@ -334,15 +334,16 @@ save_camera_capabilities()
 	# Restore the prior settings file so it can be used by makeChanges.sh.
 	[[ ${PRIOR_ALLSKY} != "" ]] && restore_prior_settings_files
 
-	if [[ ${DEBUG} -gt 0 ]]; then
-		MSG="Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
-		MSG="${MSG}  ${DEBUG_ARG} 'cameraType' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
-		display_msg debug "${MSG}"
-	fi
+	MSG="Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
+	MSG="${MSG}  ${DEBUG_ARG} 'cameraType' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
+	display_msg "${DEBUG_TYPE}" info "${MSG}"
+
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly ${DEBUG_ARG} \
-		"cameraType" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}"
+	MSG="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly ${DEBUG_ARG} \
+		"cameraType" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2>&1 )"
 	RET=$?
+
+	display_msg "${LOG_TYPE}" info "${MSG}"
 	if [[ ${RET} -ne 0 ]]; then
 		#shellcheck disable=SC2086
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
@@ -354,6 +355,9 @@ save_camera_capabilities()
 			display_msg --log error "Unable to save camera capabilities."
 		fi
 		return 1
+	else
+		MSG="$( ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null )"
+		display_msg "${LOG_TYPE}" info "Settings files: ${MSG}"
 	fi
 
 	return 0
@@ -965,7 +969,7 @@ get_locale()
 	# This can happen if they use the settings file from a different Pi or different OS.
 	local MSG2=""
 	if [[ -n ${PRIOR_ALLSKY} && -n ${PRIOR_SETTINGS_FILE} ]]; then
-		local L="$(jq -r .locale "${PRIOR_SETTINGS_FILE}")"
+		local L="$( settings .locale "${PRIOR_SETTINGS_FILE}" )"
 		if [[ ${L} != "" && ${L} != "null" ]]; then
 			local X="$(echo "${INSTALLED_LOCALES}" | grep "${L}")"
 			if [[ -z ${X} ]]; then
@@ -1403,11 +1407,11 @@ restore_prior_settings_files()
 				MSG="No prior camera-specific settings files found,"
 
 				# Try to create one based on ${PRIOR_SETTINGS_FILE}.
-				local CT="$(jq -r .cameraType "${PRIOR_SETTINGS_FILE}")"
+				local CT="$( settings .cameraType "${PRIOR_SETTINGS_FILE}" )"
 				if [[ ${CT} != "${CAMERA_TYPE}" ]]; then
 					MSG="${MSG}\nand unable to create one: new CAMERA_TYPE (${CAMERA_TYPE} different from prior type (${CT})."
 				else
-					local CM="$(jq -r .cameraModel "${PRIOR_SETTINGS_FILE}")"
+					local CM="$(settings .cameraModel "${PRIOR_SETTINGS_FILE}")"
 					local SPECIFIC="${NAME}_${CT}_${CM}.${EXT}"
 					cp -a "${PRIOR_SETTINGS_FILE}" "${ALLSKY_CONFIG}/${SPECIFIC}"
 					MSG="${MSG}\nbut was able to create '${SPECIFIC}'."
@@ -1511,8 +1515,7 @@ restore_prior_files()
 		mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
 	else
 		# This is probably very rare so let the user know
-		MSG="No prior 'images' directory so can't restore."
-		MSG="${MSG}\nThis is unusual."
+		MSG="No prior 'images' directory so can't restore; This unusual."
 		display_msg --log info "${MSG}"
 	fi
 

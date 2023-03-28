@@ -75,7 +75,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_MESSAGES="${ALLSKY_TMP}/messages.txt"
 
 	# Holds information on what the user needs to do after an installation.
-	POST_INSTALLATION_ACTIONS="${ALLSKY_CONFIG}/post-installation_actions.txt"
+	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/installation_logs"
+	POST_INSTALLATION_ACTIONS="${ALLSKY_INSTALLATION_LOGS}/post-installation_actions.txt"
 
 	# Holds temporary list of aborted uploads and timelapse since another one was in progress
 	ALLSKY_ABORTEDUPLOADS="${ALLSKY_TMP}/aborted_uploads.txt"

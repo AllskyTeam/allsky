@@ -1530,6 +1530,9 @@ restore_prior_files()
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg --log progress "Restoring overlays."
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
+		# Restore the fields.json file as its part of the main distribution and should be replaced during an upgrade
+		cp -ar "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_CONFIG}/overlay/config/"
+
 	else
 		display_msg "${LOG_TYPE}" progress "No prior 'overlay' directory so can't restore."
 	fi

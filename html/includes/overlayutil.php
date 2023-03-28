@@ -24,7 +24,7 @@ class OVERLAYUTIL
 
     public function run()
     {
-        //$this->checkXHRRequest();
+        $this->checkXHRRequest();
         $this->sanitizeRequest();
         $this->runRequest();
     }
@@ -174,7 +174,78 @@ class OVERLAYUTIL
     {
         $fileName = $this->overlayPath . '/config/fields.json';
         $fields = file_get_contents($fileName);
-        $this->sendResponse($fields);
+        $systemData = json_decode($fields);
+        
+        $fileName = $this->overlayPath . '/config/userfields.json';
+        $fields = file_get_contents($fileName);
+        $userData = json_decode($fields);
+
+        $counter = 1;
+        $mergedFields = array();
+        foreach($systemData->data as $systemField) {
+            $field = array(
+                "id" => $counter,
+                "name" => $systemField->name,
+                "description" => $systemField->description,
+                "format" => $systemField->format,
+                "sample" => $systemField->sample,
+                "type" => $systemField->type,
+                "source" => $systemField->source
+            );
+            array_push($mergedFields, $field);
+            $counter++;
+        }
+
+        foreach($userData->data as $userField) {
+            $field = array(
+                "id" => $counter,
+                "name" => $userField->name,
+                "description" => $userField->description,
+                "format" => $userField->format,
+                "sample" => $userField->sample,
+                "type" => $userField->type,
+                "source" => $userField->source
+            );
+            array_push($mergedFields, $field);
+            $counter++;
+        }
+
+        $fields = array(
+            "data" => $mergedFields
+        );
+        $jsonFields = json_encode($fields);
+        
+        $this->sendResponse($jsonFields);
+    }
+
+    public function postData()
+    {
+        $fileName = $this->overlayPath . '/config/userfields.json';
+        $fields = $_POST["data"];
+        $fields = json_decode($fields);
+
+        $userFields = array();
+        foreach($fields->data as $fieldData) {
+            if ($fieldData->source == "User") {
+                $field = array(
+                    "id" => 0,
+                    "name" => $fieldData->name,
+                    "description" => $fieldData->description,
+                    "format" => $fieldData->format,
+                    "sample" => $fieldData->sample,
+                    "type" => $fieldData->type,
+                    "source" => $fieldData->source
+                );
+                array_push($userFields, $field);
+            }
+        }
+        $fields = array(
+            "data" => $userFields
+        );
+        $formattedJSON = json_encode($fields, JSON_PRETTY_PRINT);
+
+        file_put_contents($fileName, $formattedJSON);
+        $this->sendResponse();
     }
 
     public function getOverlayData() {
@@ -217,16 +288,6 @@ class OVERLAYUTIL
         }
         $data = json_encode($result, JSON_PRETTY_PRINT);
         $this->sendResponse($data);
-    }
-
-    public function postData()
-    {
-        $fileName = $this->overlayPath . '/config/fields.json';
-        $fields = $_POST["data"];
-        $formattedJSON = json_encode(json_decode($fields), JSON_PRETTY_PRINT);
-
-        file_put_contents($fileName, $formattedJSON);
-        $this->sendResponse();
     }
 
     public function getAutoExposure()

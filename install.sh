@@ -339,12 +339,12 @@ save_camera_capabilities()
 
 	if [[ ${DEBUG} -gt 0 ]]; then
 		MSG="Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
-		MSG="${MSG}  ${DEBUG_ARG} 'cameraType' 'Camera Type' '${CAMERA_TYPE}'"
+		MSG="${MSG}  ${DEBUG_ARG} 'cameraType' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
 		display_msg debug "${MSG}"
 	fi
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly ${DEBUG_ARG} \
-		"cameraType" "Camera Type" "${CAMERA_TYPE}"
+		"cameraType" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		#shellcheck disable=SC2086
@@ -1068,6 +1068,7 @@ set_locale()
 does_prior_Allsky_exist()
 {
 	PRIOR_ALLSKY=""
+	PRIOR_CAMERA_TYPE=""
 	if [[ -d ${PRIOR_ALLSKY_DIR}/src ]]; then
 		PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"
 		if [[ -n  ${PRIOR_ALLSKY_VERSION} ]]; then
@@ -1083,6 +1084,7 @@ does_prior_Allsky_exist()
 					# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file.
 					PRIOR_ALLSKY="new"
 					PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
+					PRIOR_CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
 
 					# This shouldn't happen, but just in case ...
 					[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
@@ -1093,11 +1095,15 @@ does_prior_Allsky_exist()
 		if [[ -z ${PRIOR_ALLSKY} ]]; then
 			PRIOR_ALLSKY="old"
 			PRIOR_ALLSKY_VERSION="${PRIOR_ALLSKY_VERSION:-old}"
-			local CAMERA="$( CAMERA_TYPE_to_CAMERA "${CAMERA_TYPE}" )"
+			local CAMERA="$(get_variable "CAMERA" "${PRIOR_CONFIG_FILE}")"
+			PRIOR_CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
 			PRIOR_SETTINGS_FILE="${OLD_RASPAP_DIR}/settings_${CAMERA}.json"
 			[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
 		fi
 
+		display_msg "${LOG_TYPE}" info "PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
+		display_msg "${LOG_TYPE}" info "PRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}"
+		display_msg "${LOG_TYPE}" info "PRIOR_SETTINGS_FILE=${PRIOR_SETTINGS_FILE}"
 		return 0
 	else
 		return 1
@@ -1115,10 +1121,12 @@ prompt_for_prior_Allsky()
 		MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
 		MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
-			# Grab the CAMERA_TYPE
-			CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
+			# Set the prior camera type to the new, default camera type.
+			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
 			return 0
 		else
+			CAMERA_TYPE=""
+			PRIOR_CAMERA_TYPE=""
 			PRIOR_ALLSKY=""
 			PRIOR_ALLSKY_VERSION=""
 			MSG="If you want your old images, darks, settings, etc. from the prior version"

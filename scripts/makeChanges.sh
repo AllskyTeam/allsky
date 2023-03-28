@@ -137,8 +137,8 @@ CAMERA_NUMBER=""
 while [[ $# -gt 0 ]]; do
 	KEY="${1}"
 	LABEL="${2}"
-	NEW_VALUE="${3}"
-	OLD_VALUE="${4}"
+	OLD_VALUE="${3}"
+	NEW_VALUE="${4}"
 	if [[ ${DEBUG} == "true" ]]; then
 		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
 		echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"

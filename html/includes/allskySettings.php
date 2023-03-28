@@ -294,9 +294,8 @@ function toggle_advanced()
 			echo "<p id='messages'>" . $status->showMessages() . "</p>";
 ?>
 
-		<form method="POST" action="<?php echo $ME; ?>" name="conf_form">
+		<form method="POST" action="<?php echo "$ME?_ts=" . time(); ?>" name="conf_form">
 		<input type="hidden" name="page" value="<?php echo "$page"; ?>">
-		<input type="hidden" name="_ts" value="<?php echo time(); ?>">
 		<?php CSRFToken();
 
 		if ($formReadonly == "readonly") {

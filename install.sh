@@ -1795,18 +1795,18 @@ install_overlay()
 
 	cp "${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json" "${ALLSKY_OVERLAY}/config/overlay.json"
 
-	sudo mkdir -p "${ALLSKY_MODULES}/modules"
-	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${ALLSKY_MODULES}"
-	sudo chmod -R 774 "${ALLSKY_MODULES}"			
+	sudo mkdir -p "${ALLSKY_MODULE_LOCATION}/modules"
+	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${ALLSKY_MODULE_LOCATION}"
+	sudo chmod -R 774 "${ALLSKY_MODULE_LOCATION}"			
 
 	# TODO: Remove in next release. Temporary fix to move modules and deal with
 	# pistatus and gps that moved to core allsky during testing of "dev" release.
 	if [[ -d /etc/allsky/modules ]]; then
-		sudo cp -a /etc/allsky/modules "${ALLSKY_MODULES}"
+		sudo cp -a /etc/allsky/modules "${ALLSKY_MODULE_LOCATION}"
 		sudo rm -rf /etc/allsky
 	fi
-    sudo rm "${ALLSKY_MODULES}/modules/allsky_pistatus.py"
-   	sudo rm "${ALLSKY_MODULES}/modules/allsky_script.py"
+    sudo rm "${ALLSKY_MODULE_LOCATION}/modules/allsky_pistatus.py"
+   	sudo rm "${ALLSKY_MODULE_LOCATION}/modules/allsky_script.py"
 	#TODO: End
 }
 
@@ -1936,7 +1936,7 @@ if [[ ! -f told ]]; then
 	X="/etc/allsky/modules"
 	if [[ -d ${X} ]]; then
 		MSG="${MSG}\n * ${X} is no longer used."
-		MSG="${MSG}  Move its contents to ${ALLSKY_MODULES} then 'sudo rmdir ${X}"
+		MSG="${MSG}  Move its contents to ${ALLSKY_MODULE_LOCATION} then 'sudo rmdir ${X}"
 	fi
 	MSG="${MSG}\n   * The allsky/tmp/extra directory moved to allsky/config/extra."
 	MSG="${MSG}\ YOU need to move any files to the new location and UPDATE YOUR SCRIPTS."

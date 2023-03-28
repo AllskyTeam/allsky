@@ -1795,25 +1795,19 @@ install_overlay()
 
 	cp "${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json" "${ALLSKY_OVERLAY}/config/overlay.json"
 
-	MODULE_LOCATION="/opt/allsky"
 	sudo mkdir -p "${MODULE_LOCATION}/modules"
+	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${MODULE_LOCATION}"
+	sudo chmod -R 774 "${MODULE_LOCATION}"			
 
-	# TODO: Remove in next release. Temporary fix to move modules and deal with pistatus and gps that have moved to core allsky
+	# TODO: Remove in next release. Temporary fix to move modules and deal with
+	# pistatus and gps that moved to core allsky during testing of "dev" release.
 	if [[ -d /etc/allsky/modules ]]; then
 		sudo cp -a /etc/allsky/modules "${MODULE_LOCATION}"
 		sudo rm -rf /etc/allsky
 	fi
-
-	if [[ -f "/opt/allsky/modules/allsky_pistatus.py" ]]; then
-    	sudo rm "/opt/allsky/modules/allsky_pistatus.py"
-	fi
-	if [[ -f "/opt/allsky/modules/allsky_script.py" ]]; then
-    	sudo rm "/opt/allsky/modules/allsky_script.py"
-	fi	
+    sudo rm "${MODULE_LOCATION}/modules/allsky_pistatus.py"
+   	sudo rm "${MODULE_LOCATION}/modules/allsky_script.py"
 	#TODO: End
-
-	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${MODULE_LOCATION}"
-	sudo chmod -R 774 "${MODULE_LOCATION}"			
 }
 
 
@@ -1945,6 +1939,8 @@ if [[ ! -f told ]]; then
 		MSG="${MSG}  Move its contents to ${MODULE_LOCATION} then 'sudo rmdir ${X}"
 	fi
 	MSG="${MSG}\n   * The allsky/tmp/extra directory moved to allsky/config/extra."
+	MSG="${MSG}\ YOU need to move any files to the new location and UPDATE YOUR SCRIPTS."
+
 	MSG="${MSG}\n\nIf you agree, enter:    yes    then press Enter"
 	A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 || ${A} != "yes" ]]; then

@@ -1396,7 +1396,7 @@ restore_prior_settings_files()
 							display_msg --log progress "Restoring settings files:"
 							FIRST_ONE="false"
 						fi
-						display_msg --log progress "\t'$(basename "${F}")."
+						display_msg --log progress "\t'$(basename "${F}")'"
 						cp -a "${F}" "${ALLSKY_CONFIG}"
 					done
 			else
@@ -1530,9 +1530,9 @@ restore_prior_files()
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg --log progress "Restoring overlays."
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
-		# Restore the fields.json file as its part of the main distribution and should be replaced during an upgrade
-		cp -ar "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_CONFIG}/overlay/config/"
-
+		# Restore the fields.json file as its part of the main Allsky distribution
+		# and should be replaced during an upgrade.
+		cp -ar "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_OVERLAY}/config/"
 	else
 		display_msg "${LOG_TYPE}" progress "No prior 'overlay' directory so can't restore."
 	fi
@@ -1567,11 +1567,15 @@ restore_prior_files()
 			"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
 		# Check if this is an older Allsky Website configuration file type.
+		# The remote config file should have .ConfigVersion.
 		local OLD="false"
-		NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
-		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
+		NEW_CONFIG_VERSION="$(settings .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
+		PRIOR_CONFIG_VERSION="$(settings .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
 		if [[ ${PRIOR_CONFIG_VERSION} == "" || ${PRIOR_CONFIG_VERSION} == "null" ]]; then
 			OLD="true"		# Hmmm, it should have the version
+			MSG="Prior Website configuration file '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}'"
+			MSG="${MSG}\nis missing .ConfigVersion.  It should be '${NEW_CONFIG_VERSION}'."
+			display_msg --log warning "${MSG}"
 			PRIOR_CONFIG_VERSION="** Unknown **"
 		elif [[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]]; then
 			OLD="true"
@@ -1610,8 +1614,15 @@ restore_prior_files()
 	display_msg "${LOG_TYPE}" debug "CONFIG_SH_VERSION=${CONFIG_SH_VERSION}, PRIOR=${PRIOR_CONFIG_SH_VERSION}"
 	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
 		RESTORED_PRIOR_CONFIG_SH="true"
-		display_msg --log progress "Restoring and updating prior 'config.sh' file."
+		display_msg --log progress "Restoring prior 'config.sh' file."
 		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}"
+
+		local PRIOR="$( get_variable "ALLSKY_VERSION" "${PRIOR_CONFIG_FILE}" )"
+		if [[ ${PRIOR} != ${ALLSKY_VERSION} ]]; then
+			MSG="Updating ALLSKY_VERSION in 'config.sh' to '${ALLSKY_VERSION}'."
+			sed -i "/ALLSKY_VERSION=/ c ALLSKY_VERSION=\"${ALLSKY_VERSION}\"" "${PRIOR_CONFIG_FILE}"
+			display_msg --log progress "${MSG}"
+		fi
 	else
 		RESTORED_PRIOR_CONFIG_SH="false"
 		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
@@ -1625,6 +1636,8 @@ restore_prior_files()
 		display_msg --log info "${MSG}"
 	fi
 
+	# Unlike the config.sh file which was always in allsky/config,
+	# the ftp-settings.sh file used to be in allsky/scripts.
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then
 		# Allsky v2022.03.01 and newer.  v2022.03.01 doesn't have FTP_SH_VERSION.
 		PRIOR_FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}")"
@@ -2061,7 +2074,7 @@ check_tmp
 
 MSG="\nThe following steps can take up to 1 - 3 HOURS depending on the speed of your Pi"
 MSG="${MSG}\nand how many of the necessary dependencies are already installed."
-display_msg --log info "${MSG}"
+display_msg info "${MSG}"
 
 MSG="${MSG}\nYou will see progress messages throughout the process."
 MSG="${MSG}\nAt the end you will be prompted again for additional steps.\n"

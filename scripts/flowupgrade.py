@@ -80,7 +80,7 @@ class CONFIGMANAGER:
 
     def _saveJsonFile(self,fileName, data):
         with open(fileName, 'w') as f:
-            json.dump(data, f)
+            json.dump(data, f, indent=4)
         
     def _copyModules(self, oldJson, currentJson):
         flow = {}

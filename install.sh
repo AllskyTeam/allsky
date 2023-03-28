@@ -1814,8 +1814,7 @@ install_overlay()
 
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_CONFIG}"
 	cp -ar "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
-
-	cp "${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json" "${ALLSKY_OVERLAY}/config/overlay.json"
+	# The overlay.json file is handled by makeChanges.sh
 
 	sudo mkdir -p "${ALLSKY_MODULE_LOCATION}/modules"
 	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${ALLSKY_MODULE_LOCATION}"

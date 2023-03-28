@@ -27,14 +27,24 @@ signal.signal(signal.SIGINT, signalHandler)
 signal.signal(signal.SIGUSR1, signalHandler)
 signal.signal(signal.SIGUSR2, signalHandler)
 
+'''
+Get the locations of the modules and scripts and add them to the path.
+'''
 try:
-    allSkyHome = os.environ["ALLSKY_HOME"]
+    allSkyModules = os.environ["ALLSKY_MODULE_LOCATION"]
 except KeyError:
-    print("ERROR: $ALLSKY_HOME not found in environment variables - Aborting")
+    print("ERROR: $ALLSKY_MODULE_LOCATION not found in environment variables - Aborting")
     sys.exit(1)
+allSkyModulesLocation = os.path.join(allSkyModules, "modules")
 
-allSkyModulesPath = os.path.join(allSkyHome, "scripts", "modules")
-valid_module_paths = ["/opt/allsky/modules", allSkyModulesPath]
+try:
+    allSkyScripts = os.environ["ALLSKY_SCRIPTS"]
+except KeyError:
+    print("ERROR: $ALLSKY_SCRIPTS not found in environment variables - Aborting")
+    sys.exit(1)
+allSkyModulesPath = os.path.join(allSkyScripts, "modules")
+
+valid_module_paths = [allSkyModulesLocation, allSkyModulesPath]
 
 for vmp in valid_module_paths:
     sys.path.append(os.path.abspath(vmp))
@@ -46,6 +56,20 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--event",  type=str, help="The event we are running modules for (defaults to postcapture).", default="postcapture", choices=["postcapture","daynight", "nightday", "periodic"])
     shared.args = parser.parse_args()
     
+    try:
+        shared.allskyTmp = os.environ["ALLSKY_TMP"]
+    except:
+        shared.log(0, "ERROR: $ALLSKY_TMP not found in the variables", exitCode=1)
+    try:
+        imagesRoot = os.environ["ALLSKY_IMAGES"]
+    except:
+        shared.log(0, "ERROR: $ALLSKY_IMAGES not found in the variables", exitCode=1)
+    try:
+        rawSettings = os.environ["SETTINGS_FILE"]
+    except:
+        shared.log(0, "ERROR: no camera config file available in the environment", exitCode=1)
+
+
     if (shared.args.event == "postcapture"):
         try:
             shared.LOGLEVEL = int(os.environ["ALLSKY_DEBUG_LEVEL"])
@@ -63,24 +87,16 @@ if __name__ == "__main__":
             shared.log(0, "ERROR: unable to determine if its day or night in the environment", exitCode=1)
 
         try:
-            rawSettings = os.environ["SETTINGS_FILE"]
             with open(rawSettings, 'r') as settingsFile:
                 shared.settings = json.load(settingsFile)
         except (FileNotFoundError, KeyError):
-            shared.log(0, "ERROR: $SETTINGS_FILE not found in environment variables - Aborting", exitCode=1)
+            shared.log(0, "ERROR: Unable to read SETTINGS_FILE - Aborting", exitCode=1)
 
-        shared.allskyTmp = os.environ["ALLSKY_TMP"]
         shared.fullFilename = os.environ["FULL_FILENAME"]
         shared.createThumbnails = os.environ["IMG_CREATE_THUMBNAILS"]
         shared.thumbnailWidth = int(os.environ["THUMBNAIL_SIZE_X"])
         shared.thumbnailHeight = int(os.environ["THUMBNAIL_SIZE_Y"])
         shared.websiteImageFile = os.path.join(shared.allskyTmp, shared.fullFilename)
-
-        try:
-            imagesRoot = os.environ["ALLSKY_IMAGES"]
-        except:
-            shared.log(0, "ERROR: no allsky config directory available in the environment", exitCode=1)
-
         shared.TOD = shared.args.tod
         date = datetime.now()
         if shared.args.tod == "night":
@@ -97,17 +113,20 @@ if __name__ == "__main__":
         shared.CURRENTIMAGEPATH  = None
         shared.LOGLEVEL = int(shared.getSetting("debuglevel"))
         shared.args.tod = 'day'
-        shared.allskyTmp = os.environ["ALLSKY_TMP"]
         date = datetime.now()
         date = date + timedelta(hours=-12)
         dateString = date.strftime("%Y%m%d")
-        imagesRoot = os.environ["ALLSKY_IMAGES"]
         shared.imageFolder = os.path.join(imagesRoot, dateString)
+
+    try:
+        shared.args.allskyConfig = os.environ["ALLSKY_MODULES"]
+    except:
+        shared.log(0, "ERROR: no allsky config directory available in the environment", exitCode=1)
 
     watchdog = False
     timeout = 0
     try:
-        configFile = os.path.join(os.environ['ALLSKY_MODULES'], 'module-settings.json')
+        configFile = os.path.join(shared.args.allskyConfig, 'module-settings.json')
         with open(configFile, 'r') as module_Settings_file:
             module_settings = json.load(module_Settings_file)
             watchdog = module_settings['watchdog']
@@ -115,16 +134,8 @@ if __name__ == "__main__":
     except:
         watchdog = False
 
-    try:
-        shared.args.allskyConfig = os.environ["ALLSKY_MODULES"]
-    except:
-        shared.log(0, "ERROR: no allsky config directory available in the environment", exitCode=1)
 
-    try:
-        shared.args.config = os.environ["SETTINGS_FILE"]
-    except:
-        shared.log(0, "ERROR: no camera config file available in the environment", exitCode=1)
-
+    shared.args.config = rawSettings
     shared.log(4, "INFO: Loading config {0}".format(shared.args.config))
     try:
         with open(shared.args.config,'r') as config:

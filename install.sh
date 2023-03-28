@@ -57,7 +57,7 @@ rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 # display_msg() will send "log" entries to this file.
 # DISPLAY_MSG_LOG is used in display_msg()
 # shellcheck disable=SC2034
-DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh_log.txt"
+DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh.log"
 
 
 # Some versions of Linux default to 750 so web server can't read it
@@ -1501,6 +1501,9 @@ restore_prior_files()
 		MSG="${MSG}\nSee the 'Explanations --> Module' documentation for more details."
 		display_msg --log info "\n${MSG}\n"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+	else
+		MSG="No prior 'endOfNight_additionalSteps.sh' so can't restore."
+		display_msg "${LOG_TYPE}" progress "${MSG}"
 	fi
 
 	if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then

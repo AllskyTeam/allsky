@@ -16,14 +16,24 @@ class CONFIGMANAGER:
         self._args = args
         self._validateArgs()
     
+        '''
+        Get the locations of the modules and scripts and add them to the path.
+        '''
         try:
-            allSkyHome = os.environ["ALLSKY_HOME"]
+            allSkyModules = os.environ["ALLSKY_MODULE_LOCATION"]
         except KeyError:
-            print("ERROR: $ALLSKY_HOME not found in environment variables - Aborting")
+            print("ERROR: $ALLSKY_MODULE_LOCATION not found in environment variables - Aborting")
             sys.exit(1)
-        
-        allSkyModulesPath = os.path.join(allSkyHome, "scripts", "modules")
-        valid_module_paths = ["/opt/allsky/modules", allSkyModulesPath]
+        allSkyModulesLocation = os.path.join(allSkyModules, "modules")
+
+        try:
+            allSkyScripts = os.environ["ALLSKY_SCRIPTS"]
+        except KeyError:
+            print("ERROR: $ALLSKY_SCRIPTS not found in environment variables - Aborting")
+            sys.exit(1)
+        allSkyModulesPath = os.path.join(allSkyScripts, "modules")
+
+        valid_module_paths = [allSkyModulesLocation, allSkyModulesPath]
 
         for vmp in valid_module_paths:
             sys.path.append(os.path.abspath(vmp))

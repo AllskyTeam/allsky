@@ -1856,7 +1856,7 @@ display_image()
 		# Add a message the user will see in the WebUI.
 		cat "${POST_INSTALLATION_ACTIONS}" >> "${ALLSKY_LOG}"
 		WEBUI_MESSAGE="Actions needed.  See ${ALLSKY_LOG}."
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "Warning" "${WEBUI_MESSAGE}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${WEBUI_MESSAGE}"
 	fi
 
 	# ${ALLSKY_TMP} may not exist yet, i.e., at the beginning of installation.
@@ -2049,10 +2049,6 @@ create_webui_defines
 ##### Create the camera type-model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
 save_camera_capabilities "false" || exit_with_image 1			# prompts on error only
-
-# Code later needs "settings()" function.  This is still the "repo" config.sh.
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-#####source "${ALLSKY_CONFIG}/config.sh" || exit_with_image ${ALLSKY_ERROR_STOP}
 
 ##### Set locale
 set_locale

@@ -74,7 +74,7 @@ def skyClear():
 
     return skyState, skyStateFlag
 
-    
+
     pass
 
 def raining():
@@ -125,7 +125,7 @@ def convertPath(path):
             break
 
     return path
-    
+
 def startModuleDebug(module):
     tmpDir = getEnvironmentVariable("ALLSKY_TMP")
     moduleTmpDir = os.path.join(tmpDir, "debug", module)
@@ -141,9 +141,9 @@ def writeDebugImage(module, fileName, image):
     tmpDir = getEnvironmentVariable("ALLSKY_TMP")
     debugDir = os.path.join(tmpDir, "debug", module)
     os.makedirs(debugDir, mode = 0o777, exist_ok = True)
-    moduleTmpFile = os.path.join(debugDir, fileName)    
+    moduleTmpFile = os.path.join(debugDir, fileName)
     cv2.imwrite(moduleTmpFile, image, params=None)
-    log(4,"INFO: Wrote debug file {0}".format(moduleTmpFile))    
+    log(4,"INFO: Wrote debug file {0}".format(moduleTmpFile))
 
 def setupForCommandLine():
     global ALLSKYPATH, LOGLEVEL
@@ -246,12 +246,12 @@ def getSetting(settingName):
         result = SETTINGS[settingName]
     except Exception:
         pass
-    
+
     return result
 
 def writeSettings():
     global SETTINGS
-        
+
     settingsFile = getEnvironmentVariable("SETTINGS_FILE")
     if settingsFile is None:
         camera = getEnvironmentVariable("CAMERA_TYPE")
@@ -259,15 +259,15 @@ def writeSettings():
             camera = CONFIG["CAMERA"]
 
         settingsFile = os.path.join(getEnvironmentVariable("ALLSKY_CONFIG"), "settings_" + camera + ".json")
-           
+
     with open(settingsFile, "w") as fp:
-        json.dump(SETTINGS, fp)                            
+        json.dump(SETTINGS, fp, indent=4)
 
 def updateSetting(values):
     readSettings()
     for value in values:
         SETTINGS.update(value)
-    
+
     writeSettings()
 
 def getConfig(settingName):
@@ -276,7 +276,7 @@ def getConfig(settingName):
         result = CONFIG[settingName]
     except Exception:
         pass
-    
+
     return result
 
 def setupParams(params, metaData):
@@ -294,7 +294,7 @@ def setupParams(params, metaData):
                             value = int(value)
 
                 params[param] = value
-    
+
     return params
 
 def var_dump(variable):
@@ -331,7 +331,7 @@ def initDB():
         file = open(dbFile, 'w+')
         file.write('DataBase = {}')
         file.close()
-    
+
     try:
         sys.path.insert(1, tmpDir)
         database = __import__('allskydb')
@@ -339,14 +339,14 @@ def initDB():
     except:
         DBDATA = {}
         log(0, "ERROR: Allsy database corrupted - Resetting")
-    
+
 def dbAdd(key, value):
     global DBDATA
     DBDATA[key] = value
     writeDB()
 
 def dbUpdate(key, value):
-    global DBDATA    
+    global DBDATA
     DBDATA[key] = value
     writeDB()
 
@@ -364,7 +364,7 @@ def dbGet(key):
 def writeDB():
     global DBDATA
     tmpDir = getEnvironmentVariable('ALLSKY_TMP')
-    dbFile = os.path.join(tmpDir, 'allskydb.py')    
+    dbFile = os.path.join(tmpDir, 'allskydb.py')
     file = open(dbFile, 'w+')
     file.write('DataBase = ')
     file.write(str(DBDATA))
@@ -376,33 +376,33 @@ def isFileWriteable(fileName):
         if os.path.isfile(fileName):
             return os.access(fileName, os.W_OK)
         else:
-            return False 
+            return False
     else:
-        return False            
+        return False
 
 def isFileReadable(fileName):
-    
+
     """ Check if a file is readable """
     if os.path.exists(fileName):
         if os.path.isfile(fileName):
             return os.access(fileName, os.R_OK)
         else:
-            return False 
+            return False
     else:
-        return False     
-    
+        return False
+
 def int(val):
     if not isinstance(val, str):
         val = locale.str(val)
     val = locale.atoi(val)
-    
+
     return val
 
 def float(val):
     if not isinstance(val, str):
         val = locale.str(val)
     val = locale.atof(val)
-    
+
     return val
 
 def saveExtraData(fileName, extraData):
@@ -421,7 +421,7 @@ def deleteExtraData(fileName):
         if os.path.exists(extraDataFilename):
             if isFileWriteable(extraDataFilename):
                 os.remove(extraDataFilename)
-            
+
 def getGPIOPin(pin):
     result = None
     if pin == 0:
@@ -434,7 +434,7 @@ def getGPIOPin(pin):
         result = board.D2
 
     #SDA = pin.SDA
-    
+
     if pin == 3:
         result = board.D3
 
@@ -456,9 +456,9 @@ def getGPIOPin(pin):
 
     if pin == 8:
         result = board.D8
-    
+
     #CE0 = pin.D8
-    
+
     if pin == 9:
         result = board.D9
 
@@ -468,10 +468,10 @@ def getGPIOPin(pin):
         result = board.D10
 
     #MOSI = pin.D10
-    
+
     if pin == 11:
         result = board.D11
-    
+
     #SCLK = pin.D11
     #SCK = pin.D11
 
@@ -480,15 +480,15 @@ def getGPIOPin(pin):
 
     if pin == 13:
         result = board.D13
-    
+
     if pin == 14:
         result = board.D14
 
     #TXD = pin.D14
-    
+
     if pin == 15:
         result = board.D15
-    
+
     #RXD = pin.D15
 
     if pin == 16:
@@ -504,18 +504,18 @@ def getGPIOPin(pin):
         result = board.D19
 
     #MISO_1 = pin.D19
-    
+
     if pin == 20:
         result = board.D20
-    
+
     #MOSI_1 = pin.D20
-    
+
     if pin == 21:
         result = board.D21
-    
+
     #SCLK_1 = pin.D21
     #SCK_1 = pin.D21
-    
+
     if pin == 22:
         result = board.D22
 
@@ -533,5 +533,5 @@ def getGPIOPin(pin):
 
     if pin == 27:
         result = board.D27
-    
+
     return result

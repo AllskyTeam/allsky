@@ -72,7 +72,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_NOTIFICATION_LOG="${ALLSKY_TMP}/notification_log.txt"
 
 	# Holds temporary messages to display in the WebUI.
-	ALLSKY_MESSAGES="${ALLSKY_TMP}/messages.txt"
+	ALLSKY_MESSAGES="${ALLSKY_CONFIG}/messages.txt"
 
 	# Holds information on what the user needs to do after an installation.
 	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/installation_logs"

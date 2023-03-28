@@ -233,6 +233,6 @@ if __name__ == "__main__":
 
             updatefile.close()
             with open(moduleConfig, "w") as updatefile:
-                json.dump(config, updatefile)
+                json.dump(config, updatefile, indent=4)
         except json.JSONDecodeError as err:
             shared.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)

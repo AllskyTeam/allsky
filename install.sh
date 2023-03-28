@@ -1858,6 +1858,9 @@ display_image()
 		# Add a message the user will see in the WebUI.
 		WEBUI_MESSAGE="Actions needed.  See ${POST_INSTALLATION_ACTIONS}."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${WEBUI_MESSAGE}"
+
+		# This tells allsky.sh not to display a message about actions since we just did.
+		touch "${POST_INSTALLATION_ACTIONS}_initial_message"
 	fi
 
 	# ${ALLSKY_TMP} may not exist yet, i.e., at the beginning of installation.

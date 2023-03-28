@@ -57,7 +57,8 @@ rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 # display_msg() will send "log" entries to this file.
 # DISPLAY_MSG_LOG is used in display_msg()
 # shellcheck disable=SC2034
-DISPLAY_MSG_LOG="${INSTALL_SH_LOG}"
+DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh_log.txt"
+
 
 # Some versions of Linux default to 750 so web server can't read it
 chmod 755 "${ALLSKY_HOME}"

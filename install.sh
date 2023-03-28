@@ -1618,7 +1618,7 @@ restore_prior_files()
 		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}"
 
 		local PRIOR="$( get_variable "ALLSKY_VERSION" "${PRIOR_CONFIG_FILE}" )"
-		if [[ ${PRIOR} != ${ALLSKY_VERSION} ]]; then
+		if [[ ${PRIOR} != "${ALLSKY_VERSION}" ]]; then
 			MSG="Updating ALLSKY_VERSION in 'config.sh' to '${ALLSKY_VERSION}'."
 			sed -i "/ALLSKY_VERSION=/ c ALLSKY_VERSION=\"${ALLSKY_VERSION}\"" "${PRIOR_CONFIG_FILE}"
 			display_msg --log progress "${MSG}"

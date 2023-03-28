@@ -404,7 +404,7 @@ ask_reboot()
 	else
 		display_msg --log notice "You need to reboot the Pi before Allsky will work."
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
-		MSG="${MSG}You can connect to the WebUI at:\n"
+		MSG="${MSG}You can then connect to the WebUI at:\n"
 		MSG="${MSG}${AT}"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
@@ -1503,7 +1503,7 @@ restore_prior_files()
 		mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
 	else
 		# This is probably very rare so let the user know
-		MSG="No prior 'images' directory so can't restore them."
+		MSG="No prior 'images' directory so can't restore."
 		MSG="${MSG}\nThis is unusual."
 		display_msg --log info "${MSG}"
 	fi
@@ -1512,21 +1512,21 @@ restore_prior_files()
 		display_msg --log progress "Restoring darks."
 		mv "${PRIOR_ALLSKY_DIR}/darks" "${ALLSKY_HOME}"
 	else
-		display_msg "${LOG_TYPE}" progress "No prior 'darks' so can't restore."
+		display_msg "${LOG_TYPE}" progress "No prior 'darks' directory so can't restore."
 	fi
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg --log progress "Restoring modules."
 		"${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}"
 	else
-		display_msg "${LOG_TYPE}" progress "No prior 'modules' so can't restore."
+		display_msg "${LOG_TYPE}" progress "No prior 'modules' directory so can't restore."
 	fi
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg --log progress "Restoring overlays."
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 	else
-		display_msg "${LOG_TYPE}" progress "No prior 'overlay' so can't restore."
+		display_msg "${LOG_TYPE}" progress "No prior 'overlay' directory so can't restore."
 	fi
 
 	# This is not in a "standard" directory so we need to determine where it was.
@@ -1535,7 +1535,7 @@ restore_prior_files()
 		display_msg --log progress "Restoring 'extra' files."
 		cp -ar "${EXTRA}" "${ALLSKY_EXTRA}/.."
 	else
-		display_msg "${LOG_TYPE}" progress "No prior 'extra' files so can't restore."
+		display_msg "${LOG_TYPE}" progress "No prior 'extra' directory so can't restore."
 	fi
 
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then

@@ -57,7 +57,7 @@ rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 # display_msg() will send "log" entries to this file.
 # DISPLAY_MSG_LOG is used in display_msg()
 # shellcheck disable=SC2034
-DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh_log.txt"
+DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh.log"
 
 
 # Some versions of Linux default to 750 so web server can't read it
@@ -1396,7 +1396,7 @@ restore_prior_settings_files()
 							display_msg --log progress "Restoring settings files:"
 							FIRST_ONE="false"
 						fi
-						display_msg --log progress "\t'$(basename "${F}")."
+						display_msg --log progress "\t'$(basename "${F}")'"
 						cp -a "${F}" "${ALLSKY_CONFIG}"
 					done
 			else
@@ -1501,6 +1501,9 @@ restore_prior_files()
 		MSG="${MSG}\nSee the 'Explanations --> Module' documentation for more details."
 		display_msg --log info "\n${MSG}\n"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+	else
+		MSG="No prior 'endOfNight_additionalSteps.sh' so can't restore."
+		display_msg "${LOG_TYPE}" progress "${MSG}"
 	fi
 
 	if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then
@@ -1530,9 +1533,9 @@ restore_prior_files()
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg --log progress "Restoring overlays."
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
-		# Restore the fields.json file as its part of the main distribution and should be replaced during an upgrade
-		cp -ar "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_CONFIG}/overlay/config/"
-
+		# Restore the fields.json file as its part of the main Allsky distribution
+		# and should be replaced during an upgrade.
+		cp -ar "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_OVERLAY}/config/"
 	else
 		display_msg "${LOG_TYPE}" progress "No prior 'overlay' directory so can't restore."
 	fi
@@ -1567,11 +1570,15 @@ restore_prior_files()
 			"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
 		# Check if this is an older Allsky Website configuration file type.
+		# The remote config file should have .ConfigVersion.
 		local OLD="false"
-		NEW_CONFIG_VERSION="$(jq .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
-		PRIOR_CONFIG_VERSION="$(jq .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
+		NEW_CONFIG_VERSION="$(settings .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
+		PRIOR_CONFIG_VERSION="$(settings .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
 		if [[ ${PRIOR_CONFIG_VERSION} == "" || ${PRIOR_CONFIG_VERSION} == "null" ]]; then
 			OLD="true"		# Hmmm, it should have the version
+			MSG="Prior Website configuration file '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}'"
+			MSG="${MSG}\nis missing .ConfigVersion.  It should be '${NEW_CONFIG_VERSION}'."
+			display_msg --log warning "${MSG}"
 			PRIOR_CONFIG_VERSION="** Unknown **"
 		elif [[ ${PRIOR_CONFIG_VERSION} < "${NEW_CONFIG_VERSION}" ]]; then
 			OLD="true"
@@ -1610,8 +1617,15 @@ restore_prior_files()
 	display_msg "${LOG_TYPE}" debug "CONFIG_SH_VERSION=${CONFIG_SH_VERSION}, PRIOR=${PRIOR_CONFIG_SH_VERSION}"
 	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
 		RESTORED_PRIOR_CONFIG_SH="true"
-		display_msg --log progress "Restoring and updating prior 'config.sh' file."
+		display_msg --log progress "Restoring prior 'config.sh' file."
 		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}"
+
+		local PRIOR="$( get_variable "ALLSKY_VERSION" "${PRIOR_CONFIG_FILE}" )"
+		if [[ ${PRIOR} != "${ALLSKY_VERSION}" ]]; then
+			MSG="Updating ALLSKY_VERSION in 'config.sh' to '${ALLSKY_VERSION}'."
+			sed -i "/ALLSKY_VERSION=/ c ALLSKY_VERSION=\"${ALLSKY_VERSION}\"" "${PRIOR_CONFIG_FILE}"
+			display_msg --log progress "${MSG}"
+		fi
 	else
 		RESTORED_PRIOR_CONFIG_SH="false"
 		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
@@ -1625,10 +1639,13 @@ restore_prior_files()
 		display_msg --log info "${MSG}"
 	fi
 
+	# Unlike the config.sh file which was always in allsky/config,
+	# the ftp-settings.sh file used to be in allsky/scripts.
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then
 		# Allsky v2022.03.01 and newer.  v2022.03.01 doesn't have FTP_SH_VERSION.
 		PRIOR_FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}")"
 		FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh")"
+		FTP_SH_VERSION="${FTP_SH_VERSION:-unknown}"
 	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
 		# pre v2022.03.01
 		PRIOR_FTP_FILE="${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh"
@@ -1638,7 +1655,7 @@ restore_prior_files()
 		display_msg --log error "Unable to find prior ftp-settings.sh"
 		PRIOR_FTP_FILE=""
 		PRIOR_FTP_SH_VERSION=""
-		FTP_SH_VERSION="none"
+		FTP_SH_VERSION="no file"
 	fi
 	display_msg "${LOG_TYPE}" debug "FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
 	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
@@ -1648,11 +1665,15 @@ restore_prior_files()
 	else
 		RESTORED_PRIOR_FTP_SH="false"
 		if [[ ${FTP_SH_VERSION} == "old" ]]; then
-			MSG="old version."
-		else
+			MSG="old location so no FTP_SH_VERSION."
+		elif [[ ${FTP_SH_VERSION} == "unknown" ]]; then
+			MSG="unknown prior FTP_SH_VERSION."
+		elif [[ ${FTP_SH_VERSION} == "no file" ]]; then
 			MSG="no prior file."
+		else
+			MSG="unknown FTP_SH_VERSION: '${FTP_SH_VERSION}'."
 		fi
-		display_msg --log "Not restoring 'ftp-settings.sh': ${MSG}"
+		display_msg --log progress "Not restoring 'ftp-settings.sh': ${MSG}"
 	fi
 
 	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "true" && ${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
@@ -1690,23 +1711,25 @@ restore_prior_files()
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 		# The prior versions are similar to the new ones.
 # TODO: We can automate this since we know what changed in each version.
-		if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" ]]; then
-			MSG="Your prior 'config.sh' file is similar to the new one."
-		elif [[ ${RESTORED_PRIOR_FTP_SH} == "false" ]]; then
-			MSG="Your prior 'ftp-settings.sh' file is similar to the new one."
-		else
-			MSG="Your 'config.sh' and 'ftp-settings.sh' files are similar to the new ones."
+		M=""
+		# If it has a version number it's probably close to the current version.
+		if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" && -n ${PRIOR_CONFIG_SH_VERSION} ]]; then
+			MSG="${MSG}\nYour prior 'config.sh' file is similar to the new one."
+		fi
+		if [[ ${RESTORED_PRIOR_FTP_SH} == "false" && -n ${PRIOR_FTP_SH_VERSION} ]]; then
+			MSG="${MSG}\nYour prior 'ftp-settings.sh' file is similar to the new one."
 		fi
 		MSG="${MSG}\nAfter installation, see ${POST_INSTALLATION_ACTIONS} for details."
 
 		MSG2="You can compare the old and new configuration files with the following commands,"
 		MSG2="${MSG2}\nand apply your changes from the prior file to the new file."
-		MSG2="${MSG2}\nDo NOT simply copy the old files to the new location."
+		MSG2="${MSG2}\nDo NOT simply copy the old files to the new location because"
+		MSG2="${MSG2}\ntheir formats are different."
 		MSG2="${MSG2}\n\ndiff ${PRIOR_CONFIG_DIR}/config.sh ${ALLSKY_CONFIG}"
 		MSG2="${MSG2}\n\n   and"
 		MSG2="${MSG2}\n\ndiff ${PRIOR_FTP_FILE} ${ALLSKY_CONFIG}"
 	else
-		MSG="You need to manually move the contents of:"
+		MSG="You need to manually move the CONTENTS of:"
 		if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" ]]; then
 			MSG="${MSG}\n     ${PRIOR_CONFIG_DIR}/config.sh"
 		fi
@@ -1714,15 +1737,20 @@ restore_prior_files()
 			MSG="${MSG}\n     ${PRIOR_FTP_FILE}"
 		fi
 		MSG="${MSG}\n\nto the new files in ${ALLSKY_CONFIG}."
-		MSG="${MSG}\n\nNOTE: some settings are no longer in the new files and some changed names."
-		MSG="${MSG}\nDo NOT add the old/deleted settings back in."
+		MSG="${MSG}\n\nNOTE: some settings are no longer in the new files and some changed names"
+		MSG="${MSG}\nso NOT add the old/deleted settings back in or simply copy the files."
+		MSG="${MSG}\n*** This will take several minutes ***"
 		MSG2=""
 	fi
 	MSG="${MSG}"
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+
 	display_msg --log info "\n${MSG}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
-	[[ -n ${MSG2} ]] && echo -e "\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
+	if [[ -n ${MSG2} ]]; then
+		display_msg --log info "\n${MSG2}\n"
+		echo -e "\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
+	fi
 }
 
 
@@ -2061,7 +2089,7 @@ check_tmp
 
 MSG="\nThe following steps can take up to 1 - 3 HOURS depending on the speed of your Pi"
 MSG="${MSG}\nand how many of the necessary dependencies are already installed."
-display_msg --log info "${MSG}"
+display_msg info "${MSG}"
 
 MSG="${MSG}\nYou will see progress messages throughout the process."
 MSG="${MSG}\nAt the end you will be prompted again for additional steps.\n"

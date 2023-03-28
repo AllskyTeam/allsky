@@ -21,10 +21,11 @@ fi
 
 function usage_and_exit()
 {
-	echo -e "${wERROR}"
-	echo "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--restarting] key label new_value [...]"
-	echo -e "${wNC}"
-	echo "There must be a multiple of 3 key/label/old_value/new_value arguments"
+	echo -en "${wERROR}"
+	echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--restarting]"
+	echo -en "\tkey label old_value new_value [...]"
+	echo -e  "${wNC}"
+	echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
 	echo "unless the --optionsOnly argument is given."
 	# shellcheck disable=SC2086
 	exit ${1}
@@ -78,7 +79,7 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 	[[ $# -eq 0 ]] && usage_and_exit 1
-	[[ $(($# % 3)) -ne 0 ]] && usage_and_exit 2
+	[[ $(($# % 4)) -ne 0 ]] && usage_and_exit 2
 fi
 
 
@@ -137,8 +138,9 @@ while [[ $# -gt 0 ]]; do
 	KEY="${1}"
 	LABEL="${2}"
 	NEW_VALUE="${3}"
+	OLD_VALUE="${4}"
 	if [[ ${DEBUG} == "true" ]]; then
-		MSG="New ${KEY} = [${NEW_VALUE}]"
+		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
 		echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
 		if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
 			echo -e "<script>console.log('${MSG}');</script>"
@@ -157,7 +159,7 @@ while [[ $# -gt 0 ]]; do
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
 				CAMERA_NUMBER=" -cameraNumber ${NEW_CAMERA_NUMBER}"
 				# Set NEW_VALUE to the current Camera Type
-				NEW_VALUE="$(jq -r .cameraType "${SETTINGS_FILE}")"
+				NEW_VALUE="$( settings .cameraType )"
 				MSG="Re-creating files for cameraType ${NEW_VALUE}, cameraNumber ${NEW_CAMERA_NUMBER}"
 				if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
 					echo -e "<script>console.log('${MSG}');</script>"
@@ -217,7 +219,7 @@ while [[ $# -gt 0 ]]; do
 
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
-				CAMERA_MODEL="$(jq -r .cameraModel "${CC_FILE}")"
+				CAMERA_MODEL="$( settings .cameraModel "${CC_FILE}" )"
 				if [[ -z ${CAMERA_MODEL} || ${CAMERA_MODEL} == "null" ]]; then
 					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
@@ -244,6 +246,20 @@ while [[ $# -gt 0 ]]; do
 
 				# The old file is no longer needed.
 				rm -f "${CC_FILE_OLD}"
+
+				# Change other things that vary depending on CAMERA_TYPE and CAMERA_MODEL.
+				if [[ ${OLD_VALUE} != "${NEW_VALUE}" ]]; then
+					# Move the current overlay.json to the old camera-specific name,
+					# then copy the new camera-specific named file to overlay.json.
+					if [[ ${DEBUG} == "true" ]]; then
+						echo -e "${wDEBUG}Moving overlay.json to overlay-${OLD_VALUE}.json${wNC}"
+						echo -e "${wDEBUG}Copying overlay-${NEW_VALUE}.json to overlay.json${wNC}"
+					fi
+					mv -f "${ALLSKY_OVERLAY}/config/overlay.json" \
+						"${ALLSKY_OVERLAY}/config/overlay-${OLD_VALUE}.json"
+					cp "${ALLSKY_OVERLAY}/config/overlay-${NEW_VALUE}.json" \
+						"${ALLSKY_OVERLAY}/config/overlay.json"
+				fi
 			fi
 
 			# createAllskyOptions.php will use the cc file and the options template file
@@ -278,9 +294,7 @@ while [[ $# -gt 0 ]]; do
 				echo -e "${wNC}, RET=${RET}:${R}"
 				exit 1
 			fi
-			if [[ ${DEBUG} == "true" && -n ${R} ]]; then
-				echo -e "${wDEBUG}${R}${wNC}"
-			fi
+			[[ ${DEBUG} == "true" && -n ${R} ]] && echo -e "${wDEBUG}${R}${wNC}"
 
 			OK="true"
 			if [[ ! -f ${OPTIONS_FILE} ]]; then
@@ -422,7 +436,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		esac
-		shift 3
+		shift 4
 done
 
 if check_website ; then

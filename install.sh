@@ -49,10 +49,6 @@ REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/allskyDefines.inc.repo"
 REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
 
-# Directory for log files from installation.
-# Needs to go somewhere that survives reboots but can be removed when done.
-INSTALL_LOGS_DIR="${ALLSKY_CONFIG}/installation_logs"
-
 # The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after the reboot.
 rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
 
@@ -61,7 +57,8 @@ rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 # display_msg() will send "log" entries to this file.
 # DISPLAY_MSG_LOG is used in display_msg()
 # shellcheck disable=SC2034
-DISPLAY_MSG_LOG="${INSTALL_LOGS_DIR}/installation_log.txt"
+DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh_log.txt"
+
 
 # Some versions of Linux default to 750 so web server can't read it
 chmod 755 "${ALLSKY_HOME}"
@@ -627,7 +624,7 @@ install_webserver()
 	display_msg --log progress "Installing the web server."
 	sudo systemctl stop hostapd 2> /dev/null
 	sudo systemctl stop lighttpd 2> /dev/null
-	TMP="${INSTALL_LOGS_DIR}/lighttpd.install.log"
+	TMP="${ALLSKY_INSTALLATION_LOGS}/lighttpd.install.log"
 	(
 		sudo apt-get update && \
 			sudo apt-get --assume-yes install lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
@@ -1158,18 +1155,18 @@ install_dependencies_etc()
 	# They also take a little while, so hide the output and let the user know.
 
 	display_msg --log progress "Installing dependencies."
-	TMP="${INSTALL_LOGS_DIR}/make_deps.log"
+	TMP="${ALLSKY_INSTALLATION_LOGS}/make_deps.log"
 	#shellcheck disable=SC2024
 	sudo make deps > "${TMP}" 2>&1
 	check_success $? "Dependency installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	display_msg --log progress "Preparing Allsky commands."
-	TMP="${INSTALL_LOGS_DIR}/make_all.log"
+	TMP="${ALLSKY_INSTALLATION_LOGS}/make_all.log"
 	#shellcheck disable=SC2024
 	make all > "${TMP}" 2>&1
 	check_success $? "Compile failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
-	TMP="${INSTALL_LOGS_DIR}/make_install.log"
+	TMP="${ALLSKY_INSTALLATION_LOGS}/make_install.log"
 	#shellcheck disable=SC2024
 	sudo make install > "${TMP}" 2>&1
 	check_success $? "make install failed" "${TMP}" "${DEBUG}" || exit_with_image 1
@@ -1765,12 +1762,12 @@ install_overlay()
 {
 
 	display_msg --log progress "Installing PHP Modules."
-	TMP="${INSTALL_LOGS_DIR}/PHP_modules.log"
+	TMP="${ALLSKY_INSTALLATION_LOGS}/PHP_modules.log"
 	sudo apt-get --assume-yes install php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
 	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
 	display_msg --log progress "Installing other PHP dependencies."
-	TMP="${INSTALL_LOGS_DIR}/libatlas.log"
+	TMP="${ALLSKY_INSTALLATION_LOGS}/libatlas.log"
 	sudo apt-get --assume-yes install libatlas-base-dev > "${TMP}" 2>&1
 	check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
@@ -1785,7 +1782,7 @@ install_overlay()
 	fi
 	MSG2="\n\tThis may take a LONG time if the packages are not already installed."
 	display_msg --log progress "Installing Python dependencies${M}."  "${MSG2}"
-	TMP="${INSTALL_LOGS_DIR}/Python_dependencies"
+	TMP="${ALLSKY_INSTALLATION_LOGS}/Python_dependencies"
 	PIP3_BUILD="${ALLSKY_HOME}/pip3.build"
 	mkdir -p "${PIP3_BUILD}"
 	COUNT=0
@@ -1806,7 +1803,7 @@ install_overlay()
 	rm -fr "${PIP3_BUILD}"
 
 	display_msg --log progress "Installing Trutype fonts."
-	TMP="${INSTALL_LOGS_DIR}/msttcorefonts.log"
+	TMP="${ALLSKY_INSTALLATION_LOGS}/msttcorefonts.log"
 	sudo apt-get --assume-yes install msttcorefonts > "${TMP}" 2>&1
 	check_success $? "Trutype fonts failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
@@ -1938,8 +1935,8 @@ remind_old_version()
 
 ##### Log files write to ${ALLSKY_CONFIG}, which doesn't exist yet, so create it.
 mkdir -p "${ALLSKY_CONFIG}"
-rm -fr "${INSTALL_LOGS_DIR}"			# shouldn't be there, but just in case
-mkdir "${INSTALL_LOGS_DIR}"
+rm -fr "${ALLSKY_INSTALLATION_LOGS}"			# shouldn't be there, but just in case
+mkdir "${ALLSKY_INSTALLATION_LOGS}"
 
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 

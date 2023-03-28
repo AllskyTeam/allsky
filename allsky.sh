@@ -45,14 +45,27 @@ if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 fi
 
 # This file contains information the user needs to act upon after an installation.
-# If the file exists, display it and stop.
 if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
-	mv "${POST_INSTALLATION_ACTIONS}" "${ALLSKY_TMP}"	# in case the user wants to look at it later
-	echo "${POST_INSTALLATION_ACTIONS} moved to ${ALLSKY_TMP}"
-	# There should already be a message so don't add another,
-	# and there's already an image, so don't overwrite it.
-	# shellcheck disable=SC2154
-	doExit "${EXIT_ERROR_STOP}" "no-image" "" "See ${ALLSKY_TMP}/$( basename "${POST_INSTALLATION_ACTIONS}")"
+	# If there's an initial message display an image and stop.
+	F="${POST_INSTALLATION_ACTIONS}_initial_message"
+	if [[ -f ${F} ]]; then
+		# There is already a message so don't add another,
+		# and there's already an image, so don't overwrite it.
+		# shellcheck disable=SC2154
+		rm "${F}"		# so next time we'll remind them.
+		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
+	else
+		MSG="Reminder to perform the action(s) in '${POST_INSTALLATION_ACTIONS}'."
+		MSG="${MSG}\nIf you already have, remove the file so you will no longer see this message:"
+		MSG="${MSG}\n &nbsp; &nbsp;<code>rm -f '${POST_INSTALLATION_ACTIONS}'"
+		addMessage.sh "info" "${MSG}"
+	fi
+fi
+if [[ -d ${ALLSKY_INSTALLATION_LOGS} ]]; then
+	MSG="Logs from the last installation are in '${ALLSKY_INSTALLATION_LOGS}'."
+	MSG="${MSG}\nIf Allsky is working fine, you can remove the logs:"
+	MSG="${MSG}\n  &nbsp; &nbsp; <code>rm -fr '${ALLSKY_INSTALLATION_LOGS}'</code>"
+	addMessage.sh "info" "${MSG}"
 fi
 
 USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
@@ -172,7 +185,6 @@ else
 	MSG="${MSG}\nIf this happens again, contact the Allsky developers."
 	"${ALLSKY_SCRIPTS}/addMessage.sh" warning "${ME}: ${MSG}"
 fi
-[[ ! -d "${ALLSKY_EXTRA}" ]] && mkdir "${ALLSKY_EXTRA}"
 
 # Clear out these files and allow the web server to write to it.
 : > "${ALLSKY_ABORTEDUPLOADS}"

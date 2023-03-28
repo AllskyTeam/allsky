@@ -72,10 +72,11 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_NOTIFICATION_LOG="${ALLSKY_TMP}/notification_log.txt"
 
 	# Holds temporary messages to display in the WebUI.
-	ALLSKY_MESSAGES="${ALLSKY_TMP}/messages.txt"
+	ALLSKY_MESSAGES="${ALLSKY_CONFIG}/messages.txt"
 
 	# Holds information on what the user needs to do after an installation.
-	POST_INSTALLATION_ACTIONS="${ALLSKY_CONFIG}/post-installation_actions.txt"
+	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/installation_logs"
+	POST_INSTALLATION_ACTIONS="${ALLSKY_INSTALLATION_LOGS}/post-installation_actions.txt"
 
 	# Holds temporary list of aborted uploads and timelapse since another one was in progress
 	ALLSKY_ABORTEDUPLOADS="${ALLSKY_TMP}/aborted_uploads.txt"
@@ -90,6 +91,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Base location of the overlay and module configuration and data files.
 	ALLSKY_OVERLAY="${ALLSKY_CONFIG}/overlay"
 	ALLSKY_MODULES="${ALLSKY_CONFIG}/modules"
+	ALLSKY_MODULE_LOCATION="/opt/allsky"
 	ALLSKY_EXTRA="${ALLSKY_OVERLAY}/extra"
 
 	# Verion file and option branch file.

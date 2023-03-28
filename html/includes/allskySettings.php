@@ -91,7 +91,7 @@ function DisplayAllskyConfig(){
 							}
 						}
 						if ($checkchanges)
-							$changes .= "  '$originalName' '$label' '$newValue'";
+							$changes .= "  '$originalName' '$label' '$oldValue' '$newValue'";
 					}
 
 				} else {

@@ -437,6 +437,8 @@ check_swap()
 	if echo "${RAM_SIZE}" | grep --silent "unknown" ; then
 		# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
 		RAM_SIZE=$(free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }')		# in MB
+	else
+		RAM_SIZE="${RAM_SIZE//total_mem=/}"
 	fi
 	DESIRED_COMBINATION=$((1024 * 4))		# desired minimum memory + swap
 	SUGGESTED_SWAP_SIZE=0

@@ -357,7 +357,7 @@ save_camera_capabilities()
 		return 1
 	else
 		MSG="$( ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null )"
-		display_msg "${LOG_TYPE}" info "Settings files: ${MSG}"
+		display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
 	fi
 
 	return 0
@@ -894,11 +894,23 @@ handle_prior_website()
 
 	if [[ ${PRIOR_STYLE} == "new" ]]; then
 
-		# get_branch returns "" the prior branch is ${GITHUB_MAIN_BRANCH}.
+		# If get_branch returns "" the prior branch is ${GITHUB_MAIN_BRANCH}.
 		local PRIOR_BRANCH="$( get_branch "${PRIOR_SITE}/" )"
 
 		display_msg --log progress "Restoring Allsky Website from ${PRIOR_SITE}."
 		sudo mv "${PRIOR_SITE}" "${ALLSKY_WEBSITE}"
+
+		# Update "AllskyVersion" if needed.
+		V="$( settings .config.AllskyVersion "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
+		display_msg "${LOG_TYPE}" info "Prior local Website's AllskyVersion=${V}"
+		if [[ ${V} != "${ALLSKY_VERSION}" ]]; then
+			MSG="Updating AllskyVersion in local Website from '${V}' to '${ALLSKY_VERSION}'"
+			display_msg --log progress "${MSG}"
+			jq ".config.AllskyVersion = \"${ALLSKY_VERSION}\"" \
+				"${ALLSKY_WEBSITE_CONFIGURATION_FILE}" > /tmp/x \
+				&& mv /tmp/x "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		fi
+
 
 		# We can only check versions if we obtained the new version.
 		[[ -z ${NEWEST_VERSION} ]] && return
@@ -1574,6 +1586,17 @@ restore_prior_files()
 		cp -a "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" \
 			"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
+		# Update "AllskyVersion" if needed.
+		V="$( settings .config.AllskyVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+		display_msg "${LOG_TYPE}" info "Prior remote Website's AllskyVersion=${V}"
+		if [[ ${V} != "${ALLSKY_VERSION}" ]]; then
+			MSG="Updating AllskyVersion in remote Website from '${V}' to '${ALLSKY_VERSION}'"
+			display_msg --log progress "${MSG}"
+			jq ".config.AllskyVersion = \"${ALLSKY_VERSION}\"" \
+				"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" > /tmp/x \
+				&& mv /tmp/x "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+		fi
+
 		# Check if this is an older Allsky Website configuration file type.
 		# The remote config file should have .ConfigVersion.
 		local OLD="false"
@@ -2083,7 +2106,10 @@ get_this_branch
 does_old_WebUI_location_exist
 
 ##### Executes the specified function, if any, and exits.
-[[ -n ${FUNCTION} ]] && do_function "${FUNCTION}"
+if [[ -n ${FUNCTION} ]]; then
+	display_msg "${LOG_TYPE}" info "Calling FUNCTION '${FUNCTION}'"
+	do_function "${FUNCTION}"
+fi
 
 ##### Display an image in the WebUI
 display_image "InstallationInProgress"

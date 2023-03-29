@@ -1974,6 +1974,9 @@ mkdir "${ALLSKY_INSTALLATION_LOGS}"
 
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 
+##### Calculate whiptail sizes
+calc_wt_size
+
 ##### Check arguments
 OK="true"
 HELP="false"
@@ -1984,20 +1987,37 @@ LOG_TYPE="--logonly"	# by default we only log some messages but don't display
 DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 T="${ALLSKY_HOME}/told"
 if [[ ! -f ${T} ]]; then
-	MSG="Testers, until we go-live with this release, debugging is automatically on"
+	MSG="\n"
+	MSG="${MSG}Testers, until we go-live with this release, debugging is automatically on"
 	MSG="${MSG} to aid in installation troubleshooting."
+	MSG="${MSG} You will see additional output lines."
 	MSG="${MSG}\n\nPlease make sure you have Debug Level set to 4 in the WebUI during testing."
-	MSG="${MSG}\n\nChanges from prior dev releases:"
+	MSG="${MSG}\n"
+
+	MSG="${MSG}\nChanges from prior dev releases:"
+
 	X="/etc/allsky/modules"
 	if [[ -d ${X} ]]; then
-		MSG="${MSG}\n * ${X} is no longer used."
-		MSG="${MSG}  Move its contents to ${ALLSKY_MODULE_LOCATION} then 'sudo rmdir ${X}"
+		MSG="${MSG}\n"
+		MSG="${MSG}  * ${X} is no longer used."
+		MSG="${MSG}    Move its contents to ${ALLSKY_MODULE_LOCATION} then 'sudo rmdir ${X}"
 	fi
-	MSG="${MSG}\n   * The allsky/tmp/extra directory moved to allsky/config/extra."
-	MSG="${MSG}\ YOU need to move any files to the new location and UPDATE YOUR SCRIPTS."
+
+	MSG="${MSG}\n  * The allsky/tmp/extra directory moved to allsky/config/extra."
+	MSG="${MSG}\n    YOU need to move any files to the new location and UPDATE YOUR SCRIPTS."
+
+	MSG="${MSG}\n"
+	MSG="${MSG}\n  * The '${ALLSKY_CONFIG}/overlay/config/fields.json' file used to"
+	MSG="${MSG}\n    contain both System fields and User fields (ones YOU created)."
+	MSG="${MSG}\n    It now includes only System fields."
+	MSG="${MSG}\n    After this update please re-add any User fields via the"
+	MSG="${MSG}\n    Variable Manager in the WebUI."
+	MSG="${MSG}\n    Look in the old 'fields.json' file for a list of your"
+	MSG="${MSG}\n    field and their attributes."
+	MSG="${MSG}\n    Future updates will preserve your user fields."
 
 	MSG="${MSG}\n\nIf you agree, enter:    yes    then press Enter"
-	A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
+	A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 30 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 || ${A} != "yes" ]]; then
 		display_msg info "\nYou need to TYPE 'yes' to continue the installation."
 		display_msg info "\nThis is to make sure you read it.\n"
@@ -2041,9 +2061,6 @@ TESTING="${TESTING}" # TODO: keeps shellcheck quiet
 done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
-
-##### Calculate whiptail sizes
-calc_wt_size
 
 ##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY
 does_prior_Allsky_exist

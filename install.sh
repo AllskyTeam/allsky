@@ -2025,7 +2025,6 @@ if [[ ! -f ${T} ]]; then
 	fi
 	touch "${T}"
 fi
-exit
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 UPDATE="false"

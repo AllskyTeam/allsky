@@ -396,14 +396,16 @@ ask_reboot()
 	AT="${AT}or\n"
 	AT="${AT}     http://$(hostname -I | sed -e 's/ .*$//')"
 	local MSG="*** Allsky installation is almost done. ***"
-	MSG="${MSG}\n\nYou must reboot the Raspberry Pi to finish the installation."
+	MSG="${MSG}\n\nWhen done, you must reboot the Raspberry Pi to finish the installation."
 	MSG="${MSG}\n\nAfter reboot you can connect to the WebUI at:\n"
 	MSG="${MSG}${AT}"
 	MSG="${MSG}\n\nReboot when installation is done?"
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 		WILL_REBOOT="true"
+		display_msg --logonly info "Pi will reboot after installation completes."
 	else
-		display_msg --log notice "You need to reboot the Pi before Allsky will work."
+		display_msg --logonly info "User elected not to reboot; warning to them provided."
+		display_msg notice "You need to reboot the Pi before Allsky will work."
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
 		MSG="${MSG}You can then connect to the WebUI at:\n"
 		MSG="${MSG}${AT}"
@@ -975,8 +977,7 @@ get_locale()
 		exit 1
 	fi
 
-	#shellcheck disable=SC2086
-	[[ ${DEBUG} -gt 1 ]] && display_msg --log debug "INSTALLED_LOCALES=${INSTALLED_LOCALES}"
+	[[ ${DEBUG} -gt 1 ]] && display_msg --logonly debug "INSTALLED_LOCALES=${INSTALLED_LOCALES}"
 
 	# If the prior version of Allsky had a locale set but it's not
 	# an installed one, let th euser know.
@@ -1002,10 +1003,7 @@ get_locale()
 			CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p')"
 		fi
 	fi
-	#shellcheck disable=SC2086
-	if [[ ${DEBUG} -gt 1 ]]; then
-		display_msg --log debug "TEMP_LOCALE=${TEMP_LOCALE}, CURRENT_LOCALE=${CURRENT_LOCALE}"
-	fi
+	display_msg --logonly debug "TEMP_LOCALE=${TEMP_LOCALE}, CURRENT_LOCALE=${CURRENT_LOCALE}"
 
 	local D=""
 	if [[ -n ${CURRENT_LOCALE} && ${CURRENT_LOCALE} != "null" ]]; then
@@ -1035,7 +1033,8 @@ get_locale()
 		MSG="You need to set the locale before the installation can run."
 		MSG="${MSG}\nIf your locale was not in the list, run 'raspi-config' to update the list,"
 		MSG="${MSG}\nthen rerun the installation."
-		display_msg --log info "${MSG}"
+		display_msg info "${MSG}"
+		display_msg --logonly info "No locale selected; exiting."
 		exit 0
 	elif echo "${LOCALE}" | grep --silent "Box options" ; then
 		# Got a usage message from whiptail.
@@ -1049,32 +1048,47 @@ get_locale()
 }
 
 
+update_locale()
+{
+	local L="${1}"		# locale
+	local S="${2}"		# settings file
+	jq ".locale = \"${L}\"" "${S}" > /tmp/x && mv /tmp/x "${S}"
+}
 ####
 # Set the locale
 set_locale()
 {
-	[[ -z ${LOCALE} ]] && get_locale
-
 	# ${LOCALE} and ${CURRENT_LOCALE} are set
 
 	if [[ ${CURRENT_LOCALE} == "${LOCALE}" ]]; then
 		display_msg --log progress "Keeping '${LOCALE}' locale."
-		LOCALE=""		# causes set_locale not to do anything.
-	else
-		display_msg progress "Setting locale to '${LOCALE}'."
-		if [[ ! -f ${SETTINGS_FILE} ]]; then
-			# For testing, create a dummy settings file.
-			SETTINGS_FILE="/tmp/s"
-			echo '{ "locale" : "aa_AA.UTF-8" }' > "${SETTINGS_FILE}"
+		local L="$( settings .locale )"
+		if [[ ${L} == "" || ${L} == "null" ]]; then
+			MSG="Settings file '${SETTINGS_FILE}' did not contain .locale"
+			display_msg --logonly info "${MSG}"
+			update_locale "${LOCALE}"  "${SETTINGS_FILE}"
+		else
+			MSG="Settings file '${SETTINGS_FILE}' contained .locale = '${L}'."
+			display_msg --logonly info "${MSG}"
 		fi
-		jq ".locale = \"${LOCALE}\"" "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
-		# This updates /etc/default/locale
-		sudo update-locale LC_ALL="${LOCALE}" LANGUAGE="${LOCALE}" LANG="${LOCALE}"
-
-		ask_reboot "locale" && do_reboot		# do_reboot does not return
-		display_msg --log warning "You must reboot before continuing with the installation."
-		exit 0
+		return
 	fi
+
+	display_msg --log progress "Setting locale to '${LOCALE}'."
+	update_locale "${LOCALE}"  "${SETTINGS_FILE}"
+
+	# This updates /etc/default/locale
+	sudo update-locale LC_ALL="${LOCALE}" LANGUAGE="${LOCALE}" LANG="${LOCALE}"
+
+	if ask_reboot "locale" ; then
+		display_msg --logonly info "Rebooting to set locale to '${LOCALE}'"
+		do_reboot		# does not return
+	fi
+
+	display_msg warning "You must reboot before continuing with the installation."
+	display_msg --logonly info "User elected not to reboot to update locale."
+
+	exit 0
 }
 
 
@@ -2157,9 +2171,9 @@ create_webui_defines
 
 ##### Create the camera type-model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
-save_camera_capabilities "false" || exit_with_image 1			# prompts on error only
+save_camera_capabilities "false" || exit_with_image 1		# prompts on error only
 
-##### Set locale
+##### Set locale.  May reboot instead of returning.
 set_locale
 
 ##### Create the Allsky log files
@@ -2172,7 +2186,7 @@ install_overlay
 handle_prior_website
 
 ##### Restore prior files if needed
-restore_prior_files									# prompts if prior Allsky exists
+restore_prior_files											# prompts if prior Allsky exists
 
 ##### Update config.sh
 update_config_sh
@@ -2181,7 +2195,7 @@ update_config_sh
 set_permissions
 
 ##### Check if there's an old WebUI and let the user know it's no longer used.
-check_old_WebUI_location							# prompt if prior old-style WebUI
+check_old_WebUI_location									# prompt if prior old-style WebUI
 
 ##### See if we should reboot when installation is done.
 ask_reboot "full"											# prompts

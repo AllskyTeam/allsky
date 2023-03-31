@@ -57,8 +57,8 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	else
 		MSG="Reminder to perform the action(s) in '${POST_INSTALLATION_ACTIONS}'."
 		MSG="${MSG}\nIf you already have, remove the file so you will no longer see this message:"
-		MSG="${MSG}\n &nbsp; &nbsp;<code>rm -f '${POST_INSTALLATION_ACTIONS}'"
-		"${ALLSKY_SCRIPTS}/addMessage.sh "info" "${MSG}"
+		MSG="${MSG}\n &nbsp; &nbsp;<code>rm -f '${POST_INSTALLATION_ACTIONS}'</code>"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 	fi
 fi
 if [[ -d ${ALLSKY_INSTALLATION_LOGS} ]]; then

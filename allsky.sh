@@ -57,15 +57,15 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	else
 		MSG="Reminder to perform the action(s) in '${POST_INSTALLATION_ACTIONS}'."
 		MSG="${MSG}\nIf you already have, remove the file so you will no longer see this message:"
-		MSG="${MSG}\n &nbsp; &nbsp;<code>rm -f '${POST_INSTALLATION_ACTIONS}'"
-		addMessage.sh "info" "${MSG}"
+		MSG="${MSG}\n &nbsp; &nbsp;<code>rm -f '${POST_INSTALLATION_ACTIONS}'</code>"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 	fi
 fi
 if [[ -d ${ALLSKY_INSTALLATION_LOGS} ]]; then
 	MSG="Logs from the last installation are in '${ALLSKY_INSTALLATION_LOGS}'."
 	MSG="${MSG}\nIf Allsky is working fine, you can remove the logs:"
 	MSG="${MSG}\n  &nbsp; &nbsp; <code>rm -fr '${ALLSKY_INSTALLATION_LOGS}'</code>"
-	addMessage.sh "info" "${MSG}"
+	"{ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 fi
 
 USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")

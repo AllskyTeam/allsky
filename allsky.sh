@@ -65,7 +65,7 @@ if [[ -d ${ALLSKY_INSTALLATION_LOGS} ]]; then
 	MSG="Logs from the last installation are in '${ALLSKY_INSTALLATION_LOGS}'."
 	MSG="${MSG}\nIf Allsky is working fine, you can remove the logs:"
 	MSG="${MSG}\n  &nbsp; &nbsp; <code>rm -fr '${ALLSKY_INSTALLATION_LOGS}'</code>"
-	"{ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
+	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 fi
 
 USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")

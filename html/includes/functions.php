@@ -69,7 +69,7 @@ function initialize_variables() {
 	$cam_type = getCameraType();
 	if ($cam_type == '') {
 		echo "<div style='color: red; font-size: 200%;'>";
-		echo "'Camera Type' not defined in the WebUI.  Please update it.";
+		echo "'Camera Type' not defined in ~/allsky/config/config.sh.  Please update it.";
 		echo "</div>";
 		exit;
 	}

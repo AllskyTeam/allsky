@@ -223,7 +223,14 @@ select_camera_type()
 				# New style Allsky using ${CAMERA_TYPE}.
 				CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
 				# Don't bother with a message since this is a "similar" release.
-				[[ -n ${CAMERA_TYPE} ]] && return
+				if [[ -n ${CAMERA_TYPE} ]]; then
+					MSG="Using CAMERA_TYPE '${CAMERA_TYPE}' from prior config.sh"
+					display_msg --logonly info "${MSG}"
+					return
+				else
+					MSG="CAMERA_TYPE not in prior config.sh; possibly corrupted file?"
+					display_msg --log error "${MSG}"
+				fi
 				;;
 
 			"v2022.03.01" | "old")
@@ -237,6 +244,9 @@ select_camera_type()
 					fi
 					display_msg --log progress "Using prior ${CAMERA} camera${NEW}."
 					return
+				else
+					MSG="CAMERA not in prior old-style config.sh."
+					display_msg --log warning "${MSG}"
 				fi
 				;;
 		esac
@@ -1211,11 +1221,19 @@ install_dependencies_etc()
 # Update config.sh
 update_config_sh()
 {
-	display_msg --log progress "Updating '${ALLSKY_CONFIG}/config.sh'"
+	local C="${ALLSKY_CONFIG}/config.sh"
+	display_msg --log progress "Updating '${C}'"
+	if [[ -z ${ALLSKY_VERSION} ]]; then
+		display_msg --log error "ALLSKY_VERSION is empty in update_config_sh()"
+	fi
+	if [[ -z ${CAMERA_TYPE} ]]; then
+		display_msg --log error "CAMERA_TYPE is empty in update_config_sh()"
+		CAMERA_TYPE="$( settings .cameraType )"
+	fi
 	sed -i \
 		-e "s;^ALLSKY_VERSION=.*$;ALLSKY_VERSION=\"${ALLSKY_VERSION}\";" \
 		-e "s;^CAMERA_TYPE=.*$;CAMERA_TYPE=\"${CAMERA_TYPE}\";" \
-		"${ALLSKY_CONFIG}/config.sh"
+		"${C}"
 }
 
 
@@ -1564,7 +1582,8 @@ restore_prior_files()
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg --log progress "Restoring overlays."
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
-		# Restore the fields.json file as its part of the main Allsky distribution
+
+		# Restore the fields.json file as it's part of the main Allsky distribution
 		# and should be replaced during an upgrade.
 		cp -ar "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_OVERLAY}/config/"
 	else
@@ -1882,6 +1901,7 @@ install_overlay()
 
 	display_msg --log progress "Setting up modules and overlays."
 
+	# These will get overwritten if the user has prior versions.
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_CONFIG}"
 	cp -ar "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
 	# The overlay.json file is handled by makeChanges.sh

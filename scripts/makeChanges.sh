@@ -251,14 +251,18 @@ while [[ $# -gt 0 ]]; do
 				if [[ ${OLD_VALUE} != "${NEW_VALUE}" ]]; then
 					# Move the current overlay.json to the old camera-specific name,
 					# then copy the new camera-specific named file to overlay.json.
+					O="${ALLSKY_OVERLAY}/config/overlay.json"
+					if [[ -n ${OLD_VALUE} && -f ${O} ]]; then
+						if [[ ${DEBUG} == "true" ]]; then
+							echo -e "${wDEBUG}Moving overlay.json to overlay-${OLD_VALUE}.json${wNC}"
+						fi
+						mv -f "${O}" "${ALLSKY_OVERLAY}/config/overlay-${OLD_VALUE}.json"
+					fi
+
 					if [[ ${DEBUG} == "true" ]]; then
-						echo -e "${wDEBUG}Moving overlay.json to overlay-${OLD_VALUE}.json${wNC}"
 						echo -e "${wDEBUG}Copying overlay-${NEW_VALUE}.json to overlay.json${wNC}"
 					fi
-					mv -f "${ALLSKY_OVERLAY}/config/overlay.json" \
-						"${ALLSKY_OVERLAY}/config/overlay-${OLD_VALUE}.json"
-					cp "${ALLSKY_OVERLAY}/config/overlay-${NEW_VALUE}.json" \
-						"${ALLSKY_OVERLAY}/config/overlay.json"
+					cp "${ALLSKY_OVERLAY}/config/overlay-${NEW_VALUE}.json" "${O}"
 				fi
 			fi
 

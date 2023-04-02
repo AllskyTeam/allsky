@@ -678,7 +678,7 @@ install_webserver()
 
 	sudo systemctl start lighttpd
 	# Starting it added an entry so truncate the file so it's 0-length
-	truncate -s 0 "${LIGHTTPD_LOG}"
+	sleep 1; truncate -s 0 "${LIGHTTPD_LOG}"
 }
 
 

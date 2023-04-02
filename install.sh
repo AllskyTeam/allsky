@@ -1686,15 +1686,18 @@ restore_prior_files()
 			MSG="Updating ALLSKY_VERSION in 'config.sh' to '${ALLSKY_VERSION}'."
 			sed -i "/ALLSKY_VERSION=/ c ALLSKY_VERSION=\"${ALLSKY_VERSION}\"" "${PRIOR_CONFIG_FILE}"
 			display_msg --log progress "${MSG}"
+		else
+			MSG="ALLSKY_VERSION (${PRIOR}) in prior config.sh same as new version."
+			display_msg --logonly info "${MSG}"
 		fi
 	else
 		RESTORED_PRIOR_CONFIG_SH="false"
 		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
-			MSG="no version specified"
+			MSG="no prior version specified"
 		else
 			# This is hopefully the last version with config.sh so don't
 			# bother writing a function to convert from the prior version to this.
-			MSG="old version (${PRIOR_CONFIG_SH_VERSION})"
+			MSG="prior version is old (${PRIOR_CONFIG_SH_VERSION})"
 		fi
 		MSG="Not restoring 'config.sh': ${MSG}."
 		display_msg --log info "${MSG}"
@@ -1702,85 +1705,57 @@ restore_prior_files()
 
 	# Unlike the config.sh file which was always in allsky/config,
 	# the ftp-settings.sh file used to be in allsky/scripts.
+	# Get the current and prior (if any) file version.
+	FTP_SH_VERSION="$( get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh" )"
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then
 		# Allsky v2022.03.01 and newer.  v2022.03.01 doesn't have FTP_SH_VERSION.
-		PRIOR_FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}")"
-		FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh")"
-		FTP_SH_VERSION="${FTP_SH_VERSION:-unknown}"
+		PRIOR_FTP_SH_VERSION="$( get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}" )"
+		PRIOR_FTP_SH_VERSION="${PRIOR_FTP_SH_VERSION:-"no version"}"
 	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
 		# pre v2022.03.01
 		PRIOR_FTP_FILE="${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh"
-		PRIOR_FTP_SH_VERSION=""
-		FTP_SH_VERSION="old"
+		PRIOR_FTP_SH_VERSION="old"
 	else
 		display_msg --log error "Unable to find prior ftp-settings.sh"
 		PRIOR_FTP_FILE=""
-		PRIOR_FTP_SH_VERSION=""
-		FTP_SH_VERSION="no file"
+		PRIOR_FTP_SH_VERSION="no file"
 	fi
 	display_msg "${LOG_TYPE}" debug "FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
+
 	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
 		RESTORED_PRIOR_FTP_SH="true"
 		display_msg --log progress "Restoring prior 'ftp-settings.sh' file."
 		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}"
 	else
 		RESTORED_PRIOR_FTP_SH="false"
-		if [[ ${FTP_SH_VERSION} == "old" ]]; then
-			MSG="old location so no FTP_SH_VERSION."
-		elif [[ ${FTP_SH_VERSION} == "unknown" ]]; then
+		if [[ ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
 			MSG="unknown prior FTP_SH_VERSION."
-		elif [[ ${FTP_SH_VERSION} == "no file" ]]; then
+		elif [[ ${PRIOR_FTP_SH_VERSION} == "old" ]]; then
+			MSG="old location so no FTP_SH_VERSION."
+		elif [[ ${PRIOR_FTP_SH_VERSION} == "no file" ]]; then
 			MSG="no prior file."
 		else
-			MSG="unknown FTP_SH_VERSION: '${FTP_SH_VERSION}'."
+			MSG="unknown PRIOR_FTP_SH_VERSION: '${PRIOR_FTP_SH_VERSION}'."
 		fi
-		display_msg --log progress "Not restoring 'ftp-settings.sh': ${MSG}"
+		display_msg --log progress "Not restoring prior 'ftp-settings.sh': ${MSG}"
 	fi
 
 	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "true" && ${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
 		return 0
 	fi
 
-	## TODO: Try to automate this.
-	# We know the format of PRIOR_ALLSKY_VERSION == v2022.03.01 and know
-	# the format of CONFIG_FTP_VERSION and FTP_SH_VERSION files.
-
-	# display_msg --log progress "Restoring settings from 'config.sh'."
-	# similar for config.sh, but
-	#	- don't transfer CAMERA
-	#	- handle renames
-	#	- handle variable that were moved to WebUI
-	#		> DAYTIME_CAPTURE
-	#		> others
-	#
-	# display_msg --log info "\nIMPORTANT: check 'config.sh' for correctness.\n"
-	# RESTORED_PRIOR_CONFIG_SH="true"
-
-	# display_msg --log progress "Restoring settings from 'ftp-settings.sh'."
-	# if [[ -n ${PRIOR_FTP_FILE} ]]; then
-	#	( source ${PRIOR_FTP_FILE}
-	#		for each variable:
-	#			/^variable=/ c;variable="$oldvalue";
-	#		Deal with old names from version 0.8
-	#	) > /tmp/x
-	#	sed -i --file=/tmp/x "${ALLSKY_CONFIG}/ftp-settings.sh"
-	#	rm -f /tmp/x
-	#	RESTORED_PRIOR_FTP_SH="true"
-	#	display_msg --log info "\nIMPORTANT: check 'ftp-settings.sh' for correctness.\n"
-	# fi
-	
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 		# The prior versions are similar to the new ones.
-# TODO: We can automate this since we know what changed in each version.
-		M=""
+		MSG=""
 		# If it has a version number it's probably close to the current version.
 		if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" && -n ${PRIOR_CONFIG_SH_VERSION} ]]; then
 			MSG="${MSG}\nYour prior 'config.sh' file is similar to the new one."
 		fi
-		if [[ ${RESTORED_PRIOR_FTP_SH} == "false" && -n ${PRIOR_FTP_SH_VERSION} ]]; then
+		if [[ ${RESTORED_PRIOR_FTP_SH} == "false" && ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
 			MSG="${MSG}\nYour prior 'ftp-settings.sh' file is similar to the new one."
 		fi
-		MSG="${MSG}\nAfter installation, see ${POST_INSTALLATION_ACTIONS} for details."
+		# Don't wantn this line in the post-installation file.
+		MSGb="\nAfter installation, see ${POST_INSTALLATION_ACTIONS} for details."
 
 		MSG2="You can compare the old and new configuration files with the following commands,"
 		MSG2="${MSG2}\nand apply your changes from the prior file to the new file."
@@ -1801,12 +1776,13 @@ restore_prior_files()
 		MSG="${MSG}\n\nNOTE: some settings are no longer in the new files and some changed names"
 		MSG="${MSG}\nso NOT add the old/deleted settings back in or simply copy the files."
 		MSG="${MSG}\n*** This will take several minutes ***"
+		MSGb=""
 		MSG2=""
 	fi
 	MSG="${MSG}"
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+	whiptail --title "${TITLE}" --msgbox "${MSG}${MSGb}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
-	display_msg --log info "\n${MSG}\n"
+	display_msg --log info "\n${MSG}${MSGb}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	if [[ -n ${MSG2} ]]; then
 		display_msg --log info "\n${MSG2}\n"

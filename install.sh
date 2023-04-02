@@ -97,7 +97,8 @@ do_initial_heading()
 	MSG="${MSG}\n\nNOTE: your camera must be connected to the Pi before continuing."
 	MSG="${MSG}\n\nContinue?"
 	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
-		exit 1
+		display_msg "${LOG_TYPE}" info "User not ready to continue."
+		exit_installation 1
 	fi
 	display_header "Welcome to the ${TITLE}!"
 }
@@ -124,7 +125,7 @@ usage_and_exit()
 	echo "'--function' executes the specified function and quits."
 	echo
 	#shellcheck disable=SC2086
-	exit ${RET}
+	exit_installation ${RET}
 }
 
 
@@ -190,7 +191,7 @@ CAMERA_TYPE_to_CAMERA()
 		echo "RPiHQ"		# RPi cameras used to be called "RPiHQ".
 	else
 		display_msg --log error "Unknown CAMERA_TYPE: '${CAMERA_TYPE}'"
-		exit 1
+		exit_installation 1
 	fi
 }
 ####
@@ -204,7 +205,7 @@ CAMERA_to_CAMERA_TYPE()
 		echo "RPi"
 	else
 		display_msg --log error "Unknown CAMERA: '${CAMERA}'"
-		exit 1
+		exit_installation 1
 	fi
 }
 
@@ -260,7 +261,7 @@ select_camera_type()
 		3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 ]]; then
 		display_msg --log warning "Camera selection required.  Please re-run the installation and select a camera to continue."
-		exit 2
+		exit_installation 2
 	fi
 	display_msg --log progress "Using ${CAMERA_TYPE} camera."
 }
@@ -424,6 +425,7 @@ ask_reboot()
 }
 do_reboot()
 {
+	exit_installation -1		# -1 means just log ending statement but don't exit.
 	sudo reboot now
 }
 
@@ -676,7 +678,7 @@ install_webserver()
 
 	sudo systemctl start lighttpd
 	# Starting it added an entry so truncate the file so it's 0-length
-	truncate -s 0 "${LIGHTTPD_LOG}"
+	sleep 1; truncate -s 0 "${LIGHTTPD_LOG}"
 }
 
 
@@ -707,7 +709,7 @@ prompt_for_hostname()
 		"${SUGGESTED_NEW_HOST_NAME}" 3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 ]]; then
 		display_msg --log warning "You must specify a host name.  Please re-run the installation and select one."
-		exit 2
+		exit_installation 2
 	fi
 
 	if [[ ${CURRENT_HOSTNAME} != "${NEW_HOST_NAME}" ]]; then
@@ -984,13 +986,13 @@ get_locale()
 		MSG="${MSG}\n\nIt will take a moment for the locale(s) to be installed."
 		MSG="${MSG}\n\nWhen that is completed, rerun the Allsky installation."
 		display_msg --log error "${MSG}"
-		exit 1
+		exit_installation 1
 	fi
 
 	[[ ${DEBUG} -gt 1 ]] && display_msg --logonly debug "INSTALLED_LOCALES=${INSTALLED_LOCALES}"
 
 	# If the prior version of Allsky had a locale set but it's not
-	# an installed one, let th euser know.
+	# an installed one, let the user know.
 	# This can happen if they use the settings file from a different Pi or different OS.
 	local MSG2=""
 	if [[ -n ${PRIOR_ALLSKY} && -n ${PRIOR_SETTINGS_FILE} ]]; then
@@ -1029,7 +1031,8 @@ get_locale()
 	[[ -n ${MSG2} ]] && MSG="${MSG}\n\n${MSG2}"
 
 	# This puts in IL the necessary strings to have whiptail display what looks like
-	# a single column of selections.
+	# a single column of selections.  Could also use "--noitem" if we passed in a non-null
+	# item as the second argument.
 	local IL=()
 	for i in ${INSTALLED_LOCALES}
 	do
@@ -1045,7 +1048,7 @@ get_locale()
 		MSG="${MSG}\nthen rerun the installation."
 		display_msg info "${MSG}"
 		display_msg --logonly info "No locale selected; exiting."
-		exit 0
+		exit_installation 0
 	elif echo "${LOCALE}" | grep --silent "Box options" ; then
 		# Got a usage message from whiptail.
 		# Must be no space between the last double quote and ${INSTALLED_LOCALES}.
@@ -1053,7 +1056,7 @@ get_locale()
 		MSG="Got usage message from whiptail: D='${D}', INSTALLED_LOCALES="${INSTALLED_LOCALES}
 		MSG="${MSG}\nFix the problem and try the installation again."
 		display_msg --log error "${MSG}"
-		exit 1
+		exit_installation 1
 	fi
 }
 
@@ -1098,7 +1101,7 @@ set_locale()
 	display_msg warning "You must reboot before continuing with the installation."
 	display_msg --logonly info "User elected not to reboot to update locale."
 
-	exit 0
+	exit_installation 0
 }
 
 
@@ -1181,7 +1184,7 @@ prompt_for_prior_Allsky()
 			MSG="Rename the directory with your prior version of Allsky to\n"
 			MSG="${MSG}\n '${PRIOR_ALLSKY_DIR}', then run the installation again.\n"
 			display_msg --log info "${MSG}"
-			exit 0
+			exit_installation 0
 		fi
 	fi
 
@@ -1686,15 +1689,18 @@ restore_prior_files()
 			MSG="Updating ALLSKY_VERSION in 'config.sh' to '${ALLSKY_VERSION}'."
 			sed -i "/ALLSKY_VERSION=/ c ALLSKY_VERSION=\"${ALLSKY_VERSION}\"" "${PRIOR_CONFIG_FILE}"
 			display_msg --log progress "${MSG}"
+		else
+			MSG="ALLSKY_VERSION (${PRIOR}) in prior config.sh same as new version."
+			display_msg --logonly info "${MSG}"
 		fi
 	else
 		RESTORED_PRIOR_CONFIG_SH="false"
 		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
-			MSG="no version specified"
+			MSG="no prior version specified"
 		else
 			# This is hopefully the last version with config.sh so don't
 			# bother writing a function to convert from the prior version to this.
-			MSG="old version (${PRIOR_CONFIG_SH_VERSION})"
+			MSG="prior version is old (${PRIOR_CONFIG_SH_VERSION})"
 		fi
 		MSG="Not restoring 'config.sh': ${MSG}."
 		display_msg --log info "${MSG}"
@@ -1702,87 +1708,59 @@ restore_prior_files()
 
 	# Unlike the config.sh file which was always in allsky/config,
 	# the ftp-settings.sh file used to be in allsky/scripts.
+	# Get the current and prior (if any) file version.
+	FTP_SH_VERSION="$( get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh" )"
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then
 		# Allsky v2022.03.01 and newer.  v2022.03.01 doesn't have FTP_SH_VERSION.
-		PRIOR_FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}")"
-		FTP_SH_VERSION="$(get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh")"
-		FTP_SH_VERSION="${FTP_SH_VERSION:-unknown}"
+		PRIOR_FTP_SH_VERSION="$( get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}" )"
+		PRIOR_FTP_SH_VERSION="${PRIOR_FTP_SH_VERSION:-"no version"}"
 	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
 		# pre v2022.03.01
 		PRIOR_FTP_FILE="${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh"
-		PRIOR_FTP_SH_VERSION=""
-		FTP_SH_VERSION="old"
+		PRIOR_FTP_SH_VERSION="old"
 	else
 		display_msg --log error "Unable to find prior ftp-settings.sh"
 		PRIOR_FTP_FILE=""
-		PRIOR_FTP_SH_VERSION=""
-		FTP_SH_VERSION="no file"
+		PRIOR_FTP_SH_VERSION="no file"
 	fi
 	display_msg "${LOG_TYPE}" debug "FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
+
 	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
 		RESTORED_PRIOR_FTP_SH="true"
 		display_msg --log progress "Restoring prior 'ftp-settings.sh' file."
 		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}"
 	else
 		RESTORED_PRIOR_FTP_SH="false"
-		if [[ ${FTP_SH_VERSION} == "old" ]]; then
-			MSG="old location so no FTP_SH_VERSION."
-		elif [[ ${FTP_SH_VERSION} == "unknown" ]]; then
+		if [[ ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
 			MSG="unknown prior FTP_SH_VERSION."
-		elif [[ ${FTP_SH_VERSION} == "no file" ]]; then
+		elif [[ ${PRIOR_FTP_SH_VERSION} == "old" ]]; then
+			MSG="old location so no FTP_SH_VERSION."
+		elif [[ ${PRIOR_FTP_SH_VERSION} == "no file" ]]; then
 			MSG="no prior file."
 		else
-			MSG="unknown FTP_SH_VERSION: '${FTP_SH_VERSION}'."
+			MSG="unknown PRIOR_FTP_SH_VERSION: '${PRIOR_FTP_SH_VERSION}'."
 		fi
-		display_msg --log progress "Not restoring 'ftp-settings.sh': ${MSG}"
+		display_msg --log progress "Not restoring prior 'ftp-settings.sh': ${MSG}"
 	fi
 
 	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "true" && ${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
 		return 0
 	fi
 
-	## TODO: Try to automate this.
-	# We know the format of PRIOR_ALLSKY_VERSION == v2022.03.01 and know
-	# the format of CONFIG_FTP_VERSION and FTP_SH_VERSION files.
-
-	# display_msg --log progress "Restoring settings from 'config.sh'."
-	# similar for config.sh, but
-	#	- don't transfer CAMERA
-	#	- handle renames
-	#	- handle variable that were moved to WebUI
-	#		> DAYTIME_CAPTURE
-	#		> others
-	#
-	# display_msg --log info "\nIMPORTANT: check 'config.sh' for correctness.\n"
-	# RESTORED_PRIOR_CONFIG_SH="true"
-
-	# display_msg --log progress "Restoring settings from 'ftp-settings.sh'."
-	# if [[ -n ${PRIOR_FTP_FILE} ]]; then
-	#	( source ${PRIOR_FTP_FILE}
-	#		for each variable:
-	#			/^variable=/ c;variable="$oldvalue";
-	#		Deal with old names from version 0.8
-	#	) > /tmp/x
-	#	sed -i --file=/tmp/x "${ALLSKY_CONFIG}/ftp-settings.sh"
-	#	rm -f /tmp/x
-	#	RESTORED_PRIOR_FTP_SH="true"
-	#	display_msg --log info "\nIMPORTANT: check 'ftp-settings.sh' for correctness.\n"
-	# fi
-	
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
 		# The prior versions are similar to the new ones.
-# TODO: We can automate this since we know what changed in each version.
-		M=""
+		MSG=""
 		# If it has a version number it's probably close to the current version.
 		if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" && -n ${PRIOR_CONFIG_SH_VERSION} ]]; then
 			MSG="${MSG}\nYour prior 'config.sh' file is similar to the new one."
 		fi
-		if [[ ${RESTORED_PRIOR_FTP_SH} == "false" && -n ${PRIOR_FTP_SH_VERSION} ]]; then
+		if [[ ${RESTORED_PRIOR_FTP_SH} == "false" && ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
 			MSG="${MSG}\nYour prior 'ftp-settings.sh' file is similar to the new one."
 		fi
-		MSG="${MSG}\nAfter installation, see ${POST_INSTALLATION_ACTIONS} for details."
+		# Don't wantn this line in the post-installation file.
+		MSGb="\nAfter installation, see ${POST_INSTALLATION_ACTIONS} for details."
 
-		MSG2="You can compare the old and new configuration files with the following commands,"
+		MSG2="You can compare the old and new configuration files using the following commands,"
 		MSG2="${MSG2}\nand apply your changes from the prior file to the new file."
 		MSG2="${MSG2}\nDo NOT simply copy the old files to the new location because"
 		MSG2="${MSG2}\ntheir formats are different."
@@ -1801,12 +1779,13 @@ restore_prior_files()
 		MSG="${MSG}\n\nNOTE: some settings are no longer in the new files and some changed names"
 		MSG="${MSG}\nso NOT add the old/deleted settings back in or simply copy the files."
 		MSG="${MSG}\n*** This will take several minutes ***"
+		MSGb=""
 		MSG2=""
 	fi
 	MSG="${MSG}"
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+	whiptail --title "${TITLE}" --msgbox "${MSG}${MSGb}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
-	display_msg --log info "\n${MSG}\n"
+	display_msg --log info "\n${MSG}${MSGb}\n"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	if [[ -n ${MSG2} ]]; then
 		display_msg --log info "\n${MSG2}\n"
@@ -1824,7 +1803,7 @@ do_update()
 	source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}	# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg --log error "CAMERA_TYPE not set in config.sh."
-		exit 1
+		exit_installation 1
 	fi
 
 	create_webui_defines
@@ -1839,12 +1818,12 @@ do_update()
 		display_msg --log progress "Updating sudoers list."
 		if ! grep --silent "/date" "${REPO_SUDOERS_FILE}" ; then
 			display_msg --log error "Please get the newest '$(basename "${REPO_SUDOERS_FILE}")' file from Git and try again."
-			exit 2
+			exit_installation 2
 		fi
 		do_sudoers
 	fi
 
-	exit 0
+	exit_installation 0
 }
 
 
@@ -1932,7 +1911,7 @@ check_if_buster()
 		MSG="${MSG} recommend doing a fresh install of Bullseye on a clean SD card."
 		MSG="${MSG}\n\nDo you want to continue anyhow?"
 		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
-			exit 0
+			exit_installation 0
 		fi
 	fi
 }
@@ -1973,7 +1952,7 @@ exit_with_image()
 {
 	display_image "InstallationFailed"
 	#shellcheck disable=SC2086
-	exit ${1}
+	exit_installation ${1}
 }
 
 
@@ -2023,13 +2002,20 @@ remind_old_version()
 }
 
 
+####
+exit_installation()
+{
+	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $(date).\n"
+	local E="${1}"
+	#shellcheck disable=SC2086
+	[[ ${E} -ge 0 ]] && exit ${E}
+}
+
 
 ####################### main part of program
 
 ##### Log files write to ${ALLSKY_CONFIG}, which doesn't exist yet, so create it.
-mkdir -p "${ALLSKY_CONFIG}"
-rm -fr "${ALLSKY_INSTALLATION_LOGS}"			# shouldn't be there, but just in case
-mkdir "${ALLSKY_INSTALLATION_LOGS}"
+mkdir -p "${ALLSKY_INSTALLATION_LOGS}"
 
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 
@@ -2049,7 +2035,6 @@ if [[ ! -f ${T} ]]; then
 	MSG="\n"
 	MSG="${MSG}Testers, until we go-live with this release, debugging is automatically on"
 	MSG="${MSG} to aid in installation troubleshooting."
-	MSG="${MSG} You will see additional output lines."
 	MSG="${MSG}\n\nPlease make sure you have Debug Level set to 4 in the WebUI during testing."
 	MSG="${MSG}\n"
 
@@ -2058,28 +2043,29 @@ if [[ ! -f ${T} ]]; then
 	X="/etc/allsky/modules"
 	if [[ -d ${X} ]]; then
 		MSG="${MSG}\n"
-		MSG="${MSG}  * ${X} is no longer used."
-		MSG="${MSG}    Move its contents to ${ALLSKY_MODULE_LOCATION} then 'sudo rmdir ${X}"
+		MSG="${MSG} * ${X} is no longer used."
+		MSG="${MSG}   Move its contents to ${ALLSKY_MODULE_LOCATION} then 'sudo rmdir ${X}"
 	fi
 
-	MSG="${MSG}\n  * The allsky/tmp/extra directory moved to allsky/config/extra."
-	MSG="${MSG}\n    YOU need to move any files to the new location and UPDATE YOUR SCRIPTS."
+	MSG="${MSG}\n * The allsky/tmp/extra directory moved to allsky/config/extra."
+	MSG="${MSG}\n   YOU need to move any files to the new location and UPDATE YOUR SCRIPTS."
 
 	MSG="${MSG}\n"
-	MSG="${MSG}\n  * The '${ALLSKY_CONFIG}/overlay/config/fields.json' file used to"
-	MSG="${MSG}\n    contain both System fields and User fields (ones YOU created)."
-	MSG="${MSG}\n    It now includes only System fields."
-	MSG="${MSG}\n    After this update please re-add any User fields via the"
-	MSG="${MSG}\n    Variable Manager in the WebUI."
-	MSG="${MSG}\n    Look in the old 'fields.json' file for a list of your"
-	MSG="${MSG}\n    field and their attributes."
-	MSG="${MSG}\n    Future updates will preserve your user fields."
+	MSG="${MSG}\n * The '${ALLSKY_CONFIG}/overlay/config/fields.json' file used to"
+	MSG="${MSG}\n   contain both System fields and User fields (ones YOU created)."
+	MSG="${MSG}\n   It now includes only System fields."
+	MSG="${MSG}\n   After this installation please re-add any User fields via the"
+	MSG="${MSG}\n   Variable Manager in the WebUI."
+	MSG="${MSG}\n   Look in the old 'fields.json' file for a list of your"
+	MSG="${MSG}\n   field and their attributes."
+	MSG="${MSG}\n   Future updates will preserve your user fields."
 
-	MSG="${MSG}\n\nIf you agree, enter:    yes    then press Enter"
-	A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 30 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
+	MSG="${MSG}\n\nIf you agree, enter:    yes"
+	A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 27 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 || ${A} != "yes" ]]; then
-		display_msg info "\nYou need to TYPE 'yes' to continue the installation."
-		display_msg info "\nThis is to make sure you read it.\n"
+		MSG="\nYou need to TYPE 'yes' to continue the installation."
+		MSG="${MSG}\nThis is to make sure you read it.\n"
+		display_msg info "${MSG}"
 		exit 0
 	fi
 	touch "${T}"
@@ -2118,6 +2104,9 @@ TESTING="${TESTING}" # TODO: keeps shellcheck quiet
 	esac
 	shift
 done
+
+[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
+
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
@@ -2231,4 +2220,4 @@ remind_old_version
 
 [[ ${WILL_REBOOT} == "true" ]] && do_reboot	# does not return
 
-exit 0
+exit_installation 0

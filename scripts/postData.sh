@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# This script uploads a file to a website to tell the website when the user has defined
+# This script uploads a file to a Website to tell the Website when the user has defined
 # "sunrise" and "sunset".  Use the angle set by the user.
 # A copy of the settings file is also uploaded.
+# By default we upload to both local and remote Websites if they exist.
 
 # Allow this script to be executed manually or by sudo, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
@@ -17,31 +18,12 @@ source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
-WEBSITES="$(whatWebsites)"
-# Make sure a local or remote Allsky Website exists.
-if [[ ${WEBSITES} == "none" ]]; then
-	echo -e "${YELLOW}${ME}: WARNING: No local or remote website found.${NC}"
-	exit 0		# It's not an error
-fi
-
-if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
-	HAS_LOCAL_WEBSITE="true"
-else
-	HAS_LOCAL_WEBSITE="false"
-fi
-if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
-	HAS_REMOTE_WEBSITE="true"
-else
-	HAS_REMOTE_WEBSITE="false"
-fi
-
-
 usage_and_exit()
 {
 	retcode=${1}
 	echo
 	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] [--debug] [--settingsOnly] [--allfiles]"
+	echo "Usage: ${ME} [--help] [--debug] [--settingsOnly] [--websites w] [--allfiles]"
 	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--allfiles' causes all 'view settings' files to be uploaded"
@@ -53,6 +35,7 @@ HELP="false"
 DEBUG="false"
 DEBUG_ARG=""
 SETTINGS_ONLY="false"
+WEBSITES_TO_DO=""
 ALL_FILES="false"
 RET=0
 while [[ $# -gt 0 ]]; do
@@ -66,6 +49,10 @@ while [[ $# -gt 0 ]]; do
 		--help)
 			HELP="true"
 			shift
+			;;
+		--websites)
+			WEBSITES_TO_DO="${2}"
+			shift 2
 			;;
 		--allfiles)
 			ALL_FILES="true"
@@ -87,6 +74,44 @@ while [[ $# -gt 0 ]]; do
 done
 [[ ${RET} -ne 0 ]] && usage_and_exit ${RET}
 [[ ${HELP} = "true" ]] && usage_and_exit 0
+
+WEBSITES="$(whatWebsites)"
+# Make sure a local or remote Allsky Website exists.
+if [[ ${WEBSITES} == "none" ]]; then
+	echo -e "${YELLOW}${ME}: WARNING: No local or remote website found.${NC}"
+	exit 0		# It's not an error
+fi
+
+[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}WEBSITES=${WEBSITES}, WEBSITES_TO_TO=${WEBSITES_TO_DO}${NC}"
+# Make sure we have the specified Website(s).
+if [[ -n ${WEBSITES_TO_DO} && ${WEBSITES_TO_DO} != "${WEBSITES}" ]]; then
+	case "${WEBSITES_TO_DO}" in
+		local | remote | both)
+			;;
+		*)
+	  		MSG="Invalid requested Website type: ${WEBSITES_TO_DO}. Must be 'local', 'remote', or 'both'"
+			echo -e "${RED}${ME}: ERROR: ${MSG}"
+			exit 1
+			;;
+	esac
+	if [[ ( ${WEBSITES_TO_DO} == "local"  && ${WEBSITES} != "both") ||
+		  ( ${WEBSITES_TO_DO} == "remote" && ${WEBSITES} != "both") ]]; then
+	  	MSG="Requested Website type '${WEBSITES_TO_DO}' does not exist. Valid Websites='${WEBSITES}'."
+		echo -e "${RED}${ME}: ERROR: ${MSG}"
+		exit 1
+	fi
+fi
+
+if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
+	HAS_LOCAL_WEBSITE="true"
+else
+	HAS_LOCAL_WEBSITE="false"
+fi
+if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
+	HAS_REMOTE_WEBSITE="true"
+else
+	HAS_REMOTE_WEBSITE="false"
+fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	OK="true"

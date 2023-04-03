@@ -267,7 +267,8 @@ else # sftp/ftp/ftps
 			echo "debug 5"
 		fi
 		if [[ -n ${REMOTE_DIR} ]]; then
-			echo "cd '${REMOTE_DIR}' || (echo 'cd ${REMOTE_DIR} failed!'; exit 1) || exit 1"
+			# lftp outputs error message so we don't have to.
+			echo "cd '${REMOTE_DIR}' || exit 1"
 			if [[ ${DEBUG} == "true" ]]; then
 				echo "echo 'In REMOTE_DIR=${REMOTE_DIR}:'"
 				echo "ls"
@@ -305,7 +306,7 @@ else # sftp/ftp/ftps
 	OUTPUT="$(lftp -f "${LFTP_CMDS}" 2>&1)"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
-		HEADER="{RED}*** ${ME}: ERROR,"
+		HEADER="${RED}*** ${ME}: ERROR,"
 		if [[ ${RET} -eq ${ALLSKY_ERROR_STOP} ]]; then
 			# shellcheck disable=SC2153
 			OUTPUT="$(

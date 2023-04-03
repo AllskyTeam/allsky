@@ -100,6 +100,8 @@ if [[ -n ${WEBSITES_TO_DO} && ${WEBSITES_TO_DO} != "${WEBSITES}" ]]; then
 		echo -e "${RED}${ME}: ERROR: ${MSG}"
 		exit 1
 	fi
+
+	WEBSITES="${WEBSITES_TO_DO}"
 fi
 
 if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then

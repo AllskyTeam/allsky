@@ -625,8 +625,6 @@ check_if_remote_website_ready()
 		display_msg info "${MSG}"
 		display_msg --logonly info "User stopped remote installation - not ready."
 		exit_installation 1
-	else
-		exit_installation 0
 	fi
 }
 
@@ -696,7 +694,7 @@ do_remote_website() {
 		echo -e "${X}"
 	fi
 
-	upload_data_json_file "remote"
+	upload_data_json_file "remote" || exit_installation 2
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# The user is upgrading a new-style remote Website.
@@ -993,13 +991,13 @@ fi
 
 NEW_WEBSITE_VERSION=""			# version we're upgrading to
 
-##### See if there's a prior Website and if so, set some variables.
-does_prior_Allsky_Website_exist
+##### See if there's a prior local Website and if so, set some variables.
+[[ ${DO_REMOTE_WEBSITE} == "false" ]] && does_prior_Allsky_Website_exist
 
 ##### Get the current and new Website versions taking branch into account.
 get_versions_and_branches
 
-##### Make sure the remote site is ready for us.  If not ready the function exists
+##### Make sure the remote site is ready for us.  If not ready the function exits.
 [[ ${DO_REMOTE_WEBSITE} == "true" ]] && check_if_remote_website_ready
 
 ##### Display the welcome header.
@@ -1034,7 +1032,7 @@ download_Allsky_Website
 
 modify_locations
 modify_configuration_variables
-upload_data_json_file "local" || exit 1
+upload_data_json_file "local" || exit_installation 1
 restore_prior_files
 
 # Create any directories not created above.

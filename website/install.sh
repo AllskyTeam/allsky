@@ -130,7 +130,7 @@ check_for_old_version()
 		MSG="${MSG}\nto the command line, where 'BRANCH' is the branch you want."
 		MSG="${MSG}\nThe default branch is '${GITHUB_MAIN_BRANCH}'.\n"
 		display_msg info "${MSG}"
-		MSG="User stopped installation due to attempting to install old version (${NEW_VESION})."
+		MSG="User stopped installation due to attempting to install old version (${NEW_VERSION})."
 		display_msg --logonly info "${MSG}"
 		return 1
 	fi

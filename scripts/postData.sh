@@ -241,13 +241,12 @@ function upload_file()
 # These files go in ${VIEW_DIR} so the user can display their settings.
 # This directory is in the root of the Allsky Website.
 # Assume if the first upload fails they all will, so exit.
-VIEW_DIR="viewSettings"			# Name of remote directory
-upload_file "${SETTINGS_FILE}" "${VIEW_DIR}" || exit $?
+upload_file "${SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" || exit $?
 
 if [[ ${ALL_FILES} == "true" ]]; then
-	upload_file "${OPTIONS_FILE}" "${VIEW_DIR}"
-	upload_file "${ALLSKY_WEBUI}/includes/allskySettings.php" "${VIEW_DIR}"
-	upload_file "${ALLSKY_DOCUMENTATION}/css/custom.css" "${VIEW_DIR}"
+	upload_file "${OPTIONS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
+	upload_file "${ALLSKY_WEBUI}/includes/allskySettings.php" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
+	upload_file "${ALLSKY_DOCUMENTATION}/css/custom.css" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
 fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then

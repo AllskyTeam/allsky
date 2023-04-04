@@ -373,7 +373,10 @@ upload_data_json_file() {
 	if [[ $? -ne 0 || ! -f ${ALLSKY_TMP}/data.json ]]; then
 		MSG="Unable to upload initial files:"
 		if echo "${OUTPUT}" | grep --silent "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}: No such file or" ; then
-:
+			# This should only happen for remote sites, since this installation script
+			# created the directory for local sites.
+			MSG="Check that the remote Website has the newest files."
+			MSG="${MSG}\nThe '${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}' directory does not exist."
 		fi
 		MSG="${MSG}\n${OUTPUT}"
 		MSG="${MSG}\nMake sure 'REMOTE_HOST' is set to a valid server or to '' in 'ftp-settings.sh',"
@@ -552,7 +555,7 @@ NEEDS_NEW_CONFIGURATION_FILE="true"
 modify_configuration_variables() {
 
 	if [[ ${DEBUG} == "true" ]];then
-		display_msg --log debug "modify_configuration_variables(): PRIOR_WEBSITE_TYPE = ${PRIOR_WEBSITE_TYPE}"
+		display_msg --log debug "modify_configuration_variables(): PRIOR_WEBSITE_TYPE=${PRIOR_WEBSITE_TYPE}"
 	fi
 	if [[ ${SAVED_PRIOR} == "true" ]]; then
 		if [[ ${PRIOR_WEBSITE_TYPE} == "new" ]]; then
@@ -566,7 +569,7 @@ modify_configuration_variables() {
 
 				# Check if this is an older configuration file version.
 				# If it's old check_for_older_config_file() will display a message so we don't need to.
-				if check_for_older_config_file "${WEB_CONFIG_FILE}" ; then
+				if check_for_older_config_file "${C}" ; then
 					display_msg --log progress "Restoring prior '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'."
 					cp "${C}" "${WEB_CONFIG_FILE}" || exit_installation 1
 

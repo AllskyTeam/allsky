@@ -1,3 +1,4 @@
+arch = $(shell dpkg --print-architecture)
 platform = $(shell uname -m)
 prefix = 
 
@@ -47,33 +48,29 @@ ifeq ($(platform), armv6l)
   CFLAGS += -march=armv6
   CFLAGS += -lrt
   ZWOSDK = -Llib/armv6 -I./include
-endif
-
-ifeq ($(platform), armv7l)
+else ifeq ($(platform), x86_64)
+  CC = g++
+  AR= ar
+  ZWOSDK = -Llib/x64 -I./include
+else ifeq ($(platform), i386)
+  CC = g++
+  AR= ar
+  ZWOSDK = -Llib/x86 -I./include
+else ifeq ($(arch), arm64)
+	# Ubuntu 20.04 added by Jos Wennmacker.
+  CC = g++
+  AR= ar
+  ZWOSDK = -Llib/armv8 -I./include
+else		# $(platform) = armv7l or $(arch) = armhf
+	# Starting with the Feb 2023 Bullseye release, both 32- and 64-bit return
+	# $(platform) of "aarch64" on 64-bit hardware so we need to check $(arch),
+	# which returns "armhf" on 32-bit OS and "armhf" on 64-bit OS.
   CC = arm-linux-gnueabihf-g++
   AR= arm-linux-gnueabihf-ar
   CFLAGS += -march=armv7 -mthumb
   ZWOSDK = -Llib/armv7 -I./include
 endif
 
-#Ubuntu 20.04 added by Jos Wennmacker
-ifeq ($(platform), aarch64)
-  CC = g++
-  AR= ar
-  ZWOSDK = -Llib/armv8 -I./include
-endif
-
-ifeq ($(platform), x86_64)
-  CC = g++
-  AR= ar
-  ZWOSDK = -Llib/x64 -I./include
-endif
-
-ifeq ($(platform), i386)
-  CC = g++
-  AR= ar
-  ZWOSDK = -Llib/x86 -I./include
-endif
 
 ifeq (,$(CC))
   $(warning Could not identify the proper compiler for your platform.)

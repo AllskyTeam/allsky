@@ -261,7 +261,7 @@ while [[ $# -gt 0 ]]; do
 
 					# When we're called during Allsky installation,
 					# the Camera-Specific Overlay (CSO) file may not exist yet.
-					local CSO="${ALLSKY_OVERLAY}/config/overlay-${NEW_VALUE}.json"
+					CSO="${ALLSKY_OVERLAY}/config/overlay-${NEW_VALUE}.json"
 					if [[ -f ${CSO} ]]; then
 						if [[ ${DEBUG} == "true" ]]; then
 							echo -e "${wDEBUG}Copying overlay-${NEW_VALUE}.json to overlay.json${wNC}"

@@ -259,10 +259,17 @@ while [[ $# -gt 0 ]]; do
 						mv -f "${O}" "${ALLSKY_OVERLAY}/config/overlay-${OLD_VALUE}.json"
 					fi
 
-					if [[ ${DEBUG} == "true" ]]; then
-						echo -e "${wDEBUG}Copying overlay-${NEW_VALUE}.json to overlay.json${wNC}"
+					# When we're called during Allsky installation,
+					# the Camera-Specific Overlay (CSO) file may not exist yet.
+					local CSO="${ALLSKY_OVERLAY}/config/overlay-${NEW_VALUE}.json"
+					if [[ -f ${CSO} ]]; then
+						if [[ ${DEBUG} == "true" ]]; then
+							echo -e "${wDEBUG}Copying overlay-${NEW_VALUE}.json to overlay.json${wNC}"
+						fi
+						cp "${CSO}" "${O}"
+					elif [[ ${DEBUG} == "true" ]]; then
+						echo -e "${wDEBUG}'${CSO}' doesn't exist yet - ignoring.${wNC}"
 					fi
-					cp "${ALLSKY_OVERLAY}/config/overlay-${NEW_VALUE}.json" "${O}"
 				fi
 			fi
 

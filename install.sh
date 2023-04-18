@@ -1077,11 +1077,12 @@ set_locale()
 		display_msg --log progress "Keeping '${LOCALE}' locale."
 		local L="$( settings .locale )"
 		if [[ ${L} == "" || ${L} == "null" ]]; then
-			MSG="Settings file '${SETTINGS_FILE}' did not contain .locale"
+			# Probably a new install.
+			MSG="Info: Settings file '${SETTINGS_FILE}' did not contain .locale."
 			display_msg --logonly info "${MSG}"
 			update_locale "${LOCALE}"  "${SETTINGS_FILE}"
 		else
-			MSG="Settings file '${SETTINGS_FILE}' contained .locale = '${L}'."
+			MSG="Info: Settings file '${SETTINGS_FILE}' contained .locale = '${L}'."
 			display_msg --logonly info "${MSG}"
 		fi
 		return
@@ -1883,7 +1884,18 @@ install_overlay()
 	# These will get overwritten if the user has prior versions.
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_CONFIG}"
 	cp -ar "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
-	# The overlay.json file is handled by makeChanges.sh
+
+	# Normally makeChanges.sh handles creating the "overlay.json" file, but the
+	# Camera-Specific Overlay (CSO) file didn't exist when makeChanges was called,
+	# so we have to set it up here.
+	local CSO="${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json"
+	local O="${ALLSKY_OVERLAY}/config/overlay.json"		# generic name
+	if [[ -f ${CSO} ]]; then
+		display_msg "${LOG_TYPE}" progress "Copying '${CSO}' to '${O}'."
+		cp "${CSO}" "${O}"
+	else
+		display_msg --log error "'${CSO}' does not exist; unable to create default overlay file."
+	fi
 
 	sudo mkdir -p "${ALLSKY_MODULE_LOCATION}/modules"
 	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${ALLSKY_MODULE_LOCATION}"
@@ -2028,49 +2040,52 @@ HELP="false"
 DEBUG=0
 DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display
-# XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
-T="${ALLSKY_HOME}/told"
-if [[ ! -f ${T} ]]; then
-	MSG="\n"
-	MSG="${MSG}Testers, until we go-live with this release, debugging is automatically on"
-	MSG="${MSG} to aid in installation troubleshooting."
-	MSG="${MSG}\n\nPlease make sure you have Debug Level set to 4 in the WebUI during testing."
-	MSG="${MSG}\n"
 
-	MSG="${MSG}\nChanges from prior dev releases:"
+IN_TESTING="true"		# XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+if [[ ${IN_TESTING} == "true" ]]; then
+	DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 
-	X="/etc/allsky/modules"
-	if [[ -d ${X} ]]; then
+	T="${ALLSKY_HOME}/told"
+	if [[ ! -f ${T} ]]; then
+		MSG="\n"
+		MSG="${MSG}Testers, until we go-live with this release, debugging is automatically on"
+		MSG="${MSG} to aid in installation troubleshooting."
+		MSG="${MSG}\n\nPlease make sure you have Debug Level set to 4 in the WebUI during testing."
 		MSG="${MSG}\n"
-		MSG="${MSG} * ${X} is no longer used."
-		MSG="${MSG}   Move its contents to ${ALLSKY_MODULE_LOCATION} then 'sudo rmdir ${X}"
+
+		MSG="${MSG}\nChanges from prior dev releases:"
+
+		X="/etc/allsky/modules"
+		if [[ -d ${X} ]]; then
+			MSG="${MSG}\n"
+			MSG="${MSG} * ${X} is no longer used."
+			MSG="${MSG}   Move its contents to ${ALLSKY_MODULE_LOCATION} then 'sudo rmdir ${X}"
+		fi
+
+		MSG="${MSG}\n * The allsky/tmp/extra directory moved to '${ALLSKY_EXTRA}'."
+		MSG="${MSG}\n   YOU need to move any files to the new location and UPDATE YOUR SCRIPTS."
+
+		MSG="${MSG}\n"
+		MSG="${MSG}\n * The '${ALLSKY_CONFIG}/overlay/config/fields.json' file used to"
+		MSG="${MSG}\n   contain both System fields and User fields (ones YOU created)."
+		MSG="${MSG}\n   It now includes only System fields."
+		MSG="${MSG}\n   After this installation please re-add any User fields via the"
+		MSG="${MSG}\n   Variable Manager in the WebUI."
+		MSG="${MSG}\n   Look in the old 'fields.json' file for a list of your"
+		MSG="${MSG}\n   field and their attributes."
+		MSG="${MSG}\n   Future updates will preserve your user fields."
+
+		MSG="${MSG}\n\nIf you agree, enter:    yes"
+		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 27 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
+		if [[ $? -ne 0 || ${A} != "yes" ]]; then
+			MSG="\nYou need to TYPE 'yes' to continue the installation."
+			MSG="${MSG}\nThis is to make sure you read it.\n"
+			display_msg info "${MSG}"
+			exit 0
+		fi
+		touch "${T}"
 	fi
-
-	MSG="${MSG}\n * The allsky/tmp/extra directory moved to allsky/config/overlay/extra."
-	MSG="${MSG}\n   YOU need to move any files to the new location and UPDATE YOUR SCRIPTS."
-
-	MSG="${MSG}\n"
-	MSG="${MSG}\n * The '${ALLSKY_CONFIG}/overlay/config/fields.json' file used to"
-	MSG="${MSG}\n   contain both System fields and User fields (ones YOU created)."
-	MSG="${MSG}\n   It now includes only System fields."
-	MSG="${MSG}\n   After this installation please re-add any User fields via the"
-	MSG="${MSG}\n   Variable Manager in the WebUI."
-	MSG="${MSG}\n   Look in the old 'fields.json' file for a list of your"
-	MSG="${MSG}\n   field and their attributes."
-	MSG="${MSG}\n   Future updates will preserve your user fields."
-
-	MSG="${MSG}\n\nIf you agree, enter:    yes"
-	A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 27 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
-	if [[ $? -ne 0 || ${A} != "yes" ]]; then
-		MSG="\nYou need to TYPE 'yes' to continue the installation."
-		MSG="${MSG}\nThis is to make sure you read it.\n"
-		display_msg info "${MSG}"
-		exit 0
-	fi
-	touch "${T}"
 fi
-# XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 UPDATE="false"
 FUNCTION=""

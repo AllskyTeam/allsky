@@ -2047,7 +2047,7 @@ if [[ ! -f ${T} ]]; then
 		MSG="${MSG}   Move its contents to ${ALLSKY_MODULE_LOCATION} then 'sudo rmdir ${X}"
 	fi
 
-	MSG="${MSG}\n * The allsky/tmp/extra directory moved to allsky/config/extra."
+	MSG="${MSG}\n * The allsky/tmp/extra directory moved to allsky/config/overlay/extra."
 	MSG="${MSG}\n   YOU need to move any files to the new location and UPDATE YOUR SCRIPTS."
 
 	MSG="${MSG}\n"

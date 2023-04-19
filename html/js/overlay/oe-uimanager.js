@@ -1645,6 +1645,9 @@ class OEUIMANAGER {
             stroke: ''
         };
 
+        let gridSizeX = this.#configManager.gridSize;
+        let gridSizeY = this.#configManager.gridSize;
+
         var textConfig = {
             label: { group: 'Label', name: 'Item', type: 'text' },
             format: { group: 'Label', name: 'Format', type: 'text', helpcallback: function (name) {
@@ -1654,8 +1657,8 @@ class OEUIMANAGER {
             sample: { group: 'Label', name: 'Sample', type: 'text' },
             empty: { group: 'Label', name: 'Empty Value', type: 'text' },
 
-            x: { group: 'Position', name: 'X', type: 'number', options: { min: 0, max: 2048, step: 10 } },
-            y: { group: 'Position', name: 'Y', type: 'number', options: { min: 0, max: 2048, step: 10 } },
+            x: { group: 'Position', name: 'X', type: 'number', options: { min: 0, max: 2048, step: gridSizeX } },
+            y: { group: 'Position', name: 'Y', type: 'number', options: { min: 0, max: 2048, step: gridSizeY } },
             rotation: { group: 'Position', name: 'Rotation', type: 'number', options: { min: -360, max: 360, step: 1 } },
 
             fontname: { group: 'Font', name: 'Name', type: 'options', options: this.#fonts },
@@ -1689,6 +1692,10 @@ class OEUIMANAGER {
             // TODO: Check setter actually exists
             
             if (name == 'x' || name == 'y') {
+                if (value == '') {
+                    value = 0;
+                }
+                value = parseInt(value)
                 if (name == 'x') {
                     field.x = value + field.shape.offsetX()
                 } else {

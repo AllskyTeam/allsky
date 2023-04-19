@@ -694,8 +694,6 @@ do_remote_website() {
 		echo -e "${X}"
 	fi
 
-	upload_data_json_file "remote" || exit_installation 2
-
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# The user is upgrading a new-style remote Website.
 		display_msg --log progress "You should continue to configure your remote Allsky Website via the WebUI."
@@ -720,14 +718,23 @@ do_remote_website() {
 			display_msg info "${MSG}"
 			display_msg --logonly info "User will use local copy of remote Website config file."
 		else
+			# upload_data_json_file needs the remote configuration file to exist or else it thinks
+			# there isn't a remote site.
+			(
+				echo "Do NOT remove or change this file."
+				echo "It indicates there is a remote Allsky Website although it's not configured from the Pi."
+			) > "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+
 			MSG="You need to manually copy '${REPO_WEBCONFIG_FILE}'"
 			# ALLSKY_WEBSITE_CONFIGURATION_NAME is what it's called on the remote server
 			MSG="${MSG}to your remote server and rename it to '${ALLSKY_WEBSITE_CONFIGURATION_NAME}',"
-			MSG="${MSG}then modify it."
+			MSG="${MSG}then modify it on yuor server."
 			display_msg warning "${MSG}"
 			display_msg --logonly info "User will NOT use local copy of remote Website config file."
 		fi
 	fi
+
+	upload_data_json_file "remote" || exit_installation 2
 
 	display_msg --log progress "The Pi portion of the Remote Allsky Website Installation is complete.\n"
 

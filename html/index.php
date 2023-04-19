@@ -107,13 +107,16 @@ if (file_exists($websiteFile)) {
 $remoteWebsiteVersion = "";
 $f = ALLSKY_WEBSITE_REMOTE_CONFIG;
 if (file_exists($f)) {
-	$errorMsg = "ERROR: Unable to process '$f'.";
-	$a_array = get_decoded_json_file($f, true, $errorMsg);
+	$errorMsg = "WARNING: Unable to process '$f'.";
+	$retMsg = "";
+	$a_array = get_decoded_json_file($f, true, $errorMsg, $retMsg);
 	if ($a_array === null) {
-		exit;
+		echo "$retMsg";
+	} else {
+		$c = getVariableOrDefault($a_array, 'config', '');
+		if ($c !== "")
+			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyWebsiteVersion', '<span class="errorMsg">[unknown]</span>');
 	}
-	$c = getVariableOrDefault($a_array, 'config', '');
-	$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyWebsiteVersion', '<span class="errorMsg">[unknown]</span>');
 }
 ?>
 

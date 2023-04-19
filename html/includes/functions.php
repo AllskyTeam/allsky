@@ -23,33 +23,47 @@ if ((include $defs) == false) {
 
 // Read and decode a json file, returning the decoded results or null.
 // On error, display the specified error message
-function get_decoded_json_file($file, $associative, $errorMsg) {
+function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=null) {
 	if (! file_exists($file)) {
-		echo "<div style='color: red; font-size: 200%;'>";
-		echo "$errorMsg:";
-		echo "<br>File '$file' missing!";
-		echo "</div>";
+		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+		$retMsg .= "$errorMsg";
+		$retMsg .= "<br>File '$file' missing!";
+		$retMsg .= "</div>";
+		if ($returnedMsg === null) echo "$retMsg";
+		else $returnedMsg = $retMsg;
 		return null;
 	}
 
 	$str = file_get_contents($file, true);
 	if ($str === "") {
-		echo "<div style='color: red; font-size: 200%;'>";
-		echo "$errorMsg:";
-		echo "<br>File '$file' is empty!";
-		echo "</div>";
+		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+		$retMsg .= "$errorMsg";
+		$retMsg .= "<br>File '$file' is empty!";
+		$retMsg .= "</div>";
+		if ($returnedMsg === null) echo "$retMsg";
+		else $returnedMsg = $retMsg;
+		return null;
+	} else if ($str === false) {
+		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+		$retMsg .= "$errorMsg:";
+		$retMsg .= "<br>Error reading '$file'!";
+		$retMsg .= "</div>";
+		if ($returnedMsg === null) echo "$retMsg";
+		else $returnedMsg = $retMsg;
 		return null;
 	}
 
 	$str_array = json_decode($str, $associative);
 	if ($str_array == null) {
-		echo "<div style='color: red; font-size: 200%;'>";
-		echo "$errorMsg:";
-		echo "<br>" . json_last_error_msg();
+		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+		$retMsg .= "$errorMsg";
+		$retMsg .= "<br>" . json_last_error_msg();
 		$cmd = "json_pp < $file 2>&1";
 		exec($cmd, $output);
-		echo "<br>" . implode("<br>", $output);
-		echo "</div>";
+		$retMsg .= "<br>" . implode("<br>", $output);
+		$retMsg .= "</div>";
+		if ($returnedMsg === null) echo "$retMsg";
+		else $returnedMsg = $retMsg;
 		return null;
 	}
 	return $str_array;

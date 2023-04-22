@@ -169,7 +169,7 @@ class OECONFIG {
             $.ajax({
                 type: 'POST',
                 url: 'includes/overlayutil.php?request=Data',
-                data: { data: JSON.stringify( this.#dataFields)},
+                data: { data: JSON.stringify(this.#dataFields) },
                 dataType: 'json',
                 cache: false
             });
@@ -198,7 +198,7 @@ class OECONFIG {
     deletefieldById(id) {
         let result = null;
 
-        for(let i = 0; i < this.#dataFields.data.length; i++) {
+        for (let i = 0; i < this.#dataFields.data.length; i++) {
             if (this.#dataFields.data[i].id == id) {
                 result = i;
                 break;
@@ -206,8 +206,8 @@ class OECONFIG {
         }
 
         if (result !== null) {
-            this.#dataFields.data = this.#dataFields.data .filter(function(element){ 
-                return element.id != id; 
+            this.#dataFields.data = this.#dataFields.data.filter(function (element) {
+                return element.id != id;
             });
         }
         return result;
@@ -216,7 +216,7 @@ class OECONFIG {
     findAllFieldsById(id) {
         let result = null;
 
-        for(let i = 0; i < this.#overlayDataFields.data.length; i++) {
+        for (let i = 0; i < this.#overlayDataFields.data.length; i++) {
             if (this.#overlayDataFields.data[i].id == id) {
                 result = this.#overlayDataFields.data[i];
                 break;
@@ -228,7 +228,7 @@ class OECONFIG {
     findFieldById(id) {
         let result = null;
 
-        for(let i = 0; i < this.#dataFields.data.length; i++) {
+        for (let i = 0; i < this.#dataFields.data.length; i++) {
             if (this.#dataFields.data[i].id == id) {
                 result = this.#dataFields.data[i];
                 break;
@@ -267,8 +267,10 @@ class OECONFIG {
             type: 'POST',
             url: 'includes/overlayutil.php?request=Config',
             data: { config: JSON.stringify(this.#config) },
-            dataType: 'json',
             cache: false
+        }).done(function() {
+        }).fail(function() {
+            bootbox.alert('Failed to save the overlay config. Please check the permissions on the ~/allsky/config/overlay/config/overlay.json file');
         });
     }
 

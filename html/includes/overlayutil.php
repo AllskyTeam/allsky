@@ -134,10 +134,13 @@ class OVERLAYUTIL
     {
         $fileName = $this->overlayPath . '/config/overlay.json';
         $config = $_POST["config"];
-        // TODO: VALIDATE JSON
         $formattedJSON = json_encode(json_decode($config), JSON_PRETTY_PRINT);
-        file_put_contents($fileName, $formattedJSON);
-        $this->sendResponse();
+        $bytesWritten = file_put_contents($fileName, $formattedJSON);
+        if ($bytesWritten === false) {
+            $this->send500();
+        } else {
+            $this->sendResponse();
+        }
     }
 
     public function getAppConfig()

@@ -50,9 +50,7 @@ class OEUIMANAGER {
             height: height,
             draggable: true
         });
-
-        this.setZoom('oe-zoom-fit');
-
+                
         this.#backgroundLayer = new Konva.Layer();
         this.#backgroundLayer.add(this.#backgroundImage);
         this.#oeEditorStage.add(this.#backgroundLayer);
@@ -66,6 +64,8 @@ class OEUIMANAGER {
             resizeEnabled: false
         });
         this.#overlayLayer.add(this.#transformer);
+
+        this.setZoom('oe-zoom-fit');
 
         this.#snapRectangle = new Konva.Rect({
             x: 0,
@@ -1196,6 +1196,13 @@ class OEUIMANAGER {
         }
 
         this.#oeEditorStage.scale({ x: this.#stageScale, y: this.#stageScale });
+
+        let height = (this.#backgroundImage.height() * this.#stageScale);
+
+        // Not very nice 'fix' to prevent the scaled stage from having a huge black block underneath it
+        $('#overlay_container').height(height);
+        
+
     }
 
     loadBackgroundImage() {

@@ -266,7 +266,8 @@ while [[ $# -gt 0 ]]; do
 						if [[ ${DEBUG} == "true" ]]; then
 							echo -e "${wDEBUG}Copying overlay-${NEW_VALUE}.json to overlay.json${wNC}"
 						fi
-						cp "${CSO}" "${O}"
+						# Need to preserve permissions so use "-a".
+						cp -a "${CSO}" "${O}"
 					elif [[ ${DEBUG} == "true" ]]; then
 						echo -e "${wDEBUG}'${CSO}' doesn't exist yet - ignoring.${wNC}"
 					fi

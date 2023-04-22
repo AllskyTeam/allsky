@@ -2048,8 +2048,7 @@ if [[ ${IN_TESTING} == "true" ]]; then
 	T="${ALLSKY_HOME}/told"
 	if [[ ! -f ${T} ]]; then
 		MSG="\n"
-		MSG="${MSG}Testers, until we go-live with this release, debugging is automatically on"
-		MSG="${MSG} to aid in installation troubleshooting."
+		MSG="${MSG}Testers, until we go-live with this release, debugging is automatically on."
 		MSG="${MSG}\n\nPlease make sure you have Debug Level set to 4 in the WebUI during testing."
 		MSG="${MSG}\n"
 
@@ -2070,13 +2069,12 @@ if [[ ${IN_TESTING} == "true" ]]; then
 		MSG="${MSG}\n   contain both System fields and User fields (ones YOU created)."
 		MSG="${MSG}\n   It now includes only System fields."
 		MSG="${MSG}\n   After this installation please re-add any User fields via the"
-		MSG="${MSG}\n   Variable Manager in the WebUI."
-		MSG="${MSG}\n   Look in the old 'fields.json' file for a list of your"
-		MSG="${MSG}\n   field and their attributes."
+		MSG="${MSG}\n   Variable Manager in the WebUI. Look in the old 'fields.json'"
+		MSG="${MSG}\n   file for a list of your field and their attributes."
 		MSG="${MSG}\n   Future updates will preserve your user fields."
 
 		MSG="${MSG}\n\nIf you agree, enter:    yes"
-		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 27 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
+		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
 		if [[ $? -ne 0 || ${A} != "yes" ]]; then
 			MSG="\nYou need to TYPE 'yes' to continue the installation."
 			MSG="${MSG}\nThis is to make sure you read it.\n"

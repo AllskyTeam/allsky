@@ -31,7 +31,6 @@ class ALLSKYFORMAT:
         self._jsonConfig = json.loads(self._config)
         self._jsonFields = json.loads(self._fields)
         self._getAllSkyVariables()
-        pass
 
     def _getAllSkyVariables(self):
         allskyVariables = {}
@@ -51,8 +50,7 @@ class ALLSKYFORMAT:
                         value = line[firstSpace:].strip()
                         self._allSkyVariables[variable] = value
             except Exception as e:
-                print(e)
-                pass
+                raise(e)
 
     def _getFieldType(self, name):
         result = None
@@ -253,10 +251,20 @@ class ALLSKYFORMAT:
             result[fieldData["id"]] = fieldLabel
 
         print("Content-type: text/html\n")
-        print(json.dumps(result, indent = 4))
+        data = {
+            "result": "OK",
+            "fields": result
+        }
+        print(json.dumps(data, indent = 4))
 
 try:
     sampleEngine = ALLSKYFORMAT()
     sampleEngine.createSampleData()
 except Exception as e:
-    print(e)
+    print("Content-type: text/html\n")
+    data = {
+        "result": "ERROR",
+        "error": str(e),
+        "fields": {}
+    }
+    print(json.dumps(data, indent = 4))

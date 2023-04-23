@@ -123,9 +123,7 @@ for f in ${IMAGE_FILES} ; do
 		BAD="'${f}' (zero length)"
 	else
 		# MEAN is a number between 0.0 and 1.0.
-		MEAN=$(${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1)
-		# shellcheck disable=SC2181
-		if [[ $? -ne 0 ]]; then
+		if ! MEAN=$(${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1) ; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
 			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' failed; leaving file.${NC}"
 			echo "Message=${MEAN}"
@@ -137,14 +135,20 @@ for f in ${IMAGE_FILES} ; do
 			# Get rid of unnecessary error text, and only look at first line of error message.
 			BAD="'${f}' (corrupt file: $(echo "${MEAN}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;' -e q))"
 		else
-			# Multiply MEAN by 100 to convert to integer (0-100 %) since
-			# bash doesn't work with floats.
-			MEAN=$(echo "${MEAN} * 100" | bc)
+			# MEAN is a number between 0.0 and 1.0 but it may have format:
+			#	6.90319e-06
+			# which "bc" doesn't accept.
+			# Since the shell doesn't do floating point math and we want the user to be able to specify
+			# up to two digits precision, multiple the MEAN and the user's numbers by 100.
+			# Awk handles the "e-" format.
+			MEAN100=$( echo "${MEAN}" | awk '{ printf("%d", $1 * 100); }' )
+			HIGH100=$( echo "${HIGH}" | awk '{ printf("%d", $1 * 100); }' )
+			LOW100=$( echo "${LOW}" | awk '{ printf("%d", $1 * 100); }' )
+
 			MSG=""
 
-			if [[ ${HIGH} != "0" ]]; then
-				x=$(echo "${MEAN} > ${HIGH}" | bc)
-				if [[ ${x} -eq 1 ]]; then
+			if [[ ${HIGH} != "0" ]]; then		# Use the HIGH check
+				if [[ ${MEAN100} -gt "${HIGH100}" ]]; then
 					BAD="'${f}' (above threshold: MEAN=${MEAN}, threshold = ${HIGH})"
 				elif [[ ${DEBUG} == "true" ]]; then
 					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
@@ -153,8 +157,7 @@ for f in ${IMAGE_FILES} ; do
 
 			# An image can't be both HIGH and LOW so if it was HIGH don't check for LOW.
 			if [[ ${BAD} == "" && ${LOW} != "0" ]]; then
-				x=$(echo "${MEAN} < ${LOW}" | bc)
-				if [[ ${x} -eq 1 ]]; then
+				if [[ ${MEAN100} -lt "${LOW100}" ]]; then
 					BAD="'${f}' (below threshold: MEAN=${MEAN}, threshold = ${LOW})"
 				elif [[ ${DEBUG} == "true" && ${MSG} == "" ]]; then
 					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"

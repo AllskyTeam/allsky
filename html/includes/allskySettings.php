@@ -308,13 +308,17 @@ function toggle_advanced()
 		// confusing novice users.
 		$numAdvanced = 0;
 		$numMissing = 0;
-		$missingSettings = "";
+		$numMissingHasDefault = 0;
+		$missingSettingsHasDefault = "";
 		echo "<table border='0'>";
 			foreach($options_array as $option) {
 				$name = $option['name'];
 
 				$type = getVariableOrDefault($option, 'type', "");	// should be a type
-				if ($type != "header") {
+				if ($type == "header") {
+					$value = "";
+					$OLDvalue = "";
+				} else {
 					$default = getVariableOrDefault($option, 'default', "");
 					$default = str_replace("'", "&#x27;", $default);
 
@@ -322,6 +326,7 @@ function toggle_advanced()
 					// &apos; isn't supported by all browsers so use &#x27.
 					$value = getVariableOrDefault($settings_array, $name, $default);
 					$value = str_replace("'", "&#x27;", $value);
+					$OLDvalue = $value;
 				}
 
 				// Should this setting be displayed?
@@ -346,26 +351,41 @@ function toggle_advanced()
 					$advClass = "";
 					$advStyle = "";
 				}
+
 				$label = getVariableOrDefault($option, 'label', "");
-				if ($type == "header") {
-					$value = "";
-				} else {
+
+				if ($type != "header") {
 					$optional = getVariableOrDefault($option, 'optional', false);
 					if ($value === "" && ! $optional) {
-						$numMissing++;
-						if ($missingSettings == "") {
-							$missingSettings = "$label";
+						if ($default === "") {
+							$numMissing++;
+							if ($missingSettings == "") {
+								$missingSettings = "$label";
+							} else {
+								$missingSettings .= ", $label";
+							}
+							$warning_class = "alert-danger";
+							$warning_msg = "<span style='color: red'>This field cannot be empty.</span><br>";
 						} else {
-							$missingSettings .= ", $label";
+							// Use the default but let the user know.
+							$value = $default;
+							$numMissingHasDefault++;
+							if ($missingSettingsHasDefault == "") {
+								$missingSettingsHasDefault = "$label";
+							} else {
+								$missingSettingsHasDefault .= ", $label";
+							}
+							$warning_class = "alert-danger";
+							$warning_msg = "<span style='color: red'>This field was empty but set to default.</span><br>";
 						}
-						$optional_bg = "background-color: red";
-						$optional_msg = "<span style='color: red'>This field cannot be empty.</span><br>";
 					} else {
-						$optional_bg = "";
-						$optional_msg = "";
+						$warning_class = "";
+						$warning_msg = "";
 					}
 				}
+
 				$description = getVariableOrDefault($option, 'description', "");
+
 				// "widetext" should have the label spanning 2 rows,
 				// a wide input box on the top row spanning the 2nd and 3rd columns,
 				// and the description on the bottom row in the 3rd column.
@@ -380,7 +400,7 @@ function toggle_advanced()
 					echo "<td colspan='3' style='padding: 8px 0px;' class='settingsHeader'>$description</td>";
 					echo "<tr class='rowSeparator' style='height: 10px'><td colspan='3'></td></tr>";
 				} else {
-					echo "<tr class='form-group $advClass $class' style='margin-bottom: 0px; $advStyle'>";
+					echo "<tr class='form-group $advClass $class $warning_class' style='margin-bottom: 0px; $advStyle'>";
 					// Show the default in a popup
 					if ($type == "checkbox") {
 						if ($default == "0") $default = "No";
@@ -415,6 +435,7 @@ function toggle_advanced()
 						// Ditto for left side with shadow on right.
 						$style="padding: 5px 5px 7px 8px;";
 					}
+
 					echo "\n\t<td $span valign='middle' style='$style' align='center'>";
 					// The popup gets in the way of seeing the value a little.
 					// May want to consider having a symbol next to the field
@@ -432,13 +453,13 @@ function toggle_advanced()
 							if ($type == "number") $type = "text";
 							$t = $type;
 						}
-						echo "\n\t<input $readonly class='form-control boxShadow settingInput' type='$t'" .
+						echo "\n\t<input $readonly class='form-control boxShadow settingInput ' type='$t'" .
 							" $readonlyForm name='$name' value='$value'" .
-							" style='padding: 0px 3px 0px 0px; text-align: right; $optional_bg'>";
+							" style='padding: 0px 3px 0px 0px; text-align: right;' >";
 					} else if ($type == "widetext"){
 						echo "\n\t<input class='form-control boxShadow' type='text'" .
 							" $readonlyForm name='$name' value='$value'" .
-						   	" style='padding: 6px 5px; $optional_bg'>";
+						   	" style='padding: 6px 5px;'>";
 					} else if ($type == "select"){
 						echo "\n\t<select class='form-control boxShadow settingInput' name='$name' title='Select an item'" .
 						   	" $readonlyForm style='text-align: right; padding: 0px 3px 0px 0px;'>";
@@ -468,21 +489,31 @@ function toggle_advanced()
 
 					// Track current values so we can determine what changed.
 					if ($formReadonly != "readonly")
-						echo "\n\t<input type='hidden' name='OLD_$name' value='$value'>";
+						echo "\n\t<input type='hidden' name='OLD_$name' value='$OLDvalue'>";
 
 					echo "</td>";
 					if ($type == "widetext")
 						echo "</tr><tr class='rowSeparator $advClass' style='$advStyle'><td></td>";
-					echo "\n\t<td style='padding-left: 10px;'>$optional_msg$description</td>";
+					echo "\n\t<td style='padding-left: 10px;'>$warning_msg$description</td>";
 				}
 				echo "</tr>";
 			 }
 		echo "</table>";
 
+		$needToShowMessages = false;
 		if ($numMissing > 0 && $formReadonly != "readonly") {
+			$needToShowMessages = true;
 			$msg = "ERROR: $numMissing required field" . ($numMissing === 1 ? " is" : "s are");
-			$msg .= " missing (<strong>$missingSettings</strong>) - see highlighted fields below.";
+			$msg .= " missing (<strong>$missingSettings</strong>) - see highlighted entries below.";
 			$status->addMessage($msg, 'danger');
+		}
+		if ($numMissingHasDefault > 0 && $formReadonly != "readonly") {
+			$needToShowMessages = true;
+			$msg = "WARNING: $numMissingHasDefault required field" . ($numMissingHasDefault === 1 ? " is" : "s are");
+			$msg .= " missing (<strong>$missingSettingsHasDefault</strong>) but replaced by the default - see highlighted entries below. You MUST click the 'Save changes' button below.";
+			$status->addMessage($msg, 'danger');
+		}
+		if ($needToShowMessages) {
 		?>
 			<script>
 				var messages = document.getElementById("messages");

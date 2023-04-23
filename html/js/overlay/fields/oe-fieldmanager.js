@@ -220,15 +220,18 @@ class OEFIELDMANAGER {
         }).done((data) => {
             $.LoadingOverlay('hide');
             clearTimeout(loadingTimer);
-            for (let key in data) {
-                let field = this.findField(key);
-                if (field !== null) {
-                    field.enableTestMode(data[key]);
+            if (data.result === "OK") {
+                for (let key in data.fields) {
+                    let field = this.findField(key);
+                    if (field !== null) {
+                        field.enableTestMode(data.fields[key]);
+                    }
                 }
+            } else {
+                this.disableTestMode();
+                bootbox.alert('Error generating sample data. Please ensure the overlay module is enabled');
             }
         }).fail((jqXHR, textStatus, errorThrown) => {
-            // TODO
-            let i = 56;
         }).always(() => {
             clearTimeout(loadingTimer);
             $.LoadingOverlay('hide');
@@ -239,6 +242,8 @@ class OEFIELDMANAGER {
     }
 
     disableTestMode() {
+        let uiManager = window.oedi.get('uimanager');
+        uiManager.testMode = false;
         $('#oe-test-mode').removeClass('red pulse');
         let dataFields = this.#config.dataFields;
         for (let dataField in dataFields) {

@@ -177,8 +177,8 @@ get_versions_and_branches()
 		if [[ -n ${USER_SPECIFIED_BRANCH} && ${USER_SPECIFIED_BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
 			NEW_WEBSITE_VERSION="$( get_Git_version "${USER_SPECIFIED_BRANCH}" "allsky-website" )"
 			if [[ -z ${NEW_WEBSITE_VERSION} ]]; then
-				MSG="GitHub branch '${BRANCH}' does not exist."
-				MSG="${MSG}\nTry again either without a branch or with a different branch."
+				MSG="GitHub branch '${USER_SPECIFIED_BRANCH}' does not exist."
+				MSG="${MSG}\nTry again either with a different branch or without a branch."
 				display_msg --log error "${MSG}"
 				exit_installation 1
 			fi

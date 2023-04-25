@@ -481,7 +481,8 @@ create_website_configuration_file() {
 			fi
 		fi
 	else
-		display_msg --log warning "Unable to update '${FIELD}' in ${ALLSKY_WEBSITE_CONFIGURATION_FILE}; ignoring."
+		MSG="Unable to update '${FIELD}' in ${ALLSKY_WEBSITE_CONFIGURATION_FILE}; ignoring."
+		display_msg --log warning "${MSG}"
 		# bogus settings that won't do anything
 		MINI_TLAPSE_DISPLAY="x"
 		MINI_TLAPSE_URL="x"
@@ -491,7 +492,9 @@ create_website_configuration_file() {
 
 	# Convert latitude and longitude to use N, S, E, W.
 	LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
+	[[ -z ${LATITUDE} ]] && display_msg --log warning "latitude is empty"
 	LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
+	[[ -z ${LONGITUDE} ]] && display_msg --log warning "longitude is empty"
 
 	if [[ ${LATITUDE:1,-1} == "S" ]]; then			# last character
 		AURORAMAP="south"
@@ -511,8 +514,13 @@ create_website_configuration_file() {
 	LENS="$(settings ".lens")"
 	COMPUTER="$(sed --quiet -e 's/Raspberry Pi/RPi/' -e '/^Model/ s/.*: // p' /proc/cpuinfo)"
 
+	# These appeard not to be set for one tester, so put an explicit warning in.
+	[[ -z ${ALLSKY_VERSION} ]] && display_msg --log warning "AllskyVersion is empty"
+	[[ -z ${NEW_WEBSITE_VERSION} ]] && display_msg --log warning "AllskyWebsiteVersion is empty"
+
+	display_msg "${LOG_TYPE}" debug "Calling updateWebsiteConfig.sh"
+
 	# There are some settings we can't determine, like LENS.
-	[[ ${DEBUG} == "true" ]] && display_msg --log debug "Calling updateWebsiteConfig.sh"
 	# shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
 		--config "${WEB_CONFIG_FILE}" \

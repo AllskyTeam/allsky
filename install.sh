@@ -219,8 +219,7 @@ select_camera_type()
 	if [[ -f ${PRIOR_CONFIG_FILE} ]]; then
 		case "${PRIOR_ALLSKY_VERSION}" in
 			# New versions go here...
-# xxxxxxxxxxxxxx      TODO: update version on next line when we go live.
-			v2022.MM.DD_tbd | v2023.*)		# test versions
+			v2023.05.01*)
 				# New style Allsky using ${CAMERA_TYPE}.
 				CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
 				# Don't bother with a message since this is a "similar" release.

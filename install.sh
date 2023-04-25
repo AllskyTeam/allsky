@@ -347,7 +347,7 @@ save_camera_capabilities()
 
 	MSG="Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
 	MSG="${MSG}  ${DEBUG_ARG} 'cameraType' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
-	display_msg "${DEBUG_TYPE}" info "${MSG}"
+	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	#shellcheck disable=SC2086
 	MSG="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly ${DEBUG_ARG} \

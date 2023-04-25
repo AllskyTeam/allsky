@@ -11,12 +11,12 @@
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "Picking an allsky camera and lens";
+			content: "Picking a Pi, an allsky camera, and lens";
 		} 
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
-	<title>Picking a camera</title>
+	<title>Picking Hardware</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
@@ -24,7 +24,41 @@
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 <div class="Layout-main markdown-body" id="mainContents">
 
+<h2>Raspberry Pi choices</h2>
+<details><summary></summary>
+<p>
+Like picking a camera, picking the model of Pi may come down to your budget and availability.
+</p>
+<p>
+Ignoring those constraints, the ideal Pi to get is the Pi 4 with 4 GB memory.
+It handles everything Allsky currently does and has enough memory and CPU power for the future.
+The next best Pi to get is the Pi 4 with 2 GB memory.
+</p>
+<p>
+If the Pi 4's above are too expensive, a Pi 3B+ with 2 GB will also work but will take longer to
+create timelapse videos, and will limit how often you can create mini-timelapse videos.
+
+The 1 GB versions of the Pi 3B+ and 4 will work but require adding more swap space
+which will be used more often, slowing things down and putting more wear on your SD card.
+</p>
+<p>
+Do NOT get the Pi Zero - its extremely slow CPU (only 1) and 512 MB memory will cause problems.
+You almost for sure won't be able to do timelapse videos.
+The Pi Zero 2 which has a faster CPU than the Pi Zero but still only has 512 MB memory
+should only be considered if cost is the ONLY concern,
+as you may or may not be able to do timelapse videos.
+Future versions of Allsky will likely require more processing power and memory so the
+Pi Zero 2 may not work in the future.
+</p>
+<blockquote class="warning">
+We have not found any other brand devices to be compatible with the Pi,
+despite what their marketing information says.
+We cannot support non-Raspberry Pi devices.
+</blockquote>
+</details>
+
 <h2>Cameras</h2>
+<details><summary></summary>
 <p>
 Your budget will often be the driving factor when picking an allsky camera.
 The Raspberry Pi HQ (RPi HQ) camera is relatively inexpensive and produces good images
@@ -37,20 +71,22 @@ Some things to consider:
 <li>If you need to buy a camera and will only use it as an allsky camera,
 	the RPi HQ camera is hard to beat.
 <li>ZWO's ASI120MM (1280x960 resolution) is inexpensive but
-	a lot of people complain about its noise and hot pixels.
+	a lot of people complain about its noise and hot pixels and have replaced theirs.
 	The color version is significantly less sensitive.
 	We recommend staying away from this camera.
 <li>The choice of mono versus color is a personal one.
 	Mono cameras are usually more sensitive so require shorter exposures or less gain,
 	but many people prefer color for its more "natural" look, especially during the day.
-<li>Larger sensors (for example the ASI178MC @ 3096x2080) require more memory
-	to produce timelapses, so you may need to follow the suggestions at
-	<a allsky="true" href="/documentation/troubleshooting/timelapse.html">this page</a>.
-<li>For allsky use, an extremely high resolution usually isn't needed since the lens and
-	dome will cause some amount of distortion that will negate the benefits of high resolution.
-<li>Newer sensors tend to produce less noise, but not always.
+<li>Larger sensors (for example the RPi HQ and ASI178MC @ 3096x2080) require more memory
+	to produce timelapses, so you may need to follow
+	<a allsky="true" href="/documentation/troubleshooting/timelapse.html">these suggestions</a>
+	to get timelapse working.
+<li>For allsky use, an extremely high resolution camera usually isn't needed since the lens and
+	dome cause some amount of distortion that limit the effective resolution.
+	We suggest staying away from these cameras.
 <li>Increasing sensor temperature will always increase noise and hot pixels,
-	sometimes to the point of making the image unusable.
+	sometimes to the point of making the image unusable,
+	so many people put a fan in their allsky enclosure to pull in cooler outside air.
 <li>Different cameras have different dynamic ranges
 	(the difference between the brightest and darkest parts).
 	Increasing a camera's gain will produce brighter, noisier images with less dynamic range.
@@ -59,18 +95,29 @@ Some things to consider:
 	<a href="https://astronomy-imaging-camera.com/product/asi290mm">ASI290MM</a>
 	<a href="https://astronomy-imaging-camera.com/product/asi120mc">ASI120MC</a>,
 	<a href="https://astronomy-imaging-camera.com/product/asi178mc">ASI178MC</a>.
-<li>ZWO cameras usually have a 60 second auto-exposure limit.
-	That may not matter much in practice since shots longer than that will usually
-	produce noticeable star trailing.
+<li>Some RPi and RPi-compatible cameras support auto focus.
+	That feature sounds really useful but those cameras have some limitations:
+	<ul>
+	<li>Auto focus at night takes a long time since the camera has to take several long-exposure
+		images.
+	<li>The lenses that come with these cameras typically produce only a 120 degree field of view.
+		Many allsky lenses produce about 180 degrees.
+		A narrower field of view may not matter if you have a lot of trees and/or buildings
+		blocking the view, however.
+	</ul>
+	Some people with auto focus lenses focus during the day and may refocus if the
+	temperature changes drastically.
 <li>The "T7C" camera is an OEM version of the ASI120MC-mini.
 	We <a allsky="true" href="/documentation/troubleshooting/T7cameras.html">do not recommend</a>
 	it.
 </ul>
+</details>
 
 
 <h2>Lenses</h2>
+<details><summary></summary>
 <p>
-Although picking a camera is fairly easy since Allsky only supports ZWO and Rpi cameras,
+Although picking a camera is fairly easy since Allsky only supports ZWO and RPi cameras,
 picking a lens is more difficult.
 The lens and camera sensor together determine what kind of image you'll see:
 <ul>
@@ -261,6 +308,9 @@ If you have a lot of trees or buildings blocking the horizon and you want to
 minimize how much of them you see,
 get a lens with a higher focal length and hence a narrower FOV.
 </p>
+</details>
+
+
 </div><!-- Layout-main -->
 </div><!-- Layout -->
 </body>

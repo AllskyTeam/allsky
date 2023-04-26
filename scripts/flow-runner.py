@@ -161,6 +161,24 @@ if __name__ == "__main__":
 
     shared.initDB()
     
+    if (shared.args.event == "postcapture"):
+        disableFile = os.path.join(shared.allskyTmp,"disable")
+        if shared.isFileReadable(disableFile):
+            with open(disableFile, "r") as fp:
+                disable = json.load(fp)
+                for module in disable:
+                    moduleName = disable[module].replace('.py','')
+                    method = disable[module].replace('.py','').replace('allsky_','') + "_cleanup"
+                    _temp = importlib.import_module(moduleName)
+                    if hasattr(_temp, method):
+                        globals()[method] = getattr(_temp, method)
+                        result = globals()[method]()
+                        shared.log(3, "INFO: Cleared module data for {0}".format(moduleName))
+                    else:
+                        shared.log(3, "INFO: Attempting to clear module data for {0} but no function provided".format(moduleName))
+                        
+            os.remove(disableFile)
+    
     results = {}
     for shared.step in shared.flow:
         if shared.flow[shared.step]["enabled"] and shared.flow[shared.step]["module"] not in globals():

@@ -19,6 +19,7 @@ import sys
 import time
 import locale
 import board
+import argparse
 
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -416,12 +417,22 @@ def saveExtraData(fileName, extraData):
 
 def deleteExtraData(fileName):
     extraDataPath = getEnvironmentVariable("ALLSKY_EXTRA")
-    if allskyDataPath is not None:
+    if extraDataPath is not None:
         extraDataFilename = os.path.join(extraDataPath, fileName)
         if os.path.exists(extraDataFilename):
             if isFileWriteable(extraDataFilename):
                 os.remove(extraDataFilename)
 
+def cleanupModule(moduleData):
+    if "cleanup" in moduleData:
+        if "files" in moduleData["cleanup"]:
+            for fileName in moduleData["cleanup"]["files"]:
+                deleteExtraData(fileName)
+
+        if "env" in moduleData["cleanup"]:
+            for envVariable in moduleData["cleanup"]["env"]:
+                os.environ.pop(envVariable, None)
+                                
 def getGPIOPin(pin):
     result = None
     if pin == 0:

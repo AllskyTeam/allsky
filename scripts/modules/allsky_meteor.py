@@ -184,3 +184,16 @@ def meteor(params, event):
         os.environ["AS_METEORCOUNT"] = "Disabled"
 
     return result
+
+def meteor_cleanup():
+    moduleData = {
+        "metaData": metaData,
+        "cleanup": {
+            "files": {},
+            "env": {
+                "AS_METEORLINECOUNT",
+                "AS_METEORCOUNT"
+            }
+        }
+    }
+    s.cleanupModule(moduleData)

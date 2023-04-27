@@ -2242,7 +2242,7 @@ ask_reboot "full"											# prompts
 check_restored_settings
 
 ##### Let the user know to run check_allsky.sh.
-remind_run_check_allsky()
+remind_run_check_allsky
 
 ##### If needed, remind the user to remove any old Allsky version
 remind_old_version

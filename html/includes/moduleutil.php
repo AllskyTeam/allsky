@@ -220,6 +220,12 @@ class MODULEUTIL
     }
 
     public function getModules() {
+        $result = $this->readModules();
+        $result = json_encode($result, JSON_FORCE_OBJECT);     
+        $this->sendResponse($result);       
+    }
+
+    private function readModules() {
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $moduleConfig = json_decode($rawConfigData);
@@ -322,8 +328,8 @@ class MODULEUTIL
             'corrupted' => $corrupted,
             'restore' => $restore
         ];
-        $result = json_encode($result, JSON_FORCE_OBJECT);     
-        $this->sendResponse($result);       
+
+        return $result;
     }
 
     public function postModules() {
@@ -331,16 +337,54 @@ class MODULEUTIL
         $configData = $_POST['configData'];
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($config) . '.json';
 
+        $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($config) . '.json';
+        $rawConfigData = file_get_contents($configFileName);
+        $oldModules = json_decode($rawConfigData);
+
         $result = file_put_contents($configFileName, $configData);
         $this->changeOwner($configFileName);
         $backupFilename = $configFileName . '-last';
         copy($configFileName, $backupFilename);
         $this->changeOwner($backupFilename);
         if ($result !== false) {
+            $newModules = json_decode($configData);
+            $this->CheckForDisabledModules($newModules, $oldModules);
             $this->sendResponse();
         } else {
             $this->send500();
         }
+    }
+
+    private function CheckForDisabledModules($newModules, $oldModules) {
+        $moduleList = [];
+
+        foreach ($oldModules as $key=>$module) {
+            $moduleList[$key] = $module->module;
+        } 
+
+        foreach ($newModules as $key=>$module) {
+            if (isset($moduleList[$key])) {
+                if ($oldModules->{$key}->enabled == $module->enabled) {
+                    unset($moduleList[$key]);
+                } else {
+                    if ($oldModules->{$key}->enabled == false && $module->enabled == true) {
+                        unset($moduleList[$key]);
+                    }
+                }
+            }
+        }
+
+        $disableFile = ALLSKY_TMP . '/disable';
+        if (count($moduleList) > 0) {
+            if (file_exists($disableFile)) {
+                $oldDisableData = file_get_contents($disableFile);
+                $oldDisableData = json_decode($oldDisableData, true);
+                $moduleList = array_merge($moduleList, $oldDisableData);
+            }
+            $disableData = json_encode($moduleList);
+            $result = file_put_contents($disableFile, $disableData);
+        }
+
     }
 
     public function deleteModules() {

@@ -35,7 +35,7 @@ metaData = {
             }          
         }                   
     },
-    "enabled": "false"            
+    "enabled": "false"
 }
 
 tstats = {
@@ -138,3 +138,15 @@ def pistatus(params, event):
     
     s.log(1,'INFO: ' + result)
     return result
+
+def pistatus_cleanup():
+    moduleData = {
+        "metaData": metaData,
+        "cleanup": {
+            "files": {
+                "pistatus.json"
+            },
+            "env": {}
+        }
+    }
+    s.cleanupModule(moduleData)

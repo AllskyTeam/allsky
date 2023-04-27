@@ -250,3 +250,15 @@ def starcount(params, event):
         os.environ["AS_STARCOUNT"] = "Disabled"
 
     return "{}".format(result)
+
+def starcount_cleanup():
+    moduleData = {
+        "metaData": metaData,
+        "cleanup": {
+            "files": {},
+            "env": {
+                "AS_STARCOUNT"
+            }
+        }
+    }
+    s.cleanupModule(moduleData)

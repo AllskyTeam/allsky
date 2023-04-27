@@ -347,3 +347,16 @@ def clearsky(params, event):
     os.environ["AS_SKYSTATE"] = skyState
     os.environ["AS_SKYSTATESTARS"] = str(starCount)
     return "Sky is {0}".format(skyState)
+
+def clearsky_cleanup():
+    moduleData = {
+        "metaData": metaData,
+        "cleanup": {
+            "files": {},
+            "env": {
+                "AS_SKYSTATE",
+                "AS_SKYSTATESTARS"
+            }
+        }
+    }
+    s.cleanupModule(moduleData)

@@ -532,6 +532,15 @@ function DisplayOverlay($image_name)
                                             </div>
                                         </div>
                                         <div class="form-group">
+                                            <label for="oe-default-stroke-colour" class="control-label col-xs-4">Default Stroke
+                                                Colour</label>
+                                            <div class="col-xs-8">
+                                                <div class="input-group">
+                                                    <input id="oe-default-stroke-colour" name="oe-default-stroke-colour" type="input" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>                                                                          
+                                        <div class="form-group">
                                             <label for="defaultdatafileexpiry" class="control-label col-xs-4">Default Extra Data Expiry</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">

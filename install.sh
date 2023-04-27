@@ -2014,6 +2014,17 @@ remind_old_version()
 
 
 ####
+remind_run_check_allsky()
+{
+	MSG="After you've configured Allsky, run:"
+	MSG="${MSG}\n   cd ~/allsky;  scripts/check_allsky.sh"
+	MSG="${MSG}\nto check for any issues.  You can also run it whenever you make changes."
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+	display_msg --logonly info "${MSG}"
+}
+
+
+####
 exit_installation()
 {
 	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $(date).\n"
@@ -2023,10 +2034,8 @@ exit_installation()
 }
 
 
-####################### main part of program
 
-##### Log files write to ${ALLSKY_CONFIG}, which doesn't exist yet, so create it.
-mkdir -p "${ALLSKY_INSTALLATION_LOGS}"
+####################### Main part of program
 
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 
@@ -2106,8 +2115,8 @@ while [ $# -gt 0 ]; do
 			shift
 			;;
 		--testing)
-			TESTING="true"			# developer testing - skip many steps 
-TESTING="${TESTING}" # TODO: keeps shellcheck quiet
+			TESTING="true"			# TODO: developer testing - skip many steps 
+TESTING="${TESTING}"	# xxx keeps shellcheck quiet
 			;;
 		*)
 			display_msg --log error "Unknown argument: '${ARG}'."
@@ -2117,7 +2126,15 @@ TESTING="${TESTING}" # TODO: keeps shellcheck quiet
 	shift
 done
 
-[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
+if [[ -n ${FUNCTION} ]]; then
+	# Don't log when a single function is executed.
+	DISPLAY_MSG_LOG=""
+else
+	##### Log files write to ${ALLSKY_CONFIG}, which doesn't exist yet, so create it.
+	mkdir -p "${ALLSKY_INSTALLATION_LOGS}"
+
+	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
+fi
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
@@ -2223,6 +2240,9 @@ ask_reboot "full"											# prompts
 
 ##### Display any necessary messaged about restored / not restored settings
 check_restored_settings
+
+##### Let the user know to run check_allsky.sh.
+remind_run_check_allsky
 
 ##### If needed, remind the user to remove any old Allsky version
 remind_old_version

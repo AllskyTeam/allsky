@@ -2014,6 +2014,16 @@ remind_old_version()
 
 
 ####
+remind_run_check_allsky()
+{
+	MSG="After you've configured Allsky, run allsky/scripts/check_allsky.sh"
+	MSG="${MSG} to check for any issues.  You can also run it whenever you make changes."
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+	display_msg --logonly info "${MSG}"
+}
+
+
+####
 exit_installation()
 {
 	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $(date).\n"

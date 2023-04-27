@@ -187,6 +187,9 @@ function check_PROTOCOL()
 # Check that when a variable holds a location, the location exists.
 function check_exists() {
 	local VALUE="${!1}"
+	if [[ ${VALUE:0:1} == "~" ]]; then
+		VALUE="${HOME}${VALUE:1}"
+	fi
 	if [[ -n ${VALUE} && ! -e ${VALUE} ]]; then
 		heading "Warnings"
 		echo "${1} is set to '${VALUE}' but it does not exist."

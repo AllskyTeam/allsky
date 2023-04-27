@@ -820,6 +820,7 @@ class OEUIMANAGER {
             $('#defaulttextrotation').val(this.#configManager.getValue('settings.defaulttextrotation'));
             $('#defaultdatafileexpiry').val(this.#configManager.getValue('settings.defaultdatafileexpiry'));
             $('#oe-default-font-colour').val(this.#configManager.getValue('settings.defaultfontcolour'));
+            $('#oe-default-stroke-colour').val(this.#configManager.getValue('settings.defaultstrokecolour'));
             $('#defaultnoradids').val(this.#configManager.getValue('settings.defaultnoradids'));
             $('#defaultincludeplanets').prop('checked', this.#configManager.getValue('settings.defaultincludeplanets'));
             $('#defaultincludesun').prop('checked', this.#configManager.getValue('settings.defaultincludesun'));
@@ -827,6 +828,13 @@ class OEUIMANAGER {
 
 
             $('#oe-default-font-colour').spectrum({
+                type: 'color',
+                showInput: true,
+                showInitial: true,
+                showAlpha: false
+            });
+
+            $('#oe-default-stroke-colour').spectrum({
                 type: 'color',
                 showInput: true,
                 showInitial: true,
@@ -886,6 +894,8 @@ class OEUIMANAGER {
             let defaultincludeplanets = $('#defaultincludeplanets').prop('checked');
             let defaultincludesun = $('#defaultincludesun').prop('checked');
             let defaultincludemoon = $('#defaultincludemoon').prop('checked');
+            let defaultStrokeColour = $('#oe-default-stroke-colour').val();
+            let defaultStrokeSize = $('#oe-default-stroke-size').val();
 
 
             this.#configManager.setValue('settings.defaultimagetopacity', defaultImagOpacity);
@@ -900,6 +910,8 @@ class OEUIMANAGER {
             this.#configManager.setValue('settings.defaultincludeplanets', defaultincludeplanets);
             this.#configManager.setValue('settings.defaultincludemoon', defaultincludemoon);
             this.#configManager.setValue('settings.defaultincludesun', defaultincludesun);
+            this.#configManager.setValue('settings.defaultstrokecolour', defaultStrokeColour);
+
 
             this.#configManager.gridVisible = $('#oe-app-options-show-grid').prop('checked');
             this.#configManager.gridSize = $("#oe-app-options-grid-size option").filter(":selected").val();
@@ -1528,6 +1540,10 @@ class OEUIMANAGER {
                     $('#imagedialog').dialog('close');
                     this.#createTextPropertyEditor();
                 }
+                let strokeColour = this.#selected.stroke;
+                if (this.#selected.strokewidth == 0) {
+                    strokeColour = null;
+                }
                 $('#textpropgrid').jqPropertyGrid('set', {
                     'label': this.#selected.label,
                     'format': this.#selected.format,
@@ -1541,7 +1557,7 @@ class OEUIMANAGER {
                     'rotation': this.#selected.rotation,
                     'fill': this.#selected.fill,
                     'strokewidth': this.#selected.strokewidth,
-                    'stroke': this.#selected.stroke
+                    'stroke': strokeColour
                 });
             } else {
                 if (textVisible) {

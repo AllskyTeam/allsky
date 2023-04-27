@@ -47,7 +47,7 @@ class OETEXTFIELD extends OEFIELD {
     },
     'stroke': {
       'path': 'stroke',
-      'defaultpath': '',
+      'defaultpath': 'settings.defaultstrokecolour',
       'default': OETEXTFIELD.DEFAULTSTROKE
     }    
   };

@@ -452,7 +452,11 @@
 			$elem.spectrum(opts);
 			if (changedCallback !== undefined) {
 				$elem.on('change', function changed(e, color) {
-					changedCallback(el, name, color.toHexString());
+					let colourHex = null;
+					if (color !== null) {
+						colourHex = color.toHexString();
+					}
+					changedCallback(el, name, colourHex);
 				});
 			}
 		};

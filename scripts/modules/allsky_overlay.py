@@ -505,9 +505,18 @@ class ALLSKYOVERLAY:
         if "stroke" in fieldData:
             stroke = fieldData["stroke"]
         else:
-            stroke = '#ffffff'
-
-        stroker, strokeg, strokeb = self._convertColour(name, stroke)
+            if "defaultstrokecolour" in self._overlayConfig["settings"]:
+                stroke = self._overlayConfig["settings"]["defaultstrokecolour"]
+            else:
+                stroke = '#ffffff'
+        
+        if stroke != None:
+            stroker, strokeg, strokeb = self._convertColour(name, stroke)
+        else:
+            stroker = None
+            strokeg = None
+            strokeb = None
+            
         r, g, b = self._convertColour(name, fieldColour)
 
         regex =  r"\$\{.*?\}"
@@ -585,7 +594,12 @@ class ALLSKYOVERLAY:
                 cv2.putText(self._image, fieldLabel, (fieldX,fieldY), cv2.FONT_HERSHEY_SIMPLEX, 1, (b,g,r), 1, cv2.LINE_AA)
             else:
                 fill = (b, g, r, 0)
-                strokeFill = (strokeb, strokeg, stroker, 0)
+                
+                if stroker == None or strokeg == None or strokeb == None:
+                    strokeFill = None
+                    strokeWidth = 0
+                else:
+                    strokeFill = (strokeb, strokeg, stroker, 0)
 
                 if len(s.image.shape) == 2:
                     fill = 255

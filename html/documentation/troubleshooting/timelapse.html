@@ -132,7 +132,7 @@ You can safely ignore this message.
 </details>
 
 
-<h2>Timelapse video doesn't appear to have the correct number of images</h2>
+<h2>Timelapse video doesn't have the correct number of images</h2>
 <details><summary></summary>
 <p>
 The number of images (also called "frames") in a timelapse video is simply
@@ -147,6 +147,21 @@ and replace <code><i>YOUR_FILE</i></code> with the name of your video:
 <pre>
 ffmpeg -i <i>YOUR_FILE</i> -vcodec copy -f rawvideo -y /dev/null 2&gt;&amp;1 | tail -2
 </pre>
+</p>
+<p>
+We believe one cause for videos that are too short is zero-length files.
+Apparently when <code>ffmpeg</code> encounters a zero-length file it quits.
+Please make sure you have <span class="shSetting">REMOVE_BAD_IMAGES</span>
+set to "true" in <span class="fileName">config.sh</span> so zero-length
+and other "bad" images are not saved.
+</p>
+<p>
+To remove zero-length files for a specified day, do the following,
+replacing "DATE" with the name of directory in <code>allsky/images</code>:
+<pre>cd ~/allsky/scripts; ./removeBadImages.sh DATE</pre>.
+It will take a while to run.
+When it's done you can re-create the timelapse by executing:
+<pre>cd ~/allsky/scripts; ./generateForDay.sh -t DATE</pre>.
 </p>
 <p>
 <span style="color: red">NEED MORE INFO ON WHAT TO CHECK/DO</span>

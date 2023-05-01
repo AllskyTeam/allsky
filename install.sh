@@ -1271,7 +1271,7 @@ prompt_for_lat_long()
 			# Let the user not enter anything.  A message is printed below.
 			break
 		else
-			if VALUE="$(convertLatLong "${VALUE}" "${TYPE}")" ; then
+			if VALUE="$( convertLatLong "${VALUE}" "${TYPE}" 2>&1 )" ; then
 				jq ".${TYPE}=\"${VALUE}\" "   "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
 				display_msg --log progress "${HUMAN_TYPE} set to ${VALUE}."
 				echo "${VALUE}"

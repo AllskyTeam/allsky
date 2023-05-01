@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Cleaning up a Website";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Cleaning a Website</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<h2>How to clean up old Allsky files from a Website on your Pi</h2>
+<p>
+You can easily limit the number of days of images stored on your local Website by
+using the WebUI to edit the
+<span class="shSetting">WEB_DAYS_TO_KEEP</span> setting in
+<span class="fileName">config.sh</span> with the number of days' data you want to keep.
+Older files will be removed every morning.
+</p>
+
+<h2>How to clean up old Allsky files from a remote Website</h2>
+<p>
+<blockquote>
+The following instructions assume your startrails, keograms,
+and timelapse files are stored in the directories specified in
+<span class="fileName">ftp-settings.sh</span>.
+</blockquote>
+</p>
+<p>
+Because remote web sites vary, the instructions below are generic and it's
+assumed you know how to perform the steps.
+
+<ul>
+<li>Connect to the web site.
+<li>For each of the <span class="fileName">startrails</span>,
+	<span class="fileName">keograms</span>,
+	and <span class="fileName">videos</span> directories do the following:
+	<ul>
+	<li>Enter the directory.
+	<li>Search for all *.jpg, *.png, or *.mp4 files older than your threshold,
+		for example, older than one month.
+	<li>Remove them.
+		<b>Do NOT remove the <span class="fileName">index.php</span> files!</b>
+	<li>Enter the <span class="fileName">thumbnails</span> sub-directory
+		and delete files older than your threshold.
+</ul>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

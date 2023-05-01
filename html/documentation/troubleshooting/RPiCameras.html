@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Troubleshooting RPi Cameras";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>RPi Camera Troubleshooting</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This page describes known issues with the RPi cameras (HQ and Module 3).
+</p>
+
+<h2>RPi camera not found or not working</h2>
+<details><summary></summary>
+<p>
+A "camera not found" message can be due many different things.
+Here are some steps to try.
+</p>
+<ol>
+<li>If this is a new RPi camera, make sure the ribbon cable is installed correctly.
+	This is an easy mistake to make since the cable will go in backwards.
+	See the camera documentation for details on how to correctly plug the camera in.
+<li>If you have access to another Pi, try plugging the camera in it to see if it works.
+<li>Check for the correct camera driver.
+	<br>
+	On Bullseye, execute:
+	<pre>libcamera-hello</pre>
+	If you get an error like this:
+	<pre>terminate called after throwing an instance of 'std::runtime_error'
+  	what():  failed to import fd 22</pre>
+	then run <code>sudo raspi-config</code>, navigate to
+	<code>Advanced Options</code> and enable <code>Glamor</code> graphic acceleration.
+	Then reboot your Pi.
+	Now, try <code>libcamera-hello</code> again.
+	You should get a <b>Hello world!</b> message in a new window.
+<li>Check for under voltage (Bullseye only)
+	<br>
+	Execute:
+	<pre>libcamera-hello</pre>
+	If you get an error that contains
+	<pre>Unable to request 0 buffers: Device or resource busy</pre>
+	your Pi may be under voltaged.
+	<ul>
+	<li>If you have another power supply try it.
+	<li>Using <code>sudo</code>, add
+		<pre>over_voltage=4</pre>
+		to <span class="fileName">/boot/config.txt</span> then reboot your Pi.
+		<br>
+		If you are still having the problem, add
+		<pre>arm_freq=700</pre>
+		to <span class="fileName">/boot/config.txt</span> then reboot your Pi.
+		Note that this decreases the speed of your Pi so should be a last resort.
+		<br>See
+		<a href="https://github.com/raspberrypi/libcamera-apps/issues/246">more information</a>.
+	</ul>
+</ol>
+</details>
+
+
+<h2>RPi HD camera stops taking pictures</h2>
+<details><summary></summary>
+<p>
+This issue is normally resolved by upgrading the firmware on your Pi by doing the following:  
+<pre>
+sudo apt update 
+sudo apt full-upgrade
+sudo shutdown -r now
+</pre>
+</details>
+
+<h2>RPi settings are no longer good</h2>
+<details><summary></summary>
+<p>
+On October 31, 2021 a new version of the Raspberry Pi operating system,
+called "Bullseye" was released (the prior version was called "Buster").
+One of the changes in Bullseye was to replace the software that controls RPi cameras.
+If you downloaded the Raspberry Pi operating system on October 31 or after, you have Bullseye.
+<blockquote>
+It is <b>strongly</b> recommended that you use the Bullseye operating system if
+you have an RPi camera.
+All new features are being added to Bullseye only,
+so users of Buster won't have new features like sensor temperature.
+</blockquote>
+</p>
+<p>
+Some of the Allsky settings need to be changed when going from Buster to Bullseye.
+For example, the <span class="WebUISetting">Brightness</span> setting on Buster goes from
+<span class="WebUIValue">0</span> to <span class="WebUIValue">100</span>
+but on Bullseye goes from
+<span class="WebUIValue">-100</span> to <span class="WebUIValue">100</span>.
+Hovering over a value will display the minimum, maximum, and default values for that setting.
+</p>
+</details>
+
+
+<h2>RETCODE=137</h2>
+<details><summary></summary>
+<p>
+When a Linux command (for example, <code>date</code>) completes,
+it has an exit code, also called a "return code" or "RETCODE".
+By convention, a code of <b>0</b> means the command
+was successful and a non-zero code means there was some problem.
+The developer of the command specifies what each non-zero code means.
+When Allsky commands detect an issue, like a required file is not found,
+they print an error message then exit with a non-zero code.
+</p>
+<p>
+An exit code of <b>137</b> usually means the command was forcefully killed by an outside source,
+often the Linux kernel.
+When this happens to an Allsky command, the log file will usually contain a message
+with <b>Killed</b> in it, and often with <b>RETCODE=137</b> in it.
+</p>
+<p>
+If you are using a RPi camera and get a notification message saying
+<code>ERROR  See /var/log/allsky.log for details</code>
+and the log file contains entries similar to these:
+<pre>
+Jan 20 18:45:50 allsky allsky.sh[4480]: /home/pi/allsky/allsky.sh: line 225:  4562 Killed "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
+Jan 20 18:45:50 allsky allsky.sh[4480]: 'capture_RPi' exited with RETCODE=137
+</pre>
+that usually means the Linux kernel killed the command because it was using
+more memory than was available.
+This can also happen when
+<a allsky="true" href="timelapse.html">a timelapse is being created</a>,
+and the solution is the same -
+<a allsky="true" href="increaseSwap.html">increase swap space</a>.
+</p>
+<p>
+<blockquote>
+The installation of Allsky checked if additional swap space was needed,
+and if so, prompted you to add it.
+If you are seeing this problem you either didn't add swap space,
+or additional space is needed.
+</blockquote>
+</p>
+<p>
+This problem happens more often on Pi's with small amounts of memory such as the Pi Zero
+with only 512 MB.
+It's less likely (although still possible) on a Pi 4 with 4 or 8 GB of memory.
+</p>
+</details>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

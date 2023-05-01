@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Troubleshooting ZWO Cameras";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>ZWO Camera Troubleshooting</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<h2>ZWO camera not found</h2>
+<details><summary></summary>
+<p>
+If you have a fairly new ZWO camera model,
+the ZWO software that's included with Allsky may not yet support it.
+To see which cameras are supported, execute:
+<pre>
+strings ~/allsky/src/lib/armv7/libASICamera2.a  | \
+	grep "_SetResolutionEv$" | \
+	sed -e 's/^.*CameraS//' -e 's/17Cam//' -e 's/_SetResolutionEv//' | \
+	sort -u \
+&gt; /tmp/ZWOcameras.txt
+</pre>
+With a text editor, open <span class="fileName">/tmp/ZWOcameras.txt</span>
+and search for your camera.
+The file is about 1000 lines and is sorted.
+If your don't find your camera, execute:
+<pre>
+grep "ZWO SDK" /var/log/allsky.log"
+</pre>
+and include the results in a new
+<a href="https://github.com/thomasjacquin/allsky/issues">Issue</a>,
+as well as your camera model.
+</p>
+<p>
+Other things to check:
+<ul>
+<li>Is the camera plugged in to a USB port?
+	Try plugging it into a different port.
+<li>Is the camera plugged in to a USB hub?
+	Make sure the hub is plugged into the Pi.
+	Try plugging the hub into a different port on the Pi.
+	Temporarily bypass the hub.
+<li>If you have access to another Pi, or a PC,
+	plug the camera into it to see if it works.
+</ul>
+</p>
+</details>
+
+
+<h2>ASI_ERROR_TIMEOUT Errors</h2>
+<details><summary></summary>
+<p>
+If images are not being taken with your ZWO camera and you see many
+<b>ASI_ERROR_TIMEOUT</b> messages in <span class="fileName">/var/log/allsky.log</span>,
+try the steps below.
+The exact reason for these messages is unclear,
+although it's often due to USB settings or an excessive voltage drop going
+to the Pi or the camera.
+Long or thin wires can cause a voltage drop big enough that the camera has problems
+producing an image.
+</p>
+<p>
+Additionally, some cameras have buggy firmware that causes image acquisition to fail,
+even when other operations succeed.
+This condition may persist through a restart of Allsky.
+</p>
+<p>
+If you are seeing lots of <b>ASI_ERROR_TIMEOUT</b> messages
+(an occasional one can be ignored) try the following, in this order:
+<ol>
+<li>If you have easy access to your Pi:
+	<ul>
+	<li>Check if there is moisture or water in it and if so, let it dry out for a couple days.
+		This solved weird problems for some people,
+		such as 60 second exposures finishing in 2 seconds,
+		and continual ASI_ERROR_TIMEOUT messages.
+	<li>Unplug and replug the camera to fully reboot it.
+	<li>Move the camera to a different port or from a USB 2 port to USB 3 or vice versa. 
+	</ul>
+<li>If you don't have easy access to the Pi <b>and you have the <code>uhubctl</code>
+	command installed on your Pi</b>, make sure you set the
+	<span class="shSetting">UHUBCTL_PATH</span> and <span class="shSetting">UHUBCTL_PORT</span>
+	settings in the <span class="fileName">config.sh</span> file, then restart Allsky.
+	The next time it fails due to ASI_ERROR_TIMEOUT errors it will reset the USB bus in an
+	attempt to fix those errors.  
+	You can get the <code>uhubctl</code> command by executing
+	<code>sudo apt-get install uhubctl</code>.
+<li>Change the USB settings.
+	In the WebUI, click on the <b>Camera Settings</b> link and look for the
+	<span class="WebUISetting">USB Bandwidth</span> setting.
+	Try increasing and decreasing it, and try turning
+	<span class="WebUISetting">Auto USB Bandwidth</span> on and off.
+	You will have to click on the
+	<img allsky="true" class="buttonIconLarge" src="/documentation/img/showAdvancedOptionsButton.png">
+	button at the bottom of the page in order to view the USB options.
+<li>See if the system is in under-voltage mode or is throttling which
+	could lead to insufficient power getting to the camera.
+	In the WebUI, go to the <b>System</b> page;
+	it will display the throttle and under voltage status.
+    If you are getting under-voltage,
+	<a href="https://lifepo4wered.com/lifepo4wered-pi.html">this power unit</a> may help.
+	Or use a more powerful power supply or power cables with thicker wires.
+<li>If you have easy access to your Pi and have a spare powered USB hub,
+	plug the hub into your Pi and a power source, and plug the camera into the hub.
+	This will usually resolve any power issues with the camera.
+<li>If you have a Windows PC, plug the camera into it and use the ZWO software
+	that came with the camera to see if it also has problems.
+	If it does, it's likely a hardware issue.
+<li>Revert to the pre-0.8 exposure method.
+	In the WebUI, click on the <b>Camera Settings</b> link.
+	At the bottom of the page click on the
+	<img allsky="true" class="buttonIconLarge" src="/documentation/img/showAdvancedOptionsButton.png">
+	button and look for the <span class="WebUISetting">Version 0.8 Exposure</span> setting
+	and toggle it then click on the
+	<img allsky="true" class="buttonIcon" src="/documentation/img/saveChangesButton.png">
+	button.
+<li>The above changes work for almost everyone.
+	If they don't work for you, follow the instructions on the
+	<a allsky="true" href="/documentation/troubleshooting/reportingIssues.html">Reporting Issues</a>
+	Wiki page to report the problem.
+</ol>
+
+<h3>Advanced steps</h3>
+<p>
+The steps listed below haven't been fully tested and we suggest
+entering a new <a href="https://github.com/thomasjacquin/allsky/discussions">Discussions</a>
+item before trying them.
+</p>
+<p>
+Try adding <code>swiotlb=131072</code> to end of the line in
+<span class="fileName">/boot/cmdline.txt</span>, then reboot.  
+This increases the number of USB buffers from 32 to 128 and
+might be needed for cameras with very large sensors like the ASI294MM (8288 x 5644) @ 16 bits.
+<pre>
+32  buffers * 1024 bytes/buffer =  32768 bytes.
+128 buffers * 1024 bytes/buffer = 131072 bytes.  
+</pre>
+Prior to this change the contents of
+<span class="fileName">/sys/kernel/debug/swiotlb/io_tlb_used</span>
+was hitting the maximum of 32768 bytes.
+After the change it was hitting a maximum of about 46000.
+</p>
+<p>
+Enable <code>DebugPrint</code> in <span class="fileName">~/.ZWO/ASIconfig.xml</span>
+by changing the <code>00</code> to <code>01</code>, then restart Allsky.
+A LOT of lines will be added to <span class="fileName">/var/log/allsky.log</span>,
+so be sure to set it back to <code>00</code> when done testing.
+The extra log entries <em>may</em> offer some insight into causes of the exposure failures.
+</p>
+</details>
+
+
+
+<h2>USB 2.0 Cameras, e.g., ASI120</h2>
+<details><summary></summary>
+<p>
+Owners of USB2.0 cameras such as the ASI120 may need to do a
+<a href="https://astronomy-imaging-camera.com/software-drivers">firmware upgrade</a>.
+</p>
+</details>
+
+
+<h2>T7 Cameras</h2>
+<details><summary></summary>
+<p>
+The T7 / T7C cameras from Datyson and other sellers are an OEM version of the ZWO ASI120 and
+<b>isn't officially supported in Allsky</b>
+because it does not work out of the box.
+If you do decide to try this camera, you do so at your own risk.
+</p>
+<p>
+We do not know if the camera has a fail-safe boot loader that will prevent
+the camera from being bricked if a firmware update fails.
+ZWO states that updating the firmware may result in reduced camera performance.
+As with all firmware updates,
+this may damage your camera. Once again, use this camera at your own risk.
+</p>
+<p>
+The stock firmware uses invalid 1024-byte packets, rather than 512-byte.
+Plugging in this camera will result in kernel logs similar to this:
+<pre>
+usb 3-2: new high-speed USB device number 62 using xhci_hcd
+usb 3-2: config 1 interface 0 altsetting 0 bulk endpoint 0x82 has invalid maxpacket 1024
+usb 3-2: New USB device found, idVendor=03c3, idProduct=120b, bcdDevice= 0.00
+usb 3-2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+usb 3-2: Product: ASI120MC
+usb 3-2: Manufacturer: ZWOptical company  
+usb 3-2: SerialNumber: 00000
+</pre>
+</p>
+<p>
+You should now be experiencing some feelings of regret for buying this camera.
+Any attempt to actually use the camera will fail,
+likely producing kernel messages similar to:
+<pre>
+usb 3-2: reset high-speed USB device number 62 using xhci_hcd
+usb usb3-port2: disabled by hub (EMI?), re-enabling...
+</pre>
+</p>
+<p>
+While we cannot help with the buyer's remorse, the USB errors can be remedied using
+<a href="https://astronomy-imaging-camera.com/software-drivers">ZWO's compatible firmware</a>.
+Without this firmware the camera will not work on Linux. Unfortunately,
+the firmware updater must be run from Windows in order to update USB 2 cameras.
+ZWO support confirms that it does not work on MacOS or Linux.
+Additionally, the firmware update requires you to install a specific version of MSVCRT,
+and also the ZWO driver package (this is not obvious on the firmware page).
+</p>
+<p>
+If you do not have Windows, you can get a legitimate developer VM image from
+Microsoft which may work well enough to re-flash the camera.
+Use your favorite search engine to find a "Microsoft windows developer vm image".
+Then look for instructions on enabling "USB pass-through" for your virtualization platform.
+Note that USB pass-through to VMs has been the source of issues in many different projects,
+e.g., anything that does DSP, timing-critical operations, or device reprogramming.
+</p>
+<p>
+It may be necessary to append <code>program_usb_boot_mode=0</code> to
+<span class="fileName">/boot/config.txt</span> to make this camera work.
+As this changes some one-time-programmable EPROM - permanently altering your
+Raspberry Pi - do not set this unless absolutely necessary
+(and we don't know why it would be necessary).
+</p>
+</details>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../js/documentation.js" type="application/javascript"></script>
+    <link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Allsky FAQ";
+		} 
+	</style>
+    <link href="../css/documentation.css" rel="stylesheet">
+    <link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Allsky FAQ</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<h1>JUST STARTING THIS</h1>
+<p>
+Will add to this FAQ as time goes on...
+</p>
+<h2>The <span class="fileName">/var/log/allsky.log</span> file is gone?  How do I get it back?</h2>
+<details><summary></summary>
+<p>
+<ul>
+	<li>Try restarting the software: <code>sudo systemctl restart allsky</code>.
+	<li>If that doesn't help, restart the software that controls the log files:
+		<code>sudo systemctl restart syslog</code>.
+	<li>If that doesn't help, reboot the Pi.
+	<li>If that doesn't help, wait until tomorrow - sometimes the log file
+		mysteriously reappears after midnight.
+		Note this is NOT an Allsky problem since it also happens with other services.
+</ul>
+</p>
+</details>
+
+
+<h2>After starting Allsky, all I get is "Allsky software is starting up"</h2>
+<details><summary></summary>
+<p>
+Most likely Allsky is dropping all images for being overly dark or overly bright due to inappropriate settings.
+Check the log to see what it says by running <code>tail -f /var/log/allsky.log</code> in a terminal window.
+</p>
+<p>
+If you are using <b>manual</b> exposure/gain try adjusting those values.
+</p>
+<p>
+If you are using <b>auto</b> exposure/gain, the starting values are what you specified as the manual values,
+and it may take several exposures for the software to home in on the best exposure.
+While it's doing that, you'll see the "Allsky software is starting up" message.  This is normal.
+If, however the message remains after several minutes follow the instructions
+<a allsky="true" href="/documentation/troublehsooting/reportingIssues.html">here</a>
+and submit the log file.
+</p>
+<p>
+You can also temporarily set <span class="shSetting">REMOVE_BAD_IMAGES</span to "false" in
+<span class="fileName">~/allsky/config/config.sh</span>
+to see what the incorrectly exposed images look like - this
+might give you an idea as to the problem.
+</p>
+</details>
+
+<h2>There is a long delay between when my pictures are saved</h2>
+<details><summary></summary>
+<p>
+The time between when one picture ends and another starts is determined by
+these settings in the WebUI:
+<ol>
+	<li><span class="WebUISetting">Delay</span> (daytime or nighttime).
+	<li><span class="WebUISetting">Max Auto-Exposure</span> (daytime or nighttime),
+		even if you are using manual exposure.
+	<li><span class="WebUISetting">Consistent Delays Between Images</span>.
+</ol>
+There are two possibilities:
+<ol>
+	<li>If <span class="WebUISetting">Consistent Delays Between Images</span> is "Yes",
+		then the total delay is:
+		<br>
+		<span class="WebUISetting">Delay</span> +
+		<span class="WebUISetting">Max Auto-Exposure</span>.
+	<li>If <span class="WebUISetting">Consistent Delays Between Images</span> is "No",
+		then the total delay is simply the <span class="WebUISetting">Delay</span>.
+</ol>
+If the time between pictures is longer than you expected,
+check your <span class="WebUISetting">Max Auto-Exposure</span>.
+</p>
+</details>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

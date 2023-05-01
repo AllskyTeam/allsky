@@ -1,0 +1,44 @@
+{
+	"maxErrors": 100,
+	"disallowKeywords": ["with"],
+	"disallowKeywordsOnNewLine": ["else", "catch"],
+	"disallowMixedSpacesAndTabs": true,
+	"disallowMultipleVarDecl": { "allExcept": ["require"] },
+	"disallowNewlineBeforeBlockStatements": true,
+	"disallowQuotedKeysInObjects": true,
+	"disallowSpaceAfterObjectKeys": true,
+	"disallowSpaceAfterPrefixUnaryOperators": true,
+	"disallowSpacesInFunction": {
+		"beforeOpeningRoundBrace": true
+	},
+	"disallowSpacesInsideParentheses": true,
+	"disallowTrailingWhitespace": true,
+	"requireNamedUnassignedFunctions": { "allExcept": ["describe", "it"] },
+	"requireCamelCaseOrUpperCaseIdentifiers": true,
+	"requireCapitalizedConstructors": true,
+	"requireSpaceAfterKeywords": [
+		"if",
+		"else",
+		"for",
+		"while",
+		"do",
+		"switch",
+		"case",
+		"return",
+		"try",
+		"catch",
+		"typeof"
+	],
+	"requireSpaceAfterLineComment": { "allExcept": ["<editor-fold", "</editor-fold>", "noinspection"] },
+	"requireSpaceAfterBinaryOperators": true,
+	"requireSpaceBeforeBinaryOperators": true,
+	"requireSpaceBeforeBlockStatements": true,
+	"requireSpaceBeforeObjectValues": true,
+	"requirePaddingNewLinesAfterBlocks": true,
+	"requireSpacesInFunction": {
+		"beforeOpeningCurlyBrace": true
+	},
+	"validateIndentation": "\t",
+	"validateLineBreaks": "LF",
+	"validateQuoteMarks": "'"
+}

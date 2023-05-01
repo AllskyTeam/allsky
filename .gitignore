@@ -1,29 +1,6 @@
-documentation/*
 images/*
-config.sh
 darks/*
-gibbons*
-liveview*
-image.jpg
-image-resize.jpg
-image-processed.jpg
-autocam.sh
-temperature.txt
-data.json
-log.txt
-settings.json
-scripts/data.json
-scripts/ftp-settings.sh
-scripts/keogram_and_startrails.sh
-scripts/keogram_only.sh
-scripts/startrails_manual.sh
-scripts/startrails_only.sh
-scripts/stretch.sh
 scripts/endOfNight_additionalSteps.sh
-scripts/saveImageDay.sh
-scripts/saveImageNight.sh
-settings_RPiHQ.json
-settings_ZWO.json
 
 # development artifacts
 src/*.a
@@ -34,7 +11,7 @@ gmon.out
 .*.sw[pomnq]
 
 # generated binaries
-capture
+capture_ZWO
 capture_RPiHQ
 keogram
 startrails

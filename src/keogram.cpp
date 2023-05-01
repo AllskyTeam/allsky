@@ -393,8 +393,11 @@ void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
 				}
 			}
 			// Draw date
+			int m = ann->at<int>(date_hour, ANN_MONTH);
+			int d = ann->at<int>(date_hour, ANN_DAY);
+			int y = ann->at<int>(date_hour, ANN_YEAR);
 			char time_buf[256];
-			snprintf(time_buf, 256, "%02d-%02d-%02d", ann->at<int>(date_hour, ANN_MONTH), ann->at<int>(date_hour, ANN_DAY), ann->at<int>(date_hour, ANN_YEAR));
+			snprintf(time_buf, 256, "%02d-%02d-%02d", m, d, y);
 			std::string text(time_buf);
 			cv::Size textSize = cv::getTextSize(text, cf->fontFace, cf->fontScale, cf->lineWidth, &baseline);
 

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Allsky Map";
+		}
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
+	<title>Allsky Map</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<h2>Overview</h2>
+<p>
+Starting with version 0.8.3.3 of Allsky,
+you can automatically have your allsky camera(s) added to the global
+<a href="https://www.thomasjacquin.com/allsky-map/" target="_blank">Allsky Map <i class="fa fa-external-link-alt fa-fw"></i></a>.
+This map shows the location of all known allsky cameras as well as basic information about them.
+Click on the image below to go to the Allsky Map.
+</p>
+
+<img allsky="true" src="allsky-map-with-pins.png" class="imgCenter imgBorderDark" title="Example Allsky Map" loading="lazy">
+
+<p>
+To have your camera added, enable the <span class="WebUISetting">Show On Map</span>
+setting in the <b>Allsky Map Settings</b> section of the WebUI.
+If you don't see that section your version of the WebUI
+(and probably Allsky itself) is too old and needs to be updated.
+If your camera is already on the map you can remove it by turning the setting off.
+You can also update your information by changing any of the map-related fields.
+</p>
+<p>
+Once you've enabled the <span class="WebUISetting">Show On Map</span> setting,
+your map information will be automatically sent to the map server every other day
+so it can distinguish current data from old, expired data.
+</p>
+<p>
+All these changes take effect immediately - no human intervention required!
+</p>
+<p>
+Clicking on a pin on the map displays information about the camera and if the owner has
+set their image URL, you'll see the last image as well.
+And if the owner set their website URL you can click on the image to go to their Allsky website.
+</p>
+
+<p>
+See the <b>"Allsky Settings" Page</b> section of the
+<a allsky="true" href="/documentation/settings/allsky.html" target="_blank">Allsky Settings <i class="fa fa-external-link-alt fa-fw"></i></a>
+page for a description of each map-related setting in the WebUI.
+</p>
+
+
+<h2>My website isn't available on the Internet</h2>
+You can still have a pin of your camera's location appear on the map - just
+leave the <span class="WebUISetting">Website URL</span> and
+<span class="WebUISetting">Image URL</span> fields blank.
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

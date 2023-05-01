@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Troubleshooting Other Problems";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Other Problems</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This pages lists how to troubleshoot other problems that don't deserve their own page.
+</p>
+
+
+<h2>USB reset messages in system logs</h2>
+<details><summary></summary>
+<p>
+You can ignore entries similar to the following in the system logs:  
+<pre>
+Sep 15 17:44:28 Pi-Allsky kernel: [108641.695297] usb 1-1.5: reset
+	high-speed USB device number 4 using dwc_otg
+</pre>
+</p>
+<p>
+The ZWO software adds these whenever video mode is turned on,
+which is either once every time you start the AllSky Software,
+or every time and image is taken, depending on your settings.
+</p>
+
+</details>
+
+
+<h2>Can't save image because one is already being saved</h2>
+<details><summary></summary>
+<p>
+This message appears in <span class="fileName">/var/log/allsky.log</span>
+when the time to save and process an image is greater than the time to take an
+image plus the delay between images.
+For example, if it takes 10 seconds to save and process an image but your exposure time is
+1 second and your delay between exposures is 2 seconds (for a total of 3 seconds),
+the software will try to save the second picture while the first one is still being saved.
+</p>
+<p>
+<span class="fileName">png</span> files can take 10 or more seconds to save on a
+Pi 4 because there is no hardware support for them.
+You may also see this message if the delay between images is too short, e.g., less than a second.
+</p>
+<p>
+There also may be messages like these in <span class="fileName">/var/log/lighttpd/error.log</span>:
+<pre>
+2021-10-19 15:17:10: (chunk.c.831) file shrunk: /home/pi/allsky/tmp/image.jpg
+2021-10-19 15:17:10 (connections.c.456) connection closed: write failed on fd 8
+</pre>
+This means that a file shrunk in size while the web server was reading it.
+With these errors you'll usually see bands of pixels in the images.
+</p>
+<p>
+To fix this:
+<ul>
+<li>Increase your delay or save to
+<span class="fileName">jpg</span> format instead of <span class="fileName">png</span>.
+<li>If you have an extremely slow SD card try replacing it with a faster one.
+	Or, make the <span class="fileName">allsky/tmp</span> directory a memory-filesystem.
+	See the
+	<a allsky="true" href="/documentation/miscellaneous/tips.html">Reducing wear on your SDcard</a>
+	tip.
+</ul>
+</details>
+
+
+<h2>Images are too light or too dark</h2>
+<details><summary></summary>
+<p>
+Depending on what camera you have,
+you can try adjusting the <span class="WebUISetting">Gain</span>,
+<span class="WebUISetting">Brightness</span>,
+<span class="WebUISetting">Exposure</span>,
+and <span class="WebUISetting">Bin</span>.
+There are separate exposure-related settings for daytime and nighttime,
+so make sure you pick the right ones.
+During the day you'll normally use
+<span class="WebUISetting">Bin</span> of <span class="WebUIValue">1x1</span>
+(i.e., binning off), and
+<span class="WebUISetting">Gain</span> of <span class="WebUIValue">0</span>
+since images are bright enough that you don't need those settings.
+If your images are too dark using auto exposure and the exposure length doesn't increase,
+it may be hitting the maximum exposure limit.
+You can set it on the WebUI <span class="WebUIWebPage">Allsky Settings</span>
+page but note that ZWO cameras usually have a maximum auto exposure length of 60 seconds.
+</p>
+</details>
+
+
+<h2>Images are corrupted</h2>
+<details><summary></summary>
+<p>
+Various forms of image corruption have been observed:
+the right side of the image is full of repeating pixels,
+image contains parts of two or more frames, offset lines, etc.
+</p>
+<p>
+<ul>
+<li>Check your power supply and cooling.
+	The Pi will report on undervoltage and/or throttled status on the
+	<span class="WebUIWebPage">System</span> page of the WebUI.
+	If it doesn't say <b>No throttling</b> in green you should investigate and remediate.
+<li>If you have a ZWO camera it may be experiencing some internal firmware error;
+	reset the camera either by unplugging it or,
+	if you have the <code>uhubctl</code> command installed,
+	power cycling the port with
+	<pre>sudo uhubctl -a 2 $(grep -l 03c3 /sys/bus/usb/devices/*/idVendor | \
+		cut -d / -f 6 | sed -Ee 's/(.*)[.]([0-9]+)$/-l \1 -p \2/')</pre>
+</ul>
+</p>
+</details>
+
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

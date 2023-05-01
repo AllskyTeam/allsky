@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Troubleshooting the Allsky Website";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
+	<title>Website Troubleshooting</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This page lists various issues you may have with the Allsky Website and how to solve them.
+<p>
+
+<h2>WARNING: sunset is XX days old. Check Allsky log file if 'postData.sh' has been running...</h2>
+<p>
+If you have a local or remote Allsky Website, at the end of every night
+Allsky calls <code>postData.sh</code> to upload a small file called
+<span class="fileName">data.json</span> to the Website(s).
+This file contains the sunset time and other information needed by the Website.
+</p>
+If you are seeing the message above when you go to the Allsky Website in a browser,
+try running the command manually:
+<pre>cd ~/allsky/scripts
+./postData.sh</pre>
+
+There will be no output on success.
+If you see an error message and it's not obvious what it means, run:
+<pre>./postData.sh --debug</pre>
+which will produce many lines of debugging output which may help you determine
+where the problem is.
+At a minimum, it will provide something to attach to any trouble ticket you enter.
+
+<h2>ERROR: 'sunset' not defined in 'data.json' ...</h2>
+<p>
+Follow the instructions in the error message.
+If this message continues to appear,
+open a new <a href="https://github.com/thomasjacquin/allsky/issues">Issue</a>.
+</p>
+
+
+<h2>After changing the <span class="WebUISetting">Filename</span> in the WebUI you no longer see images on the Website</h2>
+<p>
+If you changed the <span class="WebUISetting">Filename</span> setting or its extension
+(for example, from <span class="fileName">image.jpg</span>
+to <span class="fileName">myimage.jpg</span>
+or from <span class="fileName">image.jpg</span> to <span class="fileName">image.png</span>)
+in the WebUI, this change should automatically be sent to your Website(s).
+If that didn't happen, you must manually update the
+<span class="editorSetting">fileName</span> value in
+the <span class="fileName">configuration.json</span> file (local and/or remote)
+via the WebUI's <span class="WebUILink">Editor</span> page.
+If that solved your problem, please
+open an <a href="https://github.com/thomasjacquin/allsky/issues">Issue</a> per
+<a allsky="true" href="/documentation/troubleshooting/reportingIssues.html">these instructions</a>.
+</p>
+
+
+<h2>Can't access the Website from a browser</h2>
+<p>
+If nothing appears when you go to the Website it's usually a settings issue.
+If the Website is on your Pi, look in
+<span class="fileName">/var/log/lighttpd/error.log</span> for clues to the problem.
+If the Website is remote, ask your hosting provider if you can have access to the web server's
+log file.
+<br>
+In both cases, you can also look at the <span class="fileName">configuration.json</span>
+file in the WebUI's <span class="WebUILink">Editor</span> page to see if the
+<a allsky="true" href="/documentation/settings/EditorColors.html">editor's colors are off</a>.
+If so, that indicates a syntax error in the file that needs to be fixed.
+</p>
+<p>
+If you are using the Pi's hostname in the URL,
+for example <code>http://allsky/allsky</code>, then try using the Pi's IP address,
+for example <code>http://192.168.0.21/allsky</code>.
+</p>
+
+<h2>Archived video files have no thumbnail</h2>
+<p>
+If you click on the
+<i class="fa fa-lg fa-fw fa-play-circle"></i> "Archived Timelapses" icon on the left side of the
+Website and one or more videos say "No Thumbnail", see below.
+</p>
+<div style="margin-left: 5em">
+<h3>On your Pi</h3>
+This shouldn't happen on the Pi - it should automatically create the thumbnails when
+you go to the archived timelapses directory.
+Look in <span class="fileName">/var/log/lighttpd/error.log</span> for clues to the problem.
+
+<h3>On a remote server</h3>
+<p>
+For security reasons, many hosting solutions disable the commands needed to create
+video thumbnails.
+</p>
+<p>
+To overcome this problem, edit the <span class="fileName">config.sh</span> file via the WebUI
+and set <span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span> to "true".
+If you are uploading mini-timelapse, also set
+<span class="shSetting">TIMELAPSE_MINI_UPLOAD_THUMBNAIL</span> to "true".
+<blockquote>
+Making this change will only create thumbnails for all <em>future</em> videos.
+To create the currently missing thumbnails, do the following for each missing date,
+replacing <code>YYYYMMDD</code> with the date in <span class="fileName">~/allsky/images</span>
+<pre>
+cd ~/allsky/scripts
+./generateForDay --thumbnail-only --upload -t YYYYMMDD
+</pre>
+This will upload the thumbnail for the specified date.
+</blockquote>
+</p>
+</div>
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

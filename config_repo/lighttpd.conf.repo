@@ -1,0 +1,77 @@
+server.modules = ( "mod_expire", "mod_setenv", "mod_indexfile", "mod_access", "mod_alias", "mod_redirect", "mod_cgi", )
+
+server.document-root        = "XX_ALLSKY_WEBUI_XX"
+server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
+server.errorlog             = "/var/log/lighttpd/error.log"
+server.pid-file             = "/var/run/lighttpd.pid"
+server.username             = "www-data"
+server.groupname            = "www-data"
+server.port                 = 80
+server.tag                  = "Allsky"
+
+dir-listing.activate = "enable"
+setenv.add-response-header += ( "X-Content-Type-Options" => "nosniff" )
+
+
+setenv.add-environment = (
+  "LANG" => env.LANG,
+  "ALLSKY_HOME" => "XX_ALLSKY_HOME_XX/"
+)
+
+alias.url		    = ("/current/" => "XX_ALLSKY_HOME_XX/")
+alias.url		    += ("/images/" => "XX_ALLSKY_IMAGES_XX/")
+alias.url		    += ("/website/" => "XX_ALLSKY_WEBSITE_XX/")
+alias.url		    += ("/documentation" => "XX_ALLSKY_DOCUMENTATION_XX/")
+alias.url		    += ("/overlay" => "XX_ALLSKY_OVERLAY_XX/")
+
+$HTTP["url"] =~ "^/cgi-bin/" {
+        cgi.assign = ( ".py" => "/usr/bin/python3" )
+        alias.url += ( "/cgi-bin/" => "XX_ALLSKY_HOME_XX/html/cgi-bin/" )
+}
+
+
+$HTTP["url"] =~ "^/current|.json$" {
+	# Don't cache the "current" image since it is constantly changing.
+	# Also don't cache .json files since they are configuration files that can change.
+	# This eliminates the need to add timestamps to URLs.
+	setenv.add-response-header += ( "Cache-Control" => "no-cache, proxy-revalidate" )
+} else {
+	$HTTP["url"] =~ "thumbnails|allsky/videos|allsky/startrails|allsky/keograms" {
+		# Output web pages with thumbnails as each thumbnail is read (or created) so the thumbnails appear quickly,
+		# rather than not outputing anything until the last thumbnail is created, which can be tens of seconds.
+		server.stream-response-body = 1
+	}
+
+	# Cache pages
+	setenv.add-response-header += ( "Cache-Control" => "max-age=31536000, immutable" )
+}
+
+$HTTP["url"] =~ "^/overlay/config/" {
+     url.access-deny = ("")
+}
+
+# strict parsing and normalization of URL for consistency and security
+# https://redmine.lighttpd.net/projects/lighttpd/wiki/Server_http-parseoptsDetails
+# (might need to explicitly set "url-path-2f-decode" = "disable"
+#  if a specific application is encoding URLs inside url-path)
+server.http-parseopts = (
+  "header-strict"           => "enable",# default
+  "host-strict"             => "enable",# default
+  "host-normalize"          => "enable",# default
+  "url-normalize-unreserved"=> "enable",# recommended highly
+  "url-normalize-required"  => "enable",# recommended
+  "url-ctrls-reject"        => "enable",# recommended
+  "url-path-2f-decode"      => "enable",# recommended highly (unless breaks app)
+  "url-path-dotseg-remove"  => "enable",# recommended highly (unless breaks app)
+)
+
+index-file.names            = ( "index.php", "index.html" )
+url.access-deny             = ( "~", ".inc" )
+static-file.exclude-extensions = ( ".php", ".pl", ".fcgi" )
+
+# default listening port for IPv6 falls back to the IPv4 port
+include_shell "/usr/share/lighttpd/use-ipv6.pl " + server.port
+include_shell "/usr/share/lighttpd/create-mime.conf.pl"
+include "/etc/lighttpd/conf-enabled/*.conf"
+
+server.modules += ( "mod_dirlisting", "mod_staticfile" )

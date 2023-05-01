@@ -1,0 +1,84 @@
+{
+    "fields": [
+        {
+            "label": "${DATE}  ${TIME}",
+            "x": 121,
+            "y": 24,
+            "id": "oe-field-0",
+            "format": "%d-%m-%Y,%H:%M:%S",
+            "strokewidth": 0,
+            "sample": "DATE,TIME",
+            "tlx": 9,
+            "tly": 10,
+            "fontsize": 28,
+            "fill": "#ff0000"
+        },
+        {
+            "label": "Exposure: ${sEXPOSURE}",
+            "x": 178,
+            "y": 54,
+            "id": "oe-field-1",
+            "fontsize": 28,
+            "strokewidth": 0,
+            "tlx": 9,
+            "tly": 40
+        },
+        {
+            "label": "Gain: ${GAIN}",
+            "x": 98,
+            "y": 84,
+            "id": "oe-field-2",
+            "fontsize": 28,
+            "strokewidth": 0,
+            "tlx": 9,
+            "tly": 70
+        },
+        {
+            "label": "Sensor: ${TEMPERATURE_C} C",
+            "x": 215,
+            "y": 114,
+            "id": "oe-field-3",
+            "format": "{:.1f}",
+            "fontsize": 28,
+            "strokewidth": 0,
+            "tlx": 9,
+            "tly": 100,
+            "sample": "20.1"
+        },
+        {
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
+            "x": 195,
+            "y": 1080,
+            "id": "oe-field-4",
+            "fontsize": 20,
+            "strokewidth": 0,
+            "sample": "ZWO ASI174MC",
+            "tlx": 9,
+            "tly": 1070
+        }
+    ],
+    "images": [],
+    "settings": {
+        "defaultdatafileexpiry": "550",
+        "defaultincludeplanets": false,
+        "defaultincludesun": false,
+        "defaultincludemoon": false,
+        "defaultimagetopacity": 0.63,
+        "defaultimagerotation": 0,
+        "defaulttextrotation": 0,
+        "defaultfontopacity": 1,
+        "defaultfontcolour": "white",
+        "defaultfont": "Arial",
+        "defaultfontsize": 52,
+        "defaultimagescale": 1,
+        "defaultnoradids": ""
+    },
+    "fonts": {
+        "moon_phases": {
+            "fontPath": "fonts\/moon_phases.ttf",
+            "fonttcolour": "red",
+            "backgroundcolor": "white",
+            "fontopacity": 0.5
+        }
+    }
+}

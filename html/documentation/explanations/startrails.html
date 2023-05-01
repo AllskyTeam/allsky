@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Startrails Explained";
+		}
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Startrails</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+<b>Startrails</b> are images that contain all the images from a night on top of each other.
+</p>
+<img allsky="true" src="startrails.png" title="Sample Startrails" class="imgCenter imgBorder" loading="lazy">
+
+<h2><code>startrails</code> program</h2>
+<details><summary></summary>
+<p>
+The <code>startrails</code> program can take arguments:
+</p>
+<pre>
+Usage: startrails [-v] -d &lt;dir&gt; -e &lt;ext&gt; [-b &lt;brightness&gt;] [-o &lt;output&gt;] [-S] [-s &lt;width&gt;x&lt;height&gt;]
+
+Arguments:
+-h : display this help, then exit
+-v : increase log verbosity
+-S : print image directory statistics without producing image.
+-d &lt;str&gt; : directory from which to read images
+-e &lt;str&gt; : filter images to just this extension
+-o &lt;str&gt; : output image filename
+-s &lt;int&gt;x&lt;int&gt; : restrict processed images to this size
+-b &lt;float&gt; : ranges from 0 (black) to 1 (white).
+        A moonless sky may be as low as 0.05 while full moon can be as high as 0.4
+</pre>
+
+<br><p>
+The only configuration option for startrails in <span class="fileName">config.sh</span> is
+<span class="shSetting">BRIGHTNESS_THRESHOLD</span> which defaults to
+<span class="editorNum">0.1</span>.
+Any image with an average brightness greater than this will
+be skipped during startrails image generation,
+so <b>almost all daytime images are skipped</b>.
+You may need to play around with this to get the best results,
+as allsky cameras, lenses, and sky brightnesses vary from person to person.
+</p>
+
+Example when running the program manually:
+<pre>
+./startrails -d ./images/20180223/ -e jpg -b 0.15 -o ./images/20180223/startrails/startrails.jpg
+</pre>
+
+<br><p>
+To disable automatic startrails, open <span class="fileName">config.sh</span> and set
+<span class="shSetting">STARTRAILS</span> to "false".
+<p>
+
+<blockquote>
+<b>Tip</b>: If you set the
+<span class="WEBUISetting">Image Width</span>
+and
+<span class="WEBUISetting">Image Height</span>
+of your camera in the WebUI <b>Camera Settings</b> page to the actual values of your camera,
+startrails generation will skip any file that's not the correct size.
+This will eliminate any garbage images that happen to be generated.
+</blockquote>
+
+</details>
+
+
+<h2>Troubleshooting</h2>
+<details><summary></summary>
+<p>
+If your startrails aren't working and you get a message
+<b>No images below threshold 0.100, writing the minimum image only</b>,
+this means all your images are too bright.
+If startrails previously worked, did you recently update the
+<span class="shSetting">BRIGHTNESS_THRESHOLD</span> setting in
+<span class="fileName">config.sh</span>?
+If so, set it back to what it used to be.
+</p>
+
+The key to getting startrails to work is making sure
+<span class="shSetting">BRIGHTNESS_THRESHOLD</span>
+is correct for your skies.
+To do this you need to know typical <b>nighttime</b> sky brightness values.
+Do the following (replace "DATE" below with the date of a non-working startrails):
+<ul>
+<li>Create a temporary directory to hold nighttime images:
+	<code>mkdir ~/allsky/images/test</code>.
+<li>Open a "File Manager" window and go into <span class="fileName">allsky/images/DATE</span>.
+<li>Using the time of each image, move the <b>nighttime</b> files to
+	<span class="fileName">allsky/images/test</span> (select with mouse,
+	then drag to the <span class="fileName">test</span> directory).
+	<b>nighttime</b> includes any file you want in the startrails image.
+<li><span class="fileName">cd ~/allsky/scripts</span>
+<li>Run s(tartrails) on the <span class="fileName">test</span> directory,
+	which contains only nighttime images: <code>./generateForDay.sh -s test</code>.
+<li>It should say <b>No images below...</b>.
+<li>Look at the "Minimum..." line.
+	Set the <span class="shSetting">BRIGHTNESS_THRESHOLD</span>
+	to the maximum, or slightly below it.
+<li><code>./generateForDay.sh -s test &nbsp; &nbsp; # this should give pretty good results</code>
+<li>Adjust <span class="shSetting">BRIGHTNESS_THRESHOLD</span>
+	and re-run <code>generateForDay.sh</code> as needed.
+<li>When done, in the "File Manager",
+	move all the images in <span class="fileName">allsky/images/test</span>
+	back to <span class="fileName">allsky/images/DATE</span>.
+<li><code>rm -fr ~/allsky/images/test &nbsp; &nbsp; # remove the temporary directory</code>
+<li>Now, create the final startrails:
+	<ul>
+	<li><code>./generateForDay.sh -s DATE</code>
+	<li>If you want to upload the <span class="fileName">startrails.jpg</span>
+		file you just created, see the note generated by <code>generateForDay.sh</code>.
+	</ul>
+</ul>
+</details>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

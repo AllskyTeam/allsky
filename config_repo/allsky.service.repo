@@ -1,19 +1,20 @@
 [Unit]
-Description=All Sky Camera
+Description=AllSky Camera Service
 After=multi-user.target
+Wants=allskyperiodic.service
 
 [Service]
-User=pi
-ExecStart=/home/pi/allsky/allsky.sh
-SyslogFacility=local5
+User=XX_ALLSKY_OWNER_XX
+ExecStart=XX_ALLSKY_HOME_XX/allsky.sh
+SyslogIdentifier=allsky
 Restart=on-success
-RestartSec=5
-; exit status 100 means fatal error the user needs to fix, so don't restart
-RestartPreventExitStatus=100
+RestartSec=2
+; exit status 100 and higher mean a fatal error the user needs to fix, so don't restart
+RestartPreventExitStatus=100 101
 ; XXX RestartKillSignal is not recognized by the systemd that comes with Buster (not sure about Bullseye),
 ; so use ExecReload instead.
 ; RestartKillSignal=SIGUSR1
-ExecReload=/home/pi/allsky/scripts/reload.sh $MAINPID
+ExecReload=XX_ALLSKY_SCRIPTS_XX/reload.sh $MAINPID
 
 [Install]
 WantedBy=multi-user.target

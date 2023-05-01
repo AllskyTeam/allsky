@@ -1,0 +1,71 @@
+{
+    "loadimage": {
+        "module": "allsky_loadimage.py",
+        "metadata": {
+            "name": "Loads the latest image",
+            "description": "Loads the last captured image",
+            "ignorewatchdog": "True",
+            "module": "allsky_loadimage",
+            "events": {
+                "0": "day",
+                "1": "night"
+            },
+            "experimental": false,
+            "arguments": {}
+        },
+        "type": "system",
+        "enabled": true,
+        "position": "first"
+    },
+    "overlay": {
+        "module": "allsky_overlay.py",
+        "metadata": {
+            "name": "Overlays data on the image",
+            "description": "Overlays data fields on the image",
+            "module": "allsky_overlay",
+            "events": {
+                "0": "day",
+                "1": "night"
+            },
+            "arguments": {
+                "suntimeformat": "",
+                "nonighttext": ""
+            },
+            "argumentdetails": {
+                "suntimeformat" : {
+                    "required": "false",
+                    "tab": "Sun",
+                    "description": "Date Time format",
+                    "help": "Overrides the default date and time format for the Sun. If this option is not set then the default AllSky 'Time Format' will be used"
+                },
+                "nonighttext" : {
+                    "required": "false",
+                    "tab": "Sun",
+                    "description": "No Night Time text",
+                    "help": "The text to replace the times for 'night' and 'night end' where there is no astronomical darkness"
+                } 
+            },
+            "experimental": false
+        },
+        "type": "system",
+        "enabled": true
+    },
+    "saveimage": {
+        "module": "allsky_saveimage.py",
+        "metadata": {
+            "name": "Saves the image",
+            "description": "Saves the image",
+            "ignorewatchdog": "True",
+            "module": "allsky_saveimage",
+            "events": {
+                "0": "day",
+                "1": "night"
+            },
+            "experimental": false,
+            "arguments": {}
+        },
+        "type": "system",
+        "enabled": true,
+        "position": "last"
+    }
+}

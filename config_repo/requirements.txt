@@ -1,0 +1,15 @@
+opencv_python>=4.5.3.56
+Pillow
+pyephem
+skyfield
+astral
+pytz
+scipy
+scikit-image
+paho-mqtt
+numpy>=1.23.3
+photutils
+astropy
+suncalc
+Adafruit-Blinka
+vcgencmd

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before { 
+			content: "Miscellaneous Tips";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Tips</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<blockquote>
+This page contains miscellaneous tips that don't neatly fall into one of the other pages.
+</blockquote>
+
+<h2>Reducing wear on your SDcard</h2>
+<details><summary></summary>
+<p>
+SDcards have a limited number of writes they can handle before they wear out.
+Although this is usually a very large number you may wish nonetheless to
+minimize writes to the SDcard.
+The bet way to do this is by making Allsky's <span class="fileName">allsky/tmp</span>
+directory a memory-based filesystem,
+i.e., instead of residing on the SDcard it resides in RAM memory.
+
+<blockquote>
+During Allsky installation you were prompted to create
+<span class="fileName">tmp</span> as a memory-based filesystem.
+If you did that you can ignore this tip.
+</blockquote>
+
+Note the following:
+<ul>
+<li>In order to do this you'll need enough free RAM memory,
+	so this may not work well with systems with very limited memory, for example, 512 MB.
+<li>The contents of the <span class="fileName">tmp</span>
+	directory will be erased every time you reboot your Pi.
+	This should be ok since it's only used for temporary log files and to hold images
+	as they come out of the camera,
+	before they are stored in <span class="fileName">allsky/images/DATE</span>.
+</ul>
+<p>
+It's simple to create a memory-based filesystem:
+<pre>
+cd ~/allsky
+./install.sh --function check_tmp
+</pre>
+
+It's suggested you accept the defaults.
+</details>
+
+<h2>Focusing the camera</h2>
+<details><summary></summary>
+<p>
+Try get your camera at least roughly focused during the day.
+It'll be easier to see your focus ring, and exposure duration will be much shorter so
+you'll get more instant feedback.
+</p>
+<p>
+To complete focus, enable the <span class="WebUISetting">Show Focus Metric</span>
+setting in the WebUI's <b>Allsky Settings</b> page.
+A focus number will appear on your images - the higher the number, the better focus you have.
+Note that the number can change depending on the brightness,
+so focus when the brightness isn't changing.
+<p>
+When done focusing, disable the <span class="WebUISetting">Show Focus Metric</span>
+setting since it's no longer needed.
+</p>
+</details>
+
+
+<h2>Pro-tip: install <code>gh</code> on your Pi so you can easily collaborate using Github Gists</h2>
+<details><summary></summary>
+<p>
+Click <a href="https://cli.github.com/">here</a>
+for the full details or download the latest release from
+<a href="https://github.com/cli/cli/releases/latest">here</a>.
+Once you have the Command Line Interface (CLI) installed,
+you can easily upload a script you wrote with something like:
+<pre>
+gh gist create -d "a tool to find alien spaceships" < my_awesome_allsky_script.py
+</pre>
+
+or share logs using something like
+<pre>
+journalctl --since 05:00 -u allsky | gh gist create
+gh gist create < log.txt
+</pre>
+
+</details>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Troubleshooting Image Flicker";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Image Flicker</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+
+<h2>Images flicker or strobe in brightness</h2>
+
+<h3>During Daytime AND Nighttime</h3>
+<p>
+If images in the WebUI's Liveview mode or the Allsky Website flicker every
+time a new image appears, it is probably because you are using the Firefox browser.
+It has a known issue with image updates.
+Please try a different browser.
+To ensure the issue is browser-related,
+look at the images saved in <span class="fileName">~/allsky/images/DATE</span>
+to see if they flicker.
+</p>
+
+<h3>Daytime only flicker - ZWO cameras</h3>
+<p>
+Daytime auto exposures with ZWO cameras use an AllSky algorithm that looks
+at part of the image (called the <b>histogram box</b>) to determine the average brightness,
+and adjusts exposure to keep the brightness within an acceptable range.
+By default the histogram box is centered on the image.
+If the Sun or Moon go through that box, your images may flicker, especially if it is cloudy.
+If that's the case, try moving the histogram box to one of the corners
+(but be sure it's within the image the camera lens produces and NOT in the black border).
+You can also try adjusting the histogram box size - it should be around 15% of the
+width of the camera sensor in pixels.
+For a sensor that's 1000 pixels wide, a histogram box of 150 pixels wide is a good place to start.
+</p>
+<p>
+If you are STILL having flicker issues after doing the above,
+please do the following so we can debug:
+<pre>
+sudo systemctl stop allsky
+sudo truncate -s 0 /var/log/allsky.log
+</pre>
+In the WebUI change the <span class="WebUISetting">Debug Level</span> to
+<span class="WebUIValue">4</span> then click on
+<img allsky="true" class="buttonIcon" src="/documentation/img/saveChangesButton.png">.
+Let it run for a couple minutes so it includes the flickering,
+then upload <span class="fileName">/var/log/allsky.log</span>.
+</p>
+
+<h3>Nighttime only flicker - ZWO</h3>
+<p>
+Nighttime images use the ZWO algorithm, not the Allsky algorithm for auto exposure.
+If you see flickering at night, try the following - these steps have helped some people,
+but not everyone:
+<ul>
+<li>Toggle the <span class="WebUISetting">Version 0.8 Exposure</span> setting in the WebUI.
+<li>Change the <span class="WebUISetting">USB Bandwidth</span> and
+	<span class="WebUISetting">Auto USB</span> settings in the WebUI.
+<li>Add a more powerful power supply to the Pi,
+	or a thicker/shorter wire from the power supply to the Pi.
+	The Pi may not be getting enough power,
+	which causes it to not provide enough power to the camera.
+<li>Add a powered USB 3 hub between the Pi and the camera
+	to ensure the camera's getting enough power.
+<li>Update the Pi's firmware by executing <code>sudo rpi-update</code>.
+</ul>
+
+<blockquote>
+We are still investigating nighttime flickering, since it only happens for some cameras,
+and didn't happen with Allsky version 0.7.
+</blockquote>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

@@ -1,0 +1,11 @@
+{
+    "gridVisible": true,
+    "gridSize": "20",
+    "gridOpacity": 35,
+    "snapBackground": true,
+    "addlistpagesize": "20",
+    "addfieldopacity": 15,
+    "selectfieldopacity": 30,
+    "mousewheelzoom": false,
+    "backgroundopacity": 40
+}

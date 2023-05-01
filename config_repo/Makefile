@@ -7,7 +7,8 @@ bindir = ${exec_prefix}/bin
 libexecdir = ${exec_prefix}/libexec/allsky
 sharedir = ${exec_prefix}/share/allsky
 
-PDIR = $(shell dirname "$$PWD")
+HOMEDIR = $(shell dirname "$$PWD")
+SCRIPTSDIR = ${HOMEDIR}/scripts
 
 .DEFAULT_GOAL := all
 
@@ -23,8 +24,8 @@ ifeq ($(PKGBUILD),)
 endif
 
 
-CONFIGFILES := settings_ZWO.json settings_RPiHQ.json config.sh ftp-settings.sh
-UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service
+CONFIGFILES := config.sh ftp-settings.sh 
+UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/allskyperiodic.service
 
 %:
 	@echo `date +%F\ %R:%S` nothing to do for $@
@@ -73,10 +74,11 @@ install: createDirs $(CONFIGFILES)
 	@install -D -m 0644 allsky.logrotate.repo $(DESTDIR)$(sysconfdir)/logrotate.d/allsky
 	@install -D -m 0644 allsky.rsyslog.repo $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf
 	@echo `date +%F\ %R:%S` Setting allsky to auto start...
-	@sed -e "s|User=pi|User=allsky|g" -e "s|/home/pi/allsky|$(bindir)|g" allsky.service.repo > allsky.service
+	@sed -e "s|XX_ALLSKY_OWNER_XX|allsky|" -e "s|XX_ALLSKY_HOME_XX|$(bindir)|" allsky.service.repo > allsky.service
 	@install -m 0644 allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/
+	@rm -f allsky.service
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
-	@echo -e "export ALLSKY_TMP=/tmp\nexport ALLSKY_CONFIG=$(DESTDIR)$(sysconfdir)/allsky\nexport ALLSKY_SCRIPTS=$(DESTDIR)$(libexecdir)\nexport ALLSKY_NOTIFICATION_IMAGES=$(DESTDIR)$(sharedir)\nexport ALLSKY_IMAGES=/home/allsky/Pictures/" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
+	@echo -e "export ALLSKY_TMP=/tmp\nexport ALLSKY_CONFIG=$(DESTDIR)$(sysconfdir)/allsky\nexport ALLSKY_SCRIPTS=$(DESTDIR)$(libexecdir)\nexport ALLSKY_NOTIFICATION_IMAGES=$(DESTDIR)$(sharedir)\nexport ALLSKY_IMAGES=/home/allsky/images/" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
 
 else # Not in package build mode
 remove_configs:
@@ -90,7 +92,6 @@ createDirs:
 	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi
 
 .PHONY : createDirs
-
 $(CONFIGFILES):
 	@if [ ! -e ../config/$@ ]; then \
 	  echo `date +%F\ %R:%S` Copying default $@; \
@@ -105,16 +106,24 @@ install: createDirs $(CONFIGFILES)
 	@install -D -m 0644 allsky.logrotate.repo $(DESTDIR)$(sysconfdir)/logrotate.d/allsky
 	@install -D -m 0644 allsky.rsyslog.repo $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf
 	@udevadm control -R
+	@udevadm trigger
 	@echo `date +%F\ %R:%S` Setting allsky to auto start...
 	@if [ -e /etc/xdg/lxsession/LXDE-pi/autostart ]; then \
 	  sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart; fi
-	@sed -e "s|User=pi|User=$(SUDO_USER)|g" -e "s|/home/pi/allsky|$(PDIR)|g" allsky.service.repo > allsky.service
+	@# Don't use the /lib/systemd/system directory
+	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" -e "s|XX_ALLSKY_HOME_XX|$(HOMEDIR)|" -e "s|XX_ALLSKY_SCRIPTS_XX|$(SCRIPTSDIR)|" allsky.service.repo > allsky.service
 	@install -m 0644 allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/
+	@rm -f allsky.service
 	@if [ -e /lib/systemd/system/allsky.service ]; then rm -f /lib/systemd/system/allsky.service; fi
+	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" -e "s|XX_ALLSKY_SCRIPTS_XX|$(SCRIPTSDIR)|" allskyperiodic.service.repo > allskyperiodic.service
+	@install -m 0644 allskyperiodic.service $(DESTDIR)$(sysconfdir)/systemd/system/
+	@rm -f allskyperiodic.service
+	@if [ -e /lib/systemd/system/allskyperiodic.service ]; then rm -f /lib/systemd/system/allskyperiodic.service; fi
 	@systemctl daemon-reload
 	@systemctl enable allsky
+	@systemctl enable allskyperiodic
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
-	@echo "export ALLSKY_HOME=$(PDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
+	@echo "export ALLSKY_HOME=$(HOMEDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
 .PHONY : install
 endif # Package build check
 endif # Root check

@@ -1,0 +1,226 @@
+{
+    "data": [
+        {
+            "format": "%d-%m-%y",
+            "description": "Short date",
+            "example": "25-12-23",
+            "type": "date"
+        },
+        {
+            "format": "%d-%m-%y %H:%m",
+            "description": "Short date and time",
+            "example": "25-12-23 23:10",
+            "type": "date"
+        },        
+        {
+            "format": "%m-%d-%y",
+            "description": "Short US date",
+            "example": "12-25-23",
+            "type": "date"
+        },
+        {
+            "format": "%m-%d-%y %H:%m",
+            "description": "Short US date and time",
+            "example": "12-25-23 23:10",
+            "type": "date"
+        },        
+        {
+            "format": "%a",
+            "description": "Abbreviated weekday name.",
+            "example": "Sun, Mon, ...",
+            "type": "date"
+        },
+        {
+            "format": "%A",
+            "description": "Full weekday name.",
+            "example": "Sunday, Monday, ...",
+            "type": "date"
+        },
+        {
+            "format": "%w",
+            "description": "Weekday as a decimal number.",
+            "example": "0, 1, ..., 6",
+            "type": "date"
+        },  
+        {
+            "format": "%d",
+            "description": "Day of the month as a zero added decimal.",
+            "example": "01, 02, ..., 31",
+            "type": "date"
+        },         
+        {
+            "format": "%-d",
+            "description": "Day of the month as a decimal number.",
+            "example": "1, 2, ..., 31",
+            "type": "date"
+        },        
+        {
+            "format": "%b",
+            "description": "Abbreviated month name.",
+            "example": "Jan, Feb, ..., Dec",
+            "type": "date"
+        }, 
+        {
+            "format": "%B",
+            "description": "Full month name.",
+            "example": "January, February, ...",
+            "type": "date"
+        }, 
+        {
+            "format": "%m",
+            "description": "Month as a zero added decimal number.",
+            "example": "01, 02, ..., 12",
+            "type": "date"
+        }, 
+        {
+            "format": "%-m",
+            "description": "Month as a decimal number.",
+            "example": "1, 2, ..., 12",
+            "type": "date"
+        }, 
+        {
+            "format": "%y",
+            "description": "Year without century as a zero added decimal number.",
+            "example": "00, 01, ..., 99",
+            "type": "date"
+        }, 
+        {
+            "format": "%-y",
+            "description": "Year without century as a decimal number.",
+            "example": "0, 1, ..., 99",
+            "type": "date"
+        }, 
+        {
+            "format": "%Y",
+            "description": "Year with century as a decimal number.",
+            "example": "2013, 2019 etc.",
+            "type": "date"
+        },
+        {
+            "format": "%H",
+            "description": "Hour (24-hour clock) as a zero added decimal number.",
+            "example": "00, 01, ..., 23",
+            "type": "date"
+        },
+        {
+            "format": "%-H",
+            "description": "Hour (24-hour clock) as a decimal number.",
+            "example": "0, 1, ..., 23",
+            "type": "date"
+        },
+        {
+            "format": "%I",
+            "description": "Hour (12-hour clock) as a zero added decimal number.",
+            "example": "01, 02, ..., 12",
+            "type": "date"
+        },
+        {
+            "format": "%-I",
+            "description": "Hour (12-hour clock) as a decimal number.",
+            "example": "1, 2, ..., 12",
+            "type": "date"
+        },
+        {
+            "format": "%p",
+            "description": "Locale's AM or PM.",
+            "example": "AM, PM",
+            "type": "date"
+        },
+        {
+            "format": "%M",
+            "description": "Minute as a zero added decimal number.",
+            "example": "00, 01, ..., 59",
+            "type": "date"
+        },
+        {
+            "format": "%-M",
+            "description": "Minute as a decimal number.",
+            "example": "0, 1, ..., 59",
+            "type": "date"
+        },
+        {
+            "format": "%S",
+            "description": "Second as a zero added decimal number.",
+            "example": "00, 01, ..., 59",
+            "type": "date"
+        },
+        {
+            "format": "%-S",
+            "description": "Second as a decimal number.",
+            "example": "0, 1, ..., 59",
+            "type": "date"
+        },
+        {
+            "format": "%z",
+            "description": "UTC offset in the form +HHMM or -HHMM.",
+            "example": "+0100",
+            "type": "date"
+        },
+        {
+            "format": "%Z",
+            "description": "Time zone name.",
+            "example": "Europe/London",
+            "type": "date"
+        },
+        {
+            "format": "%j",
+            "description": "Day of the year as a zero added decimal number.",
+            "example": "001, 002, ..., 366",
+            "type": "date"
+        },
+        {
+            "format": "%-j",
+            "description": "Day of the year as a decimal number.",
+            "example": "1, 2, ..., 366",
+            "type": "date"
+        },
+        {
+            "format": "{:.0f}",            
+            "description": "Floating point zero decimal places",
+            "example": "52",
+            "type": "number"
+        },
+        {
+            "format": "{:.2f}",            
+            "description": "Floating point 2 decimal places",
+            "example": "52.00",
+            "type": "number"
+        },        
+        {
+            "format": "{:,}",
+            "description": "Comma for thousands separator",
+            "example": "800,000",
+            "type": "number"
+        },
+        {
+            "format": "{:n}",
+            "description": "Use locale thousands separator",
+            "example": "800.000",
+            "type": "number"
+        },
+        {
+            "format": "%yes",
+            "description": "Output Yes (if input is 1) or No",
+            "example": "Yes, No",
+            "type": "bool"
+        },
+        {
+            "format": "%on",
+            "description": "Output On (if input is 1) or Off",
+            "example": "On, Off",
+            "type": "bool"
+        },
+        {
+            "format": "%true",
+            "description": "Output True (if input is 1) of False",
+            "example": "True, False",
+            "type": "bool"
+        },
+        {
+            "format": "%1",
+            "description": "Output 1 (if input is 1) or 0",
+            "example": "1, 0",
+            "type": "bool"
+        }
+    ]
+}

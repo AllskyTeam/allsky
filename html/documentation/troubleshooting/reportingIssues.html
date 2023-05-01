@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Reporting Issues";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Reporting Issues</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+If you have a <b>QUESTION</b> or want to suggest a <b>NEW FEATURE</b>,
+add a new <a href="https://github.com/thomasjacquin/allsky/discussions">Discussion</a>
+item via the link at the top of any GitHub page; do <u>not</u> submit an Issue.
+</p>
+<p>
+If you found a <b>BUG</b> or something isn't working right,
+first look in the
+<a href="https://github.com/thomasjacquin/allsky/discussions">Discussions</a>
+area and at existing Issues.
+If no one has already reported the problem, create a new Issue.
+</p>
+<p>
+We cannot debug a problem without the Allsky log file
+(<span class="fileName">/var/log/allsky.log</span>) so if you want help you <b>must</b> attach it.
+The following commands create the proper log file:
+<pre>
+sudo systemctl stop allsky               # Stop the allsky service
+sudo truncate -s 0 /var/log/allsky.log   # clears out log file
+# Do NOT restart the service yet
+</pre>
+</p>
+<p>
+Change <span class="WebUISetting">Debug Level</span> to 4 in the WebUI then click on the
+<img allsky="true" class="buttonIcon" src="/documentation/img/saveChangesButton.png"> button.
+This will restart the service.
+</p>
+<p>
+Wait until the problem occurs, then run <code>sudo systemctl stop allsky</code>
+to stop Allsky so the log file doesn't keep growing, making it hard to read.
+Then attach <span class="fileName">/var/log/allsky.log</span>
+(<b>do <u>not</u> copy/paste it</b>) to your Issue in GitHub.
+If the problem may be related to your configuration,
+also attach <span class="fileName">~/allsky/config/config.sh</span>.
+<p>
+<blockquote>
+GitHub only accepts text files ending in <span class="fileName">.txt</span>
+and <span class="fileName">.log</span>.
+If your file has a different extension,
+append a <span class="fileName">.txt</span> to it, i.e.,
+<span class="fileName">config.sh.txt</span>.
+</blockquote>
+</p>
+<p>
+Do NOT zip your files; it makes it hard to read on a phone.
+If you feel you need to zip a file you probably didn't follow the instructions above.
+</p>
+<p>
+In your description, please include the output of <code>cd ~/allsky; git log | head</code>.
+</p>
+<blockquote>
+When you create a new Issue, you will see a list of instructions and required information.
+</blockquote>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Pi Basics";
+		}
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Pi Basics</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<h1>Overview</h1>
+<p>
+This page is for people with little or no Pi experience.
+To keep the other Allsky documentation pages a manageable length,
+they assume you have basic Pi knowledge.
+For example, you know how to turn a Pi on and off and how to connect a camera to it.
+</p>
+
+<h3>Operating Systems</h3>
+<details><summary></summary>
+<p>
+The Linux operating system controls the Pi's hardware and lets you run software
+such as Allsky.
+The two most common versions of the Linux operating system for the Pi are
+<b>Buster</b> which was released several years ago, and
+<b>Bullseye</b> which was released late 2021.
+Allsky runs on both operating systems.
+Most people are running the 32-bit version of the operating systems,
+although some people have the 64-bit version of Bullseye.
+</p>
+<p>
+There are also different distributions of Linux (called "distros") from various companies.
+While they are basically the same Linux,
+there can be subtle differences and the administrative commands can vary.
+The recommended Linux distro is <b>Debian</b>.
+</p>
+</details>
+
+<h3>Raspberry Pi Models</h3>
+<details><summary></summary>
+<p>
+There are several models of the Pi including 1, 2, 3, 4, Zero, and others.
+The Pi 3 and 4 are the most common being used for Allsky,
+but some people have the Pi Zero because of its low cost.
+The various models have different processing power;
+the Pi 4 is the most powerful, followed by the 3, then 2, then 1.
+The Zero is somewhere around the Pi 3 in terms of processing power.
+The Pi 4 is available with up to 8 GB memory whereas the Pi Zero is limited to 0.5 GB memory.
+Although Allsky can run on the Zero, several GB of swap space are needed,
+and even then, Allsky just barely runs.
+The ideal unit is a Pi 4 with 4 GB memory.
+Allsky runs nicely on that and the USB 3.0 ports are nice for cameras that support it.
+</p>
+</details>
+
+<h3>Hardware Overview</h3>
+<details><summary></summary>
+<p>
+Newer devices come with USB 2 ports and the Pi 4 has a couple USB 3 ports.
+They also have a special port to plug the RPi High Definition (HD) camera into.
+</p>
+</details>
+
+<h3 style="color: red">MORE TO COME</h3>
+If you have any suggestions on what should be added here,
+please add a <a href="https://github.com/thomasjacquin/allsky/discussions">Discussion</a> item.
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="js/documentation.js" type="application/javascript"></script>
+	<link href="css/light.css" rel="stylesheet">
+	<link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Version Change Log";
+		}
+	</style>
+	<link href="css/documentation.css" rel="stylesheet">
+	<link href="documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="js/all.min.js" type="application/javascript"></script>
+	<title>Allsky Version Change Log</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This page lists the changes to all the major Allsky releases.
+You can also see the <a allsky="true" external="true" href="knownIssues.html">Known Issues and Limitations</a>
+of the current release.
+</p>
+
+<blockquote>
+Wonder what all the colors below mean?
+Check out <a allsky="true" external="true" href="settings/EditorColors.html">this page</a>.
+</blockquote>
+
+<h2>v2023.03.28_tbd - Current Release</h2>
+<details><summary></summary>
+
+<h4>Core Allsky</h4>
+<ul>
+	<li>New camera support:
+		<ul class="minimalPadding">
+			<li>All ZWO cameras as of March 22, 2023.
+			<li>RPi HQ and Module 3 cameras.
+			<li>ArduCam 16 and 64 MP cameras.
+			<li>The RPi "Global Shutter Camera" is NOT supported - high speed shutters aren't useful for allsky images.
+		</ul>
+	<li>"Mini" timelapse videos can be created that contain a user-configurable
+		number of the most recent images.
+		This allows you to continually see the recent sky conditions.
+	<li>Installation improvements:
+		<ul class="minimalPadding">
+			<li>If there is not enough swap space configured you are prompted to add more.
+				Doing this decreases the chance of timelapse creation problems.
+			<li>If <span class="fileName">allsky/tmp</span> is not a memory-resident
+				filesystem you are prompted to make it one.
+				This SIGNIFICANTLY decreases the number of writes to the SD card, prolonging its life.			
+			<li>If a <span class="fileName">~/allsky-OLD</span> directory is found it's
+				assumed to be a prior release of Allsky and you are prompted to have its images,
+				darks, and other items moved to the new release.
+				See the <a allsky="true" external="true" href="installation/Allsky.html">Installing / Upgrading -&gt; Allsky</a>
+				page for instructions for installing this release.
+		</ul>
+	<li><code>scripts/check_allsky.sh</code> was added to perform basic sanity
+		checking of your Allsky installation.
+		Run it after you're done configuring Allsky to see if you have any issues.
+	<li><span class="WebUISetting">latitude</span> and <span class="WebUISetting">longitude</span>
+		can now be specified as either a decimal number
+		(e.g., <code>-105.21</code>) or with N, S, E, W (e.g., <code>105.21W</code>).
+	<li>Removed several settings from <span class="fileName">config.sh</span>:
+		<ul class="minimalPadding">
+			<li><span class="shSetting">CAMERA</span>: To update the camera type, use the new
+				<span class="WebUISetting">Camera Type</span> setting in the WebUI.
+				This is an advanced setting so you need to click the "Show Advanced Options" button to view it.
+			<li><span class="shSetting">POST_END_OF_NIGHT_DATA</span> is no longer needed since
+				Allsky automatically determines if you have a local Allsky Website, a remote one, or both.
+		</ul>
+	<li>New ftp-settings.sh variables:
+		<ul class="minimalPadding">
+			<li><span class="shSetting">REMOTE_PORT</span> specifies a non-default FTP port.
+			<li><span class="shSetting">SSH_KEY_FILE</span> is the path to an SSH private key.
+				When <span class="editorString">scp</span> is used for uploads,
+				this identify file will be used to establish the secure connection.
+			<li>The Secure CP (<span class="editorString">scp</span>) and Google Cloud Service
+				(<span class="editorString">gcs</span>) protocols are now supported for file uploads.
+		</ul>
+	<li>The Wiki now points to files in the GitHub <span class="fileNamw">documentation</span> directory.
+		A copy of that directory is also on the Pi and accessible via the Documentation link in the WebUI.
+	<li>The Allsky Documentation has been <strong>significantly</strong> enhanced and expanded.
+		Its goal is to be a single source for everything you need to know about Allsky.
+		If you don't know how to do something, look it up.
+		If it's not in the documentation, let us know.
+	<li><span class="shSetting">AUTO_STRETCH</span> now works, and is documented with sample images.
+	<li>Images can now be uploaded using the full <span class="fileNamw">image-YYYYMMDDHHMMSS.jpg</span>
+		name instead of the shorter <span class="fileName">image.jpg</span> name.
+		See the <span class="shSetting">IMG_UPLOAD_ORIGINAL_NAME</span> Allsky setting in the documentation.
+	<li>Many minor enhancements and bug fixes were made.
+</ul>
+
+
+<h4>WebUI</h4>
+<ul>
+	<li>The WebUI is now installed as part of the Allsky installation and <strong>must</strong> be
+		used to make all settings changes.
+		<blockquote>
+		The <a external="true" href="https://github.com/thomasjacquin/allsky-portal">allsky-portal</a>
+		repository will be removed as it is no longer needed.
+		</blockquote>
+	<li>New links on the left side of the WebUI:
+		<ul class="minimalPadding">
+			<li><span class="WebUILink">Overlay Editor</span> allows you to drag and drop the text
+				and images you want overlayed on the images.
+				This is a <strong>significant</strong> improvement over the old mechanism and lets you
+				vary the font size, color, rotation, etc. for everything you add.
+				You can use variables in the text which get replaced at run-time, e.g., the time the image was taken.
+			<li><span class="WebUILink">Module Manager</span> allows you to specify what actions should
+				take place after an image has been saved.
+				For example you can add an overlay or count the number of stars or periodically control a dew heater.
+				Users can develop (and hopefully share) their own modules.
+				Full notes on how to <a allsky="true" external="true" href="modules/modules.html">develop modules</a>
+				is included in the documentation.
+			<li>The <span class=">WebUILink">Allsky Documentation</span>
+				link accesses the documentation on your Pi.
+		</ul>
+	<li>Minimum, maximum, and default values are now correct for all camera models.
+	<li>Required fields with missing data are shown in red with a message saying the data is missing.
+		For example, <span class="WebUISetting">Latitude</span> is a required field.
+	<li>New settings on the <span class="WebUILink">Allsky Settings</span> page:
+		<ul class="minimalPadding">
+			<li><span class="WebUISetting">Camera Type</span> is either ZWO or RPi.
+				This replaces the <span class="shSetting">CAMERA</span> variable in the
+				<span class="fileName">config.sh</span>
+				file and also allows you to switch between cameras connected to the Pi.
+				For example, if you have both an RPi and ZWO camera attached, you can switch between them using this setting.
+			<li><span class="WebUISetting">Max Auto-Exposure</span> for day and night.
+				When using auto-exposure, exposure times will not exceed this value.
+			<li><span class="WebUISetting">Max Auto-Gain</span> for day and night.
+				When using auto-gain, gain values will not exceed this value.
+			<li><span class="WebUISetting">Auto White Balance</span>, <span class="WebUISetting">Red Balance</span>,
+				and <span class="WebUISetting">Blue Balance</span> are now available for day and night.
+			<li><span class="WebUISetting">Frames to Skip</span> for day and night determine how many initial
+				auto-exposure frames to ignore when starting Allsky, while the auto-exposure
+				algorithm homes in on the correct exposure.
+				These frames are often over or under exposed so not worth saving anyhow.
+			<li><span class="WebUISetting">Consistent Delays</span> determines whether or not the time between the start of
+				exposures will be consistent (current behavior) or not.
+				When enabled, the time between images is the maximum exposure time plus the delay you set.
+			<li><span class="WebUISetting">Overlay Method</span> determines if the text overlay (exposure, time, etc.)
+				should be done by the legacy program or by the new "module" system (see above).
+				<blockquote>The default method will change to the module method in the next release of Allsky,
+				and after that the legacy overlay method will be removed.
+				</blockquote>
+			<li><span class="WebUISetting">Require WebUI Login</span> specifies whether
+				or not the WebUI should require you to login.
+				Only set this to <span class="WebUIValue">No</span>
+				if your Pi is on a local network and you trust everyone on the network.
+				<strong>Do NOT disable it if your Pi is accessible via the Internet!</strong>
+			<li><span class="WebUISetting">Cooling</span> and <span class="WebUISetting">Target Temp.</span>
+				(ZWO only) now have separate settings for day and night.
+			<li><span class="WebUISetting">Aggression</span> (ZWO only)
+				determines how much of a calculated exposure change should be applied.
+				This helps smooth out brightness changes, for example, when a car's headlights appear in one frame.
+			<li><span class="WebUISetting">Gamma</span> (ZWO only) changes the contrast of an image.
+				It is only supported by a few cameras; for those that don't,
+				the <span class="shSetting">AUTO_STRETCH</span> setting can produce a similar effect.
+			<li><span class="WebUISetting">Offset</span> (ZWO only)
+				adds about 1/10th the specified amount to each pixel's brightness,
+				thereby brightening the whole image.
+				etting this too high causes the image to turn gray.
+			<li><span class="WebUISetting">Contrast</span> and
+				<span class="WebUISetting">Sharpness</span>(RPi only).
+			<li><span class="WebUISetting">Extra Parameters</span> (RPi only) replaces the
+				<span class="shSetting">CAPTURE_EXTRA_PARAMETERS</span>
+				variable in the <span class="fileName">config.sh</span> file,
+				and allows you to pass parameters to the <code>libcamera-still</code>
+				image capture program that Allsky doesn't natively support, such as auto-focus options.
+			<li><span class="WebUISetting">Mean Target</span> (RPi only) for day and night.
+				This specifies the mean target brightness (0.0 (pure black) to
+				1.0 (pure white)) when in auto-exposure mode.
+			<li><span class="WebUISetting">Mean Threshold</span> (RPi only).
+				This specifies how close the actual mean brightness must be to the
+				<span class="WebUISetting">Mean Target</span>.
+				For example, if <span class="WebUISetting">Mean Target<span> is 0.5 and
+				<span class="WebUISetting">Mean Threshold<span> is 0.1,
+				the actual mean can vary between 0.4 and 0.6 (0.5 +/- 0.1).			
+			<li>The <span class="WebUISetting">Focus Metric</span> setting is now available for ZWO cameras.
+				Higher numbers indicate better focus.
+				Use only when sky conditions are NOT changing.
+		</ul>
+	<li><strong>NOTE</strong>: the following settings moved from
+		<span class="fileName">config.sh</span> to the WebUI,
+		and are "advanced" options so you'll need to click the "Show Advanced Options" button to see them:
+		<ul class="minimalPadding">
+			<li><span class="shSetting">DAYTIME_CAPTURE</span> is now
+				<span class="WebUISetting">Take Daytime Images</span> in the WebUI.
+			<li><span class="shSetting">DAYTIME_SAVE</span> is
+				<span class="WebUISetting">Save Daytime Images</span>.
+			<li><span class="shSetting">DARK_CAPTURE</span> is
+				<span class="WebUISetting">Take Dark Frames</span>.
+			<li><span class="shSetting">DARK_FRAME_SUBTRACTION</span> is
+				<span class="WebUISetting">Use Dark Frames</span>.
+		</ul>
+	<li> <span class="WebUISetting">Debug Level</span> is more consistent:
+		<ul class="minimalPadding">
+			<li> 0: errors only.
+			<li> 1: level 0 plus warnings and messages about taking and saving pictures.  This is the default.
+			<li> 2: level 1 plus details on images captured, sleep messages and the like.
+			<li> 3: level 2 plus time to save image, details on exposure settings and capture retries, and module execution.
+			<li> 4: lots of gory details for developers only.
+		</ul>
+	<li> System messages appear at the top of the WebUI whenever you need to take an action.
+	<li> Many minor enhancements were made.
+</ul>
+
+
+<h4>Allsky Website</h4>
+<ul>
+	<li> The Allsky Website is now installed in <span class="fileName">~/allsky/html/allsky</span>.
+	<li> If an older version of the Website is found during Website installation you'll be prompted
+		to have its images and settings moved to the new location.
+	<li> The home page can be customized:
+		<ul class="minimalPadding">
+			<li> You can specify the order, contents, look, and style of the icons on the left side.
+				You can also hide an icon or display a new one.
+			<li> You can specify the order, contents, and style of the popout that appears on the right side.
+				For example, you can add a link to pictures of your allsky camera.
+			<li> You can set a background image.
+			<li> You can easily change the maximum width of the image.
+			<li> You can add a link to a personal website.
+				This link appears at the top of the page.
+			<li> You can add a border around the image to have it stand out on the page.
+			<li> You can hide the "Make Your Own" link on the bottom right of the page.
+			<li> You can change the icon that appears on the browser's tab.
+			<li> See the Allsky Website documentation for other customizations you can make.
+		</ul>
+	<li> Left sidebar:
+		<ul class="minimalPadding">
+			<li> The constellation overlay icon (Casseopeia icon) is hidden by default and should only be displayed
+				after you've set the overlay to match your stars.
+			<li> If you are creating mini-timelapse videos, when you install the Website an icon for the current video will appear on the left side.
+				You can also manually show/hide the icon.
+			<li> There's a new icon to display the image full-size.
+			<li> The startrails and information icons were updated.
+		</ul>
+	<li> Popout on right side:
+		<ul class="minimalPadding">
+			<li> A link to your <strong>Image Settings</strong> can optionally be displayed via the
+			<span class="WebUISetting">Display Settings</span> option in the WebUI.
+			<li> The version of Allsky and the Allsky Website are displayed.
+		</ul>
+	<li> Timelapse video thumbnails are now created by default on the Pi and uploaded to a remote server.
+		This resolves issues with remote servers that don't support creating thumbnails.
+		See the <span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span> setting.
+	<li> Configuration file changes:
+		<ul class="minimalPadding">
+			<li> The two prior configuration files (<span class="fileName">config.js</span> and
+				<span class="fileName">virtualsky.json</span>) are replaced by <span class="fileName">configuration.json</span>.
+			<li> There are several new settings, including the ability to specify the opacity of the overlay.		
+			<li> The <span class="editorSetting">overlaySize</span> setting,
+				which defined both the width and the height of the constellation overlay, was split into
+				<span class="editorSetting">overlayWidth</span> and <span class="editorSetting">overlayHeight</span>.
+				Having separate values can be helpful when trying to get the overlay to line up with the actual stars.
+			<li> The WebUI <span class="WebUILink">Editor</span> page must be used to edit the Allsky Website's
+				configuration file since it performs various checks before updating the configuration.
+			<li> The <span class="WebUILink">Editor</span> page should also be used to edit a REMOTE Allsky Website's configuration file for the same reason.s
+				A master copy of the remote server's <span class="fileName">configuration.json</span>
+				is kept on the Pi and automatically re-uploaded to the server after every change.
+				After you do this, the drop-down list on the <span class="WebUILink">Editor</span> page will now have
+				<span class="fileName">configuration.json (remote Allsky Website)</span> to distinguish it from a local Website's file.
+				See the Allsky Website Installation documentation for details.
+		</ul>
+</ul>
+
+<hr class="separator">
+</details>
+
+<h2>v2022.03.01</h2>
+<details><summary></summary>
+<ul class="minimalPadding">
+	<li>Switched to date-based release names.
+	<li>Added ability to have your allsky camera added to the
+		<a external="true" href="http://www.thomasjacquin.com/allsky-map">Allsky Map</a> by configuring
+		<a external="true" href="https://github.com/thomasjacquin/allsky/wiki/allsky-Settings/_edit#map-settings">these settings</a>.
+		Added <strong>Allsky Map Setup</strong> section to the WebUI to configure the map settings.
+		The <span class="WebUISetting">Lens</span> field now shows in the popout on the Allsky Website (if installed).
+	<li>Significantly enhanced Wiki - more pages and more information on existing pages.
+		All known issues are described there as well as fixes / workarounds.
+	<li>Added an option to keograms to make them full width, even if few images were used in creating the keogram.
+		In <span class="fileName">config.sh</span>, set <span class="shSetting">KEOGRAM_EXTRA_PARAMETERS="--image-expand"</span>.
+	<li>Added/changed/deleted settings (in <span class="fileName">config.sh</span> unless otherwise noted):
+		<ul class="minimalPadding">
+	  		<li>Added <span class="shSetting">WEBUI_DATA_FILES</span> - contains the name of one or more files that contain information to
+				be added to the WebUI's <span class="WebUILink">System</span> page.
+				See <a external="true" href="https://github.com/thomasjacquin/allsky/wiki/WEBUI_DATA_FILES">this Wiki page</a> for more information.
+	  		<li>Renamed <span class="shSetting">NIGHTS_TO_KEEP</span> to <span class="shSetting">DAYS_TO_KEEP</span> since it determines
+				how many days of data to keep, not just nighttime data.
+				If blank (<code>""</code>), ALL days' data are kept.
+	  		<li>Deleted <span class="shSetting">AUTO_DELETE</span> - its functionality is now in <span class="shSetting">DAYS_TO_KEEP</span>.
+				<span class="shSetting">DAYS_TO_KEEP=""</span> is similar to the old <span class="shSetting">AUTO_DELETE=false</span>.
+	  		<li>Added <span class="shSetting">WEB_DAYS_TO_KEEP</span> - specifies how many days of Allsky Website images and
+				videos to keep, if the website is installed on your Pi.
+	  		<li>Added <span class="shSetting">WEB_IMAGE_DIR</span> in <span class="fileName">ftp-settings.sh</span> to allow the
+				images to be copied to a location on your Pi (usually the Allsky Website) as well as being copied to a remote machine.
+				This functionality already existed with timelapse, startrails, and keogram files.
+		</ul>
+	<li>The RPi camera now supports all the text overlay features as the ZWO camera,
+		including the <span class="WebUISetting">Extra Text</span> file.
+	<li>Removed the harmless "deprecated pixel format used" message from the timelapse log file.
+		That message only confused people.
+	<li>Improved the auto-exposure for RPi cameras.
+	<li>Made numerous changes to the ZWO and RPi camera's code that will make it easier to maintain and add new features in the future.
+	<li>If Allsky is stopped or restarted while a file is being uploaded to a remote server,
+		the upload continues, eliminating cases where a temporary file would be left on the server.
+	<li>Decreased other cases where temporary files would be left on remote servers during uploads.
+		Also, uploads now perform additional error checking to help in debugging.
+	<li>Only one upload can now be done at a time.
+		Any additional uploads display a message in the log file and then exit.
+		This should eliminate (or signifiantly decrease) cases where a file is overwritten or not found,
+		resulting in an error message or a temporary file left on the server.
+	<li>Added a <code>--debug</code> option to <code>allsky/scripts/upload.sh</code> to aid in debugging uploads.
+	<li>Upload log files are only created if there was an error; this saves writes to SD cards.
+	<li>The <code>removeBadImages.sh</code> script also only creates a log file if there was an error,
+		which saves one write to the SD card <em>for every image</em>.
+	<li>Allsky now stops with an error message on unrecoverable errors (e.g., no camera found).
+		It used to keep restarting and failing forever.
+	<li>More meaningful messages are displayed as images.
+		For example, in most cases "<strong>ERROR.  See /var/log/allsky.log</strong>" messages have been replaced
+		with messages containing additional information, for example,
+		"<strong>*** ERROR ***  Allsky Stopped!  ZWO camera not found!</strong>".
+	<li>If Allsky is restarted, a new "Allsky software is restarting" message is displayed,
+		instead of a "stopping" followed by "starting" message.
+	<li>The timelapse debug output no longer includes one line for each of several thousand images proced.
+		This make it easier to see any actual errors.
+	<li>The <span class=WebUILink">Camera Settings</span> page of the WebUI now displays the minimum, maximum,
+		and default values in a popup for numerical fields.
+	<li>Startrails and Keogram creation no longer crash if invalid files are found.
+	<li>Removed the <span class="fileName">allsky/scripts/filename.sh</span> file.
+	<li>The RPi <span class="WebUISetting">Gamma</span> value in the WebUI was renamed to <span class="WebUISetting">Saturation</span>,
+		which is what it always adjusted; <span class="WebUISetting">Gamma</span> was incorrect.
+	<li>Known issues:
+		<ul class="minimalPadding">
+	  		<li>The startrails and keogram programs don't work well if you bin differently during the day and night.
+				If you don't save daytime images this won't be a problem.
+	  		<li>The minimum, maximum, and default values in the <span class="WebUILink">Camera Settings</span> page of the WebUI,
+				especially for the RPi camera, aren't always correct.
+				This is especially try if running on the Bullseye operating system, where many of the settings changed.
+		</ul>
+</ul>
+</details>
+
+
+<h2>0.8.3</h2>
+<details><summary></summary>
+<ul class="minimalPadding">
+	<li>Works on Bullseye operating system.
+	<li>RPi version:
+		<ul class="minimalPadding">
+	  		<li>Has an improved auto-exposure algorithm.
+				To use it, set <span class="shSetting">CAPTURE_EXTRA_PARAMETERS</span>=<span class="editorSetting">"-daymean 0.5 -nightmean 0.2"</span>
+				in <span class="fileName">config.sh</span>.
+	  		<li>Has many new settings including support for most of the text overlay features that are supported by the ZWO version.
+		</ul>
+	<li>New and changed <span class="fileName">config.sh</span> variables,
+			see the <a external="true" href="https://github.com/thomasjacquin/allsky/wiki/allsky-Settings">Software Settings</a> Wiki page for more information:
+		<ul class="minimalPadding">
+	  		<li><span class="shSetting">IMG_UPLOAD_FREQUENCY</span> specifies how often the image should be uploaded to a website.
+				Useful with slow uplinks or metered Internet connections.
+	  		<li><span class="shSetting">IMG_CREATE_THUMBNAILS</span> specifies whether or not thumbnails should be created for each image.
+	  		<li><span class="shSetting">REMOVE_BAD_IMAGES</span> now defaults to "true" since bad-image detection is now done after a
+				picture is saved rather than once for all pictures at the end of the night.
+				This helps decrease problems when creating startrails, keograms, and timelapse videos.
+	  		<li><span class="shSetting">IMG_PREFIX</span>: no longer used - the name of the image used by the websites is now
+				whatever you specify in the WebUI (default: <span class="fileName">image.jpg</span>).
+	  		<li><blockquote>When upgrading to 0.8.3 you MUST follow the steps listed
+				<a external="true" href="https://github.com/thomasjacquin/allsky/wiki/Upgrade-from-0.8.2-or-prior-versions">here</a>.
+				</blockquote>
+		</ul>
+	<li>Replaced <code>saveImageDay.sh</code> and <code>saveImageNight.sh</code> with
+		<code>saveImage.sh</code> that has improved functionality,
+		including passing the sensor temperature to the dark subtraction commands,
+		thereby eliminating the need for the <span class="fileName">temperature.txt</span> file.
+	<li>The image used by the websites (default: <span class="fileName">image.jpg</span>)
+		as well as all temporary files are now written to <span class="fileName">allsky/tmp</span>.
+		<blockquote>If you are using the Allsky Website you will need to change the
+		<span class="editorSetting">imageName</span> variable in
+		<span class="fileName">/var/www/html/allsky/config.js</span> to
+		<span class="fileName">"/current/tmp/image.jpg"</span>.</blockquote>
+	<li>You can <strong>significanly</strong> reduce wear on your SD card by making <span class="fileName">allsky/tmp</span>
+		a <a external="true" href="https://github.com/thomasjacquin/allsky/wiki/Miscellaneous-Tips">memory-based filesystem</a>.
+</ul>
+</details>
+
+
+<h2>0.8.1</h2>
+<details><summary></summary>
+<ul class="minimalPadding">
+	<li>Rearranged the directory structure.
+	<li>Created a Wiki with additional documentation and troubleshooting tips.
+	<li>Renamed several variables in <span class="fileName">config.sh</span> and <span class="fileName">ftp-settings.sh</span>.
+	<li><span class="shSetting">CAMERA</span> type of "auto" is no longer supported - you must specify "ZWO" or "RPi".
+	<li>Startrails and keograms are now created using all CPUs on the Pi, drastically speeding up creation time.
+	<li>Installing the WebUI now preserves any website files (keograms, startrails, etc.) you have.
+		This allows for non-destructive updates of the WebUI.
+	<li>New script called <code>upload.sh</code> centralizes all the upload code from other scripts,
+		and can be used to debug uploading issues.
+		See <a external="true" href="https://github.com/thomasjacquin/allsky/wiki/Troubleshooting:-uploads">this Wiki page</a> for more information.
+	<li>The RPi camera does much better auto-exposure if you set the <code>-mode-mean</code> and <code>-autoexposure</code> options.
+	<li>The WebUI will now show the Pi's throttle and low-voltage states, which is useful for debugging.
+	<li>Darks work better.
+	<li>Many bug fixes, error checks, and warnings added.
+</ul>
+</details>
+
+
+<h2>0.8</h2>
+<details><summary></summary>
+<ul class="minimalPadding">
+	<li>Workaround for ZWO daytime autoexposure bug.
+	<li>Improved exposure transitions between day and night so there's not such a huge change in brightness.
+	<li>Decrease in ZWO sensor temperature.
+	<li>Lots of new settings, including splitting some settings into day and night versions.
+	<li>Error checking and associated log messages added in many places to aid in debugging.
+	<li>Ability to have "notification" images displayed, such as "Allsky is starting up" and "Taking dark frames".
+	<li>Ability to resize uploaded images.
+	<li>Ability to set thumbnail size.
+	<li>Ability to delete bad images (corrupt and too light/dark).
+	<li>Ability to set an image file name prefix.
+	<li>Ability to reset USB bus if ZWO camera isn't found (requires <code>uhubctl</code> command to be installed).
+	<li>Ability to specify the format of the time displayed on images.
+	<li>Ability to have the temperature displayed in Celcius, Fahrenheit, or both.
+	<li>Ability to set bitrate on timelapse video.
+</ul>
+</details>
+
+
+<h2>0.7</h2>
+<details><summary></summary>
+<ul class="minimalPadding">
+	<li>Added Raspberry Pi camera HQ support based on Rob Musquetier's fork.
+	<li>Added support for x86 architecture (Ubuntu, etc.).
+	<li>Temperature dependant dark frame library.
+	<li>Added browser-based script editor.
+	<li>Added configuration variables to crop black area around image.
+	<li>Added timelapse frame rate setting.
+	<li>Changed font size default value.
+</ul>
+</details>
+
+
+<h2>0.6</h2>
+<details><summary></summary>
+<ul class="minimalPadding">
+	<li>Added daytime exposure and auto-exposure capability.
+	<li>Added <code>-maxexposure</code>, <code>-autoexposure</code>, <code>-maxgain</code>, <code>-autogain</code> options.
+		Note that using autoexposure and autogain at the same time may produce unexpected results (black frames).
+	<li>Autostart is now based on systemd and should work on all raspbian based systems, including headless distributions.
+		Remote controlling will not start multiple instances of the software.
+	<li>Replaced <code>nodisplay</code> option with <code>preview</code> argument.
+		No preview in autostart mode.
+	<li>When using the WebUI, camera options can be saved without rebooting the RPi.
+	<li>Added a publicly accessible preview to the WebUI: <span class="fileName">public.php</span>.
+	<li>Changed exposure unit to milliseconds instead of microseconds.
+</ul>
+</details>
+
+
+<h2>0.5</h2>
+<details><summary></summary>
+<ul class="minimalPadding">
+	<li>Added Startrails (image stacking) with brightness control.
+	<li>Keograms and Startrails generation is now much faster thanks to a rewrite by Jarno Paananen..
+</ul>
+</details>
+
+
+<h2>0.4</h2>
+<details><summary></summary>
+<ul class="minimalPadding">
+	<li>Added Keograms (summary of the night in one image).
+</ul>
+</details>
+
+
+<h2>0.3</h2>
+<details><summary></summary>
+<ul class="minimalPadding">
+	<li>Added dark frame subtraction.
+</ul>
+</details>
+
+
+<h2>0.2</h2>
+<details><summary></summary>
+<ul class="minimalPadding">
+	<li>Separated camera settings from code logic.
+</ul>
+</details>
+
+
+<h2>0.1</h2>
+<details><summary></summary>
+<ul class="minimalPadding">
+	<li>Initial release.
+</ul>
+</details>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

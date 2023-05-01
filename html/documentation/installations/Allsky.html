@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Installing and upgrading Allsky";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Installing and upgrading Allsky</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This page describes how to install and upgrade Allsky.
+</p>
+<p>
+After Allsky is running and you've configured it to your satisfaction,
+you may want to install the Allsky Website on your Pi and/or on a remote server.
+See the <a allsky="true" href="AllskyWebsite.html">Allsky Website Installation</a> page for details.
+</p>
+<blockquote>
+This release of Allsky has many updates so we suggest
+you <b>install the newest <a href="https://www.raspberrypi.com/software/">Raspberry Pi OS</a>
+(Bullseye) on your Pi</b>,
+before installing this release of Allsky.
+You'll first need to save any files, images, etc. to a USB drive, PC, Mac, or another device,
+then install the new Pi operating system (OS), and then restore your files before installing Allsky.
+During installation of the new Pi OS, if asked for the name of a user account to create,
+enter <code>pi</code>.
+<br>
+The process is much simplier if you have a spare SD card you can install the new
+Pi OS version on, and have an SD card-to-USB adapter so you can plug the old SD card into
+the Pi after the new OS is installed.
+Copying your old files is then a breeze.
+</blockquote>
+
+<h2>Install AllSky in a different location (advanced)</h2>
+<details><summary></summary>
+
+<blockquote>
+Only advanced users should consider installing Allsky in a different location.
+All the documentation assumes it's installed in the default location,
+so it may be more difficult to troubleshoot if it's elsewhere.
+</blockquote>
+<p>
+By default, Allsky is installed as the login "pi" in <span class="fileName">/home/pi/allsky</span>.
+The name <span class="fileName">allsky</span> can not be changed,
+but you can install Allsky in a different directory
+(which usually means it'll run as a different login).
+For example, to install in <span class="fileName">/home/mylogin</span>
+and run as the "mylogin" user, do the following before installing Allsky:
+<pre>
+sudo mkdir /home/mylogin      <span class="pl-c"># if not already there</span>
+sudo addgroup mylogin sudo    <span class="pl-c"># allows Allsky to execute system commands</span>
+cd /home/mylogin
+</pre>
+After the above, continue with the steps below.
+</details>
+
+
+<h2>If a version of Allsky already exists</h2>
+<details><summary></summary>
+<p>
+If you have an <b>existing</b> version of Allsky,
+stop it
+<pre>
+sudo systemctl stop allsky
+cd
+</pre>
+
+then perform one of the steps below:
+</p>
+<ol class="minimalPadding">
+	<li>To <b>upgrade</b> the old version:
+	<pre>mv allsky allsky-OLD         <span class="pl-c"># The installation looks for this directory</span></pre>
+
+	<li>To <b>save</b> the old version but not use it:
+	<br>
+	<pre>mv allsky allsky-SAVED</pre>
+	At some point you'll want to delete the SAVED version so it doesn't take disk space.
+
+	<li>To <b>delete</b> the old version.
+		Only select this option if you're sure you don't want any saved
+		images, darks, and configuration settings.
+	Either way, execute:
+	<pre>rm -fr allsky</pre>
+</ol>
+<p>
+Continue to the <a href="#PreInstallation">Pre installation</a> section.
+</p>
+</details>
+
+
+<h2 id=PreInstallation>Pre installation</h2>
+<details><summary></summary>
+<p>
+Prior to installing Allsky, there are a few things you need to do.
+These only need to be done once.
+<ol>
+	<li>If this is a new Pi, you'll need to install the Raspberry Pi Operating System (OS) on it.
+		Follow
+		<a href="https://www.raspberrypi.org/documentation/installation/installing-images/">these instructions</a>
+		for information on how to do it.  Be sure to install the newest OS.
+	<li>Make sure your Pi has a
+		<a href="https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md">working Internet connection</a>.
+		If you have a choice between a wired LAN and wireless WLAN connection,
+		choose the wired connect - they are faster and more reliable.
+		If you use Power over Ethernet (PoE), you can run a single cable to your Pi.
+	<li>Install <code>git</code> if not already installed (you only need to do this once):
+		<pre>sudo apt-get install git</pre>
+</p>
+</details>
+
+
+<h2 id="Installation">Installation</h2>
+<details><summary></summary>
+<blockquote>
+Unlike prior versions of AllSky this version requires that the camera be
+connected prior to starting the installation process.
+During installation, the camera model will be automatically determined
+and the appropriate minimum, maximum, and default settings populated in the WebUI.
+</blockquote>
+<p>
+The following commands will put the new release of Allsky in <span class="fileName">~/allsky</span>.
+Except for some system files, all Allsky-related files reside in this directory.
+If you later install the Allsky Website on the Pi, its files will also go in this directory.
+</p>
+
+<pre>
+cd
+git clone --recursive https://github.com/thomasjacquin/allsky.git
+cd allsky
+./install.sh</pre>
+<p>
+The <code>git clone</code> will take a couple minutes and should produce output similar to
+what's below.
+The new <span class="fileName">allsky</span> directory is approximately 150 MB after download.
+<pre>
+Cloning into 'allsky'...
+remote: Enumerating objects: 16464, done.
+remote: Counting objects: 100% (494/494), done.
+remote: Compressing objects: 100% (395/395), done.
+remote: Total 16464 (delta 275), reused 220 (delta 96), pack-reused 15970
+Receiving objects: 100% (16464/16464), 94.03 MiB | 1.13 MiB/s, done.
+Resolving deltas: 100% (9845/9845), done.
+Submodule 'src/sunwait-src' (https://github.com/risacher/sunwait) registered for path 'src/sunwait-src'
+Cloning into '/home/pi/allsky/src/sunwait-src'...
+remote: Enumerating objects: 130, done.        
+remote: Counting objects: 100% (82/82), done.        
+remote: Compressing objects: 100% (37/37), done.        
+remote: Total 130 (delta 60), reused 53 (delta 45), pack-reused 48        
+Receiving objects: 100% (130/130), 125.99 KiB | 848.00 KiB/s, done.
+Resolving deltas: 100% (72/72), done.
+Submodule path 'src/sunwait-src': checked out '102cb417ecbb7a3757ba9ee4b94d6db3225124c4'
+</pre>
+<p>
+The installation prompts for several items that allow it to configure the Pi so
+Allsky runs most efficiently given your Pi's configuration.
+These prompts include:
+<ul>
+	<li>New host name, if not the default of <b>allsky</b>.
+		If you have more than one Pi on the same network they must all have unique names.
+		For example, if you have a test Pi you may want to call it <span class="fileName">allsky-test</span>.
+	<li>Adding swap space if needed.
+		Swap space effectively increases the amount of memory your Pi has.
+		Insufficient swap space is one of the leading causes of timelapse video creations problems.
+	<li>Putting the <span class="fileName">~/allsky/tmp</span> directory in memory instead of on the disk.
+		This directory holds temporary Allsky files and is where most Allsky files are written to.
+		Putting the directory in memory <b>significantly</b> reduces the number of writes
+		to the SD card, which increases its life.
+</ul>
+It's highly recommended to accept the defaults.
+</p>
+<p>
+During installation you'll be notified of any actions you need
+to take when the installation completes.
+If there are any such actions, the first time Allsky runs after the reboot it will stop and:
+<ul>
+	<li>add those actions to the log file
+	<li>display an image telling you to see the log file
+	<li>display a message in the WebUI (which you should clear when done performing the actions)
+</ul>
+</p>
+<p>
+<blockquote>
+Parts of the installation take up to an hour, depending on how many package
+you already have installed and the speed of your Pi.
+Subsequent installations of Allsky will be significantly faster.
+</blockquote>
+</p>
+</details>
+
+
+<h2>Post installation</h2>
+<details><summary></summary>
+<p>
+After installation, reboot then perform any actions the installation script identified.
+</p>
+<blockquote>
+If instructed to copy the contents of a prior configuration file to the new release,
+it's important to manually copy the <b>values</b>
+from the old file to the new file and <b>not</b> copy the entire file.
+</blockquote>
+
+After the reboot, do the following:
+<ol>
+	<li>Bring up the WebUI by entering
+		<code>http://allsky.local</code> or
+		<code>http://allsky.localhost</code> in a web browser.
+		The default username is <strong>admin</strong> and the default password is <strong>secret</strong>.
+		<blockquote>
+		If your website is publically viewable you should change the username and password via the
+		<span class="WebUILink">Change Password</span> link on the WebUI.
+		</blockquote>
+
+	<li>Go to the <span class="WebUILink">Allsky Settings</span> page.
+	<li>Optionally click the
+		<img allsky="true" loading="lazy" class="buttonIconLarge" src="/documentation/img/showAdvancedOptionsButton.png">
+		button to show the advanced options.
+	<li>Make any necessary changes.
+	<li>Click on the
+		<img allsky="true" loading="lazy" class="buttonIcon" src="/documentation/img/saveChangesButton.png">
+		button.
+		Allsky will (re)start.
+	<li>If instructed to update the <span class="fileName">config.sh</span>
+		and/or the <span class="fileName">ftp-settings.sh</span> files:
+		<ol>
+			<li>Go to the <span class="WebUILink">Editor</span> page.
+			<li>Select the appropriate file in the drop down list.
+			<li>Edit the file.
+				Do NOT simply copy a previous version.
+			<li>Click the green "Save Changes" button.
+				Allsky will not restart but the changes will take effect when the next
+				image is taken.
+		</ol>
+</ol>
+
+<blockquote class="warning">
+The <span class="fileName">config.sh</span> and
+<span class="fileName">ftp-settings.sh</span> configuration files should
+<b>only</b> be edited via the
+WebUI's <b>Editor</b> link since it performs sanity checks and behind-the-scenes
+actions during updates.
+</blockquote>
+</details>
+
+
+<h2>Starting and stopping Allsky</h2>
+<details><summary></summary>
+<p>
+AllSky starts automatically when the Raspberry Pi boots up.
+To enable or disable this behavior, use these commands:
+<pre>
+sudo systemctl enable allsky     <span class="shellComment"># starts the software when the Pi boots up</span>
+sudo systemctl disable allsky    <span class="shellComment"># does NOT automatically start the software</span>
+</pre>
+
+When you want to manually start, stop, or restart the software, or obtain status, use one of these commands:
+<pre>
+sudo systemctl start allsky
+sudo systemctl stop allsky
+sudo systemctl restart allsky
+sudo systemctl status allsky
+</pre>
+</p>
+<p>
+<blockquote>
+Tip: Add lines like the following to <span class="fileName">~/.bashrc</span> to save typing:
+<pre>
+alias start='sudo systemctl start allsky'
+</pre>
+You will then only need to type <code>start</code> to start Allsky.
+Do this for <b>stop</b> and <b>reload</b> as well.
+</blockquote>
+</p>
+
+<p>
+Starting the program from the terminal is a great way to track down issues as
+it provides debug information to the terminal window.
+To start the program manually, run:
+<pre>
+sudo systemctl stop allsky
+cd ~/allsky
+./allsky.sh
+</pre>
+</p>
+<p>
+If you are using a desktop environment (Pixel, Mate, LXDE, etc.) or using remote desktop or VNC,
+you can add the <code>preview</code> argument to show the images the program is
+currently saving in a separate window.
+<pre>
+./allsky.sh preview
+</pre>
+</p>
+<p>
+<blockquote>
+The <b>Allsky Website</b> normally does not need to be started or stopped,
+but if you need to do so run <code>systemctl start lighttpd</code>.
+</blockquote>
+</p>
+</details>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

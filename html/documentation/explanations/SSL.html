@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Using SSL";
+		}
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Using SSL</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+SSL (Secure Socket Layers) allows you to use secure <b>https</b> URLs
+on your Pi for your WebUI and/or Allsky Website, instead of the less secure <b>http</b>.
+This is desirable (really, mandatory) when accessing the Pi from the Internet.
+If your Pi is only available on a local network, SSL isn't needed.
+</p>
+<p>
+Allsky on the Pi uses the <b>lighttpd</b> web server,
+so it needs to be configured to use SSL.
+<a href="https://www.itzgeek.com/how-tos/linux/how-to-configure-lets-encrypt-ssl-in-lighttpd-server.html">This page</a>
+describes how to configure and use <b>Let's Encrypt SSL</b> with <b>lighttpd</b>.
+</p>
+
+<blockquote>
+You may need to to change the permissions of <span class="fileName">/etc/letsencrypt/live</span>
+in order to be able to read and write and complete the concatenation step.
+Execute <code>sudo chmod 640 /etc/letsencrypt/live</code>.
+</blockquote>
+
+Notes:
+<ul>
+<li>The Pi runs a version of the <b>Debian</b> operating system.
+<li>The <b>lighttpd</b> web server is already installed and running so you can skip
+	the step to install it.
+<li>The "document root" of the webserver is <span class="fileName">~/allsky/html</span>.
+<li>When you are done, make a copy of the <span class="fileName">/etc/letsencrypt</span>
+	directory and store on something other than your Pi in case your Pi crashes.
+</ul>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

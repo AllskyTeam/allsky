@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Exposure, Gain, Brightness, Stretch, Saturation"
+		}
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Exposure, Gain, et. al.</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+There are several settings that determine what an image looks like - how bright it is,
+how colorful it is, and its color balance.
+<br>
+The WebUI lets you manually set those settings, or have them automatically set by the software.
+</p>
+
+<h2>Image Brightness</h2>
+<p>
+If you've every used a film or DSLR camera, you know the concepts of shutter speed and ISO.
+With an allsky camera the shutter speed is called <b>Exposure</b> and the ISO is called <b>Gain</b>,
+and they work together to determine the final image brightness.
+If you take a picture at some exposure and gain, then half the exposure and double the gain,
+you should get a second picture of the same brightness as the first,
+but slightly noisier since increasing gain or ISO increases the salt-and-pepper like noise.
+If you have a manual camera you can set the shutter speed and ISO to any value you want,
+but what if your camera (or allsky camera) automatically sets those values
+but you want an image that's brighter or dimmer?
+In Allsky you can set the <span class="WebUISetting">Brightness</span>
+to change what settings the auto-exposure algorithm uses.
+</p>
+
+<h2>Image Color</h2>
+<p>
+If your sky looks green instead of blue, your <b>color balance</b> is off.
+This is also called <b>white balance</b> because it can be easier to
+determine which way the color is off by looking at something white.
+</p>
+<p>
+On color cameras you can turn on <span class="WebUISetting">Auto White Balance</span>
+in the WebUI to have the camera set the white balance,
+but you may not like the results.
+You can also manually set the <span class="WebUISetting">Red Balance</span>
+and <span class="WebUISetting">Blue Balance</span> to get a picture of your liking
+(there is no <span class="WebUISetting">Green Balance</span> because you can adjust
+the amount of green in an image by adjusting the amount of red and blue).
+</p>
+<p>
+We suggest trying <span class="WebUISetting">Auto White Balance</span>
+and if you don't like the results, turn it off and set the red and blue balance manually.
+You can change the <span class="WebUISetting">Auto White Balance</span> and red and blue balances
+separately for daytime and nighttime.
+</p>
+
+
+<h2>Saturation (RPi cameras only)</h2>
+<p>
+Saturation determines how vivid the colors are,
+from black and white to very vivid (usually to the point where the colors look unnatural).
+To change saturation, use the <span class="WebUISetting">Saturation</span> setting in the WebUI.
+The middle point is "normal" saturation, but you may like more or less.
+If you want a black and white image, set the <span class="WebUISetting">Saturation</span>
+to its lowest value.
+</p>
+
+
+<h2 id="stretch">Stretch</h2>
+<p>
+Stretching an image lightens the brightness level you specify without lightening other parts,
+and is good to bring out details in nighttime pictures.
+Stretching is enable via editing the <span class="fileName">config.sh</span> file
+in the WebUI.
+The settings are:
+<ul>
+<li><span class="editorSetting">AUTO_STRETCH</span>
+	(default: <span class="editorBool">false</span>)
+	<br>Set to <span class="editorBool">True</span> to enable stretching.
+<li><span class="editorSetting">AUTO_STRETCH_AMOUNT</span>
+	(default: <span class="editorNum">10</span>)
+	<br>The amount to lighten an image,
+	<span class="editorNum">0</span> is none,
+	<span class="editorNum">3</span> is typical,
+	and <span class="editorNum">20</span> is a lot.
+	Higher numbers lighten the image more.
+<li><span class="editorSetting">AUTO_STRETCH_MID_POINT</span>
+	(default: <span class="editorString">10%</span>)
+	<br>This specifies what parts of the image should be lightened:
+	<span class="editorString">0%</span> lightens black items,
+	<span class="editorString">50%</span> lightens middle-gray items, and
+	<span class="editorString">100%</span> lightens white items.
+</ul>
+You may find that you can decrease the gain, and hence the noise,
+by increasing the stretch.
+Experiment with the settings to get the results you want.
+</p>
+
+<h3>Sample Stretch Images</h3>
+
+<p>
+<span class="editorSetting">AUTO_STRETCH</span>="<span class="editorBool">False</span>"
+<details><summary></summary>
+<br><img class="imgCenter" loading="lazy" src="Stretch_0.png" width="50%">
+</p>
+</details>
+
+<br><p>
+<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>,
+<span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">10%</span>
+<details><summary></summary>
+Notice the dark parts of the image are much brighter,
+and the light stars are only a little brighter.
+<br><img class="imgCenter" loading="lazy" src="Stretch_10x10.png" width="50%">
+</details>
+
+<br><p>
+<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>,
+<span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">30%</span>
+<details><summary></summary>
+Notice a very slight overall increase in brightness,
+but a noticable increase in brightness of the stars.
+<br><img class="imgCenter" loading="lazy" src="Stretch_10x30.png" width="50%">
+</p>
+</details>
+
+<br><p>
+<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">20</span>,
+<span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">10%</span>
+<details><summary></summary>
+Compare this image to the
+<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>
+image;
+this one is even brighter.
+<br><img class="imgCenter" loading="lazy" src="Stretch_20x10.png" width="50%">
+</p>
+</details>
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

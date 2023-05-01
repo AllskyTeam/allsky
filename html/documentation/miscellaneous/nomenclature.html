@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Nomenclature";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Nomenclature</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<h2>Allsky Suite</h2>
+The AllSky suite of software consists of two GitHub packages:
+<ol>
+<li><a href="https://github.com/thomasjacquin/allsky"><code>allsky</code></a>
+is the main program that captures and saves images.
+This also includes the Web User Interface (<b>WebUI</b>)
+used to administer AllSky and parts of your Pi.
+In addition to taking pictures, you can also:
+<ul>
+	<li>Display the most recent image, called a <b>Liveview</b>.
+	<li>View all saved prior images, timelapse, keograms, and startrails.
+	<li>Configure Allsky settings via a web form and a built-in color text editor.
+	<li>See the status of the LAN and WLAN (Wireless LAN).
+	<li>Configure Wi-Fi.
+	<li>Change the WebUI login name and password.
+	<li>View information about the Pi such as amount of free disk space, CPU temperature, etc.
+	<li>Optionally view user-generated data such as ambient temperature or fan speed.
+	<li>View Allsky Documentation, of which this page is part of.
+</ul>
+
+<li><a href="https://github.com/thomasjacquin/allsky-website"><code>allsky-website</code></a>
+is an optional simple web interface that displays:
+<ul>
+	<li>The most recent image.
+	<li>An optional constellation overlay on the image.
+	<li>Saved startrails, keograms, and/or timelapse videos.
+	<li>Optionally the most recent "mini" timelapse video.
+	<li>Information about your camera (location, owner, Pi version, camera type, etc.).
+	<li>Optional information about your settings.
+</ul>
+<p>
+The <b>Allsky Website</b> can run on your Pi and/or one or more remote computers.
+</p>
+</ol>
+
+<h2>Terms</h2>
+<ul>
+<li>When a page says "AllSky Software" or just "software" it's referring to
+	the main Allsky software that's running on your Pi from the
+	<span class="fileName">~/allsky</span> directory.
+<li>The <code>allsky-website</code> package is usually referred to as the
+<b>Allsky Website</b> or just the <b>Website</b> (with a capital W).
+<li>The <span class="fileName">config.sh</span> file holds a lot of the Allsky settings
+and must be edited via the <span class="WebUIWebPage">Editor</span> link in the WebUI,
+NOT by manually editting it.
+<li>The <span class="fileName">ftp-settings.sh</span> file holds the upload-related settings and
+must also be edited using the <span class="WebUIWebPage">Editor</span> page.
+</ul>
+
+
+<h2>Documentation Conventions</h2>
+Commands that are to be executed look like this: <code>systemctl start allsky</code>.
+When multiple commands are to be executed they are usually displayed like this:
+<pre>
+systemctl start allsky
+date
+</pre>
+
+File names are shown as: <span class="fileName">config.sh</span>.
+<br>
+Menu items on the WebUI are shown as: <span class="WebUIWebPage">Editor</span>.
+<br>
+Settings in the WebUI appear as: <span class="WebUISetting">Debug Level</span>.
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

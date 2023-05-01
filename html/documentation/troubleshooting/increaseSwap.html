@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Increasing Swap Space";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Increasing Swap Space</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+If you see a <b>Killed</b> or a <b>RETCODE=137</b> message in
+<span class="fileName">/var/log/allsky.log</span>,
+there's a good chance you need to increase the amount of swap space you Pi has.
+It's easy to do:
+<pre>
+systemctl stop allsky
+cd ~/allsky
+./install.sh --function recheck_swap
+systemctl start allsky
+</pre>
+</p>
+<blockquote>
+The swap file cannot be in use when increasing it,
+so make sure you don't try to increase it when a timelapse or
+another memory-intensive command is being run.
+</blockquote>
+
+<p>
+If you are still having problems,
+try increasing swap size to <b>2048</b> MB or even <b>4096</b> MB.
+</p>
+<p>
+A more detailed description of how to manually increase swap space,
+including adding multiple swap files,
+is <a href="https://itsfoss.com/create-swap-file-linux/">here</a>.
+</p>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

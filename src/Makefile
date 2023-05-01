@@ -1,3 +1,4 @@
+arch = $(shell dpkg --print-architecture)
 platform = $(shell uname -m)
 prefix = 
 
@@ -39,7 +40,7 @@ ifneq ($(PKGPATH),)
   OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || (pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4))
 endif
 DEFS = -D_LIN -D_DEBUG -DGLIBC_20
-CFLAGS = -Werror -Wall -Wno-psabi -Wno-unused-result -g -O2 -lpthread
+CFLAGS = -Werror -Wall -Wno-psabi -Wno-unused-result -g -O2 -lpthread -pthread
 
 ifeq ($(platform), armv6l)
   CC = arm-linux-gnueabihf-g++
@@ -47,33 +48,29 @@ ifeq ($(platform), armv6l)
   CFLAGS += -march=armv6
   CFLAGS += -lrt
   ZWOSDK = -Llib/armv6 -I./include
-endif
-
-ifeq ($(platform), armv7l)
+else ifeq ($(platform), x86_64)
+  CC = g++
+  AR= ar
+  ZWOSDK = -Llib/x64 -I./include
+else ifeq ($(platform), i386)
+  CC = g++
+  AR= ar
+  ZWOSDK = -Llib/x86 -I./include
+else ifeq ($(arch), arm64)
+	# Ubuntu 20.04 added by Jos Wennmacker.
+  CC = g++
+  AR= ar
+  ZWOSDK = -Llib/armv8 -I./include
+else		# $(platform) = armv7l or $(arch) = armhf
+	# Starting with the Feb 2023 Bullseye release, both 32- and 64-bit return
+	# $(platform) of "aarch64" on 64-bit hardware so we need to check $(arch),
+	# which returns "armhf" on 32-bit OS and "armhf" on 64-bit OS.
   CC = arm-linux-gnueabihf-g++
   AR= arm-linux-gnueabihf-ar
   CFLAGS += -march=armv7 -mthumb
   ZWOSDK = -Llib/armv7 -I./include
 endif
 
-#Ubuntu 20.04 added by Jos Wennmacker
-ifeq ($(platform), aarch64)
-  CC = g++
-  AR= ar
-  ZWOSDK = -Llib/armv8 -I./include
-endif
-
-ifeq ($(platform), x86_64)
-  CC = g++
-  AR= ar
-  ZWOSDK = -Llib/x64 -I./include
-endif
-
-ifeq ($(platform), i386)
-  CC = g++
-  AR= ar
-  ZWOSDK = -Llib/x86 -I./include
-endif
 
 ifeq (,$(CC))
   $(warning Could not identify the proper compiler for your platform.)
@@ -82,7 +79,7 @@ endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
 
-all:check_deps capture capture_RPiHQ startrails keogram sunwait
+all:check_deps capture_ZWO capture_RPi startrails keogram sunwait
 .PHONY : all
 
 ifneq ($(shell id -u), 0)
@@ -122,19 +119,29 @@ sunwait: patchsunwait
 	@echo `date +%F\ %R:%S` Done.
 
 allsky_common.o: allsky_common.cpp include/allsky_common.h
+	@echo Building $@ ...
 	@$(CC) -c  allsky_common.cpp -o $@ $(CFLAGS) $(OPENCV)
 
-mode_RPiHQ_mean.o: mode_RPiHQ_mean.cpp
-	@$(CC) -c  mode_RPiHQ_mean.cpp -o $@ $(CFLAGS) $(OPENCV)
+mode_mean.o: mode_mean.cpp include/mode_mean.h include/raspistill.h include/allsky_common.h
+	@echo Building $@ ...
+	@$(CC) -c  mode_mean.cpp -o $@ $(CFLAGS) $(OPENCV)
 
-capture:capture.cpp allsky_common.o
+capture_RPi.o: capture_RPi.cpp ASI_functions.cpp include/raspistill.h include/allsky_common.h
+	@echo Building $@ ...
+	@$(CC) -c  capture_RPi.cpp -o $@ $(CFLAGS) $(OPENCV)
+
+capture_ZWO.o: capture_ZWO.cpp ASI_functions.cpp include/allsky_common.h
+	@echo Building $@ ...
+	@$(CC) -c capture_ZWO.cpp -o $@ $(CFLAGS) $(OPENCV)
+
+capture_ZWO: capture_ZWO.o allsky_common.o
 	@echo `date +%F\ %R:%S` Building $@ program...
-	@$(CC)  $@.cpp -o $@ $(CFLAGS) $(OPENCV) -lASICamera2 $(USB) allsky_common.o
+	@$(CC) -o $@ $(CFLAGS)  capture_ZWO.o allsky_common.o $(OPENCV) -lASICamera2 $(USB)
 	@echo `date +%F\ %R:%S` Done.
 
-capture_RPiHQ:capture_RPiHQ.cpp allsky_common.o mode_RPiHQ_mean.o
+capture_RPi:capture_RPi.o allsky_common.o mode_mean.o
 	@echo `date +%F\ %R:%S` Building $@ program...
-	@$(CC)  $@.cpp -o $@ mode_RPiHQ_mean.o $(CFLAGS) $(OPENCV) allsky_common.o
+	@$(CC) -o $@ $(CFLAGS) capture_RPi.o allsky_common.o $(OPENCV) mode_mean.o
 	@echo `date +%F\ %R:%S` Done.
 
 keogram:keogram.cpp
@@ -149,10 +156,10 @@ startrails:startrails.cpp
 
 symlink: all
 	@echo `date +%F\ %R:%S` Symlinking binaries...
-	@ln -s $$PWD/capture ../
-	@ln -s $$PWD/capture_RPiHQ ../
-	@ln -s $$PWD/keogram ../
-	@ln -s $$PWD/startrails ../
+	@ln -s $$PWD/capture_ZWO ../bin/
+	@ln -s $$PWD/capture_RPi ../bin/
+	@ln -s $$PWD/keogram ../bin/
+	@ln -s $$PWD/startrails ../bin/
 
 .PHONY: symlink
 
@@ -165,42 +172,43 @@ install:
 	@echo `date +%F\ %R:%S` Copying binaries...
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  [ ! -e $(DESTDIR)$(bindir) ] && mkdir -p $(DESTDIR)$(bindir); \
-	  install capture $(DESTDIR)$(bindir); \
-	  install capture_RPiHQ $(DESTDIR)$(bindir); \
+	  install capture_ZWO $(DESTDIR)$(bindir); \
+	  install capture_RPi $(DESTDIR)$(bindir); \
 	  install keogram $(DESTDIR)$(bindir); \
 	  install startrails $(DESTDIR)$(bindir); \
 	else \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) capture ../; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPiHQ ../; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../; \
+	  [ ! -e ../bin ] && mkdir -p ../bin; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_ZWO ../bin/; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPi ../bin/; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../bin/; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../bin/; \
 	fi
 	@install sunwait $(DESTDIR)$(bindir)
 
 uninstall:
 	@echo `date +%F\ %R:%S` Removing binaries...
 	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  rm -f $(DESTDIR)$(bindir)/capture; \
-	  rm -f $(DESTDIR)$(bindir)/capture_RPiHQ; \
+	  rm -f $(DESTDIR)$(bindir)/capture_ZWO; \
+	  rm -f $(DESTDIR)$(bindir)/capture_RPi; \
 	  rm -f $(DESTDIR)$(bindir)/keogram; \
 	  rm -f $(DESTDIR)$(bindir)/startrails; \
 	  rm -f $(DESTDIR)$(bindir)/sunwait; \
 	else \
-	  rm -f ../capture; \
-	  rm -f ../capture_RPiHQ; \
-	  rm -f ../keogram; \
-	  rm -f ../startrails; \
-	  rm -f $(DESTDIR)$(bindir)/startrails; \
+	  rm -f ../bin/capture_ZWO; \
+	  rm -f ../bin/capture_RPi; \
+	  rm -f ../bin/keogram; \
+	  rm -f ../bin/startrails; \
 	fi
 
 endif # sudo / root check
 .PHONY : install uninstall
 
 clean:
-	rm -f capture capture_RPiHQ startrails keogram *.o *.a
+	rm -f capture_ZWO capture_RPi startrails keogram sunwait *.o *.a
 .PHONY : clean
 
 endif # Correct directory structure check
 
 %:
 	@echo `date +%F\ %R:%S` nothing to do for $@
+	

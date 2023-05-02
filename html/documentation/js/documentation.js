@@ -4,7 +4,7 @@
 var debug = false;
 
 // branch is updated during installation.
-var branch = "dev";
+var branch = "master";
 
 // On the Pi, URLs will either begin with "/documentation" (which is a web
 // alias to ~/allsky/documentation), or will be a relative path.

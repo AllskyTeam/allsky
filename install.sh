@@ -2049,7 +2049,7 @@ DEBUG=0
 DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display
 
-IN_TESTING="true"		# XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+IN_TESTING="false"		# XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 if [[ ${IN_TESTING} == "true" ]]; then
 	DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 

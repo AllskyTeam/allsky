@@ -259,10 +259,12 @@ else # sftp/ftp/ftps
 		# lftp doesn't actually try to open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.
 		# So, do a simple command first so we get a better error message.
-		echo "quote PWD > /dev/null || cd . || exit 99"		# PWD not supported by all servers
+		echo "cd . || exit 99"
 
 		if [[ ${DEBUG} == "true" ]]; then
-			echo "quote PWD"
+			# PWD not supported by all servers,
+			# but if it works it returns "xxx is current directory" so only output that.
+			echo "quote PWD | grep current "
 			echo "ls"
 			echo "debug 5"
 		fi

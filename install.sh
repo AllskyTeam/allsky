@@ -267,6 +267,25 @@ select_camera_type()
 
 
 ####
+check_for_connected_camera()
+{
+	if [[ ${CAMERA_TYPE} == "RPi" ]]; then
+		# determineCommandToUse() also determines if an RPi camera is connected.
+		C="$( determineCommandToUse "false" "" )"
+		RET=$?
+		if [[ ${RET} -ne 0 ]]; then
+			display_msg --log error "No RPi camera found: ${C}"
+			# shellcheck disable=SC2086
+			exit ${RET}
+		else
+			display_msg --log progress "RPi camera found."
+		fi
+	fi
+	# TODO: check for ZWO camera
+}
+
+
+####
 # Create the file that defines the WebUI variables.
 create_webui_defines()
 {
@@ -358,7 +377,7 @@ save_camera_capabilities()
 		#shellcheck disable=SC2086
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
-			MSG="$MSG}After connecting your camera, run '${ME} --update'."
+			MSG="$MSG}After connecting your camera, re-run the installation."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --log error "No camera detected - installation aborted."
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
@@ -2062,24 +2081,10 @@ if [[ ${IN_TESTING} == "true" ]]; then
 
 		MSG="${MSG}\nChanges from prior dev releases:"
 
-		X="/etc/allsky/modules"
-		if [[ -d ${X} ]]; then
-			MSG="${MSG}\n"
-			MSG="${MSG} * ${X} is no longer used."
-			MSG="${MSG}   Move its contents to ${ALLSKY_MODULE_LOCATION} then 'sudo rmdir ${X}"
-		fi
-
-		MSG="${MSG}\n * The allsky/tmp/extra directory moved to '${ALLSKY_EXTRA}'."
-		MSG="${MSG}\n   YOU need to move any files to the new location and UPDATE YOUR SCRIPTS."
+		MSG="${MSG}\n * change 1"
 
 		MSG="${MSG}\n"
-		MSG="${MSG}\n * The '${ALLSKY_CONFIG}/overlay/config/fields.json' file used to"
-		MSG="${MSG}\n   contain both System fields and User fields (ones YOU created)."
-		MSG="${MSG}\n   It now includes only System fields."
-		MSG="${MSG}\n   After this installation please re-add any User fields via the"
-		MSG="${MSG}\n   Variable Manager in the WebUI. Look in the old 'fields.json'"
-		MSG="${MSG}\n   file for a list of your field and their attributes."
-		MSG="${MSG}\n   Future updates will preserve your user fields."
+		MSG="${MSG}\n * change 2"
 
 		MSG="${MSG}\n\nIf you agree, enter:    yes"
 		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
@@ -2176,6 +2181,9 @@ get_locale
 
 ##### Determine the camera type
 select_camera_type
+
+##### Make sure a camera of the selected type is connected
+check_for_connected_camera
 
 ##### Get the new host name
 prompt_for_hostname

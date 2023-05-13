@@ -177,8 +177,24 @@ while [[ $# -gt 0 ]]; do
 				# If we can't set the new camera type, it's a major problem so exit right away.
 				# NOTE: when we're changing cameraType we're not changing anything else.
 
-				CC_FILE_OLD="${CC_FILE}-OLD"
+				# The software for RPi cameras needs to know what command is being used to
+				# capture the images.
+				# determineCommandToUse either retuns the command with exit code 0,
+				# or an error message with non-zero exit code.
+				if [[ ${NEW_VALUE} == "RPi" ]]; then
+					C="$( determineCommandToUse "false" "" )"
+					RET=$?
+					if [[ ${RET} -ne 0 ]] ; then
+						echo -e "${wERROR}${ME}: ERROR: ${C}.${wNC}"
+						# shellcheck disable=SC2086
+						exit ${RET}
+					fi
+					C=" -cmd ${C}"
+				else
+					C=""
+				fi
 
+				CC_FILE_OLD="${CC_FILE}-OLD"
 				if [[ -f ${CC_FILE} ]]; then
 					# Save the current file just in case creating a new one fails.
 					# It's a link so copy it to a temp name, then remove the old name.
@@ -189,18 +205,6 @@ while [[ $# -gt 0 ]]; do
 				# Create the camera capabilities file for the new camera type.
 				# Use Debug Level 3 to give the user more info on error.
 
-				# The software for RPi cameras needs to know what command is being used to
-				# capture the images.
-				if [[ ${NEW_VALUE} == "RPi" ]]; then
-					if ! C="$(determineCommandToUse "false" "" )" ; then
-						echo -e "${wERROR}${ME}: ERROR: unable to determine command to use, RET=${RET}, C=${C}.${wNC}."
-						# shellcheck disable=SC2086
-						exit ${RET}
-					fi
-					C=" -cmd ${C}"
-				else
-					C=""
-				fi
 				if [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}Calling capture_${NEW_VALUE}${C}${CAMERA_NUMBER} -cc_file '${CC_FILE}'${wNC}"
 				fi

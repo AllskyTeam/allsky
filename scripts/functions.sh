@@ -88,7 +88,7 @@ function determineCommandToUse()
 
 		CMD="raspistill"
 		if ! command -v "${CMD}" > /dev/null; then
-			echo -e "${RED}*** ERROR: Can't determine what command to use for RPi camera.${NC}"
+			echo "Can't determine what command to use for RPi camera."
 			if [[ ${USE_doExit} == "true" ]]; then
 				doExit "${EXIT_ERROR_STOP}" "Error" "${PREFIX}\nRPi camera command\nnot found!."
 			fi
@@ -105,12 +105,12 @@ function determineCommandToUse()
 	fi
 
 	if [[ ${RET} -ne 0 ]]; then
-		echo -e "${RED}*** ERROR: RPi camera not found.  Make sure it's enabled.${NC}"
+		echo "RPi camera not found.  Make sure it's enabled."
 		if [[ ${USE_doExit} == "true" ]]; then
 			doExit "${EXIT_NO_CAMERA}" "Error" "${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
 		fi
 
-		return 1
+		return "${EXIT_NO_CAMERA}"
 	fi
 
 	echo "${CMD}"

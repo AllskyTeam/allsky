@@ -68,7 +68,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		*)
-			display_msg error "Unknown argument: '${ARG}'."
+			echo "${RED}${ME}: ERROR: Unknown argument: '${ARG}'${NC}." >&2
 			OK="false"
 			;;
 	esac

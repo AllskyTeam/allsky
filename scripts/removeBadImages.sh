@@ -205,6 +205,8 @@ if [[ $num_bad -eq 0 ]]; then
 	if [[ -z ${FILE} ]]; then
 		echo -e "\n${ME} ${GREEN}No bad files found.${NC}" >&2
 		rm -f "${OUTPUT}"
+	else
+		rm -f "${ALLSKY_BAD_IMAGE_COUNT}"
 	fi
 else
 	if [[ -z ${FILE} ]]; then
@@ -212,6 +214,29 @@ else
 		# Do NOT remove ${OUTPUT} in case the user wants to look at it.
 	else	# only 1 file so show it
 		echo "${ME} File is bad: ${OUTPUT}" >&2
+		echo -e "${OUTPUT}" >> "${ALLSKY_BAD_IMAGE_COUNT}"
+		BAD_COUNT="$( wc -l < "${ALLSKY_BAD_IMAGE_COUNT}" )"
+		# TODO: make comparison number a global variable.
+		BAD_LIMIT=3
+# echo "xxxxxxxxxx ${BAD_COUNT} bad consecutive images" >&2
+		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
+			MSG="Multiple bad consecutive bad images."
+			MSG="${MSG}\nCheck 'REMOVE_BAD_IMAGES_THRESHOLD_LOW' and 'REMOVE_BAD_IMAGES_THRESHOLD_HIGH' in config.sh"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}"
+		fi
+		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then
+			# Split the long file name so it fits in the message.
+			DIR="$( dirname "${ALLSKY_BAD_IMAGE_COUNT}" )"
+			FILE="$( basename "${ALLSKY_BAD_IMAGE_COUNT}" )"
+
+			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
+				--directory "${ALLSKY_TMP}" \
+				"${FILENAME}" "yellow" "" "85" "" "" \
+	 			"" "5" "yellow" "${EXTENSION}" "" \
+				"WARNING:\n\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}"
+
+		fi
+
 	fi
 fi
 

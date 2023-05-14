@@ -186,6 +186,8 @@ else
 	"${ALLSKY_SCRIPTS}/addMessage.sh" warning "${ME}: ${MSG}"
 fi
 
+rm -f "${ALLSKY_BAD_IMAGE_COUNT}"	# Start with no bad images
+
 # Clear out these files and allow the web server to write to it.
 : > "${ALLSKY_ABORTEDUPLOADS}"
 : > "${ALLSKY_ABORTEDTIMELAPSE}"

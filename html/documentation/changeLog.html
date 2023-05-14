@@ -26,7 +26,7 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-This page lists the changes to all the major Allsky releases.
+This page lists the changes to all Allsky releases.
 You can also see the <a allsky="true" external="true" href="knownIssues.html">Known Issues and Limitations</a>
 of the current release.
 </p>
@@ -35,6 +35,37 @@ of the current release.
 Wonder what all the colors below mean?
 Check out <a allsky="true" external="true" href="settings/EditorColors.html">this page</a>.
 </blockquote>
+
+<h2>v2023.05.01_dev01 - Point Release to v2023.05.01</h2>
+<details><summary></summary>
+<h4>Enhancements</h4>
+<ul>
+	<li>If multiple consecutive "bad" images are found,
+		a warning image is now displayed saying how many "bad" images were found.
+		A system warning in the WebUI is also displayed with instructions on what to check.
+		<br>
+		When Allsky starts it displays an "Allsky is Starting" image until the first
+		good image is saved.
+		Depending on your settings and the sky brightness,
+		it may take many images before it gets a good one to save.
+		The new warning image makes it obvious Allsky hasn't hung.
+</ul>
+
+<h4>Bug Fixes</h4>
+<ul>
+	<li><span class="shSetting">REMOVE_BAD_IMAGES</span> would often flag dark,
+		but "good" images as "bad" and not save them using the default
+		<span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_LOW</span>
+		value of <code>1</code> (which is still a good default).
+		<blockquote>
+		If after installing this point release you are still getting a lot of "bad" images,
+		do NOT disable <span class="shSetting">REMOVE_BAD_IMAGES</span> - instead,
+		modify the <span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_*</span> values as needed.
+		</blockquote>
+</ul>
+
+<hr class="separator"><!-- =========================================== -->
+</details>
 
 <h2>v2023.05.01 - Current Release</h2>
 <details><summary></summary>

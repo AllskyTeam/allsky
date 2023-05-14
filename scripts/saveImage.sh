@@ -53,9 +53,15 @@ WORKING_DIR=$(dirname "${CURRENT_IMAGE}")	# the directory the image is currently
 # Optional full check for bad images.
 if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
 	# If the return code is 99, the file was bad and deleted so don't continue.
-	"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
+	AS_MEAN2="$( "${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}" )"
 	# removeBadImages.sh displayed error message and deleted the file.
-	[[ $? -eq 99 ]] && exit 99
+	if [[ $? -eq 99 ]]; then
+		exit 99
+	elif [[ -n ${AS_MEAN2} ]]; then
+		export AS_MEAN2
+	fi
+else
+	AS_MEAN2=""
 fi
 
 # If we didn't execute removeBadImages.sh do a quick sanity check on the image.
@@ -90,6 +96,9 @@ done
 # Export other variables so user can use them in overlays
 export AS_CAMERA_TYPE="${CAMERA_TYPE}"
 export AS_CAMERA_MODEL="${CAMERA_MODEL}"
+if [[ -n ${AS_MEAN2} ]]; then
+	export AS_MEAN_NORMALIZED="$( echo "${AS_MEAN2} * 255" | bc )"		# xxxx for testing
+fi
 
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/darkCapture.sh"		# does not return if in darkframe mode

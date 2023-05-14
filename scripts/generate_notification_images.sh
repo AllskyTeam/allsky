@@ -26,7 +26,7 @@ function usage_and_exit()
 	(
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 		echo -e "\nUsage: ${ME} [--help] [--directory dir] [--size XxY]"
-		echo "    [type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']\n"
+		echo -e "    [type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']\n"
 		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 		echo "When run with no arguments, all notification types are created with extensions: ${ALL_EXTS/ /, }."
 		echo "Arguments:"

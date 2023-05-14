@@ -26,7 +26,7 @@ function usage_and_exit()
 	(
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 		echo -e "\nUsage: ${ME} [--help] [--directory dir] [--size XxY]"
-		echo -e "\t[type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']\n"
+		echo "    [type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']\n"
 		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 		echo "When run with no arguments, all notification types are created with extensions: ${ALL_EXTS/ /, }."
 		echo "Arguments:"
@@ -67,9 +67,12 @@ while [[ $# -gt 0 ]]; do
 			IMAGE_SIZE="${X}x${Y}"
 			shift
 			;;
-		*)
+		-*)
 			echo "${RED}${ME}: ERROR: Unknown argument: '${ARG}'${NC}." >&2
 			OK="false"
+			;;
+		*)
+			break
 			;;
 	esac
 	shift

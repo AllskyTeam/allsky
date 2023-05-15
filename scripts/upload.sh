@@ -200,7 +200,7 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	fi
 	[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-P ${REMOTE_PORT}"
 	# shellcheck disable=SC2086
-	OUTPUT="$(scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}" 2>&1)"
+	OUTPUT="$(scp -i "${SSH_KEY_FILE}" ${SCP_EXTRA_PARAMETERS} ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}" 2>&1)"
 	RET=$?
 
 

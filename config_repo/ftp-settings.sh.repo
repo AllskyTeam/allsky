@@ -56,6 +56,8 @@ LFTP_COMMANDS=""
 	# The path to the SSH key.
 SSH_KEY_FILE=""
 
+	# Any additional scp parameters.
+SCP_EXTRA_PARAMETERS=""
 
 ############### S3 PROTOCOL only:
 	# AWS CLI directory where the AWS CLI tools are installed.

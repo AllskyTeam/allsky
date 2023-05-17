@@ -682,7 +682,7 @@
 "description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type 'locale' at a command prompt to see your choices.",
 "label" : "Locale",
 "type" : "text",
-"display" : 0,
+"display" : 1,
 "advanced" : 0
 },
 {

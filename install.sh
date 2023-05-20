@@ -1873,8 +1873,6 @@ install_overlay()
 	MSG2="\n\tThis may take a LONG time if the packages are not already installed."
 	display_msg --log progress "Installing Python dependencies${M}."  "${MSG2}"
 	TMP="${ALLSKY_INSTALLATION_LOGS}/Python_dependencies"
-	PIP3_BUILD="${ALLSKY_HOME}/pip3.build"
-	mkdir -p "${PIP3_BUILD}"
 	COUNT=0
 	local NUM=$(wc -l < "${ALLSKY_REPO}/requirements${R}.txt")
 	while read -r package
@@ -1883,14 +1881,13 @@ install_overlay()
 		echo "${package}" > /tmp/package
 		L="${TMP}.${COUNT}.log"
 		display_msg --log progress "   === Package # ${COUNT} of ${NUM}: [${package}]"
-		pip3 install --no-warn-script-location --build "${PIP3_BUILD}" -r /tmp/package > "${L}" 2>&1
+		pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
 		# These files are too big to display so pass in "0" instead of ${DEBUG}.
 		if ! check_success $? "Python dependency [${package}] failed" "${L}" 0 ; then
 			rm -fr "${PIP3_BUILD}"
 			exit_with_image 1
 		fi
 	done < "${ALLSKY_REPO}/requirements${R}.txt"
-	rm -fr "${PIP3_BUILD}"
 
 	display_msg --log progress "Installing Trutype fonts."
 	TMP="${ALLSKY_INSTALLATION_LOGS}/msttcorefonts.log"

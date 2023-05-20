@@ -276,7 +276,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 			else
 				if ! grep --silent "${FINAL_FILE}" "${MINI_TIMELAPSE_FILES}" ; then
 					echo "${FINAL_FILE}" >> "${MINI_TIMELAPSE_FILES}"
-				elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+				elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 1 ]]; then
 					# This shouldn't happen...
 					echo -e "${YELLOW}${ME} WARNING: '${FINAL_FILE}' already in set.${NC}" >&2
 				fi
@@ -324,7 +324,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
 					x="$(tail -${KEEP} "${MINI_TIMELAPSE_FILES}")"
 					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
-					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 						echo -e "${YELLOW}${ME} Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest file(s) and added current image.${NC}" >&2
 					fi
 				fi

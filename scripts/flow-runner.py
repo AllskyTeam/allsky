@@ -173,7 +173,7 @@ if __name__ == "__main__":
                     if hasattr(_temp, method):
                         globals()[method] = getattr(_temp, method)
                         result = globals()[method]()
-                        shared.log(3, "INFO: Cleared module data for {0}".format(moduleName))
+                        shared.log(4, "INFO: Cleared module data for {0}".format(moduleName))
                     else:
                         shared.log(3, "INFO: Attempting to clear module data for {0} but no function provided".format(moduleName))
                         
@@ -192,7 +192,7 @@ if __name__ == "__main__":
             except Exception as e:
                 shared.log(0, "ERROR: Failed to import module allsky_{0}.py in one of ( {1} ). Ignoring Module.".format(moduleName, e))
         else:
-            shared.log(3, "INFO: Ignorning module {0} as its disabled".format(shared.flow[shared.step]["module"]))
+            shared.log(4, "INFO: Ignorning module {0} as its disabled".format(shared.flow[shared.step]["module"]))
 
         if shared.flow[shared.step]["enabled"] and method in globals():
             startTime = datetime.now()
@@ -225,11 +225,11 @@ if __name__ == "__main__":
                         shared.log(0, 'ERROR: Module {0} will be disabled, it took {1:.2f}s max allowed is {2}s'.format(shared.flow[shared.step]['module'], elapsedTime, timeout))
                         results[shared.step]["disable"] = True
                     else:
-                        shared.log(3, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
+                        shared.log(4, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
                 else:
-                    shared.log(3, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
+                    shared.log(4, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
             else:
-                shared.log(3, f'INFO: Ignoring watchdog for module {shared.step}')             
+                shared.log(4, f'INFO: Ignoring watchdog for module {shared.step}')             
                     
             results[shared.step]["lastexecutiontime"] = str(elapsedTime) 
 

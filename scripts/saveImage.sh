@@ -4,7 +4,7 @@
 
 ME="$(basename "${BASH_ARGV0}")"
 
-[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME} $*"
+[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
 #shellcheck disable=SC2086 source-path=.
 source "${ALLSKY_HOME}/variables.sh" || exit ${ALLSKY_ERROR_STOP}

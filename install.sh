@@ -1866,6 +1866,10 @@ install_overlay()
 	if [[ ${OS} == "buster" ]]; then
 		M=" for Buster"
 		R="-buster"
+		#
+		# Force pip upgrade, without this installations on Buster fail
+		#
+		pip3 install --upgrade pip
 	else
 		M=""
 		R=""

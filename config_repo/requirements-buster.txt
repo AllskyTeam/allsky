@@ -9,7 +9,7 @@ scipy<=1.8.1
 scikit-image<=0.19.3
 paho-mqtt
 photutils
-astropy=4.3.1
+astropy==4.3.1
 suncalc
 Adafruit-Blinka
 vcgencmd

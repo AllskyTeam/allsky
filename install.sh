@@ -1869,7 +1869,7 @@ install_overlay()
 		#
 		# Force pip upgrade, without this installations on Buster fail
 		#
-		pip3 install --upgrade pip
+		pip3 install --upgrade pip > /dev/null 2>&1
 	else
 		M=""
 		R=""

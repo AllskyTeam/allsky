@@ -36,7 +36,7 @@ Wonder what all the colors below mean?
 Check out <a allsky="true" external="true" href="settings/EditorColors.html">this page</a>.
 </blockquote>
 
-<h2>v2023.05.01_dev01 - Point Release to v2023.05.01</h2>
+<h2>v2023.05.01_01 - Point Release # 1</h2>
 <details><summary></summary>
 <h4>Enhancements</h4>
 <ul>
@@ -62,12 +62,17 @@ Check out <a allsky="true" external="true" href="settings/EditorColors.html">thi
 		do NOT disable <span class="shSetting">REMOVE_BAD_IMAGES</span> - instead,
 		modify the <span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_*</span> values as needed.
 		</blockquote>
+	<li>The <code>s3</code> upload protocol now sets the destination file name to
+		<span class="fileName">image.jpg</span> instead of
+		<span class="fileName">image-YYYYMMDDHHMMSS.jpg</span>.
+	<li>The <code>scp</code> upload protocol now uses the
+		<span class="shSetting">REMOTE_USER</span> setting.
 </ul>
 
 <hr class="separator"><!-- =========================================== -->
 </details>
 
-<h2>v2023.05.01 - Current Release</h2>
+<h2>v2023.05.01 - Current Major Release</h2>
 <details><summary></summary>
 
 <h4>Core Allsky</h4>

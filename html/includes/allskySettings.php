@@ -43,6 +43,7 @@ function DisplayAllskyConfig(){
 			$somethingChanged = false;
 			$numErrors = 0;
 			$newCameraType = "";
+			$refreshingCameraType = false;
 			$newCameraModel = "";
 			$newCameraNumber = "";
 			$ok = true;
@@ -71,7 +72,13 @@ function DisplayAllskyConfig(){
 					$newValue = getVariableOrDefault($settings, $originalName, "");
 					if ($oldValue !== $newValue) {
 						if ($originalName === $cameraTypeName)
-							$newCameraType = $newValue;
+							if ($newValue === "Refresh") {
+								// Refresh the same Camera Type
+								$refreshingCameraType = true;
+								$newCameraType = $oldValue;
+							} else {
+								$newCameraType = $newValue;
+							}
 						elseif ($originalName === $cameraModelName)
 							$newCameraModel = $newValue;
 						elseif ($originalName === $cameraNumberName)
@@ -141,7 +148,10 @@ function DisplayAllskyConfig(){
 					}
 				} else {
 					if ($newCameraType !== "") {
-						$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>";
+						if ($refreshingCameraType)
+							$msg .= "<b>Camera Type</b> $newCameraType refreshed";
+						else
+							$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>";
 					}
 					if ($newCameraModel !== "") {
 						if ($msg !== "") $msg = "<br>$msg";
@@ -165,12 +175,14 @@ function DisplayAllskyConfig(){
 				if ($changes !== "") {
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
+					$moreArgs = "";
 					if ($doingRestart)
-						$restarting = "--restarting";
-					else
-						$restarting = "";
+						$moreArgs .= " --restarting";
+					if ($newCameraType !== "")
+						$moreArgs .= " --cameraTypeOnly";
+
 					$CMD = "sudo --user=" . ALLSKY_OWNER;
-					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $debugArg $restarting $changes";
+					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $debugArg $moreArgs $changes";
 					# Let makeChanges.sh display any output
 					echo '<script>console.log("Running: ' . $CMD . '");</script>';
 					$ok = runCommand($CMD, "", "success");
@@ -554,4 +566,3 @@ if ($formReadonly != "readonly") { ?>
 <?php
 }
 ?>
-

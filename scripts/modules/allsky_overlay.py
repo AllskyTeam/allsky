@@ -851,8 +851,8 @@ class ALLSKYOVERLAY:
     def _doAddImage(self, imageData):
         imageName = imageData["image"]
         if imageName != 'missing':
-            imageX = imageData["x"]
-            imageY = imageData["y"]
+            imageX = int(imageData["x"])
+            imageY = int(imageData["y"])
             image = None
 
             imagePath = os.path.join(os.environ['ALLSKY_OVERLAY'], "images", imageName)
@@ -868,7 +868,7 @@ class ALLSKYOVERLAY:
 
                 if "rotate" in imageData:
                     if imageData["rotate"] is not None:
-                        image = self._rotate_image(image, imageData["rotate"])
+                        image = self._rotate_image(image, int(imageData["rotate"]))
 
                 height = image.shape[0]
                 width = image.shape[1]

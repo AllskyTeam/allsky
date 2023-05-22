@@ -1124,12 +1124,13 @@
 {
 "name" : "cameraType",
 "default" : "",
-"description" : "The type of camera you are using.  <span class='WebUIValue'>RPi</span> includes the HQ and compatible cameras.",
+"description" : "The type of camera you are using.  <span class='WebUIValue'>Refresh</span> re-sets the Camera Model and is useful if you change cameras of the same Camera Type.",
 "label" : "Camera Type",
 "type" : "select",
 "options" : [
 	{"value" : "RPi", "label" : "RPi"},
-	{"value" : "ZWO", "label" : "ZWO"}
+	{"value" : "ZWO", "label" : "ZWO"},
+	{"value" : "Refresh", "label" : "Refresh"}
 ],
 "display" : 1,
 "checkchanges" : 1,

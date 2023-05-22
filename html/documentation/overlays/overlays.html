@@ -70,7 +70,8 @@
 								to position them.</li>
 							<li><strong>Customisable Interface</strong> - The
 								<span class="editorName">Overlay Editor</span>
-								user interface can be highly customised.</li>
+								user interface can be highly customised.
+							</li>
 							<li><span class="managerName">Font Manager</span> - You can upload any TrueType font and use
 								it in the overlays or use any font already on your Pi.</li>
 							<li><span class="managerName">Variable Manager</span> - Provides a library of fields that
@@ -181,38 +182,38 @@
 					<summary></summary>
 					<p id="ValidVariableNames">
 						Variable names:
-						<ul class="minimalPadding">
-							<li>Must begin with a letter <code>a - z</code> or <code>A - Z</code>.
-							<li>The remaining characters may contain any number of letters, number <code>0 - 9</code>,
-								or the underscore character <code>_</code>.
-							<li>Should be prefixed with a string that's unique to you like your initials,
-								to avoid conflicting with the names of Allsky system variables.
-								This prefix can be anything except <code>AS_</code> and <code>ALLSKY_</code>.
-							<li>Should make sense to you.
-								You are more likely to remember what <code>${MY_AMBIENT_TEMP}</code>
-								means than <code>${MY_AT}</code>.
-							<li>By convention are UPPERCASE, but you can mix case,
-								however, variable names are case-sensitive,
-								so <code>${MY_ABIENT_TEMP}</code> and <code>${MY_ABIENT_temp}</code>
-								are different variables.
-						</ul>
+					<ul class="minimalPadding">
+						<li>Must begin with a letter <code>a - z</code> or <code>A - Z</code>.
+						<li>The remaining characters may contain any number of letters, number <code>0 - 9</code>,
+							or the underscore character <code>_</code>.
+						<li>Should be prefixed with a string that's unique to you like your initials,
+							to avoid conflicting with the names of Allsky system variables.
+							This prefix can be anything except <code>AS_</code> and <code>ALLSKY_</code>.
+						<li>Should make sense to you.
+							You are more likely to remember what <code>${MY_AMBIENT_TEMP}</code>
+							means than <code>${MY_AT}</code>.
+						<li>By convention are UPPERCASE, but you can mix case,
+							however, variable names are case-sensitive,
+							so <code>${MY_ABIENT_TEMP}</code> and <code>${MY_ABIENT_temp}</code>
+							are different variables.
+					</ul>
 					</p>
 					<p class="morePadding">
 						A <strong>variable</strong> is a variable <em>name</em> enclosed within
 						<code><strong>${}</strong></code>, for example, <code>${sEXPOSURE}</code>.
 					</p>
 					<p class="morePadding">
-						<blockquote>
-							If you see a variable displayed on the overlay as <code>???</code> it usually means
-							the variable is undefined - either it's not in the
-							<span class="managerName">Variable Manager</span> at all (could be a typo),
-							or is only in the <strong>All Variables</strong> tab.
-							The variable  needs to be defined and copied to the
-							<strong>Allsky Variables</strong> tab.
-							<br>Undefined variables will have a line in
-							<span class="fileName">/var/log/allsky.log</span> like:
-							<code class="noWrap">ERROR: ${T2} has no variable type; check 'fields.json'</code>.
-							<p>
+					<blockquote>
+						If you see a variable displayed on the overlay as <code>???</code> it usually means
+						the variable is undefined - either it's not in the
+						<span class="managerName">Variable Manager</span> at all (could be a typo),
+						or is only in the <strong>All Variables</strong> tab.
+						The variable needs to be defined and copied to the
+						<strong>Allsky Variables</strong> tab.
+						<br>Undefined variables will have a line in
+						<span class="fileName">/var/log/allsky.log</span> like:
+						<code class="noWrap">ERROR: ${T2} has no variable type; check 'fields.json'</code>.
+						<p>
 							If a variable is displayed as <code>??</code> it usually means
 							the variable's formatting is incorrect, for example,
 							you tried to display a number as a date.
@@ -222,7 +223,7 @@
 							<span class="fileName">/var/log/allsky.log</span> like:
 							<code class="noWrap">ERROR: Cannot use format '%a' on Number variables like ${GAIN}.</code>.
 							</ol>
-						</blockquote>
+					</blockquote>
 					</p>
 
 					<p class="morePadding">Some example text fields are:</p>
@@ -240,7 +241,8 @@
 								<td>24/10/2023</td>
 								<td>Displays the date from the DATE system variable.
 									The date can be <a href=#formattingVariables">formatted in a variety of ways</a>.
-									<br>This field contains only a variable.</td>
+									<br>This field contains only a variable.
+								</td>
 							</tr>
 							<tr>
 								<td><code>Date: ${DATE}</code></td>
@@ -248,12 +250,14 @@
 								<td>Displays the text "Date: " then the date the image was taken
 									from the DATE system variable.
 									As above, the date can be formatted in a variety of ways.
-									<br>This field contains text and a variable.</td>
+									<br>This field contains text and a variable.
+								</td>
 							</tr>
 							<tr>
 								<td><code class="nowrap">Date: ${DATE} ${TIME}</code></td>
 								<td>Date: 24/10/2023 23:12:34</td>
-								<td>Displays the date and time the image was taken from the DATE and TIME system variables,
+								<td>Displays the date and time the image was taken from the DATE and TIME system
+									variables,
 									respectively.
 									Both variables can be formatted in a variety of ways.
 									<br>This field contains text and two variables.
@@ -265,7 +269,8 @@
 								<td>Date: DATE TIME</td>
 								<td>Because this field doesn't have any variables, it simply displays
 									"Date: DATE TIME".
-									<br>This field contains only text.</td>
+									<br>This field contains only text.
+								</td>
 								</td>
 							</tr>
 						</tbody>
@@ -393,9 +398,11 @@
 						For this reason it's important that the <span class="moduleName">Overlay Module</span>
 						runs as late as possible within the module flow.
 						As an example, the <span class="moduleName">Star Count Module</span> creates a
-						variable called <code>${STARCOUNT}</code> and passes it to the next module.</p>
+						variable called <code>${STARCOUNT}</code> and passes it to the next module.
+					</p>
 					<p>Please refer to the
-						<a allsky="true" external="true" href="/documentation/modules/modules.html">documentation on each module</a>
+						<a allsky="true" external="true" href="/documentation/modules/modules.html">documentation on
+							each module</a>
 						for the variables they makes available.
 					</p>
 
@@ -407,7 +414,8 @@
 						<summary></summary>
 						<blockquote class="morePadding">This is an advanced topic that requires an
 							understanding of the Linux file system and how to manage files within it.
-							The <a allsky="true" external="true" href="/documentation/basics/Linux.html">Linux Basics</a>
+							The <a allsky="true" external="true" href="/documentation/basics/Linux.html">Linux
+								Basics</a>
 							page should provide the understanding you need.
 						</blockquote>
 						<p class="morePadding">As an example, assume you want to add weather data to your images.
@@ -430,7 +438,8 @@
 						<h4>Dates</h4>
 						<p>When adding dates to any extra data files please ensure that the
 							date is formatted in the same format as the
-							<span class="WebUISetting">Time Format</span> setting in WebUI</p>
+							<span class="WebUISetting">Time Format</span> setting in WebUI
+						</p>
 
 						<h4>Text Files</h4>
 						<p>Text files must end with a <span class="fileName">.txt</span> extension.
@@ -463,8 +472,9 @@
 							to ignore "extra" files when they are over a certain age.
 							For <span class="fileName">.txt</span> files there is a single value which is specified
 							in the <span class="editorName">Overlay Editor</span> settings dialog box.
-								See the next section for how to specify the expiration time for
-								<span class="fileName">.json</span> files.</p>
+							See the next section for how to specify the expiration time for
+							<span class="fileName">.json</span> files.
+						</p>
 
 
 						<h4>JSON Files</h4>
@@ -571,7 +581,7 @@
 												<span class="editorName">Overlay Editor</span> default expiry setting
 												for the other two.
 												This works well if you only have one "extra" file.
-												</li>
+											</li>
 											<li>If you have multiple "extra" files it's probably best to specify
 												an expiry time for ALL fields in all files,
 												rather than using the
@@ -580,7 +590,7 @@
 												If a field shouldn't have an expiry time,
 												use <code class="noWrap">"expires": 0,</code>
 												which disables its expiry time.
-												</li>
+											</li>
 										</ul>
 									</blockquote>
 								</td>
@@ -638,7 +648,7 @@
 			<h2>The Overlay Editor User Interface</h2>
 			<div>
 				<p>
-				The <span class="editorName">Overlay Editor</span> web page consists of two key areas:
+					The <span class="editorName">Overlay Editor</span> web page consists of two key areas:
 				</p>
 				<ol class="minimalPadding">
 					<li>The <strong>toolbar</strong> contains icons that perform actions or
@@ -654,7 +664,7 @@
 						<br>If you added a field by mistake, delete it by clicking
 						on the <i class="fa fa-times fa-lg"></i> icon
 						(<span class="moduleToolbarIconNumber" style="font-size: 75%">4</span>)
-					 	before doing anything else.
+						before doing anything else.
 					</blockquote>
 					<div class="morePadding">
 						<p>Here is a typical top portion of the editor,
@@ -849,9 +859,9 @@
 										smaller than those captured by your camera so
 										you may not be using all of the available screen area.
 										<p class="morePadding">Ideally you will create overlays after you've set any
-										resize and crop options and the captured images size is its
-										"final" size.</p>
-										</blockquote>
+											resize and crop options and the captured images size is its
+											"final" size.</p>
+									</blockquote>
 								</td>
 							</tr>
 						</tbody>
@@ -867,176 +877,181 @@
 			</p>
 			<details>
 				<summary></summary>
-					<h3 id="variableManager">The Variable Manager &nbsp; <i class="fa fa-regular fa-rectangle-list"></i></h3>
-					<p>The <span class="managerName">Variable Manager</span> is used to store
-						variables and text that can be used in fields.
+				<h3 id="variableManager">The Variable Manager &nbsp; <i class="fa fa-regular fa-rectangle-list"></i>
+				</h3>
+				<p>The <span class="managerName">Variable Manager</span> is used to store
+					variables and text that can be used in fields.
+				</p>
+				<details sub>
+					<summary></summary>
+
+					<p>The <span class="managerName">Variable Manager</span> provides a quick method
+						for storing details of the available variables and adding them to the overlay.
+						The manager comes preinstalled with a set of system variables that
+						can be modified but not deleted.
+						You can also add your own variables to the manager; typically
+						these will come from modules or "extra" data files.</p>
+					<p>The manager consists of two tabs:
+					<ol class="minimalPadding">
+						<li>The <strong>Allsky Variables</strong> tab contains
+							the variables that have been defined and hence can be
+							added to the overlay.
+						<li>The <strong>All Variables</strong> tab contains all variables
+							including ones that have not been defined and hence cannot be
+							added to the overlay.
+					</ol>
 					</p>
-					<details sub>
-						<summary></summary>
 
-						<p>The <span class="managerName">Variable Manager</span> provides a quick method
-							for storing details of the available variables and adding them to the overlay.
-							The manager comes preinstalled with a set of system variables that
-							can be modified but not deleted.
-							You can also add your own variables to the manager; typically
-							these will come from modules or "extra" data files.</p>
-						<p>The manager consists of two tabs:
-							<ol class="minimalPadding">
-								<li>The <strong>Allsky Variables</strong> tab contains
-									the variables that have been defined and hence can be
-									added to the overlay.
-								<li>The <strong>All Variables</strong> tab contains all variables
-									including ones that have not been defined and hence cannot be
-									added to the overlay.
-							</ol>
-						</p>
+					<h4>Allsky Variables tab</h4>
+					<table>
+						<tbody>
+							<tr>
+								<td align="center">
+									<img allsky="true" src="variable-manager-p2.png" alt="Variable Manager"
+										loading="lazy" />
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<ul>
+										<li>The <span class="btn dark btn-primary btn-xs oe-list-add">
+												<i class="fa-solid fa-plus oe-list-add"></i></span> icon
+											adds the associated variable in a new text field to the overlay.
+											The <strong>Text Properties</strong> dialog box
+											will also be displayed and populated with the relevant
+											data for the variable.</li>
+										<li>The <span class="btn dark btn-warning btn-xs oe-list-edit">
+												<i class="fa fa-pen-to-square oe-list-edit"></i></span> icon
+											edits the variable. If the variable is a system variable then only
+											certain fields can be changed.</li>
+										<li>The <span class="btn dark btn-danger btn-xs oe-list-delete">
+												<i class="fa fa-trash oe-list-delete"></i></span> icon
+											deletes a variable.
+											You can only delete variables that you added;
+											there are none shown in the screenshot above.
+										</li>
+									</ul>
 
-						<h4>Allsky Variables tab</h4>
-						<table>
-							<tbody>
-								<tr>
-									<td align="center">
-										<img allsky="true" src="variable-manager-p2.png" alt="Variable Manager"
-											loading="lazy" />
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<ul>
-											<li>The <span class="btn dark btn-primary btn-xs oe-list-add">
-													<i class="fa-solid fa-plus oe-list-add"></i></span> icon
-												adds the associated variable in a new text field to the overlay.
-												The <strong>Text Properties</strong> dialog box
-												will also be displayed and populated with the relevant
-												data for the variable.</li>
-											<li>The <span class="btn dark btn-warning btn-xs oe-list-edit">
-													<i class="fa fa-pen-to-square oe-list-edit"></i></span> icon
-												edits the variable. If the variable is a system variable then only
-												certain fields can be changed.</li>
-											<li>The <span class="btn dark btn-danger btn-xs oe-list-delete">
-													<i class="fa fa-trash oe-list-delete"></i></span> icon
-												deletes a variable.
-												You can only delete variables that you added;
-												there are none shown in the screenshot above.
-											</li>
-										</ul>
+									<p id="allskyVariablesButton" class="morePadding">
+										The <span class="btn btn-primary btn-small">Add Variable</span>
+										brings up the "Add Variable" dialog box that allows you to
+										add your own variable and set the variable's Type and other attributes.
+									<blockquote>
+										This button does NOT add the variable to the overlay;
+										instead, it just adds it to the end of the
+										<strong>Allsky Variables</strong> list so it can be added to the overlay.
+									</blockquote>
+									</p>
+									<p class="morePadding">The search option in the top right can be used
+										to quickly search for a variable by name.
+										Searches are not case sensitive.</p>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 
-										<p id="allskyVariablesButton" class="morePadding">
-											The <span class="btn btn-primary btn-small">Add Variable</span>
-											brings up the "Add Variable" dialog box that allows you to
-											add your own variable and set the variable's Type and other attributes.
-											<blockquote>
-												This button does NOT add the variable to the overlay;
-												instead, it just adds it to the end of the
-												<strong>Allsky Variables</strong> list so it can be added to the overlay.
-											</blockquote>
-										</p>
-										<p class="morePadding">The search option in the top right can be used
-											to quickly search for a variable by name.
-											Searches are not case sensitive.</p>
-									</td>
-								</tr>
-							</tbody>
-						</table>
+					<br>
+					<h4>All Variables tab</h4>
+					<table>
+						<tbody>
+							<tr>
+								<td align="center">
+									<img allsky="true" src="variable-manager-all.png" alt="Variable Manager All"
+										loading="lazy" />
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<p>This tab lists every variable that Allsky can see and the last value it had,
+										if any.
+										These variables only have a Name as well as possibly their last value.
+										They are not yet defined, i.e., they have no attributes like
+										data Type, Description, Format, or Sample Data.
+									</p>
+									<ul>
+										<li>Click the <span class="btn dark btn-primary btn-xs oe-list-add">
+												<i class="fa-solid fa-plus oe-list-add"></i></span> icon
+											to define the variable's attributes
+											and then add the variable to the <strong>Allsky Variables</strong> tab
+											making it available for use on overlays.
+											Note that doing this does not put the variable on the overlay -
+											it just makes it <em>available</em> to be put on the overlay.
+										</li>
+										<blockquote>If this button is disabled then the variable is already
+											in the <strong>Allsky Variables</strong> tab.</blockquote>
+									</ul>
 
-						<br><h4>All Variables tab</h4>
-						<table>
-							<tbody>
-								<tr>
-									<td align="center">
-										<img allsky="true" src="variable-manager-all.png" alt="Variable Manager All"
-											loading="lazy" />
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<p>This tab lists every variable that Allsky can see and the last value it had,
-											if any.
-											These variables only have a Name as well as possibly their last value.
-											They are not yet defined, i.e., they have no attributes like
-											data Type, Description, Format, or Sample Data.
-										</p>
-										<ul>
-											<li>Click the <span class="btn dark btn-primary btn-xs oe-list-add">
-													<i class="fa-solid fa-plus oe-list-add"></i></span> icon
-												to define the variable's attributes
-												and then add the variable to the <strong>Allsky Variables</strong> tab
-												making it available for use on overlays.
-												Note that doing this does not put the variable on the overlay -
-												it just makes it <em>available</em> to be put on the overlay.
+									<p class="morePadding">
+										The <span class="btn btn-primary btn-small">Add Variable</span>
+										button does the same thing as the same button in the
+										<a href="#allskyVariablesButton"><strong>Allsky Variables</strong></a> tab.
+									</p>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<br>
+					<h4>The "Add Variable" and "Edit Variable" dialog boxes</h4>
+					<p>Clicking on the
+						<span class="btn btn-primary btn-small">Add Variable</span> button
+						or the
+						<span class="btn dark btn-warning btn-xs oe-list-edit">
+							<i class="fa fa-pen-to-square oe-list-edit"></i></span>
+						icon above brings up a dialog box to add or edit a variable.
+						It's the same dialog box in either case, just with a different title.
+						Editing a System Variable will display a message as shown in the image below.
+					</p>
+					<table>
+						<tbody>
+							<tr>
+								<td align="center">
+									<img allsky="true" src="variable-manager-edit.png" alt="Edit variable"
+										loading="lazy" />
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<ul>
+										<li><strong>Variable Name</strong> - The name of the variable
+											enclosed within <code><strong>${}</strong></code>.
+											For system variables the name cannot be changed.
+											See the <a href="#ValidVariableNames">Variable names</a>
+											section for details on valid variable names.
+										</li>
+										<li><strong>Description</strong> - A description of the variable.
+											This is only for reference and is displayed in the
+											<span class="managerName">Variable Manager</span>.
+										</li>
+										<li><strong>Format</strong> - The optional
+											<a href="#formattingVariables">formatting</a> used to
+											display the variable.
+										</li>
+										<li><strong>Sample Data</strong> - Sample data that is used when
+											displaying
+											sample data in the <span class="editorName">Overlay Editor</span>.
+										</li>
+										<li><strong>Type</strong> - Each variable has a <em>type</em> that
+											is used to determine what formatting to use. The variable types are:
+											<ul class="minimalPadding">
+												<li><strong>Date</strong> - A variable that holds a date</li>
+												<li><strong>Time</strong> - A variable that holds a time</li>
+												<li><strong>Number</strong> - A number with, or without a decimal point
 												</li>
-											<blockquote>If this button is disabled then the variable is already
-												in the <strong>Allsky Variables</strong> tab.</blockquote>
-										</ul>
-
-										<p class="morePadding">
-											The <span class="btn btn-primary btn-small">Add Variable</span>
-											button does the same thing as the same button in the
-											<a href="#allskyVariablesButton"><strong>Allsky Variables</strong></a> tab.</p>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-
-						<br><h4>The "Add Variable" and "Edit Variable" dialog boxes</h4>
-						<p>Clicking on the
-							<span class="btn btn-primary btn-small">Add Variable</span> button
-							or the
-							<span class="btn dark btn-warning btn-xs oe-list-edit">
-								<i class="fa fa-pen-to-square oe-list-edit"></i></span>
-							icon above brings up a dialog box to add or edit a variable.
-							It's the same dialog box in either case, just with a different title.
-							Editing a System Variable will display a message as shown in the image below.
-						</p>
-						<table>
-							<tbody>
-								<tr>
-									<td align="center">
-										<img allsky="true" src="variable-manager-edit.png" alt="Edit variable"
-											loading="lazy" />
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<ul>
-											<li><strong>Variable Name</strong> - The name of the variable
-												enclosed within <code><strong>${}</strong></code>.
-												For system variables the name cannot be changed.
-												See the <a href="#ValidVariableNames">Variable names</a>
-												section for details on valid variable names.
+												<li><strong>Text</strong> - Any string of characters</li>
+												<li><strong>Bool</strong> - A variable that holds a boolean value -
+													on/off, yes/no, true/false.
 												</li>
-											<li><strong>Description</strong> - A description of the variable.
-												This is only for reference and is displayed in the
-												<span class="managerName">Variable Manager</span>.
-											</li>
-											<li><strong>Format</strong> - The optional
-												<a href="#formattingVariables">formatting</a> used to
-												display the variable.
-											</li>
-											<li><strong>Sample Data</strong> - Sample data that is used when
-												displaying
-												sample data in the <span class="editorName">Overlay Editor</span>.
-											</li>
-											<li><strong>Type</strong> - Each variable has a <em>type</em> that
-												is used to determine what formatting to use. The variable types are:
-												<ul class="minimalPadding">
-													<li><strong>Date</strong> - A variable that holds a date</li>
-													<li><strong>Time</strong> - A variable that holds a time</li>
-													<li><strong>Number</strong> - A number with, or without a decimal point</li>
-													<li><strong>Text</strong> - Any string of characters</li>
-													<li><strong>Bool</strong> - A variable that holds a boolean value -
-														on/off, yes/no, true/false.
-														</li>
-												</ul>
-											</li>
-										</ul>
-									</td>
-								</tr>
-							</tbody>
-						</table>
+											</ul>
+										</li>
+									</ul>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 
-						<hr class="separatorMinor">
-					</details>
+					<hr class="separatorMinor">
+				</details>
 
 				<div>
 					<h3 id="fontManager">The Font Manager &nbsp; <i class="fa fa-solid fa-download"></i></h3>
@@ -1048,8 +1063,7 @@
 							<tbody>
 								<tr>
 									<td align="center">
-										<img allsky="true" src="font-manager.png" alt="Font Manager"
-											loading="lazy" />
+										<img allsky="true" src="font-manager.png" alt="Font Manager" loading="lazy" />
 									</td>
 								</tr>
 								<tr>
@@ -1063,7 +1077,8 @@
 											<li><span class="moduleToolbarIconNumber">2</span>
 												<strong>Delete Button</strong> - Deletes a font.
 												<blockquote>It is not possible to delete a System Font and they
-												will not have a delete icon as shown for the first several fonts above.
+													will not have a delete icon as shown for the first several fonts
+													above.
 												</blockquote>
 												<blockquote>If a font is in use when deleted then any
 													fields using the font will revert to the default font as
@@ -1089,14 +1104,16 @@
 
 						<p class="morePadding">To use a font it must first be installed in the
 							<span class="managerName">Font Manager</span>
-							and there are two ways to do this:</p>
+							and there are two ways to do this:
+						</p>
 						<ol>
 							<li id="dafont"><strong>Add font from daFont.com</strong>
 								<br>
 								In a separate browser window, navigate to the font page on
 								<a external="true" href="http://daFont.com">http://daFont.com</a>
 								that you wish to install, for example
-								<a external="true" href="https://www.dafont.com/led-sled.font">https://www.dafont.com/led-sled.font</a>.
+								<a external="true"
+									href="https://www.dafont.com/led-sled.font">https://www.dafont.com/led-sled.font</a>.
 								Copy the font URL to the clipboard.
 								Click the <span class="btn btn-primary btn-small">Add Font</span> button and enter
 								the font URL.
@@ -1111,6 +1128,12 @@
 								Click the <span class="btn btn-primary btn-small">Upload Font</span>
 								button and browse to the zip file.
 								The fonts will be extracted from the zip file and installed.</p>
+								<blockquote><p>NOTE: If you receive an error when uploading a font please check the php max
+									file upload size. By default this is 2Mb which may be too small for some font zip
+									files</p>
+								<p>The php configuration file is normally <span class="fileName">/etc/php/7.4/cgi/php.ini</span>. Edit this file and locate the line containing 'upload_max_filesize =' and change the value. So if the exiting line says 'upload_max_filesize = 2MB' change it to 'upload_max_filesize = 20MB'</p>
+								<p>Following this change either restart lighttpd with <pre>sudo systemctl restart lighttpd</pre></p>
+								</blockquote>
 							</li>
 						</ol>
 						<hr class="separatorMinor">
@@ -1127,8 +1150,7 @@
 							<tbody>
 								<tr>
 									<td align="center">
-										<img allsky="true" src="image-manager.png" alt="Image Manager"
-											loading="lazy" />
+										<img allsky="true" src="image-manager.png" alt="Image Manager" loading="lazy" />
 									</td>
 								</tr>
 								<tr>
@@ -1197,7 +1219,7 @@
 								The field will start off with just the variable you selected;
 								you can add text or other variables to the field later.
 								See the <a href="#variableManager">Variable Manager</a> section for information on
-								the <strong>All Variables</strong> tab in the 
+								the <strong>All Variables</strong> tab in the
 								<span class="managerName">Variable Manager</span>.
 							</li>
 							<li><strong>Add a <em>pre-defined</em> image in a new field</strong>
@@ -1223,8 +1245,8 @@
 							<tbody>
 								<tr>
 									<td align="center">
-										<img allsky="true" src="text-property-editor.png"
-											alt="Text Properties Editor" loading="lazy" />
+										<img allsky="true" src="text-property-editor.png" alt="Text Properties Editor"
+											loading="lazy" />
 									</td>
 								</tr>
 								<tr>
@@ -1248,7 +1270,7 @@
 												multiple Sample values by separating them by commas or enclosing
 												each Sample in <code>{ }</code>.
 												See the screenshot above for an example of separating by commas.
-												</li>
+											</li>
 											<li><strong>Empty Value</strong> - By default, if ALL the variables
 												in a field have no value then the the field is not displayed.
 												However, if this property has something in it then the whole field
@@ -1261,9 +1283,10 @@
 													If a field doesn't appear on the overlay and you're not sure why,
 													look in <span class="fileName">/var/log/allsky.log</span> for
 													messages like
-													<code class="noWrap">Adding text field T1: ${T1} failed no variable data available</code>
+													<code
+														class="noWrap">Adding text field T1: ${T1} failed no variable data available</code>
 												</blockquote>
-												</li>
+											</li>
 											<li><strong>X</strong> - The 'x' position of the field in pixels from
 												the left
 												of the image. If setting manually you need to take into account the
@@ -1306,8 +1329,9 @@
 							<tbody>
 								<tr>
 									<td align="center">
-										<img allsky="true" src="image-property-editor.png"
-											alt="Image Properties Editor" loading="lazy" /></td>
+										<img allsky="true" src="image-property-editor.png" alt="Image Properties Editor"
+											loading="lazy" />
+									</td>
 								</tr>
 								<tr>
 									<td>
@@ -1338,7 +1362,7 @@
 												from 0 (image hidden) to 10 times the native resolution.
 												Images that are scaled a lot can look jagged and you may want to
 												consider getting a higher-resolution version.
-												</li>
+											</li>
 										</ul>
 									</td>
 								</tr>
@@ -1357,8 +1381,8 @@
 							<tbody>
 								<tr>
 									<td align="center">
-										<img allsky="true" src="image-property-editor-help.png"
-											alt="Properties Help" loading="lazy" />
+										<img allsky="true" src="image-property-editor-help.png" alt="Properties Help"
+											loading="lazy" />
 									</td>
 								</tr>
 								<tr>
@@ -1369,12 +1393,15 @@
 											<span class="editorName">Text Properties</span> dialog box
 											to view the window below.
 											After you have set a format click the "Display Sample Data" icon
-											on the toolbbar to show the formatted result.</p>
+											on the toolbbar to show the formatted result.
+										</p>
 										<blockquote>Whilst the <span class="editorName">Overlay Editor</span>
 											is displaying sample data,
-											changing the <strong>Format</strong> field will update the sample.</blockquote>
+											changing the <strong>Format</strong> field will update the sample.
+										</blockquote>
 										<p>The number formats are based upon the <a external="true"
-												href="https://learnpython.com/blog/python-string-formatting/">formating options</a>
+												href="https://learnpython.com/blog/python-string-formatting/">formating
+												options</a>
 											available in python.</p>
 									</td>
 								</tr>
@@ -1385,8 +1412,8 @@
 							<tbody>
 								<tr>
 									<td align="center">
-										<img allsky="true" src="image-property-editor-formats.png"
-											alt="Formats Help" loading="lazy" />
+										<img allsky="true" src="image-property-editor-formats.png" alt="Formats Help"
+											loading="lazy" />
 									</td>
 								</tr>
 								<tr>
@@ -1397,21 +1424,26 @@
 											dialog then the formats window will automatically be hidden.</p>
 										<ul>
 											<li><span class="moduleToolbarIconNumber">1</span>
-												- Selecting an entry will display the available formats for that variable type.</li>
+												- Selecting an entry will display the available formats for that
+												variable type.</li>
 											<li><span class="moduleToolbarIconNumber">2</span>
 												- These buttons are used to amend the variable's format:
 												<ul>
 													<li><span class="btn dark btn-primary btn-xs xxxxoe-list-add">
-														<i class="fa-solid fa-right-to-bracket xxxxxxxoe-list-add"></i></span>
-														&nbsp; 
+															<i
+																class="fa-solid fa-right-to-bracket xxxxxxxoe-list-add"></i></span>
+														&nbsp;
 														This button <em>replaces</em> the format on the current field
 														with the selected format.
-														This is most useful when working with <strong>number</strong> formats.</li>
+														This is most useful when working with <strong>number</strong>
+														formats.</li>
 													<li><span class="btn dark btn-primary btn-xs oe-list-add">
-														<i class="fa-solid fa-plus oe-list-add"></i></span>
-														&nbsp; 
-														This button <em>appends</em> the selected format to the format field.
-														This is most useful when working with <strong>date</strong> formats.</li>
+															<i class="fa-solid fa-plus oe-list-add"></i></span>
+														&nbsp;
+														This button <em>appends</em> the selected format to the format
+														field.
+														This is most useful when working with <strong>date</strong>
+														formats.</li>
 												</ul>
 											</li>
 										</ul>
@@ -1423,7 +1455,8 @@
 						</table>
 
 
-						<br><h4>Bool formats</h4>
+						<br>
+						<h4>Bool formats</h4>
 						<table>
 							<thead>
 								<tr>
@@ -1457,7 +1490,8 @@
 						</table>
 						<blockquote>Bool formats must be lowercase.</blockquote>
 
-						<br><h4>Date and Time formats</h4>
+						<br>
+						<h4>Date and Time formats</h4>
 						<table>
 							<thead>
 								<tr>
@@ -1615,7 +1649,8 @@
 							</tbody>
 						</table>
 
-						<br><h4>Number formats</h4>
+						<br>
+						<h4>Number formats</h4>
 						<table>
 							<thead>
 								<tr>
@@ -1758,15 +1793,18 @@
 												snap to if dropped.</li>
 											<li><strong>Add List Page Size</strong> - The number of variables to
 												show per page in the
-												<span class="managerName">Variable Manager</span>.</li>
+												<span class="managerName">Variable Manager</span>.
+											</li>
 											<li><strong>Add Field Brightness</strong> - When adding a new field all
 												other fields will be set to this brightness to make the new field
 												easier to see.
-												Values range from 0 (darkest) to 100 (each field's full brightness).</li>
+												Values range from 0 (darkest) to 100 (each field's full brightness).
+											</li>
 											<li><strong>Select Field Brightness</strong> - When selecting a field all
 												other fields will be set to this opacity to make the new field
 												easier to see.
-												Values range from 0 (darkest) to 100 (each field's full brightness).</li>
+												Values range from 0 (darkest) to 100 (each field's full brightness).
+											</li>
 											<li><strong>Zoom with Mouse Wheel</strong> - When enabled, scrolling the
 												mouse wheel will zoom the overlay.</li>
 											<li><strong>Background Image Brightness</strong> - Brightness of the
@@ -1782,7 +1820,8 @@
 						</table>
 
 						<p class="morePadding">
-						<blockquote class="morePadding">When changing the brightness settings you may need to click somewhere in the
+						<blockquote class="morePadding">When changing the brightness settings you may need to click
+							somewhere in the
 							overlay in order for the change to take affect.
 						</blockquote>
 						</p>
@@ -1816,7 +1855,7 @@
 				even if their associated <strong>Include</strong> checkboxes are NOT selected.
 				Their values will not appear in the overlay until the checkboxes
 				are enabled.
-<!--
+				<!--
 				<br>Planet and other satellite variables appear ???????
 -->
 			</blockquote>
@@ -1882,7 +1921,8 @@
 						This format can be overriden in the <strong>Date Time format</strong> field of the
 						<span class="moduleName">Overlay Module</span> settings in the
 						<span class="managerName">Module Manager</span>.
-						<br>See the screenshot below for this field.</p>
+						<br>See the screenshot below for this field.
+					</p>
 				</blockquote>
 
 				<div class="morePadding">
@@ -1891,7 +1931,8 @@
 				</div>
 
 
-				<br><h3>The Moon</h3>
+				<br>
+				<h3>The Moon</h3>
 				<p>The following Moon-related variables are available in the
 					<span class="managerName">Variable Manager</span>:
 				</p>
@@ -1929,7 +1970,8 @@
 				</table>
 
 
-				<br><h3>The planets</h3>
+				<br>
+				<h3>The planets</h3>
 				<p>The following planet-related variables are available in the
 					<span class="managerName">Variable Manager</span>:
 				</p>
@@ -2074,7 +2116,8 @@
 				</table>
 
 
-				<br><h3>Satellites (including the ISS and Hubble)</h3>
+				<br>
+				<h3>Satellites (including the ISS and Hubble)</h3>
 				<p>The <span class="moduleName">Overlay Module</span>
 					can generate position elements for the International Space Station (ISS),
 					the Hubble Space Telescope,
@@ -2082,7 +2125,8 @@
 					<span class="editorName">Overlay Editor's</span> <strong>Norad IDs</strong> setting.
 					IDs must be comma-separated.
 				</p>
-				<p>To find NORAD IDs browse to the <a external="true" href="https://celestrak.org/satcat/search.php" />Celestrak</a>
+				<p>To find NORAD IDs browse to the <a external="true"
+						href="https://celestrak.org/satcat/search.php" />Celestrak</a>
 					website and search for the desired objects.</p>
 
 				<table class="two-col">

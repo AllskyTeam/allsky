@@ -1,3 +1,12 @@
+:root {
+	--navbar-background-color: #f8f8f8;
+	--navbar-border-color: #e7e7e7;
+	--navbar-background-color-dark: #272727;
+	--navbar-border-color-dark: #333333;
+	--WebUI-setting-color: #00009b;
+	--WebUI-setting-color-dark: #68a0ff;
+}
+
 .page-header {
 	margin: 20px 0 20px;
 }
@@ -156,8 +165,8 @@ body.dark {
 }
 
 .dark .navbar-default {
-    background-color: #272727;
-    border-color: #333333;
+	background-color: var(--navbar-background-color-dark);
+	border: 1px solid var(--navbar-border-color-dark);
 }
 
 .dark .sidebar ul li {
@@ -181,8 +190,7 @@ body.dark {
     background-color: #272727;
 }
 
-.dark .panel-default,
-.dark .panel-primary {
+.dark .panel-default {
     border-color: #333333;
 }
 
@@ -527,11 +535,11 @@ select {
 }
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	color:#00009b;
+	color: var(--WebUI-setting-color);
 	font-weight: bold;
 }
 .dark .WebUISetting {
-	color: #68a0ff;
+	color: var(--WebUI-setting-color-dark);
 }
 .WebUIValue {
 	padding: 0 3px 0 3px;
@@ -561,9 +569,42 @@ select {
 }
 
 .cursorPointer {
-    cursor: pointer;
+	cursor: pointer;
 }
 .live_container {
 	background-color: black;
 	margin-bottom: 15px;
+}
+
+div.sticky {
+	position: -webkit-sticky;
+	position: sticky;
+	top: 0;
+	margin-top: 10px;
+	padding: 10px;
+	background-color: var(--navbar-background-color);
+	border: 2px solid var(--WebUI-setting-color);
+}
+.dark div.sticky {
+	background-color: var(--navbar-background-color-dark);
+	border-color: var(--WebUI-setting-color-dark);
+}
+#backToTopBtn {
+	display: none; /* Hidden by default */
+	position: fixed; /* Fixed/sticky position */
+	bottom: 20px; /* Place the button at the bottom of the page */
+	right: 30px; /* Place the button 30px from the right */
+	z-index: 99; /* Make sure it does not overlap */
+	border: none; /* Remove borders */
+	outline: none; /* Remove outline */
+	background-color: #555; /* Set a background color */
+	color: white; /* Text color */
+	cursor: pointer; /* Add a mouse pointer on hover */
+	padding: 15px; /* Some padding */
+	border-radius: 10px; /* Rounded corners */
+	font-size: 18px; /* Increase font size */
+}
+
+#backToTopBtn:hover {
+	background-color: #888; /* Add a lighter-grey background on hover */
 }

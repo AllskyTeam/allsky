@@ -295,6 +295,27 @@ function toggle_advanced()
 ?>
 
 		<form method="POST" action="<?php echo "$ME?_ts=" . time(); ?>" name="conf_form">
+
+<?php
+if ($formReadonly != "readonly") { ?>
+	<div class="sticky">
+		<input type="submit" class="btn btn-primary" name="save_settings" value="Save changes">
+		<input type="submit" class="btn btn-warning" name="reset_settings"
+			value="Reset to default values"
+			onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
+		<button type="button" class="btn advanced btn-advanced" id="advButton"
+			onclick="toggle_advanced();">
+			<?php if ($initial_display == "none") echo "Show advanced options"; else echo "Hide advanced options"; ?>
+		</button>
+		<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;">
+			<br>
+			<input type="checkbox" name="restart" checked> Restart Allsky after saving changes?
+			<br><br>&nbsp;
+		</div>
+	</div>
+	<button onclick="topFunction()" id="backToTopBtn" title="Go to top of page">Top</button>
+<?php } ?>
+
 		<input type="hidden" name="page" value="<?php echo "$page"; ?>">
 		<?php CSRFToken();
 
@@ -522,16 +543,9 @@ function toggle_advanced()
 				messages.innerHTML += '<?php $status->showMessages(true, true); ?>'.replace(/&apos;/g, "'");
 			</script>
 		<?php
-		}
+		} 
+		?>
 
-if ($formReadonly != "readonly") { ?>
-	<div style="margin-top: 20px">
-		<input type="submit" class="btn btn-primary" name="save_settings" value="Save changes">
-		<input type="submit" class="btn btn-warning" name="reset_settings" value="Reset to default values" onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
-		<button type="button" class="btn advanced btn-advanced" id="advButton" onclick="toggle_advanced();"><?php if ($initial_display == "none") echo "Show advanced options"; else echo "Hide advanced options"; ?></button>
-		<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;"><br><input type="checkbox" name="restart" checked> Restart Allsky after saving changes?<br><br>&nbsp;</div>
-	</div>
-<?php } ?>
 	</form>
 </div><!-- ./ Panel body -->
 </div><!-- /.panel-primary -->
@@ -540,3 +554,4 @@ if ($formReadonly != "readonly") { ?>
 <?php
 }
 ?>
+

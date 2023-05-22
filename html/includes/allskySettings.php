@@ -313,7 +313,7 @@ if ($formReadonly != "readonly") { ?>
 			<br><br>&nbsp;
 		</div>
 	</div>
-	<button onclick="topFunction()" id="backToTopBtn" title="Go to top of page">Top</button>
+	<button onclick="topFunction(); return false;" id="backToTopBtn" title="Go to top of page">Top</button>
 <?php } ?>
 
 		<input type="hidden" name="page" value="<?php echo "$page"; ?>">

@@ -1217,8 +1217,21 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->supportsMyModeMean = false;
 		cg->gainTransitionTimeImplemented = true;
 		cg->imagesSavedInBackground = true;
+		cg->myModeMeanSetting.dayMean = DEFAULT_DAYMEAN_ZWO;
+		cg->myModeMeanSetting.nightMean = DEFAULT_NIGHTMEAN_ZWO;
+		cg->myModeMeanSetting.minMean = DEFAULT_MINMEAN_ZWO;		// min number a user should enter
+		cg->myModeMeanSetting.maxMean = DEFAULT_MAXMEAN_ZWO;		// max number a user should enter
+		cg->myModeMeanSetting.dayMean_threshold = DEFAULT_DAYMEAN_THRESHOLD_ZWO;
+		cg->myModeMeanSetting.nightMean_threshold = DEFAULT_NIGHTMEAN_THRESHOLD_ZWO;
+		cg->myModeMeanSetting.minMean_threshold = DEFAULT_MINMEAN_THRESHOLD_ZWO;
+		cg->myModeMeanSetting.maxMean_threshold = DEFAULT_MAXMEAN_THRESHOLD_ZWO;
+		cg->myModeMeanSetting.mean_threshold = DEFAULT_DAYMEAN_THRESHOLD_ZWO;		// TODO: use day and night versions
+		cg->myModeMeanSetting.mean_p0 = DEFAULT_MEAN_P0_ZWO;
+		cg->myModeMeanSetting.mean_p1 = DEFAULT_MEAN_P1_ZWO;
+		cg->myModeMeanSetting.mean_p2 = DEFAULT_MEAN_P2_ZWO;
+
 	} else {	// RPi
-#ifdef IS_RPi
+#ifdef IS_RPi		// need this so it compiles
 		cg->supportsTemperature = ci.SupportsTemperature;	// this field only exists in RPi structure
 		cg->divideTemperatureBy = 1.0;
 		cg->supportsAutoFocus = ci.SupportsAutoFocus;	// this field only exists in RPi structure
@@ -1227,6 +1240,18 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->supportsMyModeMean = true;
 		cg->gainTransitionTimeImplemented = false;
 		cg->imagesSavedInBackground = false;
+		cg->myModeMeanSetting.dayMean = DEFAULT_DAYMEAN_RPi;
+		cg->myModeMeanSetting.nightMean = DEFAULT_NIGHTMEAN_RPi;
+		cg->myModeMeanSetting.minMean = DEFAULT_MINMEAN_RPi;
+		cg->myModeMeanSetting.maxMean = DEFAULT_MAXMEAN_RPi;
+		cg->myModeMeanSetting.dayMean_threshold = DEFAULT_DAYMEAN_THRESHOLD_RPi;
+		cg->myModeMeanSetting.nightMean_threshold = DEFAULT_NIGHTMEAN_THRESHOLD_RPi;
+		cg->myModeMeanSetting.minMean_threshold = DEFAULT_MINMEAN_THRESHOLD_RPi;
+		cg->myModeMeanSetting.maxMean_threshold = DEFAULT_MAXMEAN_THRESHOLD_RPi;
+		cg->myModeMeanSetting.mean_threshold = DEFAULT_DAYMEAN_THRESHOLD_RPi;		// TODO: use day and night versions
+		cg->myModeMeanSetting.mean_p0 = DEFAULT_MEAN_P0_RPi;
+		cg->myModeMeanSetting.mean_p1 = DEFAULT_MEAN_P1_RPi;
+		cg->myModeMeanSetting.mean_p2 = DEFAULT_MEAN_P2_RPi;
 	}
 
 	if (cg->imagesSavedInBackground) {
@@ -1303,11 +1328,11 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	cg->nightExposure_us = cg->temp_nightExposure_ms * US_IN_MS;
 	cg->nightMaxAutoExposure_us = cg->temp_nightMaxAutoExposure_ms * US_IN_MS;
 
-	if (! validateFloat(&cg->myModeMeanSetting.dayMean, 0.0, 1.0, "Daytime Mean Target", false))
+	if (! validateFloat(&cg->myModeMeanSetting.dayMean, cg->myModeMeanSetting.minMean, cg->myModeMeanSetting.maxMean, "Daytime Mean Target", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.nightMean, 0.0, 1.0, "Nighttime Mean Target", false))
+	if (! validateFloat(&cg->myModeMeanSetting.nightMean, cg->myModeMeanSetting.minMean, cg->myModeMeanSetting.maxMean, "Nighttime Mean Target", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.mean_threshold, 0.0, 1.0, "Mean Threshold", false))
+	if (! validateFloat(&cg->myModeMeanSetting.mean_threshold, cg->myModeMeanSetting.minMean_threshold, cg->myModeMeanSetting.maxMean_threshold, "Mean Threshold", false))
 		ok = false;
 
 	// If there's too short of a delay, pictures won't upload fast enough.

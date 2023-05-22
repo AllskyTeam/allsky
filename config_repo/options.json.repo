@@ -1129,7 +1129,8 @@
 "type" : "select",
 "options" : [
 	{"value" : "RPi", "label" : "RPi"},
-	{"value" : "ZWO", "label" : "ZWO"}
+	{"value" : "ZWO", "label" : "ZWO"},
+	{"value" : "Refresh", "label" : "Refresh"}
 ],
 "display" : 1,
 "checkchanges" : 1,

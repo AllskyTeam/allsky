@@ -98,7 +98,7 @@ if [[ ${NOTIFICATION_TYPE} != "custom" && -f ${ALLSKY_NOTIFICATION_LOG} && ${EXP
 	NOW=$(date +'%Y-%m-%d %H:%M:%S')
 	RESULTS="$(find "${ALLSKY_NOTIFICATION_LOG}" -newermt "${NOW}" -print)"
 	if [[ -n ${RESULTS} ]]; then	# the file is in the future
-		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 			# File contains:	Notification_type,expires_in_seconds,expiration_time
 			RECENT_NOTIFICATION=$(tail -1 "${ALLSKY_NOTIFICATION_LOG}")
 			RECENT_TYPE=${RECENT_NOTIFICATION%%,*}
@@ -195,7 +195,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 
 	# We're actually uploading ${UPLOAD_FILE}, but show ${NOTIFICATION_FILE} in the message since it's more descriptive.
 	# If an existing notification is being uploaded, wait for it to finish then upload this one.
-	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 		echo -e "${ME}: Uploading $(basename "${NOTIFICATION_FILE}")"
 	fi
 	"${ALLSKY_SCRIPTS}/upload.sh" --wait --silent \

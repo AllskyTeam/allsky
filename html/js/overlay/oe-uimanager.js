@@ -712,7 +712,7 @@ class OEUIMANAGER {
                         field.source = fieldSource;
                     }
                 } else {
-                    let fieldId = this.#configManager.dataFields.length;
+                    let fieldId = this.#configManager.dataFields.length + 1;
                     let newField = {
                         id: fieldId,
                         name: fieldName,

@@ -1,9 +1,21 @@
 #pragma once
 
-#define DEFAULT_MEAN_P0			 5.0
-#define DEFAULT_MEAN_P1			20.0
-#define DEFAULT_MEAN_P2			45.0
-#define DEFAULT_MEAN_THRESHOLD	 0.1	// mean brightness must be within this percent to be "ok"
+// https://www.raspberrypi.org/documentation/raspbian/applications/camera.md
+struct raspistillSetting {
+	// Sets the analog gain value directly on the sensor.
+	double analoggain = 1.0;
+
+	// Sets the digital gain value applied by the ISP (floating point value
+	// from 1.0 to 64.0, but values over about 4.0 will produce overexposed images).
+	double digitalgain = 1.0;
+
+	// Sets the shutter open time to the specified value (in microseconds).
+	int shutter_us = 1*US_IN_SEC;
+
+	// Sets the brightness of the image. 50 is the default. 0 is black, 100 is white.
+	int brightness = 50;
+};
+
 
 typedef enum {
 	// defined exposure and gain is used
@@ -36,7 +48,10 @@ struct modeMeanSetting {
 	// Default mean value for daytime and nighttime images.  User can change.
 	double dayMean			= DEFAULT_DAYMEAN;
 	double nightMean		= DEFAULT_NIGHTMEAN;
-	double mean_threshold	= DEFAULT_MEAN_THRESHOLD;	// threshold value.  User can change.
+	double dayMean_threshold= DEFAULT_DAYMEAN_THRESHOLD;	// threshold value.  User can change.
+	double nightMean_threshold	= DEFAULT_NIGHTMEAN_THRESHOLD;
+// TODO: only use day and night versions
+	double mean_threshold	= DEFAULT_DAYMEAN_THRESHOLD;
 
 	double const shuttersteps = 6.0;		// shuttersteps
 	int const historySize	= 3;			// Number of last images for mean target calculation.

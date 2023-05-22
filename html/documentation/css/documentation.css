@@ -898,6 +898,10 @@ b, strong {
 	padding: 3px 6px;
 	font-size: 12px;
 }
+.btn-not-real {
+	cursor: auto;
+	pointer-events: none;
+}
 
 .markdown-body .systemPageAdditionsLineType {
 	font-weight: bold;

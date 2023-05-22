@@ -38,6 +38,11 @@
 #define AUTO_IMAGE_TYPE				99	// must match what's in the camera_settings.json file
 #define DEFAULT_DAYMEAN				0.5
 #define DEFAULT_NIGHTMEAN			0.2
+#define DEFAULT_DAYMEAN_THRESHOLD	0.1	// mean brightness must be within this percent to be "ok"
+#define DEFAULT_NIGHTMEAN_THRESHOLD	0.1	
+#define DEFAULT_MEAN_P0				5.0
+#define DEFAULT_MEAN_P1				20.0
+#define DEFAULT_MEAN_P2				45.0
 
 // Default overlay values - will go away once external overlay program is implemented
 #define SMALLFONTSIZE_MULTIPLIER	0.08
@@ -121,10 +126,14 @@ struct myModeMeanSetting {
 	double nightMean					= DEFAULT_NIGHTMEAN;
 	double currentMean					= NOT_SET;		// (calculated value)
 	double Mean							= NOT_SET;		// (calculated value)
-	double mean_threshold				= 0.1;
-	double mean_p0						= 5.0;
-	double mean_p1						= 20.0;
-	double mean_p2						= 45.0;
+	double dayMean_threshold			= DEFAULT_DAYMEAN_THRESHOLD;
+	double nightMean_threshold			= DEFAULT_NIGHTMEAN_THRESHOLD;
+	double currentMean_threshold		= NOT_SET;		// (calculated value)
+// TODO: only use day and night versions
+	double mean_threshold				= DEFAULT_DAYMEAN_THRESHOLD;
+	double mean_p0						= DEFAULT_MEAN_P0;
+	double mean_p1						= DEFAULT_MEAN_P1;
+	double mean_p2						= DEFAULT_MEAN_P2;
 };
 
 

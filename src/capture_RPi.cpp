@@ -23,7 +23,6 @@
 // When it's passed, functions call it "cg", so use upper case for global version.
 config CG;
 
-#include "include/raspistill.h"
 #include "include/mode_mean.h"
 
 #define CAMERA_TYPE				"RPi"

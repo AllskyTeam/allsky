@@ -76,6 +76,7 @@ function DisplayAllskyConfig(){
 								// Refresh the same Camera Type
 								$refreshingCameraType = true;
 								$newCameraType = $oldValue;
+								$newValue = $oldValue;
 							} else {
 								$newCameraType = $newValue;
 							}

@@ -198,7 +198,7 @@ for f in ${IMAGE_FILES} ; do
 			echo "${r} ${BAD}" >> "${OUTPUT}"
 		fi
 		[[ ${DEBUG} == "false" ]] && rm -f "${f}" "thumbnails/${f}"
-		$((num_bad++))
+		((num_bad++))
 	fi
 done
 

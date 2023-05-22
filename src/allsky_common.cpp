@@ -256,6 +256,10 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		snprintf(tmp, s, " MEAN=%s", LorF(cg.lastMean, "%d", "%f"));
 		strcat(cmd, tmp);
 	}
+	if (cg.lastMeanFull >= 0.0) {
+		snprintf(tmp, s, " FULLMEAN=%s", LorF(cg.lastMeanFull, "%d", "%f"));
+		strcat(cmd, tmp);
+	}
 
 	// Since negative temperatures are valid, check against an impossible temperature.
 	// The temperature passed to us is 10 times the actual temperature so we can deal with
@@ -306,54 +310,64 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 
 // Display a length of time in different units, depending on the length's value.
 // If the "multi" flag is set, display in multiple units if appropriate.
+// Rotate buffers so we can call length_in_units() up to l_count times in one printf().
+
+const int l_count = 3;		// 3 buffers
+const int l = 50;			// each 50 long
+int on_l = l_count;			// point to last one
+static char length[l_count][l+1];
+static char *length_p = length[l_count - 1];	// last one
+
 char *length_in_units(long us, bool multi)	// microseconds
 {
-	const int l = 50;
-	static char length[l];
+	// Rotate buffers.
+	if (++on_l > l_count)
+		on_l = 1;
+	length_p = length[on_l - 1];
+
 	if (us == 0)
 	{
-		snprintf(length, l, "0 us");
+		snprintf(length_p, l, "0 us");
+		return(length_p);
 	}
-	else
-	{
-		double us_in_ms = (double)us / US_IN_MS;
-		double abs_us_in_ms = abs(us_in_ms);
-		// The boundaries on when to display one or two units are really a matter of taste.
-		if (abs_us_in_ms < 0.5)						// less than 0.5 ms
-		{
-			snprintf(length, l, "%'ld us", us);
-		}
-		else if (abs_us_in_ms < 1.5)				// between 0.5 ms and 1.5 ms
-		{
-			if (multi)
-				snprintf(length, l, "%'ld us (%.3f ms)", us, us_in_ms);
-			else
-				snprintf(length, l, "%'ld us", us);
-		}
-		else if (abs_us_in_ms < (0.5 * MS_IN_SEC))	// 1.5 ms to 0.5 sec
-		{
-			// Don't display seconds if it'll look like (0.00 sec).
-			double s = (double)us / US_IN_SEC;
-			if (multi && s >= 0.005) {
-				snprintf(length, l, "%'.2f ms (%.2lf sec)", us_in_ms, s);
-			} else {
-				snprintf(length, l, "%'.2f ms", us_in_ms);
-			}
-		}
-		else if (abs_us_in_ms < (1.0 * MS_IN_SEC))	// between 0.5 sec and 1 sec
-		{
-			if (multi)
-				snprintf(length, l, "%'.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
-			else
-				snprintf(length, l, "%'.1f ms", us_in_ms);
-		}
-		else									// over 1 sec
-		{
-			snprintf(length, l, "%'.1lf sec", (double)us / US_IN_SEC);
-		}
 
+	double us_in_ms = (double)us / US_IN_MS;
+	double abs_us_in_ms = abs(us_in_ms);
+	// The boundaries on when to display one or two units are really a matter of taste.
+	if (abs_us_in_ms < 0.5)						// less than 0.5 ms
+	{
+		snprintf(length_p, l, "%'ld us", us);
 	}
-	return(length);
+	else if (abs_us_in_ms < 1.5)				// between 0.5 ms and 1.5 ms
+	{
+		if (multi)
+			snprintf(length_p, l, "%'ld us (%.3f ms)", us, us_in_ms);
+		else
+			snprintf(length_p, l, "%'ld us", us);
+	}
+	else if (abs_us_in_ms < (0.5 * MS_IN_SEC))	// 1.5 ms to 0.5 sec
+	{
+		// Don't display seconds if it'll look like (0.00 sec).
+		double s = (double)us / US_IN_SEC;
+		if (multi && s >= 0.005) {
+			snprintf(length_p, l, "%'.2f ms (%.2lf sec)", us_in_ms, s);
+		} else {
+			snprintf(length_p, l, "%'.2f ms", us_in_ms);
+		}
+	}
+	else if (abs_us_in_ms < (1.0 * MS_IN_SEC))	// between 0.5 sec and 1 sec
+	{
+		if (multi)
+			snprintf(length_p, l, "%'.2f ms (%.2lf sec)", us_in_ms, (double)us / US_IN_SEC);
+		else
+			snprintf(length_p, l, "%'.1f ms", us_in_ms);
+	}
+	else									// over 1 sec
+	{
+		snprintf(length_p, l, "%'.1lf sec", (double)us / US_IN_SEC);
+	}
+
+	return(length_p);
 }
 
 // sunwait barfs if it receives an angle with a comma in it,
@@ -1273,7 +1287,7 @@ void displaySettings(config cg)
 			printf("      Show Histogram Box: %s\n", yesNo(cg.overlay.showHistogramBox));
 		}
 	} else if (cg.supportsTemperature) {
-		printf("      Temperature type: %s\n", stringORnone(cg.tempType));
+		printf("  Temperature type: %s\n", stringORnone(cg.tempType));
 	}
 
 	printf("   Allsky version: %s\n", stringORnone(cg.version));

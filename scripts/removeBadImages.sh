@@ -10,6 +10,8 @@
 # otherwise look at all the files in the specified directory.
 # If only 1 file, return it's MEAN.
 
+# The MEAN is the only thing that should go to stdout.
+
 ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck disable=SC2086 source-path=.
@@ -114,9 +116,11 @@ num_bad=0
 
 # If the LOW threshold is 0 it's disabled.
 # If the HIGH threshold is 0 or 100 (nothing can be brighter than 100) it's disabled.
+# Convert possibly 0.0 and 100.0 to 0 and 100 so we can check using bash.
 HIGH=${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}
-[[ ${HIGH} -gt 100 ]] && HIGH=0
+[[ $( echo "${HIGH} == 0 || ${HIGH} > 100" | bc ) -eq 1 ]] && HIGH=0
 LOW=${REMOVE_BAD_IMAGES_THRESHOLD_LOW}
+[[ $( echo "${LOW} <= 0" | bc ) -eq 1 ]] && LOW=0
 
 # If we're processing a whole directory assume it's done in the background so "nice" it.
 # If we're only processing one file we want it done quickly.
@@ -165,8 +169,7 @@ for f in ${IMAGE_FILES} ; do
 			MSG=""
 
 			if [[ ${HIGH} != "0" ]]; then		# Use the HIGH check
-# echo "====== Checking MEAN=${MEAN_CHECK} -gt ${HIGH_CHECK}" >&2
-				if [[ ${MEAN_CHECK} -gt "${HIGH_CHECK}" ]]; then
+				if [[ $(echo "${MEAN_CHECK} > ${HIGH_CHECK}" | bc ) -eq 1 ]]; then
 					BAD="'${f}' (above threshold: MEAN=${MEAN}, threshold = ${HIGH})"
 				elif [[ ${DEBUG} == "true" ]]; then
 					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
@@ -175,8 +178,7 @@ for f in ${IMAGE_FILES} ; do
 
 			# An image can't be both HIGH and LOW so if it was HIGH don't check for LOW.
 			if [[ ${BAD} == "" && ${LOW} != "0" ]]; then
-# echo "====== Checking MEAN=${MEAN_CHECK} -lt ${LOW_CHECK}" >&2
-				if [[ ${MEAN_CHECK} -lt "${LOW_CHECK}" ]]; then
+				if [[ $(echo "${MEAN_CHECK} < ${LOW_CHECK}" | bc ) -eq 1 ]]; then
 					BAD="'${f}' (below threshold: MEAN=${MEAN}, threshold = ${LOW})"
 				elif [[ ${DEBUG} == "true" && ${MSG} == "" ]]; then
 					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
@@ -196,7 +198,7 @@ for f in ${IMAGE_FILES} ; do
 			echo "${r} ${BAD}" >> "${OUTPUT}"
 		fi
 		[[ ${DEBUG} == "false" ]] && rm -f "${f}" "thumbnails/${f}"
-		num_bad=$((num_bad + 1))
+		$((num_bad++))
 	fi
 done
 
@@ -216,13 +218,13 @@ else
 		echo "${ME} File is bad: ${OUTPUT}" >&2
 		echo -e "${OUTPUT}" >> "${ALLSKY_BAD_IMAGE_COUNT}"
 		BAD_COUNT="$( wc -l < "${ALLSKY_BAD_IMAGE_COUNT}" )"
-		# TODO: make comparison number a global variable.
+		# TODO: make BAD_LIMIT a WebUI setting.
 		BAD_LIMIT=3
 # echo "xxxxxxxxxx ${BAD_COUNT} bad consecutive images" >&2
 		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
 			MSG="Multiple bad consecutive bad images."
 			MSG="${MSG}\nCheck 'REMOVE_BAD_IMAGES_THRESHOLD_LOW' and 'REMOVE_BAD_IMAGES_THRESHOLD_HIGH' in config.sh"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" >&2
 		fi
 		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then
 			# Split the long file name so it fits in the message.
@@ -233,7 +235,7 @@ else
 				--directory "${ALLSKY_TMP}" \
 				"${FILENAME}" "yellow" "" "85" "" "" \
 	 			"" "5" "yellow" "${EXTENSION}" "" \
-				"WARNING:\n\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}"
+				"WARNING:\n\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}" >&2
 
 		fi
 

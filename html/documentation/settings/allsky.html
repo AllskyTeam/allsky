@@ -756,7 +756,11 @@ use the <span class="shSetting">CROP</span> setting in the
 </details>
 
 
-<h2><i class="fa fa-code fa-fw"></i> <span class="WebUIWebPage">Editor</span> WebUI Page</h2>
+<h2><i class="fa fa-code fa-fw"></i>
+	<span class="WebUIWebPage">Editor</span> WebUI Page:
+	<span class="fileName">config.sh</span>,
+	<span class="fileName">ftp-settings.sh</span>
+</h2>
 <details><summary></summary>
 <p>
 This section lists the settings that are updated in the WebUI's
@@ -1245,7 +1249,7 @@ Notes:
 	</blockquote>
 <li>
 	The <span class="shSetting">WEB_*_DIR</span>
-	settings below (e.g., <span class="shSetting">WEB_IMAGE_DIR</span>)
+	settings below (e.g., <span class="shSetting">WEB_VIDEOS_DIR</span>)
 	are <strong>only</strong> used if you have an Allsky Website on the Pi
 	<strong>AND</strong> a remote Allsky Website, and you want files copied to both locations.
 	In this case, see the example at the end of the table for what settings to use.
@@ -1276,17 +1280,21 @@ Notes:
 	<ul class="minimalPadding">
 	<li><span class="editorString">local</span> -
 		copies the file to a local Allsky Website.
-	<li><span class="editorString">ftp</span> -
-		uses File Transfer Protocol (FTP) to upload to a remote server.
 	<li><span class="editorString">ftps</span> -
 		uses secure File Transfer Protocol (FTPs) to upload to a remote server.
-		<br><strong>This is preferred over the insecure
-		<span class="editorString">ftp</span></strong>.
 	<li><span class="editorString">sftp</span> -
 		uses SSH file transfer to upload to a remote server.
+	<li><span class="editorString">ftp</span> -
+		uses (insecure) File Transfer Protocol (FTP) to upload to a remote server.
+		<blockquote class="warning">
+			<span class="editorString">ftp</span> is unsecure;
+			please use 
+			<span class="editorString">ftps</span> or
+			<span class="editorString">sftp</span> instead.
+		</blockquote>
 	<li><span class="editorString">scp</span> -
 		uses secure cp (copy) to copy the file to a remote server.
-	<li><span class="editorString">S3</span> -
+	<li><span class="editorString">s3</span> -
 		copies the file to an Amazon Web Services (AWS) server.
 	<li><span class="editorString">gcs</span> -
 		copies the file to a Google Cloud Storage (GCS) server.
@@ -1363,6 +1371,11 @@ Notes:
 </tr>
 
 <tr><td class="note" colspan="3">scp Settings</td></tr>
+<tr><td><span class="shSetting">REMOTE_USER</span></td> <td></td>
+	<td>Your remote user name.
+		This is the same setting as above.
+	</td>
+</tr>
 <tr><td><span class="shSetting">SSH_KEY_FILE</span></td> <td></td>
 	<td>Path to the SSH key file.
 	<br>
@@ -1377,7 +1390,7 @@ Notes:
 	</td>
 </tr>
 
-<tr><td class="note" colspan="3">S3 Settings</td></tr>
+<tr><td class="note" colspan="3">s3 Settings</td></tr>
 <tr><td colspan="3">
 	You need to install the AWS Command-Line Interface (CLI):
 <pre>

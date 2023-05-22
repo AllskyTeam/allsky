@@ -902,6 +902,12 @@ b, strong {
 	cursor: auto;
 	pointer-events: none;
 }
+.btn-advanced {
+	border: 2px solid #c9c46a;
+}
+.advanced, .btn-advanced { /* "advanced" options are highlighted in same color as button */
+	background-color: #fffcc0;
+}
 
 .markdown-body .systemPageAdditionsLineType {
 	font-weight: bold;

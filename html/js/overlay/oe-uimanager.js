@@ -1680,8 +1680,8 @@ class OEUIMANAGER {
             sample: { group: 'Label', name: 'Sample', type: 'text' },
             empty: { group: 'Label', name: 'Empty Value', type: 'text' },
 
-            x: { group: 'Position', name: 'X', type: 'number', options: { min: 0, max: 2048, step: gridSizeX } },
-            y: { group: 'Position', name: 'Y', type: 'number', options: { min: 0, max: 2048, step: gridSizeY } },
+            x: { group: 'Position', name: 'X', type: 'number', options: { min: 0, max: this.#backgroundImage.width(), step: gridSizeX } },
+            y: { group: 'Position', name: 'Y', type: 'number', options: { min: 0, max: this.#backgroundImage.height(), step: gridSizeY } },
             rotation: { group: 'Position', name: 'Rotation', type: 'number', options: { min: -360, max: 360, step: 1 } },
 
             fontname: { group: 'Font', name: 'Name', type: 'options', options: this.#fonts },

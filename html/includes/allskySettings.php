@@ -43,6 +43,7 @@ function DisplayAllskyConfig(){
 			$somethingChanged = false;
 			$numErrors = 0;
 			$newCameraType = "";
+			$refreshingCameraType = false;
 			$newCameraModel = "";
 			$newCameraNumber = "";
 			$ok = true;
@@ -71,7 +72,14 @@ function DisplayAllskyConfig(){
 					$newValue = getVariableOrDefault($settings, $originalName, "");
 					if ($oldValue !== $newValue) {
 						if ($originalName === $cameraTypeName)
-							$newCameraType = $newValue;
+							if ($newValue === "Refresh") {
+								// Refresh the same Camera Type
+								$refreshingCameraType = true;
+								$newCameraType = $oldValue;
+								$newValue = $oldValue;
+							} else {
+								$newCameraType = $newValue;
+							}
 						elseif ($originalName === $cameraModelName)
 							$newCameraModel = $newValue;
 						elseif ($originalName === $cameraNumberName)
@@ -141,7 +149,10 @@ function DisplayAllskyConfig(){
 					}
 				} else {
 					if ($newCameraType !== "") {
-						$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>";
+						if ($refreshingCameraType)
+							$msg .= "<b>Camera Type</b> $newCameraType refreshed";
+						else
+							$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>";
 					}
 					if ($newCameraModel !== "") {
 						if ($msg !== "") $msg = "<br>$msg";
@@ -165,12 +176,14 @@ function DisplayAllskyConfig(){
 				if ($changes !== "") {
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
+					$moreArgs = "";
 					if ($doingRestart)
-						$restarting = "--restarting";
-					else
-						$restarting = "";
+						$moreArgs .= " --restarting";
+					if ($newCameraType !== "")
+						$moreArgs .= " --cameraTypeOnly";
+
 					$CMD = "sudo --user=" . ALLSKY_OWNER;
-					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $debugArg $restarting $changes";
+					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $debugArg $moreArgs $changes";
 					# Let makeChanges.sh display any output
 					echo '<script>console.log("Running: ' . $CMD . '");</script>';
 					$ok = runCommand($CMD, "", "success");
@@ -295,6 +308,27 @@ function toggle_advanced()
 ?>
 
 		<form method="POST" action="<?php echo "$ME?_ts=" . time(); ?>" name="conf_form">
+
+<?php
+if ($formReadonly != "readonly") { ?>
+	<div class="sticky">
+		<input type="submit" class="btn btn-primary" name="save_settings" value="Save changes">
+		<input type="submit" class="btn btn-warning" name="reset_settings"
+			value="Reset to default values"
+			onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
+		<button type="button" class="btn advanced btn-advanced" id="advButton"
+			onclick="toggle_advanced();">
+			<?php if ($initial_display == "none") echo "Show advanced options"; else echo "Hide advanced options"; ?>
+		</button>
+		<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;">
+			<br>
+			<input type="checkbox" name="restart" checked> Restart Allsky after saving changes?
+			<br><br>&nbsp;
+		</div>
+	</div>
+	<button onclick="topFunction(); return false;" id="backToTopBtn" title="Go to top of page">Top</button>
+<?php } ?>
+
 		<input type="hidden" name="page" value="<?php echo "$page"; ?>">
 		<?php CSRFToken();
 
@@ -522,16 +556,9 @@ function toggle_advanced()
 				messages.innerHTML += '<?php $status->showMessages(true, true); ?>'.replace(/&apos;/g, "'");
 			</script>
 		<?php
-		}
+		} 
+		?>
 
-if ($formReadonly != "readonly") { ?>
-	<div style="margin-top: 20px">
-		<input type="submit" class="btn btn-primary" name="save_settings" value="Save changes">
-		<input type="submit" class="btn btn-warning" name="reset_settings" value="Reset to default values" onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
-		<button type="button" class="btn advanced btn-advanced" id="advButton" onclick="toggle_advanced();"><?php if ($initial_display == "none") echo "Show advanced options"; else echo "Hide advanced options"; ?></button>
-		<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;"><br><input type="checkbox" name="restart" checked> Restart Allsky after saving changes?<br><br>&nbsp;</div>
-	</div>
-<?php } ?>
 	</form>
 </div><!-- ./ Panel body -->
 </div><!-- /.panel-primary -->

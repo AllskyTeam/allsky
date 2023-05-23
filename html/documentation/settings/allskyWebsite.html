@@ -29,37 +29,38 @@
 The Allsky Website allows you to display your most recent captured image on a website,
 either on your Pi or on another machine.
 Saved timelapse videos, keograms, and startrails can also be viewed.
-It can optionally add an overlay of constellations and other objects,
-as well as optional Aurora data.
+Constellations and other objects can be overlayed on the image,
+and aurora activity can be listed.
+</p>
+<p>
+Make sure you follow the
+<a href=../installations/AllskyWebsite.html">Allsky Website Installation Instructions</a>
+exactly to install the Allsky Website on your Pi and/or a remote server.
 </p>
 <p>
 To configure the Website:
-<ul>
-<li>In the WebUI, click on the <code>Editor</code> link in the menu.
+<ol>
+<li>In the WebUI, click on the <span class="WebUIWebPage">Editor</span> link in the menu.
+
+<li>If you have not already done so while installing the Website,
+	in the drop-down at the bottom of the page, select
+	<span class="dropdown">ftp-settings.sh</span>
+	to specify the settings to upload image,
+	keogram, startrails, and timelapse 
+	files to your local and/or remote Allsky Website.
+	<br>See the <a href="#ftp-settings">ftp-settings.sh file</a> section below
+	for the various settings and their meanings.
+
 <li>In the drop-down at the bottom of the page, select
 	one of the following, depending on which Website you want to configure:
 	<ul>
-	<li><code>configuration.json (local Allsky Website)</code> or
-	<li><code>remote_configuration.json (remote Allsky Website)</code>
+	<li><span class="dropdown">configuration.json (local Allsky Website)</span> or
+	<li><span class="dropdown">remote_configuration.json (remote Allsky Website)</span>
 		(only if you have a remote Website)
 	</ul>
-</ul>
-</p>
-<p>
-The Allsky Website configuration file has two sections:
-<ol>
-<li><span class="settings editorSetting">"config"</span> -
-	settings for the liveview image and constellation overlay.
-<li><span class="settings editorSetting">"homePage"</span> -
-	settings to change the look and feel
-	of the Website's home page including the icons on the left side and the
-	information popout on the right side.
+	See the <a href="#configuration.json">configuration.json files</a> section below
+	for a description of the settings in those files.
 </ol>
-</p>
-<p>
-Any setting whose default is <b>XX_need_to_update_XX</b> needs to be updated prior
-to using the Website.
-The latitude and longitude also need to be updated if not already updated.
 </p>
 <p>
 The sections below list all the settings, their default values, and a description.
@@ -68,25 +69,341 @@ Information on the color scheme used by the Editor is
 </p>
 
 
-<h2>"config" settings</h2>
+<h2 id="ftp-settings">ftp-settings.sh file</h2>
+<p>
+In order to upload files to your Allsky Website (on the Pi and/or a remote server),
+connection details must be specified by clicking on the WebUI's 
+<span class="WebUIWebPage">Editor</span> page, then selecting
+<span class="dropdown">ftp-settings.sh</span> in the drop-down list at the bottom of the page.
+</p>
 <details><summary></summary>
+<p>
+Notes:
+<ul>
+<li>
+	In the text below, "local" refers to an Allsky Website that's on the Pi
+	and "remote" refers to an Allsky Website <b>not</b> on the Pi.
+	<blockquote class="warning">
+	<br>
+	Directories on the <strong>Pi</strong> are created during Allsky Website installation, but
+	<strong>YOU</strong> must create the <strong>remote</strong> directories.
+	<br>&nbsp;
+	</blockquote>
+<li>
+	The <span class="shSetting">WEB_*_DIR</span>
+	settings below (e.g., <span class="shSetting">WEB_VIDEOS_DIR</span>)
+	are <strong>only</strong> used if you have an Allsky Website on the Pi
+	<strong>AND</strong> a remote Allsky Website, and you want files copied to both locations.
+	In this case, see the
+	<a href="#upload-combinations">example at the end of the table below</a>
+	for what settings to use.
+<li>
+	By default, the destination file name is the same as the file being uploaded.
+	The <span class="shSetting">*_DESTINATION_NAME</span> settings below are used
+	to specify a DIFFERENT destination name.
+	For example, if the file being uploaded is
+	<span class="fileName">allsky-20210710.mp4</span> you may want it
+	called <span class="fileName">allsky.mp4</span> on the remote web server
+	so the name is always the same.
+	In that case, set
+	<span class="shSetting">VIDEOS_DESTINATION_NAME</span><span class="editorSpecial">=</span><span class="editorString">"allsky.mp4"</span>
+	(don't forget the file name extension like .mp4, .jpg, etc.).
+	If you want the destination file name to be the <b>same</b> as what's being uploaded,
+	leave the <span class="shSetting">*_DESTINATION_NAME</span> blank.
+</ul>
+</p>
 <br>
-Legend:
+
+<table role="table">
+<thead>
+<tr><th>Setting</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><span class="shSetting">PROTOCOL</span></td> <td></td>
+	<td>How the file should be uploaded:
+	<ul class="minimalPadding">
+	<li><span class="editorString">local</span> -
+		copies the file to a local Allsky Website.
+	<li><span class="editorString">ftps</span> -
+		uses secure File Transfer Protocol (FTPs) to upload to a remote server.
+	<li><span class="editorString">sftp</span> -
+		uses SSH file transfer to upload to a remote server.
+	<li><span class="editorString">ftp</span> -
+		uses (insecure) File Transfer Protocol (FTP) to upload to a remote server.
+		<blockquote class="warning">
+			<span class="editorString">ftp</span> is unsecure;
+			please use 
+			<span class="editorString">ftps</span> or
+			<span class="editorString">sftp</span> instead.
+		</blockquote>
+	<li><span class="editorString">scp</span> -
+		uses secure cp (copy) to copy the file to a remote server.
+	<li><span class="editorString">s3</span> -
+		copies the file to an Amazon Web Services (AWS) server.
+	<li><span class="editorString">gcs</span> -
+		copies the file to a Google Cloud Storage (GCS) server.
+	</ul>
+	</td>
+</tr>
+
+<tr><td class="note" colspan="3">image.jpg Settings</td></tr>
+<tr><td><span class="shSetting">IMAGE_DIR</span></td> <td></td>
+	<td>The remote directory where the current image should go.</td>
+</tr>
+<tr><td><span class="shSetting">WEB_IMAGE_DIR</span></td> <td></td>
+	<td>The local directory where the current image should go.</td>
+</tr>
+
+<tr><td class="note" colspan="3">Timelapse Settings</td></tr>
+<tr><td><span class="shSetting">VIDEOS_DIR</span></td> <td></td>
+	<td>The remote directory where the timelapse video should go.</td>
+</tr>
+<tr><td><span class="shSetting">VIDEOS_DESTINATION_NAME</span></td> <td></td>
+	<td>Remote name of the timelapse video file.
+	If not specified it's the same name as the file being uploaded.</td>
+</tr>
+<tr><td><span class="shSetting">WEB_VIDEOS_DIR</span></td> <td></td>
+	<td>Location on the Pi to copy the timelapse video to.</td>
+</tr>
+
+<tr><td class="note" colspan="3">Keogram Settings</td></tr>
+<tr><td><span class="shSetting">KEOGRAM_DIR</span></td> <td></td>
+	<td>The remote directory where the keogram image should go.</td>
+</tr>
+<tr><td><span class="shSetting">KEOGRAM_DESTINATION_NAME</span></td> <td></td>
+	<td>Remote name of the keogram image file.
+	If not specified it's the same name as the file being uploaded.</td>
+</tr>
+<tr><td><span class="shSetting">WEB_KEOGRAM_DIR</span></td> <td></td>
+	<td>Location on the Pi to copy the keogram file to.</td>
+</tr>
+
+<tr><td class="note" colspan="3">Startrails Settings</td></tr>
+<tr><td><span class="shSetting">STARTRAILS_DIR</span></td> <td></td>
+	<td>The remote directory where the startrails image should go.</td>
+</tr>
+<tr><td><span class="shSetting">STARTRAILS_DESTINATION_NAME</span></td> <td></td>
+	<td>Remote name of the startrails file.
+	If not specified it's the same name as the file being uploaded.</td>
+</tr>
+<tr><td><span class="shSetting">WEB_STARTRAILS_DIR</span></td> <td></td>
+	<td>Location on the Pi to copy the startrails file to.</td>
+</tr>
+
+<tr><td class="note" colspan="3">ftp, ftps, sftp, and scp Settings</td></tr>
+<tr><td><span class="shSetting">REMOTE_HOST</span></td> <td></td>
+	<td>Remote server DNS name or IP address.
+	If you don't know it, ask your service provider.
+	</td>
+</tr>
+
+<tr><td class="note" colspan="3">ftp, ftps, and sftp Settings</td></tr>
+<tr><td><span class="shSetting">REMOTE_USER</span></td> <td></td>
+	<td>Your remote user name.</td>
+</tr>
+<tr><td><span class="shSetting">REMOTE_PASSWORD</span></td> <td></td>
+	<td>Your ftp / ftps / sftp password.</td>
+</tr>
+<tr><td><span class="shSetting">REMOTE_PORT</span></td> <td></td>
+	<td>An optional port number for <code>ftp</code> and <code>ftps</code>. Is rarely needed.</td>
+</tr>
+<tr><td><span class="shSetting">LFTP_COMMANDS</span></td> <td></td>
+	<td>An optional colon-separated (;) list of commands needed by the <code>lftp</code> command.
+	See <a allsky="true" href="/documentation/troubleshooting/uploads.html">this page</a>
+	for example commands to enter into <span class="shSetting">LFTP_COMMANDS</span>.
+	</td>
+</tr>
+
+<tr><td class="note" colspan="3">scp Settings</td></tr>
+<tr><td><span class="shSetting">REMOTE_USER</span></td> <td></td>
+	<td>Your remote user name.
+		This is the same setting as above.
+	</td>
+</tr>
+<tr><td><span class="shSetting">SSH_KEY_FILE</span></td> <td></td>
+	<td>Path to the SSH key file.
+	<br>
+	You need to set up SSH key authentication on your server.
+	First, generate an SSH key on your Pi:
+<pre>ssh-keygen -t rsa</pre>
+	When prompted, leave the default filename, and use an empty passphrase.
+	Then, copy the generated key to your server:
+<pre>ssh-copy-id remote_username@server_ip_address</pre>
+	The private SSH key will be stored in
+	<span class="fileName">~/.ssh</span> (default filename is <span class="fileName">id_rsa</span>)
+	</td>
+</tr>
+
+<tr><td class="note" colspan="3">s3 Settings</td></tr>
+<tr><td colspan="3">
+	You need to install the AWS Command-Line Interface (CLI):
+<pre>
+sudo apt-get install python3-pip
+pip3 install awscli --upgrade --user
+export PATH=/home/pi/.local/bin:$PATH
+aws configure
+</pre>
+	When prompted, enter a valid access key ID, Secret Access Key, and Default region name,
+	for example, (e.g. "us-west-2").
+	Set the Default output format to "json" when prompted.
+	</td>
+</tr>
+<tr><td><span class="shSetting">AWS_CLI_DIR</span></td>
+	<td><span class="editorString">/home/pi/.local/bin</span></td>
+	<td>Directory on the Pi where the AWS tools are installed.
+	<br>If you used a different PATH setting above, change this setting to match it.
+	</td>
+</tr>
+<tr><td><span class="shSetting">S3_BUCKET</span></td>
+	<td><span class="editorString">allskybucket</span></td>
+	<td>Name of S3 Bucket where the files will be uploaded
+	(must be in Default region specified above).
+	You may want to turn off or limit bucket versioning to avoid consuming lots of
+	space with multiple versions of the "image.jpg" files.
+	</td>
+</tr>
+<tr><td><span class="shSetting">S3_ACL</span></td>
+	<td><span class="editorString">private</span></td>
+	<td>S3 Access Control List (ACL).
+	If you want to serve your uploaded files vis http(s),
+	change this to <span class="editorString">public-read</span>.
+	You will need to ensure the S3 bucket policy is configured to allow public access to
+	objects with a <span class="editorString">public-read</span> ACL.
+	<br>You may need to set a CORS policy in S3 if the files are to be accessed by
+	Javascript from a different domain.
+	</td>
+</tr>
+
+<tr><td class="note" colspan="3">GCS Settings</td></tr>
+<tr><td colspan="3">
+	You need to install the <code>gsutil</code> command which is part of the Google Cloud SDK.
+	See installation instructions
+	<a href="https://cloud.google.com/storage/docs/gsutil_install">here</a>.
+	<br>
+	NOTE: The <code>gsutil</code> command must be installed somewhere in the standard $PATH,
+	usually in <span class="fileName">/usr/bin</span>.
+	Make sure you authenticate the cli tool with the correct user as well.
+<tr><td><span class="shSetting">GCS_BUCKET</span></td>
+	<td><span class="editorString">allskybucket</span></td>
+	<td>Name of S3 Bucket where the files will be uploaded.</td>
+</tr>
+<tr><td><span class="shSetting">GCS_ACL</span></td>
+	<td><span class="editorString">private</span></td>
+	<td>GCS Access Control List.
+	You can use any one of the predefined ACL rules found
+	<a href="https://cloud.google.com/storage/docs/access-control/lists#predefined-acl">here</a>.
+	To access files over https, set this to <span class="editorString">publicRead</span>.
+	</td>
+</tr>
+</tbody>
+</table>
+
+<hr class="separatorSmall">
+<h3 id="upload-combinations">Settings for various combinations</h3>
+<ol>
+<li>If you have the Allsky Website <b>only</b> on your Pi, use these settings:
+<pre>
+PROTOCOL="local"
+IMAGE_DIR=""
+VIDEOS_DIR="${ALLSKY_WEBSITE}/videos"
+KEOGRAM_DIR="${ALLSKY_WEBSITE}/keograms"
+STARTRAILS_DIR="${ALLSKY_WEBSITE}/startrails"
+</pre>
+
+<li>
+	If you have an Allsky Website <b>only</b> on a remote server, use these settings.
+	For the sake of this example, assume your top-level directory on the server is
+	<span class="fileName">/allsky</span>:
+<pre>
+PROTOCOL="sftp"		<span class="shellComment"># or another PROTOCOL</span>
+IMAGE_DIR="/allsky"
+VIDEOS_DIR="/allsky/videos"
+KEOGRAM_DIR="/allsky/keogram"
+STARTRAILS_DIR="/allsky/startrails"
+</pre>
+
+<li>
+	If you have an Allsky Website on your Pi <b>AND</b> on a remote server, use these settings.
+	For the sake of this example, assume your top-level directory on the server is
+	<span class="fileName">/allsky</span>:
+<pre>
+PROTOCOL="sftp"		<span class="shellComment"># or another PROTOCOL</span>
+IMAGE_DIR="/allsky"
+WEB_IMAGE_DIR=""
+VIDEOS_DIR="/allsky/videos"
+WEB_VIDEOS_DIR="${ALLSKY_WEBSITE}/videos"
+KEOGRAM_DIR="/allsky/keogram"
+WEB_KEOGRAM_DIR="${ALLSKY_WEBSITE}/keograms"
+STARTRAILS_DIR="/allsky/startrails"
+WEB_STARTRAILS_DIR="${ALLSKY_WEBSITE}/startrails"
+</pre>
+</ol>
+<hr class="separatorSmall">
+
+
+<h3>Amazon Lightsail</h3>
+If you are using SSH Key with Amazon's Lightsail,
+copy the <span class="fileName">ssh-key.pem</span> file to your Pi,
+for example, in <span class="fileName">~</span>,
+then execute
+<pre>chmod 400 ~/ssh-key.pem</pre>
+and set:
+<pre>
+PROTOCOL="sftp"
+REMOTE_HOST="remote host name"
+REMOTE_USER="remote user name"
+REMOTE_PASSWORD="n/a"
+LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"
+</pre>
+<hr class="separator">
+</details>
+<!-- ========================================================== -->
+
+<h2>configuration.json files</h2>
+<p>
+This section describes the settings in the 
+<span class="dropdown">configuration.json (local Allsky Website)</span> and
+<span class="dropdown">remote_configuration.json (remote Allsky Website)</span> files.
+</p>
+<details><summary></summary>
+<p id="configuration.json">
+The settings in both files are identical (although their values may differ)
+and they are split into two sections:
+<ol>
+<li><span class="settings editorSetting">"config"</span> -
+	settings for the liveview image and constellation overlay.
+<li><span class="settings editorSetting">"homePage"</span> -
+	settings to change the look and feel
+	of the Website's home page including the icons on the left side,
+	the information popout on the right side, an optional background image, etc.
+</ol>
+</p>
+<p>
+Any setting whose value is <b>XX_need_to_update_XX</b>
+needs to be updated prior to using the Website.
+</p>
+
+
+<h3><span class="settings editorSetting">config</span> settings</h3>
+<details><summary></summary>
+<div class="legend">
+<span class="legendHeader">Legend:</span>
 <ul class="minimalPadding">
-<li>Values for setting names with <span class="sentToMapServer"></span> after them
+<li>Values for setting names with "<span class="sentToMapServer"></span>" after them
 	are sent to the <a allsky="true" href="/documentation/allskyMap/index.html">Allsky Map</a>
 	server if you camera is on the map.
-<li>Setting names with <span class="vsOverlay"></span>
-	after them impact the virtual sky overlay.
+<li>Setting names with "<span class="vsOverlay"></span>" after them
+	impact the virtual sky overlay.
 	A complete list of virtual-sky based options is
 	<a href="https://slowe.github.io/VirtualSky/#options">here</a>.
 <li>Values marked with <span class="autoSet"></span> are automatically set during
-	installation based on your settings and your Pi model, but can be overridden.
+	installation based on your WebUI settings and your Pi model, but can be overridden.
 </ul>
 <blockquote>
 It's important to update your settings in the WebUI <b>before</b> installing the
 Allsky Website so you only have to update them once.
 </blockquote>
+</div>
 
 <br><table class="settings">
 <thead>
@@ -104,10 +421,11 @@ Allsky Website so you only have to update them once.
 </tr>
 <tr>
 	<td><span class="editorSetting">imageName</span></td>
-	<td><span class="editorString">/current/tmp/image.jpg</span></td>
+	<td><span class="editorString">/current/tmp/image.jpg</span> (local) or
+		<span class="editorString">image.jpg</span> (remote)
+	</td>
 	<td>The image uploaded from your allsky camera.
-		On a <u>remote</u> web server this should normally be
-		<span class="editorString">image.jpg</span>.
+		<br>Normally should not be changed.
 	</td>
 </tr>
 <tr>
@@ -424,7 +742,7 @@ Allsky Website so you only have to update them once.
 </details>
 
 
-<h2>"homePage" settings</h2>
+<h3><span class="settings editorSetting">homePage</span> settings</h3>
 <details><summary></summary>
 <br>
 <table class="settings">
@@ -657,6 +975,9 @@ Allsky Website so you only have to update them once.
 </tr>
 </tbody>
 </table>
+</details>
+
+</details>
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

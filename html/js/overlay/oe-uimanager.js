@@ -126,6 +126,10 @@ class OEUIMANAGER {
         this.#testMode = state;
     }
 
+    get editorStage() {
+        return this.#oeEditorStage;
+    }
+
     get transformer() {
         return this.#transformer;
     }
@@ -1118,20 +1122,24 @@ class OEUIMANAGER {
     }
 
     setTransformerState(shape) {
-        if (this.#transformer.borderStroke() !== '#00a1ff') {
-            this.#transformer.borderStroke('#00a1ff');
-            this.#transformer.borderStrokeWidth(1);
+        this.checkImageBounds(shape, this.#oeEditorStage, this.#transformer);
+    }
+
+    checkImageBounds(shape, oeEditorStage, transformer) {
+        if (transformer.borderStroke() !== '#00a1ff') {
+            transformer.borderStroke('#00a1ff');
+            transformer.borderStrokeWidth(1);
         }
 
-        if (shape.getClassName() == 'Image') {
-            let stageWidth = this.#oeEditorStage.width();
-            let stageHeight = this.#oeEditorStage.height();
+        if (shape.getClassName() == 'Image') {        
+            let stageWidth = oeEditorStage.width();
+            let stageHeight = oeEditorStage.height();
 
             let rect = shape.getClientRect();
-            let x = rect.x  / this.#oeEditorStage.scaleX();
-            let y = rect.y  / this.#oeEditorStage.scaleY();
-            let width = rect.width / this.#oeEditorStage.scaleX();
-            let height = rect.height / this.#oeEditorStage.scaleY();
+            let x = rect.x  / oeEditorStage.scaleX();
+            let y = rect.y  / oeEditorStage.scaleY();
+            let width = rect.width / oeEditorStage.scaleX();
+            let height = rect.height / oeEditorStage.scaleY();
 
             let outOfBounds = false;
             if (x < 0) {
@@ -1149,8 +1157,8 @@ class OEUIMANAGER {
             }
 
             if (outOfBounds) {
-                this.#transformer.borderStrokeWidth(3);
-                this.#transformer.borderStroke('red');    
+                transformer.borderStrokeWidth(3);
+                transformer.borderStroke('red');    
             }
         }
     }
@@ -1789,8 +1797,8 @@ class OEUIMANAGER {
             //image: { group: 'Image', name: 'Image', type: 'text' },
             //fontname: { group: 'Font', name: 'Name', type: 'options', options: this.#fonts },
 
-            x: { group: 'Position', name: 'X', type: 'number', options: { min: 0, max: 2048, step: 10 } },
-            y: { group: 'Position', name: 'Y', type: 'number', options: { min: 0, max: 2048, step: 10 } },
+            x: { group: 'Position', name: 'X', type: 'number', options: { min: 0, max: this.#backgroundImage.width(), step: 10 } },
+            y: { group: 'Position', name: 'Y', type: 'number', options: { min: 0, max: this.#backgroundImage.height(), step: 10 } },
 
             rotation: { group: 'Position', name: 'Rotation', type: 'number', options: { min: -360, max: 360, step: 1 } },
             opacity: { group: 'Position', name: 'Opacity', type: 'number', options: { min: 0, max: 1, step: 0.1 } },
@@ -1806,6 +1814,7 @@ class OEUIMANAGER {
             // TODO: Check setter actually exists
             if (name !== 'image') {
                 field[name] = value;
+                uiManager.checkImageBounds(field.shape, uiManager.editorStage , uiManager.transformer);
             } else {
                 field.setImage(value).then( () => {
                     uiManager.transformer.forceUpdate();

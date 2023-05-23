@@ -555,8 +555,9 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {	// if
         echo "</div>";
 }
 
-/* Run a command and display the appropriate status message */
-function runCommand($cmd, $message, $messageColor)
+// Run a command and display the appropriate status message.
+// If $addMsg is false, then don't add our own message.
+function runCommand($cmd, $message, $messageColor, $addMsg=true)
 {
 	global $status;
 
@@ -569,8 +570,13 @@ function runCommand($cmd, $message, $messageColor)
 		return false;
 	} elseif ($return_val > 0) {
 		// Display a failure message, plus the caller's message, if any.
-		$msg = "'$cmd' failed";
-		if ($result != null) $msg .= ":<br>" . implode("<br>", $result);
+		if ($addMsg) {
+			$msg = "'$cmd' failed";
+			if ($result != null) $msg .= ":<br>" . implode("<br>", $result);
+		} else {
+			if ($result != null) $msg = implode("<br>", $result);
+			else $msg = "";
+		}
 		$status->addMessage($msg, "danger", true);
 		return false;
 	}

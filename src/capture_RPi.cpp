@@ -435,6 +435,7 @@ int main(int argc, char *argv[])
 	processConnectedCameras();	// exits on error
 
 	ASI_CAMERA_INFO ASICameraInfo;
+	// This gives a segmentation fault if cameraNumber isn't connected.
 	asiRetCode = ASIGetCameraProperty(&ASICameraInfo, CG.cameraNumber);
 	if (asiRetCode != ASI_SUCCESS)
 	{

@@ -186,7 +186,8 @@ function DisplayAllskyConfig(){
 					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $debugArg $moreArgs $changes";
 					# Let makeChanges.sh display any output
 					echo '<script>console.log("Running: ' . $CMD . '");</script>';
-					$ok = runCommand($CMD, "", "success");
+					// false = don't add anything to the message
+					$ok = runCommand($CMD, "", "success", false);
 				}
 
 				if ($ok) {
@@ -567,3 +568,4 @@ if ($formReadonly != "readonly") { ?>
 <?php
 }
 ?>
+

@@ -127,7 +127,7 @@ function display_msg()
 	elif [[ ${LOG_TYPE} == "debug" ]]; then
 		# Indent so they align with text above
 		LOGMSG="  DEBUG: ${MESSAGE}"
-		MSG="${YELLOW}${LOGMSG}${NC}"
+		MSG="${cDEBUG}${LOGMSG}${NC}"
 		STARS=false
 
 	else

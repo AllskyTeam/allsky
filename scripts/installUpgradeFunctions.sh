@@ -127,7 +127,8 @@ function display_msg()
 	elif [[ ${LOG_TYPE} == "debug" ]]; then
 		# Indent so they align with text above
 		LOGMSG="  DEBUG: ${MESSAGE}"
-		MSG="${YELLOW}${LOGMSG}${NC}"
+		#shellcheck disable=SC2154
+		MSG="${cDEBUG}${LOGMSG}${NC}"
 		STARS=false
 
 	else
@@ -167,7 +168,7 @@ function display_msg()
 					-e "s/\\${GREEN/\[/\\[}//g" \
 					-e "s/\\${YELLOW/\[/\\[}//g" \
 					-e "s/\\${RED/\[/\\[}//g" \
-					-e "s/\\${DEBUG/\[/\\[}//g" \
+					-e "s/\\${cDEBUG/\[/\\[}//g" \
 					-e "s/\\${NC/\[/\\[}//g" )"
 				echo -e "${O}"		# handles the newlines
 			else

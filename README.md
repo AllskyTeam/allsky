@@ -1,4 +1,4 @@
-# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2023.05.01_dev-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2023.05.01_01-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 &nbsp;  
@@ -22,9 +22,9 @@ You will need the following hardware:
 &nbsp;  
 > **NOTES:**
 >	- The ZWO ASI120-series cameras are not recommended due to somewhat poor quality. See the [Troubleshooting --> ZWO Cameras](https://github.com/thomasjacquin/allsky/wiki) documentation for notes on the ASI120-series and related T7 / T7C cameras.
->	- The Pi Zero and Pi Zero W, with their limited memory and _very_ limited CPU power (single CPU core), are not recommended.  You will likely not be able to create keograms, startrails, or timelapse videos.
->	- The Pi Zero 2 and Pi Zero 2 W, with their limited memory and somewhat limited CPU power, are not recommended unless cost is a major concern.  Creating keograms, startrails, and timelapse videos may or may not be possible.
->	- We have not found any "Pi-compatible" boards that are actually compatible, so buyer beware.
+>	- The Pi Zero with its limited memory and _very_ limited CPU power (single CPU core), is not recommended.  You will likely not be able to create keograms, startrails, or timelapse videos.
+>	- The Pi Zero 2 with its limited memory and somewhat limited CPU power, is not recommended unless cost is the only concern.  Creating keograms, startrails, and timelapse videos may or may not be possible.
+>	- We have not found any "Pi-compatible" boards (other than the Le Potato) that are actually compatible, so buyer beware.
 ---
 
 

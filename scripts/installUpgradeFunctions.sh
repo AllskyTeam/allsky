@@ -127,6 +127,7 @@ function display_msg()
 	elif [[ ${LOG_TYPE} == "debug" ]]; then
 		# Indent so they align with text above
 		LOGMSG="  DEBUG: ${MESSAGE}"
+		#shellcheck disable=SC2154
 		MSG="${cDEBUG}${LOGMSG}${NC}"
 		STARS=false
 

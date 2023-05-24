@@ -53,16 +53,18 @@
 						Depending on your settings and the sky brightness,
 						it may take many images before it gets a good one to save.
 						The new warning image makes it obvious Allsky hasn't hung.
+					</li>
 					<li>In the WebUI's <span class="WebUIWebPage">Editor</span> page,
 						the buttons (e.g., "Save changes") are now at the top of the page
 						and stay there as you scroll down.
 						A new "Top" button appears at the bottom of the page after you scroll
-						to make it quick to get back to the top.
+						to make it quick to get back to the top.</li>
 					<li>Selecting <code>Refresh</code> from the
 						<span class="WebUISetting">Camera Type</span> drop-down
 						can be used to change cameras of the same
 						<span class="WebUISetting">Camera Type</span>.
 						For example, replacing a ZWO ASI120 with an ASI290.
+					</li>
 					<li>Speed up the installation process by using prebuilt binaries where possible</li>
 				</ul>
 
@@ -76,17 +78,24 @@
 							If after installing this point release you are still getting a lot of "bad" images,
 							do NOT disable <span class="shSetting">REMOVE_BAD_IMAGES</span> - instead,
 							modify the <span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_*</span> values as needed.
-						</blockquote>
+					</li>
+					</blockquote>
 					<li>The <code>s3</code> upload protocol now sets the destination file name to
 						<span class="fileName">image.jpg</span> instead of
 						<span class="fileName">image-YYYYMMDDHHMMSS.jpg</span>.
+					</li>
 					<li>The <code>scp</code> upload protocol now uses the
 						<span class="shSetting">REMOTE_USER</span> setting.
+					</li>
+					<li>The <code>sunwait</code> command is no longer included with Allsky.</li>
+					It was created but never used so was simply taking disk space.
 					<li>Set the upper limits on the x and y spinner controls in the overlay property editors to the size
 						of the image, previously these were hard coded to 2048</li>
 					<li>When adding a new variable to the overlay variable list it can now be selected without
 						refreshing the page</li>
-					<li>When an image is moved out of bounds using the x and y spinner controls a red rectangle will be drawn around the image, the same as if it were dragged out of bounds</li>
+					<li>When an image is moved out of bounds using the x and y spinner controls a red rectangle will be
+						drawn around the image, the same as if it were dragged out of bounds</li>
+
 				</ul>
 
 				<hr class="separator"><!-- =========================================== -->

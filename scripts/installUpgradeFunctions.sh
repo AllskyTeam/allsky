@@ -167,7 +167,7 @@ function display_msg()
 					-e "s/\\${GREEN/\[/\\[}//g" \
 					-e "s/\\${YELLOW/\[/\\[}//g" \
 					-e "s/\\${RED/\[/\\[}//g" \
-					-e "s/\\${DEBUG/\[/\\[}//g" \
+					-e "s/\\${cDEBUG/\[/\\[}//g" \
 					-e "s/\\${NC/\[/\\[}//g" )"
 				echo -e "${O}"		# handles the newlines
 			else

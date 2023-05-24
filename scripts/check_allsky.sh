@@ -502,6 +502,10 @@ case "${PROTOCOL}" in
 		check_PROTOCOL "${PROTOCOL}" "REMOTE_HOST"
 		check_PROTOCOL "${PROTOCOL}" "REMOTE_USER"
 		check_PROTOCOL "${PROTOCOL}" "REMOTE_PASSWORD"
+		if [[ ${PROTOCOL} == "ftp" ]]; then
+			heading "Warnings"
+			echo "PROTOCOL set to insecure 'ftp'.  Try to use 'ftps' or 'sftp' instead."
+		fi
 		;;
 
 	scp)

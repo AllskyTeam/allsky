@@ -1874,8 +1874,6 @@ install_overlay()
 		M=""
 		R=""
 	fi
-	MSG2="\n\tThis may take a LONG time if the packages are not already installed."
-	display_msg --log progress "Installing Python dependencies${M}."  "${MSG2}"
 	TMP="${ALLSKY_INSTALLATION_LOGS}/Python_dependencies"
 	COUNT=0
 	local NUM=$(wc -l < "${ALLSKY_REPO}/requirements${R}.txt")
@@ -1936,7 +1934,7 @@ install_overlay()
 check_if_buster()
 {
 	if [[ ${OS} == "buster" ]]; then
-		MSG="This release runs best on the newer Bullseye operating system"
+		MSG="This release runs best on the Bullseye operating system"
 		MSG="${MSG} that was released in November, 2021."
 		MSG="${MSG}\nYou are running the older Buster operating system and we"
 		MSG="${MSG} recommend doing a fresh install of Bullseye on a clean SD card."
@@ -2145,6 +2143,10 @@ fi
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
+
+##### Display a message to Buster users.
+check_if_buster
+
 ##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY
 does_prior_Allsky_exist
 
@@ -2196,7 +2198,7 @@ check_swap
 check_tmp
 
 
-MSG="\nThe following steps can take up to 1 - 3 HOURS depending on the speed of your Pi"
+MSG="\nThe following steps can take up to an hour depending on the speed of your Pi"
 MSG="${MSG}\nand how many of the necessary dependencies are already installed."
 display_msg info "${MSG}"
 

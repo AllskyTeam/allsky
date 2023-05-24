@@ -79,7 +79,7 @@ endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
 
-all:check_deps capture_ZWO capture_RPi startrails keogram sunwait
+all:check_deps capture_ZWO capture_RPi startrails keogram
 .PHONY : all
 
 ifneq ($(shell id -u), 0)
@@ -103,20 +103,6 @@ ifeq (,$(OPENCV))
 	  $(error Did not find any OpenCV Libraries, try 'sudo make deps')
 endif
 .PHONY : check_deps
-
-patchsunwait:
-	@echo `date +%F\ %R:%S` Initializing sunwait submodule...
-	@git submodule init
-	@git submodule update
-	@echo `date +%F\ %R:%s` Patching sunwait compile warnings...
-	@patch -p1 -d sunwait-src/ < sunwait.patch
-	@touch patchsunwait
-
-sunwait: patchsunwait
-	@echo `date +%F\ %R:%S` Building sunwait...
-	@$(MAKE) -C sunwait-src
-	@cp sunwait-src/sunwait .
-	@echo `date +%F\ %R:%S` Done.
 
 allsky_common.o: allsky_common.cpp include/allsky_common.h
 	@echo Building $@ ...
@@ -183,7 +169,6 @@ install:
 	  install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../bin/; \
 	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../bin/; \
 	fi
-	@install sunwait $(DESTDIR)$(bindir)
 
 uninstall:
 	@echo `date +%F\ %R:%S` Removing binaries...
@@ -192,7 +177,6 @@ uninstall:
 	  rm -f $(DESTDIR)$(bindir)/capture_RPi; \
 	  rm -f $(DESTDIR)$(bindir)/keogram; \
 	  rm -f $(DESTDIR)$(bindir)/startrails; \
-	  rm -f $(DESTDIR)$(bindir)/sunwait; \
 	else \
 	  rm -f ../bin/capture_ZWO; \
 	  rm -f ../bin/capture_RPi; \
@@ -204,7 +188,7 @@ endif # sudo / root check
 .PHONY : install uninstall
 
 clean:
-	rm -f capture_ZWO capture_RPi startrails keogram sunwait *.o *.a
+	rm -f capture_ZWO capture_RPi startrails keogram *.o *.a
 .PHONY : clean
 
 endif # Correct directory structure check

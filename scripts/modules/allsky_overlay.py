@@ -97,7 +97,10 @@ class ALLSKYOVERLAY:
         self._overlayConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYCONFIGFILE)
         fieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYFIELDSFILE)
         userFieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYUSERFIELDSFILE)
-        self._OVERLAYTMP = os.path.join(tempfile.gettempdir(), 'overlay')
+        
+        tmpFolder = os.path.join(os.environ['ALLSKY_OVERLAY'], 'tmp')
+        self._createTempDir(tmpFolder)
+        self._OVERLAYTMP = os.path.join(tmpFolder, 'overlay')
         self._createTempDir(self._OVERLAYTMP)
         self._OVERLAYTLEFOLDER = os.path.join(self._OVERLAYTMP , 'tle')
         self._createTempDir(self._OVERLAYTLEFOLDER)

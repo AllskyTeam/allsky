@@ -120,7 +120,7 @@ function display_msg()
 		STARS=false
 
 	elif [[ ${LOG_TYPE} == "info" ]]; then
-		LOGMSG="${MESSAGE}"
+		LOGMSG="* ${MESSAGE}"
 		MSG="${YELLOW}${LOGMSG}${NC}"
 		STARS=false
 

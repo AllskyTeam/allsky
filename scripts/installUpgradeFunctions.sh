@@ -163,18 +163,18 @@ function display_msg()
 		(
 			if [[ -n ${GREEN} ]]; then
 				# In case a variable isn't define, set it to a string that won't be found
-				YELLOW="${YELLOW:-abcxyz}"
-				RED="${RED:-abcxyz}"
-				cDEBUG="${cDEBUG:-abcxyz}"
-				NC="${NC:-abcxyz}"
+				local Y="${YELLOW:-abcxyz}"
+				local R="${RED:-abcxyz}"
+				local D="${cDEBUG:-abcxyz}"
+				local N="${NC:-abcxyz}"
 
 				# I couldn't figure out how to replace "\n" with a new line in sed.
 				O="$( sed \
 					-e "s/\\${GREEN/\[/\\[}//g" \
-					-e "s/\\${YELLOW/\[/\\[}//g" \
-					-e "s/\\${RED/\[/\\[}//g" \
-					-e "s/\\${cDEBUG/\[/\\[}//g" \
-					-e "s/\\${NC/\[/\\[}//g" )"
+					-e "s/\\${Y/\[/\\[}//g" \
+					-e "s/\\${R/\[/\\[}//g" \
+					-e "s/\\${D/\[/\\[}//g" \
+					-e "s/\\${N/\[/\\[}//g" )"
 				echo -e "${O}"		# handles the newlines
 			else
 				cat

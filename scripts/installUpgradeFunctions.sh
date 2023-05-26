@@ -161,8 +161,13 @@ function display_msg()
 		
 		echo "${LOGMSG}${MESSAGE2}" |
 		(
-			# If one color variable is defined, assume they all are.
 			if [[ -n ${GREEN} ]]; then
+				# In case a variable isn't define, set it to a string that won't be found
+				YELLOW="${YELLOW:-abcxyz}"
+				RED="${RED:-abcxyz}"
+				cDEBUG="${cDEBUG:-abcxyz}"
+				NC="${NC:-abcxyz}"
+
 				# I couldn't figure out how to replace "\n" with a new line in sed.
 				O="$( sed \
 					-e "s/\\${GREEN/\[/\\[}//g" \

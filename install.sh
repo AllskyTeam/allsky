@@ -703,27 +703,23 @@ install_webserver()
 ####
 # Prompt for a new hostname if needed,
 # and update all the files that contain the hostname.
+# The default hostname in Pi OS is "raspberrypi"; if it's still that,
+# prompt to update.  If it's anything else that means the user
+# already changed it to something so don't overwrite their change.
+
 prompt_for_hostname()
 {
-	# If the Pi is already called ${SUGGESTED_NEW_HOST_NAME},
-	# then the user already updated the name, so don't prompt again.
-
 	CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
-	if [[ ${CURRENT_HOSTNAME} == "${SUGGESTED_NEW_HOST_NAME}" ]]; then
+	if [[ ${CURRENT_HOSTNAME} != "raspberrypi" ]]; then
+		display_msg --logonly info "Using current hostname of '${CURRENT_HOSTNAME}'."
 		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
-		return
-	fi
-
-	# If we're upgrading, use the current name.
-	if [[ -n ${PRIOR_ALLSKY} ]]; then
-		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
-		display_msg --log progress "Using current hostname of '${CURRENT_HOSTNAME}'."
 		return
 	fi
 
 	MSG="Please enter a hostname for your Pi."
-	MSG="${MSG}\n\nIf you have more than one Pi on your network they must all have unique names."
-	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 10 "${WT_WIDTH}" \
+	MSG="${MSG}\n\nIf you have more than one Pi on your network they MUST all have unique names."
+	MSG="${MSG}\n\nThe current hostname is '${CURRENT_HOSTNAME}'; the suggested name is below:\n"
+	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 15 "${WT_WIDTH}" \
 		"${SUGGESTED_NEW_HOST_NAME}" 3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 ]]; then
 		display_msg --log warning "You must specify a host name.  Please re-run the installation and select one."
@@ -733,6 +729,8 @@ prompt_for_hostname()
 	if [[ ${CURRENT_HOSTNAME} != "${NEW_HOST_NAME}" ]]; then
 		echo "${NEW_HOST_NAME}" | sudo tee /etc/hostname > /dev/null
 		sudo sed -i "s/127.0.1.1.*${CURRENT_HOSTNAME}/127.0.1.1\t${NEW_HOST_NAME}/" /etc/hosts
+
+	# else, they didn't change the default name, but that's their problem...
 	fi
 
 	# Set up the avahi daemon if needed.
@@ -2170,7 +2168,7 @@ fi
 
 
 ##### Display a message to Buster users.
-check_if_buster
+[[ -z ${FUNCTION} ]] && check_if_buster
 
 ##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY
 does_prior_Allsky_exist

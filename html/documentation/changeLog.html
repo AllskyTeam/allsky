@@ -26,7 +26,6 @@
 	<div class="Layout">
 		<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 		<div class="Layout-main markdown-body" id="mainContents">
-
 			<p>
 				This page lists the changes to all Allsky releases.
 				You can also see the <a allsky="true" external="true" href="knownIssues.html">Known Issues and
@@ -58,14 +57,20 @@
 						the buttons (e.g., "Save changes") are now at the top of the page
 						and stay there as you scroll down.
 						A new "Top" button appears at the bottom of the page after you scroll
-						to make it quick to get back to the top.</li>
+						to make it quick to get back to the top.
+					</li>
 					<li>Selecting <code>Refresh</code> from the
 						<span class="WebUISetting">Camera Type</span> drop-down
 						can be used to change cameras of the same
 						<span class="WebUISetting">Camera Type</span>.
 						For example, replacing a ZWO ASI120 with an ASI290.
 					</li>
-					<li>Speed up the installation process by using prebuilt binaries where possible</li>
+					<li>Speed up the installation process by using prebuilt binaries where possible.</li>
+					<li>The installation only prompts for a new hostname if the current one is the default,
+						"raspberrypi".  The suggested new name is still "allsky".
+						If the current hostname is anything other than "raspberrypi" it implies the
+						user has already changed the Pi's name, so don't prompt to change again.
+					</li>
 				</ul>
 
 				<h4>Bug Fixes</h4>

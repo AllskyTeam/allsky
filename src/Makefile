@@ -1,6 +1,6 @@
 arch = $(shell dpkg --print-architecture)
 platform = $(shell uname -m)
-prefix = 
+prefix =
 
 sysconfdir = ${prefix}/etc
 exec_prefix = /usr

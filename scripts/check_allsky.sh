@@ -179,6 +179,8 @@ function min() {
 	fi
 }
 
+# =================================================== CHECKING FUNCTIONS
+
 # The various upload protocols need different variables defined.
 # For the specified protocol, make sure the specified variable is defined.
 function check_PROTOCOL()
@@ -205,6 +207,40 @@ function check_exists() {
 		echo "${1} is set to '${VALUE}' but it does not exist."
 	fi
 }
+
+
+
+DAYDELAY_MS=$(settings .daydelay)
+NIGHTDELAY_MS=$(settings .nightdelay)
+
+	# Use min() for worst case.
+MIN_DELAY_MS=$( min "${DAYDELAY_MS}" "${NIGHTDELAY_MS}" )
+	# This is typically the max daytime exposure, which is shorter than nighttime so use it.
+MIN_EXPOSURE_MS=250
+	# Minimum total time spent on each image
+MIN_IMAGE_TIME_MS=$((MIN_EXPOSURE_MS + MIN_DELAY_MS))
+
+##### Check if the delay is so short it's likely to cause problems.
+function check_delay()
+{
+	# With the legacy overlay method it might take up to a couple seconds to save an image.
+	# With the module method it can take up to 5 seconds.
+	# TODO: try to determine the average time it takes with the module method.
+	local OVERLAY_METHOD=$(settings .overlayMethod)
+	if [[ -z ${OVERLAY_METHOD} || ${OVERLAY_METHOD} -eq 1 ]]; then
+		MAX_TIME_TO_SAVE_MS=5000
+	else
+		MAX_TIME_TO_SAVE_MS=2000
+	fi
+	if [[ ${MAX_TIME_TO_SAVE_MS} -gt ${MIN_IMAGE_TIME_MS} ]]; then
+		heading "Warnings"
+		echo "The minimum delay of "
+	fi
+}
+
+#
+# ====================================================== MAIN PART OF PROGRAM
+#
 
 # Variables used below.
 TAKING_DARKS="$(settings .takeDarkFrames)"
@@ -292,24 +328,7 @@ fi
 #	may break part of Allsky, e.g., uploads may not work.
 
 ##### Check if the delay is so short it's likely to cause problems.
-
-# Use min() for worst case.  Convert to seconds to make logic easier.
-MIN_DELAY=$(min .daydelay .nightdelay)
-MIN_DELAY=$((MIN_DELAY / 1000))
-# This is typically the max daytime exposure, which is shorter than nighttime so use it.
-MIN_EXPOSURE=0.25
-# Minimum total time spent on each image
-MIN_IMAGE_TIME=$(echo "${MIN_EXPOSURE} + ${MIN_DELAY}" | bc -l)
-
-# With the legacy overlay method it might take up to a couple seconds to save an image.
-# With the module method it can take up to 5 seconds.
-# TODO: try to determine the average time it takes with the module method.
-#OVERLAY_METHOD=$(settings .overlayMethod)
-#if [[ -z ${OVERLAY_METHOD} || ${OVERLAY_METHOD} -eq 1 ]]; then
-#	MAX_TIME_TO_SAVE=5
-#else
-#	MAX_TIME_TO_SAVE=2
-#fi
+check_delay
 
 
 ##### Check if timelapse size is "too big" and will likely cause an error.
@@ -408,17 +427,16 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 	}
 
 	# Minimum total time between start of timelapse creations.
-	MIN_TIME_BETWEEN_TIMELAPSE=$(echo "scale=0; ${TIMELAPSE_MINI_FREQUENCY} * ${MIN_IMAGE_TIME}" | bc -l)
-	MIN_TIME_BETWEEN_TIMELAPSE=${MIN_TIME_BETWEEN_TIMELAPSE/.*/}
+	MIN_IMAGE_TIME_SEC=$(( MIN_IMAGE_TIME_MS / 1000))
+	MIN_TIME_BETWEEN_TIMELAPSE_SEC=$(echo "scale=0; ${TIMELAPSE_MINI_FREQUENCY} * ${MIN_IMAGE_TIME_SEC}" | bc -l)
+	MIN_TIME_BETWEEN_TIMELAPSE_SEC=${MIN_TIME_BETWEEN_TIMELAPSE_SEC/.*/}
 
 if false; then		# for testing
-	echo "CONSISTENT_DELAYS=$CONSISTENT_DELAYS"
-	echo "MIN_DELAY=$MIN_DELAY"
-	echo "MIN_EXPOSURE=$MIN_EXPOSURE"
-	echo "MIN_IMAGE_TIME=$MIN_IMAGE_TIME"
-	echo "MIN_TIME_BETWEEN_TIMELAPSE=$MIN_TIME_BETWEEN_TIMELAPSE"
-	echo "TIMELAPSE_MINI_IMAGES=$TIMELAPSE_MINI_IMAGES"
-	echo "CAMERA_TYPE=$CAMERA_TYPE"
+	echo "CONSISTENT_DELAYS=${CONSISTENT_DELAYS}"
+	echo "MIN_IMAGE_TIME_SEC=${MIN_IMAGE_TIME_SEC}"
+	echo "MIN_TIME_BETWEEN_TIMELAPSE_SEC=${MIN_TIME_BETWEEN_TIMELAPSE_SEC}"
+	echo "TIMELAPSE_MINI_IMAGES=${TIMELAPSE_MINI_IMAGES}"
+	echo "CAMERA_TYPE=${CAMERA_TYPE}"
 	TIMELAPSE_MINI_IMAGES=120
 fi
 
@@ -432,13 +450,13 @@ fi
 		S=60
 	fi
 	EXPECTED_TIME=$(echo "scale=0; (${TIMELAPSE_MINI_IMAGES} / 50) * ${S}" | bc -l)
-	if [[ ${EXPECTED_TIME} -gt ${MIN_TIME_BETWEEN_TIMELAPSE} ]]; then
+	if [[ ${EXPECTED_TIME} -gt ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} ]]; then
 		heading "Warnings"
 		echo "Your mini timelapse settings may cause multiple timelapse to be created simultaneously."
 		echo "Consider increasing DELAY between pictures, increasing TIMELAPSE_MINI_FREQUENCY,"
 		echo "decrease TIMELAPSE_MINI_IMAGES, or a combination of those changes."
 		echo "Expected time to create a mini timelapse on a Pi 4 is ${EXPECTED_TIME} seconds"
-		echo "but with your settings one will be created as short as every ${MIN_TIME_BETWEEN_TIMELAPSE} seconds."
+		echo "but with your settings one will be created as short as every ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} seconds."
 	fi
 fi
 
@@ -581,12 +599,19 @@ fi
 # ================= Check for error items.
 #	These are wrong and will likely keep Allsky from running.
 
+##### Make sure it's a know camera type.
 if [[ ${CAMERA_TYPE} != "ZWO" && ${CAMERA_TYPE} != "RPi" ]]; then
 	heading "Errors"
 	echo "INTERNAL ERROR: CAMERA_TYPE (${CAMERA_TYPE}) not valid."
 fi
 
-# Make sure these booleans have boolean values, or are blank.
+##### Make sure the settings file is properly linked.
+if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
+	heading "Errors"
+	echo -e "${MSG}"
+fi
+
+##### Make sure these booleans have boolean values, or are blank.
 for i in IMG_UPLOAD IMG_UPLOAD_ORIGINAL_NAME IMG_RESIZE CROP_IMAGE AUTO_STRETCH \
 	RESIZE_UPLOADS IMG_CREATE_THUMBNAILS REMOVE_BAD_IMAGES TIMELAPSE UPLOAD_VIDEO \
 	TIMELAPSE_UPLOAD_THUMBNAIL TIMELAPSE_MINI_FORCE_CREATION TIMELAPSE_MINI_UPLOAD_VIDEO \
@@ -599,8 +624,8 @@ do
 	fi
 done
 
-# Check that all required settings are set.
-# All others are optional.
+##### Check that all required settings are set.  All others are optional.
+# TODO: determine from options.json file which are required.
 for i in ANGLE LATITUDE LONGITUDE LOCALE
 do
 	if [[ -z ${!i} || ${!i} == "null" ]]; then
@@ -609,7 +634,7 @@ do
 	fi
 done
 
-# Check that the required settings' values are valid.
+##### Check that the required settings' values are valid.
 if [[ -n ${ANGLE} ]] && ! is_number "${ANGLE}" ; then
 	heading "Errors"
 	echo "ANGLE (${ANGLE}) must be a number."
@@ -627,7 +652,7 @@ if [[ -n ${LONGITUDE} ]]; then
 	fi
 fi
 
-# Check dark frames
+##### Check dark frames
 if [[ ${USING_DARKS} -eq 1 ]]; then
 	if [[ ! -d ${ALLSKY_DARKS} ]]; then
 		heading "Errors"
@@ -642,7 +667,7 @@ if [[ ${USING_DARKS} -eq 1 ]]; then
 	fi
 fi
 
-# Check for valid numbers.
+##### Check for valid numbers.
 if ! is_number "${IMG_UPLOAD_FREQUENCY}" || [[ ${IMG_UPLOAD_FREQUENCY} -le 0 ]]; then
 	heading "Errors"
 	echo "IMG_UPLOAD_FREQUENCY (${IMG_UPLOAD_FREQUENCY}) must be 1 or greater."
@@ -683,7 +708,7 @@ if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
 	fi
 fi
 
-# If images are being resized or cropped,
+##### If images are being resized or cropped,
 # make sure the resized/cropped image is fully within the sensor image.
 HAS_PIXEL_ERROR="false"
 if [[ ${IMG_RESIZE} == "true" ]]; then
@@ -769,3 +794,4 @@ else
 fi
 
 exit ${RET}
+

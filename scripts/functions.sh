@@ -466,7 +466,6 @@ function get_links()
 
 	# Don't include the specified FILE.
 	LINKS="$(
-set -x
 		if [[ ${DIRNAME} == "." ]]; then
 			x="./"
 		else

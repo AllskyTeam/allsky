@@ -152,7 +152,7 @@ function heading()
 	fi
 }
 
-# Determine if the specified value is a number
+# Determine if the specified value is a number.
 function is_number()
 {
 	local VALUE="${1}"
@@ -168,6 +168,16 @@ function is_number()
 	fi
 }
 
+# Return the min of two numbers.
+function min() {
+	local ONE=$(settings "${1}")
+	local TWO=$(settings "${2}")
+	if [[ ${ONE} -lt ${TWO} ]]; then
+		echo "${ONE}"
+	else
+		echo "${TWO}"
+	fi
+}
 
 # The various upload protocols need different variables defined.
 # For the specified protocol, make sure the specified variable is defined.
@@ -220,7 +230,7 @@ WEBSITES="$(whatWebsites)"
 if [[ ${TAKING_DARKS} -eq 1 ]]; then
 	heading "Information"
 	echo "'Take Dark Frames' is set."
-	echo "Unset if you no longer wish to take dark frames."
+	echo "Unset when you are done taking dark frames."
 fi
 
 if [[ ${KEEP_SEQUENCE} == "true" ]]; then
@@ -281,8 +291,28 @@ fi
 #	These are wrong and won't stop Allsky from running, but
 #	may break part of Allsky, e.g., uploads may not work.
 
+##### Check if the delay is so short it's likely to cause problems.
 
-# Check if timelapse size is "too big" and will likely cause an error.
+# Use min() for worst case.  Convert to seconds to make logic easier.
+MIN_DELAY=$(min .daydelay .nightdelay)
+MIN_DELAY=$((MIN_DELAY / 1000))
+# This is typically the max daytime exposure, which is shorter than nighttime so use it.
+MIN_EXPOSURE=0.25
+# Minimum total time spent on each image
+MIN_IMAGE_TIME=$(echo "${MIN_EXPOSURE} + ${MIN_DELAY}" | bc -l)
+
+# With the legacy overlay method it might take up to a couple seconds to save an image.
+# With the module method it can take up to 5 seconds.
+# TODO: try to determine the average time it takes with the module method.
+#OVERLAY_METHOD=$(settings .overlayMethod)
+#if [[ -z ${OVERLAY_METHOD} || ${OVERLAY_METHOD} -eq 1 ]]; then
+#	MAX_TIME_TO_SAVE=5
+#else
+#	MAX_TIME_TO_SAVE=2
+#fi
+
+
+##### Check if timelapse size is "too big" and will likely cause an error.
 # This is normally only an issue with the libx264 video codec which has a dimension limit
 # that we put in PIXEL_LIMIT
 if [[ ${VCODEC} == "libx264" ]]; then
@@ -358,6 +388,7 @@ if [[ ${TIMELAPSE} == "false" && ${UPLOAD_VIDEO} == "true" ]]; then
 	echo "Timelapse videos are not being created (TIMELAPSE='false') but UPLOAD_VIDEO='true'"
 fi
 
+
 if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 
 	# See if there's likely to be a problem with mini timelapse creations
@@ -367,60 +398,29 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 	#	2. Frequency:	how often mini timelapse are created (i.e., after how many images)
 	# 	3. NumImages:	how many images are used (the more the longer processing takes)
 	# 	4. the speed of the Pi - this is the biggest unknown
-	function min() {		# return the min of two numbers
-		ONE=$(settings "${1}")
-		TWO=$(settings "${2}")
-		if [[ ${ONE} -lt ${TWO} ]]; then
-			echo "${ONE}"
-		else
-			echo "${TWO}"
-		fi
-	}
 	function get_exposure() {	# return the time spent on one image, prior to delay
-		TIME="${1}"
-		if [[ $(settings ".${TIME}autoexposure") ]]; then
+		local TIME="${1}"
+		if [[ $(settings ".${TIME}autoexposure") -eq 1 ]]; then
 			settings ".${TIME}maxautoexposure"
 		else
 			settings ".${TIME}exposure"
 		fi
 	}
 
-	# Use min() for worst case.
-	# Convert to seconds ( / 1000) to make logic easier.
-	MIN_DELAY=$(min .daydelay .nightdelay)
-	MIN_DELAY=$((MIN_DELAY / 1000))
-# TODO: remove the commented out assigments after we know this works.
-#MIN_DELAY=1
-#TIMELAPSE_MINI_FREQUENCY=10
-
-# TODO: Hard-code the MIN_EXPOSURE below instead of these lines:
-#x	CONSISTENT_DELAYS=$(settings .consistentDelays)
-#x	if [[ ${CONSISTENT_DELAYS} -eq 1 ]]; then
-#x		MIN_EXPOSURE=$(min .daymaxautoexposure .nightmaxautoexposure)
-#x	else
-#x		MIN_EXPOSURE=$(min "$(get_exposure "day")" "$(get_exposure "night")")
-#x	fi
-#x	MIN_EXPOSURE=$((MIN_EXPOSURE / 1000))
-
-	# This is typically the max daytime exposure, which is shorter than nighttime.
-	# so use it.
-	MIN_EXPOSURE=0.25
-
-	# Minimum total time spent on each image
-	MIN_IMAGE_TIME=$(echo "${MIN_EXPOSURE} + ${MIN_DELAY}" | bc -l)
-
 	# Minimum total time between start of timelapse creations.
 	MIN_TIME_BETWEEN_TIMELAPSE=$(echo "scale=0; ${TIMELAPSE_MINI_FREQUENCY} * ${MIN_IMAGE_TIME}" | bc -l)
 	MIN_TIME_BETWEEN_TIMELAPSE=${MIN_TIME_BETWEEN_TIMELAPSE/.*/}
 
-#echo "CONSISTENT_DELAYS=$CONSISTENT_DELAYS"
-#echo "MIN_DELAY=$MIN_DELAY"
-#echo "MIN_EXPOSURE=$MIN_EXPOSURE"
-#echo "MIN_IMAGE_TIME=$MIN_IMAGE_TIME"
-#echo "MIN_TIME_BETWEEN_TIMELAPSE=$MIN_TIME_BETWEEN_TIMELAPSE"
-#TIMELAPSE_MINI_IMAGES=120
-#echo "TIMELAPSE_MINI_IMAGES=$TIMELAPSE_MINI_IMAGES"
-#echo "CAMERA_TYPE=$CAMERA_TYPE"
+if false; then		# for testing
+	echo "CONSISTENT_DELAYS=$CONSISTENT_DELAYS"
+	echo "MIN_DELAY=$MIN_DELAY"
+	echo "MIN_EXPOSURE=$MIN_EXPOSURE"
+	echo "MIN_IMAGE_TIME=$MIN_IMAGE_TIME"
+	echo "MIN_TIME_BETWEEN_TIMELAPSE=$MIN_TIME_BETWEEN_TIMELAPSE"
+	echo "TIMELAPSE_MINI_IMAGES=$TIMELAPSE_MINI_IMAGES"
+	echo "CAMERA_TYPE=$CAMERA_TYPE"
+	TIMELAPSE_MINI_IMAGES=120
+fi
 
 	# On a Pi 4, creating a 50 image timelapse takes
 	#	- a few seconds on a small ZWO camera
@@ -432,7 +432,6 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 		S=60
 	fi
 	EXPECTED_TIME=$(echo "scale=0; (${TIMELAPSE_MINI_IMAGES} / 50) * ${S}" | bc -l)
-#echo "EXPECTED_TIME=$EXPECTED_TIME"
 	if [[ ${EXPECTED_TIME} -gt ${MIN_TIME_BETWEEN_TIMELAPSE} ]]; then
 		heading "Warnings"
 		echo "Your mini timelapse settings may cause multiple timelapse to be created simultaneously."
@@ -463,17 +462,6 @@ if [[ ${STARTRAILS} == "false" && ${UPLOAD_STARTRAILS} == "true" ]]; then
 	echo "Startrails are not being created (STARTRAILS='false') but UPLOAD_STARTRAILS='true'"
 fi
 
-
-if [[ ${RESIZE_UPLOADS} == "true" && ${IMG_UPLOAD} == "false" ]]; then
-	heading "Warnings"
-	echo "RESIZE_UPLOADS is 'true' but you aren't uploading images (IMG_UPLOAD='false')."
-fi
-
-if [[ ${TAKE} -eq 0 && ${SAVE} -eq 1 ]]; then
-	heading "Warnings"
-	echo "'Daytime Capture' is off but 'Daytime Save' is on in the WebUI."
-fi
-
 if [[ ${BRIGHTNESS_THRESHOLD} == "0.0" ]]; then
 	heading "Warnings"
 	echo "BRIGHTNESS_THRESHOLD is 0.0 which means ALL images will be IGNORED when creating startrails."
@@ -482,9 +470,11 @@ elif [[ ${BRIGHTNESS_THRESHOLD} == "1.0" ]]; then
 	echo "BRIGHTNESS_THRESHOLD is 1.0 which means ALL images will be USED when creating startrails, even daytime images."
 fi
 
-if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} && (${PROTOCOL} == "" || ${PROTOCOL} == "local") ]]; then
+##### Images
+
+if [[ ${TAKE} -eq 0 && ${SAVE} -eq 1 ]]; then
 	heading "Warnings"
-	echo "A remote Allsky Website configuration file was found but PROTOCOL doesn't support uploading files."
+	echo "'Daytime Capture' is off but 'Daytime Save' is on in the WebUI."
 fi
 
 if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
@@ -493,6 +483,11 @@ if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
 	echo We HIGHLY recommend setting it to 'true' unless you are debugging issues.
 fi
 
+##### Uploads
+if [[ ${RESIZE_UPLOADS} == "true" && ${IMG_UPLOAD} == "false" ]]; then
+	heading "Warnings"
+	echo "RESIZE_UPLOADS is 'true' but you aren't uploading images (IMG_UPLOAD='false')."
+fi
 
 case "${PROTOCOL}" in
 	"" | local)		# Nothing needed for these
@@ -545,14 +540,19 @@ if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
 	echo "Uploads will not work until this is corrected."
 fi
 
-# If these variables are set, their corresponding directory should exist.
+##### If these variables are set, their corresponding directory should exist.
 check_exists "WEB_IMAGE_DIR"
 check_exists "WEB_VIDEOS_DIR"
 check_exists "WEB_KEOGRAM_DIR"
 check_exists "WEB_STARTRAILS_DIR"
 check_exists "UHUBCTL_PATH"
 
-# Check for Allsky Website-related anomolies.
+##### Check for Allsky Website-related issues.
+if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} && (${PROTOCOL} == "" || ${PROTOCOL} == "local") ]]; then
+	heading "Warnings"
+	echo "A remote Allsky Website configuration file was found but PROTOCOL doesn't support uploading files."
+fi
+
 if [[ ${WEBSITES} != "none" ]]; then
 	if [[ ${IMG_UPLOAD} == "false" ]]; then
 		heading "Warnings"

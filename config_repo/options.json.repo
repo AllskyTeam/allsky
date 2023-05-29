@@ -14,6 +14,7 @@
 "type" : "checkbox",
 "display" : 1,
 "checkchanges" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -23,6 +24,7 @@
 "label" : "Daytime Save",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -32,6 +34,7 @@
 "label" : "Auto-Exposure",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -87,6 +90,7 @@
 "label" : "Delay",
 "type" : "number",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -96,6 +100,7 @@
 "label" : "Auto-Gain",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -130,6 +135,7 @@
 	"bin_values"
 ],
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -139,6 +145,7 @@
 "label" : "Auto White Balance",
 "type" : "checkbox",
 "display" : "awb_display",
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -172,6 +179,7 @@
 "label" : "Frames To Skip",
 "type" : "number",
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -181,6 +189,7 @@
 "label" : "Cooling",
 "type" : "checkbox",
 "display" : "EnableCooler_display",
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -192,6 +201,7 @@
 "label" : "Target Temp.",
 "type" : "number",
 "display" : "TargetTemp_display",
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -219,6 +229,7 @@
 "label" : "Auto-Exposure",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -274,6 +285,7 @@
 "label" : "Delay",
 "type" : "number",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -283,6 +295,7 @@
 "label" : "Auto-Gain",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -317,6 +330,7 @@
 	"bin_values"
 ],
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -326,6 +340,7 @@
 "label" : "Auto White Balance",
 "type" : "checkbox",
 "display" : "awb_display",
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -359,6 +374,7 @@
 "label" : "Frames To Skip",
 "type" : "number",
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -368,6 +384,7 @@
 "label" : "Cooling",
 "type" : "checkbox",
 "display" : "EnableCooler_display",
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -379,6 +396,7 @@
 "label" : "Target Temp.",
 "type" : "number",
 "display" : "TargetTemp_display",
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -484,6 +502,7 @@
 "label" : "Aggression",
 "type" : "number",
 "display" : "aggression_display",
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -495,6 +514,7 @@
 "label" : "Gain Transition Time",
 "type" : "number",
 "display" : "gaintransitiontime_display",
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -539,6 +559,7 @@
 "label" : "Quality / Compression",
 "type" : "number",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -580,6 +601,7 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -616,6 +638,7 @@
 "label" : "Notification Images",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -625,6 +648,7 @@
 "label" : "Consistent Delays Between Images",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -634,6 +658,7 @@
 "label" : "Time Format",
 "type" : "text",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -644,6 +669,7 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -654,6 +680,7 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -664,6 +691,7 @@
 "type" : "number",
 "display" : 1,
 "checkchanges" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -682,6 +710,7 @@
 "label" : "Use Dark Frames",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -691,6 +720,7 @@
 "label" : "Locale",
 "type" : "text",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -734,6 +764,7 @@
 "label" : "Require WebUI Login",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -743,6 +774,7 @@
 "label" : "Always Show Advanced",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -764,6 +796,7 @@
 ],
 "display" : 1,
 "checkchanges" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -773,6 +806,7 @@
 "label" : "Show Time",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -782,6 +816,7 @@
 "label" : "Show Temperature",
 "type" : "checkbox",
 "display" : "showTemp_display",
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -796,6 +831,7 @@
 	{"value" : "B", "label" : "Both"}
 ],
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -805,6 +841,7 @@
 "label" : "Show Exposure",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -814,6 +851,7 @@
 "label" : "Show Gain",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -823,6 +861,7 @@
 "label" : "Show Brightness",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -841,6 +880,7 @@
 "label" : "Show Mean Brightness",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -859,6 +899,7 @@
 "label" : "Show Focus Metric",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 1
 },
 {
@@ -869,6 +910,7 @@
 "type" : "widetext",
 "display" : 1,
 "optional" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -881,6 +923,7 @@
 "checkchanges" : 1,
 "optional" : 1,
 "advanced" : 0
+"generic": 1,
 },
 {
 "name" : "extratextage",
@@ -891,6 +934,7 @@
 "label" : "Max Age Of Extra",
 "type" : "number",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -902,6 +946,7 @@
 "label" : "Line Height",
 "type" : "number",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -913,6 +958,7 @@
 "label" : "Text X",
 "type" : "number",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -924,6 +970,7 @@
 "label" : "Text Y",
 "type" : "number",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -943,6 +990,7 @@
 	{"value" : 7, "label" : "Script Complex"}
 ],
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -953,6 +1001,7 @@
 "label" : "Font Color",
 "type" : "text",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -962,6 +1011,7 @@
 "label" : "Small Font Color",
 "type" : "text",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -976,6 +1026,7 @@
 	{"value" : 2, "label" : "4 connected"}
 ],
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -987,6 +1038,7 @@
 "label" : "Font Size",
 "type" : "number",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -998,6 +1050,7 @@
 "label" : "Font Weight",
 "type" : "number",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -1007,6 +1060,7 @@
 "label" : "Use Outline Font",
 "type" : "checkbox",
 "display" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -1024,6 +1078,7 @@
 "type" : "checkbox",
 "display" : 1,
 "checkchanges" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -1034,6 +1089,7 @@
 "type" : "checkbox",
 "display" : 1,
 "checkchanges" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -1045,6 +1101,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -1056,6 +1113,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -1067,6 +1125,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -1078,6 +1137,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {
@@ -1111,6 +1171,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
+"generic": 1,
 "advanced" : 0
 },
 {

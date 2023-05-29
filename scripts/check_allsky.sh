@@ -304,12 +304,12 @@ MIN_IMAGE_TIME=$(echo "${MIN_EXPOSURE} + ${MIN_DELAY}" | bc -l)
 # With the legacy overlay method it might take up to a couple seconds to save an image.
 # With the module method it can take up to 5 seconds.
 # TODO: try to determine the average time it takes with the module method.
-OVERLAY_METHOD=$(settings .overlayMethod)
-if [[ -z ${OVERLAY_METHOD} || ${OVERLAY_METHOD} -eq 1 ]]; then
-	MAX_TIME_TO_SAVE=5
-else
-	MAX_TIME_TO_SAVE=2
-fi
+#OVERLAY_METHOD=$(settings .overlayMethod)
+#if [[ -z ${OVERLAY_METHOD} || ${OVERLAY_METHOD} -eq 1 ]]; then
+#	MAX_TIME_TO_SAVE=5
+#else
+#	MAX_TIME_TO_SAVE=2
+#fi
 
 
 ##### Check if timelapse size is "too big" and will likely cause an error.

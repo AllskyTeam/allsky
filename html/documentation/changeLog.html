@@ -65,11 +65,19 @@
 						<span class="WebUISetting">Camera Type</span>.
 						For example, replacing a ZWO ASI120 with an ASI290.
 					</li>
-					<li>Speed up the installation process by using prebuilt binaries where possible.</li>
-					<li>The installation only prompts for a new hostname if the current one is the default,
-						"raspberrypi".  The suggested new name is still "allsky".
-						If the current hostname is anything other than "raspberrypi" it implies the
-						user has already changed the Pi's name, so don't prompt to change again.
+					<li>Greatly sped up the installation process when packages are not
+						already installed by using prebuilt binaries where possible.
+					</li>
+					<li>The installation only prompts for a new hostname if the current one
+						is still the default "raspberrypi".
+						The suggested new name is still "allsky".
+						If the current hostname is anything other than the default the user
+						already changed the Pi's name, so don't prompt to change again.
+					</li>
+					<li>Check at startup if the settings file is properly linked to a
+						camera-specific file.
+						When it isn't, changes to the settings won't be propogated during
+						updates to Allsky or when switching cameras.
 					</li>
 				</ul>
 

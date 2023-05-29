@@ -156,7 +156,8 @@ UHUBCTL_PORT=2
 # ================ DO NOT CHANGE ANYTHING BELOW THIS LINE ================
 ME2="$(basename "${BASH_SOURCE[0]}")"
 
-CAMERA_TYPE=""						# Updated during installation
+# CAMERA_TYPE is updated during installation
+CAMERA_TYPE=""
 if [ "${CAMERA_TYPE}" = "" ]; then
 	echo -e "${RED}${ME2}: ERROR: Please set 'Camera Type' in the WebUI.${NC}"
 	sudo systemctl stop allsky > /dev/null 2>&1
@@ -192,6 +193,7 @@ CAMERA_MODEL="$(settings '.cameraModel')"
 
 # So scripts can conditionally output messages.
 ALLSKY_DEBUG_LEVEL="$(settings '.debuglevel')"
-ALLSKY_VERSION="XX_ALLSKY_VERSION_XX"	# Updated during installation
+# ALLSKY_VERSION is updated during installation
+ALLSKY_VERSION="XX_ALLSKY_VERSION_XX"
 
 CONFIG_SH_VERSION=1

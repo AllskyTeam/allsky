@@ -41,7 +41,7 @@ REMOTE_HOST=""
 REMOTE_PORT=""
 
 
-############### ftp, ftps, and sftp PROTOCOLS only:
+############### ftp, ftps, and sftp PROTOCOLS only.  REMOTE_USER is also used by the scp PROTOCOL:
 	# The username of the login on the remote server.
 REMOTE_USER=""
 

@@ -120,14 +120,15 @@ function display_msg()
 		STARS=false
 
 	elif [[ ${LOG_TYPE} == "info" ]]; then
-		LOGMSG="${MESSAGE}"
+		LOGMSG="* ${MESSAGE}"
 		MSG="${YELLOW}${LOGMSG}${NC}"
 		STARS=false
 
 	elif [[ ${LOG_TYPE} == "debug" ]]; then
 		# Indent so they align with text above
 		LOGMSG="  DEBUG: ${MESSAGE}"
-		MSG="${YELLOW}${LOGMSG}${NC}"
+		#shellcheck disable=SC2154
+		MSG="${cDEBUG}${LOGMSG}${NC}"
 		STARS=false
 
 	else
@@ -152,8 +153,33 @@ function display_msg()
 
 	# Log messages to a file if it was specified.
 	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
+
 	if [[ ${LOG_IT} == "true" && -n ${DISPLAY_MSG_LOG} ]]; then
-		echo -e "${LOGMSG}${MESSAGE2}" >>  "${DISPLAY_MSG_LOG}"
+		# Strip out all color escape sequences before adding to log file.
+		# This requires escaping the "\" (which appear at the beginning of every variable)
+		# and "[" in the variables.
+		
+		echo "${LOGMSG}${MESSAGE2}" |
+		(
+			if [[ -n ${GREEN} ]]; then
+				# In case a variable isn't define, set it to a string that won't be found
+				local Y="${YELLOW:-abcxyz}"
+				local R="${RED:-abcxyz}"
+				local D="${cDEBUG:-abcxyz}"
+				local N="${NC:-abcxyz}"
+
+				# I couldn't figure out how to replace "\n" with a new line in sed.
+				O="$( sed \
+					-e "s/\\${GREEN/\[/\\[}//g" \
+					-e "s/\\${Y/\[/\\[}//g" \
+					-e "s/\\${R/\[/\\[}//g" \
+					-e "s/\\${D/\[/\\[}//g" \
+					-e "s/\\${N/\[/\\[}//g" )"
+				echo -e "${O}"		# handles the newlines
+			else
+				cat
+			fi
+		) >>  "${DISPLAY_MSG_LOG}"
 	fi
 }
 

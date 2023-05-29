@@ -177,11 +177,10 @@ trap "" SIGTERM
 trap "" SIGHUP
 
 if [[ ${PROTOCOL} == "s3" ]] ; then
-	# xxxxxx How do you tell it the DESTINATION_NAME name ?
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to aws ${S3_BUCKET}/${REMOTE_DIR}"
+		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to aws ${S3_BUCKET}${REMOTE_DIR}/${DESTINATION_NAME}"
 	fi
-	OUTPUT="$("${AWS_CLI_DIR}/aws" s3 cp "${FILE_TO_UPLOAD}" "s3://${S3_BUCKET}${REMOTE_DIR}" --acl "${S3_ACL}" 2>&1)"
+	OUTPUT="$("${AWS_CLI_DIR}/aws" s3 cp "${FILE_TO_UPLOAD}" "s3://${S3_BUCKET}${REMOTE_DIR}/${DESTINATION_NAME}" --acl "${S3_ACL}" 2>&1)"
 	RET=$?
 
 
@@ -196,17 +195,17 @@ elif [[ ${PROTOCOL} == "local" ]] ; then
 elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		# shellcheck disable=SC2153
-		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
+		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
 	fi
 	[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-P ${REMOTE_PORT}"
 	# shellcheck disable=SC2086
-	OUTPUT="$(scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}" 2>&1)"
+	OUTPUT="$(scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}" 2>&1)"
 	RET=$?
 
 
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to gcs ${GCS_BUCKET}/${REMOTE_DIR}"
+		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to gcs ${GCS_BUCKET}${REMOTE_DIR}"
 	fi
 	OUTPUT="$(gsutil cp -a "${GCS_ACL}" "${FILE_TO_UPLOAD}" "gs://${GCS_BUCKET}${REMOTE_DIR}" 2>&1)"
 	RET=$?
@@ -259,10 +258,12 @@ else # sftp/ftp/ftps
 		# lftp doesn't actually try to open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.
 		# So, do a simple command first so we get a better error message.
-		echo "quote PWD > /dev/null || cd . || exit 99"		# PWD not supported by all servers
+		echo "cd . || exit 99"
 
 		if [[ ${DEBUG} == "true" ]]; then
-			echo "quote PWD"
+			# PWD not supported by all servers,
+			# but if it works it returns "xxx is current directory" so only output that.
+			echo "quote PWD | grep current "
 			echo "ls"
 			echo "debug 5"
 		fi
@@ -330,7 +331,7 @@ else # sftp/ftp/ftps
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
 	else
-		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 && ${ON_TTY} -eq 0 ]]; then
+		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 4 && ${ON_TTY} -eq 0 ]]; then
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
 	fi

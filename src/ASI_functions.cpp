@@ -128,21 +128,30 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 	{ "imx477", 0, "RPi HQ", 0, 3040, 4056, ASI_TRUE,
 		// Need ASI_IMG_END so we know where the end of the list is.
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE,
-		12, ASI_FALSE, ASI_FALSE},
+		12, ASI_FALSE, ASI_FALSE
+	},
 
 	// There are many versions of the imx708 (_wide, _noir, _wide_noir, etc.)
 	// so just check for "imx708" (6 characters.
 	{ "imx708", 6, "RPi Module 3", 0, 2592, 4608, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.40, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE},
+		10, ASI_FALSE, ASI_TRUE
+	},
+
+	{ "imx290", 0, "imx290 60.00 fps", 0, 1920, 1080, ASI_TRUE,
+		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 2.9, ASI_FALSE,
+		12, ASI_FALSE, ASI_FALSE
+	},
 
 	{ "imx519", 0, "ArduCam 16 MP", 0, 3496, 4656, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.22, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE},
+		10, ASI_FALSE, ASI_TRUE
+	},
 
 	{ "arducam_64mp", 0, "ArduCam 64 MP", 0, 6944, 9152, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 0.8, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE},
+		10, ASI_FALSE, ASI_TRUE
+	},
 
 	// FUTURE CAMERAS GO HERE...
 };
@@ -195,7 +204,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	// 99 == don't know
 
 	// Name, Description, MaxValue, MinValue, DefaultValue, CurrentValue, IsAutoSupported, IsWritable, ControlType
-	{ // imx477, libcamera
+	{ // imx477, libcamera		THIS MUST BE THE FIRST CAMERA
 		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
 		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
@@ -253,6 +262,27 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
+	{ // imx290, libcamera		// TODO: update as necessary
+		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Temperature", "Sensor Temperature", 80, -20, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
+		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
+		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
+		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 200 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
+		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+
+		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
+	},
+	{ // imx290, raspistill.  Not supported.
+		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
+	},
+
 	{ // imx519, libcamera
 		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
@@ -296,6 +326,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	{ // arducam_64mp, raspistill.  Not supported.
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
+
+	// FUTURE CAMERAS GO HERE...
 };
 
 char camerasInfoFile[128]	= { 0 };	// name of temporary file
@@ -367,20 +399,19 @@ int getCameraNumber()
 	char line[256];
 	int num = NOT_SET;
 #define SENSOR_STRING_SIZE	25
-	char sensor[SENSOR_STRING_SIZE], found_sensor[SENSOR_STRING_SIZE] = { 0 };
-	bool found = false;
-	int actualIndex;			// index into ASICameraInfoArray[]
-	int RPiCameraIndex = 0;		// index into RPiCameras[]
+	char sensor[SENSOR_STRING_SIZE];
+	int actualIndex;					// index into ASICameraInfoArray[]
+	int RPiCameraIndex = -1;			// index into RPiCameras[]
 
 	// For each camera found, update the next *RPiCameras[] entry to point to the
 	// camera's ASICameraInfoArray[] entry.
 	// Return the index into *RPiCameras[] of the attached camera we're using.
-	while (fgets(line, sizeof(line), f) != NULL)
+	while (fgets(line, sizeof(line)-1, f) != NULL)
 	{
+		// Sample line:     0 : imx477 [4056x3040] ....
+		// We only care about first two.
 		if (sscanf(line, "%d : %s ", &num, sensor) == 2)
 		{
-			strncpy(found_sensor, sensor, SENSOR_STRING_SIZE);		// last sensor found
-
 			// Found a camera; check all known cameras to make sure it's one we know about.
 			// Unfortunately we don't have anything else to check, like serial number.
 			// I suppose we could also check the Modes are the same, but it's not worth it.
@@ -399,8 +430,8 @@ int getCameraNumber()
 				{
 					// The sensor is in our list.
 					foundThisSensor = true;
-					found = true;
-					actualIndex = (int) i;
+					actualIndex = i;
+					RPiCameraIndex++;
 
 					RPiCameras[RPiCameraIndex].CameraInfo = &ASICameraInfoArray[actualIndex];
 					// There are TWO entries in ControlCapsArray[] for every entry in ASICameraInfoArray[].
@@ -410,25 +441,23 @@ int getCameraNumber()
 					actualIndex = (actualIndex * 2) + (CG.isLibcamera ? 0 : 1);
 					RPiCameras[RPiCameraIndex].ControlCaps = &ControlCapsArray[actualIndex][0];
 					Log(4, " ControlCapsArray[%d].\n", actualIndex);
-					RPiCameraIndex++;
 
 					break;
 				}
 			}
 			if (! foundThisSensor) {
-				Log(1, "WARNING: Sensor '%s' connected to Pi but not known by Allsky\n", sensor);
+				Log(1, "WARNING: Sensor '%s' found but not supported by Allsky.\n", sensor);
 			}
 		}
 	}
-	if (! found)
+	if (RPiCameraIndex == -1)
 	{
-		Log(0, "ERROR: Could not find information on camera '%s'.\n",
-			*found_sensor ? found_sensor : "unknown sensor");
-		closeUp(EXIT_ERROR_STOP);
+		Log(0, "ERROR: No RPi cameras found.\n");
+		closeUp(EXIT_NO_CAMERA);
 	}
 
 	// Caller will determine if this is out of range.
-	return(CG.cameraNumber);
+	return(RPiCameraIndex);
 }
 
 // Put the properties for the specified camera into pASICameraInfo.
@@ -1217,8 +1246,21 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->supportsMyModeMean = false;
 		cg->gainTransitionTimeImplemented = true;
 		cg->imagesSavedInBackground = true;
+		cg->myModeMeanSetting.dayMean = DEFAULT_DAYMEAN_ZWO;
+		cg->myModeMeanSetting.nightMean = DEFAULT_NIGHTMEAN_ZWO;
+		cg->myModeMeanSetting.minMean = DEFAULT_MINMEAN_ZWO;		// min number a user should enter
+		cg->myModeMeanSetting.maxMean = DEFAULT_MAXMEAN_ZWO;		// max number a user should enter
+		cg->myModeMeanSetting.dayMean_threshold = DEFAULT_DAYMEAN_THRESHOLD_ZWO;
+		cg->myModeMeanSetting.nightMean_threshold = DEFAULT_NIGHTMEAN_THRESHOLD_ZWO;
+		cg->myModeMeanSetting.minMean_threshold = DEFAULT_MINMEAN_THRESHOLD_ZWO;
+		cg->myModeMeanSetting.maxMean_threshold = DEFAULT_MAXMEAN_THRESHOLD_ZWO;
+		cg->myModeMeanSetting.mean_threshold = DEFAULT_DAYMEAN_THRESHOLD_ZWO;		// TODO: use day and night versions
+		cg->myModeMeanSetting.mean_p0 = DEFAULT_MEAN_P0_ZWO;
+		cg->myModeMeanSetting.mean_p1 = DEFAULT_MEAN_P1_ZWO;
+		cg->myModeMeanSetting.mean_p2 = DEFAULT_MEAN_P2_ZWO;
+
 	} else {	// RPi
-#ifdef IS_RPi
+#ifdef IS_RPi		// need this so it compiles
 		cg->supportsTemperature = ci.SupportsTemperature;	// this field only exists in RPi structure
 		cg->divideTemperatureBy = 1.0;
 		cg->supportsAutoFocus = ci.SupportsAutoFocus;	// this field only exists in RPi structure
@@ -1227,6 +1269,18 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->supportsMyModeMean = true;
 		cg->gainTransitionTimeImplemented = false;
 		cg->imagesSavedInBackground = false;
+		cg->myModeMeanSetting.dayMean = DEFAULT_DAYMEAN_RPi;
+		cg->myModeMeanSetting.nightMean = DEFAULT_NIGHTMEAN_RPi;
+		cg->myModeMeanSetting.minMean = DEFAULT_MINMEAN_RPi;
+		cg->myModeMeanSetting.maxMean = DEFAULT_MAXMEAN_RPi;
+		cg->myModeMeanSetting.dayMean_threshold = DEFAULT_DAYMEAN_THRESHOLD_RPi;
+		cg->myModeMeanSetting.nightMean_threshold = DEFAULT_NIGHTMEAN_THRESHOLD_RPi;
+		cg->myModeMeanSetting.minMean_threshold = DEFAULT_MINMEAN_THRESHOLD_RPi;
+		cg->myModeMeanSetting.maxMean_threshold = DEFAULT_MAXMEAN_THRESHOLD_RPi;
+		cg->myModeMeanSetting.mean_threshold = DEFAULT_DAYMEAN_THRESHOLD_RPi;		// TODO: use day and night versions
+		cg->myModeMeanSetting.mean_p0 = DEFAULT_MEAN_P0_RPi;
+		cg->myModeMeanSetting.mean_p1 = DEFAULT_MEAN_P1_RPi;
+		cg->myModeMeanSetting.mean_p2 = DEFAULT_MEAN_P2_RPi;
 	}
 
 	if (cg->imagesSavedInBackground) {
@@ -1303,11 +1357,11 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	cg->nightExposure_us = cg->temp_nightExposure_ms * US_IN_MS;
 	cg->nightMaxAutoExposure_us = cg->temp_nightMaxAutoExposure_ms * US_IN_MS;
 
-	if (! validateFloat(&cg->myModeMeanSetting.dayMean, 0.0, 1.0, "Daytime Mean Target", false))
+	if (! validateFloat(&cg->myModeMeanSetting.dayMean, cg->myModeMeanSetting.minMean, cg->myModeMeanSetting.maxMean, "Daytime Mean Target", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.nightMean, 0.0, 1.0, "Nighttime Mean Target", false))
+	if (! validateFloat(&cg->myModeMeanSetting.nightMean, cg->myModeMeanSetting.minMean, cg->myModeMeanSetting.maxMean, "Nighttime Mean Target", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.mean_threshold, 0.0, 1.0, "Mean Threshold", false))
+	if (! validateFloat(&cg->myModeMeanSetting.mean_threshold, cg->myModeMeanSetting.minMean_threshold, cg->myModeMeanSetting.maxMean_threshold, "Mean Threshold", false))
 		ok = false;
 
 	// If there's too short of a delay, pictures won't upload fast enough.

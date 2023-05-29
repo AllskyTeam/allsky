@@ -9,7 +9,7 @@
 {
 "name" : "takeDaytimeImages",
 "default" : 1,
-"description" : "Activate to take daytime images.",
+"description" : "Activate to <strong>take</strong> daytime images.",
 "label" : "Daytime Capture",
 "type" : "checkbox",
 "display" : 1,
@@ -19,7 +19,7 @@
 {
 "name" : "saveDaytimeImages",
 "default" : 0,
-"description" : "Activate to save daytime images.<br>Only applies if <span class='WebUISetting'>Daytime Capture</span> is enabled.",
+"description" : "Activate to <strong>save</strong> daytime images.<br>Only applies if <span class='WebUISetting'>Daytime Capture</span> is enabled.",
 "label" : "Daytime Save",
 "type" : "checkbox",
 "display" : 1,
@@ -114,7 +114,7 @@
 "minimum" : "gain_min",
 "maximum" : "gain_max",
 "default" : "gain_default",
-"description" : "Manually sets the light sensitivity of the camera.<br>A high value returns a brighter image but more noise too.",
+"description" : "Manually sets the light sensitivity of the camera.<br>A high value returns a brighter image but more noise too. Can normally leave at <code>0</code> for daytime.",
 "label" : "Gain",
 "type" : "number",
 "display" : 1,
@@ -123,7 +123,7 @@
 {
 "name" : "daybin",
 "default" : 1,
-"description" : "Binning level. <span class='WebUIValue'>1x1</span> = binning OFF.",
+"description" : "Binning level. <span class='WebUIValue'>1x1</span> = OFF.",
 "label" : "Binning",
 "type" : "select",
 "options" : [
@@ -310,7 +310,7 @@
 {
 "name" : "nightbin",
 "default" : 1,
-"description" : "Binning level. <span class='WebUIValue'>1x1</span> = binning OFF.",
+"description" : "Binning level. <span class='WebUIValue'>1x1</span> = OFF.",
 "label" : "Binning",
 "type" : "select",
 "options" : [
@@ -402,7 +402,7 @@
 {
 "name" : "config",
 "default" : "[none]",
-"description" : "Optional configuration file to use for settings.",
+"description" : "Configuration file to use for settings.",
 "label" : "Configuration File",
 "type" : "widetext",
 "display" : 1,
@@ -413,7 +413,7 @@
 {
 "name" : "extraArgs",
 "default" : "",
-"description" : "Optional extra arguments to pass to the capture program that Allsky doesn't support.",
+"description" : "Extra arguments to pass to the capture program that Allsky doesn't support.",
 "label" : "Extra Arguments",
 "type" : "widetext",
 "display" : "extraArgs_display",
@@ -535,9 +535,8 @@
 "name" : "quality",
 "minimum" : 1,
 "maximum" : 100,
-"default" : 95,
-"description" : "Range for a PNG image: 0-9. Range for a JPG image: 0-100.<br>Higher numbers produce larger, clearer files.",
-"label" : "Quality",
+"description" : "JPG quality: 0-100. Higher numbers produce larger, clearer files.<br>PNG compression: 0-9. Higher numbers produce smaller files but take longer to save.",
+"label" : "Quality / Compression",
 "type" : "number",
 "display" : 1,
 "advanced" : 0
@@ -567,7 +566,7 @@
 "minimum" : "usb_min",
 "maximum" : "usb_max",
 "default" : "usb_default",
-"description" : "USB bandwidth.<br>If you get ASI_ERROR_TIMEOUT errors in the log file, try chaning this value.",
+"description" : "USB bandwidth.<br>If you get ASI_ERROR_TIMEOUT errors in the log file, try changing this value.",
 "label" : "USB Bandwidth",
 "type" : "number",
 "display" : "usb_display",
@@ -576,7 +575,7 @@
 {
 "name" : "filename",
 "default" : "image.jpg",
-"description" : "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <span class='WebUISetting'>Debug Level</span> to 3 and look in the log file.",
+"description" : "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <span class='WebUISetting'>Debug Level</span> to 4 and look in the log file.",
 "label" : "Filename",
 "type" : "text",
 "display" : 1,
@@ -598,7 +597,7 @@
 {
 "name" : "flip",
 "default" : 0,
-"description" : "Select a flipping option if you want to reverse the image along an axis.",
+"description" : "Flips the image along an axis.",
 "label" : "Flip",
 "type" : "select",
 "options" : [
@@ -622,16 +621,25 @@
 {
 "name" : "consistentDelays",
 "default" : 1,
-"description" : "Activate to have the delays between images be of consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
+"description" : "Activate to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
 "label" : "Consistent Delays Between Images",
 "type" : "checkbox",
 "display" : 1,
 "advanced" : 1
 },
 {
+"name" : "timeformat",
+"default" : "%Y%m%d %H:%M:%S",
+"description" : "Determines the format of the displayed time. Run 'man 3 strftime' to see the options.",
+"label" : "Time Format",
+"type" : "text",
+"display" : 1,
+"advanced" : 0
+},
+{
 "name" : "latitude",
 "default" : "",
-"description" : "Latitude of the camera. Can be a number (-90 to 90) or a positive number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
+"description" : "Camera latitude - a number (-90 to 90) or a positive number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
 "label" : "Latitude",
 "type" : "text",
 "display" : 1,
@@ -641,7 +649,7 @@
 {
 "name" : "longitude",
 "default" : "",
-"description" : "Longitude of the camera. Can be a number (-180 to 180) or a positive number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
+"description" : "Camera longitude - a number (-180 to 180) or a positive number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
 "label" : "Longitude",
 "type" : "text",
 "display" : 1,
@@ -661,7 +669,7 @@
 {
 "name" : "takeDarkFrames",
 "default" : 0,
-"description" : "Activate to capture dark frames, which are used to decrease noise. This mode hides text and time overlays.<br>Will continually take dark frames until restarted.",
+"description" : "Activate to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
 "label" : "Take Dark Frames",
 "type" : "checkbox",
 "display" : 1,
@@ -670,7 +678,7 @@
 {
 "name" : "useDarkFrames",
 "default" : 0,
-"description" : "This enables dark frame subtraction, assuming you have dark frames.",
+"description" : "Enables dark frame subtraction if you have dark frames.",
 "label" : "Use Dark Frames",
 "type" : "checkbox",
 "display" : 1,
@@ -679,10 +687,10 @@
 {
 "name" : "locale",
 "default" : "",
-"description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type 'locale' at a command prompt to see your choices.",
+"description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type <code>locale</code> at a command prompt to see your choices.",
 "label" : "Locale",
 "type" : "text",
-"display" : 0,
+"display" : 1,
 "advanced" : 0
 },
 {
@@ -697,7 +705,7 @@
 {
 "name" : "debuglevel",
 "default" : 1,
-"description" : "Debug level. 0 is errors only.",
+"description" : "Debug level. 0 is errors only.  4 is for Allsky developers use.",
 "label" : "Debug Level",
 "type" : "select",
 "options" : [
@@ -747,7 +755,7 @@
 {
 "name" : "overlayMethod",
 "default" : 0,
-"description" : "Choose how to have image overlays done.<br><span class='WebUIValue'>module</span> has more features and is very flexible.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
+"description" : "Determines how image overlays are done.<br><span class='WebUIValue'>module</span> supports a visual editor.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
 "label" : "Overlay Method",
 "type" : "select",
 "options" : [
@@ -764,15 +772,6 @@
 "description" : "Activate to display the time an image was taken on the overlay.",
 "label" : "Show Time",
 "type" : "checkbox",
-"display" : 1,
-"advanced" : 0
-},
-{
-"name" : "timeformat",
-"default" : "%Y%m%d %H:%M:%S",
-"description" : "Determines the format of the displayed time. Run 'man 3 strftime' to see the options.",
-"label" : "Time Format",
-"type" : "text",
 "display" : 1,
 "advanced" : 0
 },
@@ -1095,7 +1094,7 @@
 {
 "name" : "lens",
 "default" : "",
-"description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55<span>.",
+"description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55</span>.",
 "label" : "Lens",
 "type" : "text",
 "display" : 1,
@@ -1124,12 +1123,13 @@
 {
 "name" : "cameraType",
 "default" : "",
-"description" : "The type of camera you are using.  <span class='WebUIValue'>RPi</span> includes the HQ and compatible cameras.",
+"description" : "The type of camera you are using.  <span class='WebUIValue'>Refresh</span> re-sets the Camera Model and is useful if you change cameras of the same Camera Type.",
 "label" : "Camera Type",
 "type" : "select",
 "options" : [
 	{"value" : "RPi", "label" : "RPi"},
-	{"value" : "ZWO", "label" : "ZWO"}
+	{"value" : "ZWO", "label" : "ZWO"},
+	{"value" : "Refresh", "label" : "Refresh"}
 ],
 "display" : 1,
 "checkchanges" : 1,

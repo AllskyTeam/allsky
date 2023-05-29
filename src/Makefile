@@ -1,6 +1,6 @@
 arch = $(shell dpkg --print-architecture)
 platform = $(shell uname -m)
-prefix = 
+prefix =
 
 sysconfdir = ${prefix}/etc
 exec_prefix = /usr
@@ -112,7 +112,8 @@ patchsunwait:
 	@patch -p1 -d sunwait-src/ < sunwait.patch
 	@touch patchsunwait
 
-sunwait: patchsunwait
+# sunwait: patchsunwait
+sunwait:
 	@echo `date +%F\ %R:%S` Building sunwait...
 	@$(MAKE) -C sunwait-src
 	@cp sunwait-src/sunwait .
@@ -122,11 +123,11 @@ allsky_common.o: allsky_common.cpp include/allsky_common.h
 	@echo Building $@ ...
 	@$(CC) -c  allsky_common.cpp -o $@ $(CFLAGS) $(OPENCV)
 
-mode_mean.o: mode_mean.cpp include/mode_mean.h include/raspistill.h include/allsky_common.h
+mode_mean.o: mode_mean.cpp include/mode_mean.h include/allsky_common.h
 	@echo Building $@ ...
 	@$(CC) -c  mode_mean.cpp -o $@ $(CFLAGS) $(OPENCV)
 
-capture_RPi.o: capture_RPi.cpp ASI_functions.cpp include/raspistill.h include/allsky_common.h
+capture_RPi.o: capture_RPi.cpp ASI_functions.cpp include/mode_mean.h include/allsky_common.h
 	@echo Building $@ ...
 	@$(CC) -c  capture_RPi.cpp -o $@ $(CFLAGS) $(OPENCV)
 

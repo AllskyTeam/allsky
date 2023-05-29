@@ -82,7 +82,7 @@ do_initial_heading()
 		MSG="${MSG}\nYou will be asked if you want to use the images and darks (if any) from"
 		MSG="${MSG}\nyour prior version of Allsky."
 		if [[ ${PRIOR_ALLSKY} == "new" ]]; then
-			MSG="${MSG}\nIf so, we will use its settings as well."
+			MSG="${MSG}\nIf so, its settings will be used as well."
 		else
 			MSG="${MSG}\nIf so, we will attempt to use its settings as well, but may not be"
 			MSG="${MSG}\nable to use ALL prior settings depending on how old your prior Allsky is."
@@ -224,7 +224,7 @@ select_camera_type()
 				CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
 				# Don't bother with a message since this is a "similar" release.
 				if [[ -n ${CAMERA_TYPE} ]]; then
-					MSG="Using CAMERA_TYPE '${CAMERA_TYPE}' from prior config.sh"
+					MSG="Using CAMERA_TYPE '${CAMERA_TYPE}' from prior config.sh."
 					display_msg --logonly info "${MSG}"
 					return
 				else
@@ -263,6 +263,25 @@ select_camera_type()
 		exit_installation 2
 	fi
 	display_msg --log progress "Using ${CAMERA_TYPE} camera."
+}
+
+
+####
+check_for_connected_camera()
+{
+	if [[ ${CAMERA_TYPE} == "RPi" ]]; then
+		# determineCommandToUse() also determines if an RPi camera is connected.
+		C="$( determineCommandToUse "false" "" )"
+		RET=$?
+		if [[ ${RET} -ne 0 ]]; then
+			display_msg --log error "No RPi camera found: ${C}"
+			# shellcheck disable=SC2086
+			exit ${RET}
+		else
+			display_msg --log progress "RPi camera found."
+		fi
+	fi
+	# TODO: check for ZWO camera
 }
 
 
@@ -358,7 +377,7 @@ save_camera_capabilities()
 		#shellcheck disable=SC2086
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
-			MSG="$MSG}After connecting your camera, run '${ME} --update'."
+			MSG="$MSG}After connecting your camera, re-run the installation."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --log error "No camera detected - installation aborted."
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
@@ -414,7 +433,7 @@ ask_reboot()
 		WILL_REBOOT="true"
 		display_msg --logonly info "Pi will reboot after installation completes."
 	else
-		display_msg --logonly info "User elected not to reboot; warning to them provided."
+		display_msg --logonly info "User elected not to reboot; displayed warning message."
 		display_msg notice "You need to reboot the Pi before Allsky will work."
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
 		MSG="${MSG}You can then connect to the WebUI at:\n"
@@ -462,7 +481,7 @@ check_swap()
 			break
 		fi
 	done
-	display_msg "${LOG_TYPE}" debug "RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
+	display_msg --logonly info "RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
 
 	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
 	CURRENT_SWAP=$(free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }')	# in MB
@@ -537,7 +556,7 @@ check_and_mount_tmp()
 
 	if [[ -d "${ALLSKY_TMP}" ]]; then
 		local IMAGES="$(find "${ALLSKY_TMP}" -name '*.jpg')"
-		display_msg "${LOG_TYPE}" debug "Existing IMAGES=${IMAGES}"
+		display_msg --logonly debug "Existing IMAGES=${IMAGES}"
 		if [[ -n ${IMAGES} ]]; then
 			mkdir "${TMP_DIR}"
 			# Need to allow for files with spaces in their names.
@@ -684,27 +703,23 @@ install_webserver()
 ####
 # Prompt for a new hostname if needed,
 # and update all the files that contain the hostname.
+# The default hostname in Pi OS is "raspberrypi"; if it's still that,
+# prompt to update.  If it's anything else that means the user
+# already changed it to something so don't overwrite their change.
+
 prompt_for_hostname()
 {
-	# If the Pi is already called ${SUGGESTED_NEW_HOST_NAME},
-	# then the user already updated the name, so don't prompt again.
-
 	CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
-	if [[ ${CURRENT_HOSTNAME} == "${SUGGESTED_NEW_HOST_NAME}" ]]; then
+	if [[ ${CURRENT_HOSTNAME} != "raspberrypi" ]]; then
+		display_msg --logonly info "Using current hostname of '${CURRENT_HOSTNAME}'."
 		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
-		return
-	fi
-
-	# If we're upgrading, use the current name.
-	if [[ -n ${PRIOR_ALLSKY} ]]; then
-		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
-		display_msg --log progress "Using current hostname of ${CURRENT_HOSTNAME}."
 		return
 	fi
 
 	MSG="Please enter a hostname for your Pi."
-	MSG="${MSG}\n\nIf you have more than one Pi on your network they must all have unique names."
-	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 10 "${WT_WIDTH}" \
+	MSG="${MSG}\n\nIf you have more than one Pi on your network they MUST all have unique names."
+	MSG="${MSG}\n\nThe current hostname is '${CURRENT_HOSTNAME}'; the suggested name is below:\n"
+	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 15 "${WT_WIDTH}" \
 		"${SUGGESTED_NEW_HOST_NAME}" 3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 ]]; then
 		display_msg --log warning "You must specify a host name.  Please re-run the installation and select one."
@@ -714,6 +729,8 @@ prompt_for_hostname()
 	if [[ ${CURRENT_HOSTNAME} != "${NEW_HOST_NAME}" ]]; then
 		echo "${NEW_HOST_NAME}" | sudo tee /etc/hostname > /dev/null
 		sudo sed -i "s/127.0.1.1.*${CURRENT_HOSTNAME}/127.0.1.1\t${NEW_HOST_NAME}/" /etc/hosts
+
+	# else, they didn't change the default name, but that's their problem...
 	fi
 
 	# Set up the avahi daemon if needed.
@@ -915,7 +932,7 @@ handle_prior_website()
 
 		# Update "AllskyVersion" if needed.
 		V="$( settings .config.AllskyVersion "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
-		display_msg "${LOG_TYPE}" info "Prior local Website's AllskyVersion=${V}"
+		display_msg --logonly info "Prior local Website's AllskyVersion=${V}"
 		if [[ ${V} != "${ALLSKY_VERSION}" ]]; then
 			MSG="Updating AllskyVersion in local Website from '${V}' to '${ALLSKY_VERSION}'"
 			display_msg --log progress "${MSG}"
@@ -947,7 +964,7 @@ handle_prior_website()
 	fi
 
 	if [[ -n ${NEWEST_VERSION} ]]; then
-		display_msg "${LOG_TYPE}" debug "Comparing prior Website ${PV} to newest ${NEWEST_VERSION}${B}"
+		display_msg "${LOG_TYPE}" info "Comparing prior Website ${PV} to newest ${NEWEST_VERSION}${B}"
 		if [[ -z ${PRIOR_VERSION} || ${PRIOR_VERSION} < "${NEWEST_VERSION}" ]]; then
 			MSG="There is a newer Allsky Website available${B}; please upgrade to it."
 			MSG="${MSG}\nYour    version: ${PV}"
@@ -1014,7 +1031,7 @@ get_locale()
 			CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p')"
 		fi
 	fi
-	display_msg --logonly debug "TEMP_LOCALE=${TEMP_LOCALE}, CURRENT_LOCALE=${CURRENT_LOCALE}"
+	display_msg --logonly info "CURRENT_LOCALE=${CURRENT_LOCALE}\nTEMP_LOCALE=${TEMP_LOCALE}"
 
 	local D=""
 	if [[ -n ${CURRENT_LOCALE} && ${CURRENT_LOCALE} != "null" ]]; then
@@ -1070,18 +1087,18 @@ update_locale()
 # Set the locale
 set_locale()
 {
-	# ${LOCALE} and ${CURRENT_LOCALE} are set
+	# ${LOCALE} and ${CURRENT_LOCALE} are already set
 
 	if [[ ${CURRENT_LOCALE} == "${LOCALE}" ]]; then
 		display_msg --log progress "Keeping '${LOCALE}' locale."
 		local L="$( settings .locale )"
 		if [[ ${L} == "" || ${L} == "null" ]]; then
 			# Probably a new install.
-			MSG="Info: Settings file '${SETTINGS_FILE}' did not contain .locale."
+			MSG="* Info: Settings file '${SETTINGS_FILE}' did not contain .locale."
 			display_msg --logonly info "${MSG}"
 			update_locale "${LOCALE}"  "${SETTINGS_FILE}"
 		else
-			MSG="Info: Settings file '${SETTINGS_FILE}' contained .locale = '${L}'."
+			MSG="* Info: Settings file '${SETTINGS_FILE}' contained .locale = '${L}'."
 			display_msg --logonly info "${MSG}"
 		fi
 		return
@@ -1225,7 +1242,7 @@ install_dependencies_etc()
 update_config_sh()
 {
 	local C="${ALLSKY_CONFIG}/config.sh"
-	display_msg --log progress "Updating '${C}'"
+	display_msg --log progress "Updating some '${C}' variables."
 	if [[ -z ${ALLSKY_VERSION} ]]; then
 		display_msg --log error "ALLSKY_VERSION is empty in update_config_sh()"
 	fi
@@ -1542,9 +1559,14 @@ restore_prior_files()
 		return			# Nothing left to do in this function, so return
 	fi
 
-	# TODO: this script is going away in the next release.
+	# Do all the being restores, then all the updates.
+	local V=""
+
+	display_msg --log progress "Restoring:"
+
+	# TODO: endOfNight_additionalStepts.sh script is going away in the next major release.
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
-		display_msg --log progress "Restoring endOfNight_additionalSteps.sh."
+		display_msg --log progress "    endOfNight_additionalSteps.sh."
 		cp -a "${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
 
 		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file will be removed"
@@ -1552,54 +1574,54 @@ restore_prior_files()
 		MSG="${MSG}\nso please move your code to the 'Script' module in"
 		MSG="${MSG}\nthe 'Night to Day Transition Flow' of the Module Manager."
 		MSG="${MSG}\nSee the 'Explanations --> Module' documentation for more details."
-		display_msg --log info "\n${MSG}\n"
+		display_msg --log warning "\n${MSG}\n"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	else
-		MSG="No prior 'endOfNight_additionalSteps.sh' so can't restore."
+		MSG="    No prior 'endOfNight_additionalSteps.sh' so can't restore."
 		display_msg "${LOG_TYPE}" progress "${MSG}"
 	fi
 
 	if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then
-		display_msg --log progress "Restoring images."
+		display_msg --log progress "    'images' directory."
 		mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
 	else
 		# This is probably very rare so let the user know
-		MSG="No prior 'images' directory so can't restore; This unusual."
-		display_msg --log info "${MSG}"
+		MSG="    No prior 'images' directory so can't restore; This unusual."
+		display_msg --log progress "${MSG}"
 	fi
 
 	if [[ -d ${PRIOR_ALLSKY_DIR}/darks ]]; then
-		display_msg --log progress "Restoring darks."
+		display_msg --log progress "    'darks' directory."
 		mv "${PRIOR_ALLSKY_DIR}/darks" "${ALLSKY_HOME}"
 	else
-		display_msg "${LOG_TYPE}" progress "No prior 'darks' directory so can't restore."
+		display_msg "${LOG_TYPE}" progress "    No prior 'darks' directory so can't restore."
 	fi
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
-		display_msg --log progress "Restoring modules."
+		display_msg --log progress "    'modules' directory."
 		"${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}"
 	else
-		display_msg "${LOG_TYPE}" progress "No prior 'modules' directory so can't restore."
+		display_msg "${LOG_TYPE}" progress "    No prior 'modules' directory so can't restore."
 	fi
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
-		display_msg --log progress "Restoring overlays."
+		display_msg --log progress "    'overlays' directory."
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 
 		# Restore the fields.json file as it's part of the main Allsky distribution
 		# and should be replaced during an upgrade.
 		cp -ar "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_OVERLAY}/config/"
 	else
-		display_msg "${LOG_TYPE}" progress "No prior 'overlay' directory so can't restore."
+		display_msg "${LOG_TYPE}" progress "    No prior 'overlay' directory so can't restore."
 	fi
 
 	# This is not in a "standard" directory so we need to determine where it was.
 	EXTRA="${PRIOR_ALLSKY_DIR}${ALLSKY_EXTRA//${ALLSKY_HOME}/}"
 	if [[ -d ${EXTRA} ]]; then
-		display_msg --log progress "Restoring 'extra' files."
+		display_msg --log progress "    'extra' files."
 		cp -ar "${EXTRA}" "${ALLSKY_EXTRA}/.."
 	else
-		display_msg "${LOG_TYPE}" progress "No prior 'extra' directory so can't restore."
+		display_msg "${LOG_TYPE}" progress "     prior 'extra' directory so can't restore."
 	fi
 
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
@@ -1609,29 +1631,21 @@ restore_prior_files()
 		D="${OLD_RASPAP_DIR}"
 	fi
 	if [[ -f ${D}/raspap.auth ]]; then
-		display_msg --log progress "Restoring WebUI security settings."
+		display_msg --log progress "    WebUI security settings."
 		cp -a "${D}/raspap.auth" "${ALLSKY_CONFIG}"
 	else
-		display_msg "${LOG_TYPE}" progress "No prior 'WebUI security settings' so can't restore."
+		display_msg "${LOG_TYPE}" progress "    No prior 'WebUI security settings' so can't restore."
 	fi
 
 	# Restore any REMOTE Allsky Website configuration file.
 	if [[ -f ${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} ]]; then
-		MSG="Restoring remote Allsky Website ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}."
+		MSG="    remote Allsky Website ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}."
 		display_msg --log progress "${MSG}"
 		cp -a "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" \
 			"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
-		# Update "AllskyVersion" if needed.
+		# Used below to update "AllskyVersion" if needed.
 		V="$( settings .config.AllskyVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
-		display_msg "${LOG_TYPE}" info "Prior remote Website's AllskyVersion=${V}"
-		if [[ ${V} != "${ALLSKY_VERSION}" ]]; then
-			MSG="Updating AllskyVersion in remote Website from '${V}' to '${ALLSKY_VERSION}'"
-			display_msg --log progress "${MSG}"
-			jq ".config.AllskyVersion = \"${ALLSKY_VERSION}\"" \
-				"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" > /tmp/x \
-				&& mv /tmp/x "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-		fi
 
 		# Check if this is an older Allsky Website configuration file type.
 		# The remote config file should have .ConfigVersion.
@@ -1660,12 +1674,13 @@ restore_prior_files()
 	else
 		# We don't check for old LOCAL Allsky Website configuration files.
 		# That's done when they install the Allsky Website.
-		display_msg "${LOG_TYPE}" info "No prior remote Website configuration so can't restore."
+		display_msg "${LOG_TYPE}" progress "    No prior remote Allsky Website known so can't restore."
 	fi
 
 	if [[ -f ${PRIOR_CONFIG_DIR}/uservariables.sh ]]; then
-		display_msg --log progress "Restoring uservariables.sh."
+		display_msg --log progress "    uservariables.sh."
 		cp -a "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
+	# Don't bother with the "else" part since this file is very rarely used.
 	fi
 
 	restore_prior_settings_files
@@ -1675,35 +1690,26 @@ restore_prior_files()
 	# See if the prior config.sh and ftp-setting.sh are the same version as
 	# the new ones; if so, we can copy them to the new version.
 	# Currently what's in ${ALLSKY_CONFIG} are copies of the repo files.
+	RESTORED_PRIOR_CONFIG_SH="false"
+	RESTORED_PRIOR_FTP_SH="false"
 
 	CONFIG_SH_VERSION="$(get_variable "CONFIG_SH_VERSION" "${ALLSKY_CONFIG}/config.sh")"
 	PRIOR_CONFIG_SH_VERSION="$(get_variable "CONFIG_SH_VERSION" "${PRIOR_CONFIG_FILE}")"
-	display_msg "${LOG_TYPE}" debug "CONFIG_SH_VERSION=${CONFIG_SH_VERSION}, PRIOR=${PRIOR_CONFIG_SH_VERSION}"
+	MSG="CONFIG_SH_VERSION=${CONFIG_SH_VERSION}, PRIOR=${PRIOR_CONFIG_SH_VERSION}"
+	display_msg "${LOG_TYPE}" info "${MSG}"
 	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
-		RESTORED_PRIOR_CONFIG_SH="true"
-		display_msg --log progress "Restoring prior 'config.sh' file."
-		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}"
-
-		local PRIOR="$( get_variable "ALLSKY_VERSION" "${PRIOR_CONFIG_FILE}" )"
-		if [[ ${PRIOR} != "${ALLSKY_VERSION}" ]]; then
-			MSG="Updating ALLSKY_VERSION in 'config.sh' to '${ALLSKY_VERSION}'."
-			sed -i "/ALLSKY_VERSION=/ c ALLSKY_VERSION=\"${ALLSKY_VERSION}\"" "${PRIOR_CONFIG_FILE}"
-			display_msg --log progress "${MSG}"
-		else
-			MSG="ALLSKY_VERSION (${PRIOR}) in prior config.sh same as new version."
-			display_msg --logonly info "${MSG}"
-		fi
+		display_msg --log progress "    prior 'config.sh' file, as is."
+		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_CONFIG_SH="true"
 	else
-		RESTORED_PRIOR_CONFIG_SH="false"
 		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
 			MSG="no prior version specified"
 		else
-			# This is hopefully the last version with config.sh so don't
+			# v2023.05.01 is hopefully the last version with config.sh so don't
 			# bother writing a function to convert from the prior version to this.
 			MSG="prior version is old (${PRIOR_CONFIG_SH_VERSION})"
 		fi
-		MSG="Not restoring 'config.sh': ${MSG}."
-		display_msg --log info "${MSG}"
+		MSG="    Not restoring prior 'config.sh': ${MSG}."
+		display_msg --log progress "${MSG}"
 	fi
 
 	# Unlike the config.sh file which was always in allsky/config,
@@ -1723,14 +1729,12 @@ restore_prior_files()
 		PRIOR_FTP_FILE=""
 		PRIOR_FTP_SH_VERSION="no file"
 	fi
-	display_msg "${LOG_TYPE}" debug "FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
+	display_msg "${LOG_TYPE}" info "FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
 
 	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
-		RESTORED_PRIOR_FTP_SH="true"
-		display_msg --log progress "Restoring prior 'ftp-settings.sh' file."
-		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}"
+		display_msg --log progress "    prior 'ftp-settings.sh' file, as is."
+		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_FTP_SH="true"
 	else
-		RESTORED_PRIOR_FTP_SH="false"
 		if [[ ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
 			MSG="unknown prior FTP_SH_VERSION."
 		elif [[ ${PRIOR_FTP_SH_VERSION} == "old" ]]; then
@@ -1740,8 +1744,37 @@ restore_prior_files()
 		else
 			MSG="unknown PRIOR_FTP_SH_VERSION: '${PRIOR_FTP_SH_VERSION}'."
 		fi
-		display_msg --log progress "Not restoring prior 'ftp-settings.sh': ${MSG}"
+		display_msg --log progress "    Not restoring prior 'ftp-settings.sh': ${MSG}"
 	fi
+
+	# Done with restores, now the updates.
+
+	if [[ -f ${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} ]]; then
+		display_msg "${LOG_TYPE}" info "Prior remote Website's AllskyVersion=${V}"
+		if [[ ${V} != "${ALLSKY_VERSION}" ]]; then
+			MSG="Updating AllskyVersion in remote Website from '${V}' to '${ALLSKY_VERSION}'"
+			display_msg --log progress "${MSG}"
+			jq ".config.AllskyVersion = \"${ALLSKY_VERSION}\"" \
+				"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" > /tmp/x \
+				&& mv /tmp/x "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+		else
+			display_msg --log progress "Prior remote Website already at version ${V}."
+		fi
+	fi
+
+	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
+		# This version should be the same as the what's in the prior "version" file.
+		local PRIOR="$( get_variable "ALLSKY_VERSION" "${PRIOR_CONFIG_FILE}" )"
+		if [[ ${PRIOR} != "${ALLSKY_VERSION}" ]]; then
+			MSG="Updating ALLSKY_VERSION in 'config.sh' to '${ALLSKY_VERSION}'."
+			sed -i "/ALLSKY_VERSION=/ c ALLSKY_VERSION=\"${ALLSKY_VERSION}\"" "${PRIOR_CONFIG_FILE}"
+			display_msg --log progress "${MSG}"
+		else
+			MSG="ALLSKY_VERSION (${PRIOR}) in prior config.sh same as new version."
+			display_msg --logonly info "${MSG}"
+		fi
+	fi
+
 
 	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "true" && ${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
 		return 0
@@ -1847,31 +1880,36 @@ install_overlay()
 	if [[ ${OS} == "buster" ]]; then
 		M=" for Buster"
 		R="-buster"
+		#
+		# Force pip upgrade, without this installations on Buster fail
+		#
+		pip3 install --upgrade pip > /dev/null 2>&1
 	else
 		M=""
 		R=""
 	fi
-	MSG2="\n\tThis may take a LONG time if the packages are not already installed."
-	display_msg --log progress "Installing Python dependencies${M}."  "${MSG2}"
 	TMP="${ALLSKY_INSTALLATION_LOGS}/Python_dependencies"
-	PIP3_BUILD="${ALLSKY_HOME}/pip3.build"
-	mkdir -p "${PIP3_BUILD}"
+	display_msg --log progress "Installing Python dependencies${M}:"
 	COUNT=0
 	local NUM=$(wc -l < "${ALLSKY_REPO}/requirements${R}.txt")
 	while read -r package
 	do
 		((COUNT++))
 		echo "${package}" > /tmp/package
+		if [[ ${COUNT} -lt 10 ]]; then
+			C=" ${COUNT}"
+		else
+			C="${COUNT}"
+		fi
+		display_msg --log progress "   === Package # ${C} of ${NUM}: [${package}]"
 		L="${TMP}.${COUNT}.log"
-		display_msg --log progress "   === Package # ${COUNT} of ${NUM}: [${package}]"
-		pip3 install --no-warn-script-location --build "${PIP3_BUILD}" -r /tmp/package > "${L}" 2>&1
+		pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
 		# These files are too big to display so pass in "0" instead of ${DEBUG}.
 		if ! check_success $? "Python dependency [${package}] failed" "${L}" 0 ; then
 			rm -fr "${PIP3_BUILD}"
 			exit_with_image 1
 		fi
 	done < "${ALLSKY_REPO}/requirements${R}.txt"
-	rm -fr "${PIP3_BUILD}"
 
 	display_msg --log progress "Installing Trutype fonts."
 	TMP="${ALLSKY_INSTALLATION_LOGS}/msttcorefonts.log"
@@ -1916,12 +1954,13 @@ install_overlay()
 check_if_buster()
 {
 	if [[ ${OS} == "buster" ]]; then
-		MSG="This release runs best on the newer Bullseye operating system"
+		MSG="This release runs best on the Bullseye operating system"
 		MSG="${MSG} that was released in November, 2021."
 		MSG="${MSG}\nYou are running the older Buster operating system and we"
 		MSG="${MSG} recommend doing a fresh install of Bullseye on a clean SD card."
 		MSG="${MSG}\n\nDo you want to continue anyhow?"
-		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
+		if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
+			display_msg --logonly info "User running Buster and elected not to continue."
 			exit_installation 0
 		fi
 	fi
@@ -2020,7 +2059,7 @@ remind_run_check_allsky()
 	MSG="${MSG}\n   cd ~/allsky;  scripts/check_allsky.sh"
 	MSG="${MSG}\nto check for any issues.  You can also run it whenever you make changes."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-	display_msg --logonly info "${MSG}"
+	display_msg --logonly info "Displayed message about running 'check_allsky.sh'."
 }
 
 
@@ -2029,6 +2068,8 @@ exit_installation()
 {
 	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $(date).\n"
 	local E="${1}"
+
+	# Don't exit for negative numbers.
 	#shellcheck disable=SC2086
 	[[ ${E} -ge 0 ]] && exit ${E}
 }
@@ -2062,24 +2103,10 @@ if [[ ${IN_TESTING} == "true" ]]; then
 
 		MSG="${MSG}\nChanges from prior dev releases:"
 
-		X="/etc/allsky/modules"
-		if [[ -d ${X} ]]; then
-			MSG="${MSG}\n"
-			MSG="${MSG} * ${X} is no longer used."
-			MSG="${MSG}   Move its contents to ${ALLSKY_MODULE_LOCATION} then 'sudo rmdir ${X}"
-		fi
-
-		MSG="${MSG}\n * The allsky/tmp/extra directory moved to '${ALLSKY_EXTRA}'."
-		MSG="${MSG}\n   YOU need to move any files to the new location and UPDATE YOUR SCRIPTS."
+		MSG="${MSG}\n * change 1"
 
 		MSG="${MSG}\n"
-		MSG="${MSG}\n * The '${ALLSKY_CONFIG}/overlay/config/fields.json' file used to"
-		MSG="${MSG}\n   contain both System fields and User fields (ones YOU created)."
-		MSG="${MSG}\n   It now includes only System fields."
-		MSG="${MSG}\n   After this installation please re-add any User fields via the"
-		MSG="${MSG}\n   Variable Manager in the WebUI. Look in the old 'fields.json'"
-		MSG="${MSG}\n   file for a list of your field and their attributes."
-		MSG="${MSG}\n   Future updates will preserve your user fields."
+		MSG="${MSG}\n * change 2"
 
 		MSG="${MSG}\n\nIf you agree, enter:    yes"
 		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
@@ -2139,6 +2166,10 @@ fi
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
+
+##### Display a message to Buster users.
+[[ -z ${FUNCTION} ]] && check_if_buster
+
 ##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY
 does_prior_Allsky_exist
 
@@ -2177,6 +2208,9 @@ get_locale
 ##### Determine the camera type
 select_camera_type
 
+##### Make sure a camera of the selected type is connected
+check_for_connected_camera
+
 ##### Get the new host name
 prompt_for_hostname
 
@@ -2187,13 +2221,11 @@ check_swap
 check_tmp
 
 
-MSG="\nThe following steps can take up to 1 - 3 HOURS depending on the speed of your Pi"
+MSG="The following steps can take up to an hour depending on the speed of your Pi"
 MSG="${MSG}\nand how many of the necessary dependencies are already installed."
-display_msg info "${MSG}"
-
 MSG="${MSG}\nYou will see progress messages throughout the process."
-MSG="${MSG}\nAt the end you will be prompted again for additional steps.\n"
-whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+MSG="${MSG}\nAt the end you will be prompted again for additional steps."
+display_msg notice "${MSG}"
 
 
 ##### Install web server

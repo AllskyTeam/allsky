@@ -23,7 +23,6 @@
 // When it's passed, functions call it "cg", so use upper case for global version.
 config CG;
 
-#include "include/raspistill.h"
 #include "include/mode_mean.h"
 
 #define CAMERA_TYPE				"RPi"
@@ -436,6 +435,7 @@ int main(int argc, char *argv[])
 	processConnectedCameras();	// exits on error
 
 	ASI_CAMERA_INFO ASICameraInfo;
+	// This gives a segmentation fault if cameraNumber isn't connected.
 	asiRetCode = ASIGetCameraProperty(&ASICameraInfo, CG.cameraNumber);
 	if (asiRetCode != ASI_SUCCESS)
 	{

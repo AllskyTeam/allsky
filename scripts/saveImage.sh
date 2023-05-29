@@ -4,7 +4,7 @@
 
 ME="$(basename "${BASH_ARGV0}")"
 
-[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME} $*"
+[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
 #shellcheck disable=SC2086 source-path=.
 source "${ALLSKY_HOME}/variables.sh" || exit ${ALLSKY_ERROR_STOP}
@@ -53,9 +53,15 @@ WORKING_DIR=$(dirname "${CURRENT_IMAGE}")	# the directory the image is currently
 # Optional full check for bad images.
 if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
 	# If the return code is 99, the file was bad and deleted so don't continue.
-	"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
+	AS_MEAN2="$( "${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}" )"
 	# removeBadImages.sh displayed error message and deleted the file.
-	[[ $? -eq 99 ]] && exit 99
+	if [[ $? -eq 99 ]]; then
+		exit 99
+	elif [[ -n ${AS_MEAN2} ]]; then
+		export AS_MEAN2
+	fi
+else
+	AS_MEAN2=""
 fi
 
 # If we didn't execute removeBadImages.sh do a quick sanity check on the image.
@@ -90,6 +96,9 @@ done
 # Export other variables so user can use them in overlays
 export AS_CAMERA_TYPE="${CAMERA_TYPE}"
 export AS_CAMERA_MODEL="${CAMERA_MODEL}"
+if [[ -n ${AS_MEAN2} ]]; then
+	export AS_MEAN_NORMALIZED="$( echo "${AS_MEAN2} * 255" | bc )"		# xxxx for testing
+fi
 
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/darkCapture.sh"		# does not return if in darkframe mode
@@ -267,7 +276,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 			else
 				if ! grep --silent "${FINAL_FILE}" "${MINI_TIMELAPSE_FILES}" ; then
 					echo "${FINAL_FILE}" >> "${MINI_TIMELAPSE_FILES}"
-				elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+				elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 1 ]]; then
 					# This shouldn't happen...
 					echo -e "${YELLOW}${ME} WARNING: '${FINAL_FILE}' already in set.${NC}" >&2
 				fi
@@ -315,7 +324,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
 					x="$(tail -${KEEP} "${MINI_TIMELAPSE_FILES}")"
 					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
-					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 						echo -e "${YELLOW}${ME} Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest file(s) and added current image.${NC}" >&2
 					fi
 				fi

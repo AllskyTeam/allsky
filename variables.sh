@@ -20,7 +20,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 		GREEN="\033[0;32m";		wOK="${GREEN}"
 		YELLOW="\033[0;33m";	wWARNING="${YELLOW}"
 		RED="\033[0;31m";		wERROR="${RED}"
-		DEBUG="${YELLOW}";		wDEBUG="${YELLOW}"
+		# Can't use DEBUG since lots of scripts use that to enable debugging
+		cDEBUG="${YELLOW}";		wDEBUG="${YELLOW}"
 		NC="\033[0m";			wNC="${NC}"
 								wBOLD="["; wNBOLD="]"
 								wBR="\n"
@@ -29,7 +30,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 		GREEN="";				wOK="<span style='color: green'>"
 		YELLOW="";				wWARNING="<span style='color: #FF9800'>"
 		RED="";					wERROR="<span style='color: red'>"
-		DEBUG="";				wDEBUG="${wWARNING}"
+		cDEBUG="";				wDEBUG="${wWARNING}"
 		NC="";					wNC="</span>"
 								wBOLD="<b>"; wNBOLD="</b>"
 								wBR="<br>"
@@ -73,6 +74,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	# Holds temporary messages to display in the WebUI.
 	ALLSKY_MESSAGES="${ALLSKY_CONFIG}/messages.txt"
+
+	# Holds a count of continuous "bad" images
+	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_image_count.txt"
 
 	# Holds information on what the user needs to do after an installation.
 	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/installation_logs"

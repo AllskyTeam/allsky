@@ -214,7 +214,7 @@ DAYDELAY_MS=$(settings .daydelay)
 NIGHTDELAY_MS=$(settings .nightdelay)
 
 	# Use min() for worst case.
-MIN_DELAY_MS=$(min ${DAYDELAY_MS} ${NIGHTDELAY_MS})
+MIN_DELAY_MS=$( min "${DAYDELAY_MS}" "${NIGHTDELAY_MS}" )
 	# This is typically the max daytime exposure, which is shorter than nighttime so use it.
 MIN_EXPOSURE_MS=250
 	# Minimum total time spent on each image

@@ -442,3 +442,48 @@ function settings()
 	echo "${ME2}: running as $(id --user --name), unable to get json value for '${1}';" >&2
 	ls -l "${SETTINGS_FILE}" >&2
 }
+
+
+#####
+# Return hard any link(s) to the specified file.
+# The links must be in the same directory.
+# On success return code 0 and the link(s).
+# On failure, return code 1 and an error message.
+function get_links()
+{
+	local FILE="$1"
+	if [[ -z ${FILE} ]]; then
+		echo "get_links(): File not specified."
+		return 1
+	fi
+	local DIRNAME="$( dirname "${FILE}" )"
+
+	local INODE="$( ls -l --inode "${FILE}" 2>/dev/null | cut -f1 -d' ' )"
+	if [[ -z ${INODE} ]]; then
+		echo "File '${FILE}' not found."
+		return 1
+	fi
+
+	# Don't include the specified FILE.
+	LINKS="$(
+set -x
+		if [[ ${DIRNAME} == "." ]]; then
+			x="./"
+		else
+			x=""
+		fi
+		find "${DIRNAME}" -inum "${INODE}" "!" -path "${x}${FILE}" | 
+			if [[ ${DIRNAME} == "." ]]; then
+				sed -e "s;^${x};;"
+			else
+				cat
+			fi
+	)"
+	if [[ -z ${LINKS} ]]; then
+		echo "No links for '${FILE}'."
+		return 1
+	fi
+
+	echo "${LINKS}"
+	return 0
+}

@@ -449,6 +449,7 @@ function settings()
 # The links must be in the same directory.
 # On success return code 0 and the link(s).
 # On failure, return code 1 and an error message.
+NO_LINK_=3
 function get_links()
 {
 	local FILE="$1"
@@ -462,7 +463,7 @@ function get_links()
 	local INODE="$( ls -l --inode "${FILE}" 2>/dev/null | cut -f1 -d' ' )"
 	if [[ -z ${INODE} ]]; then
 		echo "File '${FILE}' not found."
-		return 1
+		return 2
 	fi
 
 	# Don't include the specified FILE.
@@ -473,7 +474,7 @@ function get_links()
 			x=""
 		fi
 		find "${DIRNAME}" -inum "${INODE}" "!" -path "${x}${FILE}" | 
-			if [[ ${DIRNAME} == "." ]]; then
+			if [[ -n ${x} ]]; then
 				sed -e "s;^${x};;"
 			else
 				cat
@@ -481,9 +482,61 @@ function get_links()
 	)"
 	if [[ -z ${LINKS} ]]; then
 		echo "No links for '${FILE}'."
-		return 1
+		return "${NO_LINK_}"
 	fi
 
 	echo "${LINKS}"
+	return 0
+}
+
+
+#####
+# Make sure the settings file is linked to the camera-specific file.
+# Return 0 code and no message if successful, else 1 and return a message.
+function check_settings_link()
+{
+	local FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME
+	FILE="$1"
+	if [[ -z ${FILE} ]]; then
+		echo "check_settings_link(): Settings file not specified."
+		return 1
+	fi
+
+	DIRNAME="$( dirname "${FILE}" )"
+	SETTINGS_LINK="$( get_links "${FILE}" )"
+	RET=$?
+	if [[ ${RET} -ne 0 ]]; then
+		MSG="The settings file (${SETTINGS_FILE}) is not linked to"
+		MSG="${MSG} a camera-specific file; any setting changes you make will not"
+		MSG="${MSG} be saved if you switch cameras or upgrade Allsky."
+		[[ ${RET} -ne "${NO_LINK_}" ]] && MSG="${MSG}\nERROR: ${SETTINGS_LINK}."
+		echo "${MSG}$( fix_settings_link )"
+		return 1
+	else
+		# Make sure it's linked to the correct file.
+		SETTINGS_LINK="$( basename "${SETTINGS_LINK}" )"
+		F="${FILE%.*}"
+		E="${FILE##*.}"
+		CORRECT_NAME="$( basename "${F}_${CAMERA_TYPE}_${CAMERA_MODEL}.${E}" )"
+		if [[ ${SETTINGS_LINK} != "${CORRECT_NAME}" ]]; then
+			MSG="The settings file (${SETTINGS_FILE}) is not properly linked to"
+			MSG="${MSG} its camera-specific file; any setting changes you make will not"
+			MSG="${MSG} be saved if you switch cameras or upgrade Allsky."
+			MSG="${MSG}\nIt is linked to:"
+			MSG="${MSG}\n    ${DIRNAME}/${SETTINGS_LINK}"
+			MSG="${MSG}\nbut should be linked to:"
+			MSG="${MSG}\n    ${DIRNAME}/${CORRECT_NAME}"
+			echo "${MSG}$( fix_settings_link )"
+			return 1
+		fi
+	fi
+
+	return 0
+}
+
+function fix_settings_link()
+{
+	# TODO: describe how to fix the settings link.
+	#### echo "\nTo fix: "
 	return 0
 }

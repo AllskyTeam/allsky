@@ -171,6 +171,35 @@ else
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 
+# Make sure the settings file is linked to the camera-specific file.
+if ! SETTINGS_LINK="$( get_links "${SETTINGS_FILE}" )" ; then
+	MSG="The settings file (${SETTINGS_FILE}) is not linked to"
+	MSG="${MSG} a camera-specific file; any setting changes you make will not"
+	MSG="${MSG} be saved if you switch cameras."
+	MSG="${MSG}\nERROR: ${SETTINGS_LINK}."
+	# TODO: Tell them how to fix it.
+	"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}"
+	echo "ERROR: Settings file (${SETTINGS_FILE}) not linked to camera-specific file." >&2
+else
+	# Make sure it's linked to the correct file.
+	SETTINGS_LINK="$( basename "${SETTINGS_LINK}" )"
+	FILE="${SETTINGS_FILE%.*}"
+	EXT="${SETTINGS_FILE##*.}"
+	CORRECT_NAME="$( basename "${FILE}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}" )"
+	if [[ ${SETTINGS_LINK} != "${CORRECT_NAME}" ]]; then
+		MSG="The settings file (${SETTINGS_FILE}) is not properly linked to"
+		MSG="${MSG} its camera-specific file; any setting changes you make will not"
+		MSG="${MSG} be saved if you switch cameras."
+		MSG="${MSG}\nIt is linked to:"
+		MSG="${MSG}\n    ${SETTINGS_LINK}"
+		MSG="${MSG}\nbut should be linked to"
+		MSG="${MSG}\n    ${CORRECT_NAME}"
+		# TODO: Tell them how to fix it.
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}"
+		echo "ERROR: Settings file (${SETTINGS_FILE}) incorrectly linked to ${SETTINGS_LINK}." >&2
+	fi
+fi
+
 # Make directories that need to exist.
 if [[ -d ${ALLSKY_TMP} ]]; then
 	# remove any lingering old image files.

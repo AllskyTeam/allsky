@@ -17,6 +17,7 @@ It is expected that the 'user' supplied modules are searched first, and thus com
 This permits the user to copy and modify a distributed module, or create an entirely new replacement for a distributed
 module, thus giving the user total control.
 '''
+
 def signalHandler(sig, frame):
     if sig == signal.SIGTERM or sig == signal.SIGINT:
         try:

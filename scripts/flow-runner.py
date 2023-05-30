@@ -7,6 +7,9 @@ import argparse
 import importlib
 from datetime import datetime, timedelta, date
 import signal
+from collections import deque
+import numpy
+import shutil
 
 '''
 NOTE: `valid_module_paths` must be an array, and the order specified dictates the order of search for a named module.
@@ -14,7 +17,6 @@ It is expected that the 'user' supplied modules are searched first, and thus com
 This permits the user to copy and modify a distributed module, or create an entirely new replacement for a distributed
 module, thus giving the user total control.
 '''
-
 def signalHandler(sig, frame):
     if sig == signal.SIGTERM or sig == signal.SIGINT:
         try:
@@ -124,6 +126,7 @@ if __name__ == "__main__":
         shared.log(0, "ERROR: no allsky config directory available in the environment", exitCode=1)
 
     watchdog = False
+    moduleDebug = False
     timeout = 0
     try:
         configFile = os.path.join(shared.args.allskyConfig, 'module-settings.json')
@@ -131,10 +134,10 @@ if __name__ == "__main__":
             module_settings = json.load(module_Settings_file)
             watchdog = module_settings['watchdog']
             timeout = module_settings['timeout']
+            moduleDebug = module_settings['debugmode']
     except:
         watchdog = False
-
-
+        
     shared.args.config = rawSettings
     shared.log(4, "INFO: Loading config {0}".format(shared.args.config))
     try:
@@ -180,6 +183,8 @@ if __name__ == "__main__":
             os.remove(disableFile)
     
     results = {}
+    if moduleDebug:
+        flowStartTime = datetime.now()
     for shared.step in shared.flow:
         if shared.flow[shared.step]["enabled"] and shared.flow[shared.step]["module"] not in globals():
             try:
@@ -254,3 +259,38 @@ if __name__ == "__main__":
                 json.dump(config, updatefile, indent=4)
         except json.JSONDecodeError as err:
             shared.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)
+
+    if moduleDebug:
+        flowEndTime = datetime.now()
+        flowElapsedTime = (((flowEndTime - flowStartTime).total_seconds()) * 1000) / 1000
+        queueData = []
+        allQueueData = {}
+        if shared.dbHasKey("flowtimer"):
+            allQueueData = shared.dbGet("flowtimer")
+            if flowName in allQueueData:
+                queueData = allQueueData[flowName]
+            
+        queue = deque(queueData, maxlen = 10)
+        queue.append(flowElapsedTime)
+        
+        queueData = list(queue)
+        allQueueData[flowName] = queueData
+        shared.dbUpdate("flowtimer", allQueueData)
+        
+        flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")
+        shared.checkAndCreateDirectory(flowTimingsFolder)
+        flowTimeFile = os.path.join(flowTimingsFolder,f"{flowName}-average")
+        if len(list(queue)) == 10:
+            average = str(round(numpy.average(list(queue)),1))
+            with open(flowTimeFile, 'w') as f:
+                f.write(average) 
+        else:
+            if shared.isFileWriteable(flowTimeFile):
+                os.remove(flowTimeFile)
+    else:
+        flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")
+        if shared.dbHasKey("flowtimer"):
+            shared.dbDeleteKey("flowtimer")
+            
+        if os.path.exists(flowTimingsFolder):
+            shutil.rmtree(flowTimingsFolder)

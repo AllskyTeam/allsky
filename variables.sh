@@ -98,6 +98,11 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_MODULE_LOCATION="/opt/allsky"
 	ALLSKY_EXTRA="${ALLSKY_OVERLAY}/extra"
 
+	# Directories and files for the flow timer function
+	ALLSKY_FLOWTIMINGS="${ALLSKY_TMP}/flowtimings"
+	ALLSKY_FLOWTIMINGS_DAY="${ALLSKY_FLOWTIMINGS}/day-average"
+	ALLSKY_FLOWTIMINGS_NIGHT="${ALLSKY_FLOWTIMINGS}/night-average"
+
 	# Verion file and option branch file.
 	ALLSKY_VERSION_FILE="${ALLSKY_HOME}/version"
 	ALLSKY_BRANCH_FILE="${ALLSKY_HOME}/branch"

@@ -10,6 +10,7 @@ import signal
 from collections import deque
 import numpy
 import shutil
+import time
 
 '''
 NOTE: `valid_module_paths` must be an array, and the order specified dictates the order of search for a named module.
@@ -56,8 +57,25 @@ import allsky_shared as shared
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--event",  type=str, help="The event we are running modules for (defaults to postcapture).", default="postcapture", choices=["postcapture","daynight", "nightday", "periodic"])
+    parser.add_argument("-f", "--flowtimerframes",  type=int, help="Number of frames to capture for the flow timing averages.", default=10)
+    parser.add_argument("-c", "--cleartimings", action="store_true", help="Clear any flow average timing data.")
     shared.args = parser.parse_args()
-    
+
+    shared.initDB()
+
+    if shared.args.cleartimings:
+        if shared.dbHasKey("flowtimer"):
+            shared.dbDeleteKey("flowtimer")
+            
+        try:
+            flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
+        except KeyError:
+            flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")   
+                        
+        if os.path.exists(flowTimingsFolder):
+            shutil.rmtree(flowTimingsFolder)            
+        sys.exit(0)
+        
     try:
         shared.allskyTmp = os.environ["ALLSKY_TMP"]
     except:
@@ -70,7 +88,6 @@ if __name__ == "__main__":
         rawSettings = os.environ["SETTINGS_FILE"]
     except:
         shared.log(0, "ERROR: no camera config file available in the environment", exitCode=1)
-
 
     if (shared.args.event == "postcapture"):
         try:
@@ -161,8 +178,6 @@ if __name__ == "__main__":
                 shared.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)
     except:
         shared.log(0, "ERROR: Failed to open {0}".format(moduleConfig), exitCode=1)
-
-    shared.initDB()
     
     if (shared.args.event == "postcapture"):
         disableFile = os.path.join(shared.allskyTmp,"disable")
@@ -184,7 +199,7 @@ if __name__ == "__main__":
     
     results = {}
     if moduleDebug:
-        flowStartTime = datetime.now()
+        flowStartTime = round(time.time() * 1000)
     for shared.step in shared.flow:
         if shared.flow[shared.step]["enabled"] and shared.flow[shared.step]["module"] not in globals():
             try:
@@ -206,7 +221,6 @@ if __name__ == "__main__":
             if 'arguments' in shared.flow[shared.step]['metadata']:
                 arguments = shared.flow[shared.step]['metadata']['arguments']
                 
-
             try:
                 result = globals()[method](arguments, shared.args.event)
             except Exception as e:
@@ -260,35 +274,47 @@ if __name__ == "__main__":
         except json.JSONDecodeError as err:
             shared.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)
 
-    if moduleDebug:
-        flowEndTime = datetime.now()
-        flowElapsedTime = (((flowEndTime - flowStartTime).total_seconds()) * 1000) / 1000
-        queueData = []
-        allQueueData = {}
-        if shared.dbHasKey("flowtimer"):
-            allQueueData = shared.dbGet("flowtimer")
-            if flowName in allQueueData:
-                queueData = allQueueData[flowName]
+    if moduleDebug:        
+        try:
+            flowTimingsFile = os.environ[f"ALLSKY_FLOWTIMINGS_{flowName.upper()}"]
+        
+            flowEndTime = round(time.time() * 1000)
+            flowElapsedTime = int(flowEndTime - flowStartTime)
+            queueData = []
+            allQueueData = {}
+            if shared.dbHasKey("flowtimer"):
+                allQueueData = shared.dbGet("flowtimer")
+                if flowName in allQueueData:
+                    queueData = allQueueData[flowName]
+                
+            queue = deque(queueData, maxlen = shared.args.flowtimerframes)
+            queue.append(flowElapsedTime)
             
-        queue = deque(queueData, maxlen = 10)
-        queue.append(flowElapsedTime)
-        
-        queueData = list(queue)
-        allQueueData[flowName] = queueData
-        shared.dbUpdate("flowtimer", allQueueData)
-        
-        flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")
-        shared.checkAndCreateDirectory(flowTimingsFolder)
-        flowTimeFile = os.path.join(flowTimingsFolder,f"{flowName}-average")
-        if len(list(queue)) == 10:
-            average = str(round(numpy.average(list(queue)),1))
-            with open(flowTimeFile, 'w') as f:
-                f.write(average) 
-        else:
-            if shared.isFileWriteable(flowTimeFile):
-                os.remove(flowTimeFile)
-    else:
-        flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")
+            queueData = list(queue)
+            allQueueData[flowName] = queueData
+            shared.dbUpdate("flowtimer", allQueueData)
+            
+            try:
+                flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
+            except KeyError:
+                flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")
+            
+            shared.checkAndCreateDirectory(flowTimingsFolder)
+            if len(list(queue)) >= shared.args.flowtimerframes:
+                average = str(int(numpy.average(list(queue))))
+                with open(flowTimingsFile, 'w') as f:
+                    f.write(average) 
+            else:
+                if shared.isFileWriteable(flowTimingsFile):
+                    os.remove(flowTimingsFile)
+        except KeyError:
+            pass
+            
+    if not moduleDebug:
+        try:
+            flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
+        except KeyError:
+            flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")        
         if shared.dbHasKey("flowtimer"):
             shared.dbDeleteKey("flowtimer")
             

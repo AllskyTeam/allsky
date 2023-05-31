@@ -3,15 +3,13 @@
 function DisplayEditor()
 {
 	$status = new StatusMessages();
-	$showFullList = false;	// show the full list of what's in ALLSKY_SCRIPTS, or just user-editable files?
-	$config_dir = basename(ALLSKY_CONFIG);
 ?>
 
 	<script type="text/javascript">
 
 		$(document).ready(function () {
 			var editor = null;
-			$.get("current/<?php echo $config_dir ?>/config.sh?_ts=" + new Date().getTime(), function (data) {
+			$.get("config/config.sh?_ts=" + new Date().getTime(), function (data) {
 				editor = CodeMirror(document.querySelector("#editorContainer"), {
 					value: data,
 					mode: "shell",
@@ -125,20 +123,15 @@ function DisplayEditor()
 					<div style="margin-top: 15px;">
 				 <?php
 						$scripts = null;
-						if(isset($showFullList) && $showFullList == "true") {
-							$scripts = array_filter(array_diff(scandir(ALLSKY_SCRIPTS), array('.', '..')), function($item) {
-								// Anything OTHER than a directory is valid.
-								return !is_dir(ALLSKY_SCRIPTS . "/" . $item);
-							});
-						} else if (file_exists(ALLSKY_SCRIPTS . "/endOfNight_additionalSteps.sh")) {
+						if (file_exists(ALLSKY_SCRIPTS . "/endOfNight_additionalSteps.sh")) {
 							$scripts[0] = "endOfNight_additionalSteps.sh";
 						}
 				?>
 						<select class="form-control" id="script_path" title="Pick a file"
 							style="display: inline-block; width: auto; margin-right: 15px; margin-bottom: 5px"
 						>
-							<option value="current/<?php echo $config_dir ?>/config.sh">config.sh</option>
-							<option value="current/<?php echo $config_dir ?>/ftp-settings.sh">ftp-settings.sh</option>
+							<option value="config/config.sh">config.sh</option>
+							<option value="config/ftp-settings.sh">ftp-settings.sh</option>
 
 				<?php
 							if ($scripts != null) {
@@ -156,7 +149,7 @@ function DisplayEditor()
 							if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 								// The website is remote, but a copy of the config file is on the Pi.
 								$N = ALLSKY_WEBSITE_REMOTE_CONFIG_NAME;
-								echo "<option value='{REMOTE}current/$config_dir/$N'>$N (remote Allsky Website)</option>";
+								echo "<option value='{REMOTE}config/$N'>$N (remote Allsky Website)</option>";
 							}
 			   ?>
 						</select>

@@ -23,11 +23,9 @@ function get_generic_name($s) {
 // If it exists, set the min, max, and default.
 function get_control($array, $setting, &$min, &$max, &$default) {
 	$i = 0;
-//x echo "Looking for control [$setting]: ";
 	foreach ($array as $cc) {
 		$i++;
 		if ($cc["argumentName"] === $setting) {
-//x echo "match at number $i\n";
 			$min = getVariableOrDefault($cc, "MinValue", null);
 			$max = getVariableOrDefault($cc, "MaxValue", null);
 			$default = getVariableOrDefault($cc, "DefaultValue", null);
@@ -286,7 +284,7 @@ if ($repo_array === null) {
 	// display			[0/1]
 	// checkchanges		[0/1]
 	// optional			[0/1]
-	// nullOK			[0/1]
+	// generic			[0/1]
 	// advanced 		[0/1]	(last, so no comma after it)
 
 
@@ -340,6 +338,8 @@ foreach ($repo_array as $repo) {
 			$repo["default"] = $cameraType;
 	elseif ($name === "cameraModel")
 			$repo["default"] = $cameraModel;
+	elseif ($name === "camera")
+			$repo["default"] = "$cameraType $cameraModel";
 
 	$options_str .= "{\n";
 		add_non_null_field($repo, "name", $name);
@@ -353,7 +353,7 @@ foreach ($repo_array as $repo) {
 		add_non_null_field($repo, "display", $name);
 		add_non_null_field($repo, "checkchanges", $name);
 		add_non_null_field($repo, "optional", $name);
-		add_non_null_field($repo, "nullOK", $name);
+		add_non_null_field($repo, "generic", $name);
 		add_non_null_field($repo, "advanced", $name);
 	$options_str .= "},\n";
 }
@@ -366,14 +366,31 @@ if ($results != "") {
 	exit(6);
 }
 
-// Optionally create a basic "settings" file with the default for this camera type/model.
+// If a $settings_file was passed in, create a "settings" file.
+// If this camera type/model is already known, use that file,
+// otherwise create a "settings" file with defaults for this camera.
+// However, if there's an old settings file port its generic fields to the new file.
 
 if ($settings_file !== "") {
-	$options_array = json_decode($options_str, true);
+	// Determine the name of the camera type/model-specific file.
+	$pieces = explode(".", basename($settings_file));		// e.g., "settings.json"
+	$FileName = $pieces[0];		// e.g., "settings"
+	$FileExt = $pieces[1];		// e.g., "json"
+	// e.g., "settings_ZWO_ASI123.json"
+	$cameraSpecificSettingsName = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
+	$fullSpecificFileName = dirname($settings_file) . "/$cameraSpecificSettingsName";
+	if ($debug > 0) {
+		$e =  file_exists($fullSpecificFileName) ? "yes" : "no";
+		echo "Camera-specific settings file exists ($e): $fullSpecificFileName.\n";
+	}
 
-	// If the file exists, it's a generic link to a camera-specific named file.
+	// If the settings file exists, it's a generic link to a camera-specific named file.
 	// Remove the link because it points to a prior camera.
+	$settings_array = null;
 	if (file_exists($settings_file)) {
+		$errorMsg = "ERROR: Unable to process prior settings file '$settings_file'.";
+		$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
+
 		if ($debug > 0) echo "Removing $settings_file.\n";
 		if (! unlink($settings_file)) {
 			echo "ERROR: Unable to delete $settings_file.\n";
@@ -381,22 +398,12 @@ if ($settings_file !== "") {
 		}
 	}
 
-	// Determine the name of the camera type/model-specific file.
-	$pieces = explode(".", basename($settings_file));		// e.g., "settings.json"
-	$FileName = $pieces[0];		// e.g., "settings"
-	$FileExt = $pieces[1];		// e.g., "json"
-	// e.g., "settings_ZWO_ASI123.json"
-	$cameraSpecificSettingsName = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
-	$fullSpecificFile = dirname($settings_file) . "/$cameraSpecificSettingsName";
-	if ($debug > 0) {
-		$e =  file_exists($fullSpecificFile) ? "yes" : "no";
-		echo "Camera-specific settings file exists ($e): $fullSpecificFile.\n";
-	}
 
 	// If there isn't a camera-specific file, create one.
-	if ($force || ! file_exists($fullSpecificFile)) {
-		// For each item in the options file, write the name and default value.
+	if ($force || ! file_exists($fullSpecificFileName)) {
+		// For each item in the options file, write the name and a value.
 		$contents = "{\n";
+		$options_array = json_decode($options_str, true);
 		foreach ($options_array as $option) {
 			$type = getVariableOrDefault($option, 'type', "");
 			if ($type == "header") continue;	// don't put in settings file
@@ -404,21 +411,32 @@ if ($settings_file !== "") {
 			if ($display === 0) continue;
 
 			$name = $option['name'];
-			$default = getVariableOrDefault($option, 'default', "");
-			if ($debug > 1) echo ">> $name = [$default]\n";
 
+			// If it's a generic setting, use it's prior value if it exists.
+			if (getVariableOrDefault($option, 'generic', 0) !== 0 && $settings_array !== null) {
+				$val = getVariableOrDefault($settings_array, $name, null);
+			} else {
+				$val = null;
+			}
+
+			if ($val === null) {
+				$val = getVariableOrDefault($option, 'default', "");
+				if ($debug > 1) echo ">> default $name = [$val]\n";
+			} else {
+				if ($debug > 1) echo ">> generic $name = [$val]\n";
+			}
 			// Don't worry about whether or not the default is a string, number, etc.
-			$contents .= "\t\"$name\" : \"$default\",\n";
+			$contents .= "\t\"$name\" : \"$val\",\n";
 		}
 		// This comes last so we don't worry about whether or not the items above
 		// need a trailing comma.
 		$contents .= "\t\"XX_END_XX\" : 1\n";
 		$contents .= "}\n";
 
-		if ($debug > 0) echo "Creating camera-specific settings file: $fullSpecificFile.\n";
-		$results = updateFile($fullSpecificFile, $contents, $cameraSpecificSettingsName, true);
+		if ($debug > 0) echo "Creating camera-specific settings file: $fullSpecificFileName.\n";
+		$results = updateFile($fullSpecificFileName, $contents, $cameraSpecificSettingsName, true);
 		if ($results != "") {
-			echo "ERROR: Unable to create $fullSpecificFile.\n";
+			echo "ERROR: Unable to create $fullSpecificFileName.\n";
 			exit(8);
 		}
 
@@ -426,12 +444,12 @@ if ($settings_file !== "") {
 		// There IS a camera-specific file for the new camera type so we
 		// don't need to do anything special.
 		// The generic name will be linked to the specific name below.
-		echo "Using existing $fullSpecificFile.\n";
+		echo "Using existing $fullSpecificFileName.\n";
 	}
 
-	if ($debug > 0) echo "Linking $fullSpecificFile to $settings_file.\n";
-	if (! link($fullSpecificFile, $settings_file)) {
-		echo "ERROR: Unable to link $fullSpecificFile to $settings_file.\n";
+	if ($debug > 0) echo "Linking $fullSpecificFileName to $settings_file.\n";
+	if (! link($fullSpecificFileName, $settings_file)) {
+		echo "ERROR: Unable to link $fullSpecificFileName to $settings_file.\n";
 		exit(9);
 	}
 }

@@ -374,6 +374,9 @@ table .alert-dismissable {
 	border-color: #bdb173;
 	background-color: #837a2f;
 }
+.advanced-nocolor {
+	background-color: inherit;
+}
 
 .dark .btn-primary:hover,
 .dark .btn-success:hover,
@@ -409,12 +412,12 @@ table .alert-dismissable {
 	}
 }
 
-/* Headers in camera options */
+/* Headers in Allsky settings */
 .settingsHeader {
 	background-color: #aaa;
 	text-align: center;
 	font-weight: bold;
-	font-size: 125%;
+	font-size: 1.25em;
 	padding: 3px 0 3px 0;
 }
 .dark .settingsHeader {

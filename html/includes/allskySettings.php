@@ -42,10 +42,12 @@ function DisplayAllskyConfig(){
 			$changes = "";
 			$somethingChanged = false;
 			$numErrors = 0;
-			$newCameraType = "";
+
 			$refreshingCameraType = false;
+			$newCameraType = "";
 			$newCameraModel = "";
 			$newCameraNumber = "";
+
 			$ok = true;
 			$msg = "";
 			$errorMsg = "";
@@ -71,7 +73,7 @@ function DisplayAllskyConfig(){
 					$oldValue = str_replace("'", "&#x27", $value);
 					$newValue = getVariableOrDefault($settings, $originalName, "");
 					if ($oldValue !== $newValue) {
-						if ($originalName === $cameraTypeName)
+						if ($originalName === $cameraTypeName) {
 							if ($newValue === "Refresh") {
 								// Refresh the same Camera Type
 								$refreshingCameraType = true;
@@ -80,12 +82,13 @@ function DisplayAllskyConfig(){
 							} else {
 								$newCameraType = $newValue;
 							}
-						elseif ($originalName === $cameraModelName)
+						} elseif ($originalName === $cameraModelName) {
 							$newCameraModel = $newValue;
-						elseif ($originalName === $cameraNumberName)
+						} elseif ($originalName === $cameraNumberName) {
 							$newCameraNumber = $newValue;
-						else
-							$somethingChanged = true;	// want to know about other changes
+						} else {
+							$somethingChanged = true;	// want to know about OTHER changes
+						}
 
 						$checkchanges = false;
 						foreach ($options_array as $option){
@@ -107,10 +110,10 @@ function DisplayAllskyConfig(){
 					foreach ($options_array as $option){
 						if ($option['name'] === $key) {
 							if ($value == "" && ! $optional_array[$key]) {
-								if ($errorMsg == "")
-									$errorMsg = "<strong>" . $option['label'] . "</strong> is empty";
-								else
-									$errorMsg .= ", <strong>" . $option['label'] . "</strong> is empty";
+								$lab = $option['label'];
+								if ($errorMsg != "")
+									$errorMsg .= ", ";
+								$errorMsg .= "<strong>$lab</strong> is empty";
 								$numErrors++;
 								$ok = false;
 							}
@@ -126,9 +129,8 @@ function DisplayAllskyConfig(){
 				}
 			}
 
-// TODO: makeChanges.sh should probably come first because if it fails, we don't want
-// to update the settings file.
 			if ($ok) {
+
 				if ($somethingChanged || $lastChanged === null) {
 					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
@@ -179,8 +181,9 @@ function DisplayAllskyConfig(){
 					$moreArgs = "";
 					if ($doingRestart)
 						$moreArgs .= " --restarting";
-					if ($newCameraType !== "")
+					if ($newCameraType !== "") {
 						$moreArgs .= " --cameraTypeOnly";
+					}
 
 					$CMD = "sudo --user=" . ALLSKY_OWNER;
 					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $debugArg $moreArgs $changes";
@@ -381,7 +384,7 @@ if ($formReadonly != "readonly") { ?>
 				if ($advanced == 1) {
 					$numAdvanced++;
 					$advClass = "advanced";
-					$advStyle = "display: $initial_display";
+					$advStyle = "display: $initial_display;";
 				} else {
 					$advClass = "";
 					$advStyle = "";
@@ -431,9 +434,13 @@ if ($formReadonly != "readonly") { ?>
 
 				// Put some space before and after headers.  This next line is the "before":
 				if ($type == "header") {
-					echo "<tr style='height: 10px'><td colspan='3'></td></tr>";
-					echo "<td colspan='3' style='padding: 8px 0px;' class='settingsHeader'>$description</td>";
-					echo "<tr class='rowSeparator' style='height: 10px'><td colspan='3'></td></tr>";
+					// Not sure how to display the header with a background color with 10px of white above and
+					// below it using only one <tr>.
+					echo "<tr class='$advClass advanced-nocolor' style='$advStyle height: 10px;'><td colspan='3'></td></tr>";
+					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle'>";
+						echo "<td colspan='3' class='settingsHeader' style='padding: 8px 0px;'>$description</td>";
+					echo "</tr>";
+					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle height: 10px;'><td colspan='3'></td></tr>";
 				} else {
 					echo "<tr class='form-group $advClass $class $warning_class' style='margin-bottom: 0px; $advStyle'>";
 					// Show the default in a popup

@@ -372,7 +372,7 @@ save_camera_capabilities()
 		"cameraType" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2>&1 )"
 	RET=$?
 
-	display_msg "${LOG_TYPE}" info "${MSG}"
+	[[ -n ${MSG} ]] && display_msg "${LOG_TYPE}" info "${MSG}"
 	if [[ ${RET} -ne 0 ]]; then
 		#shellcheck disable=SC2086
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
@@ -385,7 +385,7 @@ save_camera_capabilities()
 		fi
 		return 1
 	else
-		MSG="$( ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null )"
+		MSG="$( ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
 		display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
 	fi
 
@@ -556,7 +556,6 @@ check_and_mount_tmp()
 
 	if [[ -d "${ALLSKY_TMP}" ]]; then
 		local IMAGES="$(find "${ALLSKY_TMP}" -name '*.jpg')"
-		display_msg --logonly debug "Existing IMAGES=${IMAGES}"
 		if [[ -n ${IMAGES} ]]; then
 			mkdir "${TMP_DIR}"
 			# Need to allow for files with spaces in their names.
@@ -1031,7 +1030,7 @@ get_locale()
 			CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p')"
 		fi
 	fi
-	display_msg --logonly info "CURRENT_LOCALE=${CURRENT_LOCALE}\nTEMP_LOCALE=${TEMP_LOCALE}"
+	display_msg --logonly info "CURRENT_LOCALE=${CURRENT_LOCALE}, TEMP_LOCALE=${TEMP_LOCALE}"
 
 	local D=""
 	if [[ -n ${CURRENT_LOCALE} && ${CURRENT_LOCALE} != "null" ]]; then
@@ -1092,13 +1091,14 @@ set_locale()
 	if [[ ${CURRENT_LOCALE} == "${LOCALE}" ]]; then
 		display_msg --log progress "Keeping '${LOCALE}' locale."
 		local L="$( settings .locale )"
+		MSG="Settings file '${SETTINGS_FILE}'"
 		if [[ ${L} == "" || ${L} == "null" ]]; then
 			# Probably a new install.
-			MSG="* Info: Settings file '${SETTINGS_FILE}' did not contain .locale."
+			MSG="${MSG} did NOT contain .locale so adding it."
 			display_msg --logonly info "${MSG}"
 			update_locale "${LOCALE}"  "${SETTINGS_FILE}"
 		else
-			MSG="* Info: Settings file '${SETTINGS_FILE}' contained .locale = '${L}'."
+			MSG="${MSG} CONTAINED .locale = '${L}'."
 			display_msg --logonly info "${MSG}"
 		fi
 		return
@@ -1466,7 +1466,7 @@ restore_prior_settings_files()
 							display_msg --log progress "Restoring settings files:"
 							FIRST_ONE="false"
 						fi
-						display_msg --log progress "\t'$(basename "${F}")'"
+						display_msg --log progress "\t$(basename "${F}")"
 						cp -a "${F}" "${ALLSKY_CONFIG}"
 					done
 			else
@@ -1562,7 +1562,7 @@ restore_prior_files()
 	# Do all the being restores, then all the updates.
 	local V=""
 
-	display_msg --log progress "Restoring:"
+	display_msg --log progress "Restoring prior:"
 
 	# TODO: endOfNight_additionalStepts.sh script is going away in the next major release.
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
@@ -1586,7 +1586,7 @@ restore_prior_files()
 		mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
 	else
 		# This is probably very rare so let the user know
-		MSG="    No prior 'images' directory so can't restore; This unusual."
+		MSG="    No prior 'images' directory so can't restore; This is unusual."
 		display_msg --log progress "${MSG}"
 	fi
 
@@ -1599,13 +1599,15 @@ restore_prior_files()
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg --log progress "    'modules' directory."
+
+		# Copy the user's prior data to the new file which may contain new fields.
 		"${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}"
 	else
 		display_msg "${LOG_TYPE}" progress "    No prior 'modules' directory so can't restore."
 	fi
 
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
-		display_msg --log progress "    'overlays' directory."
+		display_msg --log progress "    'overlay' directory."
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 
 		# Restore the fields.json file as it's part of the main Allsky distribution
@@ -1625,10 +1627,10 @@ restore_prior_files()
 	# This is not in a "standard" directory so we need to determine where it was.
 	EXTRA="${PRIOR_ALLSKY_DIR}${ALLSKY_EXTRA//${ALLSKY_HOME}/}"
 	if [[ -d ${EXTRA} ]]; then
-		display_msg --log progress "    'extra' files."
+		display_msg --log progress "    '${EXTRA}' directory."
 		cp -ar "${EXTRA}" "${ALLSKY_EXTRA}/.."
 	else
-		display_msg "${LOG_TYPE}" progress "     prior 'extra' directory so can't restore."
+		display_msg "${LOG_TYPE}" progress "     No prior '${EXTRA}' directory so can't restore."
 	fi
 
 	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
@@ -1646,7 +1648,7 @@ restore_prior_files()
 
 	# Restore any REMOTE Allsky Website configuration file.
 	if [[ -f ${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} ]]; then
-		MSG="    remote Allsky Website ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}."
+		MSG="    '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}'."
 		display_msg --log progress "${MSG}"
 		cp -a "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" \
 			"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
@@ -1702,10 +1704,8 @@ restore_prior_files()
 
 	CONFIG_SH_VERSION="$(get_variable "CONFIG_SH_VERSION" "${ALLSKY_CONFIG}/config.sh")"
 	PRIOR_CONFIG_SH_VERSION="$(get_variable "CONFIG_SH_VERSION" "${PRIOR_CONFIG_FILE}")"
-	MSG="CONFIG_SH_VERSION=${CONFIG_SH_VERSION}, PRIOR=${PRIOR_CONFIG_SH_VERSION}"
-	display_msg "${LOG_TYPE}" info "${MSG}"
 	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
-		display_msg --log progress "    prior 'config.sh' file, as is."
+		display_msg --log progress "    Prior 'config.sh' file, as is."
 		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_CONFIG_SH="true"
 	else
 		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
@@ -1718,6 +1718,8 @@ restore_prior_files()
 		MSG="    Not restoring prior 'config.sh': ${MSG}."
 		display_msg --log progress "${MSG}"
 	fi
+	MSG="        CONFIG_SH_VERSION=${CONFIG_SH_VERSION}, PRIOR=${PRIOR_CONFIG_SH_VERSION}"
+	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	# Unlike the config.sh file which was always in allsky/config,
 	# the ftp-settings.sh file used to be in allsky/scripts.
@@ -1736,10 +1738,9 @@ restore_prior_files()
 		PRIOR_FTP_FILE=""
 		PRIOR_FTP_SH_VERSION="no file"
 	fi
-	display_msg "${LOG_TYPE}" info "FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
 
 	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
-		display_msg --log progress "    prior 'ftp-settings.sh' file, as is."
+		display_msg --log progress "    Prior 'ftp-settings.sh' file, as is."
 		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_FTP_SH="true"
 	else
 		if [[ ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
@@ -1753,11 +1754,12 @@ restore_prior_files()
 		fi
 		display_msg --log progress "    Not restoring prior 'ftp-settings.sh': ${MSG}"
 	fi
+	MSG="        FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
+	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	# Done with restores, now the updates.
 
 	if [[ -f ${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} ]]; then
-		display_msg "${LOG_TYPE}" info "Prior remote Website's AllskyVersion=${V}"
 		if [[ ${V} != "${ALLSKY_VERSION}" ]]; then
 			MSG="Updating AllskyVersion in remote Website from '${V}' to '${ALLSKY_VERSION}'"
 			display_msg --log progress "${MSG}"
@@ -1765,7 +1767,7 @@ restore_prior_files()
 				"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" > /tmp/x \
 				&& mv /tmp/x "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		else
-			display_msg --log progress "Prior remote Website already at version ${V}."
+			display_msg --log progress "Prior remote Website already at latest version ${V}."
 		fi
 	fi
 

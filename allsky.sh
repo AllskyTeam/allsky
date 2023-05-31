@@ -260,6 +260,9 @@ CAPTURE="capture_${CAMERA_TYPE}"
 
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 
+# Clear up any flow timings
+"${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
+
 # Run the main program - this is the main attraction...
 # Pass debuglevel on command line so the capture program knows if it should display debug output.
 "${ALLSKY_BIN}/${CAPTURE}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"

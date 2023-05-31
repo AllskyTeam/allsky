@@ -385,6 +385,7 @@ save_camera_capabilities()
 		fi
 		return 1
 	else
+		#shellcheck disable SC2012
 		MSG="$( ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
 		display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
 	fi

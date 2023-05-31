@@ -292,8 +292,13 @@ while [[ $# -gt 0 ]]; do
 			fi
 
 			# createAllskyOptions.php will use the cc file and the options template file
-			# to create an OPTIONS_FILE for this camera type/model.
-			# These variables don't include a directory since the directory is specified with "--dir" below.
+			# to create an OPTIONS_FILE and SETTINGS_FILE for this camera type/model.
+			# If there is an existing camera-specific settings file for the new
+			# camera type/model then createAllskyOptions.php will use it and link it
+			# to SETTINGS_FILE.
+			# If there is no existing camera-specific file, i.e., this camera is new
+			# to Allsky, it will create a default settings file using the generic
+			# values from the prior settings file if it exists.
 
 			if [[ ${DEBUG} == "true" ]]; then
 				# shellcheck disable=SC2086
@@ -302,7 +307,8 @@ while [[ $# -gt 0 ]]; do
 					${FORCE} ${DEBUG_ARG} \
 					"\n\t--cc_file ${CC_FILE}" \
 					"\n\t--options_file ${OPTIONS_FILE}" \
-					"\n\t--settings_file ${SETTINGS_FILE}${wNC}"
+					"\n\t--settings_file ${SETTINGS_FILE}" \
+					"${wNC}"
 			fi
 			# shellcheck disable=SC2086
 			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \

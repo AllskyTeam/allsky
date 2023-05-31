@@ -374,6 +374,9 @@ table .alert-dismissable {
 	border-color: #bdb173;
 	background-color: #837a2f;
 }
+.advanced-nocolor {
+	background-color: inherit;
+}
 
 .dark .btn-primary:hover,
 .dark .btn-success:hover,

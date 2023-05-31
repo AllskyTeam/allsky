@@ -412,12 +412,12 @@ table .alert-dismissable {
 	}
 }
 
-/* Headers in camera options */
+/* Headers in Allsky settings */
 .settingsHeader {
 	background-color: #aaa;
 	text-align: center;
 	font-weight: bold;
-	font-size: 125%;
+	font-size: 1.25em;
 	padding: 3px 0 3px 0;
 }
 .dark .settingsHeader {

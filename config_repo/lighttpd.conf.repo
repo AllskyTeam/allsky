@@ -20,6 +20,7 @@ setenv.add-environment = (
 
 alias.url		    = ("/current/" => "XX_ALLSKY_HOME_XX/")
 alias.url		    += ("/images/" => "XX_ALLSKY_IMAGES_XX/")
+alias.url		    += ("/config/" => "XX_ALLSKY_CONFIG_XX/")
 alias.url		    += ("/website/" => "XX_ALLSKY_WEBSITE_XX/")
 alias.url		    += ("/documentation" => "XX_ALLSKY_DOCUMENTATION_XX/")
 alias.url		    += ("/overlay" => "XX_ALLSKY_OVERLAY_XX/")

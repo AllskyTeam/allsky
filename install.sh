@@ -1081,7 +1081,8 @@ update_locale()
 {
 	local L="${1}"		# locale
 	local S="${2}"		# settings file
-	jq ".locale = \"${L}\"" "${S}" > /tmp/x && mv /tmp/x "${S}"
+	# Have to use "cp" instead of "mv" to keep the hard link.
+	jq ".locale = \"${L}\"" "${S}" > /tmp/x && cp /tmp/x "${S}" && rm /tmp/x
 }
 ####
 # Set the locale

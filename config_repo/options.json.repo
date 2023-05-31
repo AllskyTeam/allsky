@@ -555,6 +555,7 @@
 "name" : "quality",
 "minimum" : 1,
 "maximum" : 100,
+"default" : 95,
 "description" : "JPG quality: 0-100. Higher numbers produce larger, clearer files.<br>PNG compression: 0-9. Higher numbers produce smaller files but take longer to save.",
 "label" : "Quality / Compression",
 "type" : "number",
@@ -664,7 +665,7 @@
 {
 "name" : "latitude",
 "default" : "",
-"description" : "Camera latitude - a number (-90 to 90) or a positive number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
+"description" : "Camera latitude - a number with a sign (-90 to +90) or a positive number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
 "label" : "Latitude",
 "type" : "text",
 "display" : 1,
@@ -675,7 +676,7 @@
 {
 "name" : "longitude",
 "default" : "",
-"description" : "Camera longitude - a number (-180 to 180) or a positive number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
+"description" : "Camera longitude - a number with a sign (-180 to +180) or a positive number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
 "label" : "Longitude",
 "type" : "text",
 "display" : 1,

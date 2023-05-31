@@ -674,10 +674,10 @@ install_webserver()
 		-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
 		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
 		-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
-		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
-		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
 		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
+		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
 		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
+		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
 			"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
 	sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
 
@@ -1613,6 +1613,13 @@ restore_prior_files()
 		cp -ar "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_OVERLAY}/config/"
 	else
 		display_msg "${LOG_TYPE}" progress "    No prior 'overlay' directory so can't restore."
+	fi
+
+	if [[ -d ${PRIOR_CONFIG_DIR}/ssl ]]; then
+		display_msg --log progress "    'ssl' directory."
+		cp -ar "${PRIOR_CONFIG_DIR}/ssl" "${ALLSKY_CONFIG}"
+	else
+		display_msg "${LOG_TYPE}" progress "    No prior 'ssl' directory so can't restore."
 	fi
 
 	# This is not in a "standard" directory so we need to determine where it was.

@@ -1095,7 +1095,7 @@ set_locale()
 		local L="$( settings .locale )"
 		MSG="Settings file '${SETTINGS_FILE}'"
 		if [[ ${L} == "" || ${L} == "null" ]]; then
-			# Probably a new install.
+			# Either a new install or an upgrade from an older Allsky.
 			MSG="${MSG} did NOT contain .locale so adding it."
 			display_msg --logonly info "${MSG}"
 			update_locale "${LOCALE}"  "${SETTINGS_FILE}"
@@ -1291,7 +1291,8 @@ prompt_for_lat_long()
 			break
 		else
 			if VALUE="$( convertLatLong "${VALUE}" "${TYPE}" 2>&1 )" ; then
-				jq ".${TYPE}=\"${VALUE}\" "   "${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
+				# Have to use "cp" instead of "mv" to keep the hard link.
+				jq ".${TYPE}=\"${VALUE}\" "   "${SETTINGS_FILE}" > /tmp/x && cp /tmp/x "${SETTINGS_FILE}" && rm /tmp/x
 				display_msg --log progress "${HUMAN_TYPE} set to ${VALUE}."
 				echo "${VALUE}"
 				break

@@ -965,7 +965,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "experimentalExposure");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalExposure");
-	fprintf(f, "\t\t\t\"DefaultValue\" : \"%s\"\n", CG.HB.useExperimentalExposure ? 1 : 0);
+	fprintf(f, "\t\t\t\"DefaultValue\" : \"%d\"\n", CG.HB.useExperimentalExposure ? 1 : 0);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");

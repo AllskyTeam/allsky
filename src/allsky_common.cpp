@@ -1190,8 +1190,8 @@ void displaySettings(config cg)
 		printf("\n");
 	if (cg.supportsMyModeMean || cg.HB.useExperimentalExposure)
 	{
-		printf("   Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
-		printf("   Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
+		printf("   Target Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
+		printf("   Target Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
 		printf("   Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
 	}
 	if (cg.supportsMyModeMean)

@@ -728,9 +728,39 @@ int main(int argc, char *argv[])
 
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
-	setlinebuf(stdout);					// Line buffer output so entries appear in the log immediately.
+	setlinebuf(stdout);		// Line buffer output so entries appear in the log immediately.
 
 	CG.ct = ctZWO;
+
+	processConnectedCameras();	// exits on error.  Sets CG.cameraNumber.
+
+	ASI_CAMERA_INFO ASICameraInfo;
+	asiRetCode = ASIOpenCamera(CG.cameraNumber);
+	if (asiRetCode != ASI_SUCCESS)
+	{
+		Log(0, "*** ERROR opening camera, check that you have root permissions! (%s)\n",
+			getRetCode(asiRetCode));
+		closeUp(EXIT_NO_CAMERA);
+	}
+
+	asiRetCode = ASIGetCameraProperty(&ASICameraInfo, CG.cameraNumber);
+	if (asiRetCode != ASI_SUCCESS)
+	{
+		Log(0, "ERROR: ASIGetCamerProperty() returned: %s\n", getRetCode(asiRetCode));
+		exit(EXIT_ERROR_STOP);
+	}
+	asiRetCode = ASIGetNumOfControls(CG.cameraNumber, &iNumOfCtrl);
+	if (asiRetCode != ASI_SUCCESS)
+	{
+		Log(0, "ERROR: ASIGetNumOfControls() returned: %s\n", getRetCode(asiRetCode));
+		exit(EXIT_ERROR_STOP);
+	}
+	CG.ASIversion = ASIGetSDKVersion();
+
+	// Set defaults that depend on the camera type.
+	if (! setDefaults(&CG, ASICameraInfo))
+		closeUp(EXIT_ERROR_STOP);
+
 	if (! getCommandLineArguments(&CG, argc, argv))
 	{
 		// getCommandLineArguents outputs an error message.
@@ -749,35 +779,6 @@ int main(int argc, char *argv[])
 		displayHelp(CG);
 		closeUp(EXIT_OK);
 	}
-
-	processConnectedCameras();	// exits on error
-
-	ASI_CAMERA_INFO ASICameraInfo;
-	asiRetCode = ASIOpenCamera(CG.cameraNumber);
-	if (asiRetCode != ASI_SUCCESS)
-	{
-		Log(0, "*** ERROR opening camera, check that you have root permissions! (%s)\n", getRetCode(asiRetCode));
-		closeUp(EXIT_NO_CAMERA);
-	}
-
-	asiRetCode = ASIGetCameraProperty(&ASICameraInfo, CG.cameraNumber);
-	if (asiRetCode != ASI_SUCCESS)
-	{
-		Log(0, "ERROR: ASIGetCamerProperty() returned: %s\n", getRetCode(asiRetCode));
-		exit(EXIT_ERROR_STOP);
-	}
-	asiRetCode = ASIGetNumOfControls(CG.cameraNumber, &iNumOfCtrl);
-	if (asiRetCode != ASI_SUCCESS)
-	{
-		Log(0, "ERROR: ASIGetNumOfControls() returned: %s\n", getRetCode(asiRetCode));
-		exit(EXIT_ERROR_STOP);
-	}
-	CG.ASIversion = ASIGetSDKVersion();
-
-
-	// Set defaults that depend on the camera type.
-	if (! setDefaults(&CG, ASICameraInfo))
-		closeUp(EXIT_ERROR_STOP);
 
 	// Do argument error checking if we're not going to exit soon.
 	if (! CG.saveCC && ! validateSettings(&CG, ASICameraInfo))

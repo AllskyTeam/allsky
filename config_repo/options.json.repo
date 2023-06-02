@@ -725,6 +725,15 @@
 "advanced": 0
 },
 {
+"name": "experimentalExposure",
+"default": 0,
+"description": "Activate to use an <strong>experimental</strong> auto-exposure algorithm.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
+"label": "ZWO Experimental Exposure",
+"type": "checkbox",
+"display": "experimentalExposure_display",
+"advanced": 1
+},
+{
 "name": "histogrambox",
 "default": "500 500 50 50",
 "description": "Size of the histogram box (X and Y in pixels) and offset from left and top (0-100 percent). Sizes must be even numbers.",

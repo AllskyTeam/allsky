@@ -123,7 +123,7 @@ struct overlay {
 // Histogram Box, ZWO only
 struct HB {
 	bool useHistogram					= false;		// Should we use histogram auto-exposure?
-	bool useExpirementalExposure		= false;		// Should histogram auto-exposure at night?
+	bool useExperimentalExposure		= false;		// Should histogram auto-exposure at night?
 	int histogramBoxSizeX				= 500;			// width of box in pixels
 	int currentHistogramBoxSizeX		= NOT_CHANGED;
 	int histogramBoxSizeY				= 500;			// height of box in pixels

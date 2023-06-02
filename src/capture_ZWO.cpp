@@ -225,9 +225,10 @@ void *SaveImgThd(void *para)
 // eg. box size 0x0, box size WxW, box crosses image edge, ... basically
 // anything that would read/write out-of-bounds
 
-int computeHistogram(unsigned char *imageBuffer, config cg, int *histogram, bool useHistogramBox)
+int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox)
 {
 	unsigned char *buf = imageBuffer;
+	int histogram[256];
 
 	// Clear the histogram array.
 	for (int i = 0; i < 256; i++) {
@@ -348,7 +349,7 @@ ASI_BOOL bAuto = ASI_FALSE;
 ASI_BOOL wasAutoExposure = ASI_FALSE;
 long bufferSize = NOT_SET;
 
-ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *histogram)
+ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 {
 	if (imageBuffer == NULL) {
 		return (ASI_ERROR_CODE) -1;
@@ -478,11 +479,11 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 			tempBuf[0] = '\0';
 			char *tb = tempBuf;
 
-			cg->lastMean = (double)computeHistogram(imageBuffer, *cg, histogram, true);
+			cg->lastMean = (double)computeHistogram(imageBuffer, *cg, true);
 
 // xxxxxx for testing.  Get the mean of the whole image so we can compare to what removeBadImages.sh calculates.
 //	If it's the same, then the algorithms are the same and removeBadImages.sh can use MEAN.
-cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, histogram, false);
+cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
 
 			sprintf(tb, " @ mean %d, %sgain %ld, fullMean %d",
 				(int) cg->lastMean, cg->currentAutoGain ? "(auto) " : "",
@@ -1069,88 +1070,85 @@ int main(int argc, char *argv[])
 				continue;
 			}
 
+			Log(1, "==========\n=== Starting daytime capture ===\n==========\n");
+
+			// We only skip initial frames if we are starting in daytime and using auto-exposure.
+			if (numExposures == 0 && CG.dayAutoExposure)
+				CG.currentSkipFrames = CG.daySkipFrames;
+
+			// If we went from Night to Day, then currentExposure_us will be the last night
+			// exposure so leave it if we're using auto-exposure so there's a seamless change from
+			// Night to Day, i.e., if the exposure was fine a minute ago it will likely be fine now.
+			// On the other hand, if this program just started or we're using manual exposures,
+			// use what the user specified.
+			if (numExposures == 0 || ! CG.dayAutoExposure)
+			{
+				CG.currentExposure_us = CG.dayExposure_us;
+			}
 			else
 			{
-				Log(1, "==========\n=== Starting daytime capture ===\n==========\n");
+				// If gain changes, we have to change the exposure time to get an equally
+				// exposed image.
+				// ZWO gain has unit 0.1dB, so we have to convert the gain values to a factor first
+				//		newExp =  (oldExp * oldGain) / newGain
+				// e.g.		20s = (10s    * 2.0)     / (1.0) 
 
-				// We only skip initial frames if we are starting in daytime and using auto-exposure.
-				if (numExposures == 0 && CG.dayAutoExposure)
-					CG.currentSkipFrames = CG.daySkipFrames;
+				// current values here are last night's values
+				double oldGain = pow(10, CG.currentGain / 10.0 / 20.0);
+				double newGain = pow(10, CG.dayGain / 10.0 / 20.0);
+				Log(3, "Using the last night exposure (%s),", length_in_units(CG.currentExposure_us, true));
+				CG.currentExposure_us = (CG.currentExposure_us * oldGain) / newGain;
+				Log(3," old (%'2f) and new (%'2f) Gain to calculate new exposure of %s\n",
+					oldGain, newGain, length_in_units(CG.currentExposure_us, true));
+			}
 
-				// If we went from Night to Day, then currentExposure_us will be the last night
-				// exposure so leave it if we're using auto-exposure so there's a seamless change from
-				// Night to Day, i.e., if the exposure was fine a minute ago it will likely be fine now.
-				// On the other hand, if this program just started or we're using manual exposures,
-				// use what the user specified.
-				if (numExposures == 0 || ! CG.dayAutoExposure)
-				{
-					CG.currentExposure_us = CG.dayExposure_us;
-				}
-				else
-				{
-					// If gain changes, we have to change the exposure time to get an equally
-					// exposed image.
-					// ZWO gain has unit 0.1dB, so we have to convert the gain values to a factor first
-					//		newExp =  (oldExp * oldGain) / newGain
-					// e.g.		20s = (10s    * 2.0)     / (1.0) 
-
-					// current values here are last night's values
-					double oldGain = pow(10, CG.currentGain / 10.0 / 20.0);
-					double newGain = pow(10, CG.dayGain / 10.0 / 20.0);
-					Log(3, "Using the last night exposure (%s),", length_in_units(CG.currentExposure_us, true));
-					CG.currentExposure_us = (CG.currentExposure_us * oldGain) / newGain;
-					Log(3," old (%'2f) and new (%'2f) Gain to calculate new exposure of %s\n",
-						oldGain, newGain, length_in_units(CG.currentExposure_us, true));
-				}
-
-				CG.currentMaxAutoExposure_us = CG.dayMaxAutoExposure_us;
-				Log(3, "currentMaxAutoExposure_us set to daytime value of %s.\n",
+			CG.currentMaxAutoExposure_us = CG.dayMaxAutoExposure_us;
+			Log(3, "currentMaxAutoExposure_us set to daytime value of %s.\n",
+				length_in_units(CG.currentMaxAutoExposure_us, true));
+			if (CG.currentExposure_us > CG.currentMaxAutoExposure_us) {
+				Log(3, "Decreasing currentExposure_us from %s to %s\n",
+					length_in_units(CG.currentExposure_us, true),
 					length_in_units(CG.currentMaxAutoExposure_us, true));
-				if (CG.currentExposure_us > CG.currentMaxAutoExposure_us) {
-					Log(3, "Decreasing currentExposure_us from %s to %s\n",
-						length_in_units(CG.currentExposure_us, true),
-						length_in_units(CG.currentMaxAutoExposure_us, true));
-					CG.currentExposure_us = CG.currentMaxAutoExposure_us;
-				}
-				// Don't use camera auto-exposure since we mimic it ourselves.
-				CG.HB.useHistogram = CG.dayAutoExposure;
-				if (CG.HB.useHistogram)
-				{
-					// Only need to display this once, not every night-to-day transition...
-					Log(4, "Turning off daytime ZWO auto-exposure to use Allsky auto-exposure.\n");
-				}
-				// With the histogram method we NEVER use ZWO auto exposure - either the user said
-				// not to, or we turn it off ourselves.
-				CG.currentAutoExposure = false;
-				CG.currentBrightness = CG.dayBrightness;
-				if (CG.isColorCamera)
-				{
-					CG.currentAutoAWB = CG.dayAutoAWB;
-					CG.currentWBR = CG.dayWBR;
-					CG.currentWBB = CG.dayWBB;
-				}
-				CG.currentDelay_ms = CG.dayDelay_ms;
-				CG.currentBin = CG.dayBin;
-				CG.currentGain = CG.dayGain;	// must come before determineGainChange() below
-				CG.currentMaxAutoGain = CG.dayMaxAutoGain;
-				if (currentAdjustGain)
-				{
-					// we did some nightime images so adjust gain
-					numGainChanges = 0;
-					gainChange = determineGainChange(CG);
-				}
-				else
-				{
-					gainChange = 0;
-				}
-				CG.currentAutoGain = CG.dayAutoGain;
-				CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.dayMean;
-				CG.myModeMeanSetting.currentMean_threshold = CG.myModeMeanSetting.dayMean_threshold;
-				if (CG.isCooledCamera)
-				{
-					CG.currentEnableCooler = CG.dayEnableCooler;
-					CG.currentTargetTemp = CG.dayTargetTemp;
-				}
+				CG.currentExposure_us = CG.currentMaxAutoExposure_us;
+			}
+			// Don't use camera auto-exposure since we mimic it ourselves.
+			CG.HB.useHistogram = CG.dayAutoExposure;
+			if (CG.HB.useHistogram)
+			{
+				// Only need to display this once, not every night-to-day transition...
+				Log(4, "Turning off daytime ZWO auto-exposure to use Allsky auto-exposure.\n");
+			}
+			// With the histogram method we NEVER use ZWO auto exposure - either the user said
+			// not to, or we turn it off ourselves.
+			CG.currentAutoExposure = false;
+			CG.currentBrightness = CG.dayBrightness;
+			if (CG.isColorCamera)
+			{
+				CG.currentAutoAWB = CG.dayAutoAWB;
+				CG.currentWBR = CG.dayWBR;
+				CG.currentWBB = CG.dayWBB;
+			}
+			CG.currentDelay_ms = CG.dayDelay_ms;
+			CG.currentBin = CG.dayBin;
+			CG.currentGain = CG.dayGain;	// must come before determineGainChange() below
+			CG.currentMaxAutoGain = CG.dayMaxAutoGain;
+			if (currentAdjustGain)
+			{
+				// we did some nightime images so adjust gain
+				numGainChanges = 0;
+				gainChange = determineGainChange(CG);
+			}
+			else
+			{
+				gainChange = 0;
+			}
+			CG.currentAutoGain = CG.dayAutoGain;
+			CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.dayMean;
+			CG.myModeMeanSetting.currentMean_threshold = CG.myModeMeanSetting.dayMean_threshold;
+			if (CG.isCooledCamera)
+			{
+				CG.currentEnableCooler = CG.dayEnableCooler;
+				CG.currentTargetTemp = CG.dayTargetTemp;
 			}
 		}
 
@@ -1322,7 +1320,6 @@ if (CG.HB.useExperimentalExposure) {
 		// This simply makes it easier to see things in the log file.
 
 		int attempts = 0;
-		int histogram[256];
 
 		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)
@@ -1343,7 +1340,7 @@ if (CG.HB.useExperimentalExposure) {
 				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
 			}
 
-			asiRetCode = takeOneExposure(&CG, pRgb.data, histogram);
+			asiRetCode = takeOneExposure(&CG, pRgb.data);
 			if (asiRetCode == ASI_SUCCESS)
 			{
 				numErrors = 0;
@@ -1576,7 +1573,7 @@ if (saved_newExposure_us != newExposure_us)
 						priorMean = CG.lastMean;
 						priorMeanDiff = lastMeanDiff;
 
-						asiRetCode = takeOneExposure(&CG, pRgb.data, histogram);
+						asiRetCode = takeOneExposure(&CG, pRgb.data);
 						if (asiRetCode == ASI_SUCCESS)
 						{
 							if (CG.lastMean < minAcceptableMean)

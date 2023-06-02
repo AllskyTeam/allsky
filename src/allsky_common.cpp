@@ -1193,7 +1193,7 @@ void displaySettings(config cg)
 
 	printf("   Target Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
 	printf("   Target Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
-	printf("   Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
+	printf("   Target Mean Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
 
 	if (cg.supportsMyModeMean)
 	{

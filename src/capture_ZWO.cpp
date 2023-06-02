@@ -1222,6 +1222,10 @@ if (CG.HB.useExperimentalExposure) {
 
 		CG.myModeMeanSetting.minMean = CG.myModeMeanSetting.currentMean - CG.myModeMeanSetting.currentMean_threshold;
 		CG.myModeMeanSetting.maxMean = CG.myModeMeanSetting.currentMean + CG.myModeMeanSetting.currentMean_threshold;
+
+		CG.myModeMeanSetting.minMean *= 255;	// our algorithm compares to 0 - 255
+		CG.myModeMeanSetting.maxMean *= 255;
+
 		Log(3, "xxxxxxxxxxxxx minMean=%.3f, maxMean=%.3f\n", CG.myModeMeanSetting.minMean, CG.myModeMeanSetting.maxMean);
 
 

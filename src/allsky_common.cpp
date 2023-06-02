@@ -1290,7 +1290,7 @@ void displaySettings(config cg)
 			printf("      Show Histogram Box: %s\n", yesNo(cg.overlay.showHistogramBox));
 		}
 	} else if (cg.supportsTemperature) {
-		printf("  Temperature type: %s\n", stringORnone(cg.tempType));
+		printf("   Temperature type: %s\n", stringORnone(cg.tempType));
 	}
 
 	printf("   Allsky version: %s\n", stringORnone(cg.version));

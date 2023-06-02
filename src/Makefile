@@ -112,7 +112,7 @@ patchsunwait:
 	@patch -p1 -d sunwait-src/ < sunwait.patch
 	@touch patchsunwait
 
-sunwait: patchsunwait
+sunwait: ##################### patchsunwait
 	@echo `date +%F\ %R:%S` Building sunwait...
 	@$(MAKE) -C sunwait-src
 	@cp sunwait-src/sunwait .

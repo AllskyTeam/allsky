@@ -438,9 +438,10 @@ function get_variable() {
 # Simple way to get a setting that hides the details.
 function settings()
 {
-	j="$(jq -r "${1}" "${2:-${SETTINGS_FILE}}")" && echo "${j}" && return
-	echo "${ME2}: running as $(id --user --name), unable to get json value for '${1}';" >&2
-	ls -l "${SETTINGS_FILE}" >&2
+	local FILE="${2:-${SETTINGS_FILE}}"
+	j="$( jq -r "${1}" "${FILE}")" && echo "${j}" && return
+	echo "${ME}: running as $(id --user --name), unable to get json value for '${1}';" >&2
+	ls -l "${FILE}" >&2
 }
 
 

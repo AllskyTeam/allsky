@@ -1058,6 +1058,7 @@ void displayHelp(config cg)
 	}
 	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
 	printf(" -%-*s - 1 enables consistent delays between images [%s].\n", n, "consistentDelays b", yesNo(cg.consistentDelays));
+	printf(" -%-*s - Format the time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - 1 enables notification images, for example, 'Camera is off during day' [%s].\n", n, "notificationimages b", yesNo(cg.notificationImages));
 	printf(" -%-*s - Latitude of the camera [no default - you must set it].\n", n, "latitude s");
 	printf(" -%-*s - Longitude of the camera [no default - you must set it].\n", n, "longitude s");
@@ -1082,12 +1083,9 @@ void displayHelp(config cg)
 	printf("\nOverlay settings:\n");
 	printf(" -%-*s - Set to %d to use the new, enhanced 'module' overlay program [%s].\n", n, "overlayMethod n", OVERLAY_METHOD_LEGACY, getOverlayMethod(cg.overlay.overlayMethod).c_str());
 	printf(" -%-*s - Set to 1 to display the time [%s].\n", n, "showTime b", yesNo(cg.overlay.showTime));
-	printf(" -%-*s - Format the optional time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
-	printf(" -%-*s - 1 displays the exposure length [%s].\n", n, "showExposure b", yesNo(cg.overlay.showExposure));
-	if (cg.ct == ctZWO) {
-		printf(" -%-*s - 1 displays the camera sensor temperature [%s].\n", n, "showTemp b", yesNo(cg.overlay.showTemp));
-	}
 	printf(" -%-*s - Units to display temperature in: 'C'elsius, 'F'ahrenheit, or 'B'oth [%s].\n", n, "temptype s", cg.tempType);
+	printf(" -%-*s - 1 displays the exposure length [%s].\n", n, "showExposure b", yesNo(cg.overlay.showExposure));
+	printf(" -%-*s - 1 displays the camera sensor temperature [%s].\n", n, "showTemp b", yesNo(cg.overlay.showTemp));
 	printf(" -%-*s - 1 displays the gain [%s].\n", n, "showGain b", yesNo(cg.overlay.showGain));
 	printf(" -%-*s - 1 displays the brightness [%s].\n", n, "showBrightness b", yesNo(cg.overlay.showBrightness));
 	printf(" -%-*s - 1 displays the mean brightness used in auto-exposure [%s].\n", n, "showMean b", yesNo(cg.overlay.showMean));
@@ -1190,13 +1188,14 @@ void displaySettings(config cg)
 		if (cg.nightAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
-	if (cg.supportsMyModeMean)
+	if (cg.supportsMyModeMean || cg.HB.useExperimentalExposure)
+	{
 		printf("   Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
-	if (cg.supportsMyModeMean)
 		printf("   Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
+		printf("   Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
+	}
 	if (cg.supportsMyModeMean)
 	{
-		printf("   Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
 		printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
 		printf("      p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
 		printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);

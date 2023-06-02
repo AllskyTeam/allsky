@@ -1179,7 +1179,7 @@ int main(int argc, char *argv[])
 				CG.currentExposure_us = CG.nightExposure_us;
 			}
 
-if (CG.HB.useExpirementalExposure) {
+if (CG.HB.useExperimentalExposure) {
 			// Don't use camera auto-exposure since we mimic it ourselves.
 			CG.HB.useHistogram = CG.nightAutoExposure;
 			if (CG.HB.useHistogram)

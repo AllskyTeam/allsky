@@ -92,6 +92,30 @@
 						When it isn't, changes to the settings won't be propogated during
 						updates to Allsky or when switching cameras.
 					</li>
+					<li>ZWO only:
+						<ul>
+							<li><span class="WebUISetting">ZWO Experimental Exposure</span>
+							is a new setting that will use the Allsky auto-exposure algorithm
+							at night (assuming nighttime auto-exposure is enabled).
+							Initial testing indicates this improves the exposure of nightime images.
+							<blockquote>
+							If you enable this setting, please let us know if it helps or not
+							by entering a Discussion item in GitHub.
+							<strong>We need the feedback.</strong>
+							</blockquote>
+						<li><span class="WebUISetting">Target Mean</span> can now be specified
+							for daytime and nighttime.
+							This is the same as for RPi cameras - values range from
+							<code>0.0</code> (pure black) to <code>1.0</code> (pure white).
+							<code>1.0</code> is equivalent to <code>255</code> in the ${MEAN}
+							variable in the <span class="editorName">Overlay Editor</span>.
+						</li>
+						<li><span class="WebUISetting">Mean Threshold</span> can now be specified.
+							This is the same as for RPi cameras and determines how close the
+							mean brightness needs to be to the 
+							<span class="WebUISetting">Target Mean</span>.
+						</li>
+					</ul>
 				</ul>
 
 				<h4>Bug Fixes</h4>

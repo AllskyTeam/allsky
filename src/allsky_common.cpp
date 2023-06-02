@@ -1862,7 +1862,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->debugLevel = atol(argv[++i]);
 		}
-		else if (strcmp(a, "experimentalExposure") == 0)
+		else if (strcmp(a, "experimentalexposure") == 0)
 		{
 			cg->HB.useExperimentalExposure = getBoolean(argv[++i]);
 		}

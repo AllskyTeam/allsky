@@ -26,7 +26,6 @@ config CG;
 #include "ASI_functions.cpp"
 
 bool useSnapshotMode = false;	// XXXXXX use the ZWO snapshot exposure mode or vide mode?
-bool useExpirementalExposure = true;  // Linda's algorithm at night
 
 // Forward definitions
 char *getRetCode(ASI_ERROR_CODE);
@@ -1180,7 +1179,7 @@ int main(int argc, char *argv[])
 				CG.currentExposure_us = CG.nightExposure_us;
 			}
 
-if (useExpirementalExposure) {
+if (CG.HB.useExpirementalExposure) {
 			// Don't use camera auto-exposure since we mimic it ourselves.
 			CG.HB.useHistogram = CG.nightAutoExposure;
 			if (CG.HB.useHistogram)

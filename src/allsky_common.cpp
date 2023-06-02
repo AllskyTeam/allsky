@@ -1188,12 +1188,13 @@ void displaySettings(config cg)
 		if (cg.nightAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
-	if (cg.supportsMyModeMean || cg.HB.useExperimentalExposure)
-	{
-		printf("   Target Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
-		printf("   Target Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
-		printf("   Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
-	}
+	if (cg.gainTransitionTimeImplemented)
+		printf("   Gain Transition Time: %.1f minutes\n", (float) cg.gainTransitionTime/60);
+
+	printf("   Target Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
+	printf("   Target Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
+	printf("   Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
+
 	if (cg.supportsMyModeMean)
 	{
 		printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
@@ -1201,8 +1202,6 @@ void displaySettings(config cg)
 		printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
 	}
 
-	if (cg.gainTransitionTimeImplemented)
-		printf("   Gain Transition Time: %.1f minutes\n", (float) cg.gainTransitionTime/60);
 	printf("   Brightness (day):   %ld\n", cg.dayBrightness);
 	printf("   Brightness (night): %ld\n", cg.nightBrightness);
 	printf("   Binning (day):   %ld\n", cg.dayBin);

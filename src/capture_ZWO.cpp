@@ -478,19 +478,17 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer, int *hist
 			tempBuf[0] = '\0';
 			char *tb = tempBuf;
 
-			if (histogram != NULL)
-			{
-				cg->lastMean = (double)computeHistogram(imageBuffer, *cg, histogram, true);
+			cg->lastMean = (double)computeHistogram(imageBuffer, *cg, histogram, true);
 
 // xxxxxx for testing.  Get the mean of the whole image so we can compare to what removeBadImages.sh calculates.
 //	If it's the same, then the algorithms are the same and removeBadImages.sh can use MEAN.
 cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, histogram, false);
 
-				sprintf(tb, " @ mean %d, %sgain %ld, fullMean %d",
-					(int) cg->lastMean, cg->currentAutoGain ? "(auto) " : "",
-					(long) cg->lastGain, (int) cg->lastMeanFull);
-			}
+			sprintf(tb, " @ mean %d, %sgain %ld, fullMean %d",
+				(int) cg->lastMean, cg->currentAutoGain ? "(auto) " : "",
+				(long) cg->lastGain, (int) cg->lastMeanFull);
 			cg->lastExposure_us = cg->currentExposure_us;
+
 			// Per ZWO, when in manual-exposure mode, the returned exposure length should always
 			// be equal to the requested length; in fact, "there's no need to call ASIGetControlValue()".
 			// When in auto-exposure mode, the returned exposure length is what the driver thinks the

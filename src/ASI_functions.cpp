@@ -1353,6 +1353,18 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->minDelay_ms = 0;
 	}
 
+	// The remaining settings are camera-specific and have camera defaults.
+	ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_TARGET_BRIGHTNESS, &cc);
+	if (ret == ASI_SUCCESS)
+	{
+		cg->defaultBrightness = cc.DefaultValue;		// used elsewhere
+		cg->dayBrightness = cc.DefaultValue;
+		cg->nightBrightness = cc.DefaultValue;
+	} else {
+		Log(0, "ASI_EXPOSURE failed with %s\n", getRetCode(ret));
+		ok = false;
+	}
+
 	// Get values used in several validations.
 	ret = getControlCapForControlType(cg->cameraNumber, ASI_EXPOSURE, &cc);
 	if (ret == ASI_SUCCESS)
@@ -1367,7 +1379,7 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		} else {
 			Log(0, "ASI_AUTO_MAX_EXP failed with %s\n", getRetCode(ret));
 			ok = false;
-	}
+		}
 	} else {
 		Log(0, "ASI_EXPOSURE failed with %s\n", getRetCode(ret));
 		ok = false;
@@ -1523,16 +1535,8 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_TARGET_BRIGHTNESS, &cc);
 	if (ret == ASI_SUCCESS)
 	{
-		cg->defaultBrightness = cc.DefaultValue;		// used elsewhere
-		if (cg->dayBrightness == NOT_CHANGED)
-			cg->dayBrightness = cc.DefaultValue;
-		else
-			validateLong(&cg->dayBrightness, cc.MinValue, cc.MaxValue, "Daytime Brightness", true);
-
-		if (cg->nightBrightness == NOT_CHANGED)
-			cg->nightBrightness = cc.DefaultValue;
-		else
-			validateLong(&cg->nightBrightness, cc.MinValue, cc.MaxValue, "Nighttime Brightness", true);
+		validateLong(&cg->dayBrightness, cc.MinValue, cc.MaxValue, "Daytime Brightness", true);
+		validateLong(&cg->nightBrightness, cc.MinValue, cc.MaxValue, "Nighttime Brightness", true);
 	} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 		Log(0, "ASI_AUTO_TARGET_BRIGHTNESS failed with %s\n", getRetCode(ret));
 		ok = false;

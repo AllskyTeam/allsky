@@ -1599,17 +1599,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "daymean") == 0)
 		{
-// TODO: this check should be done in capture program with all the other argument checks
-			// If the user specified 0.0, that means don't use modeMean auto exposure/gain.
-			double m = atof(argv[++i]);
-			if (m == 0.0)
-			{
-				cg->myModeMeanSetting.dayMean = 0.0;
-			}
-			else
-			{
-				cg->myModeMeanSetting.dayMean = std::min(1.0,std::max(0.0,m));
-			}
+			cg->myModeMeanSetting.dayMean = atof(argv[++i]);
 		}
 		else if (strcmp(a, "daybrightness") == 0)
 		{
@@ -1679,16 +1669,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "nightmean") == 0)
 		{
-// TODO: this check should be done in capture program with all the other argument checks
-			double m = atof(argv[++i]);
-			if (m == 0.0)
-			{
-				cg->myModeMeanSetting.nightMean = 0.0;
-			}
-			else
-			{
-				cg->myModeMeanSetting.nightMean = std::min(1.0,std::max(0.0,m));
-			}
+			cg->myModeMeanSetting.nightMean = atof(argv[++i]);
 		}
 		else if (strcmp(a, "nightbrightness") == 0)
 		{

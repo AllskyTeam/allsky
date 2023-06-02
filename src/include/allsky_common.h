@@ -40,8 +40,7 @@
 #define DEFAULT_DAYMEAN_RPi				0.5	// target value
 #define DEFAULT_DAYMEAN_THRESHOLD_RPi	0.1	// mean brightness must be within this % to be "ok"
 #define DEFAULT_NIGHTMEAN_RPi			0.2	// target value
-	// TODO: allow different night threshold
-#define DEFAULT_NIGHTMEAN_THRESHOLD_RPi	DEFAULT_DAYMEAN_THRESHOLD_RPi
+#define DEFAULT_NIGHTMEAN_THRESHOLD_RPi	0.2	// target value
 #define DEFAULT_MEAN_P0_RPi				5.0
 #define DEFAULT_MEAN_P1_RPi				20.0
 #define DEFAULT_MEAN_P2_RPi				45.0
@@ -54,14 +53,14 @@
 #define DEFAULT_DAYMEAN_ZWO				(128.0 / 255)	// matches old way
 #define DEFAULT_DAYMEAN_THRESHOLD_ZWO	(6.0 / 255)		// matches old way
 #define DEFAULT_NIGHTMEAN_ZWO			(75.0 / 255)	// TODO: pure guess as of May 22, 2023
-#define DEFAULT_NIGHTMEAN_THRESHOLD_ZWO	DEFAULT_DAYMEAN_THRESHOLD_ZWO
+#define DEFAULT_NIGHTMEAN_THRESHOLD_ZWO	(6.0 / 255)
 #define DEFAULT_MEAN_P0_ZWO				5.0		// TODO: set after porting modemean to ZWO
-#define DEFAULT_MEAN_P1_ZWO				20.0
-#define DEFAULT_MEAN_P2_ZWO				45.0
-#define DEFAULT_MINMEAN_ZWO				0
-#define DEFAULT_MAXMEAN_ZWO				255
-#define DEFAULT_MINMEAN_THRESHOLD_ZWO	0
-#define DEFAULT_MAXMEAN_THRESHOLD_ZWO	255
+#define DEFAULT_MEAN_P1_ZWO				20.0	// TODO: set after porting modemean to ZWO
+#define DEFAULT_MEAN_P2_ZWO				45.0	// TODO: set after porting modemean to ZWO
+#define DEFAULT_MINMEAN_ZWO				DEFAULT_MINMEAN_RPi
+#define DEFAULT_MAXMEAN_ZWO				DEFAULT_MAXMEAN_RPi
+#define DEFAULT_MINMEAN_THRESHOLD_ZWO	DEFAULT_MINMEAN_THRESHOLD_RPi
+#define DEFAULT_MAXMEAN_THRESHOLD_ZWO	DEFAULT_MAXMEAN_THRESHOLD_RPi
 
 // Default overlay values - will go away once external overlay program is implemented
 #define SMALLFONTSIZE_MULTIPLIER	0.08

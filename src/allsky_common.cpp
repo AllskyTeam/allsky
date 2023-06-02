@@ -1008,7 +1008,7 @@ void displayHelp(config cg)
 	printf("\nNighttime settings:\n");
 	printf(" -%-*s - 1 enables nighttime auto-exposure [%s].\n", n, "nightautoexposure b", yesNo(cg.nightAutoExposure));
 	printf(" -%-*s - Maximum nighttime auto-exposure in ms.\n", n, "nightmaxexposure n");
-	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us * US_IN_MS);
+	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us);
 	printf(" -%-*s - Nighttime mean target brightness [%.2f].\n", n, "nightmean n", cg.myModeMeanSetting.nightMean);
 	printf("  %-*s   NOTE: Nighttime auto-gain and auto-exposure should be on for best results.\n", n, "");
 	printf(" -%-*s - Nighttime brightness change [%ld].\n", n, "nightbrightness n n", cg.nightBrightness);
@@ -1043,7 +1043,7 @@ void displayHelp(config cg)
 	}
 	printf(" -%-*s - Camera maximum width [%ld].\n", n, "width n", cg.width);
 	printf(" -%-*s - Camera maximum height [%ld].\n", n, "height n", cg.height);
-	printf(" -%-*s - Type of image: 99 = auto,  0 = RAW8,  1 = RGB24 [%ld].\n", n, "type n", cg.imageType);
+	printf(" -%-*s - Type of image: 99 = auto,  0 = RAW8,  1 = RGB24 [%ld]", n, "type n", cg.imageType);
 	if (cg.ct == ctZWO) {
 		printf(",  2 = RAW16,  3 = Y8");
 	}
@@ -1188,12 +1188,13 @@ void displaySettings(config cg)
 		if (cg.nightAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
-	if (cg.supportsMyModeMean || cg.HB.useExperimentalExposure)
-	{
-		printf("   Target Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
-		printf("   Target Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
-		printf("   Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
-	}
+	if (cg.gainTransitionTimeImplemented)
+		printf("   Gain Transition Time: %.1f minutes\n", (float) cg.gainTransitionTime/60);
+
+	printf("   Target Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
+	printf("   Target Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
+	printf("   Target Mean Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
+
 	if (cg.supportsMyModeMean)
 	{
 		printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
@@ -1201,8 +1202,6 @@ void displaySettings(config cg)
 		printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
 	}
 
-	if (cg.gainTransitionTimeImplemented)
-		printf("   Gain Transition Time: %.1f minutes\n", (float) cg.gainTransitionTime/60);
 	printf("   Brightness (day):   %ld\n", cg.dayBrightness);
 	printf("   Brightness (night): %ld\n", cg.nightBrightness);
 	printf("   Binning (day):   %ld\n", cg.dayBin);

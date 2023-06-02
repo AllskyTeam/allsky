@@ -911,6 +911,23 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"MaxValue\" : \"%s\"\n", "none");
 	fprintf(f, "\t\t},\n");
 
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ModeMean");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "mean");
+	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : \"day: %.2f, night: %.2f\"\n",
+		CG.myModeMeanSetting.dayMean, CG.myModeMeanSetting.nightMean);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "MeanThreshold");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "meanthreshold");
+	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.mean_threshold);
+	fprintf(f, "\t\t},\n");
+
 	if (CG.isColorCamera) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "AutoWhiteBalance");
@@ -996,23 +1013,6 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ExtraArguments");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraArgs");
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ModeMean");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "mean");
-	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
-	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : \"day: %.2f, night: %.2f\"\n",
-		CG.myModeMeanSetting.dayMean, CG.myModeMeanSetting.nightMean);
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "MeanThreshold");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "meanthreshold");
-	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
-	fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.mean_threshold);
 	fprintf(f, "\t\t},\n");
 
 	if (CG.ct == ctRPi && CG.isLibcamera) {
@@ -1316,8 +1316,8 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		ok = false;
 	}
 
-	signal(SIGINT, IntHandle);
-	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
+	signal(SIGINT, IntHandle);		// When run at the command line, this signal terminates us.
+	signal(SIGTERM, IntHandle);		// The service sends SIGTERM to end this program.
 	signal(SIGHUP, IntHandle);		// SIGHUP means restart.
 
 	return(ok);

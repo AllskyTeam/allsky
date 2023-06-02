@@ -615,36 +615,33 @@ int main(int argc, char *argv[])
 				continue;
 			}
 
-			else
-			{
-				Log(1, "==========\n=== Starting daytime capture ===\n==========\n");
+			Log(1, "==========\n=== Starting daytime capture ===\n==========\n");
 
-				if (numExposures == 0 && CG.dayAutoExposure)
-					CG.currentSkipFrames = CG.daySkipFrames;
-				// We only skip initial frames if we are starting in daytime and using auto-exposure.
-				CG.currentAutoExposure = CG.dayAutoExposure;
-				CG.currentExposure_us = CG.dayExposure_us;
-				CG.currentMaxAutoExposure_us = CG.dayMaxAutoExposure_us;
-				CG.currentBrightness = CG.dayBrightness;
-				if (CG.isColorCamera)
-				{
-					CG.currentAutoAWB = CG.dayAutoAWB;
-					CG.currentWBR = CG.dayWBR;
-					CG.currentWBB = CG.dayWBB;
-				}
-				CG.currentDelay_ms = CG.dayDelay_ms;
-				CG.currentBin = CG.dayBin;
-				CG.currentGain = CG.dayGain;
-				CG.currentMaxAutoGain = CG.dayMaxAutoGain;
-				CG.currentAutoGain = CG.dayAutoGain;
-				CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.dayMean;
-				if (CG.isCooledCamera)
-				{
-					CG.currentEnableCooler = CG.dayEnableCooler;
-					CG.currentTargetTemp = CG.dayTargetTemp;
-				}
-				CG.currentTuningFile = CG.dayTuningFile;
+			if (numExposures == 0 && CG.dayAutoExposure)
+				CG.currentSkipFrames = CG.daySkipFrames;
+			// We only skip initial frames if we are starting in daytime and using auto-exposure.
+			CG.currentAutoExposure = CG.dayAutoExposure;
+			CG.currentExposure_us = CG.dayExposure_us;
+			CG.currentMaxAutoExposure_us = CG.dayMaxAutoExposure_us;
+			CG.currentBrightness = CG.dayBrightness;
+			if (CG.isColorCamera)
+			{
+				CG.currentAutoAWB = CG.dayAutoAWB;
+				CG.currentWBR = CG.dayWBR;
+				CG.currentWBB = CG.dayWBB;
 			}
+			CG.currentDelay_ms = CG.dayDelay_ms;
+			CG.currentBin = CG.dayBin;
+			CG.currentGain = CG.dayGain;
+			CG.currentMaxAutoGain = CG.dayMaxAutoGain;
+			CG.currentAutoGain = CG.dayAutoGain;
+			CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.dayMean;
+			if (CG.isCooledCamera)
+			{
+				CG.currentEnableCooler = CG.dayEnableCooler;
+				CG.currentTargetTemp = CG.dayTargetTemp;
+			}
+			CG.currentTuningFile = CG.dayTuningFile;
 		}
 
 		else	// NIGHT

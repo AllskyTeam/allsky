@@ -38,9 +38,10 @@
 #define AUTO_IMAGE_TYPE				99	// must match what's in the camera_settings.json file
 
 #define DEFAULT_DAYMEAN_RPi				0.5	// target value
-#define DEFAULT_NIGHTMEAN_RPi			0.2	// target value
 #define DEFAULT_DAYMEAN_THRESHOLD_RPi	0.1	// mean brightness must be within this % to be "ok"
-#define DEFAULT_NIGHTMEAN_THRESHOLD_RPi	0.1	
+#define DEFAULT_NIGHTMEAN_RPi			0.2	// target value
+	// TODO: allow different night threshold
+#define DEFAULT_NIGHTMEAN_THRESHOLD_RPi	DEFAULT_DAYMEAN_THRESHOLD_RPi
 #define DEFAULT_MEAN_P0_RPi				5.0
 #define DEFAULT_MEAN_P1_RPi				20.0
 #define DEFAULT_MEAN_P2_RPi				45.0
@@ -50,10 +51,10 @@
 #define DEFAULT_MAXMEAN_THRESHOLD_RPi	1.0
 
 // Got these by trial and error. 128 is more-or-less half the max of 255.
-#define DEFAULT_DAYMEAN_ZWO				128
-#define DEFAULT_NIGHTMEAN_ZWO			50		// TODO: pure guess as of May 22, 2023
-#define DEFAULT_DAYMEAN_THRESHOLD_ZWO	6
-#define DEFAULT_NIGHTMEAN_THRESHOLD_ZWO	6
+#define DEFAULT_DAYMEAN_ZWO				(128.0 / 255)	// matches old way
+#define DEFAULT_DAYMEAN_THRESHOLD_ZWO	(6.0 / 255)		// matches old way
+#define DEFAULT_NIGHTMEAN_ZWO			(75.0 / 255)	// TODO: pure guess as of May 22, 2023
+#define DEFAULT_NIGHTMEAN_THRESHOLD_ZWO	DEFAULT_DAYMEAN_THRESHOLD_ZWO
 #define DEFAULT_MEAN_P0_ZWO				5.0		// TODO: set after porting modemean to ZWO
 #define DEFAULT_MEAN_P1_ZWO				20.0
 #define DEFAULT_MEAN_P2_ZWO				45.0
@@ -123,6 +124,7 @@ struct overlay {
 // Histogram Box, ZWO only
 struct HB {
 	bool useHistogram					= false;		// Should we use histogram auto-exposure?
+	bool useExperimentalExposure		= false;		// Should histogram auto-exposure at night?
 	int histogramBoxSizeX				= 500;			// width of box in pixels
 	int currentHistogramBoxSizeX		= NOT_CHANGED;
 	int histogramBoxSizeY				= 500;			// height of box in pixels

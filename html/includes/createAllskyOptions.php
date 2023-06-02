@@ -18,13 +18,29 @@ function get_generic_name($s) {
 		return substr($s, 5);
 	return $s;
 }
+// These values need to be looked up in the CC file using their generic name.
+function is_generic_value($v) {
+	if ($v === null) return false;
+
+	if (substr($v, 0, 1) === "_")
+		return true;
+
+	return false;
+}
+// These values need to be looked up in the CC file using their full name.
+function is_specific_value($v) {
+	if ($v === null) return false;
+
+	if (substr($v, 0, 4) === "day_" || substr($v, 0, 6) === "night_")
+		return true;
+
+	return false;
+}
 
 // Get a camera control.  Return true if it exists, false if it doesn't.
 // If it exists, set the min, max, and default.
 function get_control($array, $setting, &$min, &$max, &$default) {
-	$i = 0;
 	foreach ($array as $cc) {
-		$i++;
 		if ($cc["argumentName"] === $setting) {
 			$min = getVariableOrDefault($cc, "MinValue", null);
 			$max = getVariableOrDefault($cc, "MaxValue", null);
@@ -38,7 +54,7 @@ function get_control($array, $setting, &$min, &$max, &$default) {
 // If a field is null that means it wasn't in the repo file,
 // so don't add it to the options string.
 // We need this because we look for all fields in a setting.
-function add_non_null_field($a, $f, $setting) {	// array, field, name_of_setting
+function add_non_null_field($a, $f, $setting) {	// array, field name, name_of_setting
 	$value = getVariableOrDefault($a, $f, null);
 	if ($value === null) return;
 
@@ -77,34 +93,52 @@ function add_field($f, $v, $setting) {	// field, value, name_of_setting
 	global $options_str;
 	$options_str .= "$q$f$q : ";				// field name
 
-	// Do not add value if a string since we need to check if it needs to be replaced
+	// Do not add value if it's a string since we need to check if it needs to be replaced
 	if (! add_value($v, false)) {
-		// If the setting is a day/night one, e.g., "daybin", get just the "bin" portion.
-		$setting = get_generic_name($setting);
-	
-		// Check if the value is a placeholder, like "bin_min" for the "bin" setting.
-		// These are the only fields that have placeholders.
-		// The "options" field is handles in add_options_field() since it's value is an array.
-		// The "display" field was handled earlier.
-if ($debug > 1) echo "Setting '$setting', field '$f', v='$v'\n";
+		if ($debug > 1) {
+			// It's hard to read the output with really long strings.
+			if (strlen($v) > 50) $vv = substr($v, 0, 50) . "...";
+			else $vv = $v;
+			echo "    '$f', v='$vv'";
+		}
 
-		if (get_control($cc_controls, $setting, $min, $max, $default)) {
-if ($debug > 1) echo "   >>> found in controls list\n";
-			if ($f === "minimum") {
-				if ($v === $setting . "_min") {
+		// Check if the value is a generic placeholder, like "_min".
+		// The "options" field is handled in add_options_field() since it's value is an array.
+		// The "display" field was handled earlier.
+		if (is_generic_value($v) || is_specific_value($v)) {
+			$searchCC = true;
+		} else {
+			$searchCC = false;
+		}
+
+		if ($searchCC) {
+			// For generic values, if the setting is a day/night one, e.g., "dayexposure",
+			// get just the "exposure" portion.
+			// For specific values e.g., "daymean" : "day_default",
+			// need to look up "daymean" in the CC file,
+			// not "mean" like we do for generic values
+
+			if (is_generic_value($v)) {
+				$setting = get_generic_name($setting);
+			}
+			if (get_control($cc_controls, $setting, $min, $max, $default)) {
+				$vReset = false;
+				if ($f === "minimum") {
 					$v = $min;
-				}
-			} else if ($f === "maximum") {
-				if ($v === $setting . "_max") {
+					$vReset = true;
+				} else if ($f === "maximum") {
 					$v = $max;
-				}
-			} else if ($f === "default") {
-				if ($v === $setting . "_default") {
-if ($debug > 1) echo "     >>>>> Setting '$setting', field '$f' _default=[$default]\n";
+					$vReset = true;
+				} else if ($f === "default") {
 					$v = $default;
+					$vReset = true;
+				}
+				if ($debug > 1) {
+					if ($vReset) echo ", RESET v='$v'";
 				}
 			}
 		}
+		if ($debug > 1) echo "\n";
 		$options_str .= "$q$v$q";
 	}
 
@@ -216,7 +250,7 @@ $settings_file = "";
 $force = false;		// force creation of settings file even if it already exists?
 
 foreach ($options as $opt => $val) {
-	if ($debug > 1) echo "   Argument $opt = $val\n";
+	if ($debug > 1 || $opt === "debug") echo "   Argument $opt $val\n";
 
 	if ($opt === "debug")
 		$debug++;
@@ -288,7 +322,21 @@ if ($repo_array === null) {
 	// advanced 		[0/1]	(last, so no comma after it)
 
 
-// Create options file
+// ==================   Create options file
+
+// A "generic" value is one that's the same for day and night, e.g., the minimum value
+// for the "dayexposure" and "nightexposure".
+// These are often specified by the camera and have an "argumentName" in the CC
+// file without the "day" or "night", e.g., "exposure.
+
+// Field values that begin with "_", e.g., "_default" are generic placeholders; their
+// actual values need to be determined by looking in the CC file for the generic name.
+// The repo options file will typically have "_" followed by the field name,
+// e.g., "_default" for the "default" field, but we only check if the first char is "_".
+
+// Field values that being with "day_" or "night_", e.g., "day_default" have
+// different values for day and night in the CC file, e.g., default value for day
+// and night exposure.
 
 $options_str = "[\n";
 foreach ($repo_array as $repo) {
@@ -307,30 +355,25 @@ foreach ($repo_array as $repo) {
 
 	if ($debug > 1) echo "Processing setting [$name]: ";
 
-	// Before adding the setting, make sure the "display field says we can.
-	// Typically the value will be 1 (can display) or a placeholder.
+	// Before adding the setting, make sure the "display" field says we can.
+	// The value will be 1 (can display) or 0 (don't display), or a placeholder.
 	// It should normally not be missing, but check anyhow.
 	$display = getVariableOrDefault($repo, "display", null);
-	if ($display === null) {
-		if ($debug > 1) echo "display field=null\n";
+	if ($display === null || $display === 0) {
+		if ($debug > 1) echo "    display field is null or 0\n";
 		continue;
 	}
-	if ($display !== 1) {
-		// should be a placeholder
-		$n = get_generic_name($name);
-		if ($display === $n . "_display") {
-			if ($debug > 1) echo "display=$display.";
-			if (! get_control($cc_controls, $n, $min, $max, $default)) {
-				if ($debug > 1) echo "     <<<<< NOT SUPPORTED >>>>>\n";
-				// Not an error - just means this isn't supported.
-				continue;
-			}
-			if ($debug > 1) echo "\n";
-			$repo["display"] = 1;	// a control exists for it, so display the setting.
+	if (is_generic_value($display)) {
+		// Is a placeholder - need to check if the setting is in the CC file.
+		// If not, don't output this setting.
+		if (! get_control($cc_controls, get_generic_name($name), $min, $max, $default)) {
+			if ($debug > 1) echo "     <<<<< NOT SUPPORTED >>>>>\n";
+			// Not an error - just means this isn't supported.
+			continue;
 		}
-	} elseif ($debug > 1) {
-		echo "standard setting.\n";
+		$repo["display"] = 1;	// a control exists for it, so display the setting.
 	}
+	if ($debug > 1) echo "\n";
 
 	// Have to handle camera type and model differently because the defaults
 	// might not be what we want.
@@ -365,6 +408,9 @@ if ($results != "") {
 	echo "ERROR: Unable to create $options_file.\n";
 	exit(6);
 }
+
+
+// ==================   Create settings file
 
 // If a $settings_file was passed in, create a "settings" file.
 // If this camera type/model is already known, use that file,

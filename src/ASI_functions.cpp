@@ -911,6 +911,30 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"MaxValue\" : \"%s\"\n", "none");
 	fprintf(f, "\t\t},\n");
 
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "daymean");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymean");
+	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.2f\n", CG.myModeMeanSetting.dayMean);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightmean");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmean");
+	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.2f\n", CG.myModeMeanSetting.nightMean);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "MeanThreshold");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "meanthreshold");
+	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.mean_threshold);
+	fprintf(f, "\t\t},\n");
+
 	if (CG.isColorCamera) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "AutoWhiteBalance");
@@ -949,6 +973,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t\t\"DefaultValue\" : %ld\n", CG.gainTransitionTime);
 		fprintf(f, "\t\t},\n");
 	}
+
 #ifdef IS_ZWO
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "autousb");
@@ -960,6 +985,12 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showUSB");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showUSB");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showUSB ? 1 : 0);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "experimentalExposure");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalExposure");
+	fprintf(f, "\t\t\t\"DefaultValue\" : \"%d\"\n", CG.HB.useExperimentalExposure ? 1 : 0);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -981,8 +1012,9 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "cameraNumber");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "cameraNumber");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "CameraNumber");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "cameraNumber");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.cameraNumber);
 	fprintf(f, "\t\t},\n");
 #endif
 
@@ -990,23 +1022,6 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ExtraArguments");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraArgs");
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ModeMean");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "mean");
-	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
-	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : \"day: %.2f, night: %.2f\"\n",
-		CG.myModeMeanSetting.dayMean, CG.myModeMeanSetting.nightMean);
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "MeanThreshold");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "meanthreshold");
-	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
-	fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.mean_threshold);
 	fprintf(f, "\t\t},\n");
 
 	if (CG.ct == ctRPi && CG.isLibcamera) {
@@ -1017,6 +1032,8 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t},\n");
 	}
 #endif
+
+	double minGain=0.0, maxGain=0.0;
 
 	for (int i = 0; i < iNumOfCtrl; i++)
 	{
@@ -1032,26 +1049,72 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		if (a == NULL or a[0] == '\0')
 			continue;
 
-		if (i > 0)
-		{
-			fprintf(f, ",");		// comma on all but last one
-			fprintf(f, "\n");
+		int div_by = 1;
+		if (strcmp(cc.Name, "Exposure") == 0) {
+			// The camera's values are in microseconds (us), but the WebUI displays in milliseconds (ms).
+			div_by = US_IN_MS;
 		}
+		double min = cc.MinValue / (double) div_by;
+		double max = cc.MaxValue / (double) div_by;
+		double def = cc.DefaultValue / (double) div_by;
 
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", cc.Name);
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", a);
-		fprintf(f, "\t\t\t\"MinValue\" : %s,\n", LorF(cc.MinValue, "%ld", "%.3f"));
-		fprintf(f, "\t\t\t\"MaxValue\" : %s,\n", LorF(cc.MaxValue, "%ld", "%.3f"));
-		fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(cc.DefaultValue, "%ld", "%.3f"));
+		fprintf(f, "\t\t\t\"MinValue\" : %s,\n", LorF(min, "%ld", "%.3f"));
+		fprintf(f, "\t\t\t\"MaxValue\" : %s,\n", LorF(max, "%ld", "%.3f"));
+		fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(def, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"IsAutoSupported\" : %s,\n", cc.IsAutoSupported == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"IsWritable\" : %s,\n", cc.IsWritable == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"ControlType\" : %d\n", cc.ControlType);
-		fprintf(f, "\t\t}");
-	}
-	fprintf(f, "\n");
-	fprintf(f, "\t]\n");
+		fprintf(f, "\t\t},\n");
 
+		if (strcmp(cc.Name, "Gain") == 0) {
+			minGain = cc.MinValue;
+			maxGain = cc.MaxValue;
+		}
+	}
+
+	// These override the generic values.
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "dayexposure");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "dayexposure");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", (int) (0.5 * MS_IN_SEC));
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightexposure");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightexposure");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", 10 * MS_IN_SEC);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "daymean");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymean");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.dayMean);
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightmean");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmean");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.nightMean);
+	fprintf(f, "\t\t},\n");
+
+	// Set the day gain to the minimum possible.
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "daygain");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daygain");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", LorF(minGain, "%ld", "%.3f"));
+	fprintf(f, "\t\t},\n");
+	// Set the night gain to the half the max.
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightgain");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightgain");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", LorF(maxGain / 2, "%ld", "%.3f"));
+	fprintf(f, "\t\t}\n");		// NO COMMA ON LAST ONE
+
+
+	// End the list
+	fprintf(f, "\t]\n");
 	fprintf(f, "}\n");
 	fclose(f);
 }
@@ -1310,8 +1373,8 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		ok = false;
 	}
 
-	signal(SIGINT, IntHandle);
-	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
+	signal(SIGINT, IntHandle);		// When run at the command line, this signal terminates us.
+	signal(SIGTERM, IntHandle);		// The service sends SIGTERM to end this program.
 	signal(SIGHUP, IntHandle);		// SIGHUP means restart.
 
 	return(ok);

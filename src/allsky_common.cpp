@@ -1058,19 +1058,21 @@ void displayHelp(config cg)
 	}
 	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
 	printf(" -%-*s - 1 enables consistent delays between images [%s].\n", n, "consistentDelays b", yesNo(cg.consistentDelays));
+	printf(" -%-*s - Format the time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - 1 enables notification images, for example, 'Camera is off during day' [%s].\n", n, "notificationimages b", yesNo(cg.notificationImages));
 	printf(" -%-*s - Latitude of the camera [no default - you must set it].\n", n, "latitude s");
 	printf(" -%-*s - Longitude of the camera [no default - you must set it].\n", n, "longitude s");
 	printf(" -%-*s - Angle of the sun below the horizon [%.2f].\n", n, "angle n", cg.angle);
 	printf("  %-*s   -6 = civil twilight   -12 = nautical twilight   -18 = astronomical twilight.\n", n, "");
 	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "takeDaytimeImages b", yesNo(cg.daytimeCapture));
-	printf(" -%-*s - 1 takes dark frames and disables the overlay [%s].\n", n, "takeDarkFrames b", yesNo(cg.takeDarkFrames));
+	printf(" -%-*s - 1 takes dark frames [%s].\n", n, "takeDarkFrames b", yesNo(cg.takeDarkFrames));
 	printf(" -%-*s - Your locale - to determine thousands separator and decimal point [%s].\n", n, "locale s", "locale on Pi");
 	printf("  %-*s   Type 'locale' at a command prompt to determine yours.\n", n, "");
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", n, "histogrambox n n n n", cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY, cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0);
 		printf(" -%-*s - 1 enables auto USB Speed.\n", n, "autousb b");
 		printf(" -%-*s - USB bandwidth percent.\n", n, "usb n");
+		printf(" -%-*s - 1 enables an experimental ZWO auto-exposure algorithm [%s].\n", n, "experimentalExposure b", yesNo(cg.HB.useExperimentalExposure));
 		printf(" -%-*s - Determines if version 0.8 exposure method should be used [%s].\n", n, "newexposure b", yesNo(cg.videoOffBetweenImages));
 	}
 	if (cg.ct == ctRPi) {
@@ -1081,12 +1083,9 @@ void displayHelp(config cg)
 	printf("\nOverlay settings:\n");
 	printf(" -%-*s - Set to %d to use the new, enhanced 'module' overlay program [%s].\n", n, "overlayMethod n", OVERLAY_METHOD_LEGACY, getOverlayMethod(cg.overlay.overlayMethod).c_str());
 	printf(" -%-*s - Set to 1 to display the time [%s].\n", n, "showTime b", yesNo(cg.overlay.showTime));
-	printf(" -%-*s - Format the optional time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
-	printf(" -%-*s - 1 displays the exposure length [%s].\n", n, "showExposure b", yesNo(cg.overlay.showExposure));
-	if (cg.ct == ctZWO) {
-		printf(" -%-*s - 1 displays the camera sensor temperature [%s].\n", n, "showTemp b", yesNo(cg.overlay.showTemp));
-	}
 	printf(" -%-*s - Units to display temperature in: 'C'elsius, 'F'ahrenheit, or 'B'oth [%s].\n", n, "temptype s", cg.tempType);
+	printf(" -%-*s - 1 displays the exposure length [%s].\n", n, "showExposure b", yesNo(cg.overlay.showExposure));
+	printf(" -%-*s - 1 displays the camera sensor temperature [%s].\n", n, "showTemp b", yesNo(cg.overlay.showTemp));
 	printf(" -%-*s - 1 displays the gain [%s].\n", n, "showGain b", yesNo(cg.overlay.showGain));
 	printf(" -%-*s - 1 displays the brightness [%s].\n", n, "showBrightness b", yesNo(cg.overlay.showBrightness));
 	printf(" -%-*s - 1 displays the mean brightness used in auto-exposure [%s].\n", n, "showMean b", yesNo(cg.overlay.showMean));
@@ -1189,13 +1188,14 @@ void displaySettings(config cg)
 		if (cg.nightAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
-	if (cg.supportsMyModeMean)
-		printf("   Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
-	if (cg.supportsMyModeMean)
-		printf("   Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
+	if (cg.supportsMyModeMean || cg.HB.useExperimentalExposure)
+	{
+		printf("   Target Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
+		printf("   Target Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
+		printf("   Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
+	}
 	if (cg.supportsMyModeMean)
 	{
-		printf("   Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
 		printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
 		printf("      p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
 		printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
@@ -1251,6 +1251,7 @@ void displaySettings(config cg)
 			cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY,
 			cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0,
 			cg.HB.centerX, cg.HB.centerY, cg.HB.leftOfBox, cg.HB.topOfBox, cg.HB.rightOfBox, cg.HB.bottomOfBox);
+		printf("   ZWO experimental auto-exposure: %s\n", yesNo(cg.HB.useExperimentalExposure));
 		printf("   Video OFF Between Images: %s\n", yesNo(cg.videoOffBetweenImages));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
@@ -1289,7 +1290,7 @@ void displaySettings(config cg)
 			printf("      Show Histogram Box: %s\n", yesNo(cg.overlay.showHistogramBox));
 		}
 	} else if (cg.supportsTemperature) {
-		printf("  Temperature type: %s\n", stringORnone(cg.tempType));
+		printf("   Temperature type: %s\n", stringORnone(cg.tempType));
 	}
 
 	printf("   Allsky version: %s\n", stringORnone(cg.version));
@@ -1860,6 +1861,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "debuglevel") == 0)
 		{
 			cg->debugLevel = atol(argv[++i]);
+		}
+		else if (strcmp(a, "experimentalexposure") == 0)
+		{
+			cg->HB.useExperimentalExposure = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "newexposure") == 0)
 		{

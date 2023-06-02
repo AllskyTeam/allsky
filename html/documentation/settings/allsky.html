@@ -124,7 +124,7 @@ and only displays settings the camera supports, like cooler temperature for cool
 </tr>
 <tr><td><span class="WebUISetting">Mean Target</span></td>
 	<td>0.5</td>
-	<td>(RPi only) The target mean brightness level when
+	<td>The target mean brightness level when
 	<span class="WebUISetting">Auto-Exposure</span> is on.
 	Ranges from 0.0 (pure black) to 1.0 (pure white).
 	Best used when both <span class="WebUISetting">Auto-Exposure</span> and
@@ -156,7 +156,10 @@ and only displays settings the camera supports, like cooler temperature for cool
 	<td>Gain is similar to ISO on regular cameras.
 	When <span class="WebUISetting">Auto-Gain</span> is on, this value is used as a starting gain.
 	When <span class="WebUISetting">Auto-Gain</span> is off,
-	increasing this produces brighter images, but with more noise.</td>
+	increasing this produces brighter images, but with more noise.
+	<br>The default daytime gain is the minimum possible for the camera since
+	daytime images are normally bright and don't need any additional gain.
+	</td>
 </tr>
 <tr><td><span class="WebUISetting">Binning</span></td>
 	<td>1x1</td>
@@ -227,7 +230,7 @@ and only displays settings the camera supports, like cooler temperature for cool
 </tr>
 <tr><td><span class="WebUISetting">Mean Target</span></td>
 	<td>0.2</td>
-	<td>(RPi only)</td>
+	<td></td>
 </tr>
 <tr><td><span class="WebUISetting">Brightness</span></td>
 	<td><span class="cameraDependent">CD</span></td>
@@ -249,7 +252,7 @@ and only displays settings the camera supports, like cooler temperature for cool
 </tr>
 <tr><td><span class="WebUISetting">Gain</span></td>
 	<td><span class="cameraDependent">CD</span></td>
-	<td></td>
+	<td>The default is one-half the maximum for the camera.</td>
 </tr>
 <tr><td><span class="WebUISetting">Binning</span></td>
 	<td>1x1</td>
@@ -381,7 +384,7 @@ use the <span class="shSetting">CROP</span> setting in the
 </tr>
 <tr><td><span class="WebUISetting">Mean Threshold</span></td>
 	<td>Yes</td>
-	<td>(RPi only) When using <span class="WebUISetting">Mean Target</span>,
+	<td>When using <span class="WebUISetting">Mean Target</span>,
 		this specifies how close (plus or minus) the target brightness should be to the
 		<span class="WebUISetting">Mean Target</span>.
 		<br>For example, if <span class="WebUISetting">Mean Target</span> is

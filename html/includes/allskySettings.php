@@ -444,7 +444,7 @@ if ($formReadonly != "readonly") { ?>
 				} else {
 					echo "<tr class='form-group $advClass $class $warning_class' style='margin-bottom: 0px; $advStyle'>";
 					// Show the default in a popup
-					if ($type == "checkbox") {
+					if ($type == "boolean") {
 						if ($default == "0") $default = "No";
 						else $default = "Yes";
 					} elseif ($type == "select") {
@@ -483,7 +483,7 @@ if ($formReadonly != "readonly") { ?>
 					// May want to consider having a symbol next to the field
 					// that has the popup.
 					echo "<span title='$popup'>";
-					if ($type == "text" || $type == "number" || $type == "readonly"){
+					if ($type == "text" || $type == "integer" || $type == "float" || $type == "percent" || $type == "readonly"){
 						if ($type == "readonly") {
 							$readonly = "readonly";
 							$t = "text";
@@ -491,8 +491,9 @@ if ($formReadonly != "readonly") { ?>
 							$readonly = "";
 							// Browsers put the up/down arrows for numbers which moves the
 							// numbers to the left, and they don't line up with text.
-							// Plus, they don't accept decimal points in "number".
-							if ($type == "number") $type = "text";
+							// Plus, they don't accept decimal points in "float".
+							if ($type == "integer" || $type == "float" || $type == "percent")
+								$type = "text";
 							$t = $type;
 						}
 						echo "\n\t<input $readonly class='form-control boxShadow settingInput ' type='$t'" .
@@ -515,7 +516,7 @@ if ($formReadonly != "readonly") { ?>
 							}
 						}
 						echo "</select>";
-					} else if ($type == "checkbox"){
+					} else if ($type == "boolean"){
 						echo "\n\t<div class='switch-field boxShadow settingInput' style='margin-bottom: -3px; border-radius: 4px;'>";
 							echo "\n\t<input id='switch_no_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='0' ".
@@ -575,4 +576,3 @@ if ($formReadonly != "readonly") { ?>
 <?php
 }
 ?>
-

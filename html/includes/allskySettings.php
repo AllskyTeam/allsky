@@ -483,7 +483,7 @@ if ($formReadonly != "readonly") { ?>
 					// May want to consider having a symbol next to the field
 					// that has the popup.
 					echo "<span title='$popup'>";
-					if ($type == "text" || $type == "number" || $type == "readonly"){
+					if ($type == "text" || $type == "integer" || $type == "float" || $type == "readonly"){
 						if ($type == "readonly") {
 							$readonly = "readonly";
 							$t = "text";
@@ -491,8 +491,8 @@ if ($formReadonly != "readonly") { ?>
 							$readonly = "";
 							// Browsers put the up/down arrows for numbers which moves the
 							// numbers to the left, and they don't line up with text.
-							// Plus, they don't accept decimal points in "number".
-							if ($type == "number") $type = "text";
+							// Plus, they don't accept decimal points in "float".
+							if ($type == "integer" || $type == "float") $type = "text";
 							$t = $type;
 						}
 						echo "\n\t<input $readonly class='form-control boxShadow settingInput ' type='$t'" .
@@ -575,4 +575,3 @@ if ($formReadonly != "readonly") { ?>
 <?php
 }
 ?>
-

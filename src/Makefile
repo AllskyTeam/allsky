@@ -106,6 +106,8 @@ endif
 
 sunwait:
 	@echo `date +%F\ %R:%S` Building sunwait...
+	@git submodule init
+	@git submodule update	
 	@$(MAKE) -C sunwait-src
 	@cp sunwait-src/sunwait .
 	@echo `date +%F\ %R:%S` Done.

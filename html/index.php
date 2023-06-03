@@ -390,7 +390,7 @@ if (file_exists($f)) {
 
 				switch ($page) {
 					case "WLAN_info":
-						DisplayDashboard_WLAN("wlan0");
+						DisplayDashboard_WLAN();
 						break;
 					case "LAN_info":
 						DisplayDashboard_LAN("eth0");

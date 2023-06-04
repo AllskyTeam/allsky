@@ -69,12 +69,12 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 	return $str_array;
 }
 
-$status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
 $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
 function initialize_variables() {
+	global $status, $needToDisplayMessages;
 	global $image_name, $delay, $daydelay, $nightdelay;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
@@ -83,7 +83,7 @@ function initialize_variables() {
 	$cam_type = getCameraType();
 	if ($cam_type == '') {
 		echo "<div style='color: red; font-size: 200%;'>";
-		echo "'Camera Type' not defined in ~/allsky/config/config.sh.  Please update it.";
+		echo "'Camera Type' not defined in config.sh.  Please update it.";
 		echo "</div>";
 		exit;
 	}
@@ -108,42 +108,79 @@ function initialize_variables() {
 
 	////////////////// Determine delay between refreshes of the image.
 	$consistentDelays = $settings_array["consistentDelays"] == 1 ? true : false;
-	$daydelay = $settings_array["daydelay"] +
-		($consistentDelays ? $settings_array["daymaxautoexposure"] : $settings_array["dayexposure"]);
-	$nightdelay = $settings_array["nightdelay"] +
-		($consistentDelays ? $settings_array["nightmaxautoexposure"] : $settings_array["nightexposure"]);
+	$daydelay = $settings_array["daydelay"];
+	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
+	$dayexposure = $settings_array["dayexposure"];
+	$nightdelay = $settings_array["nightdelay"];
+	$nightmaxautoexposure = $settings_array["nightmaxautoexposure"];
+	$nightexposure = $settings_array["nightexposure"];
 
-	$showDelay = getVariableOrDefault($settings_array, 'showDelay', true);
-	if ($showDelay) {
-		// Determine if it's day or night so we know which delay to use.
-		$angle = $settings_array['angle'];
-		$lat = $settings_array['latitude'];
-		$lon = $settings_array['longitude'];
-		exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
-		if ($retval == 2) {
-			$delay = $daydelay;
-		} else if ($retval == 3) {
-			$delay = $nightdelay;
-		} else {
-			echo "<p class='errorMsg'>ERROR: 'sunwait' returned exit code $retval so we don't know if it's day or night.</p>";
-			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
-		}
-
-		// Convert to seconds for display.
-		$daydelay /= 1000;
-		$nightdelay /= 1000;
-	} else {
-		// Not showing delay so just use average
-		$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
-		$daydelay = -1;		// signifies it's not being used
+	$ok = true;
+	if (! is_numeric($daydelay)) {
+		$ok = false;
+		$status->addMessage("<strong>daydelay</strong> is not a number.", 'danger', false);
 	}
-	// Lessen the delay between a new picture and when we check.
-	$delay /= 4;
+	if (! is_numeric($daymaxautoexposure)) {
+		$ok = false;
+		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number.", 'danger', false);
+	}
+	if (! is_numeric($dayexposure)) {
+		$ok = false;
+		$status->addMessage("<strong>dayexposure</strong> is not a number.", 'danger', false);
+	}
+	if (! is_numeric($nightdelay)) {
+		$ok = false;
+		$status->addMessage("<strong>nightdelay</strong> is not a number.", 'danger', false);
+	}
+	if (! is_numeric($nightmaxautoexposure)) {
+		$ok = false;
+		$status->addMessage("<strong>nightmaxautoexposure</strong> is not a number.", 'danger', false);
+	}
+	if (! is_numeric($nightexposure)) {
+		$ok = false;
+		$status->addMessage("<strong>nightexposure</strong> is not a number.", 'danger', false);
+	}
+	if ($ok) {
+		$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
+		$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
+
+		$showDelay = getVariableOrDefault($settings_array, 'showDelay', true);
+		if ($showDelay) {
+			// Determine if it's day or night so we know which delay to use.
+			$angle = $settings_array['angle'];
+			$lat = $settings_array['latitude'];
+			$lon = $settings_array['longitude'];
+			exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+			if ($retval == 2) {
+				$delay = $daydelay;
+			} else if ($retval == 3) {
+				$delay = $nightdelay;
+			} else {
+				$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
+				$status->addMessage($msg, 'danger', false);
+				$needToDisplayMessages = true;
+				$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
+			}
+
+			// Convert to seconds for display.
+			$daydelay /= 1000;
+			$nightdelay /= 1000;
+		} else {
+			// Not showing delay so just use average
+			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
+			$daydelay = -1;		// signifies it's not being used
+		}
+		// Lessen the delay between a new picture and when we check.
+		$delay /= 4;
+	} else {
+		$daydelay = -1;
+		$needToDisplayMessages = true;
+	}
 }
 
 // Check if the settings have been configured.
 function check_if_configured($page, $calledFrom) {
-	global $lastChanged, $status;
+	global $lastChanged, $status, $needToDisplayMessages;
 
 	// The conf page calls us if needed.
 	if ($calledFrom === "main" && $page === "configuration")
@@ -155,10 +192,8 @@ function check_if_configured($page, $calledFrom) {
 			$m = "";
 		else
 			$m = "<br>Go to the 'Allsky Settings' page.";
-		$status->addMessage("You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button below.$m", 'danger', false);
-		echo "<div class='notConfigured'>";
-			$status->showMessages();
-		echo "</div>";
+		$status->addMessage("You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button.$m", 'danger', false);
+		$needToDisplayMessage = true;
 	}
 }
 /**
@@ -321,12 +356,12 @@ function get_interface_status($cmd) {
 	return(preg_replace('/\s\s+/', ' ', implode(" ", $return)));
 }
 
-function is_interface_up($status) {
-	return(strpos($status, "UP") !== false ? true : false);
+function is_interface_up($interface_status) {
+	return(strpos($interface_status, "UP") !== false ? true : false);
 }
 
-function is_interface_running($status) {
-	return(strpos($status, "RUNNING") !== false ? true : false);
+function is_interface_running($interface_status) {
+	return(strpos($interface_status, "RUNNING") !== false ? true : false);
 }
 
 function parse_ifconfig($input, &$strHWAddress, &$strIPAddress, &$strNetMask, &$strRxPackets, &$strTxPackets, &$strRxBytes, &$strTxBytes) {
@@ -673,5 +708,4 @@ function getVariableOrDefault($a, $v, $d) {
 
 	return($d);
 }
-
 ?>

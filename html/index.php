@@ -22,6 +22,9 @@ $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 // functions.php sets a bunch of constants and variables.
 // It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
+include_once('includes/status_messages.php');
+$status = new StatusMessages();
+$needToDisplayMessages = false;
 initialize_variables();		// sets some variables
 
 // Constants for configuration file paths.
@@ -323,10 +326,11 @@ if (file_exists($f)) {
 		<div class="row right-panel">
 			<div class="col-lg-12">
 				<?php
-				$status = new StatusMessages();
-
-				// Check if the settings are configured - if not, display a message.
+				// Check if the settings are configured.
 				check_if_configured($page, "main");
+
+				if ($needToDisplayMessages)
+					$status->showMessages(true, false, true);
 
 				if (isset($_POST['clear'])) {
 					$t = @filemtime(ALLSKY_MESSAGES);
@@ -334,7 +338,6 @@ if (file_exists($f)) {
 					// in which case we don't care.
 					if ($t != false) {
 						$newT = getVariableOrDefault($_POST, "filetime", 0);
-// echo "<br>Comparing t=$t to newT=$newT";
 						if ($t == $newT) {
 							exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
 							if ($retcode !== 0) {
@@ -438,7 +441,7 @@ if (file_exists($f)) {
 						DisplayEditor();
 						break;
 					case "overlay":
-						DisplayOverlay("$image_name");
+						DisplayOverlay($image_name);
 						break;
 					case "module":
 						DisplayModule();
@@ -446,7 +449,7 @@ if (file_exists($f)) {
 
 					case "live_view":
 					default:
-						DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);
+						DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe);
 				}
 				?>
 			</div>

@@ -250,6 +250,10 @@ table .alert-dismissable {
 	border-color: #f1b1b1;
 	background-color: #a94442;
 }
+.alert-danger {
+	border-top-width: 10px;
+	border-bottom-width: 10px;
+}
 
 .dark .form-control,
 .dark input[type="text"],

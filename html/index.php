@@ -329,9 +329,8 @@ if (file_exists($f)) {
 				// Check if the settings are configured.
 				check_if_configured($page, "main");
 
-				if ($needToDisplayMessages) {
-					$status->showMessages();
-				}
+				if ($needToDisplayMessages)
+					$status->showMessages(true, false, true);
 
 				if (isset($_POST['clear'])) {
 					$t = @filemtime(ALLSKY_MESSAGES);

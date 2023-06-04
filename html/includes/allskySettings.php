@@ -1,7 +1,4 @@
 <?php
-if ($formReadonly != "readonly") {
-	include_once( 'includes/status_messages.php' );
-}
 
 function DisplayAllskyConfig(){
 	global $formReadonly;
@@ -12,10 +9,11 @@ function DisplayAllskyConfig(){
 	$debugLevelName = "debuglevel";		// json setting name
 	$debugArg = "";
 
-	global $lastChangedName;			// json setting name
+	global $lastChangedName;			// name of json setting
 	global $lastChanged;
 	global $page;
 	global $ME;
+	global $status;
 
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
@@ -24,11 +22,6 @@ function DisplayAllskyConfig(){
 	$options_array = get_decoded_json_file($options_file, true, $errorMsg);
 	if ($options_array === null) {
 		exit;
-	}
-
-	if ($formReadonly != "readonly") {
-		global $status;
-		$status = new StatusMessages();
 	}
 
 	if (isset($_POST['save_settings'])) {
@@ -41,7 +34,6 @@ function DisplayAllskyConfig(){
 			$optional_array = array();
 			$changes = "";
 			$somethingChanged = false;
-			$numErrors = 0;
 
 			$refreshingCameraType = false;
 			$newCameraType = "";
@@ -49,8 +41,6 @@ function DisplayAllskyConfig(){
 			$newCameraNumber = "";
 
 			$ok = true;
-			$msg = "";
-			$errorMsg = "";
 
 			// Keep track of optional settings
 			foreach ($options_array as $option){
@@ -69,11 +59,11 @@ function DisplayAllskyConfig(){
 				// so convert them to HTML codes instead.
 				$isOLD = substr($key, 0, 4) === "OLD_";
 				if ($isOLD) {
-					$originalName = substr($key, 4);		// everything after "OLD_"
+					$key = substr($key, 4);		// everything after "OLD_"
 					$oldValue = str_replace("'", "&#x27", $value);
-					$newValue = getVariableOrDefault($settings, $originalName, "");
+					$newValue = getVariableOrDefault($settings, $key, "");
 					if ($oldValue !== $newValue) {
-						if ($originalName === $cameraTypeName) {
+						if ($key === $cameraTypeName) {
 							if ($newValue === "Refresh") {
 								// Refresh the same Camera Type
 								$refreshingCameraType = true;
@@ -82,9 +72,9 @@ function DisplayAllskyConfig(){
 							} else {
 								$newCameraType = $newValue;
 							}
-						} elseif ($originalName === $cameraModelName) {
+						} elseif ($key === $cameraModelName) {
 							$newCameraModel = $newValue;
-						} elseif ($originalName === $cameraNumberName) {
+						} elseif ($key === $cameraNumberName) {
 							$newCameraNumber = $newValue;
 						} else {
 							$somethingChanged = true;	// want to know about OTHER changes
@@ -92,8 +82,8 @@ function DisplayAllskyConfig(){
 
 						$checkchanges = false;
 						foreach ($options_array as $option){
-							if ($option['name'] === $originalName) {
-								$optional = $optional_array[$originalName];
+							if ($option['name'] === $key) {
+								$optional = $optional_array[$key];
 								if ($newValue !== "" || $optional) {
 									$checkchanges = getVariableOrDefault($option, 'checkchanges', false);
 									$label = getVariableOrDefault($option, 'label', "");
@@ -102,39 +92,61 @@ function DisplayAllskyConfig(){
 							}
 						}
 						if ($checkchanges)
-							$changes .= "  '$originalName' '$label' '$oldValue' '$newValue'";
+							$changes .= "  '$key' '$label' '$oldValue' '$newValue'";
 					}
 
 				} else {
-					// Check for empty non-optional settings.
-					foreach ($options_array as $option){
+					// Check for empty non-optional settings and valid numbers.
+					$span = "span class='WebUISetting'";
+					$spanValue = "span class='WebUIValue'";
+					foreach ($options_array as $option) {
 						if ($option['name'] === $key) {
+							$type = getVariableOrDefault($option, 'type', null);
+							$lab = $option['label'];
+
 							if ($value == "" && ! $optional_array[$key]) {
-								$lab = $option['label'];
-								if ($errorMsg != "")
-									$errorMsg .= ", ";
-								$errorMsg .= "<strong>$lab</strong> is empty";
-								$numErrors++;
+								$msg = "<$span>$lab</span> is empty";
+								$status->addMessage($msg, 'danger', false);
 								$ok = false;
+
+							} else if ($type !== null) {
+								$msg = "";
+								// $value will be of type string, even if it's actually a number,
+								// and only is_numeric() accounts for types of string.
+								if ($type === "integer" || $type == "percent") {
+									if (! is_numeric($value) || ! is_int($value + 0))
+										$msg = "without a fraction";
+								} else if ($type === "float") {
+									if (! is_numeric($value) || ! is_float($value + 0.0))
+										$msg = "with, or without, a fraction";
+								}
+								if ($msg !== "") {
+									$msg2 = "<$span>$lab</span> must be a number $msg.";
+									$msg2 .= " You entered: <$spanValue>$value</span>";
+									$status->addMessage($msg2, 'danger', false);
+									$ok = false;
+								}
 							}
 						}
 					}
 
-					// Add the key/value pair to the array so we can see if it changed.
-					$settings[$key] = str_replace("'", "&#x27", $value);
+					if ($ok) {
+						$settings[$key] = str_replace("'", "&#x27", $value);
 
-					if ($key === $debugLevelName && $value >= 4) {
-						$debugArg = "--debug";
+						if ($key === $debugLevelName && $value >= 4) {
+							$debugArg = "--debug";
+						}
 					}
 				}
 			}
 
+			$msg = "";
 			if ($ok) {
-
 				if ($somethingChanged || $lastChanged === null) {
 					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
-						$msg .= " or <b>Camera Number</b>  you cannot change anything else.  No changes made.";
+						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
+						$status->addMessage($msg, 'danger', false);
 						$ok = false;
 					} else {
 						// Keep track of the last time the file changed.
@@ -170,11 +182,11 @@ function DisplayAllskyConfig(){
 				}
 			}
 
-			// 'restart' is a checkbox: if check, it returns 'on', otherwise nothing.
-			$doingRestart = getVariableOrDefault($_POST, 'restart', false);
-			if ($doingRestart === "on") $doingRestart = true;
-
 			if ($ok) {
+				// 'restart' is a checkbox: if check, it returns 'on', otherwise nothing.
+				$doingRestart = getVariableOrDefault($_POST, 'restart', false);
+				if ($doingRestart === "on") $doingRestart = true;
+
 				if ($changes !== "") {
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
@@ -205,12 +217,7 @@ function DisplayAllskyConfig(){
 				}
 
 			} else {	// not $ok
-				if ($doingRestart)
-					$msg = ", and Allsky NOT restarted.";
-				if ($numErrors > 0) {
-					$msg = "Settings NOT saved due to $numErrors errors: $errorMsg.";
-				}
-				$status->addMessage($msg, 'danger');
+				$status->addMessage("Settings NOT saved due to errors above.", 'info', false);
 			}
 		} else {
 			$status->addMessage('Unable to save settings - session timeout.', 'danger');
@@ -483,6 +490,7 @@ if ($formReadonly != "readonly") { ?>
 					// May want to consider having a symbol next to the field
 					// that has the popup.
 					echo "<span title='$popup'>";
+// TODO: add percent sign for "percent"
 					if ($type == "text" || $type == "integer" || $type == "float" || $type == "percent" || $type == "readonly"){
 						if ($type == "readonly") {
 							$readonly = "readonly";

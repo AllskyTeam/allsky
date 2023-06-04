@@ -114,6 +114,7 @@ function initialize_variables() {
 	$nightdelay = $settings_array["nightdelay"];
 	$nightmaxautoexposure = $settings_array["nightmaxautoexposure"];
 	$nightexposure = $settings_array["nightexposure"];
+
 	$ok = true;
 	if (! is_numeric($daydelay)) {
 		$ok = false;
@@ -155,7 +156,8 @@ function initialize_variables() {
 			} else if ($retval == 3) {
 				$delay = $nightdelay;
 			} else {
-				$status->addMessage("'sunwait' returned $retval; don't know if it's day or night.", 'danger', false);
+				$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
+				$status->addMessage($msg, 'danger', false);
 				$needToDisplayMessages = true;
 				$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 			}
@@ -171,7 +173,7 @@ function initialize_variables() {
 		// Lessen the delay between a new picture and when we check.
 		$delay /= 4;
 	} else {
-		$delay = -1;
+		$daydelay = -1;
 		$needToDisplayMessages = true;
 	}
 }

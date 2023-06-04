@@ -441,12 +441,12 @@ if ($formReadonly != "readonly") { ?>
 
 				// Put some space before and after headers.  This next line is the "before":
 				if ($type == "header") {
-					// Not sure how to display the header with a background color with 10px of white above and
-					// below it using only one <tr>.
+					// Not sure how to display the header with a background color with 10px
+					// of white above and below it using only one <tr>.
 					echo "<tr class='$advClass advanced-nocolor' style='$advStyle height: 10px;'><td colspan='3'></td></tr>";
 					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle'>";
 						echo "<td colspan='3' class='settingsHeader' style='padding: 8px 0px;'>$description</td>";
-					echo "</tr>";
+						echo "</tr>";
 					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle height: 10px;'><td colspan='3'></td></tr>";
 				} else {
 					echo "<tr class='form-group $advClass $class $warning_class' style='margin-bottom: 0px; $advStyle'>";
@@ -462,12 +462,12 @@ if ($formReadonly != "readonly") { ?>
 							break;
 						}
 					}
-					if ($default !== "")
-						$popup = "Default=$default";
-					else
-						$popup = "";
+					$popup = "";
+					if ($default !== "") $popup .= "Default=$default";
 					if ($minimum !== "") $popup .= "\nMinimum=$minimum";
 					if ($maximum !== "") $popup .= "\nMaximum=$maximum";
+					if ($type == "integer" || $type == "percent") $popup .= "\nWhole numbers only";
+					if ($type == "float") $popup .= "\nFractions allowed";
 
 					if ($type == "widetext") $span="rowspan='2'";
 					else $span="";

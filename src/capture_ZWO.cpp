@@ -165,7 +165,7 @@ void *SaveImgThd(void *para)
 		if (pRgb.data)
 		{
 			char cmd[1100+strlen(CG.allskyHome)];
-			Log(1, "  > Saving %s image '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
+			Log(4, "  > Saving %s image '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
 			snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
 			add_variables_to_command(CG, cmd, exposureStartDateTime);
 			strcat(cmd, " &");
@@ -1497,7 +1497,7 @@ if (CG.HB.useExperimentalExposure) {
 								newExposure_us, CG.currentMaxAutoExposure_us);
 							newExposure_us = CG.currentMaxAutoExposure_us;
 						} else {
-							Log(3, "    > Next exposure changing by %'ld us (%'ld us before agression) to %'ld (multiply by %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, CG.lastMean=%d]\n",
+							Log(3, "    > Next exposure change: %'ld us (%'ld pre agression) to %'ld (* %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, CG.lastMean=%d]\n",
 								exposureDiff_us, exposureDiffBeforeAgression_us,
 								newExposure_us, multiply, CG.lastExposure_us,
 								acceptableType, acceptable, (int)CG.lastMean);
@@ -1508,7 +1508,7 @@ if (CG.HB.useExperimentalExposure) {
 							++numPingPongs;
 							Log(2, "    > xxx lastMean was %d and went from %d above max of %d to %d below min of %d, is now at %d;\n",
 								priorMean, priorMeanDiff, maxAcceptableMean, -lastMeanDiff, minAcceptableMean, (int)CG.lastMean);
-							Log(2, "       should NOT set tempMinExposure_us to CG.currentExposure_us of %'ld\n", CG.currentExposure_us);
+							Log(4, "       should NOT set tempMinExposure_us to CG.currentExposure_us of %'ld\n", CG.currentExposure_us);
 						} 
 						else
 						{
@@ -1517,7 +1517,7 @@ if (CG.HB.useExperimentalExposure) {
 								++numPingPongs;
 								Log(2, "    > xxx lastMean was %d and went from %d below min of %d to %d above max of %d, is now at %d;\n",
 									priorMean, -priorMeanDiff, minAcceptableMean, lastMeanDiff, maxAcceptableMean, (int)CG.lastMean);
-								Log(2, "       OK to set tempMaxExposure_us to CG.currentExposure_us of %'ld\n", CG.currentExposure_us);
+								Log(4, "       OK to set tempMaxExposure_us to CG.currentExposure_us of %'ld\n", CG.currentExposure_us);
 							}
 							else
 							{

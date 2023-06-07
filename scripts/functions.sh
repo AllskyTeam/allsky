@@ -541,3 +541,11 @@ function fix_settings_link()
 	#### echo "\nTo fix: "
 	return 0
 }
+
+function update_json_file()		# field, new value, file
+{
+	local FILE="${3}"
+	local TEMP="/tmp/$$"
+	# Have to use "cp" instead of "mv" to keep any hard link.
+	jq "${1} = \"${2}\"" "${FILE}" > "${TEMP}" && cp "${TEMP}" "${FILE}" && rm "${TEMP}"
+}

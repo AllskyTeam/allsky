@@ -784,16 +784,20 @@ set_permissions()
 
 	# The web server needs to be able to create and update many of the files in ${ALLSKY_CONFIG}.
 	# Not all, but go ahead and chgrp all of them so we don't miss any new ones.
-	sudo find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 {} \;
-	sudo find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 {} \;
+	sudo find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 '{}' \;
+	sudo find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 '{}' \;
 	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}"
 
 	# The files should already be the correct permissions/owners, but just in case, set them.
 	# We don't know what permissions may have been on the old website, so use "sudo".
-	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 {} \;
-	# These are the exceptions
+	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 '{}' \;
+	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 '{}' \;
 	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"
-	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 {} \;
+
+	if [[ -d "${ALLSKY_WEBSITE}" ]]; then
+		sudo find "${ALLSKY_WEBUI}/" -type d -name thumbnails \! -perm 775 -exec chmod 775 '{}' \;
+		sudo find "${ALLSKY_WEBUI}/" -type d -name thumbnails \! -group "${WEBSERVER_GROUP}" -exec chgrp "${WEBSERVER_GROUP}" '{}' \;
+	fi
 
 	chmod 775 "${ALLSKY_TMP}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
@@ -927,7 +931,7 @@ handle_prior_website()
 		# If get_branch returns "" the prior branch is ${GITHUB_MAIN_BRANCH}.
 		local PRIOR_BRANCH="$( get_branch "${PRIOR_SITE}/" )"
 
-		display_msg --log progress "Restoring Allsky Website from ${PRIOR_SITE}."
+		display_msg --log progress "Restoring local Allsky Website from ${PRIOR_SITE}."
 		sudo mv "${PRIOR_SITE}" "${ALLSKY_WEBSITE}"
 
 		# Update "AllskyVersion" if needed.
@@ -936,9 +940,8 @@ handle_prior_website()
 		if [[ ${V} != "${ALLSKY_VERSION}" ]]; then
 			MSG="Updating AllskyVersion in local Website from '${V}' to '${ALLSKY_VERSION}'"
 			display_msg --log progress "${MSG}"
-			jq ".config.AllskyVersion = \"${ALLSKY_VERSION}\"" \
-				"${ALLSKY_WEBSITE_CONFIGURATION_FILE}" > /tmp/x \
-				&& mv /tmp/x "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+			update_json_file ".config.AllskyVersion" "${ALLSKY_VERSION}" \
+				"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 		fi
 
 
@@ -964,7 +967,6 @@ handle_prior_website()
 	fi
 
 	if [[ -n ${NEWEST_VERSION} ]]; then
-		display_msg "${LOG_TYPE}" info "Comparing prior Website ${PV} to newest ${NEWEST_VERSION}${B}"
 		if [[ -z ${PRIOR_VERSION} || ${PRIOR_VERSION} < "${NEWEST_VERSION}" ]]; then
 			MSG="There is a newer Allsky Website available${B}; please upgrade to it."
 			MSG="${MSG}\nYour    version: ${PV}"
@@ -974,6 +976,8 @@ handle_prior_website()
 			MSG="${MSG}\nafter this installation finishes."
 			display_msg --log notice "${MSG}"
 			echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		else
+			display_msg "${LOG_TYPE}" info "Prior local Website already at ${NEWEST_VERSION}${B}"
 		fi
 	fi
 }
@@ -1077,13 +1081,6 @@ get_locale()
 }
 
 
-update_locale()
-{
-	local L="${1}"		# locale
-	local S="${2}"		# settings file
-	# Have to use "cp" instead of "mv" to keep the hard link.
-	jq ".locale = \"${L}\"" "${S}" > /tmp/x && cp /tmp/x "${S}" && rm /tmp/x
-}
 ####
 # Set the locale
 set_locale()
@@ -1098,7 +1095,7 @@ set_locale()
 			# Either a new install or an upgrade from an older Allsky.
 			MSG="${MSG} did NOT contain .locale so adding it."
 			display_msg --logonly info "${MSG}"
-			update_locale "${LOCALE}"  "${SETTINGS_FILE}"
+			update_json_file ".locale" "${LOCALE}"  "${SETTINGS_FILE}"
 		else
 			MSG="${MSG} CONTAINED .locale = '${L}'."
 			display_msg --logonly info "${MSG}"
@@ -1107,7 +1104,7 @@ set_locale()
 	fi
 
 	display_msg --log progress "Setting locale to '${LOCALE}'."
-	update_locale "${LOCALE}"  "${SETTINGS_FILE}"
+	update_json_file ".locale" "${LOCALE}"  "${SETTINGS_FILE}"
 
 	# This updates /etc/default/locale
 	sudo update-locale LC_ALL="${LOCALE}" LANGUAGE="${LOCALE}" LANG="${LOCALE}"
@@ -1291,8 +1288,7 @@ prompt_for_lat_long()
 			break
 		else
 			if VALUE="$( convertLatLong "${VALUE}" "${TYPE}" 2>&1 )" ; then
-				# Have to use "cp" instead of "mv" to keep the hard link.
-				jq ".${TYPE}=\"${VALUE}\" "   "${SETTINGS_FILE}" > /tmp/x && cp /tmp/x "${SETTINGS_FILE}" && rm /tmp/x
+				update_json_file ".${TYPE}" "${VALUE}" "${SETTINGS_FILE}"
 				display_msg --log progress "${HUMAN_TYPE} set to ${VALUE}."
 				echo "${VALUE}"
 				break
@@ -1512,14 +1508,15 @@ restore_prior_settings_files()
 					# so don't try to copy all the settings since there have
 					# been many changes, additions, and deletions.
 
-					# As far as I know, latitude and longitude have never changed,
+					# As far as I know, latitude and longitude have never changed names,
 					# and are required and have no default,
 					# so try to restore them so Allsky can restart automatically.
 					LAT="$(settings .latitude "${PRIOR_SETTINGS_FILE}")"
+					update_json_file ".latitude" "${LAT}" "${SETTINGS_FILE}"
 					LONG="$(settings .longitude "${PRIOR_SETTINGS_FILE}")"
+					update_json_file ".longitude" "${LONG}" "${SETTINGS_FILE}"
 					ANGLE="$(settings .angle "${PRIOR_SETTINGS_FILE}")"
-					jq ".latitude=\"${LAT}\" | .longitude=\"${LONG}\" | .angle=\"${ANGLE}\"" \
-						"${SETTINGS_FILE}" > /tmp/x && mv /tmp/x "${SETTINGS_FILE}"
+					update_json_file ".angle" "${ANGLE}" "${SETTINGS_FILE}"
 					display_msg --log progress "Prior latitude, longitude, and angle restored."
 
 					MSG="You need to manually transfer your old settings to the WebUI.\n"
@@ -1766,9 +1763,8 @@ restore_prior_files()
 		if [[ ${V} != "${ALLSKY_VERSION}" ]]; then
 			MSG="Updating AllskyVersion in remote Website from '${V}' to '${ALLSKY_VERSION}'"
 			display_msg --log progress "${MSG}"
-			jq ".config.AllskyVersion = \"${ALLSKY_VERSION}\"" \
-				"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" > /tmp/x \
-				&& mv /tmp/x "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+			update_json_file ".config.AllskyVersion" "${ALLSKY_VERSION}" \
+				"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		else
 			display_msg --log progress "Prior remote Website already at latest version ${V}."
 		fi

@@ -461,14 +461,14 @@ function get_links()
 	local DIRNAME="$( dirname "${FILE}" )"
 
 	# shellcheck disable=SC2012
-	local INODE="$( ls -l --inode "${FILE}" 2>/dev/null | cut -f1 -d' ' )"
+	local INODE="$( /bin/ls -l --inode "${FILE}" 2>/dev/null | cut -f1 -d' ' )"
 	if [[ -z ${INODE} ]]; then
 		echo "File '${FILE}' not found."
 		return 2
 	fi
 
 	# Don't include the specified FILE.
-	LINKS="$(
+	local LINKS="$(
 		if [[ ${DIRNAME} == "." ]]; then
 			x="./"
 		else
@@ -496,38 +496,36 @@ function get_links()
 # Return 0 code and no message if successful, else 1 and return a message.
 function check_settings_link()
 {
-	local FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME
-	FILE="$1"
-	if [[ -z ${FILE} ]]; then
+	local FULL_FILE FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME
+	FULL_FILE="$1"
+	if [[ -z ${FULL_FILE} ]]; then
 		echo "check_settings_link(): Settings file not specified."
 		return 1
 	fi
+	[[ -z ${CAMERA_TYPE} ]] && CAMERA_TYPE="$( jq -r ".cameraType" "${FULL_FILE}" )"
+	[[ -z ${CAMERA_MODEL} ]] && CAMERA_MODEL="$( jq -r ".cameraModel" "${FULL_FILE}" )"
 
-	DIRNAME="$( dirname "${FILE}" )"
-	SETTINGS_LINK="$( get_links "${FILE}" )"
+	DIRNAME="$( dirname "${FULL_FILE}" )"
+	FILE="$( basename "${FULL_FILE}" )"
+	F="${FILE%.*}"
+	E="${FILE##*.}"
+	CORRECT_NAME="${F}_${CAMERA_TYPE}_${CAMERA_MODEL}.${E}"
+	FULL_CORRECT_NAME="${DIRNAME}/${CORRECT_NAME}"
+	SETTINGS_LINK="$( get_links "${FULL_FILE}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
-		MSG="The settings file (${SETTINGS_FILE}) is not linked to"
-		MSG="${MSG} a camera-specific file; any setting changes you make will not"
-		MSG="${MSG} be saved if you switch cameras or upgrade Allsky."
+		MSG="The settings file '${FILE}' was not linked to '${CORRECT_NAME}'"
 		[[ ${RET} -ne "${NO_LINK_}" ]] && MSG="${MSG}\nERROR: ${SETTINGS_LINK}."
-		echo "${MSG}$( fix_settings_link )"
+		echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
 		return 1
 	else
 		# Make sure it's linked to the correct file.
-		SETTINGS_LINK="$( basename "${SETTINGS_LINK}" )"
-		F="${FILE%.*}"
-		E="${FILE##*.}"
-		CORRECT_NAME="$( basename "${F}_${CAMERA_TYPE}_${CAMERA_MODEL}.${E}" )"
-		if [[ ${SETTINGS_LINK} != "${CORRECT_NAME}" ]]; then
-			MSG="The settings file (${SETTINGS_FILE}) is not properly linked to"
-			MSG="${MSG} its camera-specific file; any setting changes you make will not"
-			MSG="${MSG} be saved if you switch cameras or upgrade Allsky."
-			MSG="${MSG}\nIt is linked to:"
-			MSG="${MSG}\n    ${DIRNAME}/${SETTINGS_LINK}"
-			MSG="${MSG}\nbut should be linked to:"
-			MSG="${MSG}\n    ${DIRNAME}/${CORRECT_NAME}"
-			echo "${MSG}$( fix_settings_link )"
+		if [[ ${SETTINGS_LINK} != "${FULL_CORRECT_NAME}" ]]; then
+			MSG="The settings file (${FILE}) was linked to:"
+			MSG="${MSG}\n    ${SETTINGS_LINK}"
+			MSG="${MSG}\nbut should have been linked to:"
+			MSG="${MSG}\n    ${FULL_CORRECT_NAME}"
+			echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
 			return 1
 		fi
 	fi
@@ -537,8 +535,23 @@ function check_settings_link()
 
 function fix_settings_link()
 {
-	# TODO: describe how to fix the settings link.
-	#### echo "\nTo fix: "
+	local SETTINGS="${1}"
+	local LINK="${2}"
+
+	# Often the file to be linked to will exist, it just won't be linked.
+	# shellcheck disable=SC2012
+	local NEWER="$( /bin/ls -t -1 "${SETTINGS}" "${LINK}" 2>/dev/null | head -1 )"
+	if [[ ${NEWER} == "${SETTINGS}" ]]; then
+		echo " but has been fixed."
+		rm -f "${LINK}"
+		ln "${SETTINGS}" "${LINK}"
+	else
+		# Typically the settings will will be newer than the camera-specific version.
+		echo " but has been fixed ('${LINK}' linked to '${SETTINGS}' - this is uncommon)."
+		rm -f "${SETTINGS}"
+		ln "${LINK}" "${SETTINGS}"
+	fi
+
 	return 0
 }
 

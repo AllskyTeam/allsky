@@ -727,8 +727,8 @@
 {
 "name" : "experimentalExposure",
 "default" : 0,
-"description" : "Activate to use a newer auto-exposure algorithm.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
-"label" : "ZWO New Exposure",
+"description" : "Activate to use a newer auto-exposure algorithm at night.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
+"label" : "New Exposure Algorithm",
 "type" : "boolean",
 "display" : "_display",
 "advanced" : 1

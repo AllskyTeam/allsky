@@ -150,13 +150,22 @@ get_this_branch()
 		if [[ -n ${B} ]]; then
 			if [[ ${B} == "${GITHUB_MAIN_BRANCH}" ]]; then
 				display_msg --logonly info "Using the '${B}' branch."
+				# The file shouldn't be there, but just in case...
+				# It's only used for non-standard branches.
+				rm -f "${ALLSKY_BRANCH_FILE}"
+			elif [[ $( echo "${B}" | wc -l ) -ne 1 ]]; then
+				MSG="Multiple branches found in '${FILE}': '${B}'; unable to continue."
+				display_msg --log error "${MSG}"
+				#shellcheck disable=SC2086
+				exit_installation 1
 			else
 				BRANCH="${B}"
 				echo -n "${BRANCH}" > "${ALLSKY_BRANCH_FILE}"
 				display_msg --log info "Using '${BRANCH}' branch."
 			fi
 		else
-			display_msg --log warning "Unable to determine branch from '${FILE}'; assuming ${BRANCH}."
+			MSG="Unable to determine branch from '${FILE}'; assuming ${BRANCH}."
+			display_msg --log warning "${MSG}"
 		fi
 	else
 		display_msg --log warning "${FILE} not found; assuming ${BRANCH} branch."

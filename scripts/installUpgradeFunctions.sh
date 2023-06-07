@@ -43,12 +43,13 @@ function get_Git_version() {
 }
 
 
+# For the version and branch, if the last character of the argument passed is a "/",
+# then append the file name from ${ALLSKY_VERSION_FILE} or ${ALLSKY_BRANCH_FILE}.
+# We do this to limit the number of places that know the actual name of the files,
+# in case we ever change their names.
+
 #####
 # Get the version from a local file, if it exists.
-# For the version and branch, if the last character of the argument passed is a "/",
-# then append the file name fro ${ALLSKY_VERSION_FILE} or ${ALLSKY_BRANCH_FILE}.
-# We do this to limit the number of places that know the actual name of the files,
-# in case we every change their names.
 function get_version() {
 	local F="${1}"
 	if [[ -z ${F} ]]; then
@@ -57,7 +58,8 @@ function get_version() {
 		[[ ${F:1,-1} == "/" ]] && F="${F}$(basename "${ALLSKY_VERSION_FILE}")"
 	fi
 	if [[ -f ${F} ]]; then
-		local VALUE="$( < "${F}" )"
+		# Sometimes the branch file will have both "master" and "dev" on two lines.
+		local VALUE="$( head -1 "${F}" )"
 		echo -n "${VALUE}" | tr -d '\n\r'
 	fi
 }

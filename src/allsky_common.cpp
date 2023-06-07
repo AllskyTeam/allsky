@@ -1250,7 +1250,7 @@ void displaySettings(config cg)
 			cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY,
 			cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0,
 			cg.HB.centerX, cg.HB.centerY, cg.HB.leftOfBox, cg.HB.topOfBox, cg.HB.rightOfBox, cg.HB.bottomOfBox);
-		printf("   ZWO experimental auto-exposure: %s\n", yesNo(cg.HB.useExperimentalExposure));
+		printf("   New Exposure Algorithm: %s\n", yesNo(cg.HB.useExperimentalExposure));
 		printf("   Video OFF Between Images: %s\n", yesNo(cg.videoOffBetweenImages));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));

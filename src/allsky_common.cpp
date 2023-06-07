@@ -1072,7 +1072,7 @@ void displayHelp(config cg)
 		printf(" -%-*s - Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", n, "histogrambox n n n n", cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY, cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0);
 		printf(" -%-*s - 1 enables auto USB Speed.\n", n, "autousb b");
 		printf(" -%-*s - USB bandwidth percent.\n", n, "usb n");
-		printf(" -%-*s - 1 enables an experimental ZWO auto-exposure algorithm [%s].\n", n, "experimentalExposure b", yesNo(cg.HB.useExperimentalExposure));
+		printf(" -%-*s - 1 enables a newer ZWO auto-exposure algorithm [%s].\n", n, "experimentalExposure b", yesNo(cg.HB.useExperimentalExposure));
 		printf(" -%-*s - Determines if version 0.8 exposure method should be used [%s].\n", n, "newexposure b", yesNo(cg.videoOffBetweenImages));
 	}
 	if (cg.ct == ctRPi) {

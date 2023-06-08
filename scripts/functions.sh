@@ -657,7 +657,7 @@ function one_instance()
 
 		PID=$( < "${PID_FILE}" )
 		# shellcheck disable=SC2009
-		if ! ps -p "${PID}" | /bin/grep --silent "${PROCESS_NAME}" ; then
+		if ! ps -fp "${PID}" | /bin/grep --silent "${PROCESS_NAME}" ; then
 			break	# Not sure why the PID file existed if the process didn't exist.
 		fi
 
@@ -665,7 +665,7 @@ function one_instance()
 			echo -en "${YELLOW}" >&2
 			echo -e  "${ABORTED_MSG1}" >&2
 			echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
-			echo -n  " If this happens often, check your network and delay settings." >&2
+			echo -n  " If this happens often, check your settings." >&2
 			echo -e  "${NC}" >&2
 			ps -fp "${PID}" >&2
 

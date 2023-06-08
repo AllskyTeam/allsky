@@ -56,6 +56,7 @@ ABORTED_MSG2="uploads"
 if ! one_instance --process-name "${ME}" --pid-file "${PID_FILE}" \
 		--aborted-count-file "${ALLSKY_ABORTEDSAVEIMAGE:-/home/pi/allsky/tmp/aborted_saveImage.txt}" --aborted-fields "${ABORTED_FIELDS}" \
 		--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" ; then
+	rm -f "${CURRENT_IMAGE}"
 	exit 1
 fi
 

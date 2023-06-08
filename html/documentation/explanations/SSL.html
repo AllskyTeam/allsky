@@ -31,8 +31,17 @@ This is desirable (really, mandatory) when accessing the Pi from the Internet.
 If your Pi is only available on a local network, SSL isn't needed.
 </p>
 
-<blockquote class="warning">
-Installing SSL, which requires that your Pi be accessible via the Internet,
+<h4>Requirements</h4>
+<ol class="minimalPadding">
+	<li>You must have Allsky working on your Pi prior to installing SSL.
+	<li>You must already have an Internet domain name for your Pi.
+		The instructions below use <b>myallsky.com</b> but
+		replace that with your domain name.
+</ol>
+
+
+<blockquote class="warning morePadding">
+Installing SSL requires that your Pi be accessible via the Internet and
 can be a <strong>huge</strong> security risk if not done correctly.
 <br><br>
 Do not attempt unless you know what you are doing.
@@ -40,26 +49,20 @@ The Allsky developers are not responsible for any loss or damages.
 <br><br>
 There are additional steps you should take to secure your Pi that aren't
 described in these instructions.
-For example, install a firewall and a VLAN.
-If you do not know what those are you probably aren't qualified to install SSL.
+<br>
+If you aren't familiar with the following you're probably not qualified to install SSL:
+<ul class="minimalPadding">
+	<li>installing a firewall and a VLAN
+	<li>obtaining an Internet domain name
+</ul>
 </blockquote>
 
-<p>
+<p class="morePadding">
 There are many ways to implement SSL;
 the instructions below use
 <a external="true" href="https://letsencrypt.org/">Let's Encrypt SSL</a>
 which is popular and free software package.
 </p>
-
-
-<h4>Requirements</h4>
-<ol class="minimalPadding">
-	<li>You must have Allsky working on your Pi prior to installing SSL.
-	<li>You must already have an Internet domain name for your Pi.
-		The instructions below use <b>myallsky.com</b> but
-		replace that with your domain name.
-		<br><span style="color: red; font-weight: bold">NEED TO DESCRIBE HOW TO GET THE DOMAIN NAME.</span>
-</ol>
 
 
 <h4>Software installation</h4>
@@ -184,6 +187,11 @@ certbot renew
 cd /etc/letsencrypt/live/<b>myallsky.com</b>
 cat cert.pem privkey.pem | sudo tee web.pem
 </pre>
+<blockquote class="morePadding">
+You can renew your Let's Encrypt certificates <strong>at most</strong>
+30 days before they expire - two weeks prior to expiration is a good goal.
+</blockquote>
+</p>
 
 
 <h4>Notes</h4>
@@ -212,4 +220,3 @@ and modified for Allsky use.
 </body>
 </html>
 <script> includeHTML(); </script>
-

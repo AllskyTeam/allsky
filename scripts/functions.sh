@@ -100,7 +100,7 @@ function determineCommandToUse()
 		# the output of vcgencmd changes depending on the OS and how the Pi is configured.
 		# Newer kernels/libcamera give:   supported=1 detected=0, libcamera interfaces=1
 		# but only if    start_x=1    is in /boot/config.txt
-		vcgencmd get_camera | grep --silent "supported=1" ######### detected=1"
+		vcgencmd get_camera | /bin/grep --silent "supported=1" ######### detected=1"
 		RET=$?
 	fi
 
@@ -426,7 +426,7 @@ function get_variable() {
 	local FILE="${2}"
 	local LINE=""
 	local SEARCH_STRING="^[ 	]*${VARIABLE}="
-	if ! LINE="$(grep -E "${SEARCH_STRING}" "${FILE}")" ; then
+	if ! LINE="$( /bin/grep -E "${SEARCH_STRING}" "${FILE}" )" ; then
 		return 1
 	fi
 
@@ -561,4 +561,139 @@ function update_json_file()		# field, new value, file
 	local TEMP="/tmp/$$"
 	# Have to use "cp" instead of "mv" to keep any hard link.
 	jq "${1} = \"${2}\"" "${FILE}" > "${TEMP}" && cp "${TEMP}" "${FILE}" && rm "${TEMP}"
+}
+
+####
+# Only allow one of the specified process at a time.
+function one_instance()
+{
+	local SLEEP_TIME="5s"
+	local MAX_CHECKS=3
+	local PROCESS_NAME=""
+	local PID_FILE=""
+	local ABORTED_FILE=""
+	local ABORTED_FIELDS=""
+	local ABORTED_MSG1=""
+	local ABORTED_MSG2=""
+
+	OK="true"
+	local ERRORS=""
+	while [[ $# -gt 0 ]]; do
+		ARG="${1}"
+		case "${ARG}" in
+				--sleep)
+					SLEEP_TIME="${2}"
+					shift
+					;;
+				--max-checks)
+					MAX_CHECKS=${2}
+					shift
+					;;
+				--process-name)
+					PROCESS_NAME="${2}"
+					shift
+					;;
+				--pid-file)
+					PID_FILE="${2}"
+					shift
+					;;
+				--aborted-count-file)
+					ABORTED_FILE="${2}"
+					shift
+					;;
+				--aborted-fields)
+					ABORTED_FIELDS="${2}"
+					shift
+					;;
+				--aborted-msg1)
+					ABORTED_MSG1="${2}"
+					shift
+					;;
+				--aborted-msg2)
+					ABORTED_MSG2="${2}"
+					shift
+					;;
+				*)
+					ERRORS="${ERRORS}\nUnknown argument: '${ARG}'."
+					OK="false"
+					;;
+		esac
+		shift
+	done
+	if [[ -z ${PROCESS_NAME} ]]; then
+		ERRORS="${ERRORS}\nPROCESS_NAME not specified."
+		OK="false"
+	fi
+	if [[ -z ${PID_FILE} ]]; then
+		ERRORS="${ERRORS}\nPID_FILE not specified."
+		OK="false"
+	fi
+	if [[ -z ${ABORTED_FILE} ]]; then
+		ERRORS="${ERRORS}\nABORTED_FILE not specified."
+		OK="false"
+	fi
+	if [[ -z ${ABORTED_FIELDS} ]]; then
+		ERRORS="${ERRORS}\nABORTED_FIELDS not specified."
+		OK="false"
+	fi
+	if [[ -z ${ABORTED_MSG1} ]]; then
+		ERRORS="${ERRORS}\nABORTED_MSG1 not specified."
+		OK="false"
+	fi
+	if [[ -z ${ABORTED_MSG2} ]]; then
+		ERRORS="${ERRORS}\nABORTED_MSG2 not specified."
+		OK="false"
+	fi
+
+	if [[ ${OK} == "false" ]]; then
+		echo -e "${RED}${ME}: ERROR: ${ERRORS}.${NC}" >&2
+		return 1
+	fi
+
+
+	NUM_CHECKS=0
+	while  : ; do
+		[[ ! -f ${PID_FILE} ]] && break
+
+		PID=$( < "${PID_FILE}" )
+		# shellcheck disable=SC2009
+		if ! ps -fp "${PID}" | /bin/grep --silent "${PROCESS_NAME}" ; then
+			break	# Not sure why the PID file existed if the process didn't exist.
+		fi
+
+		if [[ $NUM_CHECKS -eq ${MAX_CHECKS} ]]; then
+			echo -en "${YELLOW}" >&2
+			echo -e  "${ABORTED_MSG1}" >&2
+			echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
+			echo -n  " If this happens often, check your settings." >&2
+			echo -e  "${NC}" >&2
+			ps -fp "${PID}" >&2
+
+			# Keep track of aborts so user can be notified.
+			# If it's happening often let the user know.
+			echo -e "$(date)\t${ABORTED_FIELDS}" >> "${ABORTED_FILE}"
+			NUM=$( wc -l < "${ABORTED_FILE}" )
+			if [[ ${NUM} -eq 3 || ${NUM} -eq 10 ]]; then
+				MSG="${NUM} ${ABORTED_MSG2} have been aborted waiting for others to finish."
+				MSG="${MSG}\nThis could be caused by a slow network or other network issues."
+				if [[ ${NUM} -eq 3 ]]; then
+					SEVERITY="info"
+				else
+					SEVERITY="warning"
+					MSG="${MSG}\nOnce you have resolved the cause, reset the aborted counter:"
+					MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${ABORTED_FILE}'</code>"
+				fi
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
+			fi
+
+			return 2
+		else
+			sleep "${SLEEP_TIME}"
+		fi
+		((NUM_CHECKS++))
+	done
+
+	echo $$ > "${PID_FILE}" || return 1
+
+	return 0
 }

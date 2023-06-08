@@ -23,6 +23,7 @@ usage_and_exit()
 	exit ${retcode}
 }
 [[ $# -lt 2 ]] && usage_and_exit 1
+
 # Export so other scripts can use it.
 export DAY_OR_NIGHT="${1}"
 [[ ${DAY_OR_NIGHT} != "DAY" && ${DAY_OR_NIGHT} != "NIGHT" ]] && usage_and_exit 1
@@ -44,6 +45,20 @@ if [[ ! -s ${CURRENT_IMAGE} ]] ; then
 	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE}' is empty; ignoring${NC}"
 	exit 2
 fi
+
+# Make sure only one save happens at once.
+# Multiple concurrent saves (which can happen if the delay is short or post-processing
+# is long) causes read and write errors.
+PID_FILE="${ALLSKY_TMP}/saveImage-pid.txt"
+ABORTED_MSG1="Another saveImage is in progress so the new one was aborted."
+ABORTED_FIELDS="${CURRENT_IMAGE}"
+ABORTED_MSG2="uploads"
+if ! one_instance --process-name "${ME}" --pid-file "${PID_FILE}" \
+		--aborted-count-file "${ALLSKY_ABORTEDSAVEIMAGE:-/home/pi/allsky/tmp/aborted_saveImage.txt}" --aborted-fields "${ABORTED_FIELDS}" \
+		--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" ; then
+	exit 1
+fi
+
 
 # The image may be in a memory filesystem, so do all the processing there and
 # leave the image used by the website(s) in that directory.
@@ -225,6 +240,11 @@ fi
 
 "${ALLSKY_SCRIPTS}/flow-runner.py"
 
+# The majority of the post-processing time for an image is in flow-runner.py.
+# Since only one mini-timelapse can run at once and that code is embeded in this code
+# in several places, remove our PID lock now.
+rm -f "${PID_FILE}"
+
 SAVED_FILE="${CURRENT_IMAGE}"						# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 
@@ -310,17 +330,21 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				# shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}"/timelapse.sh ${D} --mini "${MINI_TIMELAPSE_FILES}" "${DATE_NAME}"
 				RET=$?
-				[[ ${RET} -ne 0 ]] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
+				if [[ ${RET} -ne 0 ]]; then
+					# failed so don't try to upload
+					TIMELAPSE_MINI_UPLOAD_VIDEO="false"
+				fi
 				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
 					if [[ ${RET} -eq 0 ]]; then
-						echo "${ME}: mini-timelapse created"
+						echo "${ME}: mini-timelapse created (last image: ${IMAGE_NAME})"
 					else
-						echo "${ME}: mini-timelapse creation returned with RET=${RET}"
+						echo "${ME}: mini-timelapse creation returned with RET=${RET} (last image: ${IMAGE_NAME})"
 					fi
 				fi
 
-				# Remove the oldest files, but not if we only created this mini-timelapse because of a force
-				if [[ ${MOD} -ne 0 || ${TIMELAPSE_MINI_FORCE_CREATION} == "false" ]]; then
+				# Remove the oldest files, but not if we only created
+				# this mini-timelapse because of a force.
+				if [[ ${RET} -eq 0 && (${MOD} -ne 0 || ${TIMELAPSE_MINI_FORCE_CREATION} == "false") ]]; then
 					KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
 					x="$(tail -${KEEP} "${MINI_TIMELAPSE_FILES}")"
 					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"

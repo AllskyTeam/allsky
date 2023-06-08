@@ -115,56 +115,23 @@ LOG="${ALLSKY_TMP}/upload_errors.txt"
 # Multiple concurrent uploads (which can happen if the system and/or network is slow can
 # cause errors and files left on the server.
 PID_FILE="${ALLSKY_TMP}/${FILE_TYPE}-pid.txt"
-NUM_CHECKS=0
 if [[ ${WAIT} == "true" ]]; then
 	MAX_CHECKS=10
-	SLEEP_TIME="5s"
+	SLEEP="5s"
 else
 	MAX_CHECKS=2
-	SLEEP_TIME="10s"
+	SLEEP="10s"
 fi
-while  : ; do
-	[[ ! -f ${PID_FILE} ]] && break
-
-	PID=$( < "${PID_FILE}" )
-	# shellcheck disable=SC2009
-	if ! ps -p "${PID}" | grep --silent "${ME}" ; then
-		break	# Not sure why the PID file existed if the process didn't exist.
-	fi
-
-	if [[ $NUM_CHECKS -eq ${MAX_CHECKS} ]]; then
-		echo -en "${YELLOW}" >&2
-		echo -n  "${ME}: WARNING: Another '${FILE_TYPE}' upload is in" >&2
-		echo     " progress so the new upload of $(basename "${FILE_TO_UPLOAD}") was aborted." >&2
-		echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
-		echo -n  " If this happens often, check your network and delay settings." >&2
-		echo -e  "${NC}" >&2
-		ps -fp "${PID}" >&2
-
-		# Keep track of aborts so user can be notified.
-		# If it's happening often let the user know.
-		echo -e "$(date)\t${FILE_TYPE}\t${FILE_TO_UPLOAD}" >> "${ALLSKY_ABORTEDUPLOADS}"
-		NUM=$( wc -l < "${ALLSKY_ABORTEDUPLOADS}" )
-		if [[ ${NUM} -eq 3 || ${NUM} -eq 10 ]]; then
-			MSG="${NUM} uploads have been aborted waiting for other uploads to finish."
-			MSG="${MSG}\nThis could be caused by a slow network or other network issues."
-			if [[ ${NUM} -eq 3 ]]; then
-				SEVERITY="info"
-			else
-				SEVERITY="warning"
-				MSG="${MSG}\nOnce you have resolved the cause, reset the aborted counter:"
-				MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${ALLSKY_ABORTEDUPLOADS}'</code>"
-			fi
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
-		fi
-
-		exit 2
-	else
-		sleep "${SLEEP_TIME}"
-	fi
-	((NUM_CHECKS++))
-done
-echo $$ > "${PID_FILE}" || exit 1
+ABORTED_MSG1="Another '${FILE_TYPE}' upload is in progress so the new upload of"
+ABORTED_MSG1="${ABORTED_MSG1} $(basename "${FILE_TO_UPLOAD}") was aborted."
+ABORTED_FIELDS="${FILE_TYPE}\t${FILE_TO_UPLOAD}"
+ABORTED_MSG2="uploads"
+if ! one_instance --sleep "${SLEEP}" --max-checks "${MAX_CHECKS}" \
+		--process-name "${ME}" --pid-file "${PID_FILE}" \
+		--aborted-count-file "${ALLSKY_ABORTEDUPLOADS}" --aborted-fields "${ABORTED_FIELDS}" \
+		--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" ; then
+	exit 1
+fi
 
 # Convert to lowercase so we don't care if user specified upper or lowercase.
 PROTOCOL="${PROTOCOL,,}"

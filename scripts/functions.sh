@@ -97,11 +97,7 @@ function determineCommandToUse()
 			return 1
 		fi
 
-		# TODO: Should try and run raspistill command - doing that is more reliable since
-		# the output of vcgencmd changes depending on the OS and how the Pi is configured.
-		# Newer kernels/libcamera give:   supported=1 detected=0, libcamera interfaces=1
-		# but only if    start_x=1    is in /boot/config.txt
-		vcgencmd get_camera | /bin/grep --silent "supported=1" ######### detected=1"
+		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
 	fi
 

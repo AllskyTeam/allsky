@@ -115,7 +115,6 @@ LOG="${ALLSKY_TMP}/upload_errors.txt"
 # Multiple concurrent uploads (which can happen if the system and/or network is slow can
 # cause errors and files left on the server.
 PID_FILE="${ALLSKY_TMP}/${FILE_TYPE}-pid.txt"
-NUM_CHECKS=0
 if [[ ${WAIT} == "true" ]]; then
 	MAX_CHECKS=10
 	SLEEP="5s"

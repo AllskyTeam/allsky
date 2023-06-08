@@ -86,63 +86,22 @@ fi
 
 if [[ ${DO_MINI} == "false" ]]; then
 	OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
+	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse"
 else
 	# In MINI mode, only allow one process at a time.
 	OUTPUT_FILE="${ALLSKY_TMP}/mini-timelapse.mp4"
 	PID_FILE="${ALLSKY_TMP}/timelapse-mini-pid.txt"
-	NUM_CHECKS=0
-	MAX_CHECKS=2
-	SLEEP_TIME="15s"
-
-	while  : ; do
-		[[ ! -f ${PID_FILE} ]] && break
-
-		PID=$( < "${PID_FILE}" )
-		# shellcheck disable=SC2009
-		if ! ps -fp "${PID}" | grep -E --silent "${ME}.*--mini" ; then
-			break	# Not sure why the PID file existed if the process didn't exist.
-		fi
-
-		if [[ $NUM_CHECKS -eq ${MAX_CHECKS} ]]; then
-			echo -en "${YELLOW}" >&2
-			echo -n  "${ME}: WARNING: Another mini timelapse creation is in progress" >&2
-			echo     " so this one was aborted." >&2
-			echo     "If this happens often, check your network and delay settings" >&2
-			echo -n  "as well as your TIMELAPSE_MINI_IMAGES and TIMELAPSE_MINI_FREQUENCY settings." >&2
-			echo -e  "${NC}" >&2
-			ps -fp "${PID}" >&2
-
-			# Keep track of aborts so user can be notified.
-			# If it's happening often let the user know.
-			echo -e "$(date)\t${OUTPUT_FILE}" >> "${ALLSKY_ABORTEDTIMELAPSE}"
-			NUM=$( wc -l < "${ALLSKY_ABORTEDTIMELAPSE}" )
-			if [[ ${NUM} -eq 3 || ${NUM} -eq 10 ]]; then
-				MSG="${NUM} mini timelapse creations have been aborted waiting for others to finish."
-				MSG="${MSG}\nThis could be caused by unreasonable"
-				MSG="${MSG} TIMELAPSE_MINI_IMAGES and TIMELAPSE_MINI_FREQUENCY settings."
-				if [[ ${NUM} -eq 3 ]]; then
-					SEVERITY="info"
-				else
-					SEVERITY="warning"
-					MSG="${MSG}\nOnce you have resolved the cause, reset the aborted counter:"
-					MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${ALLSKY_ABORTEDTIMELAPSE}'</code>"
-				fi
-				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
-			fi
-
-			exit 2
-		else
-			sleep "${SLEEP_TIME}"
-		fi
-		((NUM_CHECKS++))
-	done
-
-	echo $$ > "${PID_FILE}" || exit 1
+	ABORTED_MSG1="Another mini timelapse creation is in progress so this one was aborted."
+	ABORTED_FIELDS="${OUTPUT_FILE}"
+	ABORTED_MSG2="mini timelapse creations"
+	if ! one_instance --process-name "${ME}.*--mini" --pid-file "${PID_FILE}" \
+			--aborted-count-file "${ALLSKY_ABORTEDTIMELAPSE}" --aborted-fields "${ABORTED_FIELDS}" \
+			--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" ; then
+		exit 1
+	fi
+	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-mini-timelapse"
 fi
 
-# To save on writes to SD card for people who have $ALLSKY_TMP as a memory filesystem,
-# put the sequence files there.
-SEQUENCE_DIR="${ALLSKY_TMP}/sequence-${DATE}-$$"
 if [[ -d ${SEQUENCE_DIR} ]]; then
 	NSEQ=$(find "${SEQUENCE_DIR}/*" 2>/dev/null | wc -l)	# left over from last time
 else

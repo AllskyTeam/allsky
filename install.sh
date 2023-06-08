@@ -81,7 +81,7 @@ do_initial_heading()
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		MSG="${MSG}\nYou will be asked if you want to use the images and darks (if any) from"
 		MSG="${MSG}\nyour prior version of Allsky."
-		if [[ ${PRIOR_ALLSKY} == "new" ]]; then
+		if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
 			MSG="${MSG}\nIf so, its settings will be used as well."
 		else
 			MSG="${MSG}\nIf so, we will attempt to use its settings as well, but may not be"
@@ -225,25 +225,25 @@ CAMERA_to_CAMERA_TYPE()
 CAMERA_TYPE=""
 select_camera_type()
 {
-	if [[ -f ${PRIOR_CONFIG_FILE} ]]; then
+	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		case "${PRIOR_ALLSKY_VERSION}" in
 			# New versions go here...
 			v2023.05.01*)
 				# New style Allsky using ${CAMERA_TYPE}.
-				CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
+				CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
 				# Don't bother with a message since this is a "similar" release.
 				if [[ -n ${CAMERA_TYPE} ]]; then
-					MSG="Using CAMERA_TYPE '${CAMERA_TYPE}' from prior config.sh."
+					MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky."
 					display_msg --logonly info "${MSG}"
 					return
 				else
-					MSG="CAMERA_TYPE not in prior config.sh; possibly corrupted file?"
+					MSG="Camera Type not in prior new-style settings file."
 					display_msg --log error "${MSG}"
 				fi
 				;;
 
 			"v2022.03.01" | "old")
-				local CAMERA="$(get_variable "CAMERA" "${PRIOR_CONFIG_FILE}")"
+				local CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
 				if [[ -n ${CAMERA} ]]; then
 					CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
 					if [[ ${CAMERA} != "${CAMERA_TYPE}" ]]; then
@@ -260,6 +260,8 @@ select_camera_type()
 				;;
 		esac
 	fi
+
+# TODO: if there is ONLY a ZWO or RPi camera, don't prompt.
 
 	# "2" is the number of menu items.
 	MSG="\nSelect your camera type:\n"
@@ -330,7 +332,7 @@ create_webui_defines()
 # This can be used after installation if the options file gets hosed.
 recreate_options_file()
 {
-	CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${ALLSKY_CONFIG}/config.sh")"
+	CAMERA_TYPE="$( get_variable "CAMERA_TYPE" "${ALLSKY_CONFIG}/config.sh" )"
 	save_camera_capabilities "true"
 	set_permissions
 }
@@ -377,8 +379,8 @@ save_camera_capabilities()
 	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	#shellcheck disable=SC2086
-	MSG="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly ${DEBUG_ARG} \
-		"cameraType" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2>&1 )"
+	MSG="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly \
+		${DEBUG_ARG} "cameraType" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2>&1 )"
 	RET=$?
 
 	[[ -n ${MSG} ]] && display_msg "${LOG_TYPE}" info "${MSG}"
@@ -393,11 +395,12 @@ save_camera_capabilities()
 			display_msg --log error "Unable to save camera capabilities."
 		fi
 		return 1
-	else
-		#shellcheck disable=SC2012
-		MSG="$( ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
-		display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
 	fi
+
+	#shellcheck disable=SC2012
+	MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
+	display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
+	CAMERA_MODEL="$( settings ".cameraModel" "${SETTINGS_FILE}" )"
 
 	return 0
 }
@@ -1105,6 +1108,14 @@ set_locale()
 			MSG="${MSG} did NOT contain .locale so adding it."
 			display_msg --logonly info "${MSG}"
 			update_json_file ".locale" "${LOCALE}"  "${SETTINGS_FILE}"
+
+# TODO: Something appears to still be unlinking the settings file
+# from its camera-specific file, so do "ls" of the settings
+# files to try and pinpoint the problem.
+#shellcheck disable=SC2012
+MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
+display_msg --logonly info "Settings files now:\n${MSG}"
+
 		else
 			MSG="${MSG} CONTAINED .locale = '${L}'."
 			display_msg --logonly info "${MSG}"
@@ -1114,6 +1125,11 @@ set_locale()
 
 	display_msg --log progress "Setting locale to '${LOCALE}'."
 	update_json_file ".locale" "${LOCALE}"  "${SETTINGS_FILE}"
+
+# TODO: same as above...
+#shellcheck disable=SC2012
+MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
+display_msg --logonly info "Settings files now:\n${MSG}"
 
 	# This updates /etc/default/locale
 	sudo update-locale LC_ALL="${LOCALE}" LANGUAGE="${LOCALE}" LANG="${LOCALE}"
@@ -1134,47 +1150,53 @@ set_locale()
 # See if a prior Allsky exists; if so, set some variables.
 does_prior_Allsky_exist()
 {
+	[[ ! -d ${PRIOR_ALLSKY_DIR}/src ]] && return 1
+
 	PRIOR_ALLSKY=""
 	PRIOR_CAMERA_TYPE=""
-	if [[ -d ${PRIOR_ALLSKY_DIR}/src ]]; then
-		PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"
-		if [[ -n  ${PRIOR_ALLSKY_VERSION} ]]; then
-			case "${PRIOR_ALLSKY_VERSION}" in
-				"v2022.03.01")		# First Allsky version with a version file
-					# This is an old style Allsky with ${CAMERA} in config.sh and
-					# the first version with a "version" file.
-					# Don't do anything here; go to the "if" after the "esac".
-					;;
+	PRIOR_CAMERA_MODEL=""
+	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"
+	if [[ -n  ${PRIOR_ALLSKY_VERSION} ]]; then
+		case "${PRIOR_ALLSKY_VERSION}" in
+			"v2022.03.01")		# First Allsky version with a "version" file
+				# This is an old style Allsky with ${CAMERA} in config.sh.
+				# Don't do anything here; go to the "if" after the "esac".
+				;;
 
-				*)
-					# Newer version.
-					# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file.
-					PRIOR_ALLSKY="new"
-					PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
-					PRIOR_CAMERA_TYPE="$(get_variable "CAMERA_TYPE" "${PRIOR_CONFIG_FILE}")"
+			*)
+				# Newer version.
+				# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file.
+				PRIOR_ALLSKY="newStyle"
+				PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
+				if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
+					PRIOR_CAMERA_TYPE="$( settings ".cameraType" "${PRIOR_SETTINGS_FILE}" )"
+					PRIOR_CAMERA_MODEL="$( settings ".cameraModel" "${PRIOR_SETTINGS_FILE}" )"
+				else
+					# This shouldn't happen...
+					PRIOR_SETTINGS_FILE=""
+					display_msg --log warning "No prior new style settings file found!"
+				fi
 
-					# This shouldn't happen, but just in case ...
-					[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
-					;;
-			esac
-		fi
-
-		if [[ -z ${PRIOR_ALLSKY} ]]; then
-			PRIOR_ALLSKY="old"
-			PRIOR_ALLSKY_VERSION="${PRIOR_ALLSKY_VERSION:-old}"
-			local CAMERA="$(get_variable "CAMERA" "${PRIOR_CONFIG_FILE}")"
-			PRIOR_CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
-			PRIOR_SETTINGS_FILE="${OLD_RASPAP_DIR}/settings_${CAMERA}.json"
-			[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
-		fi
-
-		display_msg "${LOG_TYPE}" info "PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
-		display_msg "${LOG_TYPE}" info "PRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}"
-		display_msg "${LOG_TYPE}" info "PRIOR_SETTINGS_FILE=${PRIOR_SETTINGS_FILE}"
-		return 0
-	else
-		return 1
+				;;
+		esac
 	fi
+
+	if [[ -z ${PRIOR_ALLSKY} ]]; then
+		PRIOR_ALLSKY="oldStyle"
+		PRIOR_ALLSKY_VERSION="${PRIOR_ALLSKY_VERSION:-old}"
+		local CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
+		PRIOR_CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
+		# PRIOR_CAMERA_MODEL wasn't stored anywhere so can't set it.
+		PRIOR_SETTINGS_FILE="${OLD_RASPAP_DIR}/settings_${CAMERA}.json"
+		[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
+	fi
+
+	MSG="PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
+	MSG="${MSG}\nPRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}"
+	MSG="${MSG}\nPRIOR_SETTINGS_FILE=${PRIOR_SETTINGS_FILE}"
+	display_msg "${LOG_TYPE}" info "${MSG}"
+
+	return 0
 }
 
 
@@ -1339,131 +1361,125 @@ get_lat_long()
 ####
 # Convert the prior settings file to a new one,
 # then link the new one to the camera-specific name.
-convert_settings()			# prior_version, prior_file, current_version
+convert_settings()			# prior_version, new_version, prior_file, new_file
 {
-cat > /dev/null <<EOF
-# ZWO:
-Z "autousb":"1",
-Z "usb":"80",
-Z "gaintransitiontime":"15",
-Z "gamma":"50",
-Z "showTemp":"1",
-Z "showHistogram":"0",
-Z "coolerEnabled":"0",
-Z "targetTemp":"0",
-Z "histogrambox":"500 500 50 50",
-Z "showhistogrambox":"0",
-Z "newexposure":"1",
-Z aggression
-Z dayskipframes
-Z nightskipframes
+	PRIOR_VERSION="${1}"
+	NEW_VERSION="${2}"
+	PRIOR_FILE="${3}"
+	NEW_FILE="${4}"
 
+	case "${NEW_VERSION}" in
+		# TODO: new versions go here
+		v2023.05.01*)
 
-R Z "dayautoexposure":"1",
-R   "daymaxexposure"
-R Z "dayexposure":".5",
-R   "daymean"
-R Z "daybrightness":"50",		R: brightness, daybrightness
-R Z "daydelay":"5000",
-R   "dayautogain",
-R   "daymaxgain"
-R   "daygain",
-R Z "daybin":"1",
-R Z "nightautoexposure":"1",
-R Z "nightmaxexposure":"20000",
-R   "nightmaxesposure"
-R Z "nightexposure":"10000",
-R   "nightmean"
-R Z "nightbrightness":"50",		R: brightness
-R Z "nightdelay":"10",
-R Z "nightautogain":"0",
-R Z "nightmaxgain":"200",
-R Z "nightgain":"50",
-R Z gaintransitiontime
-R Z "nightbin":"1",
-R Z "width":"0",
-R Z "height":"0",
-R Z "type":"99",
-R Z "autowhitebalance":"0",		|| awb
-R Z "wbr":"53",
-R Z "wbb":"90",
-R Z "quality":"95",
-R Z "filename":"image.jpg",
-R Z "flip":"0",
-R Z "showTime":"1",
-R Z "timeformat":"%Y%m%d %H:%M:%S",
-R Z "temptype":"C",
-R Z "showExposure":"1",
-R Z "showGain":"1",
-R Z "showBrightness":"0",
-R Z "text":"",
-R Z "extratext":"",
-R Z "extratextage":"600",
-R Z "textlineheight":"60",
-R Z "textx":"15",
-R Z "texty":"30",
-R Z "fontname":"0",
-R Z "fontcolor":"255 255 255",
-R Z "smallfontcolor":"0 0 255",
-R Z "fonttype":"0",
-R Z "fontsize":"7",
-R Z "fontline":"1",
-R Z "outlinefont":"0",
-R Z "notificationimages":"1",
-R Z "latitude":"60.7N",
-R Z "longitude":"135.05W",
-R Z "angle":"-6",
-R Z "darkframe":"0",
-R Z "locale":"en_US.UTF-8",
-R Z "debuglevel":"1",
-R Z "alwaysshowadvanced":"0",
-R Z "showonmap":"0",
-R Z "location":"",
-R Z "owner":"",
-R Z "websiteurl":"",
-R Z "imageurl":"",
-R Z "camera":"",
-R Z "lens":"",
-R Z "computer":""
+			case "${PRIOR_VERSION}" in
+				"v2022.03.01")
+					local B="$( basename "${NEW_FILE}" )"
+					local NAME="${B%.*}"			# before "."
+					local EXT="${B##*.}"			# after "."
+					local SPECIFIC="${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}"
 
-R "autofocus":"0",
-R "rotation":"0",
-R "showDetails":"1",
-R "background":"0",
-R "saturation":"0",
-R "showMean",
-R "mean-threshold"
-R "mean-p0"
-R "mean-p1"
-R "mean-p2"
-EOF
+					# For each field in prior file, update new file with old value.
+					# Then handle new fields and fields that changed locations or names.
+					jq "." "${PRIOR_FILE}" |
+						sed -e '/^{/d' -e '/^}/d' -e 's/ *"//' -e 's/":"/\t/' \
+							-e 's/": "/\t/' -e 's/",$//' -e 's/,$//' |
+						while read -r F V
+						do
+							case "${F}" in
+								"lastChanged")
+									V="$( date +'%Y-%m-%d %H:%M:%S' )"
+									;;
+
+								# These don't exist anymore.
+								"autofocus"|"background")
+									continue;
+									;;
+
+								"darkframe")
+									F="takeDarkFrames"
+									;;
+								"brightness")
+									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+									F="night${F}"
+									;;
+								"awb"|"autowhitebalance")
+									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+									F="night${F}"
+									;;
+								"wbr")
+									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+									F="night${F}"
+									;;
+								"wbb")
+									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+									F="night${F}"
+									;;
+								"targetTemp")
+									F="TargetTemp"
+									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+									F="night${F}"
+									;;
+								"coolerEnabled")
+									F="EnableCooler"
+									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+									F="night${F}"
+									;;
+								"meanthreshold")
+									F="meanthreshold"
+									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+									F="night${F}"
+									;;
+							esac
+
+							update_json_file ".${F}" "${V}" "${NEW_FILE}"
+						done
+
+					# Fields whose name or location changed.
+					x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
+					update_json_file ".takeDaytimeImages" "${x}" "${NEW_FILE}"
+
+					x="$( get_variable "DAYTIME_SAVE" "${PRIOR_CONFIG_FILE}" )"
+					update_json_file ".saveDaytimeImages" "${x}" "${NEW_FILE}"
+
+					x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
+					update_json_file ".useDarkFrames" "${x}" "${NEW_FILE}"
+
+					return
+					;;
+			esac
+			;;
+	esac
 }
 
 
 ####
 # Restore the prior settings file(s) if the user wanted to use them.
-PRIOR_SETTINGS_RESTORED="false"
 restore_prior_settings_files()
 {
-	[[ ${PRIOR_SETTINGS_RESTORED} == "true" ]] && return
-	PRIOR_SETTINGS_RESTORED="true"
+	[[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" ]] && return
 
-	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
+	local MSG NAME EXT FILES FIRST_ONE
+
+	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
 		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
 
-			# The prior settings file should be a link to a camera-specific file,
-			# and there may be more than one camera-specific file if the user has
-			# more than one camera.
-			# Copy all the camera-specific settings files; don't copy the generic-named
-			# file since it will be recreated.
+			# The prior settings file SHOULD be a link to a camera-specific file.
+			# Make sure that's true; if not, fix it.
+			if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
+				display_msg --log info "${MSG}"
+			fi
 
 			# Camera-specific settings file names are:
 			#	${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}
 			# where ${SETTINGS_FILE_NAME} == ${NAME}.${EXT}
 			# We don't know the ${CAMERA_MODEL} yet so use a regular expression.
-			local NAME="${SETTINGS_FILE_NAME%.*}"			# before "."
-			local EXT="${SETTINGS_FILE_NAME##*.}"			# after "."
+			NAME="${SETTINGS_FILE_NAME%.*}"			# before "."
+			EXT="${SETTINGS_FILE_NAME##*.}"			# after "."
 
+			# Copy all the camera-specific settings files; don't copy the generic-named
+			# file since it will be recreated.
+			# There will be more than one camera-specific file if the user has multiple cameras.
 			FILES="$(find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}")"
 			if [[ -n ${FILES} ]]; then
 				RESTORED_PRIOR_SETTINGS_FILE="true"
@@ -1478,15 +1494,15 @@ restore_prior_settings_files()
 						cp -a "${F}" "${ALLSKY_CONFIG}"
 					done
 			else
+				# This shouldn't happen...
 				MSG="No prior camera-specific settings files found,"
 
 				# Try to create one based on ${PRIOR_SETTINGS_FILE}.
-				local CT="$( settings .cameraType "${PRIOR_SETTINGS_FILE}" )"
-				if [[ ${CT} != "${CAMERA_TYPE}" ]]; then
-					MSG="${MSG}\nand unable to create one: new CAMERA_TYPE (${CAMERA_TYPE} different from prior type (${CT})."
+				if [[ ${PRIOR_CAMERA_TYPE} != "${CAMERA_TYPE}" ]]; then
+					MSG="${MSG}\nand unable to create one: new Camera Type"
+					MSG="${MSG} (${CAMERA_TYPE} different from prior type (${PRIOR_CAMERA_TYPE})."
 				else
-					local CM="$(settings .cameraModel "${PRIOR_SETTINGS_FILE}")"
-					local SPECIFIC="${NAME}_${CT}_${CM}.${EXT}"
+					local SPECIFIC="${NAME}_${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.${EXT}"
 					cp -a "${PRIOR_SETTINGS_FILE}" "${ALLSKY_CONFIG}/${SPECIFIC}"
 					MSG="${MSG}\nbut was able to create '${SPECIFIC}'."
 				fi
@@ -1505,12 +1521,30 @@ restore_prior_settings_files()
 		fi
 	else
 		# settings file is old style in ${OLD_RASPAP_DIR}.
-		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
+		if [[ ! -f ${PRIOR_SETTINGS_FILE} ]]; then
+			# This should "never" happen.
+			# They have a prior Allsky version but no "settings file?
+			display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
+
+			# If we ever automate migrating settings, this next statement should be deleted.
+			FORCE_CREATING_SETTINGS_FILE="true"
+
+		elif [[ -f ${SETTINGS_FILE} ]]; then
 			# Transfer prior settings to the new file.
 			case "${PRIOR_ALLSKY_VERSION}" in
 				"v2022.03.01")
-					convert_settings "${PRIOR_ALLSKY_VERSION}" "${PRIOR_SETTINGS_FILE}" \
-							"${ALLSKY_VERSION}"
+					convert_settings "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}" \
+						"${PRIOR_SETTINGS_FILE}" "${SETTINGS_FILE}"
+					RESTORED_PRIOR_SETTINGS_FILE="true"
+
+					MSG="Your old WebUI settings were transfered to the new release,"
+					MSG="${MSG}\n but note that there have been some changes to the settings file"
+					MSG="${MSG} (e.g., some settings in config.sh are now in the settings file)."
+					MSG="${MSG}\n\nPlease check your settings in the WebUI's 'Allsky Settings' page."
+					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+					display_msg info "\n${MSG}\n"
+					echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+					display_msg --logonly info "Settings from ${PRIOR_ALLSKY_VERSION} copied over."
 					;;
 
 				*)	# This could be one of many old versions of Allsky,
@@ -1520,11 +1554,11 @@ restore_prior_settings_files()
 					# As far as I know, latitude and longitude have never changed names,
 					# and are required and have no default,
 					# so try to restore them so Allsky can restart automatically.
-					LAT="$(settings .latitude "${PRIOR_SETTINGS_FILE}")"
+					local LAT="$(settings .latitude "${PRIOR_SETTINGS_FILE}")"
 					update_json_file ".latitude" "${LAT}" "${SETTINGS_FILE}"
-					LONG="$(settings .longitude "${PRIOR_SETTINGS_FILE}")"
+					local LONG="$(settings .longitude "${PRIOR_SETTINGS_FILE}")"
 					update_json_file ".longitude" "${LONG}" "${SETTINGS_FILE}"
-					ANGLE="$(settings .angle "${PRIOR_SETTINGS_FILE}")"
+					local ANGLE="$(settings .angle "${PRIOR_SETTINGS_FILE}")"
 					update_json_file ".angle" "${ANGLE}" "${SETTINGS_FILE}"
 					display_msg --log progress "Prior latitude, longitude, and angle restored."
 
@@ -1539,12 +1573,7 @@ restore_prior_settings_files()
 
 			esac
 		else
-			# This should "never" happen.
-			# They have a prior Allsky version but no "settings file?
-			display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
-
-			# If we ever automate migrating settings, this next statement should be deleted.
-			FORCE_CREATING_SETTINGS_FILE="true"
+			display_msg --logonly info "No new settings file yet..."
 		fi
 	fi
 }
@@ -1642,7 +1671,7 @@ restore_prior_files()
 		display_msg "${LOG_TYPE}" progress "     No prior '${EXTRA}' directory so can't restore."
 	fi
 
-	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
+	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
 	else
 		# raspap.auth was in a different directory in older versions.
@@ -1711,8 +1740,8 @@ restore_prior_files()
 	RESTORED_PRIOR_CONFIG_SH="false"
 	RESTORED_PRIOR_FTP_SH="false"
 
-	CONFIG_SH_VERSION="$(get_variable "CONFIG_SH_VERSION" "${ALLSKY_CONFIG}/config.sh")"
-	PRIOR_CONFIG_SH_VERSION="$(get_variable "CONFIG_SH_VERSION" "${PRIOR_CONFIG_FILE}")"
+	CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${ALLSKY_CONFIG}/config.sh" )"
+	PRIOR_CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${PRIOR_CONFIG_FILE}" )"
 	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
 		display_msg --log progress "    Prior 'config.sh' file, as is."
 		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_CONFIG_SH="true"
@@ -1797,7 +1826,7 @@ restore_prior_files()
 		return 0
 	fi
 
-	if [[ ${PRIOR_ALLSKY} == "new" ]]; then
+	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
 		# The prior versions are similar to the new ones.
 		MSG=""
 		# If it has a version number it's probably close to the current version.

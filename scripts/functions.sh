@@ -497,13 +497,13 @@ function get_links()
 function check_settings_link()
 {
 	local FULL_FILE FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME
-	FULL_FILE="$1"
+	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
 		echo "check_settings_link(): Settings file not specified."
 		return 1
 	fi
-	[[ -z ${CAMERA_TYPE} ]] && CAMERA_TYPE="$( jq -r ".cameraType" "${FULL_FILE}" )"
-	[[ -z ${CAMERA_MODEL} ]] && CAMERA_MODEL="$( jq -r ".cameraModel" "${FULL_FILE}" )"
+	[[ -z ${CAMERA_TYPE} ]] && CAMERA_TYPE="$( settings .cameraType  "${FULL_FILE}" )"
+	[[ -z ${CAMERA_MODEL} ]] && CAMERA_MODEL="$( settings .cameraModel  "${FULL_FILE}" )"
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"
 	FILE="$( basename "${FULL_FILE}" )"
@@ -521,7 +521,7 @@ function check_settings_link()
 	else
 		# Make sure it's linked to the correct file.
 		if [[ ${SETTINGS_LINK} != "${FULL_CORRECT_NAME}" ]]; then
-			MSG="The settings file (${FILE}) was linked to:"
+			MSG="The settings file (${FULL_FILE}) was linked to:"
 			MSG="${MSG}\n    ${SETTINGS_LINK}"
 			MSG="${MSG}\nbut should have been linked to:"
 			MSG="${MSG}\n    ${FULL_CORRECT_NAME}"

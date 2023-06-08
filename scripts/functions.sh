@@ -70,6 +70,7 @@ function determineCommandToUse()
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
 	# use raspistill.
 
+	local RET=0
 	local CMD="libcamera-still"
 	if command -v ${CMD} > /dev/null; then
 		# Found the command - see if it works.
@@ -88,7 +89,7 @@ function determineCommandToUse()
 
 		CMD="raspistill"
 		if ! command -v "${CMD}" > /dev/null; then
-			echo "Can't determine what command to use for RPi camera."
+			echo "Can't determine what command to use for RPi camera." >&2
 			if [[ ${USE_doExit} == "true" ]]; then
 				doExit "${EXIT_ERROR_STOP}" "Error" "${PREFIX}\nRPi camera command\nnot found!."
 			fi
@@ -105,7 +106,7 @@ function determineCommandToUse()
 	fi
 
 	if [[ ${RET} -ne 0 ]]; then
-		echo "RPi camera not found.  Make sure it's enabled."
+		echo "RPi camera not found.  Make sure it's enabled." >&2
 		if [[ ${USE_doExit} == "true" ]]; then
 			doExit "${EXIT_NO_CAMERA}" "Error" "${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
 		fi

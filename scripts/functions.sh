@@ -694,3 +694,15 @@ function one_instance()
 
 	return 0
 }
+
+
+#####
+# Make a thumbnail image.
+function make_thumbnail()
+{
+	local SEC="${1}"
+	local INPUT_FILE="${2}"
+	local THUMBNAIL="${3}"
+	ffmpeg -loglevel error -ss "00:00:${SEC}" -i "${INPUT_FILE}" \
+		-filter:v scale="${THUMBNAIL_SIZE_X:-100}:-1" -frames:v 1 "${THUMBNAIL}"
+}

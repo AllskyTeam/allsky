@@ -2088,6 +2088,31 @@ check_restored_settings()
 
 
 ####
+# See if the new ZWO exposure algorithm should be used.
+check_new_exposure_algorithm()
+{
+	local FIELD="experimentalExposure"
+	local NEW="$( settings ".${FIELD}" )"
+	[[ ${NEW} -eq 1 ]] && return
+	
+	MSG="There is a new auto-exposure algorithm for nighttime images that initial testing indicates"
+	MSG="${MSG} it creates better images at night and during the day-to-night transition."
+	MSG="${MSG}\n\nDo you want to use it?"
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 10 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+		display_msg --logonly info "Enabling ${FIELD}."
+		update_json_file ".${FIELD}" 1 "${SETTINGS_FILE}"
+
+		MSG="Please provide feedback on the new auto-exposure algorithm"
+		MSG="${MSG} by entering a Discussion item in GitHub."
+		MSG="${MSG}\nYou can disable it by changing 'New Exposure Algorithm' in the WebUI."
+		display_msg notice "${MSG}"
+	else
+		display_msg --logonly info "User elected NOT to use ${FIELD}."
+	fi
+}
+
+
+####
 remind_old_version()
 {
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
@@ -2318,6 +2343,10 @@ ask_reboot "full"											# prompts
 
 ##### Display any necessary messaged about restored / not restored settings
 check_restored_settings
+
+##### If using ZWO, prompt if the New Exposure Algorithm should be used.
+# TODO: remove check_new_exposure_algorithm() when it's the default.
+[[ ${CAMERA_TYPE} == "ZWO" ]] && check_new_exposure_algorithm
 
 ##### Let the user know to run check_allsky.sh.
 remind_run_check_allsky

@@ -126,10 +126,11 @@ ABORTED_MSG1="Another '${FILE_TYPE}' upload is in progress so the new upload of"
 ABORTED_MSG1="${ABORTED_MSG1} $(basename "${FILE_TO_UPLOAD}") was aborted."
 ABORTED_FIELDS="${FILE_TYPE}\t${FILE_TO_UPLOAD}"
 ABORTED_MSG2="uploads"
-if ! one_instance --sleep "${SLEEP}" --max-checks "${MAX_CHECKS}" \
-		--process-name "${ME}" --pid-file "${PID_FILE}" \
+CAUSED_BY="This could be caused network issues or by delays between images that are too short."
+if ! one_instance --sleep "${SLEEP}" --max-checks "${MAX_CHECKS}" --pid-file "${PID_FILE}" \
 		--aborted-count-file "${ALLSKY_ABORTEDUPLOADS}" --aborted-fields "${ABORTED_FIELDS}" \
-		--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" ; then
+		--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" \
+		--caused-by "${CAUSED_BY}" ; then
 	exit 1
 fi
 

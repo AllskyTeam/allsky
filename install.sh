@@ -59,6 +59,11 @@ rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 # shellcheck disable=SC2034
 DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh.log"
 
+# Holds status of installation if we need to exit and get back in.
+STATUS_FILE="${ALLSKY_INSTALLATION_LOGS}/status.txt"
+STATUS_LOCALE_REBOOT="locale reboot"	# status of rebooting due to locale change
+STATUS_NO_LOCALE="locale not found"		# status of exiting due to desired locale not installed
+STATUS_VARIABLES=""						# Holds all the variables and values to save
 
 # Some versions of Linux default to 750 so web server can't read it
 chmod 755 "${ALLSKY_HOME}"
@@ -71,36 +76,43 @@ chmod 755 "${ALLSKY_HOME}"
 # 
 do_initial_heading()
 {
+	STATUS_VARIABLES="${STATUS_VARIABLES}\ndo_initial_heading='true'"
+
 	if [[ ${UPDATE} == "true" ]]; then
 		display_header "Updating Allsky"
 		return
 	fi
 
-	MSG="Welcome to the ${TITLE}!\n"
-
-	if [[ -n ${PRIOR_ALLSKY} ]]; then
-		MSG="${MSG}\nYou will be asked if you want to use the images and darks (if any) from"
-		MSG="${MSG}\nyour prior version of Allsky."
-		if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
-			MSG="${MSG}\nIf so, its settings will be used as well."
-		else
-			MSG="${MSG}\nIf so, we will attempt to use its settings as well, but may not be"
-			MSG="${MSG}\nable to use ALL prior settings depending on how old your prior Allsky is."
-			MSG="${MSG}\nIn that case, you'll be prompted for required information such as"
-			MSG="${MSG}\nthe camera's latitude, logitude, and locale."
-		fi
+	if [[ ${do_initial_heading} == "true" ]]; then
+		display_header "Welcome back to the ${TITLE}!"
 	else
-		MSG="${MSG}\nYou will be prompted for required information such as the type"
-		MSG="${MSG}\nof camera you have and the camera's latitude, logitude, and locale."
-	fi
+		MSG="Welcome to the ${TITLE}!\n"
 
-	MSG="${MSG}\n\nNOTE: your camera must be connected to the Pi before continuing."
-	MSG="${MSG}\n\nContinue?"
-	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
-		display_msg "${LOG_TYPE}" info "User not ready to continue."
-		exit_installation 1
+		if [[ -n ${PRIOR_ALLSKY} ]]; then
+			MSG="${MSG}\nYou will be asked if you want to use the images and darks (if any) from"
+			MSG="${MSG}\nyour prior version of Allsky."
+			if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
+				MSG="${MSG}\nIf so, its settings will be used as well."
+			else
+				MSG="${MSG}\nIf so, we will attempt to use its settings as well, but may not be"
+				MSG="${MSG}\nable to use ALL prior settings depending on how old your prior Allsky is."
+				MSG="${MSG}\nIn that case, you'll be prompted for required information such as"
+				MSG="${MSG}\nthe camera's latitude, logitude, and locale."
+			fi
+		else
+			MSG="${MSG}\nYou will be prompted for required information such as the type"
+			MSG="${MSG}\nof camera you have and the camera's latitude, logitude, and locale."
+		fi
+
+		MSG="${MSG}\n\nNOTE: your camera must be connected to the Pi before continuing."
+		MSG="${MSG}\n\nContinue?"
+		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+			display_msg "${LOG_TYPE}" info "User not ready to continue."
+			exit_installation 1
+		fi
+
+		display_header "Welcome to the ${TITLE}!"
 	fi
-	display_header "Welcome to the ${TITLE}!"
 }
 
 ####
@@ -225,12 +237,16 @@ CAMERA_to_CAMERA_TYPE()
 CAMERA_TYPE=""
 select_camera_type()
 {
+	STATUS_VARIABLES="${STATUS_VARIABLES}\nselect_camera_type='true'"
+
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		case "${PRIOR_ALLSKY_VERSION}" in
 			# New versions go here...
 			v2023.05.01*)
 				# New style Allsky using ${CAMERA_TYPE}.
 				CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
+				STATUS_VARIABLES="${STATUS_VARIABLES}\nCAMERA_TYPE='${CAMERA_TYPE}'"
+
 				# Don't bother with a message since this is a "similar" release.
 				if [[ -n ${CAMERA_TYPE} ]]; then
 					MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky."
@@ -246,6 +262,7 @@ select_camera_type()
 				local CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
 				if [[ -n ${CAMERA} ]]; then
 					CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
+					STATUS_VARIABLES="${STATUS_VARIABLES}\nCAMERA_TYPE='${CAMERA_TYPE}'"
 					if [[ ${CAMERA} != "${CAMERA_TYPE}" ]]; then
 						NEW=" (now called ${CAMERA_TYPE})"
 					else
@@ -274,6 +291,7 @@ select_camera_type()
 		exit_installation 2
 	fi
 	display_msg --log progress "Using ${CAMERA_TYPE} camera."
+	STATUS_VARIABLES="${STATUS_VARIABLES}\nCAMERA_TYPE='${CAMERA_TYPE}'"
 }
 
 
@@ -324,6 +342,8 @@ create_webui_defines()
 			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
+
+	STATUS_VARIABLES="${STATUS_VARIABLES}\ncreate_webui_defines='true'"
 }
 
 
@@ -351,7 +371,8 @@ save_camera_capabilities()
 		return 1
 	fi
 
-	OPTIONSFILEONLY="${1}"		# Set to "true" if we should ONLY create the options file.
+	local OPTIONSFILEONLY="${1}"		# Set to "true" if we should ONLY create the options file.
+	local FORCE MSG OPTIONSONLY
 
 	# Create the camera type/model-specific options file and optionally a default settings file.
 	# --cameraTypeOnly tells makeChanges.sh to only change the camera info, then exit.
@@ -402,6 +423,7 @@ save_camera_capabilities()
 	display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
 	CAMERA_MODEL="$( settings ".cameraModel" "${SETTINGS_FILE}" )"
 
+	STATUS_VARIABLES="${STATUS_VARIABLES}\nsave_camera_capabilities='true'"
 	return 0
 }
 
@@ -471,22 +493,21 @@ recheck_swap()
 }
 check_swap()
 {
-	if [[ ${1} == "prompt" ]]; then
-		PROMPT="true"
-	else
-		PROMPT="false"
-	fi
+	STATUS_VARIABLES="${STATUS_VARIABLES}\ncheck_swap='true'"
+
+	local PROMPT="false"
+	[[ ${1} == "prompt" ]] && PROMPT="true"
 
 	# This can return "total_mem is unknown" if the OS is REALLY old.
-	RAM_SIZE="$( vcgencmd get_config total_mem )"
+	local RAM_SIZE="$( vcgencmd get_config total_mem )"
 	if echo "${RAM_SIZE}" | grep --silent "unknown" ; then
 		# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
 		RAM_SIZE=$(free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }')		# in MB
 	else
 		RAM_SIZE="${RAM_SIZE//total_mem=/}"
 	fi
-	DESIRED_COMBINATION=$((1024 * 4))		# desired minimum memory + swap
-	SUGGESTED_SWAP_SIZE=0
+	local DESIRED_COMBINATION=$((1024 * 4))		# desired minimum memory + swap
+	local SUGGESTED_SWAP_SIZE=0
 	for i in 512 1024 2048		# 4096 and above don't need any swap
 	do
 		if [[ ${RAM_SIZE} -le ${i} ]]; then
@@ -497,12 +518,13 @@ check_swap()
 	display_msg --logonly info "RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
 
 	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
-	CURRENT_SWAP=$(free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }')	# in MB
+	local CURRENT_SWAP=$(free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }')	# in MB
 	CURRENT_SWAP=${CURRENT_SWAP:-0}
 	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
 		local SWAP_CONFIG_FILE="/etc/dphys-swapfile"
 
 		[[ -z ${FUNCTION} ]] && sleep 2		# give user time to read prior messages
+		local AMT M
 		if [[ ${CURRENT_SWAP} -eq 1 ]]; then
 			CURRENT_SWAP=0
 			AMT="no"
@@ -523,7 +545,7 @@ check_swap()
 			MSG="${MSG}\n\nYou may change the amount of swap by changing the number below."
 		fi
 
-		SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 18 "${WT_WIDTH}" \
+		local SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 18 "${WT_WIDTH}" \
 			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
 		# If the suggested swap was 0 and the user added a number but didn't first delete the 0,
 		# do it now so we don't have numbers like "0256".
@@ -536,11 +558,11 @@ check_swap()
 				display_msg --log info "Swap will remain at ${CURRENT_SWAP}."
 			fi
 		else
-			display_msg --log progress "Setting swap space set to ${SWAP_SIZE} MB."
+			display_msg --log progress "Setting swap space to ${SWAP_SIZE} MB."
 			sudo dphys-swapfile swapoff					# Stops the swap file
 			sudo sed -i "/CONF_SWAPSIZE/ c CONF_SWAPSIZE=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
 
-			CURRENT_MAX="$(get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}")"
+			local CURRENT_MAX="$(get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}")"
 			# TODO: Can we determine the default max rather than hard-code it.
 			CURRENT_MAX="${CURRENT_MAX:-2048}"
 			if [[ ${CURRENT_MAX} -lt ${SWAP_SIZE} ]]; then
@@ -598,7 +620,9 @@ check_and_mount_tmp()
 # If not, offer to make it one.
 check_tmp()
 {
-	INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
+	STATUS_VARIABLES="${STATUS_VARIABLES}\ncheck_tmp='true'"
+
+	local INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
 
 	# Check if currently a memory filesystem.
 	if grep --quiet "^${INITIAL_FSTAB_STRING}" /etc/fstab; then
@@ -629,7 +653,7 @@ check_tmp()
 		return 0
 	fi
 
-	SIZE=75		# MB - should be enough
+	local SIZE=75		# MB - should be enough
 	MSG="Making ${ALLSKY_TMP} reside in memory can drastically decrease the amount of writes to the SD card, increasing its life."
 	MSG="${MSG}\n\nDo you want to make it reside in memory?"
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
@@ -709,6 +733,8 @@ install_webserver()
 	sudo systemctl start lighttpd
 	# Starting it added an entry so truncate the file so it's 0-length
 	sleep 1; truncate -s 0 "${LIGHTTPD_LOG}"
+
+	STATUS_VARIABLES="${STATUS_VARIABLES}\ninstall_webserver='true'"
 }
 
 
@@ -721,10 +747,13 @@ install_webserver()
 
 prompt_for_hostname()
 {
-	CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
+	STATUS_VARIABLES="${STATUS_VARIABLES}\nprompt_for_hostname='true'"
+
+	local CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
 	if [[ ${CURRENT_HOSTNAME} != "raspberrypi" ]]; then
 		display_msg --logonly info "Using current hostname of '${CURRENT_HOSTNAME}'."
 		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
+		STATUS_VARIABLES="${STATUS_VARIABLES}\nNEW_HOST_NAME='${NEW_HOST_NAME}'"
 		return
 	fi
 
@@ -734,8 +763,12 @@ prompt_for_hostname()
 	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 15 "${WT_WIDTH}" \
 		"${SUGGESTED_NEW_HOST_NAME}" 3>&1 1>&2 2>&3)
 	if [[ $? -ne 0 ]]; then
-		display_msg --log warning "You must specify a host name.  Please re-run the installation and select one."
+		MSG="You must specify a host name."
+		MSG="${MSG}  Please re-run the installation and select one."
+		display_msg --log warning "${MSG}"
 		exit_installation 2
+	else
+		STATUS_VARIABLES="${STATUS_VARIABLES}\nNEW_HOST_NAME='${NEW_HOST_NAME}'"
 	fi
 
 	if [[ ${CURRENT_HOSTNAME} != "${NEW_HOST_NAME}" ]]; then
@@ -847,7 +880,7 @@ check_old_WebUI_location()
 
 	if [[ ! -d ${OLD_WEBUI_LOCATION}/includes ]]; then
 		MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists"
-		COUNT=$(find "${OLD_WEBUI_LOCATION}" | wc -l)
+		local COUNT=$(find "${OLD_WEBUI_LOCATION}" | wc -l)
 		if [[ ${COUNT} -eq 1 ]]; then
 			MSG="${MSG} and is empty."
 			MSG="${MSG}\nYou can safely delete it after installation:  sudo rmdir '${OLD_WEBUI_LOCATION}'"
@@ -947,7 +980,7 @@ handle_prior_website()
 		sudo mv "${PRIOR_SITE}" "${ALLSKY_WEBSITE}"
 
 		# Update "AllskyVersion" if needed.
-		V="$( settings .config.AllskyVersion "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
+		local V="$( settings .config.AllskyVersion "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
 		display_msg --logonly info "Prior local Website's AllskyVersion=${V}"
 		if [[ ${V} != "${ALLSKY_VERSION}" ]]; then
 			MSG="Updating AllskyVersion in local Website from '${V}' to '${ALLSKY_VERSION}'"
@@ -964,7 +997,7 @@ handle_prior_website()
 		# see if there's a newer version of the Website with that branch OR
 		# a newer version with the production branch.  Use whichever is newer.
 		if [[ -n ${PRIOR_BRANCH} && ${PRIOR_BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
-			NEWEST_VERSION="$(get_Git_version "${PRIOR_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
+			NEWEST_VERSION="$( get_Git_version "${PRIOR_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}" )"
 			B=" in the '${PRIOR_BRANCH}' branch"
 
 			if [[ ${DEBUG} -gt 0 ]]; then
@@ -1018,6 +1051,11 @@ get_locale()
 		MSG="${MSG}\n\nIt will take a moment for the locale(s) to be installed."
 		MSG="${MSG}\n\nWhen that is completed, rerun the Allsky installation."
 		display_msg --log error "${MSG}"
+
+		# So we know not to start from beginning.
+		echo "STATUS_INSTALLATION=${STATUS_NO_LOCALE}" > "${STATUS_FILE}"
+		echo "${STATUS_VARIABLES}" >> "${STATUS_FILE}"
+
 		exit_installation 1
 	fi
 
@@ -1055,6 +1093,7 @@ get_locale()
 	else
 		CURRENT_LOCALE=""
 	fi
+	STATUS_VARIABLES="${STATUS_VARIABLES}\nCURRENT_LOCALE='${CURRENT_LOCALE}'"
 
 	MSG="\nSelect your locale; the default is highlighted in red."
 	MSG="${MSG}\nIf it's not in the list, press <Cancel>."
@@ -1080,7 +1119,13 @@ get_locale()
 		MSG="${MSG}\nthen rerun the installation."
 		display_msg info "${MSG}"
 		display_msg --logonly info "No locale selected; exiting."
+
+		# So we know not to start from beginning.
+		echo "STATUS_INSTALLATION=${STATUS_NO_LOCALE}" > "${STATUS_FILE}"
+		echo "${STATUS_VARIABLES}" >> "${STATUS_FILE}"
+
 		exit_installation 0
+
 	elif echo "${LOCALE}" | grep --silent "Box options" ; then
 		# Got a usage message from whiptail.
 		# Must be no space between the last double quote and ${INSTALLED_LOCALES}.
@@ -1090,6 +1135,9 @@ get_locale()
 		display_msg --log error "${MSG}"
 		exit_installation 1
 	fi
+
+	STATUS_VARIABLES="${STATUS_VARIABLES}\nget_locale='true'"
+	STATUS_VARIABLES="${STATUS_VARIABLES}\nLOCALE='${LOCALE}'"
 }
 
 
@@ -1120,6 +1168,7 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 			MSG="${MSG} CONTAINED .locale = '${L}'."
 			display_msg --logonly info "${MSG}"
 		fi
+		STATUS_VARIABLES="${STATUS_VARIABLES}\nset_locale='true'"
 		return
 	fi
 
@@ -1136,6 +1185,11 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 
 	if ask_reboot "locale" ; then
 		display_msg --logonly info "Rebooting to set locale to '${LOCALE}'"
+
+		# So we know not to start from beginning.
+		echo "STATUS_INSTALLATION=${STATUS_LOCALE_REBOOT}" > "${STATUS_FILE}"
+		echo "${STATUS_VARIABLES}" >> "${STATUS_FILE}"
+
 		do_reboot		# does not return
 	fi
 
@@ -1206,12 +1260,15 @@ does_prior_Allsky_exist()
 # Look for a directory inside the old one to make sure it's really an old allsky.
 prompt_for_prior_Allsky()
 {
+	STATUS_VARIABLES="${STATUS_VARIABLES}${STATUS_VARIABLES}\nprompt_for_prior_Allsky='true'"
+
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
 		MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			# Set the prior camera type to the new, default camera type.
 			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
+			STATUS_VARIABLES="${STATUS_VARIABLES}\nCAMERA_TYPE='${CAMERA_TYPE}'"
 			return 0
 		else
 			CAMERA_TYPE=""
@@ -1237,6 +1294,7 @@ prompt_for_prior_Allsky()
 
 	# No prior Allsky so force creating a default settings file.
 	FORCE_CREATING_SETTINGS_FILE="true"
+	STATUS_VARIABLES="${STATUS_VARIABLES}\nFORCE_CREATING_SETTINGS_FILE='${FORCE_CREATING_SETTINGS_FILE}'"
 }
 
 
@@ -1263,6 +1321,7 @@ install_dependencies_etc()
 	sudo make install > "${TMP}" 2>&1
 	check_success $? "make install failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
+	STATUS_VARIABLES="${STATUS_VARIABLES}\ninstall_dependencies_etc='true'"
 	return 0
 }
 
@@ -1885,7 +1944,7 @@ do_update()
 		exit_installation 1
 	fi
 
-	create_webui_defines
+	[[ ${create_webui_defines} != "true" ]] && create_webui_defines
 
 	save_camera_capabilities "false" || exit 1
 	set_permissions
@@ -1999,6 +2058,8 @@ install_overlay()
 ####
 check_if_buster()
 {
+	STATUS_VARIABLES="${STATUS_VARIABLES}\ncheck_if_buster='true'"
+
 	if [[ ${OS} == "buster" ]]; then
 		MSG="This release runs best on the Bullseye operating system"
 		MSG="${MSG} that was released in November, 2021."
@@ -2228,7 +2289,6 @@ if [[ -n ${FUNCTION} ]]; then
 	# Don't log when a single function is executed.
 	DISPLAY_MSG_LOG=""
 else
-	##### Log files write to ${ALLSKY_CONFIG}, which doesn't exist yet, so create it.
 	mkdir -p "${ALLSKY_INSTALLATION_LOGS}"
 
 	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
@@ -2238,8 +2298,27 @@ fi
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
 
+# See if we should skip some steps
+if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
+	MSG="You have already begun the installation."
+	MSG="${MSG}\n\nDo you want to continue where you left off?"
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 10 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+		MSG="Continuing installation.  Steps already performed will be skipped."
+		display_msg --log progress "${MSG}"
+
+		source "${STATUS_FILE}" || exit 1
+		# ${STATUS_INSTALLATION} should be set to either
+		#	"${STATUS_LOCALE_REBOOT}" or "${STATUS_NO_LOCALE}"
+
+		# If a function was called a variable with the function's name will be "true".
+		echo rm "${STATUS_FILE}"	# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+	else
+		display_msg --log progress "Restarting installation."
+	fi
+fi
+
 ##### Display a message to Buster users.
-[[ -z ${FUNCTION} ]] && check_if_buster
+[[ ${check_if_buster} != "true" && -z ${FUNCTION} ]] && check_if_buster
 
 ##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY
 does_prior_Allsky_exist
@@ -2271,25 +2350,25 @@ display_image "InstallationInProgress"
 # Do as much of the prompting up front, then do the long-running work, then prompt at the end.
 
 ##### Prompt to use prior Allsky
-prompt_for_prior_Allsky
+[[ ${prompt_for_prior_Allsky} != "true" ]] && prompt_for_prior_Allsky
 
 ##### Get locale (prompt if needed).  May not return.
-get_locale
+[[ ${get_locale} != "true" ]] && get_locale
 
 ##### Determine the camera type
-select_camera_type
+[[ ${select_camera_type} != "true" ]] && select_camera_type
 
 ##### Make sure a camera of the selected type is connected
 check_for_connected_camera
 
 ##### Get the new host name
-prompt_for_hostname
+[[ ${prompt_for_hostname} != "true" ]] && prompt_for_hostname
 
 ##### Check for sufficient swap space
-check_swap
+[[ ${check_swap} == "true" ]] && check_swap
 
 ##### Optionally make ${ALLSKY_TMP} a memory filesystem
-check_tmp
+[[ ${check_tmp} != "true" ]] && check_tmp
 
 
 MSG="The following steps can take up to an hour depending on the speed of your Pi"
@@ -2301,21 +2380,25 @@ display_msg notice "${MSG}"
 
 ##### Install web server
 # This must come BEFORE save_camera_capabilities, since it installs php.
-install_webserver
+[[ ${install_webserver} != "true" ]] && install_webserver
 
 ##### Install dependencies, then compile and install Allsky software
 # This will create the "config" directory and put default files in it.
-install_dependencies_etc || exit_with_image 1
+if [[ ${install_dependencies_etc} != "true" ]]; then
+	install_dependencies_etc || exit_with_image 1
+fi
 
 ##### Create the file that defines the WebUI variables.
-create_webui_defines
+[[ ${create_webui_defines} != "true" ]] && create_webui_defines
 
 ##### Create the camera type-model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
-save_camera_capabilities "false" || exit_with_image 1		# prompts on error only
+if [[ ${save_camera_capabilities} != "true" ]]; then
+	save_camera_capabilities "false" || exit_with_image 1		# prompts on error only
+fi
 
 ##### Set locale.  May reboot instead of returning.
-set_locale
+[[ ${set_locale} != "true" ]] && set_locale
 
 ##### Create the Allsky log files
 create_allsky_logs

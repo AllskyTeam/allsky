@@ -17,7 +17,7 @@ usage_and_exit()
 {
 	retcode=${1}
 	[[ ${retcode} -ne 0 ]] && echo -ne "${RED}"
-	echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_filename  [variable=value [...]]"
+	echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_image  [variable=value [...]]"
 	[[ ${retcode} -ne 0 ]] && echo -e "${NC}"
 	# shellcheck disable=SC2086
 	exit ${retcode}
@@ -53,9 +53,16 @@ PID_FILE="${ALLSKY_TMP}/saveImage-pid.txt"
 ABORTED_MSG1="Another saveImage is in progress so the new one was aborted."
 ABORTED_FIELDS="${CURRENT_IMAGE}"
 ABORTED_MSG2="uploads"
+# TODO: check delay settings and average times for module processing
+# and tailor the message.
+CAUSED_BY="This could be caused by very long module processing time or extremely short delays between images."
+# Don't sleep too long or check too many times since processing an image should take at most
+# a few seconds
 if ! one_instance --process-name "${ME}" --pid-file "${PID_FILE}" \
-		--aborted-count-file "${ALLSKY_ABORTEDSAVEIMAGE:-/home/pi/allsky/tmp/aborted_saveImage.txt}" --aborted-fields "${ABORTED_FIELDS}" \
-		--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" ; then
+		--sleep "3s" --max-checks 3 \
+		--aborted-count-file "${ALLSKY_ABORTEDSAVEIMAGE}" --aborted-fields "${ABORTED_FIELDS}" \
+		--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" \
+		--caused-by "${CAUSED_BY}" ; then
 	rm -f "${CURRENT_IMAGE}"
 	exit 1
 fi
@@ -116,8 +123,24 @@ if [[ -n ${AS_MEAN2} ]]; then
 	export AS_MEAN_NORMALIZED="$( echo "${AS_MEAN2} * 255" | bc )"		# xxxx for testing
 fi
 
-#shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/darkCapture.sh"		# does not return if in darkframe mode
+
+# If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
+# otherwise use the temperature in ${TEMPERATURE_FILE}.
+# TODO: Currently nothing creates the TEMPERATURE_FILE.  Eventually RPi cameras will.
+if [[ -z ${AS_TEMPERATURE_C} ]]; then
+	TEMPERATURE_FILE="${ALLSKY_TMP}/temperature.txt"
+	if [[ -s ${TEMPERATURE_FILE} ]]; then	# -s so we don't use an empty file
+		AS_TEMPERATURE_C=$( < "${TEMPERATURE_FILE}" )
+	fi
+fi
+
+# If taking dark frames, save the dark frame then exit.
+if [[ $(settings ".takeDarkFrames") -eq 1 ]]; then
+	#shellcheck source-path=scripts
+	source "${ALLSKY_SCRIPTS}/darkCapture.sh"
+	exit 0
+fi
+
 # TODO: Dark subtract long-exposure images, even if during daytime.
 # TODO: Need a config variable to specify the threshold to dark subtract.
 # TODO: Possibly also for stretching below.
@@ -329,7 +352,9 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					D=""
 				fi
 				# shellcheck disable=SC2086
-				"${ALLSKY_SCRIPTS}"/timelapse.sh ${D} --mini "${MINI_TIMELAPSE_FILES}" "${DATE_NAME}"
+				O="${ALLSKY_TMP}/mini-timelapse.mp4"
+				"${ALLSKY_SCRIPTS}"/timelapse.sh ${D} --lock --output "${O}" \
+					--mini --images "${MINI_TIMELAPSE_FILES}"
 				RET=$?
 				if [[ ${RET} -ne 0 ]]; then
 					# failed so don't try to upload
@@ -350,7 +375,8 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					x="$(tail -${KEEP} "${MINI_TIMELAPSE_FILES}")"
 					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
 					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
-						echo -e "${YELLOW}${ME} Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest file(s) and added current image.${NC}" >&2
+						echo -en "${YELLOW}${ME}: Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest"
+						echo -e " file(s) and added current image.${NC}" >&2
 					fi
 				fi
 			else

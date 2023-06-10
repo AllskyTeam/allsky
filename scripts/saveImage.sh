@@ -350,8 +350,8 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				else
 					D=""
 				fi
-				# shellcheck disable=SC2086
 				O="${ALLSKY_TMP}/mini-timelapse.mp4"
+				# shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}"/timelapse.sh ${D} --lock --output "${O}" \
 					--mini --images "${MINI_TIMELAPSE_FILES}"
 				RET=$?

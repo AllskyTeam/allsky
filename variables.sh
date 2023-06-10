@@ -83,9 +83,10 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	POST_INSTALLATION_ACTIONS="${ALLSKY_INSTALLATION_LOGS}/post-installation_actions.txt"
 
 	# Holds temporary list of aborted processes since another one was in progress.
-	ALLSKY_ABORTEDUPLOADS="${ALLSKY_TMP}/aborts/uploads.txt"
-	ALLSKY_ABORTEDTIMELAPSE="${ALLSKY_TMP}/aborts/timelapse.txt"
-	ALLSKY_ABORTEDSAVEIMAGE="${ALLSKY_TMP}/aborts/saveImage.txt"
+	ALLSKY_ABORTS_DIR="${ALLSKY_TMP}/aborts"
+	ALLSKY_ABORTEDUPLOADS="uploads.txt"
+	ALLSKY_ABORTEDTIMELAPSE="timelapse.txt"
+	ALLSKY_ABORTEDSAVEIMAGE="saveImage.txt"
 
 	# Holds all the dark frames.
 	ALLSKY_DARKS="${ALLSKY_HOME}/darks"

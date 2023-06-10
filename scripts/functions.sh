@@ -566,12 +566,13 @@ function one_instance()
 {
 	local SLEEP_TIME="5s"
 	local MAX_CHECKS=3
-	local PROCESS_NAME=""
 	local PID_FILE=""
 	local ABORTED_FILE=""
 	local ABORTED_FIELDS=""
 	local ABORTED_MSG1=""
 	local ABORTED_MSG2=""
+	local CAUSED_BY=""
+	local P=""
 
 	OK="true"
 	local ERRORS=""
@@ -584,10 +585,6 @@ function one_instance()
 					;;
 				--max-checks)
 					MAX_CHECKS=${2}
-					shift
-					;;
-				--process-name)
-					PROCESS_NAME="${2}"
 					shift
 					;;
 				--pid-file)
@@ -610,6 +607,10 @@ function one_instance()
 					ABORTED_MSG2="${2}"
 					shift
 					;;
+				--caused-by)
+					CAUSED_BY="${2}"
+					shift
+					;;
 				*)
 					ERRORS="${ERRORS}\nUnknown argument: '${ARG}'."
 					OK="false"
@@ -617,10 +618,6 @@ function one_instance()
 		esac
 		shift
 	done
-	if [[ -z ${PROCESS_NAME} ]]; then
-		ERRORS="${ERRORS}\nPROCESS_NAME not specified."
-		OK="false"
-	fi
 	if [[ -z ${PID_FILE} ]]; then
 		ERRORS="${ERRORS}\nPID_FILE not specified."
 		OK="false"
@@ -641,6 +638,7 @@ function one_instance()
 		ERRORS="${ERRORS}\nABORTED_MSG2 not specified."
 		OK="false"
 	fi
+	# CAUSED_BY isn't required
 
 	if [[ ${OK} == "false" ]]; then
 		echo -e "${RED}${ME}: ERROR: ${ERRORS}.${NC}" >&2
@@ -652,11 +650,12 @@ function one_instance()
 	while  : ; do
 		[[ ! -f ${PID_FILE} ]] && break
 
+		((NUM_CHECKS++))
+
 		PID=$( < "${PID_FILE}" )
-		# shellcheck disable=SC2009
-		if ! ps -fp "${PID}" | /bin/grep --silent "${PROCESS_NAME}" ; then
-			break	# Not sure why the PID file existed if the process didn't exist.
-		fi
+		# Check that the process is still running.
+		P="$( ps -fp "${PID}" )"
+		[[ $? -ne 0 ]] && break;	# not running - why is the file still here?
 
 		if [[ $NUM_CHECKS -eq ${MAX_CHECKS} ]]; then
 			echo -en "${YELLOW}" >&2
@@ -664,21 +663,23 @@ function one_instance()
 			echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
 			echo -n  " If this happens often, check your settings." >&2
 			echo -e  "${NC}" >&2
-			ps -fp "${PID}" >&2
+			echo "${P}" >&2
 
 			# Keep track of aborts so user can be notified.
 			# If it's happening often let the user know.
-			echo -e "$(date)\t${ABORTED_FIELDS}" >> "${ABORTED_FILE}"
-			NUM=$( wc -l < "${ABORTED_FILE}" )
+			[[ ! -d ${ALLSKY_ABORTS_DIR} ]] && mkdir "${ALLSKY_ABORTS_DIR}"
+			local AF="${ALLSKY_ABORTS_DIR}/${ABORTED_FILE}"
+			echo -e "$(date)\t${ABORTED_FIELDS}" >> "${AF}"
+			NUM=$( wc -l < "${AF}" )
 			if [[ ${NUM} -eq 3 || ${NUM} -eq 10 ]]; then
 				MSG="${NUM} ${ABORTED_MSG2} have been aborted waiting for others to finish."
-				MSG="${MSG}\nThis could be caused by a slow network or other network issues."
+				[[ -n ${CAUSED_BY} ]] && MSG="${MSG}\n${CAUSED_BY}"
 				if [[ ${NUM} -eq 3 ]]; then
 					SEVERITY="info"
 				else
 					SEVERITY="warning"
 					MSG="${MSG}\nOnce you have resolved the cause, reset the aborted counter:"
-					MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${ABORTED_FILE}'</code>"
+					MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${AF}'</code>"
 				fi
 				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
 			fi
@@ -687,10 +688,21 @@ function one_instance()
 		else
 			sleep "${SLEEP_TIME}"
 		fi
-		((NUM_CHECKS++))
 	done
 
 	echo $$ > "${PID_FILE}" || return 1
 
 	return 0
+}
+
+
+#####
+# Make a thumbnail image.
+function make_thumbnail()
+{
+	local SEC="${1}"
+	local INPUT_FILE="${2}"
+	local THUMBNAIL="${3}"
+	ffmpeg -loglevel error -ss "00:00:${SEC}" -i "${INPUT_FILE}" \
+		-filter:v scale="${THUMBNAIL_SIZE_X:-100}:-1" -frames:v 1 "${THUMBNAIL}"
 }

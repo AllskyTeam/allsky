@@ -195,10 +195,10 @@ fi
 rm -f "${ALLSKY_BAD_IMAGE_COUNT}"	# Start with no bad images
 
 # Clear out these files and allow the web server to write to it.
-: > "${ALLSKY_ABORTEDUPLOADS}"
-: > "${ALLSKY_ABORTEDTIMELAPSE}"
-sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ABORTEDUPLOADS}" "${ALLSKY_ABORTEDTIMELAPSE}"
-sudo chmod 664 "${ALLSKY_ABORTEDUPLOADS}" "${ALLSKY_ABORTEDTIMELAPSE}"
+rm -fr "${ALLSKY_ABORTS_DIR}"
+mkdir "${ALLSKY_ABORTS_DIR}"
+sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ABORTS_DIR}"
+sudo chmod 775 "${ALLSKY_ABORTS_DIR}"
 
 # Optionally display a notification image.
 if [[ $USE_NOTIFICATION_IMAGES -eq 1 ]]; then

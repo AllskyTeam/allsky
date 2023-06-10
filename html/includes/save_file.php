@@ -27,12 +27,14 @@ else
 // "website" is a web alias to ALLSKY_WEBSITE.
 // $path is the web address to the file; we need the physical path ($file) to move.
 if (substr($path, 0, 7) === "current")
-	$file = str_replace('current', ALLSKY_HOME, $path);
+	$file = str_replace('current/', ALLSKY_HOME . "/", $path);
+else if (substr($path, 0, 6) === "config")
+	$file = str_replace('config/', ALLSKY_CONFIG . "/", $path);
 else	// website
-	$file = str_replace('website', ALLSKY_WEBSITE, $path);
+	$file = str_replace('website/', ALLSKY_WEBSITE . "/", $path);
 if (! file_exists($file)) {
-	echo "E	File to save '$file' does not exist!";
-	exit;
+	echo "E	File to save '$file' does not exist (path=$path)!";
+	exit(1);
 }
 
 $ok = true;

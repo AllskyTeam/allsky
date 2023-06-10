@@ -194,7 +194,7 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 				fi
 			else
 				((NUM_IMAGES++))
-				NUM="$( printf "%04d" ${NUM_IMAGES} )"
+				NUM="$( printf "%04d" "${NUM_IMAGES}" )"
 				ln -s "${IMAGE}" "${SEQUENCE_DIR}/${NUM}.${EXTENSION}"
 			fi
 		done

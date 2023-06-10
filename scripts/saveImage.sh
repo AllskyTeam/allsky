@@ -58,8 +58,7 @@ ABORTED_MSG2="uploads"
 CAUSED_BY="This could be caused by very long module processing time or extremely short delays between images."
 # Don't sleep too long or check too many times since processing an image should take at most
 # a few seconds
-if ! one_instance --process-name "${ME}" --pid-file "${PID_FILE}" \
-		--sleep "3s" --max-checks 3 \
+if ! one_instance --pid-file "${PID_FILE}" --sleep "3s" --max-checks 3 \
 		--aborted-count-file "${ALLSKY_ABORTEDSAVEIMAGE}" --aborted-fields "${ABORTED_FIELDS}" \
 		--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" \
 		--caused-by "${CAUSED_BY}" ; then

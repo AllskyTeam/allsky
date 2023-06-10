@@ -12,10 +12,13 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
 source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
 
 
+ENTERED="$*"
 DEBUG=0
 HELP="false"
 DO_MINI="false"
-MINI_FILE=""
+LOCK="false"
+IMAGES_FILE=""
+OUTPUT_FILE=""
 while [[ $# -gt 0 ]]; do
 	case "${1}" in
 			-h | --help)
@@ -24,10 +27,19 @@ while [[ $# -gt 0 ]]; do
 			-d | --debug)
 				((DEBUG++))
 				;;
+			-l | --lock)
+				LOCK="true"
+				;;
+			-o | --output)
+				OUTPUT_FILE="${2}"
+				shift
+				;;
+			-i | --images)
+				IMAGES_FILE="${2}"
+				shift
+				;;
 			-m | --mini)
 				DO_MINI="true"
-				MINI_FILE="${2}"
-				shift
 				;;
 			-*)
 				echo -e "${RED}${ME}: Unknown argument '${1}' ignoring.${NC}" >&2
@@ -43,75 +55,102 @@ done
 usage_and_exit()
 {
 	RET=$1
-	XD="/path/to/nonstandard/location/of/allsky_images"
+	XD="/some_nonstandard_path"
 	TODAY="$(date +%Y%m%d)"
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo -n "Usage: ${ME} [--debug] [--help] [--mini mini_file]  <DATE> [<IMAGE_DIR>]"
+	echo -n "Usage: ${ME} [--debug] [--help] --lock --output file --mini {--images file | <DATE> [<IMAGE_DIR>] }"
 	echo -e "${NC}"
 	echo "    example: ${ME} ${TODAY}"
 	echo "    or:      ${ME} ${TODAY} ${XD}"
 	echo
 	echo -en "${YELLOW}"
-	echo "<DATE> must be of the form YYYYMMDD."
 	echo
-	echo "<IMAGE_DIR> defaults to '\${ALLSKY_IMAGES}' but may be overridden to use a"
-	echo "nonstandard location such as a usb stick or a network drive (eg. for regenerating timelapses)."
-	echo "In that case <DATE> must exist inside <IMAGE_DIR>,"
-	echo "eg. '${XD}/${TODAY}'."
+	echo "You entered: ${ME} ${ENTERED}"
 	echo
-	echo "Produces a movie in <IMAGE_DIR>/<DATE>/allsky-<DATE>.mp4"
-	echo "eg. ${ALLSKY_IMAGES}/${TODAY}/allsky-${TODAY}.mp4"
-	echo "or  ${XD}/${TODAY}/allsky-${TODAY}.mp4"
+	echo "The list of images is determined in one of two ways:"
+	echo "1. Using '<DATE>' which must be of the form YYYYMMDD."
+	echo "   Specifying an optional '<IMAGE_DIR>' indicates which directory to look in"
+	echo "   (default is '${ALLSKY_IMAGES}'), for example a USB stick."
+	echo "   In that case <DATE> must exist inside <IMAGE_DIR>, eg. '${XD}/${TODAY}'."
+	echo "   The timelapse is stored in '<IMAGE_DIR>/<DATE>/allsky-<DATE>.mp4' unless"
+	echo "   --output is specified in which case it's stored in 'file'."
+	echo "   The most common usage is:  ${ME} <DATE>"
 	echo
-	echo "[--mini mini_file] creates a mini-timelapse using the images listed in 'mini-file'."
+	echo "2. Specifying '--images file' uses the images listed in 'file'."
+	echo "   <DATE> and <IMAGE_DIR> are not used."
+	echo "   The timelapse is stored in '${ALLSKY_TMP}/mini-timelapse.mp4' unless"
+	echo "   --output is specified in which case it's stored in 'file'."
+	echo
+	echo "'--lock' ensures only one instance of ${ME} runs at a time."
+	echo "'--output file' puts the output timelapse in 'file'."
+	echo "'--mini' uses the MINI_TIMELAPSE settings."
+	echo
 	echo -en "${NC}"
 	# shellcheck disable=SC2086
 	exit ${RET}
 }
-[[ $# -eq 0 ||  $# -gt 2 ]] && usage_and_exit 1
+if [[ -n ${IMAGES_FILE} ]]; then
+	# If IMAGES_FILE is specified there should be no other arguments.
+	[[ $# -ne 0 ]] && usage_and_exit 1
+elif [[ $# -eq 0 || $# -gt 2 ]]; then
+	usage_and_exit 2
+fi
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
-# Allow timelapses of pictures not in the standard $ALLSKY_IMAGES directory.
-# If $2 is passed, it's the top folder, otherwise use the one in $ALLSKY_IMAGES.
-DATE="${1}"
-if [[ -z ${2} ]]; then
-	DATE_DIR="${ALLSKY_IMAGES}/${DATE}"	# Need full pathname for links
-else
-	DATE_DIR="${2}/${DATE}"
-fi
-if [[ ! -d ${DATE_DIR} ]]; then
-	echo -e "${RED}*** ${ME} ERROR: '${DATE_DIR}' does not exist!${NC}"
-	exit 2
-fi
-
-if [[ ${DO_MINI} == "false" ]]; then
-	OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
-	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse"
-else
-	# In MINI mode, only allow one process at a time.
-	OUTPUT_FILE="${ALLSKY_TMP}/mini-timelapse.mp4"
-	PID_FILE="${ALLSKY_TMP}/timelapse-mini-pid.txt"
-	ABORTED_MSG1="Another mini timelapse creation is in progress so this one was aborted."
-	ABORTED_FIELDS="${OUTPUT_FILE}"
-	ABORTED_MSG2="mini timelapse creations"
-	if ! one_instance --process-name "${ME}.*--mini" --pid-file "${PID_FILE}" \
-			--aborted-count-file "${ALLSKY_ABORTEDTIMELAPSE}" --aborted-fields "${ABORTED_FIELDS}" \
-			--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" ; then
-		exit 1
+if [[ -n ${IMAGES_FILE} ]]; then
+	if [[ ! -f ${IMAGES_FILE} ]]; then
+		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist!${NC}"
+		exit 3
 	fi
-	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-mini-timelapse"
+else
+	# Allow timelapses of pictures not in the standard $ALLSKY_IMAGES directory.
+	# If $2 is passed, it's the top folder, otherwise use the one in $ALLSKY_IMAGES.
+	DATE="${1}"
+	if [[ -z ${2} ]]; then
+		DATE_DIR="${ALLSKY_IMAGES}/${DATE}"	# Need full pathname for links
+	else
+		DATE_DIR="${2}/${DATE}"
+	fi
+	if [[ ! -d ${DATE_DIR} ]]; then
+		echo -e "${RED}*** ${ME} ERROR: '${DATE_DIR}' does not exist!${NC}"
+		exit 4
+	fi
 fi
 
-if [[ -d ${SEQUENCE_DIR} ]]; then
-	NSEQ=$(find "${SEQUENCE_DIR}/*" 2>/dev/null | wc -l)	# left over from last time
+if [[ -z ${OUTPUT_FILE} ]]; then
+	if [[ ${DO_MINI} == "true" ]]; then
+		OUTPUT_FILE="${ALLSKY_TMP}/mini-timelapse.mp4"
+	else
+		OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
+	fi
+fi
+
+if [[ ${LOCK} == "true" ]]; then
+	PID_FILE="${ALLSKY_TMP}/timelapse-pid.txt"
+	ABORTED_MSG1="Another timelapse creation is in progress so this one was aborted."
+	ABORTED_FIELDS="$( basename "${OUTPUT_FILE}" )"
+	ABORTED_MSG2="timelapse creations"
+	if [[ ${DO_MINI} == "true" ]]; then
+		CAUSED_BY="This could be caused by unreasonable TIMELAPSE_MINI_IMAGES and TIMELAPSE_MINI_FREQUENCY settings."
+	else
+		CAUSED_BY="Unknown cause - see /var/log/allsky.log."
+	fi
+	if ! one_instance --pid-file "${PID_FILE}" \
+			--aborted-count-file "${ALLSKY_ABORTEDTIMELAPSE}" \
+			--aborted-fields "${ABORTED_FIELDS}" \
+			--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" \
+			--caused-by "${CAUSED_BY}" ; then
+		exit 5
+	fi
+	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-lock-timelapse"
 else
-	NSEQ=0
+	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse"
 fi
 
 TMP="${ALLSKY_TMP}/timelapseTMP.txt"
 [[ ${DO_MINI} == "false"  ]] && : > "${TMP}"		# Only create when NOT doing mini-timelapses
 
-if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
+if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
 
@@ -123,10 +162,10 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 			exit 0		# Gets us out of this sub-shell
 		fi
 
-		if [[ -f ${MINI_FILE} ]]; then
-			cat "${MINI_FILE}"
+		if [[ -f ${IMAGES_FILE} ]]; then
+			cat "${IMAGES_FILE}"
 		else
-			echo "${ME} WARNING: No '${MINI_FILE}' file" >&2
+			echo "${ME} WARNING: No '${IMAGES_FILE}' file" >&2
 			# Do not pass anything to gawk
 		fi
 	) | gawk -v DO_MINI=${DO_MINI} 'BEGIN { a=0; }
@@ -161,7 +200,10 @@ if [[ ${KEEP_SEQUENCE} == "false" || ${NSEQ} -lt 100 ]]; then
 		exit 1
 	fi
 else
-	echo -e "${ME} ${YELLOW}Not regenerating sequence because KEEP_SEQUENCE was given and ${NSEQ} links are present ${NC}"
+	echo -e "${ME} ${YELLOW}"
+	echo "Not regenerating sequence because KEEP_SEQUENCE"
+	echo "was given and ${NSEQ} links are present."
+	echo -e "${NC}"
 fi
 
 SCALE=""
@@ -222,3 +264,4 @@ fi
 rm -f "${PID_FILE}"
 
 exit 0
+

@@ -102,10 +102,6 @@ if [[ -n ${IMAGES_FILE} ]]; then
 	INPUT_DIR=""		# Not used
 else
 	INPUT_DIR="${1}"
-	if [[ ! -d ${INPUT_DIR} ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '${INPUT_DIR}' does not exist!${NC}"
-		exit 4
-	fi
 
 	# If not a full pathname, ${DIRNAME} will be "." so look in ${ALLSKY_IMAGES}.
 	DIRNAME="$( dirname "${INPUT_DIR}" )"
@@ -113,6 +109,11 @@ else
 		INPUT_DIR="${ALLSKY_IMAGES}/${INPUT_DIR}"	# Need full pathname for links
 	fi
 	OUTPUT_DIR="${INPUT_DIR}"	# default location
+
+	if [[ ! -d ${INPUT_DIR} ]]; then
+		echo -e "${RED}*** ${ME} ERROR: '${INPUT_DIR}' does not exist!${NC}"
+		exit 4
+	fi
 fi
 
 if [[ ${LOCK} == "true" ]]; then
@@ -162,7 +163,6 @@ if [[ -z ${OUTPUT_FILE} ]]; then
 		OUTPUT_FILE="${OUTPUT_DIR}/allsky-${B}.mp4"
 	fi
 fi
-echo "OUTPUT_FILE=[$OUTPUT_FILE], INPUT_DIR=[$INPUT_DIR], OUTPUT_DIR=[$OUTPUT_DIR]"
 
 TMP="${ALLSKY_TMP}/timelapseTMP.txt"
 [[ ${IS_MINI} == "false"  ]] && : > "${TMP}"		# Only create when NOT doing mini-timelapses
@@ -171,50 +171,42 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
 
+	NUM_IMAGES=0
 	# capture the "ln" commands in case the user needs to debug
-	(
-		if [[ -n ${IMAGES_FILE} ]]; then
-			cat "${IMAGES_FILE}"
-		else
-			ls -rt "${INPUT_DIR}"/*."${EXTENSION}"
-			exit 0		# Gets us out of this sub-shell
-		fi
-	) | gawk -v IS_MINI=${IS_MINI} 'BEGIN { a=0; }
-		{
-			a++;
-			printf "ln -s %s '"${SEQUENCE_DIR}"'/%04d.'"${EXTENSION}"'\n", $0, a;
-		}
-		END {
-			# If we are in "mini" mode, tell bash to exit 1 so we do not have to create a temporary file.
-			if (a > 0 && IS_MINI == "true") {
-				printf("exit 1");		# avoids creating ${TMP} for MINI timelapse
-			} else if (a > 0) {
-				printf("Processed %d images\n", a) > "'"${TMP}"'";
-				printf("exit 0");
-			} else {		# either a == 0 or in MINI mode
-				printf("exit 2");		# no, or not enough, images found
-			}
+	if [[ -n ${IMAGES_FILE} ]]; then
+		cat "${IMAGES_FILE}"
 
-		}' \
-	| bash
-	RET=$?
-
-	# If bash exited with 0 then there are images and we're not in MINI mode.
-	# If bash exited with 1 we're in MINI mode; we exit 1 in MINI mode to avoid
-	# If bash exited with 2 no images were found.
-	# In MINI mode that's ok (but exit with 1 so the invoker knows we didn't create a timelapse).
-	if [[ ${RET} -eq 2 ]]; then
-		if [[ ${IS_MINI} == "false" ]]; then
-			echo -e "${RED}*** ${ME} ERROR: No images found!${NC}"
-			rm -fr "${SEQUENCE_DIR}"
-		fi
+		# This is needed because NUM_IMAGES is updated in a sub-shell
+		# so we can't access it and hence don't know how many images were processed,
+		# and it's too expensive to count the number in SEQUENCE_DIR since it could
+		# have thousands of images.
+		echo "[end]"		# signals end of the list
+	else
+		ls -rt "${INPUT_DIR}"/*."${EXTENSION}" 2>/dev/null
+		echo "[end]"
+	fi | while read -r IMAGE
+		do
+			if [[ ${IMAGE} == "[end]" ]]; then
+				if [[ ${NUM_IMAGES} -eq 0 ]]; then
+					exit 1		# gets out of "while" loop
+				elif [[ ${IS_MINI} == "false" ]]; then
+					echo "Processed ${NUM_IMAGES} images" > "${TMP}"
+				fi
+			else
+				((NUM_IMAGES++))
+				NUM="$( printf "%04d" ${NUM_IMAGES} )"
+				ln -s "${IMAGE}" "${SEQUENCE_DIR}/${NUM}.${EXTENSION}"
+			fi
+		done
+	if [[ $? -ne 0 ]]; then
+		echo -e "${RED}*** ${ME} ERROR: No images found in '${INPUT_DIR}'!${NC}"
+		rm -fr "${SEQUENCE_DIR}"
 		[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
 		exit 1
 	fi
 else
 	echo -e "${ME} ${YELLOW}"
-	echo "Not regenerating sequence because KEEP_SEQUENCE"
-	echo "was given and ${NSEQ} links are present."
+	echo "Not regenerating sequence because KEEP_SEQUENCE is enabled."
 	echo -e "${NC}"
 fi
 

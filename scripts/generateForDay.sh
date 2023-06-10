@@ -85,7 +85,8 @@ usage_and_exit()
 	retcode=${1}
 	echo
 	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] [--thumbnail-only] [-k] [-s] [-t] DATE"
+	echo "Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\"
+	echo "    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] DATE"
 	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--help' displays this message and exits."
@@ -94,10 +95,10 @@ usage_and_exit()
 	echo "      '--upload' uploads previously-created files instead of creating them."
 	echo "      '--thumbnail-only' creates or uploads video thumbnails only."
 	echo "      'DATE' is the day in '${ALLSKY_IMAGES}' to process."
-	echo "      '-k' will ${MSG1} a keogram."
-	echo "      '-s' will ${MSG1} a startrail."
-	echo "      '-t' will ${MSG1} a timelapse."
-	echo "    If you don't specify k, s, or t, all three will be ${MSG2}."
+	echo "      '--keogram' will ${MSG1} a keogram."
+	echo "      '--startrails' will ${MSG1} a startrail."
+	echo "      '--timelapse' will ${MSG1} a timelapse."
+	echo "    If you don't specify --keogram, --startrails, or --timelapse, all three will be ${MSG2}."
 	# shellcheck disable=SC2086
 	exit ${retcode}
 }
@@ -111,9 +112,9 @@ if [[ ${TYPE} == "UPLOAD" ]]; then
 fi
 
 DATE="${1}"
-DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
-if [[ ! -d ${DATE_DIR} ]]; then
-	echo -e "${RED}${ME}: ERROR: '${DATE_DIR}' not found!${NC}"
+OUTPUT_DIR="${ALLSKY_IMAGES}/${DATE}"
+if [[ ! -d ${OUTPUT_DIR} ]]; then
+	echo -e "${RED}${ME}: ERROR: '${OUTPUT_DIR}' not found!${NC}"
 	exit 2
 fi
 
@@ -122,7 +123,6 @@ if [[ ${GOT} -eq 0 ]]; then
 	DO_STARTRAILS="true"
 	DO_TIMELAPSE="true"
 fi
-# echo -e "k=${DO_KEOGRAM}, s=${DO_STARTRAILS}, t=${DO_TIMELAPSE}\nDATE_DIR=${DATE_DIR}"; exit 0
 
 if [[ ${TYPE} == "GENERATE" ]]; then
 	generate()
@@ -131,8 +131,9 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		DIRECTORY="${2}"
 		CMD="${3}"
 		[[ ${SILENT} == "false" ]] && echo "===== Generating ${GENERATING_WHAT}"
-		[[ ${DIRECTORY} != "" ]] && mkdir -p "${DATE_DIR}/${DIRECTORY}"
+		[[ ${DIRECTORY} != "" ]] && mkdir -p "${OUTPUT_DIR}/${DIRECTORY}"
 
+		[[ -n ${DEBUG_ARG} ]] && echo "${ME}: Executing: ${CMD}"
 		# shellcheck disable=SC2086
 		eval ${CMD}
 		RET=$?
@@ -161,7 +162,9 @@ else
 			fi
 			[[ ${SILENT} == "false" ]] && echo "===== Uploading '${UPLOAD_FILE}'"
 			# shellcheck disable=SC2086
-			"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "${UPLOAD_FILE}" "${DIRECTORY}" "${DESTINATION_NAME}" "${FILE_TYPE}" "${WEB_DIRECTORY}"
+			"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} \
+				"${UPLOAD_FILE}" "${DIRECTORY}" "${DESTINATION_NAME}" \
+				"${FILE_TYPE}" "${WEB_DIRECTORY}"
 			return $?
 		else
 			echo -en "${YELLOW}"
@@ -192,51 +195,59 @@ fi
 
 if [[ ${DO_KEOGRAM} == "true" ]]; then
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
-	UPLOAD_FILE="${DATE_DIR}/keogram/${KEOGRAM_FILE}"
+	UPLOAD_FILE="${OUTPUT_DIR}/keogram/${KEOGRAM_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
 		if [[ -z "${NICE}" ]]; then
 			N=""
 		else
 			N="--nice-level ${NICE}"
 		fi
-		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
+		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
+			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
 	else
-		upload "Keogram" "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" "${KEOGRAM_DESTINATION_NAME}" "${WEB_KEOGRAM_DIR}"
+		upload "Keogram" "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" \
+			 "${KEOGRAM_DESTINATION_NAME}" "${WEB_KEOGRAM_DIR}"
 	fi
 	[[ $? -ne 0 ]] && ((EXIT_CODE++))
 fi
 
 if [[ ${DO_STARTRAILS} == "true" ]]; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
-	UPLOAD_FILE="${DATE_DIR}/startrails/${STARTRAILS_FILE}"
+	UPLOAD_FILE="${OUTPUT_DIR}/startrails/${STARTRAILS_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
 		if [[ -z "${NICE}" ]]; then
 			N=""
 		else
 			N="--nice ${NICE}"
 		fi
-		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -d '${DATE_DIR}' -e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' ${STARTRAILS_EXTRA_PARAMETERS}"
+		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
+			-e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' \
+			${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
 	else
-		upload "Startrails" "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" "${STARTRAILS_DESTINATION_NAME}" "${WEB_STARTRAILS_DIR}"
+		upload "Startrails" "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" \
+			"${STARTRAILS_DESTINATION_NAME}" "${WEB_STARTRAILS_DIR}"
 	fi
 	[[ $? -ne 0 ]] && ((EXIT_CODE++))
 fi
 
 if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	VIDEOS_FILE="allsky-${DATE}.mp4"
-	UPLOAD_THUMBNAIL_NAME="allsky-${DATE}.jpg"
-	# Need a different name for the file on the Pi so it's not mistaken for a video file in the WebUI.
+	# Need a different name for the file so it's not mistaken for a regular image in the WebUI.
 	THUMBNAIL_FILE="thumbnail-${DATE}.jpg"
-	UPLOAD_FILE="${DATE_DIR}/${VIDEOS_FILE}"
-	UPLOAD_THUMBNAIL="${DATE_DIR}/${THUMBNAIL_FILE}"
+
+	UPLOAD_THUMBNAIL_NAME="allsky-${DATE}.jpg"
+	UPLOAD_THUMBNAIL="${OUTPUT_DIR}/${THUMBNAIL_FILE}"
+	UPLOAD_FILE="${OUTPUT_DIR}/${VIDEOS_FILE}"
+
 	if [[ ${TYPE} == "GENERATE" ]]; then
 		if [[ ${THUMBNAIL_ONLY} == "true" ]]; then
 			if [[ -f ${UPLOAD_FILE} ]]; then
 				RET=0
 			else
-				echo -e "${RED}${ME}: ERROR: video file '${UPLOAD_FILE}' not found!\nCannot create thumbnail.${NC}"
+				echo -e "${RED}${ME}: ERROR: video file '${UPLOAD_FILE}' not found!"
+				echo -e "Cannot create thumbnail.${NC}"
 				RET=1
 			fi
 		else
@@ -245,23 +256,19 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			else
 				N="nice -n ${NICE}"
 			fi
-			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DATE}"
+			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' --output '${UPLOAD_FILE}' ${DATE}"
 			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 			RET=$?
 		fi
 		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" ]]; then
 			rm -f "${UPLOAD_THUMBNAIL}"
-			function make_thumbnail()
-			{
-				local SEC="${1}"
-				ffmpeg -loglevel error -ss "00:00:${SEC}" -i "${UPLOAD_FILE}" \
-					-filter:v scale="${THUMBNAIL_SIZE_X}:-1" -frames:v 1 "${UPLOAD_THUMBNAIL}"
-			}
 			# Want the thumbnail to be near the start of the video, but not the first frame
 			# since that can be a lousy frame.
 			# If the video is less than 5 seconds, make_thumbnail won't work, so try again.
-			make_thumbnail 5
-			[[ ! -f ${UPLOAD_THUMBNAIL} ]] && make_thumbnail 0
+			make_thumbnail "05" "${UPLOAD_FILE}" "${UPLOAD_THUMBNAIL}"
+			if [[ ! -f ${UPLOAD_THUMBNAIL} ]]; then
+				make_thumbnail "00" "${UPLOAD_FILE}" "${UPLOAD_THUMBNAIL}"
+			fi
 			if [[ ! -f ${UPLOAD_THUMBNAIL} ]]; then
 				echo -e "${RED}${ME}: ERROR: video thumbnail not created!${NC}"
 			fi
@@ -270,7 +277,8 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 		if [[ ${THUMBNAIL_ONLY} == "true" ]]; then
 			RET=0
 		else
-			upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" "${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
+			upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" \
+				"${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
 			RET=$?
 		fi
 		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -f ${UPLOAD_THUMBNAIL} ]]; then
@@ -279,7 +287,8 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			else
 				W=""
 			fi
-			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" "${UPLOAD_THUMBNAIL_NAME}" "" "${W}"
+			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" \
+				"${UPLOAD_THUMBNAIL_NAME}" "" "${W}"
 		fi
 	fi
 	[[ ${RET} -ne 0 ]] && ((EXIT_CODE++))
@@ -288,9 +297,9 @@ fi
 
 if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${EXIT_CODE} -eq 0 ]]; then
 	ARGS="${THUMBNAIL_ONLY_ARG}"
-	[[ ${DO_KEOGRAM} == "true" ]] && ARGS="${ARGS} -k"
-	[[ ${DO_STARTRAILS} == "true" ]] && ARGS="${ARGS} -s"
-	[[ ${DO_TIMELAPSE} == "true" ]] && ARGS="${ARGS} -t"
+	[[ ${DO_KEOGRAM} == "true" ]] && ARGS="${ARGS} --keogram"
+	[[ ${DO_STARTRAILS} == "true" ]] && ARGS="${ARGS} --startrails"
+	[[ ${DO_TIMELAPSE} == "true" ]] && ARGS="${ARGS} --timelapse"
 	echo -e "\n================"
 	echo "If you want to upload the file(s) you just created,"
 	echo -e "\texecute '${ME} --upload ${ARGS} ${DATE}'"

@@ -474,8 +474,7 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${R
 		UPLOAD_THUMBNAIL="${ALLSKY_TMP}/${UPLOAD_THUMBNAIL_NAME}"
 		# Create the thumbnail for the mini timelapse, then upload it.
 		rm -f "${UPLOAD_THUMBNAIL}"
-		ffmpeg -loglevel error -i "${FILE_TO_UPLOAD}" \
-			-filter:v scale="${THUMBNAIL_SIZE_X}:-1" -frames:v 1 "${UPLOAD_THUMBNAIL}"
+		make_thumbnail "00" "${FILE_TO_UPLOAD}" "${UPLOAD_THUMBNAIL}"
 		if [[ ! -f ${UPLOAD_THUMBNAIL} ]]; then
 			echo "${ME}Mini timelapse thumbnail not created!"
 		else

@@ -58,7 +58,7 @@ usage_and_exit()
 	XD="/some_nonstandard_path"
 	TODAY="$(date +%Y%m%d)"
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo -n "Usage: ${ME} [--debug] [--help] [--lock] [--output file] [--mini] {--images file | <DIR> }"
+	echo -n "Usage: ${ME} [--debug] [--help] [--lock] [--output file] [--mini] {--images file | <INPUT_DIR> }"
 	echo -e "${NC}"
 	echo "    example: ${ME} ${TODAY}"
 	echo "    or:      ${ME} --output '${XD}' ${TODAY}"
@@ -68,19 +68,19 @@ usage_and_exit()
 	echo "You entered: ${ME} ${ENTERED}"
 	echo
 	echo "The list of images is determined in one of two ways:"
-	echo "1. Looking in '<DIR>' for files with an extension of '${EXTENSION}'."
-	echo "   If <DIR> is NOT a full path name it is assumed to be in '${ALLSKY_IMAGES}',"
+	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
+	echo "   If <INPUT_DIR> is NOT a full path name it is assumed to be in '${ALLSKY_IMAGES}',"
 	echo "   which allows using images on a USB stick, for example."
+	echo "   The timelapse file is stored in <INPUT_DIR> and is called 'allsky-<BASENAME_DIR>.mp4',"
+	echo "   where <BASENAME_DIR> is the basename of <INPUT_DIR>."
 	echo
-	echo "2. Specifying '--images file' uses the images listed in 'file'; <DIR> is not used."
+	echo "2. Specifying '--images file' uses the images listed in 'file'; <INPUT_DIR> is not used."
+	echo "   The timelapse file is stored in the same directory as the first image."
 	echo
 	echo "'--lock' ensures only one instance of ${ME} runs at a time."
-	echo "'--output file' puts the output timelapse in 'file'."
-	echo "   If not specified, the timelapse is stored in the same directory as the images."
-	echo "'--mini' uses the MINI_TIMELAPSE settings and the timelapse file"
-	echo "   is called 'mini-timelapse.mp4'."
-	echo "   If not set, the timelapse file is called 'allsky-<BASENAME_DIR>.mp4',"
-	echo "   where <BASENAME_DIR> is the basename of <DIR>."
+	echo "'--output file' overrides the default storage location and file name."
+	echo "'--mini' uses the MINI_TIMELAPSE settings and the timelapse file is"
+	echo "   called 'mini-timelapse.mp4' if '--output' isn't used."
 	echo -en "${NC}"
 	# shellcheck disable=SC2086
 	exit ${RET}
@@ -93,32 +93,26 @@ elif [[ $# -eq 0 || $# -gt 1 ]]; then
 fi
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
+OUTPUT_DIR=""
 if [[ -n ${IMAGES_FILE} ]]; then
-	if [[ ! -f ${IMAGES_FILE} ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist!${NC}"
+	if [[ ! -s ${IMAGES_FILE} ]]; then
+		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!${NC}"
 		exit 3
 	fi
+	INPUT_DIR=""		# Not used
 else
-	# If not a full pathname, ${DIRNAME} will be "." so look in ${ALLSKY_IMAGES}.
-	DIR="${1}"
-	DIRNAME="$( dirname "${DIR}" )"
-	if [[ ${DIRNAME} == "." ]]; then
-		DIR="${ALLSKY_IMAGES}/${DIR}"	# Need full pathname for links
-	fi
-	if [[ ! -d ${DIR} ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '${DIR}' does not exist!${NC}"
+	INPUT_DIR="${1}"
+	if [[ ! -d ${INPUT_DIR} ]]; then
+		echo -e "${RED}*** ${ME} ERROR: '${INPUT_DIR}' does not exist!${NC}"
 		exit 4
 	fi
-fi
 
-if [[ -z ${OUTPUT_FILE} ]]; then
-	if [[ ${IS_MINI} == "true" ]]; then
-		OUTPUT_FILE="${ALLSKY_TMP}/mini-timelapse.mp4"
-	else
-		# Use the basename of the directory.
-		B="$( basename "${DIR}" )"
-		OUTPUT_FILE="${DIR}/allsky-${B}.mp4"
+	# If not a full pathname, ${DIRNAME} will be "." so look in ${ALLSKY_IMAGES}.
+	DIRNAME="$( dirname "${INPUT_DIR}" )"
+	if [[ ${DIRNAME} == "." ]]; then
+		INPUT_DIR="${ALLSKY_IMAGES}/${INPUT_DIR}"	# Need full pathname for links
 	fi
+	OUTPUT_DIR="${INPUT_DIR}"	# default location
 fi
 
 if [[ ${LOCK} == "true" ]]; then
@@ -141,7 +135,34 @@ if [[ ${LOCK} == "true" ]]; then
 	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-lock-timelapse"
 else
 	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse"
+	PID_FILE=""
 fi
+
+if [[ -z ${OUTPUT_FILE} ]]; then
+	if [[ ${IS_MINI} == "true" ]]; then
+		OUTPUT_DIR="${ALLSKY_TMP}"
+		OUTPUT_FILE="${OUTPUT_DIR}/mini-timelapse.mp4"
+	else
+		if [[ -n ${IMAGES_FILE} ]]; then
+			# Use the directory the images are in.  Only look at the first one.
+			I="$( head -1 "${IMAGES_FILE}" )"
+			OUTPUT_DIR="$( dirname "${I}" )"
+
+			# In case the filename doesn't include a path, put in a default location.
+			if [[ ${OUTPUT_DIR} == "." ]]; then
+				OUTPUT_DIR="${ALLSKY_TMP}"
+				echo -en "${ME}: ${YELLOW}"
+				echo "Can't determine where to put timelapse file so putting in '${OUTPUT_DIR}'."
+				echo -e "${NC}"
+			fi
+		fi
+
+		# Use the basename of the directory.
+		B="$( basename "${OUTPUT_DIR}" )"
+		OUTPUT_FILE="${OUTPUT_DIR}/allsky-${B}.mp4"
+	fi
+fi
+echo "OUTPUT_FILE=[$OUTPUT_FILE], INPUT_DIR=[$INPUT_DIR], OUTPUT_DIR=[$OUTPUT_DIR]"
 
 TMP="${ALLSKY_TMP}/timelapseTMP.txt"
 [[ ${IS_MINI} == "false"  ]] && : > "${TMP}"		# Only create when NOT doing mini-timelapses
@@ -152,17 +173,11 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 
 	# capture the "ln" commands in case the user needs to debug
 	(
-		if [[ ${IS_MINI} == "false" ]]; then
-			# Doing daily, full timelapse
-			ls -rt "${DIR}"/*."${EXTENSION}"
-			exit 0		# Gets us out of this sub-shell
-		fi
-
-		if [[ -f ${IMAGES_FILE} ]]; then
+		if [[ -n ${IMAGES_FILE} ]]; then
 			cat "${IMAGES_FILE}"
 		else
-			echo "${ME} WARNING: No '${IMAGES_FILE}' file" >&2
-			# Do not pass anything to gawk
+			ls -rt "${INPUT_DIR}"/*."${EXTENSION}"
+			exit 0		# Gets us out of this sub-shell
 		fi
 	) | gawk -v IS_MINI=${IS_MINI} 'BEGIN { a=0; }
 		{
@@ -193,6 +208,7 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 			echo -e "${RED}*** ${ME} ERROR: No images found!${NC}"
 			rm -fr "${SEQUENCE_DIR}"
 		fi
+		[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
 		exit 1
 	fi
 else
@@ -257,7 +273,7 @@ fi
 
 [[ ${DEBUG} -ge 2 ]] && echo -e "${ME}: ${GREEN}Timelapse in ${OUTPUT_FILE}${NC}"
 
-rm -f "${PID_FILE}"
+[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
 
 exit 0
 

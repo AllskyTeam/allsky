@@ -15,7 +15,7 @@ source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
 ENTERED="$*"
 DEBUG=0
 HELP="false"
-DO_MINI="false"
+IS_MINI="false"
 LOCK="false"
 IMAGES_FILE=""
 OUTPUT_FILE=""
@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
 				shift
 				;;
 			-m | --mini)
-				DO_MINI="true"
+				IS_MINI="true"
 				;;
 			-*)
 				echo -e "${RED}${ME}: Unknown argument '${1}' ignoring.${NC}" >&2
@@ -58,33 +58,29 @@ usage_and_exit()
 	XD="/some_nonstandard_path"
 	TODAY="$(date +%Y%m%d)"
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo -n "Usage: ${ME} [--debug] [--help] --lock --output file --mini {--images file | <DATE> [<IMAGE_DIR>] }"
+	echo -n "Usage: ${ME} [--debug] [--help] [--lock] [--output file] [--mini] {--images file | <DIR> }"
 	echo -e "${NC}"
 	echo "    example: ${ME} ${TODAY}"
-	echo "    or:      ${ME} ${TODAY} ${XD}"
+	echo "    or:      ${ME} --output '${XD}' ${TODAY}"
 	echo
 	echo -en "${YELLOW}"
 	echo
 	echo "You entered: ${ME} ${ENTERED}"
 	echo
 	echo "The list of images is determined in one of two ways:"
-	echo "1. Using '<DATE>' which must be of the form YYYYMMDD."
-	echo "   Specifying an optional '<IMAGE_DIR>' indicates which directory to look in"
-	echo "   (default is '${ALLSKY_IMAGES}'), for example a USB stick."
-	echo "   In that case <DATE> must exist inside <IMAGE_DIR>, eg. '${XD}/${TODAY}'."
-	echo "   The timelapse is stored in '<IMAGE_DIR>/<DATE>/allsky-<DATE>.mp4' unless"
-	echo "   --output is specified in which case it's stored in 'file'."
-	echo "   The most common usage is:  ${ME} <DATE>"
+	echo "1. Looking in '<DIR>' for files with an extension of '${EXTENSION}'."
+	echo "   If <DIR> is NOT a full path name it is assumed to be in '${ALLSKY_IMAGES}',"
+	echo "   which allows using images on a USB stick, for example."
 	echo
-	echo "2. Specifying '--images file' uses the images listed in 'file'."
-	echo "   <DATE> and <IMAGE_DIR> are not used."
-	echo "   The timelapse is stored in '${ALLSKY_TMP}/mini-timelapse.mp4' unless"
-	echo "   --output is specified in which case it's stored in 'file'."
+	echo "2. Specifying '--images file' uses the images listed in 'file'; <DIR> is not used."
 	echo
 	echo "'--lock' ensures only one instance of ${ME} runs at a time."
 	echo "'--output file' puts the output timelapse in 'file'."
-	echo "'--mini' uses the MINI_TIMELAPSE settings."
-	echo
+	echo "   If not specified, the timelapse is stored in the same directory as the images."
+	echo "'--mini' uses the MINI_TIMELAPSE settings and the timelapse file"
+	echo "   is called 'mini-timelapse.mp4'."
+	echo "   If not set, the timelapse file is called 'allsky-<BASENAME_DIR>.mp4',"
+	echo "   where <BASENAME_DIR> is the basename of <DIR>."
 	echo -en "${NC}"
 	# shellcheck disable=SC2086
 	exit ${RET}
@@ -92,7 +88,7 @@ usage_and_exit()
 if [[ -n ${IMAGES_FILE} ]]; then
 	# If IMAGES_FILE is specified there should be no other arguments.
 	[[ $# -ne 0 ]] && usage_and_exit 1
-elif [[ $# -eq 0 || $# -gt 2 ]]; then
+elif [[ $# -eq 0 || $# -gt 1 ]]; then
 	usage_and_exit 2
 fi
 [[ ${HELP} == "true" ]] && usage_and_exit 0
@@ -103,25 +99,25 @@ if [[ -n ${IMAGES_FILE} ]]; then
 		exit 3
 	fi
 else
-	# Allow timelapses of pictures not in the standard $ALLSKY_IMAGES directory.
-	# If $2 is passed, it's the top folder, otherwise use the one in $ALLSKY_IMAGES.
-	DATE="${1}"
-	if [[ -z ${2} ]]; then
-		DATE_DIR="${ALLSKY_IMAGES}/${DATE}"	# Need full pathname for links
-	else
-		DATE_DIR="${2}/${DATE}"
+	# If not a full pathname, ${DIRNAME} will be "." so look in ${ALLSKY_IMAGES}.
+	DIR="${1}"
+	DIRNAME="$( dirname "${DIR}" )"
+	if [[ ${DIRNAME} == "." ]]; then
+		DIR="${ALLSKY_IMAGES}/${DIR}"	# Need full pathname for links
 	fi
-	if [[ ! -d ${DATE_DIR} ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '${DATE_DIR}' does not exist!${NC}"
+	if [[ ! -d ${DIR} ]]; then
+		echo -e "${RED}*** ${ME} ERROR: '${DIR}' does not exist!${NC}"
 		exit 4
 	fi
 fi
 
 if [[ -z ${OUTPUT_FILE} ]]; then
-	if [[ ${DO_MINI} == "true" ]]; then
+	if [[ ${IS_MINI} == "true" ]]; then
 		OUTPUT_FILE="${ALLSKY_TMP}/mini-timelapse.mp4"
 	else
-		OUTPUT_FILE="${DATE_DIR}/allsky-${DATE}.mp4"
+		# Use the basename of the directory.
+		B="$( basename "${DIR}" )"
+		OUTPUT_FILE="${DIR}/allsky-${B}.mp4"
 	fi
 fi
 
@@ -130,7 +126,7 @@ if [[ ${LOCK} == "true" ]]; then
 	ABORTED_MSG1="Another timelapse creation is in progress so this one was aborted."
 	ABORTED_FIELDS="$( basename "${OUTPUT_FILE}" )"
 	ABORTED_MSG2="timelapse creations"
-	if [[ ${DO_MINI} == "true" ]]; then
+	if [[ ${IS_MINI} == "true" ]]; then
 		CAUSED_BY="This could be caused by unreasonable TIMELAPSE_MINI_IMAGES and TIMELAPSE_MINI_FREQUENCY settings."
 	else
 		CAUSED_BY="Unknown cause - see /var/log/allsky.log."
@@ -148,7 +144,7 @@ else
 fi
 
 TMP="${ALLSKY_TMP}/timelapseTMP.txt"
-[[ ${DO_MINI} == "false"  ]] && : > "${TMP}"		# Only create when NOT doing mini-timelapses
+[[ ${IS_MINI} == "false"  ]] && : > "${TMP}"		# Only create when NOT doing mini-timelapses
 
 if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 	rm -fr "${SEQUENCE_DIR}"
@@ -156,9 +152,9 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 
 	# capture the "ln" commands in case the user needs to debug
 	(
-		if [[ ${DO_MINI} == "false" ]]; then
+		if [[ ${IS_MINI} == "false" ]]; then
 			# Doing daily, full timelapse
-			ls -rt "${DATE_DIR}"/*."${EXTENSION}"
+			ls -rt "${DIR}"/*."${EXTENSION}"
 			exit 0		# Gets us out of this sub-shell
 		fi
 
@@ -168,14 +164,14 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 			echo "${ME} WARNING: No '${IMAGES_FILE}' file" >&2
 			# Do not pass anything to gawk
 		fi
-	) | gawk -v DO_MINI=${DO_MINI} 'BEGIN { a=0; }
+	) | gawk -v IS_MINI=${IS_MINI} 'BEGIN { a=0; }
 		{
 			a++;
 			printf "ln -s %s '"${SEQUENCE_DIR}"'/%04d.'"${EXTENSION}"'\n", $0, a;
 		}
 		END {
 			# If we are in "mini" mode, tell bash to exit 1 so we do not have to create a temporary file.
-			if (a > 0 && DO_MINI == "true") {
+			if (a > 0 && IS_MINI == "true") {
 				printf("exit 1");		# avoids creating ${TMP} for MINI timelapse
 			} else if (a > 0) {
 				printf("Processed %d images\n", a) > "'"${TMP}"'";
@@ -193,7 +189,7 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 	# If bash exited with 2 no images were found.
 	# In MINI mode that's ok (but exit with 1 so the invoker knows we didn't create a timelapse).
 	if [[ ${RET} -eq 2 ]]; then
-		if [[ ${DO_MINI} == "false" ]]; then
+		if [[ ${IS_MINI} == "false" ]]; then
 			echo -e "${RED}*** ${ME} ERROR: No images found!${NC}"
 			rm -fr "${SEQUENCE_DIR}"
 		fi
@@ -211,7 +207,7 @@ SCALE=""
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
 # set FFLOG=info in config.sh if you want to see what's going on for debugging.
-if [[ ${DO_MINI} == "true" ]]; then
+if [[ ${IS_MINI} == "true" ]]; then
 	FPS="${TIMELAPSE_MINI_FPS}"
 	TIMELAPSE_BITRATE="${TIMELAPSE_MINI_BITRATE}"
 	if [[ ${TIMELAPSE_MINI_WIDTH} != "0" ]]; then
@@ -249,7 +245,7 @@ if [[ ${RET} -ne -0 ]]; then
 fi
 
 # if the user wants output, give it to them
-[[ ${FFLOG} == "info" && ${DO_MINI} == "false"  ]] && cat "${TMP}"
+[[ ${FFLOG} == "info" && ${IS_MINI} == "false"  ]] && cat "${TMP}"
 
 if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 	rm -rf "${SEQUENCE_DIR}"

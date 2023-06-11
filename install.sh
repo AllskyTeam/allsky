@@ -2354,6 +2354,7 @@ fi
 # See if we should skip some steps.
 # When most function are called they add a variable with the function's name set to "true".
 if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
+	#shellcheck disable=SC1090		# file doesn't exist in GitHub
 	source "${STATUS_FILE}" || exit 1
 
 	if [[ ${STATUS_INSTALLATION} == "${STATUS_OK}" ]]; then

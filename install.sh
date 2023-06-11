@@ -62,13 +62,14 @@ DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh.log"
 
 # Holds status of installation if we need to exit and get back in.
 STATUS_FILE="${ALLSKY_INSTALLATION_LOGS}/status.txt"
-STATUS_LOCALE_REBOOT="locale reboot"	# status of rebooting due to locale change
-STATUS_NO_LOCALE="locale not found"		# status of exiting due to desired locale not installed
-STATUS_NO_CAMERA="No camera found"		# status of exiting due to no camera found
-STATUS_OK="OK"							# Installation was completed.
-STATUS_CLEAR="Clear"					# Clear the file
-STATUS_ERROR="Error"
-STATUS_VARIABLES=""						# Holds all the variables and values to save
+STATUS_LOCALE_REBOOT="Rebooting to change locale"	# status of rebooting due to locale change
+STATUS_NO_LOCALE="locale not found"					# exiting due to desired locale not installed
+STATUS_NO_CAMERA="No camera found"					# status of exiting due to no camera found
+STATUS_OK="OK"										# Installation was completed.
+STATUS_NOT_CONTINUE="User elected not to continue"	# Exiting, but not an error
+STATUS_CLEAR="Clear"								# Clear the file
+STATUS_ERROR="Error encountered"
+STATUS_VARIABLES=()									# Holds all the variables and values to save
 
 # Some versions of Linux default to 750 so web server can't read it
 chmod 755 "${ALLSKY_HOME}"
@@ -117,7 +118,7 @@ do_initial_heading()
 		display_header "Welcome to the ${TITLE}!"
 	fi
 
-	STATUS_VARIABLES="${STATUS_VARIABLES}\ndo_initial_heading='true'"
+	STATUS_VARIABLES+=("do_initial_heading='true'\n")
 }
 
 ####
@@ -177,8 +178,8 @@ get_this_branch()
 				exit_installation 1 "${STATUS_ERROR}"
 			else
 				BRANCH="${B}"
-				STATUS_VARIABLES="${STATUS_VARIABLES}\nget_this_branch='true'"
-				STATUS_VARIABLES="\nBRANCH='${BRANCH}'"
+				STATUS_VARIABLES+=("get_this_branch='true'\n")
+				STATUS_VARIABLES+=("BRANCH='${BRANCH}'\n")
 				echo -n "${BRANCH}" > "${ALLSKY_BRANCH_FILE}"
 				display_msg --log info "Using '${BRANCH}' branch."
 			fi
@@ -262,8 +263,8 @@ get_connected_cameras()
 		exit_installation 1 "${STATUS_NO_CAMERA}"
 	fi
 
-	STATUS_VARIABLES="${STATUS_VARIABLES}\nget_connected_cameras='true'"
-	STATUS_VARIABLES="${STATUS_VARIABLES}\nCONNECTED_CAMERAS='${CONNECTED_CAMERAS}'"
+	STATUS_VARIABLES+=("get_connected_cameras='true'\n")
+	STATUS_VARIABLES+=("CONNECTED_CAMERAS='${CONNECTED_CAMERAS}'\n")
 }
 
 #
@@ -273,8 +274,6 @@ get_connected_cameras()
 CAMERA_TYPE=""
 select_camera_type()
 {
-	STATUS_VARIABLES="${STATUS_VARIABLES}\nselect_camera_type='true'"
-
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		case "${PRIOR_ALLSKY_VERSION}" in
 			# New versions go here...
@@ -285,7 +284,8 @@ select_camera_type()
 				# Don't bother with a message since this is a "similar" release.
 				if [[ -n ${CAMERA_TYPE} ]]; then
 					MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky."
-					STATUS_VARIABLES="${STATUS_VARIABLES}\nCAMERA_TYPE='${CAMERA_TYPE}'"
+					STATUS_VARIABLES+=("select_camera_type='true'\n")
+					STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 					display_msg --logonly info "${MSG}"
 					return
 				else
@@ -298,7 +298,8 @@ select_camera_type()
 				local CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
 				if [[ -n ${CAMERA} ]]; then
 					CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
-					STATUS_VARIABLES="${STATUS_VARIABLES}\nCAMERA_TYPE='${CAMERA_TYPE}'"
+					STATUS_VARIABLES+=("select_camera_type='true'\n")
+					STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 					if [[ ${CAMERA} != "${CAMERA_TYPE}" ]]; then
 						NEW=" (now called ${CAMERA_TYPE})"
 					else
@@ -317,14 +318,14 @@ select_camera_type()
 	local CT=()
 	local NUM=0
 	if [[ ${CONNECTED_CAMERAS} == "RPi" ]]; then
-		CT+=("RPi" "Raspberry Pi (HQ, Module 3, and compatibles)")
+		CT+=("RPi" "     Raspberry Pi (HQ, Module 3, and compatibles)")
 		((NUM++))
 	elif [[ ${CONNECTED_CAMERAS} == "ZWO" ]]; then
-		CT+=("ZWO" "ZWO ASI")
+		CT+=("ZWO" "     ZWO ASI")
 		((NUM++))
 	elif [[ ${CONNECTED_CAMERAS} == "RPi ZWO" ]]; then
-		CT+=("RPi" "Raspberry Pi (HQ, Module 3, and compatibles)")
-		CT+=("ZWO" "ZWO ASI")
+		CT+=("RPi" "     Raspberry Pi (HQ, Module 3, and compatibles)")
+		CT+=("ZWO" "     ZWO ASI")
 		((NUM+=2))
 	else		# shouldn't happen since we already checked
 		MSG="INTERNAL ERROR:"
@@ -350,7 +351,8 @@ select_camera_type()
 	fi
 
 	display_msg --log progress "Using ${CAMERA_TYPE} camera."
-	STATUS_VARIABLES="${STATUS_VARIABLES}\nCAMERA_TYPE='${CAMERA_TYPE}'"
+	STATUS_VARIABLES+=("select_camera_type='true'\n")
+	STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 }
 
 
@@ -383,7 +385,7 @@ create_webui_defines()
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
 
-	STATUS_VARIABLES="${STATUS_VARIABLES}\ncreate_webui_defines='true'"
+	STATUS_VARIABLES+=("create_webui_defines='true'\n")
 }
 
 
@@ -463,7 +465,7 @@ save_camera_capabilities()
 	display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
 	CAMERA_MODEL="$( settings ".cameraModel" "${SETTINGS_FILE}" )"
 
-	STATUS_VARIABLES="${STATUS_VARIABLES}\nsave_camera_capabilities='true'"
+	STATUS_VARIABLES+=("save_camera_capabilities='true'\n")
 	return 0
 }
 
@@ -533,7 +535,7 @@ recheck_swap()
 }
 check_swap()
 {
-	STATUS_VARIABLES="${STATUS_VARIABLES}\ncheck_swap='true'"
+	STATUS_VARIABLES+=("check_swap='true'\n")
 
 	local PROMPT="false"
 	[[ ${1} == "prompt" ]] && PROMPT="true"
@@ -660,7 +662,7 @@ check_and_mount_tmp()
 # If not, offer to make it one.
 check_tmp()
 {
-	STATUS_VARIABLES="${STATUS_VARIABLES}\ncheck_tmp='true'"
+	STATUS_VARIABLES+=("check_tmp='true'\n")
 
 	local INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
 
@@ -776,7 +778,7 @@ install_webserver()
 	# Starting it added an entry so truncate the file so it's 0-length
 	sleep 1; truncate -s 0 "${LIGHTTPD_LOG}"
 
-	STATUS_VARIABLES="${STATUS_VARIABLES}\ninstall_webserver='true'"
+	STATUS_VARIABLES+=("install_webserver='true'\n")
 }
 
 
@@ -794,8 +796,8 @@ prompt_for_hostname()
 		display_msg --logonly info "Using current hostname of '${CURRENT_HOSTNAME}'."
 		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
 
-		STATUS_VARIABLES="${STATUS_VARIABLES}\nprompt_for_hostname='true'"
-		STATUS_VARIABLES="${STATUS_VARIABLES}\nNEW_HOST_NAME='${NEW_HOST_NAME}'"
+		STATUS_VARIABLES+=("prompt_for_hostname='true'\n")
+		STATUS_VARIABLES+=("NEW_HOST_NAME='${NEW_HOST_NAME}'\n")
 		return
 	fi
 
@@ -810,8 +812,8 @@ prompt_for_hostname()
 		display_msg --log warning "${MSG}"
 		exit_installation 2 "No host name selected"
 	else
-		STATUS_VARIABLES="${STATUS_VARIABLES}\nprompt_for_hostname='true'"
-		STATUS_VARIABLES="${STATUS_VARIABLES}\nNEW_HOST_NAME='${NEW_HOST_NAME}'"
+		STATUS_VARIABLES+=("prompt_for_hostname='true'\n")
+		STATUS_VARIABLES+=("NEW_HOST_NAME='${NEW_HOST_NAME}'\n")
 	fi
 
 	if [[ ${CURRENT_HOSTNAME} != "${NEW_HOST_NAME}" ]]; then
@@ -906,8 +908,8 @@ does_old_WebUI_location_exist()
 {
 	[[ -d ${OLD_WEBUI_LOCATION} ]] && OLD_WEBUI_LOCATION_EXISTS_AT_START="true"
 
-	STATUS_VARIABLES="${STATUS_VARIABLES}\ndoes_old_WebUI_location_exist='true'"
-	STATUS_VARIABLES="${STATUS_VARIABLES}\nOLD_WEBUI_LOCATION_EXISTS_AT_START='${OLD_WEBUI_LOCATION_EXISTS_AT_START}'"
+	STATUS_VARIABLES+=("does_old_WebUI_location_exist='true'\n")
+	STATUS_VARIABLES+=("OLD_WEBUI_LOCATION_EXISTS_AT_START='${OLD_WEBUI_LOCATION_EXISTS_AT_START}'\n")
 }
 
 check_old_WebUI_location()
@@ -1135,7 +1137,7 @@ get_locale()
 	else
 		CURRENT_LOCALE=""
 	fi
-	STATUS_VARIABLES="${STATUS_VARIABLES}\nCURRENT_LOCALE='${CURRENT_LOCALE}'"
+	STATUS_VARIABLES+=("CURRENT_LOCALE='${CURRENT_LOCALE}'\n")
 
 	MSG="\nSelect your locale; the default is highlighted in red."
 	MSG="${MSG}\nIf it's not in the list, press <Cancel>."
@@ -1157,8 +1159,8 @@ get_locale()
 		3>&1 1>&2 2>&3)
 	if [[ -z ${LOCALE} ]]; then
 		MSG="You need to set the locale before the installation can run."
-		MSG="${MSG}\nIf your locale was not in the list, run 'raspi-config' to update the list,"
-		MSG="${MSG}\nthen rerun the installation."
+		MSG="${MSG}\n  If your locale was not in the list, run 'raspi-config' to update the list,"
+		MSG="${MSG}\n  then rerun the installation."
 		display_msg info "${MSG}"
 		display_msg --logonly info "No locale selected; exiting."
 
@@ -1169,13 +1171,13 @@ get_locale()
 		# Must be no space between the last double quote and ${INSTALLED_LOCALES}.
 		#shellcheck disable=SC2086
 		MSG="Got usage message from whiptail: D='${D}', INSTALLED_LOCALES="${INSTALLED_LOCALES}
-		MSG="${MSG}\nFix the problem and try the installation again."
+		MSG="${MSG}\n  Fix the problem and try the installation again."
 		display_msg --log error "${MSG}"
 		exit_installation 1
 	fi
 
-	STATUS_VARIABLES="${STATUS_VARIABLES}\nget_locale='true'"
-	STATUS_VARIABLES="${STATUS_VARIABLES}\nLOCALE='${LOCALE}'"
+	STATUS_VARIABLES+=("get_locale='true'\n")
+	STATUS_VARIABLES+=("LOCALE='${LOCALE}'\n")
 }
 
 
@@ -1206,7 +1208,7 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 			MSG="${MSG} CONTAINED .locale = '${L}'."
 			display_msg --logonly info "${MSG}"
 		fi
-		STATUS_VARIABLES="${STATUS_VARIABLES}\nset_locale='true'"
+		STATUS_VARIABLES+=("set_locale='true'\n")
 		return
 	fi
 
@@ -1294,7 +1296,7 @@ does_prior_Allsky_exist()
 # Look for a directory inside the old one to make sure it's really an old allsky.
 prompt_for_prior_Allsky()
 {
-	STATUS_VARIABLES="${STATUS_VARIABLES}${STATUS_VARIABLES}\nprompt_for_prior_Allsky='true'"
+	STATUS_VARIABLES+=("prompt_for_prior_Allsky='true'\n")
 
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
@@ -1302,7 +1304,7 @@ prompt_for_prior_Allsky()
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			# Set the prior camera type to the new, default camera type.
 			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
-			STATUS_VARIABLES="${STATUS_VARIABLES}\nCAMERA_TYPE='${CAMERA_TYPE}'"
+			STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 			return 0
 		else
 			CAMERA_TYPE=""
@@ -1319,16 +1321,16 @@ prompt_for_prior_Allsky()
 		MSG="${MSG}\n\nIf you DO have a prior version and you want images, darks, and certain settings moved from the prior version to the new one, rename the prior version to ${PRIOR_ALLSKY_DIR} before running this installation."
 		MSG="${MSG}\n\nDo you want to continue?"
 		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
-			MSG="Rename the directory with your prior version of Allsky to\n"
-			MSG="${MSG}\n '${PRIOR_ALLSKY_DIR}', then run the installation again.\n"
+			MSG="Rename the directory with your prior version of Allsky to"
+			MSG="${MSG}\n '${PRIOR_ALLSKY_DIR}', then run the installation again."
 			display_msg --log info "${MSG}"
-			exit_installation 0
+			exit_installation 0 "${STATUS_NOT_CONTINUE}"
 		fi
 	fi
 
 	# No prior Allsky so force creating a default settings file.
 	FORCE_CREATING_SETTINGS_FILE="true"
-	STATUS_VARIABLES="${STATUS_VARIABLES}\nFORCE_CREATING_SETTINGS_FILE='${FORCE_CREATING_SETTINGS_FILE}'"
+	STATUS_VARIABLES+=("FORCE_CREATING_SETTINGS_FILE='${FORCE_CREATING_SETTINGS_FILE}'\n")
 }
 
 
@@ -1355,7 +1357,7 @@ install_dependencies_etc()
 	sudo make install > "${TMP}" 2>&1
 	check_success $? "make install failed" "${TMP}" "${DEBUG}" || exit_with_image 1
 
-	STATUS_VARIABLES="${STATUS_VARIABLES}\ninstall_dependencies_etc='true'"
+	STATUS_VARIABLES+=("install_dependencies_etc='true'\n")
 	return 0
 }
 
@@ -2092,7 +2094,7 @@ install_overlay()
 ####
 check_if_buster()
 {
-	STATUS_VARIABLES="${STATUS_VARIABLES}\ncheck_if_buster='true'"
+	STATUS_VARIABLES+=("check_if_buster='true'\n")
 
 	if [[ ${OS} == "buster" ]]; then
 		MSG="This release runs best on the Bullseye operating system"
@@ -2248,7 +2250,7 @@ exit_installation()
 			clear_status
 		else
 			echo -e "STATUS_INSTALLATION='${STATUS}'" > "${STATUS_FILE}"
-			echo -e "${STATUS_VARIABLES}" >> "${STATUS_FILE}"
+			echo -e "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"
 		fi
 	fi
 
@@ -2400,6 +2402,10 @@ does_prior_Allsky_exist
 ##### Stop Allsky
 stop_allsky
 
+##### Determine what camera(s) are connected
+# Re-run every time in case a camera was connected or disconnected.
+get_connected_cameras
+
 ##### Get branch
 [[ ${get_this_branch} != "true" ]] && get_this_branch
 
@@ -2425,10 +2431,6 @@ display_image "InstallationInProgress"
 
 ##### Get locale (prompt if needed).  May not return.
 [[ ${get_locale} != "true" ]] && get_locale
-
-##### Determine what camera(s) are connected
-# Re-run every time in case a camera was connected or disconnected.
-get_connected_cameras
 
 ##### Prompt for the camera type
 [[ ${select_camera_type} != "true" ]] && select_camera_type

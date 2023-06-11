@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned
 
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 ME="$(basename "${BASH_ARGV0}")"
@@ -63,6 +64,10 @@ DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh.log"
 STATUS_FILE="${ALLSKY_INSTALLATION_LOGS}/status.txt"
 STATUS_LOCALE_REBOOT="locale reboot"	# status of rebooting due to locale change
 STATUS_NO_LOCALE="locale not found"		# status of exiting due to desired locale not installed
+STATUS_NO_CAMERA="No camera found"		# status of exiting due to no camera found
+STATUS_OK="OK"							# Installation was completed.
+STATUS_CLEAR="Clear"					# Clear the file
+STATUS_ERROR="Error"
 STATUS_VARIABLES=""						# Holds all the variables and values to save
 
 # Some versions of Linux default to 750 so web server can't read it
@@ -76,8 +81,6 @@ chmod 755 "${ALLSKY_HOME}"
 # 
 do_initial_heading()
 {
-	STATUS_VARIABLES="${STATUS_VARIABLES}\ndo_initial_heading='true'"
-
 	if [[ ${UPDATE} == "true" ]]; then
 		display_header "Updating Allsky"
 		return
@@ -108,11 +111,13 @@ do_initial_heading()
 		MSG="${MSG}\n\nContinue?"
 		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			display_msg "${LOG_TYPE}" info "User not ready to continue."
-			exit_installation 1
+			exit_installation 1 "${STATUS_CLEAR}"
 		fi
 
 		display_header "Welcome to the ${TITLE}!"
 	fi
+
+	STATUS_VARIABLES="${STATUS_VARIABLES}\ndo_initial_heading='true'"
 }
 
 ####
@@ -169,9 +174,11 @@ get_this_branch()
 				MSG="Multiple branches found in '${FILE}': '${B}'; unable to continue."
 				display_msg --log error "${MSG}"
 				#shellcheck disable=SC2086
-				exit_installation 1
+				exit_installation 1 "${STATUS_ERROR}"
 			else
 				BRANCH="${B}"
+				STATUS_VARIABLES="${STATUS_VARIABLES}\nget_this_branch='true'"
+				STATUS_VARIABLES="\nBRANCH='${BRANCH}'"
 				echo -n "${BRANCH}" > "${ALLSKY_BRANCH_FILE}"
 				display_msg --log info "Using '${BRANCH}' branch."
 			fi
@@ -212,7 +219,7 @@ CAMERA_TYPE_to_CAMERA()
 		echo "RPiHQ"		# RPi cameras used to be called "RPiHQ".
 	else
 		display_msg --log error "Unknown CAMERA_TYPE: '${CAMERA_TYPE}'"
-		exit_installation 1
+		exit_installation 1 "${STATUS_CLEAR}"
 	fi
 }
 ####
@@ -226,11 +233,40 @@ CAMERA_to_CAMERA_TYPE()
 		echo "RPi"
 	else
 		display_msg --log error "Unknown CAMERA: '${CAMERA}'"
-		exit_installation 1
+		exit_installation 1 "${STATUS_CLEAR}"
 	fi
 }
 
-####
+#######
+CONNECTED_CAMERAS=""
+get_connected_cameras()
+{
+	if determineCommandToUse "false" "" > /dev/null 2>&1 ; then
+		display_msg --log info "RPi camera found."
+		CONNECTED_CAMERAS="RPi"
+	fi
+	if lsusb -d "03c3:" > /dev/null ; then
+		display_msg --log info "ZWO camera found."
+		[[ -n ${CONNECTED_CAMERAS} ]] && CONNECTED_CAMERAS="${CONNECTED_CAMERAS} "
+		CONNECTED_CAMERAS="${CONNECTED_CAMERAS}ZWO"
+	fi
+
+	if [[ -z ${CONNECTED_CAMERAS} ]]; then
+		MSG="No connected cameras were detected.  The installation will exit."
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+
+		MSG="No connected cameras were detected."
+		MSG="${MSG}\nMake sure a camera is plugged in and working prior to restarting"
+		MSG="${MSG} the installation."
+		display_msg --log error "${MSG}"
+		exit_installation 1 "${STATUS_NO_CAMERA}"
+	fi
+
+	STATUS_VARIABLES="${STATUS_VARIABLES}\nget_connected_cameras='true'"
+	STATUS_VARIABLES="${STATUS_VARIABLES}\nCONNECTED_CAMERAS='${CONNECTED_CAMERAS}'"
+}
+
+#
 # Prompt the user to select their camera type, if we can't determine it automatically.
 # If they have a prior installation of Allsky that uses either CAMERA or CAMERA_TYPE in config.sh,
 # we can use its value and not prompt.
@@ -245,11 +281,11 @@ select_camera_type()
 			v2023.05.01*)
 				# New style Allsky using ${CAMERA_TYPE}.
 				CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
-				STATUS_VARIABLES="${STATUS_VARIABLES}\nCAMERA_TYPE='${CAMERA_TYPE}'"
 
 				# Don't bother with a message since this is a "similar" release.
 				if [[ -n ${CAMERA_TYPE} ]]; then
 					MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky."
+					STATUS_VARIABLES="${STATUS_VARIABLES}\nCAMERA_TYPE='${CAMERA_TYPE}'"
 					display_msg --logonly info "${MSG}"
 					return
 				else
@@ -278,39 +314,43 @@ select_camera_type()
 		esac
 	fi
 
-# TODO: if there is ONLY a ZWO or RPi camera, don't prompt.
-
-	# "2" is the number of menu items.
-	MSG="\nSelect your camera type:\n"
-	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "${MSG}" 15 "${WT_WIDTH}" 2 \
-		"ZWO"  "   ZWO ASI" \
-		"RPi"  "   Raspberry Pi HQ, Module 3, and compatible" \
-		3>&1 1>&2 2>&3)
-	if [[ $? -ne 0 ]]; then
-		display_msg --log warning "Camera selection required.  Please re-run the installation and select a camera to continue."
-		exit_installation 2
+	local CT=()
+	local NUM=0
+	if [[ ${CONNECTED_CAMERAS} == "RPi" ]]; then
+		CT+=("RPi" "Raspberry Pi (HQ, Module 3, and compatibles)")
+		((NUM++))
+	elif [[ ${CONNECTED_CAMERAS} == "ZWO" ]]; then
+		CT+=("ZWO" "ZWO ASI")
+		((NUM++))
+	elif [[ ${CONNECTED_CAMERAS} == "RPi ZWO" ]]; then
+		CT+=("RPi" "Raspberry Pi (HQ, Module 3, and compatibles)")
+		CT+=("ZWO" "ZWO ASI")
+		((NUM+=2))
+	else		# shouldn't happen since we already checked
+		MSG="INTERNAL ERROR:"
+		if [[ -z ${CONNECTED_CAMERAS} ]]; then
+			MSG="${MSG} CONNECTED_CAMERAS is empty."
+		else
+			MSG="${MSG} CONNECTED_CAMERAS (${CONNECTED_CAMERAS}) is invalid."
+		fi
+		display_msg --log error "${MSG}"
+		exit_installation 2 "${STATUS_NO_CAMERA}"
 	fi
+
+	MSG="\nThe following camera types are connected to the Pi.\n"
+	MSG="${MSG}Pick the one you want."
+	MSG="${MSG}\nIf it's not in the list, select <Cancel> and determine why."
+	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "${MSG}" 15 "${WT_WIDTH}" "${NUM}" \
+		"${CT[@]}" 3>&1 1>&2 2>&3)
+	if [[ $? -ne 0 ]]; then
+		MSG="Camera selection required."
+		MSG="${MSG} Please re-run the installation and select a camera to continue."
+		display_msg --log warning "${MSG}"
+		exit_installation 2 "${STATUS_NO_CAMERA}"
+	fi
+
 	display_msg --log progress "Using ${CAMERA_TYPE} camera."
 	STATUS_VARIABLES="${STATUS_VARIABLES}\nCAMERA_TYPE='${CAMERA_TYPE}'"
-}
-
-
-####
-check_for_connected_camera()
-{
-	if [[ ${CAMERA_TYPE} == "RPi" ]]; then
-		# determineCommandToUse() also determines if an RPi camera is connected.
-		C="$( determineCommandToUse "false" "" )"
-		RET=$?
-		if [[ ${RET} -ne 0 ]]; then
-			display_msg --log error "No RPi camera found: ${C}"
-			# shellcheck disable=SC2086
-			exit ${RET}
-		else
-			display_msg --log progress "RPi camera found."
-		fi
-	fi
-	# TODO: check for ZWO camera
 }
 
 
@@ -478,7 +518,7 @@ ask_reboot()
 }
 do_reboot()
 {
-	exit_installation -1		# -1 means just log ending statement but don't exit.
+	exit_installation -1 "${1}"		# -1 means just log ending statement but don't exit.
 	sudo reboot now
 }
 
@@ -703,7 +743,9 @@ install_webserver()
 		sudo apt-get update && \
 			sudo apt-get --assume-yes install lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
 	) > "${TMP}" 2>&1
-	check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" || exit_with_image 1
+	if ! check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ; then
+		exit_with_image 1 "${STATUS_ERROR}"
+	fi
 
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
 	sed \
@@ -747,12 +789,12 @@ install_webserver()
 
 prompt_for_hostname()
 {
-	STATUS_VARIABLES="${STATUS_VARIABLES}\nprompt_for_hostname='true'"
-
 	local CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
 	if [[ ${CURRENT_HOSTNAME} != "raspberrypi" ]]; then
 		display_msg --logonly info "Using current hostname of '${CURRENT_HOSTNAME}'."
 		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
+
+		STATUS_VARIABLES="${STATUS_VARIABLES}\nprompt_for_hostname='true'"
 		STATUS_VARIABLES="${STATUS_VARIABLES}\nNEW_HOST_NAME='${NEW_HOST_NAME}'"
 		return
 	fi
@@ -766,8 +808,9 @@ prompt_for_hostname()
 		MSG="You must specify a host name."
 		MSG="${MSG}  Please re-run the installation and select one."
 		display_msg --log warning "${MSG}"
-		exit_installation 2
+		exit_installation 2 "No host name selected"
 	else
+		STATUS_VARIABLES="${STATUS_VARIABLES}\nprompt_for_hostname='true'"
 		STATUS_VARIABLES="${STATUS_VARIABLES}\nNEW_HOST_NAME='${NEW_HOST_NAME}'"
 	fi
 
@@ -862,6 +905,9 @@ OLD_WEBUI_LOCATION_EXISTS_AT_START="false"
 does_old_WebUI_location_exist()
 {
 	[[ -d ${OLD_WEBUI_LOCATION} ]] && OLD_WEBUI_LOCATION_EXISTS_AT_START="true"
+
+	STATUS_VARIABLES="${STATUS_VARIABLES}\ndoes_old_WebUI_location_exist='true'"
+	STATUS_VARIABLES="${STATUS_VARIABLES}\nOLD_WEBUI_LOCATION_EXISTS_AT_START='${OLD_WEBUI_LOCATION_EXISTS_AT_START}'"
 }
 
 check_old_WebUI_location()
@@ -1052,11 +1098,7 @@ get_locale()
 		MSG="${MSG}\n\nWhen that is completed, rerun the Allsky installation."
 		display_msg --log error "${MSG}"
 
-		# So we know not to start from beginning.
-		echo "STATUS_INSTALLATION=${STATUS_NO_LOCALE}" > "${STATUS_FILE}"
-		echo "${STATUS_VARIABLES}" >> "${STATUS_FILE}"
-
-		exit_installation 1
+		exit_installation 1 "${STATUS_NO_LOCALE}"
 	fi
 
 	[[ ${DEBUG} -gt 1 ]] && display_msg --logonly debug "INSTALLED_LOCALES=${INSTALLED_LOCALES}"
@@ -1120,11 +1162,7 @@ get_locale()
 		display_msg info "${MSG}"
 		display_msg --logonly info "No locale selected; exiting."
 
-		# So we know not to start from beginning.
-		echo "STATUS_INSTALLATION=${STATUS_NO_LOCALE}" > "${STATUS_FILE}"
-		echo "${STATUS_VARIABLES}" >> "${STATUS_FILE}"
-
-		exit_installation 0
+		exit_installation 0 "${STATUS_NO_LOCALE}"
 
 	elif echo "${LOCALE}" | grep --silent "Box options" ; then
 		# Got a usage message from whiptail.
@@ -1186,11 +1224,7 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 	if ask_reboot "locale" ; then
 		display_msg --logonly info "Rebooting to set locale to '${LOCALE}'"
 
-		# So we know not to start from beginning.
-		echo "STATUS_INSTALLATION=${STATUS_LOCALE_REBOOT}" > "${STATUS_FILE}"
-		echo "${STATUS_VARIABLES}" >> "${STATUS_FILE}"
-
-		do_reboot		# does not return
+		do_reboot "${STATUS_LOCALE_REBOOT}"		# does not return
 	fi
 
 	display_msg warning "You must reboot before continuing with the installation."
@@ -2195,15 +2229,32 @@ remind_run_check_allsky()
 }
 
 
+clear_status()
+{
+	rm -f "${STATUS_FILE}"
+}
+
+
 ####
 exit_installation()
 {
 	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $(date).\n"
-	local E="${1}"
+	local RET="${1}"
+
+	# If STATUS_LINE is set, add that and all STATUS_VARIABLES to the status file.
+	local STATUS="${2}"
+	if [[ -n ${STATUS} ]]; then
+		if [[ ${STATUS} == "${STATUS_CLEAR}" ]]; then
+			clear_status
+		else
+			echo -e "STATUS_INSTALLATION='${STATUS}'" > "${STATUS_FILE}"
+			echo -e "${STATUS_VARIABLES}" >> "${STATUS_FILE}"
+		fi
+	fi
 
 	# Don't exit for negative numbers.
 	#shellcheck disable=SC2086
-	[[ ${E} -ge 0 ]] && exit ${E}
+	[[ ${RET} -ge 0 ]] && exit ${RET}
 }
 
 
@@ -2298,29 +2349,49 @@ fi
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
 
-# See if we should skip some steps
+# See if we should skip some steps.
+# When most function are called they add a variable with the function's name set to "true".
 if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
-	MSG="You have already begun the installation."
-	MSG="${MSG}\n\nDo you want to continue where you left off?"
-	if whiptail --title "${TITLE}" --yesno "${MSG}" 10 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
-		MSG="Continuing installation.  Steps already performed will be skipped."
-		display_msg --log progress "${MSG}"
+	source "${STATUS_FILE}" || exit 1
 
-		source "${STATUS_FILE}" || exit 1
-		# ${STATUS_INSTALLATION} should be set to either
-		#	"${STATUS_LOCALE_REBOOT}" or "${STATUS_NO_LOCALE}"
-
-		# If a function was called a variable with the function's name will be "true".
-		echo rm "${STATUS_FILE}"	# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+	if [[ ${STATUS_INSTALLATION} == "${STATUS_OK}" ]]; then
+		MSG="The last installation completed successfully."
+		MSG="${MSG}\n\nDo you want to re-install from the beginning?"
+		MSG="${MSG}\n\nSelecting <No> will exit the installation without making any changes."
+		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+			display_msg --log progress "Re-starting installation after successful install."
+			clear_status
+		else
+			display_msg --log progress "Not continuing after prior successful installation."
+			exit_installation 0 ""
+		fi
 	else
-		display_msg --log progress "Restarting installation."
+		MSG="You have already begun the installation."
+		MSG="${MSG}\n\nThe last status was: ${STATUS_INSTALLATION}"
+		MSG="${MSG}\n\nDo you want to continue where you left off?"
+		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+			MSG="Continuing installation.  Steps already performed will be skipped."
+			MSG="${MSG}\nThe last status was: ${STATUS_INSTALLATION}"
+			display_msg --log progress "${MSG}"
+	
+		else
+			MSG="Do you want to restart the installation from the beginning?"
+			MSG="${MSG}\n\nSelecting <No> will exit the installation without making any changes."
+			if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+				display_msg --log progress "Restarting installation."
+			else
+				display_msg --log progress "Not continuing after prior partial installation."
+				exit_installation 0 ""
+			fi
+		fi
 	fi
 fi
 
 ##### Display a message to Buster users.
 [[ ${check_if_buster} != "true" && -z ${FUNCTION} ]] && check_if_buster
 
-##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY
+##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY and other PRIOR_* variables.
+# Re-run every time in case the directory was removed.
 does_prior_Allsky_exist
 
 ##### Display the welcome header
@@ -2330,13 +2401,13 @@ does_prior_Allsky_exist
 stop_allsky
 
 ##### Get branch
-get_this_branch
+[[ ${get_this_branch} != "true" ]] && get_this_branch
 
 ##### Handle updates
 [[ ${UPDATE} == "true" ]] && do_update		# does not return
 
 ##### See if there's an old WebUI
-does_old_WebUI_location_exist
+[[ ${does_old_WebUI_location_exist} != "true" ]] && does_old_WebUI_location_exist
 
 ##### Executes the specified function, if any, and exits.
 if [[ -n ${FUNCTION} ]]; then
@@ -2355,11 +2426,12 @@ display_image "InstallationInProgress"
 ##### Get locale (prompt if needed).  May not return.
 [[ ${get_locale} != "true" ]] && get_locale
 
-##### Determine the camera type
-[[ ${select_camera_type} != "true" ]] && select_camera_type
+##### Determine what camera(s) are connected
+# Re-run every time in case a camera was connected or disconnected.
+get_connected_cameras
 
-##### Make sure a camera of the selected type is connected
-check_for_connected_camera
+##### Prompt for the camera type
+[[ ${select_camera_type} != "true" ]] && select_camera_type
 
 ##### Get the new host name
 [[ ${prompt_for_hostname} != "true" ]] && prompt_for_hostname
@@ -2440,6 +2512,6 @@ remind_old_version
 
 ######## All done
 
-[[ ${WILL_REBOOT} == "true" ]] && do_reboot	# does not return
+[[ ${WILL_REBOOT} == "true" ]] && do_reboot		# does not return
 
-exit_installation 0
+exit_installation 0 "${STATUS_OK}"

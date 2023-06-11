@@ -1098,7 +1098,7 @@ handle_prior_website()
 
 ####
 # Get the locale, prompting if we can't determine it.
-LOCALE=""
+DESIRED_LOCALE=""
 CURRENT_LOCALE=""
 get_locale()
 {
@@ -1175,9 +1175,9 @@ get_locale()
 	done
 
 	#shellcheck disable=SC2086
-	LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 "${IL[@]}" \
+	DESIRED_LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 "${IL[@]}" \
 		3>&1 1>&2 2>&3)
-	if [[ -z ${LOCALE} ]]; then
+	if [[ -z ${DESIRED_LOCALE} ]]; then
 		MSG="You need to set the locale before the installation can run."
 		MSG="${MSG}\n  If your locale was not in the list, run 'raspi-config' to update the list,"
 		MSG="${MSG}\n  then rerun the installation."
@@ -1186,7 +1186,7 @@ get_locale()
 
 		exit_installation 0 "Locale(s) available but none selected."
 
-	elif echo "${LOCALE}" | grep --silent "Box options" ; then
+	elif echo "${DESIRED_LOCALE}" | grep --silent "Box options" ; then
 		# Got a usage message from whiptail.
 		# Must be no space between the last double quote and ${INSTALLED_LOCALES}.
 		#shellcheck disable=SC2086
@@ -1197,7 +1197,7 @@ get_locale()
 	fi
 
 	STATUS_VARIABLES+=("get_locale='true'\n")
-	STATUS_VARIABLES+=("LOCALE='${LOCALE}'\n")
+	STATUS_VARIABLES+=("DESIRED_LOCALE='${DESIRED_LOCALE}'\n")
 }
 
 
@@ -1205,17 +1205,17 @@ get_locale()
 # Set the locale
 set_locale()
 {
-	# ${LOCALE} and ${CURRENT_LOCALE} are already set
+	# ${DESIRED_LOCALE} and ${CURRENT_LOCALE} are already set
 
-	if [[ ${CURRENT_LOCALE} == "${LOCALE}" ]]; then
-		display_msg --log progress "Keeping '${LOCALE}' locale."
+	if [[ ${CURRENT_LOCALE} == "${DESIRED_LOCALE}" ]]; then
+		display_msg --log progress "Keeping '${DESIRED_LOCALE}' locale."
 		local L="$( settings .locale )"
 		MSG="Settings file '${SETTINGS_FILE}'"
 		if [[ ${L} == "" || ${L} == "null" ]]; then
 			# Either a new install or an upgrade from an older Allsky.
 			MSG="${MSG} did NOT contain .locale so adding it."
 			display_msg --logonly info "${MSG}"
-			update_json_file ".locale" "${LOCALE}"  "${SETTINGS_FILE}"
+			update_json_file ".locale" "${DESIRED_LOCALE}"  "${SETTINGS_FILE}"
 
 # TODO: Something appears to still be unlinking the settings file
 # from its camera-specific file, so do "ls" of the settings
@@ -1232,8 +1232,8 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 		return
 	fi
 
-	display_msg --log progress "Setting locale to '${LOCALE}'."
-	update_json_file ".locale" "${LOCALE}"  "${SETTINGS_FILE}"
+	display_msg --log progress "Setting locale to '${DESIRED_LOCALE}'."
+	update_json_file ".locale" "${DESIRED_LOCALE}"  "${SETTINGS_FILE}"
 
 # TODO: same as above...
 #shellcheck disable=SC2012
@@ -1241,10 +1241,10 @@ MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    
 display_msg --logonly info "Settings files now:\n${MSG}"
 
 	# This updates /etc/default/locale
-	sudo update-locale LC_ALL="${LOCALE}" LANGUAGE="${LOCALE}" LANG="${LOCALE}"
+	sudo update-locale LC_ALL="${DESIRED_LOCALE}" LANGUAGE="${DESIRED_LOCALE}" LANG="${DESIRED_LOCALE}"
 
 	if ask_reboot "locale" ; then
-		display_msg --logonly info "Rebooting to set locale to '${LOCALE}'"
+		display_msg --logonly info "Rebooting to set locale to '${DESIRED_LOCALE}'"
 		do_reboot "${STATUS_LOCALE_REBOOT}"		# does not return
 	fi
 

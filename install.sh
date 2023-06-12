@@ -1517,9 +1517,24 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 									continue;
 									;;
 
+								# These changed names.
 								"darkframe")
 									F="takeDarkFrames"
 									;;
+								"daymaxautoexposure")
+									F="daymaxautoexposure"
+									;;
+								"daymaxgain")
+									F="daymaxautogain"
+									;;
+								"nightmaxautoexposure")
+									F="nightmaxautoexposure"
+									;;
+								"nightmaxgain")
+									F="nightmaxautogain"
+									;;
+
+								# These now have day and night versions.
 								"brightness")
 									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 									F="night${F}"
@@ -1556,8 +1571,7 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 							update_json_file ".${F}" "${V}" "${NEW_FILE}"
 						done
 
-					# Fields whose name or location changed.
-# xxxxxxx  TODO: daymaxexposure, daymaxgain, nightmaxexposure, nightmaxgain
+					# Fields whose location changed.
 					x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
 					update_json_file ".takeDaytimeImages" "${x}" "${NEW_FILE}"
 

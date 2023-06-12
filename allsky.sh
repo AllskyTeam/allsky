@@ -32,6 +32,12 @@ source "${ALLSKY_CONFIG}/config.sh"						|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
+# Make sure the settings have been configured after an installation or upgrade.
+LAST_CHANGED=$(settings ".lastChanged")
+if [[ ${LAST_CHANGED} == "" || ${LAST_CHANGED} == "null" ]]; then
+	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI."
+	doExit "${EXIT_ERROR_STOP}" "Error" "ConfigurationNeeded"
+fi
 
 SEE_LOG_MSG="See ${ALLSKY_LOG}"
 ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"

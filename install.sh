@@ -1120,7 +1120,7 @@ get_locale()
 		MSG="${MSG}\n\nWhen that is completed, rerun the Allsky installation."
 		display_msg --log error "${MSG}"
 
-		exit_installation 1 "No locale installed on system."
+		exit_installation 1 "${STATUS_NO_LOCALE}: None on system."
 	fi
 
 	[[ ${DEBUG} -gt 1 ]] && display_msg --logonly debug "INSTALLED_LOCALES=${INSTALLED_LOCALES}"
@@ -1160,9 +1160,9 @@ get_locale()
 	STATUS_VARIABLES+=("CURRENT_LOCALE='${CURRENT_LOCALE}'\n")
 
 	MSG="\nSelect your locale; the default is highlighted in red."
-	MSG="${MSG}\nIf it's not in the list, press <Cancel>."
+	MSG="${MSG}\nIf your desired locale is not in the list, press <Cancel>."
 	MSG="${MSG}\n\nIf you change the locale, the system will reboot and"
-	MSG="${MSG}\nyou will need to restart the installation."
+	MSG="${MSG}\nyou will need to continue the installation."
 	[[ -n ${MSG2} ]] && MSG="${MSG}\n\n${MSG2}"
 
 	# This puts in IL the necessary strings to have whiptail display what looks like
@@ -1179,8 +1179,8 @@ get_locale()
 		3>&1 1>&2 2>&3)
 	if [[ -z ${DESIRED_LOCALE} ]]; then
 		MSG="You need to set the locale before the installation can run."
-		MSG="${MSG}\n  If your locale was not in the list, run 'raspi-config' to update the list,"
-		MSG="${MSG}\n  then rerun the installation."
+		MSG="${MSG}\n  If your desired locale was not in the list,"
+		MSG="${MSG}\n   run 'raspi-config' to update the list, then rerun the installation."
 		display_msg info "${MSG}"
 		display_msg --logonly info "No locale selected; exiting."
 

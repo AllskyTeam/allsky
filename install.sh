@@ -113,7 +113,7 @@ do_initial_heading()
 		MSG="${MSG}\n\nContinue?"
 		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			display_msg "${LOG_TYPE}" info "User not ready to continue."
-			exit_installation 1 "${STATUS_CLEAR}"
+			exit_installation 1 "${STATUS_CLEAR}" ""
 		fi
 
 		display_header "Welcome to the ${TITLE}!"
@@ -199,7 +199,7 @@ CAMERA_TYPE_to_CAMERA()
 		echo "RPiHQ"		# RPi cameras used to be called "RPiHQ".
 	else
 		display_msg --log error "Unknown CAMERA_TYPE: '${CAMERA_TYPE}'"
-		exit_installation 1 "${STATUS_ERROR}: unknown CAMERA_TYPE: '${CAMERA_TYPE}'"
+		exit_installation 1 "${STATUS_ERROR}" "unknown CAMERA_TYPE: '${CAMERA_TYPE}'"
 	fi
 }
 ####
@@ -213,7 +213,7 @@ CAMERA_to_CAMERA_TYPE()
 		echo "RPi"
 	else
 		display_msg --log error "Unknown CAMERA: '${CAMERA}'"
-		exit_installation 1 "${STATUS_CLEAR}: unknown CAMERA_TYPE: '${CAMERA_TYPE}'"
+		exit_installation 1 "${STATUS_CLEAR}" "unknown CAMERA_TYPE: '${CAMERA_TYPE}'"
 	fi
 }
 
@@ -240,7 +240,7 @@ get_connected_cameras()
 		MSG="${MSG}\nMake sure a camera is plugged in and working prior to restarting"
 		MSG="${MSG} the installation."
 		display_msg --log error "${MSG}"
-		exit_installation 1 "${STATUS_NO_CAMERA}"
+		exit_installation 1 "${STATUS_NO_CAMERA}" ""
 	fi
 
 	if [[ -n ${CONNECTED_CAMERAS} ]]; then
@@ -329,7 +329,7 @@ select_camera_type()
 			MSG="${MSG} CONNECTED_CAMERAS (${CONNECTED_CAMERAS}) is invalid."
 		fi
 		display_msg --log error "${MSG}"
-		exit_installation 2 "${STATUS_NO_CAMERA}: ${MSG}"
+		exit_installation 2 "${STATUS_NO_CAMERA}" "${MSG}"
 	fi
 
 	local S=" is"
@@ -343,7 +343,7 @@ select_camera_type()
 		MSG="Camera selection required."
 		MSG="${MSG} Please re-run the installation and select a camera to continue."
 		display_msg --log warning "${MSG}"
-		exit_installation 2 "${STATUS_NO_CAMERA}: User did not select a camera."
+		exit_installation 2 "${STATUS_NO_CAMERA}" "User did not select a camera."
 	fi
 
 	display_msg --log progress "Using ${CAMERA_TYPE} camera."
@@ -744,7 +744,7 @@ install_webserver()
 			sudo apt-get --assume-yes install lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
 	) > "${TMP}" 2>&1
 	if ! check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ; then
-		exit_with_image 1 "${STATUS_ERROR}: lighttpd installation failed"
+		exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
 	fi
 
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
@@ -1098,7 +1098,7 @@ get_locale()
 		MSG="${MSG}\n\nWhen that is completed, rerun the Allsky installation."
 		display_msg --log error "${MSG}"
 
-		exit_installation 1 "${STATUS_NO_LOCALE}: None on system."
+		exit_installation 1 "${STATUS_NO_LOCALE}" "None on system."
 	fi
 
 	[[ ${DEBUG} -gt 1 ]] && display_msg --logonly debug "INSTALLED_LOCALES=${INSTALLED_LOCALES}"
@@ -1171,7 +1171,7 @@ get_locale()
 		MSG="Got usage message from whiptail: D='${D}', INSTALLED_LOCALES="${INSTALLED_LOCALES}
 		MSG="${MSG}\n  Fix the problem and try the installation again."
 		display_msg --log error "${MSG}"
-		exit_installation 1 "${STATUS_ERROR}: Got usage message from whitail."
+		exit_installation 1 "${STATUS_ERROR}" "Got usage message from whitail."
 	fi
 
 	STATUS_VARIABLES+=("get_locale='true'\n")
@@ -1223,13 +1223,13 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 
 	if ask_reboot "locale" ; then
 		display_msg --logonly info "Rebooting to set locale to '${DESIRED_LOCALE}'"
-		do_reboot "${STATUS_LOCALE_REBOOT}"		# does not return
+		do_reboot "${STATUS_LOCALE_REBOOT}" ""		# does not return
 	fi
 
 	display_msg warning "You must reboot before continuing with the installation."
 	display_msg --logonly info "User elected not to reboot to update locale."
 
-	exit_installation 0 "${STATUS_NO_REBOOT} to update locale."
+	exit_installation 0 "${STATUS_NO_REBOOT}" "to update locale."
 }
 
 
@@ -1321,7 +1321,7 @@ prompt_for_prior_Allsky()
 			MSG="Rename the directory with your prior version of Allsky to"
 			MSG="${MSG}\n '${PRIOR_ALLSKY_DIR}', then run the installation again."
 			display_msg --log info "${MSG}"
-			exit_installation 0 "${STATUS_NOT_CONTINUE} after no prior Allsky was found."
+			exit_installation 0 "${STATUS_NOT_CONTINUE}" "after no prior Allsky was found."
 		fi
 		STATUS_VARIABLES+=("prompt_for_prior_Allsky='true'\n")
 	fi
@@ -1343,20 +1343,20 @@ install_dependencies_etc()
 	#shellcheck disable=SC2024
 	sudo make deps > "${TMP}" 2>&1
 	check_success $? "Dependency installation failed" "${TMP}" "${DEBUG}"
-	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}: dependency installation failed"
+	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 
 	display_msg --log progress "Preparing Allsky commands."
 	TMP="${ALLSKY_INSTALLATION_LOGS}/make_all.log"
 	#shellcheck disable=SC2024
 	make all > "${TMP}" 2>&1
 	check_success $? "Compile failed" "${TMP}" "${DEBUG}"
-	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}: compile failed"
+	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "compile failed"
 
 	TMP="${ALLSKY_INSTALLATION_LOGS}/make_install.log"
 	#shellcheck disable=SC2024
 	sudo make install > "${TMP}" 2>&1
 	check_success $? "make install failed" "${TMP}" "${DEBUG}"
-	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}: make insall_failed"
+	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "make insall_failed"
 
 	STATUS_VARIABLES+=("install_dependencies_etc='true'\n")
 	return 0
@@ -1979,7 +1979,7 @@ do_update()
 	source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}	# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg --log error "CAMERA_TYPE not set in config.sh."
-		exit_installation 1 "${STATUS_ERROR}: No CAMERA_TYPE in config.sh during update."
+		exit_installation 1 "${STATUS_ERROR}" "No CAMERA_TYPE in config.sh during update."
 	fi
 
 	[[ ${create_webui_defines} != "true" ]] && create_webui_defines
@@ -1996,12 +1996,12 @@ do_update()
 			local F="$( basename "${REPO_SUDOERS_FILE}" )"
 			MSG="Please get the newest '${F}' file from Git and try again."
 			display_msg --log error "${MSG}"
-			exit_installation 2 "${STATUS_ERROR}: '${F}' file is old."
+			exit_installation 2 "${STATUS_ERROR}" "'${F}' file is old."
 		fi
 		do_sudoers
 	fi
 
-	exit_installation 0 "${STATUS_OK}"
+	exit_installation 0 "${STATUS_OK}" "Update completed."
 }
 
 
@@ -2014,13 +2014,13 @@ install_overlay()
 	TMP="${ALLSKY_INSTALLATION_LOGS}/PHP_modules.log"
 	sudo apt-get --assume-yes install php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
 	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}"
-	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}: PHP module install failed."
+	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
 
 	display_msg --log progress "Installing other PHP dependencies."
 	TMP="${ALLSKY_INSTALLATION_LOGS}/libatlas.log"
 	sudo apt-get --assume-yes install libatlas-base-dev > "${TMP}" 2>&1
 	check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}"
-	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}: PHP dependencies failed."
+	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP dependencies failed."
 
 	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
 	# This also allows us to display progress messages.
@@ -2055,7 +2055,7 @@ install_overlay()
 		# These files are too big to display so pass in "0" instead of ${DEBUG}.
 		if ! check_success $? "${M}" "${L}" 0 ; then
 			rm -fr "${PIP3_BUILD}"
-			exit_with_image 1 "${STATUS_ERROR}: ${M}."
+			exit_with_image 1 "${STATUS_ERROR}" "${M}."
 		fi
 	done < "${ALLSKY_REPO}/requirements${R}.txt"
 
@@ -2063,7 +2063,7 @@ install_overlay()
 	TMP="${ALLSKY_INSTALLATION_LOGS}/msttcorefonts.log"
 	local M="Trutype fonts failed"
 	sudo apt-get --assume-yes install msttcorefonts > "${TMP}" 2>&1
-	check_success $? "${M}" "${TMP}" "${DEBUG}" || exit_with_image 1 "${STATUS_ERROR}: ${M}"
+	check_success $? "${M}" "${TMP}" "${DEBUG}" || exit_with_image 1 "${STATUS_ERROR}" "${M}"
 
 	display_msg --log progress "Setting up modules and overlays."
 
@@ -2112,7 +2112,7 @@ check_if_buster()
 		MSG="${MSG}\n\nDo you want to continue anyhow?"
 		if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			display_msg --logonly info "User running Buster and elected not to continue."
-			exit_installation 0 "${STATUS_NO_REBOOT}"
+			exit_installation 0 "${STATUS_NOT_CONTINUE}" "After Buster check."
 		fi
 	fi
 }
@@ -2253,12 +2253,14 @@ exit_installation()
 	local RET="${1}"
 
 	# If STATUS_LINE is set, add that and all STATUS_VARIABLES to the status file.
-	local STATUS="${2}"
-	if [[ -n ${STATUS} ]]; then
-		if [[ ${STATUS} == "${STATUS_CLEAR}" ]]; then
+	local STATUS_CODE="${2}"
+	local MORE_STATUS="${3}"
+	if [[ -n ${STATUS_CODE} ]]; then
+		if [[ ${STATUS_CODE} == "${STATUS_CLEAR}" ]]; then
 			clear_status
 		else
-			echo -e "STATUS_INSTALLATION='${STATUS}'" > "${STATUS_FILE}"
+			[[ -n ${MORE_STATUS} ]] && MORE_STATUS="; MORE_STATUS='${MORE_STATUS}'"
+			echo -e "STATUS_INSTALLATION='${STATUS}'${MORE_STATUS}" > "${STATUS_FILE}"
 			echo -e "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"
 		fi
 	fi
@@ -2379,11 +2381,11 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 		fi
 	else
 		MSG="You have already begun the installation."
-		MSG="${MSG}\n\nThe last status was: ${STATUS_INSTALLATION}"
+		MSG="${MSG}\n\nThe last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
 		MSG="${MSG}\n\nDo you want to continue where you left off?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			MSG="Continuing installation.  Steps already performed will be skipped."
-			MSG="${MSG}\nThe last status was: ${STATUS_INSTALLATION}"
+			MSG="${MSG}\nThe last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
 			display_msg --log progress "${MSG}"
 
 			#shellcheck disable=SC1090		# file doesn't exist in GitHub
@@ -2483,7 +2485,7 @@ display_msg notice "${MSG}"
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
 if [[ ${save_camera_capabilities} != "true" ]]; then
 	save_camera_capabilities "false"		# prompts on error only
-	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}: save_camera_capabilities failed."
+	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "save_camera_capabilities failed."
 fi
 
 ##### Set locale.  May reboot instead of returning.
@@ -2531,4 +2533,4 @@ remind_old_version
 
 [[ ${WILL_REBOOT} == "true" ]] && do_reboot		# does not return
 
-exit_installation 0 "${STATUS_OK}"
+exit_installation 0 "${STATUS_OK}" "Installation succeeded."

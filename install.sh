@@ -911,6 +911,12 @@ does_old_WebUI_location_exist()
 	STATUS_VARIABLES+=("OLD_WEBUI_LOCATION_EXISTS_AT_START='${OLD_WEBUI_LOCATION_EXISTS_AT_START}'\n")
 }
 
+# If the old WebUI location is there:
+#	but it wasn't when the installation started,
+#	that means the installation created it so remove it.
+#
+#	Let the user know if there's an old WebUI, or something unknown there.
+
 check_old_WebUI_location()
 {
 	[[ ! -d ${OLD_WEBUI_LOCATION} ]] && return
@@ -926,7 +932,7 @@ check_old_WebUI_location()
 	sudo rm -f "${OLD_WEBUI_LOCATION}/index.lighttpd.html"
 
 	if [[ ! -d ${OLD_WEBUI_LOCATION}/includes ]]; then
-		local COUNT=$(find "${OLD_WEBUI_LOCATION}" | wc -l)
+		local COUNT=$( find "${OLD_WEBUI_LOCATION}" | wc -l )
 		if [[ ${COUNT} -eq 1 ]]; then
 			# This is often true after a clean install of the OS.
 			sudo rm -f "${OLD_WEBUI_LOCATION}"
@@ -944,8 +950,10 @@ check_old_WebUI_location()
 		return
 	fi
 
-	MSG="An old version of the WebUI was found in ${OLD_WEBUI_LOCATION}; it is no longer being used so you may remove it after intallation."
-	MSG="${MSG}\n\nWARNING: if you have any other web sites in that directory, they will no longer be accessible via the web server."
+	MSG="An old version of the WebUI was found in ${OLD_WEBUI_LOCATION};"
+	MSG="${MSG} it is no longer being used so you may remove it after intallation."
+	MSG="${MSG}\n\nWARNING: if you have any other web sites in that directory,"
+	MSG="${MSG}\n\n they will no longer be accessible via the web server."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
 	display_msg --log notice "${MSG}"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
@@ -2061,7 +2069,14 @@ install_overlay()
 		else
 			C="${COUNT}"
 		fi
+
 		display_msg --log progress "   === Package # ${C} of ${NUM}: [${package}]"
+		local STATUS_NAME="Python_dependency_${COUNT}"
+		if [[ ${STATUS_NAME} == "true" ]]; then
+			display_msg --log info "Skipping - already installed in prior installation."
+			continue
+		fi
+
 		L="${TMP}.${COUNT}.log"
 		local M="Python dependency [${package}] failed"
 		pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
@@ -2074,7 +2089,7 @@ install_overlay()
 
 			exit_with_image 1 "${STATUS_ERROR}" "${M}."
 		fi
-		echo "Python_dependency_${COUNT}='true'"  >> "${TEMP_STATUS_FILE}"
+		echo "${STATUS_NAME}='true'"  >> "${TEMP_STATUS_FILE}"
 	done < "${ALLSKY_REPO}/requirements${R}.txt"
 
 	# Add the status back in.
@@ -2206,7 +2221,8 @@ check_restored_settings()
 		MSG="Default files were created for:"
 		[[ ${RESTORED_PRIOR_CONFIG_SH} == "false" ]] && MSG="${MSG}\n   config.sh"
 		[[ ${RESTORED_PRIOR_FTP_SH}    == "false" ]] && MSG="${MSG}\n   ftp-settings.sh"
-		MSG="${MSG}\n\nHowever, you must update them by going to the 'Editor' page in the WebUI after rebooting."
+		MSG="${MSG}\n\nHowever, you must update them by going to the"
+		MSG="${MSG} 'Editor' page in the WebUI after rebooting."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	fi
 

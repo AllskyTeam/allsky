@@ -186,7 +186,7 @@ function check_if_configured($page, $calledFrom) {
 	if ($calledFrom === "main" && $page === "configuration")
 		return;
 
-	if ($lastChanged === null) {
+	if ($lastChanged === null || $lastChanged === "") {
 		// The settings aren't configured - probably right after an installation.
 		if ($page === "configuration")
 			$m = "";

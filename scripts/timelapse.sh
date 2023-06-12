@@ -193,6 +193,21 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 					echo "Processed ${NUM_IMAGES} images" > "${TMP}"
 				fi
 			else
+				# Make sure the file exists.
+				# This user or something else may have removed it.
+				if [[ ! -s ${IMAGE} ]]; then
+					if [[ ! -f ${IMAGE} ]]; then
+# TODO: would be nice to remove from the file,
+# but we don't create/update the file so any change we make may be overwritten.
+						MSG="not found"
+					else
+						MSG="has nothing in it"
+						rm -f "${IMAGE}"
+					fi
+					echo -e "${YELLOW}*** ${ME} WARNING: image '${IMAGE}' ${MSG}!${NC}"
+					continue
+				fi
+
 				((NUM_IMAGES++))
 				NUM="$( printf "%04d" "${NUM_IMAGES}" )"
 				ln -s "${IMAGE}" "${SEQUENCE_DIR}/${NUM}.${EXTENSION}"

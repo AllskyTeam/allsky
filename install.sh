@@ -62,6 +62,7 @@ DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh.log"
 
 # Holds status of installation if we need to exit and get back in.
 STATUS_FILE="${ALLSKY_INSTALLATION_LOGS}/status.txt"
+STATUS_FILE_TEMP="${ALLSKY_TMP}/temp_status.txt"	# holds intermediate status
 STATUS_LOCALE_REBOOT="Rebooting to change locale"	# status of rebooting due to locale change
 STATUS_NO_LOCALE="Desired locale not found"			# exiting due to desired locale not installed
 STATUS_NO_CAMERA="No camera found"					# status of exiting due to no camera found
@@ -925,19 +926,21 @@ check_old_WebUI_location()
 	sudo rm -f "${OLD_WEBUI_LOCATION}/index.lighttpd.html"
 
 	if [[ ! -d ${OLD_WEBUI_LOCATION}/includes ]]; then
-		MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists"
 		local COUNT=$(find "${OLD_WEBUI_LOCATION}" | wc -l)
 		if [[ ${COUNT} -eq 1 ]]; then
-			MSG="${MSG} and is empty."
-			MSG="${MSG}\nYou can safely delete it after installation:  sudo rmdir '${OLD_WEBUI_LOCATION}'"
+			# This is often true after a clean install of the OS.
+			sudo rm -f "${OLD_WEBUI_LOCATION}"
+			display_msg --logonly info "Deleted empty '${OLD_WEBUI_LOCATION}'."
 		else
+			MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists"
 			MSG="${MSG} but doesn't contain a valid WebUI."
 			MSG="${MSG}\nPlease check it out after installation - if there's nothing you"
 			MSG="${MSG} want in it, remove it:  sudo rm -fr '${OLD_WEBUI_LOCATION}'"
+			whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
+			display_msg --log notice "${MSG}"
+
+			echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 		fi
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
-		display_msg --log notice "${MSG}"
-		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 		return
 	fi
 
@@ -1078,7 +1081,7 @@ handle_prior_website()
 # Get the locale, prompting if we can't determine it.
 DESIRED_LOCALE=""
 CURRENT_LOCALE=""
-get_locale()
+get_desired_locale()
 {
 	# A lot of people have the incorrect locale so prompt for the correct one.
 
@@ -1103,16 +1106,18 @@ get_locale()
 
 	[[ ${DEBUG} -gt 1 ]] && display_msg --logonly debug "INSTALLED_LOCALES=${INSTALLED_LOCALES}"
 
-	# If the prior version of Allsky had a locale set but it's not
-	# an installed one, let the user know.
+	# If the prior version of Allsky had a locale set but it's no longer installed,
+	# let the user know.
 	# This can happen if they use the settings file from a different Pi or different OS.
 	local MSG2=""
-	if [[ -n ${PRIOR_ALLSKY} && -n ${PRIOR_SETTINGS_FILE} ]]; then
-		local L="$( settings .locale "${PRIOR_SETTINGS_FILE}" )"
-		if [[ ${L} != "" && ${L} != "null" ]]; then
-			local X="$(echo "${INSTALLED_LOCALES}" | grep "${L}")"
+	if [[ -z ${DESIRED_LOCALE} && -n ${PRIOR_ALLSKY} && -n ${PRIOR_SETTINGS_FILE} ]]; then
+		# People rarely change locale once set, so assume they still want the prior one.
+		DESIRED_LOCALE="$( settings .locale "${PRIOR_SETTINGS_FILE}" )"
+		if [[ -n ${DESIRED_LOCALE} && ${DESIRED_LOCALE} != "null" ]]; then
+			local X="$(echo "${INSTALLED_LOCALES}" | grep "${DESIRED_LOCALE}")"
 			if [[ -z ${X} ]]; then
-				MSG2="NOTE: Your prior locale (${L}) is not installed on this Pi."
+				# This is probably EXTREMELY rare.
+				MSG2="NOTE: Your prior locale (${DESIRED_LOCALE}) is no longer installed on this Pi."
 			fi
 		fi
 	fi
@@ -1136,6 +1141,13 @@ get_locale()
 		CURRENT_LOCALE=""
 	fi
 	STATUS_VARIABLES+=("CURRENT_LOCALE='${CURRENT_LOCALE}'\n")
+
+	# If they had a locale from the prior Allsky and it's still here, use it; no need to prompt.
+	if [[ -n ${DESIRED_LOCALE} && ${DESIRED_LOCALE} == "${CURRENT_LOCALE}" ]]; then
+		STATUS_VARIABLES+=("get_desired_locale='true'\n")
+		STATUS_VARIABLES+=("DESIRED_LOCALE='${DESIRED_LOCALE}'\n")
+		return
+	fi
 
 	MSG="\nSelect your locale; the default is highlighted in red."
 	MSG="${MSG}\nIf your desired locale is not in the list, press <Cancel>."
@@ -1162,10 +1174,10 @@ get_locale()
 		display_msg info "${MSG}"
 		display_msg --logonly info "No locale selected; exiting."
 
-		exit_installation 0 "Locale(s) available but none selected."
+		exit_installation 0 "${STATUS_NOT_CONTINUE}" "Locale(s) available but none selected."
 
 	elif echo "${DESIRED_LOCALE}" | grep --silent "Box options" ; then
-		# Got a usage message from whiptail.
+		# Got a usage message from whiptail.  This happened once so I added this check.
 		# Must be no space between the last double quote and ${INSTALLED_LOCALES}.
 		#shellcheck disable=SC2086
 		MSG="Got usage message from whiptail: D='${D}', INSTALLED_LOCALES="${INSTALLED_LOCALES}
@@ -1174,7 +1186,7 @@ get_locale()
 		exit_installation 1 "${STATUS_ERROR}" "Got usage message from whitail."
 	fi
 
-	STATUS_VARIABLES+=("get_locale='true'\n")
+	STATUS_VARIABLES+=("get_desired_locale='true'\n")
 	STATUS_VARIABLES+=("DESIRED_LOCALE='${DESIRED_LOCALE}'\n")
 }
 
@@ -2039,6 +2051,7 @@ install_overlay()
 	display_msg --log progress "Installing Python dependencies${M}:"
 	COUNT=0
 	local NUM=$(wc -l < "${ALLSKY_REPO}/requirements${R}.txt")
+	: > "${STATUS_FILE_TEMP}"
 	while read -r package
 	do
 		((COUNT++))
@@ -2055,9 +2068,17 @@ install_overlay()
 		# These files are too big to display so pass in "0" instead of ${DEBUG}.
 		if ! check_success $? "${M}" "${L}" 0 ; then
 			rm -fr "${PIP3_BUILD}"
+
+			# Add current status
+			update_status_from_file "${STATUS_FILE_TEMP}"
+
 			exit_with_image 1 "${STATUS_ERROR}" "${M}."
 		fi
+		echo "Python_dependency_${COUNT}='true'"  >> "${TEMP_STATUS_FILE}"
 	done < "${ALLSKY_REPO}/requirements${R}.txt"
+
+	# Add the status back in.
+	update_status_from_file "${STATUS_FILE_TEMP}"
 
 	display_msg --log progress "Installing Trutype fonts."
 	TMP="${ALLSKY_INSTALLATION_LOGS}/msttcorefonts.log"
@@ -2245,6 +2266,16 @@ clear_status()
 	rm -f "${STATUS_FILE}"
 }
 
+# Update the status from the specified file
+update_status_from_file()
+{
+	local FILE="${1}"
+	if [[ -s ${FILE} ]]; then
+		STATUS_VARIABLES+=( "$( < "${FILE}" )" )
+		STATUS_VARIABLES+=("\n")
+	fi
+	rm -f "${FILE}"
+}
 
 ####
 exit_installation()
@@ -2393,6 +2424,13 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 			# Put all but the status variable in the list so we save them next time.
 			STATUS_VARIABLES=( "$( grep -v STATUS_INSTALLATION "${STATUS_FILE}" )" )
 			STATUS_VARIABLES+=("\n#### Prior variables above, new below.\n")
+
+			# If returning from a reboot for local,
+			# prompt for locale again to make sure it's there and still what they want.
+			if [[ ${STATUS_INSTALLATION} == "${STATUS_LOCALE_REBOOT}" ]]; then
+				unset get_desired_locale	# forces a re-prompt
+				unset CURRENT_LOCALE		# It will get re-calculated
+			fi
 	
 		else
 			MSG="Do you want to restart the installation from the beginning?"
@@ -2448,7 +2486,7 @@ display_image "InstallationInProgress"
 [[ ${prompt_for_prior_Allsky} != "true" ]] && prompt_for_prior_Allsky
 
 ##### Get locale (prompt if needed).  May not return.
-[[ ${get_locale} != "true" ]] && get_locale
+[[ ${get_desired_locale} != "true" ]] && get_desired_locale
 
 ##### Prompt for the camera type
 [[ ${select_camera_type} != "true" ]] && select_camera_type

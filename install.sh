@@ -432,7 +432,7 @@ save_camera_capabilities()
 	fi
 
 	# Restore the prior settings file so it can be used by makeChanges.sh.
-	[[ ${PRIOR_ALLSKY} != "" ]] && restore_prior_settings_files
+	[[ ${PRIOR_ALLSKY} != "" ]] && restore_prior_settings_file
 
 	MSG="Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
 	MSG="${MSG}  ${DEBUG_ARG} 'cameraType' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
@@ -965,6 +965,9 @@ check_old_WebUI_location()
 # If it's a new-style website, copy to the new Allsky release directory.
 handle_prior_website()
 {
+	STATUS_VARIABLES+=( "handle_prior_website='true'\n" )
+	# No variables to add to STATUS_VARIABLES.
+
 	local PRIOR_SITE=""
 	local PRIOR_STYLE=""
 
@@ -987,7 +990,7 @@ handle_prior_website()
 	# when we remove the prior WebUI.
 
 	if [[ -d ${ALLSKY_WEBSITE} ]]; then
-		# Hmmm.  There's an old webite AND a new one.
+		# Hmmm.  There's prior webite AND a new one.
 		# Allsky doesn't ship with the website directory, so not sure how one got there...
 		# Try to remove the new one - if it's not empty the remove will fail
 		# so rename it.
@@ -1400,6 +1403,8 @@ update_config_sh()
 		-e "s;^ALLSKY_VERSION=.*$;ALLSKY_VERSION=\"${ALLSKY_VERSION}\";" \
 		-e "s;^CAMERA_TYPE=.*$;CAMERA_TYPE=\"${CAMERA_TYPE}\";" \
 		"${C}"
+
+	STATUS_VARIABLES+=( "update_config_sh='true'\n" )
 }
 
 
@@ -1571,7 +1576,7 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 ####
 # Restore the prior settings file(s) if the user wanted to use them.
-restore_prior_settings_files()
+restore_prior_settings_file()
 {
 	[[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" ]] && return
 
@@ -1692,12 +1697,16 @@ restore_prior_settings_files()
 			display_msg --logonly info "No new settings file yet..."
 		fi
 	fi
+
+	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
 }
 
 ####
 # If the user wanted to restore files from a prior version of Allsky, do that.
 restore_prior_files()
 {
+	STATUS_VARIABLES+=( "restore_prior_files='true'\n" )
+
 	if [[ -d ${OLD_RASPAP_DIR} ]]; then
 		MSG="\nThe '${OLD_RASPAP_DIR}' directory is no longer used.\n"
 		MSG="${MSG}When installation is done you may remove it by executing:\n"
@@ -1779,7 +1788,7 @@ restore_prior_files()
 	fi
 
 	# This is not in a "standard" directory so we need to determine where it was.
-	EXTRA="${PRIOR_ALLSKY_DIR}${ALLSKY_EXTRA//${ALLSKY_HOME}/}"
+	local EXTRA="${PRIOR_ALLSKY_DIR}${ALLSKY_EXTRA//${ALLSKY_HOME}/}"
 	if [[ -d ${EXTRA} ]]; then
 		display_msg --log progress "    '${EXTRA}' directory."
 		cp -ar "${EXTRA}" "${ALLSKY_EXTRA}/.."
@@ -1787,6 +1796,7 @@ restore_prior_files()
 		display_msg "${LOG_TYPE}" progress "     No prior '${EXTRA}' directory so can't restore."
 	fi
 
+	local D
 	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
 	else
@@ -1813,8 +1823,8 @@ restore_prior_files()
 		# Check if this is an older Allsky Website configuration file type.
 		# The remote config file should have .ConfigVersion.
 		local OLD="false"
-		NEW_CONFIG_VERSION="$(settings .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
-		PRIOR_CONFIG_VERSION="$(settings .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
+		local NEW_CONFIG_VERSION="$(settings .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
+		local PRIOR_CONFIG_VERSION="$(settings .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
 		if [[ ${PRIOR_CONFIG_VERSION} == "" || ${PRIOR_CONFIG_VERSION} == "null" ]]; then
 			OLD="true"		# Hmmm, it should have the version
 			MSG="Prior Website configuration file '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}'"
@@ -1846,18 +1856,18 @@ restore_prior_files()
 	# Don't bother with the "else" part since this file is very rarely used.
 	fi
 
-	restore_prior_settings_files
+	restore_prior_settings_file
 
 	# Do NOT restore options.json - it will be recreated.
 
 	# See if the prior config.sh and ftp-setting.sh are the same version as
 	# the new ones; if so, we can copy them to the new version.
 	# Currently what's in ${ALLSKY_CONFIG} are copies of the repo files.
-	RESTORED_PRIOR_CONFIG_SH="false"
-	RESTORED_PRIOR_FTP_SH="false"
+	RESTORED_PRIOR_CONFIG_SH="false"		# Global variable
+	RESTORED_PRIOR_FTP_SH="false"			# Global variable
 
-	CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${ALLSKY_CONFIG}/config.sh" )"
-	PRIOR_CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${PRIOR_CONFIG_FILE}" )"
+	local CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${ALLSKY_CONFIG}/config.sh" )"
+	local PRIOR_CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${PRIOR_CONFIG_FILE}" )"
 	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
 		display_msg --log progress "    Prior 'config.sh' file, as is."
 		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_CONFIG_SH="true"
@@ -1878,7 +1888,8 @@ restore_prior_files()
 	# Unlike the config.sh file which was always in allsky/config,
 	# the ftp-settings.sh file used to be in allsky/scripts.
 	# Get the current and prior (if any) file version.
-	FTP_SH_VERSION="$( get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh" )"
+	local FTP_SH_VERSION="$( get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh" )"
+	local PRIOR_FTP_SH_VERSION
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then
 		# Allsky v2022.03.01 and newer.  v2022.03.01 doesn't have FTP_SH_VERSION.
 		PRIOR_FTP_SH_VERSION="$( get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}" )"
@@ -1937,6 +1948,9 @@ restore_prior_files()
 		fi
 	fi
 
+
+	STATUS_VARIABLES+=( "RESTORED_PRIOR_CONFIG_SH='${RESTORED_PRIOR_CONFIG_SH}'\n" )
+	STATUS_VARIABLES+=( "RESTORED_PRIOR_FTP_SH='${RESTORED_PRIOR_FTP_SH}'\n" )
 
 	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "true" && ${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
 		return 0
@@ -2095,14 +2109,21 @@ install_overlay()
 	# Add the status back in.
 	update_status_from_file "${STATUS_FILE_TEMP}"
 
-	display_msg --log progress "Installing Trutype fonts."
-	TMP="${ALLSKY_INSTALLATION_LOGS}/msttcorefonts.log"
-	local M="Trutype fonts failed"
-	sudo apt-get --assume-yes install msttcorefonts > "${TMP}" 2>&1
-	check_success $? "${M}" "${TMP}" "${DEBUG}" || exit_with_image 1 "${STATUS_ERROR}" "${M}"
+	if [[ ${installing_Trutype_fonts} != "true" ]]; then
+		display_msg --log progress "Installing Trutype fonts."
+		TMP="${ALLSKY_INSTALLATION_LOGS}/msttcorefonts.log"
+		local M="Trutype fonts failed"
+		sudo apt-get --assume-yes install msttcorefonts > "${TMP}" 2>&1
+		check_success $? "${M}" "${TMP}" "${DEBUG}" || exit_with_image 1 "${STATUS_ERROR}" "${M}"
+		STATUS_VARIABLES+=( "install_Trutype_fonts='true'\n" )
+	else
+		display_msg --logonly info "Skipping: Installing Trutype fonts - already installed"
+	fi
+
+	# Do the rest, even if we already did it in a previous installation,
+	# in case something in the directories.
 
 	display_msg --log progress "Setting up modules and overlays."
-
 	# These will get overwritten if the user has prior versions.
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_CONFIG}"
 	cp -ar "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
@@ -2122,16 +2143,6 @@ install_overlay()
 	sudo mkdir -p "${ALLSKY_MODULE_LOCATION}/modules"
 	sudo chown -R "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${ALLSKY_MODULE_LOCATION}"
 	sudo chmod -R 774 "${ALLSKY_MODULE_LOCATION}"			
-
-	# TODO: Remove in next release. Temporary fix to move modules and deal with
-	# pistatus and gps that moved to core allsky during testing of "dev" release.
-	if [[ -d /etc/allsky/modules ]]; then
-		sudo cp -a /etc/allsky/modules "${ALLSKY_MODULE_LOCATION}"
-		sudo rm -rf /etc/allsky
-	fi
-    sudo rm -f "${ALLSKY_MODULE_LOCATION}/modules/allsky_pistatus.py"
-   	sudo rm -f "${ALLSKY_MODULE_LOCATION}/modules/allsky_script.py"
-	#TODO: End of stuff to remove
 }
 
 
@@ -2252,6 +2263,8 @@ check_new_exposure_algorithm()
 	else
 		display_msg --logonly info "User elected NOT to use ${FIELD}."
 	fi
+
+	STATUS_VARIABLES+=( "check_new_exposure_algorithm='true'\n" )
 }
 
 
@@ -2546,35 +2559,39 @@ fi
 [[ ${set_locale} != "true" ]] && set_locale
 
 ##### Create the Allsky log files
+# Re-run every time in case permissions changed.
 create_allsky_logs
 
 ##### install the overlay and modules system
 install_overlay
 
 ##### Check for, and handle any prior Allsky Website
-handle_prior_website
+[[ ${handle_prior_website} != "true" ]] && handle_prior_website
 
 ##### Restore prior files if needed
-restore_prior_files											# prompts if prior Allsky exists
+[[ ${restore_prior_files} != "true" ]] && restore_prior_files	# prompts if prior Allsky exists
 
 ##### Update config.sh
-update_config_sh
+[[ ${update_config_sh} != "true" ]] && update_config_sh
 
 ##### Set permissions.  Want this at the end so we make sure we get all files.
+# Re-run every time in case permissions changed.
 set_permissions
 
 ##### Check if there's an old WebUI and let the user know it's no longer used.
+# Re-run every time to remind them if there's still an old location.
 check_old_WebUI_location									# prompt if prior old-style WebUI
 
 ##### See if we should reboot when installation is done.
 ask_reboot "full"											# prompts
 
 ##### Display any necessary messaged about restored / not restored settings
+# Re-run every time to possibly remind them to update their settings.
 check_restored_settings
 
 ##### If using ZWO, prompt if the New Exposure Algorithm should be used.
 # TODO: remove check_new_exposure_algorithm() when it's the default.
-[[ ${CAMERA_TYPE} == "ZWO" ]] && check_new_exposure_algorithm
+[[ ${CAMERA_TYPE} == "ZWO" && ${check_new_exposure_algorith} != "true" ]] && check_new_exposure_algorithm
 
 ##### Let the user know to run check_allsky.sh.
 remind_run_check_allsky

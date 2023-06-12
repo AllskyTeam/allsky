@@ -158,39 +158,17 @@ stop_allsky()
 
 ####
 # Get the branch of the release we are installing;
-# if not GITHUB_MAIN_BRANCH, save the name of the branch.
-# There is no "branch" file in GitHub so we need to determine the branch
-# by looking in the .git/config file.
 get_this_branch()
 {
-	local FILE="${ALLSKY_HOME}/.git/config"
-	if [[ -f ${FILE} ]]; then
-		local B="$(sed -E --silent -e '/^\[branch "/s/(^\[branch ")(.*)("])/\2/p' "${FILE}")"
-		if [[ -n ${B} ]]; then
-			if [[ ${B} == "${GITHUB_MAIN_BRANCH}" ]]; then
-				display_msg --logonly info "Using the '${B}' branch."
-				# The file shouldn't be there, but just in case...
-				# It's only used for non-standard branches.
-				rm -f "${ALLSKY_BRANCH_FILE}"
-			elif [[ $( echo "${B}" | wc -l ) -ne 1 ]]; then
-				MSG="Multiple branches found in '${FILE}': '${B}'; unable to continue."
-				display_msg --log error "${MSG}"
-				#shellcheck disable=SC2086
-				exit_installation 1 "${STATUS_ERROR}: multiple branches found."
-			else
-				BRANCH="${B}"
-				STATUS_VARIABLES+=("get_this_branch='true'\n")
-				STATUS_VARIABLES+=("BRANCH='${BRANCH}'\n")
-				echo -n "${BRANCH}" > "${ALLSKY_BRANCH_FILE}"
-				display_msg --log info "Using '${BRANCH}' branch."
-			fi
-		else
-			MSG="Unable to determine branch from '${FILE}'; assuming ${BRANCH}."
-			display_msg --log warning "${MSG}"
-		fi
+	STATUS_VARIABLES+=("get_this_branch='true'\n")
+	if ! B="$( git rev-parse --abbrev-ref HEAD )" ; then
+		display_msg --log warning "Unable to determine branch; assuming '${BRANCH}'."
 	else
-		display_msg --log warning "${FILE} not found; assuming ${BRANCH} branch."
+		BRANCH="${B}"
+		display_msg --logonly info "Using the '${BRANCH}' branch."
 	fi
+
+	STATUS_VARIABLES+=("BRANCH='${BRANCH}'\n")
 }
 
 

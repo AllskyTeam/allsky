@@ -1557,6 +1557,7 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 						done
 
 					# Fields whose name or location changed.
+# xxxxxxx  TODO: daymaxexposure, daymaxgain, nightmaxexposure, nightmaxgain
 					x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
 					update_json_file ".takeDaytimeImages" "${x}" "${NEW_FILE}"
 
@@ -1629,17 +1630,12 @@ restore_prior_settings_file()
 				fi
 				display_msg --log warning "${MSG}"
 			fi
-
-
-			# TODO: check if this is an older version of the file,
-			# and if so, reset "lastChanged" to null.
-			# BUT, how do we determine if it's an old file,
-			# given that it's initially created at installation time?
 		else
 			# This should "never" happen.
 			# Their prior version is "new" but they don't have a settings file?
 			display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
 		fi
+
 	else
 		# settings file is old style in ${OLD_RASPAP_DIR}.
 		if [[ ! -f ${PRIOR_SETTINGS_FILE} ]]; then
@@ -1697,6 +1693,9 @@ restore_prior_settings_file()
 			display_msg --logonly info "No new settings file yet..."
 		fi
 	fi
+
+	# Set to null to force the user to at least look at the settings before Allsky will run.
+	update_json_file ".lastChanged" "" "${SETTINGS_FILE}"
 
 	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
 }

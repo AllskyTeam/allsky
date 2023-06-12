@@ -435,10 +435,20 @@ function get_variable() {
 # Simple way to get a setting that hides the details.
 function settings()
 {
+	local M="${ME:-settings}"
+	local FIELD="${1}"
+	[[ ${FIELD:0:1} != "." ]] && echo "${M}: Field names must begin with period '.'" >&2 && return 1
+
 	local FILE="${2:-${SETTINGS_FILE}}"
-	j="$( jq -r "${1}" "${FILE}")" && echo "${j}" && return
-	echo "${ME}: running as $(id --user --name), unable to get json value for '${1}';" >&2
+	if j="$( jq -r "${FIELD}" "${FILE}" )" ; then
+		echo "${j}"
+		return 0
+	fi
+
+	echo "${M}: Unable to get json value for '${FIELD}'." >&2
 	ls -l "${FILE}" >&2
+	
+	return 2
 }
 
 
@@ -554,10 +564,23 @@ function fix_settings_link()
 
 function update_json_file()		# field, new value, file
 {
-	local FILE="${3}"
+	local M="${ME:-update_json_file}"
+	local FIELD="${1}"
+	[[ ${FIELD:0:1} != "." ]] && echo "${M}: Field names must begin with period '.'" >&2 && return 1
+
+	local NEW_VALUE="${2}"
+	local FILE="${3:-${SETTINGS_FILE}}"
 	local TEMP="/tmp/$$"
 	# Have to use "cp" instead of "mv" to keep any hard link.
-	jq "${1} = \"${2}\"" "${FILE}" > "${TEMP}" && cp "${TEMP}" "${FILE}" && rm "${TEMP}"
+	if jq "${FIELD} = \"${NEW_VALUE}\"" "${FILE}" > "${TEMP}" ; then
+		cp "${TEMP}" "${FILE}"
+		rm "${TEMP}"
+		return 0
+	fi
+
+	echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}'." >&2
+
+	return 2
 }
 
 ####

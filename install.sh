@@ -1502,9 +1502,26 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 					# For each field in prior file, update new file with old value.
 					# Then handle new fields and fields that changed locations or names.
+					# Possible input formats, all with and without trailing "," and
+					# with or without leading spaces or tabs.
+					#   "field" : "value"
+					#   "field" : number
+					#   "field": "value"
+					#   "field": number
+					#   "field":"value"
+					#   "field":number
+					# Want to output two fields (field name and value), separated by tabs.
+					# First get rid of the brackets,
+					# then the optional leading spaces and tabs,
+					# then everything between the field and and its value,
+					# then ending " and/or ,
+
 					jq "." "${PRIOR_FILE}" |
-						sed -e '/^{/d' -e '/^}/d' -e 's/ *"//' -e 's/":"/\t/' \
-							-e 's/": "/\t/' -e 's/",$//' -e 's/,$//' |
+						sed -e '/^{/d' -e '/^}/d' \
+							-e 's/^[\t ]*"//' \
+							-e 's/"[\t :]*[ "]/\t/' \
+							-e 's/",$//' -e 's/,$//' \
+							|
 						while read -r F V
 						do
 							case "${F}" in

@@ -71,7 +71,7 @@ STATUS_NOT_CONTINUE="User elected not to continue"	# Exiting, but not an error
 STATUS_NO_REBOOT="User elected not to reboot"
 STATUS_CLEAR="Clear"								# Clear the file
 STATUS_ERROR="Error encountered"
-#STATUS_INT="Got interupt"
+STATUS_INT="Got interrupt"
 STATUS_VARIABLES=()									# Holds all the variables and values to save
 
 # Some versions of Linux default to 750 so web server can't read it
@@ -2364,7 +2364,7 @@ exit_installation()
 			clear_status
 		else
 			[[ -n ${MORE_STATUS} ]] && MORE_STATUS="; MORE_STATUS='${MORE_STATUS}'"
-			echo -e "STATUS_INSTALLATION='${STATUS}'${MORE_STATUS}" > "${STATUS_FILE}"
+			echo -e "STATUS_INSTALLATION='${STATUS_CODE}'${MORE_STATUS}" > "${STATUS_FILE}"
 			echo -e "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"
 		fi
 	fi
@@ -2375,6 +2375,12 @@ exit_installation()
 }
 
 
+####
+handle_interrupts()
+{
+	display_msg --log info "\nGot interrupt - saving installation status, then exiting.\n"
+	exit_installation 1 "${STATUS_INT}" "Saving status."
+}
 
 ############################################## Main part of program
 
@@ -2451,6 +2457,7 @@ TESTING="${TESTING}"	# xxx keeps shellcheck quiet
 	shift
 done
 
+
 if [[ -n ${FUNCTION} ]]; then
 	# Don't log when a single function is executed.
 	DISPLAY_MSG_LOG=""
@@ -2462,6 +2469,8 @@ fi
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
+
+trap "handle_interrupts" SIGTERM SIGINT
 
 # See if we should skip some steps.
 # When most function are called they add a variable with the function's name set to "true".

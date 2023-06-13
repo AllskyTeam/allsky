@@ -32,11 +32,24 @@ source "${ALLSKY_CONFIG}/config.sh"						|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
+# Make sure they rebooted if they were supposed to.
+NEEDS_REBOOT="false"
+reboot_needed && NEEDS_REBOOT="true"
+
 # Make sure the settings have been configured after an installation or upgrade.
-LAST_CHANGED=$(settings ".lastChanged")
+LAST_CHANGED="$( settings ".lastChanged" )"
 if [[ ${LAST_CHANGED} == "" || ${LAST_CHANGED} == "null" ]]; then
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI."
-	doExit "${EXIT_ERROR_STOP}" "Error" "ConfigurationNeeded"
+	if [[ ${NEEDS_REBOOT} == "true" ]]; then
+		echo "*** ===== The Pi also needs to be rebooted."
+		doExit "${EXIT_ERROR_STOP}" "Error" \
+			"Allsky needs\nconfiguration\nand the Pi needs\na reboot" \
+			"Allsky needs to be configured then the Pi rebooted."
+	else
+		doExit "${EXIT_ERROR_STOP}" "Error" "ConfigurationNeeded"
+	fi
+elif [[ ${NEEDS_REBOOT} == "true" ]]; then
+	doExit "${EXIT_ERROR_STOP}" "Error" "RebootNeeded"
 fi
 
 SEE_LOG_MSG="See ${ALLSKY_LOG}"

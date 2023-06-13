@@ -444,7 +444,8 @@ function settings()
 {
 	local M="${ME:-settings}"
 	local FIELD="${1}"
-	if [[ ${FIELD:0:1} != "." ]]; then
+	# Arrays can't begin with period but everything else should.
+	if [[ ${FIELD:0:1} != "." && ${FIELD: -2:2} != "[]" ]]; then
 		echo "${M}: Field names must begin with period '.' (Field='${FIELD}')" >&2
 		return 1
 	fi

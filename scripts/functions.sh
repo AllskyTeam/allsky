@@ -26,7 +26,7 @@ function doExit()
 			;;
 	esac
 
-	OUTPUT_A_MESSAGE="false"
+	OUTPUT_A_MSG="false"
 	if [[ -n ${WEBUI_MESSAGE} ]]; then
 		[[ ${TYPE} = "no-image" ]] && TYPE="success"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"

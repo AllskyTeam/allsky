@@ -28,7 +28,7 @@ usage_and_exit()
 	# Don't show the "--newer", "--no-check", or "--force-check" options since users
 	# should never use them.
 	echo
-	echo -e "${C}Usage: ${ME} [--help] [--debug]${NC}"
+	echo -e "${C}Usage: ${ME} [--help] [--debug] [--no-check]${NC}"
 	echo
 	echo "'--help' displays this message and exits."
 	echo
@@ -76,8 +76,7 @@ source "${ALLSKY_CONFIG}/config.sh"	 					|| exit ${ALLSKY_ERROR_STOP}
 source "${ALLSKY_CONFIG}/ftp-settings.sh" 				|| exit ${ALLSKY_ERROR_STOP}
 PROTOCOL="${PROTOCOL,,}"	# set to lowercase to make comparing easier
 
-
-BRANCH="$( get_branch "${ALLSKY_BRANCH_FILE}" )"
+BRANCH="$( get_allsky_branch "${ALLSKY_HOME}" )"
 [[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 [[ ${DEBUG} == "true" ]] && echo "DEBUG: using '${BRANCH}' branch."
 
@@ -170,8 +169,8 @@ function is_number()
 
 # Return the min of two numbers.
 function min() {
-	local ONE=$(settings "${1}")
-	local TWO=$(settings "${2}")
+	local ONE="${1}"
+	local TWO="${2}"
 	if [[ ${ONE} -lt ${TWO} ]]; then
 		echo "${ONE}"
 	else
@@ -210,8 +209,8 @@ function check_exists() {
 
 
 
-DAYDELAY_MS=$(settings .daydelay)
-NIGHTDELAY_MS=$(settings .nightdelay)
+DAYDELAY_MS=$(settings .daydelay) || echo "Problem getting .daydelay"
+NIGHTDELAY_MS=$(settings .nightdelay) || echo "Problem getting .nightdelay"
 
 	# Use min() for worst case.
 MIN_DELAY_MS=$( min "${DAYDELAY_MS}" "${NIGHTDELAY_MS}" )
@@ -223,18 +222,23 @@ MIN_IMAGE_TIME_MS=$((MIN_EXPOSURE_MS + MIN_DELAY_MS))
 ##### Check if the delay is so short it's likely to cause problems.
 function check_delay()
 {
+# TODO: use the module average flow times for day and night
+
 	# With the legacy overlay method it might take up to a couple seconds to save an image.
 	# With the module method it can take up to 5 seconds.
-	# TODO: try to determine the average time it takes with the module method.
-	local OVERLAY_METHOD=$(settings .overlayMethod)
-	if [[ -z ${OVERLAY_METHOD} || ${OVERLAY_METHOD} -eq 1 ]]; then
+	local OVERLAY_METHOD=$(settings .overlayMethod) || echo "Problem getting .overlayMethod." >&2
+	if [[ ${OVERLAY_METHOD} -eq 1 ]]; then
 		MAX_TIME_TO_SAVE_MS=5000
 	else
 		MAX_TIME_TO_SAVE_MS=2000
 	fi
 	if [[ ${MAX_TIME_TO_SAVE_MS} -gt ${MIN_IMAGE_TIME_MS} ]]; then
 		heading "Warnings"
-		echo "The minimum delay of "
+		echo "The minimum delay of ${MIN_DELAY_MS} may be too short"
+		echo "given the maximum expected time to save and process"
+		echo "an image (${MAX_TIME_TO_SAVE_MS} ms)."
+		echo "A new image may appear before the prior one has finished processing."
+		echo "Consider increasing your delay."
 	fi
 }
 
@@ -243,19 +247,21 @@ function check_delay()
 #
 
 # Variables used below.
-TAKING_DARKS="$(settings .takeDarkFrames)"
-WIDTH="$(settings .width)"		# per the WebUI, usually 0
-HEIGHT="$(settings .height)"
-SENSOR_WIDTH="$(settings .sensorWidth "${CC_FILE}")"	# physical sensor size
-SENSOR_HEIGHT="$(settings .sensorHeight "${CC_FILE}")"
-TAKE="$(settings .takeDaytimeImages)"
-SAVE="$(settings .saveDaytimeImages)"
-ANGLE="$(settings .angle)"
-LATITUDE="$(settings .latitude)"
-LONGITUDE="$(settings .longitude)"
+TAKING_DARKS="$(settings .takeDarkFrames)" || echo "Problem getting .takeDarkFrames." >&2
+# per the WebUI, width and height are usually 0
+WIDTH="$(settings .width)" || echo "Problem getting .width." >&2
+HEIGHT="$(settings .height)" || echo "Problem getting .height." >&2
+# physical sensor size
+SENSOR_WIDTH="$(settings .sensorWidth "${CC_FILE}")" || echo "Problem getting .sensorWidth." >&2
+SENSOR_HEIGHT="$(settings .sensorHeight "${CC_FILE}")" || echo "Problem getting .sensorHeight." >&2
+TAKE="$(settings .takeDaytimeImages)" || echo "Problem getting .takeDaytimeImages." >&2
+SAVE="$(settings .saveDaytimeImages)" || echo "Problem getting .saveDaytimeImages." >&2
+ANGLE="$(settings .angle)" || echo "Problem getting .angle" >&2
+LATITUDE="$(settings .latitude)" || echo "Problem getting .latitude." >&2
+LONGITUDE="$(settings .longitude)" || echo "Problem getting .longitude" >&2
 # shellcheck disable=SC2034
-LOCALE="$(settings .locale)"
-USING_DARKS="$(settings .useDarkFrames)"
+LOCALE="$(settings .locale)" || echo "Problem getting .locale" >&2
+USING_DARKS="$(settings .useDarkFrames)" || echo "Problem getting .useDarkFrames" >&2
 WEBSITES="$(whatWebsites)"
 
 # ======================================================================
@@ -321,6 +327,17 @@ if [[ ${CROP_IMAGE} == "true" && ${SENSOR_WIDTH} == "${CROP_WIDTH}" && ${SENSOR_
 	echo "Check CROP_IMAGE, CROP_WIDTH (${CROP_WIDTH}), and CROP_HEIGHT (${CROP_HEIGHT})."
 fi
 
+LAST_CHANGED="$( settings ".lastChanged" )" || echo "Problem getting .lastChanged" >&2
+if [[ ${LAST_CHANGED} == "" || ${LAST_CHANGED} == "null" ]]; then
+	heading "Information"
+	echo "Allsky needs to be configured before it will run."
+	echo "See the 'Allsky Settings' page in the WebUI."
+fi
+
+if reboot_needed ; then
+	heading "Information"
+	echo "The Pi needs to be rebooted before Allsky will start."
+fi
 
 # ======================================================================
 # ================= Check for warning items.
@@ -420,9 +437,9 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 	function get_exposure() {	# return the time spent on one image, prior to delay
 		local TIME="${1}"
 		if [[ $(settings ".${TIME}autoexposure") -eq 1 ]]; then
-			settings ".${TIME}maxautoexposure"
+			settings ".${TIME}maxautoexposure" || echo "Problem getting .${TIME}maxautoexposure." >&2
 		else
-			settings ".${TIME}exposure"
+			settings ".${TIME}exposure" || echo "Problem getting .${TIME}exposure." >&2
 		fi
 	}
 

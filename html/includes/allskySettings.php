@@ -142,7 +142,7 @@ function DisplayAllskyConfig(){
 
 			$msg = "";
 			if ($ok) {
-				if ($somethingChanged || $lastChanged === null) {
+				if ($somethingChanged || $lastChanged === "") {
 					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
 						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
@@ -178,7 +178,7 @@ function DisplayAllskyConfig(){
 					}
 
 					if ($msg === "")
-						$msg = "No settings changed (file not updated)";
+						$msg = "No settings changed (but timestamp updated)";
 				}
 			}
 
@@ -211,7 +211,7 @@ function DisplayAllskyConfig(){
 						// runCommand displays $msg.
 						runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
 					} else {
-						$msg .= " but Allsky NOT restarted.";
+						$msg .= "; Allsky NOT restarted.";
 						$status->addMessage($msg, 'info');
 					}
 				}

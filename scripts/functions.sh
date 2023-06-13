@@ -438,7 +438,7 @@ function settings()
 	local M="${ME:-settings}"
 	local FIELD="${1}"
 	if [[ ${FIELD:0:1} != "." ]]; then
-		echo "${M}: Field names must begin with period '.'" >&2
+		echo "${M}: Field names must begin with period '.' (Field='${FIELD}')" >&2
 		return 1
 	fi
 
@@ -574,7 +574,10 @@ function update_json_file()		# field, new value, file
 {
 	local M="${ME:-update_json_file}"
 	local FIELD="${1}"
-	[[ ${FIELD:0:1} != "." ]] && echo "${M}: Field names must begin with period '.'" >&2 && return 1
+	if [[ ${FIELD:0:1} != "." ]]; then
+		echo "${M}: Field names must begin with period '.' (Field='${FIELD}')" >&2
+		return 1
+	fi
 
 	local NEW_VALUE="${2}"
 	local FILE="${3:-${SETTINGS_FILE}}"

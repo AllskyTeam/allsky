@@ -42,29 +42,31 @@ endif
 DEFS = -D_LIN -D_DEBUG -DGLIBC_20
 CFLAGS = -Werror -Wall -Wno-psabi -Wno-unused-result -g -O2 -lpthread -pthread
 
+# Starting with the Feb 2023 Bullseye release, both 32- and 64-bit return
+# $(platform) of "aarch64" on 64-bit hardware so we need to check $(arch),
+# which returns "armhf" on 32-bit OS and "armhf" on 64-bit OS.
+# Ditto i386 arch vs x86_64 platform.
+
 ifeq ($(platform), armv6l)
   CC = arm-linux-gnueabihf-g++
   AR= arm-linux-gnueabihf-ar
   CFLAGS += -march=armv6
   CFLAGS += -lrt
   ZWOSDK = -Llib/armv6 -I./include
+else ifeq ($(arch), i386)
+  CC = g++
+  AR= ar
+  ZWOSDK = -Llib/x86 -I./include
 else ifeq ($(platform), x86_64)
   CC = g++
   AR= ar
   ZWOSDK = -Llib/x64 -I./include
-else ifeq ($(platform), i386)
-  CC = g++
-  AR= ar
-  ZWOSDK = -Llib/x86 -I./include
 else ifeq ($(arch), arm64)
 	# Ubuntu 20.04 added by Jos Wennmacker.
   CC = g++
   AR= ar
   ZWOSDK = -Llib/armv8 -I./include
 else		# $(platform) = armv7l or $(arch) = armhf
-	# Starting with the Feb 2023 Bullseye release, both 32- and 64-bit return
-	# $(platform) of "aarch64" on 64-bit hardware so we need to check $(arch),
-	# which returns "armhf" on 32-bit OS and "armhf" on 64-bit OS.
   CC = arm-linux-gnueabihf-g++
   AR= arm-linux-gnueabihf-ar
   CFLAGS += -march=armv7 -mthumb
@@ -205,4 +207,3 @@ endif # Correct directory structure check
 
 %:
 	@echo `date +%F\ %R:%S` nothing to do for $@
-	

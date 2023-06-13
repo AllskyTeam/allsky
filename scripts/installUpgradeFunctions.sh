@@ -69,7 +69,7 @@ function get_version() {
 # Get the branch using git.
 function get_allsky_branch() {
 	local H="${1:-${ALLSKY_HOME}}"
-	echo "$( cd "${H}"; git rev-parse --abbrev-ref HEAD )"
+	echo "$( cd "${H}" || exit; git rev-parse --abbrev-ref HEAD )"
 }
 
 #####

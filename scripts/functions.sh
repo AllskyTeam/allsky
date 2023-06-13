@@ -737,3 +737,21 @@ function make_thumbnail()
 	ffmpeg -loglevel error -ss "00:00:${SEC}" -i "${INPUT_FILE}" \
 		-filter:v scale="${THUMBNAIL_SIZE_X:-100}:-1" -frames:v 1 "${THUMBNAIL}"
 }
+
+
+#####
+# Check if the user was supposed to reboot, and if so, if they did.
+check_for_reboot()
+{
+	[[ ! -f ${ALLSKY_UPTIME_SINCE} ]] && return 0
+
+	# The file exists so they were supposed to reboot.
+	BEFORE="$( < "${ALLSKY_UPTIME_SINCE}" )"
+	NOW="$( uptime --since )"
+	if [[ ${BEFORE} == "${NOW}" ]]; then
+		return 1
+	else
+		rm -f "${ALLSKY_UPTIME_SINCE}"		# different times so they rebooted
+		return 0
+	fi
+}

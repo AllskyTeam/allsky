@@ -437,7 +437,10 @@ function settings()
 {
 	local M="${ME:-settings}"
 	local FIELD="${1}"
-	[[ ${FIELD:0:1} != "." ]] && echo "${M}: Field names must begin with period '.'" >&2 && return 1
+	if [[ ${FIELD:0:1} != "." ]]; then
+		echo "${M}: Field names must begin with period '.'" >&2
+		return 1
+	fi
 
 	local FILE="${2:-${SETTINGS_FILE}}"
 	if j="$( jq -r "${FIELD}" "${FILE}" )" ; then
@@ -506,10 +509,16 @@ function check_settings_link()
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
 		echo "check_settings_link(): Settings file not specified."
-		return 1
+		return "${EXIT_ERROR_STOP}"
 	fi
-	[[ -z ${CAMERA_TYPE} ]] && CAMERA_TYPE="$( settings .cameraType  "${FULL_FILE}" )"
-	[[ -z ${CAMERA_MODEL} ]] && CAMERA_MODEL="$( settings .cameraModel  "${FULL_FILE}" )"
+	if [[ -z ${CAMERA_TYPE} ]]; then
+		CAMERA_TYPE="$( settings .cameraType  "${FULL_FILE}" )"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+	fi
+	if [[ -z ${CAMERA_MODEL} ]]; then
+		CAMERA_MODEL="$( settings .cameraModel  "${FULL_FILE}" )"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+	fi
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"
 	FILE="$( basename "${FULL_FILE}" )"

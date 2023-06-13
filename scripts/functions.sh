@@ -25,6 +25,15 @@ function doExit()
 			COLOR="yellow"
 			;;
 	esac
+
+	OUTPUT_A_MSG="false"
+	if [[ -n ${WEBUI_MESSAGE} ]]; then
+		[[ ${TYPE} = "no-image" ]] && TYPE="success"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
+		echo "Stopping Allsky: ${WEBUI_MESSAGE}"
+		OUTPUT_A_MSG="true"
+	fi
+
 	if [[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
 		# even if the user has them turned off.
@@ -36,18 +45,16 @@ function doExit()
 				"${FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
 				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
+			echo "Stopping Allsky: ${CUSTOM_MESSAGE}"
 		elif [[ ${TYPE} != "no-image" ]]; then
+			[[ ${OUTPUT_A_MSG} == "false" && ${TYPE} == "RebootNeeded" ]] && echo "Reboot needed"
 			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "${TYPE}" 2>&1
 		fi
-		# Don't let the service restart us because we'll likely get the same error again.
-		echo "     ***** AllSky Stopped *****"
 	fi
 
-	if [[ -n ${WEBUI_MESSAGE} ]]; then
-		[[ ${TYPE} = "no-image" ]] && TYPE="success"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
-	fi
+	echo "     ***** AllSky Stopped *****"
 
+	# Don't let the service restart us because we'll likely get the same error again.
 	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && sudo systemctl stop allsky
 
 	# shellcheck disable=SC2086

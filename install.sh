@@ -71,14 +71,16 @@ STATUS_NOT_CONTINUE="User elected not to continue"	# Exiting, but not an error
 STATUS_NO_REBOOT="User elected not to reboot"
 STATUS_CLEAR="Clear"								# Clear the file
 STATUS_ERROR="Error encountered"
+#STATUS_INT="Got interupt"
 STATUS_VARIABLES=()									# Holds all the variables and values to save
 
 # Some versions of Linux default to 750 so web server can't read it
 chmod 755 "${ALLSKY_HOME}"
 
+OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 
-####################### functions
 
+############################################## functions
 
 ####
 # 
@@ -1617,10 +1619,22 @@ restore_prior_settings_file()
 	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
 		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
 
+			MSG="Checking link for newStyle PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
+			display_msg --logonly info "${MSG}"
+
 			# The prior settings file SHOULD be a link to a camera-specific file.
 			# Make sure that's true; if not, fix it.
-			if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
-				display_msg --log info "${MSG}"
+			MSG="$( check_settings_link "${PRIOR_SETTINGS_FILE}" )"
+			RET=$?
+			if [[ ${RET} -ne 0 ]]; then
+				display_msg --log error "${MSG}"
+				if [[ ${RET} -eq "${EXIT_ERROR_STOP}" ]]; then
+					# If we can't process the PRIOR_SETTINGS_FILE we can't really continue.
+# TODO: Maybe we copy all the camera-specific files over and let makeChanges.sh create
+# the new settings file based on the camera-specific one, and let the user know to
+# check the settings since they may be old.
+					exit_installation 1 "${STATUS_ERROR}" "Unable to check prior settings file."
+				fi
 			fi
 
 			# Camera-specific settings file names are:
@@ -2133,7 +2147,7 @@ install_overlay()
 
 			exit_with_image 1 "${STATUS_ERROR}" "${M}."
 		fi
-		echo "${STATUS_NAME}='true'"  >> "${TEMP_STATUS_FILE}"
+		echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
 	done < "${ALLSKY_REPO}/requirements${R}.txt"
 
 	# Add the status back in.
@@ -2362,9 +2376,7 @@ exit_installation()
 
 
 
-####################### Main part of program
-
-OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
+############################################## Main part of program
 
 ##### Calculate whiptail sizes
 calc_wt_size

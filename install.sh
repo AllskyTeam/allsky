@@ -32,7 +32,7 @@ TITLE="Allsky Installer"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 SETTINGS_FILE_NAME="$(basename "${SETTINGS_FILE}")"
-FORCE_CREATING_SETTINGS_FILE="false"	# should a default settings file be created?
+FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"	# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
 RESTORED_PRIOR_CONFIG_SH="false"		# prior config.sh restored?
@@ -60,15 +60,20 @@ rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 # shellcheck disable=SC2034
 DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh.log"
 
+# Is a reboot needed at end of installation?
+REBOOT_NEEDED="true"
+
 # Holds status of installation if we need to exit and get back in.
 STATUS_FILE="${ALLSKY_INSTALLATION_LOGS}/status.txt"
 STATUS_FILE_TEMP="${ALLSKY_TMP}/temp_status.txt"	# holds intermediate status
 STATUS_LOCALE_REBOOT="Rebooting to change locale"	# status of rebooting due to locale change
+STATUS_FINISH_REBOOT="Rebooting to finish installation"
+STATUS_NO_FINISH_REBOOT="Did not reboot to finish installation"
+STATUS_NO_REBOOT="User elected not to reboot"
 STATUS_NO_LOCALE="Desired locale not found"			# exiting due to desired locale not installed
 STATUS_NO_CAMERA="No camera found"					# status of exiting due to no camera found
 STATUS_OK="OK"										# Installation was completed.
 STATUS_NOT_CONTINUE="User elected not to continue"	# Exiting, but not an error
-STATUS_NO_REBOOT="User elected not to reboot"
 STATUS_CLEAR="Clear"								# Clear the file
 STATUS_ERROR="Error encountered"
 STATUS_INT="Got interrupt"
@@ -163,14 +168,14 @@ stop_allsky()
 # Get the branch of the release we are installing;
 get_this_branch()
 {
-	STATUS_VARIABLES+=("get_this_branch='true'\n")
-	if ! B="$( git rev-parse --abbrev-ref HEAD )" ; then
+	if ! B="$( get_allsky_branch "${ALLSKY_HOME}" )" ; then
 		display_msg --log warning "Unable to determine branch; assuming '${BRANCH}'."
 	else
 		BRANCH="${B}"
 		display_msg --logonly info "Using the '${BRANCH}' branch."
 	fi
 
+	STATUS_VARIABLES+=("get_this_branch='true'\n")
 	STATUS_VARIABLES+=("BRANCH='${BRANCH}'\n")
 }
 
@@ -259,7 +264,7 @@ get_connected_cameras()
 		return
 	fi
 
-	STATUS_VARIABLES+=("get_connected_cameras='true'\n")
+	[[ ${get_connected_cameras} != "true" ]] && STATUS_VARIABLES+=("get_connected_cameras='true'\n")
 	# Either not set before or is different this time
 	CONNECTED_CAMERAS="${CC}"
 }
@@ -418,7 +423,7 @@ save_camera_capabilities()
 	# Create the camera type/model-specific options file and optionally a default settings file.
 	# --cameraTypeOnly tells makeChanges.sh to only change the camera info, then exit.
 	# It displays any error messages.
-	if [[ ${FORCE_CREATING_SETTINGS_FILE} == "true" ]]; then
+	if [[ ${FORCE_CREATING_DEFAULT_SETTINGS_FILE} == "true" ]]; then
 		FORCE="--force"
 		MSG=" and default settings"
 	else
@@ -433,8 +438,11 @@ save_camera_capabilities()
 		display_msg --log progress "Setting up WebUI options${MSG} for ${CAMERA_TYPE} cameras."
 	fi
 
-	# Restore the prior settings file so it can be used by makeChanges.sh.
+	# Restore the prior settings file or camera-specific settings file(s) so
+	# the appropriate one can be used by makeChanges.sh.
 	[[ ${PRIOR_ALLSKY} != "" ]] && restore_prior_settings_file
+
+	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
 	MSG="Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
 	MSG="${MSG}  ${DEBUG_ARG} 'cameraType' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
@@ -514,12 +522,12 @@ ask_reboot()
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
 		MSG="${MSG}You can then connect to the WebUI at:\n"
 		MSG="${MSG}${AT}"
-		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 	fi
 }
 do_reboot()
 {
-	exit_installation -1 "${1}"		# -1 means just log ending statement but don't exit.
+	exit_installation -1 "${1}" "${2}"		# -1 means just log ending statement but don't exit.
 	sudo reboot now
 }
 
@@ -937,7 +945,7 @@ check_old_WebUI_location()
 		local COUNT=$( find "${OLD_WEBUI_LOCATION}" | wc -l )
 		if [[ ${COUNT} -eq 1 ]]; then
 			# This is often true after a clean install of the OS.
-			sudo rm -f "${OLD_WEBUI_LOCATION}"
+			sudo rmdir "${OLD_WEBUI_LOCATION}"
 			display_msg --logonly info "Deleted empty '${OLD_WEBUI_LOCATION}'."
 		else
 			MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists"
@@ -1145,7 +1153,7 @@ get_desired_locale()
 			CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p')"
 		fi
 	fi
-	display_msg --logonly info "CURRENT_LOCALE=${CURRENT_LOCALE}, TEMP_LOCALE=${TEMP_LOCALE}"
+	display_msg --logonly info "CURRENT_LOCALE=${CURRENT_LOCALE}, TEMP_LOCALE=[[ ${TEMP_LOCALE} ]]"
 
 	local D=""
 	if [[ -n ${CURRENT_LOCALE} && ${CURRENT_LOCALE} != "null" ]]; then
@@ -1303,10 +1311,9 @@ does_prior_Allsky_exist()
 		[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
 	fi
 
-	MSG="PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
-	MSG="${MSG}\nPRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}"
-	MSG="${MSG}\nPRIOR_SETTINGS_FILE=${PRIOR_SETTINGS_FILE}"
-	display_msg "${LOG_TYPE}" info "${MSG}"
+	display_msg "${LOG_TYPE}" info "PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
+	display_msg "${LOG_TYPE}" info "PRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}"
+	display_msg "${LOG_TYPE}" info "PRIOR_SETTINGS_FILE=${PRIOR_SETTINGS_FILE}"
 
 	return 0
 }
@@ -1352,8 +1359,8 @@ prompt_for_prior_Allsky()
 	fi
 
 	# No prior Allsky so force creating a default settings file.
-	FORCE_CREATING_SETTINGS_FILE="true"
-	STATUS_VARIABLES+=("FORCE_CREATING_SETTINGS_FILE='${FORCE_CREATING_SETTINGS_FILE}'\n")
+	FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
+	STATUS_VARIABLES+=("FORCE_CREATING_DEFAULT_SETTINGS_FILE='${FORCE_CREATING_DEFAULT_SETTINGS_FILE}'\n")
 }
 
 
@@ -1610,6 +1617,9 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 ####
 # Restore the prior settings file(s) if the user wanted to use them.
+# For newStyle we restore all prior camera-specific file(s) and let makeChanges.sh create
+# the new settings file, linking it to the appropriate camera-specific file.
+# For oldStyle (which has no camera-specific file) we update the settings file if it currently exists.
 restore_prior_settings_file()
 {
 	[[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" ]] && return
@@ -1617,24 +1627,22 @@ restore_prior_settings_file()
 	local MSG NAME EXT FILES FIRST_ONE
 
 	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
-		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
+		if [[ ! -f ${PRIOR_SETTINGS_FILE} ]]; then
+			# This should "never" happen.
+			# Huh?  Their prior version is "new" but they don't have a settings file?
+			display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
+			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
+
+		else
+			# The prior settings file SHOULD be a link to a camera-specific file.
+			# Make sure that's true; if not, fix it.
 
 			MSG="Checking link for newStyle PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
 			display_msg --logonly info "${MSG}"
-
-			# The prior settings file SHOULD be a link to a camera-specific file.
-			# Make sure that's true; if not, fix it.
 			MSG="$( check_settings_link "${PRIOR_SETTINGS_FILE}" )"
-			RET=$?
-			if [[ ${RET} -ne 0 ]]; then
+			if [[ $? -eq "${EXIT_ERROR_STOP}" ]]; then
 				display_msg --log error "${MSG}"
-				if [[ ${RET} -eq "${EXIT_ERROR_STOP}" ]]; then
-					# If we can't process the PRIOR_SETTINGS_FILE we can't really continue.
-# TODO: Maybe we copy all the camera-specific files over and let makeChanges.sh create
-# the new settings file based on the camera-specific one, and let the user know to
-# check the settings since they may be old.
-					exit_installation 1 "${STATUS_ERROR}" "Unable to check prior settings file."
-				fi
+				FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 			fi
 
 			# Camera-specific settings file names are:
@@ -1649,17 +1657,18 @@ restore_prior_settings_file()
 			# There will be more than one camera-specific file if the user has multiple cameras.
 			FILES="$(find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}")"
 			if [[ -n ${FILES} ]]; then
-				RESTORED_PRIOR_SETTINGS_FILE="true"
 				FIRST_ONE="true"
 				echo "${FILES}" | while read -r F
 					do
 						if [[ ${FIRST_ONE} == "true" ]]; then
-							display_msg --log progress "Restoring settings files:"
+							display_msg --log progress "Restoring camera-specific settings files:"
 							FIRST_ONE="false"
 						fi
 						display_msg --log progress "\t$(basename "${F}")"
 						cp -a "${F}" "${ALLSKY_CONFIG}"
 					done
+				RESTORED_PRIOR_SETTINGS_FILE="true"
+				FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
 			else
 				# This shouldn't happen...
 				MSG="No prior camera-specific settings files found,"
@@ -1668,17 +1677,17 @@ restore_prior_settings_file()
 				if [[ ${PRIOR_CAMERA_TYPE} != "${CAMERA_TYPE}" ]]; then
 					MSG="${MSG}\nand unable to create one: new Camera Type"
 					MSG="${MSG} (${CAMERA_TYPE} different from prior type (${PRIOR_CAMERA_TYPE})."
+					FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 				else
 					local SPECIFIC="${NAME}_${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.${EXT}"
 					cp -a "${PRIOR_SETTINGS_FILE}" "${ALLSKY_CONFIG}/${SPECIFIC}"
 					MSG="${MSG}\nbut was able to create '${SPECIFIC}'."
+
+					RESTORED_PRIOR_SETTINGS_FILE="true"
+					FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
 				fi
 				display_msg --log warning "${MSG}"
 			fi
-		else
-			# This should "never" happen.
-			# Their prior version is "new" but they don't have a settings file?
-			display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
 		fi
 
 	else
@@ -1687,17 +1696,15 @@ restore_prior_settings_file()
 			# This should "never" happen.
 			# They have a prior Allsky version but no "settings file?
 			display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
-
-			# If we ever automate migrating settings, this next statement should be deleted.
-			FORCE_CREATING_SETTINGS_FILE="true"
+			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 
 		elif [[ -f ${SETTINGS_FILE} ]]; then
 			# Transfer prior settings to the new file.
+
 			case "${PRIOR_ALLSKY_VERSION}" in
 				"v2022.03.01")
 					convert_settings "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}" \
 						"${PRIOR_SETTINGS_FILE}" "${SETTINGS_FILE}"
-					RESTORED_PRIOR_SETTINGS_FILE="true"
 
 					MSG="Your old WebUI settings were transfered to the new release,"
 					MSG="${MSG}\n but note that there have been some changes to the settings file"
@@ -1713,7 +1720,7 @@ restore_prior_settings_file()
 					# so don't try to copy all the settings since there have
 					# been many changes, additions, and deletions.
 
-					# As far as I know, latitude and longitude have never changed names,
+					# As far as I know, latitude, longitude, and angle have never changed names,
 					# and are required and have no default,
 					# so try to restore them so Allsky can restart automatically.
 					local LAT="$(settings .latitude "${PRIOR_SETTINGS_FILE}")"
@@ -1729,18 +1736,22 @@ restore_prior_settings_file()
 					MSG="${MSG} since you last installed Allsky, so it will likely be easiest"
 					MSG="${MSG} to re-enter everything via the WebUI's 'Allsky Settings' page."
 					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-					display_msg --log info "\n${MSG}\n"
+					display_msg info "\n${MSG}\n"
 					echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+					display_msg --logonly info "Only a few settings from very old ${PRIOR_ALLSKY_VERSION} copied over."
 					;;
-
 			esac
+			# Set to null to force the user to look at the settings before Allsky will run.
+			update_json_file ".lastChanged" "" "${SETTINGS_FILE}"
+
+			RESTORED_PRIOR_SETTINGS_FILE="true"
+			FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
 		else
+			# First time through there often won't be SETTINGS_FILE.
 			display_msg --logonly info "No new settings file yet..."
+			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 		fi
 	fi
-
-	# Set to null to force the user to at least look at the settings before Allsky will run.
-	update_json_file ".lastChanged" "" "${SETTINGS_FILE}"
 
 	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
 }
@@ -2087,18 +2098,20 @@ do_update()
 # Install the overlay and modules system
 install_overlay()
 {
+	if [[ ${installing_PHP_modules} != "true" ]]; then
+		display_msg --log progress "Installing PHP modules."
+		TMP="${ALLSKY_INSTALLATION_LOGS}/PHP_modules.log"
+		sudo apt-get --assume-yes install php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
+		check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}"
+		[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
 
-	display_msg --log progress "Installing PHP Modules."
-	TMP="${ALLSKY_INSTALLATION_LOGS}/PHP_modules.log"
-	sudo apt-get --assume-yes install php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
-	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}"
-	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
-
-	display_msg --log progress "Installing other PHP dependencies."
-	TMP="${ALLSKY_INSTALLATION_LOGS}/libatlas.log"
-	sudo apt-get --assume-yes install libatlas-base-dev > "${TMP}" 2>&1
-	check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}"
-	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP dependencies failed."
+		display_msg --log progress "Installing other PHP dependencies."
+		TMP="${ALLSKY_INSTALLATION_LOGS}/libatlas.log"
+		sudo apt-get --assume-yes install libatlas-base-dev > "${TMP}" 2>&1
+		check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}"
+		[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP dependencies failed."
+		STATUS_VARIABLES+=( "installing_PHP_modules='true'\n" )
+	fi
 
 	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
 	# This also allows us to display progress messages.
@@ -2128,12 +2141,15 @@ install_overlay()
 			C="${COUNT}"
 		fi
 
-		display_msg --log progress "   === Package # ${C} of ${NUM}: [${package}]"
+		local PACKAGE="   === Package # ${C} of ${NUM}: [${package}]"
+		# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
 		local STATUS_NAME="Python_dependency_${COUNT}"
-		if [[ ${STATUS_NAME} == "true" ]]; then
-			display_msg --log info "Skipping - already installed in prior installation."
+		eval "STATUS_VALUE=\${${STATUS_NAME}}"
+		if [[ ${STATUS_VALUE} == "true" ]]; then
+			display_msg --log progress "${PACKAGE} - already installed."
 			continue
 		fi
+		display_msg --log progress "${PACKAGE}"
 
 		L="${TMP}.${COUNT}.log"
 		local M="Python dependency [${package}] failed"
@@ -2143,7 +2159,7 @@ install_overlay()
 			rm -fr "${PIP3_BUILD}"
 
 			# Add current status
-			update_status_from_file "${STATUS_FILE_TEMP}"
+			update_status_from_temp_file
 
 			exit_with_image 1 "${STATUS_ERROR}" "${M}."
 		fi
@@ -2151,7 +2167,7 @@ install_overlay()
 	done < "${ALLSKY_REPO}/requirements${R}.txt"
 
 	# Add the status back in.
-	update_status_from_file "${STATUS_FILE_TEMP}"
+	update_status_from_temp_file
 
 	if [[ ${installing_Trutype_fonts} != "true" ]]; then
 		display_msg --log progress "Installing Trutype fonts."
@@ -2159,13 +2175,13 @@ install_overlay()
 		local M="Trutype fonts failed"
 		sudo apt-get --assume-yes install msttcorefonts > "${TMP}" 2>&1
 		check_success $? "${M}" "${TMP}" "${DEBUG}" || exit_with_image 1 "${STATUS_ERROR}" "${M}"
-		STATUS_VARIABLES+=( "install_Trutype_fonts='true'\n" )
+		STATUS_VARIABLES+=( "installing_Trutype_fonts='true'\n" )
 	else
 		display_msg --logonly info "Skipping: Installing Trutype fonts - already installed"
 	fi
 
 	# Do the rest, even if we already did it in a previous installation,
-	# in case something in the directories.
+	# in case something in the directories changed.
 
 	display_msg --log progress "Setting up modules and overlays."
 	# These will get overwritten if the user has prior versions.
@@ -2244,8 +2260,9 @@ exit_with_image()
 {
 	local RET="${1}"
 	local STATUS="${2}"
+	local MORE_STATUS="${2}"
 	display_image "InstallationFailed"
-	exit_installation "${RET}" "${STATUS}"
+	exit_installation "${RET}" "${STATUS}" "${MORE_STATUS}"
 }
 
 
@@ -2255,7 +2272,7 @@ check_restored_settings()
 	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" && \
 	  	${RESTORED_PRIOR_CONFIG_SH} == "true" && \
 	  	${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
-		# If we restored all the prior settings so no configuration is needed.
+		# If we restored all the prior settings no configuration is needed.
 		if [[ ${WILL_REBOOT} == "true" ]]; then
 			IMG=""					# Removes existing image
 		else
@@ -2317,7 +2334,7 @@ remind_old_version()
 {
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
 		MSG="When you are sure everything is working with the new Allsky release,"
-		MSG="${MSG} remove your old version in ${PRIOR_ALLSKY_DIR} to save disk space."
+		MSG="${MSG} remove your old version in '${PRIOR_ALLSKY_DIR}' to save disk space."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	fi
 }
@@ -2327,8 +2344,8 @@ remind_old_version()
 remind_run_check_allsky()
 {
 	MSG="After you've configured Allsky, run:"
-	MSG="${MSG}\n   cd ~/allsky;  scripts/check_allsky.sh"
-	MSG="${MSG}\nto check for any issues.  You can also run it whenever you make changes."
+	MSG="${MSG}\n\n   cd ~/allsky;  scripts/check_allsky.sh"
+	MSG="${MSG}\n\nto check for any issues.  You can also run it whenever you make changes."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	display_msg --logonly info "Displayed message about running 'check_allsky.sh'."
 }
@@ -2339,15 +2356,15 @@ clear_status()
 	rm -f "${STATUS_FILE}"
 }
 
-# Update the status from the specified file
-update_status_from_file()
+# Update the status from the specified file.
+# It's ok if the file doesn't exist.
+update_status_from_temp_file()
 {
-	local FILE="${1}"
-	if [[ -s ${FILE} ]]; then
-		STATUS_VARIABLES+=( "$( < "${FILE}" )" )
+	if [[ -s ${STATUS_FILE_TEMP} ]]; then
+		STATUS_VARIABLES+=( "$( < "${STATUS_FILE_TEMP}" )" )
 		STATUS_VARIABLES+=("\n")
+		rm -f "${STATUS_FILE_TEMP}"
 	fi
-	rm -f "${FILE}"
 }
 
 ####
@@ -2365,7 +2382,17 @@ exit_installation()
 		else
 			[[ -n ${MORE_STATUS} ]] && MORE_STATUS="; MORE_STATUS='${MORE_STATUS}'"
 			echo -e "STATUS_INSTALLATION='${STATUS_CODE}'${MORE_STATUS}" > "${STATUS_FILE}"
+			update_status_from_temp_file
 			echo -e "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"
+
+			# If the user needs to reboot, save the current uptime-since
+			# so we can check it when Allsky starts.  If it's the same value
+			# the user did not reboot.
+			# If the time is different the user rebooted.
+			if [[ ${STATUS_CODE} == "${STATUS_NO_FINISH_REBOOT}" ||
+				  ${STATUS_CODE} == "${STATUS_NO_REBOOT}" ]]; then
+				echo "$( uptime --since )" > "${ALLSKY_UPTIME_SINCE}"
+			fi
 		fi
 	fi
 
@@ -2490,6 +2517,30 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 			display_msg --log progress "Not continuing after prior successful installation."
 			exit_installation 0 ""
 		fi
+	elif [[ ${STATUS_INSTALLATION} == "${STATUS_NO_FINISH_REBOOT}" ]]; then
+
+# TODO: can we verify automatically if they rebooted?
+		MSG="The installation completed successfully but the following needs to happen"
+		MSG="${MSG} before Allsky is ready to run:"
+		MSG2="\n\n    1. Verify your settings in the WebUi's 'Allsky Settings' page."
+		MSG2="${MSG2}\n    2. Reboot the Pi."
+		MSG3="\n\nHave you already performed those steps?"
+		if whiptail --title "${TITLE}" --yesno "${MSG}${MSG2}${MSG3}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+			MSG="\nCongratulations, you successfully installed Allsky version ${ALLSKY_VERSION}!"
+			MSG="${MSG}\nAllsky is starting.  Look in the 'Live View' page of the WebUI to ensure"
+			MSG="${MSG}\nimages are being taken.\n"
+			display_msg --log progress "${MSG}"
+			sudo systemctl start allsky
+
+			# Update status
+			sed -i \
+				-e "s/${STATUS_NO_FINISH_REBOOT}/${STATUS_OK}/" \
+				-e "s/MORE_STATUS.*//" \
+					"${STATUS_FILE}"
+		else
+			display_msg --log info "\nPlease perform the following steps:${MSG2}\n"
+		fi
+		exit_installation 0 "" ""
 	else
 		MSG="You have already begun the installation."
 		MSG="${MSG}\n\nThe last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
@@ -2575,7 +2626,7 @@ display_image "InstallationInProgress"
 [[ ${prompt_for_hostname} != "true" ]] && prompt_for_hostname
 
 ##### Check for sufficient swap space
-[[ ${check_swap} == "true" ]] && check_swap
+[[ ${check_swap} != "true" ]] && check_swap
 
 ##### Optionally make ${ALLSKY_TMP} a memory filesystem
 [[ ${check_tmp} != "true" ]] && check_tmp
@@ -2599,7 +2650,7 @@ display_msg notice "${MSG}"
 ##### Create the file that defines the WebUI variables.
 [[ ${create_webui_defines} != "true" ]] && create_webui_defines
 
-##### Create the camera type-model-specific "options" file
+##### Create the camera type/model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
 if [[ ${save_camera_capabilities} != "true" ]]; then
 	save_camera_capabilities "false"		# prompts on error only
@@ -2634,7 +2685,7 @@ set_permissions
 check_old_WebUI_location									# prompt if prior old-style WebUI
 
 ##### See if we should reboot when installation is done.
-ask_reboot "full"											# prompts
+[[ ${REBOOT_NEEDED} == "true" ]] && ask_reboot "full"											# prompts
 
 ##### Display any necessary messaged about restored / not restored settings
 # Re-run every time to possibly remind them to update their settings.
@@ -2642,7 +2693,7 @@ check_restored_settings
 
 ##### If using ZWO, prompt if the New Exposure Algorithm should be used.
 # TODO: remove check_new_exposure_algorithm() when it's the default.
-[[ ${CAMERA_TYPE} == "ZWO" && ${check_new_exposure_algorith} != "true" ]] && check_new_exposure_algorithm
+[[ ${CAMERA_TYPE} == "ZWO" && ${check_new_exposure_algorithm} != "true" ]] && check_new_exposure_algorithm
 
 ##### Let the user know to run check_allsky.sh.
 remind_run_check_allsky
@@ -2653,6 +2704,10 @@ remind_old_version
 
 ######## All done
 
-[[ ${WILL_REBOOT} == "true" ]] && do_reboot		# does not return
+[[ ${WILL_REBOOT} == "true" ]] && do_reboot "${STATUS_FINISH_REBOOT}" ""		# does not return
 
-exit_installation 0 "${STATUS_OK}" "Installation succeeded."
+if [[ ${REBOOT_NEEDED} == "true" ]]; then
+	exit_installation 0 "${STATUS_NO_FINISH_REBOOT}" ""
+else
+	exit_installation 0 "${STATUS_OK}" ""
+fi

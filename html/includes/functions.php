@@ -102,7 +102,7 @@ function initialize_variables() {
 	$darkframe = $settings_array['takeDarkFrames'];
 	$useLogin = getVariableOrDefault($settings_array, 'useLogin', true);
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
-	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, null);
+	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
 	$websiteURL = getVariableOrDefault($settings_array, 'websiteurl', "");
 
 
@@ -186,7 +186,7 @@ function check_if_configured($page, $calledFrom) {
 	if ($calledFrom === "main" && $page === "configuration")
 		return;
 
-	if ($lastChanged === null || $lastChanged === "") {
+	if ($lastChanged === "") {
 		// The settings aren't configured - probably right after an installation.
 		if ($page === "configuration")
 			$m = "";

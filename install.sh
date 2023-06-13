@@ -2391,7 +2391,7 @@ exit_installation()
 			# If the time is different the user rebooted.
 			if [[ ${STATUS_CODE} == "${STATUS_NO_FINISH_REBOOT}" ||
 				  ${STATUS_CODE} == "${STATUS_NO_REBOOT}" ]]; then
-				echo "$( uptime --since )" > "${ALLSKY_UPTIME_SINCE}"
+				uptime --since > "${ALLSKY_UPTIME_SINCE}"
 			fi
 		fi
 	fi

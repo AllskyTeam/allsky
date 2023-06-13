@@ -445,8 +445,7 @@ function settings()
 		return 0
 	fi
 
-	echo "${M}: Unable to get json value for '${FIELD}'." >&2
-	ls -l "${FILE}" >&2
+	echo "${M}: Unable to get json value for '${FIELD}' in '${FILE}." >&2
 	
 	return 2
 }

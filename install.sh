@@ -214,7 +214,7 @@ CAMERA_to_CAMERA_TYPE()
 		echo "RPi"
 	else
 		display_msg --log error "Unknown CAMERA: '${CAMERA}'"
-		exit_installation 1 "${STATUS_CLEAR}" "unknown CAMERA_TYPE: '${CAMERA_TYPE}'"
+		exit_installation 1 "${STATUS_CLEAR}" "unknown CAMERA: '${CAMERA}'"
 	fi
 }
 

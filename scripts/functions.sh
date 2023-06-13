@@ -741,17 +741,18 @@ function make_thumbnail()
 
 #####
 # Check if the user was supposed to reboot, and if so, if they did.
-check_for_reboot()
+# Return 0 if a reboot is needed.
+reboot_needed()
 {
-	[[ ! -f ${ALLSKY_UPTIME_SINCE} ]] && return 0
+	[[ ! -f ${ALLSKY_UPTIME_SINCE} ]] && return 1
 
 	# The file exists so they were supposed to reboot.
 	BEFORE="$( < "${ALLSKY_UPTIME_SINCE}" )"
 	NOW="$( uptime --since )"
 	if [[ ${BEFORE} == "${NOW}" ]]; then
-		return 1
+		return 0
 	else
 		rm -f "${ALLSKY_UPTIME_SINCE}"		# different times so they rebooted
-		return 0
+		return 1
 	fi
 }

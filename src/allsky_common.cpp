@@ -1831,7 +1831,7 @@ else if (strcmp(a, "meanthreshold") == 0)	// TODO:  xxxxx delete in next release
 		}
 		else if (strcmp(a, "consistentdelays") == 0)
 		{
-       		cg->consistentDelays = getBoolean(argv[++i]);
+	   		cg->consistentDelays = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "latitude") == 0)
 		{

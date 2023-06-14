@@ -123,8 +123,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Holds all the Allsky documentation.
 	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/documentation"
 
-	# When the Pi was last rebooted
-	ALLSKY_UPTIME_SINCE="${ALLSKY_CONFIG}/uptime_since.txt"
+	# When the Pi was last rebooted.  If the file exists a reboot is needed.
+	# Put in ALLSKY_TMP so it'll be removed upon reboot.
+	ALLSKY_REBOOT_NEEDED="${ALLSKY_TMP}/reboot_needed.txt"
 
 	# Log files for main Allsky and modules
 	ALLSKY_LOG="/var/log/allsky.log"

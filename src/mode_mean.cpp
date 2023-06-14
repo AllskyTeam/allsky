@@ -58,14 +58,15 @@ bool aegInit(config cg,
 
 		// XXXXXX    Does this need to be done every transition between day and night,
 		// or just once when Allsky starts?
-		// first exposure with currentRaspistillSetting.shutter_us, so we have to calculate the startpoint for ExposureLevel
+		// first exposure with currentRaspistillSetting.shutter_us,
+		// so we have to calculate the startpoint for ExposureLevel
 		initialExposureLevel = calcExposureLevel(cg.currentExposure_us, cg.currentGain, currentModeMeanSetting) - 1;
 		currentModeMeanSetting.exposureLevel = initialExposureLevel;
 		currentRaspistillSetting.shutter_us = cg.currentExposure_us;
 
 		for (int i=0; i < currentModeMeanSetting.historySize; i++) {
 			// Pretend like all prior images had the target mean and initial exposure level.
-			meanHistory[i] = currentModeMeanSetting.meanValue;
+			meanHistory[i] = cg.myModeMeanSetting.currentMean;
 			exposureLevelHistory[i] = initialExposureLevel;
 		}
 	}
@@ -199,7 +200,7 @@ void aegGetNextExposureSettings(config * cg,
 
 	Log(3, "  > Got:    shutter_us: %s, gain: %1.3f, mean: %1.3f, target mean: %1.3f, diff (target - mean): %'1.3f\n",
 		length_in_units(currentRaspistillSetting.shutter_us, true), cg->lastGain, cg->lastMean,
-		currentModeMeanSetting.meanValue, (currentModeMeanSetting.meanValue - cg->lastMean));
+		cg->myModeMeanSetting.currentMean, (cg->myModeMeanSetting.currentMean - cg->lastMean));
 
 	meanHistory[MeanCnt % currentModeMeanSetting.historySize] = cg->lastMean;
 
@@ -231,15 +232,15 @@ void aegGetNextExposureSettings(config * cg,
 	// same value as current value
 	newMean += mean_forecast * currentModeMeanSetting.historySize;
 	newMean /= (double) values;
-	mean_diff = abs(newMean - currentModeMeanSetting.meanValue);
+	mean_diff = abs(newMean - cg->myModeMeanSetting.currentMean);
 	Log(3, "  > New mean target: %1.3f, mean_forecast: %1.3f, mean_diff (newMean - target mean): %'1.3f, idx=%d, idxN1=%d\n",
 		newMean, mean_forecast, mean_diff, idx, idxN1);
 
 	int ExposureChange;
 
-	double const multiplier1 = 1.5;			// xxxx was 2.0
+	double const multiplier1 = 1.75;			// xxxx was 2.0
 	double const multiplier2 = 1.25;
-	double meanDiff = abs(cg->lastMean - currentModeMeanSetting.meanValue);	// xxx was = mean_diff
+	double meanDiff = abs(cg->lastMean - cg->myModeMeanSetting.currentMean);	// xxx was = mean_diff
 
 	// fast forward
 	if (fastforward || meanDiff > (currentModeMeanSetting.mean_threshold * multiplier1)) {
@@ -276,7 +277,7 @@ void aegGetNextExposureSettings(config * cg,
 	// If the last image's mean was good, no changes are needed to the next one.
 // TODO: make mean_threshold a percent instead of an actual value.  This will allow us to use 0 to 100 for what user enters as mean.
 
-	if (cg->lastMean < (currentModeMeanSetting.meanValue - currentModeMeanSetting.mean_threshold)) {
+	if (cg->lastMean < (cg->myModeMeanSetting.currentMean - currentModeMeanSetting.mean_threshold)) {
 		// mean too low
 		if ((currentRaspistillSetting.analoggain < currentModeMeanSetting.maxGain)
 		 || (currentRaspistillSetting.shutter_us < currentModeMeanSetting.maxExposure_us)) {
@@ -290,7 +291,7 @@ void aegGetNextExposureSettings(config * cg,
 				currentModeMeanSetting.maxGain, length_in_units(currentModeMeanSetting.maxExposure_us, true));
 		}
 	}
-	else if (cg->lastMean > (currentModeMeanSetting.meanValue + currentModeMeanSetting.mean_threshold))  {
+	else if (cg->lastMean > (cg->myModeMeanSetting.currentMean + currentModeMeanSetting.mean_threshold))  {
 		// mean too high
 		if ((currentRaspistillSetting.analoggain > currentModeMeanSetting.minGain)
 		 || (lastExposureTime_us > currentModeMeanSetting.minExposure_us)) {
@@ -306,7 +307,7 @@ void aegGetNextExposureSettings(config * cg,
 	}
 	else {
 		Log(3, "  > ++++++++++ Prior image mean good - no changes needed, mean=%1.3f, target mean=%1.3f threshold=%1.3f\n",
-			cg->lastMean, currentModeMeanSetting.meanValue, currentModeMeanSetting.mean_threshold);
+			cg->lastMean, cg->myModeMeanSetting.currentMean, currentModeMeanSetting.mean_threshold);
 		cg->goodLastExposure = true;
 	}
 
@@ -322,8 +323,8 @@ void aegGetNextExposureSettings(config * cg,
 		Log(4, "  > FF activated\n");
 	}
 	if (fastforward &&
-		(abs(meanHistory[idx] - currentModeMeanSetting.meanValue) < currentModeMeanSetting.mean_threshold) &&
-		(abs(meanHistory[idxN1] - currentModeMeanSetting.meanValue) < currentModeMeanSetting.mean_threshold)) {
+		(abs(meanHistory[idx] - cg->myModeMeanSetting.currentMean) < currentModeMeanSetting.mean_threshold) &&
+		(abs(meanHistory[idxN1] - cg->myModeMeanSetting.currentMean) < currentModeMeanSetting.mean_threshold)) {
 		fastforward = false;
 		Log(4, "  > FF deactivated\n");
 	}

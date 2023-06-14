@@ -76,7 +76,7 @@ source "${ALLSKY_CONFIG}/config.sh"	 					|| exit ${ALLSKY_ERROR_STOP}
 source "${ALLSKY_CONFIG}/ftp-settings.sh" 				|| exit ${ALLSKY_ERROR_STOP}
 PROTOCOL="${PROTOCOL,,}"	# set to lowercase to make comparing easier
 
-BRANCH="$( get_allsky_branch "${ALLSKY_HOME}" )"
+BRANCH="$( get_branch )"
 [[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 [[ ${DEBUG} == "true" ]] && echo "DEBUG: using '${BRANCH}' branch."
 

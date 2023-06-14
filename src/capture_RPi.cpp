@@ -539,9 +539,6 @@ myModeMeanSetting.dayMean = CG.myModeMeanSetting.dayMean;
 myModeMeanSetting.nightMean = CG.myModeMeanSetting.nightMean;
 myModeMeanSetting.dayMean_threshold = CG.myModeMeanSetting.dayMean_threshold;
 myModeMeanSetting.nightMean_threshold = CG.myModeMeanSetting.nightMean_threshold;
-myModeMeanSetting.mean_p0 = CG.myModeMeanSetting.mean_p0;
-myModeMeanSetting.mean_p1 = CG.myModeMeanSetting.mean_p1;
-myModeMeanSetting.mean_p2 = CG.myModeMeanSetting.mean_p2;
 
 	displaySettings(CG);
 

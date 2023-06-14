@@ -357,13 +357,15 @@ int RPicapture(config cg, cv::Mat *image)
 		{
 			*image = cv::imread(cg.fullFilename, cv::IMREAD_UNCHANGED);
 			if (! image->data) {
-				Log(1, "WARNING: Error re-reading file '%s'; skipping further processing.\n", basename(cg.fullFilename));
+				Log(1, "*** %s: WARNING: Error re-reading file '%s'; skipping further processing.\n",
+					cg.ME, basename(cg.fullFilename));
 			}
 		}
 	}
 	else if (! WIFSIGNALED(ret))
 	{
-		Log(1, " >>> WARNING: Unable to take picture, return code=0x%0x (%d)\n", ret, ret >> 8);
+		Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x (%d)\n",
+			cg.ME, ret, ret >> 8);
 		Log(3, "     Executed: %s\n", cmd);
 	}	// don't display message if we got a signal - that's done elsewhere.
 
@@ -381,7 +383,7 @@ int main(int argc, char *argv[])
 	static char *a = getenv("ALLSKY_HOME");		// This must come before anything else
 	if (a == NULL)
 	{
-		Log(0, "%s: ERROR: ALLSKY_HOME not set!\n", CG.ME);
+		Log(0, "*** %s: ERROR: ALLSKY_HOME not set!\n", CG.ME);
 		exit(EXIT_ERROR_STOP);
 	}
 	else
@@ -439,13 +441,13 @@ int main(int argc, char *argv[])
 	asiRetCode = ASIGetCameraProperty(&ASICameraInfo, CG.cameraNumber);
 	if (asiRetCode != ASI_SUCCESS)
 	{
-		Log(0, "ERROR: ASIGetCamerProperty() returned: %s\n", getRetCode(asiRetCode));
+		Log(0, "*** %s: ERROR: ASIGetCamerProperty() returned: %s\n", CG.ME, getRetCode(asiRetCode));
 		exit(EXIT_ERROR_STOP);
 	}
 	asiRetCode = ASIGetNumOfControls(CG.cameraNumber, &iNumOfCtrl);
 	if (asiRetCode != ASI_SUCCESS)
 	{
-		Log(0, "ERROR: ASIGetNumOfControls() returned: %s\n", getRetCode(asiRetCode));
+		Log(0, "*** %s: ERROR: ASIGetNumOfControls() returned: %s\n", CG.ME, getRetCode(asiRetCode));
 		exit(EXIT_ERROR_STOP);
 	}
 
@@ -525,7 +527,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		Log(0, "*** ERROR: Unknown Image Type: %d\n", CG.imageType);
+		Log(0, "*** %s: ERROR: Unknown Image Type: %d\n", CG.ME, CG.imageType);
 		exit(EXIT_ERROR_STOP);
 	}
 
@@ -533,12 +535,14 @@ int main(int argc, char *argv[])
 	//-------------------------------------------------------------------------------------------------------
 
 // TODO: after merging myModeMeanSetting into CG.myModeMeanSetting, delete these lines.
-	myModeMeanSetting.dayMean = CG.myModeMeanSetting.dayMean;
-	myModeMeanSetting.nightMean = CG.myModeMeanSetting.nightMean;
-	myModeMeanSetting.mean_threshold = CG.myModeMeanSetting.mean_threshold;
-	myModeMeanSetting.mean_p0 = CG.myModeMeanSetting.mean_p0;
-	myModeMeanSetting.mean_p1 = CG.myModeMeanSetting.mean_p1;
-	myModeMeanSetting.mean_p2 = CG.myModeMeanSetting.mean_p2;
+myModeMeanSetting.dayMean = CG.myModeMeanSetting.dayMean;
+myModeMeanSetting.nightMean = CG.myModeMeanSetting.nightMean;
+myModeMeanSetting.mean_threshold = CG.myModeMeanSetting.mean_threshold;	// xxxxxx TODO: old name
+myModeMeanSetting.dayMean_threshold = CG.myModeMeanSetting.dayMean_threshold;
+myModeMeanSetting.nightMean_threshold = CG.myModeMeanSetting.nightMean_threshold;
+myModeMeanSetting.mean_p0 = CG.myModeMeanSetting.mean_p0;
+myModeMeanSetting.mean_p1 = CG.myModeMeanSetting.mean_p1;
+myModeMeanSetting.mean_p2 = CG.myModeMeanSetting.mean_p2;
 
 	displaySettings(CG);
 
@@ -577,9 +581,11 @@ int main(int argc, char *argv[])
 			CG.currentDelay_ms = CG.nightDelay_ms;
 			CG.currentBin = CG.nightBin;
 			CG.currentGain = CG.nightGain;
-			CG.currentMaxAutoGain = CG.nightMaxAutoGain;		// not needed since we're not using auto gain, but set to be consistent
+			// not needed since we're not using auto gain, but set to be consistent
+			CG.currentMaxAutoGain = CG.nightMaxAutoGain;
 			CG.currentAutoGain = false;
 			CG.myModeMeanSetting.currentMean = NOT_SET;
+			CG.myModeMeanSetting.currentMean_threshold = NOT_SET;
 			if (CG.isCooledCamera)
 			{
 				CG.currentEnableCooler = CG.nightEnableCooler;
@@ -636,6 +642,7 @@ int main(int argc, char *argv[])
 			CG.currentMaxAutoGain = CG.dayMaxAutoGain;
 			CG.currentAutoGain = CG.dayAutoGain;
 			CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.dayMean;
+			CG.myModeMeanSetting.currentMean_threshold = CG.myModeMeanSetting.dayMean_threshold;
 			if (CG.isCooledCamera)
 			{
 				CG.currentEnableCooler = CG.dayEnableCooler;
@@ -678,6 +685,7 @@ int main(int argc, char *argv[])
 			CG.currentMaxAutoGain = CG.nightMaxAutoGain;
 			CG.currentAutoGain = CG.nightAutoGain;
 			CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.nightMean;
+			CG.myModeMeanSetting.currentMean_threshold = CG.myModeMeanSetting.nightMean_threshold;
 			if (CG.isCooledCamera)
 			{
 				CG.currentEnableCooler = CG.nightEnableCooler;
@@ -691,7 +699,7 @@ int main(int argc, char *argv[])
 		if (CG.myModeMeanSetting.currentMean > 0.0)
 		{
 			CG.myModeMeanSetting.modeMean = true;
-			myModeMeanSetting.meanValue = CG.myModeMeanSetting.currentMean;
+			myModeMeanSetting.meanValue = CG.myModeMeanSetting.currentMean;	// xxx meanValue is old name
 			if (! aegInit(CG, myRaspistillSetting, myModeMeanSetting))
 			{
 				closeUp(EXIT_ERROR_STOP);
@@ -802,7 +810,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 
 						if (CG.lastMean == -1)
 						{
-							Log(-1, "ERROR: aegCalcMean() returned mean of -1.\n");
+							Log(-1, "*** %s: ERROR: aegCalcMean() returned mean of -1.\n", CG.ME);
 							Log(2, "  > Sleeping from failed exposure: %.1f seconds\n", (float)CG.currentDelay_ms / MS_IN_SEC);
 							usleep(CG.currentDelay_ms * US_IN_MS);
 							continue;
@@ -838,7 +846,8 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					// Do not save this frame or sleep after it.
 					// We just started taking images so no need to check if DAY or NIGHT changed
 					if (remove(CG.fullFilename) != 0)
-						Log(0, "ERROR: Unable to remove '%s': %s\n", CG.fullFilename, strerror(errno));
+						Log(0, "*** %s: ERROR: Unable to remove '%s': %s\n",
+							CG.ME, CG.fullFilename, strerror(errno));
 					continue;
 				}
 				else
@@ -869,7 +878,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					numErrors++;
 					if (numErrors >= maxErrors)
 					{
-						Log(0, "*** ERROR: maximum number of consecutive errors of %d reached; capture program stopped.\n", maxErrors);
+						Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped.\n", CG.ME, maxErrors);
 						Log(0, "Make sure cable between camera and Pi is all the way in.\n");
 						closeUp(EXIT_ERROR_STOP);
 					}

@@ -43,7 +43,7 @@ struct modeMeanSetting {
 	double maxGain				= NOT_SET;	// Set during initialization.
 	long maxExposure_us			= NOT_SET;	// Set during initialization.
 	long minExposure_us			= NOT_SET;	// Set during initialization.
-	double meanValue			= NOT_SET;	// Default mean value for well exposed images.
+	double meanValue			= NOT_SET;	// TODO: xxx will remove in next version
 
 	// Default mean value for daytime and nighttime images.  User can change.
 	double dayMean				= DEFAULT_DAYMEAN_RPi;
@@ -52,7 +52,7 @@ struct modeMeanSetting {
 	// Default threshold values for daytime and nighttime.  User can change.
 	double dayMean_threshold	= DEFAULT_DAYMEAN_THRESHOLD_RPi;
 	double nightMean_threshold	= DEFAULT_NIGHTMEAN_THRESHOLD_RPi;
-	double mean_threshold		= DEFAULT_DAYMEAN_THRESHOLD_RPi; // TODO: only use day and night
+	double mean_threshold		= DEFAULT_DAYMEAN_THRESHOLD_RPi; // TODO: xxx will remove in next version
 
 	double const shuttersteps	= 6.0;		// shuttersteps
 	int const historySize		= 3;		// Number of last images for mean target calculation.

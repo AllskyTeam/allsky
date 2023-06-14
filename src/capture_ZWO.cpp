@@ -79,7 +79,8 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 		ret = ASIGetControlCaps(camNum, i, &ControlCaps);
 		if (ret != ASI_SUCCESS)
 		{
-			Log(-1, "WARNING: ASIGetControlCaps() for control %d failed: %s, camNum=%d, iNumOfCtrl=%d, control=%d\n", i, getRetCode(ret), camNum, iNumOfCtrl, (int) control);
+			Log(-1, "*** %s: WARNING: ASIGetControlCaps() for control %d failed: %s, camNum=%d, iNumOfCtrl=%d, control=%d\n",
+				CG.ME, i, getRetCode(ret), camNum, iNumOfCtrl, (int) control);
 			return(ret);
 		}
 
@@ -89,26 +90,31 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 			{
 				if (value > ControlCaps.MaxValue)
 				{
-					Log(1, "WARNING: Value of %ld greater than max value allowed (%ld) for control '%s' (#%d).\n", value, ControlCaps.MaxValue, ControlCaps.Name, ControlCaps.ControlType);
+					Log(1, "*** %s: WARNING: Value of %ld greater than max value allowed (%ld) for control '%s' (#%d).\n",
+						CG.ME, value, ControlCaps.MaxValue, ControlCaps.Name, ControlCaps.ControlType);
 					value = ControlCaps.MaxValue;
 				} else if (value < ControlCaps.MinValue)
 				{
-					Log(1, "WARNING: Value of %ld less than min value allowed (%ld) for control '%s' (#%d).\n", value, ControlCaps.MinValue, ControlCaps.Name, ControlCaps.ControlType);
+					Log(1, "*** %s: WARNING: Value of %ld less than min value allowed (%ld) for control '%s' (#%d).\n",
+						CG.ME, value, ControlCaps.MinValue, ControlCaps.Name, ControlCaps.ControlType);
 					value = ControlCaps.MinValue;
 				}
 			 	if (makeAuto == ASI_TRUE && ControlCaps.IsAutoSupported == ASI_FALSE)
 				{
-					Log(1, "WARNING: control '%s' (#%d) doesn't support auto mode.\n", ControlCaps.Name, ControlCaps.ControlType);
+					Log(1, "*** %s: WARNING: control '%s' (#%d) doesn't support auto mode.\n",
+						CG.ME, ControlCaps.Name, ControlCaps.ControlType);
 					makeAuto = ASI_FALSE;
 				}
 				ret = ASISetControlValue(camNum, control, value, makeAuto);
 				if (ret != ASI_SUCCESS)
 				{
-					Log(-1, "WARNING: ASISetControlCaps() for control %d, value=%ld failed: %s\n", control, value, getRetCode(ret));
+					Log(-1, "*** %s: WARNING: ASISetControlCaps() for control %d, value=%ld failed: %s\n",
+						CG.ME, control, value, getRetCode(ret));
 					return(ret);
 				}
 			} else {
-				Log(0, "ERROR: ControlCap: '%s' (#%d) not writable; not setting to %ld.\n", ControlCaps.Name, ControlCaps.ControlType, value);
+				Log(0, "*** %s: ERROR: ControlCap: '%s' (#%d) not writable; not setting to %ld.\n",
+						CG.ME, ControlCaps.Name, ControlCaps.ControlType, value);
 				ret = ASI_ERROR_INVALID_MODE;	// this seemed like the closest error
 			}
 			return ret;
@@ -177,14 +183,14 @@ void *SaveImgThd(void *para)
 			}
 			catch (const cv::Exception& ex)
 			{
-				Log(0, "*** ERROR: Exception saving image: %s\n", ex.what());
+				Log(0, "*** %s: ERROR: Exception saving image: %s\n", CG.ME, ex.what());
 			}
 			et = std::chrono::high_resolution_clock::now();
 
 			if (result)
 				system(cmd);
 			else
-				Log(0, "*** ERROR: Unable to save image '%s'.\n", CG.fullFilename);
+				Log(0, "*** %s: ERROR: Unable to save image '%s'.\n", CG.ME, CG.fullFilename);
 
 		} else {
 			// This can happen if the program is closed before the first picture.
@@ -333,7 +339,7 @@ void flushBufferedImages(config *cg, void *buf, size_t size)
 		}
 		else if (status != ASI_ERROR_TIMEOUT)
 		{
-			Log(0, "ERROR: flushBufferedImages() got %s\n", getRetCode(status));
+			Log(0, "*** %s: ERROR: flushBufferedImages() got %s\n", cg->ME, getRetCode(status));
 		}
 		// TODO: in theory if status == ASI_ERROR_TIMEOUT we could stop.
 	}
@@ -374,7 +380,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 
 	// Sanity check.
 	if (cg->HB.useHistogram && cg->currentAutoExposure == ASI_TRUE)
-		Log(0, "=== ERROR: HB.useHistogram AND currentAutoExposure are both set\n");
+		Log(0, "*** %s: ERROR: HB.useHistogram AND currentAutoExposure are both set\n", cg->ME);
 
 	setControl(cg->cameraNumber, ASI_EXPOSURE, cg->currentExposure_us, cg->currentAutoExposure ? ASI_TRUE : ASI_FALSE);
 
@@ -399,7 +405,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 				ret = ASIStopVideoCapture(cg->cameraNumber);
 				if (ret != ASI_SUCCESS)
 				{
-					Log(1, "  > WARNING: ASIStopVideoCapture() failed: %s\n", getRetCode(ret));
+					Log(1, "  > %s: WARNING: ASIStopVideoCapture() failed: %s\n", cg->ME, getRetCode(ret));
 				}
 			}
 		}
@@ -407,7 +413,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		if (status != ASI_SUCCESS)
 		{
 			int exitCode;
-			Log(0, "  > ERROR: Failed getting image: %s\n", getRetCode(status));
+			Log(0, "  > %s: ERROR: Failed getting image: %s\n", cg->ME, getRetCode(status));
 
 			// Check if we reached the maximum number of consective errors
 			if (! checkMaxErrors(&exitCode, maxErrors))
@@ -471,7 +477,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			ret = ASIGetControlValue(cg->cameraNumber, ASI_GAIN, &l, &bAuto);
 			if (ret != ASI_SUCCESS)
 			{
-				Log(1, "  > WARNING: ASIGetControlValue(ASI_GAIN) failed: %s\n", getRetCode(ret));
+				Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_GAIN) failed: %s\n", cg->ME, getRetCode(ret));
 			}
 			cg->lastGain = (double) l;
 
@@ -497,7 +503,7 @@ cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
 			ret = ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &suggestedNextExposure_us, &wasAutoExposure);
 			if (ret != ASI_SUCCESS)
 			{
-				Log(1, "  > WARNING: ASIGetControlValue(ASI_EXPOSURE) failed: %s\n", getRetCode(ret));
+				Log(1, "  > WARNING: ASIGetControlValue(ASI_EXPOSURE) failed: %s\n", cg->ME, getRetCode(ret));
 			}
 			Log(2, "  > GOT IMAGE%s.", tb);
 			Log(3, cg->HB.useHistogram ? " Ignoring suggested next exposure of %s." : "  Suggested next exposure: %s.",
@@ -508,7 +514,7 @@ cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
 			ret = ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &temp, &bAuto);
 			if (ret != ASI_SUCCESS)
 			{
-				Log(1, "  > WARNING: ASIGetControlValue(ASI_TEMPERATURE) failed: %s\n", getRetCode(ret));
+				Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_TEMPERATURE) failed: %s\n", cg->ME, getRetCode(ret));
 			}
 			cg->lastSensorTemp = (long) ((double)temp / cg->divideTemperatureBy);
 			if (cg->isColorCamera)
@@ -516,14 +522,14 @@ cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
 				ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_R, &l, &bAuto);
 				if (ret != ASI_SUCCESS)
 				{
-					Log(1, "  > WARNING: ASIGetControlValue(ASI_WB_R) failed: %s\n", getRetCode(ret));
+					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_R) failed: %s\n", cg->ME, getRetCode(ret));
 				}
 				cg->lastWBR = (double) l;
 
 				ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_B, &l, &bAuto);
 				if (ret != ASI_SUCCESS)
 				{
-					Log(1, "  > WARNING: ASIGetControlValue(ASI_WB_B) failed: %s\n", getRetCode(ret));
+					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_B) failed: %s\n", cg->ME, getRetCode(ret));
 				}
 				cg->lastWBB = (double) l;
 			}
@@ -533,13 +539,13 @@ cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
 				ret = ASIGetControlValue(cg->cameraNumber, ASI_BANDWIDTHOVERLOAD, &cg->lastAsiBandwidth, &wasAutoExposure);
 				if (ret != ASI_SUCCESS)
 				{
-					Log(1, "  > WARNING: ASIGetControlValue(ASI_BANDWIDTHOVERLOAD) failed: %s\n", getRetCode(ret));
+					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_BANDWIDTHOVERLOAD) failed: %s\n", cg->ME, getRetCode(ret));
 				}
 			}
 		}
 	}
 	else {
-		Log(0, "  > ERROR: Not fetching exposure data because status is %s\n", getRetCode(status));
+		Log(0, "  > %s: ERROR: Not fetching exposure data because status is %s\n", cg->ME, getRetCode(status));
 	}
 
 	return status;
@@ -623,7 +629,7 @@ int determineGainChange(config cg)
 	if (numGainChanges > gainTransitionImages || totalAdjustGain == 0)
 	{
 		// no more changes needed in this transition
-		Log(4, "  xxxx No more gain changes needed.\n");
+		Log(4, "  No more gain changes needed.\n");
 		currentAdjustGain = false;
 		return(0);
 	}
@@ -671,7 +677,7 @@ bool checkMaxErrors(int *e, int maxErrors)
 	if (numErrors >= maxErrors)
 	{
 		*e = EXIT_RESET_USB;		// exit code. Need to reset USB bus
-		Log(0, "*** ERROR: Maximum number of consecutive errors of %d reached; capture program exited.\n", maxErrors);
+		Log(0, "*** %s: ERROR: Maximum number of consecutive errors of %d reached; capture program exited.\n", CG.ME, maxErrors);
 		return(false);	// gets us out of inner and outer loop
 	}
 	return(true);
@@ -687,7 +693,7 @@ int main(int argc, char *argv[])
 	static char *a = getenv("ALLSKY_HOME");		// This must come before anything else
 	if (a == NULL)
 	{
-		Log(0, "%s: ERROR: ALLSKY_HOME not set!\n", CG.ME);
+		Log(0, "*** %s: ERROR: ALLSKY_HOME not set!\n", CG.ME);
 		exit(EXIT_ERROR_STOP);
 	}
 	else
@@ -726,33 +732,33 @@ int main(int argc, char *argv[])
 	// so the mean will eventually get into the valid range.
 	const int percentChange		= 10.0;	// percent of ORIGINAL difference
 
-	//-------------------------------------------------------------------------------------------------------
-	//-------------------------------------------------------------------------------------------------------
+	//---------------------------------------------------------------------------------------------
+	//---------------------------------------------------------------------------------------------
 	setlinebuf(stdout);		// Line buffer output so entries appear in the log immediately.
 
 	CG.ct = ctZWO;
 
 	processConnectedCameras();	// exits on error.  Sets CG.cameraNumber.
 
-	ASI_CAMERA_INFO ASICameraInfo;
 	asiRetCode = ASIOpenCamera(CG.cameraNumber);
 	if (asiRetCode != ASI_SUCCESS)
 	{
-		Log(0, "*** ERROR opening camera, check that you have root permissions! (%s)\n",
-			getRetCode(asiRetCode));
+		Log(0, "*** %s: ERROR: opening camera, check that you have root permissions! (%s)\n",
+			CG.ME, getRetCode(asiRetCode));
 		closeUp(EXIT_NO_CAMERA);
 	}
 
+	ASI_CAMERA_INFO ASICameraInfo;
 	asiRetCode = ASIGetCameraProperty(&ASICameraInfo, CG.cameraNumber);
 	if (asiRetCode != ASI_SUCCESS)
 	{
-		Log(0, "ERROR: ASIGetCamerProperty() returned: %s\n", getRetCode(asiRetCode));
+		Log(0, "*** %s: ERROR: ASIGetCamerProperty() returned: %s\n", CG.ME, getRetCode(asiRetCode));
 		exit(EXIT_ERROR_STOP);
 	}
 	asiRetCode = ASIGetNumOfControls(CG.cameraNumber, &iNumOfCtrl);
 	if (asiRetCode != ASI_SUCCESS)
 	{
-		Log(0, "ERROR: ASIGetNumOfControls() returned: %s\n", getRetCode(asiRetCode));
+		Log(0, "*** %s: ERROR: ASIGetNumOfControls() returned: %s\n", CG.ME, getRetCode(asiRetCode));
 		exit(EXIT_ERROR_STOP);
 	}
 	CG.ASIversion = ASIGetSDKVersion();
@@ -832,19 +838,19 @@ int main(int argc, char *argv[])
 	{
 		if (sscanf(CG.HB.sArgs, "%d %d %f %f", &CG.HB.histogramBoxSizeX, &CG.HB.histogramBoxSizeY, &CG.HB.histogramBoxPercentFromLeft, &CG.HB.histogramBoxPercentFromTop) != 4)
 		{
-			Log(0, "%s*** ERROR: Not enough histogram box parameters should be 4: '%s'%s\n", c(KRED), CG.HB.sArgs, c(KNRM));
+			Log(0, "*** %s: ERROR: Not enough histogram box parameters should be 4: '%s'\n", CG.ME, CG.HB.sArgs);
 			ok = false;
 		} else {
 			if (CG.HB.histogramBoxSizeX < 1 || CG.HB.histogramBoxSizeY < 1)
 			{
-				Log(0, "%s*** ERROR: Histogram box size must be > 0; you entered X=%d, Y=%d%s\n",
-					c(KRED), CG.HB.histogramBoxSizeX, CG.HB.histogramBoxSizeY, c(KNRM));
+				Log(0, "*** %s: ERROR: Histogram box size must be > 0; you entered X=%d, Y=%d\n",
+					CG.ME, CG.HB.histogramBoxSizeX, CG.HB.histogramBoxSizeY);
 				ok = false;
 			}
 			if (CG.HB.histogramBoxPercentFromLeft < 0.0 || CG.HB.histogramBoxPercentFromTop < 0.0)
 			{
-				Log(0, "%s*** ERROR: Histogram box percents must be > 0; you entered X=%.0f%%, Y=%.0f%%%s\n",
-					c(KRED), (CG.HB.histogramBoxPercentFromLeft*100.0), (CG.HB.histogramBoxPercentFromTop*100.0), c(KNRM));
+				Log(0, "*** %s: ERROR: Histogram box percents must be > 0; you entered X=%.0f%%, Y=%.0f%%\n",
+					CG.ME, (CG.HB.histogramBoxPercentFromLeft*100.0), (CG.HB.histogramBoxPercentFromTop*100.0));
 				ok = false;
 			}
 			else
@@ -864,13 +870,14 @@ int main(int argc, char *argv[])
 				if (CG.HB.leftOfBox < 0 || CG.HB.rightOfBox  >= CG.width ||
 				    CG.HB.topOfBox  < 0 || CG.HB.bottomOfBox >= CG.height)
 				{
-					Log(0, "%s*** ERROR: Histogram box location must fit on image; upper left of box is %dx%d, lower right %dx%d%s\n", c(KRED), CG.HB.leftOfBox, CG.HB.topOfBox, CG.HB.rightOfBox, CG.HB.bottomOfBox, c(KNRM));
+					Log(0, "*** %s: ERROR: Histogram box location must fit on image; upper left of box is %dx%d, lower right %dx%d%s\n",
+						CG.ME, CG.HB.leftOfBox, CG.HB.topOfBox, CG.HB.rightOfBox, CG.HB.bottomOfBox);
 					ok = false;
 				}	// else everything is hunky dory
 			}
 		}
 	} else {
-		Log(0, "%s*** ERROR: No values specified for histogram box%s\n", c(KRED), c(KNRM));
+		Log(0, "*** %s: ERROR: No values specified for histogram box.\n", CG.ME);
 		ok = false;
 	}
 
@@ -882,7 +889,7 @@ int main(int argc, char *argv[])
 	asiRetCode = ASIInitCamera(CG.cameraNumber);
 	if (asiRetCode != ASI_SUCCESS)
 	{
-		Log(0, "*** ERROR: Unable to initialise camera: %s\n", getRetCode(asiRetCode));
+		Log(0, "*** %s: ERROR: Unable to initialise camera: %s\n", CG.ME, getRetCode(asiRetCode));
 		closeUp(EXIT_ERROR_STOP);	// Can't do anything so might as well exit.
 	}
 
@@ -935,7 +942,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		Log(0, "*** ERROR: Unknown Image Type: %d\n", CG.imageType);
+		Log(0, "*** %s: ERROR: Unknown Image Type: %d\n", CG.ME, CG.imageType);
 		closeUp(EXIT_ERROR_STOP);
 	}
 
@@ -997,7 +1004,7 @@ int main(int argc, char *argv[])
 		asiRetCode = ASIStartVideoCapture(CG.cameraNumber);
 		if (asiRetCode != ASI_SUCCESS)
 		{
-			Log(0, "*** ERROR: Unable to start video capture: %s\n", getRetCode(asiRetCode));
+			Log(0, "*** %s: ERROR: Unable to start video capture: %s\n", CG.ME, getRetCode(asiRetCode));
 			closeUp(EXIT_ERROR_STOP);
 		}
 	}
@@ -1041,6 +1048,7 @@ int main(int argc, char *argv[])
 				CG.currentTargetTemp = CG.nightTargetTemp;
 			}
 			CG.myModeMeanSetting.currentMean = NOT_SET;
+			CG.myModeMeanSetting.currentMean_threshold = NOT_SET;
 			CG.myModeMeanSetting.modeMean = false;
 			CG.HB.useHistogram = false;
 
@@ -1310,12 +1318,14 @@ if (CG.HB.useExperimentalExposure) {
 			{
 				if (asiRetCode == ASI_ERROR_INVALID_SIZE)
 				{
-					Log(0, "*** ERROR: your camera does not support bin %dx%d.\n", CG.currentBin, CG.currentBin);
+					Log(0, "*** %s: ERROR: your camera does not support bin %dx%d.\n", CG.ME, CG.currentBin, CG.currentBin);
 					closeUp(EXIT_ERROR_STOP);
 				}
 				else
 				{
-					Log(0, "*** ERROR: ASISetROIFormat(%d, %dx%d, %d, %d) failed (%s)\n", CG.cameraNumber, CG.width, CG.height, CG.currentBin, CG.imageType, getRetCode(asiRetCode));
+					Log(0, "*** %s: ERROR: ASISetROIFormat(%d, %dx%d, %d, %d) failed (%s)\n",
+						CG.ME, CG.cameraNumber, CG.width, CG.height, CG.currentBin,
+						CG.imageType, getRetCode(asiRetCode));
 					closeUp(EXIT_ERROR_STOP);
 				}
 			}
@@ -1350,6 +1360,7 @@ if (CG.HB.useExperimentalExposure) {
 			{
 				numErrors = 0;
 				numExposures++;
+				bool hitMinOrMax = false;
 
 				CG.lastFocusMetric = CG.overlay.showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
 
@@ -1360,22 +1371,19 @@ if (CG.HB.useExperimentalExposure) {
 					pthread_create(&threadDisplay, NULL, Display, (void *)&pRgb);
 				}
 
-				// We don't use this at night since the ZWO bug is only when it's light outside.
 				if (CG.HB.useHistogram)
 				{
+					// Make sure the mean is acceptable.
+
 					attempts = 0;
 
 					int minAcceptableMean = CG.myModeMeanSetting.minMean;
 					int maxAcceptableMean = CG.myModeMeanSetting.maxMean;
-
+					long tempMinExposure_us = CG.cameraMinExposure_us;
+					long tempMaxExposure_us = CG.cameraMaxExposure_us;
 					long newExposure_us = 0;
 
-					// histMinExposure_us is the min exposure used in the histogram calculation.
-// xxx TODO: dump histMinExposure_us? Set tempMinExposure_us = cameraMinExposure_us ? ...
-					long histMinExposure_us = CG.cameraMinExposure_us;
-					long tempMinExposure_us = histMinExposure_us;
-					long tempMaxExposure_us = CG.cameraMaxExposure_us;
-
+// TODO: dump Brightness - user can adjust Target Mean or Manual Exposure.
 					if (CG.currentBrightness != CG.defaultBrightness)
 					{
 						// Adjust brightness based on Brightness.
@@ -1411,8 +1419,6 @@ if (CG.HB.useExperimentalExposure) {
 						}
 
 						// Now adjust the variables
-// xxxxxxxxx TODO: don't adjust histMinExposure_us; just histogram numbers.
-						histMinExposure_us *= exposureAdjustment;
 						minAcceptableMean *= exposureAdjustment;
 						maxAcceptableMean *= exposureAdjustment;
 					}
@@ -1422,66 +1428,45 @@ if (CG.HB.useExperimentalExposure) {
 					// When that happens we don't want to set the min to the second exposure
 					// or else we'll never get low enough.
 					// Negative is below lower limit, positive is above upper limit.
-					int priorMean = CG.lastMean;
+					int priorMean = NOT_SET;		// The mean for the image before the last one.
 					int priorMeanDiff = 0;
 					int lastMeanDiff = 0;	// like priorMeanDiff but for next exposure
-
-					// Adjust the min or maxAcceptableMean depending on the aggression.
-					int adjustment = 0;
+					int numPingPongs = 0;
 
 					if (CG.lastMean < minAcceptableMean)
 					{
 						priorMeanDiff = CG.lastMean - minAcceptableMean;
-
-/*
-						// If we're skipping frames we want to get to a good exposure as fast as
-						// possible so don't set an adjustment.
-						if (CG.aggression != 100 && CG.currentSkipFrames <= 0)
-						{
-// TODO: why are we adjusting the AcceptableMean?
-							adjustment = priorMeanDiff * (1 - ((float)CG.aggression/100));
-							if (adjustment < 1)
-								minAcceptableMean += adjustment;
-						}
-*/
 					}
 					else if (CG.lastMean > maxAcceptableMean)
 					{
-// TODO: why not adjust here if needed?
 						priorMeanDiff = CG.lastMean - maxAcceptableMean;
 					}
-					if (adjustment != 0)
-					{
-						Log(4, "  > !!! Adjusting %sAcceptableMean by %d to %d\n",
-							adjustment < 0 ? "min" : "max",
-							adjustment,
-							adjustment < 0 ? minAcceptableMean : maxAcceptableMean);
-					}
 
-					int numPingPongs = 0;
+					// Keep trying until we get an acceptable mean or are unable to continue.
 					while ((CG.lastMean < minAcceptableMean || CG.lastMean > maxAcceptableMean) &&
-						    ++attempts <= maxHistogramAttempts && CG.currentExposure_us <= CG.cameraMaxExposure_us)
+						    ++attempts <= maxHistogramAttempts)
 					{
-						int acceptable;
+						int acceptableMean;
 						float multiplier = 1.10;
 						char const *acceptableType;
 						if (CG.lastMean < minAcceptableMean) {
-							acceptable = minAcceptableMean;
+							acceptableMean = minAcceptableMean;
 							acceptableType = "min";
 						} else {
-							acceptable = maxAcceptableMean;
+							acceptableMean = maxAcceptableMean;
 							acceptableType = "max";
 							multiplier = 1 / multiplier;
 						}
 
-						// if lastMean/acceptable is 9/90, it's 1/10th of the way there, so multiple exposure by 90/9 (10).
+						// If lastMean/acceptableMean is 9/90, it's 1/10th of the way there,
+						// so multiple exposure by 90/9 (10).
 						// ZWO cameras don't appear to be linear so increase the multiplier amount some.
 						float multiply;
 						if (CG.lastMean == 0) {
 							// TODO: is this correct?
-							multiply = ((double)acceptable) * multiplier;
+							multiply = ((double)acceptableMean) * multiplier;
 						} else {
-							multiply = ((double)acceptable / CG.lastMean) * multiplier;
+							multiply = ((double)acceptableMean / CG.lastMean) * multiplier;
 						}
 						long exposureDiff_us = (CG.lastExposure_us * multiply) - CG.lastExposure_us;
 						long exposureDiffBeforeAgression_us = exposureDiff_us;
@@ -1491,24 +1476,27 @@ if (CG.HB.useExperimentalExposure) {
 						{
 							exposureDiff_us *= (float)CG.aggression / 100;
 						}
+
 						newExposure_us = CG.lastExposure_us + exposureDiff_us;
+						// Assume max auto exposure is <= max camera exposure.
 						if (newExposure_us > CG.currentMaxAutoExposure_us) {
+							hitMinOrMax = true;
 							Log(3, "  > === Calculated newExposure_us (%'ld) > CG.currentMaxAutoExposure_us (%'ld); setting to max\n",
 								newExposure_us, CG.currentMaxAutoExposure_us);
 							newExposure_us = CG.currentMaxAutoExposure_us;
 						} else {
-							Log(3, "    > Next exposure change: %'ld us (%'ld pre agression) to %'ld (* %.3f) [CG.lastExposure_us=%'ld, %sAcceptable=%d, CG.lastMean=%d]\n",
+							Log(3, "    > Next exposure change: %'ld us (%'ld pre agression) to %'ld (* %.3f) [CG.lastExposure_us=%'ld, %sAcceptableMean=%d, CG.lastMean=%d]\n",
 								exposureDiff_us, exposureDiffBeforeAgression_us,
 								newExposure_us, multiply, CG.lastExposure_us,
-								acceptableType, acceptable, (int)CG.lastMean);
+								acceptableType, acceptableMean, (int)CG.lastMean);
 						}
 
 						if (priorMeanDiff > 0 && lastMeanDiff < 0)
 						{ 
 							++numPingPongs;
 							Log(2, "    > xxx lastMean was %d and went from %d above max of %d to %d below min of %d, is now at %d;\n",
-								priorMean, priorMeanDiff, maxAcceptableMean, -lastMeanDiff, minAcceptableMean, (int)CG.lastMean);
-							Log(4, "       should NOT set tempMinExposure_us to CG.currentExposure_us of %'ld\n", CG.currentExposure_us);
+								priorMean, priorMeanDiff, maxAcceptableMean, -lastMeanDiff,
+									minAcceptableMean, (int)CG.lastMean);
 						} 
 						else
 						{
@@ -1516,8 +1504,8 @@ if (CG.HB.useExperimentalExposure) {
 							{
 								++numPingPongs;
 								Log(2, "    > xxx lastMean was %d and went from %d below min of %d to %d above max of %d, is now at %d;\n",
-									priorMean, -priorMeanDiff, minAcceptableMean, lastMeanDiff, maxAcceptableMean, (int)CG.lastMean);
-								Log(4, "       OK to set tempMaxExposure_us to CG.currentExposure_us of %'ld\n", CG.currentExposure_us);
+									priorMean, -priorMeanDiff, minAcceptableMean, lastMeanDiff,
+									maxAcceptableMean, (int)CG.lastMean);
 							}
 							else
 							{
@@ -1543,11 +1531,14 @@ printf(" > xxx newExposure_us=%s, CG.lastExposure_us=%s, CG.currentExposure_us=%
 printf(" new newExposure_us=%s\n", length_in_units(newExposure_us, true));
 							Log(3, " > Ping-Ponged %d times, setting exposure to mid-point of %s\n", numPingPongs, length_in_units(newExposure_us, true));
 
-							// To try and help, add double the numPingPongs percent to the exposure.
+// XXXX testing
+							// To try and help, add (or subtract) the numPingPongs percent to the exposure.
 							// For example, if newExposure_us == 200 and numPingPongs == 4, add 4% (8 us = 4% * 200).
-							long us = (long) (newExposure_us * 2.0 * ((double)numPingPongs / 100.0));
+							long us = (long) (newExposure_us * ((double)numPingPongs / 100.0));
 Log(3, "================ Adding %'ld us\n", us);
 							newExposure_us += us;
+							if (tempMaxExposure_us < newExposure_us)
+								tempMaxExposure_us = newExposure_us;
 						}
 
 						// Make sure newExposure_us is between min and max.
@@ -1563,13 +1554,14 @@ if (saved_newExposure_us != newExposure_us)
 
 						if (newExposure_us == CG.currentExposure_us)
 						{
-							break;
+							break;		// message about this is output below
 						}
 
 						CG.currentExposure_us = newExposure_us;
 						if (CG.currentExposure_us > CG.cameraMaxExposure_us)
 						{
-							break;
+							hitMinOrMax = true;
+							break;		// message about this is output below
 						}
 
 						Log(2, "    >> Retry %i @ %'ld us, min=%'ld us, max=%'ld us\n",
@@ -1608,7 +1600,8 @@ if (saved_newExposure_us != newExposure_us)
 					if (CG.lastMean >= minAcceptableMean && CG.lastMean <= maxAcceptableMean)
 					{
 						// +++ at end makes it easier to see in log file
-						Log(2, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n", minAcceptableMean, maxAcceptableMean, (int)CG.lastMean);
+						Log(2, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n",
+							minAcceptableMean, maxAcceptableMean, (int)CG.lastMean);
 					}
 					else if (attempts > maxHistogramAttempts)
 					{
@@ -1619,6 +1612,7 @@ if (saved_newExposure_us != newExposure_us)
 					{
 						if (CG.currentExposure_us < CG.cameraMinExposure_us)
 						{
+							hitMinOrMax = true;
 							Log(2, "  > Stopped trying: new exposure of %s would be under camera min of %s\n",
 								length_in_units(CG.currentExposure_us, false),
 								length_in_units(CG.cameraMinExposure_us, false));
@@ -1630,6 +1624,7 @@ if (saved_newExposure_us != newExposure_us)
 						}
 						else if (CG.currentExposure_us > CG.cameraMaxExposure_us)
 						{
+							hitMinOrMax = true;
 							Log(2, "  > Stopped trying: new exposure of %s would be over camera max of %s\n",
 								length_in_units(CG.currentExposure_us, false),
 								length_in_units(CG.cameraMaxExposure_us, false));
@@ -1641,8 +1636,8 @@ if (saved_newExposure_us != newExposure_us)
 						}
 						else if (CG.currentExposure_us == CG.cameraMinExposure_us)
 						{
-							Log(2, "  > Stopped trying: hit camera min exposure limit of %s, mean %d\n",
-								length_in_units(CG.cameraMinExposure_us, false), (int)CG.lastMean);
+							Log(2, "  > Stopped trying: hit camera min exposure limit of %s\n",
+								length_in_units(CG.cameraMinExposure_us, false));
 
 							// If currentExposure_us causes too low of a mean, increase exposure
 							// so on the next loop we'll adjust it.
@@ -1651,8 +1646,8 @@ if (saved_newExposure_us != newExposure_us)
 						}
 						else if (CG.currentExposure_us == CG.currentMaxAutoExposure_us)
 						{
-							Log(2, "  > Stopped trying: hit max autoexposure limit of %s, mean %d\n",
-								length_in_units(CG.currentMaxAutoExposure_us, false), (int)CG.lastMean);
+							Log(2, "  > Stopped trying: hit max autoexposure limit of %s\n",
+								length_in_units(CG.currentMaxAutoExposure_us, false));
 							// If currentExposure_us causes too high of a mean, decrease exposure
 							// so on the next loop we'll adjust it.
 							if (CG.lastMean > maxAcceptableMean)
@@ -1713,16 +1708,16 @@ if (saved_newExposure_us != newExposure_us)
 					}
 					else
 					{
-						// Didn't use auto-exposure - don't change exposure
+						// Using manual exposure so don't change exposure.
 					}
 				}
 
 				if (CG.currentSkipFrames > 0)
 				{
-					// If we're already at a good exposure, or the last exposure was longer
-					// than the max, don't skip any more frames.
-// xxx TODO: should we have a separate variable to define "too long" instead of currentMaxAutoExposure_us?
-					if ((CG.lastMean >= CG.myModeMeanSetting.minMean && CG.lastMean <= CG.myModeMeanSetting.maxMean) || CG.lastExposure_us > CG.currentMaxAutoExposure_us)
+					// If we're already at a good exposure, or the last exposure reached the max or min time,
+					// don't skip any more frames.
+					if ((CG.lastMean >= CG.myModeMeanSetting.minMean && CG.lastMean <= CG.myModeMeanSetting.maxMean)
+						|| hitMinOrMax)
 					{
 						CG.currentSkipFrames = 0;
 					} else {

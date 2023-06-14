@@ -1031,7 +1031,7 @@ handle_prior_website()
 
 	local NEWEST_VERSION="$(get_Git_version "${GITHUB_MAIN_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
 	if [[ -z ${NEWEST_VERSION} ]]; then
-		display_msg --log warning "Unable to determine verson of GitHub branch '${GITHUB_MAIN_BRANCH}'."
+		display_msg --log warning "Unable to determine version of GitHub's Website branch '${GITHUB_MAIN_BRANCH}'."
 	fi
 
 	local B=""
@@ -1043,24 +1043,25 @@ handle_prior_website()
 
 	if [[ ${PRIOR_STYLE} == "new" ]]; then
 
-		# If get_branch returns "" the prior branch is ${GITHUB_MAIN_BRANCH}.
+		# If get_branch() returns "" assume prior branch is ${GITHUB_MAIN_BRANCH}.
 		local PRIOR_BRANCH="$( get_branch "${PRIOR_SITE}" )"
+		PRIOR_BRANCH="${PRIOR_BRANCH:-${GITHUB_MAIN_BRANCH}}"
 
 		display_msg --log progress "Restoring local Allsky Website from ${PRIOR_SITE}."
 		sudo mv "${PRIOR_SITE}" "${ALLSKY_WEBSITE}"
 
 		# Update "AllskyVersion" if needed.
 		local V="$( settings .config.AllskyVersion "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
-		display_msg --logonly info "Prior local Website's AllskyVersion=${V}"
-		if [[ ${V} != "${ALLSKY_VERSION}" ]]; then
-			MSG="Updating AllskyVersion in local Website from '${V}' to '${ALLSKY_VERSION}'"
+		if [[ ${V} == "${ALLSKY_VERSION}" ]]; then
+			display_msg --logonly info "Prior local Website's AllskyVersion already at '${ALLSKY_VERSION}'"
+		else
+			MSG="Updating local Website's AllskyVersion from '${V}' to '${ALLSKY_VERSION}'"
 			display_msg --log progress "${MSG}"
 			update_json_file ".config.AllskyVersion" "${ALLSKY_VERSION}" \
 				"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 		fi
 
-
-		# We can only check versions if we obtained the new version.
+		# We can only check Website versions if we obtained the new Website version.
 		[[ -z ${NEWEST_VERSION} ]] && return
 
 		# If the old Website was using a non-production branch,
@@ -1782,9 +1783,12 @@ restore_prior_files()
 
 	display_msg --log progress "Restoring prior:"
 
+	local SPACE="    "
+	local NOT_RESTORED="prior version does not exist so not restored"
 	# TODO: endOfNight_additionalStepts.sh script is going away in the next major release.
+	local ITEM="${SPACE}endOfNight_additionalSteps.sh"
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
-		display_msg --log progress "    endOfNight_additionalSteps.sh."
+		display_msg --log progress "${ITEM}"
 		cp -a "${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
 
 		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file will be removed"
@@ -1795,60 +1799,64 @@ restore_prior_files()
 		display_msg --log warning "\n${MSG}\n"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	else
-		MSG="    No prior 'endOfNight_additionalSteps.sh' so can't restore."
-		display_msg "${LOG_TYPE}" progress "${MSG}"
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
+	ITEM="${SPACE}'images' directory"
 	if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then
-		display_msg --log progress "    'images' directory."
+		display_msg --log progress "${ITEM}"
 		mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
 	else
 		# This is probably very rare so let the user know
-		MSG="    No prior 'images' directory so can't restore; This is unusual."
-		display_msg --log progress "${MSG}"
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}.  This is unusual."
 	fi
 
+	ITEM="${SPACE}'darks' directory"
 	if [[ -d ${PRIOR_ALLSKY_DIR}/darks ]]; then
-		display_msg --log progress "    'darks' directory."
+		display_msg --log progress "${ITEM}"
 		mv "${PRIOR_ALLSKY_DIR}/darks" "${ALLSKY_HOME}"
 	else
-		display_msg "${LOG_TYPE}" progress "    No prior 'darks' directory so can't restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
+	ITEM="${SPACE}'modules' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
-		display_msg --log progress "    'modules' directory."
+		display_msg --log progress "${ITEM}"
 
 		# Copy the user's prior data to the new file which may contain new fields.
 		"${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}"
 	else
-		display_msg "${LOG_TYPE}" progress "    No prior 'modules' directory so can't restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
+	ITEM="${SPACE}'overlay' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
-		display_msg --log progress "    'overlay' directory."
+		display_msg --log progress "${ITEM}"
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 
 		# Restore the fields.json file as it's part of the main Allsky distribution
 		# and should be replaced during an upgrade.
 		cp -ar "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_OVERLAY}/config/"
 	else
-		display_msg "${LOG_TYPE}" progress "    No prior 'overlay' directory so can't restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
+	ITEM="${SPACE}'ssl' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/ssl ]]; then
-		display_msg --log progress "    'ssl' directory."
+		display_msg --log progress "${ITEM}"
 		cp -ar "${PRIOR_CONFIG_DIR}/ssl" "${ALLSKY_CONFIG}"
 	else
-		display_msg "${LOG_TYPE}" progress "    No prior 'ssl' directory so can't restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	# This is not in a "standard" directory so we need to determine where it was.
 	local EXTRA="${PRIOR_ALLSKY_DIR}${ALLSKY_EXTRA//${ALLSKY_HOME}/}"
+	ITEM="${SPACE}'${EXTRA}' directory"
 	if [[ -d ${EXTRA} ]]; then
-		display_msg --log progress "    '${EXTRA}' directory."
+		display_msg --log progress "${ITEM}"
 		cp -ar "${EXTRA}" "${ALLSKY_EXTRA}/.."
 	else
-		display_msg "${LOG_TYPE}" progress "     No prior '${EXTRA}' directory so can't restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	local D
@@ -1858,23 +1866,25 @@ restore_prior_files()
 		# raspap.auth was in a different directory in older versions.
 		D="${OLD_RASPAP_DIR}"
 	fi
+	ITEM="${SPACE}WebUI security settings"
 	if [[ -f ${D}/raspap.auth ]]; then
-		display_msg --log progress "    WebUI security settings."
+		display_msg --log progress "${ITEM}"
 		cp -a "${D}/raspap.auth" "${ALLSKY_CONFIG}"
 	else
-		display_msg "${LOG_TYPE}" progress "    No prior 'WebUI security settings' so can't restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	# Restore any REMOTE Allsky Website configuration file.
+	ITEM="${SPACE}'${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}'"
 	if [[ -f ${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} ]]; then
-		MSG="    '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}'."
-		display_msg --log progress "${MSG}"
+		display_msg --log progress "${ITEM}"
 		cp -a "${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}" \
 			"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
 		# Used below to update "AllskyVersion" if needed.
 		V="$( settings .config.AllskyVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
 
+# TODO: is ConfigVersion still needed after the Website is part of Allsky?
 		# Check if this is an older Allsky Website configuration file type.
 		# The remote config file should have .ConfigVersion.
 		local OLD="false"
@@ -1898,15 +1908,19 @@ restore_prior_files()
 			MSG="${MSG} to see what fields have been added, changed, or removed.\n"
 			display_msg --log warning "${MSG}"
 			echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		else
+			MSG="Remote Website .ConfigVersion is current @ ${NEW_CONFIG_VERSION}"
+			display_msg --logonly info "${MSG}"
 		fi
 	else
 		# We don't check for old LOCAL Allsky Website configuration files.
 		# That's done when they install the Allsky Website.
-		display_msg "${LOG_TYPE}" progress "    No prior remote Allsky Website known so can't restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
+	ITEM="${SPACE}uservariables.sh"
 	if [[ -f ${PRIOR_CONFIG_DIR}/uservariables.sh ]]; then
-		display_msg --log progress "    uservariables.sh."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		cp -a "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
 	# Don't bother with the "else" part since this file is very rarely used.
 	fi
@@ -1923,8 +1937,9 @@ restore_prior_files()
 
 	local CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${ALLSKY_CONFIG}/config.sh" )"
 	local PRIOR_CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${PRIOR_CONFIG_FILE}" )"
+	ITEM="${SPACE}'config.sh' file"
 	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
-		display_msg --log progress "    Prior 'config.sh' file, as is."
+		display_msg --log progress "${ITEM}, as is"
 		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_CONFIG_SH="true"
 	else
 		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
@@ -1934,8 +1949,7 @@ restore_prior_files()
 			# bother writing a function to convert from the prior version to this.
 			MSG="prior version is old (${PRIOR_CONFIG_SH_VERSION})"
 		fi
-		MSG="    Not restoring prior 'config.sh': ${MSG}."
-		display_msg --log progress "${MSG}"
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}: ${MSG}"
 	fi
 	MSG="        CONFIG_SH_VERSION=${CONFIG_SH_VERSION}, PRIOR=${PRIOR_CONFIG_SH_VERSION}"
 	display_msg "${LOG_TYPE}" info "${MSG}"
@@ -1959,20 +1973,19 @@ restore_prior_files()
 		PRIOR_FTP_SH_VERSION="no file"
 	fi
 
+	ITEM="${SPACE}ftp-settings.sh"
 	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
-		display_msg --log progress "    Prior 'ftp-settings.sh' file, as is."
+		display_msg --log progress "${ITEM}, as is"
 		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_FTP_SH="true"
 	else
 		if [[ ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
-			MSG="unknown prior FTP_SH_VERSION."
+			MSG=": unknown prior FTP_SH_VERSION"
 		elif [[ ${PRIOR_FTP_SH_VERSION} == "old" ]]; then
-			MSG="old location so no FTP_SH_VERSION."
-		elif [[ ${PRIOR_FTP_SH_VERSION} == "no file" ]]; then
-			MSG="no prior file."
-		else
-			MSG="unknown PRIOR_FTP_SH_VERSION: '${PRIOR_FTP_SH_VERSION}'."
+			MSG=": old location so no FTP_SH_VERSION"
+		elif [[ ${PRIOR_FTP_SH_VERSION} != "no file" ]]; then
+			MSG=": unknown PRIOR_FTP_SH_VERSION: '${PRIOR_FTP_SH_VERSION}'"
 		fi
-		display_msg --log progress "    Not restoring prior 'ftp-settings.sh': ${MSG}"
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}${MSG}"
 	fi
 	MSG="        FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
 	display_msg "${LOG_TYPE}" info "${MSG}"
@@ -1986,7 +1999,7 @@ restore_prior_files()
 			update_json_file ".config.AllskyVersion" "${ALLSKY_VERSION}" \
 				"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		else
-			display_msg --log progress "Prior remote Website already at latest version ${V}."
+			display_msg --log progress "Prior remote Website already at latest Allsky version ${V}."
 		fi
 	fi
 
@@ -2002,7 +2015,6 @@ restore_prior_files()
 			display_msg --logonly info "${MSG}"
 		fi
 	fi
-
 
 	STATUS_VARIABLES+=( "RESTORED_PRIOR_CONFIG_SH='${RESTORED_PRIOR_CONFIG_SH}'\n" )
 	STATUS_VARIABLES+=( "RESTORED_PRIOR_FTP_SH='${RESTORED_PRIOR_FTP_SH}'\n" )

@@ -43,7 +43,6 @@ struct modeMeanSetting {
 	double maxGain				= NOT_SET;	// Set during initialization.
 	long maxExposure_us			= NOT_SET;	// Set during initialization.
 	long minExposure_us			= NOT_SET;	// Set during initialization.
-	double meanValue			= NOT_SET;	// TODO: xxx will remove in next version
 
 	// Default mean value for daytime and nighttime images.  User can change.
 	double dayMean				= DEFAULT_DAYMEAN_RPi;

@@ -699,7 +699,6 @@ myModeMeanSetting.mean_p2 = CG.myModeMeanSetting.mean_p2;
 		if (CG.myModeMeanSetting.currentMean > 0.0)
 		{
 			CG.myModeMeanSetting.modeMean = true;
-			myModeMeanSetting.meanValue = CG.myModeMeanSetting.currentMean;	// xxx meanValue is old name
 			if (! aegInit(CG, myRaspistillSetting, myModeMeanSetting))
 			{
 				closeUp(EXIT_ERROR_STOP);

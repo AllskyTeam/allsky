@@ -40,7 +40,7 @@ static char const *fontnames[]		= {		// Character representation of names for cl
 void Log(int required_level, const char *fmt, ...)
 {
 	if ((int)abs(CG.debugLevel) >= required_level) {
-		char msg[512];
+		char msg[1000];
 		va_list va;
 		va_start(va, fmt);
 		vsnprintf(msg, sizeof(msg)-1, fmt, va);
@@ -62,8 +62,9 @@ void Log(int required_level, const char *fmt, ...)
 				*p = '\0';
 			}
 
-			char command[1024];
-			snprintf(command, sizeof(command)-1, "%s/scripts/addMessage.sh %s '%s'", CG.allskyHome, severity, msg);
+			char command[sizeof(msg) + 100];
+			snprintf(command, sizeof(command)-1, "%s/scripts/addMessage.sh %s '%s'",
+				CG.allskyHome, severity, msg);
 			Log(4, "Executing %s\n", command);
 			(void) system(command);
 		}
@@ -396,7 +397,9 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, flo
 	char sunwaitCommand[128];
 	int d;
 
-	sprintf(sunwaitCommand, "sunwait poll exit angle %s %s %s > /dev/null", convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
+	snprintf(sunwaitCommand, sizeof(sunwaitCommand),
+		"sunwait poll exit angle %s %s %s > /dev/null",
+		convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
 	Log(4, "Executing %s\n", sunwaitCommand);
 	d = system(sunwaitCommand);	// returns exit code 2 for DAY, 3 for night
 
@@ -405,14 +408,14 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, flo
 		d = WEXITSTATUS(d);
 		if (d != 2 && d != 3)
 		{
-			Log(0, "*** ERROR: sunwait returned %d, not DAY or NIGHT\n", d);
+			Log(0, "*** %s: ERROR: sunwait returned %d, not DAY or NIGHT\n", CG.ME, d);
 			closeUp(EXIT_ERROR_STOP);
 		}
 		return(d == 2 ? _day : _night);
 	}
 
 	// Didn't exit normally
-	Log(0, "*** ERROR: sunwait exited abnormally: 0x%x\n", d);
+	Log(0, "*** %s: ERROR: sunwait exited abnormally: 0x%x\n", CG.ME, d);
 	closeUp(EXIT_ERROR_STOP);
 	/*NOTREACHED*/
 	return("");
@@ -423,7 +426,9 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, float 
 {
 	std::string t;
 	char sunwaitCommand[128];	// returns "hh:mm"
-	sprintf(sunwaitCommand, "sunwait list set angle %s %s %s", convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
+	snprintf(sunwaitCommand, sizeof(sunwaitCommand),
+		"sunwait list set angle %s %s %s",
+		convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
 	t = exec(sunwaitCommand);
 
 	t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
@@ -433,7 +438,8 @@ int calculateTimeToNightTime(const char *latitude, const char *longitude, float 
 	// after midnight or before noon.
 	if (sscanf(t.c_str(), "%d:%d", &hNight, &mNight) != 2)
 	{
-		Log(0, "ERROR: With angle %.4f sunwait returned unknown time to nighttime: %s\n", angle, t.c_str());
+		Log(0, "*** %s: ERROR: With angle %.4f sunwait returned unknown time to nighttime: %s\n",
+			CG.ME, angle, t.c_str());
 		return(1 * S_IN_HOUR);	// 1 hour - should we exit instead?
 	}
 	secsNight = (hNight * S_IN_HOUR) + (mNight * S_IN_MIN);	// secs to nighttime from start of today
@@ -481,7 +487,7 @@ bool getBoolean(const char* arg)
 	if (strcasecmp(arg, "no") != 0 &&
 		strcasecmp(arg, "false") != 0 &&
 		strcasecmp(arg, "0") != 0) {
-		Log(0, "*** WARNING: argument '%s' is not a boolean; setting to 'false'\n", arg);
+		Log(0, "*** %s: WARNING: argument '%s' is not a boolean; setting to 'false'\n", CG.ME, arg);
 	}
 	return(false);
 }
@@ -492,14 +498,14 @@ bool checkForValidExtension(config *cg)
 {
 	char const *ext = strrchr(cg->fileName, '.');		// e.g., "image.jpg"
 	if (ext == NULL) {
-		Log(0, "*** ERROR: No extension given on filename: [%s]\n", cg->fileName);
+		Log(0, "*** %s: ERROR: No extension given on filename: [%s]\n", CG.ME, cg->fileName);
 		return(false);
 	}
 
 	ext++;
 	if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0) {
 		if (cg->imageType == IMG_RAW16) {
-			Log(0, "*** ERROR: RAW16 images only work with .png files; either change the Image Type or the Filename.\n");
+			Log(0, "*** %s: ERROR: RAW16 images only work with .png files; either change the Image Type or the Filename.\n", cg->ME);
 			return(false);
 		}
 		cg->imageExt = "jpg";
@@ -531,7 +537,7 @@ bool checkForValidExtension(config *cg)
 		}
 
 	} else {
-		Log(0, "*** ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", ext);
+		Log(0, "*** %s: ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", cg->ME, ext);
 		return(false);
 	}
 
@@ -690,9 +696,9 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 		// Display these messages every time, since it's possible the user will
 		// correct the issue while we're running.
 		if (access(cg.overlay.ImgExtraText, F_OK ) == -1 ) {
-			Log(1, "  > *** WARNING: Extra Text File Does Not Exist So Ignoring It\n");
+			Log(1, "  > *** %s: WARNING: Extra Text File Does Not Exist So Ignoring It\n", cg.ME);
 		} else if (access(cg.overlay.ImgExtraText, R_OK ) == -1 ) {
-			Log(1, "  > *** WARNING: Cannot Read From Extra Text File So Ignoring It\n");
+			Log(1, "  > *** %s: WARNING: Cannot Read From Extra Text File So Ignoring It\n", cg.ME);
 		} else {
 			FILE *fp = fopen(cg.overlay.ImgExtraText, "r");
 
@@ -712,7 +718,7 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 							Log(4, ", so Ignoring\n");
 						}
 					} else {
-						Log(0, "  > *** ERROR: Stat Of Extra Text File Failed !\n");
+						Log(0, "  > *** %s: ERROR: Stat Of Extra Text File Failed !\n", cg.ME);
 					}
 				} else {
 					bAddExtra = true;
@@ -739,7 +745,7 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 				}
 				fclose(fp);
 			} else {
-				Log(1, "  > *** WARNING: Failed To Open Extra Text File\n");
+				Log(1, "  > *** %s: WARNING: Failed To Open Extra Text File\n", cg.ME);
 			}
 		}
 	}
@@ -851,19 +857,19 @@ void IntHandle(int i)
 		gotSignal = false;
 
 		// TODO: Re-read configuration instead of restarting.
-		Log(4, "Got SIGHUP to restart.\n");
+		Log(4, "%s: Got SIGHUP to restart.\n", CG.ME);
 		closeUp(EXIT_RESTARTING);
 		/*NOTREACHED*/
 	}
 
 	if (i == SIGINT || i == SIGTERM)
 	{
-		Log(4, "Got %s to exit.\n", i == SIGINT ? "SIGINT" : "SIGTERM");
+		Log(4, "%s: Got %s to exit.\n", CG.ME, i == SIGINT ? "SIGINT" : "SIGTERM");
 		closeUp(EXIT_OK);
 	}
 	else
 	{
-		Log(0, "Got unknown signal %d.\n", i);
+		Log(0, "%s: Got unknown signal %d.\n", CG.ME, i);
 		closeUp(i);
 	}
 }
@@ -986,6 +992,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - Maximum daytime auto-exposure in ms.\n", n, "daymaxexposure n");
 	printf(" -%-*s - Daytime exposure in us [%'ld].\n", n, "dayexposure n", cg.dayExposure_us);
 	printf(" -%-*s - Daytime mean target brightness [%.2f].\n", n, "daymean", cg.myModeMeanSetting.dayMean);
+	printf(" -%-*s - Daytime mean target threshold [%.2f].\n", n, "daymean-threshold n", cg.myModeMeanSetting.dayMean_threshold);
 	printf("  %-*s   NOTE: Daytime auto-gain and auto-exposure should be on for best results.\n", n, "");
 	printf(" -%-*s - Daytime brightness change [%'ld].\n", n, "daybrightness n", cg.dayBrightness);
 	printf(" -%-*s - Delay between daytime images in ms [%'ld].\n", n, "dayDelay n", cg.dayDelay_ms);
@@ -1011,6 +1018,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us);
 	printf(" -%-*s - Nighttime mean target brightness [%.2f].\n", n, "nightmean n", cg.myModeMeanSetting.nightMean);
 	printf("  %-*s   NOTE: Nighttime auto-gain and auto-exposure should be on for best results.\n", n, "");
+	printf(" -%-*s - Nighttime mean target threshold [%.2f].\n", n, "nightmean-threshold n", cg.myModeMeanSetting.nightMean_threshold);
 	printf(" -%-*s - Nighttime brightness change [%ld].\n", n, "nightbrightness n n", cg.nightBrightness);
 	printf(" -%-*s - Delay between nighttime images in ms [%'ld].\n", n, "nightDelay n", cg.nightDelay_ms);
 	printf(" -%-*s - 1 enables nighttime auto gain [%s].\n", n, "nightautogain b", yesNo(cg.nightAutoGain));
@@ -1113,12 +1121,11 @@ void displayHelp(config cg)
 	printf(" -%-*s - Where to save 'filename' [%s].\n", n, "save_dir s", cg.saveDir);
 	printf(" -%-*s - 1 previews the captured images. Only works with a Desktop Environment [%s]\n", n, "preview", yesNo(cg.preview));
 	printf(" -%-*s - Outputs the camera's capabilities to the specified file and exists.\n", n, "cc_file s");
-	printf(" -%-*s - Set mean-value and activates exposure control [%.2f].\n", n, "mean-threshold n", cg.myModeMeanSetting.mean_threshold);
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Command being used to take pictures (Buster: raspistill, Bullseye: libcamera-still\n", n, "cmd s");
 	}
 /* These are too advanced for anyone other than developers.
-	printf(" -%-*s - Be careful changing these values, ExposureChange (Steps) = p0 + (p1*diff) + (p2*diff)^2 [%.1f].\n", n, "mean-p0 n", cg.myModeMeanSetting.mean_threshold);
+	printf(" -%-*s - Be careful changing these values, ExposureChange (Steps) = p0 + (p1*diff) + (p2*diff)^2 [%.1f].\n", n, "mean-p0 n", cg.myModeMeanSetting.dayMean_threshold);
 	printf(" -%-*s - [%.1f].\n", n, "mean-p1 n", cg.myModeMeanSetting.mean_p1);
 	printf(" -%-*s - [%.1f].\n", n, "mean-p2 n", cg.myModeMeanSetting.mean_p2);
 */
@@ -1191,10 +1198,10 @@ void displaySettings(config cg)
 	if (cg.gainTransitionTimeImplemented)
 		printf("   Gain Transition Time: %.1f minutes\n", (float) cg.gainTransitionTime/60);
 
-	printf("   Target Mean Value (day):   %1.3f\n", cg.myModeMeanSetting.dayMean);
-	printf("   Target Mean Value (night): %1.3f\n", cg.myModeMeanSetting.nightMean);
-	printf("   Target Mean Threshold: %1.3f:\n", cg.myModeMeanSetting.mean_threshold);
-
+	printf("   Target Mean Value (day):       %1.3f\n", cg.myModeMeanSetting.dayMean);
+	printf("   Target Mean Value (night):     %1.3f\n", cg.myModeMeanSetting.nightMean);
+	printf("   Target Mean Threshold (day):   %1.3f\n", cg.myModeMeanSetting.dayMean_threshold);
+	printf("   Target Mean Threshold (night): %1.3f\n", cg.myModeMeanSetting.nightMean_threshold);
 	if (cg.supportsMyModeMean)
 	{
 		printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
@@ -1408,12 +1415,12 @@ static bool getConfigFileArguments(config *cg)
 {
 	if (called_from_getConfigFileArguments)
 	{
-		Log(-1, "*** WARNING: Configuration file calls itself; ignoring!\n");
+		Log(-1, "*** %s: WARNING: Configuration file calls itself; ignoring!\n", cg->ME);
 		return true;
 	}
 
 	if (cg->configFile[0] == '\0') {
-		Log(0, "*** ERROR: Unable to read configuration file: no file specified!\n");
+		Log(0, "*** %s: ERROR: Unable to read configuration file: no file specified!\n", cg->ME);
 		return false;
 	}
 
@@ -1423,27 +1430,31 @@ static bool getConfigFileArguments(config *cg)
 	if ((fd = open(cg->configFile, O_RDONLY)) == -1)
 	{
 		int e = errno;
-		Log(0, "*** ERROR: Could not open configuration file '%s': %s!", cg->configFile, strerror(e));
+		Log(0, "*** %s: ERROR: Could not open configuration file '%s': %s!",
+			cg->ME, cg->configFile, strerror(e));
 		return false;
 	}
 	struct stat statbuf;
 	if (fstat(fd, &statbuf) == 1)		// This should never fail
 	{
 		int e = errno;
-		Log(0, "*** ERROR: Could not fstat() configuration file '%s': %s!", cg->configFile, strerror(e));
+		Log(0, "*** %s: ERROR: Could not fstat() configuration file '%s': %s!",
+			cg->ME, cg->configFile, strerror(e));
 		return false;
 	}
 	// + 1 for trailing NULL
 	if ((buf = (char *) realloc(buf, statbuf.st_size + 1)) == NULL)
 	{
 		int e = errno;
-		Log(0, "*** ERROR: Could not malloc() configuration file '%s': %s!", cg->configFile, strerror(e));
+		Log(0, "*** %s: ERROR: Could not malloc() configuration file '%s': %s!",
+			cg->ME, cg->configFile, strerror(e));
 		return false;
 	}
 	if (read(fd, buf, statbuf.st_size) != statbuf.st_size)
 	{
 		int e = errno;
-		Log(0, "*** ERROR: Could not read() configuration file '%s': %s!", cg->configFile, strerror(e));
+		Log(0, "*** %s: ERROR: Could not read() configuration file '%s': %s!",
+			cg->ME, cg->configFile, strerror(e));
 		return false;
 	}
 	buf[statbuf.st_size] = '\0';
@@ -1467,7 +1478,8 @@ static bool getConfigFileArguments(config *cg)
 
 		if (*line == '=')		// still at start of line
 		{
-			Log(-1, "*** WARNING: Line %d in configuration file '%s' has nothing before '='!\n", lineNum, cg->configFile);
+			Log(-1, "*** %s: WARNING: Line %d in configuration file '%s' has nothing before '='!\n",
+				cg->ME, lineNum, cg->configFile);
 			continue;
 		}
 
@@ -1489,7 +1501,8 @@ static bool getConfigFileArguments(config *cg)
 
 	if (argc == 1)
 	{
-		Log(-1, "*** WARNING: configuration file '%s' has no valid entries!\n", cg->configFile);
+		Log(-1, "*** %s: WARNING: configuration file '%s' has no valid entries!\n",
+			cg->ME, cg->configFile);
 	}
 
 	// Let's hope the config file doesn't call itself!
@@ -1600,6 +1613,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->myModeMeanSetting.dayMean = atof(argv[++i]);
 		}
+		else if (strcmp(a, "daymeanthreshold") == 0)
+		{
+			cg->myModeMeanSetting.dayMean_threshold = atof(argv[++i]);
+		}
 		else if (strcmp(a, "daybrightness") == 0)
 		{
 			cg->dayBrightness = atol(argv[++i]);
@@ -1669,6 +1686,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "nightmean") == 0)
 		{
 			cg->myModeMeanSetting.nightMean = atof(argv[++i]);
+		}
+		else if (strcmp(a, "nightmeanthreshold") == 0)
+		{
+			cg->myModeMeanSetting.nightMean_threshold = atof(argv[++i]);
 		}
 		else if (strcmp(a, "nightbrightness") == 0)
 		{
@@ -1768,23 +1789,21 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->userQuality = cg->quality = atol(argv[++i]);
 		}
-		else if (strcmp(a, "meanthreshold") == 0)
-		{
-// TODO: this check should be done in capture program with all the other argument checks
-			// Must be between 0.01 and 0.1.
-			cg->myModeMeanSetting.mean_threshold = std::min(0.1, std::max(0.01,atof(argv[++i])));
-		}
+else if (strcmp(a, "meanthreshold") == 0)	// TODO:  xxxxx delete in next release
+{
+	cg->myModeMeanSetting.mean_threshold = atof(argv[++i]);
+}
 		else if (strcmp(a, "meanp0") == 0)
 		{
-			cg->myModeMeanSetting.mean_p0 = std::min(50.0, std::max(0.0,atof(argv[++i])));
+			cg->myModeMeanSetting.mean_p0 = atof(argv[++i]);
 		}
 		else if (strcmp(a, "meanp1") == 0)
 		{
-			cg->myModeMeanSetting.mean_p1 = std::min(50.0, std::max(0.0,atof(argv[++i])));
+			cg->myModeMeanSetting.mean_p1 = atof(argv[++i]);
 		}
 		else if (strcmp(a, "meanp2") == 0)
 		{
-			cg->myModeMeanSetting.mean_p2 = std::min(50.0, std::max(0.0,atof(argv[++i])));
+			cg->myModeMeanSetting.mean_p2 = atof(argv[++i]);
 		}
 		else if (strcmp(a, "autousb") == 0)
 		{
@@ -1812,7 +1831,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "consistentdelays") == 0)
 		{
-        		cg->consistentDelays = getBoolean(argv[++i]);
+       		cg->consistentDelays = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "latitude") == 0)
 		{
@@ -1978,7 +1997,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 
 		else
-			Log(-1, "*** WARNING: Unknown argument: [%s].  Ignored.\n", a);
+			Log(-1, "*** %s: WARNING: Unknown argument: [%s].  Ignored.\n", cg->ME, a);
 	}
 
 
@@ -1988,7 +2007,8 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 	// If we are in "help" mode then we won't take picture AND won't produce CC info.
 	if (cg->saveDir == NULL && cg->CC_saveFile == NULL && ! cg->help) {
 		cg->saveDir = cg->allskyHome;
-		Log(-1, "*** WARNING: No directory to save images was specified. Using: [%s]\n", cg->saveDir);
+		Log(-1, "*** %s: WARNING: No directory to save images was specified. Using: [%s]\n",
+			cg->ME, cg->saveDir);
 	}
 
 	return(true);
@@ -2005,7 +2025,7 @@ static char const *validateLatLong(
 		char const *name)
 {
 	if (l == NULL || *l == '\0') {
-		Log(0, "*** ERROR: %s not specified!\n", name);
+		Log(0, "*** %s: ERROR: %s not specified!\n", CG.ME, name);
 		return(NULL);
 	}
 
@@ -2014,8 +2034,8 @@ static char const *validateLatLong(
 	char direction = (char) toupper(l[len-1]);
 	if (direction == positive || direction == negative) {
 		if (l[0] == '+' || l[0] == '-') {
-			Log(0, "*** ERROR: %s cannot have BOTH + or - AND %c or %c.  You entered [%s].\n",
-				name, positive, negative, l);
+			Log(0, "*** %s: ERROR: %s cannot have BOTH + or - AND %c or %c.  You entered [%s].\n",
+				CG.ME, name, positive, negative, l);
 			return(NULL);
 		}
 		return(l);
@@ -2048,13 +2068,13 @@ void doLocale(config *cg)
 	if (cg->locale == NULL) {
 		cg->locale = setlocale(LC_NUMERIC, NULL);
 		if (cg->locale == NULL) {
-			Log(-1, "*** WARNING: Could not get locale from Pi!\n");
+			Log(-1, "*** %s: WARNING: Could not get locale from Pi!\n", cg->ME);
 		} else {
 			static char locale[100];
 			strncpy(locale, cg->locale, sizeof(locale)-1);
 			cg->locale = locale;
 		}
 	} else if (setlocale(LC_NUMERIC, cg->locale) == NULL && ! cg->saveCC) {
-		Log(-1, "*** WARNING: Could not set locale to %s.\n", cg->locale);
+		Log(-1, "*** %s: WARNING: Could not set locale to %s.\n", cg->ME, cg->locale);
 	}
 }

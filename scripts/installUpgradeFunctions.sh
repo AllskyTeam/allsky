@@ -43,10 +43,10 @@ function get_Git_version() {
 }
 
 
-# For the version and branch, if the last character of the argument passed is a "/",
-# then append the file name from ${ALLSKY_VERSION_FILE} or ${ALLSKY_BRANCH_FILE}.
-# We do this to limit the number of places that know the actual name of the files,
-# in case we ever change their names.
+# For the version, if the last character of the argument passed is a "/",
+# then append the file name from ${ALLSKY_VERSION_FILE}.
+# We do this to limit the number of places that know the actual name of the file,
+# in case we ever change it.
 
 #####
 # Get the version from a local file, if it exists.
@@ -67,24 +67,11 @@ function get_version() {
 
 #####
 # Get the branch using git.
-function get_allsky_branch() {
+function get_branch() {
 	local H="${1:-${ALLSKY_HOME}}"
 	echo "$( cd "${H}" || exit; git rev-parse --abbrev-ref HEAD )"
 }
 
-#####
-# Get the branch from a local file, if it exists.
-function get_branch() {
-	local F="${1}"
-	if [[ -z ${F} ]]; then
-		F="${ALLSKY_BRANCH_FILE}"		# default
-	else
-		[[ ${F:1,-1} == "/" ]] && F="${F}$(basename "${ALLSKY_BRANCH_FILE}")"
-	fi
-
-	# Branch file is same format as Version file.
-	echo -n "$(get_version "${F}")"
-}
 
 #####
 # Display a message of various types in appropriate colors.

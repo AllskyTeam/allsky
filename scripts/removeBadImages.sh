@@ -235,7 +235,7 @@ else
 				--directory "${ALLSKY_TMP}" \
 				"${FILENAME}" "yellow" "" "85" "" "" \
 	 			"" "5" "yellow" "${EXTENSION}" "" \
-				"WARNING:\n\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}" >&2
+				"WARNING:\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}" >&2
 
 		fi
 

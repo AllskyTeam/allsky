@@ -1031,7 +1031,7 @@ handle_prior_website()
 
 	local NEWEST_VERSION="$(get_Git_version "${GITHUB_MAIN_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
 	if [[ -z ${NEWEST_VERSION} ]]; then
-		display_msg --log warning "Unable to determine verson of GitHub branch '${GITHUB_MAIN_BRANCH}'."
+		display_msg --log warning "Unable to determine version of GitHub's Website branch '${GITHUB_MAIN_BRANCH}'."
 	fi
 
 	local B=""
@@ -1043,24 +1043,25 @@ handle_prior_website()
 
 	if [[ ${PRIOR_STYLE} == "new" ]]; then
 
-		# If get_branch returns "" the prior branch is ${GITHUB_MAIN_BRANCH}.
+		# If get_branch() returns "" assume prior branch is ${GITHUB_MAIN_BRANCH}.
 		local PRIOR_BRANCH="$( get_branch "${PRIOR_SITE}" )"
+		PRIOR_BRANCH="${PRIOR_BRANCH:-${GITHUB_MAIN_BRANCH}}"
 
 		display_msg --log progress "Restoring local Allsky Website from ${PRIOR_SITE}."
 		sudo mv "${PRIOR_SITE}" "${ALLSKY_WEBSITE}"
 
 		# Update "AllskyVersion" if needed.
 		local V="$( settings .config.AllskyVersion "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
-		display_msg --logonly info "Prior local Website's AllskyVersion=${V}"
-		if [[ ${V} != "${ALLSKY_VERSION}" ]]; then
-			MSG="Updating AllskyVersion in local Website from '${V}' to '${ALLSKY_VERSION}'"
+		if [[ ${V} == "${ALLSKY_VERSION}" ]]; then
+			display_msg --logonly info "Prior local Website's AllskyVersion already at '${ALLSKY_VERSION}'"
+		else
+			MSG="Updating local Website's AllskyVersion from '${V}' to '${ALLSKY_VERSION}'"
 			display_msg --log progress "${MSG}"
 			update_json_file ".config.AllskyVersion" "${ALLSKY_VERSION}" \
 				"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 		fi
 
-
-		# We can only check versions if we obtained the new version.
+		# We can only check Website versions if we obtained the new Website version.
 		[[ -z ${NEWEST_VERSION} ]] && return
 
 		# If the old Website was using a non-production branch,
@@ -1875,6 +1876,7 @@ restore_prior_files()
 		# Used below to update "AllskyVersion" if needed.
 		V="$( settings .config.AllskyVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
 
+# TODO: is ConfigVersion still needed after the Website is part of Allsky?
 		# Check if this is an older Allsky Website configuration file type.
 		# The remote config file should have .ConfigVersion.
 		local OLD="false"
@@ -1898,11 +1900,14 @@ restore_prior_files()
 			MSG="${MSG} to see what fields have been added, changed, or removed.\n"
 			display_msg --log warning "${MSG}"
 			echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		else
+			MSG="Remote Website .ConfigVersion is current @ ${NEW_CONFIG_VERSION}"
+			display_msg --logonly info "${MSG}"
 		fi
 	else
 		# We don't check for old LOCAL Allsky Website configuration files.
 		# That's done when they install the Allsky Website.
-		display_msg "${LOG_TYPE}" progress "    No prior remote Allsky Website known so can't restore."
+		display_msg "${LOG_TYPE}" progress "    No prior remote Allsky Website so can't restore."
 	fi
 
 	if [[ -f ${PRIOR_CONFIG_DIR}/uservariables.sh ]]; then
@@ -1986,7 +1991,7 @@ restore_prior_files()
 			update_json_file ".config.AllskyVersion" "${ALLSKY_VERSION}" \
 				"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		else
-			display_msg --log progress "Prior remote Website already at latest version ${V}."
+			display_msg --log progress "Prior remote Website already at latest Allsky version ${V}."
 		fi
 	fi
 

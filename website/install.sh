@@ -204,7 +204,7 @@ get_versions_and_branches()
 	fi
 
 	if [[ ${PRIOR_WEBSITE_TYPE} == "new" ]]; then
-		PRIOR_WEBSITE_BRANCH="$( get_branch "${PRIOR_WEBSITE}/" )"
+		PRIOR_WEBSITE_BRANCH="$( get_branch "${PRIOR_WEBSITE}" )"
 	fi
 	PRIOR_WEBSITE_BRANCH="${PRIOR_WEBSITE_BRANCH:-${GITHUB_MAIN_BRANCH}}"
 

@@ -1242,7 +1242,6 @@ if (CG.HB.useExperimentalExposure) {
 		{
 			CG.myModeMeanSetting.modeMean = true;
 /* TODO: FUTURE
-			myModeMeanSetting.meanValue = CG.myModeMeanSetting.currentMean;
 			if (! aegInit(cg, minExposure_us, CG.cameraMinGain, myRaspistillSetting, myModeMeanSetting))
 			{
 				closeUp(EXIT_ERROR_STOP);

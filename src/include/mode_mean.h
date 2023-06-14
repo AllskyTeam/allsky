@@ -51,7 +51,6 @@ struct modeMeanSetting {
 	// Default threshold values for daytime and nighttime.  User can change.
 	double dayMean_threshold	= DEFAULT_DAYMEAN_THRESHOLD_RPi;
 	double nightMean_threshold	= DEFAULT_NIGHTMEAN_THRESHOLD_RPi;
-	double mean_threshold		= DEFAULT_DAYMEAN_THRESHOLD_RPi; // TODO: xxx will remove in next version
 
 	double const shuttersteps	= 6.0;		// shuttersteps
 	int const historySize		= 3;		// Number of last images for mean target calculation.

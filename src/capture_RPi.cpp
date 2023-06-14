@@ -537,7 +537,6 @@ int main(int argc, char *argv[])
 // TODO: after merging myModeMeanSetting into CG.myModeMeanSetting, delete these lines.
 myModeMeanSetting.dayMean = CG.myModeMeanSetting.dayMean;
 myModeMeanSetting.nightMean = CG.myModeMeanSetting.nightMean;
-myModeMeanSetting.mean_threshold = CG.myModeMeanSetting.mean_threshold;	// xxxxxx TODO: old name
 myModeMeanSetting.dayMean_threshold = CG.myModeMeanSetting.dayMean_threshold;
 myModeMeanSetting.nightMean_threshold = CG.myModeMeanSetting.nightMean_threshold;
 myModeMeanSetting.mean_p0 = CG.myModeMeanSetting.mean_p0;

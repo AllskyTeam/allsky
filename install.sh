@@ -168,7 +168,7 @@ stop_allsky()
 # Get the branch of the release we are installing;
 get_this_branch()
 {
-	if ! B="$( get_allsky_branch "${ALLSKY_HOME}" )" ; then
+	if ! B="$( get_branch )" ; then
 		display_msg --log warning "Unable to determine branch; assuming '${BRANCH}'."
 	else
 		BRANCH="${B}"
@@ -1015,8 +1015,8 @@ handle_prior_website()
 		fi
 	fi
 
-	# Trailing "/" tells get_version and get_branch to fill in the file
-	# names given the directory we pass to them.
+	# Trailing "/" tells get_version to fill in the file
+	# name given the directory we pass to them.
 
 	# If there's no prior website version, then there IS a newer version available.
 	# Set ${PV} to a string to display in messages, but we'll still use ${PRIOR_VERSION}
@@ -1044,7 +1044,7 @@ handle_prior_website()
 	if [[ ${PRIOR_STYLE} == "new" ]]; then
 
 		# If get_branch returns "" the prior branch is ${GITHUB_MAIN_BRANCH}.
-		local PRIOR_BRANCH="$( get_branch "${PRIOR_SITE}/" )"
+		local PRIOR_BRANCH="$( get_branch "${PRIOR_SITE}" )"
 
 		display_msg --log progress "Restoring local Allsky Website from ${PRIOR_SITE}."
 		sudo mv "${PRIOR_SITE}" "${ALLSKY_WEBSITE}"

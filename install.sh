@@ -1271,13 +1271,17 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 # See if a prior Allsky exists; if so, set some variables.
 does_prior_Allsky_exist()
 {
-	[[ ! -d ${PRIOR_ALLSKY_DIR}/src ]] && return 1
+	if [[ ! -d ${PRIOR_ALLSKY_DIR}/src ]]; then
+		display_msg --logonly info "No prior Allsky found."
+		return 1
+	fi
 
 	PRIOR_ALLSKY=""
 	PRIOR_CAMERA_TYPE=""
 	PRIOR_CAMERA_MODEL=""
 	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"
 	if [[ -n  ${PRIOR_ALLSKY_VERSION} ]]; then
+		display_msg --logonly info "Prior Allsky version ${PRIOR_ALLSKY_VERSION} found."
 		case "${PRIOR_ALLSKY_VERSION}" in
 			"v2022.03.01")		# First Allsky version with a "version" file
 				# This is an old style Allsky with ${CAMERA} in config.sh.
@@ -1335,6 +1339,7 @@ prompt_for_prior_Allsky()
 			# Set the prior camera type to the new, default camera type.
 			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
 			STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
+			display_msg --log info "Will restore from prior version of Allsky."
 			return 0
 		else
 			CAMERA_TYPE=""
@@ -2325,7 +2330,7 @@ check_new_exposure_algorithm()
 	MSG="There is a new auto-exposure algorithm for nighttime images that initial testing indicates"
 	MSG="${MSG} it creates better images at night and during the day-to-night transition."
 	MSG="${MSG}\n\nDo you want to use it?"
-	if whiptail --title "${TITLE}" --yesno "${MSG}" 10 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 		display_msg --logonly info "Enabling ${FIELD}."
 		update_json_file ".${FIELD}" 1 "${SETTINGS_FILE}"
 
@@ -2530,8 +2535,6 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 			exit_installation 0 ""
 		fi
 	elif [[ ${STATUS_INSTALLATION} == "${STATUS_NO_FINISH_REBOOT}" ]]; then
-
-# TODO: can we verify automatically if they rebooted?
 		MSG="The installation completed successfully but the following needs to happen"
 		MSG="${MSG} before Allsky is ready to run:"
 		MSG2="\n\n    1. Verify your settings in the WebUi's 'Allsky Settings' page."

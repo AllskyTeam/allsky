@@ -128,21 +128,30 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 	{ "imx477", 0, "RPi HQ", 0, 3040, 4056, ASI_TRUE,
 		// Need ASI_IMG_END so we know where the end of the list is.
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE,
-		12, ASI_FALSE, ASI_FALSE},
+		12, ASI_FALSE, ASI_FALSE
+	},
 
 	// There are many versions of the imx708 (_wide, _noir, _wide_noir, etc.)
 	// so just check for "imx708" (6 characters.
 	{ "imx708", 6, "RPi Module 3", 0, 2592, 4608, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.40, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE},
+		10, ASI_FALSE, ASI_TRUE
+	},
+
+	{ "imx290", 0, "imx290 60.00 fps", 0, 1920, 1080, ASI_TRUE,
+		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 2.9, ASI_FALSE,
+		12, ASI_FALSE, ASI_FALSE
+	},
 
 	{ "imx519", 0, "ArduCam 16 MP", 0, 3496, 4656, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.22, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE},
+		10, ASI_FALSE, ASI_TRUE
+	},
 
 	{ "arducam_64mp", 0, "ArduCam 64 MP", 0, 6944, 9152, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 0.8, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE},
+		10, ASI_FALSE, ASI_TRUE
+	},
 
 	// FUTURE CAMERAS GO HERE...
 };
@@ -195,7 +204,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	// 99 == don't know
 
 	// Name, Description, MaxValue, MinValue, DefaultValue, CurrentValue, IsAutoSupported, IsWritable, ControlType
-	{ // imx477, libcamera
+	{ // imx477, libcamera		THIS MUST BE THE FIRST CAMERA
 		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
 		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
@@ -253,6 +262,27 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
+	{ // imx290, libcamera
+		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Temperature", "Sensor Temperature", 80, -20, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
+		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
+		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
+		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 200 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
+		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+
+		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
+	},
+	{ // imx290, raspistill.  Not supported.
+		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
+	},
+
 	{ // imx519, libcamera
 		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
@@ -276,7 +306,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 
 	{ // arducam_64mp, libcamera
-		// TODO: Update as necessary
 		{ "Gain", "Gain", 16.0, 1, 1, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
 		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
@@ -296,6 +325,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	{ // arducam_64mp, raspistill.  Not supported.
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
+
+	// FUTURE CAMERAS GO HERE...
 };
 
 char camerasInfoFile[128]	= { 0 };	// name of temporary file
@@ -354,33 +385,32 @@ int getCameraNumber()
 	// Determine which camera sensor(s) we have by reading the file created in ASIGetNumOfConnectedCameras().
 	if (camerasInfoFile[0] == '\0')
 	{
-		Log(0, "ERROR: camerasInfoFile not created!\n");
+		Log(0, "%s: ERROR: camerasInfoFile not created!\n", CG.ME);
 		closeUp(EXIT_ERROR_STOP);
 	}
 	FILE *f = fopen(camerasInfoFile, "r");
 	if (f == NULL)
 	{
-		Log(0, "ERROR: Unable to open '%s': %s\n", camerasInfoFile, strerror(errno));
+		Log(0, "%s: ERROR: Unable to open '%s': %s\n", CG.ME, camerasInfoFile, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
 
 	char line[256];
 	int num = NOT_SET;
 #define SENSOR_STRING_SIZE	25
-	char sensor[SENSOR_STRING_SIZE], found_sensor[SENSOR_STRING_SIZE] = { 0 };
-	bool found = false;
-	int actualIndex;			// index into ASICameraInfoArray[]
-	int RPiCameraIndex = 0;		// index into RPiCameras[]
+	char sensor[SENSOR_STRING_SIZE];
+	int actualIndex;					// index into ASICameraInfoArray[]
+	int RPiCameraIndex = -1;			// index into RPiCameras[]
 
 	// For each camera found, update the next *RPiCameras[] entry to point to the
 	// camera's ASICameraInfoArray[] entry.
 	// Return the index into *RPiCameras[] of the attached camera we're using.
-	while (fgets(line, sizeof(line), f) != NULL)
+	while (fgets(line, sizeof(line)-1, f) != NULL)
 	{
+		// Sample line:     0 : imx477 [4056x3040] ....
+		// We only care about first two.
 		if (sscanf(line, "%d : %s ", &num, sensor) == 2)
 		{
-			strncpy(found_sensor, sensor, SENSOR_STRING_SIZE);		// last sensor found
-
 			// Found a camera; check all known cameras to make sure it's one we know about.
 			// Unfortunately we don't have anything else to check, like serial number.
 			// I suppose we could also check the Modes are the same, but it's not worth it.
@@ -399,8 +429,8 @@ int getCameraNumber()
 				{
 					// The sensor is in our list.
 					foundThisSensor = true;
-					found = true;
-					actualIndex = (int) i;
+					actualIndex = i;
+					RPiCameraIndex++;
 
 					RPiCameras[RPiCameraIndex].CameraInfo = &ASICameraInfoArray[actualIndex];
 					// There are TWO entries in ControlCapsArray[] for every entry in ASICameraInfoArray[].
@@ -410,25 +440,23 @@ int getCameraNumber()
 					actualIndex = (actualIndex * 2) + (CG.isLibcamera ? 0 : 1);
 					RPiCameras[RPiCameraIndex].ControlCaps = &ControlCapsArray[actualIndex][0];
 					Log(4, " ControlCapsArray[%d].\n", actualIndex);
-					RPiCameraIndex++;
 
 					break;
 				}
 			}
 			if (! foundThisSensor) {
-				Log(1, "WARNING: Sensor '%s' connected to Pi but not known by Allsky\n", sensor);
+				Log(1, "%s: WARNING: Sensor '%s' found but not supported by Allsky.\n", CG.ME, sensor);
 			}
 		}
 	}
-	if (! found)
+	if (RPiCameraIndex == -1)
 	{
-		Log(0, "ERROR: Could not find information on camera '%s'.\n",
-			*found_sensor ? found_sensor : "unknown sensor");
-		closeUp(EXIT_ERROR_STOP);
+		Log(0, "%s: ERROR: No RPi cameras found.\n", CG.ME);
+		closeUp(EXIT_NO_CAMERA);
 	}
 
 	// Caller will determine if this is out of range.
-	return(CG.cameraNumber);
+	return(RPiCameraIndex);
 }
 
 // Put the properties for the specified camera into pASICameraInfo.
@@ -436,7 +464,7 @@ ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCamera
 {
 	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
 	{
-		Log(0, "ERROR: ASIGetCameraProperty(), iCameraIndex (%d) bad.\n", iCameraIndex);
+		Log(0, "%s: ERROR: ASIGetCameraProperty(), iCameraIndex (%d) bad.\n", CG.ME, iCameraIndex);
 		return(ASI_ERROR_INVALID_INDEX);
 	}
 
@@ -450,7 +478,7 @@ ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
 {
 	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
 	{
-		Log(0, "ERROR: ASIGetNumOfControls(), iCameraIndex (%d) bad.\n", iCameraIndex);
+		Log(0, "%s: ERROR: ASIGetNumOfControls(), iCameraIndex (%d) bad.\n", CG.ME, iCameraIndex);
 		return(ASI_ERROR_INVALID_INDEX);
 	}
 
@@ -647,14 +675,15 @@ void processConnectedCameras()
 	CG.numCameras = ASIGetNumOfConnectedCameras();
 	if (CG.numCameras <= 0)
 	{
-		Log(0, "*** ERROR: No Connected Camera...\n");
+		Log(0, "*** %s: ERROR: No Connected Camera...\n", CG.ME);
 		closeUp(EXIT_NO_CAMERA);		// If there are no cameras we can't do anything.
 	}
 
 	CG.cameraNumber = getCameraNumber();
 	if (CG.cameraNumber >= CG.numCameras)
 	{
-		Log(0, "*** ERROR: Camera number %d not connected.  Highest number is %d.\n", CG.cameraNumber, CG.numCameras-1);
+		Log(0, "*** %s: ERROR: Camera number %d not connected.  Highest number is %d.\n",
+			CG.ME, CG.cameraNumber, CG.numCameras-1);
 		closeUp(EXIT_NO_CAMERA);
 	}
 	else if (CG.numCameras > 1)
@@ -685,7 +714,8 @@ ASI_ERROR_CODE getControlCapForControlType(int iCameraIndex, ASI_CONTROL_TYPE Co
 		ASI_ERROR_CODE ret;
 		ret = ASIGetControlCaps(iCameraIndex, i, &cc);
 		if (ret != ASI_SUCCESS) {
-			Log(3, "ASIGetControlCaps(%d, %i, &cc) failed: %s\n", iCameraIndex, i, getRetCode(ret));
+			Log(3, "%s: ASIGetControlCaps(%d, %i, &cc) failed: %s\n",
+				CG.ME, iCameraIndex, i, getRetCode(ret));
 			return(ret);
 		}
 		if (ControlType == cc.ControlType)
@@ -713,7 +743,8 @@ char *getSerialNumber(int camNum)
 		if (asiRetCode == ASI_ERROR_GENERAL_ERROR)
 			snprintf(sn, sizeof(sn), "[not supported]");
 		else
-			Log(1, "*** WARNING: unable to get camera serial number (%s)\n", getRetCode(asiRetCode));
+			Log(1, "*** %s: WARNING: unable to get camera serial number (%s)\n",
+				CG.ME, getRetCode(asiRetCode));
 	}
 	else if (serialNumber.id[0] == '\0')
 	{
@@ -765,7 +796,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	FILE *f = fopen(file, "w");
 	if (f == NULL)
 	{
-		Log(0, "ERROR: Unable to open '%s': %s\n", file, strerror(errno));
+		Log(0, "%s: ERROR: Unable to open '%s': %s\n", CG.ME, file, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
 	Log(4, "saveCameraInfo(): saving to %s\n", file);
@@ -883,6 +914,47 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"MaxValue\" : \"%s\"\n", "none");
 	fprintf(f, "\t\t},\n");
 
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "daymean");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymean");
+	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.2f\n", CG.myModeMeanSetting.dayMean);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "DayMeanThreshold");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymeanthreshold");
+	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.dayMean_threshold);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightmean");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmean");
+	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.2f\n", CG.myModeMeanSetting.nightMean);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "NightMeanThreshold");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmeanthreshold");
+	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.nightMean_threshold);
+	fprintf(f, "\t\t},\n");
+
+// TODO: remove in next release
+fprintf(f, "\t\t{\n");
+fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "MeanThreshold");
+fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "meanthreshold");
+fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
+fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
+fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.mean_threshold);
+fprintf(f, "\t\t},\n");
+
 	if (CG.isColorCamera) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "AutoWhiteBalance");
@@ -921,6 +993,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t\t\"DefaultValue\" : %ld\n", CG.gainTransitionTime);
 		fprintf(f, "\t\t},\n");
 	}
+
 #ifdef IS_ZWO
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "autousb");
@@ -932,6 +1005,12 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showUSB");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showUSB");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showUSB ? 1 : 0);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "experimentalExposure");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalExposure");
+	fprintf(f, "\t\t\t\"DefaultValue\" : \"%d\"\n", CG.HB.useExperimentalExposure ? 1 : 0);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -953,8 +1032,9 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "cameraNumber");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "cameraNumber");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "CameraNumber");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "cameraNumber");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.cameraNumber);
 	fprintf(f, "\t\t},\n");
 #endif
 
@@ -962,23 +1042,6 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ExtraArguments");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraArgs");
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ModeMean");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "mean");
-	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
-	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : \"day: %.2f, night: %.2f\"\n",
-		CG.myModeMeanSetting.dayMean, CG.myModeMeanSetting.nightMean);
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "MeanThreshold");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "meanthreshold");
-	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
-	fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.mean_threshold);
 	fprintf(f, "\t\t},\n");
 
 	if (CG.ct == ctRPi && CG.isLibcamera) {
@@ -989,6 +1052,8 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t},\n");
 	}
 #endif
+
+	double minGain=0.0, maxGain=0.0;
 
 	for (int i = 0; i < iNumOfCtrl; i++)
 	{
@@ -1004,26 +1069,72 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		if (a == NULL or a[0] == '\0')
 			continue;
 
-		if (i > 0)
-		{
-			fprintf(f, ",");		// comma on all but last one
-			fprintf(f, "\n");
+		int div_by = 1;
+		if (strcmp(cc.Name, "Exposure") == 0) {
+			// The camera's values are in microseconds (us), but the WebUI displays in milliseconds (ms).
+			div_by = US_IN_MS;
 		}
+		double min = cc.MinValue / (double) div_by;
+		double max = cc.MaxValue / (double) div_by;
+		double def = cc.DefaultValue / (double) div_by;
 
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", cc.Name);
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", a);
-		fprintf(f, "\t\t\t\"MinValue\" : %s,\n", LorF(cc.MinValue, "%ld", "%.3f"));
-		fprintf(f, "\t\t\t\"MaxValue\" : %s,\n", LorF(cc.MaxValue, "%ld", "%.3f"));
-		fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(cc.DefaultValue, "%ld", "%.3f"));
+		fprintf(f, "\t\t\t\"MinValue\" : %s,\n", LorF(min, "%ld", "%.3f"));
+		fprintf(f, "\t\t\t\"MaxValue\" : %s,\n", LorF(max, "%ld", "%.3f"));
+		fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(def, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"IsAutoSupported\" : %s,\n", cc.IsAutoSupported == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"IsWritable\" : %s,\n", cc.IsWritable == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"ControlType\" : %d\n", cc.ControlType);
-		fprintf(f, "\t\t}");
-	}
-	fprintf(f, "\n");
-	fprintf(f, "\t]\n");
+		fprintf(f, "\t\t},\n");
 
+		if (strcmp(cc.Name, "Gain") == 0) {
+			minGain = cc.MinValue;
+			maxGain = cc.MaxValue;
+		}
+	}
+
+	// These override the generic values.
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "dayexposure");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "dayexposure");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", (int) (0.5 * MS_IN_SEC));
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightexposure");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightexposure");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", 10 * MS_IN_SEC);
+	fprintf(f, "\t\t},\n");
+
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "daymean");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymean");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.dayMean);
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightmean");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmean");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.nightMean);
+	fprintf(f, "\t\t},\n");
+
+	// Set the day gain to the minimum possible.
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "daygain");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daygain");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", LorF(minGain, "%ld", "%.3f"));
+	fprintf(f, "\t\t},\n");
+	// Set the night gain to the half the max.
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightgain");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightgain");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", LorF(maxGain / 2, "%ld", "%.3f"));
+	fprintf(f, "\t\t}\n");		// NO COMMA ON LAST ONE
+
+
+	// End the list
+	fprintf(f, "\t]\n");
 	fprintf(f, "}\n");
 	fclose(f);
 }
@@ -1137,33 +1248,39 @@ bool checkExposureValues(config *cg)
 {
 	if (cg->dayExposure_us < cg->cameraMinExposure_us)
 	{
-	 	Log(1, "*** WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", cg->dayExposure_us, cg->cameraMinExposure_us);
+	 	Log(1, "*** %s: WARNING: daytime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n",
+			cg->ME, cg->dayExposure_us, cg->cameraMinExposure_us);
 	 	cg->dayExposure_us = cg->cameraMinExposure_us;
 	}
 	else if (cg->dayExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	Log(1, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->dayExposure_us, cg->cameraMaxExposure_us);
+	 	Log(1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+			cg->ME, cg->dayExposure_us, cg->cameraMaxExposure_us);
 	 	cg->dayExposure_us = cg->cameraMaxExposure_us;
 	}
 	else if (cg->dayAutoExposure && cg->dayExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	Log(1, "*** WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->dayExposure_us, cg->cameraMaxAutoExposure_us);
+	 	Log(1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+			cg->ME, cg->dayExposure_us, cg->cameraMaxAutoExposure_us);
 	 	cg->dayExposure_us = cg->cameraMaxAutoExposure_us;
 	}
 
 	if (cg->nightExposure_us < cg->cameraMinExposure_us)
 	{
-	 	Log(1, "*** WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n", cg->nightExposure_us, cg->cameraMinExposure_us);
+	 	Log(1, "*** %s: WARNING: nighttime exposure %'ld us less than camera minimum of %'ld us; setting to minimum\n",
+			cg->ME, cg->nightExposure_us, cg->cameraMinExposure_us);
 	 	cg->nightExposure_us = cg->cameraMinExposure_us;
 	}
 	else if (cg->nightExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	Log(1, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->nightExposure_us, cg->cameraMaxExposure_us);
+	 	Log(1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+			cg->ME, cg->nightExposure_us, cg->cameraMaxExposure_us);
 	 	cg->nightExposure_us = cg->cameraMaxExposure_us;
 	}
 	else if (cg->nightAutoExposure && cg->nightExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	Log(1, "*** WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n", cg->nightExposure_us, cg->cameraMaxAutoExposure_us);
+	 	Log(1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+			cg->ME, cg->nightExposure_us, cg->cameraMaxAutoExposure_us);
 	 	cg->nightExposure_us = cg->cameraMaxAutoExposure_us;
 	}
 
@@ -1185,7 +1302,8 @@ static bool checkBin(long b, ASI_CAMERA_INFO ci, char const *field)
 			break;
 	}
 	if (! ok)
-		Log(0, "*** ERROR: %s bin of %ldx%ld not supported by camera %s.\n", field, b, b, ci.Name);
+		Log(0, "*** %s: ERROR: %s bin of %ldx%ld not supported by camera %s.\n",
+			CG.ME, field, b, b, ci.Name);
 
 	return(ok);
 }
@@ -1217,8 +1335,23 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->supportsMyModeMean = false;
 		cg->gainTransitionTimeImplemented = true;
 		cg->imagesSavedInBackground = true;
+		cg->myModeMeanSetting.dayMean = DEFAULT_DAYMEAN_ZWO;
+		cg->myModeMeanSetting.nightMean = DEFAULT_NIGHTMEAN_ZWO;
+		cg->myModeMeanSetting.minMean = DEFAULT_MINMEAN_ZWO;	// min number a user should enter
+		cg->myModeMeanSetting.maxMean = DEFAULT_MAXMEAN_ZWO;	// max number a user should enter
+		cg->myModeMeanSetting.dayMean_threshold = DEFAULT_DAYMEAN_THRESHOLD_ZWO;
+		cg->myModeMeanSetting.nightMean_threshold = DEFAULT_NIGHTMEAN_THRESHOLD_ZWO;
+		cg->myModeMeanSetting.minMean_threshold = DEFAULT_MINMEAN_THRESHOLD_ZWO;
+		cg->myModeMeanSetting.maxMean_threshold = DEFAULT_MAXMEAN_THRESHOLD_ZWO;
+	cg->myModeMeanSetting.mean_threshold = DEFAULT_DAYMEAN_THRESHOLD_ZWO;		// TODO: xxxx remove in next release
+		cg->myModeMeanSetting.mean_p0 = DEFAULT_MEAN_P0_ZWO;
+		cg->myModeMeanSetting.mean_p1 = DEFAULT_MEAN_P1_ZWO;
+		cg->myModeMeanSetting.mean_p2 = DEFAULT_MEAN_P2_ZWO;
+		cg->myModeMeanSetting.minMean_p = DEFAULT_MINMEAN_P_ZWO;
+		cg->myModeMeanSetting.maxMean_p = DEFAULT_MAXMEAN_P_ZWO;
+
 	} else {	// RPi
-#ifdef IS_RPi
+#ifdef IS_RPi		// need this so it compiles
 		cg->supportsTemperature = ci.SupportsTemperature;	// this field only exists in RPi structure
 		cg->divideTemperatureBy = 1.0;
 		cg->supportsAutoFocus = ci.SupportsAutoFocus;	// this field only exists in RPi structure
@@ -1227,6 +1360,20 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->supportsMyModeMean = true;
 		cg->gainTransitionTimeImplemented = false;
 		cg->imagesSavedInBackground = false;
+		cg->myModeMeanSetting.dayMean = DEFAULT_DAYMEAN_RPi;
+		cg->myModeMeanSetting.nightMean = DEFAULT_NIGHTMEAN_RPi;
+		cg->myModeMeanSetting.minMean = DEFAULT_MINMEAN_RPi;
+		cg->myModeMeanSetting.maxMean = DEFAULT_MAXMEAN_RPi;
+		cg->myModeMeanSetting.dayMean_threshold = DEFAULT_DAYMEAN_THRESHOLD_RPi;
+		cg->myModeMeanSetting.nightMean_threshold = DEFAULT_NIGHTMEAN_THRESHOLD_RPi;
+		cg->myModeMeanSetting.minMean_threshold = DEFAULT_MINMEAN_THRESHOLD_RPi;
+		cg->myModeMeanSetting.maxMean_threshold = DEFAULT_MAXMEAN_THRESHOLD_RPi;
+	cg->myModeMeanSetting.mean_threshold = DEFAULT_DAYMEAN_THRESHOLD_RPi;		// TODO: xxxx delete in next release
+		cg->myModeMeanSetting.mean_p0 = DEFAULT_MEAN_P0_RPi;
+		cg->myModeMeanSetting.mean_p1 = DEFAULT_MEAN_P1_RPi;
+		cg->myModeMeanSetting.mean_p2 = DEFAULT_MEAN_P2_RPi;
+		cg->myModeMeanSetting.minMean_p = DEFAULT_MINMEAN_P_RPi;
+		cg->myModeMeanSetting.maxMean_p = DEFAULT_MAXMEAN_P_RPi;
 	}
 
 	if (cg->imagesSavedInBackground) {
@@ -1235,6 +1382,18 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 	} else {
 		// The capture program waits for the image to be saved.
 		cg->minDelay_ms = 0;
+	}
+
+	// The remaining settings are camera-specific and have camera defaults.
+	ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_TARGET_BRIGHTNESS, &cc);
+	if (ret == ASI_SUCCESS)
+	{
+		cg->defaultBrightness = cc.DefaultValue;		// used elsewhere
+		cg->dayBrightness = cc.DefaultValue;
+		cg->nightBrightness = cc.DefaultValue;
+	} else {
+		Log(0, "%s: ASI_EXPOSURE failed with %s\n", cg->ME, getRetCode(ret));
+		ok = false;
 	}
 
 	// Get values used in several validations.
@@ -1249,16 +1408,16 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		{
 			cg->cameraMaxAutoExposure_us = cc.MaxValue * US_IN_MS;
 		} else {
-			Log(0, "ASI_AUTO_MAX_EXP failed with %s\n", getRetCode(ret));
+			Log(0, "%s: ASI_AUTO_MAX_EXP failed with %s\n", cg->ME, getRetCode(ret));
 			ok = false;
-	}
+		}
 	} else {
-		Log(0, "ASI_EXPOSURE failed with %s\n", getRetCode(ret));
+		Log(0, "%s: ASI_EXPOSURE failed with %s\n", cg->ME, getRetCode(ret));
 		ok = false;
 	}
 
-	signal(SIGINT, IntHandle);
-	signal(SIGTERM, IntHandle);	// The service sends SIGTERM to end this program.
+	signal(SIGINT, IntHandle);		// When run at the command line, this signal terminates us.
+	signal(SIGTERM, IntHandle);		// The service sends SIGTERM to end this program.
 	signal(SIGHUP, IntHandle);		// SIGHUP means restart.
 
 	return(ok);
@@ -1303,11 +1462,19 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	cg->nightExposure_us = cg->temp_nightExposure_ms * US_IN_MS;
 	cg->nightMaxAutoExposure_us = cg->temp_nightMaxAutoExposure_ms * US_IN_MS;
 
-	if (! validateFloat(&cg->myModeMeanSetting.dayMean, 0.0, 1.0, "Daytime Mean Target", false))
+	if (! validateFloat(&cg->myModeMeanSetting.dayMean, cg->myModeMeanSetting.minMean, cg->myModeMeanSetting.maxMean, "Daytime Mean Target", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.nightMean, 0.0, 1.0, "Nighttime Mean Target", false))
+	if (! validateFloat(&cg->myModeMeanSetting.dayMean_threshold, cg->myModeMeanSetting.minMean_threshold, cg->myModeMeanSetting.maxMean_threshold, "Mean Threshold", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.mean_threshold, 0.0, 1.0, "Mean Threshold", false))
+	if (! validateFloat(&cg->myModeMeanSetting.nightMean, cg->myModeMeanSetting.minMean, cg->myModeMeanSetting.maxMean, "Nighttime Mean Target", false))
+		ok = false;
+	if (! validateFloat(&cg->myModeMeanSetting.nightMean_threshold, cg->myModeMeanSetting.minMean_threshold, cg->myModeMeanSetting.maxMean_threshold, "Mean Threshold", false))
+		ok = false;
+	if (! validateFloat(&cg->myModeMeanSetting.mean_p0, cg->myModeMeanSetting.minMean_p, cg->myModeMeanSetting.maxMean_p, "Mean p0", false))
+		ok = false;
+	if (! validateFloat(&cg->myModeMeanSetting.mean_p0, cg->myModeMeanSetting.minMean_p, cg->myModeMeanSetting.maxMean_p, "Mean p1", false))
+		ok = false;
+	if (! validateFloat(&cg->myModeMeanSetting.mean_p2, cg->myModeMeanSetting.minMean_p, cg->myModeMeanSetting.maxMean_p, "Mean p2", false))
 		ok = false;
 
 	// If there's too short of a delay, pictures won't upload fast enough.
@@ -1335,7 +1502,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		else
 			validateLong(&cg->flip, cc.MinValue, cc.MaxValue, "Flip", true);
 	} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-		Log(0, "ASI_FLIP failed with %s\n", getRetCode(ret));
+		Log(0, "%s: ASI_FLIP failed with %s\n", cg->ME, getRetCode(ret));
 		ok = false;
 	}
 
@@ -1347,13 +1514,13 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		{
 			if (cg->rotation != 180)
 			{
-				Log(0, "%s*** ERROR: Only 0 and 180 degrees are supported for rotation; you entered %ld.%s\n", c(KRED), cg->rotation, c(KNRM));
+				Log(0, "*** %s: ERROR: Only 0 and 180 degrees are supported for rotation; you entered %ld.\n", cg->ME, cg->rotation);
 				ok = false;
 			}
 		}
 		else if (cg->rotation != 90 && cg->rotation != 180 && cg->rotation != 270)
 		{
-			Log(0, "%s*** ERROR: Only 0, 90, 180, and 270 degrees are supported for rotation; you entered %ld.%s\n", c(KRED), cg->rotation, c(KNRM));
+			Log(0, "*** %s: ERROR: Only 0, 90, 180, and 270 degrees are supported for rotation; you entered %ld.\n", cg->ME, cg->rotation);
 			ok = false;
 		}
 	}
@@ -1388,10 +1555,10 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	validateLong(&cg->overlay.linenumber, 0, sizeof(cg->overlay.linetype)-1, "Font Smoothness", true);
 	if (cg->overlay.fc != NULL && sscanf(cg->overlay.fc, "%d %d %d",
 			&cg->overlay.fontcolor[0], &cg->overlay.fontcolor[1], &cg->overlay.fontcolor[2]) != 3)
-		Log(-1, "%s*** WARNING: Not enough font color parameters: '%s'%s\n", c(KRED), cg->overlay.fc, c(KNRM));
+		Log(-1, "*** %s: WARNING: Not enough font color parameters: '%s'\n", cg->ME, cg->overlay.fc);
 	if (cg->overlay.sfc != NULL && sscanf(cg->overlay.sfc, "%d %d %d",
 			&cg->overlay.smallFontcolor[0], &cg->overlay.smallFontcolor[1], &cg->overlay.smallFontcolor[2]) != 3)
-		Log(-1, "%s*** WARNING: Not enough small font color parameters: '%s'%s\n", c(KRED), cg->overlay.sfc, c(KNRM));
+		Log(-1, "*** %s: WARNING: Not enough small font color parameters: '%s'%s\n", cg->ME, cg->overlay.sfc);
 
 	cg->defaultBin = 1;
 	if (! checkBin(cg->dayBin, ci, "Daytime Binning"))
@@ -1407,18 +1574,10 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_TARGET_BRIGHTNESS, &cc);
 	if (ret == ASI_SUCCESS)
 	{
-		cg->defaultBrightness = cc.DefaultValue;		// used elsewhere
-		if (cg->dayBrightness == NOT_CHANGED)
-			cg->dayBrightness = cc.DefaultValue;
-		else
-			validateLong(&cg->dayBrightness, cc.MinValue, cc.MaxValue, "Daytime Brightness", true);
-
-		if (cg->nightBrightness == NOT_CHANGED)
-			cg->nightBrightness = cc.DefaultValue;
-		else
-			validateLong(&cg->nightBrightness, cc.MinValue, cc.MaxValue, "Nighttime Brightness", true);
+		validateLong(&cg->dayBrightness, cc.MinValue, cc.MaxValue, "Daytime Brightness", true);
+		validateLong(&cg->nightBrightness, cc.MinValue, cc.MaxValue, "Nighttime Brightness", true);
 	} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-		Log(0, "ASI_AUTO_TARGET_BRIGHTNESS failed with %s\n", getRetCode(ret));
+		Log(0, "*** %s: ERROR: ASI_AUTO_TARGET_BRIGHTNESS failed with %s\n", cg->ME, getRetCode(ret));
 		ok = false;
 	}
 
@@ -1436,7 +1595,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		else
 			validateFloat(&cg->nightGain, cc.MinValue, cc.MaxValue, "Nighttime Gain", true);
 	} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-		Log(0, "ASI_GAIN failed with %s\n", getRetCode(ret));
+		Log(0, "*** %s: ERROR: ASI_GAIN failed with %s\n", cg->ME, getRetCode(ret));
 		ok = false;
 	}
 	ret = getControlCapForControlType(cg->cameraNumber, ASI_AUTO_MAX_GAIN, &cc);
@@ -1452,7 +1611,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		else
 			validateFloat(&cg->nightMaxAutoGain, cc.MinValue, cc.MaxValue, "Nighttime Max Auto-Gain", true);
 	} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-		Log(0, "ASI_AUTO_MAX_GAIN failed with %s\n", getRetCode(ret));
+		Log(0, "*** %s: ERROR: ASI_AUTO_MAX_GAIN failed with %s\n", cg->ME, getRetCode(ret));
 		ok = false;
 	}
 
@@ -1471,7 +1630,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			else
 				validateFloat(&cg->nightWBR, cc.MinValue, cc.MaxValue, "Nighttime Red Balance", true);
 		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-			Log(0, "ASI_WB_R failed with %s\n", getRetCode(ret));
+			Log(0, "*** %s: ERROR: ASI_WB_R failed with %s\n", cg->ME, getRetCode(ret));
 			ok = false;
 		}
 		ret = getControlCapForControlType(cg->cameraNumber, ASI_WB_B, &cc);
@@ -1488,7 +1647,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			else
 				validateFloat(&cg->nightWBB, cc.MinValue, cc.MaxValue, "Nighttime Blue Balance", true);
 		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-			Log(0, "ASI_WB_B failed with %s\n", getRetCode(ret));
+			Log(0, "*** %s: ERROR: ASI_WB_B failed with %s\n", cg->ME, getRetCode(ret));
 			ok = false;
 		}
 	}
@@ -1503,7 +1662,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			else
 				validateFloat(&cg->saturation, cc.MinValue, cc.MaxValue, "Saturation", true);
 		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-			Log(0, "SATURATION failed with %s\n", getRetCode(ret));
+			Log(0, "*** %s: ERROR: SATURATION failed with %s\n", cg->ME, getRetCode(ret));
 			ok = false;
 		}
 	
@@ -1516,7 +1675,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			else
 				validateFloat(&cg->contrast, cc.MinValue, cc.MaxValue, "Contrast", true);
 		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-			Log(0, "CONTRAST failed with %s\n", getRetCode(ret));
+			Log(0, "*** %s ERROR: CONTRAST failed with %s\n", cg->ME, getRetCode(ret));
 			ok = false;
 		}
 	
@@ -1529,7 +1688,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			else
 				validateFloat(&cg->sharpness, cc.MinValue, cc.MaxValue, "Sharpness", true);
 		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-			Log(0, "SHARPNESS failed with %s\n", getRetCode(ret));
+			Log(0, "*** %s ERROR: SHARPNESS failed with %s\n", cg->ME, getRetCode(ret));
 			ok = false;
 		}
 	}
@@ -1542,7 +1701,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			else
 				validateLong(&cg->gamma, cc.MinValue, cc.MaxValue, "gamma", true);
 		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-			Log(0, "ASI_GAMMA failed with %s\n", getRetCode(ret));
+			Log(0, "*** %s ERROR: ASI_GAMMA failed with %s\n", cg->ME, getRetCode(ret));
 			ok = false;
 		}
 
@@ -1554,7 +1713,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			else
 				validateLong(&cg->offset, cc.MinValue, cc.MaxValue, "offset", true);
 		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-			Log(0, "ASI_OFFSET failed with %s\n", getRetCode(ret));
+			Log(0, "*** %s ERROR: ASI_OFFSET failed with %s\n", cg->ME, getRetCode(ret));
 			ok = false;
 		}
 
@@ -1572,7 +1731,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 				else
 					validateLong(&cg->nightTargetTemp, cc.MinValue, cc.MaxValue, "Nighttime Target Sensor Temperature", true);
 			} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-				Log(0, "ASI_TARGET_TEMP failed with %s\n", getRetCode(ret));
+				Log(0, "*** %s ERROR: ASI_TARGET_TEMP failed with %s\n", cg->ME, getRetCode(ret));
 				ok = false;
 			}
 		}
@@ -1585,7 +1744,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			else
 				validateLong(&cg->asiBandwidth, cc.MinValue, cc.MaxValue, "USB Bandwidth", true);
 		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-			Log(0, "ASI_BANDWIDTHOVERLOAD failed with %s\n", getRetCode(ret));
+			Log(0, "*** %s: ERROR: ASI_BANDWIDTHOVERLOAD failed with %s\n", cg->ME, getRetCode(ret));
 			ok = false;
 		}
 	}

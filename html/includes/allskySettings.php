@@ -1,7 +1,4 @@
 <?php
-if ($formReadonly != "readonly") {
-	include_once( 'includes/status_messages.php' );
-}
 
 function DisplayAllskyConfig(){
 	global $formReadonly;
@@ -12,10 +9,11 @@ function DisplayAllskyConfig(){
 	$debugLevelName = "debuglevel";		// json setting name
 	$debugArg = "";
 
-	global $lastChangedName;			// json setting name
+	global $lastChangedName;			// name of json setting
 	global $lastChanged;
 	global $page;
 	global $ME;
+	global $status;
 
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
@@ -24,11 +22,6 @@ function DisplayAllskyConfig(){
 	$options_array = get_decoded_json_file($options_file, true, $errorMsg);
 	if ($options_array === null) {
 		exit;
-	}
-
-	if ($formReadonly != "readonly") {
-		global $status;
-		$status = new StatusMessages();
 	}
 
 	if (isset($_POST['save_settings'])) {
@@ -41,13 +34,13 @@ function DisplayAllskyConfig(){
 			$optional_array = array();
 			$changes = "";
 			$somethingChanged = false;
-			$numErrors = 0;
+
+			$refreshingCameraType = false;
 			$newCameraType = "";
 			$newCameraModel = "";
 			$newCameraNumber = "";
+
 			$ok = true;
-			$msg = "";
-			$errorMsg = "";
 
 			// Keep track of optional settings
 			foreach ($options_array as $option){
@@ -66,23 +59,31 @@ function DisplayAllskyConfig(){
 				// so convert them to HTML codes instead.
 				$isOLD = substr($key, 0, 4) === "OLD_";
 				if ($isOLD) {
-					$originalName = substr($key, 4);		// everything after "OLD_"
+					$key = substr($key, 4);		// everything after "OLD_"
 					$oldValue = str_replace("'", "&#x27", $value);
-					$newValue = getVariableOrDefault($settings, $originalName, "");
+					$newValue = getVariableOrDefault($settings, $key, "");
 					if ($oldValue !== $newValue) {
-						if ($originalName === $cameraTypeName)
-							$newCameraType = $newValue;
-						elseif ($originalName === $cameraModelName)
+						if ($key === $cameraTypeName) {
+							if ($newValue === "Refresh") {
+								// Refresh the same Camera Type
+								$refreshingCameraType = true;
+								$newCameraType = $oldValue;
+								$newValue = $oldValue;
+							} else {
+								$newCameraType = $newValue;
+							}
+						} elseif ($key === $cameraModelName) {
 							$newCameraModel = $newValue;
-						elseif ($originalName === $cameraNumberName)
+						} elseif ($key === $cameraNumberName) {
 							$newCameraNumber = $newValue;
-						else
-							$somethingChanged = true;	// want to know about other changes
+						} else {
+							$somethingChanged = true;	// want to know about OTHER changes
+						}
 
 						$checkchanges = false;
 						foreach ($options_array as $option){
-							if ($option['name'] === $originalName) {
-								$optional = $optional_array[$originalName];
+							if ($option['name'] === $key) {
+								$optional = $optional_array[$key];
 								if ($newValue !== "" || $optional) {
 									$checkchanges = getVariableOrDefault($option, 'checkchanges', false);
 									$label = getVariableOrDefault($option, 'label', "");
@@ -91,40 +92,61 @@ function DisplayAllskyConfig(){
 							}
 						}
 						if ($checkchanges)
-							$changes .= "  '$originalName' '$label' '$oldValue' '$newValue'";
+							$changes .= "  '$key' '$label' '$oldValue' '$newValue'";
 					}
 
 				} else {
-					// Check for empty non-optional settings.
-					foreach ($options_array as $option){
+					// Check for empty non-optional settings and valid numbers.
+					$span = "span class='WebUISetting'";
+					$spanValue = "span class='WebUIValue'";
+					foreach ($options_array as $option) {
 						if ($option['name'] === $key) {
+							$type = getVariableOrDefault($option, 'type', null);
+							$lab = $option['label'];
+
 							if ($value == "" && ! $optional_array[$key]) {
-								if ($errorMsg == "")
-									$errorMsg = "<strong>" . $option['label'] . "</strong> is empty";
-								else
-									$errorMsg .= ", <strong>" . $option['label'] . "</strong> is empty";
-								$numErrors++;
+								$msg = "<$span>$lab</span> is empty";
+								$status->addMessage($msg, 'danger', false);
 								$ok = false;
+
+							} else if ($type !== null) {
+								$msg = "";
+								// $value will be of type string, even if it's actually a number,
+								// and only is_numeric() accounts for types of string.
+								if ($type === "integer" || $type == "percent") {
+									if (! is_numeric($value) || ! is_int($value + 0))
+										$msg = "without a fraction";
+								} else if ($type === "float") {
+									if (! is_numeric($value) || ! is_float($value + 0.0))
+										$msg = "with, or without, a fraction";
+								}
+								if ($msg !== "") {
+									$msg2 = "<$span>$lab</span> must be a number $msg.";
+									$msg2 .= " You entered: <$spanValue>$value</span>";
+									$status->addMessage($msg2, 'danger', false);
+									$ok = false;
+								}
 							}
 						}
 					}
 
-					// Add the key/value pair to the array so we can see if it changed.
-					$settings[$key] = str_replace("'", "&#x27", $value);
+					if ($ok) {
+						$settings[$key] = str_replace("'", "&#x27", $value);
 
-					if ($key === $debugLevelName && $value >= 4) {
-						$debugArg = "--debug";
+						if ($key === $debugLevelName && $value >= 4) {
+							$debugArg = "--debug";
+						}
 					}
 				}
 			}
 
-// TODO: makeChanges.sh should probably come first because if it fails, we don't want
-// to update the settings file.
+			$msg = "";
 			if ($ok) {
-				if ($somethingChanged || $lastChanged === null) {
+				if ($somethingChanged || $lastChanged === "") {
 					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
-						$msg .= " or <b>Camera Number</b>  you cannot change anything else.  No changes made.";
+						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
+						$status->addMessage($msg, 'danger', false);
 						$ok = false;
 					} else {
 						// Keep track of the last time the file changed.
@@ -141,7 +163,10 @@ function DisplayAllskyConfig(){
 					}
 				} else {
 					if ($newCameraType !== "") {
-						$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>";
+						if ($refreshingCameraType)
+							$msg .= "<b>Camera Type</b> $newCameraType refreshed";
+						else
+							$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>";
 					}
 					if ($newCameraModel !== "") {
 						if ($msg !== "") $msg = "<br>$msg";
@@ -153,27 +178,31 @@ function DisplayAllskyConfig(){
 					}
 
 					if ($msg === "")
-						$msg = "No settings changed (file not updated)";
+						$msg = "No settings changed (but timestamp updated)";
 				}
 			}
 
-			// 'restart' is a checkbox: if check, it returns 'on', otherwise nothing.
-			$doingRestart = getVariableOrDefault($_POST, 'restart', false);
-			if ($doingRestart === "on") $doingRestart = true;
-
 			if ($ok) {
+				// 'restart' is a checkbox: if check, it returns 'on', otherwise nothing.
+				$doingRestart = getVariableOrDefault($_POST, 'restart', false);
+				if ($doingRestart === "on") $doingRestart = true;
+
 				if ($changes !== "") {
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
+					$moreArgs = "";
 					if ($doingRestart)
-						$restarting = "--restarting";
-					else
-						$restarting = "";
+						$moreArgs .= " --restarting";
+					if ($newCameraType !== "") {
+						$moreArgs .= " --cameraTypeOnly";
+					}
+
 					$CMD = "sudo --user=" . ALLSKY_OWNER;
-					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $debugArg $restarting $changes";
+					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $debugArg $moreArgs $changes";
 					# Let makeChanges.sh display any output
 					echo '<script>console.log("Running: ' . $CMD . '");</script>';
-					$ok = runCommand($CMD, "", "success");
+					// false = don't add anything to the message
+					$ok = runCommand($CMD, "", "success", false);
 				}
 
 				if ($ok) {
@@ -182,18 +211,13 @@ function DisplayAllskyConfig(){
 						// runCommand displays $msg.
 						runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
 					} else {
-						$msg .= " but Allsky NOT restarted.";
+						$msg .= "; Allsky NOT restarted.";
 						$status->addMessage($msg, 'info');
 					}
 				}
 
 			} else {	// not $ok
-				if ($doingRestart)
-					$msg = ", and Allsky NOT restarted.";
-				if ($numErrors > 0) {
-					$msg = "Settings NOT saved due to $numErrors errors: $errorMsg.";
-				}
-				$status->addMessage($msg, 'danger');
+				$status->addMessage("Settings NOT saved due to errors above.", 'info', false);
 			}
 		} else {
 			$status->addMessage('Unable to save settings - session timeout.', 'danger');
@@ -295,6 +319,27 @@ function toggle_advanced()
 ?>
 
 		<form method="POST" action="<?php echo "$ME?_ts=" . time(); ?>" name="conf_form">
+
+<?php
+if ($formReadonly != "readonly") { ?>
+	<div class="sticky">
+		<input type="submit" class="btn btn-primary" name="save_settings" value="Save changes">
+		<input type="submit" class="btn btn-warning" name="reset_settings"
+			value="Reset to default values"
+			onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
+		<button type="button" class="btn advanced btn-advanced" id="advButton"
+			onclick="toggle_advanced();">
+			<?php if ($initial_display == "none") echo "Show advanced options"; else echo "Hide advanced options"; ?>
+		</button>
+		<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;">
+			<br>
+			<input type="checkbox" name="restart" checked> Restart Allsky after saving changes?
+			<br><br>&nbsp;
+		</div>
+	</div>
+	<button onclick="topFunction(); return false;" id="backToTopBtn" title="Go to top of page">Top</button>
+<?php } ?>
+
 		<input type="hidden" name="page" value="<?php echo "$page"; ?>">
 		<?php CSRFToken();
 
@@ -346,7 +391,7 @@ function toggle_advanced()
 				if ($advanced == 1) {
 					$numAdvanced++;
 					$advClass = "advanced";
-					$advStyle = "display: $initial_display";
+					$advStyle = "display: $initial_display;";
 				} else {
 					$advClass = "";
 					$advStyle = "";
@@ -396,13 +441,17 @@ function toggle_advanced()
 
 				// Put some space before and after headers.  This next line is the "before":
 				if ($type == "header") {
-					echo "<tr style='height: 10px'><td colspan='3'></td></tr>";
-					echo "<td colspan='3' style='padding: 8px 0px;' class='settingsHeader'>$description</td>";
-					echo "<tr class='rowSeparator' style='height: 10px'><td colspan='3'></td></tr>";
+					// Not sure how to display the header with a background color with 10px
+					// of white above and below it using only one <tr>.
+					echo "<tr class='$advClass advanced-nocolor' style='$advStyle height: 10px;'><td colspan='3'></td></tr>";
+					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle'>";
+						echo "<td colspan='3' class='settingsHeader' style='padding: 8px 0px;'>$description</td>";
+						echo "</tr>";
+					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle height: 10px;'><td colspan='3'></td></tr>";
 				} else {
 					echo "<tr class='form-group $advClass $class $warning_class' style='margin-bottom: 0px; $advStyle'>";
 					// Show the default in a popup
-					if ($type == "checkbox") {
+					if ($type == "boolean") {
 						if ($default == "0") $default = "No";
 						else $default = "Yes";
 					} elseif ($type == "select") {
@@ -413,12 +462,12 @@ function toggle_advanced()
 							break;
 						}
 					}
-					if ($default !== "")
-						$popup = "Default=$default";
-					else
-						$popup = "";
+					$popup = "";
+					if ($default !== "") $popup .= "Default=$default";
 					if ($minimum !== "") $popup .= "\nMinimum=$minimum";
 					if ($maximum !== "") $popup .= "\nMaximum=$maximum";
+					if ($type == "integer" || $type == "percent") $popup .= "\nWhole numbers only";
+					if ($type == "float") $popup .= "\nFractions allowed";
 
 					if ($type == "widetext") $span="rowspan='2'";
 					else $span="";
@@ -441,7 +490,8 @@ function toggle_advanced()
 					// May want to consider having a symbol next to the field
 					// that has the popup.
 					echo "<span title='$popup'>";
-					if ($type == "text" || $type == "number" || $type == "readonly"){
+// TODO: add percent sign for "percent"
+					if ($type == "text" || $type == "integer" || $type == "float" || $type == "percent" || $type == "readonly"){
 						if ($type == "readonly") {
 							$readonly = "readonly";
 							$t = "text";
@@ -449,8 +499,9 @@ function toggle_advanced()
 							$readonly = "";
 							// Browsers put the up/down arrows for numbers which moves the
 							// numbers to the left, and they don't line up with text.
-							// Plus, they don't accept decimal points in "number".
-							if ($type == "number") $type = "text";
+							// Plus, they don't accept decimal points in "float".
+							if ($type == "integer" || $type == "float" || $type == "percent")
+								$type = "text";
 							$t = $type;
 						}
 						echo "\n\t<input $readonly class='form-control boxShadow settingInput ' type='$t'" .
@@ -473,7 +524,7 @@ function toggle_advanced()
 							}
 						}
 						echo "</select>";
-					} else if ($type == "checkbox"){
+					} else if ($type == "boolean"){
 						echo "\n\t<div class='switch-field boxShadow settingInput' style='margin-bottom: -3px; border-radius: 4px;'>";
 							echo "\n\t<input id='switch_no_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='0' ".
@@ -522,16 +573,9 @@ function toggle_advanced()
 				messages.innerHTML += '<?php $status->showMessages(true, true); ?>'.replace(/&apos;/g, "'");
 			</script>
 		<?php
-		}
+		} 
+		?>
 
-if ($formReadonly != "readonly") { ?>
-	<div style="margin-top: 20px">
-		<input type="submit" class="btn btn-primary" name="save_settings" value="Save changes">
-		<input type="submit" class="btn btn-warning" name="reset_settings" value="Reset to default values" onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
-		<button type="button" class="btn advanced btn-advanced" id="advButton" onclick="toggle_advanced();"><?php if ($initial_display == "none") echo "Show advanced options"; else echo "Hide advanced options"; ?></button>
-		<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;"><br><input type="checkbox" name="restart" checked> Restart Allsky after saving changes?<br><br>&nbsp;</div>
-	</div>
-<?php } ?>
 	</form>
 </div><!-- ./ Panel body -->
 </div><!-- /.panel-primary -->

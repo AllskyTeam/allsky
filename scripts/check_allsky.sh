@@ -28,7 +28,7 @@ usage_and_exit()
 	# Don't show the "--newer", "--no-check", or "--force-check" options since users
 	# should never use them.
 	echo
-	echo -e "${C}Usage: ${ME} [--help] [--debug]${NC}"
+	echo -e "${C}Usage: ${ME} [--help] [--debug] [--no-check]${NC}"
 	echo
 	echo "'--help' displays this message and exits."
 	echo
@@ -76,8 +76,7 @@ source "${ALLSKY_CONFIG}/config.sh"	 					|| exit ${ALLSKY_ERROR_STOP}
 source "${ALLSKY_CONFIG}/ftp-settings.sh" 				|| exit ${ALLSKY_ERROR_STOP}
 PROTOCOL="${PROTOCOL,,}"	# set to lowercase to make comparing easier
 
-
-BRANCH="$( get_branch "${ALLSKY_BRANCH_FILE}" )"
+BRANCH="$( get_branch "" )"
 [[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 [[ ${DEBUG} == "true" ]] && echo "DEBUG: using '${BRANCH}' branch."
 
@@ -152,7 +151,7 @@ function heading()
 	fi
 }
 
-# Determine if the specified value is a number
+# Determine if the specified value is a number.
 function is_number()
 {
 	local VALUE="${1}"
@@ -168,6 +167,18 @@ function is_number()
 	fi
 }
 
+# Return the min of two numbers.
+function min() {
+	local ONE="${1}"
+	local TWO="${2}"
+	if [[ ${ONE} -lt ${TWO} ]]; then
+		echo "${ONE}"
+	else
+		echo "${TWO}"
+	fi
+}
+
+# =================================================== CHECKING FUNCTIONS
 
 # The various upload protocols need different variables defined.
 # For the specified protocol, make sure the specified variable is defined.
@@ -196,20 +207,61 @@ function check_exists() {
 	fi
 }
 
+
+
+DAYDELAY_MS=$(settings .daydelay) || echo "Problem getting .daydelay"
+NIGHTDELAY_MS=$(settings .nightdelay) || echo "Problem getting .nightdelay"
+
+	# Use min() for worst case.
+MIN_DELAY_MS=$( min "${DAYDELAY_MS}" "${NIGHTDELAY_MS}" )
+	# This is typically the max daytime exposure, which is shorter than nighttime so use it.
+MIN_EXPOSURE_MS=250
+	# Minimum total time spent on each image
+MIN_IMAGE_TIME_MS=$((MIN_EXPOSURE_MS + MIN_DELAY_MS))
+
+##### Check if the delay is so short it's likely to cause problems.
+function check_delay()
+{
+# TODO: use the module average flow times for day and night
+
+	# With the legacy overlay method it might take up to a couple seconds to save an image.
+	# With the module method it can take up to 5 seconds.
+	local OVERLAY_METHOD=$(settings .overlayMethod) || echo "Problem getting .overlayMethod." >&2
+	if [[ ${OVERLAY_METHOD} -eq 1 ]]; then
+		MAX_TIME_TO_SAVE_MS=5000
+	else
+		MAX_TIME_TO_SAVE_MS=2000
+	fi
+	if [[ ${MAX_TIME_TO_SAVE_MS} -gt ${MIN_IMAGE_TIME_MS} ]]; then
+		heading "Warnings"
+		echo "The minimum delay of ${MIN_DELAY_MS} may be too short"
+		echo "given the maximum expected time to save and process"
+		echo "an image (${MAX_TIME_TO_SAVE_MS} ms)."
+		echo "A new image may appear before the prior one has finished processing."
+		echo "Consider increasing your delay."
+	fi
+}
+
+#
+# ====================================================== MAIN PART OF PROGRAM
+#
+
 # Variables used below.
-TAKING_DARKS="$(settings .takeDarkFrames)"
-WIDTH="$(settings .width)"		# per the WebUI, usually 0
-HEIGHT="$(settings .height)"
-SENSOR_WIDTH="$(settings .sensorWidth "${CC_FILE}")"	# physical sensor size
-SENSOR_HEIGHT="$(settings .sensorHeight "${CC_FILE}")"
-TAKE="$(settings .takeDaytimeImages)"
-SAVE="$(settings .saveDaytimeImages)"
-ANGLE="$(settings .angle)"
-LATITUDE="$(settings .latitude)"
-LONGITUDE="$(settings .longitude)"
+TAKING_DARKS="$(settings .takeDarkFrames)" || echo "Problem getting .takeDarkFrames." >&2
+# per the WebUI, width and height are usually 0
+WIDTH="$(settings .width)" || echo "Problem getting .width." >&2
+HEIGHT="$(settings .height)" || echo "Problem getting .height." >&2
+# physical sensor size
+SENSOR_WIDTH="$(settings .sensorWidth "${CC_FILE}")" || echo "Problem getting .sensorWidth." >&2
+SENSOR_HEIGHT="$(settings .sensorHeight "${CC_FILE}")" || echo "Problem getting .sensorHeight." >&2
+TAKE="$(settings .takeDaytimeImages)" || echo "Problem getting .takeDaytimeImages." >&2
+SAVE="$(settings .saveDaytimeImages)" || echo "Problem getting .saveDaytimeImages." >&2
+ANGLE="$(settings .angle)" || echo "Problem getting .angle" >&2
+LATITUDE="$(settings .latitude)" || echo "Problem getting .latitude." >&2
+LONGITUDE="$(settings .longitude)" || echo "Problem getting .longitude" >&2
 # shellcheck disable=SC2034
-LOCALE="$(settings .locale)"
-USING_DARKS="$(settings .useDarkFrames)"
+LOCALE="$(settings .locale)" || echo "Problem getting .locale" >&2
+USING_DARKS="$(settings .useDarkFrames)" || echo "Problem getting .useDarkFrames" >&2
 WEBSITES="$(whatWebsites)"
 
 # ======================================================================
@@ -220,7 +272,7 @@ WEBSITES="$(whatWebsites)"
 if [[ ${TAKING_DARKS} -eq 1 ]]; then
 	heading "Information"
 	echo "'Take Dark Frames' is set."
-	echo "Unset if you no longer wish to take dark frames."
+	echo "Unset when you are done taking dark frames."
 fi
 
 if [[ ${KEEP_SEQUENCE} == "true" ]]; then
@@ -275,14 +327,28 @@ if [[ ${CROP_IMAGE} == "true" && ${SENSOR_WIDTH} == "${CROP_WIDTH}" && ${SENSOR_
 	echo "Check CROP_IMAGE, CROP_WIDTH (${CROP_WIDTH}), and CROP_HEIGHT (${CROP_HEIGHT})."
 fi
 
+LAST_CHANGED="$( settings ".lastChanged" )" || echo "Problem getting .lastChanged" >&2
+if [[ ${LAST_CHANGED} == "" || ${LAST_CHANGED} == "null" ]]; then
+	heading "Information"
+	echo "Allsky needs to be configured before it will run."
+	echo "See the 'Allsky Settings' page in the WebUI."
+fi
+
+if reboot_needed ; then
+	heading "Information"
+	echo "The Pi needs to be rebooted before Allsky will start."
+fi
 
 # ======================================================================
 # ================= Check for warning items.
 #	These are wrong and won't stop Allsky from running, but
 #	may break part of Allsky, e.g., uploads may not work.
 
+##### Check if the delay is so short it's likely to cause problems.
+check_delay
 
-# Check if timelapse size is "too big" and will likely cause an error.
+
+##### Check if timelapse size is "too big" and will likely cause an error.
 # This is normally only an issue with the libx264 video codec which has a dimension limit
 # that we put in PIXEL_LIMIT
 if [[ ${VCODEC} == "libx264" ]]; then
@@ -358,6 +424,7 @@ if [[ ${TIMELAPSE} == "false" && ${UPLOAD_VIDEO} == "true" ]]; then
 	echo "Timelapse videos are not being created (TIMELAPSE='false') but UPLOAD_VIDEO='true'"
 fi
 
+
 if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 
 	# See if there's likely to be a problem with mini timelapse creations
@@ -367,60 +434,28 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 	#	2. Frequency:	how often mini timelapse are created (i.e., after how many images)
 	# 	3. NumImages:	how many images are used (the more the longer processing takes)
 	# 	4. the speed of the Pi - this is the biggest unknown
-	function min() {		# return the min of two numbers
-		ONE=$(settings "${1}")
-		TWO=$(settings "${2}")
-		if [[ ${ONE} -lt ${TWO} ]]; then
-			echo "${ONE}"
-		else
-			echo "${TWO}"
-		fi
-	}
 	function get_exposure() {	# return the time spent on one image, prior to delay
-		TIME="${1}"
-		if [[ $(settings ".${TIME}autoexposure") ]]; then
-			settings ".${TIME}maxautoexposure"
+		local TIME="${1}"
+		if [[ $(settings ".${TIME}autoexposure") -eq 1 ]]; then
+			settings ".${TIME}maxautoexposure" || echo "Problem getting .${TIME}maxautoexposure." >&2
 		else
-			settings ".${TIME}exposure"
+			settings ".${TIME}exposure" || echo "Problem getting .${TIME}exposure." >&2
 		fi
 	}
-
-	# Use min() for worst case.
-	# Convert to seconds ( / 1000) to make logic easier.
-	MIN_DELAY=$(min .daydelay .nightdelay)
-	MIN_DELAY=$((MIN_DELAY / 1000))
-# TODO: remove the commented out assigments after we know this works.
-#MIN_DELAY=1
-#TIMELAPSE_MINI_FREQUENCY=10
-
-# TODO: Hard-code the MIN_EXPOSURE below instead of these lines:
-#x	CONSISTENT_DELAYS=$(settings .consistentDelays)
-#x	if [[ ${CONSISTENT_DELAYS} -eq 1 ]]; then
-#x		MIN_EXPOSURE=$(min .daymaxautoexposure .nightmaxautoexposure)
-#x	else
-#x		MIN_EXPOSURE=$(min "$(get_exposure "day")" "$(get_exposure "night")")
-#x	fi
-#x	MIN_EXPOSURE=$((MIN_EXPOSURE / 1000))
-
-	# This is typically the max daytime exposure, which is shorter than nighttime.
-	# so use it.
-	MIN_EXPOSURE=0.25
-
-	# Minimum total time spent on each image
-	MIN_IMAGE_TIME=$(echo "${MIN_EXPOSURE} + ${MIN_DELAY}" | bc -l)
 
 	# Minimum total time between start of timelapse creations.
-	MIN_TIME_BETWEEN_TIMELAPSE=$(echo "scale=0; ${TIMELAPSE_MINI_FREQUENCY} * ${MIN_IMAGE_TIME}" | bc -l)
-	MIN_TIME_BETWEEN_TIMELAPSE=${MIN_TIME_BETWEEN_TIMELAPSE/.*/}
+	MIN_IMAGE_TIME_SEC=$(( MIN_IMAGE_TIME_MS / 1000))
+	MIN_TIME_BETWEEN_TIMELAPSE_SEC=$(echo "scale=0; ${TIMELAPSE_MINI_FREQUENCY} * ${MIN_IMAGE_TIME_SEC}" | bc -l)
+	MIN_TIME_BETWEEN_TIMELAPSE_SEC=${MIN_TIME_BETWEEN_TIMELAPSE_SEC/.*/}
 
-#echo "CONSISTENT_DELAYS=$CONSISTENT_DELAYS"
-#echo "MIN_DELAY=$MIN_DELAY"
-#echo "MIN_EXPOSURE=$MIN_EXPOSURE"
-#echo "MIN_IMAGE_TIME=$MIN_IMAGE_TIME"
-#echo "MIN_TIME_BETWEEN_TIMELAPSE=$MIN_TIME_BETWEEN_TIMELAPSE"
-#TIMELAPSE_MINI_IMAGES=120
-#echo "TIMELAPSE_MINI_IMAGES=$TIMELAPSE_MINI_IMAGES"
-#echo "CAMERA_TYPE=$CAMERA_TYPE"
+if false; then		# for testing
+	echo "CONSISTENT_DELAYS=${CONSISTENT_DELAYS}"
+	echo "MIN_IMAGE_TIME_SEC=${MIN_IMAGE_TIME_SEC}"
+	echo "MIN_TIME_BETWEEN_TIMELAPSE_SEC=${MIN_TIME_BETWEEN_TIMELAPSE_SEC}"
+	echo "TIMELAPSE_MINI_IMAGES=${TIMELAPSE_MINI_IMAGES}"
+	echo "CAMERA_TYPE=${CAMERA_TYPE}"
+	TIMELAPSE_MINI_IMAGES=120
+fi
 
 	# On a Pi 4, creating a 50 image timelapse takes
 	#	- a few seconds on a small ZWO camera
@@ -432,14 +467,13 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 		S=60
 	fi
 	EXPECTED_TIME=$(echo "scale=0; (${TIMELAPSE_MINI_IMAGES} / 50) * ${S}" | bc -l)
-#echo "EXPECTED_TIME=$EXPECTED_TIME"
-	if [[ ${EXPECTED_TIME} -gt ${MIN_TIME_BETWEEN_TIMELAPSE} ]]; then
+	if [[ ${EXPECTED_TIME} -gt ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} ]]; then
 		heading "Warnings"
 		echo "Your mini timelapse settings may cause multiple timelapse to be created simultaneously."
 		echo "Consider increasing DELAY between pictures, increasing TIMELAPSE_MINI_FREQUENCY,"
 		echo "decrease TIMELAPSE_MINI_IMAGES, or a combination of those changes."
 		echo "Expected time to create a mini timelapse on a Pi 4 is ${EXPECTED_TIME} seconds"
-		echo "but with your settings one will be created as short as every ${MIN_TIME_BETWEEN_TIMELAPSE} seconds."
+		echo "but with your settings one will be created as short as every ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} seconds."
 	fi
 fi
 
@@ -463,17 +497,6 @@ if [[ ${STARTRAILS} == "false" && ${UPLOAD_STARTRAILS} == "true" ]]; then
 	echo "Startrails are not being created (STARTRAILS='false') but UPLOAD_STARTRAILS='true'"
 fi
 
-
-if [[ ${RESIZE_UPLOADS} == "true" && ${IMG_UPLOAD} == "false" ]]; then
-	heading "Warnings"
-	echo "RESIZE_UPLOADS is 'true' but you aren't uploading images (IMG_UPLOAD='false')."
-fi
-
-if [[ ${TAKE} -eq 0 && ${SAVE} -eq 1 ]]; then
-	heading "Warnings"
-	echo "'Daytime Capture' is off but 'Daytime Save' is on in the WebUI."
-fi
-
 if [[ ${BRIGHTNESS_THRESHOLD} == "0.0" ]]; then
 	heading "Warnings"
 	echo "BRIGHTNESS_THRESHOLD is 0.0 which means ALL images will be IGNORED when creating startrails."
@@ -482,9 +505,11 @@ elif [[ ${BRIGHTNESS_THRESHOLD} == "1.0" ]]; then
 	echo "BRIGHTNESS_THRESHOLD is 1.0 which means ALL images will be USED when creating startrails, even daytime images."
 fi
 
-if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} && (${PROTOCOL} == "" || ${PROTOCOL} == "local") ]]; then
+##### Images
+
+if [[ ${TAKE} -eq 0 && ${SAVE} -eq 1 ]]; then
 	heading "Warnings"
-	echo "A remote Allsky Website configuration file was found but PROTOCOL doesn't support uploading files."
+	echo "'Daytime Capture' is off but 'Daytime Save' is on in the WebUI."
 fi
 
 if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
@@ -493,6 +518,11 @@ if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
 	echo We HIGHLY recommend setting it to 'true' unless you are debugging issues.
 fi
 
+##### Uploads
+if [[ ${RESIZE_UPLOADS} == "true" && ${IMG_UPLOAD} == "false" ]]; then
+	heading "Warnings"
+	echo "RESIZE_UPLOADS is 'true' but you aren't uploading images (IMG_UPLOAD='false')."
+fi
 
 case "${PROTOCOL}" in
 	"" | local)		# Nothing needed for these
@@ -502,6 +532,10 @@ case "${PROTOCOL}" in
 		check_PROTOCOL "${PROTOCOL}" "REMOTE_HOST"
 		check_PROTOCOL "${PROTOCOL}" "REMOTE_USER"
 		check_PROTOCOL "${PROTOCOL}" "REMOTE_PASSWORD"
+		if [[ ${PROTOCOL} == "ftp" ]]; then
+			heading "Warnings"
+			echo "PROTOCOL set to insecure 'ftp'.  Try to use 'ftps' or 'sftp' instead."
+		fi
 		;;
 
 	scp)
@@ -541,34 +575,17 @@ if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
 	echo "Uploads will not work until this is corrected."
 fi
 
-# If these variables are set, their corresponding directory should exist.
+##### If these variables are set, their corresponding directory should exist.
 check_exists "WEB_IMAGE_DIR"
 check_exists "WEB_VIDEOS_DIR"
 check_exists "WEB_KEOGRAM_DIR"
 check_exists "WEB_STARTRAILS_DIR"
 check_exists "UHUBCTL_PATH"
 
-# Check for Allsky Website-related anomolies.
-if [[ ${WEBSITES} != "none" ]]; then
-	if [[ ${IMG_UPLOAD} == "false" ]]; then
-		heading "Warnings"
-		echo "You have an Allsky Website but no images are being uploaded to it (IMG_UPLOAD=false)."
-	fi
-	if [[ ${TIMELAPSE} == "true" && ${UPLOAD_VIDEO} == "false" ]]; then
-		heading "Warnings"
-		echo "You have an Allsky Website and timelapse videos are being created (TIMELAPSE=true),"
-		echo "but they are not being uploaded (UPLOAD_VIDEO=false)."
-	fi
-	if [[ ${KEOGRAM} == "true" && ${UPLOAD_KEOGRAM} == "false" ]]; then
-		heading "Warnings"
-		echo "You have an Allsky Website and keograms are being created (KEOGRAM=true),"
-		echo "but they are not being uploaded (UPLOAD_KEOGRAM=false)."
-	fi
-	if [[ ${STARTRAILS} == "true" && ${UPLOAD_STARTRAILS} == "false" ]]; then
-		heading "Warnings"
-		echo "You have an Allsky Website and startrails are being created (STARTRAILS=true),"
-		echo "but they are not being uploaded (UPLOAD_STARTRAILS=false)."
-	fi
+##### Check for Allsky Website-related issues.
+if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} && (${PROTOCOL} == "" || ${PROTOCOL} == "local") ]]; then
+	heading "Warnings"
+	echo "A remote Allsky Website configuration file was found but PROTOCOL doesn't support uploading files."
 fi
 
 
@@ -577,12 +594,19 @@ fi
 # ================= Check for error items.
 #	These are wrong and will likely keep Allsky from running.
 
+##### Make sure it's a know camera type.
 if [[ ${CAMERA_TYPE} != "ZWO" && ${CAMERA_TYPE} != "RPi" ]]; then
 	heading "Errors"
 	echo "INTERNAL ERROR: CAMERA_TYPE (${CAMERA_TYPE}) not valid."
 fi
 
-# Make sure these booleans have boolean values, or are blank.
+##### Make sure the settings file is properly linked.
+if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
+	heading "Errors"
+	echo -e "${MSG}"
+fi
+
+##### Make sure these booleans have boolean values, or are blank.
 for i in IMG_UPLOAD IMG_UPLOAD_ORIGINAL_NAME IMG_RESIZE CROP_IMAGE AUTO_STRETCH \
 	RESIZE_UPLOADS IMG_CREATE_THUMBNAILS REMOVE_BAD_IMAGES TIMELAPSE UPLOAD_VIDEO \
 	TIMELAPSE_UPLOAD_THUMBNAIL TIMELAPSE_MINI_FORCE_CREATION TIMELAPSE_MINI_UPLOAD_VIDEO \
@@ -595,8 +619,8 @@ do
 	fi
 done
 
-# Check that all required settings are set.
-# All others are optional.
+##### Check that all required settings are set.  All others are optional.
+# TODO: determine from options.json file which are required.
 for i in ANGLE LATITUDE LONGITUDE LOCALE
 do
 	if [[ -z ${!i} || ${!i} == "null" ]]; then
@@ -605,7 +629,7 @@ do
 	fi
 done
 
-# Check that the required settings' values are valid.
+##### Check that the required settings' values are valid.
 if [[ -n ${ANGLE} ]] && ! is_number "${ANGLE}" ; then
 	heading "Errors"
 	echo "ANGLE (${ANGLE}) must be a number."
@@ -623,7 +647,7 @@ if [[ -n ${LONGITUDE} ]]; then
 	fi
 fi
 
-# Check dark frames
+##### Check dark frames
 if [[ ${USING_DARKS} -eq 1 ]]; then
 	if [[ ! -d ${ALLSKY_DARKS} ]]; then
 		heading "Errors"
@@ -638,7 +662,7 @@ if [[ ${USING_DARKS} -eq 1 ]]; then
 	fi
 fi
 
-# Check for valid numbers.
+##### Check for valid numbers.
 if ! is_number "${IMG_UPLOAD_FREQUENCY}" || [[ ${IMG_UPLOAD_FREQUENCY} -le 0 ]]; then
 	heading "Errors"
 	echo "IMG_UPLOAD_FREQUENCY (${IMG_UPLOAD_FREQUENCY}) must be 1 or greater."
@@ -679,7 +703,7 @@ if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
 	fi
 fi
 
-# If images are being resized or cropped,
+##### If images are being resized or cropped,
 # make sure the resized/cropped image is fully within the sensor image.
 HAS_PIXEL_ERROR="false"
 if [[ ${IMG_RESIZE} == "true" ]]; then

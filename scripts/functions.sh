@@ -25,6 +25,15 @@ function doExit()
 			COLOR="yellow"
 			;;
 	esac
+
+	OUTPUT_A_MSG="false"
+	if [[ -n ${WEBUI_MESSAGE} ]]; then
+		[[ ${TYPE} = "no-image" ]] && TYPE="success"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
+		echo "Stopping Allsky: ${WEBUI_MESSAGE}"
+		OUTPUT_A_MSG="true"
+	fi
+
 	if [[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
 		# even if the user has them turned off.
@@ -36,18 +45,16 @@ function doExit()
 				"${FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
 				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
+			echo "Stopping Allsky: ${CUSTOM_MESSAGE}"
 		elif [[ ${TYPE} != "no-image" ]]; then
+			[[ ${OUTPUT_A_MSG} == "false" && ${TYPE} == "RebootNeeded" ]] && echo "Reboot needed"
 			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "${TYPE}" 2>&1
 		fi
-		# Don't let the service restart us because we'll likely get the same error again.
-		echo "     ***** AllSky Stopped *****"
 	fi
 
-	if [[ -n ${WEBUI_MESSAGE} ]]; then
-		[[ ${TYPE} = "no-image" ]] && TYPE="success"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
-	fi
+	echo "     ***** AllSky Stopped *****"
 
+	# Don't let the service restart us because we'll likely get the same error again.
 	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && sudo systemctl stop allsky
 
 	# shellcheck disable=SC2086
@@ -70,6 +77,7 @@ function determineCommandToUse()
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
 	# use raspistill.
 
+	local RET=0
 	local CMD="libcamera-still"
 	if command -v ${CMD} > /dev/null; then
 		# Found the command - see if it works.
@@ -88,7 +96,7 @@ function determineCommandToUse()
 
 		CMD="raspistill"
 		if ! command -v "${CMD}" > /dev/null; then
-			echo -e "${RED}*** ERROR: Can't determine what command to use for RPi camera.${NC}"
+			echo "Can't determine what command to use for RPi camera." >&2
 			if [[ ${USE_doExit} == "true" ]]; then
 				doExit "${EXIT_ERROR_STOP}" "Error" "${PREFIX}\nRPi camera command\nnot found!."
 			fi
@@ -96,21 +104,17 @@ function determineCommandToUse()
 			return 1
 		fi
 
-		# TODO: Should try and run raspistill command - doing that is more reliable since
-		# the output of vcgencmd changes depending on the OS and how the Pi is configured.
-		# Newer kernels/libcamera give:   supported=1 detected=0, libcamera interfaces=1
-		# but only if    start_x=1    is in /boot/config.txt
-		vcgencmd get_camera | grep --silent "supported=1" ######### detected=1"
+		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
 	fi
 
 	if [[ ${RET} -ne 0 ]]; then
-		echo -e "${RED}*** ERROR: RPi camera not found.  Make sure it's enabled.${NC}"
+		echo "RPi camera not found.  Make sure it's enabled." >&2
 		if [[ ${USE_doExit} == "true" ]]; then
 			doExit "${EXIT_NO_CAMERA}" "Error" "${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
 		fi
 
-		return 1
+		return "${EXIT_NO_CAMERA}"
 	fi
 
 	echo "${CMD}"
@@ -426,7 +430,7 @@ function get_variable() {
 	local FILE="${2}"
 	local LINE=""
 	local SEARCH_STRING="^[ 	]*${VARIABLE}="
-	if ! LINE="$(grep -E "${SEARCH_STRING}" "${FILE}")" ; then
+	if ! LINE="$( /bin/grep -E "${SEARCH_STRING}" "${FILE}" )" ; then
 		return 1
 	fi
 
@@ -438,7 +442,359 @@ function get_variable() {
 # Simple way to get a setting that hides the details.
 function settings()
 {
-	j="$(jq -r "${1}" "${2:-${SETTINGS_FILE}}")" && echo "${j}" && return
-	echo "${ME2}: running as $(id --user --name), unable to get json value for '${1}';" >&2
-	ls -l "${SETTINGS_FILE}" >&2
+	local M="${ME:-settings}"
+	local FIELD="${1}"
+	# Arrays can't begin with period but everything else should.
+	if [[ ${FIELD:0:1} != "." && ${FIELD: -2:2} != "[]" ]]; then
+		echo "${M}: Field names must begin with period '.' (Field='${FIELD}')" >&2
+		return 1
+	fi
+
+	local FILE="${2:-${SETTINGS_FILE}}"
+	if j="$( jq -r "${FIELD}" "${FILE}" )" ; then
+		echo "${j}"
+		return 0
+	fi
+
+	echo "${M}: Unable to get json value for '${FIELD}' in '${FILE}." >&2
+	
+	return 2
+}
+
+
+#####
+# Return hard any link(s) to the specified file.
+# The links must be in the same directory.
+# On success return code 0 and the link(s).
+# On failure, return code 1 and an error message.
+NO_LINK_=3
+function get_links()
+{
+	local FILE="$1"
+	if [[ -z ${FILE} ]]; then
+		echo "get_links(): File not specified."
+		return 1
+	fi
+	local DIRNAME="$( dirname "${FILE}" )"
+
+	# shellcheck disable=SC2012
+	local INODE="$( /bin/ls -l --inode "${FILE}" 2>/dev/null | cut -f1 -d' ' )"
+	if [[ -z ${INODE} ]]; then
+		echo "File '${FILE}' not found."
+		return 2
+	fi
+
+	# Don't include the specified FILE.
+	local LINKS="$(
+		if [[ ${DIRNAME} == "." ]]; then
+			x="./"
+		else
+			x=""
+		fi
+		find "${DIRNAME}" -inum "${INODE}" "!" -path "${x}${FILE}" | 
+			if [[ -n ${x} ]]; then
+				sed -e "s;^${x};;"
+			else
+				cat
+			fi
+	)"
+	if [[ -z ${LINKS} ]]; then
+		echo "No links for '${FILE}'."
+		return "${NO_LINK_}"
+	fi
+
+	echo "${LINKS}"
+	return 0
+}
+
+
+#####
+# Make sure the settings file is linked to the camera-specific file.
+# Return 0 code and no message if successful, else 1 and return a message.
+function check_settings_link()
+{
+	local FULL_FILE FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME
+	FULL_FILE="${1}"
+	if [[ -z ${FULL_FILE} ]]; then
+		echo "check_settings_link(): Settings file not specified."
+		return "${EXIT_ERROR_STOP}"
+	fi
+	if [[ -z ${CAMERA_TYPE} ]]; then
+		CAMERA_TYPE="$( settings .cameraType  "${FULL_FILE}" )"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+	fi
+	if [[ -z ${CAMERA_MODEL} ]]; then
+		CAMERA_MODEL="$( settings .cameraModel  "${FULL_FILE}" )"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+	fi
+
+	DIRNAME="$( dirname "${FULL_FILE}" )"
+	FILE="$( basename "${FULL_FILE}" )"
+	F="${FILE%.*}"
+	E="${FILE##*.}"
+	CORRECT_NAME="${F}_${CAMERA_TYPE}_${CAMERA_MODEL}.${E}"
+	FULL_CORRECT_NAME="${DIRNAME}/${CORRECT_NAME}"
+	SETTINGS_LINK="$( get_links "${FULL_FILE}" )"
+	RET=$?
+	if [[ ${RET} -ne 0 ]]; then
+		MSG="The settings file '${FILE}' was not linked to '${CORRECT_NAME}'"
+		[[ ${RET} -ne "${NO_LINK_}" ]] && MSG="${MSG}\nERROR: ${SETTINGS_LINK}."
+		echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
+		return 1
+	else
+		# Make sure it's linked to the correct file.
+		if [[ ${SETTINGS_LINK} != "${FULL_CORRECT_NAME}" ]]; then
+			MSG="The settings file (${FULL_FILE}) was linked to:"
+			MSG="${MSG}\n    ${SETTINGS_LINK}"
+			MSG="${MSG}\nbut should have been linked to:"
+			MSG="${MSG}\n    ${FULL_CORRECT_NAME}"
+			echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
+			return 1
+		fi
+	fi
+
+	return 0
+}
+
+function fix_settings_link()
+{
+	local SETTINGS="${1}"
+	local LINK="${2}"
+
+	# Often the file to be linked to will exist, it just won't be linked.
+	# shellcheck disable=SC2012
+	local NEWER="$( /bin/ls -t -1 "${SETTINGS}" "${LINK}" 2>/dev/null | head -1 )"
+	if [[ ${NEWER} == "${SETTINGS}" ]]; then
+		echo " but has been fixed."
+		rm -f "${LINK}"
+		ln "${SETTINGS}" "${LINK}"
+	else
+		# Typically the settings will will be newer than the camera-specific version.
+		echo " but has been fixed ('${LINK}' linked to '${SETTINGS}' - this is uncommon)."
+		rm -f "${SETTINGS}"
+		ln "${LINK}" "${SETTINGS}"
+	fi
+
+	return 0
+}
+
+function update_json_file()		# field, new value, file
+{
+	local M="${ME:-update_json_file}"
+	local FIELD="${1}"
+	if [[ ${FIELD:0:1} != "." ]]; then
+		echo "${M}: Field names must begin with period '.' (Field='${FIELD}')" >&2
+		return 1
+	fi
+
+	local NEW_VALUE="${2}"
+	local FILE="${3:-${SETTINGS_FILE}}"
+	local TEMP="/tmp/$$"
+	# Have to use "cp" instead of "mv" to keep any hard link.
+	if jq "${FIELD} = \"${NEW_VALUE}\"" "${FILE}" > "${TEMP}" ; then
+		cp "${TEMP}" "${FILE}"
+		rm "${TEMP}"
+		return 0
+	fi
+
+	echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}'." >&2
+
+	return 2
+}
+
+####
+# Only allow one of the specified process at a time.
+function one_instance()
+{
+	local SLEEP_TIME="5s"
+	local MAX_CHECKS=3
+	local PID_FILE=""
+	local ABORTED_FILE=""
+	local ABORTED_FIELDS=""
+	local ABORTED_MSG1=""
+	local ABORTED_MSG2=""
+	local CAUSED_BY=""
+	local P=""
+
+	OK="true"
+	local ERRORS=""
+	while [[ $# -gt 0 ]]; do
+		ARG="${1}"
+		case "${ARG}" in
+				--sleep)
+					SLEEP_TIME="${2}"
+					shift
+					;;
+				--max-checks)
+					MAX_CHECKS=${2}
+					shift
+					;;
+				--pid-file)
+					PID_FILE="${2}"
+					shift
+					;;
+				--aborted-count-file)
+					ABORTED_FILE="${2}"
+					shift
+					;;
+				--aborted-fields)
+					ABORTED_FIELDS="${2}"
+					shift
+					;;
+				--aborted-msg1)
+					ABORTED_MSG1="${2}"
+					shift
+					;;
+				--aborted-msg2)
+					ABORTED_MSG2="${2}"
+					shift
+					;;
+				--caused-by)
+					CAUSED_BY="${2}"
+					shift
+					;;
+				*)
+					ERRORS="${ERRORS}\nUnknown argument: '${ARG}'."
+					OK="false"
+					;;
+		esac
+		shift
+	done
+	if [[ -z ${PID_FILE} ]]; then
+		ERRORS="${ERRORS}\nPID_FILE not specified."
+		OK="false"
+	fi
+	if [[ -z ${ABORTED_FILE} ]]; then
+		ERRORS="${ERRORS}\nABORTED_FILE not specified."
+		OK="false"
+	fi
+	if [[ -z ${ABORTED_FIELDS} ]]; then
+		ERRORS="${ERRORS}\nABORTED_FIELDS not specified."
+		OK="false"
+	fi
+	if [[ -z ${ABORTED_MSG1} ]]; then
+		ERRORS="${ERRORS}\nABORTED_MSG1 not specified."
+		OK="false"
+	fi
+	if [[ -z ${ABORTED_MSG2} ]]; then
+		ERRORS="${ERRORS}\nABORTED_MSG2 not specified."
+		OK="false"
+	fi
+	# CAUSED_BY isn't required
+
+	if [[ ${OK} == "false" ]]; then
+		echo -e "${RED}${ME}: ERROR: ${ERRORS}.${NC}" >&2
+		return 1
+	fi
+
+
+	NUM_CHECKS=0
+	while  : ; do
+		[[ ! -f ${PID_FILE} ]] && break
+
+		((NUM_CHECKS++))
+
+		PID=$( < "${PID_FILE}" )
+		# Check that the process is still running.
+		P="$( ps -fp "${PID}" )"
+		[[ $? -ne 0 ]] && break;	# not running - why is the file still here?
+
+		if [[ $NUM_CHECKS -eq ${MAX_CHECKS} ]]; then
+			echo -en "${YELLOW}" >&2
+			echo -e  "${ABORTED_MSG1}" >&2
+			echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
+			echo -n  " If this happens often, check your settings." >&2
+			echo -e  "${NC}" >&2
+			echo "${P}" >&2
+
+			# Keep track of aborts so user can be notified.
+			# If it's happening often let the user know.
+			[[ ! -d ${ALLSKY_ABORTS_DIR} ]] && mkdir "${ALLSKY_ABORTS_DIR}"
+			local AF="${ALLSKY_ABORTS_DIR}/${ABORTED_FILE}"
+			echo -e "$(date)\t${ABORTED_FIELDS}" >> "${AF}"
+			NUM=$( wc -l < "${AF}" )
+			if [[ ${NUM} -eq 3 || ${NUM} -eq 10 ]]; then
+				MSG="${NUM} ${ABORTED_MSG2} have been aborted waiting for others to finish."
+				[[ -n ${CAUSED_BY} ]] && MSG="${MSG}\n${CAUSED_BY}"
+				if [[ ${NUM} -eq 3 ]]; then
+					SEVERITY="info"
+				else
+					SEVERITY="warning"
+					MSG="${MSG}\nOnce you have resolved the cause, reset the aborted counter:"
+					MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${AF}'</code>"
+				fi
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
+			fi
+
+			return 2
+		else
+			sleep "${SLEEP_TIME}"
+		fi
+	done
+
+	echo $$ > "${PID_FILE}" || return 1
+
+	return 0
+}
+
+
+#####
+# Make a thumbnail image.
+function make_thumbnail()
+{
+	local SEC="${1}"
+	local INPUT_FILE="${2}"
+	local THUMBNAIL="${3}"
+	ffmpeg -loglevel error -ss "00:00:${SEC}" -i "${INPUT_FILE}" \
+		-filter:v scale="${THUMBNAIL_SIZE_X:-100}:-1" -frames:v 1 "${THUMBNAIL}"
+}
+
+
+#####
+# Check if the user was supposed to reboot, and if so, if they did.
+# Return 0 if a reboot is needed.
+function reboot_needed()
+{
+	[[ ! -f ${ALLSKY_REBOOT_NEEDED} ]] && return 1
+
+	# The file exists so they were supposed to reboot.
+	BEFORE="$( < "${ALLSKY_REBOOT_NEEDED}" )"
+	NOW="$( uptime --since )"
+	if [[ ${BEFORE} == "${NOW}" ]]; then
+		return 0
+	else
+		rm -f "${ALLSKY_REBOOT_NEEDED}"		# different times so they rebooted
+		return 1
+	fi
+}
+
+####
+# Read json on stdin and output each field and value separated by a tab.
+function convert_json_to_tabs()
+{
+	# Possible input formats, all with and without trailing "," and
+	# with or without leading spaces or tabs.
+	#   "field" : "value"
+	#   "field" : number
+	#   "field": "value"
+	#   "field": number
+	#   "field":"value"
+	#   "field":number
+	# Want to output two fields (field name and value), separated by tabs.
+	# First get rid of the brackets,
+	# then the optional leading spaces and tabs,
+	# then everything between the field and and its value,
+	# then ending " and/or comma.
+
+	local JSON_FILE="${1}"
+	if [[ ! -f ${JSON_FILE} ]]; then
+		echo -e "${RED}convert_json_to_tabs(): ERROR: json file '${JSON_FILE}' not found.${NC}" >&2
+		return 1
+	fi
+
+	sed -e '/^{/d' -e '/^}/d' \
+		-e 's/^[\t ]*"//' \
+		-e 's/"[\t :]*[ "]/\t/' \
+		-e 's/",$//' -e 's/"$//' -e 's/,$//' \
+			"${JSON_FILE}"
 }

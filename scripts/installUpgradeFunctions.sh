@@ -43,12 +43,13 @@ function get_Git_version() {
 }
 
 
+# For the version, if the last character of the argument passed is a "/",
+# then append the file name from ${ALLSKY_VERSION_FILE}.
+# We do this to limit the number of places that know the actual name of the file,
+# in case we ever change it.
+
 #####
 # Get the version from a local file, if it exists.
-# For the version and branch, if the last character of the argument passed is a "/",
-# then append the file name fro ${ALLSKY_VERSION_FILE} or ${ALLSKY_BRANCH_FILE}.
-# We do this to limit the number of places that know the actual name of the files,
-# in case we every change their names.
 function get_version() {
 	local F="${1}"
 	if [[ -z ${F} ]]; then
@@ -57,25 +58,20 @@ function get_version() {
 		[[ ${F:1,-1} == "/" ]] && F="${F}$(basename "${ALLSKY_VERSION_FILE}")"
 	fi
 	if [[ -f ${F} ]]; then
-		local VALUE="$( < "${F}" )"
+		# Sometimes the branch file will have both "master" and "dev" on two lines.
+		local VALUE="$( head -1 "${F}" )"
 		echo -n "${VALUE}" | tr -d '\n\r'
 	fi
 }
 
 
 #####
-# Get the branch from a local file, if it exists.
+# Get the branch using git.
 function get_branch() {
-	local F="${1}"
-	if [[ -z ${F} ]]; then
-		F="${ALLSKY_BRANCH_FILE}"		# default
-	else
-		[[ ${F:1,-1} == "/" ]] && F="${F}$(basename "${ALLSKY_BRANCH_FILE}")"
-	fi
-
-	# Branch file is same format as Version file.
-	echo -n "$(get_version "${F}")"
+	local H="${1:-${ALLSKY_HOME}}"
+	echo "$( cd "${H}" || exit; git rev-parse --abbrev-ref HEAD )"
 }
+
 
 #####
 # Display a message of various types in appropriate colors.
@@ -120,14 +116,15 @@ function display_msg()
 		STARS=false
 
 	elif [[ ${LOG_TYPE} == "info" ]]; then
-		LOGMSG="${MESSAGE}"
+		LOGMSG="* ${MESSAGE}"
 		MSG="${YELLOW}${LOGMSG}${NC}"
 		STARS=false
 
 	elif [[ ${LOG_TYPE} == "debug" ]]; then
 		# Indent so they align with text above
 		LOGMSG="  DEBUG: ${MESSAGE}"
-		MSG="${YELLOW}${LOGMSG}${NC}"
+		#shellcheck disable=SC2154
+		MSG="${cDEBUG}${LOGMSG}${NC}"
 		STARS=false
 
 	else
@@ -152,8 +149,33 @@ function display_msg()
 
 	# Log messages to a file if it was specified.
 	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
+
 	if [[ ${LOG_IT} == "true" && -n ${DISPLAY_MSG_LOG} ]]; then
-		echo -e "${LOGMSG}${MESSAGE2}" >>  "${DISPLAY_MSG_LOG}"
+		# Strip out all color escape sequences before adding to log file.
+		# This requires escaping the "\" (which appear at the beginning of every variable)
+		# and "[" in the variables.
+		
+		echo "${LOGMSG}${MESSAGE2}" |
+		(
+			if [[ -n ${GREEN} ]]; then
+				# In case a variable isn't define, set it to a string that won't be found
+				local Y="${YELLOW:-abcxyz}"
+				local R="${RED:-abcxyz}"
+				local D="${cDEBUG:-abcxyz}"
+				local N="${NC:-abcxyz}"
+
+				# I couldn't figure out how to replace "\n" with a new line in sed.
+				O="$( sed \
+					-e "s/\\${GREEN/\[/\\[}//g" \
+					-e "s/\\${Y/\[/\\[}//g" \
+					-e "s/\\${R/\[/\\[}//g" \
+					-e "s/\\${D/\[/\\[}//g" \
+					-e "s/\\${N/\[/\\[}//g" )"
+				echo -e "${O}"		# handles the newlines
+			else
+				cat
+			fi
+		) >>  "${DISPLAY_MSG_LOG}"
 	fi
 }
 

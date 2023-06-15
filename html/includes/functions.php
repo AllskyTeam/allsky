@@ -69,12 +69,12 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 	return $str_array;
 }
 
-$status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
 $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
 function initialize_variables() {
+	global $status, $needToDisplayMessages;
 	global $image_name, $delay, $daydelay, $nightdelay;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
@@ -83,7 +83,7 @@ function initialize_variables() {
 	$cam_type = getCameraType();
 	if ($cam_type == '') {
 		echo "<div style='color: red; font-size: 200%;'>";
-		echo "'Camera Type' not defined in ~/allsky/config/config.sh.  Please update it.";
+		echo "'Camera Type' not defined in config.sh.  Please update it.";
 		echo "</div>";
 		exit;
 	}
@@ -102,63 +102,98 @@ function initialize_variables() {
 	$darkframe = $settings_array['takeDarkFrames'];
 	$useLogin = getVariableOrDefault($settings_array, 'useLogin', true);
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
-	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, null);
+	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
 	$websiteURL = getVariableOrDefault($settings_array, 'websiteurl', "");
 
 
 	////////////////// Determine delay between refreshes of the image.
 	$consistentDelays = $settings_array["consistentDelays"] == 1 ? true : false;
-	$daydelay = $settings_array["daydelay"] +
-		($consistentDelays ? $settings_array["daymaxautoexposure"] : $settings_array["dayexposure"]);
-	$nightdelay = $settings_array["nightdelay"] +
-		($consistentDelays ? $settings_array["nightmaxautoexposure"] : $settings_array["nightexposure"]);
+	$daydelay = $settings_array["daydelay"];
+	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
+	$dayexposure = $settings_array["dayexposure"];
+	$nightdelay = $settings_array["nightdelay"];
+	$nightmaxautoexposure = $settings_array["nightmaxautoexposure"];
+	$nightexposure = $settings_array["nightexposure"];
 
-	$showDelay = getVariableOrDefault($settings_array, 'showDelay', true);
-	if ($showDelay) {
-		// Determine if it's day or night so we know which delay to use.
-		$angle = $settings_array['angle'];
-		$lat = $settings_array['latitude'];
-		$lon = $settings_array['longitude'];
-		exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
-		if ($retval == 2) {
-			$delay = $daydelay;
-		} else if ($retval == 3) {
-			$delay = $nightdelay;
-		} else {
-			echo "<p class='errorMsg'>ERROR: 'sunwait' returned exit code $retval so we don't know if it's day or night.</p>";
-			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
-		}
-
-		// Convert to seconds for display.
-		$daydelay /= 1000;
-		$nightdelay /= 1000;
-	} else {
-		// Not showing delay so just use average
-		$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
-		$daydelay = -1;		// signifies it's not being used
+	$ok = true;
+	if (! is_numeric($daydelay)) {
+		$ok = false;
+		$status->addMessage("<strong>daydelay</strong> is not a number.", 'danger', false);
 	}
-	// Lessen the delay between a new picture and when we check.
-	$delay /= 4;
+	if (! is_numeric($daymaxautoexposure)) {
+		$ok = false;
+		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number.", 'danger', false);
+	}
+	if (! is_numeric($dayexposure)) {
+		$ok = false;
+		$status->addMessage("<strong>dayexposure</strong> is not a number.", 'danger', false);
+	}
+	if (! is_numeric($nightdelay)) {
+		$ok = false;
+		$status->addMessage("<strong>nightdelay</strong> is not a number.", 'danger', false);
+	}
+	if (! is_numeric($nightmaxautoexposure)) {
+		$ok = false;
+		$status->addMessage("<strong>nightmaxautoexposure</strong> is not a number.", 'danger', false);
+	}
+	if (! is_numeric($nightexposure)) {
+		$ok = false;
+		$status->addMessage("<strong>nightexposure</strong> is not a number.", 'danger', false);
+	}
+	if ($ok) {
+		$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
+		$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
+
+		$showDelay = getVariableOrDefault($settings_array, 'showDelay', true);
+		if ($showDelay) {
+			// Determine if it's day or night so we know which delay to use.
+			$angle = $settings_array['angle'];
+			$lat = $settings_array['latitude'];
+			$lon = $settings_array['longitude'];
+			exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+			if ($retval == 2) {
+				$delay = $daydelay;
+			} else if ($retval == 3) {
+				$delay = $nightdelay;
+			} else {
+				$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
+				$status->addMessage($msg, 'danger', false);
+				$needToDisplayMessages = true;
+				$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
+			}
+
+			// Convert to seconds for display.
+			$daydelay /= 1000;
+			$nightdelay /= 1000;
+		} else {
+			// Not showing delay so just use average
+			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
+			$daydelay = -1;		// signifies it's not being used
+		}
+		// Lessen the delay between a new picture and when we check.
+		$delay /= 4;
+	} else {
+		$daydelay = -1;
+		$needToDisplayMessages = true;
+	}
 }
 
 // Check if the settings have been configured.
 function check_if_configured($page, $calledFrom) {
-	global $lastChanged, $status;
+	global $lastChanged, $status, $needToDisplayMessages;
 
 	// The conf page calls us if needed.
 	if ($calledFrom === "main" && $page === "configuration")
 		return;
 
-	if ($lastChanged === null) {
+	if ($lastChanged === "") {
 		// The settings aren't configured - probably right after an installation.
 		if ($page === "configuration")
 			$m = "";
 		else
 			$m = "<br>Go to the 'Allsky Settings' page.";
-		$status->addMessage("You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button below.$m", 'danger', false);
-		echo "<div class='notConfigured'>";
-			$status->showMessages();
-		echo "</div>";
+		$status->addMessage("You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button.$m", 'danger', false);
+		$needToDisplayMessage = true;
 	}
 }
 /**
@@ -321,17 +356,17 @@ function get_interface_status($cmd) {
 	return(preg_replace('/\s\s+/', ' ', implode(" ", $return)));
 }
 
-function is_interface_up($status) {
-	return(strpos($status, "UP") !== false ? true : false);
+function is_interface_up($interface_status) {
+	return(strpos($interface_status, "UP") !== false ? true : false);
 }
 
-function is_interface_running($status) {
-	return(strpos($status, "RUNNING") !== false ? true : false);
+function is_interface_running($interface_status) {
+	return(strpos($interface_status, "RUNNING") !== false ? true : false);
 }
 
 function parse_ifconfig($input, &$strHWAddress, &$strIPAddress, &$strNetMask, &$strRxPackets, &$strTxPackets, &$strRxBytes, &$strTxBytes) {
 	preg_match( '/ether ([0-9a-f:]+)/i', $input, $result );
-	$strHWAddress = $result[1];
+	$strHWAddress = getVariableOrDefault($result, 1, "[not set]");
 	preg_match( '/inet ([0-9.]+)/i', $input, $result );
 	$strIPAddress = getVariableOrDefault($result, 1, "[not set]");
 
@@ -362,19 +397,19 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 		// If the interface is down it's also not running.
 		$s = get_interface_status("ifconfig $interface");
 		if (! is_interface_up($s)) {
-			$status->addMessage('Interface was already down', 'warning');
+			$status->addMessage("Interface $interface was already down", 'warning');
 		} else {
 			exec( "sudo ifconfig $interface down 2>&1", $output );	// stop
 			// Check that it actually stopped
 			$s = get_interface_status("ifconfig $interface");
 			if (! is_interface_up($s)) {
-				$status->addMessage('Interface stopped', 'success');
+				$status->addMessage("Interface $interface stopped", 'success');
 			} else {
 				if ($output == "")
 					$output = "Unknown reason";
 				else
 					$output = implode(" ", $output);
-				$status->addMessage("Unable to stop interface<br>$output" , 'danger');
+				$status->addMessage("Unable to stop interface $interface<br>$output" , 'danger');
 				$interface_up = true;
 			}
 		}
@@ -383,19 +418,19 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 		// We should only get here if the interface is down,
 		// but just in case, check if it's already up.
 		if (is_interface_up(get_interface_status("ifconfig $interface"))) {
-			$status->addMessage('Interface was already up', 'warning');
+			$status->addMessage("Interface $interface was already up", 'warning');
 			$interface_up = true;
 		} else {
 			exec( "sudo ifconfig $interface up 2>&1", $output );	// start
 			// Check that it actually started
 			$s = get_interface_status("ifconfig $interface");
 			if (! is_interface_up($s)) {
-				$status->addMessage('Unable to start interface', 'danger');
+				$status->addMessage("Unable to start interface $interface", 'danger');
 			} else {
 				if (is_interface_running($s))
-					$status->addMessage('Interface started', 'success');
+					$status->addMessage("Interface $interface started", 'success');
 				else
-					$status->addMessage('Interface started but nothing connected to it', 'warning');
+					$status->addMessage("Interface $interface started but nothing connected to it", 'warning');
 				$interface_up = true;
 			}
 		}
@@ -403,13 +438,13 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 	} elseif (is_interface_up($input)) {
 		// The interface can be up but nothing connected to it (i.e., not RUNNING).
 		if (is_interface_running($input))
-			$status->addMessage('Interface is up', 'success');
+			$status->addMessage("Interface $interface is up", 'success');
 		else
-			$status->addMessage('Interface is up but nothing connected to it', 'warning');
+			$status->addMessage("Interface $interface is up but nothing connected to it", 'warning');
 		$interface_up = true;
 
 	} else {
-		$status->addMessage('Interface is down', 'danger');
+		$status->addMessage("Interface $interface is down", 'danger');
 	}
 
 	return($interface_up);
@@ -555,8 +590,9 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {	// if
         echo "</div>";
 }
 
-/* Run a command and display the appropriate status message */
-function runCommand($cmd, $message, $messageColor)
+// Run a command and display the appropriate status message.
+// If $addMsg is false, then don't add our own message.
+function runCommand($cmd, $message, $messageColor, $addMsg=true)
 {
 	global $status;
 
@@ -569,8 +605,13 @@ function runCommand($cmd, $message, $messageColor)
 		return false;
 	} elseif ($return_val > 0) {
 		// Display a failure message, plus the caller's message, if any.
-		$msg = "'$cmd' failed";
-		if ($result != null) $msg .= ":<br>" . implode("<br>", $result);
+		if ($addMsg) {
+			$msg = "'$cmd' failed";
+			if ($result != null) $msg .= ":<br>" . implode("<br>", $result);
+		} else {
+			if ($result != null) $msg = implode("<br>", $result);
+			else $msg = "";
+		}
 		$status->addMessage($msg, "danger", true);
 		return false;
 	}
@@ -667,5 +708,4 @@ function getVariableOrDefault($a, $v, $d) {
 
 	return($d);
 }
-
 ?>

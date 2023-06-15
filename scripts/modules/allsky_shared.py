@@ -351,6 +351,12 @@ def dbUpdate(key, value):
     DBDATA[key] = value
     writeDB()
 
+def dbDeleteKey(key):
+    global DBDATA
+    if dbHasKey(key):
+        del DBDATA[key]
+        writeDB()
+    
 def dbHasKey(key):
     global DBDATA
     return (key in DBDATA)

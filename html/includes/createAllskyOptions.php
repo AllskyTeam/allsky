@@ -18,16 +18,30 @@ function get_generic_name($s) {
 		return substr($s, 5);
 	return $s;
 }
+// These values need to be looked up in the CC file using their generic name.
+function is_generic_value($v) {
+	if ($v === null) return false;
+
+	if (substr($v, 0, 1) === "_")
+		return true;
+
+	return false;
+}
+// These values need to be looked up in the CC file using their full name.
+function is_specific_value($v) {
+	if ($v === null) return false;
+
+	if (substr($v, 0, 4) === "day_" || substr($v, 0, 6) === "night_")
+		return true;
+
+	return false;
+}
 
 // Get a camera control.  Return true if it exists, false if it doesn't.
 // If it exists, set the min, max, and default.
 function get_control($array, $setting, &$min, &$max, &$default) {
-	$i = 0;
-//x echo "Looking for control [$setting]: ";
 	foreach ($array as $cc) {
-		$i++;
 		if ($cc["argumentName"] === $setting) {
-//x echo "match at number $i\n";
 			$min = getVariableOrDefault($cc, "MinValue", null);
 			$max = getVariableOrDefault($cc, "MaxValue", null);
 			$default = getVariableOrDefault($cc, "DefaultValue", null);
@@ -40,7 +54,7 @@ function get_control($array, $setting, &$min, &$max, &$default) {
 // If a field is null that means it wasn't in the repo file,
 // so don't add it to the options string.
 // We need this because we look for all fields in a setting.
-function add_non_null_field($a, $f, $setting) {	// array, field, name_of_setting
+function add_non_null_field($a, $f, $setting) {	// array, field name, name_of_setting
 	$value = getVariableOrDefault($a, $f, null);
 	if ($value === null) return;
 
@@ -79,34 +93,52 @@ function add_field($f, $v, $setting) {	// field, value, name_of_setting
 	global $options_str;
 	$options_str .= "$q$f$q : ";				// field name
 
-	// Do not add value if a string since we need to check if it needs to be replaced
+	// Do not add value if it's a string since we need to check if it needs to be replaced
 	if (! add_value($v, false)) {
-		// If the setting is a day/night one, e.g., "daybin", get just the "bin" portion.
-		$setting = get_generic_name($setting);
-	
-		// Check if the value is a placeholder, like "bin_min" for the "bin" setting.
-		// These are the only fields that have placeholders.
-		// The "options" field is handles in add_options_field() since it's value is an array.
-		// The "display" field was handled earlier.
-if ($debug > 1) echo "Setting '$setting', field '$f', v='$v'\n";
+		if ($debug > 1) {
+			// It's hard to read the output with really long strings.
+			if (strlen($v) > 50) $vv = substr($v, 0, 50) . "...";
+			else $vv = $v;
+			echo "    '$f', v='$vv'";
+		}
 
-		if (get_control($cc_controls, $setting, $min, $max, $default)) {
-if ($debug > 1) echo "   >>> found in controls list\n";
-			if ($f === "minimum") {
-				if ($v === $setting . "_min") {
+		// Check if the value is a generic placeholder, like "_min".
+		// The "options" field is handled in add_options_field() since it's value is an array.
+		// The "display" field was handled earlier.
+		if (is_generic_value($v) || is_specific_value($v)) {
+			$searchCC = true;
+		} else {
+			$searchCC = false;
+		}
+
+		if ($searchCC) {
+			// For generic values, if the setting is a day/night one, e.g., "dayexposure",
+			// get just the "exposure" portion.
+			// For specific values e.g., "daymean" : "day_default",
+			// need to look up "daymean" in the CC file,
+			// not "mean" like we do for generic values
+
+			if (is_generic_value($v)) {
+				$setting = get_generic_name($setting);
+			}
+			if (get_control($cc_controls, $setting, $min, $max, $default)) {
+				$vReset = false;
+				if ($f === "minimum") {
 					$v = $min;
-				}
-			} else if ($f === "maximum") {
-				if ($v === $setting . "_max") {
+					$vReset = true;
+				} else if ($f === "maximum") {
 					$v = $max;
-				}
-			} else if ($f === "default") {
-				if ($v === $setting . "_default") {
-if ($debug > 1) echo "     >>>>> Setting '$setting', field '$f' _default=[$default]\n";
+					$vReset = true;
+				} else if ($f === "default") {
 					$v = $default;
+					$vReset = true;
+				}
+				if ($debug > 1) {
+					if ($vReset) echo ", RESET v='$v'";
 				}
 			}
 		}
+		if ($debug > 1) echo "\n";
 		$options_str .= "$q$v$q";
 	}
 
@@ -218,7 +250,7 @@ $settings_file = "";
 $force = false;		// force creation of settings file even if it already exists?
 
 foreach ($options as $opt => $val) {
-	if ($debug > 1) echo "   Argument $opt = $val\n";
+	if ($debug > 1 || $opt === "debug") echo "   Argument $opt $val\n";
 
 	if ($opt === "debug")
 		$debug++;
@@ -286,11 +318,25 @@ if ($repo_array === null) {
 	// display			[0/1]
 	// checkchanges		[0/1]
 	// optional			[0/1]
-	// nullOK			[0/1]
+	// generic			[0/1]
 	// advanced 		[0/1]	(last, so no comma after it)
 
 
-// Create options file
+// ==================   Create options file
+
+// A "generic" value is one that's the same for day and night, e.g., the minimum value
+// for the "dayexposure" and "nightexposure".
+// These are often specified by the camera and have an "argumentName" in the CC
+// file without the "day" or "night", e.g., "exposure.
+
+// Field values that begin with "_", e.g., "_default" are generic placeholders; their
+// actual values need to be determined by looking in the CC file for the generic name.
+// The repo options file will typically have "_" followed by the field name,
+// e.g., "_default" for the "default" field, but we only check if the first char is "_".
+
+// Field values that being with "day_" or "night_", e.g., "day_default" have
+// different values for day and night in the CC file, e.g., default value for day
+// and night exposure.
 
 $options_str = "[\n";
 foreach ($repo_array as $repo) {
@@ -309,30 +355,25 @@ foreach ($repo_array as $repo) {
 
 	if ($debug > 1) echo "Processing setting [$name]: ";
 
-	// Before adding the setting, make sure the "display field says we can.
-	// Typically the value will be 1 (can display) or a placeholder.
+	// Before adding the setting, make sure the "display" field says we can.
+	// The value will be 1 (can display) or 0 (don't display), or a placeholder.
 	// It should normally not be missing, but check anyhow.
 	$display = getVariableOrDefault($repo, "display", null);
-	if ($display === null) {
-		if ($debug > 1) echo "display field=null\n";
+	if ($display === null || $display === 0) {
+		if ($debug > 1) echo "    display field is null or 0\n";
 		continue;
 	}
-	if ($display !== 1) {
-		// should be a placeholder
-		$n = get_generic_name($name);
-		if ($display === $n . "_display") {
-			if ($debug > 1) echo "display=$display.";
-			if (! get_control($cc_controls, $n, $min, $max, $default)) {
-				if ($debug > 1) echo "     <<<<< NOT SUPPORTED >>>>>\n";
-				// Not an error - just means this isn't supported.
-				continue;
-			}
-			if ($debug > 1) echo "\n";
-			$repo["display"] = 1;	// a control exists for it, so display the setting.
+	if (is_generic_value($display)) {
+		// Is a placeholder - need to check if the setting is in the CC file.
+		// If not, don't output this setting.
+		if (! get_control($cc_controls, get_generic_name($name), $min, $max, $default)) {
+			if ($debug > 1) echo "     <<<<< NOT SUPPORTED >>>>>\n";
+			// Not an error - just means this isn't supported.
+			continue;
 		}
-	} elseif ($debug > 1) {
-		echo "standard setting.\n";
+		$repo["display"] = 1;	// a control exists for it, so display the setting.
 	}
+	if ($debug > 1) echo "\n";
 
 	// Have to handle camera type and model differently because the defaults
 	// might not be what we want.
@@ -340,6 +381,8 @@ foreach ($repo_array as $repo) {
 			$repo["default"] = $cameraType;
 	elseif ($name === "cameraModel")
 			$repo["default"] = $cameraModel;
+	elseif ($name === "camera")
+			$repo["default"] = "$cameraType $cameraModel";
 
 	$options_str .= "{\n";
 		add_non_null_field($repo, "name", $name);
@@ -353,7 +396,7 @@ foreach ($repo_array as $repo) {
 		add_non_null_field($repo, "display", $name);
 		add_non_null_field($repo, "checkchanges", $name);
 		add_non_null_field($repo, "optional", $name);
-		add_non_null_field($repo, "nullOK", $name);
+		add_non_null_field($repo, "generic", $name);
 		add_non_null_field($repo, "advanced", $name);
 	$options_str .= "},\n";
 }
@@ -366,14 +409,34 @@ if ($results != "") {
 	exit(6);
 }
 
-// Optionally create a basic "settings" file with the default for this camera type/model.
+
+// ==================   Create settings file
+
+// If a $settings_file was passed in, create a "settings" file.
+// If this camera type/model is already known, use that file,
+// otherwise create a "settings" file with defaults for this camera.
+// However, if there's an old settings file port its generic fields to the new file.
 
 if ($settings_file !== "") {
-	$options_array = json_decode($options_str, true);
+	// Determine the name of the camera type/model-specific file.
+	$pieces = explode(".", basename($settings_file));		// e.g., "settings.json"
+	$FileName = $pieces[0];		// e.g., "settings"
+	$FileExt = $pieces[1];		// e.g., "json"
+	// e.g., "settings_ZWO_ASI123.json"
+	$cameraSpecificSettingsName = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
+	$fullSpecificFileName = dirname($settings_file) . "/$cameraSpecificSettingsName";
+	if ($debug > 0) {
+		$e =  file_exists($fullSpecificFileName) ? "yes" : "no";
+		echo "Camera-specific settings file exists ($e): $fullSpecificFileName.\n";
+	}
 
-	// If the file exists, it's a generic link to a camera-specific named file.
+	// If the settings file exists, it's a generic link to a camera-specific named file.
 	// Remove the link because it points to a prior camera.
+	$settings_array = null;
 	if (file_exists($settings_file)) {
+		$errorMsg = "ERROR: Unable to process prior settings file '$settings_file'.";
+		$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
+
 		if ($debug > 0) echo "Removing $settings_file.\n";
 		if (! unlink($settings_file)) {
 			echo "ERROR: Unable to delete $settings_file.\n";
@@ -381,22 +444,12 @@ if ($settings_file !== "") {
 		}
 	}
 
-	// Determine the name of the camera type/model-specific file.
-	$pieces = explode(".", basename($settings_file));		// e.g., "settings.json"
-	$FileName = $pieces[0];		// e.g., "settings"
-	$FileExt = $pieces[1];		// e.g., "json"
-	// e.g., "settings_ZWO_ASI123.json"
-	$cameraSpecificSettingsName = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
-	$fullSpecificFile = dirname($settings_file) . "/$cameraSpecificSettingsName";
-	if ($debug > 0) {
-		$e =  file_exists($fullSpecificFile) ? "yes" : "no";
-		echo "Camera-specific settings file exists ($e): $fullSpecificFile.\n";
-	}
 
 	// If there isn't a camera-specific file, create one.
-	if ($force || ! file_exists($fullSpecificFile)) {
-		// For each item in the options file, write the name and default value.
+	if ($force || ! file_exists($fullSpecificFileName)) {
+		// For each item in the options file, write the name and a value.
 		$contents = "{\n";
+		$options_array = json_decode($options_str, true);
 		foreach ($options_array as $option) {
 			$type = getVariableOrDefault($option, 'type', "");
 			if ($type == "header") continue;	// don't put in settings file
@@ -404,21 +457,32 @@ if ($settings_file !== "") {
 			if ($display === 0) continue;
 
 			$name = $option['name'];
-			$default = getVariableOrDefault($option, 'default', "");
-			if ($debug > 1) echo ">> $name = [$default]\n";
 
+			// If it's a generic setting, use it's prior value if it exists.
+			if (getVariableOrDefault($option, 'generic', 0) !== 0 && $settings_array !== null) {
+				$val = getVariableOrDefault($settings_array, $name, null);
+			} else {
+				$val = null;
+			}
+
+			if ($val === null) {
+				$val = getVariableOrDefault($option, 'default', "");
+				if ($debug > 1) echo ">> default $name = [$val]\n";
+			} else {
+				if ($debug > 1) echo ">> generic $name = [$val]\n";
+			}
 			// Don't worry about whether or not the default is a string, number, etc.
-			$contents .= "\t\"$name\" : \"$default\",\n";
+			$contents .= "\t\"$name\" : \"$val\",\n";
 		}
 		// This comes last so we don't worry about whether or not the items above
 		// need a trailing comma.
 		$contents .= "\t\"XX_END_XX\" : 1\n";
 		$contents .= "}\n";
 
-		if ($debug > 0) echo "Creating camera-specific settings file: $fullSpecificFile.\n";
-		$results = updateFile($fullSpecificFile, $contents, $cameraSpecificSettingsName, true);
+		if ($debug > 0) echo "Creating camera-specific settings file: $fullSpecificFileName.\n";
+		$results = updateFile($fullSpecificFileName, $contents, $cameraSpecificSettingsName, true);
 		if ($results != "") {
-			echo "ERROR: Unable to create $fullSpecificFile.\n";
+			echo "ERROR: Unable to create $fullSpecificFileName.\n";
 			exit(8);
 		}
 
@@ -426,12 +490,12 @@ if ($settings_file !== "") {
 		// There IS a camera-specific file for the new camera type so we
 		// don't need to do anything special.
 		// The generic name will be linked to the specific name below.
-		echo "Using existing $fullSpecificFile.\n";
+		echo "Using existing $fullSpecificFileName.\n";
 	}
 
-	if ($debug > 0) echo "Linking $fullSpecificFile to $settings_file.\n";
-	if (! link($fullSpecificFile, $settings_file)) {
-		echo "ERROR: Unable to link $fullSpecificFile to $settings_file.\n";
+	if ($debug > 0) echo "Linking $fullSpecificFileName to $settings_file.\n";
+	if (! link($fullSpecificFileName, $settings_file)) {
+		echo "ERROR: Unable to link $fullSpecificFileName to $settings_file.\n";
 		exit(9);
 	}
 }

@@ -32,6 +32,27 @@ source "${ALLSKY_CONFIG}/config.sh"						|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
+# Make sure they rebooted if they were supposed to.
+NEEDS_REBOOT="false"
+reboot_needed && NEEDS_REBOOT="true"
+
+# Make sure the settings have been configured after an installation or upgrade.
+LAST_CHANGED="$( settings ".lastChanged" )"
+if [[ ${LAST_CHANGED} == "" || ${LAST_CHANGED} == "null" ]]; then
+	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI."
+	if [[ ${NEEDS_REBOOT} == "true" ]]; then
+		echo "*** ===== The Pi also needs to be rebooted."
+		doExit "${EXIT_ERROR_STOP}" "Error" \
+			"Allsky needs\nconfiguration\nand the Pi needs\na reboot" \
+			"Allsky needs to be configured then the Pi rebooted."
+	else
+		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" ""
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "Error" "Allsky needs to be configured."
+	fi
+elif [[ ${NEEDS_REBOOT} == "true" ]]; then
+	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" ""
+	"${ALLSKY_SCRIPTS}/addMessage.sh" "Error" "The Pi needs to be rebooted."
+fi
 
 SEE_LOG_MSG="See ${ALLSKY_LOG}"
 ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
@@ -171,6 +192,12 @@ else
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 
+# Make sure the settings file is linked to the camera-specific file.
+if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
+	"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}"
+	echo "ERROR: Settings file (${SETTINGS_FILE}) not linked correctly." >&2
+fi
+
 # Make directories that need to exist.
 if [[ -d ${ALLSKY_TMP} ]]; then
 	# remove any lingering old image files.
@@ -186,11 +213,13 @@ else
 	"${ALLSKY_SCRIPTS}/addMessage.sh" warning "${ME}: ${MSG}"
 fi
 
+rm -f "${ALLSKY_BAD_IMAGE_COUNT}"	# Start with no bad images
+
 # Clear out these files and allow the web server to write to it.
-: > "${ALLSKY_ABORTEDUPLOADS}"
-: > "${ALLSKY_ABORTEDTIMELAPSE}"
-sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ABORTEDUPLOADS}" "${ALLSKY_ABORTEDTIMELAPSE}"
-sudo chmod 664 "${ALLSKY_ABORTEDUPLOADS}" "${ALLSKY_ABORTEDTIMELAPSE}"
+rm -fr "${ALLSKY_ABORTS_DIR}"
+mkdir "${ALLSKY_ABORTS_DIR}"
+sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ABORTS_DIR}"
+sudo chmod 775 "${ALLSKY_ABORTS_DIR}"
 
 # Optionally display a notification image.
 if [[ $USE_NOTIFICATION_IMAGES -eq 1 ]]; then
@@ -219,17 +248,12 @@ if [[ -z ${LOCALE} || ${LOCALE} == "null" ]]; then
 	fi
 fi
 
-# shellcheck disable=SC2207
-KEYS=( $(settings 'keys[]') )
-for KEY in "${KEYS[@]}"
-do
-	K="$(settings ".${KEY}")"
-	# We must pass "-config ${ARGS_FILE}" on the command line,
-	# and debuglevel we did above, so don't do them again.
-	[[ ${KEY} == "config" && ${KEY} == "debuglevel" ]] && continue
-
-	echo "-${KEY}=${K}" >> "${ARGS_FILE}"
-done
+# We must pass "-config ${ARGS_FILE}" on the command line,
+# and debuglevel we did above, so don't do them again.
+TAB="$( echo -e "\t" )"
+convert_json_to_tabs "${SETTINGS_FILE}" |
+	grep -E -i -v "^config${TAB}|^debuglevel${TAB}" |
+	sed -e 's/^/-/' -e "s/${TAB}/=/" >> "${ARGS_FILE}"
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
@@ -251,6 +275,9 @@ fi
 CAPTURE="capture_${CAMERA_TYPE}"
 
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
+
+# Clear up any flow timings
+"${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
 
 # Run the main program - this is the main attraction...
 # Pass debuglevel on command line so the capture program knows if it should display debug output.

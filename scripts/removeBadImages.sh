@@ -1,28 +1,42 @@
 #!/bin/bash
 
+# Remove "bad" images, which includes:
+#	Empty files
+#	Corrupted files (i.e., not an image)
+#	Too dark (as specified by user)
+#	Too light (as specified by user)
+
+# If a file is specified, only look at that file,
+# otherwise look at all the files in the specified directory.
+# If only 1 file, return it's MEAN.
+
+# The MEAN is the only thing that should go to stdout.
+
 ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh" || exit ${ALLSKY_ERROR_STOP}
+source "${ALLSKY_HOME}/variables.sh" 		|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC2086,SC1091				# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh" 		|| exit ${ALLSKY_ERROR_STOP}
 
 usage()
 {
 	retcode="${1}"
-	echo
-	echo "Remove images with corrupt data which might mess up startrails and keograms."
-	[ "${retcode}" -ne 0 ] && echo -en "${RED}"
-	echo -n "Usage: ${ME} [--help] [--debug]  directory  [file]"
-	[ "${retcode}" -ne 0 ] && echo -e "${NC}"
-	echo
-	echo "You must enter the arguments in the above order."
+	(
+		echo
+		echo "Remove images with corrupt data which might mess up startrails and keograms."
+		[ "${retcode}" -ne 0 ] && echo -en "${RED}"
+		echo -n "Usage: ${ME} [--help] [--debug]  directory  [file]"
+		[ "${retcode}" -ne 0 ] && echo -e "${NC}"
+		echo
+		echo "You must enter the arguments in the above order."
 # TODO: use getopts to allow any order
-	echo "Turning on debug will indicate bad images but will not remove them."
-	echo "If 'file' is specified, only that file in 'directory' will be checked,"
-	echo "otherwise all files in 'directory' will be checked."
+		echo "Turning on debug will indicate bad images but will not remove them."
+		echo "If 'file' is specified, only that file in 'directory' will be checked,"
+		echo "otherwise all files in 'directory' will be checked."
+	) >&2
 	# shellcheck disable=SC2086
 	exit ${retcode}
 }
@@ -48,15 +62,15 @@ else
 	ME="${ME}:"
 fi
 
-# If it's not a full pathname, assume it's in $ALLSKY_IMAGES which is what many other scripts do.
+# If it's not a full pathname, assume it's in $ALLSKY_IMAGES.
 [[ ${DATE:0:1} != "/" ]] && DATE="${ALLSKY_IMAGES}/${DATE}"
 if [[ ! -d ${DATE} ]]; then
-	echo -e "${RED}${ME} '${DATE}' is not a directory${NC}"
+	echo -e "${RED}${ME} '${DATE}' is not a directory${NC}" >&2
 	exit 2
 fi
 
 if [[ ${FILE} != "" && ! -f ${DATE}/${FILE} ]]; then
-	echo -e "${RED}${ME} '${FILE}' not found in '${DATE}'${NC}"
+	echo -e "${RED}${ME} '${FILE}' not found in '${DATE}'${NC}" >&2
 	exit 2
 fi
 
@@ -99,14 +113,14 @@ else							# looking at a directory
 fi
 
 num_bad=0
-# If the low threshold is 0 it's disabled.
-# If the high one is 0 or 100 (nothing can be brighter than 100) it's disabled.
-if [[ ${REMOVE_BAD_IMAGES_THRESHOLD_HIGH} -gt 100 || ${REMOVE_BAD_IMAGES_THRESHOLD_HIGH} -eq 0 ]]; then
-	HIGH=0
-else
-	HIGH=${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}
-fi
+
+# If the LOW threshold is 0 it's disabled.
+# If the HIGH threshold is 0 or 100 (nothing can be brighter than 100) it's disabled.
+# Convert possibly 0.0 and 100.0 to 0 and 100 so we can check using bash.
+HIGH=${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}
+[[ $( echo "${HIGH} == 0 || ${HIGH} > 100" | bc ) -eq 1 ]] && HIGH=0
 LOW=${REMOVE_BAD_IMAGES_THRESHOLD_LOW}
+[[ $( echo "${LOW} <= 0" | bc ) -eq 1 ]] && LOW=0
 
 # If we're processing a whole directory assume it's done in the background so "nice" it.
 # If we're only processing one file we want it done quickly.
@@ -122,33 +136,40 @@ for f in ${IMAGE_FILES} ; do
 	if [[ ! -s ${f} ]]; then
 		BAD="'${f}' (zero length)"
 	else
-		# MEAN is a number between 0.0 and 1.0.
 		if ! MEAN=$(${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1) ; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
-			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' failed; leaving file.${NC}"
-			echo "Message=${MEAN}"
+			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' failed; leaving file.${NC}" >&2
+			echo -e "Message=${MEAN}" >&2
 		elif [[ -z ${MEAN} ]]; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
-			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' returned nothing; leaving file.${NC}"
+			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' returned nothing; leaving file.${NC}" >&2
 		elif echo "${MEAN}" | grep -E -q "${ERROR_WORDS}"; then
 			# At least one error word was found in the output.
 			# Get rid of unnecessary error text, and only look at first line of error message.
 			BAD="'${f}' (corrupt file: $(echo "${MEAN}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;' -e q))"
 		else
-			# MEAN is a number between 0.0 and 1.0 but it may have format:
+			# If only one file, output its mean.
+			[[ ${FILE} != "" ]] && echo "${MEAN}"
+
+			# MEAN is a number between 0.0 and 1.0, but it may have format:
 			#	6.90319e-06
 			# which "bc" doesn't accept.
-			# Since the shell doesn't do floating point math and we want the user to be able to specify
-			# up to two digits precision, multiple the MEAN and the user's numbers by 100.
+			# LOW and HIGH are from 0 to 100 so first multiple the MEAN by 100
+			# to match the LOW and HIGH.
+			MEAN=$( echo "${MEAN}" | awk '{ printf("%0.2f", $1 * 100); }' )
+
+			# Since the shell doesn't do floating point math and we want the user to
+			# be able to specify up to two digits precision,
+			# multiple everything by 100 and convert to integer.
 			# Awk handles the "e-" format.
-			MEAN100=$( echo "${MEAN}" | awk '{ printf("%d", $1 * 100); }' )
-			HIGH100=$( echo "${HIGH}" | awk '{ printf("%d", $1 * 100); }' )
-			LOW100=$( echo "${LOW}" | awk '{ printf("%d", $1 * 100); }' )
+			MEAN_CHECK=$( echo "${MEAN}" | awk '{ printf("%d", $1 * 100); }' )
+			HIGH_CHECK=$( echo "${HIGH}" | awk '{ printf("%d", $1 * 100); }' )
+			LOW_CHECK=$( echo "${LOW}" | awk '{ printf("%d", $1 * 100); }' )
 
 			MSG=""
 
 			if [[ ${HIGH} != "0" ]]; then		# Use the HIGH check
-				if [[ ${MEAN100} -gt "${HIGH100}" ]]; then
+				if [[ $(echo "${MEAN_CHECK} > ${HIGH_CHECK}" | bc ) -eq 1 ]]; then
 					BAD="'${f}' (above threshold: MEAN=${MEAN}, threshold = ${HIGH})"
 				elif [[ ${DEBUG} == "true" ]]; then
 					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
@@ -157,7 +178,7 @@ for f in ${IMAGE_FILES} ; do
 
 			# An image can't be both HIGH and LOW so if it was HIGH don't check for LOW.
 			if [[ ${BAD} == "" && ${LOW} != "0" ]]; then
-				if [[ ${MEAN100} -lt "${LOW100}" ]]; then
+				if [[ $(echo "${MEAN_CHECK} < ${LOW_CHECK}" | bc ) -eq 1 ]]; then
 					BAD="'${f}' (below threshold: MEAN=${MEAN}, threshold = ${LOW})"
 				elif [[ ${DEBUG} == "true" && ${MSG} == "" ]]; then
 					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
@@ -165,7 +186,7 @@ for f in ${IMAGE_FILES} ; do
 			fi
 
 			if [[ ${DEBUG} == "true" && ${BAD} == "" && -n ${MSG} ]]; then
-				echo "${MSG}"
+				echo "${MSG}" >&2
 			fi
 		fi
 	fi
@@ -177,22 +198,47 @@ for f in ${IMAGE_FILES} ; do
 			echo "${r} ${BAD}" >> "${OUTPUT}"
 		fi
 		[[ ${DEBUG} == "false" ]] && rm -f "${f}" "thumbnails/${f}"
-		num_bad=$((num_bad + 1))
+		((num_bad++))
 	fi
 done
 
 if [[ $num_bad -eq 0 ]]; then
 	# If only one file, "no news is good news".
 	if [[ -z ${FILE} ]]; then
-		echo -e "\n${ME} ${GREEN}No bad files found.${NC}"
+		echo -e "\n${ME} ${GREEN}No bad files found.${NC}" >&2
 		rm -f "${OUTPUT}"
+	else
+		rm -f "${ALLSKY_BAD_IMAGE_COUNT}"
 	fi
 else
 	if [[ -z ${FILE} ]]; then
-		echo "${ME} ${num_bad} bad file(s) found and ${r}. See ${OUTPUT}."
+		echo "${ME} ${num_bad} bad file(s) found and ${r}. See ${OUTPUT}." >&2
 		# Do NOT remove ${OUTPUT} in case the user wants to look at it.
 	else	# only 1 file so show it
-		echo "${ME} File is bad: ${OUTPUT}"
+		echo "${ME} File is bad: ${OUTPUT}" >&2
+		echo -e "${OUTPUT}" >> "${ALLSKY_BAD_IMAGE_COUNT}"
+		BAD_COUNT="$( wc -l < "${ALLSKY_BAD_IMAGE_COUNT}" )"
+		# TODO: make BAD_LIMIT a WebUI setting.
+		BAD_LIMIT=3
+# echo "xxxxxxxxxx ${BAD_COUNT} bad consecutive images" >&2
+		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
+			MSG="Multiple bad consecutive bad images."
+			MSG="${MSG}\nCheck 'REMOVE_BAD_IMAGES_THRESHOLD_LOW' and 'REMOVE_BAD_IMAGES_THRESHOLD_HIGH' in config.sh"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" >&2
+		fi
+		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then
+			# Split the long file name so it fits in the message.
+			DIR="$( dirname "${ALLSKY_BAD_IMAGE_COUNT}" )"
+			FILE="$( basename "${ALLSKY_BAD_IMAGE_COUNT}" )"
+
+			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
+				--directory "${ALLSKY_TMP}" \
+				"${FILENAME}" "yellow" "" "85" "" "" \
+	 			"" "5" "yellow" "${EXTENSION}" "" \
+				"WARNING:\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}" >&2
+
+		fi
+
 	fi
 fi
 

@@ -7,6 +7,10 @@ import argparse
 import importlib
 from datetime import datetime, timedelta, date
 import signal
+from collections import deque
+import numpy
+import shutil
+import time
 
 '''
 NOTE: `valid_module_paths` must be an array, and the order specified dictates the order of search for a named module.
@@ -14,7 +18,6 @@ It is expected that the 'user' supplied modules are searched first, and thus com
 This permits the user to copy and modify a distributed module, or create an entirely new replacement for a distributed
 module, thus giving the user total control.
 '''
-
 def signalHandler(sig, frame):
     if sig == signal.SIGTERM or sig == signal.SIGINT:
         try:
@@ -54,8 +57,25 @@ import allsky_shared as shared
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--event",  type=str, help="The event we are running modules for (defaults to postcapture).", default="postcapture", choices=["postcapture","daynight", "nightday", "periodic"])
+    parser.add_argument("-f", "--flowtimerframes",  type=int, help="Number of frames to capture for the flow timing averages.", default=10)
+    parser.add_argument("-c", "--cleartimings", action="store_true", help="Clear any flow average timing data.")
     shared.args = parser.parse_args()
-    
+
+    shared.initDB()
+
+    if shared.args.cleartimings:
+        if shared.dbHasKey("flowtimer"):
+            shared.dbDeleteKey("flowtimer")
+            
+        try:
+            flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
+        except KeyError:
+            flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")   
+                        
+        if os.path.exists(flowTimingsFolder):
+            shutil.rmtree(flowTimingsFolder)            
+        sys.exit(0)
+        
     try:
         shared.allskyTmp = os.environ["ALLSKY_TMP"]
     except:
@@ -68,7 +88,6 @@ if __name__ == "__main__":
         rawSettings = os.environ["SETTINGS_FILE"]
     except:
         shared.log(0, "ERROR: no camera config file available in the environment", exitCode=1)
-
 
     if (shared.args.event == "postcapture"):
         try:
@@ -124,6 +143,7 @@ if __name__ == "__main__":
         shared.log(0, "ERROR: no allsky config directory available in the environment", exitCode=1)
 
     watchdog = False
+    moduleDebug = False
     timeout = 0
     try:
         configFile = os.path.join(shared.args.allskyConfig, 'module-settings.json')
@@ -131,10 +151,10 @@ if __name__ == "__main__":
             module_settings = json.load(module_Settings_file)
             watchdog = module_settings['watchdog']
             timeout = module_settings['timeout']
+            moduleDebug = module_settings['debugmode']
     except:
         watchdog = False
-
-
+        
     shared.args.config = rawSettings
     shared.log(4, "INFO: Loading config {0}".format(shared.args.config))
     try:
@@ -158,8 +178,6 @@ if __name__ == "__main__":
                 shared.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)
     except:
         shared.log(0, "ERROR: Failed to open {0}".format(moduleConfig), exitCode=1)
-
-    shared.initDB()
     
     if (shared.args.event == "postcapture"):
         disableFile = os.path.join(shared.allskyTmp,"disable")
@@ -173,13 +191,15 @@ if __name__ == "__main__":
                     if hasattr(_temp, method):
                         globals()[method] = getattr(_temp, method)
                         result = globals()[method]()
-                        shared.log(3, "INFO: Cleared module data for {0}".format(moduleName))
+                        shared.log(4, "INFO: Cleared module data for {0}".format(moduleName))
                     else:
                         shared.log(3, "INFO: Attempting to clear module data for {0} but no function provided".format(moduleName))
                         
             os.remove(disableFile)
     
     results = {}
+    if moduleDebug:
+        flowStartTime = round(time.time() * 1000)
     for shared.step in shared.flow:
         if shared.flow[shared.step]["enabled"] and shared.flow[shared.step]["module"] not in globals():
             try:
@@ -192,7 +212,7 @@ if __name__ == "__main__":
             except Exception as e:
                 shared.log(0, "ERROR: Failed to import module allsky_{0}.py in one of ( {1} ). Ignoring Module.".format(moduleName, e))
         else:
-            shared.log(3, "INFO: Ignorning module {0} as its disabled".format(shared.flow[shared.step]["module"]))
+            shared.log(4, "INFO: Ignorning module {0} as its disabled".format(shared.flow[shared.step]["module"]))
 
         if shared.flow[shared.step]["enabled"] and method in globals():
             startTime = datetime.now()
@@ -201,7 +221,6 @@ if __name__ == "__main__":
             if 'arguments' in shared.flow[shared.step]['metadata']:
                 arguments = shared.flow[shared.step]['metadata']['arguments']
                 
-
             try:
                 result = globals()[method](arguments, shared.args.event)
             except Exception as e:
@@ -225,11 +244,11 @@ if __name__ == "__main__":
                         shared.log(0, 'ERROR: Module {0} will be disabled, it took {1:.2f}s max allowed is {2}s'.format(shared.flow[shared.step]['module'], elapsedTime, timeout))
                         results[shared.step]["disable"] = True
                     else:
-                        shared.log(3, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
+                        shared.log(4, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
                 else:
-                    shared.log(3, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
+                    shared.log(4, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
             else:
-                shared.log(3, f'INFO: Ignoring watchdog for module {shared.step}')             
+                shared.log(4, f'INFO: Ignoring watchdog for module {shared.step}')             
                     
             results[shared.step]["lastexecutiontime"] = str(elapsedTime) 
 
@@ -254,3 +273,50 @@ if __name__ == "__main__":
                 json.dump(config, updatefile, indent=4)
         except json.JSONDecodeError as err:
             shared.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)
+
+    if moduleDebug:        
+        try:
+            flowTimingsFile = os.environ[f"ALLSKY_FLOWTIMINGS_{flowName.upper()}"]
+        
+            flowEndTime = round(time.time() * 1000)
+            flowElapsedTime = int(flowEndTime - flowStartTime)
+            queueData = []
+            allQueueData = {}
+            if shared.dbHasKey("flowtimer"):
+                allQueueData = shared.dbGet("flowtimer")
+                if flowName in allQueueData:
+                    queueData = allQueueData[flowName]
+                
+            queue = deque(queueData, maxlen = shared.args.flowtimerframes)
+            queue.append(flowElapsedTime)
+            
+            queueData = list(queue)
+            allQueueData[flowName] = queueData
+            shared.dbUpdate("flowtimer", allQueueData)
+            
+            try:
+                flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
+            except KeyError:
+                flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")
+            
+            shared.checkAndCreateDirectory(flowTimingsFolder)
+            if len(list(queue)) >= shared.args.flowtimerframes:
+                average = str(int(numpy.average(list(queue))))
+                with open(flowTimingsFile, 'w') as f:
+                    f.write(average) 
+            else:
+                if shared.isFileWriteable(flowTimingsFile):
+                    os.remove(flowTimingsFile)
+        except KeyError:
+            pass
+            
+    if not moduleDebug:
+        try:
+            flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
+        except KeyError:
+            flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")        
+        if shared.dbHasKey("flowtimer"):
+            shared.dbDeleteKey("flowtimer")
+            
+        if os.path.exists(flowTimingsFolder):
+            shutil.rmtree(flowTimingsFolder)

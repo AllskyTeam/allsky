@@ -22,6 +22,9 @@ $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 // functions.php sets a bunch of constants and variables.
 // It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
+include_once('includes/status_messages.php');
+$status = new StatusMessages();
+$needToDisplayMessages = false;
 initialize_variables();		// sets some variables
 
 // Constants for configuration file paths.
@@ -323,10 +326,11 @@ if (file_exists($f)) {
 		<div class="row right-panel">
 			<div class="col-lg-12">
 				<?php
-				$status = new StatusMessages();
-
-				// Check if the settings are configured - if not, display a message.
+				// Check if the settings are configured.
 				check_if_configured($page, "main");
+
+				if ($needToDisplayMessages)
+					$status->showMessages(true, false, true);
 
 				if (isset($_POST['clear'])) {
 					$t = @filemtime(ALLSKY_MESSAGES);
@@ -334,7 +338,6 @@ if (file_exists($f)) {
 					// in which case we don't care.
 					if ($t != false) {
 						$newT = getVariableOrDefault($_POST, "filetime", 0);
-// echo "<br>Comparing t=$t to newT=$newT";
 						if ($t == $newT) {
 							exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
 							if ($retcode !== 0) {
@@ -390,7 +393,7 @@ if (file_exists($f)) {
 
 				switch ($page) {
 					case "WLAN_info":
-						DisplayDashboard_WLAN("wlan0");
+						DisplayDashboard_WLAN();
 						break;
 					case "LAN_info":
 						DisplayDashboard_LAN("eth0");
@@ -438,7 +441,7 @@ if (file_exists($f)) {
 						DisplayEditor();
 						break;
 					case "overlay":
-						DisplayOverlay("$image_name");
+						DisplayOverlay($image_name);
 						break;
 					case "module":
 						DisplayModule();
@@ -446,7 +449,7 @@ if (file_exists($f)) {
 
 					case "live_view":
 					default:
-						DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);
+						DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe);
 				}
 				?>
 			</div>
@@ -491,7 +494,38 @@ if (file_exists($f)) {
 	addTimestamp("wifi");
 	addTimestamp("auth_conf");
 	addTimestamp("system");
-</script>
 
+
+
+<?php
+// Only include the sticky buttons on the settings page
+if ($page == "configuration") {
+?>
+	// The remaining code is to keep the "Save changes" button at the top of the "settings" page.
+	// Get the button:
+	let mybutton = document.getElementById("backToTopBtn");
+
+	if (mybutton !== null) {
+		// When the user scrolls down 20px from the top of the document, show the button
+		window.onscroll = function() {scrollFunction()};
+
+		function scrollFunction() {
+			if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+				mybutton.style.display = "block";
+			} else {
+				mybutton.style.display = "none";
+			}
+		}
+
+		// When the user clicks on the button, scroll to the top of the document
+		function topFunction() {
+			document.body.scrollTop = 0; // For Safari
+			document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+		}
+	}
+<?php 
+	}
+?>
+</script>
 </body>
 </html>

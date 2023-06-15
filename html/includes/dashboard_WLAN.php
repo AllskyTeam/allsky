@@ -1,12 +1,48 @@
 <?php
 
-function DisplayDashboard_WLAN($interface) {
-	global $page;
+function DisplayDashboard_WLAN() {
 
+	// Get infomation on each interface and store in the $data array.
+	// Stop when the interface isn't found.
+	// This assumes if there are N interfaces there numbers are from 0 to (N-1).
+	// TODO: That assumption needs to be verified.
+
+	$data = Array();
+	for ($i = 0; ; $i++) {
+		$interface = "wlan$i";
+		$interface_output = get_interface_status("ifconfig $interface; iwconfig $interface");
+		if ($interface_output == "") {
+			break;
+		}
+		$data[$interface] = $interface_output;
+	}
+?>
+<div class="row">
+	<div class="col-lg-12">
+		<div class="panel panel-primary">
+			<div class="panel-heading"><i class="fa fa-tachometer-alt fa-fw"></i> WLAN Dashboard   </div>
+<?php
+	$num = 1;
+	foreach ($data as $int => $v) {
+		process_WLAN_data($int, $v, $num++);
+	}
+?>
+			<div class="panel-footer">Information provided by ifconfig and iwconfig</div>
+		</div><!-- /.panel-default -->
+	</div><!-- /.col-lg-12 -->
+</div><!-- /.row -->
+<?php
+}
+
+function process_WLAN_data($interface, $interface_output, $numCalls)
+{
+	global $page;
 	$status = new StatusMessages();
 	$notSetMsg = "[not set]";
 
-	$interface_output = get_interface_status("ifconfig $interface; iwconfig $interface");
+	if ($numCalls > 1) {
+		echo "<hr class='rowSeparator' style='height: 5px;'>";
+	}
 
 	// $interface_output is sent and the other variables are returned.
 	parse_ifconfig($interface_output, $strHWAddress, $strIPAddress, $strNetMask, $strRxPackets, $strTxPackets, $strRxBytes, $strTxBytes);
@@ -50,18 +86,15 @@ function DisplayDashboard_WLAN($interface) {
 	// $interface and $interface_output are sent, $status is returned.
 	$interface_up = handle_interface_POST_and_status($interface, $interface_output, $status);
 ?>
-
-<div class="row">
-	<div class="col-lg-12">
-		<div class="panel panel-primary">
-			<div class="panel-heading"><i class="fa fa-tachometer-alt fa-fw"></i> WLAN Dashboard   </div>
 			<div class="panel-body">
 				<?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>
 				<div class="row">
 					<div class="panel panel-default">
 						<div class="panel-body">
-							<h4>Interface Information</h4>
+							<h4><?php echo $interface ?> Interface Information</h4>
+<!--
 							<div class="info-item">Interface Name</div> <?php echo $interface ?></br>
+-->
 							<div class="info-item">IP Address</div>     <?php echo $strIPAddress ?></br>
 							<div class="info-item">Subnet Mask</div>    <?php echo $strNetMask ?></br>
 							<div class="info-item">Mac Address</div>    <?php echo $strHWAddress ?></br></br>
@@ -113,12 +146,8 @@ function DisplayDashboard_WLAN($interface) {
 						</form>
 					</div>
 				</div>
-
 			</div><!-- /.panel-body -->
-			<div class="panel-footer">Information provided by ifconfig and iwconfig</div>
-		</div><!-- /.panel-default -->
-	</div><!-- /.col-lg-12 -->
-</div><!-- /.row -->
+
 <?php
 }
 ?>

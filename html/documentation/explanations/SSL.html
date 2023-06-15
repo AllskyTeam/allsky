@@ -30,28 +30,189 @@ on your Pi for your WebUI and/or Allsky Website, instead of the less secure <b>h
 This is desirable (really, mandatory) when accessing the Pi from the Internet.
 If your Pi is only available on a local network, SSL isn't needed.
 </p>
-<p>
-Allsky on the Pi uses the <b>lighttpd</b> web server,
-so it needs to be configured to use SSL.
-<a href="https://www.itzgeek.com/how-tos/linux/how-to-configure-lets-encrypt-ssl-in-lighttpd-server.html">This page</a>
-describes how to configure and use <b>Let's Encrypt SSL</b> with <b>lighttpd</b>.
-</p>
 
-<blockquote>
-You may need to to change the permissions of <span class="fileName">/etc/letsencrypt/live</span>
-in order to be able to read and write and complete the concatenation step.
-Execute <code>sudo chmod 640 /etc/letsencrypt/live</code>.
+<h4>Requirements</h4>
+<ol class="minimalPadding">
+	<li>You must have Allsky working on your Pi prior to installing SSL.
+	<li>You must already have an Internet domain name for your Pi.
+		The instructions below use <b>myallsky.com</b> but
+		replace that with your domain name.
+</ol>
+
+
+<blockquote class="warning morePadding">
+Installing SSL requires that your Pi be accessible via the Internet and
+can be a <strong>huge</strong> security risk if not done correctly.
+<br><br>
+Do not attempt unless you know what you are doing.
+The Allsky developers are not responsible for any loss or damages.
+<br><br>
+There are additional steps you should take to secure your Pi that aren't
+described in these instructions.
+<br>
+If you aren't familiar with the following you're probably not qualified to install SSL:
+<ul class="minimalPadding">
+	<li>installing a firewall and a VLAN
+	<li>obtaining an Internet domain name
+</ul>
 </blockquote>
 
-Notes:
+<p class="morePadding">
+There are many ways to implement SSL;
+the instructions below use
+<a external="true" href="https://letsencrypt.org/">Let's Encrypt SSL</a>
+which is popular and free software package.
+</p>
+
+
+<h4>Software installation</h4>
+Install some software on your Pi
+(you can copy/paste these lines into a terminal window):
+<pre>
+apt-get update
+apt-get install software-properties-common
+add-apt-repository ppa:certbot/certbot
+apt-get update
+apt-get install certbot
+mkdir ~/allsky/config/ssl         <span class="shellComment"></span>
+chmod 775 ~/allsky/config/ssl
+
+certbot certonly --webroot -w /config/ssl/<b>myallsky.com</b> -d <b>myallsky.com</b>
+</pre>
+
+<p class="morePadding">
+The <code>cerbot</code> command will prompt for your email and a couple other things.
+It will then create the SSL certificate and private key.
+Take note of the IMPORTANT NOTES that are displayed.
+</p>
+<p>
+Combine the certificate and private key into one file:
+<pre>
+sudo chmod 750 /etc/letsencrypt/live
+cd /etc/letsencrypt/live/<b>myallsky.com</b>
+cat cert.pem privkey.pem | sudo tee web.pem
+</pre>
+</p>
+
+
+<h4>Web server configuration</h4>
+Configure the web server (called <b>lighttpd</b> to use SSL and redirects any
+"http" requests to your Pi with "https" requests.
+<p>
+In your favorite text editor,
+create a file called <span class="fileName">98-<b>myallsky.com</b>.conf</span>
+containing the following lines:
+<pre>
+server.modules += ( "mod_openssl" )
+
+$SERVER["socket"] == ":443" {
+	ssl.engine = "enable"
+	ssl.pemfile = "/etc/letsencrypt/live/<b>myallsky.com</b>/web.pem"	# Combined Certificate
+	ssl.ca-file = "/etc/letsencrypt/live/<b>myallsky.com</b>/chain.pem"	# Root CA
+	server.name = "<b>myallsky.com</b>"
+
+	# Uncomment the next line if you want the web server to log access requests.
+	# accesslog.filename = "/var/log/lighttpd/<b>myallsky.com</b>_access.log"
+}
+
+$HTTP["scheme"] == "http" {
+	$HTTP["host"] == "<b>myallsky.com</b>" {
+		url.redirect = ("/.*" =&gt; "https://<b>myallsky.com</b>$0")
+	}
+}
+</pre>
+</p>
+
+<p class="morePadding">
+Install the file so the web server sees it:
+<pre>
+sudo install -m 0644  98-<b>myallsky.com</b>.conf  /etc/lighttpd/conf-available
+cd /etc/lighttpd/conf-enabled
+sudo ln -s  "../conf-available/98-<b>myallsky.com</b>.conf"  .
+sudo systemctl restart lighttpd
+</pre>
+</p>
+
+
+<h4>Test</h4>
+Try to access your Pi via
+<code>http://<b>myallsky.com</b></code>
+and
+<code>https://<b>myallsky.com</b></code>.
+You should see the WebUI in both cases.
+</p>
+
+
+<h4>Post-installation steps</h4>
+Let's Encrypt certificates are only valid for 90 days.
+You need to configure the Pi to renew your certificates before they expire
+(or do it manually).
+
+<p>
+First, run this command to simulate automatic renewal of your certificate:
+<pre>
+certbot renew --dry-run
+</pre>
+<p>
+You should see output similar to this:
+<pre>
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+-------------------------------------------------------------------------------
+Processing /etc/letsencrypt/renewal/myallsky.com.conf
+-------------------------------------------------------------------------------
+Cert not due for renewal, but simulating renewal for dry run
+Starting new HTTPS connection (1): acme-staging.api.letsencrypt.org
+Renewing an existing certificate
+Performing the following challenges:
+http-01 challenge for myallsky.com
+Waiting for verification...
+Cleaning up challenges
+-------------------------------------------------------------------------------
+new certificate deployed without reload, fullchain is
+/etc/letsencrypt/live/myallsky.com/fullchain.pem
+-------------------------------------------------------------------------------
+** DRY RUN: simulating 'certbot renew' close to cert expiry
+**          (The test certificates below have not been saved.)
+Congratulations, all renewals succeeded. The following certs have been renewed:
+  /etc/letsencrypt/live/myallsky.com/fullchain.pem (success)
+** DRY RUN: simulating 'certbot renew' close to cert expiry
+**          (The test certificates above have not been saved.)
+</pre>
+</p>
+
+<p class="morePadding">
+Prior the the certificates expiring, run:
+<pre>
+certbot renew
+cd /etc/letsencrypt/live/<b>myallsky.com</b>
+cat cert.pem privkey.pem | sudo tee web.pem
+</pre>
+<blockquote class="morePadding">
+You can renew your Let's Encrypt certificates <strong>at most</strong>
+30 days before they expire - two weeks prior to expiration is a good goal.
+</blockquote>
+</p>
+
+
+<h4>Notes</h4>
 <ul>
-<li>The Pi runs a version of the <b>Debian</b> operating system.
-<li>The <b>lighttpd</b> web server is already installed and running so you can skip
-	the step to install it.
-<li>The "document root" of the webserver is <span class="fileName">~/allsky/html</span>.
-<li>When you are done, make a copy of the <span class="fileName">/etc/letsencrypt</span>
-	directory and store on something other than your Pi in case your Pi crashes.
+	<li>Your SSL-related files are stored in
+		<span class="fileName">~/allsky/config/ssl</span> and will be
+		preserved across Allsky upgrades.
+	<li>When you are done installing and testing SSL, make a copy of the following
+		and store on something other than your Pi in case your Pi crashes:
+		<ul class="minimalPadding">
+			<li><span class="fileName">/etc/letsencrypt</span> directory
+			<li><span class="fileName">~/allsky/config/ssl</span> directory
+			<li><span class="fileName">/etc/lighttpd/conf-available/98-<b>myallsky.com</b>.conf</span>
+		</ul>
 </ul>
+
+
+<h4>Source of instructions</h4>
+These instruction were obtain from
+<a external="true" href="https://www.itzgeek.com/how-tos/linux/how-to-configure-lets-encrypt-ssl-in-lighttpd-server.html">https://www.itzgeek.com</a>
+and modified for Allsky use.
 
 
 </div><!-- Layout-main -->
@@ -59,4 +220,3 @@ Notes:
 </body>
 </html>
 <script> includeHTML(); </script>
-

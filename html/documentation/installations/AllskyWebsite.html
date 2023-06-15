@@ -16,6 +16,7 @@
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
 	<title>Installing and upgrading Allsky Website</title>
 </head>
 <body>
@@ -41,7 +42,7 @@ and you don't want to have to change them twice.
 <p>
 If you have an <b>existing</b> Allsky Website on your Pi,
 see the section below, otherwise
-skip to the <a href="#installation-local">Installing the Website</a> section.
+skip to the <a href="#installation-local">Installing the Website</a> section below.
 </p>
 
 <h4>Steps for existing Websites</h4>
@@ -49,14 +50,16 @@ skip to the <a href="#installation-local">Installing the Website</a> section.
 The location of the prior website depends upon its version.
 In both cases the directory name is <span class="fileName">allsky</span>.
 The parent directory is:
-<ul class="minimalPadding">
-	<li><span class="fileName">/var/www/html</span> for Website version <b>v2022.03.01+</b> or before.
-	<li><span class="fileName">~/allsky/html</span> for newer versions.
+<ul>
+	<li><span class="fileName">/var/www/html</span>
+		for Website version <b>v2022.03.01+</b> or before.
+	<li><span class="fileName">~/allsky/html</span>
+		for version <b>v2023.05.01</b> or later.
 </ul>
 </p>
 
 <p>
-Perform one of the steps below,
+Perform <strong>one</strong> of the steps below,
 then continue to the <a href="#installation-local">Installing the Website</a> section:
 <ol>
 <li><b>Upgrade the old version.</b>
@@ -104,6 +107,8 @@ After installation do the following:
 	<li>Update the <span class="fileName">ftp-settings.sh</span> file
 		via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows
 		where to copy the files to.
+		See the instructions for
+		<a allsky="true" href="../settings/allskyWebsite.html#ftp-settings">updating the <span class="fileName">ftp-settings.sh</span> file</a>.
 </ul>
 
 <hr class="separator">
@@ -119,7 +124,7 @@ so they install the Allsky Website on a different
 machine that <u>is</u> accessible on the Internet.
 <blockquote>
 If you want to make your Pi available on the Internet, see
-<a href="https://medium.com/swlh/host-a-raspberry-pi-web-server-on-the-internet-89786287db77">these instructions</a>.
+<a external="true" href="https://medium.com/swlh/host-a-raspberry-pi-web-server-on-the-internet-89786287db77">these instructions</a>.
 <br>
 <strong>Be careful if you do this - if done incorrectly your Pi may be insecure.</strong>
 </blockquote>
@@ -143,13 +148,20 @@ make sure Allsky is working on your Pi, then do the following:
 	<span class="fileName">allsky</span> directory on the remote server.
 <li>Do <b>not</b> configure the Website yet - you'll do that below.
 <li>On the Pi:
-	<ul class="minimalPadding">
+	<ol class="minimalPadding">
 	<li>Update the <span class="fileName">config.sh</span> file
 		via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows which files
 		to upload (e.g., startrails, timelapse, etc.).
 	<li>Update the <span class="fileName">ftp-settings.sh</span> file
 		via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows
 		where on the remote server to upload the files to.
+		See the instructions for
+		<a allsky="true" href="../settings/allskyWebsite.html#ftp-settings">updating the <span class="fileName">ftp-settings.sh</span> file</a>.
+		<blockquote>
+			This step MUST be done before the next step since the next step
+			tries to upload a test file to your remote server and it will fail
+			if you haven't configured the settings properly.
+		</blockquote>
 	<li>Run <code>cd ~/allsky;  website/install.sh --remote</code>.
 		This will upload a default configuration file to your server,
 		leaving the master copy on the Pi.
@@ -181,7 +193,7 @@ make sure Allsky is working on your Pi, then do the following:
 		do so via WebUI (follow the first two steps above).
 		Do NOT edit the configuration file directly on the remote server.
 		</blockquote>
-	</ul>
+	</ol>
 <li>Your remote server is now ready.
 <li>Give your family and friends the URL to your Allsky Website so they can enjoy your images!
 </ol>
@@ -220,13 +232,14 @@ as desired so the Website looks and behaves like you want it to.
 Changes to both local Websites and remote Websites are both done via the WebUI.
 </p>
 
-<blockquote>
+<p>
 If your prior version of the Allsky Website was in
 <span class="fileName">/var/www/html/allsky</span>
 note that there is only one configuration file in the new Website
 (<span class="fileName">configuration.json</span>)
 that replaces the two older files.
-</blockquote>
+</p>
+
 <blockquote>
 If you have both a local and a remote Website,
 they each have their own configuration file which is

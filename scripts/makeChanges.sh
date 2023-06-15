@@ -82,6 +82,11 @@ if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 	[[ $(($# % 4)) -ne 0 ]] && usage_and_exit 2
 fi
 
+if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
+	ERROR_PREFIX=""
+else
+	ERROR_PREFIX="${ME}: "
+fi
 
 # This output may go to a web page, so use "w" colors.
 # shell check doesn't realize there were set in variables.sh
@@ -160,12 +165,20 @@ while [[ $# -gt 0 ]]; do
 				CAMERA_NUMBER=" -cameraNumber ${NEW_CAMERA_NUMBER}"
 				# Set NEW_VALUE to the current Camera Type
 				NEW_VALUE="$( settings .cameraType )"
+
 				MSG="Re-creating files for cameraType ${NEW_VALUE}, cameraNumber ${NEW_CAMERA_NUMBER}"
 				if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
 					echo -e "<script>console.log('${MSG}');</script>"
 				elif [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}${MSG}${wNC}"
 				fi
+			fi
+
+			if [[ ! -e "${ALLSKY_BIN}/capture_${NEW_VALUE}" ]]; then
+				MSG="Unknown Camera Type: '${NEW_VALUE}'."
+				echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${MSG}${wNC}"
+				# shellcheck disable=SC2086
+				exit ${EXIT_NO_CAMERA}
 			fi
 
 			# This requires Allsky to be stopped so we don't
@@ -177,8 +190,24 @@ while [[ $# -gt 0 ]]; do
 				# If we can't set the new camera type, it's a major problem so exit right away.
 				# NOTE: when we're changing cameraType we're not changing anything else.
 
-				CC_FILE_OLD="${CC_FILE}-OLD"
+				# The software for RPi cameras needs to know what command is being used to
+				# capture the images.
+				# determineCommandToUse either retuns the command with exit code 0,
+				# or an error message with non-zero exit code.
+				if [[ ${NEW_VALUE} == "RPi" ]]; then
+					C="$( determineCommandToUse "false" "" )"
+					RET=$?
+					if [[ ${RET} -ne 0 ]] ; then
+						echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${C}.${wNC}"
+						# shellcheck disable=SC2086
+						exit ${RET}
+					fi
+					C=" -cmd ${C}"
+				else
+					C=""
+				fi
 
+				CC_FILE_OLD="${CC_FILE}-OLD"
 				if [[ -f ${CC_FILE} ]]; then
 					# Save the current file just in case creating a new one fails.
 					# It's a link so copy it to a temp name, then remove the old name.
@@ -189,18 +218,6 @@ while [[ $# -gt 0 ]]; do
 				# Create the camera capabilities file for the new camera type.
 				# Use Debug Level 3 to give the user more info on error.
 
-				# The software for RPi cameras needs to know what command is being used to
-				# capture the images.
-				if [[ ${NEW_VALUE} == "RPi" ]]; then
-					if ! C="$(determineCommandToUse "false" "" )" ; then
-						echo -e "${wERROR}${ME}: ERROR: unable to determine command to use, RET=${RET}, C=${C}.${wNC}."
-						# shellcheck disable=SC2086
-						exit ${RET}
-					fi
-					C=" -cmd ${C}"
-				else
-					C=""
-				fi
 				if [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}Calling capture_${NEW_VALUE}${C}${CAMERA_NUMBER} -cc_file '${CC_FILE}'${wNC}"
 				fi
@@ -275,8 +292,13 @@ while [[ $# -gt 0 ]]; do
 			fi
 
 			# createAllskyOptions.php will use the cc file and the options template file
-			# to create an OPTIONS_FILE for this camera type/model.
-			# These variables don't include a directory since the directory is specified with "--dir" below.
+			# to create an OPTIONS_FILE and SETTINGS_FILE for this camera type/model.
+			# If there is an existing camera-specific settings file for the new
+			# camera type/model then createAllskyOptions.php will use it and link it
+			# to SETTINGS_FILE.
+			# If there is no existing camera-specific file, i.e., this camera is new
+			# to Allsky, it will create a default settings file using the generic
+			# values from the prior settings file if it exists.
 
 			if [[ ${DEBUG} == "true" ]]; then
 				# shellcheck disable=SC2086
@@ -285,7 +307,8 @@ while [[ $# -gt 0 ]]; do
 					${FORCE} ${DEBUG_ARG} \
 					"\n\t--cc_file ${CC_FILE}" \
 					"\n\t--options_file ${OPTIONS_FILE}" \
-					"\n\t--settings_file ${SETTINGS_FILE}${wNC}"
+					"\n\t--settings_file ${SETTINGS_FILE}" \
+					"${wNC}"
 			fi
 			# shellcheck disable=SC2086
 			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
@@ -310,11 +333,11 @@ while [[ $# -gt 0 ]]; do
 
 			OK="true"
 			if [[ ! -f ${OPTIONS_FILE} ]]; then
-				echo -e "${wERROR}${ME}: ERROR Options file ${OPTIONS_FILE} not created.${wNC}"
+				echo -e "${wERROR}${ERROR_PREFIX}ERROR Options file ${OPTIONS_FILE} not created.${wNC}"
 				OK="false"
 			fi
 			if [[ ! -f ${SETTINGS_FILE} && ${OPTIONS_FILE_ONLY} == "false" ]]; then
-				echo -e "${wERROR}${ME}: ERROR Settings file ${SETTINGS_FILE} not created.${wNC}"
+				echo -e "${wERROR}${ERROR_PREFIX}ERROR Settings file ${SETTINGS_FILE} not created.${wNC}"
 				OK="false"
 			fi
 			[[ ${OK} == "false" ]] && exit 2
@@ -505,7 +528,7 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 			"RemoteWebsite"
 		R=$?
 		if [[ ${R} -ne 0 ]]; then
-			echo -e "${RED}${ME}: Unable to upload '${FILE_TO_UPLOAD}'.${NC}"
+			echo -e "${RED}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}'.${NC}"
 		fi
 	fi
 fi

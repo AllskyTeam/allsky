@@ -588,28 +588,6 @@ if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} && (${PROTOCOL} == "" || ${
 	echo "A remote Allsky Website configuration file was found but PROTOCOL doesn't support uploading files."
 fi
 
-if [[ ${WEBSITES} != "none" ]]; then
-	if [[ ${IMG_UPLOAD} == "false" ]]; then
-		heading "Warnings"
-		echo "You have an Allsky Website but no images are being uploaded to it (IMG_UPLOAD=false)."
-	fi
-	if [[ ${TIMELAPSE} == "true" && ${UPLOAD_VIDEO} == "false" ]]; then
-		heading "Warnings"
-		echo "You have an Allsky Website and timelapse videos are being created (TIMELAPSE=true),"
-		echo "but they are not being uploaded (UPLOAD_VIDEO=false)."
-	fi
-	if [[ ${KEOGRAM} == "true" && ${UPLOAD_KEOGRAM} == "false" ]]; then
-		heading "Warnings"
-		echo "You have an Allsky Website and keograms are being created (KEOGRAM=true),"
-		echo "but they are not being uploaded (UPLOAD_KEOGRAM=false)."
-	fi
-	if [[ ${STARTRAILS} == "true" && ${UPLOAD_STARTRAILS} == "false" ]]; then
-		heading "Warnings"
-		echo "You have an Allsky Website and startrails are being created (STARTRAILS=true),"
-		echo "but they are not being uploaded (UPLOAD_STARTRAILS=false)."
-	fi
-fi
-
 
 
 # ======================================================================

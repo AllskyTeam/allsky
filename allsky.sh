@@ -248,17 +248,12 @@ if [[ -z ${LOCALE} || ${LOCALE} == "null" ]]; then
 	fi
 fi
 
-# shellcheck disable=SC2207
-KEYS=( $(settings 'keys[]') )
-for KEY in "${KEYS[@]}"
-do
-	K="$(settings ".${KEY}")"
-	# We must pass "-config ${ARGS_FILE}" on the command line,
-	# and debuglevel we did above, so don't do them again.
-	[[ ${KEY} == "config" && ${KEY} == "debuglevel" ]] && continue
-
-	echo "-${KEY}=${K}" >> "${ARGS_FILE}"
-done
+# We must pass "-config ${ARGS_FILE}" on the command line,
+# and debuglevel we did above, so don't do them again.
+TAB="$( echo -e "\t" )"
+convert_json_to_tabs "${SETTINGS_FILE}" |
+	grep -E -i -v "^config${TAB}|^debuglevel${TAB}" |
+	sed -e 's/^/-/' -e "s/${TAB}/=/" >> "${ARGS_FILE}"
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.

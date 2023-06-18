@@ -415,24 +415,6 @@ int main(int argc, char *argv[])
 	setlinebuf(stdout);		// Line buffer output so entries appear in the log immediately.
 
 	CG.ct = ctRPi;
-	if (! getCommandLineArguments(&CG, argc, argv))
-	{
-		// getCommandLineArguents outputs an error message.
-		exit(EXIT_ERROR_STOP);
-	}
-
-	if (! CG.saveCC && ! CG.help)
-	{
-		displayHeader(CG);
-	}
-
-	doLocale(&CG);
-
-	if (CG.help)
-	{
-		displayHelp(CG);
-		closeUp(EXIT_OK);
-	}
 
 	processConnectedCameras();	// exits on error
 
@@ -454,6 +436,25 @@ int main(int argc, char *argv[])
 	// Set defaults that depend on the camera type.
 	if (! setDefaults(&CG, ASICameraInfo))
 		closeUp(EXIT_ERROR_STOP);
+
+	if (! getCommandLineArguments(&CG, argc, argv))
+	{
+		// getCommandLineArguents outputs an error message.
+		exit(EXIT_ERROR_STOP);
+	}
+
+	if (! CG.saveCC && ! CG.help)
+	{
+		displayHeader(CG);
+	}
+
+	doLocale(&CG);
+
+	if (CG.help)
+	{
+		displayHelp(CG);
+		closeUp(EXIT_OK);
+	}
 
 	// Do argument error checking if we're not going to exit soon.
 	if (! CG.saveCC && ! validateSettings(&CG, ASICameraInfo))
@@ -533,12 +534,6 @@ int main(int argc, char *argv[])
 
 	//-------------------------------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------------------------------
-
-// TODO: after merging myModeMeanSetting into CG.myModeMeanSetting, delete these lines.
-myModeMeanSetting.dayMean = CG.myModeMeanSetting.dayMean;
-myModeMeanSetting.nightMean = CG.myModeMeanSetting.nightMean;
-myModeMeanSetting.dayMean_threshold = CG.myModeMeanSetting.dayMean_threshold;
-myModeMeanSetting.nightMean_threshold = CG.myModeMeanSetting.nightMean_threshold;
 
 	displaySettings(CG);
 
@@ -694,6 +689,7 @@ myModeMeanSetting.nightMean_threshold = CG.myModeMeanSetting.nightMean_threshold
 
 		if (CG.myModeMeanSetting.currentMean > 0.0)
 		{
+			// Using Allsky auto-exposure/gain algorithm
 			CG.myModeMeanSetting.modeMean = true;
 			if (! aegInit(CG, myRaspistillSetting, myModeMeanSetting))
 			{

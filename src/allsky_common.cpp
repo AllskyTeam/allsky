@@ -1789,10 +1789,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->userQuality = cg->quality = atol(argv[++i]);
 		}
-else if (strcmp(a, "meanthreshold") == 0)	// TODO:  xxxxx delete in next release
-{
-	cg->myModeMeanSetting.mean_threshold = atof(argv[++i]);
-}
 		else if (strcmp(a, "meanp0") == 0)
 		{
 			cg->myModeMeanSetting.mean_p0 = atof(argv[++i]);

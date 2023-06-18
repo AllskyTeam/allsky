@@ -130,6 +130,17 @@ and only displays settings the camera supports, like cooler temperature for cool
 	Best used when both <span class="WebUISetting">Auto-Exposure</span> and
 	<span class="WebUISetting">Auto-Gain</span> are enabled.</td>
 </tr>
+<tr><td><span class="WebUISetting">Mean Threshold</span></td>
+	<td>0.1</td>
+	<td>When using <span class="WebUISetting">Mean Target</span>,
+		this specifies how close (plus or minus) the target brightness should be to the
+		<span class="WebUISetting">Mean Target</span>.
+		<br>For example, if <span class="WebUISetting">Mean Target</span> is
+		<code>0.4</code> and 
+		<span class="WebUISetting">Mean Threshold</span> is <code>0.1</code>
+		then the target brightness ranges from <code>0.3</code> to <code>0.5</code>
+	</td>
+</tr>
 <tr><td><span class="WebUISetting">Brightness</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>This setting changes the amount of light in images.
@@ -234,6 +245,10 @@ and only displays settings the camera supports, like cooler temperature for cool
 </tr>
 <tr><td><span class="WebUISetting">Mean Target</span></td>
 	<td>0.2</td>
+	<td></td>
+</tr>
+<tr><td><span class="WebUISetting">Mean Threshold</span></td>
+	<td>0.1</td>
 	<td></td>
 </tr>
 <tr><td><span class="WebUISetting">Brightness</span></td>
@@ -388,17 +403,6 @@ use the <span class="shSetting">CROP</span> setting in the
 	to 9 for highest compression (but slowest to save).
 	If you use very short delays between pictures you may want to play with these
 	numbers to get the quickest delay possible.</td>
-</tr>
-<tr><td><span class="WebUISetting">Mean Threshold</span></td>
-	<td>Yes</td>
-	<td>When using <span class="WebUISetting">Mean Target</span>,
-		this specifies how close (plus or minus) the target brightness should be to the
-		<span class="WebUISetting">Mean Target</span>.
-		<br>For example, if <span class="WebUISetting">Mean Target</span> is
-		<code>0.4</code> and 
-		<span class="WebUISetting">Mean Threshold</span> is <code>0.1</code>
-		then the target brightness ranges from <code>0.3</code> to <code>0.5</code>
-	</td>
 </tr>
 <tr><td><span class="WebUISetting">Auto USB Bandwidth</span></td>
 	<td>Yes</td>

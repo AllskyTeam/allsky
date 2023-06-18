@@ -430,7 +430,7 @@ function get_variable() {
 	local FILE="${2}"
 	local LINE=""
 	local SEARCH_STRING="^[ 	]*${VARIABLE}="
-	if ! LINE="$( /bin/grep -E "${SEARCH_STRING}" "${FILE}" )" ; then
+	if ! LINE="$( /bin/grep -E "${SEARCH_STRING}" "${FILE}" 2>/dev/null )" ; then
 		return 1
 	fi
 

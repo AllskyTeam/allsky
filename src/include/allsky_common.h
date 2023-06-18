@@ -158,8 +158,7 @@ struct myModeMeanSetting {
 	double currentMean_threshold		= NOT_SET;		// holds either day or night threshold
 	double minMean_threshold			= NOT_SET;		// initialized at runtime
 	double maxMean_threshold			= NOT_SET;		// initialized at runtime
-// TODO: only use day and night versions xxxxxxxx will be deleted
-	double mean_threshold				= NOT_SET;		// initialized at runtime
+
 	// ExposureChange (Steps) = p0 + p1 * diff + (p2*diff)^2
 	double mean_p0						= NOT_SET;		// initialized at runtime
 	double mean_p1						= NOT_SET;		// initialized at runtime

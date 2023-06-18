@@ -1537,7 +1537,7 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 			display_msg --logonly info "   '${F}' was not in prior settings file."
 		fi
 
-	elif ${NEW_VERSION:0:10} == "v2023.05.01" ]]; then
+	elif [[ ${NEW_VERSION:0:10} == "v2023.05.01" ]]; then
 		if [[ ${PRIOR_VERSION} == "v2022.03.01" ]]; then
 			local B="$( basename "${NEW_FILE}" )"
 			local NAME="${B%.*}"			# before "."

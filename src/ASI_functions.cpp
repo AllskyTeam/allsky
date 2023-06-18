@@ -946,15 +946,6 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.nightMean_threshold);
 	fprintf(f, "\t\t},\n");
 
-// TODO: remove in next release
-fprintf(f, "\t\t{\n");
-fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "MeanThreshold");
-fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "meanthreshold");
-fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
-fprintf(f, "\t\t\t\"MaxValue\" : \"none\",\n");
-fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.mean_threshold);
-fprintf(f, "\t\t},\n");
-
 	if (CG.isColorCamera) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "AutoWhiteBalance");
@@ -1343,7 +1334,6 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->myModeMeanSetting.nightMean_threshold = DEFAULT_NIGHTMEAN_THRESHOLD_ZWO;
 		cg->myModeMeanSetting.minMean_threshold = DEFAULT_MINMEAN_THRESHOLD_ZWO;
 		cg->myModeMeanSetting.maxMean_threshold = DEFAULT_MAXMEAN_THRESHOLD_ZWO;
-	cg->myModeMeanSetting.mean_threshold = DEFAULT_DAYMEAN_THRESHOLD_ZWO;		// TODO: xxxx remove in next release
 		cg->myModeMeanSetting.mean_p0 = DEFAULT_MEAN_P0_ZWO;
 		cg->myModeMeanSetting.mean_p1 = DEFAULT_MEAN_P1_ZWO;
 		cg->myModeMeanSetting.mean_p2 = DEFAULT_MEAN_P2_ZWO;
@@ -1368,7 +1358,6 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->myModeMeanSetting.nightMean_threshold = DEFAULT_NIGHTMEAN_THRESHOLD_RPi;
 		cg->myModeMeanSetting.minMean_threshold = DEFAULT_MINMEAN_THRESHOLD_RPi;
 		cg->myModeMeanSetting.maxMean_threshold = DEFAULT_MAXMEAN_THRESHOLD_RPi;
-	cg->myModeMeanSetting.mean_threshold = DEFAULT_DAYMEAN_THRESHOLD_RPi;		// TODO: xxxx delete in next release
 		cg->myModeMeanSetting.mean_p0 = DEFAULT_MEAN_P0_RPi;
 		cg->myModeMeanSetting.mean_p1 = DEFAULT_MEAN_P1_RPi;
 		cg->myModeMeanSetting.mean_p2 = DEFAULT_MEAN_P2_RPi;

@@ -1504,103 +1504,130 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 	PRIOR_FILE="${3}"
 	NEW_FILE="${4}"
 
-	case "${NEW_VERSION}" in
 		# TODO: new versions go here
-		v2023.05.01*)
+	if [[ ${NEW_VERSION} == "v2023.05.01_02" ]]; then
+		if [[ ${PRIOR_VERSION} != "v2023.05.01" && ${PRIOR_VERSION} != "v2023.05.01_01" ]]; then
+			return
+		fi
 
-			case "${PRIOR_VERSION}" in
-				"v2022.03.01")
-					local B="$( basename "${NEW_FILE}" )"
-					local NAME="${B%.*}"			# before "."
-					local EXT="${B##*.}"			# after "."
-					local SPECIFIC="${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}"
+		# Replaced "meanthreshold" with "daymeanthreshold" and "nightmeanthreshold"
+		# if they don't already exist.
+		local F="meanthreshold"
+		MEANTHRESHOLD="$( settings ".${F}" "${PRIOR_FILE}" )"
+		if [[ -n ${MEANTHRESHOLD} && ${MEANTHRESHOLD} != "null" ]]; then
 
-					# For each field in prior file, update new file with old value.
-					# Then handle new fields and fields that changed locations or names.
-					# convert_json_to_tabs outputs fields and values separated by tabs.
+			DAYMEANTHRESHOLD="$( settings ".day${F}" "${NEW_FILE}" )"
+			if [[ -z ${DAYMEANTHRESHOLD} || ${DAYMEANTHRESHOLD} == "null" ]]; then
+			display_msg --logonly info "   Updating 'day${F}' in '${NEW_FILE}'."
+				update_json_file ".day${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
+			fi
+			NIGHTMEANTHRESHOLD="$( settings ".night${F}" "${NEW_FILE}" )"
+			if [[ -z ${NIGHTMEANTHRESHOLD} || ${NIGHTMEANTHRESHOLD} == "null" ]]; then
+			display_msg --logonly info "   Updating 'night${F}' in '${NEW_FILE}'."
+				update_json_file ".night${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
+			fi
 
-					convert_json_to_tabs "${PRIOR_FILE}" |
-						while read -r F V
-						do
-							case "${F}" in
-								"lastChanged")
-									V="$( date +'%Y-%m-%d %H:%M:%S' )"
-									;;
+			# If ${F} exists in the new file
+			MEANTHRESHOLD="$( settings ".${F}" "${NEW_FILE}" )"
+			if [[ -n ${MEANTHRESHOLD} && ${MEANTHRESHOLD} != "null" ]]; then
+				display_msg --logonly info "   Deleting '${F}' from '${NEW_FILE}'."
+				sed -i "/\"${F}\"/d" "${NEW_FILE}"
+			fi
+		else
+			display_msg --logonly info "   '${F}' was not in prior settings file."
+		fi
 
-								# These don't exist anymore.
-								"autofocus"|"background")
-									continue;
-									;;
+	elif ${NEW_VERSION:0:10} == "v2023.05.01" ]]; then
+		if [[ ${PRIOR_VERSION} == "v2022.03.01" ]]; then
+			local B="$( basename "${NEW_FILE}" )"
+			local NAME="${B%.*}"			# before "."
+			local EXT="${B##*.}"			# after "."
+			local SPECIFIC="${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}"
 
-								# These changed names.
-								"darkframe")
-									F="takeDarkFrames"
-									;;
-								"daymaxautoexposure")
-									F="daymaxautoexposure"
-									;;
-								"daymaxgain")
-									F="daymaxautogain"
-									;;
-								"nightmaxautoexposure")
-									F="nightmaxautoexposure"
-									;;
-								"nightmaxgain")
-									F="nightmaxautogain"
-									;;
+			# For each field in prior file, update new file with old value.
+			# Then handle new fields and fields that changed locations or names.
+			# convert_json_to_tabs outputs fields and values separated by tabs.
 
-								# These now have day and night versions.
-								"brightness")
-									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-									F="night${F}"
-									;;
-								"awb"|"autowhitebalance")
-									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-									F="night${F}"
-									;;
-								"wbr")
-									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-									F="night${F}"
-									;;
-								"wbb")
-									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-									F="night${F}"
-									;;
-								"targetTemp")
-									F="TargetTemp"
-									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-									F="night${F}"
-									;;
-								"coolerEnabled")
-									F="EnableCooler"
-									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-									F="night${F}"
-									;;
-								"meanthreshold")
-									F="meanthreshold"
-									update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-									F="night${F}"
-									;;
-							esac
+			convert_json_to_tabs "${PRIOR_FILE}" |
+				while read -r F V
+				do
+					case "${F}" in
+						"lastChanged")
+							V="$( date +'%Y-%m-%d %H:%M:%S' )"
+							;;
 
-							update_json_file ".${F}" "${V}" "${NEW_FILE}"
-						done
+						# These don't exist anymore.
+						"autofocus"|"background")
+							continue;
+							;;
 
-					# Fields whose location changed.
-					x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
-					update_json_file ".takeDaytimeImages" "${x}" "${NEW_FILE}"
+						# These changed names.
+						"darkframe")
+							F="takeDarkFrames"
+							;;
+						"daymaxautoexposure")
+							F="daymaxautoexposure"
+							;;
+						"daymaxgain")
+							F="daymaxautogain"
+							;;
+						"nightmaxautoexposure")
+							F="nightmaxautoexposure"
+							;;
+						"nightmaxgain")
+							F="nightmaxautogain"
+							;;
 
-					x="$( get_variable "DAYTIME_SAVE" "${PRIOR_CONFIG_FILE}" )"
-					update_json_file ".saveDaytimeImages" "${x}" "${NEW_FILE}"
+						# These now have day and night versions.
+						"brightness")
+							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+							F="night${F}"
+							;;
+						"awb"|"autowhitebalance")
+							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+							F="night${F}"
+							;;
+						"wbr")
+							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+							F="night${F}"
+							;;
+						"wbb")
+							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+							F="night${F}"
+							;;
+						"targetTemp")
+							F="TargetTemp"
+							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+							F="night${F}"
+							;;
+						"coolerEnabled")
+							F="EnableCooler"
+							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+							F="night${F}"
+							;;
+						"meanthreshold")
+							F="meanthreshold"
+							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+							F="night${F}"
+							;;
+					esac
 
-					x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
-					update_json_file ".useDarkFrames" "${x}" "${NEW_FILE}"
+					update_json_file ".${F}" "${V}" "${NEW_FILE}"
+				done
 
-					return
-					;;
-			esac
-			;;
-	esac
+			# Fields whose location changed.
+			x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
+			update_json_file ".takeDaytimeImages" "${x}" "${NEW_FILE}"
+
+			x="$( get_variable "DAYTIME_SAVE" "${PRIOR_CONFIG_FILE}" )"
+			update_json_file ".saveDaytimeImages" "${x}" "${NEW_FILE}"
+
+			x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
+			update_json_file ".useDarkFrames" "${x}" "${NEW_FILE}"
+
+			return
+		fi
+	fi
 }
 
 
@@ -1613,7 +1640,7 @@ restore_prior_settings_file()
 {
 	[[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" ]] && return
 
-	local MSG NAME EXT FILES FIRST_ONE
+	local MSG NAME EXT FIRST_ONE
 
 	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
 		if [[ ! -f ${PRIOR_SETTINGS_FILE} ]]; then
@@ -1644,10 +1671,10 @@ restore_prior_settings_file()
 			# Copy all the camera-specific settings files; don't copy the generic-named
 			# file since it will be recreated.
 			# There will be more than one camera-specific file if the user has multiple cameras.
-			FILES="$(find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}")"
-			if [[ -n ${FILES} ]]; then
+			local PRIOR_SPECIFIC_FILES="$(find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}")"
+			if [[ -n ${PRIOR_SPECIFIC_FILES} ]]; then
 				FIRST_ONE="true"
-				echo "${FILES}" | while read -r F
+				echo "${PRIOR_SPECIFIC_FILES}" | while read -r F
 					do
 						if [[ ${FIRST_ONE} == "true" ]]; then
 							display_msg --log progress "Restoring camera-specific settings files:"
@@ -1671,11 +1698,27 @@ restore_prior_settings_file()
 					local SPECIFIC="${NAME}_${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.${EXT}"
 					cp -a "${PRIOR_SETTINGS_FILE}" "${ALLSKY_CONFIG}/${SPECIFIC}"
 					MSG="${MSG}\nbut was able to create '${SPECIFIC}'."
+					PRIOR_SPECIFIC_FILES="${SPECIFIC}"
 
 					RESTORED_PRIOR_SETTINGS_FILE="true"
 					FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
 				fi
 				display_msg --log warning "${MSG}"
+			fi
+
+			# Make any changes to the settings files based on the old and new Allsky versions.
+			if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" &&
+				  ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ]]; then
+				for S in ${PRIOR_SPECIFIC_FILES}
+				do
+					# Update all the prior camera-specific files (which are now in $ALLSKY_CONFIG).
+					# The new settings file will be based on a camera specific file.
+					local B="$( basename "${S}" )"
+					S="${ALLSKY_CONFIG}/${B}"
+					display_msg --log progress "Updating '${S}'"
+					convert_settings "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}" \
+						"${S}" "${S}"
+				done
 			fi
 		fi
 

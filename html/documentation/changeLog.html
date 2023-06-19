@@ -49,6 +49,37 @@
 					<li>The installation keeps track of where it is so if you have to exit it,
 						for example, to update the locale, it resumes where it left off.
 					</li>
+					<li>The installation skips steps that aren't needed.
+						This greatly decreases the time when upgrading from v2023.05.01 or v2023.05.01_01.
+						It can also skip the reboot if possible.
+					</li>
+					<li id="sensorTemperature">(RPi on Bullseye only) You can display the sensor temperature by
+						doing the following:
+						<ul>
+							<li>Add <span class="WebUIValue">--metadata &nbsp; /home/pi/allsky/config/overlay/extra/libcamera.json</span>
+								to the <span class="WebUISetting">Extra Arguments</span> setting in the WebUI.</li>
+							<li>In the <span class="WebUIWebPage">Overlay Editor's</span>
+								<span class="ManagerName">Variable Manager</span>,
+								look for <span class="variableManagerVariableName">AS_SensorTemperature</span> in the
+								<span class="variableManagerTab">All Variables</span> tab.
+								Click on <span class="btn btn-primary btn-small">+</span>
+								and define the variable:
+								<ul>
+									<li><strong>Format</strong>: <code>{:n}</code> &nbsp; (a whole number)</li>
+									<li><strong>Type</strong>: <code>Number</code></li>
+									<li>Enter whatever you'd like in the other fields.</li>
+									<li>Click on <span class="btn btn-primary btn-small">Save changes</span>.
+								</ul>
+							</li>
+							<li>In the <span class="variableManagerTab">Allsky Variables</span> tab
+								look for <span class="variableManagerVariableName">${SensorTemperature}</span>
+								in the <strong>Variable Name</strong> column and
+								click on the <span class="btn btn-primary btn-small">+</span> button.
+								Move and format the field as desired.
+							</li>
+							<li>Click on the flashing <i class="fa-solid fa-floppy-disk green"></i> icon.</li>
+						</ul>
+					</li>
 				</ul>
 
 				<h4>Bug Fixes</h4>

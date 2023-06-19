@@ -2199,7 +2199,7 @@ install_overlay()
 	local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
 	# See how many have already been installed - if all, then skip this step.
-	local NUM_INSTALLED="$( set | grep "^${NAME}" | wc -l )"
+	local NUM_INSTALLED="$( set | grep -c "^${NAME}" )"
 	if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ]]; then
 		display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
 	else

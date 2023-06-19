@@ -41,20 +41,6 @@ list of <em>possible</em> changes to future Allsky versions</a>.
 <h4>Image Capture</h4>
 <ul>
 	<li><span class="ki">Known Issue</span>:
-		The nighttime auto-exposure, auto-gain algorithm for ZWO cameras
-		can produce flickering, especially if the sky is partially cloudy.
-
-		<br><span class="wa">Workaround</span>:
-		No good one, but you can try decreasing the
-		<span class="WebUISetting">Aggression</span> setting in the WebUI
-		which can smooth out the brightness changes, but is slower to react to
-		true brightness changes.
-
-		<br><span class="fp">Future Plans</span>:
-		Port the RPi auto-exposure and auto-gain algorithm,
-		which works well, to ZWO cameras.
-
-	<li><span class="ki">Known Issue</span>:
 		Some ZWO cameras can produce <strong>ASI_ERROR_TIMEOUT</strong> messages
 		and fail to take pictures.
 
@@ -64,13 +50,14 @@ list of <em>possible</em> changes to future Allsky versions</a>.
 		<br><span class="fp">Future Plans</span>:
 		We hope that when we port he RPi auto-exposure algorithm to ZWO it will fix this.
 
-	<li><span class="lim">Limitation</span>:
+	<li class="morePadding"><span class="lim">Limitation</span>:
 		RPi cameras don't support sensor temperature.
 
-		<br><span class="wa">Workaround</span>: None.
+		<br><span class="wa">Workaround</span>:
+			See <a allsky="true" href="changeLog.html#sensorTemperature">this workaround</a>.
 
 		<br><span class="fp">Future Plans</span>:
-		Will fix in the next release for users running the Bullseye operating system.
+		Will fix in the next major release for users running the Bullseye operating system.
 		<blockquote>
 		The software Allsky uses to manage RPi cameras on the older Buster operating system
 		is no longer being improved.
@@ -78,7 +65,7 @@ list of <em>possible</em> changes to future Allsky versions</a>.
 		is happening only on Bullseye so we suggest upgrading to that operating system.
 		</blockquote>
 
-	<li><span class="lim">Limitation</span>:
+	<li class="morePadding"><span class="lim">Limitation</span>:
 		RPi cameras don't easily support dark frames.
 
 		<br><span class="wa">Workaround</span>:
@@ -87,18 +74,7 @@ list of <em>possible</em> changes to future Allsky versions</a>.
 		asking the Allsky developers how to do it.
 
 		<br><span class="fp">Future Plans</span>:
-		Will fix in the next release for users running the Bullseye operating system.
-
-	<li><span class="ki">Known Issue</span>:
-		Multiple timelapse creations can occur simultaneously
-		- usually a full timelapse and "mini" timelapse,
-		or two "mini" timelapse.
-
-		<br><span class="wa">Workaround</span>:
-		Decrease the frequency of "mini" timelapse creation.
-
-		<br><span class="fp">Future Plans</span>:
-		Will only allow one timelapse creation at a time.
+		Will fix in the next major release for users running the Bullseye operating system.
 
 <!--
 	<li><span class="ki">Known Issue</span>:
@@ -118,7 +94,7 @@ list of <em>possible</em> changes to future Allsky versions</a>.
 		
 		<br><span class="wa">Workaround</span>: None
 
-		<br><span class="fp">Future Plans</span>: Will fix in next release.
+		<br><span class="fp">Future Plans</span>: Will fix in next major release.
 </ul>
 
 <h4>Modules</h4>
@@ -131,7 +107,7 @@ list of <em>possible</em> changes to future Allsky versions</a>.
 
 		<br><span class="fp">Future Plans</span>: Will change in next release.
 
-	<li><span class="ki">Known Issue</span>:
+	<li class="morePadding"><span class="ki">Known Issue</span>:
 		The <span class="moduleName">Overlay Module</span> may be
 		disabled the first time it runs.
 		This is due to the module having to download the JPL ephemeris data
@@ -143,7 +119,7 @@ list of <em>possible</em> changes to future Allsky versions</a>.
 		<br><span class="fp">Future Plans</span>:
 		Will fix in the next release.
 
-	<li><span class="ki">Known Issue</span>:
+	<li class="morePadding"><span class="ki">Known Issue</span>:
 		The "additional modules" have been installed but they don't all appear.
 
 		<br><span class="wa">Workaround</span>:

@@ -184,6 +184,7 @@ static cv::Mat mask2;
 		mean_scalar = cv::mean(image, mask);
 	} else {
 		mean_scalar = cv::mean(image, cv::noArray());
+//x printf("image.empty()=%d, image.type()=%d, CV_8U=%d\n", image.empty(), image.type(), CV_8U);
 //x		mean_scalar = cv::mean(image, mask2);
 	}
 //x printf("mean0=%f, mean1=%f, mean2=%f\n", mean_scalar[0],  mean_scalar[1], mean_scalar[2]);

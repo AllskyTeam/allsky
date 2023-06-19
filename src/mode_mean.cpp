@@ -121,37 +121,23 @@ float aegCalcMean(cv::Mat image, bool useMask)
 
 	// Only create the destination image and mask the first time we're called.
 	static cv::Mat mask;
-static cv::Mat mask2;
 	static bool maskCreated = false;
 	if (! maskCreated)
 	{
 		maskCreated = true;
 
 // TODO: Allow user to specify a mask file
+
 		// Create a circular mask at the center of the image with
 		// a radius of 1/3 the height of the image (diameter == 2/3 height).
 
-// xxxxxxx the mask appears to be ignored.
-// I tried with mono and color masks, and pure black mask,
-// and the mean is identical with and without the mask.
-		int imageType = CV_8UC3;	// Color, 3 channels
-		switch (image.channels())
-		{
-			default: // mono
-				imageType = CV_8U;
-				break;
-			case 3: // color
-			case 4:
-				imageType = CV_8UC3;
-				break;
-		}
+		const cv::Scalar white = cv::Scalar(255, 255, 255);
 
-		cv::Mat mask = cv::Mat::zeros(image.size(), imageType);
+		// mask needs to be mono or else it give a cv::exception
+		mask = cv::Mat::zeros(image.size(), CV_8U);
 		cv::Point center = cv::Point(mask.cols/2, mask.rows/2);
 		int radius = mask.rows / 3;
-		cv::circle(mask, center, radius, cv::Scalar(255, 255, 255), cv::FILLED, cv::LINE_AA, 0);
-//x cv::Mat mask2 = cv::Mat::zeros(image.size(), imageType);
-//x cv::circle(mask2, cv::Point(100,100), 75, cv::Scalar(255, 255, 255), cv::FILLED, cv::LINE_AA, 0);
+		cv::circle(mask, center, radius, white, cv::FILLED, cv::LINE_AA, 0);
 
 //x #define xxxxxxxx_for_testing
 #ifdef xxxxxxxx_for_testing		// save masks
@@ -164,12 +150,10 @@ static cv::Mat mask2;
 		char const *maskName = "tmp/mask.png";
 		if (! cv::imwrite(maskName, mask, compressionParameters))
 			Log(1, "*** ERROR: Unable to write to '%s'\n", maskName);
-//x if (! cv::imwrite("tmp/mask2.png", mask2, compressionParameters))
-//x 	Log(1, "*** ERROR: Unable to write to '%s'\n", maskName);
 
 		if (0) {		// Not sure what good this image does.
 			// Copy the source image to destination image with masking.
-			cv::Mat dstImage = cv::Mat::zeros(image.size(), imageType);
+			cv::Mat dstImage = cv::Mat::zeros(image.size(), CV_8U);
 			image.copyTo(dstImage, mask);
 
 			char const *dstImageName = "tmp/dstImage.jpg";
@@ -184,10 +168,7 @@ static cv::Mat mask2;
 		mean_scalar = cv::mean(image, mask);
 	} else {
 		mean_scalar = cv::mean(image, cv::noArray());
-//x printf("image.empty()=%d, image.type()=%d, CV_8U=%d\n", image.empty(), image.type(), CV_8U);
-//x		mean_scalar = cv::mean(image, mask2);
 	}
-//x printf("mean0=%f, mean1=%f, mean2=%f\n", mean_scalar[0],  mean_scalar[1], mean_scalar[2]);
 
 	switch (image.channels())
 	{

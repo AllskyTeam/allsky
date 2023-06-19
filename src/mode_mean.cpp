@@ -121,40 +121,72 @@ float aegCalcMean(cv::Mat image, bool useMask)
 
 	// Only create the destination image and mask the first time we're called.
 	static cv::Mat mask;
+static cv::Mat mask2;
 	static bool maskCreated = false;
 	if (! maskCreated)
 	{
 		maskCreated = true;
 
 // TODO: Allow user to specify a mask file
-		// Create a circular mask at the center of the image with a radius of 1/3 the height of the image.
-		cv::Mat mask = cv::Mat::zeros(image.size(), CV_8U);		// should CV_8U be image.type() ?
-		cv::circle(mask, cv::Point(mask.cols/2, mask.rows/2), mask.rows/3, cv::Scalar(255, 255, 255), -1, 8, 0);
+		// Create a circular mask at the center of the image with
+		// a radius of 1/3 the height of the image (diameter == 2/3 height).
 
-		// Copy the source image to destination image with masking.
-		cv::Mat dstImage = cv::Mat::zeros(image.size(), CV_8U);
-		image.copyTo(dstImage, mask);
+// xxxxxxx the mask appears to be ignored.
+// I tried with mono and color masks, and pure black mask,
+// and the mean is identical with and without the mask.
+		int imageType = CV_8UC3;	// Color, 3 channels
+		switch (image.channels())
+		{
+			default: // mono
+				imageType = CV_8U;
+				break;
+			case 3: // color
+			case 4:
+				imageType = CV_8UC3;
+				break;
+		}
 
-#ifdef xxxxxxxx_for_testing
-	bool result;
-	std::vector<int> compressionParameters;
-	compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
-	compressionParameters.push_back(95);
-	char const *dstImageName = "dstImage.jpg";
-	result = cv::imwrite(dstImageName, dstImage, compressionParameters);
-	if (! result) fprintf(stderr, "*** ERROR: Unable to write to '%s'\n", dstImageName);
-	char const *maskName = "mask.jpg";
-	result = cv::imwrite(maskName, mask, compressionParameters);
-	if (! result) fprintf(stderr, "*** ERROR: Unable to write to '%s'\n", maskName);
+		cv::Mat mask = cv::Mat::zeros(image.size(), imageType);
+		cv::Point center = cv::Point(mask.cols/2, mask.rows/2);
+		int radius = mask.rows / 3;
+		cv::circle(mask, center, radius, cv::Scalar(255, 255, 255), cv::FILLED, cv::LINE_AA, 0);
+//x cv::Mat mask2 = cv::Mat::zeros(image.size(), imageType);
+//x cv::circle(mask2, cv::Point(100,100), 75, cv::Scalar(255, 255, 255), cv::FILLED, cv::LINE_AA, 0);
+
+//x #define xxxxxxxx_for_testing
+#ifdef xxxxxxxx_for_testing		// save masks
+		std::vector<int> compressionParameters;
+		compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
+		compressionParameters.push_back(95);
+		compressionParameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
+		compressionParameters.push_back(9);
+
+		char const *maskName = "tmp/mask.png";
+		if (! cv::imwrite(maskName, mask, compressionParameters))
+			Log(1, "*** ERROR: Unable to write to '%s'\n", maskName);
+//x if (! cv::imwrite("tmp/mask2.png", mask2, compressionParameters))
+//x 	Log(1, "*** ERROR: Unable to write to '%s'\n", maskName);
+
+		if (0) {		// Not sure what good this image does.
+			// Copy the source image to destination image with masking.
+			cv::Mat dstImage = cv::Mat::zeros(image.size(), imageType);
+			image.copyTo(dstImage, mask);
+
+			char const *dstImageName = "tmp/dstImage.jpg";
+			if (! cv::imwrite(dstImageName, dstImage, compressionParameters))
+				Log(1, "*** ERROR: Unable to write to '%s'\n", dstImageName);
+		}
 #endif
-
 	}
 
 	cv::Scalar mean_scalar;
-	if (useMask)
+	if (useMask) {
 		mean_scalar = cv::mean(image, mask);
-	else
-		mean_scalar = cv::mean(image);
+	} else {
+		mean_scalar = cv::mean(image, cv::noArray());
+//x		mean_scalar = cv::mean(image, mask2);
+	}
+//x printf("mean0=%f, mean1=%f, mean2=%f\n", mean_scalar[0],  mean_scalar[1], mean_scalar[2]);
 
 	switch (image.channels())
 	{
@@ -403,7 +435,7 @@ void aegGetNextExposureSettings(config * cg,
 		}
 	}
 
-	//#############################################################################################################
+	//########################################################################
 	// prepare for the next measurement
 	MeanCnt++;
 	exposureLevelHistory[MeanCnt % currentModeMeanSetting.historySize] = currentModeMeanSetting.exposureLevel;

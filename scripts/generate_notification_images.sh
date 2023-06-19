@@ -79,16 +79,27 @@ while [[ $# -gt 0 ]]; do
 done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
+
 MAX_ARGS=12
+
 if [[ $# -ne 0 && $# -ne ${MAX_ARGS} ]]; then
 	echo -e "${RED}${ME}: ERROR: Either specify ALL ${MAX_ARGS} arguments, or don't specify any.${NC}" >&2
 	echo "You specified $# arguments." >&2
 	usage_and_exit 1
 fi
+
 declare LAST_ARG="${MAX_ARGS}"
-if [[ $# -eq ${MAX_ARGS} && ( -z ${1} || -z ${LAST_ARG} ) ]]; then
-	echo -e "${RED}${ME}: ERROR: Basename (${1}) and message (${LAST_ARG}) must be specified.${NC}" >&2
-	usage_and_exit 1
+if [[ $# -eq ${MAX_ARGS} ]]; then
+	OK="true"
+	if [[ -z ${1} ]]; then
+		echo -e "${RED}${ME}: ERROR: Basename must be specified.${NC}" >&2
+		OK="false"
+	fi
+	if [[ -z ${LAST_ARG} ]]; then
+		echo -e "${RED}${ME}: ERROR: message must be specified.${NC}" >&2
+		OK="false"
+	fi
+	[[ ${OK} == "false" ]] && usage_and_exit 1
 fi
 
 function make_image()
@@ -109,7 +120,7 @@ function make_image()
 
 	echo "${BASENAME}" | grep -qEi "[.](${ALL_EXTS/ /|})"
 	if [[ $? -ne 1 ]]; then
-		echo -e "${RED}${ME}: ERROR: Do not add an extension to the basename${NC}."
+		echo -e "${RED}${ME}: ERROR: Do not add an extension to the basename${NC}." >&2
 		usage_and_exit 1
 	fi
 

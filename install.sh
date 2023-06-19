@@ -1815,7 +1815,7 @@ restore_prior_files()
 	display_msg --log progress "Restoring prior:"
 
 	local SPACE="    "
-	local NOT_RESTORED="prior version does not exist so not restored"
+	local NOT_RESTORED="NO PRIOR VERSION"
 	# TODO: endOfNight_additionalStepts.sh script is going away in the next major release.
 	local ITEM="${SPACE}endOfNight_additionalSteps.sh"
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then

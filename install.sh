@@ -231,11 +231,11 @@ get_connected_cameras()
 {
 	local CC
 	if determineCommandToUse "false" "" > /dev/null 2>&1 ; then
-		display_msg --log info "RPi camera found."
+		display_msg --log progress "RPi camera found."
 		CC="RPi"
 	fi
 	if lsusb -d "03c3:" > /dev/null ; then
-		display_msg --log info "ZWO camera found."
+		display_msg --log progress "ZWO camera found."
 		[[ -n ${CC} ]] && CC="${CC} "
 		CC="${CC}ZWO"
 	fi
@@ -938,6 +938,8 @@ does_old_WebUI_location_exist()
 
 check_old_WebUI_location()
 {
+	STATUS_VARIABLES+=("check_old_WebUI_location='true'\n")
+
 	[[ ! -d ${OLD_WEBUI_LOCATION} ]] && return
 
 	if [[ ${OLD_WEBUI_LOCATION_EXISTS_AT_START} == "false" ]]; then
@@ -1296,15 +1298,16 @@ is_reboot_needed()
 # See if a prior Allsky exists; if so, set some variables.
 does_prior_Allsky_exist()
 {
+	PRIOR_ALLSKY=""
+	PRIOR_CAMERA_TYPE=""
+	PRIOR_CAMERA_MODEL=""
+
 	# Don't just look for the top-level directory.
 	if [[ ! -d ${PRIOR_CONFIG_DIR} ]]; then
 		display_msg --logonly info "No prior Allsky found."
 		return 1
 	fi
 
-	PRIOR_ALLSKY=""
-	PRIOR_CAMERA_TYPE=""
-	PRIOR_CAMERA_MODEL=""
 	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"
 	if [[ -n  ${PRIOR_ALLSKY_VERSION} ]]; then
 		display_msg --logonly info "Prior Allsky version ${PRIOR_ALLSKY_VERSION} found."
@@ -1314,8 +1317,6 @@ does_prior_Allsky_exist()
 			:
 		else
 			# Newer version.
-			is_reboot_needed "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
-
 			# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file.
 			PRIOR_ALLSKY="newStyle"
 			PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
@@ -1363,17 +1364,17 @@ prompt_for_prior_Allsky()
 			# Set the prior camera type to the new, default camera type.
 			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
 			STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
-			display_msg --log info "Will restore from prior version of Allsky."
+			display_msg --log progress "Will restore from prior version of Allsky."
 			return 0
 		else
-			CAMERA_TYPE=""
-			PRIOR_CAMERA_TYPE=""
 			PRIOR_ALLSKY=""
 			PRIOR_ALLSKY_VERSION=""
+			CAMERA_TYPE=""
+			PRIOR_CAMERA_TYPE=""
 			MSG="If you want your old images, darks, settings, etc. from the prior version"
 			MSG="${MSG} of Allsky, you'll need to manually move them to the new version."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-			display_msg --log info "Will NOT restore from prior version of Allsky."
+			display_msg --log progress "Will NOT restore from prior version of Allsky."
 		fi
 	else
 		MSG="No prior version of Allsky found."
@@ -2398,6 +2399,19 @@ check_new_exposure_algorithm()
 
 
 ####
+remind_run_check_allsky()
+{
+	MSG="After you've configured Allsky, run:"
+	MSG="${MSG}\n   cd ~/allsky;  scripts/check_allsky.sh"
+	MSG="${MSG}\nto check for any issues.  You can also run it whenever you make changes."
+	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
+	display_msg --logonly info "Added message about running 'check_allsky.sh'."
+
+	STATUS_VARIABLES+=( "remind_run_check_allsky='true'\n" )
+}
+
+
+####
 remind_old_version()
 {
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
@@ -2406,17 +2420,6 @@ remind_old_version()
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 		display_msg --logonly info "Displayed message about removing '${PRIOR_ALLSKY}'."
 	fi
-}
-
-
-####
-remind_run_check_allsky()
-{
-	MSG="After you've configured Allsky, run:"
-	MSG="${MSG}\n\n   cd ~/allsky;  scripts/check_allsky.sh"
-	MSG="${MSG}\n\nto check for any issues.  You can also run it whenever you make changes."
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-	display_msg --logonly info "Displayed message about running 'check_allsky.sh'."
 }
 
 
@@ -2653,6 +2656,9 @@ does_prior_Allsky_exist
 ##### Display the welcome header
 [[ -z ${FUNCTION} ]] && do_initial_heading
 
+##### See if we need to reboot at end of installation
+[[ -n ${PRIOR_ALLSKY} ]] && is_reboot_needed "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
+
 ##### Stop Allsky
 stop_allsky
 
@@ -2760,11 +2766,12 @@ check_restored_settings
 
 ##### If using ZWO, prompt if the New Exposure Algorithm should be used.
 # TODO: remove check_new_exposure_algorithm() when it's the default.
-[[ ${CAMERA_TYPE} == "ZWO" && ${check_new_exposure_algorithm} != "true" ]] && check_new_exposure_algorithm
+if [[ ${CAMERA_TYPE} == "ZWO" && ${check_new_exposure_algorithm} != "true" ]]; then
+	check_new_exposure_algorithm
+fi
 
 ##### Let the user know to run check_allsky.sh.
-# Re-run every time to remind the user again.
-remind_run_check_allsky
+[[ ${remind_run_check_allsky} != "true" ]] && remind_run_check_allsky
 
 ##### If needed, remind the user to remove any old Allsky version
 # Re-run every time to remind the user again.

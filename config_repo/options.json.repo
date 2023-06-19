@@ -86,9 +86,9 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image.<br>Higher numbers are brighter.",
+"description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
 "label" : "Brightness",
-"type" : "integer",
+"type" : "float",
 "display" : "_display",
 "advanced" : 0
 },
@@ -292,9 +292,9 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image.<br>Higher numbers are brighter.",
+"description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
 "label" : "Brightness",
-"type" : "integer",
+"type" : "float",
 "display" : "_display",
 "advanced" : 0
 },

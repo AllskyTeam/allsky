@@ -115,7 +115,7 @@ bool aegInit(config cg,
 
 
 // Calculate mean of current image.
-float aegCalcMean(cv::Mat image)
+float aegCalcMean(cv::Mat image, bool useMask)
 {
 	float mean;
 
@@ -150,7 +150,12 @@ float aegCalcMean(cv::Mat image)
 
 	}
 
-	cv::Scalar mean_scalar = cv::mean(image, mask);
+	cv::Scalar mean_scalar;
+	if (useMask)
+		mean_scalar = cv::mean(image, mask);
+	else
+		mean_scalar = cv::mean(image);
+
 	switch (image.channels())
 	{
 		default: // mono case

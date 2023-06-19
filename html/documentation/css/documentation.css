@@ -923,3 +923,15 @@ b, strong {
 	color: red;
 	font-weight: bold;
 }
+
+.variableManagerTab {
+	color: #337ab7;
+	font-weight: 500;
+}
+.variableManagerVariableName {
+	color: #333;
+	font-weight: 500;
+}
+.green {
+	color: green;
+}

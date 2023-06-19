@@ -62,6 +62,8 @@ DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh.log"
 
 # Is a reboot needed at end of installation?
 REBOOT_NEEDED="true"
+# Does Allsky need to be configured at end of installation?
+CONFIGURATION_NEEDED="true"
 
 # Holds status of installation if we need to exit and get back in.
 STATUS_FILE="${ALLSKY_INSTALLATION_LOGS}/status.txt"
@@ -103,7 +105,7 @@ do_initial_heading()
 
 		if [[ -n ${PRIOR_ALLSKY} ]]; then
 			MSG="${MSG}\nYou will be asked if you want to use the images and darks (if any) from"
-			MSG="${MSG}\nyour prior version of Allsky."
+			MSG="${MSG} your prior version of Allsky."
 			if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
 				MSG="${MSG}\nIf so, its settings will be used as well."
 			else
@@ -755,16 +757,22 @@ check_success()
 # Install the web server.
 install_webserver()
 {
-	display_msg --log progress "Installing the web server."
 	sudo systemctl stop hostapd 2> /dev/null
 	sudo systemctl stop lighttpd 2> /dev/null
-	TMP="${ALLSKY_INSTALLATION_LOGS}/lighttpd.install.log"
-	(
-		sudo apt-get update && \
-			sudo apt-get --assume-yes install lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
-	) > "${TMP}" 2>&1
-	if ! check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ; then
-		exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
+
+	if [[ ${install_webserver_et_al} == "true" ]]; then
+		display_msg --log progress "Preparing the web server."
+	else
+		display_msg --log progress "Installing the web server."
+		TMP="${ALLSKY_INSTALLATION_LOGS}/lighttpd.install.log"
+		(
+			sudo apt-get update && \
+				sudo apt-get --assume-yes install lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
+		) > "${TMP}" 2>&1
+		if ! check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ; then
+			exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
+		fi
+		STATUS_VARIABLES+=("install_webserver_et_al='true'\n")
 	fi
 
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
@@ -1165,7 +1173,8 @@ get_desired_locale()
 			CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p')"
 		fi
 	fi
-	display_msg --logonly info "CURRENT_LOCALE=${CURRENT_LOCALE}, TEMP_LOCALE=[[ ${TEMP_LOCALE} ]]"
+	MSG="CURRENT_LOCALE=${CURRENT_LOCALE}, TEMP_LOCALE=[[$( echo "${TEMP_LOCALE}" | tr '\n' ' ' )]]"
+	display_msg --logonly info "${MSG}"
 
 	local D=""
 	if [[ -n ${CURRENT_LOCALE} && ${CURRENT_LOCALE} != "null" ]]; then
@@ -1279,6 +1288,26 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 
 
 ####
+# See what steps, if any, can be skipped.
+set_what_can_be_skipped()
+{
+	if [[ ${PRIOR_ALLSKY} != "" ]]; then
+		local OLD_VERSION="${1}"
+		local OLD_BASE_VERSION="${OLD_VERSION:0:11}"	# Without point release
+		local NEW_VERSION="${2}"
+		if [[ ${NEW_VERSION} == "v2023.05.01_02" && ${OLD_BASE_VERSION} == "v2023.05.01" ]]; then
+			# No changes to these packages so no need to reinstall.
+			MSG="Skipping installation of: webserver et.al., PHP modules, Trutype fonts, Python"
+			display_msg --logonly info "${MSG}"
+			install_webserver_et_al="true"
+			installed_PHP_modules="true"
+			installing_Trutype_fonts="true"
+		  	installed_Python_dependencies="true"
+		fi
+	fi
+}
+
+####
 # Do we need to reboot?
 is_reboot_needed()
 {
@@ -1288,7 +1317,7 @@ is_reboot_needed()
 	if [[ ${NEW_VERSION} == "v2023.05.01_02" && ${OLD_BASE_VERSION} == "v2023.05.01" ]]; then
 		# just bug fixes between those two versions
 		REBOOT_NEEDED="false"
-		display_msg --log progress "No reboot is needed."
+		display_msg --logonly info "No reboot is needed."
 	else
 		display_msg --log progress "A reboot is needed after installation finishes."
 	fi
@@ -1364,7 +1393,7 @@ prompt_for_prior_Allsky()
 			# Set the prior camera type to the new, default camera type.
 			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
 			STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
-			display_msg --log progress "Will restore from prior version of Allsky."
+			display_msg --logonly info "Will restore from prior version of Allsky."
 			return 0
 		else
 			PRIOR_ALLSKY=""
@@ -1374,7 +1403,7 @@ prompt_for_prior_Allsky()
 			MSG="If you want your old images, darks, settings, etc. from the prior version"
 			MSG="${MSG} of Allsky, you'll need to manually move them to the new version."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-			display_msg --log progress "Will NOT restore from prior version of Allsky."
+			display_msg --logonly info "Will NOT restore from prior version of Allsky."
 		fi
 	else
 		MSG="No prior version of Allsky found."
@@ -1432,9 +1461,6 @@ update_config_sh()
 {
 	local C="${ALLSKY_CONFIG}/config.sh"
 	display_msg --log progress "Updating some '${C}' variables."
-	if [[ -z ${ALLSKY_VERSION} ]]; then
-		display_msg --log error "ALLSKY_VERSION is empty in update_config_sh()"
-	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg --log error "CAMERA_TYPE is empty in update_config_sh()"
 		CAMERA_TYPE="$( settings .cameraType )"
@@ -2167,7 +2193,7 @@ do_update()
 # Install the overlay and modules system
 install_overlay()
 {
-	if [[ ${installing_PHP_modules} != "true" ]]; then
+	if [[ ${installed_PHP_modules} != "true" ]]; then
 		display_msg --log progress "Installing PHP modules."
 		TMP="${ALLSKY_INSTALLATION_LOGS}/PHP_modules.log"
 		sudo apt-get --assume-yes install php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
@@ -2179,7 +2205,7 @@ install_overlay()
 		sudo apt-get --assume-yes install libatlas-base-dev > "${TMP}" 2>&1
 		check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}"
 		[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP dependencies failed."
-		STATUS_VARIABLES+=( "installing_PHP_modules='true'\n" )
+		STATUS_VARIABLES+=( "installed_PHP_modules='true'\n" )
 	fi
 
 	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
@@ -2200,7 +2226,8 @@ install_overlay()
 
 	# See how many have already been installed - if all, then skip this step.
 	local NUM_INSTALLED="$( set | grep -c "^${NAME}" )"
-	if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ]]; then
+	if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ||
+		  ${installed_Python_dependencies} == "true" ]]; then
 		display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
 	else
 		local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
@@ -2219,7 +2246,7 @@ install_overlay()
 
 			local PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
 			# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
-			local STATUS_NAME="${NAME}_${C}"
+			local STATUS_NAME="${NAME}_${COUNT}"
 			eval "STATUS_VALUE=\${${STATUS_NAME}}"
 			if [[ ${STATUS_VALUE} == "true" ]]; then
 				display_msg --log progress "${PACKAGE} - already installed."
@@ -2291,10 +2318,14 @@ check_if_buster()
 	if [[ ${OS} == "buster" ]]; then
 		MSG="This release runs best on the Bullseye operating system"
 		MSG="${MSG} that was released in November, 2021."
+		if [[ ${PRIOR_CAMERA_TYPE} == "RPi" ]]; then
+			MSG="${MSG}\n\n>>> This is especially true for RPi cameras"
+			MSG="${MSG} which have more features on Bullseye.\n"
+		fi
 		MSG="${MSG}\nYou are running the older Buster operating system and we"
 		MSG="${MSG} recommend doing a fresh install of Bullseye on a clean SD card."
 		MSG="${MSG}\n\nDo you want to continue anyhow?"
-		if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
+		if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			display_msg --logonly info "User running Buster and elected not to continue."
 			exit_installation 0 "${STATUS_NOT_CONTINUE}" "After Buster check."
 		fi
@@ -2306,27 +2337,52 @@ check_if_buster()
 # Display an image the user will see when they go to the WebUI.
 display_image()
 {
-	local IMAGE_NAME="${1}"
-
-	I="${ALLSKY_TMP}/image.jpg"
-
-	if [[ -z ${IMAGE_NAME} ]]; then		# No IMAGE_NAME means remove the image
-		rm -f "${I}"
-		return
-	fi
-
-	if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${POST_INSTALLATION_ACTIONS} ]]; then
-		# Add a message the user will see in the WebUI.
-		WEBUI_MESSAGE="Actions needed.  See ${POST_INSTALLATION_ACTIONS}."
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${WEBUI_MESSAGE}"
-
-		# This tells allsky.sh not to display a message about actions since we just did.
-		touch "${POST_INSTALLATION_ACTIONS}_initial_message"
-	fi
-
 	# ${ALLSKY_TMP} may not exist yet, i.e., at the beginning of installation.
 	mkdir -p "${ALLSKY_TMP}"
-	cp "${ALLSKY_NOTIFICATION_IMAGES}/${IMAGE_NAME}.jpg" "${I}" 2> /dev/null
+
+	local FULL_FILENAME FILENAME EXTENSION
+	if [[ -s ${SETTINGS_FILE} ]]; then		# The file may not exist yet.
+		FULL_FILENAME="$( settings ".filename" )"
+		FILENAME="${FULL_FILENAME%.*}"
+		EXTENSION="${FULL_FILENAME##*.}"
+	else
+		FILENAME="image"
+		EXTENSION="jpg"
+	fi
+
+	if [[ ${1} != "--custom" ]]; then
+		local IMAGE_NAME="${1}"
+		I="${ALLSKY_TMP}/${FILENAME}.${EXTENSION}"
+		if [[ -z ${IMAGE_NAME} ]]; then		# No IMAGE_NAME means remove the image
+			display_msg --logonly info "Removing prior notification image."
+			rm -f "${I}"
+			return
+		fi
+
+		if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${POST_INSTALLATION_ACTIONS} ]]; then
+			# Add a message the user will see in the WebUI.
+			WEBUI_MESSAGE="Actions needed.  See ${POST_INSTALLATION_ACTIONS}."
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${WEBUI_MESSAGE}"
+
+			# This tells allsky.sh not to display a message about actions since we just did.
+			touch "${POST_INSTALLATION_ACTIONS}_initial_message"
+		fi
+
+		display_msg --logonly info "Displaying notification image '${IMAGE_NAME}.${EXTENSION}'"
+		cp "${ALLSKY_NOTIFICATION_IMAGES}/${IMAGE_NAME}.${EXTENSION}" "${I}" 2>/dev/null
+	else
+		# Create custom message
+		local COLOR="${2}"
+		local CUSTOM_MESSAGE="${3}"
+
+		MSG="Displaying custom notification image: ${CUSTOM_MESSAGE}"
+		display_msg --logonly info "${MSG}"
+		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
+			--directory "${ALLSKY_TMP}" \
+			"${FILENAME}" "${COLOR}" "" "" "" "" \
+			"" "10" "${COLOR}" "${EXTENSION}" "" "${CUSTOM_MESSAGE}"   > /dev/null
+	fi
+
 }
 
 
@@ -2351,6 +2407,7 @@ check_restored_settings()
 	  	  ${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
 		# We restored all the prior settings no configuration is needed.
 		# However, check if a reboot is needed.
+		CONFIGURATION_NEEDED="false"
 		IMG=""					# Removes existing image
 		if [[ ${REBOOT_NEEDED} == "true" ]]; then
 			IMG="RebootNeeded"
@@ -2376,6 +2433,7 @@ check_restored_settings()
 	fi
 
 	display_image "ConfigurationNeeded"
+	CONFIGURATION_NEEDED="true"
 }
 
 
@@ -2410,7 +2468,7 @@ check_new_exposure_algorithm()
 remind_run_check_allsky()
 {
 	MSG="After you've configured Allsky, run:"
-	MSG="${MSG}\n   cd ~/allsky;  scripts/check_allsky.sh"
+	MSG="${MSG}\n&nbsp; &nbsp; &nbsp; cd ~/allsky;  scripts/check_allsky.sh"
 	MSG="${MSG}\nto check for any issues.  You can also run it whenever you make changes."
 	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 	display_msg --logonly info "Added message about running 'check_allsky.sh'."
@@ -2472,6 +2530,7 @@ exit_installation()
 			if [[ ${STATUS_CODE} == "${STATUS_NO_FINISH_REBOOT}" ||
 				  ${STATUS_CODE} == "${STATUS_NO_REBOOT}" ]]; then
 				uptime --since > "${ALLSKY_REBOOT_NEEDED}"
+				display_image "RebootNeeded"
 			fi
 		fi
 	fi
@@ -2486,6 +2545,7 @@ exit_installation()
 handle_interrupts()
 {
 	display_msg --log info "\nGot interrupt - saving installation status, then exiting.\n"
+	display_image --custom "yellow" "Allsky installation\nwas interrupted."
 	exit_installation 1 "${STATUS_INT}" "Saving status."
 }
 
@@ -2654,18 +2714,21 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 	fi
 fi
 
-##### Display a message to Buster users.
-[[ ${check_if_buster} != "true" && -z ${FUNCTION} ]] && check_if_buster
-
 ##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY and other PRIOR_* variables.
 # Re-run every time in case the directory was removed.
 does_prior_Allsky_exist
+
+##### Display a message to Buster users.
+[[ ${check_if_buster} != "true" && -z ${FUNCTION} ]] && check_if_buster
 
 ##### Display the welcome header
 [[ -z ${FUNCTION} ]] && do_initial_heading
 
 ##### See if we need to reboot at end of installation
 [[ -n ${PRIOR_ALLSKY} ]] && is_reboot_needed "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
+
+##### Determine what steps, if any, can be skipped.
+set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 
 ##### Stop Allsky
 stop_allsky
@@ -2793,5 +2856,8 @@ remind_old_version
 if [[ ${REBOOT_NEEDED} == "true" ]]; then
 	exit_installation 0 "${STATUS_NO_FINISH_REBOOT}" ""
 else
+	if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
+		display_image --custom "lime" "Allsky is\nready to start"
+	fi
 	exit_installation 0 "${STATUS_OK}" ""
 fi

@@ -75,15 +75,15 @@ WORKING_DIR=$(dirname "${CURRENT_IMAGE}")	# the directory the image is currently
 # Optional full check for bad images.
 if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
 	# If the return code is 99, the file was bad and deleted so don't continue.
-	AS_MEAN2="$( "${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}" )"
+	AS_BAD_IMAGES_MEAN="$( "${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}" )"
 	# removeBadImages.sh displayed error message and deleted the file.
 	if [[ $? -eq 99 ]]; then
 		exit 99
-	elif [[ -n ${AS_MEAN2} ]]; then
-		export AS_MEAN2
+	elif [[ -n ${AS_BAD_IMAGES_MEAN} ]]; then
+		export AS_BAD_IMAGES_MEAN
 	fi
 else
-	AS_MEAN2=""
+	AS_BAD_IMAGES_MEAN=""
 fi
 
 # If we didn't execute removeBadImages.sh do a quick sanity check on the image.
@@ -118,8 +118,8 @@ done
 # Export other variables so user can use them in overlays
 export AS_CAMERA_TYPE="${CAMERA_TYPE}"
 export AS_CAMERA_MODEL="${CAMERA_MODEL}"
-if [[ -n ${AS_MEAN2} ]]; then
-	export AS_MEAN_NORMALIZED="$( echo "${AS_MEAN2} * 255" | bc )"		# xxxx for testing
+if [[ -n ${AS_BAD_IMAGES_MEAN} ]]; then
+	export AS_MEAN_NORMALIZED="$( echo "${AS_BAD_IMAGES_MEAN} * 255" | bc )"	# xxxx for testing
 fi
 
 

@@ -501,6 +501,7 @@ ask_reboot()
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			return 0
 		else
+			REBOOT_NEEDED="true"
 			return 1
 		fi
 	fi
@@ -508,6 +509,13 @@ ask_reboot()
 	local AT="     http://${NEW_HOST_NAME}.local\n"
 	AT="${AT}or\n"
 	AT="${AT}     http://$(hostname -I | sed -e 's/ .*$//')"
+
+	if [[ ${REBOOT_NEEDED} == "false" ]]; then
+		MSG="\nAfter reboot you can connect to the WebUI at:\n${AT}"
+		display_msg -log progress "${MSG}"
+		return 0
+	fi
+
 	local MSG="*** Allsky installation is almost done. ***"
 	MSG="${MSG}\n\nWhen done, you must reboot the Raspberry Pi to finish the installation."
 	MSG="${MSG}\n\nAfter reboot you can connect to the WebUI at:\n"
@@ -519,6 +527,7 @@ ask_reboot()
 	else
 		display_msg --logonly info "User elected not to reboot; displayed warning message."
 		display_msg notice "You need to reboot the Pi before Allsky will work."
+
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
 		MSG="${MSG}You can then connect to the WebUI at:\n"
 		MSG="${MSG}${AT}"

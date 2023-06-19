@@ -91,6 +91,12 @@ function display_msg()
 
 	local LOG_TYPE="${1}"
 	local MESSAGE="${2}"
+	local NL=""
+	if [[ ${MESSAGE:0:2} == "\n" ]]; then
+		# If the message starts with "\n" then add newline BEFORE the "*".
+		NL="\n"
+		MESSAGE="${MESSAGE:2}"
+	fi
 	local MESSAGE2="${3}"		# optional 2nd message that's not in color
 	local MSG=""
 	local LOGMSG=""				# same as ${MSG} but no escape chars
@@ -111,18 +117,18 @@ function display_msg()
 		STARS=true
 
 	elif [[ ${LOG_TYPE} == "progress" ]]; then
-		LOGMSG="* ${MESSAGE}"
+		LOGMSG="${NL}* ${MESSAGE}"
 		MSG="${GREEN}${LOGMSG}${NC}"
 		STARS=false
 
 	elif [[ ${LOG_TYPE} == "info" ]]; then
-		LOGMSG="* ${MESSAGE}"
+		LOGMSG="${NL}* ${MESSAGE}"
 		MSG="${YELLOW}${LOGMSG}${NC}"
 		STARS=false
 
 	elif [[ ${LOG_TYPE} == "debug" ]]; then
 		# Indent so they align with text above
-		LOGMSG="  DEBUG: ${MESSAGE}"
+		LOGMSG="${NL}  DEBUG: ${MESSAGE}"
 		#shellcheck disable=SC2154
 		MSG="${cDEBUG}${LOGMSG}${NC}"
 		STARS=false

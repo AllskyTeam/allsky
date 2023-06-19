@@ -2187,56 +2187,64 @@ install_overlay()
 	if [[ ${OS} == "buster" ]]; then
 		M=" for Buster"
 		R="-buster"
-		#
+
 		# Force pip upgrade, without this installations on Buster fail
-		#
 		pip3 install --upgrade pip > /dev/null 2>&1
 	else
 		M=""
 		R=""
 	fi
-	TMP="${ALLSKY_INSTALLATION_LOGS}/Python_dependencies"
-	display_msg --log progress "Installing Python dependencies${M}:"
-	COUNT=0
-	local NUM=$(wc -l < "${ALLSKY_REPO}/requirements${R}.txt")
-	: > "${STATUS_FILE_TEMP}"
-	while read -r package
-	do
-		((COUNT++))
-		echo "${package}" > /tmp/package
-		if [[ ${COUNT} -lt 10 ]]; then
-			C=" ${COUNT}"
-		else
-			C="${COUNT}"
-		fi
+	local NAME="Python_dependencies"
+	local REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}.txt"
+	local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
-		local PACKAGE="   === Package # ${C} of ${NUM}: [${package}]"
-		# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
-		local STATUS_NAME="Python_dependency_${COUNT}"
-		eval "STATUS_VALUE=\${${STATUS_NAME}}"
-		if [[ ${STATUS_VALUE} == "true" ]]; then
-			display_msg --log progress "${PACKAGE} - already installed."
-			continue
-		fi
-		display_msg --log progress "${PACKAGE}"
+	# See how many have already been installed - if all, then skip this step.
+	local NUM_INSTALLED="$( set | grep "^${NAME}" | wc -l )"
+	if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ]]; then
+		display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
+	else
+		local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
+		display_msg --log progress "Installing ${NAME}${M}:"
+		local COUNT=0
+		rm -f "${STATUS_FILE_TEMP}"
+		while read -r package
+		do
+			((COUNT++))
+			echo "${package}" > /tmp/package
+			if [[ ${COUNT} -lt 10 ]]; then
+				C=" ${COUNT}"
+			else
+				C="${COUNT}"
+			fi
 
-		L="${TMP}.${COUNT}.log"
-		local M="Python dependency [${package}] failed"
-		pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
-		# These files are too big to display so pass in "0" instead of ${DEBUG}.
-		if ! check_success $? "${M}" "${L}" 0 ; then
-			rm -fr "${PIP3_BUILD}"
+			local PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
+			# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
+			local STATUS_NAME="${NAME}_${C}"
+			eval "STATUS_VALUE=\${${STATUS_NAME}}"
+			if [[ ${STATUS_VALUE} == "true" ]]; then
+				display_msg --log progress "${PACKAGE} - already installed."
+				continue
+			fi
+			display_msg --log progress "${PACKAGE}"
 
-			# Add current status
-			update_status_from_temp_file
+			L="${TMP}.${COUNT}.log"
+			local M="${NAME} [${package}] failed"
+			pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
+			# These files are too big to display so pass in "0" instead of ${DEBUG}.
+			if ! check_success $? "${M}" "${L}" 0 ; then
+				rm -fr "${PIP3_BUILD}"
 
-			exit_with_image 1 "${STATUS_ERROR}" "${M}."
-		fi
-		echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
-	done < "${ALLSKY_REPO}/requirements${R}.txt"
+				# Add current status
+				update_status_from_temp_file
 
-	# Add the status back in.
-	update_status_from_temp_file
+				exit_with_image 1 "${STATUS_ERROR}" "${M}."
+			fi
+			echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
+		done < "${REQUIREMENTS_FILE}"
+
+		# Add the status back in.
+		update_status_from_temp_file
+	fi
 
 	if [[ ${installing_Trutype_fonts} != "true" ]]; then
 		display_msg --log progress "Installing Trutype fonts."
@@ -2339,12 +2347,12 @@ exit_with_image()
 check_restored_settings()
 {
 	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" && \
-	  	${RESTORED_PRIOR_CONFIG_SH} == "true" && \
-	  	${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
-		# If we restored all the prior settings no configuration is needed.
-		if [[ ${WILL_REBOOT} == "true" ]]; then
-			IMG=""					# Removes existing image
-		else
+	  	  ${RESTORED_PRIOR_CONFIG_SH} == "true" && \
+	  	  ${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
+		# We restored all the prior settings no configuration is needed.
+		# However, check if a reboot is needed.
+		IMG=""					# Removes existing image
+		if [[ ${REBOOT_NEEDED} == "true" ]]; then
 			IMG="RebootNeeded"
 		fi
 		display_image "${IMG}"
@@ -2754,8 +2762,8 @@ install_overlay
 set_permissions
 
 ##### Check if there's an old WebUI and let the user know it's no longer used.
-# Re-run every time to remind them if there's still an old location.
-check_old_WebUI_location										# prompt if prior old-style WebUI
+# Prompt user to remove any prior old-style WebUI.
+[[ ${check_old_WebUI_location} != "true" ]] && check_old_WebUI_location
 
 ##### See if we should reboot when installation is done.
 [[ ${REBOOT_NEEDED} == "true" ]] && ask_reboot "full"			# prompts

@@ -424,7 +424,7 @@ save_camera_capabilities()
 	# --cameraTypeOnly tells makeChanges.sh to only change the camera info, then exit.
 	# It displays any error messages.
 	if [[ ${FORCE_CREATING_DEFAULT_SETTINGS_FILE} == "true" ]]; then
-		FORCE="--force"
+		FORCE=" --force"
 		MSG=" and default settings"
 	else
 		FORCE=""
@@ -432,7 +432,7 @@ save_camera_capabilities()
 	fi
 
 	if [[ ${OPTIONSFILEONLY} == "true" ]]; then
-		OPTIONSONLY="--optionsOnly"
+		OPTIONSONLY=" --optionsOnly"
 	else
 		OPTIONSONLY=""
 		display_msg --log progress "Setting up WebUI options${MSG} for ${CAMERA_TYPE} cameras."
@@ -444,7 +444,7 @@ save_camera_capabilities()
 
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
-	MSG="Executing makeChanges.sh ${FORCE} ${OPTIONSONLY} --cameraTypeOnly"
+	MSG="Executing makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly"
 	MSG="${MSG}  ${DEBUG_ARG} 'cameraType' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
 	display_msg "${LOG_TYPE}" info "${MSG}"
 
@@ -501,6 +501,7 @@ ask_reboot()
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			return 0
 		else
+			REBOOT_NEEDED="true"
 			return 1
 		fi
 	fi
@@ -508,6 +509,13 @@ ask_reboot()
 	local AT="     http://${NEW_HOST_NAME}.local\n"
 	AT="${AT}or\n"
 	AT="${AT}     http://$(hostname -I | sed -e 's/ .*$//')"
+
+	if [[ ${REBOOT_NEEDED} == "false" ]]; then
+		MSG="\nAfter reboot you can connect to the WebUI at:\n${AT}"
+		display_msg -log progress "${MSG}"
+		return 0
+	fi
+
 	local MSG="*** Allsky installation is almost done. ***"
 	MSG="${MSG}\n\nWhen done, you must reboot the Raspberry Pi to finish the installation."
 	MSG="${MSG}\n\nAfter reboot you can connect to the WebUI at:\n"
@@ -519,6 +527,7 @@ ask_reboot()
 	else
 		display_msg --logonly info "User elected not to reboot; displayed warning message."
 		display_msg notice "You need to reboot the Pi before Allsky will work."
+
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
 		MSG="${MSG}You can then connect to the WebUI at:\n"
 		MSG="${MSG}${AT}"
@@ -1268,10 +1277,27 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 
 
 ####
+# Do we need to reboot?
+is_reboot_needed()
+{
+	local OLD_VERSION="${1}"
+	local OLD_BASE_VERSION="${OLD_VERSION:0:11}"	# Without point release
+	local NEW_VERSION="${2}"
+	if [[ ${NEW_VERSION} == "v2023.05.01_02" && ${OLD_BASE_VERSION} == "v2023.05.01" ]]; then
+		# just bug fixes between those two versions
+		REBOOT_NEEDED="false"
+		display_msg --log progress "No reboot is needed."
+	else
+		display_msg --log progress "A reboot is needed after installation finishes."
+	fi
+}
+
+####
 # See if a prior Allsky exists; if so, set some variables.
 does_prior_Allsky_exist()
 {
-	if [[ ! -d ${PRIOR_ALLSKY_DIR}/src ]]; then
+	# Don't just look for the top-level directory.
+	if [[ ! -d ${PRIOR_CONFIG_DIR} ]]; then
 		display_msg --logonly info "No prior Allsky found."
 		return 1
 	fi
@@ -1282,28 +1308,26 @@ does_prior_Allsky_exist()
 	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"
 	if [[ -n  ${PRIOR_ALLSKY_VERSION} ]]; then
 		display_msg --logonly info "Prior Allsky version ${PRIOR_ALLSKY_VERSION} found."
-		case "${PRIOR_ALLSKY_VERSION}" in
-			"v2022.03.01")		# First Allsky version with a "version" file
-				# This is an old style Allsky with ${CAMERA} in config.sh.
-				# Don't do anything here; go to the "if" after the "esac".
-				;;
+		if [[ ${PRIOR_ALLSKY_VERSION} == "v2022.03.01" ]]; then		# First Allsky version with a "version" file
+			# This is an old style Allsky with ${CAMERA} in config.sh.
+			# Don't do anything here; go to the "if" below.
+			:
+		else
+			# Newer version.
+			is_reboot_needed "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 
-			*)
-				# Newer version.
-				# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file.
-				PRIOR_ALLSKY="newStyle"
-				PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
-				if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
-					PRIOR_CAMERA_TYPE="$( settings ".cameraType" "${PRIOR_SETTINGS_FILE}" )"
-					PRIOR_CAMERA_MODEL="$( settings ".cameraModel" "${PRIOR_SETTINGS_FILE}" )"
-				else
-					# This shouldn't happen...
-					PRIOR_SETTINGS_FILE=""
-					display_msg --log warning "No prior new style settings file found!"
-				fi
-
-				;;
-		esac
+			# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file.
+			PRIOR_ALLSKY="newStyle"
+			PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
+			if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
+				PRIOR_CAMERA_TYPE="$( settings ".cameraType" "${PRIOR_SETTINGS_FILE}" )"
+				PRIOR_CAMERA_MODEL="$( settings ".cameraModel" "${PRIOR_SETTINGS_FILE}" )"
+			else
+				# This shouldn't happen...
+				PRIOR_SETTINGS_FILE=""
+				display_msg --log warning "No prior new style settings file found!"
+			fi
+		fi
 	fi
 
 	if [[ -z ${PRIOR_ALLSKY} ]]; then
@@ -1877,7 +1901,8 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}"
 		cp -ar "${PRIOR_CONFIG_DIR}/ssl" "${ALLSKY_CONFIG}"
 	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		# Almost no one has this directory, so don't show to user.
+		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	# This is not in a "standard" directory so we need to determine where it was.
@@ -2237,7 +2262,7 @@ install_overlay()
 	local CSO="${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json"
 	local O="${ALLSKY_OVERLAY}/config/overlay.json"		# generic name
 	if [[ -f ${CSO} ]]; then
-		display_msg "${LOG_TYPE}" progress "Copying '${CSO}' to '${O}'."
+		display_msg "${LOG_TYPE}" progress "Copying '${CSO}' to 'overlay.json'."
 		cp "${CSO}" "${O}"
 	else
 		display_msg --log error "'${CSO}' does not exist; unable to create default overlay file."
@@ -2379,6 +2404,7 @@ remind_old_version()
 		MSG="When you are sure everything is working with the new Allsky release,"
 		MSG="${MSG} remove your old version in '${PRIOR_ALLSKY_DIR}' to save disk space."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+		display_msg --logonly info "Displayed message about removing '${PRIOR_ALLSKY}'."
 	fi
 }
 
@@ -2723,10 +2749,10 @@ set_permissions
 
 ##### Check if there's an old WebUI and let the user know it's no longer used.
 # Re-run every time to remind them if there's still an old location.
-check_old_WebUI_location									# prompt if prior old-style WebUI
+check_old_WebUI_location										# prompt if prior old-style WebUI
 
 ##### See if we should reboot when installation is done.
-[[ ${REBOOT_NEEDED} == "true" ]] && ask_reboot "full"											# prompts
+[[ ${REBOOT_NEEDED} == "true" ]] && ask_reboot "full"			# prompts
 
 ##### Display any necessary messaged about restored / not restored settings
 # Re-run every time to possibly remind them to update their settings.
@@ -2737,9 +2763,11 @@ check_restored_settings
 [[ ${CAMERA_TYPE} == "ZWO" && ${check_new_exposure_algorithm} != "true" ]] && check_new_exposure_algorithm
 
 ##### Let the user know to run check_allsky.sh.
+# Re-run every time to remind the user again.
 remind_run_check_allsky
 
 ##### If needed, remind the user to remove any old Allsky version
+# Re-run every time to remind the user again.
 remind_old_version
 
 

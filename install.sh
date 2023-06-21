@@ -1061,7 +1061,6 @@ handle_prior_website()
 	# a newer production branch.
 
 	if [[ ${PRIOR_STYLE} == "new" ]]; then
-
 		# If get_branch() returns "" assume prior branch is ${GITHUB_MAIN_BRANCH}.
 		local PRIOR_BRANCH="$( get_branch "${PRIOR_SITE}" )"
 		PRIOR_BRANCH="${PRIOR_BRANCH:-${GITHUB_MAIN_BRANCH}}"
@@ -1070,14 +1069,19 @@ handle_prior_website()
 		sudo mv "${PRIOR_SITE}" "${ALLSKY_WEBSITE}"
 
 		# Update "AllskyVersion" if needed.
-		local V="$( settings .config.AllskyVersion "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
-		if [[ ${V} == "${ALLSKY_VERSION}" ]]; then
-			display_msg --logonly info "Prior local Website's AllskyVersion already at '${ALLSKY_VERSION}'"
+		local FIELD=".config.AllskyVersion"
+		local V
+		if V="$( settings "${FIELD}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"; then
+			if [[ ${V} == "${ALLSKY_VERSION}" ]]; then
+				display_msg --logonly info "Prior local Website's AllskyVersion already at '${ALLSKY_VERSION}'"
+			else
+				MSG="Updating local Website's AllskyVersion from '${V}' to '${ALLSKY_VERSION}'"
+				display_msg --log progress "${MSG}"
+				update_json_file "${FIELD}" "${ALLSKY_VERSION}" \
+					"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+			fi
 		else
-			MSG="Updating local Website's AllskyVersion from '${V}' to '${ALLSKY_VERSION}'"
-			display_msg --log progress "${MSG}"
-			update_json_file ".config.AllskyVersion" "${ALLSKY_VERSION}" \
-				"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+			echo "Unable to get ${FIELD} from '${ALLSKY_WEBSITE_CONFIGURATION_FILE}'"
 		fi
 
 		# We can only check Website versions if we obtained the new Website version.
@@ -1396,6 +1400,7 @@ prompt_for_prior_Allsky()
 			display_msg --logonly info "Will restore from prior version of Allsky."
 			return 0
 		else
+			PRIOR_ALLSKY_DIR=""
 			PRIOR_ALLSKY=""
 			PRIOR_ALLSKY_VERSION=""
 			CAMERA_TYPE=""
@@ -2416,10 +2421,16 @@ check_restored_settings()
 		return 0
 	fi
 
+	local AFTER
+	if [[ ${REBOOT_NEEDED} == "true" ]]; then
+		AFTER="rebooting"
+	else
+		AFTER="installation is complete"
+	fi
 	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "false" ]]; then
 		MSG="Default settings were created for your ${CAMERA_TYPE} camera."
 		MSG="${MSG}\n\nHowever, you must update them by going to the"
-		MSG="${MSG} 'Allsky Settings' page in the WebUI after rebooting."
+		MSG="${MSG} 'Allsky Settings' page in the WebUI after ${AFTER}."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	fi
 	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" || \
@@ -2428,7 +2439,7 @@ check_restored_settings()
 		[[ ${RESTORED_PRIOR_CONFIG_SH} == "false" ]] && MSG="${MSG}\n   config.sh"
 		[[ ${RESTORED_PRIOR_FTP_SH}    == "false" ]] && MSG="${MSG}\n   ftp-settings.sh"
 		MSG="${MSG}\n\nHowever, you must update them by going to the"
-		MSG="${MSG} 'Editor' page in the WebUI after rebooting."
+		MSG="${MSG} 'Editor' page in the WebUI after ${AFTER}."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	fi
 
@@ -2854,10 +2865,15 @@ remind_old_version
 [[ ${WILL_REBOOT} == "true" ]] && do_reboot "${STATUS_FINISH_REBOOT}" ""		# does not return
 
 if [[ ${REBOOT_NEEDED} == "true" ]]; then
+	display_msg --log progress "\nInstallation is done but the Pi needs a reboot.\n"
 	exit_installation 0 "${STATUS_NO_FINISH_REBOOT}" ""
 else
 	if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
 		display_image --custom "lime" "Allsky is\nready to start"
+		display_msg --log progress "\nInstallation is done and Allsky is ready to start."
+	else
+		display_msg --log progress "\nInstallation is done but Allsky needs to be configured."
 	fi
+	display_msg progress "\nEnjoy Allsky!\n"
 	exit_installation 0 "${STATUS_OK}" ""
 fi

@@ -15,13 +15,13 @@ function doExit()
 	local WEBUI_MESSAGE="${4}"		# optional
 
 	case "${TYPE}" in
-		Warning)
+		"Warning")
 			COLOR="yellow"
 			;;
-		Error)
+		"Error")
 			COLOR="red"
 			;;
-		NotRunning | *)
+		"NotRunning" | *)
 			COLOR="yellow"
 			;;
 	esac
@@ -130,7 +130,7 @@ function getJSONarrayIndex()
 	local JSON_FILE="${1}"
 	local PARENT="${2}"
 	local FIELD="${3}"
-	jq ".${PARENT}" "${JSON_FILE}" | \
+	settings ".${PARENT}" "${JSON_FILE}" | \
 		gawk 'BEGIN { n = -1; found = 0;} {
 			if ($1 == "{") {
 				n++;

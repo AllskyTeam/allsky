@@ -28,7 +28,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe
 		<div class="panel-body">
 			<?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>
 			<div id="live_container" class="cursorPointer live_container" title="Click to make full-screen">
-				<img id="current" class="current" src="<?php echo $image_name ?>" style="width:100%">
+				<img id="current" class="current" src="<?php echo $image_name ?>">
 			</div>
 		</div>
 	</div>

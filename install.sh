@@ -1081,7 +1081,7 @@ handle_prior_website()
 					"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 			fi
 		else
-			echo "Unable to get ${FIELD} from '"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"'"
+			echo "Unable to get ${FIELD} from '${ALLSKY_WEBSITE_CONFIGURATION_FILE}'"
 		fi
 
 		# We can only check Website versions if we obtained the new Website version.

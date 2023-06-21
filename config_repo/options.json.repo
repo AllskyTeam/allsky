@@ -72,8 +72,8 @@
 },
 {
 "name" : "daymeanthreshold",
-"minimum" : "_min",
-"maximum" : "_max",
+"minimum" : "day_min",
+"maximum" : "day_max",
 "default" : "day_default",
 "description" : "When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",
@@ -278,8 +278,8 @@
 },
 {
 "name" : "nightmeanthreshold",
-"minimum" : "_min",
-"maximum" : "_max",
+"minimum" : "night_min",
+"maximum" : "night_max",
 "default" : "day_default",
 "description" : "When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",

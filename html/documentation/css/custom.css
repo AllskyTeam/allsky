@@ -223,7 +223,7 @@ table .alert-dismissable {
 .alert-dismissable .close {
 	right: 0px;
 	opacity: .6;
-	top: -1px;
+	/* xxxx top: -1px; */
 }
 .alert-message {
 	color: #31708f;
@@ -580,7 +580,11 @@ select {
 }
 .live_container {
 	background-color: black;
-	margin-bottom: 15px;
+	/* xxxx margin-bottom: 15px; */
+}
+.current {
+	max-width: 100%;
+	/* How to get the max height to fit on the screen without scrolling??? */
 }
 
 div.sticky {

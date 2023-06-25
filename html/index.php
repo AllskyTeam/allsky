@@ -196,7 +196,6 @@ if (file_exists($f)) {
 			var img = $("<img />").attr('src', '<?php echo $image_name ?>?_ts=' + new Date().getTime())
 				.attr("id", "current")
 				.attr("class", "current")
-				.css("width", "100%")
 				.on('load', function () {
 					if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
 						console.log('broken image!');

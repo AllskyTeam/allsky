@@ -145,6 +145,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	CC_FILE="${ALLSKY_CONFIG}/cc.json"
 	SETTINGS_FILE="${ALLSKY_CONFIG}/settings.json"
 	OPTIONS_FILE="${ALLSKY_CONFIG}/options.json"
+	ENV_FILE="${HOME}/.env"
 
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped

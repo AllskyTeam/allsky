@@ -237,13 +237,13 @@ else
 		echo set net:max-retries 2
 		echo set net:timeout 10
 
-		REMOTE_USER="$( get_variable "REMOTE_USER${REMOTE_NUM}" "${ENV_FILE}" )"
-		REMOTE_HOST="$( get_variable "REMOTE_HOST${REMOTE_NUM}" "${ENV_FILE}" )"
-		REMOTE_PORT="$( get_variable "REMOTE_PORT${REMOTE_NUM}" "${ENV_FILE}" )"
-		[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
+		RU="$( get_variable "REMOTE_USER${REMOTE_NUM}" "${ENV_FILE}" )"
+		RH="$( get_variable "REMOTE_HOST${REMOTE_NUM}" "${ENV_FILE}" )"
+		RP="$( get_variable "REMOTE_PORT${REMOTE_NUM}" "${ENV_FILE}" )"
+		[[ -n ${RP} ]] && RP="-p ${RP}"
 
 		# shellcheck disable=SC2153,SC2086
-		echo "open --user '${REMOTE_USER}' ${PW} ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
+		echo "open --user '${RU}' ${PW} ${RP} '${PROTOCOL}://${RH}'"
 
 		# lftp doesn't actually try to open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.

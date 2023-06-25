@@ -1,30 +1,28 @@
 [
 {
-"name" : "daytimeSettingsHeader",
+"name" : "daytimesettingsheader",
 "description" : "Daytime settings",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
 },
 {
-"name" : "takeDaytimeImages",
+"name" : "takedaytimeimages",
 "default" : 1,
 "description" : "Activate to <strong>take</strong> daytime images.",
 "label" : "Daytime Capture",
 "type" : "boolean",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
-"name" : "saveDaytimeImages",
+"name" : "savedaytimeimages",
 "default" : 0,
 "description" : "Activate to <strong>save</strong> daytime images.<br>Only applies if <span class='WebUISetting'>Daytime Capture</span> is enabled.",
 "label" : "Daytime Save",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -35,6 +33,7 @@
 "type" : "boolean",
 "display" : 1,
 "generic" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
 {
@@ -46,6 +45,7 @@
 "label" : "Max Auto-Exposure",
 "type" : "float",
 "display" : 1,
+"booldependson" : "takedaytimeimages AND daymaxautoexposure",
 "advanced" : 0
 },
 {
@@ -57,6 +57,7 @@
 "label" : "Manual Exposure",
 "type" : "float",
 "display" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
 {
@@ -68,6 +69,7 @@
 "label" : "Mean Target",
 "type" : "float",
 "display" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
 {
@@ -79,6 +81,7 @@
 "label" : "Mean Threshold",
 "type" : "float",
 "display" : 1,
+"booldependson" : "takedaytimeimages AND daymean",
 "advanced" : 1
 },
 {
@@ -90,6 +93,7 @@
 "label" : "Brightness",
 "type" : "float",
 "display" : "_display",
+"booldependson" : "takedaytimeimages",
 "advanced" : 0
 },
 {
@@ -102,6 +106,7 @@
 "type" : "integer",
 "display" : 1,
 "generic" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 0
 },
 {
@@ -112,6 +117,7 @@
 "type" : "boolean",
 "display" : 1,
 "generic" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
 {
@@ -123,6 +129,7 @@
 "label" : "Max Auto-Gain",
 "type" : "float",
 "display" : 1,
+"booldependson" : "takedaytimeimages AND dayautogain",
 "advanced" : 1
 },
 {
@@ -134,6 +141,7 @@
 "label" : "Gain",
 "type" : "float",
 "display" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
 {
@@ -147,6 +155,7 @@
 ],
 "display" : 1,
 "generic" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
 {
@@ -157,6 +166,7 @@
 "type" : "boolean",
 "display" : "_display",
 "generic" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 0
 },
 {
@@ -168,6 +178,7 @@
 "label" : "Red Balance",
 "type" : "float",
 "display" : "_display",
+"booldependson" : "takedaytimeimages AND dayawb",
 "advanced" : 0
 },
 {
@@ -179,6 +190,7 @@
 "label" : "Blue Balance",
 "type" : "float",
 "display" : "_display",
+"booldependson" : "takedaytimeimages AND dayawb",
 "advanced" : 0
 },
 {
@@ -191,20 +203,22 @@
 "type" : "integer",
 "display" : 1,
 "generic" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
 {
-"name" : "dayEnableCooler",
+"name" : "dayenablecooler",
 "default" : 0,
 "description" : "Activate to use cooling (works only on cooled cameras).",
 "label" : "Cooling",
 "type" : "boolean",
 "display" : "_display",
 "generic" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
 {
-"name" : "dayTargetTemp",
+"name" : "daytargettemp",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -213,10 +227,11 @@
 "type" : "integer",
 "display" : "_display",
 "generic" : 1,
+"booldependson" : "takedaytimeimages AND dayenablecooler",
 "advanced" : 1
 },
 {
-"name" : "dayTuningFile",
+"name" : "daytuningfile",
 "default" : "",
 "description" : "Name of the day camera tuning file to use. Omit this option to preserve the default behavior of libcamera.<br>Please read this <b><a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer' title='Opens in new tab/window'>documentation <i class='fa fa-external-link-alt fa-fw'></i></a></b> or this <b><a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer' title='Opens in new tab/window'>document <i class='fa fa-external-link-alt fa-fw'></i></a></b> if using a Raspberry camera with libcamera. For other Raspberry cameras read the camera manual for more information.",
 "label" : "Tuning File",
@@ -224,10 +239,12 @@
 "display" : "_display",
 "checkchanges" : 1,
 "optional" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
+
 {
-"name" : "nighttimeSettingsHeader",
+"name" : "nighttimesettingsheader",
 "description" : "Nighttime settings",
 "type" : "header",
 "display" : 1,
@@ -252,6 +269,7 @@
 "label" : "Max Auto-Exposure",
 "type" : "float",
 "display" : 1,
+"booldependson" : "nightautoexposure",
 "advanced" : 0
 },
 {
@@ -285,6 +303,7 @@
 "label" : "Mean Threshold",
 "type" : "float",
 "display" : 1,
+"booldependson" : "nightmean",
 "advanced" : 1
 },
 {
@@ -329,6 +348,7 @@
 "label" : "Max Auto-Gain",
 "type" : "float",
 "display" : 1,
+"booldependson" : "nightautogain",
 "advanced" : 1
 },
 {
@@ -374,6 +394,7 @@
 "label" : "Red Balance",
 "type" : "float",
 "display" : "_display",
+"booldependsoff" : "nightawb",
 "advanced" : 0
 },
 {
@@ -385,6 +406,7 @@
 "label" : "Blue Balance",
 "type" : "float",
 "display" : "_display",
+"booldependsoff" : "nightawb",
 "advanced" : 0
 },
 {
@@ -400,7 +422,7 @@
 "advanced" : 1
 },
 {
-"name" : "nightEnableCooler",
+"name" : "nightenablecooler",
 "default" : 0,
 "description" : "Activate to use cooling (works only on cooled cameras).",
 "label" : "Cooling",
@@ -410,7 +432,7 @@
 "advanced" : 1
 },
 {
-"name" : "nightTargetTemp",
+"name" : "nighttargettemp",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -419,10 +441,11 @@
 "type" : "integer",
 "display" : "_display",
 "generic" : 1,
+"booldependson" : "nightenablecooler",
 "advanced" : 1
 },
 {
-"name" : "nightTuningFile",
+"name" : "nighttuningfile",
 "default" : "",
 "description" : "Name of the night camera tuning file to use.",
 "label" : "Tuning File",
@@ -432,9 +455,10 @@
 "optional" : 1,
 "advanced" : 1
 },
+
 {
-"name" : "DayAndNightHeader",
-"description" : "Both daytime and nighttime settings",
+"name" : "dayandnightheader",
+"description" : "Both day and night settings",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
@@ -451,7 +475,7 @@
 "advanced" : 1
 },
 {
-"name" : "extraArgs",
+"name" : "extraargs",
 "default" : "",
 "description" : "Extra arguments to pass to the capture program that Allsky doesn't support.",
 "label" : "Extra Arguments",
@@ -524,7 +548,6 @@
 "label" : "Aggression",
 "type" : "percent",
 "display" : "_display",
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -536,7 +559,7 @@
 "label" : "Gain Transition Time",
 "type" : "integer",
 "display" : "_display",
-"generic" : 1,
+"booldependsoff" : "nightautogain",
 "advanced" : 1
 },
 {
@@ -582,7 +605,6 @@
 "label" : "Quality / Compression",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -603,6 +625,7 @@
 "label" : "USB Bandwidth",
 "type" : "integer",
 "display" : "_display",
+"booldependsoff" : "autousb",
 "advanced" : 1
 },
 {
@@ -613,7 +636,6 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -650,17 +672,15 @@
 "label" : "Notification Images",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
-"name" : "consistentDelays",
+"name" : "consistentdelays",
 "default" : 1,
 "description" : "Activate to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -670,8 +690,21 @@
 "label" : "Time Format",
 "type" : "text",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
+},
+{
+"name" : "temptype",
+"default" : "C",
+"description" : "Unit(s) to display temperature in.",
+"label" : "Temperature Units",
+"type" : "select",
+"options" : [
+	{"value" : "C", "label" : "Celcius"},
+	{"value" : "F", "label" : "Fahrenheit"},
+	{"value" : "B", "label" : "Both"}
+],
+"display" : 1,
+"advanced" : 1
 },
 {
 "name" : "latitude",
@@ -681,7 +714,6 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -692,7 +724,6 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -703,11 +734,10 @@
 "type" : "float",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
-"name" : "takeDarkFrames",
+"name" : "takedarkframes",
 "default" : 0,
 "description" : "Activate to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
 "label" : "Take Dark Frames",
@@ -716,13 +746,12 @@
 "advanced" : 0
 },
 {
-"name" : "useDarkFrames",
+"name" : "usedarkframes",
 "default" : 0,
 "description" : "Enables dark frame subtraction if you have dark frames.",
 "label" : "Use Dark Frames",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -732,11 +761,10 @@
 "label" : "Locale",
 "type" : "text",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
-"name" : "experimentalExposure",
+"name" : "experimentalexposure",
 "default" : 0,
 "description" : "Activate to use a newer auto-exposure algorithm at night.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
 "label" : "New Exposure Algorithm",
@@ -779,13 +807,12 @@
 "advanced" : 1
 },
 {
-"name" : "useLogin",
+"name" : "uselogin",
 "default" : 1,
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -795,19 +822,19 @@
 "label" : "Always Show Advanced",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
+
 {
-"name" : "overlayHeader",
+"name" : "overlayheader",
 "description" : "Image overlay settings",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
 },
 {
-"name" : "overlayMethod",
-"default" : 0,
+"name" : "overlaymethod",
+"default" : 1,
 "description" : "Determines how image overlays are done.<br><span class='WebUIValue'>module</span> supports a visual editor.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
 "label" : "Overlay Method",
 "type" : "select",
@@ -817,91 +844,76 @@
 ],
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
-"name" : "showTime",
+"name" : "showtime",
 "default" : 1,
 "description" : "Activate to display the time an image was taken on the overlay.",
 "label" : "Show Time",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
-"name" : "showTemp",
+"name" : "showtemp",
 "default" : 1,
 "description" : "Activate to display the camera sensor temperature on the overlay.",
 "label" : "Show Temperature",
 "type" : "boolean",
 "display" : "_display",
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
-"name" : "temptype",
-"default" : "C",
-"description" : "Unit(s) to display temperature in.",
-"label" : "Temperature Units",
-"type" : "select",
-"options" : [
-	{"value" : "C", "label" : "Celcius"},
-	{"value" : "F", "label" : "Fahrenheit"},
-	{"value" : "B", "label" : "Both"}
-],
-"display" : 1,
-"generic" : 1,
-"advanced" : 1
-},
-{
-"name" : "showExposure",
+"name" : "showexposure",
 "default" : 1,
 "description" : "Activate to display the exposure length on the overlay.<br>If <span class='WebUISetting'>Auto-Exposure</span> is set, '(auto)' will appear after the exposure time.",
 "label" : "Show Exposure",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
-"name" : "showGain",
+"name" : "showgain",
 "default" : 0,
 "description" : "Activate to display the camera gain on the overlay.<br>If <span class='WebUISetting'>Auto-Gain</span> is set, '(auto)' will appear after the gain value.",
 "label" : "Show Gain",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
-"name" : "showBrightness",
+"name" : "showbrightness",
 "default" : 0,
 "description" : "Activate to display the <span class='WebUISetting'>Brightness</span> number you set on the overlay.",
 "label" : "Show Brightness",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
-"name" : "showUSB",
+"name" : "showusb",
 "default" : 0,
 "description" : "Activate to display the USB Bandwidth number on the overlay.<br>This is primarily for troubleshooting.",
 "label" : "Show USB",
 "type" : "boolean",
 "display" : "_display",
+"booldependsoff" : "overlaymethod",
 "advanced" : 1
 },
 {
-"name" : "showMean",
+"name" : "showmean",
 "default" : 0,
 "description" : "Activate to display the calculated mean image brightness on the overlay.",
 "label" : "Show Mean Brightness",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 1
 },
 {
@@ -911,16 +923,17 @@
 "label" : "Show Histogram Box",
 "type" : "boolean",
 "display" : "_display",
+"booldependsoff" : "overlaymethod",
 "advanced" : 1
 },
 {
-"name" : "showFocus",
+"name" : "showfocus",
 "default" : 0,
 "description" : "Activate to display a focus metric to help you focus the camera.<br>This is only usefull while focusing.",
 "label" : "Show Focus Metric",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 1
 },
 {
@@ -931,7 +944,7 @@
 "type" : "widetext",
 "display" : 1,
 "optional" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -943,7 +956,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -955,7 +968,7 @@
 "label" : "Max Age Of Extra",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -967,7 +980,7 @@
 "label" : "Line Height",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -979,7 +992,7 @@
 "label" : "Text X",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -991,7 +1004,7 @@
 "label" : "Text Y",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -1011,7 +1024,7 @@
 	{"value" : 7, "label" : "Script Complex"}
 ],
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -1022,7 +1035,7 @@
 "label" : "Font Color",
 "type" : "text",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -1032,7 +1045,7 @@
 "label" : "Small Font Color",
 "type" : "text",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -1047,7 +1060,7 @@
 	{"value" : 2, "label" : "4 connected"}
 ],
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -1059,7 +1072,7 @@
 "label" : "Font Size",
 "type" : "float",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -1071,7 +1084,7 @@
 "label" : "Font Weight",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
 {
@@ -1081,25 +1094,174 @@
 "label" : "Use Outline Font",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
+"booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
+
 {
-"name" : "AllskyMapHeader",
-"description" : "Allsky Map and Website Settings",
+"name" : "websiteheader",
+"description" : "Local Website and Remote Server Settings",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
 },
 {
-"name" : "displaySettings",
+"name" : "uselocalwebsite",
 "default" : 0,
-"description" : "Activate to add a link to the Allsky Website to display the settings on this page.<br><b>Only applies if you have a local or remote Allsky Website.",
+"description" : "Enable to use the local Allsky Website.  No other settings are needed.",
+"label" : "Use Local Website",
+"type" : "boolean",
+"display" : 1,
+"advanced" : 0
+},
+{
+"name" : "useremote1",
+"default" : 0,
+"description" : "Enable to use a remote server.<br>It's connection details (server name, password, etc.) go in <a href='/documentation/settings/env.html'><i class='fa fa-external-link-alt fa-fw'></i> ${HOME}/.env</a>",
+"label" : "Use Remote Server 1",
+"type" : "boolean",
+"display" : 1,
+"advanced" : 0
+},
+{
+"name" : "remotewebsite1",
+"default" : 1,
+"description" : "Is remote server 1 an Allsky Website?",
+"label" : "Remote Server 1 Website?",
+"type" : "boolean",
+"display" : 1,
+"booldependson" : "useremote1",
+"advanced" : 0
+},
+{
+"name" : "protocol1",
+"default" : "sftp",
+"description" : "Protocol for remote server 1",
+"label" : "Protocol 1",
+"options" : [
+	{"value" : "sftp", "label" : "sftp"},
+	{"value" : "ftp", "label" : "ftp"},
+	{"value" : "ftps", "label" : "ftps"},
+	{"value" : "scp", "label" : "scp"},
+	{"value" : "S3", "label" : "S3"},
+	{"value" : "GCS", "label" : "GCS"}
+],
+"display" : 1,
+"advanced" : 0
+},
+{
+"name" : "videodestinationname1",
+"default" : "",
+"description" : "Optional name of the remote video file.",
+"label" : "Video Destination Name 1",
+"type" : "text",
+"display" : 1,
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "keogramdeodestinationname1",
+"default" : "",
+"description" : "Optional name of the remote keogram file.",
+"label" : "Keogram Destination Name 1",
+"type" : "text",
+"display" : 1,
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "startrailsdeodestinationname1",
+"default" : "",
+"description" : "Optional name of the remote startrails file.",
+"label" : "Startrails Destination Name 1",
+"type" : "text",
+"display" : 1,
+"optional" : 1,
+"advanced" : 0
+},
+
+{
+"name" : "useremote2",
+"default" : 0,
+"description" : "Enable to use a second remote server.<br>It's connection details (server name, password, etc.) go in <a href='/documentation/settings/env.html'><i class='fa fa-external-link-alt fa-fw'></i> ${HOME}/.env</a>",
+"label" : "Use Remote Server 2",
+"type" : "boolean",
+"display" : 1,
+"advanced" : 0
+},
+{
+"name" : "remotewebsite2",
+"default" : 0,
+"description" : "Is remote server 2 an Allsky Website?",
+"label" : "Remote Server 2 Website?",
+"type" : "boolean",
+"display" : 1,
+"booldependson" : "useremote2",
+"advanced" : 0
+},
+{
+"name" : "protocol2",
+"default" : "sftp",
+"description" : "Protocol for remote server 2",
+"label" : "Protocol 2",
+"options" : [
+	{"value" : "sftp", "label" : "sftp"},
+	{"value" : "ftp", "label" : "ftp"},
+	{"value" : "ftps", "label" : "ftps"},
+	{"value" : "scp", "label" : "scp"},
+	{"value" : "S3", "label" : "S3"},
+	{"value" : "GCS", "label" : "GCS"}
+],
+"display" : 1,
+"advanced" : 0
+},
+{
+"name" : "videodestinationname2",
+"default" : "",
+"description" : "Optional name of the remote video file.",
+"label" : "Video Destination Name 2",
+"type" : "text",
+"display" : 1,
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "keogramdeodestinationname2",
+"default" : "",
+"description" : "Optional name of the remote keogram file.",
+"label" : "Keogram Destination Name 2",
+"type" : "text",
+"display" : 1,
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "startrailsdeodestinationname2",
+"default" : "",
+"description" : "Optional name of the remote startrails file.",
+"label" : "Startrails Destination Name 2",
+"type" : "text",
+"display" : 1,
+"optional" : 1,
+"advanced" : 0
+},
+
+{
+"name" : "allskymapheader",
+"description" : "Allsky Map Settings",
+"type" : "header",
+"display" : 1,
+"advanced" : 0
+},
+{
+"name" : "displaysettings",
+"default" : 0,
+"description" : "Activate to add a link to the Allsky Website to display the settings on this page.<br><b>Only applies if you have a local or remote Allsky Website.</b>",
 "label" : "Display Settings",
 "type" : "boolean",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
+"booldependson" : "uselocalwebsite OR remotewebsite1 OR remotewebsite2",
 "advanced" : 0
 },
 {
@@ -1110,7 +1272,6 @@
 "type" : "boolean",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1122,7 +1283,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
+"booldependson" : "showonmap",
 "advanced" : 0
 },
 {
@@ -1134,7 +1295,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
+"booldependson" : "showonmap",
 "advanced" : 0
 },
 {
@@ -1146,7 +1307,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
+"booldependson" : "showonmap OR remotewebsite1 OR remotewebsite2",
 "advanced" : 0
 },
 {
@@ -1158,7 +1319,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
+"booldependson" : "showonmap OR remotewebsite1 OR remotewebsite2",
 "advanced" : 0
 },
 {
@@ -1170,6 +1331,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
+"booldependson" : "showonmap OR remotewebsite1 OR remotewebsite2",
 "advanced" : 0
 },
 {
@@ -1181,6 +1343,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
+"booldependson" : "showonmap OR remotewebsite1 OR remotewebsite2",
 "advanced" : 0
 },
 {
@@ -1192,18 +1355,19 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
+"booldependson" : "showonmap OR remotewebsite1 OR remotewebsite2",
 "advanced" : 0
 },
+
 {
-"name" : "CameraHeading",
+"name" : "cameraheading",
 "description" : "Camera Type",
 "type" : "header",
 "display" : 1,
 "advanced" : 1
 },
 {
-"name" : "cameraType",
+"name" : "cameratype",
 "default" : "",
 "description" : "The type of camera you are using.  <span class='WebUIValue'>Refresh</span> re-sets the Camera Model and is useful if you change cameras of the same <span class='WebUISetting'>Camera Type</span>.",
 "label" : "Camera Type",
@@ -1218,7 +1382,7 @@
 "advanced" : 1
 },
 {
-"name" : "cameraModel",
+"name" : "cameramodel",
 "default" : "",
 "description" : "The model of camera you are using.  Cannot be changed here.",
 "label" : "Camera Model",
@@ -1227,7 +1391,7 @@
 "advanced" : 1
 },
 {
-"name" : "cameraNumber",
+"name" : "cameranumber",
 "minimum" : 0,
 "maximum" : "none",
 "default" : 0,

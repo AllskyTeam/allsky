@@ -74,7 +74,7 @@ if [[ ${FILE} != "" && ! -f ${DATE}/${FILE} ]]; then
 	exit 2
 fi
 
-if [[ $(settings ".takeDarkFrames") -eq 1 ]]; then
+if [[ $(settings ".takedarkframes") -eq 1 ]]; then
 	# Disable low brightness check since darks will have extremely low brightness.
 	# But continue with the other checks in case the dark file is corrupted.
 	REMOVE_BAD_IMAGES_THRESHOLD_LOW=0

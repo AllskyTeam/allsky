@@ -472,7 +472,7 @@ save_camera_capabilities()
 	#shellcheck disable=SC2012
 	MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
 	display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
-	CAMERA_MODEL="$( settings ".cameraModel" "${SETTINGS_FILE}" )"
+	CAMERA_MODEL="$( settings ".cameramodel" "${SETTINGS_FILE}" )"
 
 	STATUS_VARIABLES+=("save_camera_capabilities='true'\n")
 	return 0
@@ -1354,8 +1354,8 @@ does_prior_Allsky_exist()
 			PRIOR_ALLSKY="newStyle"
 			PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
 			if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
-				PRIOR_CAMERA_TYPE="$( settings ".cameraType" "${PRIOR_SETTINGS_FILE}" )"
-				PRIOR_CAMERA_MODEL="$( settings ".cameraModel" "${PRIOR_SETTINGS_FILE}" )"
+				PRIOR_CAMERA_TYPE="$( settings ".cameratype" "${PRIOR_SETTINGS_FILE}" )"
+				PRIOR_CAMERA_MODEL="$( settings ".cameramodel" "${PRIOR_SETTINGS_FILE}" )"
 			else
 				# This shouldn't happen...
 				PRIOR_SETTINGS_FILE=""
@@ -1468,7 +1468,7 @@ update_config_sh()
 	display_msg --log progress "Updating some '${C}' variables."
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg --log error "CAMERA_TYPE is empty in update_config_sh()"
-		CAMERA_TYPE="$( settings .cameraType )"
+		CAMERA_TYPE="$( settings .cameratype )"
 	fi
 	sed -i \
 		-e "s;^ALLSKY_VERSION=.*$;ALLSKY_VERSION=\"${ALLSKY_VERSION}\";" \
@@ -1811,11 +1811,11 @@ restore_prior_settings_file()
 					# As far as I know, latitude, longitude, and angle have never changed names,
 					# and are required and have no default,
 					# so try to restore them so Allsky can restart automatically.
-					local LAT="$(settings .latitude "${PRIOR_SETTINGS_FILE}")"
+					local LAT="$( settings .latitude "${PRIOR_SETTINGS_FILE}" )"
 					update_json_file ".latitude" "${LAT}" "${SETTINGS_FILE}"
-					local LONG="$(settings .longitude "${PRIOR_SETTINGS_FILE}")"
+					local LONG="$( settings .longitude "${PRIOR_SETTINGS_FILE}" )"
 					update_json_file ".longitude" "${LONG}" "${SETTINGS_FILE}"
-					local ANGLE="$(settings .angle "${PRIOR_SETTINGS_FILE}")"
+					local ANGLE="$( settings .angle "${PRIOR_SETTINGS_FILE}" )"
 					update_json_file ".angle" "${ANGLE}" "${SETTINGS_FILE}"
 					display_msg --log progress "Prior latitude, longitude, and angle restored."
 
@@ -2452,7 +2452,7 @@ check_restored_settings()
 # See if the new ZWO exposure algorithm should be used.
 check_new_exposure_algorithm()
 {
-	local FIELD="experimentalExposure"
+	local FIELD="experimentalexposure"
 	local NEW="$( settings ".${FIELD}" )"
 	[[ ${NEW} -eq 1 ]] && return
 	

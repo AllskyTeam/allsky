@@ -10,8 +10,6 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
 function usage_and_exit
 {
@@ -64,9 +62,10 @@ done
 NOTIFICATION_TYPE="${1}"	# filename, minus the extension, since the extension may vary
 [[ ${NOTIFICATION_TYPE} == "" ]] && usage_and_exit 1
 
+NUM_ARGS=12
 if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
-	if [[ $# -ne 12 ]]; then
-		echo -e "${RED}'custom' notification type requires 12 arguments" >&2
+	if [[ $# -ne "${NUM_ARGS}" ]]; then
+		echo -e "${RED}'custom' notification type requires ${NUM_ARGS} arguments" >&2
 		usage_and_exit 1
 	fi
 
@@ -198,8 +197,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 		echo -e "${ME}: Uploading $(basename "${NOTIFICATION_FILE}")"
 	fi
-	"${ALLSKY_SCRIPTS}/upload.sh" --wait --silent \
-		"${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage" "${WEB_IMAGE_DIR}"
+	upload_all --wait --silent "${UPLOAD_FILE}" "" "${FULL_FILENAME}" "NotificationImage"
 	RET=$?
 
 	# If we created a temporary copy, delete it.

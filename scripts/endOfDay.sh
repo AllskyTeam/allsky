@@ -10,8 +10,6 @@ source "${ALLSKY_HOME}/variables.sh"			|| exit  ${ALLSKY_ERROR_STOP}
 source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh"				|| exit  ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"		|| exit  ${ALLSKY_ERROR_STOP}
 
 if [[ $# -eq 1 ]]; then
 	if [[ ${1} == "--help" ]]; then

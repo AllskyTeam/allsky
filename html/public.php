@@ -22,7 +22,7 @@ initialize_variables();		// sets some variables
 
 <div class="row">
 	<div id="live_container" style="background-color: black;">
-		<img id="current" class="current" src="<?php echo $image_name ?>" style="width:100%">
+		<img id="current" class="current" src="<?php echo $image_name ?>">
 	</div>
 </div>
 
@@ -33,7 +33,6 @@ initialize_variables();		// sets some variables
 		var img = $("<img />").attr('src', '<?php echo $image_name ?>?_ts=' + new Date().getTime())
 			.attr("id", "current")
 			.attr("class", "current")
-			.css("width", "100%")
 			.on('load', function() {
 				if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
 					console.log('broken image!');

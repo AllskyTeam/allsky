@@ -99,15 +99,15 @@ function initialize_variables() {
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 	$image_name = $img_dir . "/" . $settings_array['filename'];
-	$darkframe = $settings_array['takeDarkFrames'];
-	$useLogin = getVariableOrDefault($settings_array, 'useLogin', true);
+	$darkframe = $settings_array['takedarkframes'];
+	$useLogin = getVariableOrDefault($settings_array, 'uselogin', true);
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
 	$websiteURL = getVariableOrDefault($settings_array, 'websiteurl', "");
 
 
 	////////////////// Determine delay between refreshes of the image.
-	$consistentDelays = $settings_array["consistentDelays"] == 1 ? true : false;
+	$consistentDelays = $settings_array["consistentdelays"] == 1 ? true : false;
 	$daydelay = $settings_array["daydelay"];
 	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
 	$dayexposure = $settings_array["dayexposure"];
@@ -144,7 +144,7 @@ function initialize_variables() {
 		$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
 		$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
 
-		$showDelay = getVariableOrDefault($settings_array, 'showDelay', true);
+		$showDelay = getVariableOrDefault($settings_array, 'showdelay', true);
 		if ($showDelay) {
 			// Determine if it's day or night so we know which delay to use.
 			$angle = $settings_array['angle'];
@@ -458,8 +458,6 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 * so there shouldn't be a comment on the line,
 * however, there can be optional spaces or tabs before the string.
 *
-* This function will go away once the config.sh and ftp-settings.sh files are merged
-* into the settings.json file.
 */
 function get_variable($file, $searchfor, $default)
 {

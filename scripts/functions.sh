@@ -246,6 +246,43 @@ function get_sunrise_sunset()
 
 
 #####
+# Check if a remote server is acting as a remote Allsky Website.
+function checkRemote()
+{
+	local NUM="${1}"
+	local USE="$( settings ".useremote${NUM}" )"
+	[[ ${USE} -ne "${REMOTE_TYPE_ALLSKY_WEBSITE}" ]] && return 1
+
+	local PROTOCOL="$( get_variable "PROTOCOL${NUM}" "${ENV_FILE}" )"
+	if [[ -n ${PROTOCOL} ]]; then
+		local X
+		case "${PROTOCOL}" in
+			ftp | ftps | sftp | scp)
+				X="$( get_variable "REMOTE_HOST${NUM}" "${ENV_FILE}" )" 
+				[[ -n ${X} ]] && return 0
+				;;
+
+			s3)
+				X="$( get_variable "AWS_CLI_DIR${NUM}" "${ENV_FILE}" )" 
+				[[ -n ${X} ]] && return 0
+				;;
+
+			gcs)
+				X="$( get_variable "GCS_BUCKET${NUM}" "${ENV_FILE}" )" 
+				[[ -n ${X} ]] && return 0
+				;;
+
+			*)
+				echo "ERROR: Unknown PROTOCOL${NUM}: '${PROTOCOL}'" >&2
+				;;
+		esac
+	fi
+
+	return 1
+}
+
+
+#####
 # Return which Allsky Websites exist - local, remote, both, none
 function whatWebsites()
 {
@@ -256,39 +293,14 @@ function whatWebsites()
 	local HAS_REMOTE="false"
 
 	# Determine local Website - this is easy.
-	[[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]] && HAS_LOCAL="true"
+	if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} && "$( settings ".uselocalwebsite" )" -eq 1 ]]; then
+		HAS_LOCAL="true"
+	fi
 
 	# Determine remote Website - this is more involved.
 	# Not only must the file exist, but there also has to be a way to upload to it.
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		local PROTOCOL="$(get_variable "PROTOCOL" "${ALLSKY_CONFIG}/ftp-settings.sh")"
-		PROTOCOL=${PROTOCOL,,}
-		if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
-			local X
-			case "${PROTOCOL}" in
-				"" | local)
-					;;
-
-				ftp | ftps | sftp | scp)		# These require R
-					X="$(get_variable "REMOTE_HOST" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
-					[[ -n ${X} ]] && HAS_REMOTE="true"
-					;;
-
-				s3)
-					X="$(get_variable "AWS_CLI_DIR" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
-					[[ -n ${X} ]] && HAS_REMOTE="true"
-					;;
-
-				gcs)
-					X="$(get_variable "GCS_BUCKET" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
-					[[ -n ${X} ]] && HAS_REMOTE="true"
-					;;
-
-				*)
-					echo "ERROR: Unknown PROTOCOL: '${PROTOCOL}'" >&2
-					;;
-			esac
-		fi
+		(check_remote 1 || check_remote 2) && HAS_REMOTE="true"
 	fi
 
 	if [[ ${HAS_LOCAL} == "true" ]]; then
@@ -822,6 +834,7 @@ function upload_all()
 	local RET=0
 	local IMAGE_DIR REMOTE_DIR
 	if [[ "$( settings ".uselocalwebsite" )" -eq 1 ]]; then
+		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --local \
 			"${UPLOAD_FILE}" "${ALLSKY_WEBSITE}/${SUBDIR}" "${DESTINATION_NAME}"
 		((RET+=$?))
@@ -833,6 +846,7 @@ function upload_all()
 		else
 			REMOTE_DIR="${IMAGE_DIR}/${SUBDIR}"
 		fi
+		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --num 1 \
 			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
 		((RET+=$?))
@@ -844,6 +858,7 @@ function upload_all()
 		else
 			REMOTE_DIR="${IMAGE_DIR}/${SUBDIR}"
 		fi
+		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --num 2 \
 			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
 		((RET+=$?))

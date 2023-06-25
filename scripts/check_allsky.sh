@@ -328,7 +328,7 @@ if [[ ${CROP_IMAGE} == "true" && ${SENSOR_WIDTH} == "${CROP_WIDTH}" && ${SENSOR_
 fi
 
 LAST_CHANGED="$( settings ".lastchanged" )" || echo "Problem getting .lastChanged" >&2
-if [[ ${LAST_CHANGED} == "" || ${LAST_CHANGED} == "null" ]]; then
+if [[ ${LAST_CHANGED} == "" ]]; then
 	heading "Information"
 	echo "Allsky needs to be configured before it will run."
 	echo "See the 'Allsky Settings' page in the WebUI."
@@ -623,7 +623,7 @@ done
 # TODO: determine from options.json file which are required.
 for i in ANGLE LATITUDE LONGITUDE LOCALE
 do
-	if [[ -z ${!i} || ${!i} == "null" ]]; then
+	if [[ -z ${!i} ]]; then
 		heading "Errors"
 		echo "${i} must be set."
 	fi

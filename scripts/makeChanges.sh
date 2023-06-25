@@ -237,7 +237,7 @@ while [[ $# -gt 0 ]]; do
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
 				CAMERA_MODEL="$( settings .cameramodel "${CC_FILE}" )"
-				if [[ -z ${CAMERA_MODEL} || ${CAMERA_MODEL} == "null" ]]; then
+				if [[ -z ${CAMERA_MODEL} ]]; then
 					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
 					exit 1

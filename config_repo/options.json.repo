@@ -14,7 +14,6 @@
 "type" : "boolean",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -24,7 +23,6 @@
 "label" : "Daytime Save",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -524,7 +522,6 @@
 "label" : "Aggression",
 "type" : "percent",
 "display" : "_display",
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -536,7 +533,6 @@
 "label" : "Gain Transition Time",
 "type" : "integer",
 "display" : "_display",
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -582,7 +578,6 @@
 "label" : "Quality / Compression",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -613,7 +608,6 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -650,7 +644,6 @@
 "label" : "Notification Images",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -660,7 +653,6 @@
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -670,7 +662,6 @@
 "label" : "Time Format",
 "type" : "text",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -681,7 +672,6 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -692,7 +682,6 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -703,7 +692,6 @@
 "type" : "float",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -722,7 +710,6 @@
 "label" : "Use Dark Frames",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -732,7 +719,6 @@
 "label" : "Locale",
 "type" : "text",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -785,7 +771,6 @@
 "label" : "Require WebUI Login",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -795,7 +780,6 @@
 "label" : "Always Show Advanced",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -817,7 +801,6 @@
 ],
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -827,7 +810,6 @@
 "label" : "Show Time",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -837,7 +819,6 @@
 "label" : "Show Temperature",
 "type" : "boolean",
 "display" : "_display",
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -852,7 +833,6 @@
 	{"value" : "B", "label" : "Both"}
 ],
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -862,7 +842,6 @@
 "label" : "Show Exposure",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -872,7 +851,6 @@
 "label" : "Show Gain",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -882,7 +860,6 @@
 "label" : "Show Brightness",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -901,7 +878,6 @@
 "label" : "Show Mean Brightness",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -920,7 +896,6 @@
 "label" : "Show Focus Metric",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -931,7 +906,6 @@
 "type" : "widetext",
 "display" : 1,
 "optional" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -943,7 +917,6 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -955,7 +928,6 @@
 "label" : "Max Age Of Extra",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -967,7 +939,6 @@
 "label" : "Line Height",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -979,7 +950,6 @@
 "label" : "Text X",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -991,7 +961,6 @@
 "label" : "Text Y",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1011,7 +980,6 @@
 	{"value" : 7, "label" : "Script Complex"}
 ],
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1022,7 +990,6 @@
 "label" : "Font Color",
 "type" : "text",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1032,7 +999,6 @@
 "label" : "Small Font Color",
 "type" : "text",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1047,7 +1013,6 @@
 	{"value" : 2, "label" : "4 connected"}
 ],
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1059,7 +1024,6 @@
 "label" : "Font Size",
 "type" : "float",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1071,7 +1035,6 @@
 "label" : "Font Weight",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1081,7 +1044,6 @@
 "label" : "Use Outline Font",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1099,7 +1061,6 @@
 "type" : "boolean",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1110,7 +1071,6 @@
 "type" : "boolean",
 "display" : 1,
 "checkchanges" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1122,7 +1082,6 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1134,7 +1093,6 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1146,7 +1104,6 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1158,7 +1115,6 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -1192,7 +1148,6 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {

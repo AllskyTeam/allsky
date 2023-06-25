@@ -440,8 +440,12 @@ function get_variable() {
 
 #####
 # Simple way to get a setting that hides the details.
+# Most of the time the caller doesn't distinguish between a return of "" and "null",
+# so unless --null is passed, return "" instead of "null".
 function settings()
 {
+	local DO_NULL="false"
+	[[ ${1} == "--null" ]] && DO_NULL="true" && shift
 	local M="${ME:-settings}"
 	local FIELD="${1}"
 	# Arrays can't begin with period but everything else should.
@@ -452,6 +456,7 @@ function settings()
 
 	local FILE="${2:-${SETTINGS_FILE}}"
 	if j="$( jq -r "${FIELD}" "${FILE}" )" ; then
+		[[ -z ${j} && ${DO_NULL} == "false" ]] && j=""
 		echo "${j}"
 		return 0
 	fi

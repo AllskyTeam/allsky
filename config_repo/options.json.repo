@@ -1119,6 +1119,7 @@
 "default" : 0,
 "description" : "It can be an Allsky Website or a generic server.<br>It's connection details (server name, password, etc.) go in <a href='/documentation/settings/env.html'><i class='fa fa-external-link-alt fa-fw'></i> ${HOME}/.env</a>",
 "label" : "Use Remote Server 1 ?",
+"type" : "select",
 "options" : [
 	{"value" : 0, "label" : "No"},
 	{"value" : 1, "label" : "Allsky Website"},
@@ -1132,6 +1133,7 @@
 "default" : "ftps",
 "description" : "Protocol for remote server 1",
 "label" : "Protocol 1",
+"type" : "select",
 "options" : [
 	{"value" : "ftps", "label" : "ftps"},
 	{"value" : "ftp", "label" : "ftp"},
@@ -1141,6 +1143,17 @@
 	{"value" : "GCS", "label" : "GCS"}
 ],
 "display" : 1,
+"booldependson" : "useremote1",
+"advanced" : 0
+},
+{
+"name" : "imagedir1",
+"default" : "allsky",
+"description" : "Name of the top-level remote directory where images go.",
+"label" : "Image Directory 1",
+"type" : "text",
+"display" : 1,
+"optional" : 1,
 "booldependson" : "useremote1",
 "advanced" : 0
 },
@@ -1183,6 +1196,7 @@
 "default" : 0,
 "description" : "It can be an Allsky Website or a generic server.<br>It's connection details (server name, password, etc.) go in <a href='/documentation/settings/env.html'><i class='fa fa-external-link-alt fa-fw'></i> ${HOME}/.env</a>",
 "label" : "Use Remote Server 2 ?",
+"type" : "select",
 "options" : [
 	{"value" : 0, "label" : "No"},
 	{"value" : 1, "label" : "Allsky Website"},
@@ -1196,6 +1210,7 @@
 "default" : "ftps",
 "description" : "Protocol for remote server 2",
 "label" : "Protocol 2",
+"type" : "select",
 "options" : [
 	{"value" : "ftps", "label" : "ftps"},
 	{"value" : "ftp", "label" : "ftp"},
@@ -1205,6 +1220,17 @@
 	{"value" : "GCS", "label" : "GCS"}
 ],
 "display" : 1,
+"booldependson" : "useremote2",
+"advanced" : 0
+},
+{
+"name" : "imagedir2",
+"default" : "allsky",
+"description" : "Name of the top-level remote directory where images go.",
+"label" : "Image Directory 2",
+"type" : "text",
+"display" : 1,
+"optional" : 1,
 "booldependson" : "useremote2",
 "advanced" : 0
 },

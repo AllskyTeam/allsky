@@ -1117,36 +1117,31 @@
 {
 "name" : "useremote1",
 "default" : 0,
-"description" : "Enable to use a remote server.<br>It's connection details (server name, password, etc.) go in <a href='/documentation/settings/env.html'><i class='fa fa-external-link-alt fa-fw'></i> ${HOME}/.env</a>",
-"label" : "Use Remote Server 1",
-"type" : "boolean",
+"description" : "It can be an Allsky Website or a generic server.<br>It's connection details (server name, password, etc.) go in <a href='/documentation/settings/env.html'><i class='fa fa-external-link-alt fa-fw'></i> ${HOME}/.env</a>",
+"label" : "Use Remote Server 1 ?",
+"options" : [
+	{"value" : 0, "label" : "No"},
+	{"value" : 1, "label" : "Allsky Website"},
+	{"value" : 2, "label" : "Generic server"}
+],
 "display" : 1,
-"advanced" : 0
-},
-{
-"name" : "remotewebsite1",
-"default" : 1,
-"description" : "Is remote server 1 an Allsky Website?",
-"label" : "Remote Server 1 Website?",
-"type" : "boolean",
-"display" : 1,
-"booldependson" : "useremote1",
 "advanced" : 0
 },
 {
 "name" : "protocol1",
-"default" : "sftp",
+"default" : "ftps",
 "description" : "Protocol for remote server 1",
 "label" : "Protocol 1",
 "options" : [
-	{"value" : "sftp", "label" : "sftp"},
-	{"value" : "ftp", "label" : "ftp"},
 	{"value" : "ftps", "label" : "ftps"},
+	{"value" : "ftp", "label" : "ftp"},
+	{"value" : "sftp", "label" : "sftp"},
 	{"value" : "scp", "label" : "scp"},
 	{"value" : "S3", "label" : "S3"},
 	{"value" : "GCS", "label" : "GCS"}
 ],
 "display" : 1,
+"booldependson" : "useremote1",
 "advanced" : 0
 },
 {
@@ -1157,6 +1152,7 @@
 "type" : "text",
 "display" : 1,
 "optional" : 1,
+"booldependson" : "useremote1",
 "advanced" : 0
 },
 {
@@ -1167,6 +1163,7 @@
 "type" : "text",
 "display" : 1,
 "optional" : 1,
+"booldependson" : "useremote1",
 "advanced" : 0
 },
 {
@@ -1177,42 +1174,38 @@
 "type" : "text",
 "display" : 1,
 "optional" : 1,
+"booldependson" : "useremote1",
 "advanced" : 0
 },
 
 {
 "name" : "useremote2",
 "default" : 0,
-"description" : "Enable to use a second remote server.<br>It's connection details (server name, password, etc.) go in <a href='/documentation/settings/env.html'><i class='fa fa-external-link-alt fa-fw'></i> ${HOME}/.env</a>",
-"label" : "Use Remote Server 2",
-"type" : "boolean",
+"description" : "It can be an Allsky Website or a generic server.<br>It's connection details (server name, password, etc.) go in <a href='/documentation/settings/env.html'><i class='fa fa-external-link-alt fa-fw'></i> ${HOME}/.env</a>",
+"label" : "Use Remote Server 2 ?",
+"options" : [
+	{"value" : 0, "label" : "No"},
+	{"value" : 1, "label" : "Allsky Website"},
+	{"value" : 2, "label" : "Generic server"}
+],
 "display" : 1,
-"advanced" : 0
-},
-{
-"name" : "remotewebsite2",
-"default" : 0,
-"description" : "Is remote server 2 an Allsky Website?",
-"label" : "Remote Server 2 Website?",
-"type" : "boolean",
-"display" : 1,
-"booldependson" : "useremote2",
 "advanced" : 0
 },
 {
 "name" : "protocol2",
-"default" : "sftp",
+"default" : "ftps",
 "description" : "Protocol for remote server 2",
 "label" : "Protocol 2",
 "options" : [
-	{"value" : "sftp", "label" : "sftp"},
-	{"value" : "ftp", "label" : "ftp"},
 	{"value" : "ftps", "label" : "ftps"},
+	{"value" : "ftp", "label" : "ftp"},
+	{"value" : "sftp", "label" : "sftp"},
 	{"value" : "scp", "label" : "scp"},
 	{"value" : "S3", "label" : "S3"},
 	{"value" : "GCS", "label" : "GCS"}
 ],
 "display" : 1,
+"booldependson" : "useremote2",
 "advanced" : 0
 },
 {
@@ -1223,6 +1216,7 @@
 "type" : "text",
 "display" : 1,
 "optional" : 1,
+"booldependson" : "useremote2",
 "advanced" : 0
 },
 {
@@ -1233,6 +1227,7 @@
 "type" : "text",
 "display" : 1,
 "optional" : 1,
+"booldependson" : "useremote2",
 "advanced" : 0
 },
 {
@@ -1243,6 +1238,7 @@
 "type" : "text",
 "display" : 1,
 "optional" : 1,
+"booldependson" : "useremote2",
 "advanced" : 0
 },
 

@@ -12,8 +12,6 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STO
 
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh"			|| exit_installation ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit_installation ${ALLSKY_ERROR_STOP}
 
 TITLE="Allsky Website Installer"
 
@@ -402,6 +400,7 @@ set_configuration_file_variables() {
 		ON_PI="false"
 	else
 		WEB_CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		#shellcheck disable=SC2153
 		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
 		ON_PI="true"
 	fi
@@ -477,6 +476,7 @@ create_website_configuration_file() {
 			if [[ ${DO_REMOTE_WEBSITE} == "true" ]]; then
 				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
 			else
+				#shellcheck disable=SC2153
 				MINI_TLAPSE_URL_VALUE="/${IMG_DIR}/mini-timelapse.mp4"
 			fi
 		fi

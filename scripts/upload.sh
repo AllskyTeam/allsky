@@ -21,7 +21,7 @@ usage_and_exit() {
 	echo "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] \\"
 	echo "               { --local | --num n } \\"
 	echo "               file_to_upload  directory  destination_file_name \\"
-	echo "               [file_type] [local_directory]"
+	echo "               [file_type]"
 	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 
 	echo
@@ -35,8 +35,6 @@ usage_and_exit() {
 	echo "   'directory' is the directory ON THE SERVER the file should be uploaded to."
 	echo "   'destination_file_name' is the name the file should be called ON THE SERVER."
 	echo "   'file_type' is an optional, temporary name to use when uploading the file."
-	echo "   'local_directory' is the name of an optional local directory the file should be"
-	echo "        copied to IN ADDITION TO being uploaded to a remote server."
 	echo
 	echo "For example: ${ME}  keogram-20230710.jpg  /keograms  keogram.jpg"
 

@@ -440,8 +440,12 @@ function get_variable() {
 
 #####
 # Simple way to get a setting that hides the details.
+# Most of the time the caller doesn't distinguish between a return of "" and "null",
+# so unless --null is passed, return "" instead of "null".
 function settings()
 {
+	local DO_NULL="false"
+	[[ ${1} == "--null" ]] && DO_NULL="true" && shift
 	local M="${ME:-settings}"
 	local FIELD="${1}"
 	# Arrays can't begin with period but everything else should.
@@ -452,6 +456,7 @@ function settings()
 
 	local FILE="${2:-${SETTINGS_FILE}}"
 	if j="$( jq -r "${FIELD}" "${FILE}" )" ; then
+		[[ -z ${j} && ${DO_NULL} == "false" ]] && j=""
 		echo "${j}"
 		return 0
 	fi
@@ -797,4 +802,52 @@ function convert_json_to_tabs()
 		-e 's/"[\t :]*[ "]/\t/' \
 		-e 's/",$//' -e 's/"$//' -e 's/,$//' \
 			"${JSON_FILE}"
+}
+
+
+####
+# Upload to the appropriate places.
+function upload_all()
+{
+	local ARGS=""
+	while [[ ${1:0:2} == "--" ]]
+	do
+		ARGS="${ARGS} ${1}"
+		shift
+	done
+	local UPLOAD_FILE="${1}"
+	local SUBDIR="${2}"
+	local DESTINATION_NAME="${3}"
+	local FILE_TYPE="${4}"		# optional
+	local RET=0
+	local IMAGE_DIR REMOTE_DIR
+	if [[ "$( settings ".uselocalwebsite" )" -eq 1 ]]; then
+		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --local \
+			"${UPLOAD_FILE}" "${ALLSKY_WEBSITE}/${SUBDIR}" "${DESTINATION_NAME}"
+		((RET+=$?))
+	fi
+	if [[ "$( settings ".useremote1" )" -ne "${REMOTE_TYPE_NO}" ]]; then
+		IMAGE_DIR="$( settings ".imagedir1" )"
+		if [[ -z ${IMAGE_DIR} ]]; then
+			REMOTE_DIR="${SUBDIR}"
+		else
+			REMOTE_DIR="${IMAGE_DIR}/${SUBDIR}"
+		fi
+		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --num 1 \
+			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
+		((RET+=$?))
+	fi
+	if [[ "$( settings ".useremote1" )" -ne "${REMOTE_TYPE_NO}" ]]; then
+		IMAGE_DIR="$( settings ".imagedir1" )"
+		if [[ -z ${IMAGE_DIR} ]]; then
+			REMOTE_DIR="${SUBDIR}"
+		else
+			REMOTE_DIR="${IMAGE_DIR}/${SUBDIR}"
+		fi
+		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --num 2 \
+			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
+		((RET+=$?))
+	fi
+
+	return "${RET}"
 }

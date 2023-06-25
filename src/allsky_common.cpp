@@ -1972,6 +1972,13 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (
 			strcmp(a, "xx_end_xx") == 0 ||
 			strcmp(a, "lastchanged") == 0 ||
+			strcmp(a, "uselocalwebsite") == 0 ||
+			strncmp(a, "useremote", sizeof("useremote")-1) == 0 ||
+			strncmp(a, "protocol", sizeof("protocol")-1) == 0 ||
+			strncmp(a, "imagedir", sizeof("imagedir")-1) == 0 ||
+			strncmp(a, "videodestinationname", sizeof("videodestinationname")-1) == 0 ||
+			strncmp(a, "keogramdestinationname", sizeof("keogramdeodestinationname")-1) == 0 ||
+			strncmp(a, "startrailsdestinationname", sizeof("startrailsdeodestinationname")-1) == 0 ||
 			strcmp(a, "displaysettings") == 0 ||
 			strcmp(a, "showonmap") == 0 ||
 			strcmp(a, "websiteurl") == 0 ||

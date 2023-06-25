@@ -415,7 +415,7 @@ check_for_older_config_file() {
 	OLD="false"
 	NEW_CONFIG_VERSION="$( settings .ConfigVersion "${REPO_WEBCONFIG_FILE}" )"
 	PRIOR_CONFIG_VERSION="$( settings .ConfigVersion "${FILE}" )"
-	if [[ -z ${PRIOR_CONFIG_VERSION} || ${PRIOR_CONFIG_VERSION} == "null" ]]; then
+	if [[ -z ${PRIOR_CONFIG_VERSION} ]]; then
 		PRIOR_CONFIG_VERSION="** Unknown **"
 		OLD="true"
 	else
@@ -646,7 +646,7 @@ do_remote_website() {
 		OK="false"
 	fi
 	WEBURL="$( settings ".websiteurl" )"
-	if [[ -z ${WEBURL} || ${WEBURL} == "null" ]]; then
+	if [[ -z ${WEBURL} ]]; then
 		MSG="The 'Website URL' setting must be defined in the WebUI\n"
 		MSG="${MSG}in order to do a remote Website installation.\n"
 		MSG="${MSG}Please set it then re-run this installation."
@@ -1079,3 +1079,4 @@ fi
 
 echo
 exit_installation 0
+

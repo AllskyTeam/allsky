@@ -8,7 +8,7 @@ ME2="$(basename "${BASH_SOURCE[0]}")"
 # Subtract dark frame if there is one defined in config.sh
 # This has to come after executing darkCapture.sh which sets ${AS_TEMPERATURE_C}.
 
-if [[ $(settings ".useDarkFrames") -eq 1 ]]; then
+if [[ $(settings ".usedarkframes") -eq 1 ]]; then
 	# Make sure the input file exists; if not, something major is wrong so exit.
 	if [[ -z ${CURRENT_IMAGE} ]]; then
 		echo "*** ${ME2}: ERROR: 'CURRENT_IMAGE' not set; aborting."

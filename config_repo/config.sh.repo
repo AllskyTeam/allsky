@@ -189,7 +189,7 @@ FULL_FILENAME="$(settings ".filename")"
 EXTENSION="${FULL_FILENAME##*.}"
 FILENAME="${FULL_FILENAME%.*}"
  
-CAMERA_MODEL="$(settings '.cameraModel')"
+CAMERA_MODEL="$(settings '.cameramodel')"
 
 # So scripts can conditionally output messages.
 ALLSKY_DEBUG_LEVEL="$(settings '.debuglevel')"

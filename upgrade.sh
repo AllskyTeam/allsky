@@ -97,9 +97,6 @@ while [ $# -gt 0 ]; do
 		--no-check)
 			FORCE_CHECK="false"
 			;;
-		--force-check)
-			FORCE_CHECK="true"
-			;;
 		*)
 			display_msg error "Unknown argument: '${ARG}'."
 			OK="false"
@@ -128,7 +125,6 @@ if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
 
 	else
 		# See if there's a newer version of this script; if so, download it and execute it.
-		BRANCH="$(getBranch)" || exit 2
 		NEWER_SCRIPT="/tmp/${ME}"
 		checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${ME}" "${NEWER_SCRIPT}"
 		RET=$?
@@ -140,7 +136,7 @@ if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
 	fi
 fi
 
-# TODO: these are here to keep shellcheck quiet.
+# TODO: these are here to keep shellcheck quiet while this script is incomplete.
 DEBUG="${DEBUG}"
 DEBUG_ARG="${DEBUG_ARG}"
 FUNCTION="${FUNCTION}"
@@ -148,8 +144,6 @@ WORD="${WORD}"
 
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
 
 if [[ ${ACTION} == "upgrade" ]]; then
@@ -212,13 +206,12 @@ elif [[ ${ACTION} == "restore" ]]; then
 	#	mv ${ALLSKY_HOME}-OLD $ALLSKY_HOME
 	#	move images from ${ALLSKY_HOME}-new_tmp to $ALLSKY_HOME
 	#	move darks from ${ALLSKY_HOME}-new_tmp to $ALLSKY_HOME
-	#	copy scripts/endOfNight_additionalSteps.sh from ${ALLSKY_HOME}-new_tmp to $ALLSKY_HOME
 
 	# Prompt the user if they want to:
 	#	restore their old "images" folder (if there's anything in it)
 	#	restore their old "darks" folder (if there's anything in it)
 	#	restore their old configuration settings
-	#		(config.sh, ftp-settings.sh, scripts/endOfNight_additionalSteps.sh)
+	#		(config.sh, scripts/endOfNight_additionalSteps.sh)
 	#	upgrade their WebUI (if installed)
 	#	upgrade their Website (if installed)
 

@@ -106,11 +106,6 @@ usage_and_exit()
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ $# -eq 0 ]] && usage_and_exit 1
 
-if [[ ${TYPE} == "UPLOAD" ]]; then
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit ${ALLSKY_ERROR_STOP}
-fi
-
 DATE="${1}"
 OUTPUT_DIR="${ALLSKY_IMAGES}/${DATE}"
 if [[ ! -d ${OUTPUT_DIR} ]]; then
@@ -154,17 +149,17 @@ else
 		DIRECTORY="${3}"
 		DESTINATION_NAME="${4}"
 		OVERRIDE_DESTINATION_NAME="${5}"	# optional
-		WEB_DIRECTORY="${6}"				# optional
 		if [[ -f ${UPLOAD_FILE} ]]; then
 			# If the user specified a different name for the destination file, use it.
 			if [[ ${OVERRIDE_DESTINATION_NAME} != "" ]]; then
 				DESTINATION_NAME="${OVERRIDE_DESTINATION_NAME}"
 			fi
 			[[ ${SILENT} == "false" ]] && echo "===== Uploading '${UPLOAD_FILE}'"
+			
 			# shellcheck disable=SC2086
-			"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} \
+			upload_all ${UPLOAD_SILENT} ${DEBUG_ARG} \
 				"${UPLOAD_FILE}" "${DIRECTORY}" "${DESTINATION_NAME}" \
-				"${FILE_TYPE}" "${WEB_DIRECTORY}"
+				"${FILE_TYPE}"
 			return $?
 		else
 			echo -en "${YELLOW}"
@@ -206,8 +201,8 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
 	else
-		upload "Keogram" "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" \
-			 "${KEOGRAM_DESTINATION_NAME}" "${WEB_KEOGRAM_DIR}"
+		upload "Keogram" "${UPLOAD_FILE}" "keograms" "${KEOGRAM_FILE}" \
+			 "${KEOGRAM_DESTINATION_NAME}"
 	fi
 	[[ $? -ne 0 ]] && ((EXIT_CODE++))
 fi
@@ -226,8 +221,8 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
 	else
-		upload "Startrails" "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" \
-			"${STARTRAILS_DESTINATION_NAME}" "${WEB_STARTRAILS_DIR}"
+		upload "Startrails" "${UPLOAD_FILE}" "startrails" "${STARTRAILS_FILE}" \
+			"${STARTRAILS_DESTINATION_NAME}"
 	fi
 	[[ $? -ne 0 ]] && ((EXIT_CODE++))
 fi
@@ -277,18 +272,13 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 		if [[ ${THUMBNAIL_ONLY} == "true" ]]; then
 			RET=0
 		else
-			upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" \
-				"${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
+			upload "Timelapse" "${UPLOAD_FILE}" "videos" "${VIDEOS_FILE}" \
+				"${VIDEOS_DESTINATION_NAME}"
 			RET=$?
 		fi
 		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -f ${UPLOAD_THUMBNAIL} ]]; then
-			if [[ -n ${WEB_VIDEOS_DIR} ]]; then
-				W="${WEB_VIDEOS_DIR}/thumbnails"
-			else
-				W=""
-			fi
-			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" \
-				"${UPLOAD_THUMBNAIL_NAME}" "" "${W}"
+			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "videos/thumbnails" \
+				"${UPLOAD_THUMBNAIL_NAME}" ""
 		fi
 	fi
 	[[ ${RET} -ne 0 ]] && ((EXIT_CODE++))

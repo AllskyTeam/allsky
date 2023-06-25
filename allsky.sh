@@ -38,7 +38,7 @@ reboot_needed && NEEDS_REBOOT="true"
 
 # Make sure the settings have been configured after an installation or upgrade.
 LAST_CHANGED="$( settings ".lastchanged" )"
-if [[ ${LAST_CHANGED} == "" || ${LAST_CHANGED} == "null" ]]; then
+if [[ ${LAST_CHANGED} == "" ]]; then
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI."
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
 		echo "*** ===== The Pi also needs to be rebooted."
@@ -238,7 +238,7 @@ echo "-debuglevel=${ALLSKY_DEBUG_LEVEL}" >> "${ARGS_FILE}"
 
 # If the locale isn't in the settings file, try to determine it.
 LOCALE="$(settings .locale)"
-if [[ -z ${LOCALE} || ${LOCALE} == "null" ]]; then
+if [[ -z ${LOCALE} ]]; then
 	if [[ -n ${LC_ALL} ]]; then
 		echo "-Locale=${LC_ALL}" >> "${ARGS_FILE}"
 	elif [[ -n ${LANG} ]]; then

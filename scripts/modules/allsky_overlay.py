@@ -285,7 +285,7 @@ class ALLSKYOVERLAY:
             else:
                 s.log(0, 'ERROR: Data File {} is not accessible - IGNORING.'.format(dataFilename))
                 result = False
-        else:
+        elif fileExtension == '.txt':
             if s.isFileReadable(dataFilename):
                 with open(dataFilename) as file:
                     for line in file:
@@ -651,7 +651,10 @@ class ALLSKYOVERLAY:
     def _draw_rotated_text(self, image, angle, xy, text, fill, font, opacity, strokeWidth, strokeFill):
 
         fill = self._convertRGBtoBGR(fill, opacity)
-        strokeFill = self._convertRGBtoBGR(strokeFill,1)
+        if strokeFill != "":
+            strokeFill = self._convertRGBtoBGR(strokeFill,1)
+        else:
+            strokeFill = None
 
         im_txt = Image.new('RGBA', image.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(im_txt)

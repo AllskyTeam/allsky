@@ -818,7 +818,8 @@ function convert_json_to_tabs()
 
 
 ####
-# Upload to the appropriate places.
+# Upload to the appropriate Websites and/or servers.
+# Everything is put inside the root which is IMAGE_DIR.
 function upload_all()
 {
 	local ARGS=""
@@ -851,8 +852,8 @@ function upload_all()
 			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
 		((RET+=$?))
 	fi
-	if [[ "$( settings ".useremote1" )" -ne "${REMOTE_TYPE_NO}" ]]; then
-		IMAGE_DIR="$( settings ".imagedir1" )"
+	if [[ "$( settings ".useremote2" )" -ne "${REMOTE_TYPE_NO}" ]]; then
+		IMAGE_DIR="$( settings ".imagedir2" )"
 		if [[ -z ${IMAGE_DIR} ]]; then
 			REMOTE_DIR="${SUBDIR}"
 		else

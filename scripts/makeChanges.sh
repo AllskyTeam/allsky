@@ -15,8 +15,6 @@ source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit ${ALLSKY_ERROR_STOP}
 if [[ -f ${SETTINGS_FILE} ]]; then
 	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 	source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
 fi
 
 function usage_and_exit()
@@ -516,20 +514,26 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --remote "${WEBSITE_CONFIG[@]}"
 
 		FILE_TO_UPLOAD="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-		TO="${IMAGE_DIR}"
-		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "${wDEBUG}Uploading '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}' to ${TO:-root}${wNC}"
-		fi
 
-		"${ALLSKY_SCRIPTS}/upload.sh" --silent \
-			"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" \
-			"${TO}" \
-			"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
-			"RemoteWebsite"
-		R=$?
-		if [[ ${R} -ne 0 ]]; then
-			echo -e "${RED}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}'.${NC}"
-		fi
+		for NUM in 1 2
+		do
+			if [[ "$( settings ".useremote${NUM}" )" -ne "${REMOTE_TYPE_ALLSKY_WEBSITE}" ]]; then
+				# Only update the Website config file to remote Allsky Websites.
+				continue
+			fi
+			IMAGE_DIR="$( settings ".imagedir${NUM}" )"
+			if [[ ${DEBUG} == "true" ]]; then
+				echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to server ${NUM}.${wNC}"
+			fi
+
+			if ! "${ALLSKY_SCRIPTS}/upload.sh" --silent --num "${NUM}" \
+					"${FILE_TO_UPLOAD}" \
+					"${IMAGE_DIR}" \
+					"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
+					"RemoteWebsite" ; then
+				echo -e "${RED}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}' to Website ${NUM}.${NC}"
+			fi
+		done
 	fi
 fi
 

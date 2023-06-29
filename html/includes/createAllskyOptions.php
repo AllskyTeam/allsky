@@ -318,7 +318,6 @@ if ($repo_array === null) {
 	// display			[0/1]
 	// checkchanges		[0/1]
 	// optional			[0/1]
-	// generic			[0/1]
 	// advanced 		[0/1]	(last, so no comma after it)
 
 
@@ -396,7 +395,6 @@ foreach ($repo_array as $repo) {
 		add_non_null_field($repo, "display", $name);
 		add_non_null_field($repo, "checkchanges", $name);
 		add_non_null_field($repo, "optional", $name);
-		add_non_null_field($repo, "generic", $name);
 		add_non_null_field($repo, "advanced", $name);
 	$options_str .= "},\n";
 }

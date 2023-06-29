@@ -250,7 +250,7 @@ $settings_file = "";
 $force = false;		// force creation of settings file even if it already exists?
 
 foreach ($options as $opt => $val) {
-	if ($debug > 1 || $opt === "debug") echo "   Argument $opt $val\n";
+	if ($debug > 1 || $opt === "debug" || $opt === "debug2") echo "   Argument $opt $val\n";
 
 	if ($opt === "debug")
 		$debug++;
@@ -377,9 +377,9 @@ foreach ($repo_array as $repo) {
 
 	// Have to handle camera type and model differently because the defaults
 	// might not be what we want.
-	if ($name === "cameraType")
+	if ($name === "cameratype")
 			$repo["default"] = $cameraType;
-	elseif ($name === "cameraModel")
+	elseif ($name === "cameramodel")
 			$repo["default"] = $cameraModel;
 	elseif ($name === "camera")
 			$repo["default"] = "$cameraType $cameraModel";

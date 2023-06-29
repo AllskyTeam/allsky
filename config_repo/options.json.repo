@@ -32,7 +32,6 @@
 "label" : "Auto-Exposure",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
@@ -105,7 +104,6 @@
 "label" : "Delay",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
 "booldependson" : "takedaytimeimages",
 "advanced" : 0
 },
@@ -116,7 +114,6 @@
 "label" : "Auto-Gain",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
@@ -154,7 +151,6 @@
 	"bin_values"
 ],
 "display" : 1,
-"generic" : 1,
 "booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
@@ -165,7 +161,6 @@
 "label" : "Auto White Balance",
 "type" : "boolean",
 "display" : "_display",
-"generic" : 1,
 "booldependson" : "takedaytimeimages",
 "advanced" : 0
 },
@@ -202,7 +197,6 @@
 "label" : "Frames To Skip",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
 "booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
@@ -213,7 +207,6 @@
 "label" : "Cooling",
 "type" : "boolean",
 "display" : "_display",
-"generic" : 1,
 "booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
@@ -226,7 +219,6 @@
 "label" : "Target Temp.",
 "type" : "integer",
 "display" : "_display",
-"generic" : 1,
 "booldependson" : "takedaytimeimages AND dayenablecooler",
 "advanced" : 1
 },
@@ -257,7 +249,6 @@
 "label" : "Auto-Exposure",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -326,7 +317,6 @@
 "label" : "Delay",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -336,7 +326,6 @@
 "label" : "Auto-Gain",
 "type" : "boolean",
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -372,7 +361,6 @@
 	"bin_values"
 ],
 "display" : 1,
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -382,7 +370,6 @@
 "label" : "Auto White Balance",
 "type" : "boolean",
 "display" : "_display",
-"generic" : 1,
 "advanced" : 0
 },
 {
@@ -418,7 +405,6 @@
 "label" : "Frames To Skip",
 "type" : "integer",
 "display" : 1,
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -428,7 +414,6 @@
 "label" : "Cooling",
 "type" : "boolean",
 "display" : "_display",
-"generic" : 1,
 "advanced" : 1
 },
 {
@@ -440,7 +425,6 @@
 "label" : "Target Temp.",
 "type" : "integer",
 "display" : "_display",
-"generic" : 1,
 "booldependson" : "nightenablecooler",
 "advanced" : 1
 },

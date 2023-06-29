@@ -956,14 +956,14 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	if (CG.isCooledCamera) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "EnableCooler");
-		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "EnableCooler");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "enablecooler");
 		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.supportsTemperature) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
-		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showTemp");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showtemp");
 		fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showTemp ? 1 : 0);
 		fprintf(f, "\t\t},\n");
 	}
@@ -994,13 +994,13 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showUSB");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showUSB");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showusb");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showUSB ? 1 : 0);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "experimentalExposure");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalExposure");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalexposure");
 	fprintf(f, "\t\t\t\"DefaultValue\" : \"%d\"\n", CG.HB.useExperimentalExposure ? 1 : 0);
 	fprintf(f, "\t\t},\n");
 
@@ -1024,7 +1024,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "CameraNumber");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "cameraNumber");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "cameranumber");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.cameraNumber);
 	fprintf(f, "\t\t},\n");
 #endif
@@ -1032,14 +1032,19 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 #ifdef IS_RPi
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ExtraArguments");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraArgs");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraargs");
 	fprintf(f, "\t\t},\n");
+
+		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "TuningFile");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "tuningfile");
+		fprintf(f, "\t\t\t\"DefaultValue\" : \"\"\n");
+		fprintf(f, "\t\t},\n");
 
 	if (CG.ct == ctRPi && CG.isLibcamera) {
 		fprintf(f, "\t\t{\n");
-		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "TuningFile");
-		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "TuningFile");
-		fprintf(f, "\t\t\t\"DefaultValue\" : \"\"\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "Rotation");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "rotation");
 		fprintf(f, "\t\t},\n");
 	}
 #endif

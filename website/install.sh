@@ -18,7 +18,7 @@ TITLE="Allsky Website Installer"
 # display_msg() will send "log" entries to this file.
 # DISPLAY_MSG_LOG is used in display_msg()
 # shellcheck disable=SC2034
-DISPLAY_MSG_LOG="${ALLSKY_TMP}/Website_install.log"
+DISPLAY_MSG_LOG="${ALLSKY_CONFIG}/Website_install.log"
 
 
 ####################### functions

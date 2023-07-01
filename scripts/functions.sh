@@ -823,9 +823,14 @@ function convert_json_to_tabs()
 function upload_all()
 {
 	local ARGS=""
+	local REMOTE_ONLY="false"
 	while [[ ${1:0:2} == "--" ]]
 	do
-		ARGS="${ARGS} ${1}"
+		if [[ ${1} == "--remote_only" ]]; then
+			REMOTE_ONLY="true"
+		else
+			ARGS="${ARGS} ${1}"
+		fi
 		shift
 	done
 	local UPLOAD_FILE="${1}"
@@ -834,11 +839,15 @@ function upload_all()
 	local FILE_TYPE="${4}"		# optional
 	local RET=0
 	local IMAGE_DIR REMOTE_DIR
-	if [[ "$( settings ".uselocalwebsite" )" -eq 1 ]]; then
-		#shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --local \
-			"${UPLOAD_FILE}" "${ALLSKY_WEBSITE}/${SUBDIR}" "${DESTINATION_NAME}"
-		((RET+=$?))
+	if [[ ${REMOTE_ONLY} == "false" ]]; then
+		# We don't want to copy some files, like image.jpg, to the local website since it
+		# can see the ${ALLSKY_TMP} file.
+		if [[ "$( settings ".uselocalwebsite" )" -eq 1 ]]; then
+			#shellcheck disable=SC2086
+			"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --local \
+				"${UPLOAD_FILE}" "${ALLSKY_WEBSITE}/${SUBDIR}" "${DESTINATION_NAME}"
+			((RET+=$?))
+		fi
 	fi
 	if [[ "$( settings ".useremote1" )" -ne "${REMOTE_TYPE_NO}" ]]; then
 		IMAGE_DIR="$( settings ".imagedir1" )"

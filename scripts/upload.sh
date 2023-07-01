@@ -120,6 +120,11 @@ fi
 LOG="${ALLSKY_TMP}/upload_errors.txt"
 
 if [[ ${LOCAL} == "true" ]]; then
+	if [[ -z ${REMOTE_DIR} ]]; then
+		REMOTE_DIR="${ALLSKY_WEBSITE}"
+	elif [[ ${REMOTE_DIR:0:1} != "/" ]]; then
+		REMOTE_DIR="${ALLSKY_WEBSITE}/${REMOTE_DIR}"
+	fi
 	# No need to set the lock for local copies - they are fast.
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_DIR}/${DESTINATION_NAME}"
@@ -154,9 +159,9 @@ else
 	PROTOCOL="$( settings ".protocol${REMOTE_NUM}" )"
 
 	# SIGTERM is sent by systemctl to stop Allsky.
-	# SIGHUP is sent to have the capture program reload their arguments.
-	# Ignore them so we don't leave a temporary or partially uploaded file if the service is stopped
-	# in the middle of an upload.
+	# SIGHUP is sent to have the capture program reload its arguments.
+	# Ignore them so we don't leave a temporary or partially uploaded file if the service
+	# is stopped in the middle of an upload.
 	trap "" SIGTERM
 	trap "" SIGHUP
 
@@ -165,9 +170,12 @@ else
 		S3_BUCKET="$( get_variable "S3_BUCKET${REMOTE_NUM}" "${ENV_FILE}" )"
 		S3_ACL="$( get_variable "S3_ACL${REMOTE_NUM}" "${ENV_FILE}" )"
 		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-			echo "${ME}: Uploading ${FILE_TO_UPLOAD} to aws ${S3_BUCKET}${REMOTE_DIR}/${DESTINATION_NAME}"
+			MSG="${ME}: Uploading ${FILE_TO_UPLOAD} to"
+			MSG="${MSG} aws ${S3_BUCKET}${REMOTE_DIR}/${DESTINATION_NAME}"
+			echo "${MSG}"
 		fi
-		OUTPUT="$("${AWS_CLI_DIR}/aws" s3 cp "${FILE_TO_UPLOAD}" "s3://${S3_BUCKET}${REMOTE_DIR}/${DESTINATION_NAME}" --acl "${S3_ACL}" 2>&1)"
+		OUTPUT="$( "${AWS_CLI_DIR}/aws" s3 cp "${FILE_TO_UPLOAD}" \
+			"s3://${S3_BUCKET}${REMOTE_DIR}/${DESTINATION_NAME}" --acl "${S3_ACL}" 2>&1 )"
 		RET=$?
 
 
@@ -178,11 +186,14 @@ else
 		SSH_KEY_FILE="$( get_variable "SSH_KEY_FILE${REMOTE_NUM}" "${ENV_FILE}" )"
 		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 			# shellcheck disable=SC2153
-			echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
+			MSG="${ME}: Copying ${FILE_TO_UPLOAD} to"
+			MSG="${MSG} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
+			echo "${MSG}"
 		fi
 		[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-P ${REMOTE_PORT}"
 		# shellcheck disable=SC2086
-		OUTPUT="$(scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}" 2>&1)"
+		OUTPUT="$( scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" \
+			"${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}" 2>&1 )"
 		RET=$?
 
 
@@ -206,7 +217,9 @@ else
 		[[ -n ${REMOTE_DIR} && ${REMOTE_DIR: -1:1} != "/" ]] && REMOTE_DIR="${REMOTE_DIR}/"
 
 		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-			echo "${ME}: FTP '${FILE_TO_UPLOAD}' to '${REMOTE_DIR}${DESTINATION_NAME}', TEMP_NAME=${TEMP_NAME}"
+			MSG="${ME}: FTP '${FILE_TO_UPLOAD}' to"
+			MSG="${MSG} '${REMOTE_DIR}${DESTINATION_NAME}', TEMP_NAME=${TEMP_NAME}"
+			echo "${MSG}"
 		fi
 		# LFTP_CMDS needs to be unique per file type so we don't overwrite a different upload type.
 		DIR="${ALLSKY_TMP}/lftp_cmds"

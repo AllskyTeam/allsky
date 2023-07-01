@@ -3,9 +3,9 @@
 function DisplayAllskyConfig(){
 	global $formReadonly;
 
-	$cameraTypeName = "cameraType";		// json setting name
-	$cameraModelName = "cameraModel";	// json setting name
-	$cameraNumberName = "cameraNumber";	// json setting name
+	$cameraTypeName = "cameratype";		// json setting name
+	$cameraModelName = "cameramodel";	// json setting name
+	$cameraNumberName = "cameranumber";	// json setting name
 	$debugLevelName = "debuglevel";		// json setting name
 	$debugArg = "";
 
@@ -33,7 +33,7 @@ function DisplayAllskyConfig(){
 			$settings = array();
 			$optional_array = array();
 			$changes = "";
-			$somethingChanged = false;
+			$otherChanges = "";
 
 			$refreshingCameraType = false;
 			$newCameraType = "";
@@ -57,8 +57,8 @@ function DisplayAllskyConfig(){
 				// Because we are passing the changes enclosed in single quotes below,
 				// we need to escape the single quotes, but I never figured out how to do that,
 				// so convert them to HTML codes instead.
-				$isOLD = substr($key, 0, 4) === "OLD_";
-				if ($isOLD) {
+				if (substr($key, 0, 4) === "OLD_") {
+					$thisChanged = false;
 					$key = substr($key, 4);		// everything after "OLD_"
 					$oldValue = str_replace("'", "&#x27", $value);
 					$newValue = getVariableOrDefault($settings, $key, "");
@@ -77,7 +77,8 @@ function DisplayAllskyConfig(){
 						} elseif ($key === $cameraNumberName) {
 							$newCameraNumber = $newValue;
 						} else {
-							$somethingChanged = true;	// want to know about OTHER changes
+							// want to know changes other than camera
+							$thisChanged = true;
 						}
 
 						$checkchanges = false;
@@ -91,8 +92,16 @@ function DisplayAllskyConfig(){
 								break;
 							}
 						}
+
 						if ($checkchanges)
 							$changes .= "  '$key' '$label' '$oldValue' '$newValue'";
+
+						if ($thisChanged) {
+							if ($otherChanges === "")
+								$otherChanges = "[$label]";
+							else
+								$otherChanges .= ", $label";
+						}
 					}
 
 				} else {
@@ -142,10 +151,11 @@ function DisplayAllskyConfig(){
 
 			$msg = "";
 			if ($ok) {
-				if ($somethingChanged || $lastChanged === "") {
+				if ($otherChanges !== "" || $lastChanged === "") {
 					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
 						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
+						$msg .= "<br>You also changed: $otherChanges.";
 						$status->addMessage($msg, 'danger', false);
 						$ok = false;
 					} else {

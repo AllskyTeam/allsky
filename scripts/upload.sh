@@ -84,8 +84,8 @@ while [[ $# -gt 0 ]]; do
 done
 [[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit ${RET}
 [[ ${HELP} == "true" ]] && usage_and_exit 0
-[[ ${LOCAL} == "false" && -z ${REMOTE_NUM} ]] && useage_and_exit 1
-[[ ${LOCAL} == "true" && -n ${REMOTE_NUM} ]] && useage_and_exit 1
+[[ ${LOCAL} == "false" && -z ${REMOTE_NUM} ]] && usage_and_exit 1
+[[ ${LOCAL} == "true" && -n ${REMOTE_NUM} ]] && usage_and_exit 1
 
 FILE_TO_UPLOAD="${1}"
 if [[ ! -f ${FILE_TO_UPLOAD} ]]; then

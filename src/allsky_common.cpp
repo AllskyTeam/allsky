@@ -1977,8 +1977,8 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 			strncmp(a, "protocol", sizeof("protocol")-1) == 0 ||
 			strncmp(a, "imagedir", sizeof("imagedir")-1) == 0 ||
 			strncmp(a, "videodestinationname", sizeof("videodestinationname")-1) == 0 ||
-			strncmp(a, "keogramdestinationname", sizeof("keogramdeodestinationname")-1) == 0 ||
-			strncmp(a, "startrailsdestinationname", sizeof("startrailsdeodestinationname")-1) == 0 ||
+			strncmp(a, "keogramdestinationname", sizeof("keogramdestinationname")-1) == 0 ||
+			strncmp(a, "startrailsdestinationname", sizeof("startrailsdestinationname")-1) == 0 ||
 			strcmp(a, "displaysettings") == 0 ||
 			strcmp(a, "showonmap") == 0 ||
 			strcmp(a, "websiteurl") == 0 ||

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Script to save a DAY or NIGHT image.
+# It goes in ${ALLSKY_TMP} where the WebUI and local Allsky Website can find it.
 
 ME="$(basename "${BASH_ARGV0}")"
 
@@ -399,11 +400,6 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 	fi
 fi
 
-if [[ ${IMG_UPLOAD} == "true" || (${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true") ]]; then
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
-fi
-
 # If upload is true, optionally create a smaller version of the image; either way, upload it
 RET=0
 if [[ ${IMG_UPLOAD} == "true" ]]; then
@@ -433,8 +429,6 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 		fi
 	fi
 
-	# We no longer use the "permanent" image name; instead, use the one the user specified
-	# in the config file (${FULL_FILENAME}).
 	if [[ ${RESIZE_UPLOADS} == "true" ]]; then
 		# Need a copy of the image since we are going to resize it.
 		# Put the copy in ${WORKING_DIR}.
@@ -456,18 +450,19 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 		DESTINATION_NAME="${FULL_FILENAME}"
 	fi
 
-	"${ALLSKY_SCRIPTS}/upload.sh" "${FILE_TO_UPLOAD}" "${IMAGE_DIR}" "${DESTINATION_NAME}" "SaveImage" "${WEB_IMAGE_DIR}"
+	# Goes in root of Website so second arg is "".
+	upload_all --remote_only "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
 	RET=$?
 
 	[[ ${RESIZE_UPLOADS} == "true" ]] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
 fi
 
-# If needed, upload the mini timelapse.  If upload.sh failed above, it will likely fail below.
+# If needed, upload the mini timelapse.  If the upload failed above, it will likely fail below.
 if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${RET} -eq 0 ]] ; then
 	MINI="mini-timelapse.mp4"
 	FILE_TO_UPLOAD="${ALLSKY_TMP}/${MINI}"
 
-	"${ALLSKY_SCRIPTS}/upload.sh" "${FILE_TO_UPLOAD}" "${IMAGE_DIR}" "${MINI}" "MiniTimelapse" "${WEB_IMAGE_DIR}"
+	upload_all --remote_only "${FILE_TO_UPLOAD}" "" "${MINI}" "MiniTimelapse"
 	RET=$?
 	if [[ ${RET} -eq 0 && ${TIMELAPSE_MINI_UPLOAD_THUMBNAIL} == "true" ]]; then
 		UPLOAD_THUMBNAIL_NAME="mini-timelapse.jpg"
@@ -479,17 +474,11 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${R
 			echo "${ME}Mini timelapse thumbnail not created!"
 		else
 			# Use --silent because we just displayed message(s) above for this image.
-			if [[ -n ${WEB_VIDEOS_DIR} ]]; then
-				x="${WEB_VIDEOS_DIR}/thumbnails"
-			else
-				x=""
-			fi
-			"${ALLSKY_SCRIPTS}/upload.sh" --silent \
+			upload_all --remote_only --silent 
 				"${UPLOAD_THUMBNAIL}" \
-				"${IMAGE_DIR}" \
+				"" \
 				"${UPLOAD_THUMBNAIL_NAME}" \
-				"MiniThumbnail" \
-				"${x}"
+				"MiniThumbnail"
 		fi
 	fi
 fi

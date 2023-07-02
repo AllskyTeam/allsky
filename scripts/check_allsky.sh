@@ -75,7 +75,7 @@ source "${ALLSKY_CONFIG}/config.sh"	 					|| exit ${ALLSKY_ERROR_STOP}
 
 PROTOCOL="$( settings ".protocol1" )"
 
-BRANCH="$( get_branch )"
+BRANCH="$( get_branch "" )"
 [[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 [[ ${DEBUG} == "true" ]] && echo "DEBUG: using '${BRANCH}' branch."
 
@@ -150,6 +150,9 @@ function heading()
 	fi
 }
 
+
+# =================================================== FUNCTIONS
+
 # Determine if the specified value is a number.
 function is_number()
 {
@@ -178,12 +181,11 @@ function min()
 	fi
 }
 
+# Indent all lines.
 function indent()
 {
 	echo -e "${1}" | sed 's/^/\t/'
 }
-
-# =================================================== CHECKING FUNCTIONS
 
 # The various upload protocols need different variables defined.
 # For the specified protocol, make sure the specified variable is defined.
@@ -192,14 +194,97 @@ function check_PROTOCOL()
 	local P="${1}"	# Protocol
 	local N="${2}"	# Protocol number
 	local V="${3}"	# Variable
-	if [[ -z ${!V} ]]; then
+	local VALUE="$( get_variable "${V}${NUM}" "${ENV_FILE}" )"
+	if [[ -z ${VALUE} ]]; then
 		heading "Warnings"
-		echo "PROTOCOL ${N} (${P}) set but not '${V}'."
-		echo "Uploads will not work."
+		echo "PROTOCOL${N} (${P}) set but not '${V}${N}'."
+		echo "Uploads will not work until this is fixed."
 		return 1
 	fi
 	return 0
 }
+
+# Check variables are correct for a remote server.
+function check_remote_server()
+{
+	local NUM="${1}"
+
+	local USE="$( settings ".useremote${NUM}" )"
+	if [[ ${USE} -eq "${REMOTE_TYPE_NO}" ]]; then
+		if check_for_env_file ; then
+			# Variables should not be set to anything.
+			x="$( grep -E -v "^#|^$" "${ENV_FILE}" | grep "${NUM}=" | grep -E -v "${NUM}=\"\"|${NUM}=$" )"
+			if [[ -n "${x}" ]]; then
+				heading "Warnings"
+				echo "Remote Server ${NUM} not being used but settings for it exist in '${ENV_FILE}:"
+				indent "${x}" | sed "s/${NUM}=.*/${NUM}/"
+			fi
+		fi
+		return
+	fi
+
+	PROTOCOL="$( settings ".protocol${NUM}" )"
+	case "${PROTOCOL}" in
+		"")
+			heading "ERROR"
+			echo "Remote server ${NUM} is being used but has no PROTOCOL${NUM}."
+			echo "Uploads to it will not work."
+			;;
+
+		ftp | ftps | sftp)
+			check_for_env_file || return 1
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_HOST"
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_USER"
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_PASSWORD"
+			if [[ ${PROTOCOL} == "ftp" ]]; then
+				heading "Warnings"
+				echo "PROTOCOL${NUM} set to insecure 'ftp'.  Try to use 'ftps' or 'sftp' instead."
+			fi
+			;;
+
+		scp)
+			check_for_env_file || return 1
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_HOST"
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_USER"
+			if check_PROTOCOL "${PROTOCOL}" "${NUM}" "SSH_KEY_FILE" && [[ ! -e ${SSH_KEY_FILE} ]]; then
+				heading "Warnings"
+				echo "PROTOCOL ${NUM} (${PROTOCOL}) set but 'SSH_KEY_FILE${NUM}' (${SSH_KEY_FILE}) does not exist."
+				echo "Uploads will not work."
+			fi
+			;;
+
+		s3)
+			check_for_env_file || return 1
+			if check_PROTOCOL "${PROTOCOL}" "${NUM}" "AWS_CLI_DIR" && [[ ! -e ${AWS_CLI_DIR} ]]; then
+				heading "Warnings"
+				echo "PROTOCOL ${NUM} (${PROTOCOL}) set but 'AWS_CLI_DIR${NUM}' (${AWS_CLI_DIR}) does not exist."
+				echo "Uploads will not work."
+			fi
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "S3_BUCKET"
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "S3_ACL"
+			;;
+
+		gcs)
+			check_for_env_file || return 1
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "GCS_BUCKET"
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "GCS_ACL"
+			;;
+
+		*)
+			heading "Warnings"
+			echo "PROTOCOL ${NUM} (${PROTOCOL}) not blank or one of: ftp, ftps, sftp, scp, s3, gcs."
+			echo "Uploads will not work until this is corrected."
+			;;
+	esac
+
+	REMOTE_PORT="$( get_variable "REMOTE_PORT${NUM}" "${ENV_FILE}" )"
+	if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
+		heading "Warnings"
+		echo "REMOTE_PORT${NUM} (${REMOTE_PORT}) must be a number."
+		echo "Uploads will not work until this is corrected."
+	fi
+}
+
 
 # Check that when a variable holds a location, the location exists.
 function check_exists() {
@@ -213,7 +298,20 @@ function check_exists() {
 	fi
 }
 
+# Make sure the env file exists.
+function check_for_env_file()
+{
+	[[ -s ${ENV_FILE} ]] && return 0
 
+	heading "Errors"
+	if [[ ! -f ${ENV_FILE} ]]; then
+		echo "'${ENV_FILE}' not found!"
+	else
+		echo "'${ENV_FILE}' is empty!"
+	fi
+	echo "Unable to check any remote server settings."
+	return 1
+}
 
 DAYDELAY_MS=$(settings .daydelay) || echo "Problem getting .daydelay"
 NIGHTDELAY_MS=$(settings .nightdelay) || echo "Problem getting .nightdelay"
@@ -269,6 +367,7 @@ LONGITUDE="$(settings .longitude)" || echo "Problem getting .longitude" >&2
 LOCALE="$(settings .locale)" || echo "Problem getting .locale" >&2
 USING_DARKS="$(settings .usedarkframes)" || echo "Problem getting .useDarkFrames" >&2
 WEBSITES="$(whatWebsites)"
+
 
 # ======================================================================
 # ================= Check for informational items.
@@ -356,9 +455,11 @@ check_delay
 
 ##### Check if timelapse size is "too big" and will likely cause an error.
 # This is normally only an issue with the libx264 video codec which has a dimension limit
-# that we put in PIXEL_LIMIT
+# that we put in PIXEL_LIMIT.
 if [[ ${VCODEC} == "libx264" ]]; then
 	PIXEL_LIMIT=$((4096 * 2304))
+# TODO: This PIXEL_LIMIT might only apply to Buster. Bullseye (I believe) has a larger limit.
+
 	function check_timelapse_size()
 	{
 		local TYPE="${1}"			# type of video
@@ -465,7 +566,7 @@ fi
 
 	# On a Pi 4, creating a 50 image timelapse takes
 	#	- a few seconds on a small ZWO camera
-	#	- about a minute with an RPi HQ
+	#	- about a minute with an RPi HQ camera
 
 	if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		S=3
@@ -512,7 +613,6 @@ elif [[ ${BRIGHTNESS_THRESHOLD} == "1.0" ]]; then
 fi
 
 ##### Images
-
 if [[ ${TAKE} -eq 0 && ${SAVE} -eq 1 ]]; then
 	heading "Warnings"
 	echo "'Daytime Capture' is off but 'Daytime Save' is on in the WebUI."
@@ -530,116 +630,8 @@ if [[ ${RESIZE_UPLOADS} == "true" && ${IMG_UPLOAD} == "false" ]]; then
 	echo "RESIZE_UPLOADS is 'true' but you aren't uploading images (IMG_UPLOAD='false')."
 fi
 
-function check_for_env_file()
-{
-	[[ -s ${ENV_FILE} ]] && return 0
-
-	heading "Errors"
-	if [[ ! -f ${ENV_FILE} ]]; then
-		echo "'${ENV_FILE}' not found!"
-	else
-		echo "'${ENV_FILE}' is empty!"
-	fi
-	echo "Unable to check any remote server settings."
-	return 1
-}
-
-function do_remote_server()
-{
-	local NUM="${1}"
-
-	local USE="$( settings ".useremote${NUM}" )"
-	if [[ ${USE} -eq "${REMOTE_TYPE_NO}" ]]; then
-		if check_for_env_file ]]; then
-			# Variables should not be set to anything.
-			x="$( grep -E -v "^#|^$" "${ENV_FILE}" | grep "${NUM}=" | grep -E -v "${NUM}=\"\"|${NUM}=$" )"
-			if [[ -n "${x}" ]]; then
-				heading "Warnings"
-				echo "Remote Server ${NUM} not being used but settings for it exist in '${ENV_FILE}:"
-				indent "${x}" | sed "s/${NUM}=.*/${NUM}/"
-			fi
-		fi
-		return
-	fi
-
-	PROTOCOL="$( settings ".protocol${NUM}" )"
-	case "${PROTOCOL}" in
-		"")
-			heading "ERROR"
-			echo "Remote server ${NUM} is being used but has no PROTOCOL${NUM}."
-			echo "Uploads to it will not work."
-			;;
-
-		ftp | ftps | sftp)
-			check_for_env_file || return 1
-			export "REMOTE_HOST${NUM}"="$( get_variable "REMOTE_HOST${NUM}" "${ENV_FILE}" )"
-			export "REMOTE_USER${NUM}"="$( get_variable "REMOTE_USER${NUM}" "${ENV_FILE}" )"
-			export "REMOTE_PASSWORD${NUM}"="$( get_variable "REMOTE_PASSWORD${NUM}" "${ENV_FILE}" )"
-
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_HOST${NUM}"
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_USER${NUM}"
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_PASSWORD${NUM}"
-			if [[ ${PROTOCOL} == "ftp" ]]; then
-				heading "Warnings"
-				echo "PROTOCOL set to insecure 'ftp'.  Try to use 'ftps' or 'sftp' instead."
-			fi
-			;;
-
-		scp)
-			check_for_env_file || return 1
-			export "REMOTE_HOST${NUM}"="$( get_variable "REMOTE_HOST${NUM}" "${ENV_FILE}" )"
-			export "REMOTE_USER${NUM}"="$( get_variable "REMOTE_USER${NUM}" "${ENV_FILE}" )"
-
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_HOST${NUM}"
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_USER${NUM}"
-			if check_PROTOCOL "${PROTOCOL}" "${NUM}" "SSH_KEY_FILE${NUM}" && [[ ! -e ${SSH_KEY_FILE} ]]; then
-				heading "Warnings"
-				echo "PROTOCOL (${PROTOCOL}) set but 'SSH_KEY_FILE${NUM}' (${SSH_KEY_FILE}) does not exist."
-				echo "Uploads will not work."
-			fi
-			;;
-
-		s3)
-			check_for_env_file || return 1
-			export "AWS_CLI_DIR${NUM}"="$( get_variable "AWS_CLI_DIR${NUM}" "${ENV_FILE}" )"
-			export "S3_BUCKET${NUM}"="$( get_variable "S3_BUCKET${NUM}" "${ENV_FILE}" )"
-			export "S3_ACL${NUM}"="$( get_variable "S3_ACL${NUM}" "${ENV_FILE}" )"
-
-			if check_PROTOCOL "${PROTOCOL}" "${NUM}" "AWS_CLI_DIR${NUM}" && [[ ! -e ${AWS_CLI_DIR} ]]; then
-				heading "Warnings"
-				echo "PROTOCOL "${NUM}" (${PROTOCOL}) set but 'AWS_CLI_DIR${NUM}' (${AWS_CLI_DIR}) does not exist."
-				echo "Uploads will not work."
-			fi
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "S3_BUCKET${NUM}"
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "S3_ACL${NUM}"
-			;;
-
-		gcs)
-			check_for_env_file || return 1
-			export "GCS_BUCKET${NUM}"="$( get_variable "GCS_BUCKET${NUM}" "${ENV_FILE}" )"
-			export "GCS_ACL${NUM}"="$( get_variable "GCS_ACL${NUM}" "${ENV_FILE}" )"
-
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "GCS_BUCKET${NUM}"
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "GCS_ACL${NUM}"
-			;;
-
-		*)
-			heading "Warnings"
-			echo "PROTOCOL "${NUM}" (${PROTOCOL}) not blank or one of: ftp, ftps, sftp, scp, s3, gcs."
-			echo "Uploads will not work until this is corrected."
-			;;
-	esac
-
-	REMOTE_PORT="$( get_variable "REMOTE_PORT${NUM}" "${ENV_FILE}" )"
-	if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
-		heading "Warnings"
-		echo "REMOTE_PORT${NUM} (${REMOTE_PORT}) must be a number."
-		echo "Uploads will not work until this is corrected."
-	fi
-}
-
-do_remote_server 1
-do_remote_server 2
+check_remote_server 1
+check_remote_server 2
 
 
 ##### If these variables are set, their corresponding directory should exist.

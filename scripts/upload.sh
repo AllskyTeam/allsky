@@ -253,6 +253,9 @@ else # sftp/ftp/ftps
 
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 
+	REMOTE_USER="$( get_variable "REMOTE_USER${REMOTE_NUM}" "${ENV_FILE}" )"
+	REMOTE_HOST="$( get_variable "REMOTE_HOST${REMOTE_NUM}" "${ENV_FILE}" )"
+	REMOTE_PORT="$( get_variable "REMOTE_PORT${REMOTE_NUM}" "${ENV_FILE}" )"
 	# The export LFTP_PASSWORD has to be OUTSIDE the ( ) below.
 	REMOTE_PASSWORD="$( get_variable "REMOTE_PASSWORD${REMOTE_NUM}" "${ENV_FILE}" )"
 	if [[ ${DEBUG} == "true" ]]; then
@@ -275,13 +278,10 @@ else # sftp/ftp/ftps
 		echo set net:max-retries 2
 		echo set net:timeout 10
 
-		RU="$( get_variable "REMOTE_USER${REMOTE_NUM}" "${ENV_FILE}" )"
-		RH="$( get_variable "REMOTE_HOST${REMOTE_NUM}" "${ENV_FILE}" )"
-		RP="$( get_variable "REMOTE_PORT${REMOTE_NUM}" "${ENV_FILE}" )"
-		[[ -n ${RP} ]] && RP="-p ${RP}"
+		[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
 
 		# shellcheck disable=SC2153,SC2086
-		echo "open --user '${RU}' ${PW} ${RP} '${PROTOCOL}://${RH}'"
+		echo "open --user '${REMOTE_USER}' ${PW} ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
 
 		# lftp doesn't actually try to open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.
@@ -349,7 +349,7 @@ else # sftp/ftp/ftps
 		if [[ ${RET} -eq ${ALLSKY_ERROR_STOP} ]]; then
 			# shellcheck disable=SC2153
 			OUTPUT="$(
-				echo "${HEADER} unable to log in to '${RH}', user ${RU}'."
+				echo "${HEADER} unable to log in to '${REMOTE_HOST}', user ${REMOTE_USER}'."
 				echo -e "${OUTPUT}"
 			)"
 		else
@@ -357,7 +357,7 @@ else # sftp/ftp/ftps
 				echo "${HEADER} RET=${RET}:"
 				echo "FILE_TO_UPLOAD='${FILE_TO_UPLOAD}'"
 				# shellcheck disable=SC2153
-				echo "REMOTE_HOST='${RH}'"
+				echo "REMOTE_HOST='${REMOTE_HOST}'"
 				echo "DIRECTORY='${DIRECTORY}'"
 				echo "TEMP_NAME='${TEMP_NAME}'"
 				echo "DESTINATION_NAME='${DESTINATION_NAME}'"

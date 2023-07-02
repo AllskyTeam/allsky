@@ -72,18 +72,17 @@ done
 
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh"	 					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh" 				|| exit ${ALLSKY_ERROR_STOP}
-PROTOCOL="${PROTOCOL,,}"	# set to lowercase to make comparing easier
 
-BRANCH="$( get_branch "" )"
+PROTOCOL="$( settings ".protocol1" )"
+
+BRANCH="$( get_branch )"
 [[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 [[ ${DEBUG} == "true" ]] && echo "DEBUG: using '${BRANCH}' branch."
 
 # Unless forced to, only do the version check if we're on the main branch,
 # not on development branches, because when we're updating this script we
 # don't want to have the updates overwritten from an older version on GitHub.
-if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
+if [[ ${FORCE_CHECK} == "true" ]]; then
 	CURRENT_SCRIPT="${ALLSKY_SCRIPTS}/${ME}"
 	if [[ -n ${NEWER} ]]; then
 		# This is a newer version
@@ -168,7 +167,8 @@ function is_number()
 }
 
 # Return the min of two numbers.
-function min() {
+function min()
+{
 	local ONE="${1}"
 	local TWO="${2}"
 	if [[ ${ONE} -lt ${TWO} ]]; then
@@ -178,17 +178,23 @@ function min() {
 	fi
 }
 
+function indent()
+{
+	echo -e "${1}" | sed 's/^/\t/'
+}
+
 # =================================================== CHECKING FUNCTIONS
 
 # The various upload protocols need different variables defined.
 # For the specified protocol, make sure the specified variable is defined.
 function check_PROTOCOL()
 {
-	P="${1}"	# Protocol
-	V="${2}"	# Variable
+	local P="${1}"	# Protocol
+	local N="${2}"	# Protocol number
+	local V="${3}"	# Variable
 	if [[ -z ${!V} ]]; then
 		heading "Warnings"
-		echo "PROTOCOL (${P}) set but not '${V}'."
+		echo "PROTOCOL ${N} (${P}) set but not '${V}'."
 		echo "Uploads will not work."
 		return 1
 	fi
@@ -524,62 +530,119 @@ if [[ ${RESIZE_UPLOADS} == "true" && ${IMG_UPLOAD} == "false" ]]; then
 	echo "RESIZE_UPLOADS is 'true' but you aren't uploading images (IMG_UPLOAD='false')."
 fi
 
-case "${PROTOCOL}" in
-	"" | local)		# Nothing needed for these
-		;;
+function check_for_env_file()
+{
+	[[ -s ${ENV_FILE} ]] && return 0
 
-	ftp | ftps | sftp)
-		check_PROTOCOL "${PROTOCOL}" "REMOTE_HOST"
-		check_PROTOCOL "${PROTOCOL}" "REMOTE_USER"
-		check_PROTOCOL "${PROTOCOL}" "REMOTE_PASSWORD"
-		if [[ ${PROTOCOL} == "ftp" ]]; then
-			heading "Warnings"
-			echo "PROTOCOL set to insecure 'ftp'.  Try to use 'ftps' or 'sftp' instead."
+	heading "Errors"
+	if [[ ! -f ${ENV_FILE} ]]; then
+		echo "'${ENV_FILE}' not found!"
+	else
+		echo "'${ENV_FILE}' is empty!"
+	fi
+	echo "Unable to check any remote server settings."
+	return 1
+}
+
+function do_remote_server()
+{
+	local NUM="${1}"
+
+	local USE="$( settings ".useremote${NUM}" )"
+	if [[ ${USE} -eq "${REMOTE_TYPE_NO}" ]]; then
+		if check_for_env_file ]]; then
+			# Variables should not be set to anything.
+			x="$( grep -E -v "^#|^$" "${ENV_FILE}" | grep "${NUM}=" | grep -E -v "${NUM}=\"\"|${NUM}=$" )"
+			if [[ -n "${x}" ]]; then
+				heading "Warnings"
+				echo "Remote Server ${NUM} not being used but settings for it exist in '${ENV_FILE}:"
+				indent "${x}" | sed "s/${NUM}=.*/${NUM}/"
+			fi
 		fi
-		;;
+		return
+	fi
 
-	scp)
-		check_PROTOCOL "${PROTOCOL}" "REMOTE_HOST"
-		if check_PROTOCOL "${PROTOCOL}" "SSH_KEY_FILE" && [[ ! -e ${SSH_KEY_FILE} ]]; then
+	PROTOCOL="$( settings ".protocol${NUM}" )"
+	case "${PROTOCOL}" in
+		"")
+			heading "ERROR"
+			echo "Remote server ${NUM} is being used but has no PROTOCOL${NUM}."
+			echo "Uploads to it will not work."
+			;;
+
+		ftp | ftps | sftp)
+			check_for_env_file || return 1
+			export "REMOTE_HOST${NUM}"="$( get_variable "REMOTE_HOST${NUM}" "${ENV_FILE}" )"
+			export "REMOTE_USER${NUM}"="$( get_variable "REMOTE_USER${NUM}" "${ENV_FILE}" )"
+			export "REMOTE_PASSWORD${NUM}"="$( get_variable "REMOTE_PASSWORD${NUM}" "${ENV_FILE}" )"
+
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_HOST${NUM}"
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_USER${NUM}"
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_PASSWORD${NUM}"
+			if [[ ${PROTOCOL} == "ftp" ]]; then
+				heading "Warnings"
+				echo "PROTOCOL set to insecure 'ftp'.  Try to use 'ftps' or 'sftp' instead."
+			fi
+			;;
+
+		scp)
+			check_for_env_file || return 1
+			export "REMOTE_HOST${NUM}"="$( get_variable "REMOTE_HOST${NUM}" "${ENV_FILE}" )"
+			export "REMOTE_USER${NUM}"="$( get_variable "REMOTE_USER${NUM}" "${ENV_FILE}" )"
+
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_HOST${NUM}"
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_USER${NUM}"
+			if check_PROTOCOL "${PROTOCOL}" "${NUM}" "SSH_KEY_FILE${NUM}" && [[ ! -e ${SSH_KEY_FILE} ]]; then
+				heading "Warnings"
+				echo "PROTOCOL (${PROTOCOL}) set but 'SSH_KEY_FILE${NUM}' (${SSH_KEY_FILE}) does not exist."
+				echo "Uploads will not work."
+			fi
+			;;
+
+		s3)
+			check_for_env_file || return 1
+			export "AWS_CLI_DIR${NUM}"="$( get_variable "AWS_CLI_DIR${NUM}" "${ENV_FILE}" )"
+			export "S3_BUCKET${NUM}"="$( get_variable "S3_BUCKET${NUM}" "${ENV_FILE}" )"
+			export "S3_ACL${NUM}"="$( get_variable "S3_ACL${NUM}" "${ENV_FILE}" )"
+
+			if check_PROTOCOL "${PROTOCOL}" "${NUM}" "AWS_CLI_DIR${NUM}" && [[ ! -e ${AWS_CLI_DIR} ]]; then
+				heading "Warnings"
+				echo "PROTOCOL "${NUM}" (${PROTOCOL}) set but 'AWS_CLI_DIR${NUM}' (${AWS_CLI_DIR}) does not exist."
+				echo "Uploads will not work."
+			fi
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "S3_BUCKET${NUM}"
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "S3_ACL${NUM}"
+			;;
+
+		gcs)
+			check_for_env_file || return 1
+			export "GCS_BUCKET${NUM}"="$( get_variable "GCS_BUCKET${NUM}" "${ENV_FILE}" )"
+			export "GCS_ACL${NUM}"="$( get_variable "GCS_ACL${NUM}" "${ENV_FILE}" )"
+
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "GCS_BUCKET${NUM}"
+			check_PROTOCOL "${PROTOCOL}" "${NUM}" "GCS_ACL${NUM}"
+			;;
+
+		*)
 			heading "Warnings"
-			echo "PROTOCOL (${PROTOCOL}) set but 'SSH_KEY_FILE' (${SSH_KEY_FILE}) does not exist."
-			echo "Uploads will not work."
-		fi
-		;;
+			echo "PROTOCOL "${NUM}" (${PROTOCOL}) not blank or one of: ftp, ftps, sftp, scp, s3, gcs."
+			echo "Uploads will not work until this is corrected."
+			;;
+	esac
 
-	s3)
-		if check_PROTOCOL "${PROTOCOL}" "AWS_CLI_DIR" && [[ ! -e ${AWS_CLI_DIR} ]]; then
-			heading "Warnings"
-			echo "PROTOCOL (${PROTOCOL}) set but 'AWS_CLI_DIR' (${AWS_CLI_DIR}) does not exist."
-			echo "Uploads will not work."
-		fi
-		check_PROTOCOL "${PROTOCOL}" "S3_BUCKET"
-		check_PROTOCOL "${PROTOCOL}" "S3_ACL"
-		;;
-
-	gcs)
-		check_PROTOCOL "${PROTOCOL}" "GCS_BUCKET"
-		check_PROTOCOL "${PROTOCOL}" "GCS_ACL"
-		;;
-
-	*)
+	REMOTE_PORT="$( get_variable "REMOTE_PORT${NUM}" "${ENV_FILE}" )"
+	if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
 		heading "Warnings"
-		echo "PROTOCOL (${PROTOCOL}) not blank or one of: local, ftp, ftps, sftp, scp, s3, gcs."
+		echo "REMOTE_PORT${NUM} (${REMOTE_PORT}) must be a number."
 		echo "Uploads will not work until this is corrected."
-		;;
-esac
+	fi
+}
 
-if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
-	heading "Warnings"
-	echo "REMOTE_PORT (${REMOTE_PORT}) must be a number."
-	echo "Uploads will not work until this is corrected."
-fi
+do_remote_server 1
+do_remote_server 2
+
 
 ##### If these variables are set, their corresponding directory should exist.
-check_exists "WEB_IMAGE_DIR"
-check_exists "WEB_VIDEOS_DIR"
-check_exists "WEB_KEOGRAM_DIR"
-check_exists "WEB_STARTRAILS_DIR"
 check_exists "UHUBCTL_PATH"
 
 ##### Check for Allsky Website-related issues.

@@ -278,7 +278,14 @@ fi
 
 # timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
-[[ ${DEBUG} -ge 2 ]] && echo -e "${ME}: ${GREEN}Timelapse in ${OUTPUT_FILE}${NC}"
+if [[ ${DEBUG} -ge 2 ]]; then
+	if [[ ${IS_MINI} == "true" ]]; then
+		M="Mini t"
+	else
+		M="T"
+	fi
+	echo -e "${ME}: ${GREEN}${M}imelapse in ${OUTPUT_FILE}${NC}"
+fi
 
 [[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
 

@@ -1973,12 +1973,18 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 			strcmp(a, "xx_end_xx") == 0 ||
 			strcmp(a, "lastchanged") == 0 ||
 			strcmp(a, "uselocalwebsite") == 0 ||
-			strncmp(a, "useremote", sizeof("useremote")-1) == 0 ||
-			strncmp(a, "protocol", sizeof("protocol")-1) == 0 ||
-			strncmp(a, "imagedir", sizeof("imagedir")-1) == 0 ||
-			strncmp(a, "videodestinationname", sizeof("videodestinationname")-1) == 0 ||
-			strncmp(a, "keogramdestinationname", sizeof("keogramdestinationname")-1) == 0 ||
-			strncmp(a, "startrailsdestinationname", sizeof("startrailsdestinationname")-1) == 0 ||
+#define temp1 "useremote"
+			strncmp(a, temp1, sizeof(temp1)-1) == 0 ||
+#define temp2 "protocol"
+			strncmp(a, temp2, sizeof(temp2)-1) == 0 ||
+#define temp3 "imagedir"
+			strncmp(a, temp3, sizeof(temp3)-1) == 0 ||
+#define temp4 "videodestinationname"
+			strncmp(a, temp4, sizeof(temp4)-1) == 0 ||
+#define temp5 "keogramdeodestinationname"
+			strncmp(a, temp5, sizeof(temp5)-1) == 0 ||
+#define temp6 "startrailsdeodestinationname"
+			strncmp(a, temp6, sizeof(temp6)-1) == 0 ||
 			strcmp(a, "displaysettings") == 0 ||
 			strcmp(a, "showonmap") == 0 ||
 			strcmp(a, "websiteurl") == 0 ||

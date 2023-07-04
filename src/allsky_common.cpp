@@ -1179,19 +1179,19 @@ void displaySettings(config cg)
 	printf("   Quality: %ld\n", cg.userQuality);
 	printf("   Daytime capture: %s\n", yesNo(cg.daytimeCapture));
 
-	printf("   Exposure (day):   %s, Auto: %s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
+	printf("   Exposure (day):   %20s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
 		if (cg.dayAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.dayMaxAutoExposure_us, true));
 		printf("\n");
-	printf("   Exposure (night): %s, Auto: %s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
+	printf("   Exposure (night): %20s, Auto: %3s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
 		if (cg.nightAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.nightMaxAutoExposure_us, true));
 		printf("\n");
-	printf("   Gain (day):   %s, Auto: %s", LorF(cg.dayGain, "%ld", "%1.2f"), yesNo(cg.dayAutoGain));
+	printf("   Gain (day):   %8s, Auto: %3s", LorF(cg.dayGain, "%ld", "%1.2f"), yesNo(cg.dayAutoGain));
 		if (cg.dayAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.dayMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
-	printf("   Gain (night): %s, Auto: %s", LorF(cg.nightGain, "%ld", "%1.2f"), yesNo(cg.nightAutoGain));
+	printf("   Gain (night): %8s, Auto: %3s", LorF(cg.nightGain, "%ld", "%1.2f"), yesNo(cg.nightAutoGain));
 		if (cg.nightAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
@@ -1214,8 +1214,8 @@ void displaySettings(config cg)
 	printf("   Binning (day):   %ld\n", cg.dayBin);
 	printf("   Binning (night): %ld\n", cg.nightBin);
 	if (cg.isColorCamera) {
-		printf("   White Balance (day)   Red: %s, Blue: %s, Auto: %s\n", LorF(cg.dayWBR, "%ld", "%.2f"), LorF(cg.dayWBB, "%ld", "%.2f"), yesNo(cg.dayAutoAWB));
-		printf("   White Balance (night) Red: %s, Blue: %s, Auto: %s\n", LorF(cg.nightWBR, "%ld", "%.2f"), LorF(cg.nightWBB, "%ld", "%.2f"), yesNo(cg.nightAutoAWB));
+		printf("   White Balance (day)   Red: %s, Blue: %s, Auto: %3s\n", LorF(cg.dayWBR, "%ld", "%.2f"), LorF(cg.dayWBB, "%ld", "%.2f"), yesNo(cg.dayAutoAWB));
+		printf("   White Balance (night) Red: %s, Blue: %s, Auto: %3s\n", LorF(cg.nightWBR, "%ld", "%.2f"), LorF(cg.nightWBB, "%ld", "%.2f"), yesNo(cg.nightAutoAWB));
 	}
 	printf("   Delay (day):   %s\n", length_in_units(cg.dayDelay_ms * US_IN_MS, true));
 	printf("   Delay (night): %s\n", length_in_units(cg.nightDelay_ms * US_IN_MS, true));
@@ -1356,7 +1356,7 @@ void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 
 		if (lastExposure_us < cg.currentMaxAutoExposure_us)
 			s_us = cg.currentMaxAutoExposure_us - lastExposure_us;	// how much longer till max?
-		s_us += cg.currentDelay_ms * US_IN_MS;		// Add standard delay amount
+		s_us += (cg.currentDelay_ms * US_IN_MS);		// Add standard delay amount
 		Log(2, "  > Sleeping: %s\n", length_in_units(s_us, false));
 
 	} else {

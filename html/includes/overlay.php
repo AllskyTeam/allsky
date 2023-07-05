@@ -134,7 +134,7 @@ function DisplayOverlay($image_name)
                                 </div>
                             </nav>
                             <div class="oe-editor panel-body">
-                                <div id="overlay_container" style="background-color: black; margin-bottom: 15px; position: relative">
+                                <div id="overlay_container" style="background-color: black; position: relative">
                                     <div id="oe-editor-stage"></div>
                                 </div>
                             </div>

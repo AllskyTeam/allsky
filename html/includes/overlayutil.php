@@ -15,6 +15,9 @@ class OVERLAYUTIL
     private $jsonResponse = false;
     private $overlayPath;
     private $allskyTmp;
+    private $excludeVariables = array(
+        "RPi" => array("\${TEMPERATURE_C}", "\${TEMPERATURE_F}")
+    );
 
     public function __construct()
     {
@@ -173,6 +176,17 @@ class OVERLAYUTIL
         $this->sendResponse();
     }
 
+    private function includeField($camera, $field) {
+        $result = true;
+        if (isset($this->excludeVariables[$camera])) {
+            if (in_array($field, $this->excludeVariables[$camera])) {
+                $result = false;
+            }
+        }
+
+        return $result;
+    }
+
     public function getData()
     {
         $fileName = $this->overlayPath . '/config/fields.json';
@@ -185,32 +199,38 @@ class OVERLAYUTIL
 
         $counter = 1;
         $mergedFields = array();
+        $camera = getCameraType();
         foreach($systemData->data as $systemField) {
-            $field = array(
-                "id" => $counter,
-                "name" => $systemField->name,
-                "description" => $systemField->description,
-                "format" => $systemField->format,
-                "sample" => $systemField->sample,
-                "type" => $systemField->type,
-                "source" => $systemField->source
-            );
-            array_push($mergedFields, $field);
-            $counter++;
+            if ($this->includeField($camera, $systemField->name)) { 
+                $field = array(
+                    "id" => $counter,
+                    "name" => $systemField->name,
+                    "description" => $systemField->description,
+                    "format" => $systemField->format,
+                    "sample" => $systemField->sample,
+                    "type" => $systemField->type,
+                    "source" => $systemField->source
+                );
+                array_push($mergedFields, $field);
+                $counter++;
+            }
         }
 
         foreach($userData->data as $userField) {
-            $field = array(
-                "id" => $counter,
-                "name" => $userField->name,
-                "description" => $userField->description,
-                "format" => $userField->format,
-                "sample" => $userField->sample,
-                "type" => $userField->type,
-                "source" => $userField->source
-            );
-            array_push($mergedFields, $field);
-            $counter++;
+
+            if ($this->includeField($camera, $systemField->name)) {          
+                $field = array(
+                    "id" => $counter,
+                    "name" => $userField->name,
+                    "description" => $userField->description,
+                    "format" => $userField->format,
+                    "sample" => $userField->sample,
+                    "type" => $userField->type,
+                    "source" => $userField->source
+                );
+                array_push($mergedFields, $field);
+                $counter++;
+            }
         }
 
         $fields = array(

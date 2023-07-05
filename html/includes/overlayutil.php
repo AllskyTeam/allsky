@@ -15,14 +15,19 @@ class OVERLAYUTIL
     private $jsonResponse = false;
     private $overlayPath;
     private $allskyTmp;
+    private $settings = "";
     private $excludeVariables = array(
-        "RPi" => array("\${TEMPERATURE_C}", "\${TEMPERATURE_F}")
+        "RPi HQ" => array("\${TEMPERATURE_C}", "\${TEMPERATURE_F}")
     );
 
     public function __construct()
     {
         $this->overlayPath = ALLSKY_OVERLAY;
         $this->allskyTmp = ALLSKY_HOME . '/tmp';
+
+        $settingsFile =  getSettingsFile();
+        $settingsJson = file_get_contents($settingsFile, true);
+        $this->settings = json_decode($settingsJson, true);
     }
 
     public function run()
@@ -176,10 +181,13 @@ class OVERLAYUTIL
         $this->sendResponse();
     }
 
-    private function includeField($camera, $field) {
+    private function includeField($field) {
+        $camera = $this->settings["cameraType"];
+        $model = $this->settings["cameraModel"];
+        $cameraCheck = $camera . " " . $model;
         $result = true;
-        if (isset($this->excludeVariables[$camera])) {
-            if (in_array($field, $this->excludeVariables[$camera])) {
+        if (isset($this->excludeVariables[$cameraCheck])) {
+            if (in_array($field, $this->excludeVariables[$cameraCheck])) {
                 $result = false;
             }
         }
@@ -199,9 +207,9 @@ class OVERLAYUTIL
 
         $counter = 1;
         $mergedFields = array();
-        $camera = getCameraType();
+
         foreach($systemData->data as $systemField) {
-            if ($this->includeField($camera, $systemField->name)) { 
+            if ($this->includeField($systemField->name)) { 
                 $field = array(
                     "id" => $counter,
                     "name" => $systemField->name,
@@ -218,7 +226,7 @@ class OVERLAYUTIL
 
         foreach($userData->data as $userField) {
 
-            if ($this->includeField($camera, $systemField->name)) {          
+            if ($this->includeField($systemField->name)) {          
                 $field = array(
                     "id" => $counter,
                     "name" => $userField->name,

@@ -1560,9 +1560,9 @@ class OEUIMANAGER {
                     this.#createTextPropertyEditor();
                 }
                 let strokeColour = this.#selected.stroke;
-                if (this.#selected.strokewidth == 0) {
-                    strokeColour = null;
-                }
+                //if (this.#selected.strokewidth == 0) {
+                //    strokeColour = null;
+               // }
                 $('#textpropgrid').jqPropertyGrid('set', {
                     'label': this.#selected.label,
                     'format': this.#selected.format,

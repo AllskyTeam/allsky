@@ -128,14 +128,14 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 	{ "imx477", 0, "RPi HQ", 0, 3040, 4056, ASI_TRUE,
 		// Need ASI_IMG_END so we know where the end of the list is.
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE,
-		12, ASI_FALSE, ASI_FALSE
+		12, ASI_TRUE, ASI_FALSE
 	},
 
 	// There are many versions of the imx708 (_wide, _noir, _wide_noir, etc.)
 	// so just check for "imx708" (6 characters.
 	{ "imx708", 6, "RPi Module 3", 0, 2592, 4608, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.40, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE
+		10, ASI_TRUE, ASI_TRUE
 	},
 
 	{ "imx290", 0, "imx290 60.00 fps", 0, 1920, 1080, ASI_TRUE,
@@ -829,8 +829,11 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		}
 		fprintf(f, "\t\t{ \"value\" : %d, \"label\" : \"%dx%d\" }", b, b, b);
 	}
-	fprintf(f, "\t],\n");;
-
+	fprintf(f, "\t],\n");
+	
+	// RPi only supports sensor temp with libcamera.
+	if (CG.ct == ctZWO || CG.isLibcamera)
+		fprintf(f, "\t\"hasSensorTemperature\" : %s,\n", CG.supportsTemperature ? "true" : "false");
 	fprintf(f, "\t\"colorCamera\" : %s,\n", cameraInfo.IsColorCam ? "true" : "false");
 	if (cameraInfo.IsColorCam)
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
@@ -960,8 +963,8 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
 		fprintf(f, "\t\t},\n");
 	}
-	if (CG.supportsTemperature) {
-		fprintf(f, "\t\t{\n");
+	if (CG.supportsTemperature) {		
+		fprintf(f, "\t\t{\n");	// TODO This will go away when the legacy overlay is removed
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showTemp");
 		fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showTemp ? 1 : 0);

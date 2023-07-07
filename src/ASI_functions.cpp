@@ -962,6 +962,12 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	}
 	if (CG.supportsTemperature) {
 		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "supportsSensorTemperature");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "supportssensortemperature");
+		fprintf(f, "\t\t\t\"DefaultValue\" : 1\n");
+		fprintf(f, "\t\t},\n");
+		
+		fprintf(f, "\t\t{\n");	// TODO This will go away when the legacy overlay is removed
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showTemp");
 		fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showTemp ? 1 : 0);

@@ -15,11 +15,26 @@ class OVERLAYUTIL
     private $jsonResponse = false;
     private $overlayPath;
     private $allskyTmp;
+    private $cc = "";
+    private $excludeVariables = array(
+        "\${TEMPERATURE_C}" => array(
+            "ccfield" => "hasSensorTemperature",
+            "value" => false,
+        ),
+        "\${TEMPERATURE_F}" => array(
+            "ccfield" => "hasSensorTemperature",
+            "value" => false,
+        )            
+    );
 
     public function __construct()
     {
         $this->overlayPath = ALLSKY_OVERLAY;
         $this->allskyTmp = ALLSKY_HOME . '/tmp';
+
+        $ccFile = ALLSKY_CONFIG . "/cc.json";
+        $ccJson = file_get_contents($ccFile, true);
+        $this->cc = json_decode($ccJson, true);
     }
 
     public function run()
@@ -173,6 +188,19 @@ class OVERLAYUTIL
         $this->sendResponse();
     }
 
+    private function includeField($field) {
+        $result = true;
+        if (isset($this->excludeVariables[$field])) {
+            $modifier = $this->excludeVariables[$field];
+            if (isset($this->cc[$modifier["ccfield"]])) {
+                if ($this->cc[$modifier["ccfield"]] == $modifier["value"]) {
+                    $result = false;
+                }
+            }
+        }
+        return $result;
+    }
+
     public function getData()
     {
         $fileName = $this->overlayPath . '/config/fields.json';
@@ -185,32 +213,38 @@ class OVERLAYUTIL
 
         $counter = 1;
         $mergedFields = array();
+
         foreach($systemData->data as $systemField) {
-            $field = array(
-                "id" => $counter,
-                "name" => $systemField->name,
-                "description" => $systemField->description,
-                "format" => $systemField->format,
-                "sample" => $systemField->sample,
-                "type" => $systemField->type,
-                "source" => $systemField->source
-            );
-            array_push($mergedFields, $field);
-            $counter++;
+            if ($this->includeField($systemField->name)) { 
+                $field = array(
+                    "id" => $counter,
+                    "name" => $systemField->name,
+                    "description" => $systemField->description,
+                    "format" => $systemField->format,
+                    "sample" => $systemField->sample,
+                    "type" => $systemField->type,
+                    "source" => $systemField->source
+                );
+                array_push($mergedFields, $field);
+                $counter++;
+            }
         }
 
         foreach($userData->data as $userField) {
-            $field = array(
-                "id" => $counter,
-                "name" => $userField->name,
-                "description" => $userField->description,
-                "format" => $userField->format,
-                "sample" => $userField->sample,
-                "type" => $userField->type,
-                "source" => $userField->source
-            );
-            array_push($mergedFields, $field);
-            $counter++;
+
+            if ($this->includeField($systemField->name)) {          
+                $field = array(
+                    "id" => $counter,
+                    "name" => $userField->name,
+                    "description" => $userField->description,
+                    "format" => $userField->format,
+                    "sample" => $userField->sample,
+                    "type" => $userField->type,
+                    "source" => $userField->source
+                );
+                array_push($mergedFields, $field);
+                $counter++;
+            }
         }
 
         $fields = array(

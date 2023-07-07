@@ -60,6 +60,7 @@ class OEFIELD {
   }
 
   getJSON() {
+    this.saveFieldData = JSON.parse(JSON.stringify(this.fieldData));
     for (let defaultName in this.DEFAULTS) {
       let path = this.DEFAULTS[defaultName].path;
       let defaultPath = this.DEFAULTS[defaultName].defaultpath;
@@ -70,14 +71,14 @@ class OEFIELD {
         defaultValue = this.config.getValue(defaultPath, defaultClassValue);
       }
 
-      if (path in this.fieldData) {
-        if (this.fieldData[path] === defaultValue) {
-          delete this.fieldData[path];
+      if (path in this.saveFieldData) {
+        if (this.saveFieldData[path] === defaultValue) {
+          delete this.saveFieldData[path];
         }
       }
     }
     
-    return this.fieldData;
+    return this.saveFieldData;
   }
 
   rotatePoint(){

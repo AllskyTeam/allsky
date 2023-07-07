@@ -128,14 +128,14 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 	{ "imx477", 0, "RPi HQ", 0, 3040, 4056, ASI_TRUE,
 		// Need ASI_IMG_END so we know where the end of the list is.
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE,
-		12, ASI_TRUE, ASI_FALSE
+		12, ASI_FALSE, ASI_FALSE
 	},
 
 	// There are many versions of the imx708 (_wide, _noir, _wide_noir, etc.)
 	// so just check for "imx708" (6 characters.
 	{ "imx708", 6, "RPi Module 3", 0, 2592, 4608, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.40, ASI_FALSE,
-		10, ASI_TRUE, ASI_TRUE
+		10, ASI_FALSE, ASI_TRUE
 	},
 
 	{ "imx290", 0, "imx290 60.00 fps", 0, 1920, 1080, ASI_TRUE,

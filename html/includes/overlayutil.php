@@ -15,9 +15,16 @@ class OVERLAYUTIL
     private $jsonResponse = false;
     private $overlayPath;
     private $allskyTmp;
-    private $settings = "";
+    private $cc = "";
     private $excludeVariables = array(
-        "RPi HQ" => array("\${TEMPERATURE_C}", "\${TEMPERATURE_F}")
+        "\${TEMPERATURE_C}" => array(
+            "ccfield" => "hasSensorTemperature",
+            "value" => false,
+        ),
+        "\${TEMPERATURE_F}" => array(
+            "ccfield" => "hasSensorTemperature",
+            "value" => false,
+        )            
     );
 
     public function __construct()
@@ -25,9 +32,9 @@ class OVERLAYUTIL
         $this->overlayPath = ALLSKY_OVERLAY;
         $this->allskyTmp = ALLSKY_HOME . '/tmp';
 
-        $settingsFile =  getSettingsFile();
-        $settingsJson = file_get_contents($settingsFile, true);
-        $this->settings = json_decode($settingsJson, true);
+        $ccFile = ALLSKY_CONFIG . "/cc.json";
+        $ccJson = file_get_contents($ccFile, true);
+        $this->cc = json_decode($ccJson, true);
     }
 
     public function run()
@@ -182,16 +189,15 @@ class OVERLAYUTIL
     }
 
     private function includeField($field) {
-        $camera = $this->settings["cameraType"];
-        $model = $this->settings["cameraModel"];
-        $cameraCheck = $camera . " " . $model;
         $result = true;
-        if (isset($this->excludeVariables[$cameraCheck])) {
-            if (in_array($field, $this->excludeVariables[$cameraCheck])) {
-                $result = false;
+        if (isset($this->excludeVariables[$field])) {
+            $modifier = $this->excludeVariables[$field];
+            if (isset($this->cc[$modifier["ccfield"]])) {
+                if ($this->cc[$modifier["ccfield"]] == $modifier["value"]) {
+                    $result = false;
+                }
             }
         }
-
         return $result;
     }
 

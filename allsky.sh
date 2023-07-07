@@ -228,10 +228,6 @@ if [[ $USE_NOTIFICATION_IMAGES -eq 1 ]]; then
 fi
 
 : > "${ARGS_FILE}"
-if [[ ${CAMERA_TYPE} == "RPi" ]]; then
-	# This argument needs to come first since the capture code checks for it first.
-	echo "-cmd=${RPi_COMMAND_TO_USE}" >> "${ARGS_FILE}"
-fi
 
 # This argument should come second so the capture program knows if it should display debug output.
 echo "-debuglevel=${ALLSKY_DEBUG_LEVEL}" >> "${ARGS_FILE}"
@@ -280,8 +276,10 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
 
 # Run the main program - this is the main attraction...
+# -cmd needs to come first since the capture_RPi code checks for it first.  It's ignored
+# in capture_ZWO.
 # Pass debuglevel on command line so the capture program knows if it should display debug output.
-"${ALLSKY_BIN}/${CAPTURE}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
+"${ALLSKY_BIN}/${CAPTURE}" -cmd "${RPi_COMMAND_TO_USE}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
 RETCODE=$?
 
 [[ ${RETCODE} -eq ${EXIT_OK} ]] && doExit "${EXIT_OK}" ""

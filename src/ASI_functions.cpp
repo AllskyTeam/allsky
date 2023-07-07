@@ -829,8 +829,11 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		}
 		fprintf(f, "\t\t{ \"value\" : %d, \"label\" : \"%dx%d\" }", b, b, b);
 	}
-	fprintf(f, "\t],\n");;
-
+	fprintf(f, "\t],\n");
+	
+	// RPi only supports sensor temp with libcamera.
+	if (CG.ct == ctZWO || CG.isLibcamera)
+		fprintf(f, "\t\"hasSensorTemperature\" : %s,\n", CG.supportsTemperature ? "true" : "false");
 	fprintf(f, "\t\"colorCamera\" : %s,\n", cameraInfo.IsColorCam ? "true" : "false");
 	if (cameraInfo.IsColorCam)
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
@@ -960,16 +963,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
 		fprintf(f, "\t\t},\n");
 	}
-	if (CG.supportsTemperature) {
-		// RPi only supports sensor temp with libcamera.
-		if (CG.ct == ctZWO || CG.isLibcamera) {
-			fprintf(f, "\t\t{\n");
-			fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "supportsSensorTemperature");
-			fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "supportssensortemperature");
-			fprintf(f, "\t\t\t\"DefaultValue\" : 1\n");
-			fprintf(f, "\t\t},\n");
-		}
-		
+	if (CG.supportsTemperature) {		
 		fprintf(f, "\t\t{\n");	// TODO This will go away when the legacy overlay is removed
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showTemp");

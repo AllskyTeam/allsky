@@ -1179,19 +1179,19 @@ void displaySettings(config cg)
 	printf("   Quality: %ld\n", cg.userQuality);
 	printf("   Daytime capture: %s\n", yesNo(cg.daytimeCapture));
 
-	printf("   Exposure (day):   %s, Auto: %s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
+	printf("   Exposure (day):   %15s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
 		if (cg.dayAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.dayMaxAutoExposure_us, true));
 		printf("\n");
-	printf("   Exposure (night): %s, Auto: %s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
+	printf("   Exposure (night): %15s, Auto: %3s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
 		if (cg.nightAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.nightMaxAutoExposure_us, true));
 		printf("\n");
-	printf("   Gain (day):   %s, Auto: %s", LorF(cg.dayGain, "%ld", "%1.2f"), yesNo(cg.dayAutoGain));
+	printf("   Gain (day):   %5s, Auto: %3s", LorF(cg.dayGain, "%ld", "%1.2f"), yesNo(cg.dayAutoGain));
 		if (cg.dayAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.dayMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
-	printf("   Gain (night): %s, Auto: %s", LorF(cg.nightGain, "%ld", "%1.2f"), yesNo(cg.nightAutoGain));
+	printf("   Gain (night): %5s, Auto: %3s", LorF(cg.nightGain, "%ld", "%1.2f"), yesNo(cg.nightAutoGain));
 		if (cg.nightAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
@@ -1214,8 +1214,8 @@ void displaySettings(config cg)
 	printf("   Binning (day):   %ld\n", cg.dayBin);
 	printf("   Binning (night): %ld\n", cg.nightBin);
 	if (cg.isColorCamera) {
-		printf("   White Balance (day)   Red: %s, Blue: %s, Auto: %s\n", LorF(cg.dayWBR, "%ld", "%.2f"), LorF(cg.dayWBB, "%ld", "%.2f"), yesNo(cg.dayAutoAWB));
-		printf("   White Balance (night) Red: %s, Blue: %s, Auto: %s\n", LorF(cg.nightWBR, "%ld", "%.2f"), LorF(cg.nightWBB, "%ld", "%.2f"), yesNo(cg.nightAutoAWB));
+		printf("   White Balance (day)   Red: %s, Blue: %s, Auto: %3s\n", LorF(cg.dayWBR, "%ld", "%.2f"), LorF(cg.dayWBB, "%ld", "%.2f"), yesNo(cg.dayAutoAWB));
+		printf("   White Balance (night) Red: %s, Blue: %s, Auto: %3s\n", LorF(cg.nightWBR, "%ld", "%.2f"), LorF(cg.nightWBB, "%ld", "%.2f"), yesNo(cg.nightAutoAWB));
 	}
 	printf("   Delay (day):   %s\n", length_in_units(cg.dayDelay_ms * US_IN_MS, true));
 	printf("   Delay (night): %s\n", length_in_units(cg.nightDelay_ms * US_IN_MS, true));
@@ -1349,14 +1349,16 @@ void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 	}
 
 	long s_us = 0;
-	if (cg.consistentDelays && cg.currentAutoExposure && lastExposure_us < cg.currentMaxAutoExposure_us) {
-		// If using auto-exposure and the actual exposure is less than the max,
+	if (cg.consistentDelays) {
+		// consistentDelays keeps a constant frame rate during timelapse generation by
+		// always using starting the next exposure (delay + currentMaxAutoExposure_us)
+		// after the last exposure.
+		// So if the actual exposure is less than the max,
 		// we still wait until we reach maxexposure, then wait for the delay period.
-		// This is important for a constant frame rate during timelapse generation.
 
-		if (lastExposure_us < cg.currentMaxAutoExposure_us)
+		if (lastExposure_us < cg.currentMaxAutoExposure_us)		// TODO: if AE_ALLSKY:    && cg.currentAutoExposure)
 			s_us = cg.currentMaxAutoExposure_us - lastExposure_us;	// how much longer till max?
-		s_us += cg.currentDelay_ms * US_IN_MS;		// Add standard delay amount
+		s_us += (cg.currentDelay_ms * US_IN_MS);		// Add standard delay amount
 		Log(2, "  > Sleeping: %s\n", length_in_units(s_us, false));
 
 	} else {
@@ -1972,6 +1974,19 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (
 			strcmp(a, "xx_end_xx") == 0 ||
 			strcmp(a, "lastchanged") == 0 ||
+			strcmp(a, "uselocalwebsite") == 0 ||
+#define temp1 "useremote"
+			strncmp(a, temp1, sizeof(temp1)-1) == 0 ||
+#define temp2 "protocol"
+			strncmp(a, temp2, sizeof(temp2)-1) == 0 ||
+#define temp3 "imagedir"
+			strncmp(a, temp3, sizeof(temp3)-1) == 0 ||
+#define temp4 "videodestinationname"
+			strncmp(a, temp4, sizeof(temp4)-1) == 0 ||
+#define temp5 "keogramdeodestinationname"
+			strncmp(a, temp5, sizeof(temp5)-1) == 0 ||
+#define temp6 "startrailsdeodestinationname"
+			strncmp(a, temp6, sizeof(temp6)-1) == 0 ||
 			strcmp(a, "displaysettings") == 0 ||
 			strcmp(a, "showonmap") == 0 ||
 			strcmp(a, "websiteurl") == 0 ||

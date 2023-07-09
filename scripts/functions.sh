@@ -843,6 +843,12 @@ function upload_all()
 		fi
 		shift
 	done
+	if [[ ${LOCAL_WEB} == "false" && ${REMOTE_WEB} == "false" && ${REMOTE_SERVER} == "false" ]]; then
+		LOCAL_WEB="true"
+		REMOTE_WEB="true"
+		REMOTE_SERVER="true"
+	fi
+
 	local UPLOAD_FILE="${1}"
 	local SUBDIR="${2}"
 	local DESTINATION_NAME="${3}"

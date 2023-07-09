@@ -21,7 +21,7 @@ usage_and_exit()
 	retcode=${1}
 	echo
 	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] [--debug] [--settingsOnly] \\"
+	echo "Usage: ${ME} [--help] [--settingsOnly] \\"
 	echo "    [--local-web] [--remote-web] [--remote-server] [--allfiles]"
 	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
@@ -31,8 +31,6 @@ usage_and_exit()
 }
 
 HELP="false"
-DEBUG="false"
-DEBUG_ARG=""
 SETTINGS_ONLY="false"
 LOCAL_WEB="false"
 REMOTE_WEB="false"
@@ -42,11 +40,6 @@ RET=0
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in		# lower case
-		--debug)
-			DEBUG="true"
-			DEBUG_ARG="--debug"
-			shift
-			;;
 		--help)
 			HELP="true"
 			shift
@@ -157,7 +150,7 @@ function upload_file()
 	fi
 
 	#shellcheck disable=SC2086
-	upload_all ${WHERE} "${FILE_TO_UPLOAD}" "" "" "PostData"
+	upload_all ${WHERE} "${FILE_TO_UPLOAD}" "${DIRECTORY}" "" "PostData"
 	return $?
 }
 

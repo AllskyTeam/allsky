@@ -155,11 +155,6 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 	EXIT_NO_CAMERA=101		# cannot find camera
 
-	# Remote server type
-	REMOTE_TYPE_NO=0
-	REMOTE_TYPE_ALLSKY_WEBSITE=1
-	REMOTE_TYPE_GENERIC_SERVER=2
-
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.
 	# shellcheck disable=SC1090,SC1091

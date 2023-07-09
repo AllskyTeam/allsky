@@ -819,15 +819,25 @@ function convert_json_to_tabs()
 
 ####
 # Upload to the appropriate Websites and/or servers.
-# Everything is put inside the root which is IMAGE_DIR.
+# Everything is put relative to the root directory.
+#
+# --local-web: copy to local website
+# --remote-web: upload to remote website
+# --remote-server: upload to remote server
 function upload_all()
 {
 	local ARGS=""
-	local REMOTE_ONLY="false"
+	local LOCAL_WEB="false"
+	local REMOTE_WEB="false"
+	local REMOTE_SERVER="false"
 	while [[ ${1:0:2} == "--" ]]
 	do
-		if [[ ${1} == "--remote_only" ]]; then
-			REMOTE_ONLY="true"
+		if [[ ${1} == "--local-web" ]]; then
+			LOCAL_WEB="true"
+		elif [[ ${1} == "--remote-web" ]]; then
+			REMOTE_WEB="true"
+		elif [[ ${1} == "--remote-server" ]]; then
+			REMOTE_SERVER="true"
 		else
 			ARGS="${ARGS} ${1}"
 		fi
@@ -838,35 +848,31 @@ function upload_all()
 	local DESTINATION_NAME="${3}"
 	local FILE_TYPE="${4}"		# optional
 	local RET=0
-	local IMAGE_DIR REMOTE_DIR
-	if [[ ${REMOTE_ONLY} == "false" ]]; then
-		# We don't want to copy some files, like image.jpg, to the local website since it
-		# can see the ${ALLSKY_TMP} file.
-		if [[ "$( settings ".uselocalwebsite" )" -eq 1 ]]; then
-			#shellcheck disable=SC2086
-			"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --local \
-				"${UPLOAD_FILE}" "${ALLSKY_WEBSITE}/${SUBDIR}" "${DESTINATION_NAME}"
-			((RET+=$?))
-		fi
+	local ROOT REMOTE_DIR
+	if [[ ${LOCAL_WEB} == "true" && "$( settings ".uselocalwebsite" )" -eq 1 ]]; then
+		#shellcheck disable=SC2086
+		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --local \
+			"${UPLOAD_FILE}" "${ALLSKY_WEBSITE}/${SUBDIR}" "${DESTINATION_NAME}"
+		((RET+=$?))
 	fi
-	if [[ "$( settings ".useremote1" )" -ne "${REMOTE_TYPE_NO}" ]]; then
-		IMAGE_DIR="$( settings ".imagedir1" )"
-		if [[ -z ${IMAGE_DIR} ]]; then
+	if [[ ${REMOTE_WEB} == "true" && "$( settings ".useremotewebsite" )" -eq 1 ]]; then
+		ROOT="$( settings ".remotewebimagedir" )"
+		if [[ -z ${ROOT} ]]; then
 			REMOTE_DIR="${SUBDIR}"
 		else
-			REMOTE_DIR="${IMAGE_DIR}/${SUBDIR}"
+			REMOTE_DIR="${ROOT}/${SUBDIR}"
 		fi
 		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --num 1 \
 			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
 		((RET+=$?))
 	fi
-	if [[ "$( settings ".useremote2" )" -ne "${REMOTE_TYPE_NO}" ]]; then
-		IMAGE_DIR="$( settings ".imagedir2" )"
-		if [[ -z ${IMAGE_DIR} ]]; then
+	if [[ ${REMOTE_SERVER} == "true" && "$( settings ".useremoteserver" )" -eq 1 ]]; then
+		ROOT="$( settings ".remoteserverroot" )"
+		if [[ -z ${ROOT} ]]; then
 			REMOTE_DIR="${SUBDIR}"
 		else
-			REMOTE_DIR="${IMAGE_DIR}/${SUBDIR}"
+			REMOTE_DIR="${ROOT}/${SUBDIR}"
 		fi
 		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --num 2 \

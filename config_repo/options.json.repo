@@ -1084,7 +1084,7 @@
 
 {
 "name" : "websiteheader",
-"description" : "Local Website and Remote Server Settings",
+"description" : "Website and Remote Server Settings",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
@@ -1099,24 +1099,27 @@
 "advanced" : 0
 },
 {
-"name" : "useremote1",
-"default" : 0,
-"description" : "It can be an Allsky Website or a generic server.<br>It's connection details (server name, password, etc.) go in <a href='/documentation/settings/env.html'><i class='fa fa-external-link-alt fa-fw'></i> ${HOME}/.env</a>",
-"label" : "Use Remote Server 1 ?",
-"type" : "select",
-"options" : [
-	{"value" : 0, "label" : "No"},
-	{"value" : 1, "label" : "Allsky Website"},
-	{"value" : 2, "label" : "Generic server"}
-],
+"name" : "remotewebsiteheader",
+"description" : "Remote Website Settings",
+"type" : "subheader",
 "display" : 1,
 "advanced" : 0
 },
 {
-"name" : "protocol1",
+"name" : "useremotewebsite",
+"default" : 0,
+"description" : "Enable to use a remote Allsky Website.<br>See the Allsky Documentation for how to install the Website.",
+"label" : "Use Remote Website",
+"type" : "boolean",
+"display" : 1,
+"checkchanges" : 1,
+"advanced" : 0
+},
+{
+"name" : "remotewebsiteprotocol",
 "default" : "ftps",
-"description" : "Protocol for remote server 1",
-"label" : "Protocol 1",
+"description" : "Protocol",
+"label" : "Protocol",
 "type" : "select",
 "options" : [
 	{"value" : "ftps", "label" : "ftps"},
@@ -1127,73 +1130,78 @@
 	{"value" : "GCS", "label" : "GCS"}
 ],
 "display" : 1,
-"booldependson" : "useremote1",
+"checkchanges" : 1,
+"booldependson" : "useremotewebsite",
 "advanced" : 0
 },
 {
-"name" : "imagedir1",
+"name" : "remotewebsiteimagedir",
 "default" : "allsky",
 "description" : "Name of the top-level remote directory where images go.",
-"label" : "Image Directory 1",
+"label" : "Image Directory",
 "type" : "text",
 "display" : 1,
+"checkchanges" : 1,
 "optional" : 1,
-"booldependson" : "useremote1",
+"booldependson" : "useremotewebsite",
 "advanced" : 0
 },
 {
-"name" : "videodestinationname1",
+"name" : "remotewebsitevideodestinationname",
 "default" : "",
 "description" : "Optional name of the remote video file.",
-"label" : "Video Destination Name 1",
+"label" : "Remote Video File Name",
 "type" : "text",
 "display" : 1,
 "optional" : 1,
-"booldependson" : "useremote1",
+"booldependson" : "useremotewebsite",
 "advanced" : 0
 },
 {
-"name" : "keogramdeodestinationname1",
+"name" : "remotewebsitekeogramdestinationname",
 "default" : "",
 "description" : "Optional name of the remote keogram file.",
-"label" : "Keogram Destination Name 1",
+"label" : "Remote Keogram File Name",
 "type" : "text",
 "display" : 1,
 "optional" : 1,
-"booldependson" : "useremote1",
+"booldependson" : "useremotewebsite",
 "advanced" : 0
 },
 {
-"name" : "startrailsdeodestinationname1",
+"name" : "remotewebsitestartrailsdestinationname",
 "default" : "",
 "description" : "Optional name of the remote startrails file.",
-"label" : "Startrails Destination Name 1",
+"label" : "Remote Startrails Name",
 "type" : "text",
 "display" : 1,
 "optional" : 1,
-"booldependson" : "useremote1",
+"booldependson" : "useremotewebsite",
 "advanced" : 0
 },
 
 {
-"name" : "useremote2",
-"default" : 0,
-"description" : "It can be an Allsky Website or a generic server.<br>It's connection details (server name, password, etc.) go in <a href='/documentation/settings/env.html'><i class='fa fa-external-link-alt fa-fw'></i> ${HOME}/.env</a>",
-"label" : "Use Remote Server 2 ?",
-"type" : "select",
-"options" : [
-	{"value" : 0, "label" : "No"},
-	{"value" : 1, "label" : "Allsky Website"},
-	{"value" : 2, "label" : "Generic server"}
-],
+"name" : "remoteserverheader",
+"description" : "Remote Server Settings",
+"type" : "subheader",
 "display" : 1,
 "advanced" : 0
 },
 {
-"name" : "protocol2",
+"name" : "useremoteserver",
+"default" : 0,
+"description" : "This is a remote server NOT running the Allsky Website.<br>See the documentation for the necessary directory layout.",
+"label" : "Use Remote Server",
+"type" : "boolean",
+"display" : 1,
+"checkchanges" : 1,
+"advanced" : 0
+},
+{
+"name" : "remoteserverprotocol",
 "default" : "ftps",
-"description" : "Protocol for remote server 2",
-"label" : "Protocol 2",
+"description" : "Protocol for remote server",
+"label" : "Protocol",
 "type" : "select",
 "options" : [
 	{"value" : "ftps", "label" : "ftps"},
@@ -1204,51 +1212,53 @@
 	{"value" : "GCS", "label" : "GCS"}
 ],
 "display" : 1,
-"booldependson" : "useremote2",
+"checkchanges" : 1,
+"booldependson" : "useremoteserver",
 "advanced" : 0
 },
 {
-"name" : "imagedir2",
-"default" : "allsky",
+"name" : "remoteserverimagedir",
+"default" : "",
 "description" : "Name of the top-level remote directory where images go.",
-"label" : "Image Directory 2",
+"label" : "Image Directory",
 "type" : "text",
 "display" : 1,
+"checkchanges" : 1,
 "optional" : 1,
-"booldependson" : "useremote2",
+"booldependson" : "useremoteserver",
 "advanced" : 0
 },
 {
-"name" : "videodestinationname2",
+"name" : "remoteservervideodestinationname",
 "default" : "",
 "description" : "Optional name of the remote video file.",
-"label" : "Video Destination Name 2",
+"label" : "Remote Video File Name",
 "type" : "text",
 "display" : 1,
 "optional" : 1,
-"booldependson" : "useremote2",
+"booldependson" : "useremoteserver",
 "advanced" : 0
 },
 {
-"name" : "keogramdeodestinationname2",
+"name" : "remoteserverkeogramdestinationname",
 "default" : "",
 "description" : "Optional name of the remote keogram file.",
-"label" : "Keogram Destination Name 2",
+"label" : "Remote Keogram File Name",
 "type" : "text",
 "display" : 1,
 "optional" : 1,
-"booldependson" : "useremote2",
+"booldependson" : "useremoteserver",
 "advanced" : 0
 },
 {
-"name" : "startrailsdeodestinationname2",
+"name" : "remoteserverstartrailsdestinationname",
 "default" : "",
 "description" : "Optional name of the remote startrails file.",
-"label" : "Startrails Destination Name 2",
+"label" : "Remote Startrails File Name",
 "type" : "text",
 "display" : 1,
 "optional" : 1,
-"booldependson" : "useremote2",
+"booldependson" : "useremoteserver",
 "advanced" : 0
 },
 
@@ -1267,7 +1277,7 @@
 "type" : "boolean",
 "display" : 1,
 "checkchanges" : 1,
-"booldependson" : "uselocalwebsite OR remotewebsite1 OR remotewebsite2",
+"booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver",
 "advanced" : 0
 },
 {
@@ -1289,7 +1299,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"booldependson" : "showonmap",
+"booldependson" : "showonmap AND useremotewebsite",
 "advanced" : 0
 },
 {
@@ -1301,7 +1311,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"booldependson" : "showonmap",
+"booldependson" : "showonmap AND useremotewebsite",
 "advanced" : 0
 },
 {
@@ -1313,7 +1323,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"booldependson" : "showonmap OR remotewebsite1 OR remotewebsite2",
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver",
 "advanced" : 0
 },
 {
@@ -1325,7 +1335,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"booldependson" : "showonmap OR remotewebsite1 OR remotewebsite2",
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver",
 "advanced" : 0
 },
 {
@@ -1337,7 +1347,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"booldependson" : "showonmap OR remotewebsite1 OR remotewebsite2",
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver",
 "advanced" : 0
 },
 {
@@ -1349,7 +1359,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"booldependson" : "showonmap OR remotewebsite1 OR remotewebsite2",
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver",
 "advanced" : 0
 },
 {
@@ -1361,7 +1371,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"booldependson" : "showonmap OR remotewebsite1 OR remotewebsite2",
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver",
 "advanced" : 0
 },
 

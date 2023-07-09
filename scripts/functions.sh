@@ -862,7 +862,7 @@ function upload_all()
 		((RET+=$?))
 	fi
 	if [[ ${REMOTE_WEB} == "true" && "$( settings ".useremotewebsite" )" -eq 1 ]]; then
-		ROOT="$( settings ".remotewebimagedir" )"
+		ROOT="$( settings ".remotewebsiteimagedir" )"
 		if [[ -z ${ROOT} ]]; then
 			REMOTE_DIR="${SUBDIR}"
 		else
@@ -874,7 +874,7 @@ function upload_all()
 		((RET+=$?))
 	fi
 	if [[ ${REMOTE_SERVER} == "true" && "$( settings ".useremoteserver" )" -eq 1 ]]; then
-		ROOT="$( settings ".remoteserverroot" )"
+		ROOT="$( settings ".remoteserverimagedir" )"
 		if [[ -z ${ROOT} ]]; then
 			REMOTE_DIR="${SUBDIR}"
 		else

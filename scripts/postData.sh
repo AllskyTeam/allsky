@@ -159,23 +159,23 @@ function upload_file()
 # Assume if the first upload fails they all will, so exit.
 WEB_ONLY="--local-web --remote-web"
 #shellcheck disable=SC2086
-upload_file ${WEB_ONLY} "${SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" \
+upload_file "${WEB_ONLY}" "${SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" \
 	|| exit $?
 
 if [[ ${ALL_FILES} == "true" ]]; then
 	#shellcheck disable=SC2086
-	upload_file ${WEB_ONLY} "${OPTIONS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
+	upload_file "${WEB_ONLY}" "${OPTIONS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
 	#shellcheck disable=SC2086
-	upload_file ${WEB_ONLY} "${ALLSKY_WEBUI}/includes/allskySettings.php" \
+	upload_file "${WEB_ONLY}" "${ALLSKY_WEBUI}/includes/allskySettings.php" \
 		"${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
 	#shellcheck disable=SC2086
-	upload_file ${WEB_ONLY} "${ALLSKY_DOCUMENTATION}/css/custom.css" \
+	upload_file "${WEB_ONLY}" "${ALLSKY_DOCUMENTATION}/css/custom.css" \
 		"${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
 fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	# Some remote servers may want to see this file so upload everywhere.
-	upload_file "${OUTPUT_FILE}" ""		# Goes in top-level directory
+	upload_file "" "${OUTPUT_FILE}" ""		# Goes in top-level directory
 	# shellcheck disable=SC2086
 	exit $?
 fi

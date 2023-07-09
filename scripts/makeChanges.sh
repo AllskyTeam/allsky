@@ -127,7 +127,8 @@ check_website		# invoke to set variables
 
 CAMERA_NUMBER=""
 
-while [[ $# -gt 0 ]]; do
+while [[ $# -gt 0 ]]
+do
 	KEY="${1}"
 	LABEL="${2}"
 	OLD_VALUE="${3}"
@@ -439,6 +440,14 @@ while [[ $# -gt 0 ]]; do
 
 		websiteurl | imageurl)
 			RUN_POSTTOMAP="true"
+			;;
+
+		useremotewebsite | remotewebsiteprotocol | remotewebsiteimagedir)
+			:	# TODO
+			;;
+
+		useremoteserver | remoteserverprotocol | remoteserveriteimagedir)
+			:	# TODO
 			;;
 
 		overlaymethod)

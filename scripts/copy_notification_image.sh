@@ -197,7 +197,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 		echo -e "${ME}: Uploading $(basename "${NOTIFICATION_FILE}")"
 	fi
-	upload_all --wait --silent "${UPLOAD_FILE}" "" "${FULL_FILENAME}" "NotificationImage"
+	upload_all --local-web --remote-web --wait --silent "${UPLOAD_FILE}" "" "${FULL_FILENAME}" "NotificationImage"
 	RET=$?
 
 	# If we created a temporary copy, delete it.

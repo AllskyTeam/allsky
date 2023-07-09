@@ -141,6 +141,7 @@ if [[ ${LOCAL} == "true" ]]; then
 	exit ${RET}
 fi
 
+
 # For uploads to a remote server, "put" to a temp name, then move the temp name to the final name.
 # This is useful with slow uplinks where multiple upload requests can be running at once,
 # and only one upload can upload the file at once.
@@ -172,7 +173,16 @@ if ! one_instance --sleep "${SLEEP}" --max-checks "${MAX_CHECKS}" --pid-file "${
 	exit 1
 fi
 
-PROTOCOL="$( settings ".protocol${REMOTE_NUM}" )"
+# Remote number 1 is the remote Allsky Website.
+# Remote number 2 is the generic remote server.
+if [[ ${REMOTE_NUM} -eq 1 ]]; then
+	prefix="remotewebsite"
+	PREFIX="REMOTEWEBSITE"
+else
+	prefix="remoteserver"
+	PREFIX="REMOTESERVER"
+fi
+PROTOCOL="$( settings ".${prefix}protocol" )"
 
 # SIGTERM is sent by systemctl to stop Allsky.
 # SIGHUP is sent to have the capture program reload its arguments.
@@ -182,9 +192,9 @@ trap "" SIGTERM
 trap "" SIGHUP
 
 if [[ ${PROTOCOL} == "s3" ]] ; then
-	AWS_CLI_DIR="$( get_variable "AWS_CLI_DIR${REMOTE_NUM}" "${ENV_FILE}" )"
-	S3_BUCKET="$( get_variable "S3_BUCKET${REMOTE_NUM}" "${ENV_FILE}" )"
-	S3_ACL="$( get_variable "S3_ACL${REMOTE_NUM}" "${ENV_FILE}" )"
+	AWS_CLI_DIR="$( get_variable "${PREFIX}_AWS_CLI_DIR" "${ENV_FILE}" )"
+	S3_BUCKET="$( get_variable "${PREFIX}_S3_BUCKET" "${ENV_FILE}" )"
+	S3_ACL="$( get_variable "${PREFIX}_S3_ACL" "${ENV_FILE}" )"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		MSG="${ME}: Uploading ${FILE_TO_UPLOAD} to"
 		MSG="${MSG} aws ${S3_BUCKET}${DIRECTORY}/${DESTINATION_NAME}"
@@ -196,10 +206,10 @@ if [[ ${PROTOCOL} == "s3" ]] ; then
 
 
 elif [[ "${PROTOCOL}" == "scp" ]] ; then
-	REMOTE_USER="$( get_variable "REMOTE_USER${REMOTE_NUM}" "${ENV_FILE}" )"
-	REMOTE_HOST="$( get_variable "REMOTE_HOST${REMOTE_NUM}" "${ENV_FILE}" )"
-	REMOTE_PORT="$( get_variable "REMOTE_PORT${REMOTE_NUM}" "${ENV_FILE}" )"
-	SSH_KEY_FILE="$( get_variable "SSH_KEY_FILE${REMOTE_NUM}" "${ENV_FILE}" )"
+	REMOTE_USER="$( get_variable "${PREFIX}_USER" "${ENV_FILE}" )"
+	REMOTE_HOST="$( get_variable "${PREFIX}_HOST" "${ENV_FILE}" )"
+	REMOTE_PORT="$( get_variable "${PREFIX}_PORT" "${ENV_FILE}" )"
+	SSH_KEY_FILE="$( get_variable "${PREFIX}_SSH_KEY_FILE" "${ENV_FILE}" )"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		# shellcheck disable=SC2153
 		MSG="${ME}: Copying ${FILE_TO_UPLOAD} to"
@@ -214,8 +224,8 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 
 
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
-	GCS_BUCKET="$( get_variable "GCS_BUCKET${REMOTE_NUM}" "${ENV_FILE}" )"
-	GCS_ACL="$( get_variable "GCS_ACL${REMOTE_NUM}" "${ENV_FILE}" )"
+	GCS_BUCKET="$( get_variable "${PREFIX}_GCS_BUCKET" "${ENV_FILE}" )"
+	GCS_ACL="$( get_variable "${PREFIX}_GCS_ACL" "${ENV_FILE}" )"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to gcs ${GCS_BUCKET}${DIRECTORY}"
 	fi
@@ -229,8 +239,19 @@ else # sftp/ftp/ftps
 
 	TEMP_NAME="${FILE_TYPE}-${RANDOM}"
 
-	# If DIRECTORY isn't null (which it can be) and doesn't already have a trailing "/", append one.
-	[[ -n ${DIRECTORY} && ${DIRECTORY: -1:1} != "/" ]] && DIRECTORY="${DIRECTORY}/"
+	# If directory is null (which it can be) put the file in the image directory
+	# which is the root.
+	if [[ -z ${DIRECTORY} ]]; then
+		IMAGE_DIR="$( settings ".${prefix}imagedir" )"
+		if [[ -n ${IMAGE_DIR} ]]; then
+			[[ ${IMAGE_DIR: -1:1} != "/" ]] && IMAGE_DIR="${IMAGE_DIR}/"
+			DIRECTORY="${IMAGE_DIR}"
+		fi
+		
+	elif [[ ${DIRECTORY: -1:1} != "/" ]]; then
+		# If DIRECTORY doesn't already have a trailing "/", append one.
+		DIRECTORY="${DIRECTORY}/"
+	fi
 
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		MSG="${ME}: FTP '${FILE_TO_UPLOAD}' to"
@@ -253,11 +274,11 @@ else # sftp/ftp/ftps
 
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 
-	REMOTE_USER="$( get_variable "REMOTE_USER${REMOTE_NUM}" "${ENV_FILE}" )"
-	REMOTE_HOST="$( get_variable "REMOTE_HOST${REMOTE_NUM}" "${ENV_FILE}" )"
-	REMOTE_PORT="$( get_variable "REMOTE_PORT${REMOTE_NUM}" "${ENV_FILE}" )"
+	REMOTE_USER="$( get_variable "${PREFIX}_USER" "${ENV_FILE}" )"
+	REMOTE_HOST="$( get_variable "${PREFIX}_HOST" "${ENV_FILE}" )"
+	REMOTE_PORT="$( get_variable "${PREFIX}_PORT" "${ENV_FILE}" )"
 	# The export LFTP_PASSWORD has to be OUTSIDE the ( ) below.
-	REMOTE_PASSWORD="$( get_variable "REMOTE_PASSWORD${REMOTE_NUM}" "${ENV_FILE}" )"
+	REMOTE_PASSWORD="$( get_variable "${PREFIX}_PASSWORD" "${ENV_FILE}" )"
 	if [[ ${DEBUG} == "true" ]]; then
 		# In debug mode, include the password on the command line so it's easier
 		# for the user to run "lftp -f ${LFT_CMDS}"
@@ -270,7 +291,7 @@ else # sftp/ftp/ftps
 	fi
 
 	(
-		LFTP_COMMANDS="$( get_variable "LFTP_COMMANDS${REMOTE_NUM}" "${ENV_FILE}" )"
+		LFTP_COMMANDS="$( get_variable "${PREFIX}_LFTP_COMMANDS" "${ENV_FILE}" )"
 		[[ -n ${LFTP_COMMANDS} ]] && echo "${LFTP_COMMANDS}"
 
 		# Sometimes have problems with "max-reties 1", so make it 2

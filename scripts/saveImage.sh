@@ -451,7 +451,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 	fi
 
 	# Goes in root of Website so second arg is "".
-	upload_all --remote_only "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
+	upload_all --remote-web --remote_server "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
 	RET=$?
 
 	[[ ${RESIZE_UPLOADS} == "true" ]] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
@@ -462,7 +462,7 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${R
 	MINI="mini-timelapse.mp4"
 	FILE_TO_UPLOAD="${ALLSKY_TMP}/${MINI}"
 
-	upload_all --remote_only "${FILE_TO_UPLOAD}" "" "${MINI}" "MiniTimelapse"
+	upload_all --remote-web --remote_server "${FILE_TO_UPLOAD}" "" "${MINI}" "MiniTimelapse"
 	RET=$?
 	if [[ ${RET} -eq 0 && ${TIMELAPSE_MINI_UPLOAD_THUMBNAIL} == "true" ]]; then
 		UPLOAD_THUMBNAIL_NAME="mini-timelapse.jpg"
@@ -474,7 +474,7 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${R
 			echo "${ME}Mini timelapse thumbnail not created!"
 		else
 			# Use --silent because we just displayed message(s) above for this image.
-			upload_all --remote_only --silent \
+			upload_all --remote-web --remote_server --silent \
 				"${UPLOAD_THUMBNAIL}" \
 				"" \
 				"${UPLOAD_THUMBNAIL_NAME}" \

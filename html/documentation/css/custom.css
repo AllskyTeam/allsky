@@ -422,10 +422,24 @@ table .alert-dismissable {
 	text-align: center;
 	font-weight: bold;
 	font-size: 1.25em;
-	padding: 3px 0 3px 0;
+	padding: 5px 0px;
 }
 .dark .settingsHeader {
 	background-color: #555;
+}
+.subSettingsHeader {
+	text-align: center;
+	font-weight: bold;
+	font-size: 1.05em;
+	padding: 0;
+}
+.subSettingsHeader div {
+	margin: 0 3em 0 3em;
+	background-color: #aac;
+}
+.dark .subSettingsHeader {
+	background-color: #363636;
+	background-color: #339
 }
 
 .boxShadow {

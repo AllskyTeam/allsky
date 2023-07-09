@@ -38,7 +38,7 @@ reboot_needed && NEEDS_REBOOT="true"
 
 # Make sure the settings have been configured after an installation or upgrade.
 LAST_CHANGED="$( settings ".lastChanged" )"
-if [[ ${LAST_CHANGED} == "" || ${LAST_CHANGED} == "null" ]]; then
+if [[ ${LAST_CHANGED} == "" ]]; then
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI."
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
 		echo "*** ===== The Pi also needs to be rebooted."
@@ -107,6 +107,7 @@ if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	RPi_COMMAND_TO_USE="$(determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
 
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
+	RPi_COMMAND_TO_USE=""
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 	reset_usb()		# resets the USB bus
 	{
@@ -228,17 +229,10 @@ if [[ $USE_NOTIFICATION_IMAGES -eq 1 ]]; then
 fi
 
 : > "${ARGS_FILE}"
-if [[ ${CAMERA_TYPE} == "RPi" ]]; then
-	# This argument needs to come first since the capture code checks for it first.
-	echo "-cmd=${RPi_COMMAND_TO_USE}" >> "${ARGS_FILE}"
-fi
-
-# This argument should come second so the capture program knows if it should display debug output.
-echo "-debuglevel=${ALLSKY_DEBUG_LEVEL}" >> "${ARGS_FILE}"
 
 # If the locale isn't in the settings file, try to determine it.
 LOCALE="$(settings .locale)"
-if [[ -z ${LOCALE} || ${LOCALE} == "null" ]]; then
+if [[ -z ${LOCALE} ]]; then
 	if [[ -n ${LC_ALL} ]]; then
 		echo "-Locale=${LC_ALL}" >> "${ARGS_FILE}"
 	elif [[ -n ${LANG} ]]; then
@@ -280,8 +274,10 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
 
 # Run the main program - this is the main attraction...
+# -cmd needs to come first since the capture_RPi code checks for it first.  It's ignored
+# in capture_ZWO.
 # Pass debuglevel on command line so the capture program knows if it should display debug output.
-"${ALLSKY_BIN}/${CAPTURE}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
+"${ALLSKY_BIN}/${CAPTURE}" -cmd "${RPi_COMMAND_TO_USE}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
 RETCODE=$?
 
 [[ ${RETCODE} -eq ${EXIT_OK} ]] && doExit "${EXIT_OK}" ""

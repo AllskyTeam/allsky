@@ -370,7 +370,7 @@ if ($formReadonly != "readonly") { ?>
 				$name = $option['name'];
 
 				$type = getVariableOrDefault($option, 'type', "");	// should be a type
-				if ($type == "header") {
+				if ($type == "header" || $type == "subheader") {
 					$value = "";
 					$OLDvalue = "";
 				} else {
@@ -386,7 +386,7 @@ if ($formReadonly != "readonly") { ?>
 
 				// Should this setting be displayed?
 				$display = getVariableOrDefault($option, 'display', true);
-				if (! $display && $type != "header") {
+				if (! $display && $type != "header" && $type != "subheader") {
 					if ($formReadonly != "readonly") {
 						// Don't display it, but if it has a value, pass it on.
 						echo "\n\t<!-- NOT DISPLAYED -->";
@@ -409,7 +409,7 @@ if ($formReadonly != "readonly") { ?>
 
 				$label = getVariableOrDefault($option, 'label', "");
 
-				if ($type != "header") {
+				if ($type != "header" && $type != "subheader") {
 					$optional = getVariableOrDefault($option, 'optional', false);
 					if ($value === "" && ! $optional) {
 						if ($default === "") {
@@ -445,7 +445,7 @@ if ($formReadonly != "readonly") { ?>
 				// a wide input box on the top row spanning the 2nd and 3rd columns,
 				// and the description on the bottom row in the 3rd column.
 				// This way, all descriptions are in the 3rd column.
-				if ($type !== "widetext" && $type != "header") $class = "rowSeparator";
+				if ($type !== "widetext" && $type != "header" && $type != "subheader") $class = "rowSeparator";
 				else $class="";
 				echo "\n";	// to make it easier to read web source when debugging
 
@@ -453,11 +453,25 @@ if ($formReadonly != "readonly") { ?>
 				if ($type == "header") {
 					// Not sure how to display the header with a background color with 10px
 					// of white above and below it using only one <tr>.
-					echo "<tr class='$advClass advanced-nocolor' style='$advStyle height: 10px;'><td colspan='3'></td></tr>";
+					echo "<tr class='$advClass advanced-nocolor' style='$advStyle height: 10px;'>";
+						echo "<td colspan='3'></td>";
+					echo "</tr>";
 					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle'>";
-						echo "<td colspan='3' class='settingsHeader' style='padding: 8px 0px;'>$description</td>";
-						echo "</tr>";
-					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle height: 10px;'><td colspan='3'></td></tr>";
+						echo "<td colspan='3' class='settingsHeader'>$description</td>";
+					echo "</tr>";
+					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle height: 10px;'>";
+						echo "<td colspan='3'></td>";
+					echo "</tr>";
+				} else if ($type == "subheader") {
+					echo "<tr class='$advClass advanced-nocolor' style='$advStyle height: 5x;'>";
+						echo "<td colspan='3'></td>";
+					echo "</tr>";
+					echo "<tr class='$advClass advanced-nocolor style='$advStyle'>";
+						echo "<td colspan='3' class='subSettingsHeader'><div>$description</div></td>";
+					echo "</tr>";
+					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle height: 5x;'>";
+						echo "<td colspan='3'></td>";
+					echo "</tr>";
 				} else {
 					echo "<tr class='form-group $advClass $class $warning_class' style='margin-bottom: 0px; $advStyle'>";
 					// Show the default in a popup

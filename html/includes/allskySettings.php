@@ -1,7 +1,7 @@
 <?php
 
 function DisplayAllskyConfig(){
-	global $formReadonly;
+	global $formReadonly, $settings_array;
 
 	$cameraTypeName = "cameratype";		// json setting name
 	$cameraModelName = "cameramodel";	// json setting name
@@ -32,6 +32,9 @@ function DisplayAllskyConfig(){
 		if (CSRFValidate()) {
 			$settings = array();
 			$optional_array = array();
+			$sources = array();
+			$sourceFiles = array();
+			$sourcesOLD = array();
 			$changes = "";
 			$otherChanges = "";
 
@@ -42,13 +45,15 @@ function DisplayAllskyConfig(){
 
 			$ok = true;
 
-			// Keep track of optional settings
-			foreach ($options_array as $option){
+			// Keep track of optional settings and which settings are from a different source.
+			foreach ($options_array as $option) {
 				$n = $option['name'];
 				$optional_array[$n] = getVariableOrDefault($option, 'optional', false);
+				$s = getVariableOrDefault($option, 'source', null);
+				$sourceFiles[$n] = ($s === null ? null : getFileName($s));
 			}
 
-	 		foreach ($_POST as $key => $value){
+	 		foreach ($_POST as $key => $newValue) {
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
 				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", "XX_END_XX"]))
 					continue;
@@ -57,94 +62,105 @@ function DisplayAllskyConfig(){
 				// Because we are passing the changes enclosed in single quotes below,
 				// we need to escape the single quotes, but I never figured out how to do that,
 				// so convert them to HTML codes instead.
-				if (substr($key, 0, 4) === "OLD_") {
-					$thisChanged = false;
-					$key = substr($key, 4);		// everything after "OLD_"
-					$oldValue = str_replace("'", "&#x27", $value);
-					$newValue = getVariableOrDefault($settings, $key, "");
-					if ($oldValue !== $newValue) {
-						if ($key === $cameraTypeName) {
-							if ($newValue === "Refresh") {
-								// Refresh the same Camera Type
-								$refreshingCameraType = true;
-								$newCameraType = $oldValue;
-								$newValue = $oldValue;
-							} else {
-								$newCameraType = $newValue;
-							}
-						} elseif ($key === $cameraModelName) {
-							$newCameraModel = $newValue;
-						} elseif ($key === $cameraNumberName) {
-							$newCameraNumber = $newValue;
-						} else {
-							// want to know changes other than camera
-							$thisChanged = true;
-						}
-
-						$checkchanges = false;
-						foreach ($options_array as $option){
-							if ($option['name'] === $key) {
-								$optional = $optional_array[$key];
-								if ($newValue !== "" || $optional) {
-									$checkchanges = getVariableOrDefault($option, 'checkchanges', false);
-									$label = getVariableOrDefault($option, 'label', "");
-								}
-								break;
-							}
-						}
-
-						if ($checkchanges)
-							$changes .= "  '$key' '$label' '$oldValue' '$newValue'";
-
-						if ($thisChanged) {
-							if ($otherChanges === "")
-								$otherChanges = "[$label]";
-							else
-								$otherChanges .= ", $label";
-						}
-					}
-
+				$s = $sourceFiles[$key];
+				if ($s !== null) {
+					$oldValue = get_variable(getFileName($s), $key, "");
+					$sourcesOLD[$key] = $oldValue;
 				} else {
-					// Check for empty non-optional settings and valid numbers.
-					$span = "span class='WebUISetting'";
-					$spanValue = "span class='WebUIValue'";
-					foreach ($options_array as $option) {
+					$oldValue = getVariableOrDefault($settings_array, $key, "");
+				}
+				if ($oldValue !== "")
+					$oldValue = str_replace("'", "&#x27", $oldValue);
+
+				$thisChanged = false;
+				if ($oldValue !== $newValue) {
+echo "<br>$key: oldValue=$oldValue, new=<b>$newValue</b>" . ($s === null ? "" : " in $s");
+					if ($key === $cameraTypeName) {
+						if ($newValue === "Refresh") {
+							// Refresh the same Camera Type
+							$refreshingCameraType = true;
+							$newCameraType = $oldValue;
+							$newValue = $oldValue;
+						} else {
+							$newCameraType = $newValue;
+						}
+					} elseif ($key === $cameraModelName) {
+						$newCameraModel = $newValue;
+					} elseif ($key === $cameraNumberName) {
+						$newCameraNumber = $newValue;
+					} else {
+						// want to know changes other than camera
+						$thisChanged = true;
+					}
+
+					$checkchanges = false;
+					foreach ($options_array as $option){
 						if ($option['name'] === $key) {
-							$type = getVariableOrDefault($option, 'type', null);
-							$lab = $option['label'];
-
-							if ($value == "" && ! $optional_array[$key]) {
-								$msg = "<$span>$lab</span> is empty";
-								$status->addMessage($msg, 'danger', false);
-								$ok = false;
-
-							} else if ($type !== null) {
-								$msg = "";
-								// $value will be of type string, even if it's actually a number,
-								// and only is_numeric() accounts for types of string.
-								if ($type === "integer" || $type == "percent") {
-									if (! is_numeric($value) || ! is_int($value + 0))
-										$msg = "without a fraction";
-								} else if ($type === "float") {
-									if (! is_numeric($value) || ! is_float($value + 0.0))
-										$msg = "with, or without, a fraction";
-								}
-								if ($msg !== "") {
-									$msg2 = "<$span>$lab</span> must be a number $msg.";
-									$msg2 .= " You entered: <$spanValue>$value</span>";
-									$status->addMessage($msg2, 'danger', false);
-									$ok = false;
-								}
+							$optional = $optional_array[$key];
+							if ($newValue !== "" || $optional) {
+								$checkchanges = getVariableOrDefault($option, 'checkchanges', false);
+								$label = getVariableOrDefault($option, 'label', "");
 							}
+							break;
 						}
 					}
 
-					if ($ok) {
-						$settings[$key] = str_replace("'", "&#x27", $value);
+					if ($checkchanges) {		// Changes for makeChanges.sh to check
+						$changes .= "  '$key' '$label' '$oldValue' '$newValue'";
+					}
 
-						if ($key === $debugLevelName && $value >= 4) {
-							$debugArg = "--debug";
+					if ($thisChanged) {
+						if ($otherChanges === "")
+							$otherChanges = "[$label]";
+						else
+							$otherChanges .= ", $label";
+					}
+				}
+
+				// Check for empty non-optional settings and valid numbers.
+				$span = "span class='WebUISetting'";
+				$spanValue = "span class='WebUIValue'";
+				foreach ($options_array as $option) {
+					if ($option['name'] === $key) {
+						$type = getVariableOrDefault($option, 'type', null);
+						$lab = $option['label'];
+
+						if ($newValue == "" && ! $optional_array[$key]) {
+							$msg = "<$span>$lab</span> is empty";
+							$status->addMessage($msg, 'danger', false);
+							$ok = false;
+
+						} else if ($type !== null && $newValue != "") {
+							$msg = "";
+							// $newValue will be of type string, even if it's actually a number,
+							// and only is_numeric() accounts for types of string.
+							if ($type === "integer" || $type == "percent") {
+								if (! is_numeric($newValue) || ! is_int($newValue + 0))
+									$msg = "without a fraction";
+							} else if ($type === "float") {
+								if (! is_numeric($newValue) || ! is_float($newValue + 0.0))
+									$msg = "with, or without, a fraction";
+							}
+							if ($msg !== "") {
+								$msg2 = "<$span>$lab</span> must be a number $msg.";
+								$msg2 .= " You entered: <$spanValue>$newValue</span>";
+								$status->addMessage($msg2, 'danger', false);
+								$ok = false;
+							}
 						}
+					}
+				}
+
+				if ($ok) {
+					$n = str_replace("'", "&#x27", $newValue);
+					if ($sourceFiles[$key] !== null) {
+						$sources[$key] = $n;
+					} else {
+						$settings[$key] = $n;
+					}
+
+					if ($key === $debugLevelName && $newValue >= 4) {
+						$debugArg = "--debug";
 					}
 				}
 			}
@@ -166,10 +182,19 @@ function DisplayAllskyConfig(){
 						$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
 						// updateFile() only returns error messages.
 						$msg = updateFile($settings_file, $content, "settings", true);
-						if ($msg === "")
+						if ($msg === "") {
 							$msg = "Settings saved";
-						else
+
+							// Now save the settings from the source files that changed.
+							foreach ($sources as $key => $newValue) {
+								$oldValue = $sourcesOLD[$key];
+								if ($oldValue == $newValue) continue;
+								set_variable($sourceFiles[$key], $key, $newValue, $oldValue);
+							}
+						} else {
 							$ok = false;
+						}
+
 					}
 				} else {
 					if ($newCameraType !== "") {
@@ -237,37 +262,60 @@ function DisplayAllskyConfig(){
 	if (isset($_POST['reset_settings'])) {
 		if (CSRFValidate()) {
 			$settings = array();
+			$sources = array();
+			$sourceFiles = array();
 			foreach ($options_array as $option){
 				$key = $option['name'];
-				$value = getVariableOrDefault($option, 'default', null);
-				if ($value !== null) $settings[$key] = $value;
+				$newValue = getVariableOrDefault($option, 'default', null);
+				if ($newValue !== null) {
+					$s = getVariableOrDefault($option, 'source', "");
+					if ($s !== "") {
+						$sourceFiles[$n] = getFileName($s);
+						$sources[$n] = $newValue;
+					} else {
+						$settings[$key] = $newValue;
+					}
+				}
 			}
 			$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK);
 			$msg = updateFile($settings_file, $content, "settings", true);
-			if ($msg === "")
+			if ($msg === "") {
 				$status->addMessage("Settings reset to default", 'info');
-			else
+
+				foreach($sources as $key => $newValue) {
+					$file = $sourceFiles[$key];
+					$oldValue = get_variable(getFileName($file), $key, "");
+					set_variable($file, $key, $newValue, $oldValue);
+				}
+			} else {
 				$status->addMessage("Failed to reset settings: $msg", 'danger');
+			}
 		} else {
 			$status->addMessage('Unable to reset settings - session timeout', 'danger');
 		}
 	}
 
-	// Determine if the advanced settings should always be shown.
-	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
-	$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
-	if ($settings_array === null) {
-		exit;
+	// If the settings file changed above, re-read the file.
+	if (isset($_POST['save_settings']) || isset($_POST['reset_settings'])) {
+		$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
+		$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
+		if ($settings_array === null) {
+			exit;
+		}
 	}
+
 	$cameraType = getVariableOrDefault($settings_array, $cameraTypeName, "");
 	$cameraModel = getVariableOrDefault($settings_array, $cameraModelName, "");
-	$initial_display = $settings_array['alwaysshowadvanced'] == 1 ? "table-row" : "none";
+	// Determine if the advanced settings should always be shown.
+	$alwaysShowAdvanced = getVariableOrDefault($settings_array, 'alwaysshowadvanced', 0);
+	$initial_display = $alwaysShowAdvanced == 1 ? "table-row" : "none";
 
 	check_if_configured($page, "settings");
 
 if ($formReadonly != "readonly") {
 	$settingsDescription = "";
 ?>
+
 <script language="javascript">
 function toggle_advanced()
 {
@@ -365,28 +413,38 @@ if ($formReadonly != "readonly") { ?>
 		$numMissing = 0;
 		$numMissingHasDefault = 0;
 		$missingSettingsHasDefault = "";
+		$missingSettings = "";
 		echo "<table border='0'>";
 			foreach($options_array as $option) {
 				$name = $option['name'];
-
 				$type = getVariableOrDefault($option, 'type', "");	// should be a type
-				if ($type == "header" || $type == "subheader") {
+
+				$isHeader = substr($type, 0, 6) === "header";
+				if ($isHeader) {
 					$value = "";
 					$OLDvalue = "";
+					$default = "";
 				} else {
 					$default = getVariableOrDefault($option, 'default', "");
-					$default = str_replace("'", "&#x27;", $default);
+					if ($default !== "")
+						$default = str_replace("'", "&#x27;", $default);
+
+					$s = getVariableOrDefault($option, 'source', "");
+					if ($s !== "") {
+						$value = get_variable(getFileName($s), $name, $default);
+					} else {
+						$value = getVariableOrDefault($settings_array, $name, $default);
+					}
 
 					// Allow single quotes in values (for string values).
 					// &apos; isn't supported by all browsers so use &#x27.
-					$value = getVariableOrDefault($settings_array, $name, $default);
 					$value = str_replace("'", "&#x27;", $value);
 					$OLDvalue = $value;
 				}
 
 				// Should this setting be displayed?
 				$display = getVariableOrDefault($option, 'display', true);
-				if (! $display && $type != "header" && $type != "subheader") {
+				if (! $display && ! $isHeader) {
 					if ($formReadonly != "readonly") {
 						// Don't display it, but if it has a value, pass it on.
 						echo "\n\t<!-- NOT DISPLAYED -->";
@@ -409,7 +467,7 @@ if ($formReadonly != "readonly") { ?>
 
 				$label = getVariableOrDefault($option, 'label', "");
 
-				if ($type != "header" && $type != "subheader") {
+				if (! $isHeader) {
 					$optional = getVariableOrDefault($option, 'optional', false);
 					if ($value === "" && ! $optional) {
 						if ($default === "") {
@@ -445,39 +503,66 @@ if ($formReadonly != "readonly") { ?>
 				// a wide input box on the top row spanning the 2nd and 3rd columns,
 				// and the description on the bottom row in the 3rd column.
 				// This way, all descriptions are in the 3rd column.
-				if ($type !== "widetext" && $type != "header" && $type != "subheader") $class = "rowSeparator";
+				if ($type !== "widetext" && ! $isHeader) $class = "rowSeparator";
 				else $class="";
 				echo "\n";	// to make it easier to read web source when debugging
 
 				// Put some space before and after headers.  This next line is the "before":
-				if ($type == "header") {
+				if ($type == "header-tab") {
+// TODO
+					echo "<tr class='$advClass advanced-nocolor' style='$advStyle height: 10px; color: red; font-size: 125%'>";
+						echo "<td colspan='3' align='center'>[[[ <b>$label</b> tab goes here ]]]</td>";
+					echo "</tr>";
+					continue;
+
+				} else if ($type == "header") {
 					// Not sure how to display the header with a background color with 10px
 					// of white above and below it using only one <tr>.
 					echo "<tr class='$advClass advanced-nocolor' style='$advStyle height: 10px;'>";
 						echo "<td colspan='3'></td>";
 					echo "</tr>";
-					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle'>";
-						echo "<td colspan='3' class='settingsHeader'>$description</td>";
+					echo "\n\t<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle'>";
+						echo "<td colspan='3' class='settingsHeader'>$label</td>";
 					echo "</tr>";
-					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle height: 10px;'>";
+					echo "\n\t<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle height: 10px;'>";
 						echo "<td colspan='3'></td>";
 					echo "</tr>";
-				} else if ($type == "subheader") {
+					continue;
+
+				} else if ($type == "header-sub") {
 					echo "<tr class='$advClass advanced-nocolor' style='$advStyle height: 5x;'>";
 						echo "<td colspan='3'></td>";
 					echo "</tr>";
-					echo "<tr class='$advClass advanced-nocolor style='$advStyle'>";
-						echo "<td colspan='3' class='subSettingsHeader'><div>$description</div></td>";
+					echo "\n\t<tr class='$advClass advanced-nocolor style='$advStyle'>";
+						echo "<td colspan='3' class='subSettingsHeader'><div>$label</div></td>";
 					echo "</tr>";
-					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle height: 5x;'>";
+					echo "\n\t<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle height: 5x;'>";
 						echo "<td colspan='3'></td>";
 					echo "</tr>";
+					continue;
+
+				} else if ($type == "header-column") {
+					echo "<tr  style='height: 10x;'>";
+						echo "<td colspan='3'></td>";
+					echo "</tr>";
+					echo "<tr class='columnHeader'>";
+						$columns = explode(",", $label);
+						foreach ($columns as $col) {
+							echo "<td style='margin: 0;'>$col</td>";
+						}
+					echo "</tr>";
+					echo "<tr class='rowSeparator' style='height: 10x;'>";
+						echo "<td colspan='3'></td>";
+					echo "</tr>";
+					continue;
+
 				} else {
 					echo "<tr class='form-group $advClass $class $warning_class' style='margin-bottom: 0px; $advStyle'>";
 					// Show the default in a popup
 					if ($type == "boolean") {
 						if ($default == "0") $default = "No";
 						else $default = "Yes";
+
 					} elseif ($type == "select") {
 						foreach($option['options'] as $opt) {
 							$val = getVariableOrDefault($opt, 'value', "?");
@@ -490,35 +575,41 @@ if ($formReadonly != "readonly") { ?>
 					if ($default !== "") $popup .= "Default=$default";
 					if ($minimum !== "") $popup .= "\nMinimum=$minimum";
 					if ($maximum !== "") $popup .= "\nMaximum=$maximum";
-					if ($type == "integer" || $type == "percent") $popup .= "\nWhole numbers only";
-					if ($type == "float") $popup .= "\nFractions allowed";
 
-					if ($type == "widetext") $span="rowspan='2'";
-					else $span="";
-					echo "\n\t<td $span valign='middle' style='padding: 2px 0px'>";
-					echo "<label class='WebUISetting' style='padding-right: 3px;'>$label</label>";
+					$rspan="";
+					$cspan="";
+
+					if ($type == "integer" || $type == "percent") {
+						$popup .= "\nWhole numbers only";
+					} else if ($type == "float") {
+						$popup .= "\nFractions allowed";
+					} else if ($type == "widetext") {
+						$rspan="rowspan='2'";
+						$cspan="colspan='2'";
+					}
+					echo "\n\t<td $rspan valign='middle' style='padding: 2px 0px'>";
+						echo "<label class='WebUISetting' style='padding-right: 3px;'>$label</label>";
 					echo "</td>";
 
 					if ($type == "widetext") {
-						$span="colspan='2'";
 						$style="padding: 5px 3px 7px 8px;";
 					} else {
-						$span="";
 						// Less on top side to even out with drop-shadow on bottom.
 						// Ditto for left side with shadow on right.
 						$style="padding: 5px 5px 7px 8px;";
 					}
 
-					echo "\n\t<td $span valign='middle' style='$style' align='center'>";
+					echo "\n\t<td $cspan valign='middle' style='$style' align='center'>";
 					// The popup gets in the way of seeing the value a little.
 					// May want to consider having a symbol next to the field
 					// that has the popup.
 					echo "<span title='$popup'>";
 // TODO: add percent sign for "percent"
-					if ($type == "text" || $type == "integer" || $type == "float" || $type == "percent" || $type == "readonly"){
+					if (in_array($type, ["text", "password", "integer", "float", "percent", "readonly"])) {
 						if ($type == "readonly") {
 							$readonly = "readonly";
 							$t = "text";
+
 						} else {
 							$readonly = "";
 							// Browsers put the up/down arrows for numbers which moves the
@@ -528,16 +619,19 @@ if ($formReadonly != "readonly") { ?>
 								$type = "text";
 							$t = $type;
 						}
-						echo "\n\t<input $readonly class='form-control boxShadow settingInput ' type='$t'" .
+						echo "\n\t\t<input $readonly class='form-control boxShadow settingInput ' type='$t'" .
 							" $readonlyForm name='$name' value='$value'" .
 							" style='padding: 0px 3px 0px 0px; text-align: right;' >";
+
 					} else if ($type == "widetext"){
-						echo "\n\t<input class='form-control boxShadow' type='text'" .
+						echo "\n\t\t<input class='form-control boxShadow' type='text'" .
 							" $readonlyForm name='$name' value='$value'" .
 						   	" style='padding: 6px 5px;'>";
+
 					} else if ($type == "select"){
-						echo "\n\t<select class='form-control boxShadow settingInput' name='$name' title='Select an item'" .
-						   	" $readonlyForm style='text-align: right; padding: 0px 3px 0px 0px;'>";
+						echo "\n\t\t<select class='form-control boxShadow settingInput'" .
+							" $readonlyForm name='$name' title='Select an item'" .
+						   	" style='padding: 0px 3px 0px 0px; text-align: right;'>";
 						foreach($option['options'] as $opt){
 							$val = getVariableOrDefault($opt, 'value', "?");
 							$lab = getVariableOrDefault($opt, 'label', "?");
@@ -548,13 +642,14 @@ if ($formReadonly != "readonly") { ?>
 							}
 						}
 						echo "</select>";
+
 					} else if ($type == "boolean"){
-						echo "\n\t<div class='switch-field boxShadow settingInput' style='margin-bottom: -3px; border-radius: 4px;'>";
-							echo "\n\t<input id='switch_no_".$name."' class='form-control' type='radio' ".
+						echo "\n\t\t<div class='switch-field boxShadow settingInput' style='margin-bottom: -3px; border-radius: 4px;'>";
+							echo "\n\t\t<input id='switch_no_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='0' ".
 								($value == 0 ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_no_".$name."'>No</label>";
-							echo "\n\t<input id='switch_yes_".$name."' class='form-control' type='radio' ".
+							echo "\n\t\t<input id='switch_yes_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='1' ".
 								($value == 1 ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_yes_".$name."'>Yes</label>";
@@ -562,16 +657,26 @@ if ($formReadonly != "readonly") { ?>
 					}
 					echo "</span>";
 
-					// Track current values so we can determine what changed.
-					if ($formReadonly != "readonly")
-						echo "\n\t<input type='hidden' name='OLD_$name' value='$OLDvalue'>";
+//x					// Track current values so we can determine what changed.
+//x					if ($formReadonly != "readonly")
+//x						echo "\n\t\t<input type='hidden' name='OLD_$name' value='$OLDvalue'>";
 
-					echo "</td>";
-					if ($type == "widetext")
-						echo "</tr><tr class='rowSeparator $advClass' style='$advStyle'><td></td>";
+					echo "\n\t</td>";
+
+					if ($type == "widetext") {
+						echo "\n</tr>";
+						echo "\n<tr class='rowSeparator $advClass' style='$advStyle'>";
+							echo "\n\t<td></td>";
+					}
+$popupYesNo = getVariableOrDefault($option, 'popup-yesno', "");
+if ($popupYesNo !== "") {
+	$popupYesNoValue = getVariableOrDefault($option, 'popup-yesno-value', "");
+	$description .= "<br><span style='color: red;'>If value changes to '$popupYesNoValue' then ask '$popupYesNo'</span>";
+}
 					echo "\n\t<td style='padding-left: 10px;'>$warning_msg$description</td>";
+
+					echo "\n</tr>";
 				}
-				echo "</tr>";
 			 }
 		echo "</table>";
 

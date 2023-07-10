@@ -131,7 +131,6 @@ function DisplayEditor()
 							style="display: inline-block; width: auto; margin-right: 15px; margin-bottom: 5px"
 						>
 							<option value="config/config.sh">config.sh</option>
-							<option value="config/ftp-settings.sh">ftp-settings.sh</option>
 
 				<?php
 							if ($scripts != null) {

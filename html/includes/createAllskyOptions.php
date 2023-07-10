@@ -313,11 +313,17 @@ if ($repo_array === null) {
 	// default			[string, but usually a number]
 	// description		[string]
 	// label			[string]
-	// type				[string - header, number, text, checkbox, select, readonly]
+	// type				[string]
 	// options			[array with 1 or more entries] (only if "type" == "select")
+	// popup-yesno		[string]
+	// popup-yesno-value	[number or string]
 	// display			[0/1]
 	// checkchanges		[0/1]
+	// source			[string]
+	// booldependson	[string]	("name" of other setting)
+	// booldependsoff	[string]	("name" of other setting)
 	// optional			[0/1]
+	// action			[string]
 	// advanced 		[0/1]	(last, so no comma after it)
 
 
@@ -392,9 +398,15 @@ foreach ($repo_array as $repo) {
 		add_non_null_field($repo, "label", $name);
 		add_non_null_field($repo, "type", $name);
 		add_non_null_field($repo, "options", $name);
+		add_non_null_field($repo, "popup-yesno", $name);
+		add_non_null_field($repo, "popup-yesno-value", $name);
 		add_non_null_field($repo, "display", $name);
 		add_non_null_field($repo, "checkchanges", $name);
 		add_non_null_field($repo, "optional", $name);
+		add_non_null_field($repo, "source", $name);
+		add_non_null_field($repo, "booldependson", $name);
+		add_non_null_field($repo, "booldependsoff", $name);
+		add_non_null_field($repo, "action", $name);
 		add_non_null_field($repo, "advanced", $name);
 	$options_str .= "},\n";
 }

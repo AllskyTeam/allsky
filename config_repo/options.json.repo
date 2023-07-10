@@ -1179,6 +1179,30 @@
 "booldependson" : "useremotewebsite",
 "advanced" : 0
 },
+{
+"name" : "remotewebsiteurl",
+"default" : "",
+"description" : "The URL of your Allsky Website, for example: https://www.thomasjacquin.com/allsky.<br>Must begin with <b>http</b> or <b>https</b>.",
+"label" : "Website URL",
+"type" : "widetext",
+"display" : 1,
+"checkchanges" : 1,
+"optional" : 1,
+"booldependson" : "showonmap OR useremotewebsite",
+"advanced" : 0
+},
+{
+"name" : "remotewebsiteimageurl",
+"default" : "",
+"description" : "The URL of the image on your Allsky Website, for example: https://wwww.thomasjacquin.com/allsky/image.jpg.<br/>Right-click on the image and select <i>Copy Image Address</i>.<br>Must begin with <b>http</b> or <b>https</b>.",
+"label" : "Image URL",
+"type" : "widetext",
+"display" : 1,
+"checkchanges" : 1,
+"optional" : 1,
+"booldependson" : "showonmap OR useremotewebsite",
+"advanced" : 0
+},
 
 {
 "name" : "remoteserverheader",
@@ -1290,30 +1314,7 @@
 "checkchanges" : 1,
 "advanced" : 0
 },
-{
-"name" : "websiteurl",
-"default" : "",
-"description" : "The URL of your Allsky Website, for example: https://www.thomasjacquin.com/allsky.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
-"label" : "Website URL",
-"type" : "widetext",
-"display" : 1,
-"checkchanges" : 1,
-"optional" : 1,
-"booldependson" : "showonmap AND useremotewebsite",
-"advanced" : 0
-},
-{
-"name" : "imageurl",
-"default" : "",
-"description" : "The URL of the image on your Allsky Website, for example: https://wwww.thomasjacquin.com/allsky/image.jpg.<br/>Right-click on the image and select <i>Copy Image Address</i>.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
-"label" : "Image URL",
-"type" : "widetext",
-"display" : 1,
-"checkchanges" : 1,
-"optional" : 1,
-"booldependson" : "showonmap AND useremotewebsite",
-"advanced" : 0
-},
+
 {
 "name" : "location",
 "default" : "",

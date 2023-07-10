@@ -1164,8 +1164,8 @@
 	{"value" : "ftp", "label" : "ftp"},
 	{"value" : "sftp", "label" : "sftp"},
 	{"value" : "scp", "label" : "scp"},
-	{"value" : "S3", "label" : "S3"},
-	{"value" : "GCS", "label" : "GCS"}
+	{"value" : "S3", "label" : "s3"},
+	{"value" : "GCS", "label" : "gcs"}
 ],
 "display" : 1,
 "checkchanges" : 1,
@@ -1309,10 +1309,10 @@
 "advanced" : 0
 },
 {
-"name" : "REMOTEWEBSITE_GSC_ACL",
+"name" : "REMOTEWEBSITE_GCS_ACL",
 "default" : "private",
-"description" : "GSC Access Control List (ACL).",
-"label" : "GSC ACL",
+"description" : "GCS Access Control List (ACL).",
+"label" : "GCS ACL",
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
@@ -1409,8 +1409,8 @@
 	{"value" : "ftp", "label" : "ftp"},
 	{"value" : "sftp", "label" : "sftp"},
 	{"value" : "scp", "label" : "scp"},
-	{"value" : "S3", "label" : "S3"},
-	{"value" : "GCS", "label" : "GCS"}
+	{"value" : "S3", "label" : "s3"},
+	{"value" : "GCS", "label" : "gcs"}
 ],
 "display" : 1,
 "checkchanges" : 1,

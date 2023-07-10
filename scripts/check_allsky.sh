@@ -73,8 +73,6 @@ done
 #shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh"	 					|| exit ${ALLSKY_ERROR_STOP}
 
-PROTOCOL="$( settings ".protocol1" )"
-
 BRANCH="$( get_branch "" )"
 [[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 [[ ${DEBUG} == "true" ]] && echo "DEBUG: using '${BRANCH}' branch."
@@ -181,109 +179,8 @@ function min()
 	fi
 }
 
-# Indent all lines.
-function indent()
-{
-	echo -e "${1}" | sed 's/^/\t/'
-}
 
-# The various upload protocols need different variables defined.
-# For the specified protocol, make sure the specified variable is defined.
-function check_PROTOCOL()
-{
-	local P="${1}"	# Protocol
-	local N="${2}"	# Protocol number
-	local V="${3}"	# Variable
-	local VALUE="$( get_variable "${V}${NUM}" "${ENV_FILE}" )"
-	if [[ -z ${VALUE} ]]; then
-		heading "Warnings"
-		echo "PROTOCOL${N} (${P}) set but not '${V}${N}'."
-		echo "Uploads will not work until this is fixed."
-		return 1
-	fi
-	return 0
-}
 
-# Check variables are correct for a remote server.
-function check_remote_server()
-{
-	local NUM="${1}"
-
-	local USE="$( settings ".useremote${NUM}" )"
-	if [[ ${USE} -eq "${REMOTE_TYPE_NO}" ]]; then
-		if check_for_env_file ; then
-			# Variables should not be set to anything.
-			x="$( grep -E -v "^#|^$" "${ENV_FILE}" | grep "${NUM}=" | grep -E -v "${NUM}=\"\"|${NUM}=$" )"
-			if [[ -n "${x}" ]]; then
-				heading "Warnings"
-				echo "Remote Server ${NUM} not being used but settings for it exist in '${ENV_FILE}:"
-				indent "${x}" | sed "s/${NUM}=.*/${NUM}/"
-			fi
-		fi
-		return
-	fi
-
-	PROTOCOL="$( settings ".protocol${NUM}" )"
-	case "${PROTOCOL}" in
-		"")
-			heading "ERROR"
-			echo "Remote server ${NUM} is being used but has no PROTOCOL${NUM}."
-			echo "Uploads to it will not work."
-			;;
-
-		ftp | ftps | sftp)
-			check_for_env_file || return 1
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_HOST"
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_USER"
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_PASSWORD"
-			if [[ ${PROTOCOL} == "ftp" ]]; then
-				heading "Warnings"
-				echo "PROTOCOL${NUM} set to insecure 'ftp'.  Try to use 'ftps' or 'sftp' instead."
-			fi
-			;;
-
-		scp)
-			check_for_env_file || return 1
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_HOST"
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "REMOTE_USER"
-			if check_PROTOCOL "${PROTOCOL}" "${NUM}" "SSH_KEY_FILE" && [[ ! -e ${SSH_KEY_FILE} ]]; then
-				heading "Warnings"
-				echo "PROTOCOL ${NUM} (${PROTOCOL}) set but 'SSH_KEY_FILE${NUM}' (${SSH_KEY_FILE}) does not exist."
-				echo "Uploads will not work."
-			fi
-			;;
-
-		s3)
-			check_for_env_file || return 1
-			if check_PROTOCOL "${PROTOCOL}" "${NUM}" "AWS_CLI_DIR" && [[ ! -e ${AWS_CLI_DIR} ]]; then
-				heading "Warnings"
-				echo "PROTOCOL ${NUM} (${PROTOCOL}) set but 'AWS_CLI_DIR${NUM}' (${AWS_CLI_DIR}) does not exist."
-				echo "Uploads will not work."
-			fi
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "S3_BUCKET"
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "S3_ACL"
-			;;
-
-		gcs)
-			check_for_env_file || return 1
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "GCS_BUCKET"
-			check_PROTOCOL "${PROTOCOL}" "${NUM}" "GCS_ACL"
-			;;
-
-		*)
-			heading "Warnings"
-			echo "PROTOCOL ${NUM} (${PROTOCOL}) not blank or one of: ftp, ftps, sftp, scp, s3, gcs."
-			echo "Uploads will not work until this is corrected."
-			;;
-	esac
-
-	REMOTE_PORT="$( get_variable "REMOTE_PORT${NUM}" "${ENV_FILE}" )"
-	if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
-		heading "Warnings"
-		echo "REMOTE_PORT${NUM} (${REMOTE_PORT}) must be a number."
-		echo "Uploads will not work until this is corrected."
-	fi
-}
 
 
 # Check that when a variable holds a location, the location exists.
@@ -630,8 +527,25 @@ if [[ ${RESIZE_UPLOADS} == "true" && ${IMG_UPLOAD} == "false" ]]; then
 	echo "RESIZE_UPLOADS is 'true' but you aren't uploading images (IMG_UPLOAD='false')."
 fi
 
-check_remote_server 1
-check_remote_server 2
+X="$( check_remote_server "REMOTEWEBSITE" )"
+RET=$?
+if [[ ${RET} -eq 1 ]]; then
+	heading "Warnings"
+	echo -e "${X}"
+elif [[ ${RET} -eq 2 ]]; then
+	heading "Errors"
+	echo -e "${X}"
+fi
+
+X="$( check_remote_server "REMOTESERVER" )"
+RET=$?
+if [[ ${RET} -eq 1 ]]; then
+	heading "Warnings"
+	echo -e "${X}"
+elif [[ ${RET} -eq 2 ]]; then
+	heading "Errors"
+	echo -e "${X}"
+fi
 
 
 ##### If these variables are set, their corresponding directory should exist.

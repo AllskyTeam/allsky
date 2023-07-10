@@ -1,8 +1,23 @@
 [
 {
+"name" : "daynighttab",
+"label" : "Day/Night Settings",
+"type" : "header-tab",
+"display" : 1,
+"advanced" : 0
+},
+{
 "name" : "daytimesettingsheader",
-"description" : "Daytime settings",
+"label" : "Daytime settings",
 "type" : "header",
+"display" : 1,
+"advanced" : 0
+},
+{
+"name" : "daynightcolumns",
+"label" : "Setting, Day Value, Description",
+"candrop" : "Description",
+"type" : "header-column",
 "display" : 1,
 "advanced" : 0
 },
@@ -237,7 +252,7 @@
 
 {
 "name" : "nighttimesettingsheader",
-"description" : "Nighttime settings",
+"label" : "Nighttime settings",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
@@ -441,8 +456,15 @@
 },
 
 {
+"name" : "bothtab",
+"label" : "24 Hours",
+"type" : "header-tab",
+"display" : 1,
+"advanced" : 0
+},
+{
 "name" : "dayandnightheader",
-"description" : "Both day and night settings",
+"label" : "Both day and night settings",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
@@ -810,8 +832,15 @@
 },
 
 {
+"name" : "overlaytab",
+"label" : "Overlay",
+"type" : "header-tab",
+"display" : 1,
+"advanced" : 0
+},
+{
 "name" : "overlayheader",
-"description" : "Image overlay settings",
+"label" : "Image overlay settings",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
@@ -819,7 +848,7 @@
 {
 "name" : "overlaymethod",
 "default" : 1,
-"description" : "Determines how image overlays are done.<br><span class='WebUIValue'>module</span> supports a visual editor.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
+"description" : "Determines how image overlays are done.<br><span class='WebUIValue'>module</span> supports a visual editor.</b>",
 "label" : "Overlay Method",
 "type" : "select",
 "options" : [
@@ -1083,25 +1112,34 @@
 },
 
 {
+"name" : "websitetab",
+"label" : "Website",
+"type" : "header-tab",
+"display" : 1,
+"advanced" : 0
+},
+{
 "name" : "websiteheader",
-"description" : "Website and Remote Server Settings",
+"label" : "Website and Remote Server Settings",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
 },
 {
 "name" : "uselocalwebsite",
-"default" : 0,
 "description" : "Enable to use the local Allsky Website.  No other settings are needed.",
+"default" : 0,
 "label" : "Use Local Website",
 "type" : "boolean",
+"popup-yesno" : "Do you want to remove all saved images, keograms, startrails, and videos in the local Website?",
+"popup-yesno-value" : 0,
 "display" : 1,
 "advanced" : 0
 },
 {
 "name" : "remotewebsiteheader",
-"description" : "Remote Website Settings",
-"type" : "subheader",
+"label" : "Remote Website Settings",
+"type" : "header-sub",
 "display" : 1,
 "advanced" : 0
 },
@@ -1118,7 +1156,7 @@
 {
 "name" : "remotewebsiteprotocol",
 "default" : "ftps",
-"description" : "Protocol",
+"description" : "Protocol for remote Website",
 "label" : "Protocol",
 "type" : "select",
 "options" : [
@@ -1135,6 +1173,156 @@
 "advanced" : 0
 },
 {
+"name" : "REMOTEWEBSITE_HOST",
+"default" : "",
+"description" : "Name of server hosting the remote Allsky Website.",
+"label" : "Server Name",
+"type" : "widetext",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremotewebsite",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTEWEBSITE_PORT",
+"default" : "",
+"description" : "Optional port required by server.  Rarely required.",
+"label" : "Port",
+"type" : "integer",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremotewebsite",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTEWEBSITE_USER",
+"default" : "",
+"description" : "Username of the login on the remote server.",
+"label" : "User Name",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremotewebsite",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTEWEBSITE_PASSWORD",
+"default" : "",
+"description" : "Password of the remote server login.",
+"label" : "Password",
+"type" : "password",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremotewebsite",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTEWEBSITE_LFTP_COMMANDS",
+"default" : "",
+"description" : "Special commands needed when connecting to an FTP server.",
+"label" : "FTP Commands",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=*ftp*",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTEWEBSITE_SSH_KEY_FILE",
+"default" : "",
+"description" : "Path on the Pi to the SSH key file.",
+"label" : "SSH Key File",
+"type" : "widetext",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=scp",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTEWEBSITE_AWS_CLI_DIR",
+"default" : "${HOME}/.local/bin",
+"description" : "AWS CLI directory where the AWS CLI tools are installed.",
+"label" : "AWS CLI Directory",
+"type" : "widetext",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=s3",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTEWEBSITE_S3_BUCKET",
+"default" : "allskybucket",
+"description" : "Name of S3 bucket where files will be upload.",
+"label" : "S3 Bucket",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=s3",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTEWEBSITE_S3_ACL",
+"default" : "private",
+"description" : "S3 Access Control List (ACL).",
+"label" : "S3 ACL",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=s3",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTEWEBSITE_GCS_BUCKET",
+"default" : "allskybucket",
+"description" : "Name of GCS bucket where files will be upload.",
+"label" : "GCS Bucket",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=gcs",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTEWEBSITE_GSC_ACL",
+"default" : "private",
+"description" : "GSC Access Control List (ACL).",
+"label" : "GSC ACL",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=gcs",
+"optional" : 1,
+"advanced" : 0
+},
+{
 "name" : "remotewebsiteimagedir",
 "default" : "allsky",
 "description" : "Name of the top-level remote directory where images go.",
@@ -1142,8 +1330,8 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
-"optional" : 1,
 "booldependson" : "useremotewebsite",
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -1155,6 +1343,7 @@
 "display" : 1,
 "optional" : 1,
 "booldependson" : "useremotewebsite",
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -1164,8 +1353,8 @@
 "label" : "Remote Keogram File Name",
 "type" : "text",
 "display" : 1,
-"optional" : 1,
 "booldependson" : "useremotewebsite",
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -1175,8 +1364,8 @@
 "label" : "Remote Startrails Name",
 "type" : "text",
 "display" : 1,
-"optional" : 1,
 "booldependson" : "useremotewebsite",
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -1187,27 +1376,15 @@
 "type" : "widetext",
 "display" : 1,
 "checkchanges" : 1,
-"optional" : 1,
 "booldependson" : "showonmap OR useremotewebsite",
-"advanced" : 0
-},
-{
-"name" : "remotewebsiteimageurl",
-"default" : "",
-"description" : "The URL of the image on your Allsky Website, for example: https://wwww.thomasjacquin.com/allsky/image.jpg.<br/>Right-click on the image and select <i>Copy Image Address</i>.<br>Must begin with <b>http</b> or <b>https</b>.",
-"label" : "Image URL",
-"type" : "widetext",
-"display" : 1,
-"checkchanges" : 1,
 "optional" : 1,
-"booldependson" : "showonmap OR useremotewebsite",
 "advanced" : 0
 },
 
 {
 "name" : "remoteserverheader",
-"description" : "Remote Server Settings",
-"type" : "subheader",
+"label" : "Remote Server Settings",
+"type" : "header-sub",
 "display" : 1,
 "advanced" : 0
 },
@@ -1241,6 +1418,156 @@
 "advanced" : 0
 },
 {
+"name" : "REMOTESERVER_HOST",
+"default" : "",
+"description" : "Name of remote server NOT hosting an Allsky Website.",
+"label" : "Server Name",
+"type" : "widetext",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremoteserver",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTESERVER_PORT",
+"default" : "",
+"description" : "Optional port required by server.  Rarely required.",
+"label" : "Port",
+"type" : "integer",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremoteserver",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTESERVER_USER",
+"default" : "",
+"description" : "Username of the login on the remote server.",
+"label" : "User Name",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremoteserver",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTESERVER_PASSWORD",
+"default" : "",
+"description" : "Password of the remote server login.",
+"label" : "Password",
+"type" : "password",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremoteserver",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTESERVER_LFTP_COMMANDS",
+"default" : "",
+"description" : "Special commands needed when connecting to an FTP server.",
+"label" : "FTP Commands",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=*ftp*",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTESERVER_SSH_KEY_FILE",
+"default" : "",
+"description" : "Path on the Pi to the SSH key file.",
+"label" : "SSH Key File",
+"type" : "widetext",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=scp",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTESERVER_AWS_CLI_DIR",
+"default" : "${HOME}/.local/bin",
+"description" : "AWS CLI directory where the AWS CLI tools are installed.",
+"label" : "AWS CLI Directory",
+"type" : "widetext",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=s3",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTESERVER_S3_BUCKET",
+"default" : "allskybucket",
+"description" : "Name of S3 bucket where files will be upload.",
+"label" : "S3 Bucket",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=s3",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTESERVER_S3_ACL",
+"default" : "private",
+"description" : "S3 Access Control List (ACL).",
+"label" : "S3 ACL",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=s3",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTESERVER_GCS_BUCKET",
+"default" : "allskybucket",
+"description" : "Name of GCS bucket where files will be upload.",
+"label" : "GCS Bucket",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=gcs",
+"optional" : 1,
+"advanced" : 0
+},
+{
+"name" : "REMOTESERVER_SSH_KEY_FILE",
+"default" : "private",
+"description" : "S3 Access Control List (ACL).",
+"label" : "S3 ACL",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"source" : "${HOME}/.env",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=gcs",
+"optional" : 1,
+"advanced" : 0
+},
+{
 "name" : "remoteserverimagedir",
 "default" : "",
 "description" : "Name of the top-level remote directory where images go.",
@@ -1248,8 +1575,8 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
-"optional" : 1,
 "booldependson" : "useremoteserver",
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -1259,8 +1586,8 @@
 "label" : "Remote Video File Name",
 "type" : "text",
 "display" : 1,
-"optional" : 1,
 "booldependson" : "useremoteserver",
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -1270,8 +1597,8 @@
 "label" : "Remote Keogram File Name",
 "type" : "text",
 "display" : 1,
-"optional" : 1,
 "booldependson" : "useremoteserver",
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -1281,14 +1608,21 @@
 "label" : "Remote Startrails File Name",
 "type" : "text",
 "display" : 1,
-"optional" : 1,
 "booldependson" : "useremoteserver",
+"optional" : 1,
 "advanced" : 0
 },
 
 {
+"name" : "allskymaptab",
+"label" : "Map",
+"type" : "header-tab",
+"display" : 1,
+"advanced" : 0
+},
+{
 "name" : "allskymapheader",
-"description" : "Allsky Map Settings",
+"label" : "Allsky Map Settings",
 "type" : "header",
 "display" : 1,
 "advanced" : 0
@@ -1377,8 +1711,15 @@
 },
 
 {
+"name" : "cameratab",
+"label" : "Camera Type",
+"type" : "header-tab",
+"display" : 1,
+"advanced" : 0
+},
+{
 "name" : "cameraheading",
-"description" : "Camera Type",
+"label" : "Camera Type",
 "type" : "header",
 "display" : 1,
 "advanced" : 1

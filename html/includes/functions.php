@@ -506,10 +506,32 @@ function get_variable($file, $searchfor, $default)
 }
 
 /**
+*
+* Update the specified variable in the specified file.
+*/
+function set_variable($file, $variable, $newValue, $oldValue)
+{
+	// get the file contents
+	if (! file_exists($file)) {
+		$msg  = "<div style='color: red; font-size: 200%;'>";
+		$msg .= "<br>File '$file' not found!";
+		$msg .= "</div>";
+		echo $msg;
+		return(false);
+	}
+// TODO
+echo "<br>Need to set $variable to $newValue in $file (was $oldValue)";
+
+	return(true);
+}
+
+
+/**
 * 
 * List a type of file - either "All" (case sensitive) for all days, or only for the specified day.
+* If $dir is not null, it ends in "/".
 */
-function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {	// if $dir is not null, it ends in "/"
+function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 	$num = 0;	// Let the user know when there are no images for the specified day
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";

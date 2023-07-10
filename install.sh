@@ -368,7 +368,8 @@ create_webui_defines()
 {
 	display_msg --log progress "Modifying locations for WebUI."
 	FILE="${ALLSKY_WEBUI}/includes/allskyDefines.inc"
-	sed		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+	sed		-e "s;XX_HOME_XX;${HOME};" \
+			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
 			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};" \

@@ -73,11 +73,13 @@ $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null
 $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
+$settings_array = null;
 function initialize_variables() {
 	global $status, $needToDisplayMessages;
 	global $image_name, $delay, $daydelay, $nightdelay;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
+	global $settings_array;
 
 	// The Camera Type should be set during the installation, so this "should" never fail...
 	$cam_type = getCameraType();
@@ -103,7 +105,7 @@ function initialize_variables() {
 	$useLogin = getVariableOrDefault($settings_array, 'uselogin', true);
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
-	$websiteURL = getVariableOrDefault($settings_array, 'websiteurl', "");
+	$websiteURL = getVariableOrDefault($settings_array, 'remotewebsiteurl', "");
 
 
 	////////////////// Determine delay between refreshes of the image.

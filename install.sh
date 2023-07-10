@@ -1560,7 +1560,9 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 	PRIOR_FILE="${3}"
 	NEW_FILE="${4}"
 
-		# TODO: new versions go here
+	[[ ${NEW_VERSION} == "${PRIOR_VERSION}" ]] && return
+
+	# TODO: new versions go here
 	if [[ ${NEW_VERSION} == "v2023.05.01_02" ]]; then
 		if [[ ${PRIOR_VERSION} != "v2023.05.01" && ${PRIOR_VERSION} != "v2023.05.01_01" ]]; then
 			return
@@ -1571,15 +1573,14 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 		local F="meanthreshold"
 		MEANTHRESHOLD="$( settings ".${F}" "${PRIOR_FILE}" )"
 		if [[ -n ${MEANTHRESHOLD} ]]; then
-
 			DAYMEANTHRESHOLD="$( settings ".day${F}" "${NEW_FILE}" )"
 			if [[ -z ${DAYMEANTHRESHOLD} ]]; then
-			display_msg --logonly info "   Updating 'day${F}' in '${NEW_FILE}'."
+				display_msg --logonly info "   Updating 'day${F}' in '${NEW_FILE}'."
 				update_json_file ".day${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
 			fi
 			NIGHTMEANTHRESHOLD="$( settings ".night${F}" "${NEW_FILE}" )"
 			if [[ -z ${NIGHTMEANTHRESHOLD} ]]; then
-			display_msg --logonly info "   Updating 'night${F}' in '${NEW_FILE}'."
+				display_msg --logonly info "   Updating 'night${F}' in '${NEW_FILE}'."
 				update_json_file ".night${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
 			fi
 
@@ -1607,8 +1608,8 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 			convert_json_to_tabs "${PRIOR_FILE}" |
 				while read -r F V
 				do
-					case "${F}" in
-						"lastChanged")
+					case "${F,,}" in
+						"lastchanged")
 							V="$( date +'%Y-%m-%d %H:%M:%S' )"
 							;;
 
@@ -1619,7 +1620,7 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 						# These changed names.
 						"darkframe")
-							F="takeDarkFrames"
+							F="takedarkframes"
 							;;
 						"daymaxautoexposure")
 							F="daymaxautoexposure"
@@ -1632,6 +1633,12 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 							;;
 						"nightmaxgain")
 							F="nightmaxautogain"
+							;;
+						"websiteurl")
+							F="remotewebsiteurl"
+							;;
+						"imageurl")
+							F="remotewebsiteimageurl"
 							;;
 
 						# These now have day and night versions.
@@ -1673,13 +1680,13 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 			# Fields whose location changed.
 			x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
-			update_json_file ".takeDaytimeImages" "${x}" "${NEW_FILE}"
+			update_json_file ".takedaytimeimages" "${x}" "${NEW_FILE}"
 
 			x="$( get_variable "DAYTIME_SAVE" "${PRIOR_CONFIG_FILE}" )"
-			update_json_file ".saveDaytimeImages" "${x}" "${NEW_FILE}"
+			update_json_file ".savedaytimeimages" "${x}" "${NEW_FILE}"
 
 			x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
-			update_json_file ".useDarkFrames" "${x}" "${NEW_FILE}"
+			update_json_file ".usedarkframes" "${x}" "${NEW_FILE}"
 
 			return
 		fi

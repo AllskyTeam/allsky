@@ -82,7 +82,7 @@ function check_URL()
 		elif [[ ${RET} -ne 0 ]]; then
 				E="ERROR: ${FIELD_NAME} '${URL}' cannot be reached (${CONTENT}).${BR}${E}"
 		else
-			if [[ ${URL_TYPE} == "websiteurl" ]]; then
+			if [[ ${URL_TYPE} == "remotewebsiteurl" ]]; then
 				TYPE="$(echo "${CONTENT}" | grep -i "Content-Type: text")"
 				T="web site"
 			else
@@ -219,8 +219,8 @@ if [[ ${DELETE} == "true" ]]; then
 else
 	LOCATION="$(settings ".location")"
 	OWNER="$(settings ".owner")"
-	WEBSITE_URL="$(settings ".websiteurl")"
-	IMAGE_URL="$(settings ".imageurl")"
+	WEBSITE_URL="$(settings ".remotewebsiteurl")"
+	IMAGE_URL="$(settings ".remotewebsiteimageurl")"
 	CAMERA="$(settings ".camera")"
 	LENS="$(settings ".lens")"
 	COMPUTER="$(settings ".computer")"
@@ -263,10 +263,10 @@ else
 			OK="false"
 		fi
 		if [[ -n ${WEBSITE_URL} ]]; then
-			check_URL "${WEBSITE_URL}" websiteurl "Website URL" || OK="false"
+			check_URL "${WEBSITE_URL}" remotewebsiteurl "Website URL" || OK="false"
 		fi
 		if [[ -n ${IMAGE_URL} ]]; then
-			check_URL "${IMAGE_URL}" imageurl "Image URL" || OK="false"
+			check_URL "${IMAGE_URL}" remotewebsiteimageurl "Image URL" || OK="false"
 		fi
 	fi
 

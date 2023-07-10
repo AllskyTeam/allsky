@@ -439,15 +439,22 @@ do
 			;;
 
 		remotewebsiteurl | remotewebsiteimageurl)
+# TODO: make sure we can get to them.
 			RUN_POSTTOMAP="true"
 			;;
 
 		useremotewebsite | remotewebsiteprotocol | remotewebsiteimagedir)
+# TODO: make sure we can get to Website using new settings
 			:	# TODO
 			;;
 
 		useremoteserver | remoteserverprotocol | remoteserveriteimagedir)
+# TODO: make sure we can get to server using new settings
 			:	# TODO
+			;;
+
+		REMOTEWEBSITE_GSC_ACL )
+			:	# TODO - add a bunch more settings
 			;;
 
 		overlaymethod)
@@ -464,7 +471,7 @@ do
 
 
 		*)
-			echo -e "${wWARNING}WARNING: Unknown label '${LABEL}', key='${KEY}'; ignoring.${wNC}"
+			echo -e "${wWARNING}WARNING: Unknown label '${LABEL}', key='${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}${wNC}"
 			;;
 
 		esac

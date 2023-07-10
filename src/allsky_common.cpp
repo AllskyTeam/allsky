@@ -1179,19 +1179,19 @@ void displaySettings(config cg)
 	printf("   Quality: %ld\n", cg.userQuality);
 	printf("   Daytime capture: %s\n", yesNo(cg.daytimeCapture));
 
-	printf("   Exposure (day):   %20s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
+	printf("   Exposure (day):   %15s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
 		if (cg.dayAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.dayMaxAutoExposure_us, true));
 		printf("\n");
-	printf("   Exposure (night): %20s, Auto: %3s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
+	printf("   Exposure (night): %15s, Auto: %3s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
 		if (cg.nightAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.nightMaxAutoExposure_us, true));
 		printf("\n");
-	printf("   Gain (day):   %8s, Auto: %3s", LorF(cg.dayGain, "%ld", "%1.2f"), yesNo(cg.dayAutoGain));
+	printf("   Gain (day):   %5s, Auto: %3s", LorF(cg.dayGain, "%ld", "%1.2f"), yesNo(cg.dayAutoGain));
 		if (cg.dayAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.dayMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
-	printf("   Gain (night): %8s, Auto: %3s", LorF(cg.nightGain, "%ld", "%1.2f"), yesNo(cg.nightAutoGain));
+	printf("   Gain (night): %5s, Auto: %3s", LorF(cg.nightGain, "%ld", "%1.2f"), yesNo(cg.nightAutoGain));
 		if (cg.nightAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
@@ -1349,12 +1349,14 @@ void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 	}
 
 	long s_us = 0;
-	if (cg.consistentDelays && cg.currentAutoExposure && lastExposure_us < cg.currentMaxAutoExposure_us) {
-		// If using auto-exposure and the actual exposure is less than the max,
+	if (cg.consistentDelays) {
+		// consistentDelays keeps a constant frame rate during timelapse generation by
+		// always using starting the next exposure (delay + currentMaxAutoExposure_us)
+		// after the last exposure.
+		// So if the actual exposure is less than the max,
 		// we still wait until we reach maxexposure, then wait for the delay period.
-		// This is important for a constant frame rate during timelapse generation.
 
-		if (lastExposure_us < cg.currentMaxAutoExposure_us)
+		if (lastExposure_us < cg.currentMaxAutoExposure_us)		// TODO: if AE_ALLSKY:    && cg.currentAutoExposure)
 			s_us = cg.currentMaxAutoExposure_us - lastExposure_us;	// how much longer till max?
 		s_us += (cg.currentDelay_ms * US_IN_MS);		// Add standard delay amount
 		Log(2, "  > Sleeping: %s\n", length_in_units(s_us, false));
@@ -1973,22 +1975,24 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 			strcmp(a, "xx_end_xx") == 0 ||
 			strcmp(a, "lastchanged") == 0 ||
 			strcmp(a, "uselocalwebsite") == 0 ||
-#define temp1 "useremote"
-			strncmp(a, temp1, sizeof(temp1)-1) == 0 ||
-#define temp2 "protocol"
-			strncmp(a, temp2, sizeof(temp2)-1) == 0 ||
-#define temp3 "imagedir"
-			strncmp(a, temp3, sizeof(temp3)-1) == 0 ||
-#define temp4 "videodestinationname"
-			strncmp(a, temp4, sizeof(temp4)-1) == 0 ||
-#define temp5 "keogramdeodestinationname"
-			strncmp(a, temp5, sizeof(temp5)-1) == 0 ||
-#define temp6 "startrailsdeodestinationname"
-			strncmp(a, temp6, sizeof(temp6)-1) == 0 ||
+			strcmp(a, "useremotewebsite") == 0 ||
+			strcmp(a, "useremoteserver") == 0 ||
+			strcmp(a, "remotewebsiteprotocol") == 0 ||
+			strcmp(a, "remoteserverprotocol") == 0 ||
+			strcmp(a, "remotewebsiteimagedir") == 0 ||
+			strcmp(a, "remoteserverimagedir") == 0 ||
+			strcmp(a, "remotewebsiteurl") == 0 ||
+			strcmp(a, "remoteserverurl") == 0 ||
+			strcmp(a, "remotewebsiteimageurl") == 0 ||
+			strcmp(a, "remoteserverimageurl") == 0 ||
+			strcmp(a, "remotewebsitevideodestinationname") == 0 ||
+			strcmp(a, "remoteservervideodestinationname") == 0 ||
+			strcmp(a, "remotewebsitekeogramdestinationname") == 0 ||
+			strcmp(a, "remoteserverkeogramdestinationname") == 0 ||
+			strcmp(a, "remotewebsitestartrailsdestinationname") == 0 ||
+			strcmp(a, "remoteserverstartrailsdestinationname") == 0 ||
 			strcmp(a, "displaysettings") == 0 ||
 			strcmp(a, "showonmap") == 0 ||
-			strcmp(a, "websiteurl") == 0 ||
-			strcmp(a, "imageurl") == 0 ||
 			strcmp(a, "location") == 0 ||
 			strcmp(a, "owner") == 0 ||
 			strcmp(a, "camera") == 0 ||

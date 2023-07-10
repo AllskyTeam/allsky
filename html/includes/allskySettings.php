@@ -656,11 +656,6 @@ if ($formReadonly != "readonly") { ?>
 						echo "</div>";
 					}
 					echo "</span>";
-
-//x					// Track current values so we can determine what changed.
-//x					if ($formReadonly != "readonly")
-//x						echo "\n\t\t<input type='hidden' name='OLD_$name' value='$OLDvalue'>";
-
 					echo "\n\t</td>";
 
 					if ($type == "widetext") {

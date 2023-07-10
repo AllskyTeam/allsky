@@ -438,7 +438,16 @@ table .alert-dismissable {
 	background-color: #aac;
 }
 .dark .subSettingsHeader {
-	background-color: #363636;
+	background-color: #339
+}
+.columnHeader {
+	background-color: #aac;
+	text-align: center;
+	font-weight: bold;
+	font-size: 1.05em;
+	padding: 0;
+}
+.dark .columnHeader {
 	background-color: #339
 }
 

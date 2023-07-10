@@ -438,7 +438,7 @@ do
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
 
-		websiteurl | imageurl)
+		remotewebsiteurl | remotewebsiteimageurl)
 			RUN_POSTTOMAP="true"
 			;;
 

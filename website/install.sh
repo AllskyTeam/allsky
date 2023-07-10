@@ -142,7 +142,7 @@ get_versions_and_branches()
 	GOT_VERSIONS_AND_BRANCHES="true"
 
 	# All new versions have a "versions" file.
-	# If the user specified a branch use that, otherwise see if they are running
+	# If the user specified a branch, use that, otherwise see if they are running
 	# a non-production branch.
 
 	GITHUB_MAIN_BRANCH_NEW_VERSION="$( get_Git_version "${GITHUB_MAIN_BRANCH}" "allsky-website" )"
@@ -169,8 +169,13 @@ get_versions_and_branches()
 	display_msg "${LOG_TYPE}" info "GITHUB_MAIN_BRANCH_NEW_VERSION=${GITHUB_MAIN_BRANCH_NEW_VERSION}"
 
 	if [[ ${DO_REMOTE_WEBSITE} == "true" ]]; then
-		# Only newer Websites have DO_REMOTE_WEBSITE, so there should be a PRIOR_WEBSITE_VERSION.
-		PRIOR_WEBSITE_VERSION="$( settings .config.AllskyWebsiteVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+		# Only newer Websites have DO_REMOTE_WEBSITE, so there should be a PRIOR_WEBSITE_VERSION
+		# if there was a prior remote Website.
+		if [[ -s ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
+			PRIOR_WEBSITE_VERSION="$( settings .config.AllskyWebsiteVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+		else
+			PRIOR_WEBSITE_VERSION="[none]"
+		fi
 
 		if [[ -n ${USER_SPECIFIED_BRANCH} && ${USER_SPECIFIED_BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
 			NEW_WEBSITE_VERSION="$( get_Git_version "${USER_SPECIFIED_BRANCH}" "allsky-website" )"
@@ -193,7 +198,9 @@ get_versions_and_branches()
 		else
 			B="${BRANCH}"
 		fi
-		check_for_old_version "${PRIOR_WEBSITE_VERSION}" "${NEW_WEBSITE_VERSION}" "${B}" || exit 1
+		if [[ ${PRIOR_WEBSITE_VERSION} != "[none]" ]]; then
+			check_for_old_version "${PRIOR_WEBSITE_VERSION}" "${NEW_WEBSITE_VERSION}" "${B}" || exit 1
+		fi
 
 		display_msg "${LOG_TYPE}" info "New   remote Website version=${NEW_WEBSITE_VERSION}"
 		display_msg "${LOG_TYPE}" info "Prior remote Website version=${PRIOR_WEBSITE_VERSION}"
@@ -236,7 +243,7 @@ get_versions_and_branches()
 		PRIOR_WEBSITE_VERSION="$( get_version "${PRIOR_WEBSITE}/" )"
 		check_for_old_version "${PRIOR_WEBSITE_VERSION}" "${NEW_WEBSITE_VERSION}" "${NEW_WEBSITE_BRANCH}" || exit 1
 	else
-		PRIOR_WEBSITE_VERSION=""
+		PRIOR_WEBSITE_VERSION="[none]"
 	fi
 
 
@@ -309,7 +316,7 @@ check_versions() {
 		fi
 	fi
 
-	if [[ -n ${NEW_WEBSITE_VERSION} && -n ${PRIOR_WEBSITE_VERSION} && \
+	if [[ -n ${NEW_WEBSITE_VERSION} && ${PRIOR_WEBSITE_VERSION} != "[none]" && \
 		     ${NEW_WEBSITE_VERSION}   <  "${PRIOR_WEBSITE_VERSION}" ]]; then
 		# Unless the version in GitHub is screwed up (i.e., newer one sorts after prior one),
 		# we should only get here if the user is r
@@ -364,10 +371,10 @@ modify_locations() {
 
 ##### Create and upload a new data.json file and files needed to display settings.
 upload_data_json_file() {
-	LOCAL_or_REMOTE="${1}"		# is this for a local or remote Website, or both?
-	display_msg --log progress "Uploading initial files to ${LOCAL_or_REMOTE} Website(s)."
+	LOCAL_or_REMOTE="${1}"		# is this for a local or remote Website?
+	display_msg --log progress "Uploading initial files to ${LOCAL_or_REMOTE} Websites."
 
-	OUTPUT="$( "${ALLSKY_SCRIPTS}/postData.sh" --websites "${LOCAL_or_REMOTE}" --allFiles 2>&1 )"
+	OUTPUT="$( "${ALLSKY_SCRIPTS}/postData.sh" --${LOCAL_or_REMOTE}-web --allFiles 2>&1 )"
 	if [[ $? -ne 0 || ! -f ${ALLSKY_TMP}/data.json ]]; then
 		MSG="Unable to upload initial files:"
 		if echo "${OUTPUT}" | grep --silent "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}: No such file or" ; then
@@ -377,9 +384,13 @@ upload_data_json_file() {
 			MSG="${MSG}\nThe '${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}' directory does not exist."
 		fi
 		MSG="${MSG}\n${OUTPUT}"
-		MSG="${MSG}\nMake sure 'REMOTE_HOST' is set to a valid server or to '' in 'ftp-settings.sh',"
-		MSG="${MSG}\n then run:   ${ALLSKY_SCRIPTS}/postData.sh"
-		MSG="${MSG}\nto create and upload a 'data.json' file."
+		if [[ ${LOCAL_or_REMOTE} == "local" ]]; then
+		else
+			MSG="${MSG}\nMake sure you have defined all necessary variables in"
+			MSG="${MSG}\nthe 'Remote Website Settings' section of the WebUI's settings,"
+			MSG="${MSG}\n then run:   ${ALLSKY_SCRIPTS}/postData.sh --remote-web"
+			MSG="${MSG}\nto create and upload a 'data.json' file."
+		fi
 		display_msg --log error "${MSG}"
 		return 1
 	fi
@@ -556,7 +567,6 @@ update_version_in_config_file()
 NEEDS_NEW_CONFIGURATION_FILE="true"
 
 modify_configuration_variables() {
-
 	if [[ ${DEBUG} == "true" ]];then
 		display_msg --log debug "modify_configuration_variables(): PRIOR_WEBSITE_TYPE=${PRIOR_WEBSITE_TYPE}"
 	fi
@@ -612,10 +622,11 @@ check_if_remote_website_ready()
 	MSG="Setting up a remote Allsky Website requires that you first:\n"
 	MSG="${MSG}\n  1. Have Allsky configured and running the way you want it.\n"
 	MSG="${MSG}\n  2. Upload the Allsky Website files to your remote server.\n"
-	MSG="${MSG}\n  3. Update 'ftp-settings.sh' using the WebUI's 'Editor' page"
-	MSG="${MSG}\n     to point to the remote server.\n"
+	MSG="${MSG}\n  3. Update the 'Remote Website Settings' section of the WebUI's"
+	MSG="${MSG}\n     'Allsky Settings' page to point to the remote server.\n"
+# TODO: move the two URLs to the Remote Website Settings sub-section.
 	MSG="${MSG}\n  4. Enter the URL of the remote Website into the 'Website URL'"
-	MSG="${MSG}\n     field in the WebUI's 'Allsky Settings' page,"
+	MSG="${MSG}\n     field in the same WebUI page,"
 	MSG="${MSG}\n     even if you are not displaying your Website on the Allsky Map."
 	MSG="${MSG}\n\n\nHave you completed these steps?"
 	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 22 80 3>&1 1>&2 2>&3; then
@@ -635,17 +646,29 @@ check_if_remote_website_ready()
 do_remote_website() {
 	# Make sure things really are set up, despite what the user said.
 
-# TODO: not all protocols require REMOTE_HOST
+# TODO: at end, enable "useremotewebsite"
+
+	PROTOCOL="$( settings ".remotewebsiteprotocol" )"
+	if [[ -z ${PROTOCOL} ]]; then
+		MSG="No protocol is specified for the Remote Allsky Website"
+		MSG="${MSG} in the 'Allsky Settings' page of the WebUI."
+		display_msg --log error "${MSG}"
+		exit_installation 1
+	fi
+
 	OK="true"
-	if [[ -z ${REMOTE_HOST} ]]; then
-		MSG="The 'REMOTE_HOST' must be set in 'ftp-settings.sh'\n"
-		MSG="${MSG}in order to do a remote Website installation.\n"
-		MSG="${MSG}Please set it, the password, and other information, then re-run this installation."
+
+	if ! X="$( check_remote_server "REMOTEWEBSITE" )" ; then
+		MSG="The fields in the 'Remote Website Settings' section of the WebUI's"
+		MSG="${MSG} 'Allsky Settings' page must be set"
+		MSG="${MSG} in order to do a remote Website installation.\n"
+		MSG="${MSG}When done, re-run this installation."
+		MSG="${MSG}\nIssues are:\n${X}"
 		display_msg error "${MSG}"
-		display_msg --logonly error "REMOTE_HOST not set."
+		display_msg --logonly error "${X}"
 		OK="false"
 	fi
-	WEBURL="$( settings ".websiteurl" )"
+	WEBURL="$( settings ".remotewebsiteurl" )"
 	if [[ -z ${WEBURL} ]]; then
 		MSG="The 'Website URL' setting must be defined in the WebUI\n"
 		MSG="${MSG}in order to do a remote Website installation.\n"
@@ -662,12 +685,13 @@ do_remote_website() {
 	display_msg --log progress "Testing upload to remote Website."
 	display_msg info "  When done you can remove '${TEST_FILE_NAME}' from your remote server."
 	echo "This is a test file and can be removed." > "${TEST_FILE}"
-	if ! RET="$("${ALLSKY_SCRIPTS}/upload.sh" \
+	if ! RET="$( "${ALLSKY_SCRIPTS}/upload.sh" -num 1 \
 			"${TEST_FILE}" \
 			"${IMAGE_DIR}" \
 			"${TEST_FILE_NAME}" \
-			"UploadTest")" ; then
+			"UploadTest" )" ; then
 		MSG="Unable to upload a test file.\n"
+		MSG="${MSG}\nSee the 'Troubleshooting -> Uploads' documentation to fix the problem."
 		display_msg --log error "${MSG}"
 		display_msg --log info "${RET}"
 		OK="false"
@@ -699,7 +723,8 @@ do_remote_website() {
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# The user is upgrading a new-style remote Website.
-		display_msg --log progress "You should continue to configure your remote Allsky Website via the WebUI."
+		MSG="You should continue to configure your remote Allsky Website via the WebUI."
+		display_msg --log progress "${MSG}"
 
 		update_version_in_config_file "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
@@ -716,8 +741,8 @@ do_remote_website() {
 		if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 60 3>&1 1>&2 2>&3); then
 			create_website_configuration_file
 
-			MSG="\nTo edit the remote configuration file, go to the 'Editor' page in the WebUI\n"
-			MSG="${MSG}and select '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"
+			MSG="\nTo edit the remote configuration file, go to the WebUI's 'Editor' page and\n"
+			MSG="${MSG}select '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"
 			display_msg info "${MSG}"
 			display_msg --logonly info "User will use local copy of remote Website config file."
 		else
@@ -728,10 +753,10 @@ do_remote_website() {
 				echo "It indicates there is a remote Allsky Website although it's not configured from the Pi."
 			) > "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
-			MSG="You need to manually copy '${REPO_WEBCONFIG_FILE}'"
 			# ALLSKY_WEBSITE_CONFIGURATION_NAME is what it's called on the remote server
-			MSG="${MSG}to your remote server and rename it to '${ALLSKY_WEBSITE_CONFIGURATION_NAME}',"
-			MSG="${MSG}then modify it on yuor server."
+			MSG="You need to manually copy '${REPO_WEBCONFIG_FILE}' to your"
+			MSG="${MSG} remote server and rename it to '${ALLSKY_WEBSITE_CONFIGURATION_NAME}',"
+			MSG="${MSG} then modify it on your server."
 			display_msg warning "${MSG}"
 			display_msg --logonly info "User will NOT use local copy of remote Website config file."
 		fi

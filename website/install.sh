@@ -374,7 +374,7 @@ upload_data_json_file() {
 	LOCAL_or_REMOTE="${1}"		# is this for a local or remote Website?
 	display_msg --log progress "Uploading initial files to ${LOCAL_or_REMOTE} Websites."
 
-	OUTPUT="$( "${ALLSKY_SCRIPTS}/postData.sh" --${LOCAL_or_REMOTE}-web --allFiles 2>&1 )"
+	OUTPUT="$( "${ALLSKY_SCRIPTS}/postData.sh" "--${LOCAL_or_REMOTE}-web" --allFiles 2>&1 )"
 	if [[ $? -ne 0 || ! -f ${ALLSKY_TMP}/data.json ]]; then
 		MSG="Unable to upload initial files:"
 		if echo "${OUTPUT}" | grep --silent "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}: No such file or" ; then

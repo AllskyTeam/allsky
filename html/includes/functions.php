@@ -464,8 +464,15 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
+	if (! file_exists($file)) {
+		$msg  = "<div style='color: red; font-size: 200%;'>";
+		$msg .= "<br>File '$file' not found!";
+		$msg .= "</div>";
+		echo $msg;
+		return($default);
+	}
 	$contents = file_get_contents($file);
-	if ("$contents" == "") return($default);	// file not found or not readable
+	if ($contents == "") return($default);	// file not found or not readable
 
 	// escape special characters in the query
 	$pattern = preg_quote($searchfor, '/');
@@ -690,6 +697,19 @@ function getSettingsFile() {
 // Return the options file for the specified camera.
 function getOptionsFile() {
 	return ALLSKY_CONFIG . "/options.json";
+}
+
+// Return the file name after accounting for any ${} variables.
+// Since there will often only be one file used by multiple settings,
+// as an optimization save the last name.
+$lastFileName = null;
+function getFileName($file) {
+	global $lastFileName;
+
+	if ($lastFileName === $file) return $lastFileName;
+
+	$lastFileName = str_replace('${HOME}', HOME, $file);
+	return $lastFileName;
 }
 
 // Check if the specified variable is in the specified array.

@@ -1554,7 +1554,7 @@
 "advanced" : 0
 },
 {
-"name" : "REMOTESERVER_SSH_KEY_FILE",
+"name" : "REMOTESERVER_GCS_ACL",
 "default" : "private",
 "description" : "S3 Access Control List (ACL).",
 "label" : "S3 ACL",

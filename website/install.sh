@@ -384,8 +384,7 @@ upload_data_json_file() {
 			MSG="${MSG}\nThe '${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}' directory does not exist."
 		fi
 		MSG="${MSG}\n${OUTPUT}"
-		if [[ ${LOCAL_or_REMOTE} == "local" ]]; then
-		else
+		if [[ ${LOCAL_or_REMOTE} == "remote" ]]; then
 			MSG="${MSG}\nMake sure you have defined all necessary variables in"
 			MSG="${MSG}\nthe 'Remote Website Settings' section of the WebUI's settings,"
 			MSG="${MSG}\n then run:   ${ALLSKY_SCRIPTS}/postData.sh --remote-web"

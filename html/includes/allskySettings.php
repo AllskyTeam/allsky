@@ -572,9 +572,9 @@ if ($formReadonly != "readonly") { ?>
 						}
 					}
 					$popup = "";
-					if ($default !== "") $popup .= "Default=$default";
-					if ($minimum !== "") $popup .= "\nMinimum=$minimum";
-					if ($maximum !== "") $popup .= "\nMaximum=$maximum";
+					if ($default != "") $popup .= "Default=$default";
+					if ($minimum != "") $popup .= "\nMinimum=$minimum";
+					if ($maximum != "") $popup .= "\nMaximum=$maximum";
 
 					$rspan="";
 					$cspan="";
@@ -630,7 +630,7 @@ if ($formReadonly != "readonly") { ?>
 
 					} else if ($type == "select"){
 						echo "\n\t\t<select class='form-control boxShadow settingInput'" .
-							" $readonlyForm name='$name' title='Select an item'" .
+							" $readonlyForm name='$name' title='Select an item.  $popup.'" .
 						   	" style='padding: 0px 3px 0px 0px; text-align: right;'>";
 						foreach($option['options'] as $opt){
 							$val = getVariableOrDefault($opt, 'value', "?");

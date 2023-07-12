@@ -1,6 +1,6 @@
 [
 {
-"name" : "daynighttab",
+"name" : "daynighttab========================================",
 "label" : "Day/Night Settings",
 "type" : "header-tab",
 "display" : 1,
@@ -24,7 +24,7 @@
 {
 "name" : "takedaytimeimages",
 "default" : 1,
-"description" : "Activate to <strong>take</strong> daytime images.",
+"description" : "Enable to <strong>take</strong> daytime images.",
 "label" : "Daytime Capture",
 "type" : "boolean",
 "display" : 1,
@@ -34,16 +34,17 @@
 {
 "name" : "savedaytimeimages",
 "default" : 0,
-"description" : "Activate to <strong>save</strong> daytime images.<br>Only applies if <span class='WebUISetting'>Daytime Capture</span> is enabled.",
+"description" : "Enable to <strong>save</strong> daytime images.",
 "label" : "Daytime Save",
 "type" : "boolean",
 "display" : 1,
+"booldependson" : "takedaytimeimages",
 "advanced" : 1
 },
 {
 "name" : "dayautoexposure",
 "default" : 1,
-"description" : "Activate to enable daytime auto-exposure.",
+"description" : "Enable to use daytime auto-exposure.",
 "label" : "Auto-Exposure",
 "type" : "boolean",
 "display" : 1,
@@ -55,7 +56,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Maximum daytime Auto-Exposure time in milliseconds (1000ms = 1 sec).<br>Only applies if daytime <span class='WebUISetting'>Auto-Exposure</span> is enabled.",
+"description" : "Maximum daytime Auto-Exposure time in milliseconds (1000ms = 1 sec).",
 "label" : "Max Auto-Exposure",
 "type" : "float",
 "display" : 1,
@@ -91,7 +92,7 @@
 "minimum" : "day_min",
 "maximum" : "day_max",
 "default" : "day_default",
-"description" : "When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
+"description" : "When using <span class="WebUISetting'>Mean Target</span> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",
 "type" : "float",
 "display" : 1,
@@ -103,7 +104,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
+"description" : "<strong>Deprecated</strong>.  Use <span class='WebUISetting'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
 "label" : "Brightness",
 "type" : "float",
 "display" : "_display",
@@ -125,7 +126,7 @@
 {
 "name" : "dayautogain",
 "default" : 0,
-"description" : "Activate to enable dayime Auto-Gain.",
+"description" : "Enable to use dayime Auto-Gain.",
 "label" : "Auto-Gain",
 "type" : "boolean",
 "display" : 1,
@@ -149,7 +150,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "day_default",
-"description" : "Manually sets the light sensitivity of the camera.<br>A high number returns a brighter image but more noise too. Can normally leave at the minimum value for daytime.",
+"description" : "Manually sets the light sensitivity of the camera.<br>A high number returns a brighter image but more noise. Can normally leave at the minimum value for daytime.",
 "label" : "Gain",
 "type" : "float",
 "display" : 1,
@@ -172,7 +173,7 @@
 {
 "name" : "dayawb",
 "default" : 0,
-"description" : "Sets Auto White Balance.",
+"description" : "Sets Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
 "type" : "boolean",
 "display" : "_display",
@@ -208,17 +209,17 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 5,
-"description" : "When starting Allsky during the day, skip up to this many frames while the software gets to the correct exposure.<br>Only applies if daytime <span class='WebUISetting'>Auto-Exposure</span> is on.",
+"description" : "When starting Allsky during the day, skip up to this many frames while the software gets to the correct exposure.",
 "label" : "Frames To Skip",
 "type" : "integer",
 "display" : 1,
-"booldependson" : "takedaytimeimages",
+"booldependson" : "takedaytimeimages AND dayautoexposure",
 "advanced" : 1
 },
 {
 "name" : "dayenablecooler",
 "default" : 0,
-"description" : "Activate to use cooling (works only on cooled cameras).",
+"description" : "Enable to use cooling (on cooled cameras only).",
 "label" : "Cooling",
 "type" : "boolean",
 "display" : "_display",
@@ -240,7 +241,7 @@
 {
 "name" : "daytuningfile",
 "default" : "",
-"description" : "Name of the day camera tuning file to use. Omit this option to preserve the default behavior of libcamera.<br>Please read this <b><a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer' title='Opens in new tab/window'>documentation <i class='fa fa-external-link-alt fa-fw'></i></a></b> or this <b><a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer' title='Opens in new tab/window'>document <i class='fa fa-external-link-alt fa-fw'></i></a></b> if using a Raspberry camera with libcamera. For other Raspberry cameras read the camera manual for more information.",
+"description" : "Name of the optional day camera tuning file to use.<br>See <b><a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer' title='Opens in new tab/window'>documentation <i class='fa fa-external-link-alt fa-fw'></i></a></b>, this <b><a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer' title='Opens in new tab/window'>document <i class='fa fa-external-link-alt fa-fw'></i></a></b>, or the camera manual for more information.",
 "label" : "Tuning File",
 "type" : "widetext",
 "display" : "_display",
@@ -260,7 +261,7 @@
 {
 "name" : "nightautoexposure",
 "default" : 1,
-"description" : "Activate to enable nighttime auto-exposure.",
+"description" : "Enable to use nighttime auto-exposure.",
 "label" : "Auto-Exposure",
 "type" : "boolean",
 "display" : 1,
@@ -271,7 +272,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Maximum nighttime Auto-Exposure time in milliseconds (1000ms = 1 sec).<br>Only applies if nighttime <span class='WebUISetting'>Auto-Exposure</span> is enabled.",
+"description" : "Maximum nighttime Auto-Exposure time in milliseconds (1000ms = 1 sec).",
 "label" : "Max Auto-Exposure",
 "type" : "float",
 "display" : 1,
@@ -305,7 +306,7 @@
 "minimum" : "night_min",
 "maximum" : "night_max",
 "default" : "day_default",
-"description" : "When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
+"description" : "When using <span class="WebUISetting'>Mean Target</span> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",
 "type" : "float",
 "display" : 1,
@@ -317,7 +318,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
+"description" : "<strong>Deprecated</strong>.  Use <span class='WebUISetting'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
 "label" : "Brightness",
 "type" : "float",
 "display" : "_display",
@@ -337,7 +338,7 @@
 {
 "name" : "nightautogain",
 "default" : 0,
-"description" : "Activate to enable nighttime Auto-Gain.",
+"description" : "Enable to use nighttime Auto-Gain.",
 "label" : "Auto-Gain",
 "type" : "boolean",
 "display" : 1,
@@ -360,7 +361,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "night_default",
-"description" : "Manually sets the light sensitivity of the camera.<br>A high number returns a brighter image but more noise too.",
+"description" : "Manually sets the light sensitivity of the camera.<br>A high number returns a brighter image but more noise.",
 "label" : "Gain",
 "type" : "float",
 "display" : 1,
@@ -381,7 +382,7 @@
 {
 "name" : "nightawb",
 "default" : 0,
-"description" : "Activate to enable Auto White Balance (camera adjusts color).",
+"description" : "Enable to use Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
 "type" : "boolean",
 "display" : "_display",
@@ -416,16 +417,17 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 1,
-"description" : "When starting Allsky at night, skip up to this many frames while the software gets to the correct exposure.<br>Only applies if nighttime <span class='WebUISetting'>Auto-Exposure</span> is on.",
+"description" : "When starting Allsky at night, skip up to this many frames while the software gets to the correct exposure.",
 "label" : "Frames To Skip",
 "type" : "integer",
 "display" : 1,
+"booldependson" : "nightautoexposure",
 "advanced" : 1
 },
 {
 "name" : "nightenablecooler",
 "default" : 0,
-"description" : "Activate to use cooling (works only on cooled cameras).",
+"description" : "Enable to use cooling (on cooled cameras only).",
 "label" : "Cooling",
 "type" : "boolean",
 "display" : "_display",
@@ -456,7 +458,7 @@
 },
 
 {
-"name" : "bothtab",
+"name" : "bothtab========================================",
 "label" : "24 Hours",
 "type" : "header-tab",
 "display" : 1,
@@ -554,6 +556,7 @@
 "label" : "Aggression",
 "type" : "percent",
 "display" : "_display",
+"booldependson" : "dayautoexposure OR nightautoexposure",
 "advanced" : 1
 },
 {
@@ -561,7 +564,7 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : "_default",
-"description" : "Number of <b>minutes</b> over which to increase or decrease the gain when switching between day and night.<br>This helps smooth brightness differences.  Only works if nighttime <span class='WebUISetting'>Auto-Gain</span> is off. <span class='WebUIValue'>0</span> disables transitions.",
+"description" : "Number of <b>minutes</b> over which to increase or decrease the gain when switching between day and night.<br>This helps smooth brightness differences. <span class='WebUIValue'>0</span> disables transitions.",
 "label" : "Gain Transition Time",
 "type" : "integer",
 "display" : "_display",
@@ -674,7 +677,7 @@
 {
 "name" : "notificationimages",
 "default" : 1,
-"description" : "Activate to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",
+"description" : "Enable to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",
 "label" : "Notification Images",
 "type" : "boolean",
 "display" : 1,
@@ -683,7 +686,7 @@
 {
 "name" : "consistentdelays",
 "default" : 1,
-"description" : "Activate to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
+"description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
 "display" : 1,
@@ -745,7 +748,7 @@
 {
 "name" : "takedarkframes",
 "default" : 0,
-"description" : "Activate to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
+"description" : "Enable to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
 "label" : "Take Dark Frames",
 "type" : "boolean",
 "display" : 1,
@@ -772,7 +775,7 @@
 {
 "name" : "experimentalexposure",
 "default" : 0,
-"description" : "Activate to use a newer auto-exposure algorithm at night.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
+"description" : "Enable to use an improved auto-exposure algorithm at night.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
 "label" : "New Exposure Algorithm",
 "type" : "boolean",
 "display" : "_display",
@@ -785,6 +788,7 @@
 "label" : "Histogram Box",
 "type" : "text",
 "display" : "_display",
+"booldependson" : "dayautoexposure OR nightautoexposure",
 "advanced" : 1
 },
 {
@@ -806,7 +810,7 @@
 {
 "name" : "newexposure",
 "default" : 1,
-"description" : "Activate to use the Allsky version 0.8 exposure method which decreases sensor temperature.  If you see ASI_ERROR_TIMEOUTs in the log file, deactivate this.",
+"description" : "Enable to use the Allsky version 0.8 exposure method which decreases sensor temperature.  If you see ASI_ERROR_TIMEOUTs in the log file, deactivate this.",
 "label" : "Version 0.8 Exposure",
 "type" : "boolean",
 "display" : "_display",
@@ -824,7 +828,7 @@
 {
 "name" : "alwaysshowadvanced",
 "default" : 0,
-"description" : "Activate to always show the advanced options.",
+"description" : "Enable to always show the advanced options.",
 "label" : "Always Show Advanced",
 "type" : "boolean",
 "display" : 1,
@@ -832,7 +836,7 @@
 },
 
 {
-"name" : "overlaytab",
+"name" : "overlaytab========================================",
 "label" : "Overlay",
 "type" : "header-tab",
 "display" : 1,
@@ -862,7 +866,7 @@
 {
 "name" : "showtime",
 "default" : 1,
-"description" : "Activate to display the time an image was taken on the overlay.",
+"description" : "Enable to display the time an image was taken on the overlay.",
 "label" : "Show Time",
 "type" : "boolean",
 "display" : 1,
@@ -872,7 +876,7 @@
 {
 "name" : "showtemp",
 "default" : 1,
-"description" : "Activate to display the camera sensor temperature on the overlay.",
+"description" : "Enable to display the camera sensor temperature on the overlay.",
 "label" : "Show Temperature",
 "type" : "boolean",
 "display" : "_display",
@@ -882,7 +886,7 @@
 {
 "name" : "showexposure",
 "default" : 1,
-"description" : "Activate to display the exposure length on the overlay.<br>If <span class='WebUISetting'>Auto-Exposure</span> is set, '(auto)' will appear after the exposure time.",
+"description" : "Enable to display the exposure length on the overlay.<br>If <span class='WebUISetting'>Auto-Exposure</span> is set, '(auto)' will appear after the exposure time.",
 "label" : "Show Exposure",
 "type" : "boolean",
 "display" : 1,
@@ -892,7 +896,7 @@
 {
 "name" : "showgain",
 "default" : 0,
-"description" : "Activate to display the camera gain on the overlay.<br>If <span class='WebUISetting'>Auto-Gain</span> is set, '(auto)' will appear after the gain value.",
+"description" : "Enable to display the camera gain on the overlay.<br>If <span class='WebUISetting'>Auto-Gain</span> is set, '(auto)' will appear after the gain value.",
 "label" : "Show Gain",
 "type" : "boolean",
 "display" : 1,
@@ -902,7 +906,7 @@
 {
 "name" : "showbrightness",
 "default" : 0,
-"description" : "Activate to display the <span class='WebUISetting'>Brightness</span> number you set on the overlay.",
+"description" : "Enable to display the <span class='WebUISetting'>Brightness</span> number you set on the overlay.",
 "label" : "Show Brightness",
 "type" : "boolean",
 "display" : 1,
@@ -912,7 +916,7 @@
 {
 "name" : "showusb",
 "default" : 0,
-"description" : "Activate to display the USB Bandwidth number on the overlay.<br>This is primarily for troubleshooting.",
+"description" : "Enable to display the USB Bandwidth number on the overlay.<br>This is primarily for troubleshooting.",
 "label" : "Show USB",
 "type" : "boolean",
 "display" : "_display",
@@ -922,7 +926,7 @@
 {
 "name" : "showmean",
 "default" : 0,
-"description" : "Activate to display the calculated mean image brightness on the overlay.",
+"description" : "Enable to display the calculated mean image brightness on the overlay.",
 "label" : "Show Mean Brightness",
 "type" : "boolean",
 "display" : 1,
@@ -932,7 +936,7 @@
 {
 "name" : "showhistogrambox",
 "default" : 0,
-"description" : "Activate to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
+"description" : "Enable to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
 "label" : "Show Histogram Box",
 "type" : "boolean",
 "display" : "_display",
@@ -942,7 +946,7 @@
 {
 "name" : "showfocus",
 "default" : 0,
-"description" : "Activate to display a focus metric to help you focus the camera.<br>This is only usefull while focusing.",
+"description" : "Enable to display a focus metric to help you focus the camera.<br>This is only usefull while focusing.",
 "label" : "Show Focus Metric",
 "type" : "boolean",
 "display" : 1,
@@ -981,6 +985,7 @@
 "label" : "Max Age Of Extra",
 "type" : "integer",
 "display" : 1,
+"valuedependson" : "extratext=*",
 "booldependsoff" : "overlaymethod",
 "advanced" : 0
 },
@@ -1112,7 +1117,7 @@
 },
 
 {
-"name" : "websitetab",
+"name" : "websitetab========================================",
 "label" : "Website",
 "type" : "header-tab",
 "display" : 1,
@@ -1123,6 +1128,17 @@
 "label" : "Website and Remote Server Settings",
 "type" : "header",
 "display" : 1,
+"advanced" : 0
+},
+{
+"name" : "displaysettings",
+"default" : 0,
+"description" : "Enable to add a link on the Allsky Website to display the settings on this page.",
+"label" : "Display Settings",
+"type" : "boolean",
+"display" : 1,
+"checkchanges" : 1,
+"booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver",
 "advanced" : 0
 },
 {
@@ -1214,7 +1230,7 @@
 {
 "name" : "REMOTEWEBSITE_PASSWORD",
 "default" : "",
-"description" : "Password of the remote server login.",
+"description" : "Password of the login on the remote server.",
 "label" : "Password",
 "type" : "password",
 "display" : 1,
@@ -1371,15 +1387,28 @@
 {
 "name" : "remotewebsiteurl",
 "default" : "",
-"description" : "The URL of your Allsky Website, for example: https://www.thomasjacquin.com/allsky.<br>Must begin with <b>http</b> or <b>https</b>.",
+"description" : "The URL of your Allsky Website, for example: https://mywebsite.com/allsky.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
 "label" : "Website URL",
 "type" : "widetext",
 "display" : 1,
 "checkchanges" : 1,
-"booldependson" : "showonmap OR useremotewebsite",
+"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteimageurl",
 "optional" : 1,
 "advanced" : 0
 },
+{
+"name" : "remotewebsiteimageurl",
+"default" : "",
+"description" : "The URL of the image on your Allsky Website, for example: https://mywebsite.com/allsky/image.jpg.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"label" : "Image URL",
+"type" : "widetext",
+"display" : 1,
+"checkchanges" : 1,
+"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteurl",
+"optional" : 1,
+"advanced" : 0
+},
+
 
 {
 "name" : "remoteserverheader",
@@ -1614,7 +1643,7 @@
 },
 
 {
-"name" : "allskymaptab",
+"name" : "allskymaptab========================================",
 "label" : "Map",
 "type" : "header-tab",
 "display" : 1,
@@ -1628,31 +1657,21 @@
 "advanced" : 0
 },
 {
-"name" : "displaysettings",
-"default" : 0,
-"description" : "Activate to add a link to the Allsky Website to display the settings on this page.<br><b>Only applies if you have a local or remote Allsky Website.</b>",
-"label" : "Display Settings",
-"type" : "boolean",
-"display" : 1,
-"checkchanges" : 1,
-"booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver",
-"advanced" : 0
-},
-{
 "name" : "showonmap",
 "default" : 0,
-"description" : "Activate to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
+"description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
 "label" : "Show on Map",
 "type" : "boolean",
 "display" : 1,
 "checkchanges" : 1,
+"booldependson" : "uselocalwebsite OR useremotewebsite",
 "advanced" : 0
 },
 
 {
 "name" : "location",
 "default" : "",
-"description" : "The location of your camera, for example: Whitehorse, YT.<br>No need to enter country since it'll be obvious looking at the map.<br>This setting and the remaining ones also appear on the Allsky Website, if installed.",
+"description" : "The location of your camera, for example: Whitehorse, YT.<br>This setting and the remaining ones also appear on the Allsky Website, if installed.",
 "label" : "Location",
 "type" : "widetext",
 "display" : 1,
@@ -1711,7 +1730,7 @@
 },
 
 {
-"name" : "cameratab",
+"name" : "cameratab========================================",
 "label" : "Camera Type",
 "type" : "header-tab",
 "display" : 1,

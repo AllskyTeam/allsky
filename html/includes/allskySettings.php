@@ -509,7 +509,7 @@ if ($formReadonly != "readonly") { ?>
 
 				// Put some space before and after headers.  This next line is the "before":
 				if ($type == "header-tab") {
-// TODO
+// TODO put in actual tab
 					echo "<tr class='$advClass advanced-nocolor' style='$advStyle height: 10px; color: red; font-size: 125%'>";
 						echo "<td colspan='3' align='center'>[[[ <b>$label</b> tab goes here ]]]</td>";
 					echo "</tr>";
@@ -558,6 +558,8 @@ if ($formReadonly != "readonly") { ?>
 
 				} else {
 					echo "<tr class='form-group $advClass $class $warning_class' style='margin-bottom: 0px; $advStyle'>";
+					$restartRequired = (getVariableOrDefault($option, 'action', "none") === "restart" ? true : false);
+
 					// Show the default in a popup
 					if ($type == "boolean") {
 						if ($default == "0") $default = "No";
@@ -572,7 +574,9 @@ if ($formReadonly != "readonly") { ?>
 						}
 					}
 					$popup = "";
-					if ($default != "") $popup .= "Default=$default";
+					if ($restartRequired) $popup .= "RESTART REQUIRED\n";
+					if ($default == "") $default="[blank]";
+					$popup .= "Default=$default";
 					if ($minimum != "") $popup .= "\nMinimum=$minimum";
 					if ($maximum != "") $popup .= "\nMaximum=$maximum";
 
@@ -630,7 +634,7 @@ if ($formReadonly != "readonly") { ?>
 
 					} else if ($type == "select"){
 						echo "\n\t\t<select class='form-control boxShadow settingInput'" .
-							" $readonlyForm name='$name' title='Select an item.  $popup.'" .
+							" $readonlyForm name='$name'" .
 						   	" style='padding: 0px 3px 0px 0px; text-align: right;'>";
 						foreach($option['options'] as $opt){
 							$val = getVariableOrDefault($opt, 'value', "?");

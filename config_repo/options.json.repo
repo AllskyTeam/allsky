@@ -29,6 +29,7 @@
 "type" : "boolean",
 "display" : 1,
 "checkchanges" : 1,
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -49,6 +50,7 @@
 "type" : "boolean",
 "display" : 1,
 "booldependson" : "takedaytimeimages",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -61,6 +63,7 @@
 "type" : "float",
 "display" : 1,
 "booldependson" : "takedaytimeimages AND daymaxautoexposure",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -73,6 +76,7 @@
 "type" : "float",
 "display" : 1,
 "booldependson" : "takedaytimeimages",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -85,6 +89,7 @@
 "type" : "float",
 "display" : 1,
 "booldependson" : "takedaytimeimages",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -97,6 +102,7 @@
 "type" : "float",
 "display" : 1,
 "booldependson" : "takedaytimeimages AND daymean",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -109,6 +115,7 @@
 "type" : "float",
 "display" : "_display",
 "booldependson" : "takedaytimeimages",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -121,6 +128,7 @@
 "type" : "integer",
 "display" : 1,
 "booldependson" : "takedaytimeimages",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -131,6 +139,7 @@
 "type" : "boolean",
 "display" : 1,
 "booldependson" : "takedaytimeimages",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -143,6 +152,7 @@
 "type" : "float",
 "display" : 1,
 "booldependson" : "takedaytimeimages AND dayautogain",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -155,6 +165,7 @@
 "type" : "float",
 "display" : 1,
 "booldependson" : "takedaytimeimages",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -168,6 +179,7 @@
 ],
 "display" : 1,
 "booldependson" : "takedaytimeimages",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -178,6 +190,7 @@
 "type" : "boolean",
 "display" : "_display",
 "booldependson" : "takedaytimeimages",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -190,6 +203,7 @@
 "type" : "float",
 "display" : "_display",
 "booldependson" : "takedaytimeimages AND dayawb",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -202,6 +216,7 @@
 "type" : "float",
 "display" : "_display",
 "booldependson" : "takedaytimeimages AND dayawb",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -224,6 +239,7 @@
 "type" : "boolean",
 "display" : "_display",
 "booldependson" : "takedaytimeimages",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -236,18 +252,20 @@
 "type" : "integer",
 "display" : "_display",
 "booldependson" : "takedaytimeimages AND dayenablecooler",
+"action" : "reload",
 "advanced" : 1
 },
 {
 "name" : "daytuningfile",
 "default" : "",
-"description" : "Name of the optional day camera tuning file to use.<br>See <b><a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer' title='Opens in new tab/window'>documentation <i class='fa fa-external-link-alt fa-fw'></i></a></b>, this <b><a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer' title='Opens in new tab/window'>document <i class='fa fa-external-link-alt fa-fw'></i></a></b>, or the camera manual for more information.",
+"description" : "Name of the optional day camera tuning file to use.<br>See <a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer' title='Opens in new tab/window'>documentation <i class='fa fa-external-link-alt fa-fw'></i></a>, <a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer' title='Opens in new tab/window'>document <i class='fa fa-external-link-alt fa-fw'></i></a>, or the camera manual for more information.",
 "label" : "Tuning File",
 "type" : "widetext",
 "display" : "_display",
 "checkchanges" : 1,
 "optional" : 1,
 "booldependson" : "takedaytimeimages",
+"action" : "restart",
 "advanced" : 1
 },
 
@@ -265,6 +283,7 @@
 "label" : "Auto-Exposure",
 "type" : "boolean",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -277,6 +296,7 @@
 "type" : "float",
 "display" : 1,
 "booldependson" : "nightautoexposure",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -288,6 +308,7 @@
 "label" : "Manual Exposure",
 "type" : "float",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -299,6 +320,7 @@
 "label" : "Mean Target",
 "type" : "float",
 "display" : 1,
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -311,6 +333,7 @@
 "type" : "float",
 "display" : 1,
 "booldependson" : "nightmean",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -322,6 +345,7 @@
 "label" : "Brightness",
 "type" : "float",
 "display" : "_display",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -333,6 +357,7 @@
 "label" : "Delay",
 "type" : "integer",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -342,6 +367,7 @@
 "label" : "Auto-Gain",
 "type" : "boolean",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -354,6 +380,7 @@
 "type" : "float",
 "display" : 1,
 "booldependson" : "nightautogain",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -365,6 +392,7 @@
 "label" : "Gain",
 "type" : "float",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -377,6 +405,7 @@
 	"bin_values"
 ],
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -386,6 +415,7 @@
 "label" : "Auto White Balance",
 "type" : "boolean",
 "display" : "_display",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -398,6 +428,7 @@
 "type" : "float",
 "display" : "_display",
 "booldependsoff" : "nightawb",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -410,6 +441,7 @@
 "type" : "float",
 "display" : "_display",
 "booldependsoff" : "nightawb",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -431,6 +463,7 @@
 "label" : "Cooling",
 "type" : "boolean",
 "display" : "_display",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -443,6 +476,7 @@
 "type" : "integer",
 "display" : "_display",
 "booldependson" : "nightenablecooler",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -454,6 +488,7 @@
 "display" : "_display",
 "checkchanges" : 1,
 "optional" : 1,
+"action" : "restart",
 "advanced" : 1
 },
 
@@ -480,6 +515,7 @@
 "display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -490,6 +526,7 @@
 "type" : "widetext",
 "display" : "_display",
 "optional" : 1,
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -501,6 +538,7 @@
 "label" : "Saturation",
 "type" : "float",
 "display" : "_display",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -512,6 +550,7 @@
 "label" : "Contrast",
 "type" : "float",
 "display" : "_display",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -523,6 +562,7 @@
 "label" : "Sharpness",
 "type" : "float",
 "display" : "_display",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -534,6 +574,7 @@
 "label" : "Gamma",
 "type" : "integer",
 "display" : "_display",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -545,6 +586,7 @@
 "label" : "Offset",
 "type" : "integer",
 "display" : "_display",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -557,6 +599,7 @@
 "type" : "percent",
 "display" : "_display",
 "booldependson" : "dayautoexposure OR nightautoexposure",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -569,6 +612,7 @@
 "type" : "integer",
 "display" : "_display",
 "booldependsoff" : "nightautogain",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -580,6 +624,7 @@
 "label" : "Image Width",
 "type" : "integer",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -591,6 +636,7 @@
 "label" : "Image Height",
 "type" : "integer",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -603,6 +649,7 @@
 "options" : [
 	"type_values"
 ],
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -614,6 +661,7 @@
 "label" : "Quality / Compression",
 "type" : "integer",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -623,6 +671,7 @@
 "label" : "Auto USB Bandwidth",
 "type" : "boolean",
 "display" : "_display",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -635,6 +684,7 @@
 "type" : "integer",
 "display" : "_display",
 "booldependsoff" : "autousb",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -645,6 +695,7 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -657,6 +708,7 @@
 	"rotation_values"
 ],
 "display" : "_display",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -672,6 +724,7 @@
 	{"value" : 3, "label" : "Both"}
 ],
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -681,6 +734,7 @@
 "label" : "Notification Images",
 "type" : "boolean",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -690,6 +744,7 @@
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
 "display" : 1,
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -699,6 +754,7 @@
 "label" : "Time Format",
 "type" : "text",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -713,6 +769,7 @@
 	{"value" : "B", "label" : "Both"}
 ],
 "display" : 1,
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -723,6 +780,7 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -733,6 +791,7 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -743,6 +802,7 @@
 "type" : "float",
 "display" : 1,
 "checkchanges" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -752,6 +812,7 @@
 "label" : "Take Dark Frames",
 "type" : "boolean",
 "display" : 1,
+"action" : "restart",
 "advanced" : 0
 },
 {
@@ -770,6 +831,7 @@
 "label" : "Locale",
 "type" : "text",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -779,6 +841,7 @@
 "label" : "New Exposure Algorithm",
 "type" : "boolean",
 "display" : "_display",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -789,6 +852,7 @@
 "type" : "text",
 "display" : "_display",
 "booldependson" : "dayautoexposure OR nightautoexposure",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -805,6 +869,7 @@
 	{"value" : 4, "label" : 4}
 ],
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -814,6 +879,7 @@
 "label" : "Version 0.8 Exposure",
 "type" : "boolean",
 "display" : "_display",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -847,6 +913,7 @@
 "label" : "Image overlay settings",
 "type" : "header",
 "display" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -861,6 +928,7 @@
 ],
 "display" : 1,
 "checkchanges" : 1,
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -871,6 +939,7 @@
 "type" : "boolean",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -881,6 +950,7 @@
 "type" : "boolean",
 "display" : "_display",
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -891,6 +961,7 @@
 "type" : "boolean",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -901,6 +972,7 @@
 "type" : "boolean",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -911,6 +983,7 @@
 "type" : "boolean",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -921,6 +994,7 @@
 "type" : "boolean",
 "display" : "_display",
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -931,6 +1005,7 @@
 "type" : "boolean",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -941,6 +1016,7 @@
 "type" : "boolean",
 "display" : "_display",
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -951,6 +1027,7 @@
 "type" : "boolean",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 1
 },
 {
@@ -962,6 +1039,7 @@
 "display" : 1,
 "optional" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -974,6 +1052,7 @@
 "checkchanges" : 1,
 "optional" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -987,6 +1066,7 @@
 "display" : 1,
 "valuedependson" : "extratext=*",
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -999,6 +1079,7 @@
 "type" : "integer",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -1011,6 +1092,7 @@
 "type" : "integer",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -1023,6 +1105,7 @@
 "type" : "integer",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -1043,6 +1126,7 @@
 ],
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -1054,6 +1138,7 @@
 "type" : "text",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -1064,6 +1149,7 @@
 "type" : "text",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -1079,6 +1165,7 @@
 ],
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -1091,6 +1178,7 @@
 "type" : "float",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -1103,6 +1191,7 @@
 "type" : "integer",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 {
@@ -1113,6 +1202,7 @@
 "type" : "boolean",
 "display" : 1,
 "booldependsoff" : "overlaymethod",
+"action" : "reload",
 "advanced" : 0
 },
 
@@ -1756,6 +1846,7 @@
 ],
 "display" : 1,
 "checkchanges" : 1,
+"action" : "restart",
 "advanced" : 1
 },
 {
@@ -1765,6 +1856,7 @@
 "label" : "Camera Model",
 "type" : "readonly",
 "display" : 1,
+"action" : "restart",
 "advanced" : 1
 },
 {
@@ -1776,8 +1868,9 @@
 "label" : "Camera Number",
 "type" : "integer",
 "display" : "_display",
-"display" : 0,
+display" : 0,
 "checkchanges" : 1,
+"action" : "restart",
 "advanced" : 1
 },
 {

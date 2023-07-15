@@ -775,7 +775,7 @@
 {
 "name" : "latitude",
 "default" : "",
-"description" : "Camera latitude - a number with a sign (-90 to +90) or a positive number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
+"description" : "Camera latitude: a signed number from <span class='WebUIValue'>-90</span> to <span class='WebUIValue'>+90</span>, or an unsigned number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
 "label" : "Latitude",
 "type" : "text",
 "display" : 1,
@@ -786,7 +786,7 @@
 {
 "name" : "longitude",
 "default" : "",
-"description" : "Camera longitude - a number with a sign (-180 to +180) or a positive number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
+"description" : "Camera longitude: a signed number from <span class='WebUIValue'>-180</span> to <span class='WebUIValue'>+180</span>, or an unsigned number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
 "label" : "Longitude",
 "type" : "text",
 "display" : 1,
@@ -1824,7 +1824,7 @@
 "label" : "Camera Type",
 "type" : "header-tab",
 "display" : 1,
-"advanced" : 0
+"advanced" : 1
 },
 {
 "name" : "cameraheading",
@@ -1864,11 +1864,12 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 0,
-"description" : "If multiple cameras are connected to the Pi, this is the camera number (starts at 0).",
+"description" : "IF multiple cameras are connected to the Pi, this is the camera number (starts at 0).",
 "label" : "Camera Number",
 "type" : "integer",
-"display" : "_display",
-display" : 0,
+"xxxdisplay" : "_display",
+"display" : 0,
+"optional" : 1,
 "checkchanges" : 1,
 "action" : "restart",
 "advanced" : 1

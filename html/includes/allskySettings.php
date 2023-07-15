@@ -623,19 +623,16 @@ if ($formReadonly != "readonly") { ?>
 								$type = "text";
 							$t = $type;
 						}
-						echo "\n\t\t<input $readonly class='form-control boxShadow settingInput ' type='$t'" .
-							" $readonlyForm name='$name' value='$value'" .
-							" style='padding: 0px 3px 0px 0px; text-align: right;' >";
+						echo "\n\t\t<input $readonly class='form-control boxShadow settingInput settingInputTextNumber'" .
+							" type='$t' $readonlyForm name='$name' value='$value' >";
 
 					} else if ($type == "widetext"){
-						echo "\n\t\t<input class='form-control boxShadow' type='text'" .
-							" $readonlyForm name='$name' value='$value'" .
-						   	" style='padding: 6px 5px;'>";
+						echo "\n\t\t<input class='form-control boxShadow settingInputWeidetext'" .
+							" type='text' $readonlyForm name='$name' value='$value'>";
 
 					} else if ($type == "select"){
-						echo "\n\t\t<select class='form-control boxShadow settingInput'" .
-							" $readonlyForm name='$name'" .
-						   	" style='padding: 0px 3px 0px 0px; text-align: right;'>";
+						echo "\n\t\t<select class='form-control boxShadow settingInput settingInputSelect'" .
+							" $readonlyForm name='$name'>";
 						foreach($option['options'] as $opt){
 							$val = getVariableOrDefault($opt, 'value', "?");
 							$lab = getVariableOrDefault($opt, 'label', "?");
@@ -648,7 +645,7 @@ if ($formReadonly != "readonly") { ?>
 						echo "</select>";
 
 					} else if ($type == "boolean"){
-						echo "\n\t\t<div class='switch-field boxShadow settingInput' style='margin-bottom: -3px; border-radius: 4px;'>";
+						echo "\n\t\t<div class='switch-field boxShadow settingInput settingInputBoolean'>";
 							echo "\n\t\t<input id='switch_no_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='0' ".
 								($value == 0 ? " checked " : "").  ">";

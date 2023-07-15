@@ -256,11 +256,10 @@ int RPicapture(config cg, cv::Mat *image)
 		if (! cg.isLibcamera)
 			command += " --awb off";		// raspistill requires explicitly turning off
 
-		if (cg.currentWBR != cg.defaultWBR || cg.currentWBB != cg.defaultWBB) {
-			ss.str("");
-			ss << cg.currentWBR << "," << cg.currentWBB;
-			command += " --awbgains " + ss.str();
-		}
+		// If we don't specify when they are the default then auto mode is enabled.
+		ss.str("");
+		ss << cg.currentWBR << "," << cg.currentWBB;
+		command += " --awbgains " + ss.str();
 	}
 
 	if (cg.rotation != cg.defaultRotation) {

@@ -735,8 +735,28 @@ use the <span class="shSetting">CROP</span> setting in the
 	</td></tr>
 <tr><td><span class="WebUISetting">Protocol</span></td>
 	<td>ftps</td>
-	<td>Describes how files will be uploaded to the remote Website.
-	<br>Some of the settings below only apply to certain protocols.
+	<td>Specifies how files should be uploaded to the remote Website.
+	<ul class="minimalPadding">
+		<li><span class="editorString">ftps</span> -
+			uses secure File Transfer Protocol (FTPs) to upload to a remote server.
+		<li><span class="editorString">sftp</span> -
+			uses SSH file transfer to upload to a remote server.
+		<li><span class="editorString">ftp</span> -
+			uses (insecure) File Transfer Protocol (FTP) to upload to a remote server.
+			<blockquote class="warning">
+				<span class="editorString">ftp</span> is unsecure;
+				please use 
+				<span class="editorString">ftps</span> or
+				<span class="editorString">sftp</span> instead.
+			</blockquote>
+		<li><span class="editorString">scp</span> -
+			uses secure cp (copy) to copy the file to a remote server.
+		<li><span class="editorString">s3</span> -
+			copies the file to an Amazon Web Services (AWS) server.
+		<li><span class="editorString">gcs</span> -
+			copies the file to a Google Cloud Storage (GCS) server.
+	</ul>
+	<p>Some of the settings below only apply to certain protocols.</p>
 	</td></tr>
 <tr><td><span class="WebUISetting">Server Name</span></td>
 	<td></td>

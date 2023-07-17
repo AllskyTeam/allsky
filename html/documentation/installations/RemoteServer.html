@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Preparing a Remote Server";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
+	<title>Preparing a Remote Server</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This page describes how to prepare a remote server
+to accept uploads of the current Allsky image
+as well as startrails, keograms, and timelapse videos.
+</p>
+<p>
+Since this server normally is NOT running the Allsky Website software,
+setting it up is easy:
+<ol>
+	<li>Create the necessary directories on the server.
+		The web server software needs to be able to write to these directories:
+		<ul class="minimalpadding">
+			<li><code>videos</code>
+			<li><code>videos/thumbnails</code>
+			<li><code>startrails</code>
+			<li><code>startrails/thumbnails</code>
+			<li><code>keograms</code>
+			<li><code>keograms/thumbnails</code>
+		</ul>
+	<li>Go to the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page
+		and fill in the settings in the
+		<span class="subnote">Remote Server Settings</span> section.
+</ol>
+</p>
+<p>
+After enabling the remote server a test will will be uploaded to
+ensure it works.
+If there are any problems, visit the
+<a allsky="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting -&gt; Uploads</a>
+page for details on how to fix the problem.
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

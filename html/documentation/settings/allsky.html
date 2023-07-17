@@ -55,8 +55,8 @@ button is shown instead, as well as some advanced settings.
 <b>RPi camera users, note</b>
 that several settings have different ranges on Buster versus Bullseye,
 so you'll need to update them when upgrading to Bullseye.
-For example, <span class="WebUISetting">Brightness</span> in Buster ranged from
-0 (black) to 100 (white), whereas in Bullseye it's -100 to 100.
+For example, <span class="WebUISetting">Contrast</span> in Buster ranged from
+-100 to 100, whereas in Bullseye it's 0 to 15.99.
 </blockquote>
 </p>
 <p>
@@ -395,7 +395,7 @@ use the <span class="shSetting">CROP</span> setting in the
 	<b>RAW8</b>: 8-bit mono. <b>RGB24</b>: color (red, green, blue), 8 bits per channel.
 	<b>RAW16</b>: 16-bit mono.</td>
 </tr>
-<tr><td><span class="WebUISetting">Quality</span></td>
+<tr><td><span class="WebUISetting">Quality / Compression</span></td>
 	<td>95</td>
 	<td>For JPG images, this specifies the quality - 0 (low quality) to 100 (high quality).
 	Larger numbers produce higher-quality, but larger, files.
@@ -438,18 +438,36 @@ use the <span class="shSetting">CROP</span> setting in the
 	for example, every 90 seconds, regardless of how long an individual frame's exposure is.
 	</td>
 </tr>
+<tr><td><span class="WebUISetting">Time Format</span></td>
+	<td>%Y%m%d %H:%M:%S</td>
+	<td>Determines the format of the displayed time.
+	Run <code>man 3 strftime</code> to see the options.</td>
+</tr>
+<tr><td><span class="WebUISetting">Temperature Units</span></td>
+	<td>Celsius</td>
+	<td>Determines what unit(s) the temperature will be displayed in (Celsius, Fahrenheit, or Both).</td>
+</tr>
 <tr><td><span class="WebUISetting">Latitude</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>Latitude of the camera.
-	Formats include: 123.4N, 123.4S, 123.4, or -123.4.
+	Formats include: 123.4N, 123.4S, +123.4, or -123.4.
 	Southern hemisphere is negative.
+	The "+" is needed for positive numbers.
 	</td>
 </tr>
 <tr><td><span class="WebUISetting">Longitude</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>Longitude of the camera.
-	Formats include: 123.4E, 123.4W, 123.4, or -123.4.
+	Formats include: 123.4E, 123.4W, +123.4, or -123.4.
 	West is negative.
+	The "+" is needed for positive numbers.
+	<blockquote>
+	The actual values for latitude and longitude are not displayed on the map,
+	but users can zoom in to see exactly where your camera is.
+	If that bothers you, change the latitude and/or longitude values slightly.
+	Allsky itself only uses them to determine when daytime and nighttime begin so
+	you can change the values a fair amount and not impact anything.
+	</blockquote>
 	</td>
 </tr>
 <tr><td><span class="WebUISetting">Angle</span> <span class="AW">AW</span></td>
@@ -572,9 +590,8 @@ use the <span class="shSetting">CROP</span> setting in the
 	<a allsky="true" href="/documentation/overlays/overlays.html">overlay</a> program.
 	<br><b>In this mode, the overlay settings below do NOT apply</b>.
 	<blockquote>
-	This setting will be turned on by default in the next Allsky release,
-	and in the release after that the legacy mode as well as this "Image overlay settings"
-	section will be removed.
+	This setting, as well as the legacy mode and this "Image overlay settings"
+	section will be removed in the next Allsky release.
 	</blockquote>
 	<p>
 	When setting to <span class="WebUIValue">module</span>, don't forget to enable the
@@ -587,18 +604,9 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>Yes</td>
 	<td>Display the time the picture was taken in the overlay?</td>
 </tr>
-<tr><td><span class="WebUISetting">Time Format</span></td>
-	<td>%Y%m%d %H:%M:%S</td>
-	<td>Determines the format of the displayed time.
-	Run <code>man 3 strftime</code> to see the options.</td>
-</tr>
 <tr><td><span class="WebUISetting">Show Temperature</span></td>
 	<td>Yes</td>
 	<td>(ZWO only) Display the camera sensor temperature in the overlay?</td>
-</tr>
-<tr><td><span class="WebUISetting">Temperature Units</span></td>
-	<td>Celsius</td>
-	<td>Determines what unit(s) the temperature will be displayed in (Celsius, Fahrenheit, or Both).</td>
 </tr>
 <tr><td><span class="WebUISetting">Show Exposure</span></td>
 	<td>Yes</td>
@@ -694,7 +702,198 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>Should an outline to the text overlay be added to improve contrast?</td>
 </tr>
 
-<tr><td class="note" colspan="3">Allsky Map and Website Setting
+<tr><td class="note" colspan="3">Allsky Website and Remote Server Settings
+	<p>Allsky supports uploading files to a local (i.e., on your Pi) Website,
+	a remote (i.e., not on your Pi) Website,
+	and a remote server that is NOT an Allsky Website.
+	</p>
+</td></tr>
+<tr><td><span class="WebUISetting">Display Settings</span></td>
+	<td>No</td>
+	<td>People sometimes ask others what settings they are using.
+	Enable this setting to add a link to your Allsky Website's right-side
+	popout that displays your settings.
+	<br>This only works if you are running the Allsky Website.</td></tr>
+
+<tr><td><span class="WebUISetting">Use Local Website</span></td>
+	<td>No</td>
+	<td>Enable to use a <b>local</b> Allsky Website.
+	No other settings are needed for a local Website.
+	<br>
+	If you were using a local Website and disable it you will be asked if you
+	want to keep or remove the saved images, keograms, startrails, and timelapse videos.
+	Either way, the Website itself is not not removed nor are its settings so you can
+	easily re-enable it and pick up where you left off.
+	</td></tr>
+<tr><td class="subnote" colspan="3">Remote Website Settings</td></tr>
+<tr><td><span class="WebUISetting">Use Remote Website</span></td>
+	<td>No</td>
+	<td>Enable to use a <b>remote</b> Allsky Website.
+	Enable the Website BEFORE you
+	<a allsky="true" href="/documentation/installations/AllskyWebsite.html">install</a>
+	it since the installation needs the settings below.
+	</td></tr>
+<tr><td><span class="WebUISetting">Protocol</span></td>
+	<td>ftps</td>
+	<td>Describes how files will be uploaded to the remote Website.
+	<br>Some of the settings below only apply to certain protocols.
+	</td></tr>
+<tr><td><span class="WebUISetting">Server Name</span></td>
+	<td></td>
+	<td>Name of the remote server.
+		Note that this is normally NOT the same as the URL used to access the server.
+		If you don't know the name of the server,
+		ask the person or company supporting the server.
+	</td></tr>
+<tr><td><span class="WebUISetting">Port</span></td>
+	<td></td>
+	<td>Optional port required by the server.
+		This is rarely needed as the software can usually determine what port to use.
+	</td></tr>
+<tr><td><span class="WebUISetting">User Name</span></td>
+	<td></td>
+	<td>The username of the login on the remote Website.
+	</td></tr>
+<tr><td><span class="WebUISetting">Password</span></td>
+	<td></td>
+	<td>The password of the login on the remote Website.
+	</td></tr>
+<tr><td><span class="WebUISetting">FTP Commands</span></td>
+	<td></td>
+	<td>(ftp protocols only) Optional commands to send to the ftp server
+		prior to transfering files.
+		If you have problems uploading to an ftp server you'll often need to add
+		something to this field - see the
+		<a allsky="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting -> Uploads</a>
+		page for more information.
+	</td></tr>
+<tr><td><span class="WebUISetting">Image Directory</span></td>
+	<td></td>
+	<td>(ftp protocols only) Name of the directory the current image should be uploaded to.
+		<blockquote>
+		This setting is a major cause of confusion for many users.
+		If you don't know what to enter,
+		ask the person or company supporting the server or look in the
+		<a allsky="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting -> Uploads</a>
+		page for more information.
+		</blockquote>
+	</td></tr>
+<tr><td><span class="WebUISetting">SSH Key File</span></td>
+	<td></td>
+	<td>(scp protocol only) Path to the SSH key.
+	</td></tr>
+<tr><td><span class="WebUISetting">AWS CLI Directory</span></td>
+	<td>${HOME}/.local/bin</td>
+	<td>(s3 protocol only) Directory on the Pi where the AWS CLI tools are installed.
+	</td></tr>
+<tr><td><span class="WebUISetting">S3 Bucket</span></td>
+	<td>allskybucket</td>
+	<td>(s3 protocol only) Name of the S3 bucket where files will be uploaded to.
+	</td></tr>
+<tr><td><span class="WebUISetting">S3 ACL</span></td>
+	<td>private</td>
+	<td>(s3 protocol only) S3 Access Control List (ACL).
+	</td></tr>
+<tr><td><span class="WebUISetting">GCS Bucket</span></td>
+	<td>allskybucket</td>
+	<td>(gcs protocol only) Name of the GCS bucket where files will be uploaded to.
+	</td></tr>
+<tr><td><span class="WebUISetting">GCS ACL</span></td>
+	<td>private</td>
+	<td>(gcs protocol only) GCS Access Control List (ACL).
+	</td></tr>
+<tr><td><span class="WebUISetting">Remote Video File Name</span></td>
+	<td></td>
+	<td>The name to give to the remote timelapse video file.
+		If not specified it's the same as the file on your Pi.
+	</td></tr>
+<tr><td><span class="WebUISetting">Remote Keogram File Name</span></td>
+	<td></td>
+	<td>The name to give to the remote keogram file.
+		If not specified it's the same as the file on your Pi.
+	</td></tr>
+<tr><td><span class="WebUISetting">Remote Startrails File Name</span></td>
+	<td></td>
+	<td>The name to give to the remote startrails file.
+		If not specified it's the same as the file on your Pi.
+	</td></tr>
+<tr><td><span class="WebUISetting">Website URL</span></td>
+	<td></td>
+	<td>Your website's URL, for example: https://www.mywebsite.com/allsky.
+	<blockquote>
+	If a <span class="WebUISetting">Website URL</span> is specified,
+	the <span class="WebUISetting">Image URL</span> must also be specified, and vice versa.
+	</blockquote>
+	</td></tr>
+<tr><td><span class="WebUISetting">Image URL</span></td>
+	<td></td>
+	<td>The URL to your allsky image, for example: https://wwww.mywebsite.com/allsky/image.jpg.
+		Normally this will be the <span class="WebUISetting">Website URL</span> followed by
+		<code>image.jpg</code>.
+		<br>Use the more secure "https" over "http" if possible.
+
+<tr><td class="subnote" colspan="3">Remote Server Settings
+	<p>These settings are the same as for the Remote Website so are not described.</p>
+</td></tr>
+<tr><td><span class="WebUISetting">Use Remote Website</span></td>
+	<td>No</td>
+	<td>Enable to use a remote server which is NOT running the Allsky Website software.
+		Files will be copied to this server which normally will be a private website
+		where you want to display the most recent images along with other,
+		non-Allsky information.
+		For example, if you have an observatory website and want to show the latest image,
+		you would use the settings below.
+	</td></tr>
+<tr><td><span class="WebUISetting">Protocol</span></td>
+	<td>ftps</td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">Server Name</span></td>
+	<td></td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">Port</span></td>
+	<td></td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">User Name</span></td>
+	<td></td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">Password</span></td>
+	<td></td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">FTP Commands</span></td>
+	<td></td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">Image Directory</span></td>
+	<td></td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">SSH Key File</span></td>
+	<td></td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">AWS CLI Directory</span></td>
+	<td>${HOME}/.local/bin</td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">S3 Bucket</span></td>
+	<td>allskybucket</td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">S3 ACL</span></td>
+	<td>private</td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">GCS Bucket</span></td>
+	<td>allskybucket</td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">GCS ACL</span></td>
+	<td>private</td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">Remote Video File Name</span></td>
+	<td></td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">Remote Keogram File Name</span></td>
+	<td></td>
+	<td></td></tr>
+<tr><td><span class="WebUISetting">Remote Startrails File Name</span></td>
+	<td></td>
+	<td></td></tr>
+
+<tr><td class="note" colspan="3">Allsky Map Settings
 	<p>
 	If you want your allsky camera's location to display on the
 	<a href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>,
@@ -705,45 +904,12 @@ use the <span class="shSetting">CROP</span> setting in the
 	</p>
 	</td>
 </tr>
-
-<tr><td><span class="WebUISetting">Display Settings</span></td>
-	<td>No</td>
-	<td>People sometimes ask others what settings they are using.
-	Enable this setting to add a link to your Allsky Website's popout that displays your
-	settings in the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page.
-	<br>Only works if you are running the Allsky Website.</td></tr>
 <tr><td><span class="WebUISetting">Show on Map</span></td>
 	<td>No</td>
 	<td>Enable to have your camera appear on the
 	<a href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>.
 	<br><b>If off, the following settings are ignored.</b></td></tr>
-<tr><td><span class="WebUISetting">Website URL</span></td>
-	<td></td>
-	<td>Your website's URL, for example: https://www.thomasjacquin.com/allsky.
-	If your camera is not accessible on the Internet or you do not want the
-	map page to link to your website, leave this field blank.
-	<blockquote>
-	If a <span class="WebUISetting">Website URL</span> is specified,
-	the <span class="WebUISetting">Image URL</span> must also be specified, and vice versa.
-	</blockquote>
-	</td></tr>
-<tr><td><span class="WebUISetting">Image URL</span></td>
-	<td></td>
-	<td>The URL to your allsky image, for example: https://wwww.thomasjacquin.com/allsky/image.jpg.
-	Right-click on the image and select <i>Copy Image Address</i> to determine what to
-	put in this field.
-	<br>
-	If you have the Allsky Website installed <b>on your Pi</b> and are using its image,
-	you may need to set this field to
-	<span class="fileName">&lt;Pi name&gt;/current/tmp/image.jpg</span> or
-	whatever's in the <span class="editorSetting">imageName</span> field of your website's
-	<span class="fileName">configuration.json</span> file.
-	Be careful of using "http" versus "https", and after enabling
-	<span class="WebUISetting">Show On Map</span>, look at the map to ensure you can see your image.
-	If your camera is not accessible on the Internet or you do not want the image
-	to appear on the map page, leave this field empty.
-	However, one of the main purposes of the map is to show pictures from cameras around the world,
-	so adding your image URL is <b>strongly</b> encouraged.</td></tr>
+
 <tr><td><span class="WebUISetting">Location</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>The location of your camera.
@@ -762,16 +928,6 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td></td>
 	<td>The computer runni g your allsky camera, for example: <b>Raspberry Pi 3</b>.
 	This field is required and a default value is set during Allsky installation.</td></tr>
-<tr><td><span class="WebUISetting">Latitude &amp; longitude</span> <span class="AW">AW</span></td>
-	<td></td>
-	<td>These are described above and are
-	required for your camera to appear on the Allsky Map.
-	<blockquote>
-	The actual values are not displayed on the map,
-	but users can zoom in to see exactly where the camera is.
-	If that bothers you, change their values slightly.
-	</blockquote>
-	</td></tr>
 
 <tr><td class="note" colspan="3">Camera Type</td></tr>
 

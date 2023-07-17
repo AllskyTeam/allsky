@@ -1345,6 +1345,19 @@
 "advanced" : 0
 },
 {
+"name" : "remotewebsiteimagedir",
+"default" : "allsky",
+"description" : "Name of the top-level remote directory where images go.",
+"label" : "Image Directory",
+"type" : "text",
+"display" : 1,
+"checkchanges" : 1,
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=*ftp*",
+"optional" : 1,
+"advanced" : 0
+},
+{
 "name" : "REMOTEWEBSITE_SSH_KEY_FILE",
 "default" : "",
 "description" : "Path on the Pi to the SSH key file.",
@@ -1425,18 +1438,6 @@
 "source" : "${HOME}/.env",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=gcs",
-"optional" : 1,
-"advanced" : 0
-},
-{
-"name" : "remotewebsiteimagedir",
-"default" : "allsky",
-"description" : "Name of the top-level remote directory where images go.",
-"label" : "Image Directory",
-"type" : "text",
-"display" : 1,
-"checkchanges" : 1,
-"booldependson" : "useremotewebsite",
 "optional" : 1,
 "advanced" : 0
 },

@@ -368,7 +368,8 @@ create_webui_defines()
 {
 	display_msg --log progress "Modifying locations for WebUI."
 	FILE="${ALLSKY_WEBUI}/includes/allskyDefines.inc"
-	sed		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+	sed		-e "s;XX_HOME_XX;${HOME};" \
+			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
 			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};" \
@@ -1158,7 +1159,7 @@ get_desired_locale()
 	if [[ -z ${DESIRED_LOCALE} && -n ${PRIOR_ALLSKY} && -n ${PRIOR_SETTINGS_FILE} ]]; then
 		# People rarely change locale once set, so assume they still want the prior one.
 		DESIRED_LOCALE="$( settings .locale "${PRIOR_SETTINGS_FILE}" )"
-		if [[ -n ${DESIRED_LOCALE} && ${DESIRED_LOCALE} != "null" ]]; then
+		if [[ -n ${DESIRED_LOCALE} ]]; then
 			local X="$(echo "${INSTALLED_LOCALES}" | grep "${DESIRED_LOCALE}")"
 			if [[ -z ${X} ]]; then
 				# This is probably EXTREMELY rare.
@@ -1181,7 +1182,7 @@ get_desired_locale()
 	display_msg --logonly info "${MSG}"
 
 	local D=""
-	if [[ -n ${CURRENT_LOCALE} && ${CURRENT_LOCALE} != "null" ]]; then
+	if [[ -n ${CURRENT_LOCALE} ]]; then
 		D="--default-item ${CURRENT_LOCALE}"
 	else
 		CURRENT_LOCALE=""
@@ -1247,7 +1248,7 @@ set_locale()
 		display_msg --log progress "Keeping '${DESIRED_LOCALE}' locale."
 		local L="$( settings .locale )"
 		MSG="Settings file '${SETTINGS_FILE}'"
-		if [[ ${L} == "" || ${L} == "null" ]]; then
+		if [[ -z ${L} ]]; then
 			# Either a new install or an upgrade from an older Allsky.
 			MSG="${MSG} did NOT contain .locale so adding it."
 			display_msg --logonly info "${MSG}"
@@ -1560,7 +1561,9 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 	PRIOR_FILE="${3}"
 	NEW_FILE="${4}"
 
-		# TODO: new versions go here
+	[[ ${NEW_VERSION} == "${PRIOR_VERSION}" ]] && return
+
+	# TODO: new versions go here
 	if [[ ${NEW_VERSION} == "v2023.05.01_02" ]]; then
 		if [[ ${PRIOR_VERSION} != "v2023.05.01" && ${PRIOR_VERSION} != "v2023.05.01_01" ]]; then
 			return
@@ -1570,22 +1573,22 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 		# if they don't already exist.
 		local F="meanthreshold"
 		MEANTHRESHOLD="$( settings ".${F}" "${PRIOR_FILE}" )"
-		if [[ -n ${MEANTHRESHOLD} && ${MEANTHRESHOLD} != "null" ]]; then
+		if [[ -n ${MEANTHRESHOLD} ]]; then
 
 			DAYMEANTHRESHOLD="$( settings ".day${F}" "${NEW_FILE}" )"
-			if [[ -z ${DAYMEANTHRESHOLD} || ${DAYMEANTHRESHOLD} == "null" ]]; then
-			display_msg --logonly info "   Updating 'day${F}' in '${NEW_FILE}'."
+			if [[ -z ${DAYMEANTHRESHOLD} ]]; then
+				display_msg --logonly info "   Updating 'day${F}' in '${NEW_FILE}'."
 				update_json_file ".day${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
 			fi
 			NIGHTMEANTHRESHOLD="$( settings ".night${F}" "${NEW_FILE}" )"
-			if [[ -z ${NIGHTMEANTHRESHOLD} || ${NIGHTMEANTHRESHOLD} == "null" ]]; then
-			display_msg --logonly info "   Updating 'night${F}' in '${NEW_FILE}'."
+			if [[ -z ${NIGHTMEANTHRESHOLD} ]]; then
+				display_msg --logonly info "   Updating 'night${F}' in '${NEW_FILE}'."
 				update_json_file ".night${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
 			fi
 
 			# If ${F} exists in the new file
 			MEANTHRESHOLD="$( settings ".${F}" "${NEW_FILE}" )"
-			if [[ -n ${MEANTHRESHOLD} && ${MEANTHRESHOLD} != "null" ]]; then
+			if [[ -n ${MEANTHRESHOLD} ]]; then
 				display_msg --logonly info "   Deleting '${F}' from '${NEW_FILE}'."
 				sed -i "/\"${F}\"/d" "${NEW_FILE}"
 			fi
@@ -1607,8 +1610,8 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 			convert_json_to_tabs "${PRIOR_FILE}" |
 				while read -r F V
 				do
-					case "${F}" in
-						"lastChanged")
+					case "${F,,}" in
+						"lastchanged")
 							V="$( date +'%Y-%m-%d %H:%M:%S' )"
 							;;
 
@@ -1651,12 +1654,12 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 							F="night${F}"
 							;;
-						"targetTemp")
+						"targettemp")
 							F="TargetTemp"
 							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 							F="night${F}"
 							;;
-						"coolerEnabled")
+						"coolerenabled")
 							F="EnableCooler"
 							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 							F="night${F}"
@@ -1811,11 +1814,11 @@ restore_prior_settings_file()
 					# As far as I know, latitude, longitude, and angle have never changed names,
 					# and are required and have no default,
 					# so try to restore them so Allsky can restart automatically.
-					local LAT="$(settings .latitude "${PRIOR_SETTINGS_FILE}")"
+					local LAT="$( settings .latitude "${PRIOR_SETTINGS_FILE}" )"
 					update_json_file ".latitude" "${LAT}" "${SETTINGS_FILE}"
-					local LONG="$(settings .longitude "${PRIOR_SETTINGS_FILE}")"
+					local LONG="$( settings .longitude "${PRIOR_SETTINGS_FILE}" )"
 					update_json_file ".longitude" "${LONG}" "${SETTINGS_FILE}"
-					local ANGLE="$(settings .angle "${PRIOR_SETTINGS_FILE}")"
+					local ANGLE="$( settings .angle "${PRIOR_SETTINGS_FILE}" )"
 					update_json_file ".angle" "${ANGLE}" "${SETTINGS_FILE}"
 					display_msg --log progress "Prior latitude, longitude, and angle restored."
 
@@ -1978,7 +1981,7 @@ restore_prior_files()
 		local OLD="false"
 		local NEW_CONFIG_VERSION="$(settings .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
 		local PRIOR_CONFIG_VERSION="$(settings .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
-		if [[ ${PRIOR_CONFIG_VERSION} == "" || ${PRIOR_CONFIG_VERSION} == "null" ]]; then
+		if [[ -z ${PRIOR_CONFIG_VERSION} ]]; then
 			OLD="true"		# Hmmm, it should have the version
 			MSG="Prior Website configuration file '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}'"
 			MSG="${MSG}\nis missing .ConfigVersion.  It should be '${NEW_CONFIG_VERSION}'."

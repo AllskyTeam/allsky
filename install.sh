@@ -1248,7 +1248,7 @@ set_locale()
 		display_msg --log progress "Keeping '${DESIRED_LOCALE}' locale."
 		local L="$( settings .locale )"
 		MSG="Settings file '${SETTINGS_FILE}'"
-		if [[ ${L} == "" ]]; then
+		if [[ -z ${L} ]]; then
 			# Either a new install or an upgrade from an older Allsky.
 			MSG="${MSG} did NOT contain .locale so adding it."
 			display_msg --logonly info "${MSG}"
@@ -1659,12 +1659,12 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 							F="night${F}"
 							;;
-						"targetTemp")
+						"targettemp")
 							F="TargetTemp"
 							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 							F="night${F}"
 							;;
-						"coolerEnabled")
+						"coolerenabled")
 							F="EnableCooler"
 							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 							F="night${F}"
@@ -1986,7 +1986,7 @@ restore_prior_files()
 		local OLD="false"
 		local NEW_CONFIG_VERSION="$(settings .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
 		local PRIOR_CONFIG_VERSION="$(settings .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
-		if [[ ${PRIOR_CONFIG_VERSION} == "" ]]; then
+		if [[ -z ${PRIOR_CONFIG_VERSION} ]]; then
 			OLD="true"		# Hmmm, it should have the version
 			MSG="Prior Website configuration file '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}'"
 			MSG="${MSG}\nis missing .ConfigVersion.  It should be '${NEW_CONFIG_VERSION}'."

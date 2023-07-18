@@ -2586,8 +2586,10 @@ HELP="false"
 DEBUG=0
 DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display
+IN_TESTING="false"
 
-IN_TESTING="false"		# XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+[[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]] && IN_TESTING="true"
+
 if [[ ${IN_TESTING} == "true" ]]; then
 	DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 
@@ -2595,17 +2597,19 @@ if [[ ${IN_TESTING} == "true" ]]; then
 	if [[ ! -f ${T} ]]; then
 		MSG="\n"
 		MSG="${MSG}Testers, until we go-live with this release, debugging is automatically on."
-		MSG="${MSG}\n\nPlease make sure you have Debug Level set to 4 in the WebUI during testing."
+		MSG="${MSG}\n\nPlease set Debug Level to 3 during testing."
+		MSG="${MSG}\n\n"
 		MSG="${MSG}\n"
 
-		MSG="${MSG}\nChanges from prior dev releases:"
+		MSG="${MSG}\nChanges from prior dev release:"
 
-		MSG="${MSG}\n * change 1"
+		MSG="${MSG}\n * ftp-settings.sh is gone"
+		MSG="${MSG}\n   Its settings were moved to the WebUI's 'Allsky Settings' page."
 
-		MSG="${MSG}\n"
-		MSG="${MSG}\n * change 2"
+#x		MSG="${MSG}\n"
+#x		MSG="${MSG}\n * change 2"
 
-		MSG="${MSG}\n\nIf you agree, enter:    yes"
+		MSG="${MSG}\n\nIf you want to continue with the installation, enter:    yes"
 		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
 		if [[ $? -ne 0 || ${A} != "yes" ]]; then
 			MSG="\nYou need to TYPE 'yes' to continue the installation."
@@ -2619,7 +2623,6 @@ fi
 
 UPDATE="false"
 FUNCTION=""
-TESTING="false"
 while [ $# -gt 0 ]; do
 	ARG="${1}"
 	case "${ARG}" in
@@ -2637,10 +2640,6 @@ while [ $# -gt 0 ]; do
 		--function)
 			FUNCTION="${2}"
 			shift
-			;;
-		--testing)
-			TESTING="true"			# TODO: developer testing - skip many steps 
-TESTING="${TESTING}"	# xxx keeps shellcheck quiet
 			;;
 		*)
 			display_msg --log error "Unknown argument: '${ARG}'."

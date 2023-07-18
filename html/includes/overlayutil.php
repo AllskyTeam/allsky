@@ -466,58 +466,61 @@ class OVERLAYUTIL
                 $validExtenstions = array("ttf", "otf");
                 $validSignatures = array("00010000", "4F54544F");
 
-                if (in_array($ext, $validExtenstions)) {
-                    $fp = $zipArchive->getStream($nameInArchive);
-                    if (!$fp) {
-                        exit("failed\n");
-                    }
-
-                    $contents = '';
-                    while (!feof($fp)) {
-                        $contents .= fread($fp, 1024);
-                    }
-                    fclose($fp);
-
-                    $cleanFileName = basename(str_replace(' ', '', $nameInArchive));
-                    $fileName = $saveFolder . $cleanFileName;
-                    $sig = substr($contents,0,4);
-                    $sig = bin2hex($sig);
-                    if (in_array($sig, $validSignatures)) {
-                        $file = fopen($fileName, 'wb');
-
-                        if ($file = fopen($fileName, 'wb')) {
-                            fwrite($file, $contents);
-                            fclose($file);
-
-                            $configFileName = $this->overlayPath . '/config/overlay.json';
-                            $config = file_get_contents($configFileName);
-                            $config = json_decode($config);
-
-                            $fontPath = str_replace($this->overlayPath, "", $fileName);
-                            // TODO: Fix hard coded path
-                            $obj = (object) [
-                                'fontPath' => $fontPath,
-                            ];
-
-                            $key = strtolower(basename($fileName));
-                            $key = str_replace($validExtenstions, "", $key);
-                            $key = str_replace(".", "", $key);
-                            $config->fonts->$key = $obj;
-                            $formattedJSON = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-
-                            file_put_contents($configFileName, $formattedJSON);
-
-                            $result[] = array(
-                                'key' => $key,
-                                'path' => $fontPath,
-                            );
-                        } else {
-                            die('cant create file ' . $fileName);
+                if (strpos($nameInArchive, "MACOSX") === false) {
+                    if (in_array($ext, $validExtenstions)) {
+                        $fp = $zipArchive->getStream($nameInArchive);
+                        if (!$fp) {
+                            exit("failed\n");
                         }
-                    } else {
-                        $this->send500();
+
+                        $contents = '';
+                        while (!feof($fp)) {
+                            $contents .= fread($fp, 1024);
+                        }
+                        fclose($fp);
+
+                        $cleanFileName = basename(str_replace(' ', '', $nameInArchive));
+                        $fileName = $saveFolder . $cleanFileName;
+                        $sig = substr($contents,0,4);
+                        $sig = bin2hex($sig);
+                        if (in_array($sig, $validSignatures)) {
+                            $file = fopen($fileName, 'wb');
+
+                            if ($file = fopen($fileName, 'wb')) {
+                                fwrite($file, $contents);
+                                fclose($file);
+
+                                $configFileName = $this->overlayPath . '/config/overlay.json';
+                                $config = file_get_contents($configFileName);
+                                $config = json_decode($config);
+
+                                $fontPath = str_replace($this->overlayPath, "", $fileName);
+                                // TODO: Fix hard coded path
+                                $obj = (object) [
+                                    'fontPath' => $fontPath,
+                                ];
+
+                                $key = strtolower(basename($fileName));
+                                $key = str_replace($validExtenstions, "", $key);
+                                $key = str_replace(".", "", $key);
+                                $config->fonts->$key = $obj;
+                                $formattedJSON = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+                                file_put_contents($configFileName, $formattedJSON);
+
+                                $result[] = array(
+                                    'key' => $key,
+                                    'path' => $fontPath,
+                                );
+                            } else {
+                                die('cant create file ' . $fileName);
+                            }
+                        } else {
+                            $this->send500();
+                        }
                     }
                 }
+
             }
             echo (json_encode($result));
         } else {

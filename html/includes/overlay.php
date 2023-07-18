@@ -727,6 +727,9 @@ function DisplayOverlay($image_name)
                     </div>
                     <div class="modal-body">
                         <div>
+                            <div style="margin: 10px;">
+                                <h4>Please refer to the <a href="/documentation/overlays/overlays.html" target="_blank">documentation</a> before uploading zip files. Please ensure the zip file only contains fonts</h4>
+                            </div>
                             <div class="alert alert-danger hidden" id="fontuploadalert">
                                 <strong>Error!</strong> Unable to upload the zip file. Invalid Signature for font file
                             </div>

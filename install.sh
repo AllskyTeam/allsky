@@ -368,7 +368,8 @@ create_webui_defines()
 {
 	display_msg --log progress "Modifying locations for WebUI."
 	FILE="${ALLSKY_WEBUI}/includes/allskyDefines.inc"
-	sed		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+	sed		-e "s;XX_HOME_XX;${HOME};" \
+			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
 			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};" \
@@ -1560,7 +1561,9 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 	PRIOR_FILE="${3}"
 	NEW_FILE="${4}"
 
-		# TODO: new versions go here
+	[[ ${NEW_VERSION} == "${PRIOR_VERSION}" ]] && return
+
+	# TODO: new versions go here
 	if [[ ${NEW_VERSION} == "v2023.05.01_02" ]]; then
 		if [[ ${PRIOR_VERSION} != "v2023.05.01" && ${PRIOR_VERSION} != "v2023.05.01_01" ]]; then
 			return
@@ -1574,12 +1577,12 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 			DAYMEANTHRESHOLD="$( settings ".day${F}" "${NEW_FILE}" )"
 			if [[ -z ${DAYMEANTHRESHOLD} ]]; then
-			display_msg --logonly info "   Updating 'day${F}' in '${NEW_FILE}'."
+				display_msg --logonly info "   Updating 'day${F}' in '${NEW_FILE}'."
 				update_json_file ".day${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
 			fi
 			NIGHTMEANTHRESHOLD="$( settings ".night${F}" "${NEW_FILE}" )"
 			if [[ -z ${NIGHTMEANTHRESHOLD} ]]; then
-			display_msg --logonly info "   Updating 'night${F}' in '${NEW_FILE}'."
+				display_msg --logonly info "   Updating 'night${F}' in '${NEW_FILE}'."
 				update_json_file ".night${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
 			fi
 
@@ -1607,8 +1610,8 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 			convert_json_to_tabs "${PRIOR_FILE}" |
 				while read -r F V
 				do
-					case "${F}" in
-						"lastChanged")
+					case "${F,,}" in
+						"lastchanged")
 							V="$( date +'%Y-%m-%d %H:%M:%S' )"
 							;;
 
@@ -1651,12 +1654,12 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 							F="night${F}"
 							;;
-						"targetTemp")
+						"targettemp")
 							F="TargetTemp"
 							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 							F="night${F}"
 							;;
-						"coolerEnabled")
+						"coolerenabled")
 							F="EnableCooler"
 							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 							F="night${F}"
@@ -1811,11 +1814,11 @@ restore_prior_settings_file()
 					# As far as I know, latitude, longitude, and angle have never changed names,
 					# and are required and have no default,
 					# so try to restore them so Allsky can restart automatically.
-					local LAT="$(settings .latitude "${PRIOR_SETTINGS_FILE}")"
+					local LAT="$( settings .latitude "${PRIOR_SETTINGS_FILE}" )"
 					update_json_file ".latitude" "${LAT}" "${SETTINGS_FILE}"
-					local LONG="$(settings .longitude "${PRIOR_SETTINGS_FILE}")"
+					local LONG="$( settings .longitude "${PRIOR_SETTINGS_FILE}" )"
 					update_json_file ".longitude" "${LONG}" "${SETTINGS_FILE}"
-					local ANGLE="$(settings .angle "${PRIOR_SETTINGS_FILE}")"
+					local ANGLE="$( settings .angle "${PRIOR_SETTINGS_FILE}" )"
 					update_json_file ".angle" "${ANGLE}" "${SETTINGS_FILE}"
 					display_msg --log progress "Prior latitude, longitude, and angle restored."
 

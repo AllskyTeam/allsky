@@ -502,6 +502,13 @@ ask_reboot()
 		MSG="${MSG}\nYou must reboot before continuing the installation."
 		MSG="${MSG}\n\nReboot now?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
+			MSG="\nAfter the reboot you MUST continue with the installation"
+			MSG="${MSG} before anything will work."
+			MSG="${MSG}\nTo restart the installation, do the following:\n"
+			MSG="${MSG}\n   cd ~/allsky"
+			MSG="${MSG}\n   ./install.sh"
+			MSG="${MSG}\n\nThe installation will pick up where it left off."
+			whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
 			return 0
 		else
 			REBOOT_NEEDED="true"

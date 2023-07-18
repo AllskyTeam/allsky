@@ -2581,8 +2581,10 @@ HELP="false"
 DEBUG=0
 DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display
+IN_TESTING="false"
 
-IN_TESTING="false"		# XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+[[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]] && IN_TESTING="true"
+
 if [[ ${IN_TESTING} == "true" ]]; then
 	DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 
@@ -2590,7 +2592,7 @@ if [[ ${IN_TESTING} == "true" ]]; then
 	if [[ ! -f ${T} ]]; then
 		MSG="\n"
 		MSG="${MSG}Testers, until we go-live with this release, debugging is automatically on."
-		MSG="${MSG}\n\nPlease make sure you have Debug Level set to 4 in the WebUI during testing."
+		MSG="${MSG}\n\nPlease set Debug Level to 3 during testing."
 		MSG="${MSG}\n"
 
 		MSG="${MSG}\nChanges from prior dev releases:"

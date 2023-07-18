@@ -20,6 +20,10 @@ fi
 
 # This script assumes the user already did the "git clone" into ${ALLSKY_HOME}.
 
+# Some versions of Linux default to 750 so web server can't read it
+#shellcheck disable=SC2086
+chmod 755 "${ALLSKY_HOME}"  							|| exit ${ALLSKY_ERROR_STOP}
+
 #shellcheck disable=SC2086
 cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
 
@@ -80,9 +84,6 @@ STATUS_CLEAR="Clear"								# Clear the file
 STATUS_ERROR="Error encountered"
 STATUS_INT="Got interrupt"
 STATUS_VARIABLES=()									# Holds all the variables and values to save
-
-# Some versions of Linux default to 750 so web server can't read it
-chmod 755 "${ALLSKY_HOME}"
 
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 
@@ -688,8 +689,6 @@ check_and_mount_tmp()
 # If not, offer to make it one.
 check_tmp()
 {
-	STATUS_VARIABLES+=("check_tmp='true'\n")
-
 	local INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
 
 	# Check if currently a memory filesystem.
@@ -712,6 +711,8 @@ check_tmp()
 				)
 		fi
 
+		STATUS_VARIABLES+=("check_tmp='true'\n")
+
 		# If the new Allsky's ${ALLSKY_TMP} is already mounted, don't do anything.
 		# This would be the case during an upgrade.
 		if mount | grep --silent "${ALLSKY_TMP}" ; then
@@ -728,13 +729,19 @@ check_tmp()
 	MSG="${MSG}\n\nDo you want to make it reside in memory?"
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
-		echo "${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}" | sudo tee -a /etc/fstab > /dev/null
+		local STRING="${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}"
+		if ! echo "${STRING}" | sudo tee -a /etc/fstab > /dev/null ; then
+			display_msg --log error "Unable to update /etc/fstab"
+			return 1
+		fi
 		check_and_mount_tmp
 		display_msg --log progress "${ALLSKY_TMP} is now in memory."
 	else
 		display_msg --log info "${ALLSKY_TMP} will remain on disk."
 		mkdir -p "${ALLSKY_TMP}"
 	fi
+
+	STATUS_VARIABLES+=("check_tmp='true'\n")
 }
 
 

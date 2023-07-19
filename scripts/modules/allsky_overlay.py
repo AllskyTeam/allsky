@@ -624,10 +624,7 @@ class ALLSKYOVERLAY:
         try:
             r,g,b = ImageColor.getcolor(value, "RGB")
         except:
-            if value == "":
-                s.log(0, "ERROR: The colour for field '{0}' is empty - Defaulting to white.".format(name))
-            else:
-                s.log(0, "ERROR: The colour '{0}' for field '{1}' is NOT valid - Defaulting to white.".format(value, name))
+            s.log(0, f"ERROR: The colour '{value}' for field '{name}' is NOT valid - Defaulting to white.")
             r = 255
             g = 255
             b = 255

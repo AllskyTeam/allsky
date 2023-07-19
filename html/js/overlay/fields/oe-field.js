@@ -30,6 +30,22 @@ class OEFIELD {
     }
   }
 
+  updateDefaults() {
+    for (let defaultName in this.DEFAULTS) {
+      let path = this.DEFAULTS[defaultName].path;
+      let defaultPath = this.DEFAULTS[defaultName].defaultpath;
+      let defaultValue = this.DEFAULTS[defaultName].default;
+
+      if (path in this.fieldData) {
+        let oldDefault = this.config.getBackupValue(defaultPath, defaultValue);
+        if (this.fieldData[path] == oldDefault) {
+          this.fieldData[path] = this.config.getValue(defaultPath, defaultValue);
+          this[path] = this.fieldData[path] ;
+        }
+      }      
+    }
+  }
+
   get id() {
     return this.id;
   }

@@ -7,6 +7,8 @@ class OECONFIG {
     #overlayDataFields = {};
     #BASEDIR = 'annotater/';
 
+    #lastConfig = [];
+
     constructor() {
     }
 
@@ -164,6 +166,10 @@ class OECONFIG {
         return this.#dataFields = dataFields;
     }
 
+    backupConfig() {
+        this.#lastConfig= JSON.parse(JSON.stringify(this.#config));
+    }
+
     saveFields() {
         try {
             $.ajax({
@@ -306,6 +312,10 @@ class OECONFIG {
      */
     getValue(path, defaultValue) {
         return path.split('.').reduce((o, p) => o ? o[p] : defaultValue, this.#config);
+    }
+
+    getBackupValue(path, defaultValue) {
+        return path.split('.').reduce((o, p) => o ? o[p] : defaultValue, this.#lastConfig);
     }
 
     /**

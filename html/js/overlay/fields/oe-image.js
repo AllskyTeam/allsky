@@ -91,6 +91,7 @@ class OEIMAGEFIELD extends OEFIELD {
       } else {
         image.src = OEIMAGEFIELD.MISSING;
       }
+      this.dirty = true;
     });
   }
 

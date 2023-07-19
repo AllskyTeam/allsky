@@ -907,7 +907,7 @@ class OEUIMANAGER {
             let defaultStrokeColour = $('#oe-default-stroke-colour').val();
             let defaultStrokeSize = $('#oe-default-stroke-size').val();
 
-
+            this.#configManager.backupConfig();
             this.#configManager.setValue('settings.defaultimagetopacity', defaultImagOpacity);
             this.#configManager.setValue('settings.defaultimagerotation', defaultImagRotation);
             this.#configManager.setValue('settings.defaultfontsize', defaultFontSize);
@@ -934,6 +934,7 @@ class OEUIMANAGER {
             this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
             this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
 
+            this.#fieldManager.updateFieldDefaults();
             this.drawGrid();
             this.updateBackgroundImage();
 

@@ -82,12 +82,6 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 	fi
 fi
-if [[ -d ${ALLSKY_INSTALLATION_LOGS} ]]; then
-	MSG="Logs from the last installation are in '${ALLSKY_INSTALLATION_LOGS}'."
-	MSG="${MSG}\nIf Allsky is working fine, you can remove the logs:"
-	MSG="${MSG}\n  &nbsp; &nbsp; <code>rm -fr '${ALLSKY_INSTALLATION_LOGS}'</code>"
-	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
-fi
 
 USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
 
@@ -107,6 +101,7 @@ if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	RPi_COMMAND_TO_USE="$(determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
 
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
+	RPi_COMMAND_TO_USE=""
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 	reset_usb()		# resets the USB bus
 	{
@@ -228,13 +223,6 @@ if [[ $USE_NOTIFICATION_IMAGES -eq 1 ]]; then
 fi
 
 : > "${ARGS_FILE}"
-if [[ ${CAMERA_TYPE} == "RPi" ]]; then
-	# This argument needs to come first since the capture code checks for it first.
-	echo "-cmd=${RPi_COMMAND_TO_USE}" >> "${ARGS_FILE}"
-fi
-
-# This argument should come second so the capture program knows if it should display debug output.
-echo "-debuglevel=${ALLSKY_DEBUG_LEVEL}" >> "${ARGS_FILE}"
 
 # If the locale isn't in the settings file, try to determine it.
 LOCALE="$(settings .locale)"
@@ -280,8 +268,10 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
 
 # Run the main program - this is the main attraction...
+# -cmd needs to come first since the capture_RPi code checks for it first.  It's ignored
+# in capture_ZWO.
 # Pass debuglevel on command line so the capture program knows if it should display debug output.
-"${ALLSKY_BIN}/${CAPTURE}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
+"${ALLSKY_BIN}/${CAPTURE}" -cmd "${RPi_COMMAND_TO_USE}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
 RETCODE=$?
 
 [[ ${RETCODE} -eq ${EXIT_OK} ]] && doExit "${EXIT_OK}" ""

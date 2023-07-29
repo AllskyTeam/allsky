@@ -99,6 +99,11 @@ SHOW_POSTDATA_MESSAGE="true"
 TWILIGHT_DATA_CHANGED="false"
 CAMERA_TYPE_CHANGED="false"
 GOT_WARNING="false"
+CHECK_REMOTE_WEBSITE_ACCESS="false"
+CHECK_REMOTE_WEBSERVER_ACCESS="false"
+USE_REMOTE_WEBSITE=""
+USE_REMOTE_WEBSERVER=""
+SHOW_ON_MAP=""
 
 # Several of the fields are in the Allsky Website configuration file,
 # so check if the IS a file before trying to update it.
@@ -429,7 +434,8 @@ do
 			;;
 
 		showonmap)
-			[[ ${NEW_VALUE} -eq 0 ]] && POSTTOMAP_ACTION="--delete"
+			SHOW_ON_MAP="${NEW_VALUE}"
+			[[ ${SHOW_ON_MAP} -eq 0 ]] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP="true"
 			;;
 
@@ -438,23 +444,42 @@ do
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
 
+
 		remotewebsiteurl | remotewebsiteimageurl)
-# TODO: make sure we can get to them.
+			CHECK_REMOTE_WEBSITE_ACCESS="true"
 			RUN_POSTTOMAP="true"
 			;;
 
-		useremotewebsite | remotewebsiteprotocol | remotewebsiteimagedir)
-# TODO: make sure we can get to Website using new settings
-			:	# TODO
+		useremotewebsite)
+			CHECK_REMOTE_WEBSITE_ACCESS="true"
+			USE_REMOTE_WEBSITE="${NEW_VALUE}"
 			;;
 
-		useremoteserver | remoteserverprotocol | remoteserveriteimagedir)
-# TODO: make sure we can get to server using new settings
-			:	# TODO
+		remotewebsiteprotocol | remotewebsiteimagedir | \
+		remotewebsitevideodestinationname | remotewebsitekeogramdestinationname | remotewebsitestartrailsdestinationname)
+			CHECK_REMOTE_WEBSITE_ACCESS="true"
 			;;
 
-		REMOTEWEBSITE_GSC_ACL )
-			:	# TODO - add a bunch more settings
+		REMOTEWEBSITE_HOST | REMOTEWEBSITE_PORT | REMOTEWEBSITE_USER | REMOTEWEBSITE_PASSWORD | \
+		REMOTEWEBSITE_LFTP_COMMANDS | REMOTEWEBSITE_SSH_KEY_FILE | REMOTEWEBSITE_AWS_CLI_DIR | REMOTEWEBSITE_S3_BUCKET | \
+		REMOTEWEBSITE_S3_ACL | REMOTEWEBSITE_GCS_BUCKET | REMOTEWEBSITE_GCS_ACL )
+			CHECK_REMOTE_WEBSITE_ACCESS="true"
+			;;
+
+		useremotewebserver)
+			CHECK_REMOTE_WEBSERVER_ACCESS="true"
+			USE_REMOTE_WEBSERVER="${NEW_VALUE}"
+			;;
+
+		# We don't care about the *destination names for remote servers
+		remoteserverprotocol | remoteserveriteimagedir)
+			CHECK_REMOTE_WEBSERVER_ACCESS="true"
+			;;
+
+		REMOTESERVER_HOST | REMOTESERVER_PORT | REMOTESERVER_USER | REMOTESERVER_PASSWORD | \
+		REMOTESERVER_LFTP_COMMANDS | REMOTESERVER_SSH_KEY_FILE | REMOTESERVER_AWS_CLI_DIR | REMOTESERVER_S3_BUCKET | \
+		REMOTESERVER_S3_ACL | REMOTESERVER_GCS_BUCKET | REMOTESERVER_GCS_ACL )
+			CHECK_REMOTE_WEBSERVER_ACCESS="true"
 			;;
 
 		overlaymethod)
@@ -477,6 +502,15 @@ do
 		esac
 		shift 4
 done
+
+USE_REMOTE_WEBSITE="$( settings ".useremotewebsite" )"
+if [[ ${USE_REMOTE_WEBSITE} == "1" && CHECK_REMOTE_WEBSITE_ACCESS == "true" ]]; then
+	: # TODO - do a test upload
+fi
+USE_REMOTE_WEBSERVER="$( settings ".useremotewebserver" )"
+if [[ ${USE_REMOTE_WEBSERVER} == "1" && CHECK_REMOTE_WEBSERVER_ACCESS == "true" ]]; then
+	: # TODO - do a test upload
+fi
 
 if check_website ; then
 	# Anytime a setting in settings.json changed we want to
@@ -521,32 +555,28 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 
 		FILE_TO_UPLOAD="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
-		for NUM in 1 2
-		do
-			if [[ "$( settings ".useremote${NUM}" )" -ne "${REMOTE_TYPE_ALLSKY_WEBSITE}" ]]; then
-				# Only update the Website config file to remote Allsky Websites.
-				continue
-			fi
-			IMAGE_DIR="$( settings ".imagedir${NUM}" )"
-			if [[ ${DEBUG} == "true" ]]; then
-				echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to server ${NUM}.${wNC}"
-			fi
+		IMAGE_DIR="$( settings ".remotewebsiteimagedir" )"
+		if [[ ${DEBUG} == "true" ]]; then
+			echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to remote Website.${wNC}"
+		fi
 
-			if ! "${ALLSKY_SCRIPTS}/upload.sh" --silent --num "${NUM}" \
-					"${FILE_TO_UPLOAD}" \
-					"${IMAGE_DIR}" \
-					"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
-					"RemoteWebsite" ; then
-				echo -e "${RED}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}' to Website ${NUM}.${NC}"
-			fi
-		done
+		if ! "${ALLSKY_SCRIPTS}/upload.sh" --silent --remote "web" \
+				"${FILE_TO_UPLOAD}" \
+				"${IMAGE_DIR}" \
+				"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
+				"RemoteWebsite" ; then
+			echo -e "${RED}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}' to Website ${NUM}.${NC}"
+		fi
 	fi
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
-	# shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
+	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
+	if [[ ${SHOW_ON_MAP} == "1" ]]; then
+		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
+		# shellcheck disable=SC2086
+		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
+	fi
 fi
 
 if [[ ${RESTARTING} == "false" && ${NEEDS_RESTART} == "true" ]]; then

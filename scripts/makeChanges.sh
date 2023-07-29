@@ -434,8 +434,8 @@ do
 			;;
 
 		showonmap)
-			SHOW_ON_MAP="${NEW_VALUE}"
-			[[ ${SHOW_ON_MAP} -eq 0 ]] && POSTTOMAP_ACTION="--delete"
+			SHOW_ON_MAP="1"
+			[[ ${NEW_VALUE} -eq 0 ]] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP="true"
 			;;
 

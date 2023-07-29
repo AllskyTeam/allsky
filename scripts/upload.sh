@@ -19,7 +19,7 @@ usage_and_exit() {
 	RET=$1
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] \\"
-	echo "               { --local | --num n } \\"
+	echo "               { --local | --remote type } \\"
 	echo "               file_to_upload  directory  destination_file_name \\"
 	echo "               [file_type]"
 	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
@@ -30,7 +30,7 @@ usage_and_exit() {
 	echo "   '--wait'    waits for any upload of the same type to finish."
 	echo "   '--silent'  doesn't display any status messages."
 	echo "   '--local'   copy to local Website."
-	echo "   '--num n'   upload to remote server number 'n'."
+	echo "   '--remote type'   upload to remote 'web' or 'server'."
 	echo "   'file_to_upload' is the path name of the file to upload."
 	echo "   'directory' is the directory ON THE SERVER the file should be uploaded to."
 	echo "   'destination_file_name' is the name the file should be called ON THE SERVER."
@@ -48,7 +48,7 @@ WAIT="false"
 SILENT="false"
 DEBUG="false"
 LOCAL="false"
-REMOTE_NUM=""
+REMOTE_TYPE=""
 RET=0
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -68,8 +68,8 @@ while [[ $# -gt 0 ]]; do
 		--local)
 			LOCAL="true"
 			;;
-		--num)
-			REMOTE_NUM="${2}"
+		--remote)
+			REMOTE_TYPE="${2}"
 			shift
 			;;
 		-*)
@@ -84,8 +84,16 @@ while [[ $# -gt 0 ]]; do
 done
 [[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit ${RET}
 [[ ${HELP} == "true" ]] && usage_and_exit 0
-[[ ${LOCAL} == "false" && -z ${REMOTE_NUM} ]] && usage_and_exit 1
-[[ ${LOCAL} == "true" && -n ${REMOTE_NUM} ]] && usage_and_exit 1
+[[ ${LOCAL} == "false" && -z ${REMOTE_TYPE} ]] && usage_and_exit 1
+[[ ${LOCAL} == "true" && -n ${REMOTE_TYPE} ]] && usage_and_exit 1
+if [[ -n ${REMOTE_TYPE} ]]; then
+	if [[ ${REMOTE_TYPE} != "web" && ${REMOTE_TYPE} != "server" ]]; then
+		echo -en "${RED}" >&2
+		echo -n "*** ${ME}: ERROR: Unknown remote type: '${REMOTE_TYPE}'." >&2
+		echo -e "${NC}" >&2
+		exit 2
+	fi
+fi
 
 FILE_TO_UPLOAD="${1}"
 if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
@@ -142,6 +150,9 @@ if [[ ${LOCAL} == "true" ]]; then
 fi
 
 
+############## Remote Website or server
+
+
 # For uploads to a remote server, "put" to a temp name, then move the temp name to the final name.
 # This is useful with slow uplinks where multiple upload requests can be running at once,
 # and only one upload can upload the file at once.
@@ -173,12 +184,10 @@ if ! one_instance --sleep "${SLEEP}" --max-checks "${MAX_CHECKS}" --pid-file "${
 	exit 1
 fi
 
-# Remote number 1 is the remote Allsky Website.
-# Remote number 2 is the generic remote server.
-if [[ ${REMOTE_NUM} -eq 1 ]]; then
+if [[ ${REMOTE_TYPE} == "web" ]]; then
 	prefix="remotewebsite"
 	PREFIX="REMOTEWEBSITE"
-else
+else	# "server"
 	prefix="remoteserver"
 	PREFIX="REMOTESERVER"
 fi

@@ -869,7 +869,7 @@ function upload_all()
 			REMOTE_DIR="${ROOT}/${SUBDIR}"
 		fi
 		#shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --num 1 \
+		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --remote "web" \
 			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
 		((RET+=$?))
 	fi
@@ -881,7 +881,7 @@ function upload_all()
 			REMOTE_DIR="${ROOT}/${SUBDIR}"
 		fi
 		#shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --num 2 \
+		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --remote "server" \
 			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
 		((RET+=$?))
 	fi

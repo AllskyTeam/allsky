@@ -504,11 +504,11 @@ do
 done
 
 USE_REMOTE_WEBSITE="$( settings ".useremotewebsite" )"
-if [[ ${USE_REMOTE_WEBSITE} == "1" && CHECK_REMOTE_WEBSITE_ACCESS == "true" ]]; then
+if [[ ${USE_REMOTE_WEBSITE} == "1" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
 	: # TODO - do a test upload
 fi
 USE_REMOTE_WEBSERVER="$( settings ".useremotewebserver" )"
-if [[ ${USE_REMOTE_WEBSERVER} == "1" && CHECK_REMOTE_WEBSERVER_ACCESS == "true" ]]; then
+if [[ ${USE_REMOTE_WEBSERVER} == "1" && ${CHECK_REMOTE_WEBSERVER_ACCESS} == "true" ]]; then
 	: # TODO - do a test upload
 fi
 

@@ -2029,6 +2029,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 
 // validate and convert Latitude and Longitude to N, S, E, W versions.
 static char strLatitude[20], strLongitude[20];
+
 static char const *validateLatLong(
 		char const *l,
 		char positive,
@@ -2042,22 +2043,75 @@ static char const *validateLatLong(
 		return(NULL);
 	}
 
-	Log(4, "validateLatLong(l=%s, positive=%c, negative=%c, savedLocation=%s, name=%s)\n", l, positive,negative,savedLocation,name);
-	int len = strlen(l);
-	char direction = (char) toupper(l[len-1]);
-	if (direction == positive || direction == negative) {
-		if (l[0] == '+' || l[0] == '-') {
-			Log(0, "*** %s: ERROR: %s cannot have BOTH + or - AND %c or %c.  You entered [%s].\n",
-				CG.ME, name, positive, negative, l);
-			return(NULL);
-		}
-		return(l);
+	Log(4, "validateLatLong(l=%s, positive=%c, negative=%c, name=%s)\n", l, positive, negative, name);
+
+	if (index(l, ' ') != NULL) {
+		Log(0, "*** %s: ERROR: %s cannot have any spaces.  You entered [%s].\n", CG.ME, name, l);
+		return(NULL);
 	}
 
-	// Assume it's a number, so convert to a string;
-	float num = atof(l);
-	snprintf(savedLocation, maxSize-1, "%.5f%c", abs(num), num > 0 ? positive : negative);
-	l = savedLocation;
+	// Valid formats:
+	//	12.34
+	//	[+-]12.34
+	//	12.34[NS]		# Latitude only
+	//	12.34[EW]		# Longitude only
+
+	int len = strlen(l);
+	unsigned char direction = toupper(l[len-1]);		// Last character
+	if (isalpha(direction)) {
+		// Make sure it's a valid direction.
+		unsigned char upper = toupper(direction);
+		if (upper == 'N' || upper == 'S') {
+			if (strcmp(name, "Longitude") == 0) {
+				Log(0, "*** %s: ERROR: %s uses 'E' or 'W'.  You entered [%s].\n",
+					CG.ME, name, l);
+				return(NULL);
+			}
+		} else if (upper == 'E' || upper == 'W') {
+			if (strcmp(name, "Latitude") == 0) {
+				Log(0, "*** %s: ERROR: %s uses 'N' or 'S'.  You entered [%s].\n",
+					CG.ME, name, l);
+				return(NULL);
+			}
+		} else {
+			Log(0, "*** %s: ERROR: Unknown direction; must be 'N', 'S', 'E', or 'W'.  You entered [%s].\n",
+				CG.ME, l);
+			return(NULL);
+		}
+
+		if (upper == positive || upper == negative) {
+			if (l[0] == '+' || l[0] == '-') {
+				Log(0, "*** %s: ERROR: %s cannot have BOTH + or - AND %c or %c.  You entered [%s].\n",
+					CG.ME, name, positive, negative, l);
+				return(NULL);
+			}
+
+			//	12.34[NSEW]
+			return(l);
+		}
+	}
+
+	//	12.34
+	// or
+	//	[+-]12.34
+	// Convert to a string that ends with N, S, E, or W which is what sunwait needs.
+
+	// The number may have a period or comma as the decimal point,
+	// which may or may not match the user's locale, e.g.,
+	//   12.34
+	// with locale = DE.  atof() uses the locale so will convert that to 12
+	// Get around that by not converting to a number.
+	char p_or_n;
+	if (l[0] == '-') {
+		p_or_n = negative;
+		l++;		// skip sign
+	} else if (l[0] == '+') {
+		p_or_n = positive;
+		l++;		// skip sign
+	} else {
+		p_or_n = positive;
+	}
+	snprintf(savedLocation, maxSize-1, "%s%c", l, p_or_n);
 	Log(4, "   new value = %s\n", savedLocation);
 	return(savedLocation);
 }

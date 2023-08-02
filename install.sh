@@ -364,6 +364,20 @@ select_camera_type()
 
 
 ####
+# If the raspistill command exists on post-Buster releases,
+# rename it so it's not used.
+check_for_raspistill()
+{
+	STATUS_VARIABLES+=("check_for_raspistill='true'\n")
+
+	if W="$( which raspistill )" && [[ ${OS} != "buster" ]]; then
+		echo display_msg --longonly info "Renaming 'raspistill' on ${OS}."
+		echo sudo mv "${W}" "${W}-OLD"
+	fi
+}
+
+
+####
 # Create the file that defines the WebUI variables.
 create_webui_defines()
 {
@@ -1818,7 +1832,7 @@ restore_prior_settings_file()
 
 					MSG="Your old WebUI settings were transfered to the new release,"
 					MSG="${MSG}\n but note that there have been some changes to the settings file"
-					MSG="${MSG} (e.g., some settings in config.sh are now in the settings file)."
+					MSG="${MSG} (e.g., settings in ftp-settings.sh are now in the settings file)."
 					MSG="${MSG}\n\nPlease check your settings in the WebUI's 'Allsky Settings' page."
 					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 					display_msg info "\n${MSG}\n"
@@ -1843,8 +1857,8 @@ restore_prior_settings_file()
 
 					MSG="You need to manually transfer your old settings to the WebUI.\n"
 					MSG="${MSG}\nNote that there have been many changes to the settings file"
-					MSG="${MSG} since you last installed Allsky, so it will likely be easiest"
-					MSG="${MSG} to re-enter everything via the WebUI's 'Allsky Settings' page."
+					MSG="${MSG} since you last installed Allsky, so please use the "
+					MSG="${MSG} the WebUI's 'Allsky Settings' page."
 					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 					display_msg info "\n${MSG}\n"
 					echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
@@ -2797,6 +2811,9 @@ display_image "InstallationInProgress"
 
 ##### Prompt for the camera type
 [[ ${select_camera_type} != "true" ]] && select_camera_type
+
+##### If raspistill exists on post-Buster OS, rename it.
+[[ ${check_for_raspistill} != "true" ]] && check_for_raspistill
 
 ##### Get the new host name
 [[ ${prompt_for_hostname} != "true" ]] && prompt_for_hostname

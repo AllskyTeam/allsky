@@ -362,6 +362,19 @@ select_camera_type()
 	STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 }
 
+####
+# If the raspistill command exists on post-Buster releases,
+# rename it so it's not used.
+check_for_raspistill()
+{
+	STATUS_VARIABLES+=("check_for_raspistill='true'\n")
+
+	if W="$( which raspistill )" && [[ ${OS} != "buster" ]]; then
+		echo display_msg --longonly info "Renaming 'raspistill' on ${OS}."
+		echo sudo mv "${W}" "${W}-OLD"
+	fi
+}
+
 
 ####
 # Create the file that defines the WebUI variables.
@@ -2795,6 +2808,9 @@ display_image "InstallationInProgress"
 
 ##### Prompt for the camera type
 [[ ${select_camera_type} != "true" ]] && select_camera_type
+
+##### If raspistill exists on post-Buster OS, rename it.
+[[ ${check_for_raspistill} != "true" ]] && check_for_raspistill
 
 ##### Get the new host name
 [[ ${prompt_for_hostname} != "true" ]] && prompt_for_hostname

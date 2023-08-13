@@ -162,6 +162,12 @@ class OEFIELDMANAGER {
         this.#fieldDeletedAddedDefaultsChanged = true;
     }
 
+    updateFieldDefaults() {
+        for (let [fieldName, field] of this.#fields.entries()) {
+            field.updateDefaults();
+        }
+    }
+
     buildJSON() {
         let fields = [];
         let images = [];

@@ -99,7 +99,8 @@ class OEUIMANAGER {
             if (params.debugpos == 'true') {
                 this.#debugPosMode = true;
             }
-        }        
+        }
+
     }
 
     getQueryParams(url) {
@@ -269,22 +270,25 @@ class OEUIMANAGER {
             if (this.#configManager.snapBackground) {
                 let gridSizeX = this.#configManager.gridSize * this.#oeEditorStage.scaleX();
                 let gridSizeY = this.#configManager.gridSize * this.#oeEditorStage.scaleY();
-                this.#snapRectangle.size({
-                    width: shape.width(),
-                    height: shape.height()
-                });
-                this.#snapRectangle.position({
-                    x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
-                    y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
-                });
-//                this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});                
-                this.#snapRectangle.offsetX(shape.offsetX());
-                this.#snapRectangle.offsetY(shape.offsetY());
-                this.#snapRectangle.scale({
-                    x: this.#movingField.scale,
-                    y: this.#movingField.scale
-                });
-                this.#snapRectangle.visible(true);
+                
+                if (gridSizeX != 0 && gridSizeY != 0) {
+                    this.#snapRectangle.size({
+                        width: shape.width(),
+                        height: shape.height()
+                    });
+                    this.#snapRectangle.position({
+                        x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
+                        y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
+                    });
+    //                this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});                
+                    this.#snapRectangle.offsetX(shape.offsetX());
+                    this.#snapRectangle.offsetY(shape.offsetY());
+                    this.#snapRectangle.scale({
+                        x: this.#movingField.scale,
+                        y: this.#movingField.scale
+                    });
+                    this.#snapRectangle.visible(true);
+                }
             }
             
         });
@@ -299,13 +303,15 @@ class OEUIMANAGER {
             let gridSizeX = this.#configManager.gridSize;
             let gridSizeY = this.#configManager.gridSize;
 
-            let adjustedX = shape.x() - shape.offsetX();
-            let adjustedY = shape.y() - shape.offsetY();
+            if (gridSizeX != 0 && gridSizeY != 0) {
+                let adjustedX = shape.x() - shape.offsetX();
+                let adjustedY = shape.y() - shape.offsetY();
 
-            shape.position({
-                x: (Math.round(adjustedX / gridSizeX) * gridSizeX) + shape.offsetX() | 0,
-                y: (Math.round(adjustedY / gridSizeY) * gridSizeY) + shape.offsetY() | 0
-            });
+                shape.position({
+                    x: (Math.round(adjustedX / gridSizeX) * gridSizeX) + shape.offsetX() | 0,
+                    y: (Math.round(adjustedY / gridSizeY) * gridSizeY) + shape.offsetY() | 0
+                });
+            }
 
             if (this.#movingField !== null) {
                 this.#movingField.x = shape.x() | 0;
@@ -901,7 +907,7 @@ class OEUIMANAGER {
             let defaultStrokeColour = $('#oe-default-stroke-colour').val();
             let defaultStrokeSize = $('#oe-default-stroke-size').val();
 
-
+            this.#configManager.backupConfig();
             this.#configManager.setValue('settings.defaultimagetopacity', defaultImagOpacity);
             this.#configManager.setValue('settings.defaultimagerotation', defaultImagRotation);
             this.#configManager.setValue('settings.defaultfontsize', defaultFontSize);
@@ -928,6 +934,7 @@ class OEUIMANAGER {
             this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
             this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
 
+            this.#fieldManager.updateFieldDefaults();
             this.drawGrid();
             this.updateBackgroundImage();
 
@@ -1108,8 +1115,9 @@ class OEUIMANAGER {
 
                 this.#snapRectangle.rotation(shape.rotation());              
                 this.#snapRectangle.position({
-                    x: (Math.round(shape.x()  / gridSizeX) * gridSizeX) | 0,
-                    y: (Math.round(shape.y()  / gridSizeY) * gridSizeY) | 0
+//                    x: (Math.round(shape.x()  / gridSizeX) * gridSizeX),
+                    x: (Math.round((shape.x() - shape.offsetX())  / gridSizeX) * gridSizeX) +  shape.offsetX(),
+                    y: (Math.round((shape.y() - shape.offsetY())  / gridSizeY) * gridSizeY) +  shape.offsetY()
                 });
             }
 
@@ -1122,45 +1130,49 @@ class OEUIMANAGER {
     }
 
     setTransformerState(shape) {
-        this.checkImageBounds(shape, this.#oeEditorStage, this.#transformer);
+        this.checkFieldBounds(shape, this.#oeEditorStage, this.#transformer);
     }
 
-    checkImageBounds(shape, oeEditorStage, transformer) {
+    checkFieldBounds(shape, oeEditorStage, transformer) {
         if (transformer.borderStroke() !== '#00a1ff') {
             transformer.borderStroke('#00a1ff');
             transformer.borderStrokeWidth(1);
         }
 
-        if (shape.getClassName() == 'Image') {        
-            let stageWidth = oeEditorStage.width();
-            let stageHeight = oeEditorStage.height();
+      
+        let stageWidth = oeEditorStage.width();
+        let stageHeight = oeEditorStage.height();
 
-            let rect = shape.getClientRect();
-            let x = rect.x  / oeEditorStage.scaleX();
-            let y = rect.y  / oeEditorStage.scaleY();
-            let width = rect.width / oeEditorStage.scaleX();
-            let height = rect.height / oeEditorStage.scaleY();
+        let rect = shape.getClientRect();
+        let x = rect.x  / oeEditorStage.scaleX();
+        let y = rect.y  / oeEditorStage.scaleY();
 
-            let outOfBounds = false;
-            if (x < 0) {
-                outOfBounds = true;
-            }
-            if (y < 0) {
-                outOfBounds = true;
-            }
+        x = Math.ceil(x/oeEditorStage.scaleX())*oeEditorStage.scaleX()|0;
+        y = Math.ceil(y/oeEditorStage.scaleY())*oeEditorStage.scaleY()|0;
 
-            if ((x + width) > stageWidth) {
-                outOfBounds = true;
-            }
-            if ((y + height) > stageHeight) {
-                outOfBounds = true;
-            }
+        let width = rect.width / oeEditorStage.scaleX();
+        let height = rect.height / oeEditorStage.scaleY();
 
-            if (outOfBounds) {
-                transformer.borderStrokeWidth(3);
-                transformer.borderStroke('red');    
-            }
+        let outOfBounds = false;
+        if (x < 0) {
+            outOfBounds = true;
         }
+        if (y < 0) {
+            outOfBounds = true;
+        }
+
+        if ((x + width) > stageWidth) {
+            outOfBounds = true;
+        }
+        if ((y + height) > stageHeight) {
+            outOfBounds = true;
+        }
+
+        if (outOfBounds) {
+            transformer.borderStrokeWidth(3);
+            transformer.borderStroke('red');    
+        }
+
     }
 
     #saveConfig() {
@@ -1549,16 +1561,16 @@ class OEUIMANAGER {
                     this.#createTextPropertyEditor();
                 }
                 let strokeColour = this.#selected.stroke;
-                if (this.#selected.strokewidth == 0) {
-                    strokeColour = null;
-                }
+                //if (this.#selected.strokewidth == 0) {
+                //    strokeColour = null;
+               // }
                 $('#textpropgrid').jqPropertyGrid('set', {
                     'label': this.#selected.label,
                     'format': this.#selected.format,
                     'sample': this.#selected.sample,
                     'empty': this.#selected.empty,
-                    'x': this.#selected.calcX,
-                    'y': this.#selected.calcY,
+                    'x': this.#selected.calcX|0,
+                    'y': this.#selected.calcY|0,
                     'fontsize': this.#selected.fontsize,
                     'fontname': this.#selected.fontname,
                     'opacity': this.#selected.opacity,
@@ -1679,6 +1691,13 @@ class OEUIMANAGER {
         let gridSizeX = this.#configManager.gridSize;
         let gridSizeY = this.#configManager.gridSize;
 
+        if (gridSizeX == 0) {
+            gridSizeX = 1;
+        }
+        if (gridSizeY == 0) {
+            gridSizeY = 1;
+        }
+
         var textConfig = {
             label: { group: 'Label', name: 'Item', type: 'text' },
             format: { group: 'Label', name: 'Format', type: 'text', helpcallback: function (name) {
@@ -1734,14 +1753,18 @@ class OEUIMANAGER {
                 }
             } else {
                 if (name == 'label') {
+                    let x = field.x;
                     let oldSize = field.shape.measureSize(field.label); 
                     field[name] = value;
                     let size = field.shape.measureSize(field.label); 
-                    field.x = x - (oldSize - size);
+                    let adj = (oldSize.width - size.width)/2;
+                    field.shape.offsetX((size.width/2)|0);
+                    field.x = x - adj;
                 } else {
                     field[name] = value;
                 }
             }
+            uiManager.checkFieldBounds(field.shape, uiManager.editorStage , uiManager.transformer);
 
             // If we are in test mode then re enable it after the field has ben updated
             if (uiManager.testMode) {
@@ -1814,7 +1837,7 @@ class OEUIMANAGER {
             // TODO: Check setter actually exists
             if (name !== 'image') {
                 field[name] = value;
-                uiManager.checkImageBounds(field.shape, uiManager.editorStage , uiManager.transformer);
+                uiManager.checkFieldBounds(field.shape, uiManager.editorStage , uiManager.transformer);
             } else {
                 field.setImage(value).then( () => {
                     uiManager.transformer.forceUpdate();
@@ -1864,7 +1887,7 @@ class OEUIMANAGER {
     }
 
     updateDebugWindow() {
-        if (this.#debugPosMode) {
+        if (this.#debugPosMode) {            
             let field = this.#selected;
             if (field === null) {
                 $('#debugpropgrid').jqPropertyGrid('set', {
@@ -1878,8 +1901,24 @@ class OEUIMANAGER {
                     'offsety': 'N/A',                
                     'width': 'N/A',
                     'height': 'N/A',
+                    'rect': 'N/A',
+                    'rectc': 'N/A'
                 });            
             } else {
+        
+                let rect = field.shape.getClientRect();
+                let rectx = rect.x  / this.#oeEditorStage.scaleX();
+                let recty = rect.y  / this.#oeEditorStage.scaleY();
+
+                let gridSizeX = this.#configManager.gridSize;
+                let gridSizeY = this.#configManager.gridSize;
+
+                let rectcx = (Math.round((field.shape.x() - field.shape.offsetX())  / gridSizeX) * gridSizeX);
+                let rectcy = (Math.round((field.shape.y() - field.shape.offsetY())  / gridSizeY) * gridSizeY);
+                
+                let rectString = rectx.toFixed(2) + ", " + recty.toFixed(2);
+                let rectCalc = rectcx + ", " + rectcy;
+
                 let scaleX = this.#oeEditorStage.scaleX();
                 let scaleY = this.#oeEditorStage.scaleY();              
                 let type = 'Text';
@@ -1900,7 +1939,9 @@ class OEUIMANAGER {
                     'offsetx': (field.shape.offsetX() | 0).toString(),
                     'offsety': (field.shape.offsetY() | 0).toString(),
                     'width': 'sx: ' + (field.shape.width() | 0).toString() + ', ix: ' + ((field.shape.width() / scaleX) | 0).toString(),
-                    'height': 'sy: ' + (field.shape.height() | 0).toString() + ', iy: ' + ((field.shape.height() / scaleY) | 0).toString()
+                    'height': 'sy: ' + (field.shape.height() | 0).toString() + ', iy: ' + ((field.shape.height() / scaleY) | 0).toString(),
+                    'rect': rectString,
+                    'rectc' : rectCalc
                 });
             }
         }
@@ -1930,7 +1971,9 @@ class OEUIMANAGER {
             width: 0,
             height: 0,
             mouseScreenx: 0,
-            mouseScreeny: 0    
+            mouseScreeny: 0,
+            rect: 0,
+            rectc: 0  
         };
 
         let debugConfig = {
@@ -1945,6 +1988,9 @@ class OEUIMANAGER {
             offsety: { group: 'Position', name: 'offset y', type: 'text' },                
             width: { group: 'Position', name: 'width', type: 'text' },
             height: { group: 'Position', name: 'height', type: 'text' },
+
+            rect: { group: 'Field Rect', name: 'Rect', type: 'text' },
+            rectc: { group: 'Field Rect', name: 'Rect', type: 'text' },
 
             mouseScreenx: { group: 'Mouse', name: 'Screen x', type: 'text' },
             mouseScreeny: { group: 'Mouse', name: 'Screen y', type: 'text' }

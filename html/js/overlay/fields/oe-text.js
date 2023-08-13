@@ -131,6 +131,16 @@ class OETEXTFIELD extends OEFIELD {
     this.dirty = true;
   }
 
+  // Following getter and setter are neeed as font should be fontFamily in the defaults
+  get font() {
+    return this.fieldData.font;
+  }
+  set font(font) {
+    this.fieldData.font = font;
+    this.shape.fontFamily(font);
+    this.dirty = true;
+  }
+
   get fontname() {
     return this.fieldData.font;
   }

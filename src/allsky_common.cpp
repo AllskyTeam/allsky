@@ -810,12 +810,7 @@ void closeUp(int e)
 
 	closingUp = true;
 
-	stopVideoCapture(CG.cameraNumber);
-	// Seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
-	// until the exposure finishes, then it never returns so the remaining code doesn't
-	// get executed. Don't know a way around that, so don't bother closing the camera.
-	// Prior versions of allsky didn't do any cleanup, so it should be ok not to close the camera.
-	//	ASICloseCamera(CG.cameraNumber);
+	(void) stopVideoCapture(CG.cameraNumber);
 
 	// Close the optional display window.	// not used by RPi
 	if (bDisplay)
@@ -825,23 +820,27 @@ void closeUp(int e)
 		pthread_join(threadDisplay, &retval);
 	}
 
-	char const *a = "Stopping";
+	char const *a = e == EXIT_RESTARTING ? "Restarting" : "Stopping";
+
 	if (CG.notificationImages) {
 		if (e == EXIT_RESTARTING)
-		{
 			(void) displayNotificationImage("--expires 15 Restarting &");
-			a = "Restarting";
-		}
 		else
-		{
 			(void) displayNotificationImage("--expires 2 NotRunning &");
-		}
+
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
 		// before the one below. This is only so it looks nicer in the log file.
 		sleep(3);
 	}
 
 	printf("     ***** %s AllSky *****\n", a);
+
+	// ZWO seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
+	// until the exposure finishes, then it never returns so the remaining code doesn't
+	// get executed. Don't know how to get around that - hopefully this works:
+	if (CG.ct == ctZWO && ! gotSignal && e != EXIT_NO_CAMERA)
+		(void) closeCamera(CG.cameraNumber);
+
 	exit(e);
 }
 

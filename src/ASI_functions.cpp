@@ -537,8 +537,9 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 }
 
 
-// Empty routine so code compiles.
-int stopVideoCapture(int cameraID) { return(ASI_SUCCESS); }
+// Empty routines so code compiles.
+int stopVideoCapture(int cameraID) { return((int) ASI_SUCCESS); }
+int closeCamera(int cameraID) { return((int) ASI_SUCCESS); }
 
 // Get the camera's serial number.  RPi cameras don't support serial numbers.
 ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
@@ -548,6 +549,7 @@ ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
 
 	return(ASI_ERROR_GENERAL_ERROR);		// Not supported on RPi cameras
 }
+
 
 
 #else		////////////////////// ZWO
@@ -591,6 +593,10 @@ char const *argumentNames[][2] = {
 int stopVideoCapture(int cameraID)
 {
 	return((int) ASIStopVideoCapture(cameraID));
+}
+int closeCamera(int cameraID)
+{
+	return((int) ASICloseCamera(cameraID));
 }
 
 int getCameraNumber()
@@ -856,7 +862,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 			fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" },\n");
 			fprintf(f, "\t\t{ \"value\" : 270, \"label\" : \"270 degrees\" }\n");
 		}
-	fprintf(f, "\t],\n");;
+	fprintf(f, "\t],\n");
 #endif
 
 	fprintf(f, "\t\"supportedImageFormats\": [\n");
@@ -887,7 +893,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 				"unknown format");
 			fprintf(f, " }");
 		}
-	fprintf(f, "\t],\n");;
+	fprintf(f, "\t],\n");
 
 	// Add some other things the camera supports, or the software supports for this camera.
 	// Adding it to the "controls" array makes the code that checks what's available easier.

@@ -484,8 +484,6 @@ class OVERLAYUTIL
                         $sig = substr($contents,0,4);
                         $sig = bin2hex($sig);
                         if (in_array($sig, $validSignatures)) {
-                            $file = fopen($fileName, 'wb');
-
                             if ($file = fopen($fileName, 'wb')) {
                                 fwrite($file, $contents);
                                 fclose($file);

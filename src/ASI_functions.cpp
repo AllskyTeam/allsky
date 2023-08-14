@@ -830,7 +830,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t{ \"value\" : %d, \"label\" : \"%dx%d\" }", b, b, b);
 	}
 	fprintf(f, "\t],\n");
-	
+
 	// RPi only supports sensor temp with libcamera.
 	if (CG.ct == ctZWO || CG.isLibcamera)
 		fprintf(f, "\t\"hasSensorTemperature\" : %s,\n", CG.supportsTemperature ? "true" : "false");
@@ -856,7 +856,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" },\n");
 		fprintf(f, "\t\t{ \"value\" : 270, \"label\" : \"270 degrees\" }\n");
 	}
-	fprintf(f, "\t],\n");;
+	fprintf(f, "\t],\n");
 #endif
 
 	fprintf(f, "\t\"supportedImageFormats\": [\n");
@@ -963,8 +963,8 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
 		fprintf(f, "\t\t},\n");
 	}
-	if (CG.supportsTemperature) {		
-		fprintf(f, "\t\t{\n");	// TODO This will go away when the legacy overlay is removed
+	if (CG.supportsTemperature) {
+		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showTemp");
 		fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showTemp ? 1 : 0);

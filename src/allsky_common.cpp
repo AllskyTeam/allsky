@@ -810,12 +810,7 @@ void closeUp(int e)
 
 	closingUp = true;
 
-	stopVideoCapture(CG.cameraNumber);
-	// Seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
-	// until the exposure finishes, then it never returns so the remaining code doesn't
-	// get executed. Don't know a way around that, so don't bother closing the camera.
-	// Prior versions of allsky didn't do any cleanup, so it should be ok not to close the camera.
-	//	ASICloseCamera(CG.cameraNumber);
+	(void) stopVideoCapture(CG.cameraNumber);
 
 	// Close the optional display window.	// not used by RPi
 	if (bDisplay)
@@ -825,23 +820,27 @@ void closeUp(int e)
 		pthread_join(threadDisplay, &retval);
 	}
 
-	char const *a = "Stopping";
+	char const *a = e == EXIT_RESTARTING ? "Restarting" : "Stopping";
+
 	if (CG.notificationImages) {
 		if (e == EXIT_RESTARTING)
-		{
 			(void) displayNotificationImage("--expires 15 Restarting &");
-			a = "Restarting";
-		}
 		else
-		{
 			(void) displayNotificationImage("--expires 2 NotRunning &");
-		}
+
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
 		// before the one below. This is only so it looks nicer in the log file.
 		sleep(3);
 	}
 
 	printf("     ***** %s AllSky *****\n", a);
+
+	// ZWO seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
+	// until the exposure finishes, then it never returns so the remaining code doesn't
+	// get executed. Don't know how to get around that - hopefully this works:
+	if (CG.ct == ctZWO && ! gotSignal && e != EXIT_NO_CAMERA)
+		(void) closeCamera(CG.cameraNumber);
+
 	exit(e);
 }
 
@@ -1179,19 +1178,19 @@ void displaySettings(config cg)
 	printf("   Quality: %ld\n", cg.userQuality);
 	printf("   Daytime capture: %s\n", yesNo(cg.daytimeCapture));
 
-	printf("   Exposure (day):   %s, Auto: %s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
+	printf("   Exposure (day):   %15s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
 		if (cg.dayAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.dayMaxAutoExposure_us, true));
 		printf("\n");
-	printf("   Exposure (night): %s, Auto: %s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
+	printf("   Exposure (night): %15s, Auto: %3s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
 		if (cg.nightAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.nightMaxAutoExposure_us, true));
 		printf("\n");
-	printf("   Gain (day):   %s, Auto: %s", LorF(cg.dayGain, "%ld", "%1.2f"), yesNo(cg.dayAutoGain));
+	printf("   Gain (day):   %5s, Auto: %3s", LorF(cg.dayGain, "%ld", "%1.2f"), yesNo(cg.dayAutoGain));
 		if (cg.dayAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.dayMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
-	printf("   Gain (night): %s, Auto: %s", LorF(cg.nightGain, "%ld", "%1.2f"), yesNo(cg.nightAutoGain));
+	printf("   Gain (night): %5s, Auto: %3s", LorF(cg.nightGain, "%ld", "%1.2f"), yesNo(cg.nightAutoGain));
 		if (cg.nightAutoGain)
 			printf(", Max Auto-Gain: %s", LorF(cg.nightMaxAutoGain, "%ld", "%1.2f"));
 		printf("\n");
@@ -1214,8 +1213,8 @@ void displaySettings(config cg)
 	printf("   Binning (day):   %ld\n", cg.dayBin);
 	printf("   Binning (night): %ld\n", cg.nightBin);
 	if (cg.isColorCamera) {
-		printf("   White Balance (day)   Red: %s, Blue: %s, Auto: %s\n", LorF(cg.dayWBR, "%ld", "%.2f"), LorF(cg.dayWBB, "%ld", "%.2f"), yesNo(cg.dayAutoAWB));
-		printf("   White Balance (night) Red: %s, Blue: %s, Auto: %s\n", LorF(cg.nightWBR, "%ld", "%.2f"), LorF(cg.nightWBB, "%ld", "%.2f"), yesNo(cg.nightAutoAWB));
+		printf("   White Balance (day)   Red: %s, Blue: %s, Auto: %3s\n", LorF(cg.dayWBR, "%ld", "%.2f"), LorF(cg.dayWBB, "%ld", "%.2f"), yesNo(cg.dayAutoAWB));
+		printf("   White Balance (night) Red: %s, Blue: %s, Auto: %3s\n", LorF(cg.nightWBR, "%ld", "%.2f"), LorF(cg.nightWBB, "%ld", "%.2f"), yesNo(cg.nightAutoAWB));
 	}
 	printf("   Delay (day):   %s\n", length_in_units(cg.dayDelay_ms * US_IN_MS, true));
 	printf("   Delay (night): %s\n", length_in_units(cg.nightDelay_ms * US_IN_MS, true));
@@ -1349,14 +1348,16 @@ void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 	}
 
 	long s_us = 0;
-	if (cg.consistentDelays && cg.currentAutoExposure && lastExposure_us < cg.currentMaxAutoExposure_us) {
-		// If using auto-exposure and the actual exposure is less than the max,
+	if (cg.consistentDelays) {
+		// consistentDelays keeps a constant frame rate during timelapse generation by
+		// always using starting the next exposure (delay + currentMaxAutoExposure_us)
+		// after the last exposure.
+		// So if the actual exposure is less than the max,
 		// we still wait until we reach maxexposure, then wait for the delay period.
-		// This is important for a constant frame rate during timelapse generation.
 
-		if (lastExposure_us < cg.currentMaxAutoExposure_us)
+		if (lastExposure_us < cg.currentMaxAutoExposure_us)		// TODO: if AE_ALLSKY:    && cg.currentAutoExposure)
 			s_us = cg.currentMaxAutoExposure_us - lastExposure_us;	// how much longer till max?
-		s_us += cg.currentDelay_ms * US_IN_MS;		// Add standard delay amount
+		s_us += (cg.currentDelay_ms * US_IN_MS);		// Add standard delay amount
 		Log(2, "  > Sleeping: %s\n", length_in_units(s_us, false));
 
 	} else {
@@ -1972,6 +1973,19 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (
 			strcmp(a, "xx_end_xx") == 0 ||
 			strcmp(a, "lastchanged") == 0 ||
+			strcmp(a, "uselocalwebsite") == 0 ||
+#define temp1 "useremote"
+			strncmp(a, temp1, sizeof(temp1)-1) == 0 ||
+#define temp2 "protocol"
+			strncmp(a, temp2, sizeof(temp2)-1) == 0 ||
+#define temp3 "imagedir"
+			strncmp(a, temp3, sizeof(temp3)-1) == 0 ||
+#define temp4 "videodestinationname"
+			strncmp(a, temp4, sizeof(temp4)-1) == 0 ||
+#define temp5 "keogramdeodestinationname"
+			strncmp(a, temp5, sizeof(temp5)-1) == 0 ||
+#define temp6 "startrailsdeodestinationname"
+			strncmp(a, temp6, sizeof(temp6)-1) == 0 ||
 			strcmp(a, "displaysettings") == 0 ||
 			strcmp(a, "showonmap") == 0 ||
 			strcmp(a, "websiteurl") == 0 ||
@@ -2012,6 +2026,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 
 // validate and convert Latitude and Longitude to N, S, E, W versions.
 static char strLatitude[20], strLongitude[20];
+
 static char const *validateLatLong(
 		char const *l,
 		char positive,
@@ -2025,22 +2040,75 @@ static char const *validateLatLong(
 		return(NULL);
 	}
 
-	Log(4, "validateLatLong(l=%s, positive=%c, negative=%c, savedLocation=%s, name=%s)\n", l, positive,negative,savedLocation,name);
-	int len = strlen(l);
-	char direction = (char) toupper(l[len-1]);
-	if (direction == positive || direction == negative) {
-		if (l[0] == '+' || l[0] == '-') {
-			Log(0, "*** %s: ERROR: %s cannot have BOTH + or - AND %c or %c.  You entered [%s].\n",
-				CG.ME, name, positive, negative, l);
-			return(NULL);
-		}
-		return(l);
+	Log(4, "validateLatLong(l=%s, positive=%c, negative=%c, name=%s)\n", l, positive, negative, name);
+
+	if (index(l, ' ') != NULL) {
+		Log(0, "*** %s: ERROR: %s cannot have any spaces.  You entered [%s].\n", CG.ME, name, l);
+		return(NULL);
 	}
 
-	// Assume it's a number, so convert to a string;
-	float num = atof(l);
-	snprintf(savedLocation, maxSize-1, "%.5f%c", abs(num), num > 0 ? positive : negative);
-	l = savedLocation;
+	// Valid formats:
+	//	12.34
+	//	[+-]12.34
+	//	12.34[NS]		# Latitude only
+	//	12.34[EW]		# Longitude only
+
+	int len = strlen(l);
+	unsigned char direction = toupper(l[len-1]);		// Last character
+	if (isalpha(direction)) {
+		// Make sure it's a valid direction.
+		unsigned char upper = toupper(direction);
+		if (upper == 'N' || upper == 'S') {
+			if (strcmp(name, "Longitude") == 0) {
+				Log(0, "*** %s: ERROR: %s uses 'E' or 'W'.  You entered [%s].\n",
+					CG.ME, name, l);
+				return(NULL);
+			}
+		} else if (upper == 'E' || upper == 'W') {
+			if (strcmp(name, "Latitude") == 0) {
+				Log(0, "*** %s: ERROR: %s uses 'N' or 'S'.  You entered [%s].\n",
+					CG.ME, name, l);
+				return(NULL);
+			}
+		} else {
+			Log(0, "*** %s: ERROR: Unknown direction; must be 'N', 'S', 'E', or 'W'.  You entered [%s].\n",
+				CG.ME, l);
+			return(NULL);
+		}
+
+		if (upper == positive || upper == negative) {
+			if (l[0] == '+' || l[0] == '-') {
+				Log(0, "*** %s: ERROR: %s cannot have BOTH + or - AND %c or %c.  You entered [%s].\n",
+					CG.ME, name, positive, negative, l);
+				return(NULL);
+			}
+
+			//	12.34[NSEW]
+			return(l);
+		}
+	}
+
+	//	12.34
+	// or
+	//	[+-]12.34
+	// Convert to a string that ends with N, S, E, or W which is what sunwait needs.
+
+	// The number may have a period or comma as the decimal point,
+	// which may or may not match the user's locale, e.g.,
+	//   12.34
+	// with locale = DE.  atof() uses the locale so will convert that to 12
+	// Get around that by not converting to a number.
+	char p_or_n;
+	if (l[0] == '-') {
+		p_or_n = negative;
+		l++;		// skip sign
+	} else if (l[0] == '+') {
+		p_or_n = positive;
+		l++;		// skip sign
+	} else {
+		p_or_n = positive;
+	}
+	snprintf(savedLocation, maxSize-1, "%s%c", l, p_or_n);
 	Log(4, "   new value = %s\n", savedLocation);
 	return(savedLocation);
 }

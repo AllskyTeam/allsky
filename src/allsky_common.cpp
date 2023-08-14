@@ -820,17 +820,14 @@ void closeUp(int e)
 		pthread_join(threadDisplay, &retval);
 	}
 
-	char const *a = "Stopping";
+	char const *a = e == EXIT_RESTARTING ? "Restarting" : "Stopping";
+
 	if (CG.notificationImages) {
 		if (e == EXIT_RESTARTING)
-		{
 			(void) displayNotificationImage("--expires 15 Restarting &");
-			a = "Restarting";
-		}
 		else
-		{
 			(void) displayNotificationImage("--expires 2 NotRunning &");
-		}
+
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
 		// before the one below. This is only so it looks nicer in the log file.
 		sleep(3);
@@ -841,8 +838,8 @@ void closeUp(int e)
 	// ZWO seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
 	// until the exposure finishes, then it never returns so the remaining code doesn't
 	// get executed. Don't know how to get around that - hopefully this works:
-	if (CG.ct == ctZWO && ! gotSignal)
-		closeCamera(CG.cameraNumber);
+	if (CG.ct == ctZWO && ! gotSignal && e != EXIT_NO_CAMERA)
+		(void) closeCamera(CG.cameraNumber);
 
 	exit(e);
 }
@@ -1977,24 +1974,22 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 			strcmp(a, "xx_end_xx") == 0 ||
 			strcmp(a, "lastchanged") == 0 ||
 			strcmp(a, "uselocalwebsite") == 0 ||
-			strcmp(a, "useremotewebsite") == 0 ||
-			strcmp(a, "useremoteserver") == 0 ||
-			strcmp(a, "remotewebsiteprotocol") == 0 ||
-			strcmp(a, "remoteserverprotocol") == 0 ||
-			strcmp(a, "remotewebsiteimagedir") == 0 ||
-			strcmp(a, "remoteserverimagedir") == 0 ||
-			strcmp(a, "remotewebsiteurl") == 0 ||
-			strcmp(a, "remoteserverurl") == 0 ||
-			strcmp(a, "remotewebsiteimageurl") == 0 ||
-			strcmp(a, "remoteserverimageurl") == 0 ||
-			strcmp(a, "remotewebsitevideodestinationname") == 0 ||
-			strcmp(a, "remoteservervideodestinationname") == 0 ||
-			strcmp(a, "remotewebsitekeogramdestinationname") == 0 ||
-			strcmp(a, "remoteserverkeogramdestinationname") == 0 ||
-			strcmp(a, "remotewebsitestartrailsdestinationname") == 0 ||
-			strcmp(a, "remoteserverstartrailsdestinationname") == 0 ||
+#define temp1 "useremote"
+			strncmp(a, temp1, sizeof(temp1)-1) == 0 ||
+#define temp2 "protocol"
+			strncmp(a, temp2, sizeof(temp2)-1) == 0 ||
+#define temp3 "imagedir"
+			strncmp(a, temp3, sizeof(temp3)-1) == 0 ||
+#define temp4 "videodestinationname"
+			strncmp(a, temp4, sizeof(temp4)-1) == 0 ||
+#define temp5 "keogramdeodestinationname"
+			strncmp(a, temp5, sizeof(temp5)-1) == 0 ||
+#define temp6 "startrailsdeodestinationname"
+			strncmp(a, temp6, sizeof(temp6)-1) == 0 ||
 			strcmp(a, "displaysettings") == 0 ||
 			strcmp(a, "showonmap") == 0 ||
+			strcmp(a, "websiteurl") == 0 ||
+			strcmp(a, "imageurl") == 0 ||
 			strcmp(a, "location") == 0 ||
 			strcmp(a, "owner") == 0 ||
 			strcmp(a, "camera") == 0 ||

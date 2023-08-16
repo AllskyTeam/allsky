@@ -1346,8 +1346,8 @@ is_reboot_needed()
 	local OLD_VERSION="${1}"
 	local OLD_BASE_VERSION="${OLD_VERSION:0:11}"	# Without point release
 	local NEW_VERSION="${2}"
-	if [[ ${NEW_VERSION} == "v2023.05.01_02" && ${OLD_BASE_VERSION} == "v2023.05.01" ]]; then
-		# just bug fixes between those two versions
+	if [[ ${NEW_VERSION:0:11} == "v2023.05.01" && ${OLD_BASE_VERSION} == "v2023.05.01" ]]; then
+		# just bug fixes between the v2023.05.01 versions.
 		REBOOT_NEEDED="false"
 		display_msg --logonly info "No reboot is needed."
 	else

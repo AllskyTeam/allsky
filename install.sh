@@ -1445,7 +1445,8 @@ prompt_for_prior_Allsky()
 		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			MSG="Rename the directory with your prior version of Allsky to"
 			MSG="${MSG}\n '${PRIOR_ALLSKY_DIR}', then run the installation again."
-			display_msg --log info "${MSG}"
+			display_msg info "${MSG}"
+			display_msg --logonly info "User elected not to continue.  Exiting installation."
 			exit_installation 0 "${STATUS_NOT_CONTINUE}" "after no prior Allsky was found."
 		fi
 		STATUS_VARIABLES+=("prompt_for_prior_Allsky='true'\n")

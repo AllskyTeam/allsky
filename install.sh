@@ -2616,12 +2616,12 @@ if [[ ${IN_TESTING} == "true" ]]; then
 		MSG="${MSG}\n\nPlease set Debug Level to 3 during testing."
 		MSG="${MSG}\n"
 
-		MSG="${MSG}\nChanges from prior dev releases:"
+		MSG="${MSG}\nChanges from prior release:"
 
-		MSG="${MSG}\n * change 1"
+		MSG="${MSG}\n * Bug fixes"
 
-		MSG="${MSG}\n"
-		MSG="${MSG}\n * change 2"
+#		MSG="${MSG}\n"
+#		MSG="${MSG}\n * change 2"
 
 		MSG="${MSG}\n\nIf you agree, enter:    yes"
 		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3)

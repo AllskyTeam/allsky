@@ -2526,7 +2526,7 @@ remind_old_version()
 		MSG="When you are sure everything is working with the new Allsky release,"
 		MSG="${MSG} remove your old version in '${PRIOR_ALLSKY_DIR}' to save disk space."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-		display_msg --logonly info "Displayed message about removing '${PRIOR_ALLSKY}'."
+		display_msg --logonly info "Displayed message about removing '${PRIOR_ALLSKY_DIR}'."
 	fi
 }
 

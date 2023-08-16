@@ -1942,7 +1942,9 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}"
 
 		# Copy the user's prior data to the new file which may contain new fields.
-		"${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}"
+		if ! "${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}" ; then
+			display_msg --log error "Copying 'modules' directory had problems."
+		fi
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi

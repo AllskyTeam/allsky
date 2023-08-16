@@ -1446,7 +1446,8 @@ prompt_for_prior_Allsky()
 		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			MSG="Rename the directory with your prior version of Allsky to"
 			MSG="${MSG}\n '${PRIOR_ALLSKY_DIR}', then run the installation again."
-			display_msg --log info "${MSG}"
+			display_msg info "${MSG}"
+			display_msg --logonly info "User elected not to continue.  Exiting installation."
 			exit_installation 0 "${STATUS_NOT_CONTINUE}" "after no prior Allsky was found."
 		fi
 		STATUS_VARIABLES+=("prompt_for_prior_Allsky='true'\n")
@@ -1592,12 +1593,12 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 	[[ ${NEW_VERSION} == "${PRIOR_VERSION}" ]] && return
 
 	# TODO: new versions go here
-	if [[ ${NEW_VERSION} == "v2023.05.01_02" ]]; then
-		if [[ ${PRIOR_VERSION} != "v2023.05.01" && ${PRIOR_VERSION} != "v2023.05.01_01" ]]; then
-			return
-		fi
+# TODO: fix version number
+	if [[ ${NEW_VERSION} == "v2023.05.01_03_dev" ]]; then
+		# This version moved most of the ftp-setting.sh settings to the settings.json file,
+		# and made the setting names lowercase.  Plus other changes.
 
-		# Replaced "meanthreshold" with "daymeanthreshold" and "nightmeanthreshold"
+		# Replace "meanthreshold" with "daymeanthreshold" and "nightmeanthreshold"
 		# if they don't already exist.
 		local F="meanthreshold"
 		MEANTHRESHOLD="$( settings ".${F}" "${PRIOR_FILE}" )"
@@ -1866,7 +1867,7 @@ restore_prior_settings_file()
 					;;
 			esac
 			# Set to null to force the user to look at the settings before Allsky will run.
-			update_json_file ".lastChanged" "" "${SETTINGS_FILE}"
+			update_json_file ".lastchanged" "" "${SETTINGS_FILE}"
 
 			RESTORED_PRIOR_SETTINGS_FILE="true"
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"

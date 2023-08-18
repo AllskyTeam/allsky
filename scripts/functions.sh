@@ -77,7 +77,7 @@ function determineCommandToUse()
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
 	# use raspistill.
 
-	local RET=0
+	local RET=1
 	local CMD="libcamera-still"
 	if command -v ${CMD} > /dev/null; then
 		# Found the command - see if it works.

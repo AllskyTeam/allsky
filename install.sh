@@ -2583,6 +2583,9 @@ exit_installation()
 				  ${STATUS_CODE} == "${STATUS_NO_REBOOT}" ]]; then
 				uptime --since > "${ALLSKY_REBOOT_NEEDED}"
 				display_image "RebootNeeded"
+			else
+				# Just in case it's left over from a prior install.
+				rm -f "${ALLSKY_REBOOT_NEEDED}"
 			fi
 		fi
 	fi

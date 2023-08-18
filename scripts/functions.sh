@@ -66,8 +66,8 @@ function doExit()
 # RPi cameras can use either "raspistill" on Buster or "libcamera-still" on Bullseye
 # to actually take pictures.
 # Determine which to use.
-# On success, return 1 and the command to use.
-# On failure, return 0 and an error message.
+# On success, return 0 and the command to use.
+# On failure, return non-0 and an error message.
 function determineCommandToUse()
 {
 	local USE_doExit="${1}"			# Call doExit() on error?
@@ -77,7 +77,7 @@ function determineCommandToUse()
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
 	# use raspistill.
 
-	local RET=0
+	local RET=1
 	local CMD="libcamera-still"
 	if command -v ${CMD} > /dev/null; then
 		# Found the command - see if it works.

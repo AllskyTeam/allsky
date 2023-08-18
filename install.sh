@@ -233,7 +233,7 @@ CONNECTED_CAMERAS=""
 get_connected_cameras()
 {
 	local CC
- 	# If we can't determine the camera to use for RPi cameras it either means there is
+	# If we can't determine the camera to use for RPi cameras it either means there is
 	# no RPi camera, or something's wrong.
 	if determineCommandToUse "false" "" > /dev/null 2>&1 ; then
 		display_msg --log progress "RPi camera found."
@@ -2577,6 +2577,9 @@ exit_installation()
 				  ${STATUS_CODE} == "${STATUS_NO_REBOOT}" ]]; then
 				uptime --since > "${ALLSKY_REBOOT_NEEDED}"
 				display_image "RebootNeeded"
+			else
+				# Just in case it's left over from a prior install.
+				rm -f "${ALLSKY_REBOOT_NEEDED}"
 			fi
 		fi
 	fi

@@ -26,11 +26,13 @@
 
 // NOT_SET are items that aren't set yet and will be calculated at run time.
 // NOT_CHANGED items are command-line arguments where the default is camera-dependent,
+// NO_DEFAULT items don't have a default value.
 // and we can't use NOT_SET because -1 may be a legal value.
 // IS_DEFAULT means the value is the same as the camera default, so don't pass to camera program
 // since it'll use the default anyway.
 #define NOT_SET						-1
 #define NOT_CHANGED					-999999
+#define NO_DEFAULT					-999998
 #define	IS_DEFAULT					NOT_CHANGED
 
 // Defaults

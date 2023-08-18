@@ -233,6 +233,8 @@ CONNECTED_CAMERAS=""
 get_connected_cameras()
 {
 	local CC
+ 	# If we can't determine the camera to use for RPi cameras it either means there is
+	# no RPi camera, or something's wrong.
 	if determineCommandToUse "false" "" > /dev/null 2>&1 ; then
 		display_msg --log progress "RPi camera found."
 		CC="RPi"

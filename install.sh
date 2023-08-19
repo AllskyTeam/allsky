@@ -2625,7 +2625,8 @@ if [[ ${IN_TESTING} == "true" ]]; then
 
 		MSG="${MSG}\nChanges from prior release:"
 
-		MSG="${MSG}\n * Bug fixes"
+		MSG="${MSG}\n * Support for RPi Version 1 camera"
+		MSG="${MSG}\n * Bug fixes, especially with the Overlay Editor"
 
 #		MSG="${MSG}\n"
 #		MSG="${MSG}\n * change 2"

@@ -24,7 +24,8 @@ ifeq ($(PKGBUILD),)
 endif
 
 
-CONFIGFILES := config.sh ftp-settings.sh 
+CONFIGFILES := config.sh
+ENVFILE := env
 UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/allskyperiodic.service
 
 %:
@@ -42,7 +43,6 @@ uninstall:
 	@echo `date +%F\ %R:%S` Complete.
 	@echo `date +%F\ %R:%S` NOTE: Config files were \-NOT\- removed.
 	@echo `date +%F\ %R:%S` To remove config files, please run \'sudo make remove_configs\'
-
 .PHONY : uninstall
 
 ifeq ($(PKGBUILD),1)
@@ -57,7 +57,6 @@ createDirs:
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/profile.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/profile.d; fi
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/systemd/system ]; then mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system; fi
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/udev/rules.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/udev/rules.d; fi
-
 .PHONY : createDirs
 
 $(CONFIGFILES):
@@ -67,7 +66,14 @@ $(CONFIGFILES):
 	fi
 .PHONY : $(CONFIGFILES)
 
-install: createDirs $(CONFIGFILES)
+$(ENVFILE):
+	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky/.$@ ]; then \
+	  echo `date +%F\ %R:%S` Copying default .$@; \
+	  install -m 0644 $@.json.repo $(DESTDIR)$(sysconfdir)/allsky/.$@; \
+	fi
+.PHONY : $(ENVFILE)
+
+install: createDirs $(CONFIGFILES) $(ENVFILE)
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...
@@ -80,18 +86,18 @@ install: createDirs $(CONFIGFILES)
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
 	@echo -e "export ALLSKY_TMP=/tmp\nexport ALLSKY_CONFIG=$(DESTDIR)$(sysconfdir)/allsky\nexport ALLSKY_SCRIPTS=$(DESTDIR)$(libexecdir)\nexport ALLSKY_NOTIFICATION_IMAGES=$(DESTDIR)$(sharedir)\nexport ALLSKY_IMAGES=/home/allsky/images/" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
 
-else # Not in package build mode
+
+else ############################# Not in package build mode
 remove_configs:
 	@echo `date +%F\ %R:%S` Removing config path and files ../config
 	@rm -rf ../config
-
 .PHONY : remove_configs
 
 createDirs:
 	@echo `date +%F\ %R:%S` Creating directory structures...
 	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi
-
 .PHONY : createDirs
+
 $(CONFIGFILES):
 	@if [ ! -e ../config/$@ ]; then \
 	  echo `date +%F\ %R:%S` Copying default $@; \
@@ -99,7 +105,14 @@ $(CONFIGFILES):
 	fi
 .PHONY : $(CONFIGFILES)
 
-install: createDirs $(CONFIGFILES)
+$(ENVFILE):
+	@if [ ! -e ../.$@ ]; then \
+	  echo `date +%F\ %R:%S` Copying default .$@; \
+	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.json.repo ../.$@; \
+	fi
+.PHONY : $(ENVFILE)
+
+install: createDirs $(CONFIGFILES) $(ENVFILE)
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...

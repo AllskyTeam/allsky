@@ -730,7 +730,7 @@ function getFileName($file) {
 
 	if ($lastFileName === $file) return $lastFileName;
 
-	if (strpos("${HOME}", $file) !== false) {
+	if (strpos('${HOME}', $file) !== false) {
 		$lastFileName = str_replace('${HOME}', HOME, $file);
 	} else {
 		$lastFileName = get_variable(ALLSKY_HOME . '/variables.sh', "$file=", '');

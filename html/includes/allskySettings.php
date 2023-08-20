@@ -1,5 +1,25 @@
 <?php
 
+// Get the json for the given file "f" if we haven't already.
+$sourceFileContents = array();
+function getSourceArray($f) {
+	global $sourceFileContents;
+
+	$fileName = getFileName($f);
+	if (isset($sourceFileContents[$fileName])) {
+		$source_array = $sourceFileContents[$fileName];
+	} else {
+		$errorMsg = "Unable to read source file '$fileName'";
+		$source_array = get_decoded_json_file($fileName, true, $errorMsg);
+		if ($source_array === null) {
+			return null;
+		}
+		$sourceFilesContents[$fileName] = $source_array;
+	}
+	return $source_array;
+}
+
+
 function DisplayAllskyConfig(){
 	global $formReadonly, $settings_array;
 
@@ -34,6 +54,7 @@ function DisplayAllskyConfig(){
 			$optional_array = array();
 			$sources = array();
 			$sourceFiles = array();
+			$sourceFilesContent = array();
 			$sourcesOLD = array();
 			$changes = "";
 			$otherChanges = "";
@@ -50,7 +71,11 @@ function DisplayAllskyConfig(){
 				$n = $option['name'];
 				$optional_array[$n] = getVariableOrDefault($option, 'optional', false);
 				$s = getVariableOrDefault($option, 'source', null);
-				$sourceFiles[$n] = ($s === null ? null : getFileName($s));
+				if ($s !== null) {
+					$fileName = getFileName($s);
+					$sourceFiles[$n] = $fileName;
+					$sourceFilesContents[$n] = getSourceArray($fileName);
+				}
 			}
 
 	 		foreach ($_POST as $key => $newValue) {
@@ -62,9 +87,9 @@ function DisplayAllskyConfig(){
 				// Because we are passing the changes enclosed in single quotes below,
 				// we need to escape the single quotes, but I never figured out how to do that,
 				// so convert them to HTML codes instead.
-				$s = $sourceFiles[$key];
+				$s = getVariableOrDefault($sourceFilesContents, $key, null);
 				if ($s !== null) {
-					$oldValue = get_variable(getFileName($s), $key, "");
+					$oldValue = getVariableOrDefault($s, $key, "");
 					$sourcesOLD[$key] = $oldValue;
 				} else {
 					$oldValue = getVariableOrDefault($settings_array, $key, "");
@@ -74,7 +99,6 @@ function DisplayAllskyConfig(){
 
 				$thisChanged = false;
 				if ($oldValue !== $newValue) {
-echo "<br>$key: oldValue=$oldValue, new=<b>$newValue</b>" . ($s === null ? "" : " in $s");
 					if ($key === $cameraTypeName) {
 						if ($newValue === "Refresh") {
 							// Refresh the same Camera Type
@@ -153,7 +177,7 @@ echo "<br>$key: oldValue=$oldValue, new=<b>$newValue</b>" . ($s === null ? "" : 
 
 				if ($ok) {
 					$n = str_replace("'", "&#x27", $newValue);
-					if ($sourceFiles[$key] !== null) {
+					if (isset($sourceFilesContents[$key])) {
 						$sources[$key] = $n;
 					} else {
 						$settings[$key] = $n;
@@ -264,13 +288,16 @@ echo "<br>$key: oldValue=$oldValue, new=<b>$newValue</b>" . ($s === null ? "" : 
 			$settings = array();
 			$sources = array();
 			$sourceFiles = array();
+			$sourceFilesContents = array();
 			foreach ($options_array as $option){
 				$key = $option['name'];
 				$newValue = getVariableOrDefault($option, 'default', null);
 				if ($newValue !== null) {
-					$s = getVariableOrDefault($option, 'source', "");
-					if ($s !== "") {
-						$sourceFiles[$n] = getFileName($s);
+					$s = getVariableOrDefault($option, 'source', null);
+					if ($s !== null) {
+						$fileName = getFileName($s);
+						$sourceFiles[$n] = $fileName;
+						$sourceFilesContents[$n] = getSourceArray($fileName);
 						$sources[$n] = $newValue;
 					} else {
 						$settings[$key] = $newValue;
@@ -283,8 +310,9 @@ echo "<br>$key: oldValue=$oldValue, new=<b>$newValue</b>" . ($s === null ? "" : 
 				$status->addMessage("Settings reset to default", 'info');
 
 				foreach($sources as $key => $newValue) {
+					$source_array = $sourceFilesContents[$key];
+					$oldValue = getVariableOrDefault($source_array, $key, "");
 					$file = $sourceFiles[$key];
-					$oldValue = get_variable(getFileName($file), $key, "");
 					set_variable($file, $key, $newValue, $oldValue);
 				}
 			} else {
@@ -414,6 +442,8 @@ if ($formReadonly != "readonly") { ?>
 		$numMissingHasDefault = 0;
 		$missingSettingsHasDefault = "";
 		$missingSettings = "";
+		$sourceFiles = array();
+		$sourceFilesContents = array();
 		echo "<table border='0'>";
 			foreach($options_array as $option) {
 				$name = $option['name'];
@@ -429,9 +459,13 @@ if ($formReadonly != "readonly") { ?>
 					if ($default !== "")
 						$default = str_replace("'", "&#x27;", $default);
 
-					$s = getVariableOrDefault($option, 'source', "");
-					if ($s !== "") {
-						$value = get_variable(getFileName($s), $name, $default);
+					$s = getVariableOrDefault($option, 'source', null);
+					if ($s !== null) {
+						$fileName = getFileName($s);
+						$source_array = getSourceArray($fileName);
+						if ($source_array === null)
+							continue;
+						$value = getVariableOrDefault($source_array, $name, $default);
 					} else {
 						$value = getVariableOrDefault($settings_array, $name, $default);
 					}

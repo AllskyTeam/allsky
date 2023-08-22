@@ -88,15 +88,6 @@ function initialize_variables() {
 		exit;
 	}
 
-	// The Camera Type should be set during the installation, so this "should" never fail...
-	$cam_type = getVariableOrDefault($settings_array, 'cameratype', null);
-	if ($cam_type == null) {
-		echo "<div style='color: red; font-size: 200%;'>";
-		echo "'cameratype' not defined in settings file.  Please update it via the WebUI.";
-		echo "</div>";
-		exit;
-	}
-
 	// $img_dir is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');

@@ -131,6 +131,7 @@ function check_website()
 check_website		# invoke to set variables
 
 CAMERA_NUMBER=""
+NUM_CHANGES=0
 
 while [[ $# -gt 0 ]]
 do
@@ -138,6 +139,7 @@ do
 	LABEL="${2}"
 	OLD_VALUE="${3}"
 	NEW_VALUE="${4}"
+
 	if [[ ${DEBUG} == "true" ]]; then
 		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
 		echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
@@ -145,14 +147,20 @@ do
 			echo -e "<script>console.log('${MSG}');</script>"
 		fi
 	fi
+	if [[ ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
+		[[ ${DEBUG} == "true" ]] && echo -e "    ${wDEBUG}Skipping - old and new are equal${wNC}"
+		shift 4
+		continue
+	fi
 
 	# Unfortunately, the Allsky configuration file was already updated,
 	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
 	
+	((NUM_CHANGED++))
 	K="${KEY,,}"		# convert to lowercase
 	case "${K}" in
 
-		cameranumber | cameratype)
+		"cameranumber" | "cameratype")
 
 			if [[ ${K} == "cameranumber" ]]; then
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
@@ -350,12 +358,12 @@ do
 			NEEDS_RESTART="true"
 			;;
 
-		filename)
+		"filename")
 			check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
 			NEEDS_RESTART="true"
 			;;
 
-		extratext)
+		"extratext")
 			# It's possible the user will create/populate the file while Allsky is running,
 			# so it's not an error if the file doesn't exist or is empty.
 			if [[ -n ${NEW_VALUE} ]]; then
@@ -368,7 +376,7 @@ do
 			NEEDS_RESTART="true"
 			;;
 
-		latitude | longitude)
+		"latitude" | "longitude")
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
 			if NEW_VALUE="$(convertLatLong "${NEW_VALUE}" "${KEY}")" ; then
 				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
@@ -379,17 +387,17 @@ do
 			TWILIGHT_DATA_CHANGED="true"
 			;;
 
-		angle)
+		"angle")
 			NEEDS_RESTART="true"
 			TWILIGHT_DATA_CHANGED="true"
 			;;
 
-		takedaytimeimages)
+		"takedaytimeimages")
 			NEEDS_RESTART="true"
 			TWILIGHT_DATA_CHANGED="true"
 			;;
 
-		config)
+		"config")
 			if [[ ${NEW_VALUE} == "" ]]; then
 				NEW_VALUE="[none]"
 			elif [[ ${NEW_VALUE} != "[none]" ]]; then
@@ -401,14 +409,14 @@ do
 			fi
 			;;
 
-		daytuningfile | nighttuningfile)
+		"daytuningfile" | "nighttuningfile")
 			if [[ -n ${NEW_VALUE} && ! -f ${NEW_VALUE} ]]; then
 				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
 			fi
 			NEEDS_RESTART="true"
 			;;
 
-		displaysettings)
+		"displaysettings")
 			if [[ ${NEW_VALUE} -eq 0 ]]; then
 				NEW_VALUE="false"
 			else
@@ -433,56 +441,52 @@ do
 			fi
 			;;
 
-		showonmap)
+		"showonmap")
 			SHOW_ON_MAP="1"
 			[[ ${NEW_VALUE} -eq 0 ]] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP="true"
 			;;
 
-		location | owner | camera | lens | computer)
+		"location" | "owner" | "camera" | "lens" | "computer")
 			RUN_POSTTOMAP="true"
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
 
 
-		remotewebsiteurl | remotewebsiteimageurl)
+		"remotewebsiteurl" | "remotewebsiteimageurl")
 			CHECK_REMOTE_WEBSITE_ACCESS="true"
 			RUN_POSTTOMAP="true"
 			;;
 
-		useremotewebsite)
+		"useremotewebsite")
 			CHECK_REMOTE_WEBSITE_ACCESS="true"
 			USE_REMOTE_WEBSITE="${NEW_VALUE}"
 			;;
 
-		remotewebsiteprotocol | remotewebsiteimagedir | \
-		remotewebsitevideodestinationname | remotewebsitekeogramdestinationname | remotewebsitestartrailsdestinationname)
+		"remotewebsiteprotocol" | "remotewebsiteimagedir" | \
+		"remotewebsitevideodestinationname" | "remotewebsitekeogramdestinationname" | "remotewebsitestartrailsdestinationname")
 			CHECK_REMOTE_WEBSITE_ACCESS="true"
 			;;
 
-		REMOTEWEBSITE_HOST | REMOTEWEBSITE_PORT | REMOTEWEBSITE_USER | REMOTEWEBSITE_PASSWORD | \
-		REMOTEWEBSITE_LFTP_COMMANDS | REMOTEWEBSITE_SSH_KEY_FILE | REMOTEWEBSITE_AWS_CLI_DIR | REMOTEWEBSITE_S3_BUCKET | \
-		REMOTEWEBSITE_S3_ACL | REMOTEWEBSITE_GCS_BUCKET | REMOTEWEBSITE_GCS_ACL )
+		remotewebsite_*)
 			CHECK_REMOTE_WEBSITE_ACCESS="true"
 			;;
 
-		useremotewebserver)
+		"useremotewebserver")
 			CHECK_REMOTE_WEBSERVER_ACCESS="true"
 			USE_REMOTE_WEBSERVER="${NEW_VALUE}"
 			;;
 
 		# We don't care about the *destination names for remote servers
-		remoteserverprotocol | remoteserveriteimagedir)
+		"remoteserverprotocol" | "remoteserveriteimagedir")
 			CHECK_REMOTE_WEBSERVER_ACCESS="true"
 			;;
 
-		REMOTESERVER_HOST | REMOTESERVER_PORT | REMOTESERVER_USER | REMOTESERVER_PASSWORD | \
-		REMOTESERVER_LFTP_COMMANDS | REMOTESERVER_SSH_KEY_FILE | REMOTESERVER_AWS_CLI_DIR | REMOTESERVER_S3_BUCKET | \
-		REMOTESERVER_S3_ACL | REMOTESERVER_GCS_BUCKET | REMOTESERVER_GCS_ACL )
+		remotewebserver_*)
 			CHECK_REMOTE_WEBSERVER_ACCESS="true"
 			;;
 
-		overlaymethod)
+		"overlaymethod")
 			if [[ ${NEW_VALUE} -eq 1 ]]; then		# 1 == "overlay" method
 				echo -en "${wWARNING}"
 				echo -en "NOTE: You must enable the ${wBOLD}Overlay Module${wNBOLD} in the"
@@ -496,12 +500,15 @@ do
 
 
 		*)
-			echo -e "${wWARNING}WARNING: Unknown label '${LABEL}', key='${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}${wNC}"
+			echo -e "${wWARNING}WARNING: Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}${wNC}"
+			((NUM_CHANGED--))
 			;;
 
 		esac
 		shift 4
 done
+
+[[ ${NUM_CHANGED} -le 0 ]] && exit 0		# Nothing changed
 
 USE_REMOTE_WEBSITE="$( settings ".useremotewebsite" )"
 if [[ ${USE_REMOTE_WEBSITE} == "1" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then

@@ -496,26 +496,6 @@ function get_variable($file, $searchfor, $default)
 	}
 }
 
-/**
-*
-* Update the specified variable in the specified file.
-*/
-function set_variable($file, $variable, $newValue, $oldValue)
-{
-	// get the file contents
-	if (! file_exists($file)) {
-		$msg  = "<div style='color: red; font-size: 200%;'>";
-		$msg .= "<br>File '$file' not found!";
-		$msg .= "</div>";
-		echo $msg;
-		return(false);
-	}
-// TODO
-echo "<br>Need to set $variable to $newValue in $file (was $oldValue)";
-
-	return(true);
-}
-
 
 /**
 * 

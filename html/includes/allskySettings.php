@@ -12,7 +12,6 @@ function &getSourceArray($f) {
 		if ($filesContents[$fileName] === null) {
 			$msg = "Unable to get json contents of '$fileName' ($f).";
 			$status->addMessage($msg, 'danger', false);
-//			return null;
 		}
 	}
 	return $filesContents[$fileName];
@@ -22,6 +21,7 @@ function &getSourceArray($f) {
 function DisplayAllskyConfig(){
 	global $formReadonly, $settings_array;
 
+	$debug = false;
 	$cameraTypeName = "cameratype";		// json setting name
 	$cameraModelName = "cameramodel";	// json setting name
 	$cameraNumberName = "cameranumber";	// json setting name
@@ -100,7 +100,7 @@ function DisplayAllskyConfig(){
 					$nonCameraChangesExist = false;
 					if ($isSettingsField) $numSettingsChanges++;
 					else $numSourceChanges++;
-// echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsChanges, numSourceChanges=$numSourceChanges";
+if ($debug) echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsChanges, numSourceChanges=$numSourceChanges";
 
 					if ($key === $cameraTypeName) {
 						if ($newValue === "Refresh") {
@@ -182,12 +182,12 @@ function DisplayAllskyConfig(){
 					// Update the appropriate array with the new value.
 					$n = str_replace("'", "&#x27", $newValue);
 					if (isset($sourceFilesContents[$key])) {
-// echo "<br>sourceFilesContent[$key][$key] = " . $sourceFilesContents[$key][$key] . ", newValue=$newValue";
+if ($debug) echo "<br>sourceFilesContent[$key][$key] = " . $sourceFilesContents[$key][$key] . ", newValue=$newValue";
 						$sourceFilesContents[$key][$key] = $n;
 						$fileName = $sourceFiles[$key];
 						$sourceFilesChanged[$fileName] = $fileName;
 					} else {
-// echo "<br>settings[$key] = " . $settings_array[$key] . ", newValue=$newValue";
+if ($debug) echo "<br>settings[$key] = " . $settings_array[$key] . ", newValue=$newValue";
 						$settings_array[$key] = $n;
 					}
 
@@ -207,16 +207,16 @@ function DisplayAllskyConfig(){
 						$status->addMessage($msg, 'danger', false);
 						$ok = false;
 					} else {
+						$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES; // |JSON_NUMERIC_CHECK;
 						if ($numSettingsChanges > 0) {
 							// Keep track of the last time the file changed.
 							// If we end up not updating the file this will be ignored.
 							$lastChanged = date('Y-m-d H:i:s');
 							$settings_array[$lastChangedName] = $lastChanged;
-							$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES; // |JSON_NUMERIC_CHECK;
 							$content = json_encode($settings_array, $mode);
 							// updateFile() only returns error messages.
-// echo "<br>Updating settings_file $settings_file, # changes = $numSettingsChanges";
-// echo "<pre>"; var_dump($content); echo "</pre>";
+if ($debug) echo "<br>Updating settings_file $settings_file, # changes = $numSettingsChanges";
+if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 							$msg = updateFile($settings_file, $content, "settings", true);
 							if ($msg === "") {
 								$msg = "Settings saved";
@@ -229,7 +229,8 @@ function DisplayAllskyConfig(){
 							// Now save the settings from the source files that changed.
 							foreach($sourceFilesChanged as $fileName) {
 								$content = json_encode(getSourceArray($fileName), $mode);
-// echo "<br>Updating fileName $fileName, # changes=$numSourceChanges";
+if ($debug) echo "<br>Updating fileName $fileName, # changes=$numSourceChanges";
+if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 								$msg = updateFile($fileName, $content, "source_settings", true);
 								if ($msg === "") {
 									$msg = "Settings saved";

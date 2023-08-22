@@ -1,22 +1,21 @@
 <?php
 
-// Get the json for the given file "f" if we haven't already.
-$sourceFileContents = array();
-function getSourceArray($f) {
-	global $sourceFileContents;
+// Get the json for the given file "f" if we haven't already and return a point to the data.
+function &getSourceArray($f) {
+	global $status;
+	static $filesContents = array();
 
 	$fileName = getFileName($f);
-	if (isset($sourceFileContents[$fileName])) {
-		$source_array = $sourceFileContents[$fileName];
-	} else {
+	if (! isset($filesContents[$fileName])) {
 		$errorMsg = "Unable to read source file '$fileName'";
-		$source_array = get_decoded_json_file($fileName, true, $errorMsg);
-		if ($source_array === null) {
-			return null;
+		$filesContents[$fileName] = get_decoded_json_file($fileName, true, $errorMsg);
+		if ($filesContents[$fileName] === null) {
+			$msg = "Unable to get json contents of '$fileName' ($f).";
+			$status->addMessage($msg, 'danger', false);
+//			return null;
 		}
-		$sourceFilesContents[$fileName] = $source_array;
 	}
-	return $source_array;
+	return $filesContents[$fileName];
 }
 
 
@@ -50,14 +49,11 @@ function DisplayAllskyConfig(){
 		// If we went ahead and made the changes, we would be making them to the NEW
 		// camera's settings file, but using values from the OLD file.
 		if (CSRFValidate()) {
-			$settings = array();
 			$optional_array = array();
-			$sources = array();
-			$sourceFiles = array();
-			$sourceFilesContent = array();
-			$sourcesOLD = array();
+			$sourceFiles = array();			// list of files in the "source" field
+			$sourceFilesContent = array();	// contents of each sourceFiles file
 			$changes = "";
-			$otherChanges = "";
+			$nonCameraChanges = "";
 
 			$refreshingCameraType = false;
 			$newCameraType = "";
@@ -68,16 +64,18 @@ function DisplayAllskyConfig(){
 
 			// Keep track of optional settings and which settings are from a different source.
 			foreach ($options_array as $option) {
-				$n = $option['name'];
-				$optional_array[$n] = getVariableOrDefault($option, 'optional', false);
+				$key = $option['name'];
+				$optional_array[$key] = getVariableOrDefault($option, 'optional', false);
 				$s = getVariableOrDefault($option, 'source', null);
 				if ($s !== null) {
 					$fileName = getFileName($s);
-					$sourceFiles[$n] = $fileName;
-					$sourceFilesContents[$n] = getSourceArray($fileName);
+					$sourceFiles[$key] = $fileName;
+					$sourceFilesContents[$key] = &getSourceArray($fileName);
 				}
 			}
 
+			$numSettingsChanges = 0;
+			$numSourceChanges = 0;
 	 		foreach ($_POST as $key => $newValue) {
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
 				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", "XX_END_XX"]))
@@ -87,18 +85,23 @@ function DisplayAllskyConfig(){
 				// Because we are passing the changes enclosed in single quotes below,
 				// we need to escape the single quotes, but I never figured out how to do that,
 				// so convert them to HTML codes instead.
-				$s = getVariableOrDefault($sourceFilesContents, $key, null);
-				if ($s !== null) {
-					$oldValue = getVariableOrDefault($s, $key, "");
-					$sourcesOLD[$key] = $oldValue;
+				$source_array = getVariableOrDefault($sourceFilesContents, $key, null);
+				if ($source_array !== null) {
+					$oldValue = getVariableOrDefault($source_array, $key, "");
+					$isSettingsField = false;
 				} else {
 					$oldValue = getVariableOrDefault($settings_array, $key, "");
+					$isSettingsField = true;		// this field is in the settings file.
 				}
 				if ($oldValue !== "")
 					$oldValue = str_replace("'", "&#x27", $oldValue);
 
-				$thisChanged = false;
 				if ($oldValue !== $newValue) {
+					$nonCameraChangesExist = false;
+					if ($isSettingsField) $numSettingsChanges++;
+					else $numSourceChanges++;
+// echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsChanges, numSourceChanges=$numSourceChanges";
+
 					if ($key === $cameraTypeName) {
 						if ($newValue === "Refresh") {
 							// Refresh the same Camera Type
@@ -114,7 +117,7 @@ function DisplayAllskyConfig(){
 						$newCameraNumber = $newValue;
 					} else {
 						// want to know changes other than camera
-						$thisChanged = true;
+						$nonCameraChangesExist = true;
 					}
 
 					$checkchanges = false;
@@ -133,11 +136,11 @@ function DisplayAllskyConfig(){
 						$changes .= "  '$key' '$label' '$oldValue' '$newValue'";
 					}
 
-					if ($thisChanged) {
-						if ($otherChanges === "")
-							$otherChanges = "[$label]";
+					if ($nonCameraChangesExist) {
+						if ($nonCameraChanges === "")
+							$nonCameraChanges = "[$label]";
 						else
-							$otherChanges .= ", $label";
+							$nonCameraChanges .= ", $label";
 					}
 				}
 
@@ -175,12 +178,17 @@ function DisplayAllskyConfig(){
 					}
 				}
 
-				if ($ok) {
+				if ($ok && ($numSettingsChanges > 0 || $numSourceChanges > 0)) {
+					// Update the appropriate array with the new value.
 					$n = str_replace("'", "&#x27", $newValue);
 					if (isset($sourceFilesContents[$key])) {
-						$sources[$key] = $n;
+// echo "<br>sourceFilesContent[$key][$key] = " . $sourceFilesContents[$key][$key] . ", newValue=$newValue";
+						$sourceFilesContents[$key][$key] = $n;
+						$fileName = $sourceFiles[$key];
+						$sourceFilesChanged[$fileName] = $fileName;
 					} else {
-						$settings[$key] = $n;
+// echo "<br>settings[$key] = " . $settings_array[$key] . ", newValue=$newValue";
+						$settings_array[$key] = $n;
 					}
 
 					if ($key === $debugLevelName && $newValue >= 4) {
@@ -190,35 +198,47 @@ function DisplayAllskyConfig(){
 			}
 
 			$msg = "";
-			if ($ok) {
-				if ($otherChanges !== "" || $lastChanged === "") {
+			if ($ok && ($numSettingsChanges > 0 || $numSourceChanges > 0)) {
+				if ($nonCameraChanges !== "" || $lastChanged === "") {
 					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
 						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
-						$msg .= "<br>You also changed: $otherChanges.";
+						$msg .= "<br>You also changed: $nonCameraChanges.";
 						$status->addMessage($msg, 'danger', false);
 						$ok = false;
 					} else {
-						// Keep track of the last time the file changed.
-						// If we end up not updating the file this will be ignored.
-						$lastChanged = date('Y-m-d H:i:s');
-						$settings[$lastChangedName] = $lastChanged;
-						$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
-						// updateFile() only returns error messages.
-						$msg = updateFile($settings_file, $content, "settings", true);
-						if ($msg === "") {
-							$msg = "Settings saved";
-
-							// Now save the settings from the source files that changed.
-							foreach ($sources as $key => $newValue) {
-								$oldValue = $sourcesOLD[$key];
-								if ($oldValue == $newValue) continue;
-								set_variable($sourceFiles[$key], $key, $newValue, $oldValue);
+						if ($numSettingsChanges > 0) {
+							// Keep track of the last time the file changed.
+							// If we end up not updating the file this will be ignored.
+							$lastChanged = date('Y-m-d H:i:s');
+							$settings_array[$lastChangedName] = $lastChanged;
+							$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES; // |JSON_NUMERIC_CHECK;
+							$content = json_encode($settings_array, $mode);
+							// updateFile() only returns error messages.
+// echo "<br>Updating settings_file $settings_file, # changes = $numSettingsChanges";
+// echo "<pre>"; var_dump($content); echo "</pre>";
+							$msg = updateFile($settings_file, $content, "settings", true);
+							if ($msg === "") {
+								$msg = "Settings saved";
+							} else {
+								$status->addMessage("Failed to update settings in '$settings_file': $msg", 'danger');
+								$ok = false;
 							}
-						} else {
-							$ok = false;
 						}
-
+						if ($ok && $numSourceChanges > 0) {
+							// Now save the settings from the source files that changed.
+							foreach($sourceFilesChanged as $fileName) {
+								$content = json_encode(getSourceArray($fileName), $mode);
+// echo "<br>Updating fileName $fileName, # changes=$numSourceChanges";
+								$msg = updateFile($fileName, $content, "source_settings", true);
+								if ($msg === "") {
+									$msg = "Settings saved";
+								} else {
+									$status->addMessage("Failed to update settings in '$fileName': $msg", 'danger');
+									$ok = false;
+								}
+							}
+						}
 					}
 				} else {
 					if ($newCameraType !== "") {
@@ -246,7 +266,9 @@ function DisplayAllskyConfig(){
 				$doingRestart = getVariableOrDefault($_POST, 'restart', false);
 				if ($doingRestart === "on") $doingRestart = true;
 
-				if ($changes !== "") {
+				if ($numSettingsChanges == 0 && $numSourceChanges == 0) {
+					$msg = "No settings changed";
+				} else if ($changes !== "") {
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
 					$moreArgs = "";
@@ -285,9 +307,8 @@ function DisplayAllskyConfig(){
 
 	if (isset($_POST['reset_settings'])) {
 		if (CSRFValidate()) {
-			$settings = array();
-			$sources = array();
-			$sourceFiles = array();
+			$settings_array = array();
+			$sourceFilesChanged = array();
 			$sourceFilesContents = array();
 			foreach ($options_array as $option){
 				$key = $option['name'];
@@ -296,24 +317,26 @@ function DisplayAllskyConfig(){
 					$s = getVariableOrDefault($option, 'source', null);
 					if ($s !== null) {
 						$fileName = getFileName($s);
-						$sourceFiles[$n] = $fileName;
-						$sourceFilesContents[$n] = getSourceArray($fileName);
-						$sources[$n] = $newValue;
+						$sourceFilesChanged[$fileName] = $fileName;
+						$sourceFilesContents[$key] = &getSourceArray($fileName);
+						$sourceFilesContents[$key][$key] = $newValue;
 					} else {
-						$settings[$key] = $newValue;
+						$settings_array[$key] = $newValue;
 					}
 				}
 			}
-			$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK);
+			$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES; // |JSON_NUMERIC_CHECK;
+			$content = json_encode($settings_array, $mode);
 			$msg = updateFile($settings_file, $content, "settings", true);
 			if ($msg === "") {
 				$status->addMessage("Settings reset to default", 'info');
 
-				foreach($sources as $key => $newValue) {
-					$source_array = $sourceFilesContents[$key];
-					$oldValue = getVariableOrDefault($source_array, $key, "");
-					$file = $sourceFiles[$key];
-					set_variable($file, $key, $newValue, $oldValue);
+				foreach($sourceFilesChanged as $fileName) {
+					$content = json_encode(getSourceArray($fileName), $mode);
+					$msg = updateFile($fileName, $content, "source_settings", true);
+					if ($msg !== "") {
+						$status->addMessage("Failed to reset settings in '$fileName': $msg", 'danger');
+					}
 				}
 			} else {
 				$status->addMessage("Failed to reset settings: $msg", 'danger');
@@ -462,7 +485,7 @@ if ($formReadonly != "readonly") { ?>
 					$s = getVariableOrDefault($option, 'source', null);
 					if ($s !== null) {
 						$fileName = getFileName($s);
-						$source_array = getSourceArray($fileName);
+						$source_array = &getSourceArray($fileName);
 						if ($source_array === null)
 							continue;
 						$value = getVariableOrDefault($source_array, $name, $default);

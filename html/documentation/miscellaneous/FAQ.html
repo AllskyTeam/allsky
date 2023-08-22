@@ -69,6 +69,7 @@ might give you an idea as to the problem.
 </p>
 </details>
 
+
 <h2>There is a long delay between when my pictures are saved</h2>
 <details><summary></summary>
 <p>
@@ -93,6 +94,84 @@ There are two possibilities:
 If the time between pictures is longer than you expected,
 check your <span class="WebUISetting">Max Auto-Exposure</span>.
 </p>
+</details>
+
+
+<h2>Reducing wear on your SDcard</h2>
+<details><summary></summary>
+<p>
+SDcards have a limited number of writes they can handle before they wear out.
+Although this is usually a very large number you may wish nonetheless to
+minimize writes to the SDcard.
+The bet way to do this is by making Allsky's <span class="fileName">allsky/tmp</span>
+directory a memory-based filesystem,
+i.e., instead of residing on the SDcard it resides in RAM memory.
+
+<blockquote>
+During Allsky installation you were prompted to create
+<span class="fileName">tmp</span> as a memory-based filesystem.
+If you did that you can ignore this tip.
+</blockquote>
+
+Note the following:
+<ul>
+<li>In order to do this you'll need enough free RAM memory,
+	so this may not work well with systems with very limited memory, for example, 512 MB.
+<li>The contents of the <span class="fileName">tmp</span>
+	directory will be erased every time you reboot your Pi.
+	This should be ok since it's only used for temporary log files and to hold images
+	as they come out of the camera,
+	before they are stored in <span class="fileName">allsky/images/DATE</span>.
+</ul>
+<p>
+It's simple to create a memory-based filesystem:
+<pre>
+cd ~/allsky
+./install.sh --function check_tmp
+</pre>
+
+It's suggested you accept the defaults.
+</details>
+
+
+<h2>Focusing the camera</h2>
+<details><summary></summary>
+<p>
+Try get your camera at least roughly focused during the day.
+It'll be easier to see your focus ring, and exposure duration will be much shorter so
+you'll get more instant feedback.
+</p>
+<p>
+To complete focus, enable the <span class="WebUISetting">Show Focus Metric</span>
+setting in the WebUI's <b>Allsky Settings</b> page.
+A focus number will appear on your images - the higher the number, the better focus you have.
+Note that the number can change depending on the brightness,
+so focus when the brightness isn't changing.
+<p>
+When done focusing, disable the <span class="WebUISetting">Show Focus Metric</span>
+setting since it's no longer needed.
+</p>
+</details>
+
+
+<h2>Pro-tip: install <code>gh</code> on your Pi so you can easily collaborate using Github Gists</h2>
+<details><summary></summary>
+<p>
+Click <a href="https://cli.github.com/">here</a>
+for the full details or download the latest release from
+<a href="https://github.com/cli/cli/releases/latest">here</a>.
+Once you have the Command Line Interface (CLI) installed,
+you can easily upload a script you wrote with something like:
+<pre>
+gh gist create -d "a tool to find alien spaceships" < my_awesome_allsky_script.py
+</pre>
+
+or share logs using something like
+<pre>
+journalctl --since 05:00 -u allsky | gh gist create
+gh gist create < log.txt
+</pre>
+
 </details>
 
 

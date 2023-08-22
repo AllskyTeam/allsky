@@ -100,9 +100,9 @@ TWILIGHT_DATA_CHANGED="false"
 CAMERA_TYPE_CHANGED="false"
 GOT_WARNING="false"
 CHECK_REMOTE_WEBSITE_ACCESS="false"
-CHECK_REMOTE_WEBSERVER_ACCESS="false"
+CHECK_REMOTE_SERVER_ACCESS="false"
 USE_REMOTE_WEBSITE=""
-USE_REMOTE_WEBSERVER=""
+USE_REMOTE_SERVER=""
 SHOW_ON_MAP=""
 
 # Several of the fields are in the Allsky Website configuration file,
@@ -472,18 +472,18 @@ do
 			CHECK_REMOTE_WEBSITE_ACCESS="true"
 			;;
 
-		"useremotewebserver")
-			CHECK_REMOTE_WEBSERVER_ACCESS="true"
-			USE_REMOTE_WEBSERVER="${NEW_VALUE}"
+		"useremoteserver")
+			CHECK_REMOTE_SERVER_ACCESS="true"
+			USE_REMOTE_SERVER="${NEW_VALUE}"
 			;;
 
 		# We don't care about the *destination names for remote servers
 		"remoteserverprotocol" | "remoteserveriteimagedir")
-			CHECK_REMOTE_WEBSERVER_ACCESS="true"
+			CHECK_REMOTE_SERVER_ACCESS="true"
 			;;
 
-		remotewebserver_*)
-			CHECK_REMOTE_WEBSERVER_ACCESS="true"
+		remoteserver_*)
+			CHECK_REMOTE_SERVER_ACCESS="true"
 			;;
 
 		"overlaymethod")
@@ -514,8 +514,8 @@ USE_REMOTE_WEBSITE="$( settings ".useremotewebsite" )"
 if [[ ${USE_REMOTE_WEBSITE} == "1" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
 	: # TODO - do a test upload
 fi
-USE_REMOTE_WEBSERVER="$( settings ".useremotewebserver" )"
-if [[ ${USE_REMOTE_WEBSERVER} == "1" && ${CHECK_REMOTE_WEBSERVER_ACCESS} == "true" ]]; then
+USE_REMOTE_SERVER="$( settings ".useremoteserver" )"
+if [[ ${USE_REMOTE_SERVER} == "1" && ${CHECK_REMOTE_SERVER_ACCESS} == "true" ]]; then
 	: # TODO - do a test upload
 fi
 

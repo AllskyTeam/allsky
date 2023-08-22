@@ -131,7 +131,7 @@ function check_website()
 check_website		# invoke to set variables
 
 CAMERA_NUMBER=""
-NUM_CHANGES=0
+NUM_CHANGED=0
 
 while [[ $# -gt 0 ]]
 do

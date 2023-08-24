@@ -888,3 +888,11 @@ function upload_all()
 
 	return "${RET}"
 }
+
+
+# Indent all lines.
+function indent()
+{
+	echo -e "${1}" | sed 's/^/\t/'
+}
+

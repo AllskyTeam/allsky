@@ -1402,14 +1402,14 @@ does_prior_Allsky_exist()
 		PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
 		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
 			if [[ ${ALLSKY_BASE_VERSION} == "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
-				local CT=".cameraType"
-				local CM=".cameraModel"
+				local CT_=".cameraType"
+				local CM_=".cameraModel"
 			else
-				local CT=".cameratype"
-				local CM=".cameramodel"
+				local CT_=".cameratype"
+				local CM_=".cameramodel"
 			fi
-			PRIOR_CAMERA_TYPE="$( settings "${CT}" "${PRIOR_SETTINGS_FILE}" )"
-			PRIOR_CAMERA_MODEL="$( settings "${CM}" "${PRIOR_SETTINGS_FILE}" )"
+			PRIOR_CAMERA_TYPE="$( settings "${CT_}" "${PRIOR_SETTINGS_FILE}" )"
+			PRIOR_CAMERA_MODEL="$( settings "${CM_}" "${PRIOR_SETTINGS_FILE}" )"
 		else
 			# This shouldn't happen...
 			PRIOR_SETTINGS_FILE=""
@@ -1770,7 +1770,7 @@ copy_config_sh()
 
 	display_msg --log progress "Copying contents of prior config.sh to settings file (${CONFIG_FILE})."
 	(
-		#shellcheck disable=SC2086
+		#shellcheck disable=SC1090
 		if ! source "${CONFIG_FILE}" ; then
 			display_msg --log error "Unable to process prior config.sh file (${CONFIG_FILE})."
 			return 1
@@ -1862,7 +1862,7 @@ copy_ftp_sh()
 
 	display_msg --log progress "Copying contents of prior ftp-settings.sh to settings file."
 	(
-		#shellcheck disable=SC2086
+		#shellcheck disable=SC1090
 		if ! source "${CONFIG_FILE}" ; then
 			display_msg --log error "Unable to process prior ftp-settings.sh file (${CONFIG_FILE})."
 			return 1

@@ -82,7 +82,7 @@ while [[ $# -gt 0 ]]; do
 	esac
 	shift
 done
-[[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit ${RET}
+[[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit 1
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${LOCAL} == "false" && -z ${REMOTE_TYPE} ]] && usage_and_exit 1
 [[ ${LOCAL} == "true" && -n ${REMOTE_TYPE} ]] && usage_and_exit 1
@@ -104,6 +104,8 @@ if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
 fi
 
 DIRECTORY="${2}"
+# Allow explicit empty directory.
+[[ ${DIRECTORY} == "null" ]] && DIRECTORY=""
 DESTINATION_NAME="${3}"
 [[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$(basename "${FILE_TO_UPLOAD}")"
 # When run manually, the FILE_TYPE normally won't be given.

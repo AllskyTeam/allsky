@@ -50,10 +50,9 @@ ALLSKY_VERSION="$( get_version )"		# version we're installing
 ALLSKY_BASE_VERSION="${ALLSKY_VERSION:0:11}"	# without point release
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 PRIOR_ALLSKY_VERSION=""					# The version number of the prior version, if known
-PRIOR_ALLSKY_BASE_VERSION=""
 
 # Base of first version with combined configuration files # TODO: UPDATE xxxx
-COMBINED_BASE_VERSION="v2023.90.90"
+#xxxxxxx  COMBINED_BASE_VERSION="v2023.90.90"
 
 # Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
 # "cameratype" in the settings file.
@@ -1403,11 +1402,11 @@ does_prior_Allsky_exist()
 		PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
 		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
 			if [[ ${ALLSKY_BASE_VERSION} == "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
-				CT=".cameraType"
-				CM=".cameraModel"
+				local CT=".cameraType"
+				local CM=".cameraModel"
 			else
-				CT=".cameratype"
-				CM=".cameramodel"
+				local CT=".cameratype"
+				local CM=".cameramodel"
 			fi
 			PRIOR_CAMERA_TYPE="$( settings "${CT}" "${PRIOR_SETTINGS_FILE}" )"
 			PRIOR_CAMERA_MODEL="$( settings "${CM}" "${PRIOR_SETTINGS_FILE}" )"
@@ -1423,7 +1422,7 @@ does_prior_Allsky_exist()
 			# sample:    printf("%s *** Allsky Camera Software v0.8.3 | 2021 ***\n", c(KGRN));
 			DIR="${PRIOR_ALLSKY_DIR}/src"		# "src" directory added in v0.8.1.
 			[[ ! -d "${DIR}" ]] && DIR="${PRIOR_ALLSKY_DIR}"
-			PRIOR_ALLSKY_VERSION="$( grep "Camera Software" "${DIR}/capture.cpp" | awk {'print $6'} )"
+			PRIOR_ALLSKY_VERSION="$( grep "Camera Software" "${DIR}/capture.cpp" | awk '{print $6}' )"
 		fi
 		PRIOR_ALLSKY_VERSION="${PRIOR_ALLSKY_VERSION:-${PRE_FIRST_VERSION_VERSION}}"
 		local CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
@@ -1432,8 +1431,6 @@ does_prior_Allsky_exist()
 		PRIOR_SETTINGS_FILE="${OLD_RASPAP_DIR}/settings_${CAMERA}.json"
 		[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
 	fi
-
-	PRIOR_ALLSKY_BASE_VERSION="${PRIOR_ALLSKY_VERSION:0:11}"
 
 	display_msg "${LOG_TYPE}" info "PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
 	display_msg "${LOG_TYPE}" info "PRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}"
@@ -1464,7 +1461,6 @@ prompt_for_prior_Allsky()
 			PRIOR_ALLSKY_DIR=""
 			PRIOR_ALLSKY=""
 			PRIOR_ALLSKY_VERSION=""
-			PRIOR_ALLSKY_BASE_VERSION=""
 			PRIOR_SETTINGS_FILE=""
 			CAMERA_TYPE=""
 			PRIOR_CAMERA_TYPE=""
@@ -1763,9 +1759,9 @@ copy_config_sh()
 	[[ ${copy_config_sh} == "true" ]] && return
 
 	local CONFIG_FILE="${1}"
-		[[ -z ${CONFIG_FILE} ]] && CONFIG_FILE="/home/pi/allsky/config/c.sh"		# TODO: xxxxxxxxxxxx testing
+#		[[ -z ${CONFIG_FILE} ]] && CONFIG_FILE="/home/pi/allsky/config/c.sh"		# TODO: xxxxxxxxxxxx testing
 	local NEW_FILE="${2}"
-		[[ -z ${NEW_FILE} ]] && NEW_FILE="/home/pi/allsky/config/s.json"		# TODO: xxxxxxxxxxxx testing
+#		[[ -z ${NEW_FILE} ]] && NEW_FILE="/home/pi/allsky/config/s.json"		# TODO: xxxxxxxxxxxx testing
 
 	if [[ ! -e ${CONFIG_FILE} ]]; then
 		display_msg --log info "No prior config.sh file to process."
@@ -1774,6 +1770,7 @@ copy_config_sh()
 
 	display_msg --log progress "Copying contents of prior config.sh to settings file (${CONFIG_FILE})."
 	(
+		#shellcheck disable=SC2086
 		if ! source "${CONFIG_FILE}" ; then
 			display_msg --log error "Unable to process prior config.sh file (${CONFIG_FILE})."
 			return 1
@@ -1854,9 +1851,9 @@ copy_ftp_sh()
 	[[ ${copy_ftp_sh} == "true" ]] && return
 
 	local CONFIG_FILE="${1}"
-		[[ -z ${CONFIG_FILE} ]] && CONFIG_FILE="/home/pi/allsky/config/f.sh"		# TODO: xxxxxxxxxxxx testing
+#		[[ -z ${CONFIG_FILE} ]] && CONFIG_FILE="/home/pi/allsky/config/f.sh"		# TODO: xxxxxxxxxxxx testing
 	local NEW_FILE="${2}"
-		[[ -z ${NEW_FILE} ]] && NEW_FILE="/home/pi/allsky/config/s.json"		# TODO: xxxxxxxxxxxx testing
+#		[[ -z ${NEW_FILE} ]] && NEW_FILE="/home/pi/allsky/config/s.json"		# TODO: xxxxxxxxxxxx testing
 
 	if [[ ! -e ${CONFIG_FILE} ]]; then
 		display_msg --log info "No prior ftp-settings.sh file to process (${CONFIG_FILE})."
@@ -1865,6 +1862,7 @@ copy_ftp_sh()
 
 	display_msg --log progress "Copying contents of prior ftp-settings.sh to settings file."
 	(
+		#shellcheck disable=SC2086
 		if ! source "${CONFIG_FILE}" ; then
 			display_msg --log error "Unable to process prior ftp-settings.sh file (${CONFIG_FILE})."
 			return 1

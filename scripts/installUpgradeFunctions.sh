@@ -186,12 +186,6 @@ function display_msg()
 }
 
 
-# Indent all lines.
-function indent()
-{
-	echo -e "${1}" | sed 's/^/\t/'
-}
-
 # The various upload protocols need different variables defined.
 # For the specified protocol, make sure the specified variable is defined.
 function check_PROTOCOL()

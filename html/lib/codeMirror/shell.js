@@ -84,6 +84,11 @@ CodeMirror.defineMode('shell', function() {
         return 'number';
       }
     }
+    // ALLSKY: added this, from json.js
+ 		if (ch == "." && stream.match(/^\d[\d_]*(?:[eE][+\-]?[\d_]+)?/)) {
+  		return 'number';
+		}
+
     stream.eatWhile(/[\w-]/);
     var cur = stream.current();
     if (stream.peek() === '=' && /\w+/.test(cur)) return 'def';

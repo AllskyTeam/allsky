@@ -195,7 +195,7 @@ do_test()
 	DIR="$( settings "${DIR}" )"
 	DIR="${DIR:=null}"
 
-	CMD="${ALLSKY_SCRIPTS}/upload.sh --debug --remote ${REMOTE} ${TEST_FILE} ${DIR} "${bTEST_FILE}" ${ME}"
+	CMD="${ALLSKY_SCRIPTS}/upload.sh --debug --remote ${REMOTE} ${TEST_FILE} ${DIR} ${bTEST_FILE} ${ME}"
 	[[ ${DEBUG} == "true" ]] && echo -e "Executing:\n\t${CMD}"
 	${CMD} > "${OUTPUT_FILE}" 2>&1
 	RET=$?

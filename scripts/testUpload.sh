@@ -61,7 +61,7 @@ parse_output()
 {	local OUTPUT="${1}"
 	local TYPE="${2}"
 
-	local PROTOCOL DIR HOST USER OK S
+	local PROTOCOL DIR HOST USER S
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
 		PROTOCOL=".remotewebsiteprotocol"
@@ -74,11 +74,9 @@ parse_output()
 	fi
 	HOST="${TYPE}_HOST"
 	USER="${TYPE}_USER"
-	OK="true"
 
 	# Parse output.
 	if grep -i --silent "host name resolve timeout" "${OUTPUT}" ; then
-		OK="false"
 		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
 		echo -e "\t* Host name '${HOST}' not found." >&2
 		echo -e "\t  FIX: Check the spelling of the server." >&2
@@ -86,20 +84,25 @@ parse_output()
 	   	echo -e "\t       Make sure the network the server is on is up." >&2
 	fi
 
-	if grep -i --silent "User cannot log in" "${OUTPUT}" ; then
-		OK="false"
+	if grep -E -i --silent "User cannot log in|Login failed|Login incorrect" "${OUTPUT}" ; then
 		echo -e "\t* Unable to login." >&2
 		echo -e "\t  FIX: Make sure the username and password are correct." >&2
 	fi
 
 	if grep -i --silent "max-retries exceeded" "${OUTPUT}" ; then
-		OK="false"
 		echo -e "\t* Unable to login for unknown reason." >&2
 		echo -e "\t  FIX: Make sure the port is correct and your network is working." >&2
+		PROTOCOL="$( settings "${PROTOCOL}" )"
+		if [[ ${PROTOCOL} == "sftp" ]]; then
+			HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
+			USER="$( settings ".${USER}" "${ENV_FILE}" )"
+			echo -e "\t       On your Pi, run:  ssh ${USER}@${HOST}" >&2
+			echo -e "\t       When prompted to enter 'yes' or 'no', enter 'yes'." >&2
+			echo -e "\t       You may need to do this if the IP address of your Pi changed." >&2
+		fi
 	fi
 
 	if grep -i --silent "The system cannot find the file specified" "${OUTPUT}" ; then
-		OK="false"
 		if grep -i --silent "is current directory" "${OUTPUT}" ; then
 			echo -e "\t* Login succeeded but unknown location found." >&2
 		else
@@ -120,15 +123,15 @@ parse_output()
 
 	# Certificate-related issues
 	if grep -i --silent "The authenticity of host" "${OUTPUT}" ; then
-		OK="false"
 		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
 		USER="$( settings ".${USER}" "${ENV_FILE}" )"
-		PROTOCOL="$( settings ".${PROTOCOL}" )"
+		PROTOCOL="$( settings "${PROTOCOL}" )"
 		echo -e "\t* The remote machine doesn't know about your Pi." >&2
 		if [[ ${PROTOCOL} == "sftp" ]]; then
 			echo -e "\t  This happens the first time you use Protocol 'sftp' on a new Pi." >&2
 			echo -e "\t  FIX: On your Pi, run:  ssh ${USER}@${HOST}" >&2
-			echo -e "\t  When prompted to enter 'yes' or 'no', enter 'yes'." >&2
+			echo -e "\t       When prompted to enter 'yes' or 'no', enter 'yes'." >&2
+			echo -e "\t       You may need to do this if the IP address of your Pi changed." >&2
 		else
 			echo -e "\t  This error usually only happens when using Protocol 'sftp' on a new Pi." >&2
 			echo -e "\t  You are using Protocol '${PROTOCOL}', so no know fix exists." >&2
@@ -136,16 +139,14 @@ parse_output()
 	fi
 
 	if grep -i --silent "certificate common name doesn't match requested host name" "${OUTPUT}" ; then
-		OK="false"
 		echo -e "\t* Certificate verification issue." >&2
-		echo -e "\t  FIX: o one of the following on your Pi:" >&2
+		echo -e "\t  FIX: Do one of the following on your Pi:" >&2
 		echo -e "\t    echo 'set ssl:check-hostname' > ~/.lftprc" >&2
 		echo -e "\t  or" >&2
 		echo -e "\t    In the WebUI's '${S}' section set 'FTP Commands' to 'set ssl:check-hostname'." >&2
 	fi
 
 	if grep -i --silent "Not trusted" "${OUTPUT}" ; then
-		OK="false"
 		echo -e "\t* Certificate verification issue." >&2
 		echo -e "\t  FIX: o one of the following on your Pi:" >&2
 		echo -e "\t    echo 'set ssl:verify-certificate no' > ~/.lftprc" >&2
@@ -154,7 +155,7 @@ parse_output()
 	fi
 
 
-	if [[ -s ${OUTPUT} && (${OK} == "false" || ${DEBUG} == "true") ]]; then
+	if [[ -s ${OUTPUT} || ${DEBUG} == "true" ]]; then
 		echo -e "\n==================== OUTPUT:" >&2
 		indent "${YELLOW}$( < "${OUTPUT}" )${NC}\n"
 	fi

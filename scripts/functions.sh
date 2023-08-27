@@ -253,22 +253,22 @@ function checkRemote()
 	local USE="$( settings ".useremote${NUM}" )"
 	[[ ${USE} -ne "${REMOTE_TYPE_ALLSKY_WEBSITE}" ]] && return 1
 
-	local PROTOCOL="$( get_variable "PROTOCOL${NUM}" "${ENV_FILE}" )"
+	local PROTOCOL="$( get_variable "PROTOCOL${NUM}" "${ALLSKY_ENV}" )"
 	if [[ -n ${PROTOCOL} ]]; then
 		local X
 		case "${PROTOCOL}" in
 			ftp | ftps | sftp | scp)
-				X="$( get_variable "REMOTE_HOST${NUM}" "${ENV_FILE}" )" 
+				X="$( get_variable "REMOTE_HOST${NUM}" "${ALLSKY_ENV}" )" 
 				[[ -n ${X} ]] && return 0
 				;;
 
 			s3)
-				X="$( get_variable "AWS_CLI_DIR${NUM}" "${ENV_FILE}" )" 
+				X="$( get_variable "AWS_CLI_DIR${NUM}" "${ALLSKY_ENV}" )" 
 				[[ -n ${X} ]] && return 0
 				;;
 
 			gcs)
-				X="$( get_variable "GCS_BUCKET${NUM}" "${ENV_FILE}" )" 
+				X="$( get_variable "GCS_BUCKET${NUM}" "${ALLSKY_ENV}" )" 
 				[[ -n ${X} ]] && return 0
 				;;
 

@@ -193,7 +193,7 @@ function check_PROTOCOL()
 	local P="${1}"	# Protocol
 	local V="${2}"	# Variable
 	local N="${3}"	# Name
-	local VALUE="$( get_variable "${V}" "${ENV_FILE}" )"
+	local VALUE="$( get_variable "${V}" "${ALLSKY_ENV}" )"
 	if [[ -z ${VALUE} ]]; then
 		echo "${N} Protocol (${P}) set but not '${V}'."
 		echo "Uploads will not work until this is fixed."
@@ -217,9 +217,9 @@ function check_remote_server()
 	if [[ ${USE} -eq 0 ]]; then
 		if check_for_env_file ; then
 			# Variables should be empty.
-			x="$( grep -E -v "^#|^$" "${ENV_FILE}" | grep "${TYPE}" | grep -E -v "${TYPE}.*=\"\"|${TYPE}.*=$" )"
+			x="$( grep -E -v "^#|^$" "${ALLSKY_ENV}" | grep "${TYPE}" | grep -E -v "${TYPE}.*=\"\"|${TYPE}.*=$" )"
 			if [[ -n "${x}" ]]; then
-				echo "${TYPE_STRING} is not being used but settings for it exist in '${ENV_FILE}:"
+				echo "${TYPE_STRING} is not being used but settings for it exist in '${ALLSKY_ENV}:"
 				indent "${x}" | sed "s/${TYPE}.*=.*/${TYPE}/"
 				return 1
 			fi
@@ -285,7 +285,7 @@ function check_remote_server()
 			;;
 	esac
 
-	REMOTE_PORT="$( get_variable "${TYPE}_PORT" "${ENV_FILE}" )"
+	REMOTE_PORT="$( get_variable "${TYPE}_PORT" "${ALLSKY_ENV}" )"
 	if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
 		echo "${TYPE}_PORT (${REMOTE_PORT}) must be a number."
 		echo "Uploads will not work until this is corrected."

@@ -1620,7 +1620,7 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 	[[ ${NEW_VERSION} == "${PRIOR_VERSION}" ]] && return
 
 	# This version moved the ftp-setting.sh settings to settings.json
-	# or to ${ENV_FILE} and made the setting names lowercase.  Plus other changes.
+	# or to ${ALLSKY_ENV} and made the setting names lowercase.  Plus other changes.
 
 	if [[ ${PRIOR_VERSION} < "v2023.05.01_02" ]]; then
 		# Replace "meanthreshold" with "daymeanthreshold" and "nightmeanthreshold"
@@ -1885,20 +1885,20 @@ copy_ftp_sh()
 				update_json_file ".remotewebsiteprotocol" "${PROTOCOL}" "${NEW_FILE}"
 			fi
 		fi
-		doV "VIDEOS_DESTINATION_NAME" ".remotewebsitevideodestinationname" "${ENV_FILE}"
-		doV "KEOGRAM_DESTINATION_NAME" ".remotewebsitekeogramdestinationname" "${ENV_FILE}"
-		doV "STARTRAILS_DESTINATION_NAME" ".remotewebsitestartrailsdestinationname" "${ENV_FILE}"
-		doV "REMOTE_HOST" ".REMOTEWEBSITE_HOST" "${ENV_FILE}"
-		doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "${ENV_FILE}"
-		doV "REMOTE_USER" ".REMOTEWEBSITE_USER" "${ENV_FILE}"
-		doV "REMOTE_PASSWORD" ".REMOTEWEBSITE_PASSWORD" "${ENV_FILE}"
-		doV "LFTP_COMMANDS" ".REMOTEWEBSITE_LFTP_COMMANDS" "${ENV_FILE}"
-		doV "SSH_KEY_FILE" ".REMOTEWEBSITE_SSH_KEY_FILE" "${ENV_FILE}"
-		doV "AWS_CLI_DIR" ".REMOTEWEBSITE_AWS_CLI_DIR" "${ENV_FILE}"
-		doV "S3_BUCKET" ".REMOTEWEBSITE_S3_BUCKET" "${ENV_FILE}"
-		doV "S3_ACL" ".REMOTEWEBSITE_S3_ACL" "${ENV_FILE}"
-		doV "GCS_BUCKET" ".REMOTEWEBSITE_GCS_BUCKET" "${ENV_FILE}"
-		doV "GCS_ACL" ".REMOTEWEBSITE_GCS_ACL" "${ENV_FILE}"
+		doV "VIDEOS_DESTINATION_NAME" ".remotewebsitevideodestinationname" "${ALLSKY_ENV}"
+		doV "KEOGRAM_DESTINATION_NAME" ".remotewebsitekeogramdestinationname" "${ALLSKY_ENV}"
+		doV "STARTRAILS_DESTINATION_NAME" ".remotewebsitestartrailsdestinationname" "${ALLSKY_ENV}"
+		doV "REMOTE_HOST" ".REMOTEWEBSITE_HOST" "${ALLSKY_ENV}"
+		doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "${ALLSKY_ENV}"
+		doV "REMOTE_USER" ".REMOTEWEBSITE_USER" "${ALLSKY_ENV}"
+		doV "REMOTE_PASSWORD" ".REMOTEWEBSITE_PASSWORD" "${ALLSKY_ENV}"
+		doV "LFTP_COMMANDS" ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}"
+		doV "SSH_KEY_FILE" ".REMOTEWEBSITE_SSH_KEY_FILE" "${ALLSKY_ENV}"
+		doV "AWS_CLI_DIR" ".REMOTEWEBSITE_AWS_CLI_DIR" "${ALLSKY_ENV}"
+		doV "S3_BUCKET" ".REMOTEWEBSITE_S3_BUCKET" "${ALLSKY_ENV}"
+		doV "S3_ACL" ".REMOTEWEBSITE_S3_ACL" "${ALLSKY_ENV}"
+		doV "GCS_BUCKET" ".REMOTEWEBSITE_GCS_BUCKET" "${ALLSKY_ENV}"
+		doV "GCS_ACL" ".REMOTEWEBSITE_GCS_ACL" "${ALLSKY_ENV}"
 
 	) || return 1
 

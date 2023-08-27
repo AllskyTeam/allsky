@@ -161,7 +161,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 		ALLSKY_DEBUG_LEVEL=1
 	fi
 	OPTIONS_FILE="${ALLSKY_CONFIG}/options.json"
-	ENV_FILE="${ALLSKY_HOME}/.env"
+	ALLSKY_ENV="${ALLSKY_HOME}/env.json"
 
 	IMG_DIR="current/tmp"
 	CAPTURE_SAVE_DIR="${ALLSKY_TMP}"

@@ -606,9 +606,13 @@ function update_json_file()		# field, new value, file
 
 	local NEW_VALUE="${2}"
 	local FILE="${3:-${SETTINGS_FILE}}"
+	local TYPE="${4}"		# optional
+	local DOUBLE_QUOTE='"'
+	[[ -n ${TYPE} && (${TYPE} == "number" || ${TYPE} == "boolean") ]] && DOUBLE_QUOTE=""
+
 	local TEMP="/tmp/$$"
 	# Have to use "cp" instead of "mv" to keep any hard link.
-	if jq "${FIELD} = \"${NEW_VALUE}\"" "${FILE}" > "${TEMP}" ; then
+	if jq "${FIELD} = ${DOUBLE_QUOTE}${NEW_VALUE}${DOUBLE_QUOTE}" "${FILE}" > "${TEMP}" ; then
 		cp "${TEMP}" "${FILE}"
 		rm "${TEMP}"
 		return 0

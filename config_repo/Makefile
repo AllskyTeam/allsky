@@ -25,7 +25,7 @@ endif
 
 
 CONFIGFILES := config.sh
-ENVFILE := env
+ENVFILE := env.json
 UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/allskyperiodic.service
 
 %:
@@ -67,9 +67,9 @@ $(CONFIGFILES):
 .PHONY : $(CONFIGFILES)
 
 $(ENVFILE):
-	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky/.$@ ]; then \
-	  echo `date +%F\ %R:%S` Copying default .$@; \
-	  install -m 0644 $@.json.repo $(DESTDIR)$(sysconfdir)/allsky/.$@; \
+	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky/$@ ]; then \
+	  echo `date +%F\ %R:%S` Copying default $@; \
+	  install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$@; \
 	fi
 .PHONY : $(ENVFILE)
 
@@ -106,9 +106,9 @@ $(CONFIGFILES):
 .PHONY : $(CONFIGFILES)
 
 $(ENVFILE):
-	@if [ ! -e ../.$@ ]; then \
+	@if [ ! -e ../$@ ]; then \
 	  echo `date +%F\ %R:%S` Copying default .$@; \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.json.repo ../.$@; \
+	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.repo ../$@; \
 	fi
 .PHONY : $(ENVFILE)
 

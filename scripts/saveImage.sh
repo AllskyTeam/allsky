@@ -3,7 +3,6 @@
 # Script to save a DAY or NIGHT image.
 
 ME="$(basename "${BASH_ARGV0}")"
-
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
 #shellcheck disable=SC2086 source-path=.

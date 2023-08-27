@@ -6,6 +6,11 @@ function &getSourceArray($f) {
 	static $filesContents = array();
 
 	$fileName = getFileName($f);
+	if ($fileName == "") {
+		$errorMsg = "Unable to get file name for '$f'. Some settings will not work.";
+		$status->addMessage($msg, 'danger', false);
+		return ("");
+	}
 	if (! isset($filesContents[$fileName])) {
 		$errorMsg = "Unable to read source file '$fileName'";
 		$filesContents[$fileName] = get_decoded_json_file($fileName, true, $errorMsg);

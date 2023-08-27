@@ -198,13 +198,13 @@ function check_exists() {
 # Make sure the env file exists.
 function check_for_env_file()
 {
-	[[ -s ${ENV_FILE} ]] && return 0
+	[[ -s ${ALLSKY_ENV} ]] && return 0
 
 	heading "Errors"
-	if [[ ! -f ${ENV_FILE} ]]; then
-		echo "'${ENV_FILE}' not found!"
+	if [[ ! -f ${ALLSKY_ENV} ]]; then
+		echo "'${ALLSKY_ENV}' not found!"
 	else
-		echo "'${ENV_FILE}' is empty!"
+		echo "'${ALLSKY_ENV}' is empty!"
 	fi
 	echo "Unable to check any remote server settings."
 	return 1

@@ -203,9 +203,9 @@ trap "" SIGTERM
 trap "" SIGHUP
 
 if [[ ${PROTOCOL} == "s3" ]] ; then
-	AWS_CLI_DIR="$( settings ".${PREFIX}_AWS_CLI_DIR" "${ENV_FILE}" )"
-	S3_BUCKET="$( settings ".${PREFIX}_S3_BUCKET" "${ENV_FILE}" )"
-	S3_ACL="$( settings ".${PREFIX}_S3_ACL" "${ENV_FILE}" )"
+	AWS_CLI_DIR="$( settings ".${PREFIX}_AWS_CLI_DIR" "${ALLSKY_ENV}" )"
+	S3_BUCKET="$( settings ".${PREFIX}_S3_BUCKET" "${ALLSKY_ENV}" )"
+	S3_ACL="$( settings ".${PREFIX}_S3_ACL" "${ALLSKY_ENV}" )"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		MSG="${ME}: Uploading ${FILE_TO_UPLOAD} to"
 		MSG="${MSG} aws ${S3_BUCKET}${DIRECTORY}/${DESTINATION_NAME}"
@@ -217,10 +217,10 @@ if [[ ${PROTOCOL} == "s3" ]] ; then
 
 
 elif [[ "${PROTOCOL}" == "scp" ]] ; then
-	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ENV_FILE}" )"
-	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ENV_FILE}" )"
-	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ENV_FILE}" )"
-	SSH_KEY_FILE="$( settings ".${PREFIX}_SSH_KEY_FILE" "${ENV_FILE}" )"
+	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
+	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
+	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
+	SSH_KEY_FILE="$( settings ".${PREFIX}_SSH_KEY_FILE" "${ALLSKY_ENV}" )"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		# shellcheck disable=SC2153
 		MSG="${ME}: Copying ${FILE_TO_UPLOAD} to"
@@ -235,8 +235,8 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 
 
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
-	GCS_BUCKET="$( settings ".${PREFIX}_GCS_BUCKET" "${ENV_FILE}" )"
-	GCS_ACL="$( settings ".${PREFIX}_GCS_ACL" "${ENV_FILE}" )"
+	GCS_BUCKET="$( settings ".${PREFIX}_GCS_BUCKET" "${ALLSKY_ENV}" )"
+	GCS_ACL="$( settings ".${PREFIX}_GCS_ACL" "${ALLSKY_ENV}" )"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to gcs ${GCS_BUCKET}${DIRECTORY}"
 	fi
@@ -285,11 +285,11 @@ else # sftp/ftp/ftps
 
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 
-	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ENV_FILE}" )"
-	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ENV_FILE}" )"
-	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ENV_FILE}" )"
+	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
+	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
+	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
 	# The export LFTP_PASSWORD has to be OUTSIDE the ( ) below.
-	REMOTE_PASSWORD="$( settings ".${PREFIX}_PASSWORD" "${ENV_FILE}" )"
+	REMOTE_PASSWORD="$( settings ".${PREFIX}_PASSWORD" "${ALLSKY_ENV}" )"
 	if [[ ${DEBUG} == "true" ]]; then
 		# In debug mode, include the password on the command line so it's easier
 		# for the user to run "lftp -f ${LFT_CMDS}"
@@ -302,7 +302,7 @@ else # sftp/ftp/ftps
 	fi
 
 	(
-		LFTP_COMMANDS="$( settings ".${PREFIX}_LFTP_COMMANDS" "${ENV_FILE}" )"
+		LFTP_COMMANDS="$( settings ".${PREFIX}_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
 		[[ -n ${LFTP_COMMANDS} ]] && echo "${LFTP_COMMANDS}"
 
 		# Sometimes have problems with "max-reties 1", so make it 2

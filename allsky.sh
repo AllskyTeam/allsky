@@ -190,7 +190,7 @@ fi
 # Make sure the settings file is linked to the camera-specific file.
 if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
 	"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}"
-	echo "ERROR: Settings file (${SETTINGS_FILE}) not linked correctly." >&2
+	echo "ERROR: ${MSG}" >&2
 fi
 
 # Make directories that need to exist.

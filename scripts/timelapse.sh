@@ -133,9 +133,9 @@ if [[ ${LOCK} == "true" ]]; then
 			--caused-by "${CAUSED_BY}" ; then
 		exit 5
 	fi
-	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-lock-timelapse"
+	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-lock-timelapse-$$"
 else
-	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse"
+	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse-$$"
 	PID_FILE=""
 fi
 
@@ -278,7 +278,14 @@ fi
 
 # timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
-[[ ${DEBUG} -ge 2 ]] && echo -e "${ME}: ${GREEN}Timelapse in ${OUTPUT_FILE}${NC}"
+if [[ ${DEBUG} -ge 2 ]]; then
+	if [[ ${IS_MINI} == "true" ]]; then
+		M="Mini t"
+	else
+		M="T"
+	fi
+	echo -e "${ME}: ${GREEN}${M}imelapse in ${OUTPUT_FILE}${NC}"
+fi
 
 [[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
 

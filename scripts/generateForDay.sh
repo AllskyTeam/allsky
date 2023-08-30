@@ -27,6 +27,7 @@ DO_STARTRAILS="false"
 DO_TIMELAPSE="false"
 THUMBNAIL_ONLY="false"
 THUMBNAIL_ONLY_ARG=""
+IMAGES_FILE=""
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -55,6 +56,10 @@ while [[ $# -gt 0 ]]; do
 				MSG2="uploaded"
 				# On uploads, we should let upload.sh output messages since it has more details.
 				UPLOAD_SILENT=""
+				;;
+			--images)
+				IMAGES_FILE="${2}"
+				shift
 				;;
 			-k | --keogram)
 				DO_KEOGRAM="true"
@@ -86,7 +91,8 @@ usage_and_exit()
 	echo
 	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
 	echo "Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\"
-	echo "    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] DATE"
+	echo "    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] \\"
+	echo "    {--images file | <INPUT_DIR>}"
 	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--help' displays this message and exits."
@@ -94,23 +100,72 @@ usage_and_exit()
 	echo "      '--nice' runs with nice level n."
 	echo "      '--upload' uploads previously-created files instead of creating them."
 	echo "      '--thumbnail-only' creates or uploads video thumbnails only."
-	echo "      'DATE' is the day in '${ALLSKY_IMAGES}' to process."
+	echo "      'INPUT_DIR' is the day in '${ALLSKY_IMAGES}' to process."
 	echo "      '--keogram' will ${MSG1} a keogram."
 	echo "      '--startrails' will ${MSG1} a startrail."
 	echo "      '--timelapse' will ${MSG1} a timelapse."
 	echo "    If you don't specify --keogram, --startrails, or --timelapse, all three will be ${MSG2}."
+	echo
+	echo "The list of images is determined in one of two ways:"
+	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
+	echo "   If <INPUT_DIR> is NOT a full path name it is assumed to be in '${ALLSKY_IMAGES}',"
+	echo "   which allows using images on a USB stick, for example."
+	echo "   The output file(s) are stored in <INPUT_DIR>."
+	echo
+	echo "2. Specifying '--images file' uses the images listed in 'file'; <INPUT_DIR> is not used."
+	echo "   The output file is stored in the same directory as the first image."
 	# shellcheck disable=SC2086
 	exit ${retcode}
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
-[[ $# -eq 0 ]] && usage_and_exit 1
 
-DATE="${1}"
-OUTPUT_DIR="${ALLSKY_IMAGES}/${DATE}"
-if [[ ! -d ${OUTPUT_DIR} ]]; then
-	echo -e "${RED}${ME}: ERROR: '${OUTPUT_DIR}' not found!${NC}"
-	exit 2
+if [[ -n ${IMAGES_FILE} ]]; then
+	# If IMAGES_FILE is specified there should be no other arguments.
+	[[ $# -ne 0 ]] && usage_and_exit 1
+elif [[ $# -eq 0 || $# -gt 1 ]]; then
+	usage_and_exit 2
+fi
+
+if [[ -n ${IMAGES_FILE} ]]; then
+	if [[ ! -s ${IMAGES_FILE} ]]; then
+		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!${NC}"
+		exit 3
+	fi
+	INPUT_DIR=""		# Not used
+
+	# Use the directory the images are in.  Only look at the first one.
+	I="$( head -1 "${IMAGES_FILE}" )"
+	OUTPUT_DIR="$( dirname "${I}" )"
+
+	# In case the filename doesn't include a path, put in a default location.
+	if [[ ${OUTPUT_DIR} == "." ]]; then
+		OUTPUT_DIR="${ALLSKY_TMP}"
+		echo -en "${ME}: ${YELLOW}"
+		echo "Can't determine where to put files so putting in '${OUTPUT_DIR}'."
+		echo -e "${NC}"
+	fi
+
+	# Use the basename of the directory.
+	DATE="$( basename "${OUTPUT_DIR}" )"
+
+else
+	INPUT_DIR="${1}"
+
+	# If not a full pathname, ${DIRNAME} will be "." so look in ${ALLSKY_IMAGES}.
+	DIRNAME="$( dirname "${INPUT_DIR}" )"
+	if [[ ${DIRNAME} == "." ]]; then
+		DATE="${INPUT_DIR}"
+		INPUT_DIR="${ALLSKY_IMAGES}/${INPUT_DIR}"	# Need full pathname for links
+	else
+		DATE="$( basename "${INPUT_DIR}" )"
+	fi
+	if [[ ! -d ${INPUT_DIR} ]]; then
+		echo -e "${RED}*** ${ME} ERROR: '${INPUT_DIR}' does not exist!${NC}"
+		exit 4
+	fi
+
+	OUTPUT_DIR="${INPUT_DIR}"	# Put output file(s) in same location as input files.
 fi
 
 if [[ ${GOT} -eq 0 ]]; then
@@ -155,7 +210,7 @@ else
 				DESTINATION_NAME="${OVERRIDE_DESTINATION_NAME}"
 			fi
 			[[ ${SILENT} == "false" ]] && echo "===== Uploading '${UPLOAD_FILE}'"
-			
+
 			# shellcheck disable=SC2086
 			upload_all ${UPLOAD_SILENT} ${DEBUG_ARG} \
 				"${UPLOAD_FILE}" "${DIRECTORY}" "${DESTINATION_NAME}" \

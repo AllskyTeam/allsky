@@ -111,6 +111,7 @@ SHOW_POSTDATA_MESSAGE="true"
 TWILIGHT_DATA_CHANGED="false"
 CAMERA_TYPE_CHANGED="false"
 GOT_WARNING="false"
+SHOW_ON_MAP=""
 
 # Several of the fields are in the Allsky Website configuration file,
 # so check if the IS a file before trying to update it.
@@ -139,7 +140,8 @@ check_website		# invoke to set variables
 
 CAMERA_NUMBER=""
 
-while [[ $# -gt 0 ]]; do
+while [[ $# -gt 0 ]]
+do
 	KEY="${1}"
 	LABEL="${2}"
 	OLD_VALUE="${3}"
@@ -237,7 +239,7 @@ while [[ $# -gt 0 ]]; do
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
 				CAMERA_MODEL="$( settings .cameraModel "${CC_FILE}" )"
-				if [[ -z ${CAMERA_MODEL} || ${CAMERA_MODEL} == "null" ]]; then
+				if [[ -z ${CAMERA_MODEL} ]]; then
 					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
 					exit 1
@@ -440,6 +442,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		showonmap)
+			SHOW_ON_MAP="1"
 			[[ ${NEW_VALUE} -eq 0 ]] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP="true"
 			;;
@@ -534,9 +537,12 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
-	# shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
+	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
+	if [[ ${SHOW_ON_MAP} == "1" ]]; then
+		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
+		# shellcheck disable=SC2086
+		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
+	fi
 fi
 
 if [[ ${RESTARTING} == "false" && ${NEEDS_RESTART} == "true" ]]; then

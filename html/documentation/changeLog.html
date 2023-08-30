@@ -28,15 +28,57 @@
 		<div class="Layout-main markdown-body" id="mainContents">
 			<p>
 				This page lists the changes to all Allsky releases.
-				You can also see the <a allsky="true" external="true" href="knownIssues.html">Known Issues and
-					Limitations</a>
+				You can also see the
+				<a allsky="true" external="true" href="knownIssues.html">Known Issues and Limitations</a>
 				of the current release.
 			</p>
 
 			<blockquote>
 				Wonder what all the colors below mean?
-				Check out <a allsky="true" external="true" href="settings/EditorColors.html">this page</a>.
+				Check out
+				<a allsky="true" external="true" href="settings/EditorColors.html">this page</a>.
 			</blockquote>
+
+			<h2>v2023.05.01_03 - Point Release # 3</h2>
+			<details>
+				<summary></summary>
+				<h4>Enhancements</h4>
+				<ul>
+					<li>Added support for RPi Version 1 (ov5647) camera.</li>
+					<li>Added FAQ question on how to copy files to and from the Pi.</li>
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul class="minimalPadding">
+					<li><span class="shSetting">AUTO_STRETCH</span> now works.
+					<li>Latitude and Longitude processing was improved and a couple bugs fixed.</li>
+					<li>The Allsky Map is no longer updated when "Show on map" is disabled.</li>
+					<li>Consistent delays on ZWO cameras were not working at night.</li>
+					<li>Installing a remote Allsky Website gave an error about a missing file.</li>
+					<li>Some default values were incorrect for RPi cameras in the WebUI.</li>
+					<li>Overlay Editor:</li>
+					<ul class="minimalPadding">
+						<li>Moon altitude not correct.</li>
+						<li>When the text of a field changes it no longer moves on the screen.</li>
+						<li>The snap rectangle was not correctly aligned with the grid.</li>
+						<li>If the grid was disabled the overlay editor would not work.</li>
+						<li>Text alignment is slightly off when comparing the overlay editor to the final image.</li>
+						<li>Missing ERROR message for text fields totally outside of image dimensions.</li>
+						<li>Default stroke color didn't work.</li>
+						<li>Changing field contents or font size reset X to 0.</li>
+						<li>Sensor temperature-related variables are no longer shown for RPi cameras.
+							A future release of Allsky will support sensor temperature on cameras that support it.</li>
+						<li>Ensure font zip files creates on OSX are handled correctly</li>
+						<li>Ensure only txt and json files are processed in the extra directory</li>
+						<li>Remove the 15px margin at the bottom of the overlay editor</li>
+						<li>Added a visual warning in the overlay editor if a text field will appear outside of the image</li>
+						<li>Fix incorrect position of the planets</li>
+					</ul>
+				</ul>
+
+				<hr class="separator"><!-- =========================================== -->
+			</details>
+
 
 			<h2>v2023.05.01_02 - Point Release # 2</h2>
 			<details>

@@ -20,7 +20,7 @@ TITLE="Allsky Website Installer"
 # display_msg() will send "log" entries to this file.
 # DISPLAY_MSG_LOG is used in display_msg()
 # shellcheck disable=SC2034
-DISPLAY_MSG_LOG="${ALLSKY_TMP}/Website_install.log"
+DISPLAY_MSG_LOG="${ALLSKY_CONFIG}/Website_install.log"
 
 
 ####################### functions
@@ -144,7 +144,7 @@ get_versions_and_branches()
 	GOT_VERSIONS_AND_BRANCHES="true"
 
 	# All new versions have a "versions" file.
-	# If the user specified a branch use that, otherwise see if they are running
+	# If the user specified a branch, use that, otherwise see if they are running
 	# a non-production branch.
 
 	GITHUB_MAIN_BRANCH_NEW_VERSION="$( get_Git_version "${GITHUB_MAIN_BRANCH}" "allsky-website" )"
@@ -171,8 +171,13 @@ get_versions_and_branches()
 	display_msg "${LOG_TYPE}" info "GITHUB_MAIN_BRANCH_NEW_VERSION=${GITHUB_MAIN_BRANCH_NEW_VERSION}"
 
 	if [[ ${DO_REMOTE_WEBSITE} == "true" ]]; then
-		# Only newer Websites have DO_REMOTE_WEBSITE, so there should be a PRIOR_WEBSITE_VERSION.
-		PRIOR_WEBSITE_VERSION="$( settings .config.AllskyWebsiteVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+		# Only newer Websites have DO_REMOTE_WEBSITE, so there should be a PRIOR_WEBSITE_VERSION
+		# if there was a prior remote Website.
+		if [[ -s ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
+			PRIOR_WEBSITE_VERSION="$( settings .config.AllskyWebsiteVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+		else
+			PRIOR_WEBSITE_VERSION="[none]"
+		fi
 
 		if [[ -n ${USER_SPECIFIED_BRANCH} && ${USER_SPECIFIED_BRANCH} != "${GITHUB_MAIN_BRANCH}" ]]; then
 			NEW_WEBSITE_VERSION="$( get_Git_version "${USER_SPECIFIED_BRANCH}" "allsky-website" )"
@@ -195,7 +200,9 @@ get_versions_and_branches()
 		else
 			B="${BRANCH}"
 		fi
-		check_for_old_version "${PRIOR_WEBSITE_VERSION}" "${NEW_WEBSITE_VERSION}" "${B}" || exit 1
+		if [[ ${PRIOR_WEBSITE_VERSION} != "[none]" ]]; then
+			check_for_old_version "${PRIOR_WEBSITE_VERSION}" "${NEW_WEBSITE_VERSION}" "${B}" || exit 1
+		fi
 
 		display_msg "${LOG_TYPE}" info "New   remote Website version=${NEW_WEBSITE_VERSION}"
 		display_msg "${LOG_TYPE}" info "Prior remote Website version=${PRIOR_WEBSITE_VERSION}"
@@ -238,7 +245,7 @@ get_versions_and_branches()
 		PRIOR_WEBSITE_VERSION="$( get_version "${PRIOR_WEBSITE}/" )"
 		check_for_old_version "${PRIOR_WEBSITE_VERSION}" "${NEW_WEBSITE_VERSION}" "${NEW_WEBSITE_BRANCH}" || exit 1
 	else
-		PRIOR_WEBSITE_VERSION=""
+		PRIOR_WEBSITE_VERSION="[none]"
 	fi
 
 
@@ -311,7 +318,7 @@ check_versions() {
 		fi
 	fi
 
-	if [[ -n ${NEW_WEBSITE_VERSION} && -n ${PRIOR_WEBSITE_VERSION} && \
+	if [[ -n ${NEW_WEBSITE_VERSION} && ${PRIOR_WEBSITE_VERSION} != "[none]" && \
 		     ${NEW_WEBSITE_VERSION}   <  "${PRIOR_WEBSITE_VERSION}" ]]; then
 		# Unless the version in GitHub is screwed up (i.e., newer one sorts after prior one),
 		# we should only get here if the user is r
@@ -402,6 +409,7 @@ set_configuration_file_variables() {
 		ON_PI="false"
 	else
 		WEB_CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		#shellcheck disable=SC2153
 		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
 		ON_PI="true"
 	fi
@@ -415,7 +423,7 @@ check_for_older_config_file() {
 	OLD="false"
 	NEW_CONFIG_VERSION="$( settings .ConfigVersion "${REPO_WEBCONFIG_FILE}" )"
 	PRIOR_CONFIG_VERSION="$( settings .ConfigVersion "${FILE}" )"
-	if [[ -z ${PRIOR_CONFIG_VERSION} || ${PRIOR_CONFIG_VERSION} == "null" ]]; then
+	if [[ -z ${PRIOR_CONFIG_VERSION} ]]; then
 		PRIOR_CONFIG_VERSION="** Unknown **"
 		OLD="true"
 	else
@@ -477,6 +485,7 @@ create_website_configuration_file() {
 			if [[ ${DO_REMOTE_WEBSITE} == "true" ]]; then
 				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
 			else
+				#shellcheck disable=SC2153
 				MINI_TLAPSE_URL_VALUE="/${IMG_DIR}/mini-timelapse.mp4"
 			fi
 		fi
@@ -505,11 +514,6 @@ create_website_configuration_file() {
 	LOCATION="$(settings ".location")"
 	OWNER="$(settings ".owner")"
 	CAMERA_MODEL="$(settings ".cameraModel")"
-	if [[ ${CAMERA_MODEL} == "null" ]]; then
-		CAMERA_MODEL=""
-	else
-		CAMERA_MODEL=" ${CAMERA_MODEL}"		# adds a space
-	fi
 	CAMERA="${CAMERA_TYPE}${CAMERA_MODEL}"
 	LENS="$(settings ".lens")"
 	COMPUTER="$(sed --quiet -e 's/Raspberry Pi/RPi/' -e '/^Model/ s/.*: // p' /proc/cpuinfo)"
@@ -651,7 +655,7 @@ do_remote_website() {
 		OK="false"
 	fi
 	WEBURL="$( settings ".websiteurl" )"
-	if [[ -z ${WEBURL} || ${WEBURL} == "null" ]]; then
+	if [[ -z ${WEBURL} ]]; then
 		MSG="The 'Website URL' setting must be defined in the WebUI\n"
 		MSG="${MSG}in order to do a remote Website installation.\n"
 		MSG="${MSG}Please set it then re-run this installation."

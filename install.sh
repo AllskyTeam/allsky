@@ -20,6 +20,10 @@ fi
 
 # This script assumes the user already did the "git clone" into ${ALLSKY_HOME}.
 
+# Some versions of Linux default to 750 so web server can't read it
+#shellcheck disable=SC2086
+chmod 755 "${ALLSKY_HOME}"  							|| exit ${ALLSKY_ERROR_STOP}
+
 #shellcheck disable=SC2086
 cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
 
@@ -80,9 +84,6 @@ STATUS_CLEAR="Clear"								# Clear the file
 STATUS_ERROR="Error encountered"
 STATUS_INT="Got interrupt"
 STATUS_VARIABLES=()									# Holds all the variables and values to save
-
-# Some versions of Linux default to 750 so web server can't read it
-chmod 755 "${ALLSKY_HOME}"
 
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 
@@ -232,6 +233,8 @@ CONNECTED_CAMERAS=""
 get_connected_cameras()
 {
 	local CC
+	# If we can't determine the camera to use for RPi cameras it either means there is
+	# no RPi camera, or something's wrong.
 	if determineCommandToUse "false" "" > /dev/null 2>&1 ; then
 		display_msg --log progress "RPi camera found."
 		CC="RPi"
@@ -359,6 +362,19 @@ select_camera_type()
 	display_msg --log progress "Using ${CAMERA_TYPE} camera."
 	STATUS_VARIABLES+=("select_camera_type='true'\n")
 	STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
+}
+
+####
+# If the raspistill command exists on post-Buster releases,
+# rename it so it's not used.
+check_for_raspistill()
+{
+	STATUS_VARIABLES+=("check_for_raspistill='true'\n")
+
+	if W="$( which raspistill )" && [[ ${OS} != "buster" ]]; then
+		echo display_msg --longonly info "Renaming 'raspistill' on ${OS}."
+		echo sudo mv "${W}" "${W}-OLD"
+	fi
 }
 
 
@@ -502,6 +518,13 @@ ask_reboot()
 		MSG="${MSG}\nYou must reboot before continuing the installation."
 		MSG="${MSG}\n\nReboot now?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
+			MSG="\nAfter the reboot you MUST continue with the installation"
+			MSG="${MSG} before anything will work."
+			MSG="${MSG}\nTo restart the installation, do the following:\n"
+			MSG="${MSG}\n   cd ~/allsky"
+			MSG="${MSG}\n   ./install.sh"
+			MSG="${MSG}\n\nThe installation will pick up where it left off."
+			whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
 			return 0
 		else
 			REBOOT_NEEDED="true"
@@ -681,8 +704,6 @@ check_and_mount_tmp()
 # If not, offer to make it one.
 check_tmp()
 {
-	STATUS_VARIABLES+=("check_tmp='true'\n")
-
 	local INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
 
 	# Check if currently a memory filesystem.
@@ -705,6 +726,8 @@ check_tmp()
 				)
 		fi
 
+		STATUS_VARIABLES+=("check_tmp='true'\n")
+
 		# If the new Allsky's ${ALLSKY_TMP} is already mounted, don't do anything.
 		# This would be the case during an upgrade.
 		if mount | grep --silent "${ALLSKY_TMP}" ; then
@@ -721,13 +744,19 @@ check_tmp()
 	MSG="${MSG}\n\nDo you want to make it reside in memory?"
 	MSG="${MSG}\n\nNote: anything in it will be deleted whenever the Pi is rebooted, but that's not an issue since the directory only contains temporary files."
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
-		echo "${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}" | sudo tee -a /etc/fstab > /dev/null
+		local STRING="${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}"
+		if ! echo "${STRING}" | sudo tee -a /etc/fstab > /dev/null ; then
+			display_msg --log error "Unable to update /etc/fstab"
+			return 1
+		fi
 		check_and_mount_tmp
 		display_msg --log progress "${ALLSKY_TMP} is now in memory."
 	else
 		display_msg --log info "${ALLSKY_TMP} will remain on disk."
 		mkdir -p "${ALLSKY_TMP}"
 	fi
+
+	STATUS_VARIABLES+=("check_tmp='true'\n")
 }
 
 
@@ -1319,8 +1348,8 @@ is_reboot_needed()
 	local OLD_VERSION="${1}"
 	local OLD_BASE_VERSION="${OLD_VERSION:0:11}"	# Without point release
 	local NEW_VERSION="${2}"
-	if [[ ${NEW_VERSION} == "v2023.05.01_02" && ${OLD_BASE_VERSION} == "v2023.05.01" ]]; then
-		# just bug fixes between those two versions
+	if [[ ${NEW_VERSION:0:11} == "v2023.05.01" && ${OLD_BASE_VERSION} == "v2023.05.01" ]]; then
+		# just bug fixes between the v2023.05.01 versions.
 		REBOOT_NEEDED="false"
 		display_msg --logonly info "No reboot is needed."
 	else
@@ -1418,7 +1447,8 @@ prompt_for_prior_Allsky()
 		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			MSG="Rename the directory with your prior version of Allsky to"
 			MSG="${MSG}\n '${PRIOR_ALLSKY_DIR}', then run the installation again."
-			display_msg --log info "${MSG}"
+			display_msg info "${MSG}"
+			display_msg --logonly info "User elected not to continue.  Exiting installation."
 			exit_installation 0 "${STATUS_NOT_CONTINUE}" "after no prior Allsky was found."
 		fi
 		STATUS_VARIABLES+=("prompt_for_prior_Allsky='true'\n")
@@ -1558,29 +1588,33 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 {
 	PRIOR_VERSION="${1}"
 	NEW_VERSION="${2}"
+		NEW_BASE_VERSION="${NEW_VERSION:0:11}"		# without point release
 	PRIOR_FILE="${3}"
 	NEW_FILE="${4}"
 
 	[[ ${NEW_VERSION} == "${PRIOR_VERSION}" ]] && return
 
 	# TODO: new versions go here
-	if [[ ${NEW_VERSION} == "v2023.05.01_02" ]]; then
-		if [[ ${PRIOR_VERSION} != "v2023.05.01" && ${PRIOR_VERSION} != "v2023.05.01_01" ]]; then
-			return
-		fi
+
+	if [[ ${NEW_BASE_VERSION} == "v2023.05.01" ]]; then
 
 		# Replaced "meanthreshold" with "daymeanthreshold" and "nightmeanthreshold"
 		# if they don't already exist.
+		# They were added in v2023.05.01_02.
 		local F="meanthreshold"
+		DAYMEANTHRESHOLD="$( settings ".day${F}" "${NEW_FILE}" )"
+		NIGHTMEANTHRESHOLD="$( settings ".night${F}" "${NEW_FILE}" )"
+		if [[ -n ${DAYMEANSETTING} && -n ${NIGHTMEANSETTING} ]]; then
+			display_msg --logonly info "   day and night '${F}' already exist."
+			return
+		fi
+
 		MEANTHRESHOLD="$( settings ".${F}" "${PRIOR_FILE}" )"
 		if [[ -n ${MEANTHRESHOLD} ]]; then
-
-			DAYMEANTHRESHOLD="$( settings ".day${F}" "${NEW_FILE}" )"
 			if [[ -z ${DAYMEANTHRESHOLD} ]]; then
 				display_msg --logonly info "   Updating 'day${F}' in '${NEW_FILE}'."
 				update_json_file ".day${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
 			fi
-			NIGHTMEANTHRESHOLD="$( settings ".night${F}" "${NEW_FILE}" )"
 			if [[ -z ${NIGHTMEANTHRESHOLD} ]]; then
 				display_msg --logonly info "   Updating 'night${F}' in '${NEW_FILE}'."
 				update_json_file ".night${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
@@ -1596,96 +1630,95 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 			display_msg --logonly info "   '${F}' was not in prior settings file."
 		fi
 
-	elif [[ ${NEW_VERSION:0:10} == "v2023.05.01" ]]; then
-		if [[ ${PRIOR_VERSION} == "v2022.03.01" ]]; then
-			local B="$( basename "${NEW_FILE}" )"
-			local NAME="${B%.*}"			# before "."
-			local EXT="${B##*.}"			# after "."
-			local SPECIFIC="${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}"
+		return
+	fi
 
-			# For each field in prior file, update new file with old value.
-			# Then handle new fields and fields that changed locations or names.
-			# convert_json_to_tabs outputs fields and values separated by tabs.
+	if [[ ${NEW_BASE_VERSION} == "v2023.05.01" && ${PRIOR_VERSION} == "v2022.03.01" ]]; then
+		local B="$( basename "${NEW_FILE}" )"
+		local NAME="${B%.*}"			# before "."
+		local EXT="${B##*.}"			# after "."
+		local SPECIFIC="${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}"
 
-			convert_json_to_tabs "${PRIOR_FILE}" |
-				while read -r F V
-				do
-					case "${F,,}" in
-						"lastchanged")
-							V="$( date +'%Y-%m-%d %H:%M:%S' )"
-							;;
+		# For each field in prior file, update new file with old value.
+		# Then handle new fields and fields that changed locations or names.
+		# convert_json_to_tabs outputs fields and values separated by tabs.
 
-						# These don't exist anymore.
-						"autofocus"|"background")
-							continue;
-							;;
+		convert_json_to_tabs "${PRIOR_FILE}" |
+			while read -r F V
+			do
+				case "${F,,}" in
+					"lastchanged")
+						V="$( date +'%Y-%m-%d %H:%M:%S' )"
+						;;
 
-						# These changed names.
-						"darkframe")
-							F="takeDarkFrames"
-							;;
-						"daymaxautoexposure")
-							F="daymaxautoexposure"
-							;;
-						"daymaxgain")
-							F="daymaxautogain"
-							;;
-						"nightmaxautoexposure")
-							F="nightmaxautoexposure"
-							;;
-						"nightmaxgain")
-							F="nightmaxautogain"
-							;;
+					# These don't exist anymore.
+					"autofocus"|"background")
+						continue;
+						;;
 
-						# These now have day and night versions.
-						"brightness")
-							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-							F="night${F}"
-							;;
-						"awb"|"autowhitebalance")
-							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-							F="night${F}"
-							;;
-						"wbr")
-							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-							F="night${F}"
-							;;
-						"wbb")
-							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-							F="night${F}"
-							;;
-						"targettemp")
-							F="TargetTemp"
-							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-							F="night${F}"
-							;;
-						"coolerenabled")
-							F="EnableCooler"
-							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-							F="night${F}"
-							;;
-						"meanthreshold")
-							F="meanthreshold"
-							update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-							F="night${F}"
-							;;
-					esac
+					# These changed names.
+					"darkframe")
+						F="takeDarkFrames"
+						;;
+					"daymaxautoexposure")
+						F="daymaxautoexposure"
+						;;
+					"daymaxgain")
+						F="daymaxautogain"
+						;;
+					"nightmaxautoexposure")
+						F="nightmaxautoexposure"
+						;;
+					"nightmaxgain")
+						F="nightmaxautogain"
+						;;
 
-					update_json_file ".${F}" "${V}" "${NEW_FILE}"
-				done
+					# These now have day and night versions.
+					"brightness")
+						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+						F="night${F}"
+						;;
+					"awb"|"autowhitebalance")
+						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+						F="night${F}"
+						;;
+					"wbr")
+						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+						F="night${F}"
+						;;
+					"wbb")
+						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+						F="night${F}"
+						;;
+					"targettemp")
+						F="TargetTemp"
+						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+						F="night${F}"
+						;;
+					"coolerenabled")
+						F="EnableCooler"
+						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+						F="night${F}"
+						;;
+					"meanthreshold")
+						F="meanthreshold"
+						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+						F="night${F}"
+						;;
+				esac
 
-			# Fields whose location changed.
-			x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
-			update_json_file ".takeDaytimeImages" "${x}" "${NEW_FILE}"
+				update_json_file ".${F}" "${V}" "${NEW_FILE}"
+			done
 
-			x="$( get_variable "DAYTIME_SAVE" "${PRIOR_CONFIG_FILE}" )"
-			update_json_file ".saveDaytimeImages" "${x}" "${NEW_FILE}"
+		# Fields whose location changed.
+		x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
+		update_json_file ".takeDaytimeImages" "${x}" "${NEW_FILE}"
 
-			x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
-			update_json_file ".useDarkFrames" "${x}" "${NEW_FILE}"
+		x="$( get_variable "DAYTIME_SAVE" "${PRIOR_CONFIG_FILE}" )"
+		update_json_file ".saveDaytimeImages" "${x}" "${NEW_FILE}"
 
-			return
-		fi
+		x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
+		update_json_file ".useDarkFrames" "${x}" "${NEW_FILE}"
 	fi
 }
 
@@ -1699,97 +1732,92 @@ restore_prior_settings_file()
 {
 	[[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" ]] && return
 
+	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
+
+	if [[ ! -f ${PRIOR_SETTINGS_FILE} ]]; then
+		# This should "never" happen.
+		# Huh?  No prior settings file ?
+		display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
+		FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
+		return
+	fi
+
 	local MSG NAME EXT FIRST_ONE
 
 	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
-		if [[ ! -f ${PRIOR_SETTINGS_FILE} ]]; then
-			# This should "never" happen.
-			# Huh?  Their prior version is "new" but they don't have a settings file?
-			display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
+		# The prior settings file SHOULD be a link to a camera-specific file.
+		# Make sure that's true; if not, fix it.
+
+		MSG="Checking link for newStyle PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
+		display_msg --logonly info "${MSG}"
+		MSG="$( check_settings_link "${PRIOR_SETTINGS_FILE}" )"
+		if [[ $? -eq "${EXIT_ERROR_STOP}" ]]; then
+			display_msg --log error "${MSG}"
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
+		fi
 
+		# Camera-specific settings file names are:
+		#	${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}
+		# where ${SETTINGS_FILE_NAME} == ${NAME}.${EXT}
+		NAME="${SETTINGS_FILE_NAME%.*}"			# before "."
+		EXT="${SETTINGS_FILE_NAME##*.}"			# after "."
+
+		# Copy all the camera-specific settings files; don't copy the generic-named
+		# file since it will be recreated.
+		# There will be more than one camera-specific file if the user has multiple cameras.
+		local PRIOR_SPECIFIC_FILES="$(find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}")"
+		if [[ -n ${PRIOR_SPECIFIC_FILES} ]]; then
+			FIRST_ONE="true"
+			echo "${PRIOR_SPECIFIC_FILES}" | while read -r F
+				do
+					if [[ ${FIRST_ONE} == "true" ]]; then
+						display_msg --log progress "Restoring camera-specific settings files:"
+						FIRST_ONE="false"
+					fi
+					display_msg --log progress "\t$(basename "${F}")"
+					cp -a "${F}" "${ALLSKY_CONFIG}"
+				done
+			RESTORED_PRIOR_SETTINGS_FILE="true"
+			FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
 		else
-			# The prior settings file SHOULD be a link to a camera-specific file.
-			# Make sure that's true; if not, fix it.
+			# This shouldn't happen...
+			MSG="No prior camera-specific settings files found,"
 
-			MSG="Checking link for newStyle PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
-			display_msg --logonly info "${MSG}"
-			MSG="$( check_settings_link "${PRIOR_SETTINGS_FILE}" )"
-			if [[ $? -eq "${EXIT_ERROR_STOP}" ]]; then
-				display_msg --log error "${MSG}"
+			# Try to create one based on ${PRIOR_SETTINGS_FILE}.
+			if [[ ${PRIOR_CAMERA_TYPE} != "${CAMERA_TYPE}" ]]; then
+				MSG="${MSG}\nand unable to create one: new Camera Type"
+				MSG="${MSG} (${CAMERA_TYPE} different from prior type (${PRIOR_CAMERA_TYPE})."
 				FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
-			fi
+			else
+				local SPECIFIC="${NAME}_${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.${EXT}"
+				cp -a "${PRIOR_SETTINGS_FILE}" "${ALLSKY_CONFIG}/${SPECIFIC}"
+				MSG="${MSG}\nbut was able to create '${SPECIFIC}'."
+				PRIOR_SPECIFIC_FILES="${SPECIFIC}"
 
-			# Camera-specific settings file names are:
-			#	${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}
-			# where ${SETTINGS_FILE_NAME} == ${NAME}.${EXT}
-			# We don't know the ${CAMERA_MODEL} yet so use a regular expression.
-			NAME="${SETTINGS_FILE_NAME%.*}"			# before "."
-			EXT="${SETTINGS_FILE_NAME##*.}"			# after "."
-
-			# Copy all the camera-specific settings files; don't copy the generic-named
-			# file since it will be recreated.
-			# There will be more than one camera-specific file if the user has multiple cameras.
-			local PRIOR_SPECIFIC_FILES="$(find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}")"
-			if [[ -n ${PRIOR_SPECIFIC_FILES} ]]; then
-				FIRST_ONE="true"
-				echo "${PRIOR_SPECIFIC_FILES}" | while read -r F
-					do
-						if [[ ${FIRST_ONE} == "true" ]]; then
-							display_msg --log progress "Restoring camera-specific settings files:"
-							FIRST_ONE="false"
-						fi
-						display_msg --log progress "\t$(basename "${F}")"
-						cp -a "${F}" "${ALLSKY_CONFIG}"
-					done
 				RESTORED_PRIOR_SETTINGS_FILE="true"
 				FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
-			else
-				# This shouldn't happen...
-				MSG="No prior camera-specific settings files found,"
-
-				# Try to create one based on ${PRIOR_SETTINGS_FILE}.
-				if [[ ${PRIOR_CAMERA_TYPE} != "${CAMERA_TYPE}" ]]; then
-					MSG="${MSG}\nand unable to create one: new Camera Type"
-					MSG="${MSG} (${CAMERA_TYPE} different from prior type (${PRIOR_CAMERA_TYPE})."
-					FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
-				else
-					local SPECIFIC="${NAME}_${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.${EXT}"
-					cp -a "${PRIOR_SETTINGS_FILE}" "${ALLSKY_CONFIG}/${SPECIFIC}"
-					MSG="${MSG}\nbut was able to create '${SPECIFIC}'."
-					PRIOR_SPECIFIC_FILES="${SPECIFIC}"
-
-					RESTORED_PRIOR_SETTINGS_FILE="true"
-					FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
-				fi
-				display_msg --log warning "${MSG}"
 			fi
+			display_msg --log warning "${MSG}"
+		fi
 
-			# Make any changes to the settings files based on the old and new Allsky versions.
-			if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" &&
-				  ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ]]; then
-				for S in ${PRIOR_SPECIFIC_FILES}
-				do
-					# Update all the prior camera-specific files (which are now in $ALLSKY_CONFIG).
-					# The new settings file will be based on a camera specific file.
-					local B="$( basename "${S}" )"
-					S="${ALLSKY_CONFIG}/${B}"
-					display_msg --log progress "Updating '${S}'"
-					convert_settings "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}" \
-						"${S}" "${S}"
-				done
-			fi
+		# Make any changes to the settings files based on the old and new Allsky versions.
+		if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" &&
+			  ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ]]; then
+			for S in ${PRIOR_SPECIFIC_FILES}
+			do
+				# Update all the prior camera-specific files (which are now in $ALLSKY_CONFIG).
+				# The new settings file will be based on a camera specific file.
+				local B="$( basename "${S}" )"
+				S="${ALLSKY_CONFIG}/${B}"
+				display_msg --log progress "Updating '${S}'"
+				convert_settings "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}" \
+					"${S}" "${S}"
+			done
 		fi
 
 	else
 		# settings file is old style in ${OLD_RASPAP_DIR}.
-		if [[ ! -f ${PRIOR_SETTINGS_FILE} ]]; then
-			# This should "never" happen.
-			# They have a prior Allsky version but no "settings file?
-			display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
-			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
-
-		elif [[ -f ${SETTINGS_FILE} ]]; then
+		if [[ -f ${SETTINGS_FILE} ]]; then
 			# Transfer prior settings to the new file.
 
 			case "${PRIOR_ALLSKY_VERSION}" in
@@ -1798,9 +1826,8 @@ restore_prior_settings_file()
 						"${PRIOR_SETTINGS_FILE}" "${SETTINGS_FILE}"
 
 					MSG="Your old WebUI settings were transfered to the new release,"
-					MSG="${MSG}\n but note that there have been some changes to the settings file"
-					MSG="${MSG} (e.g., some settings in config.sh are now in the settings file)."
-					MSG="${MSG}\n\nPlease check your settings in the WebUI's 'Allsky Settings' page."
+					MSG="${MSG}\n but note that there have been some changes to the settings file."
+					MSG="${MSG}\n\nCheck your settings in the WebUI's 'Allsky Settings' page."
 					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 					display_msg info "\n${MSG}\n"
 					echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
@@ -1824,14 +1851,16 @@ restore_prior_settings_file()
 
 					MSG="You need to manually transfer your old settings to the WebUI.\n"
 					MSG="${MSG}\nNote that there have been many changes to the settings file"
-					MSG="${MSG} since you last installed Allsky, so it will likely be easiest"
+					MSG="${MSG} since you last installed Allsky, so you will need"
 					MSG="${MSG} to re-enter everything via the WebUI's 'Allsky Settings' page."
 					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 					display_msg info "\n${MSG}\n"
 					echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
-					display_msg --logonly info "Only a few settings from very old ${PRIOR_ALLSKY_VERSION} copied over."
+					MSG="Only a few settings from very old ${PRIOR_ALLSKY_VERSION} copied over."
+					display_msg --logonly info "${MSG}"
 					;;
 			esac
+
 			# Set to null to force the user to look at the settings before Allsky will run.
 			update_json_file ".lastChanged" "" "${SETTINGS_FILE}"
 
@@ -1843,8 +1872,6 @@ restore_prior_settings_file()
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 		fi
 	fi
-
-	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
 }
 
 ####
@@ -1914,7 +1941,9 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}"
 
 		# Copy the user's prior data to the new file which may contain new fields.
-		"${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}"
+		if ! "${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}" ; then
+			display_msg --log error "Copying 'modules' directory had problems."
+		fi
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2498,7 +2527,7 @@ remind_old_version()
 		MSG="When you are sure everything is working with the new Allsky release,"
 		MSG="${MSG} remove your old version in '${PRIOR_ALLSKY_DIR}' to save disk space."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-		display_msg --logonly info "Displayed message about removing '${PRIOR_ALLSKY}'."
+		display_msg --logonly info "Displayed message about removing '${PRIOR_ALLSKY_DIR}'."
 	fi
 }
 
@@ -2545,6 +2574,9 @@ exit_installation()
 				  ${STATUS_CODE} == "${STATUS_NO_REBOOT}" ]]; then
 				uptime --since > "${ALLSKY_REBOOT_NEEDED}"
 				display_image "RebootNeeded"
+			else
+				# Just in case it's left over from a prior install.
+				rm -f "${ALLSKY_REBOOT_NEEDED}"
 			fi
 		fi
 	fi
@@ -2574,8 +2606,10 @@ HELP="false"
 DEBUG=0
 DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display
+IN_TESTING="false"
 
-IN_TESTING="false"		# XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+[[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]] && IN_TESTING="true"
+
 if [[ ${IN_TESTING} == "true" ]]; then
 	DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 
@@ -2583,15 +2617,16 @@ if [[ ${IN_TESTING} == "true" ]]; then
 	if [[ ! -f ${T} ]]; then
 		MSG="\n"
 		MSG="${MSG}Testers, until we go-live with this release, debugging is automatically on."
-		MSG="${MSG}\n\nPlease make sure you have Debug Level set to 4 in the WebUI during testing."
+		MSG="${MSG}\n\nPlease set Debug Level to 3 during testing."
 		MSG="${MSG}\n"
 
-		MSG="${MSG}\nChanges from prior dev releases:"
+		MSG="${MSG}\nChanges from prior release:"
 
-		MSG="${MSG}\n * change 1"
+		MSG="${MSG}\n * Support for RPi Version 1 camera"
+		MSG="${MSG}\n * Bug fixes, especially with the Overlay Editor"
 
-		MSG="${MSG}\n"
-		MSG="${MSG}\n * change 2"
+#		MSG="${MSG}\n"
+#		MSG="${MSG}\n * change 2"
 
 		MSG="${MSG}\n\nIf you agree, enter:    yes"
 		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
@@ -2779,6 +2814,9 @@ display_image "InstallationInProgress"
 
 ##### Prompt for the camera type
 [[ ${select_camera_type} != "true" ]] && select_camera_type
+
+##### If raspistill exists on post-Buster OS, rename it.
+[[ ${check_for_raspistill} != "true" ]] && check_for_raspistill
 
 ##### Get the new host name
 [[ ${prompt_for_hostname} != "true" ]] && prompt_for_hostname

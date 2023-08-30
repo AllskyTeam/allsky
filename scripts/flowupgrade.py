@@ -111,12 +111,13 @@ class CONFIGMANAGER:
         currentFilePath = os.path.join(self._configPath, "modules", file)
         
         oldJson = self._loadJsonFile(oldFilePath)
-        currentJson = self._loadJsonFile(currentFilePath)
+        if oldJson is not None:
+            currentJson = self._loadJsonFile(currentFilePath)
                         
-        currentJson = self._copyModules(oldJson, currentJson)        
-        currentJson = self._updateParams(oldJson, currentJson)        
+            currentJson = self._copyModules(oldJson, currentJson)
+            currentJson = self._updateParams(oldJson, currentJson)
 
-        self._saveJsonFile(currentFilePath, currentJson)
+            self._saveJsonFile(currentFilePath, currentJson)
     
     def _mergeModuleSettings(self, file):
         oldFilePath = os.path.join(self._priorPath, "modules", file)

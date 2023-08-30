@@ -38,7 +38,7 @@ reboot_needed && NEEDS_REBOOT="true"
 
 # Make sure the settings have been configured after an installation or upgrade.
 LAST_CHANGED="$( settings ".lastChanged" )"
-if [[ ${LAST_CHANGED} == "" || ${LAST_CHANGED} == "null" ]]; then
+if [[ ${LAST_CHANGED} == "" ]]; then
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI."
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
 		echo "*** ===== The Pi also needs to be rebooted."
@@ -82,12 +82,6 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 	fi
 fi
-if [[ -d ${ALLSKY_INSTALLATION_LOGS} ]]; then
-	MSG="Logs from the last installation are in '${ALLSKY_INSTALLATION_LOGS}'."
-	MSG="${MSG}\nIf Allsky is working fine, you can remove the logs:"
-	MSG="${MSG}\n  &nbsp; &nbsp; <code>rm -fr '${ALLSKY_INSTALLATION_LOGS}'</code>"
-	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
-fi
 
 USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
 
@@ -107,6 +101,7 @@ if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	RPi_COMMAND_TO_USE="$(determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
 
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
+	RPi_COMMAND_TO_USE=""
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 	reset_usb()		# resets the USB bus
 	{
@@ -229,12 +224,9 @@ fi
 
 : > "${ARGS_FILE}"
 
-# This argument should come second so the capture program knows if it should display debug output.
-echo "-debuglevel=${ALLSKY_DEBUG_LEVEL}" >> "${ARGS_FILE}"
-
 # If the locale isn't in the settings file, try to determine it.
 LOCALE="$(settings .locale)"
-if [[ -z ${LOCALE} || ${LOCALE} == "null" ]]; then
+if [[ -z ${LOCALE} ]]; then
 	if [[ -n ${LC_ALL} ]]; then
 		echo "-Locale=${LC_ALL}" >> "${ARGS_FILE}"
 	elif [[ -n ${LANG} ]]; then

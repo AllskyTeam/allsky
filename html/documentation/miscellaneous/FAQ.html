@@ -24,23 +24,130 @@
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 <div class="Layout-main markdown-body" id="mainContents">
 
-<h1>JUST STARTING THIS</h1>
-<p>
-Will add to this FAQ as time goes on...
-</p>
-<h2>The <span class="fileName">/var/log/allsky.log</span> file is gone?  How do I get it back?</h2>
+<h2>How do I copy files to/from the Pi?</h2>
 <details><summary></summary>
 <p>
-<ul>
-	<li>Try restarting the software: <code>sudo systemctl restart allsky</code>.
-	<li>If that doesn't help, restart the software that controls the log files:
-		<code>sudo systemctl restart syslog</code>.
-	<li>If that doesn't help, reboot the Pi.
-	<li>If that doesn't help, wait until tomorrow - sometimes the log file
-		mysteriously reappears after midnight.
-		Note this is NOT an Allsky problem since it also happens with other services.
-</ul>
+If the file is a text file and it fits on one screen,
+for instance, in an editor, you can simply highlight the text and copy to the Pi's clipboard,
+then paste it into a file on your PC or Mac.
 </p>
+<p>
+If you have a large file or a binary file, you can mount the Pi's filesystem
+onto your PC or Mac by using SAMBA.
+<p>Copy the lines below to a file on your Pi named <code>installSamba.sh</code>
+(this is easiest if you are viewing this page in a browser on your Pi).
+</p>
+<pre>
+#!/bin/bash
+
+# Install SAMBA to enable network access to another device.
+# Base idea from StackExchange ( https://bit.ly/3Qqzbnp )
+
+if [[ -z ${LOGNAME} ]]; then
+	echo "Unknown LOGNAME; cannot continue;" &gt;&amp;2
+	exit 1
+fi
+source "${ALLSKY_HOME}/variables.sh"	|| exit 1
+CAP="${LOGNAME:0:1}"
+CAP="${CAP^^}${LOGNAME:1}"
+SHARE_NAME="${LOGNAME}_home"
+
+echo -e "${YELLOW}"
+echo "*************"
+echo "This script will install SAMBA which lets remote devices mount your Pi as a network drive."
+echo "The '${HOME}' directory on the Pi will appear as '${SHARE_NAME}' on remote devices."
+echo "You can then copy files to and from the Pi as you would from any other drive."
+echo
+echo -n "Press any key to continue: "; read x
+echo "${NC}"
+
+# Install SAMBA 
+sudo apt install samba -y				|| exit 1
+
+# Add the user to SAMBA and prompt for their SAMBA password.
+echo -e "${YELLOW}"
+echo "*************"
+echo "You will be prompted for a SAMBA password which remote machines will use to"
+echo "map to your Pi's drive."
+echo "This is a different password than ${LOGNAME}'s password or the root password,"
+echo "although you may elect to make them the same."
+echo
+echo "If this is your first time installing SAMBA and you are prompted for a current password,"
+echo "press 'Enter'."
+echo "*************"
+echo "${NC}"
+sudo smbpasswd -a ${LOGNAME}			|| exit 1
+
+WORKGROUP="WORKGROUP"
+CONFIG_FILE="/etc/samba/smb.conf"
+echo -e "${GREEN}..... Configuring SAMBA.${NC}"
+
+sudo mv -f ${CONFIG_FILE} ${CONFIG_FILE}.bak
+
+sudo tee ${CONFIG_FILE} &gt; /dev/null &lt;&lt;EOF
+### Config File ###
+
+[global]
+workgroup = ${WORKGROUP}
+server role = standalone server
+obey pam restrictions = no
+map to guest = never
+
+client min protocol = SMB2
+client max protocol = SMB3
+vfs objects = catia fruit streams_xattr
+fruit:metadata = stream
+fruit:model = RackMac
+fruit:posix_rename = yes
+fruit:veto_appledouble = no
+fruit:wipe_intentionally_left_blank_rfork = yes
+fruit:delete_empty_adfiles = yes
+security = user
+encrypt passwords = yes
+
+# Optional logging.  Is very verbose.
+# log file = /var/log/samba/log.%m
+# max log size = 1000
+# logging = file
+
+# The directories you want accessible by other devices.
+# Each one's name must be surrounded by [].
+
+[${SHARE_NAME}]
+comment = ${CAP} home directory
+path = ${HOME}
+browseable = yes
+read only = no
+create mask = 0664
+directory mask = 0775
+
+### end Config ###
+EOF
+
+echo -e "${GREEN}..... Restarting SAMBA.${NC}"
+sudo /etc/init.d/smbd restart
+
+echo -e "${YELLOW}"
+echo "*************"
+echo "You can now mount '${SHARE_NAME}' on your remote device using"
+echo "workgroup '${WORKGROUP}' and login name '${LOGNAME}'."
+echo "If you don't know how to do that, see your remote device's operating system documentation."
+echo "*************"
+echo -e "${NC}"
+</pre>
+</p>
+<p>
+Now execute:
+<pre>
+chmod 755 installSamba.sh
+./installSamba.sh
+</pre>
+
+and follow the prompts.
+On a PC you should then see something like this in Windows File Explorer:
+<p><img src="Pi_network_drive.png" title="Pi network drive" class="imgBorder"></p>
+Mount it as you would any other network drive.
+Remember to use the SAMBA password you entered during installation.
 </details>
 
 
@@ -48,7 +155,8 @@ Will add to this FAQ as time goes on...
 <details><summary></summary>
 <p>
 Most likely Allsky is dropping all images for being overly dark or overly bright due to inappropriate settings.
-Check the log to see what it says by running <code>tail -f /var/log/allsky.log</code> in a terminal window.
+Check the log to see what it says by running
+<code>tail -f /var/log/allsky.log</code> in a terminal window.
 </p>
 <p>
 If you are using <b>manual</b> exposure/gain try adjusting those values.
@@ -69,11 +177,12 @@ might give you an idea as to the problem.
 </p>
 </details>
 
-<h2>There is a long delay between when my pictures are saved</h2>
+
+<h2>Why is there is a long delay between pictures?</h2>
 <details><summary></summary>
 <p>
 The time between when one picture ends and another starts is determined by
-these settings in the WebUI:
+these settings:
 <ol>
 	<li><span class="WebUISetting">Delay</span> (daytime or nighttime).
 	<li><span class="WebUISetting">Max Auto-Exposure</span> (daytime or nighttime),
@@ -83,8 +192,8 @@ these settings in the WebUI:
 There are two possibilities:
 <ol>
 	<li>If <span class="WebUISetting">Consistent Delays Between Images</span> is "Yes",
-		then the total delay is:
-		<br>
+		then the total delay is <strong>always</strong>:
+		<br>&nbsp; &nbsp; &nbsp;
 		<span class="WebUISetting">Delay</span> +
 		<span class="WebUISetting">Max Auto-Exposure</span>.
 	<li>If <span class="WebUISetting">Consistent Delays Between Images</span> is "No",
@@ -93,6 +202,104 @@ There are two possibilities:
 If the time between pictures is longer than you expected,
 check your <span class="WebUISetting">Max Auto-Exposure</span>.
 </p>
+</details>
+
+
+<h2>How do I reduce wear on my SD card?</h2>
+<details><summary></summary>
+<p>
+SDcards have a limited number of writes they can handle before they wear out.
+Although this is usually a very large number you may wish nonetheless to
+minimize writes to the SDcard.
+The bet way to do this is by making Allsky's <span class="fileName">allsky/tmp</span>
+directory a memory-based filesystem,
+i.e., instead of residing on the SDcard it resides in RAM memory.
+
+<blockquote>
+During Allsky installation you were prompted to create
+<span class="fileName">tmp</span> as a memory-based filesystem.
+If you did that you can ignore this tip.
+</blockquote>
+
+Note the following:
+<ul>
+<li>In order to do this you'll need enough free RAM memory,
+	so this may not work well with systems with very limited memory, for example, 512 MB.
+<li>The contents of the <span class="fileName">tmp</span>
+	directory will be erased every time you reboot your Pi.
+	This should be ok since it's only used for temporary log files and to hold images
+	as they come out of the camera,
+	before they are stored in <span class="fileName">allsky/images/DATE</span>.
+</ul>
+<p>
+It's simple to create a memory-based filesystem:
+<pre>
+cd ~/allsky
+./install.sh --function check_tmp
+</pre>
+
+It's suggested you accept the defaults.
+</details>
+
+
+<h2>How do I focus my allsky camera?</h2>
+<details><summary></summary>
+<blockquote>
+If you have a camera with auto-focus like the RPi Module 3,
+see the camera documentation for how to focus it.
+</blockquote>
+<p>
+Try get your camera at least roughly focused during the day.
+It'll be easier to see the focus ring on your lens,
+and exposure duration will be much shorter so you'll get more instant feedback.
+</p>
+<p>
+To complete focus, enable the <span class="WebUISetting">Show Focus Metric</span>
+setting in the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page.
+A focus number will appear on your images - the higher the number, the better focus you have.
+Note that the number can change depending on the brightness,
+so focus when the brightness isn't changing.
+<p>
+When done focusing, disable the <span class="WebUISetting">Show Focus Metric</span>
+setting since it's no longer needed.
+</p>
+</details>
+
+
+<h2>The <span class="fileName">/var/log/allsky.log</span> file is gone.  How do I get it back?</h2>
+<details><summary></summary>
+<p>
+<ul>
+	<li>Try restarting the software: <code>sudo systemctl restart allsky</code>.
+	<li>If that doesn't help, restart the software that controls the log files:
+		<code>sudo systemctl restart syslog</code>.
+	<li>If that doesn't help, reboot the Pi.
+	<li>If that doesn't help, wait until tomorrow - sometimes the log file
+		mysteriously reappears after midnight.
+		Note this is NOT an Allsky problem since it also happens with other services.
+</ul>
+</p>
+</details>
+
+
+<h2>Pro-tip: install <code>gh</code> on your Pi so you can easily collaborate using Github Gists</h2>
+<details><summary></summary>
+<p>
+Click <a href="https://cli.github.com/">here</a>
+for the full details or download the latest release from
+<a href="https://github.com/cli/cli/releases/latest">here</a>.
+Once you have the Command Line Interface (CLI) installed,
+you can easily upload a script you wrote with something like:
+<pre>
+gh gist create -d "a tool to find alien spaceships" < my_awesome_allsky_script.py
+</pre>
+
+or share logs using something like
+<pre>
+journalctl --since 05:00 -u allsky | gh gist create
+gh gist create < log.txt
+</pre>
+
 </details>
 
 

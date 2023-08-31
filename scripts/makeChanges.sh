@@ -147,7 +147,11 @@ do
 			echo -e "<script>console.log('${MSG}');</script>"
 		fi
 	fi
-	if [[ ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
+
+	K="${KEY,,}"		# convert to lowercase
+
+	# Don't skip if it's cameratype since that indicates we need to refresh.
+	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
 		[[ ${DEBUG} == "true" ]] && echo -e "    ${wDEBUG}Skipping - old and new are equal${wNC}"
 		shift 4
 		continue
@@ -157,7 +161,6 @@ do
 	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
 	
 	((NUM_CHANGED++))
-	K="${KEY,,}"		# convert to lowercase
 	case "${K}" in
 
 		"cameranumber" | "cameratype")

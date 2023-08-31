@@ -248,7 +248,7 @@ do
 					exit 1
 				fi
 
-				# ${CC_FILE} is a generic name defined in config.sh.
+				# ${CC_FILE} is a generic name defined in variables.sh.
 				# ${SPECIFIC_NAME} is specific to the camera type/model.
 				# It isn't really needed except debugging.
 				CC="$(basename "${CC_FILE}")"
@@ -259,12 +259,6 @@ do
 				# Any old and new camera capabilities file should be the same unless Allsky
 				# adds or changes capabilities, so delete the old one just in case.
 				ln --force "${CC_FILE}" "${SPECIFIC_NAME}"
-
-				if ! sed -i -e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${NEW_VALUE}\"/" "${ALLSKY_CONFIG}/config.sh"; then
-					echo -e "${wERROR}ERROR updating ${wBOLD}${LABEL}${wNBOLD}.${wNC}"
-					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
-					exit 1
-				fi
 
 				# The old file is no longer needed.
 				rm -f "${CC_FILE_OLD}"

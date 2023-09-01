@@ -1072,6 +1072,7 @@
 "default": 2000,
 "description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files.",
 "label": "Timelapse Bitrate",
+"type" : "integer",
 "booldependson" : "timelapsegenerate"
 },
 {

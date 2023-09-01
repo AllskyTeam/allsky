@@ -672,7 +672,7 @@ if ($formReadonly != "readonly") { ?>
 					// that has the popup.
 					echo "<span title='$popup'>";
 // TODO: add percent sign for "percent"
-					if (in_array($type, ["text", "password", "integer", "float", "percent", "readonly"])) {
+					if (in_array($type, ["text", "password", "integer", "float", "color", "percent", "readonly"])) {
 						if ($type == "readonly") {
 							$readonly = "readonly";
 							$t = "text";
@@ -682,7 +682,7 @@ if ($formReadonly != "readonly") { ?>
 							// Browsers put the up/down arrows for numbers which moves the
 							// numbers to the left, and they don't line up with text.
 							// Plus, they don't accept decimal points in "float".
-							if ($type == "integer" || $type == "float" || $type == "percent")
+							if ($type == "integer" || $type == "float" || $type == "percent" || $type == "color")
 								$type = "text";
 							$t = $type;
 						}

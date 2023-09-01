@@ -991,7 +991,7 @@
 "default": 0.1,
 "description": "Delete images whose mean is below this value.<br><code>0</code> disables this check.",
 "label": "Remove Bad Images Threshold Low",
-"type": "integer",
+"type": "float",
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -1000,7 +1000,8 @@
 "maximum": 0.5,
 "default": 0.9,
 "description": "Delete images whose mean is above this value.<br><code>0</code> disables this check.",
-"label": "Remove Bad Images Threshold Low",
+"label": "Remove Bad Images Threshold High",
+"type": "float",
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 
@@ -1131,7 +1132,8 @@
 "default" : "",
 "description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.",
 "label" : "Timelapse Extra Parameters",
-"type" : "text",
+"type" : "widetext",
+"optional" : 1,
 "booldependson" : "timelapsegenerate"
 },
 
@@ -1317,7 +1319,8 @@
 "default" : "",
 "description" : "Optional additional keogram creation parameters.<br>Run <code>~/allsky/bin/keogram --help</code> for a list of options.",
 "label" : "Keogram Extra Parameters",
-"type" : "text",
+"type" : "widetext",
+"optional" : 1,
 "booldependson" : "keogramgenerate"
 },
 
@@ -1341,7 +1344,7 @@
 "default" : 0.1,
 "description" : "Images with a brightness higher than this threshold will not be included in the startrails.",
 "label" : "Startrails Brightness Threshold",
-"type" : "integer",
+"type" : "float",
 "booldependson" : "startrailsgenerate"
 },
 {
@@ -1357,7 +1360,8 @@
 "default" : "",
 "description" : "Optional additional startrails creation parameters.<br>Run <code>~/allsky/bin/startrails --help</code> for a list of options.",
 "label" : "Startrails Extra Parameters",
-"type" : "text",
+"type" : "widetext",
+"optional" : 1,
 "booldependson" : "startrailsgenerate"
 },
 
@@ -2216,11 +2220,18 @@
 "type" : "header-tab"
 },
 {
+"name" : "cameraheading",
+"label" : "Camera Type",
+"type" : "header",
+"advanced" : 1
+},
+{
 "name" : "webuidatafiles",
 "default" : "",
 "description" : "See documentation for a description of this setting",
 "label" : "Items to add to WebUI",
-"type" : "text"
+"type" : "widetext",
+"optional" : 1
 },
 
 {

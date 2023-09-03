@@ -506,6 +506,9 @@ save_camera_capabilities()
 			display_msg --log error "Unable to save camera capabilities."
 		fi
 		return 1
+	elif [[ ! -f ${SETTINGS_FILE} ]]; then
+		display_msg --log error "Settings file not created; cannot continue."
+		return 1
 	fi
 
 	#shellcheck disable=SC2012

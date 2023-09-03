@@ -1825,7 +1825,9 @@ convert_config_sh()
 		fi
 
 		# take/save nighttimeimages is new
+		# shellcheck disable=SC2034
 		local TAKENIGHTIMEIMAGES="true"; doV "TAKENIGHTIMEIMAGES" ".takenighttimeimages" "boolean" "${NEW_FILE}"
+		# shellcheck disable=SC2034
 		local SAVENIGHTTIMEIMAGES="true"; doV "SAVEMIGHTTIMEIMAGES" ".savenighttimeimages" "boolean" "${NEW_FILE}"
 
 		doV "DARK_FRAME_SUBTRACTION" ".usedarkframes" "boolean" "${NEW_FILE}"

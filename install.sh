@@ -1819,6 +1819,7 @@ convert_config_sh()
 		doV "DARK_FRAME_SUBTRACTION" ".usedarkframes" "boolean" "${NEW_FILE}"
 
 		# IMG_UPLOAD no longer used; instead, upload if FREQUENCY > 0.
+		# shellcheck disable=SC2034
 		[[ ${IMG_UPLOAD} != "true" ]] && IMG_UPLOAD_FREQUENCY=0
 		doV "IMG_UPLOAD_FREQUENCY" ".uploadimagefrequency" "number" "${NEW_FILE}"
 		doV "IMG_UPLOAD_ORIGINAL_NAME" ".uploadimageoriginalname" "boolean" "${NEW_FILE}"
@@ -1852,6 +1853,7 @@ convert_config_sh()
 		fi
 
 		# AUTOSTRETCH no longer used; only stretch if AMOUNT > 0 and MID_POINT != ""
+		# shellcheck disable=SC2034
 		[[ ${AUTOSTRETCH} != "true" || -n ${AUTOSTRETCH_MID_POINT} ]] && AUTOSTRETCH_AMOUNT=0
 		doV "AUTOSTRETCH_AMOUNT" ".imagestretchamount" "number" "${NEW_FILE}"
 		doV "AUTOSTRETCH_MID_POINT" ".imagestretchmidpoint" "text" "${NEW_FILE}"
@@ -1859,16 +1861,16 @@ convert_config_sh()
 		# RESIZE_UPLOADS no longer used; resize only if width > 0 and height > 0.
 		doV "RESIZE_UPLOADS" ".imageresizeuploads" "boolean" "${NEW_FILE}"
 		if [[ ${RESIZE_UPLOADS} != "true" ]]; then
-			RESIZE_UPLOADS_WIDTH=0
-			RESIZE_UPLOADS_HEIGHT=0
+			# shellcheck disable=SC2034
+			RESIZE_UPLOADS_WIDTH=0; RESIZE_UPLOADS_HEIGHT=0
 		fi
 		doV "RESIZE_UPLOADS_WIDTH" ".imageresizeuploadswidth" "number" "${NEW_FILE}"
 		doV "RESIZE_UPLOADS_HEIGHT" ".imageresizeuploadsheight" "number" "${NEW_FILE}"
 
 		# REMOVE_BAD_IMAGES no longer used; remove only if low > 0 or high > 0.
 		if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
-			REMOVE_BAD_IMAGES_THRESHOLD_LOW=0
-			REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0
+			# shellcheck disable=SC2034
+			REMOVE_BAD_IMAGES_THRESHOLD_LOW=0; REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0
 		fi
 		doV "REMOVE_BAD_IMAGES" ".imageremovebad" "boolean" "${NEW_FILE}"
 		doV "REMOVE_BAD_IMAGES_THRESHOLD_LOW" ".imageremovebadlow" "number" "${NEW_FILE}"
@@ -1968,11 +1970,14 @@ convert_ftp_sh()
 		doV "VIDEOS_DESTINATION_NAME" ".remotewebsitevideodestinationname" "text" "${ALLSKY_ENV}"
 		doV "KEOGRAM_DESTINATION_NAME" ".remotewebsitekeogramdestinationname" "text" "${ALLSKY_ENV}"
 		doV "STARTRAILS_DESTINATION_NAME" ".remotewebsitestartrailsdestinationname" "text" "${ALLSKY_ENV}"
+		# shellcheck disable=SC2034
 		[[ -n ${HOST} ]] && REMOTE_HOST="${HOST}"
 		doV "REMOTE_HOST" ".REMOTEWEBSITE_HOST" "text" "${ALLSKY_ENV}"
 		doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "number" "${ALLSKY_ENV}"
+		# shellcheck disable=SC2034
 		[[ -n ${USER} ]] && REMOTE_USER="${USER}"
 		doV "REMOTE_USER" ".REMOTEWEBSITE_USER" "text" "${ALLSKY_ENV}"
+		# shellcheck disable=SC2034
 		[[ -n ${PASSWORD} ]] && REMOTE_PASSWORD="${PASSWORD}"
 		doV "REMOTE_PASSWORD" ".REMOTEWEBSITE_PASSWORD" "text" "${ALLSKY_ENV}"
 		doV "LFTP_COMMANDS" ".REMOTEWEBSITE_LFTP_COMMANDS" "text" "${ALLSKY_ENV}"

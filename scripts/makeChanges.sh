@@ -148,7 +148,7 @@ do
 		fi
 	fi
 
-	K="${KEY,,}"		# convert to lowercase
+	KEY="${KEY,,}"		# convert to lowercase
 
 	# Don't skip if it's cameratype since that indicates we need to refresh.
 	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
@@ -161,11 +161,11 @@ do
 	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
 	
 	((NUM_CHANGED++))
-	case "${K}" in
+	case "${KEY}" in
 
 		"cameranumber" | "cameratype")
 
-			if [[ ${K} == "cameranumber" ]]; then
+			if [[ ${KEY} == "cameranumber" ]]; then
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
 				CAMERA_NUMBER=" -cameraNumber ${NEW_CAMERA_NUMBER}"
 				# Set NEW_VALUE to the current Camera Type

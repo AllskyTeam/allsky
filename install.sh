@@ -1842,11 +1842,14 @@ convert_config_sh()
 		# We'd need to know actual number of image pixels, bin level, and .width and .height to get
 		# the effective width and height, then convert.
 		if [[ ${CROP_IMAGE} == "true" ]]; then
+			MSG="The way to specify cropping images has changed."
+			MSG="${MSG}You need to reenter your crop settings."
+			display_msg --log info "${MSG}"
+			X=0; doV "X" ".imagecroptop" "number" "${NEW_FILE}"
+			X=0; doV "X" ".imagecropright" "number" "${NEW_FILE}"
+			X=0; doV "X" ".imagecropbottom" "number" "${NEW_FILE}"
+			X=0; doV "X" ".imagecropleft" "number" "${NEW_FILE}"
 		fi
-		X=0; doV "X" ".imagecroptop" "number" "${NEW_FILE}"
-		X=0; doV "X" ".imagecropright" "number" "${NEW_FILE}"
-		X=0; doV "X" ".imagecropbottom" "number" "${NEW_FILE}"
-		X=0; doV "X" ".imagecropleft" "number" "${NEW_FILE}"
 
 		# AUTOSTRETCH no longer used; only stretch if AMOUNT > 0 and MID_POINT != ""
 		[[ ${AUTOSTRETCH} != "true" || -n ${AUTOSTRETCH_MID_POINT} ]] && AUTOSTRETCH_AMOUNT=0

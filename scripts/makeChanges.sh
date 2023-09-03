@@ -9,14 +9,6 @@ source "${ALLSKY_HOME}/variables.sh"			|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit ${ALLSKY_ERROR_STOP}
 
-# This script may be called during installation BEFORE there is a settings file.
-# config.sh looks for the file and produces an error if it doesn't exist,
-# so only include these two files if there IS a settings file.
-if [[ -f ${SETTINGS_FILE} ]]; then
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
-fi
-
 function usage_and_exit()
 {
 	echo -en "${wERROR}"

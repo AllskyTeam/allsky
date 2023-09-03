@@ -1373,13 +1373,14 @@ is_reboot_needed()
 # See if a prior Allsky exists; if so, set some variables.
 
 # Globals
+# PRIOR_ALLSKY_DIR set in variables.sh
 PRIOR_ALLSKY=""					# Set to "new" or "old" if they have a prior version
 PRIOR_ALLSKY_VERSION=""			# The version number of the prior version, if known
 PRIOR_CAMERA_TYPE=""
 PRIOR_CAMERA_MODEL=""
-PRIOR_CONFIG_DIR=""				# Prior "config" directory, if it exists
-PRIOR_CONFIG_FILE=""			# Location of prior "config.sh" file
-PRIOR_FTP_FILE=""				# Location of prior "ftp-settings.sh" file
+PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/$( basename "${ALLSKY_CONFIG}" )"			# Prior "config" directory, if it exists
+PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"		# Location of prior "config.sh" file; varies by release
+PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# Location of prior "ftp-settings.sh" file; varies by release
 
 does_prior_Allsky_exist()
 {
@@ -1387,7 +1388,9 @@ does_prior_Allsky_exist()
 	local MSG CT_ CM_
 
 	# First just look for the top-level directory.
-	if [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
+	if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
+		display_msg --logonly info "Prior Allsky found in ${PRIOR_ALLSKY_DIR}."
+	else
 		display_msg --logonly info "No prior Allsky found."
 		return 1
 	fi
@@ -1416,10 +1419,12 @@ does_prior_Allsky_exist()
 			fi
 			PRIOR_CAMERA_TYPE="$( settings "${CT_}" "${PRIOR_SETTINGS_FILE}" )"
 			PRIOR_CAMERA_MODEL="$( settings "${CM_}" "${PRIOR_SETTINGS_FILE}" )"
+			MSG="Prior Camera Type = ${PRIOR_CAMERA_TYPE}, prior model = ${PRIOR_CAMERA_MODEL}"
+			display_msg --logonly info "${MSG}"
 		else
 			# This shouldn't happen...
 			PRIOR_SETTINGS_FILE=""
-			display_msg --log warning "No prior new style settings file found!"
+			display_msg --log warning "No prior new style settings file (${PRIOR_SETTINGS_FILE}) found!"
 		fi
 
 	else		# pre-${FIRST_VERSION_VERSION}
@@ -1885,6 +1890,9 @@ convert_config_sh()
 		doV "TIMELAPSE_UPLOAD_THUMBNAIL" ".timelapseuploadthumbnail" "boolean" "${NEW_FILE}"
 		doV "TIMELAPSEWIDTH" ".timelapsewidth" "number" "${NEW_FILE}"
 		doV "TIMELAPSEHEIGHT" ".timelapseheight" "number" "${NEW_FILE}"
+
+		# We no longer include the trailing "k".
+		TIMELAPSE_BITRATE="${TIMELAPSE_BITRATE//k/}"
 		doV "TIMELAPSE_BITRATE" ".timelapsebitrate" "number" "${NEW_FILE}"
 		doV "FPS" ".timelapsefps" "number" "${NEW_FILE}"
 		doV "VCODEC" ".timelapsevcodec" "text" "${NEW_FILE}"
@@ -1899,6 +1907,7 @@ convert_config_sh()
 		doV "TIMELAPSE_MINI_UPLOAD_VIDIO" ".minitimelapseupload" "boolean" "${NEW_FILE}"
 		doV "TIMELAPSE_MINI_UPLOAD_THUMBNAIL" ".minitimelapseuploadthumbnail" "boolean" "${NEW_FILE}"
 		doV "TIMELAPSE_MINI_FPS" ".minitimelapsefps" "number" "${NEW_FILE}"
+		TIMELAPSE_MINI_BITRATE="${TIMELAPSE_MINI_BITRATE//k/}"
 		doV "TIMELAPSE_MINI_BITRATE" ".minitimelapsebitrate" "number" "${NEW_FILE}"
 		doV "TIMELAPSE_MINI_WIDTH" ".minitimelapsewidth" "number" "${NEW_FILE}"
 		doV "TIMELAPSE_MINI_HEIGHT" ".minitimelapseheight" "number" "${NEW_FILE}"
@@ -2275,7 +2284,7 @@ restore_prior_files()
 		D="${OLD_RASPAP_DIR}"
 	fi
 	local R="raspap.auth"
-	ITEM="${SPACE}WebUI security settings"
+	ITEM="${SPACE}WebUI security settings (${R})."
 	if [[ -f ${D}/${R} ]]; then
 		display_msg --log progress "${ITEM}"
 		cp -a "${D}/raspap.auth" "${ALLSKY_CONFIG}"
@@ -2357,7 +2366,7 @@ restore_prior_files()
 		# pre ${FIRST_VERSION_VERSION}
 		PRIOR_FTP_FILE="${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh"
 	else
-		display_msg --log error "Unable to find prior ftp-settings.sh"
+		display_msg --log error "Unable to find prior ftp-settings.sh (${PRIOR_FTP_FILE})."
 		PRIOR_FTP_FILE=""
 	fi
 	COPIED_PRIOR_FTP_SH="true"			# Global variable
@@ -2818,8 +2827,8 @@ if [[ ${IN_TESTING} == "true" ]]; then
 
 		MSG="${MSG}\nChanges from prior dev release:"
 
-		MSG="${MSG}\n * ftp-settings.sh is gone"
-		MSG="${MSG}\n   Its settings are now in the WebUI's 'Allsky Settings' page."
+		MSG="${MSG}\n * ftp-settings.sh and config.sh are gone"
+		MSG="${MSG}\n   Their settings are now in the WebUI's 'Allsky Settings' page."
 
 #x		MSG="${MSG}\n"
 #x		MSG="${MSG}\n * change 2"

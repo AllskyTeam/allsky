@@ -1862,7 +1862,9 @@ convert_config_sh()
 		doV "RESIZE_UPLOADS" ".imageresizeuploads" "boolean" "${NEW_FILE}"
 		if [[ ${RESIZE_UPLOADS} != "true" ]]; then
 			# shellcheck disable=SC2034
-			RESIZE_UPLOADS_WIDTH=0; RESIZE_UPLOADS_HEIGHT=0
+			RESIZE_UPLOADS_WIDTH=0;
+			# shellcheck disable=SC2034
+			RESIZE_UPLOADS_HEIGHT=0
 		fi
 		doV "RESIZE_UPLOADS_WIDTH" ".imageresizeuploadswidth" "number" "${NEW_FILE}"
 		doV "RESIZE_UPLOADS_HEIGHT" ".imageresizeuploadsheight" "number" "${NEW_FILE}"
@@ -1870,7 +1872,9 @@ convert_config_sh()
 		# REMOVE_BAD_IMAGES no longer used; remove only if low > 0 or high > 0.
 		if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
 			# shellcheck disable=SC2034
-			REMOVE_BAD_IMAGES_THRESHOLD_LOW=0; REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0
+			REMOVE_BAD_IMAGES_THRESHOLD_LOW=0;
+			# shellcheck disable=SC2034
+			REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0
 		fi
 		doV "REMOVE_BAD_IMAGES" ".imageremovebad" "boolean" "${NEW_FILE}"
 		doV "REMOVE_BAD_IMAGES_THRESHOLD_LOW" ".imageremovebadlow" "number" "${NEW_FILE}"

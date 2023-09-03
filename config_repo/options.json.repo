@@ -17,32 +17,32 @@
 },
 {
 "name" : "takedaytimeimages",
-"default" : 1,
+"default" : true,
 "description" : "Enable to <strong>take</strong> daytime images.",
 "label" : "Daytime Capture",
 "type" : "boolean",
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "savedaytimeimages",
-"default" : 0,
+"default" : false,
 "description" : "Enable to <strong>save</strong> daytime images.",
 "label" : "Daytime Save",
 "type" : "boolean",
 "booldependson" : "takedaytimeimages",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "dayautoexposure",
-"default" : 1,
+"default" : true,
 "description" : "Enable to use daytime auto-exposure.",
 "label" : "Auto-Exposure",
 "type" : "boolean",
 "booldependson" : "takedaytimeimages",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "daymaxautoexposure",
@@ -65,7 +65,7 @@
 "type" : "float",
 "booldependson" : "takedaytimeimages",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "daymean",
@@ -77,7 +77,7 @@
 "type" : "float",
 "booldependson" : "takedaytimeimages",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "daymeanthreshold",
@@ -89,7 +89,7 @@
 "type" : "float",
 "booldependson" : "takedaytimeimages AND daymean",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "daydelay",
@@ -104,13 +104,13 @@
 },
 {
 "name" : "dayautogain",
-"default" : 0,
+"default" : false,
 "description" : "Enable to use dayime Auto-Gain.",
 "label" : "Auto-Gain",
 "type" : "boolean",
 "booldependson" : "takedaytimeimages",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "daymaxautogain",
@@ -122,7 +122,7 @@
 "type" : "float",
 "booldependson" : "takedaytimeimages AND dayautogain",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "daygain",
@@ -134,7 +134,7 @@
 "type" : "float",
 "booldependson" : "takedaytimeimages",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "daybin",
@@ -147,11 +147,11 @@
 ],
 "booldependson" : "takedaytimeimages",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "dayawb",
-"default" : 0,
+"default" : true,
 "description" : "Sets Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
 "type" : "boolean",
@@ -193,18 +193,18 @@
 "type" : "integer",
 "booldependson" : "takedaytimeimages AND dayautoexposure",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "dayenablecooler",
-"default" : 0,
+"default" : true,
 "description" : "Enable to use cooling (on cooled cameras only).",
 "label" : "Cooling",
 "type" : "boolean",
 "display" : "_display",
 "booldependson" : "takedaytimeimages",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "daytargettemp",
@@ -217,7 +217,7 @@
 "display" : "_display",
 "booldependson" : "takedaytimeimages AND dayenablecooler",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "daytuningfile",
@@ -226,11 +226,11 @@
 "label" : "Tuning File",
 "type" : "widetext",
 "display" : "_display",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependson" : "takedaytimeimages",
 "action" : "restart",
-"advanced" : 1
+"advanced" : true
 },
 
 {
@@ -240,7 +240,7 @@
 },
 {
 "name" : "nightautoexposure",
-"default" : 1,
+"default" : true,
 "description" : "Enable to use nighttime auto-exposure.",
 "label" : "Auto-Exposure",
 "type" : "boolean",
@@ -276,7 +276,7 @@
 "label" : "Mean Target",
 "type" : "float",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "nightmeanthreshold",
@@ -288,7 +288,7 @@
 "type" : "float",
 "booldependson" : "nightmean",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "nightdelay",
@@ -302,7 +302,7 @@
 },
 {
 "name" : "nightautogain",
-"default" : 0,
+"default" : false,
 "description" : "Enable to use nighttime Auto-Gain.",
 "label" : "Auto-Gain",
 "type" : "boolean",
@@ -318,7 +318,7 @@
 "type" : "float",
 "booldependson" : "nightautogain",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "nightgain",
@@ -343,7 +343,7 @@
 },
 {
 "name" : "nightawb",
-"default" : 0,
+"default" : false,
 "description" : "Enable to use Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
 "type" : "boolean",
@@ -383,17 +383,17 @@
 "label" : "Frames To Skip",
 "type" : "integer",
 "booldependson" : "nightautoexposure",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "nightenablecooler",
-"default" : 0,
+"default" : false,
 "description" : "Enable to use cooling (on cooled cameras only).",
 "label" : "Cooling",
 "type" : "boolean",
 "display" : "_display",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "nighttargettemp",
@@ -406,7 +406,7 @@
 "display" : "_display",
 "booldependson" : "nightenablecooler",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "nighttuningfile",
@@ -415,10 +415,10 @@
 "label" : "Tuning File",
 "type" : "widetext",
 "display" : "_display",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "action" : "restart",
-"advanced" : 1
+"advanced" : true
 },
 
 {
@@ -447,10 +447,10 @@
 "description" : "Configuration file to use for settings.",
 "label" : "Configuration File",
 "type" : "widetext",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "extraargs",
@@ -459,9 +459,9 @@
 "label" : "Extra Arguments",
 "type" : "widetext",
 "display" : "_display",
-"optional" : 1,
+"optional" : true,
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "saturation",
@@ -473,7 +473,7 @@
 "type" : "float",
 "display" : "_display",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "contrast",
@@ -485,7 +485,7 @@
 "type" : "float",
 "display" : "_display",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "sharpness",
@@ -497,7 +497,7 @@
 "type" : "float",
 "display" : "_display",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "gamma",
@@ -509,7 +509,7 @@
 "type" : "integer",
 "display" : "_display",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "offset",
@@ -521,7 +521,7 @@
 "type" : "integer",
 "display" : "_display",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "aggression",
@@ -534,7 +534,7 @@
 "display" : "_display",
 "booldependson" : "dayautoexposure OR nightautoexposure",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "gaintransitiontime",
@@ -547,7 +547,7 @@
 "display" : "_display",
 "booldependsoff" : "nightautogain",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "width",
@@ -579,7 +579,7 @@
 	"type_values"
 ],
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "quality",
@@ -593,13 +593,13 @@
 },
 {
 "name" : "autousb",
-"default" : 1,
+"default" : true,
 "description" : "Automatically set the USB bandwidth.",
 "label" : "Auto USB Bandwidth",
 "type" : "boolean",
 "display" : "_display",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "usb",
@@ -612,7 +612,7 @@
 "display" : "_display",
 "booldependsoff" : "autousb",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "filename",
@@ -620,9 +620,9 @@
 "description" : "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <span class='WebUISetting'>Debug Level</span> to 4 and look in the log file.",
 "label" : "Filename",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "rotation",
@@ -652,7 +652,7 @@
 },
 {
 "name" : "notificationimages",
-"default" : 1,
+"default" : true,
 "description" : "Enable to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",
 "label" : "Notification Images",
 "type" : "boolean",
@@ -660,12 +660,12 @@
 },
 {
 "name" : "consistentdelays",
-"default" : 1,
+"default" : true,
 "description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "timeformat",
@@ -687,7 +687,7 @@
 	{"value" : "B", "label" : "Both"}
 ],
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "latitude",
@@ -695,7 +695,7 @@
 "description" : "Camera latitude: a signed number from <span class='WebUIValue'>-90</span> to <span class='WebUIValue'>+90</span>, or an unsigned number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
 "label" : "Latitude",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
@@ -704,7 +704,7 @@
 "description" : "Camera longitude: a signed number from <span class='WebUIValue'>-180</span> to <span class='WebUIValue'>+180</span>, or an unsigned number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
 "label" : "Longitude",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
@@ -713,12 +713,12 @@
 "description" : "Altitude of the Sun in degrees relative to the horizon at which to switch between day and night.",
 "label" : "Angle",
 "type" : "float",
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
 "name" : "takedarkframes",
-"default" : 0,
+"default" : false,
 "description" : "Enable to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
 "label" : "Take Dark Frames",
 "type" : "boolean",
@@ -726,7 +726,7 @@
 },
 {
 "name" : "usedarkframes",
-"default" : 0,
+"default" : false,
 "description" : "Enables dark frame subtraction if you have dark frames.",
 "label" : "Use Dark Frames",
 "type" : "boolean"
@@ -741,13 +741,13 @@
 },
 {
 "name" : "experimentalexposure",
-"default" : 0,
+"default" : false,
 "description" : "Enable to use an improved auto-exposure algorithm at night.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
 "label" : "New Exposure Algorithm",
 "type" : "boolean",
 "display" : "_display",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "histogrambox",
@@ -758,7 +758,7 @@
 "display" : "_display",
 "booldependson" : "dayautoexposure OR nightautoexposure",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "thumbnailsizex",
@@ -816,29 +816,29 @@
 },
 {
 "name" : "newexposure",
-"default" : 1,
+"default" : true,
 "description" : "Enable to use the Allsky version 0.8 exposure method which decreases sensor temperature.  If you see ASI_ERROR_TIMEOUTs in the log file, deactivate this.",
 "label" : "Version 0.8 Exposure",
 "type" : "boolean",
 "display" : "_display",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "uselogin",
-"default" : 1,
+"default" : true,
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
 "type" : "boolean",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "alwaysshowadvanced",
-"default" : 0,
+"default" : false,
 "description" : "Enable to always show the advanced options.",
 "label" : "Always Show Advanced",
 "type" : "boolean",
-"advanced" : 1
+"advanced" : true
 },
 
 {
@@ -863,7 +863,7 @@
 },
 {
 "name" : "imageuploadoriginalname",
-"default" : 1,
+"default" : true,
 "description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
 "label" : "Upload With Original Name",
 "type" : "boolean",
@@ -871,7 +871,7 @@
 },
 {
 "name" : "imagecreatethumbnails",
-"default" : 1,
+"default" : true,
 "description" : "Enable to create thumbnails of images. If you never look at them, unset this.",
 "label" : "Create Image Thumbnails",
 "type" : "boolean",
@@ -1023,7 +1023,7 @@
 },
 {
 "name" : "timelapsegenerate",
-"default" : 1,
+"default" : true,
 "description" : "Enable to generate a timelapse video at the end of night.",
 "label" : "Generate Timelapse",
 "type" : "boolean",
@@ -1031,7 +1031,7 @@
 },
 {
 "name": "timelapseupload",
-"default": 1,
+"default": true,
 "description": "Enable to upload the timelapse video to an Allsky Website or remote server.",
 "label": "Upload Timelapse",
 "type": "boolean",
@@ -1039,7 +1039,7 @@
 },
 {
 "name": "timelapseuploadthumbnail",
-"default": 1,
+"default": true,
 "description": "Enable to upload the timelapse video thumbnail.",
 "label": "Upload Timelapse Thumbnail",
 "type": "boolean",
@@ -1093,7 +1093,7 @@
 "type" : "text",
 "comment": "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
 "booldependson" : "timelapsegenerate",
-"checkchanges": 1
+"checkchanges": true
 },
 {
 "name" : "timelapsepixfmt",
@@ -1103,7 +1103,7 @@
 "type" : "text",
 "booldependson" : "timelapsegenerate",
 "comment": "check using ffmpeg -pix_fmts looking at argument 2 for ' yuv420p  '",
-"checkchanges" : 1
+"checkchanges" : true
 },
 {
 "name" : "timelapsefflog",
@@ -1122,7 +1122,7 @@
 },
 {
 "name": "timelapsekeepsequencee",
-"default": 0,
+"default": false,
 "description": "Enable to keep the list of files used in creating the timelapse video. Rarely changed.",
 "label": "Keep Timelapse Sequence",
 "type": "boolean",
@@ -1134,7 +1134,7 @@
 "description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.",
 "label" : "Timelapse Extra Parameters",
 "type" : "widetext",
-"optional" : 1,
+"optional" : true,
 "booldependson" : "timelapsegenerate"
 },
 
@@ -1155,7 +1155,7 @@
 },
 {
 "name" : "minitimelapseforcecreation",
-"default" : 0,
+"default" : false,
 "description" : "Create a mini-timelapse even if 'Number Of Images' isn't reached?",
 "label" : "Force Creation",
 "type" : "boolean",
@@ -1173,7 +1173,7 @@
 },
 {
 "name": "minitimelapseupload",
-"default": 1,
+"default": true,
 "description": "Enable to upload the mini-timelapse video to an Allsky Website or remote server.",
 "label": "Upload Mini-Timelapse",
 "type": "boolean",
@@ -1181,7 +1181,7 @@
 },
 {
 "name": "minitimelapseuploadthumbnail",
-"default": 1,
+"default": true,
 "description": "Enable to upload the mini-timelapse video thumbnail.",
 "label": "Upload Mini-Timelapse Thumbnail",
 "type": "boolean",
@@ -1246,7 +1246,7 @@
 },
 {
 "name" : "keogramgenerate",
-"default" : 1,
+"default" : true,
 "description" : "Enable to generate a keogram at the end of night.",
 "label" : "Generate Keogram",
 "type" : "boolean",
@@ -1254,7 +1254,7 @@
 },
 {
 "name": "keogramupload",
-"default": 1,
+"default": true,
 "description": "Enable to upload the keogram to an Allsky Website or remote server.",
 "label": "Upload Keogram",
 "type": "boolean",
@@ -1263,7 +1263,7 @@
 
 {
 "name" : "keogramexpand",
-"default" : 1,
+"default" : true,
 "description" : "Enable to expand keograms to the image width.",
 "label" : "Expand Keograms",
 "type" : "boolean",
@@ -1321,7 +1321,7 @@
 "description" : "Optional additional keogram creation parameters.<br>Run <code>~/allsky/bin/keogram --help</code> for a list of options.",
 "label" : "Keogram Extra Parameters",
 "type" : "widetext",
-"optional" : 1,
+"optional" : true,
 "booldependson" : "keogramgenerate"
 },
 
@@ -1332,7 +1332,7 @@
 },
 {
 "name" : "startrailsgramgenerate",
-"default" : 1,
+"default" : true,
 "description" : "Enable to generate a startrails at the end of night.",
 "label" : "Generate Startrails",
 "type" : "boolean",
@@ -1350,7 +1350,7 @@
 },
 {
 "name": "startrailsupload",
-"default": 1,
+"default": true,
 "description": "Enable to upload the startrails to an Allsky Website or remote server.",
 "label": "Upload Startrails",
 "type": "boolean",
@@ -1362,7 +1362,7 @@
 "description" : "Optional additional startrails creation parameters.<br>Run <code>~/allsky/bin/startrails --help</code> for a list of options.",
 "label" : "Startrails Extra Parameters",
 "type" : "widetext",
-"optional" : 1,
+"optional" : true,
 "booldependson" : "startrailsgenerate"
 },
 
@@ -1387,12 +1387,12 @@
 	{"value" : 0, "label" : "legacy"},
 	{"value" : 1, "label" : "module"}
 ],
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
 "name" : "showtime",
-"default" : 1,
+"default" : true,
 "description" : "Enable to display the time an image was taken on the overlay.",
 "label" : "Show Time",
 "type" : "boolean",
@@ -1401,7 +1401,7 @@
 },
 {
 "name" : "showtemp",
-"default" : 1,
+"default" : true,
 "description" : "Enable to display the camera sensor temperature on the overlay.",
 "label" : "Show Temperature",
 "type" : "boolean",
@@ -1411,7 +1411,7 @@
 },
 {
 "name" : "showexposure",
-"default" : 1,
+"default" : true,
 "description" : "Enable to display the exposure length on the overlay.<br>If <span class='WebUISetting'>Auto-Exposure</span> is set, '(auto)' will appear after the exposure time.",
 "label" : "Show Exposure",
 "type" : "boolean",
@@ -1420,7 +1420,7 @@
 },
 {
 "name" : "showgain",
-"default" : 0,
+"default" : false,
 "description" : "Enable to display the camera gain on the overlay.<br>If <span class='WebUISetting'>Auto-Gain</span> is set, '(auto)' will appear after the gain value.",
 "label" : "Show Gain",
 "type" : "boolean",
@@ -1429,7 +1429,7 @@
 },
 {
 "name" : "showbrightness",
-"default" : 0,
+"default" : false,
 "description" : "Enable to display the <span class='WebUISetting'>Brightness</span> number you set on the overlay.",
 "label" : "Show Brightness",
 "type" : "boolean",
@@ -1438,45 +1438,45 @@
 },
 {
 "name" : "showusb",
-"default" : 0,
+"default" : false,
 "description" : "Enable to display the USB Bandwidth number on the overlay.<br>This is primarily for troubleshooting.",
 "label" : "Show USB",
 "type" : "boolean",
 "display" : "_display",
 "booldependsoff" : "overlaymethod",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "showmean",
-"default" : 0,
+"default" : false,
 "description" : "Enable to display the calculated mean image brightness on the overlay.",
 "label" : "Show Mean Brightness",
 "type" : "boolean",
 "booldependsoff" : "overlaymethod",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "showhistogrambox",
-"default" : 0,
+"default" : false,
 "description" : "Enable to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
 "label" : "Show Histogram Box",
 "type" : "boolean",
 "display" : "_display",
 "booldependsoff" : "overlaymethod",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "showfocus",
-"default" : 0,
+"default" : false,
 "description" : "Enable to display a focus metric to help you focus the camera.<br>This is only usefull while focusing.",
 "label" : "Show Focus Metric",
 "type" : "boolean",
 "booldependsoff" : "overlaymethod",
 "action" : "reload",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "text",
@@ -1484,7 +1484,7 @@
 "description" : "Text that appears below the optional time with the same color and size.",
 "label" : "Text Overlay",
 "type" : "widetext",
-"optional" : 1,
+"optional" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1494,8 +1494,8 @@
 "description" : "Extra Text File (enter full path to the file).<br>Leave blank if NOT using an extra text file.",
 "label" : "Extra Text File",
 "type" : "widetext",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1620,7 +1620,7 @@
 },
 {
 "name" : "outlinefont",
-"default" : 0,
+"default" : false,
 "description" : "Adds a black outline to the text overlay to improve contrast.",
 "label" : "Use Outline Font",
 "type" : "boolean",
@@ -1640,17 +1640,17 @@
 },
 {
 "name" : "displaysettings",
-"default" : 0,
+"default" : false,
 "description" : "Enable to add a link on the Allsky Website to display the settings on this page.",
 "label" : "Display Settings",
 "type" : "boolean",
-"checkchanges" : 1,
+"checkchanges" : true,
 "booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "uselocalwebsite",
 "description" : "Enable to use the local Allsky Website.  No other settings are needed.",
-"default" : 0,
+"default" : false,
 "label" : "Use Local Website",
 "type" : "boolean",
 "popup-yesno" : "Do you want to remove all saved images, keograms, startrails, and videos in the local Website?",
@@ -1673,11 +1673,11 @@
 },
 {
 "name" : "useremotewebsite",
-"default" : 0,
+"default" : false,
 "description" : "Enable to use a remote Allsky Website.<br>See the Allsky Documentation for how to install the Website.",
 "label" : "Use Remote Website",
 "type" : "boolean",
-"checkchanges" : 1
+"checkchanges" : true
 },
 {
 "name" : "daystokeepremotewebsite",
@@ -1703,7 +1703,7 @@
 	{"value" : "S3", "label" : "s3"},
 	{"value" : "GCS", "label" : "gcs"}
 ],
-"checkchanges" : 1,
+"checkchanges" : true,
 "booldependson" : "useremotewebsite"
 },
 {
@@ -1712,10 +1712,10 @@
 "description" : "Name of server hosting the remote Allsky Website.",
 "label" : "Server Name",
 "type" : "widetext",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremotewebsite",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_PORT",
@@ -1723,10 +1723,10 @@
 "description" : "Optional port required by server.  Rarely required.",
 "label" : "Port",
 "type" : "integer",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremotewebsite",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_USER",
@@ -1734,10 +1734,10 @@
 "description" : "Username of the login on the remote server.",
 "label" : "User Name",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremotewebsite",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_PASSWORD",
@@ -1745,10 +1745,10 @@
 "description" : "Password of the login on the remote server.",
 "label" : "Password",
 "type" : "password",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremotewebsite",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_LFTP_COMMANDS",
@@ -1756,11 +1756,11 @@
 "description" : "Special commands needed when connecting to an FTP server.",
 "label" : "FTP Commands",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=*ftp*",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "remotewebsiteimagedir",
@@ -1768,10 +1768,10 @@
 "description" : "Name of the top-level remote directory where images go.",
 "label" : "Image Directory",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=*ftp*",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_SSH_KEY_FILE",
@@ -1779,11 +1779,11 @@
 "description" : "Path on the Pi to the SSH key file.",
 "label" : "SSH Key File",
 "type" : "widetext",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=scp",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_AWS_CLI_DIR",
@@ -1791,11 +1791,11 @@
 "description" : "AWS CLI directory where the AWS CLI tools are installed.",
 "label" : "AWS CLI Directory",
 "type" : "widetext",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=s3",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_S3_BUCKET",
@@ -1803,11 +1803,11 @@
 "description" : "Name of S3 bucket where files will be upload.",
 "label" : "S3 Bucket",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=s3",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_S3_ACL",
@@ -1815,11 +1815,11 @@
 "description" : "S3 Access Control List (ACL).",
 "label" : "S3 ACL",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=s3",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_GCS_BUCKET",
@@ -1827,11 +1827,11 @@
 "description" : "Name of GCS bucket where files will be upload.",
 "label" : "GCS Bucket",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=gcs",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_GCS_ACL",
@@ -1839,11 +1839,11 @@
 "description" : "GCS Access Control List (ACL).",
 "label" : "GCS ACL",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=gcs",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "remotewebsitevideodestinationname",
@@ -1851,9 +1851,8 @@
 "description" : "Optional name of the remote video file.",
 "label" : "Remote Video File Name",
 "type" : "text",
-"optional" : 1,
 "booldependson" : "useremotewebsite",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "remotewebsitekeogramdestinationname",
@@ -1862,7 +1861,7 @@
 "label" : "Remote Keogram File Name",
 "type" : "text",
 "booldependson" : "useremotewebsite",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "remotewebsitestartrailsdestinationname",
@@ -1871,7 +1870,7 @@
 "label" : "Remote Startrails Name",
 "type" : "text",
 "booldependson" : "useremotewebsite",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "remotewebsiteurl",
@@ -1879,9 +1878,9 @@
 "description" : "The URL of your Allsky Website, for example: https://mywebsite.com/allsky.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
 "label" : "Website URL",
 "type" : "widetext",
-"checkchanges" : 1,
+"checkchanges" : true,
 "booldependson" : "showonmap OR useremotewebsite OR remotewebsiteimageurl",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "remotewebsiteimageurl",
@@ -1889,9 +1888,9 @@
 "description" : "The URL of the image on your Allsky Website, for example: https://mywebsite.com/allsky/image.jpg.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
 "label" : "Image URL",
 "type" : "widetext",
-"checkchanges" : 1,
+"checkchanges" : true,
 "booldependson" : "showonmap OR useremotewebsite OR remotewebsiteurl",
-"optional" : 1
+"optional" : true
 },
 
 
@@ -1902,11 +1901,11 @@
 },
 {
 "name" : "useremoteserver",
-"default" : 0,
+"default" : false,
 "description" : "This is a remote server NOT running the Allsky Website.<br>See the documentation for the necessary directory layout.",
 "label" : "Use Remote Server",
 "type" : "boolean",
-"checkchanges" : 1
+"checkchanges" : true
 },
 {
 "name" : "remoteserverprotocol",
@@ -1922,7 +1921,7 @@
 	{"value" : "S3", "label" : "s3"},
 	{"value" : "GCS", "label" : "gcs"}
 ],
-"checkchanges" : 1,
+"checkchanges" : true,
 "booldependson" : "useremoteserver"
 },
 {
@@ -1931,10 +1930,10 @@
 "description" : "Name of remote server NOT hosting an Allsky Website.",
 "label" : "Server Name",
 "type" : "widetext",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremoteserver",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTESERVER_PORT",
@@ -1942,10 +1941,10 @@
 "description" : "Optional port required by server.  Rarely required.",
 "label" : "Port",
 "type" : "integer",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremoteserver",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTESERVER_USER",
@@ -1953,10 +1952,10 @@
 "description" : "Username of the login on the remote server.",
 "label" : "User Name",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremoteserver",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTESERVER_PASSWORD",
@@ -1964,10 +1963,10 @@
 "description" : "Password of the remote server login.",
 "label" : "Password",
 "type" : "password",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremoteserver",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTESERVER_LFTP_COMMANDS",
@@ -1975,11 +1974,11 @@
 "description" : "Special commands needed when connecting to an FTP server.",
 "label" : "FTP Commands",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=*ftp*",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTESERVER_SSH_KEY_FILE",
@@ -1987,11 +1986,11 @@
 "description" : "Path on the Pi to the SSH key file.",
 "label" : "SSH Key File",
 "type" : "widetext",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=scp",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTESERVER_AWS_CLI_DIR",
@@ -1999,11 +1998,11 @@
 "description" : "AWS CLI directory where the AWS CLI tools are installed.",
 "label" : "AWS CLI Directory",
 "type" : "widetext",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=s3",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTESERVER_S3_BUCKET",
@@ -2011,11 +2010,11 @@
 "description" : "Name of S3 bucket where files will be upload.",
 "label" : "S3 Bucket",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=s3",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTESERVER_S3_ACL",
@@ -2023,11 +2022,11 @@
 "description" : "S3 Access Control List (ACL).",
 "label" : "S3 ACL",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=s3",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTESERVER_GCS_BUCKET",
@@ -2035,11 +2034,11 @@
 "description" : "Name of GCS bucket where files will be upload.",
 "label" : "GCS Bucket",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=gcs",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "REMOTESERVER_GCS_ACL",
@@ -2047,11 +2046,11 @@
 "description" : "S3 Access Control List (ACL).",
 "label" : "S3 ACL",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "source" : "ALLSKY_ENV",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=gcs",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "remoteserverimagedir",
@@ -2059,9 +2058,9 @@
 "description" : "Name of the top-level remote directory where images go.",
 "label" : "Image Directory",
 "type" : "text",
-"checkchanges" : 1,
+"checkchanges" : true,
 "booldependson" : "useremoteserver",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "remoteservervideodestinationname",
@@ -2070,7 +2069,7 @@
 "label" : "Remote Video File Name",
 "type" : "text",
 "booldependson" : "useremoteserver",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "remoteserverkeogramdestinationname",
@@ -2079,7 +2078,7 @@
 "label" : "Remote Keogram File Name",
 "type" : "text",
 "booldependson" : "useremoteserver",
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "remoteserverstartrailsdestinationname",
@@ -2088,7 +2087,7 @@
 "label" : "Remote Startrails File Name",
 "type" : "text",
 "booldependson" : "useremoteserver",
-"optional" : 1
+"optional" : true
 },
 
 {
@@ -2103,11 +2102,11 @@
 },
 {
 "name" : "showonmap",
-"default" : 0,
+"default" : false,
 "description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
 "label" : "Show on Map",
 "type" : "boolean",
-"checkchanges" : 1,
+"checkchanges" : true,
 "booldependson" : "uselocalwebsite OR useremotewebsite"
 },
 
@@ -2117,8 +2116,8 @@
 "description" : "The location of your camera, for example: Whitehorse, YT.<br>This setting and the remaining ones also appear on the Allsky Website, if installed.",
 "label" : "Location",
 "type" : "widetext",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
@@ -2127,8 +2126,8 @@
 "description" : "The owner of the camera. It can be your name or an association or observatory, etc.",
 "label" : "Owner",
 "type" : "text",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
@@ -2137,8 +2136,8 @@
 "description" : "The type and model of your camera, for example: <span class='WebUIValue'>ZWO 224MC</span> or <span class='WebUIValue'>RPi HQ</span>.",
 "label" : "Camera",
 "type" : "widetext",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
@@ -2147,8 +2146,8 @@
 "description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55</span>.",
 "label" : "Lens",
 "type" : "text",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
@@ -2157,8 +2156,8 @@
 "description" : "The computer running your allsky camera, for example: <span class='WebUIValue'>Raspberry Pi 3, 4 GB</span>.",
 "label" : "Computer",
 "type" : "widetext",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 
@@ -2166,13 +2165,13 @@
 "name" : "cameratab========================================",
 "label" : "Camera Type",
 "type" : "header-tab",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "cameraheading",
 "label" : "Camera Type",
 "type" : "header",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "cameratype",
@@ -2185,9 +2184,9 @@
 	{"value" : "ZWO", "label" : "ZWO"},
 	{"value" : "Refresh", "label" : "Refresh"}
 ],
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "restart",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "cameramodel",
@@ -2196,7 +2195,7 @@
 "label" : "Camera Model",
 "type" : "readonly",
 "action" : "restart",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "cameranumber",
@@ -2207,11 +2206,11 @@
 "label" : "Camera Number",
 "type" : "integer",
 "xxxdisplay" : "_display",
-"display" : 0,
-"optional" : 1,
-"checkchanges" : 1,
+"display" : false,
+"optional" : true,
+"checkchanges" : true,
 "action" : "restart",
-"advanced" : 1
+"advanced" : true
 },
 
 
@@ -2224,7 +2223,7 @@
 "name" : "cameraheading",
 "label" : "Camera Type",
 "type" : "header",
-"advanced" : 1
+"advanced" : true
 },
 {
 "name" : "webuidatafiles",
@@ -2232,7 +2231,7 @@
 "description" : "See documentation for a description of this setting",
 "label" : "Items to add to WebUI",
 "type" : "widetext",
-"optional" : 1
+"optional" : true
 },
 
 {

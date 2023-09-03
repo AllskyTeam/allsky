@@ -467,6 +467,11 @@ function settings()
 	fi
 
 	local FILE="${2:-${SETTINGS_FILE}}"
+	if [[ ! -f ${FILE} ]]; then
+		echo "${M}: File '${FILE}' does not exist!  Cannot get '${FIELD}'." >&2
+		return 2
+	fi
+
 	if j="$( jq -r "${FIELD}" "${FILE}" )" ; then
 		[[ -z ${j} && ${DO_NULL} == "false" ]] && j=""
 		echo "${j}"
@@ -475,7 +480,7 @@ function settings()
 
 	echo "${M}: Unable to get json value for '${FIELD}' in '${FILE}." >&2
 	
-	return 2
+	return 3
 }
 
 

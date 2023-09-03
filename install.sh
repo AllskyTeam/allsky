@@ -27,11 +27,6 @@ chmod 755 "${ALLSKY_HOME}"								|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086
 cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
 
-# PRIOR_ALL_DIR is passed to us and is the location of an optional prior copy of Allsky.
-PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
-PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
-PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# may change depending on old version
-
 TITLE="Allsky Installer"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
@@ -48,21 +43,15 @@ BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
 # Allsky versions
 ALLSKY_VERSION="$( get_version )"		# version we're installing
 ALLSKY_BASE_VERSION="${ALLSKY_VERSION:0:11}"	# without point release
-PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
-PRIOR_ALLSKY_VERSION=""					# The version number of the prior version, if known
-
-# Base of first version with combined configuration files # TODO: UPDATE xxxx
-#xxxxxxx  COMBINED_BASE_VERSION="v2023.90.90"
-
-# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
-# "cameratype" in the settings file.
+	# Base of first version with combined configuration files # TODO: UPDATE xxxx
+	#xxxxxxx  COMBINED_BASE_VERSION="v2023.90.90"
+	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
+	# "cameratype" in the settings file.
 FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
-
-# First Allsky version that used the "version" file.
-# It's also when ftp-settings.sh moved to ${ALLSKY_CONFIG}
+	# First Allsky version that used the "version" file.
+	# It's also when ftp-settings.sh moved to ${ALLSKY_CONFIG}
 FIRST_VERSION_VERSION="v2022.03.01"
-
-# versions before ${FIRST_VERSION_VERSION} that didn't have version numbers.
+	# versions before ${FIRST_VERSION_VERSION} that didn't have version numbers.
 PRE_FIRST_VERSION_VERSION="old"
 
 # Repo files
@@ -305,8 +294,7 @@ CAMERA_TYPE=""
 select_camera_type()
 {
 	if [[ -n ${PRIOR_ALLSKY} ]]; then
-		if [[ ${PRIOR_ALLSKY_VERSION} == "${FIRST_CAMERA_TYPE_BASE_VERSION}" ||
-				${PRIOR_ALLSKY_VERSION} > "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
+		if [[ ! ${PRIOR_ALLSKY_VERSION} < "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
 			# New style Allsky using ${CAMERA_TYPE}.
 			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
 
@@ -1383,33 +1371,48 @@ is_reboot_needed()
 
 ####
 # See if a prior Allsky exists; if so, set some variables.
+
+# Globals
+PRIOR_ALLSKY=""					# Set to "new" or "old" if they have a prior version
+PRIOR_ALLSKY_VERSION=""			# The version number of the prior version, if known
+PRIOR_CAMERA_TYPE=""
+PRIOR_CAMERA_MODEL=""
+PRIOR_CONFIG_DIR=""				# Prior "config" directory, if it exists
+PRIOR_CONFIG_FILE=""			# Location of prior "config.sh" file
+PRIOR_FTP_FILE=""				# Location of prior "ftp-settings.sh" file
+
 does_prior_Allsky_exist()
 {
-	PRIOR_ALLSKY=""
-	PRIOR_CAMERA_TYPE=""
-	PRIOR_CAMERA_MODEL=""
 
-	# Don't just look for the top-level directory.
-	if [[ ! -d ${PRIOR_CONFIG_DIR} ]]; then
+	local MSG CT_ CM_
+
+	# First just look for the top-level directory.
+	if [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
 		display_msg --logonly info "No prior Allsky found."
 		return 1
 	fi
+	# All versions back to v0.6 (never checked prior ones) have a "scripts" directory.
+	if [[ ! -d "${PRIOR_ALLSKY_DIR}/scripts" ]]; then
+		MSG="Prior Allsky directory found at '${PRIOR_ALLSKY_DIR}' but it doesn't appear to be valid; ignoring it."
+		display_msg --log warning "${MSG}"
+		return 1
+	fi
 
-	# Returns "" if no version file.
-	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"
-	# ${FIRST_VERSION_VERSION} didn't always have camera info in the settings files.
-	if [[ -n  ${PRIOR_ALLSKY_VERSION} && ${PRIOR_ALLSKY_VERSION} > "${FIRST_VERSION_VERSION}" ]]; then
+	# Determine the prior Allsky version and set some PRIOR_* locations.
+	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"	# Returns "" if no version file.
+	if [[ -n  ${PRIOR_ALLSKY_VERSION} && (! ${PRIOR_ALLSKY_VERSION} < "${FIRST_CAMERA_TYPE_BASE_VERSION}") ]]; then
+		PRIOR_ALLSKY="newStyle"
+
 		# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file
 		# and that file will have the camera type and model.
-		PRIOR_ALLSKY="newStyle"
 		PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
 		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
 			if [[ ${ALLSKY_BASE_VERSION} == "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
-				local CT_=".cameraType"
-				local CM_=".cameraModel"
+				CT_=".cameraType"
+				CM_=".cameraModel"
 			else
-				local CT_=".cameratype"
-				local CM_=".cameramodel"
+				CT_=".cameratype"
+				CM_=".cameramodel"
 			fi
 			PRIOR_CAMERA_TYPE="$( settings "${CT_}" "${PRIOR_SETTINGS_FILE}" )"
 			PRIOR_CAMERA_MODEL="$( settings "${CM_}" "${PRIOR_SETTINGS_FILE}" )"
@@ -1419,11 +1422,19 @@ does_prior_Allsky_exist()
 			display_msg --log warning "No prior new style settings file found!"
 		fi
 
-	else
+	else		# pre-${FIRST_VERSION_VERSION}
+		# V0.6, v0.7, and v0.8:
+		#	"allsky" directory contained capture.cpp, config.sh.
+		#	"scripts" directory had ftp-settings.sh.
+		#	No "src" directory.
+			# NOTE: v0.6's capture.cpp said v0.5.
+		# V0.8.1 added "scr" and "config" directories and "variables.sh" file.
+
 		PRIOR_ALLSKY="oldStyle"
 		if [[ -z ${PRIOR_ALLSKY_VERSION} ]]; then
+			# No version file so try to determine version via .cpp file.
 			# sample:    printf("%s *** Allsky Camera Software v0.8.3 | 2021 ***\n", c(KGRN));
-			DIR="${PRIOR_ALLSKY_DIR}/src"		# "src" directory added in v0.8.1.
+			DIR="${PRIOR_ALLSKY_DIR}/src"
 			[[ ! -d "${DIR}" ]] && DIR="${PRIOR_ALLSKY_DIR}"
 			PRIOR_ALLSKY_VERSION="$( grep "Camera Software" "${DIR}/capture.cpp" | awk '{print $6}' )"
 		fi
@@ -1746,25 +1757,34 @@ doV()
 	local V="${1}"			# name of the variable
 	local VAL="${!V}"		# value of the variable
 	local jV="${2}"			# new json variable name
-	local FILE="${3}"
-	if [[ -n ${VAL} ]]; then
-		if update_json_file "${jV}" "${VAL}" "${FILE}" ; then
-			display_msg --logonly info "   ${V} (${VAL})"
+	local TYPE="${3}"
+	local FILE="${4}"
+
+	[[ -z ${VAL} ]] && return
+
+	if [[ ${TYPE} == "boolean" ]]; then
+		# Some booleans used "true/false" and some used "1/0".
+		if [[ ${VAL} == "true" || ${VAL} == "1" ]]; then
+			VAL="true"
 		else
-			display_msg --logonly error "Unable to update ${jV} from ${V} (${!V})"
+			VAL="false"
 		fi
+	fi
+
+	if update_json_file "${jV}" "${VAL}" "${FILE}" "${TYPE}" ; then
+		display_msg --logonly info "   ${V} (${VAL})"
+	else
+		display_msg --logonly error "Unable to update ${jV} from ${V} (${!V})"
 	fi
 }
 
 # Copy everything from old config.sh to the settings file.
-copy_config_sh()
+convert_config_sh()
 {
-	[[ ${copy_config_sh} == "true" ]] && return
+	[[ ${convert_config_sh} == "true" ]] && return
 
 	local CONFIG_FILE="${1}"
-#		[[ -z ${CONFIG_FILE} ]] && CONFIG_FILE="/home/pi/allsky/config/c.sh"		# TODO: xxxxxxxxxxxx testing
 	local NEW_FILE="${2}"
-#		[[ -z ${NEW_FILE} ]] && NEW_FILE="/home/pi/allsky/config/s.json"		# TODO: xxxxxxxxxxxx testing
 
 	if [[ ! -e ${CONFIG_FILE} ]]; then
 		display_msg --log info "No prior config.sh file to process."
@@ -1779,95 +1799,149 @@ copy_config_sh()
 			return 1
 		fi
 
-		doV "DAYTIME_CAPTURE" ".takedaytimeimages" "${NEW_FILE}"
-		doV "DAYTIME_SAVE" ".savedaytimeimages" "${NEW_FILE}"
-		doV "DARK_FRAME_SUBTRACTION" ".usedarkframes" "${NEW_FILE}"
-		doV "IMG_UPLOAD" ".uploadimage" "${NEW_FILE}"
-		doV "IMG_UPLOAD_ORIGINAL_NAME" ".uploadimageoriginalname" "${NEW_FILE}"
-		doV "IMG_UPLOAD_FREQUENCY" ".uploadimagefrequency" "${NEW_FILE}"
-		doV "IMG_RESIZE" ".imageresize" "${NEW_FILE}"
-		doV "IMG_WIDTH" ".imageresizewidth" "${NEW_FILE}"
-		doV "IMG_HEIGHT" ".imageresizeheight" "${NEW_FILE}"
-		doV "CROP_IMAGE" ".imagecrop" "${NEW_FILE}"
-		doV "CROP_WIDTH" ".imagecropwidth" "${NEW_FILE}"
-		doV "CROP_HEIGHT" ".imagecropheight" "${NEW_FILE}"
-		doV "CROP_OFFSET_X" ".imagecropoffsetx" "${NEW_FILE}"
-		doV "CROP_OFFSET_Y" ".imagecropoffsety" "${NEW_FILE}"
-		doV "AUTOSTRETCH" ".imagestretch" "${NEW_FILE}"
-		doV "AUTOSTRETCH_AMOUNT" ".imagestretchamount" "${NEW_FILE}"
-		doV "AUTOSTRETCH_MID_POINT" ".imagestretchmidpoint" "${NEW_FILE}"
-		doV "RESIZE_UPLOADS" ".imageresizeuploads" "${NEW_FILE}"
-		doV "RESIZE_UPLOADS_WIDTH" ".imageresizeuploadswidth" "${NEW_FILE}"
-		doV "RESIZE_UPLOADS_HEIGHT" ".imageresizeuploadsheight" "${NEW_FILE}"
-		doV "IMG_CREATE_THUMBNAILS" ".imagecreatethumbnails" "${NEW_FILE}"
-		doV "REMOVE_BAD_IMAGES" ".imageremovebad" "${NEW_FILE}"
-		doV "REMOVE_BAD_IMAGES_THRESHOLD_LOW" ".imageremovebadlow" "${NEW_FILE}"
-		doV "REMOVE_BAD_IMAGES_THRESHOLD_HIGH" ".imageremovebadhigh" "${NEW_FILE}"
-		doV "TIMELAPSE" ".timelapsegenerate" "${NEW_FILE}"
-		doV "TIMELAPSEWIDTH" ".timelapsewidth" "${NEW_FILE}"
-		doV "TIMELAPSEHEIGHT" ".timelapseheight" "${NEW_FILE}"
-		doV "TIMELAPSE_BITRATE" ".timelapsebitrate" "${NEW_FILE}"
-		doV "FPS" ".timelapsefps" "${NEW_FILE}"
-		doV "VCODEC" ".timelapsevcodec" "${NEW_FILE}"
-		doV "PIX_FMT" ".timelapsepixfmt" "${NEW_FILE}"
-		doV "FFLOG" ".timelapsefflog" "${NEW_FILE}"
-		doV "KEEP_SEQUENCE" ".timelapsekeepsequence" "${NEW_FILE}"
-		doV "TIMELAPSE_EXTRA_PARAMETERS" ".timelapseextraparameters" "${NEW_FILE}"
-		doV "UPLOAD_VIDEO" ".timelapseupload" "${NEW_FILE}"
-		doV "TIMELAPSE_UPLOAD_THUMBNAIL" ".timelapseuploadthumbnail" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_IMAGES" ".minitimelapsenumimages" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_FORCE_CREATION" ".minitimelapseforcecreation" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_FREQUENCY" ".minitimelapsefrequency" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_UPLOAD_VIDIO" ".minitimelapseupload" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_UPLOAD_THUMBNAIL" ".minitimelapseuploadthumbnail" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_FPS" ".minitimelapsefps" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_BITRATE" ".minitimelapsebitrate" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_WIDTH" ".minitimelapsewidth" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_HEIGHT" ".minitimelapseheight" "${NEW_FILE}"
-		doV "KEOGRAM" ".keogramgenerate" "${NEW_FILE}"
-		doV "KEOGRAM_EXTRA_PARAMETERS" ".keogramextraparameters" "${NEW_FILE}"
-		doV "UPLOAD_KEOGRAM" ".keogramupload" "${NEW_FILE}"
-		doV "STARTRAILS" ".startrailsgramgenerate" "${NEW_FILE}"
-		doV "STARTRAILS_EXTRA_PARAMETERS" ".startrailsextraparameters" "${NEW_FILE}"
-		doV "UPLOAD_STARTRAILS" ".startrailsupload" "${NEW_FILE}"
-		doV "BRIGHTNESS_THRESHOLD" ".startrailsbrightnessthreshold" "${NEW_FILE}"
-		doV "THUMBNAIL_SIZE_X" ".thumbnailssizex" "${NEW_FILE}"
-		doV "THUMBNAIL_SIZE_Y" ".thumbnailssizey" "${NEW_FILE}"
-		doV "NIGHTS_TO_KEEP" ".nightstokeep" "${NEW_FILE}"
-		doV "DAYS_TO_KEEP" ".daystokeep" "${NEW_FILE}"
-		doV "WEB_DAYS_TO_KEEP" ".daystokeepweb" "${NEW_FILE}"
-		doV "WEBUI_DATA_FILES" ".webuidatafiles" "${NEW_FILE}"
-		doV "UHUBCTL_PATH" ".uhubctlpath" "${NEW_FILE}"
-		doV "UHUBCTL_PORT" ".uhubctlport" "${NEW_FILE}"
+		local X		# temporary variable
+
+		if [[ -n ${DAYTIME} ]]; then		# old name
+			doV "DAYTIME" ".takedaytimeimages" "boolean" "${NEW_FILE}"
+		else
+			doV "DAYTIME_CAPTURE" ".takedaytimeimages" "boolean" "${NEW_FILE}"
+		fi
+		if [[ -n ${CAPTURE_24HR} ]]; then	# old name
+			doV "CAPTURE_24HR" ".savedaytimeimages" "boolean" "${NEW_FILE}"
+		else
+			doV "DAYTIME_SAVE" ".savedaytimeimages" "boolean" "${NEW_FILE}"
+		fi
+
+		# take/save nighttimeimages is new
+		X="true"; doV "X" ".takenighttimeimages" "boolean" "${NEW_FILE}"
+		X="true"; doV "X" ".savenighttimeimages" "boolean" "${NEW_FILE}"
+
+		doV "DARK_FRAME_SUBTRACTION" ".usedarkframes" "boolean" "${NEW_FILE}"
+
+		# IMG_UPLOAD no longer used; instead, upload if FREQUENCY > 0.
+		[[ ${IMG_UPLOAD} != "true" ]] && IMG_UPLOAD_FREQUENCY=0
+		doV "IMG_UPLOAD_FREQUENCY" ".uploadimagefrequency" "number" "${NEW_FILE}"
+		doV "IMG_UPLOAD_ORIGINAL_NAME" ".uploadimageoriginalname" "boolean" "${NEW_FILE}"
+		doV "IMG_CREATE_THUMBNAILS" ".imagecreatethumbnails" "boolean" "${NEW_FILE}"
+
+		# IMG_RESIZE no longer used; only resize if width and height are > 0.
+		if [[ -n ${IMG_WIDTH} && ${IMG_WIDTH} -gt 0 && -n ${IMG_HEIGHT} && ${IMG_HEIGHT} -gt 0 ]];
+		then
+			doV "IMG_WIDTH" ".imageresizewidth" "number" "${NEW_FILE}"
+			doV "IMG_HEIGHT" ".imageresizeheight" "number" "${NEW_FILE}"
+		else
+			MSG="Ignoring IMG_RESIZE since IMG_WIDTH (${IMG_WIDTH}) and/or IMG_HEIGHT (${IMG_HEIGHT}) are not set."
+			display_msg --log info "${MSG}"
+			X=0; doV "X" ".imageresizewidth" "number" "${NEW_FILE}"
+			X=0; doV "X" ".imageresizeheight" "number" "${NEW_FILE}"
+		fi
+
+		# CROP_IMAGE, CROP_WIDTH, CROP_HEIGHT, CROP_OFFSET_X, and CROP_OFFSET_Y are no longer used.
+		# Instead the user specifies the number of pixels to crop from the top, right, bottom, and left.
+		# It's too difficult to convert old numbers to new, so force the user to enter new numbers.
+		# We'd need to know actual number of image pixels, bin level, and .width and .height to get
+		# the effective width and height, then convert.
+		if [[ ${CROP_IMAGE} == "true" ]]; then
+		fi
+		X=0; doV "X" ".imagecroptop" "number" "${NEW_FILE}"
+		X=0; doV "X" ".imagecropright" "number" "${NEW_FILE}"
+		X=0; doV "X" ".imagecropbottom" "number" "${NEW_FILE}"
+		X=0; doV "X" ".imagecropleft" "number" "${NEW_FILE}"
+
+		# AUTOSTRETCH no longer used; only stretch if AMOUNT > 0 and MID_POINT != ""
+		[[ ${AUTOSTRETCH} != "true" || -n ${AUTOSTRETCH_MID_POINT} ]] && AUTOSTRETCH_AMOUNT=0
+		doV "AUTOSTRETCH_AMOUNT" ".imagestretchamount" "number" "${NEW_FILE}"
+		doV "AUTOSTRETCH_MID_POINT" ".imagestretchmidpoint" "text" "${NEW_FILE}"
+
+		# RESIZE_UPLOADS no longer used; resize only if width > 0 and height > 0.
+		doV "RESIZE_UPLOADS" ".imageresizeuploads" "boolean" "${NEW_FILE}"
+		if [[ ${RESIZE_UPLOADS} != "true" ]]; then
+			RESIZE_UPLOADS_WIDTH=0
+			RESIZE_UPLOADS_HEIGHT=0
+		fi
+		doV "RESIZE_UPLOADS_WIDTH" ".imageresizeuploadswidth" "number" "${NEW_FILE}"
+		doV "RESIZE_UPLOADS_HEIGHT" ".imageresizeuploadsheight" "number" "${NEW_FILE}"
+
+		# REMOVE_BAD_IMAGES no longer used; remove only if low > 0 or high > 0.
+		if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
+			REMOVE_BAD_IMAGES_THRESHOLD_LOW=0
+			REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0
+		fi
+		doV "REMOVE_BAD_IMAGES" ".imageremovebad" "boolean" "${NEW_FILE}"
+		doV "REMOVE_BAD_IMAGES_THRESHOLD_LOW" ".imageremovebadlow" "number" "${NEW_FILE}"
+		doV "REMOVE_BAD_IMAGES_THRESHOLD_HIGH" ".imageremovebadhigh" "number" "${NEW_FILE}"
+
+		doV "TIMELAPSE" ".timelapsegenerate" "boolean" "${NEW_FILE}"
+		doV "UPLOAD_VIDEO" ".timelapseupload" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_UPLOAD_THUMBNAIL" ".timelapseuploadthumbnail" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSEWIDTH" ".timelapsewidth" "number" "${NEW_FILE}"
+		doV "TIMELAPSEHEIGHT" ".timelapseheight" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_BITRATE" ".timelapsebitrate" "number" "${NEW_FILE}"
+		doV "FPS" ".timelapsefps" "number" "${NEW_FILE}"
+		doV "VCODEC" ".timelapsevcodec" "text" "${NEW_FILE}"
+		doV "PIX_FMT" ".timelapsepixfmt" "text" "${NEW_FILE}"
+		doV "FFLOG" ".timelapsefflog" "text" "${NEW_FILE}"
+		doV "KEEP_SEQUENCE" ".timelapsekeepsequence" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_EXTRA_PARAMETERS" ".timelapseextraparameters" "text" "${NEW_FILE}"
+
+		doV "TIMELAPSE_MINI_IMAGES" ".minitimelapsenumimages" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_FORCE_CREATION" ".minitimelapseforcecreation" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_FREQUENCY" ".minitimelapsefrequency" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_UPLOAD_VIDIO" ".minitimelapseupload" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_UPLOAD_THUMBNAIL" ".minitimelapseuploadthumbnail" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_FPS" ".minitimelapsefps" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_BITRATE" ".minitimelapsebitrate" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_WIDTH" ".minitimelapsewidth" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_HEIGHT" ".minitimelapseheight" "number" "${NEW_FILE}"
+
+		doV "KEOGRAM" ".keogramgenerate" "boolean" "${NEW_FILE}"
+		doV "UPLOAD_KEOGRAM" ".keogramupload" "boolean" "${NEW_FILE}"
+		doV "KEOGRAM_EXTRA_PARAMETERS" ".keogramextraparameters" "text" "${NEW_FILE}"
+
+		doV "STARTRAILS" ".startrailsgramgenerate" "boolean" "${NEW_FILE}"
+		doV "STARTRAILS_EXTRA_PARAMETERS" ".startrailsextraparameters" "text" "${NEW_FILE}"
+		doV "UPLOAD_STARTRAILS" ".startrailsupload" "boolean" "${NEW_FILE}"
+		doV "BRIGHTNESS_THRESHOLD" ".startrailsbrightnessthreshold" "number" "${NEW_FILE}"
+
+		doV "THUMBNAIL_SIZE_X" ".thumbnailssizex" "number" "${NEW_FILE}"
+		doV "THUMBNAIL_SIZE_Y" ".thumbnailssizey" "number" "${NEW_FILE}"
+
+		# NIGHTS_TO_KEEP was replaced by DAYS_TO_KEEP and the AUTO_DELETE boolean was deleted.
+		if [[ -n ${NIGHTS_TO_KEEP} && ${AUTO_DELETE} == "true" ]]; then
+			doV "NIGHTS_TO_KEEP" ".daystokeep" "number" "${NEW_FILE}"
+		fi
+		doV "DAYS_TO_KEEP" ".daystokeep" "number" "${NEW_FILE}"
+		doV "WEB_DAYS_TO_KEEP" ".daystokeepweb" "number" "${NEW_FILE}"
+		doV "WEBUI_DATA_FILES" ".webuidatafiles" "text" "${NEW_FILE}"
+		doV "UHUBCTL_PATH" ".uhubctlpath" "text" "${NEW_FILE}"
+		doV "UHUBCTL_PORT" ".uhubctlport" "number" "${NEW_FILE}"
 
 	) || return 1
 
-	STATUS_VARIABLES+=( "copy_config_sh='true'\n" )
-	copy_config_sh="true"
+	STATUS_VARIABLES+=( "convert_config_sh='true'\n" )
+	convert_config_sh="true"
 
 	return 0
 }
 
 # Copy everything from ftp-settings.sh to the settings file.
-copy_ftp_sh()
+convert_ftp_sh()
 {
-	[[ ${copy_ftp_sh} == "true" ]] && return
+	[[ ${convert_ftp_sh} == "true" ]] && return
 
-	local CONFIG_FILE="${1}"
-#		[[ -z ${CONFIG_FILE} ]] && CONFIG_FILE="/home/pi/allsky/config/f.sh"		# TODO: xxxxxxxxxxxx testing
+	local FTP_FILE="${1}"
 	local NEW_FILE="${2}"
-#		[[ -z ${NEW_FILE} ]] && NEW_FILE="/home/pi/allsky/config/s.json"		# TODO: xxxxxxxxxxxx testing
 
-	if [[ ! -e ${CONFIG_FILE} ]]; then
-		display_msg --log info "No prior ftp-settings.sh file to process (${CONFIG_FILE})."
+	if [[ ! -e ${FTP_FILE} ]]; then
+		display_msg --log info "No prior ftp-settings.sh file to process (${FTP_FILE})."
 		return 1
 	fi
 
 	display_msg --log progress "Copying contents of prior ftp-settings.sh to settings file."
 	(
 		#shellcheck disable=SC1090
-		if ! source "${CONFIG_FILE}" ; then
-			display_msg --log error "Unable to process prior ftp-settings.sh file (${CONFIG_FILE})."
+		if ! source "${FTP_FILE}" ; then
+			display_msg --log error "Unable to process prior ftp-settings.sh file (${FTP_FILE})."
 			return 1
 		fi
 
@@ -1888,25 +1962,28 @@ copy_ftp_sh()
 				update_json_file ".remotewebsiteprotocol" "${PROTOCOL}" "${NEW_FILE}"
 			fi
 		fi
-		doV "VIDEOS_DESTINATION_NAME" ".remotewebsitevideodestinationname" "${ALLSKY_ENV}"
-		doV "KEOGRAM_DESTINATION_NAME" ".remotewebsitekeogramdestinationname" "${ALLSKY_ENV}"
-		doV "STARTRAILS_DESTINATION_NAME" ".remotewebsitestartrailsdestinationname" "${ALLSKY_ENV}"
-		doV "REMOTE_HOST" ".REMOTEWEBSITE_HOST" "${ALLSKY_ENV}"
-		doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "${ALLSKY_ENV}"
-		doV "REMOTE_USER" ".REMOTEWEBSITE_USER" "${ALLSKY_ENV}"
-		doV "REMOTE_PASSWORD" ".REMOTEWEBSITE_PASSWORD" "${ALLSKY_ENV}"
-		doV "LFTP_COMMANDS" ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}"
-		doV "SSH_KEY_FILE" ".REMOTEWEBSITE_SSH_KEY_FILE" "${ALLSKY_ENV}"
-		doV "AWS_CLI_DIR" ".REMOTEWEBSITE_AWS_CLI_DIR" "${ALLSKY_ENV}"
-		doV "S3_BUCKET" ".REMOTEWEBSITE_S3_BUCKET" "${ALLSKY_ENV}"
-		doV "S3_ACL" ".REMOTEWEBSITE_S3_ACL" "${ALLSKY_ENV}"
-		doV "GCS_BUCKET" ".REMOTEWEBSITE_GCS_BUCKET" "${ALLSKY_ENV}"
-		doV "GCS_ACL" ".REMOTEWEBSITE_GCS_ACL" "${ALLSKY_ENV}"
+		doV "VIDEOS_DESTINATION_NAME" ".remotewebsitevideodestinationname" "text" "${ALLSKY_ENV}"
+		doV "KEOGRAM_DESTINATION_NAME" ".remotewebsitekeogramdestinationname" "text" "${ALLSKY_ENV}"
+		doV "STARTRAILS_DESTINATION_NAME" ".remotewebsitestartrailsdestinationname" "text" "${ALLSKY_ENV}"
+		[[ -n ${HOST} ]] && REMOTE_HOST="${HOST}"
+		doV "REMOTE_HOST" ".REMOTEWEBSITE_HOST" "text" "${ALLSKY_ENV}"
+		doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "number" "${ALLSKY_ENV}"
+		[[ -n ${USER} ]] && REMOTE_USER="${USER}"
+		doV "REMOTE_USER" ".REMOTEWEBSITE_USER" "text" "${ALLSKY_ENV}"
+		[[ -n ${PASSWORD} ]] && REMOTE_PASSWORD="${PASSWORD}"
+		doV "REMOTE_PASSWORD" ".REMOTEWEBSITE_PASSWORD" "text" "${ALLSKY_ENV}"
+		doV "LFTP_COMMANDS" ".REMOTEWEBSITE_LFTP_COMMANDS" "text" "${ALLSKY_ENV}"
+		doV "SSH_KEY_FILE" ".REMOTEWEBSITE_SSH_KEY_FILE" "text" "${ALLSKY_ENV}"
+		doV "AWS_CLI_DIR" ".REMOTEWEBSITE_AWS_CLI_DIR" "text" "${ALLSKY_ENV}"
+		doV "S3_BUCKET" ".REMOTEWEBSITE_S3_BUCKET" "text" "${ALLSKY_ENV}"
+		doV "S3_ACL" ".REMOTEWEBSITE_S3_ACL" "text" "${ALLSKY_ENV}"
+		doV "GCS_BUCKET" ".REMOTEWEBSITE_GCS_BUCKET" "text" "${ALLSKY_ENV}"
+		doV "GCS_ACL" ".REMOTEWEBSITE_GCS_ACL" "text" "${ALLSKY_ENV}"
 
 	) || return 1
 
-	STATUS_VARIABLES+=( "copy_ftp_sh='true'\n" )
-	copy_ftp_sh="true"
+	STATUS_VARIABLES+=( "convert_ftp_sh='true'\n" )
+	convert_ftp_sh="true"
 
 	return 0
 }
@@ -2107,11 +2184,12 @@ restore_prior_files()
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 
-	ITEM="${SPACE}'.env' file"
-	if [[ -f ${PRIOR_ALLSKY_DIR}/.env ]]; then
+	local E="$( basename "${ALLSKY_ENV}" )"
+	ITEM="${SPACE}'${E}' file"
+	if [[ -f ${PRIOR_ALLSKY_DIR}/${E} ]]; then
 		display_msg --log progress "${ITEM}"
-		cp -ar "${PRIOR_ALLSKY_DIR}/.env" "${ALLSKY_HOME}"
-# TODO: uncomment in next release
+		cp -ar "${PRIOR_ALLSKY_DIR}/${E}" "${ALLSKY_ENV}"
+# TODO: uncomment in next release; the env file first appeared in this release.
 #	else
 #		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2133,7 +2211,7 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	ITEM="${SPACE}'modules' directory"
+	ITEM="${SPACE}'config/modules' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg --log progress "${ITEM}"
 
@@ -2145,7 +2223,7 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	ITEM="${SPACE}'overlay' directory"
+	ITEM="${SPACE}'config/overlay' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg --log progress "${ITEM}"
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
@@ -2157,7 +2235,7 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	ITEM="${SPACE}'ssl' directory"
+	ITEM="${SPACE}'config/ssl' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/ssl ]]; then
 		display_msg --log progress "${ITEM}"
 		cp -ar "${PRIOR_CONFIG_DIR}/ssl" "${ALLSKY_CONFIG}"
@@ -2167,8 +2245,9 @@ restore_prior_files()
 	fi
 
 	# This is not in a "standard" directory so we need to determine where it was.
-	local EXTRA="${PRIOR_ALLSKY_DIR}${ALLSKY_EXTRA//${ALLSKY_HOME}/}"
-	ITEM="${SPACE}'${EXTRA}' directory"
+	local E="${ALLSKY_EXTRA//${ALLSKY_HOME}\//}"
+	local EXTRA="${PRIOR_ALLSKY_DIR}${E}"
+	ITEM="${SPACE}'${E}' directory"
 	if [[ -d ${EXTRA} ]]; then
 		display_msg --log progress "${ITEM}"
 		cp -ar "${EXTRA}" "${ALLSKY_EXTRA}/.."
@@ -2183,8 +2262,9 @@ restore_prior_files()
 		# raspap.auth was in a different directory in older versions.
 		D="${OLD_RASPAP_DIR}"
 	fi
+	local R="raspap.auth"
 	ITEM="${SPACE}WebUI security settings"
-	if [[ -f ${D}/raspap.auth ]]; then
+	if [[ -f ${D}/${R} ]]; then
 		display_msg --log progress "${ITEM}"
 		cp -a "${D}/raspap.auth" "${ALLSKY_CONFIG}"
 	else
@@ -2250,12 +2330,12 @@ restore_prior_files()
 
 	COPIED_PRIOR_CONFIG_SH="true"		# Global variable
 	if [[ -e ${PRIOR_CONFIG_FILE} ]]; then
-		copy_config_sh "${PRIOR_CONFIG_FILE}" "${SETTINGS_FILE}" || COPIED_PRIOR_CONFIG_SH="false"
+		# This copies the settings from the prior config file to the settings file.
+		convert_config_sh "${PRIOR_CONFIG_FILE}" "${SETTINGS_FILE}" || COPIED_PRIOR_CONFIG_SH="false"
 	fi
 	STATUS_VARIABLES+=( "COPIED_PRIOR_CONFIG_SH='${COPIED_PRIOR_CONFIG_SH}'\n" )
 
-	# Unlike the config.sh file which was always in allsky/config,
-	# the ftp-settings.sh file used to be in allsky/scripts
+	# The ftp-settings.sh file used to be in allsky/scripts
 	# but moved to allsky/config in version ${FIRST_VERSION_VERSION}
 	# Get the current and prior (if any) file version.
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then
@@ -2270,7 +2350,7 @@ restore_prior_files()
 	fi
 	COPIED_PRIOR_FTP_SH="true"			# Global variable
 	if [[ -e ${PRIOR_FTP_FILE} ]]; then
-		copy_ftp_sh "${PRIOR_FTP_FILE}" "${SETTINGS_FILE}" || COPIED_PRIOR_FTP_SH="false"
+		convert_ftp_sh "${PRIOR_FTP_FILE}" "${SETTINGS_FILE}" || COPIED_PRIOR_FTP_SH="false"
 	fi
 	STATUS_VARIABLES+=( "COPIED_PRIOR_FTP_SH='${COPIED_PRIOR_FTP_SH}'\n" )
 

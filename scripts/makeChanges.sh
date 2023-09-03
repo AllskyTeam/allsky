@@ -120,7 +120,11 @@ function check_website()
 	# shellcheck disable=SC2086
 	return ${HAS_WEBSITE_RET}
 }
-check_website		# invoke to set variables
+if [[ -f ${SETTINGS_FILE} ]]; then
+	# check_website requies the settings file to exist.
+	# If it doesn't we are likely called from the install script before the file is created.
+	check_website		# invoke to set variables
+fi
 
 CAMERA_NUMBER=""
 NUM_CHANGED=0

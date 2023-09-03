@@ -477,9 +477,10 @@ save_camera_capabilities()
 	MSG="${MSG}  ${DEBUG_ARG} 'cameraType' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
 	display_msg "${LOG_TYPE}" info "${MSG}"
 
+	local ERR="/tmp/makeChanges.errors.txt"
 	#shellcheck disable=SC2086
 	MSG="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly \
-		${DEBUG_ARG} "cameraType" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2>&1 )"
+		${DEBUG_ARG} "cameraType" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2> "${ERR}" )"
 	RET=$?
 
 	[[ -n ${MSG} ]] && display_msg "${LOG_TYPE}" info "${MSG}"
@@ -494,9 +495,15 @@ save_camera_capabilities()
 			display_msg --log error "Unable to save camera capabilities."
 		fi
 		return 1
-	elif [[ ! -f ${SETTINGS_FILE} ]]; then
-		display_msg --log error "Settings file not created; cannot continue."
-		return 1
+	else
+		if [[ -s ${ERR} ]]; then
+			display_msg --log error "$( < "${ERR}" )"
+		fi
+
+		if [[ ! -f ${SETTINGS_FILE} ]]; then
+			display_msg --log error "Settings file not created; cannot continue."
+			return 1
+		fi
 	fi
 
 	#shellcheck disable=SC2012
@@ -1788,19 +1795,19 @@ convert_config_sh()
 {
 	[[ ${convert_config_sh} == "true" ]] && return
 
-	local CONFIG_FILE="${1}"
+	local OLD_CONFIG_FILE="${1}"
 	local NEW_FILE="${2}"
 
-	if [[ ! -e ${CONFIG_FILE} ]]; then
+	if [[ ! -e ${OLD_CONFIG_FILE} ]]; then
 		display_msg --log info "No prior config.sh file to process."
 		return 1
 	fi
 
-	display_msg --log progress "Copying contents of prior config.sh to settings file (${CONFIG_FILE})."
+	display_msg --log progress "Copying contents of prior config.sh to settings file."
 	(
 		#shellcheck disable=SC1090
-		if ! source "${CONFIG_FILE}" ; then
-			display_msg --log error "Unable to process prior config.sh file (${CONFIG_FILE})."
+		if ! source "${OLD_CONFIG_FILE}" ; then
+			display_msg --log error "Unable to process prior config.sh file (${OLD_CONFIG_FILE})."
 			return 1
 		fi
 
@@ -1818,8 +1825,8 @@ convert_config_sh()
 		fi
 
 		# take/save nighttimeimages is new
-		X="true"; doV "X" ".takenighttimeimages" "boolean" "${NEW_FILE}"
-		X="true"; doV "X" ".savenighttimeimages" "boolean" "${NEW_FILE}"
+		local TAKENIGHTIMEIMAGES="true"; doV "TAKENIGHTIMEIMAGES" ".takenighttimeimages" "boolean" "${NEW_FILE}"
+		local SAVENIGHTTIMEIMAGES="true"; doV "SAVEMIGHTTIMEIMAGES" ".savenighttimeimages" "boolean" "${NEW_FILE}"
 
 		doV "DARK_FRAME_SUBTRACTION" ".usedarkframes" "boolean" "${NEW_FILE}"
 
@@ -1914,7 +1921,11 @@ convert_config_sh()
 
 		doV "KEOGRAM" ".keogramgenerate" "boolean" "${NEW_FILE}"
 		doV "UPLOAD_KEOGRAM" ".keogramupload" "boolean" "${NEW_FILE}"
-		doV "KEOGRAM_EXTRA_PARAMETERS" ".keogramextraparameters" "text" "${NEW_FILE}"
+		if [[ -n ${KEOGRAM_EXTRA_PARAMETERS} ]]; then
+			MSG="Check your 'Keogram Extra Parameters' setting; they may be the new defaults."
+			display_msg --log info "${MSG}"
+			doV "KEOGRAM_EXTRA_PARAMETERS" ".keogramextraparameters" "text" "${NEW_FILE}"
+		fi
 
 		doV "STARTRAILS" ".startrailsgramgenerate" "boolean" "${NEW_FILE}"
 		doV "STARTRAILS_EXTRA_PARAMETERS" ".startrailsextraparameters" "text" "${NEW_FILE}"

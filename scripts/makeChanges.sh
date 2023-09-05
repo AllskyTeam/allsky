@@ -411,7 +411,6 @@ do
 
 		"displaysettings")
 			[[ ${NEW_VALUE} != "false" ]] && NEW_VALUE="true"
-			fi
 			if check_website; then
 				# If there are two Websites, this gets the index in the first one.
 				# Let's hope it's the same index in the second one...
@@ -433,7 +432,7 @@ do
 
 		"showonmap")
 			SHOW_ON_MAP="true"
-			[[ ${NEW_VALUE} -eq "false" ]] && POSTTOMAP_ACTION="--delete"
+			[[ ${NEW_VALUE} == "false" ]] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP="true"
 			;;
 

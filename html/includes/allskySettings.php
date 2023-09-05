@@ -518,8 +518,8 @@ if ($formReadonly != "readonly") { ?>
 
 				$minimum = getVariableOrDefault($option, 'minimum', "");
 				$maximum = getVariableOrDefault($option, 'maximum', "");
-				$advanced = getVariableOrDefault($option, 'advanced', 0);
-				if ($advanced == 1) {
+				$advanced = getVariableOrDefault($option, 'advanced', false);
+				if ($advanced == true) {
 					$numAdvanced++;
 					$advClass = "advanced";
 					$advStyle = "display: $initial_display;";
@@ -625,7 +625,7 @@ if ($formReadonly != "readonly") { ?>
 
 					// Show the default in a popup
 					if ($type == "boolean") {
-						if ($default == "0") $default = "No";
+						if ($default == false) $default = "No";
 						else $default = "Yes";
 
 					} elseif ($type == "select") {
@@ -710,12 +710,12 @@ if ($formReadonly != "readonly") { ?>
 					} else if ($type == "boolean"){
 						echo "\n\t\t<div class='switch-field boxShadow settingInput settingInputBoolean'>";
 							echo "\n\t\t<input id='switch_no_".$name."' class='form-control' type='radio' ".
-								"$readonlyForm name='$name' value='0' ".
-								($value == 0 ? " checked " : "").  ">";
+								"$readonlyForm name='$name' value='false' ".
+								($value == false ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_no_".$name."'>No</label>";
 							echo "\n\t\t<input id='switch_yes_".$name."' class='form-control' type='radio' ".
-								"$readonlyForm name='$name' value='1' ".
-								($value == 1 ? " checked " : "").  ">";
+								"$readonlyForm name='$name' value='true' ".
+								($value == true ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_yes_".$name."'>Yes</label>";
 						echo "</div>";
 					}

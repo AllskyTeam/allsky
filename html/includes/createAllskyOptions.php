@@ -322,14 +322,14 @@ if ($repo_array === null) {
 	// options			[array with 1 or more entries] (only if "type" == "select")
 	// popup-yesno		[string]
 	// popup-yesno-value	[number or string]
-	// display			[0/1]
-	// checkchanges		[0/1]
+	// display			[boolean]
+	// checkchanges		[boolean]
 	// source			[string]
 	// booldependson	[string]	("name" of other setting)
 	// booldependsoff	[string]	("name" of other setting)
-	// optional			[0/1]
+	// optional			[boolean]
 	// action			[string]
-	// advanced 		[0/1]	(last, so no comma after it)
+	// advanced 		[boolean]
 
 
 // ==================   Create options file
@@ -364,7 +364,7 @@ foreach ($repo_array as $repo) {
 	if ($type === null && $name === "XX_END_XX") {
 		$options_str .= "{\n";
 		$options_str .= "$q" . "name$q : $q$name$q,\n";
-		$options_str .= "$q" . "display$q : 0\n";
+		$options_str .= "$q" . "display$q : false\n";
 		$options_str .= "}\n";
 		break;		// hit the end
 	}
@@ -374,9 +374,9 @@ foreach ($repo_array as $repo) {
 	// It should normally not be missing, but check anyhow.
 	$display = getVariableOrDefault($repo, "display", null);
 	if ($display === null) {
-		$display = 1;		// default
-	} else if ($display === 0) {
-		if ($debug > 1) echo "\nname: $name: 'display' is 0; skipping\n";
+		$display = true;		// default
+	} else if ($display === false) {
+		if ($debug > 1) echo "\nname: $name: 'display' is false; skipping\n";
 		continue;
 	}
 
@@ -477,8 +477,8 @@ if ($settings_file !== "") {
 		foreach ($options_array as $option) {
 			$type = getVariableOrDefault($option, 'type', "");
 			if ($type == "header") continue;	// don't put in settings file
-			$display = getVariableOrDefault($option, 'display', 0);
-			if ($display === 0) continue;
+			$display = getVariableOrDefault($option, 'display', false);
+			if ($display === false) continue;
 
 			$name = $option['name'];
 

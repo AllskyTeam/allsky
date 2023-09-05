@@ -410,10 +410,7 @@ do
 			;;
 
 		"displaysettings")
-			if [[ ${NEW_VALUE} -eq 0 ]]; then
-				NEW_VALUE="false"
-			else
-				NEW_VALUE="true"
+			[[ ${NEW_VALUE} != "false" ]] && NEW_VALUE="true"
 			fi
 			if check_website; then
 				# If there are two Websites, this gets the index in the first one.
@@ -435,8 +432,8 @@ do
 			;;
 
 		"showonmap")
-			SHOW_ON_MAP="1"
-			[[ ${NEW_VALUE} -eq 0 ]] && POSTTOMAP_ACTION="--delete"
+			SHOW_ON_MAP="true"
+			[[ ${NEW_VALUE} -eq "false" ]] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP="true"
 			;;
 
@@ -504,11 +501,11 @@ done
 [[ ${NUM_CHANGED} -le 0 ]] && exit 0		# Nothing changed
 
 USE_REMOTE_WEBSITE="$( settings ".useremotewebsite" )"
-if [[ ${USE_REMOTE_WEBSITE} == "1" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
+if [[ ${USE_REMOTE_WEBSITE} == "true" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
 	: # TODO - do a test upload
 fi
 USE_REMOTE_SERVER="$( settings ".useremoteserver" )"
-if [[ ${USE_REMOTE_SERVER} == "1" && ${CHECK_REMOTE_SERVER_ACCESS} == "true" ]]; then
+if [[ ${USE_REMOTE_SERVER} == "true" && ${CHECK_REMOTE_SERVER_ACCESS} == "true" ]]; then
 	: # TODO - do a test upload
 fi
 
@@ -572,7 +569,7 @@ fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
-	if [[ ${SHOW_ON_MAP} == "1" ]]; then
+	if [[ ${SHOW_ON_MAP} == "true" ]]; then
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}

@@ -16,7 +16,7 @@ STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 
 #shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_ERROR_STOP}"
 if [[ -z ${ALLSKY_CONFIG} ]]; then
 	MSG="FATAL ERROR: 'source variables.sh' did not work properly."
 	echo -e "${RED}*** ${MSG}${NC}"
@@ -25,10 +25,10 @@ if [[ -z ${ALLSKY_CONFIG} ]]; then
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 
 # Make sure they rebooted if they were supposed to.
 NEEDS_REBOOT="false"
@@ -81,10 +81,10 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	fi
 fi
 
-USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit ${ALLSKY_ERROR_STOP}
-UHUBCTL_PATH="$( settings ".uhubctlpath" )"							|| exit ${ALLSKY_ERROR_STOP}
-UHUBCTL_PORT="$( settings ".uhubctlport" )"							|| exit ${ALLSKY_ERROR_STOP}
-LOCALE="$( settings .locale )"										|| exit ${ALLSKY_ERROR_STOP}
+USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${ALLSKY_ERROR_STOP}"
+UHUBCTL_PATH="$( settings ".uhubctlpath" )"							|| exit "${ALLSKY_ERROR_STOP}"
+UHUBCTL_PORT="$( settings ".uhubctlport" )"							|| exit "${ALLSKY_ERROR_STOP}"
+LOCALE="$( settings .locale )"										|| exit "${ALLSKY_ERROR_STOP}"
 
 if [[ -z ${CAMERA_TYPE} ]]; then
 	MSG="FATAL ERROR: 'Camera Type' not set in WebUI."

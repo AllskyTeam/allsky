@@ -27,8 +27,6 @@ fi
 
 #shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"						|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
@@ -83,7 +81,10 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	fi
 fi
 
-USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
+USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit ${ALLSKY_ERROR_STOP}
+UHUBCTL_PATH="$( settings ".uhubctlpath" )"							|| exit ${ALLSKY_ERROR_STOP}
+UHUBCTL_PORT="$( settings ".uhubctlport" )"							|| exit ${ALLSKY_ERROR_STOP}
+LOCALE="$( settings .locale )"										|| exit ${ALLSKY_ERROR_STOP}
 
 if [[ -z ${CAMERA_TYPE} ]]; then
 	MSG="FATAL ERROR: 'Camera Type' not set in WebUI."
@@ -98,7 +99,7 @@ pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	# "true" means use doExit() on error
-	RPi_COMMAND_TO_USE="$(determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
+	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
 
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	RPi_COMMAND_TO_USE=""
@@ -122,7 +123,7 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		fi
 
 		MSG="${YELLOW}WARNING: Resetting USB ports ${REASON/\\n/ }"
-		if [[ ${ON_TTY} -eq 1 ]]; then
+		if [[ ${ON_TTY} == "true" ]]; then
 			echo "${MSG}; restart ${ME} when done.${NC}" >&2
 		else
 			echo "${MSG}, then restarting.${NC}" >&2
@@ -136,7 +137,7 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${FILENAME}" \
 			"yellow" "" "85" "" "" \
 			"" "5" "yellow" "${EXTENSION}" "" "WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
-		sudo "$UHUBCTL_PATH" -a cycle -l "$UHUBCTL_PORT"
+		sudo "${UHUBCTL_PATH}" -a cycle -l "${UHUBCTL_PORT}"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 	}
 
@@ -217,7 +218,7 @@ sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ABORTS_DIR}"
 sudo chmod 775 "${ALLSKY_ABORTS_DIR}"
 
 # Optionally display a notification image.
-if [[ $USE_NOTIFICATION_IMAGES -eq 1 ]]; then
+if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	# Can do this in the background to speed up startup.
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
 fi
@@ -225,7 +226,6 @@ fi
 : > "${ARGS_FILE}"
 
 # If the locale isn't in the settings file, try to determine it.
-LOCALE="$(settings .locale)"
 if [[ -z ${LOCALE} ]]; then
 	if [[ -n ${LC_ALL} ]]; then
 		echo "-Locale=${LC_ALL}" >> "${ARGS_FILE}"
@@ -245,7 +245,7 @@ convert_json_to_tabs "${SETTINGS_FILE}" |
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
-[[ $1 == "preview" ]] && echo "-preview=1" >> "${ARGS_FILE}"
+[[ $1 == "preview" ]] && echo "-preview=true" >> "${ARGS_FILE}"
 
 echo "-version=$( get_version )" >> "${ARGS_FILE}"
 echo "-save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
@@ -277,7 +277,7 @@ RETCODE=$?
 [[ ${RETCODE} -eq ${EXIT_OK} ]] && doExit "${EXIT_OK}" ""
 
 if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
-	if [[ ${ON_TTY} -eq 1 ]]; then
+	if [[ ${ON_TTY} == "true" ]]; then
 		echo "*** Can restart allsky now. ***"
 		NOTIFICATION_TYPE="NotRunning"
 	else
@@ -290,20 +290,20 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 	# Reset the USB bus if possible
 	if [[ ${UHUBCTL_PATH} != "" ]]; then
 		reset_usb " (ASI_ERROR_TIMEOUTs)"
-		if [[ ${ON_TTY} -eq 1 ]]; then
+		if [[ ${ON_TTY} == "true" ]]; then
 			echo "*** USB bus was reset; You can restart allsky now. ***"
 			NOTIFICATION_TYPE="NotRunning"
 		else
 			NOTIFICATION_TYPE="Restarting"
 		fi
-		if [[ ${USE_NOTIFICATION_IMAGES} -eq 1 ]]; then
+		if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${NOTIFICATION_TYPE}"
 		fi
 		doExit 0 ""		# use 0 so the service is restarted
 	else
 		# TODO: use ASI_ERROR_TIMEOUT message
 		MSG="Non-recoverable ERROR found"
-		[[ ${ON_TTY} -eq 1 ]] && echo "*** ${MSG} - ${SEE_LOG_MSG}. ***"
+		[[ ${ON_TTY} == "true" ]] && echo "*** ${MSG} - ${SEE_LOG_MSG}. ***"
 		doExit "${EXIT_ERROR_STOP}" "Error" \
 			"${ERROR_MSG_PREFIX}Too many\nASI_ERROR_TIMEOUT\nerrors received!\n${SEE_LOG_MSG}" \
 			"${STOPPED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
@@ -313,7 +313,7 @@ fi
 # RETCODE -ge ${EXIT_ERROR_STOP} means we should not restart until the user fixes the error.
 if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 	echo "***"
-	if [[ ${ON_TTY} -eq 1 ]]; then
+	if [[ ${ON_TTY} == "true" ]]; then
 		echo "*** After fixing, restart ${ME}.sh. ***"
 	else
 		echo "*** After fixing, restart the allsky service. ***"
@@ -323,7 +323,7 @@ if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 fi
 
 # Some other error
-if [[ ${USE_NOTIFICATION_IMAGES} -eq 1 ]]; then
+if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	# If started by the service, it will restart us once we exit.
 	doExit "${RETCODE}" "NotRunning"
 else

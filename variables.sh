@@ -16,7 +16,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# If we're not on a tty output is likely being written to a file, so don't use colors.
 	# The "w" colors are for when output may go to a web page.
 	if tty --silent ; then
-		ON_TTY=1
+		ON_TTY="true"
 		GREEN="\033[0;32m";		wOK="${GREEN}"
 		YELLOW="\033[0;33m";	wWARNING="${YELLOW}"
 		RED="\033[0;31m";		wERROR="${RED}"
@@ -26,7 +26,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 								wBOLD="["; wNBOLD="]"
 								wBR="\n"
 	else
-		ON_TTY=0
+		ON_TTY="false"
 		GREEN="";				wOK="<span style='color: green'>"
 		YELLOW="";				wWARNING="<span style='color: #FF9800'>"
 		RED="";					wERROR="<span style='color: red'>"
@@ -150,6 +150,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 		EXTENSION="${FULL_FILENAME##*.}"
 		FILENAME="${FULL_FILENAME%.*}"
 
+		CAMERA_TYPE="$( jq -r '.cameratype' "${SETTINGS_FILE}" )"
 		CAMERA_MODEL="$( jq -r '.cameramodel' "${SETTINGS_FILE}" )"
 
 		# So scripts can conditionally output messages.

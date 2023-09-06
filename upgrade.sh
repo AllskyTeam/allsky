@@ -29,7 +29,7 @@ if [[ ${EUID} -eq 0 ]]; then
 fi
 
 #shellcheck disable=SC2086
-cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
+cd "${ALLSKY_HOME}"  						|| exit ${ALLSKY_ERROR_STOP}
 
 
 ####
@@ -142,9 +142,6 @@ DEBUG_ARG="${DEBUG_ARG}"
 FUNCTION="${FUNCTION}"
 WORD="${WORD}"
 
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
-
 
 if [[ ${ACTION} == "upgrade" ]]; then
 	:
@@ -173,7 +170,7 @@ if [[ ${ACTION} == "upgrade" ]]; then
 	#	cd
 	#	Git new code into ${ALLSKY_HOME}
 	#	cd ${ALLSKY_HOME}
-	#	Run: ./install.sh $DEBUG_ARG .... --doUpgrade
+	#	Run: ./install.sh ${DEBUG_ARG} .... --doUpgrade
 	#		--doUpgrade tells it to use prior version without asking and to
 	#		not display header, change messages to say "upgrade", not "install", etc.
 	#	?? anything else?
@@ -192,27 +189,19 @@ if [[ ${ACTION} == "upgrade" ]]; then
 elif [[ ${ACTION} == "restore" ]]; then
 	:
 
-	# If running in $ALLSKY_HOME		# us 1st time through
+	# If running in ${ALLSKY_HOME}		# us 1st time through
 	#	Make sure ${ALLSKY_HOME}-OLD exists
 	#		If not, warn user and exit:
 	#			"No prior version to restore from: ${ALLSKY_HOME}-OLD does not exist".
 	#	cp ${ME} /tmp
 	#	chmod 775 /tmp/${ME}
-	#	exec /tmp/${ME} --restore ${ALL_ARGS} $ALLSKY_HOME
+	#	exec /tmp/${ME} --restore ${ALL_ARGS} ${ALLSKY_HOME}
 
 	# Else		# running from /tmp - do the actual work
 	#	Stop allsky
 	#	mv $ALLSKY_HOME} ${ALLSKY_HOME}-new_tmp
-	#	mv ${ALLSKY_HOME}-OLD $ALLSKY_HOME
-	#	move images from ${ALLSKY_HOME}-new_tmp to $ALLSKY_HOME
-	#	move darks from ${ALLSKY_HOME}-new_tmp to $ALLSKY_HOME
-
-	# Prompt the user if they want to:
-	#	restore their old "images" folder (if there's anything in it)
-	#	restore their old "darks" folder (if there's anything in it)
-	#	restore their old configuration settings
-	#		(config.sh, scripts/endOfNight_additionalSteps.sh)
-	#	upgrade their WebUI (if installed)
-	#	upgrade their Website (if installed)
+	#	mv ${ALLSKY_HOME}-OLD ${ALLSKY_HOME}
+	#	move images from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
+	#	move darks from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
 
 fi

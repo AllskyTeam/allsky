@@ -252,8 +252,8 @@ function whatWebsites()
 	local HAS_LOCAL="false"
 	local HAS_REMOTE="false"
 
-	"$( settings ".uselocalwebsite" )" == "true" && HAS_LOCAL="true"
-	"$( settings ".useremotewebsite" )" == "true" && HAS_REMOTE="true"
+	[[ "$( settings ".uselocalwebsite" )" == "true" ]] && HAS_LOCAL="true"
+	[[ "$( settings ".useremotewebsite" )" == "true" ]] && HAS_REMOTE="true"
 
 	if [[ ${HAS_LOCAL} == "true" ]]; then
 		if [[ ${HAS_REMOTE} == "true" ]]; then

@@ -3,15 +3,12 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")"/..)"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
+#shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
+#shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
+#shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
-
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit_installation ${ALLSKY_ERROR_STOP}
 
 TITLE="Allsky Website Installer"
 
@@ -93,8 +90,7 @@ usage_and_exit()
 	echo
 	echo "'--function' executes the specified function and quits."
 	echo
-	# shellcheck disable=SC2086
-	exit_installation ${RET}
+	exit_installation "${RET}"
 }
 
 
@@ -478,6 +474,7 @@ create_website_configuration_file() {
 	if [[ ${INDEX} -ge 0 ]]; then
 		MINI_TLAPSE_DISPLAY="${PARENT}[${INDEX}].display"
 		MINI_TLAPSE_URL="${PARENT}[${INDEX}].url"
+		TIMELAPSE_MINI_IMAGES="$( settings ".minitimelapsenumimages" )"
 		if [[ ${TIMELAPSE_MINI_IMAGES:-0} -eq 0 ]]; then
 			MINI_TLAPSE_DISPLAY_VALUE="false"
 			MINI_TLAPSE_URL_VALUE=""
@@ -501,9 +498,9 @@ create_website_configuration_file() {
 	fi
 
 	# Convert latitude and longitude to use N, S, E, W.
-	LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
+	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"
 	[[ -z ${LATITUDE} ]] && display_msg --log warning "latitude is empty"
-	LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
+	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"
 	[[ -z ${LONGITUDE} ]] && display_msg --log warning "longitude is empty"
 
 	if [[ ${LATITUDE:1,-1} == "S" ]]; then			# last character
@@ -549,12 +546,12 @@ create_website_configuration_file() {
 ##### Update the Website version in the config file
 update_version_in_config_file()
 {
-	local CONFIG_FILE="${1}"
+	local FILE="${1}"
 	if [[ ${PRIOR_WEBSITE_VERSION} != "${NEW_WEBSITE_VERSION}" ]]; then
-		display_msg --log progress "Updating Website version in '${CONFIG_FILE}' to ${NEW_WEBSITE_VERSION}"
+		display_msg --log progress "Updating Website version in '${FILE}' to ${NEW_WEBSITE_VERSION}"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
-			--config "${CONFIG_FILE}" \
+			--config "${FILE}" \
 			config.AllskyWebsiteVersion		"AllskyWebsiteVersion"		"${NEW_WEBSITE_VERSION}"
 	else
 		display_msg "${LOG_TYPE}" progress "Website version already at ${NEW_WEBSITE_VERSION} - no need to update."
@@ -622,8 +619,7 @@ check_if_remote_website_ready()
 	MSG="${MSG}\n  1. Have Allsky configured and running the way you want it.\n"
 	MSG="${MSG}\n  2. Upload the Allsky Website files to your remote server.\n"
 	MSG="${MSG}\n  3. Update the 'Remote Website Settings' section of the WebUI's"
-	MSG="${MSG}\n     'Allsky Settings' page to point to the remote server.\n"
-# TODO: move the two URLs to the Remote Website Settings sub-section.
+	MSG="${MSG}\n     'Allsky Settings' page to point to the remote webserver.\n"
 	MSG="${MSG}\n  4. Enter the URL of the remote Website into the 'Website URL'"
 	MSG="${MSG}\n     field in the same WebUI page,"
 	MSG="${MSG}\n     even if you are not displaying your Website on the Allsky Map."
@@ -718,6 +714,7 @@ do_remote_website() {
 		display_msg warning "${MSG}${MSG2}"
 		display_msg --logonly warning "${MSG}"
 		echo -e "${X}"
+# TODO: exit?
 	fi
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
@@ -733,32 +730,13 @@ do_remote_website() {
 		# Don't know if the user is upgrading an old-style remote website,
 		# or they don't even have a remote website.
 
-		MSG="You can keep a copy of your remote Website's configuration file on your Pi"
-		MSG="${MSG}\nso you can easily edit it in the WebUI and have it automatically uploaded."
-		MSG="${MSG}\n** This is the recommended way of making changes to the configuration **."
-		MSG="${MSG}\n\nWould you like to do that?"
-		if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 60 3>&1 1>&2 2>&3); then
-			create_website_configuration_file
+		MSG="The master copy of your remote Website's configuration file will be on your Pi."
+		MSG="${MSG}\nYou must edit it in the WebUI; it will then be automatically uploaded."
+		MSG="${MSG}\nTo edit the remote configuration file, go to the WebUI's 'Editor' page and\n"
+		MSG="${MSG}select '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"
+		display_msg info "${MSG}"
 
-			MSG="\nTo edit the remote configuration file, go to the WebUI's 'Editor' page and\n"
-			MSG="${MSG}select '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"
-			display_msg info "${MSG}"
-			display_msg --logonly info "User will use local copy of remote Website config file."
-		else
-			# upload_data_json_file needs the remote configuration file to exist or else it thinks
-			# there isn't a remote site.
-			(
-				echo "Do NOT remove or change this file."
-				echo "It indicates there is a remote Allsky Website although it's not configured from the Pi."
-			) > "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-
-			# ALLSKY_WEBSITE_CONFIGURATION_NAME is what it's called on the remote server
-			MSG="You need to manually copy '${REPO_WEBCONFIG_FILE}' to your"
-			MSG="${MSG} remote server and rename it to '${ALLSKY_WEBSITE_CONFIGURATION_NAME}',"
-			MSG="${MSG} then modify it on your server."
-			display_msg warning "${MSG}"
-			display_msg --logonly info "User will NOT use local copy of remote Website config file."
-		fi
+		create_website_configuration_file
 	fi
 
 	upload_data_json_file "remote" || exit_installation 2
@@ -860,8 +838,7 @@ download_Allsky_Website() {
 
 	display_msg --log progress "Downloading Allsky Website files${B} into ${ALLSKY_WEBSITE}."
 	TMP="/tmp/git.install.tmp"
-	# shellcheck disable=SC2086
-	git clone -b ${BRANCH} "${GITHUB_ROOT}/allsky-website.git" "${ALLSKY_WEBSITE}" > "${TMP}" 2>&1
+	git clone -b "${BRANCH}" "${GITHUB_ROOT}/allsky-website.git" "${ALLSKY_WEBSITE}" > "${TMP}" 2>&1
 	if [[ $? -ne 0 ]]; then
 		display_msg --log error "Unable to get Allsky Website files from git."
 		display_msg --logonly info "$( cat "${TMP}" )"
@@ -911,12 +888,24 @@ restore_prior_files() {
 		display_msg "${LOG_TYPE}" info "No prior startrails to restore."
 	fi
 
+	D="${PRIOR_WEBSITE}/myFiles"
+	if [[ -d ${D} ]]; then
+		count=$(find "${D}" | wc -l)
+		if [[ ${count} -gt 1 ]]; then
+			display_msg --log progress "Restoring prior 'myFiles' directory."
+			mv "${D}"   "${ALLSKY_WEBSITE}"
+		fi
+	else
+		display_msg "${LOG_TYPE}" info "No prior 'myFiles' to restore."
+	fi
+
+	# This is the old name.
 	D="${PRIOR_WEBSITE}/myImages"
 	if [[ -d ${D} ]]; then
 		count=$(find "${D}" | wc -l)
 		if [[ ${count} -gt 1 ]]; then
-			display_msg --log progress "Restoring prior 'myImages' directory."
-			mv "${D}"   "${ALLSKY_WEBSITE}"
+			display_msg --log progress "Moving prior 'myImages' contents to 'myFiles'."
+			mv "${D}"*   "${ALLSKY_WEBSITE}/myFiles"
 		fi
 	else
 		display_msg "${LOG_TYPE}" info "No prior 'myImages' to restore."
@@ -1002,7 +991,9 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
-[[ -z ${FUNCTION} && ${UPDATE} == "false" ]] && display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
+if [[ -z ${FUNCTION} && ${UPDATE} == "false" ]]; then
+	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
+fi
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
@@ -1010,12 +1001,13 @@ done
 
 # Make sure the settings file isn't corrupted.
 if ! json_pp < "${SETTINGS_FILE}" > /dev/null; then
-	display_msg --log error "Settings file '${SETTINGS_FILE} is corrupted.\nFix, then re-run this installation."
+	MSG="Settings file '${SETTINGS_FILE} is corrupted.\nFix, then re-run this installation."
+	display_msg --log error "${MSG}"
 	exit_installation 1
 fi
 
-LATITUDE="$(settings ".latitude")"
-LONGITUDE="$(settings ".longitude")"
+LATITUDE="$( settings ".latitude" )"
+LONGITUDE="$( settings ".longitude" )"
 if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
 	MSG="Latitude and Longitude must be set in the WebUI before the Allsky Website\ncan be installed."
 	display_msg --log error "${MSG}"

@@ -44,12 +44,12 @@ if [[ ${LAST_CHANGED} == "" ]]; then
 			"Allsky needs\nconfiguration\nand the Pi needs\na reboot" \
 			"Allsky needs to be configured then the Pi rebooted."
 	else
-		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" ""
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "Error" "Allsky needs to be configured."
+		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" ""
 	fi
 elif [[ ${NEEDS_REBOOT} == "true" ]]; then
-	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" ""
 	"${ALLSKY_SCRIPTS}/addMessage.sh" "Error" "The Pi needs to be rebooted."
+	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" ""
 fi
 
 SEE_LOG_MSG="See ${ALLSKY_LOG}"

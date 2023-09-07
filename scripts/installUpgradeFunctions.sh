@@ -37,7 +37,7 @@ function get_Git_version() {
 	local BRANCH="${1}"
 	local PACKAGE="${2}"
 	local VF="$( basename "${ALLSKY_VERSION_FILE}" )"
-	local V="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r')"
+	local V="$( curl --show-error --silent "${GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r' )"
 	# "404" means the branch isn't found since all new branches have a version file.
 	[[ ${V} != "404: Not Found" ]] && echo -n "${V}"
 }
@@ -55,7 +55,7 @@ function get_version() {
 	if [[ -z ${F} ]]; then
 		F="${ALLSKY_VERSION_FILE}"		# default
 	else
-		[[ ${F:1,-1} == "/" ]] && F="${F}$(basename "${ALLSKY_VERSION_FILE}")"
+		[[ ${F:1,-1} == "/" ]] && F="${F}$( basename "${ALLSKY_VERSION_FILE}" )"
 	fi
 	if [[ -f ${F} ]]; then
 		# Sometimes the branch file will have both "master" and "dev" on two lines.
@@ -70,6 +70,23 @@ function get_version() {
 function get_branch() {
 	local H="${1:-${ALLSKY_HOME}}"
 	echo "$( cd "${H}" || exit; git rev-parse --abbrev-ref HEAD )"
+}
+
+
+#####
+# Get a shell variable's value.  The variable can have optional spaces and tabs before it.
+# This function is useful when we can't "source" the file.
+function get_variable() {
+	local VARIABLE="${1}"
+	local FILE="${2}"
+	local LINE=""
+	local SEARCH_STRING="^[ 	]*${VARIABLE}="
+	if ! LINE="$( /bin/grep -E "${SEARCH_STRING}" "${FILE}" 2>/dev/null )" ; then
+		return 1
+	fi
+
+	echo "${LINE}" | sed -e "s/${SEARCH_STRING}//" -e 's/"//g'
+	return 0
 }
 
 

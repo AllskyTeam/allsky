@@ -39,7 +39,7 @@ function doExit()
 		# even if the user has them turned off.
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
 			# Create a custom error message.
-			# If we error out before config.sh is sourced in, $FILENAME and $EXTENSION won't be
+			# If we error out before config.sh is sourced in, ${FILENAME} and ${EXTENSION} won't be
 			# set so guess at what they are.
 			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
 				"${FILENAME:-"image"}" \
@@ -57,8 +57,7 @@ function doExit()
 	# Don't let the service restart us because we'll likely get the same error again.
 	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && sudo systemctl stop allsky
 
-	# shellcheck disable=SC2086
-	exit ${EXITCODE}
+	exit "${EXITCODE}"
 }
 
 
@@ -224,17 +223,15 @@ function get_sunrise_sunset()
 	local ANGLE="${1}"
 	local LATITUDE="${2}"
 	local LONGITUDE="${3}"
-	#shellcheck disable=SC2086 source-path=.
+	#shellcheck source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/config.sh"		|| return 1
 
-	[[ -z ${ANGLE} ]] && ANGLE="$(settings ".angle")"
-	[[ -z ${LATITUDE} ]] && LATITUDE="$(settings ".latitude")"
-	[[ -z ${LONGITUDE} ]] && LONGITUDE="$(settings ".longitude")"
+	[[ -z ${ANGLE} ]] && ANGLE="$( settings ".angle" )"
+	[[ -z ${LATITUDE} ]] && LATITUDE="$( settings ".latitude" )"
+	[[ -z ${LONGITUDE} ]] && LONGITUDE="$( settings ".longitude" )"
 
-	LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"		|| return 2
-	LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"	|| return 2
+	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"		|| return 2
+	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
 
 	echo "Daytime start    Nighttime start   Angle"
 	local X="$(sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}")"
@@ -246,62 +243,17 @@ function get_sunrise_sunset()
 
 
 #####
-# Check if a remote server is acting as a remote Allsky Website.
-function checkRemote()
-{
-	local NUM="${1}"
-	local USE="$( settings ".useremote${NUM}" )"
-	[[ ${USE} -ne "${REMOTE_TYPE_ALLSKY_WEBSITE}" ]] && return 1
-
-	local PROTOCOL="$( get_variable "PROTOCOL${NUM}" "${ALLSKY_ENV}" )"
-	if [[ -n ${PROTOCOL} ]]; then
-		local X
-		case "${PROTOCOL}" in
-			ftp | ftps | sftp | scp)
-				X="$( get_variable "REMOTE_HOST${NUM}" "${ALLSKY_ENV}" )" 
-				[[ -n ${X} ]] && return 0
-				;;
-
-			s3)
-				X="$( get_variable "AWS_CLI_DIR${NUM}" "${ALLSKY_ENV}" )" 
-				[[ -n ${X} ]] && return 0
-				;;
-
-			gcs)
-				X="$( get_variable "GCS_BUCKET${NUM}" "${ALLSKY_ENV}" )" 
-				[[ -n ${X} ]] && return 0
-				;;
-
-			*)
-				echo "ERROR: Unknown PROTOCOL${NUM}: '${PROTOCOL}'" >&2
-				;;
-		esac
-	fi
-
-	return 1
-}
-
-
-#####
 # Return which Allsky Websites exist - local, remote, both, none
 function whatWebsites()
 {
-	#shellcheck disable=SC2086 source-path=.
+	#shellcheck source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
 
 	local HAS_LOCAL="false"
 	local HAS_REMOTE="false"
 
-	# Determine local Website - this is easy.
-	if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} && "$( settings ".uselocalwebsite" )" -eq 1 ]]; then
-		HAS_LOCAL="true"
-	fi
-
-	# Determine remote Website - this is more involved.
-	# Not only must the file exist, but there also has to be a way to upload to it.
-	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		(check_remote 1 || check_remote 2) && HAS_REMOTE="true"
-	fi
+	"$( settings ".uselocalwebsite" )" == "true" && HAS_LOCAL="true"
+	"$( settings ".useremotewebsite" )" == "true" && HAS_REMOTE="true"
 
 	if [[ ${HAS_LOCAL} == "true" ]]; then
 		if [[ ${HAS_REMOTE} == "true" ]]; then
@@ -334,13 +286,13 @@ function checkAndGetNewerFile()
 	local GIT_FILE="${GITHUB_RAW_ROOT}/allsky/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
-	X="$(curl --show-error --silent "${GIT_FILE}")"
+	X="$( curl --show-error --silent "${GIT_FILE}" )"
 	RET=$?
 	if [[ ${RET} -eq 0 && ${X} != "404: Not Found" ]]; then
 		# We really just check if the files are different.
 		echo "${X}" > "${DOWNLOADED_FILE}"
-		DOWNLOADED_CHECKSUM="$(sum "${DOWNLOADED_FILE}")"
-		MY_CHECKSUM="$(sum "${CURRENT_FILE}")"
+		DOWNLOADED_CHECKSUM="$( sum "${DOWNLOADED_FILE}" )"
+		MY_CHECKSUM="$( sum "${CURRENT_FILE}" )"
 		if [[ ${MY_CHECKSUM} == "${DOWNLOADED_CHECKSUM}" ]]; then
 			rm -f "${DOWNLOADED_FILE}"
 			return 0
@@ -385,9 +337,53 @@ function checkPixelValue()	# variable name, variable value, width_or_height, res
 
 
 #####
+# The crop rectangle needs to fit within the image and the numbers be even.
+# TODO: should there be a maximum for any number (other than the image size)?
+# Number of pixels to crop off top, right, bottom, left, plus max_resolution_x and max_resolution_y.
+function checkCropValues()
+{
+	local CROP_TOP="${1}"
+	local CROP_RIGHT="${2}"
+	local CROP_BOTTOM="${3}"
+	local CROP_LEFT="${4}"
+	local MAX_RESOLUTION_X="${5}"
+	local MAX_RESOLUTION_Y="${6}"
+
+	local ERR=""
+	if [[ ${CROP_TOP} -lt 0 || ${CROP_RIGHT} -lt 0 ||
+			${CROP_BOTTOM} -lt 0 || ${CROP_LEFT} -lt 0 ]]; then
+		ERR="${ERR}\nCrop numbers must all be positive."
+	fi
+	if [[ $((CROP_TOP % 2)) -eq 1 || $((CROP_RIGHT % 2)) -eq 1 ||
+			$((CROP_BOTTOM % 2)) -eq 1 || $((CROP_LEFT % 2)) -eq 1 ]]; then
+		ERR="${ERR}\nCrop numbers must all be even."
+	fi
+	if [[ ${CROP_TOP} -gt $((MAX_RESOLUTION_Y -2)) ]]; then
+		ERR="${ERR}\nCropping on top (${CROP_TOP}) is larger than the image height (${MAX_RESOLUTION_Y})."
+	fi
+	if [[ ${CROP_RIGHT} -gt $((MAX_RESOLUTION_X - 2)) ]]; then
+		ERR="${ERR}\nCropping on right (${CROP_RIGHT}) is larger than the image width (${MAX_RESOLUTION_X})."
+	fi
+	if [[ ${CROP_BOTTOM} -gt $((MAX_RESOLUTION_Y - 2)) ]]; then
+		ERR="${ERR}\nCropping on bottom (${CROP_BOTTOM}) is larger than the image height (${MAX_RESOLUTION_Y})."
+	fi
+	if [[ ${CROP_LEFT} -gt $((MAX_RESOLUTION_X - 2)) ]]; then
+		ERR="${ERR}\nCropping on left (${CROP_LEFT}) is larger than the image width (${MAX_RESOLUTION_X})."
+	fi
+
+	if [[ -z ${ERR} ]]; then
+		return 0
+	else
+		echo -e "${ERR}"
+		return 1
+	fi
+}
+
+#####
 # The crop rectangle needs to fit within the image, be an even number, and be greater than 0.
 # x, y, offset_x, offset_y, max_resolution_x, max_resolution_y
-function checkCropValues()
+# TODO: remove this after testing.  It's the old way of cropping.
+function checkCropValuesOLD()
 {
 	local X="${1}"
 	local Y="${2}"
@@ -434,21 +430,6 @@ function checkCropValues()
 	fi
 }
 
-#####
-# Get a shell variable's value.  The variable can have optional spaces and tabs before it.
-# This function is useful when we can't "source" the file.
-function get_variable() {
-	local VARIABLE="${1}"
-	local FILE="${2}"
-	local LINE=""
-	local SEARCH_STRING="^[ 	]*${VARIABLE}="
-	if ! LINE="$( /bin/grep -E "${SEARCH_STRING}" "${FILE}" 2>/dev/null )" ; then
-		return 1
-	fi
-
-	echo "${LINE}" | sed -e "s/${SEARCH_STRING}//" -e 's/"//g'
-	return 0
-}
 
 #####
 # Simple way to get a setting that hides the details.
@@ -715,7 +696,8 @@ function one_instance()
 
 
 	NUM_CHECKS=0
-	while  : ; do
+	while  : ;
+	do
 		[[ ! -f ${PID_FILE} ]] && break
 
 		((NUM_CHECKS++))
@@ -725,7 +707,7 @@ function one_instance()
 		P="$( ps -fp "${PID}" )"
 		[[ $? -ne 0 ]] && break;	# not running - why is the file still here?
 
-		if [[ $NUM_CHECKS -eq ${MAX_CHECKS} ]]; then
+		if [[ ${NUM_CHECKS} -eq ${MAX_CHECKS} ]]; then
 			echo -en "${YELLOW}" >&2
 			echo -e  "${ABORTED_MSG1}" >&2
 			echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
@@ -771,8 +753,9 @@ function make_thumbnail()
 	local SEC="${1}"
 	local INPUT_FILE="${2}"
 	local THUMBNAIL="${3}"
+	local THUMBNAIL_SIZE_X="$( settings ".thumbnailssizex" )"
 	ffmpeg -loglevel error -ss "00:00:${SEC}" -i "${INPUT_FILE}" \
-		-filter:v scale="${THUMBNAIL_SIZE_X:-100}:-1" -frames:v 1 "${THUMBNAIL}"
+		-filter:v scale="${THUMBNAIL_SIZE_X}:-1" -frames:v 1 "${THUMBNAIL}"
 }
 
 
@@ -864,13 +847,13 @@ function upload_all()
 	local FILE_TYPE="${4}"		# optional
 	local RET=0
 	local ROOT REMOTE_DIR
-	if [[ ${LOCAL_WEB} == "true" && "$( settings ".uselocalwebsite" )" -eq 1 ]]; then
+	if [[ ${LOCAL_WEB} == "true" && "$( settings ".uselocalwebsite" )" == "true" ]]; then
 		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --local \
 			"${UPLOAD_FILE}" "${ALLSKY_WEBSITE}/${SUBDIR}" "${DESTINATION_NAME}"
 		((RET+=$?))
 	fi
-	if [[ ${REMOTE_WEB} == "true" && "$( settings ".useremotewebsite" )" -eq 1 ]]; then
+	if [[ ${REMOTE_WEB} == "true" && "$( settings ".useremotewebsite" )" == "true" ]]; then
 		ROOT="$( settings ".remotewebsiteimagedir" )"
 		if [[ -z ${ROOT} ]]; then
 			REMOTE_DIR="${SUBDIR}"
@@ -882,7 +865,7 @@ function upload_all()
 			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
 		((RET+=$?))
 	fi
-	if [[ ${REMOTE_SERVER} == "true" && "$( settings ".useremoteserver" )" -eq 1 ]]; then
+	if [[ ${REMOTE_SERVER} == "true" && "$( settings ".useremoteserver" )" == "true" ]]; then
 		ROOT="$( settings ".remoteserverimagedir" )"
 		if [[ -z ${ROOT} ]]; then
 			REMOTE_DIR="${SUBDIR}"
@@ -904,4 +887,3 @@ function indent()
 {
 	echo -e "${1}" | sed 's/^/\t/'
 }
-

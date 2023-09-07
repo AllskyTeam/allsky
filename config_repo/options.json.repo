@@ -1428,15 +1428,6 @@
 "action" : "reload"
 },
 {
-"name" : "showbrightness",
-"default" : false,
-"description" : "Enable to display the <span class='WebUISetting'>Brightness</span> number you set on the overlay.",
-"label" : "Show Brightness",
-"type" : "boolean",
-"booldependsoff" : "overlaymethod",
-"action" : "reload"
-},
-{
 "name" : "showusb",
 "default" : false,
 "description" : "Enable to display the USB Bandwidth number on the overlay.<br>This is primarily for troubleshooting.",

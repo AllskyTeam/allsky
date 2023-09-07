@@ -1704,6 +1704,9 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 					"autofocus" | "background")
 						continue;
 						;;
+					"brightness" | "daybrightness" | "nightbrightness" | "showbrightness")
+						continue;
+						;;
 
 					# These changed names.
 					"darkframe")
@@ -1726,10 +1729,6 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 						;;
 
 					# These now have day and night versions.
-					"brightness")
-						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-						F="night${F}"
-						;;
 					"awb" | "autowhitebalance")
 						F="awb"
 						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
@@ -1781,6 +1780,8 @@ doV()
 		else
 			VAL="false"
 		fi
+	elif [[ ${TYPE} == "number" && -z ${VAL} ]]; then
+		VAL=0		# give it a default
 	fi
 
 	if update_json_file "${jV}" "${VAL}" "${FILE}" "${TYPE}" ; then
@@ -1859,6 +1860,7 @@ convert_config_sh()
 		if [[ ${CROP_IMAGE} == "true" ]]; then
 			MSG="The way to specify cropping images has changed."
 			MSG="${MSG}You need to reenter your crop settings."
+			MSG="${MSG}\nSpecify the amount to crop from the top, right, bottom, and left."
 			display_msg --log info "${MSG}"
 			X=0; doV "X" ".imagecroptop" "number" "${NEW_FILE}"
 			X=0; doV "X" ".imagecropright" "number" "${NEW_FILE}"
@@ -1934,7 +1936,9 @@ convert_config_sh()
 		doV "UPLOAD_STARTRAILS" ".startrailsupload" "boolean" "${NEW_FILE}"
 		doV "BRIGHTNESS_THRESHOLD" ".startrailsbrightnessthreshold" "number" "${NEW_FILE}"
 
+		[[ -z ${THUMBNAIL_SIZE_X} ]] && THUMBNAIL_SIZE_X=100
 		doV "THUMBNAIL_SIZE_X" ".thumbnailssizex" "number" "${NEW_FILE}"
+		[[ -z ${THUMBNAIL_SIZE_Y} ]] && THUMBNAIL_SIZE_Y=75
 		doV "THUMBNAIL_SIZE_Y" ".thumbnailssizey" "number" "${NEW_FILE}"
 
 		# NIGHTS_TO_KEEP was replaced by DAYS_TO_KEEP and the AUTO_DELETE boolean was deleted.
@@ -2223,9 +2227,7 @@ restore_prior_files()
 	if [[ -f ${PRIOR_ALLSKY_DIR}/${E} ]]; then
 		display_msg --log progress "${ITEM}"
 		cp -ar "${PRIOR_ALLSKY_DIR}/${E}" "${ALLSKY_ENV}"
-# TODO: uncomment in next release; the env file first appeared in this release.
-#	else
-#		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	ITEM="${SPACE}'images' directory"
@@ -2363,7 +2365,7 @@ restore_prior_files()
 	# Done with restores, now the updates.
 
 	COPIED_PRIOR_CONFIG_SH="true"		# Global variable
-	if [[ -e ${PRIOR_CONFIG_FILE} ]]; then
+	if [[ -s ${PRIOR_CONFIG_FILE} ]]; then
 		# This copies the settings from the prior config file to the settings file.
 		convert_config_sh "${PRIOR_CONFIG_FILE}" "${SETTINGS_FILE}" || COPIED_PRIOR_CONFIG_SH="false"
 	fi
@@ -2383,7 +2385,7 @@ restore_prior_files()
 		PRIOR_FTP_FILE=""
 	fi
 	COPIED_PRIOR_FTP_SH="true"			# Global variable
-	if [[ -e ${PRIOR_FTP_FILE} ]]; then
+	if [[ -s ${PRIOR_FTP_FILE} ]]; then
 		convert_ftp_sh "${PRIOR_FTP_FILE}" "${SETTINGS_FILE}" || COPIED_PRIOR_FTP_SH="false"
 	fi
 	STATUS_VARIABLES+=( "COPIED_PRIOR_FTP_SH='${COPIED_PRIOR_FTP_SH}'\n" )
@@ -2437,9 +2439,10 @@ do_update()
 	# Update the sudoers file if it's missing some entries.
 	# Look for the last entry added (should be the last entry in the file).
 	# Don't simply copy the repo file to the final location in case the repo file isn't up to date.
-	if ! grep --silent "/date" "${FINAL_SUDOERS_FILE}" ; then
+	local LAST_COMMAND="/date"
+	if ! grep --silent "${LAST_COMMAND}" "${FINAL_SUDOERS_FILE}" ; then
 		display_msg --log progress "Updating sudoers list."
-		if ! grep --silent "/date" "${REPO_SUDOERS_FILE}" ; then
+		if ! grep --silent "${LAST_COMMAND}" "${REPO_SUDOERS_FILE}" ; then
 			local F="$( basename "${REPO_SUDOERS_FILE}" )"
 			MSG="Please get the newest '${F}' file from Git and try again."
 			display_msg --log error "${MSG}"
@@ -2550,7 +2553,7 @@ install_overlay()
 	# Do the rest, even if we already did it in a previous installation,
 	# in case something in the directories changed.
 
-	display_msg --log progress "Setting up modules and overlays."
+	display_msg --log progress "Setting up default modules and overlays."
 	# These will get overwritten if the user has prior versions.
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_CONFIG}"
 	cp -ar "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
@@ -2705,8 +2708,8 @@ check_new_exposure_algorithm()
 	local NEW="$( settings ".${FIELD}" )"
 	[[ ${NEW} == "true" ]] && return
 	
-	MSG="There is a new auto-exposure algorithm for nighttime images that initial testing indicates"
-	MSG="${MSG} it creates better images at night and during the day-to-night transition."
+	MSG="There is a new auto-exposure algorithm for nighttime images that"
+	MSG="${MSG} creates better images at night and during the day-to-night transition."
 	MSG="${MSG}\n\nDo you want to use it?"
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 		display_msg --logonly info "Enabling ${FIELD}."
@@ -2840,11 +2843,8 @@ if [[ ${IN_TESTING} == "true" ]]; then
 
 		MSG="${MSG}\nChanges from prior dev release:"
 
-		MSG="${MSG}\n * ftp-settings.sh and config.sh are gone"
+		MSG="${MSG}\n * ftp-settings.sh and config.sh are gone."
 		MSG="${MSG}\n   Their settings are now in the WebUI's 'Allsky Settings' page."
-
-#x		MSG="${MSG}\n"
-#x		MSG="${MSG}\n * change 2"
 
 		MSG="${MSG}\n\nIf you want to continue with the installation, enter:    yes"
 		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3)

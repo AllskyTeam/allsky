@@ -187,7 +187,7 @@ if [[ ${IMG_RESIZE} == "true" ]] ; then
 		display_error_and_exit "${ERROR_MSG}" "IMG_RESIZE"
 	fi
 
-	[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "*** ${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
+	[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "*** ${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
 	if ! convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}" ; then
 		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed; not saving${NC}"
 		exit 4
@@ -227,7 +227,7 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 	fi
 
 	if [[ -z ${ERROR_MSG} ]]; then
-		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 			echo -e "*** ${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}."
 		fi
 		convert "${CURRENT_IMAGE}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${CURRENT_IMAGE}"
@@ -243,7 +243,7 @@ fi
 
 # Stretch the image if required, but only at night.
 if [[ ${DAY_OR_NIGHT} == "NIGHT" && ${AUTO_STRETCH} == "true" ]]; then
-	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "*** ${ME}: Stretching '${CURRENT_IMAGE}' by ${AUTO_STRETCH_AMOUNT}"
 	fi
  	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${AUTO_STRETCH_AMOUNT}x${AUTO_STRETCH_MID_POINT}" "${IMAGE_TO_USE}"
@@ -327,10 +327,11 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				NUM_IMAGES=$(wc -l < "${MINI_TIMELAPSE_FILES}")
 				LEFT=$((TIMELAPSE_MINI_IMAGES - NUM_IMAGES))
 			fi
-			[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo -e "NUM_IMAGES=${NUM_IMAGES}" >&2
 
 			MOD=0
 			if [[ ${TIMELAPSE_MINI_FORCE_CREATION} == "true" ]]; then
+				[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo -e "NUM_IMAGES=${NUM_IMAGES}"
+
 				# We only force creation every${TIMELAPSE_MINI_FREQUENCY} images,
 				# and only when we haven't reached ${TIMELAPSE_MINI_IMAGES} or we're close.
 				if [[ ${LEFT} -lt ${TIMELAPSE_MINI_FREQUENCY} ]]; then
@@ -343,8 +344,8 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 			if [[ ${TIMELAPSE_MINI_FORCE_CREATION} == "true" || ${LEFT} -le 0 ]]; then
 				# Create a mini-timelapse
 				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
-				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-					echo "${ME}: creating mini-timelapse (last image: ${IMAGE_NAME})"
+				# This causes timelapse.sh to print "before" and "after" debug messages.
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
 					D="--debug"
 				else
 					D=""
@@ -358,29 +359,22 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					# failed so don't try to upload
 					TIMELAPSE_MINI_UPLOAD_VIDEO="false"
 				fi
-				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
-					if [[ ${RET} -eq 0 ]]; then
-						echo "${ME}: mini-timelapse created."
-					else
-						echo "${ME}: mini-timelapse creation returned with RET=${RET}."
-					fi
-				fi
 
 				# Remove the oldest files, but not if we only created
 				# this mini-timelapse because of a force.
 				if [[ ${RET} -eq 0 && (${MOD} -ne 0 || ${TIMELAPSE_MINI_FORCE_CREATION} == "false") ]]; then
 					KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
-					x="$(tail -${KEEP} "${MINI_TIMELAPSE_FILES}")"
+					x="$( tail -${KEEP} "${MINI_TIMELAPSE_FILES}" )"
 					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
-					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 						echo -en "${YELLOW}${ME}: Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest"
-						echo -e " file(s) and added current image.${NC}" >&2
+						echo -e " timelapse file(s).${NC}" >&2
 					fi
 				fi
 			else
 				# Not ready to create yet
-				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
-					echo -n "${ME}: Not creating mini timelapse: "
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+					echo -n "NUM_IMAGES=${NUM_IMAGES}: Not creating mini timelapse: "
 					if [[ ${MOD} -eq 0 ]]; then
 						echo "${LEFT} images(s) left."
 					else
@@ -418,7 +412,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 			LEFT=$((LEFT - 1))
 			echo "${LEFT}" > "${FREQUENCY_FILE}"
 			# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
-			[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
+			[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
 
 			# We didn't create ${WEBSITE_FILE} yet so do that now.
 			mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
@@ -432,7 +426,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 		# Put the copy in ${WORKING_DIR}.
 		FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
 		S="${RESIZE_UPLOADS_WIDTH}x${RESIZE_UPLOADS_HEIGHT}"
-		[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "*** ${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
+		[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ] && echo "*** ${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
 		if ! convert "${CURRENT_IMAGE}" -resize "${S}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: RESIZE_UPLOADS failed; continuing with larger image.${NC}"
 			# We don't know the state of $FILE_TO_UPLOAD so use the larger file.

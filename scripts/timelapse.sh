@@ -13,7 +13,7 @@ source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
 
 
 ENTERED="$*"
-DEBUG=0
+DEBUG="false"
 HELP="false"
 IS_MINI="false"
 LOCK="false"
@@ -25,7 +25,7 @@ while [[ $# -gt 0 ]]; do
 				HELP="true"
 				;;
 			-d | --debug)
-				((DEBUG++))
+				DEBUG="true"
 				;;
 			-l | --lock)
 				LOCK="true"
@@ -278,7 +278,7 @@ fi
 
 # timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
-if [[ ${DEBUG} -ge 2 ]]; then
+if [[ ${DEBUG} == "true" ]]; then
 	if [[ ${IS_MINI} == "true" ]]; then
 		M="Mini t"
 	else

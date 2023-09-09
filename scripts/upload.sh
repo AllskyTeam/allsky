@@ -401,7 +401,7 @@ else # sftp/ftp/ftps
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
 	else
-		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 4 && ${ON_TTY} -eq 0 ]]; then
+		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 && ${ON_TTY} -eq 0 ]]; then
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
 	fi

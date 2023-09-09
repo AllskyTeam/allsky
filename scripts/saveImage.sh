@@ -343,17 +343,15 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 			if [[ ${TIMELAPSE_MINI_FORCE_CREATION} == "true" || ${LEFT} -le 0 ]]; then
 				# Create a mini-timelapse
 				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
-				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
-					# timelapse.sh produces a lot of debug output
-					D="--debug --debug"
-				elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+					echo "${ME}: creating mini-timelapse (last image: ${IMAGE_NAME})"
 					D="--debug"
 				else
 					D=""
 				fi
 				O="${ALLSKY_TMP}/mini-timelapse.mp4"
 				# shellcheck disable=SC2086
-				"${ALLSKY_SCRIPTS}"/timelapse.sh ${D} --lock --output "${O}" \
+				"${ALLSKY_SCRIPTS}/timelapse.sh" ${D} --lock --output "${O}" \
 					--mini --images "${MINI_TIMELAPSE_FILES}"
 				RET=$?
 				if [[ ${RET} -ne 0 ]]; then
@@ -362,9 +360,9 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				fi
 				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
 					if [[ ${RET} -eq 0 ]]; then
-						echo "${ME}: mini-timelapse created (last image: ${IMAGE_NAME})"
+						echo "${ME}: mini-timelapse created."
 					else
-						echo "${ME}: mini-timelapse creation returned with RET=${RET} (last image: ${IMAGE_NAME})"
+						echo "${ME}: mini-timelapse creation returned with RET=${RET}."
 					fi
 				fi
 

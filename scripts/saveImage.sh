@@ -463,7 +463,7 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${R
 		rm -f "${UPLOAD_THUMBNAIL}"
 		make_thumbnail "00" "${FILE_TO_UPLOAD}" "${UPLOAD_THUMBNAIL}"
 		if [[ ! -f ${UPLOAD_THUMBNAIL} ]]; then
-			echo "${ME}Mini timelapse thumbnail not created!"
+			echo "${ME}: Mini timelapse thumbnail not created!"
 		else
 			# Use --silent because we just displayed message(s) above for this image.
 			upload_all --remote-web --remote-server --silent \

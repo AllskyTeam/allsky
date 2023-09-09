@@ -94,11 +94,13 @@ fi
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
 OUTPUT_DIR=""
+LAST_IMAGE=""
 if [[ -n ${IMAGES_FILE} ]]; then
 	if [[ ! -s ${IMAGES_FILE} ]]; then
 		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!${NC}"
 		exit 3
 	fi
+	LAST_IMAGE="$( tail -1 "${IMAGES_FILE}" )"
 	INPUT_DIR=""		# Not used
 else
 	INPUT_DIR="${1}"
@@ -137,6 +139,12 @@ if [[ ${LOCK} == "true" ]]; then
 else
 	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse"
 	PID_FILE=""
+fi
+
+if [[ ${DEBUG} == "true" ]]; then
+	echo -en "${ME}: ${GREEN}Starting timelapse"
+	[[ -n ${LAST_IMAGE} ]] && echo -n ", last image = $( basename "${LAST_IMAGE}" )"
+	echo -e ", PID=$$.${NC}"
 fi
 
 if [[ -z ${OUTPUT_FILE} ]]; then
@@ -264,6 +272,7 @@ if [[ ${RET} -ne -0 ]]; then
 	echo "Links in '${SEQUENCE_DIR}' left for debugging."
 	echo -e "Remove them when the problem is fixed.${NC}\n"
 	rm -f "${OUTPUT_FILE}"	# don't leave around to confuse user
+	[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
 	exit 1
 fi
 
@@ -279,12 +288,9 @@ fi
 # timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
 if [[ ${DEBUG} == "true" ]]; then
-	if [[ ${IS_MINI} == "true" ]]; then
-		M="Mini t"
-	else
-		M="T"
-	fi
-	echo -e "${ME}: ${GREEN}${M}imelapse in ${OUTPUT_FILE}${NC}"
+	echo -en "${ME}: ${GREEN}timelapse creation finished"
+	[[ -n ${LAST_IMAGE} ]] && echo -n ", last image = $( basename "${LAST_IMAGE}" )"
+	echo -e ", PID=$$.${NC}"
 fi
 
 [[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"

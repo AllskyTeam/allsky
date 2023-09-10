@@ -364,7 +364,11 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 	$cameraType = getVariableOrDefault($settings_array, $cameraTypeName, "");
 	$cameraModel = getVariableOrDefault($settings_array, $cameraModelName, "");
 	// Determine if the advanced settings should always be shown.
-	$alwaysShowAdvanced = getVariableOrDefault($settings_array, 'alwaysshowadvanced', false);
+	if ($formReadonly == "readonly") {
+		$alwaysShowAdvanced = true;
+	} else {
+		$alwaysShowAdvanced = getVariableOrDefault($settings_array, 'alwaysshowadvanced', false);
+	}
 	$initial_display = $alwaysShowAdvanced ? "table-row" : "none";
 
 	check_if_configured($page, "settings");

@@ -27,6 +27,9 @@ while [[ $# -gt 0 ]]; do
 			-d | --debug)
 				DEBUG="true"
 				;;
+			--no-debug)
+				DEBUG="false"
+				;;
 			-l | --lock)
 				LOCK="true"
 				;;
@@ -118,8 +121,23 @@ else
 	fi
 fi
 
+if [[ ${DEBUG} == "true" ]]; then
+	# Output one string so it's all on one line in log file.
+	MSG="${ME}: ${GREEN}Starting"
+	[[ ${IS_MINI} == "true" ]] && MSG="${MSG} mini "
+	MSG="${MSG}timelapse"
+	[[ -n ${LAST_IMAGE} ]] && MSG="${MSG}, last image = $( basename "${LAST_IMAGE}" )"
+	echo -e "${MSG}, my PID=$$.${NC}"
+fi
+
 if [[ ${LOCK} == "true" ]]; then
-	PID_FILE="${ALLSKY_TMP}/timelapse-pid.txt"
+	if [[ ${DEBUG} == "true" ]]; then
+		if [[ -s ${ALLSKY_TIMELAPSE_PID_FILE} ]]; then
+			echo "  > ALLSKY_TIMELAPSE_PID_FILE contains $( < "${ALLSKY_TIMELAPSE_PID_FILE}" )"
+		else
+			echo "  > No ALLSKY_TIMELAPSE_PID_FILE"
+		fi
+	fi
 	ABORTED_MSG1="Another timelapse creation is in progress so this one was aborted."
 	ABORTED_FIELDS="$( basename "${OUTPUT_FILE}" )"
 	ABORTED_MSG2="timelapse creations"
@@ -128,23 +146,22 @@ if [[ ${LOCK} == "true" ]]; then
 	else
 		CAUSED_BY="Unknown cause - see /var/log/allsky.log."
 	fi
-	if ! one_instance --pid-file "${PID_FILE}" \
+	# We need to use the PID of our parent, not our PID, since our parent
+	# may also upload the timelapse file, and 
+	if ! one_instance --pid-file "${ALLSKY_TIMELAPSE_PID_FILE}" --pid "${PPID}" \
 			--aborted-count-file "${ALLSKY_ABORTEDTIMELAPSE}" \
 			--aborted-fields "${ABORTED_FIELDS}" \
 			--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" \
 			--caused-by "${CAUSED_BY}" ; then
 		exit 5
 	fi
+	if [[ ${DEBUG} == "true" ]]; then
+		echo "  > Got lock, new PID=$( < "${ALLSKY_TIMELAPSE_PID_FILE}" )"
+	fi
 	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-lock-timelapse"
 else
 	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse"
-	PID_FILE=""
-fi
-
-if [[ ${DEBUG} == "true" ]]; then
-	echo -en "${ME}: ${GREEN}Starting timelapse"
-	[[ -n ${LAST_IMAGE} ]] && echo -n ", last image = $( basename "${LAST_IMAGE}" )"
-	echo -e ", PID=$$.${NC}"
+	ALLSKY_TIMELAPSE_PID_FILE=""
 fi
 
 if [[ -z ${OUTPUT_FILE} ]]; then
@@ -224,7 +241,7 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 	if [[ $? -ne 0 ]]; then
 		echo -e "${RED}*** ${ME} ERROR: No images found in '${INPUT_DIR}'!${NC}"
 		rm -fr "${SEQUENCE_DIR}"
-		[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
+		[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 		exit 1
 	fi
 else
@@ -272,7 +289,7 @@ if [[ ${RET} -ne -0 ]]; then
 	echo "Links in '${SEQUENCE_DIR}' left for debugging."
 	echo -e "Remove them when the problem is fixed.${NC}\n"
 	rm -f "${OUTPUT_FILE}"	# don't leave around to confuse user
-	[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
+	[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 	exit 1
 fi
 
@@ -288,12 +305,14 @@ fi
 # timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
 if [[ ${DEBUG} == "true" ]]; then
-	echo -en "${ME}: ${GREEN}timelapse creation finished"
-	[[ -n ${LAST_IMAGE} ]] && echo -n ", last image = $( basename "${LAST_IMAGE}" )"
-	echo -e ", PID=$$.${NC}"
+	# Output one string so it's all on one line in log file.
+	MSG="${ME}: ${GREEN}"
+	[[ ${IS_MINI} == "true" ]] && MSG="${MSG}mini "
+	MSG="${MSG}timelapse creation finished"
+	[[ -n ${LAST_IMAGE} ]] && MSG="${MSG}, last image = $( basename "${LAST_IMAGE}" )"
+	echo -e "${MSG}, my PID=$$.${NC}"
 fi
 
-[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
+# Let our parent remove ${ALLSKY_TIMELAPSE_PID_FILE} when done.
 
 exit 0
-

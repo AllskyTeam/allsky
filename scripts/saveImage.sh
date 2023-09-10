@@ -348,16 +348,17 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
 					D="--debug"
 				else
-					D=""
+					D="--no-debug"
 				fi
 				O="${ALLSKY_TMP}/mini-timelapse.mp4"
-				# shellcheck disable=SC2086
-				"${ALLSKY_SCRIPTS}/timelapse.sh" ${D} --lock --output "${O}" \
+				"${ALLSKY_SCRIPTS}/timelapse.sh" "${D}" --lock --output "${O}" \
 					--mini --images "${MINI_TIMELAPSE_FILES}"
 				RET=$?
 				if [[ ${RET} -ne 0 ]]; then
 					# failed so don't try to upload
 					TIMELAPSE_MINI_UPLOAD_VIDEO="false"
+					# This leaves the lock file since it belongs to another running process.
+					ALLSKY_TIMELAPSE_PID_FILE=""
 				fi
 
 				# Remove the oldest files, but not if we only created
@@ -390,6 +391,10 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 		SAVE_IMAGE="false"
 		TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# so we can easily compare below
 	fi
+fi
+
+if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "false" ]]; then
+	ALLSKY_TIMELAPSE_PID_FILE=""			# so we don't try to remove the non-existant file
 fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
@@ -474,6 +479,9 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${R
 		fi
 	fi
 fi
+
+# We're done with the mini-timelapse so remove the lock file.
+[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 
 # We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.
 mv "${SAVED_FILE}" "${WEBSITE_FILE}"

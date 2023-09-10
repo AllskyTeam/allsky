@@ -616,6 +616,7 @@ function one_instance()
 	local SLEEP_TIME="5s"
 	local MAX_CHECKS=3
 	local PID_FILE=""
+	local PID=""
 	local ABORTED_FILE=""
 	local ABORTED_FIELDS=""
 	local ABORTED_MSG1=""
@@ -623,7 +624,7 @@ function one_instance()
 	local CAUSED_BY=""
 	local P=""
 
-	OK="true"
+	local OK="true"
 	local ERRORS=""
 	while [[ $# -gt 0 ]]; do
 		ARG="${1}"
@@ -638,6 +639,10 @@ function one_instance()
 					;;
 				--pid-file)
 					PID_FILE="${2}"
+					shift
+					;;
+				--pid)
+					PID="${2}"
 					shift
 					;;
 				--aborted-count-file)
@@ -687,7 +692,7 @@ function one_instance()
 		ERRORS="${ERRORS}\nABORTED_MSG2 not specified."
 		OK="false"
 	fi
-	# CAUSED_BY isn't required
+	# CAUSED_BY and PID aren't required
 
 	if [[ ${OK} == "false" ]]; then
 		echo -e "${RED}${ME}: ERROR: ${ERRORS}.${NC}" >&2
@@ -695,17 +700,16 @@ function one_instance()
 	fi
 
 
-	NUM_CHECKS=0
+	local NUM_CHECKS=0
 	while  : ;
 	do
 		[[ ! -f ${PID_FILE} ]] && break
 
 		((NUM_CHECKS++))
 
-		PID=$( < "${PID_FILE}" )
-		# Check that the process is still running.
-		P="$( ps -fp "${PID}" )"
-		[[ $? -ne 0 ]] && break;	# not running - why is the file still here?
+		local CURRENT_PID=$( < "${PID_FILE}" )
+		# Check that the process is still running. Looking in /proc is very quick.
+		[[ ! -d "/proc/${CURRENT_PID}" ]] && break
 
 		if [[ ${NUM_CHECKS} -eq ${MAX_CHECKS} ]]; then
 			echo -en "${YELLOW}" >&2
@@ -713,7 +717,7 @@ function one_instance()
 			echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
 			echo -n  " If this happens often, check your settings." >&2
 			echo -e  "${NC}" >&2
-			echo "${P}" >&2
+			ps -fp "${CURRENT_PID}" >&2
 
 			# Keep track of aborts so user can be notified.
 			# If it's happening often let the user know.
@@ -740,7 +744,8 @@ function one_instance()
 		fi
 	done
 
-	echo $$ > "${PID_FILE}" || return 1
+	[[ -z ${PID} ]] && PID="$$"
+	echo "${PID}" > "${PID_FILE}" || return 1
 
 	return 0
 }

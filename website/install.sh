@@ -699,7 +699,7 @@ do_remote_website() {
 	# TODO: Will also need to change the messages above.
 
 	# Tell the remote server to check the sanity of the Website.
-	# This also creates some necessary directories.
+	# This can create missing directories that initially have no content.
 	display_msg --log progress "Sanity checking remote Website."
 	[[ ${WEBURL: -1} != "/" ]] && WEBURL="${WEBURL}/"
 	if [[ ${DEBUG} == "true" ]]; then
@@ -708,14 +708,15 @@ do_remote_website() {
 		D=""
 	fi
 	X="$( curl --show-error --silent "${WEBURL}?check=1${D}" )"
-	if ! echo "${X}" | grep --silent "^SUCCESS$" ; then
+	if ! echo "${X}" | grep --silent "^SUCCESS" ; then
 		MSG="Sanity check of remote Website (${WEBURL}) failed."
-		MSG2="${MSG}\nYou will need to manually fix."
-		display_msg warning "${MSG}${MSG2}"
-		display_msg --logonly warning "${MSG}"
-		echo -e "${X}"
-# TODO: exit?
+		display_msg --log warning "${MSG}\n${X}"
+		MSG="\nPlease fix and run the installation again."
+		display_msg warning "${MSG}"
+		OK="false"
 	fi
+
+	[[ ${OK} == "false" ]] && exit_installation 1
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# The user is upgrading a new-style remote Website.
@@ -1066,7 +1067,7 @@ mkdir -p \
 	"${ALLSKY_WEBSITE}/startrails/thumbnails" \
 	"${ALLSKY_WEBSITE}/keograms/thumbnails" \
 	"${ALLSKY_WEBSITE}/videos/thumbnails" \
-	"${ALLSKY_WEBSITE}/myImages"
+	"${ALLSKY_WEBSITE}/myFiles"
 
 ##### Set permissions on files and directories
 set_permissions
@@ -1095,4 +1096,3 @@ fi
 
 echo
 exit_installation 0
-

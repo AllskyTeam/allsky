@@ -231,7 +231,7 @@ MIN_IMAGE_TIME_MS="$( min "${DAY_MIN_IMAGE_TIME_MS}" "${NIGHT_MIN_IMAGE_TIME_MS}
 function check_delay()
 {
 	local DAY_OR_NIGHT="${1}"
-	local DELAY_MS MIN_MS OVERLAY_METHOD MAX_TIME_TO_SAVE_MS
+	local DELAY_MS MIN_MS OVERLAY_METHOD
 
 	if [[ ${DAY_OR_NIGHT} == "daytime" ]]; then
 		DELAY_MS="${DAY_DELAY_MS}"
@@ -690,6 +690,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	IMG_CREATE_THUMBNAILS="$( get_setting ".imagecreatethumbnails" )"
 	KEEP_SEQUENCE="$( get_setting ".timelapsekeepsequence" )"
 	TIMELAPSE_MINI_FORCE_CREATION="$( get_setting ".minitimelapseforcecreation" )"
+	# shellcheck disable=SC2034
 	LOCALE="$( get_setting ".locale" )"
 
 	##### Make sure it's a know camera type.
@@ -708,7 +709,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	{
 		local B="${1}"
 		local NAME="${2}"
-		if [[ ${!B,,} != "true" && ${!B,,} != "false" ]]; then
+		if [[ ${B,,} != "true" && ${B,,} != "false" ]]; then
 			heading "Errors"
 			echo "'${NAME}' must be either 'true' or 'false'."
 		fi
@@ -716,20 +717,20 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 
 	##### Make sure these booleans have boolean values.
 		# TODO: use options.json to determine which are type=boolean.
-	check_bool "USING_DARKS" "Use Dark Frames"
-	check_bool "IMG_UPLOAD_ORIGINAL_NAME" "Upload With Original Name"
-	check_bool "IMG_CREATE_THUMBNAILS" "Create Image Thumbnails"
-	check_bool "TIMELAPSE" "Generate Timelapse"
-	check_bool "UPLOAD_VIDEO" "Upload Timelapse"
-	check_bool "KEEP_SEQUENCE" "Keep Timelapse Sequence"
-	check_bool "TIMELAPSE_UPLOAD_THUMBNAIL" "Upload Timelapse Thumbnail"
-	check_bool "TIMELAPSE_MINI_FORCE_CREATION" "Force Creation (of mini-timelapse)"
-	check_bool "TIMELAPSE_MINI_UPLOAD_VIDEO" "Upload Mini-Timelapse"
-	check_bool "TIMELAPSE_MINI_UPLOAD_THUMBNAIL" "Upload Mini-Timelapse Thumbnail"
-	check_bool "KEOGRAM" "Generate Keogram"
-	check_bool "UPLOAD_KEOGRAM" "Upload Keogram"
-	check_bool "STARTRAILS" "Generate Startrails"
-	check_bool "UPLOAD_STARTRAILS" "Upload Startrails"
+	check_bool "${USING_DARKS}" "Use Dark Frames"
+	check_bool "${IMG_UPLOAD_ORIGINAL_NAME}" "Upload With Original Name"
+	check_bool "${IMG_CREATE_THUMBNAILS}" "Create Image Thumbnails"
+	check_bool "${TIMELAPSE}" "Generate Timelapse"
+	check_bool "${UPLOAD_VIDEO}" "Upload Timelapse"
+	check_bool "${KEEP_SEQUENCE}" "Keep Timelapse Sequence"
+	check_bool "${TIMELAPSE_UPLOAD_THUMBNAIL}" "Upload Timelapse Thumbnail"
+	check_bool "${TIMELAPSE_MINI_FORCE_CREATION}" "Force Creation (of mini-timelapse)"
+	check_bool "${TIMELAPSE_MINI_UPLOAD_VIDEO}" "Upload Mini-Timelapse"
+	check_bool "${TIMELAPSE_MINI_UPLOAD_THUMBNAIL}" "Upload Mini-Timelapse Thumbnail"
+	check_bool "${KEOGRAM}" "Generate Keogram"
+	check_bool "${UPLOAD_KEOGRAM}" "Upload Keogram"
+	check_bool "${STARTRAILS}" "Generate Startrails"
+	check_bool "${UPLOAD_STARTRAILS}" "Upload Startrails"
 
 	##### Check that all required settings are set.  All others are optional.
 	# TODO: determine from options.json file which are required.
@@ -828,48 +829,6 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 			heading "Errors"
 			echo -e "${X}"
 			HAS_PIXEL_ERROR="true"
-		fi
-	fi
-
-	if [[ ${CROP_IMAGE} == "true" ]]; then
-		if ! X="$( checkPixelValue "CROP_WIDTH" "${CROP_WIDTH}" "width" "${SENSOR_WIDTH}" )" ; then
-			heading "Errors"
-			echo -e "${X}"
-			HAS_PIXEL_ERROR="true"
-		fi
-		if ! X="$( checkPixelValue "CROP_HEIGHT" "${CROP_HEIGHT}" "height" "${SENSOR_HEIGHT}" )" ; then
-			heading "Errors"
-			echo -e "${X}"
-			HAS_PIXEL_ERROR="true"
-		fi
-		# "any" means it can be any number, positive or negative.
-		if ! X="$( checkPixelValue "CROP_OFFSET_X" "${CROP_OFFSET_X}" "width" "${SENSOR_WIDTH}" "any" )" ; then
-			heading "Errors"
-			echo -e "${X}"
-			HAS_PIXEL_ERROR="true"
-		fi
-		if ! X="$( checkPixelValue "CROP_OFFSET_Y" "${CROP_OFFSET_Y}" "height" "${SENSOR_HEIGHT}" "any" )" ; then
-			heading "Errors"
-			echo -e "${X}"
-			HAS_PIXEL_ERROR="true"
-		fi
-
-		# Do more intensive checks but only if there weren't IMG_RESIZE errors since we
-		# we can't use IMG_WIDTH or IMG_HEIGHT.
-		if [[ ${HAS_PIXEL_ERROR} == "false" ]]; then
-			if [[ ${IMG_RESIZE} == "true" ]]; then
-				MAX_X=${IMG_WIDTH}
-				MAX_Y=${IMG_HEIGHT}
-			else
-				MAX_X=${SENSOR_WIDTH}
-				MAX_Y=${SENSOR_HEIGHT}
-			fi
-			if ! X="$( checkCropValues "${CROP_WIDTH}" "${CROP_HEIGHT}" \
-					"${CROP_OFFSET_X}" "${CROP_OFFSET_Y}" \
-					"${MAX_X}" "${MAX_Y}" )" ; then
-				heading "Errors"
-				echo -e "${X}"
-			fi
 		fi
 	fi
 

@@ -222,6 +222,8 @@ function check_PROTOCOL()
 # Return 0 for OK, 1 for warning, 2 for error.
 function check_remote_server()
 {
+	check_for_env_file || return 1
+
 	local TYPE="${1}"
 	local TYPE_STRING
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
@@ -232,14 +234,12 @@ function check_remote_server()
 
 	local USE="$( settings ".use${TYPE,,}" )"
 	if [[ ${USE} != "true" ]]; then
-		if check_for_env_file ; then
-			# Variables should be empty.
-			x="$( grep -E -v "^#|^$" "${ALLSKY_ENV}" | grep "${TYPE}" | grep -E -v "${TYPE}.*=\"\"|${TYPE}.*=$" )"
-			if [[ -n "${x}" ]]; then
-				echo "${TYPE_STRING} is not being used but settings for it exist in '${ALLSKY_ENV}:"
-				indent "${x}" | sed "s/${TYPE}.*=.*/${TYPE}/"
-				return 1
-			fi
+		# Variables should be empty.
+		x="$( grep -E -v "^#|^$" "${ALLSKY_ENV}" | grep "${TYPE}" | grep -E -v "${TYPE}.*=\"\"|${TYPE}.*=$" )"
+		if [[ -n "${x}" ]]; then
+			echo "${TYPE_STRING} is not being used but settings for it exist in '${ALLSKY_ENV}:"
+			indent "${x}" | sed "s/${TYPE}.*=.*/${TYPE}/"
+			return 1
 		fi
 		return 0
 	fi
@@ -254,7 +254,6 @@ function check_remote_server()
 			;;
 
 		ftp | ftps | sftp)
-			check_for_env_file || return 1
 			check_PROTOCOL "${PROTOCOL}" "${TYPE}_HOST" "${TYPE_STRING}" || RET=1
 			check_PROTOCOL "${PROTOCOL}" "${TYPE}_USER" "${TYPE_STRING}" || RET=1
 			check_PROTOCOL "${PROTOCOL}" "${TYPE}_PASSWORD" "${TYPE_STRING}" || RET=1
@@ -266,7 +265,6 @@ function check_remote_server()
 			;;
 
 		scp)
-			check_for_env_file || return 1
 			check_PROTOCOL "${PROTOCOL}" "${TYPE}_HOST" "${TYPE_STRING}" || RET=1
 			check_PROTOCOL "${PROTOCOL}" "${TYPE}_USER" "${TYPE_STRING}" || RET=1
 			if check_PROTOCOL "${PROTOCOL}" "${TYPE}_SSH_KEY_FILE" "${TYPE_STRING}" \
@@ -278,7 +276,6 @@ function check_remote_server()
 			;;
 
 		s3)
-			check_for_env_file || return 1
 			if check_PROTOCOL "${PROTOCOL}" "${TYPE}_AWS_CLI_DIR" "${TYPE_STRING}" \
 					&& [[ ! -e ${AWS_CLI_DIR} ]]; then
 				echo "${TYPE_STRING} Protocol (${PROTOCOL}) set but '${TYPE}_AWS_CLI_DIR' (${AWS_CLI_DIR}) does not exist."
@@ -290,7 +287,6 @@ function check_remote_server()
 			;;
 
 		gcs)
-			check_for_env_file || return 1
 			check_PROTOCOL "${PROTOCOL}" "${TYPE}_GCS_BUCKET" "${TYPE_STRING}" || RET=1
 			check_PROTOCOL "${PROTOCOL}" "${TYPE}_GCS_ACL" "${TYPE_STRING}" || RET=1
 			;;

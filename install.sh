@@ -810,7 +810,7 @@ install_webserver()
 	sudo systemctl stop hostapd 2> /dev/null
 	sudo systemctl stop lighttpd 2> /dev/null
 
-	if [[ ${install_webserver_et_al} == "true" ]]; then
+	if [[ ${install_webserver} == "true" ]]; then
 		display_msg --log progress "Preparing the web server."
 	else
 		display_msg --log progress "Installing the web server."
@@ -822,7 +822,7 @@ install_webserver()
 		if ! check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ; then
 			exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
 		fi
-		STATUS_VARIABLES+=("install_webserver_et_al='true'\n")
+		STATUS_VARIABLES+=("install_webserver='true'\n")
 	fi
 
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
@@ -1350,7 +1350,7 @@ set_what_can_be_skipped()
 			# No changes to these packages so no need to reinstall.
 			MSG="Skipping installation of: webserver et.al., PHP modules, Trutype fonts, Python"
 			display_msg --logonly info "${MSG}"
-			install_webserver_et_al="true"
+			install_webserver="true"
 			installed_PHP_modules="true"
 			installing_Trutype_fonts="true"
 		  	installed_Python_dependencies="true"

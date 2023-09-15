@@ -1331,7 +1331,7 @@
 "type" : "header-sub"
 },
 {
-"name" : "startrailsgramgenerate",
+"name" : "startrailsgenerate",
 "default" : true,
 "description" : "Enable to generate a startrails at the end of night.",
 "label" : "Generate Startrails",

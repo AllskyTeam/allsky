@@ -622,7 +622,6 @@ function one_instance()
 	local ABORTED_MSG1=""
 	local ABORTED_MSG2=""
 	local CAUSED_BY=""
-	local P=""
 
 	local OK="true"
 	local ERRORS=""

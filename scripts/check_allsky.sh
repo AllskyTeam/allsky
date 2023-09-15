@@ -815,35 +815,6 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 			echo "although it's normally around 90.  0 disables the high threshold check."
 		fi
 	fi
-
-	##### If images are being resized or cropped,
-	# make sure the resized/cropped image is fully within the sensor image.
-	HAS_PIXEL_ERROR="false"
-	if [[ ${IMG_RESIZE} == "true" ]]; then
-		if ! X="$( checkPixelValue "IMG_WIDTH" "${IMG_WIDTH}" "width" "${SENSOR_WIDTH}" )" ; then
-			heading "Errors"
-			echo -e "${X}"
-			HAS_PIXEL_ERROR="true"
-		fi
-		if ! X="$( checkPixelValue "IMG_HEIGHT" "${IMG_HEIGHT}" "height" "${SENSOR_HEIGHT}" )" ; then
-			heading "Errors"
-			echo -e "${X}"
-			HAS_PIXEL_ERROR="true"
-		fi
-	fi
-
-	if [[ ${RESIZE_UPLOADS} == "true" ]]; then
-		if ! X="$( checkPixelValue "RESIZE_UPLOADS_WIDTH" "${RESIZE_UPLOADS_WIDTH}" "width" "${SENSOR_WIDTH}" )" ; then
-			heading "Errors"
-			echo -e "${X}"
-			echo "It is typically less than the sensor width of ${SENSOR_WIDTH}."
-		fi
-		if ! X="$( checkPixelValue "RESIZE_UPLOADS_HEIGHT" "${RESIZE_UPLOADS_HEIGHT}" "height" "${SENSOR_HEIGHT}" )" ; then
-			heading "Errors"
-			echo -e "${X}"
-			echo "It is typically less than the sensor height of ${SENSOR_HEIGHT}."
-		fi
-	fi
 fi		# end of checking for warning items
 
 

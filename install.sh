@@ -382,8 +382,8 @@ check_for_raspistill()
 	STATUS_VARIABLES+=("check_for_raspistill='true'\n")
 
 	if W="$( which raspistill )" && [[ ${OS} != "buster" ]]; then
-		echo display_msg --longonly info "Renaming 'raspistill' on ${OS}."
-		echo sudo mv "${W}" "${W}-OLD"
+		display_msg --longonly info "Renaming 'raspistill' on ${OS}."
+		sudo mv "${W}" "${W}-OLD"
 	fi
 }
 
@@ -1925,16 +1925,12 @@ convert_config_sh()
 
 		doV "KEOGRAM" ".keogramgenerate" "boolean" "${NEW_FILE}"
 		doV "UPLOAD_KEOGRAM" ".keogramupload" "boolean" "${NEW_FILE}"
-		if [[ -n ${KEOGRAM_EXTRA_PARAMETERS} ]]; then
-			MSG="Check your 'Keogram Extra Parameters' setting; they may be the new defaults."
-			display_msg --log info "${MSG}"
-			doV "KEOGRAM_EXTRA_PARAMETERS" ".keogramextraparameters" "text" "${NEW_FILE}"
-		fi
+		doV "KEOGRAM_EXTRA_PARAMETERS" ".keogramextraparameters" "text" "${NEW_FILE}"
 
 		doV "STARTRAILS" ".startrailsgramgenerate" "boolean" "${NEW_FILE}"
-		doV "STARTRAILS_EXTRA_PARAMETERS" ".startrailsextraparameters" "text" "${NEW_FILE}"
 		doV "UPLOAD_STARTRAILS" ".startrailsupload" "boolean" "${NEW_FILE}"
 		doV "BRIGHTNESS_THRESHOLD" ".startrailsbrightnessthreshold" "number" "${NEW_FILE}"
+		doV "STARTRAILS_EXTRA_PARAMETERS" ".startrailsextraparameters" "text" "${NEW_FILE}"
 
 		[[ -z ${THUMBNAIL_SIZE_X} ]] && THUMBNAIL_SIZE_X=100
 		doV "THUMBNAIL_SIZE_X" ".thumbnailssizex" "number" "${NEW_FILE}"

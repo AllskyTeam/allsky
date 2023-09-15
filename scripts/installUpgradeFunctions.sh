@@ -231,7 +231,7 @@ function check_remote_server()
 	fi
 
 	local USE="$( settings ".use${TYPE,,}" )"
-	if [[ ${USE} -eq 0 ]]; then
+	if [[ ${USE} != "true" ]]; then
 		if check_for_env_file ; then
 			# Variables should be empty.
 			x="$( grep -E -v "^#|^$" "${ALLSKY_ENV}" | grep "${TYPE}" | grep -E -v "${TYPE}.*=\"\"|${TYPE}.*=$" )"

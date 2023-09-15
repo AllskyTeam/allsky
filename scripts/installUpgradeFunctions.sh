@@ -210,7 +210,7 @@ function check_PROTOCOL()
 	local P="${1}"	# Protocol
 	local V="${2}"	# Variable
 	local N="${3}"	# Name
-	local VALUE="$( get_variable "${V}" "${ALLSKY_ENV}" )"
+	local VALUE="$( settings ".${V}" "${ALLSKY_ENV}" )"
 	if [[ -z ${VALUE} ]]; then
 		echo "${N} Protocol (${P}) set but not '${V}'."
 		echo "Uploads will not work until this is fixed."

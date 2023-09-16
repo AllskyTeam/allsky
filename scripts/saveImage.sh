@@ -220,7 +220,7 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 		"${RESOLUTION_X}" "${RESOLUTION_Y}" )"
 	if [[ -z ${ERROR_MSG} ]]; then
 		CROP_WIDTH=$(( RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))
-		CROP_HEIGHT=$(( RESOLUTION_H - CROP_TOP - CROP_BOTTOM ))
+		CROP_HEIGHT=$(( RESOLUTION_Y - CROP_TOP - CROP_BOTTOM ))
 # TODO:
 CROP_OFFSET_X="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 CROP_OFFSET_Y="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -340,7 +340,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 			fi
 
 			MOD=0
-			TIMELAPSE_MINFORCE_CREATION="$( settings ".minitimelapseforcecreation" )"
+			TIMELAPSE_MINI_FORCE_CREATION="$( settings ".minitimelapseforcecreation" )"
 			if [[ ${TIMELAPSE_MINI_FORCE_CREATION} == "true" ]]; then
 				[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo -e "NUM_IMAGES=${NUM_IMAGES}"
 

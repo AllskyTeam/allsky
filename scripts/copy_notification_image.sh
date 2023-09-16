@@ -1,15 +1,13 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 
 function usage_and_exit
 {
@@ -23,8 +21,7 @@ function usage_and_exit
 		echo "  TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message'"
 		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	) >&2
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
 
 OK="true"
@@ -77,7 +74,7 @@ if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 			"${7}" "${8}" "${9}" "${10:-${EXTENSION}}" "${11}" "${12}" ; then
 		exit 2			# it output error messages
 	fi
-	NOTIFICATION_FILE="${ALLSKYCAPTURE_SAVE_DIR}/${NOTIFICATION_TYPE}.${EXTENSION}"
+	NOTIFICATION_FILE="${CAPTURE_SAVE_DIR}/${NOTIFICATION_TYPE}.${EXTENSION}"
 else
 	NOTIFICATION_FILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATION_TYPE}.${EXTENSION}"
 	if [[ ! -e ${NOTIFICATION_FILE} ]]; then
@@ -121,8 +118,10 @@ else
 fi
 
 # Resize the image if required
-if [[ ${IMG_RESIZE} == "true" ]]; then
-	if ! convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}" ; then
+RESIZE_W="$( settings ".imageresizewidth" )"
+if [[ ${RESIZE_W} -gt 0 ]]; then
+	RESIZE_H="$( settings ".imageresizeheight" )"
+	if ! convert "${CURRENT_IMAGE}" -resize "${RESIZE_W}x${RESIZE_H}" "${CURRENT_IMAGE}" ; then
 		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed${NC}"
 		exit 3
 	fi
@@ -133,9 +132,9 @@ fi
 # Don't save in main image directory because we don't want the notification image in timelapses.
 # If at nighttime, save them in (possibly) yesterday's directory.
 # If during day, save in today's directory.
-if [[ $(settings ".takedaytimeimages") == "1" && \
-	  $(settings ".savedaytimeimages") == "1" && \
-	  ${IMG_CREATE_THUMBNAILS} == "true" ]]; then
+if [[ $( settings ".takedaytimeimages" ) == "true" && \
+	  $( settings ".savedaytimeimages" ) == "true" && \
+	  $( settings ".imagecreatethumbnails" ) == "true" ]]; then
 	DATE_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
 	# Use today's folder if it exists, otherwise yesterday's
 	[[ ! -d ${DATE_DIR} ]] && DATE_DIR="${ALLSKY_IMAGES}/$(date -d '12 hours ago' +'%Y%m%d')"
@@ -146,7 +145,9 @@ if [[ $(settings ".takedaytimeimages") == "1" && \
 	else
 		THUMB="${THUMBNAILS_DIR}/${FILENAME}-$(date +'%Y%m%d%H%M%S').${EXTENSION}"
 
-		if ! convert "${CURRENT_IMAGE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}" ; then
+		X="$( settings ".thumbnailsizex" )"
+		Y="$( settings ".thumbnailsizey" )"
+		if ! convert "${CURRENT_IMAGE}" -resize "${X}x${Y}" "${THUMB}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
 		fi
 	fi
@@ -164,13 +165,15 @@ fi
 # Keep track of last notification type and time.
 # We don't use the type (at least not yet), but save it anyhow so we can manually look at
 # it for debugging purposes.
-EXPIRE_TIME=$(date -d "${EXPIRES_IN_SECONDS} seconds" +'%Y-%m-%d %H:%M:%S')
+EXPIRE_TIME=$( date -d "${EXPIRES_IN_SECONDS} seconds" +'%Y-%m-%d %H:%M:%S' )
 echo "${NOTIFICATION_TYPE},${EXPIRES_IN_SECONDS},${EXPIRE_TIME}" >> "${ALLSKY_NOTIFICATION_LOG}"
 touch --date="${EXPIRE_TIME}" "${ALLSKY_NOTIFICATION_LOG}"
 
 # If upload is true, optionally create a smaller version of the image, either way, upload it.
-if [[ ${IMG_UPLOAD} == "true" ]]; then
-	if [[ ${RESIZE_UPLOADS} == "true" ]]; then
+if [[ $( settings ".imageuploadfrequency" ) -gt 0 ]]; then
+	RESIZE_UPLOADS_WIDTH="$( settings ".imageresizeuploadswidth" )"
+	if [[ ${RESIZE_UPLOADS_WIDTH} == "true" ]]; then
+		RESIZE_UPLOADS_HEIGHT="$( settings ".imageresizeuploadsheight" )"
 		# Don't overwrite FINAL_IMAGE since the web server(s) may be looking at it.
 		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"
 
@@ -203,8 +206,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 	# If we created a temporary copy, delete it.
 	[[ ${TEMP_FILE} != "" ]] && rm -f "${TEMP_FILE}"
 
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 fi
 
 exit 0

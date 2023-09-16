@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${ALLSKY_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -17,8 +17,7 @@ function usage_and_exit()
 	echo -e  "${wNC}"
 	echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
 	echo "unless the --optionsOnly argument is given."
-	# shellcheck disable=SC2086
-	exit ${1}
+	exit "${1}"
 }
 
 # Check arguments
@@ -72,7 +71,7 @@ if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 	[[ $(($# % 4)) -ne 0 ]] && usage_and_exit 2
 fi
 
-if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
+if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 	ERROR_PREFIX=""
 else
 	ERROR_PREFIX="${ME}: "
@@ -103,8 +102,7 @@ SHOW_ON_MAP=""
 # The first time we're called, set ${WEBSITES}
 function check_website()
 {
-	# shellcheck disable=SC2086
-	[[ -n ${HAS_WEBSITE_RET} ]] && return ${HAS_WEBSITE_RET}		# already checked
+	[[ -n ${HAS_WEBSITE_RET} ]] && return "${HAS_WEBSITE_RET}"		# already checked
 
 	WEBSITES="$(whatWebsites)"
 	if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
@@ -117,8 +115,7 @@ function check_website()
 		WEB_CONFIG_FILE=""
 		HAS_WEBSITE_RET=1
 	fi
-	# shellcheck disable=SC2086
-	return ${HAS_WEBSITE_RET}
+	return "${HAS_WEBSITE_RET}"
 }
 if [[ -f ${SETTINGS_FILE} ]]; then
 	# check_website requies the settings file to exist.
@@ -168,7 +165,7 @@ do
 				NEW_VALUE="$( settings .cameratype )"
 
 				MSG="Re-creating files for cameraType ${NEW_VALUE}, cameraNumber ${NEW_CAMERA_NUMBER}"
-				if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
+				if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 					echo -e "<script>console.log('${MSG}');</script>"
 				elif [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}${MSG}${wNC}"
@@ -178,8 +175,7 @@ do
 			if [[ ! -e "${ALLSKY_BIN}/capture_${NEW_VALUE}" ]]; then
 				MSG="Unknown Camera Type: '${NEW_VALUE}'."
 				echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${MSG}${wNC}"
-				# shellcheck disable=SC2086
-				exit ${EXIT_NO_CAMERA}
+				exit "${EXIT_NO_CAMERA}"
 			fi
 
 			# This requires Allsky to be stopped so we don't
@@ -200,8 +196,7 @@ do
 					RET=$?
 					if [[ ${RET} -ne 0 ]] ; then
 						echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${C}.${wNC}"
-						# shellcheck disable=SC2086
-						exit ${RET}
+						exit "${RET}"
 					fi
 					C=" -cmd ${C}"
 				else
@@ -231,8 +226,7 @@ do
 
 					# Restore prior cc file if there was one.
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
-					# shellcheck disable=SC2086
-					exit ${RET}		# the actual exit code is important
+					exit "${RET}"		# the actual exit code is important
 				fi
 
 				# Create a link to a file that contains the camera type and model in the name.
@@ -247,7 +241,7 @@ do
 				# ${CC_FILE} is a generic name defined in variables.sh.
 				# ${SPECIFIC_NAME} is specific to the camera type/model.
 				# It isn't really needed except debugging.
-				CC="$(basename "${CC_FILE}")"
+				CC="$( basename "${CC_FILE}" )"
 				CC_EXT="${CC##*.}"			# after "."
 				CC_NAME="${CC%.*}"			# before "."
 				SPECIFIC_NAME="${ALLSKY_CONFIG}/${CC_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_EXT}"
@@ -371,7 +365,7 @@ do
 
 		"latitude" | "longitude")
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
-			if NEW_VALUE="$(convertLatLong "${NEW_VALUE}" "${KEY}")" ; then
+			if NEW_VALUE="$( convertLatLong "${NEW_VALUE}" "${KEY}" )" ; then
 				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			else
 				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
@@ -415,7 +409,7 @@ do
 				# If there are two Websites, this gets the index in the first one.
 				# Let's hope it's the same index in the second one...
 				PARENT="homePage.popoutIcons"
-				INDEX=$(getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "Allsky Settings")
+				INDEX=$( getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "Allsky Settings" )
 				if [[ ${INDEX} -ge 0 ]]; then
 					WEBSITE_CONFIG+=("${PARENT}[${INDEX}].display" "${LABEL}" "${NEW_VALUE}")
 				else

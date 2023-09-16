@@ -3,15 +3,13 @@
 # This script allows users to manually generate or upload keograms, startrails, and timelapses.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"	|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"		|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 
 DO_HELP="false"
 DEBUG_ARG=""
@@ -87,13 +85,13 @@ done
 
 usage_and_exit()
 {
-	retcode=${1}
+	local RET=${1}
 	echo
-	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo "Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\"
 	echo "    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] \\"
 	echo "    {--images file | <INPUT_DIR>}"
-	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
+	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--help' displays this message and exits."
 	echo "      '--debug' runs upload.sh in debug mode."
@@ -114,8 +112,7 @@ usage_and_exit()
 	echo
 	echo "2. Specifying '--images file' uses the images listed in 'file'; <INPUT_DIR> is not used."
 	echo "   The output file is stored in the same directory as the first image."
-	# shellcheck disable=SC2086
-	exit ${retcode}
+	exit "${RET}"
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
@@ -234,7 +231,7 @@ if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
 	# a non-empty string (eg. IMGSIZE="1280x960") will be produced and later
 	# parts of this script so startrail and keogram generation can use it
 	# to reject incorrectly-sized images.
-	IMGSIZE=$(settings 'if .width != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end')
+	IMGSIZE=$( settings 'if .width != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end' )
 	if [[ ${IMGSIZE} != "" ]]; then
 		SIZE_FILTER="-s ${IMGSIZE//\"}"
 	else
@@ -247,7 +244,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${OUTPUT_DIR}/keogram/${KEOGRAM_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		if [[ -z "${NICE}" ]]; then
+		if [[ -z ${NICE} ]]; then
 			N=""
 		else
 			N="--nice-level ${NICE}"
@@ -266,7 +263,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${OUTPUT_DIR}/startrails/${STARTRAILS_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		if [[ -z "${NICE}" ]]; then
+		if [[ -z ${NICE} ]]; then
 			N=""
 		else
 			N="--nice ${NICE}"
@@ -291,6 +288,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	UPLOAD_THUMBNAIL="${OUTPUT_DIR}/${THUMBNAIL_FILE}"
 	UPLOAD_FILE="${OUTPUT_DIR}/${VIDEOS_FILE}"
 
+	TIMELAPSE_UPLOAD_THUMBNAIL="$( settings ".timelapseuploadthumbnail" )"
 	if [[ ${TYPE} == "GENERATE" ]]; then
 		if [[ ${THUMBNAIL_ONLY} == "true" ]]; then
 			if [[ -f ${UPLOAD_FILE} ]]; then
@@ -301,7 +299,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 				RET=1
 			fi
 		else
-			if [[ -z "${NICE}" ]]; then
+			if [[ -z ${NICE} ]]; then
 				N=""
 			else
 				N="nice -n ${NICE}"
@@ -351,5 +349,4 @@ if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${EXIT_CODE} -eq 0 ]]; th
 	echo "================"
 fi
 
-#shellcheck disable=SC2086
-exit ${EXIT_CODE}
+exit "${EXIT_CODE}"

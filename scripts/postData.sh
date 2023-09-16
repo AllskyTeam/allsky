@@ -6,28 +6,25 @@
 # By default we upload to both local and remote Websites if they exist.
 
 # Allow this script to be executed manually or by sudo, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 
 usage_and_exit()
 {
-	retcode=${1}
+	RET=${1}
 	echo
-	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo "Usage: ${ME} [--help] [--settingsOnly] \\"
 	echo "    [--local-web] [--remote-web] [--remote-server] [--allfiles]"
-	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
+	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--allfiles' causes all 'view settings' files to be uploaded"
-	# shellcheck disable=SC2086
-	exit ${retcode}
+	exit "${RET}"
 }
 
 HELP="false"
@@ -82,31 +79,31 @@ fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	OK="true"
-	if ! latitude="$(convertLatLong "$(settings ".latitude")" "latitude")" ; then
+	if ! latitude="$( convertLatLong "$( settings ".latitude" )" "latitude" )" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${latitude}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${latitude}"
 	fi
-	if ! longitude="$(convertLatLong "$(settings ".longitude")" "longitude")" ; then
+	if ! longitude="$( convertLatLong "$( settings ".longitude" )" "longitude" )" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${longitude}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${longitude}"
 	fi
 	[[ ${OK} == "false" ]] && exit 1
 
-	angle="$(settings ".angle")"
-	timezone="$(date "+%z")"
+	angle="$( settings ".angle" )"
+	timezone="$( date "+%z" )"
 
 	# If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
 	# If nighttime happens before noon, sunwait returns "--:-- (Polar night)"
 	sunrise="$(sunwait list rise angle "${angle}" "${latitude}" "${longitude}")"
 	sunrise_hhmm="${sunrise:0:5}"
-	sunset="$(sunwait list set angle "${angle}" "${latitude}" "${longitude}")"
+	sunset="$( sunwait list set angle "${angle}" "${latitude}" "${longitude}" )"
 	sunset_hhmm="${sunset:0:5}"
 
 	if [[ ${sunrise_hhmm} == "--:--" || ${sunset_hhmm} == "--:--" ]]; then
 		# nighttime starts after midnight or before noon.
-		today="$(date --date='tomorrow' +%Y-%m-%d)"		# is actually tomorrow
+		today="$( date --date='tomorrow' +%Y-%m-%d )"		# is actually tomorrow
 		# TODO What SHOULD *_hhmm be?
 		sunrise_hhmm="00:00"
 		sunset_hhmm="00:00"
@@ -117,13 +114,13 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		echo "Using tomorrow at '${sunrise_hhmm}' instead."
 		echo "***"
 	else
-		today="$(date +%Y-%m-%d)"
+		today="$( date +%Y-%m-%d )"
 	fi
 
 	FILE="data.json"
 	OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
 	(
-		if [[ $(settings ".takedaytimeimages") -eq 1 ]]; then
+		if [[ $(settings ".takedaytimeimages") == "true" ]]; then
 			D="true"
 		else
 			D="false"
@@ -149,8 +146,7 @@ function upload_file()
 		return 1
 	fi
 
-	#shellcheck disable=SC2086
-	upload_all ${WHERE} "${FILE_TO_UPLOAD}" "${DIRECTORY}" "" "PostData"
+	upload_all "${WHERE}" "${FILE_TO_UPLOAD}" "${DIRECTORY}" "" "PostData"
 	return $?
 }
 
@@ -158,17 +154,14 @@ function upload_file()
 # This directory is in the root of the Allsky Website.
 # Assume if the first upload fails they all will, so exit.
 WEB_ONLY="--local-web --remote-web"
-#shellcheck disable=SC2086
 upload_file "${WEB_ONLY}" "${SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" \
-	|| exit $?
+	|| exit "$?"
 
 if [[ ${ALL_FILES} == "true" ]]; then
-	#shellcheck disable=SC2086
-	upload_file "${WEB_ONLY}" "${OPTIONS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
-	#shellcheck disable=SC2086
+	upload_file "${WEB_ONLY}" "${OPTIONS_FILE}" \
+		"${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
 	upload_file "${WEB_ONLY}" "${ALLSKY_WEBUI}/includes/allskySettings.php" \
 		"${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
-	#shellcheck disable=SC2086
 	upload_file "${WEB_ONLY}" "${ALLSKY_DOCUMENTATION}/css/custom.css" \
 		"${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
 fi
@@ -176,8 +169,7 @@ fi
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	# Some remote servers may want to see this file so upload everywhere.
 	upload_file "" "${OUTPUT_FILE}" ""		# Goes in top-level directory
-	# shellcheck disable=SC2086
-	exit $?
+	exit "$?"
 fi
 
 exit 0

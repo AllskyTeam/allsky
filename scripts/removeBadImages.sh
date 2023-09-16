@@ -12,24 +12,22 @@
 
 # The MEAN is the only thing that should go to stdout.
 
-ME="$(basename "${BASH_ARGV0}")"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh" 		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091				# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh" 		|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh" 		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 
 usage()
 {
-	retcode="${1}"
+	RET="${1}"
 	(
 		echo
 		echo "Remove images with corrupt data which might mess up startrails and keograms."
-		[ "${retcode}" -ne 0 ] && echo -en "${RED}"
+		[ "${RET}" -ne 0 ] && echo -en "${RED}"
 		echo -n "Usage: ${ME} [--help] [--debug]  directory  [file]"
-		[ "${retcode}" -ne 0 ] && echo -e "${NC}"
+		[ "${RET}" -ne 0 ] && echo -e "${NC}"
 		echo
 		echo "You must enter the arguments in the above order."
 # TODO: use getopts to allow any order
@@ -37,8 +35,7 @@ usage()
 		echo "If 'file' is specified, only that file in 'directory' will be checked,"
 		echo "otherwise all files in 'directory' will be checked."
 	) >&2
-	# shellcheck disable=SC2086
-	exit ${retcode}
+	exit "${RET}"
 }
 [[ ${1} == "-h" || ${1} == "--help" ]] && usage 0
 if [[ ${1} == "-d" || ${1} == "--debug" ]]; then
@@ -56,7 +53,7 @@ DATE="${1}"
 FILE="${2}"
 
 # If we're running in debug mode don't display ${ME} since it makes the output harder to read.
-if [[ ${DEBUG} == "true" || ${ON_TTY} -eq 1 ]]; then
+if [[ ${DEBUG} == "true" || ${ON_TTY} == "true" ]]; then
 	ME=""
 else
 	ME="${ME}:"
@@ -74,10 +71,12 @@ if [[ ${FILE} != "" && ! -f ${DATE}/${FILE} ]]; then
 	exit 2
 fi
 
-if [[ $(settings ".takedarkframes") -eq 1 ]]; then
+HIGH="$( settings ".imageremovebadhigh" )"
+LOW="$( settings ".imageremovebadlow" )"
+if [[ $(settings ".takedarkframes") == "true" ]]; then
 	# Disable low brightness check since darks will have extremely low brightness.
 	# But continue with the other checks in case the dark file is corrupted.
-	REMOVE_BAD_IMAGES_THRESHOLD_LOW=0
+	LOW=0
 fi
 
 # Find the full size image-*jpg and image-*png files (not the thumbnails) and
@@ -117,9 +116,7 @@ num_bad=0
 # If the LOW threshold is 0 it's disabled.
 # If the HIGH threshold is 0 or 100 (nothing can be brighter than 100) it's disabled.
 # Convert possibly 0.0 and 100.0 to 0 and 100 so we can check using bash.
-HIGH=${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}
 [[ $( echo "${HIGH} == 0 || ${HIGH} > 100" | bc ) -eq 1 ]] && HIGH=0
-LOW=${REMOVE_BAD_IMAGES_THRESHOLD_LOW}
 [[ $( echo "${LOW} <= 0" | bc ) -eq 1 ]] && LOW=0
 
 # If we're processing a whole directory assume it's done in the background so "nice" it.
@@ -136,7 +133,7 @@ for f in ${IMAGE_FILES} ; do
 	if [[ ! -s ${f} ]]; then
 		BAD="'${f}' (zero length)"
 	else
-		if ! MEAN=$(${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1) ; then
+		if ! MEAN=$( ${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1 ) ; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
 			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' failed; leaving file.${NC}" >&2
 			echo -e "Message=${MEAN}" >&2
@@ -223,7 +220,7 @@ else
 # echo "xxxxxxxxxx ${BAD_COUNT} bad consecutive images" >&2
 		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
 			MSG="Multiple bad consecutive bad images."
-			MSG="${MSG}\nCheck 'REMOVE_BAD_IMAGES_THRESHOLD_LOW' and 'REMOVE_BAD_IMAGES_THRESHOLD_HIGH' in config.sh"
+			MSG="${MSG}\nCheck 'Remove Bad Images Threshold Low' and 'Remove Bad Images Threshold High' in the WebUI."
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" >&2
 		fi
 		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then

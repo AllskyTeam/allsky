@@ -23,7 +23,7 @@ fi
 # If we weren't saving daytime images the directory won't exist.
 SAVING="$( settings ".savedaytimeimages" )"
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
-if [[ ! -d ${DATE_DIR} && ${SAVING} -eq 1 ]]; then
+if [[ ! -d ${DATE_DIR} && ${SAVING} == "true" ]]; then
 	echo -e "${ME}: ${RED}ERROR: '${DATE_DIR}' not found!${NC}"
 	exit 2
 fi

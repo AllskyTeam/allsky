@@ -4,13 +4,13 @@
 # looking for errors that are easy for users to miss.
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -21,8 +21,7 @@ usage_and_exit()
 
 	[[ ${RET} -ne 0 ]] && echo -e "${NC}" >&2
 
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
 
 DEBUG="false"
@@ -116,7 +115,7 @@ parse_output()
 			echo -e "\t  FIX: make sure that directory exists on the server." >&2
 		else
 			echo -e "\t  The 'Image Directory' in the WebUI's '${S}' section is empty." >&2
-			# TODO: can this every happen?
+			# TODO: can this ever happen?
 			echo -e "\t  FIX: unknown - not sure why this failed." >&2
 		fi
 	fi
@@ -218,9 +217,8 @@ do_test()
 	fi
 
 	rm -f "${TEST_FILE}"
-	[[ ! -s "${OUTPUT_FILE}" ]] && rm -f "${OUTPUT_FILE}"
-	# shellcheck disable=SC2086
-	exit ${RET}
+	[[ ! -s ${OUTPUT_FILE} ]] && rm -f "${OUTPUT_FILE}"
+	exit "${RET}"
 }
 
 # ========================= main body of program

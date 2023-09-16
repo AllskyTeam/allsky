@@ -16,8 +16,8 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 
 function usage_and_exit()
 {
-	RET_CODE=${1}
-	[[ ${RET_CODE} -ne 0 ]] && echo -en "${wERROR}"
+	RET=${1}
+	[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
 	echo
 	echo -e "Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight]"
 	echo
@@ -28,8 +28,8 @@ function usage_and_exit()
 	echo "--debug: Output debugging statements."
 	echo "--endofnight: Indicates how ${ME} was invoked."
 	echo
-	[[ ${RET_CODE} -ne 0 ]] && echo -e "${wNC}"
-	exit "${RET_CODE}"
+	[[ ${RET} -ne 0 ]] && echo -e "${wNC}"
+	exit "${RET}"
 }
 
 function get_domain()
@@ -403,4 +403,4 @@ elif [[ ( ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 4) && ${ENDOFNIGHT} =
 	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
 fi
 
-exit ${RETURN_CODE}
+exit "${RETURN_CODE}"

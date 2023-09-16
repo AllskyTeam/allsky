@@ -40,5 +40,3 @@ if [[ $(settings ".notificationimages") == "false" ]]; then
 	# will want to see the dark frames so the performance hit is 
 	cp "${MOVE_TO_FILE}" "${ALLSKY_TMP}/${FILENAME}.${EXTENSION}" || exit 4
 fi
-
-exit 0

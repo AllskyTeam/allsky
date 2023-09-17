@@ -219,15 +219,19 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	ERROR_MSG="$( checkCropValues "${CROP_TOP}" "${CROP_RIGHT}" "${CROP_BOTTOM}" "${CROP_LEFT}" \
 		"${RESOLUTION_X}" "${RESOLUTION_Y}" )"
 	if [[ -z ${ERROR_MSG} ]]; then
-		CROP_WIDTH=$(( RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))
-		CROP_HEIGHT=$(( RESOLUTION_Y - CROP_TOP - CROP_BOTTOM ))
-# TODO:
-CROP_OFFSET_X="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-CROP_OFFSET_Y="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+			CROP_WIDTH=$(( RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))
+			CROP_HEIGHT=$(( RESOLUTION_Y - CROP_TOP - CROP_BOTTOM ))
 			echo -e "*** ${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}."
 		fi
-		convert "${CURRENT_IMAGE}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${CURRENT_IMAGE}"
+		C=""
+		[[ ${CROP_TOP} -ne 0 ]] && C="${C} -gravity North -chop 0x${CROP_TOP}"
+		[[ ${CROP_RIGHT} -ne 0 ]] && C="${C} -gravity East -chop ${CROP_RIGHT}x0"
+		[[ ${CROP_BOTTOM} -ne 0 ]] && C="${C} -gravity South -chop 0x${CROP_BOTTOM}"
+		[[ ${CROP_LEFT} -ne 0 ]] && C="${C} -gravity West -chop ${CROP_LEFT}x0"
+
+		# shellcheck disable=SC2086
+		convert "${CURRENT_IMAGE}" ${C} "${CURRENT_IMAGE}"
 		if [ $? -ne 0 ] ; then
 			echo -e "${RED}*** ${ME}: ERROR: CROP_IMAGE failed; not saving${NC}"
 			exit 4

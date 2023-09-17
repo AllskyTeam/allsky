@@ -5,7 +5,7 @@
 
 ME2="$( basename "${BASH_SOURCE[0]}" )"
 
-# Subtract dark frame if there is one defined in config.sh
+# Subtract dark frame if there is one.
 # This has to come after executing darkCapture.sh which sets ${AS_TEMPERATURE_C}.
 
 if [[ $(settings ".usedarkframes") == "true" ]]; then

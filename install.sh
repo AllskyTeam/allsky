@@ -793,7 +793,7 @@ check_success()
 		MSG="The full log file is in ${LOG}"
 		MSG="${MSG}\nThe end of the file is:"
 		display_msg --log info "${MSG}"
-		tail -5 "${LOG}"
+		tail "${LOG}"
 
 		return 1
 	fi
@@ -1933,9 +1933,9 @@ convert_config_sh()
 		doV "STARTRAILS_EXTRA_PARAMETERS" ".startrailsextraparameters" "text" "${NEW_FILE}"
 
 		[[ -z ${THUMBNAIL_SIZE_X} ]] && THUMBNAIL_SIZE_X=100
-		doV "THUMBNAIL_SIZE_X" ".thumbnailssizex" "number" "${NEW_FILE}"
+		doV "THUMBNAIL_SIZE_X" ".thumbnailsizex" "number" "${NEW_FILE}"
 		[[ -z ${THUMBNAIL_SIZE_Y} ]] && THUMBNAIL_SIZE_Y=75
-		doV "THUMBNAIL_SIZE_Y" ".thumbnailssizey" "number" "${NEW_FILE}"
+		doV "THUMBNAIL_SIZE_Y" ".thumbnailsizey" "number" "${NEW_FILE}"
 
 		# NIGHTS_TO_KEEP was replaced by DAYS_TO_KEEP and the AUTO_DELETE boolean was deleted.
 		if [[ -n ${NIGHTS_TO_KEEP} && ${AUTO_DELETE} == "true" ]]; then

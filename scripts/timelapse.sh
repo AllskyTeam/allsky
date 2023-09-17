@@ -268,7 +268,7 @@ else
 	SCALE=""
 fi
 FFLOG="$( settings ".timelapsefflog" )"
-# shellcheck disable=SC2086
+# shellcheck disable=SC2086,SC2046
 X="$(ffmpeg -y -f image2 \
 	-loglevel "${FFLOG}" \
 	-r "${FPS}" \

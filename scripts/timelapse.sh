@@ -250,7 +250,6 @@ fi
 
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
-# set FFLOG=info in config.sh if you want to see what's going on for debugging.
 if [[ ${IS_MINI} == "true" ]]; then
 	FPS="$( settings ".minitimelapsefps" )"
 	TIMELAPSE_BITRATE="$( settings ".minitimelapsebitrate" )"

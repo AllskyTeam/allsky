@@ -313,8 +313,8 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 	# shellcheck disable=SC2034
 	TAKING_DARKS="$( get_setting ".takedarkframes" )"
 	KEEP_SEQUENCE="$( get_setting ".timelapsekeepsequencee" )"
-	THUMBNAIL_SIZE_X="$( get_setting ".thumbnailssizex" )"
-	THUMBNAIL_SIZE_Y="$( get_setting ".thumbnailssizey" )"
+	THUMBNAIL_SIZE_X="$( get_setting ".thumbnailsizex" )"
+	THUMBNAIL_SIZE_Y="$( get_setting ".thumbnailsizey" )"
 	DAYS_TO_KEEP="$( get_setting ".daystokeep" )"
 	LOCAL_WEB_DAYS_TO_KEEP="$( get_setting ".daystokeeplocalwebsite" )"
 	REMOTE_WEB_DAYS_TO_KEEP="$( get_setting ".daystokeepremotewebsite" )"

@@ -112,7 +112,7 @@ if __name__ == "__main__":
             shared.log(0, "ERROR: Unable to read SETTINGS_FILE - Aborting", exitCode=1)
 
         shared.fullFilename = os.environ["FULL_FILENAME"]
-			# TODO: imagecreatethumbnails is a boolean
+        # TODO: imagecreatethumbnails is a boolean
         shared.createThumbnails = int(shared.getSetting("imagecreatethumbnails"))
         shared.thumbnailWidth = int(shared.getSetting("thumbnailsizex"))
         shared.thumbnailHeight = int(shared.getSetting("thumbnailsizey"))

@@ -61,7 +61,7 @@ if [[ $( settings ".keogramgenerate" ) == "true" ]]; then
 fi
 
 # Generate startrails from collected images.
-# Threshold set to 0.1 by default in config.sh to avoid stacking over-exposed images.
+# Threshold set to 0.1 by default to avoid stacking over-exposed images.
 if [[ $( settings ".startrailsgenerate" ) == "true" ]]; then
 	echo -e "${ME}: ===== Generating Startrails"
 	#shellcheck disable=SC2086

@@ -217,6 +217,8 @@ mkdir "${ALLSKY_ABORTS_DIR}"
 sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ABORTS_DIR}"
 sudo chmod 775 "${ALLSKY_ABORTS_DIR}"
 
+rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
+
 # Optionally display a notification image.
 if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	# Can do this in the background to speed up startup.
@@ -261,8 +263,6 @@ else
 fi
 
 CAPTURE="capture_${CAMERA_TYPE}"
-
-rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 
 # Clear up any flow timings
 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings

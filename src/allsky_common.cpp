@@ -908,7 +908,7 @@ bool validateLong(long *num, long min, long max, char const *name, bool invalidI
 bool validateFloat(double *num, double min, double max, char const *name, bool invalidIsOK)
 {
 	if (*num < min) {
-		fprintf(stderr, "*** %s: '%s' (%'.1f) is less than the minimum of %'.1f",
+		fprintf(stderr, "*** %s: '%s' (%'.3f) is less than the minimum of %'.3f",
 			invalidIsOK ? "WARNING" : "ERROR", name, *num, min);
 		if (invalidIsOK == true)
 		{
@@ -919,7 +919,7 @@ bool validateFloat(double *num, double min, double max, char const *name, bool i
 		return invalidIsOK;
 
 	} else if (*num > max) {
-		fprintf(stderr, "*** %s: '%s' (%'.1f) is greater than the maximum of %'.1f",
+		fprintf(stderr, "*** %s: '%s' (%'.3f) is greater than the maximum of %'.3f",
 			invalidIsOK ? "WARNING" : "ERROR", name, *num, max);
 		if (invalidIsOK == true)
 		{

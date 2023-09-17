@@ -1,15 +1,13 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh" || exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 
 
 ENTERED="$*"
@@ -85,8 +83,7 @@ usage_and_exit()
 	echo "'--mini' uses the MINI_TIMELAPSE settings and the timelapse file is"
 	echo "   called 'mini-timelapse.mp4' if '--output' isn't used."
 	echo -en "${NC}"
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
 if [[ -n ${IMAGES_FILE} ]]; then
 	# If IMAGES_FILE is specified there should be no other arguments.
@@ -192,6 +189,7 @@ fi
 TMP="${ALLSKY_TMP}/timelapseTMP.txt"
 [[ ${IS_MINI} == "false"  ]] && : > "${TMP}"		# Only create when NOT doing mini-timelapses
 
+KEEP_SEQUENCE="$( settings ".timelapsekeepsequence" )"
 if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
@@ -222,8 +220,8 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 				# This user or something else may have removed it.
 				if [[ ! -s ${IMAGE} ]]; then
 					if [[ ! -f ${IMAGE} ]]; then
-# TODO: would be nice to remove from the file,
-# but we don't create/update the file so any change we make may be overwritten.
+						# It would be nice to remove from the file, but we don't
+						# create/update the file so any change we make may be overwritten.
 						MSG="not found"
 					else
 						MSG="has nothing in it"
@@ -237,7 +235,7 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 				NUM="$( printf "%04d" "${NUM_IMAGES}" )"
 				ln -s "${IMAGE}" "${SEQUENCE_DIR}/${NUM}.${EXTENSION}"
 			fi
-		done
+	done
 	if [[ $? -ne 0 ]]; then
 		echo -e "${RED}*** ${ME} ERROR: No images found in '${INPUT_DIR}'!${NC}"
 		rm -fr "${SEQUENCE_DIR}"
@@ -250,36 +248,42 @@ else
 	echo -e "${NC}"
 fi
 
-SCALE=""
-
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
 # set FFLOG=info in config.sh if you want to see what's going on for debugging.
 if [[ ${IS_MINI} == "true" ]]; then
-	FPS="${TIMELAPSE_MINI_FPS}"
-	TIMELAPSE_BITRATE="${TIMELAPSE_MINI_BITRATE}"
-	if [[ ${TIMELAPSE_MINI_WIDTH} != "0" ]]; then
-		SCALE="-filter:v scale=${TIMELAPSE_MINI_WIDTH}:${TIMELAPSE_MINI_HEIGHT}"
-	fi
-elif [[ ${TIMELAPSEWIDTH} != "0" ]]; then
-	SCALE="-filter:v scale=${TIMELAPSEWIDTH}:${TIMELAPSEHEIGHT}"
+	FPS="$( settings ".minitimelapsefps" )"
+	TIMELAPSE_BITRATE="$( settings ".minitimelapsebitrate" )"
+	W="$( settings ".minitimelapsewidth" )"
+	H="$( settings ".minitimelapseheight" )"
+else
+	FPS="$( settings ".timelapsefps" )"
+	TIMELAPSE_BITRATE="$( settings ".timelapsebitrate" )"
+	W="$( settings ".timelapsewidth" )"
+	H="$( settings ".timelapseheight" )"
 fi
+if [[ ${W} -gt 0 ]]; then
+	SCALE="-filter:v scale=${W}:${H}"
+else
+	SCALE=""
+fi
+FFLOG="$( settings ".timelapsefflog" )"
 # shellcheck disable=SC2086
 X="$(ffmpeg -y -f image2 \
 	-loglevel "${FFLOG}" \
 	-r "${FPS}" \
 	-i "${SEQUENCE_DIR}/%04d.${EXTENSION}" \
-	-vcodec "${VCODEC}" \
+	-vcodec "$( settings ".timelapsevcodec" )" \
 	-b:v "${TIMELAPSE_BITRATE}" \
-	-pix_fmt "${PIX_FMT}" \
+	-pix_fmt "$( settings ".timelapsepixfmt" )" \
 	-movflags +faststart \
 	$SCALE \
-	${TIMELAPSE_EXTRA_PARAMETERS} \
+	$( settings ".timelapseextraparameters" ) \
 	"${OUTPUT_FILE}" 2>&1)"
 RET=$?
 
 # The "deprecated..." message is useless and only confuses users, so hide it.
-X="$(echo "${X}" | grep -v "deprecated pixel format used")"
+X="$( echo "${X}" | grep -v "deprecated pixel format used" )"
 [ "${X}" != "" ] && echo "${X}" >> "${TMP}"		# a warning/error message
 
 if [[ ${RET} -ne -0 ]]; then

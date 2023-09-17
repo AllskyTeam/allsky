@@ -1672,6 +1672,11 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 
 		// nighttime settings
+		else if (strcmp(a, "takenighttimeimages") == 0)
+		{
+++i;
+//xxx			cg->daytimeCapture = getBoolean(argv[++i]);
+		}
 		else if (strcmp(a, "nightautoexposure") == 0)
 		{
 			cg->nightAutoExposure = getBoolean(argv[++i]);
@@ -1972,6 +1977,69 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		// Arguments that may be passed to us but we don't use.
 		else if (
 			strcmp(a, "xx_end_xx") == 0 ||
+			strcmp(a, "daystokeep") == 0 ||
+			strcmp(a, "daystokeeplocalwebsite") == 0 ||
+			strcmp(a, "daystokeepremotewebsite") == 0 ||
+			strcmp(a, "thumbnailsizex") == 0 ||
+			strcmp(a, "thumbnailsizey") == 0 ||
+			strcmp(a, "imageuploadfrequency") == 0 ||
+			strcmp(a, "imageuploadoriginalname") == 0 ||
+			strcmp(a, "imagecreatethumbnails") == 0 ||
+			strcmp(a, "imageresizewidth") == 0 ||
+			strcmp(a, "imageresizeheight") == 0 ||
+			strcmp(a, "imagestretchamountdaytime") == 0 ||
+			strcmp(a, "imagestretchmidpointdaytime") == 0 ||
+			strcmp(a, "imagestretchamountnighttime") == 0 ||
+			strcmp(a, "imagestretchmidpointnighttime") == 0 ||
+			strcmp(a, "imagecroptop") == 0 ||
+			strcmp(a, "imagecropright") == 0 ||
+			strcmp(a, "imagecropbottom") == 0 ||
+			strcmp(a, "imagecropleft") == 0 ||
+			strcmp(a, "imageresizeuploadswidth") == 0 ||
+			strcmp(a, "imageresizeuploadsheight") == 0 ||
+			strcmp(a, "imageremovebadlow") == 0 ||
+			strcmp(a, "imageremovebadhigh") == 0 ||
+			strcmp(a, "timelapsegenerate") == 0 ||
+			strcmp(a, "timelapseupload") == 0 ||
+			strcmp(a, "timelapseuploadthumbnail") == 0 ||
+			strcmp(a, "timelapsewidth") == 0 ||
+			strcmp(a, "timelapseheight") == 0 ||
+			strcmp(a, "timelapsefps") == 0 ||
+			strcmp(a, "timelapsebitrate") == 0 ||
+			strcmp(a, "timelapsevcodec") == 0 ||
+			strcmp(a, "timelapsepixfmt") == 0 ||
+			strcmp(a, "timelapsefflog") == 0 ||
+			strcmp(a, "timelapsekeepsequence") == 0 ||
+			strcmp(a, "timelapseextraparameters") == 0 ||
+			strcmp(a, "minitimelapsenumimages") == 0 ||
+			strcmp(a, "minitimelapseforcecreation") == 0 ||
+			strcmp(a, "minitimelapsefrequency") == 0 ||
+			strcmp(a, "minitimelapseupload") == 0 ||
+			strcmp(a, "minitimelapseuploadthumbnail") == 0 ||
+			strcmp(a, "minitimelapsewidth") == 0 ||
+			strcmp(a, "minitimelapseheight") == 0 ||
+			strcmp(a, "minitimelapsefps") == 0 ||
+			strcmp(a, "minitimelapsebitrate") == 0 ||
+			strcmp(a, "keogramgenerate") == 0 ||
+			strcmp(a, "keogramupload") == 0 ||
+			strcmp(a, "keogramexpand") == 0 ||
+			strcmp(a, "keogramfontname") == 0 ||
+			strcmp(a, "keogramfontcolor") == 0 ||
+			strcmp(a, "keogramfontsize") == 0 ||
+			strcmp(a, "keogramlinethickness") == 0 ||
+			strcmp(a, "keogramextraparameters") == 0 ||
+			strcmp(a, "startrailsgenerate") == 0 ||
+			strcmp(a, "startrailsbrightnessthreshold") == 0 ||
+			strcmp(a, "startrailsupload") == 0 ||
+			strcmp(a, "startrailsextraparameters") == 0 ||
+			strcmp(a, "webuidatafiles") == 0 ||
+			strcmp(a, "uploadimagefrequency") == 0 ||
+			strcmp(a, "uploadimageoriginalname") == 0 ||
+			strcmp(a, "imagestretchamount") == 0 ||
+			strcmp(a, "imageresizeuploads") == 0 ||
+			strcmp(a, "uhubctlport") == 0 ||
+			strcmp(a, "uhubctlpath") == 0 ||
+
 			strcmp(a, "lastchanged") == 0 ||
 			strcmp(a, "uselocalwebsite") == 0 ||
 			strcmp(a, "useremotewebsite") == 0 ||

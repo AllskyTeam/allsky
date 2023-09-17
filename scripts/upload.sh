@@ -4,15 +4,13 @@
 # This is a separate script so it can also be used manually to test uploads.
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 
 
 usage_and_exit() {
@@ -38,8 +36,7 @@ usage_and_exit() {
 	echo
 	echo "For example: ${ME}  keogram-20230710.jpg  /keograms  keogram.jpg"
 
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
 
 
@@ -147,8 +144,7 @@ if [[ ${LOCAL} == "true" ]]; then
 	OUTPUT="$(cp "${FILE_TO_UPLOAD}" "${DIRECTORY}/${DESTINATION_NAME}" 2>&1)"
 	RET=$?
 	check_for_error_messages "${OUTPUT}"
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 fi
 
 
@@ -222,7 +218,6 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
 	SSH_KEY_FILE="$( settings ".${PREFIX}_SSH_KEY_FILE" "${ALLSKY_ENV}" )"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		# shellcheck disable=SC2153
 		MSG="${ME}: Copying ${FILE_TO_UPLOAD} to"
 		MSG="${MSG} ${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
 		echo "${MSG}"
@@ -401,7 +396,7 @@ else # sftp/ftp/ftps
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
 	else
-		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 && ${ON_TTY} -eq 0 ]]; then
+		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 && ${ON_TTY} == "false" ]]; then
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
 	fi
@@ -409,5 +404,4 @@ fi
 
 check_for_error_messages "${OUTPUT}"
 
-# shellcheck disable=SC2086
-exit ${RET}
+exit "${RET}"

@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Shell functions used by multiple scripts.
-# This file is "source"d into others, and must be done AFTER source'ing variables.sh
-# and config.sh.
+# This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
 
 #####
@@ -39,8 +38,8 @@ function doExit()
 		# even if the user has them turned off.
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
 			# Create a custom error message.
-			# If we error out before config.sh is sourced in, ${FILENAME} and ${EXTENSION} won't be
-			# set so guess at what they are.
+			# If we error out before variables.sh is sourced in,
+			# ${FILENAME} and ${EXTENSION} won't be set so guess at what they are.
 			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
 				"${FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \

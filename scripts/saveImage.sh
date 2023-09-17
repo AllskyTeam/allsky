@@ -346,7 +346,6 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 			MOD=0
 			TIMELAPSE_MINI_FORCE_CREATION="$( settings ".minitimelapseforcecreation" )"
 			if [[ ${TIMELAPSE_MINI_FORCE_CREATION} == "true" ]]; then
-				[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo -e "NUM_IMAGES=${NUM_IMAGES}"
 
 				# We only force creation every${TIMELAPSE_MINI_FREQUENCY} images,
 				# and only when we haven't reached ${TIMELAPSE_MINI_IMAGES} or we're close.
@@ -358,6 +357,8 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				fi
 			fi
 			if [[ ${TIMELAPSE_MINI_FORCE_CREATION} == "true" || ${LEFT} -le 0 ]]; then
+				[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo -e "NUM_IMAGES=${NUM_IMAGES}"
+
 				# Create a mini-timelapse
 				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
 				# This causes timelapse.sh to print "before" and "after" debug messages.

@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
         shared.fullFilename = os.environ["FULL_FILENAME"]
         # TODO: imagecreatethumbnails is a boolean
-        shared.createThumbnails = int(shared.getSetting("imagecreatethumbnails"))
+        shared.createThumbnails = bool(shared.getSetting("imagecreatethumbnails"))
         shared.thumbnailWidth = int(shared.getSetting("thumbnailsizex"))
         shared.thumbnailHeight = int(shared.getSetting("thumbnailsizey"))
         shared.websiteImageFile = os.path.join(shared.allskyTmp, shared.fullFilename)

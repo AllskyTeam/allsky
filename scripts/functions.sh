@@ -225,9 +225,9 @@ function get_sunrise_sunset()
 	#shellcheck source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
 
-	[[ -z ${ANGLE} ]] && ANGLE="$( settings ".angle" )"
-	[[ -z ${LATITUDE} ]] && LATITUDE="$( settings ".latitude" )"
-	[[ -z ${LONGITUDE} ]] && LONGITUDE="$( settings ".longitude" )"
+	[[ -z ${ANGLE} ]] && ANGLE="$( settings "._angle" )"
+	[[ -z ${LATITUDE} ]] && LATITUDE="$( settings "._latitude" )"
+	[[ -z ${LONGITUDE} ]] && LONGITUDE="$( settings "._longitude" )"
 
 	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"		|| return 2
 	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
@@ -522,11 +522,11 @@ function check_settings_link()
 		return "${EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
-		CAMERA_TYPE="$( settings .cameratype  "${FULL_FILE}" )"
+		CAMERA_TYPE="$( settings ".cameratype"  "${FULL_FILE}" )"
 		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
-		CAMERA_MODEL="$( settings .cameramodel  "${FULL_FILE}" )"
+		CAMERA_MODEL="$( settings ".cameramodel"  "${FULL_FILE}" )"
 		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
 	fi
 

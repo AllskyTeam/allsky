@@ -78,6 +78,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Holds a count of continuous "bad" images
 	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_image_count.txt"
 
+	# Holds the PID of the process that called timelapse.sh.
+	ALLSKY_TIMELAPSE_PID_FILE="${ALLSKY_TMP}/timelapse-pid.txt"
+
 	# Holds information on what the user needs to do after an installation.
 	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/installation_logs"
 	POST_INSTALLATION_ACTIONS="${ALLSKY_INSTALLATION_LOGS}/post-installation_actions.txt"
@@ -146,7 +149,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	SETTINGS_FILE="${ALLSKY_CONFIG}/settings.json"
 	if [[ -s ${SETTINGS_FILE} ]]; then
 		# Get the name of the file the websites will look for, and split into name and extension.
-		FULL_FILENAME="$( jq -r ".filename" "${SETTINGS_FILE}" )"
+		FULL_FILENAME="$( jq -r "._filename" "${SETTINGS_FILE}" )"
 		EXTENSION="${FULL_FILENAME##*.}"
 		FILENAME="${FULL_FILENAME%.*}"
 
@@ -154,7 +157,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 		CAMERA_MODEL="$( jq -r '.cameramodel' "${SETTINGS_FILE}" )"
 
 		# So scripts can conditionally output messages.
-		ALLSKY_DEBUG_LEVEL="$( jq -r '.debuglevel' "${SETTINGS_FILE}" )"
+		ALLSKY_DEBUG_LEVEL="$( jq -r '._debuglevel' "${SETTINGS_FILE}" )"
 
 		# ALLSKY_VERSION is updated during installation
 		ALLSKY_VERSION="v2023.05.01_02"

@@ -84,7 +84,7 @@ def pistatus(params, event):
         vcgm = Vcgencmd()
         temp = vcgm.measure_temp()
         temp = round(temp,1)
-        tempUnits = s.getSetting("temptype")
+        tempUnits = s.getSetting("_temptype")
         if tempUnits == 'B':
             data['AS_CPUTEMP_C'] = str(temp)
             temp = (temp * (9/5)) + 32

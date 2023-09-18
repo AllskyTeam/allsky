@@ -324,8 +324,13 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 		TIMELAPSE_MINI_IMAGES="$( settings ".minitimelapsenumimages" )"
 		TIMELAPSE_MINI_FREQUENCY="$( settings ".minitimelapsefrequency" )"
 		if [[ ${TIMELAPSE_MINI_IMAGES} -ne 0 && ${TIMELAPSE_MINI_FREQUENCY} -ne 1 ]]; then
+			TIMELAPSE_MINI_FORCE_CREATION="$( settings ".minitimelapseforcecreation" )"
 			# We are creating mini-timelapses; see if we should create one now.
 
+			CREATE="false"
+			MOD=0
+
+			# See how many images we have and how many are left.
 			MINI_TIMELAPSE_FILES="${ALLSKY_TMP}/mini-timelapse_files.txt"	 # List of files
 			if [[ ! -f ${MINI_TIMELAPSE_FILES} ]]; then
 				# The file may have been deleted for an unknown reason.
@@ -341,22 +346,19 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				fi
 				NUM_IMAGES=$(wc -l < "${MINI_TIMELAPSE_FILES}")
 				LEFT=$((TIMELAPSE_MINI_IMAGES - NUM_IMAGES))
-			fi
+				MOD="$( echo "${NUM_IMAGES} % ${TIMELAPSE_MINI_FREQUENCY}" | bc )"
 
-			MOD=0
-			TIMELAPSE_MINI_FORCE_CREATION="$( settings ".minitimelapseforcecreation" )"
-			if [[ ${TIMELAPSE_MINI_FORCE_CREATION} == "true" ]]; then
+				# If either of the following are true we'll create the mini-timelapse:
+				#	1. We have ${TIMELAPSE_MINI_IMAGES}  (i.e., ${LEFT} -eq 0)
+				#	2. ${TIMELAPSE_MINI_FORCE_CREATION} == true AND we're at a 
+				#		${TIMELAPSE_MINI_FREQUENCY} boundary (i.e., ${MOD} -eq 0)
 
-				# We only force creation every${TIMELAPSE_MINI_FREQUENCY} images,
-				# and only when we haven't reached ${TIMELAPSE_MINI_IMAGES} or we're close.
-				if [[ ${LEFT} -lt ${TIMELAPSE_MINI_FREQUENCY} ]]; then
-					TIMELAPSE_MINI_FORCE_CREATION="false"
-				else
-					MOD="$(echo "${NUM_IMAGES} % ${TIMELAPSE_MINI_FREQUENCY}" | bc)"
-					[[ ${MOD} -ne 0 ]] && TIMELAPSE_MINI_FORCE_CREATION="false"
+				if [[ ${LEFT} -le 0 ||
+						( ${TIMELAPSE_MINI_FORCE_CREATION} == "true" && ${MOD} -eq 0 ) ]]; then
+					CREATE="true"
 				fi
-			fi
-			if [[ ${TIMELAPSE_MINI_FORCE_CREATION} == "true" || ${LEFT} -le 0 ]]; then
+
+			if [[ ${CREATE} == "true" ]]; then
 				[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo -e "NUM_IMAGES=${NUM_IMAGES}"
 
 				# Create a mini-timelapse
@@ -368,32 +370,31 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					D="--no-debug"
 				fi
 				O="${ALLSKY_TMP}/mini-timelapse.mp4"
+
 				"${ALLSKY_SCRIPTS}/timelapse.sh" --Last "$( basename "${FINAL_FILE}" )" \
 					"${D}" --lock --output "${O}" --mini --images "${MINI_TIMELAPSE_FILES}"
-				if [[ $? -ne 0 ]]; then
+				if [[ $? -eq 0 ]]; then
+					# Remove the oldest files if we haven't reached the limit.
+					if [[ ${LEFT} -eq 0 ]]; then
+						KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
+						x="$( tail -${KEEP} "${MINI_TIMELAPSE_FILES}" )"
+						echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
+						if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+							echo -en "${YELLOW}${ME}: Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest"
+							echo -e " timelapse file(s).${NC}" >&2
+						fi
+					fi
+				else
 					# failed so don't try to upload
 					TIMELAPSE_MINI_UPLOAD_VIDEO="false"
-					# This leaves the lock file since it belongs to another running process.
-					ALLSKY_TIMELAPSE_PID_FILE=""
 				fi
 
-				# Remove the oldest files, but not if we only created
-				# this mini-timelapse because of a force.
-				if [[ ${RET} -eq 0 && (${MOD} -ne 0 || ${TIMELAPSE_MINI_FORCE_CREATION} == "false") ]]; then
-					KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
-					x="$( tail -${KEEP} "${MINI_TIMELAPSE_FILES}" )"
-					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
-					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-						echo -en "${YELLOW}${ME}: Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest"
-						echo -e " timelapse file(s).${NC}" >&2
-					fi
-				fi
 			else
 				# Not ready to create yet
 				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-					echo -n "NUM_IMAGES=${NUM_IMAGES}: Not creating mini timelapse: "
+					echo -n "NUM_IMAGES=${NUM_IMAGES}: Not creating mini-timelapse: "
 					if [[ ${MOD} -eq 0 ]]; then
-						echo "${LEFT} images(s) left."
+						echo "${LEFT} images(s) left."		# haven't reached limit
 					else
 						echo "$((TIMELAPSE_MINI_FREQUENCY - MOD)) images(s) left in frequency."
 					fi
@@ -410,7 +411,8 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 fi
 
 if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "false" ]]; then
-	ALLSKY_TIMELAPSE_PID_FILE=""			# so we don't try to remove the non-existant file
+	# Don't deleate a lock file that belongs to another running process.
+	ALLSKY_TIMELAPSE_PID_FILE=""
 fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
@@ -504,7 +506,7 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${R
 	fi
 fi
 
-# We're done with the mini-timelapse so remove the lock file.
+# We're done so remove the lock file.
 [[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 
 # We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.

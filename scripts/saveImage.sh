@@ -357,6 +357,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 						( ${TIMELAPSE_MINI_FORCE_CREATION} == "true" && ${MOD} -eq 0 ) ]]; then
 					CREATE="true"
 				fi
+			fi
 
 			if [[ ${CREATE} == "true" ]]; then
 				[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo -e "NUM_IMAGES=${NUM_IMAGES}"

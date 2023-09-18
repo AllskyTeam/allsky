@@ -142,7 +142,7 @@ do
 	fi
 
 	KEY="${KEY,,}"		# convert to lowercase
-	KEY="${KEY/^_/}"	# Remove any leading "_"
+	KEY="${KEY/#_/}"	# Remove any leading "_"
 
 	# Don't skip if it's cameratype since that indicates we need to refresh.
 	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then

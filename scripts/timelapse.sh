@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
 				IMAGES_FILE="${2}"
 				shift
 				;;
-			--last)			# this is just so the last image name appears in "ps" output
+			-L | --Last)			# this is just so the last image name appears in "ps" output
 				shift
 				;;
 			-m | --mini)

@@ -81,10 +81,10 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	fi
 fi
 
-USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${ALLSKY_ERROR_STOP}"
+USE_NOTIFICATION_IMAGES="$( settings "._notificationimages" )"		|| exit "${ALLSKY_ERROR_STOP}"
 UHUBCTL_PATH="$( settings ".uhubctlpath" )"							|| exit "${ALLSKY_ERROR_STOP}"
 UHUBCTL_PORT="$( settings ".uhubctlport" )"							|| exit "${ALLSKY_ERROR_STOP}"
-LOCALE="$( settings .locale )"										|| exit "${ALLSKY_ERROR_STOP}"
+LOCALE="$( settings "._locale" )"									|| exit "${ALLSKY_ERROR_STOP}"
 
 if [[ -z ${CAMERA_TYPE} ]]; then
 	MSG="FATAL ERROR: 'Camera Type' not set in WebUI."
@@ -240,17 +240,18 @@ fi
 
 # We must pass "-config ${ARGS_FILE}" on the command line,
 # and debuglevel we did above, so don't do them again.
+# Only pass settings whose names begin with "_".  Other ones aren't use by capture*.
 TAB="$( echo -e "\t" )"
 convert_json_to_tabs "${SETTINGS_FILE}" |
-	grep -E -i -v "^config${TAB}|^debuglevel${TAB}" |
+	grep -E -i -v "^_|^_config${TAB}|^_debuglevel${TAB}" |
 	sed -e 's/^/-/' -e "s/${TAB}/=/" >> "${ARGS_FILE}"
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
-[[ $1 == "preview" ]] && echo "-preview=true" >> "${ARGS_FILE}"
+[[ $1 == "preview" ]] && echo "-_preview=true" >> "${ARGS_FILE}"
 
-echo "-version=$( get_version )" >> "${ARGS_FILE}"
-echo "-save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
+echo "-_version=$( get_version )" >> "${ARGS_FILE}"
+echo "-_save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 # If the user wants images uploaded only every n times, save that number to a file.

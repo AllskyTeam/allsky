@@ -863,7 +863,7 @@
 },
 {
 "name" : "imageuploadoriginalname",
-"default" : true,
+"default" : false,
 "description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
 "label" : "Upload With Original Name",
 "type" : "boolean",
@@ -885,7 +885,7 @@
 "description" : "Width of resized image before cropping.  0 means don't resize.",
 "label" : "Image Resize Width",
 "type" : "integer",
-"checkchanges" : 1,
+"checkchanges" : true,
 "booldependson" : "takedaytimeimages OR takenighttimeimages",
 "action" : "reload"
 },
@@ -897,7 +897,7 @@
 "description" : "Height of resized image before cropping.  0 means don't resize.",
 "label" : "Image Resize Height",
 "type" : "integer",
-"checkchanges" : 1,
+"checkchanges" : true,
 "booldependson" : "takedaytimeimages OR takenighttimeimages",
 "action" : "reload"
 },
@@ -929,7 +929,7 @@
 "description" : "Number of pixels to crop off the top of image.",
 "label" : "Image Crop Top",
 "type" : "integer",
-"checkchanges": 1,
+"checkchanges": true,
 "booldependson": "takedaytimeimages OR takenighttimeimages"
 },
 {
@@ -940,7 +940,7 @@
 "description" : "Number of pixels to crop off the right side of image.",
 "label" : "Image Crop Right",
 "type" : "integer",
-"checkchanges": 1,
+"checkchanges": true,
 "booldependson": "takedaytimeimages OR takenighttimeimages"
 },
 {
@@ -951,7 +951,7 @@
 "description" : "Number of pixels to crop off the bottom of image.",
 "label" : "Image Crop Bottom",
 "type" : "integer",
-"checkchanges": 1,
+"checkchanges": true,
 "booldependson": "takedaytimeimages OR takenighttimeimages"
 },
 {
@@ -962,6 +962,7 @@
 "description" : "Number of pixels to crop off the left side of image.",
 "label" : "Image Crop Left",
 "type" : "integer",
+"checkchanges": true,
 "booldependson": "takedaytimeimages OR takenighttimeimages"
 },
 {
@@ -2211,8 +2212,8 @@
 "type" : "header-tab"
 },
 {
-"name" : "cameraheading",
-"label" : "Camera Type",
+"name" : "webuiheading",
+"label" : "WebUI Configuration",
 "type" : "header",
 "advanced" : true
 },

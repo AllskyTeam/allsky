@@ -121,6 +121,7 @@ else
 	fi
 fi
 
+MY_PID="$$"
 if [[ ${DEBUG} == "true" ]]; then
 	# Output one string so it's all on one line in log file.
 	MSG="${ME}: ${GREEN}Starting"
@@ -310,7 +311,6 @@ fi
 
 # timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
-MY_PID="$$"
 if [[ ${DEBUG} == "true" ]]; then
 	# Output one string so it's all on one line in log file.
 	MSG="${ME}: ${GREEN}"

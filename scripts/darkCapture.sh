@@ -19,6 +19,10 @@ DARK_EXTENSION="${CURRENT_IMAGE##*.}"
 
 DARKS_DIR="${ALLSKY_DARKS}"
 mkdir -p "${DARKS_DIR}"
+if [[ -z ${AS_TEMPERATURE_C} && -s ${ALLSKY_EXTRA}/libcamera.txt ]]; then
+	AS_TEMPERATURE_C=$(awk -F "=" '/SensorTemperature/ {print $2}' ${ALLSKY_EXTRA}/libcamera.txt)
+	AS_TEMPERATURE_C=${AS_TEMPERATURE_C%%.*}
+fi
 if [[ -z ${AS_TEMPERATURE_C} ]]; then
 	# The camera doesn't support temperature so we'll keep overwriting the file until
 	# AS_TEMPERATURE_C is set.

@@ -368,8 +368,8 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					D="--no-debug"
 				fi
 				O="${ALLSKY_TMP}/mini-timelapse.mp4"
-				"${ALLSKY_SCRIPTS}/timelapse.sh" "${D}" --lock --output "${O}" \
-					--mini --images "${MINI_TIMELAPSE_FILES}"
+				"${ALLSKY_SCRIPTS}/timelapse.sh" --Last "$( basename "${FINAL_FILE}" )" \
+					"${D}" --lock --output "${O}" --mini --images "${MINI_TIMELAPSE_FILES}"
 				if [[ $? -ne 0 ]]; then
 					# failed so don't try to upload
 					TIMELAPSE_MINI_UPLOAD_VIDEO="false"

@@ -19,6 +19,11 @@ if [[ $(settings ".useDarkFrames") -eq 1 ]]; then
 		exit 2
 	fi
 
+ 	if [[ -z ${AS_TEMPERATURE_C} && -s ${ALLSKY_EXTRA}/libcamera.txt ]]; then
+  		AS_TEMPERATURE_C=$(awk -F "=" '/SensorTemperature/ {print $2}' ${ALLSKY_EXTRA}/libcamera.txt)
+		AS_TEMPERATURE_C=${AS_TEMPERATURE_C%%.*}
+	fi
+
 	# Make sure we know the current temperature.
 	# If it doesn't exist, warn the user but continue.
 	if [[ -z ${AS_TEMPERATURE_C} ]]; then
@@ -26,7 +31,7 @@ if [[ $(settings ".useDarkFrames") -eq 1 ]]; then
 		return
 	fi
 	# Some cameras don't have a sensor temp, so don't attempt dark subtraction for them.
-	[[ ${AS_TEMPERATURE_C} == "n/a" ]] && return
+	[[ ${AS_TEMPERATURE_C} == "n/a" || ${AS_TEMPERATURE_C} == "0" ]] && return
 
 	# First check if we have an exact match.
 	DARKS_DIR="${ALLSKY_DARKS}"

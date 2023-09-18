@@ -136,12 +136,13 @@ do
 	if [[ ${DEBUG} == "true" ]]; then
 		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
 		echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
-		if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
+		if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 			echo -e "<script>console.log('${MSG}');</script>"
 		fi
 	fi
 
 	KEY="${KEY,,}"		# convert to lowercase
+	KEY="${KEY/^_/}"	# Remove any leading "_"
 
 	# Don't skip if it's cameratype since that indicates we need to refresh.
 	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
@@ -162,7 +163,7 @@ do
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
 				CAMERA_NUMBER=" -cameraNumber ${NEW_CAMERA_NUMBER}"
 				# Set NEW_VALUE to the current Camera Type
-				NEW_VALUE="$( settings .cameratype )"
+				NEW_VALUE="$( settings ".cameratype" )"
 
 				MSG="Re-creating files for cameraType ${NEW_VALUE}, cameraNumber ${NEW_CAMERA_NUMBER}"
 				if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.

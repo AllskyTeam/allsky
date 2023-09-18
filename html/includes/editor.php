@@ -3,16 +3,34 @@
 function DisplayEditor()
 {
 	$status = new StatusMessages();
+
+	if (file_exists(ALLSKY_WEBSITE_LOCAL_CONFIG)) {
+		$N = "website/" . ALLSKY_WEBSITE_LOCAL_CONFIG_NAME;
+	} else {
+		if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
+			$N = "config/" . ALLSKY_WEBSITE_REMOTE_CONFIG_NAME;
+		} else {
+			$N = "";
+		}
+	}
+
+	if ($N !== "") {
 ?>
-
 	<script type="text/javascript">
-
 		$(document).ready(function () {
+
 			var editor = null;
-			$.get("config/config.sh?_ts=" + new Date().getTime(), function (data) {
+			$.get("<?php echo $N; ?>", function (data) {
+
+				// .json files return "data" as json array, and we need a regular string.
+				// Get around this by stringify'ing "data".
+				if (typeof data != 'string') {
+					data = JSON.stringify(data, null, "\t");
+				}
+
 				editor = CodeMirror(document.querySelector("#editorContainer"), {
 					value: data,
-					mode: "shell",
+					mode: "json",
 					theme: "monokai"
 				});
 			});
@@ -111,6 +129,7 @@ function DisplayEditor()
 		});
 
 	</script>
+<?php } ?>
 
 	<div class="row">
 		<div class="col-lg-12">
@@ -121,20 +140,15 @@ function DisplayEditor()
 					<p id="editor-messages"><?php $status->showMessages(); ?></p>
 					<div id="editorContainer"></div>
 					<div style="margin-top: 15px;">
-				 <?php
-						$scripts = null;
+				<?php
+					if ($N == "") {
+						echo "<div class='errorMsgBig'>No files to edit</div>";
+					} else {
 				?>
 						<select class="form-control" id="script_path" title="Pick a file"
 							style="display: inline-block; width: auto; margin-right: 15px; margin-bottom: 5px"
 						>
-							<option value="config/config.sh">config.sh</option>
-
 				<?php
-							if ($scripts != null) {
-								foreach ($scripts as $script) {
-									echo "<option value='current/" . basename(ALLSKY_SCRIPTS) . "/$script'>$script</option>";
-								}
-							}
 							if (file_exists(ALLSKY_WEBSITE_LOCAL_CONFIG)) {
 								// The website is installed on this Pi.
 								// The physical path is ALLSKY_WEBSITE; virtual path is "website".
@@ -147,10 +161,13 @@ function DisplayEditor()
 								$N = ALLSKY_WEBSITE_REMOTE_CONFIG_NAME;
 								echo "<option value='{REMOTE}config/$N'>$N (remote Allsky Website)</option>";
 							}
-			   ?>
+				?>
 						</select>
 						<button type="submit" class="btn btn-primary" style="margin-bottom:5px" id="save_file"/>
 							<i class="fa fa-save"></i> Save Changes</button>
+				<?php
+					}
+				?>
 					</div>
 				</div>
 			</div>

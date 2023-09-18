@@ -39,6 +39,9 @@ while [[ $# -gt 0 ]]; do
 				IMAGES_FILE="${2}"
 				shift
 				;;
+			--last)			# this is just so the last image name appears in "ps" output
+				shift
+				;;
 			-m | --mini)
 				IS_MINI="true"
 				;;
@@ -124,7 +127,7 @@ if [[ ${DEBUG} == "true" ]]; then
 	[[ ${IS_MINI} == "true" ]] && MSG="${MSG} mini "
 	MSG="${MSG}timelapse"
 	[[ -n ${LAST_IMAGE} ]] && MSG="${MSG}, last image = $( basename "${LAST_IMAGE}" )"
-	echo -e "${MSG}, my PID=$$.${NC}"
+	echo -e "${MSG}, my PID=${MY_PID}.${NC}"
 fi
 
 if [[ ${LOCK} == "true" ]]; then
@@ -135,8 +138,8 @@ if [[ ${LOCK} == "true" ]]; then
 			echo "  > No ALLSKY_TIMELAPSE_PID_FILE"
 		fi
 	fi
-	ABORTED_MSG1="Another timelapse creation is in progress so this one was aborted."
-	ABORTED_FIELDS="$( basename "${OUTPUT_FILE}" )"
+	ABORTED_MSG1="Another timelapse creation is in progress so this one (${PPID}) was aborted."
+	ABORTED_FIELDS="$( basename "${OUTPUT_FILE}" )\tMY_PID=${MY_PID}\tPPID=${PPID}"
 	ABORTED_MSG2="timelapse creations"
 	if [[ ${IS_MINI} == "true" ]]; then
 		CAUSED_BY="This could be caused by unreasonable TIMELAPSE_MINI_IMAGES and TIMELAPSE_MINI_FREQUENCY settings."
@@ -307,13 +310,14 @@ fi
 
 # timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
+MY_PID="$$"
 if [[ ${DEBUG} == "true" ]]; then
 	# Output one string so it's all on one line in log file.
 	MSG="${ME}: ${GREEN}"
 	[[ ${IS_MINI} == "true" ]] && MSG="${MSG}mini "
 	MSG="${MSG}timelapse creation finished"
 	[[ -n ${LAST_IMAGE} ]] && MSG="${MSG}, last image = $( basename "${LAST_IMAGE}" )"
-	echo -e "${MSG}, my PID=$$.${NC}"
+	echo -e "${MSG}, my PID=${MY_PID}.${NC}"
 fi
 
 # Let our parent remove ${ALLSKY_TIMELAPSE_PID_FILE} when done.

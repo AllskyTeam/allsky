@@ -91,7 +91,7 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	fi
 	[[ ${OK} == "false" ]] && exit 1
 
-	angle="$( settings "_.angle" )"
+	angle="$( settings "._angle" )"
 	timezone="$( date "+%z" )"
 
 	# If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
@@ -146,7 +146,8 @@ function upload_file()
 		return 1
 	fi
 
-	upload_all "${WHERE}" "${FILE_TO_UPLOAD}" "${DIRECTORY}" "" "PostData"
+	#shellcheck disable=SC2086
+	upload_all ${WHERE} "${FILE_TO_UPLOAD}" "${DIRECTORY}" "" "PostData"
 	return $?
 }
 

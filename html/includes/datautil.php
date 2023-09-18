@@ -96,9 +96,9 @@ class DATAUTIL
         $haveDatabase = $this->haveDatabase();
 
         if ($haveDatabase) {
-            $angle = $settings_array['angle'];
-            $lat = $settings_array['latitude'];
-            $lon = $settings_array['longitude'];
+            $angle = $settings_array['_angle'];
+            $lat = $settings_array['_latitude'];
+            $lon = $settings_array['_longitude'];
 
             $tod = 'Unknown';
             exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);

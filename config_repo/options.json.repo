@@ -16,7 +16,7 @@
 "type" : "header-column"
 },
 {
-"name" : "takedaytimeimages",
+"name" : "_takedaytimeimages",
 "default" : true,
 "description" : "Enable to <strong>take</strong> daytime images.",
 "label" : "Daytime Capture",
@@ -26,7 +26,7 @@
 "advanced" : true
 },
 {
-"name" : "savedaytimeimages",
+"name" : "_savedaytimeimages",
 "default" : false,
 "description" : "Enable to <strong>save</strong> daytime images.",
 "label" : "Daytime Save",
@@ -35,7 +35,7 @@
 "advanced" : true
 },
 {
-"name" : "dayautoexposure",
+"name" : "_dayautoexposure",
 "default" : true,
 "description" : "Enable to use daytime auto-exposure.",
 "label" : "Auto-Exposure",
@@ -45,7 +45,7 @@
 "advanced" : true
 },
 {
-"name" : "daymaxautoexposure",
+"name" : "_daymaxautoexposure",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -56,7 +56,7 @@
 "action" : "reload"
 },
 {
-"name" : "dayexposure",
+"name" : "_dayexposure",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "day_default",
@@ -68,7 +68,7 @@
 "advanced" : true
 },
 {
-"name" : "daymean",
+"name" : "_daymean",
 "minimum" : 0.0,
 "maximum" : 1.0,
 "default" : "day_default",
@@ -80,7 +80,7 @@
 "advanced" : true
 },
 {
-"name" : "daymeanthreshold",
+"name" : "_daymeanthreshold",
 "minimum" : "day_min",
 "maximum" : "day_max",
 "default" : "day_default",
@@ -92,7 +92,7 @@
 "advanced" : true
 },
 {
-"name" : "daydelay",
+"name" : "_daydelay",
 "minimum" : "_min",
 "maximum" : "none",
 "default" : 30000,
@@ -103,7 +103,7 @@
 "action" : "reload"
 },
 {
-"name" : "dayautogain",
+"name" : "_dayautogain",
 "default" : false,
 "description" : "Enable to use dayime Auto-Gain.",
 "label" : "Auto-Gain",
@@ -113,7 +113,7 @@
 "advanced" : true
 },
 {
-"name" : "daymaxautogain",
+"name" : "_daymaxautogain",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -125,7 +125,7 @@
 "advanced" : true
 },
 {
-"name" : "daygain",
+"name" : "_daygain",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "day_default",
@@ -137,7 +137,7 @@
 "advanced" : true
 },
 {
-"name" : "daybin",
+"name" : "_daybin",
 "default" : 1,
 "description" : "Binning level. <span class='WebUIValue'>1x1</span> = OFF.",
 "label" : "Binning",
@@ -150,7 +150,7 @@
 "advanced" : true
 },
 {
-"name" : "dayawb",
+"name" : "_dayawb",
 "default" : true,
 "description" : "Sets Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
@@ -160,7 +160,7 @@
 "action" : "reload"
 },
 {
-"name" : "daywbr",
+"name" : "_daywbr",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -172,7 +172,7 @@
 "action" : "reload"
 },
 {
-"name" : "daywbb",
+"name" : "_daywbb",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -184,7 +184,7 @@
 "action" : "reload"
 },
 {
-"name" : "dayskipframes",
+"name" : "_dayskipframes",
 "minimum" : 0,
 "maximum" : "none",
 "default" : 5,
@@ -196,7 +196,7 @@
 "advanced" : true
 },
 {
-"name" : "dayenablecooler",
+"name" : "_dayenablecooler",
 "default" : true,
 "description" : "Enable to use cooling (on cooled cameras only).",
 "label" : "Cooling",
@@ -207,7 +207,7 @@
 "advanced" : true
 },
 {
-"name" : "daytargettemp",
+"name" : "_daytargettemp",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -220,7 +220,7 @@
 "advanced" : true
 },
 {
-"name" : "daytuningfile",
+"name" : "_daytuningfile",
 "default" : "",
 "description" : "Name of the optional day camera tuning file to use.<br>See <a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer' title='Opens in new tab/window'>documentation <i class='fa fa-external-link-alt fa-fw'></i></a>, <a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer' title='Opens in new tab/window'>document <i class='fa fa-external-link-alt fa-fw'></i></a>, or the camera manual for more information.",
 "label" : "Tuning File",
@@ -239,7 +239,7 @@
 "type" : "header"
 },
 {
-"name" : "nightautoexposure",
+"name" : "_nightautoexposure",
 "default" : true,
 "description" : "Enable to use nighttime auto-exposure.",
 "label" : "Auto-Exposure",
@@ -247,7 +247,7 @@
 "action" : "reload"
 },
 {
-"name" : "nightmaxautoexposure",
+"name" : "_nightmaxautoexposure",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -258,7 +258,7 @@
 "action" : "reload"
 },
 {
-"name" : "nightexposure",
+"name" : "_nightexposure",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "night_default",
@@ -268,7 +268,7 @@
 "action" : "reload"
 },
 {
-"name" : "nightmean",
+"name" : "_nightmean",
 "minimum" : 0.0,
 "maximum" : 1.0,
 "default" : "night_default",
@@ -279,7 +279,7 @@
 "advanced" : true
 },
 {
-"name" : "nightmeanthreshold",
+"name" : "_nightmeanthreshold",
 "minimum" : "night_min",
 "maximum" : "night_max",
 "default" : "day_default",
@@ -291,7 +291,7 @@
 "advanced" : true
 },
 {
-"name" : "nightdelay",
+"name" : "_nightdelay",
 "minimum" : "_min",
 "maximum" : "none",
 "default" : 30000,
@@ -301,7 +301,7 @@
 "action" : "reload"
 },
 {
-"name" : "nightautogain",
+"name" : "_nightautogain",
 "default" : false,
 "description" : "Enable to use nighttime Auto-Gain.",
 "label" : "Auto-Gain",
@@ -309,7 +309,7 @@
 "action" : "reload"
 },
 {
-"name" : "nightmaxautogain",
+"name" : "_nightmaxautogain",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -321,7 +321,7 @@
 "advanced" : true
 },
 {
-"name" : "nightgain",
+"name" : "_nightgain",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "night_default",
@@ -331,7 +331,7 @@
 "action" : "reload"
 },
 {
-"name" : "nightbin",
+"name" : "_nightbin",
 "default" : 1,
 "description" : "Binning level. <span class='WebUIValue'>1x1</span> = OFF.",
 "label" : "Binning",
@@ -342,7 +342,7 @@
 "action" : "reload"
 },
 {
-"name" : "nightawb",
+"name" : "_nightawb",
 "default" : false,
 "description" : "Enable to use Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
@@ -351,7 +351,7 @@
 "action" : "reload"
 },
 {
-"name" : "nightwbr",
+"name" : "_nightwbr",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -363,7 +363,7 @@
 "action" : "reload"
 },
 {
-"name" : "nightwbb",
+"name" : "_nightwbb",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -375,7 +375,7 @@
 "action" : "reload"
 },
 {
-"name" : "nightskipframes",
+"name" : "_nightskipframes",
 "minimum" : 0,
 "maximum" : "none",
 "default" : 1,
@@ -386,7 +386,7 @@
 "advanced" : true
 },
 {
-"name" : "nightenablecooler",
+"name" : "_nightenablecooler",
 "default" : false,
 "description" : "Enable to use cooling (on cooled cameras only).",
 "label" : "Cooling",
@@ -396,7 +396,7 @@
 "advanced" : true
 },
 {
-"name" : "nighttargettemp",
+"name" : "_nighttargettemp",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -409,7 +409,7 @@
 "advanced" : true
 },
 {
-"name" : "nighttuningfile",
+"name" : "_nighttuningfile",
 "default" : "",
 "description" : "Name of the night camera tuning file to use.",
 "label" : "Tuning File",
@@ -442,7 +442,7 @@
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
-"name" : "config",
+"name" : "_config",
 "default" : "[none]",
 "description" : "Configuration file to use for settings.",
 "label" : "Configuration File",
@@ -464,7 +464,7 @@
 "advanced" : true
 },
 {
-"name" : "saturation",
+"name" : "_saturation",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -476,7 +476,7 @@
 "advanced" : true
 },
 {
-"name" : "contrast",
+"name" : "_contrast",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -488,7 +488,7 @@
 "advanced" : true
 },
 {
-"name" : "sharpness",
+"name" : "_sharpness",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -500,7 +500,7 @@
 "advanced" : true
 },
 {
-"name" : "gamma",
+"name" : "_gamma",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -512,7 +512,7 @@
 "advanced" : true
 },
 {
-"name" : "offset",
+"name" : "_offset",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -524,7 +524,7 @@
 "advanced" : true
 },
 {
-"name" : "aggression",
+"name" : "_aggression",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -537,7 +537,7 @@
 "advanced" : true
 },
 {
-"name" : "gaintransitiontime",
+"name" : "_gaintransitiontime",
 "minimum" : 0,
 "maximum" : "none",
 "default" : "_default",
@@ -550,7 +550,7 @@
 "advanced" : true
 },
 {
-"name" : "width",
+"name" : "_width",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : 0,
@@ -560,7 +560,7 @@
 "action" : "reload"
 },
 {
-"name" : "height",
+"name" : "_height",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : 0,
@@ -570,7 +570,7 @@
 "action" : "reload"
 },
 {
-"name" : "type",
+"name" : "_type",
 "default" : 99,
 "description" : "'auto' uses color if possible, otherwise the best mono mode supported.<br>RAW16 only works with PNG extension.",
 "label" : "Image Type",
@@ -582,7 +582,7 @@
 "advanced" : true
 },
 {
-"name" : "quality",
+"name" : "_quality",
 "minimum" : 1,
 "maximum" : 100,
 "default" : 95,
@@ -592,7 +592,7 @@
 "action" : "reload"
 },
 {
-"name" : "autousb",
+"name" : "_autousb",
 "default" : true,
 "description" : "Automatically set the USB bandwidth.",
 "label" : "Auto USB Bandwidth",
@@ -602,7 +602,7 @@
 "advanced" : true
 },
 {
-"name" : "usb",
+"name" : "_usb",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -615,7 +615,7 @@
 "advanced" : true
 },
 {
-"name" : "filename",
+"name" : "_filename",
 "default" : "image.jpg",
 "description" : "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <span class='WebUISetting'>Debug Level</span> to 4 and look in the log file.",
 "label" : "Filename",
@@ -625,7 +625,7 @@
 "advanced" : true
 },
 {
-"name" : "rotation",
+"name" : "_rotation",
 "default" : 0,
 "description" : "Set image rotation to enable proper orientation.",
 "label" : "Rotation",
@@ -637,7 +637,7 @@
 "action" : "reload"
 },
 {
-"name" : "flip",
+"name" : "_flip",
 "default" : 0,
 "description" : "Flips the image along an axis.",
 "label" : "Flip",
@@ -651,7 +651,7 @@
 "action" : "reload"
 },
 {
-"name" : "notificationimages",
+"name" : "_notificationimages",
 "default" : true,
 "description" : "Enable to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",
 "label" : "Notification Images",
@@ -659,7 +659,7 @@
 "action" : "reload"
 },
 {
-"name" : "consistentdelays",
+"name" : "_consistentdelays",
 "default" : true,
 "description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
 "label" : "Consistent Delays Between Images",
@@ -668,7 +668,7 @@
 "advanced" : true
 },
 {
-"name" : "timeformat",
+"name" : "_timeformat",
 "default" : "%Y%m%d %H:%M:%S",
 "description" : "Determines the format of the displayed time. Run 'man 3 strftime' to see the options.",
 "label" : "Time Format",
@@ -676,7 +676,7 @@
 "action" : "reload"
 },
 {
-"name" : "temptype",
+"name" : "_temptype",
 "default" : "C",
 "description" : "Unit(s) to display temperature in.",
 "label" : "Temperature Units",
@@ -690,7 +690,7 @@
 "advanced" : true
 },
 {
-"name" : "latitude",
+"name" : "_latitude",
 "default" : "",
 "description" : "Camera latitude: a signed number from <span class='WebUIValue'>-90</span> to <span class='WebUIValue'>+90</span>, or an unsigned number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
 "label" : "Latitude",
@@ -699,7 +699,7 @@
 "action" : "reload"
 },
 {
-"name" : "longitude",
+"name" : "_longitude",
 "default" : "",
 "description" : "Camera longitude: a signed number from <span class='WebUIValue'>-180</span> to <span class='WebUIValue'>+180</span>, or an unsigned number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
 "label" : "Longitude",
@@ -708,7 +708,7 @@
 "action" : "reload"
 },
 {
-"name" : "angle",
+"name" : "_angle",
 "default" : "-6",
 "description" : "Altitude of the Sun in degrees relative to the horizon at which to switch between day and night.",
 "label" : "Angle",
@@ -717,7 +717,7 @@
 "action" : "reload"
 },
 {
-"name" : "takedarkframes",
+"name" : "_takedarkframes",
 "default" : false,
 "description" : "Enable to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
 "label" : "Take Dark Frames",
@@ -732,7 +732,7 @@
 "type" : "boolean"
 },
 {
-"name" : "locale",
+"name" : "_locale",
 "default" : "",
 "description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type <code>locale</code> at a command prompt to see your choices.",
 "label" : "Locale",
@@ -740,7 +740,7 @@
 "action" : "reload"
 },
 {
-"name" : "experimentalexposure",
+"name" : "_experimentalexposure",
 "default" : false,
 "description" : "Enable to use an improved auto-exposure algorithm at night.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
 "label" : "New Exposure Algorithm",
@@ -750,7 +750,7 @@
 "advanced" : true
 },
 {
-"name" : "histogrambox",
+"name" : "_histogrambox",
 "default" : "500 500 50 50",
 "description" : "Size of the histogram box (X and Y in pixels) and offset from left and top (0-100 percent). Sizes must be even numbers.",
 "label" : "Histogram Box",
@@ -781,7 +781,7 @@
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
-"name" : "debuglevel",
+"name" : "_debuglevel",
 "default" : 1,
 "description" : "Debug level. 0 is errors only.  4 is for Allsky developers use.",
 "label" : "Debug Level",
@@ -815,7 +815,7 @@
 "valuedependson" : "uhubctlpath!=''"
 },
 {
-"name" : "newexposure",
+"name" : "_newexposure",
 "default" : true,
 "description" : "Enable to use the Allsky version 0.8 exposure method which decreases sensor temperature.  If you see ASI_ERROR_TIMEOUTs in the log file, deactivate this.",
 "label" : "Version 0.8 Exposure",
@@ -1378,7 +1378,7 @@
 "type" : "header"
 },
 {
-"name" : "overlaymethod",
+"name" : "_overlaymethod",
 "default" : 1,
 "description" : "Determines how image overlays are done.<br><span class='WebUIValue'>module</span> supports a visual editor and will be the only method in the next version of Allsky.",
 "label" : "Overlay Method",
@@ -1391,7 +1391,7 @@
 "action" : "reload"
 },
 {
-"name" : "showtime",
+"name" : "_showtime",
 "default" : true,
 "description" : "Enable to display the time an image was taken on the overlay.",
 "label" : "Show Time",
@@ -1400,7 +1400,7 @@
 "action" : "reload"
 },
 {
-"name" : "showtemp",
+"name" : "_showtemp",
 "default" : true,
 "description" : "Enable to display the camera sensor temperature on the overlay.",
 "label" : "Show Temperature",
@@ -1410,7 +1410,7 @@
 "action" : "reload"
 },
 {
-"name" : "showexposure",
+"name" : "_showexposure",
 "default" : true,
 "description" : "Enable to display the exposure length on the overlay.<br>If <span class='WebUISetting'>Auto-Exposure</span> is set, '(auto)' will appear after the exposure time.",
 "label" : "Show Exposure",
@@ -1419,7 +1419,7 @@
 "action" : "reload"
 },
 {
-"name" : "showgain",
+"name" : "_showgain",
 "default" : false,
 "description" : "Enable to display the camera gain on the overlay.<br>If <span class='WebUISetting'>Auto-Gain</span> is set, '(auto)' will appear after the gain value.",
 "label" : "Show Gain",
@@ -1428,7 +1428,7 @@
 "action" : "reload"
 },
 {
-"name" : "showusb",
+"name" : "_showusb",
 "default" : false,
 "description" : "Enable to display the USB Bandwidth number on the overlay.<br>This is primarily for troubleshooting.",
 "label" : "Show USB",
@@ -1439,7 +1439,7 @@
 "advanced" : true
 },
 {
-"name" : "showmean",
+"name" : "_showmean",
 "default" : false,
 "description" : "Enable to display the calculated mean image brightness on the overlay.",
 "label" : "Show Mean Brightness",
@@ -1449,7 +1449,7 @@
 "advanced" : true
 },
 {
-"name" : "showhistogrambox",
+"name" : "_showhistogrambox",
 "default" : false,
 "description" : "Enable to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
 "label" : "Show Histogram Box",
@@ -1460,7 +1460,7 @@
 "advanced" : true
 },
 {
-"name" : "showfocus",
+"name" : "_showfocus",
 "default" : false,
 "description" : "Enable to display a focus metric to help you focus the camera.<br>This is only usefull while focusing.",
 "label" : "Show Focus Metric",
@@ -1470,7 +1470,7 @@
 "advanced" : true
 },
 {
-"name" : "text",
+"name" : "_text",
 "default" : "",
 "description" : "Text that appears below the optional time with the same color and size.",
 "label" : "Text Overlay",
@@ -1480,7 +1480,7 @@
 "action" : "reload"
 },
 {
-"name" : "extratext",
+"name" : "_extratext",
 "default" : "",
 "description" : "Extra Text File (enter full path to the file).<br>Leave blank if NOT using an extra text file.",
 "label" : "Extra Text File",
@@ -1491,7 +1491,7 @@
 "action" : "reload"
 },
 {
-"name" : "extratextage",
+"name" : "_extratextage",
 "minimum" : 1,
 "maximum" : "none",
 "default" : 0,
@@ -1503,7 +1503,7 @@
 "action" : "reload"
 },
 {
-"name" : "textlineheight",
+"name" : "_textlineheight",
 "minimum" : "font height",
 "maximum" : "image height",
 "default" : 30,
@@ -1514,7 +1514,7 @@
 "action" : "reload"
 },
 {
-"name" : "textx",
+"name" : "_textx",
 "minimum" : 0,
 "maximum" : "image width",
 "default" : 15,
@@ -1525,7 +1525,7 @@
 "action" : "reload"
 },
 {
-"name" : "texty",
+"name" : "_texty",
 "minimum" : 0,
 "maximum" : "image height",
 "default" : 35,
@@ -1536,7 +1536,7 @@
 "action" : "reload"
 },
 {
-"name" : "fontname",
+"name" : "_fontname",
 "default" : 0,
 "description" : "Font name for the text overlay. Used for both large and small text.",
 "label" : "Font Name",
@@ -1555,7 +1555,7 @@
 "action" : "reload"
 },
 {
-"name" : "fontcolor",
+"name" : "_fontcolor",
 "default" : "255 0 0",
 "minimum" : 0,
 "description" : "Blue, Green, and Red (BGR) values of text color.<br>NOTE: When using RAW 16 only the first two numbers are used i.e., <span class='WebUIValue'>255 128 0</span>.",
@@ -1565,7 +1565,7 @@
 "action" : "reload"
 },
 {
-"name" : "smallfontcolor",
+"name" : "_smallfontcolor",
 "default" : "0 0 255",
 "description" : "BGR value of text color.<br>NOTE: When using RAW 16 only the first two numbers are used i.e., <span class='WebUIValue'>255 128 0</span>.",
 "label" : "Small Font Color",
@@ -1574,7 +1574,7 @@
 "action" : "reload"
 },
 {
-"name" : "fonttype",
+"name" : "_fonttype",
 "default" : 0,
 "description" : "Choose between smooth font lines (antialiased), 8-pixel, or 4 pixel connectivity (harder edges).",
 "label" : "Font Smoothness",
@@ -1588,7 +1588,7 @@
 "action" : "reload"
 },
 {
-"name" : "fontsize",
+"name" : "_fontsize",
 "minimum" : 1,
 "maximum" : 100,
 "default" : 7,
@@ -1599,7 +1599,7 @@
 "action" : "reload"
 },
 {
-"name" : "fontline",
+"name" : "_fontline",
 "minimum" : 1,
 "maximum" : 20,
 "default" : 1,
@@ -1610,7 +1610,7 @@
 "action" : "reload"
 },
 {
-"name" : "outlinefont",
+"name" : "_outlinefont",
 "default" : false,
 "description" : "Adds a black outline to the text overlay to improve contrast.",
 "label" : "Use Outline Font",
@@ -2189,7 +2189,7 @@
 "advanced" : true
 },
 {
-"name" : "cameranumber",
+"name" : "_cameranumber",
 "minimum" : 0,
 "maximum" : "none",
 "default" : 0,

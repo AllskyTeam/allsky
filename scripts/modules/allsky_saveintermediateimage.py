@@ -51,7 +51,7 @@ def writeImage(image, path, quality):
     return result
 
 def saveintermediateimage(params, event):
-    quality = s.getSetting("quality")
+    quality = s.getSetting("_quality")
     if quality is not None:
         quality = s.int(quality)
         path = params["imagefolder"]

@@ -27,10 +27,10 @@ function DisplayAllskyConfig(){
 	global $formReadonly, $settings_array;
 
 	$debug = false;
-	$cameraTypeName = "cameratype";		// json setting name
-	$cameraModelName = "cameramodel";	// json setting name
-	$cameraNumberName = "cameranumber";	// json setting name
-	$debugLevelName = "debuglevel";		// json setting name
+	$cameraTypeName = "cameratype";			// json setting name
+	$cameraModelName = "cameramodel";		// json setting name
+	$cameraNumberName = "_cameranumber";	// json setting name
+	$debugLevelName = "_debuglevel";		// json setting name
 	$debugArg = "";
 
 	global $lastChangedName;			// name of json setting
@@ -143,9 +143,10 @@ if ($debug) echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsC
 
 					if ($nonCameraChangesExist) {
 						if ($nonCameraChanges === "")
-							$nonCameraChanges = "[$label]";
+							$nonCameraChanges = "<b>$label</b>";
 						else
-							$nonCameraChanges .= ", $label";
+							$nonCameraChanges .= ", <b>$label</b>";
+						$nonCameraChanges .= " (from '$oldValue' to '$newValue')";
 					}
 				}
 
@@ -715,11 +716,11 @@ if ($formReadonly != "readonly") { ?>
 						echo "\n\t\t<div class='switch-field boxShadow settingInput settingInputBoolean'>";
 							echo "\n\t\t<input id='switch_no_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='false' ".
-								($value == false ? " checked " : "").  ">";
+								($value == "false" ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_no_".$name."'>No</label>";
 							echo "\n\t\t<input id='switch_yes_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='true' ".
-								($value == true ? " checked " : "").  ">";
+								($value == "true" ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_yes_".$name."'>Yes</label>";
 						echo "</div>";
 					}

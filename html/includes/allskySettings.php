@@ -55,6 +55,7 @@ function DisplayAllskyConfig(){
 		// camera's settings file, but using values from the OLD file.
 		if (CSRFValidate()) {
 			$optional_array = array();
+			$type_array = array();
 			$sourceFiles = array();			// list of files in the "source" field
 			$sourceFilesContent = array();	// contents of each sourceFiles file
 			$changes = "";
@@ -71,6 +72,7 @@ function DisplayAllskyConfig(){
 			foreach ($options_array as $option) {
 				$key = $option['name'];
 				$optional_array[$key] = getVariableOrDefault($option, 'optional', false);
+				$type_array[$key] = getVariableOrDefault($option, 'type', "");
 				$s = getVariableOrDefault($option, 'source', null);
 				if ($s !== null) {
 					$fileName = getFileName($s);
@@ -100,6 +102,11 @@ function DisplayAllskyConfig(){
 				}
 				if ($oldValue !== "")
 					$oldValue = str_replace("'", "&#x27", $oldValue);
+
+				if ($type_array[$key] == "boolean") {
+					if ($oldValue === 0 || $oldValue === "0") $oldValue = "false";
+					else if ($oldValue === 1 || $oldValue === "1") $oldValue = "true";
+				}
 
 				if ($oldValue !== $newValue) {
 					$nonCameraChangesExist = false;
@@ -249,6 +256,7 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 					}
 				} else {
 					if ($newCameraType !== "") {
+						if ($msg !== "") $msg = "<br>$msg";
 						if ($refreshingCameraType)
 							$msg .= "<b>Camera Type</b> $newCameraType refreshed";
 						else
@@ -503,10 +511,14 @@ if ($formReadonly != "readonly") { ?>
 					} else {
 						$value = getVariableOrDefault($settings_array, $name, $default);
 					}
-
-					// Allow single quotes in values (for string values).
-					// &apos; isn't supported by all browsers so use &#x27.
-					$value = str_replace("'", "&#x27;", $value);
+					if ($type == "boolean") {
+						if ($value === 0 || $value === "0" || ! $value) $value = "false";
+						else if ($value === 1 || $value === "1" || $value) $value = "true";
+					} else {
+						// Allow single quotes in values (for string values).
+						// &apos; isn't supported by all browsers so use &#x27.
+						$value = str_replace("'", "&#x27;", $value);
+					}
 					$OLDvalue = $value;
 				}
 
@@ -716,11 +728,11 @@ if ($formReadonly != "readonly") { ?>
 						echo "\n\t\t<div class='switch-field boxShadow settingInput settingInputBoolean'>";
 							echo "\n\t\t<input id='switch_no_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='false' ".
-								($value == "false" ? " checked " : "").  ">";
+								($value === "false" ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_no_".$name."'>No</label>";
 							echo "\n\t\t<input id='switch_yes_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='true' ".
-								($value == "true" ? " checked " : "").  ">";
+								($value === "true" ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_yes_".$name."'>Yes</label>";
 						echo "</div>";
 					}

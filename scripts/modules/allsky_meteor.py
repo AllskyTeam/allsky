@@ -9,6 +9,7 @@ import allsky_shared as s
 import os
 import json
 import cv2
+import pathlib
 import numpy as np
 from scipy.spatial import distance as dist
 
@@ -25,7 +26,11 @@ metaData = {
         "length": "100",
         "annotate": "false",
         "debug": "false",
-        "useclearsky": "false"
+        "useclearsky": "false",
+        "saveimage": "false",
+        "imagefolder": "${ALLSKY_IMAGES}/${DATE_NAME}/meteors",
+        "writelog": "false",
+        "logfile": "${ALLSKY_IMAGES}/${DATE_NAME}/meteors.txt"
     },
     "argumentdetails": {
         "mask" : {
@@ -72,7 +77,33 @@ metaData = {
             "type": {
                 "fieldtype": "checkbox"
             }          
-        }                          
+        },
+        "saveimage" : {
+            "required": "false",
+            "description": "Save images with meteors",
+            "help": "Save an intermediate images with detected meteors",
+            "type": {
+                "fieldtype": "checkbox"
+            }
+        },
+        "imagefolder" : {
+            "required": "false",
+            "description": "Images folder",
+            "help": "The folder to save the images in. The folder will be created if it does not exist. You can use AllSky Variables in the path"
+        },
+        "writelog" : {
+            "required": "false",
+            "description": "Write detections to log file",
+            "help": "Positive results of meteors detections will be written to log file",
+            "type": {
+                "fieldtype": "checkbox"
+            }
+        },
+        "logfile" : {
+            "required": "false",
+            "description": "Detections log file",
+            "help": "The log file to write the positive meteors detections. The file will be created if it does not exist but folder must exist. You can use AllSky Variables in the path"
+        }
     }
 }
 
@@ -91,6 +122,10 @@ def meteor(params, event):
             annotate = params["annotate"]    
             length = s.int(params["length"])
             debug = params["debug"]
+            saveimage = params["saveimage"]
+            imagefolder = params["imagefolder"]
+            writelog = params["writelog"]
+            logfile = params["logfile"]
 
             maskImage = None
             
@@ -174,6 +209,25 @@ def meteor(params, event):
             os.environ["AS_METEORCOUNT"] = str(meteorCount)
             result = "{0} Meteors found, {1} Lines detected".format(meteorCount, lineCount)
             s.log(4,"INFO: {}".format(result))
+            if meteorCount > 0:
+                if writelog:
+                    path = s.convertPath(logfile)
+                    if path is not None:
+                        with open(path, "a") as outfile:
+                            outfile.write(os.path.basename(s.CURRENTIMAGEPATH) + ": " + result + "\n")
+                if saveimage:
+                    quality = s.getSetting("quality")
+                    if quality is not None:
+                        quality = s.int(quality)
+                        path = s.convertPath(imagefolder)
+                        if path is not None:
+                            path = os.path.join(path, os.path.basename(s.CURRENTIMAGEPATH))
+                            fileExtension = pathlib.Path(path).suffix
+                            s.checkAndCreatePath(path)
+                            if fileExtension == ".jpg":
+                                cv2.imwrite(path, s.image, [s.int(cv2.IMWRITE_JPEG_QUALITY), quality])
+                            else:
+                                cv2.imwrite(path, s.image, [s.int(cv2.IMWRITE_PNG_COMPRESSION), quality])
         else:
             result = "Sky is not clear so ignoring meteor detection"
             s.log(4,"INFO: {0}".format(result))

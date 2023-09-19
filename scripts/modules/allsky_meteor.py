@@ -15,7 +15,8 @@ from scipy.spatial import distance as dist
 
 metaData = {
     "name": "AllSKY Meteor Detection",
-    "description": "Detects meteors in images",  
+    "description": "Detects meteors in images",
+    "version": "v1.0.1",
     "events": [
         "night"
     ],

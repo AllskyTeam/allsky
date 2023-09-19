@@ -985,21 +985,21 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "AutoWhiteBalance");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "awb");
-		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+		fprintf(f, "\t\t\t\"DefaultValue\" : false\n");
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.isCooledCamera) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "EnableCooler");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "enablecooler");
-		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+		fprintf(f, "\t\t\t\"DefaultValue\" : false\n");
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.supportsTemperature) {
 		fprintf(f, "\t\t{\n");	// TODO This will go away when the legacy overlay is removed
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showtemp");
-		fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showTemp ? 1 : 0);
+		fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showTemp ? "true" : "false");
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.supportsAggression) {
@@ -1024,19 +1024,19 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "autousb");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "autousb");
-	fprintf(f, "\t\t\t\"DefaultValue\" : 1\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : true\n");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showUSB");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showusb");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showUSB ? 1 : 0);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showUSB ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "experimentalExposure");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalexposure");
-	fprintf(f, "\t\t\t\"DefaultValue\" : \"%d\"\n", CG.HB.useExperimentalExposure ? 1 : 0);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.HB.useExperimentalExposure ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -1048,13 +1048,13 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showhistogrambox");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showhistogrambox");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showHistogramBox ? 1 : 0);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showHistogramBox ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "newexposure");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "newexposure");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.videoOffBetweenImages ? 1 : 0);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.videoOffBetweenImages ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");

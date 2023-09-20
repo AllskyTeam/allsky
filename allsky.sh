@@ -240,12 +240,11 @@ fi
 
 # We must pass "-config ${ARGS_FILE}" on the command line,
 # and debuglevel we did above, so don't do them again.
-# Only pass settings whose names begin with "_".  Other ones aren't use by capture*.
+# Only pass settings whose names do NOT begin with "_".  Other ones aren't use by capture*.
 TAB="$( echo -e "\t" )"
 convert_json_to_tabs "${SETTINGS_FILE}" |
-	grep "^_" |
-	grep -E -i -v "^_config${TAB}|^_debuglevel${TAB}" |
-	sed -e 's/^_//' -e 's/^/-/' -e "s/${TAB}/=/" >> "${ARGS_FILE}"
+	grep -E -i -v "^_|^config${TAB}|^debuglevel${TAB}" |
+	sed -e 's/^/-/' -e "s/${TAB}/=/" >> "${ARGS_FILE}"
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.

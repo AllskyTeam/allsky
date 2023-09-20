@@ -216,6 +216,8 @@ def meteor(params, event):
                     if path is not None:
                         with open(path, "a") as outfile:
                             outfile.write(os.path.basename(s.CURRENTIMAGEPATH) + ": " + result + "\n")
+                    else:
+                        s.log(0, "ERROR: {0}".format("Invalid path {0}".format(params["logfile"])))
                 if saveimage:
                     quality = s.getSetting("quality")
                     if quality is not None:
@@ -229,6 +231,10 @@ def meteor(params, event):
                                 cv2.imwrite(path, s.image, [s.int(cv2.IMWRITE_JPEG_QUALITY), quality])
                             else:
                                 cv2.imwrite(path, s.image, [s.int(cv2.IMWRITE_PNG_COMPRESSION), quality])
+                        else:
+                            s.log(0, "ERROR: {0}".format("Invalid path {0}".format(params["imagefolder"])))
+                    else:
+                        s.log(0, "ERROR: {0}".format("Cannot determine the image quality. Image with meteor NOT saved"))
         else:
             result = "Sky is not clear so ignoring meteor detection"
             s.log(4,"INFO: {0}".format(result))

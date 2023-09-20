@@ -780,37 +780,6 @@ function reboot_needed()
 	fi
 }
 
-####
-# Read json on stdin and output each field and value separated by a tab.
-function convert_json_to_tabs()
-{
-	# Possible input formats, all with and without trailing "," and
-	# with or without leading spaces or tabs.
-	#   "field" : "value"
-	#   "field" : number
-	#   "field": "value"
-	#   "field": number
-	#   "field":"value"
-	#   "field":number
-	# Want to output two fields (field name and value), separated by tabs.
-	# First get rid of the brackets,
-	# then the optional leading spaces and tabs,
-	# then everything between the field and and its value,
-	# then ending " and/or comma.
-
-	local JSON_FILE="${1}"
-	if [[ ! -f ${JSON_FILE} ]]; then
-		echo -e "${RED}convert_json_to_tabs(): ERROR: json file '${JSON_FILE}' not found.${NC}" >&2
-		return 1
-	fi
-
-	sed -e '/^{/d' -e '/^}/d' \
-		-e 's/^[\t ]*"//' \
-		-e 's/"[\t :]*[ "]/\t/' \
-		-e 's/",$//' -e 's/"$//' -e 's/,$//' \
-			"${JSON_FILE}"
-}
-
 
 ####
 # Upload to the appropriate Websites and/or servers.

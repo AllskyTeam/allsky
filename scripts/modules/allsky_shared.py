@@ -236,7 +236,7 @@ def readSettings():
     with open(settingsFile, "r") as fp:
         SETTINGS = json.load(fp)
 
-    LOGLEVEL = int(getSetting("_debuglevel"))
+    LOGLEVEL = int(getSetting("debuglevel"))
 
 def getSetting(settingName):
     global SETTINGS

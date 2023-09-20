@@ -216,8 +216,8 @@ function check_for_env_file()
 	return 1
 }
 
-DAY_DELAY_MS=$( settings "._daydelay" ) || echo "Problem getting .daydelay"
-NIGHT_DELAY_MS=$( settings "._nightdelay" ) || echo "Problem getting .nightdelay"
+DAY_DELAY_MS=$( settings ".daydelay" ) || echo "Problem getting .daydelay"
+NIGHT_DELAY_MS=$( settings ".nightdelay" ) || echo "Problem getting .nightdelay"
 
 # Typical minimum daytime and nighttime exposures.
 DAY_MIN_EXPOSURE_MS=250
@@ -245,7 +245,7 @@ function check_delay()
 
 	# With the legacy overlay method it might take up to a couple seconds to save an image.
 	# With the module method it can take up to 5 seconds.
-	OVERLAY_METHOD=$( settings "._overlaymethod" ) || echo "Problem getting ._overlayMethod." >&2
+	OVERLAY_METHOD=$( settings ".overlaymethod" ) || echo "Problem getting .overlayMethod." >&2
 	if [[ ${OVERLAY_METHOD} -eq 1 ]]; then
 		MAX_TIME_TO_PROCESS_MS=5000
 	else
@@ -275,8 +275,8 @@ function get_setting()
 # For the most part we use the names that used to be in config.sh since we're familiar with them.
 
 # User-specified width and height are usually 0 which means use SENSOR size.
-WIDTH="$( get_setting "._width" )"
-HEIGHT="$( get_setting "._height" )"
+WIDTH="$( get_setting ".width" )"
+HEIGHT="$( get_setting ".height" )"
 
 # Physical sensor size.
 SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )" || echo "Problem getting .sensorWidth." >&2
@@ -288,9 +288,9 @@ CROP_TOP="$( get_setting ".imagecroptop" )"
 CROP_RIGHT="$( get_setting ".imagecropright" )"
 CROP_BOTTOM="$( get_setting ".imagecropbottom" )"
 CROP_LEFT="$( get_setting ".imagecropleft" )"
-ANGLE="$( get_setting "._angle" )"
-LATITUDE="$( get_setting "._latitude" )"
-LONGITUDE="$( get_setting "._longitude" )"
+ANGLE="$( get_setting ".angle" )"
+LATITUDE="$( get_setting ".latitude" )"
+LONGITUDE="$( get_setting ".longitude" )"
 UPLOAD_VIDEO="$( get_setting ".timelapseupload" )"
 TIMELAPSE_UPLOAD_THUMBNAIL="$( get_setting ".timelapseuploadthumbnail" )"
 TIMELAPSE_MINI_UPLOAD_VIDEO="$( get_setting ".minitimelapseupload" )"
@@ -311,7 +311,7 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 	# Settings used in this section.
 	WEBSITES="$( whatWebsites )"
 	# shellcheck disable=SC2034
-	TAKING_DARKS="$( get_setting "._takedarkframes" )"
+	TAKING_DARKS="$( get_setting ".takedarkframes" )"
 	KEEP_SEQUENCE="$( get_setting ".timelapsekeepsequencee" )"
 	THUMBNAIL_SIZE_X="$( get_setting ".thumbnailsizex" )"
 	THUMBNAIL_SIZE_Y="$( get_setting ".thumbnailsizey" )"
@@ -535,10 +535,10 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
 		function get_exposure() {	# return the time spent on one image, prior to delay
 			local TIME="${1}"
-			if [[ $( settings "._${TIME}autoexposure") -eq 1 ]]; then
-				settings "._${TIME}maxautoexposure" || echo "Problem getting ._${TIME}maxautoexposure." >&2
+			if [[ $( settings ".${TIME}autoexposure") -eq 1 ]]; then
+				settings ".${TIME}maxautoexposure" || echo "Problem getting .${TIME}maxautoexposure." >&2
 			else
-				settings "._${TIME}exposure" || echo "Problem getting ._${TIME}exposure." >&2
+				settings ".${TIME}exposure" || echo "Problem getting .${TIME}exposure." >&2
 			fi
 		}
 		# Minimum total time between start of timelapse creations.
@@ -691,7 +691,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	KEEP_SEQUENCE="$( get_setting ".timelapsekeepsequence" )"
 	TIMELAPSE_MINI_FORCE_CREATION="$( get_setting ".minitimelapseforcecreation" )"
 	# shellcheck disable=SC2034
-	LOCALE="$( get_setting "._locale" )"
+	LOCALE="$( get_setting ".locale" )"
 
 	##### Make sure it's a know camera type.
 	if [[ ${CAMERA_TYPE} != "ZWO" && ${CAMERA_TYPE} != "RPi" ]]; then

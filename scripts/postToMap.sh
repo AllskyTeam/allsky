@@ -184,12 +184,12 @@ fi
 
 OK="true"
 E=""			# Global variable
-LATITUDE="$( settings "._latitude" )"
+LATITUDE="$( settings ".latitude" )"
 if [[ -z ${LATITUDE} ]]; then
 	E="ERROR: 'Latitude' is required.${BR}${E}"
 	OK="false"
 fi
-LONGITUDE="$( settings "._longitude" )"
+LONGITUDE="$( settings ".longitude" )"
 if [[ -z ${LONGITUDE} ]]; then
 	E="ERROR: 'Longitude' is required.${BR}${E}"
 	OK="false"

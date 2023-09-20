@@ -19,8 +19,7 @@ usage_and_exit()
 	RET=${1}
 	echo
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] [--settingsOnly] \\"
-	echo "    [--local-web] [--remote-web] [--remote-server] [--allfiles]"
+	echo "Usage: ${ME} [--help] [--settingsOnly] [--allfiles]"
 	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--allfiles' causes all 'view settings' files to be uploaded"
@@ -29,9 +28,6 @@ usage_and_exit()
 
 HELP="false"
 SETTINGS_ONLY="false"
-LOCAL_WEB="false"
-REMOTE_WEB="false"
-REMOTE_SERVER="false"
 ALL_FILES="false"
 RET=0
 while [[ $# -gt 0 ]]; do
@@ -40,15 +36,6 @@ while [[ $# -gt 0 ]]; do
 		--help)
 			HELP="true"
 			shift
-			;;
-		--local-web)
-			LOCAL_WEB="true"
-			;;
-		--remote-web)
-			REMOTE_WEB="true"
-			;;
-		--remote-server)
-			REMOTE_SERVER="true"
 			;;
 		--allfiles)
 			ALL_FILES="true"
@@ -70,12 +57,6 @@ while [[ $# -gt 0 ]]; do
 done
 [[ ${RET} -ne 0 ]] && usage_and_exit ${RET}
 [[ ${HELP} = "true" ]] && usage_and_exit 0
-
-if [[ ${LOCAL_WEB} == "false" && ${REMOTE_WEB} == "false" && ${REMOTE_SERVER} == "false" ]]; then
-	LOCAL_WEB="true"
-	REMOTE_WEB="true"
-	REMOTE_SERVER="true"
-fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	OK="true"

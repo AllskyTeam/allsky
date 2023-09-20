@@ -39,7 +39,7 @@ def writeImage(image, path, quality):
     return result
 
 def saveimage(params, event):
-    quality = s.getSetting("_quality")
+    quality = s.getSetting("quality")
     if quality is not None:
         quality = s.int(quality)
         result = "Image {0} Saved, quality {1}".format(s.CURRENTIMAGEPATH, quality)

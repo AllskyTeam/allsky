@@ -925,17 +925,16 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	// Adding it to the "controls" array makes the code that checks what's available easier.
 	fprintf(f, "\t\"controls\": [\n");
 
-	// sensor size was also saved above, but save here with min/max/default
+	// sensor size was also saved above, but this is the size the user can change.
 	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"sensorWidth\",\n");
+	fprintf(f, "\t\t\t\"Name\" : \"Width\",\n");
 	fprintf(f, "\t\t\t\"argumentName\" : \"width\",\n");
 	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");		// TODO: I <think> some ZWO cameras have a min
 	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", width);
 	fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
 	fprintf(f, "\t\t},\n");
-
 	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"sensorHeight\",\n");
+	fprintf(f, "\t\t\t\"Name\" : \"Height\",\n");
 	fprintf(f, "\t\t\t\"argumentName\" : \"height\",\n");
 	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");		// TODO: I <think> some ZWO cameras have a min
 	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", height);
@@ -954,7 +953,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymean");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %.2f\n", CG.myModeMeanSetting.dayMean);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.dayMean);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -970,7 +969,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmean");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %.2f\n", CG.myModeMeanSetting.nightMean);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.nightMean);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -1140,17 +1139,6 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightexposure");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightexposure");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", 10 * MS_IN_SEC);
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "daymean");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymean");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.dayMean);
-	fprintf(f, "\t\t},\n");
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightmean");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmean");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.nightMean);
 	fprintf(f, "\t\t},\n");
 
 	// Set the day gain to the minimum possible.

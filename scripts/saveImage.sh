@@ -115,7 +115,6 @@ if [[ ${HIGH} != "0" || ${LOW} != "0" || ${CROP_IMAGE} -gt 0 ]]; then
 fi
 
 # Get passed-in variables.
-# Normally at least the exposure will be passed and the sensor temp if known.
 while [[ $# -gt 0 ]]; do
 	VARIABLE="AS_${1%=*}"		# everything before the "="
 	VALUE="${1##*=}"			# everything after  the "="
@@ -128,7 +127,8 @@ done
 export AS_CAMERA_TYPE="$( settings ".cameratype" )"
 export AS_CAMERA_MODEL="$( settings ".cameramodel" )"
 if [[ -n ${AS_BAD_IMAGES_MEAN} ]]; then
-	export AS_MEAN_NORMALIZED="$( echo "${AS_BAD_IMAGES_MEAN} * 255" | bc )"	# xxxx for testing
+	# xxxx TODO for testing.  We'll eventually just use the mean passed to us.
+	export AS_MEAN_NORMALIZED="$( echo "${AS_BAD_IMAGES_MEAN} * 255" | bc )"
 fi
 
 # If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
@@ -142,7 +142,7 @@ if [[ -z ${AS_TEMPERATURE_C} ]]; then
 fi
 
 # If taking dark frames, save the dark frame then exit.
-if [[ $(settings ".takedarkframes") == "true" ]]; then
+if [[ $( settings ".takedarkframes" ) == "true" ]]; then
 	#shellcheck source-path=scripts
 	source "${ALLSKY_SCRIPTS}/darkCapture.sh"
 	exit 0
@@ -182,11 +182,6 @@ function display_error_and_exit()	# error message, notification string
 RESIZE_W="$( settings ".imagresizewidth" )"
 RESIZE_H="$( settings ".imagresizeheight" )"
 if [[ ${RESIZE_W} -gt 0 && ${RESIZE_H} -gt 0 ]]; then
-	IMG_RESIZE="true"
-else
-	IMG_RESIZE="false"
-fi
-if [[ ${IMG_RESIZE} == "true" ]] ; then
 	# Make sure we were given numbers.
 	ERROR_MSG=""
 	if [[ ${RESIZE_W} != +([+0-9]) ]]; then		# no negative numbers allowed
@@ -200,21 +195,23 @@ if [[ ${IMG_RESIZE} == "true" ]] ; then
 		display_error_and_exit "${ERROR_MSG}" "Image Resize"
 	fi
 
-	[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "*** ${ME}: Resizing '${CURRENT_IMAGE}' to ${RESIZE_W}x${RESIZE_H}"
+	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+		echo "*** ${ME}: Resizing '${CURRENT_IMAGE}' to ${RESIZE_W}x${RESIZE_H}"
+	fi
 	if ! convert "${CURRENT_IMAGE}" -resize "${RESIZE_W}x${RESIZE_H}" "${CURRENT_IMAGE}" ; then
 		echo -e "${RED}*** ${ME}: ERROR: image resize failed; not saving${NC}"
 		exit 4
+	fi
+
+	if [[ ${CROP_IMAGE} -gt 0 ]]; then
+		# The image was just resized and the resolution changed, so reset the variables.
+		RESOLUTION_X=${RESIZE_W}
+		RESOLUTION_Y=${RESIZE_H}
 	fi
 fi
 
 # Crop the image if required
 if [[ ${CROP_IMAGE} -gt 0 ]]; then
-	# If the image was just resized, the resolution changed, so reset the variables.
-	if [[ ${IMG_RESIZE} == "true" ]]; then
-		RESOLUTION_X=${RESIZE_W}
-		RESOLUTION_Y=${RESIZE_H}
-	fi
-
 	# Perform basic checks on crop settings.
 	ERROR_MSG="$( checkCropValues "${CROP_TOP}" "${CROP_RIGHT}" "${CROP_BOTTOM}" "${CROP_LEFT}" \
 		"${RESOLUTION_X}" "${RESOLUTION_Y}" )"
@@ -284,8 +281,8 @@ WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websi
 
 TIMELAPSE_MINI_UPLOAD_VIDEO="$( settings ".minitimelapseupload" )"
 # If needed, save the current image in today's directory.
-if [[ $( settings ".savedaytimeimages" ) == "true" ||
-	  $( settings ".savenighttimeimages" ) == "true" ]]; then
+if [[ ( $( settings ".savedaytimeimages" ) == "true" && ${DAY_OR_NIGHT} == "DAY" ) || 
+	  ( $( settings ".savenighttimeimages" ) == "true" && ${DAY_OR_NIGHT} == "NIGHT" ) ]]; then
 	SAVE_IMAGE="true"
 else
 	SAVE_IMAGE="false"
@@ -468,15 +465,23 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 		FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 	fi
 
-	if [[ $( settings ".imageuploadoriginalname" ) == "true" ]]; then
+	RET=0
+	if [[ $( settings ".remotewebsiteimageuploadoriginalname" ) == "true" ]]; then
 		DESTINATION_NAME=""
 	else
 		DESTINATION_NAME="${FULL_FILENAME}"
 	fi
-
 	# Goes in root of Website so second arg is "".
-	upload_all --remote-web --remote-server "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
-	RET=$?
+	upload_all --remote-web "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
+	((RET += $?))
+	if [[ $( settings ".remoteserverimageuploadoriginalname" ) == "true" ]]; then
+		DESTINATION_NAME=""
+	else
+		DESTINATION_NAME="${FULL_FILENAME}"
+	fi
+	# Goes in root of Website so second arg is "".
+	upload_all --remote-server "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
+	((RET += $?))
 
 	[[ ${RESIZE_UPLOADS} == "true" ]] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
 fi

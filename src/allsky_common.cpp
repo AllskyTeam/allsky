@@ -952,7 +952,7 @@ void displayHeader(config cg)
 		printf("Capture images of the sky with a Raspberry Pi and an RPi camera\n");
 	printf("%s\n", c(KNRM));
 
-	if (! cg.help) printf("%sAdd -h or --help for available options%s\n\n", c(KYEL), c(KNRM));
+	if (! cg.help) printf("%sAdd --help for available options%s\n\n", c(KYEL), c(KNRM));
 	printf("Author: Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
 	printf("Contributors:\n");
 	printf(" -Knut Olav Klo\n");
@@ -1550,7 +1550,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 				return(false);
 			}
 		}
-		else if (strcmp(a, "h") == 0 || strcmp(a, "-help") == 0)
+		else if (strcmp(a, "-help") == 0)
 		{
 			cg->help = true;
 			cg->quietExit = true;	// we display the help message and quit

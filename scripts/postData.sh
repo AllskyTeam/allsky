@@ -79,19 +79,19 @@ fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	OK="true"
-	if ! latitude="$( convertLatLong "$( settings "._latitude" )" "latitude" )" ; then
+	if ! latitude="$( convertLatLong "$( settings ".latitude" )" "latitude" )" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${latitude}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${latitude}"
 	fi
-	if ! longitude="$( convertLatLong "$( settings "._longitude" )" "longitude" )" ; then
+	if ! longitude="$( convertLatLong "$( settings ".longitude" )" "longitude" )" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${longitude}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${longitude}"
 	fi
 	[[ ${OK} == "false" ]] && exit 1
 
-	angle="$( settings "._angle" )"
+	angle="$( settings ".angle" )"
 	timezone="$( date "+%z" )"
 
 	# If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
@@ -120,7 +120,7 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	FILE="data.json"
 	OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
 	(
-		if [[ $(settings "._takedaytimeimages") == "true" ]]; then
+		if [[ $(settings ".takedaytimeimages") == "true" ]]; then
 			D="true"
 		else
 			D="false"

@@ -241,9 +241,8 @@ fi
 # We must pass "-config ${ARGS_FILE}" on the command line,
 # and debuglevel we did above, so don't do them again.
 # Only pass settings that are used by the capture program.
-"${ALLSKY_WEBUI}/includes/outputJSONwithEqual.php" \
-	--settings-file "${SETTINGS_FILE}" --capture-only "${OPTIONS_FILE}" |
-		grep -E -i -v "^config=|^debuglevel=" >> "${ARGS_FILE}"
+"${ALLSKY_WEBUI}/includes/outputJSONwithEqual.php" --capture-only "${OPTIONS_FILE}" |
+	grep -E -i -v "^config=|^debuglevel=" >> "${ARGS_FILE}"
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.

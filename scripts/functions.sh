@@ -225,9 +225,9 @@ function get_sunrise_sunset()
 	#shellcheck source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
 
-	[[ -z ${ANGLE} ]] && ANGLE="$( settings "._angle" )"
-	[[ -z ${LATITUDE} ]] && LATITUDE="$( settings "._latitude" )"
-	[[ -z ${LONGITUDE} ]] && LONGITUDE="$( settings "._longitude" )"
+	[[ -z ${ANGLE} ]] && ANGLE="$( settings ".angle" )"
+	[[ -z ${LATITUDE} ]] && LATITUDE="$( settings ".latitude" )"
+	[[ -z ${LONGITUDE} ]] && LONGITUDE="$( settings ".longitude" )"
 
 	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"		|| return 2
 	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2

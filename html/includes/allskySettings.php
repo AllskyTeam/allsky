@@ -29,8 +29,8 @@ function DisplayAllskyConfig(){
 	$debug = false;
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
-	$cameraNumberName = "_cameranumber";	// json setting name
-	$debugLevelName = "_debuglevel";		// json setting name
+	$cameraNumberName = "cameranumber";	// json setting name
+	$debugLevelName = "debuglevel";		// json setting name
 	$debugArg = "";
 
 	global $lastChangedName;			// name of json setting

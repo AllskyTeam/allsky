@@ -295,6 +295,7 @@ UPLOAD_VIDEO="$( get_setting ".timelapseupload" )"
 TIMELAPSE_UPLOAD_THUMBNAIL="$( get_setting ".timelapseuploadthumbnail" )"
 TIMELAPSE_MINI_UPLOAD_VIDEO="$( get_setting ".minitimelapseupload" )"
 TIMELAPSE_MINI_UPLOAD_THUMBNAIL="$( get_setting ".minitimelapseuploadthumbnail" )"
+KEEP_SEQUENCE="$( get_setting ".timelapsekeepsequence" )"
 KEOGRAM="$( get_setting ".keogramgenerate" )"
 UPLOAD_KEOGRAM="$( get_setting ".keogramupload" )"
 STARTRAILS="$( get_setting ".startrailsgenerate" )"
@@ -312,7 +313,6 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 	WEBSITES="$( whatWebsites )"
 	# shellcheck disable=SC2034
 	TAKING_DARKS="$( get_setting ".takedarkframes" )"
-	KEEP_SEQUENCE="$( get_setting ".timelapsekeepsequencee" )"
 	THUMBNAIL_SIZE_X="$( get_setting ".thumbnailsizex" )"
 	THUMBNAIL_SIZE_Y="$( get_setting ".thumbnailsizey" )"
 	DAYS_TO_KEEP="$( get_setting ".daystokeep" )"
@@ -688,7 +688,6 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	USING_DARKS="$( get_setting ".usedarkframes" )"
 	IMG_UPLOAD_ORIGINAL_NAME="$( get_setting ".imageuploadoriginalname" )"
 	IMG_CREATE_THUMBNAILS="$( get_setting ".imagecreatethumbnails" )"
-	KEEP_SEQUENCE="$( get_setting ".timelapsekeepsequence" )"
 	TIMELAPSE_MINI_FORCE_CREATION="$( get_setting ".minitimelapseforcecreation" )"
 	# shellcheck disable=SC2034
 	LOCALE="$( get_setting ".locale" )"

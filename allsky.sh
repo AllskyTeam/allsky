@@ -81,10 +81,10 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	fi
 fi
 
-USE_NOTIFICATION_IMAGES="$( settings "._notificationimages" )"		|| exit "${ALLSKY_ERROR_STOP}"
+USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${ALLSKY_ERROR_STOP}"
 UHUBCTL_PATH="$( settings ".uhubctlpath" )"							|| exit "${ALLSKY_ERROR_STOP}"
 UHUBCTL_PORT="$( settings ".uhubctlport" )"							|| exit "${ALLSKY_ERROR_STOP}"
-LOCALE="$( settings "._locale" )"									|| exit "${ALLSKY_ERROR_STOP}"
+LOCALE="$( settings ".locale" )"									|| exit "${ALLSKY_ERROR_STOP}"
 
 if [[ -z ${CAMERA_TYPE} ]]; then
 	MSG="FATAL ERROR: 'Camera Type' not set in WebUI."

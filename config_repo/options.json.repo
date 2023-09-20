@@ -257,6 +257,26 @@
 "type" : "header"
 },
 {
+"name" : "takenighttimeimages",
+"default" : true,
+"description" : "Enable to <strong>take</strong> nighttime images.",
+"label" : "Nighttime Capture",
+"type" : "boolean",
+"usage" : "capture",
+"checkchanges" : true,
+"action" : "reload",
+"advanced" : true
+},
+{
+"name" : "savenighttimeimages",
+"default" : false,
+"description" : "Enable to <strong>save</strong> nighttime images.",
+"label" : "Nighttime Save",
+"type" : "boolean",
+"booldependson" : "takenighttimeimages",
+"advanced" : true
+},
+{
 "name" : "nightautoexposure",
 "default" : true,
 "description" : "Enable to use nighttime auto-exposure.",
@@ -928,14 +948,6 @@
 "booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
 },
 {
-"name" : "imageuploadoriginalname",
-"default" : false,
-"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
-"label" : "Upload With Original Name",
-"type" : "boolean",
-"valuedependson" : "imageuploadfrequency=[1-9]*"
-},
-{
 "name" : "imagecreatethumbnails",
 "default" : true,
 "description" : "Enable to create thumbnails of images. If you never look at them, unset this.",
@@ -966,6 +978,26 @@
 "checkchanges" : true,
 "booldependson" : "takedaytimeimages OR takenighttimeimages",
 "action" : "reload"
+},
+{
+"name": "imagestretchamountdaytime",
+"minimum": 0,
+"maximum": 100,
+"default": 0,
+"description": "Amount to stretch daytime images.",
+"label": "Stretch Amount",
+"type": "integer",
+"booldependson": "takedaytimeimages"
+},
+{
+"name": "imagestretchmidpointdaytime",
+"minimum": 0,
+"maximum": 100,
+"default": 0,
+"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.",
+"label": "Stretch mid point",
+"type": "percent",
+"booldependson": "takedaytimeimages"
 },
 {
 "name": "imagestretchamountnighttime",
@@ -1926,6 +1958,14 @@
 "optional" : true
 },
 {
+"name" : "remotewebsiteimageuploadoriginalname",
+"default" : false,
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
+"label" : "Upload With Original Name",
+"type" : "boolean",
+"valuedependson" : "imageuploadfrequency=[1-9]*"
+},
+{
 "name" : "remotewebsitevideodestinationname",
 "default" : "",
 "description" : "Optional name of the remote video file.",
@@ -2141,6 +2181,14 @@
 "checkchanges" : true,
 "booldependson" : "useremoteserver",
 "optional" : true
+},
+{
+"name" : "remoteserverimageuploadoriginalname",
+"default" : false,
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
+"label" : "Upload With Original Name",
+"type" : "boolean",
+"valuedependson" : "imageuploadfrequency=[1-9]*"
 },
 {
 "name" : "remoteservervideodestinationname",

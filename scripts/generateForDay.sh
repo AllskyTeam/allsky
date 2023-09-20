@@ -249,8 +249,20 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 		else
 			N="--nice-level ${NICE}"
 		fi
+		KEOGRAM_EXTRA_PARAMETERS="$( settings ".keogramextraparameters" )"
+		MORE=""
+		EXPAND="$( settings ".keogramexpand" )"
+			[[ ${EXPAND} == "true" ]] && MORE="${MORE} --image-expand"
+		NAME="$( settings ".keogramfontname" )"
+			[[ ${NAME} != "" ]] && MORE="${MORE} --font-name ${NAME}"
+		COLOR="$( settings ".keogramfontcolor" )"
+			[[ ${COLOR} != "" ]] && MORE="${MORE} --font-color '${COLOR}'"
+		SIZE="$( settings ".keogramfontsize" )"
+			[[ ${SIZE} != "" ]] && MORE="${MORE} --font-size ${SIZE}"
+		THICKNESS="$( settings ".keogramlinethickness" )"
+			[[ ${THICKNESS} != "" ]] && MORE="${MORE} --font-type ${THICKNESS}"
 		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
-			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
+			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
 	else
 		upload "Keogram" "${UPLOAD_FILE}" "keograms" "${KEOGRAM_FILE}" \
@@ -268,6 +280,8 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		else
 			N="--nice ${NICE}"
 		fi
+		BRIGHTNESS_THRESHOLD="$( settings ".startrailsbrightnessthreshold" )"
+		STARTRAILS_EXTRA_PARAMETERS="$( settings ".startrailsextraparameters" )"
 		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
 			-e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' \
 			${STARTRAILS_EXTRA_PARAMETERS}"

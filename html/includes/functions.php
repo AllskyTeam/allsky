@@ -90,47 +90,47 @@ function initialize_variables() {
 	// $img_dir is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 	$img_dir = get_variable(ALLSKY_HOME . '/variables.sh', 'IMG_DIR=', 'current/tmp');
-	$image_name = $img_dir . "/" . $settings_array['_filename'];
-	$darkframe = $settings_array['_takedarkframes'];
+	$image_name = $img_dir . "/" . $settings_array['filename'];
+	$darkframe = $settings_array['takedarkframes'];
 	$useLogin = getVariableOrDefault($settings_array, 'uselogin', true);
-	$temptype = getVariableOrDefault($settings_array, '_temptype', "C");
+	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
 	$websiteURL = getVariableOrDefault($settings_array, 'remotewebsiteurl', "");
 
 
 	////////////////// Determine delay between refreshes of the image.
-	$consistentDelays = getVariableOrDefault($settings_array, '_consistentdelays', false);
-	$daydelay = $settings_array["_daydelay"];
-	$daymaxautoexposure = $settings_array["_daymaxautoexposure"];
-	$dayexposure = $settings_array["_dayexposure"];
-	$nightdelay = $settings_array["_nightdelay"];
-	$nightmaxautoexposure = $settings_array["_nightmaxautoexposure"];
-	$nightexposure = $settings_array["_nightexposure"];
+	$consistentDelays = getVariableOrDefault($settings_array, 'consistentdelays', false);
+	$daydelay = $settings_array["daydelay"];
+	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
+	$dayexposure = $settings_array["dayexposure"];
+	$nightdelay = $settings_array["nightdelay"];
+	$nightmaxautoexposure = $settings_array["nightmaxautoexposure"];
+	$nightexposure = $settings_array["nightexposure"];
 
 	$ok = true;
 	if (! is_numeric($daydelay)) {
 		$ok = false;
-		$status->addMessage("<strong>daydelay</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>daydelay</strong> is not a number: $daydelay.", 'danger', false);
 	}
 	if (! is_numeric($daymaxautoexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number: $daymaxautoexposure.", 'danger', false);
 	}
 	if (! is_numeric($dayexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>dayexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>dayexposure</strong> is not a number: $dayexposure.", 'danger', false);
 	}
 	if (! is_numeric($nightdelay)) {
 		$ok = false;
-		$status->addMessage("<strong>nightdelay</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>nightdelay</strong> is not a number: $nightdelay.", 'danger', false);
 	}
 	if (! is_numeric($nightmaxautoexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>nightmaxautoexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>nightmaxautoexposure</strong> is not a number: $nightmaxautoexposure.", 'danger', false);
 	}
 	if (! is_numeric($nightexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>nightexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>nightexposure</strong> is not a number: $nightexposure.", 'danger', false);
 	}
 	if ($ok) {
 		$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
@@ -139,9 +139,9 @@ function initialize_variables() {
 		$showDelay = getVariableOrDefault($settings_array, 'showdelay', true);
 		if ($showDelay) {
 			// Determine if it's day or night so we know which delay to use.
-			$angle = $settings_array['_angle'];
-			$lat = $settings_array['_latitude'];
-			$lon = $settings_array['_longitude'];
+			$angle = $settings_array['angle'];
+			$lat = $settings_array['latitude'];
+			$lon = $settings_array['longitude'];
 			exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
 			if ($retval == 2) {
 				$delay = $daydelay;

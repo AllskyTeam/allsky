@@ -1,17 +1,15 @@
 #!/bin/bash
 # shellcheck disable=SC2154		# referenced but not assigned
 
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit ${ALLSKY_ERROR_STOP}
-
-# This file defines functions plus sets many variables.
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 
 if [[ ${EUID} -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
@@ -21,11 +19,9 @@ fi
 # This script assumes the user already did the "git clone" into ${ALLSKY_HOME}.
 
 # Some versions of Linux default to 750 so web server can't read it
-#shellcheck disable=SC2086
-chmod 755 "${ALLSKY_HOME}"								|| exit ${ALLSKY_ERROR_STOP}
+chmod 755 "${ALLSKY_HOME}"								|| exit "${ALLSKY_ERROR_STOP}"
 
-#shellcheck disable=SC2086
-cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
+cd "${ALLSKY_HOME}"  									|| exit "${ALLSKY_ERROR_STOP}"
 
 TITLE="Allsky Installer"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
@@ -160,8 +156,7 @@ usage_and_exit()
 	echo
 	echo "'--function' executes the specified function and quits."
 	echo
-	#shellcheck disable=SC2086
-	exit_installation ${RET}
+	exit_installation "${RET}"
 }
 
 
@@ -2798,8 +2793,7 @@ exit_installation()
 	fi
 
 	# Don't exit for negative numbers.
-	#shellcheck disable=SC2086
-	[[ ${RET} -ge 0 ]] && exit ${RET}
+	[[ ${RET} -ge 0 ]] && exit "${RET}"
 }
 
 

@@ -230,28 +230,28 @@ fi
 # If the locale isn't in the settings file, try to determine it.
 if [[ -z ${LOCALE} ]]; then
 	if [[ -n ${LC_ALL} ]]; then
-		echo "-Locale=${LC_ALL}" >> "${ARGS_FILE}"
+		echo "Locale=${LC_ALL}" >> "${ARGS_FILE}"
 	elif [[ -n ${LANG} ]]; then
-		echo "-lOcale=${LANG}" >> "${ARGS_FILE}"
+		echo "lOcale=${LANG}" >> "${ARGS_FILE}"
 	elif [[ -n ${LANGUAGE} ]]; then
-		echo "-loCale=${LANGUAGE}" >> "${ARGS_FILE}"
+		echo "loCale=${LANGUAGE}" >> "${ARGS_FILE}"
 	fi
 fi
 
 # We must pass "-config ${ARGS_FILE}" on the command line,
 # and debuglevel we did above, so don't do them again.
-# Only pass settings whose names do NOT begin with "_".  Other ones aren't use by capture*.
+# Only pass settings that are used by the capture program.
 TAB="$( echo -e "\t" )"
-convert_json_to_tabs "${SETTINGS_FILE}" |
-	grep -E -i -v "^_|^config${TAB}|^debuglevel${TAB}" |
-	sed -e 's/^/-/' -e "s/${TAB}/=/" >> "${ARGS_FILE}"
+"${ALLSKY_WEBUI}/includes/outputJSONwithEqual.php" \
+	--settings-file "${SETTINGS_FILE}" --capture-only "${OPTIONS_FILE}" |
+		grep -E -i -v "^config=|^debuglevel=" >> "${ARGS_FILE}"
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
-[[ $1 == "preview" ]] && echo "-preview=true" >> "${ARGS_FILE}"
+[[ $1 == "preview" ]] && echo "preview=true" >> "${ARGS_FILE}"
 
-echo "-version=$( get_version )" >> "${ARGS_FILE}"
-echo "-save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
+echo "version=$( get_version )" >> "${ARGS_FILE}"
+echo "save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 # If the user wants images uploaded only every n times, save that number to a file.

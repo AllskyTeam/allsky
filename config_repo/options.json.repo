@@ -1188,7 +1188,7 @@
 "booldependson" : "timelapsegenerate"
 },
 {
-"name": "timelapsekeepsequencee",
+"name": "timelapsekeepsequence",
 "default": false,
 "description": "Enable to keep the list of files used in creating the timelapse video. Rarely changed.",
 "label": "Keep Timelapse Sequence",

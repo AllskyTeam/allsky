@@ -1684,9 +1684,10 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 		# For each field in prior file, update new file with old value.
 		# Then handle new fields and fields that changed locations or names.
-		# convert_json_to_tabs outputs fields and values separated by tabs.
+		# outputJSONwithEqual.php outputs fields and values separated by "=".
 
-		convert_json_to_tabs "${PRIOR_FILE}" |
+		"${ALLSKY_WEBUI}/includes/outputJSONwithEqual.php" --settings-file "${PRIOR_FILE}" |
+			sed 's/=/\t/' |
 			while read -r F V
 			do
 				F="${F,,}"

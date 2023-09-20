@@ -121,8 +121,8 @@ class ALLSKYOVERLAY:
             s.log(0, "ERROR: Unable to download de421.bsp: {}".format(err))
             self._enableSkyfield = False
         self._setDateandTime()
-        self._observerLat = s.getSetting('_latitude')
-        self._observerLon = s.getSetting('_longitude')
+        self._observerLat = s.getSetting('latitude')
+        self._observerLon = s.getSetting('longitude')
         self._debug = True
 
         self._formaterrortext = formaterrortext;
@@ -775,7 +775,7 @@ class ALLSKYOVERLAY:
 
             if fieldFound:
                 if variableType == 'Date':
-                    internalFormat = s.getSetting('_timeformat')
+                    internalFormat = s.getSetting('timeformat')
                     if envCheck == 'DATE' or envCheck == 'AS_DATE':
                         timeStamp = datetime.fromtimestamp(self._imageDate)
                         value = timeStamp.strftime(internalFormat)
@@ -1064,7 +1064,7 @@ class ALLSKYOVERLAY:
                     sunset = todaySunData["sunset"]
                     dusk = todaySunData["dusk"]
 
-            format = s.getSetting("_timeformat")
+            format = s.getSetting("timeformat")
             os.environ["AS_SUN_DAWN"] = dawn.strftime(format)
             os.environ["AS_SUN_SUNRISE"] = sunrise.strftime(format)
             os.environ["AS_SUN_NOON"] = noon.strftime(format)

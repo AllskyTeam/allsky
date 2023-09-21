@@ -206,7 +206,7 @@ else
 			if [[ ${OVERRIDE_DESTINATION_NAME} != "" ]]; then
 				DESTINATION_NAME="${OVERRIDE_DESTINATION_NAME}"
 			fi
-			[[ ${SILENT} == "false" ]] && echo "===== Uploading '${UPLOAD_FILE}'"
+			[[ ${SILENT} == "false" ]] && echo "===== Uploading '${UPLOAD_FILE}' to '${DIRECTORY}'."
 
 			# shellcheck disable=SC2086
 			upload_all ${UPLOAD_SILENT} ${DEBUG_ARG} \

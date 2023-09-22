@@ -4,6 +4,11 @@ Part of allsky postprocess.py modules.
 https://github.com/thomasjacquin/allsky
 
 This module will attempt to locate meteors in captured images
+
+Changelog:
+v1.0.1 by Damian Grocholski (Mr-Groch)
+- Added saving meteor detection log to separate text log file (writelog and logfile params)
+- Added saving an intermediate images with detected meteors to separate folder (saveimage and imagefolder params)
 """
 import allsky_shared as s
 import os

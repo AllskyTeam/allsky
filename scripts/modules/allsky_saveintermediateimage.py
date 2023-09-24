@@ -8,6 +8,11 @@ This module will save the image at any point during the module workflow
 
 Expected parameters:
 None
+
+Changelog
+v1.0.1 by Damian Grocholski (Mr-Groch)
+- Added possibility to use custom filename for output image
+
 '''
 import allsky_shared as s
 import os 
@@ -17,19 +22,26 @@ import pathlib
 metaData = {
     "name": "Saves an intermediate image",
     "description": "Saves an intermediate image",
+    "version": "v1.0.1",
     "module": "allsky_saveintermediateimage",       
     "events": [
         "day",
         "night"
     ],
     "arguments":{
-        "imagefolder": "${ALLSKY_IMAGES}/${DATE}-clean"
+        "imagefolder": "${ALLSKY_IMAGES}/${DATE}-clean",
+        "imagecustomname": ""
     },
     "argumentdetails": {
         "imagefolder" : {
             "required": "true",
             "description": "Image folder",
             "help": "The folder to save the image in. The folder will be created if it does not exist. You can use AllSky Variables in the path"
+        },
+        "imagecustomname" : {
+            "required": "false",
+            "description": "Image custom filename",
+            "help": "Custom filename under which to save the image (without extension). If not provided - original filename will be used. You can use AllSky Variables in the name"
         }
     }      
 }
@@ -57,7 +69,18 @@ def saveintermediateimage(params, event):
         path = params["imagefolder"]
         path = s.convertPath(path)
         if path is not None:
-            path = os.path.join(path, os.path.basename(s.CURRENTIMAGEPATH))
+            filename = os.path.basename(s.CURRENTIMAGEPATH)
+            imagecustomname = params["imagecustomname"]
+            if imagecustomname != "":
+                imagecustomname = s.convertPath(imagecustomname)
+                if imagecustomname is not None:
+                    fileExtension = pathlib.Path(s.CURRENTIMAGEPATH).suffix
+                    filename = imagecustomname + fileExtension
+                else:
+                    result = "Invalid name {0}".format(params["imagecustomname"])
+                    s.log(0, "ERROR: {}".format(result))
+                    return result
+            path = os.path.join(path, filename)
             if not writeImage(s.image, path, quality):
                 result = "Failed to save {}".format(path) 
                 s.log(0, "ERROR: Failed to save image {}".format(path))

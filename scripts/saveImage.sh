@@ -373,7 +373,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					"${D}" --lock --output "${O}" --mini --images "${MINI_TIMELAPSE_FILES}"
 				if [[ $? -eq 0 ]]; then
 					# Remove the oldest files if we haven't reached the limit.
-					if [[ ${LEFT} -eq 0 ]]; then
+					if [[ ${LEFT} -le 0 ]]; then
 						KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
 						x="$( tail -${KEEP} "${MINI_TIMELAPSE_FILES}" )"
 						echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"

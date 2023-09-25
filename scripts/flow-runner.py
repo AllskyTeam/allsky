@@ -131,7 +131,7 @@ if __name__ == "__main__":
     else:
         shared.setupForCommandLine()
         shared.CURRENTIMAGEPATH  = None
-        shared.LOGLEVEL = int(shared.getSetting("_debuglevel"))
+        shared.LOGLEVEL = int(shared.getSetting("debuglevel"))
         shared.args.tod = 'day'
         date = datetime.now()
         date = date + timedelta(hours=-12)

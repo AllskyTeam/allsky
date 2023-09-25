@@ -1810,28 +1810,26 @@ convert_config_sh()
 
 		local X		# temporary variable
 
-		# Add new fields
-		X="true"; doV "X" ".takenighttimeimages" "boolean" "${NEW_FILE}"
-		X="true"; doV "X" ".savenighttimeimages" "boolean" "${NEW_FILE}"
-
 		if [[ -n ${DAYTIME} ]]; then		# old name
-			doV "DAYTIME" ".takedaytimeimages" "boolean" "${NEW_FILE}"
+			X="${DAYTIME}"
 		else
-			doV "DAYTIME_CAPTURE" ".takedaytimeimages" "boolean" "${NEW_FILE}"
+			X="${DAYTIME_CAPTURE}"
 		fi
 		if [[ -n ${CAPTURE_24HR} ]]; then	# old name
-			doV "CAPTURE_24HR" ".savedaytimeimages" "boolean" "${NEW_FILE}"
+			X="${CAPTURE_24HR}"
 		else
-			doV "DAYTIME_SAVE" ".savedaytimeimages" "boolean" "${NEW_FILE}"
+			X="${DAYTIME_SAVE}"
 		fi
+		doV "X" ".savedaytimeimages" "boolean" "${NEW_FILE}"
+		X="true"; doV "X" ".takenighttimeimages" "boolean" "${NEW_FILE}"	# new
+		X="true"; doV "X" ".savenighttimeimages" "boolean" "${NEW_FILE}"	# new
 
 		doV "DARK_FRAME_SUBTRACTION" ".usedarkframes" "boolean" "${NEW_FILE}"
 
 		# IMG_UPLOAD no longer used; instead, upload if FREQUENCY > 0.
 		# shellcheck disable=SC2034
 		[[ ${IMG_UPLOAD} != "true" ]] && IMG_UPLOAD_FREQUENCY=0
-		doV "IMG_UPLOAD_FREQUENCY" ".uploadimagefrequency" "number" "${NEW_FILE}"
-		doV "IMG_UPLOAD_ORIGINAL_NAME" ".uploadimageoriginalname" "boolean" "${NEW_FILE}"
+		doV "IMG_UPLOAD_FREQUENCY" ".imageuploadfrequency" "number" "${NEW_FILE}"
 
 		# IMG_RESIZE no longer used; only resize if width and height are > 0.
 		if [[ -n ${IMG_WIDTH} && ${IMG_WIDTH} -gt 0 && -n ${IMG_HEIGHT} && ${IMG_HEIGHT} -gt 0 ]];
@@ -1862,10 +1860,12 @@ convert_config_sh()
 		fi
 
 		# AUTOSTRETCH no longer used; only stretch if AMOUNT > 0 and MID_POINT != ""
+		X=0; doV "X" ".imagestretchamountdaytime" "number" "${NEW_FILE}"		# new
+		X=0; doV "X" ".imagestretchmidpointdaytime" "text" "${NEW_FILE}"		# new
 		# shellcheck disable=SC2034
 		[[ ${AUTOSTRETCH} != "true" || -n ${AUTOSTRETCH_MID_POINT} ]] && AUTOSTRETCH_AMOUNT=0
-		doV "AUTOSTRETCH_AMOUNT" ".imagestretchamount" "number" "${NEW_FILE}"
-		doV "AUTOSTRETCH_MID_POINT" ".imagestretchmidpoint" "text" "${NEW_FILE}"
+		doV "AUTOSTRETCH_AMOUNT" ".imagestretchamountnighttime" "number" "${NEW_FILE}"
+		doV "AUTOSTRETCH_MID_POINT" ".imagestretchmidpointnighttime" "text" "${NEW_FILE}"
 
 		# RESIZE_UPLOADS no longer used; resize only if width > 0 and height > 0.
 		if [[ ${RESIZE_UPLOADS} != "true" ]]; then
@@ -1918,6 +1918,11 @@ convert_config_sh()
 		doV "KEOGRAM" ".keogramgenerate" "boolean" "${NEW_FILE}"
 		doV "KEOGRAM_EXTRA_PARAMETERS" ".keogramextraparameters" "text" "${NEW_FILE}"
 		doV "UPLOAD_KEOGRAM" ".keogramupload" "boolean" "${NEW_FILE}"
+		X="true"; doV "X" ".keogramexpand" "boolean" "${NEW_FILE}"		# new
+		X="simplex"; doV "X" ".keogramfontname" "text" "${NEW_FILE}"	# new
+		X="#ffff"; doV "X" ".keogramfontcolor" "text" "${NEW_FILE}"		# new
+		X=1; doV "X" ".keogramfontsize" "text" "${NEW_FILE}"			# new
+		X=3; doV "X" ".keogramlinethickness" "text" "${NEW_FILE}"		# new
 
 		doV "STARTRAILS" ".startrailsgramgenerate" "boolean" "${NEW_FILE}"
 		doV "BRIGHTNESS_THRESHOLD" ".startrailsbrightnessthreshold" "number" "${NEW_FILE}"
@@ -1990,6 +1995,7 @@ convert_ftp_sh()
 			X=""; doV "X" ".remotewebsiteimagedir" "text" "${NEW_FILE}"
 			X="false"; doV "X" ".useremotewebsite" "boolean" "${NEW_FILE}"
 		fi
+		doV "IMG_UPLOAD_ORIGINAL_NAME" ".remotewebsiteimageuploadoriginalname" "boolean" "${NEW_FILE}"
 		doV "VIDEOS_DESTINATION_NAME" ".remotewebsitevideodestinationname" "text" "${ALLSKY_ENV}"
 		doV "KEOGRAM_DESTINATION_NAME" ".remotewebsitekeogramdestinationname" "text" "${ALLSKY_ENV}"
 		doV "STARTRAILS_DESTINATION_NAME" ".remotewebsitestartrailsdestinationname" "text" "${ALLSKY_ENV}"
@@ -2016,6 +2022,8 @@ convert_ftp_sh()
 		doV "GCS_BUCKET" ".REMOTEWEBSITE_GCS_BUCKET" "text" "${ALLSKY_ENV}"
 		doV "GCS_ACL" ".REMOTEWEBSITE_GCS_ACL" "text" "${ALLSKY_ENV}"
 
+		# Remote server
+		doV "IMG_UPLOAD_ORIGINAL_NAME" ".remoteserverimageuploadoriginalname" "boolean" "${NEW_FILE}"
 	) || return 1
 
 	STATUS_VARIABLES+=( "convert_ftp_sh='true'\n" )

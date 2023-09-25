@@ -1610,8 +1610,8 @@ if (saved_newExposure_us != newExposure_us)
 					if (CG.lastMean >= minAcceptableMean && CG.lastMean <= maxAcceptableMean)
 					{
 						// +++ at end makes it easier to see in log file
-						Log(2, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n",
-							minAcceptableMean, maxAcceptableMean, (int)CG.lastMean);
+						Log(2, "  > Good image: mean %d within range of %d to %d ++++++++++\n",
+							(int)CG.lastMean, minAcceptableMean, maxAcceptableMean);
 					}
 					else if (attempts > maxHistogramAttempts)
 					{

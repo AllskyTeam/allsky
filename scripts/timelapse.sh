@@ -194,7 +194,7 @@ TMP="${ALLSKY_TMP}/timelapseTMP.txt"
 [[ ${IS_MINI} == "false"  ]] && : > "${TMP}"		# Only create when NOT doing mini-timelapses
 
 KEEP_SEQUENCE="$( settings ".timelapsekeepsequence" )"
-if [[ ${KEEP_SEQUENCE} == "false" ]]; then
+if [[ ${KEEP_SEQUENCE} == "false" || ! -d ${SEQUENCE_DIR} ]]; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
 
@@ -247,8 +247,8 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 		exit 1
 	fi
 else
-	echo -e "${ME} ${YELLOW}"
-	echo "Not regenerating sequence because KEEP_SEQUENCE is enabled."
+	echo -en "${ME} ${YELLOW}"
+	echo -n "Not regenerating sequence because 'Keep Timelapse Sequence' is enabled."
 	echo -e "${NC}"
 fi
 

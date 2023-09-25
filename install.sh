@@ -1640,7 +1640,7 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 	[[ ${NEW_VERSION} == "${PRIOR_VERSION}" ]] && return
 
-	# This version moved the ftp-setting.sh settings to settings.json
+	# This version moved the config.sh and ftp-setting.sh settings to settings.json
 	# or to ${ALLSKY_ENV} and made the setting names lowercase.  Plus other changes.
 
 	if [[ ${PRIOR_VERSION} < "v2023.05.01_02" ]]; then
@@ -1800,7 +1800,7 @@ convert_config_sh()
 		return 1
 	fi
 
-	display_msg --log progress "Copying contents of prior config.sh to settings file."
+	display_msg --log progress "Copying contents of prior config.sh to the settings file."
 	(
 		#shellcheck disable=SC1090
 		if ! source "${OLD_CONFIG_FILE}" ; then
@@ -1809,6 +1809,10 @@ convert_config_sh()
 		fi
 
 		local X		# temporary variable
+
+		# Add new fields
+		X="true"; doV "X" ".takenighttimeimages" "boolean" "${NEW_FILE}"
+		X="true"; doV "X" ".savenighttimeimages" "boolean" "${NEW_FILE}"
 
 		if [[ -n ${DAYTIME} ]]; then		# old name
 			doV "DAYTIME" ".takedaytimeimages" "boolean" "${NEW_FILE}"
@@ -1821,12 +1825,6 @@ convert_config_sh()
 			doV "DAYTIME_SAVE" ".savedaytimeimages" "boolean" "${NEW_FILE}"
 		fi
 
-		# take/save nighttimeimages is new
-		# shellcheck disable=SC2034
-		local TAKENIGHTIMEIMAGES="true"; doV "TAKENIGHTIMEIMAGES" ".takenighttimeimages" "boolean" "${NEW_FILE}"
-		# shellcheck disable=SC2034
-		local SAVENIGHTTIMEIMAGES="true"; doV "SAVEMIGHTTIMEIMAGES" ".savenighttimeimages" "boolean" "${NEW_FILE}"
-
 		doV "DARK_FRAME_SUBTRACTION" ".usedarkframes" "boolean" "${NEW_FILE}"
 
 		# IMG_UPLOAD no longer used; instead, upload if FREQUENCY > 0.
@@ -1834,7 +1832,6 @@ convert_config_sh()
 		[[ ${IMG_UPLOAD} != "true" ]] && IMG_UPLOAD_FREQUENCY=0
 		doV "IMG_UPLOAD_FREQUENCY" ".uploadimagefrequency" "number" "${NEW_FILE}"
 		doV "IMG_UPLOAD_ORIGINAL_NAME" ".uploadimageoriginalname" "boolean" "${NEW_FILE}"
-		doV "IMG_CREATE_THUMBNAILS" ".imagecreatethumbnails" "boolean" "${NEW_FILE}"
 
 		# IMG_RESIZE no longer used; only resize if width and height are > 0.
 		if [[ -n ${IMG_WIDTH} && ${IMG_WIDTH} -gt 0 && -n ${IMG_HEIGHT} && ${IMG_HEIGHT} -gt 0 ]];
@@ -1842,7 +1839,7 @@ convert_config_sh()
 			doV "IMG_WIDTH" ".imageresizewidth" "number" "${NEW_FILE}"
 			doV "IMG_HEIGHT" ".imageresizeheight" "number" "${NEW_FILE}"
 		else
-			MSG="Ignoring IMG_RESIZE since IMG_WIDTH (${IMG_WIDTH}) and/or IMG_HEIGHT (${IMG_HEIGHT}) are not set."
+			MSG="Ignoring IMG_RESIZE since IMG_WIDTH (${IMG_WIDTH}) and/or IMG_HEIGHT (${IMG_HEIGHT}) are not positive numbers."
 			display_msg --log info "${MSG}"
 			X=0; doV "X" ".imageresizewidth" "number" "${NEW_FILE}"
 			X=0; doV "X" ".imageresizeheight" "number" "${NEW_FILE}"
@@ -1871,7 +1868,6 @@ convert_config_sh()
 		doV "AUTOSTRETCH_MID_POINT" ".imagestretchmidpoint" "text" "${NEW_FILE}"
 
 		# RESIZE_UPLOADS no longer used; resize only if width > 0 and height > 0.
-		doV "RESIZE_UPLOADS" ".imageresizeuploads" "boolean" "${NEW_FILE}"
 		if [[ ${RESIZE_UPLOADS} != "true" ]]; then
 			# shellcheck disable=SC2034
 			RESIZE_UPLOADS_WIDTH=0;
@@ -1881,6 +1877,8 @@ convert_config_sh()
 		doV "RESIZE_UPLOADS_WIDTH" ".imageresizeuploadswidth" "number" "${NEW_FILE}"
 		doV "RESIZE_UPLOADS_HEIGHT" ".imageresizeuploadsheight" "number" "${NEW_FILE}"
 
+		doV "IMG_CREATE_THUMBNAILS" ".imagecreatethumbnails" "boolean" "${NEW_FILE}"
+
 		# REMOVE_BAD_IMAGES no longer used; remove only if low > 0 or high > 0.
 		if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
 			# shellcheck disable=SC2034
@@ -1888,16 +1886,12 @@ convert_config_sh()
 			# shellcheck disable=SC2034
 			REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0
 		fi
-		doV "REMOVE_BAD_IMAGES" ".imageremovebad" "boolean" "${NEW_FILE}"
 		doV "REMOVE_BAD_IMAGES_THRESHOLD_LOW" ".imageremovebadlow" "number" "${NEW_FILE}"
 		doV "REMOVE_BAD_IMAGES_THRESHOLD_HIGH" ".imageremovebadhigh" "number" "${NEW_FILE}"
 
 		doV "TIMELAPSE" ".timelapsegenerate" "boolean" "${NEW_FILE}"
-		doV "UPLOAD_VIDEO" ".timelapseupload" "boolean" "${NEW_FILE}"
-		doV "TIMELAPSE_UPLOAD_THUMBNAIL" ".timelapseuploadthumbnail" "boolean" "${NEW_FILE}"
 		doV "TIMELAPSEWIDTH" ".timelapsewidth" "number" "${NEW_FILE}"
 		doV "TIMELAPSEHEIGHT" ".timelapseheight" "number" "${NEW_FILE}"
-
 		# We no longer include the trailing "k".
 		TIMELAPSE_BITRATE="${TIMELAPSE_BITRATE//k/}"
 		doV "TIMELAPSE_BITRATE" ".timelapsebitrate" "number" "${NEW_FILE}"
@@ -1907,6 +1901,8 @@ convert_config_sh()
 		doV "FFLOG" ".timelapsefflog" "text" "${NEW_FILE}"
 		doV "KEEP_SEQUENCE" ".timelapsekeepsequence" "boolean" "${NEW_FILE}"
 		doV "TIMELAPSE_EXTRA_PARAMETERS" ".timelapseextraparameters" "text" "${NEW_FILE}"
+		doV "UPLOAD_VIDEO" ".timelapseupload" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_UPLOAD_THUMBNAIL" ".timelapseuploadthumbnail" "boolean" "${NEW_FILE}"
 
 		doV "TIMELAPSE_MINI_IMAGES" ".minitimelapsenumimages" "number" "${NEW_FILE}"
 		doV "TIMELAPSE_MINI_FORCE_CREATION" ".minitimelapseforcecreation" "boolean" "${NEW_FILE}"
@@ -1920,13 +1916,13 @@ convert_config_sh()
 		doV "TIMELAPSE_MINI_HEIGHT" ".minitimelapseheight" "number" "${NEW_FILE}"
 
 		doV "KEOGRAM" ".keogramgenerate" "boolean" "${NEW_FILE}"
-		doV "UPLOAD_KEOGRAM" ".keogramupload" "boolean" "${NEW_FILE}"
 		doV "KEOGRAM_EXTRA_PARAMETERS" ".keogramextraparameters" "text" "${NEW_FILE}"
+		doV "UPLOAD_KEOGRAM" ".keogramupload" "boolean" "${NEW_FILE}"
 
 		doV "STARTRAILS" ".startrailsgramgenerate" "boolean" "${NEW_FILE}"
-		doV "UPLOAD_STARTRAILS" ".startrailsupload" "boolean" "${NEW_FILE}"
 		doV "BRIGHTNESS_THRESHOLD" ".startrailsbrightnessthreshold" "number" "${NEW_FILE}"
 		doV "STARTRAILS_EXTRA_PARAMETERS" ".startrailsextraparameters" "text" "${NEW_FILE}"
+		doV "UPLOAD_STARTRAILS" ".startrailsupload" "boolean" "${NEW_FILE}"
 
 		[[ -z ${THUMBNAIL_SIZE_X} ]] && THUMBNAIL_SIZE_X=100
 		doV "THUMBNAIL_SIZE_X" ".thumbnailsizex" "number" "${NEW_FILE}"
@@ -1936,9 +1932,11 @@ convert_config_sh()
 		# NIGHTS_TO_KEEP was replaced by DAYS_TO_KEEP and the AUTO_DELETE boolean was deleted.
 		if [[ -n ${NIGHTS_TO_KEEP} && ${AUTO_DELETE} == "true" ]]; then
 			doV "NIGHTS_TO_KEEP" ".daystokeep" "number" "${NEW_FILE}"
+		else
+			doV "DAYS_TO_KEEP" ".daystokeep" "number" "${NEW_FILE}"
 		fi
-		doV "DAYS_TO_KEEP" ".daystokeep" "number" "${NEW_FILE}"
-		doV "WEB_DAYS_TO_KEEP" ".daystokeepweb" "number" "${NEW_FILE}"
+		doV "WEB_DAYS_TO_KEEP" ".daystokeeplocalwebsite" "number" "${NEW_FILE}"
+		X=0; doV "X" ".daystokeepremotewebsite" "number" "${NEW_FILE}"
 		doV "WEBUI_DATA_FILES" ".webuidatafiles" "text" "${NEW_FILE}"
 		doV "UHUBCTL_PATH" ".uhubctlpath" "text" "${NEW_FILE}"
 		doV "UHUBCTL_PORT" ".uhubctlport" "number" "${NEW_FILE}"
@@ -1979,15 +1977,18 @@ convert_ftp_sh()
 		# "local" PROTOCOL means they're using local Website.
 		# WEB_IMAGE_DIR means they have both local and remote Website.
 		if [[ -d ${ALLSKY_WEBSITE} && (${PROTOCOL} == "local" || -n ${WEB_IMAGE_DIR}) ]]; then
-			update_json_file ".uselocalwebsite" "true" "${NEW_FILE}"
+			X="true";  doV "X" ".uselocalwebsite" "boolean" "${NEW_FILE}"
+		else
+			X="false"; doV "X" ".uselocalwebsite" "boolean" "${NEW_FILE}"
 		fi
-		if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
-			doV "PROTOCOL" ".remotewebsiteprotocol" "${NEW_FILE}"
-			doV "IMAGE_DIR" ".remotewebsiteimagedir" "${NEW_FILE}"
-			if [[ -n ${REMOTE_HOST} ]]; then
-				update_json_file ".useremotewebsite" "true" "${NEW_FILE}"
-				update_json_file ".remotewebsiteprotocol" "${PROTOCOL}" "${NEW_FILE}"
-			fi
+		if [[ (-n ${PROTOCOL} && ${PROTOCOL} != "local") || -n ${REMOTE_HOST} ]]; then
+			doV "PROTOCOL" ".remotewebsiteprotocol" "text" "${NEW_FILE}"
+			doV "IMAGE_DIR" ".remotewebsiteimagedir" "text" "${NEW_FILE}"
+			X="true"; doV "X" ".useremotewebsite" "boolean" "${NEW_FILE}"
+		else
+			X=""; doV "X" ".remotewebsiteprotocol" "text" "${NEW_FILE}"
+			X=""; doV "X" ".remotewebsiteimagedir" "text" "${NEW_FILE}"
+			X="false"; doV "X" ".useremotewebsite" "boolean" "${NEW_FILE}"
 		fi
 		doV "VIDEOS_DESTINATION_NAME" ".remotewebsitevideodestinationname" "text" "${ALLSKY_ENV}"
 		doV "KEOGRAM_DESTINATION_NAME" ".remotewebsitekeogramdestinationname" "text" "${ALLSKY_ENV}"
@@ -1995,7 +1996,12 @@ convert_ftp_sh()
 		# shellcheck disable=SC2034
 		[[ -n ${HOST} ]] && REMOTE_HOST="${HOST}"
 		doV "REMOTE_HOST" ".REMOTEWEBSITE_HOST" "text" "${ALLSKY_ENV}"
-		doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "number" "${ALLSKY_ENV}"
+		if [[ -z ${REMOTE_PORT} ]]; then
+			# Don't want a default value.
+			doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "text" "${ALLSKY_ENV}"
+		else
+			doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "number" "${ALLSKY_ENV}"
+		fi
 		# shellcheck disable=SC2034
 		[[ -n ${USER} ]] && REMOTE_USER="${USER}"
 		doV "REMOTE_USER" ".REMOTEWEBSITE_USER" "text" "${ALLSKY_ENV}"

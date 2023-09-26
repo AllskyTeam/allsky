@@ -1,25 +1,23 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$(dirname "${BASH_ARGV0}")/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 # This script uploads various information relative to the camera setup to the allsky map.
 # https://www.thomasjacquin.com/allsky-map/
 # Information is gathered automatically from the settings file.
 # The script can be called manually, via endOfNight.sh, or via the WebUI.
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 
 function usage_and_exit()
 {
-	RET_CODE=${1}
-	[[ ${RET_CODE} -ne 0 ]] && echo -en "${wERROR}"
+	RET=${1}
+	[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
 	echo
 	echo -e "Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight]"
 	echo
@@ -30,13 +28,13 @@ function usage_and_exit()
 	echo "--debug: Output debugging statements."
 	echo "--endofnight: Indicates how ${ME} was invoked."
 	echo
-	[[ ${RET_CODE} -ne 0 ]] && echo -e "${wNC}"
-	# shellcheck disable=SC2086
-	exit ${RET_CODE}
+	[[ ${RET} -ne 0 ]] && echo -e "${wNC}"
+	exit "${RET}"
 }
 
 function get_domain()
 {
+	local URL D
 	# Get the domain name or IP address from a URL
 	# Examples:
 	#	http://myallsky.com						# Return "myallsky.com"
@@ -49,15 +47,17 @@ function get_domain()
 	echo "${D}"
 }
 
-TIMEOUT=30		# seconds to wait when trying to reach a URL
 
 function check_URL()
 {
-	URL="${1}"
-	URL_TYPE="${2}"
-	FIELD_NAME="${3}"
+	local URL="${1}"
+	local URL_TYPE="${2}"
+	local FIELD_NAME="${3}"
 
-	D="$(get_domain "${URL}")"
+	# ${E} is a global variable we may set.
+	local TIMEOUT=30		# seconds to wait when trying to reach a URL
+
+	local D="$( get_domain "${URL}" )"
 	if [[ "${D:0:7}"  == "192.168"		||
 		  "${D:0:4}"  == "10.0"			||
 		  "${D:0:6}"  == "172.16"		||
@@ -73,8 +73,9 @@ function check_URL()
 
 	else
 		# Make sure it's a valid URL
-		CONTENT="$(curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1)"
-		RET=$?
+		local CONTENT="$(curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1)"
+		local RET=$?
+		[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}check_URL() RET=${RET}:\n${CONTENT}${wNC}.\n"
 		if [[ ${RET} -eq 6 ]]; then
 			E="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}${E}"
 		elif [[ ${RET} -eq 28 ]]; then
@@ -82,11 +83,12 @@ function check_URL()
 		elif [[ ${RET} -ne 0 ]]; then
 				E="ERROR: ${FIELD_NAME} '${URL}' cannot be reached (${CONTENT}).${BR}${E}"
 		else
-			if [[ ${URL_TYPE} == "websiteurl" ]]; then
-				TYPE="$(echo "${CONTENT}" | grep -i "Content-Type: text")"
+			local TYPE T
+			if [[ ${URL_TYPE} == "remotewebsiteurl" ]]; then
+				TYPE="$( echo "${CONTENT}" | grep -i "Content-Type: text" )"
 				T="web site"
 			else
-				TYPE="$(echo "${CONTENT}" | grep -i "Content-Type: image")"
+				TYPE="$(echo "${CONTENT}" | grep -i "Content-Type: image" )"
 				T="image"
 			fi
 			if [[ -z ${TYPE} ]]; then
@@ -139,7 +141,7 @@ done
 
 
 # If not on a tty, then we're either called from the endOfNight.sh script (plain text), or the WebUI (html).
-if [[ ${ON_TTY} -eq 0 && ${ENDOFNIGHT} == "false" ]]; then
+if [[ ${ON_TTY} == "false" && ${ENDOFNIGHT} == "false" ]]; then
 	BR="<br>"		# Line break
 else
 	BR="\n"
@@ -171,7 +173,7 @@ fi
 
 
 if [[ -z ${MACHINE_ID} ]]; then
-	MACHINE_ID="$(< /etc/machine-id)"
+	MACHINE_ID="$( < /etc/machine-id )"
 	if [[ -z ${MACHINE_ID} ]]; then
 		E="ERROR: Unable to get 'machine_id': check /etc/machine-id."
 		echo -e "${ERROR_MSG_START}${E}${wNC}"
@@ -181,22 +183,21 @@ if [[ -z ${MACHINE_ID} ]]; then
 fi
 
 OK="true"
-E=""
-LATITUDE="$(settings ".latitude")"
-if [[ ${LATITUDE} == "" ]]; then
+E=""			# Global variable
+LATITUDE="$( settings ".latitude" )"
+if [[ -z ${LATITUDE} ]]; then
 	E="ERROR: 'Latitude' is required.${BR}${E}"
 	OK="false"
 fi
-LONGITUDE="$(settings ".longitude")"
-if [[ ${LONGITUDE} == "" ]]; then
+LONGITUDE="$( settings ".longitude" )"
+if [[ -z ${LONGITUDE} ]]; then
 	E="ERROR: 'Longitude' is required.${BR}${E}"
 	OK="false"
 fi
 [[ ${OK} == "false" ]] && echo -e "${ERROR_MSG_START}${E}${wNC}" && exit 1
 
-OK="true"
-LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")" || OK="false"
-LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")" || OK="false"
+LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )" || OK="false"
+LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )" || OK="false"
 [[ ${OK} == "false" ]] && exit 1	# convertLatLong output error message
 
 if false; then
@@ -217,35 +218,35 @@ if [[ ${DELETE} == "true" ]]; then
 	}
 
 else
-	LOCATION="$(settings ".location")"
-	OWNER="$(settings ".owner")"
-	WEBSITE_URL="$(settings ".websiteurl")"
-	IMAGE_URL="$(settings ".imageurl")"
-	CAMERA="$(settings ".camera")"
-	LENS="$(settings ".lens")"
-	COMPUTER="$(settings ".computer")"
+	LOCATION="$( settings ".location" )"
+	OWNER="$( settings ".owner" )"
+	WEBSITE_URL="$( settings ".remotewebsiteurl" )"
+	IMAGE_URL="$( settings ".remotewebsiteimageurl" )"
+	CAMERA="$( settings ".camera" )"
+	LENS="$( settings ".lens" )"
+	COMPUTER="$( settings ".computer" )"
 
 	OK="true"
 	E=""
 	W=""
 	# Check for required fields
-	if [[ ${CAMERA} == "" ]]; then
+	if [[ -z ${CAMERA} ]]; then
 		E="ERROR: 'Camera' is required.${BR}${E}"
 		OK="false"
 	fi
-	if [[ ${COMPUTER} == "" ]]; then
+	if [[ -z ${COMPUTER} ]]; then
 		E="ERROR: 'Computer' is required.${BR}${E}"
 		OK="false"
 	fi
 
 	# Check for optional, but suggested fields
-	if [[ ${LOCATION} == "" ]]; then
+	if [[ -z ${LOCATION} ]]; then
 		W="WARNING: 'Location' not set; continuing.${BR}${W}"
 	fi
-	if [[ ${OWNER} == "" ]]; then
+	if [[ -z ${OWNER} ]]; then
 		W="WARNING: 'Owner' not set; continuing.${BR}${W}"
 	fi
-	if [[ ${LENS} == "" ]]; then
+	if [[ -z ${LENS} ]]; then
 		W="WARNING: 'Lens' not set; continuing.${BR}${W}"
 	fi
 
@@ -256,17 +257,18 @@ else
 		OK="false"
 	elif [[ -n ${WEBSITE_URL} ]]; then		# they specified both
 		# The domain names (or IP addresses) must be the same.
-		Wurl="$(get_domain "${WEBSITE_URL}")"
-		Iurl="$(get_domain "${IMAGE_URL}")"
+		Wurl="$( get_domain "${WEBSITE_URL}" )"
+		Iurl="$( get_domain "${IMAGE_URL}" )"
 		if [[ ${Wurl} != "${Iurl}" ]]; then
 			E="ERROR: The Website and Image URLs must have the same domain name or IP address.${BR}${E}"
 			OK="false"
 		fi
+		# check_URL() may set ${E}.
 		if [[ -n ${WEBSITE_URL} ]]; then
-			check_URL "${WEBSITE_URL}" websiteurl "Website URL" || OK="false"
+			check_URL "${WEBSITE_URL}" remotewebsiteurl "Website URL" || OK="false"
 		fi
 		if [[ -n ${IMAGE_URL} ]]; then
-			check_URL "${IMAGE_URL}" imageurl "Image URL" || OK="false"
+			check_URL "${IMAGE_URL}" remotewebsiteimageurl "Image URL" || OK="false"
 		fi
 	fi
 
@@ -274,25 +276,25 @@ else
 		echo -e "${WARNING_MSG_START}${W%%"${BR}"}${NC}"
 		# Want each message to have its own addMessage.sh entry.
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
-			echo "${W}" | while read -r w
+			echo "${W}" | while read -r MSG
 			do
-				"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${w}"
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${MSG}"
 			done
 		fi
 	fi
 	if [[ ${OK} == "false" ]]; then
 		echo -e "${ERROR_MSG_START}${E%%"${BR}"}${NC}"
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
-			echo "${E}" | while read -r e
+			echo "${E}" | while read -r MSG
 			do
-				"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${e}"
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
 			done
 		fi
 		exit 2
 	fi
 
 	if [[ -f ${ALLSKY_HOME}/version ]]; then
-		ALLSKY_VERSION="$(< "${ALLSKY_HOME}/version")"
+		ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
 	else
 		ALLSKY_VERSION="unknown"		# This really should be an error
 	fi
@@ -331,7 +333,7 @@ RETURN_CODE=0
 if [[ ${UPLOAD} == "true" ]]; then
 	if [[ ${DELETE} == "true" ]]; then
 		[[ ${WHISPER} == "false" ]] && echo "${ME}: Deleting map data."
-	elif [[ ${ON_TTY} -eq 1 || ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+	elif [[ ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading map data."
 	fi
 	# shellcheck disable=SC2089
@@ -339,8 +341,9 @@ if [[ ${UPLOAD} == "true" ]]; then
 	# shellcheck disable=SC2089
 	CMD="${CMD} --data '$(generate_post_data)' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Executing:\n${CMD}${wNC}\n"
+
 	# shellcheck disable=SC2090,SC2086
-	RETURN="$(echo ${CMD} | bash)"
+	RETURN="$( echo ${CMD} | bash )"
 	RETURN_CODE=$?
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Returned:\n${RETURN}${wNC}.\n"
 	if [[ ${RETURN_CODE} -ne 0 ]]; then
@@ -351,7 +354,7 @@ if [[ ${UPLOAD} == "true" ]]; then
 	fi
 
 	# Get the return string from the server.  It's the last line of output.
-	RET="$(echo "${RETURN}" | tail -1)"
+	RET="$( echo "${RETURN}" | tail -1 )"
 	if [[ ${RET} == "INSERTED" || ${RET} == "DELETED" ]]; then
 		echo -e "${wOK}${MSG_START}Map data ${RET}.${wNC}"
 
@@ -396,8 +399,8 @@ if [[ ${UPLOAD} == "true" ]]; then
 		RETURN_CODE=2
 	fi
 
-elif [[ ( ${ON_TTY} -eq 1 || ${ALLSKY_DEBUG_LEVEL} -ge 4) && ${ENDOFNIGHT} == "false"  ]]; then
+elif [[ ( ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 4) && ${ENDOFNIGHT} == "false"  ]]; then
 	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
 fi
 
-exit ${RETURN_CODE}
+exit "${RETURN_CODE}"

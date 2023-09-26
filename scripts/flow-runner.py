@@ -112,9 +112,10 @@ if __name__ == "__main__":
             shared.log(0, "ERROR: Unable to read SETTINGS_FILE - Aborting", exitCode=1)
 
         shared.fullFilename = os.environ["FULL_FILENAME"]
-        shared.createThumbnails = os.environ["IMG_CREATE_THUMBNAILS"]
-        shared.thumbnailWidth = int(os.environ["THUMBNAIL_SIZE_X"])
-        shared.thumbnailHeight = int(os.environ["THUMBNAIL_SIZE_Y"])
+        # TODO: imagecreatethumbnails is a boolean
+        shared.createThumbnails = bool(shared.getSetting("imagecreatethumbnails"))
+        shared.thumbnailWidth = int(shared.getSetting("thumbnailsizex"))
+        shared.thumbnailHeight = int(shared.getSetting("thumbnailsizey"))
         shared.websiteImageFile = os.path.join(shared.allskyTmp, shared.fullFilename)
         shared.TOD = shared.args.tod
         date = datetime.now()

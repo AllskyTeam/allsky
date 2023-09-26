@@ -908,7 +908,7 @@ bool validateLong(long *num, long min, long max, char const *name, bool invalidI
 bool validateFloat(double *num, double min, double max, char const *name, bool invalidIsOK)
 {
 	if (*num < min) {
-		fprintf(stderr, "*** %s: '%s' (%'.1f) is less than the minimum of %'.1f",
+		fprintf(stderr, "*** %s: '%s' (%'.3f) is less than the minimum of %'.3f",
 			invalidIsOK ? "WARNING" : "ERROR", name, *num, min);
 		if (invalidIsOK == true)
 		{
@@ -919,7 +919,7 @@ bool validateFloat(double *num, double min, double max, char const *name, bool i
 		return invalidIsOK;
 
 	} else if (*num > max) {
-		fprintf(stderr, "*** %s: '%s' (%'.1f) is greater than the maximum of %'.1f",
+		fprintf(stderr, "*** %s: '%s' (%'.3f) is greater than the maximum of %'.3f",
 			invalidIsOK ? "WARNING" : "ERROR", name, *num, max);
 		if (invalidIsOK == true)
 		{
@@ -952,7 +952,7 @@ void displayHeader(config cg)
 		printf("Capture images of the sky with a Raspberry Pi and an RPi camera\n");
 	printf("%s\n", c(KNRM));
 
-	if (! cg.help) printf("%sAdd -h or --help for available options%s\n\n", c(KYEL), c(KNRM));
+	if (! cg.help) printf("%sAdd --help for available options%s\n\n", c(KYEL), c(KNRM));
 	printf("Author: Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
 	printf("Contributors:\n");
 	printf(" -Knut Olav Klo\n");
@@ -1550,7 +1550,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 				return(false);
 			}
 		}
-		else if (strcmp(a, "h") == 0 || strcmp(a, "-help") == 0)
+		else if (strcmp(a, "-help") == 0)
 		{
 			cg->help = true;
 			cg->quietExit = true;	// we display the help message and quit
@@ -1672,6 +1672,11 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 
 		// nighttime settings
+		else if (strcmp(a, "takenighttimeimages") == 0)
+		{
+++i;
+//xxx			cg->daytimeCapture = getBoolean(argv[++i]);
+		}
 		else if (strcmp(a, "nightautoexposure") == 0)
 		{
 			cg->nightAutoExposure = getBoolean(argv[++i]);
@@ -1967,43 +1972,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "outlinefont") == 0)
 		{
 			cg->overlay.outlinefont = getBoolean(argv[++i]);
-		}
-
-		// Arguments that may be passed to us but we don't use.
-		else if (
-			strcmp(a, "xx_end_xx") == 0 ||
-			strcmp(a, "lastchanged") == 0 ||
-			strcmp(a, "uselocalwebsite") == 0 ||
-#define temp1 "useremote"
-			strncmp(a, temp1, sizeof(temp1)-1) == 0 ||
-#define temp2 "protocol"
-			strncmp(a, temp2, sizeof(temp2)-1) == 0 ||
-#define temp3 "imagedir"
-			strncmp(a, temp3, sizeof(temp3)-1) == 0 ||
-#define temp4 "videodestinationname"
-			strncmp(a, temp4, sizeof(temp4)-1) == 0 ||
-#define temp5 "keogramdeodestinationname"
-			strncmp(a, temp5, sizeof(temp5)-1) == 0 ||
-#define temp6 "startrailsdeodestinationname"
-			strncmp(a, temp6, sizeof(temp6)-1) == 0 ||
-			strcmp(a, "displaysettings") == 0 ||
-			strcmp(a, "showonmap") == 0 ||
-			strcmp(a, "websiteurl") == 0 ||
-			strcmp(a, "imageurl") == 0 ||
-			strcmp(a, "location") == 0 ||
-			strcmp(a, "owner") == 0 ||
-			strcmp(a, "camera") == 0 ||
-			strcmp(a, "lens") == 0 ||
-			strcmp(a, "computer") == 0 ||
-			strcmp(a, "usedarkframes") == 0 ||
-			strcmp(a, "uselogin") == 0 ||
-			strcmp(a, "cameratype") == 0 ||
-			strcmp(a, "cameramodel") == 0 ||
-			strcmp(a, "showusb") == 0 ||
-			strcmp(a, "alwaysshowadvanced") == 0
-			)
-		{
-			i++;
 		}
 
 		else

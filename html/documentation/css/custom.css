@@ -80,6 +80,21 @@
 .settingInput { /* Input field in Allsky Settings page */
 	width: 120px;
 }
+.settingInputSelect {
+	padding: 0px 3px 0px 3px;
+	text-align: right;
+}
+.settingInputTextNumber {
+	padding: 0px 3px 0px 0px;
+	text-align: right;
+}
+.settingInputWidetext {
+	padding: 6px 5px;
+}
+.settingInputBoolean {
+	margin-bottom: -3px !important;
+	border-radius: 4px;
+}
 
 .info-item {
 	width: 140px;
@@ -422,10 +437,33 @@ table .alert-dismissable {
 	text-align: center;
 	font-weight: bold;
 	font-size: 1.25em;
-	padding: 3px 0 3px 0;
+	padding: 5px 0px;
 }
 .dark .settingsHeader {
 	background-color: #555;
+}
+.subSettingsHeader {
+	text-align: center;
+	font-weight: bold;
+	font-size: 1.05em;
+	padding: 0;
+}
+.subSettingsHeader div {
+	margin: 0 3em 0 3em;
+	background-color: #aac;
+}
+.dark .subSettingsHeader {
+	background-color: #339
+}
+.columnHeader {
+	background-color: #aac;
+	text-align: center;
+	font-weight: bold;
+	font-size: 1.05em;
+	padding: 0;
+}
+.dark .columnHeader {
+	background-color: #339
 }
 
 .boxShadow {

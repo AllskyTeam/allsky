@@ -270,7 +270,7 @@ function displayUserData($file, $displayType)
  */
 function DisplaySystem()
 {
-	global $status, $temptype, $page;
+	global $status, $temptype, $page, $settings_array;
 	$status = new StatusMessages();
 
 	$top_dir = dirname(ALLSKY_WEBSITE, 1);
@@ -399,7 +399,7 @@ function DisplaySystem()
 
 	// Optional user-specified data.
 	// TODO: read each file once and populate arrays for "data", "progress", and "button".
-	$udf = get_variable(ALLSKY_CONFIG .'/config.sh', 'WEBUI_DATA_FILES=', '');
+	$udf = getVariableOrDefault($settings_array, 'webuidatafiles', '');
 	if ($udf !== "") {
 		$user_data_files = explode(':', $udf);
 		$user_data_files_count = count($user_data_files);

@@ -16,7 +16,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# If we're not on a tty output is likely being written to a file, so don't use colors.
 	# The "w" colors are for when output may go to a web page.
 	if tty --silent ; then
-		ON_TTY=1
+		ON_TTY="true"
 		GREEN="\033[0;32m";		wOK="${GREEN}"
 		YELLOW="\033[0;33m";	wWARNING="${YELLOW}"
 		RED="\033[0;31m";		wERROR="${RED}"
@@ -26,7 +26,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 								wBOLD="["; wNBOLD="]"
 								wBR="\n"
 	else
-		ON_TTY=0
+		ON_TTY="false"
 		GREEN="";				wOK="<span style='color: green'>"
 		YELLOW="";				wWARNING="<span style='color: #FF9800'>"
 		RED="";					wERROR="<span style='color: red'>"
@@ -77,6 +77,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	# Holds a count of continuous "bad" images
 	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_image_count.txt"
+
+	# Holds the PID of the process that called timelapse.sh.
+	ALLSKY_TIMELAPSE_PID_FILE="${ALLSKY_TMP}/timelapse-pid.txt"
 
 	# Holds information on what the user needs to do after an installation.
 	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/installation_logs"
@@ -144,7 +147,28 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# They are configuration files so go in ${ALLSKY_CONFIG) like all the other config files.
 	CC_FILE="${ALLSKY_CONFIG}/cc.json"
 	SETTINGS_FILE="${ALLSKY_CONFIG}/settings.json"
+	if [[ -s ${SETTINGS_FILE} ]]; then
+		# Get the name of the file the websites will look for, and split into name and extension.
+		FULL_FILENAME="$( jq -r ".filename" "${SETTINGS_FILE}" )"
+		EXTENSION="${FULL_FILENAME##*.}"
+		FILENAME="${FULL_FILENAME%.*}"
+
+		CAMERA_TYPE="$( jq -r '.cameratype' "${SETTINGS_FILE}" )"
+		CAMERA_MODEL="$( jq -r '.cameramodel' "${SETTINGS_FILE}" )"
+
+		# So scripts can conditionally output messages.
+		ALLSKY_DEBUG_LEVEL="$( jq -r '.debuglevel' "${SETTINGS_FILE}" )"
+
+		# ALLSKY_VERSION is updated during installation
+		ALLSKY_VERSION="v2023.05.01_02"
+	else
+		ALLSKY_DEBUG_LEVEL=1
+	fi
 	OPTIONS_FILE="${ALLSKY_CONFIG}/options.json"
+	ALLSKY_ENV="${ALLSKY_HOME}/env.json"
+
+	IMG_DIR="current/tmp"
+	CAPTURE_SAVE_DIR="${ALLSKY_TMP}"
 
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped

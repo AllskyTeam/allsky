@@ -3,12 +3,12 @@
 # This file is "source"d into another.
 # "${CURRENT_IMAGE}" is the name of the current image we're working on.
 
-ME2="$(basename "${BASH_SOURCE[0]}")"
+ME2="$( basename "${BASH_SOURCE[0]}" )"
 
-# Subtract dark frame if there is one defined in config.sh
+# Subtract dark frame if there is one.
 # This has to come after executing darkCapture.sh which sets ${AS_TEMPERATURE_C}.
 
-if [[ $(settings ".useDarkFrames") -eq 1 ]]; then
+if [[ $(settings ".usedarkframes") == "true" ]]; then
 	# Make sure the input file exists; if not, something major is wrong so exit.
 	if [[ -z ${CURRENT_IMAGE} ]]; then
 		echo "*** ${ME2}: ERROR: 'CURRENT_IMAGE' not set; aborting."
@@ -45,12 +45,12 @@ if [[ $(settings ".useDarkFrames") -eq 1 ]]; then
 		# than ${AS_TEMPERATURE_C}, stop, then compare it to the previous file to
 		# determine which is closer to ${AS_TEMPERATURE_C}.
 		# Need "--general-numeric-sort" in case any files have a leading "-".
-		for file in $(find "${DARKS_DIR}" -maxdepth 1 -iname "*.${EXTENSION}" | sed 's;.*/;;' | sort --general-numeric-sort)
+		for file in $( find "${DARKS_DIR}" -maxdepth 1 -iname "*.${EXTENSION}" |
+			sed 's;.*/;;' | sort --general-numeric-sort )
 		do
-			[[ ${ALLSKY_DEBUG_LEVEL} -ge 5 ]] && echo "Looking at ${file}"
 			# Example file name for 21 degree dark: "21.jpg".
 			if [[ -s ${DARKS_DIR}/${file} ]]; then
-				file="$(basename "./${file}")"	# need "./" in case file has "-"
+				file="$( basename "./${file}" )"	# need "./" in case file has "-"
 				# Get name of file (which is the temp) without extension
 				DARK_TEMPERATURE=${file%.*}
 				if [[ ${DARK_TEMPERATURE} -gt ${AS_TEMPERATURE_C} ]]; then

@@ -128,14 +128,19 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 	{ "imx477", 0, "RPi HQ", 0, 3040, 4056, ASI_TRUE,
 		// Need ASI_IMG_END so we know where the end of the list is.
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE,
-		12, ASI_FALSE, ASI_FALSE
+		12, ASI_TRUE, ASI_FALSE
 	},
 
 	// There are many versions of the imx708 (_wide, _noir, _wide_noir, etc.)
 	// so just check for "imx708" (6 characters.
 	{ "imx708", 6, "RPi Module 3", 0, 2592, 4608, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.4, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE
+		10, ASI_TRUE, ASI_TRUE
+	},
+
+	{ "ov5647", 0, "RPi Version 1", 0, 2592, 1944, ASI_TRUE,
+		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.4, ASI_FALSE,
+		10, ASI_FALSE, ASI_FALSE
 	},
 
 	{ "ov5647", 0, "RPi Version 1", 0, 2592, 1944, ASI_TRUE,
@@ -210,33 +215,34 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 	// Name, Description, MaxValue, MinValue, DefaultValue, CurrentValue, IsAutoSupported, IsWritable, ControlType
 	{ // imx477, libcamera		THIS MUST BE THE FIRST CAMERA
-		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Gain", "Gain", 16.0, 1.0, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, NOT_SET, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+		{ "WB_R", "White balance: Red component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+
 		{ "Temperature", "Sensor Temperature", 80, -20, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.0, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
 		// These are the same for all libcamera cameras.
-		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
-		{ "Saturation", "Saturation", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	},
 	{ // imx477, raspistill.  Minimum width and height are 64.
-		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Gain", "Gain", 16.0, 1.0, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, NOT_SET, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+		{ "WB_R", "White balance: Red component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
 		{ "Temperature", "Temperature, not supported", NOT_SET, NOT_SET, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.0, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10, -10, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "ExposureCompensation", "Exposure Compensation", 10, -10, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
 		{ "Brightness", "Brightness", 100, 0, 50, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
 		{ "Saturation", "Saturation", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
 		{ "Contrast", "Contrast", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
@@ -246,19 +252,19 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	},
 
 	{ // imx708*, libcamera
-		{ "Gain", "Gain", 16.0, 1.122807, 1.122807, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 112015553, 26, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 32.0, 0.0, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 32.0, 0.0, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Gain", "Gain", 16.0, 1.122807, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Exposure", "Exposure Time (us)", 112015553, 26, NOT_SET, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+		{ "WB_R", "White balance: Red component", 32.0, 0.0, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 32.0, 0.0, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
 		{ "Temperature", "Sensor Temperature", 80, -20, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.122807, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 112015553 / US_IN_MS, 26.0, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Brightness", "Brightness", 1.0, -1.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
 		{ "Saturation", "Saturation", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
 		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "Sharpness", "Sharpness", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
@@ -267,16 +273,16 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	},
 
 	{ // ov5647, libcamera
-		{ "Gain", "Gain", 63.9375, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 969249, 130, 9000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 32.0, 0, 0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 32.0, 0, 0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Gain", "Gain", 63.9375, 1.0, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Exposure", "Exposure Time (us)", 969249, 130, NOT_SET, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+		{ "WB_R", "White balance: Red component", 32.0, 0.0, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 32.0, 0.0, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
 		{ "Temperature", "Temperature, not supported", NOT_SET, NOT_SET, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 63.9375, 1.0, 63.9375, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 969249 / US_IN_MS, 1.0, 9 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
 		{ "Saturation", "Saturation", 32, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
 		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
 		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
@@ -288,19 +294,19 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	},
 
 	{ // imx290, libcamera
-		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Gain", "Gain", 16.0, 1.0, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "WB_R", "White balance: Red component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
 		{ "Temperature", "Sensor Temperature", 80, -20, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
+		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.0, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 200 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
-		{ "Saturation", "Saturation", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
@@ -309,19 +315,19 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	},
 
 	{ // imx519, libcamera
-		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Gain", "Gain", 16.0, 1.0, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "WB_R", "White balance: Red component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
 		{ "Temperature", "Sensor Temperature", 80, -20, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
+		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.0, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 200 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
-		{ "Saturation", "Saturation", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
@@ -331,19 +337,19 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 
 	{ // arducam_64mp, libcamera
-		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Gain", "Gain", 16.0, 1.0, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "WB_R", "White balance: Red component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
 		{ "Temperature", "Sensor Temperature", 80, -20, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
+		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.0, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 200 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
-		{ "Saturation", "Saturation", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
@@ -574,6 +580,7 @@ ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
 
 	return(ASI_ERROR_GENERAL_ERROR);		// Not supported on RPi cameras
 }
+
 
 
 #else		////////////////////// ZWO
@@ -844,21 +851,21 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\"sensorHeight\" : %d,\n", height);
 	fprintf(f, "\t\"pixelSize\" : %1.2f,\n", pixelSize);
 	fprintf(f, "\t\"supportedBins\" : [\n");
-	for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedBins); ++i)
-	{
-		int b = cameraInfo.SupportedBins[i];
-		if (b == 0)
+		for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedBins); ++i)
 		{
-			fprintf(f, "\n");
-			break;
+			int b = cameraInfo.SupportedBins[i];
+			if (b == 0)
+			{
+				fprintf(f, "\n");
+				break;
+			}
+			if (i > 0)
+			{
+				fprintf(f, ",");		// comma on all but last one
+				fprintf(f, "\n");
+			}
+			fprintf(f, "\t\t{ \"value\" : %d, \"label\" : \"%dx%d\" }", b, b, b);
 		}
-		if (i > 0)
-		{
-			fprintf(f, ",");		// comma on all but last one
-			fprintf(f, "\n");
-		}
-		fprintf(f, "\t\t{ \"value\" : %d, \"label\" : \"%dx%d\" }", b, b, b);
-	}
 	fprintf(f, "\t],\n");
 
 	// RPi only supports sensor temp with libcamera.
@@ -874,66 +881,65 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 #ifdef IS_RPi
 	fprintf(f, "\t\"autoFocus\" : %s,\n", cameraInfo.SupportsAutoFocus ? "true" : "false");
 	fprintf(f, "\t\"supportedRotations\": [\n");
-	fprintf(f, "\t\t{ \"value\" : 0, \"label\" : \"None\" },\n");
-	if (CG.ct == ctRPi && CG.isLibcamera)
-	{
-		// libcamera only supports 0 and 180 degree rotation
-		fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" }\n");
-	}
-	else
-	{
-		fprintf(f, "\t\t{ \"value\" : 90, \"label\" : \"90 degrees\" },\n");
-		fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" },\n");
-		fprintf(f, "\t\t{ \"value\" : 270, \"label\" : \"270 degrees\" }\n");
-	}
+		fprintf(f, "\t\t{ \"value\" : 0, \"label\" : \"None\" },\n");
+		if (CG.ct == ctRPi && CG.isLibcamera)
+		{
+			// libcamera only supports 0 and 180 degree rotation
+			fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" }\n");
+		}
+		else
+		{
+			fprintf(f, "\t\t{ \"value\" : 90, \"label\" : \"90 degrees\" },\n");
+			fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" },\n");
+			fprintf(f, "\t\t{ \"value\" : 270, \"label\" : \"270 degrees\" }\n");
+		}
 	fprintf(f, "\t],\n");
 #endif
 
 	fprintf(f, "\t\"supportedImageFormats\": [\n");
-	fprintf(f, "\t\t{ ");
-	fprintf(f, "\"value\" : %d, ", AUTO_IMAGE_TYPE);
-	fprintf(f, "\"label\" : \"%s\"", "auto");
-	fprintf(f, " },\n");
-	for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedVideoFormat); i++)
-	{
-		ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];
-		if (it == ASI_IMG_END)
-		{
-			fprintf(f, "\n");
-			break;
-		}
-		if (i > 0)
-		{
-			fprintf(f, ",");		// comma on all but last one
-			fprintf(f, "\n");
-		}
 		fprintf(f, "\t\t{ ");
-		fprintf(f, "\"value\" : %d, ", (int) it);
-		fprintf(f, "\"label\" : \"%s\"",
-			it == ASI_IMG_RAW8 ?  "RAW8" :
-			it == ASI_IMG_RGB24 ?  "RGB24" :
-			it == ASI_IMG_RAW16 ?  "RAW16" :
-			it == ASI_IMG_Y8 ?  "Y8" :
-			"unknown format");
-		fprintf(f, " }");
-	}
-	fprintf(f, "\t],\n");;
+		fprintf(f, "\"value\" : %d, ", AUTO_IMAGE_TYPE);
+		fprintf(f, "\"label\" : \"%s\"", "auto");
+		fprintf(f, " },\n");
+		for (unsigned int i = 0; i < sizeof(cameraInfo.SupportedVideoFormat); i++)
+		{
+			ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];
+			if (it == ASI_IMG_END)
+			{
+				fprintf(f, "\n");
+				break;
+			}
+			if (i > 0)
+			{
+				fprintf(f, ",");		// comma on all but last one
+				fprintf(f, "\n");
+			}
+			fprintf(f, "\t\t{ ");
+			fprintf(f, "\"value\" : %d, ", (int) it);
+			fprintf(f, "\"label\" : \"%s\"",
+				it == ASI_IMG_RAW8 ?  "RAW8" :
+				it == ASI_IMG_RGB24 ?  "RGB24" :
+				it == ASI_IMG_RAW16 ?  "RAW16" :
+				it == ASI_IMG_Y8 ?  "Y8" :
+				"unknown format");
+			fprintf(f, " }");
+		}
+	fprintf(f, "\t],\n");
 
 	// Add some other things the camera supports, or the software supports for this camera.
 	// Adding it to the "controls" array makes the code that checks what's available easier.
 	fprintf(f, "\t\"controls\": [\n");
 
-	// sensor size was also saved above, but save here with min/max/default
+	// sensor size was also saved above, but this is the size the user can change.
 	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"sensorWidth\",\n");
+	fprintf(f, "\t\t\t\"Name\" : \"Width\",\n");
 	fprintf(f, "\t\t\t\"argumentName\" : \"width\",\n");
 	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");		// TODO: I <think> some ZWO cameras have a min
 	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", width);
 	fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
 	fprintf(f, "\t\t},\n");
-
 	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"sensorHeight\",\n");
+	fprintf(f, "\t\t\t\"Name\" : \"Height\",\n");
 	fprintf(f, "\t\t\t\"argumentName\" : \"height\",\n");
 	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");		// TODO: I <think> some ZWO cameras have a min
 	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", height);
@@ -952,7 +958,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymean");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %.2f\n", CG.myModeMeanSetting.dayMean);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.dayMean);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -968,7 +974,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmean");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %.2f\n", CG.myModeMeanSetting.nightMean);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.nightMean);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -983,21 +989,21 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "AutoWhiteBalance");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "awb");
-		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+		fprintf(f, "\t\t\t\"DefaultValue\" : false\n");
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.isCooledCamera) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "EnableCooler");
-		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "EnableCooler");
-		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "enablecooler");
+		fprintf(f, "\t\t\t\"DefaultValue\" : false\n");
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.supportsTemperature) {
-		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t{\n");	// TODO This will go away when the legacy overlay is removed
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
-		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showTemp");
-		fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showTemp ? 1 : 0);
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showtemp");
+		fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showTemp ? "true" : "false");
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.supportsAggression) {
@@ -1022,19 +1028,19 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "autousb");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "autousb");
-	fprintf(f, "\t\t\t\"DefaultValue\" : 1\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : true\n");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showUSB");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showUSB");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showUSB ? 1 : 0);
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showusb");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showUSB ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "experimentalExposure");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalExposure");
-	fprintf(f, "\t\t\t\"DefaultValue\" : \"%d\"\n", CG.HB.useExperimentalExposure ? 1 : 0);
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalexposure");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.HB.useExperimentalExposure ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -1046,18 +1052,18 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showhistogrambox");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showhistogrambox");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showHistogramBox ? 1 : 0);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showHistogramBox ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "newexposure");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "newexposure");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.videoOffBetweenImages ? 1 : 0);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.videoOffBetweenImages ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "CameraNumber");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "cameraNumber");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "cameranumber");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.cameraNumber);
 	fprintf(f, "\t\t},\n");
 #endif
@@ -1065,14 +1071,19 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 #ifdef IS_RPi
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ExtraArguments");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraArgs");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraargs");
 	fprintf(f, "\t\t},\n");
+
+		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "TuningFile");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "tuningfile");
+		fprintf(f, "\t\t\t\"DefaultValue\" : \"\"\n");
+		fprintf(f, "\t\t},\n");
 
 	if (CG.ct == ctRPi && CG.isLibcamera) {
 		fprintf(f, "\t\t{\n");
-		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "TuningFile");
-		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "TuningFile");
-		fprintf(f, "\t\t\t\"DefaultValue\" : \"\"\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "Rotation");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "rotation");
 		fprintf(f, "\t\t},\n");
 	}
 #endif
@@ -1107,7 +1118,10 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", a);
 		fprintf(f, "\t\t\t\"MinValue\" : %s,\n", LorF(min, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"MaxValue\" : %s,\n", LorF(max, "%ld", "%.3f"));
-		fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(def, "%ld", "%.3f"));
+		if (def == NO_DEFAULT)
+			fprintf(f, "\t\t\t\"DefaultValue\" : \"none\",\n");
+		else
+			fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(def, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"IsAutoSupported\" : %s,\n", cc.IsAutoSupported == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"IsWritable\" : %s,\n", cc.IsWritable == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"ControlType\" : %d\n", cc.ControlType);
@@ -1130,17 +1144,6 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightexposure");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightexposure");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", 10 * MS_IN_SEC);
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "daymean");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymean");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.dayMean);
-	fprintf(f, "\t\t},\n");
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightmean");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmean");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.nightMean);
 	fprintf(f, "\t\t},\n");
 
 	// Set the day gain to the minimum possible.

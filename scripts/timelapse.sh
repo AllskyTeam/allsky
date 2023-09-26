@@ -1,19 +1,17 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh" || exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 
 
 ENTERED="$*"
-DEBUG=0
+DEBUG="false"
 HELP="false"
 IS_MINI="false"
 LOCK="false"
@@ -25,7 +23,10 @@ while [[ $# -gt 0 ]]; do
 				HELP="true"
 				;;
 			-d | --debug)
-				((DEBUG++))
+				DEBUG="true"
+				;;
+			--no-debug)
+				DEBUG="false"
 				;;
 			-l | --lock)
 				LOCK="true"
@@ -36,6 +37,9 @@ while [[ $# -gt 0 ]]; do
 				;;
 			-i | --images)
 				IMAGES_FILE="${2}"
+				shift
+				;;
+			-L | --Last)			# this is just so the last image name appears in "ps" output
 				shift
 				;;
 			-m | --mini)
@@ -82,8 +86,7 @@ usage_and_exit()
 	echo "'--mini' uses the MINI_TIMELAPSE settings and the timelapse file is"
 	echo "   called 'mini-timelapse.mp4' if '--output' isn't used."
 	echo -en "${NC}"
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
 if [[ -n ${IMAGES_FILE} ]]; then
 	# If IMAGES_FILE is specified there should be no other arguments.
@@ -94,11 +97,13 @@ fi
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
 OUTPUT_DIR=""
+LAST_IMAGE=""
 if [[ -n ${IMAGES_FILE} ]]; then
 	if [[ ! -s ${IMAGES_FILE} ]]; then
 		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!${NC}"
 		exit 3
 	fi
+	LAST_IMAGE="$( tail -1 "${IMAGES_FILE}" )"
 	INPUT_DIR=""		# Not used
 else
 	INPUT_DIR="${1}"
@@ -116,27 +121,48 @@ else
 	fi
 fi
 
+MY_PID="$$"
+if [[ ${DEBUG} == "true" ]]; then
+	# Output one string so it's all on one line in log file.
+	MSG="${ME}: ${GREEN}Starting"
+	[[ ${IS_MINI} == "true" ]] && MSG="${MSG} mini "
+	MSG="${MSG}timelapse"
+	[[ -n ${LAST_IMAGE} ]] && MSG="${MSG}, last image = $( basename "${LAST_IMAGE}" )"
+	echo -e "${MSG}, my PID=${MY_PID}.${NC}"
+fi
+
 if [[ ${LOCK} == "true" ]]; then
-	PID_FILE="${ALLSKY_TMP}/timelapse-pid.txt"
-	ABORTED_MSG1="Another timelapse creation is in progress so this one was aborted."
-	ABORTED_FIELDS="$( basename "${OUTPUT_FILE}" )"
+	if [[ ${DEBUG} == "true" ]]; then
+		if [[ -s ${ALLSKY_TIMELAPSE_PID_FILE} ]]; then
+			echo "  > ALLSKY_TIMELAPSE_PID_FILE contains $( < "${ALLSKY_TIMELAPSE_PID_FILE}" )"
+		else
+			echo "  > No ALLSKY_TIMELAPSE_PID_FILE"
+		fi
+	fi
+	ABORTED_MSG1="Another timelapse creation is in progress so this one (${PPID}) was aborted."
+	ABORTED_FIELDS="$( basename "${OUTPUT_FILE}" )\tMY_PID=${MY_PID}\tPPID=${PPID}"
 	ABORTED_MSG2="timelapse creations"
 	if [[ ${IS_MINI} == "true" ]]; then
 		CAUSED_BY="This could be caused by unreasonable TIMELAPSE_MINI_IMAGES and TIMELAPSE_MINI_FREQUENCY settings."
 	else
 		CAUSED_BY="Unknown cause - see /var/log/allsky.log."
 	fi
-	if ! one_instance --pid-file "${PID_FILE}" \
+	# We need to use the PID of our parent, not our PID, since our parent
+	# may also upload the timelapse file, and 
+	if ! one_instance --pid-file "${ALLSKY_TIMELAPSE_PID_FILE}" --pid "${PPID}" \
 			--aborted-count-file "${ALLSKY_ABORTEDTIMELAPSE}" \
 			--aborted-fields "${ABORTED_FIELDS}" \
 			--aborted-msg1 "${ABORTED_MSG1}" --aborted-msg2 "${ABORTED_MSG2}" \
 			--caused-by "${CAUSED_BY}" ; then
 		exit 5
 	fi
-	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-lock-timelapse-$$"
+	if [[ ${DEBUG} == "true" ]]; then
+		echo "  > Got lock, new PID=$( < "${ALLSKY_TIMELAPSE_PID_FILE}" )"
+	fi
+	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-lock-timelapse"
 else
-	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse-$$"
-	PID_FILE=""
+	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse"
+	ALLSKY_TIMELAPSE_PID_FILE=""
 fi
 
 if [[ -z ${OUTPUT_FILE} ]]; then
@@ -167,7 +193,8 @@ fi
 TMP="${ALLSKY_TMP}/timelapseTMP.txt"
 [[ ${IS_MINI} == "false"  ]] && : > "${TMP}"		# Only create when NOT doing mini-timelapses
 
-if [[ ${KEEP_SEQUENCE} == "false" ]]; then
+KEEP_SEQUENCE="$( settings ".timelapsekeepsequence" )"
+if [[ ${KEEP_SEQUENCE} == "false" || ! -d ${SEQUENCE_DIR} ]]; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"
 
@@ -197,8 +224,8 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 				# This user or something else may have removed it.
 				if [[ ! -s ${IMAGE} ]]; then
 					if [[ ! -f ${IMAGE} ]]; then
-# TODO: would be nice to remove from the file,
-# but we don't create/update the file so any change we make may be overwritten.
+						# It would be nice to remove from the file, but we don't
+						# create/update the file so any change we make may be overwritten.
 						MSG="not found"
 					else
 						MSG="has nothing in it"
@@ -212,49 +239,54 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 				NUM="$( printf "%04d" "${NUM_IMAGES}" )"
 				ln -s "${IMAGE}" "${SEQUENCE_DIR}/${NUM}.${EXTENSION}"
 			fi
-		done
+	done
 	if [[ $? -ne 0 ]]; then
 		echo -e "${RED}*** ${ME} ERROR: No images found in '${INPUT_DIR}'!${NC}"
 		rm -fr "${SEQUENCE_DIR}"
-		[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
+		[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 		exit 1
 	fi
 else
-	echo -e "${ME} ${YELLOW}"
-	echo "Not regenerating sequence because KEEP_SEQUENCE is enabled."
+	echo -en "${ME} ${YELLOW}"
+	echo -n "Not regenerating sequence because 'Keep Timelapse Sequence' is enabled."
 	echo -e "${NC}"
 fi
 
-SCALE=""
-
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
-# set FFLOG=info in config.sh if you want to see what's going on for debugging.
 if [[ ${IS_MINI} == "true" ]]; then
-	FPS="${TIMELAPSE_MINI_FPS}"
-	TIMELAPSE_BITRATE="${TIMELAPSE_MINI_BITRATE}"
-	if [[ ${TIMELAPSE_MINI_WIDTH} != "0" ]]; then
-		SCALE="-filter:v scale=${TIMELAPSE_MINI_WIDTH}:${TIMELAPSE_MINI_HEIGHT}"
-	fi
-elif [[ ${TIMELAPSEWIDTH} != "0" ]]; then
-	SCALE="-filter:v scale=${TIMELAPSEWIDTH}:${TIMELAPSEHEIGHT}"
+	FPS="$( settings ".minitimelapsefps" )"
+	TIMELAPSE_BITRATE="$( settings ".minitimelapsebitrate" )"
+	W="$( settings ".minitimelapsewidth" )"
+	H="$( settings ".minitimelapseheight" )"
+else
+	FPS="$( settings ".timelapsefps" )"
+	TIMELAPSE_BITRATE="$( settings ".timelapsebitrate" )"
+	W="$( settings ".timelapsewidth" )"
+	H="$( settings ".timelapseheight" )"
 fi
-# shellcheck disable=SC2086
+if [[ ${W} -gt 0 ]]; then
+	SCALE="-filter:v scale=${W}:${H}"
+else
+	SCALE=""
+fi
+FFLOG="$( settings ".timelapsefflog" )"
+# shellcheck disable=SC2086,SC2046
 X="$(ffmpeg -y -f image2 \
 	-loglevel "${FFLOG}" \
 	-r "${FPS}" \
 	-i "${SEQUENCE_DIR}/%04d.${EXTENSION}" \
-	-vcodec "${VCODEC}" \
+	-vcodec "$( settings ".timelapsevcodec" )" \
 	-b:v "${TIMELAPSE_BITRATE}" \
-	-pix_fmt "${PIX_FMT}" \
+	-pix_fmt "$( settings ".timelapsepixfmt" )" \
 	-movflags +faststart \
 	$SCALE \
-	${TIMELAPSE_EXTRA_PARAMETERS} \
+	$( settings ".timelapseextraparameters" ) \
 	"${OUTPUT_FILE}" 2>&1)"
 RET=$?
 
 # The "deprecated..." message is useless and only confuses users, so hide it.
-X="$(echo "${X}" | grep -v "deprecated pixel format used")"
+X="$( echo "${X}" | grep -v "deprecated pixel format used" )"
 [ "${X}" != "" ] && echo "${X}" >> "${TMP}"		# a warning/error message
 
 if [[ ${RET} -ne -0 ]]; then
@@ -264,6 +296,7 @@ if [[ ${RET} -ne -0 ]]; then
 	echo "Links in '${SEQUENCE_DIR}' left for debugging."
 	echo -e "Remove them when the problem is fixed.${NC}\n"
 	rm -f "${OUTPUT_FILE}"	# don't leave around to confuse user
+	[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 	exit 1
 fi
 
@@ -278,16 +311,15 @@ fi
 
 # timelapse is uploaded via generateForDay.sh (usually via endOfNight.sh), which called us.
 
-if [[ ${DEBUG} -ge 2 ]]; then
-	if [[ ${IS_MINI} == "true" ]]; then
-		M="Mini t"
-	else
-		M="T"
-	fi
-	echo -e "${ME}: ${GREEN}${M}imelapse in ${OUTPUT_FILE}${NC}"
+if [[ ${DEBUG} == "true" ]]; then
+	# Output one string so it's all on one line in log file.
+	MSG="${ME}: ${GREEN}"
+	[[ ${IS_MINI} == "true" ]] && MSG="${MSG}mini "
+	MSG="${MSG}timelapse creation finished"
+	[[ -n ${LAST_IMAGE} ]] && MSG="${MSG}, last image = $( basename "${LAST_IMAGE}" )"
+	echo -e "${MSG}, my PID=${MY_PID}.${NC}"
 fi
 
-[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
+# Let our parent remove ${ALLSKY_TIMELAPSE_PID_FILE} when done.
 
 exit 0
-

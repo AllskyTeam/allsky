@@ -342,6 +342,12 @@ body {
 	margin-top: 5px;
 	margin-bottom: 5px;
 }
+.markdown-body table td.subnote {
+	background-color: var(--color-accent-muted);
+	color: var(--color-accent-emphasis);
+	text-align: center;
+	margin: 0 3em 0 3em;
+}
 .markdown-body table img {
 	background-color: transparent;
 }

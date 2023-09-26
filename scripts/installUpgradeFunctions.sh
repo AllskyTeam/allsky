@@ -37,7 +37,7 @@ function get_Git_version() {
 	local BRANCH="${1}"
 	local PACKAGE="${2}"
 	local VF="$( basename "${ALLSKY_VERSION_FILE}" )"
-	local V="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r')"
+	local V="$( curl --show-error --silent "${GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r' )"
 	# "404" means the branch isn't found since all new branches have a version file.
 	[[ ${V} != "404: Not Found" ]] && echo -n "${V}"
 }
@@ -55,7 +55,7 @@ function get_version() {
 	if [[ -z ${F} ]]; then
 		F="${ALLSKY_VERSION_FILE}"		# default
 	else
-		[[ ${F:1,-1} == "/" ]] && F="${F}$(basename "${ALLSKY_VERSION_FILE}")"
+		[[ ${F:1,-1} == "/" ]] && F="${F}$( basename "${ALLSKY_VERSION_FILE}" )"
 	fi
 	if [[ -f ${F} ]]; then
 		# Sometimes the branch file will have both "master" and "dev" on two lines.
@@ -70,6 +70,23 @@ function get_version() {
 function get_branch() {
 	local H="${1:-${ALLSKY_HOME}}"
 	echo "$( cd "${H}" || exit; git rev-parse --abbrev-ref HEAD )"
+}
+
+
+#####
+# Get a shell variable's value.  The variable can have optional spaces and tabs before it.
+# This function is useful when we can't "source" the file.
+function get_variable() {
+	local VARIABLE="${1}"
+	local FILE="${2}"
+	local LINE=""
+	local SEARCH_STRING="^[ 	]*${VARIABLE}="
+	if ! LINE="$( /bin/grep -E "${SEARCH_STRING}" "${FILE}" 2>/dev/null )" ; then
+		return 1
+	fi
+
+	echo "${LINE}" | sed -e "s/${SEARCH_STRING}//" -e 's/"//g'
+	return 0
 }
 
 
@@ -184,6 +201,113 @@ function display_msg()
 		) >>  "${DISPLAY_MSG_LOG}"
 	fi
 }
+
+
+# The various upload protocols need different variables defined.
+# For the specified protocol, make sure the specified variable is defined.
+function check_PROTOCOL()
+{
+	local P="${1}"	# Protocol
+	local V="${2}"	# Variable
+	local N="${3}"	# Name
+	local VALUE="$( settings ".${V}" "${ALLSKY_ENV}" )"
+	if [[ -z ${VALUE} ]]; then
+		echo "${N} Protocol (${P}) set but not '${V}'."
+		echo "Uploads will not work until this is fixed."
+		return 1
+	fi
+	return 0
+}
+# Check variables are correct for a remote server.
+# Return 0 for OK, 1 for warning, 2 for error.
+function check_remote_server()
+{
+	check_for_env_file || return 1
+
+	local TYPE="${1}"
+	local TYPE_STRING
+	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
+		TYPE_STRING="Remote Website"
+	else
+		TYPE_STRING="Remote Server"
+	fi
+
+	local USE="$( settings ".use${TYPE,,}" )"
+	if [[ ${USE} != "true" ]]; then
+		# Variables should be empty.
+		x="$( grep -E -v "^#|^$" "${ALLSKY_ENV}" | grep "${TYPE}" | grep -E -v "${TYPE}.*=\"\"|${TYPE}.*=$" )"
+		if [[ -n "${x}" ]]; then
+			echo "${TYPE_STRING} is not being used but settings for it exist in '${ALLSKY_ENV}:"
+			indent "${x}" | sed "s/${TYPE}.*=.*/${TYPE}/"
+			return 1
+		fi
+		return 0
+	fi
+
+	local RET=0
+	local PROTOCOL="$( settings ".${TYPE,,}protocol" )"
+	case "${PROTOCOL}" in
+		"")
+			echo "${TYPE_STRING} is being used but has no Protocol."
+			echo "Uploads to it will not work."
+			return 2
+			;;
+
+		ftp | ftps | sftp)
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_HOST" "${TYPE_STRING}" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_USER" "${TYPE_STRING}" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_PASSWORD" "${TYPE_STRING}" || RET=1
+			if [[ ${PROTOCOL} == "ftp" ]]; then
+				echo "${TYPE_STRING} Protocol set to insecure 'ftp'."
+				echo "Try using 'ftps' or 'sftp' instead."
+				RET=1
+			fi
+			;;
+
+		scp)
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_HOST" "${TYPE_STRING}" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_USER" "${TYPE_STRING}" || RET=1
+			if check_PROTOCOL "${PROTOCOL}" "${TYPE}_SSH_KEY_FILE" "${TYPE_STRING}" \
+					&& [[ ! -e ${SSH_KEY_FILE} ]]; then
+				echo "${TYPE_STRING} Protocol (${PROTOCOL}) set but '${TYPE}_SSH_KEY_FILE' (${SSH_KEY_FILE}) does not exist."
+				echo "Uploads will not work."
+				RET=1
+			fi
+			;;
+
+		s3)
+			if check_PROTOCOL "${PROTOCOL}" "${TYPE}_AWS_CLI_DIR" "${TYPE_STRING}" \
+					&& [[ ! -e ${AWS_CLI_DIR} ]]; then
+				echo "${TYPE_STRING} Protocol (${PROTOCOL}) set but '${TYPE}_AWS_CLI_DIR' (${AWS_CLI_DIR}) does not exist."
+				echo "Uploads will not work."
+				RET=1
+			fi
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_S3_BUCKET" "${TYPE_STRING}" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_S3_ACL" "${TYPE_STRING}" || RET=1
+			;;
+
+		gcs)
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_GCS_BUCKET" "${TYPE_STRING}" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_GCS_ACL" "${TYPE_STRING}" || RET=1
+			;;
+
+		*)
+			echo "${TYPE_STRING} Protocol (${PROTOCOL}) not blank or one of: ftp, ftps, sftp, scp, s3, gcs."
+			echo "Uploads will not work until this is corrected."
+			RET=1
+			;;
+	esac
+
+	REMOTE_PORT="$( get_variable "${TYPE}_PORT" "${ALLSKY_ENV}" )"
+	if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
+		echo "${TYPE}_PORT (${REMOTE_PORT}) must be a number."
+		echo "Uploads will not work until this is corrected."
+		RET=1
+	fi
+
+	return "${RET}"
+}
+
 
 
 

@@ -2,7 +2,7 @@
 
 # This file is "source"d into another.
 # "${CURRENT_IMAGE}" is the full pathname of the current image we're working on and is passed to us.
-ME2="$(basename "${BASH_SOURCE[0]}")"
+ME2="$( basename "${BASH_SOURCE[0]}" )"
 
 # Make sure the input file exists; if not, something major is wrong so exit.
 if [[ -z ${CURRENT_IMAGE} ]]; then
@@ -23,7 +23,7 @@ if [[ -z ${AS_TEMPERATURE_C} ]]; then
 	# The camera doesn't support temperature so we'll keep overwriting the file until
 	# AS_TEMPERATURE_C is set.
 	# This allows users to continually look for a new dark file and rename it manually.
-	MOVE_TO_FILE="${DARKS_DIR}/$(basename "${CURRENT_IMAGE}")"
+	MOVE_TO_FILE="${DARKS_DIR}/$( basename "${CURRENT_IMAGE}" )"
 else
 	MOVE_TO_FILE="${DARKS_DIR}/${AS_TEMPERATURE_C}.${DARK_EXTENSION}"
 fi
@@ -35,8 +35,8 @@ mv "${CURRENT_IMAGE}" "${MOVE_TO_FILE}" || exit 3
 # Some people may want to see the dark frame even if notification images
 # are being used, but no one's askef for that feature so don't worry about it.
 
-if [[ $(settings ".notificationimages") -eq 0 ]]; then
+if [[ $(settings ".notificationimages") == "false" ]]; then
 	# We're copying back the file we just moved, but the assumption is few people
 	# will want to see the dark frames so the performance hit is 
-	cp "${MOVE_TO_FILE}" "${ALLSKY_TMP}/${FILENAME}.${EXTENSION}"
+	cp "${MOVE_TO_FILE}" "${ALLSKY_TMP}/${FILENAME}.${EXTENSION}" || exit 4
 fi

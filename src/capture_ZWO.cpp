@@ -108,7 +108,7 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 				ret = ASISetControlValue(camNum, control, value, makeAuto);
 				if (ret != ASI_SUCCESS)
 				{
-					Log(-1, "*** %s: WARNING: ASISetControlCaps() for control %d, value=%ld failed: %s\n",
+					Log(-1, "*** %s: WARNING: ASISetControlValue() for control %d, value=%ld failed: %s\n",
 						CG.ME, control, value, getRetCode(ret));
 					return(ret);
 				}
@@ -323,12 +323,17 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 // Camera has internal frame buffers we need to clear.
 // The camera and/or driver will buffer frames and return the oldest one which
 // could be very old. Read out all the buffered frames so the frame we get is current.
-void flushBufferedImages(config *cg, void *buf, size_t size)
+ASI_ERROR_CODE flushBufferedImages(config *cg, void *buf, size_t size)
 {
 	enum { NUM_IMAGE_BUFFERS = 2 };
 	ASI_ERROR_CODE status;
 
-	setControl(cg->cameraNumber, ASI_EXPOSURE, cg->cameraMinExposure_us, ASI_FALSE);
+	status = setControl(cg->cameraNumber, ASI_EXPOSURE, cg->cameraMinExposure_us, ASI_FALSE);
+	if (status != ASI_SUCCESS)
+	{
+		Log(0, "*** %s: ERROR: flushBufferedImages() setControl() returned %s\n", cg->ME, getRetCode(status));
+		return(status);
+	}
 
 	for (int i = 0; i < NUM_IMAGE_BUFFERS; i++)
 	{
@@ -341,8 +346,14 @@ void flushBufferedImages(config *cg, void *buf, size_t size)
 		{
 			Log(0, "*** %s: ERROR: flushBufferedImages() got %s\n", cg->ME, getRetCode(status));
 		}
-		// TODO: in theory if status == ASI_ERROR_TIMEOUT we could stop.
+		else
+		{
+			// ASI_ERROR_TIMEOUT.  No more left.
+			return(status);
+		}
 	}
+
+	return(ASI_SUCCESS);
 }
 
 
@@ -1599,8 +1610,8 @@ if (saved_newExposure_us != newExposure_us)
 					if (CG.lastMean >= minAcceptableMean && CG.lastMean <= maxAcceptableMean)
 					{
 						// +++ at end makes it easier to see in log file
-						Log(2, "  > Good image: mean within range of %d to %d ++++++++++, mean %d\n",
-							minAcceptableMean, maxAcceptableMean, (int)CG.lastMean);
+						Log(2, "  > Good image: mean %d within range of %d to %d ++++++++++\n",
+							(int)CG.lastMean, minAcceptableMean, maxAcceptableMean);
 					}
 					else if (attempts > maxHistogramAttempts)
 					{

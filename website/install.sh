@@ -3,17 +3,12 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")"/..)"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
-
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit_installation ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit_installation ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 
 TITLE="Allsky Website Installer"
 
@@ -95,8 +90,7 @@ usage_and_exit()
 	echo
 	echo "'--function' executes the specified function and quits."
 	echo
-	# shellcheck disable=SC2086
-	exit_installation ${RET}
+	exit_installation "${RET}"
 }
 
 
@@ -373,10 +367,10 @@ modify_locations() {
 
 ##### Create and upload a new data.json file and files needed to display settings.
 upload_data_json_file() {
-	LOCAL_or_REMOTE="${1}"		# is this for a local or remote Website, or both?
-	display_msg --log progress "Uploading initial files to ${LOCAL_or_REMOTE} Website(s)."
+	LOCAL_or_REMOTE="${1}"		# is this for a local or remote Website?
+	display_msg --log progress "Uploading initial files to ${LOCAL_or_REMOTE} Websites."
 
-	OUTPUT="$( "${ALLSKY_SCRIPTS}/postData.sh" --websites "${LOCAL_or_REMOTE}" --allFiles 2>&1 )"
+	OUTPUT="$( "${ALLSKY_SCRIPTS}/postData.sh" "--${LOCAL_or_REMOTE}-web" --allFiles 2>&1 )"
 	if [[ $? -ne 0 || ! -f ${ALLSKY_TMP}/data.json ]]; then
 		MSG="Unable to upload initial files:"
 		if echo "${OUTPUT}" | grep --silent "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}: No such file or" ; then
@@ -386,9 +380,12 @@ upload_data_json_file() {
 			MSG="${MSG}\nThe '${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}' directory does not exist."
 		fi
 		MSG="${MSG}\n${OUTPUT}"
-		MSG="${MSG}\nMake sure 'REMOTE_HOST' is set to a valid server or to '' in 'ftp-settings.sh',"
-		MSG="${MSG}\n then run:   ${ALLSKY_SCRIPTS}/postData.sh"
-		MSG="${MSG}\nto create and upload a 'data.json' file."
+		if [[ ${LOCAL_or_REMOTE} == "remote" ]]; then
+			MSG="${MSG}\nMake sure you have defined all necessary variables in"
+			MSG="${MSG}\nthe 'Remote Website Settings' section of the WebUI's settings,"
+			MSG="${MSG}\n then run:   ${ALLSKY_SCRIPTS}/postData.sh --remote-web"
+			MSG="${MSG}\nto create and upload a 'data.json' file."
+		fi
 		display_msg --log error "${MSG}"
 		return 1
 	fi
@@ -477,6 +474,7 @@ create_website_configuration_file() {
 	if [[ ${INDEX} -ge 0 ]]; then
 		MINI_TLAPSE_DISPLAY="${PARENT}[${INDEX}].display"
 		MINI_TLAPSE_URL="${PARENT}[${INDEX}].url"
+		TIMELAPSE_MINI_IMAGES="$( settings ".minitimelapsenumimages" )"
 		if [[ ${TIMELAPSE_MINI_IMAGES:-0} -eq 0 ]]; then
 			MINI_TLAPSE_DISPLAY_VALUE="false"
 			MINI_TLAPSE_URL_VALUE=""
@@ -500,9 +498,9 @@ create_website_configuration_file() {
 	fi
 
 	# Convert latitude and longitude to use N, S, E, W.
-	LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
+	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"
 	[[ -z ${LATITUDE} ]] && display_msg --log warning "latitude is empty"
-	LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
+	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"
 	[[ -z ${LONGITUDE} ]] && display_msg --log warning "longitude is empty"
 
 	if [[ ${LATITUDE:1,-1} == "S" ]]; then			# last character
@@ -513,7 +511,8 @@ create_website_configuration_file() {
 
 	LOCATION="$(settings ".location")"
 	OWNER="$(settings ".owner")"
-	CAMERA_MODEL="$(settings ".cameraModel")"
+	CAMERA_MODEL="$(settings ".cameramodel")"
+
 	CAMERA="${CAMERA_TYPE}${CAMERA_MODEL}"
 	LENS="$(settings ".lens")"
 	COMPUTER="$(sed --quiet -e 's/Raspberry Pi/RPi/' -e '/^Model/ s/.*: // p' /proc/cpuinfo)"
@@ -548,12 +547,12 @@ create_website_configuration_file() {
 ##### Update the Website version in the config file
 update_version_in_config_file()
 {
-	local CONFIG_FILE="${1}"
+	local FILE="${1}"
 	if [[ ${PRIOR_WEBSITE_VERSION} != "${NEW_WEBSITE_VERSION}" ]]; then
-		display_msg --log progress "Updating Website version in '${CONFIG_FILE}' to ${NEW_WEBSITE_VERSION}"
+		display_msg --log progress "Updating Website version in '${FILE}' to ${NEW_WEBSITE_VERSION}"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
-			--config "${CONFIG_FILE}" \
+			--config "${FILE}" \
 			config.AllskyWebsiteVersion		"AllskyWebsiteVersion"		"${NEW_WEBSITE_VERSION}"
 	else
 		display_msg "${LOG_TYPE}" progress "Website version already at ${NEW_WEBSITE_VERSION} - no need to update."
@@ -565,7 +564,6 @@ update_version_in_config_file()
 NEEDS_NEW_CONFIGURATION_FILE="true"
 
 modify_configuration_variables() {
-
 	if [[ ${DEBUG} == "true" ]];then
 		display_msg --log debug "modify_configuration_variables(): PRIOR_WEBSITE_TYPE=${PRIOR_WEBSITE_TYPE}"
 	fi
@@ -621,10 +619,10 @@ check_if_remote_website_ready()
 	MSG="Setting up a remote Allsky Website requires that you first:\n"
 	MSG="${MSG}\n  1. Have Allsky configured and running the way you want it.\n"
 	MSG="${MSG}\n  2. Upload the Allsky Website files to your remote server.\n"
-	MSG="${MSG}\n  3. Update 'ftp-settings.sh' using the WebUI's 'Editor' page"
-	MSG="${MSG}\n     to point to the remote server.\n"
+	MSG="${MSG}\n  3. Update the 'Remote Website Settings' section of the WebUI's"
+	MSG="${MSG}\n     'Allsky Settings' page to point to the remote webserver.\n"
 	MSG="${MSG}\n  4. Enter the URL of the remote Website into the 'Website URL'"
-	MSG="${MSG}\n     field in the WebUI's 'Allsky Settings' page,"
+	MSG="${MSG}\n     field in the same WebUI page,"
 	MSG="${MSG}\n     even if you are not displaying your Website on the Allsky Map."
 	MSG="${MSG}\n\n\nHave you completed these steps?"
 	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 22 80 3>&1 1>&2 2>&3; then
@@ -644,17 +642,30 @@ check_if_remote_website_ready()
 do_remote_website() {
 	# Make sure things really are set up, despite what the user said.
 
-# TODO: not all protocols require REMOTE_HOST
+# TODO: at end, enable "useremotewebsite"
+
+	PROTOCOL="$( settings ".remotewebsiteprotocol" )"
+	if [[ -z ${PROTOCOL} ]]; then
+		MSG="No protocol is specified for the Remote Allsky Website"
+		MSG="${MSG} in the 'Allsky Settings' page of the WebUI."
+		display_msg --log error "${MSG}"
+		exit_installation 1
+	fi
+
 	OK="true"
-	if [[ -z ${REMOTE_HOST} ]]; then
-		MSG="The 'REMOTE_HOST' must be set in 'ftp-settings.sh'\n"
-		MSG="${MSG}in order to do a remote Website installation.\n"
-		MSG="${MSG}Please set it, the password, and other information, then re-run this installation."
+
+	if ! X="$( check_remote_server "REMOTEWEBSITE" )" ; then
+		MSG="The fields in the 'Remote Website Settings' section of the WebUI's"
+		MSG="${MSG} 'Allsky Settings' page must be set"
+		MSG="${MSG} in order to do a remote Website installation.\n"
+		MSG="${MSG}When done, re-run this installation."
+		MSG="${MSG}\nIssues are:\n${X}"
 		display_msg error "${MSG}"
-		display_msg --logonly error "REMOTE_HOST not set."
+		display_msg --logonly error "${X}"
 		OK="false"
 	fi
-	WEBURL="$( settings ".websiteurl" )"
+	WEBURL="$( settings ".remotewebsiteurl" )"
+
 	if [[ -z ${WEBURL} ]]; then
 		MSG="The 'Website URL' setting must be defined in the WebUI\n"
 		MSG="${MSG}in order to do a remote Website installation.\n"
@@ -671,12 +682,13 @@ do_remote_website() {
 	display_msg --log progress "Testing upload to remote Website."
 	display_msg info "  When done you can remove '${TEST_FILE_NAME}' from your remote server."
 	echo "This is a test file and can be removed." > "${TEST_FILE}"
-	if ! RET="$("${ALLSKY_SCRIPTS}/upload.sh" \
+	if ! RET="$( "${ALLSKY_SCRIPTS}/upload.sh" -num 1 \
 			"${TEST_FILE}" \
 			"${IMAGE_DIR}" \
 			"${TEST_FILE_NAME}" \
-			"UploadTest")" ; then
+			"UploadTest" )" ; then
 		MSG="Unable to upload a test file.\n"
+		MSG="${MSG}\nSee the 'Troubleshooting -> Uploads' documentation to fix the problem."
 		display_msg --log error "${MSG}"
 		display_msg --log info "${RET}"
 		OK="false"
@@ -689,7 +701,7 @@ do_remote_website() {
 	# TODO: Will also need to change the messages above.
 
 	# Tell the remote server to check the sanity of the Website.
-	# This also creates some necessary directories.
+	# This can create missing directories that initially have no content.
 	display_msg --log progress "Sanity checking remote Website."
 	[[ ${WEBURL: -1} != "/" ]] && WEBURL="${WEBURL}/"
 	if [[ ${DEBUG} == "true" ]]; then
@@ -698,17 +710,20 @@ do_remote_website() {
 		D=""
 	fi
 	X="$( curl --show-error --silent "${WEBURL}?check=1${D}" )"
-	if ! echo "${X}" | grep --silent "^SUCCESS$" ; then
+	if ! echo "${X}" | grep --silent "^SUCCESS" ; then
 		MSG="Sanity check of remote Website (${WEBURL}) failed."
-		MSG2="${MSG}\nYou will need to manually fix."
-		display_msg warning "${MSG}${MSG2}"
-		display_msg --logonly warning "${MSG}"
-		echo -e "${X}"
+		display_msg --log warning "${MSG}\n${X}"
+		MSG="\nPlease fix and run the installation again."
+		display_msg warning "${MSG}"
+		OK="false"
 	fi
+
+	[[ ${OK} == "false" ]] && exit_installation 1
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# The user is upgrading a new-style remote Website.
-		display_msg --log progress "You should continue to configure your remote Allsky Website via the WebUI."
+		MSG="You should continue to configure your remote Allsky Website via the WebUI."
+		display_msg --log progress "${MSG}"
 
 		update_version_in_config_file "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
@@ -718,32 +733,13 @@ do_remote_website() {
 		# Don't know if the user is upgrading an old-style remote website,
 		# or they don't even have a remote website.
 
-		MSG="You can keep a copy of your remote Website's configuration file on your Pi"
-		MSG="${MSG}\nso you can easily edit it in the WebUI and have it automatically uploaded."
-		MSG="${MSG}\n** This is the recommended way of making changes to the configuration **."
-		MSG="${MSG}\n\nWould you like to do that?"
-		if (whiptail --title "${TITLE}" --yesno "${MSG}" 15 60 3>&1 1>&2 2>&3); then
-			create_website_configuration_file
+		MSG="The master copy of your remote Website's configuration file will be on your Pi."
+		MSG="${MSG}\nYou must edit it in the WebUI; it will then be automatically uploaded."
+		MSG="${MSG}\nTo edit the remote configuration file, go to the WebUI's 'Editor' page and\n"
+		MSG="${MSG}select '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"
+		display_msg info "${MSG}"
 
-			MSG="\nTo edit the remote configuration file, go to the 'Editor' page in the WebUI\n"
-			MSG="${MSG}and select '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'.\n"
-			display_msg info "${MSG}"
-			display_msg --logonly info "User will use local copy of remote Website config file."
-		else
-			# upload_data_json_file needs the remote configuration file to exist or else it thinks
-			# there isn't a remote site.
-			(
-				echo "Do NOT remove or change this file."
-				echo "It indicates there is a remote Allsky Website although it's not configured from the Pi."
-			) > "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-
-			MSG="You need to manually copy '${REPO_WEBCONFIG_FILE}'"
-			# ALLSKY_WEBSITE_CONFIGURATION_NAME is what it's called on the remote server
-			MSG="${MSG}to your remote server and rename it to '${ALLSKY_WEBSITE_CONFIGURATION_NAME}',"
-			MSG="${MSG}then modify it on yuor server."
-			display_msg warning "${MSG}"
-			display_msg --logonly info "User will NOT use local copy of remote Website config file."
-		fi
+		create_website_configuration_file
 	fi
 
 	upload_data_json_file "remote" || exit_installation 2
@@ -845,8 +841,7 @@ download_Allsky_Website() {
 
 	display_msg --log progress "Downloading Allsky Website files${B} into ${ALLSKY_WEBSITE}."
 	TMP="/tmp/git.install.tmp"
-	# shellcheck disable=SC2086
-	git clone -b ${BRANCH} "${GITHUB_ROOT}/allsky-website.git" "${ALLSKY_WEBSITE}" > "${TMP}" 2>&1
+	git clone -b "${BRANCH}" "${GITHUB_ROOT}/allsky-website.git" "${ALLSKY_WEBSITE}" > "${TMP}" 2>&1
 	if [[ $? -ne 0 ]]; then
 		display_msg --log error "Unable to get Allsky Website files from git."
 		display_msg --logonly info "$( cat "${TMP}" )"
@@ -896,12 +891,24 @@ restore_prior_files() {
 		display_msg "${LOG_TYPE}" info "No prior startrails to restore."
 	fi
 
+	D="${PRIOR_WEBSITE}/myFiles"
+	if [[ -d ${D} ]]; then
+		count=$(find "${D}" | wc -l)
+		if [[ ${count} -gt 1 ]]; then
+			display_msg --log progress "Restoring prior 'myFiles' directory."
+			mv "${D}"   "${ALLSKY_WEBSITE}"
+		fi
+	else
+		display_msg "${LOG_TYPE}" info "No prior 'myFiles' to restore."
+	fi
+
+	# This is the old name.
 	D="${PRIOR_WEBSITE}/myImages"
 	if [[ -d ${D} ]]; then
 		count=$(find "${D}" | wc -l)
 		if [[ ${count} -gt 1 ]]; then
-			display_msg --log progress "Restoring prior 'myImages' directory."
-			mv "${D}"   "${ALLSKY_WEBSITE}"
+			display_msg --log progress "Moving prior 'myImages' contents to 'myFiles'."
+			mv "${D}"*   "${ALLSKY_WEBSITE}/myFiles"
 		fi
 	else
 		display_msg "${LOG_TYPE}" info "No prior 'myImages' to restore."
@@ -987,7 +994,9 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
-[[ -z ${FUNCTION} && ${UPDATE} == "false" ]] && display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
+if [[ -z ${FUNCTION} && ${UPDATE} == "false" ]]; then
+	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
+fi
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
@@ -995,12 +1004,13 @@ done
 
 # Make sure the settings file isn't corrupted.
 if ! json_pp < "${SETTINGS_FILE}" > /dev/null; then
-	display_msg --log error "Settings file '${SETTINGS_FILE} is corrupted.\nFix, then re-run this installation."
+	MSG="Settings file '${SETTINGS_FILE} is corrupted.\nFix, then re-run this installation."
+	display_msg --log error "${MSG}"
 	exit_installation 1
 fi
 
-LATITUDE="$(settings ".latitude")"
-LONGITUDE="$(settings ".longitude")"
+LATITUDE="$( settings ".latitude" )"
+LONGITUDE="$( settings ".longitude" )"
 if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
 	MSG="Latitude and Longitude must be set in the WebUI before the Allsky Website\ncan be installed."
 	display_msg --log error "${MSG}"
@@ -1059,7 +1069,7 @@ mkdir -p \
 	"${ALLSKY_WEBSITE}/startrails/thumbnails" \
 	"${ALLSKY_WEBSITE}/keograms/thumbnails" \
 	"${ALLSKY_WEBSITE}/videos/thumbnails" \
-	"${ALLSKY_WEBSITE}/myImages"
+	"${ALLSKY_WEBSITE}/myFiles"
 
 ##### Set permissions on files and directories
 set_permissions

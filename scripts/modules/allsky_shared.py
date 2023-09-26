@@ -166,7 +166,7 @@ def setupForCommandLine():
             pass
     proc.communicate()
 
-    readConfig()
+    """ XXXXX TODO: config.sh is gone.   readConfig() """
     readSettings()
 
 def readConfig():
@@ -195,6 +195,7 @@ def readConfig():
                             else:
                                 break
 
+""" XXXXX TODO: ftp-settings.sh is gone and this function is never used. """
 def readUploadConfig():
     global UPLOAD
 
@@ -224,6 +225,7 @@ def readSettings():
 
     settingsFile = getEnvironmentVariable("SETTINGS_FILE")
     if settingsFile is None:
+        """ XXXXX TODO: it's a major error if the settings file doesn't exist. Do not continue. """
         camera = getEnvironmentVariable("CAMERA_TYPE")
         if camera is None:
             camera = CONFIG["CAMERA"]
@@ -254,6 +256,7 @@ def writeSettings():
 
     settingsFile = getEnvironmentVariable("SETTINGS_FILE")
     if settingsFile is None:
+        """ XXXXX TODO: it's a major error if the settings file doesn't exist. Do not continue. """
         camera = getEnvironmentVariable("CAMERA_TYPE")
         if camera is None:
             camera = CONFIG["CAMERA"]
@@ -280,7 +283,7 @@ def getConfig(settingName):
     return result
 
 def setupParams(params, metaData):
-    readConfig()
+    """ XXXXX TODO: config.sh is gone.   readConfig() """
 
     for param in metaData["arguments"]:
         if param in metaData["argumentdetails"]:

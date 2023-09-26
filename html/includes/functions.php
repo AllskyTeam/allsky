@@ -73,20 +73,13 @@ $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null
 $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
+$settings_array = null;
 function initialize_variables() {
 	global $status, $needToDisplayMessages;
 	global $image_name, $delay, $daydelay, $nightdelay;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
-
-	// The Camera Type should be set during the installation, so this "should" never fail...
-	$cam_type = getCameraType();
-	if ($cam_type == '') {
-		echo "<div style='color: red; font-size: 200%;'>";
-		echo "'Camera Type' not defined in config.sh.  Please update it.";
-		echo "</div>";
-		exit;
-	}
+	global $settings_array;
 
 	$settings_file = getSettingsFile();
 	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
@@ -94,20 +87,19 @@ function initialize_variables() {
 	if ($settings_array === null) {
 		exit;
 	}
-
 	// $img_dir is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
-	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
+	$img_dir = get_variable(ALLSKY_HOME . '/variables.sh', 'IMG_DIR=', 'current/tmp');
 	$image_name = $img_dir . "/" . $settings_array['filename'];
-	$darkframe = $settings_array['takeDarkFrames'];
-	$useLogin = getVariableOrDefault($settings_array, 'useLogin', true);
+	$darkframe = $settings_array['takedarkframes'];
+	$useLogin = getVariableOrDefault($settings_array, 'uselogin', true);
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
-	$websiteURL = getVariableOrDefault($settings_array, 'websiteurl', "");
+	$websiteURL = getVariableOrDefault($settings_array, 'remotewebsiteurl', "");
 
 
 	////////////////// Determine delay between refreshes of the image.
-	$consistentDelays = $settings_array["consistentDelays"] == 1 ? true : false;
+	$consistentDelays = getVariableOrDefault($settings_array, 'consistentdelays', false);
 	$daydelay = $settings_array["daydelay"];
 	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
 	$dayexposure = $settings_array["dayexposure"];
@@ -118,33 +110,33 @@ function initialize_variables() {
 	$ok = true;
 	if (! is_numeric($daydelay)) {
 		$ok = false;
-		$status->addMessage("<strong>daydelay</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>daydelay</strong> is not a number: $daydelay.", 'danger', false);
 	}
 	if (! is_numeric($daymaxautoexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number: $daymaxautoexposure.", 'danger', false);
 	}
 	if (! is_numeric($dayexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>dayexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>dayexposure</strong> is not a number: $dayexposure.", 'danger', false);
 	}
 	if (! is_numeric($nightdelay)) {
 		$ok = false;
-		$status->addMessage("<strong>nightdelay</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>nightdelay</strong> is not a number: $nightdelay.", 'danger', false);
 	}
 	if (! is_numeric($nightmaxautoexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>nightmaxautoexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>nightmaxautoexposure</strong> is not a number: $nightmaxautoexposure.", 'danger', false);
 	}
 	if (! is_numeric($nightexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>nightexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>nightexposure</strong> is not a number: $nightexposure.", 'danger', false);
 	}
 	if ($ok) {
 		$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
 		$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
 
-		$showDelay = getVariableOrDefault($settings_array, 'showDelay', true);
+		$showDelay = getVariableOrDefault($settings_array, 'showdelay', true);
 		if ($showDelay) {
 			// Determine if it's day or night so we know which delay to use.
 			$angle = $settings_array['angle'];
@@ -458,14 +450,19 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 * so there shouldn't be a comment on the line,
 * however, there can be optional spaces or tabs before the string.
 *
-* This function will go away once the config.sh and ftp-settings.sh files are merged
-* into the settings.json file.
 */
 function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
+	if (! file_exists($file)) {
+		$msg  = "<div style='color: red; font-size: 200%;'>";
+		$msg .= "<br>File '$file' not found!";
+		$msg .= "</div>";
+		echo $msg;
+		return($default);
+	}
 	$contents = file_get_contents($file);
-	if ("$contents" == "") return($default);	// file not found or not readable
+	if ($contents == "") return($default);	// file not found or not readable
 
 	// escape special characters in the query
 	$pattern = preg_quote($searchfor, '/');
@@ -498,11 +495,13 @@ function get_variable($file, $searchfor, $default)
 	}
 }
 
+
 /**
 * 
 * List a type of file - either "All" (case sensitive) for all days, or only for the specified day.
+* If $dir is not null, it ends in "/".
 */
-function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {	// if $dir is not null, it ends in "/"
+function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 	$num = 0;	// Let the user know when there are no images for the specified day
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
@@ -678,10 +677,6 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 	return "";
 }
 
-function getCameraType() {
-	return get_variable(ALLSKY_CONFIG . '/config.sh', 'CAMERA_TYPE=', '');
-}
-
 // Return the settings file for the specified camera.
 function getSettingsFile() {
 	return ALLSKY_CONFIG . "/settings.json";
@@ -690,6 +685,25 @@ function getSettingsFile() {
 // Return the options file for the specified camera.
 function getOptionsFile() {
 	return ALLSKY_CONFIG . "/options.json";
+}
+
+// Return the file name after accounting for any ${} variables.
+// Since there will often only be one file used by multiple settings,
+// as an optimization save the last name.
+$lastFileName = null;
+function getFileName($file) {
+	global $lastFileName;
+
+	if ($lastFileName === $file) return $lastFileName;
+
+	if (strpos('${HOME}', $file) !== false) {
+		$lastFileName = str_replace('${HOME}', HOME, $file);
+	} else {
+		$lastFileName = get_variable(ALLSKY_HOME . '/variables.sh', "$file=", '');
+// TODO: don't hard code
+$lastFileName = str_replace('${ALLSKY_HOME}', ALLSKY_HOME, $lastFileName);
+	}
+	return $lastFileName;
 }
 
 // Check if the specified variable is in the specified array.

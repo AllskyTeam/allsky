@@ -26,10 +26,8 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-This page describes how to install and upgrade the Allsky Website.
-It can be installed on your Pi, on a remote server, or on both.
-When installing on both, install on your Pi first and make sure everything works,
-then install on the remote server.
+The code for the Allsky Website is installed as part of the Allsky installation on your Pi.
+This page describes how to install and upgrade the Allsky Website on a remote server.
 </p>
 <p>
 Make sure you have Allsky configured and working the way you want it
@@ -37,82 +35,25 @@ since some of its settings are also used by the Website
 and you don't want to have to change them twice.
 </p>
 
-<h2>Install on a Pi</h2>
-<details><summary></summary>
 <p>
 If you have an <b>existing</b> Allsky Website on your Pi,
-see the section below, otherwise
-skip to the <a href="#installation-local">Installing the Website</a> section below.
+the installation of Allsky will move images and videos from the prior Website
+to the new Website.
+If the prior Website was version <b>v2022.03.01+</b> or before
+you need to manually copy your prior settings from 
+<span class="fileName">/var/www/html/allsky/config.js</span> to
+<span class="fileName">configuration.json</span> by going to the 
+<span class="WebUIWebPage">Editor</span> page in the WebUI and selecting
+<code>configuration.json (local Allsky Website)</code>.
 </p>
-
-<h4>Steps for existing Websites</h4>
 <p>
-The location of the prior website depends upon its version.
-In both cases the directory name is <span class="fileName">allsky</span>.
-The parent directory is:
-<ul>
-	<li><span class="fileName">/var/www/html</span>
-		for Website version <b>v2022.03.01+</b> or before.
-	<li><span class="fileName">~/allsky/html</span>
-		for version <b>v2023.05.01</b> or later.
-</ul>
+After configuring the local Website,
+check in <span class="fileName">/var/www/html/allsky</span>
+for any files you may have manually added.
+If you find any, store them somewhere, and store <span class="fileName">config.js</span> as well.
+Either way, remove the old Website:
+<pre> rm -fr /var/www/html/allsky </pre>
 </p>
-
-<p>
-Perform <strong>one</strong> of the steps below,
-then continue to the <a href="#installation-local">Installing the Website</a> section:
-<ol>
-<li><b>Upgrade the old version.</b>
-	<br>
-	The Website installation checks for an old version in the locations above,
-	and if found, prompts if you want to upgrade it.
-	You don't need to do anything special.
-
-<li><b>Save the old version but don't use it.</b>
-	<br>
-	<pre>
-cd <i>old_version_parent_directory</i>     <span class="shellComment"># One of the locations above</span>
-mv allsky allsky-SAVED</pre>
-	At some point you'll want to delete the SAVED version so it doesn't take disk space.
-
-<li><b>Delete the old version.</b>
-	<br>
-	Only select this option if you're sure you don't want any saved
-	images, videos, keograms, startrails, or settings files.
-<pre>
-cd <i>old_version_parent_directory</i>     <span class="shellComment"># One of the locations above</span>
-rm -fr allsky</pre>
-</ol>
-</p>
-
-
-<h4 id="installation-local">Installing the Website</h4>
-<p>
-Run the following to install the Website on your Pi:
-</p>
-<pre>
-cd ~/allsky
-website/install.sh</pre>
-
-<p>
-The installation won't prompt for anything, and will display minimal output.
-</p>
-
-<p>
-After installation do the following:
-<ul class="minimalPadding">
-	<li>Update the <span class="fileName">config.sh</span> file
-		via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows which files
-		to copy to the Website (e.g., startrails, timelapse, etc.).
-	<li>Update the <span class="fileName">ftp-settings.sh</span> file
-		via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows
-		where to copy the files to.
-		See the instructions for
-		<a allsky="true" href="../settings/allskyWebsite.html#ftp-settings">updating the <span class="fileName">ftp-settings.sh</span> file</a>.
-</ul>
-
-<hr class="separator">
-</details>
 
 
 
@@ -139,24 +80,13 @@ make sure Allsky is working on your Pi, then do the following:
 		<strong>Keep track of where on your server you created the directory</strong>
 		- you will need that information later when you tell Allsky where to upload the images.
 	</ul>
-<li>Go to the <a href="https://github.com/thomasjacquin/allsky-website">allsky-website GitHub page</a>.
-<li>Click the <img allsky="true" src="Code.png" alt="Code" class="buttonIcon" loading="lazy">
-	button, download the <span class="fileName">allsky-website-master</span> zip file and
-	unzip it to a location on your PC, Pi, or Mac.
-<li>Upload the <b>contents</b> of the <span class="fileName">allsky-website-master</span> directory
-	(but not the directory itself) to the
-	<span class="fileName">allsky</span> directory on the remote server.
-<li>Do <b>not</b> configure the Website yet - you'll do that below.
+<li>Copy ALL files and directories from <span class="fileName">~/allsky/html/allsky</span>
+	on the Pi to the <span class="fileName">allsky</span> directory on your remote Website.
+<li>Do <b>not</b> configure the remote Website yet - you'll do that below.
 <li>On the Pi:
 	<ol class="minimalPadding">
-	<li>Update the <span class="fileName">config.sh</span> file
-		via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows which files
-		to upload (e.g., startrails, timelapse, etc.).
-	<li>Update the <span class="fileName">ftp-settings.sh</span> file
-		via the WebUI's <span class="WebUIWebPage">Editor</span> page so Allsky knows
-		where on the remote server to upload the files to.
-		See the instructions for
-		<a allsky="true" href="../settings/allskyWebsite.html#ftp-settings">updating the <span class="fileName">ftp-settings.sh</span> file</a>.
+	<li>In the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page
+		update the settings for the Remote Website.
 		<blockquote>
 			This step MUST be done before the next step since the next step
 			tries to upload a test file to your remote server and it will fail
@@ -169,7 +99,7 @@ make sure Allsky is working on your Pi, then do the following:
 		<li>If the upload fails, see the
 			<a allsky="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting uploads</a>
 			page on how to debug the problem.
-		<li>If you also have an Allsky Website on your Pi,
+		<li>If you enabled the Allsky Website on your Pi,
 			the remote configuration file will be identical to the local one with the
 			exception of the <span class="editorSetting">imageName</span> and
 			<span class="editorSetting">onPi</span> settings,
@@ -212,9 +142,9 @@ The remote server needs to support the following:
 		to create thumbnails of the timelapse videos.
 		<blockquote>
 		Most hosting solutions don't support those commands for security reasons.
-		In that case, set <span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span> to "true"
-		(and <span class="shSetting">TIMELAPSE_MINI_UPLOAD_THUMBNAIL</span> to "true"
-		if you are creating mini timelapses) in <span class="fileName">config.sh</span>.
+		In that case, make sure <span class="WebUISetting">Upload Timelapse Thumbnail</span>
+		is enabled (and <span class="WebUISetting">Upload Mini-Timelapse Thumbnail</span>
+		if you are creating mini timelapses).
 		Failure to set those variables will result in "No thumbnail" messages when
 		viewing videos.
 		Everything else will still work.
@@ -224,20 +154,12 @@ The remote server needs to support the following:
 </details>
 
 
-<h2>Post installation - local and remote</h2>
+<h2>Post installation</h2>
 <p>
 Change
 <a allsky="true" href="/documentation/settings/allskyWebsite.html">Allsky Website Settings</a>
 as desired so the Website looks and behaves like you want it to.
 Changes to both local Websites and remote Websites are both done via the WebUI.
-</p>
-
-<p>
-If your prior version of the Allsky Website was in
-<span class="fileName">/var/www/html/allsky</span>
-note that there is only one configuration file in the new Website
-(<span class="fileName">configuration.json</span>)
-that replaces the two older files.
 </p>
 
 <blockquote>

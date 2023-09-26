@@ -29,11 +29,11 @@ function DisplayAllskyConfig(){
 	$debug = false;
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
-	$cameraNumberName = "cameranumber";	// json setting name
-	$debugLevelName = "debuglevel";		// json setting name
+	$cameraNumberName = "cameranumber";		// json setting name
+	$debugLevelName = "debuglevel";			// json setting name
 	$debugArg = "";
 
-	global $lastChangedName;			// name of json setting
+	global $lastChangedName;				// name of json setting
 	global $lastChanged;
 	global $page;
 	global $ME;
@@ -177,9 +177,13 @@ if ($debug) echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsC
 							if ($type === "integer" || $type == "percent") {
 								if (! is_numeric($newValue) || ! is_int($newValue + 0))
 									$msg = "without a fraction";
+								else
+									$newValue += 0;
 							} else if ($type === "float") {
 								if (! is_numeric($newValue) || ! is_float($newValue + 0.0))
 									$msg = "with, or without, a fraction";
+								else
+									$newValue += 0.0;
 							}
 							if ($msg !== "") {
 								$msg2 = "<$span>$lab</span> must be a number $msg.";
@@ -220,7 +224,7 @@ if ($debug) echo "<br>settings[$key] = " . $settings_array[$key] . ", newValue=$
 						$status->addMessage($msg, 'danger', false);
 						$ok = false;
 					} else {
-						$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES; // |JSON_NUMERIC_CHECK;
+						$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 						if ($numSettingsChanges > 0) {
 							// Keep track of the last time the file changed.
 							// If we end up not updating the file this will be ignored.
@@ -228,8 +232,10 @@ if ($debug) echo "<br>settings[$key] = " . $settings_array[$key] . ", newValue=$
 							$settings_array[$lastChangedName] = $lastChanged;
 							$content = json_encode($settings_array, $mode);
 							// updateFile() only returns error messages.
-if ($debug) echo "<br>Updating settings_file $settings_file, # changes = $numSettingsChanges";
-if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
+if ($debug) {
+	echo "<br>Updating settings_file $settings_file, # changes = $numSettingsChanges";
+	echo "<pre>"; var_dump($content); echo "</pre>";
+}
 							$msg = updateFile($settings_file, $content, "settings", true);
 							if ($msg === "") {
 								$msg = "Settings saved";
@@ -498,7 +504,7 @@ if ($formReadonly != "readonly") { ?>
 					$default = "";
 				} else {
 					$default = getVariableOrDefault($option, 'default', "");
-					if ($default !== "")
+					if ($default !== "" && $type != "boolean")
 						$default = str_replace("'", "&#x27;", $default);
 
 					$s = getVariableOrDefault($option, 'source', null);
@@ -512,8 +518,11 @@ if ($formReadonly != "readonly") { ?>
 						$value = getVariableOrDefault($settings_array, $name, $default);
 					}
 					if ($type == "boolean") {
-						if ($value === 0 || $value === "0" || ! $value) $value = "false";
-						else if ($value === 1 || $value === "1" || $value) $value = "true";
+						if ($value === "false" || $value === 0 || $value === "0" || ! $value) {
+							$value = false;
+						} else if ($value === "true" || $value === 1 || $value === "1" || $value) {
+							$value = true;
+						}
 					} else {
 						// Allow single quotes in values (for string values).
 						// &apos; isn't supported by all browsers so use &#x27.
@@ -728,11 +737,11 @@ if ($formReadonly != "readonly") { ?>
 						echo "\n\t\t<div class='switch-field boxShadow settingInput settingInputBoolean'>";
 							echo "\n\t\t<input id='switch_no_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='false' ".
-								($value === "false" ? " checked " : "").  ">";
+								($value == false ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_no_".$name."'>No</label>";
 							echo "\n\t\t<input id='switch_yes_".$name."' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='true' ".
-								($value === "true" ? " checked " : "").  ">";
+								($value == true ? " checked " : "").  ">";
 							echo "<label style='margin-bottom: 0px;' for='switch_yes_".$name."'>Yes</label>";
 						echo "</div>";
 					}

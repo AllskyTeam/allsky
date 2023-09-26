@@ -34,7 +34,6 @@
 "type" : "boolean",
 "booldependson" : "takedaytimeimages",
 "advanced" : true
-
 },
 {
 "name" : "dayautoexposure",
@@ -393,7 +392,7 @@
 {
 "name" : "nightawb",
 "default" : false,
-"description" : "Enable to use Auto White Balance (camera adjusts color).",
+"description" : "Enable to use Auto White Balance (camera adjusts color).<br>NOTE: enabling this can significantly increase the time needed to capture a nighttime image.",
 "label" : "Auto White Balance",
 "type" : "boolean",
 "usage" : "capture",
@@ -565,7 +564,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Changes the difference between light and dark areas.<br>higher numbers increase contrast.",
+"description" : "Changes the difference between light and dark areas.<br>Higher numbers increase contrast.",
 "label" : "Gamma",
 "type" : "integer",
 "usage" : "capture",
@@ -691,11 +690,10 @@
 "description" : "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <span class='WebUISetting'>Debug Level</span> to 4 and look in the log file.",
 "label" : "Filename",
 "type" : "text",
-<"usage" : "capture",
+"usage" : "capture",
 "checkchanges" : true,
 "action" : "reload",
 "advanced" : true
-
 },
 {
 "name" : "rotation",
@@ -817,7 +815,7 @@
 {
 "name" : "locale",
 "default" : "",
-"description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type <code>locale</code> at a command prompt to see your choices.",
+"description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type <span class='WebUIValue'>locale</span> at a command prompt to see your choices.",
 "label" : "Locale",
 "type" : "text",
 "usage" : "capture",
@@ -869,7 +867,7 @@
 {
 "name" : "debuglevel",
 "default" : 1,
-"description" : "Debug level. 0 is errors only.  4 is for Allsky developers use.",
+"description" : "Debug level. <span class='WebUIValue'>0</span> is errors only.  <span class='WebUIValue'>4</span> is for Allsky developers use.",
 "label" : "Debug Level",
 "type" : "select",
 "usage" : "capture",
@@ -944,7 +942,7 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 1,
-"description" : "How often should images be uploaded to an Allsky Website or remote server?<br><code>0</code> never uploads images, <code>1</code> uploads every frame, <code>2</code> every other frame, etc.",
+"description" : "How often should images be uploaded to an Allsky Website or remote server?<br><span class='WebUIValue'>0</span> never uploads images, <span class='WebUIValue'>1</span> uploads every frame, <span class='WebUIValue'>2</span> every other frame, etc.",
 "label" : "Upload Every X Images",
 "type" : "integer",
 "booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
@@ -962,7 +960,7 @@
 "minimum" : 2,
 "maximum" : "none",
 "default" : 0,
-"description" : "Width of resized image before cropping.  0 means don't resize.",
+"description" : "Width of resized image before cropping.  <span class='WebUIValue'>0</span> means don't resize.",
 "label" : "Image Resize Width",
 "type" : "integer",
 "checkchanges" : true,
@@ -974,7 +972,7 @@
 "minimum" : 2,
 "maximum" : "none",
 "default" : 0,
-"description" : "Height of resized image before cropping.  0 means don't resize.",
+"description" : "Height of resized image before cropping.  <span class='WebUIValue'>0</span> means don't resize.",
 "label" : "Image Resize Height",
 "type" : "integer",
 "checkchanges" : true,
@@ -986,7 +984,7 @@
 "minimum": 0,
 "maximum": 100,
 "default": 0,
-"description": "Amount to stretch daytime images.",
+"description": "Amount to stretch daytime images.  <span class='WebUIValue'>0</span> means don't stretch.",
 "label": "Stretch Amount",
 "type": "integer",
 "booldependson": "takedaytimeimages"
@@ -996,7 +994,7 @@
 "minimum": 0,
 "maximum": 100,
 "default": 0,
-"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.",
+"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
 "label": "Stretch mid point",
 "type": "percent",
 "booldependson": "takedaytimeimages"
@@ -1006,7 +1004,7 @@
 "minimum": 0,
 "maximum": 100,
 "default": 0,
-"description": "Amount to stretch nighttime images.",
+"description": "Amount to stretch nighttime images.  <span class='WebUIValue'>0</span> means don't stretch.",
 "label": "Stretch Amount",
 "type": "integer",
 "booldependson": "takenighttimeimages"
@@ -1016,7 +1014,7 @@
 "minimum": 0,
 "maximum": 100,
 "default": 0,
-"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.",
+"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
 "label": "Stretch mid point",
 "type": "percent",
 "booldependson": "takenighttimeimages"
@@ -1070,7 +1068,7 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Resized width of uploaded images.",
+"description" : "Resized width of uploaded images. <span class='WebUIValue'>0</span> means don't resize.",
 "label" : "Resize Uploaded Images Width",
 "type" : "integer",
 "booldependson" : "imageupload"
@@ -1080,7 +1078,7 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Resized height of uploaded images.",
+"description" : "Resized height of uploaded images. <span class='WebUIValue'>0</span> means don't resize.",
 "label" : "Resize Uploaded Images Height",
 "type" : "integer",
 "booldependson" : "imageupload"
@@ -1090,7 +1088,7 @@
 "minimum": 0,
 "maximum": 0.5,
 "default": 0.1,
-"description": "Delete images whose mean is below this value.<br><code>0</code> disables this check.",
+"description": "Delete images whose mean is below this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label": "Remove Bad Images Threshold Low",
 "type": "float",
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
@@ -1100,7 +1098,7 @@
 "minimum": 0,
 "maximum": 0.5,
 "default": 0.9,
-"description": "Delete images whose mean is above this value.<br><code>0</code> disables this check.",
+"description": "Delete images whose mean is above this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label": "Remove Bad Images Threshold High",
 "type": "float",
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
@@ -1125,7 +1123,7 @@
 {
 "name" : "timelapsegenerate",
 "default" : true,
-"description" : "Enable to generate a timelapse video at the end of night.",
+"description" : "Enable to generate a timelapse video of the prior 24 hours at the end of night.",
 "label" : "Generate Timelapse",
 "type" : "boolean",
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
@@ -1151,7 +1149,7 @@
 "minimum": 0,
 "maximum": "_max",
 "default": 0,
-"description": "Width of resized timelapse video. <code>0</code> disables resize.",
+"description": "Width of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Timelapse Width",
 "type": "integer",
 "booldependson" : "timelapsegenerate"
@@ -1161,7 +1159,7 @@
 "minimum": 0,
 "maximum": "_max",
 "default": 0,
-"description": "Height of resized timelapse video. <code>0</code> disables resize.",
+"description": "Height of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Timelapse Height",
 "type": "integer",
 "booldependson" : "timelapsegenerate"
@@ -1181,7 +1179,7 @@
 "minimum": 1,
 "maximum": 200,
 "default": 25,
-"description": "Frames Per Second (FPS) of timelapse video.",
+"description": "Frames Per Second (FPS) of timelapse video.  Higher values will produce smoother, but faster videos.",
 "label": "Timelapse FPS",
 "type": "integer",
 "booldependson" : "timelapsegenerate"
@@ -1249,7 +1247,7 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 0,
-"description" : "Number of images in a mini-timelapse. <code>0</code> disables mini-timelapse creation.",
+"description" : "Number of images in a mini-timelapse. <span class='WebUIValue'>0</span> disables mini-timelapse creation.",
 "label" : "Number Of Images",
 "type" : "integer",
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
@@ -1257,7 +1255,7 @@
 {
 "name" : "minitimelapseforcecreation",
 "default" : false,
-"description" : "Create a mini-timelapse even if 'Number Of Images' isn't reached?",
+"description" : "Create a mini-timelapse even if <span class='WebUISetting'>Number Of Images</span> isn't reached?",
 "label" : "Force Creation",
 "type" : "boolean",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
@@ -1294,7 +1292,7 @@
 "minimum": 0,
 "maximum": "_max",
 "default": 0,
-"description": "Width of resized mini-timelapse video. <code>0</code> disables resize.",
+"description": "Width of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Mini-Timelapse Width",
 "type": "integer",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
@@ -1304,7 +1302,7 @@
 "minimum": 0,
 "maximum": "_max",
 "default": 0,
-"description": "Height of resized mini-timelapse video. <code>0</code> disables resize.",
+"description": "Height of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Mini-Timelapse Height",
 "type": "integer",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
@@ -1578,7 +1576,7 @@
 "booldependsoff" : "overlaymethod",
 "action" : "reload",
 "advanced" : true
-,
+},
 {
 "name" : "text",
 "default" : "",
@@ -1845,7 +1843,7 @@
 {
 "name" : "REMOTEWEBSITE_USER",
 "default" : "",
-"description" : "Username of the login on the remote server.",
+"description" : "Username of the login on the remote Website server.",
 "label" : "User Name",
 "type" : "text",
 "checkchanges" : true,
@@ -1856,7 +1854,7 @@
 {
 "name" : "REMOTEWEBSITE_PASSWORD",
 "default" : "",
-"description" : "Password of the login on the remote server.",
+"description" : "Password of the login on the remote Website server.",
 "label" : "Password",
 "type" : "password",
 "checkchanges" : true,
@@ -1879,7 +1877,7 @@
 {
 "name" : "remotewebsiteimagedir",
 "default" : "allsky",
-"description" : "Name of the top-level remote directory where images go.",
+"description" : "Name of the top-level remote Website directory where images go.",
 "label" : "Image Directory",
 "type" : "text",
 "checkchanges" : true,
@@ -2060,7 +2058,7 @@
 {
 "name" : "REMOTESERVER_PORT",
 "default" : "",
-"description" : "Optional port required by server.  Rarely required.",
+"description" : "Optional port required by remote server.  Rarely required.",
 "label" : "Port",
 "type" : "integer",
 "checkchanges" : true,
@@ -2177,7 +2175,7 @@
 {
 "name" : "remoteserverimagedir",
 "default" : "",
-"description" : "Name of the top-level remote directory where images go.",
+"description" : "Name of the top-level remote server directory where images go.",
 "label" : "Image Directory",
 "type" : "text",
 "checkchanges" : true,
@@ -2253,7 +2251,7 @@
 {
 "name" : "owner",
 "default" : "",
-"description" : "The owner of the camera. It can be your name or an association or observatory, etc.",
+"description" : "The owner of the camera. It can be your name, an association, or observatory, etc.",
 "label" : "Owner",
 "type" : "text",
 "checkchanges" : true,
@@ -2263,7 +2261,7 @@
 {
 "name" : "camera",
 "default" : "",
-"description" : "The type and model of your camera, for example: <span class='WebUIValue'>ZWO 224MC</span> or <span class='WebUIValue'>RPi HQ</span>.",
+"description" : "The type and model of your camera, for example: <span class='WebUIValue'>ZWO 224MC</span> or <span class='WebUIValue'>RPi HQ</span>.  Set automatically.",
 "label" : "Camera",
 "type" : "widetext",
 "checkchanges" : true,
@@ -2332,7 +2330,7 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 0,
-"description" : "IF multiple cameras are connected to the Pi, this is the camera number (starts at 0).",
+"description" : "If multiple cameras are connected to the Pi, this is the camera number (starts at 0).",
 "label" : "Camera Number",
 "type" : "integer",
 "usage" : "capture",
@@ -2359,7 +2357,7 @@
 {
 "name" : "webuidatafiles",
 "default" : "",
-"description" : "See documentation for a description of this setting",
+"description" : "See documentation for a description of this setting,",
 "label" : "Items to add to WebUI",
 "type" : "widetext",
 "optional" : true

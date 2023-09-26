@@ -143,11 +143,6 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 		10, ASI_FALSE, ASI_FALSE
 	},
 
-	{ "ov5647", 0, "RPi Version 1", 0, 2592, 1944, ASI_TRUE,
-		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.4, ASI_FALSE,
-		10, ASI_FALSE, ASI_FALSE
-	},
-
 	{ "imx290", 0, "imx290 60.00 fps", 0, 1920, 1080, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 2.9, ASI_FALSE,
 		12, ASI_FALSE, ASI_FALSE
@@ -219,7 +214,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, NOT_SET, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
 		{ "WB_R", "White balance: Red component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
 		{ "WB_B", "White balance: Blue component", 10.0, 0.1, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-
 		{ "Temperature", "Sensor Temperature", 80, -20, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.0, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
@@ -250,6 +244,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
+
 
 	{ // imx708*, libcamera
 		{ "Gain", "Gain", 16.0, 1.122807, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },

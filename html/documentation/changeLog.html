@@ -39,6 +39,65 @@
 				<a allsky="true" external="true" href="settings/EditorColors.html">this page</a>.
 			</blockquote>
 
+			<h2>v2023.90.90 - Current Major Release</h2>
+			<details>
+				<summary></summary>
+
+				<h4>Breaking Changes</h4>
+				<ul class="minimalPadding">
+					<li>The CROP settings have been simplified.
+						You now specifiy the number of pixels to crop from
+						the top, right, bottom, and left.
+						<br>If you used the CROP settings you'll need to re-enter
+						them using the new fields.
+					</li>
+				</ul>
+
+				<h4>Enhancements</h4>
+				<ul>
+					<li>The settings in the
+						<span class="fileName">config.sh</span> and
+						<span class="fileName">ftp-setting</span> files are now in the WebUI
+						so those two files no longer exist.
+					</li>
+					<li>Private data like FTP passwords are in a new
+						<span class="fileName">~/allsky/env.json</span> file,
+						but should still be modifed only through the WebUI.
+						This allows users to upload their settings file without worrying
+						about uploading private data. </li>
+					<li>
+						The prior
+						<span class="shSetting">IMG_RESIZE</span>,
+						<span class="shSetting">CROP_IMAGE</span>,
+						<span class="shSetting">AUTO_STRETCH</span>,
+						<span class="shSetting">RESIZE_UPLOADS</span>, and
+						<span class="shSetting">REMOVE_BAD_IMAGES</span>,
+						settings are no longer used.
+						Instead, the associated numerical values determine if an action
+						should be taken.
+						For example if the <span class="WebUISetting">Image Resize Width</span>
+						and <span class="WebUISetting">Image Resize Height</span> are
+						greater than 0, then the image is resized.
+					<li>The WebUI has been completely redesigned:
+						<ul>
+							<li>The <span class="WebUIWebPage">Allsky Settings</span>
+								page now has tabs containing related settings so
+								the concept of "Advanced Options" no longer exists.</li>
+							<li>Daytime and nighttime settings appear on the same line.</li>
+							<li>MORE...</li>
+						</ul>
+					</li>
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul class="minimalPadding">
+					<li> </li>
+				</ul>
+
+				<hr class="separator"><!-- =========================================== -->
+			</details>
+
+
 			<h2>v2023.05.01_03 - Point Release # 3</h2>
 			<details>
 				<summary></summary>
@@ -256,7 +315,7 @@
 				<hr class="separator"><!-- =========================================== -->
 			</details>
 
-			<h2>v2023.05.01 - Current Major Release</h2>
+			<h2>v2023.05.01</h2>
 			<details>
 				<summary></summary>
 

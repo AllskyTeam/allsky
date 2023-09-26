@@ -4,7 +4,6 @@
 # It goes in ${ALLSKY_TMP} where the WebUI and local Allsky Website can find it.
 
 ME="$( basename "${BASH_ARGV0}" )"
-
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
 #shellcheck source-path=.
@@ -253,7 +252,8 @@ if [[ ${STRETCH_AMOUNT} -gt 0 ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "*** ${ME}: Stretching '${CURRENT_IMAGE}' by ${STRETCH_AMOUNT}"
 	fi
- 	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${STRETCH_AMOUNT}x${STRETCH_MIDPOINT}%" "${IMAGE_TO_USE}"
+ 	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${STRETCH_AMOUNT}x${STRETCH_MIDPOINT}%" "${CURRENT_IMAGE}"
+
 	if [ $? -ne 0 ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: AUTO_STRETCH failed; not saving${NC}"
 		exit 4

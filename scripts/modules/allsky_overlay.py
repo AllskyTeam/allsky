@@ -25,7 +25,7 @@ from math import degrees
 from datetime import date, datetime, timedelta
 
 from astral.sun import sun, azimuth, elevation, night
-from astral import LocationInfo
+from astral import LocationInfo, Observer
 
 from skyfield.api import EarthSatellite, load, wgs84, Loader
 from skyfield.api import N, S, E, W
@@ -285,7 +285,7 @@ class ALLSKYOVERLAY:
             else:
                 s.log(0, 'ERROR: Data File {} is not accessible - IGNORING.'.format(dataFilename))
                 result = False
-        else:
+        elif fileExtension == '.txt':
             if s.isFileReadable(dataFilename):
                 with open(dataFilename) as file:
                     for line in file:
@@ -606,6 +606,8 @@ class ALLSKYOVERLAY:
                 if len(s.image.shape) == 2:
                     fill = 255
 
+                self._checkTextBounds(fieldLabel, fieldX, fieldY)
+                
                 if rotation == 0 and opacity == 1:
                     draw = ImageDraw.Draw(pilImage)
                     draw.text((fieldX, fieldY), fieldLabel, font = font, fill = fill, stroke_width=strokeWidth, stroke_fill=strokeFill)
@@ -622,16 +624,32 @@ class ALLSKYOVERLAY:
         try:
             r,g,b = ImageColor.getcolor(value, "RGB")
         except:
-            if value == "":
-                s.log(0, "ERROR: The colour for field '{0}' is empty - Defaulting to white.".format(name))
-            else:
-                s.log(0, "ERROR: The colour '{0}' for field '{1}' is NOT valid - Defaulting to white.".format(value, name))
+            #s.log(0, f"ERROR: The colour '{value}' for field '{name}' is NOT valid - Defaulting to white.")
             r = 255
             g = 255
             b = 255
 
         return r,g,b
 
+    def _checkTextBounds(self, fieldLabel, x, y):
+        try:
+            h, w, c = self._image.shape
+
+            outOfBounds = False
+            if (x < 0):
+                outOfBounds = True
+            if (y < 0):
+                outOfBounds = True
+            if (x > w):
+                outOfBounds = True
+            if (y > h):
+                outOfBounds = True
+            
+            if outOfBounds:
+                s.log(0, f"ERROR: Field '{fieldLabel}' is outside of the image")    
+        except:
+            pass
+    
     def get_text_dimensions(self, text_string, font):
         ascent, descent = font.getmetrics()
 
@@ -649,9 +667,12 @@ class ALLSKYOVERLAY:
         return colour
 
     def _draw_rotated_text(self, image, angle, xy, text, fill, font, opacity, strokeWidth, strokeFill):
-
+    
         fill = self._convertRGBtoBGR(fill, opacity)
-        strokeFill = self._convertRGBtoBGR(strokeFill,1)
+        if strokeFill != "":
+            strokeFill = self._convertRGBtoBGR(strokeFill,1)
+        else:
+            strokeFill = None
 
         im_txt = Image.new('RGBA', image.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(im_txt)
@@ -832,7 +853,7 @@ class ALLSKYOVERLAY:
                         value = empty
             elif variableType is None or variableType == '':
                 value = '???'
-                s.log(0, f"ERROR: {rawFieldName} has no variable type; check 'fields.json'.  Using '{value}' instead.")
+                s.log(0, f"ERROR: {rawFieldName} has no variable type; check 'userfields.json'.  Using '{value}' instead.")
 
         return value, x, y, fill, font, fontsize, rotate, scale, opacity, stroke, strokewidth
 
@@ -889,7 +910,7 @@ class ALLSKYOVERLAY:
 
     def _overlay_transparent(self, imageName, background, overlay, x, y, imageData):
 
-        if (overlay.shape[0] + y < background.shape[0]) and (overlay.shape[1] + x < background.shape[1]):
+        if (overlay.shape[0] + y < background.shape[0]) and (overlay.shape[1] + x < background.shape[1] and x >= 0 and y >= 0):
             background_width = background.shape[1]
             background_height = background.shape[0]
 
@@ -951,12 +972,14 @@ class ALLSKYOVERLAY:
                 lat = radians(self._convertLatLon(self._observerLat))
                 lon = radians(self._convertLatLon(self._observerLon))
 
+                ts = time.time()
+                utcOffset = (datetime.fromtimestamp(ts) - datetime.utcfromtimestamp(ts)).total_seconds()
+
                 observer = ephem.Observer()
                 observer.lat = lat
                 observer.long = lon
                 moon = ephem.Moon()
-                observer.date = date.today()
-                observer.date = datetime.now()
+                observer.date = datetime.now() - timedelta(seconds=utcOffset)
                 moon.compute(observer)
 
                 nnm = ephem.next_new_moon(observer.date)
@@ -974,7 +997,7 @@ class ALLSKYOVERLAY:
                 self._moonElevation = str(round(degrees(moon.alt),2)) + u"\N{DEGREE SIGN}"
                 self._moonIllumination = str(round(moon.phase, 2))
                 self._moonPhaseSymbol  = symbol
-
+                
                 os.environ['AS_MOON_AZIMUTH'] = self._moonAzimuth
                 s.log(4, 'INFO: Adding Moon Azimuth {}'.format(self._moonAzimuth))
                 os.environ['AS_MOON_ELEVATION'] = self._moonElevation
@@ -1007,9 +1030,9 @@ class ALLSKYOVERLAY:
         return result
 
     def _getSunTimes(self, location, date):
-        sunData = sun(location.observer, date=date, tzinfo=location.timezone)
-        az = azimuth(location.observer, date)
-        el = elevation(location.observer, date)
+        sunData = sun(location, date=date)
+        az = azimuth(location, date)
+        el = elevation(location, date)
         sunData['azimuth'] = az
         sunData['elevation'] = el
         return sunData
@@ -1033,16 +1056,16 @@ class ALLSKYOVERLAY:
             lon = self._convertLatLon(self._observerLon)
 
             tzName, tz = self._getTimeZone()                
-            location = LocationInfo("Allsky", "", tzName, lat, lon)
-
-            today = datetime.now()
+            location = Observer(lat, lon, 0)
+                
+            today = datetime.now(tz) 
             tomorrow = today + timedelta(days = 1)
             yesterday = today + timedelta(days = -1)
 
             yesterdaySunData = self._getSunTimes(location, yesterday)
             todaySunData = self._getSunTimes(location, today)
             tomorrowSunData = self._getSunTimes(location, tomorrow)
-                
+
             if s.TOD == 'day':
                 dawn = todaySunData["dawn"]
                 sunrise = todaySunData["sunrise"]
@@ -1256,8 +1279,12 @@ class ALLSKYOVERLAY:
                     'NEPTUNE BARYCENTER',
                     'PLUTO BARYCENTER'
                 }
+                
+                timeNow = time.time()
+                utcOffset = (datetime.fromtimestamp(timeNow) - datetime.utcfromtimestamp(timeNow)).total_seconds()
+                
                 ts = load.timescale()
-                t = ts.now()
+                t = ts.now() #- timedelta(seconds=utcOffset)
                 earth = self._eph['earth']
 
                 home = earth + wgs84.latlon(self._convertLatLon(self._observerLat), self._convertLatLon(self._observerLon))

@@ -428,6 +428,7 @@ do
 		"showonmap")
 			SHOW_ON_MAP="true"
 			[[ ${NEW_VALUE} == "false" ]] && POSTTOMAP_ACTION="--delete"
+
 			RUN_POSTTOMAP="true"
 			;;
 
@@ -564,6 +565,7 @@ fi
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
 	if [[ ${SHOW_ON_MAP} == "true" ]]; then
+
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}

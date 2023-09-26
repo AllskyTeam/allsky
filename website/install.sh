@@ -512,6 +512,7 @@ create_website_configuration_file() {
 	LOCATION="$(settings ".location")"
 	OWNER="$(settings ".owner")"
 	CAMERA_MODEL="$(settings ".cameramodel")"
+
 	CAMERA="${CAMERA_TYPE}${CAMERA_MODEL}"
 	LENS="$(settings ".lens")"
 	COMPUTER="$(sed --quiet -e 's/Raspberry Pi/RPi/' -e '/^Model/ s/.*: // p' /proc/cpuinfo)"
@@ -664,6 +665,7 @@ do_remote_website() {
 		OK="false"
 	fi
 	WEBURL="$( settings ".remotewebsiteurl" )"
+
 	if [[ -z ${WEBURL} ]]; then
 		MSG="The 'Website URL' setting must be defined in the WebUI\n"
 		MSG="${MSG}in order to do a remote Website installation.\n"

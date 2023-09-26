@@ -368,6 +368,19 @@ select_camera_type()
 	STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 }
 
+####
+# If the raspistill command exists on post-Buster releases,
+# rename it so it's not used.
+check_for_raspistill()
+{
+	STATUS_VARIABLES+=("check_for_raspistill='true'\n")
+
+	if W="$( which raspistill )" && [[ ${OS} != "buster" ]]; then
+		echo display_msg --longonly info "Renaming 'raspistill' on ${OS}."
+		echo sudo mv "${W}" "${W}-OLD"
+	fi
+}
+
 
 ####
 # If the raspistill command exists on post-Buster releases,
@@ -1640,6 +1653,7 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 	[[ ${NEW_VERSION} == "${PRIOR_VERSION}" ]] && return
 
+
 	# This version moved the config.sh and ftp-setting.sh settings to settings.json
 	# or to ${ALLSKY_ENV} and made the setting names lowercase.  Plus other changes.
 
@@ -1672,6 +1686,7 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 				fi
 			else
 				display_msg --logonly info "   '${F}' was not in prior settings file."
+
 			fi
 		fi
 	fi
@@ -2041,97 +2056,92 @@ restore_prior_settings_file()
 {
 	[[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" ]] && return
 
+	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
+
+	if [[ ! -f ${PRIOR_SETTINGS_FILE} ]]; then
+		# This should "never" happen.
+		# Huh?  No prior settings file ?
+		display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
+		FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
+		return
+	fi
+
 	local MSG NAME EXT FIRST_ONE
 
 	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
-		if [[ ! -f ${PRIOR_SETTINGS_FILE} ]]; then
-			# This should "never" happen.
-			# Huh?  Their prior version is "new" but they don't have a settings file?
-			display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
+		# The prior settings file SHOULD be a link to a camera-specific file.
+		# Make sure that's true; if not, fix it.
+
+		MSG="Checking link for newStyle PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
+		display_msg --logonly info "${MSG}"
+		MSG="$( check_settings_link "${PRIOR_SETTINGS_FILE}" )"
+		if [[ $? -eq "${EXIT_ERROR_STOP}" ]]; then
+			display_msg --log error "${MSG}"
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
+		fi
 
+		# Camera-specific settings file names are:
+		#	${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}
+		# where ${SETTINGS_FILE_NAME} == ${NAME}.${EXT}
+		NAME="${SETTINGS_FILE_NAME%.*}"			# before "."
+		EXT="${SETTINGS_FILE_NAME##*.}"			# after "."
+
+		# Copy all the camera-specific settings files; don't copy the generic-named
+		# file since it will be recreated.
+		# There will be more than one camera-specific file if the user has multiple cameras.
+		local PRIOR_SPECIFIC_FILES="$(find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}")"
+		if [[ -n ${PRIOR_SPECIFIC_FILES} ]]; then
+			FIRST_ONE="true"
+			echo "${PRIOR_SPECIFIC_FILES}" | while read -r F
+				do
+					if [[ ${FIRST_ONE} == "true" ]]; then
+						display_msg --log progress "Restoring camera-specific settings files:"
+						FIRST_ONE="false"
+					fi
+					display_msg --log progress "\t$(basename "${F}")"
+					cp -a "${F}" "${ALLSKY_CONFIG}"
+				done
+			RESTORED_PRIOR_SETTINGS_FILE="true"
+			FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
 		else
-			# The prior settings file SHOULD be a link to a camera-specific file.
-			# Make sure that's true; if not, fix it.
+			# This shouldn't happen...
+			MSG="No prior camera-specific settings files found,"
 
-			MSG="Checking link for newStyle PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
-			display_msg --logonly info "${MSG}"
-			MSG="$( check_settings_link "${PRIOR_SETTINGS_FILE}" )"
-			if [[ $? -eq "${EXIT_ERROR_STOP}" ]]; then
-				display_msg --log error "${MSG}"
+			# Try to create one based on ${PRIOR_SETTINGS_FILE}.
+			if [[ ${PRIOR_CAMERA_TYPE} != "${CAMERA_TYPE}" ]]; then
+				MSG="${MSG}\nand unable to create one: new Camera Type"
+				MSG="${MSG} (${CAMERA_TYPE} different from prior type (${PRIOR_CAMERA_TYPE})."
 				FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
-			fi
+			else
+				local SPECIFIC="${NAME}_${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.${EXT}"
+				cp -a "${PRIOR_SETTINGS_FILE}" "${ALLSKY_CONFIG}/${SPECIFIC}"
+				MSG="${MSG}\nbut was able to create '${SPECIFIC}'."
+				PRIOR_SPECIFIC_FILES="${SPECIFIC}"
 
-			# Camera-specific settings file names are:
-			#	${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}
-			# where ${SETTINGS_FILE_NAME} == ${NAME}.${EXT}
-			# We don't know the ${CAMERA_MODEL} yet so use a regular expression.
-			NAME="${SETTINGS_FILE_NAME%.*}"			# before "."
-			EXT="${SETTINGS_FILE_NAME##*.}"			# after "."
-
-			# Copy all the camera-specific settings files; don't copy the generic-named
-			# file since it will be recreated.
-			# There will be more than one camera-specific file if the user has multiple cameras.
-			local PRIOR_SPECIFIC_FILES="$(find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}")"
-			if [[ -n ${PRIOR_SPECIFIC_FILES} ]]; then
-				FIRST_ONE="true"
-				echo "${PRIOR_SPECIFIC_FILES}" | while read -r F
-					do
-						if [[ ${FIRST_ONE} == "true" ]]; then
-							display_msg --log progress "Restoring camera-specific settings files:"
-							FIRST_ONE="false"
-						fi
-						display_msg --log progress "\t$(basename "${F}")"
-						cp -a "${F}" "${ALLSKY_CONFIG}"
-					done
 				RESTORED_PRIOR_SETTINGS_FILE="true"
 				FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
-			else
-				# This shouldn't happen...
-				MSG="No prior camera-specific settings files found,"
-
-				# Try to create one based on ${PRIOR_SETTINGS_FILE}.
-				if [[ ${PRIOR_CAMERA_TYPE} != "${CAMERA_TYPE}" ]]; then
-					MSG="${MSG}\nand unable to create one: new Camera Type"
-					MSG="${MSG} (${CAMERA_TYPE} different from prior type (${PRIOR_CAMERA_TYPE})."
-					FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
-				else
-					local SPECIFIC="${NAME}_${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.${EXT}"
-					cp -a "${PRIOR_SETTINGS_FILE}" "${ALLSKY_CONFIG}/${SPECIFIC}"
-					MSG="${MSG}\nbut was able to create '${SPECIFIC}'."
-					PRIOR_SPECIFIC_FILES="${SPECIFIC}"
-
-					RESTORED_PRIOR_SETTINGS_FILE="true"
-					FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
-				fi
-				display_msg --log warning "${MSG}"
 			fi
+			display_msg --log warning "${MSG}"
+		fi
 
-			# Make any changes to the settings files based on the old and new Allsky versions.
-			if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" &&
-				  ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ]]; then
-				for S in ${PRIOR_SPECIFIC_FILES}
-				do
-					# Update all the prior camera-specific files (which are now in $ALLSKY_CONFIG).
-					# The new settings file will be based on a camera specific file.
-					local B="$( basename "${S}" )"
-					S="${ALLSKY_CONFIG}/${B}"
-					display_msg --log progress "Updating '${S}'"
-					convert_settings "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}" \
-						"${S}" "${S}"
-				done
-			fi
+		# Make any changes to the settings files based on the old and new Allsky versions.
+		if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" &&
+			  ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ]]; then
+			for S in ${PRIOR_SPECIFIC_FILES}
+			do
+				# Update all the prior camera-specific files (which are now in $ALLSKY_CONFIG).
+				# The new settings file will be based on a camera specific file.
+				local B="$( basename "${S}" )"
+				S="${ALLSKY_CONFIG}/${B}"
+				display_msg --log progress "Updating '${S}'"
+				convert_settings "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}" \
+					"${S}" "${S}"
+			done
 		fi
 
 	else
 		# settings file is old style in ${OLD_RASPAP_DIR}.
-		if [[ ! -f ${PRIOR_SETTINGS_FILE} ]]; then
-			# This should "never" happen.
-			# They have a prior Allsky version but no "settings file?
-			display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
-			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
-
-		elif [[ -f ${SETTINGS_FILE} ]]; then
+		if [[ -f ${SETTINGS_FILE} ]]; then
 			# Transfer prior settings to the new file.
 
 			case "${PRIOR_ALLSKY_VERSION}" in
@@ -2143,6 +2153,7 @@ restore_prior_settings_file()
 					MSG="${MSG}\n but note that there have been some changes to the settings file"
 					MSG="${MSG} (e.g., settings in ftp-settings.sh are now in the settings file)."
 					MSG="${MSG}\n\nPlease check your settings in the WebUI's 'Allsky Settings' page."
+
 					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 					display_msg info "\n${MSG}\n"
 					echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
@@ -2168,12 +2179,15 @@ restore_prior_settings_file()
 					MSG="${MSG}\nNote that there have been many changes to the settings file"
 					MSG="${MSG} since you last installed Allsky, so please use the "
 					MSG="${MSG} the WebUI's 'Allsky Settings' page."
+
 					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 					display_msg info "\n${MSG}\n"
 					echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
-					display_msg --logonly info "Only a few settings from very old ${PRIOR_ALLSKY_VERSION} copied over."
+					MSG="Only a few settings from very old ${PRIOR_ALLSKY_VERSION} copied over."
+					display_msg --logonly info "${MSG}"
 					;;
 			esac
+
 			# Set to null to force the user to look at the settings before Allsky will run.
 			update_json_file ".lastchanged" "" "${SETTINGS_FILE}"
 
@@ -2185,8 +2199,6 @@ restore_prior_settings_file()
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 		fi
 	fi
-
-	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
 }
 
 ####
@@ -2850,6 +2862,7 @@ if [[ ${IN_TESTING} == "true" ]]; then
 
 		MSG="${MSG}\n * ftp-settings.sh and config.sh are gone."
 		MSG="${MSG}\n   Their settings are now in the WebUI's 'Allsky Settings' page."
+
 
 		MSG="${MSG}\n\nIf you want to continue with the installation, enter:    yes"
 		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3)

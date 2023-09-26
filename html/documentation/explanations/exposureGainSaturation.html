@@ -11,7 +11,7 @@
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "Exposure, Gain, Brightness, Stretch, Saturation"
+			content: "Exposure, Gain, Stretch, Saturation"
 		}
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
@@ -36,14 +36,18 @@ The WebUI lets you manually set those settings, or have them automatically set b
 If you've every used a film or DSLR camera, you know the concepts of shutter speed and ISO.
 With an allsky camera the shutter speed is called <b>Exposure</b> and the ISO is called <b>Gain</b>,
 and they work together to determine the final image brightness.
-If you take a picture at some exposure and gain, then half the exposure and double the gain,
+If you take a picture at some exposure and gain, then halve the exposure and double the gain,
 you should get a second picture of the same brightness as the first,
 but slightly noisier since increasing gain or ISO increases the salt-and-pepper like noise.
 If you have a manual camera you can set the shutter speed and ISO to any value you want,
 but what if your camera (or allsky camera) automatically sets those values
 but you want an image that's brighter or dimmer?
-In Allsky you can set the <span class="WebUISetting">Brightness</span>
+In Allsky you can set the <span class="WebUISetting">Mean Target</span>
 to change what settings the auto-exposure algorithm uses.
+</p>
+<p>
+Increasing that value, which ranges from 0.0 (pure black) to 1.0 (pure white),
+increases the overall brightness of the image.
 </p>
 
 <h2>Image Color</h2>
@@ -82,10 +86,9 @@ to its lowest value.
 
 <h2 id="stretch">Stretch</h2>
 <p>
-Stretching an image lightens the brightness level you specify without lightening other parts,
+Stretching an image changes its contrast (difference between light and dark)
 and is good to bring out details in nighttime pictures.
-Stretching is enable via editing the <span class="fileName">config.sh</span> file
-in the WebUI.
+Stretching is enable by editing the <span class="fileName">config.sh</span> file via the WebUI.
 The settings are:
 <ul>
 <li><span class="editorSetting">AUTO_STRETCH</span>
@@ -114,41 +117,34 @@ Experiment with the settings to get the results you want.
 
 <p>
 <span class="editorSetting">AUTO_STRETCH</span>="<span class="editorBool">False</span>"
-<details><summary></summary>
 <br><img class="imgCenter" loading="lazy" src="Stretch_0.png" width="50%">
 </p>
-</details>
 
 <br><p>
 <span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>,
 <span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">10%</span>
-<details><summary></summary>
-Notice the dark parts of the image are much brighter,
-and the light stars are only a little brighter.
+<br>Notice the dark parts of the image are much brighter,
+and the light stars are only a little brighter
+(but the dark stars are much brighter and easier to see).
 <br><img class="imgCenter" loading="lazy" src="Stretch_10x10.png" width="50%">
-</details>
 
 <br><p>
 <span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>,
 <span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">30%</span>
-<details><summary></summary>
-Notice a very slight overall increase in brightness,
+<br>Notice a very slight overall increase in brightness,
 but a noticable increase in brightness of the stars.
 <br><img class="imgCenter" loading="lazy" src="Stretch_10x30.png" width="50%">
 </p>
-</details>
 
 <br><p>
 <span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">20</span>,
 <span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">10%</span>
-<details><summary></summary>
-Compare this image to the
+<br>Compare this image to the
 <span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>
 image;
 this one is even brighter.
 <br><img class="imgCenter" loading="lazy" src="Stretch_20x10.png" width="50%">
 </p>
-</details>
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

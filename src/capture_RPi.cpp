@@ -82,14 +82,6 @@ int RPicapture(config cg, cv::Mat *image)
 	ss << cg.fullFilename;
 	command += " --output '" + ss.str() + "'";
 
-	if (*cg.extraArgs)
-	{
-		// add the extra arguments as is; do not parse them
-		ss.str("");
-		ss << cg.extraArgs;
-		command += " " + ss.str();
-	}
-
 	if (cg.isLibcamera)
 	{
 		// libcamera tuning file
@@ -264,11 +256,10 @@ int RPicapture(config cg, cv::Mat *image)
 		if (! cg.isLibcamera)
 			command += " --awb off";		// raspistill requires explicitly turning off
 
-		if (cg.currentWBR != cg.defaultWBR || cg.currentWBB != cg.defaultWBB) {
-			ss.str("");
-			ss << cg.currentWBR << "," << cg.currentWBB;
-			command += " --awbgains " + ss.str();
-		}
+		// If we don't specify when they are the default then auto mode is enabled.
+		ss.str("");
+		ss << cg.currentWBR << "," << cg.currentWBB;
+		command += " --awbgains " + ss.str();
 	}
 
 	if (cg.rotation != cg.defaultRotation) {
@@ -316,6 +307,14 @@ int RPicapture(config cg, cv::Mat *image)
 		ss.str("");
 		ss << cg.quality;
 		command += " --quality " + ss.str();
+	}
+
+	if (*cg.extraArgs)
+	{
+		// add the extra arguments as is; do not parse them
+		ss.str("");
+		ss << cg.extraArgs;
+		command += " " + ss.str();
 	}
 
 	// Log the command we're going to run without the

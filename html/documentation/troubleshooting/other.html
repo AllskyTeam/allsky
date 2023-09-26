@@ -73,11 +73,12 @@ With these errors you'll usually see bands of pixels in the images.
 </p>
 <p>
 To fix this:
-<ul>
+<ul class="minimalPadding">
 <li>Increase your delay or save to
 <span class="fileName">jpg</span> format instead of <span class="fileName">png</span>.
 <li>If you have an extremely slow SD card try replacing it with a faster one.
-	Or, make the <span class="fileName">allsky/tmp</span> directory a memory-filesystem.
+	Or, make the <span class="fileName">allsky/tmp</span> directory a memory-filesystem
+	if not already done during installation.
 	See the
 	<a allsky="true" href="/documentation/miscellaneous/tips.html">Reducing wear on your SDcard</a>
 	tip.
@@ -85,14 +86,14 @@ To fix this:
 </details>
 
 
-<h2>Images are too light or too dark</h2>
+<h2>Images are too light, too dark, or stars are hard to see</h2>
 <details><summary></summary>
+<h3>Overall image too light or too dark</h3>
 <p>
-Depending on what camera you have,
-you can try adjusting the <span class="WebUISetting">Gain</span>,
-<span class="WebUISetting">Brightness</span>,
+If your images are too light or too dark and you are using <b>manual exposure</b>
+try adjusting the <span class="WebUISetting">Gain</span>,
 <span class="WebUISetting">Exposure</span>,
-and <span class="WebUISetting">Bin</span>.
+and/or <span class="WebUISetting">Bin</span>.
 There are separate exposure-related settings for daytime and nighttime,
 so make sure you pick the right ones.
 During the day you'll normally use
@@ -100,13 +101,21 @@ During the day you'll normally use
 (i.e., binning off), and
 <span class="WebUISetting">Gain</span> of <span class="WebUIValue">0</span>
 since images are bright enough that you don't need those settings.
-If your images are too dark using auto exposure and the exposure length doesn't increase,
-it may be hitting the maximum exposure limit.
-You can set it on the WebUI <span class="WebUIWebPage">Allsky Settings</span>
-page but note that ZWO cameras usually have a maximum auto exposure length of 60 seconds.
 </p>
+<p>
+If you are using <b>auto exposure</b> change the 
+<span class="WebUISetting">Mean Target</span> to change the overall brightness of the image.
+It will vary the gain and exposure up to the maximum values you specify.
+If your images are still too dark overall try increasing the maximum values.
+Note that every camera has a maximum gain and exposure it supports - hover your cursor
+over those values to see what the maximums are.
+</p>
+<h3>Stars hard to see</h3>
+If the stars are too hard to see but the overall image image brightness is where you want it,
+try
+<a allsky="true" href="/documentation/explanations/exposureGainSaturation.html#stretch">stretching</a>
+the image which changes the contrast.
 </details>
-
 
 <h2>Images are corrupted</h2>
 <details><summary></summary>
@@ -120,7 +129,8 @@ image contains parts of two or more frames, offset lines, etc.
 <li>Check your power supply and cooling.
 	The Pi will report on undervoltage and/or throttled status on the
 	<span class="WebUIWebPage">System</span> page of the WebUI.
-	If it doesn't say <b>No throttling</b> in green you should investigate and remediate.
+	If it doesn't say <b class="progress-bar-success">No throttling</b>
+	you should investigate and remediate.
 <li>If you have a ZWO camera it may be experiencing some internal firmware error;
 	reset the camera either by unplugging it or,
 	if you have the <code>uhubctl</code> command installed,

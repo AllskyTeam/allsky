@@ -34,6 +34,7 @@
 "type" : "boolean",
 "booldependson" : "takedaytimeimages",
 "advanced" : true
+
 },
 {
 "name" : "dayautoexposure",
@@ -690,10 +691,11 @@
 "description" : "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <span class='WebUISetting'>Debug Level</span> to 4 and look in the log file.",
 "label" : "Filename",
 "type" : "text",
-"usage" : "capture",
+<"usage" : "capture",
 "checkchanges" : true,
 "action" : "reload",
 "advanced" : true
+
 },
 {
 "name" : "rotation",
@@ -1576,7 +1578,7 @@
 "booldependsoff" : "overlaymethod",
 "action" : "reload",
 "advanced" : true
-},
+,
 {
 "name" : "text",
 "default" : "",

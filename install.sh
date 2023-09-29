@@ -1400,7 +1400,7 @@ PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# Location of prior "ftp-se
 does_prior_Allsky_exist()
 {
 	# First just look for the top-level directory.
-	if [[!  -d ${PRIOR_ALLSKY_DIR} ]]; then
+	if [[ !  -d ${PRIOR_ALLSKY_DIR} ]]; then
 		display_msg --logonly info "No prior Allsky found."
 		return 1
 	fi

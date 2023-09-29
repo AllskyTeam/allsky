@@ -1399,19 +1399,20 @@ PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# Location of prior "ftp-se
 
 does_prior_Allsky_exist()
 {
-
-	local MSG CT_ CM_
-
 	# First just look for the top-level directory.
-	if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
-		display_msg --logonly info "Prior Allsky found in ${PRIOR_ALLSKY_DIR}."
-	else
+	if [[!  -d ${PRIOR_ALLSKY_DIR} ]]; then
 		display_msg --logonly info "No prior Allsky found."
 		return 1
 	fi
+
+	local MSG CT_ CM_
+
+	display_msg --logonly info "Prior Allsky found in ${PRIOR_ALLSKY_DIR}."
+
 	# All versions back to v0.6 (never checked prior ones) have a "scripts" directory.
 	if [[ ! -d "${PRIOR_ALLSKY_DIR}/scripts" ]]; then
-		MSG="Prior Allsky directory found at '${PRIOR_ALLSKY_DIR}' but it doesn't appear to be valid; ignoring it."
+		MSG="Prior Allsky directory found at '${PRIOR_ALLSKY_DIR}'"
+		MSG="${MSG} but it doesn't appear to be valid; ignoring it."
 		display_msg --log warning "${MSG}"
 		return 1
 	fi
@@ -2595,19 +2596,34 @@ install_overlay()
 
 
 ####
+log_info()
+{
+	STATUS_VARIABLES+=("log_info='true'\n")
+
+	MSG="$( < /etc/os-release )"
+	display_msg --logonly info "${MSG}"
+	display_msg --logonly info "id = $(id)"
+	display_msg --logonly info "uname = $(uname -a)"
+
+	# TODO: more?
+}
+
+
+####
 check_if_buster()
 {
 	STATUS_VARIABLES+=("check_if_buster='true'\n")
 
 	if [[ ${OS} == "buster" ]]; then
 		MSG="This release runs best on the Bullseye operating system"
-		MSG="${MSG} that was released in November, 2021."
+		MSG="${MSG} that was released in November, 2021 or"
+		MSG="${MSG} on Bookworm that was released in October 2023."
 		if [[ ${PRIOR_CAMERA_TYPE} == "RPi" ]]; then
 			MSG="${MSG}\n\n>>> This is especially true for RPi cameras"
-			MSG="${MSG} which have more features on Bullseye.\n"
+			MSG="${MSG} which have more features on Bullseye and Bookworm.\n"
 		fi
 		MSG="${MSG}\nYou are running the older Buster operating system and we"
-		MSG="${MSG} recommend doing a fresh install of Bullseye on a clean SD card."
+		MSG="${MSG} recommend doing a fresh install of Bookworm or Bullseye on a clean SD card."
 		MSG="${MSG}\n\nDo you want to continue anyhow?"
 		if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			display_msg --logonly info "User running Buster and elected not to continue."
@@ -2907,7 +2923,7 @@ done
 
 mkdir -p "${ALLSKY_INSTALLATION_LOGS}"
 if [[ -z ${FUNCTION} ]]; then
-	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
+	display_msg "${LOG_TYPE}" info "========== STARTING INSTALLATON AT $(date).\n"
 fi
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
@@ -2956,6 +2972,7 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 		fi
 		exit_installation 0 "" ""
 	else
+		[[ -n ${MORE_STATUS} ]] && MORE_STATUS=": ${MORE_STATUS}"
 		MSG="You have already begun the installation."
 		MSG="${MSG}\n\nThe last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
 		MSG="${MSG}\n\nDo you want to continue where you left off?"
@@ -2990,12 +3007,15 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 	fi
 fi
 
-##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY and other PRIOR_* variables.
-# Re-run every time in case the directory was removed.
-does_prior_Allsky_exist
+##### Log some info to help in troubleshooting.
+[[ ${log_info} != "true" && -z ${FUNCTION} ]] && log_info
 
 ##### Display a message to Buster users.
 [[ ${check_if_buster} != "true" && -z ${FUNCTION} ]] && check_if_buster
+
+##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY and other PRIOR_* variables.
+# Re-run every time in case the directory was removed.
+does_prior_Allsky_exist
 
 ##### Display the welcome header
 [[ -z ${FUNCTION} ]] && do_initial_heading

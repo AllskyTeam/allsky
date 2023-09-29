@@ -136,8 +136,7 @@ and the appropriate minimum, maximum, and default settings populated in the WebU
 </blockquote>
 <p>
 The following commands will put the new release of Allsky in <span class="fileName">~/allsky</span>.
-Except for some system files, all Allsky-related files reside in this directory.
-If you later install the Allsky Website on the Pi, its files will also go in this directory.
+Except for some system files, all Allsky and Allsky Website-related files reside in this directory.
 </p>
 
 <pre>
@@ -208,7 +207,8 @@ Subsequent installations of Allsky will be significantly faster.
 <h2>Post installation</h2>
 <details><summary></summary>
 <p>
-After installation, reboot then perform any actions the installation script identified.
+After installation, reboot if told to,
+then perform any actions the installation script identified.
 </p>
 <blockquote>
 If instructed to copy the contents of a prior configuration file to the new release,
@@ -228,33 +228,11 @@ After the reboot, do the following:
 		</blockquote>
 
 	<li>Go to the <span class="WebUILink">Allsky Settings</span> page.
-	<li>Optionally click the
-		<span class="btn advanced btn-advanced btn-not-real btn-small">Show advanced options</span> button.
-		button to show the advanced options.
 	<li>Make any necessary changes.
 	<li>Click on the
 		<span class="btn btn-primary btn-not-real btn-small">Save changes</span> button.
 		Allsky will (re)start.
-	<li>If instructed to update the <span class="fileName">config.sh</span>
-		and/or the <span class="fileName">ftp-settings.sh</span> files:
-		<ol>
-			<li>Go to the <span class="WebUILink">Editor</span> page.
-			<li>Select the appropriate file in the drop down list.
-			<li>Edit the file.
-				Do NOT simply copy a previous version.
-			<li>Click the green "Save Changes" button.
-				Allsky will not restart but the changes will take effect when the next
-				image is taken.
-		</ol>
 </ol>
-
-<blockquote class="warning">
-The <span class="fileName">config.sh</span> and
-<span class="fileName">ftp-settings.sh</span> configuration files should
-<b>only</b> be edited via the
-WebUI's <b>Editor</b> link since it performs sanity checks and behind-the-scenes
-actions during updates.
-</blockquote>
 </details>
 
 
@@ -283,7 +261,7 @@ Tip: Add lines like the following to <span class="fileName">~/.bashrc</span> to 
 alias start='sudo systemctl start allsky'
 </pre>
 You will then only need to type <code>start</code> to start Allsky.
-Do this for <b>stop</b> and <b>reload</b> as well.
+Do this for <b>stop</b> and <b>restart</b> as well.
 </blockquote>
 </p>
 

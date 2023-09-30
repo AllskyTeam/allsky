@@ -1613,7 +1613,7 @@ VirtualSky.prototype.createSky = function(){
 			var y = e.originalEvent.touches[0].pageY;
 			e.data.sky.debug('touchmove '+x+','+y+' '+s.x+','+s.y+'');
 			var theta,f,dr;
-			if(s.dragging){
+			if(s.dragging && s.mouse){	// ALLSKY fix: added "&& s.mouse" for portable devices
 				if(s.polartype){
 					theta = Math.atan2(y-s.tall/2,x-s.wide/2);
 					if(!s.theta) s.theta = theta;

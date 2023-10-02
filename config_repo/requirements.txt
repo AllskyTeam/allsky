@@ -1,4 +1,4 @@
-numpy<=1.24.2
+numpy>=1.25.0
 opencv-python<=4.6.0.66
 Pillow
 pyephem

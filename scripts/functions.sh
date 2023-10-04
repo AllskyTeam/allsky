@@ -699,20 +699,30 @@ function one_instance()
 
 
 	local NUM_CHECKS=0
+	local INITIAL_PID
 	while  : ;
 	do
-		[[ ! -f ${PID_FILE} ]] && break
-
 		((NUM_CHECKS++))
+
+		[[ ! -f ${PID_FILE} ]] && break
 
 		local CURRENT_PID=$( < "${PID_FILE}" )
 		# Check that the process is still running. Looking in /proc is very quick.
 		[[ ! -d "/proc/${CURRENT_PID}" ]] && break
 
-		if [[ ${NUM_CHECKS} -eq ${MAX_CHECKS} ]]; then
+		[[ ${NUM_CHECKS} -eq 1 ]] && INITIAL_PID="${CURRENT_PID}"
+
+		# If the PID has changed since the first time we looked,
+		# that means another process grabbed the lock.
+		# Since there may be several processes waiting, exit.
+		if [[ ${NUM_CHECKS} -eq ${MAX_CHECKS} || ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
 			echo -en "${YELLOW}" >&2
 			echo -e  "${ABORTED_MSG1}" >&2
-			echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
+			if [[ ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
+				echo -n  "Another process (PID=${CURRENT_PID}) got the lock." >&2
+			else
+				echo -n  "Made ${NUM_CHECKS} attempts at waiting. Process ${PID} still has lock." >&2
+			fi
 			echo -n  " If this happens often, check your settings." >&2
 			echo -e  "${NC}" >&2
 			ps -fp "${CURRENT_PID}" >&2

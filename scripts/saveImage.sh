@@ -429,7 +429,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 		if [[ ${LEFT} -le 1 ]]; then
 			# Reset the counter then upload this image below.
 			if [[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]]; then
-				echo "*** ${ME}: resetting LEFT counter to ${IMAGE_UPLOAD_FREQUENCY}, then uploading image."
+				echo "*** ${ME}: resetting LEFT counter to ${IMG_UPLOAD_FREQUENCY}, then uploading image."
 			fi
 
 			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"

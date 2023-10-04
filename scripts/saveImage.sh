@@ -228,7 +228,7 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 
 		# shellcheck disable=SC2086
 		convert "${CURRENT_IMAGE}" ${C} "${CURRENT_IMAGE}"
-		if [ $? -ne 0 ] ; then
+		if [[ $? -ne 0 ]] ; then
 			echo -e "${RED}*** ${ME}: ERROR: CROP_IMAGE failed; not saving${NC}"
 			exit 4
 		fi
@@ -254,13 +254,13 @@ if [[ ${STRETCH_AMOUNT} -gt 0 ]]; then
 	fi
  	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${STRETCH_AMOUNT}x${STRETCH_MIDPOINT}%" "${CURRENT_IMAGE}"
 
-	if [ $? -ne 0 ] ; then
+	if [[ $? -ne 0 ]]; then
 		echo -e "${RED}*** ${ME}: ERROR: AUTO_STRETCH failed; not saving${NC}"
 		exit 4
 	fi
 fi
 
-if [ "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
+if [[ "${DAY_OR_NIGHT}" = "NIGHT" ]]; then
 	# The 12 hours ago option ensures that we're always using today's date
 	# even at high latitudes where civil twilight can start after midnight.
 	export DATE_NAME="$( date -d '12 hours ago' +'%Y%m%d' )"
@@ -427,7 +427,11 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 			LEFT=$( < "${FREQUENCY_FILE}" )
 		fi
 		if [[ ${LEFT} -le 1 ]]; then
-			# upload this one and reset the counter
+			# Reset the counter then upload this image below.
+			if [[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]]; then
+				echo "*** ${ME}: resetting LEFT counter to ${IMG_UPLOAD_FREQUENCY}, then uploading image."
+			fi
+
 			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
 		else
 			# Not ready to upload yet, so decrement the counter
@@ -455,7 +459,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 		# Put the copy in ${WORKING_DIR}.
 		FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
 		S="${W}x${H}"
-		[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ] && echo "*** ${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
+		[[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]] && echo "*** ${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
 		if ! convert "${CURRENT_IMAGE}" -resize "${S}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: Resize Uploads failed; continuing with larger image.${NC}"
 			# We don't know the state of $FILE_TO_UPLOAD so use the larger file.

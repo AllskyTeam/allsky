@@ -50,7 +50,7 @@ fi
 
 # Generate keogram from collected images
 if [[ $( settings ".keogramgenerate" ) == "true" ]]; then
-	echo -e "${ME}: ===== Generating Keogram"
+	echo -e "${ME}: ===== Generating Keogram for ${DATE}"
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --keogram "${DATE}"
 	RET=$?
@@ -63,7 +63,7 @@ fi
 # Generate startrails from collected images.
 # Threshold set to 0.1 by default to avoid stacking over-exposed images.
 if [[ $( settings ".startrailsgenerate" ) == "true" ]]; then
-	echo -e "${ME}: ===== Generating Startrails"
+	echo -e "${ME}: ===== Generating Startrails for ${DATE}"
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --startrails "${DATE}"
 	RET=$?
@@ -77,7 +77,7 @@ fi
 # Use generateForDay.sh instead of putting all the commands here so users can easily
 # test the timelapse creation, which sometimes has issues.
 if [[ $( settings ".timelapsegenerate" ) == "true" ]]; then
-	echo -e "${ME}: ===== Generating Timelapse"
+	echo -e "${ME}: ===== Generating Timelapse for ${DATE}"
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --timelapse "${DATE}"
 	RET=$?

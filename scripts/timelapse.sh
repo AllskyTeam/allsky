@@ -162,6 +162,10 @@ if [[ ${LOCK} == "true" ]]; then
 	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-lock-timelapse"
 else
 	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse"
+	# Use (hopefully) unique names for the sequence directories in case there are
+	# multiple simultaneous timelapse being created.
+	[[ -n ${INPUT_DIR} ]] && SEQUENCE_DIR="${SEQUENCE_DIR}.$( basename "${INPUT_DIR}" )"
+
 	ALLSKY_TIMELAPSE_PID_FILE=""
 fi
 

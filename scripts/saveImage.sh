@@ -440,13 +440,12 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 			# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
 			[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
 
-			# We didn't create ${WEBSITE_FILE} yet so do that now.
-			mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
-
-			exit 0
+			IMG_UPLOAD_FREQUENCY=0
 		fi
 	fi
+fi
 
+if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 	W="$( settings ".imageresizeuploadswidth" )"
 	H="$( settings ".imageresizeuploadsheight" )"
 	if [[ ${W} -gt 0 && ${H} -gt 0 ]]; then

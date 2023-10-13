@@ -78,6 +78,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Holds a count of continuous "bad" images
 	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_image_count.txt"
 
+	# Holds the PID of the process that called timelapse.sh
+	ALLSKY_TIMELAPSE_PID_FILE="${ALLSKY_TMP}/timelapse-pid.txt"
+
 	# Holds information on what the user needs to do after an installation.
 	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/installation_logs"
 	POST_INSTALLATION_ACTIONS="${ALLSKY_INSTALLATION_LOGS}/post-installation_actions.txt"

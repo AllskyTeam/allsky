@@ -262,7 +262,7 @@ X="$(echo "${X}" | grep -v "deprecated pixel format used")"
 
 if [[ ${RET} -ne -0 ]]; then
 	echo -e "\n${RED}*** $ME: ERROR: ffmpeg failed."
-	echo -e "Error log:\n $( < ${TMP} )'."
+	echo -e "Error log:\n $( < "${TMP}" )'."
 	echo "=============================================="
 	echo "Links in '${SEQUENCE_DIR}' left for debugging."
 	echo -e "Remove them when the problem is fixed.${NC}\n"

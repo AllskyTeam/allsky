@@ -3,6 +3,7 @@
 # Script to save a DAY or NIGHT image.
 
 ME="$(basename "${BASH_ARGV0}")"
+
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
 #shellcheck disable=SC2086 source-path=.
@@ -372,14 +373,14 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
 					x="$(tail -${KEEP} "${MINI_TIMELAPSE_FILES}")"
 					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
-					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 						echo -en "${YELLOW}${ME}: Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest"
 						echo -e " file(s) and added current image.${NC}" >&2
 					fi
 				fi
 			else
 				# Not ready to create yet
-				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 					echo -n "${ME}: Not creating mini timelapse: "
 					if [[ ${MOD} -eq 0 ]]; then
 						echo "${LEFT} images(s) left."
@@ -416,14 +417,17 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 			LEFT=$( < "${FREQUENCY_FILE}" )
 		fi
 		if [[ ${LEFT} -le 1 ]]; then
-			# upload this one and reset the counter
+			# Reset the counter then upload this image below.
+			if [[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]]; then
+				echo "*** ${ME}: resetting LEFT counter to ${IMG_UPLOAD_FREQUENCY}, then uploading image."
+			fi
 			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
 		else
 			# Not ready to upload yet, so decrement the counter
 			LEFT=$((LEFT - 1))
 			echo "${LEFT}" > "${FREQUENCY_FILE}"
 			# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
-			[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
+			[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
 
 			# We didn't create ${WEBSITE_FILE} yet so do that now.
 			mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"

@@ -419,7 +419,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 		if [[ ${LEFT} -le 1 ]]; then
 			# Reset the counter then upload this image below.
 			if [[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]]; then
-				echo "*** ${ME}: resetting LEFT counter to ${IMG_UPLOAD_FREQUENCY}, then uploading image."
+				echo "${ME}: resetting LEFT counter to ${IMG_UPLOAD_FREQUENCY}, then uploading image."
 			fi
 			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
 		else
@@ -429,13 +429,11 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 			# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
 			[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
 
-			# We didn't create ${WEBSITE_FILE} yet so do that now.
-			mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
-
-			exit 0
+			IMG_UPLOAD="false"
 		fi
 	fi
-
+fi
+if [[ ${IMG_UPLOAD} == "true" ]]; then
 	# We no longer use the "permanent" image name; instead, use the one the user specified
 	# in the config file (${FULL_FILENAME}).
 	if [[ ${RESIZE_UPLOADS} == "true" ]]; then
@@ -443,7 +441,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 		# Put the copy in ${WORKING_DIR}.
 		FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
 		S="${RESIZE_UPLOADS_WIDTH}x${RESIZE_UPLOADS_HEIGHT}"
-		[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "*** ${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
+		[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
 		if ! convert "${CURRENT_IMAGE}" -resize "${S}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: RESIZE_UPLOADS failed; continuing with larger image.${NC}"
 			# We don't know the state of $FILE_TO_UPLOAD so use the larger file.

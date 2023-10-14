@@ -66,8 +66,8 @@ function doExit()
 # RPi cameras can use either "raspistill" on Buster or "libcamera-still" on Bullseye
 # to actually take pictures.
 # Determine which to use.
-# On success, return 0 and the command to use.
-# On failure, return non-0 and an error message.
+# On success, return 1 and the command to use.
+# On failure, return 0 and an error message.
 function determineCommandToUse()
 {
 	local USE_doExit="${1}"			# Call doExit() on error?
@@ -81,7 +81,7 @@ function determineCommandToUse()
 	local CMD="libcamera-still"
 	if command -v ${CMD} > /dev/null; then
 		# Found the command - see if it works.
-		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
+		"${CMD}" --timeout 1 --nopreview # > /dev/null 2>&1
 		RET=$?
 		if [[ ${RET} -eq 137 ]]; then
 			# If another libcamera-still is running the one we execute will hang for
@@ -104,7 +104,7 @@ function determineCommandToUse()
 			return 1
 		fi
 
-		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
+		"${CMD}" --timeout 1 --nopreview # > /dev/null 2>&1
 		RET=$?
 	fi
 
@@ -619,7 +619,6 @@ function one_instance()
 	local ABORTED_MSG1=""
 	local ABORTED_MSG2=""
 	local CAUSED_BY=""
-	local P=""
 
 	OK="true"
 	local ERRORS=""
@@ -636,6 +635,10 @@ function one_instance()
 					;;
 				--pid-file)
 					PID_FILE="${2}"
+					shift
+					;;
+				--pid)
+					PID="${2}"
 					shift
 					;;
 				--aborted-count-file)
@@ -694,23 +697,33 @@ function one_instance()
 
 
 	NUM_CHECKS=0
-	while  : ; do
-		[[ ! -f ${PID_FILE} ]] && break
-
+	local INITIAL_PID
+	while  : ;
+	do
 		((NUM_CHECKS++))
 
-		PID=$( < "${PID_FILE}" )
-		# Check that the process is still running.
-		P="$( ps -fp "${PID}" )"
-		[[ $? -ne 0 ]] && break;	# not running - why is the file still here?
+		[[ ! -f ${PID_FILE} ]] && break
 
-		if [[ $NUM_CHECKS -eq ${MAX_CHECKS} ]]; then
+		local CURRENT_PID=$( < "${PID_FILE}" )
+		# Check that the process is still running. Looking in /proc is very quick.
+		[[ ! -d "/proc/${CURRENT_PID}" ]] && break
+
+		[[ ${NUM_CHECKS} -eq 1 ]] && INITIAL_PID="${CURRENT_PID}"
+
+		# If the PID has changed since the first time we looked,
+		# that means another process grabbed the lock.
+		# Since there may be several processes waiting, exit.
+		if [[ ${NUM_CHECKS} -eq ${MAX_CHECKS} || ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
 			echo -en "${YELLOW}" >&2
 			echo -e  "${ABORTED_MSG1}" >&2
-			echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
+			if [[ ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
+				echo -n  "Another process (PID=${CURRENT_PID}) got the lock." >&2
+			else
+				echo -n  "Made ${NUM_CHECKS} attempts at waiting. Process ${PID} still has lock." >&2
+			fi
 			echo -n  " If this happens often, check your settings." >&2
 			echo -e  "${NC}" >&2
-			echo "${P}" >&2
+			ps -fp "${CURRENT_PID}" >&2
 
 			# Keep track of aborts so user can be notified.
 			# If it's happening often let the user know.
@@ -737,7 +750,8 @@ function one_instance()
 		fi
 	done
 
-	echo $$ > "${PID_FILE}" || return 1
+	[[ -z ${PID} ]] && PID="$$"
+	echo "${PID}" > "${PID_FILE}" || return 1
 
 	return 0
 }

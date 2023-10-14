@@ -9,6 +9,14 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit ${ALLSKY_ERROR_STOP}
 #shellcheck disable=SC2086 source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
 
+
+INSTALLED_VENV="true"
+if [ -d "${ALLSKY_HOME}/venv" ]; then
+    INSTALLED_VENV="false"
+fi
+
+echo "Installed venv ${INSTALLED_VENV}"
+
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 LONG_BITS=$(getconf LONG_BIT) # Size of a long, 32 or 64
 

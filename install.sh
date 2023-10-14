@@ -88,6 +88,14 @@ STATUS_VARIABLES=()									# Holds all the variables and values to save
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 LONG_BITS=$(getconf LONG_BIT) # Size of a long, 32 or 64
 
+#
+# Check if we have a venv already. If not then the install/update will create it
+# but we need to warn the user to reinstall the extra modules if they have them
+INSTALLED_VENV="true"
+if [ -d "${ALLSKY_HOME}/venv" ]; then
+    INSTALLED_VENV="false"
+fi
+
 ############################################## functions
 
 ####
@@ -2571,6 +2579,20 @@ remind_old_version()
 	fi
 }
 
+update_modules()
+{
+
+	if [[ -d "/opt/allsky/modules" ]]; then
+		if [[ ${INSTALLED_VENV} == "true" ]]; then
+			MSG="You appear to have the Allsky Extra modules installed. Please reinstall these using"
+			MSG="${MSG} the normal instructions. The extra modules will not function until you have"
+			MSG="${MSG} reinstalled them."
+			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+			display_msg --logonly info "Reminded user to re install the extra modules."
+		fi
+	fi
+
+}
 
 clear_status()
 {
@@ -2935,6 +2957,9 @@ fi
 
 ##### Let the user know to run check_allsky.sh.
 [[ ${remind_run_check_allsky} != "true" ]] && remind_run_check_allsky
+
+##### Check if extra modules need to be reinstalled #####
+update_modules
 
 ##### If needed, remind the user to remove any old Allsky version
 # Re-run every time to remind the user again.

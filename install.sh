@@ -2302,7 +2302,7 @@ install_overlay()
 		# AG - Bookworm mod 12/10/23
 		TMP="${ALLSKY_INSTALLATION_LOGS}/python_full.log"
 		sudo apt-get --assume-yes install python3-full > "${TMP}" 2>&1
-		sudo apt-get --assume-yes libgfortran5 libopenblas0-pthread > "${TMP}" 2>&1
+		sudo apt-get --assume-yes install libgfortran5 libopenblas0-pthread > "${TMP}" 2>&1
 
 		python3 -m venv "${ALLSKY_HOME}/venv"
 		source "${ALLSKY_HOME}/venv/bin/activate"

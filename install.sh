@@ -91,7 +91,7 @@ LONG_BITS=$(getconf LONG_BIT) # Size of a long, 32 or 64
 #
 # Check if any extra modules are installed
 EXTRA_MODULES_INSTALLED="false"
-if [[ "$(ls -A /opt/allsky/modules)" ]]; then
+if [[ "$(ls -A /opt/allsky/modules 2> /dev/null)" ]]; then
 	EXTRA_MODULES_INSTALLED="true"
 fi
 

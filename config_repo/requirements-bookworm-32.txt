@@ -13,4 +13,3 @@ astropy
 suncalc
 Adafruit-Blinka
 vcgencmd
-requests

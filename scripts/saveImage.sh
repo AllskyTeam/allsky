@@ -260,7 +260,10 @@ else
 	export DATE_NAME="$(date +'%Y%m%d')"
 fi
 
-"${ALLSKY_SCRIPTS}/flow-runner.py"
+# AG - Bookworm mod 12/10/23
+source "${ALLSKY_HOME}/venv/bin/activate"
+python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
+deactivate
 
 # The majority of the post-processing time for an image is in flow-runner.py.
 # Since only one mini-timelapse can run at once and that code is embeded in this code

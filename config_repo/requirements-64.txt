@@ -1,12 +1,12 @@
-numpy>=1.25.0
-opencv-python<=4.6.0.66
+numpy
+opencv-python
 Pillow
 pyephem
 skyfield
 astral
 pytz
-scipy<=1.8.1
-scikit-image<=0.19.3
+scipy
+scikit-image
 paho-mqtt
 photutils
 astropy

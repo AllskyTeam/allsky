@@ -86,7 +86,7 @@ STATUS_INT="Got interrupt"
 STATUS_VARIABLES=()									# Holds all the variables and values to save
 
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
-
+LONG_BITS=$(getconf LONG_BIT) # Size of a long, 32 or 64
 
 ############################################## functions
 
@@ -1515,6 +1515,8 @@ update_config_sh()
 create_allsky_logs()
 {
 	display_msg --log progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
+	TMP="${ALLSKY_INSTALLATION_LOGS}/rsyslog.log"
+	sudo apt-get --assume-yes install rsyslog > "${TMP}" 2>&1	
 	sudo truncate -s 0 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chmod 664 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chgrp "${ALLSKY_GROUP}" "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
@@ -2253,20 +2255,56 @@ install_overlay()
 
 		# Force pip upgrade, without this installations on Buster fail
 		pip3 install --upgrade pip > /dev/null 2>&1
+	elif [[ ${OS} == "bullseye" ]]; then
+		M=" for Bullseye"
+		R="-bullseye"
+	elif [[ ${OS} == "bookworm" ]]; then
+		M=" for Bookworm"
+		R="-bookworm"
 	else
 		M=""
 		R=""
 	fi
 	local NAME="Python_dependencies"
-	local REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}.txt"
-	local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
+	REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}-${LONG_BITS}.txt"
 
+    display_msg --logonly info "Attempting to locate Python dependency file"
+
+    if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
+        display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+        REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}.txt"
+        if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
+            display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+
+            REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements-${LONG_BITS}.txt"
+            if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
+                display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+                REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements.txt"
+            else
+                display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+            fi
+        else
+            display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+        fi
+    else
+        display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+    fi
+
+	local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
+	
 	# See how many have already been installed - if all, then skip this step.
 	local NUM_INSTALLED="$( set | grep -c "^${NAME}" )"
 	if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ||
 		  ${installed_Python_dependencies} == "true" ]]; then
 		display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
 	else
+
+		# AG - Bookworm mod 12/10/23
+		TMP="${ALLSKY_INSTALLATION_LOGS}/python_full.log"
+		sudo apt-get --assume-yes install python3-full > "${TMP}" 2>&1
+		python3 -m venv "${ALLSKY_HOME}/venv"
+		source "${ALLSKY_HOME}/venv/bin/activate"
+
 		local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
 		display_msg --log progress "Installing ${NAME}${M}:"
 		local COUNT=0

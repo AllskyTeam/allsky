@@ -10,6 +10,12 @@ import numpy
 import shutil
 import time
 
+'''
+NOTE: `valid_module_paths` must be an array, and the order specified dictates the order of search for a named module.
+It is expected that the 'user' supplied modules are searched first, and thus come before the distributed modules path.
+This permits the user to copy and modify a distributed module, or create an entirely new replacement for a distributed
+module, thus giving the user total control.
+'''
 def signalHandler(sig, frame):
     if sig == signal.SIGTERM or sig == signal.SIGINT:
         try:

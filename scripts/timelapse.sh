@@ -136,6 +136,9 @@ if [[ ${LOCK} == "true" ]]; then
 	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-lock-timelapse"
 else
 	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-timelapse"
+	# Use (hopefully) unique names for the sequence directories in case there are
+	# multiple simultaneous timelapse being created.
+	[[ -n ${INPUT_DIR} ]] && SEQUENCE_DIR="${SEQUENCE_DIR}.$( basename "${INPUT_DIR}" )"
 	PID_FILE=""
 fi
 
@@ -259,11 +262,22 @@ X="$(echo "${X}" | grep -v "deprecated pixel format used")"
 
 if [[ ${RET} -ne -0 ]]; then
 	echo -e "\n${RED}*** $ME: ERROR: ffmpeg failed."
-	echo "Error log is in '${TMP}'."
-	echo
+	echo -e "Error log:\n $( < "${TMP}" )'."
+	echo "=============================================="
 	echo "Links in '${SEQUENCE_DIR}' left for debugging."
 	echo -e "Remove them when the problem is fixed.${NC}\n"
 	rm -f "${OUTPUT_FILE}"	# don't leave around to confuse user
+
+	if [[ ${IS_MINI} == "true" ]]; then
+		M="Mini-t"
+	else
+		M="T"
+	fi
+	MSG="${M}imelapse creation for $( basename "$OUTPUT_FILE" ) failed!"
+	"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}"
+
+	[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
+
 	exit 1
 fi
 

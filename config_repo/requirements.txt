@@ -13,3 +13,4 @@ suncalc
 Adafruit-Blinka
 vcgencmd
 requests
+requests

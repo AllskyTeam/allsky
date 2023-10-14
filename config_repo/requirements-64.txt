@@ -6,7 +6,6 @@ skyfield
 astral
 pytz
 scipy
-scikit-image
 paho-mqtt
 photutils
 astropy

@@ -34,21 +34,21 @@ LONG_BITS=$(getconf LONG_BIT) # Size of a long, 32 or 64
     display_msg info "Attempting to locate Python dependency file"
 
     if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
-        display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+        display_msg info "${REQUIREMENTS_FILE} - File not found!"
         REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}.txt"
         if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
-            display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+            display_msg info "${REQUIREMENTS_FILE} - File not found!"
 
             REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements-${LONG_BITS}.txt"
             if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
-                display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+                display_msg  info "${REQUIREMENTS_FILE} - File not found!"
                 REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements.txt"
             else
-                display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+                display_msg info "${REQUIREMENTS_FILE} - File found!"
             fi
         else
-            display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+            display_msg info "${REQUIREMENTS_FILE} - File found!"
         fi
     else
-        display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+        display_msg  info "${REQUIREMENTS_FILE} - File found!"
     fi

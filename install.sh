@@ -89,10 +89,17 @@ OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 LONG_BITS=$(getconf LONG_BIT) # Size of a long, 32 or 64
 
 #
+# Check if any extra modules are installed
+EXTRA_MODULES_INSTALLED="false"
+if [[ "$(ls -A /opt/allsky/modules)" ]]; then
+	EXTRA_MODULES_INSTALLED="true"
+fi
+
+#
 # Check if we have a venv already. If not then the install/update will create it
 # but we need to warn the user to reinstall the extra modules if they have them
 INSTALLED_VENV="true"
-if [ -d "${ALLSKY_HOME}/venv" ]; then
+if [[ -d "${ALLSKY_HOME}/venv" ]]; then
     INSTALLED_VENV="false"
 fi
 
@@ -2582,7 +2589,7 @@ remind_old_version()
 update_modules()
 {
 
-	if [[ -d "/opt/allsky/modules" ]]; then
+	if [[ ${EXTRA_MODULES_INSTALLED} == "true" ]]; then
 		if [[ ${INSTALLED_VENV} == "true" ]]; then
 			MSG="You appear to have the Allsky Extra modules installed. Please reinstall these using"
 			MSG="${MSG} the normal instructions. The extra modules will not function until you have"

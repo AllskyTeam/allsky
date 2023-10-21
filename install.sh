@@ -86,7 +86,22 @@ STATUS_INT="Got interrupt"
 STATUS_VARIABLES=()									# Holds all the variables and values to save
 
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
+LONG_BITS=$(getconf LONG_BIT) # Size of a long, 32 or 64
 
+#
+# Check if any extra modules are installed
+EXTRA_MODULES_INSTALLED="false"
+if [[ "$(ls -A /opt/allsky/modules 2> /dev/null)" ]]; then
+	EXTRA_MODULES_INSTALLED="true"
+fi
+
+#
+# Check if we have a venv already. If not then the install/update will create it
+# but we need to warn the user to reinstall the extra modules if they have them
+INSTALLED_VENV="true"
+if [[ -d "${ALLSKY_HOME}/venv" ]]; then
+    INSTALLED_VENV="false"
+fi
 
 ############################################## functions
 
@@ -1515,6 +1530,8 @@ update_config_sh()
 create_allsky_logs()
 {
 	display_msg --log progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
+	TMP="${ALLSKY_INSTALLATION_LOGS}/rsyslog.log"
+	sudo apt-get --assume-yes install rsyslog > "${TMP}" 2>&1	
 	sudo truncate -s 0 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chmod 664 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chgrp "${ALLSKY_GROUP}" "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
@@ -2253,20 +2270,58 @@ install_overlay()
 
 		# Force pip upgrade, without this installations on Buster fail
 		pip3 install --upgrade pip > /dev/null 2>&1
+	elif [[ ${OS} == "bullseye" ]]; then
+		M=" for Bullseye"
+		R="-bullseye"
+	elif [[ ${OS} == "bookworm" ]]; then
+		M=" for Bookworm"
+		R="-bookworm"
 	else
 		M=""
 		R=""
 	fi
 	local NAME="Python_dependencies"
-	local REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}.txt"
-	local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
+	REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}-${LONG_BITS}.txt"
 
+    display_msg --logonly info "Attempting to locate Python dependency file"
+
+    if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
+        display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+        REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}.txt"
+        if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
+            display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+
+            REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements-${LONG_BITS}.txt"
+            if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
+                display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+                REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements.txt"
+            else
+                display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+            fi
+        else
+            display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+        fi
+    else
+        display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+    fi
+
+	local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
+	
 	# See how many have already been installed - if all, then skip this step.
 	local NUM_INSTALLED="$( set | grep -c "^${NAME}" )"
 	if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ||
 		  ${installed_Python_dependencies} == "true" ]]; then
 		display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
 	else
+
+		# AG - Bookworm mod 12/10/23
+		TMP="${ALLSKY_INSTALLATION_LOGS}/python_full.log"
+		sudo apt-get --assume-yes install python3-full > "${TMP}" 2>&1
+		sudo apt-get --assume-yes install libgfortran5 libopenblas0-pthread > "${TMP}" 2>&1
+
+		python3 -m venv "${ALLSKY_HOME}/venv"
+		source "${ALLSKY_HOME}/venv/bin/activate"
+
 		local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
 		display_msg --log progress "Installing ${NAME}${M}:"
 		local COUNT=0
@@ -2531,6 +2586,20 @@ remind_old_version()
 	fi
 }
 
+update_modules()
+{
+
+	if [[ ${EXTRA_MODULES_INSTALLED} == "true" ]]; then
+		if [[ ${INSTALLED_VENV} == "true" ]]; then
+			MSG="You appear to have the Allsky Extra modules installed. Please reinstall these using"
+			MSG="${MSG} the normal instructions. The extra modules will not function until you have"
+			MSG="${MSG} reinstalled them."
+			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+			display_msg --logonly info "Reminded user to re install the extra modules."
+		fi
+	fi
+
+}
 
 clear_status()
 {
@@ -2895,6 +2964,9 @@ fi
 
 ##### Let the user know to run check_allsky.sh.
 [[ ${remind_run_check_allsky} != "true" ]] && remind_run_check_allsky
+
+##### Check if extra modules need to be reinstalled #####
+update_modules
 
 ##### If needed, remind the user to remove any old Allsky version
 # Re-run every time to remind the user again.

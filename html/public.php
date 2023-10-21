@@ -30,7 +30,13 @@ initialize_variables();		// sets some variables
 
 <script type="text/javascript">
 	function getImage(){
-		var img = $("<img />").attr('src', '<?php echo $image_name ?>?_ts=' + new Date().getTime())
+		var newImg = new Image();
+		newImg.src = '<?php echo $image_name ?>?_ts=' + new Date().getTime();
+		newImg.id = "current";
+		newImg.class = "current";
+		newImg.style = "width: 100%";
+		newImg.decode().then(() => {
+			$("#current").attr('src', newImg.src)
 			.attr("id", "current")
 			.attr("class", "current")
 			.css("width", "100%")
@@ -41,9 +47,11 @@ initialize_variables();		// sets some variables
 						getImage();
 					}, 500);
 				} else {
-					$("#live_container").empty().append(img);
+					$("#live_container").empty().append(newImg);
 				}
 			});
+		});
+
 	}
 
 	setInterval(function(){

@@ -87,6 +87,17 @@ STATUS_VARIABLES=()									# Holds all the variables and values to save
 
 OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
 
+##### XXXXXXXXXXXXXXXX    TODO: TEMPORARY CHECK FOR Bookworm
+if [[ ${OS} == "bookworm" ]]; then
+	echo -e "\n=========="
+	echo "Allsky does not yet work on Bookworm, the newest Pi operating system"
+	echo "released in October, 2023."
+	echo "We are working on a release that supports Bookworm and"
+	echo "should have it available shortly."
+	echo -e "\n=========="
+	exit 0
+fi
+
 
 ############################################## functions
 

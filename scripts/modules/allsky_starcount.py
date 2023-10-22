@@ -12,6 +12,7 @@ None
 Changelog:
 v1.0.1 by Damian Grocholski (Mr-Groch)
 - Added possibility to use custom star template image
+- If debug is enabled - annotate only on debug images
 
 '''
 import allsky_shared as s
@@ -176,13 +177,13 @@ def starcount(params, event):
             if debugimage != "":
                 image = cv2.imread(debugimage)
                 if image is None:
-                    image = s.image
+                    image = s.image.copy()
                     s.log(4, "WARNING: Debug image set to {0} but cannot be found, using latest allsky image".format(debugimage))
                 else:
                     usingDebugImage = True
                     s.log(4, "WARNING: Using debug image {0}".format(debugimage))
             else:
-                image = s.image
+                image = s.image.copy()
 
             if debug:
                 s.startModuleDebug(metaData["module"])
@@ -220,15 +221,12 @@ def starcount(params, event):
                     s.log(0,"ERROR: Source image and mask dimensions do not match")
                     imageLoaded = False
 
-            detectedImageClean = gray_image.copy()
-            sourceImageCopy = gray_image.copy()
-
             starList = list()
 
             templateWidth, templateHeight = starTemplate.shape[::-1]
 
             try:
-                result = cv2.matchTemplate(sourceImageCopy, starTemplate, cv2.TM_CCOEFF_NORMED)
+                result = cv2.matchTemplate(gray_image, starTemplate, cv2.TM_CCOEFF_NORMED)
             except:
                 s.log(0,"ERROR: Star template match failed")
             else:

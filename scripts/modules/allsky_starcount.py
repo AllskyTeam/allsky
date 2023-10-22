@@ -240,8 +240,8 @@ def starcount(params, event):
                     else:
                         starList.append(pt)
 
-                wOffset = s.int(templateWidth/2)
-                hOffset = s.int(templateHeight/2)
+                wOffset = int(templateWidth/2)
+                hOffset = int(templateHeight/2)
 
                 if annotate:
                     for star in starList:

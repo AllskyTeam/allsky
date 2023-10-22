@@ -8,6 +8,11 @@ This module attempts to count the number of stars in an image
 
 Expected parameters:
 None
+
+Changelog:
+v1.0.1 by Damian Grocholski (Mr-Groch)
+- Added possibility to use custom star template image
+
 '''
 import allsky_shared as s
 import os
@@ -25,12 +30,14 @@ metaData = {
         "night"
     ],
     "experimental": "true",
-    "module": "allsky_starcount",    
+    "module": "allsky_starcount",
+    "version": "v1.0.1",
     "arguments":{
         "detectionThreshold": 0.55,
         "distanceThreshold": 20,
         "annotate": "false",
         "template1": 6,
+        "template": "",
         "mask": "",
         "debug": "false",
         "debugimage": "",
@@ -57,35 +64,43 @@ metaData = {
                 "min": 0,
                 "max": 100,
                 "step": 1
-            }          
+            }
         },
         "template1" : {
             "required": "true",
             "description": "Star Template size",
-            "help": "Size in pixels of the first star template",
+            "help": "Size in pixels of the first star template. Artificially created star template will be used if custom star template image is not set",
             "type": {
                 "fieldtype": "spinner",
-                "min": 0,
+                "min": 1,
                 "max": 100,
                 "step": 1
-            }          
-        },          
+            }
+        },
+        "template" : {
+            "required": "false",
+            "description": "Custom star template image",
+            "help": "The name of the star template image. Will overwrite artificially created star template if used.",
+            "type": {
+                "fieldtype": "image"
+            }
+        },
         "mask" : {
             "required": "false",
             "description": "Mask Path",
             "help": "The name of the image mask. This mask is applied when counting stars bit not visible in the final image. <span class=\"text-danger\">NOTE: It is highly recommened you create a mask to improve the detection performance</span>",
             "type": {
                 "fieldtype": "image"
-            }                
+            }
         },
         "useclearsky" : {
             "required": "false",
             "description": "Use Clear Sky",
-            "help": "If available use the results of the clear sky module. If the sky is not clear meteor detection will be skipped",         
+            "help": "If available use the results of the clear sky module. If the sky is not clear meteor detection will be skipped",
             "type": {
                 "fieldtype": "checkbox"
-            }          
-        },              
+            }
+        },
         "annotate" : {
             "required": "false",
             "description": "Annotate Stars",
@@ -93,7 +108,7 @@ metaData = {
             "tab": "Debug",
             "type": {
                 "fieldtype": "checkbox"
-            }          
+            }
         },
         "debug" : {
             "required": "false",
@@ -102,15 +117,15 @@ metaData = {
             "tab": "Debug",
             "type": {
                 "fieldtype": "checkbox"
-            }          
+            }
         },
         "debugimage" : {
             "required": "false",
             "description": "Debug Image",
             "help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
-            "tab": "Debug"        
-        }                  
-    }          
+            "tab": "Debug"
+        }
+    }
 }
 
 def createStarTemplate(starSize, debug):
@@ -121,15 +136,15 @@ def createStarTemplate(starSize, debug):
     starTemplate = np.zeros([starTemplateSize, starTemplateSize], dtype=np.uint8)
     cv2.circle(
         img=starTemplate,
-        center=(s.int(starTemplateSize/2), s.int(starTemplateSize/2)),
-        radius=s.int(starSize/2),
+        center=(int(starTemplateSize/2), int(starTemplateSize/2)),
+        radius=int(starSize/2),
         color=(255, 255, 255),
         thickness=cv2.FILLED,
     )
 
     starTemplate = cv2.blur(
         src=starTemplate,
-        ksize=(3, 3)
+        ksize=(2, 2)
     )
 
     if debug:
@@ -140,7 +155,6 @@ def createStarTemplate(starSize, debug):
 def starcount(params, event):
 
     raining, rainFlag = s.raining()
-
     skyState, skyClear = s.skyClear()
 
     useclearsky = params["useclearsky"]
@@ -148,12 +162,13 @@ def starcount(params, event):
         skyClear = True
 
     if not rainFlag:
-        if skyClear:        
+        if skyClear:
             detectionThreshold = s.float(params["detectionThreshold"])
             distanceThreshold = s.int(params["distanceThreshold"])
             mask = params["mask"]
             annotate = params["annotate"]
             starTemplate1Size = s.int(params["template1"])
+            starTemplateImgName = params["template"]
             debug = params["debug"]
             debugimage = params["debugimage"]
 
@@ -176,7 +191,7 @@ def starcount(params, event):
                 gray_image = image
             else:
                 gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            
+
             if debug:
                 s.writeDebugImage(metaData["module"], "a-greyscale-image.png", gray_image)
 
@@ -185,23 +200,29 @@ def starcount(params, event):
                 maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY"),"images",mask)
                 imageMask = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
                 if debug:
-                    s.writeDebugImage(metaData["module"], "b-image-mask.png", imageMask) 
+                    s.writeDebugImage(metaData["module"], "b-image-mask.png", imageMask)
 
-
-            starTemplate = createStarTemplate(starTemplate1Size, debug)
+            if starTemplateImgName != "":
+                starTemplateImgPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY"),"images",starTemplateImgName)
+                starTemplate = cv2.imread(starTemplateImgPath,cv2.IMREAD_GRAYSCALE)
+                if starTemplate is None:
+                    s.log(0,"ERROR: Star template image can't be read. Falling back to artificiall star template.")
+                    starTemplate = createStarTemplate(starTemplate1Size, debug)
+            else:
+                starTemplate = createStarTemplate(starTemplate1Size, debug)
 
             if imageMask is not None:
                 if gray_image.shape == imageMask.shape:
                     gray_image = cv2.bitwise_and(src1=gray_image, src2=imageMask)
                     if debug:
-                        s.writeDebugImage(metaData["module"], "h-masked-image.png", gray_image)                   
+                        s.writeDebugImage(metaData["module"], "h-masked-image.png", gray_image)
                 else:
                     s.log(0,"ERROR: Source image and mask dimensions do not match")
                     imageLoaded = False
 
             detectedImageClean = gray_image.copy()
             sourceImageCopy = gray_image.copy()
-            
+
             starList = list()
 
             templateWidth, templateHeight = starTemplate.shape[::-1]
@@ -226,7 +247,7 @@ def starcount(params, event):
 
                 if annotate:
                     for star in starList:
-                        if usingDebugImage:
+                        if debug:
                             cv2.circle(image, (star[0] + wOffset, star[1] + hOffset), 10, (255, 255, 255), 1)
                         else:
                             cv2.circle(s.image, (star[0] + wOffset, star[1] + hOffset), 10, (255, 255, 255), 1)
@@ -242,7 +263,7 @@ def starcount(params, event):
             s.log(4,"INFO: {0}".format(result))
         else:
             result = "Sky is not clear so ignoring starcount"
-            s.log(4,"INFO: {0}".format(result))                 
+            s.log(4,"INFO: {0}".format(result))
             os.environ["AS_STARCOUNT"] = "Disabled"
     else:
         result = "Its raining so ignorning starcount"

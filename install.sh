@@ -387,8 +387,8 @@ check_for_raspistill()
 	STATUS_VARIABLES+=("check_for_raspistill='true'\n")
 
 	if W="$( which raspistill )" && [[ ${OS} != "buster" ]]; then
-		echo display_msg --longonly info "Renaming 'raspistill' on ${OS}."
-		echo sudo mv "${W}" "${W}-OLD"
+		display_msg --longonly info "Renaming 'raspistill' on ${OS}."
+		sudo mv "${W}" "${W}-OLD"
 	fi
 }
 

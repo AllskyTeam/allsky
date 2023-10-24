@@ -788,7 +788,7 @@ check_success()
 		MSG="The full log file is in ${LOG}"
 		MSG="${MSG}\nThe end of the file is:"
 		display_msg --log info "${MSG}"
-		tail -5 "${LOG}"
+		tail "${LOG}"
 
 		return 1
 	fi

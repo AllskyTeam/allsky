@@ -85,7 +85,7 @@ STATUS_ERROR="Error encountered"
 STATUS_INT="Got interrupt"
 STATUS_VARIABLES=()									# Holds all the variables and values to save
 
-OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
+OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster, bullseye, or bookworm
 LONG_BITS=$(getconf LONG_BIT) # Size of a long, 32 or 64
 
 #
@@ -97,10 +97,11 @@ fi
 
 #
 # Check if we have a venv already. If not then the install/update will create it
-# but we need to warn the user to reinstall the extra modules if they have them
-INSTALLED_VENV="true"
+# but we need to warn the user to reinstall the extra modules if they have them.
 if [[ -d "${ALLSKY_HOME}/venv" ]]; then
     INSTALLED_VENV="false"
+else
+	INSTALLED_VENV="true"
 fi
 
 ############################################## functions
@@ -800,7 +801,7 @@ check_success()
 
 ####
 # Install the web server.
-install_webserver()
+install_webserver_et_al()
 {
 	sudo systemctl stop hostapd 2> /dev/null
 	sudo systemctl stop lighttpd 2> /dev/null
@@ -849,7 +850,7 @@ install_webserver()
 	# Starting it added an entry so truncate the file so it's 0-length
 	sleep 1; truncate -s 0 "${LIGHTTPD_LOG}"
 
-	STATUS_VARIABLES+=("install_webserver='true'\n")
+	STATUS_VARIABLES+=("install_webserver_et_al='true'\n")
 }
 
 
@@ -2264,46 +2265,38 @@ install_overlay()
 
 	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
 	# This also allows us to display progress messages.
+	M=" for ${OS^}"
+	R="-${OS}"
 	if [[ ${OS} == "buster" ]]; then
-		M=" for Buster"
-		R="-buster"
-
 		# Force pip upgrade, without this installations on Buster fail
 		pip3 install --upgrade pip > /dev/null 2>&1
-	elif [[ ${OS} == "bullseye" ]]; then
-		M=" for Bullseye"
-		R="-bullseye"
-	elif [[ ${OS} == "bookworm" ]]; then
-		M=" for Bookworm"
-		R="-bookworm"
-	else
+	elif [[ ${OS} != "bullseye" && ${OS} != "bookworm" ]]; then
+		# TODO: is this an error?  Unknown OS?
 		M=""
 		R=""
 	fi
-	local NAME="Python_dependencies"
-	REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}-${LONG_BITS}.txt"
 
+	local NAME="Python_dependencies"
     display_msg --logonly info "Attempting to locate Python dependency file"
 
-    if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
-        display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
-        REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}.txt"
-        if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
-            display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+	local PREFIX="${ALLSKY_REPO}/requirements"
+	for REQUIREMENTS_FILE in "${PREFIX}${R}-${LONG_BITS}.txt" \
+		"${PREFIX}${R}.txt" \
+		"${PREFIX}-${LONG_BITS}.txt" \
+		"${PREFIX}.txt" \
+		"END"
+	do
+		if [[ ${REQUIREMENTS_FILE} == "END" ]]; then
+        	display_msg --log error "Unable to find a requirements file!"
+			exit 2
+		fi
 
-            REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements-${LONG_BITS}.txt"
-            if [[ ! -f ${REQUIREMENTS_FILE} ]]; then
-                display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
-                REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements.txt"
-            else
-                display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
-            fi
-        else
-            display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
-        fi
-    else
-        display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
-    fi
+    	if [[ -f ${REQUIREMENTS_FILE} ]]; then
+        	display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+		else
+        	display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+		fi
+	done
 
 	local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 	
@@ -2313,13 +2306,18 @@ install_overlay()
 		  ${installed_Python_dependencies} == "true" ]]; then
 		display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
 	else
-
 		# AG - Bookworm mod 12/10/23
-		TMP="${ALLSKY_INSTALLATION_LOGS}/python_full.log"
-		sudo apt-get --assume-yes install python3-full > "${TMP}" 2>&1
-		sudo apt-get --assume-yes install libgfortran5 libopenblas0-pthread > "${TMP}" 2>&1
+		display_msg --log progress "Installing Python3-full and related packages."
+		local TMP="${ALLSKY_INSTALLATION_LOGS}/python_full.log"
+		(
+			sudo apt-get --assume-yes install python3-full &&
+			sudo apt-get --assume-yes install libgfortran5 libopenblas0-pthread
+		) > "${TMP}" 2>&1
+		check_success $? "python3-full install failed" "${TMP}" "${DEBUG}"
+		[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "python3-full install failed."
 
 		python3 -m venv "${ALLSKY_HOME}/venv"
+		#shellcheck disable=SC1090,SC1091
 		source "${ALLSKY_HOME}/venv/bin/activate"
 
 		local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
@@ -2588,17 +2586,13 @@ remind_old_version()
 
 update_modules()
 {
-
-	if [[ ${EXTRA_MODULES_INSTALLED} == "true" ]]; then
-		if [[ ${INSTALLED_VENV} == "true" ]]; then
-			MSG="You appear to have the Allsky Extra modules installed. Please reinstall these using"
-			MSG="${MSG} the normal instructions. The extra modules will not function until you have"
-			MSG="${MSG} reinstalled them."
-			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-			display_msg --logonly info "Reminded user to re install the extra modules."
-		fi
+	if [[ ${EXTRA_MODULES_INSTALLED} == "true" && ${INSTALLED_VENV} == "true" ]]; then
+		MSG="You appear to have the Allsky Extra modules installed. Please reinstall these using"
+		MSG="${MSG} the normal instructions. The extra modules will not function until you have"
+		MSG="${MSG} reinstalled them."
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+		display_msg --logonly info "Reminded user to re install the extra modules."
 	fi
-
 }
 
 clear_status()
@@ -2906,7 +2900,7 @@ display_msg notice "${MSG}"
 
 ##### Install web server
 # This must come BEFORE save_camera_capabilities, since it installs php.
-[[ ${install_webserver} != "true" ]] && install_webserver
+[[ ${install_webserver_et_al} != "true" ]] && install_webserver_et_al
 
 ##### Install dependencies, then compile and install Allsky software
 # This will create the "config" directory and put default files in it.
@@ -2965,7 +2959,7 @@ fi
 ##### Let the user know to run check_allsky.sh.
 [[ ${remind_run_check_allsky} != "true" ]] && remind_run_check_allsky
 
-##### Check if extra modules need to be reinstalled #####
+##### Check if extra modules need to be reinstalled.
 update_modules
 
 ##### If needed, remind the user to remove any old Allsky version

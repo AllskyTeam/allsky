@@ -85,14 +85,16 @@ STATUS_ERROR="Error encountered"
 STATUS_INT="Got interrupt"
 STATUS_VARIABLES=()									# Holds all the variables and values to save
 
-OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster, bullseye, or bookworm
-LONG_BITS=$(getconf LONG_BIT) # Size of a long, 32 or 64
+OS="$( grep CODENAME /etc/os-release | cut -d= -f2 )"	# buster, bullseye, or bookworm
+# TODO: check for unknown OS ?
+LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 
 #
 # Check if any extra modules are installed
-EXTRA_MODULES_INSTALLED="false"
-if [[ "$(ls -A /opt/allsky/modules 2> /dev/null)" ]]; then
+if [[ -n "$( find /opt/allsky/modules -type f -name "*.py" -print -quit 2> /dev/null )" ]]; then
 	EXTRA_MODULES_INSTALLED="true"
+else
+	EXTRA_MODULES_INSTALLED="false"
 fi
 
 #
@@ -2594,9 +2596,10 @@ remind_old_version()
 update_modules()
 {
 	if [[ ${EXTRA_MODULES_INSTALLED} == "true" && ${INSTALLED_VENV} == "true" ]]; then
-		MSG="You appear to have the Allsky Extra modules installed. Please reinstall these using"
-		MSG="${MSG} the normal instructions. The extra modules will not function until you have"
-		MSG="${MSG} reinstalled them."
+		MSG="You appear to have the Allsky Extra modules installed."
+		MSG="${MSG}\nPlease reinstall these using the normal instructions"
+		MSG="${MSG} at https://github.com/Alex-developer/allsky-modules"
+		MSG="${MSG}\nThe extra modules will not function until you have reinstalled them."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 		display_msg --logonly info "Reminded user to re install the extra modules."
 	fi

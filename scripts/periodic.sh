@@ -17,6 +17,7 @@ cd "${ALLSKY_SCRIPTS}" || exit ${ALLSKY_ERROR_STOP}
 while :
 do
     # AG - Bookworm mod 12/10/23
+    #shellcheck disable=SC1090
     source "${ALLSKY_HOME}/venv/bin/activate"
     python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
     deactivate

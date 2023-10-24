@@ -262,6 +262,7 @@ else
 fi
 
 # AG - Bookworm mod 12/10/23
+#shellcheck disable=SC2086 source-path=/dev/null
 source "${ALLSKY_HOME}/venv/bin/activate"
 python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
 deactivate

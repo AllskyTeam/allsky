@@ -266,6 +266,7 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 
 # Clear up any flow timings
 # AG - Bookworm mod 12/10/23
+#shellcheck disable=SC1090,SC1091
 source "${ALLSKY_HOME}/venv/bin/activate"
 python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
 deactivate

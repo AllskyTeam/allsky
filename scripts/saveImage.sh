@@ -262,7 +262,7 @@ else
 fi
 
 # AG - Bookworm mod 12/10/23
-#shellcheck source-path=/dev/null
+#shellcheck disable=SC1090,SC1091
 source "${ALLSKY_HOME}/venv/bin/activate"
 python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
 deactivate

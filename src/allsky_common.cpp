@@ -1674,8 +1674,11 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		// nighttime settings
 		else if (strcmp(a, "takenighttimeimages") == 0)
 		{
-++i;
-//xxx			cg->daytimeCapture = getBoolean(argv[++i]);
+			cg->nighttimeCapture = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "savenighttimeimages") == 0)
+		{
+			cg->nighttimeSave = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "nightautoexposure") == 0)
 		{

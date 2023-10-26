@@ -987,6 +987,8 @@ void displayHelp(config cg)
 	printf("  %-*s   command-line arguments.  The file is read when seen on the command line [none].\n", n, "");
 
 	printf("\nDaytime settings:\n");
+	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "takeDaytimeImages b", yesNo(cg.daytimeCapture));
+	printf(" -%-*s - 1 enables saving of daytime images [%s].\n", n, "saveDaytimeImages b", yesNo(cg.daytimeSave));
 	printf(" -%-*s - 1 enables daytime auto-exposure [%s].\n", n, "dayautoexposure b", yesNo(cg.dayAutoExposure));
 	printf(" -%-*s - Maximum daytime auto-exposure in ms.\n", n, "daymaxexposure n");
 	printf(" -%-*s - Daytime exposure in us [%'ld].\n", n, "dayexposure n", cg.dayExposure_us);
@@ -1012,6 +1014,8 @@ void displayHelp(config cg)
 	}
 
 	printf("\nNighttime settings:\n");
+	printf(" -%-*s - 1 enables capturing of nighttime images [%s].\n", n, "takeNighttimeImages b", yesNo(cg.nighttimeCapture));
+	printf(" -%-*s - 1 enables saving of nighttime images [%s].\n", n, "saveNighttimeImages b", yesNo(cg.nighttimeSave));
 	printf(" -%-*s - 1 enables nighttime auto-exposure [%s].\n", n, "nightautoexposure b", yesNo(cg.nightAutoExposure));
 	printf(" -%-*s - Maximum nighttime auto-exposure in ms.\n", n, "nightmaxexposure n");
 	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us);
@@ -1071,7 +1075,6 @@ void displayHelp(config cg)
 	printf(" -%-*s - Longitude of the camera [no default - you must set it].\n", n, "longitude s");
 	printf(" -%-*s - Angle of the sun below the horizon [%.2f].\n", n, "angle n", cg.angle);
 	printf("  %-*s   -6 = civil twilight   -12 = nautical twilight   -18 = astronomical twilight.\n", n, "");
-	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "takeDaytimeImages b", yesNo(cg.daytimeCapture));
 	printf(" -%-*s - 1 takes dark frames [%s].\n", n, "takeDarkFrames b", yesNo(cg.takeDarkFrames));
 	printf(" -%-*s - Your locale - to determine thousands separator and decimal point [%s].\n", n, "locale s", "locale on Pi");
 	printf("  %-*s   Type 'locale' at a command prompt to determine yours.\n", n, "");
@@ -1177,6 +1180,9 @@ void displaySettings(config cg)
 	printf("   Configuration file: %s\n", stringORnone(cg.configFile));
 	printf("   Quality: %ld\n", cg.userQuality);
 	printf("   Daytime capture: %s\n", yesNo(cg.daytimeCapture));
+	printf("   Daytime save: %s\n", yesNo(cg.daytimeSave));
+	printf("   Nighttime capture: %s\n", yesNo(cg.nighttimeCapture));
+	printf("   Nighttime save: %s\n", yesNo(cg.nighttimeSave));
 
 	printf("   Exposure (day):   %15s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
 		if (cg.dayAutoExposure)

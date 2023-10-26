@@ -216,6 +216,7 @@ struct config {			// for configuration variables
 	bool daytimeSave					= false;		// Save images during daytime?
 	char const *timeFormat				= "%Y%m%d %H:%M:%S";
 	char const *extraArgs				= "";			// Optional extra arguments passed on
+	bool determineFocus					= false;
 
 	// To make the code cleaner, comments are only given for daytime variables.
 

@@ -20,7 +20,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe
 	}
 ?>
 
-<script> setInterval(function () { getImage(); }, <?php echo $delay ?>); </script>
+<script> setTimeout(function () { getImage(); }, <?php echo $delay ?>); </script>
 
 <div class="row">
 	<div class="panel panel-primary">

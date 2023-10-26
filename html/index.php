@@ -199,13 +199,13 @@ if (file_exists($f)) {
 				.on('load', function () {
 					if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
 						console.log('broken image!');
-						setTimeout(function () {
-							getImage();
-						}, 500);
 					} else {
 						$("#live_container").empty().append(img);
 					}
 				});
+			}).finally(() => {
+				// Use tail recursion to trigger the next invocation after `$delay` milliseconds
+				setTimeout(function () { getImage(); }, <?php echo $delay ?>);
 		}
 
 		// Inititalize theme to light

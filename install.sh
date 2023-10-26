@@ -173,6 +173,7 @@ stop_allsky()
 # Get the branch of the release we are installing;
 get_this_branch()
 {
+	# shellcheck disable=SC2119
 	if ! B="$( get_branch )" ; then
 		display_msg --log warning "Unable to determine branch; assuming '${BRANCH}'."
 	else
@@ -925,6 +926,7 @@ set_permissions()
 	# can write to the webserver root (is in the webserver group).
 	G="$( id "${ALLSKY_OWNER}" )"
 
+	# shellcheck disable=SC2076
 	if ! [[ ${G} =~ "(sudo)" ]]; then
 		display_msg --log progress "Adding ${ALLSKY_OWNER} to sudo group."
 
@@ -933,6 +935,7 @@ set_permissions()
 
 		sudo addgroup --quiet "${ALLSKY_OWNER}" "sudo"
 	fi
+	# shellcheck disable=SC2076
 	if ! [[ ${G} =~ "(${WEBSERVER_GROUP})" ]]; then
 		display_msg --log progress "Adding ${ALLSKY_OWNER} to ${WEBSERVER_GROUP} group."
 		sudo addgroup --quiet "${ALLSKY_OWNER}" "${WEBSERVER_GROUP}"
@@ -2919,6 +2922,7 @@ DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display
 IN_TESTING="false"
 
+# shellcheck disable=SC2119
 [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]] && IN_TESTING="true"
 
 if [[ ${IN_TESTING} == "true" ]]; then

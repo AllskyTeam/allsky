@@ -86,6 +86,18 @@ STATUS_INT="Got interrupt"
 STATUS_VARIABLES=()									# Holds all the variables and values to save
 
 OS="$( grep CODENAME /etc/os-release | cut -d= -f2 )"	# buster, bullseye, or bookworm
+
+##### XXXXXXXXXXXXXXXX    TODO: TEMPORARY CHECK FOR Bookworm
+if [[ ${OS} == "bookworm" ]]; then
+	echo -e "\n=========="
+	echo "Allsky does not yet work on Bookworm, the newest Pi operating system"
+	echo "released in October, 2023."
+	echo "We are working on a release that supports Bookworm and"
+	echo "should have it available shortly."
+	echo -e "\n=========="
+	exit 0
+fi
+
 # TODO: check for unknown OS ?
 LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 

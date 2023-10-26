@@ -212,8 +212,6 @@ struct config {			// for configuration variables
 	bool saveCC							= false;		// Save camera controls file?
 	bool tty							= false;		// Running on a tty?
 	bool preview						= false;		// Display a preview windoe?
-	bool daytimeCapture					= false;		// Capture images during daytime?
-	bool daytimeSave					= false;		// Save images during daytime?
 	char const *timeFormat				= "%Y%m%d %H:%M:%S";
 	char const *extraArgs				= "";			// Optional extra arguments passed on
 	bool determineFocus					= false;
@@ -221,6 +219,10 @@ struct config {			// for configuration variables
 	// To make the code cleaner, comments are only given for daytime variables.
 
 	// Settings not camera-dependent.
+	bool daytimeCapture					= false;		// Capture images during daytime?
+	bool daytimeSave					= false;		// Save images during daytime?
+	bool nighttimeCapture				= false;
+	bool nighttimeSave					= false;
 	long dayDelay_ms					= 10 * MS_IN_SEC;	// Delay between capture end and start
 	long nightDelay_ms					= 10 * MS_IN_SEC;
 	long minDelay_ms					= NOT_SET;			// Minimum delay between images

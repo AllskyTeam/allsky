@@ -195,7 +195,7 @@ if [[ ${RESIZE_W} -gt 0 && ${RESIZE_H} -gt 0 ]]; then
 	fi
 
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "*** ${ME}: Resizing '${CURRENT_IMAGE}' to ${RESIZE_W}x${RESIZE_H}"
+		echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${RESIZE_W}x${RESIZE_H}"
 	fi
 	if ! convert "${CURRENT_IMAGE}" -resize "${RESIZE_W}x${RESIZE_H}" "${CURRENT_IMAGE}" ; then
 		echo -e "${RED}*** ${ME}: ERROR: image resize failed; not saving${NC}"
@@ -429,7 +429,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 		if [[ ${LEFT} -le 1 ]]; then
 			# Reset the counter then upload this image below.
 			if [[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]]; then
-				echo "*** ${ME}: resetting LEFT counter to ${IMG_UPLOAD_FREQUENCY}, then uploading image."
+				echo "${ME}: resetting LEFT counter to ${IMG_UPLOAD_FREQUENCY}, then uploading image."
 			fi
 
 			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
@@ -440,13 +440,12 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 			# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
 			[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
 
-			# We didn't create ${WEBSITE_FILE} yet so do that now.
-			mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
-
-			exit 0
+			IMG_UPLOAD_FREQUENCY=0
 		fi
 	fi
+fi
 
+if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 	W="$( settings ".imageresizeuploadswidth" )"
 	H="$( settings ".imageresizeuploadsheight" )"
 	if [[ ${W} -gt 0 && ${H} -gt 0 ]]; then

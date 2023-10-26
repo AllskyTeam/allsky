@@ -318,7 +318,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			else
 				N="nice -n ${NICE}"
 			fi
-			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' --output '${UPLOAD_FILE}' ${DATE}"
+			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} --output '${UPLOAD_FILE}' ${DATE}"
 			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 			RET=$?
 		fi

@@ -157,7 +157,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 		ALLSKY_DEBUG_LEVEL="$( jq -r '.debuglevel' "${SETTINGS_FILE}" )"
 
 		# ALLSKY_VERSION is updated during installation
-		ALLSKY_VERSION="v2023.05.01_02"
+		ALLSKY_VERSION="XX_ALLSKY_VERSION_XX"
 	else
 		ALLSKY_DEBUG_LEVEL=1
 	fi

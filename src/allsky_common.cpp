@@ -454,7 +454,7 @@ int calculateTimeToNextTime(const char *latitude, const char *longitude, float a
 
 	// Now get how long from NOW the next time is.
 	char *now = getTime("%H:%M:%S");
-	int hNow=0, mNow=0, sNow=0, sNow;
+	int hNow=0, mNow=0, sNow=0;
 	sscanf(now, "%d:%d:%d", &hNow, &mNow, &sNow);
 	// Convert to total seconds to now from start of today
 	sNow = (hNow*S_IN_HOUR) + (mNow*S_IN_MIN) + sNow;

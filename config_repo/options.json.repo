@@ -726,7 +726,7 @@
 {
 "name" : "determineFocus",
 "default" : false,
-"description" : "Enable to have the image focus determined and output via the 'FOCUS' variable."
+"description" : "Enable to have the image focus determined and output via the 'FOCUS' variable.",
 "label" : "Focus Mode",
 "type" : "boolean",
 "usage" : "capture",

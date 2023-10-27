@@ -1075,6 +1075,7 @@ void displayHelp(config cg)
 			printf(" -%-*s - Amount to rotate image in degrees - 0, 90, 180, or 270 [%ld].\n", n, "rotation n", cg.rotation);
 	}
 	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
+	printf(" -%-*s - 1 enables focus mode [%s].\n", n, "determineFocus b", yesNo(cg.determineFocus));
 	printf(" -%-*s - 1 enables consistent delays between images [%s].\n", n, "consistentDelays b", yesNo(cg.consistentDelays));
 	printf(" -%-*s - Format the time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - 1 enables notification images, for example, 'Camera is off during day' [%s].\n", n, "notificationimages b", yesNo(cg.notificationImages));
@@ -1273,6 +1274,7 @@ void displaySettings(config cg)
 		printf("   Video OFF Between Images: %s\n", yesNo(cg.videoOffBetweenImages));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
+	printf("   Focus mode: %s\n", yesNo(cg.determineFocus));
 	printf("   Taking Dark Frames: %s\n", yesNo(cg.takeDarkFrames));
 	printf("   Debug Level: %ld\n", cg.debugLevel);
 	printf("   On TTY: %s\n", yesNo(cg.tty));
@@ -1846,6 +1848,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "flip") == 0)
 		{
 			cg->flip = atol(argv[++i]);
+		}
+		else if (strcmp(a, "determineFocus") == 0)
+		{
+			cg->determineFocus = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "notificationimages") == 0)
 		{

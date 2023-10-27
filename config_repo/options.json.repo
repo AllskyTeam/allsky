@@ -724,6 +724,15 @@
 "action" : "reload"
 },
 {
+"name" : "determineFocus",
+"default" : false,
+"description" : "Enable to have the image focus determined and output via the 'FOCUS' variable."
+"label" : "Focus Mode",
+"type" : "boolean",
+"usage" : "capture",
+"action" : "stop"
+},
+{
 "name" : "notificationimages",
 "default" : true,
 "description" : "Enable to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",

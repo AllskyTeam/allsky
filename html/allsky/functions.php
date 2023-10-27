@@ -1,9 +1,5 @@
 <?php
 
-// On Pi's, this placeholder gets replaced with ${ALLSKY_CONFIG}.
-// On other machines it won't and references to it will silently fail.
-define('ALLSKY_CONFIG',  'XX_ALLSKY_CONFIG_XX');
-
 // Look for $var in the $a array and return its value.
 // If not found, return $default.
 // If the value is a boolean and is false, an empty string is returned (not a 0).
@@ -46,25 +42,6 @@ if ($settings_array == null) {
 	exit;
 }
 $onPi = v("onPi", true, $settings_array['homePage']);
-
-// If on a Pi, check that the placeholder was replaced.
-if ($onPi && ALLSKY_CONFIG == "XX_ALLSKY_CONFIG" . "_XX") {
-	// This file hasn't been updated yet after installation.
-	echo "<div style='font-size: 200%;'>";
-	echo "<span style='color: red'>";
-	echo "If this Website is running on a Pi, please run the following:";
-	echo "</span>";
-	echo "<br><code>";
-	echo "&nbsp; &nbsp; &nbsp; &nbsp; cd ~/allsky";
-	echo "<br>&nbsp; &nbsp; &nbsp; &nbsp; website/install.sh --update";
-	echo "</code>";
-
-	echo "<span style='color: red'>";
-	echo "<br><br>If instead, this Website is being run on a remote server, change the <b>onPi</b> variable in the '$configurationFileName' configuration file to <b>false</b>.";
-	echo "</span>";
-	echo "</div>";
-	exit;
-}
 
 /*
  * Does the exec() function work?  It's needed to make thumbnails from video files.

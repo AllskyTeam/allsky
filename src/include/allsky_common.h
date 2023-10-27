@@ -221,8 +221,8 @@ struct config {			// for configuration variables
 	// Settings not camera-dependent.
 	bool daytimeCapture					= false;		// Capture images during daytime?
 	bool daytimeSave					= false;		// Save images during daytime?
-	bool nighttimeCapture				= false;
-	bool nighttimeSave					= false;
+	bool nighttimeCapture				= true;
+	bool nighttimeSave					= true;
 	long dayDelay_ms					= 10 * MS_IN_SEC;	// Delay between capture end and start
 	long nightDelay_ms					= 10 * MS_IN_SEC;
 	long minDelay_ms					= NOT_SET;			// Minimum delay between images

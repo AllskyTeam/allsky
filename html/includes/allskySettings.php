@@ -368,7 +368,9 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 	}
 
 	// If the settings file changed above, re-read the file.
-	if (isset($_POST['save_settings']) || isset($_POST['reset_settings'])) {
+	// Also, if $settings_array is null it means we're being called from the Allsky Website,
+	// so read the file.
+	if (isset($_POST['save_settings']) || isset($_POST['reset_settings']) || $settings_array === null) {
 		$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
 		$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
 		if ($settings_array === null) {

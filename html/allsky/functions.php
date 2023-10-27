@@ -31,17 +31,18 @@ if (! file_exists($configuration_file)) {
 	echo "</p>";
 	exit;
 }
-$settings_str = file_get_contents($configuration_file, true);
-$settings_array = json_decode($settings_str, true);
-if ($settings_array == null) {
+$website_settings_str = file_get_contents($configuration_file, true);
+$website_settings_array = json_decode($website_settings_str, true);
+if ($website_settings_array == null) {
 	echo "<p style='color: red; font-size: 200%'>";
 	echo "ERROR: Bad configuration file '<span style='color: black'>$configurationFileName</span>'.  Cannot continue.";
 	echo "<br>Check for missing quotes or commas at the end of every line (except the last one).";
 	echo "</p>";
-	echo "<pre>$settings_str</pre>";
+	echo "<pre>$website_settings_str</pre>";
 	exit;
 }
-$onPi = v("onPi", true, $settings_array['homePage']);
+$onPi = v("onPi", true, $website_settings_array['homePage']);
+
 
 /*
  * Does the exec() function work?  It's needed to make thumbnails from video files.
@@ -250,7 +251,14 @@ function display_thumbnails($dir, $file_prefix, $title)
 	echo "<table class='imagesHeader'><tr><td class='headerButton'>$back_button</td> <td class='headerTitle'>$title</td></tr></table>";
 	echo "<div class='archived-files'>\n";
 
-	$thumbnailSizeX = get_variable(ALLSKY_CONFIG .'/config.sh', 'THUMBNAIL_SIZE_X=', '100');
+	$thumbnailSizeX = 100;
+	$s = "viewSettings/settings.json";
+	if (file_exists($s)) {
+		$errorMsg = "<br>Unable to read $s";
+		$settings_array = get_decoded_json_file($s, false, $errorMsg);
+		if (isset($settings_array['thumbnailsizex']))
+			$thumbnailSizeX = $settings_array['thumbnailsizex'];
+	}
 	foreach ($files as $file) {
 		// The thumbnail should be a .jpg.
 		$thumbnail = preg_replace($ext, ".jpg", "$dir/thumbnails/$file");

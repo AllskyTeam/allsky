@@ -1849,7 +1849,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->flip = atol(argv[++i]);
 		}
-		else if (strcmp(a, "determineFocus") == 0)
+		else if (strcmp(a, "determinefocus") == 0)
 		{
 			cg->determineFocus = getBoolean(argv[++i]);
 		}

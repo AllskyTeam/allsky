@@ -219,7 +219,7 @@ struct config {			// for configuration variables
 	// To make the code cleaner, comments are only given for daytime variables.
 
 	// Settings not camera-dependent.
-	bool daytimeCapture					= false;		// Capture images during daytime?
+	bool daytimeCapture					= true;			// Capture images during daytime?
 	bool daytimeSave					= false;		// Save images during daytime?
 	bool nighttimeCapture				= true;
 	bool nighttimeSave					= true;

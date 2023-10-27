@@ -983,9 +983,10 @@ int main(int argc, char *argv[])
 	int originalITextY		= CG.overlay.iTextY;
 	int originalFontsize	= CG.overlay.fontsize;
 	int originalLinewidth	= CG.overlay.linewidth;
-	// Have we displayed "not taking picture during day" message, if applicable?
-	bool displayedNoDaytimeMsg	= false;
-	int gainChange				= 0;		// how much to change gain up or down
+	// Have we displayed "not taking picture during day/night" message, if applicable?
+	bool displayedNoDaytimeMsg		= false;
+	bool displayedNoNighttimeMsg	= false;
+	int gainChange					= 0;		// how much to change gain up or down
 
 	// Display one-time messages.
 
@@ -1084,7 +1085,8 @@ int main(int argc, char *argv[])
 
 			if (! CG.daytimeCapture)
 			{
-				displayedNoDaytimeMsg = daytimeSleep(displayedNoDaytimeMsg, CG);
+				// true == for daytime
+				displayedNoDaytimeMsg = day_night_timeSleep(displayedNoDaytimeMsg, CG, true);
 
 				// No need to do any of the code below so go back to the main loop.
 				continue;
@@ -1181,6 +1183,15 @@ int main(int argc, char *argv[])
 				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfDay.sh &", CG.allskyHome);
 				system(bufTemp);
 				justTransitioned = false;
+			}
+
+			if (! CG.nighttimeCapture)
+			{
+				// false == for nighttime
+				displayedNoNighttimeMsg = day_night_timeSleep(displayedNoNighttimeMsg, CG, false);
+
+				// No need to do any of the code below so go back to the main loop.
+				continue;
 			}
 
 			Log(1, "==========\n=== Starting nighttime capture ===\n==========\n");
@@ -1372,7 +1383,7 @@ if (CG.HB.useExperimentalExposure) {
 				numExposures++;
 				bool hitMinOrMax = false;
 
-				CG.lastFocusMetric = CG.overlay.showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
+				CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
 
 				if (numExposures == 0 && CG.preview)
 				{

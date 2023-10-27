@@ -269,7 +269,7 @@
 },
 {
 "name" : "savenighttimeimages",
-"default" : false,
+"default" : true,
 "description" : "Enable to <strong>save</strong> nighttime images.",
 "label" : "Nighttime Save",
 "type" : "boolean",

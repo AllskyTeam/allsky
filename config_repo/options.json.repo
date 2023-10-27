@@ -32,6 +32,7 @@
 "description" : "Enable to <strong>save</strong> daytime images.",
 "label" : "Daytime Save",
 "type" : "boolean",
+"usage" : "capture",
 "booldependson" : "takedaytimeimages",
 "advanced" : true
 },
@@ -273,6 +274,7 @@
 "description" : "Enable to <strong>save</strong> nighttime images.",
 "label" : "Nighttime Save",
 "type" : "boolean",
+"usage" : "capture",
 "booldependson" : "takenighttimeimages",
 "advanced" : true
 },

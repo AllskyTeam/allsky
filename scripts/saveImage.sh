@@ -218,7 +218,7 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 			CROP_WIDTH=$(( RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))
 			CROP_HEIGHT=$(( RESOLUTION_Y - CROP_TOP - CROP_BOTTOM ))
-			echo -e "*** ${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}."
+			echo -e "${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}."
 		fi
 		C=""
 		[[ ${CROP_TOP} -ne 0 ]] && C="${C} -gravity North -chop 0x${CROP_TOP}"
@@ -250,7 +250,7 @@ else	# DAY
 fi
 if [[ ${STRETCH_AMOUNT} -gt 0 ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "*** ${ME}: Stretching '${CURRENT_IMAGE}' by ${STRETCH_AMOUNT}"
+		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${STRETCH_AMOUNT}"
 	fi
  	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${STRETCH_AMOUNT}x${STRETCH_MIDPOINT}%" "${CURRENT_IMAGE}"
 
@@ -458,7 +458,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 		# Put the copy in ${WORKING_DIR}.
 		FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
 		S="${W}x${H}"
-		[[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]] && echo "*** ${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
+		[[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]] && echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
 		if ! convert "${CURRENT_IMAGE}" -resize "${S}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: Resize Uploads failed; continuing with larger image.${NC}"
 			# We don't know the state of $FILE_TO_UPLOAD so use the larger file.

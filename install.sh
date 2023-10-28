@@ -795,7 +795,7 @@ check_success()
 		MSG="The full log file is in ${LOG}"
 		MSG="${MSG}\nThe end of the file is:"
 		display_msg --log info "${MSG}"
-		tail "${LOG}"
+		indent "$( tail "${LOG}" )"
 
 		return 1
 	fi
@@ -2915,7 +2915,13 @@ exit_installation()
 		if [[ ${STATUS_CODE} == "${STATUS_CLEAR}" ]]; then
 			clear_status
 		else
-			[[ -n ${MORE_STATUS} ]] && MORE_STATUS="; MORE_STATUS='${MORE_STATUS}'"
+			if [[ -n ${MORE_STATUS} ]]; then
+				if [[ ${MORE_STATUS} == "${STATUS_CODE}" ]]; then
+					MORE_STATUS=""
+				else
+					MORE_STATUS="; MORE_STATUS='${MORE_STATUS}'"
+				fi
+			fi
 			echo -e "STATUS_INSTALLATION='${STATUS_CODE}'${MORE_STATUS}" > "${STATUS_FILE}"
 			update_status_from_temp_file
 			echo -e "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"

@@ -4,14 +4,14 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_ERROR_STOP}"
 
 # This file defines functions plus sets many variables.
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 
 if [[ ${EUID} -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
@@ -21,11 +21,8 @@ fi
 # This script assumes the user already did the "git clone" into ${ALLSKY_HOME}.
 
 # Some versions of Linux default to 750 so web server can't read it
-#shellcheck disable=SC2086
-chmod 755 "${ALLSKY_HOME}"  							|| exit ${ALLSKY_ERROR_STOP}
-
-#shellcheck disable=SC2086
-cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
+chmod 755 "${ALLSKY_HOME}"  							|| exit "${ALLSKY_ERROR_STOP}"
+cd "${ALLSKY_HOME}"  									|| exit "${ALLSKY_ERROR_STOP}"
 
 # PRIOR_ALL_DIR is passed to us and is the location of an optional prior copy of Allsky.
 PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
@@ -170,8 +167,7 @@ usage_and_exit()
 	echo
 	echo "'--function' executes the specified function and quits."
 	echo
-	#shellcheck disable=SC2086
-	exit_installation ${RET}
+	exit_installation "${RET}"
 }
 
 
@@ -2215,8 +2211,8 @@ restore_prior_files()
 do_update()
 {
 # TODO: get from settings file
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}	# Get current CAMERA_TYPE
+	#shellcheck disable=SC1091		# file doesn't exist in GitHub
+	source "${ALLSKY_CONFIG}/config.sh" || exit "${ALLSKY_ERROR_STOP}"	# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg --log error "CAMERA_TYPE not set in config.sh."
 		exit_installation 1 "${STATUS_ERROR}" "No CAMERA_TYPE in config.sh during update."
@@ -2654,8 +2650,7 @@ exit_installation()
 	fi
 
 	# Don't exit for negative numbers.
-	#shellcheck disable=SC2086
-	[[ ${RET} -ge 0 ]] && exit ${RET}
+	[[ ${RET} -ge 0 ]] && exit "${RET}"
 }
 
 

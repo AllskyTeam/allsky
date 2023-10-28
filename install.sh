@@ -2297,6 +2297,7 @@ install_overlay()
 
 	    	if [[ -f ${REQUIREMENTS_FILE} ]]; then
 	        	display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+	              break
 			else
 	        	display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
 			fi

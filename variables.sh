@@ -108,8 +108,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_FLOWTIMINGS_DAY="${ALLSKY_FLOWTIMINGS}/day-average"
 	ALLSKY_FLOWTIMINGS_NIGHT="${ALLSKY_FLOWTIMINGS}/night-average"
 
-	# Verion file.
+	# Allsky version.
 	ALLSKY_VERSION_FILE="${ALLSKY_HOME}/version"
+	ALLSKY_VERSION="$( head -1 "${ALLSKY_VERSION_FILE}" | tr -d '\n\r' )"
 
 	# Location of optional allsky-website package.
 	ALLSKY_WEBSITE="${ALLSKY_WEBUI}/allsky"

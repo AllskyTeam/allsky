@@ -108,10 +108,11 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_FLOWTIMINGS_DAY="${ALLSKY_FLOWTIMINGS}/day-average"
 	ALLSKY_FLOWTIMINGS_NIGHT="${ALLSKY_FLOWTIMINGS}/night-average"
 
-	# Verion file.
+	# Allsky verion.
 	ALLSKY_VERSION_FILE="${ALLSKY_HOME}/version"
+	ALLSKY_VERSION="$( head -1 "${ALLSKY_VERSION_FILE}" | tr -d '\n\r' )"
 
-	# Location of optional allsky-website package.
+	# Location of Allsky Website.
 	ALLSKY_WEBSITE="${ALLSKY_WEBUI}/allsky"
 	ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME="viewSettings"
 	ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY="${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
@@ -155,9 +156,6 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 		# So scripts can conditionally output messages.
 		ALLSKY_DEBUG_LEVEL="$( jq -r '.debuglevel' "${SETTINGS_FILE}" )"
-
-		# ALLSKY_VERSION is updated during installation
-		ALLSKY_VERSION="XX_ALLSKY_VERSION_XX"
 	else
 		ALLSKY_DEBUG_LEVEL=1
 	fi
@@ -174,6 +172,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
 	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 	EXIT_NO_CAMERA=101		# cannot find camera
+
+	# Name of the Pi's OS.
+	PI_OS="$( grep CODENAME /etc/os-release | cut -d= -f2 )"
 
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.

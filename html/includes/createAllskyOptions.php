@@ -250,7 +250,7 @@ $settings_file = "";
 $force = false;		// force creation of settings file even if it already exists?
 
 foreach ($options as $opt => $val) {
-	if ($debug > 1 || $opt === "debug") echo "   Argument $opt $val\n";
+	if ($debug > 1) echo "   Argument $opt $val\n";
 
 	if ($opt === "debug")
 		$debug++;

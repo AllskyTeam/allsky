@@ -157,6 +157,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 	EXIT_NO_CAMERA=101		# cannot find camera
 
+	# Name of the Pi's OS.
+	PI_OS="$( grep CODENAME /etc/os-release | cut -d= -f2 )"
+
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.
 	# shellcheck disable=SC1090,SC1091

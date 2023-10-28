@@ -6,7 +6,7 @@
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
-#shellcheck # file doesn't exist in GitHub
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
 
 trap "exit 0" SIGTERM SIGINT

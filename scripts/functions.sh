@@ -813,3 +813,10 @@ function convert_json_to_tabs()
 		-e 's/",$//' -e 's/"$//' -e 's/,$//' \
 			"${JSON_FILE}"
 }
+
+
+# Indent all lines.
+function indent()
+{
+	echo -e "${1}" | sed 's/^/\t/'
+}

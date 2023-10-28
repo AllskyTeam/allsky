@@ -2276,7 +2276,6 @@ install_overlay()
 			R=""
 		fi
 
-		local NAME="Python_dependencies"
 	    display_msg --logonly info "Attempting to locate Python dependency file"
 
 		local PREFIX="${ALLSKY_REPO}/requirements"
@@ -2292,30 +2291,29 @@ install_overlay()
 			fi
 
 	    	if [[ -f ${REQUIREMENTS_FILE} ]]; then
-	        	display_msg --logonly info "${REQUIREMENTS_FILE} - File found!"
+	        	display_msg --logonly info "${REQUIREMENTS_FILE} - File found"
 	              break
 			else
-	        	display_msg --logonly info "${REQUIREMENTS_FILE} - File not found!"
+	        	display_msg --logonly info "${REQUIREMENTS_FILE} - File not found"
 			fi
 		done
 
 		local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 		
 		# See how many have already been installed - if all, then skip this step.
+		local NAME="Python_dependencies"
 		local NUM_INSTALLED="$( set | grep -c "^${NAME}" )"
 		if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ||
-			  ${installed_Python_dependencies} == "true" ]]; then
+				${installed_Python_dependencies} == "true" ]]; then
 			display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
 		else
 			# AG - Bookworm mod 12/10/23
-			display_msg --log progress "Installing Python3-full and related packages."
+			local N="python3-full"
+			display_msg --log progress "Installing ${N} and related packages."
 			local TMP="${ALLSKY_INSTALLATION_LOGS}/python_full.log"
-			(
-				sudo apt-get --assume-yes install python3-full &&
-				sudo apt-get --assume-yes install libgfortran5 libopenblas0-pthread
-			) > "${TMP}" 2>&1
-			check_success $? "python3-full install failed" "${TMP}" "${DEBUG}"
-			[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "python3-full install failed."
+			sudo apt-get --assume-yes install ${N} libgfortran5 libopenblas0-pthread > "${TMP}" 2>&1
+			check_success $? "${N} install failed" "${TMP}" "${DEBUG}"
+			[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "${N} install failed."
 
 			python3 -m venv "${ALLSKY_HOME}/venv"
 			#shellcheck disable=SC1090,SC1091

@@ -1417,9 +1417,9 @@ does_prior_Allsky_exist()
 		[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
 	fi
 
-	display_msg "${LOG_TYPE}" info "PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
-	display_msg "${LOG_TYPE}" info "PRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}"
-	display_msg "${LOG_TYPE}" info "PRIOR_SETTINGS_FILE=${PRIOR_SETTINGS_FILE}"
+	display_msg --logonly info "PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
+	display_msg --logonly info "PRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}"
+	display_msg --logonly info "PRIOR_SETTINGS_FILE=${PRIOR_SETTINGS_FILE}"
 
 	return 0
 }

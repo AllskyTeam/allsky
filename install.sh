@@ -2309,6 +2309,7 @@ install_overlay()
 				local PKGs="python3-full libgfortran5 libopenblas0-pthread"
 				display_msg --log progress "Installing ${PKGs}."
 				local TMP="${ALLSKY_INSTALLATION_LOGS}/python3-full.log"
+				# shellcheck disable=SC2086
 				sudo apt-get --assume-yes install ${PKGs} > "${TMP}" 2>&1
 				check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}"
 				[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."

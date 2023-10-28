@@ -2542,83 +2542,122 @@ do_update()
 install_overlay()
 {
 	if [[ ${installed_PHP_modules} != "true" ]]; then
-		display_msg --log progress "Installing PHP modules."
+		display_msg --log progress "Installing PHP modules and dependencies."
 		TMP="${ALLSKY_INSTALLATION_LOGS}/PHP_modules.log"
 		sudo apt-get --assume-yes install php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
 		check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}"
 		[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
 
-		display_msg --log progress "Installing other PHP dependencies."
 		TMP="${ALLSKY_INSTALLATION_LOGS}/libatlas.log"
 		sudo apt-get --assume-yes install libatlas-base-dev > "${TMP}" 2>&1
 		check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}"
 		[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP dependencies failed."
+
 		STATUS_VARIABLES+=( "installed_PHP_modules='true'\n" )
 	fi
 
-	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
-	# This also allows us to display progress messages.
-	if [[ ${OS} == "buster" ]]; then
-		M=" for Buster"
-		R="-buster"
-
-		# Force pip upgrade; without this installations on Buster fail.
-		pip3 install --upgrade pip > /dev/null 2>&1
+	if [[ ${installed_python} == "true" ]]; then
+		display_msg --log info "Python and related packages already installed."
 	else
-		M=""
-		R=""
-	fi
-	local NAME="Python_dependencies"
-	local REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}.txt"
-	local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
+		# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
+		# This also allows us to display progress messages.
+		M=" for ${OS^}"
+		R="-${OS}"
+		if [[ ${OS} == "buster" ]]; then
+			# Force pip upgrade, without this installations on Buster fail
+			pip3 install --upgrade pip > /dev/null 2>&1
+		elif [[ ${OS} != "bullseye" && ${OS} != "bookworm" ]]; then
+			# TODO: is this an error?  Unknown OS?
+			M=""
+			R=""
+		fi
 
-	# See how many have already been installed - if all, then skip this step.
-	local NUM_INSTALLED="$( set | grep -c "^${NAME}" )"
-	if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ||
-		  ${installed_Python_dependencies} == "true" ]]; then
-		display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
-	else
-		local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
-		display_msg --log progress "Installing ${NAME}${M}:"
-		local COUNT=0
-		rm -f "${STATUS_FILE_TEMP}"
-		while read -r package
+	    display_msg --logonly info "Attempting to locate Python dependency file"
+
+		local PREFIX="${ALLSKY_REPO}/requirements"
+		for REQUIREMENTS_FILE in "${PREFIX}${R}-${LONG_BITS}.txt" \
+			"${PREFIX}${R}.txt" \
+			"${PREFIX}-${LONG_BITS}.txt" \
+			"${PREFIX}.txt" \
+			"END"
 		do
-			((COUNT++))
-			echo "${package}" > /tmp/package
-			if [[ ${COUNT} -lt 10 ]]; then
-				C=" ${COUNT}"
+			if [[ ${REQUIREMENTS_FILE} == "END" ]]; then
+	        	display_msg --log error "Unable to find a requirements file!"
+				exit_with_image 1 "No requirements file"
+			fi
+
+	    	if [[ -f ${REQUIREMENTS_FILE} ]]; then
+	        	display_msg --logonly info "${REQUIREMENTS_FILE} - File found"
+	              break
 			else
-				C="${COUNT}"
+	        	display_msg --logonly info "${REQUIREMENTS_FILE} - File not found"
 			fi
+		done
 
-			local PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
-			# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
-			local STATUS_NAME="${NAME}_${COUNT}"
-			eval "STATUS_VALUE=\${${STATUS_NAME}}"
-			if [[ ${STATUS_VALUE} == "true" ]]; then
-				display_msg --log progress "${PACKAGE} - already installed."
-				continue
-			fi
-			display_msg --log progress "${PACKAGE}"
+		local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
-			L="${TMP}.${COUNT}.log"
-			local M="${NAME} [${package}] failed"
-			pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
-			# These files are too big to display so pass in "0" instead of ${DEBUG}.
-			if ! check_success $? "${M}" "${L}" 0 ; then
-				rm -fr "${PIP3_BUILD}"
+		# See how many have already been installed - if all, then skip this step.
+		local NAME="Python_dependencies"
+		local NUM_INSTALLED="$( set | grep -c "^${NAME}" )"
+		if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ||
+				${installed_Python_dependencies} == "true" ]]; then
+			display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
+	else
+			local N="python3-full"
+			display_msg --log progress "Installing ${N} and related packages."
+			local TMP="${ALLSKY_INSTALLATION_LOGS}/${N}.log"
+			sudo apt-get --assume-yes install ${N} libgfortran5 libopenblas0-pthread > "${TMP}" 2>&1
+			check_success $? "${N} install failed" "${TMP}" "${DEBUG}"
+			[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "${N} install failed."
 
-				# Add current status
-				update_status_from_temp_file
+			python3 -m venv "${ALLSKY_HOME}/venv"
+			#shellcheck disable=SC1090,SC1091
+			source "${ALLSKY_HOME}/venv/bin/activate"
 
-				exit_with_image 1 "${STATUS_ERROR}" "${M}."
-			fi
-			echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
-		done < "${REQUIREMENTS_FILE}"
+			local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
+			display_msg --log progress "Installing ${NAME}${M}:"
+			local COUNT=0
+			rm -f "${STATUS_FILE_TEMP}"
+			while read -r package
+			do
+				((COUNT++))
+				echo "${package}" > /tmp/package
+				if [[ ${COUNT} -lt 10 ]]; then
+					C=" ${COUNT}"
+				else
+					C="${COUNT}"
+				fi
 
-		# Add the status back in.
-		update_status_from_temp_file
+				local PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
+				# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
+				local STATUS_NAME="${NAME}_${COUNT}"
+				eval "STATUS_VALUE=\${${STATUS_NAME}}"
+				if [[ ${STATUS_VALUE} == "true" ]]; then
+					display_msg --log progress "${PACKAGE} - already installed."
+					continue
+				fi
+				display_msg --log progress "${PACKAGE}"
+
+				L="${TMP}.${COUNT}.log"
+				local M="${NAME} [${package}] failed"
+				pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
+				# These files are too big to display so pass in "0" instead of ${DEBUG}.
+				if ! check_success $? "${M}" "${L}" 0 ; then
+					rm -fr "${PIP3_BUILD}"
+
+					# Add current status
+					update_status_from_temp_file
+
+					exit_with_image 1 "${STATUS_ERROR}" "${M}."
+				fi
+				echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
+			done < "${REQUIREMENTS_FILE}"
+
+			# Add the status back in.
+			update_status_from_temp_file
+		fi
+
+		STATUS_VARIABLES+=( "installed_python='true'\n" )
 	fi
 
 	if [[ ${installing_Trutype_fonts} != "true" ]]; then

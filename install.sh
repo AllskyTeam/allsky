@@ -38,7 +38,6 @@ RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
 RESTORED_PRIOR_CONFIG_SH="false"		# prior config.sh restored?
 RESTORED_PRIOR_FTP_SH="false"			# prior ftp-settings.sh restored?
-ALLSKY_VERSION="$( get_version )"		# version we're installing
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 PRIOR_ALLSKY_VERSION=""					# The version number of the prior version, if known
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
@@ -82,8 +81,6 @@ STATUS_ERROR="Error encountered"
 STATUS_INT="Got interrupt"
 STATUS_VARIABLES=()									# Holds all the variables and values to save
 
-OS="$( grep CODENAME /etc/os-release | cut -d= -f2 )"	# buster, bullseye, or bookworm
-# TODO: check for unknown OS ?
 LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 
 # Check if any extra modules are installed
@@ -383,8 +380,8 @@ check_for_raspistill()
 {
 	STATUS_VARIABLES+=("check_for_raspistill='true'\n")
 
-	if W="$( which raspistill )" && [[ ${OS} != "buster" ]]; then
-		display_msg --longonly info "Renaming 'raspistill' on ${OS}."
+	if W="$( which raspistill )" && [[ ${PI_OS} != "buster" ]]; then
+		display_msg --longonly info "Renaming 'raspistill' on ${PI_OS}."
 		sudo mv "${W}" "${W}-OLD"
 	fi
 }
@@ -785,7 +782,7 @@ check_success()
 		MSG="The full log file is in ${LOG}"
 		MSG="${MSG}\nThe end of the file is:"
 		display_msg --log info "${MSG}"
-		tail "${LOG}"
+		indent "$( tail "${LOG}" )"
 
 		return 1
 	fi
@@ -2266,11 +2263,11 @@ install_overlay()
 		# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
 		# This also allows us to display progress messages.
 		M=" for ${OS^}"
-		R="-${OS}"
-		if [[ ${OS} == "buster" ]]; then
+		R="-${PI_OS}"
+		if [[ ${PI_OS} == "buster" ]]; then
 			# Force pip upgrade, without this installations on Buster fail
 			pip3 install --upgrade pip > /dev/null 2>&1
-		elif [[ ${OS} != "bullseye" && ${OS} != "bookworm" ]]; then
+		elif [[ ${PI_OS} != "bullseye" && ${PI_OS} != "bookworm" ]]; then
 			# TODO: is this an error?  Unknown OS?
 			M=""
 			R=""
@@ -2291,10 +2288,10 @@ install_overlay()
 			fi
 
 	    	if [[ -f ${REQUIREMENTS_FILE} ]]; then
-	        	display_msg --logonly info "${REQUIREMENTS_FILE} - File found"
-	              break
+	        	display_msg --logonly info "Using '${REQUIREMENTS_FILE}'"
+				break
 			else
-	        	display_msg --logonly info "${REQUIREMENTS_FILE} - File not found"
+	        	display_msg --logonly debug "${REQUIREMENTS_FILE} - File not found"
 			fi
 		done
 
@@ -2308,16 +2305,18 @@ install_overlay()
 			display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
 		else
 			# AG - Bookworm mod 12/10/23
-			local N="python3-full"
-			display_msg --log progress "Installing ${N} and related packages."
-			local TMP="${ALLSKY_INSTALLATION_LOGS}/python_full.log"
-			sudo apt-get --assume-yes install ${N} libgfortran5 libopenblas0-pthread > "${TMP}" 2>&1
-			check_success $? "${N} install failed" "${TMP}" "${DEBUG}"
-			[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "${N} install failed."
+			if [[ ${PI_OS} == "bookworm" ]]; then
+				local PKGs="python3-full libgfortran5 libopenblas0-pthread"
+				display_msg --log progress "Installing ${PKGs}."
+				local TMP="${ALLSKY_INSTALLATION_LOGS}/python3-full.log"
+				sudo apt-get --assume-yes install ${PKGs} > "${TMP}" 2>&1
+				check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}"
+				[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."
 
-			python3 -m venv "${ALLSKY_HOME}/venv"
-			#shellcheck disable=SC1090,SC1091
-			source "${ALLSKY_HOME}/venv/bin/activate"
+				python3 -m venv "${ALLSKY_HOME}/venv"
+				#shellcheck disable=SC1090,SC1091
+				source "${ALLSKY_HOME}/venv/bin/activate"
+			fi
 
 			local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
 			display_msg --log progress "Installing ${NAME}${M}:"
@@ -2407,21 +2406,20 @@ check_if_buster()
 {
 	STATUS_VARIABLES+=("check_if_buster='true'\n")
 
-	if [[ ${OS} == "buster" ]]; then
-		MSG="This release runs best on the Bullseye operating system"
-		MSG="${MSG} that was released in November, 2021."
-		if [[ ${PRIOR_CAMERA_TYPE} == "RPi" ]]; then
-			MSG="${MSG}\n\n>>> This is especially true for RPi cameras"
-			MSG="${MSG} which have more features on Bullseye.\n"
-		fi
-		MSG="${MSG}\nYou are running the older Buster operating system and we"
-		MSG="${MSG} recommend doing a fresh install of Bullseye on a clean SD card."
-		MSG="${MSG}\n\nDo you want to continue anyhow?"
-		if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
-			display_msg --logonly info "User running Buster and elected not to continue."
-			exit_installation 0 "${STATUS_NOT_CONTINUE}" "After Buster check."
-		fi
+	[[ ${PI_OS} != "buster" ]] && return
+
+	MSG="WARNING: You are running the older Buster operating system."
+	MSG="${MSG}\nSupport for it will be dropped in a future Allsky release."
+	MSG="${MSG}\nWe recommend doing a fresh install of Bookworm on a clean SD card now."
+	if [[ ${PRIOR_CAMERA_TYPE} == "RPi" ]]; then
+		MSG="${MSG}\nRPi cameras have more features on newer operating systems.\n"
 	fi
+	MSG="${MSG}\n\nDo you want to continue anyhow?"
+	if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
+		display_msg --logonly info "User running Buster and elected not to continue."
+		exit_installation 0 "${STATUS_NOT_CONTINUE}" "After Buster check."
+	fi
+	display_msg --logonly info "User running Buster and elected to continue."
 }
 
 
@@ -2627,7 +2625,13 @@ exit_installation()
 		if [[ ${STATUS_CODE} == "${STATUS_CLEAR}" ]]; then
 			clear_status
 		else
-			[[ -n ${MORE_STATUS} ]] && MORE_STATUS="; MORE_STATUS='${MORE_STATUS}'"
+			if [[ -n ${MORE_STATUS} ]]; then
+				if [[ ${MORE_STATUS} == "${STATUS_CODE}" ]]; then
+					MORE_STATUS=""
+				else
+					MORE_STATUS="; MORE_STATUS='${MORE_STATUS}'"
+				fi
+			fi
 			echo -e "STATUS_INSTALLATION='${STATUS_CODE}'${MORE_STATUS}" > "${STATUS_FILE}"
 			update_status_from_temp_file
 			echo -e "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"
@@ -2799,7 +2803,7 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 		MSG="${MSG}\n\nDo you want to continue where you left off?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			MSG="Continuing installation.  Steps already performed will be skipped."
-			MSG="${MSG}\nThe last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
+			MSG="${MSG}\n   The last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
 			display_msg --log progress "${MSG}"
 
 			#shellcheck disable=SC1090		# file doesn't exist in GitHub
